@@ -1,5 +1,6 @@
 
 import requests
+import json
 
 # Server
 # GET /
@@ -7,7 +8,7 @@ import requests
 # DELETE db/_session
 
 
-class Server:
+class SyncGateway:
 
     def __init__(self, ip, db_name):
         self.ip = "http://{}:4985".format(ip)
@@ -59,9 +60,8 @@ class Database:
 
     def add_document(self, name, doc):
         headers = {"Content-Type": "application/json"}
-        print(self.db_url)
-        print(name)
-        return requests.put("{0}/{1}".format(self.db_url, name), headers=headers, data=doc)
+        json_doc = json.dumps(doc)
+        return requests.put("{0}/{1}".format(self.db_url, name), headers=headers, data=json_doc)
 
 
 
