@@ -16,7 +16,8 @@ import json
 
 def test_1():
 
-    sg_ips = ["127.0.0.1"]
+    sg_ips = ["172.23.105.204", "172.23.105.175"]
+    # sg_ips = ["127.0.0.1"]
 
     sgs = []
 
@@ -35,6 +36,15 @@ def test_1():
         docs.append({key: value})
         i += 1
 
+    sgs[0].db.add_user("seth", "pass123")
+    sgs[1].db.add_user("ashvinder", "pass123")
+
+    users_1 = sgs[0].db.get_users()
+    print(users_1)
+
+    users_2 = sgs[1].db.get_users()
+    print(users_2)
+
     count = 0
     for doc in docs:
         doc_name = uuid.uuid4()
@@ -43,5 +53,6 @@ def test_1():
         print(r.status_code)
         print(count)
         count += 1
+
 
 test_1()
