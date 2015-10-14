@@ -1,5 +1,6 @@
+import sys
 
-
+sys.path = ["..","lib"] + sys.path
 
 # Local
 # PUT /{db}/{local-doc-id}
