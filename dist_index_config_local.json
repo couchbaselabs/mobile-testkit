@@ -23,7 +23,7 @@
             "bucket":"bucket-1",
             "users":{
                 "GUEST":{
-                    "disabled":false,
+                    "disabled":true,
                     "admin_channels":[
                         "*"
                     ]

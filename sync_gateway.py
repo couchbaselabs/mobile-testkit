@@ -43,12 +43,15 @@ class Database:
         assert r.status_code == 200
         return r.text
 
-    def add_user(self, name, password):
+    def get_user(self, name):
+        r = requests.get("{0}/_user/{1}".format(self.admin_db_url, name))
+        assert r.status_code == 200
+        return json.loads(r.text)
+
+    def add_user(self, user):
         headers = {"Content-Type": "application/json"}
-        json_doc = json.dumps({"name": name, "password": password})
-        return requests.put("{0}/_user/{1}".format(self.admin_db_url, name), headers=headers, data=json_doc)
-
-
+        json_doc = json.dumps({"name": user.name, "password": user.password, "admin_channels": user.channels})
+        return requests.put("{0}/_user/{1}".format(self.admin_db_url, user.name), headers=headers, data=json_doc)
 
     # public endpoints
     def info(self):
@@ -76,7 +79,17 @@ class Database:
         return requests.get("{}/_changes".format(self.public_db_url))
 
     def add_document(self, name, doc):
-        headers = {"Content-Type": "application/json"}
+        headers = {
+            "Content-Type": "application/json"
+        }
+        json_doc = json.dumps(doc)
+        return requests.put("{0}/{1}".format(self.public_db_url, name), headers=headers, data=json_doc)
+
+    def add_user_document(self, name, doc, user):
+        headers = {
+            "Content-Type": "application/json",
+            "Authorization": "Basic {}".format(user.auth)
+        }
         json_doc = json.dumps(doc)
         return requests.put("{0}/{1}".format(self.public_db_url, name), headers=headers, data=json_doc)
 
