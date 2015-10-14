@@ -1,0 +1,18 @@
+---
+# Provision sync_gateway_vms
+- hosts: sg_nodes
+
+  remote_user: root
+  sudo: yes
+
+  tasks:
+  # Download + Extract sync_gateway package
+  - name: Remove sync_gateway downloads
+    shell: rm -rf /tmp/*
+
+  # stop sync_gateway and remove sync_gateway user
+  - name: stop any sync gateway services that might be running
+    service: name=sync_gateway state=stopped
+    ignore_errors: yes
+  - name: delete sync_gateway user
+    user: name=sync_gateway state=absent remove=yes

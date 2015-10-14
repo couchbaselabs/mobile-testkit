@@ -1,0 +1,15 @@
+cb1 ansible_ssh_host=XXX.XX.XXX.XXX
+
+sg1 ansible_ssh_host=XXX.XX.XXX.XXX
+sg2 ansible_ssh_host=XXX.XX.XXX.XXX
+sg3 ansible_ssh_host=XXX.XX.XXX.XXX
+sg4 ansible_ssh_host=XXX.XX.XXX.XXX
+
+[cb_pool]
+cb1
+
+[sg_pool]
+sg1
+sg2
+sg3
+sg4

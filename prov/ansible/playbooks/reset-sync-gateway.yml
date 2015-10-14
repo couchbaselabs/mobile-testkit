@@ -1,0 +1,54 @@
+---
+# Kill sync_gateway, nuke logs and pindex files
+- hosts: sg_pool
+  remote_user: root
+  any_errors_fatal: true
+  sudo: true
+  tasks:
+  - name: stop sync_gateway service
+    service: name=sync_gateway state=stopped
+    when: ansible_distribution == "CentOS" and ansible_distribution_major_version == "7"
+  - name: stop sync_gateway for CentOS 6
+    shell: /sbin/initctl stop sync_gateway
+    when: ansible_distribution == "CentOS" and ansible_distribution_major_version == "6"
+    ignore_errors: true
+  - name: delete sync_gateway logs
+    shell: rm -f /home/sync_gateway/logs/*.log
+  - name: delete sync_gateway pindex files
+    shell: rm -rf /home/sync_gateway/*.pindex
+
+# Flush server buckets
+- hosts: cb_pool
+  any_errors_fatal: true
+  remote_user: root
+  sudo: true
+  vars:
+    couchbase_server_home_path: /opt/couchbase
+    couchbase_server_bucket_name2: bucket-1
+    couchbase_server_bucket_name3: bucket-2
+    couchbase_server_node: "{{ hostvars['cb1']['ansible_ssh_host'] }}"
+    couchbase_server_admin_port: 8091
+    couchbase_server_admin: Administrator
+    couchbase_server_password: password
+  tasks:
+  - name: set couchbase_server_primary_node variable
+    set_fact:
+      couchbase_server_primary_node: "{{ lookup('file', '../../temp_couchbase_server_primary_node') }}"
+  - name: flush couchbase server bucket 1
+    shell: "{{ couchbase_server_home_path }}/bin/couchbase-cli bucket-flush --bucket={{ item }} --force -c {{ couchbase_server_primary_node }}:{{ couchbase_server_admin_port }} --user={{ couchbase_server_admin }} --password={{ couchbase_server_password }}"
+    register: bucket_flush
+    with_items:
+      - bucket-1
+      - bucket-2
+
+# start sync_gateway
+- hosts: sg_pool
+  remote_user: root
+  sudo: true
+  tasks:
+  - name: start sync_gateway service
+    service: name=sync_gateway state=started
+    when: ansible_distribution == "CentOS" and ansible_distribution_major_version == "7"
+  - name: start sync_gateway for CentOS 6
+    shell: /sbin/initctl start sync_gateway
+    when: ansible_distribution == "CentOS" and ansible_distribution_major_version == "6"

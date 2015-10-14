@@ -1,0 +1,19 @@
+---
+- hosts: sg_pool
+  remote_user: root
+  any_errors_fatal: true
+  vars:
+    branch: master
+  tasks:
+  - name: delete previous sync gateway
+    command: rm -rf /home/centos/sync_gateway
+  - name: clone sync gateway git repo
+    git: repo=https://github.com/couchbase/sync_gateway.git
+         dest=/home/centos/sync_gateway
+         recursive=no
+  - name: checkout feature branch
+    shell: git checkout {{ branch }} chdir=/home/centos/sync_gateway
+  - name: update submodules
+    shell: git submodule init && git submodule update chdir=/home/centos/sync_gateway
+  - name: build sync gateway
+    shell: ./build.sh chdir=/home/centos/sync_gateway

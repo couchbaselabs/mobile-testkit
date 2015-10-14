@@ -1,0 +1,97 @@
+---
+- hosts: cb_pool
+  remote_user: root
+  any_errors_fatal: true
+  serial: 1
+  vars:
+    couchbase_server_primary_node: "{{ hostvars['cb1']['ansible_ssh_host'] }}"
+  connection: local
+  tasks:
+    - debug: msg="Couchbase Server primary node - {{ couchbase_server_primary_node }}"
+    - shell: echo {{ couchbase_server_primary_node }} > ../../temp_couchbase_server_primary_node
+
+- hosts: cb_pool
+  remote_user: root
+  any_errors_fatal: true
+  sudo: true
+  vars:
+    couchbase_server_package_base_url:
+    couchbase_server_package_name:
+    couchbase_server_package_url: "{{ couchbase_server_package_base_url }}/{{ couchbase_server_package_name }}"
+
+    couchbase_server_admin: Administrator
+    couchbase_server_password: password
+    couchbase_server_cluster_ram: 3072
+    couchbase_server_admin_port: 8091
+    couchbase_server_home_path: /opt/couchbase
+
+    couchbase_server_node: "{{ couchbase_server_primary_node }}"
+    couchbase_server_bucket_type: couchbase
+    couchbase_server_bucket_port: 11211
+    couchbase_server_bucket_replica: 1
+    couchbase_server_bucket_ram: 1024
+
+  tasks:
+    - debug: msg="Downloading Couchbase server v. {{ couchbase_server_package_url }}"
+    - name: set couchbase_server_primary_node variable
+      set_fact:
+        couchbase_server_primary_node: "{{ lookup('file', '../../temp_couchbase_server_primary_node') }}"
+
+    # Download and install
+    - name: Stop Couchbase Service
+      service: name=couchbase-server state=stopped
+      ignore_errors: yes
+    - name: Uninstall couchbase server
+      shell: rpm -e couchbase-server
+      ignore_errors: yes
+    - name: Remove all couchbase server residue
+      shell: rm -rf /opt/couchbase
+    - name: Download couchbase server
+      get_url: url={{ couchbase_server_package_url }} dest=/tmp/{{ couchbase_server_package_name }}
+    - name: Install Couchbase Server
+      yum: name=/tmp/{{ couchbase_server_package_name }} state=present
+    - name: Restart Couchbase Service
+      service: name=couchbase-server state=restarted
+    - name: raise max file descriptors
+      copy: src=files/security-nofiles-limit.conf dest=/etc/security/limits.d/20-nofiles.conf owner=root group=root mode=0644
+
+    #- name: Disable Transparent Huge Pages
+    #  shell: echo 'for i in /sys/kernel/mm/*transparent_hugepage/enabled; do echo never > $i; done' >> /etc/rc.local
+    #  shell: echo 'for i in /sys/kernel/mm/*transparent_hugepage/defrag; do echo never > $i; done' >> /etc/rc.local
+    #  shell: for i in /sys/kernel/mm/*transparent_hugepage/enabled; do echo never > $i; done
+
+    # Configure
+    - debug: msg="Couchbase cluster RAM {{ couchbase_server_cluster_ram }}"
+    - debug: msg="Couchbase bucket RAM {{ couchbase_server_bucket_ram }}"
+
+    - name: Get major version
+      shell: cat /opt/couchbase/VERSION.txt | cut -d '.' -f1
+      register: cb_major_version
+
+    - name: Wait for node to be listening on port 8091
+      wait_for: port=8091 delay=5
+
+    - name: Configure cluster settings
+      shell: "{{ couchbase_server_home_path }}/bin/couchbase-cli cluster-init -c {{ couchbase_server_node }}:{{ couchbase_server_admin_port }} --user={{ couchbase_server_admin }} --password={{ couchbase_server_password }} --cluster-init-username={{ couchbase_server_admin }} --cluster-init-password={{ couchbase_server_password }} --cluster-init-port={{couchbase_server_admin_port}} --cluster-init-ramsize={{ couchbase_server_cluster_ram }}"
+
+    - name: Initialize primary node
+      shell: "{{ couchbase_server_home_path }}/bin/couchbase-cli node-init -c {{ couchbase_server_node }}:{{ couchbase_server_admin_port }} --user={{ couchbase_server_admin }} --password={{ couchbase_server_password }} --cluster-init-username={{ couchbase_server_admin }} --node-init-hostname={{ couchbase_server_node }}"
+      when: "{{ cb_major_version['stdout'] }} != 2"
+
+    - name: Wait for node to be listening on port 8091
+      wait_for: port=8091 delay=5
+
+    - name: Join additional cluster nodes
+      shell: "{{ couchbase_server_home_path }}/bin/couchbase-cli server-add -c {{ couchbase_server_primary_node }}:{{ couchbase_server_admin_port }} --user={{ couchbase_server_admin }} --password={{ couchbase_server_password }} --server-add={{ couchbase_server_node }}:{{ couchbase_server_admin_port }} --server-add-username={{ couchbase_server_admin }} --server-add-password={{ couchbase_server_password }}"
+      when: not (couchbase_server_node == couchbase_server_primary_node )
+
+    - name: Rebalance cluster
+      shell: "{{ couchbase_server_home_path }}/bin/couchbase-cli rebalance -c {{ couchbase_server_primary_node }}:{{ couchbase_server_admin_port }} --user={{ couchbase_server_admin }} --password={{ couchbase_server_password }}"
+      ignore_errors: yes
+
+    - name: Create new buckets
+      shell: "{{ couchbase_server_home_path }}/bin/couchbase-cli bucket-create -c {{ couchbase_server_node }}:{{ couchbase_server_admin_port }} --user={{ couchbase_server_admin }} --password={{ couchbase_server_password }} --bucket={{ item }} --enable-flush=1 --bucket-type={{ couchbase_server_bucket_type }} --bucket-port={{ couchbase_server_bucket_port }} --bucket-ramsize={{ couchbase_server_bucket_ram }} --bucket-replica={{ couchbase_server_bucket_replica }}"
+      with_items:
+        - bucket-1
+        - bucket-2
+      when: couchbase_server_node == couchbase_server_primary_node

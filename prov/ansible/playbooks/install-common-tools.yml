@@ -1,0 +1,43 @@
+---
+- hosts: sg_pool:cb_pool
+  remote_user: root
+  any_errors_fatal: true
+  sudo: true
+  tasks:
+  - name: create centos user
+    user: name=centos createhome=yes
+  - name: install git
+    yum: pkg=git state=latest
+  - name: install bc
+    yum: pkg=bc state=latest
+  - name: install lsof
+    yum: pkg=lsof state=latest
+  - name: install screen
+    yum: pkg=screen state=latest
+  - name: install emacs
+    yum: pkg=emacs-nox state=latest
+  - name: install wget
+    yum: pkg=wget state=latest
+  - name: install graphviz
+    yum: pkg=graphviz state=latest
+  - name: install the 'Development tools' package group
+    yum: name="@Development tools" state=present
+  - name: download golang
+    get_url: url=http://golang.org/dl/go1.4.2.linux-amd64.tar.gz dest=/tmp mode=0440
+  - name: extract go
+    unarchive: src=/tmp/go1.4.2.linux-amd64.tar.gz dest=/usr/local copy=no
+  - name: symlink go into /usr/local/bin
+    file: src=/usr/local/go/bin/go dest=/usr/local/bin/go owner=centos group=centos state=link
+  - name: symlink godoc into /usr/local/bin
+    file: src=/usr/local/go/bin/godoc dest=/usr/local/bin/godoc owner=centos group=centos state=link
+  - name: symlink gofmt into /usr/local/bin
+    file: src=/usr/local/go/bin/gofmt dest=/usr/local/bin/gofmt owner=centos group=centos state=link
+  - name: create GOPATH directory
+    shell: mkdir -p /opt/go
+  - name: chown GOPATH to be owned by centos user
+    file: path=/opt/go owner=centos group=centos recurse=yes
+  - name: raise max file descriptors
+    copy: src=files/security-nofiles-limit.conf dest=/etc/security/limits.d/20-nofiles.conf owner=root group=root mode=0644
+
+
+  
