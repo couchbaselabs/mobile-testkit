@@ -1,0 +1,8 @@
+---
+- hosts: sg_pool
+  remote_user: root
+  any_errors_fatal: true
+  tasks:
+  - name: Fetch sync_gateway logs
+    fetch: src=/home/sync_gateway/logs/sync_gateway_access.log dest=/tmp/sg_logs/{{ inventory_hostname }}/ fail_on_missing=yes flat=yes
+    fetch: src=/home/sync_gateway/logs/sync_gateway_error.log dest=/tmp/sg_logs/{{ inventory_hostname }}/ fail_on_missing=yes flat=yes

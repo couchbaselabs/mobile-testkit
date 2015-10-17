@@ -40,6 +40,8 @@
     with_items:
       - bucket-1
       - bucket-2
+  - debug: var={{item.stdout}}
+    with_items: bucket_flush.results
 
 # start sync_gateway
 - hosts: sg_pool

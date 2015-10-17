@@ -1,5 +1,8 @@
 import requests
+
 import json
+
+from requests_futures.sessions import FuturesSession
 
 # Server
 # GET /
@@ -29,9 +32,11 @@ class SyncGateway:
 # Document
 # POST /{db}
 
+
 class Database:
 
     def __init__(self, ip, admin_port, public_port, name):
+        self.__session = FuturesSession(max_workers=10)
         self.ip = ip
         self.public_db_url = "{0}:{1}/{2}".format(self.ip, public_port, name)
         self.admin_db_url = "{0}:{1}/{2}".format(self.ip, admin_port, name)
@@ -74,8 +79,12 @@ class Database:
             }
         )
 
-    def changes(self):
-        return requests.get("{}/_changes".format(self.public_db_url))
+    def get_user_changes(self, user):
+        headers = {
+            "Authorization": "Basic {}".format(user.auth)
+        }
+        r = requests.get("{}/_changes".format(self.public_db_url), headers=headers)
+        return json.loads(r.text)
 
     def add_document(self, name, doc):
         headers = {
@@ -91,4 +100,3 @@ class Database:
         }
         json_doc = json.dumps(doc)
         return requests.put("{0}/{1}".format(self.public_db_url, name), headers=headers, data=json_doc)
-

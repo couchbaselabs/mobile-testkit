@@ -35,7 +35,7 @@ def check_vms_online(ips):
 def install_keys(key_name, user_name):
 
     if not key_name or not user_name:
-        print "Make sure to specify a public key with --key-name and user with --remote-user"
+        print("Make sure to specify a public key with --key-name and user with --remote-user")
         sys.exit(1)
 
 
@@ -46,16 +46,16 @@ def install_keys(key_name, user_name):
         print("Could not ping each vm in the cluster: Unreachable {}".format(unreachable_vms))
         sys.exit(1)
 
-    print "Are you sure you would like to copy public key {0} to vms: {1}".format(
+    print("Are you sure you would like to copy public key {0} to vms: {1}".format(
         key_name, ips
-    )
+    ))
 
-    validate = raw_input("Enter 'y' to continue or 'n' to exit: ")
+    validate = input("Enter 'y' to continue or 'n' to exit: ")
     if validate != "y":
-        print "Exiting..."
+        print("Exiting...")
         sys.exit(1)
 
-    print "Using ssh-copy-id..."
+    print("Using ssh-copy-id...")
     for ip in ips:
         subprocess.call([
             "ssh-copy-id", "-i", "{0}/.ssh/{1}".format(os.environ["HOME"], key_name),

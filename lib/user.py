@@ -7,7 +7,5 @@ class User:
         self.name = name
         self.password = password
         self.channels = channels
-        self.auth = base64.b64encode("{0}:{1}".format(self.name, self.password))
-
-
-
+        auth = base64.b64encode("{0}:{1}".format(self.name, self.password).encode())
+        self.auth = auth.decode("UTF-8")
