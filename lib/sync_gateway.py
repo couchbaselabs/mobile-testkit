@@ -101,9 +101,11 @@ class Database:
         json_doc = json.dumps(doc)
         return requests.put("{0}/{1}".format(self.public_db_url, name), headers=headers, data=json_doc, timeout=30)
 
-    def add_bulk_documents(self, docs):
+    def add_user_bulk_documents(self, docs, user):
+
         headers = {
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
+            "Authorization": "Basic {}".format(user.auth)
         }
 
         docs_list = []
@@ -111,5 +113,4 @@ class Database:
             docs_list.append(doc.name_with_body())
 
         json_doc = json.dumps({"docs": docs_list})
-
         return requests.post("{0}/_bulk_docs".format(self.public_db_url), headers=headers, data=json_doc)

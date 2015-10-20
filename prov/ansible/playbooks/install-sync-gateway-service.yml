@@ -51,5 +51,3 @@
  #   service: name=sync_gateway state=restarted
   - name: wait until sync gateway to listen on port
     wait_for: port=4985 delay=1 timeout=30
-  #- name: disable sync gateway logging
-  #  shell: curl -X PUT -d '{}' http://localhost:4985/_logging
