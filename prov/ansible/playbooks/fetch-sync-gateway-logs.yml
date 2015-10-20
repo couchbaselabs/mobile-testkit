@@ -3,6 +3,8 @@
   remote_user: root
   any_errors_fatal: true
   tasks:
+
   - name: Fetch sync_gateway logs
-    fetch: src=/home/sync_gateway/logs/sync_gateway_access.log dest=/tmp/sg_logs/{{ inventory_hostname }}/ fail_on_missing=yes flat=yes
-    fetch: src=/home/sync_gateway/logs/sync_gateway_error.log dest=/tmp/sg_logs/{{ inventory_hostname }}/ fail_on_missing=yes flat=yes
+    # Do not validate checksum as this is just a passive grab of the logs. Since they are continuously being appended to, the checksum may fail
+    fetch: src=/home/sync_gateway/logs/sync_gateway_access.log dest=/tmp/sg_logs/{{ hostvars[inventory_hostname]['ansible_eth0']['ipv4']['address'] }}/ fail_on_missing=yes flat=yes validate_checksum=no
+    fetch: src=/home/sync_gateway/logs/sync_gateway_error.log dest=/tmp/sg_logs/{{ hostvars[inventory_hostname]['ansible_eth0']['ipv4']['address'] }}/ fail_on_missing=yes flat=yes validate_checksum=no

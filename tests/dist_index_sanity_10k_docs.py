@@ -1,33 +1,37 @@
 import sys
 
 
-sys.path = ["..","lib"] + sys.path
+sys.path = ["..", "lib"] + sys.path
+sys.path = ["..", "prov"] + sys.path
+sys.path = ["..", "prov", "scripts"] + sys.path
 
 # Local
 # PUT /{db}/{local-doc-id}
 # GET /{db}/{local-doc-id}
 # DELETE /{db}/{local-doc-id}
 
-from sync_gateway import SyncGateway
-from user import User
 
 import time
 import uuid
+import os
+import pytest
 import concurrent.futures
 
 from concurrent.futures import ThreadPoolExecutor
 
+from sync_gateway import SyncGateway
+from user import User
+
+# @pytest.fixture
+# def reset_cluster():
+#     from prov.reset_sync_gateway import reset_sync_gateway
+
+
+#def test_1(reset_cluster):
 def test_1():
 
-    start = time.time()
-
-    #sg_ips = [ "127.0.0.1" ]
-
     sg_ips = [
-        "XXX.XX.XXX.XXX",
-        "XXX.XX.XXX.XXX",
-        "XXX.XX.XXX.XXX",
-        "XXX.XX.XXX.XXX"
+        "127.0.0.1"
     ]
 
     sgs = [SyncGateway(sg_ip, "db") for sg_ip in sg_ips]
@@ -64,7 +68,7 @@ def test_1():
 
         count += 1
 
-    with ThreadPoolExecutor(max_workers=300) as executor:
+    with ThreadPoolExecutor(max_workers=40) as executor:
 
         future_to_doc = {}
 
@@ -83,7 +87,7 @@ def test_1():
             except Exception as e:
                 print("Generated an exception: doc:{} e:{}".format(doc, e))
             else:
-                #print(docs_done)
+                print(docs_done)
                 #print(r.status_code)
                 if r.status_code == 201:
                     reported_created += 1
@@ -92,15 +96,14 @@ def test_1():
                 docs_done += 1
 
     assert reported_created == 10000
+    print("201 Created: {}".format(reported_created))
     assert len(channel_docs) == 5000
+    print("Channel[ABC] Created: {}".format(len(channel_docs)))
+
+    time.sleep(10)
 
     c_r = sgs[0].db.get_user_changes(seth)
     number_of_changes = len(c_r["results"])
 
     print("CHANGES: {}".format(number_of_changes))
     assert number_of_changes == 5000
-
-    end = time.time()
-    print("TIME:{}s".format(end - start))
-
-test_1()

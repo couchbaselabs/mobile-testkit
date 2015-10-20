@@ -100,7 +100,7 @@ if __name__ == "__main__":
     --config-file-path=<path_to_local_sync_gateway_config>
     """
 
-    default_sync_gateway_config = os.path.abspath("../ansible/playbooks/files/sync_gateway_config.json")
+    default_sync_gateway_config = os.path.abspath("prov/ansible/playbooks/files/sync_gateway_config.json")
 
     parser = OptionParser(usage=usage)
 
