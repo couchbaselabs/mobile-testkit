@@ -1,20 +1,21 @@
 import uuid
-import json
-
-class Data:
-
-   #def __init__(self):
-
-    def doc_with_channels(channels, body):
-        doc_name = uuid.uuid4()
-        doc = {
-            "channels": channels,
-            "body": body
-        }
-        return doc_name, doc
 
 
-class Document:
+class Doc:
+    def __init__(self, body):
+        self.name = uuid.uuid4()
+        self.body = body
+
+    def name_and_body(self):
+        doc = {"body": self.body}
+        return str(self.name), doc
+
+    def name_with_body(self):
+        doc = {"_id": str(self.name), "body": self.body}
+        return doc
+
+
+class ChannelDoc:
 
     def __init__(self, channels, body):
         self.name = uuid.uuid4()

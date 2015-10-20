@@ -1,8 +1,8 @@
-import ansible_runner
+from ansible_runner import run_ansible_playbook
 
 
 def fetch_sync_gateway_logs():
-    ansible_runner.run_ansible_playbook("fetch-sync-gateway-logs.yml")
+    run_ansible_playbook("fetch-sync-gateway-logs.yml")
 
 if __name__ == "__main__":
     fetch_sync_gateway_logs()

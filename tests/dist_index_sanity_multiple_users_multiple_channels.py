@@ -22,10 +22,15 @@ from concurrent.futures import ThreadPoolExecutor
 
 from sync_gateway import SyncGateway
 from user import User
-from data import Document
+from data import ChannelDoc
 
 
-def test_1():
+@pytest.fixture
+def reset_cluster():
+     from prov.reset_sync_gateway import reset_sync_gateway
+
+
+def test_1(reset_cluster):
 
     sg_ips = [
         "172.23.105.165",
@@ -53,9 +58,9 @@ def test_1():
     print("Adding traun")
     sgs[0].db.add_user(traun)
 
-    abc_docs = [Document(channels=["ABC"], body={"abc_item": "hi abc"}) for _ in range(2356)]
-    nbc_docs = [Document(channels=["NBC"], body={"nbc_item": "hi nbc"}) for _ in range(8198)]
-    cbs_docs = [Document(channels=["CBS"], body={"cbs_item": "hi cbs"}) for _ in range(10)]
+    abc_docs = [ChannelDoc(channels=["ABC"], body={"abc_item": "hi abc"}) for _ in range(2356)]
+    nbc_docs = [ChannelDoc(channels=["NBC"], body={"nbc_item": "hi nbc"}) for _ in range(8198)]
+    cbs_docs = [ChannelDoc(channels=["CBS"], body={"cbs_item": "hi cbs"}) for _ in range(10)]
 
     bulk_docs = [abc_docs, nbc_docs, cbs_docs]
 
