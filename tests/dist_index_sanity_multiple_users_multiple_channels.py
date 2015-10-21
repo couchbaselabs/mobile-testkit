@@ -1,28 +1,19 @@
-import sys
-
-
-sys.path = ["..", "lib"] + sys.path
-sys.path = ["..", "prov"] + sys.path
-sys.path = ["..", "prov", "scripts"] + sys.path
-sys.path = ["..", "data"] + sys.path
-
-# Local
-# PUT /{db}/{local-doc-id}
-# GET /{db}/{local-doc-id}
-# DELETE /{db}/{local-doc-id}
-
-
 import time
-import uuid
-import os
 import pytest
-import concurrent.futures
 
-from concurrent.futures import ThreadPoolExecutor
+from lib.syncgateway import SyncGateway
+from lib.user import User
+from data.data import Doc
 
-from sync_gateway import SyncGateway
-from user import User
-from data import Doc
+
+sg_host_infos = [
+    {"name": "sg1", "ip": "172.23.105.165"},
+    {"name": "sg2", "ip": "172.23.105.166"},
+    {"name": "sg3", "ip": "172.23.105.122"},
+    {"name": "sg4", "ip": "172.23.105.118"}
+]
+
+sgs = [SyncGateway(sg_host_infos, "db") for sg_host_infos in sg_host_infos]
 
 
 @pytest.fixture
@@ -32,14 +23,6 @@ def reset_cluster():
 
 def test_1(reset_cluster):
 
-    sg_ips = [
-        "172.23.105.165",
-        "172.23.105.166",
-        "172.23.105.122",
-        "172.23.105.118",
-    ]
-
-    sgs = [SyncGateway(sg_ip, "db") for sg_ip in sg_ips]
 
     for sg in sgs:
         r = sg.info()

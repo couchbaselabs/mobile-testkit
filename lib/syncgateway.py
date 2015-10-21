@@ -1,25 +1,27 @@
 import requests
-
 import json
+
+import orch.syncgatewayactions
 
 # Server
 # GET /
 # POST db/_session
 # DELETE db/_session
 
-
 class SyncGateway:
 
-    def __init__(self, ip, db_name):
+    def __init__(self, host_info, db_name):
         self.public_port = 4984
         self.admin_port = 4985
-        self.ip = "http://{}".format(ip)
+        self.ip = "http://{}".format(host_info["ip"])
+        self.host_name = host_info["name"]
         self.db = Database(self.ip, self.admin_port, self.public_port, db_name)
 
     def info(self):
         return requests.get("{0}:{1}".format(self.ip, self.public_port))
 
-    #def stop(self):
+    def stop(self):
+        orch.syncgatewayactions.stop_instance(self.host_name)
 
     #def start(self):
 

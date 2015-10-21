@@ -1,7 +1,6 @@
 import sys
 from optparse import OptionParser
 
-import kill_sync_gateway
 
 def main():
 
