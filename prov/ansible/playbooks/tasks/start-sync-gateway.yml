@@ -1,0 +1,14 @@
+---
+# start sync_gateway
+- hosts: sg_pool
+  remote_user: root
+  sudo: true
+  tasks:
+  - name: start sync_gateway service
+    service: name=sync_gateway state=started
+    when: ansible_distribution == "CentOS" and ansible_distribution_major_version == "7"
+  - name: start sync_gateway for CentOS 6
+    shell: /sbin/initctl start sync_gateway
+    when: ansible_distribution == "CentOS" and ansible_distribution_major_version == "6"
+  - name: wait until sync gateway to listen on port
+    wait_for: port=4985 delay=1 timeout=30

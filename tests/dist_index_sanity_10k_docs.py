@@ -2,6 +2,7 @@ import time
 from threading import Thread
 import pytest
 
+from prov.reset_sync_gateway import reset_sync_gateway
 
 from lib.syncgateway import SyncGateway
 from lib.user import User
@@ -19,7 +20,7 @@ sgs = [SyncGateway(sg_host_infos, "db") for sg_host_infos in sg_host_infos]
 
 @pytest.fixture
 def reset_cluster():
-     from prov.reset_sync_gateway import reset_sync_gateway
+    reset_sync_gateway()
 
 
 def doc_spliter(docs, batch_num=100):

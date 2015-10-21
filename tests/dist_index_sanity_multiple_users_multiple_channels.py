@@ -1,6 +1,8 @@
 import time
 import pytest
 
+from prov.reset_sync_gateway import reset_sync_gateway
+
 from lib.syncgateway import SyncGateway
 from lib.user import User
 from data.data import Doc
@@ -18,7 +20,7 @@ sgs = [SyncGateway(sg_host_infos, "db") for sg_host_infos in sg_host_infos]
 
 @pytest.fixture
 def reset_cluster():
-     from prov.reset_sync_gateway import reset_sync_gateway
+    reset_sync_gateway()
 
 
 def test_1(reset_cluster):

@@ -21,10 +21,10 @@ class SyncGateway:
         return requests.get("{0}:{1}".format(self.ip, self.public_port))
 
     def stop(self):
-        orch.syncgatewayactions.stop_instance(self.host_name)
+        orch.syncgatewayactions.stop(self.host_name)
 
-    #def start(self):
-
+    def start(self):
+        orch.syncgatewayactions.start(self.host_name)
 
 # Database
 # GET /{db}

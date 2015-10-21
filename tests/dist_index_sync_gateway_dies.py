@@ -1,6 +1,7 @@
 import pytest
 
 from lib.syncgateway import SyncGateway
+from prov.reset_sync_gateway import reset_sync_gateway
 
 sg_host_infos = [
     {"name": "sg1", "ip": "172.23.105.165"},
@@ -14,7 +15,8 @@ sgs = [SyncGateway(sg_host_infos, "db") for sg_host_infos in sg_host_infos]
 
 @pytest.fixture
 def reset_cluster():
-     from prov.reset_sync_gateway import reset_sync_gateway
+    reset_sync_gateway()
+
 
 def test_1(reset_cluster):
 
@@ -25,5 +27,6 @@ def test_1(reset_cluster):
 
     sgs[0].stop()
     sgs[3].stop()
+    sgs[0].start()
 
 
