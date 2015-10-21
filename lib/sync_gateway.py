@@ -2,8 +2,6 @@ import requests
 
 import json
 
-from requests_futures.sessions import FuturesSession
-
 # Server
 # GET /
 # POST db/_session
@@ -21,6 +19,11 @@ class SyncGateway:
     def info(self):
         return requests.get("{0}:{1}".format(self.ip, self.public_port))
 
+    #def stop(self):
+
+    #def start(self):
+
+
 # Database
 # GET /{db}
 # GET /{db}/_all_docs
@@ -36,7 +39,6 @@ class SyncGateway:
 class Database:
 
     def __init__(self, ip, admin_port, public_port, name):
-        self.__session = FuturesSession(max_workers=10)
         self.ip = ip
         self.public_db_url = "{0}:{1}/{2}".format(self.ip, public_port, name)
         self.admin_db_url = "{0}:{1}/{2}".format(self.ip, admin_port, name)
@@ -93,13 +95,13 @@ class Database:
         json_doc = json.dumps(doc)
         return requests.put("{0}/{1}".format(self.public_db_url, name), headers=headers, data=json_doc)
 
-    def add_user_document(self, name, doc, user):
+    def add_user_document(self, doc_id, doc_body, user):
         headers = {
             "Content-Type": "application/json",
             "Authorization": "Basic {}".format(user.auth)
         }
-        json_doc = json.dumps(doc)
-        return requests.put("{0}/{1}".format(self.public_db_url, name), headers=headers, data=json_doc, timeout=30)
+        json_doc = json.dumps(doc_body)
+        return requests.put("{0}/{1}".format(self.public_db_url, doc_id), headers=headers, data=json_doc, timeout=30)
 
     def add_user_bulk_documents(self, docs, user):
 

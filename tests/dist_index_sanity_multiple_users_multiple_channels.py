@@ -22,7 +22,7 @@ from concurrent.futures import ThreadPoolExecutor
 
 from sync_gateway import SyncGateway
 from user import User
-from data import ChannelDoc
+from data import Doc
 
 
 @pytest.fixture
@@ -58,31 +58,21 @@ def test_1(reset_cluster):
     print("Adding traun")
     sgs[0].db.add_user(traun)
 
-    abc_docs = [ChannelDoc(channels=["ABC"], body={"abc_item": "hi abc"}) for _ in range(2356)]
-    nbc_docs = [ChannelDoc(channels=["NBC"], body={"nbc_item": "hi nbc"}) for _ in range(8198)]
-    cbs_docs = [ChannelDoc(channels=["CBS"], body={"cbs_item": "hi cbs"}) for _ in range(10)]
+    abc_docs = [Doc(channels=["ABC"], body={"abc_item": "hi abc"}) for _ in range(2356)]
+    nbc_docs = [Doc(channels=["NBC"], body={"nbc_item": "hi nbc"}) for _ in range(8198)]
+    cbs_docs = [Doc(channels=["CBS"], body={"cbs_item": "hi cbs"}) for _ in range(10)]
 
-    bulk_docs = [abc_docs, nbc_docs, cbs_docs]
+    r = sgs[0].db.add_user_bulk_documents(abc_docs, seth)
+    assert r.status_code == 201
+    print(r.status_code)
 
-    with ThreadPoolExecutor() as executor:
+    r = sgs[1].db.add_user_bulk_documents(nbc_docs, seth)
+    assert r.status_code == 201
+    print(r.status_code)
 
-        count = 0
-        futures = []
-
-        for bulk_doc in bulk_docs:
-            futures.append(executor.submit(sgs[count].db.add_user_bulk_documents, bulk_doc, seth))
-            count += 1
-
-        for future in concurrent.futures.as_completed(futures):
-            try:
-                response = future.result()
-                print("FUTURE")
-            except Exception as e:
-                print("Future _bulk_docs failed: {}".format(e))
-            else:
-                print(response.status_code)
-                print(response.text)
-
+    r = sgs[2].db.add_user_bulk_documents(cbs_docs, seth)
+    assert r.status_code == 201
+    print(r.status_code)
 
     # discuss appropriate time with team
     time.sleep(30)
