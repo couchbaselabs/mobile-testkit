@@ -9,7 +9,7 @@ def get_vim_ips():
     ips = []
     with open(os.environ["INVENTORY"]) as f:
         for line in f:
-            pattern = "ansible_host="
+            pattern = "ansible_ssh_host="
             if pattern in line:
                 start_idx = line.find(pattern)
                 ip = line[start_idx + len(pattern):len(line) - 1]
@@ -42,7 +42,7 @@ def install_keys(key_name, user_name):
     ips = get_vim_ips()
     reachable_vms, unreachable_vms = check_vms_online(ips)
 
-    if len(reachable_vms) != len(ips):
+    if len(reachable_vms) != len(ips) and len(reachable_vms) != 0:
         print("Could not ping each vm in the cluster: Unreachable {}".format(unreachable_vms))
         sys.exit(1)
 
@@ -50,7 +50,7 @@ def install_keys(key_name, user_name):
         key_name, ips
     ))
 
-    validate = input("Enter 'y' to continue or 'n' to exit: ")
+    validate = raw_input("Enter 'y' to continue or 'n' to exit: ")
     if validate != "y":
         print("Exiting...")
         sys.exit(1)
