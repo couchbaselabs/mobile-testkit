@@ -7,7 +7,6 @@ sg_host_infos = [
     {"name": "sg1", "ip": "172.23.105.165"},
     {"name": "sg2", "ip": "172.23.105.166"},
     {"name": "sg3", "ip": "172.23.105.122"},
-    {"name": "sg4", "ip": "172.23.105.118"}
 ]
 
 sgs = [SyncGateway(sg_host_infos, "db") for sg_host_infos in sg_host_infos]
