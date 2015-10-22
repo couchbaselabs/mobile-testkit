@@ -73,7 +73,7 @@ if __name__ == "__main__":
 
     parser = OptionParser(usage=usage)
 
-    default_sync_gateway_config = os.path.abspath("../ansible/playbooks/files/sync_gateway_config.json")
+    default_sync_gateway_config = os.path.abspath("prov/ansible/playbooks/files/sync_gateway_config.json")
 
     parser.add_option("", "--server-version",
                       action="store", type="string", dest="server_version", default="3.1.1",
