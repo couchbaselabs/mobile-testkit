@@ -1,0 +1,13 @@
+cb1 ansible_ssh_host=172.23.105.164
+
+sg1 ansible_ssh_host=172.23.105.165
+sg2 ansible_ssh_host=172.23.105.166
+sg3 ansible_ssh_host=172.23.105.122
+
+[cb_pool]
+cb1
+
+[sg_pool]
+sg1
+sg2
+sg3
