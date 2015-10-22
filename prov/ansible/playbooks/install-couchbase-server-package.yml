@@ -8,7 +8,6 @@
   connection: local
   tasks:
     - debug: msg="Couchbase Server primary node - {{ couchbase_server_primary_node }}"
-    - shell: echo {{ couchbase_server_primary_node }} > ../../temp_couchbase_server_primary_node
 
 - hosts: cb_pool
   remote_user: root
@@ -35,7 +34,7 @@
     - debug: msg="Downloading Couchbase server v. {{ couchbase_server_package_url }}"
     - name: set couchbase_server_primary_node variable
       set_fact:
-        couchbase_server_primary_node: "{{ lookup('file', '../../temp_couchbase_server_primary_node') }}"
+        couchbase_server_primary_node: "{{ hostvars['cb1']['ansible_ssh_host'] }}"
 
     # Download and install
     - name: Stop Couchbase Service

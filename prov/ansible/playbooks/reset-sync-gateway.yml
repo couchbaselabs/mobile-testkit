@@ -29,7 +29,8 @@
   tasks:
   - name: set couchbase_server_primary_node variable
     set_fact:
-      couchbase_server_primary_node: "{{ lookup('file', '../../temp_couchbase_server_primary_node') }}"
+
+      couchbase_server_primary_node: "{{ hostvars['cb1']['ansible_ssh_host'] }}"
   - name: flush couchbase server bucket 1
     shell: "{{ couchbase_server_home_path }}/bin/couchbase-cli bucket-flush --bucket={{ item }} --force -c {{ couchbase_server_primary_node }}:{{ couchbase_server_admin_port }} --user={{ couchbase_server_admin }} --password={{ couchbase_server_password }}"
     register: bucket_flush
