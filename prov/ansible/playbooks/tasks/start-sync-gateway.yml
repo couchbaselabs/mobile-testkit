@@ -1,6 +1,6 @@
 ---
 # start sync_gateway
-- hosts: sg_pool
+- hosts: sync_gateways
   remote_user: root
   sudo: true
   tasks:

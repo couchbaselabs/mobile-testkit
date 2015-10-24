@@ -4,10 +4,10 @@ sg1 ansible_ssh_host=172.23.105.165 ansible_ssh_user=root ansible_ssh_pass=couch
 sg2 ansible_ssh_host=172.23.105.166 ansible_ssh_user=root ansible_ssh_pass=couchbase
 sg3 ansible_ssh_host=172.23.105.122 ansible_ssh_user=root ansible_ssh_pass=couchbase
 
-[cb_pool]
+[couchbase_servers]
 cb1
 
-[sg_pool]
+[sync_gateways]
 sg1
 sg2
 sg3

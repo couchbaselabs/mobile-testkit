@@ -1,5 +1,5 @@
 ---
-- hosts: cb_pool
+- hosts: couchbase_servers
   remote_user: root
   any_errors_fatal: true
   serial: 1
@@ -9,7 +9,7 @@
   tasks:
     - debug: msg="Couchbase Server primary node - {{ couchbase_server_primary_node }}"
 
-- hosts: cb_pool
+- hosts: couchbase_servers
   remote_user: root
   any_errors_fatal: true
   sudo: true

@@ -3,7 +3,7 @@
 - include: tasks/stop-sync-gateway.yml
 
 # Nuke logs and pindex files
-- hosts: sg_pool
+- hosts: sync_gateways
   remote_user: root
   any_errors_fatal: true
   sudo: true
@@ -14,7 +14,7 @@
     shell: rm -rf /home/sync_gateway/*.pindex
 
 # Flush server buckets
-- hosts: cb_pool
+- hosts: couchbase_servers
   any_errors_fatal: true
   remote_user: root
   sudo: true

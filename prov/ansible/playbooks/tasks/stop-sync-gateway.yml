@@ -1,6 +1,6 @@
 ---
 # Provision sync_gateway_vms
-- hosts: sg_pool
+- hosts: sync_gateways
 
   remote_user: root
   sudo: yes
