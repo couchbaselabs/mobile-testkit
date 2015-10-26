@@ -36,15 +36,10 @@
       set_fact:
         couchbase_server_primary_node: "{{ hostvars['cb1']['ansible_ssh_host'] }}"
 
+    # Remove Couchbase Server
+    - include: tasks/remove-couchbase-server.yml
+
     # Download and install
-    - name: Stop Couchbase Service
-      service: name=couchbase-server state=stopped
-      ignore_errors: yes
-    - name: Uninstall couchbase server
-      shell: rpm -e couchbase-server
-      ignore_errors: yes
-    - name: Remove all couchbase server residue
-      shell: rm -rf /opt/couchbase
     - name: Download couchbase server
       get_url: url={{ couchbase_server_package_url }} dest=/tmp/{{ couchbase_server_package_name }}
     - name: Install Couchbase Server

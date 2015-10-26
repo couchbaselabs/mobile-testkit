@@ -1,0 +1,8 @@
+- name: Stop Couchbase Service
+  service: name=couchbase-server state=stopped
+  ignore_errors: yes
+- name: Uninstall couchbase server
+  shell: rpm -e couchbase-server
+  ignore_errors: yes
+- name: Remove all couchbase server residue
+  shell: rm -rf /opt/couchbase

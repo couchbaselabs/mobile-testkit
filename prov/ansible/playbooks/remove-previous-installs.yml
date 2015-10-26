@@ -1,0 +1,11 @@
+---
+- hosts: sync_gateways:couchbase_servers
+  remote_user: root
+  any_errors_fatal: true
+  sudo: true
+  tasks:
+    # Remove Couchbase Server
+    - include: tasks/remove-couchbase-server.yml
+
+    # Remove sync_gateway
+    - include: tasks/remove-sync-gateway.yml
