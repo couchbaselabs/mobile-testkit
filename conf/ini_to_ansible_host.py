@@ -5,6 +5,7 @@ import ConfigParser
 from optparse import OptionParser
 import install_keys
 
+
 def ini_file_to_dictionary(ini_file):
 
     ini_abs_path = os.path.abspath(ini_file)
@@ -35,6 +36,11 @@ def copy_keys(cbs, sgs, key_name):
 
 
 def ini_to_ansible_host(ini_file, key_name=None):
+
+    print(">>> Using .ini file: {}".format(ini_file))
+
+    if key_name is not None:
+        print(">>> Installing key: {}".format(key_name))
 
     ini_dict = ini_file_to_dictionary(ini_file)
 
@@ -86,7 +92,7 @@ def ini_to_ansible_host(ini_file, key_name=None):
 
 if __name__ == "__main__":
 
-    usage = "usage: ini_to_ansible_host.py --ini-file=<absolute_path_to_ini_file> --install-key=<name_of_public_key>"
+    usage = "usage: ini_to_ansible_host.py --ini-file=<absolute_path_to_ini_file> --install-keys=<name_of_public_key>"
     parser = OptionParser(usage=usage)
 
     parser.add_option(
