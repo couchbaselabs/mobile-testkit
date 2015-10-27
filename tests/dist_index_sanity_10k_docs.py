@@ -10,14 +10,8 @@ from lib.user import User
 
 from data.data import Doc
 
-
-cluster = Cluster("conf/hosts.ini")
-sgs = [SyncGateway(sync_gateway, "db") for sync_gateway in cluster.sync_gateways]
-
-
-@pytest.fixture
-def reset_cluster():
-    reset_sync_gateway()
+from cluster_setup import cluster
+from cluster_setup import reset_cluster
 
 
 def doc_spliter(docs, batch_num=100):
@@ -25,7 +19,7 @@ def doc_spliter(docs, batch_num=100):
         yield docs[i:i+batch_num]
 
 
-def issue_requests_for_docs(docs, user):
+def issue_requests_for_docs(sgs, docs, user):
     count = 0
     for doc in docs:
         sg_index = count % len(sgs)
@@ -35,9 +29,11 @@ def issue_requests_for_docs(docs, user):
         print(r.status_code)
 
 
-def test_1(reset_cluster):
+def test_1(cluster, reset_cluster):
 
     start = time.time()
+
+    sgs = [SyncGateway(sync_gateway, "db") for sync_gateway in cluster.sync_gateways]
 
     for sg in sgs:
         r = sg.info()
@@ -59,7 +55,7 @@ def test_1(reset_cluster):
 
     threads = []
     for batch in batches:
-        threads.append(Thread(target=issue_requests_for_docs, args=(batch, seth)))
+        threads.append(Thread(target=issue_requests_for_docs, args=(sgs, batch, seth)))
 
     for thread in threads:
         thread.start()

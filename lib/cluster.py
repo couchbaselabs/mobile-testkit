@@ -1,14 +1,13 @@
 import os
 
-from conf.ini_to_ansible_host import ini_to_ansible_host
+from conf.host_info import get_host_info
 
 
 class Cluster:
     def __init__(self, ini_file):
 
-        sgs, cbs = ini_to_ansible_host(ini_file)
+        sgs, cbs = get_host_info(ini_file)
 
         self.sync_gateways = sgs
         self.servers = cbs
-
 
