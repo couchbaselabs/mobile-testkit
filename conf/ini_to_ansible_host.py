@@ -34,7 +34,7 @@ def copy_keys(cbs, sgs, key_name):
     install_keys.install_keys(key_name, "root", ips)
 
 
-def ini_to_ansible_host(ini_file, key_name):
+def ini_to_ansible_host(ini_file, key_name=None):
 
     ini_dict = ini_file_to_dictionary(ini_file)
 
@@ -46,8 +46,8 @@ def ini_to_ansible_host(ini_file, key_name):
         vm = ini_dict["couchbase_servers"][cb]
         ip = ini_dict["vms"][vm]
         cbs.append({"name": cb, "ip": ip})
-        host_entry = "{0} ansible_ssh_host={1} ansible_ssh_user={2} ansible_ssh_pass={3}\n".format(
-            cb, ip, ini_dict["common"]["ssh_user"], ini_dict["common"]["ssh_password"],
+        host_entry = "{0} ansible_ssh_host={1}\n".format(
+            cb, ip
         )
         host_file.append(host_entry)
 
@@ -55,8 +55,8 @@ def ini_to_ansible_host(ini_file, key_name):
         vm = ini_dict["sync_gateways"][sg]
         ip = ini_dict["vms"][vm]
         sgs.append({"name": sg, "ip": ip})
-        host_entry = "{0} ansible_ssh_host={1} ansible_ssh_user={2} ansible_ssh_pass={3}\n".format(
-            sg, ip, ini_dict["common"]["ssh_user"], ini_dict["common"]["ssh_password"],
+        host_entry = "{0} ansible_ssh_host={1}\n".format(
+            sg, ip,
         )
         host_file.append(host_entry)
 
