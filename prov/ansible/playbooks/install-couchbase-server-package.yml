@@ -57,7 +57,7 @@
       register: cb_major_version
 
     - name: Wait for node to be listening on port 8091
-      wait_for: port=8091 delay=5
+      wait_for: port=8091 delay=5 timeout=30
 
     - name: Configure cluster settings
       shell: "{{ couchbase_server_home_path }}/bin/couchbase-cli cluster-init -c {{ couchbase_server_node }}:{{ couchbase_server_admin_port }} --user={{ couchbase_server_admin }} --password={{ couchbase_server_password }} --cluster-init-username={{ couchbase_server_admin }} --cluster-init-password={{ couchbase_server_password }} --cluster-init-port={{couchbase_server_admin_port}} --cluster-init-ramsize={{ couchbase_server_cluster_ram }}"
@@ -67,7 +67,7 @@
       when: "{{ cb_major_version['stdout'] }} != 2"
 
     - name: Wait for node to be listening on port 8091
-      wait_for: port=8091 delay=5
+      wait_for: port=8091 delay=5 timeout=30
 
     - name: Join additional cluster nodes
       shell: "{{ couchbase_server_home_path }}/bin/couchbase-cli server-add -c {{ couchbase_server_primary_node }}:{{ couchbase_server_admin_port }} --user={{ couchbase_server_admin }} --password={{ couchbase_server_password }} --server-add={{ couchbase_server_node }}:{{ couchbase_server_admin_port }} --server-add-username={{ couchbase_server_admin }} --server-add-password={{ couchbase_server_password }}"

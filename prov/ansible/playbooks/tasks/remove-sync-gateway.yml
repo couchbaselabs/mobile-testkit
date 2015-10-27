@@ -2,10 +2,13 @@
 - name: stop sync_gateway service
   service: name=sync_gateway state=stopped
   when: ansible_distribution == "CentOS" and ansible_distribution_major_version == "7"
+  ignore_errors: yes
+
 - name: stop sync_gateway for CentOS 6
   shell: /sbin/initctl stop sync_gateway
   when: ansible_distribution == "CentOS" and ansible_distribution_major_version == "6"
   ignore_errors: yes
+
 - name: verify sync_gateway not listening on port
   wait_for: port=4985 delay=1 state=stopped
 
@@ -18,6 +21,8 @@
 # Remove sync_gateway user
 - name: remove sync gateway user
   user: name=sync_gateway state=absent remove=yes force=yes
+  ignore_errors: yes
+
 
 # Delete downloaded source
 - name: delete previous sync gateway
