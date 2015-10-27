@@ -15,35 +15,41 @@ import ansible_runner
 
 # TODO Add SG package
 
+
 def provision_cluster(couchbase_server_config, sync_gateway_config):
+
+    print "\n>>> Host info:\n"
+
+    with open("temp_ansible_hosts", "r") as ansible_hosts:
+        print(ansible_hosts.read())
 
     print(couchbase_server_config)
     print(sync_gateway_config)
 
-    print ">>> Validating..."
+    print(">>> Validating...")
 
     if not couchbase_server_config.is_valid():
-        print "Invalid server provisioning configuration. Exiting ..."
+        print("Invalid server provisioning configuration. Exiting ...")
         sys.exit(1)
 
     if not sync_gateway_config.is_valid():
-        print "Invalid sync_gateway provisioning configuration. Exiting ..."
+        print("Invalid sync_gateway provisioning configuration. Exiting ...")
         sys.exit(1)
 
-    print ">>> Provisioning cluster..."
+    print(">>> Provisioning cluster...")
 
     # Get server base url and package name
     server_base_url, server_package_name = couchbase_server_config.server_base_url_and_package()
 
-    print ">>> Server package: {0}/{1}".format(server_base_url, server_package_name)
+    print(">>> Server package: {0}/{1}".format(server_base_url, server_package_name))
 
     if sync_gateway_config.branch is not None:
-        print ">>> Building sync_gateway: branch={}".format(sync_gateway_config.branch)
+        print(">>> Building sync_gateway: branch={}".format(sync_gateway_config.branch))
     else:
         # TODO
-        print ">>> sync_gateway package"
+        print(">>> sync_gateway package")
 
-    print ">>> Using sync_gateway config: {}".format(sync_gateway_config.config_path)
+    print(">>> Using sync_gateway config: {}".format(sync_gateway_config.config_path))
 
     # Reset previous installs
     ansible_runner.run_ansible_playbook("remove-previous-installs.yml")

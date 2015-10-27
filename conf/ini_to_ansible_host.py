@@ -3,7 +3,7 @@ import os
 import ConfigParser
 
 from optparse import OptionParser
-
+import install_keys
 
 def ini_file_to_dictionary(ini_file):
 
@@ -28,7 +28,13 @@ def ini_file_to_dictionary(ini_file):
     return section_options
 
 
-def ini_to_ansible_host(ini_file):
+def copy_keys(cbs, sgs, key_name):
+    ips = [i["ip"] for i in cbs]
+    ips.extend([i["ip"] for i in sgs])
+    install_keys.install_keys(key_name, "root", ips)
+
+
+def ini_to_ansible_host(ini_file, key_name):
 
     ini_dict = ini_file_to_dictionary(ini_file)
 
@@ -56,6 +62,10 @@ def ini_to_ansible_host(ini_file):
 
     host_file.append("\n")
 
+    if key_name is not None:
+        print("Installing key...")
+        copy_keys(cbs, sgs, key_name)
+
     host_file.append("[couchbase_servers]\n")
     for cb in cbs:
         host_file.append("{}\n".format(cb["name"]))
@@ -76,7 +86,7 @@ def ini_to_ansible_host(ini_file):
 
 if __name__ == "__main__":
 
-    usage = "usage: ini_to_ansible_host.py --ini-file=<absolute_path_to_ini_file>"
+    usage = "usage: ini_to_ansible_host.py --ini-file=<absolute_path_to_ini_file> --install-key=<name_of_public_key>"
     parser = OptionParser(usage=usage)
 
     parser.add_option(
@@ -88,7 +98,16 @@ if __name__ == "__main__":
         default=""
     )
 
+    parser.add_option(
+        "", "--install-keys",
+        action="store",
+        type="string",
+        dest="key_to_install",
+        help="public ssh key to install",
+        default=None
+    )
+
     cmd_args = sys.argv[1:]
     (opts, args) = parser.parse_args(cmd_args)
 
-    ini_to_ansible_host(opts.ini_file)
+    ini_to_ansible_host(opts.ini_file, opts.key_to_install)
