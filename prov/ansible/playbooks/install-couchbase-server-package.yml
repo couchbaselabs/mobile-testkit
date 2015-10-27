@@ -10,7 +10,7 @@
 
     couchbase_server_admin: Administrator
     couchbase_server_password: password
-    couchbase_server_cluster_ram: 3072
+    couchbase_server_cluster_ram: 2048
     couchbase_server_admin_port: 8091
     couchbase_server_home_path: /opt/couchbase
 
