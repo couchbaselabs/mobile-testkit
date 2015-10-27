@@ -7,12 +7,10 @@ from lib.cluster import Cluster
 @pytest.fixture()
 def cluster():
     c = Cluster("conf/hosts.ini")
+    c.reset()
     return c
 
 
-@pytest.fixture()
-def reset_cluster():
-    reset_sync_gateway()
 
 
 

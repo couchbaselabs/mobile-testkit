@@ -4,15 +4,12 @@ import pytest
 
 from prov.reset_sync_gateway import reset_sync_gateway
 
-from lib.cluster import Cluster
 from lib.syncgateway import SyncGateway
 from lib.user import User
 
 from data.data import Doc
 
 from cluster_setup import cluster
-from cluster_setup import reset_cluster
-
 
 def doc_spliter(docs, batch_num=100):
     for i in xrange(0, len(docs), batch_num):
@@ -29,7 +26,7 @@ def issue_requests_for_docs(sgs, docs, user):
         print(r.status_code)
 
 
-def test_1(cluster, reset_cluster):
+def test_1(cluster):
 
     start = time.time()
 
