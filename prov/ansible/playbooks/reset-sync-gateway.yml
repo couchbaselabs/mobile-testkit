@@ -22,15 +22,12 @@
     couchbase_server_home_path: /opt/couchbase
     couchbase_server_bucket_name2: bucket-1
     couchbase_server_bucket_name3: bucket-2
-    couchbase_server_node: "{{ hostvars['cb1']['ansible_ssh_host'] }}"
+    couchbase_server_primary_node: "{{ hostvars['cb1']['ansible_ssh_host'] }}"
     couchbase_server_admin_port: 8091
     couchbase_server_admin: Administrator
     couchbase_server_password: password
   tasks:
-  - name: set couchbase_server_primary_node variable
-    set_fact:
 
-      couchbase_server_primary_node: "{{ hostvars['cb1']['ansible_ssh_host'] }}"
   - name: flush couchbase server bucket 1
     shell: "{{ couchbase_server_home_path }}/bin/couchbase-cli bucket-flush --bucket={{ item }} --force -c {{ couchbase_server_primary_node }}:{{ couchbase_server_admin_port }} --user={{ couchbase_server_admin }} --password={{ couchbase_server_password }}"
     register: bucket_flush

@@ -11,7 +11,7 @@
     "cluster_config": {
         "server":"http://{{ couchbase_server_primary_node }}:8091",
         "data_dir":".",
-        "bucket":"bucket-1"
+        "bucket":"data-bucket"
     },
     "databases":{
         "db":{
@@ -20,7 +20,7 @@
                 "num_shards":64
             },
             "server":"http://{{ couchbase_server_primary_node }}:8091",
-            "bucket":"bucket-1",
+            "bucket":"data-bucket",
             "users":{
                 "GUEST":{
                     "disabled":true,
@@ -31,7 +31,7 @@
             },
             "channel_index":{
                 "server":"http://{{ couchbase_server_primary_node }}:8091",
-                "bucket":"bucket-2",
+                "bucket":"index-bucket",
                 "writer":true
             }
         }

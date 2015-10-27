@@ -2,16 +2,6 @@
 - hosts: couchbase_servers
   remote_user: root
   any_errors_fatal: true
-  serial: 1
-  vars:
-    couchbase_server_primary_node: "{{ hostvars['cb1']['ansible_ssh_host'] }}"
-  connection: local
-  tasks:
-    - debug: msg="Couchbase Server primary node - {{ couchbase_server_primary_node }}"
-
-- hosts: couchbase_servers
-  remote_user: root
-  any_errors_fatal: true
   sudo: true
   vars:
     couchbase_server_package_base_url:
@@ -24,17 +14,21 @@
     couchbase_server_admin_port: 8091
     couchbase_server_home_path: /opt/couchbase
 
-    couchbase_server_node: "{{ couchbase_server_primary_node }}"
+    # Primary node
+    couchbase_server_primary_node: "{{ hostvars['cb1']['ansible_ssh_host'] }}"
+
+    # Current node
+    couchbase_server_node: "{{ hostvars[inventory_hostname]['ansible_ssh_host'] }}"
+
     couchbase_server_bucket_type: couchbase
     couchbase_server_bucket_port: 11211
     couchbase_server_bucket_replica: 1
     couchbase_server_bucket_ram: 1024
 
   tasks:
+    - debug: msg="Couchbase server primary node {{ couchbase_server_primary_node }}"
+    - debug: msg="Couchbase server node {{ couchbase_server_node }}"
     - debug: msg="Downloading Couchbase server v. {{ couchbase_server_package_url }}"
-    - name: set couchbase_server_primary_node variable
-      set_fact:
-        couchbase_server_primary_node: "{{ hostvars['cb1']['ansible_ssh_host'] }}"
 
     # Remove Couchbase Server
     - include: tasks/remove-couchbase-server.yml
@@ -86,6 +80,6 @@
     - name: Create new buckets
       shell: "{{ couchbase_server_home_path }}/bin/couchbase-cli bucket-create -c {{ couchbase_server_node }}:{{ couchbase_server_admin_port }} --user={{ couchbase_server_admin }} --password={{ couchbase_server_password }} --bucket={{ item }} --enable-flush=1 --bucket-type={{ couchbase_server_bucket_type }} --bucket-port={{ couchbase_server_bucket_port }} --bucket-ramsize={{ couchbase_server_bucket_ram }} --bucket-replica={{ couchbase_server_bucket_replica }}"
       with_items:
-        - bucket-1
-        - bucket-2
+        - data-bucket
+        - index-bucket
       when: couchbase_server_node == couchbase_server_primary_node

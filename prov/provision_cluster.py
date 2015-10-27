@@ -48,14 +48,14 @@ def provision_cluster(couchbase_server_config, sync_gateway_config):
     # Reset previous installs
     ansible_runner.run_ansible_playbook("remove-previous-installs.yml")
 
-    ## Install dependencies
-    #ansible_runner.run_ansible_playbook("install-common-tools.yml")
+    # Install dependencies
+    ansible_runner.run_ansible_playbook("install-common-tools.yml")
 
     # Install server package
-    #install_couchbase_server.install_couchbase_server(couchbase_server_config)
+    install_couchbase_server.install_couchbase_server(couchbase_server_config)
 
     # Install sync_gateway
-    #install_sync_gateway.install_sync_gateway(sync_gateway_config)
+    install_sync_gateway.install_sync_gateway(sync_gateway_config)
 
 if __name__ == "__main__":
     usage = """usage: python provision_cluster.py
