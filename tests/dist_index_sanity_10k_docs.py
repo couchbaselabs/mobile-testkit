@@ -1,73 +1,41 @@
 import time
-from threading import Thread
-import pytest
-
-from prov.reset_sync_gateway import reset_sync_gateway
-
-from lib.syncgateway import SyncGateway
-from lib.user import User
-
-from data.data import Doc
+from lib.admin import Admin
 
 from cluster_setup import cluster
-
-def doc_spliter(docs, batch_num=100):
-    for i in xrange(0, len(docs), batch_num):
-        yield docs[i:i+batch_num]
-
-
-def issue_requests_for_docs(sgs, docs, user):
-    count = 0
-    for doc in docs:
-        sg_index = count % len(sgs)
-        doc_name, doc_body = doc.name_and_body()
-        r = sgs[sg_index].db.add_user_document(doc_name, doc_body, user)
-        assert(r.status_code == 201)
-        print(r.status_code)
 
 
 def test_1(cluster):
 
+    cluster.reset()
+
     start = time.time()
+    sgs = cluster.sync_gateways
 
-    sgs = [SyncGateway(sync_gateway, "db") for sync_gateway in cluster.sync_gateways]
+    admin = Admin(sgs[0])
+    admin.register_user(target=sgs[0], db="db", name="seth", password="password", channels=["ABC"])
+    admin.register_user(target=sgs[0], db="db", name="admin", password="password", channels=["*"])
 
-    for sg in sgs:
-        r = sg.info()
-        print(r.text)
-        assert r.status_code == 200
+    users = admin.get_users()
+    print users
 
-    seth = User("seth", "password", ["ABC"])
-    sgs[0].db.add_user(seth)
+    seth = users["seth"]
+    admin = users["admin"]
 
-    no_channel_docs = [Doc(channels=[], body={"abc_item": "hi abc"}) for _ in range(3000)]
-    channel_docs = [Doc(channels=["ABC"], body={"abc_item": "hi abc"}) for _ in range(7000)]
+    seth.add_docs(7000, uuid_names=True)
+    admin.add_docs(3000, uuid_names=True)
 
-    no_channel_docs.extend(channel_docs)
+    assert len(seth.docs_info) == 7000
+    assert len(admin.docs_info) == 3000
 
-    docs = no_channel_docs
-    print(len(docs))
+    seth_changes = seth.get_changes()
+    admin_changes = admin.get_changes()
 
-    batches = doc_spliter(docs)
+    print("Number of changes(seth): " + str(len(seth_changes["results"])))
+    print("Number of changes(admin): " + str(len(admin_changes["results"])))
 
-    threads = []
-    for batch in batches:
-        threads.append(Thread(target=issue_requests_for_docs, args=(sgs, batch, seth)))
-
-    for thread in threads:
-        thread.start()
-    for thread in threads:
-        thread.join()
-
-    print("Channel[ABC] Created: {}".format(len(channel_docs)))
-
-    time.sleep(10)
-
-    c_r = sgs[0].db.get_user_changes(seth)
-    number_of_changes = len(c_r["results"])
+    assert len(seth_changes["results"]) == 7000
+    assert len(admin_changes["results"]) == 10000
 
     end = time.time()
     print("TIME:{}s".format(end - start))
 
-    print("CHANGES: {}".format(number_of_changes))
-    assert number_of_changes == 7000

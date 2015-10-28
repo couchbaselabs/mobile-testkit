@@ -1,7 +1,9 @@
-import os
-from prov.reset_sync_gateway import reset_sync_gateway
 
 from conf.host_info import get_host_info
+
+from prov.reset_sync_gateway import reset_sync_gateway
+
+from lib.syncgateway import SyncGateway
 
 
 class Cluster:
@@ -9,7 +11,7 @@ class Cluster:
 
         sgs, cbs = get_host_info(ini_file)
 
-        self.sync_gateways = sgs
+        self.sync_gateways = [SyncGateway(sg) for sg in sgs]
         self.servers = cbs
 
     def reset(self):
