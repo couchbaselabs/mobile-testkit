@@ -1,75 +1,52 @@
 import time
-import pytest
 
-from prov.reset_sync_gateway import reset_sync_gateway
-
-from lib.syncgateway import SyncGateway
 from lib.user import User
-from data.data import Doc
+from lib.admin import Admin
 
+from cluster_setup import cluster
 
-sg_host_infos = [
-    {"name": "sg1", "ip": "172.23.105.165"},
-    {"name": "sg2", "ip": "172.23.105.166"},
-    {"name": "sg3", "ip": "172.23.105.122"},
-]
+def test_1(cluster):
 
-sgs = [SyncGateway(sg_host_infos, "db") for sg_host_infos in sg_host_infos]
+    cluster.reset()
 
+    start = time.time()
+    sgs = cluster.sync_gateways
 
-@pytest.fixture
-def reset_cluster():
-    reset_sync_gateway()
+    admin = Admin(sgs[0])
+    admin.register_user(target=sgs[0], db="db", name="seth", password="password", channels=["ABC"])
+    admin.register_user(target=sgs[1], db="db", name="adam", password="password", channels=["NBC", "CBS"])
+    admin.register_user(target=sgs[1], db="db", name="traun", password="password", channels=["ABC", "NBC", "CBS"])
 
+    users = admin.get_users()
 
-def test_1(reset_cluster):
+    seth = users["seth"]
+    adam = users["adam"]
+    traun = users["traun"]
 
+    # use bulk docs
+    seth.add_docs(2356, uuid_names=True)  # ABC
+    adam.add_docs(8198, uuid_names=True)  # NBC, CBS
+    traun.add_docs(2999, uuid_names=True)  # ABC, NBC, CBS
 
-    for sg in sgs:
-        r = sg.info()
-        print(r.text)
-        assert r.status_code == 200
-
-    seth = User("seth", "password", ["ABC"])
-    print("Adding seth")
-    sgs[0].db.add_user(seth)
-
-    adam = User("adam", "password", ["NBC", "CBS"])
-    print("Adding adam")
-    sgs[0].db.add_user(adam)
-
-    traun = User("traun", "password", ["ABC", "NBC", "CBS"])
-    print("Adding traun")
-    sgs[0].db.add_user(traun)
-
-    abc_docs = [Doc(channels=["ABC"], body={"abc_item": "hi abc"}) for _ in range(2356)]
-    nbc_docs = [Doc(channels=["NBC"], body={"nbc_item": "hi nbc"}) for _ in range(8198)]
-    cbs_docs = [Doc(channels=["CBS"], body={"cbs_item": "hi cbs"}) for _ in range(10)]
-
-    r = sgs[0].db.add_user_bulk_documents(abc_docs, seth)
-    assert r.status_code == 201
-    print(r.status_code)
-
-    r = sgs[1].db.add_user_bulk_documents(nbc_docs, seth)
-    assert r.status_code == 201
-    print(r.status_code)
-
-    r = sgs[2].db.add_user_bulk_documents(cbs_docs, seth)
-    assert r.status_code == 201
-    print(r.status_code)
+    assert len(seth.docs_info) == 2356
+    assert len(adam.docs_info) == 8198
+    assert len(traun.docs_info) == 2999
 
     # discuss appropriate time with team
-    time.sleep(30)
+    time.sleep(5)
+
+    c_seth = seth.get_changes()
+    assert len(c_seth["results"]) == 5355
+
+    c_adam = adam.get_changes()
+    assert len(c_adam["results"]) == 11197
 
     # ABC
-    c_seth = sgs[0].db.get_user_changes(seth)
-    assert len(c_seth["results"]) == 2356
+    c_traun = traun.get_changes()
+    assert len(c_traun["results"]) == 13553
 
-    # NBC + CBS
-    c_adam = sgs[0].db.get_user_changes(adam)
-    assert len(c_adam["results"]) == 8208
+    end = time.time()
+    print("TIME:{}s".format(end - start))
 
-    # ABC + NBC + CBS
-    c_traun = sgs[0].db.get_user_changes(traun)
-    assert len(c_traun["results"]) == 10564
+
 
