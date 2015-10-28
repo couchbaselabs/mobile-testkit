@@ -1,15 +1,13 @@
 ---
-- hosts: sg_pool
+- hosts: sync_gateways
   remote_user: root
   sudo: true
   vars:
     writer: "false"
     sync_gateway_config_filepath:
-  tasks:
-  - name: set couchbase_server_primary_node variable
-    set_fact:
-      couchbase_server_primary_node: "{{ hostvars['cb1']['ansible_ssh_host'] }}"
+    couchbase_server_primary_node: "{{ hostvars['cb1']['ansible_ssh_host'] }}"
 
+  tasks:
   - name: stop any sync gateway services that might be running
     service: name=sync_gateway pattern=sync_gateway state=stopped
     ignore_errors: yes
@@ -34,7 +32,7 @@
  #   shell: sed -i '/\[Service\]/a Environment="GODEBUG=gctrace=1"' /usr/lib/systemd/system/sync_gateway.service
  # - name: reload systemctl daemon to pick up file changes
  #   shell: systemctl daemon-reload
- # - name: restart sync gateway service after service file change
- #   service: name=sync_gateway state=restarted
+#  - name: restart sync gateway service after service file change
+#    service: name=sync_gateway state=restarted
   - name: wait until sync gateway to listen on port
     wait_for: port=4985 delay=1 timeout=30

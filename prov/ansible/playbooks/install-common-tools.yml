@@ -1,5 +1,5 @@
 ---
-- hosts: sg_pool:cb_pool
+- hosts: sync_gateways:couchbase_servers
   remote_user: root
   any_errors_fatal: true
   sudo: true

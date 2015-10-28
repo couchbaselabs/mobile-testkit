@@ -1,5 +1,5 @@
 ---
-- hosts: sg_pool
+- hosts: sync_gateways
   remote_user: root
   any_errors_fatal: true
   vars:

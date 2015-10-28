@@ -1,15 +1,5 @@
 ---
-- hosts: cb_pool
-  remote_user: root
-  any_errors_fatal: true
-  serial: 1
-  vars:
-    couchbase_server_primary_node: "{{ hostvars['cb1']['ansible_ssh_host'] }}"
-  connection: local
-  tasks:
-    - debug: msg="Couchbase Server primary node - {{ couchbase_server_primary_node }}"
-
-- hosts: cb_pool
+- hosts: couchbase_servers
   remote_user: root
   any_errors_fatal: true
   sudo: true
@@ -20,31 +10,30 @@
 
     couchbase_server_admin: Administrator
     couchbase_server_password: password
-    couchbase_server_cluster_ram: 3072
+    couchbase_server_cluster_ram: 2048
     couchbase_server_admin_port: 8091
     couchbase_server_home_path: /opt/couchbase
 
-    couchbase_server_node: "{{ couchbase_server_primary_node }}"
+    # Primary node
+    couchbase_server_primary_node: "{{ hostvars['cb1']['ansible_ssh_host'] }}"
+
+    # Current node
+    couchbase_server_node: "{{ hostvars[inventory_hostname]['ansible_ssh_host'] }}"
+
     couchbase_server_bucket_type: couchbase
     couchbase_server_bucket_port: 11211
     couchbase_server_bucket_replica: 1
     couchbase_server_bucket_ram: 1024
 
   tasks:
+    - debug: msg="Couchbase server primary node {{ couchbase_server_primary_node }}"
+    - debug: msg="Couchbase server node {{ couchbase_server_node }}"
     - debug: msg="Downloading Couchbase server v. {{ couchbase_server_package_url }}"
-    - name: set couchbase_server_primary_node variable
-      set_fact:
-        couchbase_server_primary_node: "{{ hostvars['cb1']['ansible_ssh_host'] }}"
+
+    # Remove Couchbase Server
+    - include: tasks/remove-couchbase-server.yml
 
     # Download and install
-    - name: Stop Couchbase Service
-      service: name=couchbase-server state=stopped
-      ignore_errors: yes
-    - name: Uninstall couchbase server
-      shell: rpm -e couchbase-server
-      ignore_errors: yes
-    - name: Remove all couchbase server residue
-      shell: rm -rf /opt/couchbase
     - name: Download couchbase server
       get_url: url={{ couchbase_server_package_url }} dest=/tmp/{{ couchbase_server_package_name }}
     - name: Install Couchbase Server
@@ -68,7 +57,7 @@
       register: cb_major_version
 
     - name: Wait for node to be listening on port 8091
-      wait_for: port=8091 delay=5
+      wait_for: port=8091 delay=5 timeout=30
 
     - name: Configure cluster settings
       shell: "{{ couchbase_server_home_path }}/bin/couchbase-cli cluster-init -c {{ couchbase_server_node }}:{{ couchbase_server_admin_port }} --user={{ couchbase_server_admin }} --password={{ couchbase_server_password }} --cluster-init-username={{ couchbase_server_admin }} --cluster-init-password={{ couchbase_server_password }} --cluster-init-port={{couchbase_server_admin_port}} --cluster-init-ramsize={{ couchbase_server_cluster_ram }}"
@@ -78,7 +67,7 @@
       when: "{{ cb_major_version['stdout'] }} != 2"
 
     - name: Wait for node to be listening on port 8091
-      wait_for: port=8091 delay=5
+      wait_for: port=8091 delay=5 timeout=30
 
     - name: Join additional cluster nodes
       shell: "{{ couchbase_server_home_path }}/bin/couchbase-cli server-add -c {{ couchbase_server_primary_node }}:{{ couchbase_server_admin_port }} --user={{ couchbase_server_admin }} --password={{ couchbase_server_password }} --server-add={{ couchbase_server_node }}:{{ couchbase_server_admin_port }} --server-add-username={{ couchbase_server_admin }} --server-add-password={{ couchbase_server_password }}"
@@ -91,6 +80,6 @@
     - name: Create new buckets
       shell: "{{ couchbase_server_home_path }}/bin/couchbase-cli bucket-create -c {{ couchbase_server_node }}:{{ couchbase_server_admin_port }} --user={{ couchbase_server_admin }} --password={{ couchbase_server_password }} --bucket={{ item }} --enable-flush=1 --bucket-type={{ couchbase_server_bucket_type }} --bucket-port={{ couchbase_server_bucket_port }} --bucket-ramsize={{ couchbase_server_bucket_ram }} --bucket-replica={{ couchbase_server_bucket_replica }}"
       with_items:
-        - bucket-1
-        - bucket-2
+        - data-bucket
+        - index-bucket
       when: couchbase_server_node == couchbase_server_primary_node

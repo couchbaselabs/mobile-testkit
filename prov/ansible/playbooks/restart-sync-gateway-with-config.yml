@@ -1,4 +1,4 @@
-- hosts: sg_nodes
+- hosts: sync_gateways
 
   vars:
     sync_gateway_config_file_name:
