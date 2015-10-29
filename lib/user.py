@@ -55,7 +55,6 @@ class User:
                 doc = future_to_docs[future]
                 try:
                     doc_id = future.result()
-                    print(doc_id)
                 except Exception as exc:
                     print('Generated an exception while adding doc_id : %s %s' % (doc, exc))
                 else:
