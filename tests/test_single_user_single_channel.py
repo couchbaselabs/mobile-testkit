@@ -27,6 +27,8 @@ def test_1(cluster):
     assert len(seth.docs_info) == 7000
     assert len(admin.docs_info) == 3000
 
+    time.sleep(10)
+
     seth_changes = seth.get_changes()
     admin_changes = admin.get_changes()
 

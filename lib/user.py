@@ -111,6 +111,7 @@ class User:
             r = requests.get("{}/{}/_changes?include_docs=true".format(self.target.url, self.db), headers=self._headers)
         else:
             r = requests.get("{}/{}/_changes".format(self.target.url, self.db), headers=self._headers)
+        r.raise_for_status()
         return json.loads(r.text)
 
     def verify_all_docs_from_changes_feed(self, num_revision, doc_name_pattern):
