@@ -16,7 +16,9 @@ class SyncGateway:
         self.host_name = target["name"]
 
     def info(self):
-        return requests.get(self.url)
+        r = requests.get(self.url)
+        r.raise_for_status()
+        return r.text
 
     def stop(self):
         orch.syncgatewayactions.stop(self.host_name)

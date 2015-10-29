@@ -1,7 +1,7 @@
 ---
 # Provision sync_gateway_vms
 - hosts: sync_gateways
-
+  any_errors_fatal: true
   remote_user: root
   sudo: yes
 

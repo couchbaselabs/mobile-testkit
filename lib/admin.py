@@ -23,7 +23,7 @@ class Admin:
         headers = {"Content-Type": "application/json"}
         data = {"name": name, "password": password, "admin_channels": channels}
         r = requests.put("{0}/{1}/_user/{2}".format(self.admin_url, db, name), headers=headers, data=json.dumps(data))
-        assert r.status_code == 200 or r.status_code == 201
+        r.raise_for_status()
 
         self.users[name] = User(target, db, name, password, channels)
 

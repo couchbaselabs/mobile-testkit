@@ -13,9 +13,10 @@ def test_1(cluster):
     sgs = cluster.sync_gateways
 
     admin = Admin(sgs[0])
+
     admin.register_user(target=sgs[0], db="db", name="seth", password="password", channels=["ABC"])
-    admin.register_user(target=sgs[1], db="db", name="adam", password="password", channels=["NBC", "CBS"])
-    admin.register_user(target=sgs[1], db="db", name="traun", password="password", channels=["ABC", "NBC", "CBS"])
+    admin.register_user(target=sgs[0], db="db", name="adam", password="password", channels=["NBC", "CBS"])
+    admin.register_user(target=sgs[0], db="db", name="traun", password="password", channels=["ABC", "NBC", "CBS"])
 
     users = admin.get_users()
 
@@ -23,7 +24,7 @@ def test_1(cluster):
     adam = users["adam"]
     traun = users["traun"]
 
-    # use bulk docs
+    # TODO use bulk docs
     seth.add_docs(2356, uuid_names=True)  # ABC
     adam.add_docs(8198, uuid_names=True)  # NBC, CBS
     traun.add_docs(2999, uuid_names=True)  # ABC, NBC, CBS

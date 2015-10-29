@@ -12,15 +12,15 @@ from collections import defaultdict
 
 
 class User:
-    def __init__(self, target, db, name, password, channels, ):
+    def __init__(self, target, db, name, password, channels):
 
         self.name = name
         self.password = password
         self.db = db
         self.docs_info = {}
         self.channels = list(channels)
+        self.target = target
 
-        self._url = target.url
         auth = base64.b64encode("{0}:{1}".format(self.name, self.password).encode())
         self._auth = auth.decode("UTF-8")
         self._headers = {'Content-Type': 'application/json', "Authorization": "Basic {}".format(self._auth)}
@@ -28,19 +28,14 @@ class User:
     def __str__(self):
         return "USER: name={0} password={1} db={2} channels={3}".format(self.name, self.password, self.db, self.channels)
 
-    def set_target(self, target):
-        self._url = target.url
 
     def add_doc(self, doc_id):
-        doc_url = self._url + "/" + self.db + "/" + doc_id
+        doc_url = self.target.url + "/" + self.db + "/" + doc_id
         doc_body = {}
         doc_body["updates"] = 0
         if self.channels:
             doc_body["channels"] = self.channels
         body = json.dumps(doc_body)
-
-        print(body)
-
         resp = requests.put(doc_url, headers=self._headers, data=body)
         if resp.status_code == 201:
             self.docs_info[doc_id] = 0  # init doc revisions to 0
@@ -70,7 +65,7 @@ class User:
     def update_doc(self, doc_id, num_revision=1):
 
         for i in range(num_revision):
-            doc_url = self._url + '/' + self.db + '/' + doc_id
+            doc_url = self.target.url + '/' + self.db + '/' + doc_id
             resp = requests.get(doc_url, headers=self._headers)
     
             if resp.status_code == 200:
@@ -113,9 +108,9 @@ class User:
 
     def get_changes(self, with_docs=False):
         if with_docs:
-            r = requests.get("{}/{}/_changes?include_docs=true".format(self._url, self.db), headers=self._headers)
+            r = requests.get("{}/{}/_changes?include_docs=true".format(self.target.url, self.db), headers=self._headers)
         else:
-            r = requests.get("{}/{}/_changes".format(self._url, self.db), headers=self._headers)
+            r = requests.get("{}/{}/_changes".format(self.target.url, self.db), headers=self._headers)
         return json.loads(r.text)
 
     def verify_all_docs_from_changes_feed(self, num_revision, doc_name_pattern):
