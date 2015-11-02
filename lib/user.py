@@ -9,6 +9,7 @@ import base64
 import uuid
 import re
 from collections import defaultdict
+from responseprinter import ResponsePrinter
 
 
 class User:
@@ -17,28 +18,31 @@ class User:
         self.name = name
         self.password = password
         self.db = db
-        self.docs_info = {}
+        self.cache = {}
         self.channels = list(channels)
         self.target = target
 
         auth = base64.b64encode("{0}:{1}".format(self.name, self.password).encode())
         self._auth = auth.decode("UTF-8")
         self._headers = {'Content-Type': 'application/json', "Authorization": "Basic {}".format(self._auth)}
+        self._r_printer = ResponsePrinter()
 
     def __str__(self):
-        return "USER: name={0} password={1} db={2} channels={3}".format(self.name, self.password, self.db, self.channels)
-
+        return "USER: name={0} password={1} db={2} channels={3} cache_num={4}".format(self.name, self.password, self.db, self.channels, len(self.cache))
 
     def add_doc(self, doc_id):
         doc_url = self.target.url + "/" + self.db + "/" + doc_id
-        doc_body = {}
+        doc_body = dict()
         doc_body["updates"] = 0
         if self.channels:
             doc_body["channels"] = self.channels
         body = json.dumps(doc_body)
+
         resp = requests.put(doc_url, headers=self._headers, data=body)
+        self._r_printer.print_status(resp)
+
         if resp.status_code == 201:
-            self.docs_info[doc_id] = 0  # init doc revisions to 0
+            self.cache[doc_id] = 0  # init doc revisions to 0
         resp.raise_for_status()
         return doc_id         
 
@@ -57,8 +61,7 @@ class User:
                     doc_id = future.result()
                 except Exception as exc:
                     print('Generated an exception while adding doc_id : %s %s' % (doc, exc))
-                else:
-                    print "Document:", doc, "added successfully"
+
         return True
 
     def update_doc(self, doc_id, num_revision=1):
@@ -76,7 +79,7 @@ class User:
                 if put_resp.status_code == 201:
                     data = put_resp.json()
                     if data["rev"]:
-                        self.docs_info[doc_id] = data["rev"]  # init doc revisions to 0
+                        self.cache[doc_id] = data["rev"]  # init doc revisions to 0
                     else:
                         print "Error: Did not fine _rev after Update response"
                 put_resp.raise_for_status()
@@ -84,7 +87,7 @@ class User:
                 
     def update_docs(self, num_revs_per_doc=1):
         with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
-            future_to_docs = {executor.submit(self.update_doc, doc_id, num_revs_per_doc): doc_id for doc_id in self.docs_info.keys()}
+            future_to_docs = {executor.submit(self.update_doc, doc_id, num_revs_per_doc): doc_id for doc_id in self.cache.keys()}
             
             for future in concurrent.futures.as_completed(future_to_docs):
                 doc = future_to_docs[future]
@@ -113,6 +116,15 @@ class User:
         r.raise_for_status()
         return json.loads(r.text)
 
+    def get_doc_ids_from_changes(self):
+
+        changes = self.get_changes()
+        results = changes["results"]
+
+        ids = [result["id"] for result in results]
+
+        return ids
+
     def verify_all_docs_from_changes_feed(self, num_revision, doc_name_pattern):
         status_num_docs = status_revisions = status_content = True
         p = re.compile(doc_name_pattern)
@@ -125,18 +137,18 @@ class User:
                 docs[obj['id']].append(obj['doc']['_rev'])
                 docs[obj['id']].append(obj['doc']['updates'])
         
-        print "Num doc created", len(self.docs_info.keys())
+        print "Num doc created", len(self.cache.keys())
         print "Num docs found", len(docs.keys())
         
-        if len(self.docs_info.keys()) == len(docs.keys()):
+        if len(self.cache.keys()) == len(docs.keys()):
             print "Success, found expected num docs"
         else:
             print "Error: Num docs did not match"
             status_num_docs = False
 
         for doc_id in docs.keys():
-            if doc_id in self.docs_info.keys():
-                if docs[doc_id][0] == self.docs_info[doc_id]:
+            if doc_id in self.cache.keys():
+                if docs[doc_id][0] == self.cache[doc_id]:
                     print "Revision matched for doc_id", doc_id
                 else:
                     print "Error, Revision did not match", doc_id

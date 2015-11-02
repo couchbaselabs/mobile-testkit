@@ -1,4 +1,5 @@
 import time
+import itertools
 
 from lib.user import User
 from lib.admin import Admin
@@ -29,9 +30,9 @@ def test_1(cluster):
     adam.add_docs(8198, uuid_names=True)  # NBC, CBS
     traun.add_docs(2999, uuid_names=True)  # ABC, NBC, CBS
 
-    assert len(seth.docs_info) == 2356
-    assert len(adam.docs_info) == 8198
-    assert len(traun.docs_info) == 2999
+    assert len(seth.cache) == 2356
+    assert len(adam.cache) == 8198
+    assert len(traun.cache) == 2999
 
     # discuss appropriate time with team
     time.sleep(5)
@@ -39,12 +40,27 @@ def test_1(cluster):
     c_seth = seth.get_changes()
     assert len(c_seth["results"]) == 5355
 
-    c_adam = adam.get_changes()
-    assert len(c_adam["results"]) == 11197
+    # verify number of changes
+    seth_changes_doc_ids = seth.get_doc_ids_from_changes()
+    print("seth number of changes: {}".format(len(seth_changes_doc_ids)))
+    assert len(seth_changes_doc_ids) == 5355
 
-    # ABC
-    c_traun = traun.get_changes()
-    assert len(c_traun["results"]) == 13553
+    adam_changes_doc_ids = adam.get_doc_ids_from_changes()
+    print("adam number of changes: {}".format(len(adam_changes_doc_ids)))
+    assert len(adam_changes_doc_ids) == 11197
+
+    traun_changes_doc_ids = traun.get_doc_ids_from_changes()
+    print("traun number of changes: {}".format(len(traun_changes_doc_ids)))
+    assert len(traun_changes_doc_ids) == 13553
+
+    #verify id of docs
+    seth_ids = list(itertools.chain(seth.cache.keys(), traun.cache.keys()))
+    adam_ids = list(itertools.chain(adam.cache.keys(), traun.cache.keys()))
+    traun_ids = list(itertools.chain(seth.cache.keys(), adam.cache.keys(), traun.cache.keys()))
+
+    assert set(seth_changes_doc_ids) == set(seth_ids)
+    assert set(adam_changes_doc_ids) == set(adam_ids)
+    assert set(traun_changes_doc_ids) == set(traun_ids)
 
     end = time.time()
     print("TIME:{}s".format(end - start))
