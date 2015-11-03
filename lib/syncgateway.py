@@ -1,12 +1,7 @@
 import requests
-import json
 
 import orch.syncgatewayactions
 
-# Server
-# GET /
-# POST db/_session
-# DELETE db/_session
 
 class SyncGateway:
 
@@ -23,8 +18,8 @@ class SyncGateway:
     def stop(self):
         orch.syncgatewayactions.stop(self.host_name)
 
-    def start(self):
-        orch.syncgatewayactions.start(self.host_name)
+    def start(self, config):
+        orch.syncgatewayactions.start(self.host_name, config)
 
     def restart(self, config):
         orch.syncgatewayactions.restart(self.host_name, config)

@@ -37,7 +37,7 @@
   sudo: true
 
   vars:
-    sync_gateway_config_filepath: "files/sync_gateway_config.json"
+    sync_gateway_config_filepath:
     couchbase_server_primary_node: "{{ hostvars['cb1']['ansible_ssh_host'] }}"
 
   tasks:

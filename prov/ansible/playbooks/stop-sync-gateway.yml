@@ -1,0 +1,8 @@
+---
+- hosts: sync_gateways
+  any_errors_fatal: true
+  remote_user: root
+  sudo: yes
+
+  tasks:
+  - include: tasks/stop-sync-gateway.yml

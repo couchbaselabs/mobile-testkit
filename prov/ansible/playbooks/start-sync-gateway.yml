@@ -1,0 +1,12 @@
+---
+- hosts: sync_gateways
+  remote_user: root
+  any_errors_fatal: true
+  sudo: true
+
+  vars:
+    sync_gateway_config_filepath:
+    couchbase_server_primary_node: "{{ hostvars['cb1']['ansible_ssh_host'] }}"
+
+  tasks:
+  - include: tasks/start-sync-gateway.yml

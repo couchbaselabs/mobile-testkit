@@ -15,9 +15,12 @@ def run_ansible_playbook(script_name, extra_vars=None):
         sys.exit(1)
 
     if extra_vars is not None:
-        subprocess.call(["ansible-playbook", "-i", "../../../temp_ansible_hosts", script_name, "--extra-vars", extra_vars])
+        status = subprocess.call(["ansible-playbook", "-i", "../../../temp_ansible_hosts", script_name, "--extra-vars", extra_vars])
     else:
-        subprocess.call(["ansible-playbook", "-i", "../../../temp_ansible_hosts", script_name])
+        status = subprocess.call(["ansible-playbook", "-i", "../../../temp_ansible_hosts", script_name])
+
+    if status != 0:
+        sys.exit(1)
 
     os.chdir("../../../")
 
@@ -31,9 +34,12 @@ def run_targeted_ansible_playbook(script_name, target_name, extra_vars=None):
         sys.exit(1)
 
     if extra_vars is not None:
-        subprocess.call(["ansible-playbook", "-i", "../../../temp_ansible_hosts", script_name, "--extra-vars", extra_vars, "--limit", target_name])
+        status = subprocess.call(["ansible-playbook", "-i", "../../../temp_ansible_hosts", script_name, "--extra-vars", extra_vars, "--limit", target_name])
     else:
-        subprocess.call(["ansible-playbook", "-i", "../../../temp_ansible_hosts", script_name, "--limit", target_name])
+        status = subprocess.call(["ansible-playbook", "-i", "../../../temp_ansible_hosts", script_name, "--limit", target_name])
+
+    if status != 0:
+        sys.exit(1)
 
     os.chdir("../../../")
 

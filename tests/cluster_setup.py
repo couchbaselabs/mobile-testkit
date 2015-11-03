@@ -1,6 +1,5 @@
 import pytest
 
-from prov.reset_sync_gateway import reset_sync_gateway
 from lib.cluster import Cluster
 
 
