@@ -1,17 +1,12 @@
 ---
-# Kill sync_gateway,
-- include: tasks/stop-sync-gateway.yml
-
-# Nuke logs and pindex files
+# Kill sync_gateway
 - hosts: sync_gateways
-  remote_user: root
   any_errors_fatal: true
-  sudo: true
+  remote_user: root
+  sudo: yes
+
   tasks:
-  - name: delete sync_gateway logs
-    shell: rm -f /home/sync_gateway/logs/*.log
-  - name: delete sync_gateway pindex files
-    shell: rm -rf /home/sync_gateway/*.pindex
+  - include: tasks/stop-sync-gateway.yml
 
 # Flush server buckets
 - hosts: couchbase_servers
@@ -36,4 +31,14 @@
     with_items: bucket_flush.results
 
 # Start sync_gateway
-- include: tasks/start-sync-gateway.yml
+- hosts: sync_gateways
+  remote_user: root
+  any_errors_fatal: true
+  sudo: true
+
+  vars:
+    sync_gateway_config_filepath: "files/sync_gateway_config.json"
+    couchbase_server_primary_node: "{{ hostvars['cb1']['ansible_ssh_host'] }}"
+
+  tasks:
+  - include: tasks/start-sync-gateway.yml

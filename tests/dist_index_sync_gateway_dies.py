@@ -1,31 +1,17 @@
 import pytest
 
-from lib.syncgateway import SyncGateway
-from prov.reset_sync_gateway import reset_sync_gateway
+from cluster_setup import cluster
 
-sg_host_infos = [
-    {"name": "sg1", "ip": "172.23.105.165"},
-    {"name": "sg2", "ip": "172.23.105.166"},
-    {"name": "sg3", "ip": "172.23.105.122"},
-]
+def test_1(cluster):
 
-sgs = [SyncGateway(sg_host_infos, "db") for sg_host_infos in sg_host_infos]
+    cluster.reset()
 
+    for sg in cluster.sync_gateways:
+        print(sg.info())
 
-@pytest.fixture
-def reset_cluster():
-    reset_sync_gateway()
+    cluster.sync_gateways[0].restart("sync_gateway_config_test.json")
 
 
-def test_1(reset_cluster):
 
-    for sg in sgs:
-        r = sg.info()
-        print(r.text)
-        assert r.status_code == 200
-
-    sgs[0].stop()
-    sgs[3].stop()
-    sgs[0].start()
 
 

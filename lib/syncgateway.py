@@ -25,3 +25,7 @@ class SyncGateway:
 
     def start(self):
         orch.syncgatewayactions.start(self.host_name)
+
+    def restart(self, config):
+        orch.syncgatewayactions.restart(self.host_name, config)
+
