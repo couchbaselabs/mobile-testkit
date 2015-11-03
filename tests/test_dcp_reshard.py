@@ -32,7 +32,7 @@ def test_dcp_reshard(cluster):
         futures[executor.submit(seth.add_docs, 1999, True)] = "seth"
 
         # take down a sync_gateway
-        time.sleep(4)
+        time.sleep(7)
         cluster.sync_gateways[0].stop()
 
         for future in concurrent.futures.as_completed(futures):
@@ -44,7 +44,10 @@ def test_dcp_reshard(cluster):
             else:
                 print "Docs added!!"
 
-    # verify number of changes
+    # TODO better way to do this
+    time.sleep(20)
+
+    #verify number of changes
     traun_changes_doc_ids = traun.get_doc_ids_from_changes()
     print("traun number of changes: {}".format(len(traun_changes_doc_ids)))
     assert len(traun_changes_doc_ids) == 8001

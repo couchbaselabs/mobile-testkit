@@ -2,3 +2,4 @@
 
 python -m pytest --capture=no tests/test_single_user_single_channel.py
 python -m pytest --capture=no tests/test_multiple_users_multiple_channels.py
+python -m pytest --capture=no tests/test_dcp_reshard.py

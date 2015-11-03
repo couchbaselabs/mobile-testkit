@@ -20,15 +20,8 @@
     couchbase_server_admin: Administrator
     couchbase_server_password: password
   tasks:
+  - include: tasks/flush-server-buckets.yml
 
-  - name: flush couchbase server bucket 1
-    shell: "{{ couchbase_server_home_path }}/bin/couchbase-cli bucket-flush --bucket={{ item }} --force -c {{ couchbase_server_primary_node }}:{{ couchbase_server_admin_port }} --user={{ couchbase_server_admin }} --password={{ couchbase_server_password }}"
-    register: bucket_flush
-    with_items:
-      - data-bucket
-      - index-bucket
-  - debug: var={{item.stdout}}
-    with_items: bucket_flush.results
 
 # Start sync_gateway
 - hosts: sync_gateways

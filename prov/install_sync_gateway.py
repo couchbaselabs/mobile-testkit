@@ -78,21 +78,31 @@ def install_sync_gateway(sync_gateway_config):
         print "Invalid server provisioning configuration. Exiting ..."
         sys.exit(1)
 
-    if sync_gateway_config.branch != "":
-        print "Build from source with branch: {}".format(sync_gateway_config.branch)
-        ansible_runner.run_ansible_playbook("build-sync-gateway-source.yml", "branch={}".format(sync_gateway_config.branch))
-    else:
-        print "Build stable"
-        sync_gateway_base_url, sync_gateway_package_name = sync_gateway_config.sync_gateway_base_url_and_package()
+    # if sync_gateway_config.branch != "":
+    #     print "Build from source with branch: {}".format(sync_gateway_config.branch)
+    #     ansible_runner.run_ansible_playbook("build-sync-gateway-source.yml", "branch={}".format(sync_gateway_config.branch))
+    # else:
+    #     print "Build stable"
+    #     sync_gateway_base_url, sync_gateway_package_name = sync_gateway_config.sync_gateway_base_url_and_package()
+    #     ansible_runner.run_ansible_playbook(
+    #         "install-sync-gateway-package.yml",
+    #         "couchbase_sync_gateway_package_base_url={0} couchbase_sync_gateway_package={1}".format(
+    #             sync_gateway_base_url,
+    #             sync_gateway_package_name
+    #         )
+    #     )
+
+    if sync_gateway_config.branch is not None:
         ansible_runner.run_ansible_playbook(
-            "install-sync-gateway-package.yml",
-            "couchbase_sync_gateway_package_base_url={0} couchbase_sync_gateway_package={1}".format(
-                sync_gateway_base_url,
-                sync_gateway_package_name
+            "install-sync-gateway-source.yml",
+            "sync_gateway_config_filepath={0} branch={1}".format(
+                sync_gateway_config.config_path,
+                sync_gateway_config.branch
             )
         )
-
-    ansible_runner.run_ansible_playbook("install-sync-gateway-service.yml", "sync_gateway_config_filepath={}".format(sync_gateway_config.config_path))
+    else:
+        # TODO
+        print("TODO: Install Package")
 
 if __name__ == "__main__":
     usage = """usage: python install_sync_gateway.py
@@ -100,7 +110,7 @@ if __name__ == "__main__":
     --config-file-path=<path_to_local_sync_gateway_config>
     """
 
-    default_sync_gateway_config = os.path.abspath("prov/ansible/playbooks/files/sync_gateway_config.json")
+    default_sync_gateway_config = os.path.abspath("conf/sync_gateway_default.json")
 
     parser = OptionParser(usage=usage)
 
