@@ -1,5 +1,7 @@
 import time
 
+import concurrent.futures
+
 from lib.admin import Admin
 
 from cluster_setup import cluster
@@ -19,20 +21,36 @@ def test_dcp_reshard(cluster):
     traun = users["traun"]
     seth = users["seth"]
 
-    # Make concurrent and take down a sync_gateway during adds
-    print(">>> Adding Traun docs")
-    traun.add_docs(8001, uuid_names=True, bulk=True)  # ABC, NBC, CBS
+    with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
 
-    print(">>> Adding Seth docs")
-    seth.add_docs(1999, uuid_names=True)  # FOX
+        futures = dict()
+
+        print(">>> Adding Traun docs")  # ABC, NBC, CBS
+        futures[executor.submit(traun.add_docs, 8001, True, True)] = "traun"
+
+        print(">>> Adding Seth docs")  # FOX
+        futures[executor.submit(seth.add_docs, 1999, True)] = "seth"
+
+        # take down a sync_gateway
+        time.sleep(4)
+        cluster.sync_gateways[0].stop()
+
+        for future in concurrent.futures.as_completed(futures):
+            try:
+                user = futures[future]
+                print("{} Completed:".format(user))
+            except Exception as e:
+                print("Exception thrown while adding docs: {}".format(e))
+            else:
+                print "Docs added!!"
 
     # verify number of changes
     traun_changes_doc_ids = traun.get_doc_ids_from_changes()
-    print("seth number of changes: {}".format(len(traun_changes_doc_ids)))
+    print("traun number of changes: {}".format(len(traun_changes_doc_ids)))
     assert len(traun_changes_doc_ids) == 8001
 
     seth_changes_doc_ids = seth.get_doc_ids_from_changes()
-    print("traun number of changes: {}".format(len(seth_changes_doc_ids)))
+    print("seth number of changes: {}".format(len(seth_changes_doc_ids)))
     assert len(seth_changes_doc_ids) == 1999
 
     total_time = time.time() - start
