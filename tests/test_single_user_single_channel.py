@@ -6,7 +6,7 @@ from cluster_setup import cluster
 
 def test_1(cluster):
 
-    cluster.reset()
+    cluster.reset("sync_gateway_default.json")
 
     start = time.time()
     sgs = cluster.sync_gateways

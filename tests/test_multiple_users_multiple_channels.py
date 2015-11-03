@@ -8,7 +8,7 @@ from cluster_setup import cluster
 
 def test_1(cluster):
 
-    cluster.reset()
+    cluster.reset("sync_gateway_default.json")
 
     start = time.time()
     sgs = cluster.sync_gateways
@@ -36,9 +36,6 @@ def test_1(cluster):
 
     # discuss appropriate time with team
     time.sleep(5)
-
-    c_seth = seth.get_changes()
-    assert len(c_seth["results"]) == 5355
 
     # verify number of changes
     seth_changes_doc_ids = seth.get_doc_ids_from_changes()

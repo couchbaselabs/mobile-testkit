@@ -40,27 +40,60 @@ class User:
 
         resp = requests.put(doc_url, headers=self._headers, data=body)
         self._r_printer.print_status(resp)
+        resp.raise_for_status()
 
         if resp.status_code == 201:
             self.cache[doc_id] = 0  # init doc revisions to 0
-        resp.raise_for_status()
+
         return doc_id         
 
-    def add_docs(self, num_docs, uuid_names=False):
+    def add_bulk_docs(self, doc_ids):
+        doc_list = []
+        for doc_id in doc_ids:
+            if self.channels:
+                doc = {"_id": doc_id, "channels": self.channels}
+            else:
+                doc = {"_id": doc_id}
+            doc_list.append(doc)
+
+        docs = dict()
+        docs["docs"] = doc_list
+
+        data = json.dumps(docs)
+        r = requests.post("{0}/{1}/_bulk_docs".format(self.target.url, self.db), headers=self._headers, data=data)
+        self._r_printer.print_status(r)
+        if r.status_code == 201:
+            for doc_id in doc_ids:
+                self.cache[doc_id] = 0
+
+        return doc_list
+
+    def add_docs(self, num_docs, uuid_names=False, bulk=False):
 
         if uuid_names:
             doc_names = [str(uuid.uuid4()) for _ in range(num_docs)]
         else:
             doc_names = ["test-" + str(i) for i in range(num_docs)]
 
-        with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
-            future_to_docs = {executor.submit(self.add_doc, doc): doc for doc in doc_names}
-            for future in concurrent.futures.as_completed(future_to_docs):
-                doc = future_to_docs[future]
-                try:
-                    doc_id = future.result()
-                except Exception as exc:
-                    print('Generated an exception while adding doc_id : %s %s' % (doc, exc))
+        if not bulk:
+            with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
+                future_to_docs = {executor.submit(self.add_doc, doc): doc for doc in doc_names}
+                for future in concurrent.futures.as_completed(future_to_docs):
+                    doc = future_to_docs[future]
+                    try:
+                        doc_id = future.result()
+                    except Exception as exc:
+                        print('Generated an exception while adding doc_id : %s %s' % (doc, exc))
+        else:
+            print(">>> Adding bulk docs ...")
+            with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
+                future = [executor.submit(self.add_bulk_docs, doc_names)]
+                for f in concurrent.futures.as_completed(future):
+                    try:
+                        doc_list = f.result()
+                        #print(doc_list)
+                    except Exception as e:
+                        print("Error adding bulk docs: {}".format(e))
 
         return True
 
