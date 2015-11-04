@@ -13,7 +13,7 @@ from cluster_setup import cluster
 def test_update_docs_multiple_users_multiple_channels(cluster):
 
     start = time.time()
-    cluster.reset()
+    cluster.reset("sync_gateway_default.json")
     num_docs = 100
     num_revisions = 10
     username = "User-1"
@@ -34,7 +34,7 @@ def test_update_docs_multiple_users_multiple_channels(cluster):
     # Not using bulk docs
     single_user.add_docs(num_docs)
 
-    assert len(single_user.docs_info) == num_docs
+    assert len(single_user.cache) == num_docs
 
     # let SG catch up with all the changes
     time.sleep(5)
@@ -44,7 +44,8 @@ def test_update_docs_multiple_users_multiple_channels(cluster):
     time.sleep(10)
 
     doc_name_pattern = "test-"
-    assert(single_user.verify_all_docs_from_changes_feed(num_revisions, doc_name_pattern))
+    status = single_user.verify_all_docs_from_changes_feed(num_revisions, doc_name_pattern)
+    assert status
 
     end = time.time()
     print("TIME:{}s".format(end - start))
