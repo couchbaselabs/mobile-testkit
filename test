@@ -1,5 +1,2 @@
 #!/usr/bin/env bash
-
-python2.7 -m pytest --capture=no --junitxml=results.xml tests/test_single_user_single_channel.py
-python2.7 -m pytest --capture=no --junitxml=results.xml tests/test_multiple_users_multiple_channels.py
-python2.7 -m pytest --capture=no --junitxml=results.xml tests/test_dcp_reshard.py
+python2.7 -m pytest --capture=no --junitxml=results.xml 

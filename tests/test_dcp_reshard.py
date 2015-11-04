@@ -1,12 +1,13 @@
 import time
 
+import pytest
 import concurrent.futures
 
 from lib.admin import Admin
 
 from cluster_setup import cluster
 
-
+@pytest.mark.extendedsanity
 def test_dcp_reshard(cluster):
 
     cluster.reset("sync_gateway_default.json")

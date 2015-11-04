@@ -62,6 +62,8 @@ class User:
         data = json.dumps(docs)
         r = requests.post("{0}/{1}/_bulk_docs".format(self.target.url, self.db), headers=self._headers, data=data)
         self._r_printer.print_status(r)
+        r.raise_for_status()
+
         if r.status_code == 201:
             for doc_id in doc_ids:
                 self.cache[doc_id] = 0
