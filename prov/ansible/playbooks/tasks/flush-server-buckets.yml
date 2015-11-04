@@ -1,8 +1,19 @@
-- name: flush couchbase server buckets
-  shell: "{{ couchbase_server_home_path }}/bin/couchbase-cli bucket-flush --bucket={{ item }} --force -c {{ couchbase_server_primary_node }}:{{ couchbase_server_admin_port }} --user={{ couchbase_server_admin }} --password={{ couchbase_server_password }}"
+# Delete buckets
+- debug: msg={{ couchbase_server_primary_node }}
+- name: Delete buckets
+  shell: "{{ couchbase_server_home_path }}/bin/couchbase-cli bucket-delete --cluster={{ couchbase_server_primary_node }}:{{ couchbase_server_admin_port }} --user={{ couchbase_server_admin }} --password={{ couchbase_server_password }} --bucket={{ item }}"
   register: bucket_flush
   with_items:
     - data-bucket
     - index-bucket
-- debug: var={{item.stdout}}
-  with_items: bucket_flush.results
+  when: couchbase_server_node == couchbase_server_primary_node
+
+# Create buckets and wait
+- name: Create new buckets
+  shell: "{{ couchbase_server_home_path }}/bin/couchbase-cli bucket-create --cluster={{ couchbase_server_primary_node }}:{{ couchbase_server_admin_port }} --user={{ couchbase_server_admin }} --password={{ couchbase_server_password }} --bucket={{ item }} --bucket-type={{ couchbase_server_bucket_type }} --bucket-port={{ couchbase_server_bucket_port }} --bucket-ramsize={{ couchbase_server_bucket_ram }} --bucket-replica={{ couchbase_server_bucket_replica }} --wait"
+  with_items:
+    - data-bucket
+    - index-bucket
+  when: couchbase_server_node == couchbase_server_primary_node
+
+

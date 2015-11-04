@@ -14,11 +14,22 @@
   remote_user: root
   sudo: true
   vars:
-    couchbase_server_home_path: /opt/couchbase
+    # Primary node
     couchbase_server_primary_node: "{{ hostvars['cb1']['ansible_ssh_host'] }}"
+
+    # Current node
+    couchbase_server_node: "{{ hostvars[inventory_hostname]['ansible_ssh_host'] }}"
+
+    couchbase_server_home_path: /opt/couchbase
     couchbase_server_admin_port: 8091
     couchbase_server_admin: Administrator
     couchbase_server_password: password
+
+    couchbase_server_bucket_type: couchbase
+    couchbase_server_bucket_port: 11211
+    couchbase_server_bucket_replica: 1
+    couchbase_server_bucket_ram: 1024
+
   tasks:
   - include: tasks/flush-server-buckets.yml
 

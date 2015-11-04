@@ -1,8 +1,5 @@
 import os
-import subprocess
 import sys
-import urlparse
-import httplib
 from optparse import OptionParser
 
 import install_sync_gateway
