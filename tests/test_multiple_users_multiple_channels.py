@@ -35,7 +35,7 @@ def test_1(cluster):
     assert len(traun.cache) == 2999
 
     # discuss appropriate time with team
-    time.sleep(5)
+    time.sleep(10)
 
     # verify number of changes
     seth_changes_doc_ids = seth.get_doc_ids_from_changes()

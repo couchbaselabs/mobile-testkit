@@ -6,7 +6,6 @@ import ansible_runner
 
 
 class SyncGatewayConfig:
-
     def __init__(self,
                  branch,
                  dev_build_url,
@@ -77,27 +76,32 @@ class SyncGatewayConfig:
             return self._base_url_package_for_sync_gateway_dev_build(self._dev_build_url, self._dev_build_number)
 
     def is_valid(self):
-        if self._version is None and self._branch is None and self.dev_build_url is None:
-            print "You must provide a version / build or branch to build for sync_gateway"
+        if self._version is not None and self._build_number is not None:
+            assert self._dev_build_url is None
+            assert self._dev_build_number is None
+            assert self._branch is None
+        elif self._dev_build_url is not None and self._dev_build_number is not None:
+            assert self._version is None
+            assert self._build_number is None
+            assert self._branch is None
+        elif self._branch is not None:
+            assert self._dev_build_url is None
+            assert self._dev_build_number is None
+            assert self._version is None
+            assert self._build_number is None
+        else:
+            print "You must provide a (version and build number) or (dev url and dev build number) or branch to build for sync_gateway"
             return False
-        if self._branch is not None and (self._version is not None or self._build_number is not None):
-            print "Specify --branch or --version, not both"
-            return False
-        if self._version is not None and self._build_number is None:
-            print "Must specify a build number for sync_gateway version"
-            return False
-        if self._version is None and self._build_number is not None:
-            print "Please specify both a version and build number for sync_gateway build"
-            return False
+
         if not os.path.isfile(self._config_path):
             print "Could not find sync_gateway config file: {}".format(self._config_path)
             print "Try to use an absolute path."
             return False
+
         return True
 
 
 def install_sync_gateway(sync_gateway_config):
-
     print(sync_gateway_config)
 
     if not sync_gateway_config.is_valid():
@@ -150,7 +154,8 @@ if __name__ == "__main__":
                       help="sync_gateway build to download")
 
     parser.add_option("", "--config-file-path",
-                      action="store", type="string", dest="sync_gateway_config_file", default=default_sync_gateway_config,
+                      action="store", type="string", dest="sync_gateway_config_file",
+                      default=default_sync_gateway_config,
                       help="path to your sync_gateway_config file")
 
     parser.add_option("", "--branch",
@@ -179,3 +184,4 @@ if __name__ == "__main__":
     )
 
     install_sync_gateway(sync_gateway_install_config)
+

@@ -81,7 +81,7 @@ if __name__ == "__main__":
     default_sync_gateway_config = os.path.abspath("conf/sync_gateway_default.json")
 
     parser.add_option("", "--server-version",
-                      action="store", type="string", dest="server_version", default="3.1.1",
+                      action="store", type="string", dest="server_version", default=None,
                       help="server version to download")
 
     parser.add_option("", "--server-build",
@@ -109,7 +109,7 @@ if __name__ == "__main__":
                       help="path to your sync_gateway_config file")
 
     parser.add_option("", "--sync-gateway-branch",
-                      action="store", type="string", dest="source_branch", default="master",
+                      action="store", type="string", dest="source_branch", default=None,
                       help="sync_gateway branch to checkout and build")
 
     arg_parameters = sys.argv[1:]
