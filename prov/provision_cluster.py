@@ -12,7 +12,6 @@ import ansible_runner
 
 # TODO Add SG package
 
-
 def provision_cluster(couchbase_server_config, sync_gateway_config):
 
     print "\n>>> Host info:\n"
@@ -97,6 +96,14 @@ if __name__ == "__main__":
                       action="store", type="string", dest="sync_gateway_build", default=None,
                       help="sync_gateway build to download")
 
+    parser.add_option("", "--sync-gateway-dev-build-url",
+                      action="store", type="string", dest="sync_gateway_dev_build_url", default=None,
+                      help="sync_gateway dev build url to download")
+
+    parser.add_option("", "--sync-gateway-dev-build-number",
+                      action="store", type="string", dest="sync_gateway_dev_build_number", default=None,
+                      help="sync_gateway dev build number")
+
     parser.add_option("", "--sync-gateway-config-file",
                       action="store", type="string", dest="sync_gateway_config_file", default=default_sync_gateway_config,
                       help="path to your sync_gateway_config file")
@@ -117,6 +124,8 @@ if __name__ == "__main__":
     sync_gateway_config = SyncGatewayConfig(
         version=opts.sync_gateway_version,
         build_number=opts.sync_gateway_build,
+        dev_build_url=opts.sync_gateway_dev_build_url,
+        dev_build_number=opts.sync_gateway_dev_build_number,
         branch=opts.source_branch,
         config_path=opts.sync_gateway_config_file
     )

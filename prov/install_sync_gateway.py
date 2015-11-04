@@ -9,62 +9,88 @@ class SyncGatewayConfig:
 
     def __init__(self,
                  branch,
+                 dev_build_url,
+                 dev_build_number,
                  version,
                  build_number,
                  config_path):
-        self.__version = version
-        self.__build_number = build_number
-        self.__branch = branch
-        self.__config_path = config_path
+        self._dev_build_url = dev_build_url
+        self._dev_build_number = dev_build_number
+        self._version = version
+        self._build_number = build_number
+        self._branch = branch
+        self._config_path = config_path
 
     @property
-    def version(self):
-        return self.__version
+    def dev_build_url(self):
+        return self._dev_build_url
+
+    @property
+    def dev_build_number(self):
+        return self._dev_build_number
 
     @property
     def build_number(self):
-        return self.__build_number
+        return self._build_number
+
+    @property
+    def version(self):
+        return self._version
+
+    @property
+    def build_number(self):
+        return self._build_number
 
     @property
     def branch(self):
-        return self.__branch
+        return self._branch
 
     @property
     def config_path(self):
-        return self.__config_path
+        return self._config_path
 
     def __str__(self):
         output = "\n  sync_gateway configuration\n"
         output += "  ------------------------------------------\n"
-        output += "  version:      {}\n".format(self.__version)
-        output += "  build number: {}\n".format(self.__build_number)
-        output += "  branch:       {}\n".format(self.__branch)
-        output += "  config path:  {}\n".format(self.__config_path)
+        output += "  version:          {}\n".format(self._version)
+        output += "  build number:     {}\n".format(self._build_number)
+        output += "  dev build url:    {}\n".format(self._dev_build_url)
+        output += "  dev build number: {}\n".format(self._dev_build_number)
+        output += "  branch:           {}\n".format(self._branch)
+        output += "  config path:      {}\n".format(self._config_path)
         return output
 
-    def __base_url_package_for_sync_gateway(self, version, build):
+    def _base_url_package_for_sync_gateway_dev_build(self, dev_build_url, dev_build_number):
+        base_url = "http://latestbuilds.hq.couchbase.com/couchbase-sync-gateway/0.0.1/{0}/0.0.1-{1}".format(dev_build_url, dev_build_number)
+        package_name = "couchbase-sync-gateway-centos_community_0.0.1-{0}_x86_64.tar.gz".format(dev_build_number)
+        return base_url, package_name
+
+    def _base_url_package_for_sync_gateway(self, version, build):
         base_url = "http://latestbuilds.hq.couchbase.com/couchbase-sync-gateway/release/{0}/{1}-{2}".format(version, version, build)
         package_name = "couchbase-sync-gateway-enterprise_{0}-{1}_x86_64.rpm".format(version, build)
         return base_url, package_name
 
-    def sync_gateway_base_url_and_package(self):
-        return self.__base_url_package_for_sync_gateway(self.__version, self.__build_number)
+    def sync_gateway_base_url_and_package(self, dev_build=False):
+        if not dev_build:
+            return self._base_url_package_for_sync_gateway(self._version, self._build_number)
+        else:
+            return self._base_url_package_for_sync_gateway_dev_build(self._dev_build_url, self._dev_build_number)
 
     def is_valid(self):
-        if self.__version is None and self.__branch is None:
+        if self._version is None and self._branch is None and self.dev_build_url is None:
             print "You must provide a version / build or branch to build for sync_gateway"
             return False
-        if self.__branch is not None and (self.__version is not None or self.__build_number is not None):
+        if self._branch is not None and (self._version is not None or self._build_number is not None):
             print "Specify --branch or --version, not both"
             return False
-        if self.__version is not None and self.__build_number is None:
+        if self._version is not None and self._build_number is None:
             print "Must specify a build number for sync_gateway version"
             return False
-        if self.__version is None and self.__build_number is not None:
+        if self._version is None and self._build_number is not None:
             print "Please specify both a version and build number for sync_gateway build"
             return False
-        if not os.path.isfile(self.__config_path):
-            print "Could not find sync_gateway config file: {}".format(self.__config_path)
+        if not os.path.isfile(self._config_path):
+            print "Could not find sync_gateway config file: {}".format(self._config_path)
             print "Try to use an absolute path."
             return False
         return True
@@ -78,21 +104,9 @@ def install_sync_gateway(sync_gateway_config):
         print "Invalid server provisioning configuration. Exiting ..."
         sys.exit(1)
 
-    # if sync_gateway_config.branch != "":
-    #     print "Build from source with branch: {}".format(sync_gateway_config.branch)
-    #     ansible_runner.run_ansible_playbook("build-sync-gateway-source.yml", "branch={}".format(sync_gateway_config.branch))
-    # else:
-    #     print "Build stable"
-    #     sync_gateway_base_url, sync_gateway_package_name = sync_gateway_config.sync_gateway_base_url_and_package()
-    #     ansible_runner.run_ansible_playbook(
-    #         "install-sync-gateway-package.yml",
-    #         "couchbase_sync_gateway_package_base_url={0} couchbase_sync_gateway_package={1}".format(
-    #             sync_gateway_base_url,
-    #             sync_gateway_package_name
-    #         )
-    #     )
-
     if sync_gateway_config.branch is not None:
+
+        # Install source
         ansible_runner.run_ansible_playbook(
             "install-sync-gateway-source.yml",
             "sync_gateway_config_filepath={0} branch={1}".format(
@@ -100,9 +114,22 @@ def install_sync_gateway(sync_gateway_config):
                 sync_gateway_config.branch
             )
         )
+
     else:
-        # TODO
-        print("TODO: Install Package")
+        # Install build
+        if sync_gateway_config.dev_build_url is not None:
+            sync_gateway_base_url, sync_gateway_package_name = sync_gateway_config.sync_gateway_base_url_and_package(dev_build=True)
+        else:
+            sync_gateway_base_url, sync_gateway_package_name = sync_gateway_config.sync_gateway_base_url_and_package()
+
+        ansible_runner.run_ansible_playbook(
+            "install-sync-gateway-package.yml",
+            "couchbase_sync_gateway_package_base_url={0} couchbase_sync_gateway_package={1} sync_gateway_config_filepath={2}".format(
+                sync_gateway_base_url,
+                sync_gateway_package_name,
+                sync_gateway_config.config_path
+            )
+        )
 
 if __name__ == "__main__":
     usage = """usage: python install_sync_gateway.py
@@ -130,6 +157,14 @@ if __name__ == "__main__":
                       action="store", type="string", dest="source_branch", default=None,
                       help="sync_gateway branch to checkout and build")
 
+    parser.add_option("", "--dev-build-url",
+                      action="store", type="string", dest="dev_build_url", default=None,
+                      help="sync_gateway dev build url (ex. 'feature/distributed_index/')")
+
+    parser.add_option("", "--dev-build-number",
+                      action="store", type="string", dest="dev_build_number", default=None,
+                      help="sync_gateway dev build number (ex. 340)")
+
     arg_parameters = sys.argv[1:]
 
     (opts, args) = parser.parse_args(arg_parameters)
@@ -138,7 +173,9 @@ if __name__ == "__main__":
         version=opts.version,
         build_number=opts.build_number,
         branch=opts.source_branch,
-        config_path=opts.sync_gateway_config_file
+        config_path=opts.sync_gateway_config_file,
+        dev_build_url=opts.dev_build_url,
+        dev_build_number=opts.dev_build_number
     )
 
     install_sync_gateway(sync_gateway_install_config)

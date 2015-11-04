@@ -1,0 +1,58 @@
+---
+# Remove sync_gateway
+- hosts: sync_gateways
+  remote_user: root
+  sudo: true
+
+  tasks:
+
+  - include: tasks/remove-sync-gateway.yml
+
+# Flush server buckets
+- hosts: couchbase_servers
+  any_errors_fatal: true
+  remote_user: root
+  sudo: true
+  vars:
+    # Primary node
+    couchbase_server_primary_node: "{{ hostvars['cb1']['ansible_ssh_host'] }}"
+
+    # Current node
+    couchbase_server_node: "{{ hostvars[inventory_hostname]['ansible_ssh_host'] }}"
+
+    couchbase_server_home_path: /opt/couchbase
+    couchbase_server_admin_port: 8091
+    couchbase_server_admin: Administrator
+    couchbase_server_password: password
+
+    couchbase_server_bucket_type: couchbase
+    couchbase_server_bucket_port: 11211
+    couchbase_server_bucket_replica: 1
+    couchbase_server_bucket_ram: 1024
+
+  tasks:
+  - include: tasks/flush-server-buckets.yml
+
+# Download package and install
+- hosts: sync_gateways
+  remote_user: root
+  any_errors_fatal: true
+  sudo: true
+
+  vars:
+    couchbase_sync_gateway_package_base_url:
+    couchbase_sync_gateway_package:
+    couchbase_sync_gateway_package_url: "{{ couchbase_sync_gateway_package_base_url }}/{{ couchbase_sync_gateway_package }}"
+
+    couchbase_server_primary_node: "{{ hostvars['cb1']['ansible_ssh_host'] }}"
+
+  tasks:
+  - debug: msg="Downloading sync_gateway v. {{ couchbase_sync_gateway_package_url }}"
+  - name: Download sync_gateway
+    get_url: url={{ couchbase_sync_gateway_package_url }} dest=/tmp/{{ couchbase_sync_gateway_package }}
+  - name: Creates sync_gateway directory
+    file: path=/home/centos/sync_gateway state=directory
+  - name: Extract package
+    unarchive: src=/tmp/{{ couchbase_sync_gateway_package }} dest=/home/centos/sync_gateway copy=no
+
+  - include: tasks/start-sync-gateway.yml
