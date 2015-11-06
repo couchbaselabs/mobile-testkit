@@ -14,7 +14,7 @@ See `docker/controller/README.md`
 
 ## Setup hosts / deploy shared key
 
-This will generate a 'temp_ansible_hosts' file from a conf/<host-file>.ini that will be used in provisioning and running tests.
+This will generate a 'temp_ansible_hosts' file from a conf/host-file-name.ini that will be used in provisioning and running tests.
 If you change want to changes your cluster definition, you must rerun this to regenerate the ansible host file.
 
 ```
