@@ -29,18 +29,15 @@ def ini_file_to_dictionary(ini_file):
     return section_options
 
 
-def copy_keys(cbs, sgs, key_name):
+def copy_keys(cbs, sgs, key_name, user):
     ips = [i["ip"] for i in cbs]
     ips.extend([i["ip"] for i in sgs])
-    install_keys.install_keys(key_name, "root", ips)
+    install_keys.install_keys(key_name, user, ips)
 
 
-def ini_to_ansible_host(ini_file, key_name=None):
+def ini_to_ansible_host(ini_file, key_name=None, ssh_user=None):
 
     print(">>> Using .ini file: {}".format(ini_file))
-
-    if key_name is not None:
-        print(">>> Installing key: {}".format(key_name))
 
     ini_dict = ini_file_to_dictionary(ini_file)
 
@@ -69,8 +66,8 @@ def ini_to_ansible_host(ini_file, key_name=None):
     host_file.append("\n")
 
     if key_name is not None:
-        print("Installing key...")
-        copy_keys(cbs, sgs, key_name)
+        print(">>> Installing key: {}".format(key_name))
+        copy_keys(cbs, sgs, key_name, ssh_user)
 
     host_file.append("[couchbase_servers]\n")
     for cb in cbs:
@@ -92,7 +89,7 @@ def ini_to_ansible_host(ini_file, key_name=None):
 
 if __name__ == "__main__":
 
-    usage = "usage: ini_to_ansible_host.py --ini-file=<absolute_path_to_ini_file> --install-keys=<name_of_public_key>"
+    usage = "usage: ini_to_ansible_host.py --ini-file=<absolute_path_to_ini_file> --install-key=<name_of_key> --ssh-user=<user>"
     parser = OptionParser(usage=usage)
 
     parser.add_option(
@@ -101,19 +98,40 @@ if __name__ == "__main__":
         type="string",
         dest="ini_file",
         help=".ini file to define cluster",
-        default=""
+        default=None
     )
 
     parser.add_option(
-        "", "--install-keys",
+        "", "--install-key",
         action="store",
         type="string",
         dest="key_to_install",
-        help="public ssh key to install",
+        help="ssh key to install to hosts",
+        default=None
+    )
+
+    parser.add_option(
+        "", "--ssh-user",
+        action="store",
+        type="string",
+        dest="ssh_user",
+        help="ssh key to install to hosts",
         default=None
     )
 
     cmd_args = sys.argv[1:]
     (opts, args) = parser.parse_args(cmd_args)
 
-    ini_to_ansible_host(opts.ini_file, opts.key_to_install)
+    if opts.ini_file is None:
+        print(">>> Provide a path to an .ini file ex. --ini-file=conf/hosts.ini")
+        sys.exit(1)
+
+    if opts.key_to_install is not None and opts.ssh_user is None:
+        print(">>> Please provide --install-key=<key-name> AND --ssh-user=<user>")
+        sys.exit(1)
+
+    if opts.key_to_install is not None and not opts.key_to_install.endswith(".pub"):
+        print(">>> Please provide a PUBLIC key (.pub) to install on the remote machines")
+        sys.exit(1)
+
+    ini_to_ansible_host(opts.ini_file, opts.key_to_install, opts.ssh_user)

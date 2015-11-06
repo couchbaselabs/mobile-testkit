@@ -1,7 +1,6 @@
 ---
 # Remove sync_gateway
 - hosts: sync_gateways
-  remote_user: root
   sudo: true
 
   tasks:
@@ -11,7 +10,6 @@
 # Flush server buckets
 - hosts: couchbase_servers
   any_errors_fatal: true
-  remote_user: root
   sudo: true
   vars:
     # Primary node
@@ -35,7 +33,6 @@
 
 # Download package and install
 - hosts: sync_gateways
-  remote_user: root
   any_errors_fatal: true
   sudo: true
 

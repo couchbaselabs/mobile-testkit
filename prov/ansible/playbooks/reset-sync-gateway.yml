@@ -2,7 +2,6 @@
 # Kill sync_gateway
 - hosts: sync_gateways
   any_errors_fatal: true
-  remote_user: root
   sudo: yes
 
   tasks:
@@ -11,7 +10,6 @@
 # Flush server buckets
 - hosts: couchbase_servers
   any_errors_fatal: true
-  remote_user: root
   sudo: true
   vars:
 
@@ -36,7 +34,6 @@
 
 # Start sync_gateway
 - hosts: sync_gateways
-  remote_user: root
   any_errors_fatal: true
   sudo: true
 

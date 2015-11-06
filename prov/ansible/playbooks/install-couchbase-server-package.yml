@@ -1,6 +1,5 @@
 ---
 - hosts: couchbase_servers
-  remote_user: root
   any_errors_fatal: true
   sudo: true
   vars:
