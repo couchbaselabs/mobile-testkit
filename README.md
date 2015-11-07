@@ -51,6 +51,13 @@ Example:
 $ python prov/provision_cluster.py --server-version=3.1.1 --sync-gateway-branch=feature/distributed_index_bulk_set
 ```
 
+If you experience ssh errors, you may need to verify that the key has been added to your ssh agent
+
+```
+eval "$(ssh-agent -s)"
+ssh-add ~/.ssh/<test-key>
+```
+
 ## Running all tests
 
 ```
