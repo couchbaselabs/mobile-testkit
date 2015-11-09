@@ -90,6 +90,14 @@ This script performs a series of steps for you
 
 2) The generated template is uploaded to AWS with ssh access to the AWS_KEY name you specified (assuming that you have set up that keypair in AWS prior to this)
 
+## Manually generate conf/hosts.ini (AWS only)
+
+If you are running on AWS, you will need to manually generate a conf/hosts.ini file so that the provisioning scripts have a working Ansible Inventory to use.  Eventually, this step will be automated.
+
+* Open conf/hosts.ini
+* Go to the AWS console and find the public hostnames of your servers
+* Update conf/hosts.ini with these hostnames, depending on their respective roles
+* Save the conf/hosts.ini file
 
 ## Setup hosts / deploy shared key
 

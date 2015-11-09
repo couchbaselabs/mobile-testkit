@@ -19,3 +19,4 @@ temp_gateload_node
 temp_cbagent_config_template.conf
 
 cloudformation_template.json
+temp_ansible_hosts
