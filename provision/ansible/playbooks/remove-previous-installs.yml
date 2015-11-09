@@ -1,5 +1,5 @@
 ---
-- hosts: sync_gateways:couchbase_servers
+- hosts: sync_gateways:couchbase_servers:load_generators
   any_errors_fatal: true
   sudo: true
   tasks:
