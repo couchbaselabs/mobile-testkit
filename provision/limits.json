@@ -1,0 +1,5 @@
+{
+  "max_servers" : 10,
+  "max_sync_gateways" : 10,
+  "max_loads" : 10
+}
