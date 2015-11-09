@@ -44,6 +44,7 @@ def ini_to_ansible_host(ini_file, key_name=None, ssh_user=None):
     host_file = []
     cbs = []
     sgs = []
+    lgs = []
 
     for cb in ini_dict["couchbase_servers"]:
         vm = ini_dict["couchbase_servers"][cb]
@@ -63,6 +64,15 @@ def ini_to_ansible_host(ini_file, key_name=None, ssh_user=None):
         )
         host_file.append(host_entry)
 
+    for lg in ini_dict["load_generators"]:
+        vm = ini_dict["load_generators"][lg]
+        ip = ini_dict["vms"][vm]
+        lgs.append({"name": lg, "ip": ip})
+        host_entry = "{0} ansible_ssh_host={1}\n".format(
+            lg, ip,
+        )
+        host_file.append(host_entry)
+
     host_file.append("\n")
 
     if key_name is not None:
@@ -79,13 +89,18 @@ def ini_to_ansible_host(ini_file, key_name=None, ssh_user=None):
     for sg in sgs:
         host_file.append("{}\n".format(sg["name"]))
 
+    host_file.append("\n")
+
+    host_file.append("[load_generators]\n")
+    for lg in lgs:
+        host_file.append("{}\n".format(lg["name"]))
+
     # generate host file
     host_file_test = "".join(host_file)
     with open("temp_ansible_hosts", "w") as hosts:
         hosts.write(host_file_test)
 
-    # export INVENTORY env variable
-    return sgs, cbs
+    return sgs, cbs, lgs
 
 if __name__ == "__main__":
 
