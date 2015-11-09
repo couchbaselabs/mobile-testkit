@@ -22,14 +22,18 @@ $ ssh-keygen
 $ python conf/ini_to_ansible_host.py  --install-keys=id_rsa --ini-file=conf/hosts.ini
 ```
 
-## Run all tests
+## Running tests
+
+See `distributed_index_tests/README.md` in this repo for more information
+
+## Capturing network traffic
+
+From the **Linux Host** where docker is running
 
 ```
-$ ./test
+$ yum install -y tcpdump
+$ tcpdump -i docker0 -w /tmp/docker.pcap port 4984
+^C
 ```
 
-## Run single test
-
-```
-$ python -m pytest tests/<testfile>.py
-```
+Now, get the file to your OSX host and open it in Wireshark.  It should contain all HTTP traffic between the test suite and the sync gateway machines.
