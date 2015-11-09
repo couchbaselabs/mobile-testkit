@@ -74,14 +74,15 @@ $ export SPLUNK_SERVER_AUTH="<username>:<password>"
 **To kick off cluster**
 
 ```
-python create_and_instantiate_cluster.py 
-    --stackname="YourCloudFormationStack"
-    --num-servers=2
-    --server-type="m3.large"
-    --num-sync-gateways=1
-    --sync-gateway-type="m3.medium"
-    --num-gatlings=1
-    --gatling-type="m3.medium"
+$ cd provision
+$ python create_and_instantiate_cluster.py \
+    --stackname="YourCloudFormationStack" \
+    --num-servers=1 \
+    --server-type="m3.large" \
+    --num-sync-gateways=1 \
+    --sync-gateway-type="m3.medium" \
+    --num-gatlings=1 \
+    --gatling-type="m3.medium" 
 ```
 
 This script performs a series of steps for you
@@ -149,10 +150,10 @@ $ python provision/provision_cluster.py --server-version=3.1.1 --sync-gateway-br
 Example from a pre-built version (dev build):
 
 ```
-$ python provision/provision_cluster.py --server-version=3.1.1 --sync-gateway-branch=feature/distributed_index_bulk_set
+$ python provision/provision_cluster.py --server-version=3.1.1 --sync-gateway-dev-build-url=feature/distributed_index --sync-gateway-dev-build-number=345
 ```
 
-
+Like all scripts, run `python provision/provision_cluster.py -h` to view help options.
 
 If you experience ssh errors, you may need to verify that the key has been added to your ssh agent
 
@@ -163,7 +164,23 @@ ssh-add ~/.ssh/<test-key>
 
 ## Run Performance Tests
 
+**Gateload**
 
+Currently the load generation is specified in ansible/files/gateload_config.json.
+(In progress) Allow this to be parameterized
+
+```
+python run_tests.py
+    --use-gateload
+```
+
+**Gatling**
+
+```
+python run_tests.py
+    --number-pullers=0
+    --number-pushers=7500
+```
 
 ## Run Functional Tests
 
