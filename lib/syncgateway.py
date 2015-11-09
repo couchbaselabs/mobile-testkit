@@ -1,6 +1,6 @@
 import requests
 
-import orch.syncgatewayactions
+import orchestration.syncgatewayactions
 
 
 class SyncGateway:
@@ -16,11 +16,11 @@ class SyncGateway:
         return r.text
 
     def stop(self):
-        orch.syncgatewayactions.stop(self.host_name)
+        orchestration.syncgatewayactions.stop(self.host_name)
 
     def start(self, config):
-        orch.syncgatewayactions.start(self.host_name, config)
+        orchestration.syncgatewayactions.start(self.host_name, config)
 
     def restart(self, config):
-        orch.syncgatewayactions.restart(self.host_name, config)
+        orchestration.syncgatewayactions.restart(self.host_name, config)
 

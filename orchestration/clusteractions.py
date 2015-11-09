@@ -1,5 +1,5 @@
 import os
-from prov.ansible_runner import run_ansible_playbook
+from provision.ansible_runner import run_ansible_playbook
 
 
 def reset(configuration):

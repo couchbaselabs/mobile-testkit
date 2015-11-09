@@ -1,6 +1,6 @@
 import os
 
-from prov.ansible_runner import run_targeted_ansible_playbook
+from provision.ansible_runner import run_targeted_ansible_playbook
 
 
 def stop(hostname):
