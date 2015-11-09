@@ -98,11 +98,11 @@ if __name__ == "__main__":
 
     parser.add_option("", "--sync-gateway-dev-build-url",
                       action="store", type="string", dest="sync_gateway_dev_build_url", default=None,
-                      help="sync_gateway dev build url to download")
+                      help="sync_gateway dev build url to download (eg, feature/distributed_index)")
 
     parser.add_option("", "--sync-gateway-dev-build-number",
                       action="store", type="string", dest="sync_gateway_dev_build_number", default=None,
-                      help="sync_gateway dev build number")
+                      help="sync_gateway dev build number (eg, 345)")
 
     parser.add_option("", "--sync-gateway-config-file",
                       action="store", type="string", dest="sync_gateway_config_file", default=default_sync_gateway_config,
