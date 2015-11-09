@@ -90,14 +90,24 @@ This script performs a series of steps for you
 
 2) The generated template is uploaded to AWS with ssh access to the AWS_KEY name you specified (assuming that you have set up that keypair in AWS prior to this)
 
-## Manually generate conf/hosts.ini (AWS only)
+## Configure conf/hosts.ini 
+
+Copy conf/hosts.ini.example to conf/hosts.ini
+
+**AWS**
 
 If you are running on AWS, you will need to manually generate a conf/hosts.ini file so that the provisioning scripts have a working Ansible Inventory to use.  Eventually, this step will be automated.
+
 
 * Open conf/hosts.ini
 * Go to the AWS console and find the public hostnames of your servers
 * Update conf/hosts.ini with these hostnames, depending on their respective roles
 * Save the conf/hosts.ini file
+
+**VMs**
+
+* Open conf/hosts.ini and edit
+
 
 ## Setup hosts / deploy shared key
 
@@ -108,8 +118,9 @@ If you change want to changes your cluster definition, you must rerun this to re
 python conf/ini_to_ansible_host.py --ini-file=conf/hosts.ini
 ```
 
-One time only. Ansible playbooks require ssh access to run on the target hosts. 
-This script will attempt to install a common public key to ~/.ssh/knownhosts on the machines in the cluster via ssh-copy-id. 
+**VMs only**
+
+One time only. Ansible playbooks require ssh access to run on the target hosts.  This script will attempt to install a common public key to ~/.ssh/knownhosts on the machines in the cluster via ssh-copy-id. 
 
 ```
 ~/.ssh » ssh-keygen
@@ -125,15 +136,23 @@ python conf/ini_to_ansible_host.py --ini-file=conf/hosts.ini --install-key=<test
 
 ## Set your user
 
-If your ssh user is different then root, you may need to edit prov/ansible/ansible.cfg
+If your ssh user is different then root, you may need to edit provision/ansible/playbooks/ansible.cfg
 
 ## Provision Cluster 
 
-Example:
+Example building from source:
 
 ```
-$ python prov/provision_cluster.py --server-version=3.1.1 --sync-gateway-branch=feature/distributed_index_bulk_set
+$ python provision/provision_cluster.py --server-version=3.1.1 --sync-gateway-branch=feature/distributed_index_bulk_set
 ```
+
+Example from a pre-built version (dev build):
+
+```
+$ python provision/provision_cluster.py --server-version=3.1.1 --sync-gateway-branch=feature/distributed_index_bulk_set
+```
+
+
 
 If you experience ssh errors, you may need to verify that the key has been added to your ssh agent
 
@@ -142,9 +161,13 @@ eval "$(ssh-agent -s)"
 ssh-add ~/.ssh/<test-key>
 ```
 
+## Run Performance Tests
+
+
+
 ## Run Functional Tests
 
-## Run Performance Tests
+
 
 
 
@@ -439,14 +462,14 @@ python conf/ini_to_ansible_host.py --ini-file=conf/hosts.ini --install-key=<test
 
 ## Set your user
 
-If your ssh user is different then root, you may need to edit prov/ansible/ansible.cfg
+If your ssh user is different then root, you may need to edit provision/ansible/ansible.cfg
 
 ## Provision Cluster (one time only)
 
 Example:
 
 ```
-$ python prov/provision_cluster.py --server-version=3.1.1 --sync-gateway-branch=feature/distributed_index_bulk_set
+$ python provision/provision_cluster.py --server-version=3.1.1 --sync-gateway-branch=feature/distributed_index_bulk_set
 ```
 
 If you experience ssh errors, you may need to verify that the key has been added to your ssh agent
@@ -471,5 +494,5 @@ $ python -m pytest --capture=no tests/test_single_user_multiple_channels.py
 ## Collecting Sync Gateway logs
 
 ```
-$ python prov/fetch_sg_logs.py
+$ python provision/fetch_sg_logs.py
 ```
