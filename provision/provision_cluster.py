@@ -10,7 +10,6 @@ from install_sync_gateway import SyncGatewayConfig
 
 import ansible_runner
 
-# TODO Add SG package
 
 def provision_cluster(couchbase_server_config, sync_gateway_config):
 
@@ -62,7 +61,6 @@ def provision_cluster(couchbase_server_config, sync_gateway_config):
 if __name__ == "__main__":
     usage = """usage: python provision_cluster.py
     --server-version=<server_version_number>
-    --server-build=<server_build_number>
     --sync-gateway-version=<sync_gateway_version_number>
     --sync-gateway-build=<sync_gateway_build_number>
     --sync-gateway-config-file=<path_to_local_sync_gateway_config>
@@ -92,10 +90,6 @@ if __name__ == "__main__":
                       action="store", type="string", dest="sync_gateway_version", default=None,
                       help="sync_gateway version to download")
 
-    parser.add_option("", "--sync-gateway-build",
-                      action="store", type="string", dest="sync_gateway_build", default=None,
-                      help="sync_gateway build to download")
-
     parser.add_option("", "--sync-gateway-dev-build-url",
                       action="store", type="string", dest="sync_gateway_dev_build_url", default=None,
                       help="sync_gateway dev build url to download (eg, feature/distributed_index)")
@@ -123,7 +117,6 @@ if __name__ == "__main__":
 
     sync_gateway_config = SyncGatewayConfig(
         version=opts.sync_gateway_version,
-        build_number=opts.sync_gateway_build,
         dev_build_url=opts.sync_gateway_dev_build_url,
         dev_build_number=opts.sync_gateway_dev_build_number,
         branch=opts.source_branch,

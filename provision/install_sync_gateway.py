@@ -11,12 +11,10 @@ class SyncGatewayConfig:
                  dev_build_url,
                  dev_build_number,
                  version,
-                 build_number,
                  config_path):
         self._dev_build_url = dev_build_url
         self._dev_build_number = dev_build_number
         self._version = version
-        self._build_number = build_number
         self._branch = branch
         self._config_path = config_path
 
@@ -37,10 +35,6 @@ class SyncGatewayConfig:
         return self._version
 
     @property
-    def build_number(self):
-        return self._build_number
-
-    @property
     def branch(self):
         return self._branch
 
@@ -52,7 +46,6 @@ class SyncGatewayConfig:
         output = "\n  sync_gateway configuration\n"
         output += "  ------------------------------------------\n"
         output += "  version:          {}\n".format(self._version)
-        output += "  build number:     {}\n".format(self._build_number)
         output += "  dev build url:    {}\n".format(self._dev_build_url)
         output += "  dev build number: {}\n".format(self._dev_build_number)
         output += "  branch:           {}\n".format(self._branch)
@@ -64,22 +57,39 @@ class SyncGatewayConfig:
         package_name = "couchbase-sync-gateway-centos_community_0.0.1-{0}_x86_64.tar.gz".format(dev_build_number)
         return base_url, package_name
 
-    def _base_url_package_for_sync_gateway(self, version, build):
-        base_url = "http://latestbuilds.hq.couchbase.com/couchbase-sync-gateway/release/{0}/{1}-{2}".format(version, version, build)
-        package_name = "couchbase-sync-gateway-enterprise_{0}-{1}_x86_64.rpm".format(version, build)
+    def _base_url_package_for_sync_gateway(self, version):
+
+        if version == "1.1.0":
+            base_url = "http://latestbuilds.hq.couchbase.com/couchbase-sync-gateway/release/1.1.0/1.1.0-28/"
+            package_name = "couchbase-sync-gateway-enterprise_1.1.0-28_x86_64.tar.gz"
+
+        elif version == "1.1.1":
+            base_url = "http://latestbuilds.hq.couchbase.com/couchbase-sync-gateway/release/1.1.1/1.1.1-10/"
+            package_name = "couchbase-sync-gateway-centos_enterprise_1.1.1-10_x86_64.tar.gz"
+
         return base_url, package_name
 
     def sync_gateway_base_url_and_package(self, dev_build=False):
         if not dev_build:
-            return self._base_url_package_for_sync_gateway(self._version, self._build_number)
+            return self._base_url_package_for_sync_gateway(self._version)
         else:
             return self._base_url_package_for_sync_gateway_dev_build(self._dev_build_url, self._dev_build_number)
 
     def is_valid(self):
-        if self._version is not None and self._build_number is not None:
+
+        releases = [
+            "1.1.0",
+            "1.1.1"
+        ]
+
+        if self._version is not None:
             assert self._dev_build_url is None
             assert self._dev_build_number is None
             assert self._branch is None
+
+            if self._version not in releases:
+                return False
+
         elif self._dev_build_url is not None and self._dev_build_number is not None:
             assert self._version is None
             assert self._build_number is None
@@ -149,10 +159,6 @@ if __name__ == "__main__":
                       action="store", type="string", dest="version", default=None,
                       help="sync_gateway version to download")
 
-    parser.add_option("", "--build-number",
-                      action="store", type="string", dest="build_number", default=None,
-                      help="sync_gateway build to download")
-
     parser.add_option("", "--config-file-path",
                       action="store", type="string", dest="sync_gateway_config_file",
                       default=default_sync_gateway_config,
@@ -176,7 +182,6 @@ if __name__ == "__main__":
 
     sync_gateway_install_config = SyncGatewayConfig(
         version=opts.version,
-        build_number=opts.build_number,
         branch=opts.source_branch,
         config_path=opts.sync_gateway_config_file,
         dev_build_url=opts.dev_build_url,
