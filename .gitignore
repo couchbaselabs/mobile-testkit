@@ -21,3 +21,5 @@ temp_cbagent_config_template.conf
 cloudformation_template.json
 temp_ansible_hosts
 conf/hosts.ini
+
+results.xml
