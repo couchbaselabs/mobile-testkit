@@ -14,7 +14,7 @@
     couchbase_server_home_path: /opt/couchbase
 
     # Primary node
-    couchbase_server_primary_node: "{{ hostvars[groups.couchbase_servers[0]].inventory_hostname }}"
+    couchbase_server_primary_node: "{{ groups.couchbase_servers[0] }}"
 
     # Current node
     couchbase_server_node: "{{ hostvars[inventory_hostname]['ansible_ssh_host'] }}"
