@@ -8,6 +8,13 @@ This repository contains:
 
 ## Setup Controller
 
+The "controller" is the machine that runs ansible, which is typically:
+
+* Your developer workstation
+* A virtual machine / docker container
+
+The instructions below are docker specific, but if you look in `docker/controller/Dockerfile` it should give you an idea of the required dependencies if you want to make this work directly on your workstation.
+
 ### Start a container
 
 ```shell
