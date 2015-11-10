@@ -8,8 +8,6 @@
   - name: symlink gateload into /usr/local/bin
     file: src=/opt/go/bin/gateload dest=/usr/local/bin/gateload owner=centos group=centos state=link
     sudo: true
-  - name: copy gateload config to host
-    copy: src=files/gateload_config.json dest=/home/centos/gateload_config.json owner=centos group=centos mode=0644
   - name: sysctl file to increase available port range for outgoing socket connections
     copy: src=files/sysctld.conf dest=/etc/sysctl.d/20-increase-port-range.conf owner=root group=root mode=0644
     sudo: true
