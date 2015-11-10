@@ -82,13 +82,6 @@ $ export AWS_KEY=<your-aws-keypair-name>
 $ export KEYNAME=key_<your-aws-keypair-name>
 ```
 
-**To gather data in Splunk you will want to set variable below**
-
-```
-$ export SPLUNK_SERVER="<url_of_splunk_server>:<port>"
-$ export SPLUNK_SERVER_AUTH="<username>:<password>"
-```
-
 **To kick off cluster**
 
 ```
@@ -168,10 +161,6 @@ Generate the ansible hosts file and attempt to install the shared key on all mac
 python conf/ini_to_ansible_host.py --ini-file=conf/hosts.ini --install-key=<test-key>.pub --ssh-user=<user>
 ```
 
-## Set your user
-
-If your ssh user is different then root, you may need to edit provision/ansible/playbooks/ansible.cfg
-
 ## Provision Cluster 
 
 Example building from source:
@@ -193,6 +182,21 @@ If you experience ssh errors, you may need to verify that the key has been added
 ```
 eval "$(ssh-agent -s)"
 ssh-add ~/.ssh/<test-key>
+```
+
+## Install Splunk (optional)
+
+**Set environment variables**
+
+```
+$ export SPLUNK_SERVER="<url_of_splunk_server>:<port>"
+$ export SPLUNK_SERVER_AUTH="<username>:<password>"
+```
+
+**Install**
+
+```
+$ python provision/install_splunk.py
 ```
 
 ## Run Performance Tests
