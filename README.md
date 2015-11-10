@@ -126,6 +126,22 @@ If you change want to changes your cluster definition, you must rerun this to re
 python conf/ini_to_ansible_host.py --ini-file=conf/hosts.ini
 ```
 
+Now update the generated temp_ansible_hosts file to have this format:
+
+```
+[couchbase_servers]
+ec2-54-205-165-155.compute-1.amazonaws.com
+
+[sync_gateways]
+ec2-54-158-112-128.compute-1.amazonaws.com
+
+[load_generators]
+ec2-54-163-112-228.compute-1.amazonaws.com
+
+```
+
+(this is needed for the gateload config generation script to work)
+
 **VMs only**
 
 One time only. Ansible playbooks require ssh access to run on the target hosts.  This script will attempt to install a common public key to ~/.ssh/knownhosts on the machines in the cluster via ssh-copy-id. 
