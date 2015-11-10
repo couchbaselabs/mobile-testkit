@@ -8,6 +8,8 @@ import time
 import base64
 import uuid
 import re
+import logging
+
 from collections import defaultdict
 from responseprinter import ResponsePrinter
 
@@ -25,6 +27,7 @@ class User:
         auth = base64.b64encode("{0}:{1}".format(self.name, self.password).encode())
         self._auth = auth.decode("UTF-8")
         self._headers = {'Content-Type': 'application/json', "Authorization": "Basic {}".format(self._auth)}
+        self._request_timeout = 30
         self._r_printer = ResponsePrinter()
 
     def __str__(self):
@@ -38,7 +41,7 @@ class User:
             doc_body["channels"] = self.channels
         body = json.dumps(doc_body)
 
-        resp = requests.put(doc_url, headers=self._headers, data=body)
+        resp = requests.put(doc_url, headers=self._headers, data=body, timeout=self._request_timeout)
         self._r_printer.print_status(resp)
         resp.raise_for_status()
 
@@ -58,9 +61,9 @@ class User:
 
         docs = dict()
         docs["docs"] = doc_list
-
         data = json.dumps(docs)
-        r = requests.post("{0}/{1}/_bulk_docs".format(self.target.url, self.db), headers=self._headers, data=data)
+
+        r = requests.post("{0}/{1}/_bulk_docs".format(self.target.url, self.db), headers=self._headers, data=data, timeout=self._request_timeout)
         self._r_printer.print_status(r)
         r.raise_for_status()
 
@@ -87,7 +90,6 @@ class User:
                     except Exception as exc:
                         print('Generated an exception while adding doc_id : %s %s' % (doc, exc))
         else:
-            print(">>> Adding bulk docs ...")
             with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
                 future = [executor.submit(self.add_bulk_docs, doc_names)]
                 for f in concurrent.futures.as_completed(future):
@@ -103,14 +105,14 @@ class User:
 
         for i in range(num_revision):
             doc_url = self.target.url + '/' + self.db + '/' + doc_id
-            resp = requests.get(doc_url, headers=self._headers)
+            resp = requests.get(doc_url, headers=self._headers, timeout=self._request_timeout)
     
             if resp.status_code == 200:
                 data = resp.json()
                 data['updates'] = int(data['updates']) + 1
                 
                 body = json.dumps(data)
-                put_resp = requests.put(doc_url, headers=self._headers, data=body)
+                put_resp = requests.put(doc_url, headers=self._headers, data=body, timeout=self._request_timeout)
                 if put_resp.status_code == 201:
                     data = put_resp.json()
                     if data["rev"]:
@@ -145,9 +147,9 @@ class User:
 
     def get_changes(self, with_docs=False):
         if with_docs:
-            r = requests.get("{}/{}/_changes?include_docs=true".format(self.target.url, self.db), headers=self._headers)
+            r = requests.get("{}/{}/_changes?include_docs=true".format(self.target.url, self.db), headers=self._headers, timeout=self._request_timeout)
         else:
-            r = requests.get("{}/{}/_changes".format(self.target.url, self.db), headers=self._headers)
+            r = requests.get("{}/{}/_changes".format(self.target.url, self.db), headers=self._headers, timeout=self._request_timeout)
         r.raise_for_status()
         return json.loads(r.text)
 
