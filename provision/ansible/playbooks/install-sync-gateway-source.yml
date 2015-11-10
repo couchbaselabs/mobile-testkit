@@ -35,6 +35,7 @@
 # Download source and build
 - hosts: sync_gateways
   any_errors_fatal: true
+  sudo: true
   vars:
     branch:
 
