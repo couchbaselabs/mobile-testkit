@@ -14,7 +14,7 @@
   vars:
 
   # Primary node
-    couchbase_server_primary_node: "{{ groups.couchbase_servers[0] }}"
+    couchbase_server_primary_node: "{{ hostvars[groups.couchbase_servers[0]].ansible_ssh_host }}"
 
     # Current node
     couchbase_server_node: "{{ hostvars[inventory_hostname]['ansible_ssh_host'] }}"
@@ -41,7 +41,7 @@
   vars:
     sync_gateway_config_filepath:
 
-    couchbase_server_primary_node: "{{ groups.couchbase_servers[0] }}"
+    couchbase_server_primary_node: "{{ hostvars[groups.couchbase_servers[0]].ansible_ssh_host }}"
 
   tasks:
   - include: tasks/start-sync-gateway.yml

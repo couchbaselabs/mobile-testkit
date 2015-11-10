@@ -99,13 +99,13 @@ Manually create a `sync-gateway-testcluster/temp_ansible_hosts` file in this for
 
 ```
 [couchbase_servers]
-ec2-54-205-165-155.compute-1.amazonaws.com ansible_ssh_host=ec2-54-205-165-155.compute-1.amazonaws.com
+cb1 ansible_ssh_host=ec2-54-205-165-155.compute-1.amazonaws.com
 
 [sync_gateways]
-ec2-54-158-112-128.compute-1.amazonaws.com ansible_ssh_host=ec2-54-158-112-128.compute-1.amazonaws.com
+sg1 ansible_ssh_host=ec2-54-158-112-128.compute-1.amazonaws.com
 
 [load_generators]
-ec2-54-163-112-228.compute-1.amazonaws.com ansible_ssh_host=ec2-54-163-112-228.compute-1.amazonaws.com
+lg1 ansible_ssh_host=ec2-54-163-112-228.compute-1.amazonaws.com
 ```
 
 **Virutal Machines**
