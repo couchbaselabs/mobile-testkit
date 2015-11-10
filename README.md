@@ -70,18 +70,15 @@ aws_secret_access_key = ABGHEFCDABGHEFCDABGHEFCDABGHEFCDABGHEFCDAB
 $ export AWS_ACCESS_KEY_ID=CDABGHEFCDABGHEFCDAB
 $ export AWS_SECRET_ACCESS_KEY=ABGHEFCDABGHEFCDABGHEFCDABGHEFCDABGHEFCDAB
 $ export AWS_KEY=<your-aws-keypair-name>
-```
-
-**To run tests or ansible scripts**
-
-```
 $ export KEYNAME=key_<your-aws-keypair-name>
 ```
+
+You probably want to persist these in your `~/.bash_profile`.
 
 **To kick off cluster**
 
 ```
-$ cd provision
+$ cd sync-gateway-testcluster/provision
 $ python create_and_instantiate_cluster.py \
     --stackname="YourCloudFormationStack" \
     --num-servers=1 \
@@ -92,11 +89,7 @@ $ python create_and_instantiate_cluster.py \
     --gatling-type="m3.medium" 
 ```
 
-This script performs a series of steps for you
-
-1) It uses [troposphere](https://github.com/cloudtools/troposphere) to generate the Cloudformation template (a json file). The Cloudformation config is declared via a Python DSL, which then generates the Cloudformation Json.
-
-2) The generated template is uploaded to AWS with ssh access to the AWS_KEY name you specified (assuming that you have set up that keypair in AWS prior to this)
+The AWS virtual machines will be accessible via the `AWS_KEY` you specified above.
 
 ## Setup Ansible inventory
 
@@ -114,14 +107,6 @@ ec2-54-158-112-128.compute-1.amazonaws.com ansible_ssh_host=ec2-54-158-112-128.c
 [load_generators]
 ec2-54-163-112-228.compute-1.amazonaws.com ansible_ssh_host=ec2-54-163-112-228.compute-1.amazonaws.com
 ```
-
-To verify this is setup correctly, run:
-
-```
-$ ansible couchbase_servers --list-hosts -i temp_ansible_hosts
-```
-
-and you should see `ec2-54-205-165-155.compute-1.amazonaws.com`
 
 **Virutal Machines**
 
