@@ -5,7 +5,7 @@ from optparse import OptionParser
 
 import generate_gateload_configs
 
-def run_tests(number_pullers, number_pushers, use_gateload):
+def run_tests(number_pullers, number_pushers, use_gateload, gen_gateload_config):
     if use_gateload:
         print "Using Gateload"
         print ">>> Starting gateload with {0} pullers and {1} pushers".format(number_pullers, number_pushers)
@@ -16,7 +16,8 @@ def run_tests(number_pullers, number_pushers, use_gateload):
         subprocess.call(["ansible-playbook", "-i", "../../../temp_ansible_hosts", "build-gateload.yml"])
 
         # Generate gateload config
-        generate_gateload_configs.main(number_pullers, number_pushers)
+        if gen_gateload_config:
+            generate_gateload_configs.main(number_pullers, number_pushers)
 
         # Start gateload
         subprocess.call(["ansible-playbook", "-i", "../../../temp_ansible_hosts", "start-gateload.yml"])
@@ -57,6 +58,11 @@ if __name__ == "__main__":
                       action="store_true", dest="use_gateload", default=False,
                       help="flag to set to use gateload")
 
+    parser.add_option("", "--gen-gateload-config",
+                      action="store_true", dest="gen_gateload_config", default=False,
+                      help="flag to set to generate gateload config")
+
+
     arg_parameters = sys.argv[1:]
 
     (opts, args) = parser.parse_args(arg_parameters)
@@ -66,5 +72,6 @@ if __name__ == "__main__":
     run_tests(
         number_pullers=opts.number_pullers,
         number_pushers=opts.number_pushers,
-        use_gateload=opts.use_gateload
+        use_gateload=opts.use_gateload,
+        gen_gateload_config=opts.gen_gateload_config
     )
