@@ -102,8 +102,11 @@ def main(number_of_pullers, number_of_pushers):
     gateload_ips = gateloads()
 
     for idx, gateload_ip in enumerate(gateload_ips):
+
         # calculate the user offset
-        user_offset = idx * 13000 
+        total_num_users = number_of_pullers + number_of_pushers
+        user_offset = idx * total_num_users
+
         # assign a sync gateway to this gateload, get its ip
         sync_gateway_private_ip = sync_gateway_ips[idx]
 
