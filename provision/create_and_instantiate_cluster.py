@@ -113,6 +113,8 @@ def create_and_instantiate_cluster(config):
     print ">>> Creating cluster on AWS"
 
     key = os.path.expandvars("$AWS_KEY")
+    if key == "$AWS_KEY":
+        raise Exception("You must define the AWS_KEY environment variable")
 
     subprocess.call([
         "aws", "cloudformation", "create-stack",
