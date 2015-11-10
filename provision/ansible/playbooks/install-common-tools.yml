@@ -25,12 +25,12 @@
     get_url: url=http://golang.org/dl/go1.4.2.linux-amd64.tar.gz dest=/tmp mode=0440
   - name: extract go
     unarchive: src=/tmp/go1.4.2.linux-amd64.tar.gz dest=/usr/local copy=no
-  - name: symlink go into /usr/local/bin
-    file: src=/usr/local/go/bin/go dest=/usr/local/bin/go owner=centos group=centos state=link
-  - name: symlink godoc into /usr/local/bin
-    file: src=/usr/local/go/bin/godoc dest=/usr/local/bin/godoc owner=centos group=centos state=link
-  - name: symlink gofmt into /usr/local/bin
-    file: src=/usr/local/go/bin/gofmt dest=/usr/local/bin/gofmt owner=centos group=centos state=link
+  - name: symlink go into /usr/bin
+    file: src=/usr/local/go/bin/go dest=/usr/bin/go owner=centos group=centos state=link
+  - name: symlink godoc into /usr/bin
+    file: src=/usr/local/go/bin/godoc dest=/usr/bin/godoc owner=centos group=centos state=link
+  - name: symlink gofmt into /usr/bin
+    file: src=/usr/local/go/bin/gofmt dest=/usr/bin/gofmt owner=centos group=centos state=link
   - name: create GOPATH directory
     shell: mkdir -p /opt/go
   - name: chown GOPATH to be owned by centos user
