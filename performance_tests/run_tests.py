@@ -3,6 +3,7 @@ import subprocess
 import sys
 from optparse import OptionParser
 
+import generate_gateload_configs
 
 def run_tests(number_pullers, number_pushers, use_gateload):
     if use_gateload:
@@ -13,6 +14,9 @@ def run_tests(number_pullers, number_pushers, use_gateload):
 
         # Build gateload
         subprocess.call(["ansible-playbook", "-i", "../../../temp_ansible_hosts", "build-gateload.yml"])
+
+        # Generate gateload config
+        generate_gateload_configs.main(number_pullers, number_pushers)
 
         # Start gateload
         subprocess.call(["ansible-playbook", "-i", "../../../temp_ansible_hosts", "start-gateload.yml"])
