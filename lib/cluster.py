@@ -2,10 +2,10 @@ import sys
 import os.path
 import ansible.inventory
 
+import os
 from lib.syncgateway import SyncGateway
-from orchestration import clusteractions
-
-
+from lib.server import Server
+from provision.ansible_runner import run_ansible_playbook
 
 
 class Cluster:
@@ -26,7 +26,7 @@ class Cluster:
 
         self.sync_gateways = [SyncGateway(sg) for sg in sgs]
         self.sync_gateway_writers = [SyncGateway(sgw) for sgw in sgsw]
-        self.servers = cbs
+        self.servers = [Server(cb) for cb in cbs]
         self.load_generators = lds
 
     def _hosts_for_tag(self, tag):
@@ -44,7 +44,13 @@ class Cluster:
         return [host.get_variables() for host in hosts]
 
     def reset(self, config):
-        clusteractions.reset(config)
+        conf_path = os.path.abspath("conf/" + config)
+        print(">>> Restarting sync_gateway with configuration: {}".format(conf_path))
+
+        run_ansible_playbook(
+            "reset-sync-gateway.yml",
+            extra_vars="sync_gateway_config_filepath={0}".format(conf_path)
+        )
 
     def __repr__(self):
         s = "\n\n"
@@ -62,10 +68,3 @@ class Cluster:
             s += str(lg)
         s += "\n"
         return s
-
-
-
-
-
-
-
