@@ -14,4 +14,6 @@ cb2=vm2
 sg1=vm3
 sg2=vm4
 sg3=vm5
-sg4=vm6
+
+[load_generators]
+ld1=vm6

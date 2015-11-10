@@ -24,8 +24,6 @@ def ini_file_to_dictionary(ini_file):
 
 def get_host_info(ini_file):
 
-    print("\n>>> Using .ini file: {}\n".format(ini_file))
-
     ini_dict = ini_file_to_dictionary(ini_file)
 
     cbs = []
