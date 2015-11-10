@@ -13,7 +13,7 @@
   sudo: true
   vars:
     # Primary node
-    couchbase_server_primary_node: "{{ hostvars['cb1']['ansible_ssh_host'] }}"
+    couchbase_server_primary_node: "{{ hostvars[groups.couchbase_servers[0]].inventory_hostname }}"
 
     # Current node
     couchbase_server_node: "{{ hostvars[inventory_hostname]['ansible_ssh_host'] }}"
@@ -42,7 +42,7 @@
     couchbase_sync_gateway_package:
     couchbase_sync_gateway_package_url: "{{ couchbase_sync_gateway_package_base_url }}/{{ couchbase_sync_gateway_package }}"
 
-    couchbase_server_primary_node: "{{ hostvars['cb1']['ansible_ssh_host'] }}"
+    couchbase_server_primary_node: "{{ hostvars[groups.couchbase_servers[0]].inventory_hostname }}"
 
   tasks:
   # Download and extract package
@@ -69,7 +69,7 @@
   sudo: true
   vars:
     sync_gateway_config_filepath:
-    couchbase_server_primary_node: "{{ hostvars['cb1']['ansible_ssh_host'] }}"
+    couchbase_server_primary_node: "{{ hostvars[groups.couchbase_servers[0]].inventory_hostname }}"
 
   tasks:
   # Create sync_gateway user, install and start service
