@@ -8,3 +8,9 @@
 - name: verify sync_gateway not listening on port
   wait_for: port=4985 delay=1 state=stopped
 
+# Delete logs and .pindex files
+- name: delete sync_gateway logs
+  shell: rm -f /home/sync_gateway/logs/*.log
+- name: delete sync_gateway pindex files
+  shell: rm -rf /home/sync_gateway/*.pindex
+
