@@ -203,9 +203,6 @@ $ python provision/install_splunk.py
 
 **Gateload**
 
-Currently the load generation is specified in ansible/files/gateload_config.json.
-(In progress) Allow this to be parameterized
-
 ```
 python run_tests.py
     --use-gateload
@@ -214,10 +211,20 @@ python run_tests.py
 
 **Gatling**
 
+NOTE: this needs retesting
+
 ```
 python run_tests.py
     --number-pullers=0
     --number-pushers=7500
+```
+
+### Performance test data
+
+Most of the performance test data will be pushed to Splunk (if the splunk forwarder is installed), but you can download the Heap + CPU profile data via:
+
+```
+$ ansible-playbook performance_tests/ansible/playbooks/collect-sync-gateway-profile.yml -i temp_ansible_hosts
 ```
 
 ## Run Functional Tests
