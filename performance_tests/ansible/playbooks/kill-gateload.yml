@@ -1,0 +1,11 @@
+---
+- hosts: load_generators
+  any_errors_fatal: true
+  remote_user: centos
+  tasks:
+  - name: kill gateload screen
+    shell: screen -X -S gateload kill
+  - name: kill gateload_expvars screen
+    shell: screen -X -S gateload_expvars kill
+
+    
