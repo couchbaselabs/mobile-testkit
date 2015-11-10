@@ -24,7 +24,7 @@
   - name: download golang
     get_url: url=https://storage.googleapis.com/golang/go1.5.1.linux-amd64.tar.gz dest=/tmp mode=0440
   - name: extract go
-    unarchive: src=/tmp/go1.4.2.linux-amd64.tar.gz dest=/usr/local copy=no
+    unarchive: src=/tmp/go1.5.1.linux-amd64.tar.gz dest=/usr/local copy=no
   - name: symlink go into /usr/bin
     file: src=/usr/local/go/bin/go dest=/usr/bin/go owner=centos group=centos state=link
   - name: symlink godoc into /usr/bin
