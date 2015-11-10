@@ -30,6 +30,17 @@ $ cd /opt
 $ git clone https://github.com/couchbaselabs/sync-gateway-testcluster.git
 ```
 
+### Setup Global Ansible Config
+
+```
+$ cd sync-gateway-testcluster/provision/ansible/playbooks
+$ cp ansible.cfg.example ansible.cfg
+$ vi ansible.cfg  # edit to your liking
+```
+
+By default, the user is set to `root`, which works for VM clusters.  If you are on AWS, you will need to change that to `centos`
+
+
 ### Copy SSH key from Host -> Container
 
 In order to be able to ssh from your container into any of the hosts on AWS using public key auth, which is required to run most of the ansible commands, you will need to have an ssh keypair in your container that corresponds to your registered AWS key.
