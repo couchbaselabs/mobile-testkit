@@ -180,9 +180,8 @@ $ python provision/install_splunk.py
 **Gateload**
 
 ```
-python run_tests.py
-    --use-gateload
-    --gen-gateload-config
+$ cd performance_tests
+$ python run_tests.py --use-gateload --gen-gateload-config
 ```
 
 **Gatling**
@@ -190,9 +189,8 @@ python run_tests.py
 NOTE: this is currently broken
 
 ```
-python run_tests.py
-    --number-pullers=0
-    --number-pushers=7500
+$ cd performance_tests
+$ python run_tests.py --number-pullers=0 --number-pushers=7500
 ```
 
 ### Performance test data

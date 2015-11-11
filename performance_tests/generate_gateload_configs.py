@@ -22,6 +22,7 @@ import subprocess
 import json
 import os
 from jinja2 import Template
+import ansible.inventory
 
 def sync_gateways():
     """
@@ -41,13 +42,10 @@ def sync_gateways():
 
 
 def public_ip_addresses_for_tag(tag):
-    cmd = "ansible {0} --list-hosts -i ../temp_ansible_hosts".format(tag)
-    result = subprocess.check_output(cmd, shell=True)
-    print result
-    instance_list = result.split("\n")
-    instance_list = [x.strip() for x in instance_list]
-    instance_list = [x for x in instance_list if x]  # filter empty items 
-    return instance_list
+    hostfile = "../../../temp_ansible_hosts"
+    i = ansible.inventory.Inventory(host_list=hostfile)
+    hosts = i.get_group(tag).get_hosts()
+    return [host.get_variables()['ansible_ssh_host'] for host in hosts]
 
 def gateloads():
     tag = "load_generators"
@@ -90,7 +88,7 @@ def upload_gateload_config(gateload_ec2_id, sync_gateway_private_ip, user_offset
     print "Wrote to file: {}".format(outfile)
 
     # transfer file to remote host
-    cmd = 'ansible {} -i ../temp_ansible_hosts -m copy -a "src={} dest=/home/centos/gateload_config.json" --user centos'.format(gateload_ec2_id, outfile)
+    cmd = 'ansible {} -i ../../../temp_ansible_hosts -m copy -a "src={} dest=/home/centos/gateload_config.json" --user centos'.format(gateload_ec2_id, outfile)
     result = subprocess.check_output(cmd, shell=True)
     print "File transfer result: {}".format(result)
 
