@@ -87,11 +87,13 @@ $ python create_and_instantiate_cluster.py \
     --sync-gateway-type="m3.medium" \
     --num-gatlings=1 \
     --gatling-type="m3.medium" \
-    --num-lbs=1 \
+    --num-lbs=0 \
     --lb-type="m3.medium" 
 ```
 
 The AWS virtual machines will be accessible via the `AWS_KEY` you specified above.
+
+If you want to install a load balancer in front of the Sync Gateway instances, set `--num-lbs` to 1.
 
 ## Setup Ansible inventory
 
