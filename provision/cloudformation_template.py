@@ -19,6 +19,9 @@ def gen_template(config):
     num_gateloads = config.load_number
     gateload_instance_type = config.load_type
 
+    num_lbs = config.lb_number
+    lb_instance_type = config.lb_type
+
     t = Template()
     t.add_description(
         'An Ec2-classic stack with Couchbase Server, Sync Gateway + load testing tools '
@@ -171,6 +174,29 @@ def gen_template(config):
         ]
 
         t.add_resource(instance)
+
+        # Load Balancer instances (ubuntu ami)
+    for i in xrange(num_lbs):
+        name = "loadbalancer{}".format(i)
+        instance = ec2.Instance(name)
+        instance.ImageId = "ami-96a818fe"  # centos7 
+        instance.InstanceType = lb_instance_type
+        instance.SecurityGroups = [Ref(secGrpCouchbase)]
+        instance.KeyName = Ref(keyname_param)
+        instance.Tags=Tags(Name=name, Type="loadbalancer")
+        instance.BlockDeviceMappings = [
+            ec2.BlockDeviceMapping(
+                DeviceName = "/dev/sda1",
+                Ebs = ec2.EBSBlockDevice(
+                    DeleteOnTermination = True,
+                    VolumeSize = 20,
+                    VolumeType = "gp2"
+                )
+            )
+        ]
+
+        t.add_resource(instance)
+
 
     return t.to_json()
 

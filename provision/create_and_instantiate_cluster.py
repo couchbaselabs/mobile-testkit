@@ -9,7 +9,7 @@ import cloudformation_template
 
 class ClusterConfig:
 
-    def __init__(self, name, server_number, server_type, sync_gateway_number, sync_gateway_type, load_number, load_type):
+    def __init__(self, name, server_number, server_type, sync_gateway_number, sync_gateway_type, load_number, load_type, lb_number, lb_type):
 
         self.__name = name
         self.__server_number = server_number
@@ -18,6 +18,8 @@ class ClusterConfig:
         self.__sync_gateway_type = sync_gateway_type
         self.__load_number = load_number
         self.__load_type = load_type
+        self.__lb_number = lb_number
+        self.__lb_type = lb_type
 
     @property
     def name(self):
@@ -47,6 +49,14 @@ class ClusterConfig:
     def load_type(self):
         return self.__load_type
 
+    @property
+    def lb_number(self):
+        return self.__lb_number
+
+    @property
+    def lb_type(self):
+        return self.__lb_type
+
     def __validate_types(self):
         # Ec2 instances follow string format xx.xxxx
         # Hacky validation but better than nothing
@@ -58,6 +68,9 @@ class ClusterConfig:
             return False
         if not len(self.__load_type.split(".")) == 2:
             print "Invalid Ec2 load type"
+            return False
+        if not len(self.__lb_type.split(".")) == 2:
+            print "Invalid Ec2 load balancer type"
             return False
         return True
 
@@ -75,6 +88,10 @@ class ClusterConfig:
                 return False
             if self.__load_number > limits["max_loads"]:
                 print "You have exceed your maximum number of servers: {}".format(limits["max_loads"])
+                print "Edit you limits.json file to override this behavior"
+                return False
+            if self.__lb_number > limits["max_lbs"]:
+                print "You have exceed your maximum number of servers: {}".format(limits["max_lbs"])
                 print "Edit you limits.json file to override this behavior"
                 return False
             return True
@@ -100,6 +117,9 @@ def create_and_instantiate_cluster(config):
 
     print ">>> Load Instances:             {}".format(config.load_number)
     print ">>> Load Type:                  {}".format(config.load_type)
+
+    print ">>> Load Balancer Instances:    {}".format(config.lb_number)
+    print ">>> Load Balancer Type:         {}".format(config.lb_type)
 
     print ">>> Generating Cloudformation Template"
     json = cloudformation_template.gen_template(config)
@@ -133,7 +153,9 @@ if __name__ == "__main__":
         --num-sync-gateways <number_sync_gateways>
         --sync-gateway-type=<ec2_instance_type>
         --num-gatlings <number_gateloads>
-        --gatling-type=<ec2_instance_type>"""
+        --gatling-type=<ec2_instance_type>
+        --num-lbs <number_load_balancers>
+        --lb-type=<ec2_instance_type>"""
 
     parser = OptionParser(usage=usage)
 
@@ -165,6 +187,14 @@ if __name__ == "__main__":
                       action="store", type="string", dest="gatling_type", default="m3.medium",
                       help="EC2 instance type for gatling type")
 
+    parser.add_option("", "--num-lbs",
+                      action="store", type="int", dest="num_lbs", default=1,
+                      help="number of load balancer instances")
+
+    parser.add_option("", "--lb-type",
+                      action="store", type="string", dest="lb_type", default="m3.medium",
+                      help="EC2 instance type for load balancer type")
+
     arg_parameters = sys.argv[1:]
 
     (opts, args) = parser.parse_args(arg_parameters)
@@ -177,7 +207,9 @@ if __name__ == "__main__":
         opts.num_sync_gateways,
         opts.sync_gateway_type,
         opts.num_gatlings,
-        opts.gatling_type
+        opts.gatling_type,
+        opts.num_lbs,
+        opts.lb_type
     )
 
     if not cluster_config.is_valid():
