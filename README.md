@@ -96,7 +96,7 @@ The AWS virtual machines will be accessible via the `AWS_KEY` you specified abov
 **AWS**
 
 ```
-$ python performance_tests/generate_ansible_inventory_from_aws.py --stackname=TLeydenTestCluster --targetfile=temp_ansible_hosts
+$ python performance_tests/generate_ansible_inventory_from_aws.py --stackname=YourCloudFormationStack --targetfile=temp_ansible_hosts
 ```
 
 **Virutal Machines**
