@@ -95,8 +95,12 @@ The AWS virtual machines will be accessible via the `AWS_KEY` you specified abov
 
 **AWS**
 
+Generate the Ansible Inventory file (`temp_ansibile_hosts`) via:
+
 ```
-$ python performance_tests/generate_ansible_inventory_from_aws.py --stackname=YourCloudFormationStack --targetfile=temp_ansible_hosts
+$ python performance_tests/generate_ansible_inventory_from_aws.py \
+     --stackname=YourCloudFormationStack \
+     --targetfile=temp_ansible_hosts
 ```
 
 **Virutal Machines**
@@ -112,7 +116,10 @@ Enter file in which to save the key (/Users/sethrosetter/.ssh/id_rsa):<test-key>
 Generate the ansible hosts file and attempt to install the shared key on all machines in the cluster
 
 ```
-python conf/ini_to_ansible_host.py --ini-file=conf/hosts.ini --install-key=<test-key>.pub --ssh-user=<user>
+python conf/ini_to_ansible_host.py \
+  --ini-file=conf/hosts.ini \
+  --install-key=<test-key>.pub \
+  --ssh-user=<user>
 ```
 
 ## SSH Key setup (AWS)
@@ -133,13 +140,18 @@ This step will install:
 Example building from source:
 
 ```
-$ python provision/provision_cluster.py --server-version=3.1.1 --sync-gateway-branch=feature/distributed_index_bulk_set
+$ python provision/provision_cluster.py \
+    --server-version=3.1.1 \
+    --sync-gateway-branch=feature/distributed_index_bulk_set
 ```
 
 Example from a pre-built version (dev build):
 
 ```
-$ python provision/provision_cluster.py --server-version=3.1.1 --sync-gateway-dev-build-url=feature/distributed_index --sync-gateway-dev-build-number=345
+$ python provision/provision_cluster.py \
+    --server-version=3.1.1 \
+    --sync-gateway-dev-build-url=feature/distributed_index \
+    --sync-gateway-dev-build-number=345
 ```
 
 Like all scripts, run `python provision/provision_cluster.py -h` to view help options.
