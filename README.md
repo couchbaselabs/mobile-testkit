@@ -86,7 +86,9 @@ $ python create_and_instantiate_cluster.py \
     --num-sync-gateways=1 \
     --sync-gateway-type="m3.medium" \
     --num-gatlings=1 \
-    --gatling-type="m3.medium" 
+    --gatling-type="m3.medium" \
+    --num-lbs=1 \
+    --lb-type="m3.medium" 
 ```
 
 The AWS virtual machines will be accessible via the `AWS_KEY` you specified above.
