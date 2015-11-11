@@ -95,17 +95,8 @@ The AWS virtual machines will be accessible via the `AWS_KEY` you specified abov
 
 **AWS**
 
-Manually create a `sync-gateway-testcluster/temp_ansible_hosts` file in this format, with the hosts listed in your AWS console:
-
 ```
-[couchbase_servers]
-cb1 ansible_ssh_host=ec2-54-205-165-155.compute-1.amazonaws.com
-
-[sync_gateways]
-sg1 ansible_ssh_host=ec2-54-158-112-128.compute-1.amazonaws.com
-
-[load_generators]
-lg1 ansible_ssh_host=ec2-54-163-112-228.compute-1.amazonaws.com
+$ python performance_tests/generate_ansible_inventory_from_aws.py --stackname=TLeydenTestCluster --targetfile=temp_ansible_hosts
 ```
 
 **Virutal Machines**
