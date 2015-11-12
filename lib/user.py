@@ -199,8 +199,10 @@ class User:
 
         num_expected_docs = len(doc_ids)
         num_docs_from_changes = len(changes_ids)
-        print(">>> Number of expected docs: {}".format(num_expected_docs))
-        print(">>> Number of docs from _changes: {}".format(num_docs_from_changes))
+        print(" --------------------------------")
+        print("| {}".format(self.name))
+        print("| Number of expected docs: {}".format(num_expected_docs))
+        print("| Number of docs from _changes: {}".format(num_docs_from_changes))
 
         # Check that expected number of ids matchs the number returned by the changes feed
         assert num_expected_docs == num_docs_from_changes

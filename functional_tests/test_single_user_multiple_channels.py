@@ -35,14 +35,8 @@ def test_1(cluster):
 
     time.sleep(10)
 
-    seth_changes_doc_ids = seth.get_doc_ids_from_changes()
-    print("seth number of changes: {}".format(len(seth_changes_doc_ids)))
-
     seth_cache_ids = seth.cache.keys()
-
-    assert len(seth_changes_doc_ids) == 2000
-    assert len(seth_changes_doc_ids) == len(seth_cache_ids)
-    assert set(seth_changes_doc_ids) == set(seth_changes_doc_ids)
+    seth.verify_ids_from_changes(seth_cache_ids)
 
     end = time.time()
     print("TIME:{}s".format(end - start))

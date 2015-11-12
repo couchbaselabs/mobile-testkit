@@ -46,16 +46,13 @@ def test_dcp_reshard(cluster):
                 print "Docs added!!"
 
     # TODO better way to do this
-    time.sleep(20)
+    time.sleep(10)
 
-    #verify number of changes
-    traun_changes_doc_ids = traun.get_doc_ids_from_changes()
-    print("traun number of changes: {}".format(len(traun_changes_doc_ids)))
-    assert len(traun_changes_doc_ids) == 8001
+    expected_traun_ids = traun.cache.keys()
+    traun.verify_ids_from_changes(expected_traun_ids)
 
-    seth_changes_doc_ids = seth.get_doc_ids_from_changes()
-    print("seth number of changes: {}".format(len(seth_changes_doc_ids)))
-    assert len(seth_changes_doc_ids) == 1999
+    expected_seth_ids = seth.cache.keys()
+    seth.verify_ids_from_changes(expected_seth_ids)
 
     total_time = time.time() - start
 

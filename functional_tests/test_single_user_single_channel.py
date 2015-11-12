@@ -32,26 +32,14 @@ def test_1(cluster):
 
     time.sleep(10)
 
-    seth_changes_doc_ids = seth.get_doc_ids_from_changes()
-    print("seth number of changes: {}".format(len(seth_changes_doc_ids)))
-
     seth_cache_ids = seth.cache.keys()
-
-    assert len(seth_changes_doc_ids) == 7000
-    assert len(seth_changes_doc_ids) == len(seth_cache_ids)
-
-    assert set(seth_changes_doc_ids) == set(seth_changes_doc_ids)
-
-    admin_changes_doc_ids = admin.get_doc_ids_from_changes()
-    print("admin number of changes: {}".format(len(admin_changes_doc_ids)))
-
-    assert len(admin_changes_doc_ids) == 10000
-    admin_cache_ids = admin.cache.keys()
+    seth.verify_ids_from_changes(seth_cache_ids)
 
     # Admin should have doc ids from seth + admin
+    admin_cache_ids = admin.cache.keys()
     admin_cache_ids.extend(seth_cache_ids)
 
-    assert set(admin_changes_doc_ids) == set(admin_cache_ids)
+    admin.verify_ids_from_changes(admin_cache_ids)
 
     end = time.time()
     print("TIME:{}s".format(end - start))

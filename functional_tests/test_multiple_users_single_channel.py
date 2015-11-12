@@ -38,27 +38,14 @@ def test_1(cluster):
     # discuss appropriate time with team
     time.sleep(10)
 
-    # verify number of changes
-    seth_changes_doc_ids = seth.get_doc_ids_from_changes()
-    print("seth number of changes: {}".format(len(seth_changes_doc_ids)))
-    assert len(seth_changes_doc_ids) == 10000
+    # verify id of docs
+    expected_seth_ids = list(itertools.chain(seth.cache.keys(), adam.cache.keys(), traun.cache.keys()))
+    expected_adam_ids = list(itertools.chain(seth.cache.keys(), adam.cache.keys(), traun.cache.keys()))
+    expected_traun_ids = list(itertools.chain(seth.cache.keys(), adam.cache.keys(), traun.cache.keys()))
 
-    adam_changes_doc_ids = adam.get_doc_ids_from_changes()
-    print("adam number of changes: {}".format(len(adam_changes_doc_ids)))
-    assert len(adam_changes_doc_ids) == 10000
-
-    traun_changes_doc_ids = traun.get_doc_ids_from_changes()
-    print("traun number of changes: {}".format(len(traun_changes_doc_ids)))
-    assert len(traun_changes_doc_ids) == 10000
-
-    #verify id of docs
-    seth_ids = list(itertools.chain(seth.cache.keys(), adam.cache.keys(), traun.cache.keys()))
-    adam_ids = list(itertools.chain(seth.cache.keys(), adam.cache.keys(), traun.cache.keys()))
-    traun_ids = list(itertools.chain(seth.cache.keys(), adam.cache.keys(), traun.cache.keys()))
-
-    assert set(seth_changes_doc_ids) == set(seth_ids)
-    assert set(adam_changes_doc_ids) == set(adam_ids)
-    assert set(traun_changes_doc_ids) == set(traun_ids)
+    seth.verify_ids_from_changes(expected_seth_ids)
+    adam.verify_ids_from_changes(expected_adam_ids)
+    traun.verify_ids_from_changes(expected_traun_ids)
 
     end = time.time()
     print("TIME:{}s".format(end - start))
