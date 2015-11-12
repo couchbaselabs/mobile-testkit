@@ -208,9 +208,20 @@ Most of the performance test data will be pushed to Splunk (if the splunk forwar
 $ ansible-playbook performance_tests/ansible/playbooks/collect-sync-gateway-profile.yml -i temp_ansible_hosts
 ```
 
-## Run Functional Tests
+## Run Functional tests
 
 ```
 $ ./test
 ```
 
+## Running an individual functional test
+
+```
+$ python -m pytest --capture=no functional_tests/test_single_user_multiple_channels.py
+```
+
+## Collecting Sync Gateway logs
+
+```
+$ python provision/fetch_sg_logs.py
+```
