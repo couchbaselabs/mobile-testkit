@@ -1,6 +1,6 @@
 import sys
 
-class ResponsePrinter:
+class ScenarioPrinter:
 
     def __init__(self):
         self._request_count = 0

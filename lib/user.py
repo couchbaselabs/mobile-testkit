@@ -8,11 +8,11 @@ import time
 import base64
 import uuid
 import re
-from lib.document import Document
-from collections import defaultdict
-from responseprinter import ResponsePrinter
 
-PRINTER = ResponsePrinter()
+from collections import defaultdict
+from scenarioprinter import ScenarioPrinter
+
+scenario_printer = ScenarioPrinter()
 
 class User:
     def __init__(self, target, db, name, password, channels):
@@ -40,7 +40,7 @@ class User:
         body = json.dumps(doc_body)
 
         resp = requests.put(doc_url, headers=self._headers, data=body)
-        PRINTER.print_status(resp)
+        scenario_printer.print_status(resp)
         resp.raise_for_status()
 
         if resp.status_code == 201:
@@ -62,7 +62,7 @@ class User:
         data = json.dumps(docs)
 
         r = requests.post("{0}/{1}/_bulk_docs".format(self.target.url, self.db), headers=self._headers, data=data)
-        PRINTER.print_status(r)
+        scenario_printer.print_status(r)
         r.raise_for_status()
 
         if r.status_code == 201:
@@ -184,7 +184,7 @@ class User:
         r.raise_for_status()
 
         obj = json.loads(r.text)
-        PRINTER.print_changes_num(self.name, len(obj["results"]))
+        scenario_printer.print_changes_num(self.name, len(obj["results"]))
         return obj
 
     def verify_ids_from_changes(self, doc_ids):
