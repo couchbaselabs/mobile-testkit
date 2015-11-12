@@ -3,8 +3,14 @@
   any_errors_fatal: true
   sudo: true
   tasks:
-    # Remove Couchbase Server
-    - include: tasks/remove-couchbase-server.yml
 
-    # Remove sync_gateway
-    - include: tasks/remove-sync-gateway.yml
+  # Remove go, can cause issues with version confusion if multple versions of go are on a machine
+  - name: delete existing go installations
+    shell: rm -rf /usr/local/go/
+    ignore_errors: yes
+
+  # Remove Couchbase Server
+  - include: tasks/remove-couchbase-server.yml
+
+  # Remove sync_gateway
+  - include: tasks/remove-sync-gateway.yml
