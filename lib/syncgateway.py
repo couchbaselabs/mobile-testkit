@@ -23,4 +23,3 @@ class SyncGateway:
 
     def restart(self, config):
         orchestration.syncgatewayactions.restart(self.host_name, config)
-

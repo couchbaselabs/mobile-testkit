@@ -8,9 +8,11 @@ import time
 import base64
 import uuid
 import re
-from collections import defaultdict
-from responseprinter import ResponsePrinter
 
+from collections import defaultdict
+from scenarioprinter import ScenarioPrinter
+
+scenario_printer = ScenarioPrinter()
 
 class User:
     def __init__(self, target, db, name, password, channels):
@@ -25,7 +27,6 @@ class User:
         auth = base64.b64encode("{0}:{1}".format(self.name, self.password).encode())
         self._auth = auth.decode("UTF-8")
         self._headers = {'Content-Type': 'application/json', "Authorization": "Basic {}".format(self._auth)}
-        self._r_printer = ResponsePrinter()
 
     def __str__(self):
         return "USER: name={0} password={1} db={2} channels={3} cache_num={4}".format(self.name, self.password, self.db, self.channels, len(self.cache))
@@ -39,7 +40,7 @@ class User:
         body = json.dumps(doc_body)
 
         resp = requests.put(doc_url, headers=self._headers, data=body)
-        self._r_printer.print_status(resp)
+        scenario_printer.print_status(resp)
         resp.raise_for_status()
 
         if resp.status_code == 201:
@@ -58,10 +59,10 @@ class User:
 
         docs = dict()
         docs["docs"] = doc_list
-
         data = json.dumps(docs)
+
         r = requests.post("{0}/{1}/_bulk_docs".format(self.target.url, self.db), headers=self._headers, data=data)
-        self._r_printer.print_status(r)
+        scenario_printer.print_status(r)
         r.raise_for_status()
 
         if r.status_code == 201:
@@ -143,27 +144,75 @@ class User:
                 docs.append(obj['id'])
         return len(docs)
 
-    def get_changes(self, with_docs=False):
-        if with_docs:
-            r = requests.get("{}/{}/_changes?include_docs=true".format(self.target.url, self.db), headers=self._headers)
-        else:
-            r = requests.get("{}/{}/_changes".format(self.target.url, self.db), headers=self._headers)
-        r.raise_for_status()
-        return json.loads(r.text)
+    def get_changes(self, feed=None, limit=None, heartbeat=None, style=None,
+                    since=None, include_docs=None, channels=None, filter=None):
 
-    def get_doc_ids_from_changes(self):
+        params = dict()
+
+        if feed is not None:
+            if feed != "normal" and feed != "continuous" and feed != "longpoll" and feed != "websocket":
+                raise Exception("Invalid _changes feed type")
+            params["feed"] = feed
+
+        if limit is not None:
+            params["limit"] = limit
+
+        if heartbeat is not None:
+            params["heartbeat"] = heartbeat
+
+        if style is not None:
+            params["style"] = style
+
+        if since is not None:
+            params["since"] = since
+
+        if include_docs is not None:
+            if include_docs:
+                params["include_docs"] = "true"
+            else:
+                params["include_docs"] = "false"
+
+        if channels is not None:
+            params["channels"] = ",".join(channels)
+
+        if filter is not None:
+            if filter != "sync_gateway/bychannel":
+                raise Exception("Invalid _changes filter type")
+            params["filter"] = filter
+
+        r = requests.get("{}/{}/_changes".format(self.target.url, self.db), headers=self._headers, params=params)
+        r.raise_for_status()
+
+        obj = json.loads(r.text)
+        scenario_printer.print_changes_num(self.name, len(obj["results"]))
+        return obj
+
+    def verify_ids_from_changes(self, doc_ids):
 
         changes = self.get_changes()
+
         results = changes["results"]
+        changes_ids = []
+        for result in results:
+            if not result["id"].startswith("_user"):
+                changes_ids.append(result["id"])
 
-        ids = [result["id"] for result in results]
+        num_expected_docs = len(doc_ids)
+        num_docs_from_changes = len(changes_ids)
+        print(">>> Number of expected docs: {}".format(num_expected_docs))
+        print(">>> Number of docs from _changes: {}".format(num_docs_from_changes))
 
-        return ids
+        # Check that expected number of ids matchs the number returned by the changes feed
+        assert num_expected_docs == num_docs_from_changes
+
+        # Check that the ids are equal
+        assert set(doc_ids) == set(changes_ids)
+        print(">>> _changes doc ids match expected doc_ids")
 
     def verify_all_docs_from_changes_feed(self, num_revision, doc_name_pattern):
         status_num_docs = status_revisions = status_content = True
         p = re.compile(doc_name_pattern)
-        data = self.get_changes(with_docs=True)
+        data = self.get_changes(include_docs=True)
         docs = defaultdict(list)
 
         for obj in data['results']:

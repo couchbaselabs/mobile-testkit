@@ -7,20 +7,17 @@ import ansible_runner
 
 class CouchbaseServerConfig:
 
-    def __init__(self,
-                 version,
-                 build_number):
+    def __init__(self, version):
 
-        self.__valid_versions = [
+        self._valid_versions = [
             "3.1.0",
             "3.1.1",
             "4.0.0"
         ]
 
-        self.__version = version
-        self.__build_number = build_number
+        self._version = version
 
-    def __base_url_package_for_server(self, version, build):
+    def _base_url_package_for_server(self, version):
         if version == "3.1.0":
             base_url = "http://latestbuilds.hq.couchbase.com"
             package_name = "couchbase-server-enterprise_centos6_x86_64_3.1.0-1805-rel.rpm"
@@ -39,30 +36,27 @@ class CouchbaseServerConfig:
 
     @property
     def version(self):
-        return self.__version
-
-    @property
-    def build_number(self):
-        return self.__build_number
+        return self._version
 
     def __str__(self):
         output = "\n  Couchbase Server configuration\n"
         output += "  ------------------------------------------\n"
-        output += "  version:      {}\n".format(self.__version)
-        output += "  build number: {}\n".format(self.__build_number)
+        output += "  version:      {}\n".format(self._version)
         return output
 
     def server_base_url_and_package(self):
-        return self.__base_url_package_for_server(self.__version, self.__build_number)
+        return self._base_url_package_for_server(self._version)
 
     def is_valid(self):
-        if self.__version not in self.__valid_versions:
-            print "Make sure your server version is one of the following: {}".format(self.__valid_versions)
+        if self._version not in self._valid_versions:
+            print "Make sure your server version is one of the following: {}".format(self._valid_versions)
             return False
         return True
 
 
 def install_couchbase_server(couchbase_server_config):
+
+    print(couchbase_server_config)
 
     if not couchbase_server_config.is_valid():
         print "Invalid server provisioning configuration. Exiting ..."
@@ -87,17 +81,12 @@ if __name__ == "__main__":
                       action="store", type="string", dest="version", default=None,
                       help="server version to download")
 
-    parser.add_option("", "--build-number",
-                      action="store", type="string", dest="build_number", default=None,
-                      help="server build to download")
-
     arg_parameters = sys.argv[1:]
 
     (opts, args) = parser.parse_args(arg_parameters)
 
     server_config = CouchbaseServerConfig(
-        version=opts.version,
-        build_number=opts.build_number,
+        version=opts.version
     )
 
     install_couchbase_server(server_config)

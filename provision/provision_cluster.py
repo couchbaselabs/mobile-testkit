@@ -84,13 +84,9 @@ if __name__ == "__main__":
                       action="store", type="string", dest="server_version", default=None,
                       help="server version to download")
 
-    parser.add_option("", "--server-build",
-                      action="store", type="string", dest="server_build", default=None,
-                      help="server build to download")
-
     parser.add_option("", "--sync-gateway-version",
                       action="store", type="string", dest="sync_gateway_version", default=None,
-                      help="sync_gateway version to download")
+                      help="sync_gateway release version to download")
 
     parser.add_option("", "--sync-gateway-build",
                       action="store", type="string", dest="sync_gateway_build", default=None,
@@ -118,7 +114,6 @@ if __name__ == "__main__":
 
     server_config = CouchbaseServerConfig(
         version=opts.server_version,
-        build_number=opts.server_build
     )
 
     sync_gateway_config = SyncGatewayConfig(
