@@ -93,7 +93,7 @@ $ python create_and_instantiate_cluster.py \
 
 The AWS virtual machines will be accessible via the `AWS_KEY` you specified above.
 
-If you want to install a load balancer in front of the Sync Gateway instances, set `--num-lbs` to 1.
+If you want to install a load balancer in front of the Sync Gateway instances, set `--num-lbs` to 1.	
 
 ## Setup Ansible inventory
 
@@ -105,6 +105,26 @@ Generate the Ansible Inventory file (`temp_ansibile_hosts`) via:
 $ python performance_tests/generate_ansible_inventory_from_aws.py \
      --stackname=YourCloudFormationStack \
      --targetfile=temp_ansible_hosts
+```
+
+## Configure Index Writers
+
+If you need to set any Sync Gateways as Index Writers, then modify the `temp_ansible_hosts` file by hand.  Example:
+
+```
+[sync_gateways]
+sg1 ansible_ssh_host=ec2-54-211-190-141.compute-1.amazonaws.com
+sg2 ansible_ssh_host=ec2-54-163-79-222.compute-1.amazonaws.com
+
+[couchbase_servers]
+cb1 ansible_ssh_host=ec2-54-144-248-216.compute-1.amazonaws.com
+
+[load_generators]
+lg1 ansible_ssh_host=ec2-184-73-24-12.compute-1.amazonaws.com
+lg2 ansible_ssh_host=ec2-54-144-215-195.compute-1.amazonaws.com
+
+[sync_gateway_index_writers]
+sg1 ansible_ssh_host=ec2-54-211-190-141.compute-1.amazonaws.com
 ```
 
 **Virutal Machines**

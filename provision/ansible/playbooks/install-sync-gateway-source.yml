@@ -60,14 +60,41 @@
   - name: change permissions of sync gateway executable
     file: path=/home/sync_gateway/sync_gateway mode=a+x
 
-# Install and start service
+# Create sync gateway user
+- hosts: sync_gateways
+  sudo: true
+  tasks:
+  - include: tasks/create-sync-gateway-user.yml
+
+# Deploy sync gateway configs
 - hosts: sync_gateways
   sudo: true
   vars:
     sync_gateway_config_filepath:
     couchbase_server_primary_node: "{{ hostvars[groups.couchbase_servers[0]].ansible_ssh_host }}"
+    is_index_writer: "false"
+  tasks:
+  - include: tasks/deploy-sync-gateway-config.yml
 
+# Deploy sync gateway configs (index writers)
+- hosts: sync_gateway_index_writers
+  sudo: true
+  vars:
+    sync_gateway_config_filepath:
+    couchbase_server_primary_node: "{{ hostvars[groups.couchbase_servers[0]].ansible_ssh_host }}"
+    is_index_writer: "true"
+  tasks:
+  - include: tasks/deploy-sync-gateway-config.yml
+
+# Install and start service
+- hosts: sync_gateways
+  sudo: true
+  vars:
+    sync_gateway_config_filepath:
   tasks:
   # Create sync_gateway user, install and start service
   - include: tasks/start-sync-gateway.yml
+
+
+
 

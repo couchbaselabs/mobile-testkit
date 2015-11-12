@@ -32,7 +32,7 @@
             "channel_index":{
                 "server":"http://{{ couchbase_server_primary_node }}:8091",
                 "bucket":"index-bucket",
-                "writer":true
+                "writer":{{ is_index_writer }}
             }
         }
     }

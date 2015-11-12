@@ -1,0 +1,4 @@
+# Add sync_gateway user
+- name: add sync gateway user
+  user: name=sync_gateway createhome=yes
+
