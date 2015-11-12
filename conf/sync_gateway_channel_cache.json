@@ -1,12 +1,15 @@
 {
     "interface":":4984",
     "adminInterface": "0.0.0.0:4985",
-    "log":["*"],
-    "verbose":"true",
     "databases":{
         "db": {
             "server":"http://{{ couchbase_server_primary_node }}:8091",
-            "bucket":"data-bucket"
+            "bucket":"data-bucket",
+            "cache": {
+                "channel_cache_max_length": 5000,
+                "channel_cache_min_length": 5000,
+                "channel_cache_expiry": 90
+            }
         }
     }
 }
