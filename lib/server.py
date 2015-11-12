@@ -16,7 +16,7 @@ class Server:
         auth = auth.decode("UTF-8")
         self._headers = {'Content-Type': 'application/json', "Authorization": "Basic {}".format(auth)}
 
-    def create_buckets(self, names):
+    def delete_buckets(self):
 
         resp = requests.get("{}/pools/default/buckets".format(self.url), headers=self._headers)
         resp.raise_for_status()
@@ -33,6 +33,8 @@ class Server:
         for bucket_name in existing_bucket_names:
             resp = requests.delete("{0}/pools/default/buckets/{1}".format(self.url, bucket_name), headers=self._headers)
             resp.raise_for_status()
+
+    def create_buckets(self, names):
 
         # Create buckets
         extra_vars = {"bucket_names": names}
