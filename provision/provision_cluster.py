@@ -50,6 +50,9 @@ def provision_cluster(couchbase_server_config, sync_gateway_config):
     # Reset previous installs
     ansible_runner.run_ansible_playbook("remove-previous-installs.yml")
 
+    # OS-level modifications
+    ansible_runner.run_ansible_playbook("os-level-modifications.yml")
+
     # Install dependencies
     ansible_runner.run_ansible_playbook("install-common-tools.yml")
 
