@@ -1,7 +1,7 @@
 import requests
 import json
 from lib.user import User
-from lib.responseprinter import ResponsePrinter
+from lib.scenarioprinter import ScenarioPrinter
 
 # Admin
 # GET /
@@ -18,7 +18,7 @@ class Admin:
         self.admin_url = "http://{}:4985".format(sync_gateway.ip)
         self.users = {}
 
-        self._printer = ResponsePrinter()
+        self._printer = ScenarioPrinter()
 
     def register_user(self, target, db, name, password, channels):
 
