@@ -21,17 +21,20 @@ lg1 ansible_ssh_host=ec2-54-157-59-199.compute-1.amazonaws.com
 host_types = [
     "tag_Type_syncgateway", 
     "tag_Type_couchbaseserver", 
-    "tag_Type_gateload"
+    "tag_Type_gateload",
+    "tag_Type_loadbalancer"
 ]
 host_types_to_ansible_groups = {
     "tag_Type_syncgateway": "sync_gateways",
     "tag_Type_couchbaseserver": "couchbase_servers",
-    "tag_Type_gateload": "load_generators"
+    "tag_Type_gateload": "load_generators",
+    "tag_Type_loadbalancer": "load_balancers"
 }
 ansible_group_shortnames = {
     "sync_gateways": "sg",
     "couchbase_servers": "cb",
-    "load_generators": "lg"
+    "load_generators": "lg",
+    "load_balancer": "lb"
 }
 
 def get_ansible_inventory_name(ansible_group_name, host_index):
@@ -48,6 +51,10 @@ def get_ansible_groups():
 
     # loop over all the host_types (groups) like 
     for host_type in host_types:
+        
+        if not ec2Inventory.inventory.has_key(host_type):
+            print "No hosts with type: {} found, skipping".format(host_type)
+            continue
 
         hosts_for_type = ec2Inventory.inventory[host_type]
         hosts_for_type = list(set(hosts_for_type))  # uniquify
