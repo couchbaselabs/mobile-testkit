@@ -72,6 +72,7 @@ def get_ansible_groups():
             host.add_group(ansible_group)
             host.set_variable("ansible_ssh_host", hostname)
             ansible_group.add_host(host)
+            i += 1
 
         ansible_groups.append(ansible_group)
 
