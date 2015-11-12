@@ -39,6 +39,7 @@
     branch:
 
   tasks:
+  # Clone and build sync_gateway
   - name: clone sync gateway git repo
     git: repo=https://github.com/couchbase/sync_gateway.git
          dest=/home/centos/sync_gateway
@@ -49,6 +50,16 @@
     shell: git submodule init && git submodule update chdir=/home/centos/sync_gateway
   - name: build sync gateway
     shell: ./build.sh chdir=/home/centos/sync_gateway
+
+  # Add sync_gateway user and copy binary from centos user
+  - name: add sync gateway user
+    user: name=sync_gateway createhome=yes
+  - name: make service install script executable
+    file: path=/home/centos/sync_gateway/service/sync_gateway_service_install.sh mode=a+x
+  - name: copy sync gateway binary to sync_gateway home
+    shell: cp /home/centos/sync_gateway/bin/sync_gateway /home/sync_gateway
+  - name: change permissions of sync gateway executable
+    file: path=/home/sync_gateway/sync_gateway mode=a+x
 
 # Install and start service
 - hosts: sync_gateways
