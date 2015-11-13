@@ -109,7 +109,7 @@ $ python performance_tests/generate_ansible_inventory_from_aws.py \
 
 ## Configure Index Writers
 
-If you need to set any Sync Gateways as Index Writers, then modify the `temp_ansible_hosts` file by hand.  Example:
+If you need to set any Sync Gateways as Index Writers, then modify the `provisioning_config` file by hand.  Example:
 
 ```
 [sync_gateways]
@@ -128,6 +128,12 @@ sg1 ansible_ssh_host=ec2-54-211-190-141.compute-1.amazonaws.com
 ```
 
 **Virutal Machines**
+
+Create and edit your provisioning configuration
+```
+$ cp provisioning_config.example provisioning_config
+```
+Add the ip endpoints you would like to target
 
 One time only. Ansible playbooks require ssh access to run on the target hosts.  This script will attempt to install a common public key to ~/.ssh/knownhosts on the machines in the cluster via ssh-copy-id. 
 
