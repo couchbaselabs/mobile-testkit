@@ -37,7 +37,10 @@ class Cluster:
             sys.exit(1)
 
         i = ansible.inventory.Inventory(host_list=hostfile)
-        hosts = i.get_group(tag).get_hosts()
+        group = i.get_group(tag)
+        if group is None:
+            return []
+        hosts = group.get_hosts()
         return [host.get_variables() for host in hosts]
 
     def reset(self, config):
