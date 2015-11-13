@@ -26,7 +26,7 @@ import ansible.inventory
 
 
 def hosts_for_tag(tag):
-    hostfile = "../../../temp_ansible_hosts"
+    hostfile = "../../../provisioning_config"
     i = ansible.inventory.Inventory(host_list=hostfile)
     hosts = i.get_group(tag).get_hosts()
     return [host.get_variables() for host in hosts]
@@ -75,7 +75,7 @@ def upload_gateload_config(gateload, sync_gateway, user_offset, number_of_puller
 
     # transfer file to remote host
 
-    cmd = 'ansible {} -i ../../../temp_ansible_hosts -m copy -a "src={} dest=/home/centos/gateload_config.json" --user centos'.format(gateload_inventory_hostname, outfile)
+    cmd = 'ansible {} -i ../../../provisioning_config -m copy -a "src={} dest=/home/centos/gateload_config.json" --user centos'.format(gateload_inventory_hostname, outfile)
     result = subprocess.check_output(cmd, shell=True)
     print "File transfer result: {}".format(result)
 

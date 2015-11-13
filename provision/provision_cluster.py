@@ -16,7 +16,7 @@ def provision_cluster(couchbase_server_config, sync_gateway_config):
 
     print "\n>>> Host info:\n"
 
-    with open("temp_ansible_hosts", "r") as ansible_hosts:
+    with open("provisioning_config", "r") as ansible_hosts:
         print(ansible_hosts.read())
 
     print(couchbase_server_config)

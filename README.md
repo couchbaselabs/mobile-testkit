@@ -99,7 +99,7 @@ If you want to install a load balancer in front of the Sync Gateway instances, s
 
 **AWS**
 
-Generate the Ansible Inventory file (`temp_ansibile_hosts`) via:
+Generate the Ansible Inventory file (`provisioning_config`) via:
 
 ```
 $ python performance_tests/generate_ansible_inventory_from_aws.py \
@@ -137,12 +137,11 @@ Generating public/private rsa key pair.
 Enter file in which to save the key (/Users/sethrosetter/.ssh/id_rsa):<test-key>
 ```
 
-Generate the ansible hosts file and attempt to install the shared key on all machines in the cluster
+Attempt to install the shared key on all machines in the cluster defined in (`provisioning_config`)
 
 ```
-python conf/ini_to_ansible_host.py \
-  --ini-file=conf/hosts.ini \
-  --install-key=<test-key>.pub \
+python conf/install_keys.py \
+  --key-name=<public-ssh-key-name> \
   --ssh-user=<user>
 ```
 
