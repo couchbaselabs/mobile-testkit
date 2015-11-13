@@ -70,7 +70,7 @@ def upload_gateload_config(gateload, sync_gateway, user_offset, number_of_puller
 
     # transfer file to remote host
 
-    cmd = 'ansible {} -i ../../../temp_ansible_hosts -m copy -a "src={} dest=/home/centos/gateload_config.json" --user centos'.format(gateload_inventory_hostname, outfile)
+    cmd = 'ansible {} -i ../../../provisioning_config -m copy -a "src={} dest=/home/centos/gateload_config.json" --user centos'.format(gateload_inventory_hostname, outfile)
     result = subprocess.check_output(cmd, shell=True)
     print "File transfer result: {}".format(result)
 

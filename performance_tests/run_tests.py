@@ -13,14 +13,14 @@ def run_tests(number_pullers, number_pushers, use_gateload, gen_gateload_config)
         os.chdir("ansible/playbooks")
 
         # Build gateload
-        subprocess.call(["ansible-playbook", "-i", "../../../temp_ansible_hosts", "build-gateload.yml"])
+        subprocess.call(["ansible-playbook", "-i", "../../../provisioning_config", "build-gateload.yml"])
 
         # Generate gateload config
         if gen_gateload_config:
             generate_gateload_configs.main(number_pullers, number_pushers)
 
         # Start gateload
-        subprocess.call(["ansible-playbook", "-i", "../../../temp_ansible_hosts", "start-gateload.yml"])
+        subprocess.call(["ansible-playbook", "-i", "../../../provisioning_config", "start-gateload.yml"])
 
     else:
         print "Using Gatling"
@@ -28,12 +28,12 @@ def run_tests(number_pullers, number_pushers, use_gateload, gen_gateload_config)
         os.chdir("ansible/playbooks")
 
         # Configure gatling
-        subprocess.call(["ansible-playbook", "-i", "../../../temp_ansible_hosts", "configure-gatling.yml"])
+        subprocess.call(["ansible-playbook", "-i", "../../../provisioning_config", "configure-gatling.yml"])
 
         # Run Gatling
         subprocess.call([
             "ansible-playbook", 
-            "-i", "../../../temp_ansible_hosts",
+            "-i", "../../../provisioning_config",
             "run-gatling-theme.yml",
             "--extra-vars", "number_of_pullers={0} number_of_pushers={1}".format(number_pullers, number_pushers)
         ])

@@ -23,3 +23,6 @@ class SyncGateway:
 
     def restart(self, config):
         orchestration.syncgatewayactions.restart(self.host_name, config)
+
+    def __str__(self):
+        return "SyncGateway: {}:{}\n".format(self.host_name, self.ip)

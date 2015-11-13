@@ -5,7 +5,7 @@ from optparse import OptionParser
 import sys
 
 """
-Generate a temp_ansible_hosts file like:
+Generate a provisioning_config file like:
 
 [couchbase_servers]
 cb1 ansible_ssh_host=ec2-54-147-234-108.compute-1.amazonaws.com
