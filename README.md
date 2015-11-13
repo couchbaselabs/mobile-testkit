@@ -104,7 +104,7 @@ Generate the Ansible Inventory file (`provisioning_config`) via:
 ```
 $ python performance_tests/generate_ansible_inventory_from_aws.py \
      --stackname=YourCloudFormationStack \
-     --targetfile=temp_ansible_hosts
+     --targetfile=provisioning_config
 ```
 
 ## Configure Index Writers
