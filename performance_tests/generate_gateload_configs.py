@@ -28,7 +28,10 @@ import ansible.inventory
 def hosts_for_tag(tag):
     hostfile = "../../../provisioning_config"
     i = ansible.inventory.Inventory(host_list=hostfile)
-    hosts = i.get_group(tag).get_hosts()
+    group = i.get_group(tag)
+    if group is None:
+        return []
+    hosts = group.get_hosts()
     return [host.get_variables() for host in hosts]
 
 def gateloads():
