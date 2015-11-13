@@ -10,7 +10,7 @@ import pytest
 @pytest.mark.sanity
 def test_1(cluster):
 
-    cluster.reset("sync_gateway_default.json")
+    cluster.reset("sync_gateway_default_functional_tests.json")
 
     start = time.time()
     sgs = cluster.sync_gateways

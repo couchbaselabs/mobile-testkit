@@ -43,5 +43,8 @@
     couchbase_server_primary_node: "{{ hostvars[groups.couchbase_servers[0]].ansible_ssh_host }}"
 
   tasks:
+  #
+  # IMPORTANT - this script is intended to reset with a non paramterized sync_gateway configuation
+  #
   - include: tasks/deploy-sync-gateway-config.yml
   - include: tasks/start-sync-gateway.yml
