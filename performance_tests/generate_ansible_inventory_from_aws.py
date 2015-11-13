@@ -85,6 +85,23 @@ def get_ansible_groups():
 
     return ansible_groups
 
+def add_sync_gateway_index_writers(input_ansible_groups):
+    """
+    By default, make each sync gateway an index writer. 
+    """
+    output_ansible_groups = []
+    sg_writer_group = ansible.inventory.group.Group("sync_gateway_index_writers")
+    for ansible_group in input_ansible_groups:
+        output_ansible_groups.append(ansible_group)
+        if ansible_group.name == "sync_gateways":
+            for host in ansible_group.get_hosts():
+                host_copy = ansible.inventory.host.Host(host.name)
+                host_copy.add_group(sg_writer_group)
+                host_copy.set_variable("ansible_ssh_host", host.get_variables()["ansible_ssh_host"])
+                sg_writer_group.add_host(host_copy)
+            output_ansible_groups.append(sg_writer_group)
+    return output_ansible_groups
+
 def write_to_file(ansible_groups, filename):
     target = open(filename, 'w')
     target.truncate()
@@ -141,6 +158,7 @@ if __name__=="__main__":
     cloud_formation_stack_hostnames = list(set(cloud_formation_stack_hostnames))
 
     ansible_groups = get_ansible_groups()
+    ansible_groups = add_sync_gateway_index_writers(ansible_groups)
     write_to_file(ansible_groups, opts.targetfile)
 
         
