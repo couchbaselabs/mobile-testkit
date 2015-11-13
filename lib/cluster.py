@@ -43,7 +43,7 @@ class Cluster:
     def reset(self, config):
         clusteractions.reset(config)
 
-    def __str__(self):
+    def __repr__(self):
         s = "\n\n"
         s += "Sync Gateways\n"
         for sg in self.sync_gateways:
