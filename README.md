@@ -102,30 +102,14 @@ If you want to install a load balancer in front of the Sync Gateway instances, s
 Generate the Ansible Inventory file (`provisioning_config`) via:
 
 ```
-$ python performance_tests/generate_ansible_inventory_from_aws.py \
+$ python provision/generate_ansible_inventory_from_aws.py \
      --stackname=YourCloudFormationStack \
      --targetfile=provisioning_config
 ```
 
-## Configure Index Writers
+## Configure non-Index Writers (optional)
 
-If you need to set any Sync Gateways as Index Writers, then modify the `provisioning_config` file by hand.  Example:
-
-```
-[sync_gateways]
-sg1 ansible_ssh_host=ec2-54-211-190-141.compute-1.amazonaws.com
-sg2 ansible_ssh_host=ec2-54-163-79-222.compute-1.amazonaws.com
-
-[couchbase_servers]
-cb1 ansible_ssh_host=ec2-54-144-248-216.compute-1.amazonaws.com
-
-[load_generators]
-lg1 ansible_ssh_host=ec2-184-73-24-12.compute-1.amazonaws.com
-lg2 ansible_ssh_host=ec2-54-144-215-195.compute-1.amazonaws.com
-
-[sync_gateway_index_writers]
-sg1 ansible_ssh_host=ec2-54-211-190-141.compute-1.amazonaws.com
-```
+By default, all Sync Gateways will be configured as index writers.  However, if you need to set any Sync Gateways as non-Index Writers, then modify the `provisioning_config` file by hand to remove them from the `sync_gateway_index_writers` ansible group.
 
 **Virutal Machines**
 
