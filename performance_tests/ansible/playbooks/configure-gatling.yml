@@ -1,14 +1,5 @@
 ---
-- hosts: all
-  connection: local
-  any_errors_fatal: true
-  tasks:
-  - name: Create groups based on ec2 access key
-    group_by: key=key_{{ ec2_key_name }}
-
 - hosts: load_generators
-  vars:
-    ec2keyname: key_{{ ec2_key_name }}
   remote_user: centos
   any_errors_fatal: true
   sudo: yes
@@ -53,4 +44,4 @@
     lineinfile: 
       dest=/home/projects/sg-gatling-load/pom.xml 
       regexp='<simulation.targetHosts>.*</simulation.targetHosts>' 
-      line='<simulation.targetHosts>{% set comma = joiner(",") %} {% for item in groups.sync_gateways | intersect(groups[ec2keyname]) -%} {{ comma() }}{{ hostvars[item].ec2_private_ip_address }} {%- endfor %}</simulation.targetHosts>'
+      line='<simulation.targetHosts>{% set comma = joiner(",") %} {% for item in groups.sync_gateways -%} {{ comma() }}{{ hostvars[item].ansible_ssh_host }} {%- endfor %}</simulation.targetHosts>'
