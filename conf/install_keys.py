@@ -2,12 +2,20 @@ import os
 import subprocess
 import sys
 
+import ansible.inventory
 
-def install_keys(key_name, user_name, ips):
+from optparse import OptionParser
 
-    if not key_name or not user_name:
-        print("Make sure to specify a public key with --key-name and user with --remote-user")
-        sys.exit(1)
+def install_keys(key_name, user_name):
+
+    hostfile = "provisioning_config"
+    inv = ansible.inventory.Inventory(host_list=hostfile)
+    hosts = inv.get_hosts()
+
+    ips = []
+    for host in hosts:
+        host_vars = host.get_variables()
+        ips.append(host_vars["ansible_ssh_host"])
 
     print("Are you sure you would like to copy public key '{0}' to vms: {1}".format(
         key_name, ips
@@ -35,4 +43,41 @@ def install_keys(key_name, user_name, ips):
         sys.exit(1)
     else:
         subprocess.call((["ssh-add", "{0}/.ssh/{1}".format(os.environ["HOME"], private_key)]))
+
+if __name__ == "__main__":
+
+    usage = "usage: install-keys.py --key-name=<name_of_key> --ssh-user=<user>"
+    parser = OptionParser(usage=usage)
+
+    parser.add_option(
+        "", "--key-name",
+        action="store",
+        type="string",
+        dest="key_name",
+        help="ssh key to install to hosts",
+        default=None
+    )
+
+    parser.add_option(
+        "", "--ssh-user",
+        action="store",
+        type="string",
+        dest="ssh_user",
+        help="ssh key to install to hosts",
+        default=None
+    )
+
+    cmd_args = sys.argv[1:]
+    (opts, args) = parser.parse_args(cmd_args)
+
+    if opts.key_name is None or opts.ssh_user is None:
+        print(">>> Please provide --key-name=<key-name> AND --ssh-user=<user>")
+        sys.exit(1)
+
+    if opts.key_name is not None and not opts.key_name.endswith(".pub"):
+        print(">>> Please provide a PUBLIC key (.pub) to install on the remote machines")
+        sys.exit(1)
+
+    install_keys(opts.key_name, opts.ssh_user)
+
 
