@@ -42,7 +42,7 @@ class User:
         body = json.dumps(doc_body)
 
         resp = requests.put(doc_url, headers=self._headers, data=body, timeout=self._request_timeout)
-        self._r_printer.print_status(resp)
+        scenario_printer.print_status(resp)
         resp.raise_for_status()
 
         if resp.status_code == 201:
@@ -64,7 +64,7 @@ class User:
         data = json.dumps(docs)
 
         r = requests.post("{0}/{1}/_bulk_docs".format(self.target.url, self.db), headers=self._headers, data=data, timeout=self._request_timeout)
-        self._r_printer.print_status(r)
+        scenario_printer.print_status(r)
         r.raise_for_status()
 
         if r.status_code == 201:
