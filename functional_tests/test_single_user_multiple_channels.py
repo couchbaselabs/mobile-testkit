@@ -36,7 +36,7 @@ def test_1(cluster):
     time.sleep(10)
 
     seth_cache_ids = seth.cache.keys()
-    seth.verify_ids_from_changes(seth_cache_ids)
+    seth.verify_ids_from_changes(2000, seth_cache_ids)
 
     end = time.time()
     print("TIME:{}s".format(end - start))

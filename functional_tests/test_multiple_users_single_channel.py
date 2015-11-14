@@ -43,9 +43,9 @@ def test_1(cluster):
     expected_adam_ids = list(itertools.chain(seth.cache.keys(), adam.cache.keys(), traun.cache.keys()))
     expected_traun_ids = list(itertools.chain(seth.cache.keys(), adam.cache.keys(), traun.cache.keys()))
 
-    seth.verify_ids_from_changes(expected_seth_ids)
-    adam.verify_ids_from_changes(expected_adam_ids)
-    traun.verify_ids_from_changes(expected_traun_ids)
+    seth.verify_ids_from_changes(10000, expected_seth_ids)
+    adam.verify_ids_from_changes(10000, expected_adam_ids)
+    traun.verify_ids_from_changes(10000, expected_traun_ids)
 
     end = time.time()
     print("TIME:{}s".format(end - start))

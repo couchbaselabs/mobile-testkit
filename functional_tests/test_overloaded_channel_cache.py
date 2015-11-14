@@ -83,3 +83,5 @@ def test_1(cluster, user_channels, filter, limit):
             doc_pusher = users["abc_doc_pusher"]
 
             user.verify_ids_from_changes(doc_pusher.cache.keys())
+
+        #TODO: Autoverify 4985/db/_expvar view queries

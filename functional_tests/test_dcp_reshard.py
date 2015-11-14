@@ -49,10 +49,10 @@ def test_dcp_reshard(cluster):
     time.sleep(10)
 
     expected_traun_ids = traun.cache.keys()
-    traun.verify_ids_from_changes(expected_traun_ids)
+    traun.verify_ids_from_changes(8001, expected_traun_ids)
 
     expected_seth_ids = seth.cache.keys()
-    seth.verify_ids_from_changes(expected_seth_ids)
+    seth.verify_ids_from_changes(1999, expected_seth_ids)
 
     total_time = time.time() - start
 

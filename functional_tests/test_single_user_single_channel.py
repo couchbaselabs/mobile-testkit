@@ -33,13 +33,13 @@ def test_1(cluster):
     time.sleep(10)
 
     seth_cache_ids = seth.cache.keys()
-    seth.verify_ids_from_changes(seth_cache_ids)
+    seth.verify_ids_from_changes(7000, seth_cache_ids)
 
     # Admin should have doc ids from seth + admin
     admin_cache_ids = admin.cache.keys()
     admin_cache_ids.extend(seth_cache_ids)
 
-    admin.verify_ids_from_changes(admin_cache_ids)
+    admin.verify_ids_from_changes(10000, admin_cache_ids)
 
     end = time.time()
     print("TIME:{}s".format(end - start))

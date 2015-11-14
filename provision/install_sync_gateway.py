@@ -138,7 +138,6 @@ def install_sync_gateway(sync_gateway_config):
 if __name__ == "__main__":
     usage = """usage: python install_sync_gateway.py
     --branch=<sync_gateway_branch_to_build>
-    --config-file-path=<path_to_local_sync_gateway_config>
     """
 
     default_sync_gateway_config = os.path.abspath("conf/sync_gateway_default.json")
@@ -156,7 +155,7 @@ if __name__ == "__main__":
     parser.add_option("", "--config-file-path",
                       action="store", type="string", dest="sync_gateway_config_file",
                       default=default_sync_gateway_config,
-                      help="path to your sync_gateway_config file")
+                      help="path to your sync_gateway_config file uses '/conf/default_sync_gateway_config' by default")
 
     parser.add_option("", "--branch",
                       action="store", type="string", dest="source_branch", default=None,
