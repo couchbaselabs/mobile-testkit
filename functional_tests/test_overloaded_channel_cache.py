@@ -4,7 +4,7 @@ import pytest
 import concurrent
 import concurrent.futures
 
-from cluster_setup import cluster
+from fixtures import cluster
 
 @pytest.mark.regression
 @pytest.mark.parametrize("user_channels, filter, limit", [

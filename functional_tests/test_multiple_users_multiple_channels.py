@@ -4,7 +4,7 @@ import itertools
 from lib.user import User
 from lib.admin import Admin
 
-from cluster_setup import cluster
+from fixtures import cluster
 import pytest
 
 @pytest.mark.sanity

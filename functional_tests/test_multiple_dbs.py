@@ -1,94 +1,69 @@
-import time
-
 import pytest
-import concurrent.futures
 
 from lib.admin import Admin
 
-from cluster_setup import cluster
+from fixtures import cluster
 
-
-@pytest.fixture
-def simple_users_with_channels():
-    users = [
-        {"db": "db", "name": "seth", "channels": ["ABC", "CBS", "NBC", "FOX"]},
-        {"db": "db2", "name": "ashvinder", "channels": ["ABC", "CBS", "NBC", "FOX"]}
-    ]
-    return users
-
-
-@pytest.mark.extendedsanity
-def test_multiple_db_single_data_bucket_single_index_bucket(cluster, simple_users_with_channels):
+@pytest.mark.sanity
+def test_multiple_db_single_data_bucket_single_index_bucket(cluster):
 
     cluster.reset(config="multiple_dbs_shared_data_shared_index.json")
-    #cluster.servers[0].add_bucket("one-more-bucket")
+
+    # TODO - parametrize
+    num_db_users = 5
+    num_db2_users = 5
+    num_docs_per_user = 100
 
     admin = Admin(cluster.sync_gateways[0])
 
-    for user in simple_users_with_channels:
-        admin.register_user(target=cluster.sync_gateways[0], db=user["db"], name=user["name"], channels=user["channels"])
+    admin.register_bulk_users(target=cluster.sync_gateways[0], db="db", name_prefix="bulk_db_user", number=num_db_users, password="password", channels=["ABC"])
+    admin.register_bulk_users(target=cluster.sync_gateways[0], db="db2", name_prefix="bulk_db2_user", number=num_db2_users, password="password", channels=["ABC"])
 
     users = admin.get_users().values()
-    print(users)
+
+    assert len(users) == 10
 
     # Round robin
-    count = 1
     num_sgs = len(cluster.sync_gateways)
-    while count <= 20:
-        for user in users:
-            user.add_docs(100, uuid_names=True, bulk=True)
-            user.target = cluster.sync_gateways[(count + 1) % num_sgs]
+    count = 1
+    for user in users:
+        user.add_docs(num_docs_per_user, uuid_names=True, bulk=True)
+        user.target = cluster.sync_gateways[(count + 1) % num_sgs]
         count += 1
 
     all_cache_ids = [key for user in users for key in user.cache.keys()]
 
     for user in users:
-        print(user)
-        assert len(user.cache) == 2000
-        change_doc_ids = user.get_doc_ids_from_changes()
-        assert len(change_doc_ids) == len(all_cache_ids)
-        assert set(change_doc_ids) == set(all_cache_ids)
+        user.verify_ids_from_changes(1000, all_cache_ids)
 
+def test_multiple_db_unique_data_bucket_unique_index_bucket(cluster):
 
-
-
-# def test_multiple_db_single_data_bucket_unique_index_bucket(cluster, simple_users_with_channels):
-#     pass
-#
-#
-# def test_multiple_db_unique_data_bucket_single_index_bucket(cluster, simple_users_with_channels):
-#     pass
-#
-#
-
-def test_multiple_db_unique_data_bucket_unique_index_bucket(cluster, simple_users_with_channels):
     cluster.reset(config="multiple_dbs_unique_data_unique_index.json")
+    cluster.servers[0].delete_buckets
+
+    # TODO - parametrize
+    num_db_users = 5
+    num_db2_users = 5
+    num_docs_per_user = 100
 
     admin = Admin(cluster.sync_gateways[0])
 
-    for user in simple_users_with_channels:
-        admin.register_user(target=cluster.sync_gateways[0], db=user["db"], name=user["name"], channels=user["channels"])
+    admin.register_bulk_users(target=cluster.sync_gateways[0], db="db", name_prefix="bulk_db_user", number=num_db_users, password="password", channels=["ABC"])
+    admin.register_bulk_users(target=cluster.sync_gateways[0], db="db2", name_prefix="bulk_db2_user", number=num_db2_users, password="password", channels=["ABC"])
 
     users = admin.get_users().values()
-    print(users)
+
+    assert len(users) == 10
 
     # Round robin
-    count = 1
     num_sgs = len(cluster.sync_gateways)
-    while count <= 20:
-        for user in users:
-            user.add_docs(100, uuid_names=True, bulk=True)
-            user.target = cluster.sync_gateways[(count + 1) % num_sgs]
+    count = 1
+    for user in users:
+        user.add_docs(num_docs_per_user, uuid_names=True, bulk=True)
+        user.target = cluster.sync_gateways[(count + 1) % num_sgs]
         count += 1
 
-    for user in users:
-        print(user)
-        assert len(user.cache) == 2000
-        change_doc_ids = user.get_doc_ids_from_changes()
-        assert len(change_doc_ids) == len(user.cache.keys())
-        assert set(change_doc_ids) == set(user.cache.keys())
+    all_cache_ids = [key for user in users for key in user.cache.keys()]
 
-#
-#
-# def test_multiple_db_single_data_bucket_different_sync_functions(cluster, simple_users_with_channels):
-#     pass
+    for user in users:
+        user.verify_ids_from_changes(1000, all_cache_ids)

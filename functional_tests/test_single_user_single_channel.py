@@ -2,7 +2,7 @@ import time
 from lib.admin import Admin
 import pytest
 
-from cluster_setup import cluster
+from fixtures import cluster
 
 @pytest.mark.sanity
 def test_1(cluster):

@@ -5,7 +5,7 @@ import concurrent.futures
 
 from lib.admin import Admin
 
-from cluster_setup import cluster
+from fixtures import cluster
 
 @pytest.mark.extendedsanity
 def test_dcp_reshard(cluster):

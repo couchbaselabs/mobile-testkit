@@ -1,6 +1,6 @@
 import pytest
 
-from cluster_setup import cluster
+from fixtures import cluster
 
 def test_1(cluster):
 
