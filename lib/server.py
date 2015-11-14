@@ -43,5 +43,7 @@ class Server:
             extra_vars=json.dumps(extra_vars),
         )
 
+    def __repr__(self):
+        return "Server: {}:{}\n".format(self.hostname, self.ip)
 
 

@@ -44,4 +44,4 @@ class SyncGateway:
         )
 
     def __repr__(self):
-        return "SyncGateway: {}:{}\n".format(self.host_name, self.ip)
+        return "SyncGateway: {}:{}\n".format(self.hostname, self.ip)
