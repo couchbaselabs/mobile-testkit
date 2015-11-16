@@ -10,7 +10,7 @@ from fixtures import cluster
 @pytest.mark.extendedsanity
 def test_dcp_reshard(cluster):
 
-    cluster.reset("sync_gateway_default_functional_tests.json")
+    cluster.reset(config="sync_gateway_default_functional_tests.json")
 
     start = time.time()
 

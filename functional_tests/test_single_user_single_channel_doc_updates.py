@@ -13,7 +13,7 @@ from fixtures import cluster
 def test_update_docs_multiple_users_multiple_channels(cluster):
 
     start = time.time()
-    cluster.reset("sync_gateway_default_functional_tests.json")
+    cluster.reset(config="sync_gateway_default_functional_tests.json")
     num_docs = 100
     num_revisions = 10
     username = "User-1"

@@ -7,7 +7,7 @@ from fixtures import cluster
 @pytest.mark.sanity
 def test_1(cluster):
 
-    cluster.reset("sync_gateway_default_functional_tests.json")
+    cluster.reset(config="sync_gateway_default_functional_tests.json")
 
     start = time.time()
     sgs = cluster.sync_gateways

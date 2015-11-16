@@ -13,7 +13,7 @@ from fixtures import cluster
 ])
 def test_1(cluster, user_channels, filter, limit):
 
-    cluster.reset("sync_gateway_channel_cache.json")
+    cluster.reset(config="sync_gateway_channel_cache.json")
 
     target_sg = cluster.sync_gateways[0]
 
