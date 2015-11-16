@@ -7,32 +7,6 @@
   tasks:
   - include: tasks/stop-sync-gateway.yml
 
-# Flush server buckets
-- hosts: couchbase_servers
-  any_errors_fatal: true
-  sudo: true
-  vars:
-
-  # Primary node
-    couchbase_server_primary_node: "{{ hostvars[groups.couchbase_servers[0]].ansible_ssh_host }}"
-
-    # Current node
-    couchbase_server_node: "{{ hostvars[inventory_hostname]['ansible_ssh_host'] }}"
-
-    couchbase_server_home_path: /opt/couchbase
-    couchbase_server_admin_port: 8091
-    couchbase_server_admin: Administrator
-    couchbase_server_password: password
-
-    couchbase_server_bucket_type: couchbase
-    couchbase_server_bucket_port: 11211
-    couchbase_server_bucket_replica: 1
-    couchbase_server_cluster_ram: "{{ ((ansible_memtotal_mb|int)*0.8)|int }}"
-    couchbase_server_bucket_ram: "{{ ((couchbase_server_cluster_ram|int)*0.5)|int }}"
-
-  tasks:
-  - include: tasks/flush-server-buckets.yml
-
 # Deploy sync gateway configs
 - hosts: sync_gateways
   sudo: true

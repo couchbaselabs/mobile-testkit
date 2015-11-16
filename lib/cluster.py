@@ -1,8 +1,10 @@
+import os
 import sys
-import os.path
+import json
+
+import jinja2
 import ansible.inventory
 
-import os
 from lib.syncgateway import SyncGateway
 from lib.server import Server
 from provision.ansible_runner import run_ansible_playbook
@@ -44,7 +46,32 @@ class Cluster:
         return [host.get_variables() for host in hosts]
 
     def reset(self, config):
+        # Delete buckets
+        print(">>> Deleting buckets on: {}".format(self.servers[0].ip))
+        self.servers[0].delete_buckets()
+
+        # Parse config and grab bucket names
         conf_path = os.path.abspath("conf/" + config)
+        bucket_names_from_config = []
+        with open(conf_path, "r") as config:
+            data = config.read()
+
+            # HACK - render template for valid json
+            sg_template = jinja2.Template(data)
+            rendered_sg_config = sg_template.render({"is_index_writer": "true"})
+
+            # Find all bucket names in config's databases: {}
+            conf_obj = json.loads(rendered_sg_config)
+            dbs = conf_obj["databases"]
+
+            for key, val in dbs.iteritems():
+                bucket_names_from_config.append(val["bucket"])
+                if "channel_index" in val:
+                    bucket_names_from_config.append(val["channel_index"]["bucket"])
+
+        print(">>> Creating buckets {} on: {}".format(bucket_names_from_config, self.servers[0].ip))
+        self.servers[0].create_buckets(bucket_names_from_config)
+
         print(">>> Restarting sync_gateway with configuration: {}".format(conf_path))
 
         run_ansible_playbook(
