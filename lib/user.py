@@ -11,6 +11,7 @@ import re
 
 from collections import defaultdict
 from scenarioprinter import ScenarioPrinter
+from lib import settings
 
 scenario_printer = ScenarioPrinter()
 
@@ -28,8 +29,6 @@ class User:
         self._auth = auth.decode("UTF-8")
         self._headers = {'Content-Type': 'application/json', "Authorization": "Basic {}".format(self._auth)}
 
-        self._request_timeout = 30
-
     def __str__(self):
         return "USER: name={0} password={1} db={2} channels={3} cache_num={4}".format(self.name, self.password, self.db, self.channels, len(self.cache))
 
@@ -41,7 +40,7 @@ class User:
             doc_body["channels"] = self.channels
         body = json.dumps(doc_body)
 
-        resp = requests.put(doc_url, headers=self._headers, data=body, timeout=self._request_timeout)
+        resp = requests.put(doc_url, headers=self._headers, data=body, timeout=settings.HTTP_REQ_TIMEOUT)
         scenario_printer.print_status(resp)
         resp.raise_for_status()
 
@@ -63,7 +62,7 @@ class User:
         docs["docs"] = doc_list
         data = json.dumps(docs)
 
-        r = requests.post("{0}/{1}/_bulk_docs".format(self.target.url, self.db), headers=self._headers, data=data, timeout=self._request_timeout)
+        r = requests.post("{0}/{1}/_bulk_docs".format(self.target.url, self.db), headers=self._headers, data=data, timeout=settings.HTTP_REQ_TIMEOUT)
         scenario_printer.print_status(r)
         r.raise_for_status()
 
@@ -105,14 +104,16 @@ class User:
 
         for i in range(num_revision):
             doc_url = self.target.url + '/' + self.db + '/' + doc_id
-            resp = requests.get(doc_url, headers=self._headers, timeout=self._request_timeout)
+            resp = requests.get(doc_url, headers=self._headers, timeout=settings.HTTP_REQ_TIMEOUT)
     
             if resp.status_code == 200:
                 data = resp.json()
                 data['updates'] = int(data['updates']) + 1
                 
                 body = json.dumps(data)
-                put_resp = requests.put(doc_url, headers=self._headers, data=body, timeout=self._request_timeout)
+
+                put_resp = requests.put(doc_url, headers=self._headers, data=body, timeout=settings.HTTP_REQ_TIMEOUT)
+
                 if put_resp.status_code == 201:
                     data = put_resp.json()
                     if data["rev"]:
@@ -181,7 +182,7 @@ class User:
                 raise Exception("Invalid _changes filter type")
             params["filter"] = filter
 
-        r = requests.get("{}/{}/_changes".format(self.target.url, self.db), headers=self._headers, params=params, timeout=self._request_timeout)
+        r = requests.get("{}/{}/_changes".format(self.target.url, self.db), headers=self._headers, params=params, timeout=settings.HTTP_REQ_TIMEOUT)
         r.raise_for_status()
 
         obj = json.loads(r.text)
