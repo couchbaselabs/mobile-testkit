@@ -5,12 +5,12 @@ import concurrent.futures
 
 from lib.admin import Admin
 
-from cluster_setup import cluster
+from fixtures import cluster
 
 @pytest.mark.extendedsanity
 def test_dcp_reshard(cluster):
 
-    cluster.reset("sync_gateway_default_functional_tests.json")
+    cluster.reset(config="sync_gateway_default_functional_tests.json")
 
     start = time.time()
 
@@ -49,10 +49,10 @@ def test_dcp_reshard(cluster):
     time.sleep(10)
 
     expected_traun_ids = traun.cache.keys()
-    traun.verify_ids_from_changes(expected_traun_ids)
+    traun.verify_ids_from_changes(8001, expected_traun_ids)
 
     expected_seth_ids = seth.cache.keys()
-    seth.verify_ids_from_changes(expected_seth_ids)
+    seth.verify_ids_from_changes(1999, expected_seth_ids)
 
     total_time = time.time() - start
 

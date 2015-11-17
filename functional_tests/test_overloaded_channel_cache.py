@@ -4,7 +4,7 @@ import pytest
 import concurrent
 import concurrent.futures
 
-from cluster_setup import cluster
+from fixtures import cluster
 
 @pytest.mark.regression
 @pytest.mark.parametrize("user_channels, filter, limit", [
@@ -13,7 +13,7 @@ from cluster_setup import cluster
 ])
 def test_1(cluster, user_channels, filter, limit):
 
-    cluster.reset("sync_gateway_channel_cache.json")
+    cluster.reset(config="sync_gateway_channel_cache.json")
 
     target_sg = cluster.sync_gateways[0]
 
@@ -83,3 +83,5 @@ def test_1(cluster, user_channels, filter, limit):
             doc_pusher = users["abc_doc_pusher"]
 
             user.verify_ids_from_changes(doc_pusher.cache.keys())
+
+        #TODO: Autoverify 4985/db/_expvar view queries

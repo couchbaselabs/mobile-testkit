@@ -1,6 +1,6 @@
 import pytest
 
-from cluster_setup import cluster
+from fixtures import cluster
 
 def test_1(cluster):
 
@@ -15,6 +15,8 @@ def test_1(cluster):
     cluster.sync_gateways[1].start("sync_gateway_default.json")
 
     cluster.sync_gateways[0].restart("sync_gateway_config_test.json")
+
+    cluster.servers[0].create_buckets(["data-bucket-1", "data-bucket-2", "index-bucket-1", "index-bucket-2"])
 
 
 

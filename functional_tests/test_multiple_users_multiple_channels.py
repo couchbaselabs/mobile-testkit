@@ -4,13 +4,13 @@ import itertools
 from lib.user import User
 from lib.admin import Admin
 
-from cluster_setup import cluster
+from fixtures import cluster
 import pytest
 
 @pytest.mark.sanity
 def test_1(cluster):
 
-    cluster.reset("sync_gateway_default_functional_tests.json")
+    cluster.reset(config="sync_gateway_default_functional_tests.json")
 
     start = time.time()
     sgs = cluster.sync_gateways
@@ -44,9 +44,9 @@ def test_1(cluster):
     expected_adam_ids = list(itertools.chain(adam.cache.keys(), traun.cache.keys()))
     expected_traun_ids = list(itertools.chain(seth.cache.keys(), adam.cache.keys(), traun.cache.keys()))
 
-    seth.verify_ids_from_changes(expected_seth_ids)
-    adam.verify_ids_from_changes(expected_adam_ids)
-    traun.verify_ids_from_changes(expected_traun_ids)
+    seth.verify_ids_from_changes(5355, expected_seth_ids)
+    adam.verify_ids_from_changes(11197, expected_adam_ids)
+    traun.verify_ids_from_changes(13553, expected_traun_ids)
 
     end = time.time()
     print("TIME:{}s".format(end - start))

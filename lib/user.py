@@ -188,7 +188,7 @@ class User:
         scenario_printer.print_changes_num(self.name, len(obj["results"]))
         return obj
 
-    def verify_ids_from_changes(self, doc_ids):
+    def verify_ids_from_changes(self, expected_num_docs, doc_ids):
 
         changes = self.get_changes()
 
@@ -198,19 +198,22 @@ class User:
             if not result["id"].startswith("_user"):
                 changes_ids.append(result["id"])
 
-        num_expected_docs = len(doc_ids)
+        num_doc_ids = len(doc_ids)
         num_docs_from_changes = len(changes_ids)
         print(" --------------------------------")
         print("| {}".format(self.name))
-        print("| Number of expected docs: {}".format(num_expected_docs))
+        print("| Number of expected docs: {}".format(expected_num_docs))
         print("| Number of docs from _changes: {}".format(num_docs_from_changes))
 
-        # Check that expected number of ids matchs the number returned by the changes feed
-        assert num_expected_docs == num_docs_from_changes
+        # Check expected expected number of docs == number of docs ids
+        assert expected_num_docs == num_doc_ids
+
+        # Check expected expected number of docs == number of docs ids from changes
+        assert expected_num_docs == num_docs_from_changes
 
         # Check that the ids are equal
         assert set(doc_ids) == set(changes_ids)
-        print(">>> _changes doc ids match expected doc_ids")
+        print("| _changes doc ids match expected doc_ids")
 
     def verify_all_docs_from_changes_feed(self, num_revision, doc_name_pattern):
         status_num_docs = status_revisions = status_content = True

@@ -13,7 +13,7 @@
         "data_dir":".",
         "bucket":"data-bucket"
     },
-    "databases":{
+    "databases": {
         "db":{
             "feed_type":"DCPSHARD",
             "feed_params":{
@@ -21,17 +21,22 @@
             },
             "server":"http://{{ couchbase_server_primary_node }}:8091",
             "bucket":"data-bucket",
-            "users":{
-                "GUEST":{
-                    "disabled":true,
-                    "admin_channels":[
-                        "*"
-                    ]
-                }
-            },
             "channel_index":{
                 "server":"http://{{ couchbase_server_primary_node }}:8091",
                 "bucket":"index-bucket",
+                "writer":{{ is_index_writer }}
+            }
+        },
+        "db2":{
+            "feed_type":"DCPSHARD",
+            "feed_params":{
+                "num_shards":64
+            },
+            "server":"http://{{ couchbase_server_primary_node }}:8091",
+            "bucket":"data-bucket-2",
+            "channel_index":{
+                "server":"http://{{ couchbase_server_primary_node }}:8091",
+                "bucket":"index-bucket-2",
                 "writer":{{ is_index_writer }}
             }
         }

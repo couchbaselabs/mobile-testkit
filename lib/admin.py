@@ -1,5 +1,7 @@
 import requests
 import json
+import concurrent.futures
+
 from lib.user import User
 from lib.scenarioprinter import ScenarioPrinter
 
@@ -31,6 +33,19 @@ class Admin:
         self._printer.print_user_add()
 
         self.users[name] = User(target, db, name, password, channels)
+
+    def register_bulk_users(self, target, db, name_prefix, number, password, channels):
+
+        if type(channels) is not list:
+            raise("Channels needs to be a list")
+
+        with concurrent.futures.ThreadPoolExecutor(max_workers=100) as executor:
+            futures = [executor.submit(self.register_user, target=target, db=db, name="{}_{}".format(name_prefix, i), password=password, channels=channels) for i in range(number)]
+            for future in concurrent.futures.as_completed(futures):
+                try:
+                    result = future.result()
+                except Exception as e:
+                    print("Error adding user: {}".format(e))
 
     def get_users(self):
         return self.users

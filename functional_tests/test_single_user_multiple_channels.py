@@ -2,12 +2,12 @@ import time
 from lib.admin import Admin
 import pytest
 
-from cluster_setup import cluster
+from fixtures import cluster
 
 @pytest.mark.sanity
 def test_1(cluster):
 
-    cluster.reset("sync_gateway_default_functional_tests.json")
+    cluster.reset(config="sync_gateway_default_functional_tests.json")
 
     start = time.time()
     sgs = cluster.sync_gateways
@@ -36,7 +36,7 @@ def test_1(cluster):
     time.sleep(10)
 
     seth_cache_ids = seth.cache.keys()
-    seth.verify_ids_from_changes(seth_cache_ids)
+    seth.verify_ids_from_changes(2000, seth_cache_ids)
 
     end = time.time()
     print("TIME:{}s".format(end - start))

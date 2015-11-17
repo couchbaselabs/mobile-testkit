@@ -1,5 +1,8 @@
 # Delete buckets
 - debug: msg={{ couchbase_server_primary_node }}
+- debug: msg="Couchbase cluster RAM {{ couchbase_server_cluster_ram }}"
+- debug: msg="Couchbase bucket RAM {{ couchbase_server_bucket_ram }}"
+
 - name: Delete buckets
   shell: "{{ couchbase_server_home_path }}/bin/couchbase-cli bucket-delete --cluster={{ couchbase_server_primary_node }}:{{ couchbase_server_admin_port }} --user={{ couchbase_server_admin }} --password={{ couchbase_server_password }} --bucket={{ item }}"
   register: bucket_flush
