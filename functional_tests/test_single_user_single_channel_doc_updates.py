@@ -1,4 +1,5 @@
 import time
+import pytest
 
 from lib.user import User
 from lib.admin import Admin
@@ -10,6 +11,7 @@ from fixtures import cluster
 # Verify all revisions in changes feed
 # https://docs.google.com/spreadsheets/d/1nlba3SsWagDrnAep3rDZHXHIDmRH_FFDeTaYJms_55k/edit#gid=598127796
 
+@pytest.mark.distributed_index
 def test_update_docs_multiple_users_multiple_channels(cluster):
 
     start = time.time()

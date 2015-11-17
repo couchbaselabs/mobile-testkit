@@ -1,8 +1,11 @@
+import pytest
+
 from lib.admin import Admin
 from fixtures import cluster
 
 #TODO: Take index or data bucket down and make sure sg goes offline
 
+@pytest.mark.distributed_index
 def test_multiple_db_unique_data_bucket_unique_index_bucket(cluster):
 
     cluster.reset(config="multiple_dbs_unique_data_unique_index.json")

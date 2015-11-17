@@ -4,6 +4,7 @@ import pytest
 
 from fixtures import cluster
 
+@pytest.mark.distributed_index
 @pytest.mark.sanity
 def test_1(cluster):
 

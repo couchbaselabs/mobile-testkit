@@ -7,6 +7,7 @@ from lib.admin import Admin
 from fixtures import cluster
 import pytest
 
+@pytest.mark.distributed_index
 @pytest.mark.sanity
 def test_1(cluster):
 

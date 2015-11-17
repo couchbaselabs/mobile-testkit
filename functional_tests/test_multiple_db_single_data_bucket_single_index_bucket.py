@@ -4,6 +4,7 @@ from lib.admin import Admin
 
 from fixtures import cluster
 
+@pytest.mark.distributed_index
 @pytest.mark.sanity
 def test_multiple_db_single_data_bucket_single_index_bucket(cluster):
 

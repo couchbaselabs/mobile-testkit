@@ -7,6 +7,7 @@ from lib.admin import Admin
 
 from fixtures import cluster
 
+@pytest.mark.distributed_index
 @pytest.mark.extendedsanity
 def test_dcp_reshard(cluster):
 
