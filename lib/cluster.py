@@ -69,8 +69,11 @@ class Cluster:
                 if "channel_index" in val:
                     bucket_names_from_config.append(val["channel_index"]["bucket"])
 
-        print(">>> Creating buckets {} on: {}".format(bucket_names_from_config, self.servers[0].ip))
-        self.servers[0].create_buckets(bucket_names_from_config)
+        # Buckets may be shared for different functionality
+        bucket_name_set = list(set(bucket_names_from_config))
+
+        print(">>> Creating buckets {} on: {}".format(bucket_name_set, self.servers[0].ip))
+        self.servers[0].create_buckets(bucket_name_set)
 
         print(">>> Restarting sync_gateway with configuration: {}".format(conf_path))
 
