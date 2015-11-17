@@ -29,7 +29,6 @@ class Admin:
         data = {"name": name, "password": password, "admin_channels": channels}
 
         r = requests.put("{0}/{1}/_user/{2}".format(self.admin_url, db, name), headers=headers, data=json.dumps(data), timeout=self._request_timeout)
-        print(r.url)
         r.raise_for_status()
         self._printer.print_user_add()
 
