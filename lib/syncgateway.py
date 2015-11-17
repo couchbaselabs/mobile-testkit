@@ -16,32 +16,38 @@ class SyncGateway:
         return r.text
 
     def stop(self):
-        run_targeted_ansible_playbook(
+        status = run_targeted_ansible_playbook(
             "stop-sync-gateway.yml",
-            target_name=self.hostname
+            target_name=self.hostname,
+            stop_on_fail=False,
         )
+        return status
 
     def start(self, config):
         conf_path = os.path.abspath("conf/" + config)
 
         print(">>> Starting sync_gateway with configuration: {}".format(conf_path))
 
-        run_targeted_ansible_playbook(
+        status = run_targeted_ansible_playbook(
             "start-sync-gateway.yml",
             extra_vars="sync_gateway_config_filepath={0}".format(conf_path),
-            target_name=self.hostname
+            target_name=self.hostname,
+            stop_on_fail=False
         )
+        return status
 
     def restart(self, config):
         conf_path = os.path.abspath("conf/" + config)
 
         print(">>> Restarting sync_gateway with configuration: {}".format(conf_path))
 
-        run_targeted_ansible_playbook(
+        status = run_targeted_ansible_playbook(
             "reset-sync-gateway.yml",
             extra_vars="sync_gateway_config_filepath={0}".format(conf_path),
-            target_name=self.hostname
+            target_name=self.hostname,
+            stop_on_fail=False
         )
+        return status
 
     def __repr__(self):
         return "SyncGateway: {}:{}\n".format(self.hostname, self.ip)
