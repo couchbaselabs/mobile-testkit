@@ -6,15 +6,6 @@ from lib.user import User
 from lib.scenarioprinter import ScenarioPrinter
 from lib import settings
 
-# Admin
-# GET /
-# GET /_all_dbs
-# PUT /db/
-# DELETE /db/
-# POST /DB/_compact
-# POST /DB/_resync
-
-
 
 class Admin:
 
@@ -42,7 +33,7 @@ class Admin:
             raise("Channels needs to be a list")
 
         users = []
-        with concurrent.futures.ThreadPoolExecutor(max_workers=100) as executor:
+        with concurrent.futures.ThreadPoolExecutor(max_workers=settings.MAX_REQUEST_WORKERS) as executor:
             futures = [executor.submit(self.register_user, target=target, db=db, name="{}_{}".format(name_prefix, i), password=password, channels=channels) for i in range(number)]
             for future in concurrent.futures.as_completed(futures):
                 try:

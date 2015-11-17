@@ -1,10 +1,6 @@
 import requests
 import concurrent.futures
 import json
-import pprint
-import copy_reg
-import types
-import time
 import base64
 import uuid
 import re
@@ -80,7 +76,7 @@ class User:
             doc_names = ["test-" + str(i) for i in range(num_docs)]
 
         if not bulk:
-            with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
+            with concurrent.futures.ThreadPoolExecutor(max_workers=settings.MAX_REQUEST_WORKERS) as executor:
                 future_to_docs = {executor.submit(self.add_doc, doc): doc for doc in doc_names}
                 for future in concurrent.futures.as_completed(future_to_docs):
                     doc = future_to_docs[future]
@@ -89,7 +85,7 @@ class User:
                     except Exception as exc:
                         print('Generated an exception while adding doc_id : %s %s' % (doc, exc))
         else:
-            with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
+            with concurrent.futures.ThreadPoolExecutor(max_workers=settings.MAX_REQUEST_WORKERS) as executor:
                 future = [executor.submit(self.add_bulk_docs, doc_names)]
                 for f in concurrent.futures.as_completed(future):
                     try:
@@ -124,7 +120,7 @@ class User:
             resp.raise_for_status()
                 
     def update_docs(self, num_revs_per_doc=1):
-        with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
+        with concurrent.futures.ThreadPoolExecutor(max_workers=settings.MAX_REQUEST_WORKERS) as executor:
             future_to_docs = {executor.submit(self.update_doc, doc_id, num_revs_per_doc): doc_id for doc_id in self.cache.keys()}
             
             for future in concurrent.futures.as_completed(future_to_docs):
