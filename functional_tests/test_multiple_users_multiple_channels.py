@@ -17,15 +17,9 @@ def test_1(cluster):
 
     admin = Admin(sgs[0])
 
-    admin.register_user(target=sgs[0], db="db", name="seth", password="password", channels=["ABC"])
-    admin.register_user(target=sgs[0], db="db", name="adam", password="password", channels=["NBC", "CBS"])
-    admin.register_user(target=sgs[0], db="db", name="traun", password="password", channels=["ABC", "NBC", "CBS"])
-
-    users = admin.get_users()
-
-    seth = users["seth"]
-    adam = users["adam"]
-    traun = users["traun"]
+    seth = admin.register_user(target=sgs[0], db="db", name="seth", password="password", channels=["ABC"])
+    adam = admin.register_user(target=sgs[0], db="db", name="adam", password="password", channels=["NBC", "CBS"])
+    traun = admin.register_user(target=sgs[0], db="db", name="traun", password="password", channels=["ABC", "NBC", "CBS"])
 
     # TODO use bulk docs
     seth.add_docs(2356, uuid_names=True)  # ABC
