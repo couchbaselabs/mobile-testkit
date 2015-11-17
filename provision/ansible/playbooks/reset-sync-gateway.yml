@@ -7,6 +7,12 @@
   tasks:
   - include: tasks/stop-sync-gateway.yml
 
+  # Delete logs and .pindex files
+  - name: delete sync_gateway logs
+    shell: rm -f /home/sync_gateway/logs/*.log
+  - name: delete sync_gateway pindex files
+    shell: rm -rf /home/sync_gateway/*.pindex
+
 # Deploy sync gateway configs
 - hosts: sync_gateways
   sudo: true
