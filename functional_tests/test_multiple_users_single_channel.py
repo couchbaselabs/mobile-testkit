@@ -9,7 +9,7 @@ import pytest
 
 @pytest.mark.distributed_index
 @pytest.mark.sanity
-def test_1(cluster):
+def test_multiple_users_single_channel(cluster):
 
     cluster.reset(config="sync_gateway_default_functional_tests.json")
 

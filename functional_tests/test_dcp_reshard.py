@@ -13,12 +13,12 @@ def test_dcp_reshard(cluster):
 
     cluster.reset(config="sync_gateway_default_functional_tests.json")
 
-    start = time.time()
-
     admin = Admin(cluster.sync_gateways[2])
 
     traun = admin.register_user(target=cluster.sync_gateways[3], db="db", name="traun", password="password", channels=["ABC", "NBC", "CBS"])
     seth = admin.register_user(target=cluster.sync_gateways[2], db="db", name="seth", password="password", channels=["FOX"])
+
+    print(">> Users added")
 
     with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
 
@@ -52,6 +52,3 @@ def test_dcp_reshard(cluster):
     expected_seth_ids = seth.cache.keys()
     seth.verify_ids_from_changes(1999, expected_seth_ids)
 
-    total_time = time.time() - start
-
-    print("TIME: {}".format(total_time))

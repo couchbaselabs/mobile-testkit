@@ -6,7 +6,7 @@ from fixtures import cluster
 
 @pytest.mark.distributed_index
 @pytest.mark.sanity
-def test_1(cluster):
+def test_single_user_single_channel(cluster):
 
     cluster.reset(config="sync_gateway_default_functional_tests.json")
 
