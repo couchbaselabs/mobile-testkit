@@ -40,6 +40,3 @@ class ScenarioPrinter:
 
         self._changes_line += " {}:{} ".format(user, number)
         self._changes_count += 1
-
-
-

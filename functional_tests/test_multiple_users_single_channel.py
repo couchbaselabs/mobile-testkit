@@ -17,15 +17,9 @@ def test_1(cluster):
 
     admin = Admin(sgs[0])
 
-    admin.register_user(target=sgs[0], db="db", name="seth", password="password", channels=["ABC"])
-    admin.register_user(target=sgs[0], db="db", name="adam", password="password", channels=["ABC"])
-    admin.register_user(target=sgs[0], db="db", name="traun", password="password", channels=["ABC"])
-
-    users = admin.get_users()
-
-    seth = users["seth"]
-    adam = users["adam"]
-    traun = users["traun"]
+    seth = admin.register_user(target=sgs[0], db="db", name="seth", password="password", channels=["ABC"])
+    adam = admin.register_user(target=sgs[0], db="db", name="adam", password="password", channels=["ABC"])
+    traun = admin.register_user(target=sgs[0], db="db", name="traun", password="password", channels=["ABC"])
 
     seth.add_docs(1000, uuid_names=True)  # ABC
     adam.add_docs(3000, uuid_names=True, bulk=True)  # ABC

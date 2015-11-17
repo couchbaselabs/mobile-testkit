@@ -19,23 +19,10 @@ def test_1(cluster, user_channels, filter, limit):
 
     admin = Admin(target_sg)
 
-    # Add 1000 users
-    with concurrent.futures.ThreadPoolExecutor(max_workers=100) as executor:
+    users = admin.register_bulk_users(target_sg, "db", "user", 1000, "password", [user_channels])
+    assert len(users) == 1000
 
-        add_user_requests = {executor.submit(admin.register_user, target_sg, "db", "user_{}".format(i), "password", [user_channels]): "user_{}".format(i) for i in range(1000)}
-
-        for future in concurrent.futures.as_completed(add_user_requests):
-            try:
-                user = add_user_requests[future]
-            except Exception as e:
-                print("Error adding user: {}".format(e))
-
-    admin.register_user(target_sg, "db", "abc_doc_pusher", "password", ["ABC"])
-
-    users = admin.get_users()
-    assert len(users) == 1001
-
-    doc_pusher = users["abc_doc_pusher"]
+    doc_pusher = admin.register_user(target_sg, "db", "abc_doc_pusher", "password", ["ABC"])
     doc_pusher.add_docs(5000, bulk=True, uuid_names=True)
 
     start = time.time()
@@ -45,8 +32,7 @@ def test_1(cluster, user_channels, filter, limit):
         changes_requests = []
         errors = []
 
-        for i in range(1000):
-            user = users["user_{}".format(i)]
+        for user in users:
             if filter and limit is not None:
                 changes_requests.append(executor.submit(user.get_changes, since=0, limit=limit, filter="sync_gateway/bychannel", channels=["ABC"]))
             elif filter and limit is None:

@@ -13,13 +13,7 @@ def test_1(cluster):
     sgs = cluster.sync_gateways
 
     admin = Admin(sgs[0])
-    admin.register_user(target=sgs[0], db="db", name="seth", password="password", channels=["ABC", "CBS", "NBC", "FOX"])
-    admin.register_user(target=sgs[0], db="db", name="admin", password="password", channels=["*"])
-
-    users = admin.get_users()
-
-    seth = users["seth"]
-    admin = users["admin"]
+    seth = admin.register_user(target=sgs[0], db="db", name="seth", password="password", channels=["ABC", "CBS", "NBC", "FOX"])
 
     # Round robin
     count = 1

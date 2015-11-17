@@ -15,12 +15,9 @@ def test_dcp_reshard(cluster):
     start = time.time()
 
     admin = Admin(cluster.sync_gateways[2])
-    admin.register_user(target=cluster.sync_gateways[3], db="db", name="traun", password="password", channels=["ABC", "NBC", "CBS"])
-    admin.register_user(target=cluster.sync_gateways[2], db="db", name="seth", password="password", channels=["FOX"])
-    users = admin.get_users()
 
-    traun = users["traun"]
-    seth = users["seth"]
+    traun = admin.register_user(target=cluster.sync_gateways[3], db="db", name="traun", password="password", channels=["ABC", "NBC", "CBS"])
+    seth = admin.register_user(target=cluster.sync_gateways[2], db="db", name="seth", password="password", channels=["FOX"])
 
     with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
 
