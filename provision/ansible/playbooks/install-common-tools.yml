@@ -19,6 +19,8 @@
     yum: pkg=wget state=latest
   - name: install graphviz
     yum: pkg=graphviz state=latest
+  - name: install sysstat
+    yum: pkg=sysstat state=latest
   - name: install the 'Development tools' package group
     yum: name="@Development tools" state=present
   - name: download golang
