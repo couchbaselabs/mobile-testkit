@@ -52,6 +52,9 @@ class User:
         return doc_id         
 
     def add_bulk_docs(self, doc_ids):
+        session = requests.Session()
+        adapter = requests.adapters.HTTPAdapter(max_retries=Retry(total=8, backoff_factor=0.1, status_forcelist=[500, 503]))
+        session.mount("http://", adapter)
         doc_list = []
         for doc_id in doc_ids:
             if self.channels:
@@ -64,7 +67,7 @@ class User:
         docs["docs"] = doc_list
         data = json.dumps(docs)
 
-        r = requests.post("{0}/{1}/_bulk_docs".format(self.target.url, self.db), headers=self._headers, data=data, timeout=settings.HTTP_REQ_TIMEOUT)
+        r = session.post("{0}/{1}/_bulk_docs".format(self.target.url, self.db), headers=self._headers, data=data, timeout=settings.HTTP_REQ_TIMEOUT)
         scenario_printer.print_status(r)
         r.raise_for_status()
 
