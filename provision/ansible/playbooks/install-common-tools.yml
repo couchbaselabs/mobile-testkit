@@ -21,6 +21,10 @@
     yum: pkg=graphviz state=latest
   - name: install the 'Development tools' package group
     yum: name="@Development tools" state=present
+    # Remove go, can cause issues with version confusion if multple versions of go are on a machine
+  - name: delete existing go installations
+    shell: rm -rf /usr/local/go/
+    ignore_errors: yes
   - name: download golang
     get_url: url=https://storage.googleapis.com/golang/go1.5.1.linux-amd64.tar.gz dest=/tmp mode=0440
   - name: extract go
