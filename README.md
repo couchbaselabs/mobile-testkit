@@ -156,7 +156,7 @@ Example building from source:
 $ python provision/provision_cluster.py \
     --server-version=3.1.1 \
     --sync-gateway-branch=feature/distributed_index_bulk_set
-    --install-deps (first time only, this will install requisites to build / debug)
+    --install-deps (first time only, this will install prerequisites to build / debug)
 ```
 
 Example from a pre-built version (dev build):
@@ -166,7 +166,7 @@ $ python provision/provision_cluster.py \
     --server-version=3.1.1 \
     --sync-gateway-dev-build-url=feature/distributed_index \
     --sync-gateway-dev-build-number=345
-    --install-deps (first time only, this will install requisites to build / debug)
+    --install-deps (first time only, this will install prerequisites to build / debug)
 ```
 
 Like all scripts, run `python provision/provision_cluster.py -h` to view help options.
