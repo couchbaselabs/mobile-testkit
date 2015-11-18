@@ -4,7 +4,9 @@ import json
 import base64
 import uuid
 import re
-
+from requests.packages.urllib3.util import Retry
+from requests.adapters import HTTPAdapter
+from requests import Session, exceptions
 from collections import defaultdict
 from scenarioprinter import ScenarioPrinter
 from lib import settings
@@ -29,6 +31,10 @@ class User:
         return "USER: name={0} password={1} db={2} channels={3} cache_num={4}".format(self.name, self.password, self.db, self.channels, len(self.cache))
 
     def add_doc(self, doc_id):
+        session = requests.Session()
+        adapter = requests.adapters.HTTPAdapter(max_retries=Retry(total=8, backoff_factor=0.1, status_forcelist=[500, 503]))
+        session.mount("http://", adapter)
+
         doc_url = self.target.url + "/" + self.db + "/" + doc_id
         doc_body = dict()
         doc_body["updates"] = 0
@@ -36,7 +42,7 @@ class User:
             doc_body["channels"] = self.channels
         body = json.dumps(doc_body)
 
-        resp = requests.put(doc_url, headers=self._headers, data=body, timeout=settings.HTTP_REQ_TIMEOUT)
+        resp = session.put(doc_url, headers=self._headers, data=body, timeout=settings.HTTP_REQ_TIMEOUT)
         scenario_printer.print_status(resp)
         resp.raise_for_status()
 
@@ -108,7 +114,11 @@ class User:
                 
                 body = json.dumps(data)
 
-                put_resp = requests.put(doc_url, headers=self._headers, data=body, timeout=settings.HTTP_REQ_TIMEOUT)
+                session = requests.Session()
+                adapter = requests.adapters.HTTPAdapter(max_retries=Retry(total=9, backoff_factor=0.2, status_forcelist=[500, 503]))
+                session.mount("http://", adapter)
+
+                put_resp = session.put(doc_url, headers=self._headers, data=body, timeout=settings.HTTP_REQ_TIMEOUT)
 
                 if put_resp.status_code == 201:
                     data = put_resp.json()
