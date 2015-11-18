@@ -32,7 +32,7 @@ class User:
 
     def add_doc(self, doc_id):
         session = requests.Session()
-        adapter = requests.adapters.HTTPAdapter(max_retries=Retry(total=8, backoff_factor=0.1, status_forcelist=[500, 503]))
+        adapter = requests.adapters.HTTPAdapter(max_retries=Retry(total=settings.MAX_HTTP_RETRIES, backoff_factor=settings.BACKOFF_FACTOR, status_forcelist=settings.ERROR_CODE_LIST))
         session.mount("http://", adapter)
 
         doc_url = self.target.url + "/" + self.db + "/" + doc_id
@@ -53,7 +53,7 @@ class User:
 
     def add_bulk_docs(self, doc_ids):
         session = requests.Session()
-        adapter = requests.adapters.HTTPAdapter(max_retries=Retry(total=8, backoff_factor=0.1, status_forcelist=[500, 503]))
+        adapter = requests.adapters.HTTPAdapter(max_retries=Retry(total=settings.MAX_HTTP_RETRIES, backoff_factor=settings.BACKOFF_FACTOR, status_forcelist=settings.ERROR_CODE_LIST))
         session.mount("http://", adapter)
         doc_list = []
         for doc_id in doc_ids:
@@ -118,7 +118,7 @@ class User:
                 body = json.dumps(data)
 
                 session = requests.Session()
-                adapter = requests.adapters.HTTPAdapter(max_retries=Retry(total=9, backoff_factor=0.2, status_forcelist=[500, 503]))
+                adapter = requests.adapters.HTTPAdapter(max_retries=Retry(total=settings.MAX_HTTP_RETRIES, backoff_factor=settings.BACKOFF_FACTOR, status_forcelist=settings.ERROR_CODE_LIST))
                 session.mount("http://", adapter)
 
                 put_resp = session.put(doc_url, headers=self._headers, data=body, timeout=settings.HTTP_REQ_TIMEOUT)
