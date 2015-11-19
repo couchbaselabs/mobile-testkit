@@ -36,7 +36,9 @@
             },
             "sync":
             `function(doc, oldDoc){
-                access ("dj_0", ["KDWB"]);
+                if(doc._id == "access_doc"){
+                    access("dj_0", ["KDWB"]);
+                }
                 channel(doc.channels);
             }`
         }
