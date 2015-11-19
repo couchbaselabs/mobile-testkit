@@ -12,7 +12,7 @@ from fixtures import cluster
 @pytest.mark.sanity
 def test_roles_sanity(cluster):
 
-    cluster.reset(config="sync_gateway_custom_sync_one.json")
+    cluster.reset(config="sync_gateway_default_functional_tests.json")
 
     radio_stations = ["KMOW", "HWOD", "KDWB"]
     tv_stations = ["ABC", "CBS", "NBC"]

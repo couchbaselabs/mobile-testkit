@@ -1,4 +1,5 @@
 import os
+import re
 import sys
 import json
 
@@ -57,12 +58,20 @@ class Cluster:
         with open(conf_path, "r") as config:
             data = config.read()
 
-            # HACK - render template for valid json
-            sg_template = jinja2.Template(data)
-            rendered_sg_config = sg_template.render({"is_index_writer": "true"})
+            # HACK: Strip out invalid json from config to allow it to be loaded
+            #       and parsed for bucket names
+
+            # strip out templated variables {{ ... }}
+            data = re.sub("({{.*}})", "0", data)
+
+            # strip out sync functions `function ... }`
+            data = re.sub("(`function.*\n)(.*\n)+(.*}`)", "0", data)
+
+            with open("temp_stripped_config", "w") as stripped_config:
+                stripped_config.write(data)
 
             # Find all bucket names in config's databases: {}
-            conf_obj = json.loads(rendered_sg_config)
+            conf_obj = json.loads(data)
 
             # Add CBGT buckets
             if "cluster_config" in conf_obj.keys():

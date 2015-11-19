@@ -33,7 +33,12 @@
                 "server":"http://{{ couchbase_server_primary_node }}:8091",
                 "bucket":"index-bucket",
                 "writer":{{ is_index_writer }}
-            }
+            },
+            "sync":
+            `function(doc, oldDoc){
+                access ("dj_0", ["KDWB"]);
+                channel(doc.channels);
+            }`
         }
     }
 }
