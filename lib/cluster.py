@@ -67,9 +67,6 @@ class Cluster:
             # strip out sync functions `function ... }`
             data = re.sub("(`function.*\n)(.*\n)+(.*}`)", "0", data)
 
-            with open("temp_stripped_config", "w") as stripped_config:
-                stripped_config.write(data)
-
             # Find all bucket names in config's databases: {}
             conf_obj = json.loads(data)
 

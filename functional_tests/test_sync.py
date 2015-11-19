@@ -23,22 +23,27 @@ def test_roles_sanity(cluster):
 
     admin = Admin(cluster.sync_gateways[0])
 
-    djs = admin.register_bulk_users(target=cluster.sync_gateways[0], db="db", name_prefix="dj", number=number_of_djs, password="password")
-    vjs = admin.register_bulk_users(target=cluster.sync_gateways[0], db="db", name_prefix="vj", number=number_of_vjs, password="password")
+    # djs = admin.register_bulk_users(target=cluster.sync_gateways[0], db="db", name_prefix="dj", number=number_of_djs, password="password")
+    # vjs = admin.register_bulk_users(target=cluster.sync_gateways[0], db="db", name_prefix="vj", number=number_of_vjs, password="password")
+
+    dj_0 = admin.register_user(target=cluster.sync_gateways[0], db="db", name="dj_0", password="password")
 
     # mogul = admin.register_user(target=cluster.sync_gateways[0], db="db", name="mogul", password="password", roles=["tv_stations", "radio_stations"])
 
     radio_doc_ids = []
-    for radio_station in radio_stations:
-        doc_pusher = admin.register_user(target=cluster.sync_gateways[0], db="db", name="{}_doc_pusher".format(radio_station), password="password", channels=[radio_station])
-        doc_pusher.add_docs(number_of_docs_per_pusher, uuid_names=True, bulk=True)
-        radio_doc_ids.extend(doc_pusher.cache.keys())
+    # for radio_station in radio_stations:
+    doc_pusher = admin.register_user(target=cluster.sync_gateways[0], db="db", name="{}_doc_pusher".format("KDWB_pusher"), password="password", channels=["KDWB"])
+    doc_pusher.add_docs(number_of_docs_per_pusher, uuid_names=True, bulk=True)
+    radio_doc_ids.extend(doc_pusher.cache.keys())
+    #    radio_doc_ids.extend(doc_pusher.cache.keys())
 
-    tv_doc_ids = []
-    for tv_station in tv_stations:
-        doc_pusher = admin.register_user(target=cluster.sync_gateways[0], db="db", name="{}_doc_pusher".format(tv_station), password="password", channels=[tv_station])
-        doc_pusher.add_docs(number_of_docs_per_pusher, uuid_names=True, bulk=True)
-        tv_doc_ids.extend(doc_pusher.cache.keys())
+    dj_0.verify_ids_from_changes(100, radio_doc_ids)
+
+    # tv_doc_ids = []
+    # for tv_station in tv_stations:
+    #     doc_pusher = admin.register_user(target=cluster.sync_gateways[0], db="db", name="{}_doc_pusher".format(tv_station), password="password", channels=[tv_station])
+    #     doc_pusher.add_docs(number_of_docs_per_pusher, uuid_names=True, bulk=True)
+    #     tv_doc_ids.extend(doc_pusher.cache.keys())
     #
     # # Verify djs get docs for all the channels associated with the radio_stations role
     # expected_num_radio_docs = len(radio_stations) * number_of_docs_per_pusher
