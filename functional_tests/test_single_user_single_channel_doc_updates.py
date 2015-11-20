@@ -2,6 +2,7 @@ import time
 import pytest
 from lib.user import User
 from lib.admin import Admin
+from lib.verify import verify_changes
 from fixtures import cluster
 import pytest
 
@@ -32,7 +33,7 @@ def test_single_user_single_channel_doc_updates(cluster, num_docs, num_revisions
     single_user = admin.register_user(target=sgs[0], db="db", name=username, password=password, channels=channels)
 
     # Not using bulk docs
-    single_user.add_docs(num_docs)
+    single_user.add_docs(num_docs, name_prefix="test-")
 
     assert len(single_user.cache) == num_docs
 
@@ -43,9 +44,7 @@ def test_single_user_single_channel_doc_updates(cluster, num_docs, num_revisions
 
     time.sleep(10)
 
-    doc_name_pattern = "test-"
-    status = single_user.verify_all_docs_from_changes_feed(num_revisions, doc_name_pattern)
-    assert status
+    verify_changes([single_user], expected_num_docs=num_docs, expected_num_updates=num_revisions, expected_docs=single_user.cache)
 
     end = time.time()
     print("TIME:{}s".format(end - start))
