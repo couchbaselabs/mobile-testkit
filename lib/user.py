@@ -4,6 +4,7 @@ import json
 import base64
 import uuid
 import re
+
 from requests.packages.urllib3.util import Retry
 from requests.adapters import HTTPAdapter
 from requests import Session, exceptions
@@ -12,6 +13,7 @@ from scenarioprinter import ScenarioPrinter
 from lib import settings
 
 scenario_printer = ScenarioPrinter()
+
 
 class User:
     def __init__(self, target, db, name, password, channels):
@@ -28,7 +30,7 @@ class User:
         self._headers = {'Content-Type': 'application/json', "Authorization": "Basic {}".format(self._auth)}
 
     def __str__(self):
-        return "USER: name={0} password={1} db={2} channels={3} cache_num={4}".format(self.name, self.password, self.db, self.channels, len(self.cache))
+        return "USER: name={0} password={1} db={2} channels={3} cache={4}".format(self.name, self.password, self.db, self.channels, len(self.cache))
 
     def add_doc(self, doc_id, content=None):
         session = requests.Session()
@@ -61,34 +63,45 @@ class User:
         session = requests.Session()
         adapter = requests.adapters.HTTPAdapter(max_retries=Retry(total=settings.MAX_HTTP_RETRIES, backoff_factor=settings.BACKOFF_FACTOR, status_forcelist=settings.ERROR_CODE_LIST))
         session.mount("http://", adapter)
+
+        # Create docs
         doc_list = []
         for doc_id in doc_ids:
             if self.channels:
-                doc = {"_id": doc_id, "channels": self.channels}
+                doc = {"_id": doc_id, "channels": self.channels, "updates": 0}
             else:
-                doc = {"_id": doc_id}
+                doc = {"_id": doc_id, "updates": 0}
             doc_list.append(doc)
 
         docs = dict()
         docs["docs"] = doc_list
         data = json.dumps(docs)
 
-        r = session.post("{0}/{1}/_bulk_docs".format(self.target.url, self.db), headers=self._headers, data=data, timeout=settings.HTTP_REQ_TIMEOUT)
-        scenario_printer.print_status(r)
-        r.raise_for_status()
+        resp = session.post("{0}/{1}/_bulk_docs".format(self.target.url, self.db), headers=self._headers, data=data, timeout=settings.HTTP_REQ_TIMEOUT)
+        scenario_printer.print_status(resp)
+        resp.raise_for_status()
+        resp_json = resp.json()
 
-        if r.status_code == 201:
-            for doc_id in doc_ids:
-                self.cache[doc_id] = 0
+        if len(resp_json) != len(doc_ids):
+            print("Number of bulk docs inconsistent: resp_json['docs']:{} doc_ids:{}".format(len(resp_json), len(doc_ids)))
 
-        return doc_list
+        # Store docs from response in user's cache and save list of ids to return
+        bulk_docs_ids = []
+        if resp.status_code == 201:
+            for doc in resp_json:
+                self.cache[doc["id"]] = doc["rev"]
+                bulk_docs_ids.append(doc["id"])
 
-    def add_docs(self, num_docs, uuid_names=False, bulk=False):
+        # Return list of cache docs that were added
+        return bulk_docs_ids
 
-        if uuid_names:
+    def add_docs(self, num_docs, bulk=False, name_prefix=None):
+
+        # If no name_prefix is specified, use uuids for doc_names
+        if name_prefix is None:
             doc_names = [str(uuid.uuid4()) for _ in range(num_docs)]
         else:
-            doc_names = ["test-" + str(i) for i in range(num_docs)]
+            doc_names = [name_prefix + str(i) for i in range(num_docs)]
 
         if not bulk:
             with concurrent.futures.ThreadPoolExecutor(max_workers=settings.MAX_REQUEST_WORKERS) as executor:
@@ -119,8 +132,10 @@ class User:
     
             if resp.status_code == 200:
                 data = resp.json()
+
+                # Store number of updates on the document
                 data['updates'] = int(data['updates']) + 1
-                
+
                 body = json.dumps(data)
 
                 session = requests.Session()
@@ -130,13 +145,18 @@ class User:
                 put_resp = session.put(doc_url, headers=self._headers, data=body, timeout=settings.HTTP_REQ_TIMEOUT)
 
                 if put_resp.status_code == 201:
+
                     data = put_resp.json()
-                    if data["rev"]:
-                        self.cache[doc_id] = data["rev"]  # init doc revisions to 0
-                    else:
-                        print "Error: Did not fine _rev after Update response"
+                    assert "rev" in data.keys()
+
+                    # Update revision number for stored doc id
+                    self.cache[doc_id]["rev"] = data["rev"]
+
                 put_resp.raise_for_status()
             resp.raise_for_status()
+
+        # Return doc_id, doc_rev kvp
+        return self.cache[doc_id]
                 
     def update_docs(self, num_revs_per_doc=1):
         with concurrent.futures.ThreadPoolExecutor(max_workers=settings.MAX_REQUEST_WORKERS) as executor:
@@ -150,16 +170,6 @@ class User:
                     print('Generated an exception while updating doc_id:%s %s' % (doc, exc))
                 else:
                     print "Document:", doc, "updated successfully"
-
-    def get_num_docs(self, doc_name_pattern):
-        data = self.get_changes()
-        p = re.compile(doc_name_pattern)
-        docs = []
-        for obj in data['results']:
-            m = p.match(obj['id'])
-            if m:
-                docs.append(obj['id'])
-        return len(docs)
 
     def get_changes(self, feed=None, limit=None, heartbeat=None, style=None,
                     since=None, include_docs=None, channels=None, filter=None):
@@ -203,69 +213,3 @@ class User:
         obj = json.loads(r.text)
         scenario_printer.print_changes_num(self.name, len(obj["results"]))
         return obj
-
-    def verify_ids_from_changes(self, expected_num_docs, doc_ids):
-
-        changes = self.get_changes()
-
-        results = changes["results"]
-        changes_ids = []
-        for result in results:
-            if not result["id"].startswith("_user"):
-                changes_ids.append(result["id"])
-
-        num_doc_ids = len(doc_ids)
-        num_docs_from_changes = len(changes_ids)
-        print(" --------------------------------")
-        print("| {}".format(self.name))
-        print("| Number of expected docs: {}".format(expected_num_docs))
-        print("| Number of docs from _changes: {}".format(num_docs_from_changes))
-
-        # Check expected expected number of docs == number of docs ids
-        assert expected_num_docs == num_doc_ids
-
-        # Check expected expected number of docs == number of docs ids from changes
-        assert expected_num_docs == num_docs_from_changes
-
-        # Check that the ids are equal
-        assert set(doc_ids) == set(changes_ids)
-        print("| _changes doc ids match expected doc_ids")
-
-    def verify_all_docs_from_changes_feed(self, num_revision, doc_name_pattern):
-        status_num_docs = status_revisions = status_content = True
-        p = re.compile(doc_name_pattern)
-        data = self.get_changes(include_docs=True)
-        docs = defaultdict(list)
-
-        for obj in data['results']:
-            m = p.match(obj['id'])
-            if m:
-                docs[obj['id']].append(obj['doc']['_rev'])
-                docs[obj['id']].append(obj['doc']['updates'])
-        
-        print "Num doc created", len(self.cache.keys())
-        print "Num docs found", len(docs.keys())
-        
-        if len(self.cache.keys()) == len(docs.keys()):
-            print "Success, found expected num docs"
-        else:
-            print "Error: Num docs did not match"
-            status_num_docs = False
-
-        for doc_id in docs.keys():
-            if doc_id in self.cache.keys():
-                if docs[doc_id][0] == self.cache[doc_id]:
-                    print "Revision matched for doc_id", doc_id
-                else:
-                    print "Error, Revision did not match", doc_id
-                    status_revisions = False
-
-                if num_revision:
-                    if docs[doc_id][1] == num_revision:
-                        print "Num updates matches with", num_revision
-                    else:
-                        print "Error: expected update count did not match", num_revision
-                        status_content = False
-
-        status = status_num_docs & status_revisions & status_content
-        return status
