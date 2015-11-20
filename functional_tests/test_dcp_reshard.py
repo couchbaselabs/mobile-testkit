@@ -4,6 +4,7 @@ import pytest
 import concurrent.futures
 
 from lib.admin import Admin
+from lib.verify import verify_changes
 
 from fixtures import cluster
 
@@ -46,11 +47,8 @@ def test_dcp_reshard_sync_gateway_goes_down(cluster):
     # TODO better way to do this
     time.sleep(10)
 
-    expected_seth_ids = seth.cache.keys()
-    seth.verify_ids_from_changes(8000, expected_seth_ids)
-
-    expected_traun_ids = traun.cache.keys()
-    traun.verify_ids_from_changes(2000, expected_traun_ids)
+    verify_changes([traun], expected_num_docs=8001, expected_num_updates=0, expected_docs=traun.cache)
+    verify_changes([seth], expected_num_docs=1999, expected_num_updates=0, expected_docs=seth.cache)
 
 
 @pytest.mark.distributed_index
@@ -99,4 +97,5 @@ def test_dcp_reshard_sync_gateway_comes_up(cluster):
 
     expected_seth_ids = seth.cache.keys()
     seth.verify_ids_from_changes(4000, expected_seth_ids)
+
 
