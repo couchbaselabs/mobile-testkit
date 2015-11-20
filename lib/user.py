@@ -151,7 +151,7 @@ class User:
                     assert "rev" in data.keys()
 
                     # Update revision number for stored doc id
-                    self.cache[doc_id]["rev"] = data["rev"]
+                    self.cache[doc_id] = data["rev"]
 
                 put_resp.raise_for_status()
             resp.raise_for_status()
