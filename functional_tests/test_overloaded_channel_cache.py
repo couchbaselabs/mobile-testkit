@@ -23,7 +23,7 @@ def test_1(cluster, user_channels, filter, limit):
     assert len(users) == 1000
 
     doc_pusher = admin.register_user(target_sg, "db", "abc_doc_pusher", "password", ["ABC"])
-    doc_pusher.add_docs(5000, bulk=True, uuid_names=True)
+    doc_pusher.add_docs(5000, bulk=True)
 
     start = time.time()
 

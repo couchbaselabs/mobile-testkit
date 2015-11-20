@@ -23,9 +23,9 @@ def test_multiple_users_multiple_channels(cluster):
     traun = admin.register_user(target=sgs[0], db="db", name="traun", password="password", channels=["ABC", "NBC", "CBS"])
 
     # TODO use bulk docs
-    seth.add_docs(2356, uuid_names=True)  # ABC
-    adam.add_docs(8198, uuid_names=True)  # NBC, CBS
-    traun.add_docs(2999, uuid_names=True)  # ABC, NBC, CBS
+    seth.add_docs(2356)  # ABC
+    adam.add_docs(8198)  # NBC, CBS
+    traun.add_docs(2999)  # ABC, NBC, CBS
 
     assert len(seth.cache) == 2356
     assert len(adam.cache) == 8198

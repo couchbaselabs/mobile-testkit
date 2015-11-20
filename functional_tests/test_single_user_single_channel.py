@@ -17,8 +17,8 @@ def test_1(cluster):
     seth = admin.register_user(target=sgs[0], db="db", name="seth", password="password", channels=["ABC"])
     admin_user = admin.register_user(target=sgs[0], db="db", name="admin", password="password", channels=["*"])
 
-    seth.add_docs(7000, uuid_names=True)
-    admin_user.add_docs(3000, uuid_names=True)
+    seth.add_docs(7000)
+    admin_user.add_docs(3000)
 
     assert len(seth.cache) == 7000
     assert len(admin_user.cache) == 3000

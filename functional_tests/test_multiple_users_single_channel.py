@@ -22,9 +22,9 @@ def test_multiple_users_single_channel(cluster):
     adam = admin.register_user(target=sgs[0], db="db", name="adam", password="password", channels=["ABC"])
     traun = admin.register_user(target=sgs[0], db="db", name="traun", password="password", channels=["ABC"])
 
-    seth.add_docs(1000, uuid_names=True)  # ABC
-    adam.add_docs(3000, uuid_names=True, bulk=True)  # ABC
-    traun.add_docs(6000, uuid_names=True, bulk=True)  # ABC
+    seth.add_docs(1000)  # ABC
+    adam.add_docs(3000, bulk=True)  # ABC
+    traun.add_docs(6000, bulk=True)  # ABC
 
     assert len(seth.cache) == 1000
     assert len(adam.cache) == 3000

@@ -20,7 +20,7 @@ def test_single_user_single_channel(cluster):
     count = 1
     num_sgs = len(cluster.sync_gateways)
     while count <= 20:
-        seth.add_docs(100, uuid_names=True, bulk=True)
+        seth.add_docs(100, bulk=True)
         seth.target = cluster.sync_gateways[count % num_sgs]
         count += 1
 
