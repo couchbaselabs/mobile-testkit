@@ -1,11 +1,13 @@
 import time
-import itertools
 
-from lib.user import User
+import pytest
+
+
 from lib.admin import Admin
+from lib.verify import verify_changes
 
 from fixtures import cluster
-import pytest
+
 
 @pytest.mark.distributed_index
 @pytest.mark.sanity
@@ -13,7 +15,11 @@ def test_multiple_users_multiple_channels(cluster):
 
     cluster.reset(config="sync_gateway_default_functional_tests.json")
 
-    start = time.time()
+    # TODO Parametrize
+    num_docs_seth = 10
+    num_docs_adam = 20
+    num_docs_traun = 30
+
     sgs = cluster.sync_gateways
 
     admin = Admin(sgs[0])
@@ -23,28 +29,32 @@ def test_multiple_users_multiple_channels(cluster):
     traun = admin.register_user(target=sgs[0], db="db", name="traun", password="password", channels=["ABC", "NBC", "CBS"])
 
     # TODO use bulk docs
-    seth.add_docs(2356)  # ABC
-    adam.add_docs(8198)  # NBC, CBS
-    traun.add_docs(2999)  # ABC, NBC, CBS
+    seth.add_docs(num_docs_seth)  # ABC
+    adam.add_docs(num_docs_adam)  # NBC, CBS
+    traun.add_docs(num_docs_traun)  # ABC, NBC, CBS
 
-    assert len(seth.cache) == 2356
-    assert len(adam.cache) == 8198
-    assert len(traun.cache) == 2999
+    assert len(seth.cache) == num_docs_seth
+    assert len(adam.cache) == num_docs_adam
+    assert len(traun.cache) == num_docs_traun
 
     # discuss appropriate time with team
     time.sleep(10)
 
-    #verify id of docs
-    expected_seth_ids = list(itertools.chain(seth.cache.keys(), traun.cache.keys()))
-    expected_adam_ids = list(itertools.chain(adam.cache.keys(), traun.cache.keys()))
-    expected_traun_ids = list(itertools.chain(seth.cache.keys(), adam.cache.keys(), traun.cache.keys()))
+    # Seth should get docs from seth + traun
+    seth_subset = [seth.cache, traun.cache]
+    seth_expected_docs = {k: v for cache in seth_subset for k, v in cache.items()}
+    verify_changes([seth], expected_num_docs=num_docs_seth + num_docs_traun, expected_num_updates=0, expected_docs=seth_expected_docs)
 
-    seth.verify_ids_from_changes(5355, expected_seth_ids)
-    adam.verify_ids_from_changes(11197, expected_adam_ids)
-    traun.verify_ids_from_changes(13553, expected_traun_ids)
+    # Adam should get docs from adam + traun
+    adam_subset = [adam.cache, traun.cache]
+    adam_expected_docs = {k: v for cache in adam_subset for k, v in cache.items()}
+    verify_changes([adam], expected_num_docs=num_docs_adam + num_docs_traun, expected_num_updates=0, expected_docs=adam_expected_docs)
 
-    end = time.time()
-    print("TIME:{}s".format(end - start))
+    # Traun should get docs from seth + adam + traun
+    traun_subset = [seth.cache, adam.cache, traun.cache]
+    traun_expected_docs = {k: v for cache in traun_subset for k, v in cache.items()}
+    verify_changes([traun], expected_num_docs=num_docs_seth + num_docs_adam + num_docs_traun, expected_num_updates=0, expected_docs=traun_expected_docs)
+
 
 
 

@@ -53,9 +53,10 @@ class User:
         resp = session.put(doc_url, headers=self._headers, data=body, timeout=settings.HTTP_REQ_TIMEOUT)
         scenario_printer.print_status(resp)
         resp.raise_for_status()
+        resp_json = resp.json()
 
         if resp.status_code == 201:
-            self.cache[doc_id] = 0  # init doc revisions to 0
+            self.cache[doc_id] = resp_json["rev"]
 
         return doc_id         
 

@@ -1,12 +1,16 @@
 import time
-from lib.admin import Admin
+
 import pytest
+
+from lib.admin import Admin
+from lib.verify import verify_changes
 
 from fixtures import cluster
 
+
 @pytest.mark.distributed_index
 @pytest.mark.sanity
-def test_single_user_single_channel(cluster):
+def test_single_user_multiple_channels(cluster):
 
     cluster.reset(config="sync_gateway_default_functional_tests.json")
 
@@ -24,14 +28,11 @@ def test_single_user_single_channel(cluster):
         seth.target = cluster.sync_gateways[count % num_sgs]
         count += 1
 
-    assert len(seth.cache) == 2000
-
     print(seth)
 
     time.sleep(10)
 
-    seth_cache_ids = seth.cache.keys()
-    seth.verify_ids_from_changes(2000, seth_cache_ids)
+    verify_changes(users=[seth], expected_num_docs=2000, expected_num_updates=0, expected_docs=seth.cache)
 
     end = time.time()
     print("TIME:{}s".format(end - start))
