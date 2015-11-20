@@ -12,7 +12,9 @@ class CouchbaseServerConfig:
         self._valid_versions = [
             "3.1.0",
             "3.1.1",
-            "4.0.0"
+            "3.1.2",
+            "4.0.0",
+            "4.1.0"
         ]
 
         self._version = version
@@ -26,9 +28,17 @@ class CouchbaseServerConfig:
             base_url = "http://latestbuilds.hq.couchbase.com"
             package_name = "couchbase-server-enterprise_centos6_x86_64_3.1.1-1807-rel.rpm"
             return base_url, package_name
+        elif version == "3.1.2":
+            base_url = "http://latestbuilds.hq.couchbase.com"
+            package_name = "couchbase-server-enterprise_centos6_x86_64_3.1.2-1815-rel.rpm"
+            return base_url, package_name
         elif version == "4.0.0":
             base_url = "http://latestbuilds.hq.couchbase.com/couchbase-server/sherlock/4051"
             package_name = "couchbase-server-enterprise-4.0.0-4051-centos7.x86_64.rpm"
+            return base_url, package_name
+        elif version == "4.1.0":
+            base_url = "http://latestbuilds.hq.couchbase.com/couchbase-server/sherlock/4940"
+            package_name = "couchbase-server-enterprise-4.1.0-4940-centos7.x86_64.rpm"
             return base_url, package_name
         else:
             print "Server package url not found. Make sure to specify a version / build."
