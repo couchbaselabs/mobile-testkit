@@ -66,7 +66,7 @@ class SyncGatewayConfig:
 
     def _base_url_package_for_sync_gateway(self, version, build):
         base_url = "http://latestbuilds.hq.couchbase.com/couchbase-sync-gateway/release/{0}/{1}-{2}".format(version, version, build)
-        package_name = "couchbase-sync-gateway-enterprise_{0}-{1}_x86_64.rpm".format(version, build)
+        package_name = "couchbase-sync-gateway-enterprise_{0}-{1}_x86_64.tar.gz".format(version, build)
         return base_url, package_name
 
     def sync_gateway_base_url_and_package(self, dev_build=False):
