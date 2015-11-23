@@ -10,8 +10,12 @@ from requests import Session, exceptions
 from collections import defaultdict
 from scenarioprinter import ScenarioPrinter
 from lib import settings
+import logging
+log = logging.getLogger('test_framework')
+
 
 scenario_printer = ScenarioPrinter()
+
 
 class User:
     def __init__(self, target, db, name, password, channels):
@@ -43,6 +47,7 @@ class User:
         body = json.dumps(doc_body)
 
         resp = session.put(doc_url, headers=self._headers, data=body, timeout=settings.HTTP_REQ_TIMEOUT)
+        log.info("User: %s created doc %s" % (self.name, doc_url))
         scenario_printer.print_status(resp)
         resp.raise_for_status()
 
@@ -92,7 +97,7 @@ class User:
                     try:
                         doc_id = future.result()
                     except Exception as exc:
-                        print('Generated an exception while adding doc_id : %s %s' % (doc, exc))
+                        log.error('Generated an exception while adding doc_id : %s %s' % (doc, exc))
         else:
             with concurrent.futures.ThreadPoolExecutor(max_workers=settings.MAX_REQUEST_WORKERS) as executor:
                 future = [executor.submit(self.add_bulk_docs, doc_names)]
@@ -101,7 +106,7 @@ class User:
                         doc_list = f.result()
                         #print(doc_list)
                     except Exception as e:
-                        print("Error adding bulk docs: {}".format(e))
+                        log.error("Error adding bulk docs: {}".format(e))
 
         return True
 
@@ -128,7 +133,7 @@ class User:
                     if data["rev"]:
                         self.cache[doc_id] = data["rev"]  # init doc revisions to 0
                     else:
-                        print "Error: Did not fine _rev after Update response"
+                        log.error("Error: Did not fine _rev after Update response")
                 put_resp.raise_for_status()
             resp.raise_for_status()
                 
@@ -141,9 +146,9 @@ class User:
                 try:
                     doc_id = future.result()
                 except Exception as exc:
-                    print('Generated an exception while updating doc_id:%s %s' % (doc, exc))
+                    log.error('Generated an exception while updating doc_id:%s %s' % (doc, exc))
                 else:
-                    print "Document:", doc, "updated successfully"
+                    log.info("Document: %s updated successfully" % doc)
 
     def get_num_docs(self, doc_name_pattern):
         data = self.get_changes()
