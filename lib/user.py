@@ -24,6 +24,7 @@ class User:
         self.password = password
         self.db = db
         self.cache = {}
+        self.changes_data = None
         self.channels = list(channels)
         self.target = target
 
@@ -150,15 +151,29 @@ class User:
                 else:
                     log.info("Document: %s updated successfully" % doc)
 
-    def get_num_docs(self, doc_name_pattern):
-        data = self.get_changes()
-        p = re.compile(doc_name_pattern)
-        docs = []
-        for obj in data['results']:
-            m = p.match(obj['id'])
-            if m:
-                docs.append(obj['id'])
-        return len(docs)
+    def get_num_docs(self):
+        return len(self.changes_data['results'])
+
+    # returns a dictionary of type doc[revision]
+    def get_num_revisions(self):
+        docs = {}
+        for obj in self.changes_data['results']:
+            revision = obj["changes"][0]["rev"]
+            log.debug(revision)
+            match = re.search('(\d+)-\w+', revision)
+            if match:
+                log.debug("match found")
+                revision_num = match.group(1)
+                log.debug(revision_num)
+
+            if obj["id"] in docs.keys():
+                log.error("Key already exists")
+                raise "Key already exists"
+            else:
+                docs[obj["id"]] = revision_num
+        log.debug(docs)
+        return docs
+
 
     def get_changes(self, feed=None, limit=None, heartbeat=None, style=None,
                     since=None, include_docs=None, channels=None, filter=None):
@@ -200,6 +215,7 @@ class User:
         r.raise_for_status()
 
         obj = json.loads(r.text)
+        self.changes_data = obj
         scenario_printer.print_changes_num(self.name, len(obj["results"]))
         return obj
 

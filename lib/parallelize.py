@@ -33,15 +33,17 @@ def parallel_process(objects, method, *args):
 
 # Using Thread Pool
 def in_parallel(objects, method, *args):
+    result = {}
     with concurrent.futures.ThreadPoolExecutor(max_workers=settings.MAX_REQUEST_WORKERS) as executor:
         futures = {executor.submit(getattr(obj, method), *args): obj for obj in objects}
         for future in concurrent.futures.as_completed(futures):
             if concurrent.futures.as_completed(futures):
                 obj = futures[future]
                 try:
-                    output = future.result()
-                    log.info("%s method %s output %s" % (obj, method, output))
+                    result[obj] = future.result()
+                    #log.info("%s method %s output %s" % (obj, method, result[obj]))
                 except Exception as exception:
                     log.info('Generated an exception : %s : %s' % (obj, exception))
+    return result
 
 

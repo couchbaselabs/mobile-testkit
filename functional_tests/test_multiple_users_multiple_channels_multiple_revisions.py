@@ -53,6 +53,39 @@ def test_mulitple_users_mulitiple_channels_mulitple_revisions(cluster, num_users
     log.info("Update docs")
     in_parallel(user_objects, 'update_docs', num_revisions)
 
+    # Get changes for all users
+    in_parallel(user_objects, 'get_changes')
+
+    # every user should have same number of docs
+    # total/expected docs = num_users * num_docs
+    recieved_docs = in_parallel(user_objects, 'get_num_docs')
+
+    expected_docs = num_users * num_docs
+    for user_obj, docs in recieved_docs.items():
+        assert docs == expected_docs
+        log.info('User {} got {} docs, expected docs: {}'.format(user_obj.name, docs, expected_docs))
+
+    # Verify that
+    # user created doc-ids exist in docs received in changes feed
+    # expected revision is equal to received revision
+    expected_revision = str(num_revisions + 1)
+    docs_rev_dict = in_parallel(user_objects, 'get_num_revisions')
+    rev_errors = []
+    for user_obj, docs_revision_dict in docs_rev_dict.items():
+        for doc_id in docs_revision_dict.keys():
+            rev = docs_revision_dict[doc_id]
+            log.info('User {} doc_id {} has {} revisions, expected revision: {}'.format(user_obj.name,
+                                                                                        doc_id, rev, expected_revision))
+            if rev != expected_revision:
+                rev_errors.append(doc_id)
+                log.error('User {} doc_id got revision {}, expected revision {}'.format(user_obj.name,
+                                                                                        doc_id, rev, expected_revision))
+
+    assert len(rev_errors) == 0
+    # verify all user created sub-set doc-ids present in
+    # received super-set doc-ids
+    #for user_obj in user_objects:
+    #    super_set = user_obj.
     end = time.time()
     print("TIME:{}s".format(end - start))
 
