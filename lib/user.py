@@ -4,6 +4,7 @@ import json
 import base64
 import uuid
 import re
+import time
 from requests.packages.urllib3.util import Retry
 from requests.adapters import HTTPAdapter
 from requests import Session, exceptions
@@ -160,11 +161,6 @@ class User:
 
         params = dict()
 
-        if feed is not None:
-            if feed != "normal" and feed != "continuous" and feed != "longpoll" and feed != "websocket":
-                raise Exception("Invalid _changes feed type")
-            params["feed"] = feed
-
         if limit is not None:
             params["limit"] = limit
 
@@ -191,12 +187,62 @@ class User:
                 raise Exception("Invalid _changes filter type")
             params["filter"] = filter
 
-        r = requests.get("{}/{}/_changes".format(self.target.url, self.db), headers=self._headers, params=params, timeout=settings.HTTP_REQ_TIMEOUT)
+        r = requests.get("{}/{}/_changes".format(self.target.url, self.db), headers=self._headers, params=params)
         r.raise_for_status()
 
         obj = json.loads(r.text)
         scenario_printer.print_changes_num(self.name, len(obj["results"]))
         return obj
+
+    def start_continuous_changes(self, termination_string=None):
+        last_sequence = 1
+        while True:
+            params = {
+                "include_docs": "true",
+            }
+            time.sleep(2)
+            r = requests.get("{}/{}/_changes".format(self.target.url, self.db), headers=self._headers, params=params)
+            #print(r.text)
+
+            json = r.json()
+            print(json["last_seq"])
+
+    def start_polling(self, termination_string, timeout=10000):
+
+        term_string = ""
+
+        current_time = time.time()
+
+        previous_seq_num = "-1"
+        current_seq_num = "0"
+
+        while(True):
+
+            print("looping")
+
+            if previous_seq_num != current_seq_num:
+
+                previous_seq_num = current_seq_num
+
+                params = {
+                    "feed": "longpoll",
+                    "include_docs": "true",
+                    "timeout": timeout,
+                    "since": current_seq_num
+                }
+                r = requests.get("{}/{}/_changes".format(self.target.url, self.db), headers=self._headers, params=params)
+                print("STATUS: {}".format(r.status_code))
+
+                r.raise_for_status()
+                obj = r.json()
+                print(r.text)
+
+                # Get latest sequence from changes request
+                current_seq_num = obj["last_seq"]
+
+                print(current_seq_num)
+
+            time.sleep(1)
 
     def verify_ids_from_changes(self, expected_num_docs, doc_ids):
 
