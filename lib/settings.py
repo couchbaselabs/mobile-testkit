@@ -23,5 +23,8 @@ ERROR_CODE_LIST = [500, 503]
 # NOTSET    0
 LOG_LEVEL = 20
 
+# Logger Name
+LOGGER = 'test_framework'
+
 # Log filename
 LOG_FILE = 'test-framework.log'

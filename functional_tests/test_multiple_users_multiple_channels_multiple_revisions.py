@@ -7,7 +7,7 @@ from fixtures import cluster
 import pytest
 from lib.parallelize import *
 import logging
-log = logging.getLogger('test_framework')
+log = logging.getLogger(settings.LOGGER)
 
 
 
@@ -28,6 +28,9 @@ def test_mulitple_users_mulitiple_channels_mulitple_revisions(cluster, num_users
     start = time.time()
 
     cluster.reset(config="sync_gateway_default_functional_tests.json")
+
+    init_completed = time.time()
+    log.info("Initialization completed. Time taken:{}s".format(init_completed - start))
 
     users = ["User-" + str(i) for i in range(num_users)]
     channels = ["channel-" + str(i) for i in range(num_channels)]
@@ -82,12 +85,15 @@ def test_mulitple_users_mulitiple_channels_mulitple_revisions(cluster, num_users
                                                                                         doc_id, rev, expected_revision))
 
     assert len(rev_errors) == 0
-    # verify all user created sub-set doc-ids present in
-    # received super-set doc-ids
-    #for user_obj in user_objects:
-    #    super_set = user_obj.
+
+    # Verify each User created docs are part of changes feed
+    output = in_parallel(user_objects, 'is_subset')
+    assert True in output.values()
     end = time.time()
-    print("TIME:{}s".format(end - start))
+    log.info("Test ended.")
+    log.info("Main test duration: {}".format(end - init_completed))
+    log.info("Test setup time: {}".format(init_completed - start))
+    log.info("Total Time taken: {}s".format(end - start))
 
 
 

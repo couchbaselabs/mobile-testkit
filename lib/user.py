@@ -4,6 +4,7 @@ import json
 import base64
 import uuid
 import re
+import copy
 from requests.packages.urllib3.util import Retry
 from requests.adapters import HTTPAdapter
 from requests import Session, exceptions
@@ -11,7 +12,7 @@ from collections import defaultdict
 from scenarioprinter import ScenarioPrinter
 from lib import settings
 import logging
-log = logging.getLogger('test_framework')
+log = logging.getLogger(settings.LOGGER)
 
 
 scenario_printer = ScenarioPrinter()
@@ -157,6 +158,7 @@ class User:
     # returns a dictionary of type doc[revision]
     def get_num_revisions(self):
         docs = {}
+
         for obj in self.changes_data['results']:
             revision = obj["changes"][0]["rev"]
             log.debug(revision)
@@ -174,6 +176,24 @@ class User:
         log.debug(docs)
         return docs
 
+    # Check if the user created doc-ids are part of changes feed
+    def is_subset(self):
+        superset = []
+        errors = 0
+        for obj in self.changes_data['results']:
+            if obj["id"] in superset:
+                log.error("doc id {} already exists".format(obj["id"]))
+                raise KeyError("Doc id already exists")
+            else:
+                superset.append(obj["id"])
+
+        for doc_id in self.cache.keys():
+            if doc_id not in superset:
+                log.error("doc-id {} missing from superset for User {}".format(doc_id, self.name))
+                errors += 1
+            else:
+                log.info('Found doc-id {} for user {} in changes feed'.format(doc_id, self.name))
+        return errors == 0
 
     def get_changes(self, feed=None, limit=None, heartbeat=None, style=None,
                     since=None, include_docs=None, channels=None, filter=None):

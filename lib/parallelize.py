@@ -3,7 +3,7 @@ from lib import settings
 import copy_reg
 import types
 import logging
-log = logging.getLogger('test_framework')
+log = logging.getLogger(settings.LOGGER)
 
 
 # This function is added to use ProcessExecutor

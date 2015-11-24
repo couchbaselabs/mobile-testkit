@@ -2,7 +2,7 @@ import logging
 import settings
 
 # create logger
-log = logging.getLogger("test_framework")
+log = logging.getLogger(settings.LOGGER)
 log.setLevel(settings.LOG_LEVEL)
 
 # create file handler which logs even debug messages
