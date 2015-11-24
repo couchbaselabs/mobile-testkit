@@ -209,18 +209,15 @@ class User:
 
     def start_polling(self, termination_string, timeout=10000):
 
-        term_string = ""
-
-        current_time = time.time()
-
         previous_seq_num = "-1"
         current_seq_num = "0"
+        request_timed_out = True
 
-        while(True):
+        docs = []
 
-            print("looping")
-
-            if previous_seq_num != current_seq_num:
+        while True:
+            # if the longpoll request times out or there have been changes, issue a new long poll request
+            if request_timed_out or current_seq_num != previous_seq_num:
 
                 previous_seq_num = current_seq_num
 
@@ -237,12 +234,22 @@ class User:
                 obj = r.json()
                 print(r.text)
 
+                if len(obj["results"]) == 0:
+                    request_timed_out = True
+                else:
+                    docs.extend(obj["results"])
+
                 # Get latest sequence from changes request
                 current_seq_num = obj["last_seq"]
 
                 print(current_seq_num)
 
             time.sleep(1)
+
+        print("DOCS!!!")
+        print(docs)
+
+
 
     def verify_ids_from_changes(self, expected_num_docs, doc_ids):
 
