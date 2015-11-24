@@ -207,15 +207,16 @@ class User:
             json = r.json()
             print(json["last_seq"])
 
-    def start_polling(self, termination_string, timeout=10000):
+    def start_polling(self, termination_doc_id, timeout=10000):
 
         previous_seq_num = "-1"
         current_seq_num = "0"
         request_timed_out = True
 
-        docs = []
+        docs = dict()
+        continue_polling = True
 
-        while True:
+        while continue_polling:
             # if the longpoll request times out or there have been changes, issue a new long poll request
             if request_timed_out or current_seq_num != previous_seq_num:
 
@@ -234,10 +235,15 @@ class User:
                 obj = r.json()
                 print(r.text)
 
-                if len(obj["results"]) == 0:
+                new_docs = obj["results"]
+
+                if len(new_docs) == 0:
                     request_timed_out = True
                 else:
-                    docs.extend(obj["results"])
+                    for doc in new_docs:
+                        docs[doc["id"]] = doc
+                        if doc["id"] == termination_doc_id:
+                            continue_polling = False
 
                 # Get latest sequence from changes request
                 current_seq_num = obj["last_seq"]
@@ -247,8 +253,10 @@ class User:
             time.sleep(1)
 
         print("DOCS!!!")
-        print(docs)
+        for doc in docs:
+            print(doc)
 
+        return docs
 
 
     def verify_ids_from_changes(self, expected_num_docs, doc_ids):
