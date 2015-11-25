@@ -5,6 +5,17 @@ def verify_change_with_filter(doc_name_pattern):
 
 def verify_changes(users, expected_num_docs, expected_num_revisions, expected_docs):
 
+    errors = {
+        "unexpected_changes_length": 0,
+        "invalid_expected_docs_length": 0,
+        "duplicate_expected_ids": 0,
+        "duplicate_changes_doc_ids": 0,
+        "expected_doc_ids_differ_from_changes_doc_ids": 0,
+        "invalid_rev_id": 0,
+        "unexpected_rev_id_prefix": 0,
+        "unexpected_num_updates": 0
+    }
+
     if type(users) is not list:
         users = list(users)
 
@@ -26,16 +37,19 @@ def verify_changes(users, expected_num_docs, expected_num_revisions, expected_do
                 changes_results.append(changes_result)
 
         # Check expected_num_docs matches number of changes results
-        assert expected_num_docs == len(changes_results)
+        if expected_num_docs != len(changes_results):
+            errors["unexpected_changes_length"] += 1
 
         # Check number of expected num docs matched number of expected doc ids
-        assert expected_num_docs == len(expected_docs)
+        if expected_num_docs != len(expected_docs):
+            errors["invalid_expected_docs_length"] += 1
 
         # Get ids from expected docs
         expected_doc_ids = expected_docs.keys()
 
         # Assert there are no duplicates in expected doc ids
-        assert len(expected_doc_ids) == len(set(expected_doc_ids))
+        if len(expected_doc_ids) != len(set(expected_doc_ids)):
+            errors["duplicate_expected_ids"] += 1
 
         # Get ids from all changes results
         changes_doc_ids = list()
@@ -43,21 +57,26 @@ def verify_changes(users, expected_num_docs, expected_num_revisions, expected_do
             changes_doc_ids.append(result["id"])
 
         # Assert there are no duplicates in changes doc ids
-        assert len(changes_doc_ids) == len(set(changes_doc_ids))
+        if len(changes_doc_ids) != len(set(changes_doc_ids)):
+            errors["duplicate_changes_doc_ids"] += 1
 
         # Assert the expected doc ids and changes doc ids are the same
-        assert set(expected_doc_ids) == set(changes_doc_ids)
+        if set(expected_doc_ids) != set(changes_doc_ids):
+            errors["expected_doc_ids_differ_from_changes_doc_ids"] += 1
 
         for result in changes_results:
             # Compare revision number for id
-            assert expected_docs[result["id"]] == result["rev"]
+            if expected_docs[result["id"]] != result["rev"]:
+                errors["invalid_rev_id"] += 1
 
             # Assert that the revision id prefix matches the number of expected revisions
             rev_id_prefix = result["rev"].split("-")[0]
-            assert expected_num_revisions == int(rev_id_prefix)
+            if expected_num_revisions != int(rev_id_prefix):
+                errors["unexpected_rev_id_prefix"] += 1
 
             # Check number of expected updates matched the updates on the _changes doc
-            assert expected_num_revisions == result["updates"]
+            if expected_num_revisions != result["updates"]:
+                errors["unexpected_num_updates"] += 1
 
         print(" -> |{0}| expected (num_docs: {1} num_updates: {2}) _changes (num_docs: {3} updates: {4})".format(
             user.name,
@@ -66,3 +85,12 @@ def verify_changes(users, expected_num_docs, expected_num_revisions, expected_do
             len(changes_doc_ids),
             changes_results[0]["updates"]
         ))
+
+        # Print any error that may have occured
+        error_count = 0
+        for key, val in errors.items():
+            if val != 0:
+                print("<!> VERIFY ERROR - name: {}: occurences: {}".format(key, val))
+                error_count += 1
+
+        assert error_count == 0
