@@ -30,16 +30,22 @@ class User:
     def __str__(self):
         return "USER: name={0} password={1} db={2} channels={3} cache_num={4}".format(self.name, self.password, self.db, self.channels, len(self.cache))
 
-    def add_doc(self, doc_id):
+    def add_doc(self, doc_id, content=None):
         session = requests.Session()
         adapter = requests.adapters.HTTPAdapter(max_retries=Retry(total=settings.MAX_HTTP_RETRIES, backoff_factor=settings.BACKOFF_FACTOR, status_forcelist=settings.ERROR_CODE_LIST))
         session.mount("http://", adapter)
 
         doc_url = self.target.url + "/" + self.db + "/" + doc_id
+
         doc_body = dict()
         doc_body["updates"] = 0
+
         if self.channels:
             doc_body["channels"] = self.channels
+
+        if content is not None:
+            doc_body["content"] = content
+
         body = json.dumps(doc_body)
 
         resp = session.put(doc_url, headers=self._headers, data=body, timeout=settings.HTTP_REQ_TIMEOUT)
