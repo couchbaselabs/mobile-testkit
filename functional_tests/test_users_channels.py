@@ -147,7 +147,6 @@ def test_single_user_single_channel(cluster):
 
     time.sleep(10)
 
-    seth_pushed_doc_ids = seth.cache.keys()
     verify_changes([seth], expected_num_docs=num_seth_docs, expected_num_revisions=1, expected_docs=seth.cache)
 
     all_doc_caches = [seth.cache, admin_user.cache]

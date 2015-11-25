@@ -1,5 +1,6 @@
 import time
 from lib.admin import Admin
+from lib.verify import verify_changes
 import pytest
 import concurrent
 import concurrent.futures
@@ -65,9 +66,6 @@ def test_1(cluster, user_channels, filter, limit):
             assert time_for_users_to_get_all_changes < 60
 
         for i in range(10):
-            user = users["user_{}".format(i)]
-            doc_pusher = users["abc_doc_pusher"]
-
-            user.verify_ids_from_changes(doc_pusher.cache.keys())
+            verify_changes(user, expected_num_docs=5000, expected_num_revisions=1, expected_docs=doc_pusher.cache)
 
         #TODO: Autoverify 4985/db/_expvar view queries

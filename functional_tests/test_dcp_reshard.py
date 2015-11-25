@@ -8,6 +8,7 @@ from lib.verify import verify_changes
 
 from fixtures import cluster
 
+
 @pytest.mark.distributed_index
 @pytest.mark.extendedsanity
 def test_dcp_reshard_sync_gateway_goes_down(cluster):
@@ -26,7 +27,7 @@ def test_dcp_reshard_sync_gateway_goes_down(cluster):
         futures = dict()
 
         # take down a sync_gateway
-        futures[executor.submit(cluster.sync_gateways[0].stop)] = "Sg Stopped!"
+        futures[executor.submit(cluster.sync_gateways[0].stop)] = "sg_down"
 
         print(">>> Adding Seth docs")  # FOX
         futures[executor.submit(seth.add_docs, 8000, uuid_names=True)] = "seth"
@@ -36,19 +37,20 @@ def test_dcp_reshard_sync_gateway_goes_down(cluster):
 
         for future in concurrent.futures.as_completed(futures):
             try:
-                user = futures[future]
-                test = future.result()
-                print("{} Completed:".format(user))
+                tag = futures[future]
+                if tag == "sg_down":
+                    # Assert takedown was successful
+                    shutdown_status = future.result()
+                    assert shutdown_status == 0
+                print("{} Completed:".format(tag))
             except Exception as e:
                 print("Exception thrown while adding docs: {}".format(e))
-            else:
-                print "Docs added!!"
 
     # TODO better way to do this
     time.sleep(10)
 
-    verify_changes([traun], expected_num_docs=8001, expected_num_revisions=1, expected_docs=traun.cache)
-    verify_changes([seth], expected_num_docs=1999, expected_num_revisions=1, expected_docs=seth.cache)
+    verify_changes(traun, expected_num_docs=8000, expected_num_revisions=1, expected_docs=traun.cache)
+    verify_changes(seth, expected_num_docs=2000, expected_num_revisions=1, expected_docs=seth.cache)
 
 
 @pytest.mark.distributed_index
@@ -70,7 +72,7 @@ def test_dcp_reshard_sync_gateway_comes_up(cluster):
         futures = dict()
 
         # Bring up a sync_gateway
-        futures[executor.submit(cluster.sync_gateways[0].start, "sync_gateway_default_functional_tests.json")] = "Startup"
+        futures[executor.submit(cluster.sync_gateways[0].start, "sync_gateway_default_functional_tests.json")] = "sg_up"
 
         time.sleep(20)
 
@@ -82,8 +84,11 @@ def test_dcp_reshard_sync_gateway_comes_up(cluster):
 
         for future in concurrent.futures.as_completed(futures):
             try:
-                user = futures[future]
-                print("{} Completed:".format(user))
+                tag = futures[future]
+                if tag == "sg_up":
+                    up_status = future.result()
+                    assert up_status == 0
+                print("{} Completed:".format(tag))
             except Exception as e:
                 print("Exception thrown while adding docs: {}".format(e))
             else:
@@ -92,10 +97,6 @@ def test_dcp_reshard_sync_gateway_comes_up(cluster):
     # TODO better way to do this
     time.sleep(10)
 
-    expected_traun_ids = traun.cache.keys()
-    traun.verify_ids_from_changes(6000, expected_traun_ids)
-
-    expected_seth_ids = seth.cache.keys()
-    seth.verify_ids_from_changes(4000, expected_seth_ids)
-
+    verify_changes(traun, expected_num_docs=6000, expected_num_revisions=1, expected_docs=traun.cache)
+    verify_changes(seth, expected_num_docs=4000, expected_num_revisions=1, expected_docs=seth.cache)
 

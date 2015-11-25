@@ -4,6 +4,7 @@ import pytest
 import concurrent.futures
 
 from lib.admin import Admin
+from lib.verify import verify_changes
 
 from fixtures import cluster
 
@@ -25,14 +26,17 @@ def test_sync_sanity(cluster):
     # Grant dj_0 access to KDWB channel via sync before docs are pushed
     access_doc_pusher.add_doc("access_doc", content="access")
 
-    kdwb_doc_ids = []
+    kdwb_caches = []
     for radio_station in radio_stations:
         doc_pusher = admin.register_user(target=cluster.sync_gateways[0], db="db", name="{}_doc_pusher".format(radio_station), password="password", channels=[radio_station])
         doc_pusher.add_docs(number_of_docs_per_pusher, uuid_names=True, bulk=True)
         if doc_pusher.name == "KDWB_doc_pusher":
-            kdwb_doc_ids.extend(doc_pusher.cache.keys())
+            kdwb_caches.append(doc_pusher.cache)
 
-    dj_0.verify_ids_from_changes(100, kdwb_doc_ids)
+    # Build global doc_id, rev dict for all docs from all KDWB caches
+    kdwb_docs = {k: v for cache in kdwb_caches for k, v in cache.item()}
+
+    verify_changes(dj_0, expected_num_docs=100, expected_num_revisions=1, expected_docs=kdwb_docs)
 
 
 @pytest.mark.distributed_index
@@ -48,16 +52,19 @@ def test_sync_sanity_backfill(cluster):
 
     dj_0 = admin.register_user(target=cluster.sync_gateways[0], db="db", name="dj_0", password="password")
 
-    kdwb_doc_ids = []
+    kdwb_caches = []
     for radio_station in radio_stations:
         doc_pusher = admin.register_user(target=cluster.sync_gateways[0], db="db", name="{}_doc_pusher".format(radio_station), password="password", channels=[radio_station])
         doc_pusher.add_docs(number_of_docs_per_pusher, uuid_names=True, bulk=True)
         if doc_pusher.name == "KDWB_doc_pusher":
-            kdwb_doc_ids.extend(doc_pusher.cache.keys())
+            kdwb_caches.append(doc_pusher.cache)
 
     access_doc_pusher = admin.register_user(target=cluster.sync_gateways[0], db="db", name="access_doc_pusher", password="password")
 
     # Grant dj_0 access to KDWB channel via sync after docs are pushed
     access_doc_pusher.add_doc("access_doc", content="access")
 
-    dj_0.verify_ids_from_changes(100, kdwb_doc_ids)
+    # Build global doc_id, rev dict for all docs from all KDWB caches
+    kdwb_docs = {k: v for cache in kdwb_caches for k, v in cache.item()}
+
+    verify_changes(dj_0, expected_num_docs=100, expected_num_revisions=1, expected_docs=kdwb_docs)
