@@ -15,7 +15,7 @@ import pytest
 @pytest.mark.sanity
 @pytest.mark.distributed_index
 @pytest.mark.parametrize("num_docs", [100])
-@pytest.mark.parametrize("num_revisions", [100])
+@pytest.mark.parametrize("num_revisions", [101])
 def test_single_user_single_channel_doc_updates(cluster, num_docs, num_revisions):
 
     start = time.time()
@@ -44,7 +44,7 @@ def test_single_user_single_channel_doc_updates(cluster, num_docs, num_revisions
 
     time.sleep(10)
 
-    verify_changes([single_user], expected_num_docs=num_docs, expected_num_updates=num_revisions, expected_docs=single_user.cache)
+    verify_changes([single_user], expected_num_docs=num_docs, expected_num_revisions=num_revisions, expected_docs=single_user.cache)
 
     end = time.time()
     print("TIME:{}s".format(end - start))
