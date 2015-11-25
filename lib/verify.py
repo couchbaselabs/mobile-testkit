@@ -2,10 +2,11 @@
 def verify_change_with_filter(doc_name_pattern):
     pass
 
-def verify_changes(users, expected_num_docs, expected_num_updates, expected_docs):
+
+def verify_changes(users, expected_num_docs, expected_num_revisions, expected_docs):
 
     if type(users) is not list:
-        raise Exception("Make sure 'users' is of type list")
+        users = list(users)
 
     if type(expected_docs) is not dict:
         raise Exception("Make sure 'expected_docs' is a dictionary")
@@ -51,13 +52,17 @@ def verify_changes(users, expected_num_docs, expected_num_updates, expected_docs
             # Compare revision number for id
             assert expected_docs[result["id"]] == result["rev"]
 
-            # Check number of expected updates matched the updates on the _changes doc
-            assert expected_num_updates == result["updates"]
+            # Assert that the revision id prefix matches the number of expected revisions
+            rev_id_prefix = result["rev"].split("-")[0]
+            assert expected_num_revisions == int(rev_id_prefix)
 
-        print(" -> |{0}| expected (num_docs: {1} num_updates: {2}) _changes (num_docs: {3} num_updates: {4})".format(
+            # Check number of expected updates matched the updates on the _changes doc
+            assert expected_num_revisions == result["updates"]
+
+        print(" -> |{0}| expected (num_docs: {1} num_updates: {2}) _changes (num_docs: {3} updates: {4})".format(
             user.name,
             expected_num_docs,
-            expected_num_updates,
+            expected_num_revisions,
             len(changes_doc_ids),
             changes_results[0]["updates"]
         ))

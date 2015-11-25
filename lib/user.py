@@ -40,7 +40,7 @@ class User:
         doc_url = self.target.url + "/" + self.db + "/" + doc_id
 
         doc_body = dict()
-        doc_body["updates"] = 0
+        doc_body["updates"] = 1
 
         if self.channels:
             doc_body["channels"] = self.channels
@@ -69,9 +69,9 @@ class User:
         doc_list = []
         for doc_id in doc_ids:
             if self.channels:
-                doc = {"_id": doc_id, "channels": self.channels, "updates": 0}
+                doc = {"_id": doc_id, "channels": self.channels, "updates": 1}
             else:
-                doc = {"_id": doc_id, "updates": 0}
+                doc = {"_id": doc_id, "updates": 1}
             doc_list.append(doc)
 
         docs = dict()
@@ -84,7 +84,7 @@ class User:
         resp_json = resp.json()
 
         if len(resp_json) != len(doc_ids):
-            print("Number of bulk docs inconsistent: resp_json['docs']:{} doc_ids:{}".format(len(resp_json), len(doc_ids)))
+            raise Exception("Number of bulk docs inconsistent: resp_json['docs']:{} doc_ids:{}")
 
         # Store docs from response in user's cache and save list of ids to return
         bulk_docs_ids = []
@@ -127,7 +127,10 @@ class User:
 
     def update_doc(self, doc_id, num_revision=1):
 
+        updated_docs = dict()
+
         for i in range(num_revision):
+
             doc_url = self.target.url + '/' + self.db + '/' + doc_id
             resp = requests.get(doc_url, headers=self._headers, timeout=settings.HTTP_REQ_TIMEOUT)
     
@@ -153,11 +156,13 @@ class User:
                     # Update revision number for stored doc id
                     self.cache[doc_id] = data["rev"]
 
+                    # Store updated doc to return
+                    updated_docs[doc_id] = data["rev"]
+
                 put_resp.raise_for_status()
             resp.raise_for_status()
 
-        # Return doc_id, doc_rev kvp
-        return self.cache[doc_id]
+        return updated_docs
                 
     def update_docs(self, num_revs_per_doc=1):
         with concurrent.futures.ThreadPoolExecutor(max_workers=settings.MAX_REQUEST_WORKERS) as executor:
