@@ -5,6 +5,11 @@ def verify_change_with_filter(doc_name_pattern):
 
 def verify_changes(users, expected_num_docs, expected_num_revisions, expected_docs):
 
+    # When users create or update a doc on sync_gateway, the response of the REST call
+    # is stored in the users cache. 'expected_docs' is a scenario level dictionary created
+    # from the combination of these user caches. This is used to create expected results
+    # when comparing against the changes feed for each user.
+
     errors = {
         "unexpected_changes_length": 0,
         "invalid_expected_docs_length": 0,
@@ -52,9 +57,7 @@ def verify_changes(users, expected_num_docs, expected_num_revisions, expected_do
             errors["duplicate_expected_ids"] += 1
 
         # Get ids from all changes results
-        changes_doc_ids = list()
-        for result in changes_results:
-            changes_doc_ids.append(result["id"])
+        changes_doc_ids = [result["id"] for result in changes_result]
 
         # Assert there are no duplicates in changes doc ids
         if len(changes_doc_ids) != len(set(changes_doc_ids)):
@@ -69,6 +72,7 @@ def verify_changes(users, expected_num_docs, expected_num_revisions, expected_do
             if expected_docs[result["id"]] != result["rev"]:
                 errors["invalid_rev_id"] += 1
 
+            # IMPORTANT - This assumes that no conflicts are created via new_edits in the doc PUT
             # Assert that the revision id prefix matches the number of expected revisions
             rev_id_prefix = result["rev"].split("-")[0]
             if expected_num_revisions != int(rev_id_prefix):
