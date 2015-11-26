@@ -30,10 +30,10 @@ def test_dcp_reshard_sync_gateway_goes_down(cluster):
         futures[executor.submit(cluster.sync_gateways[0].stop)] = "sg_down"
 
         print(">>> Adding Seth docs")  # FOX
-        futures[executor.submit(seth.add_docs, 8000, uuid_names=True)] = "seth"
+        futures[executor.submit(seth.add_docs, 8000)] = "seth"
 
         print(">>> Adding Traun docs")  # ABC, NBC, CBS
-        futures[executor.submit(traun.add_docs, 2000, uuid_names=True, bulk=True)] = "traun"
+        futures[executor.submit(traun.add_docs, 2000, bulk=True)] = "traun"
 
         for future in concurrent.futures.as_completed(futures):
             try:
@@ -49,8 +49,8 @@ def test_dcp_reshard_sync_gateway_goes_down(cluster):
     # TODO better way to do this
     time.sleep(10)
 
-    verify_changes(traun, expected_num_docs=8000, expected_num_revisions=1, expected_docs=traun.cache)
-    verify_changes(seth, expected_num_docs=2000, expected_num_revisions=1, expected_docs=seth.cache)
+    verify_changes(traun, expected_num_docs=2000, expected_num_revisions=1, expected_docs=traun.cache)
+    verify_changes(seth, expected_num_docs=8000, expected_num_revisions=1, expected_docs=seth.cache)
 
 
 @pytest.mark.distributed_index
@@ -74,13 +74,13 @@ def test_dcp_reshard_sync_gateway_comes_up(cluster):
         # Bring up a sync_gateway
         futures[executor.submit(cluster.sync_gateways[0].start, "sync_gateway_default_functional_tests.json")] = "sg_up"
 
-        time.sleep(20)
+        time.sleep(5)
 
         print(">>> Adding Traun docs")  # ABC, NBC, CBS
-        futures[executor.submit(traun.add_docs, 6000, uuid_names=True)] = "traun"
+        futures[executor.submit(traun.add_docs, 6000)] = "traun"
 
         print(">>> Adding Seth docs")  # FOX
-        futures[executor.submit(seth.add_docs, 4000, uuid_names=True)] = "seth"
+        futures[executor.submit(seth.add_docs, 4000)] = "seth"
 
         for future in concurrent.futures.as_completed(futures):
             try:

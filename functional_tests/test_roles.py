@@ -36,7 +36,7 @@ def test_roles_sanity(cluster):
     radio_doc_caches = []
     for radio_station in radio_stations:
         doc_pusher = admin.register_user(target=cluster.sync_gateways[0], db="db", name="{}_doc_pusher".format(radio_station), password="password", channels=[radio_station])
-        doc_pusher.add_docs(number_of_docs_per_pusher, uuid_names=True, bulk=True)
+        doc_pusher.add_docs(number_of_docs_per_pusher, bulk=True)
         radio_doc_caches.append(doc_pusher.cache)
 
     radio_docs = {k: v for cache in radio_doc_caches for k, v in cache.items()}
@@ -44,7 +44,7 @@ def test_roles_sanity(cluster):
     tv_doc_caches = []
     for tv_station in tv_stations:
         doc_pusher = admin.register_user(target=cluster.sync_gateways[0], db="db", name="{}_doc_pusher".format(tv_station), password="password", channels=[tv_station])
-        doc_pusher.add_docs(number_of_docs_per_pusher, uuid_names=True, bulk=True)
+        doc_pusher.add_docs(number_of_docs_per_pusher, bulk=True)
         tv_doc_caches.append(doc_pusher.cache)
 
     tv_docs = {k: v for cache in radio_doc_caches for k, v in cache.items()}

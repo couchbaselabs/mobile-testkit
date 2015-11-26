@@ -29,7 +29,7 @@ def test_sync_sanity(cluster):
     kdwb_caches = []
     for radio_station in radio_stations:
         doc_pusher = admin.register_user(target=cluster.sync_gateways[0], db="db", name="{}_doc_pusher".format(radio_station), password="password", channels=[radio_station])
-        doc_pusher.add_docs(number_of_docs_per_pusher, uuid_names=True, bulk=True)
+        doc_pusher.add_docs(number_of_docs_per_pusher, bulk=True)
         if doc_pusher.name == "KDWB_doc_pusher":
             kdwb_caches.append(doc_pusher.cache)
 
@@ -55,7 +55,7 @@ def test_sync_sanity_backfill(cluster):
     kdwb_caches = []
     for radio_station in radio_stations:
         doc_pusher = admin.register_user(target=cluster.sync_gateways[0], db="db", name="{}_doc_pusher".format(radio_station), password="password", channels=[radio_station])
-        doc_pusher.add_docs(number_of_docs_per_pusher, uuid_names=True, bulk=True)
+        doc_pusher.add_docs(number_of_docs_per_pusher, bulk=True)
         if doc_pusher.name == "KDWB_doc_pusher":
             kdwb_caches.append(doc_pusher.cache)
 

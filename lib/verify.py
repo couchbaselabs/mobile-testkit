@@ -1,4 +1,6 @@
 
+from lib.user import User
+
 def verify_change_with_filter(doc_name_pattern):
     pass
 
@@ -21,13 +23,17 @@ def verify_changes(users, expected_num_docs, expected_num_revisions, expected_do
         "unexpected_num_updates": 0
     }
 
-    if type(users) is not list:
-        users = list(users)
+    if type(users) is list:
+        user_list = users
+    else:
+        # Allow a single user to be passed
+        user_list = list()
+        user_list.append(users)
 
     if type(expected_docs) is not dict:
         raise Exception("Make sure 'expected_docs' is a dictionary")
 
-    for user in users:
+    for user in user_list:
 
         changes = user.get_changes(include_docs=True)
         results = changes["results"]
@@ -57,7 +63,7 @@ def verify_changes(users, expected_num_docs, expected_num_revisions, expected_do
             errors["duplicate_expected_ids"] += 1
 
         # Get ids from all changes results
-        changes_doc_ids = [result["id"] for result in changes_result]
+        changes_doc_ids = [result["id"] for result in changes_results]
 
         # Assert there are no duplicates in changes doc ids
         if len(changes_doc_ids) != len(set(changes_doc_ids)):
@@ -82,12 +88,17 @@ def verify_changes(users, expected_num_docs, expected_num_revisions, expected_do
             if expected_num_revisions != result["updates"]:
                 errors["unexpected_num_updates"] += 1
 
-        print(" -> |{0}| expected (num_docs: {1} num_updates: {2}) _changes (num_docs: {3} updates: {4})".format(
+        if len(changes_results) == 0:
+            updates = 0
+        else:
+            updates = changes_results[0]["updates"]
+
+        print(" -> |{0}| expected (num_docs: {1} num_revisions: {2}) _changes (num_docs: {3} updates: {4})".format(
             user.name,
             expected_num_docs,
             expected_num_revisions,
             len(changes_doc_ids),
-            changes_results[0]["updates"]
+            updates
         ))
 
         # Print any error that may have occured
