@@ -49,8 +49,8 @@ def test_dcp_reshard_sync_gateway_goes_down(cluster):
     # TODO better way to do this
     time.sleep(10)
 
-    verify_changes(traun, expected_num_docs=2000, expected_num_revisions=1, expected_docs=traun.cache)
-    verify_changes(seth, expected_num_docs=8000, expected_num_revisions=1, expected_docs=seth.cache)
+    verify_changes(traun, expected_num_docs=2000, expected_num_revisions=0, expected_docs=traun.cache)
+    verify_changes(seth, expected_num_docs=8000, expected_num_revisions=0, expected_docs=seth.cache)
 
 
 @pytest.mark.distributed_index
@@ -97,6 +97,6 @@ def test_dcp_reshard_sync_gateway_comes_up(cluster):
     # TODO better way to do this
     time.sleep(10)
 
-    verify_changes(traun, expected_num_docs=6000, expected_num_revisions=1, expected_docs=traun.cache)
-    verify_changes(seth, expected_num_docs=4000, expected_num_revisions=1, expected_docs=seth.cache)
+    verify_changes(traun, expected_num_docs=6000, expected_num_revisions=0, expected_docs=traun.cache)
+    verify_changes(seth, expected_num_docs=4000, expected_num_revisions=0, expected_docs=seth.cache)
 

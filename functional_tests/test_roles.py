@@ -51,17 +51,17 @@ def test_roles_sanity(cluster):
 
     # Verify djs get docs for all the channels associated with the radio_stations role
     expected_num_radio_docs = len(radio_stations) * number_of_docs_per_pusher
-    verify_changes(djs, expected_num_docs=expected_num_radio_docs, expected_num_revisions=1, expected_docs=radio_docs)
+    verify_changes(djs, expected_num_docs=expected_num_radio_docs, expected_num_revisions=0, expected_docs=radio_docs)
 
     # Verify vjs get docs for all the channels associated with the tv_stations role
     expected_num_tv_docs = len(tv_stations) * number_of_docs_per_pusher
-    verify_changes(vjs, expected_num_docs=expected_num_tv_docs, expected_num_revisions=1, expected_docs=tv_docs)
+    verify_changes(vjs, expected_num_docs=expected_num_tv_docs, expected_num_revisions=0, expected_docs=tv_docs)
 
     # Verify mogul gets docs for all the channels associated with the radio_stations + tv_stations roles
     all_docs_caches = list(radio_doc_caches)
     all_docs_caches.extend(tv_doc_caches)
     all_docs = {k: v for cache in all_docs_caches for k, v in cache.items()}
-    verify_changes(mogul, expected_num_docs=expected_num_radio_docs + expected_num_tv_docs, expected_num_revisions=1, expected_docs=all_docs)
+    verify_changes(mogul, expected_num_docs=expected_num_radio_docs + expected_num_tv_docs, expected_num_revisions=0, expected_docs=all_docs)
 
 # TODO - Add role mid scenario
 # TODO - Delete role mid scenario

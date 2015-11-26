@@ -81,13 +81,17 @@ def verify_changes(users, expected_num_docs, expected_num_revisions, expected_do
             # IMPORTANT - This assumes that no conflicts are created via new_edits in the doc PUT
             # Assert that the revision id prefix matches the number of expected revisions
             rev_id_prefix = result["rev"].split("-")[0]
-            if expected_num_revisions != int(rev_id_prefix):
+
+            # rev-id prefix will be 1 when document is created
+            # For any non-conflicting update, it will be incremented by one
+            if expected_num_revisions != int(rev_id_prefix) - 1:
                 errors["unexpected_rev_id_prefix"] += 1
 
             # Check number of expected updates matched the updates on the _changes doc
             if expected_num_revisions != result["updates"]:
                 errors["unexpected_num_updates"] += 1
 
+        # Allow printing updates even if changes feed length is 0
         if len(changes_results) == 0:
             updates = 0
         else:

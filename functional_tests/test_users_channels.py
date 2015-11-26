@@ -43,17 +43,17 @@ def test_multiple_users_multiple_channels(cluster):
     # Seth should get docs from seth + traun
     seth_subset = [seth.cache, traun.cache]
     seth_expected_docs = {k: v for cache in seth_subset for k, v in cache.items()}
-    verify_changes([seth], expected_num_docs=num_docs_seth + num_docs_traun, expected_num_revisions=1, expected_docs=seth_expected_docs)
+    verify_changes([seth], expected_num_docs=num_docs_seth + num_docs_traun, expected_num_revisions=0, expected_docs=seth_expected_docs)
 
     # Adam should get docs from adam + traun
     adam_subset = [adam.cache, traun.cache]
     adam_expected_docs = {k: v for cache in adam_subset for k, v in cache.items()}
-    verify_changes([adam], expected_num_docs=num_docs_adam + num_docs_traun, expected_num_revisions=1, expected_docs=adam_expected_docs)
+    verify_changes([adam], expected_num_docs=num_docs_adam + num_docs_traun, expected_num_revisions=0, expected_docs=adam_expected_docs)
 
     # Traun should get docs from seth + adam + traun
     traun_subset = [seth.cache, adam.cache, traun.cache]
     traun_expected_docs = {k: v for cache in traun_subset for k, v in cache.items()}
-    verify_changes([traun], expected_num_docs=num_docs_seth + num_docs_adam + num_docs_traun, expected_num_revisions=1, expected_docs=traun_expected_docs)
+    verify_changes([traun], expected_num_docs=num_docs_seth + num_docs_adam + num_docs_traun, expected_num_revisions=0, expected_docs=traun_expected_docs)
 
 
 @pytest.mark.distributed_index
@@ -90,7 +90,7 @@ def test_muliple_users_single_channel(cluster):
     all_caches = [seth.cache, adam.cache, traun.cache]
     all_docs = {k: v for cache in all_caches for k, v in cache.items()}
 
-    verify_changes([seth, adam, traun], expected_num_docs=num_docs_seth + num_docs_adam + num_docs_traun, expected_num_revisions=1, expected_docs=all_docs)
+    verify_changes([seth, adam, traun], expected_num_docs=num_docs_seth + num_docs_adam + num_docs_traun, expected_num_revisions=0, expected_docs=all_docs)
 
 
 @pytest.mark.distributed_index
@@ -117,7 +117,7 @@ def test_single_user_multiple_channels(cluster):
 
     time.sleep(10)
 
-    verify_changes(users=[seth], expected_num_docs=2000, expected_num_revisions=1, expected_docs=seth.cache)
+    verify_changes(users=[seth], expected_num_docs=2000, expected_num_revisions=0, expected_docs=seth.cache)
 
     end = time.time()
     print("TIME:{}s".format(end - start))
@@ -147,11 +147,11 @@ def test_single_user_single_channel(cluster):
 
     time.sleep(10)
 
-    verify_changes([seth], expected_num_docs=num_seth_docs, expected_num_revisions=1, expected_docs=seth.cache)
+    verify_changes([seth], expected_num_docs=num_seth_docs, expected_num_revisions=0, expected_docs=seth.cache)
 
     all_doc_caches = [seth.cache, admin_user.cache]
     all_docs = {k: v for cache in all_doc_caches for k, v in cache.items()}
-    verify_changes([admin_user], expected_num_docs=num_seth_docs + num_admin_docs, expected_num_revisions=1, expected_docs=all_docs)
+    verify_changes([admin_user], expected_num_docs=num_seth_docs + num_admin_docs, expected_num_revisions=0, expected_docs=all_docs)
 
 
 

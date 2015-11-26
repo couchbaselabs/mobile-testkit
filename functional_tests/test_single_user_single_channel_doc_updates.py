@@ -15,7 +15,7 @@ import pytest
 @pytest.mark.sanity
 @pytest.mark.distributed_index
 @pytest.mark.parametrize("num_docs", [100])
-@pytest.mark.parametrize("num_revisions", [101])
+@pytest.mark.parametrize("num_revisions", [100])
 def test_single_user_single_channel_doc_updates(cluster, num_docs, num_revisions):
 
     start = time.time()

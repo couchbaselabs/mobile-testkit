@@ -40,7 +40,7 @@ class User:
         doc_url = self.target.url + "/" + self.db + "/" + doc_id
 
         doc_body = dict()
-        doc_body["updates"] = 1
+        doc_body["updates"] = 0
 
         if self.channels:
             doc_body["channels"] = self.channels
@@ -69,9 +69,9 @@ class User:
         doc_list = []
         for doc_id in doc_ids:
             if self.channels:
-                doc = {"_id": doc_id, "channels": self.channels, "updates": 1}
+                doc = {"_id": doc_id, "channels": self.channels, "updates": 0}
             else:
-                doc = {"_id": doc_id, "updates": 1}
+                doc = {"_id": doc_id, "updates": 0}
             doc_list.append(doc)
 
         docs = dict()

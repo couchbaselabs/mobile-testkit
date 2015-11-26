@@ -44,8 +44,8 @@ def test_multiple_db_unique_data_bucket_unique_index_bucket(cluster):
     db_cache_docs = {k: v for user in db_one_users for k, v in user.cache.items()}
     db2_cache_docs = {k: v for user in db_two_users for k, v in user.cache.items()}
 
-    verify_changes(db_one_users, expected_num_docs=num_docs_per_user * num_db_users, expected_num_revisions=1, expected_docs=db_cache_docs)
-    verify_changes(db_two_users, expected_num_docs=num_docs_per_user * num_db2_users, expected_num_revisions=1, expected_docs=db2_cache_docs)
+    verify_changes(db_one_users, expected_num_docs=num_docs_per_user * num_db_users, expected_num_revisions=0, expected_docs=db_cache_docs)
+    verify_changes(db_two_users, expected_num_docs=num_docs_per_user * num_db2_users, expected_num_revisions=0, expected_docs=db2_cache_docs)
 
 
 @pytest.mark.distributed_index
@@ -82,4 +82,4 @@ def test_multiple_db_single_data_bucket_single_index_bucket(cluster):
     cached_docs_from_all_users = {k: v for user in all_users for k, v in user.cache.items()}
 
     # Verify each user has all of the docs
-    verify_changes(all_users, expected_num_docs=1000, expected_num_revisions=1, expected_docs=cached_docs_from_all_users)
+    verify_changes(all_users, expected_num_docs=1000, expected_num_revisions=0, expected_docs=cached_docs_from_all_users)

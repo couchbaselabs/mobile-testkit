@@ -36,7 +36,7 @@ def test_sync_sanity(cluster):
     # Build global doc_id, rev dict for all docs from all KDWB caches
     kdwb_docs = {k: v for cache in kdwb_caches for k, v in cache.item()}
 
-    verify_changes(dj_0, expected_num_docs=100, expected_num_revisions=1, expected_docs=kdwb_docs)
+    verify_changes(dj_0, expected_num_docs=100, expected_num_revisions=0, expected_docs=kdwb_docs)
 
 
 @pytest.mark.distributed_index
@@ -67,4 +67,4 @@ def test_sync_sanity_backfill(cluster):
     # Build global doc_id, rev dict for all docs from all KDWB caches
     kdwb_docs = {k: v for cache in kdwb_caches for k, v in cache.item()}
 
-    verify_changes(dj_0, expected_num_docs=100, expected_num_revisions=1, expected_docs=kdwb_docs)
+    verify_changes(dj_0, expected_num_docs=100, expected_num_revisions=0, expected_docs=kdwb_docs)

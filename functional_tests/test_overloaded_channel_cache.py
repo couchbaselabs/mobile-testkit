@@ -66,6 +66,6 @@ def test_1(cluster, user_channels, filter, limit):
             assert time_for_users_to_get_all_changes < 60
 
         for i in range(10):
-            verify_changes(user, expected_num_docs=5000, expected_num_revisions=1, expected_docs=doc_pusher.cache)
+            verify_changes(user, expected_num_docs=5000, expected_num_revisions=0, expected_docs=doc_pusher.cache)
 
         #TODO: Autoverify 4985/db/_expvar view queries
