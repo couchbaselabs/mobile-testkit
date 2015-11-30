@@ -34,7 +34,7 @@ def test_sync_sanity(cluster):
             kdwb_caches.append(doc_pusher.cache)
 
     # Build global doc_id, rev dict for all docs from all KDWB caches
-    kdwb_docs = {k: v for cache in kdwb_caches for k, v in cache.item()}
+    kdwb_docs = {k: v for cache in kdwb_caches for k, v in cache.items()}
 
     verify_changes(dj_0, expected_num_docs=100, expected_num_revisions=0, expected_docs=kdwb_docs)
 
@@ -65,6 +65,6 @@ def test_sync_sanity_backfill(cluster):
     access_doc_pusher.add_doc("access_doc", content="access")
 
     # Build global doc_id, rev dict for all docs from all KDWB caches
-    kdwb_docs = {k: v for cache in kdwb_caches for k, v in cache.item()}
+    kdwb_docs = {k: v for cache in kdwb_caches for k, v in cache.items()}
 
     verify_changes(dj_0, expected_num_docs=100, expected_num_revisions=0, expected_docs=kdwb_docs)
