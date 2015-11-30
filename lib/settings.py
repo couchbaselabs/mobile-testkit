@@ -3,7 +3,7 @@
 HTTP_REQ_TIMEOUT = 30
 
 # Number of thread workers for requests
-MAX_REQUEST_WORKERS = 10
+MAX_REQUEST_WORKERS = 100
 
 # Backoff factor, double for each retry. in seconds
 BACKOFF_FACTOR = 0.2

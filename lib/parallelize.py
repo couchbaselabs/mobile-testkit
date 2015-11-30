@@ -26,10 +26,10 @@ def parallel_process(objects, method, *args):
             if concurrent.futures.as_completed(futures):
                 obj = futures[future]
                 try:
-                    print future.result()
-                #log.info(output)
+                    log.debug("Object {} method {} output {}".format(obj, method, future.result()))
                 except Exception as exception:
-                    print('Generated an exception : %s : %s' % (obj, exception))
+                    log.info('Generated an exception : {} : {}'.format(obj, exception))
+
 
 # Using Thread Pool
 def in_parallel(objects, method, *args):
@@ -41,9 +41,9 @@ def in_parallel(objects, method, *args):
                 obj = futures[future]
                 try:
                     result[obj] = future.result()
-                    #log.info("%s method %s output %s" % (obj, method, result[obj]))
+                    log.debug("Object {} method {} output {}".format(obj, method, result[obj]))
                 except Exception as exception:
-                    log.info('Generated an exception : %s : %s' % (obj, exception))
+                    log.info('Generated an exception : {} : {}'.format(obj, exception))
     return result
 
 

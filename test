@@ -1,2 +1,0 @@
-#!/usr/bin/env bash
-python2.7 -m pytest --capture=no --junitxml=results.xml 
