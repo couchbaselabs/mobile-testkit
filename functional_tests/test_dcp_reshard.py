@@ -17,7 +17,7 @@ def test_dcp_reshard_sync_gateway_goes_down(cluster):
 
     admin = Admin(cluster.sync_gateways[2])
 
-    traun = admin.register_user(target=cluster.sync_gateways[3], db="db", name="traun", password="password", channels=["ABC", "NBC", "CBS"])
+    traun = admin.register_user(target=cluster.sync_gateways[1], db="db", name="traun", password="password", channels=["ABC", "NBC", "CBS"])
     seth = admin.register_user(target=cluster.sync_gateways[2], db="db", name="seth", password="password", channels=["FOX"])
 
     print(">> Users added")
@@ -62,7 +62,7 @@ def test_dcp_reshard_sync_gateway_comes_up(cluster):
 
     admin = Admin(cluster.sync_gateways[1])
 
-    traun = admin.register_user(target=cluster.sync_gateways[3], db="db", name="traun", password="password", channels=["ABC", "NBC", "CBS"])
+    traun = admin.register_user(target=cluster.sync_gateways[1], db="db", name="traun", password="password", channels=["ABC", "NBC", "CBS"])
     seth = admin.register_user(target=cluster.sync_gateways[2], db="db", name="seth", password="password", channels=["FOX"])
 
     print(">> Users added")
