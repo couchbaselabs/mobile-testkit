@@ -6,9 +6,11 @@
 - name: Delete buckets
   shell: "{{ couchbase_server_home_path }}/bin/couchbase-cli bucket-delete --cluster={{ couchbase_server_primary_node }}:{{ couchbase_server_admin_port }} --user={{ couchbase_server_admin }} --password={{ couchbase_server_password }} --bucket={{ item }}"
   register: bucket_flush
+  ignore_errors: true
   with_items:
     - data-bucket
     - index-bucket
+    - cbgt-bucket
   when: couchbase_server_node == couchbase_server_primary_node
 
 # Create buckets and wait
@@ -17,6 +19,7 @@
   with_items:
     - data-bucket
     - index-bucket
+    - cbgt-bucket
   when: couchbase_server_node == couchbase_server_primary_node
 
 
