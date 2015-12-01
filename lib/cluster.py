@@ -47,6 +47,14 @@ class Cluster:
         return [host.get_variables() for host in hosts]
 
     def reset(self, config):
+        # Stop sync_gateways
+        print(">>> Stopping sync_gateway")
+        run_ansible_playbook("stop-sync-gateway.yml")
+
+        # Deleting sync_gateway artifacts
+        print(">>> Deleting sync_gateway artifacts")
+        run_ansible_playbook("delete-sync-gateway-artifacts.yml")
+
         # Delete buckets
         print(">>> Deleting buckets on: {}".format(self.servers[0].ip))
         self.servers[0].delete_buckets()
@@ -89,10 +97,11 @@ class Cluster:
         print(">>> Creating buckets {}".format(bucket_name_set))
         self.servers[0].create_buckets(bucket_name_set)
 
-        print(">>> Restarting sync_gateway with configuration: {}".format(conf_path))
+        print(">>> Starting sync_gateway with configuration: {}".format(conf_path))
 
+        # Start sync-gateway
         run_ansible_playbook(
-            "reset-sync-gateway.yml",
+            "start-sync-gateway.yml",
             extra_vars="sync_gateway_config_filepath={0}".format(conf_path)
         )
 
