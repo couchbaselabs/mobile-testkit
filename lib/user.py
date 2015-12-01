@@ -165,7 +165,7 @@ class User:
 
     # GET /{db}/{doc}
     # PUT /{db}/{doc}
-    def update_doc(self, doc_id, num_revision=1, retries=False):
+    def update_doc(self, doc_id, num_revision=1, content=None, retries=False):
 
         updated_docs = dict()
 
@@ -180,6 +180,9 @@ class User:
 
                 # Store number of updates on the document
                 data['updates'] = int(data['updates']) + 1
+
+                if content is not None:
+                    data['content'] = content
 
                 body = json.dumps(data)
 

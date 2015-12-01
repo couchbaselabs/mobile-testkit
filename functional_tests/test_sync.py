@@ -8,9 +8,40 @@ from lib.verify import verify_changes
 
 from fixtures import cluster
 
+
 @pytest.mark.sanity
 def test_sync_access_sanity(cluster):
-    pass
+
+    num_docs = 100
+
+    cluster.reset(config="sync_gateway_custom_sync_access_sanity.json")
+    admin = Admin(cluster.sync_gateways[2])
+
+    seth = admin.register_user(target=cluster.sync_gateways[2], db="db", name="seth", password="password")
+
+    # Push some ABC docs
+    abc_doc_pusher = admin.register_user(target=cluster.sync_gateways[2], db="db", name="abc_doc_pusher", password="password", channels=["ABC"])
+    abc_doc_pusher.add_docs(num_docs)
+
+    # Create access doc pusher and grant access Seth to ABC channel
+    access_doc_pusher = admin.register_user(target=cluster.sync_gateways[2], db="db", name="access_doc_pusher", password="password", channels=["access"])
+    access_doc_pusher.add_doc(doc_id="access_doc", content={"grant_access": "true"})
+
+    # Allow docs to backfill
+    time.sleep(5)
+
+    verify_changes(seth, expected_num_docs=num_docs, expected_num_revisions=0, expected_docs=abc_doc_pusher.cache)
+
+    # Remove seth from ABC
+    access_doc_pusher.update_doc(doc_id="access_doc", content={"grant_access": "false"})
+
+    # Push more ABC docs
+    abc_doc_pusher.add_docs(num_docs)
+
+    time.sleep(10)
+
+    # Verify seth sees no abc_docs
+    verify_changes(seth, expected_num_docs=0, expected_num_revisions=0, expected_docs={})
 
 
 @pytest.mark.sanity
