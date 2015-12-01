@@ -85,7 +85,8 @@ class Cluster:
         # Buckets may be shared for different functionality
         bucket_name_set = list(set(bucket_names_from_config))
 
-        print(">>> Creating buckets {} on: {}".format(bucket_name_set, self.servers[0].ip))
+        print(">>> Creating buckets on: {}".format(self.servers[0].ip))
+        print(">>> Creating buckets {}".format(bucket_name_set))
         self.servers[0].create_buckets(bucket_name_set)
 
         print(">>> Restarting sync_gateway with configuration: {}".format(conf_path))
@@ -100,13 +101,13 @@ class Cluster:
         s += "Sync Gateways\n"
         for sg in self.sync_gateways:
             s += str(sg)
-        s += "Sync Gateway Writers\n"
+        s += "\nSync Gateway Writers\n"
         for sgw in self.sync_gateway_writers:
             s += str(sgw)
-        s += "Couchbase Servers\n"
+        s += "\nCouchbase Servers\n"
         for server in self.servers:
             s += str(server)
-        s += "Load Generators\n"
+        s += "\nLoad Generators\n"
         for lg in self.load_generators:
             s += str(lg)
         s += "\n"
