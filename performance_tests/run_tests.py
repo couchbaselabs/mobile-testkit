@@ -82,7 +82,7 @@ if __name__ == "__main__":
     if opts.reset_sync_gateway:
         print "Resetting Sync Gateway"
         cluster = Cluster()
-        cluster.reset("sync_gateway_default_functional_tests.json")
+        cluster.reset("sync_gateway_default.json")
 
     run_tests(
         number_pullers=opts.number_pullers,
