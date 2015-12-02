@@ -58,7 +58,7 @@ def test_sync_channel_sanity(cluster):
     doc_pusher_caches = []
     # Push some ABC docs
     for channel in channels:
-        doc_pusher = admin.register_user(target=cluster.sync_gateways[2], db="db", name="{}_doc_pusher".format(channel), password="password", channels=[channel, ])
+        doc_pusher = admin.register_user(target=cluster.sync_gateways[2], db="db", name="{}_doc_pusher".format(channel), password="password", channels=[channel])
         doc_pusher.add_docs(num_docs_per_channel, bulk=True)
 
         doc_pushers.append(doc_pusher)
@@ -91,6 +91,62 @@ def test_sync_channel_sanity(cluster):
 
     # Verify that all docs have been flaged with _removed = true in changes feed for subscriber
     verify_docs_removed(subscriber, expected_num_docs=len(all_docs.items()), expected_docs=all_docs)
+
+
+@pytest.mark.sanity
+def test_sync_role_sanity(cluster):
+
+    num_docs_per_channel = 100
+    tv_channels = ["ABC", "NBC", "CBS"]
+
+    cluster.reset(config="sync_gateway_custom_sync_role_sanity.json")
+
+    admin = Admin(cluster.sync_gateways[2])
+    admin.create_role(db="db", name="tv_stations", channels=tv_channels)
+
+    seth = admin.register_user(target=cluster.sync_gateways[2], db="db", name="seth", password="password")
+
+    doc_pushers = []
+    doc_pusher_caches = []
+    # Push some ABC docs
+    for tv_channel in tv_channels:
+        doc_pusher = admin.register_user(target=cluster.sync_gateways[2], db="db", name="{}_doc_pusher".format(tv_channel), password="password", channels=[tv_channel])
+        doc_pusher.add_docs(num_docs_per_channel, bulk=True)
+
+        doc_pushers.append(doc_pusher)
+        doc_pusher_caches.append(doc_pusher.cache)
+
+    # Before role access grant
+    verify_changes(seth, expected_num_docs=0, expected_num_revisions=0, expected_docs={})
+
+    # Create access doc pusher and grant access Seth to ABC channel
+    access_doc_pusher = admin.register_user(target=cluster.sync_gateways[2], db="db", name="access_doc_pusher", password="password", channels=["access"])
+    access_doc_pusher.add_doc(doc_id="access_doc", content={"grant_access": "true"})
+
+    # Allow docs to backfill
+    time.sleep(5)
+
+    all_tv_docs = {k: v for cache in doc_pusher_caches for k, v in cache.items()}
+    verify_changes(seth, expected_num_docs=num_docs_per_channel * len(tv_channels), expected_num_revisions=0, expected_docs=all_tv_docs)
+
+    # Remove seth from tv_stations role
+    access_doc_pusher.update_doc(doc_id="access_doc", content={"grant_access": "false"})
+
+    # Allow docs to backfill
+    time.sleep(5)
+
+    # Verify seth sees no tv_stations channel docs
+    verify_changes(seth, expected_num_docs=0, expected_num_revisions=0, expected_docs={})
+
+    # Push more ABC docs
+    for doc_pusher in doc_pushers:
+        doc_pusher.add_docs(num_docs_per_channel, bulk=True)
+
+    # Allow docs to backfill
+    time.sleep(5)
+
+    # Verify seth sees no tv_stations channel docs
+    verify_changes(seth, expected_num_docs=0, expected_num_revisions=0, expected_docs={})
 
 
 @pytest.mark.sanity
