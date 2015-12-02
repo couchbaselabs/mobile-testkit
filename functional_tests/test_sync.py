@@ -5,6 +5,7 @@ import concurrent.futures
 
 from lib.admin import Admin
 from lib.verify import verify_changes
+from lib.verify import verify_docs_removed
 
 from fixtures import cluster
 
@@ -42,6 +43,54 @@ def test_sync_access_sanity(cluster):
 
     # Verify seth sees no abc_docs
     verify_changes(seth, expected_num_docs=0, expected_num_revisions=0, expected_docs={})
+
+
+@pytest.mark.sanity
+def test_sync_channel_sanity(cluster):
+
+    num_docs_per_channel = 2
+    channels = ["ABC", "NBC", "CBS"]
+
+    cluster.reset(config="sync_gateway_custom_sync_channel_sanity.json")
+    admin = Admin(cluster.sync_gateways[2])
+
+    doc_pushers = []
+    doc_pusher_caches = []
+    # Push some ABC docs
+    for channel in channels:
+        doc_pusher = admin.register_user(target=cluster.sync_gateways[2], db="db", name="{}_doc_pusher".format(channel), password="password", channels=[channel, ])
+        doc_pusher.add_docs(num_docs_per_channel, bulk=True)
+
+        doc_pushers.append(doc_pusher)
+        doc_pusher_caches.append(doc_pusher.cache)
+
+    # Verfy that none of the doc_pushers get docs. They should all be redirected by the sync function
+    verify_changes(doc_pushers, expected_num_docs=0, expected_num_revisions=0, expected_docs={})
+
+    subscriber = admin.register_user(target=cluster.sync_gateways[2], db="db", name="subscriber", password="password", channels=["tv_station_channel"])
+
+    # Allow docs to backfill
+    time.sleep(5)
+
+    # subscriber should recieve all docs
+    all_docs = {k: v for cache in doc_pusher_caches for k, v in cache.items()}
+    verify_changes(subscriber, expected_num_docs=len(channels) * num_docs_per_channel, expected_num_revisions=0, expected_docs=all_docs)
+
+    # update subscribers cache so the user knows what docs to update
+    subscriber.cache = all_docs
+    subscriber.update_docs(num_revs_per_doc=1)
+
+    # Allow docs to backfill
+    time.sleep(5)
+
+    # Verify the doc are back in the repective ABC, NBC, CBS channels
+    # HACK: Ignoring rev_id verification due to the fact that the doc was updated the the subscriber user and not the
+    # doc_pusher
+    for doc_pusher in doc_pushers:
+        verify_changes(doc_pusher, expected_num_docs=num_docs_per_channel, expected_num_revisions=1, expected_docs=doc_pusher.cache, ignore_rev_ids=True)
+
+    # Verify that all docs have been flaged with _removed = true in changes feed for subscriber
+    verify_docs_removed(subscriber, expected_num_docs=len(all_docs.items()), expected_docs=all_docs)
 
 
 @pytest.mark.sanity
@@ -190,7 +239,3 @@ def test_sync_require_roles(cluster):
         assert not k.startswith("bad_doc")
 
     verify_changes(mogul, expected_num_docs=expected_num_radio_docs + expected_num_tv_docs, expected_num_revisions=0, expected_docs=all_docs)
-
-
-
-
