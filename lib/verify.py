@@ -208,13 +208,12 @@ def verify_changes(users, expected_num_docs, expected_num_revisions, expected_do
             if expected_num_revisions != int(rev_id_prefix) - 1:
                 errors["unexpected_rev_id_prefix"] += 1
 
-            if not removed_docs:
-                # Check number of expected updates matched the updates on the _changes doc
-                if expected_num_revisions != result["updates"]:
-                    errors["unexpected_num_updates"] += 1
+            # Check number of expected updates matched the updates on the _changes doc
+            if expected_num_revisions != result["updates"]:
+                errors["unexpected_num_updates"] += 1
 
         # Allow printing updates even if changes feed length is 0
-        if len(changes_results) == 0 or removed_docs:
+        if len(changes_results) == 0:
             updates = 0
         else:
             updates = changes_results[0]["updates"]

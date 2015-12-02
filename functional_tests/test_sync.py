@@ -48,7 +48,7 @@ def test_sync_access_sanity(cluster):
 @pytest.mark.sanity
 def test_sync_channel_sanity(cluster):
 
-    num_docs_per_channel = 2
+    num_docs_per_channel = 100
     channels = ["ABC", "NBC", "CBS"]
 
     cluster.reset(config="sync_gateway_custom_sync_channel_sanity.json")
