@@ -210,11 +210,9 @@ $ python performance_tests/kill_gateload.py
 
 **Gatling**
 
-NOTE: this is currently broken
-
 ```
-$ cd performance_tests
-$ python run_tests.py --number-pullers=0 --number-pushers=7500
+$ export PYTHONPATH=$PYTHONPATH:.
+$ python performance_tests/run_tests.py --number-pullers=0 --number-pushers=7500
 ```
 
 ### Performance test data
