@@ -1,4 +1,30 @@
 ---
+- name: Wait for port 22 to be ready
+  hosts: sync_gateways
+  gather_facts: False
+  tasks:
+  - wait_for: port=22 delay=2
+
+# Deploy sync gateway configs
+- hosts: sync_gateways
+  sudo: true
+  vars:
+    sync_gateway_config_filepath:
+    couchbase_server_primary_node: "{{ hostvars[groups.couchbase_servers[0]].ansible_ssh_host }}"
+    is_index_writer: "false"
+  tasks:
+  - include: tasks/deploy-sync-gateway-config.yml
+
+# Deploy sync gateway configs (index writers)
+- hosts: sync_gateway_index_writers
+  sudo: true
+  vars:
+    sync_gateway_config_filepath:
+    couchbase_server_primary_node: "{{ hostvars[groups.couchbase_servers[0]].ansible_ssh_host }}"
+    is_index_writer: "true"
+  tasks:
+  - include: tasks/deploy-sync-gateway-config.yml
+
 - hosts: sync_gateways
   any_errors_fatal: true
   sudo: true

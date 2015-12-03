@@ -1,4 +1,5 @@
 import os
+import re
 import sys
 import json
 
@@ -46,6 +47,14 @@ class Cluster:
         return [host.get_variables() for host in hosts]
 
     def reset(self, config):
+        # Stop sync_gateways
+        print(">>> Stopping sync_gateway")
+        run_ansible_playbook("stop-sync-gateway.yml")
+
+        # Deleting sync_gateway artifacts
+        print(">>> Deleting sync_gateway artifacts")
+        run_ansible_playbook("delete-sync-gateway-artifacts.yml")
+
         # Delete buckets
         print(">>> Deleting buckets on: {}".format(self.servers[0].ip))
         self.servers[0].delete_buckets()
@@ -57,12 +66,17 @@ class Cluster:
         with open(conf_path, "r") as config:
             data = config.read()
 
-            # HACK - render template for valid json
-            sg_template = jinja2.Template(data)
-            rendered_sg_config = sg_template.render({"is_index_writer": "true"})
+            # HACK: Strip out invalid json from config to allow it to be loaded
+            #       and parsed for bucket names
+
+            # strip out templated variables {{ ... }}
+            data = re.sub("({{.*}})", "0", data)
+
+            # strip out sync functions `function ... }`
+            data = re.sub("(`function.*\n)(.*\n)+(.*}`)", "0", data)
 
             # Find all bucket names in config's databases: {}
-            conf_obj = json.loads(rendered_sg_config)
+            conf_obj = json.loads(data)
 
             # Add CBGT buckets
             if "cluster_config" in conf_obj.keys():
@@ -79,13 +93,15 @@ class Cluster:
         # Buckets may be shared for different functionality
         bucket_name_set = list(set(bucket_names_from_config))
 
-        print(">>> Creating buckets {} on: {}".format(bucket_name_set, self.servers[0].ip))
+        print(">>> Creating buckets on: {}".format(self.servers[0].ip))
+        print(">>> Creating buckets {}".format(bucket_name_set))
         self.servers[0].create_buckets(bucket_name_set)
 
-        print(">>> Restarting sync_gateway with configuration: {}".format(conf_path))
+        print(">>> Starting sync_gateway with configuration: {}".format(conf_path))
 
+        # Start sync-gateway
         run_ansible_playbook(
-            "reset-sync-gateway.yml",
+            "start-sync-gateway.yml",
             extra_vars="sync_gateway_config_filepath={0}".format(conf_path)
         )
 
@@ -94,13 +110,13 @@ class Cluster:
         s += "Sync Gateways\n"
         for sg in self.sync_gateways:
             s += str(sg)
-        s += "Sync Gateway Writers\n"
+        s += "\nSync Gateway Writers\n"
         for sgw in self.sync_gateway_writers:
             s += str(sgw)
-        s += "Couchbase Servers\n"
+        s += "\nCouchbase Servers\n"
         for server in self.servers:
             s += str(server)
-        s += "Load Generators\n"
+        s += "\nLoad Generators\n"
         for lg in self.load_generators:
             s += str(lg)
         s += "\n"

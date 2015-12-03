@@ -1,0 +1,7 @@
+---
+# Deploy sync gateway configs
+- hosts: sync_gateways
+  sudo: true
+  vars:
+  tasks:
+  - include: tasks/delete-sync-gateway-artifacts.yml

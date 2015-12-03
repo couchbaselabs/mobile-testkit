@@ -1,3 +1,7 @@
+import logging
+
+# print debug logging
+# logging.basicConfig(level=logging.DEBUG)
 
 # the timeout for HTTP Requests, in seconds
 HTTP_REQ_TIMEOUT = 30

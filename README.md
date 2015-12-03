@@ -156,6 +156,7 @@ Example building from source:
 $ python provision/provision_cluster.py \
     --server-version=3.1.1 \
     --sync-gateway-branch=feature/distributed_index_bulk_set
+    --install-deps (first time only, this will install prerequisites to build / debug)
 ```
 
 Example from a pre-built version (dev build):
@@ -165,6 +166,7 @@ $ python provision/provision_cluster.py \
     --server-version=3.1.1 \
     --sync-gateway-dev-build-url=feature/distributed_index \
     --sync-gateway-dev-build-number=345
+    --install-deps (first time only, this will install prerequisites to build / debug)
 ```
 
 Like all scripts, run `python provision/provision_cluster.py -h` to view help options.
@@ -196,8 +198,14 @@ $ python provision/install_splunk.py
 **Gateload**
 
 ```
-$ cd performance_tests
-$ python run_tests.py --use-gateload --gen-gateload-config
+$ export PYTHONPATH=$PYTHONPATH:.
+$ python performance_tests/run_tests.py --number-pullers 1000 --number-pushers 1000 --use-gateload --gen-gateload-config --reset-sync-gw 
+```
+
+To stop the tests:
+
+```
+$ python performance_tests/kill_gateload.py
 ```
 
 **Gatling**

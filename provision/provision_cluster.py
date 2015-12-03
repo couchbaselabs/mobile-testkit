@@ -12,7 +12,7 @@ import ansible_runner
 
 # TODO Add SG package
 
-def provision_cluster(couchbase_server_config, sync_gateway_config):
+def provision_cluster(couchbase_server_config, sync_gateway_config, install_deps):
 
     print "\n>>> Host info:\n"
 
@@ -50,11 +50,12 @@ def provision_cluster(couchbase_server_config, sync_gateway_config):
     # Reset previous installs
     ansible_runner.run_ansible_playbook("remove-previous-installs.yml")
 
-    # OS-level modifications
-    ansible_runner.run_ansible_playbook("os-level-modifications.yml")
+    if install_deps:
+        # OS-level modifications
+        ansible_runner.run_ansible_playbook("os-level-modifications.yml")
 
-    # Install dependencies
-    ansible_runner.run_ansible_playbook("install-common-tools.yml")
+        # Install dependencies
+        ansible_runner.run_ansible_playbook("install-common-tools.yml")
 
     # Install server package
     install_couchbase_server.install_couchbase_server(couchbase_server_config)
@@ -68,7 +69,6 @@ if __name__ == "__main__":
     --server-build=<server_build_number>
     --sync-gateway-version=<sync_gateway_version_number>
     --sync-gateway-build=<sync_gateway_build_number>
-    --sync-gateway-config-file=<path_to_local_sync_gateway_config>
 
     or
 
@@ -76,7 +76,6 @@ if __name__ == "__main__":
     --server-version=<server_version_number>
     --server-build=<server_build_number>
     --branch=<sync_gateway_branch_to_build>
-    --sync-gateway-config-file=<path_to_local_sync_gateway_config>
     """
 
     parser = OptionParser(usage=usage)
@@ -111,6 +110,9 @@ if __name__ == "__main__":
                       action="store", type="string", dest="source_branch", default=None,
                       help="sync_gateway branch to checkout and build")
 
+    parser.add_option("", "--install-deps", action="store_true", dest="install_deps", default=False,
+                      help="This flag will install the required dependencies to build sync_gateway from source")
+
     arg_parameters = sys.argv[1:]
 
     (opts, args) = parser.parse_args(arg_parameters)
@@ -130,5 +132,6 @@ if __name__ == "__main__":
 
     provision_cluster(
         couchbase_server_config=server_config,
-        sync_gateway_config=sync_gateway_config
+        sync_gateway_config=sync_gateway_config,
+        install_deps=opts.install_deps
     )

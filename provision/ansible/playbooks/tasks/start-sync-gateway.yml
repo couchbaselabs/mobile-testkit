@@ -3,4 +3,4 @@
 - name: install sync gateway service
   shell: ./sync_gateway_service_install.sh --sgpath=/home/sync_gateway/sync_gateway chdir=/home/centos/sync_gateway/service
 - name: wait until sync gateway to listen on port
-  wait_for: port=4985 delay=1 timeout=30
+  wait_for: port=4985 delay=2 timeout=60
