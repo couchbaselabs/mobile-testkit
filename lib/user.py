@@ -55,7 +55,7 @@ class User:
         body = json.dumps(doc_body)
 
         resp = session.put(doc_url, headers=self._headers, data=body, timeout=settings.HTTP_REQ_TIMEOUT)
-        log.info("User: %s created doc %s" % (self.name, doc_url))
+        log.info("User: {} created doc {}".format(self.name, doc_url))
         scenario_printer.print_status(resp)
         resp.raise_for_status()
         resp_json = resp.json()
@@ -183,7 +183,7 @@ class User:
                 except Exception as exc:
                     log.error('Generated an exception while updating doc_id:%s %s' % (doc, exc))
                 else:
-                    log.info("Document: %s updated successfully" % doc)
+                    log.info("Document: {} updated successfully".format(doc))
 
     def get_num_docs(self):
         return len(self.changes_data['results'])
@@ -268,6 +268,8 @@ class User:
         r.raise_for_status()
 
         obj = json.loads(r.text)
+        if obj["results"] is None:
+            raise ValueError("Got no data in changes feed")
         self.changes_data = obj
         scenario_printer.print_changes_num(self.name, len(obj["results"]))
         return obj

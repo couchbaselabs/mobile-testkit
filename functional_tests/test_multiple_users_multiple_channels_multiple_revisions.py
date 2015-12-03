@@ -44,9 +44,8 @@ def test_mulitple_users_mulitiple_channels_mulitple_revisions(cluster, num_users
 
     # Register User
     log.info("Register User")
-    for username in users:
-        user_obj = admin.register_user(target=sgs[0], db="db", name=username, password=password, channels=channels)
-        user_objects.append(user_obj)
+    user_objects = admin.register_bulk_users(target=sgs[0], db="db", name_prefix="User",
+                                             number=num_users, password=password, channels=channels)
 
     # Add User
     log.info("Add docs")
