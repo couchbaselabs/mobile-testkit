@@ -268,8 +268,8 @@ class User:
         r.raise_for_status()
 
         obj = json.loads(r.text)
-        if obj["results"] is None:
-            raise ValueError("Got no data in changes feed")
+        if len(obj["results"]) == 0:
+            log.warn("Got no data in changes feed")
         self.changes_data = obj
         scenario_printer.print_changes_num(self.name, len(obj["results"]))
         return obj

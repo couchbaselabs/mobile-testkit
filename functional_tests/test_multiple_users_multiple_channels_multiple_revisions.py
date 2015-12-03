@@ -49,7 +49,7 @@ def test_mulitple_users_mulitiple_channels_mulitple_revisions(cluster, num_users
 
     # Add User
     log.info("Add docs")
-    in_parallel(user_objects, 'add_docs', num_docs, use_uuid_names)
+    in_parallel(user_objects, 'add_docs', num_docs)
 
     # Update docs
     log.info("Update docs")
