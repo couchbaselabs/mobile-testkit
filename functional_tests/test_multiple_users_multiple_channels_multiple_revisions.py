@@ -18,9 +18,9 @@ log = logging.getLogger(settings.LOGGER)
 
 @pytest.mark.sanity
 @pytest.mark.distributed_index
-@pytest.mark.parametrize("num_users", [5])
+@pytest.mark.parametrize("num_users", [10])
 @pytest.mark.parametrize("num_channels", [3]) #all users share all channels
-@pytest.mark.parametrize("num_docs", [2])
+@pytest.mark.parametrize("num_docs", [10])
 @pytest.mark.parametrize("num_revisions", [10])
 def test_mulitple_users_mulitiple_channels_mulitple_revisions(cluster, num_users,num_channels, num_docs, num_revisions):
 
@@ -87,7 +87,7 @@ def test_mulitple_users_mulitiple_channels_mulitple_revisions(cluster, num_users
     assert len(rev_errors) == 0
 
     # Verify each User created docs are part of changes feed
-    output = in_parallel(user_objects, 'is_subset')
+    output = in_parallel(user_objects, 'check_doc_ids_in_changes_feed')
     assert True in output.values()
     end = time.time()
     log.info("Test ended.")

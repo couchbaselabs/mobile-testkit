@@ -156,16 +156,16 @@ class User:
                 if put_resp.status_code == 201:
 
                     data = put_resp.json()
-		    
-		    if "rev" not in data.keys():
-                        log.error("Error: Did not find _rev property after Update response")
-			raise ValueError("Did not find _rev property after Update response")
 
-                    # Update revision number for stored doc id
-                    self.cache[doc_id] = data["rev"]
+                if "rev" not in data.keys():
+                    log.error("Error: Did not find _rev property after Update response")
+                    raise ValueError("Did not find _rev property after Update response")
 
-                    # Store updated doc to return
-                    updated_docs[doc_id] = data["rev"]
+                # Update revision number for stored doc id
+                self.cache[doc_id] = data["rev"]
+
+                # Store updated doc to return
+                updated_docs[doc_id] = data["rev"]
 
                 put_resp.raise_for_status()
             resp.raise_for_status()
@@ -210,7 +210,7 @@ class User:
         return docs
 
     # Check if the user created doc-ids are part of changes feed
-    def is_subset(self):
+    def check_doc_ids_in_changes_feed(self):
         superset = []
         errors = 0
         for obj in self.changes_data['results']:
