@@ -92,6 +92,8 @@ def test_sync_channel_sanity(cluster):
     # Verify that all docs have been flaged with _removed = true in changes feed for subscriber
     verify_docs_removed(subscriber, expected_num_docs=len(all_docs.items()), expected_docs=all_docs)
 
+    # TODO Push more docs to channel and make sure they do not show up in the users changes feed.
+
 
 @pytest.mark.sanity
 def test_sync_role_sanity(cluster):
