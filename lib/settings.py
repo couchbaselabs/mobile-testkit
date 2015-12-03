@@ -16,5 +16,19 @@ BACKOFF_FACTOR = 0.2
 MAX_HTTP_RETRIES = 9
 
 # HTTP Retry error codes
-ERROR_CODE_LIST = [500,503]
+ERROR_CODE_LIST = [500, 503]
 
+# Log Levels:
+# CRITICAL 50
+# ERROR	   40
+# WARNING  30
+# INFO     20
+# DEBUG    10
+# NOTSET    0
+LOG_LEVEL = 20
+
+# Logger Name
+LOGGER = 'test_framework'
+
+# Log filename
+LOG_FILE = 'test-framework.log'

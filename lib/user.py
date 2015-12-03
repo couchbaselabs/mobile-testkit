@@ -4,13 +4,16 @@ import json
 import base64
 import uuid
 import re
-
+import copy
 from requests.packages.urllib3.util import Retry
 from requests.adapters import HTTPAdapter
 from requests import Session, exceptions
 from collections import defaultdict
 from scenarioprinter import ScenarioPrinter
 from lib import settings
+import logging
+log = logging.getLogger(settings.LOGGER)
+
 
 scenario_printer = ScenarioPrinter()
 
@@ -22,6 +25,7 @@ class User:
         self.password = password
         self.db = db
         self.cache = {}
+        self.changes_data = None
         self.channels = list(channels)
         self.target = target
 
@@ -51,6 +55,7 @@ class User:
         body = json.dumps(doc_body)
 
         resp = session.put(doc_url, headers=self._headers, data=body, timeout=settings.HTTP_REQ_TIMEOUT)
+        log.info("User: {} created doc {}".format(self.name, doc_url))
         scenario_printer.print_status(resp)
         resp.raise_for_status()
         resp_json = resp.json()
@@ -112,7 +117,7 @@ class User:
                     try:
                         doc_id = future.result()
                     except Exception as exc:
-                        print('Generated an exception while adding doc_id : %s %s' % (doc, exc))
+                        log.error('Generated an exception while adding doc_id : %s %s' % (doc, exc))
         else:
             with concurrent.futures.ThreadPoolExecutor(max_workers=settings.MAX_REQUEST_WORKERS) as executor:
                 future = [executor.submit(self.add_bulk_docs, doc_names)]
@@ -121,7 +126,7 @@ class User:
                         doc_list = f.result()
                         #print(doc_list)
                     except Exception as e:
-                        print("Error adding bulk docs: {}".format(e))
+                        log.error("Error adding bulk docs: {}".format(e))
 
         return True
 
@@ -151,13 +156,16 @@ class User:
                 if put_resp.status_code == 201:
 
                     data = put_resp.json()
-                    assert "rev" in data.keys()
 
-                    # Update revision number for stored doc id
-                    self.cache[doc_id] = data["rev"]
+                if "rev" not in data.keys():
+                    log.error("Error: Did not find _rev property after Update response")
+                    raise ValueError("Did not find _rev property after Update response")
 
-                    # Store updated doc to return
-                    updated_docs[doc_id] = data["rev"]
+                # Update revision number for stored doc id
+                self.cache[doc_id] = data["rev"]
+
+                # Store updated doc to return
+                updated_docs[doc_id] = data["rev"]
 
                 put_resp.raise_for_status()
             resp.raise_for_status()
@@ -173,9 +181,52 @@ class User:
                 try:
                     doc_id = future.result()
                 except Exception as exc:
-                    print('Generated an exception while updating doc_id:%s %s' % (doc, exc))
+                    log.error('Generated an exception while updating doc_id:%s %s' % (doc, exc))
                 else:
-                    print "Document:", doc, "updated successfully"
+                    log.info("Document: {} updated successfully".format(doc))
+
+    def get_num_docs(self):
+        return len(self.changes_data['results'])
+
+    # returns a dictionary of type doc[revision]
+    def get_num_revisions(self):
+        docs = {}
+
+        for obj in self.changes_data['results']:
+            revision = obj["changes"][0]["rev"]
+            log.debug(revision)
+            match = re.search('(\d+)-\w+', revision)
+            if match:
+                log.debug("match found")
+                revision_num = match.group(1)
+                log.debug(revision_num)
+
+            if obj["id"] in docs.keys():
+                log.error("Key already exists")
+                raise "Key already exists"
+            else:
+                docs[obj["id"]] = revision_num
+        log.debug(docs)
+        return docs
+
+    # Check if the user created doc-ids are part of changes feed
+    def check_doc_ids_in_changes_feed(self):
+        superset = []
+        errors = 0
+        for obj in self.changes_data['results']:
+            if obj["id"] in superset:
+                log.error("doc id {} already exists".format(obj["id"]))
+                raise KeyError("Doc id already exists")
+            else:
+                superset.append(obj["id"])
+
+        for doc_id in self.cache.keys():
+            if doc_id not in superset:
+                log.error("doc-id {} missing from superset for User {}".format(doc_id, self.name))
+                errors += 1
+            else:
+                log.info('Found doc-id {} for user {} in changes feed'.format(doc_id, self.name))
+        return errors == 0
 
     def get_changes(self, feed=None, limit=None, heartbeat=None, style=None,
                     since=None, include_docs=None, channels=None, filter=None):
@@ -217,5 +268,8 @@ class User:
         r.raise_for_status()
 
         obj = json.loads(r.text)
+        if len(obj["results"]) == 0:
+            log.warn("Got no data in changes feed")
+        self.changes_data = obj
         scenario_printer.print_changes_num(self.name, len(obj["results"]))
         return obj
