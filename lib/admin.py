@@ -57,18 +57,44 @@ class Admin:
         pass
 
     def db_online(self, db, delay=None):
-        pass
+
+        data = {}
+        if delay is not None:
+            data = {"delay": delay}
+
+        resp = requests.post("{0}/{1}/_online".format(self.admin_url, db), headers=self._headers, timeout=settings.HTTP_REQ_TIMEOUT, data=json.dumps(data))
+        resp.raise_for_status()
+        print(resp.text)
 
     def db_offline(self, db):
-        pass
+        resp = requests.post("{0}/{1}/_offline".format(self.admin_url, db), headers=self._headers, timeout=settings.HTTP_REQ_TIMEOUT)
+        resp.raise_for_status()
+        print(resp.text)
 
     def get_db_status(self, db):
-        pass
+        resp = requests.get("{0}/{1}".format(self.admin_url, db), headers=self._headers, timeout=settings.HTTP_REQ_TIMEOUT)
+        resp.raise_for_status()
+        print(resp.text)
 
     def get_db_config(self, db):
-        pass
+        resp = requests.get("{0}/{1}/_config".format(self.admin_url, db), headers=self._headers, timeout=settings.HTTP_REQ_TIMEOUT)
+        resp.raise_for_status()
+        print(resp.text)
 
     def put_config(self, db, config_name):
-        # will look in conf/
-        pass
+
+        # sample_conf = {
+        #     "server": "http://localhost:8091",
+        #     "bucket": "bucket-1",
+        #     "users": {
+        #         "GUEST": {
+        #             "disabled": False,
+        #             "admin_channels": ["*"]
+        #         }
+        #     }
+        # }
+
+        resp = requests.put("{0}/{1}".format(self.admin_url, db), headers=self._headers, timeout=settings.HTTP_REQ_TIMEOUT, data=json.dumps(config))
+        resp.raise_for_status()
+        print(resp.text)
 
