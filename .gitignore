@@ -25,3 +25,4 @@ provisioning_config
 
 results.xml
 provision/ansible/playbooks/ansible.cfg
+test-framework.log
