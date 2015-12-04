@@ -60,6 +60,8 @@
     shell: cp /home/centos/sync_gateway/bin/sync_gateway /home/sync_gateway
   - name: change permissions of sync gateway executable
     file: path=/home/sync_gateway/sync_gateway mode=a+x
+  - name: copy wait for sync_gateway launch script
+    copy: src=files/sg_wait_for_launch.sh dest=/home/sync_gateway/ mode=a+x owner=sync_gateway
 
 # Deploy sync gateway configs
 - hosts: sync_gateways
