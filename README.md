@@ -232,7 +232,7 @@ $ ./test
 ## Running an individual functional test
 
 ```
-$ python -m pytest --capture=no functional_tests/test_single_user_multiple_channels.py
+$ python -m pytest --capture=no functional_tests/test_users_channels.py::test_single_user_single_channel
 ```
 
 ## Collecting Sync Gateway logs
