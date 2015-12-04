@@ -52,3 +52,23 @@ class Admin:
             raise("Not all users added during register_bulk users")
 
         return users
+
+    def db_resync(self, db):
+        pass
+
+    def db_online(self, db, delay=None):
+        pass
+
+    def db_offline(self, db):
+        pass
+
+    def get_db_status(self, db):
+        pass
+
+    def get_db_config(self, db):
+        pass
+
+    def put_config(self, db, config_name):
+        # will look in conf/
+        pass
+
