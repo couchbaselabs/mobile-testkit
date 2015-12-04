@@ -212,7 +212,7 @@ $ python performance_tests/kill_gateload.py
 
 ```
 $ export PYTHONPATH=$PYTHONPATH:.
-$ python performance_tests/run_tests.py --number-pullers=0 --number-pushers=7500
+$ python performance_tests/run_tests.py --number-pullers=1000 --number-pushers=1000
 ```
 
 ### Performance test data
