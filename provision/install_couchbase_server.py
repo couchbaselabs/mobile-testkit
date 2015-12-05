@@ -37,8 +37,8 @@ class CouchbaseServerConfig:
             package_name = "couchbase-server-enterprise-4.0.0-4051-centos7.x86_64.rpm"
             return base_url, package_name
         elif version == "4.1.0":
-            base_url = "http://latestbuilds.hq.couchbase.com/couchbase-server/sherlock/4940"
-            package_name = "couchbase-server-enterprise-4.1.0-4940-centos7.x86_64.rpm"
+            base_url = "http://latestbuilds.hq.couchbase.com/couchbase-server/sherlock/5005"
+            package_name = "couchbase-server-enterprise-4.1.0-5005-centos7.x86_64.rpm"
             return base_url, package_name
         else:
             print "Server package url not found. Make sure to specify a version / build."
