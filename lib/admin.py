@@ -17,11 +17,13 @@ class Admin:
 
         self._headers = {"Content-Type": "application/json"}
 
+    # PUT /{db}/_role/{name}
     def create_role(self, db, name, channels):
         data = {"name": name, "admin_channels": channels}
         resp = requests.put("{0}/{1}/_role/{2}".format(self.admin_url, db, name), headers=self._headers, timeout=settings.HTTP_REQ_TIMEOUT, data=json.dumps(data))
         resp.raise_for_status()
 
+    # PUT /{db}/_user/{name}
     def register_user(self, target, db, name, password, channels=list(), roles=list()):
 
         data = {"name": name, "password": password, "admin_channels": channels, "admin_roles": roles}
