@@ -10,7 +10,7 @@
     "verbose":"true",
     "databases":{
         "db":{
-            "offline":false,
+            "offline":true,
             "server":"http://{{ couchbase_server_primary_node }}:8091",
             "bucket":"data-bucket"
         }
