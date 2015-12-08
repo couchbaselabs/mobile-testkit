@@ -1,4 +1,6 @@
 import pytest
+import time
+
 from lib.admin import Admin
 from lib.verify import verify_changes
 
@@ -137,10 +139,13 @@ def rest_scan(sync_gateway, db, online=True):
         print "get_all_docs exception: {}".format(status_code)
         error_responses[e.response.url] = status_code
 
+    # wait for changes
+    time.sleep(1)
+
     try:
         # GET /{db}/_changes
         changes = seth.get_changes()
-
+        # If successful, verify the _changes feed
         verify_changes(seth, expected_num_docs=3, expected_num_revisions=1, expected_docs=seth.cache)
     except HTTPError as e:
         status_code = e.response.status_code
@@ -153,6 +158,7 @@ def rest_scan(sync_gateway, db, online=True):
 @pytest.mark.sanity
 @pytest.mark.dbonlineoffline
 def test_online_online_default(cluster):
+
     # Scenario 1
     cluster.reset("bucket_online_offline/bucket_online_offline_default.json")
 
@@ -160,10 +166,31 @@ def test_online_online_default(cluster):
     errors = rest_scan(cluster.sync_gateways[0], db="db", online=True)
     assert(len(errors) == 0)
 
+    # Scenario 4
+    # Check the db has an Online state at each running sync_gateway
+    for sg in cluster.sync_gateways:
+        admin = Admin(sg)
+        db_info = admin.get_db_info("db")
+        assert (db_info["state"] == "Online")
+
 
 @pytest.mark.sanity
 def test_offline_false_config_rest(cluster):
+
+    # Scenario 2
     cluster.reset("bucket_online_offline/bucket_online_offline_offline_false.json")
+
+    # all db endpoints should function as expected
+    errors = rest_scan(cluster.sync_gateways[0], db="db", online=True)
+
+    assert(len(errors) == 0)
+
+    # Scenario 4
+    # Check the db has an Online state at each running sync_gateway
+    for sg in cluster.sync_gateways:
+        admin = Admin(sg)
+        db_info = admin.get_db_info("db")
+        assert (db_info["state"] == "Online")
 
 @pytest.mark.sanity
 def test_online__rest(cluster):
