@@ -96,9 +96,11 @@ class Admin:
         resp.raise_for_status()
         return resp.json()
 
+    # POST /{db}/_resync
     def db_resync(self, db):
         pass
 
+    # POST /{db}/_online
     def db_online(self, db, delay=None):
 
         data = {}
@@ -108,8 +110,9 @@ class Admin:
         resp = requests.post("{0}/{1}/_online".format(self.admin_url, db), headers=self._headers, timeout=settings.HTTP_REQ_TIMEOUT, data=json.dumps(data))
         log.info(resp.url)
         resp.raise_for_status()
-        print(resp.text)
+        return resp.status_code
 
+    # POST /{db}/_online
     def db_offline(self, db):
         resp = requests.post("{0}/{1}/_offline".format(self.admin_url, db), headers=self._headers, timeout=settings.HTTP_REQ_TIMEOUT)
         resp.raise_for_status()
