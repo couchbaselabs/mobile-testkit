@@ -30,6 +30,13 @@ if __name__ == "__main__":
                       default=None,
                       help="pytest mark to target")
 
+    parser.add_option("-r", "",
+                      action="store",
+                      type="int",
+                      dest="repeat",
+                      default=1,
+                      help="repeat number of times (only works with -t)")
+
     (opts, args) = parser.parse_args(sys.argv[1:])
 
     # Delete sg logs in /tmp
@@ -41,7 +48,13 @@ if __name__ == "__main__":
             shutil.rmtree("/tmp/" + f)
 
     if opts.test:
-        pytest.main("--capture=no --junit-xml=results.xml functional_tests/{}".format(opts.test))
+        count = 0
+        while count < opts.repeat:
+            status = pytest.main("--capture=no --junit-xml=results.xml {}".format(opts.test))
+            if status != 0:
+                break
+            count += 1
+
     elif opts.mark:
         pytest.main("--capture=no --junit-xml=results.xml -m {}".format(opts.mark))
     else:

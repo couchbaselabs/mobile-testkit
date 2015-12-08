@@ -18,6 +18,8 @@ def cluster(request):
             log_zip_prefix = "{0}-{1}".format(test_id_elements[0], test_id_elements[1])
             fetch_sync_gateway_logs(log_zip_prefix)
 
+        print("\n\n\n")
+
     if settings.CAPTURE_SYNC_GATEWAY_LOGS_ON_FAIL:
         request.addfinalizer(fetch_logs)
 
