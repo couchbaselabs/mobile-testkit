@@ -6,6 +6,8 @@ from lib.user import User
 from lib.scenarioprinter import ScenarioPrinter
 from lib import settings
 
+import logging
+log = logging.getLogger(settings.LOGGER)
 
 class Admin:
 
@@ -17,19 +19,44 @@ class Admin:
 
         self._headers = {"Content-Type": "application/json"}
 
+    def get_db_info(self, db):
+        resp = requests.get("{0}/{1}/".format(self.admin_url, db), headers=self._headers, timeout=settings.HTTP_REQ_TIMEOUT)
+        log.info(resp.url)
+        resp.raise_for_status()
+        return resp.json()
+
     # PUT /{db}/_role/{name}
     def create_role(self, db, name, channels):
         data = {"name": name, "admin_channels": channels}
         resp = requests.put("{0}/{1}/_role/{2}".format(self.admin_url, db, name), headers=self._headers, timeout=settings.HTTP_REQ_TIMEOUT, data=json.dumps(data))
+        log.info(resp.url)
         resp.raise_for_status()
+
+    # GET /{db}/_role
+    def get_roles(self, db):
+        resp = requests.get("{0}/{1}/_role/".format(self.admin_url, db), headers=self._headers, timeout=settings.HTTP_REQ_TIMEOUT)
+        log.info(resp.url)
+        resp.raise_for_status()
+        return resp.json()
+
+    # GET /{db}/_role/{name}
+    def get_role(self, db, name):
+        resp = requests.get("{0}/{1}/_role/{2}".format(self.admin_url, db, name), headers=self._headers, timeout=settings.HTTP_REQ_TIMEOUT)
+        log.info(resp.url)
+        resp.raise_for_status()
+        return resp.json()
 
     # PUT /{db}/_user/{name}
     def register_user(self, target, db, name, password, channels=list(), roles=list()):
 
         data = {"name": name, "password": password, "admin_channels": channels, "admin_roles": roles}
 
-        r = requests.put("{0}/{1}/_user/{2}".format(self.admin_url, db, name), headers=self._headers, timeout=settings.HTTP_REQ_TIMEOUT, data=json.dumps(data))
-        r.raise_for_status()
+        resp = requests.put("{0}/{1}/_user/{2}".format(self.admin_url, db, name), headers=self._headers, timeout=settings.HTTP_REQ_TIMEOUT, data=json.dumps(data))
+
+        print(resp.status_code)
+
+        log.info(resp.url)
+        resp.raise_for_status()
 
         self._printer.print_user_add()
 
@@ -55,6 +82,20 @@ class Admin:
 
         return users
 
+    # GET /{db}/_user/
+    def get_users_info(self, db):
+        resp = requests.get("{0}/{1}/_user/".format(self.admin_url, db), headers=self._headers, timeout=settings.HTTP_REQ_TIMEOUT)
+        log.info(resp.url)
+        resp.raise_for_status()
+        return resp.json()
+
+    # GET /{db}/_user/{name}
+    def get_user_info(self, db, name):
+        resp = requests.get("{0}/{1}/_user/{2}".format(self.admin_url, db, name), headers=self._headers, timeout=settings.HTTP_REQ_TIMEOUT)
+        log.info(resp.url)
+        resp.raise_for_status()
+        return resp.json()
+
     def db_resync(self, db):
         pass
 
@@ -65,6 +106,7 @@ class Admin:
             data = {"delay": delay}
 
         resp = requests.post("{0}/{1}/_online".format(self.admin_url, db), headers=self._headers, timeout=settings.HTTP_REQ_TIMEOUT, data=json.dumps(data))
+        log.info(resp.url)
         resp.raise_for_status()
         print(resp.text)
 
@@ -75,11 +117,13 @@ class Admin:
 
     def get_db_status(self, db):
         resp = requests.get("{0}/{1}".format(self.admin_url, db), headers=self._headers, timeout=settings.HTTP_REQ_TIMEOUT)
+        log.info(resp.url)
         resp.raise_for_status()
         print(resp.text)
 
     def get_db_config(self, db):
         resp = requests.get("{0}/{1}/_config".format(self.admin_url, db), headers=self._headers, timeout=settings.HTTP_REQ_TIMEOUT)
+        log.info(resp.url)
         resp.raise_for_status()
         print(resp.text)
 
@@ -97,6 +141,7 @@ class Admin:
         # }
 
         resp = requests.put("{0}/{1}".format(self.admin_url, db), headers=self._headers, timeout=settings.HTTP_REQ_TIMEOUT, data=json.dumps(config))
+        log.info(resp.url)
         resp.raise_for_status()
         print(resp.text)
 
