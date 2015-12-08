@@ -15,7 +15,10 @@ from fixtures import cluster
 # set this to ensure no retries occur
 lib.settings.ERROR_CODE_LIST = []
 
+NUM_ENDPOINTS = 11
+
 def rest_scan(sync_gateway, db, online):
+
 
     # Missing ADMIN
     # TODO: GET /{db}/_session/{session-id}
@@ -33,7 +36,6 @@ def rest_scan(sync_gateway, db, online):
     # TODO: POST /{db}/_all_docs
     # TODO: POST /{db}/_bulk_get
 
-    # TODO: POST /{db}
     # TODO: DELETE /{db}/{doc}
     # TODO: PUT /{db}/{doc}/{attachment}
     # TODO: GET /{db}/{doc}/{attachment}
@@ -46,6 +48,10 @@ def rest_scan(sync_gateway, db, online):
     # Missing Authentication
     # TODO: POST /{db}/_facebook_token
     # TODO: POST /{db}/_persona_assertion
+
+
+    # Implement these
+    # TODO: POST /{db}
 
     admin = Admin(sync_gateway=sync_gateway)
 
@@ -222,7 +228,7 @@ def test_offline_true_config_bring_online(cluster):
     # all db endpoints should fail with 503
     errors = rest_scan(cluster.sync_gateways[0], db="db", online=False)
 
-    assert(len(errors) == 11)
+    assert(len(errors) == NUM_ENDPOINTS)
     for error_tuple in errors:
         print("({},{})".format(error_tuple[0], error_tuple[1]))
         assert(error_tuple[1] == 503)
@@ -242,12 +248,59 @@ def test_offline_true_config_bring_online(cluster):
 #lib.settings.ERROR_CODE_LIST = [500, 503]
 
 
-# Scenario 6
+# Scenario 14
 @pytest.mark.sanity
 @pytest.mark.dbonlineoffline
-def test_offline_true_config_bring_online(cluster):
-    
+def test_config_change_valid(cluster):
+
+    cluster.reset("bucket_online_offline/bucket_online_offline_offline_false.json")
+    admin = Admin(cluster.sync_gateways[0])
 
 
+# Scenario 16
+@pytest.mark.sanity
+@pytest.mark.dbonlineoffline
+def test_config_change_invalid_1(cluster):
 
+    cluster.reset("bucket_online_offline/bucket_online_offline_offline_false.json")
+    admin = Admin(cluster.sync_gateways[0])
 
+    # all db endpoints should succeed
+    errors = rest_scan(cluster.sync_gateways[0], db="db", online=True)
+    assert(len(errors) == 0)
+
+    config = admin.get_db_config(db="db")
+    print(config)
+
+    # Invalid config
+    new_config = {
+        "db": {
+            "server": "http://{}:8091".format(cluster.servers[0].ip),
+            "bucket": "data-bucket",
+            "users": {
+                "seth": {"password": "password", "admin_channels": ["*", "ABC"]},
+                "Ashvinder": {"password": "password", "admin_channels": ["*", "CBS"]},
+                "Andy": {"password": "password", "admin_channels": ["*", "NBC"]}
+            }
+        }
+    }
+
+    # VERIFY
+    # Should status should be an error state?
+    status = admin.put_db_config(db="db", config=new_config)
+    assert(status == 201)
+
+    # Take "db" offline
+    status = admin.db_offline(db="db")
+    assert(status == 200)
+
+    # all db endpoints should 503
+    errors = rest_scan(cluster.sync_gateways[0], db="db", online=False)
+    assert(len(errors) == NUM_ENDPOINTS)
+    for error_tuple in errors:
+        assert(error_tuple[1] == 503)
+
+    # Bring "db" online
+    # VERIFY - Correct status code
+    status = admin.db_online(db="db")
+    assert(status == 500)

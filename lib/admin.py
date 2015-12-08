@@ -19,6 +19,7 @@ class Admin:
 
         self._headers = {"Content-Type": "application/json"}
 
+    # GET /{db}/
     def get_db_info(self, db):
         resp = requests.get("{0}/{1}/".format(self.admin_url, db), headers=self._headers, timeout=settings.HTTP_REQ_TIMEOUT)
         log.info(resp.url)
@@ -102,7 +103,6 @@ class Admin:
 
     # POST /{db}/_online
     def db_online(self, db, delay=None):
-
         data = {}
         if delay is not None:
             data = {"delay": delay}
@@ -112,39 +112,23 @@ class Admin:
         resp.raise_for_status()
         return resp.status_code
 
-    # POST /{db}/_online
+    # POST /{db}/_offline
     def db_offline(self, db):
         resp = requests.post("{0}/{1}/_offline".format(self.admin_url, db), headers=self._headers, timeout=settings.HTTP_REQ_TIMEOUT)
         resp.raise_for_status()
-        print(resp.text)
+        return resp.status_code
 
-    def get_db_status(self, db):
-        resp = requests.get("{0}/{1}".format(self.admin_url, db), headers=self._headers, timeout=settings.HTTP_REQ_TIMEOUT)
-        log.info(resp.url)
-        resp.raise_for_status()
-        print(resp.text)
-
+    # GET /{db}/_config
     def get_db_config(self, db):
         resp = requests.get("{0}/{1}/_config".format(self.admin_url, db), headers=self._headers, timeout=settings.HTTP_REQ_TIMEOUT)
         log.info(resp.url)
         resp.raise_for_status()
-        print(resp.text)
+        return resp.json()
 
-    def put_config(self, db, config_name):
-
-        # sample_conf = {
-        #     "server": "http://localhost:8091",
-        #     "bucket": "bucket-1",
-        #     "users": {
-        #         "GUEST": {
-        #             "disabled": False,
-        #             "admin_channels": ["*"]
-        #         }
-        #     }
-        # }
-
-        resp = requests.put("{0}/{1}".format(self.admin_url, db), headers=self._headers, timeout=settings.HTTP_REQ_TIMEOUT, data=json.dumps(config))
+    # PUT /{db}/_config
+    def put_db_config(self, db, config):
+        resp = requests.put("{0}/{1}/_config".format(self.admin_url, db), headers=self._headers, timeout=settings.HTTP_REQ_TIMEOUT, data=json.dumps(config))
         log.info(resp.url)
         resp.raise_for_status()
-        print(resp.text)
+        return resp.status_code
 
