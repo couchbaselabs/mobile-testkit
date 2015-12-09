@@ -43,6 +43,7 @@ class User:
         session.mount("http://", adapter)
 
         resp = session.get("{0}/{1}/_all_docs".format(self.target.url, self.db), headers=self._headers)
+        log.info("GET {}".format(resp.url))
         resp.raise_for_status()
 
         return resp.json()
@@ -67,8 +68,8 @@ class User:
         body = json.dumps(doc_body)
 
         resp = session.put(doc_url, headers=self._headers, data=body, timeout=settings.HTTP_REQ_TIMEOUT)
-        log.info("User: {} created doc {}".format(self.name, doc_url))
-        scenario_printer.print_status(resp)
+        log.info("{0} PUT {1}".format(self.name, doc_url))
+
         resp.raise_for_status()
         resp_json = resp.json()
 
@@ -78,7 +79,6 @@ class User:
         return doc_id         
 
     # POST /{db}/_bulk_docs
-
     def add_bulk_docs(self, doc_ids):
         session = requests.Session()
         adapter = requests.adapters.HTTPAdapter(max_retries=Retry(total=settings.MAX_HTTP_RETRIES, backoff_factor=settings.BACKOFF_FACTOR, status_forcelist=settings.ERROR_CODE_LIST))
@@ -98,7 +98,7 @@ class User:
         data = json.dumps(docs)
 
         resp = session.post("{0}/{1}/_bulk_docs".format(self.target.url, self.db), headers=self._headers, data=data, timeout=settings.HTTP_REQ_TIMEOUT)
-        scenario_printer.print_status(resp)
+        log.info("{0} POST {1}".format(self.name, resp.url))
         resp.raise_for_status()
         resp_json = resp.json()
 
@@ -154,7 +154,8 @@ class User:
 
             doc_url = self.target.url + '/' + self.db + '/' + doc_id
             resp = requests.get(doc_url, headers=self._headers, timeout=settings.HTTP_REQ_TIMEOUT)
-    
+            log.info("{0} GET {1}".format(self.name, resp.url))
+
             if resp.status_code == 200:
                 data = resp.json()
 
@@ -168,9 +169,9 @@ class User:
                 session.mount("http://", adapter)
 
                 put_resp = session.put(doc_url, headers=self._headers, data=body, timeout=settings.HTTP_REQ_TIMEOUT)
+                log.info("{0} PUT {1}".format(self.name, resp.url))
 
                 if put_resp.status_code == 201:
-
                     data = put_resp.json()
 
                 if "rev" not in data.keys():
@@ -282,6 +283,7 @@ class User:
             params["filter"] = filter
 
         r = requests.get("{}/{}/_changes".format(self.target.url, self.db), headers=self._headers, params=params, timeout=settings.HTTP_REQ_TIMEOUT)
+        log.info("{0} POST {1}".format(self.name, r.url))
         r.raise_for_status()
 
         obj = json.loads(r.text)
