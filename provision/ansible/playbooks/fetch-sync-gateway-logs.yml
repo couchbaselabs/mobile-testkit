@@ -1,5 +1,6 @@
 ---
 - hosts: sync_gateways
+  sudo: true
   any_errors_fatal: true
   tasks:
 
