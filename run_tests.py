@@ -10,7 +10,7 @@ if __name__ == "__main__":
     usage = """
     usage: python run_tests.py
     usage: python run_tests.py -t test_samplefile
-    usage: python run_tests.py -t test_samplefile::test_test1
+    usage: python run_tests.py -t test_samplefile.py::test_test1
     usage: python run_tests.py -m sanity
     """
 
