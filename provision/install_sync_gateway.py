@@ -20,6 +20,12 @@ class SyncGatewayConfig:
         self._branch = branch
         self._config_path = config_path
 
+        self._valid_versions = [
+            "1.1.0",
+            "1.1.1",
+            "1.2.0"
+        ]
+
     @property
     def dev_build_url(self):
         return self._dev_build_url
@@ -65,8 +71,14 @@ class SyncGatewayConfig:
         return base_url, package_name
 
     def _base_url_package_for_sync_gateway(self, version, build):
-        base_url = "http://latestbuilds.hq.couchbase.com/couchbase-sync-gateway/release/{0}/{1}-{2}".format(version, version, build)
-        package_name = "couchbase-sync-gateway-enterprise_{0}-{1}_x86_64.tar.gz".format(version, build)
+        if version == "1.1.0" or version == "1.1.1":
+            # Legacy location
+            base_url = "http://latestbuilds.hq.couchbase.com/couchbase-sync-gateway/release/{0}/{1}-{2}".format(version, version, build)
+            package_name = "couchbase-sync-gateway-enterprise_{0}-{1}_x86_64.tar.gz".format(version, build)
+        else:
+            # http://latestbuilds.hq.couchbase.com/couchbase-sync-gateway/1.2.0/1.2.0-3/couchbase-sync-gateway-centos_enterprise_1.2.0-3_x86_64.tar.gz
+            base_url = "http://latestbuilds.hq.couchbase.com/couchbase-sync-gateway/{0}/{1}-{2}".format(version, version, build)
+            package_name = "couchbase-sync-gateway-centos_enterprise_{0}-{1}_x86_64.tar.gz".format(version, build)
         return base_url, package_name
 
     def sync_gateway_base_url_and_package(self, dev_build=False):
@@ -80,6 +92,7 @@ class SyncGatewayConfig:
             assert self._dev_build_url is None
             assert self._dev_build_number is None
             assert self._branch is None
+            assert self._version in self._valid_versions
         elif self._dev_build_url is not None and self._dev_build_number is not None:
             assert self._version is None
             assert self._build_number is None
