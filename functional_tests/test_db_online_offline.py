@@ -217,6 +217,39 @@ def test_offline_false_config_rest(cluster):
         db_info = admin.get_db_info("db")
         assert (db_info["state"] == "Online")
 
+
+# Scenario 3
+@pytest.mark.sanity
+@pytest.mark.dbonlineoffline
+def test_online_to_offline_check_503(cluster):
+
+    cluster.reset("bucket_online_offline/bucket_online_offline_default.json")
+    admin = Admin(cluster.sync_gateways[0])
+
+    # all db endpoints should function as expected
+    errors = rest_scan(cluster.sync_gateways[0], db="db", online=True)
+
+    assert(len(errors) == 0)
+
+    # Scenario 4
+    # Check the db has an Online state at each running sync_gateway
+    for sg in cluster.sync_gateways:
+        admin = Admin(sg)
+        db_info = admin.get_db_info("db")
+        assert (db_info["state"] == "Online")
+
+    # Take bucket offline
+    status = admin.db_offline(db="db")
+    assert(status == 200)
+
+    # all db endpoints should return 503
+    errors = rest_scan(cluster.sync_gateways[0], db="db", online=False)
+    assert(len(errors) == NUM_ENDPOINTS)
+    for error_tuple in errors:
+        print("({},{})".format(error_tuple[0], error_tuple[1]))
+        assert(error_tuple[1] == 503)
+
+
 # Scenario 6
 @pytest.mark.sanity
 @pytest.mark.dbonlineoffline
@@ -241,11 +274,6 @@ def test_offline_true_config_bring_online(cluster):
     # all db endpoints should succeed
     errors = rest_scan(cluster.sync_gateways[0], db="db", online=True)
     assert(len(errors) == 0)
-
-
-
-# Re enable retries
-#lib.settings.ERROR_CODE_LIST = [500, 503]
 
 
 # Scenario 14
@@ -304,3 +332,6 @@ def test_config_change_invalid_1(cluster):
     # VERIFY - Correct status code
     status = admin.db_online(db="db")
     assert(status == 500)
+
+# Re enable retries
+#lib.settings.ERROR_CODE_LIST = [500, 503]
