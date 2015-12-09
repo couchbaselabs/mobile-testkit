@@ -1,9 +1,15 @@
 import pytest
 
+import lib.settings
+
 from lib.cluster import Cluster
 from utilities.fetch_sg_logs import fetch_sync_gateway_logs
 
 import settings
+
+import logging
+import lib.settings
+log = logging.getLogger(lib.settings.LOGGER)
 
 @pytest.fixture()
 def cluster(request):
@@ -26,6 +32,19 @@ def cluster(request):
     c = Cluster()
     print(c)
     return c
+
+@pytest.fixture()
+def disable_http_retry(request):
+
+    def enable_http_retry():
+        lib.settings.ERROR_CODE_LIST = [500, 503]
+        log.warn("Enabling HTTP retry for [500, 503]")
+
+    request.addfinalizer(enable_http_retry)
+
+    log.warn("DISABLING HTTP RETRY")
+    lib.settings.ERROR_CODE_LIST = []
+
 
 
 

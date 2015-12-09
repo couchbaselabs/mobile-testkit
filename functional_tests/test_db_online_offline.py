@@ -11,14 +11,12 @@ from requests.exceptions import HTTPError
 from requests.exceptions import RetryError
 
 from fixtures import cluster
-
-# set this to ensure no retries occur
-lib.settings.ERROR_CODE_LIST = []
+from fixtures import disable_http_retry
 
 NUM_ENDPOINTS = 11
 
-def rest_scan(sync_gateway, db, online):
 
+def rest_scan(sync_gateway, db, online):
 
     # Missing ADMIN
     # TODO: GET /{db}/_session/{session-id}
@@ -122,7 +120,7 @@ def rest_scan(sync_gateway, db, online):
         print "GET / exception: {}".format(status_code)
         error_responses.append((e.response.url, status_code))
 
-    # Create dummy user to hit endpoint if offline, user creation above will
+    # Create dummy user to hit endpoint if offline, user creation above will fail
     if not online:
         seth = User(target=sync_gateway, db=db, name="seth", password="password", channels=["*", "ABC"])
 
@@ -182,7 +180,7 @@ def rest_scan(sync_gateway, db, online):
 # Scenario 1
 @pytest.mark.sanity
 @pytest.mark.dbonlineoffline
-def test_online_default_rest(cluster):
+def test_online_default_rest(cluster, disable_http_retry):
 
     cluster.reset("bucket_online_offline/bucket_online_offline_default.json")
 
@@ -201,7 +199,7 @@ def test_online_default_rest(cluster):
 # Scenario 2
 @pytest.mark.sanity
 @pytest.mark.dbonlineoffline
-def test_offline_false_config_rest(cluster):
+def test_offline_false_config_rest(cluster, disable_http_retry):
 
     cluster.reset("bucket_online_offline/bucket_online_offline_offline_false.json")
 
@@ -221,22 +219,14 @@ def test_offline_false_config_rest(cluster):
 # Scenario 3
 @pytest.mark.sanity
 @pytest.mark.dbonlineoffline
-def test_online_to_offline_check_503(cluster):
+def test_online_to_offline_check_503(cluster, disable_http_retry):
 
     cluster.reset("bucket_online_offline/bucket_online_offline_default.json")
     admin = Admin(cluster.sync_gateways[0])
 
     # all db endpoints should function as expected
     errors = rest_scan(cluster.sync_gateways[0], db="db", online=True)
-
     assert(len(errors) == 0)
-
-    # Scenario 4
-    # Check the db has an Online state at each running sync_gateway
-    for sg in cluster.sync_gateways:
-        admin = Admin(sg)
-        db_info = admin.get_db_info("db")
-        assert (db_info["state"] == "Online")
 
     # Take bucket offline
     status = admin.db_offline(db="db")
@@ -253,7 +243,7 @@ def test_online_to_offline_check_503(cluster):
 # Scenario 6
 @pytest.mark.sanity
 @pytest.mark.dbonlineoffline
-def test_offline_true_config_bring_online(cluster):
+def test_offline_true_config_bring_online(cluster, disable_http_retry):
 
     cluster.reset("bucket_online_offline/bucket_online_offline_offline_true.json")
     admin = Admin(cluster.sync_gateways[0])
@@ -277,18 +267,18 @@ def test_offline_true_config_bring_online(cluster):
 
 
 # Scenario 14
-@pytest.mark.sanity
-@pytest.mark.dbonlineoffline
-def test_config_change_valid(cluster):
-
-    cluster.reset("bucket_online_offline/bucket_online_offline_offline_false.json")
-    admin = Admin(cluster.sync_gateways[0])
+# @pytest.mark.sanity
+# @pytest.mark.dbonlineoffline
+# def test_config_change_valid(cluster, disable_http_retry):
+#
+#     cluster.reset("bucket_online_offline/bucket_online_offline_offline_false.json")
+#     admin = Admin(cluster.sync_gateways[0])
 
 
 # Scenario 16
 @pytest.mark.sanity
 @pytest.mark.dbonlineoffline
-def test_config_change_invalid_1(cluster):
+def test_config_change_invalid_1(cluster, disable_http_retry):
 
     cluster.reset("bucket_online_offline/bucket_online_offline_offline_false.json")
     admin = Admin(cluster.sync_gateways[0])
@@ -332,6 +322,3 @@ def test_config_change_invalid_1(cluster):
     # VERIFY - Correct status code
     status = admin.db_online(db="db")
     assert(status == 500)
-
-# Re enable retries
-#lib.settings.ERROR_CODE_LIST = [500, 503]
