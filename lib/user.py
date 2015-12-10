@@ -36,6 +36,29 @@ class User:
     def __str__(self):
         return "USER: name={0} password={1} db={2} channels={3} cache={4}".format(self.name, self.password, self.db, self.channels, len(self.cache))
 
+    # GET /{db}
+    def get_db_info(self):
+        session = requests.Session()
+        adapter = requests.adapters.HTTPAdapter(max_retries=Retry(total=settings.MAX_HTTP_RETRIES, backoff_factor=settings.BACKOFF_FACTOR, status_forcelist=settings.ERROR_CODE_LIST))
+        session.mount("http://", adapter)
+
+        resp = session.get("{0}/{1}".format(self.target.url, self.db))
+        resp.raise_for_status()
+
+        return resp.json
+
+    # GET /{db}/_all_docs
+    def get_all_docs(self):
+        session = requests.Session()
+        adapter = requests.adapters.HTTPAdapter(max_retries=Retry(total=settings.MAX_HTTP_RETRIES, backoff_factor=settings.BACKOFF_FACTOR, status_forcelist=settings.ERROR_CODE_LIST))
+        session.mount("http://", adapter)
+
+        resp = session.get("{0}/{1}/_all_docs".format(self.target.url, self.db))
+        resp.raise_for_status()
+
+        return resp.json
+
+    # PUT /{db}/{doc}
     def add_doc(self, doc_id, content=None):
         session = requests.Session()
         adapter = requests.adapters.HTTPAdapter(max_retries=Retry(total=settings.MAX_HTTP_RETRIES, backoff_factor=settings.BACKOFF_FACTOR, status_forcelist=settings.ERROR_CODE_LIST))
@@ -65,6 +88,7 @@ class User:
 
         return doc_id         
 
+    # POST /{db}/_bulk_docs
     def add_bulk_docs(self, doc_ids):
         session = requests.Session()
         adapter = requests.adapters.HTTPAdapter(max_retries=Retry(total=settings.MAX_HTTP_RETRIES, backoff_factor=settings.BACKOFF_FACTOR, status_forcelist=settings.ERROR_CODE_LIST))
@@ -130,6 +154,8 @@ class User:
 
         return True
 
+    # GET /{db}/{doc}
+    # PUT /{db}/{doc}
     def update_doc(self, doc_id, num_revision=1):
 
         updated_docs = dict()
@@ -228,6 +254,7 @@ class User:
                 log.info('Found doc-id {} for user {} in changes feed'.format(doc_id, self.name))
         return errors == 0
 
+    # GET /{db}/_changes
     def get_changes(self, feed=None, limit=None, heartbeat=None, style=None,
                     since=None, include_docs=None, channels=None, filter=None):
 

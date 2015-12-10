@@ -17,11 +17,13 @@ class Admin:
 
         self._headers = {"Content-Type": "application/json"}
 
+    # PUT /{db}/_role/{name}
     def create_role(self, db, name, channels):
         data = {"name": name, "admin_channels": channels}
         resp = requests.put("{0}/{1}/_role/{2}".format(self.admin_url, db, name), headers=self._headers, timeout=settings.HTTP_REQ_TIMEOUT, data=json.dumps(data))
         resp.raise_for_status()
 
+    # PUT /{db}/_user/{name}
     def register_user(self, target, db, name, password, channels=list(), roles=list()):
 
         data = {"name": name, "password": password, "admin_channels": channels, "admin_roles": roles}
@@ -52,3 +54,49 @@ class Admin:
             raise("Not all users added during register_bulk users")
 
         return users
+
+    def db_resync(self, db):
+        pass
+
+    def db_online(self, db, delay=None):
+
+        data = {}
+        if delay is not None:
+            data = {"delay": delay}
+
+        resp = requests.post("{0}/{1}/_online".format(self.admin_url, db), headers=self._headers, timeout=settings.HTTP_REQ_TIMEOUT, data=json.dumps(data))
+        resp.raise_for_status()
+        print(resp.text)
+
+    def db_offline(self, db):
+        resp = requests.post("{0}/{1}/_offline".format(self.admin_url, db), headers=self._headers, timeout=settings.HTTP_REQ_TIMEOUT)
+        resp.raise_for_status()
+        print(resp.text)
+
+    def get_db_status(self, db):
+        resp = requests.get("{0}/{1}".format(self.admin_url, db), headers=self._headers, timeout=settings.HTTP_REQ_TIMEOUT)
+        resp.raise_for_status()
+        print(resp.text)
+
+    def get_db_config(self, db):
+        resp = requests.get("{0}/{1}/_config".format(self.admin_url, db), headers=self._headers, timeout=settings.HTTP_REQ_TIMEOUT)
+        resp.raise_for_status()
+        print(resp.text)
+
+    def put_config(self, db, config_name):
+
+        # sample_conf = {
+        #     "server": "http://localhost:8091",
+        #     "bucket": "bucket-1",
+        #     "users": {
+        #         "GUEST": {
+        #             "disabled": False,
+        #             "admin_channels": ["*"]
+        #         }
+        #     }
+        # }
+
+        resp = requests.put("{0}/{1}".format(self.admin_url, db), headers=self._headers, timeout=settings.HTTP_REQ_TIMEOUT, data=json.dumps(config))
+        resp.raise_for_status()
+        print(resp.text)
+
