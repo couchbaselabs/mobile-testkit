@@ -80,6 +80,7 @@ class User:
         return doc_id         
 
     # POST /{db}/_bulk_docs
+
     def add_bulk_docs(self, doc_ids):
         session = requests.Session()
         adapter = requests.adapters.HTTPAdapter(max_retries=Retry(total=settings.MAX_HTTP_RETRIES, backoff_factor=settings.BACKOFF_FACTOR, status_forcelist=settings.ERROR_CODE_LIST))
@@ -294,7 +295,7 @@ class User:
         scenario_printer.print_changes_num(self.name, len(obj["results"]))
         return obj
 
-    # GET /{db}/_changes?
+    # GET /{db}/_changes?feed=longpoll
     def start_polling(self, termination_doc_id, timeout=10000):
 
         previous_seq_num = "-1"
@@ -322,7 +323,7 @@ class User:
                 r.raise_for_status()
                 obj = r.json()
 
-                log.info(r.text)
+                log.info("{} DOCS FROM POLLING: {}".format(self.name, obj))
 
                 new_docs = obj["results"]
 
@@ -330,7 +331,6 @@ class User:
                     request_timed_out = True
                 else:
                     for doc in new_docs:
-
                         # We are not interested in _user/ docs
                         if doc["id"].startswith("_user/"):
                             continue
@@ -354,3 +354,33 @@ class User:
 
         return docs
 
+    # GET /{db}/_changes?feed=continuous
+    def start_continuous(self, termination_doc_id):
+
+        docs = dict()
+
+        params = {
+            "feed": "continuous",
+            "include_docs": "true"
+        }
+
+        r = requests.get(url="{0}/{1}/_changes".format(self.target.url, self.db), headers=self._headers, params=params, stream=True)
+        log.info("{0} GET {1}".format(self.name, r.url))
+
+        # Wait for continuous changes
+        for line in r.iter_lines():
+            # filter out keep-alive new lines
+            if line:
+                doc = json.loads(line)
+
+                # We are not interested in _user/ docs
+                if doc["id"].startswith("_user/"):
+                    continue
+
+                log.info("{} DOC FROM CONTINUOUS: {}".format(self.name, doc))
+                docs[doc["doc"]["_id"]] = doc["doc"]["_rev"]
+
+                # Close connection if termination doc recieved
+                if doc["doc"]["_id"] == termination_doc_id:
+                    r.close()
+                    return docs

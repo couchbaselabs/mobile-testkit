@@ -12,7 +12,7 @@ from fixtures import cluster
 
 @pytest.mark.distributed_index
 @pytest.mark.sanity
-def test_longpoll_changes_sanity(cluster):
+def test_continuous_changes_sanity(cluster):
 
     abc_doc_num = 5000
 
@@ -27,7 +27,7 @@ def test_longpoll_changes_sanity(cluster):
     with concurrent.futures.ThreadPoolExecutor(max_workers=lib.settings.MAX_REQUEST_WORKERS) as executor:
 
         futures = dict()
-        futures[executor.submit(seth.start_polling, termination_doc_id="killpolling")] = "polling"
+        futures[executor.submit(seth.start_continuous, termination_doc_id="killcontinuous")] = "polling"
         futures[executor.submit(abc_doc_pusher.add_docs, abc_doc_num)] = "doc_pusher"
 
         for future in concurrent.futures.as_completed(futures):
@@ -36,7 +36,7 @@ def test_longpoll_changes_sanity(cluster):
 
                 # Send termination doc to seth long poller
                 if task_name == "doc_pusher":
-                    abc_doc_pusher.add_doc("killpolling")
+                    abc_doc_pusher.add_doc("killcontinuous")
                 elif task_name == "polling":
                     docs_in_changes = future.result()
 
