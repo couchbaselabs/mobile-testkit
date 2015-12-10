@@ -1,8 +1,28 @@
 
 from lib.user import User
 
-def verify_change_with_filter(doc_name_pattern):
-    pass
+
+def verify_same_docs(expected_num_docs, doc_dict_one, doc_dict_two):
+
+    # assert each dictionary is of expected length
+    assert len(doc_dict_one) == expected_num_docs
+    assert len(doc_dict_two) == expected_num_docs
+
+    # get doc ids
+    ids_one = doc_dict_one.keys()
+    ids_two = doc_dict_two.keys()
+
+    assert len(set(ids_one)) == expected_num_docs
+    assert len(set(ids_two)) == expected_num_docs
+
+    # Check keys of the dictionary are the same
+    assert set(ids_one) == set(ids_two)
+
+    # Compare _revs from each dictionary
+    for k in ids_one:
+        assert doc_dict_one[k] == doc_dict_two[k]
+
+    print(" -> doc_dict_one == doc_dict_two expected (num_docs: {})".format(expected_num_docs))
 
 
 def verify_changes(users, expected_num_docs, expected_num_revisions, expected_docs):

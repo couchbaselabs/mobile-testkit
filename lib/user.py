@@ -4,7 +4,8 @@ import json
 import base64
 import uuid
 import re
-import copy
+import time
+
 from requests.packages.urllib3.util import Retry
 from requests.adapters import HTTPAdapter
 from requests import Session, exceptions
@@ -292,3 +293,64 @@ class User:
         self.changes_data = obj
         scenario_printer.print_changes_num(self.name, len(obj["results"]))
         return obj
+
+    # GET /{db}/_changes?
+    def start_polling(self, termination_doc_id, timeout=10000):
+
+        previous_seq_num = "-1"
+        current_seq_num = "0"
+        request_timed_out = True
+
+        docs = dict()
+        continue_polling = True
+
+        while continue_polling:
+            # if the longpoll request times out or there have been changes, issue a new long poll request
+            if request_timed_out or current_seq_num != previous_seq_num:
+
+                previous_seq_num = current_seq_num
+
+                params = {
+                    "feed": "longpoll",
+                    "include_docs": "true",
+                    "timeout": timeout,
+                    "since": current_seq_num
+                }
+
+                r = requests.get("{}/{}/_changes".format(self.target.url, self.db), headers=self._headers, params=params)
+                log.info("{0} GET {1}".format(self.name, r.url))
+                r.raise_for_status()
+                obj = r.json()
+
+                log.info(r.text)
+
+                new_docs = obj["results"]
+
+                if len(new_docs) == 0:
+                    request_timed_out = True
+                else:
+                    for doc in new_docs:
+
+                        # We are not interested in _user/ docs
+                        if doc["id"].startswith("_user/"):
+                            continue
+
+                        # add docs from the changes feed to the return dictionary
+                        docs[doc["doc"]["_id"]] = doc["doc"]["_rev"]
+
+                        if doc["id"] == termination_doc_id:
+                            continue_polling = False
+
+                # Get latest sequence from changes request
+                current_seq_num = obj["last_seq"]
+
+                print(current_seq_num)
+
+            time.sleep(0.1)
+
+        log.info("{} DOCS FROM POLLING".format(self.name))
+        for k, v in docs.items():
+            log.info("{}: {}".format(k, v))
+
+        return docs
+
