@@ -40,12 +40,12 @@ if __name__ == "__main__":
     (opts, args) = parser.parse_args(sys.argv[1:])
 
     # Delete sg logs in /tmp
-    filelist = [f for f in os.listdir("/tmp") if f.endswith(".zip") or f.endswith("sglogs")]
-    for f in filelist:
-        if os.path.isfile("/tmp/" + f):
-            os.remove("/tmp/" + f)
-        else:
-            shutil.rmtree("/tmp/" + f)
+    # filelist = [f for f in os.listdir("/tmp") if f.endswith(".zip") or f.endswith("sglogs")]
+    # for f in filelist:
+    #     if os.path.isfile("/tmp/" + f):
+    #         os.remove("/tmp/" + f)
+    #     else:
+    #         shutil.rmtree("/tmp/" + f)
 
     if opts.test:
         count = 0
