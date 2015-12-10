@@ -323,9 +323,11 @@ class User:
                 r.raise_for_status()
                 obj = r.json()
 
-                log.info("{} DOCS FROM POLLING: {}".format(self.name, obj))
-
                 new_docs = obj["results"]
+
+                # Check for duplicates in response doc_ids
+                doc_ids = [doc["doc"]["_id"] for doc in new_docs if not doc["id"].startswith("_user/")]
+                assert(len(doc_ids) == len(set(doc_ids)))
 
                 if len(new_docs) == 0:
                     request_timed_out = True
@@ -340,8 +342,7 @@ class User:
                             continue_polling = False
                             break
 
-                        log.info("{} DOC FROM LOGPOLL _changes: {}: {}".format(self.name, doc["doc"]["_id"], doc["doc"]["_rev"]))
-                        # IMPORTANT: Will not catch duplicate in changes feed
+                        log.info("{} DOC FROM LONGPOLL _changes: {}: {}".format(self.name, doc["doc"]["_id"], doc["doc"]["_rev"]))
                         # Store doc
                         docs[doc["doc"]["_id"]] = doc["doc"]["_rev"]
 
@@ -351,10 +352,6 @@ class User:
                 print(current_seq_num)
 
             time.sleep(0.1)
-
-        log.info("{} DOCS FROM POLLING".format(self.name))
-        for k, v in docs.items():
-            log.info("{}: {}".format(k, v))
 
         return docs
 
@@ -387,6 +384,6 @@ class User:
                     return docs
 
                 log.info("{} DOC FROM CONTINUOUS _changes: {}: {}".format(self.name, doc["doc"]["_id"], doc["doc"]["_rev"]))
-                # IMPORTANT: Will not catch duplicate in changes feed
                 # Store doc
+                # Should I be worried about duplicated in continuous _changes feed?
                 docs[doc["doc"]["_id"]] = doc["doc"]["_rev"]
