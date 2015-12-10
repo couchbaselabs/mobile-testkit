@@ -23,6 +23,6 @@
   user: name=sync_gateway state=absent remove=yes force=yes
   ignore_errors: yes
 
-# Delete downloaded source
-- name: delete previous sync gateway
-  command: rm -rf /home/centos/sync_gateway
+# Delete centos user contents
+- name: delete centos user directory
+  shell: rm -rf /home/centos/*
