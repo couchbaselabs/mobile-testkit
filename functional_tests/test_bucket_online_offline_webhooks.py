@@ -11,18 +11,12 @@ import logging
 log = logging.getLogger(settings.LOGGER)
 
 
-
-# Scenario-2:
-# Single User Single Channel: Create Unique docs and update docs verify all num docs present in changes feed.
-# Verify all revisions in changes feed
-# https://docs.google.com/spreadsheets/d/1nlba3SsWagDrnAep3rDZHXHIDmRH_FFDeTaYJms_55k/edit#gid=598127796
-
 @pytest.mark.sanity
 @pytest.mark.distributed_index
 @pytest.mark.parametrize("num_users", [5])
 @pytest.mark.parametrize("num_channels", [1]) #all users share all channels
 @pytest.mark.parametrize("num_docs", [1])
-@pytest.mark.parametrize("num_revisions", [1])
+@pytest.mark.parametrize("num_revisions", [2])
 def test_bucket_online_offline_webhooks(cluster, num_users,num_channels, num_docs, num_revisions):
 
     log.info("Starting test...")
@@ -54,6 +48,9 @@ def test_bucket_online_offline_webhooks(cluster, num_users,num_channels, num_doc
     # Update docs
     log.info("Update docs")
     in_parallel(user_objects, 'update_docs', num_revisions)
-    time.sleep(120)
+    time.sleep(30)
     ws.stop()
-    log.info(ws.get_data())
+    expected_events = (num_users * num_docs * num_revisions) + (num_users * num_docs)
+    received_events = len(ws.get_data())
+    log.info("expected_events: {} received_events {}".format(expected_events, received_events))
+    assert (expected_events == received_events)
