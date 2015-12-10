@@ -296,7 +296,7 @@ class User:
         return obj
 
     # GET /{db}/_changes?feed=longpoll
-    def start_polling(self, termination_doc_id, timeout=10000):
+    def start_longpoll_changes_tracking(self, termination_doc_id, timeout=10000):
 
         previous_seq_num = "-1"
         current_seq_num = "0"
@@ -335,11 +335,15 @@ class User:
                         if doc["id"].startswith("_user/"):
                             continue
 
-                        # add docs from the changes feed to the return dictionary
-                        docs[doc["doc"]["_id"]] = doc["doc"]["_rev"]
-
+                        # Stop polling if termination doc is recieved in _changes
                         if doc["id"] == termination_doc_id:
                             continue_polling = False
+                            break
+
+                        log.info("{} DOC FROM LOGPOLL _changes: {}: {}".format(self.name, doc["doc"]["_id"], doc["doc"]["_rev"]))
+                        # IMPORTANT: Will not catch duplicate in changes feed
+                        # Store doc
+                        docs[doc["doc"]["_id"]] = doc["doc"]["_rev"]
 
                 # Get latest sequence from changes request
                 current_seq_num = obj["last_seq"]
@@ -355,7 +359,7 @@ class User:
         return docs
 
     # GET /{db}/_changes?feed=continuous
-    def start_continuous(self, termination_doc_id):
+    def start_continuous_changes_tracking(self, termination_doc_id):
 
         docs = dict()
 
@@ -377,10 +381,12 @@ class User:
                 if doc["id"].startswith("_user/"):
                     continue
 
-                log.info("{} DOC FROM CONTINUOUS: {}".format(self.name, doc))
-                docs[doc["doc"]["_id"]] = doc["doc"]["_rev"]
-
-                # Close connection if termination doc recieved
+                # Close connection if termination doc is recieved in _changes
                 if doc["doc"]["_id"] == termination_doc_id:
                     r.close()
                     return docs
+
+                log.info("{} DOC FROM CONTINUOUS _changes: {}: {}".format(self.name, doc["doc"]["_id"], doc["doc"]["_rev"]))
+                # IMPORTANT: Will not catch duplicate in changes feed
+                # Store doc
+                docs[doc["doc"]["_id"]] = doc["doc"]["_rev"]
