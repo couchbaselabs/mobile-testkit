@@ -97,7 +97,7 @@ class Admin:
         pass
 
     # POST /{db}/_online
-    def db_online(self, db, delay=None):
+    def bring_db_online(self, db, delay=None):
         data = {}
         if delay is not None:
             data = {"delay": delay}
@@ -108,7 +108,7 @@ class Admin:
         return resp.status_code
 
     # POST /{db}/_offline
-    def db_offline(self, db):
+    def take_db_offline(self, db):
         resp = requests.post("{0}/{1}/_offline".format(self.admin_url, db), headers=self._headers, timeout=settings.HTTP_REQ_TIMEOUT)
         log.info("POST {}".format(resp.url))
         resp.raise_for_status()

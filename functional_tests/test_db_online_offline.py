@@ -229,7 +229,7 @@ def test_online_to_offline_check_503(cluster, disable_http_retry):
     assert(len(errors) == 0)
 
     # Take bucket offline
-    status = admin.db_offline(db="db")
+    status = admin.take_db_offline(db="db")
     assert(status == 200)
 
     # all db endpoints should return 503
@@ -258,7 +258,7 @@ def test_offline_true_config_bring_online(cluster, disable_http_retry):
 
     # Scenario 9
     # POST /db/_online
-    status = admin.db_online(db="db")
+    status = admin.bring_db_online(db="db")
     assert status == 200
 
     # all db endpoints should succeed
@@ -309,7 +309,7 @@ def test_config_change_invalid_1(cluster, disable_http_retry):
     assert(status == 201)
 
     # Take "db" offline
-    status = admin.db_offline(db="db")
+    status = admin.take_db_offline(db="db")
     assert(status == 200)
 
     # all db endpoints should 503
@@ -320,5 +320,5 @@ def test_config_change_invalid_1(cluster, disable_http_retry):
 
     # Bring "db" online
     # VERIFY - Correct status code
-    status = admin.db_online(db="db")
+    status = admin.bring_db_online(db="db")
     assert(status == 500)
