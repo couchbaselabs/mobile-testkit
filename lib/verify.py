@@ -12,9 +12,6 @@ def verify_same_docs(expected_num_docs, doc_dict_one, doc_dict_two):
     ids_one = doc_dict_one.keys()
     ids_two = doc_dict_two.keys()
 
-    assert len(set(ids_one)) == expected_num_docs
-    assert len(set(ids_two)) == expected_num_docs
-
     # Check keys of the dictionary are the same
     assert set(ids_one) == set(ids_two)
 
