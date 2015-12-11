@@ -1,5 +1,6 @@
 import pytest
 import time
+import concurrent.futures
 
 from lib.admin import Admin
 from lib.user import User
@@ -12,6 +13,9 @@ from requests.exceptions import RetryError
 
 from fixtures import cluster
 from fixtures import disable_http_retry
+import lib.settings
+import logging
+log = logging.getLogger(lib.settings.LOGGER)
 
 NUM_ENDPOINTS = 11
 
@@ -238,6 +242,45 @@ def test_online_to_offline_check_503(cluster, disable_http_retry):
     for error_tuple in errors:
         print("({},{})".format(error_tuple[0], error_tuple[1]))
         assert(error_tuple[1] == 503)
+
+
+# Scenario 5
+@pytest.mark.sanity
+@pytest.mark.dbonlineoffline
+@pytest.mark.parametrize("num_docs", [10])
+def test_online_to_offline_changes_feed_controlled_close(cluster, disable_http_retry, num_docs):
+
+    cluster.reset("bucket_online_offline/bucket_online_offline_default.json")
+    admin = Admin(cluster.sync_gateways[0])
+    seth = admin.register_user(target=cluster.sync_gateways[0], db="db", name="seth", password="password", channels=["ABC"])
+    doc_pusher = admin.register_user(target=cluster.sync_gateways[0], db="db", name="doc_pusher", password="password", channels=["ABC"])
+
+    with concurrent.futures.ThreadPoolExecutor(max_workers=lib.settings.MAX_REQUEST_WORKERS) as executor:
+        futures = dict()
+        futures[executor.submit(seth.start_continuous_changes_tracking, termination_doc_id="killcontinuous")] = "continuous"
+        futures[executor.submit(doc_pusher.add_docs, num_docs, bulk=True)] = "bulk_docs_push"
+        time.sleep(1)
+        futures[executor.submit(admin.take_db_offline, "db")] = "db_offline_task"
+
+        for future in concurrent.futures.as_completed(futures):
+            try:
+                task_name = futures[future]
+
+                # Send termination doc to seth continuous changes feed subscriber
+                if task_name == "db_offline_task":
+                    log.info("DB OFFLINE")
+                    # make sure db_offline returns 200
+                    assert(future.result() == 200)
+                elif task_name == "bulk_docs_push":
+                    log.info("DONE PUSHING DOCS")
+                elif task_name == "continuous":
+                    docs_in_changes = future.result()
+                    log.info("DOCS FROM CHANGES")
+                    for k, v in docs_in_changes.items():
+                        log.info("DFC -> {}:{}".format(k, v))
+
+            except Exception as e:
+                print("Futures: error: {}".format(e))
 
 
 # Scenario 6
