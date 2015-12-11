@@ -387,3 +387,6 @@ class User:
                 # Store doc
                 # Should I be worried about duplicated in continuous _changes feed?
                 docs[doc["doc"]["_id"]] = doc["doc"]["_rev"]
+
+        # if connection is closed from server
+        return docs

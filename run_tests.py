@@ -47,6 +47,10 @@ if __name__ == "__main__":
     #     else:
     #         shutil.rmtree("/tmp/" + f)
 
+    # Delete test-framework.log
+    if os.path.isfile("test-framework.log"):
+        os.remove("test-framework.log")
+
     if opts.test:
         count = 0
         while count < opts.repeat:

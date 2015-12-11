@@ -247,7 +247,7 @@ def test_online_to_offline_check_503(cluster, disable_http_retry):
 # Scenario 5
 @pytest.mark.sanity
 @pytest.mark.dbonlineoffline
-@pytest.mark.parametrize("num_docs", [10])
+@pytest.mark.parametrize("num_docs", [5000])
 def test_online_to_offline_changes_feed_controlled_close(cluster, disable_http_retry, num_docs):
 
     cluster.reset("bucket_online_offline/bucket_online_offline_default.json")
@@ -255,11 +255,13 @@ def test_online_to_offline_changes_feed_controlled_close(cluster, disable_http_r
     seth = admin.register_user(target=cluster.sync_gateways[0], db="db", name="seth", password="password", channels=["ABC"])
     doc_pusher = admin.register_user(target=cluster.sync_gateways[0], db="db", name="doc_pusher", password="password", channels=["ABC"])
 
+    docs_in_changes = dict()
+
     with concurrent.futures.ThreadPoolExecutor(max_workers=lib.settings.MAX_REQUEST_WORKERS) as executor:
         futures = dict()
         futures[executor.submit(seth.start_continuous_changes_tracking, termination_doc_id="killcontinuous")] = "continuous"
-        futures[executor.submit(doc_pusher.add_docs, num_docs, bulk=True)] = "bulk_docs_push"
-        time.sleep(1)
+        futures[executor.submit(doc_pusher.add_docs, num_docs)] = "bulk_docs_push"
+        time.sleep(5)
         futures[executor.submit(admin.take_db_offline, "db")] = "db_offline_task"
 
         for future in concurrent.futures.as_completed(futures):
@@ -281,6 +283,11 @@ def test_online_to_offline_changes_feed_controlled_close(cluster, disable_http_r
 
             except Exception as e:
                 print("Futures: error: {}".format(e))
+
+    print("Number of docs from _changes ({})".format(len(docs_in_changes)))
+    # Asserting value is less than the number of docs means the connection was closed and
+    # docs were returned. The less than num_docs ensures that the db was taken offline during doc pushes
+    assert(len(docs_in_changes) > 1 and docs_in_changes < num_docs)
 
 
 # Scenario 6
