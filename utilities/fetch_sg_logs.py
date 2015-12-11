@@ -11,6 +11,8 @@ from provision.ansible_runner import run_ansible_playbook
 
 def fetch_sync_gateway_logs(prefix):
 
+    print("\n\n\n")
+
     log.info("Pulling logs")
     # fetch logs from sync_gateway instances
     run_ansible_playbook("fetch-sync-gateway-logs.yml")
@@ -25,6 +27,8 @@ def fetch_sync_gateway_logs(prefix):
 
         shutil.rmtree("/tmp/sg_logs")
         log.info("sync_gateway logs copied here {}\n".format(name))
+
+    print("\n\n\n")
 
 
 if __name__ == "__main__":

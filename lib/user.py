@@ -4,7 +4,8 @@ import json
 import base64
 import uuid
 import re
-import copy
+import time
+
 from requests.packages.urllib3.util import Retry
 from requests.adapters import HTTPAdapter
 from requests import Session, exceptions
@@ -36,6 +37,19 @@ class User:
     def __str__(self):
         return "USER: name={0} password={1} db={2} channels={3} cache={4}".format(self.name, self.password, self.db, self.channels, len(self.cache))
 
+    # GET /{db}/_all_docs
+    def get_all_docs(self):
+        session = requests.Session()
+        adapter = requests.adapters.HTTPAdapter(max_retries=Retry(total=settings.MAX_HTTP_RETRIES, backoff_factor=settings.BACKOFF_FACTOR, status_forcelist=settings.ERROR_CODE_LIST))
+        session.mount("http://", adapter)
+
+        resp = session.get("{0}/{1}/_all_docs".format(self.target.url, self.db), headers=self._headers)
+        log.info("GET {}".format(resp.url))
+        resp.raise_for_status()
+
+        return resp.json()
+
+    # PUT /{db}/{doc}
     def add_doc(self, doc_id, content=None):
         session = requests.Session()
         adapter = requests.adapters.HTTPAdapter(max_retries=Retry(total=settings.MAX_HTTP_RETRIES, backoff_factor=settings.BACKOFF_FACTOR, status_forcelist=settings.ERROR_CODE_LIST))
@@ -55,8 +69,8 @@ class User:
         body = json.dumps(doc_body)
 
         resp = session.put(doc_url, headers=self._headers, data=body, timeout=settings.HTTP_REQ_TIMEOUT)
-        log.info("User: {} created doc {}".format(self.name, doc_url))
-        scenario_printer.print_status(resp)
+        log.info("{0} PUT {1}".format(self.name, doc_url))
+
         resp.raise_for_status()
         resp_json = resp.json()
 
@@ -64,6 +78,8 @@ class User:
             self.cache[doc_id] = resp_json["rev"]
 
         return doc_id         
+
+    # POST /{db}/_bulk_docs
 
     def add_bulk_docs(self, doc_ids):
         session = requests.Session()
@@ -84,7 +100,7 @@ class User:
         data = json.dumps(docs)
 
         resp = session.post("{0}/{1}/_bulk_docs".format(self.target.url, self.db), headers=self._headers, data=data, timeout=settings.HTTP_REQ_TIMEOUT)
-        scenario_printer.print_status(resp)
+        log.info("{0} POST {1}".format(self.name, resp.url))
         resp.raise_for_status()
         resp_json = resp.json()
 
@@ -130,6 +146,8 @@ class User:
 
         return True
 
+    # GET /{db}/{doc}
+    # PUT /{db}/{doc}
     def update_doc(self, doc_id, num_revision=1):
 
         updated_docs = dict()
@@ -138,7 +156,8 @@ class User:
 
             doc_url = self.target.url + '/' + self.db + '/' + doc_id
             resp = requests.get(doc_url, headers=self._headers, timeout=settings.HTTP_REQ_TIMEOUT)
-    
+            log.info("{0} GET {1}".format(self.name, resp.url))
+
             if resp.status_code == 200:
                 data = resp.json()
 
@@ -152,9 +171,9 @@ class User:
                 session.mount("http://", adapter)
 
                 put_resp = session.put(doc_url, headers=self._headers, data=body, timeout=settings.HTTP_REQ_TIMEOUT)
+                log.info("{0} PUT {1}".format(self.name, resp.url))
 
                 if put_resp.status_code == 201:
-
                     data = put_resp.json()
 
                 if "rev" not in data.keys():
@@ -228,6 +247,7 @@ class User:
                 log.info('Found doc-id {} for user {} in changes feed'.format(doc_id, self.name))
         return errors == 0
 
+    # GET /{db}/_changes
     def get_changes(self, feed=None, limit=None, heartbeat=None, style=None,
                     since=None, include_docs=None, channels=None, filter=None):
 
@@ -265,6 +285,7 @@ class User:
             params["filter"] = filter
 
         r = requests.get("{}/{}/_changes".format(self.target.url, self.db), headers=self._headers, params=params, timeout=settings.HTTP_REQ_TIMEOUT)
+        log.info("{0} POST {1}".format(self.name, r.url))
         r.raise_for_status()
 
         obj = json.loads(r.text)
@@ -273,3 +294,96 @@ class User:
         self.changes_data = obj
         scenario_printer.print_changes_num(self.name, len(obj["results"]))
         return obj
+
+    # GET /{db}/_changes?feed=longpoll
+    def start_longpoll_changes_tracking(self, termination_doc_id, timeout=10000):
+
+        previous_seq_num = "-1"
+        current_seq_num = "0"
+        request_timed_out = True
+
+        docs = dict()
+        continue_polling = True
+
+        while continue_polling:
+            # if the longpoll request times out or there have been changes, issue a new long poll request
+            if request_timed_out or current_seq_num != previous_seq_num:
+
+                previous_seq_num = current_seq_num
+
+                params = {
+                    "feed": "longpoll",
+                    "include_docs": "true",
+                    "timeout": timeout,
+                    "since": current_seq_num
+                }
+
+                r = requests.get("{}/{}/_changes".format(self.target.url, self.db), headers=self._headers, params=params)
+                log.info("{0} GET {1}".format(self.name, r.url))
+                r.raise_for_status()
+                obj = r.json()
+
+                new_docs = obj["results"]
+
+                # Check for duplicates in response doc_ids
+                doc_ids = [doc["doc"]["_id"] for doc in new_docs if not doc["id"].startswith("_user/")]
+                assert(len(doc_ids) == len(set(doc_ids)))
+
+                if len(new_docs) == 0:
+                    request_timed_out = True
+                else:
+                    for doc in new_docs:
+                        # We are not interested in _user/ docs
+                        if doc["id"].startswith("_user/"):
+                            continue
+
+                        # Stop polling if termination doc is recieved in _changes
+                        if doc["id"] == termination_doc_id:
+                            continue_polling = False
+                            break
+
+                        log.info("{} DOC FROM LONGPOLL _changes: {}: {}".format(self.name, doc["doc"]["_id"], doc["doc"]["_rev"]))
+                        # Store doc
+                        docs[doc["doc"]["_id"]] = doc["doc"]["_rev"]
+
+                # Get latest sequence from changes request
+                current_seq_num = obj["last_seq"]
+
+                print(current_seq_num)
+
+            time.sleep(0.1)
+
+        return docs
+
+    # GET /{db}/_changes?feed=continuous
+    def start_continuous_changes_tracking(self, termination_doc_id):
+
+        docs = dict()
+
+        params = {
+            "feed": "continuous",
+            "include_docs": "true"
+        }
+
+        r = requests.get(url="{0}/{1}/_changes".format(self.target.url, self.db), headers=self._headers, params=params, stream=True)
+        log.info("{0} GET {1}".format(self.name, r.url))
+
+        # Wait for continuous changes
+        for line in r.iter_lines():
+            # filter out keep-alive new lines
+            if line:
+                doc = json.loads(line)
+
+                # We are not interested in _user/ docs
+                if doc["id"].startswith("_user/"):
+                    continue
+
+                # Close connection if termination doc is recieved in _changes
+                if doc["doc"]["_id"] == termination_doc_id:
+                    r.close()
+                    return docs
+
+                log.info("{} DOC FROM CONTINUOUS _changes: {}: {}".format(self.name, doc["doc"]["_id"], doc["doc"]["_rev"]))
+                # Store doc
+                # Should I be worried about duplicated in continuous _changes feed?
+                docs[doc["doc"]["_id"]] = doc["doc"]["_rev"]

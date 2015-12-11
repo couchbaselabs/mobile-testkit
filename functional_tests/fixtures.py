@@ -1,9 +1,15 @@
 import pytest
 
+import lib.settings
+
 from lib.cluster import Cluster
 from utilities.fetch_sg_logs import fetch_sync_gateway_logs
 
 import settings
+
+import logging
+import lib.settings
+log = logging.getLogger(lib.settings.LOGGER)
 
 @pytest.fixture()
 def cluster(request):
@@ -12,13 +18,12 @@ def cluster(request):
 
         # Fetch logs if a test fails
         if request.node.rep_call.failed:
+
             # example nodeid: tests/test_single_user_multiple_channels.py::test_1
             remove_slash = request.node.nodeid.replace("/", "-")
             test_id_elements = remove_slash.split("::")
             log_zip_prefix = "{0}-{1}".format(test_id_elements[0], test_id_elements[1])
             fetch_sync_gateway_logs(log_zip_prefix)
-
-        print("\n\n\n")
 
     if settings.CAPTURE_SYNC_GATEWAY_LOGS_ON_FAIL:
         request.addfinalizer(fetch_logs)
@@ -26,6 +31,19 @@ def cluster(request):
     c = Cluster()
     print(c)
     return c
+
+@pytest.fixture()
+def disable_http_retry(request):
+
+    def enable_http_retry():
+        lib.settings.ERROR_CODE_LIST = [500, 503]
+        log.warn("Enabling HTTP retry for [500, 503]")
+
+    request.addfinalizer(enable_http_retry)
+
+    log.warn("DISABLING HTTP RETRY")
+    lib.settings.ERROR_CODE_LIST = []
+
 
 
 
