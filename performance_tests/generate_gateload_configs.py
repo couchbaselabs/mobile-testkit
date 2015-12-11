@@ -43,14 +43,9 @@ def sync_gateway_non_index_writers():
     Get all the sync gateways that are not index writers, since we 
     don't want to send load to those
     """
-    
-    # Due to https://github.com/couchbase/sync_gateway/issues/1289#issuecomment-160743751
-    # I'm temporarily just pointing load generators at ALL sync gw nodes, index writers included.
-    # sync_gateways = hosts_for_tag("sync_gateways")
-    # sync_gateway_index_writers = hosts_for_tag("sync_gateway_index_writers")
-    # return [sg for sg in sync_gateways if sg not in sync_gateway_index_writers]
-    return hosts_for_tag("sync_gateways")
-
+    sync_gateways = hosts_for_tag("sync_gateways")
+    sync_gateway_index_writers = hosts_for_tag("sync_gateway_index_writers")
+    return [sg for sg in sync_gateways if sg not in sync_gateway_index_writers]
 
 def render_gateload_template(sync_gateway, user_offset, number_of_pullers, number_of_pushers):
         # run template to produce file
