@@ -256,6 +256,7 @@ def test_online_to_offline_changes_feed_controlled_close(cluster, disable_http_r
     doc_pusher = admin.register_user(target=cluster.sync_gateways[0], db="db", name="doc_pusher", password="password", channels=["ABC"])
 
     docs_in_changes = dict()
+    doc_add_errors = list()
 
     with concurrent.futures.ThreadPoolExecutor(max_workers=lib.settings.MAX_REQUEST_WORKERS) as executor:
         futures = dict()
@@ -275,6 +276,7 @@ def test_online_to_offline_changes_feed_controlled_close(cluster, disable_http_r
                     assert(future.result() == 200)
                 elif task_name == "bulk_docs_push":
                     log.info("DONE PUSHING DOCS")
+                    doc_add_errors = future.result()
                 elif task_name == "continuous":
                     docs_in_changes = future.result()
                     log.info("DOCS FROM CHANGES")
@@ -285,10 +287,27 @@ def test_online_to_offline_changes_feed_controlled_close(cluster, disable_http_r
                 print("Futures: error: {}".format(e))
 
     print("Number of docs from _changes ({})".format(len(docs_in_changes)))
-    # Asserting value is less than the number of docs means the connection was closed and
-    # docs were returned. The less than num_docs ensures that the db was taken offline during doc pushes
-    assert(len(docs_in_changes) > 1 and docs_in_changes < num_docs)
+    print("Number of docs add errors ({})".format(len(doc_add_errors)))
 
+    # TODO Discuss this pass criteria with dev
+    # The less than num_docs ensures that the db was taken offline during doc pushes
+    # docs_in_changes > 0 ensures that the connection closed and the continuous changes connection
+    # returned the documents it had processed
+    assert(len(docs_in_changes) > 0 and len(docs_in_changes) < num_docs)
+
+    # Bring db back online
+    status = admin.bring_db_online("db")
+    assert(status == 200)
+
+    # Get all docs that have been pushed
+    # Verify that changes returns all of them
+    all_docs = doc_pusher.get_all_docs()
+    num_docs_pushed = len(all_docs["rows"])
+    verify_changes(doc_pusher, expected_num_docs=num_docs_pushed, expected_num_revisions=0, expected_docs=doc_pusher.cache)
+
+    # Check that the number of errors return when trying to push while db is offline + num of docs in db
+    # should equal the number of docs
+    assert(num_docs_pushed + doc_add_errors == num_docs)
 
 # Scenario 6
 @pytest.mark.sanity
