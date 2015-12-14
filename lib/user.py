@@ -8,6 +8,7 @@ import time
 
 from requests.packages.urllib3.util import Retry
 from requests.adapters import HTTPAdapter
+from requests.exceptions import HTTPError
 from requests import Session, exceptions
 from collections import defaultdict
 from scenarioprinter import ScenarioPrinter
@@ -51,9 +52,9 @@ class User:
 
     # PUT /{db}/{doc}
     def add_doc(self, doc_id, content=None):
-        session = requests.Session()
-        adapter = requests.adapters.HTTPAdapter(max_retries=Retry(total=settings.MAX_HTTP_RETRIES, backoff_factor=settings.BACKOFF_FACTOR, status_forcelist=settings.ERROR_CODE_LIST))
-        session.mount("http://", adapter)
+        # session = requests.Session()
+        # adapter = requests.adapters.HTTPAdapter(max_retries=Retry(total=settings.MAX_HTTP_RETRIES, backoff_factor=settings.BACKOFF_FACTOR, status_forcelist=settings.ERROR_CODE_LIST))
+        # session.mount("http://", adapter)
 
         doc_url = self.target.url + "/" + self.db + "/" + doc_id
 
@@ -68,7 +69,8 @@ class User:
 
         body = json.dumps(doc_body)
 
-        resp = session.put(doc_url, headers=self._headers, data=body, timeout=settings.HTTP_REQ_TIMEOUT)
+        #resp = session.put(doc_url, headers=self._headers, data=body, timeout=settings.HTTP_REQ_TIMEOUT)
+        resp = requests.put(doc_url, headers=self._headers, data=body, timeout=settings.HTTP_REQ_TIMEOUT)
         log.info("{0} PUT {1}".format(self.name, doc_url))
 
         resp.raise_for_status()
@@ -119,6 +121,8 @@ class User:
 
     def add_docs(self, num_docs, bulk=False, name_prefix=None):
 
+        errors = list()
+
         # If no name_prefix is specified, use uuids for doc_names
         if name_prefix is None:
             doc_names = [str(uuid.uuid4()) for _ in range(num_docs)]
@@ -134,6 +138,7 @@ class User:
                         doc_id = future.result()
                     except Exception as exc:
                         log.error('Generated an exception while adding doc_id : %s %s' % (doc, exc))
+                        errors.append(doc)
         else:
             with concurrent.futures.ThreadPoolExecutor(max_workers=settings.MAX_REQUEST_WORKERS) as executor:
                 future = [executor.submit(self.add_bulk_docs, doc_names)]
@@ -143,8 +148,9 @@ class User:
                         #print(doc_list)
                     except Exception as e:
                         log.error("Error adding bulk docs: {}".format(e))
+                        errors.append("BULK_DOCS_ERROR")
 
-        return True
+        return errors
 
     # GET /{db}/{doc}
     # PUT /{db}/{doc}
@@ -320,14 +326,22 @@ class User:
 
                 r = requests.get("{}/{}/_changes".format(self.target.url, self.db), headers=self._headers, params=params)
                 log.info("{0} GET {1}".format(self.name, r.url))
-                r.raise_for_status()
+
+                # If call is unsuccessful (ex. db goes offline), return docs
+                if r.status_code != 200:
+                    raise HTTPError({"docs": docs, "last_seq_num": current_seq_num})
+
                 obj = r.json()
 
                 new_docs = obj["results"]
+                log.info("CHANGES RESULT: {}".format(obj))
 
                 # Check for duplicates in response doc_ids
                 doc_ids = [doc["doc"]["_id"] for doc in new_docs if not doc["id"].startswith("_user/")]
-                assert(len(doc_ids) == len(set(doc_ids)))
+                if len(doc_ids) != len(set(doc_ids)):
+                    for item in set(doc_ids):
+                        if doc_ids.count(item) > 1:
+                            log.error("DUPLICATE!!!: {}".format(item))
 
                 if len(new_docs) == 0:
                     request_timed_out = True
@@ -349,11 +363,11 @@ class User:
                 # Get latest sequence from changes request
                 current_seq_num = obj["last_seq"]
 
-                print(current_seq_num)
+                log.info("SEQ_NUM {}".format(current_seq_num))
 
             time.sleep(0.1)
 
-        return docs
+        return docs, current_seq_num
 
     # GET /{db}/_changes?feed=continuous
     def start_continuous_changes_tracking(self, termination_doc_id):

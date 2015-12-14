@@ -244,11 +244,11 @@ def test_online_to_offline_check_503(cluster, disable_http_retry):
         assert(error_tuple[1] == 503)
 
 
-# Scenario 5
+# Scenario 5 - continuous
 @pytest.mark.sanity
 @pytest.mark.dbonlineoffline
 @pytest.mark.parametrize("num_docs", [5000])
-def test_online_to_offline_changes_feed_controlled_close(cluster, disable_http_retry, num_docs):
+def test_online_to_offline_changes_feed_controlled_close_continuous(cluster, disable_http_retry, num_docs):
 
     cluster.reset("bucket_online_offline/bucket_online_offline_default.json")
     admin = Admin(cluster.sync_gateways[0])
@@ -308,6 +308,74 @@ def test_online_to_offline_changes_feed_controlled_close(cluster, disable_http_r
     # Check that the number of errors return when trying to push while db is offline + num of docs in db
     # should equal the number of docs
     assert(num_docs_pushed + doc_add_errors == num_docs)
+
+
+# Scenario 6 - longpoll
+@pytest.mark.sanity
+@pytest.mark.dbonlineoffline
+@pytest.mark.parametrize("num_docs", [5000])
+def test_online_to_offline_changes_feed_controlled_close_longpoll(cluster, disable_http_retry, num_docs):
+
+    # TODO
+
+    # cluster.reset("bucket_online_offline/bucket_online_offline_default.json")
+    # admin = Admin(cluster.sync_gateways[0])
+    # seth = admin.register_user(target=cluster.sync_gateways[0], db="db", name="seth", password="password", channels=["ABC"])
+    # doc_pusher = admin.register_user(target=cluster.sync_gateways[0], db="db", name="doc_pusher", password="password", channels=["ABC"])
+    # 
+    # docs_in_changes = dict()
+    # doc_add_errors = list()
+    #
+    # with concurrent.futures.ThreadPoolExecutor(max_workers=lib.settings.MAX_REQUEST_WORKERS) as executor:
+    #     futures = dict()
+    #     futures[executor.submit(seth.start_longpoll_changes_tracking, termination_doc_id="killcontinuous")] = "continuous"
+    #     futures[executor.submit(doc_pusher.add_docs, num_docs)] = "bulk_docs_push"
+    #     time.sleep(5)
+    #     futures[executor.submit(admin.take_db_offline, "db")] = "db_offline_task"
+    #
+    #     for future in concurrent.futures.as_completed(futures):
+    #         try:
+    #             task_name = futures[future]
+    #
+    #             # Send termination doc to seth continuous changes feed subscriber
+    #             if task_name == "db_offline_task":
+    #                 log.info("DB OFFLINE")
+    #                 # make sure db_offline returns 200
+    #                 assert(future.result() == 200)
+    #             elif task_name == "bulk_docs_push":
+    #                 log.info("DONE PUSHING DOCS")
+    #                 doc_add_errors = future.result()
+    #             elif task_name == "continuous":
+    #                 docs_in_changes = future.result()
+    #                 log.info("DOCS FROM CHANGES")
+    #                 for k, v in docs_in_changes.items():
+    #                     log.info("DFC -> {}:{}".format(k, v))
+    #
+    #         except Exception as e:
+    #             print("Futures: error: {}".format(e))
+    #
+    # print("Number of docs from _changes ({})".format(len(docs_in_changes)))
+    # print("Number of docs add errors ({})".format(len(doc_add_errors)))
+    #
+    # # TODO Discuss this pass criteria with dev
+    # # The less than num_docs ensures that the db was taken offline during doc pushes
+    # # docs_in_changes > 0 ensures that the connection closed and the continuous changes connection
+    # # returned the documents it had processed
+    # assert(len(docs_in_changes) > 0 and len(docs_in_changes) < num_docs)
+    #
+    # # Bring db back online
+    # status = admin.bring_db_online("db")
+    # assert(status == 200)
+    #
+    # # Get all docs that have been pushed
+    # # Verify that changes returns all of them
+    # all_docs = doc_pusher.get_all_docs()
+    # num_docs_pushed = len(all_docs["rows"])
+    # verify_changes(doc_pusher, expected_num_docs=num_docs_pushed, expected_num_revisions=0, expected_docs=doc_pusher.cache)
+    #
+    # # Check that the number of errors return when trying to push while db is offline + num of docs in db
+    # # should equal the number of docs
+    # assert(num_docs_pushed + doc_add_errors == num_docs)
 
 # Scenario 6
 @pytest.mark.sanity
