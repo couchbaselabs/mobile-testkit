@@ -88,11 +88,7 @@ if __name__ == "__main__":
 
     parser.add_option("", "--sync-gateway-version",
                       action="store", type="string", dest="sync_gateway_version", default=None,
-                      help="sync_gateway release version to download")
-
-    parser.add_option("", "--sync-gateway-build",
-                      action="store", type="string", dest="sync_gateway_build", default=None,
-                      help="sync_gateway build to download")
+                      help="sync_gateway release version to download (ex. 1.2.0-5)")
 
     parser.add_option("", "--sync-gateway-dev-build-url",
                       action="store", type="string", dest="sync_gateway_dev_build_url", default=None,
@@ -118,12 +114,23 @@ if __name__ == "__main__":
     (opts, args) = parser.parse_args(arg_parameters)
 
     server_config = CouchbaseServerConfig(
-        version=opts.server_version,
+        version=opts.server_version
     )
 
+    sync_gateway_version = None
+    sync_gateway_build = None
+
+    if opts.sync_gateway_version is not None:
+        version_build = opts.sync_gateway_version.split("-")
+        if len(version_build) != 2:
+            print("Make sure the sync_gateway version follows pattern: 1.2.3-456")
+            sys.exit(1)
+        sync_gateway_version = version_build[0]
+        sync_gateway_build = version_build[1]
+
     sync_gateway_config = SyncGatewayConfig(
-        version=opts.sync_gateway_version,
-        build_number=opts.sync_gateway_build,
+        version=sync_gateway_version,
+        build_number=sync_gateway_build,
         dev_build_url=opts.sync_gateway_dev_build_url,
         dev_build_number=opts.sync_gateway_dev_build_number,
         branch=opts.source_branch,
