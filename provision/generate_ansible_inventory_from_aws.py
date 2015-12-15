@@ -34,7 +34,7 @@ ansible_group_shortnames = {
     "sync_gateways": "sg",
     "couchbase_servers": "cb",
     "load_generators": "lg",
-    "load_balancer": "lb"
+    "load_balancers": "lb"
 }
 
 def get_ansible_inventory_name(ansible_group_name, host_index):
