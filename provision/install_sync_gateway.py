@@ -159,11 +159,7 @@ if __name__ == "__main__":
 
     parser.add_option("", "--version",
                       action="store", type="string", dest="version", default=None,
-                      help="sync_gateway version to download")
-
-    parser.add_option("", "--build-number",
-                      action="store", type="string", dest="build_number", default=None,
-                      help="sync_gateway build to download")
+                      help="sync_gateway version to download (ex. 1.2.0-5)")
 
     parser.add_option("", "--config-file-path",
                       action="store", type="string", dest="sync_gateway_config_file",
@@ -186,9 +182,20 @@ if __name__ == "__main__":
 
     (opts, args) = parser.parse_args(arg_parameters)
 
+    version = None
+    build = None
+
+    if opts.version is not None:
+        version_build = opts.version.split("-")
+        if len(version_build) != 2:
+            print("Make sure the sync_gateway version follows pattern: 1.2.3-456")
+            sys.exit(1)
+        version = version_build[0]
+        build = version_build[1]
+
     sync_gateway_install_config = SyncGatewayConfig(
-        version=opts.version,
-        build_number=opts.build_number,
+        version=version,
+        build_number=build,
         branch=opts.source_branch,
         config_path=opts.sync_gateway_config_file,
         dev_build_url=opts.dev_build_url,
