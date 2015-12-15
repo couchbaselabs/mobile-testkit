@@ -348,6 +348,7 @@ class User:
 
                 # If call is unsuccessful (ex. db goes offline), return docs
                 if r.status_code != 200:
+                    # HACK: return last sequence number and docs to allow closed connections
                     raise HTTPError({"docs": docs, "last_seq_num": current_seq_num})
 
                 obj = r.json()

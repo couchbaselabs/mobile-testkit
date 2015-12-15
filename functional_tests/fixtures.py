@@ -34,25 +34,6 @@ def cluster(request):
     return c
 
 
-@pytest.fixture()
-def disable_http_retry(request):
-
-    def enable_http_retry():
-
-        lib.settings.ERROR_CODE_LIST = [500, 503]
-        log.info("Enabling HTTP retry for [500, 503]")
-        lib.settings.MAX_HTTP_RETRIES = 9
-        log.info("Enabling HTTP retry: MAX_HTTP_RETRIES=9")
-
-        log.info("\n")
-
-    request.addfinalizer(enable_http_retry)
-
-    lib.settings.ERROR_CODE_LIST = []
-    log.info("DISABLING HTTP retry: MAX_HTTP_RETRIES=0")
-    lib.settings.MAX_HTTP_RETRIES = 0
-
-
 
 
 

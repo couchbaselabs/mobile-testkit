@@ -12,7 +12,7 @@ from requests.exceptions import HTTPError
 from requests.exceptions import RetryError
 
 from fixtures import cluster
-from fixtures import disable_http_retry
+
 import lib.settings
 import logging
 log = logging.getLogger(lib.settings.LOGGER)
@@ -184,7 +184,7 @@ def rest_scan(sync_gateway, db, online):
 # Scenario 1
 @pytest.mark.sanity
 @pytest.mark.dbonlineoffline
-def test_online_default_rest(cluster, disable_http_retry):
+def test_online_default_rest(cluster):
 
     cluster.reset("bucket_online_offline/bucket_online_offline_default.json")
 
@@ -203,7 +203,7 @@ def test_online_default_rest(cluster, disable_http_retry):
 # Scenario 2
 @pytest.mark.sanity
 @pytest.mark.dbonlineoffline
-def test_offline_false_config_rest(cluster, disable_http_retry):
+def test_offline_false_config_rest(cluster):
 
     cluster.reset("bucket_online_offline/bucket_online_offline_offline_false.json")
 
@@ -223,7 +223,7 @@ def test_offline_false_config_rest(cluster, disable_http_retry):
 # Scenario 3
 @pytest.mark.sanity
 @pytest.mark.dbonlineoffline
-def test_online_to_offline_check_503(cluster, disable_http_retry):
+def test_online_to_offline_check_503(cluster):
 
     cluster.reset("bucket_online_offline/bucket_online_offline_default.json")
     admin = Admin(cluster.sync_gateways[0])
@@ -248,7 +248,7 @@ def test_online_to_offline_check_503(cluster, disable_http_retry):
 @pytest.mark.sanity
 @pytest.mark.dbonlineoffline
 @pytest.mark.parametrize("num_docs", [5000])
-def test_online_to_offline_changes_feed_controlled_close_continuous(cluster, disable_http_retry, num_docs):
+def test_online_to_offline_changes_feed_controlled_close_continuous(cluster, num_docs):
 
     cluster.reset("bucket_online_offline/bucket_online_offline_default.json")
     admin = Admin(cluster.sync_gateways[0])
@@ -293,7 +293,7 @@ def test_online_to_offline_changes_feed_controlled_close_continuous(cluster, dis
     # The less than num_docs ensures that the db was taken offline during doc pushes
     # docs_in_changes > 0 ensures that the connection closed and the continuous changes connection
     # returned the documents it had processed
-    assert(len(docs_in_changes) > 0 and len(docs_in_changes) < num_docs)
+    assert(len(docs_in_changes) > 20 and len(docs_in_changes) < num_docs)
 
     # Bring db back online
     status = admin.bring_db_online("db")
@@ -314,73 +314,87 @@ def test_online_to_offline_changes_feed_controlled_close_continuous(cluster, dis
 @pytest.mark.sanity
 @pytest.mark.dbonlineoffline
 @pytest.mark.parametrize("num_docs", [5000])
-def test_online_to_offline_changes_feed_controlled_close_longpoll(cluster, disable_http_retry, num_docs):
+def test_online_to_offline_changes_feed_controlled_close_longpoll(cluster, num_docs):
 
-    # TODO
+    cluster.reset("bucket_online_offline/bucket_online_offline_default.json")
+    admin = Admin(cluster.sync_gateways[0])
+    seth = admin.register_user(target=cluster.sync_gateways[0], db="db", name="seth", password="password", channels=["ABC"])
+    doc_pusher = admin.register_user(target=cluster.sync_gateways[0], db="db", name="doc_pusher", password="password", channels=["ABC"])
 
-    # cluster.reset("bucket_online_offline/bucket_online_offline_default.json")
-    # admin = Admin(cluster.sync_gateways[0])
-    # seth = admin.register_user(target=cluster.sync_gateways[0], db="db", name="seth", password="password", channels=["ABC"])
-    # doc_pusher = admin.register_user(target=cluster.sync_gateways[0], db="db", name="doc_pusher", password="password", channels=["ABC"])
-    # 
-    # docs_in_changes = dict()
-    # doc_add_errors = list()
+    docs_in_changes = dict()
+    doc_add_errors = list()
+
+    with concurrent.futures.ThreadPoolExecutor(max_workers=lib.settings.MAX_REQUEST_WORKERS) as executor:
+        futures = dict()
+        futures[executor.submit(seth.start_longpoll_changes_tracking, termination_doc_id="killpoll")] = "polling"
+        futures[executor.submit(doc_pusher.add_docs, num_docs)] = "docs_push"
+        time.sleep(5)
+        futures[executor.submit(admin.take_db_offline, "db")] = "db_offline_task"
+
+        for future in concurrent.futures.as_completed(futures):
+            try:
+                task_name = futures[future]
+
+                # Send termination doc to seth continuous changes feed subscriber
+                if task_name == "db_offline_task":
+                    log.info("DB OFFLINE")
+                    # make sure db_offline returns 200
+                    assert(future.result() == 200)
+                if task_name == "docs_push":
+                    log.info("DONE PUSHING DOCS")
+                    doc_add_errors = future.result()
+                if task_name == "polling":
+                    # Long poll will exit with 503, return docs in the exception
+                    log.info("POLLING DONE")
+                    try:
+                        docs_in_changes = future.result()
+                    except Exception as e:
+                        log.info(e)
+                        log.info("POLLING DONE EXCEPTION")
+                        log.info("AARGS: {}".format(e.args))
+                        docs_in_changes = e.args[0]["docs"]
+                        last_seq_num = e.args[0]["last_seq_num"]
+                        log.info("DOCS FROM longpoll")
+                        for k, v in docs_in_changes.items():
+                            log.info("DFC -> {}:{}".format(k, v))
+                        log.info("LAST_SEQ_NUM FROM longpoll {}".format(last_seq_num))
+
+            except Exception as e:
+                print("Futures: error: {}".format(e))
+
+    log.info("Number of docs from _changes ({})".format(len(docs_in_changes)))
+    log.info("last_seq_num _changes ({})".format(last_seq_num))
+    log.info("Number of docs add errors ({})".format(len(doc_add_errors)))
+
+    # TODO Discuss this pass criteria with dev
+    # The less than num_docs ensures that the db was taken offline during doc pushes
+    # docs_in_changes > 0 ensures that the connection closed and the continuous changes connection
+    # returned the documents it had processed
+    assert(len(docs_in_changes) > 20 and len(docs_in_changes) < num_docs)
+
+    # TODO Why is this the case?
+    # assert the last_seq_number == number _changes + 2 (_user doc starts and one and docs start at _user doc seq + 2)
+    assert(len(docs_in_changes) + 2 == int(last_seq_num))
+
+    # Bring db back online
+    status = admin.bring_db_online("db")
+    assert(status == 200)
     #
-    # with concurrent.futures.ThreadPoolExecutor(max_workers=lib.settings.MAX_REQUEST_WORKERS) as executor:
-    #     futures = dict()
-    #     futures[executor.submit(seth.start_longpoll_changes_tracking, termination_doc_id="killcontinuous")] = "continuous"
-    #     futures[executor.submit(doc_pusher.add_docs, num_docs)] = "bulk_docs_push"
-    #     time.sleep(5)
-    #     futures[executor.submit(admin.take_db_offline, "db")] = "db_offline_task"
-    #
-    #     for future in concurrent.futures.as_completed(futures):
-    #         try:
-    #             task_name = futures[future]
-    #
-    #             # Send termination doc to seth continuous changes feed subscriber
-    #             if task_name == "db_offline_task":
-    #                 log.info("DB OFFLINE")
-    #                 # make sure db_offline returns 200
-    #                 assert(future.result() == 200)
-    #             elif task_name == "bulk_docs_push":
-    #                 log.info("DONE PUSHING DOCS")
-    #                 doc_add_errors = future.result()
-    #             elif task_name == "continuous":
-    #                 docs_in_changes = future.result()
-    #                 log.info("DOCS FROM CHANGES")
-    #                 for k, v in docs_in_changes.items():
-    #                     log.info("DFC -> {}:{}".format(k, v))
-    #
-    #         except Exception as e:
-    #             print("Futures: error: {}".format(e))
-    #
-    # print("Number of docs from _changes ({})".format(len(docs_in_changes)))
-    # print("Number of docs add errors ({})".format(len(doc_add_errors)))
-    #
-    # # TODO Discuss this pass criteria with dev
-    # # The less than num_docs ensures that the db was taken offline during doc pushes
-    # # docs_in_changes > 0 ensures that the connection closed and the continuous changes connection
-    # # returned the documents it had processed
-    # assert(len(docs_in_changes) > 0 and len(docs_in_changes) < num_docs)
-    #
-    # # Bring db back online
-    # status = admin.bring_db_online("db")
-    # assert(status == 200)
-    #
-    # # Get all docs that have been pushed
-    # # Verify that changes returns all of them
-    # all_docs = doc_pusher.get_all_docs()
-    # num_docs_pushed = len(all_docs["rows"])
-    # verify_changes(doc_pusher, expected_num_docs=num_docs_pushed, expected_num_revisions=0, expected_docs=doc_pusher.cache)
-    #
-    # # Check that the number of errors return when trying to push while db is offline + num of docs in db
-    # # should equal the number of docs
-    # assert(num_docs_pushed + doc_add_errors == num_docs)
+    # Get all docs that have been pushed
+    # Verify that changes returns all of them
+    all_docs = doc_pusher.get_all_docs()
+    num_docs_pushed = len(all_docs["rows"])
+    verify_changes(doc_pusher, expected_num_docs=num_docs_pushed, expected_num_revisions=0, expected_docs=doc_pusher.cache)
+
+    # Check that the number of errors return when trying to push while db is offline + num of docs in db
+    # should equal the number of docs
+    assert(num_docs_pushed + len(doc_add_errors) == num_docs)
+
 
 # Scenario 6
 @pytest.mark.sanity
 @pytest.mark.dbonlineoffline
-def test_offline_true_config_bring_online(cluster, disable_http_retry):
+def test_offline_true_config_bring_online(cluster):
 
     cluster.reset("bucket_online_offline/bucket_online_offline_offline_true.json")
     admin = Admin(cluster.sync_gateways[0])
@@ -415,7 +429,7 @@ def test_offline_true_config_bring_online(cluster, disable_http_retry):
 # Scenario 16
 @pytest.mark.sanity
 @pytest.mark.dbonlineoffline
-def test_config_change_invalid_1(cluster, disable_http_retry):
+def test_config_change_invalid_1(cluster):
 
     cluster.reset("bucket_online_offline/bucket_online_offline_offline_false.json")
     admin = Admin(cluster.sync_gateways[0])
