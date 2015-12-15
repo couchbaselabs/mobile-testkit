@@ -40,21 +40,13 @@ class User:
 
     # GET /{db}/_all_docs
     def get_all_docs(self):
-        session = requests.Session()
-        adapter = requests.adapters.HTTPAdapter(max_retries=Retry(total=settings.MAX_HTTP_RETRIES, backoff_factor=settings.BACKOFF_FACTOR, status_forcelist=settings.ERROR_CODE_LIST))
-        session.mount("http://", adapter)
-
-        resp = session.get("{0}/{1}/_all_docs".format(self.target.url, self.db), headers=self._headers)
+        resp = requests.get("{0}/{1}/_all_docs".format(self.target.url, self.db), headers=self._headers)
         log.info("GET {}".format(resp.url))
         resp.raise_for_status()
-
         return resp.json()
 
     # PUT /{db}/{doc}
-    def add_doc(self, doc_id, content=None):
-        # session = requests.Session()
-        # adapter = requests.adapters.HTTPAdapter(max_retries=Retry(total=settings.MAX_HTTP_RETRIES, backoff_factor=settings.BACKOFF_FACTOR, status_forcelist=settings.ERROR_CODE_LIST))
-        # session.mount("http://", adapter)
+    def add_doc(self, doc_id, content=None, retries=False):
 
         doc_url = self.target.url + "/" + self.db + "/" + doc_id
 
@@ -69,8 +61,14 @@ class User:
 
         body = json.dumps(doc_body)
 
-        #resp = session.put(doc_url, headers=self._headers, data=body, timeout=settings.HTTP_REQ_TIMEOUT)
-        resp = requests.put(doc_url, headers=self._headers, data=body, timeout=settings.HTTP_REQ_TIMEOUT)
+        if retries:
+            session = requests.Session()
+            adapter = requests.adapters.HTTPAdapter(max_retries=Retry(total=settings.MAX_HTTP_RETRIES, backoff_factor=settings.BACKOFF_FACTOR, status_forcelist=settings.ERROR_CODE_LIST))
+            session.mount("http://", adapter)
+            resp = session.put(doc_url, headers=self._headers, data=body, timeout=settings.HTTP_REQ_TIMEOUT)
+        else:
+            resp = requests.put(doc_url, headers=self._headers, data=body, timeout=settings.HTTP_REQ_TIMEOUT)
+
         log.info("{0} PUT {1}".format(self.name, doc_url))
 
         resp.raise_for_status()
@@ -83,10 +81,7 @@ class User:
 
     # POST /{db}/_bulk_docs
 
-    def add_bulk_docs(self, doc_ids):
-        session = requests.Session()
-        adapter = requests.adapters.HTTPAdapter(max_retries=Retry(total=settings.MAX_HTTP_RETRIES, backoff_factor=settings.BACKOFF_FACTOR, status_forcelist=settings.ERROR_CODE_LIST))
-        session.mount("http://", adapter)
+    def add_bulk_docs(self, doc_ids, retries=False):
 
         # Create docs
         doc_list = []
@@ -101,7 +96,14 @@ class User:
         docs["docs"] = doc_list
         data = json.dumps(docs)
 
-        resp = session.post("{0}/{1}/_bulk_docs".format(self.target.url, self.db), headers=self._headers, data=data, timeout=settings.HTTP_REQ_TIMEOUT)
+        if retries:
+            session = requests.Session()
+            adapter = requests.adapters.HTTPAdapter(max_retries=Retry(total=settings.MAX_HTTP_RETRIES, backoff_factor=settings.BACKOFF_FACTOR, status_forcelist=settings.ERROR_CODE_LIST))
+            session.mount("http://", adapter)
+            resp = session.post("{0}/{1}/_bulk_docs".format(self.target.url, self.db), headers=self._headers, data=data, timeout=settings.HTTP_REQ_TIMEOUT)
+        else:
+            resp = requests.post("{0}/{1}/_bulk_docs".format(self.target.url, self.db), headers=self._headers, data=data, timeout=settings.HTTP_REQ_TIMEOUT)
+
         log.info("{0} POST {1}".format(self.name, resp.url))
         resp.raise_for_status()
         resp_json = resp.json()
@@ -119,7 +121,7 @@ class User:
         # Return list of cache docs that were added
         return bulk_docs_ids
 
-    def add_docs(self, num_docs, bulk=False, name_prefix=None):
+    def add_docs(self, num_docs, bulk=False, name_prefix=None, retries=False):
 
         errors = list()
 
@@ -131,7 +133,12 @@ class User:
 
         if not bulk:
             with concurrent.futures.ThreadPoolExecutor(max_workers=settings.MAX_REQUEST_WORKERS) as executor:
-                future_to_docs = {executor.submit(self.add_doc, doc): doc for doc in doc_names}
+
+                if retries:
+                    future_to_docs = {executor.submit(self.add_doc, doc, content=None, retries=True): doc for doc in doc_names}
+                else:
+                    future_to_docs = {executor.submit(self.add_doc, doc, content=None): doc for doc in doc_names}
+
                 for future in concurrent.futures.as_completed(future_to_docs):
                     doc = future_to_docs[future]
                     try:
@@ -141,7 +148,12 @@ class User:
                         errors.append(doc)
         else:
             with concurrent.futures.ThreadPoolExecutor(max_workers=settings.MAX_REQUEST_WORKERS) as executor:
-                future = [executor.submit(self.add_bulk_docs, doc_names)]
+
+                if retries:
+                    future = [executor.submit(self.add_bulk_docs, doc_names, retries=True)]
+                else:
+                    future = [executor.submit(self.add_bulk_docs, doc_names)]
+
                 for f in concurrent.futures.as_completed(future):
                     try:
                         doc_list = f.result()
@@ -154,7 +166,7 @@ class User:
 
     # GET /{db}/{doc}
     # PUT /{db}/{doc}
-    def update_doc(self, doc_id, num_revision=1):
+    def update_doc(self, doc_id, num_revision=1, retries=False):
 
         updated_docs = dict()
 
@@ -172,11 +184,14 @@ class User:
 
                 body = json.dumps(data)
 
-                session = requests.Session()
-                adapter = requests.adapters.HTTPAdapter(max_retries=Retry(total=settings.MAX_HTTP_RETRIES, backoff_factor=settings.BACKOFF_FACTOR, status_forcelist=settings.ERROR_CODE_LIST))
-                session.mount("http://", adapter)
+                if retries:
+                    session = requests.Session()
+                    adapter = requests.adapters.HTTPAdapter(max_retries=Retry(total=settings.MAX_HTTP_RETRIES, backoff_factor=settings.BACKOFF_FACTOR, status_forcelist=settings.ERROR_CODE_LIST))
+                    session.mount("http://", adapter)
+                    put_resp = session.put(doc_url, headers=self._headers, data=body, timeout=settings.HTTP_REQ_TIMEOUT)
+                else:
+                    put_resp = requests.put(doc_url, headers=self._headers, data=body, timeout=settings.HTTP_REQ_TIMEOUT)
 
-                put_resp = session.put(doc_url, headers=self._headers, data=body, timeout=settings.HTTP_REQ_TIMEOUT)
                 log.info("{0} PUT {1}".format(self.name, resp.url))
 
                 if put_resp.status_code == 201:
@@ -197,9 +212,13 @@ class User:
 
         return updated_docs
                 
-    def update_docs(self, num_revs_per_doc=1):
+    def update_docs(self, num_revs_per_doc=1, retries=False):
         with concurrent.futures.ThreadPoolExecutor(max_workers=settings.MAX_REQUEST_WORKERS) as executor:
-            future_to_docs = {executor.submit(self.update_doc, doc_id, num_revs_per_doc): doc_id for doc_id in self.cache.keys()}
+
+            if retries:
+                future_to_docs = {executor.submit(self.update_doc, doc_id, num_revs_per_doc, retries=True): doc_id for doc_id in self.cache.keys()}
+            else:
+                future_to_docs = {executor.submit(self.update_doc, doc_id, num_revs_per_doc): doc_id for doc_id in self.cache.keys()}
             
             for future in concurrent.futures.as_completed(future_to_docs):
                 doc = future_to_docs[future]
@@ -399,7 +418,6 @@ class User:
 
                 log.info("{} DOC FROM CONTINUOUS _changes: {}: {}".format(self.name, doc["doc"]["_id"], doc["doc"]["_rev"]))
                 # Store doc
-                # Should I be worried about duplicated in continuous _changes feed?
                 docs[doc["doc"]["_id"]] = doc["doc"]["_rev"]
 
         # if connection is closed from server
