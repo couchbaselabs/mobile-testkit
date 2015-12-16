@@ -189,7 +189,7 @@ $ export SPLUNK_SERVER_AUTH="<username>:<password>"
 **Install**
 
 ```
-$ python provision/install_splunk.py
+$ python provision/install_splunk_forwarder.py
 ```
 
 ## Run Performance Tests
