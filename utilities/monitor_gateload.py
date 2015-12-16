@@ -6,7 +6,7 @@ from optparse import OptionParser
 
 if __name__ == "__main__":
     usage = """
-    usage: python monitor_gateload.py -e "111.11.111.111:4985,222.22.222.222:4985"
+    usage: python monitor_gateload.py -e "111.11.111.111:9876,222.22.222.222:9876"
     """
 
     parser = OptionParser(usage=usage)
