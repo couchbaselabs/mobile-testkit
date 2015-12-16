@@ -4,7 +4,7 @@
   remote_user: centos
   tasks:
   - name: go get gateload
-    shell: GOPATH=/opt/go go get github.com/couchbaselabs/gateload
+    shell: GOPATH=/opt/go go get -u -v github.com/couchbaselabs/gateload
   - name: symlink gateload into /usr/local/bin
     file: src=/opt/go/bin/gateload dest=/usr/local/bin/gateload owner=centos group=centos state=link
     sudo: true
