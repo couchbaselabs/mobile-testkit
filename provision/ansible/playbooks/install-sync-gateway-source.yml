@@ -54,14 +54,24 @@
   - include: tasks/create-sync-gateway-user.yml
 
   # Copy binary from centos user
+  - name: Creates /opt/couchbase-sync-gateway
+    file: path=/opt/couchbase-sync-gateway state=directory
+  - name: Creates /opt/couchbase-sync-gateway/bin
+    file: path=/opt/couchbase-sync-gateway/bin state=directory
+  - name: copy binary to /opt/
+    shell: cp /home/centos/sync_gateway/bin/sync_gateway /opt/couchbase-sync-gateway/bin/
+
+  # Install service and wait for launch
   - name: make service install script executable
     file: path=/home/centos/sync_gateway/service/sync_gateway_service_install.sh mode=a+x
-  - name: copy sync gateway binary to sync_gateway home
-    shell: cp /home/centos/sync_gateway/bin/sync_gateway /home/sync_gateway
-  - name: change permissions of sync gateway executable
-    file: path=/home/sync_gateway/sync_gateway mode=a+x
-  - name: copy wait for sync_gateway launch script
-    copy: src=files/sg_wait_for_launch.sh dest=/home/sync_gateway/ mode=a+x owner=sync_gateway
+  - name: install sync gateway service
+    shell: ./sync_gateway_service_install.sh chdir=/home/centos/sync_gateway/service
+  - name: wait until sync gateway to listen on port
+    wait_for: port=4985 delay=2 timeout=120
+
+  # Service install with launch sync_gateway automatically. Stop to upload configs
+  - name: stop sync_gateway service
+    service: name=sync_gateway state=stopped
 
 # Deploy sync gateway configs
 - hosts: sync_gateways
