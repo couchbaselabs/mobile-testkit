@@ -21,7 +21,7 @@ temp_cbagent_config_template.conf
 cloudformation_template.json
 temp_ansible_hosts
 conf/hosts.ini
-provisioning_config
+provisioning_config*
 
 results.xml
 provision/ansible/playbooks/ansible.cfg
