@@ -78,8 +78,7 @@ You probably want to persist these in your `~/.bash_profile`.
 **To kick off cluster**
 
 ```
-$ cd sync-gateway-testcluster/provision
-$ python create_and_instantiate_cluster.py \
+$ python provision/create_and_instantiate_cluster.py \
     --stackname="YourCloudFormationStack" \
     --num-servers=1 \
     --server-type="m3.large" \
