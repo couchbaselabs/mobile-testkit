@@ -42,10 +42,10 @@
     - name: raise max file descriptors
       copy: src=files/security-nofiles-limit.conf dest=/etc/security/limits.d/20-nofiles.conf owner=root group=root mode=0644
 
-    #- name: Disable Transparent Huge Pages
-    #  shell: echo 'for i in /sys/kernel/mm/*transparent_hugepage/enabled; do echo never > $i; done' >> /etc/rc.local
-    #  shell: echo 'for i in /sys/kernel/mm/*transparent_hugepage/defrag; do echo never > $i; done' >> /etc/rc.local
-    #  shell: for i in /sys/kernel/mm/*transparent_hugepage/enabled; do echo never > $i; done
+    - name: Disable Transparent Huge Pages
+      shell: echo 'for i in /sys/kernel/mm/*transparent_hugepage/enabled; do echo never > $i; done' >> /etc/rc.local
+      shell: echo 'for i in /sys/kernel/mm/*transparent_hugepage/defrag; do echo never > $i; done' >> /etc/rc.local
+      shell: for i in /sys/kernel/mm/*transparent_hugepage/enabled; do echo never > $i; done
 
     # Configure
     - debug: msg="Couchbase cluster RAM {{ couchbase_server_cluster_ram }}"
