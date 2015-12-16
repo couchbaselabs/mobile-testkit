@@ -17,6 +17,11 @@
   shell: rpm -e couchbase-sync-gateway
   ignore_errors: yes
 
+# Remove service
+- name: Remove sync_gateway service
+  shell: rm /usr/lib/systemd/system/sync_gateway.service
+  ignore_errors: yes
+
 # Delete sync_gateway binary
 - name: delete sync_gateway binary
   shell: rm -rf /opt/couchbase-sync-gateway

@@ -4,7 +4,6 @@
   sudo: true
 
   tasks:
-
   - include: tasks/remove-sync-gateway.yml
 
 # Flush server buckets
@@ -32,7 +31,7 @@
   tasks:
   - include: tasks/flush-server-buckets.yml
 
-# Download package and install
+# Download package and create sync_gateway user
 - hosts: sync_gateways
   any_errors_fatal: true
   sudo: true
@@ -49,14 +48,6 @@
   - name: Download sync_gateway rpm
     get_url: url={{ couchbase_sync_gateway_package_url }} dest=/tmp/{{ couchbase_sync_gateway_package }}
   - include: tasks/create-sync-gateway-user.yml
-
-  - name: Install sync_gateway rpm
-    shell: rpm -iv /tmp/{{ couchbase_sync_gateway_package }}
-  - name: wait until sync gateway to listen on port
-    wait_for: port=4985 delay=2 timeout=120
-  # Service install with launch sync_gateway automatically. Stop to upload configs
-  - name: Stop sync_gateway service
-    service: name=sync_gateway state=stopped
 
 # Deploy sync gateway configs
 - hosts: sync_gateways
@@ -78,12 +69,18 @@
   tasks:
   - include: tasks/deploy-sync-gateway-config.yml
 
-# Start service
+# Install and launch service
 - hosts: sync_gateways
   sudo: true
   vars:
     sync_gateway_config_filepath:
   tasks:
-  # Create sync_gateway user, install and start service
-  - include: tasks/start-sync-gateway.yml
+  # Install and start service
+  - name: Install sync_gateway rpm
+    shell: rpm -i /tmp/{{ couchbase_sync_gateway_package }}
+  - name: wait until sync gateway to listen on port
+    wait_for: port=4985 delay=2 timeout=120
+
+
+
 
