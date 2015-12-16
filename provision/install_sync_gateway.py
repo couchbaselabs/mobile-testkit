@@ -66,8 +66,9 @@ class SyncGatewayConfig:
         return output
 
     def _base_url_package_for_sync_gateway_dev_build(self, dev_build_url, dev_build_number):
+        # http://latestbuilds.hq.couchbase.com/couchbase-sync-gateway/0.0.1/feature/distributed_index/0.0.1-449/couchbase-sync-gateway-community_0.0.1-449_x86_64.rpm
         base_url = "http://latestbuilds.hq.couchbase.com/couchbase-sync-gateway/0.0.1/{0}/0.0.1-{1}".format(dev_build_url, dev_build_number)
-        package_name = "couchbase-sync-gateway-centos_community_0.0.1-{0}_x86_64.tar.gz".format(dev_build_number)
+        package_name = "couchbase-sync-gateway-community_0.0.1-{0}_x86_64.rpm".format(dev_build_number)
         return base_url, package_name
 
     def _base_url_package_for_sync_gateway(self, version, build):

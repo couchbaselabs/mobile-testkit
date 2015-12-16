@@ -4,7 +4,6 @@
   sudo: true
 
   tasks:
-
   - include: tasks/remove-sync-gateway.yml
 
 # Flush server buckets
@@ -61,18 +60,6 @@
   - name: copy binary to /opt/
     shell: cp /home/centos/sync_gateway/bin/sync_gateway /opt/couchbase-sync-gateway/bin/
 
-  # Install service and wait for launch
-  - name: make service install script executable
-    file: path=/home/centos/sync_gateway/service/sync_gateway_service_install.sh mode=a+x
-  - name: install sync gateway service
-    shell: ./sync_gateway_service_install.sh chdir=/home/centos/sync_gateway/service
-  - name: wait until sync gateway to listen on port
-    wait_for: port=4985 delay=2 timeout=120
-
-  # Service install with launch sync_gateway automatically. Stop to upload configs
-  - name: stop sync_gateway service
-    service: name=sync_gateway state=stopped
-
 # Deploy sync gateway configs
 - hosts: sync_gateways
   sudo: true
@@ -93,15 +80,13 @@
   tasks:
   - include: tasks/deploy-sync-gateway-config.yml
 
-# Install and start service
+# Install service and wait for launch
 - hosts: sync_gateways
   sudo: true
-  vars:
-    sync_gateway_config_filepath:
   tasks:
-  # Create sync_gateway user, install and start service
-  - include: tasks/start-sync-gateway.yml
-
-
-
-
+  - name: make service install script executable
+    file: path=/home/centos/sync_gateway/service/sync_gateway_service_install.sh mode=a+x
+  - name: install sync gateway service
+    shell: ./sync_gateway_service_install.sh chdir=/home/centos/sync_gateway/service
+  - name: wait until sync gateway to listen on port
+    wait_for: port=4985 delay=2 timeout=120
