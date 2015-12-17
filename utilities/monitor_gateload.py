@@ -1,23 +1,20 @@
-import sys
 import subprocess
-
-from optparse import OptionParser
+from provisioning_config_parser import hosts_for_tag
 
 
 if __name__ == "__main__":
     usage = """
-    usage: python monitor_gateload.py -e "111.11.111.111:9876,222.22.222.222:9876"
+    usage: python monitor_gateload.py"
     """
 
-    parser = OptionParser(usage=usage)
+    # Get gateload ips from ansible inventory
+    lgs_host_vars = hosts_for_tag("load_generators")
+    lgs = [lg["ansible_ssh_host"] for lg in lgs_host_vars]
 
-    parser.add_option("-e", "", action="store", type="string", dest="endpoints", default=None, help="ips running gateload")
-    (opts, args) = parser.parse_args(sys.argv[1:])
-
-    if opts.endpoints is None:
-        print("Please specify '-e' endpoints to monitor")
-        sys.exit(1)
+    print("Monitoring sync_gateways: {}".format(lgs))
+    lgs_with_port = [lg + ":9876" for lg in lgs]
+    lgs_joined = ",".join(lgs_with_port)
 
     vars = "gateload.ops.PushToSubscriberInteractive.p95,gateload.ops.PushToSubscriberInteractive.p99,gateload.total_doc_pulled,gateload.total_doc_pushed,gateload.user_active,gateload.user_awake"
 
-    subprocess.call(["expvarmon", "-ports={}".format(opts.endpoints), "-vars={}".format(vars)])
+    subprocess.call(["expvarmon", "-ports={}".format(lgs_joined), "-vars={}".format(vars)])
