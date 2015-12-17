@@ -23,6 +23,7 @@ cloudformation_template.json
 temp_ansible_hosts
 conf/hosts.ini
 provisioning_config*
+!utilities/provisioning_config_parser.py
 
 results.xml
 provision/ansible/playbooks/ansible.cfg
