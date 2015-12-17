@@ -18,6 +18,6 @@ if __name__ == "__main__":
         print("Please specify '-e' endpoints to monitor")
         sys.exit(1)
 
-    vars = "mem:memstats.Alloc,mem:memstats.Sys,mem:memstats.HeapAlloc,mem:memstats.HeapInuse,memstats.NumGC,memstats.PauseTotalNs,memstats.PauseNs,syncGateway_db.channelChangesFeeds,syncGateway_db.document_gets,syncGateway_db.revisionCache_adds,syncGateway_db.revs_added,syncGateway_db.sequence_gets,syncGateway_db.sequence_reserves"
+    vars = "mem:memstats.Alloc,mem:memstats.Sys,mem:memstats.HeapAlloc,mem:memstats.HeapInuse,memstats.NumGC,memstats.PauseTotalNs,memstats.PauseNs,syncGateway_db.channelChangesFeeds,syncGateway_db.document_gets,syncGateway_db.revisionCache_adds,syncGateway_db.revs_added"
 
     subprocess.call(["expvarmon", "-ports={}".format(opts.endpoints), "-endpoint=/_expvar", "-vars={}".format(vars)])

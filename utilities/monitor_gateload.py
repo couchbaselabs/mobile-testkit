@@ -18,6 +18,6 @@ if __name__ == "__main__":
         print("Please specify '-e' endpoints to monitor")
         sys.exit(1)
 
-    vars = "gateload.ops.PushToSubscriberInteractive.p95, gateload.ops.PushToSubscriberInteractive.p99,gateload.total_doc_pulled,gateload.total_doc_pushed"
+    vars = "gateload.ops.PushToSubscriberInteractive.p95,gateload.ops.PushToSubscriberInteractive.p99,gateload.total_doc_pulled,gateload.total_doc_pushed,gateload.user_active,gateload.user_awake"
 
     subprocess.call(["expvarmon", "-ports={}".format(opts.endpoints), "-vars={}".format(vars)])
