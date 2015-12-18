@@ -3,6 +3,7 @@ import ec2
 import ansible.inventory
 from optparse import OptionParser
 import sys
+import json
 
 """
 Generate a provisioning_config file like:
@@ -128,6 +129,7 @@ if __name__=="__main__":
     usage = """usage: python generate_ansible_inventory_from_aws.py
     --stackname=<aws_cloudformation_stack_name>
     --targetfile=<ansible_inventory_target_file_path>
+    --dumpinventory=true|false
     """
 
     parser = OptionParser(usage=usage)
@@ -140,12 +142,17 @@ if __name__=="__main__":
                       action="store", type="string", dest="targetfile", default=None,
                       help="ansible inventory target file")
 
+    parser.add_option("", "--dumpinventory",
+                      action="store", dest="dumpinventory", default=False,
+                      help="dump raw AWS inventory (for debugging)")
+
     arg_parameters = sys.argv[1:]
 
     (opts, args) = parser.parse_args(arg_parameters)
-
+   
     print "Getting inventory from AWS ... (may take a few minutes)"
     ec2Inventory = ec2.Ec2Inventory()
+    
     # print "Refreshing inventory from AWS ... (may take a few minutes)"
     ec2Inventory.do_api_calls_update_cache()
 
@@ -154,6 +161,9 @@ if __name__=="__main__":
     cloud_formation_stack_key = "tag_aws_cloudformation_stack_name_{}".format(opts.stackname)
 
     # get all hosts for that cloudformation stack + uniquify
+    if opts.dumpinventory:
+        print "Inventory: {}".format(json.dumps(ec2Inventory.inventory, indent=4))
+        
     cloud_formation_stack_hostnames = ec2Inventory.inventory[cloud_formation_stack_key]
     cloud_formation_stack_hostnames = list(set(cloud_formation_stack_hostnames))
 
