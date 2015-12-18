@@ -173,7 +173,7 @@ if __name__ == "__main__":
 
     parser.add_option("", "--dev-build-url",
                       action="store", type="string", dest="dev_build_url", default=None,
-                      help="sync_gateway dev build url (ex. 'feature/distributed_index/')")
+                      help="sync_gateway dev build url (ex. 'feature/distributed_index')")
 
     parser.add_option("", "--dev-build-number",
                       action="store", type="string", dest="dev_build_number", default=None,
