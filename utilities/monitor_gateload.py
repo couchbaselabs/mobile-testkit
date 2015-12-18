@@ -17,4 +17,6 @@ if __name__ == "__main__":
 
     vars = "gateload.ops.PushToSubscriberInteractive.p95,gateload.ops.PushToSubscriberInteractive.p99,gateload.total_doc_pulled,gateload.total_doc_pushed,gateload.user_active,gateload.user_awake"
 
-    subprocess.call(["expvarmon", "-ports={}".format(lgs_joined), "-vars={}".format(vars)])
+    subprocess.call(["expvarmon",
+                     "-ports={}".format(lgs_joined),
+                     "-vars={}".format(vars)])

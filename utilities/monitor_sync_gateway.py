@@ -18,4 +18,7 @@ if __name__ == "__main__":
 
     vars = "mem:memstats.Alloc,mem:memstats.Sys,mem:memstats.HeapAlloc,mem:memstats.HeapInuse,memstats.NumGC,memstats.PauseTotalNs,memstats.PauseNs,syncGateway_db.channelChangesFeeds,syncGateway_db.document_gets,syncGateway_db.revisionCache_adds,syncGateway_db.revs_added"
 
-    subprocess.call(["expvarmon", "-ports={}".format(sgs_joined), "-endpoint=/_expvar", "-vars={}".format(vars)])
+    subprocess.call(["expvarmon",
+                     "-ports={}".format(sgs_joined),
+                     "-endpoint=/_expvar",
+                     "-vars={}".format(vars)])

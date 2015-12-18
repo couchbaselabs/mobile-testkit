@@ -5,7 +5,7 @@ import requests
 from provisioning_config_parser import hosts_for_tag
 
 
-def write_endpoint_expvars(file, endpoint):
+def write_expvars(file, endpoint):
     try:
         resp = requests.get("http://{}".format(endpoint))
         print(resp.url)
@@ -67,7 +67,7 @@ def log_expvars():
         while test_time < 1200:
 
             for endpoint in endpoints:
-                write_endpoint_expvars(f, endpoint)
+                write_expvars(f, endpoint)
 
             print("Elapsed: {}".format(test_time))
             f.write("\n\n\n".format(endpoint))
