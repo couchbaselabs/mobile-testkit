@@ -241,6 +241,22 @@ $ python run_tests.py -m sanity
 $ python -m pytest --capture=no functional_tests/test_users_channels.py::test_single_user_single_channel
 ```
 
+## Monitoring the cluster
+Make sure you have installed expvarmon 
+```
+go get github.com/divan/expvarmon
+```
+
+To monitor the Gateload expvars for [load_generators] nodes in the provisioning_config 
+```
+python utilities/monitor_gateload.py
+```
+
+To monitor the sync_gateway expvars for [sync_gateways] nodes in the provisioning_config 
+```
+python utilities/monitor_sync_gateway.py
+```
+
 ## Collecting Sync Gateway logs
 
 ```
