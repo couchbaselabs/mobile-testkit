@@ -12,6 +12,20 @@
 - name: verify sync_gateway not listening on port
   wait_for: port=4985 delay=1 state=stopped
 
+# Remove package
+- name: Uninstall sync_gateway rpm
+  shell: rpm -e couchbase-sync-gateway
+  ignore_errors: yes
+
+# Remove service
+- name: Remove sync_gateway service
+  shell: rm /usr/lib/systemd/system/sync_gateway.service
+  ignore_errors: yes
+
+# Delete sync_gateway binary
+- name: delete sync_gateway binary
+  shell: rm -rf /opt/couchbase-sync-gateway
+
 # Delete logs and .pindex files
 - name: delete sync_gateway logs
   shell: rm -f /home/sync_gateway/logs/*.log

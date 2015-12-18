@@ -66,19 +66,20 @@ class SyncGatewayConfig:
         return output
 
     def _base_url_package_for_sync_gateway_dev_build(self, dev_build_url, dev_build_number):
+        # http://latestbuilds.hq.couchbase.com/couchbase-sync-gateway/0.0.1/feature/distributed_index/0.0.1-449/couchbase-sync-gateway-community_0.0.1-449_x86_64.rpm
         base_url = "http://latestbuilds.hq.couchbase.com/couchbase-sync-gateway/0.0.1/{0}/0.0.1-{1}".format(dev_build_url, dev_build_number)
-        package_name = "couchbase-sync-gateway-centos_community_0.0.1-{0}_x86_64.tar.gz".format(dev_build_number)
+        package_name = "couchbase-sync-gateway-community_0.0.1-{0}_x86_64.rpm".format(dev_build_number)
         return base_url, package_name
 
     def _base_url_package_for_sync_gateway(self, version, build):
         if version == "1.1.0" or version == "1.1.1":
-            # Legacy location
+            # http://latestbuilds.hq.couchbase.com/couchbase-sync-gateway/release/1.1.1/1.1.1-10/couchbase-sync-gateway-enterprise_1.1.1-10_x86_64.rpm
             base_url = "http://latestbuilds.hq.couchbase.com/couchbase-sync-gateway/release/{0}/{1}-{2}".format(version, version, build)
-            package_name = "couchbase-sync-gateway-enterprise_{0}-{1}_x86_64.tar.gz".format(version, build)
+            package_name = "couchbase-sync-gateway-enterprise_{0}-{1}_x86_64.rpm".format(version, build)
         else:
-            # http://latestbuilds.hq.couchbase.com/couchbase-sync-gateway/1.2.0/1.2.0-3/couchbase-sync-gateway-centos_enterprise_1.2.0-3_x86_64.tar.gz
+            # http://latestbuilds.hq.couchbase.com/couchbase-sync-gateway/1.2.0/1.2.0-6/couchbase-sync-gateway-enterprise_1.2.0-6_x86_64.rpm
             base_url = "http://latestbuilds.hq.couchbase.com/couchbase-sync-gateway/{0}/{1}-{2}".format(version, version, build)
-            package_name = "couchbase-sync-gateway-centos_enterprise_{0}-{1}_x86_64.tar.gz".format(version, build)
+            package_name = "couchbase-sync-gateway-enterprise_{0}-{1}_x86_64.rpm".format(version, build)
         return base_url, package_name
 
     def sync_gateway_base_url_and_package(self, dev_build=False):

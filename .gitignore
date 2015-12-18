@@ -17,11 +17,13 @@ venv
 temp_couchbase_server_primary_node
 temp_gateload_node
 temp_cbagent_config_template.conf
+temp_cbagent_config_template.conf-e
 
 cloudformation_template.json
 temp_ansible_hosts
 conf/hosts.ini
-provisioning_config
+provisioning_config*
+!utilities/provisioning_config_parser.py
 
 results.xml
 provision/ansible/playbooks/ansible.cfg
