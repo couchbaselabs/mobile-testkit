@@ -5,6 +5,7 @@ from optparse import OptionParser
 from lib.cluster import Cluster
 
 import generate_gateload_configs
+from utilities.log_expvars import log_expvars
 
 def run_tests(number_pullers, number_pushers, use_gateload, gen_gateload_config):
     if use_gateload:
@@ -90,3 +91,9 @@ if __name__ == "__main__":
         use_gateload=opts.use_gateload,
         gen_gateload_config=opts.gen_gateload_config
     )
+
+    # HACK to resolve provisioning_config path
+    os.chdir("../../..")
+
+    # write expvars to file
+    log_expvars()
