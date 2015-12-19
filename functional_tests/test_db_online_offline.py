@@ -418,13 +418,26 @@ def test_offline_true_config_bring_online(cluster):
 
 
 # Scenario 14
-# @pytest.mark.sanity
-# @pytest.mark.dbonlineoffline
-# def test_config_change_valid(cluster, disable_http_retry):
-#
-#     cluster.reset("bucket_online_offline/bucket_online_offline_offline_false.json")
-#     admin = Admin(cluster.sync_gateways[0])
+@pytest.mark.sanity
+@pytest.mark.dbonlineoffline
+def test_db_offline_TAP_loss_sanity(cluster):
 
+    cluster.reset("bucket_online_offline/bucket_online_offline_default.json")
+    admin = Admin(cluster.sync_gateways[0])
+
+    # all db rest enpoints should succeed
+    errors = rest_scan(cluster.sync_gateways[0], db="db", online=True)
+    assert(len(errors) == 0)
+
+    # Delete bucket to sever TAP feed
+    cluster.servers[0].delete_bucket("data-bucket")
+
+    # Check that bucket is in offline state
+    errors = rest_scan(cluster.sync_gateways[0], db="db", online=False)
+    assert(len(errors) == NUM_ENDPOINTS)
+    for error_tuple in errors:
+        print("({},{})".format(error_tuple[0], error_tuple[1]))
+        assert(error_tuple[1] == 503)
 
 # Scenario 16
 @pytest.mark.sanity

@@ -5,6 +5,11 @@ import requests
 
 from provision.ansible_runner import run_ansible_playbook
 
+import lib.settings
+
+import logging
+log = logging.getLogger(lib.settings.LOGGER)
+
 class Server:
 
     def __init__(self, target):
@@ -33,6 +38,13 @@ class Server:
         for bucket_name in existing_bucket_names:
             resp = requests.delete("{0}/pools/default/buckets/{1}".format(self.url, bucket_name), headers=self._headers)
             resp.raise_for_status()
+
+    def delete_bucket(self, name):
+
+        print(">>> Deleting buckets: {}".format(name))
+
+        resp = requests.delete("{0}/pools/default/buckets/{1}".format(self.url, name), headers=self._headers)
+        resp.raise_for_status()
 
     def create_buckets(self, names):
 
