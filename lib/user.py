@@ -80,7 +80,6 @@ class User:
         return doc_id         
 
     # POST /{db}/_bulk_docs
-
     def add_bulk_docs(self, doc_ids, retries=False):
 
         # Create docs
@@ -143,9 +142,9 @@ class User:
                     doc = future_to_docs[future]
                     try:
                         doc_id = future.result()
-                    except Exception as exc:
-                        log.error('Generated an exception while adding doc_id : %s %s' % (doc, exc))
-                        errors.append(doc)
+                    except HTTPError as e:
+                        log.error("{0} {1} {2}".format(self.name, e.response.url, e.response.status_code))
+                        errors.append((e.response.url, e.response.status_code))
         else:
             with concurrent.futures.ThreadPoolExecutor(max_workers=settings.MAX_REQUEST_WORKERS) as executor:
 
@@ -158,9 +157,9 @@ class User:
                     try:
                         doc_list = f.result()
                         #print(doc_list)
-                    except Exception as e:
-                        log.error("Error adding bulk docs: {}".format(e))
-                        errors.append("BULK_DOCS_ERROR")
+                    except HTTPError as e:
+                        log.error("{0} {1} {2}".format(self.name, e.response.url, e.response.status_code))
+                        errors.append((e.response.url, e.response.status_code))
 
         return errors
 
@@ -208,11 +207,18 @@ class User:
                 updated_docs[doc_id] = data["rev"]
 
                 put_resp.raise_for_status()
+
             resp.raise_for_status()
 
         return updated_docs
                 
     def update_docs(self, num_revs_per_doc=1, retries=False):
+
+        errors = list()
+
+        if len(self.cache.keys()) == 0:
+            log.warning("Unable to find any docs to update")
+
         with concurrent.futures.ThreadPoolExecutor(max_workers=settings.MAX_REQUEST_WORKERS) as executor:
 
             if retries:
@@ -224,10 +230,13 @@ class User:
                 doc = future_to_docs[future]
                 try:
                     doc_id = future.result()
-                except Exception as exc:
-                    log.error('Generated an exception while updating doc_id:%s %s' % (doc, exc))
+                except HTTPError as e:
+                    log.error("{0} {1} {2}".format(self.name, e.response.url, e.response.status_code))
+                    errors.append((e.response.url, e.response.status_code))
                 else:
                     log.info("Document: {} updated successfully".format(doc))
+
+        return errors
 
     def get_num_docs(self):
         return len(self.changes_data['results'])
