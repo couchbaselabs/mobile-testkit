@@ -11,7 +11,7 @@
     "cluster_config": {
         "server":"http://{{ couchbase_server_primary_node }}:8091",
         "data_dir":".",
-        "bucket":"cbgt-bucket"
+        "bucket":"data-bucket"
     },
     "databases": {
         "db":{

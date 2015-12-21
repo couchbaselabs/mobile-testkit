@@ -11,15 +11,22 @@ from fixtures import cluster
 
 @pytest.mark.distributed_index
 @pytest.mark.sanity
-def test_multiple_db_unique_data_bucket_unique_index_bucket(cluster):
+@pytest.mark.parametrize(
+        "conf,num_users,num_docs", [
+            ("multiple_dbs_unique_data_unique_index.json", 10, 5000),
+            #("multiple_dbs_unique_data_unique_index.json", 50, 100),
+        ],
+        ids=["DI-1", "DI-2"]
+)
+def test_multiple_db_unique_data_bucket_unique_index_bucket(cluster, conf, num_users, num_docs):
 
     # 2 dbs have unique data and unique index buckets
-    cluster.reset(config="multiple_dbs_unique_data_unique_index.json")
+    cluster.reset(config=conf)
 
     # TODO - parametrize
-    num_db_users = 10
-    num_db2_users = 10
-    num_docs_per_user = 100
+    num_db_users = num_users
+    num_db2_users = num_users
+    num_docs_per_user = num_docs
 
     admin = Admin(cluster.sync_gateways[0])
 
@@ -47,7 +54,7 @@ def test_multiple_db_unique_data_bucket_unique_index_bucket(cluster):
     verify_changes(db_one_users, expected_num_docs=num_docs_per_user * num_db_users, expected_num_revisions=0, expected_docs=db_cache_docs)
     verify_changes(db_two_users, expected_num_docs=num_docs_per_user * num_db2_users, expected_num_revisions=0, expected_docs=db2_cache_docs)
 
-
+# Kind of an edge case
 @pytest.mark.distributed_index
 @pytest.mark.sanity
 def test_multiple_db_single_data_bucket_single_index_bucket(cluster):
