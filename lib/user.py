@@ -105,7 +105,7 @@ class User:
         resp_json = resp.json()
 
         if len(resp_json) != len(doc_ids):
-            raise Exception("Number of bulk docs inconsistent: resp_json['docs']:{} doc_ids:{}")
+            raise Exception("Number of bulk docs inconsistent: resp_json['docs']:{} doc_ids:{}".format(len(resp_json), len(doc_ids)))
 
         # Store docs from response in user's cache and save list of ids to return
         bulk_docs_ids = []
@@ -285,7 +285,7 @@ class User:
             params["filter"] = filter
 
         r = requests.get("{}/{}/_changes".format(self.target.url, self.db), headers=self._headers, params=params, timeout=settings.HTTP_REQ_TIMEOUT)
-        log.info("{0} POST {1}".format(self.name, r.url))
+        log.info("{0} GET {1}".format(self.name, r.url))
         r.raise_for_status()
 
         obj = json.loads(r.text)
@@ -296,7 +296,7 @@ class User:
         return obj
 
     # GET /{db}/_changes?feed=longpoll
-    def start_longpoll_changes_tracking(self, termination_doc_id, timeout=10000):
+    def start_longpoll_changes_tracking(self, termination_doc_id, timeout=60000):
 
         previous_seq_num = "-1"
         current_seq_num = "0"
