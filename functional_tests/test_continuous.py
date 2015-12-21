@@ -17,10 +17,12 @@ log = logging.getLogger(lib.settings.LOGGER)
 @pytest.mark.sanity
 @pytest.mark.parametrize(
         "conf,num_users,num_docs,num_revisions", [
-            ("sync_gateway_default_functional_tests.json", 1, 5000, 10),
-            ("sync_gateway_default_functional_tests.json", 50, 5000, 1)
+            ("sync_gateway_default_functional_tests.json", 1, 5000, 1),
+            ("sync_gateway_default_functional_tests.json", 50, 5000, 1),
+            ("sync_gateway_default_functional_tests.json", 50, 10, 10),
+            ("sync_gateway_default_functional_tests.json", 50, 5000, 10)
         ],
-        ids=["DI-1", "DI-2"]
+        ids=["DI-1", "DI-2", "DI-3", "DI-4"]
 )
 def test_continuous_changes_parametrized(cluster, conf, num_users, num_docs, num_revisions):
 
@@ -48,6 +50,9 @@ def test_continuous_changes_parametrized(cluster, conf, num_users, num_docs, num
                 # Send termination doc to seth continuous changes feed subscriber
                 if task_name == "doc_pusher":
                     abc_doc_pusher.update_docs(num_revs_per_doc=num_revisions)
+
+                    time.sleep(10)
+
                     doc_terminator.add_doc("killcontinuous")
                 elif task_name.startswith("user"):
                     # When the user has continuous _changes feed closed, return the docs and verify the user got all the channel docs
