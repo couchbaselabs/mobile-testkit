@@ -130,7 +130,7 @@ def create_and_instantiate_cluster(config):
     template_file.write(json)
     template_file.close()
 
-    print ">>> Creating cluster on AWS"
+    print ">>> Creating {} cluster on AWS".format(config.name)
 
     key = os.path.expandvars("$AWS_KEY")
     if key == "$AWS_KEY":

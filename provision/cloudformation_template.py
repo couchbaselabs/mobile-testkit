@@ -62,33 +62,54 @@ def gen_template(config):
                 FromPort="9876",
                 ToPort="9876",
                 CidrIp="0.0.0.0/0",
+            ),
+            ec2.SecurityGroupRule(   # couchbase server
+                IpProtocol="tcp",
+                FromPort="4369",
+                ToPort="4369",
+                CidrIp="0.0.0.0/0",
+            ),
+            ec2.SecurityGroupRule(   # couchbase server
+                IpProtocol="tcp",
+                FromPort="5984",
+                ToPort="5984",
+                CidrIp="0.0.0.0/0",
+            ),
+            ec2.SecurityGroupRule(   # couchbase server
+                IpProtocol="tcp",
+                FromPort="8092",
+                ToPort="8092",
+                CidrIp="0.0.0.0/0",
+            ),
+            ec2.SecurityGroupRule(   # couchbase server
+                IpProtocol="tcp",
+                FromPort="11209",
+                ToPort="11209",
+                CidrIp="0.0.0.0/0",
+            ),
+            ec2.SecurityGroupRule(   # couchbase server
+                IpProtocol="tcp",
+                FromPort="11210",
+                ToPort="11210",
+                CidrIp="0.0.0.0/0",
+            ),
+            ec2.SecurityGroupRule(   # couchbase server
+                IpProtocol="tcp",
+                FromPort="11211",
+                ToPort="11211",
+                CidrIp="0.0.0.0/0",
+            ),
+            ec2.SecurityGroupRule(   # couchbase server
+                IpProtocol="tcp",
+                FromPort="21100",
+                ToPort="21100",
+                CidrIp="0.0.0.0/0",
             )
+
         ]
 
         # Add security group to template
         t.add_resource(secGrpCouchbase)
-
-        cbIngressPorts = [
-            {"FromPort": "4369", "ToPort": "4369" },    # couchbase server
-            {"FromPort": "5984", "ToPort": "5984" },    # couchbase server
-            {"FromPort": "8092", "ToPort": "8092" },    # couchbase server
-            {"FromPort": "11209", "ToPort": "11209" },  # couchbase server
-            {"FromPort": "11210", "ToPort": "11210" },  # couchbase server
-            {"FromPort": "11211", "ToPort": "11211" },  # couchbase server
-            {"FromPort": "21100", "ToPort": "21299" },  # couchbase server
-        ]
-
-        for cbIngressPort in cbIngressPorts:
-            from_port = cbIngressPort["FromPort"]
-            to_port = cbIngressPort["ToPort"]
-            name = 'CouchbaseSecurityGroupIngress{}'.format(from_port)
-            secGrpCbIngress = ec2.SecurityGroupIngress(name)
-            secGrpCbIngress.GroupName = Ref(secGrpCouchbase)
-            secGrpCbIngress.IpProtocol = "tcp"
-            secGrpCbIngress.FromPort = from_port
-            secGrpCbIngress.ToPort = to_port
-            secGrpCbIngress.SourceSecurityGroupName = Ref(secGrpCouchbase)
-            t.add_resource(secGrpCbIngress)
 
         return secGrpCouchbase
 
