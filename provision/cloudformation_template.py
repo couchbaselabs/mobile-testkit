@@ -102,7 +102,7 @@ def gen_template(config):
             ec2.SecurityGroupRule(   # couchbase server
                 IpProtocol="tcp",
                 FromPort="21100",
-                ToPort="21100",
+                ToPort="21299",
                 CidrIp="0.0.0.0/0",
             )
 
