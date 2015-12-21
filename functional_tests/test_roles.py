@@ -21,7 +21,7 @@ def test_roles_sanity(cluster):
     number_of_djs = 10
     number_of_vjs = 10
 
-    number_of_docs_per_pusher = 100
+    number_of_docs_per_pusher = 500
 
     admin = Admin(cluster.sync_gateways[0])
 

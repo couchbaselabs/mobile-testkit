@@ -11,22 +11,23 @@ from fixtures import cluster
 
 @pytest.mark.distributed_index
 @pytest.mark.sanity
+
 def test_multiple_users_multiple_channels(cluster):
 
     cluster.reset(config="sync_gateway_default_functional_tests.json")
 
     # TODO Parametrize
-    num_docs_seth = 10
-    num_docs_adam = 20
-    num_docs_traun = 30
+    num_docs_seth = 1000
+    num_docs_adam = 2000
+    num_docs_traun = 3000
 
     sgs = cluster.sync_gateways
 
     admin = Admin(sgs[0])
 
-    seth = admin.register_user(target=sgs[0], db="db", name="seth", password="password", channels=["ABC"])
-    adam = admin.register_user(target=sgs[0], db="db", name="adam", password="password", channels=["NBC", "CBS"])
-    traun = admin.register_user(target=sgs[0], db="db", name="traun", password="password", channels=["ABC", "NBC", "CBS"])
+    seth = admin.register_user(target=sgs[2], db="db", name="seth", password="password", channels=["ABC"])
+    adam = admin.register_user(target=sgs[2], db="db", name="adam", password="password", channels=["NBC", "CBS"])
+    traun = admin.register_user(target=sgs[2], db="db", name="traun", password="password", channels=["ABC", "NBC", "CBS"])
 
     # TODO use bulk docs
     seth.add_docs(num_docs_seth)  # ABC
@@ -65,15 +66,15 @@ def test_muliple_users_single_channel(cluster):
     sgs = cluster.sync_gateways
 
     # TODO parametrize
-    num_docs_seth = 10
-    num_docs_adam = 20
-    num_docs_traun = 30
+    num_docs_seth = 1000
+    num_docs_adam = 2000
+    num_docs_traun = 3000
 
     admin = Admin(sgs[0])
 
-    seth = admin.register_user(target=sgs[0], db="db", name="seth", password="password", channels=["ABC"])
-    adam = admin.register_user(target=sgs[0], db="db", name="adam", password="password", channels=["ABC"])
-    traun = admin.register_user(target=sgs[0], db="db", name="traun", password="password", channels=["ABC"])
+    seth = admin.register_user(target=sgs[2], db="db", name="seth", password="password", channels=["ABC"])
+    adam = admin.register_user(target=sgs[2], db="db", name="adam", password="password", channels=["ABC"])
+    traun = admin.register_user(target=sgs[2], db="db", name="traun", password="password", channels=["ABC"])
 
     seth.add_docs(num_docs_seth)  # ABC
     adam.add_docs(num_docs_adam, bulk=True)  # ABC
@@ -103,13 +104,13 @@ def test_single_user_multiple_channels(cluster):
     sgs = cluster.sync_gateways
 
     admin = Admin(sgs[0])
-    seth = admin.register_user(target=sgs[0], db="db", name="seth", password="password", channels=["ABC", "CBS", "NBC", "FOX"])
+    seth = admin.register_user(target=sgs[2], db="db", name="seth", password="password", channels=["ABC", "CBS", "NBC", "FOX"])
 
     # Round robin
     count = 1
     num_sgs = len(cluster.sync_gateways)
-    while count <= 20:
-        seth.add_docs(100, bulk=True)
+    while count <= 5:
+        seth.add_docs(1000, bulk=True)
         seth.target = cluster.sync_gateways[count % num_sgs]
         count += 1
 
@@ -117,7 +118,7 @@ def test_single_user_multiple_channels(cluster):
 
     time.sleep(10)
 
-    verify_changes(users=[seth], expected_num_docs=2000, expected_num_revisions=0, expected_docs=seth.cache)
+    verify_changes(users=[seth], expected_num_docs=5000, expected_num_revisions=0, expected_docs=seth.cache)
 
     end = time.time()
     print("TIME:{}s".format(end - start))
@@ -132,12 +133,12 @@ def test_single_user_single_channel(cluster):
     sgs = cluster.sync_gateways
 
     # TODO Parametrize
-    num_seth_docs = 70
-    num_admin_docs = 30
+    num_seth_docs = 7000
+    num_admin_docs = 3000
 
-    admin = Admin(sgs[0])
-    seth = admin.register_user(target=sgs[0], db="db", name="seth", password="password", channels=["ABC"])
-    admin_user = admin.register_user(target=sgs[0], db="db", name="admin", password="password", channels=["*"])
+    admin = Admin(sgs[2])
+    seth = admin.register_user(target=sgs[2], db="db", name="seth", password="password", channels=["ABC"])
+    admin_user = admin.register_user(target=sgs[2], db="db", name="admin", password="password", channels=["*"])
 
     seth.add_docs(num_seth_docs)
     admin_user.add_docs(num_admin_docs)
