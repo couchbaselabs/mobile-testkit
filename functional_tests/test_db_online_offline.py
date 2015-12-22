@@ -168,12 +168,18 @@ def rest_scan(sync_gateway, db, online, num_docs, user_name, channels):
 @pytest.mark.sanity
 @pytest.mark.dbonlineoffline
 @pytest.mark.parametrize(
-    "num_docs",
-    [100]
+    "conf,num_docs",
+    [
+        ("bucket_online_offline/bucket_online_offline_default.json", 100)
+    ],
+    ids=["CC-1"]
 )
-def test_online_default_rest(cluster, num_docs):
+def test_online_default_rest(cluster, conf, num_docs):
 
-    cluster.reset("bucket_online_offline/bucket_online_offline_default.json")
+    log.info("Using conf: {}".format(conf))
+    log.info("Using num_docs: {}".format(num_docs))
+
+    cluster.reset(conf)
 
     # all db endpoints should function as expected
     errors = rest_scan(cluster.sync_gateways[0], db="db", online=True, num_docs=num_docs, user_name="seth", channels=["ABC"])
@@ -191,12 +197,18 @@ def test_online_default_rest(cluster, num_docs):
 @pytest.mark.sanity
 @pytest.mark.dbonlineoffline
 @pytest.mark.parametrize(
-    "num_docs",
-    [100]
+    "conf,num_docs",
+    [
+        ("bucket_online_offline/bucket_online_offline_offline_false.json", 100)
+    ],
+    ids=["CC-1"]
 )
-def test_offline_false_config_rest(cluster, num_docs):
+def test_offline_false_config_rest(cluster, conf, num_docs):
 
-    cluster.reset("bucket_online_offline/bucket_online_offline_offline_false.json")
+    log.info("Using conf: {}".format(conf))
+    log.info("Using num_docs: {}".format(num_docs))
+
+    cluster.reset(conf)
 
     # all db endpoints should function as expected
     errors = rest_scan(cluster.sync_gateways[0], db="db", online=True, num_docs=num_docs, user_name="seth", channels=["ABC"])
@@ -215,12 +227,18 @@ def test_offline_false_config_rest(cluster, num_docs):
 @pytest.mark.sanity
 @pytest.mark.dbonlineoffline
 @pytest.mark.parametrize(
-    "num_docs",
-    [100]
+    "conf,num_docs",
+    [
+        ("bucket_online_offline/bucket_online_offline_default.json", 100)
+    ],
+    ids=["CC-1"]
 )
-def test_online_to_offline_check_503(cluster, num_docs):
+def test_online_to_offline_check_503(cluster, conf, num_docs):
 
-    cluster.reset("bucket_online_offline/bucket_online_offline_default.json")
+    log.info("Using conf: {}".format(conf))
+    log.info("Using num_docs: {}".format(num_docs))
+
+    cluster.reset(conf)
     admin = Admin(cluster.sync_gateways[0])
 
     # all db endpoints should function as expected
@@ -245,12 +263,18 @@ def test_online_to_offline_check_503(cluster, num_docs):
 @pytest.mark.sanity
 @pytest.mark.dbonlineoffline
 @pytest.mark.parametrize(
-    "num_docs",
-    [5000]
+    "conf,num_docs",
+    [
+        ("bucket_online_offline/bucket_online_offline_default.json", 5000)
+    ],
+    ids=["CC-1"]
 )
-def test_online_to_offline_changes_feed_controlled_close_continuous(cluster, num_docs):
+def test_online_to_offline_changes_feed_controlled_close_continuous(cluster, conf, num_docs):
 
-    cluster.reset("bucket_online_offline/bucket_online_offline_default.json")
+    log.info("Using conf: {}".format(conf))
+    log.info("Using num_docs: {}".format(num_docs))
+
+    cluster.reset(conf)
     admin = Admin(cluster.sync_gateways[0])
     seth = admin.register_user(target=cluster.sync_gateways[0], db="db", name="seth", password="password", channels=["ABC"])
     doc_pusher = admin.register_user(target=cluster.sync_gateways[0], db="db", name="doc_pusher", password="password", channels=["ABC"])
@@ -289,11 +313,8 @@ def test_online_to_offline_changes_feed_controlled_close_continuous(cluster, num
     log.info("Number of docs from _changes ({})".format(len(docs_in_changes)))
     log.info("Number of docs add errors ({})".format(len(doc_add_errors)))
 
-    # TODO Discuss this pass criteria with dev
-    # The less than num_docs ensures that the db was taken offline during doc pushes
-    # docs_in_changes > 0 ensures that the connection closed and the continuous changes connection
-    # returned the documents it had processed
-    assert(len(docs_in_changes) > 20 and len(docs_in_changes) < num_docs)
+    # Some docs should have made it to _changes
+    assert(len(docs_in_changes) > 0)
 
     # Bring db back online
     status = admin.bring_db_online("db")
@@ -314,12 +335,19 @@ def test_online_to_offline_changes_feed_controlled_close_continuous(cluster, num
 @pytest.mark.sanity
 @pytest.mark.dbonlineoffline
 @pytest.mark.parametrize(
-    "num_docs",
-    [5000]
+    "conf,num_docs",
+    [
+        ("bucket_online_offline/bucket_online_offline_default.json", 5000)
+    ],
+    ids=["CC-1"]
 )
-def test_online_to_offline_changes_feed_controlled_close_longpoll(cluster, num_docs):
+def test_online_to_offline_changes_feed_controlled_close_longpoll(cluster, conf, num_docs):
 
-    cluster.reset("bucket_online_offline/bucket_online_offline_default.json")
+    log.info("Using conf: {}".format(conf))
+    log.info("Using num_docs: {}".format(num_docs))
+
+    cluster.reset(conf)
+
     admin = Admin(cluster.sync_gateways[0])
     seth = admin.register_user(target=cluster.sync_gateways[0], db="db", name="seth", password="password", channels=["ABC"])
     doc_pusher = admin.register_user(target=cluster.sync_gateways[0], db="db", name="doc_pusher", password="password", channels=["ABC"])
@@ -369,13 +397,9 @@ def test_online_to_offline_changes_feed_controlled_close_longpoll(cluster, num_d
     log.info("last_seq_num _changes ({})".format(last_seq_num))
     log.info("Number of docs add errors ({})".format(len(doc_add_errors)))
 
-    # TODO Discuss this pass criteria with dev
-    # The less than num_docs ensures that the db was taken offline during doc pushes
-    # docs_in_changes > 0 ensures that the connection closed and the continuous changes connection
-    # returned the documents it had processed
-    assert(len(docs_in_changes) > 20 and len(docs_in_changes) < num_docs)
+    # Some docs should have made it to _changes
+    assert(len(docs_in_changes) > 0)
 
-    # TODO Why is this the case?
     # assert the last_seq_number == number _changes + 2 (_user doc starts and one and docs start at _user doc seq + 2)
     assert(len(docs_in_changes) + 2 == int(last_seq_num))
 
@@ -398,12 +422,19 @@ def test_online_to_offline_changes_feed_controlled_close_longpoll(cluster, num_d
 @pytest.mark.sanity
 @pytest.mark.dbonlineoffline
 @pytest.mark.parametrize(
-    "num_docs",
-    [100]
+    "conf,num_docs",
+    [
+        ("bucket_online_offline/bucket_online_offline_offline_true.json", 100)
+    ],
+    ids=["CC-1"]
 )
-def test_offline_true_config_bring_online(cluster, num_docs):
+def test_offline_true_config_bring_online(cluster, conf, num_docs):
 
-    cluster.reset("bucket_online_offline/bucket_online_offline_offline_true.json")
+    log.info("Using conf: {}".format(conf))
+    log.info("Using num_docs: {}".format(num_docs))
+
+    cluster.reset(conf)
+
     admin = Admin(cluster.sync_gateways[0])
 
     # all db endpoints should fail with 503
@@ -428,12 +459,19 @@ def test_offline_true_config_bring_online(cluster, num_docs):
 @pytest.mark.sanity
 @pytest.mark.dbonlineoffline
 @pytest.mark.parametrize(
-    "num_docs",
-    [100]
+    "conf,num_docs",
+    [
+        ("bucket_online_offline/bucket_online_offline_default.json", 100)
+    ],
+    ids=["CC-1"]
 )
-def test_db_offline_tap_loss_sanity(cluster, num_docs):
+def test_db_offline_tap_loss_sanity(cluster, conf, num_docs):
 
-    cluster.reset("bucket_online_offline/bucket_online_offline_default.json")
+    log.info("Using conf: {}".format(conf))
+    log.info("Using num_docs: {}".format(num_docs))
+
+    cluster.reset(conf)
+
     admin = Admin(cluster.sync_gateways[0])
 
     # all db rest enpoints should succeed
@@ -456,10 +494,16 @@ def test_db_offline_tap_loss_sanity(cluster, num_docs):
 @pytest.mark.dbonlineoffline
 @pytest.mark.parametrize(
     "conf,num_docs",
-    [("bucket_online_offline/bucket_online_offline_multiple_dbs_unique_buckets.json", 100)],
-    ids=["CCache-100"]
+    [
+        ("bucket_online_offline/bucket_online_offline_multiple_dbs_unique_buckets.json", 100)
+    ],
+    ids=["CC-1"]
 )
 def test_multiple_dbs_unique_buckets_lose_tap(cluster, conf, num_docs):
+
+    log.info("Using conf: {}".format(conf))
+    log.info("Using num_docs: {}".format(num_docs))
+
     cluster.reset(conf)
 
     dbs = ["db1", "db2", "db3", "db4"]
