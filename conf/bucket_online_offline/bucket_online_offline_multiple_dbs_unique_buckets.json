@@ -14,10 +14,12 @@
             "bucket":"data-bucket-1"
         },
         "db2":{
+            "offline":false,
             "server":"http://{{ couchbase_server_primary_node }}:8091",
             "bucket":"data-bucket-2"
         },
         "db3":{
+            "offline":false,
             "server":"http://{{ couchbase_server_primary_node }}:8091",
             "bucket":"data-bucket-3"
         },

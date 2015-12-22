@@ -505,37 +505,6 @@ def test_config_change_invalid_1(cluster, num_docs):
     assert(status == 500)
 
 
-# Additional scenarios
-@pytest.mark.sanity
-@pytest.mark.dbonlineoffline
-@pytest.mark.parametrize(
-    "conf,num_docs",
-    [("bucket_online_offline/bucket_online_offline_multiple_dbs_shared_bucket.json", 100)],
-    ids=["CCache-100"]
-)
-def test_multiple_dbs_shared_bucket_lose_tap(cluster, conf, num_docs):
-
-    cluster.reset(conf)
-
-    dbs = ["db1", "db2", "db3", "db4"]
-
-    # all db rest endpoints should succeed
-    for db in dbs:
-        errors = rest_scan(cluster.sync_gateways[0], db=db, online=True, num_docs=num_docs, user_name="seth", channels=["ABC"])
-        assert(len(errors) == 0)
-
-    # Delete bucket to sever TAP feed
-    cluster.servers[0].delete_bucket("data-bucket")
-
-    # Check that all dbs go offline
-    for db in dbs:
-        errors = rest_scan(cluster.sync_gateways[0], db=db, online=False, num_docs=num_docs, user_name="seth", channels=["ABC"])
-        assert(len(errors) == NUM_ENDPOINTS + num_docs)
-        for error_tuple in errors:
-            print("({},{})".format(error_tuple[0], error_tuple[1]))
-            assert(error_tuple[1] == 503 or error_tuple[1] == 401)
-
-
 @pytest.mark.sanity
 @pytest.mark.dbonlineoffline
 @pytest.mark.parametrize(
