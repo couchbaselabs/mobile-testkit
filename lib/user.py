@@ -77,7 +77,7 @@ class User:
         if resp.status_code == 201:
             self.cache[doc_id] = resp_json["rev"]
 
-        return doc_id         
+        return doc_id
 
     # POST /{db}/_bulk_docs
     def add_bulk_docs(self, doc_ids, retries=False):

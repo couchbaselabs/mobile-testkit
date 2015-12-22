@@ -36,6 +36,10 @@ def test_sync_sanity(cluster):
     # Build global doc_id, rev dict for all docs from all KDWB caches
     kdwb_docs = {k: v for cache in kdwb_caches for k, v in cache.items()}
 
+    # wait for changes
+    time.sleep(5)
+
+    # Make sure dj_0 sees KDWB docs in _changes feed
     verify_changes(dj_0, expected_num_docs=number_of_docs_per_pusher, expected_num_revisions=0, expected_docs=kdwb_docs)
 
 
@@ -66,5 +70,8 @@ def test_sync_sanity_backfill(cluster):
 
     # Build global doc_id, rev dict for all docs from all KDWB caches
     kdwb_docs = {k: v for cache in kdwb_caches for k, v in cache.items()}
+
+    # wait for changes
+    time.sleep(5)
 
     verify_changes(dj_0, expected_num_docs=number_of_docs_per_pusher, expected_num_revisions=0, expected_docs=kdwb_docs)
