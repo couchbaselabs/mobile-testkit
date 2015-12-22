@@ -452,6 +452,40 @@ def test_db_offline_tap_loss_sanity(cluster, num_docs):
         assert(error_tuple[1] == 503 or error_tuple[1] == 401)
 
 
+@pytest.mark.sanity
+@pytest.mark.dbonlineoffline
+@pytest.mark.parametrize(
+    "conf,num_docs",
+    [("bucket_online_offline/bucket_online_offline_multiple_dbs_unique_buckets.json", 100)],
+    ids=["CCache-100"]
+)
+def test_multiple_dbs_unique_buckets_lose_tap(cluster, conf, num_docs):
+    cluster.reset(conf)
+
+    dbs = ["db1", "db2", "db3", "db4"]
+
+    # all db rest endpoints should succeed
+    for db in dbs:
+        errors = rest_scan(cluster.sync_gateways[0], db=db, online=True, num_docs=num_docs, user_name="seth", channels=["ABC"])
+        assert(len(errors) == 0)
+
+    cluster.servers[0].delete_bucket("data-bucket-1")
+    cluster.servers[0].delete_bucket("data-bucket-3")
+
+    # Check that db2 and db4 are still Online
+    for db in ["db2", "db4"]:
+        errors = rest_scan(cluster.sync_gateways[0], db=db, online=True, num_docs=num_docs, user_name="adam", channels=["CBS"])
+        assert(len(errors) == 0)
+
+    # Check that db1 and db3 go offline
+    for db in ["db1", "db3"]:
+        errors = rest_scan(cluster.sync_gateways[0], db=db, online=False, num_docs=num_docs, user_name="seth", channels=["ABC"])
+        assert(len(errors) == NUM_ENDPOINTS + num_docs)
+        for error_tuple in errors:
+            print("({},{})".format(error_tuple[0], error_tuple[1]))
+            assert(error_tuple[1] == 503 or error_tuple[1] == 401)
+
+
 # Reenable for 1.3
 # Scenario 16
 # @pytest.mark.sanity
@@ -506,35 +540,3 @@ def test_db_offline_tap_loss_sanity(cluster, num_docs):
 #     assert(status == 500)
 
 
-@pytest.mark.sanity
-@pytest.mark.dbonlineoffline
-@pytest.mark.parametrize(
-    "conf,num_docs",
-    [("bucket_online_offline/bucket_online_offline_multiple_dbs_unique_buckets.json", 100)],
-    ids=["CCache-100"]
-)
-def test_multiple_dbs_unique_buckets_lose_tap(cluster, conf, num_docs):
-    cluster.reset(conf)
-
-    dbs = ["db1", "db2", "db3", "db4"]
-
-    # all db rest endpoints should succeed
-    for db in dbs:
-        errors = rest_scan(cluster.sync_gateways[0], db=db, online=True, num_docs=num_docs, user_name="seth", channels=["ABC"])
-        assert(len(errors) == 0)
-
-    cluster.servers[0].delete_bucket("data-bucket-1")
-    cluster.servers[0].delete_bucket("data-bucket-3")
-
-    # Check that db2 and db4 are still Online
-    for db in ["db2", "db4"]:
-        errors = rest_scan(cluster.sync_gateways[0], db=db, online=True, num_docs=num_docs, user_name="adam", channels=["CBS"])
-        assert(len(errors) == 0)
-
-    # Check that db1 and db3 go offline
-    for db in ["db1", "db3"]:
-        errors = rest_scan(cluster.sync_gateways[0], db=db, online=False, num_docs=num_docs, user_name="seth", channels=["ABC"])
-        assert(len(errors) == NUM_ENDPOINTS + num_docs)
-        for error_tuple in errors:
-            print("({},{})".format(error_tuple[0], error_tuple[1]))
-            assert(error_tuple[1] == 503 or error_tuple[1] == 401)
