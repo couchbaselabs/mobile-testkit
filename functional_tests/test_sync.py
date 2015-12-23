@@ -16,7 +16,7 @@ def test_sync_sanity(cluster):
     cluster.reset(config="sync_gateway_custom_sync_one.json")
 
     radio_stations = ["KMOW", "HWOD", "KDWB"]
-    number_of_docs_per_pusher = 100
+    number_of_docs_per_pusher = 5000
 
     admin = Admin(cluster.sync_gateways[0])
 
@@ -36,7 +36,7 @@ def test_sync_sanity(cluster):
     # Build global doc_id, rev dict for all docs from all KDWB caches
     kdwb_docs = {k: v for cache in kdwb_caches for k, v in cache.items()}
 
-    verify_changes(dj_0, expected_num_docs=100, expected_num_revisions=0, expected_docs=kdwb_docs)
+    verify_changes(dj_0, expected_num_docs=number_of_docs_per_pusher, expected_num_revisions=0, expected_docs=kdwb_docs)
 
 
 @pytest.mark.distributed_index
@@ -46,7 +46,7 @@ def test_sync_sanity_backfill(cluster):
     cluster.reset(config="sync_gateway_custom_sync_one.json")
 
     radio_stations = ["KMOW", "HWOD", "KDWB"]
-    number_of_docs_per_pusher = 100
+    number_of_docs_per_pusher = 5000
 
     admin = Admin(cluster.sync_gateways[0])
 
@@ -67,4 +67,4 @@ def test_sync_sanity_backfill(cluster):
     # Build global doc_id, rev dict for all docs from all KDWB caches
     kdwb_docs = {k: v for cache in kdwb_caches for k, v in cache.items()}
 
-    verify_changes(dj_0, expected_num_docs=100, expected_num_revisions=0, expected_docs=kdwb_docs)
+    verify_changes(dj_0, expected_num_docs=number_of_docs_per_pusher, expected_num_revisions=0, expected_docs=kdwb_docs)
