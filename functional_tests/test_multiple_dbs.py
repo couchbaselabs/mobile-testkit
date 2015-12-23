@@ -107,4 +107,4 @@ def test_multiple_db_single_data_bucket_single_index_bucket(cluster, conf, num_u
     cached_docs_from_all_users = {k: v for user in all_users for k, v in user.cache.items()}
 
     # Verify each user has all of the docs
-    verify_changes(all_users, expected_num_docs=1000, expected_num_revisions=0, expected_docs=cached_docs_from_all_users)
+    verify_changes(all_users, expected_num_docs=(num_users * 2) * num_docs_per_user, expected_num_revisions=0, expected_docs=cached_docs_from_all_users)
