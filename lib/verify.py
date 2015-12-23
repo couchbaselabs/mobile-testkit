@@ -1,6 +1,10 @@
 
 from lib.user import User
 
+import logging
+import settings
+log = logging.getLogger(settings.LOGGER)
+
 
 def verify_same_docs(expected_num_docs, doc_dict_one, doc_dict_two):
 
@@ -19,7 +23,7 @@ def verify_same_docs(expected_num_docs, doc_dict_one, doc_dict_two):
     for k in ids_one:
         assert doc_dict_one[k] == doc_dict_two[k]
 
-    print(" -> doc_dict_one == doc_dict_two expected (num_docs: {})".format(expected_num_docs))
+    log.info(" -> doc_dict_one == doc_dict_two expected (num_docs: {})".format(expected_num_docs))
 
 
 def verify_docs_removed(users, expected_num_docs, expected_docs):
@@ -104,7 +108,7 @@ def verify_docs_removed(users, expected_num_docs, expected_docs):
 
             # TODO - maybe try to ping doc endpoint and asser 4XX response?
 
-        print(" -> REMOVED |{0}| expected (num_docs: {1}) _changes (num_docs: {2}, num_removed: {3})".format(
+        log.info(" -> REMOVED |{0}| expected (num_docs: {1}) _changes (num_docs: {2}, num_removed: {3})".format(
             user.name,
             expected_num_docs,
             len(changes_doc_ids),
@@ -115,7 +119,7 @@ def verify_docs_removed(users, expected_num_docs, expected_docs):
         error_count = 0
         for key, val in errors.items():
             if val != 0:
-                print("<!> VERIFY ERROR - name: {}: occurences: {}".format(key, val))
+                log.error("<!> VERIFY ERROR - name: {}: occurences: {}".format(key, val))
                 error_count += 1
 
         assert error_count == 0
@@ -147,6 +151,7 @@ def verify_changes(users, expected_num_docs, expected_num_revisions, expected_do
         user_list.append(users)
 
     if type(expected_docs) is not dict:
+        log.error("expected_docs is not a dictionary")
         raise Exception("Make sure 'expected_docs' is a dictionary")
 
     for user in user_list:
@@ -165,10 +170,12 @@ def verify_changes(users, expected_num_docs, expected_num_revisions, expected_do
 
         # Check expected_num_docs matches number of changes results
         if expected_num_docs != len(changes_results):
+            log.error("{} expected_num_docs != {} len(changes_results)".format(expected_num_docs, len(changes_results)))
             errors["unexpected_changes_length"] += 1
 
         # Check number of expected num docs matched number of expected doc ids
         if expected_num_docs != len(expected_docs):
+            log.error("{} expected_num_docs != {} len(expected_docs)".format(expected_num_docs, len(expected_docs)))
             errors["invalid_expected_docs_length"] += 1
 
         # Get ids from expected docs
@@ -176,6 +183,7 @@ def verify_changes(users, expected_num_docs, expected_num_revisions, expected_do
 
         # Assert there are no duplicates in expected doc ids
         if len(expected_doc_ids) != len(set(expected_doc_ids)):
+            log.error("Duplicates found in expected_doc_ids")
             errors["duplicate_expected_ids"] += 1
 
         # Get ids from all changes results
@@ -183,14 +191,16 @@ def verify_changes(users, expected_num_docs, expected_num_revisions, expected_do
 
         # Assert there are no duplicates in changes doc ids
         if len(changes_doc_ids) != len(set(changes_doc_ids)):
+            log.error("Duplicates found in changes doc ids")
             errors["duplicate_changes_doc_ids"] += 1
 
         # Assert the expected doc ids and changes doc ids are the same
         if set(expected_doc_ids) != set(changes_doc_ids):
+            log.error("changes feed doc ids differ from expected doc ids")
             errors["expected_doc_ids_differ_from_changes_doc_ids"] += 1
 
         if ignore_rev_ids:
-            print("WARNING: Ignoring rev id verification!!")
+            log.warning("WARNING: Ignoring rev id verification!!")
 
         for result in changes_results:
 
@@ -206,10 +216,12 @@ def verify_changes(users, expected_num_docs, expected_num_revisions, expected_do
             # rev-id prefix will be 1 when document is created
             # For any non-conflicting update, it will be incremented by one
             if expected_num_revisions != int(rev_id_prefix) - 1:
+                log.error("expected_num_revisions {} does not match stored rev_id_prefix: {}".format(expected_num_revisions, rev_id_prefix))
                 errors["unexpected_rev_id_prefix"] += 1
 
             # Check number of expected updates matched the updates on the _changes doc
             if expected_num_revisions != result["updates"]:
+                log.error("expected_num_revisions {} does not match number of updates {}".format(expected_num_revisions, result["updates"]))
                 errors["unexpected_num_updates"] += 1
 
         # Allow printing updates even if changes feed length is 0
@@ -218,7 +230,7 @@ def verify_changes(users, expected_num_docs, expected_num_revisions, expected_do
         else:
             updates = changes_results[0]["updates"]
 
-        print(" -> |{0}| expected (num_docs: {1} num_revisions: {2}) _changes (num_docs: {3} updates: {4})".format(
+        log.info(" -> |{0}| expected (num_docs: {1} num_revisions: {2}) _changes (num_docs: {3} updates: {4})".format(
             user.name,
             expected_num_docs,
             expected_num_revisions,
@@ -230,7 +242,7 @@ def verify_changes(users, expected_num_docs, expected_num_revisions, expected_do
         error_count = 0
         for key, val in errors.items():
             if val != 0:
-                print("<!> VERIFY ERROR - name: {}: occurences: {}".format(key, val))
+                log.error("<!> VERIFY ERROR - name: {}: occurences: {}".format(key, val))
                 error_count += 1
 
         assert error_count == 0
