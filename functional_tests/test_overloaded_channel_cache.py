@@ -4,6 +4,7 @@ from lib.verify import verify_changes
 import pytest
 import concurrent
 import concurrent.futures
+import requests
 
 from fixtures import cluster
 
@@ -12,7 +13,7 @@ from fixtures import cluster
     ("*", True, 50),
     ("ABC", False, 50)
 ])
-def test_1(cluster, user_channels, filter, limit):
+def test_overloaded_channel_cache(cluster, user_channels, filter, limit):
 
     cluster.reset(config="sync_gateway_channel_cache.json")
 
@@ -65,7 +66,14 @@ def test_1(cluster, user_channels, filter, limit):
             print("Time for users to get all changes: {}".format(time_for_users_to_get_all_changes))
             assert time_for_users_to_get_all_changes < 60
 
+        # Sanity check that a subset of users have _changes feed intact
         for i in range(10):
-            verify_changes(user, expected_num_docs=5000, expected_num_revisions=0, expected_docs=doc_pusher.cache)
+            verify_changes(users[i], expected_num_docs=5000, expected_num_revisions=0, expected_docs=doc_pusher.cache)
 
-        #TODO: Autoverify 4985/db/_expvar view queries
+        # Get sync_gateway expvars
+        resp = requests.get(url="http://{}:4985/_expvar".format(target_sg.ip))
+        resp.raise_for_status()
+        resp_obj = resp.json()
+
+        # If number of view queries == 0 the key will not exist in the expvars
+        assert("view_queries" not in resp_obj["syncGateway_changeCache"])
