@@ -341,6 +341,62 @@ def test_online_to_offline_changes_feed_controlled_close_continuous(cluster, con
     ],
     ids=["CC-1"]
 )
+def test_online_to_offline_changes_feed_controlled_close_longpoll_sanity(cluster, conf, num_docs):
+
+    log.info("Using conf: {}".format(conf))
+    log.info("Using num_docs: {}".format(num_docs))
+
+    cluster.reset(conf)
+
+    admin = Admin(cluster.sync_gateways[0])
+    seth = admin.register_user(target=cluster.sync_gateways[0], db="db", name="seth", password="password", channels=["ABC"])
+
+    docs_in_changes = dict()
+
+    with concurrent.futures.ThreadPoolExecutor(max_workers=lib.settings.MAX_REQUEST_WORKERS) as executor:
+        futures = dict()
+        # start longpoll tracking with no timeout, will block until longpoll is closed by db going offline
+        futures[executor.submit(seth.start_longpoll_changes_tracking, termination_doc_id="killpoll", timeout=0, loop=False)] = "polling"
+        time.sleep(5)
+        futures[executor.submit(admin.take_db_offline, "db")] = "db_offline_task"
+
+        for future in concurrent.futures.as_completed(futures):
+            try:
+                task_name = futures[future]
+
+                # Send termination doc to seth continuous changes feed subscriber
+                if task_name == "db_offline_task":
+                    log.info("DB OFFLINE")
+                    # make sure db_offline returns 200
+                    assert(future.result() == 200)
+                if task_name == "polling":
+                    # Long poll will exit with 503, return docs in the exception
+                    log.info("POLLING DONE")
+                    try:
+                        docs_in_changes, last_seq_num = future.result()
+                    except Exception as e:
+                        log.error("Longpoll feed close error: {}".format(e))
+                        # long poll should be closed so this exception should never happen
+                        assert(0)
+
+            except Exception as e:
+                print("Futures: error: {}".format(e))
+
+    # Account for _user doc
+    assert(1 == int(last_seq_num))
+    assert(len(docs_in_changes) == 0)
+
+
+# Scenario 6 - longpoll
+@pytest.mark.sanity
+@pytest.mark.dbonlineoffline
+@pytest.mark.parametrize(
+    "conf,num_docs",
+    [
+        ("bucket_online_offline/bucket_online_offline_default.json", 5000)
+    ],
+    ids=["CC-1"]
+)
 def test_online_to_offline_changes_feed_controlled_close_longpoll(cluster, conf, num_docs):
 
     log.info("Using conf: {}".format(conf))

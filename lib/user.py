@@ -330,7 +330,7 @@ class User:
         return obj
 
     # GET /{db}/_changes?feed=longpoll
-    def start_longpoll_changes_tracking(self, termination_doc_id, timeout=60000):
+    def start_longpoll_changes_tracking(self, termination_doc_id, timeout=60000, loop=True):
 
         previous_seq_num = "-1"
         current_seq_num = "0"
@@ -372,6 +372,7 @@ class User:
                         if doc_ids.count(item) > 1:
                             log.error("DUPLICATE!!!: {}".format(item))
 
+                # HACK - need to figure out a better way to check this
                 if len(new_docs) == 0:
                     request_timed_out = True
                 else:
@@ -393,6 +394,15 @@ class User:
                 current_seq_num = obj["last_seq"]
 
                 log.info("SEQ_NUM {}".format(current_seq_num))
+
+                if loop is False:
+                    if len(new_docs) == 1:
+                        # Hack around the fact that the first call to
+                        # _changes may return an _user docs which will not be stored
+                        continue
+
+                    # Exit after one longpoll request that returns docs
+                    break
 
             time.sleep(0.1)
 
