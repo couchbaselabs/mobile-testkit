@@ -84,6 +84,8 @@ def test_multiple_db_single_data_bucket_single_index_bucket(cluster):
         user.target = cluster.sync_gateways[(count + 1) % num_sgs]
         count += 1
 
+    time.sleep(10)
+
     # Get list of all docs from users caches
     cached_docs_from_all_users = {k: v for user in all_users for k, v in user.cache.items()}
 
