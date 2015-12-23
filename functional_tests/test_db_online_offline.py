@@ -13,7 +13,6 @@ from requests.exceptions import RetryError
 
 from fixtures import cluster
 
-import lib.settings
 import logging
 log = logging.getLogger(lib.settings.LOGGER)
 
