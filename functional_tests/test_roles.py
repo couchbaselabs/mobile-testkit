@@ -47,7 +47,7 @@ def test_roles_sanity(cluster):
         doc_pusher.add_docs(number_of_docs_per_pusher, bulk=True)
         tv_doc_caches.append(doc_pusher.cache)
 
-    tv_docs = {k: v for cache in radio_doc_caches for k, v in cache.items()}
+    tv_docs = {k: v for cache in tv_doc_caches for k, v in cache.items()}
 
     # Verify djs get docs for all the channels associated with the radio_stations role
     expected_num_radio_docs = len(radio_stations) * number_of_docs_per_pusher

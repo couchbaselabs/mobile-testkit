@@ -8,6 +8,7 @@ import time
 
 from requests.packages.urllib3.util import Retry
 from requests.adapters import HTTPAdapter
+from requests.exceptions import HTTPError
 from requests import Session, exceptions
 from collections import defaultdict
 from scenarioprinter import ScenarioPrinter
@@ -39,21 +40,13 @@ class User:
 
     # GET /{db}/_all_docs
     def get_all_docs(self):
-        session = requests.Session()
-        adapter = requests.adapters.HTTPAdapter(max_retries=Retry(total=settings.MAX_HTTP_RETRIES, backoff_factor=settings.BACKOFF_FACTOR, status_forcelist=settings.ERROR_CODE_LIST))
-        session.mount("http://", adapter)
-
-        resp = session.get("{0}/{1}/_all_docs".format(self.target.url, self.db), headers=self._headers)
+        resp = requests.get("{0}/{1}/_all_docs".format(self.target.url, self.db), headers=self._headers)
         log.info("GET {}".format(resp.url))
         resp.raise_for_status()
-
         return resp.json()
 
     # PUT /{db}/{doc}
-    def add_doc(self, doc_id, content=None):
-        session = requests.Session()
-        adapter = requests.adapters.HTTPAdapter(max_retries=Retry(total=settings.MAX_HTTP_RETRIES, backoff_factor=settings.BACKOFF_FACTOR, status_forcelist=settings.ERROR_CODE_LIST))
-        session.mount("http://", adapter)
+    def add_doc(self, doc_id, content=None, retries=False):
 
         doc_url = self.target.url + "/" + self.db + "/" + doc_id
 
@@ -68,7 +61,14 @@ class User:
 
         body = json.dumps(doc_body)
 
-        resp = session.put(doc_url, headers=self._headers, data=body, timeout=settings.HTTP_REQ_TIMEOUT)
+        if retries:
+            session = requests.Session()
+            adapter = requests.adapters.HTTPAdapter(max_retries=Retry(total=settings.MAX_HTTP_RETRIES, backoff_factor=settings.BACKOFF_FACTOR, status_forcelist=settings.ERROR_CODE_LIST))
+            session.mount("http://", adapter)
+            resp = session.put(doc_url, headers=self._headers, data=body, timeout=settings.HTTP_REQ_TIMEOUT)
+        else:
+            resp = requests.put(doc_url, headers=self._headers, data=body, timeout=settings.HTTP_REQ_TIMEOUT)
+
         log.info("{0} PUT {1}".format(self.name, doc_url))
 
         resp.raise_for_status()
@@ -77,14 +77,10 @@ class User:
         if resp.status_code == 201:
             self.cache[doc_id] = resp_json["rev"]
 
-        return doc_id         
+        return doc_id
 
     # POST /{db}/_bulk_docs
-
-    def add_bulk_docs(self, doc_ids):
-        session = requests.Session()
-        adapter = requests.adapters.HTTPAdapter(max_retries=Retry(total=settings.MAX_HTTP_RETRIES, backoff_factor=settings.BACKOFF_FACTOR, status_forcelist=settings.ERROR_CODE_LIST))
-        session.mount("http://", adapter)
+    def add_bulk_docs(self, doc_ids, retries=False):
 
         # Create docs
         doc_list = []
@@ -99,7 +95,14 @@ class User:
         docs["docs"] = doc_list
         data = json.dumps(docs)
 
-        resp = session.post("{0}/{1}/_bulk_docs".format(self.target.url, self.db), headers=self._headers, data=data, timeout=settings.HTTP_REQ_TIMEOUT)
+        if retries:
+            session = requests.Session()
+            adapter = requests.adapters.HTTPAdapter(max_retries=Retry(total=settings.MAX_HTTP_RETRIES, backoff_factor=settings.BACKOFF_FACTOR, status_forcelist=settings.ERROR_CODE_LIST))
+            session.mount("http://", adapter)
+            resp = session.post("{0}/{1}/_bulk_docs".format(self.target.url, self.db), headers=self._headers, data=data, timeout=settings.HTTP_REQ_TIMEOUT)
+        else:
+            resp = requests.post("{0}/{1}/_bulk_docs".format(self.target.url, self.db), headers=self._headers, data=data, timeout=settings.HTTP_REQ_TIMEOUT)
+
         log.info("{0} POST {1}".format(self.name, resp.url))
         resp.raise_for_status()
         resp_json = resp.json()
@@ -117,7 +120,9 @@ class User:
         # Return list of cache docs that were added
         return bulk_docs_ids
 
-    def add_docs(self, num_docs, bulk=False, name_prefix=None):
+    def add_docs(self, num_docs, bulk=False, name_prefix=None, retries=False):
+
+        errors = list()
 
         # If no name_prefix is specified, use uuids for doc_names
         if name_prefix is None:
@@ -127,28 +132,40 @@ class User:
 
         if not bulk:
             with concurrent.futures.ThreadPoolExecutor(max_workers=settings.MAX_REQUEST_WORKERS) as executor:
-                future_to_docs = {executor.submit(self.add_doc, doc): doc for doc in doc_names}
+
+                if retries:
+                    future_to_docs = {executor.submit(self.add_doc, doc, content=None, retries=True): doc for doc in doc_names}
+                else:
+                    future_to_docs = {executor.submit(self.add_doc, doc, content=None): doc for doc in doc_names}
+
                 for future in concurrent.futures.as_completed(future_to_docs):
                     doc = future_to_docs[future]
                     try:
                         doc_id = future.result()
-                    except Exception as exc:
-                        log.error('Generated an exception while adding doc_id : %s %s' % (doc, exc))
+                    except HTTPError as e:
+                        log.error("{0} {1} {2}".format(self.name, e.response.url, e.response.status_code))
+                        errors.append((e.response.url, e.response.status_code))
         else:
             with concurrent.futures.ThreadPoolExecutor(max_workers=settings.MAX_REQUEST_WORKERS) as executor:
-                future = [executor.submit(self.add_bulk_docs, doc_names)]
+
+                if retries:
+                    future = [executor.submit(self.add_bulk_docs, doc_names, retries=True)]
+                else:
+                    future = [executor.submit(self.add_bulk_docs, doc_names)]
+
                 for f in concurrent.futures.as_completed(future):
                     try:
                         doc_list = f.result()
                         #print(doc_list)
-                    except Exception as e:
-                        log.error("Error adding bulk docs: {}".format(e))
+                    except HTTPError as e:
+                        log.error("{0} {1} {2}".format(self.name, e.response.url, e.response.status_code))
+                        errors.append((e.response.url, e.response.status_code))
 
-        return True
+        return errors
 
     # GET /{db}/{doc}
     # PUT /{db}/{doc}
-    def update_doc(self, doc_id, num_revision=1):
+    def update_doc(self, doc_id, num_revision=1, retries=False):
 
         updated_docs = dict()
 
@@ -166,11 +183,14 @@ class User:
 
                 body = json.dumps(data)
 
-                session = requests.Session()
-                adapter = requests.adapters.HTTPAdapter(max_retries=Retry(total=settings.MAX_HTTP_RETRIES, backoff_factor=settings.BACKOFF_FACTOR, status_forcelist=settings.ERROR_CODE_LIST))
-                session.mount("http://", adapter)
+                if retries:
+                    session = requests.Session()
+                    adapter = requests.adapters.HTTPAdapter(max_retries=Retry(total=settings.MAX_HTTP_RETRIES, backoff_factor=settings.BACKOFF_FACTOR, status_forcelist=settings.ERROR_CODE_LIST))
+                    session.mount("http://", adapter)
+                    put_resp = session.put(doc_url, headers=self._headers, data=body, timeout=settings.HTTP_REQ_TIMEOUT)
+                else:
+                    put_resp = requests.put(doc_url, headers=self._headers, data=body, timeout=settings.HTTP_REQ_TIMEOUT)
 
-                put_resp = session.put(doc_url, headers=self._headers, data=body, timeout=settings.HTTP_REQ_TIMEOUT)
                 log.info("{0} PUT {1}".format(self.name, resp.url))
 
                 if put_resp.status_code == 201:
@@ -187,22 +207,36 @@ class User:
                 updated_docs[doc_id] = data["rev"]
 
                 put_resp.raise_for_status()
+
             resp.raise_for_status()
 
         return updated_docs
                 
-    def update_docs(self, num_revs_per_doc=1):
+    def update_docs(self, num_revs_per_doc=1, retries=False):
+
+        errors = list()
+
+        if len(self.cache.keys()) == 0:
+            log.warning("Unable to find any docs to update")
+
         with concurrent.futures.ThreadPoolExecutor(max_workers=settings.MAX_REQUEST_WORKERS) as executor:
-            future_to_docs = {executor.submit(self.update_doc, doc_id, num_revs_per_doc): doc_id for doc_id in self.cache.keys()}
+
+            if retries:
+                future_to_docs = {executor.submit(self.update_doc, doc_id, num_revs_per_doc, retries=True): doc_id for doc_id in self.cache.keys()}
+            else:
+                future_to_docs = {executor.submit(self.update_doc, doc_id, num_revs_per_doc): doc_id for doc_id in self.cache.keys()}
             
             for future in concurrent.futures.as_completed(future_to_docs):
                 doc = future_to_docs[future]
                 try:
                     doc_id = future.result()
-                except Exception as exc:
-                    log.error('Generated an exception while updating doc_id:%s %s' % (doc, exc))
+                except HTTPError as e:
+                    log.error("{0} {1} {2}".format(self.name, e.response.url, e.response.status_code))
+                    errors.append((e.response.url, e.response.status_code))
                 else:
                     log.info("Document: {} updated successfully".format(doc))
+
+        return errors
 
     def get_num_docs(self):
         return len(self.changes_data['results'])
@@ -296,7 +330,7 @@ class User:
         return obj
 
     # GET /{db}/_changes?feed=longpoll
-    def start_longpoll_changes_tracking(self, termination_doc_id, timeout=60000):
+    def start_longpoll_changes_tracking(self, termination_doc_id=None, timeout=10000, loop=True):
 
         previous_seq_num = "-1"
         current_seq_num = "0"
@@ -320,15 +354,25 @@ class User:
 
                 r = requests.get("{}/{}/_changes".format(self.target.url, self.db), headers=self._headers, params=params)
                 log.info("{0} GET {1}".format(self.name, r.url))
-                r.raise_for_status()
+
+                # If call is unsuccessful (ex. db goes offline), return docs
+                if r.status_code != 200:
+                    # HACK: return last sequence number and docs to allow closed connections
+                    raise HTTPError({"docs": docs, "last_seq_num": current_seq_num})
+
                 obj = r.json()
 
                 new_docs = obj["results"]
+                log.info("CHANGES RESULT: {}".format(obj))
 
                 # Check for duplicates in response doc_ids
                 doc_ids = [doc["doc"]["_id"] for doc in new_docs if not doc["id"].startswith("_user/")]
-                assert(len(doc_ids) == len(set(doc_ids)))
+                if len(doc_ids) != len(set(doc_ids)):
+                    for item in set(doc_ids):
+                        if doc_ids.count(item) > 1:
+                            log.error("DUPLICATE!!!: {}".format(item))
 
+                # HACK - need to figure out a better way to check this
                 if len(new_docs) == 0:
                     request_timed_out = True
                 else:
@@ -338,7 +382,7 @@ class User:
                             continue
 
                         # Stop polling if termination doc is recieved in _changes
-                        if doc["id"] == termination_doc_id:
+                        if termination_doc_id is not None and doc["id"] == termination_doc_id:
                             continue_polling = False
                             break
 
@@ -349,14 +393,23 @@ class User:
                 # Get latest sequence from changes request
                 current_seq_num = obj["last_seq"]
 
-                print(current_seq_num)
+                log.info("SEQ_NUM {}".format(current_seq_num))
+
+                if loop is False:
+                    if len(new_docs) == 1:
+                        # Hack around the fact that the first call to
+                        # _changes may return an _user docs which will not be stored
+                        continue
+
+                    # Exit after one longpoll request that returns docs
+                    break
 
             time.sleep(0.1)
 
-        return docs
+        return docs, current_seq_num
 
     # GET /{db}/_changes?feed=continuous
-    def start_continuous_changes_tracking(self, termination_doc_id):
+    def start_continuous_changes_tracking(self, termination_doc_id=None):
 
         docs = dict()
 
@@ -379,11 +432,13 @@ class User:
                     continue
 
                 # Close connection if termination doc is recieved in _changes
-                if doc["doc"]["_id"] == termination_doc_id:
+                if termination_doc_id is not None and doc["doc"]["_id"] == termination_doc_id:
                     r.close()
                     return docs
 
                 log.info("{} DOC FROM CONTINUOUS _changes: {}: {}".format(self.name, doc["doc"]["_id"], doc["doc"]["_rev"]))
                 # Store doc
-                # Should I be worried about duplicated in continuous _changes feed?
                 docs[doc["doc"]["_id"]] = doc["doc"]["_rev"]
+
+        # if connection is closed from server
+        return docs
