@@ -6,14 +6,25 @@ import concurrent
 import concurrent.futures
 import requests
 
+import lib.settings
+import logging
+log = logging.getLogger(lib.settings.LOGGER)
+
 from fixtures import cluster
 
 @pytest.mark.regression
-@pytest.mark.parametrize("user_channels, filter, limit", [
-    ("*", True, 50),
-    ("ABC", False, 50)
+@pytest.mark.parametrize("num_docs, user_channels, filter, limit", [
+    (5000, "*", True, 50),
+    (1000, "*", True, 50),
+    (5000, "ABC", False, 50),
+    (5000, "ABC", True, 50)
 ])
-def test_overloaded_channel_cache(cluster, user_channels, filter, limit):
+def test_overloaded_channel_cache(cluster, num_docs, user_channels, filter, limit):
+
+    log.info("Using num_docs: {}".format(num_docs))
+    log.info("Using user_channels: {}".format(user_channels))
+    log.info("Using filter: {}".format(filter))
+    log.info("Using limit: {}".format(limit))
 
     cluster.reset(config="sync_gateway_channel_cache.json")
 
@@ -25,7 +36,7 @@ def test_overloaded_channel_cache(cluster, user_channels, filter, limit):
     assert len(users) == 1000
 
     doc_pusher = admin.register_user(target_sg, "db", "abc_doc_pusher", "password", ["ABC"])
-    doc_pusher.add_docs(5000, bulk=True)
+    doc_pusher.add_docs(num_docs, bulk=True)
 
     start = time.time()
 
@@ -68,12 +79,16 @@ def test_overloaded_channel_cache(cluster, user_channels, filter, limit):
 
         # Sanity check that a subset of users have _changes feed intact
         for i in range(10):
-            verify_changes(users[i], expected_num_docs=5000, expected_num_revisions=0, expected_docs=doc_pusher.cache)
+            verify_changes(users[i], expected_num_docs=num_docs, expected_num_revisions=0, expected_docs=doc_pusher.cache)
 
         # Get sync_gateway expvars
         resp = requests.get(url="http://{}:4985/_expvar".format(target_sg.ip))
         resp.raise_for_status()
         resp_obj = resp.json()
 
-        # If number of view queries == 0 the key will not exist in the expvars
-        assert("view_queries" not in resp_obj["syncGateway_changeCache"])
+        if user_channels == "*" and num_docs == 5000:
+            # "*" channel includes _user docs so the verify_changes will result in 10 view queries
+            assert(resp_obj["syncGateway_changeCache"]["view_queries"] == 10)
+        else:
+            # If number of view queries == 0 the key will not exist in the expvars
+            assert("view_queries" not in resp_obj["syncGateway_changeCache"])
