@@ -283,7 +283,7 @@ def test_online_to_offline_changes_feed_controlled_close_continuous(cluster, con
 
     with concurrent.futures.ThreadPoolExecutor(max_workers=lib.settings.MAX_REQUEST_WORKERS) as executor:
         futures = dict()
-        futures[executor.submit(seth.start_continuous_changes_tracking, termination_doc_id="killcontinuous")] = "continuous"
+        futures[executor.submit(seth.start_continuous_changes_tracking, termination_doc_id=None)] = "continuous"
         futures[executor.submit(doc_pusher.add_docs, num_docs)] = "docs_push"
         time.sleep(5)
         futures[executor.submit(admin.take_db_offline, "db")] = "db_offline_task"
@@ -292,7 +292,6 @@ def test_online_to_offline_changes_feed_controlled_close_continuous(cluster, con
             try:
                 task_name = futures[future]
 
-                # Send termination doc to seth continuous changes feed subscriber
                 if task_name == "db_offline_task":
                     log.info("DB OFFLINE")
                     # make sure db_offline returns 200
@@ -355,7 +354,7 @@ def test_online_to_offline_changes_feed_controlled_close_longpoll_sanity(cluster
     with concurrent.futures.ThreadPoolExecutor(max_workers=lib.settings.MAX_REQUEST_WORKERS) as executor:
         futures = dict()
         # start longpoll tracking with no timeout, will block until longpoll is closed by db going offline
-        futures[executor.submit(seth.start_longpoll_changes_tracking, termination_doc_id="killpoll", timeout=0, loop=False)] = "polling"
+        futures[executor.submit(seth.start_longpoll_changes_tracking, termination_doc_id=None, timeout=0, loop=False)] = "polling"
         time.sleep(5)
         futures[executor.submit(admin.take_db_offline, "db")] = "db_offline_task"
 
@@ -363,7 +362,6 @@ def test_online_to_offline_changes_feed_controlled_close_longpoll_sanity(cluster
             try:
                 task_name = futures[future]
 
-                # Send termination doc to seth continuous changes feed subscriber
                 if task_name == "db_offline_task":
                     log.info("DB OFFLINE")
                     # make sure db_offline returns 200
@@ -412,7 +410,7 @@ def test_online_to_offline_changes_feed_controlled_close_longpoll(cluster, conf,
 
     with concurrent.futures.ThreadPoolExecutor(max_workers=lib.settings.MAX_REQUEST_WORKERS) as executor:
         futures = dict()
-        futures[executor.submit(seth.start_longpoll_changes_tracking, termination_doc_id="killpoll")] = "polling"
+        futures[executor.submit(seth.start_longpoll_changes_tracking, termination_doc_id=None)] = "polling"
         futures[executor.submit(doc_pusher.add_docs, num_docs)] = "docs_push"
         time.sleep(5)
         futures[executor.submit(admin.take_db_offline, "db")] = "db_offline_task"
@@ -421,7 +419,6 @@ def test_online_to_offline_changes_feed_controlled_close_longpoll(cluster, conf,
             try:
                 task_name = futures[future]
 
-                # Send termination doc to seth continuous changes feed subscriber
                 if task_name == "db_offline_task":
                     log.info("DB OFFLINE")
                     # make sure db_offline returns 200

@@ -330,7 +330,7 @@ class User:
         return obj
 
     # GET /{db}/_changes?feed=longpoll
-    def start_longpoll_changes_tracking(self, termination_doc_id, timeout=60000, loop=True):
+    def start_longpoll_changes_tracking(self, termination_doc_id=None, timeout=10000, loop=True):
 
         previous_seq_num = "-1"
         current_seq_num = "0"
@@ -382,7 +382,7 @@ class User:
                             continue
 
                         # Stop polling if termination doc is recieved in _changes
-                        if doc["id"] == termination_doc_id:
+                        if termination_doc_id is not None and doc["id"] == termination_doc_id:
                             continue_polling = False
                             break
 
@@ -409,7 +409,7 @@ class User:
         return docs, current_seq_num
 
     # GET /{db}/_changes?feed=continuous
-    def start_continuous_changes_tracking(self, termination_doc_id):
+    def start_continuous_changes_tracking(self, termination_doc_id=None):
 
         docs = dict()
 
@@ -432,7 +432,7 @@ class User:
                     continue
 
                 # Close connection if termination doc is recieved in _changes
-                if doc["doc"]["_id"] == termination_doc_id:
+                if termination_doc_id is not None and doc["doc"]["_id"] == termination_doc_id:
                     r.close()
                     return docs
 

@@ -91,7 +91,7 @@ def test_longpoll_changes_sanity(cluster, num_docs, num_revisions):
                     abc_doc_pusher.update_docs(num_revs_per_doc=num_revisions)
                     doc_terminator.add_doc("killpolling")
                 elif task_name == "polling":
-                    docs_in_changes = future.result()
+                    docs_in_changes, seq_num = future.result()
 
             except Exception as e:
                 print("Futures: error: {}".format(e))
