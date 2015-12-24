@@ -2,36 +2,40 @@ import time
 import datetime
 import requests
 
+from requests.exceptions import HTTPError
+
 from provisioning_config_parser import hosts_for_tag
 
 
 def write_expvars(file, endpoint):
-    try:
-        resp = requests.get("http://{}".format(endpoint))
-        print(resp.url)
-        file.write("\n############## VARS #############\n")
-        file.write("Date / Time: {}\n".format(datetime.datetime.now()))
-        file.write("Endpoint: {}\n".format(endpoint))
 
+        resp = requests.get("http://{}".format(endpoint))
+        resp.raise_for_status()
         expvars = resp.json()
 
-        p95 = expvars["gateload"]["ops"]["PushToSubscriberInteractive"]["p95"]
-        p99 = expvars["gateload"]["ops"]["PushToSubscriberInteractive"]["p99"]
-        total_doc_pushed = expvars["gateload"]["total_doc_pushed"]
-        total_doc_pulled = expvars["gateload"]["total_doc_pulled"]
-        user_active = expvars["gateload"]["user_active"]
-        user_awake = expvars["gateload"]["user_awake"]
+        try:
+            file.write("\n############## VARS #############\n")
+            file.write("Date / Time: {}\n".format(datetime.datetime.now()))
+            file.write("Endpoint: {}\n".format(endpoint))
 
-        file.write("P95: {}\n".format(p95))
-        file.write("P99: {}\n".format(p99))
-        file.write("total_doc_pushed: {}\n".format(total_doc_pushed))
-        file.write("total_doc_pulled: {}\n".format(total_doc_pulled))
-        file.write("user_active: {}\n".format(user_active))
-        file.write("user_awake: {}\n".format(user_awake))
+            p95 = expvars["gateload"]["ops"]["PushToSubscriberInteractive"]["p95"]
+            p99 = expvars["gateload"]["ops"]["PushToSubscriberInteractive"]["p99"]
+            total_doc_pushed = expvars["gateload"]["total_doc_pushed"]
+            total_doc_pulled = expvars["gateload"]["total_doc_pulled"]
+            user_active = expvars["gateload"]["user_active"]
+            user_awake = expvars["gateload"]["user_awake"]
 
-    except Exception as e:
-        print("Failed to connect: {}".format(e))
-        file.write("!! Failed to connect to endpoint: {}\n".format(endpoint))
+            file.write("P95: {}\n".format(p95))
+            file.write("P99: {}\n".format(p99))
+            file.write("total_doc_pushed: {}\n".format(total_doc_pushed))
+            file.write("total_doc_pulled: {}\n".format(total_doc_pulled))
+            file.write("user_active: {}\n".format(user_active))
+            file.write("user_awake: {}\n".format(user_awake))
+
+        except Exception as e:
+            # P95 and P99 may have not been calculated as of yet
+            print("Failed to connect: {}".format(e))
+            file.write("!! Failed to connect to endpoint: {}\n".format(endpoint))
 
 
 def log_expvars():
@@ -60,16 +64,20 @@ def log_expvars():
 
     with open(target_test_filename, "w") as f:
 
-        # in seconds
-        test_time = 0
-        collect_interval = 120
+        start_time = time.time()
+        f.write("Test beginning: {}".format(datetime.datetime.now()))
 
-        while test_time < 1200:
+        gateload_is_running = True
 
+        while gateload_is_running:
             for endpoint in endpoints:
-                write_expvars(f, endpoint)
+                try:
+                    write_expvars(f, endpoint)
+                except HTTPError as he:
+                    # connection to gateload expvars has been closed
+                    print(he)
+                    gateload_is_running = False
 
-            print("Elapsed: {}".format(test_time))
-            f.write("\n\n\n".format(endpoint))
-            time.sleep(collect_interval)
-            test_time += collect_interval
+            print("Elapsed: {}".format(time.time() - start_time))
+            time.sleep(60)
+            f.write("\n\n\n")
