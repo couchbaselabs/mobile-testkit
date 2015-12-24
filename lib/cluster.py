@@ -49,11 +49,13 @@ class Cluster:
     def reset(self, config):
         # Stop sync_gateways
         print(">>> Stopping sync_gateway")
-        run_ansible_playbook("stop-sync-gateway.yml")
+        status = run_ansible_playbook("stop-sync-gateway.yml", stop_on_fail=False)
+        assert(status == 0)
 
         # Deleting sync_gateway artifacts
         print(">>> Deleting sync_gateway artifacts")
-        run_ansible_playbook("delete-sync-gateway-artifacts.yml")
+        status = run_ansible_playbook("delete-sync-gateway-artifacts.yml", stop_on_fail=False)
+        assert(status == 0)
 
         # Delete buckets
         print(">>> Deleting buckets on: {}".format(self.servers[0].ip))
@@ -100,10 +102,12 @@ class Cluster:
         print(">>> Starting sync_gateway with configuration: {}".format(conf_path))
 
         # Start sync-gateway
-        run_ansible_playbook(
+        status = run_ansible_playbook(
             "start-sync-gateway.yml",
-            extra_vars="sync_gateway_config_filepath={0}".format(conf_path)
+            extra_vars="sync_gateway_config_filepath={0}".format(conf_path),
+            stop_on_fail=False
         )
+        assert(status == 0)
 
     def __repr__(self):
         s = "\n\n"

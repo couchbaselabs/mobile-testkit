@@ -5,7 +5,7 @@ import subprocess
 # TODO provide a way to specify inventory (perhaps local or private vm endpoints)
 
 
-def run_ansible_playbook(script_name, extra_vars=None):
+def run_ansible_playbook(script_name, extra_vars=None, stop_on_fail=True):
 
     # Need to cd here to pick up dynamic inventory
     os.chdir("provision/ansible/playbooks")
@@ -19,10 +19,12 @@ def run_ansible_playbook(script_name, extra_vars=None):
     else:
         status = subprocess.call(["ansible-playbook", "-i", "../../../provisioning_config", script_name])
 
-    if status != 0:
+    if status != 0 and stop_on_fail:
         sys.exit(1)
 
     os.chdir("../../../")
+
+    return status
 
 def run_targeted_ansible_playbook(script_name, target_name, extra_vars=None, stop_on_fail=True):
 
