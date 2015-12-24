@@ -49,7 +49,7 @@ def test_longpoll_changes_parametrized(cluster,conf, num_docs, num_revisions):
 
                     doc_terminator.add_doc("killpolling")
                 elif task_name == "polling":
-                    docs_in_changes = future.result()
+                    docs_in_changes, last_seq = future.result()
 
             except Exception as e:
                 print("Futures: error: {}".format(e))
