@@ -1,6 +1,7 @@
 {
     "interface":":4984",
     "adminInterface": "0.0.0.0:4985",
+    "log": ["CRUD+", "Cache+", "HTTP+", "Changes+"],
     "databases":{
         "db": {
             "server":"http://{{ couchbase_server_primary_node }}:8091",
