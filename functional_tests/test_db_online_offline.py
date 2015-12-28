@@ -18,7 +18,7 @@ from multiprocessing.pool import ThreadPool
 import logging
 log = logging.getLogger(lib.settings.LOGGER)
 
-NUM_ENDPOINTS = 10
+NUM_ENDPOINTS = 12
 
 def rest_scan(sync_gateway, db, online, num_docs, user_name, channels):
 
@@ -141,6 +141,21 @@ def rest_scan(sync_gateway, db, online, num_docs, user_name, channels):
         except HTTPError as e:
             log.error((e.response.url, e.response.status_code))
             error_responses.append((e.response.url, e.response.status_code))
+
+    # PUT /{db}/{local-doc-id}
+    try:
+        doc = user.add_doc("_local/a-local-doc", content={"message": "I should not be replicated"})
+    except HTTPError as e:
+        log.error((e.response.url, e.response.status_code))
+        error_responses.append((e.response.url, e.response.status_code))
+
+    # GET /{db}/{local-doc-id}
+    try:
+        doc = user.get_doc("_local/a-local-doc")
+        assert(doc["content"]["message"] == "I should not be replicated")
+    except HTTPError as e:
+        log.error((e.response.url, e.response.status_code))
+        error_responses.append((e.response.url, e.response.status_code))
 
     # GET /{db}/_all_docs
     try:

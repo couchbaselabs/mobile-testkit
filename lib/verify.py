@@ -195,6 +195,8 @@ def verify_changes(users, expected_num_docs, expected_num_revisions, expected_do
         # Assert the expected doc ids and changes doc ids are the same
         if set(expected_doc_ids) != set(changes_doc_ids):
             log.error("{0} -> changes feed doc ids differ from expected doc ids".format(user.name))
+            different_docs = set(expected_doc_ids) - set(changes_doc_ids)
+            log.error("{0} -> Set difference {1}".format(user.name, different_docs))
             errors["expected_doc_ids_differ_from_changes_doc_ids"] += 1
 
         if ignore_rev_ids:

@@ -38,6 +38,14 @@ class User:
     def __str__(self):
         return "USER: name={0} password={1} db={2} channels={3} cache={4}".format(self.name, self.password, self.db, self.channels, len(self.cache))
 
+    # GET /{db}/{doc}
+    # GET /{db}/{local-doc-id}
+    def get_doc(self, doc_id):
+        resp = requests.get("{0}/{1}/{2}".format(self.target.url, self.db, doc_id), headers=self._headers)
+        log.info("GET {}".format(resp.url))
+        resp.raise_for_status()
+        return resp.json()
+
     # GET /{db}/_all_docs
     def get_all_docs(self):
         resp = requests.get("{0}/{1}/_all_docs".format(self.target.url, self.db), headers=self._headers)
@@ -46,6 +54,7 @@ class User:
         return resp.json()
 
     # PUT /{db}/{doc}
+    # PUT /{db}/{local-doc-id}
     def add_doc(self, doc_id, content=None, retries=False):
 
         doc_url = self.target.url + "/" + self.db + "/" + doc_id
@@ -74,7 +83,8 @@ class User:
         resp.raise_for_status()
         resp_json = resp.json()
 
-        if resp.status_code == 201:
+        # Do not store local docs in user cache because they will not show up in the _changes feed
+        if resp.status_code == 201 and not doc_id.startswith("_local/"):
             self.cache[doc_id] = resp_json["rev"]
 
         return doc_id
