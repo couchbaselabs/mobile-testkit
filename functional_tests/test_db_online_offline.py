@@ -18,7 +18,7 @@ from multiprocessing.pool import ThreadPool
 import logging
 log = logging.getLogger(lib.settings.LOGGER)
 
-NUM_ENDPOINTS = 12
+NUM_ENDPOINTS = 14
 
 def rest_scan(sync_gateway, db, online, num_docs, user_name, channels):
 
@@ -36,24 +36,17 @@ def rest_scan(sync_gateway, db, online, num_docs, user_name, channels):
 
     # Missing REST
     # TODO: POST /{db}/_all_docs
-    # TODO: POST /{db}/_bulk_get
 
     # TODO: DELETE /{db}/{doc}
     # TODO: PUT /{db}/{doc}/{attachment}
     # TODO: GET /{db}/{doc}/{attachment}
 
     # Missing Local Document
-    # TODO: PUT /{db}/{local-doc-id}
-    # TODO: GET /{db}/{local-doc-id}
     # TODO: DELETE /{db}/{local-doc-id}
 
     # Missing Authentication
     # TODO: POST /{db}/_facebook_token
     # TODO: POST /{db}/_persona_assertion
-
-
-    # Implement these
-    # TODO: POST /{db}
 
     admin = Admin(sync_gateway=sync_gateway)
 
@@ -129,6 +122,14 @@ def rest_scan(sync_gateway, db, online, num_docs, user_name, channels):
     bulk_doc_errors = user.add_docs(num_docs=num_docs, bulk=True)
     error_responses.extend(bulk_doc_errors)
 
+    # POST /{db}/
+    try:
+        for i in range(num_docs):
+            user.add_doc()
+    except HTTPError as e:
+        log.error((e.response.url, e.response.status_code))
+        error_responses.append((e.response.url, e.response.status_code))
+
     # GET /{db}/{name}
     # PUT /{db}/{name}
     if online:
@@ -160,7 +161,18 @@ def rest_scan(sync_gateway, db, online, num_docs, user_name, channels):
     # GET /{db}/_all_docs
     try:
         all_docs_result = user.get_all_docs()
-        assert len(all_docs_result["rows"]) == num_docs * 2
+        # num_docs /{db}/{doc} PUT + num_docs /{db}/_bulk_docs + num_docs POST /{db}/
+        assert(len(all_docs_result["rows"]) == num_docs * 3)
+    except HTTPError as e:
+        log.error((e.response.url, e.response.status_code))
+        error_responses.append((e.response.url, e.response.status_code))
+
+    # POST /{db}/_bulk_get
+    try:
+        doc_ids = list(user.cache.keys())
+        first_ten_ids = doc_ids[:10]
+        first_ten = user.get_docs(first_ten_ids)
+        assert(len(first_ten) == 10)
     except HTTPError as e:
         log.error((e.response.url, e.response.status_code))
         error_responses.append((e.response.url, e.response.status_code))
@@ -172,7 +184,7 @@ def rest_scan(sync_gateway, db, online, num_docs, user_name, channels):
     try:
         changes = user.get_changes()
         # If successful, verify the _changes feed
-        verify_changes(user, expected_num_docs=num_docs * 2, expected_num_revisions=1, expected_docs=user.cache)
+        verify_changes(user, expected_num_docs=num_docs * 3, expected_num_revisions=1, expected_docs=user.cache)
     except HTTPError as e:
         log.error((e.response.url, e.response.status_code))
         error_responses.append((e.response.url, e.response.status_code))
