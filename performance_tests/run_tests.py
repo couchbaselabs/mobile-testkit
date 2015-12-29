@@ -10,7 +10,7 @@ from provision.ansible_runner import run_ansible_playbook
 
 
 import generate_gateload_configs
-from fetch_machine_stats import fetch_machine_stats
+from utilities.fetch_machine_stats import fetch_machine_stats
 
 from utilities.log_expvars import log_expvars
 
@@ -82,10 +82,17 @@ if __name__ == "__main__":
                       action="store_true", dest="reset_sync_gateway", default=False,
                       help="reset CBS buckets, delete SG logs, restart SG")
 
+    parser.add_option("", "--test-id",
+                      action="store", dest="test_id", default=None,
+                      help="test identifier to identify results of performance test")
 
     arg_parameters = sys.argv[1:]
 
     (opts, args) = parser.parse_args(arg_parameters)
+
+    if opts.test_id is None:
+        print "You must provide a test identifier to run the test"
+        sys.exit(1)
 
     if opts.reset_sync_gateway:
         print "Resetting Sync Gateway"
@@ -102,8 +109,14 @@ if __name__ == "__main__":
     # HACK to resolve provisioning_config path
     os.chdir("../../..")
 
+    if not os.path.exists("performance_results/{}".format(opts.test_id)):
+        os.makedirs("performance_results/{}".format(opts.test_id))
+    else:
+        print("Make sure the provided test-id is not an existing folder in performance_results/. Exiting ...")
+        sys.exit(1)
+
     # write expvars to file, will exit when gateload scenario is done
-    log_expvars()
+    log_expvars(opts.test_id)
 
     # kill all sync_gateways to ensure machine stat collection exits
     run_ansible_playbook("stop-sync-gateway.yml")
@@ -111,4 +124,4 @@ if __name__ == "__main__":
     # HACK: refresh interval for resource stat collection is 10 seconds.
     #  Make sure enough time has passed before collecting json
     time.sleep(15)
-    fetch_machine_stats()
+    fetch_machine_stats(opts.test_id)

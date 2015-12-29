@@ -1,44 +1,38 @@
 import time
 import datetime
 import requests
+import json
 
 from requests.exceptions import ConnectionError
 
 from provisioning_config_parser import hosts_for_tag
 
 
-def write_expvars(file_handle, endpoint):
+def write_expvars(results_obj, endpoint):
 
         resp = requests.get("http://{}".format(endpoint))
         resp.raise_for_status()
         expvars = resp.json()
 
+        now = "{}".format(datetime.datetime.now())
+        results_obj[now] = dict()
+
         try:
-            file_handle.write("\n############## VARS #############\n")
-            file_handle.write("Date / Time: {}\n".format(datetime.datetime.now()))
-            file_handle.write("Endpoint: {}\n".format(endpoint))
-
-            p95 = expvars["gateload"]["ops"]["PushToSubscriberInteractive"]["p95"]
-            p99 = expvars["gateload"]["ops"]["PushToSubscriberInteractive"]["p99"]
-            total_doc_pushed = expvars["gateload"]["total_doc_pushed"]
-            total_doc_pulled = expvars["gateload"]["total_doc_pulled"]
-            user_active = expvars["gateload"]["user_active"]
-            user_awake = expvars["gateload"]["user_awake"]
-
-            file_handle.write("P95: {}\n".format(p95))
-            file_handle.write("P99: {}\n".format(p99))
-            file_handle.write("total_doc_pushed: {}\n".format(total_doc_pushed))
-            file_handle.write("total_doc_pulled: {}\n".format(total_doc_pulled))
-            file_handle.write("user_active: {}\n".format(user_active))
-            file_handle.write("user_awake: {}\n".format(user_awake))
+            results_obj[now]["endpoint"] = endpoint
+            results_obj[now]["P95"] = expvars["gateload"]["ops"]["PushToSubscriberInteractive"]["p95"]
+            results_obj[now]["p99"] = expvars["gateload"]["ops"]["PushToSubscriberInteractive"]["p99"]
+            results_obj[now]["total_doc_pushed"] = expvars["gateload"]["total_doc_pushed"]
+            results_obj[now]["total_doc_pulled"] = expvars["gateload"]["total_doc_pulled"]
+            results_obj[now]["user_active"] = expvars["gateload"]["user_active"]
+            results_obj[now]["user_awake"] = expvars["gateload"]["user_awake"]
 
         except Exception as e:
             # P95 and P99 may have not been calculated as of yet
             print("Failed to connect: {}".format(e))
-            file_handle.write("!! Failed to connect to endpoint: {}\n".format(endpoint))
+            results_obj[now]["error"] = "!! Failed to connect to endpoint: {}\n".format(endpoint)
 
 
-def log_expvars():
+def log_expvars(folder_name):
     usage = """
     usage: log_expvars.py"
     """
@@ -60,18 +54,20 @@ def log_expvars():
     endpoints = list()
     endpoints.extend(lgs_with_port)
 
-    target_test_filename = "perf_test.log"
+    date_time = time.strftime("%Y-%m-%d-%H-%M-%S")
+    target_test_filename = "performance_results/{}/{}-expvars.json".format(folder_name, date_time)
 
     with open(target_test_filename, "w") as f:
 
         start_time = time.time()
-        f.write("Test beginning: {}".format(datetime.datetime.now()))
+
+        results = dict()
 
         gateload_is_running = True
         while gateload_is_running:
             for endpoint in endpoints:
                 try:
-                    write_expvars(f, endpoint)
+                    write_expvars(results, endpoint)
                 except ConnectionError as he:
                     # connection to gateload expvars has been closed
                     print(he)
@@ -79,4 +75,5 @@ def log_expvars():
 
             print("Elapsed: {}".format(time.time() - start_time))
             time.sleep(10)
-            f.write("\n\n\n")
+
+        f.write(json.dumps(results, indent=4))

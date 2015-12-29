@@ -29,3 +29,6 @@ provisioning_config*
 results.xml
 provision/ansible/playbooks/ansible.cfg
 test-framework.log
+
+performance_results/*
+!performance_results/README.txt

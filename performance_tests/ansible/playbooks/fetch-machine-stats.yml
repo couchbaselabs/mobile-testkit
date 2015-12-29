@@ -1,8 +1,0 @@
----
-- hosts: sync_gateways
-  sudo: true
-  any_errors_fatal: true
-  tasks:
-
-  - name: Fetch machine stats
-    fetch: src=/home/sync_gateway/cpu_stats.json dest=/tmp/ fail_on_missing=yes
