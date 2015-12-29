@@ -1,7 +1,7 @@
 import time
 import datetime
 import psutil
-
+import json
 
 def is_running(process_name):
     for p in psutil.process_iter():
@@ -9,10 +9,12 @@ def is_running(process_name):
             return True
     return False
 
-with open("cpu_stats", "w") as f:
+with open("cpu_stats.json", "w") as f:
 
-    # collect cpu stats while gateload process is running
-    while is_running("gateload"):
+    obj = dict()
+
+    # collect cpu stats while sync_gateway process is running
+    while is_running("sync_gateway"):
 
         print("Datetime: {}".format(datetime.datetime.now()))
         print("-------------------------------")
@@ -20,15 +22,21 @@ with open("cpu_stats", "w") as f:
         print("CPU times (per CPU): {}".format(psutil.cpu_times(percpu=True)))
         print("CPU percent: {}".format(psutil.cpu_percent(interval=1)))
         print("CPU percent (per CPU): {}".format(psutil.cpu_percent(interval=1, percpu=True)))
+        print("Virtual memory: {}".format(psutil.virtual_memory()))
+        print("Swap memory: {}".format(psutil.swap_memory()))
 
-        f.write("Datetime: {}\n".format(datetime.datetime.now()))
-        f.write("-------------------------------\n")
-        f.write("CPU times: {}\n".format(psutil.cpu_times()))
-        f.write("CPU times (per CPU): {}\n".format(psutil.cpu_times(percpu=True)))
-        f.write("CPU percent: {}\n".format(psutil.cpu_percent(interval=1)))
-        f.write("CPU percent (per CPU): {}\n".format(psutil.cpu_percent(interval=1, percpu=True)))
+        current_datetime = "{}".format(datetime.datetime.now())
+        obj[current_datetime] = dict()
+        obj[current_datetime]["cpu_times"] = psutil.cpu_times()
+        obj[current_datetime]["cpu_times_per_cpu"] = psutil.cpu_times(percpu=True)
+        obj[current_datetime]["cpu_percent"] = psutil.cpu_percent(interval=1)
+        obj[current_datetime]["cpu_percent_per_cpu"] = psutil.cpu_percent(interval=1, percpu=True)
+        obj[current_datetime]["virtual_memory"] = psutil.virtual_memory()._asdict()
+        obj[current_datetime]["swap_memory"] = psutil.swap_memory()._asdict()
 
-        f.write("\n\n")
-        # Wait a minute
+        # Wait 10 seconds
         time.sleep(1)
+
+    # Write stats human readible
+    f.write(json.dumps(obj, indent=4))
 
