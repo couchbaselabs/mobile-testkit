@@ -1,7 +1,10 @@
+#!/usr/bin/python
+
 import time
 import datetime
 import psutil
 import json
+
 
 def is_running(process_name):
     for p in psutil.process_iter():
@@ -35,7 +38,7 @@ with open("cpu_stats.json", "w") as f:
         obj[current_datetime]["swap_memory"] = psutil.swap_memory()._asdict()
 
         # Wait 10 seconds
-        time.sleep(1)
+        time.sleep(10)
 
     # Write stats human readible
     f.write(json.dumps(obj, indent=4))

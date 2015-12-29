@@ -2,21 +2,21 @@ import time
 import datetime
 import requests
 
-from requests.exceptions import HTTPError
+from requests.exceptions import ConnectionError
 
 from provisioning_config_parser import hosts_for_tag
 
 
-def write_expvars(file, endpoint):
+def write_expvars(file_handle, endpoint):
 
         resp = requests.get("http://{}".format(endpoint))
         resp.raise_for_status()
         expvars = resp.json()
 
         try:
-            file.write("\n############## VARS #############\n")
-            file.write("Date / Time: {}\n".format(datetime.datetime.now()))
-            file.write("Endpoint: {}\n".format(endpoint))
+            file_handle.write("\n############## VARS #############\n")
+            file_handle.write("Date / Time: {}\n".format(datetime.datetime.now()))
+            file_handle.write("Endpoint: {}\n".format(endpoint))
 
             p95 = expvars["gateload"]["ops"]["PushToSubscriberInteractive"]["p95"]
             p99 = expvars["gateload"]["ops"]["PushToSubscriberInteractive"]["p99"]
@@ -25,17 +25,17 @@ def write_expvars(file, endpoint):
             user_active = expvars["gateload"]["user_active"]
             user_awake = expvars["gateload"]["user_awake"]
 
-            file.write("P95: {}\n".format(p95))
-            file.write("P99: {}\n".format(p99))
-            file.write("total_doc_pushed: {}\n".format(total_doc_pushed))
-            file.write("total_doc_pulled: {}\n".format(total_doc_pulled))
-            file.write("user_active: {}\n".format(user_active))
-            file.write("user_awake: {}\n".format(user_awake))
+            file_handle.write("P95: {}\n".format(p95))
+            file_handle.write("P99: {}\n".format(p99))
+            file_handle.write("total_doc_pushed: {}\n".format(total_doc_pushed))
+            file_handle.write("total_doc_pulled: {}\n".format(total_doc_pulled))
+            file_handle.write("user_active: {}\n".format(user_active))
+            file_handle.write("user_awake: {}\n".format(user_awake))
 
         except Exception as e:
             # P95 and P99 may have not been calculated as of yet
             print("Failed to connect: {}".format(e))
-            file.write("!! Failed to connect to endpoint: {}\n".format(endpoint))
+            file_handle.write("!! Failed to connect to endpoint: {}\n".format(endpoint))
 
 
 def log_expvars():
@@ -72,11 +72,11 @@ def log_expvars():
             for endpoint in endpoints:
                 try:
                     write_expvars(f, endpoint)
-                except HTTPError as he:
+                except ConnectionError as he:
                     # connection to gateload expvars has been closed
                     print(he)
                     gateload_is_running = False
 
             print("Elapsed: {}".format(time.time() - start_time))
-            time.sleep(60)
+            time.sleep(10)
             f.write("\n\n\n")

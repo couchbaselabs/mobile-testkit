@@ -108,7 +108,7 @@ if __name__ == "__main__":
     # kill all sync_gateways to ensure machine stat collection exits
     run_ansible_playbook("stop-sync-gateway.yml")
 
-    # HACK: refresh interval for resource stat collection is 10 seconds. Make sure enough time has passed
-    #   before collecting json
+    # HACK: refresh interval for resource stat collection is 10 seconds.
+    #  Make sure enough time has passed before collecting json
     time.sleep(15)
     fetch_machine_stats()
