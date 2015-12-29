@@ -1,10 +1,17 @@
 import os
 import subprocess
 import sys
+import time
+
 from optparse import OptionParser
 from lib.cluster import Cluster
 
+from provision.ansible_runner import run_ansible_playbook
+
+
 import generate_gateload_configs
+from fetch_machine_stats import fetch_machine_stats
+
 from utilities.log_expvars import log_expvars
 
 def run_tests(number_pullers, number_pushers, use_gateload, gen_gateload_config):
@@ -95,5 +102,13 @@ if __name__ == "__main__":
     # HACK to resolve provisioning_config path
     os.chdir("../../..")
 
-    # write expvars to file
+    # write expvars to file, will exit when gateload scenario is done
     log_expvars()
+
+    # kill all sync_gateways to ensure machine stat collection exits
+    run_ansible_playbook("stop-sync-gateway.yml")
+
+    # HACK: refresh interval for resource stat collection is 10 seconds. Make sure enough time has passed
+    #   before collecting json
+    time.sleep(15)
+    fetch_machine_stats()

@@ -2,6 +2,8 @@
 - hosts: load_generators
   any_errors_fatal: true
   remote_user: centos
+
+  # Kill gateload
   tasks:
   - name: kill previous gateload screen
     shell: screen -X -S gateload kill
@@ -9,6 +11,31 @@
   - name: kill previous gateload_expvars screen
     shell: screen -X -S gateload_expvars kill
     ignore_errors: yes
+
+- hosts: sync_gateways
+  any_errors_fatal: true
+  remote_user: centos
+  sudo: true
+
+  # Copy machine stat collection script and start collecting stats
+  tasks:
+  - name: copy the machine collection script
+    copy: src=files/log_machine_stats.py dest=/home/sync_gateway/ owner=sync_gateway group=sync_gateway
+  - name: install pip
+    easy_install: name=pip
+  - name: install deps
+    yum: pkg=python-devel state=latest
+  - name: install psutil
+    shell: pip install psutil
+  - name: start stat collection
+    shell: nohup python log_machine_stats.py & chdir=/home/sync_gateway/
+
+- hosts: load_generators
+  any_errors_fatal: true
+  remote_user: centos
+
+  # Deploy gateload script and start gateload
+  tasks:
   - name: copy the run gateload script
     copy: src=files/run_gateload.sh dest=/home/centos/ owner=centos group=centos mode=0755
   - name: start gateload in screen
@@ -19,4 +46,5 @@
     copy: src=files/collect_expvars.sh dest=/home/centos/collect_expvars.sh owner=centos group=centos mode=0755
   - name: collect expvar json in screen
     shell: screen -d -m -S gateload_expvars ./collect_expvars.sh
-    
+
+

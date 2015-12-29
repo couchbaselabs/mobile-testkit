@@ -68,7 +68,6 @@ def log_expvars():
         f.write("Test beginning: {}".format(datetime.datetime.now()))
 
         gateload_is_running = True
-
         while gateload_is_running:
             for endpoint in endpoints:
                 try:
