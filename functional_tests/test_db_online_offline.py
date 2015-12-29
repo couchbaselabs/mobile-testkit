@@ -13,6 +13,9 @@ from requests.exceptions import RetryError
 from fixtures import cluster
 from fixtures import disable_http_retry
 
+import logging
+log = logging.getLogger(lib.settings.LOGGER)
+
 NUM_ENDPOINTS = 11
 
 
@@ -322,3 +325,41 @@ def test_config_change_invalid_1(cluster, disable_http_retry):
     # VERIFY - Correct status code
     status = admin.bring_db_online(db="db")
     assert(status == 500)
+
+# Scenario 17
+@pytest.mark.dbonlineoffline
+def test_db_online_offline_with_invalid_legal_config(cluster, disable_http_retry):
+    cluster.reset("bucket_online_offline/bucket_online_offline_offline_false.json")
+    admin = Admin(cluster.sync_gateways[0])
+
+    # all db endpoints should succeed
+    errors = rest_scan(cluster.sync_gateways[0], db="db", online=True)
+    assert(len(errors) == 0)
+
+    #restart_status = cluster.sync_gateways[0].restart("bucket_online_offline/db_online_offline_invalid_db.json")
+    #assert restart_status == 0
+
+    config = admin.get_db_config(db="db")
+    print(config)
+
+    # Invalid config
+    new_config = {
+        "db": {
+            "server": "http://{}:8091".format(cluster.servers[0].ip),
+            "bucket": "data-bucket",
+            "users": {
+                "seth": {"password": "password", "admin_channels": ["*", "ABC"]},
+                "Ashvinder": {"password": "password", "admin_channels": ["*", "CBS"]},
+                "Andy": {"password": "password", "admin_channels": ["*", "NBC"]}
+            }
+        }
+    }
+
+    status = admin.put_db_config(db="db", config=new_config)
+    assert(status == 201)
+
+    # Take "db" offline
+    status = admin.bring_db_online(db="db")
+    log.info("status: {}".format(status))
+    assert(status == 200)
+
