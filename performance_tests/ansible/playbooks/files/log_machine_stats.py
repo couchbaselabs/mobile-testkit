@@ -28,7 +28,7 @@ with open("cpu_stats.json", "w") as f:
         print("Virtual memory: {}".format(psutil.virtual_memory()))
         print("Swap memory: {}".format(psutil.swap_memory()))
 
-        current_datetime = "{}".format(datetime.datetime.now())
+        current_datetime = "{}".format(datetime.datetime.utcnow())
         obj[current_datetime] = dict()
         obj[current_datetime]["cpu_times"] = psutil.cpu_times()
         obj[current_datetime]["cpu_times_per_cpu"] = psutil.cpu_times(percpu=True)

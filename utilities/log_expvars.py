@@ -14,7 +14,7 @@ def write_expvars(results_obj, endpoint):
         resp.raise_for_status()
         expvars = resp.json()
 
-        now = "{}".format(datetime.datetime.now())
+        now = "{}".format(datetime.datetime.utcnow())
         results_obj[now] = dict()
 
         try:
