@@ -102,6 +102,8 @@ def test_db_online_offline_webhooks_offline(cluster, num_users,num_channels, num
     webhook_events = ws.get_data()
     time.sleep(5)
     log.info("webhook event {}".format(webhook_events))
+    last_event = webhook_events[-1]
+    #assert (last_event['state'] == 'offline')
 
     admin.bring_db_online("db")
     time.sleep(5)
