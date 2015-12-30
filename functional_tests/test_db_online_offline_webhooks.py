@@ -106,11 +106,13 @@ def test_db_online_offline_webhooks_offline(cluster, num_users,num_channels, num
     admin.bring_db_online("db")
     time.sleep(5)
     db_info = admin.get_db_info("db")
-    log.info("Expecting db state {} found db state {}".format("Online",db_info['state']))
+    log.info("Expecting db state {} found db state {}".format("Online", db_info['state']))
     assert (db_info["state"] == "Online")
-    take_2 = ws.get_data()
+    webhook_events = ws.get_data()
+    last_event = webhook_events[-1]
+    assert (last_event['state'] == 'online')
     time.sleep(10)
-    log.info("webhook event {}".format(take_2))
+    log.info("webhook event {}".format(webhook_events))
 
 
     ws.stop()

@@ -1,6 +1,5 @@
 from lib.verify import verify_changes
 from fixtures import cluster
-from fixtures import disable_http_retry
 import time
 import pytest
 from lib.user import User
