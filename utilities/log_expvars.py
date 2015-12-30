@@ -8,7 +8,7 @@ from requests.exceptions import ConnectionError
 from provisioning_config_parser import hosts_for_tag
 
 
-def write_expvars(results_obj, endpoint):
+def write_gateload_expvars(results_obj, endpoint):
 
         resp = requests.get("http://{}".format(endpoint))
         resp.raise_for_status()
@@ -32,6 +32,24 @@ def write_expvars(results_obj, endpoint):
             results_obj[now]["error"] = "!! Failed to connect to endpoint: {}\n".format(endpoint)
 
 
+def write_sync_gateway_expvars(results_obj, endpoint):
+
+        resp = requests.get("http://{}".format(endpoint))
+        resp.raise_for_status()
+        expvars = resp.json()
+
+        now = "{}".format(datetime.datetime.utcnow())
+        results_obj[now] = {
+            "endpoint": endpoint,
+            "memstats": {
+                "Alloc": expvars["memstats"]["Alloc"],
+                "Sys": expvars["memstats"]["Sys"],
+                "HeapAlloc": expvars["memstats"]["HeapAlloc"],
+                "HeapSys": expvars["memstats"]["HeapSys"]
+            }
+        }
+
+
 def log_expvars(folder_name):
     usage = """
     usage: log_expvars.py"
@@ -42,17 +60,15 @@ def log_expvars(folder_name):
     lgs = [lg["ansible_ssh_host"] for lg in lgs_host_vars]
 
     print("Monitoring gateloads: {}".format(lgs))
-    lgs_with_port = [lg + ":9876/debug/vars" for lg in lgs]
+    lgs_expvar_endpoints = [lg + ":9876/debug/vars" for lg in lgs]
 
     # Get sync_gateway ips from ansible inventory
     sgs_host_vars = hosts_for_tag("sync_gateways")
     sgs = [sgv["ansible_ssh_host"] for sgv in sgs_host_vars]
 
     print("Monitoring sync_gateways: {}".format(sgs))
-    sgs_with_port = [sg + ":4985/_expvar" for sg in sgs]
+    sgs_expvar_endpoints = [sg + ":4985/_expvar" for sg in sgs]
 
-    endpoints = list()
-    endpoints.extend(lgs_with_port)
 
     date_time = time.strftime("%Y-%m-%d-%H-%M-%S")
     target_test_filename = "performance_results/{}/expvars.json".format(folder_name)
@@ -65,13 +81,19 @@ def log_expvars(folder_name):
 
         gateload_is_running = True
         while gateload_is_running:
-            for endpoint in endpoints:
+
+            # Caputure expvars for gateloads
+            for endpoint in lgs_expvar_endpoints:
                 try:
-                    write_expvars(results, endpoint)
+                    write_gateload_expvars(results, endpoint)
                 except ConnectionError as he:
                     # connection to gateload expvars has been closed
                     print(he)
                     gateload_is_running = False
+
+            # Caputure expvars for sync_gateways
+            for endpoint in sgs_expvar_endpoints:
+                write_sync_gateway_expvars(results, endpoint)
 
             print("Elapsed: {}".format(time.time() - start_time))
             time.sleep(30)
