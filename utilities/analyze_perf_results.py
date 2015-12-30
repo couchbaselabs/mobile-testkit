@@ -7,6 +7,7 @@ from matplotlib.backends.backend_pdf import PdfPages
 
 matplotlib.rcParams.update({'font.size': 8})
 
+
 def keys_present(keys, dictionary):
     for key in keys:
         if key not in dictionary:
@@ -38,7 +39,6 @@ def plot_expvars(figure, json_file_name):
             p99.append(obj[entry]["p99"])
             docs_pushed.append(obj[entry]["total_doc_pushed"])
             docs_pulled.append(obj[entry]["total_doc_pulled"])
-
 
     # Plot p95 / p99
     ax1 = figure.add_subplot(211)
@@ -75,14 +75,19 @@ def plot_machine_stats(figure, folder_path):
     ax3 = figure.add_subplot(111)
     ax3.set_title("CPU percent")
 
-    count = 0
+
     for machine in machine_stats:
         entity = machine_stats[machine]
 
-        entity_timestamps = [datetime.datetime.strptime(timestamp, "%Y-%m-%d %H:%M:%S.%f") for timestamp in entity.keys()]
-        cpu_percents = [entity[timestamp]["cpu_percent"] for timestamp in entity.keys()]
+        datetimes = []
+        cpu_percents = []
 
-        # Hack to show differenct machines in different color
+        # create a list of timestamps with the corresponding CPU percent
+        for timestamp in entity.keys():
+            datetimes.append(datetime.datetime.strptime(timestamp, "%Y-%m-%d %H:%M:%S.%f"))
+            cpu_percents.append(entity[timestamp]["cpu_percent"])
+
+        # Hack to show different machines in different color
         if machine == "sg1":
             color = "r"
         elif machine == "sg2":
@@ -92,25 +97,25 @@ def plot_machine_stats(figure, folder_path):
         else:
             color = "y"
 
-        ax3.plot(entity_timestamps, cpu_percents, "{}o".format(color))
-        count += 1
+        ax3.plot(datetimes, cpu_percents, "{}o".format(color))
 
     figure.autofmt_xdate()
 
 
-fig1 = plt.figure()
-fig1.text(0.5, 0.04, 'Gateload Expvars', ha='center', va='center')
+def analze_perf_results(test_id):
+    fig1 = plt.figure()
+    fig1.text(0.5, 0.04, 'Gateload Expvars', ha='center', va='center')
 
-# Generate plot of gateload expvars
-plot_expvars(fig1, "performance_results/Test6/2015-12-29-17-16-30-expvars.json")
+    # Generate plot of gateload expvars
+    plot_expvars(fig1, "performance_results/{}/expvars.json".format(test_id))
 
-plt.savefig("expvars.png", dpi=300)
+    plt.savefig("performance_results/{}/expvars.png".format(test_id), dpi=300)
 
-fig2 = plt.figure()
-fig2.text(0.5, 0.04, 'sync_gateway CPU', ha='center', va='center')
+    fig2 = plt.figure()
+    fig2.text(0.5, 0.04, 'sync_gateway CPU', ha='center', va='center')
 
-# Generate plot of machine stats
-plot_machine_stats(fig2, "performance_results/Test6/2015-12-29-17-18-22-machine-stats/")
+    # Generate plot of machine stats
+    plot_machine_stats(fig2, "performance_results/{}/perf_logs/".format(test_id))
 
-# Save png
-plt.savefig("sync_gateway.png", dpi=300)
+    # Save png
+    plt.savefig("performance_results/{}/sg_machines.png".format(test_id), dpi=300)

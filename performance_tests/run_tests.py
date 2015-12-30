@@ -10,9 +10,10 @@ from provision.ansible_runner import run_ansible_playbook
 
 
 import generate_gateload_configs
-from utilities.fetch_machine_stats import fetch_machine_stats
 
+from utilities.fetch_machine_stats import fetch_machine_stats
 from utilities.log_expvars import log_expvars
+from utilities.analyze_perf_results import analze_perf_results
 
 def run_tests(number_pullers, number_pushers, use_gateload, gen_gateload_config):
     if use_gateload:
@@ -125,3 +126,5 @@ if __name__ == "__main__":
     #  Make sure enough time has passed before collecting json
     time.sleep(15)
     fetch_machine_stats(opts.test_id)
+
+    analze_perf_results(opts.test_id)

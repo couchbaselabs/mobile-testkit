@@ -20,15 +20,8 @@ def fetch_machine_stats(folder_name):
     # zip logs and timestamp
     if os.path.isdir("/tmp/perf_logs"):
 
-        date_time = time.strftime("%Y-%m-%d-%H-%M-%S")
-        name = "/tmp/{}-machine-stats".format(date_time)
-
-        shutil.make_archive(name, "zip", "/tmp/perf_logs")
-
-        shutil.rmtree("/tmp/perf_logs")
-        log.info("perf_logs logs copied here {}\n".format(name))
-
-        shutil.copy("{}.zip".format(name), "performance_results/{}/".format(folder_name))
+        # Move perf logs to performance_results
+        shutil.move("/tmp/perf_logs", "performance_results/{}/".format(folder_name))
 
     print("\n\n\n")
 

@@ -38,7 +38,7 @@ with open("cpu_stats.json", "w") as f:
         obj[current_datetime]["swap_memory"] = psutil.swap_memory()._asdict()
 
         # Wait 10 seconds
-        time.sleep(10)
+        time.sleep(30)
 
     # Write stats human readible
     f.write(json.dumps(obj, indent=4))

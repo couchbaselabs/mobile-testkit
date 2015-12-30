@@ -55,7 +55,7 @@ def log_expvars(folder_name):
     endpoints.extend(lgs_with_port)
 
     date_time = time.strftime("%Y-%m-%d-%H-%M-%S")
-    target_test_filename = "performance_results/{}/{}-expvars.json".format(folder_name, date_time)
+    target_test_filename = "performance_results/{}/expvars.json".format(folder_name)
 
     with open(target_test_filename, "w") as f:
 
@@ -74,6 +74,6 @@ def log_expvars(folder_name):
                     gateload_is_running = False
 
             print("Elapsed: {}".format(time.time() - start_time))
-            time.sleep(10)
+            time.sleep(30)
 
         f.write(json.dumps(results, indent=4))
