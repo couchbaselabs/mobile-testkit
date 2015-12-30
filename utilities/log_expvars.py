@@ -19,7 +19,7 @@ def write_expvars(results_obj, endpoint):
 
         try:
             results_obj[now]["endpoint"] = endpoint
-            results_obj[now]["P95"] = expvars["gateload"]["ops"]["PushToSubscriberInteractive"]["p95"]
+            results_obj[now]["p95"] = expvars["gateload"]["ops"]["PushToSubscriberInteractive"]["p95"]
             results_obj[now]["p99"] = expvars["gateload"]["ops"]["PushToSubscriberInteractive"]["p99"]
             results_obj[now]["total_doc_pushed"] = expvars["gateload"]["total_doc_pushed"]
             results_obj[now]["total_doc_pulled"] = expvars["gateload"]["total_doc_pulled"]
