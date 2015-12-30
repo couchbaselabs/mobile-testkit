@@ -36,10 +36,16 @@
             },
             "sync":
             `function(doc, oldDoc){
-                if(doc._id == "access_doc"){
-                    access("dj_0", ["KDWB"]);
+
+                if (oldDoc == null && doc.channels) {
+                    // When docs are created, send them to one channel
+                    channel("tv_station_channel");
+                } else if (oldDoc != null && doc.channels) {
+                    // When docs are updated, send them to their original channel
+                    channel(doc.channels);
+                } else {
+                    throw({forbidden: "No channel!"});
                 }
-                channel(doc.channels);
             }`
         }
     }
