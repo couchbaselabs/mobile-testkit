@@ -91,14 +91,26 @@ def test_db_online_offline_webhooks_offline(cluster, num_users,num_channels, num
     # Update docs
     log.info("Update docs")
     in_parallel(user_objects, 'update_docs', num_revisions)
-    time.sleep(30)
+    time.sleep(10)
 
     admin.take_db_offline("db")
+    time.sleep(5)
+    db_info = admin.get_db_info("db")
+    log.info("Expecting db state {} found db state {}".format("Offline",db_info['state']))
+    assert (db_info["state"] == "Offline")
+
     webhook_events = ws.get_data()
     time.sleep(5)
-    log.info("webhook event {}".format(webhook_events[-1]))
+    log.info("webhook event {}".format(webhook_events))
 
     admin.bring_db_online("db")
-    log.info("webhook event {}".format(webhook_events[-1]))
+    time.sleep(5)
+    db_info = admin.get_db_info("db")
+    log.info("Expecting db state {} found db state {}".format("Online",db_info['state']))
+    assert (db_info["state"] == "Online")
+    take_2 = ws.get_data()
+    time.sleep(10)
+    log.info("webhook event {}".format(take_2))
+
 
     ws.stop()
