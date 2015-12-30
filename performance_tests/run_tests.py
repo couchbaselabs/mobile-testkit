@@ -124,7 +124,8 @@ if __name__ == "__main__":
 
     # HACK: refresh interval for resource stat collection is 10 seconds.
     #  Make sure enough time has passed before collecting json
-    time.sleep(15)
+    time.sleep(31)
     fetch_machine_stats(opts.test_id)
 
+    # Generate graphs of the expvars and CPU
     analze_perf_results(opts.test_id)
