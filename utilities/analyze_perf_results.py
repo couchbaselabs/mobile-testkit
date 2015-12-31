@@ -93,7 +93,7 @@ def plot_sync_gateway_expvars(figure, json_file_name):
 
     # Plot Alloc / Sys
     ax1 = figure.add_subplot(111)
-    ax1.set_title("(blue=writer, green=reader) memstats.Alloc (square) / memstats.Sys (triangle)")
+    ax1.set_title("(writers=blue, readers=green) memstats.Alloc (square) / memstats.Sys (triangle)")
     ax1.plot(datetimes, memstats_alloc, "gs", datetimes, memstats_sys, "g^")
     ax1.plot(writer_datetimes, writer_memstats_alloc, "bs", writer_datetimes, writer_memstats_sys, "b^")
 
@@ -120,7 +120,11 @@ def plot_machine_stats(figure, folder_path):
             machine_stats[name] = obj
 
     ax3 = figure.add_subplot(111)
-    ax3.set_title("CPU percent (sg1=blue, sg2=green, sg3=red, sg4=cyan, sg5=magenta, sg6=yellow, else=black)")
+    ax3.set_title("CPU percent (writers=blue, readers=green")
+
+    # Get writer hostnames for provisioning_config
+    sg_writers = hosts_for_tag("sync_gateway_index_writers")
+    sg_writer_hostnames = [sg_writer["inventory_hostname"] for sg_writer in sg_writers]
 
     for machine in machine_stats:
         entity = machine_stats[machine]
@@ -133,23 +137,11 @@ def plot_machine_stats(figure, folder_path):
             datetimes.append(datetime.datetime.strptime(timestamp, "%Y-%m-%d %H:%M:%S.%f"))
             cpu_percents.append(entity[timestamp]["cpu_percent"])
 
-        # Hack to show different machines in different color
-        if machine == "sg1":
-            color = "b"
-        elif machine == "sg2":
-            color = "g"
-        elif machine == "sg3":
-            color = "r"
-        elif machine == "sg4":
-            color = "c"
-        elif machine == "sg5":
-            color = "m"
-        elif machine == "sg6":
-            color = "y"
+        # Plot blue if writer, green if reader
+        if machine in sg_writer_hostnames:
+            ax3.plot(datetimes, cpu_percents, "bo")
         else:
-            color = "k"
-
-        ax3.plot(datetimes, cpu_percents, "{}o".format(color))
+            ax3.plot(datetimes, cpu_percents, "go")
 
     figure.autofmt_xdate()
 
