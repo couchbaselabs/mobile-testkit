@@ -1,6 +1,7 @@
 import pytest
 import time
 import concurrent.futures
+import uuid
 
 from lib.admin import Admin
 from lib.user import User
@@ -144,15 +145,16 @@ def rest_scan(sync_gateway, db, online, num_docs, user_name, channels):
             error_responses.append((e.response.url, e.response.status_code))
 
     # PUT /{db}/{local-doc-id}
+    local_doc_id = uuid.uuid4()
     try:
-        doc = user.add_doc("_local/a-local-doc", content={"message": "I should not be replicated"})
+        doc = user.add_doc("_local/{}".format(local_doc_id), content={"message": "I should not be replicated"})
     except HTTPError as e:
         log.error((e.response.url, e.response.status_code))
         error_responses.append((e.response.url, e.response.status_code))
 
     # GET /{db}/{local-doc-id}
     try:
-        doc = user.get_doc("_local/a-local-doc")
+        doc = user.get_doc("_local/{}".format(local_doc_id))
         assert(doc["content"]["message"] == "I should not be replicated")
     except HTTPError as e:
         log.error((e.response.url, e.response.status_code))
