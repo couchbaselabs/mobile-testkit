@@ -4,8 +4,10 @@ import os
 import sys
 import matplotlib
 import matplotlib.pyplot as plt
+import pprint
 from optparse import OptionParser
 from collections import OrderedDict
+from utilities.provisioning_config_parser import hosts_for_tag
 
 matplotlib.rcParams.update({'font.size': 6})
 
@@ -60,6 +62,10 @@ def plot_sync_gateway_expvars(figure, json_file_name):
 
     print("Plotting sync_gateway expvars ...")
 
+    # Get writer hostnames for provisioning_config
+    sg_writers = hosts_for_tag("sync_gateway_index_writers")
+    sg_writer_hostnames = [sg_writer["ansible_ssh_host"] for sg_writer in sg_writers]
+
     with open(json_file_name, "r") as f:
         obj = json.loads(f.read(), object_pairs_hook=OrderedDict)
 
@@ -67,15 +73,29 @@ def plot_sync_gateway_expvars(figure, json_file_name):
     memstats_alloc = []
     memstats_sys = []
 
+    writer_datetimes = []
+    writer_memstats_alloc = []
+    writer_memstats_sys = []
+
     for timestamp in obj:
-        datetimes.append(datetime.datetime.strptime(timestamp, "%Y-%m-%d %H:%M:%S.%f"))
-        memstats_alloc.append(obj[timestamp]["expvars"]["memstats"]["Alloc"])
-        memstats_sys.append(obj[timestamp]["expvars"]["memstats"]["Sys"])
+
+        endpoint = obj[timestamp]["endpoint"]
+        hostname = endpoint.split(":")[0]
+
+        if hostname in sg_writer_hostnames:
+            writer_datetimes.append(datetime.datetime.strptime(timestamp, "%Y-%m-%d %H:%M:%S.%f"))
+            writer_memstats_alloc.append(obj[timestamp]["expvars"]["memstats"]["Alloc"])
+            writer_memstats_sys.append(obj[timestamp]["expvars"]["memstats"]["Sys"])
+        else:
+            datetimes.append(datetime.datetime.strptime(timestamp, "%Y-%m-%d %H:%M:%S.%f"))
+            memstats_alloc.append(obj[timestamp]["expvars"]["memstats"]["Alloc"])
+            memstats_sys.append(obj[timestamp]["expvars"]["memstats"]["Sys"])
 
     # Plot Alloc / Sys
     ax1 = figure.add_subplot(111)
-    ax1.set_title("memstats.Alloc (blue) / memstats.Sys (green)")
-    ax1.plot(datetimes, memstats_alloc, "bs", datetimes, memstats_sys, "g^")
+    ax1.set_title("(blue=writer, green=reader) memstats.Alloc (square) / memstats.Sys (triangle)")
+    ax1.plot(datetimes, memstats_alloc, "gs", datetimes, memstats_sys, "g^")
+    ax1.plot(writer_datetimes, writer_memstats_alloc, "bs", writer_datetimes, writer_memstats_sys, "b^")
 
     figure.autofmt_xdate()
 
