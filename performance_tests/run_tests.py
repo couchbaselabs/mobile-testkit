@@ -15,7 +15,7 @@ from utilities.fetch_machine_stats import fetch_machine_stats
 from utilities.log_expvars import log_expvars
 from utilities.analyze_perf_results import analze_perf_results
 
-def run_tests(number_pullers, number_pushers, use_gateload, gen_gateload_config):
+def run_tests(number_pullers, number_pushers, use_gateload, gen_gateload_config, test_id):
     if use_gateload:
         print "Using Gateload"
         print ">>> Starting gateload with {0} pullers and {1} pushers".format(number_pullers, number_pushers)
@@ -31,7 +31,7 @@ def run_tests(number_pullers, number_pushers, use_gateload, gen_gateload_config)
 
         # Generate gateload config
         if gen_gateload_config:
-            generate_gateload_configs.main(number_pullers, number_pushers)
+            generate_gateload_configs.main(number_pullers, number_pushers, test_id)
 
         # Start gateload
         subprocess.call(["ansible-playbook", "-i", "../../../provisioning_config", "start-gateload.yml"])
@@ -95,6 +95,13 @@ if __name__ == "__main__":
         print "You must provide a test identifier to run the test"
         sys.exit(1)
 
+    # Create test results directory
+    if not os.path.exists("performance_results/{}".format(opts.test_id)):
+        os.makedirs("performance_results/{}".format(opts.test_id))
+    else:
+        print("Make sure the provided test-id is not an existing folder in performance_results/. Exiting ...")
+        sys.exit(1)
+
     if opts.reset_sync_gateway:
         print "Resetting Sync Gateway"
         cluster = Cluster()
@@ -104,17 +111,12 @@ if __name__ == "__main__":
         number_pullers=opts.number_pullers,
         number_pushers=opts.number_pushers,
         use_gateload=opts.use_gateload,
-        gen_gateload_config=opts.gen_gateload_config
+        gen_gateload_config=opts.gen_gateload_config,
+        test_id=opts.test_id
     )
 
     # HACK to resolve provisioning_config path
     os.chdir("../../..")
-
-    if not os.path.exists("performance_results/{}".format(opts.test_id)):
-        os.makedirs("performance_results/{}".format(opts.test_id))
-    else:
-        print("Make sure the provided test-id is not an existing folder in performance_results/. Exiting ...")
-        sys.exit(1)
 
     # write expvars to file, will exit when gateload scenario is done
     log_expvars(opts.test_id)

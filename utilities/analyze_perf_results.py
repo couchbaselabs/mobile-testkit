@@ -29,9 +29,6 @@ def plot_expvars(figure, json_file_name):
     docs_pulled = []
 
     for entry in obj.keys():
-        print(entry)
-        print(obj[entry])
-
         # only plot entry with all vars wer are looking for
         if keys_present(["p95", "p99", "total_doc_pushed", "total_doc_pulled"], obj[entry]):
             datetimes.append(datetime.datetime.strptime(entry, "%Y-%m-%d %H:%M:%S.%f"))
@@ -44,8 +41,8 @@ def plot_expvars(figure, json_file_name):
     ax1 = figure.add_subplot(211)
     ax1.set_title(" p95 (blue) / p99 ns (g)")
     ax1.plot(datetimes, p95, "bs", datetimes, p99, "g^")
-    for i, j in zip(datetimes, p95):
-        ax1.annotate(str(j), xy=(i, j))
+    # for i, j in zip(datetimes, p95):
+    #     ax1.annotate(str(j), xy=(i, j))
 
     # Plot docs pushed / docs pulled
     ax2 = figure.add_subplot(212)
@@ -73,7 +70,7 @@ def plot_machine_stats(figure, folder_path):
             machine_stats[name] = obj
 
     ax3 = figure.add_subplot(111)
-    ax3.set_title("CPU percent")
+    ax3.set_title("CPU percent (red=sg1, green=sg2, blue=sg3)")
 
 
     for machine in machine_stats:

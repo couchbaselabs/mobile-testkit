@@ -22,7 +22,7 @@ python provision/provision_cluster.py --server-version=4.1.0 --sync-gateway-bran
 python performance_tests/run_tests.py --use-gateload --gen-gateload-config --reset-sync-gw --number-pushers=2500 --number-pullers=2500 --test-id="10k-10k-4IR-1IW"
 python provision/teardown_cluster.py --stackname="SethPerfStack"
 
-# Take down one gateload
+# Take down one gateload / one sync_gateway
 
 # Test 3
 # 3 IR / 1 IW
@@ -33,7 +33,7 @@ python provision/provision_cluster.py --server-version=4.1.0 --sync-gateway-bran
 python performance_tests/run_tests.py --use-gateload --gen-gateload-config --reset-sync-gw --number-pushers=3334 --number-pullers=3334 --test-id="10k-10k-3IR-1IW"
 python provision/teardown_cluster.py --stackname="SethPerfStack"
 
-# Take down one gateload
+# Take down one gateload / one sync_gateway
 
 # Test 2
 # 2 IR / 1 IW
@@ -44,7 +44,7 @@ python provision/provision_cluster.py --server-version=4.1.0 --sync-gateway-bran
 python performance_tests/run_tests.py --use-gateload --gen-gateload-config --reset-sync-gw --number-pushers=5000 --number-pullers=5000 --test-id="10k-10k-2IR-1IW"
 python provision/teardown_cluster.py --stackname="SethPerfStack"
 
-# Take down one gateload
+# Take down one gateload / one sync_gateway
 
 # Test 1
 # 1 IR / 1 IW
@@ -68,7 +68,7 @@ python provision/provision_cluster.py --server-version=4.1.0 --sync-gateway-bran
 python performance_tests/run_tests.py --use-gateload --gen-gateload-config --reset-sync-gw --number-pushers=2500 --number-pullers=2500 --test-id="10k-10k-4IR-2IW"
 python provision/teardown_cluster.py --stackname="SethPerfStack"
 
-# Take down one gateload
+# Take down one gateload / one sync_gateway
 
 # Test 7
 # 3 IR / 2 IW
@@ -79,7 +79,7 @@ python provision/provision_cluster.py --server-version=4.1.0 --sync-gateway-bran
 python performance_tests/run_tests.py --use-gateload --gen-gateload-config --reset-sync-gw --number-pushers=3334 --number-pullers=3334 --test-id="10k-10k-3IR-2IW"
 python provision/teardown_cluster.py --stackname="SethPerfStack"
 
-# Take down one gateload
+# Take down one gateload / one sync_gateway
 
 # Test 6
 # 2 IR / 2 IW
@@ -91,7 +91,7 @@ python provision/provision_cluster.py --server-version=4.1.0 --sync-gateway-bran
 python performance_tests/run_tests.py --use-gateload --gen-gateload-config --reset-sync-gw --number-pushers=5000 --number-pullers=5000 --test-id="10k-10k-2IR-2IW"
 python provision/teardown_cluster.py --stackname="SethPerfStack"
 
-# Take down one gateload
+# Take down one gateload / one sync_gateway
 
 # Test 5
 # 1 IR / 2 IW
