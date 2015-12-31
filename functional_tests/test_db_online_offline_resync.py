@@ -58,7 +58,7 @@ def test_bucket_online_offline_resync_sanity(cluster, num_users, num_docs, num_r
     expected_docs = num_users * num_docs
     for user_obj, docs in recieved_docs.items():
         log.info('User {} got {} docs, expected docs: {}'.format(user_obj.name, docs, expected_docs))
-        assert docs == 1 + expected_docs
+        assert docs == expected_docs
 
 
     # Verify that
@@ -161,7 +161,7 @@ def test_bucket_online_offline_resync_with_online(cluster, num_users, num_docs, 
     expected_docs = num_users * num_docs
     for user_obj, docs in recieved_docs.items():
         log.info('User {} got {} docs, expected docs: {}'.format(user_obj.name, docs, expected_docs))
-        assert docs == 1 + expected_docs
+        assert docs == expected_docs
 
 
     # Verify that

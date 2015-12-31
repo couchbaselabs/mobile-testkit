@@ -5,7 +5,6 @@ import concurrent.futures
 from lib.user import User
 from lib.scenarioprinter import ScenarioPrinter
 from lib import settings
-from requests.packages.urllib3.util import Retry
 
 
 import logging

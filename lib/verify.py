@@ -4,11 +4,6 @@ from lib import settings
 import logging
 log = logging.getLogger(settings.LOGGER)
 
-import logging
-import settings
-log = logging.getLogger(settings.LOGGER)
-
-
 def verify_same_docs(expected_num_docs, doc_dict_one, doc_dict_two):
 
     # assert each dictionary is of expected length
