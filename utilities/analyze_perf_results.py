@@ -28,25 +28,32 @@ def plot_gateload_expvars(figure, json_file_name):
         obj = json.loads(f.read(), object_pairs_hook=OrderedDict)
 
     datetimes = []
-    p95 = []
-    p99 = []
+    p95s = []
+    p99s = []
     docs_pushed = []
     docs_pulled = []
+
+    number_ns_per_sec = 1000000000.0
 
     for timestamp in obj:
 
         # only plot if p95 and p99 exist in expvars
         if "PushToSubscriberInteractive" in obj[timestamp]["expvars"]["gateload"]["ops"]:
             datetimes.append(datetime.datetime.strptime(timestamp, "%Y-%m-%d %H:%M:%S.%f"))
-            p95.append(obj[timestamp]["expvars"]["gateload"]["ops"]["PushToSubscriberInteractive"]["p95"])
-            p99.append(obj[timestamp]["expvars"]["gateload"]["ops"]["PushToSubscriberInteractive"]["p99"])
+
+            p95 = obj[timestamp]["expvars"]["gateload"]["ops"]["PushToSubscriberInteractive"]["p95"] / number_ns_per_sec
+            p95s.append(p95)
+
+            p99 = obj[timestamp]["expvars"]["gateload"]["ops"]["PushToSubscriberInteractive"]["p99"] / number_ns_per_sec
+            p99s.append(p99)
+
             docs_pushed.append(obj[timestamp]["expvars"]["gateload"]["total_doc_pushed"])
             docs_pulled.append(obj[timestamp]["expvars"]["gateload"]["total_doc_pulled"])
 
     # Plot p95 / p99
     ax1 = figure.add_subplot(211)
-    ax1.set_title("PushToSubscriberInteractive: p95 (blue) / p99 ns (green)")
-    ax1.plot(datetimes, p95, "bs", datetimes, p99, "g^")
+    ax1.set_title("PushToSubscriberInteractive (seconds): p95 (cyan) / p99 (magenta)")
+    ax1.plot(datetimes, p95s, "cs", datetimes, p99s, "m^")
     # for i, j in zip(datetimes, p95):
     #     ax1.annotate(str(j), xy=(i, j))
 
