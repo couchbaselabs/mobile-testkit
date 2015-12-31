@@ -18,7 +18,7 @@ from multiprocessing.pool import ThreadPool
 import logging
 log = logging.getLogger(lib.settings.LOGGER)
 
-NUM_ENDPOINTS = 14
+NUM_ENDPOINTS = 13
 
 def rest_scan(sync_gateway, db, online, num_docs, user_name, channels):
 
@@ -123,12 +123,12 @@ def rest_scan(sync_gateway, db, online, num_docs, user_name, channels):
     error_responses.extend(bulk_doc_errors)
 
     # POST /{db}/
-    try:
-        for i in range(num_docs):
+    for i in range(num_docs):
+        try:
             user.add_doc()
-    except HTTPError as e:
-        log.error((e.response.url, e.response.status_code))
-        error_responses.append((e.response.url, e.response.status_code))
+        except HTTPError as e:
+            log.error((e.response.url, e.response.status_code))
+            error_responses.append((e.response.url, e.response.status_code))
 
     # GET /{db}/{name}
     # PUT /{db}/{name}
@@ -281,7 +281,7 @@ def test_online_to_offline_check_503(cluster, conf, num_docs):
     errors = rest_scan(cluster.sync_gateways[0], db="db", online=False, num_docs=num_docs, user_name="seth", channels=["ABC"])
 
     # We hit NUM_ENDPOINT unique REST endpoints + num of doc PUT failures
-    assert(len(errors) == NUM_ENDPOINTS + num_docs)
+    assert(len(errors) == NUM_ENDPOINTS + (num_docs * 2))
     for error_tuple in errors:
         print("({},{})".format(error_tuple[0], error_tuple[1]))
         assert(error_tuple[1] == 503)
@@ -521,7 +521,7 @@ def test_offline_true_config_bring_online(cluster, conf, num_docs):
     # all db endpoints should fail with 503
     errors = rest_scan(cluster.sync_gateways[0], db="db", online=False, num_docs=num_docs, user_name="seth", channels=["ABC"])
 
-    assert(len(errors) == NUM_ENDPOINTS + num_docs)
+    assert(len(errors) == NUM_ENDPOINTS + (num_docs * 2))
     for error_tuple in errors:
         print("({},{})".format(error_tuple[0], error_tuple[1]))
         assert(error_tuple[1] == 503)
@@ -566,7 +566,7 @@ def test_db_offline_tap_loss_sanity(cluster, conf, num_docs):
     # Check that bucket is in offline state
     # Will return 401 for public enpoint because the auth doc has been deleted
     errors = rest_scan(cluster.sync_gateways[0], db="db", online=False, num_docs=num_docs, user_name="seth", channels=["ABC"])
-    assert(len(errors) == NUM_ENDPOINTS + num_docs)
+    assert(len(errors) == NUM_ENDPOINTS + (num_docs * 2))
     for error_tuple in errors:
         print("({},{})".format(error_tuple[0], error_tuple[1]))
         assert(error_tuple[1] == 503 or error_tuple[1] == 401)
@@ -649,7 +649,7 @@ def test_multiple_dbs_unique_buckets_lose_tap(cluster, conf, num_docs):
     # Check that db1 and db3 go offline
     for db in ["db1", "db3"]:
         errors = rest_scan(cluster.sync_gateways[0], db=db, online=False, num_docs=num_docs, user_name="seth", channels=["ABC"])
-        assert(len(errors) == NUM_ENDPOINTS + num_docs)
+        assert(len(errors) == NUM_ENDPOINTS + (num_docs * 2))
         for error_tuple in errors:
             print("({},{})".format(error_tuple[0], error_tuple[1]))
             assert(error_tuple[1] == 503 or error_tuple[1] == 401)
