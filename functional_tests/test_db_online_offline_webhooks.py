@@ -103,7 +103,7 @@ def test_db_online_offline_webhooks_offline(cluster, num_users,num_channels, num
     time.sleep(5)
     log.info("webhook event {}".format(webhook_events))
     last_event = webhook_events[-1]
-    #assert (last_event['state'] == 'offline')
+    assert (last_event['state'] == 'offline')
 
     admin.bring_db_online("db")
     time.sleep(5)
@@ -118,3 +118,55 @@ def test_db_online_offline_webhooks_offline(cluster, num_users,num_channels, num
 
 
     ws.stop()
+
+
+# implements scenarios: 21
+@pytest.mark.sanity
+@pytest.mark.parametrize("num_users", [5])
+@pytest.mark.parametrize("num_channels", [1]) #all users share all channels
+@pytest.mark.parametrize("num_docs", [1])
+@pytest.mark.parametrize("num_revisions", [2])
+def test_db_online_offline_webhooks_offline(cluster, num_users,num_channels, num_docs, num_revisions):
+
+    log.info("Starting test...")
+    start = time.time()
+
+    cluster.reset(config="sync_gateway_webhook.json")
+
+    init_completed = time.time()
+    log.info("Initialization completed. Time taken:{}s".format(init_completed - start))
+
+    channels = ["channel-" + str(i) for i in range(num_channels)]
+    password = "password"
+    ws = WebServer()
+    ws.start()
+
+    sgs = cluster.sync_gateways
+
+    admin = Admin(sgs[0])
+
+    # Register User
+    log.info("Register User")
+    user_objects = admin.register_bulk_users(target=sgs[0], db="db", name_prefix="User",
+                                             number=num_users, password=password, channels=channels)
+
+    # Add User
+    log.info("Add docs")
+    in_parallel(user_objects, 'add_docs', num_docs)
+
+    # Update docs
+    log.info("Update docs")
+    in_parallel(user_objects, 'update_docs', num_revisions)
+    time.sleep(10)
+
+    cluster.servers[0].delete_bucket("data-bucket")
+    time.sleep(5)
+
+    webhook_events = ws.get_data()
+    time.sleep(5)
+    log.info("webhook event {}".format(webhook_events))
+    last_event = webhook_events[-1]
+    assert (last_event['state'] == 'offline')
+
+    ws.stop()
+

@@ -242,6 +242,8 @@ class User:
         return errors
 
     def get_num_docs(self):
+        if self.changes_data['results'][0]['id'].startswith("_user"):
+            return len(self.changes_data['results']) - 1
         return len(self.changes_data['results'])
 
     # returns a dictionary of type doc[revision]

@@ -2,17 +2,9 @@ from lib.verify import verify_changes
 from fixtures import cluster
 import time
 import pytest
-from lib.user import User
-import concurrent.futures
 from lib.admin import Admin
-from requests.packages.urllib3.util import Retry
-from fixtures import cluster
-from lib.web_server import WebServer
-import lib.settings
 from multiprocessing.pool import ThreadPool
 from requests.exceptions import HTTPError
-from requests.exceptions import RetryError
-
 from lib.parallelize import *
 import logging
 log = logging.getLogger(settings.LOGGER)
@@ -32,12 +24,9 @@ def test_bucket_online_offline_resync_sanity(cluster, num_users, num_docs, num_r
     init_completed = time.time()
     log.info("Initialization completed. Time taken:{}s".format(init_completed - start))
 
-    users = ["User-" + str(i) for i in range(num_users)]
     num_channels = 1
     channels = ["channel-" + str(i) for i in range(num_channels)]
     password = "password"
-    user_objects = []
-    use_uuid_names = True
 
     sgs = cluster.sync_gateways
 
@@ -138,12 +127,9 @@ def test_bucket_online_offline_resync_with_online(cluster, num_users, num_docs, 
     init_completed = time.time()
     log.info("Initialization completed. Time taken:{}s".format(init_completed - start))
 
-    users = ["User-" + str(i) for i in range(num_users)]
     num_channels = 1
     channels = ["channel-" + str(i) for i in range(num_channels)]
     password = "password"
-    user_objects = []
-    use_uuid_names = True
 
     sgs = cluster.sync_gateways
 
@@ -300,12 +286,9 @@ def test_bucket_online_offline_resync_with_offline(cluster, num_users, num_docs,
     init_completed = time.time()
     log.info("Initialization completed. Time taken:{}s".format(init_completed - start))
 
-    users = ["User-" + str(i) for i in range(num_users)]
     num_channels = 1
     channels = ["channel-" + str(i) for i in range(num_channels)]
     password = "password"
-    user_objects = []
-    use_uuid_names = True
 
     sgs = cluster.sync_gateways
 
@@ -337,7 +320,7 @@ def test_bucket_online_offline_resync_with_offline(cluster, num_users, num_docs,
     expected_docs = num_users * num_docs
     for user_obj, docs in recieved_docs.items():
         log.info('User {} got {} docs, expected docs: {}'.format(user_obj.name, docs, expected_docs))
-        assert docs == 1 + expected_docs
+        assert docs == expected_docs
 
 
     # Verify that

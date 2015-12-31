@@ -12,6 +12,8 @@ from requests.exceptions import HTTPError
 from requests.exceptions import RetryError
 
 from fixtures import cluster
+from multiprocessing.pool import ThreadPool
+
 
 import logging
 log = logging.getLogger(lib.settings.LOGGER)
@@ -540,6 +542,49 @@ def test_db_offline_tap_loss_sanity(cluster, conf, num_docs):
     for error_tuple in errors:
         print("({},{})".format(error_tuple[0], error_tuple[1]))
         assert(error_tuple[1] == 503 or error_tuple[1] == 401)
+
+# Scenario 11
+@pytest.mark.sanity
+@pytest.mark.dbonlineoffline
+@pytest.mark.parametrize(
+    "conf,num_docs",
+    [
+        ("bucket_online_offline/bucket_online_offline_default.json", 100)
+    ],
+    ids=["CC-1"]
+)
+def test_db_delayed_online(cluster, conf, num_docs):
+
+    log.info("Using conf: {}".format(conf))
+    log.info("Using num_docs: {}".format(num_docs))
+
+    cluster.reset(conf)
+
+    admin = Admin(cluster.sync_gateways[0])
+
+    time.sleep(2)
+    status = admin.take_db_offline("db")
+    log.info("offline request response status: {}".format(status))
+    time.sleep(10)
+
+    pool = ThreadPool(processes=1)
+
+    db_info = admin.get_db_info("db")
+    assert (db_info["state"] == "Offline")
+
+    async_result = pool.apply_async(admin.bring_db_online, ("db", 15,))
+    status = async_result.get(timeout=15)
+    log.info("offline request response status: {}".format(status))
+
+    time.sleep(20)
+
+    db_info = admin.get_db_info("db")
+    assert (db_info["state"] == "Online")
+
+    # all db rest enpoints should succeed
+    errors = rest_scan(cluster.sync_gateways[0], db="db", online=True, num_docs=num_docs, user_name="seth", channels=["ABC"])
+    assert(len(errors) == 0)
+
 
 
 @pytest.mark.sanity
