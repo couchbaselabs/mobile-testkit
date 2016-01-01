@@ -26,7 +26,8 @@ if __name__ == "__main__":
         "gateload.total_doc_pulled",
         "gateload.total_doc_pushed",
         "gateload.user_active",
-        "gateload.user_awake"
+        "gateload.user_awake",
+        "gateload.ops.AddUser.count"
     ]
 
     expvars_combined = ",".join(expvars)

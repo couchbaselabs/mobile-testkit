@@ -95,12 +95,10 @@ if __name__ == "__main__":
         print "You must provide a test identifier to run the test"
         sys.exit(1)
 
+    test_run_id = "{}_{}".format(opts.test_id, time.strftime("%Y-%m-%d-%H-%M-%S"))
+
     # Create test results directory
-    if not os.path.exists("performance_results/{}".format(opts.test_id)):
-        os.makedirs("performance_results/{}".format(opts.test_id))
-    else:
-        print("Make sure the provided test-id is not an existing folder in performance_results/. Exiting ...")
-        sys.exit(1)
+    os.makedirs("performance_results/{}".format(test_run_id))
 
     if opts.reset_sync_gateway:
         print "Resetting Sync Gateway"
@@ -112,14 +110,14 @@ if __name__ == "__main__":
         number_pushers=opts.number_pushers,
         use_gateload=opts.use_gateload,
         gen_gateload_config=opts.gen_gateload_config,
-        test_id=opts.test_id
+        test_id=test_run_id
     )
 
     # HACK to resolve provisioning_config path
     os.chdir("../../..")
 
     # write expvars to file, will exit when gateload scenario is done
-    log_expvars(opts.test_id)
+    log_expvars(test_run_id)
 
     # kill all sync_gateways to ensure machine stat collection exits
     run_ansible_playbook("stop-sync-gateway.yml")
@@ -127,7 +125,7 @@ if __name__ == "__main__":
     # HACK: refresh interval for resource stat collection is 10 seconds.
     #  Make sure enough time has passed before collecting json
     time.sleep(31)
-    fetch_machine_stats(opts.test_id)
+    fetch_machine_stats(test_run_id)
 
     # Generate graphs of the expvars and CPU
-    analze_perf_results(opts.test_id)
+    analze_perf_results(test_run_id)
