@@ -12,6 +12,8 @@ from requests.exceptions import HTTPError
 from requests.exceptions import RetryError
 
 from fixtures import cluster
+from multiprocessing.pool import ThreadPool
+
 
 import logging
 log = logging.getLogger(lib.settings.LOGGER)
@@ -541,6 +543,49 @@ def test_db_offline_tap_loss_sanity(cluster, conf, num_docs):
         print("({},{})".format(error_tuple[0], error_tuple[1]))
         assert(error_tuple[1] == 503 or error_tuple[1] == 401)
 
+# Scenario 11
+@pytest.mark.sanity
+@pytest.mark.dbonlineoffline
+@pytest.mark.parametrize(
+    "conf,num_docs",
+    [
+        ("bucket_online_offline/bucket_online_offline_default.json", 100)
+    ],
+    ids=["CC-1"]
+)
+def test_db_delayed_online(cluster, conf, num_docs):
+
+    log.info("Using conf: {}".format(conf))
+    log.info("Using num_docs: {}".format(num_docs))
+
+    cluster.reset(conf)
+
+    admin = Admin(cluster.sync_gateways[0])
+
+    time.sleep(2)
+    status = admin.take_db_offline("db")
+    log.info("offline request response status: {}".format(status))
+    time.sleep(10)
+
+    pool = ThreadPool(processes=1)
+
+    db_info = admin.get_db_info("db")
+    assert (db_info["state"] == "Offline")
+
+    async_result = pool.apply_async(admin.bring_db_online, ("db", 15,))
+    status = async_result.get(timeout=15)
+    log.info("offline request response status: {}".format(status))
+
+    time.sleep(20)
+
+    db_info = admin.get_db_info("db")
+    assert (db_info["state"] == "Online")
+
+    # all db rest enpoints should succeed
+    errors = rest_scan(cluster.sync_gateways[0], db="db", online=True, num_docs=num_docs, user_name="seth", channels=["ABC"])
+    assert(len(errors) == 0)
+
+
 
 @pytest.mark.sanity
 @pytest.mark.dbonlineoffline
@@ -636,3 +681,42 @@ def test_multiple_dbs_unique_buckets_lose_tap(cluster, conf, num_docs):
 #     assert(status == 500)
 
 
+## Scenario 17
+#@pytest.mark.dbonlineoffline
+#def test_db_online_offline_with_invalid_legal_config(cluster, disable_http_retry):
+#    cluster.reset("bucket_online_offline/bucket_online_offline_offline_false.json")
+#    admin = Admin(cluster.sync_gateways[0])
+#
+#    # all db endpoints should succeed
+#    errors = rest_scan(cluster.sync_gateways[0], db="db", online=True)
+#    assert(len(errors) == 0)
+#
+#    #restart_status = cluster.sync_gateways[0].restart("bucket_online_offline/db_online_offline_invalid_db.json")
+#    #assert restart_status == 0
+#
+#    config = admin.get_db_config(db="db")
+#    print(config)
+#
+#    # Invalid config
+#    new_config = {
+#        "db": {
+#            "server": "http://{}:8091".format(cluster.servers[0].ip),
+#            "bucket": "data-bucket",
+#            "users": {
+#                "seth": {"password": "password", "admin_channels": ["*", "ABC"]},
+#                "Ashvinder": {"password": "password", "admin_channels": ["*", "CBS"]},
+#                "Andy": {"password": "password", "admin_channels": ["*", "NBC"]}
+#            }
+#        }
+#    }
+#
+#    status = admin.put_db_config(db="db", config=new_config)
+#    assert(status == 201)
+#
+#    # Take "db" offline
+#    status = admin.bring_db_online(db="db")
+#    log.info("status: {}".format(status))
+#    assert(status == 200)
+#
+#
+#

@@ -6,6 +6,7 @@ from lib.user import User
 from lib.scenarioprinter import ScenarioPrinter
 from lib import settings
 
+
 import logging
 log = logging.getLogger(settings.LOGGER)
 
@@ -94,7 +95,14 @@ class Admin:
 
     # POST /{db}/_resync
     def db_resync(self, db):
-        pass
+        result = dict()
+        resp = requests.post("{0}/{1}/_resync".format(self.admin_url, db), headers=self._headers, timeout=settings.HTTP_REQ_TIMEOUT)
+        log.info("POST {}".format(resp.url))
+        resp.raise_for_status()
+        result['status_code'] = resp.status_code
+        result['payload'] = resp.json()
+        return result
+
 
     # POST /{db}/_online
     def bring_db_online(self, db, delay=None):

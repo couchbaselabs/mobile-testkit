@@ -6,20 +6,18 @@
     "maxFileDescriptors": 90000,
     "slowServerCallWarningThreshold": 500,
     "compressResponses": true,
-    "log": ["CRUD+", "Cache+", "HTTP+", "Changes+"],
+    "log":["*"],
     "verbose":"true",
     "databases":{
         "db":{
-            "offline":false,
             "server":"http://{{ couchbase_server_primary_node }}:8091",
             "bucket":"data-bucket",
             "sync": `function(doc){
                   channel(doc.channels);
                 }`,
-            "users": {"GUEST": {"disabled": false, "admin_channels": ["*"] }},
-            "event_handlers": {
-               "document_changed":[{"handler":"webhook","max_processes" : 500,"wait_for_process" : "600000","url":"http://{{ webhook_ip }}:8080","timeout":60}],
-               "db_state_changed":[{"handler":"webhook","max_processes" : 500,"wait_for_process" : "600000","url":"http://{{ webhook_ip }}:8080","timeout":60}] }
+            "offline":false,
+            "users": {"GUEST": {"disabled": false, "admin_channels": ["*"] }}
         }
     }
 }
+

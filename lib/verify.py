@@ -1,10 +1,8 @@
 
 from lib.user import User
-
+from lib import settings
 import logging
-import settings
 log = logging.getLogger(settings.LOGGER)
-
 
 def verify_same_docs(expected_num_docs, doc_dict_one, doc_dict_two):
 
@@ -203,7 +201,6 @@ def verify_changes(users, expected_num_docs, expected_num_revisions, expected_do
             log.warning("WARNING: Ignoring rev id verification!!")
 
         for result in changes_results:
-
             if not ignore_rev_ids:
                 # Compare revision number for id
                 if expected_docs[result["id"]] != result["rev"]:

@@ -3,6 +3,7 @@ from lib import settings
 import copy_reg
 import types
 import logging
+from threading import Thread
 log = logging.getLogger(settings.LOGGER)
 
 
@@ -47,3 +48,7 @@ def in_parallel(objects, method, *args):
     return result
 
 
+def run_async(function, *args, **kwargs):
+    thread = Thread(target=function, args=args, kwargs=kwargs)
+    thread.daemon = True
+    thread.start()

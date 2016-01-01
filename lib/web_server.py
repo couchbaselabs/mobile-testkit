@@ -38,7 +38,7 @@ class HttpHandler(BaseHTTPRequestHandler):
 class WebServer(object):
     def __init__(self, port=8080):
         self.port = port
-        self.server = HTTPServer(('',port),HttpHandler)
+        self.server = HTTPServer(('', port), HttpHandler)
 
     def start(self):
         thread = threading.Thread(target=self.server.serve_forever)
@@ -46,7 +46,7 @@ class WebServer(object):
         try:
             thread.start()
         except Exception as e:
-            raise ValueError("Caught exception could not launch webserver thread",e)
+            raise ValueError("Caught exception could not launch webserver thread", e)
 
     def stop(self):
         self.server.shutdown()
