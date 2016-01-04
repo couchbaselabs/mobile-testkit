@@ -1,13 +1,21 @@
 import os
 import subprocess
 import sys
+import time
+
 from optparse import OptionParser
 from lib.cluster import Cluster
 
-import generate_gateload_configs
-from utilities.log_expvars import log_expvars
+from provision.ansible_runner import run_ansible_playbook
 
-def run_tests(number_pullers, number_pushers, use_gateload, gen_gateload_config):
+
+import generate_gateload_configs
+
+from utilities.fetch_machine_stats import fetch_machine_stats
+from utilities.log_expvars import log_expvars
+from utilities.analyze_perf_results import analze_perf_results
+
+def run_tests(number_pullers, number_pushers, use_gateload, gen_gateload_config, test_id):
     if use_gateload:
         print "Using Gateload"
         print ">>> Starting gateload with {0} pullers and {1} pushers".format(number_pullers, number_pushers)
@@ -23,7 +31,7 @@ def run_tests(number_pullers, number_pushers, use_gateload, gen_gateload_config)
 
         # Generate gateload config
         if gen_gateload_config:
-            generate_gateload_configs.main(number_pullers, number_pushers)
+            generate_gateload_configs.main(number_pullers, number_pushers, test_id)
 
         # Start gateload
         subprocess.call(["ansible-playbook", "-i", "../../../provisioning_config", "start-gateload.yml"])
@@ -75,10 +83,22 @@ if __name__ == "__main__":
                       action="store_true", dest="reset_sync_gateway", default=False,
                       help="reset CBS buckets, delete SG logs, restart SG")
 
+    parser.add_option("", "--test-id",
+                      action="store", dest="test_id", default=None,
+                      help="test identifier to identify results of performance test")
 
     arg_parameters = sys.argv[1:]
 
     (opts, args) = parser.parse_args(arg_parameters)
+
+    if opts.test_id is None:
+        print "You must provide a test identifier to run the test"
+        sys.exit(1)
+
+    test_run_id = "{}_{}".format(opts.test_id, time.strftime("%Y-%m-%d-%H-%M-%S"))
+
+    # Create test results directory
+    os.makedirs("performance_results/{}".format(test_run_id))
 
     if opts.reset_sync_gateway:
         print "Resetting Sync Gateway"
@@ -89,11 +109,23 @@ if __name__ == "__main__":
         number_pullers=opts.number_pullers,
         number_pushers=opts.number_pushers,
         use_gateload=opts.use_gateload,
-        gen_gateload_config=opts.gen_gateload_config
+        gen_gateload_config=opts.gen_gateload_config,
+        test_id=test_run_id
     )
 
     # HACK to resolve provisioning_config path
     os.chdir("../../..")
 
-    # write expvars to file
-    log_expvars()
+    # write expvars to file, will exit when gateload scenario is done
+    log_expvars(test_run_id)
+
+    # kill all sync_gateways to ensure machine stat collection exits
+    run_ansible_playbook("stop-sync-gateway.yml")
+
+    # HACK: refresh interval for resource stat collection is 10 seconds.
+    #  Make sure enough time has passed before collecting json
+    time.sleep(31)
+    fetch_machine_stats(test_run_id)
+
+    # Generate graphs of the expvars and CPU
+    analze_perf_results(test_run_id)

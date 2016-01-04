@@ -149,6 +149,10 @@ if __name__=="__main__":
     arg_parameters = sys.argv[1:]
 
     (opts, args) = parser.parse_args(arg_parameters)
+
+    if opts.stackname is None or opts.targetfile is None:
+        print("You must specify --stackname=<stack_name> and --targetfile=<file_name>")
+        sys.exit(1)
    
     print "Getting inventory from AWS ... (may take a few minutes)"
     ec2Inventory = ec2.Ec2Inventory()

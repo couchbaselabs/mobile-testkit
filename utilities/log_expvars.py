@@ -1,40 +1,37 @@
 import time
 import datetime
 import requests
+import json
+
+from collections import OrderedDict
+
+from requests.exceptions import ConnectionError
 
 from provisioning_config_parser import hosts_for_tag
 
 
-def write_expvars(file, endpoint):
-    try:
-        resp = requests.get("http://{}".format(endpoint))
-        print(resp.url)
-        file.write("\n############## VARS #############\n")
-        file.write("Date / Time: {}\n".format(datetime.datetime.now()))
-        file.write("Endpoint: {}\n".format(endpoint))
+def dump_results(test_folder, gateload_results, sync_gateway_results):
+    with open("performance_results/{}/gateload_expvars.json".format(test_folder), "w") as f:
+        f.write(json.dumps(gateload_results))
 
+    with open("performance_results/{}/sync_gateway_expvars.json".format(test_folder), "w") as f:
+        f.write(json.dumps(sync_gateway_results))
+
+
+def write_expvars(results_obj, endpoint):
+
+        resp = requests.get("http://{}".format(endpoint))
+        resp.raise_for_status()
         expvars = resp.json()
 
-        p95 = expvars["gateload"]["ops"]["PushToSubscriberInteractive"]["p95"]
-        p99 = expvars["gateload"]["ops"]["PushToSubscriberInteractive"]["p99"]
-        total_doc_pushed = expvars["gateload"]["total_doc_pushed"]
-        total_doc_pulled = expvars["gateload"]["total_doc_pulled"]
-        user_active = expvars["gateload"]["user_active"]
-        user_awake = expvars["gateload"]["user_awake"]
-
-        file.write("P95: {}\n".format(p95))
-        file.write("P99: {}\n".format(p99))
-        file.write("total_doc_pushed: {}\n".format(total_doc_pushed))
-        file.write("total_doc_pulled: {}\n".format(total_doc_pulled))
-        file.write("user_active: {}\n".format(user_active))
-        file.write("user_awake: {}\n".format(user_awake))
-
-    except Exception as e:
-        print("Failed to connect: {}".format(e))
-        file.write("!! Failed to connect to endpoint: {}\n".format(endpoint))
+        now = "{}".format(datetime.datetime.utcnow())
+        results_obj[now] = {
+            "endpoint": endpoint,
+            "expvars": expvars
+        }
 
 
-def log_expvars():
+def log_expvars(folder_name):
     usage = """
     usage: log_expvars.py"
     """
@@ -44,32 +41,43 @@ def log_expvars():
     lgs = [lg["ansible_ssh_host"] for lg in lgs_host_vars]
 
     print("Monitoring gateloads: {}".format(lgs))
-    lgs_with_port = [lg + ":9876/debug/vars" for lg in lgs]
+    lgs_expvar_endpoints = [lg + ":9876/debug/vars" for lg in lgs]
 
     # Get sync_gateway ips from ansible inventory
     sgs_host_vars = hosts_for_tag("sync_gateways")
     sgs = [sgv["ansible_ssh_host"] for sgv in sgs_host_vars]
 
     print("Monitoring sync_gateways: {}".format(sgs))
-    sgs_with_port = [sg + ":4985/_expvar" for sg in sgs]
+    sgs_expvar_endpoints = [sg + ":4985/_expvar" for sg in sgs]
 
-    endpoints = list()
-    endpoints.extend(lgs_with_port)
+    start_time = time.time()
 
-    target_test_filename = "perf_test.log"
+    gateload_results = OrderedDict()
+    sync_gateway_results = OrderedDict()
 
-    with open(target_test_filename, "w") as f:
+    gateload_is_running = True
+    while gateload_is_running:
 
-        # in seconds
-        test_time = 0
-        collect_interval = 120
+        # Caputure expvars for gateloads
+        for endpoint in lgs_expvar_endpoints:
+            try:
+                write_expvars(gateload_results, endpoint)
+            except ConnectionError as he:
+                # connection to gateload expvars has been closed
+                print(he)
+                print("Gateload no longer reachable. Writing expvars ...")
+                dump_results(folder_name, gateload_results, sync_gateway_results)
+                gateload_is_running = False
 
-        while test_time < 1200:
+        # Capture expvars for sync_gateways
+        for endpoint in sgs_expvar_endpoints:
+            try:
+                write_expvars(sync_gateway_results, endpoint)
+            except ConnectionError as he:
+                # Should not happen unless sg crashes
+                print(he)
+                print("ERROR: sync_gateway not reachable. Dumping results")
+                dump_results(folder_name, gateload_results, sync_gateway_results)
 
-            for endpoint in endpoints:
-                write_expvars(f, endpoint)
-
-            print("Elapsed: {}".format(test_time))
-            f.write("\n\n\n".format(endpoint))
-            time.sleep(collect_interval)
-            test_time += collect_interval
+        print("Elapsed: {} minutes".format((time.time() - start_time) / 60.0))
+        time.sleep(30)

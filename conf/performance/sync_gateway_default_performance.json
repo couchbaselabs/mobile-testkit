@@ -6,7 +6,7 @@
     "maxFileDescriptors": 90000,
     "slowServerCallWarningThreshold": 500,
     "compressResponses": true,
-    "log":["HTTP+"],
+    "log":["HTTP"],
     "cluster_config": {
         "server":"http://{{ couchbase_server_primary_node }}:8091",
         "data_dir":".",

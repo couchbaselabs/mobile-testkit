@@ -59,7 +59,7 @@ def render_gateload_template(sync_gateway, user_offset, number_of_pullers, numbe
         )
         return rendered 
 
-def upload_gateload_config(gateload, sync_gateway, user_offset, number_of_pullers, number_of_pushers):
+def upload_gateload_config(gateload, sync_gateway, user_offset, number_of_pullers, number_of_pushers, test_id):
 
     gateload_inventory_hostname = gateload['inventory_hostname']    
     
@@ -70,6 +70,10 @@ def upload_gateload_config(gateload, sync_gateway, user_offset, number_of_puller
         number_of_pushers
     )
     print rendered
+
+    # Write renderered gateload configs to test results directory
+    with open("../../../performance_results/{}/{}.json".format(test_id, gateload_inventory_hostname), "w") as f:
+        f.write(rendered)
 
     outfile = os.path.join("/tmp", gateload_inventory_hostname) 
     with open(outfile, 'w') as f:
@@ -83,7 +87,7 @@ def upload_gateload_config(gateload, sync_gateway, user_offset, number_of_puller
     print "File transfer result: {}".format(result)
 
 
-def main(number_of_pullers, number_of_pushers):
+def main(number_of_pullers, number_of_pushers, test_id):
 
     sync_gateway_hosts = sync_gateway_non_index_writers()
 
@@ -106,7 +110,8 @@ def main(number_of_pullers, number_of_pushers):
             sync_gateway,
             user_offset,
             number_of_pullers,
-            number_of_pushers
+            number_of_pushers,
+            test_id
         )
 
     print "Finished successfully"
