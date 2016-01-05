@@ -17,9 +17,10 @@ from fixtures import cluster
 @pytest.mark.sanity
 @pytest.mark.parametrize(
         "conf", [
-            ("sync_gateway_default_functional_tests_di.json")
+            ("sync_gateway_default_functional_tests_di.json"),
+            ("sync_gateway_default_functional_tests_cc.json")
         ],
-        ids=["DI-1"]
+        ids=["DI-1", "CC-2"]
 )
 def test_multiple_users_multiple_channels(cluster, conf):
 
@@ -72,9 +73,10 @@ def test_multiple_users_multiple_channels(cluster, conf):
 @pytest.mark.sanity
 @pytest.mark.parametrize(
         "conf", [
-            ("sync_gateway_default_functional_tests_di.json")
+            ("sync_gateway_default_functional_tests_di.json"),
+            ("sync_gateway_default_functional_tests_cc.json")
         ],
-        ids=["DI-1"]
+        ids=["DI-1", "CC-2"]
 )
 def test_muliple_users_single_channel(cluster, conf):
 
@@ -117,9 +119,10 @@ def test_muliple_users_single_channel(cluster, conf):
 @pytest.mark.sanity
 @pytest.mark.parametrize(
         "conf", [
-            ("sync_gateway_default_functional_tests_di.json")
+            ("sync_gateway_default_functional_tests_di.json"),
+            ("sync_gateway_default_functional_tests_cc.json")
         ],
-        ids=["DI-1"]
+        ids=["DI-1", "CC-2"]
 )
 def test_single_user_multiple_channels(cluster, conf):
 
@@ -155,9 +158,10 @@ def test_single_user_multiple_channels(cluster, conf):
 @pytest.mark.sanity
 @pytest.mark.parametrize(
         "conf", [
-            ("sync_gateway_default_functional_tests_di.json")
+            ("sync_gateway_default_functional_tests_di.json"),
+            ("sync_gateway_default_functional_tests_cc.json")
         ],
-        ids=["DI-1"]
+        ids=["DI-1", "CC-2"]
 )
 def test_single_user_single_channel(cluster, conf):
 

@@ -18,8 +18,9 @@ from fixtures import cluster
 @pytest.mark.parametrize(
         "conf", [
             ("sync_gateway_default_functional_tests_di.json"),
+            ("sync_gateway_default_functional_tests_cc.json")
         ],
-        ids=["DI-1"]
+        ids=["DI-1", "CC-2"]
 )
 def test_roles_sanity(cluster, conf):
 

@@ -17,9 +17,10 @@ log = logging.getLogger(lib.settings.LOGGER)
 @pytest.mark.parametrize(
     "conf",
     [
-        ("sync_gateway_custom_sync_access_sanity_di.json")
+        ("sync_gateway_custom_sync_access_sanity_di.json"),
+        ("sync_gateway_custom_sync_access_sanity_cc.json")
     ],
-    ids=["DI-1"]
+    ids=["DI-1", "CC-2"]
 )
 def test_sync_access_sanity(cluster, conf):
 
@@ -61,9 +62,10 @@ def test_sync_access_sanity(cluster, conf):
 @pytest.mark.parametrize(
     "conf",
     [
-        ("sync_gateway_custom_sync_channel_sanity_di.json")
+        ("sync_gateway_custom_sync_channel_sanity_di.json"),
+        ("sync_gateway_custom_sync_channel_sanity_cc.json")
     ],
-    ids=["DI-1"]
+    ids=["DI-1", "CC-2"]
 )
 def test_sync_channel_sanity(cluster, conf):
 
@@ -120,9 +122,10 @@ def test_sync_channel_sanity(cluster, conf):
 @pytest.mark.parametrize(
     "conf",
     [
-        ("sync_gateway_custom_sync_role_sanity_di.json")
+        ("sync_gateway_custom_sync_role_sanity_di.json"),
+        ("sync_gateway_custom_sync_role_sanity_cc.json")
     ],
-    ids=["DI-1"]
+    ids=["DI-1", "CC-2"]
 )
 def test_sync_role_sanity(cluster, conf):
 
@@ -185,9 +188,10 @@ def test_sync_role_sanity(cluster, conf):
 @pytest.mark.parametrize(
     "conf",
     [
-        ("sync_gateway_custom_sync_one_di.json")
+        ("sync_gateway_custom_sync_one_di.json"),
+        ("sync_gateway_custom_sync_one_cc.json")
     ],
-    ids=["DI-1"]
+    ids=["DI-1", "CC-2"]
 )
 def test_sync_sanity(cluster, conf):
 
@@ -227,9 +231,10 @@ def test_sync_sanity(cluster, conf):
 @pytest.mark.parametrize(
     "conf",
     [
-        ("sync_gateway_custom_sync_one_di.json")
+        ("sync_gateway_custom_sync_one_di.json"),
+        ("sync_gateway_custom_sync_one_cc.json")
     ],
-    ids=["DI-1"]
+    ids=["DI-1", "CC-2"]
 )
 def test_sync_sanity_backfill(cluster, conf):
 
@@ -269,9 +274,10 @@ def test_sync_sanity_backfill(cluster, conf):
 @pytest.mark.parametrize(
     "conf",
     [
-        ("sync_gateway_custom_sync_require_roles_di.json")
+        ("sync_gateway_custom_sync_require_roles_di.json"),
+        ("sync_gateway_custom_sync_require_roles_cc.json")
     ],
-    ids=["DI-1"]
+    ids=["DI-1", "CC-2"]
 )
 def test_sync_require_roles(cluster, conf):
 

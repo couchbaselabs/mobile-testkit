@@ -19,9 +19,10 @@ log = logging.getLogger(lib.settings.LOGGER)
 @pytest.mark.distributed_index
 @pytest.mark.parametrize(
         "conf, num_docs, num_revisions", [
-            ("sync_gateway_default_functional_tests_di.json", 100, 100)
+            ("sync_gateway_default_functional_tests_di.json", 100, 100),
+            ("sync_gateway_default_functional_tests_cc.json", 100, 100)
         ],
-        ids=["DI-1"]
+        ids=["DI-1", "CC-2"]
 )
 def test_single_user_single_channel_doc_updates(cluster, conf, num_docs, num_revisions):
 
