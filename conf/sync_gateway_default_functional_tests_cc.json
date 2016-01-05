@@ -7,7 +7,6 @@
     "slowServerCallWarningThreshold": 500,
     "compressResponses": true,
     "log": ["CRUD+", "Cache+", "HTTP+", "Changes+"],
-    "verbose":"true",
     "databases":{
         "db":{
             "server":"http://{{ couchbase_server_primary_node }}:8091",
@@ -23,3 +22,4 @@
         }
     }
 }
+

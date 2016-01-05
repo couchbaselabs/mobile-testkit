@@ -8,18 +8,15 @@
     "compressResponses": true,
     "log": ["CRUD+", "Cache+", "HTTP+", "Changes+"],
     "verbose":"true",
-    "databases":{
+    "databases": {
         "db":{
             "server":"http://{{ couchbase_server_primary_node }}:8091",
-            "bucket":"data-bucket",
-            "users":{
-                "GUEST":{
-                    "disabled":true,
-                    "admin_channels":[
-                        "*"
-                    ]
-                }
-            }
+            "bucket":"data-bucket"
+        },
+        "db2":{
+            "server":"http://{{ couchbase_server_primary_node }}:8091",
+            "bucket":"data-bucket-2"
         }
     }
 }
+

@@ -19,7 +19,15 @@
                         "*"
                     ]
                 }
-            }
+            },
+            "sync":
+            `function(doc, oldDoc){
+                if (doc.content && doc.content.grant_access == "true") {
+                    role("seth", "role:tv_stations");
+                }
+                channel(doc.channels);
+            }`
         }
     }
 }
+

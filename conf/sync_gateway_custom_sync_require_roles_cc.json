@@ -19,7 +19,19 @@
                         "*"
                     ]
                 }
-            }
+            },
+            "sync":
+            `function(doc, oldDoc){
+                if (doc.channels.indexOf("KMOW") > -1 || doc.channels.indexOf("HWOD") > -1 || doc.channels.indexOf("KDWB") > -1) {
+                    requireRole("radio_stations");
+                } else if (doc.channels.indexOf("ABC") > -1 || doc.channels.indexOf("CBS") > -1 || doc.channels.indexOf("NBC") > -1) {
+                    requireRole("tv_stations");
+                } else {
+                    throw({forbidden: "You have to have access to radio_stations or tv_stations!"})
+                }
+                channel(doc.channels);
+            }`
         }
     }
 }
+
