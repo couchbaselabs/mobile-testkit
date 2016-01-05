@@ -16,11 +16,11 @@ log = logging.getLogger(lib.settings.LOGGER)
 @pytest.mark.distributed_index
 @pytest.mark.sanity
 @pytest.mark.parametrize(
-        "conf,num_users,num_docs,num_revisions", [
-            ("sync_gateway_default_functional_tests.json", 1, 5000, 1),
-            ("sync_gateway_default_functional_tests.json", 50, 5000, 1),
-            ("sync_gateway_default_functional_tests.json", 50, 10, 10),
-            ("sync_gateway_default_functional_tests.json", 50, 5000, 10)
+        "conf, num_users, num_docs, num_revisions", [
+            ("sync_gateway_default_functional_tests_di.json", 1, 5000, 1),
+            ("sync_gateway_default_functional_tests_di.json", 50, 5000, 1),
+            ("sync_gateway_default_functional_tests_di.json", 50, 10, 10),
+            ("sync_gateway_default_functional_tests_di.json", 50, 5000, 10)
         ],
         ids=["DI-1", "DI-2", "DI-3", "DI-4"]
 )
@@ -69,11 +69,19 @@ def test_continuous_changes_parametrized(cluster, conf, num_users, num_docs, num
 
 @pytest.mark.distributed_index
 @pytest.mark.sanity
-@pytest.mark.parametrize("num_docs", [10])
-@pytest.mark.parametrize("num_revisions", [10])
-def test_continuous_changes_sanity(cluster, num_docs, num_revisions):
+@pytest.mark.parametrize(
+        "conf, num_docs, num_revisions", [
+            ("sync_gateway_default_functional_tests_di.json", 10, 10)
+        ],
+        ids=["DI-1"]
+)
+def test_continuous_changes_sanity(cluster, conf, num_docs, num_revisions):
 
-    cluster.reset(config="sync_gateway_default_functional_tests.json")
+    log.info("conf: {}".format(conf))
+    log.info("num_docs: {}".format(num_docs))
+    log.info("num_revisions: {}".format(num_revisions))
+
+    cluster.reset(config=conf)
 
     admin = Admin(cluster.sync_gateways[0])
     seth = admin.register_user(target=cluster.sync_gateways[0], db="db", name="seth", password="password", channels=["ABC", "TERMINATE"])

@@ -18,16 +18,24 @@ log = logging.getLogger(settings.LOGGER)
 
 @pytest.mark.sanity
 @pytest.mark.distributed_index
-@pytest.mark.parametrize("num_users", [10])
-@pytest.mark.parametrize("num_channels", [3]) #all users share all channels
-@pytest.mark.parametrize("num_docs", [10])
-@pytest.mark.parametrize("num_revisions", [10])
-def test_mulitple_users_mulitiple_channels_mulitple_revisions(cluster, num_users,num_channels, num_docs, num_revisions):
+@pytest.mark.parametrize(
+        "conf, num_users, num_channels, num_docs, num_revisions", [
+            ("sync_gateway_default_functional_tests_di.json", 10, 3, 10, 10)
+        ],
+        ids=["DI-1"]
+)
+def test_mulitple_users_mulitiple_channels_mulitple_revisions(cluster, conf, num_users, num_channels, num_docs, num_revisions):
 
     log.info("Starting test...")
+    log.info("conf: {}".format(conf))
+    log.info("num_users: {}".format(num_users))
+    log.info("num_channels: {}".format(num_channels))
+    log.info("num_docs: {}".format(num_docs))
+    log.info("num_revisions: {}".format(num_revisions))
+
     start = time.time()
 
-    cluster.reset(config="sync_gateway_default_functional_tests.json")
+    cluster.reset(config=conf)
 
     init_completed = time.time()
     log.info("Initialization completed. Time taken:{}s".format(init_completed - start))

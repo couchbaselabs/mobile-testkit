@@ -6,6 +6,9 @@ from lib.verify import verify_changes
 from fixtures import cluster
 import pytest
 
+import lib.settings
+import logging
+log = logging.getLogger(lib.settings.LOGGER)
 
 # Scenario-2:
 # Single User Single Channel: Create Unique docs and update docs verify all num docs present in changes feed.
@@ -14,12 +17,20 @@ import pytest
 
 @pytest.mark.sanity
 @pytest.mark.distributed_index
-@pytest.mark.parametrize("num_docs", [100])
-@pytest.mark.parametrize("num_revisions", [100])
-def test_single_user_single_channel_doc_updates(cluster, num_docs, num_revisions):
+@pytest.mark.parametrize(
+        "conf, num_docs, num_revisions", [
+            ("sync_gateway_default_functional_tests_di.json", 100, 100)
+        ],
+        ids=["DI-1"]
+)
+def test_single_user_single_channel_doc_updates(cluster, conf, num_docs, num_revisions):
+
+    log.info("conf: {}".format(conf))
+    log.info("num_docs: {}".format(num_docs))
+    log.info("num_revisions: {}".format(num_revisions))
 
     start = time.time()
-    cluster.reset(config="sync_gateway_default_functional_tests.json")
+    cluster.reset(config=conf)
     num_docs = num_docs
     num_revisions = num_revisions
     username = "User-1"

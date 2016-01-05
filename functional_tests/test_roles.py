@@ -6,14 +6,26 @@ import concurrent.futures
 from lib.admin import Admin
 from lib.verify import verify_changes
 
+import lib.settings
+import logging
+log = logging.getLogger(lib.settings.LOGGER)
+
 from fixtures import cluster
 
 
 @pytest.mark.distributed_index
 @pytest.mark.sanity
-def test_roles_sanity(cluster):
+@pytest.mark.parametrize(
+        "conf", [
+            ("sync_gateway_default_functional_tests_di.json"),
+        ],
+        ids=["DI-1"]
+)
+def test_roles_sanity(cluster, conf):
 
-    cluster.reset(config="sync_gateway_default_functional_tests.json")
+    log.info("conf: {}".format(conf))
+
+    cluster.reset(config=conf)
 
     radio_stations = ["KMOW", "HWOD", "KDWB"]
     tv_stations = ["ABC", "CBS", "NBC"]

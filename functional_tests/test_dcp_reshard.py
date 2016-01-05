@@ -5,15 +5,26 @@ import concurrent.futures
 
 from lib.admin import Admin
 from lib.verify import verify_changes
+import lib.settings
+import logging
+log = logging.getLogger(lib.settings.LOGGER)
 
 from fixtures import cluster
 
 
 @pytest.mark.distributed_index
 @pytest.mark.extendedsanity
-def test_dcp_reshard_sync_gateway_goes_down(cluster):
+@pytest.mark.parametrize(
+        "conf", [
+            ("sync_gateway_default_functional_tests_di.json"),
+        ],
+        ids=["DI-1"]
+)
+def test_dcp_reshard_sync_gateway_goes_down(cluster, conf):
 
-    cluster.reset(config="sync_gateway_default_functional_tests.json")
+    log.info("conf: {}".format(conf))
+
+    cluster.reset(config=conf)
 
     admin = Admin(cluster.sync_gateways[2])
 
@@ -55,9 +66,17 @@ def test_dcp_reshard_sync_gateway_goes_down(cluster):
 
 @pytest.mark.distributed_index
 @pytest.mark.extendedsanity
-def test_dcp_reshard_sync_gateway_comes_up(cluster):
+@pytest.mark.parametrize(
+        "conf", [
+            ("sync_gateway_default_functional_tests_di.json"),
+        ],
+        ids=["DI-1"]
+)
+def test_dcp_reshard_sync_gateway_comes_up(cluster, conf):
 
-    cluster.reset(config="sync_gateway_default_functional_tests.json")
+    log.info("conf: {}".format(conf))
+
+    cluster.reset(config=conf)
     cluster.sync_gateways[0].stop()
 
     admin = Admin(cluster.sync_gateways[1])
@@ -72,7 +91,7 @@ def test_dcp_reshard_sync_gateway_comes_up(cluster):
         futures = dict()
 
         # Bring up a sync_gateway
-        futures[executor.submit(cluster.sync_gateways[0].start, "sync_gateway_default_functional_tests.json")] = "sg_up"
+        futures[executor.submit(cluster.sync_gateways[0].start, conf)] = "sg_up"
 
         time.sleep(5)
 
