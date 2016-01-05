@@ -13,20 +13,23 @@ log = logging.getLogger(lib.settings.LOGGER)
 from fixtures import cluster
 
 @pytest.mark.regression
-@pytest.mark.parametrize("num_docs, user_channels, filter, limit", [
-    (5000, "*", True, 50),
-    (1000, "*", True, 50),
-    (5000, "ABC", False, 50),
-    (5000, "ABC", True, 50)
-])
-def test_overloaded_channel_cache(cluster, num_docs, user_channels, filter, limit):
+@pytest.mark.parametrize("conf, num_docs, user_channels, filter, limit", [
+        ("sync_gateway_channel_cache_cc.json", 5000, "*", True, 50),
+        ("sync_gateway_channel_cache_cc.json", 1000, "*", True, 50),
+        ("sync_gateway_channel_cache_cc.json", 5000, "ABC", False, 50),
+        ("sync_gateway_channel_cache_cc.json", 5000, "ABC", True, 50)
+    ],
+    ids=["CC-1", "CC-2", "CC-3", "CC-4"]
+)
+def test_overloaded_channel_cache(cluster, conf, num_docs, user_channels, filter, limit):
 
+    log.info("Using conf: {}".format(conf))
     log.info("Using num_docs: {}".format(num_docs))
     log.info("Using user_channels: {}".format(user_channels))
     log.info("Using filter: {}".format(filter))
     log.info("Using limit: {}".format(limit))
 
-    cluster.reset(config="sync_gateway_channel_cache.json")
+    cluster.reset(config=conf)
 
     target_sg = cluster.sync_gateways[0]
 
