@@ -14,6 +14,7 @@ import generate_gateload_configs
 from utilities.fetch_machine_stats import fetch_machine_stats
 from utilities.log_expvars import log_expvars
 from utilities.analyze_perf_results import analze_perf_results
+from utilities.fetch_sg_logs import fetch_sync_gateway_logs
 
 def run_tests(number_pullers, number_pushers, use_gateload, gen_gateload_config, test_id):
     if use_gateload:
@@ -35,6 +36,8 @@ def run_tests(number_pullers, number_pushers, use_gateload, gen_gateload_config,
 
         # Start gateload
         subprocess.call(["ansible-playbook", "-i", "../../../provisioning_config", "start-gateload.yml"])
+
+        os.chdir("../../..")
 
     else:
         print "Using Gatling"
@@ -113,9 +116,6 @@ if __name__ == "__main__":
         test_id=test_run_id
     )
 
-    # HACK to resolve provisioning_config path
-    os.chdir("../../..")
-
     # write expvars to file, will exit when gateload scenario is done
     log_expvars(test_run_id)
 
@@ -129,3 +129,6 @@ if __name__ == "__main__":
 
     # Generate graphs of the expvars and CPU
     analze_perf_results(test_run_id)
+
+    # Copy sync_gateway logs to test results directory
+    fetch_sync_gateway_logs(test_run_id, is_perf_run=True)
