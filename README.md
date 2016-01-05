@@ -261,3 +261,12 @@ python utilities/monitor_sync_gateway.py
 ```
 $ python utilities/fetch_sg_logs.py
 ```
+
+## Reset Sync Gateway
+
+```
+$ ansible-playbook -i provisioning_config -u centos -e sync_gateway_config_filepath=../../../../conf/bucket_online_offline//bucket_online_offline_default_dcp_cc.json ./provision/ansible/playbooks/reset-sync-gateway.yml
+```
+
+*Note: replace the Sync Gateway config with the config that you need for your use case*
+
