@@ -17,14 +17,6 @@
             "feed_type":"DCPSHARD",
             "server":"http://{{ couchbase_server_primary_node }}:8091",
             "bucket":"data-bucket",
-            "users":{
-                "GUEST":{
-                    "disabled":true,
-                    "admin_channels":[
-                        "*"
-                    ]
-                }
-            },
             "channel_index":{
                 "server":"http://{{ couchbase_server_primary_node }}:8091",
                 "bucket":"index-bucket",
