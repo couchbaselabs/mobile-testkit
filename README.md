@@ -229,10 +229,9 @@ can disable this behavior in functional_tests/settings
 
 
 ```
-$ python run_tests.py
-$ python run_tests.py -t test_samplefile
-$ python run_tests.py -t test_samplefile::test_test1
-$ python run_tests.py -m sanity
+$ py.test -s
+$ py.test -s "functional_tests/test_db_online_offline.py"
+$ py.test -s "functional_tests/test_db_online_offline.py::test_online_default_rest["CC-1"]"
 ```
 
 ## Running an individual functional test
