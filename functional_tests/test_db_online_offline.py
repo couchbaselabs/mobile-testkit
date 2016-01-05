@@ -171,9 +171,10 @@ def rest_scan(sync_gateway, db, online, num_docs, user_name, channels):
 @pytest.mark.parametrize(
     "conf,num_docs",
     [
-        ("bucket_online_offline/bucket_online_offline_default_cc.json", 100)
+        ("bucket_online_offline/bucket_online_offline_default_cc.json", 100),
+        ("bucket_online_offline/bucket_online_offline_default_di.json", 100)
     ],
-    ids=["CC-1"]
+    ids=["CC-1", "DI-2"]
 )
 def test_online_default_rest(cluster, conf, num_docs):
 
@@ -200,9 +201,10 @@ def test_online_default_rest(cluster, conf, num_docs):
 @pytest.mark.parametrize(
     "conf,num_docs",
     [
-        ("bucket_online_offline/bucket_online_offline_offline_false_cc.json", 100)
+        ("bucket_online_offline/bucket_online_offline_offline_false_cc.json", 100),
+        ("bucket_online_offline/bucket_online_offline_offline_false_di.json", 100)
     ],
-    ids=["CC-1"]
+    ids=["CC-1", "DI-2"]
 )
 def test_offline_false_config_rest(cluster, conf, num_docs):
 
@@ -230,9 +232,10 @@ def test_offline_false_config_rest(cluster, conf, num_docs):
 @pytest.mark.parametrize(
     "conf,num_docs",
     [
-        ("bucket_online_offline/bucket_online_offline_default_cc.json", 100)
+        ("bucket_online_offline/bucket_online_offline_default_cc.json", 100),
+        ("bucket_online_offline/bucket_online_offline_default_di.json", 100)
     ],
-    ids=["CC-1"]
+    ids=["CC-1", "DI-2"]
 )
 def test_online_to_offline_check_503(cluster, conf, num_docs):
 
@@ -266,9 +269,10 @@ def test_online_to_offline_check_503(cluster, conf, num_docs):
 @pytest.mark.parametrize(
     "conf,num_docs",
     [
-        ("bucket_online_offline/bucket_online_offline_default_cc.json", 5000)
+        ("bucket_online_offline/bucket_online_offline_default_cc.json", 5000),
+        ("bucket_online_offline/bucket_online_offline_default_di.json", 5000)
     ],
-    ids=["CC-1"]
+    ids=["CC-1", "DI-2"]
 )
 def test_online_to_offline_changes_feed_controlled_close_continuous(cluster, conf, num_docs):
 
@@ -337,9 +341,10 @@ def test_online_to_offline_changes_feed_controlled_close_continuous(cluster, con
 @pytest.mark.parametrize(
     "conf,num_docs",
     [
-        ("bucket_online_offline/bucket_online_offline_default_cc.json", 5000)
+        ("bucket_online_offline/bucket_online_offline_default_cc.json", 5000),
+        ("bucket_online_offline/bucket_online_offline_default_di.json", 5000)
     ],
-    ids=["CC-1"]
+    ids=["CC-1", "DI-2"]
 )
 def test_online_to_offline_changes_feed_controlled_close_longpoll_sanity(cluster, conf, num_docs):
 
@@ -392,9 +397,10 @@ def test_online_to_offline_changes_feed_controlled_close_longpoll_sanity(cluster
 @pytest.mark.parametrize(
     "conf,num_docs",
     [
-        ("bucket_online_offline/bucket_online_offline_default_cc.json", 5000)
+        ("bucket_online_offline/bucket_online_offline_default_cc.json", 5000),
+        ("bucket_online_offline/bucket_online_offline_default_di.json", 5000)
     ],
-    ids=["CC-1"]
+    ids=["CC-1", "DI-2"]
 )
 def test_online_to_offline_changes_feed_controlled_close_longpoll(cluster, conf, num_docs):
 
@@ -478,9 +484,10 @@ def test_online_to_offline_changes_feed_controlled_close_longpoll(cluster, conf,
 @pytest.mark.parametrize(
     "conf,num_docs",
     [
-        ("bucket_online_offline/bucket_online_offline_offline_true_cc.json", 100)
+        ("bucket_online_offline/bucket_online_offline_offline_true_cc.json", 100),
+        ("bucket_online_offline/bucket_online_offline_offline_true_di.json", 100)
     ],
-    ids=["CC-1"]
+    ids=["CC-1", "DI-2"]
 )
 def test_offline_true_config_bring_online(cluster, conf, num_docs):
 
@@ -515,11 +522,11 @@ def test_offline_true_config_bring_online(cluster, conf, num_docs):
 @pytest.mark.parametrize(
     "conf,num_docs",
     [
-        ("bucket_online_offline/bucket_online_offline_default.json", 100),
         ("bucket_online_offline/bucket_online_offline_default_dcp_cc.json", 100),
-        ("bucket_online_offline/bucket_online_offline_default_cc.json", 100)
+        ("bucket_online_offline/bucket_online_offline_default_cc.json", 100),
+        ("bucket_online_offline/bucket_online_offline_default_di.json", 100)
     ],
-    ids=["CC-1", "CC-2"]
+    ids=["CC-1", "CC-2", "DI-3"]
 )
 def test_db_offline_tap_loss_sanity(cluster, conf, num_docs):
 
@@ -551,9 +558,10 @@ def test_db_offline_tap_loss_sanity(cluster, conf, num_docs):
 @pytest.mark.parametrize(
     "conf,num_docs",
     [
-        ("bucket_online_offline/bucket_online_offline_default_cc.json", 100)
+        ("bucket_online_offline/bucket_online_offline_default_cc.json", 100),
+        ("bucket_online_offline/bucket_online_offline_default_di.json", 100)
     ],
-    ids=["CC-1"]
+    ids=["CC-1", "DI-2"]
 )
 def test_db_delayed_online(cluster, conf, num_docs):
 
@@ -594,9 +602,10 @@ def test_db_delayed_online(cluster, conf, num_docs):
 @pytest.mark.parametrize(
     "conf,num_docs",
     [
-        ("bucket_online_offline/bucket_online_offline_multiple_dbs_unique_buckets_cc.json", 100)
+        ("bucket_online_offline/bucket_online_offline_multiple_dbs_unique_buckets_cc.json", 100),
+        ("bucket_online_offline/bucket_online_offline_multiple_dbs_unique_buckets_di.json", 100)
     ],
-    ids=["CC-1"]
+    ids=["CC-1", "DI-2"]
 )
 def test_multiple_dbs_unique_buckets_lose_tap(cluster, conf, num_docs):
 
