@@ -56,6 +56,22 @@ python provision/provision_cluster.py --server-version=4.1.0 --sync-gateway-bran
 python performance_tests/run_tests.py --use-gateload --gen-gateload-config --reset-sync-gw --number-pushers=10000 --number-pullers=10000 --test-id="10k-10k-1IR-1IW"
 python provision/teardown_cluster.py --stackname="SethPerfStack"
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 ## REPROVISION
 
 # Test 8
@@ -64,7 +80,7 @@ python provision/create_and_instantiate_cluster.py --stackname="SethPerfStack" -
 python provision/generate_ansible_inventory_from_aws.py --stackname="SethPerfStack" --targetfile="provisioning_config"
 # Edit provisioning_config to reflect the number of writers you require
 python provision/provision_cluster.py --server-version=4.1.0 --sync-gateway-branch=feature/distributed_index --install-deps
-# 4 IR - 5000 / 4 = 1250 readers and writers per sync_gateway IR
+# 4 IR - 10000 / 8 = 1250 readers and writers per sync_gateway IR
 python performance_tests/run_tests.py --use-gateload --gen-gateload-config --reset-sync-gw --number-pushers=1250 --number-pullers=1250 --test-id="10k-10k-8IR-2IW"
 python provision/teardown_cluster.py --stackname="SethPerfStack"
 
@@ -76,6 +92,7 @@ python provision/create_and_instantiate_cluster.py --stackname="SethPerfStack" -
 python provision/generate_ansible_inventory_from_aws.py --stackname="SethPerfStack" --targetfile="provisioning_config"
 # Edit provisioning_config to reflect the number of writers you require
 python provision/provision_cluster.py --server-version=4.1.0 --sync-gateway-branch=feature/distributed_index --install-deps
+# 4 IR - 10000 / 4 = 2500 readers and writers per sync_gateway IR
 python performance_tests/run_tests.py --use-gateload --gen-gateload-config --reset-sync-gw --number-pushers=2500 --number-pullers=2500 --test-id="10k-10k-4IR-2IW"
 python provision/teardown_cluster.py --stackname="SethPerfStack"
 
@@ -87,7 +104,7 @@ python provision/create_and_instantiate_cluster.py --stackname="SethPerfStack" -
 python provision/generate_ansible_inventory_from_aws.py --stackname="SethPerfStack" --targetfile="provisioning_config"
 # Edit provisioning_config to reflect the number of writers you require
 python provision/provision_cluster.py --server-version=4.1.0 --sync-gateway-branch=feature/distributed_index --install-deps
-# 4 IR - 5000 / 2 = 2500 readers and writers per sync_gateway IR
+# 4 IR - 10000 / 2 = 5000 readers and writers per sync_gateway IR
 python performance_tests/run_tests.py --use-gateload --gen-gateload-config --reset-sync-gw --number-pushers=5000 --number-pullers=5000 --test-id="10k-10k-2IR-2IW"
 python provision/teardown_cluster.py --stackname="SethPerfStack"
 
@@ -99,6 +116,7 @@ python provision/create_and_instantiate_cluster.py --stackname="SethPerfStack" -
 python provision/generate_ansible_inventory_from_aws.py --stackname="SethPerfStack" --targetfile="provisioning_config"
 # Edit provisioning_config to reflect the number of writers you require
 python provision/provision_cluster.py --server-version=4.1.0 --sync-gateway-branch=feature/distributed_index --install-deps
+# 4 IR - 10000 / 1 = 10000 readers and writers per sync_gateway IR
 python performance_tests/run_tests.py --use-gateload --gen-gateload-config --reset-sync-gw --number-pushers=10000 --number-pullers=10000 --test-id="10k-10k-1IR-2IW"
 python provision/teardown_cluster.py --stackname="SethPerfStack"
 
