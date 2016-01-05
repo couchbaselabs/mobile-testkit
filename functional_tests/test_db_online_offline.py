@@ -171,7 +171,7 @@ def rest_scan(sync_gateway, db, online, num_docs, user_name, channels):
 @pytest.mark.parametrize(
     "conf,num_docs",
     [
-        ("bucket_online_offline/bucket_online_offline_default.json", 100)
+        ("bucket_online_offline/bucket_online_offline_default_cc.json", 100)
     ],
     ids=["CC-1"]
 )
@@ -200,7 +200,7 @@ def test_online_default_rest(cluster, conf, num_docs):
 @pytest.mark.parametrize(
     "conf,num_docs",
     [
-        ("bucket_online_offline/bucket_online_offline_offline_false.json", 100)
+        ("bucket_online_offline/bucket_online_offline_offline_false_cc.json", 100)
     ],
     ids=["CC-1"]
 )
@@ -230,7 +230,7 @@ def test_offline_false_config_rest(cluster, conf, num_docs):
 @pytest.mark.parametrize(
     "conf,num_docs",
     [
-        ("bucket_online_offline/bucket_online_offline_default.json", 100)
+        ("bucket_online_offline/bucket_online_offline_default_cc.json", 100)
     ],
     ids=["CC-1"]
 )
@@ -266,7 +266,7 @@ def test_online_to_offline_check_503(cluster, conf, num_docs):
 @pytest.mark.parametrize(
     "conf,num_docs",
     [
-        ("bucket_online_offline/bucket_online_offline_default.json", 5000)
+        ("bucket_online_offline/bucket_online_offline_default_cc.json", 5000)
     ],
     ids=["CC-1"]
 )
@@ -337,7 +337,7 @@ def test_online_to_offline_changes_feed_controlled_close_continuous(cluster, con
 @pytest.mark.parametrize(
     "conf,num_docs",
     [
-        ("bucket_online_offline/bucket_online_offline_default.json", 5000)
+        ("bucket_online_offline/bucket_online_offline_default_cc.json", 5000)
     ],
     ids=["CC-1"]
 )
@@ -392,7 +392,7 @@ def test_online_to_offline_changes_feed_controlled_close_longpoll_sanity(cluster
 @pytest.mark.parametrize(
     "conf,num_docs",
     [
-        ("bucket_online_offline/bucket_online_offline_default.json", 5000)
+        ("bucket_online_offline/bucket_online_offline_default_cc.json", 5000)
     ],
     ids=["CC-1"]
 )
@@ -478,7 +478,7 @@ def test_online_to_offline_changes_feed_controlled_close_longpoll(cluster, conf,
 @pytest.mark.parametrize(
     "conf,num_docs",
     [
-        ("bucket_online_offline/bucket_online_offline_offline_true.json", 100)
+        ("bucket_online_offline/bucket_online_offline_offline_true_cc.json", 100)
     ],
     ids=["CC-1"]
 )
@@ -516,7 +516,8 @@ def test_offline_true_config_bring_online(cluster, conf, num_docs):
     "conf,num_docs",
     [
         ("bucket_online_offline/bucket_online_offline_default.json", 100),
-        ("bucket_online_offline/bucket_online_offline_default_dcp_cc.json", 100)
+        ("bucket_online_offline/bucket_online_offline_default_dcp_cc.json", 100),
+        ("bucket_online_offline/bucket_online_offline_default_cc.json", 100)
     ],
     ids=["CC-1", "CC-2"]
 )
@@ -550,7 +551,7 @@ def test_db_offline_tap_loss_sanity(cluster, conf, num_docs):
 @pytest.mark.parametrize(
     "conf,num_docs",
     [
-        ("bucket_online_offline/bucket_online_offline_default.json", 100)
+        ("bucket_online_offline/bucket_online_offline_default_cc.json", 100)
     ],
     ids=["CC-1"]
 )
@@ -593,7 +594,7 @@ def test_db_delayed_online(cluster, conf, num_docs):
 @pytest.mark.parametrize(
     "conf,num_docs",
     [
-        ("bucket_online_offline/bucket_online_offline_multiple_dbs_unique_buckets.json", 100)
+        ("bucket_online_offline/bucket_online_offline_multiple_dbs_unique_buckets_cc.json", 100)
     ],
     ids=["CC-1"]
 )
@@ -638,7 +639,7 @@ def test_multiple_dbs_unique_buckets_lose_tap(cluster, conf, num_docs):
 # )
 # def test_config_change_invalid_1(cluster, num_docs):
 #
-#     cluster.reset("bucket_online_offline/bucket_online_offline_offline_false.json")
+#     cluster.reset("bucket_online_offline/bucket_online_offline_offline_false_cc.json")
 #     admin = Admin(cluster.sync_gateways[0])
 #
 #     # all db endpoints should succeed
@@ -685,14 +686,14 @@ def test_multiple_dbs_unique_buckets_lose_tap(cluster, conf, num_docs):
 ## Scenario 17
 #@pytest.mark.dbonlineoffline
 #def test_db_online_offline_with_invalid_legal_config(cluster, disable_http_retry):
-#    cluster.reset("bucket_online_offline/bucket_online_offline_offline_false.json")
+#    cluster.reset("bucket_online_offline/bucket_online_offline_offline_false_cc.json")
 #    admin = Admin(cluster.sync_gateways[0])
 #
 #    # all db endpoints should succeed
 #    errors = rest_scan(cluster.sync_gateways[0], db="db", online=True)
 #    assert(len(errors) == 0)
 #
-#    #restart_status = cluster.sync_gateways[0].restart("bucket_online_offline/db_online_offline_invalid_db.json")
+#    #restart_status = cluster.sync_gateways[0].restart("bucket_online_offline/db_online_offline_invalid_db_cc.json")
 #    #assert restart_status == 0
 #
 #    config = admin.get_db_config(db="db")
