@@ -227,17 +227,17 @@ $ ansible-playbook performance_tests/ansible/playbooks/collect-sync-gateway-prof
 By default the logs from all of the sync_gateways will be zipped and placed in your /tmp directory if a test fails. You
 can disable this behavior in functional_tests/settings
 
-
+**Run all**
 ```
 $ py.test -s
+```
+**Running a test fixture**
+```
 $ py.test -s "functional_tests/test_db_online_offline.py"
+```
+**Running an individual test**
+```
 $ py.test -s "functional_tests/test_db_online_offline.py::test_online_default_rest["CC-1"]"
-```
-
-## Running an individual functional test
-
-```
-$ python -m pytest --capture=no functional_tests/test_users_channels.py::test_single_user_single_channel
 ```
 
 ## Monitoring the cluster
