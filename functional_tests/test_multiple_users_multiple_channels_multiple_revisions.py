@@ -64,8 +64,9 @@ def test_mulitple_users_mulitiple_channels_mulitple_revisions(cluster, num_users
 
     expected_docs = num_users * num_docs
     for user_obj, docs in recieved_docs.items():
-        assert docs == expected_docs
         log.info('User {} got {} docs, expected docs: {}'.format(user_obj.name, docs, expected_docs))
+        assert docs == expected_docs
+
 
     # Verify that
     # user created doc-ids exist in docs received in changes feed
