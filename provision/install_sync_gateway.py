@@ -12,14 +12,16 @@ class SyncGatewayConfig:
                  dev_build_number,
                  version,
                  build_number,
-                 config_path):
+                 config_path,
+                 build_flags):
         self._dev_build_url = dev_build_url
         self._dev_build_number = dev_build_number
         self._version = version
         self._build_number = build_number
         self._branch = branch
         self._config_path = config_path
-
+        self._build_flags = build_flags
+        
         self._valid_versions = [
             "1.1.0",
             "1.1.1",
@@ -53,6 +55,10 @@ class SyncGatewayConfig:
     @property
     def config_path(self):
         return self._config_path
+    
+    @property
+    def build_flags(self):
+        return self._build_flags
 
     def __str__(self):
         output = "\n  sync_gateway configuration\n"
@@ -63,6 +69,7 @@ class SyncGatewayConfig:
         output += "  dev build number: {}\n".format(self._dev_build_number)
         output += "  branch:           {}\n".format(self._branch)
         output += "  config path:      {}\n".format(self._config_path)
+        output += "  build flags:      {}\n".format(self._build_flags)
         return output
 
     def _base_url_package_for_sync_gateway_dev_build(self, dev_build_url, dev_build_number):
@@ -127,9 +134,10 @@ def install_sync_gateway(sync_gateway_config):
         # Install source
         ansible_runner.run_ansible_playbook(
             "install-sync-gateway-source.yml",
-            "sync_gateway_config_filepath={0} branch={1}".format(
+            "sync_gateway_config_filepath={0} branch={1} build_flags={2}".format(
                 sync_gateway_config.config_path,
-                sync_gateway_config.branch
+                sync_gateway_config.branch,
+                sync_gateway_config.build_flags
             )
         )
 
@@ -179,6 +187,11 @@ if __name__ == "__main__":
                       action="store", type="string", dest="dev_build_number", default=None,
                       help="sync_gateway dev build number (ex. 340)")
 
+    parser.add_option("", "--build-flags",
+                      action="store", type="string", dest="build_flags", default=None,
+                      help="build flags to pass when building sync gateway (ex. -race)")
+
+    
     arg_parameters = sys.argv[1:]
 
     (opts, args) = parser.parse_args(arg_parameters)
@@ -200,7 +213,8 @@ if __name__ == "__main__":
         branch=opts.source_branch,
         config_path=opts.sync_gateway_config_file,
         dev_build_url=opts.dev_build_url,
-        dev_build_number=opts.dev_build_number
+        dev_build_number=opts.dev_build_number,
+        build_flags=opts.build_flags
     )
 
     install_sync_gateway(sync_gateway_install_config)
