@@ -46,7 +46,18 @@ class Cluster:
         hosts = group.get_hosts()
         return [host.get_variables() for host in hosts]
 
+    def validate_cluster(self):
+
+        # Validate sync gateways
+        num_index_readers = len(self.sync_gateways) - len(self.sync_gateway_writers)
+        if num_index_readers == 0:
+            raise Exception("Functional tests require at least 1 index reader")
+        
+    
     def reset(self, config):
+
+        self.validate_cluster()
+        
         # Stop sync_gateways
         print(">>> Stopping sync_gateway")
         status = run_ansible_playbook("stop-sync-gateway.yml", stop_on_fail=False)
