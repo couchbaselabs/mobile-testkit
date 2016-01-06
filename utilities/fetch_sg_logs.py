@@ -1,19 +1,15 @@
 import os.path
 import shutil
 import time
-import logging
-import lib.settings
-
-log = logging.getLogger(lib.settings.LOGGER)
 
 from provision.ansible_runner import run_ansible_playbook
 
 
 def fetch_sync_gateway_logs(prefix, is_perf_run=False):
 
-    print("\n\n\n")
+    print("\n")
 
-    log.info("Pulling logs")
+    print("Pulling logs")
     # fetch logs from sync_gateway instances
     run_ansible_playbook("fetch-sync-gateway-logs.yml")
 
@@ -30,15 +26,13 @@ def fetch_sync_gateway_logs(prefix, is_perf_run=False):
         shutil.make_archive(name, "zip", "/tmp/sg_logs")
 
         shutil.rmtree("/tmp/sg_logs")
-        log.info("sync_gateway logs copied here {}\n".format(name))
-
-        print(name)
+        print("sync_gateway logs copied here {}\n".format(name))
 
         if is_perf_run:
             # Move perf logs to performance_results
             shutil.copy("{}.zip".format(name), "performance_results/{}/".format(prefix))
 
-    print("\n\n\n")
+    print("\n")
 
 
 if __name__ == "__main__":
