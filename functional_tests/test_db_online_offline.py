@@ -390,7 +390,9 @@ def test_online_to_offline_changes_feed_controlled_close_longpoll_sanity(cluster
                 print("Futures: error: {}".format(e))
 
     # Account for _user doc
-    assert(1 == int(last_seq_num))
+    # last_seq may be of the form '1' for channel cache or '1-0' for distributed index
+    seq_num_component = last_seq_num.split("-")
+    assert(1 == int(seq_num_component[0]))
     assert(len(docs_in_changes) == 0)
 
 
@@ -400,10 +402,13 @@ def test_online_to_offline_changes_feed_controlled_close_longpoll_sanity(cluster
 @pytest.mark.parametrize(
     "conf,num_docs",
     [
-        ("bucket_online_offline/bucket_online_offline_default_cc.json", 5000),
-        ("bucket_online_offline/bucket_online_offline_default_di.json", 5000)
+        ("bucket_online_offline/bucket_online_offline_default_cc.json", 5000)
+        #("bucket_online_offline/bucket_online_offline_default_di.json", 5000)
     ],
-    ids=["CC-1", "DI-2"]
+    ids=[
+        "CC-1"
+        #"DI-2"
+    ]
 )
 def test_online_to_offline_changes_feed_controlled_close_longpoll(cluster, conf, num_docs):
 
@@ -463,8 +468,12 @@ def test_online_to_offline_changes_feed_controlled_close_longpoll(cluster, conf,
     # Some docs should have made it to _changes
     assert(len(docs_in_changes) > 0)
 
+    seq_num_component = last_seq_num.split("-")
+
+    # last_seq may be of the form '1' for channel cache or '1-0' for distributed index
     # assert the last_seq_number == number _changes + 2 (_user doc starts and one and docs start at _user doc seq + 2)
-    assert(len(docs_in_changes) + 2 == int(last_seq_num))
+    seq_num_component = last_seq_num.split("-")
+    assert(len(docs_in_changes) + 2 == int(seq_num_component[0]))
 
     # Bring db back online
     status = admin.bring_db_online("db")
