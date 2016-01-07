@@ -497,9 +497,12 @@ def test_online_to_offline_changes_feed_controlled_close_longpoll(cluster, conf,
     "conf,num_docs",
     [
         ("bucket_online_offline/bucket_online_offline_offline_true_cc.json", 100),
-        ("bucket_online_offline/bucket_online_offline_offline_true_di.json", 100)
+        #("bucket_online_offline/bucket_online_offline_offline_true_di.json", 100)
     ],
-    ids=["CC-1", "DI-2"]
+    ids=[
+        "CC-1"
+    #    "DI-2"
+    ]
 )
 def test_offline_true_config_bring_online(cluster, conf, num_docs):
 
