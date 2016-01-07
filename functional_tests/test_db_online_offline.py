@@ -574,9 +574,12 @@ def test_db_offline_tap_loss_sanity(cluster, conf, num_docs):
     "conf,num_docs",
     [
         ("bucket_online_offline/bucket_online_offline_default_cc.json", 100),
-        ("bucket_online_offline/bucket_online_offline_default_di.json", 100)
+        #("bucket_online_offline/bucket_online_offline_default_di.json", 100)
     ],
-    ids=["CC-1", "DI-2"]
+    ids=[
+        "CC-1"
+         #"DI-2"
+         ]
 )
 def test_db_delayed_online(cluster, conf, num_docs):
 
