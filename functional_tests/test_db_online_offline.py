@@ -269,10 +269,13 @@ def test_online_to_offline_check_503(cluster, conf, num_docs):
 @pytest.mark.parametrize(
     "conf,num_docs",
     [
-        ("bucket_online_offline/bucket_online_offline_default_cc.json", 5000),
-        ("bucket_online_offline/bucket_online_offline_default_di.json", 5000)
+        ("bucket_online_offline/bucket_online_offline_default_cc.json", 5000)
+        #("bucket_online_offline/bucket_online_offline_default_di.json", 5000)
     ],
-    ids=["CC-1", "DI-2"]
+    ids=[
+        "CC-1"
+         #"DI-2"
+        ]
 )
 def test_online_to_offline_changes_feed_controlled_close_continuous(cluster, conf, num_docs):
 
