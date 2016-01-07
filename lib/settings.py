@@ -25,7 +25,7 @@ ERROR_CODE_LIST = [500, 503]
 # INFO     20
 # DEBUG    10
 # NOTSET    0
-LOG_LEVEL = 20
+LOG_LEVEL = 30
 
 # Logger Name
 LOGGER = 'test_framework'
