@@ -198,7 +198,7 @@ $ python provision/install_splunk_forwarder.py
 
 ```
 $ export PYTHONPATH=$PYTHONPATH:.
-$ python performance_tests/run_tests.py --number-pullers 1000 --number-pushers 1000 --use-gateload --gen-gateload-config --reset-sync-gw 
+$ python performance_tests/run_tests.py --number-pullers 1000 --number-pushers 1000 --use-gateload --gen-gateload-config --reset-sync-gw --test-id="perftest" 
 ```
 
 To stop the tests:
