@@ -136,3 +136,16 @@ class Admin:
         resp.raise_for_status()
         return resp.status_code
 
+    # GET /_cbgt/api/cfg
+    def get_cbgt_cfg(self):
+        resp = requests.get("{0}/_cbgt/api/cfg".format(self.admin_url), headers=self._headers, timeout=settings.HTTP_REQ_TIMEOUT)
+        log.info("GET {}".format(resp.url))
+        resp.raise_for_status()
+        return resp.json()
+
+    # GET /_cbgt/api/diag
+    def get_cbgt_diagnostics(self):
+        resp = requests.get("{0}/_cbgt/api/diag".format(self.admin_url), headers=self._headers, timeout=settings.HTTP_REQ_TIMEOUT)
+        log.info("GET {}".format(resp.url))
+        resp.raise_for_status()
+        return resp.json()
