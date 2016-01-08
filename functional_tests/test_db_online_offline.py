@@ -1,6 +1,7 @@
 import pytest
 import time
 import concurrent.futures
+import uuid
 
 from lib.admin import Admin
 from lib.user import User
@@ -18,7 +19,7 @@ from multiprocessing.pool import ThreadPool
 import logging
 log = logging.getLogger(lib.settings.LOGGER)
 
-NUM_ENDPOINTS = 10
+NUM_ENDPOINTS = 13
 
 def rest_scan(sync_gateway, db, online, num_docs, user_name, channels):
 
@@ -36,24 +37,17 @@ def rest_scan(sync_gateway, db, online, num_docs, user_name, channels):
 
     # Missing REST
     # TODO: POST /{db}/_all_docs
-    # TODO: POST /{db}/_bulk_get
 
     # TODO: DELETE /{db}/{doc}
     # TODO: PUT /{db}/{doc}/{attachment}
     # TODO: GET /{db}/{doc}/{attachment}
 
     # Missing Local Document
-    # TODO: PUT /{db}/{local-doc-id}
-    # TODO: GET /{db}/{local-doc-id}
     # TODO: DELETE /{db}/{local-doc-id}
 
     # Missing Authentication
     # TODO: POST /{db}/_facebook_token
     # TODO: POST /{db}/_persona_assertion
-
-
-    # Implement these
-    # TODO: POST /{db}
 
     admin = Admin(sync_gateway=sync_gateway)
 
@@ -129,6 +123,14 @@ def rest_scan(sync_gateway, db, online, num_docs, user_name, channels):
     bulk_doc_errors = user.add_docs(num_docs=num_docs, bulk=True)
     error_responses.extend(bulk_doc_errors)
 
+    # POST /{db}/
+    for i in range(num_docs):
+        try:
+            user.add_doc()
+        except HTTPError as e:
+            log.error((e.response.url, e.response.status_code))
+            error_responses.append((e.response.url, e.response.status_code))
+
     # GET /{db}/{name}
     # PUT /{db}/{name}
     if online:
@@ -142,10 +144,37 @@ def rest_scan(sync_gateway, db, online, num_docs, user_name, channels):
             log.error((e.response.url, e.response.status_code))
             error_responses.append((e.response.url, e.response.status_code))
 
+    # PUT /{db}/{local-doc-id}
+    local_doc_id = uuid.uuid4()
+    try:
+        doc = user.add_doc("_local/{}".format(local_doc_id), content={"message": "I should not be replicated"})
+    except HTTPError as e:
+        log.error((e.response.url, e.response.status_code))
+        error_responses.append((e.response.url, e.response.status_code))
+
+    # GET /{db}/{local-doc-id}
+    try:
+        doc = user.get_doc("_local/{}".format(local_doc_id))
+        assert(doc["content"]["message"] == "I should not be replicated")
+    except HTTPError as e:
+        log.error((e.response.url, e.response.status_code))
+        error_responses.append((e.response.url, e.response.status_code))
+
     # GET /{db}/_all_docs
     try:
         all_docs_result = user.get_all_docs()
-        assert len(all_docs_result["rows"]) == num_docs * 2
+        # num_docs /{db}/{doc} PUT + num_docs /{db}/_bulk_docs + num_docs POST /{db}/
+        assert(len(all_docs_result["rows"]) == num_docs * 3)
+    except HTTPError as e:
+        log.error((e.response.url, e.response.status_code))
+        error_responses.append((e.response.url, e.response.status_code))
+
+    # POST /{db}/_bulk_get
+    try:
+        doc_ids = list(user.cache.keys())
+        first_ten_ids = doc_ids[:10]
+        first_ten = user.get_docs(first_ten_ids)
+        assert(len(first_ten) == 10)
     except HTTPError as e:
         log.error((e.response.url, e.response.status_code))
         error_responses.append((e.response.url, e.response.status_code))
@@ -157,7 +186,7 @@ def rest_scan(sync_gateway, db, online, num_docs, user_name, channels):
     try:
         changes = user.get_changes()
         # If successful, verify the _changes feed
-        verify_changes(user, expected_num_docs=num_docs * 2, expected_num_revisions=1, expected_docs=user.cache)
+        verify_changes(user, expected_num_docs=num_docs * 3, expected_num_revisions=1, expected_docs=user.cache)
     except HTTPError as e:
         log.error((e.response.url, e.response.status_code))
         error_responses.append((e.response.url, e.response.status_code))
@@ -254,7 +283,7 @@ def test_online_to_offline_check_503(cluster, conf, num_docs):
     errors = rest_scan(cluster.sync_gateways[0], db="db", online=False, num_docs=num_docs, user_name="seth", channels=["ABC"])
 
     # We hit NUM_ENDPOINT unique REST endpoints + num of doc PUT failures
-    assert(len(errors) == NUM_ENDPOINTS + num_docs)
+    assert(len(errors) == NUM_ENDPOINTS + (num_docs * 2))
     for error_tuple in errors:
         print("({},{})".format(error_tuple[0], error_tuple[1]))
         assert(error_tuple[1] == 503)
@@ -494,7 +523,7 @@ def test_offline_true_config_bring_online(cluster, conf, num_docs):
     # all db endpoints should fail with 503
     errors = rest_scan(cluster.sync_gateways[0], db="db", online=False, num_docs=num_docs, user_name="seth", channels=["ABC"])
 
-    assert(len(errors) == NUM_ENDPOINTS + num_docs)
+    assert(len(errors) == NUM_ENDPOINTS + (num_docs * 2))
     for error_tuple in errors:
         print("({},{})".format(error_tuple[0], error_tuple[1]))
         assert(error_tuple[1] == 503)
@@ -539,7 +568,7 @@ def test_db_offline_tap_loss_sanity(cluster, conf, num_docs):
     # Check that bucket is in offline state
     # Will return 401 for public enpoint because the auth doc has been deleted
     errors = rest_scan(cluster.sync_gateways[0], db="db", online=False, num_docs=num_docs, user_name="seth", channels=["ABC"])
-    assert(len(errors) == NUM_ENDPOINTS + num_docs)
+    assert(len(errors) == NUM_ENDPOINTS + (num_docs * 2))
     for error_tuple in errors:
         print("({},{})".format(error_tuple[0], error_tuple[1]))
         assert(error_tuple[1] == 503 or error_tuple[1] == 401)
@@ -622,7 +651,7 @@ def test_multiple_dbs_unique_buckets_lose_tap(cluster, conf, num_docs):
     # Check that db1 and db3 go offline
     for db in ["db1", "db3"]:
         errors = rest_scan(cluster.sync_gateways[0], db=db, online=False, num_docs=num_docs, user_name="seth", channels=["ABC"])
-        assert(len(errors) == NUM_ENDPOINTS + num_docs)
+        assert(len(errors) == NUM_ENDPOINTS + (num_docs * 2))
         for error_tuple in errors:
             print("({},{})".format(error_tuple[0], error_tuple[1]))
             assert(error_tuple[1] == 503 or error_tuple[1] == 401)

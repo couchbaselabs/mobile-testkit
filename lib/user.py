@@ -38,6 +38,32 @@ class User:
     def __str__(self):
         return "USER: name={0} password={1} db={2} channels={3} cache={4}".format(self.name, self.password, self.db, self.channels, len(self.cache))
 
+    # GET /{db}/{doc}
+    # GET /{db}/{local-doc-id}
+    def get_doc(self, doc_id):
+        resp = requests.get("{0}/{1}/{2}".format(self.target.url, self.db, doc_id), headers=self._headers)
+        log.info("GET {}".format(resp.url))
+        resp.raise_for_status()
+        return resp.json()
+
+    # POST /{db}/bulk_get
+    def get_docs(self, doc_ids):
+        docs_array = [{"id": doc_id} for doc_id in doc_ids]
+        body = {"docs": docs_array}
+
+        resp = requests.post("{0}/{1}/_bulk_get".format(self.target.url, self.db), headers=self._headers, data=json.dumps(body))
+        log.info("POST {}".format(resp.url))
+        resp.raise_for_status()
+
+        # Parse Mime and build python obj of docs returned
+        # May need to fix this if we start including attachments
+        docs = []
+        for part in resp.text.splitlines():
+            if part.startswith("{"):
+                docs.append(json.loads(part))
+
+        return docs
+
     # GET /{db}/_all_docs
     def get_all_docs(self):
         resp = requests.get("{0}/{1}/_all_docs".format(self.target.url, self.db), headers=self._headers)
@@ -46,9 +72,8 @@ class User:
         return resp.json()
 
     # PUT /{db}/{doc}
-    def add_doc(self, doc_id, content=None, retries=False):
-
-        doc_url = self.target.url + "/" + self.db + "/" + doc_id
+    # PUT /{db}/{local-doc-id}
+    def add_doc(self, doc_id=None, content=None, retries=False):
 
         doc_body = dict()
         doc_body["updates"] = 0
@@ -61,21 +86,36 @@ class User:
 
         body = json.dumps(doc_body)
 
-        if retries:
-            session = requests.Session()
-            adapter = requests.adapters.HTTPAdapter(max_retries=Retry(total=settings.MAX_HTTP_RETRIES, backoff_factor=settings.BACKOFF_FACTOR, status_forcelist=settings.ERROR_CODE_LIST))
-            session.mount("http://", adapter)
-            resp = session.put(doc_url, headers=self._headers, data=body, timeout=settings.HTTP_REQ_TIMEOUT)
+        if doc_id is None:
+            # Use a POST and let sync_gateway generate an id
+            resp = requests.post("{0}/{1}/".format(self.target.url, self.db), headers=self._headers, data=body, timeout=settings.HTTP_REQ_TIMEOUT)
+            log.info("{0} POST {1}".format(self.name, resp.url))
         else:
-            resp = requests.put(doc_url, headers=self._headers, data=body, timeout=settings.HTTP_REQ_TIMEOUT)
+            # If the doc id is specified, use PUT with doc_id in url
+            doc_url = self.target.url + "/" + self.db + "/" + doc_id
 
-        log.info("{0} PUT {1}".format(self.name, doc_url))
+            if retries:
+                session = requests.Session()
+                adapter = requests.adapters.HTTPAdapter(max_retries=Retry(total=settings.MAX_HTTP_RETRIES, backoff_factor=settings.BACKOFF_FACTOR, status_forcelist=settings.ERROR_CODE_LIST))
+                session.mount("http://", adapter)
+                resp = session.put(doc_url, headers=self._headers, data=body, timeout=settings.HTTP_REQ_TIMEOUT)
+            else:
+                resp = requests.put(doc_url, headers=self._headers, data=body, timeout=settings.HTTP_REQ_TIMEOUT)
+
+            log.info("{0} PUT {1}".format(self.name, resp.url))
 
         resp.raise_for_status()
         resp_json = resp.json()
 
-        if resp.status_code == 201:
-            self.cache[doc_id] = resp_json["rev"]
+        # 200 as result of POST to /{db}/, 201 is result of PUT to /{db}/{doc}
+        if resp.status_code == 200 or resp.status_code == 201:
+            if doc_id is None:
+                # Get id generated from sync_gateway in response
+                doc_id = resp_json["id"]
+                self.cache[doc_id] = resp_json["rev"]
+            elif doc_id is not None and not doc_id.startswith("_local/"):
+                # Do not store local docs in user cache because they will not show up in the _changes feed
+                self.cache[doc_id] = resp_json["rev"]
 
         return doc_id
 
