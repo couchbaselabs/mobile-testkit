@@ -47,7 +47,10 @@
     shell: git checkout {{ branch }} chdir=/home/centos/sync_gateway
   - name: update submodules
     shell: git submodule init && git submodule update chdir=/home/centos/sync_gateway
-  - name: build sync gateway
+
+  # Build with flags if flags are defined, by default build_flags=""
+  - debug: msg="Building with flags {{ build_flags }}"
+  - name: build sync_gateway
     shell: ./build.sh {{ build_flags }} chdir=/home/centos/sync_gateway
 
   # Create sync gateway user

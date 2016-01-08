@@ -188,7 +188,7 @@ if __name__ == "__main__":
                       help="sync_gateway dev build number (ex. 340)")
 
     parser.add_option("", "--build-flags",
-                      action="store", type="string", dest="build_flags", default=None,
+                      action="store", type="string", dest="build_flags", default="",
                       help="build flags to pass when building sync gateway (ex. -race)")
 
     
