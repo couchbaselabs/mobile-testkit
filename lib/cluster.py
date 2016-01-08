@@ -55,7 +55,6 @@ class Cluster:
         if num_index_readers == 0:
             raise Exception("Functional tests require at least 1 index reader")
 
-    
     def reset(self, config):
 
         self.validate_cluster()
@@ -78,6 +77,7 @@ class Cluster:
         conf_path = os.path.abspath("conf/" + config)
         bucket_names_from_config = []
 
+        is_distributed_index = False
         with open(conf_path, "r") as config:
             data = config.read()
 
@@ -95,6 +95,7 @@ class Cluster:
 
             # Add CBGT buckets
             if "cluster_config" in conf_obj.keys():
+                is_distributed_index = True
                 bucket_names_from_config.append(conf_obj["cluster_config"]["bucket"])
 
             dbs = conf_obj["databases"]
@@ -123,11 +124,13 @@ class Cluster:
         assert(status == 0)
 
         # Validate CBGT
-        if not self.validate_cbgt_pindex_distribution_retry():
-            self.save_cbgt_diagnostics()
-            raise Exception("Failed to validate CBGT Pindex distribution")
-
-        print(">>> Detected valid CBGT Pindex distribution")
+        if is_distributed_index:
+            if not self.validate_cbgt_pindex_distribution_retry(config):
+                self.save_cbgt_diagnostics()
+                raise Exception("Failed to validate CBGT Pindex distribution")
+            print(">>> Detected valid CBGT Pindex distribution")
+        else:
+            print(">>> Running in channel cache")
 
     def save_cbgt_diagnostics(self):
         
@@ -224,7 +227,6 @@ class Cluster:
                 
     
         return True
-        
 
     def __repr__(self):
         s = "\n\n"
