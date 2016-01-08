@@ -14,6 +14,8 @@ import generate_gateload_configs
 from utilities.fetch_machine_stats import fetch_machine_stats
 from utilities.log_expvars import log_expvars
 from utilities.analyze_perf_results import analze_perf_results
+from utilities.fetch_sg_logs import fetch_sync_gateway_logs
+from utilities.fetch_sync_gateway_profile import fetch_sync_gateway_profile
 
 def run_tests(number_pullers, number_pushers, use_gateload, gen_gateload_config, test_id):
     if use_gateload:
@@ -35,6 +37,8 @@ def run_tests(number_pullers, number_pushers, use_gateload, gen_gateload_config,
 
         # Start gateload
         subprocess.call(["ansible-playbook", "-i", "../../../provisioning_config", "start-gateload.yml"])
+
+        os.chdir("../../..")
 
     else:
         print "Using Gatling"
@@ -113,19 +117,25 @@ if __name__ == "__main__":
         test_id=test_run_id
     )
 
-    # HACK to resolve provisioning_config path
-    os.chdir("../../..")
-
     # write expvars to file, will exit when gateload scenario is done
     log_expvars(test_run_id)
 
-    # kill all sync_gateways to ensure machine stat collection exits
+    # Killing sync_gateway will trigger collection of
+    #    1) machine_stats
+    #    2) sync_gateway profile data
     run_ansible_playbook("stop-sync-gateway.yml")
 
     # HACK: refresh interval for resource stat collection is 10 seconds.
     #  Make sure enough time has passed before collecting json
-    time.sleep(31)
+    time.sleep(61)
+
     fetch_machine_stats(test_run_id)
+
+    # Fetch profile for sync_gateway while the endpoints are still running
+    fetch_sync_gateway_profile(test_run_id)
 
     # Generate graphs of the expvars and CPU
     analze_perf_results(test_run_id)
+
+    # Copy sync_gateway logs to test results directory
+    fetch_sync_gateway_logs(test_run_id, is_perf_run=True)

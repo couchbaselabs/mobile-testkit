@@ -21,9 +21,18 @@
   tasks:
   - name: copy the machine collection script
     copy: src=files/log_machine_stats.py dest=/home/sync_gateway/ owner=sync_gateway group=sync_gateway mode=755
-  # Run async with an hour timeout, no polling
+  # Start collecting machine stats, run async with an hour timeout, no polling
   - name: start stat collection
     shell: ./log_machine_stats.py chdir=/home/sync_gateway/
+    async: 3600
+    poll: 0
+
+  # Copy profile collection script and start collecting profile
+  - name: copy the profile collection script
+    copy: src=files/sync_gateway_collect_profile.py dest=/home/sync_gateway/ owner=sync_gateway group=sync_gateway mode=755
+  # Start collecting profile, run async with an hour timeout, no polling
+  - name: start profile collection
+    shell: ./sync_gateway_collect_profile.py /opt/couchbase-sync-gateway/bin/sync_gateway chdir=/home/sync_gateway/
     async: 3600
     poll: 0
 
