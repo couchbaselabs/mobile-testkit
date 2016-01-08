@@ -242,15 +242,23 @@ class User:
         return errors
 
     def get_num_docs(self):
-        if self.changes_data['results'][0]['id'].startswith("_user"):
-            return len(self.changes_data['results']) - 1
-        return len(self.changes_data['results'])
+        # add this variable to not count "_user" id in changes feed
+        adjustment = 0
+        for index in range(len(self.changes_data['results'])):
+            if self.changes_data['results'][index]['id'].startswith("_user"):
+                adjustment += 1
+                log.info("Found \"_user\" id in changes feed")
+                log.info(self.changes_data['results'][index]['id'])
+        log.info("get_num_docs = {}".format(len(self.changes_data['results']) - adjustment))
+        return len(self.changes_data['results']) - adjustment
 
     # returns a dictionary of type doc[revision]
     def get_num_revisions(self):
         docs = {}
 
         for obj in self.changes_data['results']:
+            if obj["id"].startswith("_user"):
+                continue
             revision = obj["changes"][0]["rev"]
             log.debug(revision)
             match = re.search('(\d+)-\w+', revision)
