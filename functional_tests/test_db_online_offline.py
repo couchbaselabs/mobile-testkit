@@ -515,9 +515,10 @@ def test_offline_true_config_bring_online(cluster, conf, num_docs):
 @pytest.mark.parametrize(
     "conf,num_docs",
     [
-        ("bucket_online_offline/bucket_online_offline_default.json", 100)
+        ("bucket_online_offline/bucket_online_offline_default.json", 100),
+        ("bucket_online_offline/bucket_online_offline_default_dcp_cc.json", 100)
     ],
-    ids=["CC-1"]
+    ids=["CC-1", "CC-2"]
 )
 def test_db_offline_tap_loss_sanity(cluster, conf, num_docs):
 
