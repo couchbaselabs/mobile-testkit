@@ -9,13 +9,26 @@ from lib.verify import verify_docs_removed
 
 from fixtures import cluster
 
+import lib.settings
+import logging
+log = logging.getLogger(lib.settings.LOGGER)
 
 @pytest.mark.sanity
-def test_sync_access_sanity(cluster):
+@pytest.mark.parametrize(
+    "conf",
+    [
+        ("sync_gateway_custom_sync_access_sanity_di.json"),
+        ("sync_gateway_custom_sync_access_sanity_cc.json")
+    ],
+    ids=["DI-1", "CC-2"]
+)
+def test_sync_access_sanity(cluster, conf):
 
     num_docs = 100
 
-    cluster.reset(config="sync_gateway_custom_sync_access_sanity.json")
+    log.info("Using conf: {}".format(conf))
+
+    cluster.reset(config=conf)
     admin = Admin(cluster.sync_gateways[2])
 
     seth = admin.register_user(target=cluster.sync_gateways[2], db="db", name="seth", password="password")
@@ -46,12 +59,22 @@ def test_sync_access_sanity(cluster):
 
 
 @pytest.mark.sanity
-def test_sync_channel_sanity(cluster):
+@pytest.mark.parametrize(
+    "conf",
+    [
+        ("sync_gateway_custom_sync_channel_sanity_di.json"),
+        ("sync_gateway_custom_sync_channel_sanity_cc.json")
+    ],
+    ids=["DI-1", "CC-2"]
+)
+def test_sync_channel_sanity(cluster, conf):
 
     num_docs_per_channel = 100
     channels = ["ABC", "NBC", "CBS"]
 
-    cluster.reset(config="sync_gateway_custom_sync_channel_sanity.json")
+    log.info("Using conf: {}".format(conf))
+
+    cluster.reset(config=conf)
     admin = Admin(cluster.sync_gateways[2])
 
     doc_pushers = []
@@ -96,12 +119,22 @@ def test_sync_channel_sanity(cluster):
 
 
 @pytest.mark.sanity
-def test_sync_role_sanity(cluster):
+@pytest.mark.parametrize(
+    "conf",
+    [
+        ("sync_gateway_custom_sync_role_sanity_di.json"),
+        ("sync_gateway_custom_sync_role_sanity_cc.json")
+    ],
+    ids=["DI-1", "CC-2"]
+)
+def test_sync_role_sanity(cluster, conf):
 
     num_docs_per_channel = 100
     tv_channels = ["ABC", "NBC", "CBS"]
 
-    cluster.reset(config="sync_gateway_custom_sync_role_sanity.json")
+    log.info("Using conf: {}".format(conf))
+
+    cluster.reset(config=conf)
 
     admin = Admin(cluster.sync_gateways[2])
     admin.create_role(db="db", name="tv_stations", channels=tv_channels)
@@ -152,9 +185,19 @@ def test_sync_role_sanity(cluster):
 
 
 @pytest.mark.sanity
-def test_sync_sanity(cluster):
+@pytest.mark.parametrize(
+    "conf",
+    [
+        ("sync_gateway_custom_sync_one_di.json"),
+        ("sync_gateway_custom_sync_one_cc.json")
+    ],
+    ids=["DI-1", "CC-2"]
+)
+def test_sync_sanity(cluster, conf):
 
-    cluster.reset(config="sync_gateway_custom_sync_one.json")
+    log.info("Using conf: {}".format(conf))
+
+    cluster.reset(config=conf)
 
     radio_stations = ["KMOW", "HWOD", "KDWB"]
     number_of_docs_per_pusher = 5000
@@ -185,9 +228,19 @@ def test_sync_sanity(cluster):
 
 
 @pytest.mark.sanity
-def test_sync_sanity_backfill(cluster):
+@pytest.mark.parametrize(
+    "conf",
+    [
+        ("sync_gateway_custom_sync_one_di.json"),
+        ("sync_gateway_custom_sync_one_cc.json")
+    ],
+    ids=["DI-1", "CC-2"]
+)
+def test_sync_sanity_backfill(cluster, conf):
 
-    cluster.reset(config="sync_gateway_custom_sync_one.json")
+    log.info("Using conf: {}".format(conf))
+
+    cluster.reset(config=conf)
 
     radio_stations = ["KMOW", "HWOD", "KDWB"]
     number_of_docs_per_pusher = 5000
@@ -218,9 +271,19 @@ def test_sync_sanity_backfill(cluster):
 
 
 @pytest.mark.sanity
-def test_sync_require_roles(cluster):
+@pytest.mark.parametrize(
+    "conf",
+    [
+        ("sync_gateway_custom_sync_require_roles_di.json"),
+        ("sync_gateway_custom_sync_require_roles_cc.json")
+    ],
+    ids=["DI-1", "CC-2"]
+)
+def test_sync_require_roles(cluster, conf):
 
-    cluster.reset(config="sync_gateway_custom_sync_require_roles.json")
+    log.info("Using conf: {}".format(conf))
+
+    cluster.reset(config=conf)
 
     radio_stations = ["KMOW", "HWOD", "KDWB"]
     tv_stations = ["ABC", "CBS", "NBC"]

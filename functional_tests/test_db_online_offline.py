@@ -200,9 +200,10 @@ def rest_scan(sync_gateway, db, online, num_docs, user_name, channels):
 @pytest.mark.parametrize(
     "conf,num_docs",
     [
-        ("bucket_online_offline/bucket_online_offline_default.json", 100)
+        ("bucket_online_offline/bucket_online_offline_default_cc.json", 100),
+        ("bucket_online_offline/bucket_online_offline_default_di.json", 100)
     ],
-    ids=["CC-1"]
+    ids=["CC-1", "DI-2"]
 )
 def test_online_default_rest(cluster, conf, num_docs):
 
@@ -229,9 +230,10 @@ def test_online_default_rest(cluster, conf, num_docs):
 @pytest.mark.parametrize(
     "conf,num_docs",
     [
-        ("bucket_online_offline/bucket_online_offline_offline_false.json", 100)
+        ("bucket_online_offline/bucket_online_offline_offline_false_cc.json", 100),
+        ("bucket_online_offline/bucket_online_offline_offline_false_di.json", 100)
     ],
-    ids=["CC-1"]
+    ids=["CC-1", "DI-2"]
 )
 def test_offline_false_config_rest(cluster, conf, num_docs):
 
@@ -259,9 +261,10 @@ def test_offline_false_config_rest(cluster, conf, num_docs):
 @pytest.mark.parametrize(
     "conf,num_docs",
     [
-        ("bucket_online_offline/bucket_online_offline_default.json", 100)
+        ("bucket_online_offline/bucket_online_offline_default_cc.json", 100),
+        ("bucket_online_offline/bucket_online_offline_default_di.json", 100)
     ],
-    ids=["CC-1"]
+    ids=["CC-1", "DI-2"]
 )
 def test_online_to_offline_check_503(cluster, conf, num_docs):
 
@@ -295,9 +298,13 @@ def test_online_to_offline_check_503(cluster, conf, num_docs):
 @pytest.mark.parametrize(
     "conf,num_docs",
     [
-        ("bucket_online_offline/bucket_online_offline_default.json", 5000)
+        ("bucket_online_offline/bucket_online_offline_default_cc.json", 5000)
+        #("bucket_online_offline/bucket_online_offline_default_di.json", 5000)
     ],
-    ids=["CC-1"]
+    ids=[
+        "CC-1"
+         #"DI-2"
+        ]
 )
 def test_online_to_offline_changes_feed_controlled_close_continuous(cluster, conf, num_docs):
 
@@ -366,9 +373,10 @@ def test_online_to_offline_changes_feed_controlled_close_continuous(cluster, con
 @pytest.mark.parametrize(
     "conf,num_docs",
     [
-        ("bucket_online_offline/bucket_online_offline_default.json", 5000)
+        ("bucket_online_offline/bucket_online_offline_default_cc.json", 5000),
+        ("bucket_online_offline/bucket_online_offline_default_di.json", 5000)
     ],
-    ids=["CC-1"]
+    ids=["CC-1", "DI-2"]
 )
 def test_online_to_offline_changes_feed_controlled_close_longpoll_sanity(cluster, conf, num_docs):
 
@@ -411,7 +419,9 @@ def test_online_to_offline_changes_feed_controlled_close_longpoll_sanity(cluster
                 print("Futures: error: {}".format(e))
 
     # Account for _user doc
-    assert(1 == int(last_seq_num))
+    # last_seq may be of the form '1' for channel cache or '1-0' for distributed index
+    seq_num_component = last_seq_num.split("-")
+    assert(1 == int(seq_num_component[0]))
     assert(len(docs_in_changes) == 0)
 
 
@@ -421,9 +431,13 @@ def test_online_to_offline_changes_feed_controlled_close_longpoll_sanity(cluster
 @pytest.mark.parametrize(
     "conf,num_docs",
     [
-        ("bucket_online_offline/bucket_online_offline_default.json", 5000)
+        ("bucket_online_offline/bucket_online_offline_default_cc.json", 5000)
+        #("bucket_online_offline/bucket_online_offline_default_di.json", 5000)
     ],
-    ids=["CC-1"]
+    ids=[
+        "CC-1"
+        #"DI-2"
+    ]
 )
 def test_online_to_offline_changes_feed_controlled_close_longpoll(cluster, conf, num_docs):
 
@@ -483,8 +497,12 @@ def test_online_to_offline_changes_feed_controlled_close_longpoll(cluster, conf,
     # Some docs should have made it to _changes
     assert(len(docs_in_changes) > 0)
 
+    seq_num_component = last_seq_num.split("-")
+
+    # last_seq may be of the form '1' for channel cache or '1-0' for distributed index
     # assert the last_seq_number == number _changes + 2 (_user doc starts and one and docs start at _user doc seq + 2)
-    assert(len(docs_in_changes) + 2 == int(last_seq_num))
+    seq_num_component = last_seq_num.split("-")
+    assert(len(docs_in_changes) + 2 == int(seq_num_component[0]))
 
     # Bring db back online
     status = admin.bring_db_online("db")
@@ -507,9 +525,13 @@ def test_online_to_offline_changes_feed_controlled_close_longpoll(cluster, conf,
 @pytest.mark.parametrize(
     "conf,num_docs",
     [
-        ("bucket_online_offline/bucket_online_offline_offline_true.json", 100)
+        ("bucket_online_offline/bucket_online_offline_offline_true_cc.json", 100),
+        #("bucket_online_offline/bucket_online_offline_offline_true_di.json", 100)
     ],
-    ids=["CC-1"]
+    ids=[
+        "CC-1"
+    #    "DI-2"
+    ]
 )
 def test_offline_true_config_bring_online(cluster, conf, num_docs):
 
@@ -544,10 +566,11 @@ def test_offline_true_config_bring_online(cluster, conf, num_docs):
 @pytest.mark.parametrize(
     "conf,num_docs",
     [
-        ("bucket_online_offline/bucket_online_offline_default.json", 100),
-        ("bucket_online_offline/bucket_online_offline_default_dcp_cc.json", 100)
+        ("bucket_online_offline/bucket_online_offline_default_dcp_cc.json", 100),
+        ("bucket_online_offline/bucket_online_offline_default_cc.json", 100),
+        ("bucket_online_offline/bucket_online_offline_default_di.json", 100)
     ],
-    ids=["CC-1", "CC-2"]
+    ids=["CC-1", "CC-2", "DI-3"]
 )
 def test_db_offline_tap_loss_sanity(cluster, conf, num_docs):
 
@@ -579,9 +602,13 @@ def test_db_offline_tap_loss_sanity(cluster, conf, num_docs):
 @pytest.mark.parametrize(
     "conf,num_docs",
     [
-        ("bucket_online_offline/bucket_online_offline_default.json", 100)
+        ("bucket_online_offline/bucket_online_offline_default_cc.json", 100),
+        #("bucket_online_offline/bucket_online_offline_default_di.json", 100)
     ],
-    ids=["CC-1"]
+    ids=[
+        "CC-1"
+         #"DI-2"
+         ]
 )
 def test_db_delayed_online(cluster, conf, num_docs):
 
@@ -622,9 +649,10 @@ def test_db_delayed_online(cluster, conf, num_docs):
 @pytest.mark.parametrize(
     "conf,num_docs",
     [
-        ("bucket_online_offline/bucket_online_offline_multiple_dbs_unique_buckets.json", 100)
+        ("bucket_online_offline/bucket_online_offline_multiple_dbs_unique_buckets_cc.json", 100),
+        ("bucket_online_offline/bucket_online_offline_multiple_dbs_unique_buckets_di.json", 100)
     ],
-    ids=["CC-1"]
+    ids=["CC-1", "DI-2"]
 )
 def test_multiple_dbs_unique_buckets_lose_tap(cluster, conf, num_docs):
 
@@ -667,7 +695,7 @@ def test_multiple_dbs_unique_buckets_lose_tap(cluster, conf, num_docs):
 # )
 # def test_config_change_invalid_1(cluster, num_docs):
 #
-#     cluster.reset("bucket_online_offline/bucket_online_offline_offline_false.json")
+#     cluster.reset("bucket_online_offline/bucket_online_offline_offline_false_cc.json")
 #     admin = Admin(cluster.sync_gateways[0])
 #
 #     # all db endpoints should succeed
@@ -714,14 +742,14 @@ def test_multiple_dbs_unique_buckets_lose_tap(cluster, conf, num_docs):
 ## Scenario 17
 #@pytest.mark.dbonlineoffline
 #def test_db_online_offline_with_invalid_legal_config(cluster, disable_http_retry):
-#    cluster.reset("bucket_online_offline/bucket_online_offline_offline_false.json")
+#    cluster.reset("bucket_online_offline/bucket_online_offline_offline_false_cc.json")
 #    admin = Admin(cluster.sync_gateways[0])
 #
 #    # all db endpoints should succeed
 #    errors = rest_scan(cluster.sync_gateways[0], db="db", online=True)
 #    assert(len(errors) == 0)
 #
-#    #restart_status = cluster.sync_gateways[0].restart("bucket_online_offline/db_online_offline_invalid_db.json")
+#    #restart_status = cluster.sync_gateways[0].restart("bucket_online_offline/db_online_offline_invalid_db_cc.json")
 #    #assert restart_status == 0
 #
 #    config = admin.get_db_config(db="db")

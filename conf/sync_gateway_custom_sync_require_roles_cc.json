@@ -8,17 +8,8 @@
     "compressResponses": true,
     "log": ["CRUD+", "Cache+", "HTTP+", "Changes+"],
     "verbose":"true",
-    "cluster_config": {
-        "server":"http://{{ couchbase_server_primary_node }}:8091",
-        "data_dir":".",
-        "bucket":"data-bucket"
-    },
     "databases":{
         "db":{
-            "feed_type":"DCPSHARD",
-            "feed_params":{
-                "num_shards":64
-            },
             "server":"http://{{ couchbase_server_primary_node }}:8091",
             "bucket":"data-bucket",
             "users":{
@@ -29,11 +20,18 @@
                     ]
                 }
             },
-            "channel_index":{
-                "server":"http://{{ couchbase_server_primary_node }}:8091",
-                "bucket":"index-bucket",
-                "writer":{{ is_index_writer }}
-            }
+            "sync":
+            `function(doc, oldDoc){
+                if (doc.channels.indexOf("KMOW") > -1 || doc.channels.indexOf("HWOD") > -1 || doc.channels.indexOf("KDWB") > -1) {
+                    requireRole("radio_stations");
+                } else if (doc.channels.indexOf("ABC") > -1 || doc.channels.indexOf("CBS") > -1 || doc.channels.indexOf("NBC") > -1) {
+                    requireRole("tv_stations");
+                } else {
+                    throw({forbidden: "You have to have access to radio_stations or tv_stations!"})
+                }
+                channel(doc.channels);
+            }`
         }
     }
 }
+

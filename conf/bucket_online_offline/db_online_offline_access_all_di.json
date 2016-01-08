@@ -6,8 +6,7 @@
     "maxFileDescriptors": 90000,
     "slowServerCallWarningThreshold": 500,
     "compressResponses": true,
-    "log": ["CRUD+", "Cache+", "HTTP+", "Changes+"],
-    "verbose":"true",
+    "log":["*"],
     "cluster_config": {
         "server":"http://{{ couchbase_server_primary_node }}:8091",
         "data_dir":".",
@@ -16,24 +15,19 @@
     "databases":{
         "db":{
             "feed_type":"DCPSHARD",
-            "feed_params":{
-                "num_shards":64
-            },
-            "server":"http://{{ couchbase_server_primary_node }}:8091",
-            "bucket":"data-bucket",
-            "users":{
-                "GUEST":{
-                    "disabled":true,
-                    "admin_channels":[
-                        "*"
-                    ]
-                }
-            },
             "channel_index":{
                 "server":"http://{{ couchbase_server_primary_node }}:8091",
                 "bucket":"index-bucket",
                 "writer":{{ is_index_writer }}
-            }
+            },
+            "server":"http://{{ couchbase_server_primary_node }}:8091",
+            "bucket":"data-bucket",
+            "sync": `function(doc){
+                  channel(doc.channels);
+                }`,
+            "offline":false,
+            "users": {"GUEST": {"disabled": false, "admin_channels": ["*"] }}
         }
     }
 }
+

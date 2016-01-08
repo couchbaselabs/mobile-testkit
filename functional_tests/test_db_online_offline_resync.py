@@ -19,7 +19,7 @@ def test_bucket_online_offline_resync_sanity(cluster, num_users, num_docs, num_r
     log.info("Starting test...")
     start = time.time()
 
-    cluster.reset("bucket_online_offline/db_online_offline_access_all.json")
+    cluster.reset("bucket_online_offline/db_online_offline_access_all_cc.json")
 
     init_completed = time.time()
     log.info("Initialization completed. Time taken:{}s".format(init_completed - start))
@@ -87,7 +87,7 @@ def test_bucket_online_offline_resync_sanity(cluster, num_users, num_docs, num_r
     status = admin.take_db_offline(db="db")
     assert(status == 200)
 
-    restart_status = cluster.sync_gateways[0].restart("bucket_online_offline/db_online_offline_access_restricted.json")
+    restart_status = cluster.sync_gateways[0].restart("bucket_online_offline/db_online_offline_access_restricted_cc.json")
     assert restart_status == 0
 
     time.sleep(10)
@@ -122,7 +122,7 @@ def test_bucket_online_offline_resync_with_online(cluster, num_users, num_docs, 
     log.info("Starting test...")
     start = time.time()
 
-    cluster.reset("bucket_online_offline/db_online_offline_access_all.json")
+    cluster.reset("bucket_online_offline/db_online_offline_access_all_cc.json")
 
     init_completed = time.time()
     log.info("Initialization completed. Time taken:{}s".format(init_completed - start))
@@ -190,7 +190,7 @@ def test_bucket_online_offline_resync_with_online(cluster, num_users, num_docs, 
     status = admin.take_db_offline(db="db")
     assert(status == 200)
 
-    restart_status = cluster.sync_gateways[0].restart("bucket_online_offline/db_online_offline_access_restricted.json")
+    restart_status = cluster.sync_gateways[0].restart("bucket_online_offline/db_online_offline_access_restricted_cc.json")
     assert restart_status == 0
 
     log.info("Sleeping....")
@@ -281,7 +281,7 @@ def test_bucket_online_offline_resync_with_offline(cluster, num_users, num_docs,
     log.info("Starting test...")
     start = time.time()
 
-    cluster.reset("bucket_online_offline/db_online_offline_access_all.json")
+    cluster.reset("bucket_online_offline/db_online_offline_access_all_cc.json")
 
     init_completed = time.time()
     log.info("Initialization completed. Time taken:{}s".format(init_completed - start))
@@ -349,7 +349,7 @@ def test_bucket_online_offline_resync_with_offline(cluster, num_users, num_docs,
     status = admin.take_db_offline(db="db")
     assert(status == 200)
 
-    restart_status = cluster.sync_gateways[0].restart("bucket_online_offline/db_online_offline_access_restricted.json")
+    restart_status = cluster.sync_gateways[0].restart("bucket_online_offline/db_online_offline_access_restricted_cc.json")
     assert restart_status == 0
 
     log.info("Sleeping....")

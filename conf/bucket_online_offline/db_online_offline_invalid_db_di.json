@@ -6,8 +6,7 @@
     "maxFileDescriptors": 90000,
     "slowServerCallWarningThreshold": 500,
     "compressResponses": true,
-    "log": ["CRUD+", "Cache+", "HTTP+", "Changes+"],
-    "verbose":"true",
+    "log":["*"],
     "cluster_config": {
         "server":"http://{{ couchbase_server_primary_node }}:8091",
         "data_dir":".",
@@ -20,15 +19,13 @@
                 "num_shards":64
             },
             "server":"http://{{ couchbase_server_primary_node }}:8091",
-            "bucket":"data-bucket",
-            "users":{
-                "GUEST":{
-                    "disabled":true,
-                    "admin_channels":[
-                        "*"
-                    ]
-                }
-            },
+            "bucket":"non-existent-bucket",
+            "sync": `function(doc,oldDoc){
+                    if (doc.channels[0] == "channel-0") {
+                        channel([doc.channels,"channel_x"]);
+                    } }`,
+            "offline":false,
+            "users": {"GUEST": {"disabled": false, "admin_channels": ["*"] }},
             "channel_index":{
                 "server":"http://{{ couchbase_server_primary_node }}:8091",
                 "bucket":"index-bucket",
@@ -37,3 +34,4 @@
         }
     }
 }
+

@@ -8,6 +8,10 @@ from lib.admin import Admin
 from lib.verify import verify_changes
 from lib.verify import verify_same_docs
 
+import lib.settings
+import logging
+log = logging.getLogger(lib.settings.LOGGER)
+
 from fixtures import cluster
 
 
@@ -15,12 +19,18 @@ from fixtures import cluster
 @pytest.mark.sanity
 @pytest.mark.parametrize(
         "conf,num_docs,num_revisions", [
-            ("sync_gateway_default_functional_tests.json", 5000, 1),
-            ("sync_gateway_default_functional_tests.json", 5000, 10)
+            ("sync_gateway_default_functional_tests_di.json", 5000, 1),
+            ("sync_gateway_default_functional_tests_di.json", 5000, 10),
+            ("sync_gateway_default_functional_tests_cc.json", 5000, 1),
+            ("sync_gateway_default_functional_tests_cc.json", 5000, 10)
         ],
-        ids=["DI-1", "DI-2"]
+        ids=["DI-1", "DI-2", "CC-3", "CC-4"]
 )
 def test_longpoll_changes_parametrized(cluster,conf, num_docs, num_revisions):
+
+    log.info("conf: {}".format(conf))
+    log.info("num_docs: {}".format(num_docs))
+    log.info("num_revisions: {}".format(num_revisions))
 
     cluster.reset(config=conf)
 
@@ -63,11 +73,20 @@ def test_longpoll_changes_parametrized(cluster,conf, num_docs, num_revisions):
 
 @pytest.mark.distributed_index
 @pytest.mark.sanity
-@pytest.mark.parametrize("num_docs", [10])
-@pytest.mark.parametrize("num_revisions", [10])
-def test_longpoll_changes_sanity(cluster, num_docs, num_revisions):
+@pytest.mark.parametrize(
+        "conf, num_docs, num_revisions", [
+            ("sync_gateway_default_functional_tests_di.json", 10, 10),
+            ("sync_gateway_default_functional_tests_cc.json", 10, 10)
+        ],
+        ids=["DI-1", "CC-2"]
+)
+def test_longpoll_changes_sanity(cluster, conf, num_docs, num_revisions):
 
-    cluster.reset(config="sync_gateway_default_functional_tests.json")
+    log.info("conf: {}".format(conf))
+    log.info("num_docs: {}".format(num_docs))
+    log.info("num_revisions: {}".format(num_revisions))
+
+    cluster.reset(config=conf)
 
     admin = Admin(cluster.sync_gateways[0])
     seth = admin.register_user(target=cluster.sync_gateways[0], db="db", name="seth", password="password", channels=["ABC", "TERMINATE"])
