@@ -54,13 +54,13 @@ def plot_gateload_expvars(figure, json_file_name):
 
             if "total_doc_failed_to_push" in obj[timestamp]["expvars"]["gateload"]:
                 docs_failed = obj[timestamp]["expvars"]["gateload"]["total_doc_failed_to_push"]
-                print("!!! ERROR: docs failed to push: {} !!!".format(docs_failed_to_push))
                 docs_failed_to_push.append(docs_failed)
+                print("!!! ERROR: docs failed to push: {} !!!".format(docs_failed_to_push))
 
             if "total_doc_failed_to_pull" in obj[timestamp]["expvars"]["gateload"]:
                 docs_failed = obj[timestamp]["expvars"]["gateload"]["total_doc_failed_to_pull"]
-                print("!!! ERROR: docs failed to pull: {} !!!".format(docs_failed_to_pull))
                 docs_failed_to_pull.append(docs_failed)
+                print("!!! ERROR: docs failed to pull: {} !!!".format(docs_failed_to_pull))
 
     # Plot p95 / p99
     ax1 = figure.add_subplot(211)
