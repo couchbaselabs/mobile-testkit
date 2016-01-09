@@ -129,6 +129,9 @@ def install_sync_gateway(sync_gateway_config):
         print "Invalid server provisioning configuration. Exiting ..."
         sys.exit(1)
 
+    if sync_gateway_config.build_flags != "":
+        print("\n\n!!! WARNING: You are building with flags: {} !!!\n\n".format(opts.build_flags))
+
     if sync_gateway_config.branch is not None:
 
         # Install source
@@ -190,7 +193,6 @@ if __name__ == "__main__":
     parser.add_option("", "--build-flags",
                       action="store", type="string", dest="build_flags", default="",
                       help="build flags to pass when building sync gateway (ex. -race)")
-
     
     arg_parameters = sys.argv[1:]
 
