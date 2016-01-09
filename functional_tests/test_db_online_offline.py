@@ -589,12 +589,11 @@ def test_db_offline_tap_loss_sanity(cluster, conf, num_docs):
     cluster.servers[0].delete_bucket("data-bucket")
 
     # Check that bucket is in offline state
-    # Will return 401 for public enpoint because the auth doc has been deleted
     errors = rest_scan(cluster.sync_gateways[0], db="db", online=False, num_docs=num_docs, user_name="seth", channels=["ABC"])
     assert(len(errors) == NUM_ENDPOINTS + (num_docs * 2))
     for error_tuple in errors:
         print("({},{})".format(error_tuple[0], error_tuple[1]))
-        assert(error_tuple[1] == 503 or error_tuple[1] == 401)
+        assert(error_tuple[1] == 503)
 
 # Scenario 11
 @pytest.mark.sanity
@@ -682,7 +681,7 @@ def test_multiple_dbs_unique_buckets_lose_tap(cluster, conf, num_docs):
         assert(len(errors) == NUM_ENDPOINTS + (num_docs * 2))
         for error_tuple in errors:
             print("({},{})".format(error_tuple[0], error_tuple[1]))
-            assert(error_tuple[1] == 503 or error_tuple[1] == 401)
+            assert(error_tuple[1] == 503)
 
 
 # Reenable for 1.3
