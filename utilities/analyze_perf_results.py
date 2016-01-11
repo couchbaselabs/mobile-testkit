@@ -32,6 +32,8 @@ def plot_gateload_expvars(figure, json_file_name):
     p99s = []
     docs_pushed = []
     docs_pulled = []
+    docs_failed_to_push = []
+    docs_failed_to_pull = []
 
     number_ns_per_sec = 1000000000.0
 
@@ -50,6 +52,16 @@ def plot_gateload_expvars(figure, json_file_name):
             docs_pushed.append(obj[timestamp]["expvars"]["gateload"]["total_doc_pushed"])
             docs_pulled.append(obj[timestamp]["expvars"]["gateload"]["total_doc_pulled"])
 
+            if "total_doc_failed_to_push" in obj[timestamp]["expvars"]["gateload"]:
+                docs_failed = obj[timestamp]["expvars"]["gateload"]["total_doc_failed_to_push"]
+                docs_failed_to_push.append(docs_failed)
+                print("!!! ERROR: docs failed to push: {} !!!".format(docs_failed_to_push))
+
+            if "total_doc_failed_to_pull" in obj[timestamp]["expvars"]["gateload"]:
+                docs_failed = obj[timestamp]["expvars"]["gateload"]["total_doc_failed_to_pull"]
+                docs_failed_to_pull.append(docs_failed)
+                print("!!! ERROR: docs failed to pull: {} !!!".format(docs_failed_to_pull))
+
     # Plot p95 / p99
     ax1 = figure.add_subplot(211)
     ax1.set_title("PushToSubscriberInteractive (seconds): p95 (cyan) / p99 (magenta)")
@@ -62,7 +74,34 @@ def plot_gateload_expvars(figure, json_file_name):
     ax2.set_title("total_doc_pushed (red) / total_doc_pulled (yellow)")
     ax2.plot(datetimes, docs_pushed, "rs", datetimes, docs_pulled, "y^")
 
+    push_failed_label_pos = (min(datetimes), 0.75 * max(docs_pulled))
+    pull_failed_label_pos = (min(datetimes), 0.25 * max(docs_pulled))
+
+    # Plot doc push / pull failures
+    if len(docs_failed_to_push) > 0:
+        ax2.text(
+            push_failed_label_pos[0],
+            push_failed_label_pos[1],
+            "ERROR - DOCS FAILED TO PUSH: {}".format(max(docs_failed_to_push)),
+            color="red",
+            fontsize=20
+        )
+
+    if len(docs_failed_to_pull) > 0:
+        ax2.text(
+            pull_failed_label_pos[0],
+            pull_failed_label_pos[1],
+            "ERROR - DOCS FAILED TO PULL: {}".format(max(docs_failed_to_pull)),
+            color="red",
+            fontsize=20
+        )
+
     figure.autofmt_xdate()
+
+    if len(docs_failed_to_push) > 0 or len(docs_failed_to_pull) > 0:
+        return False
+
+    return True
 
 
 def plot_sync_gateway_expvars(figure, json_file_name):
@@ -160,8 +199,11 @@ def analze_perf_results(test_id):
     # Generate plot of gateload expvars
     fig1 = plt.figure()
     fig1.text(0.5, 0.04, 'Gateload Expvars', ha='center', va='center')
-    plot_gateload_expvars(fig1, "performance_results/{}/gateload_expvars.json".format(test_id))
+    valid_results = plot_gateload_expvars(fig1, "performance_results/{}/gateload_expvars.json".format(test_id))
     plt.savefig("performance_results/{}/gateload_expvars.png".format(test_id), dpi=300)
+    if not valid_results:
+        print("FAILURE STATE. Some docs failed to push and/or pull. Exiting...")
+        sys.exit(1)
 
     # Generate plot of sync_gateway expvars
     fig2 = plt.figure()
