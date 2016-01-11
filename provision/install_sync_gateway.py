@@ -75,19 +75,22 @@ class SyncGatewayConfig:
     def _base_url_package_for_sync_gateway_dev_build(self, dev_build_url, dev_build_number):
         # http://latestbuilds.hq.couchbase.com/couchbase-sync-gateway/0.0.1/feature/distributed_index/0.0.1-449/couchbase-sync-gateway-community_0.0.1-449_x86_64.rpm
         base_url = "http://latestbuilds.hq.couchbase.com/couchbase-sync-gateway/0.0.1/{0}/0.0.1-{1}".format(dev_build_url, dev_build_number)
-        package_name = "couchbase-sync-gateway-community_0.0.1-{0}_x86_64.rpm".format(dev_build_number)
-        return base_url, package_name
+        sg_package_name = "couchbase-sync-gateway-community_0.0.1-{0}_x86_64.rpm".format(dev_build_number)
+        accel_package_name = "couchbase-sg-accel-community_0.0.1-{0}_x86_64.rpm".format(dev_build_number)
+        return base_url, sg_package_name, accel_package_name
 
     def _base_url_package_for_sync_gateway(self, version, build):
         if version == "1.1.0" or version == "1.1.1":
             # http://latestbuilds.hq.couchbase.com/couchbase-sync-gateway/release/1.1.1/1.1.1-10/couchbase-sync-gateway-enterprise_1.1.1-10_x86_64.rpm
             base_url = "http://latestbuilds.hq.couchbase.com/couchbase-sync-gateway/release/{0}/{1}-{2}".format(version, version, build)
-            package_name = "couchbase-sync-gateway-enterprise_{0}-{1}_x86_64.rpm".format(version, build)
+            # HACK: install sync_gateway to all nodes pre 1.2
+            sg_package_name = accel_package_name = "couchbase-sync-gateway-enterprise_{0}-{1}_x86_64.rpm".format(version, build)
         else:
             # http://latestbuilds.hq.couchbase.com/couchbase-sync-gateway/1.2.0/1.2.0-6/couchbase-sync-gateway-enterprise_1.2.0-6_x86_64.rpm
             base_url = "http://latestbuilds.hq.couchbase.com/couchbase-sync-gateway/{0}/{1}-{2}".format(version, version, build)
-            package_name = "couchbase-sync-gateway-enterprise_{0}-{1}_x86_64.rpm".format(version, build)
-        return base_url, package_name
+            sg_package_name = "couchbase-sync-gateway-enterprise_{0}-{1}_x86_64.rpm".format(version, build)
+            accel_package_name = "couchbase-sg-accel-enterprise_{0}-{1}_x86_64.rpm".format(version, build)
+        return base_url, sg_package_name, accel_package_name
 
     def sync_gateway_base_url_and_package(self, dev_build=False):
         if not dev_build:
@@ -147,15 +150,16 @@ def install_sync_gateway(sync_gateway_config):
     else:
         # Install build
         if sync_gateway_config.dev_build_url is not None:
-            sync_gateway_base_url, sync_gateway_package_name = sync_gateway_config.sync_gateway_base_url_and_package(dev_build=True)
+            sync_gateway_base_url, sync_gateway_package_name, sg_accel_package_name = sync_gateway_config.sync_gateway_base_url_and_package(dev_build=True)
         else:
-            sync_gateway_base_url, sync_gateway_package_name = sync_gateway_config.sync_gateway_base_url_and_package()
+            sync_gateway_base_url, sync_gateway_package_name, sg_accel_package_name = sync_gateway_config.sync_gateway_base_url_and_package()
 
         ansible_runner.run_ansible_playbook(
             "install-sync-gateway-package.yml",
-            "couchbase_sync_gateway_package_base_url={0} couchbase_sync_gateway_package={1} sync_gateway_config_filepath={2}".format(
+            "couchbase_sync_gateway_package_base_url={0} couchbase_sync_gateway_package={1} couchbase_sg_accel_package={2} sync_gateway_config_filepath={3}".format(
                 sync_gateway_base_url,
                 sync_gateway_package_name,
+                sg_accel_package_name,
                 sync_gateway_config.config_path
             )
         )
