@@ -134,6 +134,7 @@ if __name__ == "__main__":
         dev_build_url=opts.sync_gateway_dev_build_url,
         dev_build_number=opts.sync_gateway_dev_build_number,
         branch=opts.source_branch,
+        build_flags="",
         config_path=opts.sync_gateway_config_file
     )
 
