@@ -1,6 +1,7 @@
 import os
 import subprocess
 import sys
+import shutil
 import time
 
 from optparse import OptionParser
@@ -109,6 +110,10 @@ if __name__ == "__main__":
         cluster = Cluster()
         cluster.reset("performance/sync_gateway_default_performance.json")
 
+    # Copy provisioning_config to performance_results/ folder
+    shutil.copy("provisioning_config", "performance_results/{}".format(test_run_id))
+
+    # Start load generator
     run_tests(
         number_pullers=opts.number_pullers,
         number_pushers=opts.number_pushers,
