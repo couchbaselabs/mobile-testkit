@@ -29,6 +29,9 @@ def cluster(request):
     if settings.CAPTURE_SYNC_GATEWAY_LOGS_ON_FAIL:
         request.addfinalizer(fetch_logs)
 
+    print("\n--------- TEST -----------")
+    print(request.node.nodeid)
+
     c = Cluster()
     print(c)
     return c
