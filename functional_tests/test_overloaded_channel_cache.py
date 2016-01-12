@@ -59,15 +59,11 @@ def test_overloaded_channel_cache(cluster, conf, num_docs, user_channels, filter
                 changes_requests.append(executor.submit(user.get_changes))
 
         for future in concurrent.futures.as_completed(changes_requests):
-            try:
-                changes = future.result()
-                if limit is not None:
-                    assert len(changes["results"]) == 50
-                else:
-                    assert len(changes["results"]) == 5001
-            except Exception as e:
-                errors.append(e)
-                print("Error getting _changes: {}".format(e))
+            changes = future.result()
+            if limit is not None:
+                assert len(changes["results"]) == 50
+            else:
+                assert len(changes["results"]) == 5001
 
         # changes feed should all be successful
         print(len(errors))

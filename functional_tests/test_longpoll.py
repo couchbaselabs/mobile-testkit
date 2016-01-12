@@ -48,21 +48,17 @@ def test_longpoll_changes_parametrized(cluster,conf, num_docs, num_revisions):
         futures[executor.submit(abc_doc_pusher.add_docs, num_docs)] = "doc_pusher"
 
         for future in concurrent.futures.as_completed(futures):
-            try:
-                task_name = futures[future]
+            task_name = futures[future]
 
-                # Send termination doc to seth long poller
-                if task_name == "doc_pusher":
-                    abc_doc_pusher.update_docs(num_revs_per_doc=num_revisions)
+            # Send termination doc to seth long poller
+            if task_name == "doc_pusher":
+                abc_doc_pusher.update_docs(num_revs_per_doc=num_revisions)
 
-                    time.sleep(5)
+                time.sleep(5)
 
-                    doc_terminator.add_doc("killpolling")
-                elif task_name == "polling":
-                    docs_in_changes, last_seq = future.result()
-
-            except Exception as e:
-                print("Futures: error: {}".format(e))
+                doc_terminator.add_doc("killpolling")
+            elif task_name == "polling":
+                docs_in_changes, last_seq = future.result()
 
     # Verify abc_docs_pusher gets the correct docs in changes feed
     verify_changes(abc_doc_pusher, expected_num_docs=num_docs, expected_num_revisions=num_revisions, expected_docs=abc_doc_pusher.cache)
@@ -102,18 +98,14 @@ def test_longpoll_changes_sanity(cluster, conf, num_docs, num_revisions):
         futures[executor.submit(abc_doc_pusher.add_docs, num_docs)] = "doc_pusher"
 
         for future in concurrent.futures.as_completed(futures):
-            try:
-                task_name = futures[future]
+            task_name = futures[future]
 
-                # Send termination doc to seth long poller
-                if task_name == "doc_pusher":
-                    abc_doc_pusher.update_docs(num_revs_per_doc=num_revisions)
-                    doc_terminator.add_doc("killpolling")
-                elif task_name == "polling":
-                    docs_in_changes, seq_num = future.result()
-
-            except Exception as e:
-                print("Futures: error: {}".format(e))
+            # Send termination doc to seth long poller
+            if task_name == "doc_pusher":
+                abc_doc_pusher.update_docs(num_revs_per_doc=num_revisions)
+                doc_terminator.add_doc("killpolling")
+            elif task_name == "polling":
+                docs_in_changes, seq_num = future.result()
 
     # Verify abc_docs_pusher gets the correct docs in changes feed
     verify_changes(abc_doc_pusher, expected_num_docs=num_docs, expected_num_revisions=num_revisions, expected_docs=abc_doc_pusher.cache)

@@ -47,15 +47,12 @@ def test_dcp_reshard_sync_gateway_goes_down(cluster, conf):
         futures[executor.submit(traun.add_docs, 2000, bulk=True)] = "traun"
 
         for future in concurrent.futures.as_completed(futures):
-            try:
-                tag = futures[future]
-                if tag == "sg_down":
-                    # Assert takedown was successful
-                    shutdown_status = future.result()
-                    assert shutdown_status == 0
-                print("{} Completed:".format(tag))
-            except Exception as e:
-                print("Exception thrown while adding docs: {}".format(e))
+            tag = futures[future]
+            if tag == "sg_down":
+                # Assert takedown was successful
+                shutdown_status = future.result()
+                assert shutdown_status == 0
+            print("{} Completed:".format(tag))
 
     # TODO better way to do this
     time.sleep(60)
@@ -102,21 +99,14 @@ def test_dcp_reshard_sync_gateway_comes_up(cluster, conf):
         futures[executor.submit(seth.add_docs, 4000)] = "seth"
 
         for future in concurrent.futures.as_completed(futures):
-            try:
-                tag = futures[future]
-                if tag == "sg_up":
-                    up_status = future.result()
-                    assert up_status == 0
-                print("{} Completed:".format(tag))
-            except Exception as e:
-                print("Exception thrown while adding docs: {}".format(e))
-            else:
-                print "Docs added!!"
+            tag = futures[future]
+            if tag == "sg_up":
+                up_status = future.result()
+                assert up_status == 0
+            print("{} Completed:".format(tag))
 
     # TODO better way to do this
     time.sleep(60)
-
-    # TODO: Verify up sync_gateway gets registered with CBGT
 
     verify_changes(traun, expected_num_docs=6000, expected_num_revisions=0, expected_docs=traun.cache)
     verify_changes(seth, expected_num_docs=4000, expected_num_revisions=0, expected_docs=seth.cache)
