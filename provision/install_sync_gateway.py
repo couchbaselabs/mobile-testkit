@@ -128,8 +128,10 @@ class SyncGatewayConfig:
 def install_sync_gateway(sync_gateway_config):
     print(sync_gateway_config)
 
+
+
     if not sync_gateway_config.is_valid():
-        print "Invalid server provisioning configuration. Exiting ..."
+        print "Invalid sync_gateway provisioning configuration. Exiting ..."
         sys.exit(1)
 
     if sync_gateway_config.build_flags != "":

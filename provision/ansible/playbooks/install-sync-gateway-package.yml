@@ -97,8 +97,6 @@
 - hosts: sync_gateways
   any_errors_fatal: true
   sudo: true
-  vars:
-    sync_gateway_config_filepath:
   tasks:
   # Install and start service
   - name: Install sync_gateway rpm
@@ -112,11 +110,9 @@
 - hosts: sync_gateway_index_writers
   any_errors_fatal: true
   sudo: true
-  vars:
-    sync_gateway_config_filepath:
   tasks:
   # Install and start service
-  - name: Install sync_gateway rpm
+  - name: Install sg_accel rpm
     shell: rpm -i /tmp/{{ couchbase_sg_accel_package }}
   - name: wait for sg_accel to listen on port
     wait_for: port=4985 delay=2 timeout=120
