@@ -160,7 +160,8 @@ def test_db_online_offline_webhooks_offline(cluster, num_users,num_channels, num
     time.sleep(10)
 
     cluster.servers[0].delete_bucket("data-bucket")
-    time.sleep(5)
+    log.info("Sleeping for 120 seconds...")
+    time.sleep(120)
 
     webhook_events = ws.get_data()
     time.sleep(5)

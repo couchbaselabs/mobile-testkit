@@ -64,6 +64,12 @@ def test_mulitple_users_mulitiple_channels_mulitple_revisions(cluster, conf, num
     log.info("Update docs")
     in_parallel(user_objects, 'update_docs', num_revisions)
 
+    # Adding sleep to let sg to catch-up...
+    # Without sleep this test fails in Channel-Cache mode and changes feed doesn't return the expected
+    # num_revisions in docs.
+    # The test passes in Distributed-Index mode.
+    time.sleep(10)
+
     # Get changes for all users
     in_parallel(user_objects, 'get_changes')
 
