@@ -327,24 +327,20 @@ def test_online_to_offline_changes_feed_controlled_close_continuous(cluster, con
         futures[executor.submit(admin.take_db_offline, "db")] = "db_offline_task"
 
         for future in concurrent.futures.as_completed(futures):
-            try:
-                task_name = futures[future]
+            task_name = futures[future]
 
-                if task_name == "db_offline_task":
-                    log.info("DB OFFLINE")
-                    # make sure db_offline returns 200
-                    assert(future.result() == 200)
-                elif task_name == "docs_push":
-                    log.info("DONE PUSHING DOCS")
-                    doc_add_errors = future.result()
-                elif task_name == "continuous":
-                    docs_in_changes = future.result()
-                    log.info("DOCS FROM CHANGES")
-                    for k, v in docs_in_changes.items():
-                        log.info("DFC -> {}:{}".format(k, v))
-
-            except Exception as e:
-                print("Futures: error: {}".format(e))
+            if task_name == "db_offline_task":
+                log.info("DB OFFLINE")
+                # make sure db_offline returns 200
+                assert(future.result() == 200)
+            elif task_name == "docs_push":
+                log.info("DONE PUSHING DOCS")
+                doc_add_errors = future.result()
+            elif task_name == "continuous":
+                docs_in_changes = future.result()
+                log.info("DOCS FROM CHANGES")
+                for k, v in docs_in_changes.items():
+                    log.debug("DFC -> {}:{}".format(k, v))
 
     log.info("Number of docs from _changes ({})".format(len(docs_in_changes)))
     log.info("Number of docs add errors ({})".format(len(doc_add_errors)))
@@ -398,25 +394,21 @@ def test_online_to_offline_changes_feed_controlled_close_longpoll_sanity(cluster
         futures[executor.submit(admin.take_db_offline, "db")] = "db_offline_task"
 
         for future in concurrent.futures.as_completed(futures):
-            try:
-                task_name = futures[future]
+            task_name = futures[future]
 
-                if task_name == "db_offline_task":
-                    log.info("DB OFFLINE")
-                    # make sure db_offline returns 200
-                    assert(future.result() == 200)
-                if task_name == "polling":
-                    # Long poll will exit with 503, return docs in the exception
-                    log.info("POLLING DONE")
-                    try:
-                        docs_in_changes, last_seq_num = future.result()
-                    except Exception as e:
-                        log.error("Longpoll feed close error: {}".format(e))
-                        # long poll should be closed so this exception should never happen
-                        assert(0)
-
-            except Exception as e:
-                print("Futures: error: {}".format(e))
+            if task_name == "db_offline_task":
+                log.info("DB OFFLINE")
+                # make sure db_offline returns 200
+                assert(future.result() == 200)
+            if task_name == "polling":
+                # Long poll will exit with 503, return docs in the exception
+                log.info("POLLING DONE")
+                try:
+                    docs_in_changes, last_seq_num = future.result()
+                except Exception as e:
+                    log.error("Longpoll feed close error: {}".format(e))
+                    # long poll should be closed so this exception should never happen
+                    assert(0)
 
     # Account for _user doc
     # last_seq may be of the form '1' for channel cache or '1-0' for distributed index
@@ -461,34 +453,30 @@ def test_online_to_offline_changes_feed_controlled_close_longpoll(cluster, conf,
         futures[executor.submit(admin.take_db_offline, "db")] = "db_offline_task"
 
         for future in concurrent.futures.as_completed(futures):
-            try:
-                task_name = futures[future]
+            task_name = futures[future]
 
-                if task_name == "db_offline_task":
-                    log.info("DB OFFLINE")
-                    # make sure db_offline returns 200
-                    assert(future.result() == 200)
-                if task_name == "docs_push":
-                    log.info("DONE PUSHING DOCS")
-                    doc_add_errors = future.result()
-                if task_name == "polling":
-                    # Long poll will exit with 503, return docs in the exception
-                    log.info("POLLING DONE")
-                    try:
-                        docs_in_changes = future.result()
-                    except Exception as e:
-                        log.info(e)
-                        log.info("POLLING DONE EXCEPTION")
-                        log.info("AARGS: {}".format(e.args))
-                        docs_in_changes = e.args[0]["docs"]
-                        last_seq_num = e.args[0]["last_seq_num"]
-                        log.info("DOCS FROM longpoll")
-                        for k, v in docs_in_changes.items():
-                            log.info("DFC -> {}:{}".format(k, v))
-                        log.info("LAST_SEQ_NUM FROM longpoll {}".format(last_seq_num))
-
-            except Exception as e:
-                print("Futures: error: {}".format(e))
+            if task_name == "db_offline_task":
+                log.info("DB OFFLINE")
+                # make sure db_offline returns 200
+                assert(future.result() == 200)
+            if task_name == "docs_push":
+                log.info("DONE PUSHING DOCS")
+                doc_add_errors = future.result()
+            if task_name == "polling":
+                # Long poll will exit with 503, return docs in the exception
+                log.info("POLLING DONE")
+                try:
+                    docs_in_changes = future.result()
+                except Exception as e:
+                    log.warn(e)
+                    log.warn("POLLING DONE EXCEPTION")
+                    log.warn("ARGS: {}".format(e.args))
+                    docs_in_changes = e.args[0]["docs"]
+                    last_seq_num = e.args[0]["last_seq_num"]
+                    log.warn("DOCS FROM longpoll")
+                    for k, v in docs_in_changes.items():
+                        log.debug("DFC -> {}:{}".format(k, v))
+                    log.warn("LAST_SEQ_NUM FROM longpoll {}".format(last_seq_num))
 
     log.info("Number of docs from _changes ({})".format(len(docs_in_changes)))
     log.info("last_seq_num _changes ({})".format(last_seq_num))
