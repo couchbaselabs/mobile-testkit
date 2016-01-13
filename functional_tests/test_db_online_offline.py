@@ -446,7 +446,7 @@ def test_online_to_offline_changes_feed_controlled_close_longpoll_sanity(cluster
         ("bucket_online_offline/bucket_online_offline_default_cc.json", 5000, 40),
         ("bucket_online_offline/bucket_online_offline_default_di.json", 5000, 40)
     ],
-    ids=["CC-1", "CC-2", "DI-3", "DI-4"]
+    ids=["CC-1", "DI-2"]
 )
 def test_online_to_offline_changes_feed_controlled_close_longpoll_sanity_mulitple_users(cluster, conf, num_docs, num_users):
 
