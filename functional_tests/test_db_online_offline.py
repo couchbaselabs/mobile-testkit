@@ -340,7 +340,7 @@ def test_online_to_offline_changes_feed_controlled_close_continuous(cluster, con
                 docs_in_changes = future.result()
                 log.info("DOCS FROM CHANGES")
                 for k, v in docs_in_changes.items():
-                    log.info("DFC -> {}:{}".format(k, v))
+                    log.debug("DFC -> {}:{}".format(k, v))
 
     log.info("Number of docs from _changes ({})".format(len(docs_in_changes)))
     log.info("Number of docs add errors ({})".format(len(doc_add_errors)))
@@ -468,15 +468,15 @@ def test_online_to_offline_changes_feed_controlled_close_longpoll(cluster, conf,
                 try:
                     docs_in_changes = future.result()
                 except Exception as e:
-                    log.info(e)
-                    log.info("POLLING DONE EXCEPTION")
-                    log.info("AARGS: {}".format(e.args))
+                    log.warn(e)
+                    log.warn("POLLING DONE EXCEPTION")
+                    log.warn("ARGS: {}".format(e.args))
                     docs_in_changes = e.args[0]["docs"]
                     last_seq_num = e.args[0]["last_seq_num"]
-                    log.info("DOCS FROM longpoll")
+                    log.warn("DOCS FROM longpoll")
                     for k, v in docs_in_changes.items():
-                        log.info("DFC -> {}:{}".format(k, v))
-                    log.info("LAST_SEQ_NUM FROM longpoll {}".format(last_seq_num))
+                        log.debug("DFC -> {}:{}".format(k, v))
+                    log.warn("LAST_SEQ_NUM FROM longpoll {}".format(last_seq_num))
 
     log.info("Number of docs from _changes ({})".format(len(docs_in_changes)))
     log.info("last_seq_num _changes ({})".format(last_seq_num))
