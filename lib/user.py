@@ -42,7 +42,7 @@ class User:
     # GET /{db}/{local-doc-id}
     def get_doc(self, doc_id):
         resp = requests.get("{0}/{1}/{2}".format(self.target.url, self.db, doc_id), headers=self._headers)
-        log.info("GET {}".format(resp.url))
+        log.debug("GET {}".format(resp.url))
         resp.raise_for_status()
         return resp.json()
 
@@ -52,7 +52,7 @@ class User:
         body = {"docs": docs_array}
 
         resp = requests.post("{0}/{1}/_bulk_get".format(self.target.url, self.db), headers=self._headers, data=json.dumps(body))
-        log.info("POST {}".format(resp.url))
+        log.debug("POST {}".format(resp.url))
         resp.raise_for_status()
 
         # Parse Mime and build python obj of docs returned
@@ -67,7 +67,7 @@ class User:
     # GET /{db}/_all_docs
     def get_all_docs(self):
         resp = requests.get("{0}/{1}/_all_docs".format(self.target.url, self.db), headers=self._headers)
-        log.info("GET {}".format(resp.url))
+        log.debug("GET {}".format(resp.url))
         resp.raise_for_status()
         return resp.json()
 
@@ -89,7 +89,7 @@ class User:
         if doc_id is None:
             # Use a POST and let sync_gateway generate an id
             resp = requests.post("{0}/{1}/".format(self.target.url, self.db), headers=self._headers, data=body, timeout=settings.HTTP_REQ_TIMEOUT)
-            log.info("{0} POST {1}".format(self.name, resp.url))
+            log.debug("{0} POST {1}".format(self.name, resp.url))
         else:
             # If the doc id is specified, use PUT with doc_id in url
             doc_url = self.target.url + "/" + self.db + "/" + doc_id
@@ -102,7 +102,7 @@ class User:
             else:
                 resp = requests.put(doc_url, headers=self._headers, data=body, timeout=settings.HTTP_REQ_TIMEOUT)
 
-            log.info("{0} PUT {1}".format(self.name, resp.url))
+            log.debug("{0} PUT {1}".format(self.name, resp.url))
 
         resp.raise_for_status()
         resp_json = resp.json()
@@ -143,7 +143,7 @@ class User:
         else:
             resp = requests.post("{0}/{1}/_bulk_docs".format(self.target.url, self.db), headers=self._headers, data=data, timeout=settings.HTTP_REQ_TIMEOUT)
 
-        log.info("{0} POST {1}".format(self.name, resp.url))
+        log.debug("{0} POST {1}".format(self.name, resp.url))
         resp.raise_for_status()
         resp_json = resp.json()
 
@@ -213,7 +213,7 @@ class User:
 
             doc_url = self.target.url + '/' + self.db + '/' + doc_id
             resp = requests.get(doc_url, headers=self._headers, timeout=settings.HTTP_REQ_TIMEOUT)
-            log.info("{0} GET {1}".format(self.name, resp.url))
+            log.debug("{0} GET {1}".format(self.name, resp.url))
 
             if resp.status_code == 200:
                 data = resp.json()
@@ -234,7 +234,7 @@ class User:
                 else:
                     put_resp = requests.put(doc_url, headers=self._headers, data=body, timeout=settings.HTTP_REQ_TIMEOUT)
 
-                log.info("{0} PUT {1}".format(self.name, resp.url))
+                log.debug("{0} PUT {1}".format(self.name, resp.url))
 
                 if put_resp.status_code == 201:
                     data = put_resp.json()
@@ -331,7 +331,7 @@ class User:
                 log.error("doc-id {} missing from superset for User {}".format(doc_id, self.name))
                 errors += 1
             else:
-                log.info('Found doc-id {} for user {} in changes feed'.format(doc_id, self.name))
+                log.debug('Found doc-id {} for user {} in changes feed'.format(doc_id, self.name))
         return errors == 0
 
     # GET /{db}/_changes
@@ -372,7 +372,7 @@ class User:
             params["filter"] = filter
 
         r = requests.get("{}/{}/_changes".format(self.target.url, self.db), headers=self._headers, params=params, timeout=settings.HTTP_REQ_TIMEOUT)
-        log.info("{0} GET {1}".format(self.name, r.url))
+        log.debug("{0} GET {1}".format(self.name, r.url))
         r.raise_for_status()
 
         obj = json.loads(r.text)
@@ -406,7 +406,7 @@ class User:
                 }
 
                 r = requests.get("{}/{}/_changes".format(self.target.url, self.db), headers=self._headers, params=params)
-                log.info("{0} GET {1}".format(self.name, r.url))
+                log.debug("{0} GET {1}".format(self.name, r.url))
 
                 # If call is unsuccessful (ex. db goes offline), return docs
                 if r.status_code != 200:
@@ -416,7 +416,7 @@ class User:
                 obj = r.json()
 
                 new_docs = obj["results"]
-                log.info("CHANGES RESULT: {}".format(obj))
+                log.debug("CHANGES RESULT: {}".format(obj))
 
                 # Check for duplicates in response doc_ids
                 doc_ids = [doc["doc"]["_id"] for doc in new_docs if not doc["id"].startswith("_user/")]
@@ -439,14 +439,14 @@ class User:
                             continue_polling = False
                             break
 
-                        log.info("{} DOC FROM LONGPOLL _changes: {}: {}".format(self.name, doc["doc"]["_id"], doc["doc"]["_rev"]))
+                        log.debug("{} DOC FROM LONGPOLL _changes: {}: {}".format(self.name, doc["doc"]["_id"], doc["doc"]["_rev"]))
                         # Store doc
                         docs[doc["doc"]["_id"]] = doc["doc"]["_rev"]
 
                 # Get latest sequence from changes request
                 current_seq_num = obj["last_seq"]
 
-                log.info("SEQ_NUM {}".format(current_seq_num))
+                log.debug("SEQ_NUM {}".format(current_seq_num))
 
                 if loop is False:
                     if len(new_docs) == 1:
@@ -472,7 +472,7 @@ class User:
         }
 
         r = requests.get(url="{0}/{1}/_changes".format(self.target.url, self.db), headers=self._headers, params=params, stream=True)
-        log.info("{0} GET {1}".format(self.name, r.url))
+        log.debug("{0} GET {1}".format(self.name, r.url))
 
         # Wait for continuous changes
         for line in r.iter_lines():
@@ -489,7 +489,7 @@ class User:
                     r.close()
                     return docs
 
-                log.info("{} DOC FROM CONTINUOUS _changes: {}: {}".format(self.name, doc["doc"]["_id"], doc["doc"]["_rev"]))
+                log.debug("{} DOC FROM CONTINUOUS _changes: {}: {}".format(self.name, doc["doc"]["_id"], doc["doc"]["_rev"]))
                 # Store doc
                 docs[doc["doc"]["_id"]] = doc["doc"]["_rev"]
 
