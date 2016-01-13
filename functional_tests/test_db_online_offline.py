@@ -223,6 +223,10 @@ def test_online_default_rest(cluster, conf, num_docs):
         db_info = admin.get_db_info("db")
         assert (db_info["state"] == "Online")
 
+    # Verify all sync_gateways are running
+    errors = cluster.verify_sync_gateways_running()
+    assert(len(errors) == 0)
+
 
 # Scenario 2
 @pytest.mark.sanity
@@ -253,6 +257,10 @@ def test_offline_false_config_rest(cluster, conf, num_docs):
         admin = Admin(sg)
         db_info = admin.get_db_info("db")
         assert (db_info["state"] == "Online")
+
+    # Verify all sync_gateways are running
+    errors = cluster.verify_sync_gateways_running()
+    assert(len(errors) == 0)
 
 
 # Scenario 3
@@ -290,6 +298,10 @@ def test_online_to_offline_check_503(cluster, conf, num_docs):
     for error_tuple in errors:
         print("({},{})".format(error_tuple[0], error_tuple[1]))
         assert(error_tuple[1] == 503)
+
+    # Verify all sync_gateways are running
+    errors = cluster.verify_sync_gateways_running()
+    assert(len(errors) == 0)
 
 
 # Scenario 5 - continuous
@@ -362,6 +374,10 @@ def test_online_to_offline_changes_feed_controlled_close_continuous(cluster, con
     # should equal the number of docs
     assert(num_docs_pushed + len(doc_add_errors) == num_docs)
 
+    # Verify all sync_gateways are running
+    errors = cluster.verify_sync_gateways_running()
+    assert(len(errors) == 0)
+
 
 # Scenario 6 - longpoll
 @pytest.mark.sanity
@@ -415,6 +431,10 @@ def test_online_to_offline_changes_feed_controlled_close_longpoll_sanity(cluster
     seq_num_component = last_seq_num.split("-")
     assert(1 == int(seq_num_component[0]))
     assert(len(docs_in_changes) == 0)
+
+    # Verify all sync_gateways are running
+    errors = cluster.verify_sync_gateways_running()
+    assert(len(errors) == 0)
 
 
 # Scenario 6 - longpoll
@@ -506,6 +526,10 @@ def test_online_to_offline_changes_feed_controlled_close_longpoll(cluster, conf,
     # should equal the number of docs
     assert(num_docs_pushed + len(doc_add_errors) == num_docs)
 
+    # Verify all sync_gateways are running
+    errors = cluster.verify_sync_gateways_running()
+    assert(len(errors) == 0)
+
 
 # Scenario 6
 @pytest.mark.sanity
@@ -547,6 +571,10 @@ def test_offline_true_config_bring_online(cluster, conf, num_docs):
     errors = rest_scan(cluster.sync_gateways[0], db="db", online=True, num_docs=num_docs, user_name="seth", channels=["ABC"])
     assert(len(errors) == 0)
 
+    # Verify all sync_gateways are running
+    errors = cluster.verify_sync_gateways_running()
+    assert(len(errors) == 0)
+
 
 # Scenario 14
 @pytest.mark.sanity
@@ -582,6 +610,10 @@ def test_db_offline_tap_loss_sanity(cluster, conf, num_docs):
     for error_tuple in errors:
         print("({},{})".format(error_tuple[0], error_tuple[1]))
         assert(error_tuple[1] == 503)
+
+    # Verify all sync_gateways are running
+    errors = cluster.verify_sync_gateways_running()
+    assert(len(errors) == 0)
 
 # Scenario 11
 @pytest.mark.sanity
@@ -629,6 +661,9 @@ def test_db_delayed_online(cluster, conf, num_docs):
     errors = rest_scan(cluster.sync_gateways[0], db="db", online=True, num_docs=num_docs, user_name="seth", channels=["ABC"])
     assert(len(errors) == 0)
 
+    # Verify all sync_gateways are running
+    errors = cluster.verify_sync_gateways_running()
+    assert(len(errors) == 0)
 
 
 @pytest.mark.sanity
@@ -670,6 +705,10 @@ def test_multiple_dbs_unique_buckets_lose_tap(cluster, conf, num_docs):
         for error_tuple in errors:
             print("({},{})".format(error_tuple[0], error_tuple[1]))
             assert(error_tuple[1] == 503)
+
+    # Verify all sync_gateways are running
+    errors = cluster.verify_sync_gateways_running()
+    assert(len(errors) == 0)
 
 
 # Reenable for 1.3

@@ -61,6 +61,10 @@ def test_multiple_db_unique_data_bucket_unique_index_bucket(cluster, conf, num_u
     verify_changes(db_one_users, expected_num_docs=num_docs_per_user * num_db_users, expected_num_revisions=0, expected_docs=db_cache_docs)
     verify_changes(db_two_users, expected_num_docs=num_docs_per_user * num_db2_users, expected_num_revisions=0, expected_docs=db2_cache_docs)
 
+    # Verify all sync_gateways are running
+    errors = cluster.verify_sync_gateways_running()
+    assert(len(errors) == 0)
+
 # Kind of an edge case in that most users would not point multiple dbs at the same server bucket
 @pytest.mark.distributed_index
 @pytest.mark.sanity
@@ -110,3 +114,7 @@ def test_multiple_db_single_data_bucket_single_index_bucket(cluster, conf, num_u
 
     # Verify each user has all of the docs
     verify_changes(all_users, expected_num_docs=(num_users * 2) * num_docs_per_user, expected_num_revisions=0, expected_docs=cached_docs_from_all_users)
+
+    # Verify all sync_gateways are running
+    errors = cluster.verify_sync_gateways_running()
+    assert(len(errors) == 0)
