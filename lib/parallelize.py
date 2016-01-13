@@ -45,6 +45,7 @@ def in_parallel(objects, method, *args):
                     log.debug("Object {} method {} output {}".format(obj, method, result[obj]))
                 except Exception as exception:
                     log.info('Generated an exception : {} : {}'.format(obj, exception))
+                    raise ValueError('in_parallel: got exception', exception, obj)
     return result
 
 
