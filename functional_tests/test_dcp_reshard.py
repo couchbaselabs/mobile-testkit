@@ -62,7 +62,7 @@ def test_dcp_reshard_sync_gateway_goes_down(cluster, conf):
 
     # Verify that the sg1 is down but the other sync_gateways are running
     errors = cluster.verify_sync_gateways_running()
-    assert(len(errors) == 1 and errors[0] == "sg1")
+    assert(len(errors) == 1 and errors[0][0].hostname == "sg1")
 
 
 @pytest.mark.distributed_index
