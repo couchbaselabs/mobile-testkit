@@ -441,6 +441,70 @@ def test_online_to_offline_changes_feed_controlled_close_longpoll_sanity(cluster
 @pytest.mark.sanity
 @pytest.mark.dbonlineoffline
 @pytest.mark.parametrize(
+    "conf, num_docs, num_users",
+    [
+        ("bucket_online_offline/bucket_online_offline_default_cc.json", 5000, 40),
+        ("bucket_online_offline/bucket_online_offline_default_di.json", 5000, 40)
+    ],
+    ids=["CC-1", "CC-2", "DI-3", "DI-4"]
+)
+def test_online_to_offline_changes_feed_controlled_close_longpoll_sanity_mulitple_users(cluster, conf, num_docs, num_users):
+
+    log.info("Using conf: {}".format(conf))
+    log.info("Using num_docs: {}".format(num_docs))
+
+    cluster.reset(conf)
+
+    admin = Admin(cluster.sync_gateways[0])
+    users = admin.register_bulk_users(target=cluster.sync_gateways[0], db="db", name_prefix="user", password="password", number=num_users, channels=["ABC"])
+
+    feed_close_results = list()
+
+    with concurrent.futures.ThreadPoolExecutor(max_workers=lib.settings.MAX_REQUEST_WORKERS) as executor:
+        # start longpoll tracking with no timeout, will block until longpoll is closed by db going offline
+        futures = {executor.submit(user.start_longpoll_changes_tracking, termination_doc_id=None, timeout=0, loop=False): user.name for user in users}
+
+        time.sleep(5)
+        futures[executor.submit(admin.take_db_offline, "db")] = "db_offline_task"
+
+        for future in concurrent.futures.as_completed(futures):
+            task_name = futures[future]
+
+            if task_name == "db_offline_task":
+                log.info("DB OFFLINE")
+                # make sure db_offline returns 200
+                assert(future.result() == 200)
+            if task_name.startswith("user"):
+                # Long poll will exit with 503, return docs in the exception
+                log.info("POLLING DONE")
+                try:
+                    docs_in_changes, last_seq_num = future.result()
+                    feed_close_results.append((docs_in_changes, last_seq_num))
+                except Exception as e:
+                    log.error("Longpoll feed close error: {}".format(e))
+                    # long poll should be closed so this exception should never happen
+                    assert(0)
+
+    # Assert that the feed close results length is num_users
+    assert(len(feed_close_results) == num_users)
+
+    # Account for _user doc
+    # last_seq may be of the form '1' for channel cache or '1-0' for distributed index
+    for feed_result in feed_close_results:
+        docs_in_changes = feed_result[0]
+        seq_num_component = feed_result[1].split("-")
+        assert(len(docs_in_changes) == 0)
+        assert(int(seq_num_component[0]) > 0)
+
+
+    # Verify all sync_gateways are running
+    errors = cluster.verify_sync_gateways_running()
+    assert(len(errors) == 0)
+
+# Scenario 6 - longpoll
+@pytest.mark.sanity
+@pytest.mark.dbonlineoffline
+@pytest.mark.parametrize(
     "conf,num_docs",
     [
         ("bucket_online_offline/bucket_online_offline_default_cc.json", 5000)
