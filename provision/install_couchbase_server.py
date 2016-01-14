@@ -19,26 +19,11 @@ class CouchbaseServerConfig:
 
         self._version = version
 
+    #  https://s3.amazonaws.com/packages.couchbase.com/releases/4.1.0/couchbase-server-enterprise-4.1.0-centos7.x86_64.rpm
     def _base_url_package_for_server(self, version):
-        if version == "3.1.0":
-            base_url = "http://latestbuilds.hq.couchbase.com"
-            package_name = "couchbase-server-enterprise_centos6_x86_64_3.1.0-1805-rel.rpm"
-            return base_url, package_name
-        elif version == "3.1.1":
-            base_url = "http://latestbuilds.hq.couchbase.com"
-            package_name = "couchbase-server-enterprise_centos6_x86_64_3.1.1-1807-rel.rpm"
-            return base_url, package_name
-        elif version == "3.1.2":
-            base_url = "http://latestbuilds.hq.couchbase.com"
-            package_name = "couchbase-server-enterprise_centos6_x86_64_3.1.2-1815-rel.rpm"
-            return base_url, package_name
-        elif version == "4.0.0":
-            base_url = "http://latestbuilds.hq.couchbase.com/couchbase-server/sherlock/4051"
-            package_name = "couchbase-server-enterprise-4.0.0-4051-centos7.x86_64.rpm"
-            return base_url, package_name
-        elif version == "4.1.0":
-            base_url = "http://latestbuilds.hq.couchbase.com/couchbase-server/sherlock/5005"
-            package_name = "couchbase-server-enterprise-4.1.0-5005-centos7.x86_64.rpm"
+        if self.is_valid:
+            base_url = "https://s3.amazonaws.com/packages.couchbase.com/releases/{}".format(version)
+            package_name = "couchbase-server-enterprise-{}-centos7.x86_64.rpm".format(version)
             return base_url, package_name
         else:
             print "Server package url not found. Make sure to specify a version / build."
