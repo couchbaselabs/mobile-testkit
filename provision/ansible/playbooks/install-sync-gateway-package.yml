@@ -4,7 +4,13 @@
   sudo: true
 
   tasks:
+  # Delete previous artifacts
+  - name: delete downloads directory
+    shell: rm -rf /tmp/*
+  - name: delete user home files
+    shell: rm -rf /home/centos/*
   - include: tasks/remove-sync-gateway.yml
+  - include: tasks/remove-sg-accel.yml
 
 # Flush server buckets
 - hosts: couchbase_servers
@@ -37,6 +43,14 @@
   any_errors_fatal: true
   tasks:
   - include: tasks/create-sync-gateway-user.yml
+    when: "'sync_gateway_index_writers' not in group_names"
+
+# Create sg_accel user
+- hosts: sync_gateway_index_writers
+  sudo: true
+  any_errors_fatal: true
+  tasks:
+  - include: tasks/create-sg-accel-user.yml
 
 # Download sync_gateway package
 - hosts: sync_gateways
@@ -91,7 +105,7 @@
     couchbase_server_primary_node: "{{ hostvars[groups.couchbase_servers[0]].ansible_ssh_host }}"
     is_index_writer: "true"
   tasks:
-  - include: tasks/deploy-sync-gateway-config.yml
+  - include: tasks/deploy-sg-accel-config.yml
 
 # Install and launch sync_gateway service
 - hosts: sync_gateways

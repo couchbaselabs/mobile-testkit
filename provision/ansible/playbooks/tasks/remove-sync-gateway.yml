@@ -26,20 +26,6 @@
 - name: delete sync_gateway binary
   shell: rm -rf /opt/couchbase-sync-gateway
 
-# Remove sg_accel package
-- name: Uninstall sg_accel rpm
-  shell: rpm -e couchbase-sg-accel
-  ignore_errors: yes
-
-# Remove sg_accel service
-- name: Remove sg_accel service
-  shell: rm /usr/lib/systemd/system/sg_accel.service
-  ignore_errors: yes
-
-# Delete sg-accel binary
-- name: delete sg-accel binary
-  shell: rm -rf /opt/couchbase-sg-accel
-
 # Delete logs and .pindex files
 - name: delete sync_gateway logs
   shell: rm -f /home/sync_gateway/logs/*.log

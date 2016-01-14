@@ -4,7 +4,13 @@
   sudo: true
 
   tasks:
+  # Delete previous artifacts
+  - name: delete downloads directory
+    shell: rm -rf /tmp/*
+  - name: delete user home files
+    shell: rm -rf /home/centos/*
   - include: tasks/remove-sync-gateway.yml
+  - include: tasks/remove-sg-accel.yml
 
 # Flush server buckets
 - hosts: couchbase_servers
@@ -30,6 +36,21 @@
   tasks:
   - include: tasks/flush-server-buckets.yml
 
+# Create sync_gateway user
+- hosts: sync_gateways
+  sudo: true
+  any_errors_fatal: true
+  tasks:
+  - include: tasks/create-sync-gateway-user.yml
+    when: "'sync_gateway_index_writers' not in group_names"
+
+# Create sg_accel user
+- hosts: sync_gateway_index_writers
+  sudo: true
+  any_errors_fatal: true
+  tasks:
+  - include: tasks/create-sg-accel-user.yml
+
 # Download source and build
 - hosts: sync_gateways
   any_errors_fatal: true
@@ -53,44 +74,68 @@
   - name: build sync_gateway
     shell: ./build.sh {{ build_flags }} chdir=/home/centos/sync_gateway
 
-  # Create sync gateway user
-  - include: tasks/create-sync-gateway-user.yml
-
-  # Copy binary from centos user
+  # Copy sync_gateway binary from centos user
   - name: Creates /opt/couchbase-sync-gateway
     file: path=/opt/couchbase-sync-gateway state=directory
   - name: Creates /opt/couchbase-sync-gateway/bin
     file: path=/opt/couchbase-sync-gateway/bin state=directory
-  - name: copy binary to /opt/
+  - name: copy sync_gateway binary to /opt/
     shell: cp /home/centos/sync_gateway/bin/sync_gateway /opt/couchbase-sync-gateway/bin/
+
+  # Copy sg_accel binary from centos user
+  - name: Creates /opt/couchbase-sg-accel
+    file: path=/opt/couchbase-sg-accel state=directory
+  - name: Creates /opt/couchbase-sg-accel/bin
+    file: path=/opt/couchbase-sg-accel/bin state=directory
+  - name: copy sg_accel binary to /opt/
+    shell: cp /home/centos/sync_gateway/bin/sg_accel /opt/couchbase-sg-accel/bin/
 
 # Deploy sync gateway configs
 - hosts: sync_gateways
   sudo: true
+  any_errors_fatal: true
   vars:
     sync_gateway_config_filepath:
     couchbase_server_primary_node: "{{ hostvars[groups.couchbase_servers[0]].ansible_ssh_host }}"
     is_index_writer: "false"
   tasks:
   - include: tasks/deploy-sync-gateway-config.yml
+    when: "'sync_gateway_index_writers' not in group_names"
 
-# Deploy sync gateway configs (index writers)
+# Deploy sg_accel configs
 - hosts: sync_gateway_index_writers
   sudo: true
+  any_errors_fatal: true
   vars:
     sync_gateway_config_filepath:
     couchbase_server_primary_node: "{{ hostvars[groups.couchbase_servers[0]].ansible_ssh_host }}"
     is_index_writer: "true"
   tasks:
-  - include: tasks/deploy-sync-gateway-config.yml
+  - include: tasks/deploy-sg-accel-config.yml
 
-# Install service and wait for launch
+# Install sync_gateway service and wait for launch
 - hosts: sync_gateways
   sudo: true
+  any_errors_fatal: true
   tasks:
   - name: make service install script executable
     file: path=/home/centos/sync_gateway/service/sync_gateway_service_install.sh mode=a+x
+    when: "'sync_gateway_index_writers' not in group_names"
   - name: install sync gateway service
     shell: ./sync_gateway_service_install.sh chdir=/home/centos/sync_gateway/service
+    when: "'sync_gateway_index_writers' not in group_names"
+  - name: wait until sync gateway to listen on port
+    wait_for: port=4985 delay=2 timeout=120
+    when: "'sync_gateway_index_writers' not in group_names"
+
+# Install sg_accel service and wait for launch
+- hosts: sync_gateway_index_writers
+  sudo: true
+  any_errors_fatal: true
+  tasks:
+  - name: make service install script executable
+    file: path=/home/centos/sync_gateway/service/sg_accel_service_install.sh mode=a+x
+  - name: install sync gateway service
+    shell: ./sg_accel_service_install.sh chdir=/home/centos/sync_gateway/service
   - name: wait until sync gateway to listen on port
     wait_for: port=4985 delay=2 timeout=120

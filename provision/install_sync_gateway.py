@@ -81,10 +81,11 @@ class SyncGatewayConfig:
 
     def _base_url_package_for_sync_gateway(self, version, build):
         if version == "1.1.0" or version == "1.1.1":
+            print("Version unsupported in provisioning.")
+            sys.exit(1)
             # http://latestbuilds.hq.couchbase.com/couchbase-sync-gateway/release/1.1.1/1.1.1-10/couchbase-sync-gateway-enterprise_1.1.1-10_x86_64.rpm
-            base_url = "http://latestbuilds.hq.couchbase.com/couchbase-sync-gateway/release/{0}/{1}-{2}".format(version, version, build)
-            # HACK: install sync_gateway to all nodes pre 1.2
-            sg_package_name = accel_package_name = "couchbase-sync-gateway-enterprise_{0}-{1}_x86_64.rpm".format(version, build)
+            #base_url = "http://latestbuilds.hq.couchbase.com/couchbase-sync-gateway/release/{0}/{1}-{2}".format(version, version, build)
+            #sg_package_name  = "couchbase-sync-gateway-enterprise_{0}-{1}_x86_64.rpm".format(version, build)
         else:
             # http://latestbuilds.hq.couchbase.com/couchbase-sync-gateway/1.2.0/1.2.0-6/couchbase-sync-gateway-enterprise_1.2.0-6_x86_64.rpm
             base_url = "http://latestbuilds.hq.couchbase.com/couchbase-sync-gateway/{0}/{1}-{2}".format(version, version, build)
@@ -127,8 +128,6 @@ class SyncGatewayConfig:
 
 def install_sync_gateway(sync_gateway_config):
     print(sync_gateway_config)
-
-
 
     if not sync_gateway_config.is_valid():
         print "Invalid sync_gateway provisioning configuration. Exiting ..."
