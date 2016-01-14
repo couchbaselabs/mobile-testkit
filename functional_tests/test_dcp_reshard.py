@@ -60,6 +60,10 @@ def test_dcp_reshard_sync_gateway_goes_down(cluster, conf):
     verify_changes(traun, expected_num_docs=2000, expected_num_revisions=0, expected_docs=traun.cache)
     verify_changes(seth, expected_num_docs=8000, expected_num_revisions=0, expected_docs=seth.cache)
 
+    # Verify that the sg1 is down but the other sync_gateways are running
+    errors = cluster.verify_sync_gateways_running()
+    assert(len(errors) == 1 and errors[0][0].hostname == "sg1")
+
 
 @pytest.mark.distributed_index
 @pytest.mark.extendedsanity
@@ -110,4 +114,8 @@ def test_dcp_reshard_sync_gateway_comes_up(cluster, conf):
 
     verify_changes(traun, expected_num_docs=6000, expected_num_revisions=0, expected_docs=traun.cache)
     verify_changes(seth, expected_num_docs=4000, expected_num_revisions=0, expected_docs=seth.cache)
+
+    # Verify all sync_gateways are running
+    errors = cluster.verify_sync_gateways_running()
+    assert(len(errors) == 0)
 

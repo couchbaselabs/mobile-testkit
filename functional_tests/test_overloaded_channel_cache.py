@@ -91,3 +91,7 @@ def test_overloaded_channel_cache(cluster, conf, num_docs, user_channels, filter
         else:
             # If number of view queries == 0 the key will not exist in the expvars
             assert("view_queries" not in resp_obj["syncGateway_changeCache"])
+
+    # Verify all sync_gateways are running
+    errors = cluster.verify_sync_gateways_running()
+    assert(len(errors) == 0)

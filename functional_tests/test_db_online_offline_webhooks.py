@@ -54,6 +54,10 @@ def test_webhooks(cluster, num_users,num_channels, num_docs, num_revisions):
     log.info("expected_events: {} received_events {}".format(expected_events, received_events))
     assert (expected_events == received_events)
 
+    # Verify all sync_gateways are running
+    errors = cluster.verify_sync_gateways_running()
+    assert(len(errors) == 0)
+
 # implements scenarios: 18 and 19
 @pytest.mark.sanity
 @pytest.mark.parametrize("num_users", [5])
@@ -119,6 +123,10 @@ def test_db_online_offline_webhooks_offline(cluster, num_users,num_channels, num
 
     ws.stop()
 
+    # Verify all sync_gateways are running
+    errors = cluster.verify_sync_gateways_running()
+    assert(len(errors) == 0)
+
 
 # implements scenarios: 21
 @pytest.mark.sanity
@@ -170,4 +178,8 @@ def test_db_online_offline_webhooks_offline(cluster, num_users,num_channels, num
     assert (last_event['state'] == 'offline')
 
     ws.stop()
+
+    # Verify all sync_gateways are running
+    errors = cluster.verify_sync_gateways_running()
+    assert(len(errors) == 0)
 

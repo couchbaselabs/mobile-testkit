@@ -66,6 +66,10 @@ def test_longpoll_changes_parametrized(cluster,conf, num_docs, num_revisions):
     # Verify docs from seth continous changes is the same as abc_docs_pusher's docs
     verify_same_docs(expected_num_docs=num_docs, doc_dict_one=docs_in_changes, doc_dict_two=abc_doc_pusher.cache)
 
+    # Verify all sync_gateways are running
+    errors = cluster.verify_sync_gateways_running()
+    assert(len(errors) == 0)
+
 
 @pytest.mark.distributed_index
 @pytest.mark.sanity
@@ -112,3 +116,7 @@ def test_longpoll_changes_sanity(cluster, conf, num_docs, num_revisions):
 
     # Verify docs from seth continous changes is the same as abc_docs_pusher's docs
     verify_same_docs(expected_num_docs=num_docs, doc_dict_one=docs_in_changes, doc_dict_two=abc_doc_pusher.cache)
+
+    # Verify all sync_gateways are running
+    errors = cluster.verify_sync_gateways_running()
+    assert(len(errors) == 0)

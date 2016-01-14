@@ -58,6 +58,10 @@ def test_single_user_single_channel_doc_updates(cluster, conf, num_docs, num_rev
 
     verify_changes([single_user], expected_num_docs=num_docs, expected_num_revisions=num_revisions, expected_docs=single_user.cache)
 
+    # Verify all sync_gateways are running
+    errors = cluster.verify_sync_gateways_running()
+    assert(len(errors) == 0)
+
     end = time.time()
     print("TIME:{}s".format(end - start))
 

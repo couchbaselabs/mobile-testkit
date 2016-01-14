@@ -115,6 +115,10 @@ def test_sync_channel_sanity(cluster, conf):
     # Verify that all docs have been flaged with _removed = true in changes feed for subscriber
     verify_docs_removed(subscriber, expected_num_docs=len(all_docs.items()), expected_docs=all_docs)
 
+    # Verify all sync_gateways are running
+    errors = cluster.verify_sync_gateways_running()
+    assert(len(errors) == 0)
+
     # TODO Push more docs to channel and make sure they do not show up in the users changes feed.
 
 
@@ -183,6 +187,10 @@ def test_sync_role_sanity(cluster, conf):
     # Verify seth sees no tv_stations channel docs
     verify_changes(seth, expected_num_docs=0, expected_num_revisions=0, expected_docs={})
 
+    # Verify all sync_gateways are running
+    errors = cluster.verify_sync_gateways_running()
+    assert(len(errors) == 0)
+
 
 @pytest.mark.sanity
 @pytest.mark.parametrize(
@@ -226,6 +234,10 @@ def test_sync_sanity(cluster, conf):
     # Make sure dj_0 sees KDWB docs in _changes feed
     verify_changes(dj_0, expected_num_docs=number_of_docs_per_pusher, expected_num_revisions=0, expected_docs=kdwb_docs)
 
+    # Verify all sync_gateways are running
+    errors = cluster.verify_sync_gateways_running()
+    assert(len(errors) == 0)
+
 
 @pytest.mark.sanity
 @pytest.mark.parametrize(
@@ -268,6 +280,10 @@ def test_sync_sanity_backfill(cluster, conf):
     time.sleep(5)
 
     verify_changes(dj_0, expected_num_docs=number_of_docs_per_pusher, expected_num_revisions=0, expected_docs=kdwb_docs)
+
+    # Verify all sync_gateways are running
+    errors = cluster.verify_sync_gateways_running()
+    assert(len(errors) == 0)
 
 
 @pytest.mark.sanity
@@ -360,3 +376,7 @@ def test_sync_require_roles(cluster, conf):
         assert not k.startswith("bad_doc")
 
     verify_changes(mogul, expected_num_docs=expected_num_radio_docs + expected_num_tv_docs, expected_num_revisions=0, expected_docs=all_docs)
+
+    # Verify all sync_gateways are running
+    errors = cluster.verify_sync_gateways_running()
+    assert(len(errors) == 0)

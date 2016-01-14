@@ -19,7 +19,10 @@ def test_pindex_distribution(cluster):
     # cluster.reset() method itself.
     
     cluster.reset(config="performance/sync_gateway_default_performance.json")
-    
+
+    # Verify all sync_gateways are running
+    errors = cluster.verify_sync_gateways_running()
+    assert(len(errors) == 0)
 
 
 

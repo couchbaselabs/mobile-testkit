@@ -4,12 +4,17 @@ import sys
 import json
 import time
 
-import jinja2
 import ansible.inventory
+
+from requests.exceptions import ConnectionError
 
 from lib.syncgateway import SyncGateway
 from lib.server import Server
 from lib.admin import Admin
+from lib import settings
+import logging
+log = logging.getLogger(settings.LOGGER)
+
 from provision.ansible_runner import run_ansible_playbook
 
 
@@ -80,9 +85,6 @@ class Cluster:
         is_distributed_index = False
         with open(conf_path, "r") as config:
             data = config.read()
-
-            # HACK: Strip out invalid json from config to allow it to be loaded
-            #       and parsed for bucket names
 
             # strip out templated variables {{ ... }}
             data = re.sub("({{.*}})", "0", data)
@@ -227,6 +229,17 @@ class Cluster:
                 
     
         return True
+
+    def verify_sync_gateways_running(self):
+        errors = []
+        for sg in self.sync_gateways:
+            try:
+                info = sg.info()
+                log.info("sync_gateway: {}, info: {}".format(sg.url, info))
+            except ConnectionError as e:
+                log.error("sync_gateway down: {}".format(e))
+                errors.append((sg, e))
+        return errors
 
     def __repr__(self):
         s = "\n\n"
