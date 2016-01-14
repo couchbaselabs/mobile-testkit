@@ -11,6 +11,7 @@
 
 - name: verify sync_gateway not listening on port
   wait_for: port=4985 delay=1 state=stopped
+  when: "'sync_gateway_index_writers' not in group_names"
 
 # Remove sync_gateway package
 - name: Uninstall sync_gateway rpm
