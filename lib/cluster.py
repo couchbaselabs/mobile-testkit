@@ -69,9 +69,19 @@ class Cluster:
         status = run_ansible_playbook("stop-sync-gateway.yml", stop_on_fail=False)
         assert(status == 0)
 
+        # Stop sync_gateways
+        print(">>> Stopping sg_accel")
+        status = run_ansible_playbook("stop-sg-accel.yml", stop_on_fail=False)
+        assert(status == 0)
+
         # Deleting sync_gateway artifacts
         print(">>> Deleting sync_gateway artifacts")
         status = run_ansible_playbook("delete-sync-gateway-artifacts.yml", stop_on_fail=False)
+        assert(status == 0)
+
+        # Deleting sg_accel artifacts
+        print(">>> Deleting sg_accel artifacts")
+        status = run_ansible_playbook("delete-sg-accel-artifacts.yml", stop_on_fail=False)
         assert(status == 0)
 
         # Delete buckets
@@ -120,6 +130,14 @@ class Cluster:
         # Start sync-gateway
         status = run_ansible_playbook(
             "start-sync-gateway.yml",
+            extra_vars="sync_gateway_config_filepath={0}".format(conf_path),
+            stop_on_fail=False
+        )
+        assert(status == 0)
+
+        # Start sg-accel
+        status = run_ansible_playbook(
+            "start-sg-accel.yml",
             extra_vars="sync_gateway_config_filepath={0}".format(conf_path),
             stop_on_fail=False
         )

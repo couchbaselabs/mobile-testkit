@@ -5,3 +5,4 @@
 
   tasks:
   - include: tasks/stop-sync-gateway.yml
+    when: "'sync_gateway_index_writers' not in group_names"

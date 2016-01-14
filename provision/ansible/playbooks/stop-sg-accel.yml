@@ -1,0 +1,7 @@
+---
+- hosts: sync_gateway_index_writers
+  any_errors_fatal: true
+  sudo: yes
+
+  tasks:
+  - include: tasks/stop-sg-accel.yml
