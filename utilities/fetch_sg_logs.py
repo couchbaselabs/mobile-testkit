@@ -4,6 +4,9 @@ import time
 
 from provision.ansible_runner import run_ansible_playbook
 
+import logging
+import lib.settings
+log = logging.getLogger(lib.settings.LOGGER)
 
 def fetch_sync_gateway_logs(prefix, is_perf_run=False):
 
@@ -11,7 +14,9 @@ def fetch_sync_gateway_logs(prefix, is_perf_run=False):
 
     print("Pulling logs")
     # fetch logs from sync_gateway instances
-    run_ansible_playbook("fetch-sync-gateway-logs.yml")
+    status = run_ansible_playbook("fetch-sync-gateway-logs.yml", stop_on_fail=False)
+    if status != 0:
+        log.error("Error pulling logs")
 
     # zip logs and timestamp
     if os.path.isdir("/tmp/sg_logs"):
