@@ -27,9 +27,9 @@
   tasks:
     # Delete previous artifacts
     - name: delete downloads directory
-        shell: rm -rf /tmp/*
+      shell: rm -rf /tmp/*
     - name: delete user home files
-        shell: rm -rf /centos/*
+      shell: rm -rf /centos/*
 
     - debug: msg="Couchbase server primary node {{ couchbase_server_primary_node }}"
     - debug: msg="Couchbase server node {{ couchbase_server_node }}"

@@ -10,6 +10,9 @@
   # Remove sync_gateway
   - include: tasks/remove-sync-gateway.yml
 
+  # Remove sync_gateway
+  - include: tasks/remove-sg-accel.yml
+
   # Remove package downloads
   - name: Remove package install dir
     shell: rm -rf /tmp/*
