@@ -26,7 +26,7 @@ def test_roles_sanity(cluster, conf):
 
     log.info("conf: {}".format(conf))
 
-    cluster.reset(config=conf)
+    mode = cluster.reset(config=conf)
 
     radio_stations = ["KMOW", "HWOD", "KDWB"]
     tv_stations = ["ABC", "CBS", "NBC"]
@@ -77,7 +77,7 @@ def test_roles_sanity(cluster, conf):
     verify_changes(mogul, expected_num_docs=expected_num_radio_docs + expected_num_tv_docs, expected_num_revisions=0, expected_docs=all_docs)
 
     # Verify all sync_gateways are running
-    errors = cluster.verify_sync_gateways_running()
+    errors = cluster.verify_alive(mode)
     assert(len(errors) == 0)
 
 # TODO - Add role mid scenario

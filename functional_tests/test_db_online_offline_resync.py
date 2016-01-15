@@ -19,7 +19,7 @@ def test_bucket_online_offline_resync_sanity(cluster, num_users, num_docs, num_r
     log.info("Starting test...")
     start = time.time()
 
-    cluster.reset("bucket_online_offline/db_online_offline_access_all_cc.json")
+    mode = cluster.reset("bucket_online_offline/db_online_offline_access_all_cc.json")
 
     init_completed = time.time()
     log.info("Initialization completed. Time taken:{}s".format(init_completed - start))
@@ -102,7 +102,7 @@ def test_bucket_online_offline_resync_sanity(cluster, num_users, num_docs, num_r
     verify_changes(user_x, expected_num_docs=expected_docs, expected_num_revisions=num_revisions, expected_docs=user_objects[0].cache)
 
     # Verify all sync_gateways are running
-    errors = cluster.verify_sync_gateways_running()
+    errors = cluster.verify_alive(mode)
     assert(len(errors) == 0)
 
     end = time.time()
@@ -126,7 +126,7 @@ def test_bucket_online_offline_resync_with_online(cluster, num_users, num_docs, 
     log.info("Starting test...")
     start = time.time()
 
-    cluster.reset("bucket_online_offline/db_online_offline_access_all_cc.json")
+    mode = cluster.reset("bucket_online_offline/db_online_offline_access_all_cc.json")
 
     init_completed = time.time()
     log.info("Initialization completed. Time taken:{}s".format(init_completed - start))
@@ -264,7 +264,7 @@ def test_bucket_online_offline_resync_with_online(cluster, num_users, num_docs, 
     verify_changes(user_x, expected_num_docs=expected_docs, expected_num_revisions=num_revisions, expected_docs=all_docs)
 
     # Verify all sync_gateways are running
-    errors = cluster.verify_sync_gateways_running()
+    errors = cluster.verify_alive(mode)
     assert(len(errors) == 0)
 
     end = time.time()
@@ -289,7 +289,7 @@ def test_bucket_online_offline_resync_with_offline(cluster, num_users, num_docs,
     log.info("Starting test...")
     start = time.time()
 
-    cluster.reset("bucket_online_offline/db_online_offline_access_all_cc.json")
+    mode = cluster.reset("bucket_online_offline/db_online_offline_access_all_cc.json")
 
     init_completed = time.time()
     log.info("Initialization completed. Time taken:{}s".format(init_completed - start))
@@ -426,7 +426,7 @@ def test_bucket_online_offline_resync_with_offline(cluster, num_users, num_docs,
     verify_changes(user_x, expected_num_docs=expected_docs, expected_num_revisions=num_revisions, expected_docs=all_docs)
 
     # Verify all sync_gateways are running
-    errors = cluster.verify_sync_gateways_running()
+    errors = cluster.verify_alive(mode)
     assert(len(errors) == 0)
 
     end = time.time()

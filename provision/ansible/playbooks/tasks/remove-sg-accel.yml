@@ -13,7 +13,7 @@
   wait_for: port=4985 delay=1 state=stopped
 
 # Remove sg_accel package
-- name: Uninstall sync_gateway rpm
+- name: Uninstall sg_accel rpm
   shell: rpm -e couchbase-sg-accel
   ignore_errors: yes
 

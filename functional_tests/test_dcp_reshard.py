@@ -24,7 +24,7 @@ def test_dcp_reshard_sync_gateway_goes_down(cluster, conf):
 
     log.info("conf: {}".format(conf))
 
-    cluster.reset(config=conf)
+    mode = cluster.reset(config=conf)
 
     admin = Admin(cluster.sync_gateways[2])
 
@@ -61,7 +61,7 @@ def test_dcp_reshard_sync_gateway_goes_down(cluster, conf):
     verify_changes(seth, expected_num_docs=8000, expected_num_revisions=0, expected_docs=seth.cache)
 
     # Verify that the sg1 is down but the other sync_gateways are running
-    errors = cluster.verify_sync_gateways_running()
+    errors = cluster.verify_alive(mode)
     assert(len(errors) == 1 and errors[0][0].hostname == "sg1")
 
 
@@ -77,7 +77,7 @@ def test_dcp_reshard_sync_gateway_comes_up(cluster, conf):
 
     log.info("conf: {}".format(conf))
 
-    cluster.reset(config=conf)
+    mode = cluster.reset(config=conf)
     cluster.sync_gateways[0].stop()
 
     admin = Admin(cluster.sync_gateways[1])
@@ -116,6 +116,6 @@ def test_dcp_reshard_sync_gateway_comes_up(cluster, conf):
     verify_changes(seth, expected_num_docs=4000, expected_num_revisions=0, expected_docs=seth.cache)
 
     # Verify all sync_gateways are running
-    errors = cluster.verify_sync_gateways_running()
+    errors = cluster.verify_alive(mode)
     assert(len(errors) == 0)
 

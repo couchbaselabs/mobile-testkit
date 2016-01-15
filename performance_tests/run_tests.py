@@ -108,7 +108,8 @@ if __name__ == "__main__":
     if opts.reset_sync_gateway:
         print "Resetting Sync Gateway"
         cluster = Cluster()
-        cluster.reset("performance/sync_gateway_default_performance.json")
+        mode = cluster.reset("performance/sync_gateway_default_performance.json")
+        print("Running in mode: {}".format(mode))
 
     # Copy provisioning_config to performance_results/ folder
     shutil.copy("provisioning_config", "performance_results/{}".format(test_run_id))

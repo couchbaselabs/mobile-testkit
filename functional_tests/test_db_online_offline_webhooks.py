@@ -21,7 +21,7 @@ def test_webhooks(cluster, num_users,num_channels, num_docs, num_revisions):
     log.info("Starting test...")
     start = time.time()
 
-    cluster.reset(config="sync_gateway_webhook_cc.json")
+    mode = cluster.reset(config="sync_gateway_webhook_cc.json")
 
     init_completed = time.time()
     log.info("Initialization completed. Time taken:{}s".format(init_completed - start))
@@ -55,7 +55,7 @@ def test_webhooks(cluster, num_users,num_channels, num_docs, num_revisions):
     assert (expected_events == received_events)
 
     # Verify all sync_gateways are running
-    errors = cluster.verify_sync_gateways_running()
+    errors = cluster.verify_alive(mode)
     assert(len(errors) == 0)
 
 # implements scenarios: 18 and 19
@@ -69,7 +69,7 @@ def test_db_online_offline_webhooks_offline(cluster, num_users,num_channels, num
     log.info("Starting test...")
     start = time.time()
 
-    cluster.reset(config="sync_gateway_webhook_cc.json")
+    mode = cluster.reset(config="sync_gateway_webhook_cc.json")
 
     init_completed = time.time()
     log.info("Initialization completed. Time taken:{}s".format(init_completed - start))
@@ -124,7 +124,7 @@ def test_db_online_offline_webhooks_offline(cluster, num_users,num_channels, num
     ws.stop()
 
     # Verify all sync_gateways are running
-    errors = cluster.verify_sync_gateways_running()
+    errors = cluster.verify_alive(mode)
     assert(len(errors) == 0)
 
 
@@ -139,7 +139,7 @@ def test_db_online_offline_webhooks_offline(cluster, num_users,num_channels, num
     log.info("Starting test...")
     start = time.time()
 
-    cluster.reset(config="sync_gateway_webhook_cc.json")
+    mode = cluster.reset(config="sync_gateway_webhook_cc.json")
 
     init_completed = time.time()
     log.info("Initialization completed. Time taken:{}s".format(init_completed - start))
@@ -180,6 +180,6 @@ def test_db_online_offline_webhooks_offline(cluster, num_users,num_channels, num
     ws.stop()
 
     # Verify all sync_gateways are running
-    errors = cluster.verify_sync_gateways_running()
+    errors = cluster.verify_alive(mode)
     assert(len(errors) == 0)
 

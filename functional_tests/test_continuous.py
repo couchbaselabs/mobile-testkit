@@ -35,7 +35,7 @@ def test_continuous_changes_parametrized(cluster, conf, num_users, num_docs, num
     log.info("num_docs: {}".format(num_docs))
     log.info("num_revisions: {}".format(num_revisions))
 
-    cluster.reset(config=conf)
+    mode = cluster.reset(config=conf)
 
     admin = Admin(cluster.sync_gateways[2])
     users = admin.register_bulk_users(target=cluster.sync_gateways[2], db="db", name_prefix="user", number=num_users, password="password", channels=["ABC", "TERMINATE"])
@@ -67,7 +67,7 @@ def test_continuous_changes_parametrized(cluster, conf, num_users, num_docs, num
     verify_changes(abc_doc_pusher, expected_num_docs=num_docs, expected_num_revisions=num_revisions, expected_docs=abc_doc_pusher.cache)
 
     # Verify all sync_gateways are running
-    errors = cluster.verify_sync_gateways_running()
+    errors = cluster.verify_alive(mode)
     assert(len(errors) == 0)
 
 @pytest.mark.distributed_index
@@ -85,7 +85,7 @@ def test_continuous_changes_sanity(cluster, conf, num_docs, num_revisions):
     log.info("num_docs: {}".format(num_docs))
     log.info("num_revisions: {}".format(num_revisions))
 
-    cluster.reset(config=conf)
+    mode = cluster.reset(config=conf)
 
     admin = Admin(cluster.sync_gateways[0])
     seth = admin.register_user(target=cluster.sync_gateways[0], db="db", name="seth", password="password", channels=["ABC", "TERMINATE"])
@@ -117,5 +117,5 @@ def test_continuous_changes_sanity(cluster, conf, num_docs, num_revisions):
     verify_same_docs(expected_num_docs=num_docs, doc_dict_one=docs_in_changes, doc_dict_two=abc_doc_pusher.cache)
 
     # Verify all sync_gateways are running
-    errors = cluster.verify_sync_gateways_running()
+    errors = cluster.verify_alive(mode)
     assert(len(errors) == 0)

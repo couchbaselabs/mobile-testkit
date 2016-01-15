@@ -29,7 +29,7 @@ def test_overloaded_channel_cache(cluster, conf, num_docs, user_channels, filter
     log.info("Using filter: {}".format(filter))
     log.info("Using limit: {}".format(limit))
 
-    cluster.reset(config=conf)
+    mode = cluster.reset(config=conf)
 
     target_sg = cluster.sync_gateways[0]
 
@@ -93,5 +93,5 @@ def test_overloaded_channel_cache(cluster, conf, num_docs, user_channels, filter
             assert("view_queries" not in resp_obj["syncGateway_changeCache"])
 
     # Verify all sync_gateways are running
-    errors = cluster.verify_sync_gateways_running()
+    errors = cluster.verify_alive(mode)
     assert(len(errors) == 0)

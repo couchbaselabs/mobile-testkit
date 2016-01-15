@@ -31,7 +31,7 @@ def test_single_user_single_channel_doc_updates(cluster, conf, num_docs, num_rev
     log.info("num_revisions: {}".format(num_revisions))
 
     start = time.time()
-    cluster.reset(config=conf)
+    mode = cluster.reset(config=conf)
     num_docs = num_docs
     num_revisions = num_revisions
     username = "User-1"
@@ -59,7 +59,7 @@ def test_single_user_single_channel_doc_updates(cluster, conf, num_docs, num_rev
     verify_changes([single_user], expected_num_docs=num_docs, expected_num_revisions=num_revisions, expected_docs=single_user.cache)
 
     # Verify all sync_gateways are running
-    errors = cluster.verify_sync_gateways_running()
+    errors = cluster.verify_alive(mode)
     assert(len(errors) == 0)
 
     end = time.time()

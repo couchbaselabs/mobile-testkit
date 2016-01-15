@@ -28,7 +28,7 @@ def test_sync_access_sanity(cluster, conf):
 
     log.info("Using conf: {}".format(conf))
 
-    cluster.reset(config=conf)
+    mode = cluster.reset(config=conf)
     admin = Admin(cluster.sync_gateways[2])
 
     seth = admin.register_user(target=cluster.sync_gateways[2], db="db", name="seth", password="password")
@@ -74,7 +74,7 @@ def test_sync_channel_sanity(cluster, conf):
 
     log.info("Using conf: {}".format(conf))
 
-    cluster.reset(config=conf)
+    mode = cluster.reset(config=conf)
     admin = Admin(cluster.sync_gateways[2])
 
     doc_pushers = []
@@ -116,7 +116,7 @@ def test_sync_channel_sanity(cluster, conf):
     verify_docs_removed(subscriber, expected_num_docs=len(all_docs.items()), expected_docs=all_docs)
 
     # Verify all sync_gateways are running
-    errors = cluster.verify_sync_gateways_running()
+    errors = cluster.verify_alive(mode)
     assert(len(errors) == 0)
 
     # TODO Push more docs to channel and make sure they do not show up in the users changes feed.
@@ -138,7 +138,7 @@ def test_sync_role_sanity(cluster, conf):
 
     log.info("Using conf: {}".format(conf))
 
-    cluster.reset(config=conf)
+    mode = cluster.reset(config=conf)
 
     admin = Admin(cluster.sync_gateways[2])
     admin.create_role(db="db", name="tv_stations", channels=tv_channels)
@@ -188,7 +188,7 @@ def test_sync_role_sanity(cluster, conf):
     verify_changes(seth, expected_num_docs=0, expected_num_revisions=0, expected_docs={})
 
     # Verify all sync_gateways are running
-    errors = cluster.verify_sync_gateways_running()
+    errors = cluster.verify_alive(mode)
     assert(len(errors) == 0)
 
 
@@ -205,7 +205,7 @@ def test_sync_sanity(cluster, conf):
 
     log.info("Using conf: {}".format(conf))
 
-    cluster.reset(config=conf)
+    mode = cluster.reset(config=conf)
 
     radio_stations = ["KMOW", "HWOD", "KDWB"]
     number_of_docs_per_pusher = 5000
@@ -235,7 +235,7 @@ def test_sync_sanity(cluster, conf):
     verify_changes(dj_0, expected_num_docs=number_of_docs_per_pusher, expected_num_revisions=0, expected_docs=kdwb_docs)
 
     # Verify all sync_gateways are running
-    errors = cluster.verify_sync_gateways_running()
+    errors = cluster.verify_alive(mode)
     assert(len(errors) == 0)
 
 
@@ -252,7 +252,7 @@ def test_sync_sanity_backfill(cluster, conf):
 
     log.info("Using conf: {}".format(conf))
 
-    cluster.reset(config=conf)
+    mode = cluster.reset(config=conf)
 
     radio_stations = ["KMOW", "HWOD", "KDWB"]
     number_of_docs_per_pusher = 5000
@@ -282,7 +282,7 @@ def test_sync_sanity_backfill(cluster, conf):
     verify_changes(dj_0, expected_num_docs=number_of_docs_per_pusher, expected_num_revisions=0, expected_docs=kdwb_docs)
 
     # Verify all sync_gateways are running
-    errors = cluster.verify_sync_gateways_running()
+    errors = cluster.verify_alive(mode)
     assert(len(errors) == 0)
 
 
@@ -299,7 +299,7 @@ def test_sync_require_roles(cluster, conf):
 
     log.info("Using conf: {}".format(conf))
 
-    cluster.reset(config=conf)
+    mode = cluster.reset(config=conf)
 
     radio_stations = ["KMOW", "HWOD", "KDWB"]
     tv_stations = ["ABC", "CBS", "NBC"]
@@ -378,5 +378,5 @@ def test_sync_require_roles(cluster, conf):
     verify_changes(mogul, expected_num_docs=expected_num_radio_docs + expected_num_tv_docs, expected_num_revisions=0, expected_docs=all_docs)
 
     # Verify all sync_gateways are running
-    errors = cluster.verify_sync_gateways_running()
+    errors = cluster.verify_alive(mode)
     assert(len(errors) == 0)

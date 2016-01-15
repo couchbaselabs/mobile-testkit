@@ -28,7 +28,7 @@ def test_bulk_get_compression(cluster, conf, num_docs):
     log.info("Using conf: {}".format(conf))
     log.info("Using num_docs: {}".format(num_docs))
 
-    cluster.reset(conf)
+    mode = cluster.reset(conf)
     admin = Admin(cluster.sync_gateways[2])
 
     user = admin.register_user(cluster.sync_gateways[0], "db", "seth", "password", channels=["seth"])
@@ -96,6 +96,11 @@ def test_bulk_get_compression(cluster, conf, num_docs):
     assert(6320000 < no_compression_response_size < 6321000)
     assert(2244000 < x_accept_part_encoding_response_size < 2245000)
     assert(75000 < accept_encoding_response_size < 76000)
+
+    # Verify all sync_gateways are running
+    errors = cluster.verify_alive(mode)
+    assert(len(errors) == 0)
+
 
 
 

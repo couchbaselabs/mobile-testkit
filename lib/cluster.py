@@ -12,10 +12,10 @@ from lib.syncgateway import SyncGateway
 from lib.server import Server
 from lib.admin import Admin
 from lib import settings
+from provision.ansible_runner import run_ansible_playbook
+
 import logging
 log = logging.getLogger(settings.LOGGER)
-
-from provision.ansible_runner import run_ansible_playbook
 
 
 class Cluster:
@@ -30,12 +30,16 @@ class Cluster:
 
         # provide simple consumable dictionaries to functional framwork
         cbs = [{"name": cbsv["inventory_hostname"], "ip": cbsv["ansible_ssh_host"]} for cbsv in cbs_host_vars]
-        sgs = [{"name": sgv["inventory_hostname"], "ip": sgv["ansible_ssh_host"]} for sgv in sgs_host_vars]
+
+        # Only collect sync_gateways that are not index_writers
+        sgvs = [sgv for sgv in sgs_host_vars if "sync_gateway_index_writers" not in sgv["group_names"]]
+        sgs = [{"name": sgv["inventory_hostname"], "ip": sgv["ansible_ssh_host"]} for sgv in sgvs]
+
         sgsw = [{"name": sgwv["inventory_hostname"], "ip": sgwv["ansible_ssh_host"]} for sgwv in sgsw_host_vars]
         lds = [{"name": ldv["inventory_hostname"], "ip": ldv["ansible_ssh_host"]} for ldv in lds_host_vars]
 
         self.sync_gateways = [SyncGateway(sg) for sg in sgs]
-        self.sync_gateway_writers = [SyncGateway(sgw) for sgw in sgsw]
+        self.sg_accels = [SyncGateway(sgw) for sgw in sgsw]
         self.servers = [Server(cb) for cb in cbs]
         self.load_generators = lds
 
@@ -56,7 +60,7 @@ class Cluster:
     def validate_cluster(self):
 
         # Validate sync gateways
-        num_index_readers = len(self.sync_gateways) - len(self.sync_gateway_writers)
+        num_index_readers = len(self.sync_gateways) - len(self.sg_accels)
         if num_index_readers == 0:
             raise Exception("Functional tests require at least 1 index reader")
 
@@ -92,7 +96,7 @@ class Cluster:
         conf_path = os.path.abspath("conf/" + config)
         bucket_names_from_config = []
 
-        is_distributed_index = False
+        mode = "channel_cache"
         with open(conf_path, "r") as config:
             data = config.read()
 
@@ -107,7 +111,7 @@ class Cluster:
 
             # Add CBGT buckets
             if "cluster_config" in conf_obj.keys():
-                is_distributed_index = True
+                mode = "distributed_index"
                 bucket_names_from_config.append(conf_obj["cluster_config"]["bucket"])
 
             dbs = conf_obj["databases"]
@@ -135,16 +139,19 @@ class Cluster:
         )
         assert(status == 0)
 
-        # Start sg-accel
-        status = run_ansible_playbook(
-            "start-sg-accel.yml",
-            extra_vars="sync_gateway_config_filepath={0}".format(conf_path),
-            stop_on_fail=False
-        )
-        assert(status == 0)
+        # HACK - only enable sg_accel for distributed index tests
+        # revise this with https://github.com/couchbaselabs/sync-gateway-testcluster/issues/222
+        if mode == "distributed_index":
+            # Start sg-accel
+            status = run_ansible_playbook(
+                "start-sg-accel.yml",
+                extra_vars="sync_gateway_config_filepath={0}".format(conf_path),
+                stop_on_fail=False
+            )
+            assert(status == 0)
 
         # Validate CBGT
-        if is_distributed_index:
+        if mode == "distributed_index":
             if not self.validate_cbgt_pindex_distribution_retry():
                 self.save_cbgt_diagnostics()
                 raise Exception("Failed to validate CBGT Pindex distribution")
@@ -152,10 +159,12 @@ class Cluster:
         else:
             print(">>> Running in channel cache")
 
+        return mode
+
     def save_cbgt_diagnostics(self):
         
         # CBGT REST Admin API endpoint
-        for sync_gateway_writer in self.sync_gateway_writers:
+        for sync_gateway_writer in self.sg_accels:
 
             adminApi = Admin(sync_gateway_writer)
             cbgt_diagnostics = adminApi.get_cbgt_diagnostics()
@@ -186,7 +195,7 @@ class Cluster:
         node_defs_pindex_counts = {}
 
         # CBGT REST Admin API endpoint 
-        adminApi = Admin(self.sync_gateways[0])
+        adminApi = Admin(self.sg_accels[0])
         cbgt_cfg = adminApi.get_cbgt_cfg()
 
         # loop over the planpindexes and update the count for the node where it lives
@@ -215,10 +224,10 @@ class Cluster:
         print("CBGT node to pindex counts: {}".format(node_defs_pindex_counts))
         
         # make sure number of unique node uuids is equal to the number of sync gateway writers
-        if len(node_defs_pindex_counts) != len(self.sync_gateway_writers):
+        if len(node_defs_pindex_counts) != len(self.sg_accels):
             print("CBGT len(unique_node_uuids) != len(self.sync_gateway_writers) ({} != {})".format(
                 len(node_defs_pindex_counts),
-                len(self.sync_gateway_writers)
+                len(self.sg_accels)
             ))
             return False 
 
@@ -248,7 +257,7 @@ class Cluster:
     
         return True
 
-    def verify_sync_gateways_running(self):
+    def verify_alive(self, mode):
         errors = []
         for sg in self.sync_gateways:
             try:
@@ -257,6 +266,16 @@ class Cluster:
             except ConnectionError as e:
                 log.error("sync_gateway down: {}".format(e))
                 errors.append((sg, e))
+
+        if mode == "distributed_index":
+            for sa in self.sg_accels:
+                try:
+                    info = sa.info()
+                    log.info("sg_accel: {}, info: {}".format(sa.url, info))
+                except ConnectionError as e:
+                    log.error("sg_accel down: {}".format(e))
+                    errors.append((sa, e))
+
         return errors
 
     def __repr__(self):
@@ -264,8 +283,8 @@ class Cluster:
         s += "Sync Gateways\n"
         for sg in self.sync_gateways:
             s += str(sg)
-        s += "\nSync Gateway Writers\n"
-        for sgw in self.sync_gateway_writers:
+        s += "\nSync Gateway Accels\n"
+        for sgw in self.sg_accels:
             s += str(sgw)
         s += "\nCouchbase Servers\n"
         for server in self.servers:
