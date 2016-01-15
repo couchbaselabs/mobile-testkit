@@ -4,7 +4,7 @@
   gather_facts: False
 
   tasks:
-  - wait_for: port=8091 delay=2
+  - wait_for: port=8091 delay=5
 
 - hosts: couchbase_servers
   any_errors_fatal: true
