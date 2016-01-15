@@ -37,10 +37,10 @@ def test_continuous_changes_parametrized(cluster, conf, num_users, num_docs, num
 
     mode = cluster.reset(config=conf)
 
-    admin = Admin(cluster.sync_gateways[2])
-    users = admin.register_bulk_users(target=cluster.sync_gateways[2], db="db", name_prefix="user", number=num_users, password="password", channels=["ABC", "TERMINATE"])
-    abc_doc_pusher = admin.register_user(target=cluster.sync_gateways[2], db="db", name="abc_doc_pusher", password="password", channels=["ABC"])
-    doc_terminator = admin.register_user(target=cluster.sync_gateways[2], db="db", name="doc_terminator", password="password", channels=["TERMINATE"])
+    admin = Admin(cluster.sync_gateways[0])
+    users = admin.register_bulk_users(target=cluster.sync_gateways[0], db="db", name_prefix="user", number=num_users, password="password", channels=["ABC", "TERMINATE"])
+    abc_doc_pusher = admin.register_user(target=cluster.sync_gateways[0], db="db", name="abc_doc_pusher", password="password", channels=["ABC"])
+    doc_terminator = admin.register_user(target=cluster.sync_gateways[0], db="db", name="doc_terminator", password="password", channels=["TERMINATE"])
 
     with concurrent.futures.ThreadPoolExecutor(max_workers=100) as executor:
 
@@ -52,6 +52,9 @@ def test_continuous_changes_parametrized(cluster, conf, num_users, num_docs, num
 
             # Send termination doc to seth continuous changes feed subscriber
             if task_name == "doc_pusher":
+
+                errors = future.result()
+                assert(len(errors) == 0)
                 abc_doc_pusher.update_docs(num_revs_per_doc=num_revisions)
 
                 time.sleep(10)

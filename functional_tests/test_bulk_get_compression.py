@@ -29,7 +29,7 @@ def test_bulk_get_compression(cluster, conf, num_docs):
     log.info("Using num_docs: {}".format(num_docs))
 
     mode = cluster.reset(conf)
-    admin = Admin(cluster.sync_gateways[2])
+    admin = Admin(cluster.sync_gateways[0])
 
     user = admin.register_user(cluster.sync_gateways[0], "db", "seth", "password", channels=["seth"])
 
