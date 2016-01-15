@@ -7,7 +7,10 @@
     "slowServerCallWarningThreshold": 500,
     "compressResponses": true,
     "skip_runmode_validation": true,
-    "log": ["CRUD+", "Cache+", "HTTP+", "Changes+"],
+    "log": ["*"],
+    "facebook" : {
+        "register" : true
+    },
     "cluster_config": {
         "server":"http://{{ couchbase_server_primary_node }}:8091",
         "data_dir":".",
