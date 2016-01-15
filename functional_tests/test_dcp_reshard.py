@@ -38,7 +38,7 @@ def test_dcp_reshard_sync_gateway_goes_down(cluster, conf):
         futures = dict()
 
         # take down a sync_gateway
-        futures[executor.submit(cluster.sync_gateways[0].stop)] = "sg_down"
+        futures[executor.submit(cluster.sg_accels[0].stop)] = "sg_down"
 
         log.info(">>> Adding Seth docs")  # FOX
         futures[executor.submit(seth.add_docs, 8000)] = "seth"
@@ -78,7 +78,7 @@ def test_dcp_reshard_sync_gateway_comes_up(cluster, conf):
     log.info("conf: {}".format(conf))
 
     mode = cluster.reset(config=conf)
-    cluster.sync_gateways[0].stop()
+    cluster.sg_accels[0].stop()
 
     admin = Admin(cluster.sync_gateways[0])
 
@@ -92,7 +92,7 @@ def test_dcp_reshard_sync_gateway_comes_up(cluster, conf):
         futures = dict()
 
         # Bring up a sync_gateway
-        futures[executor.submit(cluster.sync_gateways[0].start, conf)] = "sg_up"
+        futures[executor.submit(cluster.sg_accels[0].start, conf)] = "sg_up"
 
         time.sleep(5)
 

@@ -65,6 +65,7 @@
 
   tasks:
   - debug: msg="Downloading sync_gateway v. {{ couchbase_sync_gateway_package_url }}"
+    when: "'sync_gateway_index_writers' not in group_names"
   - name: Download sync_gateway rpm
     get_url: url={{ couchbase_sync_gateway_package_url }} dest=/tmp/{{ couchbase_sync_gateway_package }}
     when: "'sync_gateway_index_writers' not in group_names"

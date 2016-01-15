@@ -9,6 +9,7 @@ import ansible.inventory
 from requests.exceptions import ConnectionError
 
 from lib.syncgateway import SyncGateway
+from lib.sgaccel import SgAccel
 from lib.server import Server
 from lib.admin import Admin
 from lib import settings
@@ -39,7 +40,7 @@ class Cluster:
         lds = [{"name": ldv["inventory_hostname"], "ip": ldv["ansible_ssh_host"]} for ldv in lds_host_vars]
 
         self.sync_gateways = [SyncGateway(sg) for sg in sgs]
-        self.sg_accels = [SyncGateway(sgw) for sgw in sgsw]
+        self.sg_accels = [SgAccel(sgw) for sgw in sgsw]
         self.servers = [Server(cb) for cb in cbs]
         self.load_generators = lds
 
