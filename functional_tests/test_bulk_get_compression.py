@@ -13,6 +13,7 @@ from lib.admin import Admin
 import logging
 log = logging.getLogger(lib.settings.LOGGER)
 
+from fixtures import cluster
 
 @pytest.mark.sanity
 @pytest.mark.parametrize(
