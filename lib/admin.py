@@ -3,7 +3,6 @@ import json
 import concurrent.futures
 
 from lib.user import User
-from lib.scenarioprinter import ScenarioPrinter
 from lib import settings
 
 
@@ -15,9 +14,6 @@ class Admin:
     def __init__(self, sync_gateway):
         self.admin_url = "http://{}:4985".format(sync_gateway.ip)
         self.users = {}
-
-        self._printer = ScenarioPrinter()
-
         self._headers = {"Content-Type": "application/json"}
 
     # GET /{db}/

@@ -48,7 +48,7 @@ class Cluster:
         hostfile = "provisioning_config"
 
         if not os.path.isfile(hostfile):
-            print("File 'provisioning_config' not found at {}".format(os.getcwd()))
+            log.error("File 'provisioning_config' not found at {}".format(os.getcwd()))
             sys.exit(1)
 
         i = ansible.inventory.Inventory(host_list=hostfile)
@@ -70,27 +70,27 @@ class Cluster:
         self.validate_cluster()
         
         # Stop sync_gateways
-        print(">>> Stopping sync_gateway")
+        log.info(">>> Stopping sync_gateway")
         status = run_ansible_playbook("stop-sync-gateway.yml", stop_on_fail=False)
         assert(status == 0)
 
         # Stop sync_gateways
-        print(">>> Stopping sg_accel")
+        log.info(">>> Stopping sg_accel")
         status = run_ansible_playbook("stop-sg-accel.yml", stop_on_fail=False)
         assert(status == 0)
 
         # Deleting sync_gateway artifacts
-        print(">>> Deleting sync_gateway artifacts")
+        log.info(">>> Deleting sync_gateway artifacts")
         status = run_ansible_playbook("delete-sync-gateway-artifacts.yml", stop_on_fail=False)
         assert(status == 0)
 
         # Deleting sg_accel artifacts
-        print(">>> Deleting sg_accel artifacts")
+        log.info(">>> Deleting sg_accel artifacts")
         status = run_ansible_playbook("delete-sg-accel-artifacts.yml", stop_on_fail=False)
         assert(status == 0)
 
         # Delete buckets
-        print(">>> Deleting buckets on: {}".format(self.servers[0].ip))
+        log.info(">>> Deleting buckets on: {}".format(self.servers[0].ip))
         self.servers[0].delete_buckets()
 
         # Parse config and grab bucket names
@@ -126,11 +126,11 @@ class Cluster:
         # Buckets may be shared for different functionality
         bucket_name_set = list(set(bucket_names_from_config))
 
-        print(">>> Creating buckets on: {}".format(self.servers[0].ip))
-        print(">>> Creating buckets {}".format(bucket_name_set))
+        log.info(">>> Creating buckets on: {}".format(self.servers[0].ip))
+        log.info(">>> Creating buckets {}".format(bucket_name_set))
         self.servers[0].create_buckets(bucket_name_set)
 
-        print(">>> Starting sync_gateway with configuration: {}".format(conf_path))
+        log.info(">>> Starting sync_gateway with configuration: {}".format(conf_path))
 
         # Start sync-gateway
         status = run_ansible_playbook(
@@ -156,9 +156,9 @@ class Cluster:
             if not self.validate_cbgt_pindex_distribution_retry():
                 self.save_cbgt_diagnostics()
                 raise Exception("Failed to validate CBGT Pindex distribution")
-            print(">>> Detected valid CBGT Pindex distribution")
+            log.info(">>> Detected valid CBGT Pindex distribution")
         else:
-            print(">>> Running in channel cache")
+            log.info(">>> Running in channel cache")
 
         return mode
 
@@ -173,7 +173,7 @@ class Cluster:
         
             # dump raw diagnostics
             pretty_print_json = json.dumps(cbgt_diagnostics, sort_keys=True, indent=4, separators=(',', ': '))
-            print("SG {} CBGT diagnostic output: {}".format(sync_gateway_writer, pretty_print_json))
+            log.info("SG {} CBGT diagnostic output: {}".format(sync_gateway_writer, pretty_print_json))
         
     def validate_cbgt_pindex_distribution_retry(self):
         """
@@ -185,7 +185,7 @@ class Cluster:
             if is_valid:
                return True
             else:
-                print("Could not validate CBGT Pindex distribution.  Will retry after sleeping ..")
+                log.error("Could not validate CBGT Pindex distribution.  Will retry after sleeping ..")
                 time.sleep(5)
 
         return False 
@@ -221,12 +221,11 @@ class Cluster:
                 current_pindex_count += 1
                 node_defs_pindex_counts[node] = current_pindex_count
 
-
-        print("CBGT node to pindex counts: {}".format(node_defs_pindex_counts))
+        log.info("CBGT node to pindex counts: {}".format(node_defs_pindex_counts))
         
         # make sure number of unique node uuids is equal to the number of sync gateway writers
         if len(node_defs_pindex_counts) != len(self.sg_accels):
-            print("CBGT len(unique_node_uuids) != len(self.sync_gateway_writers) ({} != {})".format(
+            log.error("CBGT len(unique_node_uuids) != len(self.sync_gateway_writers) ({} != {})".format(
                 len(node_defs_pindex_counts),
                 len(self.sg_accels)
             ))
@@ -248,7 +247,7 @@ class Cluster:
             # divided evenly across the cluster)
             delta = abs(num_pindex_first_node - num_pindexes)
             if delta > 1:
-                print("CBGT Sync Gateway node {} has {} pindexes, but other node has {} pindexes.".format(
+                log.info("CBGT Sync Gateway node {} has {} pindexes, but other node has {} pindexes.".format(
                     node_def_uuid,
                     num_pindexes,
                     num_pindex_first_node

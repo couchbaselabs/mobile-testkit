@@ -152,7 +152,7 @@ def test_single_user_multiple_channels(cluster, conf):
         seth.target = cluster.sync_gateways[count % num_sgs]
         count += 1
 
-    print(seth)
+    log.info(seth)
 
     time.sleep(10)
 
@@ -163,7 +163,7 @@ def test_single_user_multiple_channels(cluster, conf):
     assert(len(errors) == 0)
 
     end = time.time()
-    print("TIME:{}s".format(end - start))
+    log.info("TIME:{}s".format(end - start))
 
 
 @pytest.mark.distributed_index

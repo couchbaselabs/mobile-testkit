@@ -63,7 +63,7 @@ def test_single_user_single_channel_doc_updates(cluster, conf, num_docs, num_rev
     assert(len(errors) == 0)
 
     end = time.time()
-    print("TIME:{}s".format(end - start))
+    log.info("TIME:{}s".format(end - start))
 
 
 

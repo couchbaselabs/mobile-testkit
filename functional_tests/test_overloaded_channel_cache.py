@@ -66,14 +66,14 @@ def test_overloaded_channel_cache(cluster, conf, num_docs, user_channels, filter
                 assert len(changes["results"]) == 5001
 
         # changes feed should all be successful
-        print(len(errors))
+        log.info(len(errors))
         assert len(errors) == 0
 
         if limit is not None:
             # HACK: Should be less than a minute unless blocking on view calls
             end = time.time()
             time_for_users_to_get_all_changes = end - start
-            print("Time for users to get all changes: {}".format(time_for_users_to_get_all_changes))
+            log.info("Time for users to get all changes: {}".format(time_for_users_to_get_all_changes))
             assert time_for_users_to_get_all_changes < 60
 
         # Sanity check that a subset of users have _changes feed intact

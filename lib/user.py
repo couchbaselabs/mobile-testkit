@@ -11,14 +11,10 @@ from requests.adapters import HTTPAdapter
 from requests.exceptions import HTTPError
 from requests import Session, exceptions
 from collections import defaultdict
-from scenarioprinter import ScenarioPrinter
+
 from lib import settings
 import logging
 log = logging.getLogger(settings.LOGGER)
-
-
-scenario_printer = ScenarioPrinter()
-
 
 class User:
     def __init__(self, target, db, name, password, channels):
@@ -379,7 +375,7 @@ class User:
         if len(obj["results"]) == 0:
             log.warn("Got no data in changes feed")
         self.changes_data = obj
-        scenario_printer.print_changes_num(self.name, len(obj["results"]))
+        log.debug(self.name, len(obj["results"]))
         return obj
 
     # GET /{db}/_changes?feed=longpoll

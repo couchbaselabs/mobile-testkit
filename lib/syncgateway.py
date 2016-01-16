@@ -1,6 +1,10 @@
 import os
 import requests
 
+import lib.settings
+import logging
+log = logging.getLogger(lib.settings.LOGGER)
+
 from provision.ansible_runner import run_targeted_ansible_playbook
 
 class SyncGateway:
@@ -26,7 +30,7 @@ class SyncGateway:
     def start(self, config):
         conf_path = os.path.abspath("conf/" + config)
 
-        print(">>> Starting sync_gateway with configuration: {}".format(conf_path))
+        log.info(">>> Starting sync_gateway with configuration: {}".format(conf_path))
 
         status = run_targeted_ansible_playbook(
             "start-sync-gateway.yml",
@@ -39,7 +43,7 @@ class SyncGateway:
     def restart(self, config):
         conf_path = os.path.abspath("conf/" + config)
 
-        print(">>> Restarting sync_gateway with configuration: {}".format(conf_path))
+        log.info(">>> Restarting sync_gateway with configuration: {}".format(conf_path))
 
         status = run_targeted_ansible_playbook(
             "reset-sync-gateway.yml",

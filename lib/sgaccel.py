@@ -1,6 +1,10 @@
 import os
 import requests
 
+import lib.settings
+import logging
+log = logging.getLogger(lib.settings.LOGGER)
+
 from provision.ansible_runner import run_targeted_ansible_playbook
 
 class SgAccel:
@@ -26,7 +30,7 @@ class SgAccel:
     def start(self, config):
         conf_path = os.path.abspath("conf/" + config)
 
-        print(">>> Starting sg_accel with configuration: {}".format(conf_path))
+        log.info(">>> Starting sg_accel with configuration: {}".format(conf_path))
 
         status = run_targeted_ansible_playbook(
             "start-sg-accel.yml",

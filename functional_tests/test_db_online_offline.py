@@ -63,7 +63,7 @@ def rest_scan(sync_gateway, db, online, num_docs, user_name, channels):
     # GET /{db}/_role
     try:
         roles = admin.get_roles(db=db)
-        print(roles)
+        log.info(roles)
     except HTTPError as e:
         log.error((e.response.url, e.response.status_code))
         error_responses.append((e.response.url, e.response.status_code))
@@ -71,7 +71,7 @@ def rest_scan(sync_gateway, db, online, num_docs, user_name, channels):
     # GET /{db}/_role/{name}
     try:
         role = admin.get_role(db=db, name="radio_stations")
-        print(role)
+        log.info(role)
     except HTTPError as e:
         log.error((e.response.url, e.response.status_code))
         error_responses.append((e.response.url, e.response.status_code))
@@ -86,7 +86,7 @@ def rest_scan(sync_gateway, db, online, num_docs, user_name, channels):
     # GET /{db}/_user
     try:
         users_info = admin.get_users_info(db=db)
-        print(users_info)
+        log.info(users_info)
     except HTTPError as e:
         log.error((e.response.url, e.response.status_code))
         error_responses.append((e.response.url, e.response.status_code))
@@ -94,7 +94,7 @@ def rest_scan(sync_gateway, db, online, num_docs, user_name, channels):
     # GET /{db}/_user/{name}
     try:
         user_info = admin.get_user_info(db=db, name=user_name)
-        print(user_info)
+        log.info(user_info)
     except HTTPError as e:
         log.error((e.response.url, e.response.status_code))
         error_responses.append((e.response.url, e.response.status_code))
@@ -106,7 +106,7 @@ def rest_scan(sync_gateway, db, online, num_docs, user_name, channels):
             assert (db_info["state"] == "Offline")
         else:
             assert (db_info["state"] == "Online")
-        print(db_info)
+        log.info(db_info)
     except HTTPError as e:
         log.error((e.response.url, e.response.status_code))
         error_responses.append((e.response.url, e.response.status_code))
@@ -296,7 +296,7 @@ def test_online_to_offline_check_503(cluster, conf, num_docs):
     # We hit NUM_ENDPOINT unique REST endpoints + num of doc PUT failures
     assert(len(errors) == NUM_ENDPOINTS + (num_docs * 2))
     for error_tuple in errors:
-        print("({},{})".format(error_tuple[0], error_tuple[1]))
+        log.error("({},{})".format(error_tuple[0], error_tuple[1]))
         assert(error_tuple[1] == 503)
 
     # Verify all sync_gateways are running
@@ -684,7 +684,7 @@ def test_offline_true_config_bring_online(cluster, conf, num_docs):
 
     assert(len(errors) == NUM_ENDPOINTS + (num_docs * 2))
     for error_tuple in errors:
-        print("({},{})".format(error_tuple[0], error_tuple[1]))
+        log.error("({},{})".format(error_tuple[0], error_tuple[1]))
         assert(error_tuple[1] == 503)
 
     # Scenario 9
@@ -733,7 +733,7 @@ def test_db_offline_tap_loss_sanity(cluster, conf, num_docs):
     errors = rest_scan(cluster.sync_gateways[0], db="db", online=False, num_docs=num_docs, user_name="seth", channels=["ABC"])
     assert(len(errors) == NUM_ENDPOINTS + (num_docs * 2))
     for error_tuple in errors:
-        print("({},{})".format(error_tuple[0], error_tuple[1]))
+        log.error("({},{})".format(error_tuple[0], error_tuple[1]))
         assert(error_tuple[1] == 503)
 
     # Verify all sync_gateways are running
@@ -828,7 +828,7 @@ def test_multiple_dbs_unique_buckets_lose_tap(cluster, conf, num_docs):
         errors = rest_scan(cluster.sync_gateways[0], db=db, online=False, num_docs=num_docs, user_name="seth", channels=["ABC"])
         assert(len(errors) == NUM_ENDPOINTS + (num_docs * 2))
         for error_tuple in errors:
-            print("({},{})".format(error_tuple[0], error_tuple[1]))
+            log.error("({},{})".format(error_tuple[0], error_tuple[1]))
             assert(error_tuple[1] == 503)
 
     # Verify all sync_gateways are running
