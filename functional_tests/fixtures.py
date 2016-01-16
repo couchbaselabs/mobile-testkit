@@ -20,6 +20,9 @@ def cluster(request):
         # Fetch logs if a test fails
         if request.node.rep_call.failed:
 
+            log.error("\n!!!!!!!!!! TEST FAIULRE !!!!!!!!!!")
+            log.error(request.node.nodeid)
+
             # example nodeid: tests/test_single_user_multiple_channels.py::test_1
             remove_slash = request.node.nodeid.replace("/", "-")
             test_id_elements = remove_slash.split("::")
