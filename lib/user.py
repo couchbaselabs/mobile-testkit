@@ -277,7 +277,7 @@ class User:
                     log.error("{0} {1} {2}".format(self.name, e.response.url, e.response.status_code))
                     errors.append((e.response.url, e.response.status_code))
                 else:
-                    log.info("Document: {} updated successfully".format(doc))
+                    log.debug("Document: {} updated successfully".format(doc))
 
         return errors
 

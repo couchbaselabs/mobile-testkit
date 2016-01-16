@@ -20,13 +20,22 @@ log = logging.getLogger(lib.settings.LOGGER)
             ("sync_gateway_default_functional_tests_di.json", 1, 5000, 1),
             ("sync_gateway_default_functional_tests_di.json", 50, 5000, 1),
             ("sync_gateway_default_functional_tests_di.json", 50, 10, 10),
-            ("sync_gateway_default_functional_tests_di.json", 50, 5000, 10),
+            #("sync_gateway_default_functional_tests_di.json", 50, 5000, 10),
             ("sync_gateway_default_functional_tests_cc.json", 1, 5000, 1),
             ("sync_gateway_default_functional_tests_cc.json", 50, 5000, 1),
             ("sync_gateway_default_functional_tests_cc.json", 50, 10, 10),
-            ("sync_gateway_default_functional_tests_cc.json", 50, 5000, 10)
+            #("sync_gateway_default_functional_tests_cc.json", 50, 5000, 10)
         ],
-        ids=["DI-1", "DI-2", "DI-3", "DI-4", "CC-5", "CC-6", "CC-7", "CC-8"]
+        ids=[
+            "DI-1",
+            "DI-2",
+            "DI-3",
+            #"DI-4",
+            "CC-5",
+            "CC-6",
+            "CC-7",
+            #"CC-8"
+        ]
 )
 def test_continuous_changes_parametrized(cluster, conf, num_users, num_docs, num_revisions):
 

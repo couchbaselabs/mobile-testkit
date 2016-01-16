@@ -20,11 +20,16 @@ from fixtures import cluster
 @pytest.mark.parametrize(
         "conf,num_docs,num_revisions", [
             ("sync_gateway_default_functional_tests_di.json", 5000, 1),
-            ("sync_gateway_default_functional_tests_di.json", 5000, 10),
+            #("sync_gateway_default_functional_tests_di.json", 5000, 10),
             ("sync_gateway_default_functional_tests_cc.json", 5000, 1),
-            ("sync_gateway_default_functional_tests_cc.json", 5000, 10)
+            #("sync_gateway_default_functional_tests_cc.json", 5000, 10)
         ],
-        ids=["DI-1", "DI-2", "CC-3", "CC-4"]
+        ids=[
+            "DI-1",
+            #"DI-2",
+            "CC-3",
+            #"CC-4"
+        ]
 )
 def test_longpoll_changes_parametrized(cluster,conf, num_docs, num_revisions):
 
