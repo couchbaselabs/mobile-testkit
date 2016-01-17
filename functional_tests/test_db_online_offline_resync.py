@@ -304,7 +304,7 @@ def test_bucket_online_offline_resync_with_offline(cluster, num_users, num_docs,
 
     # Register User
     log.info("Register User")
-    user_objects = admin.register_bulk_users(target=sgs[1], db="db", name_prefix="User",
+    user_objects = admin.register_bulk_users(target=sgs[0], db="db", name_prefix="User",
                                              number=num_users, password=password, channels=channels)
     user_x = admin.register_user(target=sgs[0], db="db", name="User-X", password="password", channels=["channel_x"])
 
