@@ -126,10 +126,11 @@ if __name__ == "__main__":
     # write expvars to file, will exit when gateload scenario is done
     log_expvars(test_run_id)
 
-    # Killing sync_gateway will trigger collection of
+    # Killing sync_gateway and sg_accel will trigger collection of
     #    1) machine_stats
     #    2) sync_gateway profile data
     run_ansible_playbook("stop-sync-gateway.yml")
+    run_ansible_playbook("stop-sg-accel.yml")
 
     # HACK: refresh interval for resource stat collection is 10 seconds.
     #  Make sure enough time has passed before collecting json
