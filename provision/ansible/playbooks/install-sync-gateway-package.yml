@@ -36,6 +36,7 @@
 
   tasks:
   - include: tasks/flush-server-buckets.yml
+    when: (skip_bucketflush != 'true') and (skip_bucketflush != 'True')
 
 # Create sync_gateway user
 - hosts: sync_gateways

@@ -13,7 +13,9 @@ class SyncGatewayConfig:
                  version,
                  build_number,
                  config_path,
-                 build_flags):
+                 build_flags,
+                 skip_bucketflush):
+
         self._dev_build_url = dev_build_url
         self._dev_build_number = dev_build_number
         self._version = version
@@ -21,6 +23,7 @@ class SyncGatewayConfig:
         self._branch = branch
         self._config_path = config_path
         self._build_flags = build_flags
+        self._skip_bucketflush = skip_bucketflush
         
         self._valid_versions = [
             "1.1.0",
@@ -60,6 +63,11 @@ class SyncGatewayConfig:
     def build_flags(self):
         return self._build_flags
 
+    @property
+    def skip_bucketflush(self):
+        return self._skip_bucketflush
+
+    
     def __str__(self):
         output = "\n  sync_gateway configuration\n"
         output += "  ------------------------------------------\n"
@@ -70,6 +78,7 @@ class SyncGatewayConfig:
         output += "  branch:           {}\n".format(self._branch)
         output += "  config path:      {}\n".format(self._config_path)
         output += "  build flags:      {}\n".format(self._build_flags)
+        output += "  skip bucketflush: {}\n".format(self._skip_bucketflush)
         return output
 
     def _base_url_package_for_sync_gateway_dev_build(self, dev_build_url, dev_build_number):
@@ -137,14 +146,15 @@ def install_sync_gateway(sync_gateway_config):
         print("\n\n!!! WARNING: You are building with flags: {} !!!\n\n".format(opts.build_flags))
 
     if sync_gateway_config.branch is not None:
-
+                
         # Install source
         ansible_runner.run_ansible_playbook(
             "install-sync-gateway-source.yml",
-            "sync_gateway_config_filepath={0} branch={1} build_flags={2}".format(
+            "sync_gateway_config_filepath={0} branch={1} build_flags={2} skip_bucketflush={3}".format(
                 sync_gateway_config.config_path,
                 sync_gateway_config.branch,
-                sync_gateway_config.build_flags
+                sync_gateway_config.build_flags,
+                sync_gateway_config.skip_bucketflush
             )
         )
 
@@ -157,11 +167,12 @@ def install_sync_gateway(sync_gateway_config):
 
         ansible_runner.run_ansible_playbook(
             "install-sync-gateway-package.yml",
-            "couchbase_sync_gateway_package_base_url={0} couchbase_sync_gateway_package={1} couchbase_sg_accel_package={2} sync_gateway_config_filepath={3}".format(
+            "couchbase_sync_gateway_package_base_url={0} couchbase_sync_gateway_package={1} couchbase_sg_accel_package={2} sync_gateway_config_filepath={3} skip_bucketflush={4}".format(
                 sync_gateway_base_url,
                 sync_gateway_package_name,
                 sg_accel_package_name,
-                sync_gateway_config.config_path
+                sync_gateway_config.config_path,
+                sync_gateway_config.skip_bucketflush
             )
         )
 
@@ -198,11 +209,16 @@ if __name__ == "__main__":
     parser.add_option("", "--build-flags",
                       action="store", type="string", dest="build_flags", default="",
                       help="build flags to pass when building sync gateway (ex. -race)")
+
+    parser.add_option("", "--skip-bucketflush",
+                      action="store", dest="skip_bucketflush", default=False,
+                      help="skip the bucketflush step")
+
     
     arg_parameters = sys.argv[1:]
 
     (opts, args) = parser.parse_args(arg_parameters)
-
+    
     version = None
     build = None
 
@@ -221,7 +237,8 @@ if __name__ == "__main__":
         config_path=opts.sync_gateway_config_file,
         dev_build_url=opts.dev_build_url,
         dev_build_number=opts.dev_build_number,
-        build_flags=opts.build_flags
+        build_flags=opts.build_flags,
+        skip_bucketflush=opts.skip_bucketflush
     )
 
     install_sync_gateway(sync_gateway_install_config)
