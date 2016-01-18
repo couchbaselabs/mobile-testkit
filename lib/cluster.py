@@ -61,8 +61,7 @@ class Cluster:
     def validate_cluster(self):
 
         # Validate sync gateways
-        num_index_readers = len(self.sync_gateways) - len(self.sg_accels)
-        if num_index_readers == 0:
+        if len(self.sync_gateways) == 0:
             raise Exception("Functional tests require at least 1 index reader")
 
     def reset(self, config):
