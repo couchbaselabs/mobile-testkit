@@ -41,6 +41,9 @@ def test_overloaded_channel_cache(cluster, conf, num_docs, user_channels, filter
     doc_pusher = admin.register_user(target_sg, "db", "abc_doc_pusher", "password", ["ABC"])
     doc_pusher.add_docs(num_docs, bulk=True)
 
+    # Give a few seconds to let changes register
+    time.sleep(2)
+
     start = time.time()
 
     with concurrent.futures.ThreadPoolExecutor(max_workers=100) as executor:
