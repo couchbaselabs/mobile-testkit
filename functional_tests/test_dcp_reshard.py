@@ -24,12 +24,12 @@ def test_dcp_reshard_sync_gateway_goes_down(cluster, conf):
 
     log.info("conf: {}".format(conf))
 
-    cluster.reset(config=conf)
+    mode = cluster.reset(config=conf)
 
-    admin = Admin(cluster.sync_gateways[2])
+    admin = Admin(cluster.sync_gateways[0])
 
-    traun = admin.register_user(target=cluster.sync_gateways[1], db="db", name="traun", password="password", channels=["ABC", "NBC", "CBS"])
-    seth = admin.register_user(target=cluster.sync_gateways[2], db="db", name="seth", password="password", channels=["FOX"])
+    traun = admin.register_user(target=cluster.sync_gateways[0], db="db", name="traun", password="password", channels=["ABC", "NBC", "CBS"])
+    seth = admin.register_user(target=cluster.sync_gateways[0], db="db", name="seth", password="password", channels=["FOX"])
 
     log.info(">> Users added")
 
@@ -38,7 +38,7 @@ def test_dcp_reshard_sync_gateway_goes_down(cluster, conf):
         futures = dict()
 
         # take down a sync_gateway
-        futures[executor.submit(cluster.sync_gateways[0].stop)] = "sg_down"
+        futures[executor.submit(cluster.sg_accels[0].stop)] = "sg_down"
 
         log.info(">>> Adding Seth docs")  # FOX
         futures[executor.submit(seth.add_docs, 8000)] = "seth"
@@ -55,13 +55,13 @@ def test_dcp_reshard_sync_gateway_goes_down(cluster, conf):
                 assert shutdown_status == 0
 
     # TODO better way to do this
-    time.sleep(60)
+    time.sleep(120)
 
     verify_changes(traun, expected_num_docs=2000, expected_num_revisions=0, expected_docs=traun.cache)
     verify_changes(seth, expected_num_docs=8000, expected_num_revisions=0, expected_docs=seth.cache)
 
     # Verify that the sg1 is down but the other sync_gateways are running
-    errors = cluster.verify_sync_gateways_running()
+    errors = cluster.verify_alive(mode)
     assert(len(errors) == 1 and errors[0][0].hostname == "sg1")
 
 
@@ -77,13 +77,13 @@ def test_dcp_reshard_sync_gateway_comes_up(cluster, conf):
 
     log.info("conf: {}".format(conf))
 
-    cluster.reset(config=conf)
-    cluster.sync_gateways[0].stop()
+    mode = cluster.reset(config=conf)
+    cluster.sg_accels[0].stop()
 
-    admin = Admin(cluster.sync_gateways[1])
+    admin = Admin(cluster.sync_gateways[0])
 
-    traun = admin.register_user(target=cluster.sync_gateways[1], db="db", name="traun", password="password", channels=["ABC", "NBC", "CBS"])
-    seth = admin.register_user(target=cluster.sync_gateways[2], db="db", name="seth", password="password", channels=["FOX"])
+    traun = admin.register_user(target=cluster.sync_gateways[0], db="db", name="traun", password="password", channels=["ABC", "NBC", "CBS"])
+    seth = admin.register_user(target=cluster.sync_gateways[0], db="db", name="seth", password="password", channels=["FOX"])
 
     log.info(">> Users added")
 
@@ -92,7 +92,7 @@ def test_dcp_reshard_sync_gateway_comes_up(cluster, conf):
         futures = dict()
 
         # Bring up a sync_gateway
-        futures[executor.submit(cluster.sync_gateways[0].start, conf)] = "sg_up"
+        futures[executor.submit(cluster.sg_accels[0].start, conf)] = "sg_up"
 
         time.sleep(5)
 
@@ -116,6 +116,6 @@ def test_dcp_reshard_sync_gateway_comes_up(cluster, conf):
     verify_changes(seth, expected_num_docs=4000, expected_num_revisions=0, expected_docs=seth.cache)
 
     # Verify all sync_gateways are running
-    errors = cluster.verify_sync_gateways_running()
+    errors = cluster.verify_alive(mode)
     assert(len(errors) == 0)
 

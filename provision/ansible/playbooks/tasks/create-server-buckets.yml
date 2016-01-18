@@ -1,10 +1,9 @@
 # ssh wait hopefully to resolve intermittent ssh failures
-- name: Wait for port 22 to be ready
-  hosts: sync_gateways
+- name: Wait for port 8091 to be ready
+  hosts: couchbase_servers
   gather_facts: False
-
   tasks:
-  - wait_for: port=22 delay=2
+  - wait_for: port=8091 delay=5
 
 - hosts: couchbase_servers
   any_errors_fatal: true

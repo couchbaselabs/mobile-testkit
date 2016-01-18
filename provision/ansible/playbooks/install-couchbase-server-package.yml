@@ -25,6 +25,12 @@
     couchbase_server_bucket_ram: "{{ ((couchbase_server_cluster_ram|int)*0.5)|int }}"
 
   tasks:
+    # Delete previous artifacts
+    - name: delete downloads directory
+      shell: rm -rf /tmp/*
+    - name: delete user home files
+      shell: rm -rf /centos/*
+
     - debug: msg="Couchbase server primary node {{ couchbase_server_primary_node }}"
     - debug: msg="Couchbase server node {{ couchbase_server_node }}"
     - debug: msg="Downloading Couchbase server v. {{ couchbase_server_package_url }}"

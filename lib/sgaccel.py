@@ -7,7 +7,7 @@ log = logging.getLogger(lib.settings.LOGGER)
 
 from provision.ansible_runner import run_targeted_ansible_playbook
 
-class SyncGateway:
+class SgAccel:
 
     def __init__(self, target):
         self.ip = target["ip"]
@@ -21,7 +21,7 @@ class SyncGateway:
 
     def stop(self):
         status = run_targeted_ansible_playbook(
-            "stop-sync-gateway.yml",
+            "stop-sg-accel.yml",
             target_name=self.hostname,
             stop_on_fail=False,
         )
@@ -30,23 +30,10 @@ class SyncGateway:
     def start(self, config):
         conf_path = os.path.abspath("conf/" + config)
 
-        log.info(">>> Starting sync_gateway with configuration: {}".format(conf_path))
+        log.info(">>> Starting sg_accel with configuration: {}".format(conf_path))
 
         status = run_targeted_ansible_playbook(
-            "start-sync-gateway.yml",
-            extra_vars="sync_gateway_config_filepath={0}".format(conf_path),
-            target_name=self.hostname,
-            stop_on_fail=False
-        )
-        return status
-
-    def restart(self, config):
-        conf_path = os.path.abspath("conf/" + config)
-
-        log.info(">>> Restarting sync_gateway with configuration: {}".format(conf_path))
-
-        status = run_targeted_ansible_playbook(
-            "reset-sync-gateway.yml",
+            "start-sg-accel.yml",
             extra_vars="sync_gateway_config_filepath={0}".format(conf_path),
             target_name=self.hostname,
             stop_on_fail=False
@@ -54,4 +41,4 @@ class SyncGateway:
         return status
 
     def __repr__(self):
-        return "SyncGateway: {}:{}\n".format(self.hostname, self.ip)
+        return "SgAccel: {}:{}\n".format(self.hostname, self.ip)

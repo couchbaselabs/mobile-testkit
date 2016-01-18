@@ -10,7 +10,6 @@
   with_items:
     - data-bucket
     - index-bucket
-    - cbgt-bucket
   when: couchbase_server_node == couchbase_server_primary_node
 
 # Create buckets and wait
@@ -19,7 +18,6 @@
   with_items:
     - data-bucket
     - index-bucket
-    - cbgt-bucket
   when: couchbase_server_node == couchbase_server_primary_node
 
 

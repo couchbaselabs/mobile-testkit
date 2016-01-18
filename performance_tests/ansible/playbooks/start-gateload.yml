@@ -17,22 +17,50 @@
   remote_user: centos
   sudo: true
 
-  # Copy machine stat collection script and start collecting stats
+  # Copy machine stat collection script to sync_gateways
   tasks:
   - name: copy the machine collection script
     copy: src=files/log_machine_stats.py dest=/home/sync_gateway/ owner=sync_gateway group=sync_gateway mode=755
+    when: "'sync_gateway_index_writers' not in group_names"
   # Start collecting machine stats, run async with an hour timeout, no polling
   - name: start stat collection
     shell: ./log_machine_stats.py chdir=/home/sync_gateway/
     async: 3600
     poll: 0
+    when: "'sync_gateway_index_writers' not in group_names"
 
-  # Copy profile collection script and start collecting profile
+  # Copy profile collection script to sync_gateways
   - name: copy the profile collection script
     copy: src=files/sync_gateway_collect_profile.py dest=/home/sync_gateway/ owner=sync_gateway group=sync_gateway mode=755
+    when: "'sync_gateway_index_writers' not in group_names"
   # Start collecting profile, run async with an hour timeout, no polling
   - name: start profile collection
     shell: ./sync_gateway_collect_profile.py /opt/couchbase-sync-gateway/bin/sync_gateway chdir=/home/sync_gateway/
+    async: 3600
+    poll: 0
+    when: "'sync_gateway_index_writers' not in group_names"
+
+- hosts: sync_gateway_index_writers
+  any_errors_fatal: true
+  remote_user: centos
+  sudo: true
+
+  # Copy machine stat collection script to sg_accels
+  tasks:
+  - name: copy the machine collection script
+    copy: src=files/log_machine_stats.py dest=/home/sg_accel/ owner=sg_accel group=sg_accel mode=755
+  # Start collecting machine stats, run async with an hour timeout, no polling
+  - name: start stat collection
+    shell: ./log_machine_stats.py chdir=/home/sg_accel/
+    async: 3600
+    poll: 0
+
+  # Copy profile collection script to sg_accels
+  - name: copy the profile collection script
+    copy: src=files/sync_gateway_collect_profile.py dest=/home/sg_accel/ owner=sg_accel group=sg_accel mode=755
+  # Start collecting profile, run async with an hour timeout, no polling
+  - name: start profile collection
+    shell: ./sync_gateway_collect_profile.py /opt/couchbase-sg-accel/bin/sg_accel chdir=/home/sg_accel/
     async: 3600
     poll: 0
 

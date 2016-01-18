@@ -20,6 +20,9 @@ def cluster(request):
         # Fetch logs if a test fails
         if request.node.rep_call.failed:
 
+            log.error("\n!!!!!!!!!! TEST FAIULRE !!!!!!!!!!")
+            log.error(request.node.nodeid)
+
             # example nodeid: tests/test_single_user_multiple_channels.py::test_1
             remove_slash = request.node.nodeid.replace("/", "-")
             test_id_elements = remove_slash.split("::")
@@ -29,11 +32,11 @@ def cluster(request):
     if settings.CAPTURE_SYNC_GATEWAY_LOGS_ON_FAIL:
         request.addfinalizer(fetch_logs)
 
-    print("\n--------- TEST -----------")
-    print(request.node.nodeid)
+    log.info("\n--------- TEST -----------")
+    log.info(request.node.nodeid)
 
     c = Cluster()
-    print(c)
+    log.info(c)
     return c
 
 

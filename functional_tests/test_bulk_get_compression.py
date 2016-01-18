@@ -13,6 +13,7 @@ from lib.admin import Admin
 import logging
 log = logging.getLogger(lib.settings.LOGGER)
 
+from fixtures import cluster
 
 @pytest.mark.sanity
 @pytest.mark.parametrize(
@@ -28,8 +29,8 @@ def test_bulk_get_compression(cluster, conf, num_docs):
     log.info("Using conf: {}".format(conf))
     log.info("Using num_docs: {}".format(num_docs))
 
-    cluster.reset(conf)
-    admin = Admin(cluster.sync_gateways[2])
+    mode = cluster.reset(conf)
+    admin = Admin(cluster.sync_gateways[0])
 
     user = admin.register_user(cluster.sync_gateways[0], "db", "seth", "password", channels=["seth"])
 
@@ -76,26 +77,35 @@ def test_bulk_get_compression(cluster, conf, num_docs):
         json.dumps(payload)
     )
 
-    with open("X-Accept-Encoding-gzip_response", "w") as f:
+    with open("X-Accept-Part-Encoding-response", "w") as f:
         subprocess.call(bulk_get_curl_command, shell=True, stdout=f)
 
     no_compression_response_size = os.path.getsize("no_compression_response")
     accept_encoding_response_size = os.path.getsize("Accept-Encoding-gzip_response")
-    x_accept_part_encoding_response_size = os.path.getsize("X-Accept-Encoding-gzip_response")
+    x_accept_part_encoding_response_size = os.path.getsize("X-Accept-Part-Encoding-response")
 
     # delete reponses
     os.remove("no_compression_response")
     os.remove("Accept-Encoding-gzip_response")
-    os.remove("X-Accept-Encoding-gzip_response")
+    os.remove("X-Accept-Part-Encoding-response")
 
     log.info("no_compression_response size {}".format(no_compression_response_size))
     log.info("'Accept-Encoding: gzip' response size {}".format(accept_encoding_response_size))
-    log.info("'X-Accept-Part-Encoding: gzip' response size {}".format(x_accept_part_encoding_response_size))
+    log.info("'X-Accept-Part-Encoding-response: gzip' response size {}".format(x_accept_part_encoding_response_size))
 
     # Verify response sizes
+    # No user agent
+    # https://github.com/couchbase/sync_gateway/issues/1419#issuecomment-171483866
     assert(6320000 < no_compression_response_size < 6321000)
     assert(2244000 < x_accept_part_encoding_response_size < 2245000)
-    assert(75000 < accept_encoding_response_size < 76000)
+    assert(6320000 < accept_encoding_response_size < 6321000)
+
+    #assert(75000 < accept_encoding_response_size < 76000)
+
+    # Verify all sync_gateways are running
+    errors = cluster.verify_alive(mode)
+    assert(len(errors) == 0)
+
 
 
 

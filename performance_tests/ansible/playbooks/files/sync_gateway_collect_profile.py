@@ -94,7 +94,7 @@ if __name__ == "__main__":
     os.makedirs("/tmp/sync_gateway_profile/")
 
     minutes_elapsed = 0
-    while is_running("sync_gateway"):
+    while is_running("sync_gateway") or is_running("sg_accel"):
 
         print("Polling ...")
 

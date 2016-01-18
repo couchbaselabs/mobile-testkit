@@ -6,3 +6,13 @@
 
   - name: Fetch machine stats
     fetch: src=/home/sync_gateway/cpu_stats.json dest="/tmp/perf_logs/{{ inventory_hostname }}/" fail_on_missing=yes flat=yes
+    when: "'sync_gateway_index_writers' not in group_names"
+
+- hosts: sync_gateway_index_writers
+  sudo: true
+  any_errors_fatal: true
+  tasks:
+
+  - name: Fetch machine stats
+    fetch: src=/home/sg_accel/cpu_stats.json dest="/tmp/perf_logs/{{ inventory_hostname }}/" fail_on_missing=yes flat=yes
+

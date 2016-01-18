@@ -26,7 +26,7 @@ def test_multiple_users_multiple_channels(cluster, conf):
 
     log.info("conf: {}".format(conf))
 
-    cluster.reset(config=conf)
+    mode = cluster.reset(config=conf)
 
     # TODO Parametrize
     num_docs_seth = 1000
@@ -37,9 +37,9 @@ def test_multiple_users_multiple_channels(cluster, conf):
 
     admin = Admin(sgs[0])
 
-    seth = admin.register_user(target=sgs[2], db="db", name="seth", password="password", channels=["ABC"])
-    adam = admin.register_user(target=sgs[2], db="db", name="adam", password="password", channels=["NBC", "CBS"])
-    traun = admin.register_user(target=sgs[2], db="db", name="traun", password="password", channels=["ABC", "NBC", "CBS"])
+    seth = admin.register_user(target=sgs[0], db="db", name="seth", password="password", channels=["ABC"])
+    adam = admin.register_user(target=sgs[0], db="db", name="adam", password="password", channels=["NBC", "CBS"])
+    traun = admin.register_user(target=sgs[0], db="db", name="traun", password="password", channels=["ABC", "NBC", "CBS"])
 
     # TODO use bulk docs
     seth.add_docs(num_docs_seth)  # ABC
@@ -69,7 +69,7 @@ def test_multiple_users_multiple_channels(cluster, conf):
     verify_changes([traun], expected_num_docs=num_docs_seth + num_docs_adam + num_docs_traun, expected_num_revisions=0, expected_docs=traun_expected_docs)
 
     # Verify all sync_gateways are running
-    errors = cluster.verify_sync_gateways_running()
+    errors = cluster.verify_alive(mode)
     assert(len(errors) == 0)
 
 
@@ -86,7 +86,7 @@ def test_muliple_users_single_channel(cluster, conf):
 
     log.info("conf: {}".format(conf))
 
-    cluster.reset(config=conf)
+    mode = cluster.reset(config=conf)
 
     sgs = cluster.sync_gateways
 
@@ -97,9 +97,9 @@ def test_muliple_users_single_channel(cluster, conf):
 
     admin = Admin(sgs[0])
 
-    seth = admin.register_user(target=sgs[2], db="db", name="seth", password="password", channels=["ABC"])
-    adam = admin.register_user(target=sgs[2], db="db", name="adam", password="password", channels=["ABC"])
-    traun = admin.register_user(target=sgs[2], db="db", name="traun", password="password", channels=["ABC"])
+    seth = admin.register_user(target=sgs[0], db="db", name="seth", password="password", channels=["ABC"])
+    adam = admin.register_user(target=sgs[0], db="db", name="adam", password="password", channels=["ABC"])
+    traun = admin.register_user(target=sgs[0], db="db", name="traun", password="password", channels=["ABC"])
 
     seth.add_docs(num_docs_seth)  # ABC
     adam.add_docs(num_docs_adam, bulk=True)  # ABC
@@ -119,7 +119,7 @@ def test_muliple_users_single_channel(cluster, conf):
     verify_changes([seth, adam, traun], expected_num_docs=num_docs_seth + num_docs_adam + num_docs_traun, expected_num_revisions=0, expected_docs=all_docs)
 
     # Verify all sync_gateways are running
-    errors = cluster.verify_sync_gateways_running()
+    errors = cluster.verify_alive(mode)
     assert(len(errors) == 0)
 
 
@@ -136,13 +136,13 @@ def test_single_user_multiple_channels(cluster, conf):
 
     log.info("conf: {}".format(conf))
 
-    cluster.reset(config=conf)
+    mode = cluster.reset(config=conf)
 
     start = time.time()
     sgs = cluster.sync_gateways
 
     admin = Admin(sgs[0])
-    seth = admin.register_user(target=sgs[2], db="db", name="seth", password="password", channels=["ABC", "CBS", "NBC", "FOX"])
+    seth = admin.register_user(target=sgs[0], db="db", name="seth", password="password", channels=["ABC", "CBS", "NBC", "FOX"])
 
     # Round robin
     count = 1
@@ -152,18 +152,18 @@ def test_single_user_multiple_channels(cluster, conf):
         seth.target = cluster.sync_gateways[count % num_sgs]
         count += 1
 
-    print(seth)
+    log.info(seth)
 
     time.sleep(10)
 
     verify_changes(users=[seth], expected_num_docs=5000, expected_num_revisions=0, expected_docs=seth.cache)
 
     # Verify all sync_gateways are running
-    errors = cluster.verify_sync_gateways_running()
+    errors = cluster.verify_alive(mode)
     assert(len(errors) == 0)
 
     end = time.time()
-    print("TIME:{}s".format(end - start))
+    log.info("TIME:{}s".format(end - start))
 
 
 @pytest.mark.distributed_index
@@ -179,7 +179,7 @@ def test_single_user_single_channel(cluster, conf):
 
     log.info("conf: {}".format(conf))
 
-    cluster.reset(config=conf)
+    mode = cluster.reset(config=conf)
 
     sgs = cluster.sync_gateways
 
@@ -187,9 +187,9 @@ def test_single_user_single_channel(cluster, conf):
     num_seth_docs = 7000
     num_admin_docs = 3000
 
-    admin = Admin(sgs[2])
-    seth = admin.register_user(target=sgs[2], db="db", name="seth", password="password", channels=["ABC"])
-    admin_user = admin.register_user(target=sgs[2], db="db", name="admin", password="password", channels=["*"])
+    admin = Admin(sgs[0])
+    seth = admin.register_user(target=sgs[0], db="db", name="seth", password="password", channels=["ABC"])
+    admin_user = admin.register_user(target=sgs[0], db="db", name="admin", password="password", channels=["*"])
 
     seth.add_docs(num_seth_docs)
     admin_user.add_docs(num_admin_docs)
@@ -206,7 +206,7 @@ def test_single_user_single_channel(cluster, conf):
     verify_changes([admin_user], expected_num_docs=num_seth_docs + num_admin_docs, expected_num_revisions=0, expected_docs=all_docs)
 
     # Verify all sync_gateways are running
-    errors = cluster.verify_sync_gateways_running()
+    errors = cluster.verify_alive(mode)
     assert(len(errors) == 0)
 
 
