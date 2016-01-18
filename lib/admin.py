@@ -58,7 +58,7 @@ class Admin:
     def register_bulk_users(self, target, db, name_prefix, number, password, channels=list(), roles=list()):
 
         if type(channels) is not list:
-            raise("Channels needs to be a list")
+            raise ValueError("Channels needs to be a list")
 
         users = []
         with concurrent.futures.ThreadPoolExecutor(max_workers=settings.MAX_REQUEST_WORKERS) as executor:
@@ -68,10 +68,10 @@ class Admin:
                     user = future.result()
                     users.append(user)
                 except Exception as e:
-                    raise("register_bulk_users failed: {}".format(e))
+                    raise ValueError("register_bulk_users failed: {}".format(e))
 
         if len(users) != number:
-            raise("Not all users added during register_bulk users")
+            raise ValueError("Not all users added during register_bulk users")
 
         return users
 
