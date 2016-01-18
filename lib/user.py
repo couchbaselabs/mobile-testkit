@@ -375,7 +375,7 @@ class User:
         if len(obj["results"]) == 0:
             log.warn("Got no data in changes feed")
         self.changes_data = obj
-        log.debug(self.name, len(obj["results"]))
+        log.debug("{0}:{1}".format(self.name, len(obj["results"])))
         return obj
 
     # GET /{db}/_changes?feed=longpoll

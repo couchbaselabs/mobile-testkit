@@ -20,11 +20,11 @@ log = logging.getLogger(lib.settings.LOGGER)
             ("sync_gateway_default_functional_tests_di.json", 1, 5000, 1),
             ("sync_gateway_default_functional_tests_di.json", 50, 5000, 1),
             ("sync_gateway_default_functional_tests_di.json", 50, 10, 10),
-            ("sync_gateway_default_functional_tests_di.json", 50, 5000, 10),
+            ("sync_gateway_default_functional_tests_di.json", 50, 50, 1000),
             ("sync_gateway_default_functional_tests_cc.json", 1, 5000, 1),
             ("sync_gateway_default_functional_tests_cc.json", 50, 5000, 1),
             ("sync_gateway_default_functional_tests_cc.json", 50, 10, 10),
-            ("sync_gateway_default_functional_tests_cc.json", 50, 5000, 10)
+            ("sync_gateway_default_functional_tests_cc.json", 50, 50, 1000)
         ],
         ids=[
             "DI-1",
