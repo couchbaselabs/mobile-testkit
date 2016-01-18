@@ -118,6 +118,9 @@ def test_continuous_changes_sanity(cluster, conf, num_docs, num_revisions):
             # Send termination doc to seth continuous changes feed subscriber
             if task_name == "doc_pusher":
                 abc_doc_pusher.update_docs(num_revs_per_doc=num_revisions)
+
+                time.sleep(5)
+
                 doc_terminator.add_doc("killcontinuous")
             elif task_name == "continuous":
                 docs_in_changes = future.result()
