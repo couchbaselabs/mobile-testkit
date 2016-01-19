@@ -13,8 +13,8 @@ log = logging.getLogger(settings.LOGGER)
 @pytest.mark.sanity
 @pytest.mark.dbonlineoffline
 @pytest.mark.parametrize("num_users", [5])
-@pytest.mark.parametrize("num_docs", [1000])
-@pytest.mark.parametrize("num_revisions", [20])
+@pytest.mark.parametrize("num_docs", [100])
+@pytest.mark.parametrize("num_revisions", [10])
 def test_bucket_online_offline_resync_sanity(cluster, num_users, num_docs, num_revisions):
     log.info("Starting test...")
     start = time.time()
@@ -94,12 +94,19 @@ def test_bucket_online_offline_resync_sanity(cluster, num_users, num_docs, num_r
 
     num_changes = admin.db_resync(db="db")
     log.info("expecting num_changes {} == num_docs {} * num_users {}".format(num_changes, num_docs, num_users))
-    assert(num_changes['changes'] == num_docs * num_users)
+    assert(num_changes['payload']['changes'] == num_docs * num_users)
 
     status = admin.bring_db_online(db="db")
     assert(status == 200)
 
-    verify_changes(user_x, expected_num_docs=expected_docs, expected_num_revisions=num_revisions, expected_docs=user_objects[0].cache)
+    time.sleep(5)
+    global_cache = list()
+    for user in user_objects:
+        global_cache.append(user.cache)
+
+    all_docs = {k: v for user_cache in global_cache for k, v in user_cache.items()}
+
+    verify_changes(user_x, expected_num_docs=expected_docs, expected_num_revisions=num_revisions, expected_docs=all_docs)
 
     # Verify all sync_gateways are running
     errors = cluster.verify_alive(mode)
