@@ -112,6 +112,10 @@ def test_longpoll_changes_sanity(cluster, conf, num_docs, num_revisions):
             # Send termination doc to seth long poller
             if task_name == "doc_pusher":
                 abc_doc_pusher.update_docs(num_revs_per_doc=num_revisions)
+
+                # Allow time for changes to reach subscribers
+                time.sleep(5)
+
                 doc_terminator.add_doc("killpolling")
             elif task_name == "polling":
                 docs_in_changes, seq_num = future.result()
