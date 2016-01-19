@@ -45,12 +45,28 @@ def test_seq(cluster, conf, num_users, num_docs, num_revisions):
 
     user_0_changes = users[0].get_changes(since=0)
     doc_seq = user_0_changes["results"][250]["seq"]
-    log.info("Trying changes with since={}".format(doc_seq))
 
     # https://github.com/couchbase/sync_gateway/issues/1475#issuecomment-172426052
+    # verify you can issue _changes with since=12313-0::1023.15
     for user in users:
         changes = user.get_changes(since=doc_seq)
+        log.info("Trying changes with since={}".format(doc_seq))
         assert(len(changes["results"]) > 0)
+
+        second_to_last_doc_entry_seq = changes["results"][-2]["seq"]
+        last_doc_entry_seq = changes["results"][-1]["seq"]
+
+        log.info('Second to last doc "seq": {}'.format(second_to_last_doc_entry_seq))
+        log.info('Last doc "seq": {}'.format(last_doc_entry_seq))
+
+        if mode == "distributed_index":
+            # Verify last "seq" follows the formate 12313-0, not 12313-0::1023.15
+            log.info('Verify that the last "seq" is a plain hashed value')
+            assert(len(second_to_last_doc_entry_seq.split("::")) == 2)
+            assert(len(last_doc_entry_seq.split("::")) == 1)
+        else:
+            assert(second_to_last_doc_entry_seq > 0)
+            assert(last_doc_entry_seq > 0)
 
     all_doc_caches = [user.cache for user in users]
     all_docs = {k: v for cache in all_doc_caches for k, v in cache.items()}
