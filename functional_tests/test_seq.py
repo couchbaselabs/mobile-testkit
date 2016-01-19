@@ -44,7 +44,7 @@ def test_seq(cluster, conf, num_users, num_docs, num_revisions):
     time.sleep(5)
 
     user_0_changes = users[0].get_changes(since=0)
-    doc_seq = user_0_changes["results"][250]["seq"]
+    doc_seq = user_0_changes["results"][num_docs / 2]["seq"]
 
     # https://github.com/couchbase/sync_gateway/issues/1475#issuecomment-172426052
     # verify you can issue _changes with since=12313-0::1023.15
