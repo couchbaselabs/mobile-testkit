@@ -143,7 +143,7 @@ def install_sync_gateway(sync_gateway_config):
         sys.exit(1)
 
     if sync_gateway_config.build_flags != "":
-        print("\n\n!!! WARNING: You are building with flags: {} !!!\n\n".format(opts.build_flags))
+        print("\n\n!!! WARNING: You are building with flags: {} !!!\n\n".format(sync_gateway_config.build_flags))
 
     if sync_gateway_config.branch is not None:
                 
