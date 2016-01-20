@@ -396,9 +396,14 @@ class User:
 
                 previous_seq_num = current_seq_num
 
+                # Android client POST data
+                # {"limit":50,"feed":"longpoll","since":15,"style":"all_docs","heartbeat":300000}
+                # Make sure to use similar parameters in POST
                 params = {
                     "feed": "longpoll",
                     "include_docs": True,
+                    "style": "all_docs",
+                    "heartbeat": 300000,
                     "timeout": timeout,
                     "since": current_seq_num
                 }
@@ -406,7 +411,14 @@ class User:
                 data = json.dumps(params)
 
                 r = requests.post("{}/{}/_changes".format(self.target.url, self.db), headers=self._headers, data=data)
-                log.debug("{0} POST {1}".format(self.name, r.url))
+                log.debug("{0} {1} {2}\n{3}\n{4}".format(
+                        self.name,
+                        r.request.method,
+                        r.request.url,
+                        r.request.headers,
+                        r.request.body
+                    )
+                )
 
                 # If call is unsuccessful (ex. db goes offline), return docs
                 if r.status_code != 200:
