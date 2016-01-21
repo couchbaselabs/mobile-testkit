@@ -330,7 +330,7 @@ class User:
                 log.debug('Found doc-id {} for user {} in changes feed'.format(doc_id, self.name))
         return errors == 0
 
-    # GET /{db}/_changes
+    # POST /{db}/_changes
     def get_changes(self, feed=None, limit=None, heartbeat=None, style=None,
                     since=None, include_docs=None, channels=None, filter=None):
 
@@ -355,9 +355,9 @@ class User:
 
         if include_docs is not None:
             if include_docs:
-                params["include_docs"] = "true"
+                params["include_docs"] = True
             else:
-                params["include_docs"] = "false"
+                params["include_docs"] = False
 
         if channels is not None:
             params["channels"] = ",".join(channels)
@@ -367,8 +367,10 @@ class User:
                 raise Exception("Invalid _changes filter type")
             params["filter"] = filter
 
-        r = requests.get("{}/{}/_changes".format(self.target.url, self.db), headers=self._headers, params=params, timeout=settings.HTTP_REQ_TIMEOUT)
-        log.debug("{0} GET {1}".format(self.name, r.url))
+        data = json.dumps(params)
+
+        r = requests.post("{}/{}/_changes".format(self.target.url, self.db), headers=self._headers, data=data, timeout=settings.HTTP_REQ_TIMEOUT)
+        log.debug("{0} POST {1}".format(self.name, r.url))
         r.raise_for_status()
 
         obj = json.loads(r.text)
@@ -378,7 +380,7 @@ class User:
         log.debug("{0}:{1}".format(self.name, len(obj["results"])))
         return obj
 
-    # GET /{db}/_changes?feed=longpoll
+    # POST /{db}/_changes?feed=longpoll
     def start_longpoll_changes_tracking(self, termination_doc_id=None, timeout=10000, loop=True):
 
         previous_seq_num = "-1"
@@ -394,15 +396,29 @@ class User:
 
                 previous_seq_num = current_seq_num
 
+                # Android client POST data
+                # {"limit":50,"feed":"longpoll","since":15,"style":"all_docs","heartbeat":300000}
+                # Make sure to use similar parameters in POST
                 params = {
                     "feed": "longpoll",
-                    "include_docs": "true",
+                    "include_docs": True,
+                    "style": "all_docs",
+                    "heartbeat": 300000,
                     "timeout": timeout,
                     "since": current_seq_num
                 }
 
-                r = requests.get("{}/{}/_changes".format(self.target.url, self.db), headers=self._headers, params=params)
-                log.debug("{0} GET {1}".format(self.name, r.url))
+                data = json.dumps(params)
+
+                r = requests.post("{}/{}/_changes".format(self.target.url, self.db), headers=self._headers, data=data)
+                log.debug("{0} {1} {2}\n{3}\n{4}".format(
+                        self.name,
+                        r.request.method,
+                        r.request.url,
+                        r.request.headers,
+                        r.request.body
+                    )
+                )
 
                 # If call is unsuccessful (ex. db goes offline), return docs
                 if r.status_code != 200:
@@ -457,18 +473,20 @@ class User:
 
         return docs, current_seq_num
 
-    # GET /{db}/_changes?feed=continuous
+    # POST /{db}/_changes?feed=continuous
     def start_continuous_changes_tracking(self, termination_doc_id=None):
 
         docs = dict()
 
         params = {
             "feed": "continuous",
-            "include_docs": "true"
+            "include_docs": True
         }
 
-        r = requests.get(url="{0}/{1}/_changes".format(self.target.url, self.db), headers=self._headers, params=params, stream=True)
-        log.debug("{0} GET {1}".format(self.name, r.url))
+        data = json.dumps(params)
+
+        r = requests.post(url="{0}/{1}/_changes".format(self.target.url, self.db), headers=self._headers, data=data, stream=True)
+        log.debug("{0} POST {1}".format(self.name, r.url))
 
         # Wait for continuous changes
         for line in r.iter_lines():
