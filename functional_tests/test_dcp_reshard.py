@@ -154,7 +154,7 @@ def test_dcp_reshard_single_sg_accel_goes_down_and_up(cluster, conf):
         futures[executor.submit(seth.add_docs, 8000)] = "seth"
 
         log.info(">>> Adding Traun docs")  # ABC, NBC, CBS
-        futures[executor.submit(traun.add_docs, 2000, bulk=True)] = "traun"
+        futures[executor.submit(traun.add_docs, 10000, bulk=True)] = "traun"
 
         for future in concurrent.futures.as_completed(futures):
             tag = futures[future]
@@ -175,7 +175,7 @@ def test_dcp_reshard_single_sg_accel_goes_down_and_up(cluster, conf):
     # TODO better way to do this
     time.sleep(120)
 
-    verify_changes(traun, expected_num_docs=2000, expected_num_revisions=0, expected_docs=traun.cache)
+    verify_changes(traun, expected_num_docs=10000, expected_num_revisions=0, expected_docs=traun.cache)
     verify_changes(seth, expected_num_docs=10000, expected_num_revisions=0, expected_docs=seth.cache)
 
     # Start second writer again
