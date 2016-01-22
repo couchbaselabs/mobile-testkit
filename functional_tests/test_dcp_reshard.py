@@ -119,3 +119,69 @@ def test_dcp_reshard_sync_gateway_comes_up(cluster, conf):
     errors = cluster.verify_alive(mode)
     assert(len(errors) == 0)
 
+@pytest.mark.distributed_index
+@pytest.mark.extendedsanity
+@pytest.mark.parametrize(
+        "conf", [
+            ("sync_gateway_default_functional_tests_di.json"),
+        ],
+        ids=["DI-1"]
+)
+def test_dcp_reshard_single_sg_accel_goes_down_and_up(cluster, conf):
+
+    log.info("conf: {}".format(conf))
+
+    mode = cluster.reset(config=conf)
+
+    # Stop the second sg_accel
+    cluster.sg_accels[1].stop()
+
+    admin = Admin(cluster.sync_gateways[0])
+
+    traun = admin.register_user(target=cluster.sync_gateways[0], db="db", name="traun", password="password", channels=["ABC", "NBC", "CBS"])
+    seth = admin.register_user(target=cluster.sync_gateways[0], db="db", name="seth", password="password", channels=["FOX"])
+
+    log.info(">> Users added")
+
+    with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
+
+        futures = dict()
+
+        # take down a sync_gateway
+        futures[executor.submit(cluster.sg_accels[0].stop)] = "sg_accel_down"
+
+        log.info(">>> Adding Seth docs")  # FOX
+        futures[executor.submit(seth.add_docs, 8000)] = "seth"
+
+        log.info(">>> Adding Traun docs")  # ABC, NBC, CBS
+        futures[executor.submit(traun.add_docs, 2000, bulk=True)] = "traun"
+
+        for future in concurrent.futures.as_completed(futures):
+            tag = futures[future]
+            log.info("{} Completed:".format(tag))
+            if tag == "sg_accel_down":
+                # Assert takedown was successful
+                shutdown_status = future.result()
+                assert shutdown_status == 0
+
+                # Add more docs while no writers are online
+                log.info(">>> Adding Seth docs")  # FOX
+                futures[executor.submit(seth.add_docs, 2000, bulk=True)] = "seth"
+
+                # Start a single writer
+                start_status = cluster.sg_accels[0].start(conf)
+                assert start_status == 0
+
+    # TODO better way to do this
+    time.sleep(120)
+
+    verify_changes(traun, expected_num_docs=2000, expected_num_revisions=0, expected_docs=traun.cache)
+    verify_changes(seth, expected_num_docs=10000, expected_num_revisions=0, expected_docs=seth.cache)
+
+    # Start second writer again
+    start_status = cluster.sg_accels[1].start(conf)
+    assert start_status == 0
+
+    # Verify that all sync_gateways and
+    errors = cluster.verify_alive(mode)
+    assert(len(errors) == 0)
