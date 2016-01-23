@@ -19,6 +19,7 @@ from utilities.fetch_sg_logs import fetch_sync_gateway_logs
 from utilities.fetch_sync_gateway_profile import fetch_sync_gateway_profile
 from utilities.push_cbcollect_info_supportal import push_cbcollect_info_supportal
 
+
 def run_tests(number_pullers, number_pushers, use_gateload, gen_gateload_config, test_id):
     if use_gateload:
         print "Using Gateload"
@@ -140,7 +141,7 @@ if __name__ == "__main__":
 
     # HACK: refresh interval for resource stat collection is 10 seconds.
     #  Make sure enough time has passed before collecting json
-    time.sleep(61)
+    time.sleep(300)
 
     fetch_machine_stats(test_run_id)
 
