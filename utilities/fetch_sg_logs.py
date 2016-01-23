@@ -10,6 +10,7 @@ log = logging.getLogger(lib.settings.LOGGER)
 
 def fetch_sync_gateway_logs(prefix, is_perf_run=False):
 
+    
     print("\n")
 
     print("Pulling logs")
@@ -33,11 +34,14 @@ def fetch_sync_gateway_logs(prefix, is_perf_run=False):
         shutil.rmtree("/tmp/sg_logs")
         print("sync_gateway logs copied here {}\n".format(name))
 
+        zip_file_path = "{}.zip".format(name)
         if is_perf_run:
             # Move perf logs to performance_results
-            shutil.copy("{}.zip".format(name), "performance_results/{}/".format(prefix))
+            shutil.copy(zip_file_path, "performance_results/{}/".format(prefix))
 
-    print("\n")
+        print("\n")
+        
+        return zip_file_path
 
 
 if __name__ == "__main__":
