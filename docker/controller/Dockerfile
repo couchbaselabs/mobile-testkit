@@ -8,7 +8,8 @@ RUN yum update -y && yum install -y \
 # Install dependencies
 RUN yum install -y \
   git \
-  python-pip
+  python-pip \
+  unzip
 
 # Install pip packages
 RUN pip install troposphere && \
