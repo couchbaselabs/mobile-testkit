@@ -1,0 +1,19 @@
+---
+- hosts: cb1
+  remote_user: centos
+  any_errors_fatal: true
+  sudo: true
+  tasks:
+
+  tasks:
+  - name: Run collectcb_info
+    shell: /opt/couchbase/bin/cbcollect_info /tmp/cbcollect_info_output.zip
+  - name: Push result to S3
+    shell: curl --upload-file /tmp/cbcollect_info_output.zip https://s3.amazonaws.com/customers.couchbase.com/mobileperf/
+    register: curl_out
+  - name: Dump curl stdout
+    debug: msg="{{ curl_out.stdout }}"
+  - name: Dump curl stderr
+    debug: msg="{{ curl_out.stderr }}"
+
+
