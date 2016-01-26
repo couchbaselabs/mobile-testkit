@@ -17,6 +17,7 @@ from utilities.log_expvars import log_expvars
 from utilities.analyze_perf_results import analze_perf_results
 from utilities.fetch_sg_logs import fetch_sync_gateway_logs
 from utilities.fetch_sync_gateway_profile import fetch_sync_gateway_profile
+from utilities.push_cbcollect_info_supportal import push_cbcollect_info_supportal
 
 def run_tests(number_pullers, number_pushers, use_gateload, gen_gateload_config, test_id):
     if use_gateload:
@@ -64,6 +65,7 @@ if __name__ == "__main__":
     --reset-sync-gw
     --use-gateload
     --gen-gateload-config
+    --cb-collect-info
     """
 
     parser = OptionParser(usage=usage)
@@ -88,6 +90,10 @@ if __name__ == "__main__":
                       action="store_true", dest="reset_sync_gateway", default=False,
                       help="reset CBS buckets, delete SG logs, restart SG")
 
+    parser.add_option("", "--cb-collect-info",
+                      action="store_true", dest="cb_collect_info", default=False,
+                      help="calls cbcollect_info and pushes to http://supportal.couchbase.com/customer/mobileperf/")
+    
     parser.add_option("", "--test-id",
                       action="store", dest="test_id", default=None,
                       help="test identifier to identify results of performance test")
@@ -95,7 +101,7 @@ if __name__ == "__main__":
     arg_parameters = sys.argv[1:]
 
     (opts, args) = parser.parse_args(arg_parameters)
-
+    
     if opts.test_id is None:
         print "You must provide a test identifier to run the test"
         sys.exit(1)
@@ -146,3 +152,7 @@ if __name__ == "__main__":
 
     # Copy sync_gateway logs to test results directory
     fetch_sync_gateway_logs(test_run_id, is_perf_run=True)
+
+    # Invoke cb-collect-info and push to support portal
+    if opts.cb_collect_info:
+        push_cbcollect_info_supportal()
