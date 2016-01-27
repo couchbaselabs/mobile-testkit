@@ -5,8 +5,8 @@ from optparse import OptionParser
 from lib.cluster import Cluster
 
 if __name__ == "__main__":
-    usage = """usage: analyze_perf_results.py
-    --test-id=<test-id>
+    usage = """usage: reset_cluster.py
+    --cong=<name-of-conf>
     """
 
     parser = OptionParser(usage=usage)
