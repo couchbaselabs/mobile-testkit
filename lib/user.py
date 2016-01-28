@@ -403,7 +403,7 @@ class User:
                     "feed": "longpoll",
                     "include_docs": True,
                     "style": "all_docs",
-                    "heartbeat": 300000,
+                    #"heartbeat": 300000,
                     "timeout": timeout,
                     "since": current_seq_num
                 }
@@ -442,16 +442,19 @@ class User:
                     request_timed_out = True
                 else:
                     for doc in new_docs:
+
                         # We are not interested in _user/ docs
                         if doc["id"].startswith("_user/"):
                             continue
 
+                        log.debug("{} DOC FROM LONGPOLL _changes: {}: {}".format(self.name, doc["doc"]["_id"], doc["doc"]["_rev"]))
+
                         # Stop polling if termination doc is recieved in _changes
                         if termination_doc_id is not None and doc["id"] == termination_doc_id:
+                            log.debug("Termination doc found")
                             continue_polling = False
                             break
 
-                        log.debug("{} DOC FROM LONGPOLL _changes: {}: {}".format(self.name, doc["doc"]["_id"], doc["doc"]["_rev"]))
                         # Store doc
                         docs[doc["doc"]["_id"]] = doc["doc"]["_rev"]
 
