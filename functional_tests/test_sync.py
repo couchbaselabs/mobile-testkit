@@ -55,9 +55,6 @@ def test_issue_1524(cluster, conf, num_docs):
                 log.info("'A' channel docs pushed")
                 time.sleep(5)
 
-                #log.info("Verifying 'user_no_channels' has no docs in one off changes request")
-                #verify_changes(user_no_channels, expected_num_docs=0, expected_num_revisions=0, expected_docs={})
-
                 log.info("Grant 'user_no_channels' access to channel 'A' via sync function")
                 access_doc_pusher.add_doc(
                         doc_id="access_doc",
@@ -83,7 +80,7 @@ def test_issue_1524(cluster, conf, num_docs):
     verify_changes(user_no_channels, expected_num_docs=num_docs + 1, expected_num_revisions=0, expected_docs=expected_docs)
 
     # TODO: Fix this inconsistency suite wide
-    # Long breaks before storing termination docs
+    # Longpoll docs do not save termination doc
     log.info("Verify docs in longpoll changes are the expected docs")
     verify_same_docs(num_docs, longpoll_docs, a_doc_pusher.cache)
 

@@ -403,7 +403,7 @@ class User:
                     "feed": "longpoll",
                     "include_docs": True,
                     "style": "all_docs",
-                    #"heartbeat": 300000,
+                    "heartbeat": 300000,
                     "timeout": timeout,
                     "since": current_seq_num
                 }

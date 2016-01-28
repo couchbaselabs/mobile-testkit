@@ -37,7 +37,7 @@
             "sync":
             `function(doc) {
                 channel(doc.channels);
-                if (doc.content){
+                if (doc.content) {
                     access(doc.content.accessUser, doc.content.accessChannels);
                 }
             }`
