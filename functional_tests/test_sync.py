@@ -5,6 +5,7 @@ import concurrent.futures
 
 from lib.admin import Admin
 from lib.verify import verify_changes
+from lib.verify import verify_same_docs
 from lib.verify import verify_docs_removed
 
 from fixtures import cluster
@@ -12,6 +13,82 @@ from fixtures import cluster
 import lib.settings
 import logging
 log = logging.getLogger(lib.settings.LOGGER)
+
+
+# https://github.com/couchbase/sync_gateway/issues/1524
+@pytest.mark.sanity
+@pytest.mark.parametrize(
+    "conf, num_docs",
+    [
+        ("custom_sync/grant_access_one_cc.json", 10),
+        ("custom_sync/grant_access_one_di.json", 10)
+    ],
+    ids=["CC-1", "DI-2"]
+)
+def test_issue_1524(cluster, conf, num_docs):
+
+    log.info("Using conf: {}".format(conf))
+    log.info("Using num_docs: {}".format(num_docs))
+
+    mode = cluster.reset(config=conf)
+    admin = Admin(cluster.sync_gateways[0])
+
+    user_no_channels = admin.register_user(target=cluster.sync_gateways[0], db="db", name="user_no_channels", password="password")
+    a_doc_pusher = admin.register_user(target=cluster.sync_gateways[0], db="db", name="a_doc_pusher", password="password", channels=["A"])
+    access_doc_pusher = admin.register_user(target=cluster.sync_gateways[0], db="db", name="access_doc_pusher", password="password")
+    terminator = admin.register_user(target=cluster.sync_gateways[0], db="db", name="terminator", password="password", channels=["A"])
+
+    longpoll_docs = {}
+
+    with concurrent.futures.ThreadPoolExecutor(max_workers=lib.settings.MAX_REQUEST_WORKERS) as executor:
+        futures = dict()
+        futures[executor.submit(user_no_channels.start_longpoll_changes_tracking, termination_doc_id="terminator")] = "polling"
+        log.info("Starting longpoll feed")
+
+        futures[executor.submit(a_doc_pusher.add_docs, num_docs=num_docs, bulk=True, name_prefix="a-doc")] = "a_docs_pushed"
+        log.info("'A' channel docs pushing")
+
+        for future in concurrent.futures.as_completed(futures):
+            task_name = futures[future]
+
+            if task_name == "a_docs_pushed":
+                log.info("'A' channel docs pushed")
+                time.sleep(5)
+
+                log.info("Grant 'user_no_channels' access to channel 'A' via sync function")
+                access_doc_pusher.add_doc(
+                        doc_id="access_doc",
+                        content={
+                            "accessUser": "user_no_channels",
+                            "accessChannels": ["A"]
+                        }
+                )
+
+                time.sleep(5)
+                log.info("'terminator' pushing termination doc")
+                terminator.add_doc(doc_id="terminator")
+
+            if task_name == "polling":
+                log.info("Getting changes from longpoll")
+                longpoll_docs, last_seq = future.result()
+                log.info("Verify docs in longpoll changes are the expected docs")
+
+    log.info("Verifying 'user_no_channels' has same docs as 'a_doc_pusher' + access_doc")
+
+    # One off changes verification will include the termination doc
+    expected_docs = {k: v for cache in [a_doc_pusher.cache, terminator.cache] for k, v in cache.items()}
+    verify_changes(user_no_channels, expected_num_docs=num_docs + 1, expected_num_revisions=0, expected_docs=expected_docs)
+
+    # TODO: Fix this inconsistency suite wide
+    # Longpoll docs do not save termination doc
+    log.info("Verify docs in longpoll changes are the expected docs")
+    verify_same_docs(num_docs, longpoll_docs, a_doc_pusher.cache)
+
+    # Verify all sync_gateways are running
+    errors = cluster.verify_alive(mode)
+    assert(len(errors) == 0)
+
+
 
 @pytest.mark.sanity
 @pytest.mark.parametrize(
@@ -56,6 +133,10 @@ def test_sync_access_sanity(cluster, conf):
 
     # Verify seth sees no abc_docs
     verify_changes(seth, expected_num_docs=0, expected_num_revisions=0, expected_docs={})
+
+    # Verify all sync_gateways are running
+    errors = cluster.verify_alive(mode)
+    assert(len(errors) == 0)
 
 
 @pytest.mark.sanity
