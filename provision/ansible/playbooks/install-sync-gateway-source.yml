@@ -136,7 +136,9 @@
   tasks:
   - name: make service install script executable
     file: path=/home/centos/sync_gateway/service/sg_accel_service_install.sh mode=a+x
-  - name: install sync gateway service
+  - name: install sg_accell service
     shell: ./sg_accel_service_install.sh chdir=/home/centos/sync_gateway/service
+  - name: Start the service
+    service: name=sg_accel state=started
   - name: wait until sync gateway to listen on port
     wait_for: port=4985 delay=2 timeout=120
