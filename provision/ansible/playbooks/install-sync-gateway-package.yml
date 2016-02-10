@@ -1,21 +1,19 @@
 ---
 # Remove sync_gateway
 - hosts: sync_gateways
-  sudo: true
 
   tasks:
   # Delete previous artifacts
   - name: delete downloads directory
-    shell: rm -rf /tmp/*
+    file: path=/tmp state=absent
   - name: delete user home files
-    shell: rm -rf /home/centos/*
+    file: path=/home/centos state=absent
   - include: tasks/remove-sync-gateway.yml
   - include: tasks/remove-sg-accel.yml
 
 # Flush server buckets
 - hosts: couchbase_servers
   any_errors_fatal: true
-  sudo: true
   vars:
     # Primary node
     couchbase_server_primary_node: "{{ hostvars[groups.couchbase_servers[0]].ansible_ssh_host }}"
@@ -40,7 +38,6 @@
 
 # Create sync_gateway user
 - hosts: sync_gateways
-  sudo: true
   any_errors_fatal: true
   tasks:
   - include: tasks/create-sync-gateway-user.yml
@@ -48,7 +45,6 @@
 
 # Create sg_accel user
 - hosts: sync_gateway_index_writers
-  sudo: true
   any_errors_fatal: true
   tasks:
   - include: tasks/create-sg-accel-user.yml
@@ -56,7 +52,6 @@
 # Download sync_gateway package
 - hosts: sync_gateways
   any_errors_fatal: true
-  sudo: true
 
   vars:
     couchbase_sync_gateway_package_base_url:
@@ -74,7 +69,6 @@
 # Download sg accel package
 - hosts: sync_gateway_index_writers
   any_errors_fatal: true
-  sudo: true
 
   vars:
     couchbase_sync_gateway_package_base_url:
@@ -90,7 +84,6 @@
 # Deploy non writer sync_gateway configs
 - hosts: sync_gateways
   any_errors_fatal: true
-  sudo: true
   vars:
     sync_gateway_config_filepath:
     couchbase_server_primary_node: "{{ hostvars[groups.couchbase_servers[0]].ansible_ssh_host }}"
@@ -101,7 +94,6 @@
 
 # Deploy sg_accel index writer configs
 - hosts: sync_gateway_index_writers
-  sudo: true
   vars:
     sync_gateway_config_filepath:
     couchbase_server_primary_node: "{{ hostvars[groups.couchbase_servers[0]].ansible_ssh_host }}"
@@ -112,7 +104,6 @@
 # Install and launch sync_gateway service
 - hosts: sync_gateways
   any_errors_fatal: true
-  sudo: true
   tasks:
   # Install and start service
   - name: Install sync_gateway rpm
@@ -125,7 +116,6 @@
 # Install and launch sg_accel service
 - hosts: sync_gateway_index_writers
   any_errors_fatal: true
-  sudo: true
   tasks:
   # Install and start service
   - name: Install sg_accel rpm

@@ -2,7 +2,6 @@
 # https://github.com/couchbase/sync_gateway/issues/1193#issuecomment-150395613
 - hosts: sync_gateways:couchbase_servers:load_generators:load_balancers
   any_errors_fatal: true
-  sudo: true
   tasks:
   - name: disable scatter / gather for eth0 (see http://bit.ly/1R25bbE)
     shell: ethtool -K eth0 sg off

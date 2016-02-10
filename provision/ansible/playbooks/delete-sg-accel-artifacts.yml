@@ -1,7 +1,6 @@
 ---
 # Deploy sync gateway configs
 - hosts: sync_gateway_index_writers
-  sudo: true
   vars:
   tasks:
   - include: tasks/delete-sg-accel-artifacts.yml

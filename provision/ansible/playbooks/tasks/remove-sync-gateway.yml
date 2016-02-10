@@ -20,18 +20,16 @@
 
 # Remove sync_gateway service
 - name: Remove sync_gateway service
-  shell: rm /usr/lib/systemd/system/sync_gateway.service
+  file: path=/usr/lib/systemd/system/sync_gateway.service state=absent
   ignore_errors: yes
 
 # Delete sync_gateway binary
 - name: delete sync_gateway binary
-  shell: rm -rf /opt/couchbase-sync-gateway
+  file: path=/opt/couchbase-sync-gateway state=absent
 
 # Delete logs and .pindex files
 - name: delete sync_gateway logs
-  shell: rm -f /home/sync_gateway/logs/*.log
-- name: delete sync_gateway pindex files
-  shell: rm -rf /home/sync_gateway/*.pindex
+  file: path=/home/sync_gateway state=absent
 
 # Remove sync_gateway user
 - name: remove sync gateway user
@@ -40,4 +38,4 @@
 
 # Delete downloaded source
 - name: delete previous sync gateway
-  command: rm -rf /home/centos/sync_gateway
+  file: path=/home/centos/sync_gateway state=absent

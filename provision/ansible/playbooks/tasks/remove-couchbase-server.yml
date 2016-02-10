@@ -5,4 +5,4 @@
   shell: rpm -e couchbase-server
   ignore_errors: yes
 - name: Remove all couchbase server residue
-  shell: rm -rf /opt/couchbase
+  file: path=/opt/couchbase state=absent

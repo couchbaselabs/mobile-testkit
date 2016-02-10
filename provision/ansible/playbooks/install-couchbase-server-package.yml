@@ -1,7 +1,6 @@
 ---
 - hosts: couchbase_servers
   any_errors_fatal: true
-  sudo: true
   vars:
     couchbase_server_package_base_url:
     couchbase_server_package_name:
@@ -27,9 +26,9 @@
   tasks:
     # Delete previous artifacts
     - name: delete downloads directory
-      shell: rm -rf /tmp/*
+      file: path=/tmp state=absent
     - name: delete user home files
-      shell: rm -rf /centos/*
+      file: path=/centos state=absent
 
     - debug: msg="Couchbase server primary node {{ couchbase_server_primary_node }}"
     - debug: msg="Couchbase server node {{ couchbase_server_node }}"
