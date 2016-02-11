@@ -1,17 +1,17 @@
 [couchbase_servers]
-cb1 ansible_ssh_host=172.23.105.164
-cb2 ansible_ssh_host=172.23.105.165
+cb1 ansible_host=172.23.105.164
+cb2 ansible_host=172.23.105.165
 
 [sync_gateways]
-sg1 ansible_ssh_host=172.23.122.250
-sg2 ansible_ssh_host=172.23.122.251
-sg3 ansible_ssh_host=172.23.122.252
-sg4 ansible_ssh_host=172.23.122.253
+sg1 ansible_host=172.23.122.250
+sg2 ansible_host=172.23.122.251
+sg3 ansible_host=172.23.122.252
+sg4 ansible_host=172.23.122.253
 
 [load_generators]
 
 [sync_gateway_index_writers]
-sg1 ansible_ssh_host=172.23.122.250
-sg2 ansible_ssh_host=172.23.122.251
-sg3 ansible_ssh_host=172.23.122.252
-sg4 ansible_ssh_host=172.23.122.253
+sg1 ansible_host=172.23.122.250
+sg2 ansible_host=172.23.122.251
+sg3 ansible_host=172.23.122.252
+sg4 ansible_host=172.23.122.253

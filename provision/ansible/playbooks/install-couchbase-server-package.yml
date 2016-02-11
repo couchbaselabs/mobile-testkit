@@ -1,6 +1,7 @@
 ---
 - hosts: couchbase_servers
   any_errors_fatal: true
+
   vars:
     couchbase_server_package_base_url:
     couchbase_server_package_name:
@@ -13,7 +14,7 @@
     couchbase_server_home_path: /opt/couchbase
 
     # Primary node
-    couchbase_server_primary_node: "{{ hostvars[groups.couchbase_servers[0]].ansible_ssh_host }}"
+    couchbase_server_primary_node: "{{ hostvars[groups.couchbase_servers[0]].ansible_host }}"
 
     # Current node
     couchbase_server_node: "{{ hostvars[inventory_hostname]['ansible_ssh_host'] }}"
@@ -24,11 +25,17 @@
     couchbase_server_bucket_ram: "{{ ((couchbase_server_cluster_ram|int)*0.5)|int }}"
 
   tasks:
-    # Delete previous artifacts
-    - name: delete downloads directory
-      file: path=/tmp state=absent
-    - name: delete user home files
-      file: path=/centos state=absent
+    # Remove users
+    - name: Remove centos user
+      user: name=centos state=absent remove=yes force=yes
+    - name: Remove sync_gateway user
+      user: name=sync_gateway state=absent remove=yes force=yes
+    - name: Remove sg_accel user
+      user: name=sg_accel state=absent remove=yes force=yes
+
+      # Create users
+    - name: Create centos user
+      user: name=centos createhome=yes
 
     - debug: msg="Couchbase server primary node {{ couchbase_server_primary_node }}"
     - debug: msg="Couchbase server node {{ couchbase_server_node }}"
@@ -37,11 +44,15 @@
     # Remove Couchbase Server
     - include: tasks/remove-couchbase-server.yml
 
+    # Create centos user
+    - name: Create centos user
+      user: name=centos createhome=yes
+
     # Download and install
     - name: Download couchbase server
-      get_url: url={{ couchbase_server_package_url }} dest=/tmp/{{ couchbase_server_package_name }}
+      get_url: url={{ couchbase_server_package_url }} dest=/home/centos/{{ couchbase_server_package_name }}
     - name: Install Couchbase Server
-      yum: name=/tmp/{{ couchbase_server_package_name }} state=present
+      yum: name=/home/centos/{{ couchbase_server_package_name }} state=present
     - name: Restart Couchbase Service
       service: name=couchbase-server state=restarted
     - name: raise max file descriptors

@@ -21,7 +21,7 @@
   sudo: true
   vars:
     sync_gateway_config_filepath:
-    couchbase_server_primary_node: "{{ hostvars[groups.couchbase_servers[0]].ansible_ssh_host }}"
+    couchbase_server_primary_node: "{{ hostvars[groups.couchbase_servers[0]].ansible_host }}"
     webhook_ip: "{{ hostvars[groups.webhook_ip[0]].ansible_ssh_host }}"
     is_index_writer: "false"
   tasks:
@@ -32,8 +32,8 @@
   sudo: true
   vars:
     sync_gateway_config_filepath:
-    couchbase_server_primary_node: "{{ hostvars[groups.couchbase_servers[0]].ansible_ssh_host }}"
-    webhook_ip: "{{ hostvars[groups.webhook_ip[0]].ansible_ssh_host }}"
+    couchbase_server_primary_node: "{{ hostvars[groups.couchbase_servers[0]].ansible_host }}"
+    webhook_ip: "{{ hostvars[groups.webhook_ip[0]].ansible_host }}"
     is_index_writer: "true"
   tasks:
   - include: tasks/deploy-sync-gateway-config.yml
@@ -45,6 +45,6 @@
 
   vars:
     sync_gateway_config_filepath:
-    couchbase_server_primary_node: "{{ hostvars[groups.couchbase_servers[0]].ansible_ssh_host }}"
+    couchbase_server_primary_node: "{{ hostvars[groups.couchbase_servers[0]].ansible_host }}"
   tasks:
   - include: tasks/start-sync-gateway.yml

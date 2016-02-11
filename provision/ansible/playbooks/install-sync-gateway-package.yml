@@ -3,20 +3,24 @@
 - hosts: sync_gateways
 
   tasks:
-  # Delete previous artifacts
-  - name: delete downloads directory
-    file: path=/tmp state=absent
-  - name: delete user home files
-    file: path=/home/centos state=absent
-  - include: tasks/remove-sync-gateway.yml
-  - include: tasks/remove-sg-accel.yml
+  # Remove users
+  - name: Remove centos user
+    user: name=centos state=absent remove=yes force=yes
+  - name: Remove sync_gateway user
+    user: name=sync_gateway state=absent remove=yes force=yes
+  - name: Remove sg_accel user
+    user: name=sg_accel state=absent remove=yes force=yes
+
+    # Create users
+  - name: Create centos user
+    user: name=centos createhome=yes
 
 # Flush server buckets
 - hosts: couchbase_servers
   any_errors_fatal: true
   vars:
     # Primary node
-    couchbase_server_primary_node: "{{ hostvars[groups.couchbase_servers[0]].ansible_ssh_host }}"
+    couchbase_server_primary_node: "{{ hostvars[groups.couchbase_servers[0]].ansible_host }}"
 
     # Current node
     couchbase_server_node: "{{ hostvars[inventory_hostname]['ansible_ssh_host'] }}"
@@ -57,13 +61,13 @@
     couchbase_sync_gateway_package_base_url:
     couchbase_sync_gateway_package:
     couchbase_sync_gateway_package_url: "{{ couchbase_sync_gateway_package_base_url }}/{{ couchbase_sync_gateway_package }}"
-    couchbase_server_primary_node: "{{ hostvars[groups.couchbase_servers[0]].ansible_ssh_host }}"
+    couchbase_server_primary_node: "{{ hostvars[groups.couchbase_servers[0]].ansible_host }}"
 
   tasks:
   - debug: msg="Downloading sync_gateway v. {{ couchbase_sync_gateway_package_url }}"
     when: "'sync_gateway_index_writers' not in group_names"
   - name: Download sync_gateway rpm
-    get_url: url={{ couchbase_sync_gateway_package_url }} dest=/tmp/{{ couchbase_sync_gateway_package }}
+    get_url: url={{ couchbase_sync_gateway_package_url }} dest=/home/centos/{{ couchbase_sync_gateway_package }}
     when: "'sync_gateway_index_writers' not in group_names"
 
 # Download sg accel package
@@ -74,19 +78,19 @@
     couchbase_sync_gateway_package_base_url:
     couchbase_sg_accel_package:
     couchbase_sg_accel_package_url: "{{ couchbase_sync_gateway_package_base_url }}/{{ couchbase_sg_accel_package }}"
-    couchbase_server_primary_node: "{{ hostvars[groups.couchbase_servers[0]].ansible_ssh_host }}"
+    couchbase_server_primary_node: "{{ hostvars[groups.couchbase_servers[0]].ansible_host }}"
 
   tasks:
   - debug: msg="Downloading sg_accel v. {{ couchbase_sg_accel_package_url }}"
   - name: Download sg_accel rpm
-    get_url: url={{ couchbase_sg_accel_package_url }} dest=/tmp/{{ couchbase_sg_accel_package }}
+    get_url: url={{ couchbase_sg_accel_package_url }} dest=/home/centos/{{ couchbase_sg_accel_package }}
 
 # Deploy non writer sync_gateway configs
 - hosts: sync_gateways
   any_errors_fatal: true
   vars:
     sync_gateway_config_filepath:
-    couchbase_server_primary_node: "{{ hostvars[groups.couchbase_servers[0]].ansible_ssh_host }}"
+    couchbase_server_primary_node: "{{ hostvars[groups.couchbase_servers[0]].ansible_host }}"
     is_index_writer: "false"
   tasks:
   - include: tasks/deploy-sync-gateway-config.yml
@@ -96,7 +100,7 @@
 - hosts: sync_gateway_index_writers
   vars:
     sync_gateway_config_filepath:
-    couchbase_server_primary_node: "{{ hostvars[groups.couchbase_servers[0]].ansible_ssh_host }}"
+    couchbase_server_primary_node: "{{ hostvars[groups.couchbase_servers[0]].ansible_host }}"
     is_index_writer: "true"
   tasks:
   - include: tasks/deploy-sg-accel-config.yml
@@ -107,7 +111,7 @@
   tasks:
   # Install and start service
   - name: Install sync_gateway rpm
-    shell: rpm -i /tmp/{{ couchbase_sync_gateway_package }}
+    shell: rpm -i /home/centos/{{ couchbase_sync_gateway_package }}
     when: "'sync_gateway_index_writers' not in group_names"
   - name: wait until sync gateway to listen on port
     wait_for: port=4985 delay=2 timeout=120
@@ -119,7 +123,7 @@
   tasks:
   # Install and start service
   - name: Install sg_accel rpm
-    shell: rpm -i /tmp/{{ couchbase_sg_accel_package }}
+    shell: rpm -i /home/centos/{{ couchbase_sg_accel_package }}
   - name: Start the service
     service: name=sg_accel state=started
   - name: wait for sg_accel to listen on port
