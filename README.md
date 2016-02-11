@@ -82,13 +82,15 @@ $ python provision/create_and_instantiate_cluster.py \
     --stackname="YourCloudFormationStack" \
     --num-servers=1 \
     --server-type="m3.large" \
-    --num-sync-gateways=1 \
+    --num-sync-gateways=2 \
     --sync-gateway-type="m3.medium" \
     --num-gatlings=1 \
     --gatling-type="m3.medium" \
     --num-lbs=0 \
     --lb-type="m3.medium" 
 ```
+
+NOTE: currently need at least 2 sync gateways (1 sync gw and 1 sg_accel)
 
 The AWS virtual machines will be accessible via the `AWS_KEY` you specified above.
 
@@ -106,11 +108,11 @@ $ python provision/generate_ansible_inventory_from_aws.py \
      --targetfile=provisioning_config
 ```
 
-## Configure non-Index Writers (optional)
+## Configure sync gateway index readers vs index writers
 
-By default, all Sync Gateways will be configured as index writers.  However, if you need to set any Sync Gateways as non-Index Writers, then modify the `provisioning_config` file by hand to remove them from the `sync_gateway_index_writers` ansible group.
+Modify `provisioning_config` to remove at least one node from the `[sync_gateway_index_writers]` list
 
-**Virutal Machines**
+**Virtual Machines**
 
 Create and edit your provisioning configuration
 ```
@@ -153,8 +155,8 @@ Example building from source:
 
 ```
 $ python provision/provision_cluster.py \
-    --server-version=3.1.1 \
-    --sync-gateway-branch=feature/distributed_index_bulk_set
+    --server-version=4.1.0 \
+    --sync-gateway-branch=master
     --install-deps (first time only, this will install prerequisites to build / debug)
 ```
 
@@ -234,6 +236,11 @@ pip install futures
 pip install requests
 ```
 
+**Add current directory to $PYTHONPATH**
+
+```
+$ export PYTHONPATH=$PYTHONPATH:.
+```
 
 **Run all**
 ```
