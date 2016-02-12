@@ -9,13 +9,13 @@ import json
 Generate a provisioning_config file like:
 
 [couchbase_servers]
-cb1 ansible_ssh_host=ec2-54-147-234-108.compute-1.amazonaws.com
+cb1 ansible_host=ec2-54-147-234-108.compute-1.amazonaws.com
 
 [sync_gateways]
-sg1 ansible_ssh_host=ec2-50-16-26-70.compute-1.amazonaws.com
+sg1 ansible_host=ec2-50-16-26-70.compute-1.amazonaws.com
 
 [load_generators]
-lg1 ansible_ssh_host=ec2-54-157-59-199.compute-1.amazonaws.com
+lg1 ansible_host=ec2-54-157-59-199.compute-1.amazonaws.com
 
 """
 

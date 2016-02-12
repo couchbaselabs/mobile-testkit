@@ -1,8 +1,9 @@
 ---
 - hosts: sync_gateways:couchbase_servers:load_generators
   any_errors_fatal: true
-  tasks:
+  become: yes
 
+  tasks:
   # Remove Couchbase Server
   - include: tasks/remove-couchbase-server.yml
 
@@ -12,6 +13,6 @@
   # Remove sync_gateway
   - include: tasks/remove-sg-accel.yml
 
-  # Remove package downloads
-  - name: Remove package install dir
+  # Remove tmp
+  - name: Remove downloads in /tmp dir
     shell: rm -rf /tmp/*

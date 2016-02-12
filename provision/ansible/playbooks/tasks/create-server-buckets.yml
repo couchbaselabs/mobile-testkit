@@ -11,10 +11,10 @@
   vars:
 
   # Primary node
-    couchbase_server_primary_node: "{{ hostvars['cb1']['ansible_ssh_host'] }}"
+    couchbase_server_primary_node: "{{ hostvars['cb1']['ansible_host'] }}"
 
     # Current node
-    couchbase_server_node: "{{ hostvars[inventory_hostname]['ansible_ssh_host'] }}"
+    couchbase_server_node: "{{ hostvars[inventory_hostname]['ansible_host'] }}"
 
     couchbase_server_home_path: /opt/couchbase
     couchbase_server_admin_port: 8091

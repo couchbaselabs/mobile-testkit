@@ -52,7 +52,7 @@ def render_gateload_template(sync_gateway, user_offset, number_of_pullers, numbe
         gateload_config = open("files/gateload_config.json")
         template = Template(gateload_config.read())
         rendered = template.render(
-            sync_gateway_private_ip=sync_gateway['ansible_ssh_host'],
+            sync_gateway_private_ip=sync_gateway['ansible_host'],
             user_offset=user_offset,
             number_of_pullers=number_of_pullers,
             number_of_pushers=number_of_pushers

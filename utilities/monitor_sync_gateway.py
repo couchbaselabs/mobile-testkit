@@ -11,7 +11,7 @@ if __name__ == "__main__":
 
     # Get sync_gateway ips from ansible inventory
     sgs_host_vars = hosts_for_tag("sync_gateways")
-    sgs = [sgv["ansible_ssh_host"] for sgv in sgs_host_vars]
+    sgs = [sgv["ansible_host"] for sgv in sgs_host_vars]
 
     if len(sgs) == 0:
         print("No sync_gateways to monitor in 'provisioning_config'")

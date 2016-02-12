@@ -1,19 +1,10 @@
 ---
 # Remove sync_gateway
 - hosts: sync_gateways
+  become: yes
 
   tasks:
-  # Remove users
-  - name: Remove centos user
-    user: name=centos state=absent remove=yes force=yes
-  - name: Remove sync_gateway user
-    user: name=sync_gateway state=absent remove=yes force=yes
-  - name: Remove sg_accel user
-    user: name=sg_accel state=absent remove=yes force=yes
-
-    # Create users
-  - name: Create centos user
-    user: name=centos createhome=yes
+  - include: tasks/clean-users.yml
 
 # Flush server buckets
 - hosts: couchbase_servers
@@ -22,7 +13,7 @@
     # Primary node
     couchbase_server_primary_node: "{{ hostvars[groups.couchbase_servers[0]].ansible_host }}"
     # Current node
-    couchbase_server_node: "{{ hostvars[inventory_hostname]['ansible_ssh_host'] }}"
+    couchbase_server_node: "{{ hostvars[inventory_hostname]['ansible_host'] }}"
 
     couchbase_server_home_path: /opt/couchbase
     couchbase_server_admin_port: 8091

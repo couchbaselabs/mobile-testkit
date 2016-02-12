@@ -15,7 +15,7 @@ def install_keys(key_name, user_name):
     ips = []
     for host in hosts:
         host_vars = host.get_variables()
-        ips.append(host_vars["ansible_ssh_host"])
+        ips.append(host_vars["ansible_host"])
 
     print("Are you sure you would like to copy public key '{0}' to vms: {1}".format(
         key_name, ips

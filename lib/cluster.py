@@ -30,14 +30,14 @@ class Cluster:
         lds_host_vars = self._hosts_for_tag("load_generators")
 
         # provide simple consumable dictionaries to functional framwork
-        cbs = [{"name": cbsv["inventory_hostname"], "ip": cbsv["ansible_ssh_host"]} for cbsv in cbs_host_vars]
+        cbs = [{"name": cbsv["inventory_hostname"], "ip": cbsv["ansible_host"]} for cbsv in cbs_host_vars]
 
         # Only collect sync_gateways that are not index_writers
         sgvs = [sgv for sgv in sgs_host_vars if "sync_gateway_index_writers" not in sgv["group_names"]]
-        sgs = [{"name": sgv["inventory_hostname"], "ip": sgv["ansible_ssh_host"]} for sgv in sgvs]
+        sgs = [{"name": sgv["inventory_hostname"], "ip": sgv["ansible_host"]} for sgv in sgvs]
 
-        sgsw = [{"name": sgwv["inventory_hostname"], "ip": sgwv["ansible_ssh_host"]} for sgwv in sgsw_host_vars]
-        lds = [{"name": ldv["inventory_hostname"], "ip": ldv["ansible_ssh_host"]} for ldv in lds_host_vars]
+        sgsw = [{"name": sgwv["inventory_hostname"], "ip": sgwv["ansible_host"]} for sgwv in sgsw_host_vars]
+        lds = [{"name": ldv["inventory_hostname"], "ip": ldv["ansible_host"]} for ldv in lds_host_vars]
 
         self.sync_gateways = [SyncGateway(sg) for sg in sgs]
         self.sg_accels = [SgAccel(sgw) for sgw in sgsw]

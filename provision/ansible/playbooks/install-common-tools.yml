@@ -1,6 +1,8 @@
 ---
 - hosts: sync_gateways:couchbase_servers:load_generators
   any_errors_fatal: true
+  become: yes
+
   tasks:
   - name: create centos user
     user: name=centos createhome=yes
