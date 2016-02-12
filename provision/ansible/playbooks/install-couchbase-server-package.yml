@@ -26,14 +26,13 @@
     couchbase_server_bucket_ram: "{{ ((couchbase_server_cluster_ram|int)*0.5)|int }}"
 
   tasks:
-    - include: tasks/clean-users.yml
-
     - debug: msg="Couchbase server primary node {{ couchbase_server_primary_node }}"
     - debug: msg="Couchbase server node {{ couchbase_server_node }}"
     - debug: msg="Downloading Couchbase server v. {{ couchbase_server_package_url }}"
 
     # Remove Couchbase Server
     - include: tasks/remove-couchbase-server.yml
+    - include: tasks/clean-users.yml
 
     # Download and install
     - name: Download couchbase server

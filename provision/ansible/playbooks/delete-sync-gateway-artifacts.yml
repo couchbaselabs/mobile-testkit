@@ -1,6 +1,6 @@
 ---
 # Deploy sync gateway configs
 - hosts: sync_gateways
-  vars:
+  become: yes
   tasks:
   - include: tasks/delete-sync-gateway-artifacts.yml

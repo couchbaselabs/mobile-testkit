@@ -7,7 +7,7 @@
 
 - hosts: couchbase_servers
   any_errors_fatal: true
-  sudo: true
+  become: true
   vars:
 
   # Primary node

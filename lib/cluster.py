@@ -5,6 +5,8 @@ import json
 import time
 
 import ansible.inventory
+from ansible.parsing.dataloader import DataLoader
+from ansible.vars import VariableManager
 
 from requests.exceptions import ConnectionError
 
@@ -51,12 +53,17 @@ class Cluster:
             log.error("File 'provisioning_config' not found at {}".format(os.getcwd()))
             sys.exit(1)
 
-        i = ansible.inventory.Inventory(host_list=hostfile)
+        variable_manager = VariableManager()
+        loader = DataLoader()
+
+        i = ansible.inventory.Inventory(loader=loader, variable_manager=variable_manager, host_list=hostfile)
+        variable_manager.set_inventory(i)
+
         group = i.get_group(tag)
         if group is None:
             return []
         hosts = group.get_hosts()
-        return [host.get_variables() for host in hosts]
+        return [host.get_vars() for host in hosts]
 
     def validate_cluster(self):
 

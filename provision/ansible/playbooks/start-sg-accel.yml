@@ -8,7 +8,7 @@
 # Deploy sync gateway configs (index writers)
 - hosts: sync_gateway_index_writers
   any_errors_fatal: true
-  sudo: true
+  become: yes
   vars:
     sync_gateway_config_filepath:
     couchbase_server_primary_node: "{{ hostvars[groups.couchbase_servers[0]].ansible_host }}"
@@ -19,7 +19,7 @@
 
 - hosts: sync_gateway_index_writers
   any_errors_fatal: true
-  sudo: true
+  become: yes
   vars:
     sync_gateway_config_filepath:
     couchbase_server_primary_node: "{{ hostvars[groups.couchbase_servers[0]].ansible_host }}"

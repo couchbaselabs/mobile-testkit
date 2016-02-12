@@ -8,7 +8,7 @@
 
 # Deploy sync gateway configs
 - hosts: sync_gateways
-  sudo: true
+  become: yes
   vars:
     sync_gateway_config_filepath:
     couchbase_server_primary_node: "{{ hostvars[groups.couchbase_servers[0]].ansible_host }}"
@@ -20,7 +20,7 @@
 
 - hosts: sync_gateways
   any_errors_fatal: true
-  sudo: true
+  become: yes
 
   vars:
     sync_gateway_config_filepath:
