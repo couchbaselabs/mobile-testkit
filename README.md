@@ -13,7 +13,7 @@ The "controller" is the machine that runs ansible, which is typically:
 * Your developer workstation
 * A virtual machine / docker container
 
-NOTE: This repo now only supports ansible 2.0+
+NOTE: This repo now only supports ansible 2.0+.  To upgrade from ansible 1.x, run `pip uninstall ansible && pip install ansible`.  Note that this upgrade will also need to be done in the docker container since it is shipped with ansible 1.x.
 
 The instructions below are docker specific, but if you look in `docker/controller/Dockerfile` it should give you an idea of the required dependencies if you want to make this work directly on your workstation.
 
