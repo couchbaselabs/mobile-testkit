@@ -2,7 +2,7 @@
 ## Run docker image
 
 ```
-$ docker run -ti tleyden5iwx/sync-gateway-tests /bin/bash
+$ docker run -ti tleyden5iwx/sync-gateway-testcluster /bin/bash
 ```
 
 The rest of the steps should be run **inside** the running docker container.

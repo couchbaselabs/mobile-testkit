@@ -22,7 +22,7 @@ The instructions below are docker specific, but if you look in `docker/controlle
 First you will need to [install docker](https://docs.docker.com/mac/step_one/).
 
 ```shell
-$ docker run -ti tleyden5iwx/sync-gateway-tests /bin/bash
+$ docker run -ti tleyden5iwx/sync-gateway-testcluster /bin/bash
 ```
 
 The rest of the commands should be run **inside** the docker container created in the previous step.
