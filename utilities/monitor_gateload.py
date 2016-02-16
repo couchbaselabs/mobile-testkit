@@ -10,7 +10,7 @@ if __name__ == "__main__":
 
     # Get gateload ips from ansible inventory
     lgs_host_vars = hosts_for_tag("load_generators")
-    lgs = [lg["ansible_ssh_host"] for lg in lgs_host_vars]
+    lgs = [lg["ansible_host"] for lg in lgs_host_vars]
 
     if len(lgs) == 0:
         print("No gateloads to monitor in 'provisioning_config'")

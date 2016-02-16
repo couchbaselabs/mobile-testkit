@@ -110,7 +110,7 @@ def plot_sync_gateway_expvars(figure, json_file_name):
 
     # Get writer hostnames for provisioning_config
     sg_writers = hosts_for_tag("sync_gateway_index_writers")
-    sg_writer_hostnames = [sg_writer["ansible_ssh_host"] for sg_writer in sg_writers]
+    sg_writer_hostnames = [sg_writer["ansible_host"] for sg_writer in sg_writers]
 
     with open(json_file_name, "r") as f:
         obj = json.loads(f.read(), object_pairs_hook=OrderedDict)

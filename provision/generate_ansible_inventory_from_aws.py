@@ -9,13 +9,13 @@ import json
 Generate a provisioning_config file like:
 
 [couchbase_servers]
-cb1 ansible_ssh_host=ec2-54-147-234-108.compute-1.amazonaws.com
+cb1 ansible_host=ec2-54-147-234-108.compute-1.amazonaws.com
 
 [sync_gateways]
-sg1 ansible_ssh_host=ec2-50-16-26-70.compute-1.amazonaws.com
+sg1 ansible_host=ec2-50-16-26-70.compute-1.amazonaws.com
 
 [load_generators]
-lg1 ansible_ssh_host=ec2-54-157-59-199.compute-1.amazonaws.com
+lg1 ansible_host=ec2-54-157-59-199.compute-1.amazonaws.com
 
 """
 
@@ -78,7 +78,7 @@ def get_ansible_groups():
             # create an ansible host object
             host = ansible.inventory.host.Host(ansible_inventory_name)
             host.add_group(ansible_group)
-            host.set_variable("ansible_ssh_host", hostname)
+            host.set_variable("ansible_host", hostname)
             ansible_group.add_host(host)
             i += 1
 
@@ -98,7 +98,7 @@ def add_sync_gateway_index_writers(input_ansible_groups):
             for host in ansible_group.get_hosts():
                 host_copy = ansible.inventory.host.Host(host.name)
                 host_copy.add_group(sg_writer_group)
-                host_copy.set_variable("ansible_ssh_host", host.get_variables()["ansible_ssh_host"])
+                host_copy.set_variable("ansible_host", host.get_vars()["ansible_host"])
                 sg_writer_group.add_host(host_copy)
             output_ansible_groups.append(sg_writer_group)
     return output_ansible_groups
@@ -111,11 +111,11 @@ def write_to_file(ansible_groups, filename):
         target.write(group_header)
         target.write("\n")
         for ansible_host in ansible_group.get_hosts():
-            host_variables = ansible_host.get_variables()
+            host_variables = ansible_host.get_vars()
             target.write(ansible_host.name)
             target.write(" ")
-            ansible_ssh_host = host_variables["ansible_ssh_host"]
-            line = "ansible_ssh_host={}".format(ansible_ssh_host)
+            ansible_host = host_variables["ansible_host"]
+            line = "ansible_host={}".format(ansible_host)
             target.write(line)
             target.write("\n")
 

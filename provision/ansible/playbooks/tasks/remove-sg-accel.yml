@@ -19,24 +19,9 @@
 
 # Remove sg_accel service
 - name: Remove sg_accel service
-  shell: rm /usr/lib/systemd/system/sg_accel.service
+  file: path=/usr/lib/systemd/system/sg_accel.service state=absent
   ignore_errors: yes
 
 # Delete sg_accel binary
 - name: delete sync_gateway binary
-  shell: rm -rf /opt/couchbase-sg-accel
-
-# Delete logs and .pindex files
-- name: delete sg_accel logs
-  shell: rm -f /home/sg_accel/logs/*.log
-- name: delete sg_accel pindex files
-  shell: rm -rf /home/sg_accel/*.pindex
-
-# Remove sync_gateway user
-- name: remove sg accel user
-  user: name=sg_accel state=absent remove=yes force=yes
-  ignore_errors: yes
-
-# Delete downloaded source
-- name: delete previous sync gateway
-  command: rm -rf /home/centos/sync_gateway
+  file: path=/opt/couchbase-sg-accel state=absent

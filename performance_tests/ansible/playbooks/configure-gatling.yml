@@ -44,4 +44,4 @@
     lineinfile: 
       dest=/home/projects/sg-gatling-load/pom.xml 
       regexp='<simulation.targetHosts>.*</simulation.targetHosts>' 
-      line='<simulation.targetHosts>{% set comma = joiner(",") %} {% for item in groups.sync_gateways -%} {{ comma() }}{{ hostvars[item].ansible_ssh_host }} {%- endfor %}</simulation.targetHosts>'
+      line='<simulation.targetHosts>{% set comma = joiner(",") %} {% for item in groups.sync_gateways -%} {{ comma() }}{{ hostvars[item].ansible_host }} {%- endfor %}</simulation.targetHosts>'

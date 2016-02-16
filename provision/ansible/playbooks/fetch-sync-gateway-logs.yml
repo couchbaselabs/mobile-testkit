@@ -1,6 +1,6 @@
 ---
 - hosts: sync_gateways
-  sudo: true
+  become: yes
   any_errors_fatal: true
   tasks:
 
@@ -12,7 +12,7 @@
     when: "'sync_gateway_index_writers' not in group_names"
 
 - hosts: sync_gateway_index_writers
-  sudo: true
+  become: yes
   any_errors_fatal: true
   tasks:
 

@@ -1,9 +1,3 @@
 # Delete logs and .pindex files
-- name: delete sg_accel logs
-  shell: rm -f /home/sg_accel/logs/*.log
-- name: delete sg_accel pindex files
-  shell: rm -rf /home/sg_accel/*.pindex
-- name: delete sg_accel uuid files
-  shell: rm -rf /home/sg_accel/*.uuid
-- name: delete sg_accel configs / cpu stats
-  shell: rm -rf /home/sg_accel/*.json
+- name: delete sg_accel artifacts
+  shell: rm -rf /home/sg_accel/*

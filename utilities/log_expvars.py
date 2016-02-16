@@ -38,14 +38,14 @@ def log_expvars(folder_name):
 
     # Get gateload ips from ansible inventory
     lgs_host_vars = hosts_for_tag("load_generators")
-    lgs = [lg["ansible_ssh_host"] for lg in lgs_host_vars]
+    lgs = [lg["ansible_host"] for lg in lgs_host_vars]
 
     print("Monitoring gateloads: {}".format(lgs))
     lgs_expvar_endpoints = [lg + ":9876/debug/vars" for lg in lgs]
 
     # Get sync_gateway ips from ansible inventory
     sgs_host_vars = hosts_for_tag("sync_gateways")
-    sgs = [sgv["ansible_ssh_host"] for sgv in sgs_host_vars]
+    sgs = [sgv["ansible_host"] for sgv in sgs_host_vars]
 
     print("Monitoring sync_gateways: {}".format(sgs))
     sgs_expvar_endpoints = [sg + ":4985/_expvar" for sg in sgs]

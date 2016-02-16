@@ -1,0 +1,4 @@
+- name: Remove sync_gateway user
+  user: name=sync_gateway state=absent remove=yes force=yes
+- name: Remove sg_accel user
+  user: name=sg_accel state=absent remove=yes force=yes

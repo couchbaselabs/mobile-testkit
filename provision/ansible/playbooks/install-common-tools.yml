@@ -1,7 +1,8 @@
 ---
 - hosts: sync_gateways:couchbase_servers:load_generators
   any_errors_fatal: true
-  sudo: true
+  become: yes
+
   tasks:
   - name: create centos user
     user: name=centos createhome=yes
@@ -31,7 +32,7 @@
     shell: pip install psutil
     # Remove go, can cause issues with version confusion if multple versions of go are on a machine
   - name: delete existing go installations
-    shell: rm -rf /usr/local/go/
+    file: path=/usr/local/go state=absent
     ignore_errors: yes
   - name: download golang
     get_url: url=https://storage.googleapis.com/golang/go1.5.1.linux-amd64.tar.gz dest=/tmp mode=0440

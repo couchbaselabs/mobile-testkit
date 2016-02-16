@@ -2,7 +2,7 @@
 - hosts: sync_gateways
   remote_user: centos
   any_errors_fatal: true
-  sudo: true
+  become: yes
   tasks:
 
   # Fetch generated profile results
@@ -17,7 +17,7 @@
 - hosts: sync_gateway_index_writers
   remote_user: centos
   any_errors_fatal: true
-  sudo: true
+  become: yes
   tasks:
 
   # Fetch generated profile results on sg_accels

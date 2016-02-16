@@ -1,9 +1,3 @@
 # Delete logs and .pindex files
 - name: delete sync_gateway logs
-  shell: rm -f /home/sync_gateway/logs/*.log
-- name: delete sync_gateway pindex files
-  shell: rm -rf /home/sync_gateway/*.pindex
-- name: delete sync_gateway uuid files
-  shell: rm -rf /home/sync_gateway/*.uuid
-- name: delete sync_gateway configs / cpu stats
-  shell: rm -rf /home/sync_gateway/*.json
+  shell: rm -rf /home/sync_gateway/*
