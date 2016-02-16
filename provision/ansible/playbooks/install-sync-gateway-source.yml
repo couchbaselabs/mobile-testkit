@@ -35,6 +35,7 @@
 # Create sync_gateway user
 - hosts: sync_gateways
   any_errors_fatal: true
+  become: yes
   tasks:
   - include: tasks/create-sync-gateway-user.yml
     when: "'sync_gateway_index_writers' not in group_names"
@@ -42,38 +43,35 @@
 # Create sg_accel user
 - hosts: sync_gateway_index_writers
   any_errors_fatal: true
+  become: yes
   tasks:
   - include: tasks/create-sg-accel-user.yml
 
 # Download source and build
 - hosts: sync_gateways
   any_errors_fatal: true
+  become: yes
   vars:
     branch:
     build_flags:
 
   tasks:
-  - name: clone sync gateway git repo
-    git: repo=https://github.com/couchbase/sync_gateway.git
-         dest=/home/centos/sync_gateway
-         recursive=no
-  - name: checkout feature branch
-    shell: git checkout {{ branch }} chdir=/home/centos/sync_gateway
-  - name: update submodules
-    shell: git submodule init && git submodule update chdir=/home/centos/sync_gateway
-
-  # Build with flags if flags are defined, by default build_flags=""
-  - debug: msg="Building with flags {{ build_flags }}"
-  - name: build sync_gateway
-    shell: ./build.sh {{ build_flags }} chdir=/home/centos/sync_gateway
-
+  - name: repo init
+    shell: repo init -u "https://github.com/couchbase/sync_gateway.git" -m manifest/default.xml
+  - name: repo sync
+    shell: repo sync
+  - name: go install
+    shell: go install {{ build_flags }} github.com/couchbase/sync_gateway/...
+    environment:
+      GOPATH: /home/centos/godeps
+    
   # Copy sync_gateway binary from centos user
   - name: Creates /opt/couchbase-sync-gateway
     file: path=/opt/couchbase-sync-gateway state=directory
   - name: Creates /opt/couchbase-sync-gateway/bin
     file: path=/opt/couchbase-sync-gateway/bin state=directory
   - name: copy sync_gateway binary to /opt/
-    shell: cp /home/centos/sync_gateway/bin/sync_gateway /opt/couchbase-sync-gateway/bin/
+    shell: cp /home/centos/godeps/bin/sync_gateway /opt/couchbase-sync-gateway/bin/
 
   # Copy sg_accel binary from centos user
   - name: Creates /opt/couchbase-sg-accel
@@ -81,11 +79,12 @@
   - name: Creates /opt/couchbase-sg-accel/bin
     file: path=/opt/couchbase-sg-accel/bin state=directory
   - name: copy sg_accel binary to /opt/
-    shell: cp /home/centos/sync_gateway/bin/sg_accel /opt/couchbase-sg-accel/bin/
+    shell: cp /home/centos/godeps/bin/sg_accel /opt/couchbase-sg-accel/bin/
 
 # Deploy sync gateway configs
 - hosts: sync_gateways
   any_errors_fatal: true
+  become: yes
   vars:
     sync_gateway_config_filepath:
     couchbase_server_primary_node: "{{ hostvars[groups.couchbase_servers[0]].ansible_host }}"
@@ -97,6 +96,7 @@
 # Deploy sg_accel configs
 - hosts: sync_gateway_index_writers
   any_errors_fatal: true
+  become: yes
   vars:
     sync_gateway_config_filepath:
     couchbase_server_primary_node: "{{ hostvars[groups.couchbase_servers[0]].ansible_host }}"
@@ -107,6 +107,7 @@
 # Install sync_gateway service and wait for launch
 - hosts: sync_gateways
   any_errors_fatal: true
+  become: yes
   tasks:
   - name: make service install script executable
     file: path=/home/centos/sync_gateway/service/sync_gateway_service_install.sh mode=a+x
@@ -121,6 +122,7 @@
 # Install sg_accel service and wait for launch
 - hosts: sync_gateway_index_writers
   any_errors_fatal: true
+  become: yes
   tasks:
   - name: make service install script executable
     file: path=/home/centos/sync_gateway/service/sg_accel_service_install.sh mode=a+x
