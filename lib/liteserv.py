@@ -1,35 +1,24 @@
-import sys
 import subprocess
-from optparse import OptionParser
+import requests
+import os
 
-# jython imports
-from com.android.monkeyrunner import MonkeyRunner, MonkeyDevice
+from lib import settings
+import logging
+log = logging.getLogger(settings.LOGGER)
 
-port = 5984
-args = sys.argv
+class LiteServ:
+    def __init__(self, port):
+        ip = "192.168.0.19"
+        self.url = "http://{}:{}".format(ip, port)
+        subprocess.call(["monkeyrunner", "utilities/cbl_android_tool.py", "--port={}".format(port)])
 
-if len(args) > 1:
-    if args[1].startswith('--port'):
-        port_arg = args[1]
-        port = int(port_arg.split('=')[1])
+    def verify_lauched(self):
+        r = requests.get(self.url)
+        log.info("GET {} ".format(r.url))
+        return r.text
 
-device = MonkeyRunner.waitForConnection()
 
-success = device.installPackage('/Users/sethrosetter/Code/couchbase-lite-android-liteserv/couchbase-lite-android-liteserv/build/outputs/apk/couchbase-lite-android-liteserv-debug.apk')
-if success:
-    print('LiteServ install successful!')
-else:
-    print('Could not install LiteServ')
-    sys.exit(1)
 
-print('Getting Device ip ...')
-result = device.shell('netcfg')
-ip_line = result.split('\n')[0]
-ip = ip_line.split()[2]
-ip = ip.split("/")[0]
-
-print('Launching LiteServ activity on %s:%d!' % (ip, port))
-device.shell('am start -a android.intent.action.MAIN -n com.couchbase.liteservandroid/com.couchbase.liteservandroid.MainActivity --ei listen_port %d --es username "" --es password ""' % port)
 
 
 #status = subprocess.call('adb forward tcp:$* tcp:$*')
