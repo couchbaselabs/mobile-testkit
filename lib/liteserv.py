@@ -22,10 +22,25 @@ class LiteServ:
         return r.text
 
     def create_db(self, name):
-        self.server.create(name)
+        r = requests.put("{}/{}".format(self.url, name))
+        log.info("PUT {} ".format(r.url))
+        r.raise_for_status()
+        return r.json()
 
     def delete_db(self, name):
+        log.info("Delete db: {}".format(name))
         self.server.delete(name)
+
+    def get_dbs(self):
+        r = requests.get("{}/_all_dbs".format(self.url))
+        log.info("GET {} ".format(r.url))
+        r.raise_for_status()
+        return r.json()
+
+    def reset(self):
+        dbs = self.get_dbs()
+        for db in dbs:
+            self.delete_db(db)
 
 
 #status = subprocess.call('adb forward tcp:$* tcp:$*')
