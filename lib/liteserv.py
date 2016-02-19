@@ -2,6 +2,8 @@ import subprocess
 import requests
 import os
 
+from couchdb import Server
+
 from lib import settings
 import logging
 log = logging.getLogger(settings.LOGGER)
@@ -10,15 +12,20 @@ class LiteServ:
     def __init__(self, port):
         ip = "192.168.0.19"
         self.url = "http://{}:{}".format(ip, port)
+        self.server = Server(url=self.url)
         subprocess.call(["monkeyrunner", "utilities/cbl_android_tool.py", "--port={}".format(port)])
 
     def verify_lauched(self):
         r = requests.get(self.url)
         log.info("GET {} ".format(r.url))
+        r.raise_for_status()
         return r.text
 
+    def create_db(self, name):
+        self.server.create(name)
 
-
+    def delete_db(self, name):
+        self.server.delete(name)
 
 
 #status = subprocess.call('adb forward tcp:$* tcp:$*')
