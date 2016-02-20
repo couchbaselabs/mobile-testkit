@@ -8,12 +8,22 @@ from lib import settings
 import logging
 log = logging.getLogger(settings.LOGGER)
 
-class LiteServ:
-    def __init__(self, port):
+
+# For use with any listener based application (Android only)
+class Listener:
+    def __init__(self, target_device, local_port, apk_path, activity):
         ip = "192.168.0.19"
-        self.url = "http://{}:{}".format(ip, port)
+        self.url = "http://{}:{}".format(ip, 5984)
         self.server = Server(url=self.url)
-        subprocess.call(["monkeyrunner", "utilities/cbl_android_tool.py", "--port={}".format(port)])
+        monkey_output = subprocess.check_output([
+            "monkeyrunner",
+            "utilities/monkeyrunner.py",
+            "--target-device={}".format(target_device),
+            "--local-port={}".format(local_port),
+            "--apk-path={}".format(apk_path),
+            "--activity={}".format(activity)
+        ])
+        log.info("OUTPUT: {}".format(monkey_output))
 
     def verify_lauched(self):
         r = requests.get(self.url)
