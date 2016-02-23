@@ -95,7 +95,7 @@ class Listener:
         log_request(r)
         log_response(r)
 
-    def start_push_replication(self, target, db):
+    def start_pull_replication(self, target, db):
         data = {
             "source": "{}/{}".format(target, db),
             "target": "{}".format(db),
