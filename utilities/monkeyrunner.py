@@ -1,18 +1,11 @@
 import sys
 import subprocess
+
 from optparse import OptionParser
 
 # jython imports
 from com.android.monkeyrunner import MonkeyRunner, MonkeyDevice
 
-
-def get_ip(device):
-    print('Getting Device ip ...')
-    result = device.shell('netcfg')
-    ip_line = result.split('\n')[0]
-    ip = ip_line.split()[2]
-    ip = ip.split("/")[0]
-    return ip
 
 
 def launch_lite_serv(target_device, apk_path):
@@ -31,12 +24,17 @@ def launch_lite_serv(target_device, apk_path):
     device.shell('am start -a android.intent.action.MAIN -n com.couchbase.liteservandroid/com.couchbase.liteservandroid.MainActivity --ei listen_port 5984 --es username "" --es password ""')
 
 
-def launch_android_app(target_device, apk_path, activity):
+def reinstall_and_launch_app(target_device, apk_path, activity):
 
     print('Waiting for device "%s" ' % target_device)
     device = MonkeyRunner.waitForConnection(timeout=10, deviceId=target_device)
 
-    print('Installing "%s" on device "%s" ' % (apk_path, target_device))
+    package_name = activity.split('/')[0]
+
+    print ('Removing %s on device "%s"' % (package_name, target_device))
+    device.removePackage(package_name)
+
+    print('Installing "%s" on device "%s"' % (apk_path, target_device))
     success = device.installPackage(apk_path)
     if not success:
         print('Failed to install apk. Exiting!')
@@ -82,9 +80,9 @@ if __name__ == '__main__':
     validate_args(parser, target_device, local_port, apk_path, activity)
 
     if apk_path.endswith('couchbase-lite-android-liteserv-debug.apk'):
-        ip = launch_lite_serv(target_device, apk_path)
+        launch_lite_serv(target_device, apk_path)
     else:
-        ip = launch_android_app(target_device, apk_path, activity)
+        reinstall_and_launch_app(target_device, apk_path, activity)
 
     # print('Listing forwarded ports ...')
     # subprocess.check_call(['adb', '-s', target_device, 'forward', '--list'])
@@ -92,4 +90,3 @@ if __name__ == '__main__':
     # subprocess.call(['adb', '-s', target_device, 'forward', '--remove-all'])
     print('Forwarding %s :5984 to localhost:%s' % (target_device, local_port))
     subprocess.call(['adb', '-s', target_device, 'forward', 'tcp:%d' % local_port, 'tcp:5984'])
-
