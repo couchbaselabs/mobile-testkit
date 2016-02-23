@@ -26,7 +26,7 @@ def test_multiple_users_multiple_channels(cluster, conf):
 
     log.info("conf: {}".format(conf))
 
-    mode = cluster.reset(config=conf)
+    mode = cluster.reset(config_path=conf)
 
     # TODO Parametrize
     num_docs_seth = 1000
@@ -86,7 +86,7 @@ def test_muliple_users_single_channel(cluster, conf):
 
     log.info("conf: {}".format(conf))
 
-    mode = cluster.reset(config=conf)
+    mode = cluster.reset(config_path=conf)
 
     sgs = cluster.sync_gateways
 
@@ -136,7 +136,7 @@ def test_single_user_multiple_channels(cluster, conf):
 
     log.info("conf: {}".format(conf))
 
-    mode = cluster.reset(config=conf)
+    mode = cluster.reset(config_path=conf)
 
     start = time.time()
     sgs = cluster.sync_gateways
@@ -179,7 +179,7 @@ def test_single_user_single_channel(cluster, conf):
 
     log.info("conf: {}".format(conf))
 
-    mode = cluster.reset(config=conf)
+    mode = cluster.reset(config_path=conf)
 
     sgs = cluster.sync_gateways
 

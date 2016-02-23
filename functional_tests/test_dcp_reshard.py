@@ -24,7 +24,7 @@ def test_dcp_reshard_sync_gateway_goes_down(cluster, conf):
 
     log.info("conf: {}".format(conf))
 
-    mode = cluster.reset(config=conf)
+    mode = cluster.reset(config_path=conf)
 
     admin = Admin(cluster.sync_gateways[0])
 
@@ -77,7 +77,7 @@ def test_dcp_reshard_sync_gateway_comes_up(cluster, conf):
 
     log.info("conf: {}".format(conf))
 
-    mode = cluster.reset(config=conf)
+    mode = cluster.reset(config_path=conf)
     cluster.sg_accels[0].stop()
 
     admin = Admin(cluster.sync_gateways[0])
@@ -131,7 +131,7 @@ def test_dcp_reshard_single_sg_accel_goes_down_and_up(cluster, conf):
 
     log.info("conf: {}".format(conf))
 
-    mode = cluster.reset(config=conf)
+    mode = cluster.reset(config_path=conf)
 
     # Stop the second sg_accel
     cluster.sg_accels[1].stop()

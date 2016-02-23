@@ -14,6 +14,7 @@ from lib.syncgateway import SyncGateway
 from lib.sgaccel import SgAccel
 from lib.server import Server
 from lib.admin import Admin
+from lib.config import Config
 from lib import settings
 from provision.ansible_runner import run_ansible_playbook
 
@@ -45,7 +46,8 @@ class Cluster:
         self.sg_accels = [SgAccel(sgw) for sgw in sgsw]
         self.servers = [Server(cb) for cb in cbs]
         self.load_generators = lds
-
+        self.sync_gateway_config = None  # will be set to Config object when reset() called
+        
     def _hosts_for_tag(self, tag):
         hostfile = "provisioning_config"
 
@@ -69,9 +71,9 @@ class Cluster:
 
         # Validate sync gateways
         if len(self.sync_gateways) == 0:
-            raise Exception("Functional tests require at least 1 index reader")
-
-    def reset(self, config):
+            raise Exception("Functional tests require at least 1 index reader")        
+        
+    def reset(self, config_path):
 
         self.validate_cluster()
         
@@ -98,50 +100,24 @@ class Cluster:
         # Delete buckets
         log.info(">>> Deleting buckets on: {}".format(self.servers[0].ip))
         self.servers[0].delete_buckets()
-
+        
         # Parse config and grab bucket names
-        conf_path = os.path.abspath("conf/" + config)
-        bucket_names_from_config = []
-
-        mode = "channel_cache"
-        with open(conf_path, "r") as config:
-            data = config.read()
-
-            # strip out templated variables {{ ... }}
-            data = re.sub("({{.*}})", "0", data)
-
-            # strip out sync functions `function ... }`
-            data = re.sub("(`function.*\n)(.*\n)+(.*}`)", "0", data)
-
-            # Find all bucket names in config's databases: {}
-            conf_obj = json.loads(data)
-
-            # Add CBGT buckets
-            if "cluster_config" in conf_obj.keys():
-                mode = "distributed_index"
-                bucket_names_from_config.append(conf_obj["cluster_config"]["bucket"])
-
-            dbs = conf_obj["databases"]
-            for key, val in dbs.iteritems():
-                # Add data buckets
-                bucket_names_from_config.append(val["bucket"])
-                if "channel_index" in val:
-                    # index buckets
-                    bucket_names_from_config.append(val["channel_index"]["bucket"])
-
-        # Buckets may be shared for different functionality
-        bucket_name_set = list(set(bucket_names_from_config))
-
+        config_path_full = os.path.abspath("conf/" + config_path)
+        config = Config(config_path_full)
+        mode = config.get_mode()
+        bucket_name_set = config.get_bucket_name_set()
+        self.sync_gateway_config = config
+        
         log.info(">>> Creating buckets on: {}".format(self.servers[0].ip))
         log.info(">>> Creating buckets {}".format(bucket_name_set))
         self.servers[0].create_buckets(bucket_name_set)
 
-        log.info(">>> Starting sync_gateway with configuration: {}".format(conf_path))
+        log.info(">>> Starting sync_gateway with configuration: {}".format(config_path_full))
 
         # Start sync-gateway
         status = run_ansible_playbook(
             "start-sync-gateway.yml",
-            extra_vars="sync_gateway_config_filepath={0}".format(conf_path),
+            extra_vars="sync_gateway_config_filepath={0}".format(config_path_full),
             stop_on_fail=False
         )
         assert(status == 0)
@@ -152,7 +128,7 @@ class Cluster:
             # Start sg-accel
             status = run_ansible_playbook(
                 "start-sg-accel.yml",
-                extra_vars="sync_gateway_config_filepath={0}".format(conf_path),
+                extra_vars="sync_gateway_config_filepath={0}".format(config_path_full),
                 stop_on_fail=False
             )
             assert(status == 0)

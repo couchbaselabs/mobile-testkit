@@ -26,7 +26,7 @@ def test_roles_sanity(cluster, conf):
 
     log.info("conf: {}".format(conf))
 
-    mode = cluster.reset(config=conf)
+    mode = cluster.reset(config_path=conf)
 
     radio_stations = ["KMOW", "HWOD", "KDWB"]
     tv_stations = ["ABC", "CBS", "NBC"]

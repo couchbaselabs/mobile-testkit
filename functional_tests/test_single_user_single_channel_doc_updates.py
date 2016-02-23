@@ -31,7 +31,7 @@ def test_single_user_single_channel_doc_updates(cluster, conf, num_docs, num_rev
     log.info("num_revisions: {}".format(num_revisions))
 
     start = time.time()
-    mode = cluster.reset(config=conf)
+    mode = cluster.reset(config_path=conf)
     num_docs = num_docs
     num_revisions = num_revisions
     username = "User-1"

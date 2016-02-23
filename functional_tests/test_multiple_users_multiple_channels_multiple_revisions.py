@@ -36,7 +36,7 @@ def test_mulitple_users_mulitiple_channels_mulitple_revisions(cluster, conf, num
 
     start = time.time()
 
-    mode = cluster.reset(config=conf)
+    mode = cluster.reset(config_path=conf)
 
     init_completed = time.time()
     log.info("Initialization completed. Time taken:{}s".format(init_completed - start))

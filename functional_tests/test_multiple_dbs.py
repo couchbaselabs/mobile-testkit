@@ -29,7 +29,7 @@ def test_multiple_db_unique_data_bucket_unique_index_bucket(cluster, conf, num_u
     log.info("Using num_docs_per_user: {}".format(num_docs_per_user))
 
     # 2 dbs have unique data and unique index buckets
-    mode = cluster.reset(config=conf)
+    mode = cluster.reset(config_path=conf)
 
     num_db_users = num_users
     num_db2_users = num_users
@@ -83,7 +83,7 @@ def test_multiple_db_single_data_bucket_single_index_bucket(cluster, conf, num_u
     log.info("Using num_docs_per_user: {}".format(num_docs_per_user))
 
     # 2 dbs share the same data and index bucket
-    mode = cluster.reset(config=conf)
+    mode = cluster.reset(config_path=conf)
 
     num_db_users = num_users
     num_db2_users = num_users
