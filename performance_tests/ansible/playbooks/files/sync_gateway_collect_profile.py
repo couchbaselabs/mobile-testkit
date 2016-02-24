@@ -119,7 +119,7 @@ if __name__ == "__main__":
             minutes_elapsed += 1
             continue
 
-        # wait five minutes
+        # wait one minute
         time.sleep(60)
         minutes_elapsed += 1
 
