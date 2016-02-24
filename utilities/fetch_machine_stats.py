@@ -1,5 +1,7 @@
 import os.path
 import shutil
+import sys
+from optparse import OptionParser
 
 from provision.ansible_runner import run_ansible_playbook
 
@@ -22,4 +24,22 @@ def fetch_machine_stats(folder_name):
 
 
 if __name__ == "__main__":
-    fetch_machine_stats()
+    usage = """usage: fetch_machine_stats.py
+    --test-id=<test-id>
+    """
+
+    parser = OptionParser(usage=usage)
+
+    parser.add_option("", "--test-id",
+                      action="store", type="string", dest="test_id", default=None,
+                      help="Test id to generate graphs for")
+
+    arg_parameters = sys.argv[1:]
+
+    (opts, args) = parser.parse_args(arg_parameters)
+
+    if opts.test_id is None:
+        print("You must provide a test identifier to run the test")
+        sys.exit(1)
+
+    fetch_machine_stats(opts.test_id)

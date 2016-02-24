@@ -19,6 +19,7 @@ from utilities.fetch_sg_logs import fetch_sync_gateway_logs
 from utilities.fetch_sync_gateway_profile import fetch_sync_gateway_profile
 from utilities.push_cbcollect_info_supportal import push_cbcollect_info_supportal
 
+
 def run_tests(number_pullers, number_pushers, use_gateload, gen_gateload_config, test_id):
     if use_gateload:
         print "Using Gateload"
