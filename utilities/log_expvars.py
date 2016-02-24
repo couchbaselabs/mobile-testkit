@@ -80,4 +80,4 @@ def log_expvars(folder_name):
                 dump_results(folder_name, gateload_results, sync_gateway_results)
 
         print("Elapsed: {} minutes".format((time.time() - start_time) / 60.0))
-        time.sleep(180)
+        time.sleep(30)

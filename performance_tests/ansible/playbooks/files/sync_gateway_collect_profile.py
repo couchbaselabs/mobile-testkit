@@ -120,7 +120,7 @@ if __name__ == "__main__":
             continue
 
         # wait five minutes
-        time.sleep(180)
+        time.sleep(60)
         minutes_elapsed += 1
 
     # package the all of the profile results
