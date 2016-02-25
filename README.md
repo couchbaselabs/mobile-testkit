@@ -6,26 +6,47 @@ This repository contains:
     * Performance Tests
 * Functional Test Suite (python)
 
-## Setup Controller
+## Setup Controller on OSX
 
 The "controller" is the machine that runs ansible, which is typically:
 
 * Your developer workstation
 * A virtual machine / docker container
 
-NOTE: This repo now only supports ansible 2.0+.  To upgrade from ansible 1.x, run `pip uninstall ansible && pip install ansible`.  Note that this upgrade will also need to be done in the docker container since it is shipped with ansible 1.x.
+The instructions below are for setting up directly on OSX.  If you prefer to run this under Docker, see the [Running under Docker](https://github.com/couchbaselabs/sync-gateway-testcluster/wiki/Running-under-Docker) wiki page.
 
-The instructions below are docker specific, but if you look in `docker/controller/Dockerfile` it should give you an idea of the required dependencies if you want to make this work directly on your workstation.
+### Install dependencies
 
-### Start a Docker container for the Ansible Controller
+**Install Python via brew**
 
-First you will need to [install docker](https://docs.docker.com/mac/step_one/).
+If you are on OSX El Capitan, you must install docker via brew rather than using the system python due to [Pip issue 3165](https://github.com/pypa/pip/issues/3165).
 
-```shell
-$ docker run -ti tleyden5iwx/sync-gateway-testcluster /bin/bash
+```
+$ brew install python
 ```
 
-The rest of the commands should be run **inside** the docker container created in the previous step.
+After you install it, you should see that the python installed via brew is the default python:
+
+```
+$ which python
+/usr/local/bin/python
+$ python --version
+Python 2.7.10
+```
+
+**Install Pip dependencies**
+
+```
+$ pip install troposphere && \
+  pip install awscli && \
+  pip install boto && \
+  pip install ansible && \
+  pip install pytest && \
+  pip install futures && \
+  pip install requests
+```
+
+NOTE: This repo now only supports ansible 2.0+, which will be installed by default if you are on a fresh system.  To upgrade an existing system from ansible 1.x, run `pip uninstall ansible && pip install ansible`.  
 
 ### Clone Repo
 
