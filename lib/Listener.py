@@ -4,8 +4,6 @@ import os
 import time
 import json
 
-from couchdb import Server
-
 from lib.debug import *
 
 from lib import settings
@@ -16,9 +14,8 @@ log = logging.getLogger(settings.LOGGER)
 # For use with any listener based application (Android only)
 class Listener:
     def __init__(self, target_device, local_port, apk_path, activity):
-        self.url = ""
-        self.server = Server(url=self.url)
 
+        self.url = ""
         self.install_and_launch_app(target_device, local_port, apk_path, activity)
 
         if self.is_emulator(target_device):
@@ -58,7 +55,7 @@ class Listener:
         ip = ip.split("/")[0]
         return ip
 
-    def verify_lauched(self):
+    def verify_launched(self):
         r = requests.get(self.url)
         log.info("GET {} ".format(r.url))
         r.raise_for_status()
@@ -71,8 +68,11 @@ class Listener:
         return r.json()
 
     def delete_db(self, name):
-        log.info("Delete db: {}".format(name))
-        self.server.delete(name)
+        r = requests.delete("{}/{}".format(self.url, name))
+        log_request(r)
+        log_response(r)
+        r.raise_for_status()
+        return r.json()
 
     def get_dbs(self):
         r = requests.get("{}/_all_dbs".format(self.url))
@@ -94,6 +94,7 @@ class Listener:
         r = requests.post("{}/_replicate".format(self.url), data=json.dumps(data))
         log_request(r)
         log_response(r)
+        r.raise_for_status()
 
     def start_pull_replication(self, target, db):
         data = {
@@ -104,3 +105,6 @@ class Listener:
         r = requests.post("{}/_replicate".format(self.url), data=json.dumps(data))
         log_request(r)
         log_response(r)
+        r.raise_for_status()
+
+
