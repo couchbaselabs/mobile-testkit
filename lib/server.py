@@ -5,6 +5,7 @@ import sys
 
 import requests
 
+from couchbase.bucket import Bucket
 from provision.ansible_runner import run_ansible_playbook
 
 import lib.settings
@@ -82,6 +83,10 @@ class Server:
             extra_vars=json.dumps(extra_vars),
         )
 
+    def get_bucket(self, bucket_name):
+        connection_str = "couchbase://{}/{}".format(self.ip, bucket_name)
+        return Bucket(connection_str)
+        
     def __repr__(self):
         return "Server: {}:{}\n".format(self.hostname, self.ip)
 
