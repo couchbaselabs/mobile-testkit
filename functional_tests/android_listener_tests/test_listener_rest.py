@@ -31,7 +31,6 @@ def test_scenario_two():
         {"target_device": "emulator-5558", "local_port": 12000, "apk_path": apk_path, "activity": activity},
         {"target_device": "emulator-5560", "local_port": 13000, "apk_path": apk_path, "activity": activity},
         {"target_device": "emulator-5562", "local_port": 14000, "apk_path": apk_path, "activity": activity},
-        #{"target_device": "06c455850b3fa11e", "local_port": 15000, "apk_path": apk_path, "activity": activity},
     ]
 
     listeners = {}
@@ -66,18 +65,29 @@ def test_scenario_two():
     emu_3 = listeners["emulator-5558"]
     emu_4 = listeners["emulator-5560"]
     emu_5 = listeners["emulator-5562"]
-    #dev_1 = listeners["06c455850b3fa11e"]
 
     emu_1.verify_launched()
     emu_2.verify_launched()
     emu_3.verify_launched()
     emu_4.verify_launched()
     emu_5.verify_launched()
-    #dev_1.verify_launched()
 
     # Add docs on master device
     emu_1_pusher = User(target=emu_1, db=db_name, name="emu1_doc_pusher", password="password", channels=["ABC"])
-    emu_1_pusher.add_docs(200)
+    emu_1_pusher.add_docs(600, bulk=True)
+    emu_1_pusher.add_design_doc(
+        doc_id="view1",
+        content={
+            "views": {
+                "dt1": {
+                    "map": "function(doc) {if (doc.type == \'dt1\') {emit(doc._id, doc);}}"
+                },
+                "filters": {
+                    "dt1": "function(doc) {if (doc.type == \'dt1\') {return true} return false}"
+                }
+            }
+        }
+    )
 
     # Start all replication
     emu_1.start_pull_replication(emu_2.url, db=db_name)
@@ -91,9 +101,68 @@ def test_scenario_two():
     emu_1.start_push_replication(emu_5.url, db=db_name)
 
     # Wait for all docs to push to emulators
-    time.sleep(10)
+    time.sleep(30)
 
-    
+    # TODO Assert each endpoint has 200 docs
 
+    # Stop all replication
+    emu_1.stop_pull_replication(emu_2.url, db=db_name)
+    emu_1.stop_pull_replication(emu_3.url, db=db_name)
+    emu_1.stop_pull_replication(emu_4.url, db=db_name)
+    emu_1.stop_pull_replication(emu_5.url, db=db_name)
 
+    emu_1.stop_push_replication(emu_2.url, db=db_name)
+    emu_1.stop_push_replication(emu_3.url, db=db_name)
+    emu_1.stop_push_replication(emu_4.url, db=db_name)
+    emu_1.stop_push_replication(emu_5.url, db=db_name)
 
+    # Wait for all replications to stop
+    time.sleep(30)
+
+    # Delete dbs on master and first slave
+    emu_1.delete_db(db_name)
+    emu_2.delete_db(db_name)
+
+    # TODO Verify db is deleted
+
+    time.sleep(2)
+
+    # Add docs to the reset of the slaves
+    emu_3_pusher = User(target=emu_3, db=db_name, name="emu3_doc_pusher", password="password", channels=["ABC"])
+    emu_4_pusher = User(target=emu_4, db=db_name, name="emu4_doc_pusher", password="password", channels=["ABC"])
+    emu_5_pusher = User(target=emu_5, db=db_name, name="emu5_doc_pusher", password="password", channels=["ABC"])
+
+    emu_3_pusher.add_docs(20)
+    emu_4_pusher.add_docs(20)
+    emu_5_pusher.add_docs(20)
+
+    # TODO Verify 3,4,5 have 240
+
+    time.sleep(2)
+
+    # Create dbs on master and first slave
+    emu_1.create_db(db_name)
+    emu_2.create_db(db_name)
+
+    # TODO Verify db has been created, and doc count should be 0
+
+    time.sleep(5)
+
+    # Start all replication
+    emu_1.start_pull_replication(emu_2.url, db=db_name)
+    emu_1.start_pull_replication(emu_3.url, db=db_name)
+    emu_1.start_pull_replication(emu_4.url, db=db_name)
+    emu_1.start_pull_replication(emu_5.url, db=db_name)
+
+    emu_1.start_push_replication(emu_2.url, db=db_name)
+    emu_1.start_push_replication(emu_3.url, db=db_name)
+    emu_1.start_push_replication(emu_4.url, db=db_name)
+    emu_1.start_push_replication(emu_5.url, db=db_name)
+
+    time.sleep(45)
+
+    emus = [emu_1, emu_2, emu_3, emu_4, emu_5]
+    for emu in emus:
+        doc_num = emu.get_num_docs(db_name)
+        log.info("emu: {} doc_num: {}".format(emu.target_device, doc_num))
+        # assert (doc_num == 661)

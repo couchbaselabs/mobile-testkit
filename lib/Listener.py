@@ -109,6 +109,17 @@ class Listener:
         log_response(r)
         r.raise_for_status()
 
+    def stop_push_replication(self, target, db):
+        data = {
+            "source": "{}".format(db),
+            "target": "{}/{}".format(target, db),
+            "cancel": True
+        }
+        r = requests.post("{}/_replicate".format(self.url), data=json.dumps(data))
+        log_request(r)
+        log_response(r)
+        r.raise_for_status()
+
     def start_pull_replication(self, target, db):
         data = {
             "source": "{}/{}".format(target, db),
@@ -119,5 +130,24 @@ class Listener:
         log_request(r)
         log_response(r)
         r.raise_for_status()
+
+    def stop_pull_replication(self, target, db):
+        data = {
+            "source": "{}/{}".format(target, db),
+            "target": "{}".format(db),
+            "cancel": True
+        }
+        r = requests.post("{}/_replicate".format(self.url), data=json.dumps(data))
+        log_request(r)
+        log_response(r)
+        r.raise_for_status()
+
+    def get_num_docs(self, db):
+        r = requests.get("{}/{}/_all_docs".format(self.url, db))
+        log_request(r)
+        log_response(r)
+        r.raise_for_status()
+        resp_data = r.json()
+        return resp_data["total_rows"]
 
 
