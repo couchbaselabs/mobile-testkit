@@ -14,12 +14,13 @@ log = logging.getLogger(settings.LOGGER)
 import time
 
 
-def create_listener(target_device, local_port, apk_path, activity):
-    return Listener(target_device=target_device, local_port=local_port, apk_path=apk_path, activity=activity)
+def create_listener(target_device, local_port, apk_path, activity, reinstall):
+    return Listener(target_device=target_device, local_port=local_port, apk_path=apk_path, activity=activity, reinstall=reinstall)
 
 
 def test_scenario_two():
 
+    should_reinstall = True
     apk_path = os.environ["P2P_APP"]
     activity = "com.couchbase.ui.maven/com.couchbase.ui.MainActivity"
     db_name = "db"
@@ -45,6 +46,7 @@ def test_scenario_two():
                 local_port=device_def["local_port"],
                 apk_path=device_def["apk_path"],
                 activity=device_def["activity"],
+                reinstall=should_reinstall,
             ): device_def["target_device"]
             for device_def in device_defs
         }

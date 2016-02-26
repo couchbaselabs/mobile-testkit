@@ -13,10 +13,12 @@ log = logging.getLogger(settings.LOGGER)
 
 # For use with any listener based application (Android only)
 class Listener:
-    def __init__(self, target_device, local_port, apk_path, activity):
+    def __init__(self, target_device, local_port, apk_path, activity, reinstall):
+
+        self.target_device = target_device
 
         self.url = ""
-        self.install_and_launch_app(target_device, local_port, apk_path, activity)
+        self.install_and_launch_app(target_device, local_port, apk_path, activity, reinstall)
 
         if self.is_emulator(target_device):
             self.url = "http://{}:{}".format(self.get_host_ip(), local_port)
@@ -25,15 +27,26 @@ class Listener:
 
         log.info("Listener running at {} ...".format(self.url))
 
-    def install_and_launch_app(self, target_device, local_port, apk_path, activity):
-        monkey_output = subprocess.check_output([
-            "monkeyrunner",
-            "utilities/monkeyrunner.py",
-            "--target-device={}".format(target_device),
-            "--local-port={}".format(local_port),
-            "--apk-path={}".format(apk_path),
-            "--activity={}".format(activity)
-        ])
+    def install_and_launch_app(self, target_device, local_port, apk_path, activity, reinstall):
+        if reinstall:
+            monkey_output = subprocess.check_output([
+                "monkeyrunner",
+                "utilities/monkeyrunner.py",
+                "--target-device={}".format(target_device),
+                "--local-port={}".format(local_port),
+                "--apk-path={}".format(apk_path),
+                "--activity={}".format(activity),
+                "--reinstall"
+            ])
+        else:
+            monkey_output = subprocess.check_output([
+                "monkeyrunner",
+                "utilities/monkeyrunner.py",
+                "--target-device={}".format(target_device),
+                "--local-port={}".format(local_port),
+                "--apk-path={}".format(apk_path),
+                "--activity={}".format(activity),
+            ])
         log.info("OUTPUT: {}".format(monkey_output))
 
     def is_emulator(self, target_device):
