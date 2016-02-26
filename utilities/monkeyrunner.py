@@ -96,9 +96,5 @@ if __name__ == '__main__':
     else:
         reset_and_launch_app(target_device, apk_path, activity, reinstall)
 
-    # print('Listing forwarded ports ...')
-    # subprocess.check_call(['adb', '-s', target_device, 'forward', '--list'])
-    # print('Clearing any forwarded ports ...')
-    # subprocess.call(['adb', '-s', target_device, 'forward', '--remove-all'])
     print('Forwarding %s :5984 to localhost:%s' % (target_device, local_port))
     subprocess.call(['adb', '-s', target_device, 'forward', 'tcp:%d' % local_port, 'tcp:5984'])
