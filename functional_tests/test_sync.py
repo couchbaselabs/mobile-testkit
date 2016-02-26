@@ -30,7 +30,7 @@ def test_issue_1524(cluster, conf, num_docs):
     log.info("Using conf: {}".format(conf))
     log.info("Using num_docs: {}".format(num_docs))
 
-    mode = cluster.reset(config=conf)
+    mode = cluster.reset(config_path=conf)
     admin = Admin(cluster.sync_gateways[0])
 
     user_no_channels = admin.register_user(target=cluster.sync_gateways[0], db="db", name="user_no_channels", password="password")
@@ -105,7 +105,7 @@ def test_sync_access_sanity(cluster, conf):
 
     log.info("Using conf: {}".format(conf))
 
-    mode = cluster.reset(config=conf)
+    mode = cluster.reset(config_path=conf)
     admin = Admin(cluster.sync_gateways[0])
 
     seth = admin.register_user(target=cluster.sync_gateways[0], db="db", name="seth", password="password")
@@ -155,7 +155,7 @@ def test_sync_channel_sanity(cluster, conf):
 
     log.info("Using conf: {}".format(conf))
 
-    mode = cluster.reset(config=conf)
+    mode = cluster.reset(config_path=conf)
     admin = Admin(cluster.sync_gateways[0])
 
     doc_pushers = []
@@ -219,7 +219,7 @@ def test_sync_role_sanity(cluster, conf):
 
     log.info("Using conf: {}".format(conf))
 
-    mode = cluster.reset(config=conf)
+    mode = cluster.reset(config_path=conf)
 
     admin = Admin(cluster.sync_gateways[0])
     admin.create_role(db="db", name="tv_stations", channels=tv_channels)
@@ -286,7 +286,7 @@ def test_sync_sanity(cluster, conf):
 
     log.info("Using conf: {}".format(conf))
 
-    mode = cluster.reset(config=conf)
+    mode = cluster.reset(config_path=conf)
 
     radio_stations = ["KMOW", "HWOD", "KDWB"]
     number_of_docs_per_pusher = 5000
@@ -333,7 +333,7 @@ def test_sync_sanity_backfill(cluster, conf):
 
     log.info("Using conf: {}".format(conf))
 
-    mode = cluster.reset(config=conf)
+    mode = cluster.reset(config_path=conf)
 
     radio_stations = ["KMOW", "HWOD", "KDWB"]
     number_of_docs_per_pusher = 5000
@@ -380,7 +380,7 @@ def test_sync_require_roles(cluster, conf):
 
     log.info("Using conf: {}".format(conf))
 
-    mode = cluster.reset(config=conf)
+    mode = cluster.reset(config_path=conf)
 
     radio_stations = ["KMOW", "HWOD", "KDWB"]
     tv_stations = ["ABC", "CBS", "NBC"]

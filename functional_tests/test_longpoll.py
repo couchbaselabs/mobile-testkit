@@ -37,7 +37,7 @@ def test_longpoll_changes_parametrized(cluster,conf, num_docs, num_revisions):
     log.info("num_docs: {}".format(num_docs))
     log.info("num_revisions: {}".format(num_revisions))
 
-    mode = cluster.reset(config=conf)
+    mode = cluster.reset(config_path=conf)
 
     admin = Admin(cluster.sync_gateways[0])
     seth = admin.register_user(target=cluster.sync_gateways[0], db="db", name="seth", password="password", channels=["ABC", "TERMINATE"])
@@ -91,7 +91,7 @@ def test_longpoll_changes_sanity(cluster, conf, num_docs, num_revisions):
     log.info("num_docs: {}".format(num_docs))
     log.info("num_revisions: {}".format(num_revisions))
 
-    mode = cluster.reset(config=conf)
+    mode = cluster.reset(config_path=conf)
 
     admin = Admin(cluster.sync_gateways[0])
     seth = admin.register_user(target=cluster.sync_gateways[0], db="db", name="seth", password="password", channels=["ABC", "TERMINATE"])

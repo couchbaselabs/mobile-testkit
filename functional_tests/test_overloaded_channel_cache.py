@@ -29,7 +29,7 @@ def test_overloaded_channel_cache(cluster, conf, num_docs, user_channels, filter
     log.info("Using filter: {}".format(filter))
     log.info("Using limit: {}".format(limit))
 
-    mode = cluster.reset(config=conf)
+    mode = cluster.reset(config_path=conf)
 
     target_sg = cluster.sync_gateways[0]
 

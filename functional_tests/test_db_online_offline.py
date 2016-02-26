@@ -210,7 +210,7 @@ def test_online_default_rest(cluster, conf, num_docs):
     log.info("Using conf: {}".format(conf))
     log.info("Using num_docs: {}".format(num_docs))
 
-    mode = cluster.reset(conf)
+    mode = cluster.reset(config_path=conf)
 
     # all db endpoints should function as expected
     errors = rest_scan(cluster.sync_gateways[0], db="db", online=True, num_docs=num_docs, user_name="seth", channels=["ABC"])
@@ -244,7 +244,7 @@ def test_offline_false_config_rest(cluster, conf, num_docs):
     log.info("Using conf: {}".format(conf))
     log.info("Using num_docs: {}".format(num_docs))
 
-    mode = cluster.reset(conf)
+    mode = cluster.reset(config_path=conf)
 
     # all db endpoints should function as expected
     errors = rest_scan(cluster.sync_gateways[0], db="db", online=True, num_docs=num_docs, user_name="seth", channels=["ABC"])
@@ -279,7 +279,7 @@ def test_online_to_offline_check_503(cluster, conf, num_docs):
     log.info("Using conf: {}".format(conf))
     log.info("Using num_docs: {}".format(num_docs))
 
-    mode = cluster.reset(conf)
+    mode = cluster.reset(config_path=conf)
     admin = Admin(cluster.sync_gateways[0])
 
     # all db endpoints should function as expected
@@ -323,7 +323,7 @@ def test_online_to_offline_changes_feed_controlled_close_continuous(cluster, con
     log.info("Using conf: {}".format(conf))
     log.info("Using num_docs: {}".format(num_docs))
 
-    mode = cluster.reset(conf)
+    mode = cluster.reset(config_path=conf)
     admin = Admin(cluster.sync_gateways[0])
     seth = admin.register_user(target=cluster.sync_gateways[0], db="db", name="seth", password="password", channels=["ABC"])
     doc_pusher = admin.register_user(target=cluster.sync_gateways[0], db="db", name="doc_pusher", password="password", channels=["ABC"])
@@ -395,7 +395,7 @@ def test_online_to_offline_continous_changes_feed_controlled_close_sanity_mulitp
     log.info("Using conf: {}".format(conf))
     log.info("Using num_docs: {}".format(num_docs))
 
-    mode = cluster.reset(conf)
+    mode = cluster.reset(config_path=conf)
 
     admin = Admin(cluster.sync_gateways[0])
     users = admin.register_bulk_users(target=cluster.sync_gateways[0], db="db", name_prefix="user", password="password", number=num_users, channels=["ABC"])
@@ -455,7 +455,7 @@ def test_online_to_offline_changes_feed_controlled_close_longpoll_sanity(cluster
     log.info("Using conf: {}".format(conf))
     log.info("Using num_docs: {}".format(num_docs))
 
-    mode = cluster.reset(conf)
+    mode = cluster.reset(config_path=conf)
 
     admin = Admin(cluster.sync_gateways[0])
     seth = admin.register_user(target=cluster.sync_gateways[0], db="db", name="seth", password="password", channels=["ABC"])
@@ -513,7 +513,7 @@ def test_online_to_offline_longpoll_changes_feed_controlled_close_sanity_mulitpl
     log.info("Using conf: {}".format(conf))
     log.info("Using num_docs: {}".format(num_docs))
 
-    mode = cluster.reset(conf)
+    mode = cluster.reset(config_path=conf)
 
     admin = Admin(cluster.sync_gateways[0])
     users = admin.register_bulk_users(target=cluster.sync_gateways[0], db="db", name_prefix="user", password="password", number=num_users, channels=["ABC"])
@@ -581,7 +581,7 @@ def test_online_to_offline_changes_feed_controlled_close_longpoll(cluster, conf,
     log.info("Using conf: {}".format(conf))
     log.info("Using num_docs: {}".format(num_docs))
 
-    mode = cluster.reset(conf)
+    mode = cluster.reset(config_path=conf)
 
     admin = Admin(cluster.sync_gateways[0])
     seth = admin.register_user(target=cluster.sync_gateways[0], db="db", name="seth", password="password", channels=["ABC"])
@@ -675,7 +675,7 @@ def test_offline_true_config_bring_online(cluster, conf, num_docs):
     log.info("Using conf: {}".format(conf))
     log.info("Using num_docs: {}".format(num_docs))
 
-    mode = cluster.reset(conf)
+    mode = cluster.reset(config_path=conf)
 
     admin = Admin(cluster.sync_gateways[0])
 
@@ -718,7 +718,7 @@ def test_db_offline_tap_loss_sanity(cluster, conf, num_docs):
     log.info("Using conf: {}".format(conf))
     log.info("Using num_docs: {}".format(num_docs))
 
-    mode = cluster.reset(conf)
+    mode = cluster.reset(config_path=conf)
 
     admin = Admin(cluster.sync_gateways[0])
 
@@ -759,7 +759,7 @@ def test_db_delayed_online(cluster, conf, num_docs):
     log.info("Using conf: {}".format(conf))
     log.info("Using num_docs: {}".format(num_docs))
 
-    mode = cluster.reset(conf)
+    mode = cluster.reset(config_path=conf)
 
     admin = Admin(cluster.sync_gateways[0])
 
@@ -806,7 +806,7 @@ def test_multiple_dbs_unique_buckets_lose_tap(cluster, conf, num_docs):
     log.info("Using conf: {}".format(conf))
     log.info("Using num_docs: {}".format(num_docs))
 
-    mode = cluster.reset(conf)
+    mode = cluster.reset(config_path=conf)
 
     dbs = ["db1", "db2", "db3", "db4"]
 
