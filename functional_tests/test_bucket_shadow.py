@@ -15,6 +15,8 @@ def test_bucket_shadow_multiple_sync_gateways(cluster):
     # the initial config so that both buckets (source and data) will be created
     config_path_shadower = "sync_gateway_bucketshadow_cc.json"
     config_path_non_shadower = "sync_gateway_default_cc.json"
+    source_bucket_name = "source-bucket"
+    
     mode = cluster.reset(config_path=config_path_shadower)
 
     # pick a sync gateway and choose it as non-shadower.  reset with config.
@@ -48,12 +50,23 @@ def test_bucket_shadow_multiple_sync_gateways(cluster):
     # Write several docs into non-shadower SG
     doc_id_bob = bob_non_shadower.add_doc()
     
-    # TODO: Ditto as above, but bump revs rather than writing brand new docs
+    # Ditto as above, but bump revs rather than writing brand new docs
+    bob_non_shadower.update_doc(doc_id_bob, num_revision=10)
+    alice_shadower.update_doc(doc_id_alice, num_revision=10)
 
+    # Get a connection to the bucket
+    bucket = cluster.servers[0].get_bucket(source_bucket_name)
+
+    # Get the doc from the source bucket, possibly retrying if needed
+    # Otherwise an exception will be thrown and the test will fail
+    get_doc_from_source_bucket_retry(doc_id_bob, bucket)
+    get_doc_from_source_bucket_retry(doc_id_alice, bucket)
+    
     # Stop the SG shadower
     shadower_sg.stop()
     
     # Write several docs + bump revs into non-shadower SG
+    bob_non_shadower.update_doc(doc_id_bob, num_revision=10)
     doc2_id_bob = bob_non_shadower.add_doc()
     
     # Bring SG shadower back up
@@ -63,7 +76,12 @@ def test_bucket_shadow_multiple_sync_gateways(cluster):
     errors = cluster.verify_alive(mode)
     assert(len(errors) == 0)
 
-    # TODO: If SG shadower does come up without panicking, bump a rev on a document that was modified during the downtime of the SG shadower
+    # If SG shadower does come up without panicking, bump a rev on a document that was modified during the downtime of the SG shadower
+    bob_non_shadower.update_doc(doc_id_bob, num_revision=10)
+
+    # Verify SG shadower comes up without panicking, given writes from non-shadower during downtime.
+    errors = cluster.verify_alive(mode)
+    assert(len(errors) == 0)
 
 
 def test_bucket_shadow_propagates_to_source_bucket(cluster):
