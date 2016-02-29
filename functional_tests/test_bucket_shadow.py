@@ -8,6 +8,64 @@ from lib.verify import verify_changes
 
 from fixtures import cluster
 
+
+def test_bucket_shadow_multiple_sync_gateways(cluster):
+
+    # initially, setup both sync gateways as shadowers -- this needs to be
+    # the initial config so that both buckets (source and data) will be created
+    config_path_shadower = "sync_gateway_bucketshadow_cc.json"
+    config_path_non_shadower = "sync_gateway_default_cc.json"
+    mode = cluster.reset(config_path=config_path_shadower)
+
+    # pick a sync gateway and choose it as non-shadower.  reset with config.
+    non_shadower_sg = cluster.sync_gateways[1]
+    non_shadower_sg.restart(config_path_non_shadower)
+
+    # the other sync gateway will be the shadower
+    shadower_sg = cluster.sync_gateways[0]
+
+    admin = Admin(non_shadower_sg)
+
+    alice_shadower = admin.register_user(
+        target=shadower_sg,
+        db="db",
+        name="alice",
+        password="password",
+        channels=["ABC", "NBC", "CBS"],
+    )
+
+    bob_non_shadower = admin.register_user(
+        target=non_shadower_sg,
+        db="db",
+        name="bob",
+        password="password",
+        channels=["ABC", "NBC", "CBS"],
+    )
+    
+    # Write several docs into shadower SG
+    doc_id_alice = alice_shadower.add_doc()
+    
+    # Write several docs into non-shadower SG
+    doc_id_bob = bob_non_shadower.add_doc()
+    
+    # TODO: Ditto as above, but bump revs rather than writing brand new docs
+
+    # Stop the SG shadower
+    shadower_sg.stop()
+    
+    # Write several docs + bump revs into non-shadower SG
+    doc2_id_bob = bob_non_shadower.add_doc()
+    
+    # Bring SG shadower back up
+    shadower_sg.start(config_path_shadower)
+    
+    # Verify SG shadower comes up without panicking, given writes from non-shadower during downtime.
+    errors = cluster.verify_alive(mode)
+    assert(len(errors) == 0)
+
+    # TODO: If SG shadower does come up without panicking, bump a rev on a document that was modified during the downtime of the SG shadower
+
+
 def test_bucket_shadow_propagates_to_source_bucket(cluster):
 
     """
