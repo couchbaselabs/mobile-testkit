@@ -34,6 +34,12 @@ $ python --version
 Python 2.7.10
 ```
 
+**Install libcouchbase**
+
+```
+$ brew install libcouchbase 
+```
+
 **Install Pip dependencies**
 
 ```
@@ -43,7 +49,8 @@ $ pip install troposphere && \
   pip install ansible && \
   pip install pytest && \
   pip install futures && \
-  pip install requests
+  pip install requests && \
+  pip install couchbase
 ```
 
 NOTE: This repo now only supports ansible 2.0+, which will be installed by default if you are on a fresh system.  To upgrade an existing system from ansible 1.x, run `pip uninstall ansible && pip install ansible`.  
