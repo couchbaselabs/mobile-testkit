@@ -62,11 +62,29 @@ class User:
 
     # GET /{db}/_all_docs
     def get_all_docs(self):
-        resp = requests.get("{0}/{1}/_all_docs".format(self.target.url, self.db), headers=self._headers)
+        resp = requests.get("{0}/{1}/_all_docs".format(
+            self.target.url,
+            self.db,
+        ), headers=self._headers)
         log.debug("GET {}".format(resp.url))
         resp.raise_for_status()
         return resp.json()
 
+    # DELETE /{db}/{doc-id}
+    def delete_doc(self, doc_id):
+
+        # fetch latest revision of doc
+        doc2del = self.get_doc(doc_id)
+        
+        # delete that revision
+        resp = requests.delete("{0}/{1}/{2}?rev={3}".format(
+            self.target.url,
+            self.db,
+            doc_id,
+            doc2del["_rev"],
+        ), headers=self._headers)
+        resp.raise_for_status()
+    
     # PUT /{db}/{doc}
     # PUT /{db}/{local-doc-id}
     def add_doc(self, doc_id=None, content=None, retries=False):

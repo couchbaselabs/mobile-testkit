@@ -282,6 +282,11 @@ $ py.test -s "functional_tests/test_db_online_offline.py"
 ```
 **Running an individual test**
 ```
+$ py.test -s "functional_tests/functional_tests/test_bucket_shadow.py::test_bucket_shadow_multiple_sync_gateways"
+```
+
+**Running an individual parameterized test**
+```
 $ py.test -s "functional_tests/test_db_online_offline.py::test_online_default_rest["CC-1"]"
 ```
 
