@@ -12,6 +12,7 @@ from requests.exceptions import HTTPError
 from requests import Session, exceptions
 from collections import defaultdict
 
+from lib.debug import *
 from lib import settings
 import logging
 log = logging.getLogger(settings.LOGGER)
@@ -216,6 +217,13 @@ class User:
                         errors.append((e.response.url, e.response.status_code))
 
         return errors
+
+    def add_design_doc(self, doc_id, content):
+        data = json.dumps(content)
+        r = requests.put("{0}/{1}/_design/{2}".format(self.target.url, self.db, doc_id), headers=self._headers, data=data)
+        log_request(r)
+        log_response(r)
+        r.raise_for_status()
 
     # GET /{db}/{doc}
     # PUT /{db}/{doc}
