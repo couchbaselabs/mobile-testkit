@@ -71,8 +71,8 @@ class Listener:
     def verify_launched(self):
         r = requests.get(self.url)
         log.info("GET {} ".format(r.url))
-        r.raise_for_status()
         log.info("{}".format(r.text))
+        r.raise_for_status()
 
     def create_db(self, name):
         r = requests.put("{}/{}".format(self.url, name))

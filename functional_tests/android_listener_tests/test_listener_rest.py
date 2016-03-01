@@ -1,6 +1,7 @@
 import concurrent.futures
 from concurrent.futures import ThreadPoolExecutor
 import os
+import time
 
 import lib.settings
 from lib.listener import Listener
@@ -11,14 +12,32 @@ from lib import settings
 import logging
 log = logging.getLogger(settings.LOGGER)
 
-import time
+
+def start_pull_replications(db_name, source, targets):
+    for target in targets:
+        source.start_pull_replication(target.url, db_name)
+
+
+def start_push_replications(db_name, source, targets):
+    for target in targets:
+        source.start_push_replication(target.url, db_name)
+
+
+def stop_pull_replications(db_name, source, targets):
+    for target in targets:
+        source.stop_pull_replication(target.url, db_name)
+
+
+def stop_push_replications(db_name, source, targets):
+    for target in targets:
+        source.stop_push_replication(target.url, db_name)
 
 
 def create_listener(target_device, local_port, apk_path, activity, reinstall):
     return Listener(target_device=target_device, local_port=local_port, apk_path=apk_path, activity=activity, reinstall=reinstall)
 
 
-def test_scenario_two():
+def test_selective_db_delete_and_replication_lifecycle():
 
     should_reinstall = True
     apk_path = os.environ["P2P_APP"]
@@ -66,11 +85,9 @@ def test_scenario_two():
     emu_4 = listeners["emulator-5560"]
     emu_5 = listeners["emulator-5562"]
 
-    emu_1.verify_launched()
-    emu_2.verify_launched()
-    emu_3.verify_launched()
-    emu_4.verify_launched()
-    emu_5.verify_launched()
+    all_emus = [emu_1, emu_2, emu_3, emu_4, emu_5]
+    for emu in all_emus:
+        emu.verify_launched()
 
     # Add docs on master device
     emu_1_pusher = User(target=emu_1, db=db_name, name="emu1_doc_pusher", password="password", channels=["ABC"])
@@ -90,31 +107,20 @@ def test_scenario_two():
     )
 
     # Start all replication
-    emu_1.start_pull_replication(emu_2.url, db=db_name)
-    emu_1.start_pull_replication(emu_3.url, db=db_name)
-    emu_1.start_pull_replication(emu_4.url, db=db_name)
-    emu_1.start_pull_replication(emu_5.url, db=db_name)
-
-    emu_1.start_push_replication(emu_2.url, db=db_name)
-    emu_1.start_push_replication(emu_3.url, db=db_name)
-    emu_1.start_push_replication(emu_4.url, db=db_name)
-    emu_1.start_push_replication(emu_5.url, db=db_name)
+    targets = [emu_2, emu_3, emu_4, emu_5]
+    start_pull_replications(db_name, emu_1, targets)
+    start_push_replications(db_name, emu_1, targets)
 
     # Wait for all docs to push to emulators
     time.sleep(30)
 
-    # TODO Assert each endpoint has 200 docs
+    # Assert each endpoint has 601 docs
+    for emu in all_emus:
+        assert(emu.get_num_docs() == 601)
 
     # Stop all replication
-    emu_1.stop_pull_replication(emu_2.url, db=db_name)
-    emu_1.stop_pull_replication(emu_3.url, db=db_name)
-    emu_1.stop_pull_replication(emu_4.url, db=db_name)
-    emu_1.stop_pull_replication(emu_5.url, db=db_name)
-
-    emu_1.stop_push_replication(emu_2.url, db=db_name)
-    emu_1.stop_push_replication(emu_3.url, db=db_name)
-    emu_1.stop_push_replication(emu_4.url, db=db_name)
-    emu_1.stop_push_replication(emu_5.url, db=db_name)
+    stop_pull_replications(db_name, emu_1, targets)
+    stop_push_replications(db_name, emu_1, targets)
 
     # Wait for all replications to stop
     time.sleep(30)
@@ -136,9 +142,11 @@ def test_scenario_two():
     emu_4_pusher.add_docs(20)
     emu_5_pusher.add_docs(20)
 
-    # TODO Verify 3,4,5 have 240
-
     time.sleep(2)
+
+    # TODO Verify 3,4,5 have 621
+    for emu in [emu_3, emu_4, emu_5]:
+        assert(emu.get_num_docs == 621)
 
     # Create dbs on master and first slave
     emu_1.create_db(db_name)
@@ -149,15 +157,8 @@ def test_scenario_two():
     time.sleep(5)
 
     # Start all replication
-    emu_1.start_pull_replication(emu_2.url, db=db_name)
-    emu_1.start_pull_replication(emu_3.url, db=db_name)
-    emu_1.start_pull_replication(emu_4.url, db=db_name)
-    emu_1.start_pull_replication(emu_5.url, db=db_name)
-
-    emu_1.start_push_replication(emu_2.url, db=db_name)
-    emu_1.start_push_replication(emu_3.url, db=db_name)
-    emu_1.start_push_replication(emu_4.url, db=db_name)
-    emu_1.start_push_replication(emu_5.url, db=db_name)
+    start_pull_replications(db_name, emu_1, targets)
+    start_push_replications(db_name, emu_1, targets)
 
     time.sleep(45)
 
@@ -165,4 +166,4 @@ def test_scenario_two():
     for emu in emus:
         doc_num = emu.get_num_docs(db_name)
         log.info("emu: {} doc_num: {}".format(emu.target_device, doc_num))
-        # assert (doc_num == 661)
+        assert (doc_num == 661)
