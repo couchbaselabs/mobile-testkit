@@ -6,24 +6,7 @@ from optparse import OptionParser
 # jython imports
 from com.android.monkeyrunner import MonkeyRunner, MonkeyDevice
 
-
-def launch_lite_serv(target_device, apk_path):
-
-    print('Installing LiteServ on port 5984 ...')
-
-    device = MonkeyRunner.waitForConnection(timeout=10, deviceId=target_device)
-    success = device.installPackage(apk_path)
-    if success:
-        print('LiteServ install successful!')
-    else:
-        print('Could not install LiteServ!')
-        sys.exit(1)
-
-    print('Launching LiteServ activity ... ')
-    device.shell('am start -a android.intent.action.MAIN -n com.couchbase.liteservandroid/com.couchbase.liteservandroid.MainActivity --ei listen_port 5984 --es username "" --es password ""')
-
-
-def reset_and_launch_app(target_device, apk_path, activity, reinstall):
+def reset_and_launch_app(target_device, apk_path, activity, reinstall, is_liteserve):
 
     print('Waiting for device "%s" ' % target_device)
     device = MonkeyRunner.waitForConnection(timeout=10, deviceId=target_device)
@@ -48,8 +31,13 @@ def reset_and_launch_app(target_device, apk_path, activity, reinstall):
         print ('Clearing package cache for %s on device "%s"' % (package_name, target_device))
         device.shell("pm clear %s" % package_name)
 
-    print('Launching activity: "%s"' % activity)
-    device.startActivity(component=activity)
+
+    if is_liteserve:
+        print('Launching LiteServ activity ... ')
+        device.shell('am start -a android.intent.action.MAIN -n com.couchbase.liteservandroid/com.couchbase.liteservandroid.MainActivity --ei listen_port 5984 --es username "" --es password ""')
+    else:
+        print('Launching activity: "%s"' % activity)
+        device.startActivity(component=activity)
 
 
 def parse_args():
@@ -92,9 +80,9 @@ if __name__ == '__main__':
     validate_args(parser, target_device, local_port, apk_path, activity, reinstall)
 
     if apk_path.endswith('couchbase-lite-android-liteserv-debug.apk'):
-        launch_lite_serv(target_device, apk_path)
+        reset_and_launch_app(target_device, apk_path, activity, reinstall, True)
     else:
-        reset_and_launch_app(target_device, apk_path, activity, reinstall)
+        reset_and_launch_app(target_device, apk_path, activity, reinstall, False)
 
     print('Forwarding %s :5984 to localhost:%s' % (target_device, local_port))
     subprocess.call(['adb', '-s', target_device, 'forward', 'tcp:%d' % local_port, 'tcp:5984'])
