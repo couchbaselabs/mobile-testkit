@@ -423,3 +423,18 @@ $ ansible-playbook -i provisioning_config -u centos -e sync_gateway_config_filep
 
 *Note: replace the Sync Gateway config with the config that you need for your use case*
 
+## Robot Framework
+
+Install robot framework plugin for PyCharm
+
+```
+pip install robotframework
+
+```
+
+Install prerequisites for appium
+```
+brew install node
+npm install -g appium
+```
+
