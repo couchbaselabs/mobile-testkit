@@ -32,3 +32,9 @@ test-framework.log
 
 performance_results/*
 !performance_results/README.txt
+
+# appium ignore
+*.png
+log.html
+output.xml
+report.html
