@@ -99,7 +99,6 @@ class Admin:
         result['payload'] = resp.json()
         return result
 
-
     # POST /{db}/_online
     def bring_db_online(self, db, delay=None):
         data = {}
@@ -142,6 +141,12 @@ class Admin:
     # GET /_cbgt/api/diag
     def get_cbgt_diagnostics(self):
         resp = requests.get("{0}/_cbgt/api/diag".format(self.admin_url), headers=self._headers, timeout=settings.HTTP_REQ_TIMEOUT)
+        log.info("GET {}".format(resp.url))
+        resp.raise_for_status()
+        return resp.json()
+
+    def get_all_docs(self, db):
+        resp = requests.get("{0}/{1}/_all_docs".format(self.admin_url, db), headers=self._headers, timeout=settings.HTTP_REQ_TIMEOUT)
         log.info("GET {}".format(resp.url))
         resp.raise_for_status()
         return resp.json()
