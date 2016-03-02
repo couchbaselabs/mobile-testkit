@@ -33,6 +33,9 @@ RUN pip install troposphere && \
     pip install boto && \
     pip install pytest && \
     pip install futures && \
+    pip install robotframework && \
+    pip install robotframework-appiumlibrary && \
+    pip install robotframework-debuglibrary && \
     pip install requests
 
 
