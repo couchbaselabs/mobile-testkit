@@ -20,22 +20,32 @@ ${EXECUTION_OS}             OSX
 Add Grocery Items
     [Documentation]     Launch Grocery Sync, add docs, and verify they get pushed to sync_gateway
     [Tags]              sync_gateway    grocery_sync    android     nightly
-    Add Items
+
+    # Add 3 grocery items
+    @{items}            Create List     Item 1  Item 2  Item 3
+    Add Items           @{items}
+
+    # Verify 3 docs pushed to sync_gateway
     ${doc_number} =     Get Sync Gateway Document Count      grocery-sync
     Should Be Equal As Integers     ${doc_number}   3
+
+    # Add 3 more grocery items
+    @{items}            Create List     Item 4  Item 5  Item 6
+    Add Items           @{items}
+
+    # Verify 6 docs pushed to sync_gateway
+    ${doc_number} =     Get Sync Gateway Document Count      grocery-sync
+    Should Be Equal As Integers     ${doc_number}   6
 
 *** Keywords ***
 
 Add Items
-    Tap                 id=com.couchbase.grocerysync:id/addItemEditText
-    Input Text          id=com.couchbase.grocerysync:id/addItemEditText     Item 1
-    Press Enter
-    Tap                 id=com.couchbase.grocerysync:id/addItemEditText
-    Input Text          id=com.couchbase.grocerysync:id/addItemEditText     Item 2
-    Press Enter
-    Tap                 id=com.couchbase.grocerysync:id/addItemEditText
-    Input Text          id=com.couchbase.grocerysync:id/addItemEditText     Item 3
-    Press Enter
+    [Arguments]     @{items}
+
+    : FOR   ${item}     IN      @{items}
+    \   Tap             id=com.couchbase.grocerysync:id/addItemEditText
+    \   Input Text      id=com.couchbase.grocerysync:id/addItemEditText     ${item}
+    \   Press Enter
 
     # Wait for docs to push
     Sleep               2s
