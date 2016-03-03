@@ -74,10 +74,22 @@ class Server:
             log.error("Could not delete bucket")
             sys.exit(1)
 
-    def create_buckets(self, names):
+    def calculate_available_cluster_ram_mb(self):
 
+        resp = requests.get("{0}/pools/default".format(self.url), headers=self._headers)
+        quota_total_bytes = resp.json()["storageTotals"]["ram"]["quotaTotal"]
+        quota_used_bytes = resp.json()["storageTotals"]["ram"]["quotaUsed"]
+        quota_total_mb = int(quota_total_bytes) / (1024 * 1024)
+        quota_used_mb = int(quota_used_bytes) / (1024 * 1024)
+        return quota_total_mb - quota_used_mb
+            
+    def create_buckets(self, names):
+        
         # Create buckets
-        extra_vars = {"bucket_names": names}
+        extra_vars = {
+            "bucket_names": names,
+            "couchbase_server_cluster_ram": self.calculate_available_cluster_ram_mb(),
+        }
         run_ansible_playbook(
             "tasks/create-server-buckets.yml",
             extra_vars=json.dumps(extra_vars),
