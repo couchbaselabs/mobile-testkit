@@ -43,34 +43,31 @@ Add Items
     [Arguments]     @{items}
 
     : FOR   ${item}     IN      @{items}
-    \   Tap             id=com.couchbase.grocerysync:id/addItemEditText
-    \   Input Text      id=com.couchbase.grocerysync:id/addItemEditText     ${item}
+    \   Tap             class=UIATextField
+    \   Input Text      class=UIATextField     ${item}
     \   Press Enter
 
     # Wait for docs to push
     Sleep               2s
 
 Setup
-#    Start Process               emulator    @Nexus_5_API_23_x86
-#    Wait For Emulator           emulator-5554
-
     Install Local Sync Gateway  ${SYNC_GATEWAY_VERSION}    ${EXECUTION_OS}
     Start Process               ${SYNC_GATEWAY}    ${SYNC_GATEWAY_CONFIGS}/grocery_sync_conf.json    alias=sync_gateway
     Process Should Be Running   sync_gateway    alias=sync_gateway
 
-    #Start Process               appium    alias=appium
-    #Process Should Be Running   appium    alias=appium
+    Start Process               appium    alias=appium
+    Process Should Be Running   appium    alias=appium
 
     # Wait for service to be available on port, need something similar to ansible, wait_for
-    #Sleep                       2s
+    Sleep                       2s
 
     # Need to be able to pass ip in here to resolve connecting to sync_gateway
-    Open Application            http://localhost:4723/wd/hub    platformName=iOS    deviceName='iPhone Simulator'    app=%{GROCERY_SYNC_APP}
+    Open Application            http://localhost:4723/wd/hub    platformName=iOS    deviceName=iPhone 6s    app=%{GROCERY_SYNC_APP}
 
 Teardown
     Close Application
     Terminate All Processes         kill=True
-    #Uninstall Local Sync Gateway    ${EXECUTION_OS}
+    Uninstall Local Sync Gateway    ${EXECUTION_OS}
 
 Press Enter
-    Press Keycode       66
+    Hide Keyboard       key_name=Done
