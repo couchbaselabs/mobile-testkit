@@ -46,7 +46,7 @@ $ brew install libcouchbase
 $ pip install troposphere && \
   pip install awscli && \
   pip install boto && \
-  pip install ansible && \
+  pip install ansible==2.0.0.2 && \
   pip install pytest && \
   pip install futures && \
   pip install requests && \
