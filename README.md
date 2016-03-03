@@ -53,8 +53,7 @@ $ pip install troposphere && \
   pip install couchbase
 ```
 
-NOTE: This repo now only supports ansible 2.0.0.2, which will be installed by default if you are on a fresh system.  To upgrade an existing system from ansible 1.x, run `pip uninstall ansible && pip install ansible==2.0.0.2`.  
-NOTE: With ansible version: 2.0.1.0 the ansible returns a non zero code for the playbooks for the ignored errors. This causes the ansible scripts to break. Ansible versions 2.0.0.2 returns zero return code for the ignored errors. 
+NOTE: This repo now only supports ansible 2.0.+, which will be installed by default if you are on a fresh system.  To upgrade an existing system from ansible 1.x, run `pip uninstall ansible && pip install ansible==2.0.0.2`. There are known issues with certain versions of ansible. Make sure to install 2.0.0.2
 
 ### Clone Repo
 
