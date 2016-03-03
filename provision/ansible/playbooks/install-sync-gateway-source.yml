@@ -56,14 +56,13 @@
     build_flags:
 
   tasks:
-  - name: repo init
-    shell: repo init -u "https://github.com/couchbase/sync_gateway.git" -m manifest/default.xml
-  - name: repo sync
-    shell: repo sync
-  - name: go install
-    shell: go install {{ build_flags }} github.com/couchbase/sync_gateway/...
-    environment:
-      GOPATH: /home/centos/godeps
+  - name: download bootstrap script
+    get_url: url=https://raw.githubusercontent.com/couchbase/sync_gateway/master/bootstrap.sh dest=/home/centos mode=0751
+  - name: run bootstrap script (bootstrap.sh takes a branch and a commit as params, this will be fixed to only take a commit at some point)
+    shell: ./bootstrap.sh {{ branch }} {{ branch }}  
+  - name: build
+    shell: ./build.sh {{ build_flags }}
+
     
   # Copy sync_gateway binary from centos user
   - name: Creates /opt/couchbase-sync-gateway
