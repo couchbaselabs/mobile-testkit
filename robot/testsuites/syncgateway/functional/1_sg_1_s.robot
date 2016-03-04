@@ -28,7 +28,7 @@ Test Users And Channels
 Setup
     Log To Console      Setting up ...
     Set Environment Variable    CLUSTER_CONFIG    ${cluster_config}
-    Provision Cluster   ${SERVER_VERSION}   ${SYNC_GATEWAY_VERSION}    ${SYNC_GATEWAY_CONFIG}
+    #Provision Cluster   ${SERVER_VERSION}   ${SYNC_GATEWAY_VERSION}    ${SYNC_GATEWAY_CONFIG}
     #Install Sync Gateway   ${CLUSTER_CONFIG}    ${SYNC_GATEWAY_VERSION}    ${SYNC_GATEWAY_CONFIG}
 
 Teardown
@@ -53,8 +53,7 @@ Provision Cluster
 Install Server
     [Arguments]     ${cluster_config}   ${server_version}
     ${server_arg}               Catenate  SEPARATOR=  --version=          ${server_version}
-    ${cluster_config_arg}       Catenate  SEPARATOR=  --cluster-config=   ${cluster_config}
-    ${result} =  Run Process  python  ${LIBRARIES}/provision/install_couchbase_server.py  ${cluster_config_arg}  ${server_arg}
+    ${result} =  Run Process  python  ${LIBRARIES}/provision/install_couchbase_server.py  ${server_arg}
     Log To Console  ${result.stderr}
     Log To Console  ${result.stdout}
 
@@ -62,7 +61,6 @@ Install Sync Gateway
     [Arguments]     ${cluster_config}  ${sync_gateway_version}  ${sync_gateway_config}
     ${sync_gateway_arg}         Catenate  SEPARATOR=  --version=      ${sync_gateway_version}
     ${sync_gateway_config_arg}  Catenate  SEPARATOR=  --config-file=  ${sync_gateway_config}
-    ${cluster_config_arg}       Catenate  SEPARATOR=  --cluster-config=            ${cluster_config}
-    ${result} =  Run Process  python  ${LIBRARIES}/provision/install_sync_gateway.py  ${cluster_config_arg}  ${sync_gateway_arg}  ${sync_gateway_config_arg}
+    ${result} =  Run Process  python  ${LIBRARIES}/provision/install_sync_gateway.py  ${sync_gateway_arg}  ${sync_gateway_config_arg}
     Log To Console  ${result.stderr}
     Log To Console  ${result.stdout}

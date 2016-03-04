@@ -136,7 +136,7 @@ class SyncGatewayConfig:
         return True
 
 
-def install_sync_gateway(cluster_config, sync_gateway_config):
+def install_sync_gateway(sync_gateway_config):
     print(sync_gateway_config)
 
     if not sync_gateway_config.is_valid():
@@ -146,7 +146,7 @@ def install_sync_gateway(cluster_config, sync_gateway_config):
     if sync_gateway_config.build_flags != "":
         print("\n\n!!! WARNING: You are building with flags: {} !!!\n\n".format(sync_gateway_config.build_flags))
 
-    ansible_runner = AnsibleRunner(cluster_config)
+    ansible_runner = AnsibleRunner()
 
     config_path = os.path.abspath(sync_gateway_config.config_path)
 
@@ -218,11 +218,6 @@ if __name__ == "__main__":
     parser.add_option("", "--skip-bucketflush",
                       action="store", dest="skip_bucketflush", default=False,
                       help="skip the bucketflush step")
-
-    parser.add_option("", "--cluster-config",
-                      action="store", type="string", dest="cluster_config", default="provisioning_config",
-                      help="relative path to cluster configuration")
-
     
     arg_parameters = sys.argv[1:]
 
@@ -250,5 +245,5 @@ if __name__ == "__main__":
         skip_bucketflush=opts.skip_bucketflush
     )
 
-    install_sync_gateway(opts.cluster_config, sync_gateway_install_config)
+    install_sync_gateway(sync_gateway_install_config)
 

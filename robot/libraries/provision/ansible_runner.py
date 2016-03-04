@@ -5,8 +5,8 @@ import subprocess
 
 class AnsibleRunner:
 
-    def __init__(self, provisioning_config):
-        self.provisiong_config = provisioning_config
+    def __init__(self):
+        self.provisiong_config = os.environ["CLUSTER_CONFIG"]
 
     def run_ansible_playbook(self, script_name, extra_vars=None, stop_on_fail=True):
 
