@@ -12,8 +12,8 @@ from requests.exceptions import HTTPError
 from requests import Session, exceptions
 from collections import defaultdict
 
-from lib.debug import *
-from lib import settings
+from testkit.debug import *
+from testkit import settings
 import logging
 log = logging.getLogger(settings.LOGGER)
 

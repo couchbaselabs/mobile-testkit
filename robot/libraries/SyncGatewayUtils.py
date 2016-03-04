@@ -3,8 +3,8 @@ import tarfile
 import os
 import shutil
 
-from lib.admin import Admin
-from lib.syncgateway import SyncGateway
+from testkit.admin import Admin
+from testkit.syncgateway import SyncGateway
 
 
 class SyncGatewayUtils:
@@ -14,8 +14,8 @@ class SyncGatewayUtils:
         self.sync_gateway = SyncGateway({"ip": "localhost", "name": "local"})
         self.admin = Admin(self.sync_gateway)
 
-    def install_local_sync_gateway(self, platform, version):
-        print("Installing {} sync_gateway on {}".format(version, platform))
+    def install_local_sync_gateway(self, version):
+        print("Installing {} sync_gateway".format(version))
 
         url = "http://latestbuilds.hq.couchbase.com/couchbase-sync-gateway/1.2.0/1.2.0-83/couchbase-sync-gateway-enterprise_1.2.0-83_x86_64.tar.gz"
 

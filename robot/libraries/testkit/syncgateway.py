@@ -1,15 +1,16 @@
 import os
 import requests
 
-import lib.settings
+import testkit.settings
 import logging
-log = logging.getLogger(lib.settings.LOGGER)
+log = logging.getLogger(testkit.settings.LOGGER)
 
-from provision.ansible_runner import run_targeted_ansible_playbook
+from provision.ansible_runner import AnsibleRunner
 
 class SyncGateway:
 
     def __init__(self, target):
+        #self.ansible_runner = AnsibleRunner(cluster_config)
         self.ip = target["ip"]
         self.url = "http://{}:4984".format(target["ip"])
         self.hostname = target["name"]
@@ -20,7 +21,7 @@ class SyncGateway:
         return r.text
 
     def stop(self):
-        status = run_targeted_ansible_playbook(
+        status = self.ansible_runner.run_targeted_ansible_playbook(
             "stop-sync-gateway.yml",
             target_name=self.hostname,
             stop_on_fail=False,
@@ -28,11 +29,12 @@ class SyncGateway:
         return status
 
     def start(self, config):
+
         conf_path = os.path.abspath("conf/" + config)
 
         log.info(">>> Starting sync_gateway with configuration: {}".format(conf_path))
 
-        status = run_targeted_ansible_playbook(
+        status = self.ansible_runner.run_targeted_ansible_playbook(
             "start-sync-gateway.yml",
             extra_vars="sync_gateway_config_filepath={0}".format(conf_path),
             target_name=self.hostname,
@@ -45,7 +47,7 @@ class SyncGateway:
 
         log.info(">>> Restarting sync_gateway with configuration: {}".format(conf_path))
 
-        status = run_targeted_ansible_playbook(
+        status = self.ansible_runner.run_targeted_ansible_playbook(
             "reset-sync-gateway.yml",
             extra_vars="sync_gateway_config_filepath={0}".format(conf_path),
             target_name=self.hostname,

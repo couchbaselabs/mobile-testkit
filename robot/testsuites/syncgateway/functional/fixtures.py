@@ -1,8 +1,8 @@
 import pytest
 
-import lib.settings
+import testkit.settings
 
-from lib.cluster import Cluster
+from testkit.cluster import Cluster
 from utilities.fetch_sg_logs import fetch_sync_gateway_logs
 
 import settings
@@ -12,8 +12,8 @@ import os.path
 
 import sys
 import logging
-import lib.settings
-log = logging.getLogger(lib.settings.LOGGER)
+import testkit.settings
+log = logging.getLogger(testkit.settings.LOGGER)
 
 
 @pytest.fixture()

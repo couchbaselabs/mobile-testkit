@@ -78,10 +78,6 @@ if __name__ == "__main__":
                       action="store", type="string", dest="version", default=None,
                       help="server version to download")
 
-    parser.add_option("", "--cluster-config",
-                      action="store", type="string", dest="cluster_config", default="provisioning_config",
-                      help="relative path to cluster configuration")
-
     arg_parameters = sys.argv[1:]
 
     (opts, args) = parser.parse_args(arg_parameters)

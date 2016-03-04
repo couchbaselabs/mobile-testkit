@@ -2,13 +2,12 @@ import time
 
 import pytest
 
+from testkit.admin import Admin
+from testkit.verify import verify_changes
 
-from lib.admin import Admin
-from lib.verify import verify_changes
-
-import lib.settings
+import testkit.settings
 import logging
-log = logging.getLogger(lib.settings.LOGGER)
+log = logging.getLogger(testkit.settings.LOGGER)
 
 from fixtures import cluster
 

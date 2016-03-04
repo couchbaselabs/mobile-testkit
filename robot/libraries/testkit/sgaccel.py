@@ -1,15 +1,16 @@
 import os
 import requests
 
-import lib.settings
+import testkit.settings
 import logging
-log = logging.getLogger(lib.settings.LOGGER)
+log = logging.getLogger(testkit.settings.LOGGER)
 
-from provision.ansible_runner import run_targeted_ansible_playbook
+from provision.ansible_runner import AnsibleRunner
 
 class SgAccel:
 
-    def __init__(self, target):
+    def __init__(self, cluster_config, target):
+        self.ansible_runner = AnsibleRunner(cluster_config)
         self.ip = target["ip"]
         self.url = "http://{}:4984".format(target["ip"])
         self.hostname = target["name"]
@@ -20,7 +21,7 @@ class SgAccel:
         return r.text
 
     def stop(self):
-        status = run_targeted_ansible_playbook(
+        status = self.ansible_runner.run_targeted_ansible_playbook(
             "stop-sg-accel.yml",
             target_name=self.hostname,
             stop_on_fail=False,
@@ -32,7 +33,7 @@ class SgAccel:
 
         log.info(">>> Starting sg_accel with configuration: {}".format(conf_path))
 
-        status = run_targeted_ansible_playbook(
+        status = self.ansible_runner.run_targeted_ansible_playbook(
             "start-sg-accel.yml",
             extra_vars="sync_gateway_config_filepath={0}".format(conf_path),
             target_name=self.hostname,
