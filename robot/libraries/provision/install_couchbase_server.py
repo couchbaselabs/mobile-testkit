@@ -49,7 +49,7 @@ class CouchbaseServerConfig:
         return True
 
 
-def install_couchbase_server(cluster_config, couchbase_server_config):
+def install_couchbase_server(couchbase_server_config):
 
     print(couchbase_server_config)
 
@@ -59,7 +59,7 @@ def install_couchbase_server(cluster_config, couchbase_server_config):
 
     server_base_url, server_package_name = couchbase_server_config.server_base_url_and_package()
 
-    ansible_runner = AnsibleRunner(cluster_config)
+    ansible_runner = AnsibleRunner()
 
     ansible_runner.run_ansible_playbook(
         "install-couchbase-server-package.yml",
@@ -86,4 +86,4 @@ if __name__ == "__main__":
         version=opts.version
     )
 
-    install_couchbase_server(opts.cluster_config, server_config)
+    install_couchbase_server(server_config)
