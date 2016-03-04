@@ -2,7 +2,7 @@ import sys
 import os
 from optparse import OptionParser
 
-import ansible_runner
+from ansible_runner import AnsibleRunner
 
 
 class SyncGatewayConfig:
@@ -136,7 +136,7 @@ class SyncGatewayConfig:
         return True
 
 
-def install_sync_gateway(sync_gateway_config):
+def install_sync_gateway(cluster_config, sync_gateway_config):
     print(sync_gateway_config)
 
     if not sync_gateway_config.is_valid():
@@ -146,13 +146,17 @@ def install_sync_gateway(sync_gateway_config):
     if sync_gateway_config.build_flags != "":
         print("\n\n!!! WARNING: You are building with flags: {} !!!\n\n".format(sync_gateway_config.build_flags))
 
+    ansible_runner = AnsibleRunner(cluster_config)
+
+    config_path = os.path.abspath(sync_gateway_config.config_path)
+
     if sync_gateway_config.branch is not None:
                 
         # Install source
         ansible_runner.run_ansible_playbook(
             "install-sync-gateway-source.yml",
             "sync_gateway_config_filepath={0} branch={1} build_flags={2} skip_bucketflush={3}".format(
-                sync_gateway_config.config_path,
+                config_path,
                 sync_gateway_config.branch,
                 sync_gateway_config.build_flags,
                 sync_gateway_config.skip_bucketflush
@@ -172,7 +176,7 @@ def install_sync_gateway(sync_gateway_config):
                 sync_gateway_base_url,
                 sync_gateway_package_name,
                 sg_accel_package_name,
-                sync_gateway_config.config_path,
+                config_path,
                 sync_gateway_config.skip_bucketflush
             )
         )
@@ -215,6 +219,10 @@ if __name__ == "__main__":
                       action="store", dest="skip_bucketflush", default=False,
                       help="skip the bucketflush step")
 
+    parser.add_option("", "--cluster-config",
+                      action="store", type="string", dest="cluster_config", default="provisioning_config",
+                      help="relative path to cluster configuration")
+
     
     arg_parameters = sys.argv[1:]
 
@@ -242,5 +250,5 @@ if __name__ == "__main__":
         skip_bucketflush=opts.skip_bucketflush
     )
 
-    install_sync_gateway(sync_gateway_install_config)
+    install_sync_gateway(opts.cluster_config, sync_gateway_install_config)
 
