@@ -60,7 +60,8 @@ Setup
 
     Log To Console              ${PLATFORM}
 
-    Install Local Sync Gateway  ${SYNC_GATEWAY_VERSION}    ${EXECUTION_OS}
+    # Currently assumes Mac OSX install
+    Install Local Sync Gateway  ${SYNC_GATEWAY_VERSION}
 
     Start Process               ${SYNC_GATEWAY}    ${SYNC_GATEWAY_CONFIGS}/grocery_sync_conf.json    alias=sync_gateway
     Process Should Be Running   sync_gateway    alias=sync_gateway
@@ -69,7 +70,7 @@ Setup
     Process Should Be Running   appium    alias=appium
 
     # TODO Wait for service to be available on port, need something similar to ansible, wait_for
-    Sleep                       2s
+    Sleep                       5s
 
     # TODO Need to be able to pass ip in here to resolve connecting to sync_gateway
     Run Keyword If  '${PLATFORM}' == 'Android'   Open Application   http://localhost:4723/wd/hub    platformName=Android    deviceName=emulator-5554    app=%{GROCERY_SYNC_APK}

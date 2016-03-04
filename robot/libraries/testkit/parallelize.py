@@ -1,5 +1,5 @@
 import concurrent.futures
-from lib import settings
+from testkit import settings
 import copy_reg
 import types
 import logging

@@ -4,7 +4,7 @@ import sys
 import json
 import time
 
-from lib import settings
+from testkit import settings
 
 import logging
 log = logging.getLogger(settings.LOGGER)

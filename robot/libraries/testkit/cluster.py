@@ -10,13 +10,13 @@ from ansible.vars import VariableManager
 
 from requests.exceptions import ConnectionError
 
-from lib.syncgateway import SyncGateway
-from lib.sgaccel import SgAccel
-from lib.server import Server
-from lib.admin import Admin
-from lib.config import Config
-from lib import settings
-from provision.ansible_runner import run_ansible_playbook
+from testkit.syncgateway import SyncGateway
+from testkit.sgaccel import SgAccel
+from testkit.server import Server
+from testkit.admin import Admin
+from testkit.config import Config
+from testkit import settings
+from provision.ansible_runner import AnsibleRunner
 
 import logging
 log = logging.getLogger(settings.LOGGER)
@@ -24,9 +24,11 @@ log = logging.getLogger(settings.LOGGER)
 
 class Cluster:
 
-    def __init__(self):
+    def __init__(self, cluster_config):
 
         # get hosts
+        self.cluster_config = cluster_config
+
         cbs_host_vars = self._hosts_for_tag("couchbase_servers")
         sgs_host_vars = self._hosts_for_tag("sync_gateways")
         sgsw_host_vars = self._hosts_for_tag("sync_gateway_index_writers")
@@ -42,17 +44,16 @@ class Cluster:
         sgsw = [{"name": sgwv["inventory_hostname"], "ip": sgwv["ansible_host"]} for sgwv in sgsw_host_vars]
         lds = [{"name": ldv["inventory_hostname"], "ip": ldv["ansible_host"]} for ldv in lds_host_vars]
 
-        self.sync_gateways = [SyncGateway(sg) for sg in sgs]
-        self.sg_accels = [SgAccel(sgw) for sgw in sgsw]
-        self.servers = [Server(cb) for cb in cbs]
+        self.sync_gateways = [SyncGateway(cluster_config, sg) for sg in sgs]
+        self.sg_accels = [SgAccel(cluster_config, sgw) for sgw in sgsw]
+        self.servers = [Server(cluster_config, cb) for cb in cbs]
         self.load_generators = lds
         self.sync_gateway_config = None  # will be set to Config object when reset() called
         
     def _hosts_for_tag(self, tag):
-        hostfile = "provisioning_config"
 
-        if not os.path.isfile(hostfile):
-            log.error("File 'provisioning_config' not found at {}".format(os.getcwd()))
+        if not os.path.isfile(self.cluster_config):
+            log.error("Cluster config not found at {}".format(os.getcwd()))
             sys.exit(1)
 
         variable_manager = VariableManager()
@@ -76,25 +77,27 @@ class Cluster:
     def reset(self, config_path):
 
         self.validate_cluster()
+
+        ansible_runner = AnsibleRunner(self.cluster_config)
         
         # Stop sync_gateways
         log.info(">>> Stopping sync_gateway")
-        status = run_ansible_playbook("stop-sync-gateway.yml", stop_on_fail=False)
+        status = ansible_runner.run_ansible_playbook("stop-sync-gateway.yml", stop_on_fail=False)
         assert(status == 0)
 
         # Stop sync_gateways
         log.info(">>> Stopping sg_accel")
-        status = run_ansible_playbook("stop-sg-accel.yml", stop_on_fail=False)
+        status = ansible_runner.run_ansible_playbook("stop-sg-accel.yml", stop_on_fail=False)
         assert(status == 0)
 
         # Deleting sync_gateway artifacts
         log.info(">>> Deleting sync_gateway artifacts")
-        status = run_ansible_playbook("delete-sync-gateway-artifacts.yml", stop_on_fail=False)
+        status = ansible_runner.run_ansible_playbook("delete-sync-gateway-artifacts.yml", stop_on_fail=False)
         assert(status == 0)
 
         # Deleting sg_accel artifacts
         log.info(">>> Deleting sg_accel artifacts")
-        status = run_ansible_playbook("delete-sg-accel-artifacts.yml", stop_on_fail=False)
+        status = ansible_runner.run_ansible_playbook("delete-sg-accel-artifacts.yml", stop_on_fail=False)
         assert(status == 0)
 
         # Delete buckets
@@ -115,7 +118,7 @@ class Cluster:
         log.info(">>> Starting sync_gateway with configuration: {}".format(config_path_full))
 
         # Start sync-gateway
-        status = run_ansible_playbook(
+        status = ansible_runner.run_ansible_playbook(
             "start-sync-gateway.yml",
             extra_vars="sync_gateway_config_filepath={0}".format(config_path_full),
             stop_on_fail=False
@@ -126,7 +129,7 @@ class Cluster:
         # revise this with https://github.com/couchbaselabs/sync-gateway-testcluster/issues/222
         if mode == "distributed_index":
             # Start sg-accel
-            status = run_ansible_playbook(
+            status = ansible_runner.run_ansible_playbook(
                 "start-sg-accel.yml",
                 extra_vars="sync_gateway_config_filepath={0}".format(config_path_full),
                 stop_on_fail=False

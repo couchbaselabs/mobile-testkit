@@ -2,7 +2,7 @@ import sys
 import os
 from optparse import OptionParser
 
-from lib.cluster import Cluster
+from testkit.cluster import Cluster
 
 if __name__ == "__main__":
     usage = """usage: reset_cluster.py

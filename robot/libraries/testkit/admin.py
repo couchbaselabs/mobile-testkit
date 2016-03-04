@@ -2,8 +2,8 @@ import requests
 import json
 import concurrent.futures
 
-from lib.user import User
-from lib import settings
+from testkit.user import User
+from testkit import settings
 
 
 import logging

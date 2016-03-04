@@ -6,16 +6,17 @@ import sys
 import requests
 
 from couchbase.bucket import Bucket
-from provision.ansible_runner import run_ansible_playbook
+from provision.ansible_runner import AnsibleRunner
 
-import lib.settings
+import testkit.settings
 
 import logging
-log = logging.getLogger(lib.settings.LOGGER)
+log = logging.getLogger(testkit.settings.LOGGER)
 
 class Server:
 
-    def __init__(self, target):
+    def __init__(self, cluster_config, target):
+        self.ansible_runner = AnsibleRunner(cluster_config)
         self.ip = target["ip"]
         self.url = "http://{}:8091".format(target["ip"])
         self.hostname = target["name"]
@@ -78,7 +79,7 @@ class Server:
 
         # Create buckets
         extra_vars = {"bucket_names": names}
-        run_ansible_playbook(
+        self.ansible_runner.run_ansible_playbook(
             "tasks/create-server-buckets.yml",
             extra_vars=json.dumps(extra_vars),
         )
