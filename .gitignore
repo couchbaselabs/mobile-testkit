@@ -27,7 +27,6 @@ provisioning_config*
 !utilities/provisioning_config_parser.py
 
 results.xml
-provision/ansible/playbooks/ansible.cfg
 test-framework.log
 
 performance_results/*
@@ -38,3 +37,6 @@ performance_results/*
 log.html
 output.xml
 report.html
+
+robot/resources/cluster_configs/*
+robot/libraries/provision/ansible/playbooks/ansible.cfg

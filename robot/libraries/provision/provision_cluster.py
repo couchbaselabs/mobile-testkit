@@ -8,15 +8,15 @@ import install_couchbase_server
 from install_couchbase_server import CouchbaseServerConfig
 from install_sync_gateway import SyncGatewayConfig
 
-import ansible_runner
+from ansible_runner import AnsibleRunner
 
 # TODO Add SG package
 
-def provision_cluster(couchbase_server_config, sync_gateway_config, install_deps):
+def provision_cluster(cluster_config, couchbase_server_config, sync_gateway_config, install_deps):
 
     print "\n>>> Host info:\n"
 
-    with open("provisioning_config", "r") as ansible_hosts:
+    with open(cluster_config, "r") as ansible_hosts:
         print(ansible_hosts.read())
 
     print(couchbase_server_config)
@@ -39,13 +39,9 @@ def provision_cluster(couchbase_server_config, sync_gateway_config, install_deps
 
     print(">>> Server package: {0}/{1}".format(server_base_url, server_package_name))
 
-    if sync_gateway_config.branch is not None:
-        print(">>> Building sync_gateway: branch={}".format(sync_gateway_config.branch))
-    else:
-        # TODO
-        print(">>> sync_gateway package")
-
     print(">>> Using sync_gateway config: {}".format(sync_gateway_config.config_path))
+
+    ansible_runner = AnsibleRunner(cluster_config)
 
     # Reset previous installs
     ansible_runner.run_ansible_playbook("remove-previous-installs.yml")
@@ -58,10 +54,10 @@ def provision_cluster(couchbase_server_config, sync_gateway_config, install_deps
         ansible_runner.run_ansible_playbook("install-common-tools.yml")
 
     # Install server package
-    install_couchbase_server.install_couchbase_server(couchbase_server_config)
+    install_couchbase_server.install_couchbase_server(cluster_config, couchbase_server_config)
 
     # Install sync_gateway
-    install_sync_gateway.install_sync_gateway(sync_gateway_config)
+    install_sync_gateway.install_sync_gateway(cluster_config, sync_gateway_config)
 
 if __name__ == "__main__":
     usage = """usage: python provision_cluster.py
@@ -117,6 +113,10 @@ if __name__ == "__main__":
                       action="store", type="string", dest="build_flags", default="",
                       help="build flags to pass when building sync gateway (ex. -race)")
 
+    parser.add_option("", "--cluster-config",
+                      action="store", type="string", dest="cluster_config", default="provisioning_config",
+                      help="relative path to cluster configuration")
+
     
     arg_parameters = sys.argv[1:]
 
@@ -145,11 +145,12 @@ if __name__ == "__main__":
         branch=opts.source_branch,
         build_flags=opts.build_flags,
         config_path=opts.sync_gateway_config_file,
-        skip_bucketflush=opts.skip_bucketflush
+        skip_bucketflush=opts.skip_bucketflush,
     )
 
     provision_cluster(
         couchbase_server_config=server_config,
         sync_gateway_config=sync_gateway_config,
-        install_deps=opts.install_deps
+        install_deps=opts.install_deps,
+        cluster_config=opts.cluster_config
     )

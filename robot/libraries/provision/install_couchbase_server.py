@@ -2,7 +2,7 @@ import os
 import sys
 from optparse import OptionParser
 
-import ansible_runner
+from ansible_runner import AnsibleRunner
 
 
 class CouchbaseServerConfig:
@@ -49,7 +49,7 @@ class CouchbaseServerConfig:
         return True
 
 
-def install_couchbase_server(couchbase_server_config):
+def install_couchbase_server(cluster_config, couchbase_server_config):
 
     print(couchbase_server_config)
 
@@ -58,6 +58,8 @@ def install_couchbase_server(couchbase_server_config):
         sys.exit(1)
 
     server_base_url, server_package_name = couchbase_server_config.server_base_url_and_package()
+
+    ansible_runner = AnsibleRunner(cluster_config)
 
     ansible_runner.run_ansible_playbook(
         "install-couchbase-server-package.yml",
@@ -76,6 +78,10 @@ if __name__ == "__main__":
                       action="store", type="string", dest="version", default=None,
                       help="server version to download")
 
+    parser.add_option("", "--cluster-config",
+                      action="store", type="string", dest="cluster_config", default="provisioning_config",
+                      help="relative path to cluster configuration")
+
     arg_parameters = sys.argv[1:]
 
     (opts, args) = parser.parse_args(arg_parameters)
@@ -84,4 +90,4 @@ if __name__ == "__main__":
         version=opts.version
     )
 
-    install_couchbase_server(server_config)
+    install_couchbase_server(opts.cluster_config, server_config)
