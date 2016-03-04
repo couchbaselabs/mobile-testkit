@@ -1,4 +1,5 @@
 *** Settings ***
+Resource        resources/Paths.robot
 
 Library         Process
 Library         AppiumLibrary
@@ -12,9 +13,7 @@ Test Teardown   Teardown
 
 # By default run iOS, use `robot -v PLATFORM:Android grocerysync.robot` to run android
 ${PLATFORM}                 iOS
-${RESOURCES}                resources
-${SYNC_GATEWAY}             ${RESOURCES}/sync_gateway/couchbase-sync-gateway/bin/sync_gateway
-${SYNC_GATEWAY_CONFIGS}     ${RESOURCES}/sync_gateway_configurations
+${SYNC_GATEWAY}             ${ARTIFACTS}/sync_gateway/couchbase-sync-gateway/bin/sync_gateway
 ${SYNC_GATEWAY_VERSION}     1.2.0-79
 ${EXECUTION_OS}             OSX
 
@@ -23,7 +22,6 @@ ${EXECUTION_OS}             OSX
 Add Grocery Items
     [Documentation]     Launch Grocery Sync, add docs, and verify they get pushed to sync_gateway
     [Tags]              sync_gateway    grocery_sync    android     nightly
-
     # Add 3 grocery items
     @{items}            Create List     Item 1  Item 2  Item 3
     Add Items           @{items}
@@ -63,6 +61,7 @@ Setup
     Log To Console              ${PLATFORM}
 
     Install Local Sync Gateway  ${SYNC_GATEWAY_VERSION}    ${EXECUTION_OS}
+
     Start Process               ${SYNC_GATEWAY}    ${SYNC_GATEWAY_CONFIGS}/grocery_sync_conf.json    alias=sync_gateway
     Process Should Be Running   sync_gateway    alias=sync_gateway
 
