@@ -1,15 +1,17 @@
 import os.path
 import shutil
-from provision.ansible_runner import run_ansible_playbook
+from provision.ansible_runner import AnsibleRunner
 
 
 def fetch_sync_gateway_profile(folder_name):
+
+    ansible_runner = AnsibleRunner()
 
     print("\n")
 
     print("Pulling sync_gateway profile ...")
     # fetch logs from sync_gateway instances
-    run_ansible_playbook("fetch-sync-gateway-profile.yml")
+    ansible_runner.run_ansible_playbook("fetch-sync-gateway-profile.yml")
 
     # zip logs and timestamp
     if os.path.isdir("/tmp/sync_gateway_profile"):

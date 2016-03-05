@@ -3,7 +3,9 @@ Resource    resources/Paths.robot
 
 Library     Process
 Library     OperatingSystem
-#Library     test_users_channels.py
+Library     ${Libraries}/ClusterKeywords.py
+Library     test_users_channels.py
+
 
 Test Setup      Setup
 Test Teardown   Teardown
@@ -21,7 +23,7 @@ Test Users And Channels
     [Documentation]     Sync Gateway Functional Tests
     [Tags]              sync_gateway    nightly     bimode
     Log To Console      Hello
-    Reset Cluster   ${CLUSTER_CONFIG}   ${SYNC_GATEWAY_CONFIGS}/sync_gateway_default.json
+    Reset Cluster       ${SYNC_GATEWAY_CONFIGS}/sync_gateway_default.json
     Test Users Channels
 
 *** Keywords ***
@@ -33,12 +35,6 @@ Setup
 
 Teardown
     Log To Console      Tearing down ...
-
-
-Reset Cluster
-    [Arguments]     ${cluster_config}   ${sync_gateway_config}
-
-
 
 Provision Cluster
     [Arguments]     ${server_version}   ${sync_gateway_version}    ${sync_gateway_config}

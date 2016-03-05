@@ -15,8 +15,8 @@ log = logging.getLogger(testkit.settings.LOGGER)
 
 class Server:
 
-    def __init__(self, cluster_config, target):
-        self.ansible_runner = AnsibleRunner(cluster_config)
+    def __init__(self, target):
+        self.ansible_runner = AnsibleRunner()
         self.ip = target["ip"]
         self.url = "http://{}:8091".format(target["ip"])
         self.hostname = target["name"]

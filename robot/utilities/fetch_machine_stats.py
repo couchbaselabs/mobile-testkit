@@ -3,16 +3,18 @@ import shutil
 import sys
 from optparse import OptionParser
 
-from provision.ansible_runner import run_ansible_playbook
+from provision.ansible_runner import AnsibleRunner
 
 
 def fetch_machine_stats(folder_name):
+
+    ansible_runner = AnsibleRunner()
 
     print("\n")
 
     print("Pulling logs")
     # fetch logs from sync_gateway instances
-    run_ansible_playbook("fetch-machine-stats.yml")
+    ansible_runner.run_ansible_playbook("fetch-machine-stats.yml")
 
     # zip logs and timestamp
     if os.path.isdir("/tmp/perf_logs"):

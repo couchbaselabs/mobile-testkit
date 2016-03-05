@@ -8,7 +8,7 @@ from optparse import OptionParser
 
 def install_keys(key_name, user_name):
 
-    hostfile = "provisioning_config"
+    hostfile = os.environ["CLUSTER_CONFIG"]
     inv = ansible.inventory.Inventory(host_list=hostfile)
     hosts = inv.get_hosts()
 

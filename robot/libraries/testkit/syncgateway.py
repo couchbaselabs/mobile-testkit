@@ -10,7 +10,7 @@ from provision.ansible_runner import AnsibleRunner
 class SyncGateway:
 
     def __init__(self, target):
-        #self.ansible_runner = AnsibleRunner(cluster_config)
+        self.ansible_runner = AnsibleRunner()
         self.ip = target["ip"]
         self.url = "http://{}:4984".format(target["ip"])
         self.hostname = target["name"]

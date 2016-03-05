@@ -26,7 +26,7 @@ import ansible.inventory
 
 
 def hosts_for_tag(tag):
-    hostfile = "../../../provisioning_config"
+    hostfile = "../../../{}".format(os.environ["CLUSTER_CONFIG"])
     i = ansible.inventory.Inventory(host_list=hostfile)
     group = i.get_group(tag)
     if group is None:
