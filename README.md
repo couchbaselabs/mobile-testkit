@@ -438,3 +438,11 @@ brew install node
 npm install -g appium
 ```
 
+Debugging
+
+The below command will write a debug file which will include a dump of stacktraces which can be useful when identifying failures
+
+```
+robot -b debug.txt
+```
+

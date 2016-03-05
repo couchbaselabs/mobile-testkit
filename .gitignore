@@ -40,3 +40,4 @@ report.html
 
 robot/resources/cluster_configs/*
 robot/libraries/provision/ansible/playbooks/ansible.cfg
+robot/debug.txt

@@ -24,11 +24,9 @@ log = logging.getLogger(settings.LOGGER)
 
 class Cluster:
 
-    def __init__(self, cluster_config):
+    def __init__(self):
 
         # get hosts
-        self.cluster_config = cluster_config
-
         cbs_host_vars = self._hosts_for_tag("couchbase_servers")
         sgs_host_vars = self._hosts_for_tag("sync_gateways")
         sgsw_host_vars = self._hosts_for_tag("sync_gateway_index_writers")
@@ -44,22 +42,23 @@ class Cluster:
         sgsw = [{"name": sgwv["inventory_hostname"], "ip": sgwv["ansible_host"]} for sgwv in sgsw_host_vars]
         lds = [{"name": ldv["inventory_hostname"], "ip": ldv["ansible_host"]} for ldv in lds_host_vars]
 
-        self.sync_gateways = [SyncGateway(cluster_config, sg) for sg in sgs]
-        self.sg_accels = [SgAccel(cluster_config, sgw) for sgw in sgsw]
-        self.servers = [Server(cluster_config, cb) for cb in cbs]
+        self.sync_gateways = [SyncGateway(sg) for sg in sgs]
+        self.sg_accels = [SgAccel(sgw) for sgw in sgsw]
+        self.servers = [Server(cb) for cb in cbs]
         self.load_generators = lds
         self.sync_gateway_config = None  # will be set to Config object when reset() called
         
     def _hosts_for_tag(self, tag):
 
-        if not os.path.isfile(self.cluster_config):
+        if not os.path.isfile(os.environ["CLUSTER_CONFIG"]):
             log.error("Cluster config not found at {}".format(os.getcwd()))
             sys.exit(1)
 
         variable_manager = VariableManager()
         loader = DataLoader()
 
-        i = ansible.inventory.Inventory(loader=loader, variable_manager=variable_manager, host_list=hostfile)
+        host_file = os.environ["CLUSTER_CONFIG"]
+        i = ansible.inventory.Inventory(loader=loader, variable_manager=variable_manager, host_list=host_file)
         variable_manager.set_inventory(i)
 
         group = i.get_group(tag)
@@ -78,7 +77,7 @@ class Cluster:
 
         self.validate_cluster()
 
-        ansible_runner = AnsibleRunner(self.cluster_config)
+        ansible_runner = AnsibleRunner()
         
         # Stop sync_gateways
         log.info(">>> Stopping sync_gateway")
@@ -105,7 +104,7 @@ class Cluster:
         self.servers[0].delete_buckets()
         
         # Parse config and grab bucket names
-        config_path_full = os.path.abspath("conf/" + config_path)
+        config_path_full = os.path.abspath(config_path)
         config = Config(config_path_full)
         mode = config.get_mode()
         bucket_name_set = config.get_bucket_name_set()

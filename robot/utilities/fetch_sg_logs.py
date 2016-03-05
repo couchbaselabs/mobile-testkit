@@ -2,20 +2,21 @@ import os.path
 import shutil
 import time
 
-from provision.ansible_runner import run_ansible_playbook
+from provision.ansible_runner import AnsibleRunner
 
 import logging
-import lib.settings
-log = logging.getLogger(lib.settings.LOGGER)
+import testkit.settings
+log = logging.getLogger(testkit.settings.LOGGER)
 
 def fetch_sync_gateway_logs(prefix, is_perf_run=False):
 
-    
+    ansible_runner = AnsibleRunner()
+
     print("\n")
 
     print("Pulling logs")
     # fetch logs from sync_gateway instances
-    status = run_ansible_playbook("fetch-sync-gateway-logs.yml", stop_on_fail=False)
+    status = ansible_runner.run_ansible_playbook("fetch-sync-gateway-logs.yml", stop_on_fail=False)
     if status != 0:
         log.error("Error pulling logs")
 
