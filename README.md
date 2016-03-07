@@ -120,7 +120,7 @@ $ python provision/create_and_instantiate_cluster.py \
     --lb-type="m3.medium" 
 ```
 
-NOTE: currently need at least 2 sync gateways (1 sync gw and 1 sg_accel)
+NOTE: currently need at least 3 sync gateways (1 sync gw and 2 sg_accels)
 
 The AWS virtual machines will be accessible via the `AWS_KEY` you specified above.
 
