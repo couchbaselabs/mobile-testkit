@@ -50,7 +50,7 @@ class Listener:
         log.info("OUTPUT: {}".format(monkey_output))
 
     def is_emulator(self, target_device):
-        return target_device.startswith("emulator")
+        return target_device.startswith("emulator") or target_device.startswith("192.168")
 
     def get_host_ip(self):
         cmd_output = subprocess.check_output("ifconfig")

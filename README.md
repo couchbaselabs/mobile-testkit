@@ -292,13 +292,15 @@ $ py.test -s "functional_tests/test_db_online_offline.py::test_online_default_re
 
 ## Running android_listener_tests
 
-These tests live in the functional_tests/android_listener_test/ directory
+**Note:** Read the previous section to install Python dependencies.
+
+These tests live in the `functional_tests/android_listener_test` directory.
 
 Make sure you have the Android sdk installed and the 'monkeyrunner' program is in your path. You will need this to bootstrap apk installation on your emulators (ex. Users/user/Library/Android/sdk/tools/monkeyrunner). 
 
-Currently, the scenarios are targeting stock emulators with the emulator names defined in the test cases. For these, you should be using HAXM emulators.
- 
-Follow the instructions here to install (https://software.intel.com/en-us/android/articles/installation-instructions-for-intel-hardware-accelerated-execution-manager-mac-os-x) 
+The scenarios can run on Android stock emulators/Genymotion emulators and devices.
+
+If you're running Android stock emulators you should make sure they are using HAXM. Follow the instructions here to install (https://software.intel.com/en-us/android/articles/installation-instructions-for-intel-hardware-accelerated-execution-manager-mac-os-x).
 
 Ensure the RAM allocated to your combined running emulators is less than the total allocated to HAXM. You can configure the RAM for your emulator images in the Android Virtual Device Manager and in HAXM by reinstalling via the .dmg in the android sdk folder.
  
@@ -325,6 +327,20 @@ emulator-5554          device product:sdk_google_phone_x86 model:Android_SDK_bui
 
 Most of the port forwarding will be set up via instantiation of the Listener. However, you do need to complete some additional steps.
 
+**Note:** Instantiating a Listener in `test_listener_rest.py` will automatically forward the port the listener is running on to one on localhost. However, that port forwarding will not be bound on the local IP of your computer. This can be useful when combining actual devices and emulators. The following section describes how to make the emulators reachable from devices.
+
+Once you have emulators and possibly port forwarding setup, set the `P2P_APP` environment variable to the `.apk` of the application to be tested.
+
+```
+$ export P2P_APP=/path/to/apk
+```
+
+To run the test
+```
+$ py.test -s "functional_tests/android_listener_tests/test_listener_rest.py"
+```
+
+If the test fails with a hostname unreachable error then it's probably because port forwarding needs to be configured (read section below).
 
 ### Port forwarding (setup once)
 
@@ -376,12 +392,6 @@ $ sudo pfctl -ef /etc/pf.conf
 ```
 
 Now, all the databases are reachable on the internal network via host:forwarded_port (ex. http://192.168.0.21:10000/db), where 192.168.0.21 is your host computer's ip and 10000 is the 'local_port' passed when instantiating the Listener.
-
-To run the test
-```
-$ py.test -s "functional_tests/android_listener_tests/test_listener_rest.py"
-```
-
 
 ## Monitoring the cluster
 Make sure you have installed expvarmon 
