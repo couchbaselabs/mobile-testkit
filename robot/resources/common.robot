@@ -1,41 +1,18 @@
 *** Settings ***
-Resource    resources/Paths.robot
-
-Library     Process
-Library     OperatingSystem
-Library     ${Libraries}/ClusterKeywords.py
-Library     test_users_channels.py
-
-
-Test Setup      Setup
-Test Teardown   Teardown
+Documentation    Common Variables / Keywords
 
 *** Variables ***
-${SERVER_VERSION}           4.1.0
-${SYNC_GATEWAY_VERSION}     1.2.0-79
-${CLUSTER_CONFIG}           ${CLUSTER_CONFIGS}/1sg_1s
-${SYNC_GATEWAY_CONFIG}      ${SYNC_GATEWAY_CONFIGS}/sync_gateway_default.json
+${LIBRARIES}                libraries
 
-*** Test Cases ***
-# Cluster has been setup
+${RESOURCES}                resources
+${ARTIFACTS}                ${RESOURCES}/artifacts
+${SYNC_GATEWAY_CONFIGS}     ${RESOURCES}/sync_gateway_configs
+${CLUSTER_CONFIGS}          ${RESOURCES}/cluster_configs
 
-Test Users And Channels
-    [Documentation]     Sync Gateway Functional Tests
-    [Tags]              sync_gateway    nightly     bimode
-    Log To Console      Hello
-    Reset Cluster       ${SYNC_GATEWAY_CONFIGS}/sync_gateway_default.json
-    Test Users Channels
+# Suite paths
+${SYNC_GATEWAY_SUITE_FUNCTIONAL}  testsuites/syncgateway/functional
 
 *** Keywords ***
-Setup
-    Log To Console      Setting up ...
-    Set Environment Variable    CLUSTER_CONFIG    ${cluster_config}
-    #Provision Cluster   ${SERVER_VERSION}   ${SYNC_GATEWAY_VERSION}    ${SYNC_GATEWAY_CONFIG}
-    #Install Sync Gateway   ${CLUSTER_CONFIG}    ${SYNC_GATEWAY_VERSION}    ${SYNC_GATEWAY_CONFIG}
-
-Teardown
-    Log To Console      Tearing down ...
-
 Provision Cluster
     [Arguments]     ${server_version}   ${sync_gateway_version}    ${sync_gateway_config}
     Log To Console              Cluster Config: %{CLUSTER_CONFIG}
@@ -60,3 +37,5 @@ Install Sync Gateway
     ${result} =  Run Process  python  ${LIBRARIES}/provision/install_sync_gateway.py  ${sync_gateway_arg}  ${sync_gateway_config_arg}
     Log To Console  ${result.stderr}
     Log To Console  ${result.stdout}
+
+
