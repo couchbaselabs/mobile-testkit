@@ -2,7 +2,6 @@ import time
 
 import pytest
 
-
 from lib.admin import Admin
 from lib.verify import verify_changes
 from collections import namedtuple
@@ -14,12 +13,14 @@ default_config_path_shadower_low_revs = "sync_gateway_bucketshadow_low_revs_cc.j
 default_config_path_non_shadower = "sync_gateway_default_cc.json"
 default_config_path_non_shadower_low_revs = "sync_gateway_default_low_revs_cc.json"
 source_bucket_name = "source-bucket"
+data_bucket_name = "data-bucket"
 fake_doc_content = {"foo":"bar"}
 
 ShadowCluster = namedtuple(
     'ShadowCluster',
     [
         'source_bucket',
+        'data_bucket',
         'mode',
         'non_shadower_sg',
         'shadower_sg',
@@ -61,6 +62,7 @@ def init_shadow_cluster(cluster, config_path_shadower, config_path_non_shadower)
     )
 
     source_bucket = cluster.servers[0].get_bucket(source_bucket_name)
+    data_bucket = cluster.servers[0].get_bucket(data_bucket_name)
 
     sc = ShadowCluster(
         bob_non_shadower=bob_non_shadower,
@@ -70,9 +72,66 @@ def init_shadow_cluster(cluster, config_path_shadower, config_path_non_shadower)
         shadower_sg=shadower_sg,
         non_shadower_sg=non_shadower_sg,
         source_bucket=source_bucket,
+        data_bucket=data_bucket,
     )
     
     return sc
+
+
+# Validate that Sync Gateway doesn't panic (and instead creates a conflict branch
+# and prints a warning) after doing the following steps:
+# 
+# - Set revs_limit to 5 
+# - Create a doc via SG
+# - Issue a delete operation for that doc via SG
+# - Repeat step 3 5x. (each additional delete will create a new revision in SG, but the delete on the source bucket will fail with the 'not found' error, which also means that upstream_rev won't get incremented
+# - Recreate the doc in the source bucket
+#
+# See https://github.com/couchbaselabs/sync-gateway-testcluster/issues/291#issuecomment-191521993 
+def test_bucket_shadow_low_revs_limit_repeated_deletes(cluster):
+
+    sc = init_shadow_cluster(cluster,
+                             default_config_path_shadower_low_revs,
+                             default_config_path_non_shadower_low_revs,
+    )    
+
+    # Write doc into shadower SG
+    doc_id = sc.alice_shadower.add_doc()
+
+    # Wait until it gets to source bucket
+    get_doc_from_source_bucket_retry(doc_id, sc.source_bucket)    
+
+    # Wait until upstream-rev in _sync metadata is non empty
+    # Otherwise, this will not reproduce a panic 
+    while True:
+        doc = sc.data_bucket.get(doc_id)
+        if doc.success:
+            if "upstream_rev" in doc.value["_sync"]:
+                break
+        time.sleep(1)
+    
+    # Repeatedly issue a delete operation for that doc via SG
+    # Keep adding tombstone revs to the one and only branch
+    rev_id_to_delete = None
+    for i in xrange(100):
+        resp = sc.alice_shadower.delete_doc(doc_id, rev_id_to_delete)
+        rev_id_to_delete = resp["rev"]
+
+    # Recreate doc with that ID in the source bucket
+    result = sc.source_bucket.upsert(doc_id, json.loads('{"foo":"bar"}'))
+
+    # Check if SG's are up
+    errors = cluster.verify_alive(sc.mode)
+    assert(len(errors) == 0)
+
+    # Restart Shadow SG
+    sc.shadower_sg.stop()
+    sc.shadower_sg.start(default_config_path_shadower_low_revs)
+        
+    # Check if SG's are up
+    errors = cluster.verify_alive(sc.mode)
+    assert(len(errors) == 0)
+    
 
 def test_bucket_shadow_low_revs_limit(cluster):
     """
@@ -234,3 +293,8 @@ def get_doc_from_source_bucket_retry(doc_id, bucket):
             time.sleep(i)
             continue
     return doc 
+
+
+
+
+    
