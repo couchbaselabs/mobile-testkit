@@ -82,6 +82,12 @@ if __name__ == "__main__":
 
     (opts, args) = parser.parse_args(arg_parameters)
 
+    try:
+        cluster_config = os.environ["CLUSTER_CONFIG"]
+    except KeyError as ke:
+        print ("Make sure CLUSTER_CONFIG is defined and pointing to the configuration you would like to provision")
+        sys.exit(1)
+
     server_config = CouchbaseServerConfig(
         version=opts.version
     )
