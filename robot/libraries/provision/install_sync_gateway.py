@@ -186,7 +186,7 @@ if __name__ == "__main__":
     --branch=<sync_gateway_branch_to_build>
     """
 
-    default_sync_gateway_config = os.path.abspath("conf/sync_gateway_default.json")
+    default_sync_gateway_config = os.path.abspath("resources/sync_gateway_configs/sync_gateway_default.json")
 
     parser = OptionParser(usage=usage)
 
@@ -197,7 +197,7 @@ if __name__ == "__main__":
     parser.add_option("", "--config-file-path",
                       action="store", type="string", dest="sync_gateway_config_file",
                       default=default_sync_gateway_config,
-                      help="path to your sync_gateway_config file uses '/conf/default_sync_gateway_config' by default")
+                      help="path to your sync_gateway_config file uses 'resources/sync_gateway_configs/sync_gateway_default.json' by default")
 
     parser.add_option("", "--branch",
                       action="store", type="string", dest="source_branch", default=None,
