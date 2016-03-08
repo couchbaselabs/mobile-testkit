@@ -5,11 +5,8 @@ Library     Process
 Library     OperatingSystem
 Library     ${Libraries}/ClusterKeywords.py
 Library     ${Libraries}/LoggingKeywords.py
-Library     TestUsersChannels.py
-Library     TestSync.py
-Library     TestBulkGetCompression.py
-Library     TestContinuous.py
-Library     TestBucketShadow.py
+
+Library     test_bucket_shadow.py
 
 Suite Setup     Suite Setup
 Suite Teardown  Suite Teardown
