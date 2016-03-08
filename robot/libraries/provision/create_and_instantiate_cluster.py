@@ -76,7 +76,7 @@ class ClusterConfig:
 
     def __validate_numbers(self):
         # Validate against limits.json to prevent accidental giant AWS cluster
-        with open("conf/limits.json") as limits_config:
+        with open("limits.json") as limits_config:
             limits = json.load(limits_config)
             if self.__server_number > limits["max_servers"]:
                 print "You have exceed your maximum number of servers: {}".format(limits["max_servers"])
