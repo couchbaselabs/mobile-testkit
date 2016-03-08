@@ -5,7 +5,7 @@ Library     Process
 Library     OperatingSystem
 Library     ${Libraries}/ClusterKeywords.py
 Library     ${Libraries}/LoggingKeywords.py
-Library     TestCbgtPIndex.py
+Library     test_cbgt_pindex.py
 
 Suite Setup     Suite Setup
 Suite Teardown  Suite Teardown
