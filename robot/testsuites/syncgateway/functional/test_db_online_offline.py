@@ -4,6 +4,7 @@ import concurrent.futures
 import uuid
 
 from testkit.admin import Admin
+from testkit.cluster import Cluster
 from testkit.user import User
 from testkit.verify import verify_changes
 
@@ -12,7 +13,6 @@ import testkit.settings
 from requests.exceptions import HTTPError
 from requests.exceptions import RetryError
 
-from fixtures import cluster
 from multiprocessing.pool import ThreadPool
 
 
@@ -20,6 +20,7 @@ import logging
 log = logging.getLogger(testkit.settings.LOGGER)
 
 NUM_ENDPOINTS = 13
+
 
 def rest_scan(sync_gateway, db, online, num_docs, user_name, channels):
 
@@ -195,21 +196,12 @@ def rest_scan(sync_gateway, db, online, num_docs, user_name, channels):
 
 
 # Scenario 1
-@pytest.mark.sanity
-@pytest.mark.dbonlineoffline
-@pytest.mark.parametrize(
-    "conf,num_docs",
-    [
-        ("bucket_online_offline/bucket_online_offline_default_cc.json", 100),
-        ("bucket_online_offline/bucket_online_offline_default_di.json", 100)
-    ],
-    ids=["CC-1", "DI-2"]
-)
-def test_online_default_rest(cluster, conf, num_docs):
+def test_online_default_rest(conf, num_docs):
 
     log.info("Using conf: {}".format(conf))
     log.info("Using num_docs: {}".format(num_docs))
 
+    cluster = Cluster()
     mode = cluster.reset(config_path=conf)
 
     # all db endpoints should function as expected
@@ -229,21 +221,12 @@ def test_online_default_rest(cluster, conf, num_docs):
 
 
 # Scenario 2
-@pytest.mark.sanity
-@pytest.mark.dbonlineoffline
-@pytest.mark.parametrize(
-    "conf,num_docs",
-    [
-        ("bucket_online_offline/bucket_online_offline_offline_false_cc.json", 100),
-        ("bucket_online_offline/bucket_online_offline_offline_false_di.json", 100)
-    ],
-    ids=["CC-1", "DI-2"]
-)
-def test_offline_false_config_rest(cluster, conf, num_docs):
+def test_offline_false_config_rest(conf, num_docs):
 
     log.info("Using conf: {}".format(conf))
     log.info("Using num_docs: {}".format(num_docs))
 
+    cluster = Cluster()
     mode = cluster.reset(config_path=conf)
 
     # all db endpoints should function as expected
@@ -264,21 +247,12 @@ def test_offline_false_config_rest(cluster, conf, num_docs):
 
 
 # Scenario 3
-@pytest.mark.sanity
-@pytest.mark.dbonlineoffline
-@pytest.mark.parametrize(
-    "conf,num_docs",
-    [
-        ("bucket_online_offline/bucket_online_offline_default_cc.json", 100),
-        ("bucket_online_offline/bucket_online_offline_default_di.json", 100)
-    ],
-    ids=["CC-1", "DI-2"]
-)
-def test_online_to_offline_check_503(cluster, conf, num_docs):
+def test_online_to_offline_check_503(conf, num_docs):
 
     log.info("Using conf: {}".format(conf))
     log.info("Using num_docs: {}".format(num_docs))
 
+    cluster = Cluster()
     mode = cluster.reset(config_path=conf)
     admin = Admin(cluster.sync_gateways[0])
 
@@ -305,24 +279,12 @@ def test_online_to_offline_check_503(cluster, conf, num_docs):
 
 
 # Scenario 5 - continuous
-@pytest.mark.sanity
-@pytest.mark.dbonlineoffline
-@pytest.mark.parametrize(
-    "conf,num_docs",
-    [
-        ("bucket_online_offline/bucket_online_offline_default_cc.json", 5000)
-        #("bucket_online_offline/bucket_online_offline_default_di.json", 5000)
-    ],
-    ids=[
-        "CC-1"
-         #"DI-2"
-        ]
-)
-def test_online_to_offline_changes_feed_controlled_close_continuous(cluster, conf, num_docs):
+def test_online_to_offline_changes_feed_controlled_close_continuous(conf, num_docs):
 
     log.info("Using conf: {}".format(conf))
     log.info("Using num_docs: {}".format(num_docs))
 
+    cluster = Cluster()
     mode = cluster.reset(config_path=conf)
     admin = Admin(cluster.sync_gateways[0])
     seth = admin.register_user(target=cluster.sync_gateways[0], db="db", name="seth", password="password", channels=["ABC"])
@@ -380,21 +342,12 @@ def test_online_to_offline_changes_feed_controlled_close_continuous(cluster, con
 
 
 # Scenario 6 - longpoll
-@pytest.mark.sanity
-@pytest.mark.dbonlineoffline
-@pytest.mark.parametrize(
-    "conf, num_docs, num_users",
-    [
-        ("bucket_online_offline/bucket_online_offline_default_cc.json", 5000, 40),
-        ("bucket_online_offline/bucket_online_offline_default_di.json", 5000, 40)
-    ],
-    ids=["CC-1", "DI-2"]
-)
-def test_online_to_offline_continous_changes_feed_controlled_close_sanity_mulitple_users(cluster, conf, num_docs, num_users):
+def test_online_to_offline_continous_changes_feed_controlled_close_sanity_mulitple_users(conf, num_docs, num_users):
 
     log.info("Using conf: {}".format(conf))
     log.info("Using num_docs: {}".format(num_docs))
 
+    cluster = Cluster()
     mode = cluster.reset(config_path=conf)
 
     admin = Admin(cluster.sync_gateways[0])
@@ -440,21 +393,12 @@ def test_online_to_offline_continous_changes_feed_controlled_close_sanity_mulitp
 
 
 # Scenario 6 - longpoll
-@pytest.mark.sanity
-@pytest.mark.dbonlineoffline
-@pytest.mark.parametrize(
-    "conf,num_docs",
-    [
-        ("bucket_online_offline/bucket_online_offline_default_cc.json", 5000),
-        ("bucket_online_offline/bucket_online_offline_default_di.json", 5000)
-    ],
-    ids=["CC-1", "DI-2"]
-)
-def test_online_to_offline_changes_feed_controlled_close_longpoll_sanity(cluster, conf, num_docs):
+def test_online_to_offline_changes_feed_controlled_close_longpoll_sanity(conf, num_docs):
 
     log.info("Using conf: {}".format(conf))
     log.info("Using num_docs: {}".format(num_docs))
 
+    cluster = Cluster()
     mode = cluster.reset(config_path=conf)
 
     admin = Admin(cluster.sync_gateways[0])
@@ -498,21 +442,12 @@ def test_online_to_offline_changes_feed_controlled_close_longpoll_sanity(cluster
 
 
 # Scenario 6 - longpoll
-@pytest.mark.sanity
-@pytest.mark.dbonlineoffline
-@pytest.mark.parametrize(
-    "conf, num_docs, num_users",
-    [
-        ("bucket_online_offline/bucket_online_offline_default_cc.json", 5000, 40),
-        ("bucket_online_offline/bucket_online_offline_default_di.json", 5000, 40)
-    ],
-    ids=["CC-1", "DI-2"]
-)
-def test_online_to_offline_longpoll_changes_feed_controlled_close_sanity_mulitple_users(cluster, conf, num_docs, num_users):
+def test_online_to_offline_longpoll_changes_feed_controlled_close_sanity_mulitple_users(conf, num_docs, num_users):
 
     log.info("Using conf: {}".format(conf))
     log.info("Using num_docs: {}".format(num_docs))
 
+    cluster = Cluster()
     mode = cluster.reset(config_path=conf)
 
     admin = Admin(cluster.sync_gateways[0])
@@ -563,24 +498,12 @@ def test_online_to_offline_longpoll_changes_feed_controlled_close_sanity_mulitpl
 
 
 # Scenario 6 - longpoll
-@pytest.mark.sanity
-@pytest.mark.dbonlineoffline
-@pytest.mark.parametrize(
-    "conf,num_docs",
-    [
-        ("bucket_online_offline/bucket_online_offline_default_cc.json", 5000)
-        #("bucket_online_offline/bucket_online_offline_default_di.json", 5000)
-    ],
-    ids=[
-        "CC-1"
-        #"DI-2"
-    ]
-)
-def test_online_to_offline_changes_feed_controlled_close_longpoll(cluster, conf, num_docs):
+def test_online_to_offline_changes_feed_controlled_close_longpoll(conf, num_docs):
 
     log.info("Using conf: {}".format(conf))
     log.info("Using num_docs: {}".format(num_docs))
 
+    cluster = Cluster()
     mode = cluster.reset(config_path=conf)
 
     admin = Admin(cluster.sync_gateways[0])
@@ -657,24 +580,12 @@ def test_online_to_offline_changes_feed_controlled_close_longpoll(cluster, conf,
 
 
 # Scenario 6
-@pytest.mark.sanity
-@pytest.mark.dbonlineoffline
-@pytest.mark.parametrize(
-    "conf,num_docs",
-    [
-        ("bucket_online_offline/bucket_online_offline_offline_true_cc.json", 100),
-        #("bucket_online_offline/bucket_online_offline_offline_true_di.json", 100)
-    ],
-    ids=[
-        "CC-1"
-    #    "DI-2"
-    ]
-)
-def test_offline_true_config_bring_online(cluster, conf, num_docs):
+def test_offline_true_config_bring_online(conf, num_docs):
 
     log.info("Using conf: {}".format(conf))
     log.info("Using num_docs: {}".format(num_docs))
 
+    cluster = Cluster()
     mode = cluster.reset(config_path=conf)
 
     admin = Admin(cluster.sync_gateways[0])
@@ -702,22 +613,12 @@ def test_offline_true_config_bring_online(cluster, conf, num_docs):
 
 
 # Scenario 14
-@pytest.mark.sanity
-@pytest.mark.dbonlineoffline
-@pytest.mark.parametrize(
-    "conf,num_docs",
-    [
-        ("bucket_online_offline/bucket_online_offline_default_dcp_cc.json", 100),
-        ("bucket_online_offline/bucket_online_offline_default_cc.json", 100),
-        ("bucket_online_offline/bucket_online_offline_default_di.json", 100)
-    ],
-    ids=["CC-1", "CC-2", "DI-3"]
-)
-def test_db_offline_tap_loss_sanity(cluster, conf, num_docs):
+def test_db_offline_tap_loss_sanity(conf, num_docs):
 
     log.info("Using conf: {}".format(conf))
     log.info("Using num_docs: {}".format(num_docs))
 
+    cluster = Cluster()
     mode = cluster.reset(config_path=conf)
 
     admin = Admin(cluster.sync_gateways[0])
@@ -740,25 +641,14 @@ def test_db_offline_tap_loss_sanity(cluster, conf, num_docs):
     errors = cluster.verify_alive(mode)
     assert(len(errors) == 0)
 
+
 # Scenario 11
-@pytest.mark.sanity
-@pytest.mark.dbonlineoffline
-@pytest.mark.parametrize(
-    "conf,num_docs",
-    [
-        ("bucket_online_offline/bucket_online_offline_default_cc.json", 100),
-        #("bucket_online_offline/bucket_online_offline_default_di.json", 100)
-    ],
-    ids=[
-        "CC-1"
-         #"DI-2"
-         ]
-)
-def test_db_delayed_online(cluster, conf, num_docs):
+def test_db_delayed_online(conf, num_docs):
 
     log.info("Using conf: {}".format(conf))
     log.info("Using num_docs: {}".format(num_docs))
 
+    cluster = Cluster()
     mode = cluster.reset(config_path=conf)
 
     admin = Admin(cluster.sync_gateways[0])
@@ -791,21 +681,12 @@ def test_db_delayed_online(cluster, conf, num_docs):
     assert(len(errors) == 0)
 
 
-@pytest.mark.sanity
-@pytest.mark.dbonlineoffline
-@pytest.mark.parametrize(
-    "conf,num_docs",
-    [
-        ("bucket_online_offline/bucket_online_offline_multiple_dbs_unique_buckets_cc.json", 100),
-        ("bucket_online_offline/bucket_online_offline_multiple_dbs_unique_buckets_di.json", 100)
-    ],
-    ids=["CC-1", "DI-2"]
-)
-def test_multiple_dbs_unique_buckets_lose_tap(cluster, conf, num_docs):
+def test_multiple_dbs_unique_buckets_lose_tap(conf, num_docs):
 
     log.info("Using conf: {}".format(conf))
     log.info("Using num_docs: {}".format(num_docs))
 
+    cluster = Cluster()
     mode = cluster.reset(config_path=conf)
 
     dbs = ["db1", "db2", "db3", "db4"]

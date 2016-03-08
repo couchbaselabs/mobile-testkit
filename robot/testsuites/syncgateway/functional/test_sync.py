@@ -1,14 +1,12 @@
 import time
 
-import pytest
 import concurrent.futures
 
 from testkit.admin import Admin
+from testkit.cluster import Cluster
 from testkit.verify import verify_changes
 from testkit.verify import verify_same_docs
 from testkit.verify import verify_docs_removed
-
-from fixtures import cluster
 
 import testkit.settings
 import logging
@@ -16,20 +14,12 @@ log = logging.getLogger(testkit.settings.LOGGER)
 
 
 # https://github.com/couchbase/sync_gateway/issues/1524
-@pytest.mark.sanity
-@pytest.mark.parametrize(
-    "conf, num_docs",
-    [
-        ("custom_sync/grant_access_one_cc.json", 10),
-        ("custom_sync/grant_access_one_di.json", 10)
-    ],
-    ids=["CC-1", "DI-2"]
-)
-def test_issue_1524(cluster, conf, num_docs):
+def test_issue_1524(conf, num_docs):
 
     log.info("Using conf: {}".format(conf))
     log.info("Using num_docs: {}".format(num_docs))
 
+    cluster = Cluster()
     mode = cluster.reset(config_path=conf)
     admin = Admin(cluster.sync_gateways[0])
 
@@ -89,22 +79,13 @@ def test_issue_1524(cluster, conf, num_docs):
     assert(len(errors) == 0)
 
 
-
-@pytest.mark.sanity
-@pytest.mark.parametrize(
-    "conf",
-    [
-        ("sync_gateway_custom_sync_access_sanity_di.json"),
-        ("sync_gateway_custom_sync_access_sanity_cc.json")
-    ],
-    ids=["DI-1", "CC-2"]
-)
-def test_sync_access_sanity(cluster, conf):
+def test_sync_access_sanity(conf):
 
     num_docs = 100
 
     log.info("Using conf: {}".format(conf))
 
+    cluster = Cluster()
     mode = cluster.reset(config_path=conf)
     admin = Admin(cluster.sync_gateways[0])
 
@@ -139,22 +120,14 @@ def test_sync_access_sanity(cluster, conf):
     assert(len(errors) == 0)
 
 
-@pytest.mark.sanity
-@pytest.mark.parametrize(
-    "conf",
-    [
-        ("sync_gateway_custom_sync_channel_sanity_di.json"),
-        ("sync_gateway_custom_sync_channel_sanity_cc.json")
-    ],
-    ids=["DI-1", "CC-2"]
-)
-def test_sync_channel_sanity(cluster, conf):
+def test_sync_channel_sanity(conf):
 
     num_docs_per_channel = 100
     channels = ["ABC", "NBC", "CBS"]
 
     log.info("Using conf: {}".format(conf))
 
+    cluster = Cluster()
     mode = cluster.reset(config_path=conf)
     admin = Admin(cluster.sync_gateways[0])
 
@@ -203,22 +176,14 @@ def test_sync_channel_sanity(cluster, conf):
     # TODO Push more docs to channel and make sure they do not show up in the users changes feed.
 
 
-@pytest.mark.sanity
-@pytest.mark.parametrize(
-    "conf",
-    [
-        ("sync_gateway_custom_sync_role_sanity_di.json"),
-        ("sync_gateway_custom_sync_role_sanity_cc.json")
-    ],
-    ids=["DI-1", "CC-2"]
-)
-def test_sync_role_sanity(cluster, conf):
+def test_sync_role_sanity(conf):
 
     num_docs_per_channel = 100
     tv_channels = ["ABC", "NBC", "CBS"]
 
     log.info("Using conf: {}".format(conf))
 
+    cluster = Cluster()
     mode = cluster.reset(config_path=conf)
 
     admin = Admin(cluster.sync_gateways[0])
@@ -273,19 +238,11 @@ def test_sync_role_sanity(cluster, conf):
     assert(len(errors) == 0)
 
 
-@pytest.mark.sanity
-@pytest.mark.parametrize(
-    "conf",
-    [
-        ("sync_gateway_custom_sync_one_di.json"),
-        ("sync_gateway_custom_sync_one_cc.json")
-    ],
-    ids=["DI-1", "CC-2"]
-)
-def test_sync_sanity(cluster, conf):
+def test_sync_sanity(conf):
 
     log.info("Using conf: {}".format(conf))
 
+    cluster = Cluster()
     mode = cluster.reset(config_path=conf)
 
     radio_stations = ["KMOW", "HWOD", "KDWB"]
@@ -320,19 +277,11 @@ def test_sync_sanity(cluster, conf):
     assert(len(errors) == 0)
 
 
-@pytest.mark.sanity
-@pytest.mark.parametrize(
-    "conf",
-    [
-        ("sync_gateway_custom_sync_one_di.json"),
-        ("sync_gateway_custom_sync_one_cc.json")
-    ],
-    ids=["DI-1", "CC-2"]
-)
-def test_sync_sanity_backfill(cluster, conf):
+def test_sync_sanity_backfill(conf):
 
     log.info("Using conf: {}".format(conf))
 
+    cluster = Cluster()
     mode = cluster.reset(config_path=conf)
 
     radio_stations = ["KMOW", "HWOD", "KDWB"]
@@ -367,19 +316,11 @@ def test_sync_sanity_backfill(cluster, conf):
     assert(len(errors) == 0)
 
 
-@pytest.mark.sanity
-@pytest.mark.parametrize(
-    "conf",
-    [
-        ("sync_gateway_custom_sync_require_roles_di.json"),
-        ("sync_gateway_custom_sync_require_roles_cc.json")
-    ],
-    ids=["DI-1", "CC-2"]
-)
-def test_sync_require_roles(cluster, conf):
+def test_sync_require_roles(conf):
 
     log.info("Using conf: {}".format(conf))
 
+    cluster = Cluster()
     mode = cluster.reset(config_path=conf)
 
     radio_stations = ["KMOW", "HWOD", "KDWB"]

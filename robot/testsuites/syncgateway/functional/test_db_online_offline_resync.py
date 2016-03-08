@@ -1,5 +1,6 @@
 from testkit.verify import verify_changes
-from fixtures import cluster
+from testkit.cluster import Cluster
+
 import time
 import pytest
 from testkit.admin import Admin
@@ -10,16 +11,12 @@ import logging
 log = logging.getLogger(settings.LOGGER)
 
 
-@pytest.mark.sanity
-@pytest.mark.dbonlineoffline
-@pytest.mark.parametrize("num_users", [5])
-@pytest.mark.parametrize("num_docs", [100])
-@pytest.mark.parametrize("num_revisions", [10])
-def test_bucket_online_offline_resync_sanity(cluster, num_users, num_docs, num_revisions):
+def test_bucket_online_offline_resync_sanity(num_users, num_docs, num_revisions):
     log.info("Starting test...")
     start = time.time()
 
-    mode = cluster.reset("bucket_online_offline/db_online_offline_access_all_cc.json")
+    cluster = Cluster()
+    mode = cluster.reset("resources/sync_gateway_configs/bucket_online_offline/db_online_offline_access_all_cc.json")
 
     init_completed = time.time()
     log.info("Initialization completed. Time taken:{}s".format(init_completed - start))
@@ -124,16 +121,12 @@ def test_bucket_online_offline_resync_sanity(cluster, num_users, num_docs, num_r
 # put DB offline, run _resync, attempt to bring DB online while _resync is running,
 # expected result _online will fail with status 503, when _resync is complete,
 # attempt to bring DB _online, expected result _online will succeed, return status 200.
-@pytest.mark.sanity
-@pytest.mark.dbonlineoffline
-@pytest.mark.parametrize("num_users", [5])
-@pytest.mark.parametrize("num_docs", [100])
-@pytest.mark.parametrize("num_revisions", [5])
-def test_bucket_online_offline_resync_with_online(cluster, num_users, num_docs, num_revisions):
+def test_bucket_online_offline_resync_with_online(num_users, num_docs, num_revisions):
     log.info("Starting test...")
     start = time.time()
 
-    mode = cluster.reset("bucket_online_offline/db_online_offline_access_all_cc.json")
+    cluster = Cluster()
+    mode = cluster.reset("resources/sync_gateway_configs/bucket_online_offline/db_online_offline_access_all_cc.json")
 
     init_completed = time.time()
     log.info("Initialization completed. Time taken:{}s".format(init_completed - start))
@@ -201,7 +194,7 @@ def test_bucket_online_offline_resync_with_online(cluster, num_users, num_docs, 
     status = admin.take_db_offline(db="db")
     assert(status == 200)
 
-    restart_status = cluster.sync_gateways[0].restart("bucket_online_offline/db_online_offline_access_restricted_cc.json")
+    restart_status = cluster.sync_gateways[0].restart("resources/sync_gateway_configs/bucket_online_offline/db_online_offline_access_restricted_cc.json")
     assert restart_status == 0
 
     log.info("Sleeping....")
@@ -287,16 +280,12 @@ def test_bucket_online_offline_resync_with_online(cluster, num_users, num_docs, 
 # #13
 # With DB running a _resync, make REST API call to get DB runtime details /db/,
 # expected result 'state' property with value 'Resyncing' is returned.
-@pytest.mark.sanity
-@pytest.mark.dbonlineoffline
-@pytest.mark.parametrize("num_users", [5])
-@pytest.mark.parametrize("num_docs", [100])
-@pytest.mark.parametrize("num_revisions", [5])
-def test_bucket_online_offline_resync_with_offline(cluster, num_users, num_docs, num_revisions):
+def test_bucket_online_offline_resync_with_offline(num_users, num_docs, num_revisions):
     log.info("Starting test...")
     start = time.time()
 
-    mode = cluster.reset("bucket_online_offline/db_online_offline_access_all_cc.json")
+    cluster = Cluster()
+    mode = cluster.reset("resources/sync_gateway_configs/bucket_online_offline/db_online_offline_access_all_cc.json")
 
     init_completed = time.time()
     log.info("Initialization completed. Time taken:{}s".format(init_completed - start))
@@ -364,7 +353,7 @@ def test_bucket_online_offline_resync_with_offline(cluster, num_users, num_docs,
     status = admin.take_db_offline(db="db")
     assert(status == 200)
 
-    restart_status = cluster.sync_gateways[0].restart("bucket_online_offline/db_online_offline_access_restricted_cc.json")
+    restart_status = cluster.sync_gateways[0].restart("resources/sync_gateway_configs/bucket_online_offline/db_online_offline_access_restricted_cc.json")
     assert restart_status == 0
 
     log.info("Sleeping....")

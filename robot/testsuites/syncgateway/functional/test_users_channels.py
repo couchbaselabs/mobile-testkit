@@ -3,28 +3,19 @@ import time
 import pytest
 
 from testkit.admin import Admin
+from testkit.cluster import Cluster
 from testkit.verify import verify_changes
 
 import testkit.settings
 import logging
 log = logging.getLogger(testkit.settings.LOGGER)
 
-from fixtures import cluster
 
-
-@pytest.mark.distributed_index
-@pytest.mark.sanity
-@pytest.mark.parametrize(
-        "conf", [
-            ("sync_gateway_default_functional_tests_di.json"),
-            ("sync_gateway_default_functional_tests_cc.json")
-        ],
-        ids=["DI-1", "CC-2"]
-)
-def test_multiple_users_multiple_channels(cluster, conf):
+def test_multiple_users_multiple_channels(conf):
 
     log.info("conf: {}".format(conf))
 
+    cluster = Cluster()
     mode = cluster.reset(config_path=conf)
 
     # TODO Parametrize
@@ -72,19 +63,11 @@ def test_multiple_users_multiple_channels(cluster, conf):
     assert(len(errors) == 0)
 
 
-@pytest.mark.distributed_index
-@pytest.mark.sanity
-@pytest.mark.parametrize(
-        "conf", [
-            ("sync_gateway_default_functional_tests_di.json"),
-            ("sync_gateway_default_functional_tests_cc.json")
-        ],
-        ids=["DI-1", "CC-2"]
-)
-def test_muliple_users_single_channel(cluster, conf):
+def test_muliple_users_single_channel(conf):
 
     log.info("conf: {}".format(conf))
 
+    cluster = Cluster()
     mode = cluster.reset(config_path=conf)
 
     sgs = cluster.sync_gateways
@@ -122,19 +105,11 @@ def test_muliple_users_single_channel(cluster, conf):
     assert(len(errors) == 0)
 
 
-@pytest.mark.distributed_index
-@pytest.mark.sanity
-@pytest.mark.parametrize(
-        "conf", [
-            ("sync_gateway_default_functional_tests_di.json"),
-            ("sync_gateway_default_functional_tests_cc.json")
-        ],
-        ids=["DI-1", "CC-2"]
-)
-def test_single_user_multiple_channels(cluster, conf):
+def test_single_user_multiple_channels(conf):
 
     log.info("conf: {}".format(conf))
 
+    cluster = Cluster()
     mode = cluster.reset(config_path=conf)
 
     start = time.time()
@@ -165,19 +140,11 @@ def test_single_user_multiple_channels(cluster, conf):
     log.info("TIME:{}s".format(end - start))
 
 
-@pytest.mark.distributed_index
-@pytest.mark.sanity
-@pytest.mark.parametrize(
-        "conf", [
-            ("sync_gateway_default_functional_tests_di.json"),
-            ("sync_gateway_default_functional_tests_cc.json")
-        ],
-        ids=["DI-1", "CC-2"]
-)
-def test_single_user_single_channel(cluster, conf):
+def test_single_user_single_channel(conf):
 
     log.info("conf: {}".format(conf))
 
+    cluster = Cluster()
     mode = cluster.reset(config_path=conf)
 
     sgs = cluster.sync_gateways
