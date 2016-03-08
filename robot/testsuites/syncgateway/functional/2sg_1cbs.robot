@@ -22,7 +22,13 @@ ${SYNC_GATEWAY_CONFIG}      ${SYNC_GATEWAY_CONFIGS}/sync_gateway_default_functio
 *** Test Cases ***
 # Cluster has been setup
 
-# TestBucketShadow
+# test bucket shadow
+test bucket shadow low_revs limit repeated_deletes
+    test bucket shadow low_revs limit repeated_deletes
+
+test bucket shadow low_revs limit
+    test bucket shadow low_revs limit
+
 test bucket shadow multiple sync gateways
     test bucket shadow multiple sync gateways
 

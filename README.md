@@ -432,6 +432,27 @@ pip install robotframework
 
 ```
 
+running a test case
+
+The functional tests are organized in files names with the cluster configuration that they require. 
+
+For instance, testsuites/syncgateway/functional/1sg_1cb.robot requires resources/cluster_configs/1sg_1cb to be defined.
+ 
+1sg_1cbs would look like below
+
+```
+[couchbase_servers]
+cb1 ansible_host=111.11.111.111
+
+[sync_gateways]
+sg1 ansible_host=222.22.222.222
+```
+ 
+ 
+```
+robot testsuites/syncgateway/functional/1sg_1cbs.robot
+```
+
 Install prerequisites for appium
 ```
 brew install node

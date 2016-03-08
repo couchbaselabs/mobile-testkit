@@ -30,10 +30,6 @@ ${SYNC_GATEWAY_CONFIG}      ${SYNC_GATEWAY_CONFIGS}/sync_gateway_default_functio
 *** Test Cases ***
 # Cluster has been setup
 
-# test_bucket_shadow
-test bucket shadow propagates to source bucket
-    test bucket shadow propagates to source bucket
-
 # test_bulk_get_compression (channel cache mode)
 test bulk get compression no compression
     test bulk get compression   ${SYNC_GATEWAY_CONFIGS}/sync_gateway_default_cc.json    ${300}
@@ -183,7 +179,7 @@ test single user single channel
 Suite Setup
     Log To Console      Setting up ...
     Set Environment Variable    CLUSTER_CONFIG    ${cluster_config}
-    #Provision Cluster   ${SERVER_VERSION}   ${SYNC_GATEWAY_VERSION}    ${SYNC_GATEWAY_CONFIG}
+    Provision Cluster   ${SERVER_VERSION}   ${SYNC_GATEWAY_VERSION}    ${SYNC_GATEWAY_CONFIG}
 
 Suite Teardown
     Log To Console      Tearing down ...

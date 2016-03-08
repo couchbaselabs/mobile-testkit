@@ -295,7 +295,3 @@ def get_doc_from_source_bucket_retry(doc_id, bucket):
             continue
     return doc 
 
-
-
-
-    

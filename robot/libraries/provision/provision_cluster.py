@@ -10,7 +10,6 @@ from install_sync_gateway import SyncGatewayConfig
 
 from ansible_runner import AnsibleRunner
 
-# TODO Add SG package
 
 def provision_cluster(couchbase_server_config, sync_gateway_config, install_deps):
 
@@ -76,7 +75,7 @@ if __name__ == "__main__":
 
     parser = OptionParser(usage=usage)
 
-    default_sync_gateway_config = os.path.abspath("conf/sync_gateway_default.json")
+    default_sync_gateway_config = os.path.abspath("resources/sync_gateway_configs/sync_gateway_default.json")
 
     parser.add_option("", "--server-version",
                       action="store", type="string", dest="server_version", default=None,
@@ -96,7 +95,7 @@ if __name__ == "__main__":
 
     parser.add_option("", "--sync-gateway-config-file",
                       action="store", type="string", dest="sync_gateway_config_file", default=default_sync_gateway_config,
-                      help="path to your sync_gateway_config file")
+                      help="path to your sync_gateway_config file, uses 'resources/sync_gateway_configs/sync_gateway_default.json' by default")
 
     parser.add_option("", "--sync-gateway-branch",
                       action="store", type="string", dest="source_branch", default=None,
@@ -146,11 +145,11 @@ if __name__ == "__main__":
         branch=opts.source_branch,
         build_flags=opts.build_flags,
         config_path=opts.sync_gateway_config_file,
-        skip_bucketflush=opts.skip_bucketflush,
+        skip_bucketflush=opts.skip_bucketflush
     )
 
     provision_cluster(
         couchbase_server_config=server_config,
         sync_gateway_config=sync_gateway_config,
-        install_deps=opts.install_deps,
+        install_deps=opts.install_deps
     )
