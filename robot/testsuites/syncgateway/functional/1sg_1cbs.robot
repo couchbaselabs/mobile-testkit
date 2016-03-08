@@ -5,13 +5,16 @@ Library     Process
 Library     OperatingSystem
 Library     ${Libraries}/ClusterKeywords.py
 Library     ${Libraries}/LoggingKeywords.py
-Library     test_users_channels.py
+
 Library     test_bucket_shadow.py
+Library     test_bulk_get_compression.py
+Library     test_continuous.py
 Library     test_db_online_offline.py
 Library     test_db_online_offline_resync.py
 Library     test_sync.py
-Library     test_bulk_get_compression.py
-Library     test_continuous.py
+Library     test_users_channels.py
+
+
 
 Suite Setup     Suite Setup
 Suite Teardown  Suite Teardown
@@ -27,11 +30,11 @@ ${SYNC_GATEWAY_CONFIG}      ${SYNC_GATEWAY_CONFIGS}/sync_gateway_default_functio
 *** Test Cases ***
 # Cluster has been setup
 
-# TestBucketShadow
+# test_bucket_shadow
 test bucket shadow propagates to source bucket
     test bucket shadow propagates to source bucket
 
-# TestBulkGetCompression
+# test_bulk_get_compression (channel cache mode)
 test bulk get compression no compression
     test bulk get compression   ${SYNC_GATEWAY_CONFIGS}/sync_gateway_default_cc.json    ${300}
 
@@ -69,7 +72,24 @@ test bulk get compression accept encoding gzip x accept part encoding gzip 1.2 u
     test bulk get compression   ${SYNC_GATEWAY_CONFIGS}/sync_gateway_default_cc.json    ${300}  accept_encoding=gzip  x_accept_part_encoding=gzip  user_agent=CouchbaseLite/1.2
 
 
-# TestDbOnlineOffline
+# test_continuous (channel cache mode)
+test continuous changes parametrized 1 user 5000 docs 1 revision
+    test continuous changes parametrized    ${SYNC_GATEWAY_CONFIGS}/sync_gateway_default_functional_tests_cc.json  ${1}  ${5000}  ${1}
+
+test continuous changes parametrized 50 users 5000 docs 1 revision
+    test continuous changes parametrized    ${SYNC_GATEWAY_CONFIGS}/sync_gateway_default_functional_tests_cc.json  ${50}  ${5000}  ${1}
+
+test continuous changes parametrized 50 users 5000 10 docs 10 revisions
+    test continuous changes parametrized    ${SYNC_GATEWAY_CONFIGS}/sync_gateway_default_functional_tests_cc.json  ${50}  ${10}  ${10}
+
+test continuous changes parametrized 50 user 50 docs 1000 revisions
+    test continuous changes parametrized    ${SYNC_GATEWAY_CONFIGS}/sync_gateway_default_functional_tests_cc.json  ${50}  ${50}  ${1000}
+
+test continuous changes sanity
+    test_continuous_changes_sanity          ${SYNC_GATEWAY_CONFIGS}/sync_gateway_default_functional_tests_cc.json  ${10}  ${10}
+
+
+# test_db_online_offline (channel cache mode)
 test online default rest
     test online default rest                                                                ${SYNC_GATEWAY_CONFIGS}/bucket_online_offline/bucket_online_offline_default_cc.json             ${100}
 
@@ -110,7 +130,7 @@ test multiple dbs unique buckets lose tap
     test multiple dbs unique buckets lose tap                                               ${SYNC_GATEWAY_CONFIGS}/bucket_online_offline/bucket_online_offline_multiple_dbs_unique_buckets_cc.json     ${100}
 
 
-# TestDBOnlineOfflineResync
+# test_db_online_offline_resync (channel cache mode)
 test bucket online offline resync sanity
     test bucket online offline resync sanity    ${5}    ${100}  ${10}
 
@@ -121,23 +141,8 @@ test bucket online offline resync with offline
     test bucket online offline resync with offline  ${5}    ${100}  ${5}
 
 
-# TestContinuous
-test continuous changes parametrized 1 user 5000 docs 1 revision
-    test continuous changes parametrized    ${SYNC_GATEWAY_CONFIGS}/sync_gateway_default_functional_tests_cc.json  ${1}  ${5000}  ${1}
 
-test continuous changes parametrized 50 users 5000 docs 1 revision
-    test continuous changes parametrized    ${SYNC_GATEWAY_CONFIGS}/sync_gateway_default_functional_tests_cc.json  ${50}  ${5000}  ${1}
-
-test continuous changes parametrized 50 users 5000 10 docs 10 revisions
-    test continuous changes parametrized    ${SYNC_GATEWAY_CONFIGS}/sync_gateway_default_functional_tests_cc.json  ${50}  ${10}  ${10}
-
-test continuous changes parametrized 50 user 50 docs 1000 revisions
-    test continuous changes parametrized    ${SYNC_GATEWAY_CONFIGS}/sync_gateway_default_functional_tests_cc.json  ${50}  ${50}  ${1000}
-
-test continuous changes sanity
-    test_continuous_changes_sanity          ${SYNC_GATEWAY_CONFIGS}/sync_gateway_default_functional_tests_cc.json  ${10}  ${10}
-
-# TestSync (channel cache mode)
+# test_sync (channel cache mode)
 test issue 1524
      test issue 1524            ${SYNC_GATEWAY_CONFIGS}/custom_sync/grant_access_one_cc.json   ${10}
 
@@ -160,7 +165,7 @@ test sync require roles
     test sync require roles     ${SYNC_GATEWAY_CONFIGS}/custom_sync/sync_gateway_custom_sync_require_roles_cc.json
 
 
-# TestUsersChannels (channel cache mode)
+# test_users_channels (channel cache mode)
 test multiple users multiple channels
     test multiple users multiple channels   ${SYNC_GATEWAY_CONFIGS}/sync_gateway_default_functional_tests_cc.json
 

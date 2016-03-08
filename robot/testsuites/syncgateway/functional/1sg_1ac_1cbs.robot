@@ -5,8 +5,11 @@ Library     Process
 Library     OperatingSystem
 Library     ${Libraries}/ClusterKeywords.py
 Library     ${Libraries}/LoggingKeywords.py
-Library     TestUsersChannels.py
-Library     TestDbOnlineOffline.py
+
+Library     test_continuous.py
+Library     test_db_online_offline.py
+Library     test_sync.py
+Library     test_users_channels.py
 
 Suite Setup     Suite Setup
 Suite Teardown  Suite Teardown
@@ -21,7 +24,7 @@ ${CLUSTER_CONFIG}           ${CLUSTER_CONFIGS}/1sg_1ac_1cbs
 *** Test Cases ***
 # Cluster has been setup
 
-# TestContinuous
+# test_continuous (Distributed Index)
 test continuous changes parametrized 1 user 5000 docs 1 revision
     test continuous changes parametrized    ${SYNC_GATEWAY_CONFIGS}/sync_gateway_default_functional_tests_di.json  ${1}  ${5000}  ${1}
 
@@ -38,7 +41,7 @@ test continuous changes sanity
     test_continuous_changes_sanity          ${SYNC_GATEWAY_CONFIGS}/sync_gateway_default_functional_tests_di.json  ${10}  ${10}
 
 
-# TestDbOnlineOffline
+# test_db_online_offline (Distributed Index)
 test online default rest
     test online default rest                                                                ${SYNC_GATEWAY_CONFIGS}/bucket_online_offline/bucket_online_offline_default_di.json             ${100}
 
@@ -76,7 +79,7 @@ test multiple dbs unique buckets lose tap
     test multiple dbs unique buckets lose tap                                               ${SYNC_GATEWAY_CONFIGS}/bucket_online_offline/bucket_online_offline_multiple_dbs_unique_buckets_di.json     ${100}
 
 
-# TestSync (Distributed Index)
+# test_sync (Distributed Index)
 test issue 1524
      test issue 1524            ${SYNC_GATEWAY_CONFIGS}/custom_sync/grant_access_one_di.json.json   ${10}
 
@@ -98,7 +101,7 @@ test sync sanity backfill
 test sync require roles
     test sync require roles     ${SYNC_GATEWAY_CONFIGS}/custom_sync/sync_gateway_custom_sync_require_roles_di.json
 
-# TestUsersChannels (Distributed Index)
+# test_users_channels (Distributed Index)
 test multiple users multiple channels (distributed index)
     test multiple users multiple channels   ${SYNC_GATEWAY_CONFIGS}/sync_gateway_default_functional_tests_di.json
 
