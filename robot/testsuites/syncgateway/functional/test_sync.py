@@ -3,16 +3,16 @@ import time
 import pytest
 import concurrent.futures
 
-from lib.admin import Admin
-from lib.verify import verify_changes
-from lib.verify import verify_same_docs
-from lib.verify import verify_docs_removed
+from testkit.admin import Admin
+from testkit.verify import verify_changes
+from testkit.verify import verify_same_docs
+from testkit.verify import verify_docs_removed
 
 from fixtures import cluster
 
-import lib.settings
+import testkit.settings
 import logging
-log = logging.getLogger(lib.settings.LOGGER)
+log = logging.getLogger(testkit.settings.LOGGER)
 
 
 # https://github.com/couchbase/sync_gateway/issues/1524
@@ -40,7 +40,7 @@ def test_issue_1524(cluster, conf, num_docs):
 
     longpoll_docs = {}
 
-    with concurrent.futures.ThreadPoolExecutor(max_workers=lib.settings.MAX_REQUEST_WORKERS) as executor:
+    with concurrent.futures.ThreadPoolExecutor(max_workers=testkit.settings.MAX_REQUEST_WORKERS) as executor:
         futures = dict()
         futures[executor.submit(user_no_channels.start_longpoll_changes_tracking, termination_doc_id="terminator")] = "polling"
         log.info("Starting longpoll feed")

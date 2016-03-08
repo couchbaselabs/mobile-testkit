@@ -1,12 +1,10 @@
 import time
 
-import pytest
-
-from lib.admin import Admin
-from lib.verify import verify_changes
+import json
+from testkit.admin import Admin
+from testkit.cluster import Cluster
+from testkit.verify import verify_changes
 from collections import namedtuple
-
-from fixtures import cluster
 
 default_config_path_shadower = "sync_gateway_bucketshadow_cc.json"
 default_config_path_shadower_low_revs = "sync_gateway_bucketshadow_low_revs_cc.json"
@@ -30,10 +28,11 @@ ShadowCluster = namedtuple(
     ],
     verbose=False)
 
-def init_shadow_cluster(cluster, config_path_shadower, config_path_non_shadower):
+def init_shadow_cluster(config_path_shadower, config_path_non_shadower):
 
     # initially, setup both sync gateways as shadowers -- this needs to be
     # the initial config so that both buckets (source and data) will be created
+    cluster = Cluster()
     mode = cluster.reset(config_path=config_path_shadower)
 
     # pick a sync gateway and choose it as non-shadower.  reset with config.
@@ -88,8 +87,9 @@ def init_shadow_cluster(cluster, config_path_shadower, config_path_non_shadower)
 # - Recreate the doc in the source bucket
 #
 # See https://github.com/couchbaselabs/sync-gateway-testcluster/issues/291#issuecomment-191521993 
-def test_bucket_shadow_low_revs_limit_repeated_deletes(cluster):
+def test_bucket_shadow_low_revs_limit_repeated_deletes():
 
+    cluster = Cluster()
     sc = init_shadow_cluster(cluster,
                              default_config_path_shadower_low_revs,
                              default_config_path_non_shadower_low_revs,
@@ -133,7 +133,7 @@ def test_bucket_shadow_low_revs_limit_repeated_deletes(cluster):
     assert(len(errors) == 0)
     
 
-def test_bucket_shadow_low_revs_limit(cluster):
+def test_bucket_shadow_low_revs_limit():
     """
     Set revs limit to 40
     Add doc and makes sure it syncs to source bucket
@@ -145,7 +145,7 @@ def test_bucket_shadow_low_revs_limit(cluster):
     Look for panics
     (TODO: Update doc in shadow bucket and look for panics?)
     """
-
+    cluster = Cluster()
     sc = init_shadow_cluster(cluster, default_config_path_shadower_low_revs, default_config_path_non_shadower_low_revs)    
 
     # Write doc into shadower SG
@@ -188,8 +188,9 @@ def test_bucket_shadow_low_revs_limit(cluster):
     assert(len(errors) == 0)
 
     
-def test_bucket_shadow_multiple_sync_gateways(cluster):
+def test_bucket_shadow_multiple_sync_gateways():
 
+    cluster = Cluster()
     sc = init_shadow_cluster(
         cluster,
         default_config_path_shadower,

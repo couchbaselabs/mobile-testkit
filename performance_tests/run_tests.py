@@ -5,7 +5,7 @@ import shutil
 import time
 
 from optparse import OptionParser
-from lib.cluster import Cluster
+from testkit.cluster import Cluster
 
 from provision.ansible_runner import run_ansible_playbook
 

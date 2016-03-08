@@ -3,14 +3,14 @@ import time
 import pytest
 import concurrent.futures
 
-import lib.settings
-from lib.admin import Admin
-from lib.verify import verify_changes
-from lib.verify import verify_same_docs
+import testkit.settings
+from testkit.admin import Admin
+from testkit.verify import verify_changes
+from testkit.verify import verify_same_docs
 
-import lib.settings
+import testkit.settings
 import logging
-log = logging.getLogger(lib.settings.LOGGER)
+log = logging.getLogger(testkit.settings.LOGGER)
 
 from fixtures import cluster
 
@@ -46,7 +46,7 @@ def test_longpoll_changes_parametrized(cluster,conf, num_docs, num_revisions):
 
     docs_in_changes = dict()
 
-    with concurrent.futures.ThreadPoolExecutor(max_workers=lib.settings.MAX_REQUEST_WORKERS) as executor:
+    with concurrent.futures.ThreadPoolExecutor(max_workers=testkit.settings.MAX_REQUEST_WORKERS) as executor:
 
         futures = dict()
         futures[executor.submit(seth.start_longpoll_changes_tracking, termination_doc_id="killpolling")] = "polling"
@@ -100,7 +100,7 @@ def test_longpoll_changes_sanity(cluster, conf, num_docs, num_revisions):
 
     docs_in_changes = dict()
 
-    with concurrent.futures.ThreadPoolExecutor(max_workers=lib.settings.MAX_REQUEST_WORKERS) as executor:
+    with concurrent.futures.ThreadPoolExecutor(max_workers=testkit.settings.MAX_REQUEST_WORKERS) as executor:
 
         futures = dict()
         futures[executor.submit(seth.start_longpoll_changes_tracking, termination_doc_id="killpolling")] = "polling"

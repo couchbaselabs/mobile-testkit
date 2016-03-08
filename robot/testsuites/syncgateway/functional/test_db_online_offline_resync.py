@@ -1,11 +1,11 @@
-from lib.verify import verify_changes
+from testkit.verify import verify_changes
 from fixtures import cluster
 import time
 import pytest
-from lib.admin import Admin
+from testkit.admin import Admin
 from multiprocessing.pool import ThreadPool
 from requests.exceptions import HTTPError
-from lib.parallelize import *
+from testkit.parallelize import *
 import logging
 log = logging.getLogger(settings.LOGGER)
 
