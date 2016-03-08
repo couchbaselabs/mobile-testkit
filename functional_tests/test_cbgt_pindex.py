@@ -3,8 +3,8 @@ import time
 import pytest
 
 
-from lib.admin import Admin
-from lib.verify import verify_changes
+from testkit.admin import Admin
+from testkit.verify import verify_changes
 
 from fixtures import cluster
 

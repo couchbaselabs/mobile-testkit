@@ -3,15 +3,15 @@ import time
 import pytest
 import concurrent.futures
 
-import lib.settings
-from lib.admin import Admin
-from lib.verify import verify_changes
-from lib.verify import verify_same_docs
+import testkit.settings
+from testkit.admin import Admin
+from testkit.verify import verify_changes
+from testkit.verify import verify_same_docs
 
 from fixtures import cluster
 
 import logging
-log = logging.getLogger(lib.settings.LOGGER)
+log = logging.getLogger(testkit.settings.LOGGER)
 
 @pytest.mark.distributed_index
 @pytest.mark.sanity

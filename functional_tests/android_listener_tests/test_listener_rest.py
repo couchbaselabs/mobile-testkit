@@ -3,12 +3,12 @@ from concurrent.futures import ThreadPoolExecutor
 import os
 import time
 
-import lib.settings
-from lib.listener import Listener
-from lib.user import User
-from lib.verify import verify_same_docs
+import testkit.settings
+from testkit.listener import Listener
+from testkit.user import User
+from testkit.verify import verify_same_docs
 
-from lib import settings
+from testkit import settings
 import logging
 log = logging.getLogger(settings.LOGGER)
 

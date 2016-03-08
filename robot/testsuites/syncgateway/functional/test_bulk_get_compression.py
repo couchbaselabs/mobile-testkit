@@ -1,19 +1,16 @@
-import pytest
-import time
 import concurrent.futures
 
 import subprocess
 import json
 import os
 
-import lib.settings
-from lib.data import Data
-from lib.admin import Admin
+import testkit.settings
+from testkit.cluster import Cluster
+from testkit.data import Data
+from testkit.admin import Admin
 
 import logging
-log = logging.getLogger(lib.settings.LOGGER)
-
-from fixtures import cluster
+log = logging.getLogger(testkit.settings.LOGGER)
 
 uncompressed_size = 6320500
 part_encoded_size = 2244500
@@ -115,7 +112,7 @@ def verify_response_size(user_agent, accept_encoding, x_accept_part_encoding, re
     ],
     ids=["CC-1", "CC-2", "CC-3", "CC-4", "CC-5", "CC-6", "CC-7", "CC-8", "CC-9", "CC-10", "CC-11", "CC-12"]
 )
-def test_bulk_get_compression(cluster, conf, num_docs, accept_encoding, x_accept_part_encoding, user_agent):
+def test_bulk_get_compression(conf, num_docs, accept_encoding, x_accept_part_encoding, user_agent):
 
     log.info("Using conf: {}".format(conf))
     log.info("Using num_docs: {}".format(num_docs))
@@ -123,6 +120,7 @@ def test_bulk_get_compression(cluster, conf, num_docs, accept_encoding, x_accept
     log.info("Using accept_encoding: {}".format(accept_encoding))
     log.info("Using x_accept_part_encoding: {}".format(x_accept_part_encoding))
 
+    cluster = Cluster()
     mode = cluster.reset(config_path=conf)
     admin = Admin(cluster.sync_gateways[0])
 
@@ -130,7 +128,7 @@ def test_bulk_get_compression(cluster, conf, num_docs, accept_encoding, x_accept
 
     doc_body = Data.load("mock_users_20k.json")
 
-    with concurrent.futures.ThreadPoolExecutor(max_workers=lib.settings.MAX_REQUEST_WORKERS) as executor:
+    with concurrent.futures.ThreadPoolExecutor(max_workers=testkit.settings.MAX_REQUEST_WORKERS) as executor:
         futures = [executor.submit(user.add_doc, doc_id="test-{}".format(i), content=doc_body) for i in range(num_docs)]
         for future in concurrent.futures.as_completed(futures):
             try:
