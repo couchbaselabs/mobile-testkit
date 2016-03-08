@@ -16,6 +16,7 @@ uncompressed_size = 6320500
 part_encoded_size = 2244500
 whole_response_compressed_size = 75500
 
+
 def issue_request(target, user_agent, accept_encoding, x_accept_part_encoding, payload):
 
     # Set proper headers
@@ -93,26 +94,7 @@ def verify_response_size(user_agent, accept_encoding, x_accept_part_encoding, re
         raise ValueError("Unsupported user agent")
 
 
-@pytest.mark.sanity
-@pytest.mark.parametrize(
-    "conf, num_docs, accept_encoding, x_accept_part_encoding, user_agent",
-    [
-        ("sync_gateway_default_cc.json", 300, None, None, None),
-        ("sync_gateway_default_cc.json", 300, None, None, "CouchbaseLite/1.1"),
-        ("sync_gateway_default_cc.json", 300, "gzip", None, None),
-        ("sync_gateway_default_cc.json", 300, "gzip", None, "CouchbaseLite/1.1"),
-        ("sync_gateway_default_cc.json", 300, None, "gzip", None),
-        ("sync_gateway_default_cc.json", 300, None, "gzip", "CouchbaseLite/1.1"),
-        ("sync_gateway_default_cc.json", 300, "gzip", "gzip", None),
-        ("sync_gateway_default_cc.json", 300, "gzip", "gzip", "CouchbaseLite/1.1"),
-        ("sync_gateway_default_cc.json", 300, None, None, "CouchbaseLite/1.2"),
-        ("sync_gateway_default_cc.json", 300, "gzip", None, "CouchbaseLite/1.2"),
-        ("sync_gateway_default_cc.json", 300, None, "gzip", "CouchbaseLite/1.2"),
-        ("sync_gateway_default_cc.json", 300, "gzip", "gzip", "CouchbaseLite/1.2"),
-    ],
-    ids=["CC-1", "CC-2", "CC-3", "CC-4", "CC-5", "CC-6", "CC-7", "CC-8", "CC-9", "CC-10", "CC-11", "CC-12"]
-)
-def test_bulk_get_compression(conf, num_docs, accept_encoding, x_accept_part_encoding, user_agent):
+def test_bulk_get_compression(conf, num_docs, accept_encoding=None, x_accept_part_encoding=None, user_agent=None):
 
     log.info("Using conf: {}".format(conf))
     log.info("Using num_docs: {}".format(num_docs))
