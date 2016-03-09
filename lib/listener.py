@@ -16,6 +16,7 @@ class Listener:
     def __init__(self, target_device, local_port, apk_path, activity, reinstall):
 
         self.target_device = target_device
+        self.local_port = local_port
 
         self.url = ""
         self.install_and_launch_app(target_device, local_port, apk_path, activity, reinstall)
@@ -149,5 +150,14 @@ class Listener:
         r.raise_for_status()
         resp_data = r.json()
         return resp_data["total_rows"]
+
+    def kill_port_forwarding(self):
+        log.info("Killing forwarding rule for {} on port: {}".format(self.target_device, self.local_port))
+        subprocess.call(['adb', '-s', self.target_device, 'forward', '--remove', 'tcp:{}'.format(self.local_port)])
+
+    def setup_port_forwarding(self):
+        log.info("Setup forwarding rule for {} on port: {}".format(self.target_device, self.local_port))
+        subprocess.call(['adb', '-s', self.target_device, 'forward', 'tcp:{}'.format(self.local_port), 'tcp:5984'])
+
 
 

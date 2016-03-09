@@ -1,10 +1,12 @@
 import sys
 import subprocess
+import time
 
 from optparse import OptionParser
 
 # jython imports
 from com.android.monkeyrunner import MonkeyRunner, MonkeyDevice
+
 
 def reset_and_launch_app(target_device, apk_path, activity, reinstall, is_liteserve):
 
@@ -31,10 +33,9 @@ def reset_and_launch_app(target_device, apk_path, activity, reinstall, is_litese
         print ('Clearing package cache for %s on device "%s"' % (package_name, target_device))
         device.shell("pm clear %s" % package_name)
 
-
     if is_liteserve:
-        print('Launching LiteServ activity ... ')
-        device.shell('am start -a android.intent.action.MAIN -n com.couchbase.liteservandroid/com.couchbase.liteservandroid.MainActivity --ei listen_port 5984 --es username "" --es password ""')
+        print('Launching LiteServ: "%s"' % activity)
+        device.shell('am start -a android.intent.action.MAIN -n %s --ei listen_port 5984 --es username "" --es password ""' % activity)
     else:
         print('Launching activity: "%s"' % activity)
         device.startActivity(component=activity)
@@ -83,6 +84,12 @@ if __name__ == '__main__':
         reset_and_launch_app(target_device, apk_path, activity, reinstall, True)
     else:
         reset_and_launch_app(target_device, apk_path, activity, reinstall, False)
+
+    time.sleep(5)
+
+    # adb -s emulator-5554 forward --remove tcp:10000
+    print('Removing any forwarding rules for local port: %s' % local_port)
+    subprocess.call(['adb', '-s', target_device, 'forward', '--remove', 'tcp:%d' % local_port])
 
     print('Forwarding %s :5984 to localhost:%s' % (target_device, local_port))
     subprocess.call(['adb', '-s', target_device, 'forward', 'tcp:%d' % local_port, 'tcp:5984'])
