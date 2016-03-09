@@ -33,7 +33,8 @@ RUN pip install troposphere && \
     pip install boto && \
     pip install pytest && \
     pip install futures && \
-    pip install requests
+    pip install requests && \
+    pip install couchbase
 
 
 
