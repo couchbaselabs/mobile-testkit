@@ -111,10 +111,10 @@
   become: yes
   tasks:
   - name: make service install script executable
-    file: path=/home/centos/sync_gateway/service/sync_gateway_service_install.sh mode=a+x
+    file: path=/home/centos/godeps/src/github.com/couchbase/sync_gateway/service/sync_gateway_service_install.sh mode=a+x
     when: "'sync_gateway_index_writers' not in group_names"
   - name: install sync gateway service
-    shell: ./sync_gateway_service_install.sh chdir=/home/centos/sync_gateway/service
+    shell: ./sync_gateway_service_install.sh chdir=/home/centos/godeps/src/github.com/couchbase/sync_gateway/service
     when: "'sync_gateway_index_writers' not in group_names"
   - name: wait until sync gateway to listen on port
     wait_for: port=4985 delay=2 timeout=120
@@ -126,9 +126,9 @@
   become: yes
   tasks:
   - name: make service install script executable
-    file: path=/home/centos/sync_gateway/service/sg_accel_service_install.sh mode=a+x
+    file: path=/home/centos/godeps/src/github.com/couchbase/sync_gateway/service/sg_accel_service_install.sh mode=a+x
   - name: install sg_accell service
-    shell: ./sg_accel_service_install.sh chdir=/home/centos/sync_gateway/service
+    shell: ./sg_accel_service_install.sh chdir=/home/centos/godeps/src/github.com/couchbase/sync_gateway/service
   - name: Start the service
     service: name=sg_accel state=started
   - name: wait until sync gateway to listen on port
