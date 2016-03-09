@@ -128,7 +128,7 @@ def gen_template(config):
     for i in xrange(num_couchbase_servers):
         name = "couchbaseserver{}".format(i)
         instance = ec2.Instance(name)
-        instance.ImageId = "ami-96a818fe"  # centos7
+        instance.ImageId = "ami-6d1c2007"  # centos7
         instance.InstanceType = couchbase_instance_type
         instance.SecurityGroups = [Ref(secGrpCouchbase)]
         instance.KeyName = Ref(keyname_param)
@@ -150,7 +150,7 @@ def gen_template(config):
     for i in xrange(num_sync_gateway_servers):
         name = "syncgateway{}".format(i)
         instance = ec2.Instance(name)
-        instance.ImageId = "ami-96a818fe"  # centos7
+        instance.ImageId = "ami-6d1c2007"  # centos7
         instance.InstanceType = sync_gateway_server_type
         instance.SecurityGroups = [Ref(secGrpCouchbase)]
         instance.KeyName = Ref(keyname_param)
@@ -178,7 +178,7 @@ def gen_template(config):
     for i in xrange(num_gateloads):
         name = "gateload{}".format(i)
         instance = ec2.Instance(name)
-        instance.ImageId = "ami-96a818fe"  # centos7
+        instance.ImageId = "ami-6d1c2007"  # centos7
         instance.InstanceType = gateload_instance_type
         instance.SecurityGroups = [Ref(secGrpCouchbase)]
         instance.KeyName = Ref(keyname_param)
@@ -200,7 +200,7 @@ def gen_template(config):
     for i in xrange(num_lbs):
         name = "loadbalancer{}".format(i)
         instance = ec2.Instance(name)
-        instance.ImageId = "ami-96a818fe"  # centos7 
+        instance.ImageId = "ami-6d1c2007"  # centos7  
         instance.InstanceType = lb_instance_type
         instance.SecurityGroups = [Ref(secGrpCouchbase)]
         instance.KeyName = Ref(keyname_param)
