@@ -36,7 +36,9 @@ RUN pip install troposphere && \
     pip install robotframework && \
     pip install robotframework-appiumlibrary && \
     pip install robotframework-debuglibrary && \
-    pip install requests
+    pip install requests && \
+    pip install couchbase
+
 
 
 
