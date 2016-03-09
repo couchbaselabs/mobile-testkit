@@ -56,6 +56,8 @@
     build_flags:
 
   tasks:
+  - name: remove previous .repo directory
+    file: path=/home/centos/.repo state=absent
   - name: download bootstrap script
     get_url: url=https://raw.githubusercontent.com/couchbase/sync_gateway/master/bootstrap.sh dest=/home/centos mode=0751
   - name: run bootstrap script (bootstrap.sh takes a branch and a commit as params, this will be fixed to only take a commit at some point)
