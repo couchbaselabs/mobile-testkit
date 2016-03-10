@@ -25,7 +25,7 @@ def cluster(request):
         if request.node.rep_call.failed:
 
             log.error("\n!!!!!!!!!! TEST FAILURE !!!!!!!!!!")
-            log.error(request.node.nodeid)
+            log.info(request.node.nodeid)
 
             # example nodeid: tests/test_single_user_multiple_channels.py::test_1
             remove_slash = request.node.nodeid.replace("/", "-")
