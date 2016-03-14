@@ -15,6 +15,7 @@ Library     test_db_online_offline_webhooks.py
 Library     test_longpoll.py
 Library     test_multiple_dbs.py
 Library     test_multiple_users_multiple_channels_multiple_revisions.py
+Library     test_overloaded_channel_cache.py
 Library     test_sync.py
 Library     test_users_channels.py
 
@@ -174,6 +175,20 @@ test mulitple users mulitiple channels mulitple revisions
     test mulitple users mulitiple channels mulitple revisions   ${SYNC_GATEWAY_CONFIGS}/sync_gateway_default_functional_tests_cc.json   ${10}   ${3}    ${10}   ${10}
 
 
+# test overloaded channel cache
+test overloaded channel cache one
+    test overloaded channel cache   ${SYNC_GATEWAY_CONFIGS}/sync_gateway_channel_cache_cc.json  ${5000}  *    True   ${50}
+
+test overloaded channel cache two
+    test overloaded channel cache   ${SYNC_GATEWAY_CONFIGS}/sync_gateway_channel_cache_cc.json  ${1000}  *    True   ${50}
+
+test overloaded channel cache three
+    test overloaded channel cache   ${SYNC_GATEWAY_CONFIGS}/sync_gateway_channel_cache_cc.json  ${5000}  ABC  False  ${50}
+
+test overloaded channel cache four
+    test overloaded channel cache   ${SYNC_GATEWAY_CONFIGS}/sync_gateway_channel_cache_cc.json  ${5000}  ABC  True   ${50}
+
+
 # test_sync (channel cache mode)
 test issue 1524
      test issue 1524            ${SYNC_GATEWAY_CONFIGS}/custom_sync/grant_access_one_cc.json   ${10}
@@ -215,7 +230,7 @@ test single user single channel
 Suite Setup
     Log To Console      Setting up ...
     Set Environment Variable    CLUSTER_CONFIG    ${cluster_config}
-    Provision Cluster   ${SERVER_VERSION}   ${SYNC_GATEWAY_VERSION}    ${SYNC_GATEWAY_CONFIG}
+    #Provision Cluster   ${SERVER_VERSION}   ${SYNC_GATEWAY_VERSION}    ${SYNC_GATEWAY_CONFIG}
 
 Suite Teardown
     Log To Console      Tearing down ...

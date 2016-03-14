@@ -425,11 +425,22 @@ $ ansible-playbook -i provisioning_config -u centos -e sync_gateway_config_filep
 
 ## Robot Framework
 
-Install robot framework plugin for PyCharm
+The mobile test suites leverage Robot Framework (http://robotframework.org/) as an organization platform as well as a test runner and reporter. 
+
+### IMPORTANT
+### Due to resource paths and dependencies, running all scripts and tests should be done from the root of the repository.
+
+Install the dependencies
 
 ```
 pip install robotframework
 
+```
+
+Install prerequisites for appium (used in app testing)
+```
+brew install node
+npm install -g appium
 ```
 
 To provision clusters, you must define a cluster configuration in in resources/cluster_config/
@@ -458,15 +469,14 @@ cb1 ansible_host=111.11.111.111
 sg1 ansible_host=222.22.222.222
 ```
  
- 
+To run a fixture
 ```
 robot testsuites/syncgateway/functional/1sg_1cbs.robot
 ```
 
-Install prerequisites for appium
+To run a test from a fixture
 ```
-brew install node
-npm install -g appium
+robot -t  "test overloaded channel cache one" testsuites/syncgateway/functional/1sg_1cbs.robot
 ```
 
 Debugging
