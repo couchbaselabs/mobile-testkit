@@ -1,36 +1,26 @@
 import time
-import pytest
 from testkit.user import User
 from testkit.admin import Admin
+from testkit.cluster import Cluster
 from testkit.verify import verify_changes
-from fixtures import cluster
-import pytest
-
 import testkit.settings
 import logging
 log = logging.getLogger(testkit.settings.LOGGER)
+
 
 # Scenario-2:
 # Single User Single Channel: Create Unique docs and update docs verify all num docs present in changes feed.
 # Verify all revisions in changes feed
 # https://docs.google.com/spreadsheets/d/1nlba3SsWagDrnAep3rDZHXHIDmRH_FFDeTaYJms_55k/edit#gid=598127796
-
-@pytest.mark.sanity
-@pytest.mark.distributed_index
-@pytest.mark.parametrize(
-        "conf, num_docs, num_revisions", [
-            ("sync_gateway_default_functional_tests_di.json", 100, 100),
-            ("sync_gateway_default_functional_tests_cc.json", 100, 100)
-        ],
-        ids=["DI-1", "CC-2"]
-)
-def test_single_user_single_channel_doc_updates(cluster, conf, num_docs, num_revisions):
+def test_single_user_single_channel_doc_updates(conf, num_docs, num_revisions):
 
     log.info("conf: {}".format(conf))
     log.info("num_docs: {}".format(num_docs))
     log.info("num_revisions: {}".format(num_revisions))
 
     start = time.time()
+
+    cluster = Cluster()
     mode = cluster.reset(config_path=conf)
     num_docs = num_docs
     num_revisions = num_revisions
