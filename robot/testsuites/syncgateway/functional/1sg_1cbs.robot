@@ -12,6 +12,7 @@ Library     test_continuous.py
 Library     test_db_online_offline.py
 Library     test_db_online_offline_resync.py
 Library     test_db_online_offline_webhooks.py
+Library     test_longpoll.py
 Library     test_sync.py
 Library     test_users_channels.py
 
@@ -146,6 +147,16 @@ test db online offline webhooks offline
 
 test db online offline_webhooks offline two
     test db online offline_webhooks offline two     ${5}    ${1}    ${1}    ${2}
+
+# test_longpoll (channel cache mode)
+test longpoll changes parametrized
+    test longpoll changes parametrized      ${SYNC_GATEWAY_CONFIGS}/sync_gateway_default_functional_tests_cc.json   ${5000}  ${1}
+
+test longpoll changes parametrized
+    test longpoll changes parametrized      ${SYNC_GATEWAY_CONFIGS}/sync_gateway_default_functional_tests_cc.json   ${50}   ${100}
+
+test longpoll changes sanity
+    test longpoll changes sanity            ${SYNC_GATEWAY_CONFIGS}/sync_gateway_default_functional_tests_cc.json   ${10}   ${10}
 
 
 # test_sync (channel cache mode)

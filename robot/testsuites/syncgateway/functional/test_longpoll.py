@@ -5,6 +5,7 @@ import concurrent.futures
 
 import testkit.settings
 from testkit.admin import Admin
+from testkit.cluster import Cluster
 from testkit.verify import verify_changes
 from testkit.verify import verify_same_docs
 
@@ -12,31 +13,14 @@ import testkit.settings
 import logging
 log = logging.getLogger(testkit.settings.LOGGER)
 
-from fixtures import cluster
 
-
-@pytest.mark.distributed_index
-@pytest.mark.sanity
-@pytest.mark.parametrize(
-        "conf,num_docs,num_revisions", [
-            ("sync_gateway_default_functional_tests_di.json", 5000, 1),
-            ("sync_gateway_default_functional_tests_di.json", 50, 100),
-            ("sync_gateway_default_functional_tests_cc.json", 5000, 1),
-            ("sync_gateway_default_functional_tests_cc.json", 50, 100)
-        ],
-        ids=[
-            "DI-1",
-            "DI-2",
-            "CC-3",
-            "CC-4"
-        ]
-)
-def test_longpoll_changes_parametrized(cluster,conf, num_docs, num_revisions):
+def test_longpoll_changes_parametrized(conf, num_docs, num_revisions):
 
     log.info("conf: {}".format(conf))
     log.info("num_docs: {}".format(num_docs))
     log.info("num_revisions: {}".format(num_revisions))
 
+    cluster = Cluster()
     mode = cluster.reset(config_path=conf)
 
     admin = Admin(cluster.sync_gateways[0])
@@ -76,21 +60,13 @@ def test_longpoll_changes_parametrized(cluster,conf, num_docs, num_revisions):
     assert(len(errors) == 0)
 
 
-@pytest.mark.distributed_index
-@pytest.mark.sanity
-@pytest.mark.parametrize(
-        "conf, num_docs, num_revisions", [
-            ("sync_gateway_default_functional_tests_di.json", 10, 10),
-            ("sync_gateway_default_functional_tests_cc.json", 10, 10)
-        ],
-        ids=["DI-1", "CC-2"]
-)
-def test_longpoll_changes_sanity(cluster, conf, num_docs, num_revisions):
+def test_longpoll_changes_sanity(conf, num_docs, num_revisions):
 
     log.info("conf: {}".format(conf))
     log.info("num_docs: {}".format(num_docs))
     log.info("num_revisions: {}".format(num_revisions))
 
+    cluster = Cluster()
     mode = cluster.reset(config_path=conf)
 
     admin = Admin(cluster.sync_gateways[0])
