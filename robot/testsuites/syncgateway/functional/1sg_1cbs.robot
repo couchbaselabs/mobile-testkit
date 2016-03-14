@@ -11,6 +11,7 @@ Library     test_bulk_get_compression.py
 Library     test_continuous.py
 Library     test_db_online_offline.py
 Library     test_db_online_offline_resync.py
+Library     test_db_online_offline_webhooks.py
 Library     test_sync.py
 Library     test_users_channels.py
 
@@ -136,6 +137,15 @@ test bucket online offline resync with online
 test bucket online offline resync with offline
     test bucket online offline resync with offline  ${5}    ${100}  ${5}
 
+# test_db_online_offline_webhooks (channel cache mode)
+test webhooks
+    test webhooks                                   ${5}    ${1}    ${1}    ${2}
+
+test db online offline webhooks offline
+    test db online offline webhooks offline         ${5}    ${1}    ${1}    ${2}
+
+test db online offline_webhooks offline two
+    test db online offline_webhooks offline two     ${5}    ${1}    ${1}    ${2}
 
 
 # test_sync (channel cache mode)

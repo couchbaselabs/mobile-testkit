@@ -6,10 +6,10 @@ from testkit.cluster import Cluster
 from testkit.verify import verify_changes
 from collections import namedtuple
 
-default_config_path_shadower = "sync_gateway_bucketshadow_cc.json"
-default_config_path_shadower_low_revs = "sync_gateway_bucketshadow_low_revs_cc.json"
-default_config_path_non_shadower = "sync_gateway_default_cc.json"
-default_config_path_non_shadower_low_revs = "sync_gateway_default_low_revs_cc.json"
+default_config_path_shadower = "resources/sync_gateway_configs/sync_gateway_bucketshadow_cc.json"
+default_config_path_shadower_low_revs = "resources/sync_gateway_configs/sync_gateway_bucketshadow_low_revs_cc.json"
+default_config_path_non_shadower = "resources/sync_gateway_configs/sync_gateway_default_cc.json"
+default_config_path_non_shadower_low_revs = "resources/sync_gateway_configs/sync_gateway_default_low_revs_cc.json"
 source_bucket_name = "source-bucket"
 data_bucket_name = "data-bucket"
 fake_doc_content = {"foo":"bar"}
