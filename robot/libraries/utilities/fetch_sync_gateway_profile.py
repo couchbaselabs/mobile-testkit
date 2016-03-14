@@ -17,7 +17,7 @@ def fetch_sync_gateway_profile(folder_name):
     if os.path.isdir("/tmp/sync_gateway_profile"):
 
         # Move perf logs to performance_results
-        shutil.move("/tmp/sync_gateway_profile", "performance_results/{}/".format(folder_name))
+        shutil.move("/tmp/sync_gateway_profile", "results/{}/".format(folder_name))
 
     print("\n")
 

@@ -20,7 +20,7 @@ def fetch_machine_stats(folder_name):
     if os.path.isdir("/tmp/perf_logs"):
 
         # Move perf logs to performance_results
-        shutil.move("/tmp/perf_logs", "performance_results/{}/".format(folder_name))
+        shutil.move("/tmp/perf_logs", "results/{}/".format(folder_name))
 
     print("\n")
 

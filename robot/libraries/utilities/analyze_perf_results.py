@@ -199,8 +199,8 @@ def analze_perf_results(test_id):
     # Generate plot of gateload expvars
     fig1 = plt.figure()
     fig1.text(0.5, 0.04, 'Gateload Expvars', ha='center', va='center')
-    valid_results = plot_gateload_expvars(fig1, "performance_results/{}/gateload_expvars.json".format(test_id))
-    plt.savefig("performance_results/{}/gateload_expvars.png".format(test_id), dpi=300)
+    valid_results = plot_gateload_expvars(fig1, "results/{}/gateload_expvars.json".format(test_id))
+    plt.savefig("results/{}/gateload_expvars.png".format(test_id), dpi=300)
     if not valid_results:
         print("FAILURE STATE. Some docs failed to push and/or pull. Exiting...")
         sys.exit(1)
@@ -208,14 +208,14 @@ def analze_perf_results(test_id):
     # Generate plot of sync_gateway expvars
     fig2 = plt.figure()
     fig2.text(0.5, 0.04, 'sync_gateway expvars', ha='center', va='center')
-    plot_sync_gateway_expvars(fig2, "performance_results/{}/sync_gateway_expvars.json".format(test_id))
-    plt.savefig("performance_results/{}/sync_gateway_expvars.png".format(test_id), dpi=300)
+    plot_sync_gateway_expvars(fig2, "results/{}/sync_gateway_expvars.json".format(test_id))
+    plt.savefig("results/{}/sync_gateway_expvars.png".format(test_id), dpi=300)
 
     # Generate plot of machine stats
     fig3 = plt.figure()
     fig3.text(0.5, 0.04, 'sync_gateway CPU', ha='center', va='center')
-    plot_machine_stats(fig3, "performance_results/{}/perf_logs/".format(test_id))
-    plt.savefig("performance_results/{}/sync_gateway_machine_stats.png".format(test_id), dpi=300)
+    plot_machine_stats(fig3, "results/{}/perf_logs/".format(test_id))
+    plt.savefig("results/{}/sync_gateway_machine_stats.png".format(test_id), dpi=300)
 
 if __name__ == "__main__":
     usage = """usage: analyze_perf_results.py
