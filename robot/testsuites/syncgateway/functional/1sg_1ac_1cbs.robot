@@ -81,7 +81,7 @@ test multiple dbs unique buckets lose tap
 
 # test_sync (Distributed Index)
 test issue 1524
-     test issue 1524            ${SYNC_GATEWAY_CONFIGS}/custom_sync/grant_access_one_di.json.json   ${10}
+     test issue 1524            ${SYNC_GATEWAY_CONFIGS}/custom_sync/grant_access_one_di.json   ${10}
 
 test sync access sanity
     test sync access sanity     ${SYNC_GATEWAY_CONFIGS}/custom_sync/sync_gateway_custom_sync_access_sanity_di.json
@@ -118,7 +118,7 @@ test single user single channel (distributed index)
 Suite Setup
     Log To Console      Setting up ...
     Set Environment Variable    CLUSTER_CONFIG    ${cluster_config}
-    #Provision Cluster   ${SERVER_VERSION}   ${SYNC_GATEWAY_VERSION}    ${SYNC_GATEWAY_CONFIG}
+    Provision Cluster   ${SERVER_VERSION}   ${SYNC_GATEWAY_VERSION}    ${SYNC_GATEWAY_CONFIG}
 
 Suite Teardown
     Log To Console      Tearing down ...

@@ -5,25 +5,18 @@ import concurrent.futures
 
 from testkit.admin import Admin
 from testkit.verify import verify_changes
+from testkit.cluster import Cluster
+
 import testkit.settings
 import logging
 log = logging.getLogger(testkit.settings.LOGGER)
 
-from fixtures import cluster
 
-
-@pytest.mark.distributed_index
-@pytest.mark.extendedsanity
-@pytest.mark.parametrize(
-        "conf", [
-            ("sync_gateway_default_functional_tests_di.json"),
-        ],
-        ids=["DI-1"]
-)
-def test_dcp_reshard_sync_gateway_goes_down(cluster, conf):
+def test_dcp_reshard_sync_gateway_goes_down(conf):
 
     log.info("conf: {}".format(conf))
 
+    cluster = Cluster()
     mode = cluster.reset(config_path=conf)
 
     admin = Admin(cluster.sync_gateways[0])
@@ -65,18 +58,11 @@ def test_dcp_reshard_sync_gateway_goes_down(cluster, conf):
     assert(len(errors) == 1 and errors[0][0].hostname == "sg1")
 
 
-@pytest.mark.distributed_index
-@pytest.mark.extendedsanity
-@pytest.mark.parametrize(
-        "conf", [
-            ("sync_gateway_default_functional_tests_di.json"),
-        ],
-        ids=["DI-1"]
-)
-def test_dcp_reshard_sync_gateway_comes_up(cluster, conf):
+def test_dcp_reshard_sync_gateway_comes_up(conf):
 
     log.info("conf: {}".format(conf))
 
+    cluster = Cluster()
     mode = cluster.reset(config_path=conf)
     cluster.sg_accels[0].stop()
 
@@ -119,18 +105,12 @@ def test_dcp_reshard_sync_gateway_comes_up(cluster, conf):
     errors = cluster.verify_alive(mode)
     assert(len(errors) == 0)
 
-@pytest.mark.distributed_index
-@pytest.mark.extendedsanity
-@pytest.mark.parametrize(
-        "conf", [
-            ("sync_gateway_default_functional_tests_di.json"),
-        ],
-        ids=["DI-1"]
-)
-def test_dcp_reshard_single_sg_accel_goes_down_and_up(cluster, conf):
+
+def test_dcp_reshard_single_sg_accel_goes_down_and_up(conf):
 
     log.info("conf: {}".format(conf))
 
+    cluster = Cluster()
     mode = cluster.reset(config_path=conf)
 
     # Stop the second sg_accel

@@ -1,5 +1,6 @@
 from testkit.cluster import Cluster
 
+
 def test_pindex_distribution():
 
     # the test itself doesn't have to do anything beyond calling cluster.reset() with the
