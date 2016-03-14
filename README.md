@@ -108,7 +108,7 @@ You probably want to persist these in your `~/.bash_profile`.
 **To kick off cluster**
 
 ```
-$ python provision/create_and_instantiate_cluster.py \
+$ python libraries/provision/create_and_instantiate_cluster.py \
     --stackname="YourCloudFormationStack" \
     --num-servers=1 \
     --server-type="m3.large" \
@@ -124,18 +124,18 @@ NOTE: currently need at least 3 sync gateways (1 sync gw and 2 sg_accels)
 
 The AWS virtual machines will be accessible via the `AWS_KEY` you specified above.
 
-If you want to install a load balancer in front of the Sync Gateway instances, set `--num-lbs` to 1.	
+If you want to install a load balancer in front of the Sync Gateway instances, set `--num-lbs` to 1.
 
 ## Setup Ansible inventory
 
 **AWS**
 
-Generate the Ansible Inventory file (`provisioning_config`) via:
+Generate the Ansible Inventory file (`aws_perf_config`) via:
 
 ```
-$ python provision/generate_ansible_inventory_from_aws.py \
+$ python libraries/provision/generate_ansible_inventory_from_aws.py \
      --stackname=YourCloudFormationStack \
-     --targetfile=provisioning_config
+     --targetfile=aws_perf_config
 ```
 
 ## Configure sync gateway index readers vs index writers
