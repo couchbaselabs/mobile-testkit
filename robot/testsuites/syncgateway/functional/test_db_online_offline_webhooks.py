@@ -1,12 +1,10 @@
 import time
-import pytest
-from testkit.user import User
-import concurrent.futures
+
 from testkit.admin import Admin
 from testkit.cluster import Cluster
 from testkit.web_server import WebServer
-import pytest
 from testkit.parallelize import *
+
 import logging
 log = logging.getLogger(settings.LOGGER)
 

@@ -1,6 +1,5 @@
 import time
 
-import pytest
 import concurrent.futures
 
 import testkit.settings

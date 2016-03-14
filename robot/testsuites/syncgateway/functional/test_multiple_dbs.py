@@ -1,4 +1,3 @@
-import pytest
 
 from testkit.admin import Admin
 from testkit.cluster import Cluster

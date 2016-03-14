@@ -3,7 +3,7 @@ import time
 import json
 from testkit.admin import Admin
 from testkit.cluster import Cluster
-from testkit.verify import verify_changes
+
 from collections import namedtuple
 
 default_config_path_shadower = "resources/sync_gateway_configs/sync_gateway_bucketshadow_cc.json"
