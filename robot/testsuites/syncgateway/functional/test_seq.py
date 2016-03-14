@@ -1,34 +1,22 @@
 import time
 
-import pytest
-
-
 from testkit.admin import Admin
+from testkit.cluster import Cluster
 from testkit.verify import verify_changes
 
 import testkit.settings
 import logging
 log = logging.getLogger(testkit.settings.LOGGER)
 
-from fixtures import cluster
 
-
-@pytest.mark.distributed_index
-@pytest.mark.sanity
-@pytest.mark.parametrize(
-        "conf, num_users, num_docs, num_revisions", [
-            ("sync_gateway_default_functional_tests_di.json", 10, 500, 1),
-            ("sync_gateway_default_functional_tests_cc.json", 10, 500, 1)
-        ],
-        ids=["DI-1", "CC-2"]
-)
-def test_seq(cluster, conf, num_users, num_docs, num_revisions):
+def test_seq(conf, num_users, num_docs, num_revisions):
 
     log.info("conf: {}".format(conf))
     log.info("num_users: {}".format(num_users))
     log.info("num_docs: {}".format(num_docs))
     log.info("num_revisions: {}".format(num_revisions))
 
+    cluster = Cluster()
     mode = cluster.reset(config_path=conf)
     admin = Admin(cluster.sync_gateways[0])
 

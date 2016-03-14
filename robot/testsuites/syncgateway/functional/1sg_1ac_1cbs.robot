@@ -11,6 +11,8 @@ Library     test_db_online_offline.py
 Library     test_longpoll.py
 Library     test_multiple_dbs.py
 Library     test_multiple_users_multiple_channels_multiple_revisions.py
+Library     test_roles.py
+Library     test_seq.py
 Library     test_sync.py
 Library     test_users_channels.py
 
@@ -109,6 +111,11 @@ test mulitple users mulitiple channels mulitple revisions
 # test_roles (distributed index mode)
 test roles sanity
     test roles sanity           ${SYNC_GATEWAY_CONFIGS}/sync_gateway_default_functional_tests_di.json
+
+
+# test_seq (channel cache mode)
+test seq
+    test seq        ${SYNC_GATEWAY_CONFIGS}/sync_gateway_default_functional_tests_di.json   ${10}   ${500}  ${1}
 
 
 # test_sync (Distributed Index)

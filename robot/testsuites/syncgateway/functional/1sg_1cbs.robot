@@ -16,6 +16,8 @@ Library     test_longpoll.py
 Library     test_multiple_dbs.py
 Library     test_multiple_users_multiple_channels_multiple_revisions.py
 Library     test_overloaded_channel_cache.py
+Library     test_roles.py
+Library     test_seq.py
 Library     test_sync.py
 Library     test_users_channels.py
 
@@ -192,6 +194,11 @@ test overloaded channel cache four
 # test_roles (channel cache mode)
 test roles sanity
     test roles sanity           ${SYNC_GATEWAY_CONFIGS}/sync_gateway_default_functional_tests_cc.json
+
+
+# test_seq (channel cache mode)
+test seq
+    test seq        ${SYNC_GATEWAY_CONFIGS}/sync_gateway_default_functional_tests_cc.json   ${10}   ${500}  ${1}
 
 
 # test_sync (channel cache mode)
