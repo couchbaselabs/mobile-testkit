@@ -72,7 +72,7 @@ def upload_gateload_config(gateload, sync_gateway, user_offset, number_of_puller
     print rendered
 
     # Write renderered gateload configs to test results directory
-    with open("../../../performance_results/{}/{}.json".format(test_id, gateload_inventory_hostname), "w") as f:
+    with open("../../../results/{}/{}.json".format(test_id, gateload_inventory_hostname), "w") as f:
         f.write(rendered)
 
     outfile = os.path.join("/tmp", gateload_inventory_hostname) 

@@ -110,7 +110,7 @@ if __name__ == "__main__":
     test_run_id = "{}_{}".format(opts.test_id, time.strftime("%Y-%m-%d-%H-%M-%S"))
 
     # Create test results directory
-    os.makedirs("performance_results/{}".format(test_run_id))
+    os.makedirs("results/{}".format(test_run_id))
 
     if opts.reset_sync_gateway:
         print "Resetting Sync Gateway"
@@ -119,7 +119,7 @@ if __name__ == "__main__":
         print("Running in mode: {}".format(mode))
 
     # Copy provisioning_config to performance_results/ folder
-    shutil.copy("provisioning_config", "performance_results/{}".format(test_run_id))
+    shutil.copy("provisioning_config", "results/{}".format(test_run_id))
 
     # Start load generator
     run_tests(

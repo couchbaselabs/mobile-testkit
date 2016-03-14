@@ -38,7 +38,7 @@ def fetch_sync_gateway_logs(prefix, is_perf_run=False):
         zip_file_path = "{}.zip".format(name)
         if is_perf_run:
             # Move perf logs to performance_results
-            shutil.copy(zip_file_path, "performance_results/{}/".format(prefix))
+            shutil.copy(zip_file_path, "results/{}/".format(prefix))
 
         print("\n")
         
