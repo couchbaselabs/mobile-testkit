@@ -104,7 +104,7 @@ def add_sync_gateway_index_writers(input_ansible_groups):
     return output_ansible_groups
 
 def write_to_file(ansible_groups, filename):
-    target = open(filename, 'w')
+    target = open("resources/cluster_configs/{}".format(filename), 'w')
     target.truncate()
     for ansible_group in ansible_groups:
         group_header = "[{}]".format(ansible_group.name)
