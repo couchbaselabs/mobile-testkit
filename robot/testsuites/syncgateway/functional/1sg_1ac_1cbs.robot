@@ -9,6 +9,7 @@ Library     ${Libraries}/LoggingKeywords.py
 Library     test_continuous.py
 Library     test_db_online_offline.py
 Library     test_longpoll.py
+Library     test_multiple_dbs.py
 Library     test_sync.py
 Library     test_users_channels.py
 
@@ -89,6 +90,14 @@ test longpoll changes parametrized
 
 test longpoll changes sanity
     test longpoll changes sanity            ${SYNC_GATEWAY_CONFIGS}/sync_gateway_default_functional_tests_di.json   ${10}   ${10}
+
+
+# test_multiple_dbs (distributed index mode)
+test multiple db unique data bucket unique index bucket
+    test multiple db unique data bucket unique index bucket     ${SYNC_GATEWAY_CONFIGS}/multiple_dbs_unique_data_unique_index_di.json   ${10}   ${500}
+
+test multiple db single data bucket single index bucket
+    test multiple db single data bucket single index bucket     ${SYNC_GATEWAY_CONFIGS}/multiple_dbs_shared_data_shared_index_di.json   ${10}   ${500}
 
 
 # test_sync (Distributed Index)
