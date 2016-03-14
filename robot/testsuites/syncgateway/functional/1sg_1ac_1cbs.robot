@@ -10,6 +10,7 @@ Library     test_continuous.py
 Library     test_db_online_offline.py
 Library     test_longpoll.py
 Library     test_multiple_dbs.py
+Library     test_multiple_users_multiple_channels_multiple_revisions.py
 Library     test_sync.py
 Library     test_users_channels.py
 
@@ -98,6 +99,11 @@ test multiple db unique data bucket unique index bucket
 
 test multiple db single data bucket single index bucket
     test multiple db single data bucket single index bucket     ${SYNC_GATEWAY_CONFIGS}/multiple_dbs_shared_data_shared_index_di.json   ${10}   ${500}
+
+
+# test_mulitple_users_mulitiple_channels_mulitple_revisions (distributed index mode)
+test mulitple users mulitiple channels mulitple revisions
+    test mulitple users mulitiple channels mulitple revisions   ${SYNC_GATEWAY_CONFIGS}/sync_gateway_default_functional_tests_di.json   ${10}   ${3}    ${10}   ${10}
 
 
 # test_sync (Distributed Index)
