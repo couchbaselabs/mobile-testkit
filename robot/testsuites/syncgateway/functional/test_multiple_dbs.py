@@ -1,6 +1,7 @@
 import pytest
 
 from testkit.admin import Admin
+from testkit.cluster import Cluster
 from testkit.verify import verify_changes
 
 import time
@@ -9,26 +10,15 @@ import testkit.settings
 import logging
 log = logging.getLogger(testkit.settings.LOGGER)
 
-from fixtures import cluster
 
-
-@pytest.mark.distributed_index
-@pytest.mark.sanity
-@pytest.mark.parametrize(
-    "conf,num_users,num_docs_per_user",
-    [
-        ("multiple_dbs_unique_data_unique_index_di.json", 10, 500),
-        ("multiple_dbs_unique_data_unique_index_cc.json", 10, 500)
-    ],
-    ids=["DI-1", "CC-2"]
-)
-def test_multiple_db_unique_data_bucket_unique_index_bucket(cluster, conf, num_users, num_docs_per_user):
+def test_multiple_db_unique_data_bucket_unique_index_bucket(conf, num_users, num_docs_per_user):
 
     log.info("Using conf: {}".format(conf))
     log.info("Using num_users: {}".format(num_users))
     log.info("Using num_docs_per_user: {}".format(num_docs_per_user))
 
     # 2 dbs have unique data and unique index buckets
+    cluster = Cluster()
     mode = cluster.reset(config_path=conf)
 
     num_db_users = num_users
@@ -65,24 +55,16 @@ def test_multiple_db_unique_data_bucket_unique_index_bucket(cluster, conf, num_u
     errors = cluster.verify_alive(mode)
     assert(len(errors) == 0)
 
+
 # Kind of an edge case in that most users would not point multiple dbs at the same server bucket
-@pytest.mark.distributed_index
-@pytest.mark.sanity
-@pytest.mark.parametrize(
-    "conf,num_users,num_docs_per_user",
-    [
-        ("multiple_dbs_shared_data_shared_index_di.json", 10, 500),
-        ("multiple_dbs_shared_data_shared_index_cc.json", 10, 500)
-    ],
-    ids=["DI-1", "CC-2"]
-)
-def test_multiple_db_single_data_bucket_single_index_bucket(cluster, conf, num_users, num_docs_per_user):
+def test_multiple_db_single_data_bucket_single_index_bucket(conf, num_users, num_docs_per_user):
 
     log.info("Using conf: {}".format(conf))
     log.info("Using num_users: {}".format(num_users))
     log.info("Using num_docs_per_user: {}".format(num_docs_per_user))
 
     # 2 dbs share the same data and index bucket
+    cluster = Cluster()
     mode = cluster.reset(config_path=conf)
 
     num_db_users = num_users
