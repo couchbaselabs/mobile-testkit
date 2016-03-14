@@ -189,6 +189,11 @@ test overloaded channel cache four
     test overloaded channel cache   ${SYNC_GATEWAY_CONFIGS}/sync_gateway_channel_cache_cc.json  ${5000}  ABC  True   ${50}
 
 
+# test_roles (channel cache mode)
+test roles sanity
+    test roles sanity           ${SYNC_GATEWAY_CONFIGS}/sync_gateway_default_functional_tests_cc.json
+
+
 # test_sync (channel cache mode)
 test issue 1524
      test issue 1524            ${SYNC_GATEWAY_CONFIGS}/custom_sync/grant_access_one_cc.json   ${10}

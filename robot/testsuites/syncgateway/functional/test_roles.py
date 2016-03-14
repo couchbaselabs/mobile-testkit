@@ -1,31 +1,17 @@
-import time
-
-import pytest
-import concurrent.futures
-
 from testkit.admin import Admin
+from testkit.cluster import Cluster
 from testkit.verify import verify_changes
-
 import testkit.settings
+
 import logging
 log = logging.getLogger(testkit.settings.LOGGER)
 
-from fixtures import cluster
 
-
-@pytest.mark.distributed_index
-@pytest.mark.sanity
-@pytest.mark.parametrize(
-        "conf", [
-            ("sync_gateway_default_functional_tests_di.json"),
-            ("sync_gateway_default_functional_tests_cc.json")
-        ],
-        ids=["DI-1", "CC-2"]
-)
-def test_roles_sanity(cluster, conf):
+def test_roles_sanity(conf):
 
     log.info("conf: {}".format(conf))
 
+    cluster = Cluster()
     mode = cluster.reset(config_path=conf)
 
     radio_stations = ["KMOW", "HWOD", "KDWB"]
