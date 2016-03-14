@@ -106,6 +106,11 @@ test mulitple users mulitiple channels mulitple revisions
     test mulitple users mulitiple channels mulitple revisions   ${SYNC_GATEWAY_CONFIGS}/sync_gateway_default_functional_tests_di.json   ${10}   ${3}    ${10}   ${10}
 
 
+# test_roles (distributed index mode)
+test roles sanity
+    test roles sanity           ${SYNC_GATEWAY_CONFIGS}/sync_gateway_default_functional_tests_di.json
+
+
 # test_sync (Distributed Index)
 test issue 1524
      test issue 1524            ${SYNC_GATEWAY_CONFIGS}/custom_sync/grant_access_one_di.json   ${10}
