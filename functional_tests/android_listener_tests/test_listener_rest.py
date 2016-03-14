@@ -33,8 +33,37 @@ def stop_push_replications(db_name, source, targets):
         source.stop_push_replication(target.url, db_name)
 
 
-def create_listener(target_device, local_port, apk_path, activity, reinstall):
-    return Listener(target_device=target_device, local_port=local_port, apk_path=apk_path, activity=activity, reinstall=reinstall)
+def create_listener(target, local_port, apk_path, activity, reinstall):
+    return Listener(target=target, local_port=local_port, apk_path=apk_path, activity=activity, reinstall=reinstall)
+
+
+def parallel_install(device_defs, should_reinstall):
+
+    listeners = {}
+     # Create all listeners concurrently
+    with concurrent.futures.ThreadPoolExecutor(max_workers=len(device_defs)) as executor:
+
+        future_to_device_name = {
+            executor.submit(
+                create_listener,
+                target=device_def["target"],
+                local_port=device_def["local_port"],
+                apk_path=device_def["apk_path"],
+                activity=device_def["activity"],
+                reinstall=should_reinstall,
+            ): device_def["target"]
+            for device_def in device_defs
+        }
+
+        for future in concurrent.futures.as_completed(future_to_device_name):
+
+            name = future_to_device_name[future]
+            listener = future.result()
+
+            listeners[name] = listener
+            log.info("Listener created: {} {}".format(name, listener))
+
+    return listeners
 
 
 def test_selective_db_delete_and_replication_lifecycle():
@@ -52,30 +81,7 @@ def test_selective_db_delete_and_replication_lifecycle():
         {"target_device": "emulator-5562", "local_port": 14000, "apk_path": apk_path, "activity": activity},
     ]
 
-    listeners = {}
-
-    # Create all listeners concurrently
-    with concurrent.futures.ThreadPoolExecutor(max_workers=len(device_defs)) as executor:
-
-        future_to_device_name = {
-            executor.submit(
-                create_listener,
-                target_device=device_def["target_device"],
-                local_port=device_def["local_port"],
-                apk_path=device_def["apk_path"],
-                activity=device_def["activity"],
-                reinstall=should_reinstall,
-            ): device_def["target_device"]
-            for device_def in device_defs
-        }
-
-        for future in concurrent.futures.as_completed(future_to_device_name):
-
-            name = future_to_device_name[future]
-            listener = future.result()
-
-            listeners[name] = listener
-            log.info("Listener created: {} {}".format(name, listener))
+    listeners = parallel_install(device_defs, should_reinstall)
 
     time.sleep(2)
 
@@ -167,3 +173,80 @@ def test_selective_db_delete_and_replication_lifecycle():
         doc_num = emu.get_num_docs(db_name)
         log.info("emu: {} doc_num: {}".format(emu.target_device, doc_num))
         assert (doc_num == 661)
+
+
+def test_replication_unstable_network():
+
+    should_reinstall = False
+    apk_path = os.environ["P2P_APP"]
+    activity = "com.couchbase.ui.maven/com.couchbase.ui.MainActivity"
+    db_name = os.environ["P2P_APP_DB"]
+
+    device_defs = [
+        {"target": "06c455850b3fa11e", "local_port": None, "apk_path": apk_path, "activity": activity},
+        {"target": "emulator-5554", "local_port": 10000, "apk_path": apk_path, "activity": activity},
+        {"target": "emulator-5556", "local_port": 11000, "apk_path": apk_path, "activity": activity},
+        {"target": "emulator-5558", "local_port": 12000, "apk_path": apk_path, "activity": activity},
+        {"target": "emulator-5560", "local_port": 13000, "apk_path": apk_path, "activity": activity},
+        {"target": "emulator-5562", "local_port": 14000, "apk_path": apk_path, "activity": activity},
+        {"target": "emulator-5564", "local_port": 15000, "apk_path": apk_path, "activity": activity},
+    ]
+
+    listeners = parallel_install(device_defs, should_reinstall)
+
+    dev = listeners["06c455850b3fa11e"]
+    emu_1 = listeners["emulator-5554"]
+    emu_2 = listeners["emulator-5556"]
+    emu_3 = listeners["emulator-5558"]
+    emu_4 = listeners["emulator-5560"]
+    emu_5 = listeners["emulator-5562"]
+    emu_6 = listeners["emulator-5564"]
+
+    emus = [emu_1, emu_2, emu_3, emu_4, emu_5, emu_6]
+
+    dev.verify_launched()
+    for emu in emus:
+        emu.verify_launched()
+
+    log.info("Starting push replications ...")
+    start_push_replications(db_name, dev, emus)
+
+    log.info("Starting pull replications ...")
+    start_pull_replications(db_name, dev, emus)
+
+    log.info("Adding 100 docs to dev")
+    dev_pusher = User(target=dev, db=db_name, name="emu1_doc_pusher", password="password", channels=["ABC"])
+    dev_pusher.add_docs(100, bulk=True)
+
+    time.sleep(10)
+
+    # Assert each endpoint has 100 docs
+    assert(dev.get_num_docs(db_name) == 100)
+    for emu in emus:
+        assert(emu.get_num_docs(db_name) == 100)
+
+    # Create docs on targets
+    emu_1_pusher = User(target=emu_1, db=db_name, name="emu1_doc_pusher", password="password", channels=["ABC"])
+    emu_2_pusher = User(target=emu_2, db=db_name, name="emu2_doc_pusher", password="password", channels=["ABC"])
+    emu_3_pusher = User(target=emu_3, db=db_name, name="emu3_doc_pusher", password="password", channels=["ABC"])
+    emu_4_pusher = User(target=emu_4, db=db_name, name="emu4_doc_pusher", password="password", channels=["ABC"])
+    emu_5_pusher = User(target=emu_5, db=db_name, name="emu5_doc_pusher", password="password", channels=["ABC"])
+    emu_6_pusher = User(target=emu_6, db=db_name, name="emu6_doc_pusher", password="password", channels=["ABC"])
+
+    emu_1_pusher.add_docs(10)
+    emu_2_pusher.add_docs(10)
+    emu_3_pusher.add_docs(10)
+    emu_4_pusher.add_docs(10)
+    emu_5_pusher.add_docs(10)
+    emu_6_pusher.add_docs(10)
+
+    time.sleep(5)
+
+    # Assert each endpoint has 140 docs
+    assert(dev.get_num_docs(db_name) == 160)
+
+    for emu in emus:
+        assert(emu.get_num_docs(db_name) == 160)
+
+
+
