@@ -28,6 +28,7 @@ ShadowCluster = namedtuple(
     ],
     verbose=False)
 
+
 def init_shadow_cluster(config_path_shadower, config_path_non_shadower):
 
     # initially, setup both sync gateways as shadowers -- this needs to be
@@ -255,8 +256,8 @@ def get_doc_with_content_from_source_bucket_retry(doc_id, content_dict, bucket):
     Get a document from the couchbase source bucket with particular content
     Will retry until it appears, or give up and raise an exception
     """
-    doc  = None
-    maxTries = 5
+    doc = None
+    max_tries = 5
     i = 0
     while True:
         i += 1
@@ -265,7 +266,7 @@ def get_doc_with_content_from_source_bucket_retry(doc_id, content_dict, bucket):
             if "content" in doc.value and doc.value["content"] == content_dict:
                 break
         else:
-            if i > maxTries:
+            if i > max_tries:
                 # too many tries, give up
                 raise Exception("Doc {} never made it to source bucket.  Aborting".format(doc_id))
             time.sleep(i)
@@ -279,8 +280,8 @@ def get_doc_from_source_bucket_retry(doc_id, bucket):
     Will retry until it appears, or give up and raise an exception
     """
     # Wait til the docs appears in the source bucket
-    doc  = None
-    maxTries = 5
+    doc = None
+    max_tries = 5
     i = 0
     while True:
         i += 1
@@ -288,7 +289,7 @@ def get_doc_from_source_bucket_retry(doc_id, bucket):
         if doc.success:
             break
         else:
-            if i > maxTries:
+            if i > max_tries:
                 # too many tries, give up
                 raise Exception("Doc {} never made it to source bucket.  Aborting".format(doc_id))
             time.sleep(i)
