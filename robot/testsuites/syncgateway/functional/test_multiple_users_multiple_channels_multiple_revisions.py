@@ -3,29 +3,19 @@ import pytest
 from testkit.user import User
 import concurrent.futures
 from testkit.admin import Admin
-from fixtures import cluster
+from testkit.cluster import Cluster
+
 import pytest
 from testkit.parallelize import *
 import logging
 log = logging.getLogger(settings.LOGGER)
 
 
-
 # Scenario-2:
 # Single User Single Channel: Create Unique docs and update docs verify all num docs present in changes feed.
 # Verify all revisions in changes feed
 # https://docs.google.com/spreadsheets/d/1nlba3SsWagDrnAep3rDZHXHIDmRH_FFDeTaYJms_55k/edit#gid=598127796
-
-@pytest.mark.sanity
-@pytest.mark.distributed_index
-@pytest.mark.parametrize(
-        "conf, num_users, num_channels, num_docs, num_revisions", [
-            ("sync_gateway_default_functional_tests_di.json", 10, 3, 10, 10),
-            ("sync_gateway_default_functional_tests_cc.json", 10, 3, 10, 10)
-        ],
-        ids=["DI-1", "CC-1"]
-)
-def test_mulitple_users_mulitiple_channels_mulitple_revisions(cluster, conf, num_users, num_channels, num_docs, num_revisions):
+def test_mulitple_users_mulitiple_channels_mulitple_revisions(conf, num_users, num_channels, num_docs, num_revisions):
 
     log.info("Starting test...")
     log.info("conf: {}".format(conf))
@@ -36,6 +26,7 @@ def test_mulitple_users_mulitiple_channels_mulitple_revisions(cluster, conf, num
 
     start = time.time()
 
+    cluster = Cluster()
     mode = cluster.reset(config_path=conf)
 
     init_completed = time.time()
@@ -81,7 +72,6 @@ def test_mulitple_users_mulitiple_channels_mulitple_revisions(cluster, conf, num
     for user_obj, docs in recieved_docs.items():
         log.info('User {} got {} docs, expected docs: {}'.format(user_obj.name, docs, expected_docs))
         assert docs == expected_docs
-
 
     # Verify that
     # user created doc-ids exist in docs received in changes feed

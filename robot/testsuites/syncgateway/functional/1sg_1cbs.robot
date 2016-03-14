@@ -14,6 +14,7 @@ Library     test_db_online_offline_resync.py
 Library     test_db_online_offline_webhooks.py
 Library     test_longpoll.py
 Library     test_multiple_dbs.py
+Library     test_multiple_users_multiple_channels_multiple_revisions.py
 Library     test_sync.py
 Library     test_users_channels.py
 
@@ -159,12 +160,19 @@ test longpoll changes parametrized
 test longpoll changes sanity
     test longpoll changes sanity            ${SYNC_GATEWAY_CONFIGS}/sync_gateway_default_functional_tests_cc.json   ${10}   ${10}
 
+
 # test_multiple_dbs (channel cache mode)
 test multiple db unique data bucket unique index bucket
     test multiple db unique data bucket unique index bucket     ${SYNC_GATEWAY_CONFIGS}/multiple_dbs_unique_data_unique_index_cc.json   ${10}   ${500}
 
 test multiple db single data bucket single index bucket
     test multiple db single data bucket single index bucket     ${SYNC_GATEWAY_CONFIGS}/multiple_dbs_shared_data_shared_index_cc.json   ${10}   ${500}
+
+
+# test_mulitple_users_mulitiple_channels_mulitple_revisions (channel cache mode)
+test mulitple users mulitiple channels mulitple revisions
+    test mulitple users mulitiple channels mulitple revisions   ${SYNC_GATEWAY_CONFIGS}/sync_gateway_default_functional_tests_cc.json   ${10}   ${3}    ${10}   ${10}
+
 
 # test_sync (channel cache mode)
 test issue 1524
