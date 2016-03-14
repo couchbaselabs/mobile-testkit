@@ -1,5 +1,6 @@
 import time
 from testkit.admin import Admin
+from testkit.cluster import Cluster
 from testkit.verify import verify_changes
 import pytest
 import concurrent
@@ -10,18 +11,8 @@ import testkit.settings
 import logging
 log = logging.getLogger(testkit.settings.LOGGER)
 
-from fixtures import cluster
 
-@pytest.mark.regression
-@pytest.mark.parametrize("conf, num_docs, user_channels, filter, limit", [
-        ("sync_gateway_channel_cache_cc.json", 5000, "*", True, 50),
-        ("sync_gateway_channel_cache_cc.json", 1000, "*", True, 50),
-        ("sync_gateway_channel_cache_cc.json", 5000, "ABC", False, 50),
-        ("sync_gateway_channel_cache_cc.json", 5000, "ABC", True, 50)
-    ],
-    ids=["CC-1", "CC-2", "CC-3", "CC-4"]
-)
-def test_overloaded_channel_cache(cluster, conf, num_docs, user_channels, filter, limit):
+def test_overloaded_channel_cache(conf, num_docs, user_channels, filter, limit):
 
     log.info("Using conf: {}".format(conf))
     log.info("Using num_docs: {}".format(num_docs))
@@ -29,6 +20,7 @@ def test_overloaded_channel_cache(cluster, conf, num_docs, user_channels, filter
     log.info("Using filter: {}".format(filter))
     log.info("Using limit: {}".format(limit))
 
+    cluster = Cluster()
     mode = cluster.reset(config_path=conf)
 
     target_sg = cluster.sync_gateways[0]
