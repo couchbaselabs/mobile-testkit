@@ -1,12 +1,9 @@
 import concurrent.futures
-from concurrent.futures import ThreadPoolExecutor
 import os
 import time
 
-import testkit.settings
 from testkit.listener import Listener
 from testkit.user import User
-from testkit.verify import verify_same_docs
 
 from testkit import settings
 import logging
