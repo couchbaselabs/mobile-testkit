@@ -432,6 +432,16 @@ pip install robotframework
 
 ```
 
+To provision clusters, you must define a cluster configuration in in resources/cluster_config/
+Then you need to set your CLUSTER_CONFIG environment variable
+```
+export CLUSTER_CONFIG=resources/cluster_configs/<your_cluster_config>
+```
+Now provisioning will target that cluster. Example.
+```
+python libraries/provision/provision_cluster.py --server-version=4.1.0 --sync-gateway-version=1.2.0-79
+```
+
 running a test case
 
 The functional tests are organized in files names with the cluster configuration that they require. 

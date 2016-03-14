@@ -3,7 +3,7 @@ import pytest
 from testkit.user import User
 import concurrent.futures
 from testkit.admin import Admin
-from fixtures import cluster
+from testkit.cluster import Cluster
 from testkit.web_server import WebServer
 import pytest
 from testkit.parallelize import *
@@ -11,17 +11,13 @@ import logging
 log = logging.getLogger(settings.LOGGER)
 
 
-@pytest.mark.sanity
-@pytest.mark.parametrize("num_users", [5])
-@pytest.mark.parametrize("num_channels", [1]) #all users share all channels
-@pytest.mark.parametrize("num_docs", [1])
-@pytest.mark.parametrize("num_revisions", [2])
-def test_webhooks(cluster, num_users,num_channels, num_docs, num_revisions):
+def test_webhooks(num_users, num_channels, num_docs, num_revisions):
 
     log.info("Starting test...")
     start = time.time()
 
-    mode = cluster.reset(config_path="sync_gateway_webhook_cc.json")
+    cluster = Cluster()
+    mode = cluster.reset(config_path="resources/sync_gateway_configs/sync_gateway_webhook_cc.json")
 
     init_completed = time.time()
     log.info("Initialization completed. Time taken:{}s".format(init_completed - start))
@@ -58,18 +54,15 @@ def test_webhooks(cluster, num_users,num_channels, num_docs, num_revisions):
     errors = cluster.verify_alive(mode)
     assert(len(errors) == 0)
 
+
 # implements scenarios: 18 and 19
-@pytest.mark.sanity
-@pytest.mark.parametrize("num_users", [5])
-@pytest.mark.parametrize("num_channels", [1]) #all users share all channels
-@pytest.mark.parametrize("num_docs", [1])
-@pytest.mark.parametrize("num_revisions", [2])
-def test_db_online_offline_webhooks_offline(cluster, num_users,num_channels, num_docs, num_revisions):
+def test_db_online_offline_webhooks_offline(num_users, num_channels, num_docs, num_revisions):
 
     log.info("Starting test...")
     start = time.time()
 
-    mode = cluster.reset(config_path="sync_gateway_webhook_cc.json")
+    cluster = Cluster()
+    mode = cluster.reset(config_path="resources/sync_gateway_configs/sync_gateway_webhook_cc.json")
 
     init_completed = time.time()
     log.info("Initialization completed. Time taken:{}s".format(init_completed - start))
@@ -129,17 +122,13 @@ def test_db_online_offline_webhooks_offline(cluster, num_users,num_channels, num
 
 
 # implements scenarios: 21
-@pytest.mark.sanity
-@pytest.mark.parametrize("num_users", [5])
-@pytest.mark.parametrize("num_channels", [1]) #all users share all channels
-@pytest.mark.parametrize("num_docs", [1])
-@pytest.mark.parametrize("num_revisions", [2])
-def test_db_online_offline_webhooks_offline(cluster, num_users,num_channels, num_docs, num_revisions):
+def test_db_online_offline_webhooks_offline_two(num_users, num_channels, num_docs, num_revisions):
 
     log.info("Starting test...")
     start = time.time()
 
-    mode = cluster.reset(config_path="sync_gateway_webhook_cc.json")
+    cluster = Cluster()
+    mode = cluster.reset(config_path="resources/sync_gateway_configs/sync_gateway_webhook_cc.json")
 
     init_completed = time.time()
     log.info("Initialization completed. Time taken:{}s".format(init_completed - start))
