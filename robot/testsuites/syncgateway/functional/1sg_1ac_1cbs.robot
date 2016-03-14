@@ -8,6 +8,7 @@ Library     ${Libraries}/LoggingKeywords.py
 
 Library     test_continuous.py
 Library     test_db_online_offline.py
+Library     test_longpoll.py
 Library     test_sync.py
 Library     test_users_channels.py
 
@@ -77,6 +78,17 @@ test db offline tap loss sanity
 
 test multiple dbs unique buckets lose tap
     test multiple dbs unique buckets lose tap                                               ${SYNC_GATEWAY_CONFIGS}/bucket_online_offline/bucket_online_offline_multiple_dbs_unique_buckets_di.json     ${100}
+
+
+# test_longpoll (distributed index mode)
+test longpoll changes parametrized
+    test longpoll changes parametrized      ${SYNC_GATEWAY_CONFIGS}/sync_gateway_default_functional_tests_di.json   ${5000}  ${1}
+
+test longpoll changes parametrized
+    test longpoll changes parametrized      ${SYNC_GATEWAY_CONFIGS}/sync_gateway_default_functional_tests_di.json   ${50}   ${100}
+
+test longpoll changes sanity
+    test longpoll changes sanity            ${SYNC_GATEWAY_CONFIGS}/sync_gateway_default_functional_tests_di.json   ${10}   ${10}
 
 
 # test_sync (Distributed Index)
