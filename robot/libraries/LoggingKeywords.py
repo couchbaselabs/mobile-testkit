@@ -1,5 +1,3 @@
-import pytest
-
 import testkit.settings
 
 from utilities.fetch_sg_logs import fetch_sync_gateway_logs

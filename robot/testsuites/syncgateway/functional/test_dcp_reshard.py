@@ -1,6 +1,5 @@
 import time
 
-import pytest
 import concurrent.futures
 
 from testkit.admin import Admin

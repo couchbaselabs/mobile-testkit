@@ -1,4 +1,3 @@
-import pytest
 import time
 import concurrent.futures
 import uuid
@@ -719,13 +718,8 @@ def test_multiple_dbs_unique_buckets_lose_tap(conf, num_docs):
 
 # Reenable for 1.3
 # Scenario 16
-# @pytest.mark.sanity
-# @pytest.mark.dbonlineoffline
-# @pytest.mark.parametrize(
-#     "num_docs",
-#     [100]
-# )
 # def test_config_change_invalid_1(cluster, num_docs):
+#     num_docs = 100
 #
 #     cluster.reset("bucket_online_offline/bucket_online_offline_offline_false_cc.json")
 #     admin = Admin(cluster.sync_gateways[0])

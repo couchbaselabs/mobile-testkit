@@ -2,7 +2,6 @@ from testkit.verify import verify_changes
 from testkit.cluster import Cluster
 
 import time
-import pytest
 from testkit.admin import Admin
 from multiprocessing.pool import ThreadPool
 from requests.exceptions import HTTPError

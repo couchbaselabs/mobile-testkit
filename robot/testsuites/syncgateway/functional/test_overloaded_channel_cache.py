@@ -2,7 +2,7 @@ import time
 from testkit.admin import Admin
 from testkit.cluster import Cluster
 from testkit.verify import verify_changes
-import pytest
+
 import concurrent
 import concurrent.futures
 import requests
