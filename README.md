@@ -2,6 +2,7 @@
 This repository contains:
 
 * Sync Gateway + Couchbase Server Cluster setup scripts suitable for:
+    * Sync Gateway
     * Functional Tests
     * Performance Tests
 * Functional Test Suite (python)

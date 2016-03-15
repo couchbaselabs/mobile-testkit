@@ -29,7 +29,7 @@ provisioning_config*
 results.xml
 test-framework.log
 
-performance_results/*
+testsuites/syncgateway/performance/results/*
 !performance_results/README.txt
 
 # appium ignore

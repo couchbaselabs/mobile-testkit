@@ -39,7 +39,7 @@ def run_perf_test(number_pullers, number_pushers, use_gateload, gen_gateload_con
     print("Running in mode: {}".format(mode))
 
     # Copy provisioning_config to performance_results/ folder
-    shutil.copy("{}".format(cluster_config), "results/{}".format(test_run_id))
+    shutil.copy("{}".format(cluster_config), "testsuites/syncgateway/performance/results/{}".format(test_run_id))
 
     if use_gateload:
         print "Using Gateload"
@@ -51,14 +51,14 @@ def run_perf_test(number_pullers, number_pushers, use_gateload, gen_gateload_con
         os.chdir("testsuites/syncgateway/performance/ansible/playbooks")
 
         # Build gateload
-        subprocess.call(["ansible-playbook", "-i", "{}".format(cluster_config), "build-gateload.yml"])
+        subprocess.call(["ansible-playbook", "-i", "../../../../../{}".format(cluster_config), "build-gateload.yml"])
 
         # Generate gateload config
         if gen_gateload_config:
-            generate_gateload_configs.main(number_pullers, number_pushers, test_id)
+            generate_gateload_configs.main(number_pullers, number_pushers, test_run_id)
 
         # Start gateload
-        subprocess.call(["ansible-playbook", "-i", "{}".format(cluster_config), "start-gateload.yml"])
+        subprocess.call(["ansible-playbook", "-i", "../../../../../{}".format(cluster_config), "start-gateload.yml"])
 
         os.chdir("../../../../../")
 
@@ -68,7 +68,7 @@ def run_perf_test(number_pullers, number_pushers, use_gateload, gen_gateload_con
         os.chdir("performance_tests/ansible/playbooks")
 
         # Configure gatling
-        subprocess.call(["ansible-playbook", "-i", "{}".format(cluster_config), "configure-gatling.yml"])
+        subprocess.call(["ansible-playbook", "-i", "../../../../../{}".format(cluster_config), "configure-gatling.yml"])
 
         # Run Gatling
         subprocess.call([
