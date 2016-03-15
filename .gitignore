@@ -39,5 +39,6 @@ output.xml
 report.html
 
 robot/resources/cluster_configs/*
+!robot/resources/cluster_configs/1sg_1ac.sample
 robot/libraries/provision/ansible/playbooks/ansible.cfg
 robot/debug.txt
