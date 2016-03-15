@@ -37,7 +37,7 @@ def create_listener(target_device, local_port, apk_path, activity, reinstall):
     return Listener(target_device=target_device, local_port=local_port, apk_path=apk_path, activity=activity, reinstall=reinstall)
 
 
-def test_selective_db_delete_and_replication_lifecycle():
+def selective_db_delete_and_replication_lifecycle():
 
     should_reinstall = True
     apk_path = os.environ["P2P_APP"]
