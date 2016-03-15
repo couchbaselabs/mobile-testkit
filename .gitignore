@@ -24,7 +24,7 @@ temp_ansible_hosts
 conf/hosts.ini
 
 provisioning_config*
-!robot/libraries/utilities/provisioning_config_parser.py
+!libraries/utilities/provisioning_config_parser.py
 
 results.xml
 test-framework.log
@@ -38,7 +38,7 @@ log.html
 output.xml
 report.html
 
-robot/resources/cluster_configs/*
-!robot/resources/cluster_configs/1sg_1cbs.sample
-robot/libraries/provision/ansible/playbooks/ansible.cfg
-robot/debug.txt
+resources/cluster_configs/*
+!resources/cluster_configs/1sg_1cbs.sample
+libraries/provision/ansible/playbooks/ansible.cfg
+debug.txt
