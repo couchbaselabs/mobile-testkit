@@ -4,7 +4,7 @@ import os
 import sys
 import matplotlib
 import matplotlib.pyplot as plt
-import pprint
+
 from optparse import OptionParser
 from collections import OrderedDict
 from utilities.provisioning_config_parser import hosts_for_tag
