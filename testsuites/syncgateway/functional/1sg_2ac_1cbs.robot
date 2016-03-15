@@ -18,6 +18,7 @@ Test Teardown   Test Teardown
 ${SERVER_VERSION}           4.1.0
 ${SYNC_GATEWAY_VERSION}     1.2.0-79
 ${CLUSTER_CONFIG}           ${CLUSTER_CONFIGS}/1sg_1ac_1cbs
+${SYNC_GATEWAY_CONFIG}      ${SYNC_GATEWAY_CONFIGS}/sync_gateway_default_functional_tests_di.json
 
 *** Test Cases ***
 # Cluster has been setup
