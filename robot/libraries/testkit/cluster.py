@@ -51,7 +51,7 @@ class Cluster:
     def _hosts_for_tag(self, tag):
 
         if not os.path.isfile(os.environ["CLUSTER_CONFIG"]):
-            log.error("Cluster config not found at {}".format(os.getcwd()))
+            log.error("Cluster config not found in 'resources/cluster_configs/'")
             sys.exit(1)
 
         variable_manager = VariableManager()
