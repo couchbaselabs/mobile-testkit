@@ -22,21 +22,31 @@ import subprocess
 import json
 import os
 from jinja2 import Template
+
 import ansible.inventory
+from ansible.parsing.dataloader import DataLoader
+from ansible.vars import VariableManager
 
 
 def hosts_for_tag(tag):
-    hostfile = "../../../{}".format(os.environ["CLUSTER_CONFIG"])
-    i = ansible.inventory.Inventory(host_list=hostfile)
+    print(os.getcwd())
+
+    variable_manager = VariableManager()
+    loader = DataLoader()
+    hostfile = "../../../../../{}".format(os.environ["CLUSTER_CONFIG"])
+    i = ansible.inventory.Inventory(loader=loader, variable_manager=variable_manager, host_list=hostfile)
+
     group = i.get_group(tag)
     if group is None:
         return []
     hosts = group.get_hosts()
-    return [host.get_variables() for host in hosts]
+    return [host.get_vars() for host in hosts]
+
 
 def gateloads():
     tag = "load_generators"
     return hosts_for_tag(tag)
+
 
 def sync_gateway_non_index_writers():
     """
@@ -46,6 +56,7 @@ def sync_gateway_non_index_writers():
     sync_gateways = hosts_for_tag("sync_gateways")
     sync_gateway_index_writers = hosts_for_tag("sync_gateway_index_writers")
     return [sg for sg in sync_gateways if sg not in sync_gateway_index_writers]
+
 
 def render_gateload_template(sync_gateway, user_offset, number_of_pullers, number_of_pushers):
         # run template to produce file
@@ -58,6 +69,7 @@ def render_gateload_template(sync_gateway, user_offset, number_of_pullers, numbe
             number_of_pushers=number_of_pushers
         )
         return rendered 
+
 
 def upload_gateload_config(gateload, sync_gateway, user_offset, number_of_pullers, number_of_pushers, test_id):
 
@@ -72,7 +84,7 @@ def upload_gateload_config(gateload, sync_gateway, user_offset, number_of_puller
     print rendered
 
     # Write renderered gateload configs to test results directory
-    with open("../../../results/{}/{}.json".format(test_id, gateload_inventory_hostname), "w") as f:
+    with open("../../../../../testsuites/syncgateway/performance/results/{}/{}.json".format(test_id, gateload_inventory_hostname), "w") as f:
         f.write(rendered)
 
     outfile = os.path.join("/tmp", gateload_inventory_hostname) 
@@ -82,7 +94,7 @@ def upload_gateload_config(gateload, sync_gateway, user_offset, number_of_puller
 
     # transfer file to remote host
 
-    cmd = 'ansible {} -i ../../../provisioning_config -m copy -a "src={} dest=/home/centos/gateload_config.json" --user centos'.format(gateload_inventory_hostname, outfile)
+    cmd = 'ansible {} -i ../../../../../{} -m copy -a "src={} dest=/home/centos/gateload_config.json" --user centos'.format(os.environ["CLUSTER_CONFIG"], gateload_inventory_hostname, outfile)
     result = subprocess.check_output(cmd, shell=True)
     print "File transfer result: {}".format(result)
 

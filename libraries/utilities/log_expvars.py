@@ -11,10 +11,10 @@ from provisioning_config_parser import hosts_for_tag
 
 
 def dump_results(test_folder, gateload_results, sync_gateway_results):
-    with open("results/{}/gateload_expvars.json".format(test_folder), "w") as f:
+    with open("testsuites/syncgateway/performance/results/{}/gateload_expvars.json".format(test_folder), "w") as f:
         f.write(json.dumps(gateload_results))
 
-    with open("results/{}/sync_gateway_expvars.json".format(test_folder), "w") as f:
+    with open("testsuites/syncgateway/performance/results/{}/sync_gateway_expvars.json".format(test_folder), "w") as f:
         f.write(json.dumps(sync_gateway_results))
 
 
