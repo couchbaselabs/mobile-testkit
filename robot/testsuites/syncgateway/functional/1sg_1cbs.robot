@@ -22,8 +22,6 @@ Library     test_single_user_single_channel_doc_updates.py
 Library     test_sync.py
 Library     test_users_channels.py
 
-
-
 Suite Setup     Suite Setup
 Suite Teardown  Suite Teardown
 
@@ -248,7 +246,7 @@ test single user single channel
 Suite Setup
     Log To Console      Setting up ...
     Set Environment Variable    CLUSTER_CONFIG    ${cluster_config}
-    #Provision Cluster   ${SERVER_VERSION}   ${SYNC_GATEWAY_VERSION}    ${SYNC_GATEWAY_CONFIG}
+    Provision Cluster   ${SERVER_VERSION}   ${SYNC_GATEWAY_VERSION}    ${SYNC_GATEWAY_CONFIG}
 
 Suite Teardown
     Log To Console      Tearing down ...
