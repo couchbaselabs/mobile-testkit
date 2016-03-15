@@ -82,7 +82,9 @@ class Cluster:
         # Stop sync_gateways
         log.info(">>> Stopping sync_gateway")
         status = ansible_runner.run_ansible_playbook("stop-sync-gateway.yml", stop_on_fail=False)
-        assert(status == 0)
+        if status != 0:
+            log.error("Error in provisioning!! Verify your ssh user is correct in 'libraries/provision/playbooks/ansible.cfg'")
+            raise Exception("Failed to run provisioning")
 
         # Stop sync_gateways
         log.info(">>> Stopping sg_accel")
