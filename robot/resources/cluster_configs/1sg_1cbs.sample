@@ -1,5 +1,5 @@
 # Add your ip targets below
-# Rename this file 1sg_1ac.sample -> 1sg_1ac
+# Rename this file 1sg_1cbs.sample -> 1sg_1cbs
 
 [couchbase_servers]
 cb1 ansible_host=111.22.333.444

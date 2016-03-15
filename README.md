@@ -278,6 +278,20 @@ $ export PYTHONPATH=$PYTHONPATH:.
 robot testsuites/syncgateway/functional/1sg_1cbs.robot
 ```
 
+The functional tests are organized in files names with the cluster configuration that they require. 
+
+For instance, testsuites/syncgateway/functional/1sg_1cbs.robot requires resources/cluster_configs/1sg_1cbs to be defined.
+ 
+1sg_1cbs would look like below
+
+```
+[couchbase_servers]
+cb1 ansible_host=111.11.111.111
+
+[sync_gateways]
+sg1 ansible_host=222.22.222.222
+```
+
 ### To run a test from a suite
 ```
 robot -t  "test overloaded channel cache one" testsuites/syncgateway/functional/1sg_1cbs.robot
