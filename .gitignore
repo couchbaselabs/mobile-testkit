@@ -24,7 +24,7 @@ temp_ansible_hosts
 conf/hosts.ini
 
 provisioning_config*
-!utilities/provisioning_config_parser.py
+!robot/libraries/utilities/provisioning_config_parser.py
 
 results.xml
 test-framework.log

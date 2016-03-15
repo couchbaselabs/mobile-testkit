@@ -8,6 +8,7 @@ import logging
 import testkit.settings
 log = logging.getLogger(testkit.settings.LOGGER)
 
+
 def fetch_sync_gateway_logs(prefix, is_perf_run=False):
 
     ansible_runner = AnsibleRunner()
