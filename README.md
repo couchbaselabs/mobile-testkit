@@ -184,7 +184,7 @@ This step will install:
 Example building from source:
 
 ```
-$ python provision/provision_cluster.py \
+$ python libraries/provision/provision_cluster.py \
     --server-version=4.1.0 \
     --sync-gateway-branch=master
     --install-deps (first time only, this will install prerequisites to build / debug)
@@ -193,7 +193,7 @@ $ python provision/provision_cluster.py \
 Example from a pre-built version (dev build):
 
 ```
-$ python provision/provision_cluster.py \
+$ python libraries/provision/provision_cluster.py \
     --server-version=3.1.1 \
     --sync-gateway-dev-build-url=feature/distributed_index \
     --sync-gateway-dev-build-number=345
@@ -221,7 +221,7 @@ $ export SPLUNK_SERVER_AUTH="<username>:<password>"
 **Install**
 
 ```
-$ python provision/install_splunk_forwarder.py
+$ python libraries/provision/install_splunk_forwarder.py
 ```
 
 ## Run Performance Tests
@@ -261,7 +261,6 @@ can disable this behavior in functional_tests/settings
 
 **Install dependencies (skip if using Docker container)**
 ```
-pip install pytest
 pip install futures
 pip install requests
 ```
@@ -272,22 +271,14 @@ pip install requests
 $ export PYTHONPATH=$PYTHONPATH:.
 ```
 
-**Run all**
+###  To run a suite
 ```
-$ py.test -s
-```
-**Running a test fixture**
-```
-$ py.test -s "functional_tests/test_db_online_offline.py"
-```
-**Running an individual test**
-```
-$ py.test -s "functional_tests/functional_tests/test_bucket_shadow.py::test_bucket_shadow_multiple_sync_gateways"
+robot testsuites/syncgateway/functional/1sg_1cbs.robot
 ```
 
-**Running an individual parameterized test**
+### To run a test from a suite
 ```
-$ py.test -s "functional_tests/test_db_online_offline.py::test_online_default_rest["CC-1"]"
+robot -t  "test overloaded channel cache one" testsuites/syncgateway/functional/1sg_1cbs.robot
 ```
 
 ## Running android_listener_tests
