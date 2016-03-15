@@ -260,7 +260,6 @@ By default the logs from all of the sync_gateways will be zipped and placed in y
 can disable this behavior in functional_tests/settings
 
 **Install dependencies (skip if using Docker container)**
-Install the dependencies
 
 ```
 pip install robotframework
