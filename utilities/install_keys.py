@@ -31,7 +31,7 @@ def install_keys(key_name, user_name):
             print("ssh-copy-id failed: {}".format(key_name))
             print("Make sure '{}' is in ~/.ssh/".format(key_name))
             sys.exit(1)
-            
+
     split_key = key_name.split(".")
     private_key = split_key[0]
 
