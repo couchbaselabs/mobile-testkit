@@ -75,13 +75,14 @@ class Server:
             sys.exit(1)
 
     def create_buckets(self, names):
-
         # Create buckets
         extra_vars = {"bucket_names": names}
-        run_ansible_playbook(
+        status = run_ansible_playbook(
             "tasks/create-server-buckets.yml",
             extra_vars=json.dumps(extra_vars),
+            stop_on_fail=False
         )
+        assert(status == 0)
 
     def get_bucket(self, bucket_name):
         connection_str = "couchbase://{}/{}".format(self.ip, bucket_name)
