@@ -77,7 +77,7 @@ test online to offline longpoll changes feed controlled close sanity mulitple us
 #    test offline true config bring online                                                   ${SYNC_GATEWAY_CONFIGS}/bucket_online_offline/bucket_online_offline_offline_true_di.json    ${100}
 
 test db offline tap loss sanity
-    test db offline tap loss sanity                                                         ${SYNC_GATEWAY_CONFIGS}/bucket_online_offline/bucket_online_offline_default_dcp_di.json     ${100}
+    test db offline tap loss sanity                                                         ${SYNC_GATEWAY_CONFIGS}/bucket_online_offline/bucket_online_offline_default_di.json     ${100}
 
 # test db delayed online
 #    test db delayed online                                                                  ${SYNC_GATEWAY_CONFIGS}/bucket_online_offline/bucket_online_offline_default_di.json     ${100}
@@ -163,7 +163,8 @@ test single user single channel (distributed index)
 *** Keywords ***
 Suite Setup
     Log To Console      Setting up ...
-    Set Environment Variable    CLUSTER_CONFIG    ${cluster_config}
+    Set Environment Variable    CLUSTER_CONFIG    ${CLUSTER_CONFIG}
+    Log to Console        Using cluster ${CLUSTER_CONFIG}
     Provision Cluster   ${SERVER_VERSION}   ${SYNC_GATEWAY_VERSION}    ${SYNC_GATEWAY_CONFIG}
 
 Suite Teardown
