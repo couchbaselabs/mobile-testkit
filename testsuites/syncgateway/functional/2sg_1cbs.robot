@@ -36,8 +36,9 @@ test bucket shadow multiple sync gateways
 *** Keywords ***
 Suite Setup
     Log To Console      Setting up ...
-    Set Environment Variable    CLUSTER_CONFIG    ${cluster_config}
-    #Provision Cluster   ${SERVER_VERSION}   ${SYNC_GATEWAY_VERSION}    ${SYNC_GATEWAY_CONFIG}
+    Set Environment Variable    CLUSTER_CONFIG    ${CLUSTER_CONFIG}
+    Log to Console        Using cluster ${CLUSTER_CONFIG}
+    Provision Cluster   ${SERVER_VERSION}   ${SYNC_GATEWAY_VERSION}    ${SYNC_GATEWAY_CONFIG}
 
 Suite Teardown
     Log To Console      Tearing down ...
