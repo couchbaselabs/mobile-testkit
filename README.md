@@ -1,20 +1,48 @@
 
-This repository contains:
+This repository contains Mobile QE Functional / Integration tests. 
 
-* Sync Gateway + Couchbase Server Cluster setup scripts suitable for:
-    * Sync Gateway
-    * Functional Tests
-    * Performance Tests
-* Functional Test Suite (python)
 
-## Setup Controller on OSX
+```
+$ git clone https://github.com/couchbaselabs/sync-gateway-testcluster.git
+```
 
-The "controller" is the machine that runs ansible, which is typically:
+The mobile test suites leverage Robot Framework (http://robotframework.org/) as an organization platform as well as a test runner and reporter. 
 
-* Your developer workstation
-* A virtual machine / docker container
+### IMPORTANT
+### Due to resource paths and dependencies, running all scripts and tests should be done from the root of the repository. 
+```
+robot testsuites/syncgateway/functional/
+python libraries/provision/provision_cluster.py --server-version=4.1.0 --sync-gateway-version=1.2.70-79
+```
 
-The instructions below are for setting up directly on OSX.  If you prefer to run this under Docker, see the [Running under Docker](https://github.com/couchbaselabs/sync-gateway-testcluster/wiki/Running-under-Docker) wiki page.
+The repo is organized as following
+
+## dependencies
+
+## libraries
+   
+### provision
+
+### testkit
+
+### utilities
+
+## testsuites
+
+### android
+
+* listener
+
+### grocerysync
+
+### syncgateway
+
+* functional
+
+* performance
+
+
+## Setup
 
 ### Install dependencies
 
@@ -35,41 +63,90 @@ $ python --version
 Python 2.7.10
 ```
 
-**Install libcouchbase**
-
-```
-$ brew install libcouchbase 
-```
-
 **Install Pip dependencies**
 
 ```
-$ pip install troposphere && \
-  pip install awscli && \
-  pip install boto && \
-  pip install ansible==2.0.0.2 && \
-  pip install pytest && \
+$ brew install libcouchbase 
+$ brew install node
+npm install -g appium
+```
+
+```
+pip install ansible==2.0.0.2 && \
   pip install futures && \
   pip install requests && \
-  pip install couchbase
+  pip install couchbase && \
+  pip install robotframework \
+  pip install troposphere && \
+  pip install awscli && \
+  pip install boto && \
 ```
 
-NOTE: This repo now only supports ansible 2.0.+, which will be installed by default if you are on a fresh system.  To upgrade an existing system from ansible 1.x, run `pip uninstall ansible && pip install ansible==2.0.0.2`. There are known issues with certain versions of ansible. Make sure to install 2.0.0.2.
+### Environment
 
-### Clone Repo
-
-```
-$ cd /opt
-$ git clone https://github.com/couchbaselabs/sync-gateway-testcluster.git
-```
-
-### Setup Global Ansible Config
+* Setup Global Ansible Config
 
 ```
-$ cd sync-gateway-testcluster/provision/ansible/playbooks
+$ cd sync-gateway-testcluster/libraries/provision/ansible/playbooks
 $ cp ansible.cfg.example ansible.cfg
 $ vi ansible.cfg  # edit to your liking
 ```
+
+* Add current directory to $PYTHONPATH. This will pick the custom libraries and allow you to use them
+
+```
+$ export PYTHONPATH=$PYTHONPATH:.
+```
+
+* Set CLUSTER_CONFIG environment variable. This will provide a target for the provisioning scripts to use.
+
+IMPORTANT: This will be overwritten to run some tests. This will be explained in the 'Running syncgateway functional tests section'
+
+```
+export CLUSTER_CONFIG=resources/cluster_configs/<your_cluster_config>
+```
+
+** AWS Environment requirements
+
+* Add boto configuration
+
+```
+$ cd ~/ 
+$ touch .boto
+$ vi .boto
+```
+
+Add your AWS credentials (Below are a fake example).
+
+```
+[Credentials]
+aws_access_key_id = CDABGHEFCDABGHEFCDAB
+aws_secret_access_key = ABGHEFCDABGHEFCDABGHEFCDABGHEFCDABGHEFCDAB
+```
+
+* Add AWS env variables**
+
+```
+$ export AWS_ACCESS_KEY_ID=CDABGHEFCDABGHEFCDAB
+$ export AWS_SECRET_ACCESS_KEY=ABGHEFCDABGHEFCDABGHEFCDABGHEFCDABGHEFCDAB
+$ export AWS_KEY=<your-aws-keypair-name>
+$ export KEYNAME=key_<your-aws-keypair-name>
+```
+
+You probably want to persist these in your `~/.bash_profile`.
+
+NOTE: This repo now only supports ansible 2.0.0.2 `pip uninstall ansible && pip install ansible==2.0.0.2`. There are known issues with certain versions of ansible. Make sure to install 2.0.0.2.
+
+## Setup Controller on OSX
+
+The "controller" is the machine that runs ansible, which is typically:
+
+* Your developer workstation
+* A virtual machine / docker container
+
+The instructions below are for setting up directly on OSX.  If you prefer to run this under Docker, see the [Running under Docker](https://github.com/couchbaselabs/sync-gateway-testcluster/wiki/Running-under-Docker) wiki page.
+
+
 
 By default, the user is set to `root`, which works for VM clusters.  If you are on AWS, you will need to change that to `centos`
 
@@ -81,30 +158,8 @@ Requirements:
 
 * Should have a centos user with full root access in /etc/sudoers
 
-### Spin up Machines on AWS
+### Spin up Machines on AWS (DO NOT CHECK THESE FILES INTO SOURCE CONTROL)
 
-**Add boto configuration**
-
-```
-$ cat >> ~/.boto
-[Credentials]
-aws_access_key_id = CDABGHEFCDABGHEFCDAB
-aws_secret_access_key = ABGHEFCDABGHEFCDABGHEFCDABGHEFCDABGHEFCDAB
-^D
-```
-
-(and replace fake credentials above with your real credentials)
-
-**Add AWS env variables**
-
-```
-$ export AWS_ACCESS_KEY_ID=CDABGHEFCDABGHEFCDAB
-$ export AWS_SECRET_ACCESS_KEY=ABGHEFCDABGHEFCDABGHEFCDABGHEFCDABGHEFCDAB
-$ export AWS_KEY=<your-aws-keypair-name>
-$ export KEYNAME=key_<your-aws-keypair-name>
-```
-
-You probably want to persist these in your `~/.bash_profile`.
 
 **To kick off cluster**
 
@@ -210,20 +265,6 @@ eval "$(ssh-agent -s)"
 ssh-add ~/.ssh/<test-key>
 ```
 
-## Install Splunk (optional)
-
-**Set environment variables**
-
-```
-$ export SPLUNK_SERVER="<url_of_splunk_server>:<port>"
-$ export SPLUNK_SERVER_AUTH="<username>:<password>"
-```
-
-**Install**
-
-```
-$ python libraries/provision/install_splunk_forwarder.py
-```
 
 ## Run Performance Tests
 
@@ -298,7 +339,9 @@ sg1 ansible_host=222.22.222.222
 robot -t  "test overloaded channel cache one" testsuites/syncgateway/functional/1sg_1cbs.robot
 ```
 
-## Running android_listener_tests
+## Running android test suite
+
+### listener
 
 **Note:** Read the previous section to install Python dependencies.
 
@@ -345,7 +388,7 @@ $ export P2P_APP=/path/to/apk
 
 To run the test
 ```
-$ py.test -s "functional_tests/android_listener_tests/test_listener_rest.py"
+$ robot testsuites/android/listener/
 ```
 
 If the test fails with a hostname unreachable error then it's probably because port forwarding needs to be configured (read section below).
@@ -431,35 +474,6 @@ $ ansible-playbook -i provisioning_config -u centos -e sync_gateway_config_filep
 
 *Note: replace the Sync Gateway config with the config that you need for your use case*
 
-## Robot Framework
-
-The mobile test suites leverage Robot Framework (http://robotframework.org/) as an organization platform as well as a test runner and reporter. 
-
-### IMPORTANT
-### Due to resource paths and dependencies, running all scripts and tests should be done from the root of the repository.
-
-Install the dependencies
-
-```
-pip install robotframework
-
-```
-
-Install prerequisites for appium (used in app testing)
-```
-brew install node
-npm install -g appium
-```
-
-To provision clusters, you must define a cluster configuration in in resources/cluster_config/
-Then you need to set your CLUSTER_CONFIG environment variable
-```
-export CLUSTER_CONFIG=resources/cluster_configs/<your_cluster_config>
-```
-Now provisioning will target that cluster. Example.
-```
-python libraries/provision/provision_cluster.py --server-version=4.1.0 --sync-gateway-version=1.2.0-79
-```
 
 running a test case
 
