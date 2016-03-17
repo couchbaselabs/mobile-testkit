@@ -8,7 +8,7 @@
 # Kill sync_gateway
 - hosts: sync_gateways
   any_errors_fatal: true
-  sudo: yes
+  become: yes
 
   tasks:
   - include: tasks/stop-sync-gateway.yml
@@ -18,7 +18,7 @@
 
 # Deploy sync gateway configs
 - hosts: sync_gateways
-  sudo: true
+  become: yes
   vars:
     sync_gateway_config_filepath:
     couchbase_server_primary_node: "{{ hostvars[groups.couchbase_servers[0]].ansible_host }}"
@@ -29,7 +29,7 @@
 
 # Deploy sync gateway configs (index writers)
 - hosts: sync_gateway_index_writers
-  sudo: true
+  become: yes
   vars:
     sync_gateway_config_filepath:
     couchbase_server_primary_node: "{{ hostvars[groups.couchbase_servers[0]].ansible_host }}"
@@ -41,7 +41,7 @@
 # Start sync_gateway
 - hosts: sync_gateways
   any_errors_fatal: true
-  sudo: true
+  become: yes
 
   vars:
     sync_gateway_config_filepath:
