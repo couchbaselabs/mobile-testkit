@@ -2,20 +2,14 @@ import os
 import subprocess
 import sys
 
-import ansible.inventory
-
 from optparse import OptionParser
+from subprocess import CalledProcessError
+
+from utilities.provisioning_config_parser import get_host_ips
 
 def install_keys(key_name, user_name):
 
-    hostfile = "provisioning_config"
-    inv = ansible.inventory.Inventory(host_list=hostfile)
-    hosts = inv.get_hosts()
-
-    ips = []
-    for host in hosts:
-        host_vars = host.get_variables()
-        ips.append(host_vars["ansible_host"])
+    ips = get_host_ips()
 
     print("Are you sure you would like to copy public key '{0}' to vms: {1}".format(
         key_name, ips
@@ -28,10 +22,15 @@ def install_keys(key_name, user_name):
 
     print("Using ssh-copy-id...")
     for ip in ips:
-        subprocess.call([
-            "ssh-copy-id", "-i", "{0}/.ssh/{1}".format(os.environ["HOME"], key_name),
-            "{0}@{1}".format(user_name, ip)
-        ])
+        try:
+            subprocess.check_output([
+                "ssh-copy-id", "-i", "{0}/.ssh/{1}".format(os.environ["HOME"], key_name),
+                "{0}@{1}".format(user_name, ip)
+            ])
+        except CalledProcessError as e:
+            print("ssh-copy-id failed: {}".format(key_name))
+            print("Make sure '{}' is in ~/.ssh/".format(key_name))
+            sys.exit(1)
 
     split_key = key_name.split(".")
     private_key = split_key[0]

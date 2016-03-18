@@ -72,19 +72,26 @@ class User:
         return resp.json()
 
     # DELETE /{db}/{doc-id}
-    def delete_doc(self, doc_id):
+    def delete_doc(self, doc_id, doc_rev=None):
 
-        # fetch latest revision of doc
-        doc2del = self.get_doc(doc_id)
+        if doc_rev is None:
+            # fetch latest revision of doc
+            doc_to_del = self.get_doc(doc_id)
+            rev_to_delete = doc_to_del["_rev"]
+        else:
+            # use specific rev
+            rev_to_delete = doc_rev
         
         # delete that revision
         resp = requests.delete("{0}/{1}/{2}?rev={3}".format(
             self.target.url,
             self.db,
             doc_id,
-            doc2del["_rev"],
+            rev_to_delete,
         ), headers=self._headers)
+
         resp.raise_for_status()
+        return resp.json()
     
     # PUT /{db}/{doc}
     # PUT /{db}/{local-doc-id}
