@@ -39,9 +39,9 @@ test dcp reshard single sg accel goes down and up
 
 *** Keywords ***
 Suite Setup
-    Log To Console      Setting up ...
+    Log To Console              Setting up ...
     Set Environment Variable    CLUSTER_CONFIG    ${CLUSTER_CONFIG}
-    Log to Console        Using cluster ${CLUSTER_CONFIG}
+    Log                         Using cluster ${CLUSTER_CONFIG}
     Provision Cluster   ${SERVER_VERSION}   ${SYNC_GATEWAY_VERSION}    ${SYNC_GATEWAY_CONFIG}
 
 Suite Teardown

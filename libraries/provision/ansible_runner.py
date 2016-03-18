@@ -32,7 +32,7 @@ class AnsibleRunner:
     def run_targeted_ansible_playbook(self, script_name, target_name, extra_vars=None, stop_on_fail=True):
 
         # Need to cd here to pick up dynamic inventory
-        os.chdir("librarys/provision/ansible/playbooks")
+        os.chdir("libraries/provision/ansible/playbooks")
 
         if not os.path.isfile(script_name):
             print("Could not locate ansible script {0} in {1}".format(script_name, os.getcwd()))
