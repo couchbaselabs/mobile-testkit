@@ -1,4 +1,5 @@
 import time
+import json
 
 import json
 from testkit.admin import Admin
@@ -12,7 +13,7 @@ default_config_path_non_shadower = "resources/sync_gateway_configs/sync_gateway_
 default_config_path_non_shadower_low_revs = "resources/sync_gateway_configs/sync_gateway_default_low_revs_cc.json"
 source_bucket_name = "source-bucket"
 data_bucket_name = "data-bucket"
-fake_doc_content = {"foo":"bar"}
+fake_doc_content = {"foo": "bar"}
 
 ShadowCluster = namedtuple(
     'ShadowCluster',
@@ -93,8 +94,7 @@ def test_bucket_shadow_low_revs_limit_repeated_deletes():
     cluster = Cluster()
     sc = init_shadow_cluster(cluster,
                              default_config_path_shadower_low_revs,
-                             default_config_path_non_shadower_low_revs,
-    )    
+                             default_config_path_non_shadower_low_revs)
 
     # Write doc into shadower SG
     doc_id = sc.alice_shadower.add_doc()

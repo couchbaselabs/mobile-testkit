@@ -32,16 +32,23 @@ class LoggingKeywords:
 
     def detected_pattern(self, pattern, zip_file_path):
 
-        if not os.path.isfile(zip_file_path):
-            log.error("Can't run zipgrep, cannot find zipfile: {}".format(zip_file_path))
+        if not zip_file_path:
             return False
 
-        process = Popen(["zipgrep", pattern, zip_file_path], stdout=PIPE)
-        (output, err) = process.communicate()
-        exit_code = process.wait()
-        if exit_code == 0:
-            log.info("Detected pattern {}: {}".format(pattern, output))
-        return exit_code == 0
+        try:
+            if not os.path.isfile(zip_file_path):
+                log.error("Can't run zipgrep, cannot find zipfile: {}".format(zip_file_path))
+                return False
+
+            process = Popen(["zipgrep", pattern, zip_file_path], stdout=PIPE)
+            (output, err) = process.communicate()
+            exit_code = process.wait()
+            if exit_code == 0:
+                log.info("Detected pattern {}: {}".format(pattern, output))
+                return exit_code == 0
+
+        except Exception as e:
+            log.warn("Exception in detected_pattern(): {}".format(e))
 
 
 

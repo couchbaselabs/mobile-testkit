@@ -31,12 +31,12 @@ RUN cd /tmp/ && \
 RUN pip install troposphere && \
     pip install awscli && \
     pip install boto && \
-    pip install pytest && \
     pip install futures && \
+    pip install requests && \
     pip install robotframework && \
     pip install robotframework-appiumlibrary && \
     pip install robotframework-debuglibrary && \
-    pip install requests
+    pip install couchbase
 
 
 
