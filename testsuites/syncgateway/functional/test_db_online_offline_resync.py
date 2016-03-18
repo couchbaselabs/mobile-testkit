@@ -83,7 +83,7 @@ def test_bucket_online_offline_resync_sanity(num_users, num_docs, num_revisions)
     status = admin.take_db_offline(db="db")
     assert(status == 200)
 
-    restart_status = cluster.sync_gateways[0].restart("bucket_online_offline/db_online_offline_access_restricted_cc.json")
+    restart_status = cluster.sync_gateways[0].restart("resources/sync_gateway_configs/bucket_online_offline/db_online_offline_access_restricted_cc.json")
     assert restart_status == 0
 
     time.sleep(10)

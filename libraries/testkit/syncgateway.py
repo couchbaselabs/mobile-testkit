@@ -30,7 +30,7 @@ class SyncGateway:
 
     def start(self, config):
 
-        conf_path = os.path.abspath("conf/" + config)
+        conf_path = os.path.abspath(config)
 
         log.info(">>> Starting sync_gateway with configuration: {}".format(conf_path))
 
@@ -43,7 +43,7 @@ class SyncGateway:
         return status
 
     def restart(self, config):
-        conf_path = os.path.abspath("conf/" + config)
+        conf_path = os.path.abspath(config)
 
         log.info(">>> Restarting sync_gateway with configuration: {}".format(conf_path))
 
