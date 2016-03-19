@@ -39,6 +39,7 @@ output.xml
 report.html
 
 resources/cluster_configs/*
+resources/pool.json
 !resources/cluster_configs/1sg_1cbs.sample
 libraries/provision/ansible/playbooks/ansible.cfg
 debug.txt

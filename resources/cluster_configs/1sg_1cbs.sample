@@ -1,8 +1,0 @@
-# Add your ip targets below
-# Rename this file 1sg_1cbs.sample -> 1sg_1cbs
-
-[couchbase_servers]
-cb1 ansible_host=111.22.333.444
-
-[sync_gateways]
-sg1 ansible_host=555.66.777.888
