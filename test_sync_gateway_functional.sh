@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
-# TODO python libraries/install_deps.py # target the union vm pool
+# Generate cluster topologies from a list of machine endpoints (either IPs or AWS)
+python libraries/utilities/generate_clusters_from_pool.py
 
-robot -b debug.txt testsuites/syncgateway/functional/
+# Run the sync gateway functional tests
+robot testsuites/syncgateway/functional/
