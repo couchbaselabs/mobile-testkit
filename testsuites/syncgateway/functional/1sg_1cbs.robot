@@ -28,8 +28,6 @@ Suite Teardown  Suite Teardown
 Test Teardown   Test Teardown
 
 *** Variables ***
-${SERVER_VERSION}           4.1.0
-${SYNC_GATEWAY_VERSION}     1.2.0-79
 ${CLUSTER_CONFIG}           ${CLUSTER_CONFIGS}/1sg_1cbs
 ${SYNC_GATEWAY_CONFIG}      ${SYNC_GATEWAY_CONFIGS}/sync_gateway_default_functional_tests_cc.json
 
