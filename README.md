@@ -17,8 +17,6 @@ python libraries/provision/provision_cluster.py --server-version=4.1.0 --sync-ga
 
 The repo is organized as following
 
-## dependencies
-
 ## libraries
    
 ### provision
@@ -97,6 +95,66 @@ $ vi ansible.cfg  # edit to your liking
 ```
 $ export PYTHONPATH=$PYTHONPATH:.
 ```
+
+## Running Tests
+
+### android 
+* listener
+
+### grocerysync
+
+### sgcollectinfo
+
+### syncgateway 
+
+* functional
+
+1. Create a pool.json of endpoints you would like to target (IPs or AWS ec2 endpoints). Rename resources/pool.json.example -> resources/pool.json. Update the fake ips with your endpoints.
+2. Run `python libraries/utilities/generate_clusters_from_pool.py`. This converts the pool you supplied to cluster definitions required for provisioning and running the tests. The generated configurations will be in 'resources/cluster_configs/'.
+3. Run the whole suite `robot -v SERVER_VERSION:4.1.0 -v SYNC_GATEWAY_VERSION:1.2.0-79 testsuites/syncgateway/functional/ `
+4. Run a single suite  `robot -v SERVER_VERSION:4.1.0 -v SYNC_GATEWAY_VERSION:1.2.0-79 testsuites/syncgateway/functional/1sg_1cbs.robot`
+5. Run a single test   `robot -v SERVER_VERSION:4.1.0 -v SYNC_GATEWAY_VERSION:1.2.0-79 -t "test bulk get compression no compression" testsuites/syncgateway/functional/1sg_1cbs.robot`
+
+* performance
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 * Set CLUSTER_CONFIG environment variable. This will provide a target for the provisioning scripts to use.
 
