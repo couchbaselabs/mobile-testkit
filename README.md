@@ -44,6 +44,14 @@ The repo is organized as following
 
 ### Install dependencies
 
+**Install dependencies**
+
+```
+$ brew install libcouchbase 
+$ brew install node
+npm install -g appium
+```
+
 **Install Python via brew**
 
 If you are on OSX El Capitan, you must install docker via brew rather than using the system python due to [Pip issue 3165](https://github.com/pypa/pip/issues/3165).
@@ -61,23 +69,13 @@ $ python --version
 Python 2.7.10
 ```
 
-**Install Pip dependencies**
+Set up virtualenv install python dependencies
 
 ```
-$ brew install libcouchbase 
-$ brew install node
-npm install -g appium
-```
-
-```
-pip install ansible==2.0.0.2 && \
-  pip install futures && \
-  pip install requests && \
-  pip install couchbase && \
-  pip install robotframework \
-  pip install troposphere && \
-  pip install awscli && \
-  pip install boto && \
+cd sync-gateway-testcluster/
+virtualenv -p /usr/bin/python2.7 venv
+source venv/bin/activate
+pip install -r requirements.txt
 ```
 
 ### Environment
