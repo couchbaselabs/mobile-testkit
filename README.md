@@ -105,21 +105,68 @@ $ export PYTHONPATH=$PYTHONPATH:.
 
 ### sgcollectinfo
 
-### syncgateway 
-
-functional
+### syncgateway -> functional
 
 #### Setup
 1. Create a pool.json of endpoints you would like to target (IPs or AWS ec2 endpoints). Rename resources/pool.json.example -> resources/pool.json. Update the fake ips with your endpoints.
-2. Install keys (Only required if you do not have ssh access without password). `python libraries/utilities/install_keys.py --key-name=sample_key.pub --ssh-user=root`. This will deploy key to each of the endpoints defined in your pool.json file. 
-3. Run `python libraries/utilities/generate_clusters_from_pool.py`. This converts the pool you supplied to cluster definitions required for provisioning and running the tests. The generated configurations will be in 'resources/cluster_configs/'.
+2. Install keys (Only required if you do not have ssh access without password). 
+
+`python libraries/utilities/install_keys.py --key-name=sample_key.pub --ssh-user=root` 
+
+This will deploy key to each of the endpoints defined in your pool.json file. 
+3. Run 
+
+`python libraries/utilities/generate_clusters_from_pool.py`. 
+
+This converts the pool you supplied to cluster definitions required for provisioning and running the tests. The generated configurations will be in 'resources/cluster_configs/'.
 
 #### Running the tests
-Run the whole suite `robot -v SERVER_VERSION:4.1.0 -v SYNC_GATEWAY_VERSION:1.2.0-79 testsuites/syncgateway/functional/ `
-Run a single suite  `robot -v SERVER_VERSION:4.1.0 -v SYNC_GATEWAY_VERSION:1.2.0-79 testsuites/syncgateway/functional/1sg_1cbs.robot`
-Run a single test   `robot -v SERVER_VERSION:4.1.0 -v SYNC_GATEWAY_VERSION:1.2.0-79 -t "test bulk get compression no compression" testsuites/syncgateway/functional/1sg_1cbs.robot`
+Run the whole suite 
 
-performance
+`robot -v SERVER_VERSION:4.1.0 -v SYNC_GATEWAY_VERSION:1.2.0-79 testsuites/syncgateway/functional/ `
+
+Run a single suite  
+
+`robot -v SERVER_VERSION:4.1.0 -v SYNC_GATEWAY_VERSION:1.2.0-79 testsuites/syncgateway/functional/1sg_1cbs.robot`
+
+Run a single test   
+
+`robot -v SERVER_VERSION:4.1.0 -v SYNC_GATEWAY_VERSION:1.2.0-79 -t "test bulk get compression no compression" testsuites/syncgateway/functional/1sg_1cbs.robot`
+
+### syncgateway -> performance
+
+In progress ...
+
+#### Setup
+1. Create and AWS CloudFormation Stack. Make sure you have set up AWS credential described above in 'Dependencies'
+
+`python libraries/provision/create_and_instantiate_cluster.py --stackname="TestPerfStack" --num-servers=3 --server-type="c3.2xlarge" --num-sync-gateways=2 --sync-gateway-type="c3.2xlarge" --num-gatlings=1 --gatling-type="c3.2xlarge"`
+
+2. Generate an ansible inventory from your CloudFormation Stack. The generated 'aws_perf_config' file will be written to 'resources/cluster_configs'
+
+`
+python libraries/provision/generate_ansible_inventory_from_aws.py --stackname="TestPerfStack" --targetfile="aws_perf_config"
+`
+
+3. Edit 'aws_perf_config' to reflect the number of writers you require
+4. Run the performance tests
+
+`robot testsuites/syncgateway/performance/minimatrix.robot`
+
+5. Teardown the CloudFormation Stack
+
+`python libraries/provision/teardown_cluster.py --stackname="TestPerfStack`
+
+
+
+
+
+
+
+
+
+
+
 
 
 
