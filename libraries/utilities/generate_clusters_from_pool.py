@@ -3,6 +3,8 @@ import os
 import sys
 import socket
 
+pool_file = "resources/pool.json"
+
 
 class ClusterDef:
     def __init__(self, name, num_sgs, num_acs, num_cbs, num_lgs):
@@ -62,7 +64,6 @@ if __name__ == "__main__":
     """
 
     min_num_machines = 6
-    pool_file = "resources/pool.json"
 
     cluster_configs = [
         ClusterDef("1sg_1cbs",      num_sgs=1, num_acs=0, num_cbs=1, num_lgs=0),

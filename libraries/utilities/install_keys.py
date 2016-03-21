@@ -4,18 +4,12 @@ import sys
 
 import ansible.inventory
 
-from optparse import OptionParser
+
+from generate_clusters_from_pool import get_ips
 
 def install_keys(key_name, user_name):
 
-    hostfile = os.environ["CLUSTER_CONFIG"]
-    inv = ansible.inventory.Inventory(host_list=hostfile)
-    hosts = inv.get_hosts()
-
-    ips = []
-    for host in hosts:
-        host_vars = host.get_variables()
-        ips.append(host_vars["ansible_host"])
+    ips = get_ips()
 
     print("Are you sure you would like to copy public key '{0}' to vms: {1}".format(
         key_name, ips
