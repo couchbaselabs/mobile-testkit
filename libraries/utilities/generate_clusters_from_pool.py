@@ -22,7 +22,7 @@ def write_config(config):
         f.write("[couchbase_servers]\n")
         for i in range(config.num_cbs):
             ip = ips[i]
-            f.write("{}\n".format(ip))
+            f.write("cb{} ansible_host={}\n".format(i + 1, ip))
             ips.remove(ip)
 
         f.write("\n")
@@ -33,21 +33,21 @@ def write_config(config):
         for i in range(config.num_sgs + config.num_acs):
             ip = ips[i]
             sg_ips.append(ip)
-            f.write("{}\n".format(ip))
+            f.write("sg{} ansible_host={}\n".format(i + 1, ip))
             ips.remove(ip)
 
         f.write("\n")
 
         f.write("[sync_gateway_index_writers]\n")
         for i in range(config.num_acs):
-            f.writelines("{}\n".format(sg_ips[i]))
+            f.writelines("sg{} ansible_host={}\n".format(i + 1, sg_ips[i]))
 
         f.write("\n")
 
         # Get local address to run webhook server on
         f.write("[webhook_ip]\n")
         local_ip = socket.gethostbyname(socket.gethostname())
-        f.write(local_ip)
+        f.write("tf1 ansible_host={}".format(local_ip))
 
 
 def get_ips():
