@@ -52,6 +52,9 @@ def provision_cluster(couchbase_server_config, sync_gateway_config, install_deps
         # Install dependencies
         ansible_runner.run_ansible_playbook("install-common-tools.yml")
 
+    # Clear firewall rules
+    ansible_runner.run_ansible_playbook("flush-firewall.yml")
+
     # Install server package
     install_couchbase_server.install_couchbase_server(couchbase_server_config)
 

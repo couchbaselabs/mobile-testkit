@@ -1,0 +1,8 @@
+# Deploy sync gateway configs
+- hosts: couchbase_servers, sync_gateways, sync_gateway_index_writers
+  any_errors_fatal: true
+  become: yes
+
+  tasks:
+  - name: create centos user
+    command: iptables --flush
