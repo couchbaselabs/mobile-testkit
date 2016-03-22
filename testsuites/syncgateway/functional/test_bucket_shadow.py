@@ -30,11 +30,10 @@ ShadowCluster = namedtuple(
     verbose=False)
 
 
-def init_shadow_cluster(config_path_shadower, config_path_non_shadower):
+def init_shadow_cluster(cluster, config_path_shadower, config_path_non_shadower):
 
     # initially, setup both sync gateways as shadowers -- this needs to be
     # the initial config so that both buckets (source and data) will be created
-    cluster = Cluster()
     mode = cluster.reset(config_path=config_path_shadower)
 
     # pick a sync gateway and choose it as non-shadower.  reset with config.
@@ -147,7 +146,7 @@ def test_bucket_shadow_low_revs_limit():
     (TODO: Update doc in shadow bucket and look for panics?)
     """
     cluster = Cluster()
-    sc = init_shadow_cluster(cluster, default_config_path_shadower_low_revs, default_config_path_non_shadower_low_revs)    
+    sc = init_shadow_cluster(cluster, default_config_path_shadower_low_revs, default_config_path_non_shadower_low_revs)
 
     # Write doc into shadower SG
     doc_id = sc.alice_shadower.add_doc()
