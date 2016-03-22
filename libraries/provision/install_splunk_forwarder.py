@@ -16,5 +16,6 @@ if __name__ == "__main__":
         os.environ["SPLUNK_SERVER_AUTH"]
     )
 
-    ansible_runner.run_ansible_playbook("install-splunkforwarder.yml", extra_vars=extra_vars)
+    status = ansible_runner.run_ansible_playbook("install-splunkforwarder.yml", extra_vars=extra_vars, stop_on_fail=False)
+    assert(status == 0)
 
