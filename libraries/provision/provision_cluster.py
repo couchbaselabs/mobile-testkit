@@ -25,7 +25,7 @@ def provision_cluster(couchbase_server_config, sync_gateway_config, install_deps
 
     if not couchbase_server_config.is_valid():
         print("Invalid server provisioning configuration. Exiting ...")
-        sys.exit(1)
+        raise ValueError("Invalid Couchbase Server provisioning config")
 
     if not sync_gateway_config.is_valid():
         print("Invalid sync_gateway provisioning configuration. Exiting ...")
@@ -43,17 +43,21 @@ def provision_cluster(couchbase_server_config, sync_gateway_config, install_deps
     ansible_runner = AnsibleRunner()
 
     # Reset previous installs
-    ansible_runner.run_ansible_playbook("remove-previous-installs.yml")
+    status = ansible_runner.run_ansible_playbook("remove-previous-installs.yml", stop_on_fail=False)
+    assert(status == 0)
 
     if install_deps:
         # OS-level modifications
-        ansible_runner.run_ansible_playbook("os-level-modifications.yml")
+        status = ansible_runner.run_ansible_playbook("os-level-modifications.yml", stop_on_fail=False)
+        assert(status == 0)
 
         # Install dependencies
-        ansible_runner.run_ansible_playbook("install-common-tools.yml")
+        status = ansible_runner.run_ansible_playbook("install-common-tools.yml", stop_on_fail=False)
+        assert(status == 0)
 
     # Clear firewall rules
-    ansible_runner.run_ansible_playbook("flush-firewall.yml")
+    status = ansible_runner.run_ansible_playbook("flush-firewall.yml", stop_on_fail=False)
+    assert(status == 0)
 
     # Install server package
     install_couchbase_server.install_couchbase_server(couchbase_server_config)
@@ -123,7 +127,7 @@ if __name__ == "__main__":
         cluster_config = os.environ["CLUSTER_CONFIG"]
     except KeyError as ke:
         print ("Make sure CLUSTER_CONFIG is defined and pointing to the configuration you would like to provision")
-        sys.exit(1)
+        raise KeyError("CLUSTER_CONFIG not defined. Unable to provision cluster.")
 
     server_config = CouchbaseServerConfig(
         version=opts.server_version

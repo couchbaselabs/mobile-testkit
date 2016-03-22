@@ -27,7 +27,7 @@ class CouchbaseServerConfig:
             return base_url, package_name
         else:
             print "Server package url not found. Make sure to specify a version / build."
-            sys.exit(1)
+            raise ValueError("Invalid server url")
 
     @property
     def version(self):
@@ -61,13 +61,15 @@ def install_couchbase_server(couchbase_server_config):
 
     ansible_runner = AnsibleRunner()
 
-    ansible_runner.run_ansible_playbook(
+    status = ansible_runner.run_ansible_playbook(
         "install-couchbase-server-package.yml",
         "couchbase_server_package_base_url={0} couchbase_server_package_name={1}".format(
             server_base_url,
             server_package_name
-        )
+        ),
+        stop_on_fail=False
     )
+    assert(status == 0)
 
 if __name__ == "__main__":
     usage = "usage: python install_couchbase_server.py --version=<couchbase_server_version> --build-number=<server_build_number>"
@@ -86,7 +88,7 @@ if __name__ == "__main__":
         cluster_config = os.environ["CLUSTER_CONFIG"]
     except KeyError as ke:
         print ("Make sure CLUSTER_CONFIG is defined and pointing to the configuration you would like to provision")
-        sys.exit(1)
+        raise KeyError("CLUSTER_CONFIG not defined. Unable to provision cluster.")
 
     server_config = CouchbaseServerConfig(
         version=opts.version

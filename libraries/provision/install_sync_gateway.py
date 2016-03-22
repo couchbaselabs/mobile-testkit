@@ -93,7 +93,7 @@ class SyncGatewayConfig:
     def _base_url_package_for_sync_gateway(self, version, build):
         if version == "1.1.0" or version == "1.1.1":
             print("Version unsupported in provisioning.")
-            sys.exit(1)
+            raise ValueError("Unsupport version of sync_gateway")
             # http://latestbuilds.hq.couchbase.com/couchbase-sync-gateway/release/1.1.1/1.1.1-10/couchbase-sync-gateway-enterprise_1.1.1-10_x86_64.rpm
             #base_url = "http://latestbuilds.hq.couchbase.com/couchbase-sync-gateway/release/{0}/{1}-{2}".format(version, version, build)
             #sg_package_name  = "couchbase-sync-gateway-enterprise_{0}-{1}_x86_64.rpm".format(version, build)
@@ -154,15 +154,17 @@ def install_sync_gateway(sync_gateway_config):
     if sync_gateway_config.branch is not None:
                 
         # Install source
-        ansible_runner.run_ansible_playbook(
+        status = ansible_runner.run_ansible_playbook(
             "install-sync-gateway-source.yml",
             "sync_gateway_config_filepath={0} branch={1} build_flags={2} skip_bucketflush={3}".format(
                 config_path,
                 sync_gateway_config.branch,
                 sync_gateway_config.build_flags,
                 sync_gateway_config.skip_bucketflush
-            )
+            ),
+            stop_on_fail=False
         )
+        assert(status == 0)
 
     else:
         # Install build
@@ -171,7 +173,7 @@ def install_sync_gateway(sync_gateway_config):
         else:
             sync_gateway_base_url, sync_gateway_package_name, sg_accel_package_name = sync_gateway_config.sync_gateway_base_url_and_package()
 
-        ansible_runner.run_ansible_playbook(
+        status = ansible_runner.run_ansible_playbook(
             "install-sync-gateway-package.yml",
             "couchbase_sync_gateway_package_base_url={0} couchbase_sync_gateway_package={1} couchbase_sg_accel_package={2} sync_gateway_config_filepath={3} skip_bucketflush={4}".format(
                 sync_gateway_base_url,
@@ -179,8 +181,10 @@ def install_sync_gateway(sync_gateway_config):
                 sg_accel_package_name,
                 config_path,
                 sync_gateway_config.skip_bucketflush
-            )
+            ),
+            stop_on_fail=False
         )
+        assert(status == 0)
 
 if __name__ == "__main__":
     usage = """usage: python install_sync_gateway.py
@@ -228,7 +232,7 @@ if __name__ == "__main__":
         cluster_config = os.environ["CLUSTER_CONFIG"]
     except KeyError as ke:
         print ("Make sure CLUSTER_CONFIG is defined and pointing to the configuration you would like to provision")
-        sys.exit(1)
+        raise KeyError("CLUSTER_CONFIG not defined. Unable to provision cluster.")
     
     version = None
     build = None
@@ -237,7 +241,7 @@ if __name__ == "__main__":
         version_build = opts.version.split("-")
         if len(version_build) != 2:
             print("Make sure the sync_gateway version follows pattern: 1.2.3-456")
-            sys.exit(1)
+            raise ValueError("Invalid format for sync_gateway version. Make sure to follow the patter '1.2.3-456'")
         version = version_build[0]
         build = version_build[1]
 
