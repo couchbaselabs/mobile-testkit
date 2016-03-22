@@ -56,6 +56,12 @@ def get_ips():
     with open(pool_file) as f:
         pool_dict = json.loads(f.read())
         ips = pool_dict["ips"]
+
+    # Make sure there are no duplicate endpoints
+    if len(ips) != len(set(ips)):
+        print("Duplicate endpoints found in 'resources/pools'. Make sure they are unique. Exiting ...")
+        sys.exit(1)
+
     return ips
 
 if __name__ == "__main__":

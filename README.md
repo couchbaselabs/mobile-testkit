@@ -10,10 +10,6 @@ The mobile test suites leverage Robot Framework (http://robotframework.org/) as 
 
 ### IMPORTANT
 ### Due to resource paths and dependencies, running all scripts and tests should be done from the root of the repository. 
-```
-robot testsuites/syncgateway/functional/
-python libraries/provision/provision_cluster.py --server-version=4.1.0 --sync-gateway-version=1.2.70-79
-```
 
 The repo is organized as following
 
