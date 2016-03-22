@@ -16,9 +16,13 @@ ${SYNC_GATEWAY_SUITE_FUNCTIONAL}  testsuites/syncgateway/functional
 Provision Cluster
     [Arguments]     ${server_version}   ${sync_gateway_version}    ${sync_gateway_config}
     Log                         Cluster Config: %{CLUSTER_CONFIG}
+    Log To Console              Cluster Config: %{CLUSTER_CONFIG}
     ${server_arg}               Catenate  SEPARATOR=  --server-version=            ${server_version}
     ${sync_gateway_arg}         Catenate  SEPARATOR=  --sync-gateway-version=      ${sync_gateway_version}
     ${sync_gateway_config_arg}  Catenate  SEPARATOR=  --sync-gateway-config-file=  ${sync_gateway_config}
+    Log To Console      ${server_arg}
+    Log To Console      ${sync_gateway_arg}
+    Log To Console      ${sync_gateway_config_arg}
     ${result} =  Run Process  python  ${LIBRARIES}/provision/provision_cluster.py  ${server_arg}  ${sync_gateway_arg}  ${sync_gateway_config_arg}
     Log To Console  ${result.stderr}
     Log To Console  ${result.stdout}
