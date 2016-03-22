@@ -21,11 +21,16 @@ def write_config(config):
 
     with open("resources/cluster_configs/{}".format(config.name), "w") as f:
 
+        cbs_ips_to_remove = []
+
         f.write("[couchbase_servers]\n")
         for i in range(config.num_cbs):
             ip = ips[i]
             f.write("cb{} ansible_host={}\n".format(i + 1, ip))
-            ips.remove(ip)
+            cbs_ips_to_remove.append(ip)
+
+        for cbs_ip in cbs_ips_to_remove:
+            ips.remove(cbs_ip)
 
         f.write("\n")
 
@@ -36,7 +41,9 @@ def write_config(config):
             ip = ips[i]
             sg_ips.append(ip)
             f.write("sg{} ansible_host={}\n".format(i + 1, ip))
-            ips.remove(ip)
+
+        for sg_ip in sg_ips:
+            ips.remove(sg_ip)
 
         f.write("\n")
 
@@ -69,7 +76,7 @@ if __name__ == "__main__":
     usage: python generate_cluster_from_pool.py"
     """
 
-    min_num_machines = 6
+    min_num_machines = 4
 
     cluster_configs = [
         ClusterDef("1sg_1cbs",      num_sgs=1, num_acs=0, num_cbs=1, num_lgs=0),
