@@ -52,7 +52,7 @@ class Cluster:
 
         if not os.path.isfile(os.environ["CLUSTER_CONFIG"]):
             log.error("Cluster config not found in 'resources/cluster_configs/'")
-            sys.exit(1)
+            raise IOError("Cluster config not found in 'resources/cluster_configs/'")
 
         variable_manager = VariableManager()
         loader = DataLoader()

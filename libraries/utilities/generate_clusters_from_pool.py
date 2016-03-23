@@ -21,6 +21,15 @@ def write_config(config):
 
     with open("resources/cluster_configs/{}".format(config.name), "w") as f:
 
+        f.write("[pool]\n")
+        count = 1
+        for ip in ips:
+            f.write("ma{} ansible_host={}\n".format(count, ip))
+            count += 1
+
+        f.write("\n")
+        f.write("\n")
+
         cbs_ips_to_remove = []
 
         f.write("[couchbase_servers]\n")

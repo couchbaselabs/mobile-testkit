@@ -27,6 +27,11 @@ Provision Cluster
     Log To Console  ${result.stderr}
     Log To Console  ${result.stdout}
 
+Clean Cluster
+    Log                         Cluster Config: %{CLUSTER_CONFIG}
+    Log To Console              Cluster Config: %{CLUSTER_CONFIG}
+    ${result} =  Run Process  python  ${LIBRARIES}/provision/clean_cluster.py
+
 Install Server
     [Arguments]     ${server_version}
     Log                         Cluster Config: %{CLUSTER_CONFIG}
@@ -43,5 +48,6 @@ Install Sync Gateway
     ${result} =  Run Process  python  ${LIBRARIES}/provision/install_sync_gateway.py  ${sync_gateway_arg}  ${sync_gateway_config_arg}
     Log To Console  ${result.stderr}
     Log To Console  ${result.stdout}
+
 
 
