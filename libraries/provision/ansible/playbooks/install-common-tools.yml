@@ -1,5 +1,5 @@
 ---
-- hosts: sync_gateways:couchbase_servers:load_generators
+- hosts: pool
   any_errors_fatal: true
   become: yes
 
