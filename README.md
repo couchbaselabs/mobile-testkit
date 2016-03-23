@@ -444,13 +444,31 @@ robot -t  "test overloaded channel cache one" testsuites/syncgateway/functional/
 
 ## Running android test suite
 
+### Pre-requisites
+
+* Android SDK. Download [Android Studio](http://developer.android.com/sdk/index.html) to install
+* Monkeyrunner (ships with Android Studio, must be in your PATH)
+
+```
+export ANDROID_HOME=$HOME/Library/Android/sdk
+export PATH=$ANDROID_HOME/tools:$ANDROID_HOME/platform-tools:$PATH
+```
+
+You will need this to bootstrap apk installation on your emulators (ex. Users/user/Library/Android/sdk/tools/monkeyrunner). 
+
+### Create Android Emulator (AVD)
+
+* Create new "dummy" project
+* Click on AVD manager (purple icon)
+* Create Virtual Device
+* Click "Download" next to Marshmallow x86_64
+* Hit Next/Finish to create it
+
 ### listener
 
 **Note:** Read the previous section to install Python dependencies.
 
 These tests live in the `functional_tests/android_listener_test` directory.
-
-Make sure you have the Android sdk installed and the 'monkeyrunner' program is in your path. You will need this to bootstrap apk installation on your emulators (ex. Users/user/Library/Android/sdk/tools/monkeyrunner). 
 
 The scenarios can run on Android stock emulators/Genymotion emulators and devices.
 
@@ -460,11 +478,11 @@ Ensure the RAM allocated to your combined running emulators is less than the tot
  
 To run the tests make sure you have lauched the correct number of emulators. You can launch them using the following command. 
 ```
-emulator -scale 0.25 @Nexus_5_API_23_x86 &
-emulator -scale 0.25 @Nexus_5_API_23_x86 &
-emulator -scale 0.25 @Nexus_5_API_23_x86 &
-emulator -scale 0.25 @Nexus_5_API_23_x86 &
-emulator -scale 0.25 @Nexus_5_API_23_x86 &
+emulator -scale 0.25 @Nexus_5_API_23 &
+emulator -scale 0.25 @Nexus_5_API_23 &
+emulator -scale 0.25 @Nexus_5_API_23 &
+emulator -scale 0.25 @Nexus_5_API_23 &
+emulator -scale 0.25 @Nexus_5_API_23 &
 ```
 Verify that the names listed below match the device definitions for the test you are trying to run
 ```
