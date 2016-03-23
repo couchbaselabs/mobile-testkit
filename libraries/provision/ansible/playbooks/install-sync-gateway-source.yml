@@ -8,6 +8,10 @@
   - include: tasks/remove-sg-accel.yml
   - include: tasks/clean-users.yml
 
+  # Check no sync_gateways or accels running
+  - name: verify no service on 4985
+    wait_for: port=4985 delay=1 state=stopped
+
 # Flush server buckets
 - hosts: couchbase_servers
   any_errors_fatal: true

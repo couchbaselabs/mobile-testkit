@@ -9,10 +9,6 @@
   when: ansible_distribution == "CentOS" and ansible_distribution_major_version == "6"
   ignore_errors: yes
 
-- name: verify sync_gateway not listening on port
-  wait_for: port=4985 delay=1 state=stopped
-  when: "'sync_gateway_index_writers' not in group_names"
-
 # Remove sync_gateway package
 - name: Uninstall sync_gateway rpm
   shell: rpm -e couchbase-sync-gateway
