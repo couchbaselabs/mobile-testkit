@@ -46,6 +46,24 @@ def get_ansible_inventory_name(ansible_group_name, host_index):
     ansible_group_shortname = ansible_group_shortnames[ansible_group_name]
     return "{}{}".format(ansible_group_shortname, host_index)
 
+def get_all_pool_nodes():
+    pool_nodes = []
+    for host_type in host_types:
+        
+        if not ec2Inventory.inventory.has_key(host_type):
+            print "No hosts with type: {} found, skipping".format(host_type)
+            continue
+
+        hosts_for_type = ec2Inventory.inventory[host_type]
+        hosts_for_type = list(set(hosts_for_type))  # uniquify
+
+        # find the intersection of hosts for this host type which are in cloudformation stack
+        hostnames = [host for host in hosts_for_type if host in cloud_formation_stack_hostnames]
+
+        for hostname in hostnames:
+            pool_nodes.append(hostname)
+    
+
 def get_ansible_groups():
 
     ansible_groups = []
@@ -129,6 +147,7 @@ if __name__=="__main__":
     usage = """usage: python generate_ansible_inventory_from_aws.py
     --stackname=<aws_cloudformation_stack_name>
     --targetfile=<ansible_inventory_target_file_path>
+    --pool_targetfile=<pools_json_target_file_path>
     --dumpinventory=true|false
     """
 
@@ -142,6 +161,10 @@ if __name__=="__main__":
                       action="store", type="string", dest="targetfile", default=None,
                       help="ansible inventory target file")
 
+    parser.add_option("", "--pool_targetfile",
+                      action="store", type="string", dest="pool_targetfile", default=None,
+                      help="pools json target file")
+
     parser.add_option("", "--dumpinventory",
                       action="store", dest="dumpinventory", default=False,
                       help="dump raw AWS inventory (for debugging)")
@@ -150,8 +173,8 @@ if __name__=="__main__":
 
     (opts, args) = parser.parse_args(arg_parameters)
 
-    if opts.stackname is None or opts.targetfile is None:
-        print("You must specify --stackname=<stack_name> and --targetfile=<file_name>")
+    if opts.stackname is None or opts.targetfile is None or opts.pool_targetfile is None:
+        print("You must specify --stackname=<stack_name> and --targetfile=<file_name> and --pool_targetfile=<file_name>")
         sys.exit(1)
    
     print "Getting inventory from AWS ... (may take a few minutes)"
@@ -175,5 +198,6 @@ if __name__=="__main__":
     ansible_groups = add_sync_gateway_index_writers(ansible_groups)
     write_to_file(ansible_groups, opts.targetfile)
 
-        
+    pool_nodes = get_all_pool_nodes()
+    print "pool_nodes: {}".format(pool_nodes)
 
