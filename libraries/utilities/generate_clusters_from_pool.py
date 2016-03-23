@@ -63,10 +63,14 @@ def write_config(config):
         f.write("\n")
 
         # Get local address to run webhook server on
-        f.write("[webhook_ip]\n")
-        local_ip = socket.gethostbyname(socket.gethostname())
-        f.write("tf1 ansible_host={}".format(local_ip))
-
+        # TODO: make the webhook receiver it's own endpoint, or come up w/ better design.
+        try:
+            f.write("[webhook_ip]\n")
+            local_ip = socket.gethostbyname(socket.gethostname())
+            f.write("tf1 ansible_host={}".format(local_ip))
+        except Exception as e:
+            print "Failed to find local_ip, webhook tests will fail.  Error: {}".format(e)
+            
 
 def get_ips():
     with open(pool_file) as f:
