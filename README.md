@@ -14,25 +14,22 @@ The mobile test suites leverage Robot Framework (http://robotframework.org/) as 
 The repo is organized as following
 
 ## libraries
-   
 ### provision
-
 ### testkit
-
 ### utilities
 
 ## testsuites
-
 ### android
-
 * listener
-
+* lite
 ### grocerysync
-
+### ios
+* lite
+### net
+* lite
+### sgcollectinfo
 ### syncgateway
-
 * functional
-
 * performance
 
 
@@ -72,15 +69,15 @@ $ [sudo] pip install virtualenv
 ```
 
 ```
-cd sync-gateway-testcluster/
-virtualenv -p /usr/bin/python2.7 venv
-source venv/bin/activate
-pip install -r requirements.txt
+$ cd sync-gateway-testcluster/
+$ virtualenv -p /usr/bin/python2.7 venv
+$ source venv/bin/activate
+$ pip install -r requirements.txt
 ```
 
 ### Environment
 
-* Setup Global Ansible Config
+** Setup Global Ansible Config
 
 ```
 $ cd sync-gateway-testcluster/libraries/provision/ansible/playbooks
@@ -88,26 +85,65 @@ $ cp ansible.cfg.example ansible.cfg
 $ vi ansible.cfg  # edit to your liking
 ```
 
-* Add current directory to $PYTHONPATH. This will pick the custom libraries and allow you to use them
+** Add current directory to $PYTHONPATH. This will pick the custom libraries and allow you to use them
 
 ```
 $ export PYTHONPATH=$PYTHONPATH:.
+```
+
+** AWS Environment requirements
+
+* Add boto configuration
+
+```
+$ cd ~/ 
+$ touch .boto
+$ vi .boto
+```
+
+* Add your AWS credentials (Below are a fake example).
+
+```
+[Credentials]
+aws_access_key_id = CDABGHEFCDABGHEFCDAB
+aws_secret_access_key = ABGHEFCDABGHEFCDABGHEFCDABGHEFCDABGHEFCDAB
+```
+
+* Add AWS env variables**
+
+```
+$ export AWS_ACCESS_KEY_ID=CDABGHEFCDABGHEFCDAB
+$ export AWS_SECRET_ACCESS_KEY=ABGHEFCDABGHEFCDABGHEFCDABGHEFCDABGHEFCDAB
+$ export AWS_KEY=<your-aws-keypair-name>
+$ export KEYNAME=key_<your-aws-keypair-name>
 ```
 
 ## Running Tests
 
 ### android 
 * listener
+* lite
 
 ### grocerysync
 
+### ios
+* lite
+
+### net
+* lite
+
 ### sgcollectinfo
 
-### syncgateway -> functional
+### syncgateway
+
+* functional
 
 #### Setup
+#### Spin up VM's or Bare Metal machines
 1. Create a pool.json of endpoints you would like to target (IPs or AWS ec2 endpoints). Rename resources/pool.json.example -> resources/pool.json. Update the fake ips with your endpoints.
-2. Install keys (Only required if you do not have ssh access without password). 
+If you do not have IP endpoints and would like to use AWS, see [Spin up Machines on AWS](#Spin-Up-Machines-On-AWS)
+
+2. Install keys (Not required for AWS). 
 
 `python libraries/utilities/install_keys.py --key-name=sample_key.pub --ssh-user=root` 
 
@@ -117,6 +153,25 @@ This will deploy key to each of the endpoints defined in your pool.json file.
 `python libraries/utilities/generate_clusters_from_pool.py`. 
 
 This converts the pool you supplied to cluster definitions required for provisioning and running the tests. The generated configurations will be in 'resources/cluster_configs/'.
+
+4. Provision the cluster with --install-deps flag (only once)
+Install sync_gateway package:
+
+```
+$ python libraries/provision/provision_cluster.py \
+    --server-version=4.1.0 \
+    --sync-gateway-version=1.2.0-79
+    --install-deps (first time only, this will install prerequisites to build / debug)
+```
+
+Install sync_gateway source:
+
+```
+$ python libraries/provision/provision_cluster.py \
+    --server-version=4.1.0 \
+    --sync-gateway-branch=master
+    --install-deps (first time only, this will install prerequisites to build / debug)
+```
 
 #### Running the tests
 Run the whole suite 
@@ -158,53 +213,6 @@ python libraries/provision/generate_ansible_inventory_from_aws.py --stackname="T
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 * Set CLUSTER_CONFIG environment variable. This will provide a target for the provisioning scripts to use.
 
 IMPORTANT: This will be overwritten to run some tests. This will be explained in the 'Running syncgateway functional tests section'
@@ -213,32 +221,9 @@ IMPORTANT: This will be overwritten to run some tests. This will be explained in
 export CLUSTER_CONFIG=resources/cluster_configs/<your_cluster_config>
 ```
 
-** AWS Environment requirements
+### AWS Cluster Setup
 
-* Add boto configuration
 
-```
-$ cd ~/ 
-$ touch .boto
-$ vi .boto
-```
-
-Add your AWS credentials (Below are a fake example).
-
-```
-[Credentials]
-aws_access_key_id = CDABGHEFCDABGHEFCDAB
-aws_secret_access_key = ABGHEFCDABGHEFCDABGHEFCDABGHEFCDABGHEFCDAB
-```
-
-* Add AWS env variables**
-
-```
-$ export AWS_ACCESS_KEY_ID=CDABGHEFCDABGHEFCDAB
-$ export AWS_SECRET_ACCESS_KEY=ABGHEFCDABGHEFCDABGHEFCDABGHEFCDABGHEFCDAB
-$ export AWS_KEY=<your-aws-keypair-name>
-$ export KEYNAME=key_<your-aws-keypair-name>
-```
 
 You probably want to persist these in your `~/.bash_profile`.
 
@@ -254,7 +239,6 @@ The "controller" is the machine that runs ansible, which is typically:
 The instructions below are for setting up directly on OSX.  If you prefer to run this under Docker, see the [Running under Docker](https://github.com/couchbaselabs/sync-gateway-testcluster/wiki/Running-under-Docker) wiki page.
 
 
-
 By default, the user is set to `root`, which works for VM clusters.  If you are on AWS, you will need to change that to `centos`
 
 ## Setup Cluster
@@ -264,6 +248,8 @@ By default, the user is set to `root`, which works for VM clusters.  If you are 
 Requirements:
 
 * Should have a centos user with full root access in /etc/sudoers
+
+
 
 ### Spin up Machines on AWS (DO NOT CHECK THESE FILES INTO SOURCE CONTROL)
 
@@ -344,24 +330,9 @@ This step will install:
 * Sync Gateway
 * Gateload/Gatling load generators
 
-Example building from source:
 
-```
-$ python libraries/provision/provision_cluster.py \
-    --server-version=4.1.0 \
-    --sync-gateway-branch=master
-    --install-deps (first time only, this will install prerequisites to build / debug)
-```
 
-Example from a pre-built version (dev build):
 
-```
-$ python libraries/provision/provision_cluster.py \
-    --server-version=3.1.1 \
-    --sync-gateway-dev-build-url=feature/distributed_index \
-    --sync-gateway-dev-build-number=345
-    --install-deps (first time only, this will install prerequisites to build / debug)
-```
 
 Like all scripts, run `python provision/provision_cluster.py -h` to view help options.
 
