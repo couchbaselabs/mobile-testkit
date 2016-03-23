@@ -68,6 +68,10 @@ Python 2.7.10
 Set up virtualenv install python dependencies
 
 ```
+$ [sudo] pip install virtualenv
+```
+
+```
 cd sync-gateway-testcluster/
 virtualenv -p /usr/bin/python2.7 venv
 source venv/bin/activate
