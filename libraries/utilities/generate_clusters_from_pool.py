@@ -2,6 +2,7 @@ import json
 import os
 import sys
 import socket
+import netifaces
 
 pool_file = "resources/pool.json"
 
@@ -85,7 +86,8 @@ def write_config(config):
         # TODO: make the webhook receiver it's own endpoint, or come up w/ better design.
         try:
             f.write("[webhook_ip]\n")
-            local_ip = socket.gethostbyname(socket.gethostname())
+            local_ip = netifaces.ifaddresses("eth0")[2][0]["addr"]
+            print("webhook ip: {}".format(local_ip))
             f.write("tf1 ansible_host={}".format(local_ip))
         except Exception as e:
             print "Failed to find local_ip, webhook tests will fail.  Error: {}".format(e)
