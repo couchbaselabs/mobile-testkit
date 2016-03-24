@@ -1,5 +1,6 @@
 import json
 import os
+import platform
 import sys
 import socket
 import netifaces
@@ -86,7 +87,10 @@ def write_config(config):
         # TODO: make the webhook receiver it's own endpoint, or come up w/ better design.
         try:
             f.write("[webhook_ip]\n")
-            local_ip = netifaces.ifaddresses("eth0")[2][0]["addr"]
+            if platform.system() == "Darwin":
+                local_ip = socket.gethostbyname(socket.gethostname())
+            else:
+                local_ip = netifaces.ifaddresses("eth0")[2][0]["addr"]
             print("webhook ip: {}".format(local_ip))
             f.write("tf1 ansible_host={}".format(local_ip))
         except Exception as e:
