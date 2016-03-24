@@ -57,7 +57,7 @@ def rest_scan(sync_gateway, db, online, num_docs, user_name, channels):
     try:
         admin.create_role(db=db, name="radio_stations", channels=["HWOD", "KDWB"])
     except HTTPError as e:
-        log.error((e.response.url, e.response.status_code))
+        log.info((e.response.url, e.response.status_code))
         error_responses.append((e.response.url, e.response.status_code))
 
     # GET /{db}/_role
@@ -65,7 +65,7 @@ def rest_scan(sync_gateway, db, online, num_docs, user_name, channels):
         roles = admin.get_roles(db=db)
         log.info(roles)
     except HTTPError as e:
-        log.error((e.response.url, e.response.status_code))
+        log.info((e.response.url, e.response.status_code))
         error_responses.append((e.response.url, e.response.status_code))
 
     # GET /{db}/_role/{name}
@@ -73,14 +73,14 @@ def rest_scan(sync_gateway, db, online, num_docs, user_name, channels):
         role = admin.get_role(db=db, name="radio_stations")
         log.info(role)
     except HTTPError as e:
-        log.error((e.response.url, e.response.status_code))
+        log.info((e.response.url, e.response.status_code))
         error_responses.append((e.response.url, e.response.status_code))
 
     # PUT /{db}/_user/{name}
     try:
         user = admin.register_user(target=sync_gateway, db=db, name=user_name, password="password", channels=channels)
     except HTTPError as e:
-        log.error((e.response.url, e.response.status_code))
+        log.info((e.response.url, e.response.status_code))
         error_responses.append((e.response.url, e.response.status_code))
 
     # GET /{db}/_user
@@ -88,7 +88,7 @@ def rest_scan(sync_gateway, db, online, num_docs, user_name, channels):
         users_info = admin.get_users_info(db=db)
         log.info(users_info)
     except HTTPError as e:
-        log.error((e.response.url, e.response.status_code))
+        log.info((e.response.url, e.response.status_code))
         error_responses.append((e.response.url, e.response.status_code))
 
     # GET /{db}/_user/{name}
@@ -96,7 +96,7 @@ def rest_scan(sync_gateway, db, online, num_docs, user_name, channels):
         user_info = admin.get_user_info(db=db, name=user_name)
         log.info(user_info)
     except HTTPError as e:
-        log.error((e.response.url, e.response.status_code))
+        log.info((e.response.url, e.response.status_code))
         error_responses.append((e.response.url, e.response.status_code))
 
     # GET /{db}
@@ -108,7 +108,7 @@ def rest_scan(sync_gateway, db, online, num_docs, user_name, channels):
             assert (db_info["state"] == "Online")
         log.info(db_info)
     except HTTPError as e:
-        log.error((e.response.url, e.response.status_code))
+        log.info((e.response.url, e.response.status_code))
         error_responses.append((e.response.url, e.response.status_code))
 
     # Create dummy user to hit endpoint if offline, user creation above will fail
@@ -128,7 +128,7 @@ def rest_scan(sync_gateway, db, online, num_docs, user_name, channels):
         try:
             user.add_doc()
         except HTTPError as e:
-            log.error((e.response.url, e.response.status_code))
+            log.info((e.response.url, e.response.status_code))
             error_responses.append((e.response.url, e.response.status_code))
 
     # GET /{db}/{name}
@@ -141,7 +141,7 @@ def rest_scan(sync_gateway, db, online, num_docs, user_name, channels):
             # Try to hit the GET enpoint for "test-id"
             user.update_doc("test-id")
         except HTTPError as e:
-            log.error((e.response.url, e.response.status_code))
+            log.info((e.response.url, e.response.status_code))
             error_responses.append((e.response.url, e.response.status_code))
 
     # PUT /{db}/{local-doc-id}
@@ -149,7 +149,7 @@ def rest_scan(sync_gateway, db, online, num_docs, user_name, channels):
     try:
         doc = user.add_doc("_local/{}".format(local_doc_id), content={"message": "I should not be replicated"})
     except HTTPError as e:
-        log.error((e.response.url, e.response.status_code))
+        log.info((e.response.url, e.response.status_code))
         error_responses.append((e.response.url, e.response.status_code))
 
     # GET /{db}/{local-doc-id}
@@ -157,7 +157,7 @@ def rest_scan(sync_gateway, db, online, num_docs, user_name, channels):
         doc = user.get_doc("_local/{}".format(local_doc_id))
         assert(doc["content"]["message"] == "I should not be replicated")
     except HTTPError as e:
-        log.error((e.response.url, e.response.status_code))
+        log.info((e.response.url, e.response.status_code))
         error_responses.append((e.response.url, e.response.status_code))
 
     # GET /{db}/_all_docs
@@ -166,7 +166,7 @@ def rest_scan(sync_gateway, db, online, num_docs, user_name, channels):
         # num_docs /{db}/{doc} PUT + num_docs /{db}/_bulk_docs + num_docs POST /{db}/
         assert(len(all_docs_result["rows"]) == num_docs * 3)
     except HTTPError as e:
-        log.error((e.response.url, e.response.status_code))
+        log.info((e.response.url, e.response.status_code))
         error_responses.append((e.response.url, e.response.status_code))
 
     # POST /{db}/_bulk_get
@@ -176,7 +176,7 @@ def rest_scan(sync_gateway, db, online, num_docs, user_name, channels):
         first_ten = user.get_docs(first_ten_ids)
         assert(len(first_ten) == 10)
     except HTTPError as e:
-        log.error((e.response.url, e.response.status_code))
+        log.info((e.response.url, e.response.status_code))
         error_responses.append((e.response.url, e.response.status_code))
 
     # wait for changes
@@ -188,7 +188,7 @@ def rest_scan(sync_gateway, db, online, num_docs, user_name, channels):
         # If successful, verify the _changes feed
         verify_changes(user, expected_num_docs=num_docs * 3, expected_num_revisions=1, expected_docs=user.cache)
     except HTTPError as e:
-        log.error((e.response.url, e.response.status_code))
+        log.info((e.response.url, e.response.status_code))
         error_responses.append((e.response.url, e.response.status_code))
 
     return error_responses
@@ -269,7 +269,7 @@ def test_online_to_offline_check_503(conf, num_docs):
     # We hit NUM_ENDPOINT unique REST endpoints + num of doc PUT failures
     assert(len(errors) == NUM_ENDPOINTS + (num_docs * 2))
     for error_tuple in errors:
-        log.error("({},{})".format(error_tuple[0], error_tuple[1]))
+        log.info("({},{})".format(error_tuple[0], error_tuple[1]))
         assert(error_tuple[1] == 503)
 
     # Verify all sync_gateways are running
@@ -594,7 +594,7 @@ def test_offline_true_config_bring_online(conf, num_docs):
 
     assert(len(errors) == NUM_ENDPOINTS + (num_docs * 2))
     for error_tuple in errors:
-        log.error("({},{})".format(error_tuple[0], error_tuple[1]))
+        log.info("({},{})".format(error_tuple[0], error_tuple[1]))
         assert(error_tuple[1] == 503)
 
     # Scenario 9
@@ -633,7 +633,7 @@ def test_db_offline_tap_loss_sanity(conf, num_docs):
     errors = rest_scan(cluster.sync_gateways[0], db="db", online=False, num_docs=num_docs, user_name="seth", channels=["ABC"])
     assert(len(errors) == NUM_ENDPOINTS + (num_docs * 2))
     for error_tuple in errors:
-        log.error("({},{})".format(error_tuple[0], error_tuple[1]))
+        log.info("({},{})".format(error_tuple[0], error_tuple[1]))
         assert(error_tuple[1] == 503)
 
     # Verify all sync_gateways are running
@@ -708,7 +708,7 @@ def test_multiple_dbs_unique_buckets_lose_tap(conf, num_docs):
         errors = rest_scan(cluster.sync_gateways[0], db=db, online=False, num_docs=num_docs, user_name="seth", channels=["ABC"])
         assert(len(errors) == NUM_ENDPOINTS + (num_docs * 2))
         for error_tuple in errors:
-            log.error("({},{})".format(error_tuple[0], error_tuple[1]))
+            log.info("({},{})".format(error_tuple[0], error_tuple[1]))
             assert(error_tuple[1] == 503)
 
     # Verify all sync_gateways are running
