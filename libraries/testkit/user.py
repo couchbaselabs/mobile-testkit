@@ -9,13 +9,12 @@ import time
 from requests.packages.urllib3.util import Retry
 from requests.adapters import HTTPAdapter
 from requests.exceptions import HTTPError
-from requests import Session, exceptions
-from collections import defaultdict
 
 from testkit.debug import *
 from testkit import settings
 import logging
 log = logging.getLogger(settings.LOGGER)
+
 
 class User:
     def __init__(self, target, db, name, password, channels):
@@ -28,9 +27,12 @@ class User:
         self.channels = list(channels)
         self.target = target
 
-        auth = base64.b64encode("{0}:{1}".format(self.name, self.password).encode())
-        self._auth = auth.decode("UTF-8")
-        self._headers = {'Content-Type': 'application/json', "Authorization": "Basic {}".format(self._auth)}
+        self._headers = {'Content-Type': 'application/json'}
+
+        if self.name is not None:
+            auth = base64.b64encode("{0}:{1}".format(self.name, self.password).encode())
+            self._auth = auth.decode("UTF-8")
+            self._headers["Authorization"] = "Basic {}".format(self._auth)
 
     def __str__(self):
         return "USER: name={0} password={1} db={2} channels={3} cache={4}".format(self.name, self.password, self.db, self.channels, len(self.cache))
@@ -92,7 +94,7 @@ class User:
 
         resp.raise_for_status()
         return resp.json()
-    
+
     # PUT /{db}/{doc}
     # PUT /{db}/{local-doc-id}
     def add_doc(self, doc_id=None, content=None, retries=False):

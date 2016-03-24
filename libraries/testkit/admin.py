@@ -4,10 +4,12 @@ import concurrent.futures
 
 from testkit.user import User
 from testkit import settings
-
+from testkit.debug import log_request
+from testkit.debug import log_response
 
 import logging
 log = logging.getLogger(settings.LOGGER)
+
 
 class Admin:
 
@@ -15,6 +17,26 @@ class Admin:
         self.admin_url = "http://{}:4985".format(sync_gateway.ip)
         self.users = {}
         self._headers = {"Content-Type": "application/json"}
+
+    def create_db(self, name):
+        r = requests.put("{}/{}".format(self.admin_url, name))
+        log_request(r)
+        log_response(r)
+        r.raise_for_status()
+        return r.json()
+
+    def delete_db(self, name):
+        r = requests.delete("{}/{}".format(self.admin_url, name))
+        log_request(r)
+        log_response(r)
+        r.raise_for_status()
+        return r.json()
+
+    def get_dbs(self):
+        r = requests.get("{}/_all_dbs".format(self.admin_url))
+        log.info("GET {}".format(r.url))
+        r.raise_for_status()
+        return r.json()
 
     # GET /{db}/
     def get_db_info(self, db):
@@ -144,6 +166,24 @@ class Admin:
         log.info("GET {}".format(resp.url))
         resp.raise_for_status()
         return resp.json()
+
+    # GET /{db}/_changes
+    def get_global_changes(self, db):
+        r = requests.get("{}/{}/_changes".format(self.admin_url, db))
+        log_request(r)
+        log_response(r)
+        r.raise_for_status()
+        resp_data = r.json()
+        return resp_data["results"]
+
+    # GET /_active_tasks
+    def get_active_tasks(self):
+        r = requests.get("{}/_active_tasks".format(self.admin_url))
+        log_request(r)
+        log_response(r)
+        r.raise_for_status()
+        resp_data = r.json()
+        return resp_data
 
     def get_all_docs(self, db):
         resp = requests.get("{0}/{1}/_all_docs".format(self.admin_url, db), headers=self._headers, timeout=settings.HTTP_REQ_TIMEOUT)

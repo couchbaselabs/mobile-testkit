@@ -8,9 +8,13 @@
     "compressResponses": true,
     "log": ["*"],
     "databases":{
-        "db":{
+        "db1":{
             "server":"http://{{ couchbase_server_primary_node }}:8091",
-            "bucket":"data-bucket"
+            "bucket":"data-bucket-1"
+        },
+        "db2":{
+            "server":"http://{{ couchbase_server_primary_node }}:8091",
+            "bucket":"data-bucket-2"
         }
     }
 }
