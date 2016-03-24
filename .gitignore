@@ -24,11 +24,23 @@ temp_ansible_hosts
 conf/hosts.ini
 
 provisioning_config*
-!utilities/provisioning_config_parser.py
+!libraries/utilities/provisioning_config_parser.py
 
 results.xml
-provision/ansible/playbooks/ansible.cfg
 test-framework.log
 
-performance_results/*
+testsuites/syncgateway/performance/results/*
 !performance_results/README.txt
+
+# appium ignore
+*.png
+log.html
+output.xml
+report.html
+
+resources/cluster_configs/*
+!resources/cluster_configs/README.md
+resources/pool.json
+!resources/cluster_configs/1sg_1cbs.sample
+libraries/provision/ansible/playbooks/ansible.cfg
+debug.txt

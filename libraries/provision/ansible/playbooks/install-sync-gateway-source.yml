@@ -1,0 +1,139 @@
+---
+# Remove sync_gateway
+- hosts: sync_gateways
+  become: yes
+
+  tasks:
+  - include: tasks/remove-sync-gateway.yml
+  - include: tasks/remove-sg-accel.yml
+  - include: tasks/clean-users.yml
+
+  # Check no sync_gateways or accels running
+  - name: verify no service on 4985
+    wait_for: port=4985 delay=1 state=stopped
+
+# Flush server buckets
+- hosts: couchbase_servers
+  any_errors_fatal: true
+  vars:
+    # Primary node
+    couchbase_server_primary_node: "{{ hostvars[groups.couchbase_servers[0]].ansible_host }}"
+    # Current node
+    couchbase_server_node: "{{ hostvars[inventory_hostname]['ansible_host'] }}"
+
+    couchbase_server_home_path: /opt/couchbase
+    couchbase_server_admin_port: 8091
+    couchbase_server_admin: Administrator
+    couchbase_server_password: password
+
+    couchbase_server_bucket_type: couchbase
+    couchbase_server_bucket_port: 11211
+    couchbase_server_bucket_replica: 1
+    couchbase_server_cluster_ram: "{{ ((ansible_memtotal_mb|int)*0.8)|int }}"
+    couchbase_server_bucket_ram: "{{ ((couchbase_server_cluster_ram|int)*0.5)|int }}"
+
+  tasks:
+  - include: tasks/flush-server-buckets.yml
+    when: (skip_bucketflush != 'true') and (skip_bucketflush != 'True')
+
+# Create sync_gateway user
+- hosts: sync_gateways
+  any_errors_fatal: true
+  become: yes
+  tasks:
+  - include: tasks/create-sync-gateway-user.yml
+    when: "'sync_gateway_index_writers' not in group_names"
+
+# Create sg_accel user
+- hosts: sync_gateway_index_writers
+  any_errors_fatal: true
+  become: yes
+  tasks:
+  - include: tasks/create-sg-accel-user.yml
+
+# Download source and build
+- hosts: sync_gateways
+  any_errors_fatal: true
+  become: yes
+  vars:
+    branch:
+    build_flags:
+
+  tasks:
+  - name: remove previous .repo directory
+    file: path=/home/centos/.repo state=absent
+  - name: download bootstrap script
+    get_url: url=https://raw.githubusercontent.com/couchbase/sync_gateway/master/bootstrap.sh dest=/home/centos mode=0751
+  - name: run bootstrap script (bootstrap.sh takes a branch and a commit as params, this will be fixed to only take a commit at some point)
+    shell: ./bootstrap.sh {{ branch }} {{ branch }}  
+  - name: build
+    shell: ./build.sh {{ build_flags }}
+
+    
+  # Copy sync_gateway binary from centos user
+  - name: Creates /opt/couchbase-sync-gateway
+    file: path=/opt/couchbase-sync-gateway state=directory
+  - name: Creates /opt/couchbase-sync-gateway/bin
+    file: path=/opt/couchbase-sync-gateway/bin state=directory
+  - name: copy sync_gateway binary to /opt/
+    shell: cp /home/centos/godeps/bin/sync_gateway /opt/couchbase-sync-gateway/bin/
+
+  # Copy sg_accel binary from centos user
+  - name: Creates /opt/couchbase-sg-accel
+    file: path=/opt/couchbase-sg-accel state=directory
+  - name: Creates /opt/couchbase-sg-accel/bin
+    file: path=/opt/couchbase-sg-accel/bin state=directory
+  - name: copy sg_accel binary to /opt/
+    shell: cp /home/centos/godeps/bin/sg_accel /opt/couchbase-sg-accel/bin/
+
+# Deploy sync gateway configs
+- hosts: sync_gateways
+  any_errors_fatal: true
+  become: yes
+  vars:
+    sync_gateway_config_filepath:
+    couchbase_server_primary_node: "{{ hostvars[groups.couchbase_servers[0]].ansible_host }}"
+    is_index_writer: "false"
+  tasks:
+  - include: tasks/deploy-sync-gateway-config.yml
+    when: "'sync_gateway_index_writers' not in group_names"
+
+# Deploy sg_accel configs
+- hosts: sync_gateway_index_writers
+  any_errors_fatal: true
+  become: yes
+  vars:
+    sync_gateway_config_filepath:
+    couchbase_server_primary_node: "{{ hostvars[groups.couchbase_servers[0]].ansible_host }}"
+    is_index_writer: "true"
+  tasks:
+  - include: tasks/deploy-sg-accel-config.yml
+
+# Install sync_gateway service and wait for launch
+- hosts: sync_gateways
+  any_errors_fatal: true
+  become: yes
+  tasks:
+  - name: make service install script executable
+    file: path=/home/centos/godeps/src/github.com/couchbase/sync_gateway/service/sync_gateway_service_install.sh mode=a+x
+    when: "'sync_gateway_index_writers' not in group_names"
+  - name: install sync gateway service
+    shell: ./sync_gateway_service_install.sh chdir=/home/centos/godeps/src/github.com/couchbase/sync_gateway/service
+    when: "'sync_gateway_index_writers' not in group_names"
+  - name: wait until sync gateway to listen on port
+    wait_for: port=4985 delay=2 timeout=120
+    when: "'sync_gateway_index_writers' not in group_names"
+
+# Install sg_accel service and wait for launch
+- hosts: sync_gateway_index_writers
+  any_errors_fatal: true
+  become: yes
+  tasks:
+  - name: make service install script executable
+    file: path=/home/centos/godeps/src/github.com/couchbase/sync_gateway/service/sg_accel_service_install.sh mode=a+x
+  - name: install sg_accell service
+    shell: ./sg_accel_service_install.sh chdir=/home/centos/godeps/src/github.com/couchbase/sync_gateway/service
+  - name: Start the service
+    service: name=sg_accel state=started
+  - name: wait until sync gateway to listen on port
+    wait_for: port=4985 delay=2 timeout=120
