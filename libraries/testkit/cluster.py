@@ -26,46 +26,31 @@ class Cluster:
 
     def __init__(self):
 
-        # get hosts
-        cbs_host_vars = self._hosts_for_tag("couchbase_servers")
-        sgs_host_vars = self._hosts_for_tag("sync_gateways")
-        sgsw_host_vars = self._hosts_for_tag("sync_gateway_index_writers")
-        lds_host_vars = self._hosts_for_tag("load_generators")
+        host_file = os.environ["CLUSTER_CONFIG"]
 
-        # provide simple consumable dictionaries to functional framwork
-        cbs = [{"name": cbsv["inventory_hostname"], "ip": cbsv["ansible_host"]} for cbsv in cbs_host_vars]
-
-        # Only collect sync_gateways that are not index_writers
-        sgvs = [sgv for sgv in sgs_host_vars if "sync_gateway_index_writers" not in sgv["group_names"]]
-        sgs = [{"name": sgv["inventory_hostname"], "ip": sgv["ansible_host"]} for sgv in sgvs]
-
-        sgsw = [{"name": sgwv["inventory_hostname"], "ip": sgwv["ansible_host"]} for sgwv in sgsw_host_vars]
-        lds = [{"name": ldv["inventory_hostname"], "ip": ldv["ansible_host"]} for ldv in lds_host_vars]
-
-        self.sync_gateways = [SyncGateway(sg) for sg in sgs]
-        self.sg_accels = [SgAccel(sgw) for sgw in sgsw]
-        self.servers = [Server(cb) for cb in cbs]
-        self.load_generators = lds
-        self.sync_gateway_config = None  # will be set to Config object when reset() called
-        
-    def _hosts_for_tag(self, tag):
-
-        if not os.path.isfile(os.environ["CLUSTER_CONFIG"]):
+        if not os.path.isfile(host_file):
             log.error("Cluster config not found in 'resources/cluster_configs/'")
             raise IOError("Cluster config not found in 'resources/cluster_configs/'")
 
-        variable_manager = VariableManager()
-        loader = DataLoader()
+        log.info(host_file)
 
-        host_file = os.environ["CLUSTER_CONFIG"]
-        i = ansible.inventory.Inventory(loader=loader, variable_manager=variable_manager, host_list=host_file)
-        variable_manager.set_inventory(i)
+        # Load resources/cluster_configs/<cluster_config>.json
+        with open("{}.json".format(host_file)) as f:
+            cluster = json.loads(f.read())
+            print("Using Cluster: {}.json".format(cluster))
 
-        group = i.get_group(tag)
-        if group is None:
-            return []
-        hosts = group.get_hosts()
-        return [host.get_vars() for host in hosts]
+        cbs = [{"name": cbs["name"], "ip": cbs["ip"]} for cbs in cluster["couchbase_servers"]]
+        sgs = [{"name": sgs["name"], "ip": sgs["ip"]} for sgs in cluster["sync_gateways"] if sgs["name"] not in cluster["sync_gateway_index_writers"]]
+        acs = [{"name": ac["name"], "ip": ac["ip"]} for ac in cluster["sync_gateway_index_writers"]]
+
+        log.info("cbs: {}".format(cbs))
+        log.info("sgs: {}".format(sgs))
+        log.info("acs: {}".format(acs))
+
+        self.sync_gateways = [SyncGateway(sg) for sg in sgs]
+        self.sg_accels = [SgAccel(ac) for ac in acs]
+        self.servers = [Server(cb) for cb in cbs]
+        self.sync_gateway_config = None  # will be set to Config object when reset() called
 
     def validate_cluster(self):
 

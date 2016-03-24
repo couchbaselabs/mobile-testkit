@@ -19,7 +19,14 @@ def write_config(config):
 
     ips = get_ips()
 
-    with open("resources/cluster_configs/{}".format(config.name), "w") as f:
+    ansible_cluster_conf_file = "resources/cluster_configs/{}".format(config.name)
+    cluster_json_file = "resources/cluster_configs/{}.json".format(config.name)
+
+    with open(ansible_cluster_conf_file, "w") as f:
+
+        couchbase_servers = []
+        sync_gateways = []
+        accels = []
 
         f.write("[pool]\n")
         count = 1
@@ -36,6 +43,10 @@ def write_config(config):
         for i in range(config.num_cbs):
             ip = ips[i]
             f.write("cb{} ansible_host={}\n".format(i + 1, ip))
+            couchbase_servers.append({
+                "name": "cb{}".format(i + 1),
+                "ip": ip
+            })
             cbs_ips_to_remove.append(ip)
 
         for cbs_ip in cbs_ips_to_remove:
@@ -50,6 +61,10 @@ def write_config(config):
             ip = ips[i]
             sg_ips.append(ip)
             f.write("sg{} ansible_host={}\n".format(i + 1, ip))
+            sync_gateways.append({
+                "name": "sg{}".format(i + 1),
+                "ip": ip
+            })
 
         for sg_ip in sg_ips:
             ips.remove(sg_ip)
@@ -59,6 +74,10 @@ def write_config(config):
         f.write("[sync_gateway_index_writers]\n")
         for i in range(config.num_acs):
             f.writelines("sg{} ansible_host={}\n".format(i + 1, sg_ips[i]))
+            accels.append({
+                "name": "sg{}".format(i + 1),
+                "ip": sg_ips[i]
+            })
 
         f.write("\n")
 
@@ -70,7 +89,18 @@ def write_config(config):
             f.write("tf1 ansible_host={}".format(local_ip))
         except Exception as e:
             print "Failed to find local_ip, webhook tests will fail.  Error: {}".format(e)
-            
+
+        # Write json file consumable by testkit.cluster class
+        cluster_dict = {
+            "couchbase_servers": couchbase_servers,
+            "sync_gateways": sync_gateways,
+            "sync_gateway_index_writers": accels
+        }
+
+        with open(cluster_json_file, "w") as f_json:
+            f_json.write(json.dumps(cluster_dict, indent=4))
+
+
 
 def get_ips():
     with open(pool_file) as f:
