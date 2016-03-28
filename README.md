@@ -464,10 +464,6 @@ $ python libraries/utilities/fetch_sg_logs.py
 
 
 
-Known Issues And Limitations
-============================
-- This repo now only supports ansible 2.0.0.2. There are known issues with certain versions of ansible.
-
 
 ## Spin Up Machines on AWS
 ==========================
@@ -493,3 +489,7 @@ Wait until the resources are up, then
 ```
 python libraries/provision/generate_ansible_inventory_from_aws.py --stackname="TestPerfStack" --targetfile="aws_config"
 ```
+
+## Known Issues And Limitations
+============================
+- This repo now only supports ansible 2.0.0.2. There are known issues with certain versions of ansible.
