@@ -29,7 +29,7 @@ class SgAccel:
         return status
 
     def start(self, config):
-        conf_path = os.path.abspath("conf/" + config)
+        conf_path = os.path.abspath(config)
 
         log.info(">>> Starting sg_accel with configuration: {}".format(conf_path))
 
