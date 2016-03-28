@@ -7,6 +7,23 @@ $ git clone https://github.com/couchbaselabs/mobile-testkit.git
 
 The mobile test suites leverage Robot Framework (http://robotframework.org/) as an organization platform as well as a test runner and reporter. 
 
+
+Table of Contents
+=================
+
+* [Repo Structure](#repo-structure)
+* [Repo Dependencies](#repo-dependencies)
+* [Development Environment](#development-environment)
+* [Android Tests](#android-tests)
+* [GrocerySync Tests](#grocerysync-tests)
+* [iOS Tests](#ios-tests)
+* [NET Tests](#net-tests)
+* [sgcollectinfo Tests](#sgcollectinfo-tests)
+* [sync_gateway Tests](#sync_gateway-tests)
+* [Monitoring](#monitoring)
+* [Known Issues And Limitations](#known-issues-and-limitations)
+
+
 Repo Structure
 ==============
 
@@ -25,19 +42,6 @@ The repo is organized as following
  * sgcollectinfo
  * syncgateway
 
-Table of Contents
-=================
-
-* [Dependencies](#repo-dependencies)
-* [Development Environment](#development-environment)
-* [Android Tests](#android-tests)
-* [GrocerySync Tests](#grocerysync-tests)
-* [iOS Tests](#ios-tests)
-* [NET Tests](#net-tests)
-* [sgcollectinfo Tests](#sgcollectinfo-tests)
-* [sync_gateway Tests](#sync_gateway-tests)
-* [Monitoring](#monitoring)
-* [Known Issues And Limitations](#known-issues-and-limitations)
 
 Repo Dependencies
 =================
