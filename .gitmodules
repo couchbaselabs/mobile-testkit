@@ -1,0 +1,3 @@
+[submodule "deps/couchbase-lite-android-liteserv"]
+	path = deps/couchbase-lite-android-liteserv
+	url = https://github.com/couchbase/couchbase-lite-android-liteserv.git
