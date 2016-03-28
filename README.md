@@ -469,7 +469,7 @@ $ python libraries/utilities/fetch_sg_logs.py
 
 
 
-## Spin Up Machines on AWS
+Spin Up Machines on AWS
 ==========================
 1. Create and AWS CloudFormation Stack. Make sure you have set up AWS credentials described in [sync_gateway Test Dependencies](#sync_gateway-Test-Dependencies)
 
@@ -494,6 +494,6 @@ Wait until the resources are up, then
 python libraries/provision/generate_ansible_inventory_from_aws.py --stackname="TestPerfStack" --targetfile="aws_config"
 ```
 
-## Known Issues And Limitations
+Known Issues And Limitations
 ============================
 - This repo now only supports ansible 2.0.0.2. There are known issues with certain versions of ansible.
