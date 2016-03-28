@@ -440,6 +440,32 @@ robot testsuites/syncgateway/performance/minimatrix.robot
 python libraries/provision/teardown_cluster.py --stackname="TestPerfStack
 ```
 
+### Spin Up Machines on AWS
+==========================
+1. Create and AWS CloudFormation Stack. Make sure you have set up AWS credentials described in [sync_gateway Test Dependencies](#sync_gateway-Test-Dependencies)
+
+```
+$ python libraries/provision/create_and_instantiate_cluster.py \
+    --stackname="YourCloudFormationStack" \
+    --num-servers=1 \
+    --server-type="m3.large" \
+    --num-sync-gateways=2 \
+    --sync-gateway-type="m3.medium" \
+    --num-gatlings=1 \
+    --gatling-type="m3.medium" \
+    --num-lbs=0 \
+    --lb-type="m3.medium" 
+```
+
+Wait until the resources are up, then
+
+2. Generate an ansible inventory from your CloudFormation Stack. The generated 'aws_config' file will be written to 'resources/cluster_configs'
+
+```
+python libraries/provision/generate_ansible_inventory_from_aws.py --stackname="TestPerfStack" --targetfile="aws_config"
+```
+
+
 Monitoring
 ==========
 
@@ -466,33 +492,6 @@ python libraries/utilities/monitor_sync_gateway.py
 $ python libraries/utilities/fetch_sg_logs.py
 ```
 
-
-
-
-Spin Up Machines on AWS
-==========================
-1. Create and AWS CloudFormation Stack. Make sure you have set up AWS credentials described in [sync_gateway Test Dependencies](#sync_gateway-Test-Dependencies)
-
-```
-$ python libraries/provision/create_and_instantiate_cluster.py \
-    --stackname="YourCloudFormationStack" \
-    --num-servers=1 \
-    --server-type="m3.large" \
-    --num-sync-gateways=2 \
-    --sync-gateway-type="m3.medium" \
-    --num-gatlings=1 \
-    --gatling-type="m3.medium" \
-    --num-lbs=0 \
-    --lb-type="m3.medium" 
-```
-
-Wait until the resources are up, then
-
-2. Generate an ansible inventory from your CloudFormation Stack. The generated 'aws_config' file will be written to 'resources/cluster_configs'
-
-```
-python libraries/provision/generate_ansible_inventory_from_aws.py --stackname="TestPerfStack" --targetfile="aws_config"
-```
 
 Known Issues And Limitations
 ============================
