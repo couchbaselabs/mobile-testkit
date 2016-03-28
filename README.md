@@ -427,7 +427,6 @@ Although it is not necessary, the `-b debug.txt` will provide more output and st
 - [Spin up a AWS CloudFormation stack](#Spin=Up-Machines-on-AWS)
 
 - Edit 'aws_config' to reflect the number of writers you require
-- 
 - Run the performance tests
 
 ```
