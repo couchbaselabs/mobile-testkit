@@ -379,6 +379,8 @@ This targets the 'resources/pool.json' you supplied above and generates cluster 
 
 - Provision the cluster with --install-deps flag (only once)
 
+- Set the `CLUSTER_CONFIG` environment variable that is required by the `provision_cluster.py` script.  Eg: `$ export CLUSTER_CONFIG=resources/cluster_configs/2sg_1cbs`
+
 - Install sync_gateway package:
 
 ```
