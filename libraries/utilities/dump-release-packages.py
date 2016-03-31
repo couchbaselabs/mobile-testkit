@@ -106,7 +106,7 @@ def pull_package_and_dump_contents(package_defs):
         # Write package contents
         file_contents = subprocess.check_output(["find", extracted_file_name])
         print("\n{}\n".format(file_contents))
-        with open("package-contents/{}-package-contents.log".format(file_name), "w") as f:
+        with open("package-contents/{}-package-contents.txt".format(file_name), "w") as f:
             f.write("Downloaded package: {}\n\n".format(url))
             f.write(file_contents)
 
