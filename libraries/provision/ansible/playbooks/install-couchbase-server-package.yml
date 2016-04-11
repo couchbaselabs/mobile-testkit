@@ -40,15 +40,7 @@
     - name: Install Couchbase Server
       yum: name=/tmp/{{ couchbase_server_package_name }} state=present
 
-    # Start via init scipt if running CBS 4.1.0 on CentOS 7.2 due to https://issues.couchbase.com/browse/MB-17193
-    - name: Restart Couchbase Service (Hack around 7.2 and CBS 4.1.0 issue)
-      shell: /opt/couchbase/etc/couchbase_init.d start
-      when: ansible_distribution == 'CentOS' and ansible_distribution_version == '7.2.1511' and couchbase_server_package_name == 'couchbase-server-enterprise-4.1.0-centos7.x86_64.rpm'
-
-    - name: Restart Couchbase Service
-      service: name=couchbase-server state=restarted
-      when: not ansible_distribution == 'CentOS' and not ansible_distribution_version == '7.2.1511' and not couchbase_server_package_name == 'couchbase-server-enterprise-4.1.0-centos7.x86_64.rpm'
-
+    # Change system settings for Couchbase Server
     - name: raise max file descriptors
       copy: src=files/security-nofiles-limit.conf dest=/etc/security/limits.d/20-nofiles.conf owner=root group=root mode=0644
 
@@ -56,6 +48,15 @@
       shell: echo 'for i in /sys/kernel/mm/*transparent_hugepage/enabled; do echo never > $i; done' >> /etc/rc.local
       shell: echo 'for i in /sys/kernel/mm/*transparent_hugepage/defrag; do echo never > $i; done' >> /etc/rc.local
       shell: for i in /sys/kernel/mm/*transparent_hugepage/enabled; do echo never > $i; done
+
+    # Start via init scipt if running CBS 4.1.0 on CentOS 7.2 due to https://issues.couchbase.com/browse/MB-17193
+    - name: Restart Couchbase Service (Hack around 7.2 and CBS 4.1.0 issue)
+      shell: /opt/couchbase/etc/couchbase_init.d start
+      when: ansible_distribution == 'CentOS' and ansible_distribution_version == '7.2.1511' and couchbase_server_package_name == 'couchbase-server-enterprise-4.1.0-centos7.x86_64.rpm'
+
+    - name: Restart Couchbase Service
+      service: name=couchbase-server state=restarted
+      when: ansible_distribution == 'CentOS' and not ansible_distribution_version == '7.2.1511'
 
     # Configure
     - debug: msg="Couchbase cluster RAM {{ couchbase_server_cluster_ram }}"
