@@ -205,7 +205,7 @@ class User:
                     try:
                         doc_id = future.result()
                     except HTTPError as e:
-                        log.error("{0} {1} {2}".format(self.name, e.response.url, e.response.status_code))
+                        log.info("HTTPError: {0} {1} {2}".format(self.name, e.response.url, e.response.status_code))
                         errors.append((e.response.url, e.response.status_code))
         else:
             with concurrent.futures.ThreadPoolExecutor(max_workers=settings.MAX_REQUEST_WORKERS) as executor:
@@ -220,7 +220,7 @@ class User:
                         doc_list = f.result()
                         #print(doc_list)
                     except HTTPError as e:
-                        log.error("{0} {1} {2}".format(self.name, e.response.url, e.response.status_code))
+                        log.info("HTTPError: {0} {1} {2}".format(self.name, e.response.url, e.response.status_code))
                         errors.append((e.response.url, e.response.status_code))
 
         return errors

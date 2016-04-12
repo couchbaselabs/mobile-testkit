@@ -37,7 +37,8 @@ class Cluster:
         # Load resources/cluster_configs/<cluster_config>.json
         with open("{}.json".format(host_file)) as f:
             cluster = json.loads(f.read())
-            print("Using Cluster: {}.json".format(cluster))
+
+        log.info("Cluster: {}".format(cluster))
 
         cbs = [{"name": cbs["name"], "ip": cbs["ip"]} for cbs in cluster["couchbase_servers"]]
 
