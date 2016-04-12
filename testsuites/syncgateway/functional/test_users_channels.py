@@ -16,7 +16,6 @@ def test_multiple_users_multiple_channels(conf):
     cluster = Cluster()
     mode = cluster.reset(config_path=conf)
 
-    # TODO Parametrize
     num_docs_seth = 1000
     num_docs_adam = 2000
     num_docs_traun = 3000
@@ -70,7 +69,6 @@ def test_muliple_users_single_channel(conf):
 
     sgs = cluster.sync_gateways
 
-    # TODO parametrize
     num_docs_seth = 1000
     num_docs_adam = 2000
     num_docs_traun = 3000
@@ -147,27 +145,29 @@ def test_single_user_single_channel(conf):
 
     sgs = cluster.sync_gateways
 
-    # TODO Parametrize
     num_seth_docs = 7000
-    num_admin_docs = 3000
+    num_cbs_docs = 3000
 
     admin = Admin(sgs[0])
     seth = admin.register_user(target=sgs[0], db="db", name="seth", password="password", channels=["ABC"])
-    admin_user = admin.register_user(target=sgs[0], db="db", name="admin", password="password", channels=["*"])
+    cbs_user = admin.register_user(target=sgs[0], db="db", name="cbs_user", password="password", channels=["CBS"])
+    admin_user = admin.register_user(target=sgs[0], db="db", name="admin", password="password", channels=["ABC", "CBS"])
 
     seth.add_docs(num_seth_docs)
-    admin_user.add_docs(num_admin_docs)
+    cbs_user.add_docs(num_cbs_docs)
 
     assert len(seth.cache) == num_seth_docs
-    assert len(admin_user.cache) == num_admin_docs
+    assert len(cbs_user.cache) == num_cbs_docs
+    assert len(admin_user.cache) == 0
 
     time.sleep(10)
 
     verify_changes([seth], expected_num_docs=num_seth_docs, expected_num_revisions=0, expected_docs=seth.cache)
+    verify_changes([cbs_user], expected_num_docs=num_cbs_docs, expected_num_revisions=0, expected_docs=cbs_user.cache)
 
-    all_doc_caches = [seth.cache, admin_user.cache]
+    all_doc_caches = [seth.cache, cbs_user.cache]
     all_docs = {k: v for cache in all_doc_caches for k, v in cache.items()}
-    verify_changes([admin_user], expected_num_docs=num_seth_docs + num_admin_docs, expected_num_revisions=0, expected_docs=all_docs)
+    verify_changes([admin_user], expected_num_docs=num_cbs_docs + num_seth_docs, expected_num_revisions=0, expected_docs=all_docs)
 
     # Verify all sync_gateways are running
     errors = cluster.verify_alive(mode)
