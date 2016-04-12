@@ -3,6 +3,7 @@ Resource    resources/common.robot
 
 Library     Process
 Library     OperatingSystem
+Library     ${Libraries}/NetworkUtils.py
 Library     ${Libraries}/ClusterKeywords.py
 Library     ${Libraries}/LoggingKeywords.py
 
@@ -251,4 +252,5 @@ Suite Teardown
     Log To Console      Tearing down ...
 
 Test Teardown
+    List Connections
     Run Keyword If Test Failed      Fetch And Analyze Logs
