@@ -164,7 +164,7 @@ if __name__ == "__main__":
                       help="name for your cluster")
 
     parser.add_option("", "--num-servers",
-                      action="store", type="int", dest="num_servers", default=1,
+                      action="store", type="int", dest="num_servers", default=0,
                       help="number of couchbase server instances")
 
     parser.add_option("", "--server-type",
@@ -172,7 +172,7 @@ if __name__ == "__main__":
                       help="EC2 instance type for couchbase server")
 
     parser.add_option("", "--num-sync-gateways",
-                      action="store", type="int", dest="num_sync_gateways", default=1,
+                      action="store", type="int", dest="num_sync_gateways", default=0,
                       help="number of sync_gateway instances")
 
     parser.add_option("", "--sync-gateway-type",
@@ -180,7 +180,7 @@ if __name__ == "__main__":
                       help="EC2 instance type for sync_gateway type")
 
     parser.add_option("", "--num-gatlings",
-                      action="store", type="int", dest="num_gatlings", default=1,
+                      action="store", type="int", dest="num_gatlings", default=0,
                       help="number of gatling instances")
 
     parser.add_option("", "--gatling-type",
@@ -188,7 +188,7 @@ if __name__ == "__main__":
                       help="EC2 instance type for gatling type")
 
     parser.add_option("", "--num-lbs",
-                      action="store", type="int", dest="num_lbs", default=1,
+                      action="store", type="int", dest="num_lbs", default=0,
                       help="number of load balancer instances")
 
     parser.add_option("", "--lb-type",
