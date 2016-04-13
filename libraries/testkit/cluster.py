@@ -120,6 +120,8 @@ class Cluster:
             except AssertionError as e:
                 log.error("Failed to delete / create buckets. Trying again ...")
                 bucket_delete_create_attempt_num += 1
+                # Wait 3 sec before retry
+                time.sleep(3)
 
         # Max tries to delete / create buckets
         if bucket_delete_create_attempt_num == bucket_delete_create_max_retries:
