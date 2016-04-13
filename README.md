@@ -426,6 +426,11 @@ Run a single test
 
 Although it is not necessary, the `-b debug.txt` will provide more output and stacktraces for deeper investigation
 
+Skipping the cluster provisioning (i.e. You are writing tests and know your cluster is the topology you are expecting)
+
+`robot -b debug.txt -v SERVER_VERSION:4.1.0 -v SYNC_GATEWAY_VERSION:1.2.0-79 -v RESET_CLUSTER:False testsuites/syncgateway/functional/1sg_1ac_1cbs.robot`
+`robot -b debug.txt -v SERVER_VERSION:4.1.0 -v SYNC_GATEWAY_VERSION:1.2.0-79 -v RESET_CLUSTER:False -t "test sync sanity" testsuites/syncgateway/functional/1sg_1ac_1cbs.robot`
+
 **Running Performance Tests**
 
 - [Spin up a AWS CloudFormation stack](#Spin=Up-Machines-on-AWS)
