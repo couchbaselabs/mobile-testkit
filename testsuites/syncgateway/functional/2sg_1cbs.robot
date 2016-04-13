@@ -12,7 +12,7 @@ Library     test_sg_replicate.py
 Suite Setup     Suite Setup
 Suite Teardown  Suite Teardown
 
-# Test Teardown   Test Teardown
+Test Teardown   Test Teardown
 
 *** Variables ***
 ${CLUSTER_CONFIG}           ${CLUSTER_CONFIGS}/2sg_1cbs
