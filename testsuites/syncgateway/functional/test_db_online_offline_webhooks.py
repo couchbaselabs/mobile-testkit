@@ -154,7 +154,9 @@ def test_db_online_offline_webhooks_offline_two(num_users, num_channels, num_doc
     in_parallel(user_objects, 'update_docs', num_revisions)
     time.sleep(10)
 
-    cluster.servers[0].delete_bucket("data-bucket")
+    status = cluster.servers[0].delete_bucket("data-bucket")
+    assert(status == 0)
+
     log.info("Sleeping for 120 seconds...")
     time.sleep(120)
 
