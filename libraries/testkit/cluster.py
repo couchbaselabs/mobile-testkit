@@ -95,11 +95,12 @@ class Cluster:
         bucket_delete_create_attempt_num = 0
         while bucket_delete_create_attempt_num < bucket_delete_create_max_retries:
             try:
-                log.info("Deleting / Creating server buckets: Attempt {}".format(bucket_delete_create_attempt_num))
+                log.info(">>> Deleting / Creating server buckets: Attempt {}".format(bucket_delete_create_attempt_num))
                 # Delete buckets
                 log.info(">>> Deleting buckets on: {}".format(self.servers[0].ip))
                 status = self.servers[0].delete_buckets()
                 assert (status == 0)
+                log.info(">>> Bucket deletion status: {}".format(status))
 
                 # Parse config and grab bucket names
                 config_path_full = os.path.abspath(config_path)
@@ -112,9 +113,12 @@ class Cluster:
                 log.info(">>> Creating buckets {}".format(bucket_name_set))
                 status = self.servers[0].create_buckets(bucket_name_set)
                 assert (status == 0)
+                log.info(">>> Bucket creation status: {}".format(status))
 
+                # Both steps are successful, break out of retry loop
+                break
             except AssertionError as e:
-                log.info("Failed to delete / create buckets. Trying again ...")
+                log.error("Failed to delete / create buckets. Trying again ...")
                 bucket_delete_create_attempt_num += 1
 
         # Max tries to delete / create buckets
