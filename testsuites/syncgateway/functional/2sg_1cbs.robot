@@ -5,7 +5,6 @@ Library     Process
 Library     OperatingSystem
 Library     ${Libraries}/ClusterKeywords.py
 Library     ${Libraries}/LoggingKeywords.py
-Library     ${Libraries}/AndroidKeywords.py
 
 Library     test_bucket_shadow.py
 Library     test_sg_replicate.py
@@ -59,10 +58,10 @@ Suite Setup
     Log To Console              Setting up ...
     Set Environment Variable    CLUSTER_CONFIG    ${CLUSTER_CONFIG}
     Log                         Using cluster ${CLUSTER_CONFIG}
-    # Provision Cluster   ${SERVER_VERSION}   ${SYNC_GATEWAY_VERSION}    ${SYNC_GATEWAY_CONFIG}
+    Provision Cluster   ${SERVER_VERSION}   ${SYNC_GATEWAY_VERSION}    ${SYNC_GATEWAY_CONFIG}
 
 Suite Teardown
     Log To Console      Tearing down ...
 
 Test Teardown
-    # Run Keyword If Test Failed      Fetch And Analyze Logs
+    Run Keyword If Test Failed      Fetch And Analyze Logs
