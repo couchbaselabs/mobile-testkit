@@ -195,6 +195,20 @@ class SyncGateway:
         log_response(r)
         r.raise_for_status()
 
+    def stop_replication_by_id(self, replication_id, use_admin_url=False):
+        sg_url = self.url
+        if use_admin_url:
+            sg_url = self.admin.admin_url
+
+        data = {
+            "replication_id": "{}".format(replication_id),
+            "cancel": True,
+        }
+        r = requests.post("{}/_replicate".format(sg_url), headers=self._headers, data=json.dumps(data))
+        log_request(r)
+        log_response(r)
+        r.raise_for_status()
+
     def get_num_docs(self, db):
         r = requests.get("{}/{}/_all_docs".format(self.url, db))
         log_request(r)
