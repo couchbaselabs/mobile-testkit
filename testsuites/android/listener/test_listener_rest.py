@@ -7,6 +7,7 @@ import testkit.settings
 from testkit.listener import Listener
 from testkit.user import User
 from testkit.verify import verify_same_docs
+from testkit.android import parallel_install
 
 from testkit import settings
 import logging
@@ -15,55 +16,22 @@ log = logging.getLogger(settings.LOGGER)
 
 def start_pull_replications(db_name, source, targets):
     for target in targets:
-        source.start_pull_replication(target.url, db_name)
+        source.start_pull_replication(target.url, db_name, db_name)
 
 
 def start_push_replications(db_name, source, targets):
     for target in targets:
-        source.start_push_replication(target.url, db_name)
+        source.start_push_replication(target.url, db_name, db_name)
 
 
 def stop_pull_replications(db_name, source, targets):
     for target in targets:
-        source.stop_pull_replication(target.url, db_name)
+        source.stop_pull_replication(target.url, db_name, db_name)
 
 
 def stop_push_replications(db_name, source, targets):
     for target in targets:
-        source.stop_push_replication(target.url, db_name)
-
-
-def create_listener(target, local_port, apk_path, activity, reinstall):
-    return Listener(target=target, local_port=local_port, apk_path=apk_path, activity=activity, reinstall=reinstall)
-
-
-def parallel_install(device_defs, should_reinstall):
-
-    listeners = {}
-     # Create all listeners concurrently
-    with concurrent.futures.ThreadPoolExecutor(max_workers=len(device_defs)) as executor:
-
-        future_to_device_name = {
-            executor.submit(
-                create_listener,
-                target=device_def["target"],
-                local_port=device_def["local_port"],
-                apk_path=device_def["apk_path"],
-                activity=device_def["activity"],
-                reinstall=should_reinstall,
-            ): device_def["target"]
-            for device_def in device_defs
-        }
-
-        for future in concurrent.futures.as_completed(future_to_device_name):
-
-            name = future_to_device_name[future]
-            listener = future.result()
-
-            listeners[name] = listener
-            log.info("Listener created: {} {}".format(name, listener))
-
-    return listeners
+        source.stop_push_replication(target.url, db_name, db_name)
 
 
 def test_selective_db_delete_and_replication_lifecycle():

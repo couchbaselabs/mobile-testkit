@@ -8,6 +8,7 @@ Library     ${Libraries}/ClusterKeywords.py
 Library     ${Libraries}/LoggingKeywords.py
 
 Library     test_bucket_shadow.py
+Library     test_sg_replicate.py
 
 Suite Setup     Suite Setup
 Suite Teardown  Suite Teardown
@@ -31,6 +32,27 @@ test bucket shadow low_revs limit
 
 test bucket shadow multiple sync gateways
     test bucket shadow multiple sync gateways
+
+Test Sg Replicate Basic Test
+    Test Sg Replicate Basic Test
+
+Test Sg Replicate Non Existent Db
+    Test Sg Replicate Non Existent Db
+
+Test Sg Replicate Continuous Replication
+    Test Sg Replicate Continuous Replication
+
+Test Sg Replicate Delete Db Replication In Progress
+    Test Sg Replicate Delete Db Replication In Progress
+
+Test Sg Replicate Basic Test Channels
+    Test Sg Replicate Basic Test Channels
+
+Test Sg Replicate Push Async 100 docs
+    Test Sg Replicate Push Async    num_docs=${100}
+
+Test Sg Replicate Push Async 250 docs
+    Test Sg Replicate Push Async    num_docs=${250}
 
 
 *** Keywords ***

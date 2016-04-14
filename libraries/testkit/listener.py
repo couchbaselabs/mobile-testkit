@@ -5,6 +5,7 @@ import time
 import json
 
 from testkit.debug import *
+from testkit.syncgateway import SyncGateway
 
 from testkit import settings
 import logging
@@ -26,6 +27,12 @@ class Listener:
         else:
             self.url = "http://{}:{}".format(self.get_device_ip(target), 5984)
 
+        # Wrap a Sync Gateway instance and use that as a client to hit the LiteServ listener
+        # in Couchbase Lite
+        fake_target = {"ip": None, "name": None}
+        self.sg = SyncGateway(fake_target)
+        self.sg.url = self.url
+
         log.info("Listener running at {} ...".format(self.url))
 
     def install_and_launch_app(self, target, local_port, apk_path, activity, reinstall):
@@ -33,7 +40,7 @@ class Listener:
         # Build monkeyrunner install cmd
         cmd_args = [
             "monkeyrunner",
-            "/Users/sethrosetter/Code/sync-gateway-testcluster/utilities/monkeyrunner.py",
+            "libraries/utilities/monkeyrunner.py",
             "--target={}".format(target),
             "--apk-path={}".format(apk_path),
             "--activity={}".format(activity),
@@ -68,88 +75,6 @@ class Listener:
         ip = ip.split("/")[0]
         return ip
 
-    def verify_launched(self):
-        r = requests.get(self.url)
-        log.info("GET {} ".format(r.url))
-        log.info("{}".format(r.text))
-        r.raise_for_status()
-
-    def create_db(self, name):
-        r = requests.put("{}/{}".format(self.url, name))
-        log.info("PUT {} ".format(r.url))
-        r.raise_for_status()
-        return r.json()
-
-    def delete_db(self, name):
-        r = requests.delete("{}/{}".format(self.url, name))
-        log_request(r)
-        log_response(r)
-        r.raise_for_status()
-        return r.json()
-
-    def get_dbs(self):
-        r = requests.get("{}/_all_dbs".format(self.url))
-        log.info("GET {}".format(r.url))
-        r.raise_for_status()
-        return r.json()
-
-    def reset(self):
-        dbs = self.get_dbs()
-        for db in dbs:
-            self.delete_db(db)
-
-    def start_push_replication(self, target, db):
-        data = {
-            "source": "{}".format(db),
-            "target": "{}/{}".format(target, db),
-            "continuous": True
-        }
-        r = requests.post("{}/_replicate".format(self.url), data=json.dumps(data))
-        log_request(r)
-        log_response(r)
-        r.raise_for_status()
-
-    def stop_push_replication(self, target, db):
-        data = {
-            "source": "{}".format(db),
-            "target": "{}/{}".format(target, db),
-            "cancel": True
-        }
-        r = requests.post("{}/_replicate".format(self.url), data=json.dumps(data))
-        log_request(r)
-        log_response(r)
-        r.raise_for_status()
-
-    def start_pull_replication(self, target, db):
-        data = {
-            "source": "{}/{}".format(target, db),
-            "target": "{}".format(db),
-            "continuous": True
-        }
-        r = requests.post("{}/_replicate".format(self.url), data=json.dumps(data))
-        log_request(r)
-        log_response(r)
-        r.raise_for_status()
-
-    def stop_pull_replication(self, target, db):
-        data = {
-            "source": "{}/{}".format(target, db),
-            "target": "{}".format(db),
-            "cancel": True
-        }
-        r = requests.post("{}/_replicate".format(self.url), data=json.dumps(data))
-        log_request(r)
-        log_response(r)
-        r.raise_for_status()
-
-    def get_num_docs(self, db):
-        r = requests.get("{}/{}/_all_docs".format(self.url, db))
-        log_request(r)
-        log_response(r)
-        r.raise_for_status()
-        resp_data = r.json()
-        return resp_data["total_rows"]
-
     def kill_port_forwarding(self):
         log.info("Killing forwarding rule for {} on port: {}".format(self.target, self.local_port))
         subprocess.call(['adb', '-s', self.target, 'forward', '--remove', 'tcp:{}'.format(self.local_port)])
@@ -158,5 +83,32 @@ class Listener:
         log.info("Setup forwarding rule for {} on port: {}".format(self.target, self.local_port))
         subprocess.call(['adb', '-s', self.target, 'forward', 'tcp:{}'.format(self.local_port), 'tcp:5984'])
 
+    def verify_launched(self):
+        self.sg.verify_launched()
 
+    def create_db(self, name):
+        return self.sg.create_db(name)
 
+    def delete_db(self, name):
+        return self.sg.delete_db(name)
+
+    def get_dbs(self):
+        self.sg.admin.get_dbs()
+
+    def reset(self):
+        self.sg.reset()
+
+    def start_push_replication(self, target, source_db, target_db):
+        self.sg.start_push_replication(target, source_db, target_db)
+
+    def stop_push_replication(self, target, source_db, target_db):
+        self.sg.stop_push_replication(target, source_db, target_db)
+
+    def start_pull_replication(self, source_url, source_db, target_db):
+        self.sg.start_pull_replication(source_url, source_db, target_db)
+
+    def stop_pull_replication(self, source_url, source_db, target_db):
+        self.sg.stop_pull_replication(source_url, source_db, target_db)
+
+    def get_num_docs(self, db):
+        return self.sg.get_num_docs(db)
