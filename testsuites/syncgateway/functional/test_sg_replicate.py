@@ -218,8 +218,6 @@ def test_sg_replicate_push_async(num_docs):
 
     assert num_docs > 0
 
-    print("num_docs: {}".format(num_docs))
-
     # if the async stuff works, we should be able to kick off a large
     # push replication and get a missing doc before the replication has
     # a chance to finish.  And then we should later see that doc.
@@ -261,6 +259,39 @@ def test_sg_replicate_push_async(num_docs):
 
     # At this point, the active tasks should be empty
     wait_until_active_tasks_empty(sg1)
+
+def test_stop_replication_via_replication_id():
+
+    sg1, sg2 = create_sync_gateways()
+
+    # Create users (in order to add docs)
+    sg1_user, sg2_user = create_sg_users(sg1, sg2, DB1, DB2)
+
+    # Kick off continuous replication
+    sg1.start_push_replication(
+        sg2.admin.admin_url,
+        DB1,
+        DB2,
+        continuous=True,
+        use_remote_source=True,
+        use_admin_url=True
+    )
+
+    # Make sure there is one active task
+    active_tasks = sg1.admin.get_active_tasks()
+    assert len(active_tasks) == 1
+    active_task = active_tasks[0]
+
+    # get the replication id from the active tasks
+    replication_id = active_task["replication_id"]
+
+    # stop the replication
+    sg1.stop_replication_by_id(replication_id, use_admin_url=True)
+
+    # verify that the replication is stopped
+    active_tasks = sg1.admin.get_active_tasks()
+    print "active_tasks after stop: {}".format(active_tasks)
+    assert len(active_tasks) == 0
 
 
 def create_sync_gateways():
