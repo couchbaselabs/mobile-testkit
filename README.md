@@ -356,7 +356,9 @@ $ vi ansible.cfg  # edit to your liking
 
 Make sure to use your ssh user ("root" is default). If you are using AWS, you may have to change this to "centos"
 
-**Spin up VM's or Bare Metal machines**
+**Create pool.json file**
+
+This is the list of machines that is used to generate the resources/cluster_configs which are used by the functional tests.
 
 *Create a pool.json of endpoints you would like to target (IPs or AWS ec2 endpoints)* 
 - Rename resources/pool.json.example -> resources/pool.json. Update the fake ips with your endpoints or EC2 endpoints.
@@ -373,7 +375,7 @@ python libraries/utilities/install_keys.py --key-name=sample_key.pub --ssh-user=
 ```
 - Generate the necessary cluster topologies to run the tests
 ```
-python libraries/utilities/generate_clusters_from_pool.py`
+python libraries/utilities/generate_clusters_from_pool.py
 ```
 This targets the 'resources/pool.json' you supplied above and generates cluster definitions required for provisioning and running the tests. The generated configurations can be found in 'resources/cluster_configs/'.
 
@@ -465,13 +467,7 @@ $ python libraries/provision/create_and_instantiate_cluster.py \
     --lb-type="m3.medium" 
 ```
 
-Wait until the resources are up, then
-
-2. Generate an ansible inventory from your CloudFormation Stack. The generated 'aws_config' file will be written to 'resources/cluster_configs'
-
-```
-python libraries/provision/generate_ansible_inventory_from_aws.py --stackname="TestPerfStack" --targetfile="aws_config"
-```
+Wait until the resources are up, then create the `pool.json` file by hand according to instructions above.
 
 
 Monitoring
@@ -503,4 +499,7 @@ $ python libraries/utilities/fetch_sg_logs.py
 
 Known Issues And Limitations
 ============================
+
 - This repo now only supports ansible 2.0.0.2. There are known issues with certain versions of ansible.
+
+- For AWS, the  `libraries/provision/generate_ansible_inventory_from_aws.py` script needs to be resurrected to support the new `resources/cluster_configs` file format (generated from pool.json)
