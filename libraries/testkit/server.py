@@ -27,6 +27,7 @@ class Server:
 
     def delete_buckets(self):
         count = 0
+        status = 0
         while count < 3:
             resp = requests.get("{}/pools/default/buckets".format(self.url), headers=self._headers)
             resp.raise_for_status()
@@ -56,11 +57,14 @@ class Server:
 
         if count == 3:
             log.error("Could not delete bucket")
-            sys.exit(1)
+            status = 1
+
+        return status
 
     def delete_bucket(self, name):
         # HACK around Couchbase Server issue where issuing a bucket delete via REST occasionally returns 500 error
         count = 0
+        status = 0
         while count < 3:
             log.info(">>> Deleting buckets: {}".format(name))
             resp = requests.delete("{0}/pools/default/buckets/{1}".format(self.url, name), headers=self._headers)
@@ -73,7 +77,9 @@ class Server:
 
         if count == 3:
             log.error("Could not delete bucket")
-            sys.exit(1)
+            status = 1
+
+        return status
 
     def create_buckets(self, names):
         # Create buckets
@@ -83,7 +89,7 @@ class Server:
             extra_vars=json.dumps(extra_vars),
             stop_on_fail=False
         )
-        assert(status == 0)
+        return status
 
     def get_bucket(self, bucket_name):
         connection_str = "couchbase://{}/{}".format(self.ip, bucket_name)

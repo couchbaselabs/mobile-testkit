@@ -3,6 +3,7 @@ Resource    resources/common.robot
 
 Library     Process
 Library     OperatingSystem
+Library     ${Libraries}/NetworkUtils.py
 Library     ${Libraries}/ClusterKeywords.py
 Library     ${Libraries}/LoggingKeywords.py
 
@@ -25,6 +26,7 @@ Test Teardown   Test Teardown
 *** Variables ***
 ${CLUSTER_CONFIG}           ${CLUSTER_CONFIGS}/1sg_1ac_1cbs
 ${SYNC_GATEWAY_CONFIG}      ${SYNC_GATEWAY_CONFIGS}/sync_gateway_default_functional_tests_di.json
+${RESET_CLUSTER}            True
 
 *** Test Cases ***
 # Cluster has been setup
@@ -85,10 +87,10 @@ test multiple dbs unique buckets lose tap
 
 
 # test_longpoll (distributed index mode)
-test longpoll changes parametrized
+test longpoll changes parametrized 5000 docs 1 rev
     test longpoll changes parametrized      ${SYNC_GATEWAY_CONFIGS}/sync_gateway_default_functional_tests_di.json   ${5000}  ${1}
 
-test longpoll changes parametrized
+test longpoll changes parametrized 50 docs 100 rev
     test longpoll changes parametrized      ${SYNC_GATEWAY_CONFIGS}/sync_gateway_default_functional_tests_di.json   ${50}   ${100}
 
 test longpoll changes sanity
@@ -160,13 +162,14 @@ test single user single channel (distributed index)
 
 *** Keywords ***
 Suite Setup
-    Log To Console              Setting up ...
-    Set Environment Variable    CLUSTER_CONFIG    ${CLUSTER_CONFIG}
-    Log                         Using cluster ${CLUSTER_CONFIG}
-    Provision Cluster   ${SERVER_VERSION}   ${SYNC_GATEWAY_VERSION}    ${SYNC_GATEWAY_CONFIG}
+    Log To Console                    Setting up ...
+    Set Environment Variable          CLUSTER_CONFIG  ${CLUSTER_CONFIG}
+    Log                               Using cluster ${CLUSTER_CONFIG}
+    Run Keyword If  ${RESET_CLUSTER}  Provision Cluster  ${SERVER_VERSION}  ${SYNC_GATEWAY_VERSION}  ${SYNC_GATEWAY_CONFIG}
 
 Suite Teardown
     Log To Console      Tearing down ...
 
 Test Teardown
+    List Connections
     Run Keyword If Test Failed      Fetch And Analyze Logs

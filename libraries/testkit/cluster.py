@@ -37,7 +37,8 @@ class Cluster:
         # Load resources/cluster_configs/<cluster_config>.json
         with open("{}.json".format(host_file)) as f:
             cluster = json.loads(f.read())
-            print("Using Cluster: {}.json".format(cluster))
+
+        log.info("Cluster: {}".format(cluster))
 
         cbs = [{"name": cbs["name"], "ip": cbs["ip"]} for cbs in cluster["couchbase_servers"]]
 
@@ -90,23 +91,43 @@ class Cluster:
         status = ansible_runner.run_ansible_playbook("delete-sg-accel-artifacts.yml", stop_on_fail=False)
         assert(status == 0)
 
-        # Delete buckets
-        log.info(">>> Deleting buckets on: {}".format(self.servers[0].ip))
-        self.servers[0].delete_buckets()
-        
-        # Parse config and grab bucket names
-        config_path_full = os.path.abspath(config_path)
-        config = Config(config_path_full)
-        mode = config.get_mode()
-        bucket_name_set = config.get_bucket_name_set()
-        self.sync_gateway_config = config
-        
-        log.info(">>> Creating buckets on: {}".format(self.servers[0].ip))
-        log.info(">>> Creating buckets {}".format(bucket_name_set))
-        self.servers[0].create_buckets(bucket_name_set)
+        bucket_delete_create_max_retries = 3
+        bucket_delete_create_attempt_num = 0
+        while bucket_delete_create_attempt_num < bucket_delete_create_max_retries:
+            try:
+                log.info(">>> Deleting / Creating server buckets: Attempt {}".format(bucket_delete_create_attempt_num))
+                # Delete buckets
+                log.info(">>> Deleting buckets on: {}".format(self.servers[0].ip))
+                status = self.servers[0].delete_buckets()
+                assert (status == 0)
+                log.info(">>> Bucket deletion status: {}".format(status))
+
+                # Parse config and grab bucket names
+                config_path_full = os.path.abspath(config_path)
+                config = Config(config_path_full)
+                mode = config.get_mode()
+                bucket_name_set = config.get_bucket_name_set()
+                self.sync_gateway_config = config
+
+                log.info(">>> Creating buckets on: {}".format(self.servers[0].ip))
+                log.info(">>> Creating buckets {}".format(bucket_name_set))
+                status = self.servers[0].create_buckets(bucket_name_set)
+                assert (status == 0)
+                log.info(">>> Bucket creation status: {}".format(status))
+
+                # Both steps are successful, break out of retry loop
+                break
+            except AssertionError as e:
+                log.error("Failed to delete / create buckets. Trying again ...")
+                bucket_delete_create_attempt_num += 1
+                # Wait 3 sec before retry
+                time.sleep(3)
+
+        # Max tries to delete / create buckets
+        if bucket_delete_create_attempt_num == bucket_delete_create_max_retries:
+            raise RuntimeError("Max tries exceeded to delete / create buckets")
 
         log.info(">>> Starting sync_gateway with configuration: {}".format(config_path_full))
-
         # Start sync-gateway
         status = ansible_runner.run_ansible_playbook(
             "start-sync-gateway.yml",
