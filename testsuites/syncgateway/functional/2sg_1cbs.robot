@@ -54,6 +54,9 @@ Test Sg Replicate Push Async 100 docs
 Test Sg Replicate Push Async 250 docs
     Test Sg Replicate Push Async    num_docs=${250}
 
+Test Stop Replication Via Replication Id
+    Test Stop Replication Via Replication Id
+
 
 *** Keywords ***
 Suite Setup
