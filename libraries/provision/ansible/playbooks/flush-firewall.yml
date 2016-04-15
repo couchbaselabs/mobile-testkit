@@ -1,8 +1,8 @@
-# Deploy sync gateway configs
-- hosts: couchbase_servers, sync_gateways, sync_gateway_index_writers
+# Flush the firewall rules, some maybe in place if it is a new vm
+- hosts: pool
   any_errors_fatal: true
   become: yes
 
   tasks:
-  - name: create centos user
+  - name: Flush Firewall
     command: iptables --flush
