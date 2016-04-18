@@ -35,7 +35,8 @@ Test Concurrent View Queries Against Stale Index
     Wait For         ${query}    ${query2}
     Status Equals    ${query}     200
     Status Equals    ${query2}    200
-
+    Ensure No Duplicate Rows In ${query}
+    Ensure No Duplicate Rows In ${query2}
 
 *** Keywords ***
 Create Design Doc
