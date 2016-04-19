@@ -1,6 +1,6 @@
 ---
 # Deploy sync gateway configs
-- hosts: sync_gateway_index_writers
+- hosts: sg_accels
   become: yes
   tasks:
   - include: tasks/delete-sg-accel-artifacts.yml

@@ -1,5 +1,5 @@
 ---
-- hosts: sync_gateway_index_writers
+- hosts: sg_accels
   any_errors_fatal: true
   become: yes
 

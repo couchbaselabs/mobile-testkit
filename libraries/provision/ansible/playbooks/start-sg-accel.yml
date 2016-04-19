@@ -1,12 +1,12 @@
 ---
 - name: Wait for port 22 to be ready
-  hosts: sync_gateway_index_writers
+  hosts: sg_accels
   gather_facts: False
   tasks:
   - wait_for: port=22 delay=2
 
 # Deploy sync gateway configs (index writers)
-- hosts: sync_gateway_index_writers
+- hosts: sg_accels
   any_errors_fatal: true
   become: yes
   vars:
@@ -17,7 +17,7 @@
   tasks:
   - include: tasks/deploy-sg-accel-config.yml
 
-- hosts: sync_gateway_index_writers
+- hosts: sg_accels
   any_errors_fatal: true
   become: yes
   vars:

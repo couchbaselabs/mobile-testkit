@@ -42,10 +42,9 @@
   become: yes
   tasks:
   - include: tasks/create-sync-gateway-user.yml
-    when: "'sync_gateway_index_writers' not in group_names"
 
 # Create sg_accel user
-- hosts: sync_gateway_index_writers
+- hosts: sg_accels
   any_errors_fatal: true
   become: yes
   tasks:
@@ -96,10 +95,9 @@
     is_index_writer: "false"
   tasks:
   - include: tasks/deploy-sync-gateway-config.yml
-    when: "'sync_gateway_index_writers' not in group_names"
 
 # Deploy sg_accel configs
-- hosts: sync_gateway_index_writers
+- hosts: sg_accels
   any_errors_fatal: true
   become: yes
   vars:
@@ -116,16 +114,13 @@
   tasks:
   - name: make service install script executable
     file: path=/home/centos/godeps/src/github.com/couchbase/sync_gateway/service/sync_gateway_service_install.sh mode=a+x
-    when: "'sync_gateway_index_writers' not in group_names"
   - name: install sync gateway service
     shell: ./sync_gateway_service_install.sh chdir=/home/centos/godeps/src/github.com/couchbase/sync_gateway/service
-    when: "'sync_gateway_index_writers' not in group_names"
   - name: wait until sync gateway to listen on port
     wait_for: port=4985 delay=2 timeout=120
-    when: "'sync_gateway_index_writers' not in group_names"
 
 # Install sg_accel service and wait for launch
-- hosts: sync_gateway_index_writers
+- hosts: sg_accels
   any_errors_fatal: true
   become: yes
   tasks:

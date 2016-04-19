@@ -43,10 +43,9 @@
   become: yes
   tasks:
   - include: tasks/create-sync-gateway-user.yml
-    when: "'sync_gateway_index_writers' not in group_names"
 
 # Create sg_accel user
-- hosts: sync_gateway_index_writers
+- hosts: sg_accels
   any_errors_fatal: true
   become: yes
   tasks:
@@ -64,13 +63,11 @@
 
   tasks:
   - debug: msg="Downloading sync_gateway v. {{ couchbase_sync_gateway_package_url }}"
-    when: "'sync_gateway_index_writers' not in group_names"
   - name: Download sync_gateway rpm
     get_url: url={{ couchbase_sync_gateway_package_url }} dest=/tmp/{{ couchbase_sync_gateway_package }}
-    when: "'sync_gateway_index_writers' not in group_names"
 
 # Download sg accel package
-- hosts: sync_gateway_index_writers
+- hosts: sg_accels
   any_errors_fatal: true
 
   vars:
@@ -94,10 +91,9 @@
     is_index_writer: "false"
   tasks:
   - include: tasks/deploy-sync-gateway-config.yml
-    when: "'sync_gateway_index_writers' not in group_names"
 
 # Deploy sg_accel index writer configs
-- hosts: sync_gateway_index_writers
+- hosts: sg_accels
   become: yes
   vars:
     sync_gateway_config_filepath:
@@ -114,13 +110,11 @@
   # Install and start service
   - name: Install sync_gateway rpm
     shell: rpm -i /tmp/{{ couchbase_sync_gateway_package }}
-    when: "'sync_gateway_index_writers' not in group_names"
   - name: wait until sync gateway to listen on port
     wait_for: port=4985 delay=2 timeout=120
-    when: "'sync_gateway_index_writers' not in group_names"
 
 # Install and launch sg_accel service
-- hosts: sync_gateway_index_writers
+- hosts: sg_accels
   any_errors_fatal: true
   become: yes
   tasks:

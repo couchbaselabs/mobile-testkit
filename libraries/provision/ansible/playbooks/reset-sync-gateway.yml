@@ -28,7 +28,7 @@
   - include: tasks/deploy-sync-gateway-config.yml
 
 # Deploy sync gateway configs (index writers)
-- hosts: sync_gateway_index_writers
+- hosts: sg_accels
   become: yes
   vars:
     sync_gateway_config_filepath:
