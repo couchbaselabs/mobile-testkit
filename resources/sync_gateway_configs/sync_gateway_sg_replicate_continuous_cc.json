@@ -1,0 +1,28 @@
+{
+    "interface":":4984",
+    "adminInterface": "0.0.0.0:4985",
+    "maxIncomingConnections": 0,
+    "maxCouchbaseConnections": 16,
+    "maxFileDescriptors": 90000,
+    "slowServerCallWarningThreshold": 500,
+    "compressResponses": true,
+    "log": ["*"],
+    "replications": {
+        "continuous": {
+            "source":"http://{{ sync_gateway_node }}:4985/db1",
+            "target":"http://{{ sync_gateway_node }}:4985/db2",
+            "continuous":true
+        }
+    },
+    "databases":{
+        "db1":{
+            "server":"http://{{ couchbase_server_primary_node }}:8091",
+            "bucket":"data-bucket-1"
+        },
+        "db2":{
+            "server":"http://{{ couchbase_server_primary_node }}:8091",
+            "bucket":"data-bucket-2"
+        }
+    }
+}
+
