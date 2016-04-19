@@ -4,10 +4,6 @@ import sys
 import json
 import time
 
-import ansible.inventory
-from ansible.parsing.dataloader import DataLoader
-from ansible.vars import VariableManager
-
 from requests.exceptions import ConnectionError
 
 from testkit.syncgateway import SyncGateway
@@ -41,12 +37,8 @@ class Cluster:
         log.info("Cluster: {}".format(cluster))
 
         cbs = [{"name": cbs["name"], "ip": cbs["ip"]} for cbs in cluster["couchbase_servers"]]
-
-        acs = [{"name": ac["name"], "ip": ac["ip"]} for ac in cluster["sync_gateway_index_writers"]]
-        acs_ips = [ac["ip"] for ac in acs]
-
-        # Only assign sync_gateways that are not defined as sync_gateway_index_writers
-        sgs = [{"name": sg["name"], "ip": sg["ip"]} for sg in cluster["sync_gateways"] if not sg["ip"] in acs_ips]
+        sgs = [{"name": sg["name"], "ip": sg["ip"]} for sg in cluster["sync_gateways"]]
+        acs = [{"name": ac["name"], "ip": ac["ip"]} for ac in cluster["sg_accels"]]
 
         log.info("cbs: {}".format(cbs))
         log.info("sgs: {}".format(sgs))
