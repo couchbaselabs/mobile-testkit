@@ -57,6 +57,9 @@ Test Sg Replicate Push Async 250 docs
 Test Stop Replication Via Replication Id
     Test Stop Replication Via Replication Id
 
+Test Replication Config
+    Test Replication Config
+
 
 *** Keywords ***
 Suite Setup

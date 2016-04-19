@@ -117,6 +117,7 @@ class SyncGateway:
         log_request(r)
         log_response(r)
         r.raise_for_status()
+        return r.json()
 
     def stop_push_replication(self,
                               target,
@@ -143,6 +144,7 @@ class SyncGateway:
         log_request(r)
         log_response(r)
         r.raise_for_status()
+        return r.json()
 
     def start_pull_replication(self,
                                source_url,
@@ -168,6 +170,7 @@ class SyncGateway:
         log_request(r)
         log_response(r)
         r.raise_for_status()
+        return r.json()
 
     def stop_pull_replication(self,
                               source_url,
@@ -194,6 +197,7 @@ class SyncGateway:
         log_request(r)
         log_response(r)
         r.raise_for_status()
+        return r.json()
 
     def stop_replication_by_id(self, replication_id, use_admin_url=False):
         sg_url = self.url
