@@ -54,7 +54,7 @@ def test_dcp_reshard_sync_gateway_goes_down(conf):
 
     # Verify that the sg1 is down but the other sync_gateways are running
     errors = cluster.verify_alive(mode)
-    assert(len(errors) == 1 and errors[0][0].hostname == "sg1")
+    assert(len(errors) == 1 and errors[0][0].hostname == "ac1")
 
 
 def test_dcp_reshard_sync_gateway_comes_up(conf):

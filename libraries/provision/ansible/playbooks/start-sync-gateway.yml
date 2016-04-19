@@ -4,7 +4,6 @@
   gather_facts: False
   tasks:
   - wait_for: port=22 delay=2
-    when: "'sync_gateway_index_writers' not in group_names"
 
 # Deploy sync gateway configs
 - hosts: sync_gateways
@@ -16,7 +15,6 @@
     is_index_writer: "false"
   tasks:
   - include: tasks/deploy-sync-gateway-config.yml
-    when: "'sync_gateway_index_writers' not in group_names"
 
 - hosts: sync_gateways
   any_errors_fatal: true
@@ -27,4 +25,3 @@
     couchbase_server_primary_node: "{{ hostvars[groups.couchbase_servers[0]].ansible_host }}"
   tasks:
   - include: tasks/start-sync-gateway.yml
-    when: "'sync_gateway_index_writers' not in group_names"

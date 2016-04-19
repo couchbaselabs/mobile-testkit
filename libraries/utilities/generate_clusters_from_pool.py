@@ -19,7 +19,10 @@ class ClusterDef:
 
 def write_config(config):
 
+    print("\nGenerating config: {}".format(config.name))
+
     ips = get_ips()
+    print("ips: {}".format(ips))
 
     ansible_cluster_conf_file = "resources/cluster_configs/{}".format(config.name)
     cluster_json_file = "resources/cluster_configs/{}.json".format(config.name)
@@ -40,7 +43,6 @@ def write_config(config):
         f.write("\n")
 
         cbs_ips_to_remove = []
-
         f.write("[couchbase_servers]\n")
         for i in range(config.num_cbs):
             ip = ips[i]
@@ -56,30 +58,35 @@ def write_config(config):
 
         f.write("\n")
 
-        # TODO Currently kind of hackish. Will be clean when clean up of sync_gateway_writer defs happen
         f.write("[sync_gateways]\n")
-        sg_ips = []
-        for i in range(config.num_sgs + config.num_acs):
+        sg_ips_to_remove = []
+        for i in range(config.num_sgs):
             ip = ips[i]
-            sg_ips.append(ip)
             f.write("sg{} ansible_host={}\n".format(i + 1, ip))
             sync_gateways.append({
                 "name": "sg{}".format(i + 1),
                 "ip": ip
             })
+            sg_ips_to_remove.append(ip)
 
-        for sg_ip in sg_ips:
+        for sg_ip in sg_ips_to_remove:
             ips.remove(sg_ip)
 
         f.write("\n")
 
-        f.write("[sync_gateway_index_writers]\n")
+        ac_ips_to_remove = []
+        f.write("[sg_accels]\n")
         for i in range(config.num_acs):
-            f.writelines("sg{} ansible_host={}\n".format(i + 1, sg_ips[i]))
+            ip = ips[i]
+            f.write("ac{} ansible_host={}\n".format(i + 1, ip))
             accels.append({
-                "name": "sg{}".format(i + 1),
-                "ip": sg_ips[i]
+                "name": "ac{}".format(i + 1),
+                "ip": ip
             })
+            ac_ips_to_remove.append(ip)
+
+        for ac_ip in ac_ips_to_remove:
+            ips.remove(ac_ip)
 
         f.write("\n")
 
@@ -96,16 +103,17 @@ def write_config(config):
         except Exception as e:
             print "Failed to find local_ip, webhook tests will fail.  Error: {}".format(e)
 
+        print("Generating {}.json".format(config.name))
+
         # Write json file consumable by testkit.cluster class
         cluster_dict = {
             "couchbase_servers": couchbase_servers,
             "sync_gateways": sync_gateways,
-            "sync_gateway_index_writers": accels
+            "sg_accels": accels
         }
 
         with open(cluster_json_file, "w") as f_json:
             f_json.write(json.dumps(cluster_dict, indent=4))
-
 
 
 def get_ips():
