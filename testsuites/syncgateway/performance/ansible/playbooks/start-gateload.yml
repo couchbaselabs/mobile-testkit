@@ -21,26 +21,22 @@
   tasks:
   - name: copy the machine collection script
     copy: src=files/log_machine_stats.py dest=/home/sync_gateway/ owner=sync_gateway group=sync_gateway mode=755
-    when: "'sync_gateway_index_writers' not in group_names"
   # Start collecting machine stats, no polling and a 24 hour timeout
   - name: start stat collection
     shell: ./log_machine_stats.py chdir=/home/sync_gateway/
     async: 86400
     poll: 0
-    when: "'sync_gateway_index_writers' not in group_names"
 
   # Copy profile collection script to sync_gateways
   - name: copy the profile collection script
     copy: src=files/sync_gateway_collect_profile.py dest=/home/sync_gateway/ owner=sync_gateway group=sync_gateway mode=755
-    when: "'sync_gateway_index_writers' not in group_names"
   # Start collecting profile, no polling and a 24 hour timeout
   - name: start profile collection
     shell: ./sync_gateway_collect_profile.py /opt/couchbase-sync-gateway/bin/sync_gateway chdir=/home/sync_gateway/
     async: 86400
     poll: 0
-    when: "'sync_gateway_index_writers' not in group_names"
 
-- hosts: sync_gateway_index_writers
+- hosts: sg_accels
   any_errors_fatal: true
   remote_user: centos
   sudo: true
