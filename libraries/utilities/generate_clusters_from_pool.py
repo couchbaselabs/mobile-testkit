@@ -19,7 +19,10 @@ class ClusterDef:
 
 def write_config(config):
 
+    print("\nGenerating config: {}".format(config.name))
+
     ips = get_ips()
+    print("ips: {}".format(ips))
 
     ansible_cluster_conf_file = "resources/cluster_configs/{}".format(config.name)
     cluster_json_file = "resources/cluster_configs/{}.json".format(config.name)
@@ -82,6 +85,9 @@ def write_config(config):
             })
             ac_ips_to_remove.append(ip)
 
+        for ac_ip in ac_ips_to_remove:
+            ips.remove(ac_ip)
+
         f.write("\n")
 
         # Get local address to run webhook server on
@@ -97,6 +103,8 @@ def write_config(config):
         except Exception as e:
             print "Failed to find local_ip, webhook tests will fail.  Error: {}".format(e)
 
+        print("Generating {}.json".format(config.name))
+
         # Write json file consumable by testkit.cluster class
         cluster_dict = {
             "couchbase_servers": couchbase_servers,
@@ -106,7 +114,6 @@ def write_config(config):
 
         with open(cluster_json_file, "w") as f_json:
             f_json.write(json.dumps(cluster_dict, indent=4))
-
 
 
 def get_ips():
