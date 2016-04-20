@@ -74,7 +74,7 @@ $ python --version
 Python 2.7.10
 ```
 
-**Install libcouchbase
+**Install libcouchbase**
 
 ```
 yum install -y libev libevent
