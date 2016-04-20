@@ -74,6 +74,20 @@ $ python --version
 Python 2.7.10
 ```
 
+**Install libcouchbase
+
+```
+yum install -y libev libevent
+wget http://packages.couchbase.com/clients/c/libcouchbase-2.5.6_centos7_x86_64.tar && \
+    tar xvf libcouchbase-2.5.6_centos7_x86_64.tar && \
+    cd libcouchbase-2.5.6_centos7_x86_64 && \
+    rpm -ivh libcouchbase-devel-2.5.6-1.el7.centos.x86_64.rpm \
+             libcouchbase2-core-2.5.6-1.el7.centos.x86_64.rpm \
+	     libcouchbase2-bin-2.5.6-1.el7.centos.x86_64.rpm \
+	     libcouchbase2-libevent-2.5.6-1.el7.centos.x86_64.rpm && \
+    rm -f *.rpm	     
+```
+
 **Set up virtualenv install python dependencies**
 
 ```
