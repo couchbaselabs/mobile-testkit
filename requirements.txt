@@ -18,6 +18,7 @@ python-dateutil==2.5.1
 PyYAML==3.11
 requests==2.9.1
 robotframework==3.0
+robotframework-debuglibrary==0.4
 rsa==3.3
 s3transfer==0.0.1
 six==1.10.0
