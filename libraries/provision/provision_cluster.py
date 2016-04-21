@@ -21,12 +21,6 @@ def provision_cluster(couchbase_server_config, sync_gateway_config, install_deps
     print(couchbase_server_config)
     print(sync_gateway_config)
 
-    print(">>> Validating...")
-
-    if not couchbase_server_config.is_valid():
-        print("Invalid server provisioning configuration. Exiting ...")
-        raise ValueError("Invalid Couchbase Server provisioning config")
-
     if not sync_gateway_config.is_valid():
         print("Invalid sync_gateway provisioning configuration. Exiting ...")
         sys.exit(1)
@@ -34,10 +28,9 @@ def provision_cluster(couchbase_server_config, sync_gateway_config, install_deps
     print(">>> Provisioning cluster...")
 
     # Get server base url and package name
-    server_base_url, server_package_name = couchbase_server_config.server_base_url_and_package()
+    server_baseurl, server_package_name = couchbase_server_config.get_baseurl_package()
 
-    print(">>> Server package: {0}/{1}".format(server_base_url, server_package_name))
-
+    print(">>> Server package: {0}/{1}".format(server_baseurl, server_package_name))
     print(">>> Using sync_gateway config: {}".format(sync_gateway_config.config_path))
 
     ansible_runner = AnsibleRunner()
