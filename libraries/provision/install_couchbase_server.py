@@ -43,11 +43,11 @@ class CouchbaseServerConfig:
             # Get dev server package from latestbuilds
             if self.version.startswith("4.1"):
                 # http://172.23.120.24/builds/latestbuilds/couchbase-server/sherlock/5914/couchbase-server-enterprise-4.1.1-5914-centos7.x86_64.rpm
-                base_url = "http://172.23.120.24/builds/latestbuilds/couchbase-server/sherlock/{}".format(self.build)
+                base_url = "http://cbnas01.sc.couchbase.com/builds/latestbuilds/couchbase-server/sherlock/{}".format(self.build)
                 package_name = "couchbase-server-enterprise-{}-{}-centos7.x86_64.rpm".format(self.version, self.build)
             elif self.version.startswith("4.5"):
                 # http://172.23.120.24/builds/latestbuilds/couchbase-server/watson/2151/couchbase-server-enterprise-4.5.0-2151-centos7.x86_64.rpm
-                base_url = "http://172.23.120.24/builds/latestbuilds/couchbase-server/watson/{}".format(self.build)
+                base_url = "http://cbnas01.sc.couchbase.com/builds/latestbuilds/couchbase-server/watson/{}".format(self.build)
                 package_name = "couchbase-server-enterprise-{}-{}-centos7.x86_64.rpm".format(self.version, self.build)
             else:
                 raise ValueError("Unable to resolve dev build for version: {}-{}".format(self.version, self.build))
