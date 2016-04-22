@@ -25,8 +25,10 @@ Test Teardown   Test Teardown
 
 *** Variables ***
 ${CLUSTER_CONFIG}           ${CLUSTER_CONFIGS}/1sg_1ac_1cbs
+${SYNC_GATEWAY_VERSION}     None
+${SYNC_GATEWAY_BRANCH}      None
 ${SYNC_GATEWAY_CONFIG}      ${SYNC_GATEWAY_CONFIGS}/sync_gateway_default_functional_tests_di.json
-${RESET_CLUSTER}            True
+${PROVISION_CLUSTER}        True
 
 *** Test Cases ***
 # Cluster has been setup
@@ -195,13 +197,22 @@ test single user single channel (distributed index)
 
 *** Keywords ***
 Suite Setup
-    Log To Console                    Setting up ...
     Set Environment Variable          CLUSTER_CONFIG  ${CLUSTER_CONFIG}
     Log                               Using cluster ${CLUSTER_CONFIG}
-    Run Keyword If  ${RESET_CLUSTER}  Provision Cluster  ${SERVER_VERSION}  ${SYNC_GATEWAY_VERSION}  ${SYNC_GATEWAY_CONFIG}
+    Run Keyword If  ${PROVISION_CLUSTER} and '${SYNC_GATEWAY_VERSION}' != 'None'
+    ...  Provision Cluster With Sync Gateway Build
+    ...     server_version=${SERVER_VERSION}
+    ...     sync_gateway_version=${SYNC_GATEWAY_VERSION}
+    ...     sync_gateway_config=${SYNC_GATEWAY_CONFIG}
+
+    Run Keyword If  ${PROVISION_CLUSTER} and '${SYNC_GATEWAY_BRANCH}' != 'None'
+    ...  Provision Cluster With Sync Gateway Source
+    ...     server_version=${SERVER_VERSION}
+    ...     sync_gateway_branch=${SYNC_GATEWAY_BRANCH}
+    ...     sync_gateway_config=${SYNC_GATEWAY_CONFIG}
 
 Suite Teardown
-    Log To Console      Tearing down ...
+    Log  Tearing down ...
 
 Test Teardown
     List Connections
