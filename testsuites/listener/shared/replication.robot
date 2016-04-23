@@ -6,31 +6,51 @@ Resource          resources/common.robot
 Resource          ./defines.robot
 Library           DebugLibrary
 Library           Process
-Library           Listener              ${HOSTNAME}     ${PORT}
-Suite Setup       Start Listener        ios  ${HOSTNAME}
-Test Setup        Create Database       ${DBNAME}
+Library           LiteServ
+...                 platform=${PLATFORM}
+...                 version_build=${LITESERV_VERSION}
+...                 hostname=${HOSTNAME}
+...                 port=${PORT}
 
+# Passed in at runtime
+Suite Setup       Setup Suite
+Suite Teardown    Teardown Suite
 
-Suite Teardown    Shutdown Listener     ios  ${HOSTNAME}
+#Test Setup        Create Database   ${DBNAME}
+
+# Suite Teardown    Shutdown Listener     ios  ${HOSTNAME}
 Test Timeout      30 seconds     The default test timeout elapsed before the test completed.
+
+*** Variables ***
+
 
 *** Test Cases ***
 Test multiple client dbs with single sync_gateway db
     [Documentation]
-    [Tags]           Sanity    CBL    Listener    Replication
+    [Tags]           sanity     listener    ${HOSTNAME}    syncgateway
     [Timeout]        5 minutes
 
+
 *** Keywords ***
-Install Listener
+Setup Suite
+    [Documentation]  Download, install, and launch LiteServ.
+    Download LiteServ
+    Start LiteServ
+
+Teardown Suite
+    [Documentation]  Shutdown LiteServ and remove the package.
+    Shutdown LiteServ
+    Remove LiteServ
+
+Install LiteServ
     [Documentation]  Downloads a Listener to deps/ for the platform and version specified
     [Arguments]  ${platform}  ${version}
 
-
-Start Listener
+Start LiteServ
     [Documentation]   Starts LiteServ for a specific platform. The LiteServ binaries are located in deps/.
-    [Arguments]     ${platform}     ${hostname}
     [Timeout]       1 minute
-    Start Process   deps/couchbase-lite-macosx-enterprise_1.2.1-13/LiteServ
+    ${binary_path} =  Get Binary Path
+    Start Process   ${binary_path}
     ...             alias=liteserv-ios
     ...             shell=True
     ...             stdout=liteserv-ios-stdout.log
@@ -39,9 +59,8 @@ Start Listener
     Sleep  5s
     Verify Listener Launched
 
-Shutdown Listener
+Shutdown LiteServ
     [Documentation]   Starts LiteServ for a specific platform. The LiteServ binaries are located in deps/.
-    [Arguments]     ${platform}     ${hostname}
     [Timeout]       1 minute
     Terminate Process          handle=liteserv-ios
     Process Should Be Stopped  handle=liteserv-ios
