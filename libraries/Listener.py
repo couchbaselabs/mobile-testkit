@@ -11,7 +11,6 @@ class Listener:
         logging.info("Launching Listener on {}".format(self.url))
 
     def verify_listener_launched(self):
-
         resp = requests.get(self.url)
         log_request(resp)
         log_response(resp)

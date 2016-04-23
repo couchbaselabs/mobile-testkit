@@ -61,7 +61,7 @@ Shutdown Listener
     [Documentation]   Starts LiteServ for a specific platform. The LiteServ binaries are located in deps/.
     [Arguments]     ${platform}     ${hostname}
     [Timeout]       1 minute
-    Terminate Process   handle=liteserv-ios
+    Terminate Process          handle=liteserv-ios
     Process Should Be Stopped  handle=liteserv-ios
 
 Create Design Doc
