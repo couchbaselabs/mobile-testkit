@@ -51,7 +51,7 @@
   - include: tasks/create-sg-accel-user.yml
 
 # Download source and build
-- hosts: sync_gateways
+- hosts: sync_gateways:sg_accels
   any_errors_fatal: true
   become: yes
   vars:
@@ -59,16 +59,24 @@
     build_flags:
 
   tasks:
+  - name: Create .git email to use bootstrap.sh script
+    shell: git config --global user.email "foo@couchbase.com"
+  - name: Create .git user name to use bootstrap.sh script
+    shell: git config --global user.name "Foo"
+
   - name: remove previous .repo directory
     file: path=/home/centos/.repo state=absent
   - name: download bootstrap script
     get_url: url=https://raw.githubusercontent.com/couchbase/sync_gateway/master/bootstrap.sh dest=/home/centos mode=0751
   - name: run bootstrap script (bootstrap.sh takes a branch and a commit as params, this will be fixed to only take a commit at some point)
-    shell: ./bootstrap.sh {{ branch }}
+    shell: ./bootstrap.sh {{ branch }} chdir=/home/centos/
   - name: build
-    shell: ./build.sh {{ build_flags }}
+    shell: ./build.sh {{ build_flags }} chdir=/home/centos/
 
-    
+- hosts: sync_gateways
+  any_errors_fatal: true
+
+  tasks:
   # Copy sync_gateway binary from centos user
   - name: Creates /opt/couchbase-sync-gateway
     file: path=/opt/couchbase-sync-gateway state=directory
@@ -77,6 +85,10 @@
   - name: copy sync_gateway binary to /opt/
     shell: cp /home/centos/godeps/bin/sync_gateway /opt/couchbase-sync-gateway/bin/
 
+- hosts: sg_accels
+  any_errors_fatal: true
+
+  tasks:
   # Copy sg_accel binary from centos user
   - name: Creates /opt/couchbase-sg-accel
     file: path=/opt/couchbase-sg-accel state=directory
