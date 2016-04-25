@@ -76,9 +76,21 @@ Python 2.7.10
 
 **Install libcouchbase**
 
+If your controlling maching is Mac
+
 ```
-yum install -y libev libevent
-wget http://packages.couchbase.com/clients/c/libcouchbase-2.5.6_centos7_x86_64.tar && \
+$ brew install libcouchbase 
+```
+
+If your controlling machine is CentOS,
+
+```
+$ sudo yum install python-devel
+```
+
+```
+$ yum install -y libev libevent
+$ wget http://packages.couchbase.com/clients/c/libcouchbase-2.5.6_centos7_x86_64.tar && \
     tar xvf libcouchbase-2.5.6_centos7_x86_64.tar && \
     cd libcouchbase-2.5.6_centos7_x86_64 && \
     rpm -ivh libcouchbase-devel-2.5.6-1.el7.centos.x86_64.rpm \
