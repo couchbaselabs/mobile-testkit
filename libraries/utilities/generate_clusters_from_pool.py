@@ -96,6 +96,8 @@ def write_config(config):
             f.write("[webhook_ip]\n")
             if platform.system() == "Darwin":
                 local_ip = socket.gethostbyname(socket.gethostname())
+            elif platform.system() == "Linux":
+                local_ip = netifaces.ifaddresses("eth1")[2][0]["addr"]
             else:
                 local_ip = netifaces.ifaddresses("eth0")[2][0]["addr"]
             print("webhook ip: {}".format(local_ip))
