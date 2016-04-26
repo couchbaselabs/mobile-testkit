@@ -38,6 +38,8 @@ log.html
 output.xml
 report.html
 
+results/*
+
 resources/cluster_configs/*
 !resources/cluster_configs/README.md
 resources/pool.json

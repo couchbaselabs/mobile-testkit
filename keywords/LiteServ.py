@@ -84,7 +84,7 @@ class LiteServ:
         # Change back to root dir
         os.chdir("../..")
 
-    def get_binary_path(self):
+    def get_liteserv_binary_path(self):
 
         if self._platform == "macosx":
             binary_path = "{}/{}/LiteServ".format(BINARY_DIR, self.extracted_file_name)
@@ -109,6 +109,8 @@ class LiteServ:
         while count < MAX_RETRIES:
             try:
                 resp = self._session.get(self._url)
+                log_request(resp)
+                log_response(resp)
                 # If request does not throw, exit retry loop
                 break
             except ConnectionError as ce:

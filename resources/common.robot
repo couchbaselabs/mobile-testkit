@@ -7,10 +7,13 @@ Library     ${KEYWORDS}/ClusterKeywords.py
 ${LIBRARIES}                libraries
 ${KEYWORDS}                 keywords
 
+${KEYWORDS}                 keywords
+${RESULTS}                  results
 ${RESOURCES}                resources
 ${ARTIFACTS}                ${RESOURCES}/artifacts
 ${SYNC_GATEWAY_CONFIGS}     ${RESOURCES}/sync_gateway_configs
 ${CLUSTER_CONFIGS}          ${RESOURCES}/cluster_configs
+
 
 # Suite paths
 ${SYNC_GATEWAY_SUITE_FUNCTIONAL}  testsuites/syncgateway/functional
