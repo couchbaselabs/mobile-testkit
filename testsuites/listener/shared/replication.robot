@@ -42,10 +42,6 @@ Teardown Suite
     Shutdown LiteServ
     Remove LiteServ
 
-Install LiteServ
-    [Documentation]  Downloads a Listener to deps/ for the platform and version specified
-    [Arguments]  ${platform}  ${version}
-
 Start LiteServ
     [Documentation]   Starts LiteServ for a specific platform. The LiteServ binaries are located in deps/.
     [Timeout]       1 minute
@@ -56,8 +52,7 @@ Start LiteServ
     ...             stdout=liteserv-ios-stdout.log
     ...             stderr=liteserv-ios-stderr.log
     Process Should Be Running   handle=liteserv-ios
-    Sleep  5s
-    Verify Listener Launched
+    Verify LiteServ Launched
 
 Shutdown LiteServ
     [Documentation]   Starts LiteServ for a specific platform. The LiteServ binaries are located in deps/.

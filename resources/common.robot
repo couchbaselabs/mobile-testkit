@@ -16,6 +16,7 @@ ${CLUSTER_CONFIGS}          ${RESOURCES}/cluster_configs
 ${SYNC_GATEWAY_SUITE_FUNCTIONAL}  testsuites/syncgateway/functional
 
 *** Keywords ***
+# Provisioning Keywords
 Provision Cluster
     [Arguments]  ${server_version}  ${sync_gateway_version}  ${sync_gateway_config}
     [Documentation]    Installs a Sync Gateway (build) + Sg Accel cluster based on the CLUSTER_CONFIG environment variable

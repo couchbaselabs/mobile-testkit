@@ -2,8 +2,14 @@ import logging
 import os
 import shutil
 from zipfile import ZipFile
-from constants import *
+import time
+import re
 
+from requests.sessions import Session
+from requests.exceptions import ConnectionError
+from requests.adapters import HTTPAdapter
+
+from constants import *
 from testkit.debug import log_request
 from testkit.debug import log_response
 import requests
@@ -21,32 +27,37 @@ class LiteServ:
         if platform not in supported_platforms:
             raise ValueError("Unsupported version of LiteServ")
 
-        self.platform = platform
-        self.version_build = version_build
+        self._platform = platform
+        self._version_build = version_build
 
-        if self.platform == "macosx":
-            self.extracted_file_name = "couchbase-lite-macosx-{}".format(version_build)
-        elif self.platform == "android":
+        if self._platform == "macosx":
+            self.extracted_file_name = "couchbase-lite-macosx-{}".format(self._version_build)
+        elif self._platform == "android":
             # TODO
             pass
-        elif self.platform == "net":
+        elif self._platform == "net":
             # TODO
             pass
 
-        self.url = "http://{}:{}".format(hostname, port)
-        logging.info("Launching Listener on {}".format(self.url))
+        self._url = "http://{}:{}".format(hostname, port)
+        logging.info("Launching Listener on {}".format(self._url))
+
+        # self._retry_session = Session()
+        # self._retry_session.mount('https://', HTTPAdapter(max_retries=MAX_RETRIES))
+
+        self._session = Session()
 
     def download_liteserv(self):
 
-        logging.info("Downloading {} LiteServ, version: {}".format(self.platform, self.version_build))
-        if self.platform == "macosx":
-            version, build = version_and_build(self.version_build)
-            file_name = "couchbase-lite-macosx-enterprise_{}.zip".format(self.version_build)
-            url = "{}/couchbase-lite-ios/{}/macosx/{}/{}".format(LATEST_BUILDS, version, self.version_build, file_name)
-        elif self.platform == "android":
+        logging.info("Downloading {} LiteServ, version: {}".format(self._platform, self._version_build))
+        if self._platform == "macosx":
+            version, build = version_and_build(self._version_build)
+            file_name = "couchbase-lite-macosx-enterprise_{}.zip".format(self._version_build)
+            url = "{}/couchbase-lite-ios/{}/macosx/{}/{}".format(LATEST_BUILDS, version, self._version_build, file_name)
+        elif self._platform == "android":
             # TODO
             pass
-        elif self.platform == "net":
+        elif self._platform == "net":
             # TODO
             pass
 
@@ -75,24 +86,47 @@ class LiteServ:
 
     def get_binary_path(self):
 
-        if self.platform == "macosx":
+        if self._platform == "macosx":
             binary_path = "{}/{}/LiteServ".format(BINARY_DIR, self.extracted_file_name)
-        elif self.platform == "android":
+        elif self._platform == "android":
             # TODO
             pass
-        elif self.platform == "net":
+        elif self._platform == "net":
             # TODO
             pass
 
         return binary_path
 
     def remove_liteserv(self):
-        logging.info("Removing {} LiteServ, version: {}".format(self.platform, self.version_build))
+        logging.info("Removing {} LiteServ, version: {}".format(self._platform, self._version_build))
         os.chdir(BINARY_DIR)
         shutil.rmtree(self.extracted_file_name)
         os.chdir("../..")
 
-    def verify_listener_launched(self):
-        resp = requests.get(self.url)
-        log_request(resp)
-        log_response(resp)
+    def verify_liteserv_launched(self):
+        count = 0
+        wait_time = 1
+        while count < MAX_RETRIES:
+            try:
+                resp = self._session.get(self._url)
+                # If request does not throw, exit retry loop
+                break
+            except ConnectionError as ce:
+                logging.info("LiteServ may not be launched (Retrying): {}".format(ce))
+                time.sleep(wait_time)
+                count += 1
+                wait_time *= 2
+
+        if count == MAX_RETRIES:
+            raise RuntimeError("Could not connect to LiteServ")
+
+        resp_json = resp.json()
+        lite_version = resp_json["vendor"]["version"]
+
+        # Validate that the version launched is the expected LiteServ version
+        # LiteServ: 1.2.1 (build 13)
+        version, build = version_and_build(self._version_build)
+        expected_version = "{} (build {})".format(version, build)
+        assert (lite_version == expected_version)
+
+        logging.info ("LiteServ: {} is running".format(lite_version))
