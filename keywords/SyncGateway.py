@@ -1,14 +1,15 @@
-import requests
 import tarfile
 import os
 import shutil
 import logging
+import time
+import re
+
+import requests
+from requests import Session
+from requests import ConnectionError
 
 from constants import *
-
-from testkit.admin import Admin
-from testkit.syncgateway import SyncGateway
-
 
 def version_and_build(full_version):
     version_parts = full_version.split("-")
@@ -20,29 +21,32 @@ class SyncGateway:
 
     def __init__(self, version_build):
 
-        self.version_build = version_build
-        self.extracted_file_name = "couchbase-sync_gateway-{}".format(self.version_build)
+        self._version_build = version_build
+        self.extracted_file_name = "couchbase-sync_gateway-{}".format(self._version_build)
 
         # self.sync_gateway = SyncGateway({"ip": "localhost", "name": "local"})
         #self.admin = Admin(self.sync_gateway)
 
+        self._url = "http://localhost:4984"
+        self._session = Session()
+
     def download_sync_gateway(self):
 
-        print("Installing {} sync_gateway".format(self.version_build))
+        print("Installing {} sync_gateway".format(self._version_build))
 
-        version, build = version_and_build(self.version_build)
+        version, build = version_and_build(self._version_build)
         if version == "1.1.1":
             url = "{}/couchbase-sync-gateway/release/{}/{}/couchbase-sync-gateway-enterprise_{}_x86_64.tar.gz".format(
                 LATEST_BUILDS,
                 version,
-                self.version_build,
-                self.version_build)
+                self._version_build,
+                self._version_build)
         else:
             url = "{}/couchbase-sync-gateway/{}/{}/couchbase-sync-gateway-enterprise_{}_x86_64.tar.gz".format(
                 LATEST_BUILDS,
                 version,
-                self.version_build,
-                self.version_build)
+                self._version_build,
+                self._version_build)
 
         os.chdir(BINARY_DIR)
 
@@ -71,7 +75,35 @@ class SyncGateway:
         return sync_gateway_binary_path
 
     def verify_sync_gateway_launched(self):
-        logging.info("verify_sync_gateway_launched")
+        count = 0
+        wait_time = 1
+        while count < MAX_RETRIES:
+            try:
+                resp = self._session.get(self._url)
+                # If request does not throw, exit retry loop
+                break
+            except ConnectionError as ce:
+                logging.info("Sync Gateway may not be launched (Retrying): {}".format(ce))
+                time.sleep(wait_time)
+                count += 1
+                wait_time *= 2
+
+        if count == MAX_RETRIES:
+            raise RuntimeError("Could not connect to LiteServ")
+
+        # Get version from running sync_gateway and compare with expected version
+        resp_json = resp.json()
+        logging.info(resp_json)
+        sync_gateway_version = resp_json["version"]
+        resp_version_parts = re.split("[ /(;)]", sync_gateway_version)
+        actual_version = "{}-{}".format(resp_version_parts[3], resp_version_parts[4])
+
+        logging.info("Expected Version {}".format(self._version_build))
+        logging.info("Actual Version {}".format(actual_version))
+
+        assert (actual_version == self._version_build)
+
+        logging.info("{} is running".format(sync_gateway_version))
 
     def get_sync_gateway_document_count(self, db):
         docs = self.admin.get_all_docs(db)
