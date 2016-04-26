@@ -7,7 +7,7 @@ from testkit.admin import Admin
 from testkit.syncgateway import SyncGateway
 
 
-class SyncGatewayUtils:
+class SyncGateway:
 
     def __init__(self):
         self.file_name = "couchbase-sync-gateway-enterprise_1.2.0-83_x86_64.tar.gz"
