@@ -25,8 +25,6 @@ Library           ${KEYWORDS}/SyncGateway.py
 Test Setup        Setup Test
 Test Teardown     Teardown Test
 
-# Suite Teardown    Shutdown Listener     ios  ${HOSTNAME}
-#Test Timeout      30 seconds     The default test timeout elapsed before the test completed.
 
 *** Variables ***
 ${SYNC_GATEWAY_CONFIG}  ${SYNC_GATEWAY_CONFIGS}/walrus.json
@@ -42,20 +40,19 @@ Test multiple client dbs with single sync_gateway db
     ${ls_db2} =  Create Database  url=${ls_url}  name=ls_db2  listener=True
     ${sg_db} =   Create Database  url=${sg_url_admin}  name=sg_db
 
-    Debug
-
-    Start Push Replication
+    Start Replication
     ...  url=${ls_url}
     ...  continuous=True
-    ...  source_url=${ls_url}  source_db=${ls_db1}
-    ...  target_url=${sg_url_admin}  target_db=${sg_db}
+    ...  from_url=${ls_url}  from_db=${ls_db1}
+    ...  to_url=${sg_url_admin}  to_db=${sg_db}
 
     Debug
 
 #    Start Continuous Push / Pull Replication  ${ls_db2}  ${sg_db}
 
-#    ${ls_db1_docs} =  Add Docs  ${ls_db1}  ${500}
-#    ${ls_db2_docs} =  Add Docs  ${ls_db2}  ${500}
+    #${ls_db1_docs} =  Add Docs  url=${ls_url}  db=${ls_db1}  number=${500}  id_prefix=test
+    #${ls_db2_docs} =  Add Docs  url=${ls_url}  db=${ls_db2}  number=${500}  id_prefix=test
+
 #    Verify Number of Docs  ${ls_db1}  ${500}
 #    Verify Number of Docs  ${ls_db2}  ${500}
 #    @{all_docs} =  Create List  ${ls_db0_docs}  ${ls_db1_docs}
@@ -92,7 +89,7 @@ Start LiteServ
     [Documentation]   Starts LiteServ for a specific platform. The LiteServ binaries are located in deps/.
     [Timeout]       1 minute
     ${binary_path} =  Get LiteServ Binary Path
-    Start Process   ${binary_path}
+    Start Process   ${binary_path}  -Log  YES  -LogSync  YES  -LogCBLRouter  YES  -LogSyncVerbose  YES  -LogRemoteRequest  YES
     ...             alias=liteserv-ios
     ...             shell=True
     ...             stdout=${RESULTS}/${TEST_NAME}-${PLATFORM}-liteserv-stdout.log

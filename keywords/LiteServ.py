@@ -51,7 +51,10 @@ class LiteServ:
         if self._platform == "macosx":
             version, build = version_and_build(self._version_build)
             file_name = "couchbase-lite-macosx-enterprise_{}.zip".format(self._version_build)
-            url = "{}/couchbase-lite-ios/{}/macosx/{}/{}".format(LATEST_BUILDS, version, self._version_build, file_name)
+            if version == "1.2.0":
+                url = "{}/couchbase-lite-ios/release/{}/macosx/{}/{}".format(LATEST_BUILDS, version, self._version_build, file_name)
+            else:
+                url = "{}/couchbase-lite-ios/{}/macosx/{}/{}".format(LATEST_BUILDS, version, self._version_build, file_name)
         elif self._platform == "android":
             # TODO
             pass
@@ -125,7 +128,8 @@ class LiteServ:
         # LiteServ: 1.2.1 (build 13)
         version, build = version_and_build(self._version_build)
         expected_version = "{} (build {})".format(version, build)
-        assert (lite_version == expected_version)
+        if lite_version != expected_version:
+            raise ValueError("Expected version does not match actual version: Expected={}  Actual={}".format(expected_version, lite_version))
 
         logging.info ("LiteServ: {} is running".format(lite_version))
 
