@@ -5,8 +5,9 @@ Documentation     Global settings and variables defined for all Listener tests.
 ${DBNAME}           foo
 ${VIEW1_NAME}       fizz
 ${VIEW2_NAME}       buzz
-${HOSTNAME}         localhost
-${PORT}             ${59840}
+${LITESERV_HOSTNAME}         localhost
+${LITESERV_PORT}             ${59840}
+${SYNC_GATEWAY_HOSTNAME}     localhost
 ${USERNAME}         demo
 ${PASSWORD}         pass
 

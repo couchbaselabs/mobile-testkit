@@ -6,23 +6,27 @@ Resource          resources/common.robot
 Resource          ./defines.robot
 Library           DebugLibrary
 Library           Process
+Library           ${KEYWORDS}/TKClient.py
+
 Library           ${KEYWORDS}/LiteServ.py
 ...                 platform=${PLATFORM}
 ...                 version_build=${LITESERV_VERSION}
-...                 hostname=${HOSTNAME}
-...                 port=${PORT}
+...                 hostname=${LITESERV_HOSTNAME}
+...                 port=${LITESERV_PORT}
+
 Library           ${KEYWORDS}/SyncGateway.py
 ...                 version_build=${SYNC_GATEWAY_VERSION}
+...                 hostname=${SYNC_GATEWAY_HOSTNAME}
 
 # Passed in at runtime
-Suite Setup       Setup Suite
-Suite Teardown    Teardown Suite
+#Suite Setup       Setup Suite
+#Suite Teardown    Teardown Suite
 
 Test Setup        Setup Test
 Test Teardown     Teardown Test
 
 # Suite Teardown    Shutdown Listener     ios  ${HOSTNAME}
-Test Timeout      30 seconds     The default test timeout elapsed before the test completed.
+#Test Timeout      30 seconds     The default test timeout elapsed before the test completed.
 
 *** Variables ***
 ${SYNC_GATEWAY_CONFIG}  ${SYNC_GATEWAY_CONFIGS}/walrus.json
@@ -31,13 +35,25 @@ ${SYNC_GATEWAY_CONFIG}  ${SYNC_GATEWAY_CONFIGS}/walrus.json
 Test multiple client dbs with single sync_gateway db
     [Documentation]
     [Tags]           sanity     listener    ${HOSTNAME}    syncgateway
-    [Timeout]        5 minutes
-    Log To Console  Testing ...
-#    ${ls_db1} =  Create LiteServ Database  name=ls_db1
-#    ${ls_db2} =  Create LiteServ Database  name=ls_db2
-#    ${sg_db} =   Create Sync Gateway Database  name=sg_db1
-#    Start Continuous Push / Pull Replication  ${ls_db1}  ${sg_db}
+    # [Timeout]        5 minutes
+    Log  Using LiteServ: ${ls_url}
+    Log  Using Sync Gateway: ${sg_url}
+    ${ls_db1} =  Create Database  url=${ls_url}  name=ls_db1  listener=True
+    ${ls_db2} =  Create Database  url=${ls_url}  name=ls_db2  listener=True
+    ${sg_db} =   Create Database  url=${sg_url_admin}  name=sg_db
+
+    Debug
+
+    Start Push Replication
+    ...  url=${ls_url}
+    ...  continuous=True
+    ...  source_url=${ls_url}  source_db=${ls_db1}
+    ...  target_url=${sg_url_admin}  target_db=${sg_db}
+
+    Debug
+
 #    Start Continuous Push / Pull Replication  ${ls_db2}  ${sg_db}
+
 #    ${ls_db1_docs} =  Add Docs  ${ls_db1}  ${500}
 #    ${ls_db2_docs} =  Add Docs  ${ls_db2}  ${500}
 #    Verify Number of Docs  ${ls_db1}  ${500}
@@ -59,13 +75,18 @@ Teardown Suite
     Remove Sync Gateway
 
 Setup Test
-    Start LiteServ
-    Start Sync Gateway  ${SYNC_GATEWAY_CONFIG}
-    Debug
+    ${ls_url} =  Start LiteServ
+    Set Test Variable  ${ls_url}
+    ${sg_url}  ${sg_url_admin} =  Start Sync Gateway  ${SYNC_GATEWAY_CONFIG}
+    Set Test Variable  ${sg_url}
+    Set Test Variable  ${sg_url_admin}
 
 Teardown Test
+    Delete Databases  ${ls_url}
+    Delete Databases  ${sg_url_admin}
     Shutdown LiteServ
     Shutdown Sync Gateway
+
 
 Start LiteServ
     [Documentation]   Starts LiteServ for a specific platform. The LiteServ binaries are located in deps/.
@@ -77,7 +98,8 @@ Start LiteServ
     ...             stdout=${RESULTS}/${TEST_NAME}-${PLATFORM}-liteserv-stdout.log
     ...             stderr=${RESULTS}/${TEST_NAME}-${PLATFORM}-liteserv-stderr.log
     Process Should Be Running   handle=liteserv-ios
-    Verify LiteServ Launched
+    ${ls_url} =  Verify LiteServ Launched
+    [return]  ${ls_url}
 
 Shutdown LiteServ
     [Documentation]   Starts LiteServ for a specific platform. The LiteServ binaries are located in deps/binaries.
@@ -95,7 +117,8 @@ Start Sync Gateway
     ...             stdout=${RESULTS}/${TEST_NAME}-sync-gateway-stdout.log
     ...             stderr=${RESULTS}/${TEST_NAME}-sync-gateway-stderr.log
     Process Should Be Running   handle=sync_gateway
-    Verify Sync Gateway Launched
+    ${sg_url} =  Verify Sync Gateway Launched
+    [return]    ${sg_url}
 
 Shutdown Sync Gateway
     [Documentation]   Starts LiteServ for a specific platform. The LiteServ binaries are located in deps/binaries.

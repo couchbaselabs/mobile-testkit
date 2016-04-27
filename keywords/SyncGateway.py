@@ -16,18 +16,14 @@ def version_and_build(full_version):
     assert (len(version_parts) == 2)
     return version_parts[0], version_parts[1]
 
-
 class SyncGateway:
 
-    def __init__(self, version_build):
+    def __init__(self, version_build, hostname):
 
         self._version_build = version_build
         self.extracted_file_name = "couchbase-sync_gateway-{}".format(self._version_build)
-
-        # self.sync_gateway = SyncGateway({"ip": "localhost", "name": "local"})
-        #self.admin = Admin(self.sync_gateway)
-
-        self._url = "http://localhost:4984"
+        self._url = "http://{}:4984".format(hostname)
+        self._admin_url = "http://{}:4985".format(hostname)
         self._session = Session()
 
     def download_sync_gateway(self):
@@ -104,6 +100,8 @@ class SyncGateway:
         assert (actual_version == self._version_build)
 
         logging.info("{} is running".format(sync_gateway_version))
+
+        return self._url, self._admin_url
 
     def get_sync_gateway_document_count(self, db):
         docs = self.admin.get_all_docs(db)

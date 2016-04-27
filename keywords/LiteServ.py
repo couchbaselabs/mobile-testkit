@@ -10,8 +10,6 @@ from requests.exceptions import ConnectionError
 from requests.adapters import HTTPAdapter
 
 from constants import *
-from testkit.debug import log_request
-from testkit.debug import log_response
 import requests
 
 def version_and_build(full_version):
@@ -109,8 +107,6 @@ class LiteServ:
         while count < MAX_RETRIES:
             try:
                 resp = self._session.get(self._url)
-                log_request(resp)
-                log_response(resp)
                 # If request does not throw, exit retry loop
                 break
             except ConnectionError as ce:
@@ -132,3 +128,5 @@ class LiteServ:
         assert (lite_version == expected_version)
 
         logging.info ("LiteServ: {} is running".format(lite_version))
+
+        return self._url
