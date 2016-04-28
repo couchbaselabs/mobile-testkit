@@ -22,8 +22,8 @@ Library           ${KEYWORDS}/SyncGateway.py
 #Suite Setup       Setup Suite
 #Suite Teardown    Teardown Suite
 
-#Test Setup        Setup Test
-#Test Teardown     Teardown Test
+Test Setup        Setup Test
+Test Teardown     Teardown Test
 
 
 *** Variables ***
@@ -34,41 +34,56 @@ Test multiple client dbs with single sync_gateway db
     [Documentation]
     [Tags]           sanity     listener    ${HOSTNAME}    syncgateway
     # [Timeout]        5 minutes
-#    Log  Using LiteServ: ${ls_url}
-#    Log  Using Sync Gateway: ${sg_url}
-#    ${ls_db1} =  Create Database  url=${ls_url}  name=ls_db1  listener=True
-#    ${ls_db2} =  Create Database  url=${ls_url}  name=ls_db2  listener=True
-#    ${sg_db} =   Create Database  url=${sg_url_admin}  name=sg_db
-#
-#
-#    # Setup continuous push / pull replication from ls_db1 to sg_db
-#    Start Replication
-#    ...  url=${ls_url}
-#    ...  continuous=${True}
-#    ...  from_db=${ls_db1}
-#    ...  to_url=${sg_url_admin}  to_db=${sg_db}
-#
-#    Start Replication
-#    ...  url=${ls_url}
-#    ...  continuous=${True}
-#    ...  from_url=${sg_url_admin}  from_db=${sg_db}
-#    ...  to_db=${ls_db1}
 
-    ${task1} =  Start Async  Tkclient Test  one    seconds=${10}
-    ${task2} =  Start Async  tkclient test  two    seconds=${5}
-    ${task3} =  Start Async  tkclient test  three  seconds=${3}
+    Log  Using LiteServ: ${ls_url}
+    Log  Using Sync Gateway: ${sg_url}
 
-    ${text2} =  Get Async  ${task2}
-    Log To Console  ${text2}
-    ${text1} =  Get Async  ${task1}
-    Log To Console  ${text1}
-    ${text3} =  Get Async  ${task3}
-    Log To Console  ${text3}
+    ${ls_db1} =  Create Database  url=${ls_url}  name=ls_db1  listener=True
+    ${ls_db2} =  Create Database  url=${ls_url}  name=ls_db2  listener=True
+    ${sg_db} =   Create Database  url=${sg_url_admin}  name=sg_db
+
+    # Setup continuous push / pull replication from ls_db1 to sg_db
+    Start Replication
+    ...  url=${ls_url}
+    ...  continuous=${True}
+    ...  from_db=${ls_db1}
+    ...  to_url=${sg_url_admin}  to_db=${sg_db}
+
+    Start Replication
+    ...  url=${ls_url}
+    ...  continuous=${True}
+    ...  from_url=${sg_url_admin}  from_db=${sg_db}
+    ...  to_db=${ls_db1}
+
+    # Setup continuous push / pull replication from ls_db2 to sg_db
+    Start Replication
+    ...  url=${ls_url}
+    ...  continuous=${True}
+    ...  from_db=${ls_db2}
+    ...  to_url=${sg_url_admin}  to_db=${sg_db}
+
+    Start Replication
+    ...  url=${ls_url}
+    ...  continuous=${True}
+    ...  from_url=${sg_url_admin}  from_db=${sg_db}
+    ...  to_db=${ls_db2}
+
+    ${ls_db1_docs} =  Add Docs  url=${ls_url}  db=${ls_db1}  number=${500}  id_prefix=test_ls_db1
+    ${ls_db2_docs} =  Add Docs  url=${ls_url}  db=${ls_db2}  number=${500}  id_prefix=test_ls_db2
+
+    # Execute doc adds asynchronously
+#    ${doc_add_ls_db1_handle} =  Start Async  Add Docs  url=${ls_url}  db=${ls_db1}  number=${500}  id_prefix=test
+#    Log To Console  ${doc_add_ls_db1_handle}
+#    ${doc_add_ls_db2_handle} =  Start Async  Add Docs  url=${ls_url}  db=${ls_db2}  number=${500}  id_prefix=test
+#    Log To Console  ${doc_add_ls_db2_handle}
+#
+#    # Wait for doc adds to complete
+#    ${ls_db1_docs} =  Get Async  ${doc_add_ls_db1_handle}
+#    ${ls_db2_docs} =  Get Async  ${doc_add_ls_db2_handle}
 
 #    Start Continuous Push / Pull Replication  ${ls_db2}  ${sg_db}
 
-    #${ls_db1_docs} =  Add Docs  url=${ls_url}  db=${ls_db1}  number=${500}  id_prefix=test
-    #${ls_db2_docs} =  Add Docs  url=${ls_url}  db=${ls_db2}  number=${500}  id_prefix=test
+
 
 #    Verify Number of Docs  ${ls_db1}  ${500}
 #    Verify Number of Docs  ${ls_db2}  ${500}

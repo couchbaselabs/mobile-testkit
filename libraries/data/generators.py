@@ -21,15 +21,37 @@ def random_string(length):
 def simple():
     data = {
         "date_time_added": str(datetime.datetime.now()),
-        "updates": 0
+        "updates": 0,
+        "dict": {
+            "name": random_string(10),
+        },
+        "list": [
+            random_int(),
+            random_int()
+        ],
+        "list_of_dicts": [
+            {
+                "friend_one": random_string(10)
+            },
+            {
+                "friend_two": random_string(10)
+            }
+        ],
+        "dict_with_list": {
+            "list": [
+                random_bool(),
+                random_bool()
+            ]
+        }
     }
     return json.dumps(data)
 
 def simple_user():
     data = {
+        "updates": 0,
         "index": 0,
         "date_time_added": str(datetime.datetime.now()),
-        "guid": uuid.uuid4(),
+        "guid": str(uuid.uuid4()),
         "isActive": True,
         "balance": "$3,175.30",
         "picture": random_string(10),
