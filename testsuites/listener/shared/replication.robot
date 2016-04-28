@@ -54,13 +54,9 @@ Test multiple client dbs with single sync_gateway db
 #    ...  from_url=${sg_url_admin}  from_db=${sg_db}
 #    ...  to_db=${ls_db1}
 
-    Log To Console  Before docs
-    ${task1} =  Start Async  tkclient test  one    ${10}
-    ${task2} =  Start Async  tkclient test  two    ${5}
-    ${task3} =  Start Async  tkclient test  three  ${3}
-    Log To Console  ${task1}
-    Log To Console  ${task2}
-    Log To Console  ${task3}
+    ${task1} =  Start Async  Tkclient Test  one    seconds=${10}
+    ${task2} =  Start Async  tkclient test  two    seconds=${5}
+    ${task3} =  Start Async  tkclient test  three  seconds=${3}
 
     ${text2} =  Get Async  ${task2}
     Log To Console  ${text2}
