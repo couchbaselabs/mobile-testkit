@@ -1,5 +1,6 @@
 import logging
 import json
+import time
 import requests
 from requests import Session
 from requests.exceptions import HTTPError
@@ -58,24 +59,41 @@ class TKClient:
             log_r(resp)
             resp.raise_for_status()
 
+    def tkclient_test(self, text, seconds):
+        console("Starting: {}".format(text))
+        time.sleep(seconds)
+        return "{}: {} seconds".format(text, seconds)
+
     def add_docs(self, url, db, number, id_prefix, generator=simple()):
         for i in xrange(number):
             json = generator
             resp = self._session.put("{}/{}/{}_{}".format(url, db, id_prefix, i), data=json)
             log_r(resp)
+            console(resp.text)
             resp.raise_for_status()
+        return "sup"
 
 
     def start_push_pull_replication(self, url, continuous, source_url, source_db, target_url, target_db):
         self.start_push_replication(url, continuous, source_url, source_db, target_url, target_db)
         #self.start_pull_replication(url, continuous, source_url, source_db, target_url, target_db)
 
-    def start_replication(self, url, continuous, from_url, from_db, to_url, to_db):
+    def start_replication(self, url, continuous, from_url=None, from_db=None, to_url=None, to_db=None):
+
+        if from_url is None:
+            source = from_db
+        else:
+            source = "{}/{}".format(from_url, from_db)
+
+        if to_url is None:
+            target = to_db
+        else:
+            target = "{}/{}".format(to_url, to_db)
 
         data = {
-            "continuous": True,
-            "source": "{}".format(from_db),
-            "target": "{}/{}".format(to_url, to_db)
+            "continuous": continuous,
+            "source": source,
+            "target": target
         }
 
         console(json.dumps(data))

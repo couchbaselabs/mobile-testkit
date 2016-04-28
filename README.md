@@ -22,6 +22,7 @@ Table of Contents
 * [NET Tests](#net-tests)
 * [sgcollectinfo Tests](#sgcollectinfo-tests)
 * [sync_gateway Tests](#sync_gateway-tests)
+* [Debugging](#debugging)
 * [Monitoring](#monitoring)
 * [Known Issues And Limitations](#known-issues-and-limitations)
 
@@ -498,6 +499,21 @@ $ python libraries/provision/create_and_instantiate_cluster.py \
 ```
 
 Wait until the resources are up, then create the `pool.json` file by hand according to instructions above.
+
+
+Debugging
+=========
+
+When developing custom keyworks, you may want to break and inspect at a certain point. Adding the following lines will do what you need
+
+```
+import pdb
+for attr in ('stdin', 'stdout', 'stderr'):
+    setattr(sys, attr, getattr(sys, '__%s__' % attr))
+pdb.set_trace()
+```
+
+They will redirect the stdin, stdout, and stderr from robot back to your control
 
 
 Monitoring

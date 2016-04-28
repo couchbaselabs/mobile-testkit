@@ -6,8 +6,8 @@ Resource          resources/common.robot
 Resource          ./defines.robot
 Library           DebugLibrary
 Library           Process
+Library           ${KEYWORDS}/Async.py
 Library           ${KEYWORDS}/TKClient.py
-
 Library           ${KEYWORDS}/LiteServ.py
 ...                 platform=${PLATFORM}
 ...                 version_build=${LITESERV_VERSION}
@@ -22,8 +22,8 @@ Library           ${KEYWORDS}/SyncGateway.py
 #Suite Setup       Setup Suite
 #Suite Teardown    Teardown Suite
 
-Test Setup        Setup Test
-Test Teardown     Teardown Test
+#Test Setup        Setup Test
+#Test Teardown     Teardown Test
 
 
 *** Variables ***
@@ -34,19 +34,40 @@ Test multiple client dbs with single sync_gateway db
     [Documentation]
     [Tags]           sanity     listener    ${HOSTNAME}    syncgateway
     # [Timeout]        5 minutes
-    Log  Using LiteServ: ${ls_url}
-    Log  Using Sync Gateway: ${sg_url}
-    ${ls_db1} =  Create Database  url=${ls_url}  name=ls_db1  listener=True
-    ${ls_db2} =  Create Database  url=${ls_url}  name=ls_db2  listener=True
-    ${sg_db} =   Create Database  url=${sg_url_admin}  name=sg_db
+#    Log  Using LiteServ: ${ls_url}
+#    Log  Using Sync Gateway: ${sg_url}
+#    ${ls_db1} =  Create Database  url=${ls_url}  name=ls_db1  listener=True
+#    ${ls_db2} =  Create Database  url=${ls_url}  name=ls_db2  listener=True
+#    ${sg_db} =   Create Database  url=${sg_url_admin}  name=sg_db
+#
+#
+#    # Setup continuous push / pull replication from ls_db1 to sg_db
+#    Start Replication
+#    ...  url=${ls_url}
+#    ...  continuous=${True}
+#    ...  from_db=${ls_db1}
+#    ...  to_url=${sg_url_admin}  to_db=${sg_db}
+#
+#    Start Replication
+#    ...  url=${ls_url}
+#    ...  continuous=${True}
+#    ...  from_url=${sg_url_admin}  from_db=${sg_db}
+#    ...  to_db=${ls_db1}
 
-    Start Replication
-    ...  url=${ls_url}
-    ...  continuous=True
-    ...  from_url=${ls_url}  from_db=${ls_db1}
-    ...  to_url=${sg_url_admin}  to_db=${sg_db}
+    Log To Console  Before docs
+    ${task1} =  Start Async  tkclient test  one    ${10}
+    ${task2} =  Start Async  tkclient test  two    ${5}
+    ${task3} =  Start Async  tkclient test  three  ${3}
+    Log To Console  ${task1}
+    Log To Console  ${task2}
+    Log To Console  ${task3}
 
-    Debug
+    ${text2} =  Get Async  ${task2}
+    Log To Console  ${text2}
+    ${text1} =  Get Async  ${task1}
+    Log To Console  ${text1}
+    ${text3} =  Get Async  ${task3}
+    Log To Console  ${text3}
 
 #    Start Continuous Push / Pull Replication  ${ls_db2}  ${sg_db}
 
