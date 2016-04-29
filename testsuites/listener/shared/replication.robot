@@ -42,6 +42,8 @@ Test multiple client dbs with single sync_gateway db
     ${ls_db2} =  Create Database  url=${ls_url}  name=ls_db2  listener=True
     ${sg_db} =   Create Database  url=${sg_url_admin}  name=sg_db
 
+
+
     # Setup continuous push / pull replication from ls_db1 to sg_db
     Start Replication
     ...  url=${ls_url}
@@ -68,8 +70,14 @@ Test multiple client dbs with single sync_gateway db
     ...  from_url=${sg_url_admin}  from_db=${sg_db}
     ...  to_db=${ls_db2}
 
-    ${ls_db1_docs} =  Add Docs  url=${ls_url}  db=${ls_db1}  number=${500}  id_prefix=test_ls_db1
-    ${ls_db2_docs} =  Add Docs  url=${ls_url}  db=${ls_db2}  number=${500}  id_prefix=test_ls_db2
+    ${ls_db1_docs} =  Add Docs  url=${ls_url}  db=${ls_db1}  number=${10}  id_prefix=test_ls_db1
+    ${ls_db2_docs} =  Add Docs  url=${ls_url}  db=${ls_db2}  number=${10}  id_prefix=test_ls_db2
+
+    @{ls_db1_db2_docs} =  Create List  ${ls_db1_docs}  ${ls_db2_docs}
+
+    Verify Docs Present  url=${sg_url_admin}  db=${sg_db}  expected_docs=@{ls_db1_db2_docs}
+    Verify Docs Present  url=${ls_url}  db=${ls_db1}  expected_docs=@{ls_db1_db2_docs}  listener=${True}
+    Verify Docs Present  url=${ls_url}  db=${ls_db2}  expected_docs=@{ls_db1_db2_docs}  listener=${True}
 
     # Execute doc adds asynchronously
 #    ${doc_add_ls_db1_handle} =  Start Async  Add Docs  url=${ls_url}  db=${ls_db1}  number=${500}  id_prefix=test
