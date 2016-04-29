@@ -47,6 +47,11 @@ class LiteServ:
 
     def download_liteserv(self):
 
+        # Check if package is already downloaded and return if it is preset
+        if os.path.isdir("{}/{}".format(BINARY_DIR, self.extracted_file_name)):
+            logging.info("Package exists: {}. Skipping download".format(self.extracted_file_name))
+            return
+
         logging.info("Downloading {} LiteServ, version: {}".format(self._platform, self._version_build))
         if self._platform == "macosx":
             version, build = version_and_build(self._version_build)
@@ -62,28 +67,23 @@ class LiteServ:
             # TODO
             pass
 
-        # Change to package dir
-        os.chdir(BINARY_DIR)
-
-        # Download the packages
+        # Download the packages to binary directory
         print("Downloading: {}".format(url))
         resp = requests.get(url)
         resp.raise_for_status()
-        with open(file_name, "wb") as f:
+        with open("{}/{}".format(BINARY_DIR, file_name), "wb") as f:
             f.write(resp.content)
 
         # Unzip the package
-        with ZipFile(file_name) as zip_f:
-            zip_f.extractall(self.extracted_file_name)
+        with ZipFile("{}/{}".format(BINARY_DIR, file_name)) as zip_f:
+            zip_f.extractall("{}/{}".format(BINARY_DIR, self.extracted_file_name))
 
         # Make binary executable
-        os.chmod("{}/LiteServ".format(self.extracted_file_name), 0755)
+        os.chmod("{}/{}/LiteServ".format(BINARY_DIR, self.extracted_file_name), 0755)
 
         # Remove .zip file
-        os.remove(file_name)
+        os.remove("{}/{}".format(BINARY_DIR, file_name))
 
-        # Change back to root dir
-        os.chdir("../..")
 
     def get_liteserv_binary_path(self):
 

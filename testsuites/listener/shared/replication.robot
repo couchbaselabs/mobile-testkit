@@ -19,8 +19,7 @@ Library           ${KEYWORDS}/SyncGateway.py
 ...                 hostname=${SYNC_GATEWAY_HOSTNAME}
 
 # Passed in at runtime
-#Suite Setup       Setup Suite
-#Suite Teardown    Teardown Suite
+Suite Setup       Setup Suite
 
 Test Setup        Setup Test
 Test Teardown     Teardown Test
@@ -105,11 +104,6 @@ Setup Suite
     [Documentation]  Download, install, and launch LiteServ.
     Download LiteServ
     Download Sync Gateway
-
-Teardown Suite
-    [Documentation]  Shutdown LiteServ and remove the package.
-    Remove LiteServ
-    Remove Sync Gateway
 
 Setup Test
     ${ls_url} =  Start LiteServ

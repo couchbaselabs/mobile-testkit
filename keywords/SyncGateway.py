@@ -28,6 +28,11 @@ class SyncGateway:
 
     def download_sync_gateway(self):
 
+        # Check if package is already downloaded and return if it is preset
+        if os.path.isdir("{}/{}".format(BINARY_DIR, self.extracted_file_name)):
+            logging.info("Package exists: {}. Skipping download".format(self.extracted_file_name))
+            return
+
         print("Installing {} sync_gateway".format(self._version_build))
 
         version, build = version_and_build(self._version_build)
@@ -44,22 +49,19 @@ class SyncGateway:
                 self._version_build,
                 self._version_build)
 
-        os.chdir(BINARY_DIR)
-
         # Download and write package
         r = requests.get(url)
-        file_name = "{}.tar.gz".format(self.extracted_file_name)
+        file_name = "{}/{}.tar.gz".format(BINARY_DIR, self.extracted_file_name)
 
         with open(file_name, "wb") as f:
             f.write(r.content)
 
         # Extract package
         with tarfile.open(file_name) as tar_f:
-            tar_f.extractall(path=self.extracted_file_name)
+            tar_f.extractall(path="{}/{}".format(BINARY_DIR, self.extracted_file_name))
 
         # Remove .tar.gz and return to root directory
         os.remove(file_name)
-        os.chdir("../../")
 
     def remove_sync_gateway(self):
         logging.info("Removing {}".format(self.extracted_file_name))
