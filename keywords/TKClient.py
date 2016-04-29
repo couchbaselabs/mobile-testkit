@@ -111,7 +111,9 @@ class TKClient:
         resp.raise_for_status()
 
     def verify_docs_present(self, url, db, expected_docs, listener=False):
-        """ Verifies that the docs passed in the function exist in the database """
+        """
+        Verifies that the docs passed in the function exist in the database
+        """
 
         if isinstance(expected_docs, list):
             # Create single dictionary for comparison
@@ -179,12 +181,16 @@ class TKClient:
 
 
     def parse_multipart_response(self, response):
-        """ Parses a multipart response where each section looks like below
-            --5570ab847be212079e2b05bbbfa023da25b07712bda36aec6481bca024f3
+        """
+        Parses a multipart response where each section looks like below:
+        --------------------------------------------------------------------
+        --5570ab847be212079e2b05bbbfa023da25b07712bda36aec6481bca024f3
             Content-Type: application/json
 
-            {"_id":"test_ls_db2_0","_rev":"1-9a525c69cafb3d1cdf69545fa5ccfecc","date_time_added":"2016-04-29 13:34:26.346148"} """
+            {"_id":"test_ls_db2_0","_rev":"1-9a525c69cafb3d1cdf69545fa5ccfecc","date_time_added":"2016-04-29 13:34:26.346148"}
 
+        Returns a a list of docs {"rows": [ {"_id":"test_ls_db2_0","_rev":"1-9a525c69cafb3d1cdf69545fa5ccfecc" ... } ] }
+        """
         rows = []
 
         for part in response.split("--"):
