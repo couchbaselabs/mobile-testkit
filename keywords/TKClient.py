@@ -26,6 +26,33 @@ def log_r(request):
     )
     logging.debug("{}".format(request.text))
 
+def parse_multipart_response(response):
+    """
+    Parses a multipart response where each section looks like below:
+    --------------------------------------------------------------------
+    --5570ab847be212079e2b05bbbfa023da25b07712bda36aec6481bca024f3
+        Content-Type: application/json
+
+        {"_id":"test_ls_db2_0","_rev":"1-9a525c69cafb3d1cdf69545fa5ccfecc","date_time_added":"2016-04-29 13:34:26.346148"}
+
+    Returns a a list of docs {"rows": [ {"_id":"test_ls_db2_0","_rev":"1-9a525c69cafb3d1cdf69545fa5ccfecc" ... } ] }
+    """
+    rows = []
+
+    for part in response.split("--"):
+
+        part_lines = part.splitlines()
+        if part_lines:
+            doc = part_lines[-1]
+            try:
+                doc_obj = json.loads(doc)
+                rows.append(doc_obj)
+            except Exception as e:
+                # A few lines from the response can't be parsed as docs
+                logging.debug("doc_obj: {} e: {}".format(doc_obj, e))
+
+    return {"rows": rows}
+
 class TKClient:
 
     def __init__(self):
@@ -125,10 +152,9 @@ class TKClient:
         else:
             raise TypeError("Verify Docs Preset expects a list or dict of expected docs")
 
-
         start = time.time()
-
         while True:
+
             if time.time() - start > CLIENT_REQUEST_TIMEOUT:
                 raise Exception("Verify Docs Present: TIMEOUT")
 
@@ -152,7 +178,7 @@ class TKClient:
                 log_r(resp)
                 resp.raise_for_status()
 
-                resp_obj = self.parse_multipart_response(resp.text)
+                resp_obj = parse_multipart_response(resp.text)
 
             # See any docs were not retureed
             all_docs_returned = True
@@ -179,33 +205,61 @@ class TKClient:
             assert(expected_doc_map == resp_docs), "Unable to verify docs present. Dictionaries are not equal"
             break
 
+    def verify_docs_in_changes(self, url, db, expected_docs, listener=False):
 
-    def parse_multipart_response(self, response):
-        """
-        Parses a multipart response where each section looks like below:
-        --------------------------------------------------------------------
-        --5570ab847be212079e2b05bbbfa023da25b07712bda36aec6481bca024f3
-            Content-Type: application/json
+        if isinstance(expected_docs, list):
+            # Create single dictionary for comparison
+            expected_doc_map = {
+                k: v for expected_doc_dict in expected_docs for k, v in expected_doc_dict.iteritems()
+                }
+        elif isinstance(expected_docs, dict):
+            expected_doc_map = expected_docs
+        else:
+            raise TypeError("Verify Docs Preset expects a list or dict of expected docs")
 
-            {"_id":"test_ls_db2_0","_rev":"1-9a525c69cafb3d1cdf69545fa5ccfecc","date_time_added":"2016-04-29 13:34:26.346148"}
+        start = time.time()
+        last_seq = 0
+        while True:
 
-        Returns a a list of docs {"rows": [ {"_id":"test_ls_db2_0","_rev":"1-9a525c69cafb3d1cdf69545fa5ccfecc" ... } ] }
-        """
-        rows = []
+            if time.time() - start > CLIENT_REQUEST_TIMEOUT:
+                raise Exception("Verify Docs In Changes: TIMEOUT")
 
-        for part in response.split("--"):
+            body = {
+                "feed": "longpoll",
+                "since": last_seq
+            }
+            resp = self._session.post("{}/{}/_changes".format(url, db), data=json.dumps(body))
+            log_r(resp)
+            resp.raise_for_status()
+            resp_obj = resp.json()
 
-            part_lines = part.splitlines()
-            if part_lines:
-                doc = part_lines[-1]
-                try:
-                    doc_obj = json.loads(doc)
-                    rows.append(doc_obj)
-                except Exception as e:
-                    # A few lines from the response can't be parsed as docs
-                    logging.debug("doc_obj: {} e: {}".format(doc_obj, e))
+            missing_expected_docs = []
+            for resp_doc in resp_obj["results"]:
+                # Check changes results contain a doc in the expected docs
+                if resp_doc["id"] in expected_doc_map:
+                    # Check that the rev of the changes docs matches the expected docs rev
+                    for resp_doc_change in resp_doc["changes"]:
+                        if resp_doc_change["rev"] == expected_doc_map[resp_doc["id"]]["rev"]:
+                            # expected doc with expected revision found in changes, cross out doc from expected docs
+                            del expected_doc_map[resp_doc["id"]]
+                        else:
+                            # expected rev not found
+                            logging.debug("Found doc: {} in changes but could not find expected rev")
+                else:
+                    missing_expected_docs.append(resp_doc)
 
-        return {"rows": rows}
+            logging.debug("Missing docs: {}".format(expected_doc_map))
+
+            if len(expected_doc_map) == 0:
+                # All expected docs have been crossed out
+                break
+
+            # update last sequence and continue
+            last_seq = resp_obj["last_seq"]
+            logging.debug(last_seq)
+
+            time.sleep(1)
+
 
 
 
