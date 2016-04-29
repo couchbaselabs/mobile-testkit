@@ -123,85 +123,83 @@ class TKClient:
         else:
             raise TypeError("Verify Docs Preset expects a list or dict of expected docs")
 
-        if listener:
 
-            data = {"keys": expected_doc_map.keys()}
-            start = time.time()
+        start = time.time()
 
-            while True:
-                if time.time() - start > CLIENT_REQUEST_TIMEOUT:
-                    raise Exception("Verify Docs Present: TIMEOUT")
+        while True:
+            if time.time() - start > CLIENT_REQUEST_TIMEOUT:
+                raise Exception("Verify Docs Present: TIMEOUT")
 
+            if listener:
+
+                data = {"keys": expected_doc_map.keys()}
                 resp = self._session.post("{}/{}/_all_docs".format(url, db), data=json.dumps(data))
                 log_r(resp)
                 resp.raise_for_status()
                 resp_obj = resp.json()
 
-                # See any docs were not retureed
-                all_docs_returned = True
-                missing_docs = []
-                for resp_doc in resp_obj["rows"]:
-                    if "error" in resp_doc:
-                        missing_docs.append(resp_doc)
-                        all_docs_returned = False
+            else:
 
-                # Issue the request again, docs my still be replicating
-                if not all_docs_returned:
-                    logging.info("Not all docs present. Retrying")
-                    logging.info(missing_docs)
-                    time.sleep(1)
-                    continue
-
-                resp_docs = {}
-                for resp_doc in resp_obj["rows"]:
-                    resp_docs[resp_doc["id"]] = { "rev": resp_doc["value"]["rev"] }
-
-                assert(expected_doc_map == resp_docs), "Unable to verify docs present. Dictionaries are not equal"
-                break
-
-        else:
-
-            # Constuct _bulk_get body
-            bulk_get_body_id_list = []
-            for key in expected_doc_map.keys():
-                bulk_get_body_id_list.append({"id":key})
-            bulk_get_body = {"docs": bulk_get_body_id_list}
-
-            start = time.time()
-            while True:
-                if time.time() - start > CLIENT_REQUEST_TIMEOUT:
-                    raise Exception("Verify Docs Present: TIMEOUT")
+                # Constuct _bulk_get body
+                bulk_get_body_id_list = []
+                for key in expected_doc_map.keys():
+                    bulk_get_body_id_list.append({"id": key})
+                bulk_get_body = {"docs": bulk_get_body_id_list}
 
                 resp = self._session.post("{}/{}/_bulk_get".format(url, db), data=json.dumps(bulk_get_body))
                 log_r(resp)
                 resp.raise_for_status()
-                resp_obj = resp.json()
 
-                logging.info("RESP")
-                logging.info(resp_obj)
+                resp_obj = self.parse_multipart_response(resp.text)
 
-                # See if any docs were not returned
-                # all_docs_returned = True
-                # missing_docs = []
-                # for resp_doc in resp_obj["rows"]:
-                #     if "error" in resp_doc:
-                #         missing_docs.append(resp_doc)
-                #         all_docs_returned = False
-                #
-                # # Issue the request again, docs my still be replicating
-                # if not all_docs_returned:
-                #     logging.info("Not all docs present. Retrying")
-                #     logging.info(missing_docs)
-                #     time.sleep(1)
-                #     continue
-                #
-                # resp_docs = {}
-                # for resp_doc in resp_obj["rows"]:
-                #     resp_docs[resp_doc["id"]] = {"rev": resp_doc["value"]["rev"]}
-                #
-                # assert (expected_doc_map == resp_docs), "Unable to verify docs present. Dictionaries are not equal"
-                # break
+            # See any docs were not retureed
+            all_docs_returned = True
+            missing_docs = []
+            for resp_doc in resp_obj["rows"]:
+                if "error" in resp_doc:
+                    missing_docs.append(resp_doc)
+                    all_docs_returned = False
 
+            # Issue the request again, docs my still be replicating
+            if not all_docs_returned:
+                logging.info("Not all docs present. Retrying")
+                logging.info(missing_docs)
+                time.sleep(1)
+                continue
+
+            resp_docs = {}
+            for resp_doc in resp_obj["rows"]:
+                if listener:
+                    resp_docs[resp_doc["id"]] = { "rev": resp_doc["value"]["rev"] }
+                else:
+                    resp_docs[resp_doc["_id"]] = {"rev": resp_doc["_rev"]}
+
+            assert(expected_doc_map == resp_docs), "Unable to verify docs present. Dictionaries are not equal"
+            break
+
+
+    def parse_multipart_response(self, response):
+        """ Parses a multipart response where each section looks like below
+            --5570ab847be212079e2b05bbbfa023da25b07712bda36aec6481bca024f3
+            Content-Type: application/json
+
+            {"_id":"test_ls_db2_0","_rev":"1-9a525c69cafb3d1cdf69545fa5ccfecc","date_time_added":"2016-04-29 13:34:26.346148"} """
+
+        rows = []
+
+        for part in response.split("--"):
+
+            part_lines = part.splitlines()
+            if part_lines:
+                doc = part_lines[-1]
+                try:
+                    doc_obj = json.loads(doc)
+                    rows.append(doc_obj)
+                except Exception as e:
+                    # A few lines from the response can't be parsed as docs
+                    logging.debug("doc_obj: {} e: {}".format(doc_obj, e))
+
+        return {"rows": rows}
 
 
 
