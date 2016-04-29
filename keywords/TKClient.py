@@ -144,9 +144,7 @@ class TKClient:
 
         if isinstance(expected_docs, list):
             # Create single dictionary for comparison
-            expected_doc_map = {
-                k: v for expected_doc_dict in expected_docs for k, v in expected_doc_dict.iteritems()
-            }
+            expected_doc_map = {k: v for expected_doc_dict in expected_docs for k, v in expected_doc_dict.iteritems()}
         elif isinstance(expected_docs, dict):
             expected_doc_map = expected_docs
         else:
@@ -209,9 +207,7 @@ class TKClient:
 
         if isinstance(expected_docs, list):
             # Create single dictionary for comparison
-            expected_doc_map = {
-                k: v for expected_doc_dict in expected_docs for k, v in expected_doc_dict.iteritems()
-                }
+            expected_doc_map = {k: v for expected_doc_dict in expected_docs for k, v in expected_doc_dict.iteritems()}
         elif isinstance(expected_docs, dict):
             expected_doc_map = expected_docs
         else:
