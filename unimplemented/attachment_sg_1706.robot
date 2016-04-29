@@ -15,12 +15,24 @@ Test Attachment Revpos When Ancestor Unavailable
     ...              the body of the revision that originally pushed the document is no
     ...              longer available.  Add a new revision that's not a child of the
     ...              active revision, and validate that it's uploaded successfully.
+    ...              Example:
+    ...                 1. Document is created with attachment at rev-1
+    ...                 2. Document is updated multiple times on the server, goes to rev-4
+    ...                 3. Client attempts to add a new (conflicting) revision 2, with parent rev-1.
+    ...                 4. If the body of rev-1 is no longer available on the server (temporary backup of revision has expired, and is no longer stored
+    ...                   in the in-memory rev cache), we were throwing an error to client
+    ...                   because we couldn't verify based on the _attachments property in rev-1.
+    ...                 5. In this scenario, before returning error, we are now checking if the active revision has a common ancestor with the incoming revision.
+    ...                  If so, we can validate any revpos values equal to or earlier than the common ancestor against the active revision.
+
+
+
     [Tags]           Sanity    Attachments
     ${dburl} =       http://localhost:4985/default
     ${docid} =       TestDoc
 
-    ${rev1id} =       Create Doc With Attachment ${dburl} ${docid}
-    ${revid} =       Update Doc With Attachment Stub ${dburl} ${docid} ${rev1id}
+    ${doc1} =       Create Doc With Attachment  url=${sg_url}  db=${db}  doc_id=${docid}
+    ${revid} =       Update Doc With Attachment Stub ${dburl} ${doc1.id} ${doc1.revid}
     ${revid} =       Update Doc With Attachment Stub ${dburl} ${docid} ${revid}
     ${revid} =       Update Doc With Attachment Stub ${dburl} ${docid} ${revid}
 
@@ -28,10 +40,35 @@ Test Attachment Revpos When Ancestor Unavailable
     ...             version to expire from bucket.  TODO: Add config to reduce the 5 minute expiry time for testing purposes
     Stop Sync Gateway
     Start Sync Gateway
-    Wait 5 minutes
+    Wait five minutes for doc to expire from CBS (or even better, delete the backup document directly via the SDK)
+    (when it's implemented, could also set the expiry config property https://github.com/couchbase/sync_gateway/issues/1729)
 
     Documentation   Create a conflicting revision with revision 1 as ancestor, referencing revpos
     ${revid} =      Update Doc With Conflicting Attachment Stub ${dburl} ${docid} ${rev1id} 2 foo 201
+
+Test Attachment Revpos When Ancestor Unavailable, Active Revision doesn't share ancestor
+    Documentation    Creates a document with an attachment, then updates that document so that
+    ...              the body of the revision that originally pushed the document is no
+    ...              longer available.  Add a new revision that's not a child of the
+    ...              active revision, and validate that it's uploaded successfully.
+    ...              Example:
+    ...                 1. Document is created with no attachment at rev-1
+    ...                 2. Server adds revision with attachment at rev-2 {"hello.txt", revpos=2}
+    ...                 2. Document is updated multiple times on the server, goes to rev-4
+    ...                 3. Client attempts to add a new (conflicting) revision 3a, with ancestors rev-2a (with it's own attachment), rev-1.
+    ...                 4. When client attempts to push rev-3a with attachment stub {"hello.txt", revpos=2}.  Should throw an error, since the revpos
+    ...                 of the attachment is later than the common ancestor (rev-1)
+
+Test Attachments on Docs Rejected By Sync Function
+    Documentation
+    ...  1. Start sync_gateway with sync function that rejects all writes:
+    ...  function(doc, oldDoc) {
+    ...    throw({forbidden:"No writes!"});
+    ...  }
+    ...  2. Create a doc with attachment
+    ...  3. Use CBS sdk to see if attachment doc exists.  Doc ID will look like _sync:att:sha1-Kq5sNclPz7QV2+lfQIuc6R7oRu0= (where the suffix is the digest)
+    ...  4. Assert att doc does not exist
+
 
 
 *** Keywords ***
@@ -87,7 +124,7 @@ Update Doc With Conflicting Attachment Stub
     ...                        "start":${NEW_REV_GEN}
     ...                     }
     ...                    }
-    ${response} = Put Doc ${DB_URL} ${DOC_ID} ${BODY}
+    ${response} = Put Doc ${DB_URL} ${DOC_ID} ${BODY} new_edits==false
     Status Equals    ${response} ${EXPECTED_STATUS}
 
 Put Doc
