@@ -244,7 +244,7 @@ class TKClient:
                 else:
                     missing_expected_docs.append(resp_doc)
 
-            logging.debug("Missing docs: {}".format(expected_doc_map))
+            logging.info("Missing docs: {}".format(expected_doc_map))
 
             if len(expected_doc_map) == 0:
                 # All expected docs have been crossed out
@@ -252,7 +252,7 @@ class TKClient:
 
             # update last sequence and continue
             last_seq = resp_obj["last_seq"]
-            logging.debug(last_seq)
+            logging.info("last_seq: {}".format(last_seq))
 
             time.sleep(1)
 
