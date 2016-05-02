@@ -101,43 +101,8 @@ Teardown Test
     Shutdown Sync Gateway
 
 
-Start LiteServ
-    [Documentation]   Starts LiteServ for a specific platform. The LiteServ binaries are located in deps/.
-    [Timeout]       1 minute
-    ${binary_path} =  Get LiteServ Binary Path
-    Start Process   ${binary_path}  -Log  YES  -LogSync  YES  -LogCBLRouter  YES  -LogSyncVerbose  YES  -LogRemoteRequest  YES
-    ...             alias=liteserv-ios
-    ...             shell=True
-    ...             stdout=${RESULTS}/${TEST_NAME}-${PLATFORM}-liteserv-stdout.log
-    ...             stderr=${RESULTS}/${TEST_NAME}-${PLATFORM}-liteserv-stderr.log
-    Process Should Be Running   handle=liteserv-ios
-    ${ls_url} =  Verify LiteServ Launched
-    [return]  ${ls_url}
 
-Shutdown LiteServ
-    [Documentation]   Starts LiteServ for a specific platform. The LiteServ binaries are located in deps/binaries.
-    [Timeout]       1 minute
-    Terminate Process          handle=liteserv-ios
-    Process Should Be Stopped  handle=liteserv-ios
 
-Start Sync Gateway
-    [Documentation]   Starts sync_gateway with a provided configuration. The sync_gateway binary is located in deps/binaries.
-    [Timeout]       1 minute
-    [Arguments]  ${sync_gateway_config}
-    ${binary_path} =  Get Sync Gateway Binary Path
-    Start Process   ${binary_path}  ${sync_gateway_config}
-    ...             alias=sync_gateway
-    ...             stdout=${RESULTS}/${TEST_NAME}-sync-gateway-stdout.log
-    ...             stderr=${RESULTS}/${TEST_NAME}-sync-gateway-stderr.log
-    Process Should Be Running   handle=sync_gateway
-    ${sg_url} =  Verify Sync Gateway Launched
-    [return]    ${sg_url}
-
-Shutdown Sync Gateway
-    [Documentation]   Starts LiteServ for a specific platform. The LiteServ binaries are located in deps/binaries.
-    [Timeout]       1 minute
-    Terminate Process          handle=sync_gateway
-    Process Should Be Stopped  handle=sync_gateway
 
 
 

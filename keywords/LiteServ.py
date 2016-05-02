@@ -31,11 +31,10 @@ class LiteServ:
         if self._platform == "macosx":
             self.extracted_file_name = "couchbase-lite-macosx-{}".format(self._version_build)
         elif self._platform == "android":
-            # TODO
-            pass
+            raise NotImplementedError("TODO")
         elif self._platform == "net":
             # TODO
-            pass
+            raise NotImplementedError("TODO")
 
         self._url = "http://{}:{}".format(hostname, port)
         logging.info("Launching Listener on {}".format(self._url))
