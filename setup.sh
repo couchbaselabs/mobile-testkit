@@ -1,3 +1,11 @@
+# See if virtual env is installed
+virtualenv
+if [ $? -ne 0 ]; then
+    # Install virtual env
+    "You need to 'pip install virtualenv' on the machine running tests"
+    exit 1
+fi
+
 # Setup virtual env
 virtualenv -p python venv
 source venv/bin/activate
