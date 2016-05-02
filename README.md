@@ -77,14 +77,12 @@ Python 2.7.10
 
 **Install libcouchbase**
 
-If your controlling maching is Mac
-
+On MacOSX
 ```
-$ brew install libcouchbase 
+$ brew install libcouchbase
 ```
 
-If your controlling machine is CentOS,
-
+On CentOS7
 ```
 $ sudo yum install python-devel
 ```
@@ -110,15 +108,14 @@ $ [sudo] pip install virtualenv
 ```
 $ cd mobile-testkit/
 $ virtualenv -p /usr/bin/python2.7 venv
-$ source venv/bin/activate
-$ pip install -r requirements.txt
 ```
 
-** Add current directory to $PYTHONPATH. This will pick the custom libraries and allow you to use them
+Setup PATH and PYTHONPATH
+```
+source setup.sh
+```
 
-```
-$ export PYTHONPATH=$PYTHONPATH:.
-```
+If you plan on doing development, it may be helpful to add the PYTHONPATH env variables to you .bashrc file so that you do not have to run setup everytime you open a new shell.
 
 ### Development Environment
 ===========================
