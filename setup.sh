@@ -1,5 +1,5 @@
 # See if virtual env is installed
-virtualenv --version
+/usr/bin/python -m virtualenv --version
 if [ $? -ne 0 ]; then
     # Install virtual env
     "You need to 'pip install virtualenv' on the machine running tests"
@@ -7,7 +7,7 @@ if [ $? -ne 0 ]; then
 fi
 
 # Setup virtual env
-virtualenv -p python venv
+virtualenv -p /usr/bin/python venv
 source venv/bin/activate
 
 # Get python version
