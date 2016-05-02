@@ -60,11 +60,28 @@ class TKClient:
         self._session = Session()
         self._session.headers = headers
 
-    def create_database(self, url, name, listener=False):
+    def get_server_type(self, url):
+        resp = self._session.get(url)
+        log_r(resp)
+        resp.raise_for_status()
+        resp_obj = resp.json()
 
-        if listener:
-            resp = self._session.put("{}/{}/".format(url, name))
+        if resp_obj["vendor"]["name"] == "Couchbase Sync Gateway":
+            logging.info("ServerType={}".format(ServerType.syncgateway))
+            return ServerType.syncgateway
+        elif resp_obj["vendor"]["name"] == "Couchbase Lite (Objective-C)":
+            logging.info("ServerType={}".format(ServerType.listener))
+            return ServerType.listener
         else:
+            raise ValueError("Unsupported couchbase lite server type")
+
+    def create_database(self, url, name):
+
+        server_type = self.get_server_type(url)
+
+        if server_type == ServerType.listener:
+            resp = self._session.put("{}/{}/".format(url, name))
+        elif server_type == ServerType.syncgateway:
             data = {
                 "name": "{}".format(name),
                 "server": "walrus:",
@@ -137,10 +154,12 @@ class TKClient:
         log_r(resp)
         resp.raise_for_status()
 
-    def verify_docs_present(self, url, db, expected_docs, listener=False):
+    def verify_docs_present(self, url, db, expected_docs):
         """
         Verifies that the docs passed in the function exist in the database
         """
+
+        server_type = self.get_server_type(url)
 
         if isinstance(expected_docs, list):
             # Create single dictionary for comparison
@@ -156,7 +175,7 @@ class TKClient:
             if time.time() - start > CLIENT_REQUEST_TIMEOUT:
                 raise Exception("Verify Docs Present: TIMEOUT")
 
-            if listener:
+            if server_type == ServerType.listener:
 
                 data = {"keys": expected_doc_map.keys()}
                 resp = self._session.post("{}/{}/_all_docs".format(url, db), data=json.dumps(data))
@@ -164,7 +183,7 @@ class TKClient:
                 resp.raise_for_status()
                 resp_obj = resp.json()
 
-            else:
+            elif server_type == ServerType.syncgateway:
 
                 # Constuct _bulk_get body
                 bulk_get_body_id_list = []
@@ -195,15 +214,15 @@ class TKClient:
 
             resp_docs = {}
             for resp_doc in resp_obj["rows"]:
-                if listener:
+                if server_type == ServerType.listener:
                     resp_docs[resp_doc["id"]] = { "rev": resp_doc["value"]["rev"] }
-                else:
+                elif server_type == ServerType.syncgateway:
                     resp_docs[resp_doc["_id"]] = {"rev": resp_doc["_rev"]}
 
             assert(expected_doc_map == resp_docs), "Unable to verify docs present. Dictionaries are not equal"
             break
 
-    def verify_docs_in_changes(self, url, db, expected_docs, listener=False):
+    def verify_docs_in_changes(self, url, db, expected_docs):
 
         if isinstance(expected_docs, list):
             # Create single dictionary for comparison
@@ -213,18 +232,27 @@ class TKClient:
         else:
             raise TypeError("Verify Docs Preset expects a list or dict of expected docs")
 
+        server_type = self.get_server_type(url)
+
         start = time.time()
         last_seq = 0
         while True:
 
+            logging.info(time.time() - start)
+
             if time.time() - start > CLIENT_REQUEST_TIMEOUT:
                 raise Exception("Verify Docs In Changes: TIMEOUT")
 
-            body = {
-                "feed": "longpoll",
-                "since": last_seq
-            }
-            resp = self._session.post("{}/{}/_changes".format(url, db), data=json.dumps(body))
+            if server_type == ServerType.listener:
+                resp = self._session.get("{}/{}/_changes?feed=longpoll&since={}".format(url, db, last_seq))
+
+            elif server_type == ServerType.syncgateway:
+                body = {
+                    "feed": "longpoll",
+                    "since": last_seq
+                }
+                resp = self._session.post("{}/{}/_changes".format(url, db), data=json.dumps(body))
+
             log_r(resp)
             resp.raise_for_status()
             resp_obj = resp.json()
@@ -251,7 +279,7 @@ class TKClient:
                 break
 
             # update last sequence and continue
-            last_seq = resp_obj["last_seq"]
+            last_seq = int(resp_obj["last_seq"])
             logging.info("last_seq: {}".format(last_seq))
 
             time.sleep(1)

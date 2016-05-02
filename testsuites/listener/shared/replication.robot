@@ -37,8 +37,8 @@ Test multiple client dbs with single sync_gateway db
     Log  Using LiteServ: ${ls_url}
     Log  Using Sync Gateway: ${sg_url}
 
-    ${ls_db1} =  Create Database  url=${ls_url}  name=ls_db1  listener=True
-    ${ls_db2} =  Create Database  url=${ls_url}  name=ls_db2  listener=True
+    ${ls_db1} =  Create Database  url=${ls_url}  name=ls_db1
+    ${ls_db2} =  Create Database  url=${ls_url}  name=ls_db2
     ${sg_db} =   Create Database  url=${sg_url_admin}  name=sg_db
 
     # Setup continuous push / pull replication from ls_db1 to sg_db
@@ -72,13 +72,14 @@ Test multiple client dbs with single sync_gateway db
 
     @{ls_db1_db2_docs} =  Create List  ${ls_db1_docs}  ${ls_db2_docs}
 
-    Verify Docs Present  url=${ls_url}  db=${ls_db1}  expected_docs=@{ls_db1_db2_docs}  listener=${True}
-    Verify Docs Present  url=${ls_url}  db=${ls_db2}  expected_docs=@{ls_db1_db2_docs}  listener=${True}
+    Verify Docs Present  url=${ls_url}  db=${ls_db1}  expected_docs=@{ls_db1_db2_docs}
+    Verify Docs Present  url=${ls_url}  db=${ls_db2}  expected_docs=@{ls_db1_db2_docs}
     Verify Docs Present  url=${sg_url_admin}  db=${sg_db}  expected_docs=@{ls_db1_db2_docs}
 
-    Verify Docs In Changes  url=${ls_url}  db=${ls_db1}  expected_docs=@{ls_db1_db2_docs}  listener=${True}
-    Verify Docs In Changes  url=${ls_url}  db=${ls_db2}  expected_docs=@{ls_db1_db2_docs}  listener=${True}
-    #Verify Docs In Changes  url=${sg_url_admin}  db=${sg_db}  expected_docs=@{ls_db1_db2_docs}
+    Verify Docs In Changes  url=${sg_url_admin}  db=${sg_db}  expected_docs=@{ls_db1_db2_docs}
+    Verify Docs In Changes  url=${ls_url}  db=${ls_db1}  expected_docs=@{ls_db1_db2_docs}
+    Verify Docs In Changes  url=${ls_url}  db=${ls_db2}  expected_docs=@{ls_db1_db2_docs}
+
 
     # Execute doc adds asynchronously
 #    ${doc_add_ls_db1_handle} =  Start Async  Add Docs  url=${ls_url}  db=${ls_db1}  number=${500}  id_prefix=test
