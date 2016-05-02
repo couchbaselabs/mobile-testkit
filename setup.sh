@@ -1,5 +1,5 @@
 # See if virtual env is installed
-virtualenv
+virtualenv --version
 if [ $? -ne 0 ]; then
     # Install virtual env
     "You need to 'pip install virtualenv' on the machine running tests"
