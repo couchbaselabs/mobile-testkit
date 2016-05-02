@@ -25,7 +25,8 @@ class CouchbaseServerConfig:
             "3.1.4",
             "3.1.5",
             "4.0.0",
-            "4.1.0"
+            "4.1.0",
+            "4.1.1"
         ]
 
     def get_baseurl_package(self):
