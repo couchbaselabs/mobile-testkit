@@ -11,12 +11,9 @@ Library           ${KEYWORDS}/TKClient.py
 Library           ${KEYWORDS}/LiteServ.py
 ...                 platform=${PLATFORM}
 ...                 version_build=${LITESERV_VERSION}
-...                 hostname=${LITESERV_HOSTNAME}
-...                 port=${LITESERV_PORT}
 
 Library           ${KEYWORDS}/SyncGateway.py
 ...                 version_build=${SYNC_GATEWAY_VERSION}
-...                 hostname=${SYNC_GATEWAY_HOSTNAME}
 
 # Passed in at runtime
 Suite Setup       Setup Suite
@@ -88,9 +85,13 @@ Setup Suite
     Download Sync Gateway
 
 Setup Test
-    ${ls_url} =  Start LiteServ
+    ${ls_url} =  Start LiteServ  host=${LITESERV_HOST}  port=${LITESERV_PORT}
     Set Test Variable  ${ls_url}
-    ${sg_url}  ${sg_url_admin} =  Start Sync Gateway  ${SYNC_GATEWAY_CONFIG}
+    ${sg_url}  ${sg_url_admin} =  Start Sync Gateway
+    ...  config=${SYNC_GATEWAY_CONFIG}
+    ...  host=${SYNC_GATEWAY_HOST}
+    ...  port=${SYNC_GATEWAY_PORT}
+    ...  admin_port=${SYNC_GATEWAY_ADMIN_PORT}
     Set Test Variable  ${sg_url}
     Set Test Variable  ${sg_url_admin}
 

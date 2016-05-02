@@ -78,15 +78,17 @@ Install Sync Gateway
 Start LiteServ
     [Documentation]   Starts LiteServ for a specific platform.
     ...  The LiteServ binaries are located in deps/.
+    [Arguments]  ${host}  ${port}
     [Timeout]       1 minute
     ${binary_path} =  Get LiteServ Binary Path
-    Start Process   ${binary_path}  -Log  YES  -LogSync  YES  -LogCBLRouter  YES  -LogSyncVerbose  YES  -LogRemoteRequest  YES
+    Start Process   ${binary_path}  --port  ${port}
+    ...             -Log  YES  -LogSync  YES  -LogCBLRouter  YES  -LogSyncVerbose  YES  -LogRemoteRequest  YES
     ...             alias=liteserv-ios
     ...             shell=True
     ...             stdout=${RESULTS}/${TEST_NAME}-${PLATFORM}-liteserv-stdout.log
     ...             stderr=${RESULTS}/${TEST_NAME}-${PLATFORM}-liteserv-stderr.log
     Process Should Be Running   handle=liteserv-ios
-    ${ls_url} =  Verify LiteServ Launched
+    ${ls_url} =  Verify LiteServ Launched  host=${host}  port=${port}
     [return]  ${ls_url}
 
 Shutdown LiteServ
@@ -98,17 +100,20 @@ Shutdown LiteServ
 
 # sync_gateway keywords
 Start Sync Gateway
-    [Documentation]   Starts sync_gateway with a provided configuration.
+    [Documentation]   Starts sync_gateway with a provided configuration on a host and port(s).
     ...  The sync_gateway binary is located in deps/binaries.
     [Timeout]       1 minute
-    [Arguments]  ${sync_gateway_config}
+    [Arguments]  ${config}  ${host}  ${port}  ${admin_port}
     ${binary_path} =  Get Sync Gateway Binary Path
-    Start Process   ${binary_path}  ${sync_gateway_config}
+    Start Process   ${binary_path}
+    ...             -interface       ${host}:${port}
+    ...             -adminInterface  ${host}:${admin_port}
+    ...             ${config}
     ...             alias=sync_gateway
     ...             stdout=${RESULTS}/${TEST_NAME}-sync-gateway-stdout.log
     ...             stderr=${RESULTS}/${TEST_NAME}-sync-gateway-stderr.log
     Process Should Be Running   handle=sync_gateway
-    ${sg_url} =  Verify Sync Gateway Launched
+    ${sg_url} =  Verify Sync Gateway Launched  host=${host}  port=${port}  admin_port=${admin_port}
     [return]    ${sg_url}
 
 Shutdown Sync Gateway

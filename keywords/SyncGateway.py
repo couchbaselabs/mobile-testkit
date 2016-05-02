@@ -18,12 +18,11 @@ def version_and_build(full_version):
 
 class SyncGateway:
 
-    def __init__(self, version_build, hostname):
+    def __init__(self, version_build):
 
         self._version_build = version_build
         self.extracted_file_name = "couchbase-sync_gateway-{}".format(self._version_build)
-        self._url = "http://{}:4984".format(hostname)
-        self._admin_url = "http://{}:4985".format(hostname)
+
         self._session = Session()
 
     def download_sync_gateway(self):
@@ -72,12 +71,16 @@ class SyncGateway:
         logging.info("sync_gateway binary path: {}".format(sync_gateway_binary_path))
         return sync_gateway_binary_path
 
-    def verify_sync_gateway_launched(self):
+    def verify_sync_gateway_launched(self, host, port, admin_port):
+
+        url = "http://{}:{}".format(host, port)
+        admin_url = "http://{}:{}".format(host, admin_port)
+
         count = 0
         wait_time = 1
         while count < MAX_RETRIES:
             try:
-                resp = self._session.get(self._url)
+                resp = self._session.get(url)
                 # If request does not throw, exit retry loop
                 break
             except ConnectionError as ce:
@@ -87,7 +90,7 @@ class SyncGateway:
                 wait_time *= 2
 
         if count == MAX_RETRIES:
-            raise RuntimeError("Could not connect to LiteServ")
+            raise RuntimeError("Could not connect to Sync Gateway")
 
         # Get version from running sync_gateway and compare with expected version
         resp_json = resp.json()
@@ -103,7 +106,7 @@ class SyncGateway:
 
         logging.info("{} is running".format(sync_gateway_version))
 
-        return self._url, self._admin_url
+        return url, admin_url
 
     def get_sync_gateway_document_count(self, db):
         docs = self.admin.get_all_docs(db)

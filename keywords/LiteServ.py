@@ -19,7 +19,7 @@ def version_and_build(full_version):
 
 class LiteServ:
 
-    def __init__(self, platform, version_build, hostname, port):
+    def __init__(self, platform, version_build):
 
         supported_platforms = ["macosx", "android", "net"]
         if platform not in supported_platforms:
@@ -35,12 +35,6 @@ class LiteServ:
         elif self._platform == "net":
             # TODO
             raise NotImplementedError("TODO")
-
-        self._url = "http://{}:{}".format(hostname, port)
-        logging.info("Launching Listener on {}".format(self._url))
-
-        # self._retry_session = Session()
-        # self._retry_session.mount('https://', HTTPAdapter(max_retries=MAX_RETRIES))
 
         self._session = Session()
 
@@ -83,7 +77,6 @@ class LiteServ:
         # Remove .zip file
         os.remove("{}/{}".format(BINARY_DIR, file_name))
 
-
     def get_liteserv_binary_path(self):
 
         if self._platform == "macosx":
@@ -103,12 +96,16 @@ class LiteServ:
         shutil.rmtree(self.extracted_file_name)
         os.chdir("../..")
 
-    def verify_liteserv_launched(self):
+    def verify_liteserv_launched(self, host, port):
+
+        url = "http://{}:{}".format(host, port)
+        logging.info("Verifying LiteServ running at {}".format(url))
+
         count = 0
         wait_time = 1
         while count < MAX_RETRIES:
             try:
-                resp = self._session.get(self._url)
+                resp = self._session.get(url)
                 # If request does not throw, exit retry loop
                 break
             except ConnectionError as ce:
@@ -132,4 +129,4 @@ class LiteServ:
 
         logging.info ("LiteServ: {} is running".format(lite_version))
 
-        return self._url
+        return url
