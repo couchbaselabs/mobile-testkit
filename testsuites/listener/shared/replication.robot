@@ -32,7 +32,7 @@ ${SYNC_GATEWAY_CONFIG}  ${SYNC_GATEWAY_CONFIGS}/walrus.json
 Test multiple client dbs with single sync_gateway db
     [Documentation]
     [Tags]           sanity     listener    ${HOSTNAME}    syncgateway
-    # [Timeout]        5 minutes
+    [Timeout]        5 minutes
 
     Log  Using LiteServ: ${ls_url}
     Log  Using Sync Gateway: ${sg_url}
@@ -72,35 +72,14 @@ Test multiple client dbs with single sync_gateway db
 
     @{ls_db1_db2_docs} =  Create List  ${ls_db1_docs}  ${ls_db2_docs}
 
-    Verify Docs Present  url=${ls_url}  db=${ls_db1}  expected_docs=@{ls_db1_db2_docs}
-    Verify Docs Present  url=${ls_url}  db=${ls_db2}  expected_docs=@{ls_db1_db2_docs}
-    Verify Docs Present  url=${sg_url_admin}  db=${sg_db}  expected_docs=@{ls_db1_db2_docs}
+    Verify Docs Present  url=${ls_url}        db=${ls_db1}  expected_docs=@{ls_db1_db2_docs}
+    Verify Docs Present  url=${ls_url}        db=${ls_db2}  expected_docs=@{ls_db1_db2_docs}
+    Verify Docs Present  url=${sg_url_admin}  db=${sg_db}   expected_docs=@{ls_db1_db2_docs}
 
-    Verify Docs In Changes  url=${sg_url_admin}  db=${sg_db}  expected_docs=@{ls_db1_db2_docs}
-    Verify Docs In Changes  url=${ls_url}  db=${ls_db1}  expected_docs=@{ls_db1_db2_docs}
-    Verify Docs In Changes  url=${ls_url}  db=${ls_db2}  expected_docs=@{ls_db1_db2_docs}
+    Verify Docs In Changes  url=${sg_url_admin}  db=${sg_db}   expected_docs=@{ls_db1_db2_docs}
+    Verify Docs In Changes  url=${ls_url}        db=${ls_db1}  expected_docs=@{ls_db1_db2_docs}
+    Verify Docs In Changes  url=${ls_url}        db=${ls_db2}  expected_docs=@{ls_db1_db2_docs}
 
-
-    # Execute doc adds asynchronously
-#    ${doc_add_ls_db1_handle} =  Start Async  Add Docs  url=${ls_url}  db=${ls_db1}  number=${500}  id_prefix=test
-#    Log To Console  ${doc_add_ls_db1_handle}
-#    ${doc_add_ls_db2_handle} =  Start Async  Add Docs  url=${ls_url}  db=${ls_db2}  number=${500}  id_prefix=test
-#    Log To Console  ${doc_add_ls_db2_handle}
-#
-#    # Wait for doc adds to complete
-#    ${ls_db1_docs} =  Get Async  ${doc_add_ls_db1_handle}
-#    ${ls_db2_docs} =  Get Async  ${doc_add_ls_db2_handle}
-
-#    Start Continuous Push / Pull Replication  ${ls_db2}  ${sg_db}
-
-
-
-#    Verify Number of Docs  ${ls_db1}  ${500}
-#    Verify Number of Docs  ${ls_db2}  ${500}
-#    @{all_docs} =  Create List  ${ls_db0_docs}  ${ls_db1_docs}
-#    Verify Docs in Sync Gateway Changes Feed  @{all_docs}
-#    Verify Docs in LiteServ Database  ${ls_dbs[0]}  @{all_docs}
-#    Verify Docs in LiteServ Database  ${ls_dbs[1]}  @{all_docs}
 
 *** Keywords ***
 Setup Suite
