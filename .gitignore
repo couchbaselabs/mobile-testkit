@@ -48,3 +48,4 @@ libraries/provision/ansible/playbooks/ansible.cfg
 debug.txt
 
 deps/*
+!deps/binaries/README.md

@@ -6,6 +6,8 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
+currentdir=`pwd`
+
 # Setup virtual env
 virtualenv -p /usr/bin/python venv
 source venv/bin/activate
@@ -24,5 +26,9 @@ fi
 pip install -r requirements.txt
 
 # set python env
-currentdir=`pwd`
 export PYTHONPATH=$PYTHONPATH:$currentdir/
+export PYTHONPATH=$PYTHONPATH:$currentdir/libraries/
+export PYTHONPATH=$PYTHONPATH:$currentdir/libraries/data
+export PYTHONPATH=$PYTHONPATH:$currentdir/libraries/testkit
+export PYTHONPATH=$PYTHONPATH:$currentdir/libraries/provision
+export PYTHONPATH=$PYTHONPATH:$currentdir/libraries/utilities
