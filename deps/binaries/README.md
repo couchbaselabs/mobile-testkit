@@ -1,1 +1,1 @@
-giLocation for dependencies required to run robot tests
+Location for dependencies required to run robot tests
