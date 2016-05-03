@@ -66,14 +66,19 @@ class TKClient:
         resp.raise_for_status()
         resp_obj = resp.json()
 
-        if resp_obj["vendor"]["name"] == "Couchbase Sync Gateway":
-            logging.info("ServerType={}".format(ServerType.syncgateway))
-            return ServerType.syncgateway
-        elif resp_obj["vendor"]["name"] == "Couchbase Lite (Objective-C)":
-            logging.info("ServerType={}".format(ServerType.listener))
-            return ServerType.listener
-        else:
-            raise ValueError("Unsupported couchbase lite server type")
+        try:
+            if resp_obj["vendor"]["name"] == "Couchbase Sync Gateway":
+                logging.info("ServerType={}".format(ServerType.syncgateway))
+                return ServerType.syncgateway
+            elif resp_obj["vendor"]["name"] == "Couchbase Lite (Objective-C)":
+                logging.info("ServerType={}".format(ServerType.listener))
+                return ServerType.listener
+        except KeyError as ke:
+            # Android LiteServ
+            if resp_obj["CBLite"] == "Welcome":
+                return ServerType.listener
+
+        raise ValueError("Unsupported couchbase lite server type")
 
     def create_database(self, url, name):
 

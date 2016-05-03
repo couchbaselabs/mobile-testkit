@@ -143,14 +143,26 @@ class LiteServ:
             raise RuntimeError("Could not connect to LiteServ")
 
         resp_json = resp.json()
-        lite_version = resp_json["vendor"]["version"]
+        try:
+            # Mac OSX
+            lite_version = resp_json["vendor"]["version"]
+            is_macosx = True
+        except KeyError as e:
+            # Android
+            lite_version = resp_json["version"]
+            is_macosx = False
 
         # Validate that the version launched is the expected LiteServ version
-        # LiteServ: 1.2.1 (build 13)
+        # Mac OSX - LiteServ: 1.2.1 (build 13)
         version, build = version_and_build(self._version_build)
-        expected_version = "{} (build {})".format(version, build)
-        if lite_version != expected_version:
-            raise ValueError("Expected version does not match actual version: Expected={}  Actual={}".format(expected_version, lite_version))
+        if is_macosx:
+            expected_version = "{} (build {})".format(version, build)
+            if lite_version != expected_version:
+                raise ValueError("Expected version does not match actual version: Expected={}  Actual={}".format(expected_version, lite_version))
+        else:
+            expected_version = version
+            if lite_version != expected_version:
+                raise ValueError("Expected version does not match actual version: Expected={}  Actual={}".format(expected_version, lite_version))
 
         logging.info ("LiteServ: {} is running".format(lite_version))
 
