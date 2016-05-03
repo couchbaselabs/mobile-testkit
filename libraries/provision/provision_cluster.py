@@ -61,16 +61,13 @@ def provision_cluster(couchbase_server_config, sync_gateway_config, install_deps
 if __name__ == "__main__":
     usage = """usage: python provision_cluster.py
     --server-version=<server_version_number>
-    --server-build=<server_build_number>
     --sync-gateway-version=<sync_gateway_version_number>
-    --sync-gateway-build=<sync_gateway_build_number>
 
     or
 
     usage: python provision_cluster.py
     --server-version=<server_version_number>
-    --server-build=<server_build_number>
-    --branch=<sync_gateway_branch_to_build>
+    --sync-gateway-commit=<sync_gateway_commit_to_build>
     """
 
     parser = OptionParser(usage=usage)
@@ -85,20 +82,12 @@ if __name__ == "__main__":
                       action="store", type="string", dest="sync_gateway_version", default=None,
                       help="sync_gateway release version to download (ex. 1.2.0-5)")
 
-    parser.add_option("", "--sync-gateway-dev-build-url",
-                      action="store", type="string", dest="sync_gateway_dev_build_url", default=None,
-                      help="sync_gateway dev build url to download (eg, feature/distributed_index)")
-
-    parser.add_option("", "--sync-gateway-dev-build-number",
-                      action="store", type="string", dest="sync_gateway_dev_build_number", default=None,
-                      help="sync_gateway dev build number (eg, 345)")
-
     parser.add_option("", "--sync-gateway-config-file",
                       action="store", type="string", dest="sync_gateway_config_file", default=default_sync_gateway_config,
                       help="path to your sync_gateway_config file, uses 'resources/sync_gateway_configs/sync_gateway_default.json' by default")
 
-    parser.add_option("", "--sync-gateway-branch",
-                      action="store", type="string", dest="source_branch", default=None,
+    parser.add_option("", "--sync-gateway-commit",
+                      action="store", type="string", dest="source_commit", default=None,
                       help="sync_gateway branch to checkout and build")
 
     parser.add_option("", "--install-deps", action="store_true", dest="install_deps", default=False,
@@ -138,11 +127,9 @@ if __name__ == "__main__":
         sync_gateway_build = version_build[1]
 
     sync_gateway_config = SyncGatewayConfig(
-        version=sync_gateway_version,
+        version_number=sync_gateway_version,
         build_number=sync_gateway_build,
-        dev_build_url=opts.sync_gateway_dev_build_url,
-        dev_build_number=opts.sync_gateway_dev_build_number,
-        branch=opts.source_branch,
+        commit=opts.source_commit,
         build_flags=opts.build_flags,
         config_path=opts.sync_gateway_config_file,
         skip_bucketflush=opts.skip_bucketflush
