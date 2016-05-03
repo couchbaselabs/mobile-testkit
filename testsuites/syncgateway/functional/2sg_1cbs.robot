@@ -4,7 +4,6 @@ Resource    resources/common.robot
 Library     Process
 Library     OperatingSystem
 Library     ${Libraries}/NetworkUtils.py
-Library     ${Libraries}/ClusterKeywords.py
 Library     ${Libraries}/LoggingKeywords.py
 
 Library     test_bucket_shadow.py
@@ -17,8 +16,6 @@ Test Teardown   Test Teardown
 
 *** Variables ***
 ${CLUSTER_CONFIG}           ${CLUSTER_CONFIGS}/2sg_1cbs
-${SYNC_GATEWAY_VERSION}     None
-${SYNC_GATEWAY_BRANCH}      None
 ${SYNC_GATEWAY_CONFIG}      ${SYNC_GATEWAY_CONFIGS}/sync_gateway_default_functional_tests_cc.json
 ${PROVISION_CLUSTER}        True
 
@@ -77,19 +74,17 @@ Test Replication Config
 
 *** Keywords ***
 Suite Setup
-    Set Environment Variable          CLUSTER_CONFIG  ${CLUSTER_CONFIG}
-    Log                               Using cluster ${CLUSTER_CONFIG}
-    Run Keyword If  ${PROVISION_CLUSTER} and '${SYNC_GATEWAY_VERSION}' != 'None'
-    ...  Provision Cluster With Sync Gateway Build
+    Run Keyword If  ${PROVISION_CLUSTER}
+    ...  Provision Cluster
+    ...     cluster_config=${CLUSTER_CONFIG}
     ...     server_version=${SERVER_VERSION}
     ...     sync_gateway_version=${SYNC_GATEWAY_VERSION}
     ...     sync_gateway_config=${SYNC_GATEWAY_CONFIG}
 
-    Run Keyword If  ${PROVISION_CLUSTER} and '${SYNC_GATEWAY_BRANCH}' != 'None'
-    ...  Provision Cluster With Sync Gateway Source
-    ...     server_version=${SERVER_VERSION}
-    ...     sync_gateway_branch=${SYNC_GATEWAY_BRANCH}
-    ...     sync_gateway_config=${SYNC_GATEWAY_CONFIG}
+    Verify Cluster Versions
+    ...  cluster_config=%{CLUSTER_CONFIG}
+    ...  expected_server_version=${server_version}
+    ...  expected_sync_gateway_version=${sync_gateway_version}
 
 Suite Teardown
     Log To Console      Tearing down ...
