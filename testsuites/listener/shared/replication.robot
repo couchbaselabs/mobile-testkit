@@ -28,7 +28,7 @@ ${SYNC_GATEWAY_CONFIG}  ${SYNC_GATEWAY_CONFIGS}/walrus.json
 *** Test Cases ***
 Test multiple client dbs with single sync_gateway db
     [Documentation]
-    [Tags]           sanity     listener    ${HOSTNAME}    syncgateway
+    [Tags]           sanity     listener    ${PLATFORM}    syncgateway
     [Timeout]        5 minutes
 
     Log  Using LiteServ: ${ls_url}

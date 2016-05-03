@@ -3,11 +3,10 @@ import os
 import shutil
 from zipfile import ZipFile
 import time
-import re
+import subprocess
 
 from requests.sessions import Session
 from requests.exceptions import ConnectionError
-from requests.adapters import HTTPAdapter
 
 from constants import *
 import requests
@@ -31,7 +30,7 @@ class LiteServ:
         if self._platform == "macosx":
             self.extracted_file_name = "couchbase-lite-macosx-{}".format(self._version_build)
         elif self._platform == "android":
-            raise NotImplementedError("TODO")
+            self.extracted_file_name = "couchbase-lite-android-liteserv-{}".format(self._version_build)
         elif self._platform == "net":
             # TODO
             raise NotImplementedError("TODO")
@@ -39,6 +38,8 @@ class LiteServ:
         self._session = Session()
 
     def download_liteserv(self):
+
+        logging.info("{}/{}".format(BINARY_DIR, self.extracted_file_name))
 
         # Check if package is already downloaded and return if it is preset
         if os.path.isdir("{}/{}".format(BINARY_DIR, self.extracted_file_name)):
@@ -81,14 +82,38 @@ class LiteServ:
 
         if self._platform == "macosx":
             binary_path = "{}/{}/LiteServ".format(BINARY_DIR, self.extracted_file_name)
-        elif self._platform == "android":
-            # TODO
-            pass
         elif self._platform == "net":
             # TODO
             pass
+        else:
+            raise ValueError("Unsupported standalone LiteServ binary")
 
         return binary_path
+
+    def install_apk(self):
+
+        apk_path = "{}/{}/couchbase-lite-android-liteserv.apk".format(BINARY_DIR, self.extracted_file_name)
+        logging.info(apk_path)
+
+        install_successful = False
+        while not install_successful:
+            output = subprocess.check_output(["adb", "install", apk_path])
+            logging.info(output)
+            if "INSTALL_FAILED_ALREADY_EXISTS" in output:
+                logging.error("APK already exists. Removing and trying again ...")
+                output = subprocess.check_output(["adb", "shell", "pm", "uninstall", "com.couchbase.liteservandroid"])
+                logging.info(output)
+            else:
+                install_successful = True
+
+
+    def launch_activity(self, port):
+        activity_name = "com.couchbase.liteservandroid/com.couchbase.liteservandroid.MainActivity"
+        output = subprocess.check_output([
+            "adb", "shell", "am", "start", "-n", activity_name,
+            "--ei", "listen_port", port, "--es", "username", "none", "--es", "password", "none"
+        ])
+        logging.info(output)
 
     def remove_liteserv(self):
         logging.info("Removing {} LiteServ, version: {}".format(self._platform, self._version_build))

@@ -80,6 +80,21 @@ Start LiteServ
     ...  The LiteServ binaries are located in deps/.
     [Arguments]  ${host}  ${port}
     [Timeout]       1 minute
+
+    # Mac OSX install
+    ${ls_url} =  Run Keyword If  "${PLATFORM}" == "macosx"  Start MacOSX LiteServ  host=${host}  port=${port}
+
+    # Android install
+    ${ls_url} =  Run Keyword If  "${PLATFORM}" == "android"  Start Android LiteServ  host=${host}  port=${port}
+
+    ${ls_url} =  Verify LiteServ Launched  host=${host}  port=${port}
+    [return]  ${ls_url}
+
+Start MacOSX LiteServ
+    [Documentation]   Starts LiteServ for MacOSX platform.
+    ...  The LiteServ binaries are located in deps/.
+    [Arguments]  ${host}  ${port}
+    [Timeout]       1 minute
     ${binary_path} =  Get LiteServ Binary Path
     Start Process   ${binary_path}  --port  ${port}
     ...             -Log  YES  -LogSync  YES  -LogCBLRouter  YES  -LogSyncVerbose  YES  -LogRemoteRequest  YES
@@ -88,8 +103,14 @@ Start LiteServ
     ...             stdout=${RESULTS}/${TEST_NAME}-${PLATFORM}-liteserv-stdout.log
     ...             stderr=${RESULTS}/${TEST_NAME}-${PLATFORM}-liteserv-stderr.log
     Process Should Be Running   handle=liteserv-ios
-    ${ls_url} =  Verify LiteServ Launched  host=${host}  port=${port}
-    [return]  ${ls_url}
+
+Start Android LiteServ
+    [Documentation]   Starts LiteServ for Android platform.
+    ...  The LiteServ binaries are located in deps/.
+    [Arguments]  ${host}  ${port}
+    [Timeout]       1 minute
+    Install Apk
+    Launch Activity  ${port}
 
 Shutdown LiteServ
     [Documentation]   Stops LiteServ for a specific platform.
