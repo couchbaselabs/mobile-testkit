@@ -40,10 +40,10 @@ Provision Cluster
     ...  --sync-gateway-commit\=${sync_gateway_version}
     ...  --sync-gateway-config-file\=${sync_gateway_config}
 
-    Should Be Equal As Integers  ${result.rc}  0
-
     Log  ${result.stderr}
     Log  ${result.stdout}
+
+    Should Be Equal As Integers  ${result.rc}  0
 
 Clean Cluster
     Log                         Cluster Config: %{CLUSTER_CONFIG}
