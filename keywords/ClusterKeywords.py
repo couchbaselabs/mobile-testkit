@@ -29,7 +29,7 @@ class ClusterKeywords:
             return False
 
     def get_server_version(self, host):
-        resp = requests.get("http://{}:8091/pools".format(host))
+        resp = requests.get("http://Administrator:password@{}:8091/pools".format(host))
         log_r(resp)
         resp.raise_for_status()
         resp_obj = resp.json()

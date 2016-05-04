@@ -17,14 +17,12 @@ ${SYNC_GATEWAY_SUITE_FUNCTIONAL}  testsuites/syncgateway/functional
 
 *** Keywords ***
 Provision Cluster
-    [Arguments]    ${cluster_config}  ${server_version}  ${sync_gateway_version}  ${sync_gateway_config}
-    [Documentation]    Installs a Sync Gateway (build) + Sg Accel cluster based on the ${cluster_config}
+    [Arguments]  ${server_version}  ${sync_gateway_version}  ${sync_gateway_config}
+    [Documentation]    Installs a Sync Gateway (build) + Sg Accel cluster based on the CLUSTER_CONFIG environment variable
     ...  server_version = the version of Couchbase Server to install (ex. 4.1.0 or 4.5.0-2151)
     ...  sync_gateway_version = the version of Sync Gateway and Sg Accel to install (ex. 1.2.1-4 or commit hash)
     ...  sync_gateway_config = the config to launch the Sync Gateways and Sg Accels with.
     ...  Cluster configs can be found in 'resources/cluster_configs'
-
-    Set Environment Variable  CLUSTER_CONFIG  ${cluster_config}
 
     ${is_binary} =  Sync Gateway Version Is Binary  version=${sync_gateway_version}
     Log  Is Sync Gateway Version Binary: ${is_binary}
