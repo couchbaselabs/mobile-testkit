@@ -24,6 +24,9 @@ Provision Cluster
     ...  sync_gateway_config = the config to launch the Sync Gateways and Sg Accels with.
     ...  Cluster configs can be found in 'resources/cluster_configs'
 
+    Clean Cluster
+    Verfiy No Running Services  %{CLUSTER_CONFIG}
+
     ${is_binary} =  Sync Gateway Version Is Binary  version=${sync_gateway_version}
     Log  Is Sync Gateway Version Binary: ${is_binary}
 
@@ -46,6 +49,9 @@ Provision Cluster
 Clean Cluster
     Log                         Cluster Config: %{CLUSTER_CONFIG}
     ${result} =  Run Process  python  ${LIBRARIES}/provision/clean_cluster.py
+    Log  ${result.stderr}
+    Log  ${result.stdout}
+    Should Be Equal As Integers  ${result.rc}  0
 
 Install Server
     [Arguments]     ${server_version}

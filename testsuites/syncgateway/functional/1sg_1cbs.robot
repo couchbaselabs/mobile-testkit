@@ -318,6 +318,8 @@ Suite Setup
 
 Suite Teardown
     Log To Console      Tearing down ...
+    Clean Cluster
+    Verify No Running Services  %{CLUSTER_CONFIG}
 
 Test Teardown
     List Connections
