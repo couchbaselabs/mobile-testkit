@@ -126,7 +126,7 @@ class Cluster:
             extra_vars="sync_gateway_config_filepath={0}".format(config_path_full),
             stop_on_fail=False
         )
-        assert(status == 0)
+        assert status == 0, "Failed to start to Sync Gateway"
 
         # HACK - only enable sg_accel for distributed index tests
         # revise this with https://github.com/couchbaselabs/sync-gateway-testcluster/issues/222
