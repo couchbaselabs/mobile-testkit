@@ -214,6 +214,13 @@ def test_sg_replicate_non_existent_db():
 
     sg1, sg2 = create_sync_gateways(DEFAULT_CONFIG_PATH)
 
+    # delete databases if they exist
+    try:
+        sg1.admin.delete_db(DB1)
+        sg2.admin.delete_db(DB2)
+    except HTTPError:
+        logging.debug("Got HTTPError trying to delete a DB, which means it didn't already exist")
+
     # Start a push replication
     got_exception = False
     try:
@@ -228,7 +235,7 @@ def test_sg_replicate_non_existent_db():
     except HTTPError:
         got_exception = True
 
-    assert got_exception is True
+    assert got_exception is True, 'Expected an exception trying to create a replication against non-existent db'
 
 
 def test_sg_replicate_push_async(num_docs):
