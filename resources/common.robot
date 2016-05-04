@@ -37,8 +37,10 @@ Provision Cluster
     ...  ELSE
     ...  Run Process  python  ${LIBRARIES}/provision/provision_cluster.py
     ...  --server-version\=${server_version}
-    ...  --sync-gateway-branch\=${sync_gateway_version}
+    ...  --sync-gateway-commit\=${sync_gateway_version}
     ...  --sync-gateway-config-file\=${sync_gateway_config}
+
+    Should Be Equal As Integers  ${result.rc}  0
 
     Log  ${result.stderr}
     Log  ${result.stdout}

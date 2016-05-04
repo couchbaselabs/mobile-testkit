@@ -5,6 +5,6 @@ python libraries/utilities/generate_clusters_from_pool.py
 
 # Run the sync gateway functional tests
 robot --loglevel DEBUG \
-      -v SYNC_GATEWAY_VERSION:1.2.0-79 \
-      -v SERVER_VERSION:4.1.0 \
-      -t "Test Replication Config" testsuites/syncgateway/functional/2sg_1cbs.robot
+      -v SYNC_GATEWAY_VERSION:1.2.1-6 \
+      -v SERVER_VERSION:4.1.1 \
+      -t "test dcp reshard single sg accel goes down and up" testsuites/syncgateway/functional/1sg_2ac_1cbs.robot
