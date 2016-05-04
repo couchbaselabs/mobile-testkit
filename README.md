@@ -423,7 +423,7 @@ $ python libraries/provision/provision_cluster.py \
 ```
 $ python libraries/provision/provision_cluster.py \
     --server-version=4.1.0 \
-    --sync-gateway-branch=master
+    --sync-gateway-commit=062bc26a8b65e63b3a80ba0f11506e49681d4c8c (requires full commit hash)
     --install-deps (first time only, this will install prerequisites to build / debug)
 ```
 
@@ -452,9 +452,9 @@ Run a single test
 
 `robot -b debug.txt -v SERVER_VERSION:4.1.0 -v SYNC_GATEWAY_VERSION:1.2.0-79 -t "test bulk get compression no compression" testsuites/syncgateway/functional/1sg_1cbs.robot`
 
-Running a test (using a source branch)
+Running a test (using a source commit)
 
-``robot -b debug.txt -v SERVER_VERSION:4.1.0 -v SYNC_GATEWAY_BRANCH:master -t "test bulk get compression no compression" testsuites/syncgateway/functional/1sg_1cbs.robot``
+``robot -b debug.txt -v SERVER_VERSION:4.1.0 -v SYNC_GATEWAY_VERSION:062bc26a8b65e63b3a80ba0f11506e49681d4c8c -t "test bulk get compression no compression" testsuites/syncgateway/functional/1sg_1cbs.robot``
 
 Although it is not necessary, the `-b debug.txt` will provide more output and stacktraces for deeper investigation
 
