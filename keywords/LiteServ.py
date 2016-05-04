@@ -114,6 +114,20 @@ class LiteServ:
         ])
         logging.info(output)
 
+    def stop_activity(self):
+        # Stop LiteServ Activity
+        output = subprocess.check_output([
+            "adb", "shell", "am", "force-stop", "com.couchbase.liteservandroid"
+        ])
+        logging.info(output)
+
+        # Clear package data
+        output = subprocess.check_output([
+            "adb", "shell", "pm", "clear", "com.couchbase.liteservandroid"
+        ])
+        logging.info(output)
+
+
     def remove_liteserv(self):
         logging.info("Removing {} LiteServ, version: {}".format(self._platform, self._version_build))
         os.chdir(BINARY_DIR)

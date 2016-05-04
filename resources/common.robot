@@ -75,6 +75,9 @@ Install Sync Gateway
     Log To Console  ${result.stdout}
 
 # LiteServ Keywords
+Install LiteServ
+    Run Keyword If  "${PLATFORM}" == "android"  Install Apk  ELSE  Log  No install need
+
 Start LiteServ
     [Documentation]   Starts LiteServ for a specific platform.
     ...  The LiteServ binaries are located in deps/.
@@ -105,19 +108,31 @@ Start MacOSX LiteServ
     Process Should Be Running   handle=liteserv-ios
 
 Start Android LiteServ
-    [Documentation]   Starts LiteServ for Android platform.
+    [Documentation]   Starts LiteServ Activity on Running on port.
     ...  The LiteServ binaries are located in deps/.
     [Arguments]  ${host}  ${port}
     [Timeout]       1 minute
-    Install Apk
     Launch Activity  ${port}
 
 Shutdown LiteServ
     [Documentation]   Stops LiteServ for a specific platform.
     ...  The LiteServ binaries are located in deps/binaries.
     [Timeout]       1 minute
+    Run Keyword If  "${PLATFORM}" == "macosx"  Shutdown MacOSX LiteServ
+    Run Keyword If  "${PLATFORM}" == "android"  Shutdown Android LiteServ
+
+Shutdown MacOSX LiteServ
+    [Documentation]   Stops Mac OSX LiteServ.
+    ...  The LiteServ binaries are located in deps/binaries.
+    [Timeout]       1 minute
     Terminate Process          handle=liteserv-ios
     Process Should Be Stopped  handle=liteserv-ios
+
+Shutdown Android LiteServ
+    [Documentation]   Stops Android LiteServ Activity.
+    ...  The LiteServ binaries are located in deps/binaries.
+    [Timeout]       1 minute
+    Stop Activity
 
 # sync_gateway keywords
 Start Sync Gateway

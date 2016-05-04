@@ -81,6 +81,7 @@ Replication with multiple client dbs and single sync_gateway db
 Setup Suite
     [Documentation]  Download, install, and launch LiteServ.
     Download LiteServ
+    Install LiteServ
     Download Sync Gateway
 
 Setup Test
