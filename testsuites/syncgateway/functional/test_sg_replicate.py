@@ -10,6 +10,7 @@ from testkit.syncgateway import assert_has_doc
 from requests import HTTPError
 
 import time
+import logging 
 
 DB1 = "db1"
 DB2 = "db2"
@@ -41,6 +42,8 @@ def test_sg_replicate_basic_test():
     assert_does_not_have_doc(sg1_user, doc_id_sg2)
 
     # Start a push replication sg1 -> sg2
+    # Should block until replication
+    # Result should contain the stats of the completed replication
     replication_result = sg1.start_push_replication(
         sg2.admin.admin_url,
         DB1,
@@ -50,10 +53,12 @@ def test_sg_replicate_basic_test():
         use_admin_url=True
     )
 
-    assert replication_result["continuous"] is False
-    assert replication_result["docs_written"] == 2
-    assert replication_result["docs_read"] == 2
-    assert replication_result["doc_write_failures"] == 0
+    logging.debug("replication_result 1: {}".format(replication_result))
+    
+    assert replication_result["continuous"] is False, 'replication_result["continuous"] != False'
+    assert replication_result["docs_written"] == 1, 'replication_result["docs_written"] != 1' 
+    assert replication_result["docs_read"] == 1, 'replication_result["docs_read"] != 1' 
+    assert replication_result["doc_write_failures"] == 0, 'replication_result["doc_write_failures"] != 0'
 
     # Start a pull replication sg1 <- sg2
     replication_result = sg1.start_pull_replication(
@@ -65,10 +70,12 @@ def test_sg_replicate_basic_test():
         use_admin_url=True
     )
 
-    assert replication_result["continuous"] is False
-    assert replication_result["docs_written"] == 2
-    assert replication_result["docs_read"] == 2
-    assert replication_result["doc_write_failures"] == 0
+    logging.debug("replication_result 2: {}".format(replication_result))
+
+    assert replication_result["continuous"] is False, 'replication_result["continuous"] != False'
+    assert replication_result["docs_written"] == 1, 'replication_result["docs_written"] != 1'
+    assert replication_result["docs_read"] == 1, 'replication_result["docs_read"] != 1'
+    assert replication_result["doc_write_failures"] == 0, 'replication_result["doc_write_failures"] != 0'
 
     # Verify that the doc added to sg1 made it to sg2
     assert_has_doc(sg2_user, doc_id_sg1)
