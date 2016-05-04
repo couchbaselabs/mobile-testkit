@@ -106,7 +106,6 @@ class LiteServ:
             else:
                 install_successful = True
 
-
     def launch_activity(self, port):
         activity_name = "com.couchbase.liteservandroid/com.couchbase.liteservandroid.MainActivity"
         output = subprocess.check_output([

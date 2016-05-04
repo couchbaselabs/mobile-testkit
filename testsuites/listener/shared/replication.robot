@@ -21,12 +21,11 @@ Suite Setup       Setup Suite
 Test Setup        Setup Test
 Test Teardown     Teardown Test
 
-
 *** Variables ***
 ${SYNC_GATEWAY_CONFIG}  ${SYNC_GATEWAY_CONFIGS}/walrus.json
 
 *** Test Cases ***
-Test multiple client dbs with single sync_gateway db
+Replication with multiple client dbs and single sync_gateway db
     [Documentation]
     [Tags]           sanity     listener    ${PLATFORM}    syncgateway
     [Timeout]        5 minutes
@@ -86,12 +85,13 @@ Setup Suite
 
 Setup Test
     ${ls_url} =  Start LiteServ  host=${LITESERV_HOST}  port=${LITESERV_PORT}
-    Set Test Variable  ${ls_url}
     ${sg_url}  ${sg_url_admin} =  Start Sync Gateway
     ...  config=${SYNC_GATEWAY_CONFIG}
     ...  host=${SYNC_GATEWAY_HOST}
     ...  port=${SYNC_GATEWAY_PORT}
     ...  admin_port=${SYNC_GATEWAY_ADMIN_PORT}
+
+    Set Test Variable  ${ls_url}
     Set Test Variable  ${sg_url}
     Set Test Variable  ${sg_url_admin}
 

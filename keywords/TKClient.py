@@ -42,14 +42,21 @@ def parse_multipart_response(response):
     for part in response.split("--"):
 
         part_lines = part.splitlines()
-        if part_lines:
+        # part_lines follow the format
+        # [
+        #   '5570ab847be212079e2b05bbbfa023da25b07712bda36aec6481bca024f3',
+        #   Content-Type: application/json,
+        #   { doc }
+        # ]
+        # Only include part that has doc property
+        if part_lines and len(part_lines) > 2:
             doc = part_lines[-1]
             try:
                 doc_obj = json.loads(doc)
                 rows.append(doc_obj)
             except Exception as e:
                 # A few lines from the response can't be parsed as docs
-                logging.debug("doc_obj: {} e: {}".format(doc_obj, e))
+                logging.error("Could not parse docs as JSON: {} error: {}".format(doc, e))
 
     return {"rows": rows}
 
@@ -202,18 +209,20 @@ class TKClient:
 
                 resp_obj = parse_multipart_response(resp.text)
 
-            # See any docs were not retureed
+            # See any docs were not retured
+            # Mac OSX - {"key":"test_ls_db2_5","error":"not_found"}
+            # Android - {"doc":null,"id":"test_ls_db2_5","key":"test_ls_db2_5","value":{}}
             all_docs_returned = True
             missing_docs = []
             for resp_doc in resp_obj["rows"]:
-                if "error" in resp_doc:
+                if "error" in resp_doc or ("value" in resp_doc and len(resp_doc["value"]) == 0):
                     missing_docs.append(resp_doc)
                     all_docs_returned = False
 
+            logging.info("Missing Docs = {}".format(missing_docs))
             # Issue the request again, docs my still be replicating
             if not all_docs_returned:
-                logging.info("Not all docs present. Retrying")
-                logging.info(missing_docs)
+                logging.info("Retrying ...")
                 time.sleep(1)
                 continue
 
