@@ -84,11 +84,9 @@ Start LiteServ
     [Arguments]  ${host}  ${port}
     [Timeout]       1 minute
 
-    # Mac OSX install
     ${ls_url} =  Run Keyword If  "${PLATFORM}" == "macosx"  Start MacOSX LiteServ  host=${host}  port=${port}
-
-    # Android install
     ${ls_url} =  Run Keyword If  "${PLATFORM}" == "android"  Start Android LiteServ  host=${host}  port=${port}
+    ${ls_url} =  Run Keyword If  "${PLATFORM}" == "net"  Start Net ListenerConsole  host=${host}  port=${port}
 
     ${ls_url} =  Verify LiteServ Launched  host=${host}  port=${port}
     [return]  ${ls_url}
@@ -114,12 +112,20 @@ Start Android LiteServ
     [Timeout]       1 minute
     Launch Activity  ${port}
 
+Start Net ListenerConsole
+    [Documentation]   Starts a .net ListenerConsole on a port.
+    [Arguments]  ${host}  ${port}
+    [Timeout]       1 minute
+    ${binary_path} =  Get LiteServ Binary Path
+    Start Mono Process  ${binary_path}  ${port}
+
 Shutdown LiteServ
     [Documentation]   Stops LiteServ for a specific platform.
     ...  The LiteServ binaries are located in deps/binaries.
     [Timeout]       1 minute
     Run Keyword If  "${PLATFORM}" == "macosx"  Shutdown MacOSX LiteServ
     Run Keyword If  "${PLATFORM}" == "android"  Shutdown Android LiteServ
+    Run Keyword If  "${PLATFORM}" == "net"  Shutdown Net ListenerConsole
 
 Shutdown MacOSX LiteServ
     [Documentation]   Stops Mac OSX LiteServ.
@@ -133,6 +139,12 @@ Shutdown Android LiteServ
     ...  The LiteServ binaries are located in deps/binaries.
     [Timeout]       1 minute
     Stop Activity
+
+Shutdown Net ListenerConsole
+    [Documentation]   Kills Net Listener Console Process.
+    ...  The LiteServ binaries are located in deps/binaries.
+    [Timeout]       1 minute
+    Kill Mono Process
 
 # sync_gateway keywords
 Start Sync Gateway

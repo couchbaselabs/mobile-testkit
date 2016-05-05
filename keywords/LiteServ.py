@@ -5,11 +5,14 @@ from zipfile import ZipFile
 import time
 import subprocess
 
+import requests
 from requests.sessions import Session
 from requests.exceptions import ConnectionError
 
+from robot.api.logger import console
+
 from constants import *
-import requests
+
 
 def version_and_build(full_version):
     version_parts = full_version.split("-")
@@ -32,8 +35,8 @@ class LiteServ:
         elif self._platform == "android":
             self.extracted_file_name = "couchbase-lite-android-liteserv-{}".format(self._version_build)
         elif self._platform == "net":
-            # TODO
-            raise NotImplementedError("TODO")
+            # TODO package with version and build
+            self.extracted_file_name = "couchbase-lite-net-listenerconsole-{}".format(self._version_build)
 
         self._session = Session()
 
@@ -55,10 +58,11 @@ class LiteServ:
             else:
                 url = "{}/couchbase-lite-ios/{}/macosx/{}/{}".format(LATEST_BUILDS, version, self._version_build, file_name)
         elif self._platform == "android":
-            # TODO
+            # TODO, requires package to be published via latestbuilds.
+            # https://github.com/couchbase/couchbase-lite-net/issues/639
             pass
         elif self._platform == "net":
-            # TODO
+            # TODO, requires package to be published via latestbuilds.
             pass
 
         # Download the packages to binary directory
@@ -83,11 +87,11 @@ class LiteServ:
         if self._platform == "macosx":
             binary_path = "{}/{}/LiteServ".format(BINARY_DIR, self.extracted_file_name)
         elif self._platform == "net":
-            # TODO
-            pass
+            binary_path = "{}/{}/Listener.exe".format(BINARY_DIR, self.extracted_file_name)
         else:
             raise ValueError("Unsupported standalone LiteServ binary")
 
+        logging.info(binary_path)
         return binary_path
 
     def install_apk(self):
@@ -126,7 +130,6 @@ class LiteServ:
             "adb", "shell", "pm", "clear", "com.couchbase.liteservandroid"
         ])
         logging.info(output)
-
 
     def remove_liteserv(self):
         logging.info("Removing {} LiteServ, version: {}".format(self._platform, self._version_build))
@@ -180,3 +183,12 @@ class LiteServ:
         logging.info ("LiteServ: {} is running".format(lite_version))
 
         return url
+
+    def start_mono_process(self, path, port):
+        logging.info("Starting mono process: {}".format(path))
+        self._mono_process = subprocess.Popen(["mono", path, "--port={}".format(port)])
+
+    def kill_mono_process(self):
+        self._mono_process.kill()
+        self._mono_process.wait()
+        logging.info(self._mono_process.returncode)

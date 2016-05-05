@@ -2,6 +2,7 @@ from enum import Enum
 
 BINARY_DIR = "deps/binaries"
 LATEST_BUILDS = "http://latestbuilds.hq.couchbase.com"
+RESULTS_DIR = "results"
 
 MAX_RETRIES = 5
 
