@@ -159,26 +159,38 @@ class LiteServ:
             raise RuntimeError("Could not connect to LiteServ")
 
         resp_json = resp.json()
+        is_macosx = False
+        is_net = False
+        is_android = False
         try:
             # Mac OSX
             lite_version = resp_json["vendor"]["version"]
-            is_macosx = True
+            if resp_json["vendor"]["name"] == "Couchbase Lite (Objective-C)":
+                is_macosx = True
+            elif resp_json["vendor"]["name"] == "Couchbase Lite (C#)":
+                is_net = True
         except KeyError as e:
             # Android
             lite_version = resp_json["version"]
-            is_macosx = False
+            is_android = True
 
         # Validate that the version launched is the expected LiteServ version
         # Mac OSX - LiteServ: 1.2.1 (build 13)
         version, build = version_and_build(self._version_build)
         if is_macosx:
             expected_version = "{} (build {})".format(version, build)
-            if lite_version != expected_version:
-                raise ValueError("Expected version does not match actual version: Expected={}  Actual={}".format(expected_version, lite_version))
-        else:
+            assert lite_version == expected_version, "Expected version does not match actual version: Expected={}  Actual={}".format(expected_version, lite_version)
+        elif is_android:
             expected_version = version
-            if lite_version != expected_version:
-                raise ValueError("Expected version does not match actual version: Expected={}  Actual={}".format(expected_version, lite_version))
+            assert lite_version == expected_version, "Expected version does not match actual version: Expected={}  Actual={}".format(expected_version, lite_version)
+        elif is_net:
+            running_version = lite_version.split()[-1]
+            # TODO Get version / build instead of just version
+            running_version_stripped = running_version.split("/")[0]
+            expected_version = "{}".format(version)
+            assert expected_version == running_version_stripped, "Expected version does not match actual version: Expected={}  Actual={}".format(expected_version, running_version_stripped)
+        else:
+            raise ValueError("Unexpected Listener platform")
 
         logging.info ("LiteServ: {} is running".format(lite_version))
 

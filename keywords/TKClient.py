@@ -80,6 +80,9 @@ class TKClient:
             elif resp_obj["vendor"]["name"] == "Couchbase Lite (Objective-C)":
                 logging.info("ServerType={}".format(ServerType.listener))
                 return ServerType.listener
+            elif resp_obj["vendor"]["name"] == "Couchbase Lite (C#)":
+                logging.info("ServerType={}".format(ServerType.listener))
+                return ServerType.listener
         except KeyError as ke:
             # Android LiteServ
             if resp_obj["CBLite"] == "Welcome":
