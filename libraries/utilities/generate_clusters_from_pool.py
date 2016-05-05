@@ -29,6 +29,7 @@ def write_config(config):
 
     with open(ansible_cluster_conf_file, "w") as f:
 
+        hosts = []
         couchbase_servers = []
         sync_gateways = []
         accels = []
@@ -37,6 +38,10 @@ def write_config(config):
         count = 1
         for ip in ips:
             f.write("ma{} ansible_host={}\n".format(count, ip))
+            hosts.append({
+                "name": "host{}".format(count),
+                "ip": ip
+            })
             count += 1
 
         f.write("\n")
@@ -109,6 +114,7 @@ def write_config(config):
 
         # Write json file consumable by testkit.cluster class
         cluster_dict = {
+            "hosts": hosts,
             "couchbase_servers": couchbase_servers,
             "sync_gateways": sync_gateways,
             "sg_accels": accels

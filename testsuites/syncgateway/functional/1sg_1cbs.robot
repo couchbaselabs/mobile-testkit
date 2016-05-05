@@ -303,9 +303,10 @@ test single user single channel
 
 *** Keywords ***
 Suite Setup
+    Set Environment Variable  CLUSTER_CONFIG  ${CLUSTER_CONFIG}
+
     Run Keyword If  ${PROVISION_CLUSTER}
     ...  Provision Cluster
-    ...     cluster_config=${CLUSTER_CONFIG}
     ...     server_version=${SERVER_VERSION}
     ...     sync_gateway_version=${SYNC_GATEWAY_VERSION}
     ...     sync_gateway_config=${SYNC_GATEWAY_CONFIG}
@@ -317,6 +318,8 @@ Suite Setup
 
 Suite Teardown
     Log To Console      Tearing down ...
+    Clean Cluster
+    Verify No Running Services  %{CLUSTER_CONFIG}
 
 Test Teardown
     List Connections

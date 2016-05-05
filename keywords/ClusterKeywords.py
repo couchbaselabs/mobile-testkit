@@ -3,6 +3,9 @@ import json
 import requests
 import re
 
+from requests.exceptions import HTTPError
+from requests.exceptions import ConnectionError
+
 def log_r(request):
     logging.info("{0} {1} {2}".format(
             request.request.method,
@@ -28,8 +31,42 @@ class ClusterKeywords:
         else:
             return False
 
+    def verfiy_no_running_services(self, cluster_config):
+
+        with open("{}.json".format(cluster_config)) as f:
+            cluster_obj = json.loads(f.read())
+
+        running_services = []
+        for host in cluster_obj["hosts"]:
+
+            # Couchbase Server
+            try:
+                resp = requests.get("http://Administrator:password@{}:8091/pools".format(host["ip"]))
+                log_r(resp)
+                running_services.append(resp.url)
+            except ConnectionError as he:
+                logging.info(he)
+
+            # Sync Gateway
+            try:
+                resp = requests.get("http://{}:4984".format(host["ip"]))
+                log_r(resp)
+                running_services.append(resp.url)
+            except ConnectionError as he:
+                logging.info(he)
+
+            # Sg Accel
+            try:
+                resp = requests.get("http://{}:4985".format(host["ip"]))
+                log_r(resp)
+                running_services.append(resp.url)
+            except ConnectionError as he:
+                logging.info(he)
+
+        assert len(running_services) == 0, "Running Services Found: {}".format(running_services)
+
     def get_server_version(self, host):
-        resp = requests.get("http://{}:8091/pools".format(host))
+        resp = requests.get("http://Administrator:password@{}:8091/pools".format(host))
         log_r(resp)
         resp.raise_for_status()
         resp_obj = resp.json()
@@ -128,7 +165,6 @@ class ClusterKeywords:
             # Since sync_gateway does not return the full commit, verify the prefix
             if running_ac_version != expected_sg_accel_version[:7]:
                 raise ValueError("Unexpected sync_gateway version!! Expected: {} Actual: {}".format(expected_sg_accel_version, running_ac_version))
-
 
     def verify_cluster_versions(self, cluster_config, expected_server_version, expected_sync_gateway_version):
 
