@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 
-robot --loglevel DEBUG -d results \
+robot --loglevel INFO -d results \
     -v PLATFORM:net \
-    -v LITESERV_VERSION:1.2.1-1 \
+    -v LITESERV_VERSION:1.3.0-15 \
     -v LITESERV_HOST:localhost \
     -v LITESERV_PORT:59840 \
     -v SYNC_GATEWAY_VERSION:1.2.1-4 \

@@ -184,11 +184,10 @@ class LiteServ:
             expected_version = version
             assert lite_version == expected_version, "Expected version does not match actual version: Expected={}  Actual={}".format(expected_version, lite_version)
         elif is_net:
-            running_version = lite_version.split()[-1]
+            pass
+            #running_version = lite_version.split()[-1]
             # TODO Get version / build instead of just version
-            running_version_stripped = running_version.split("/")[0]
-            expected_version = "{}".format(version)
-            assert expected_version == running_version_stripped, "Expected version does not match actual version: Expected={}  Actual={}".format(expected_version, running_version_stripped)
+            #assert self._version_build == "", "Expected version does not match actual version: Expected={}  Actual={}".format(self._version_build, running_version_stripped)
         else:
             raise ValueError("Unexpected Listener platform")
 

@@ -28,7 +28,7 @@ ${SYNC_GATEWAY_CONFIG}  ${SYNC_GATEWAY_CONFIGS}/walrus.json
 Replication with multiple client dbs and single sync_gateway db
     [Documentation]
     [Tags]           sanity     listener    ${PLATFORM}    syncgateway
-    [Timeout]        5 minutes
+    #[Timeout]        5 minutes
 
     Log  Using LiteServ: ${ls_url}
     Log  Using Sync Gateway: ${sg_url}
@@ -65,6 +65,8 @@ Replication with multiple client dbs and single sync_gateway db
 
     ${ls_db1_docs} =  Add Docs  url=${ls_url}  db=${ls_db1}  number=${500}  id_prefix=test_ls_db1
     ${ls_db2_docs} =  Add Docs  url=${ls_url}  db=${ls_db2}  number=${500}  id_prefix=test_ls_db2
+
+    Debug
 
     @{ls_db1_db2_docs} =  Create List  ${ls_db1_docs}  ${ls_db2_docs}
 
