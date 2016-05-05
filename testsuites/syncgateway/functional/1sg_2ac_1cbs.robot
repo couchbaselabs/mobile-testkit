@@ -40,8 +40,10 @@ test dcp reshard single sg accel goes down and up
     [Tags]   nightly
     test dcp reshard single sg accel goes down and up   ${SYNC_GATEWAY_CONFIGS}/sync_gateway_default_functional_tests_di.json
 
+
 *** Keywords ***
 Suite Setup
+    Log  Setting up suite ...  console=True
     Set Environment Variable  CLUSTER_CONFIG  ${CLUSTER_CONFIG}
 
     Run Keyword If  ${PROVISION_CLUSTER}
@@ -56,8 +58,9 @@ Suite Setup
     ...  expected_sync_gateway_version=${SYNC_GATEWAY_VERSION}
 
 Suite Teardown
-    Log To Console      Tearing down ...
+    Log  Tearing down suite ...  console=True
 
 Test Teardown
+    Log  Tearing down test ...  console=True
     List Connections
     Run Keyword If Test Failed      Fetch And Analyze Logs

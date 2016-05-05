@@ -303,6 +303,7 @@ test single user single channel
 
 *** Keywords ***
 Suite Setup
+    Log  Setting up suite ...  console=True
     Set Environment Variable  CLUSTER_CONFIG  ${CLUSTER_CONFIG}
 
     Run Keyword If  ${PROVISION_CLUSTER}
@@ -317,10 +318,9 @@ Suite Setup
     ...  expected_sync_gateway_version=${SYNC_GATEWAY_VERSION}
 
 Suite Teardown
-    Log To Console      Tearing down ...
-    Clean Cluster
-    Verify No Running Services  %{CLUSTER_CONFIG}
+    Log  Tearing down suite ...  console=True
 
 Test Teardown
+    Log  Tearing down test ...  console=True
     List Connections
     Run Keyword If Test Failed      Fetch And Analyze Logs
