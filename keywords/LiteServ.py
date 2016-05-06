@@ -4,6 +4,7 @@ import shutil
 from zipfile import ZipFile
 import time
 import subprocess
+import re
 
 import requests
 from requests.sessions import Session
@@ -181,13 +182,15 @@ class LiteServ:
             expected_version = "{} (build {})".format(version, build)
             assert lite_version == expected_version, "Expected version does not match actual version: Expected={}  Actual={}".format(expected_version, lite_version)
         elif is_android:
+            # TODO need version and build
             expected_version = version
             assert lite_version == expected_version, "Expected version does not match actual version: Expected={}  Actual={}".format(expected_version, lite_version)
         elif is_net:
-            pass
-            #running_version = lite_version.split()[-1]
-            # TODO Get version / build instead of just version
-            #assert self._version_build == "", "Expected version does not match actual version: Expected={}  Actual={}".format(self._version_build, running_version_stripped)
+            running_version_parts = re.split("[ /-]", lite_version)
+            version = running_version_parts[5]
+            build = int(running_version_parts[6].strip("build"))
+            running_version_composed = "{}-{}".format(version, build)
+            assert self._version_build == running_version_composed, "Expected version does not match actual version: Expected={}  Actual={}".format(self._version_build, running_version_composed)
         else:
             raise ValueError("Unexpected Listener platform")
 
