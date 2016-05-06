@@ -250,6 +250,7 @@ class TKClient:
             raise TypeError("Verify Docs Preset expects a list or dict of expected docs")
 
         server_type = self.get_server_type(url)
+        sequence_number_map = {}
 
         start = time.time()
         last_seq = 0
@@ -278,6 +279,8 @@ class TKClient:
             for resp_doc in resp_obj["results"]:
                 # Check changes results contain a doc in the expected docs
                 if resp_doc["id"] in expected_doc_map:
+                    assert resp_doc["seq"] not in sequence_number_map, "Found duplicate sequence number: {} in sequence map!!".format(resp_doc["seq"])
+                    sequence_number_map[resp_doc["seq"]] = resp_doc["id"]
                     # Check that the rev of the changes docs matches the expected docs rev
                     for resp_doc_change in resp_doc["changes"]:
                         if resp_doc_change["rev"] == expected_doc_map[resp_doc["id"]]["rev"]:
@@ -290,6 +293,7 @@ class TKClient:
                     missing_expected_docs.append(resp_doc)
 
             logging.info("Missing docs: {}".format(expected_doc_map))
+            logging.debug("Sequence number map: {}".format(sequence_number_map))
 
             if len(expected_doc_map) == 0:
                 # All expected docs have been crossed out
