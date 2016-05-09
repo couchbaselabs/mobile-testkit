@@ -21,6 +21,8 @@ def method_instance_for_keyword(keyword):
     raise RuntimeError("Async: could not resolve method for keyword: {}".format(keyword))
 
 class Async:
+    """ Experimental class for executing robot framework keywords asynchronously"""
+
     def __init__(self):
         self._futures = {}
         self.executor = ThreadPoolExecutor(max_workers=10)

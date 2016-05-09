@@ -108,7 +108,3 @@ class SyncGateway:
 
         return url, admin_url
 
-    def get_sync_gateway_document_count(self, db):
-        docs = self.admin.get_all_docs(db)
-        return docs["total_rows"]
-

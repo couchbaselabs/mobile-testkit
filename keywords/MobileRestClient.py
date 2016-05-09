@@ -7,7 +7,7 @@ from requests.exceptions import HTTPError
 
 from robot.api.logger import console
 
-from libraries.data.generators import *
+from libraries.data.doc_generators import *
 from constants import *
 
 def log_r(request):
@@ -60,7 +60,13 @@ def parse_multipart_response(response):
 
     return {"rows": rows}
 
-class TKClient:
+class MobileRestClient:
+    """
+    A set of robot keyworks that can be executed against
+        - LiteServ (Mac OSX, Android, .NET)
+        - sync_gateway
+    via REST
+    """
 
     def __init__(self):
         headers = {"Content-Type": "application/json"}
@@ -171,7 +177,11 @@ class TKClient:
 
     def verify_docs_present(self, url, db, expected_docs):
         """
-        Verifies that the docs passed in the function exist in the database
+        Verifies the expected docs are present in the database using a polling loop with
+        POST _all_docs with Listener and a POST _bulk_get for sync_gateway
+
+        expected_docs should be a dict {id: {rev: ""}} or
+        a list of {id: {rev: ""}}. If the expected docs are a list, they will be converted to a single map.
         """
 
         server_type = self.get_server_type(url)
@@ -240,6 +250,14 @@ class TKClient:
             break
 
     def verify_docs_in_changes(self, url, db, expected_docs):
+        """
+        Verifies the expected docs are present in the database _changes feed using longpoll in a loop with
+        Uses a GET _changes?feed=longpoll&since=last_seq for Listener
+        and POST _changes with a body {"feed": "longpoll", "since": last_seq} for sync_gateway
+
+        expected_docs should be a dict {id: {rev: ""}} or
+        a list of {id: {rev: ""}}. If the expected docs are a list, they will be converted to a single map.
+        """
 
         if isinstance(expected_docs, list):
             # Create single dictionary for comparison
