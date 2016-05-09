@@ -19,6 +19,7 @@ Table of Contents
 * [Android Tests](#android-tests)
 * [GrocerySync Tests](#grocerysync-tests)
 * [iOS Tests](#ios-tests)
+* [Listener Tests](#listener-tests)
 * [NET Tests](#net-tests)
 * [sgcollectinfo Tests](#sgcollectinfo-tests)
 * [sync_gateway Tests](#sync_gateway-tests)
@@ -294,6 +295,56 @@ TODO
 iOS Tests
 =========
 TODO
+
+Listener Tests
+==============
+
+The listener tests are a series of tests utilizing Couchbase Lite Listener and Sync Gateway. They are meant to be cross platform and should be able to run for
+for all the platforms that support the Listener
+
+Running Mac OSX
+```
+robot --loglevel DEBUG -d results \
+    -v PLATFORM:macosx \
+    -v LITESERV_VERSION:1.2.1-13 \
+    -v LITESERV_HOST:localhost \
+    -v LITESERV_PORT:59840 \
+    -v SYNC_GATEWAY_VERSION:1.2.1-4 \
+    -v SYNC_GATEWAY_HOST:localhost \
+    -v SYNC_GATEWAY_PORT:4984 \
+    -v SYNC_GATEWAY_ADMIN_PORT:4985 \
+    testsuites/listener/shared/replication.robot
+```
+
+Running Android. For Android you need to provide the IP of the connected Android device you are using for LITESERV_HOST as well as the IP of the computer 
+running sync_gateway. In this case it will be the computer running your tests. 
+```
+robot --loglevel DEBUG -d results \
+    -v PLATFORM:android \
+    -v LITESERV_VERSION:1.2.1-18 \
+    -v LITESERV_HOST:192.168.0.18 \
+    -v LITESERV_PORT:5984 \
+    -v SYNC_GATEWAY_VERSION:1.2.1-4 \
+    -v SYNC_GATEWAY_HOST:192.168.0.14 \
+    -v SYNC_GATEWAY_PORT:4984 \
+    -v SYNC_GATEWAY_ADMIN_PORT:4985 \
+    testsuites/listener/shared/replication.robot
+```
+
+Running .NET
+```
+robot --loglevel INFO -d results \
+    -v PLATFORM:net \
+    -v LITESERV_VERSION:1.3.0-15 \
+    -v LITESERV_HOST:localhost \
+    -v LITESERV_PORT:59840 \
+    -v SYNC_GATEWAY_VERSION:1.2.1-4 \
+    -v SYNC_GATEWAY_HOST:localhost \
+    -v SYNC_GATEWAY_PORT:4984 \
+    -v SYNC_GATEWAY_ADMIN_PORT:4985 \
+    testsuites/listener/shared/replication.robot
+```
+
 
 ### iOS Test Dependencies
 =========================

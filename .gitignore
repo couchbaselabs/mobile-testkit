@@ -49,3 +49,5 @@ debug.txt
 
 deps/*
 !deps/binaries/README.md
+
+scripts/*

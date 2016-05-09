@@ -3,9 +3,9 @@ Documentation     A test suite containing functional tests of the Listener's
 ...               replication with sync_gateway
 
 Resource          resources/common.robot
-Resource          ./defines.robot
 Library           DebugLibrary
 Library           Process
+
 Library           ${KEYWORDS}/Async.py
 Library           ${KEYWORDS}/TKClient.py
 Library           ${KEYWORDS}/LiteServ.py
