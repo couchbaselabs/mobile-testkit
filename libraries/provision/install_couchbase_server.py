@@ -77,7 +77,7 @@ def install_couchbase_server(couchbase_server_config):
         ),
         stop_on_fail=False
     )
-    assert(status == 0)
+    assert(status == 0), "Failed to install Couchbase Server"
 
 if __name__ == "__main__":
     usage = "usage: python install_couchbase_server.py --version=<couchbase_server_version> --build-number=<server_build_number>"

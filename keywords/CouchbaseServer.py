@@ -3,108 +3,193 @@ import shutil
 import subprocess
 import logging
 import requests
-import tarfile
-
+import json
+import base64
+import time
 from subprocess import CalledProcessError
-from zipfile import ZipFile
+
+from requests.exceptions import ConnectionError
+
+from couchbase.bucket import Bucket
+from couchbase.exceptions import *
 
 from constants import *
+from utils import *
 from utils import version_and_build
 
+
+def get_server_version(host):
+    resp = requests.get("http://Administrator:password@{}:8091/pools".format(host))
+    log_r(resp)
+    resp.raise_for_status()
+    resp_obj = resp.json()
+
+    # Actual version is the following format 4.1.1-5914-enterprise
+    running_server_version = resp_obj["implementationVersion"]
+    running_server_version_parts = running_server_version.split("-")
+
+    # Return version in the formatt 4.1.1-5487
+    return "{}-{}".format(running_server_version_parts[0], running_server_version_parts[1])
+
+
+def verify_server_version(host, expected_server_version):
+    running_server_version = get_server_version(host)
+    expected_server_version_parts = expected_server_version.split("-")
+
+    # Check both version parts if expected version contains a build
+    if len(expected_server_version_parts) == 2:
+        # 4.1.1-5487
+        logging.info("Expected Server Version: {}".format(expected_server_version))
+        logging.info("Running Server Version: {}".format(running_server_version))
+        assert(running_server_version == expected_server_version), "Unexpected server version!! Expected: {} Actual: {}".format(expected_server_version, running_server_version)
+    elif len(expected_server_version_parts) == 1:
+        # 4.1.1
+        running_server_version_parts = running_server_version.split("-")
+        logging.info("Expected Server Version: {}".format(expected_server_version))
+        logging.info("Running Server Version: {}".format(running_server_version_parts[0]))
+        assert(expected_server_version == running_server_version_parts[0]), "Unexpected server version!! Expected: {} Actual: {}".format(expected_server_version, running_server_version_parts[0])
+    else:
+        raise ValueError("Unsupported version format")
+
+
 class CouchbaseServer:
-    """ Downloads / Installs Couchbase Server on local Mac OSX machine"""
+    """ Installs Couchbase Server on machine host"""
 
-    def __init__(self, version_build):
+    def __init__(self):
+        self._headers = {"Content-Type": "application/json"}
+        self._auth = ("Administrator", "password")
 
-        self._version_build = version_build
-        self.extracted_file_name = "couchbase-server-{}".format(self._version_build)
+    def install_couchbase_server(self, host, version):
 
-    def download_couchbase_server(self):
-        # Check if package is already downloaded and return if it is preset
-        # if os.path.isdir("{}/{}".format(BINARY_DIR, self.extracted_file_name)):
-        #     logging.info("Package exists: {}. Skipping download".format(self.extracted_file_name))
-        #     return
+        url = "http://{}:8091".format(host)
 
-        print("Installing Couchbase Server: {}".format(self._version_build))
-
-        version, build = version_and_build(self._version_build)
-
-        # Get dev server package from latestbuilds
-        if self._version_build.startswith("4.1"):
-            # http://cbnas01.sc.couchbase.com/builds/latestbuilds/couchbase-server/sherlock/5914/couchbase-server-enterprise_4.1.1-5914-macos_x86_64.zip
-            base_url = "http://cbnas01.sc.couchbase.com/builds/latestbuilds/couchbase-server/sherlock/{}".format(build)
-            package_name = "couchbase-server-enterprise_{}-{}-macos_x86_64.zip".format(version, build)
-        elif self._version_build.startswith("4.5"):
-            base_url = "http://cbnas01.sc.couchbase.com/builds/latestbuilds/couchbase-server/watson/{}".format(build)
-            package_name = "couchbase-server-enterprise_{}-{}-macos_x86_64.zip".format(version, build)
-        else:
-            raise ValueError("Unable to resolve dev build for version: {}".format(self._version_build))
-
-        url = "{}/{}".format(base_url, package_name)
-
-        # Download and write package
-        r = requests.get(url)
-        r.raise_for_status()
-
-        file_name = "{}/{}.zip".format(BINARY_DIR, self.extracted_file_name)
-
-        with open(file_name, "wb") as f:
-            f.write(r.content)
-
-        # Unzip the package
-        with ZipFile("{}".format(file_name)) as zip_f:
-            zip_f.extractall("{}/{}".format(BINARY_DIR, self.extracted_file_name))
-
-        os.chmod("{}/{}/Couchbase Server.app/Contents/MacOS/Couchbase Server".format(BINARY_DIR, self.extracted_file_name), 0755)
-
-        # Remove .tar.gz
-        os.remove(file_name)
-
-        subprocess.check_call("mv {}/{}/Couchbase\ Server.app /Applications/".format(BINARY_DIR, self.extracted_file_name), shell=True)
-
-        # Launch Server
-        subprocess.check_call("xattr -dr com.apple.quarantine /Applications/Couchbase\ Server.app", shell=True)
-        launch_server_output = subprocess.check_output("open /Applications/Couchbase\ Server.app", shell=True)
-        print(launch_server_output)
-
-    def _remove_existing_couchbase_server(self):
-
-        # Kill Archive
         try:
-            output = subprocess.check_output("ps aux | grep Archive | awk '{print $2}' | xargs kill -9", shell=True)
-            logging.info(output)
-        except CalledProcessError as e:
-            logging.info("No Archive process running: {}".format(e))
+            verify_server_version(host, version)
+            logging.info("Server version already running: {} Skipping provisioning".format(version))
+            return url
+        except AssertionError as ae:
+            # Server is not the version we are expecting
+            logging.info(ae.message)
+        except ConnectionError as ce:
+            # Server is not running
+            logging.info(ce.message)
 
-        # Kill Couchbase server
-        try:
-            subprocess.check_output("ps aux | grep '/Applications/Couchbase Server.app/Contents/MacOS/Couchbase Server' | awk '{print $2}' | xargs kill -9",
-                                    shell=True)
-            logging.info(output)
-        except CalledProcessError as e:
-            logging.info("No Couchbase Server process running: {}".format(e))
+        logging.info("Installing Couchbase Server: {}".format(version))
 
-        if os.path.isdir("/Applications/Couchbase Server.app/"):
-            shutil.rmtree("/Applications/Couchbase Server.app/")
+        temp_conf_file_name = "{}/temp_server_conf".format(CLUSTER_CONFIGS_DIR)
 
-        if os.path.isdir("~/Library/Application Support/Couchbase"):
-            shutil.rmtree("~/Library/Application Support/Couchbase")
+        # Write Server only ansible inventory file
+        with open(temp_conf_file_name, "w") as temp_conf:
+            temp_conf.write("[couchbase_servers]\n")
+            temp_conf.write("cb1 ansible_host={}\n".format(host))
 
-        if os.path.isdir("~/Library/Application Support/Membase"):
-            shutil.rmtree("~/Library/Application Support/Membase")
+        with open(temp_conf_file_name) as temp_conf:
+            logging.info("temp_conf: {}".format(temp_conf.read()))
 
-    def install_couchbase_server(self):
+        # Install server using that file as context
+        os.environ["CLUSTER_CONFIG"] = temp_conf_file_name
+        logging.info("Using CLUSTER_CONFIG: {}".format(os.environ["CLUSTER_CONFIG"]))
 
-        # Remove Couchbase Server Install
-        self._remove_existing_couchbase_server()
+        logging.info("Installing server: {} on {}".format(version, host))
+        try :
+            install_output = subprocess.check_output(["python",
+                                                      "libraries/provision/install_couchbase_server.py",
+                                                      "--version={}".format(version)])
+            logging.info(install_output)
+        except CalledProcessError as cpe:
+            logging.error("Install Status: {}".format(cpe.returncode))
+            logging.error(cpe.output)
 
+        # Remove temp provisioning configuration
+        del os.environ["CLUSTER_CONFIG"]
+        os.remove(temp_conf_file_name)
 
+        # Make sure expected version is installed
+        verify_server_version(host, version)
 
-        subprocess.check_call("mv {}/{}/Couchbase\ Server.app /Applications/".format(BINARY_DIR, self.extracted_file_name), shell=True)
+        # Return server url
+        return url
 
+    def delete_buckets(self, url):
+        count = 0
+        while count < 3:
+            resp = requests.get("{}/pools/default/buckets".format(url), auth=self._auth, headers=self._headers)
+            log_r(resp)
+            resp.raise_for_status()
 
-        # Launch Server
-        subprocess.check_call("xattr -dr com.apple.quarantine /Applications/Couchbase\ Server.app", shell=True)
-        launch_server_output = subprocess.check_output("open /Applications/Couchbase\ Server.app", shell=True)
-        print(launch_server_output)
+            obj = json.loads(resp.text)
 
+            existing_bucket_names = []
+            for entry in obj:
+                existing_bucket_names.append(entry["name"])
+
+            logging.info("Existing buckets: {}".format(existing_bucket_names))
+            logging.info("Deleting buckets: {}".format(existing_bucket_names))
+
+            # HACK around Couchbase Server issue where issuing a bucket delete via REST occasionally returns 500 error
+            delete_num = 0
+            # Delete existing buckets
+            for bucket_name in existing_bucket_names:
+                resp = requests.delete("{0}/pools/default/buckets/{1}".format(url, bucket_name), auth=self._auth, headers=self._headers)
+                log_r(resp)
+                if resp.status_code == 200:
+                    delete_num += 1
+
+            if delete_num == len(existing_bucket_names):
+                break
+            else:
+                # A 500 error may have occured, query for buckets and try to delete them again
+                time.sleep(5)
+                count += 1
+
+        # Check that max retries did not occur
+        assert count != 3, "Could not delete bucket"
+
+    def create_bucket(self, url, name):
+        """
+        1. Create CBS bucket via REST
+        2. Create client connection and poll until bucket is available
+           Catch all connection exception and break when KeyNotFound error is thrown
+
+        Followed the docs below that suggested this approach.
+        http://docs.couchbase.com/admin/admin/REST/rest-bucket-create.html
+        """
+
+        # Todo, make ramQuotaMB more flexible
+        data = {
+            "name": name,
+            "ramQuotaMB": "1024",
+            "authType": "sasl",
+            "proxyPort": "11211",
+            "bucketType": "couchbase",
+        }
+
+        resp = requests.post("{}/pools/default/buckets".format(url), auth=self._auth, data=data)
+        log_r(resp)
+        resp.raise_for_status()
+
+        # Create client an retry until KeyNotFound error is thrown
+        client_host = url.lstrip("http://")
+        client_host = client_host.rstrip(":8091")
+        logging.info(client_host)
+
+        start = time.time()
+        while True:
+
+            if time.time() - start > CLIENT_REQUEST_TIMEOUT:
+                raise Exception("Verify Docs Present: TIMEOUT")
+
+            try:
+                bucket = Bucket("couchbase://{}/{}".format(client_host, name))
+                rv = bucket.get('foo')
+            except ProtocolError as pe:
+                logging.info("Client Connection failed: {} Retrying ...".format(pe))
+                time.sleep(1)
+                continue
+            except TemporaryFailError as te:
+                logging.info("Failure from server: {} Retrying ...".format(te))
+                time.sleep(1)
+                continue
+            except NotFoundError as nfe:
+                logging.info("Key not found error: {} Bucket is ready!".format(nfe))
+                break

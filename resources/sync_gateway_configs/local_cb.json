@@ -2,8 +2,8 @@
 	"log": ["*"],
 	"databases": {
 		"db":{
-            "server":"http://localhost:8091",
-            "bucket":"db"
+            "server":"http://{{ couchbase_server_host }}:8091",
+            "bucket":"data-bucket"
         }
 	}
 }

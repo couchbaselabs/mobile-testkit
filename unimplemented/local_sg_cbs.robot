@@ -9,10 +9,9 @@ Library           ${KEYWORDS}/MobileRestClient.py
 Library           ${KEYWORDS}/SyncGateway.py
 ...                 version_build=${SYNC_GATEWAY_VERSION}
 Library           ${KEYWORDS}/CouchbaseServer.py
-...                 version_build=${COUCHBASE_SERVER_VERSION}
 
 Suite Setup       Setup Suite
-#Test Setup        Setup Test
+Test Setup        Setup Test
 #Test Teardown     Teardown Test
 #Suite Teardown    Teardown Suite
 
@@ -38,7 +37,9 @@ Test Attachment Revpos When Ancestor Unavailable
     ...                  If so, we can validate any revpos values equal to or earlier than the common ancestor against the active revision.
     [Tags]           sanity    attachments  syncgateway
 
-    ${db} db
+    Log To Console  TESTING
+
+    #${db} db
 
     ${sg_url}  ${sg_url_admin} =  Start Sync Gateway
     ...  config=${SYNC_GATEWAY_CONFIG}
@@ -46,14 +47,14 @@ Test Attachment Revpos When Ancestor Unavailable
     ...  port=${SYNC_GATEWAY_PORT}
     ...  admin_port=${SYNC_GATEWAY_ADMIN_PORT}
 
-    Debug
+    #Debug
 
     #${sg_docs} =  Add Docs  url=${sg_url_admin}  db=${db}  number=${500}  id_prefix=sg_db
 
-    ${doc} =  Create Doc  id=test_doc  content={ "sample": "json" }  attachment=${attachment}
-    ${doc_handle} =  Add Doc  url=${sg_url}  db=${db}  ${doc}
+    #${doc} =  Create Doc  id=test_doc  content={ "sample": "json" }  attachment=${attachment}
+    #${doc_handle} =  Add Doc  url=${sg_url}  db=${db}  ${doc}
 
-     Debug
+     #Debug
 
 #    ${dburl} =       http://localhost:4985/default
 #    ${docid} =       TestDoc
@@ -74,7 +75,7 @@ Test Attachment Revpos When Ancestor Unavailable
 
     # Create a conflicting revision with revision 1 as ancestor, referencing revpos
 
-    ${revid} =      Update Doc With Conflicting Attachment Stub ${dburl} ${docid} ${rev1id} 2 foo 201
+    #${revid} =      Update Doc With Conflicting Attachment Stub ${dburl} ${docid} ${rev1id} 2 foo 201
 
 #Test Attachment Revpos When Ancestor Unavailable, Active Revision doesn't share ancestor
 #    Documentation    Creates a document with an attachment, then updates that document so that
@@ -104,10 +105,14 @@ Test Attachment Revpos When Ancestor Unavailable
 *** Keywords ***
 Setup Suite
     Download Sync Gateway
-    Download Couchbase Server
-    #Install Couchbase Server
+    ${cbs_url} =  Install Couchbase Server  host=${COUCHBASE_SERVER_HOST}  version=${COUCHBASE_SERVER_VERSION}
+    Set Suite Variable  ${cbs_url}
 
-#Setup Test
+
+Setup Test
+    Delete Buckets  url=${cbs_url}
+    Create Bucket  url=${cbs_url}  name=testdb
+
 #Teardown Test
 #Teardown Suite
 
