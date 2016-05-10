@@ -1,9 +1,9 @@
 {
 	"log": ["*"],
 	"databases": {
-		"db":{
-            "server":"http://{{ couchbase_server_host }}:8091",
-            "bucket":"data-bucket"
+		"{{ sync_gateway_db }}":{
+            "server":"{{ couchbase_server_host }}",
+            "bucket":"{{ couchbase_server_bucket }}"
         }
 	}
 }

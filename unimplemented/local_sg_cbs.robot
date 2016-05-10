@@ -37,15 +37,18 @@ Test Attachment Revpos When Ancestor Unavailable
     ...                  If so, we can validate any revpos values equal to or earlier than the common ancestor against the active revision.
     [Tags]           sanity    attachments  syncgateway
 
-    Log To Console  TESTING
+    Log To Console  ${cbs_url}
 
-    #${db} db
+    ${test_db} =  Create Bucket  url=${cbs_url}  name=testdb-bucket
 
     ${sg_url}  ${sg_url_admin} =  Start Sync Gateway
     ...  config=${SYNC_GATEWAY_CONFIG}
+    ...  db=testdb
     ...  host=${SYNC_GATEWAY_HOST}
     ...  port=${SYNC_GATEWAY_PORT}
     ...  admin_port=${SYNC_GATEWAY_ADMIN_PORT}
+    ...  server_url=${cbs_url}
+    ...  server_bucket=${test_db}
 
     #Debug
 
@@ -111,7 +114,6 @@ Setup Suite
 
 Setup Test
     Delete Buckets  url=${cbs_url}
-    Create Bucket  url=${cbs_url}  name=testdb
 
 #Teardown Test
 #Teardown Suite
