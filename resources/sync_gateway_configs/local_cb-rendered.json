@@ -1,0 +1,9 @@
+{
+	"log": ["*"],
+	"databases": {
+		"testdb":{
+            "server":"http://192.168.0.23:8091",
+            "bucket":"testdb-bucket"
+        }
+	}
+}

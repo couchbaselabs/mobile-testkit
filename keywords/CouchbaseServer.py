@@ -193,3 +193,5 @@ class CouchbaseServer:
             except NotFoundError as nfe:
                 logging.info("Key not found error: {} Bucket is ready!".format(nfe))
                 break
+
+        return name

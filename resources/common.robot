@@ -152,12 +152,19 @@ Start Sync Gateway
     [Documentation]   Starts sync_gateway with a provided configuration on a host and port(s).
     ...  The sync_gateway binary is located in deps/binaries.
     [Timeout]       1 minute
-    [Arguments]  ${config}  ${host}  ${port}  ${admin_port}
+    [Arguments]  ${config}  ${db}  ${host}  ${port}  ${admin_port}  ${server_url}  ${server_bucket}
+
+    ${rendered_config} =  Render Sync Gateway Config
+    ...  config=${config}
+    ...  db=${db}
+    ...  server_url=${server_url}
+    ...  server_bucket=${server_bucket}
+
     ${binary_path} =  Get Sync Gateway Binary Path
     Start Process   ${binary_path}
     ...             -interface       ${host}:${port}
     ...             -adminInterface  ${host}:${admin_port}
-    ...             ${config}
+    ...             ${rendered_config}
     ...             alias=sync_gateway
     ...             stdout=${RESULTS}/${TEST_NAME}-sync-gateway-stdout.log
     ...             stderr=${RESULTS}/${TEST_NAME}-sync-gateway-stderr.log
