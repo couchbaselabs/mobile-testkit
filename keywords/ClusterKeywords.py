@@ -6,21 +6,9 @@ import re
 from requests.exceptions import HTTPError
 from requests.exceptions import ConnectionError
 
-def log_r(request):
-    logging.info("{0} {1} {2}".format(
-            request.request.method,
-            request.request.url,
-            request.status_code
-        )
-    )
-    logging.debug("{0} {1}\nHEADERS = {2}\nBODY = {3}".format(
-            request.request.method,
-            request.request.url,
-            request.request.headers,
-            request.request.body,
-        )
-    )
-    logging.debug("{}".format(request.text))
+from utils import *
+
+from CouchbaseServer import verify_server_version
 
 class ClusterKeywords:
 
@@ -64,41 +52,6 @@ class ClusterKeywords:
                 logging.info(he)
 
         assert len(running_services) == 0, "Running Services Found: {}".format(running_services)
-
-    def get_server_version(self, host):
-        resp = requests.get("http://Administrator:password@{}:8091/pools".format(host))
-        log_r(resp)
-        resp.raise_for_status()
-        resp_obj = resp.json()
-
-        # Actual version is the following format 4.1.1-5914-enterprise
-        running_server_version = resp_obj["implementationVersion"]
-        running_server_version_parts = running_server_version.split("-")
-
-        # Return version in the formatt 4.1.1-5487
-        return "{}-{}".format(running_server_version_parts[0], running_server_version_parts[1])
-
-    def verify_server_version(self, host, expected_server_version):
-
-        running_server_version = self.get_server_version(host)
-        expected_server_version_parts = expected_server_version.split("-")
-
-        # Check both version parts if expected version contains a build
-        if len(expected_server_version_parts) == 2:
-            # 4.1.1-5487
-            logging.info("Expected Server Version: {}".format(expected_server_version))
-            logging.info("Running Server Version: {}".format(running_server_version))
-            if running_server_version != expected_server_version:
-                raise ValueError("Unexpected server version!! Expected: {} Actual: {}".format(expected_server_version, running_server_version))
-        elif len(expected_server_version_parts) == 1:
-            # 4.1.1
-            running_server_version_parts = running_server_version.split("-")
-            logging.info("Expected Server Version: {}".format(expected_server_version))
-            logging.info("Running Server Version: {}".format(running_server_version_parts[0]))
-            if expected_server_version != running_server_version_parts[0]:
-                raise ValueError("Unexpected server version!! Expected: {} Actual: {}".format(expected_server_version, running_server_version_parts[0]))
-        else:
-            raise ValueError("Unsupported version format")
 
     def get_sync_gateway_version(self, host):
         resp = requests.get("http://{}:4984".format(host))
@@ -175,7 +128,7 @@ class ClusterKeywords:
 
         # Verify Server version
         for server in cluster_obj["couchbase_servers"]:
-            self.verify_server_version(server["ip"], expected_server_version)
+            verify_server_version(server["ip"], expected_server_version)
 
         # Verify sync_gateway versions
         for sg in cluster_obj["sync_gateways"]:
