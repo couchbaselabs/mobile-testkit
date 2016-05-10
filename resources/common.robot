@@ -1,21 +1,26 @@
 *** Settings ***
 Documentation    Common Variables / Keywords
 
+Library     Process
 Library     ${KEYWORDS}/ClusterKeywords.py
 
 *** Variables ***
 ${LIBRARIES}                libraries
 ${KEYWORDS}                 keywords
 
+${KEYWORDS}                 keywords
+${RESULTS}                  results
 ${RESOURCES}                resources
 ${ARTIFACTS}                ${RESOURCES}/artifacts
 ${SYNC_GATEWAY_CONFIGS}     ${RESOURCES}/sync_gateway_configs
 ${CLUSTER_CONFIGS}          ${RESOURCES}/cluster_configs
 
+
 # Suite paths
 ${SYNC_GATEWAY_SUITE_FUNCTIONAL}  testsuites/syncgateway/functional
 
 *** Keywords ***
+# Provisioning Keywords
 Provision Cluster
     [Arguments]  ${server_version}  ${sync_gateway_version}  ${sync_gateway_config}
     [Documentation]    Installs a Sync Gateway (build) + Sg Accel cluster based on the CLUSTER_CONFIG environment variable
@@ -70,5 +75,99 @@ Install Sync Gateway
     Log To Console  ${result.stderr}
     Log To Console  ${result.stdout}
 
+# LiteServ Keywords
+Install LiteServ
+    Run Keyword If  "${PLATFORM}" == "android"  Install Apk  ELSE  Log  No install need
 
+Start LiteServ
+    [Documentation]   Starts LiteServ for a specific platform.
+    ...  The LiteServ binaries are located in deps/.
+    [Arguments]  ${host}  ${port}
+    [Timeout]       1 minute
 
+    ${ls_url} =  Run Keyword If  "${PLATFORM}" == "macosx"  Start MacOSX LiteServ  host=${host}  port=${port}
+    ${ls_url} =  Run Keyword If  "${PLATFORM}" == "android"  Start Android LiteServ  host=${host}  port=${port}
+    ${ls_url} =  Run Keyword If  "${PLATFORM}" == "net"  Start Net ListenerConsole  host=${host}  port=${port}
+
+    ${ls_url} =  Verify LiteServ Launched  host=${host}  port=${port}
+    [return]  ${ls_url}
+
+Start MacOSX LiteServ
+    [Documentation]   Starts LiteServ for MacOSX platform.
+    ...  The LiteServ binaries are located in deps/.
+    [Arguments]  ${host}  ${port}
+    [Timeout]       1 minute
+    ${binary_path} =  Get LiteServ Binary Path
+    Start Process   ${binary_path}  --port  ${port}
+    ...             -Log  YES  -LogSync  YES  -LogCBLRouter  YES  -LogSyncVerbose  YES  -LogRemoteRequest  YES
+    ...             alias=liteserv-ios
+    ...             shell=True
+    ...             stdout=${RESULTS}/${TEST_NAME}-${PLATFORM}-liteserv-stdout.log
+    ...             stderr=${RESULTS}/${TEST_NAME}-${PLATFORM}-liteserv-stderr.log
+    Process Should Be Running   handle=liteserv-ios
+
+Start Android LiteServ
+    [Documentation]   Starts LiteServ Activity on Running on port.
+    ...  The LiteServ binaries are located in deps/.
+    [Arguments]  ${host}  ${port}
+    [Timeout]       1 minute
+    Launch Activity  ${port}
+
+Start Net ListenerConsole
+    [Documentation]   Starts a .net ListenerConsole on a port.
+    [Arguments]  ${host}  ${port}
+    [Timeout]       1 minute
+    ${binary_path} =  Get LiteServ Binary Path
+    Start Mono Process  ${binary_path}  ${port}
+
+Shutdown LiteServ
+    [Documentation]   Stops LiteServ for a specific platform.
+    ...  The LiteServ binaries are located in deps/binaries.
+    [Timeout]       1 minute
+    Run Keyword If  "${PLATFORM}" == "macosx"  Shutdown MacOSX LiteServ
+    Run Keyword If  "${PLATFORM}" == "android"  Shutdown Android LiteServ
+    Run Keyword If  "${PLATFORM}" == "net"  Shutdown Net ListenerConsole
+
+Shutdown MacOSX LiteServ
+    [Documentation]   Stops Mac OSX LiteServ.
+    ...  The LiteServ binaries are located in deps/binaries.
+    [Timeout]       1 minute
+    Terminate Process          handle=liteserv-ios
+    Process Should Be Stopped  handle=liteserv-ios
+
+Shutdown Android LiteServ
+    [Documentation]   Stops Android LiteServ Activity.
+    ...  The LiteServ binaries are located in deps/binaries.
+    [Timeout]       1 minute
+    Stop Activity
+
+Shutdown Net ListenerConsole
+    [Documentation]   Kills Net Listener Console Process.
+    ...  The LiteServ binaries are located in deps/binaries.
+    [Timeout]       1 minute
+    Kill Mono Process
+
+# sync_gateway keywords
+Start Sync Gateway
+    [Documentation]   Starts sync_gateway with a provided configuration on a host and port(s).
+    ...  The sync_gateway binary is located in deps/binaries.
+    [Timeout]       1 minute
+    [Arguments]  ${config}  ${host}  ${port}  ${admin_port}
+    ${binary_path} =  Get Sync Gateway Binary Path
+    Start Process   ${binary_path}
+    ...             -interface       ${host}:${port}
+    ...             -adminInterface  ${host}:${admin_port}
+    ...             ${config}
+    ...             alias=sync_gateway
+    ...             stdout=${RESULTS}/${TEST_NAME}-sync-gateway-stdout.log
+    ...             stderr=${RESULTS}/${TEST_NAME}-sync-gateway-stderr.log
+    Process Should Be Running   handle=sync_gateway
+    ${sg_url} =  Verify Sync Gateway Launched  host=${host}  port=${port}  admin_port=${admin_port}
+    [return]    ${sg_url}
+
+Shutdown Sync Gateway
+    [Documentation]   Stops sync_gateway running on a local machine.
+    ...  The LiteServ binaries are located in deps/binaries.
+    [Timeout]       1 minute
+    Terminate Process          handle=sync_gateway
+    Process Should Be Stopped  handle=sync_gateway

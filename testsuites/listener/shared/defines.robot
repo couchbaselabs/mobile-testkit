@@ -5,6 +5,7 @@ Documentation     Global settings and variables defined for all Listener tests.
 ${DBNAME}           foo
 ${VIEW1_NAME}       fizz
 ${VIEW2_NAME}       buzz
-${HOSTNAME}         localhost
 ${USERNAME}         demo
 ${PASSWORD}         pass
+
+*** Keywords ***

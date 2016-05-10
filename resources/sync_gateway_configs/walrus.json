@@ -1,0 +1,8 @@
+{
+	"log": ["*"],
+	"databases": {
+		"db": {
+			"server": "walrus:"
+		}
+	}
+}

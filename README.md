@@ -19,9 +19,11 @@ Table of Contents
 * [Android Tests](#android-tests)
 * [GrocerySync Tests](#grocerysync-tests)
 * [iOS Tests](#ios-tests)
+* [Listener Tests](#listener-tests)
 * [NET Tests](#net-tests)
 * [sgcollectinfo Tests](#sgcollectinfo-tests)
 * [sync_gateway Tests](#sync_gateway-tests)
+* [Debugging](#debugging)
 * [Monitoring](#monitoring)
 * [Known Issues And Limitations](#known-issues-and-limitations)
 
@@ -76,14 +78,12 @@ Python 2.7.10
 
 **Install libcouchbase**
 
-If your controlling maching is Mac
-
+On MacOSX
 ```
-$ brew install libcouchbase 
+$ brew install libcouchbase
 ```
 
-If your controlling machine is CentOS,
-
+On CentOS7
 ```
 $ sudo yum install python-devel
 ```
@@ -109,15 +109,14 @@ $ [sudo] pip install virtualenv
 ```
 $ cd mobile-testkit/
 $ virtualenv -p /usr/bin/python2.7 venv
-$ source venv/bin/activate
-$ pip install -r requirements.txt
 ```
 
-** Add current directory to $PYTHONPATH. This will pick the custom libraries and allow you to use them
+Setup PATH and PYTHONPATH
+```
+source setup.sh
+```
 
-```
-$ export PYTHONPATH=$PYTHONPATH:.
-```
+If you plan on doing development, it may be helpful to add the PYTHONPATH env variables to you .bashrc file so that you do not have to run setup everytime you open a new shell.
 
 ### Development Environment
 ===========================
@@ -296,6 +295,56 @@ TODO
 iOS Tests
 =========
 TODO
+
+Listener Tests
+==============
+
+The listener tests are a series of tests utilizing Couchbase Lite Listener and Sync Gateway. They are meant to be cross platform and should be able to run for
+for all the platforms that support the Listener
+
+Running Mac OSX
+```
+robot --loglevel DEBUG -d results \
+    -v PLATFORM:macosx \
+    -v LITESERV_VERSION:1.2.1-13 \
+    -v LITESERV_HOST:localhost \
+    -v LITESERV_PORT:59840 \
+    -v SYNC_GATEWAY_VERSION:1.2.1-4 \
+    -v SYNC_GATEWAY_HOST:localhost \
+    -v SYNC_GATEWAY_PORT:4984 \
+    -v SYNC_GATEWAY_ADMIN_PORT:4985 \
+    testsuites/listener/shared/replication.robot
+```
+
+Running Android. For Android you need to provide the IP of the connected Android device you are using for LITESERV_HOST as well as the IP of the computer 
+running sync_gateway. In this case it will be the computer running your tests. 
+```
+robot --loglevel DEBUG -d results \
+    -v PLATFORM:android \
+    -v LITESERV_VERSION:1.2.1-18 \
+    -v LITESERV_HOST:192.168.0.18 \
+    -v LITESERV_PORT:5984 \
+    -v SYNC_GATEWAY_VERSION:1.2.1-4 \
+    -v SYNC_GATEWAY_HOST:192.168.0.14 \
+    -v SYNC_GATEWAY_PORT:4984 \
+    -v SYNC_GATEWAY_ADMIN_PORT:4985 \
+    testsuites/listener/shared/replication.robot
+```
+
+Running .NET
+```
+robot --loglevel INFO -d results \
+    -v PLATFORM:net \
+    -v LITESERV_VERSION:1.3.0-15 \
+    -v LITESERV_HOST:localhost \
+    -v LITESERV_PORT:59840 \
+    -v SYNC_GATEWAY_VERSION:1.2.1-4 \
+    -v SYNC_GATEWAY_HOST:localhost \
+    -v SYNC_GATEWAY_PORT:4984 \
+    -v SYNC_GATEWAY_ADMIN_PORT:4985 \
+    testsuites/listener/shared/replication.robot
+```
+
 
 ### iOS Test Dependencies
 =========================
@@ -498,6 +547,21 @@ $ python libraries/provision/create_and_instantiate_cluster.py \
 ```
 
 Wait until the resources are up, then create the `pool.json` file by hand according to instructions above.
+
+
+Debugging
+=========
+
+When developing custom keyworks, you may want to break and inspect at a certain point. Adding the following lines will do what you need
+
+```
+import pdb
+for attr in ('stdin', 'stdout', 'stderr'):
+    setattr(sys, attr, getattr(sys, '__%s__' % attr))
+pdb.set_trace()
+```
+
+They will redirect the stdin, stdout, and stderr from robot back to your control
 
 
 Monitoring
