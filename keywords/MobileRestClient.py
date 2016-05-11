@@ -50,6 +50,7 @@ def parse_multipart_response(response):
         # ]
         # Only include part that has doc property
         if part_lines and len(part_lines) > 2:
+            logging.info(part_lines)
             doc = part_lines[-1]
             try:
                 doc_obj = json.loads(doc)
@@ -130,6 +131,82 @@ class MobileRestClient:
             resp = self._session.delete("{}/{}".format(url, db))
             log_r(resp)
             resp.raise_for_status()
+
+    def get_doc(self, url, db, doc_id):
+        """
+        returns a dictionary with the following format:
+
+        {
+            "_attachments":{
+                "sample_text.txt":{
+                    "digest":"sha1-x6zPGLnfGXxKdGqxUN2YzvFGdho=",
+                    "length":445,
+                    "revpos":1,
+                    "stub":true}
+                },
+            "_id":"att_doc",
+            "_rev":"1-59bd81bc19049947b4728f8c769a44bd",
+            "content":"{ \"sample_key\": \"sample_value\" }"
+            ,"updates":0
+        }
+        """
+
+        resp = self._session.get("{}/{}/{}".format(url, db, doc_id))
+        log_r(resp)
+        resp.raise_for_status()
+        resp_obj = resp.json()
+
+        return resp_obj
+
+    def add_doc(self, url, db, doc):
+        doc["updates"] = 0
+        resp = self._session.post("{}/{}/".format(url, db), data=json.dumps(doc))
+        log_r(resp)
+        resp.raise_for_status()
+        resp_obj = resp.json()
+
+        return {"id": resp_obj["id"], "rev": resp_obj["rev"]}
+
+    def update_doc(self, url, db, doc_id, number_updates, rev=None):
+        """
+        Updates a doc on a db a number of times.
+            1. GETs the doc
+            2. It increments the "updates" propery
+            3 (rev == None). PUTs the doc
+            4 (rev != None). PUTs the doc to a specific rev
+        """
+
+        logging.info(doc_id)
+        logging.info(rev)
+
+        if rev is None:
+            doc = self.get_doc(url, db, doc_id)
+            current_rev = doc["_rev"]
+        else:
+            current_rev = rev
+
+        for i in xrange(number_updates):
+
+            doc = self.get_doc(url, db, doc_id)
+
+            current_update_number = doc["updates"]
+            doc["updates"] = current_update_number + 1
+            doc["_rev"] = current_rev
+
+            if rev is not None:
+                # Force a conflict if explicit rev is passed in
+                params = {"new_edits": "false"}
+                resp = self._session.put("{}/{}/{}".format(url, db, doc_id), params=params, data=json.dumps(doc))
+            else:
+                resp = self._session.put("{}/{}/{}".format(url, db, doc_id), data=json.dumps(doc))
+
+            log_r(resp)
+            resp.raise_for_status()
+            resp_obj = resp.json()
+
+            current_rev = resp_obj["rev"]
+
+        return {"id": resp_obj["id"], "rev": resp_obj["rev"]}
 
     def add_docs(self, url, db, number, id_prefix, generator=simple()):
 

@@ -4,6 +4,7 @@ BINARY_DIR = "deps/binaries"
 LATEST_BUILDS = "http://latestbuilds.hq.couchbase.com"
 RESULTS_DIR = "results"
 CLUSTER_CONFIGS_DIR = "resources/cluster_configs"
+DATA_DIR = "resources/data"
 
 MAX_RETRIES = 5
 
