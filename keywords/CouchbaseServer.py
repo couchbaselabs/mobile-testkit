@@ -148,6 +148,7 @@ class CouchbaseServer:
         1. Create CBS bucket via REST
         2. Create client connection and poll until bucket is available
            Catch all connection exception and break when KeyNotFound error is thrown
+        3. Verify all server nodes are in a 'healthy' state before proceeding
 
         Followed the docs below that suggested this approach.
         http://docs.couchbase.com/admin/admin/REST/rest-bucket-create.html
@@ -192,6 +193,7 @@ class CouchbaseServer:
                 logging.info("Key not found error: {} Bucket is ready!".format(nfe))
                 break
 
+        # Verify all nodes are in a "healthy" state to avoid sync_gateway startup failures
         start = time.time()
         while True:
 

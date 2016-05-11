@@ -52,13 +52,15 @@ Test Attachment Revpos When Ancestor Unavailable
     ...  server_url=${cbs_url}
     ...  server_bucket=${sg_db_bucket}
 
+    ${doc_with_att} =  Create Doc  id=att_doc  content={ "sample_key": "sample_value" }  attachment=sample_text.txt
+    ${doc_rev_1} =  Add Doc  url=${sg_url_admin}  db=${sg_db}  doc=${doc_with_att}
+    ${doc_rev_2} =  Update Doc  url=${sg_url_admin}  db=${sg_db}  doc_id=${doc_rev_1["id"]}  number_updates=${1}
+    ${doc_rev_4} =  Update Doc  url=${sg_url_admin}  db=${sg_db}  doc_id=${doc_rev_1["id"]}  number_updates=${2}
+
+    ${doc_rev_2_conflict} =  Update Doc  url=${sg_url_admin}  db=${sg_db}  doc_id=${doc_rev_1["id"]}  number_updates=${1}  rev=${doc_rev_2["rev"]}
+
     Debug
 
-    ${sg_docs} =  Add Docs  url=${sg_url_admin}  db=${sg_db}  number=${500}  id_prefix=sg_db
-
-    Debug
-
-    #${doc} =  Create Doc  id=test_doc  content={ "sample": "json" }  attachment=${attachment}
     #${doc_handle} =  Add Doc  url=${sg_url}  db=${db}  ${doc}
 
      #Debug
@@ -113,9 +115,7 @@ Test Attachment Revpos When Ancestor Unavailable
 Setup Suite
     Download Sync Gateway
     ${cbs_url} =  Install Couchbase Server  host=${COUCHBASE_SERVER_HOST}  version=${COUCHBASE_SERVER_VERSION}
-
     Set Suite Variable  ${cbs_url}
-
 
 Setup Test
     Delete Buckets  url=${cbs_url}
