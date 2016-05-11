@@ -108,7 +108,6 @@ $ [sudo] pip install virtualenv
 
 ```
 $ cd mobile-testkit/
-$ virtualenv -p /usr/bin/python2.7 venv
 ```
 
 Setup PATH and PYTHONPATH
