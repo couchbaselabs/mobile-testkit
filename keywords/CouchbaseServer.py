@@ -31,7 +31,6 @@ def get_server_version(host):
     # Return version in the formatt 4.1.1-5487
     return "{}-{}".format(running_server_version_parts[0], running_server_version_parts[1])
 
-
 def verify_server_version(host, expected_server_version):
     running_server_version = get_server_version(host)
     expected_server_version_parts = expected_server_version.split("-")
@@ -50,7 +49,6 @@ def verify_server_version(host, expected_server_version):
         assert(expected_server_version == running_server_version_parts[0]), "Unexpected server version!! Expected: {} Actual: {}".format(expected_server_version, running_server_version_parts[0])
     else:
         raise ValueError("Unsupported version format")
-
 
 class CouchbaseServer:
     """ Installs Couchbase Server on machine host"""
@@ -193,5 +191,32 @@ class CouchbaseServer:
             except NotFoundError as nfe:
                 logging.info("Key not found error: {} Bucket is ready!".format(nfe))
                 break
+
+        start = time.time()
+        while True:
+
+            if time.time() - start > CLIENT_REQUEST_TIMEOUT:
+                raise Exception("Verify Docs Present: TIMEOUT")
+
+            # Verfy the server is in a "healthy", not "warmup" state
+            resp = requests.get("{}/pools/nodes".format(url), auth=self._auth, headers=self._headers)
+            log_r(resp)
+
+            resp_obj = resp.json()
+
+            all_nodes_healthy = True
+            for node in resp_obj["nodes"]:
+                if node["status"] != "healthy":
+                    all_nodes_healthy = False
+                    logging.info("Node: {} is still not healthy. Retrying ...".format(node))
+                    time.sleep(1)
+
+            if not all_nodes_healthy:
+                continue
+
+            logging.info("All nodes are healthy")
+            logging.debug(resp_obj)
+            # All nodes are heathy if it made it to here
+            break
 
         return name

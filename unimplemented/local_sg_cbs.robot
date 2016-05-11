@@ -12,7 +12,8 @@ Library           ${KEYWORDS}/CouchbaseServer.py
 
 Suite Setup       Setup Suite
 Test Setup        Setup Test
-#Test Teardown     Teardown Test
+Test Teardown     Teardown Test
+
 #Suite Teardown    Teardown Suite
 
 Test Timeout      10 minutes     The default test timeout elapsed before the test completed.
@@ -39,20 +40,23 @@ Test Attachment Revpos When Ancestor Unavailable
 
     Log To Console  ${cbs_url}
 
-    ${test_db} =  Create Bucket  url=${cbs_url}  name=testdb-bucket
+    ${sg_db_bucket} =  Create Bucket  url=${cbs_url}  name=db-bucket
+    ${sg_db} =  Set Variable  testdb
 
     ${sg_url}  ${sg_url_admin} =  Start Sync Gateway
     ...  config=${SYNC_GATEWAY_CONFIG}
-    ...  db=testdb
+    ...  db=${sg_db}
     ...  host=${SYNC_GATEWAY_HOST}
     ...  port=${SYNC_GATEWAY_PORT}
     ...  admin_port=${SYNC_GATEWAY_ADMIN_PORT}
     ...  server_url=${cbs_url}
-    ...  server_bucket=${test_db}
+    ...  server_bucket=${sg_db_bucket}
 
-    #Debug
+    Debug
 
-    #${sg_docs} =  Add Docs  url=${sg_url_admin}  db=${db}  number=${500}  id_prefix=sg_db
+    ${sg_docs} =  Add Docs  url=${sg_url_admin}  db=${sg_db}  number=${500}  id_prefix=sg_db
+
+    Debug
 
     #${doc} =  Create Doc  id=test_doc  content={ "sample": "json" }  attachment=${attachment}
     #${doc_handle} =  Add Doc  url=${sg_url}  db=${db}  ${doc}
@@ -109,13 +113,15 @@ Test Attachment Revpos When Ancestor Unavailable
 Setup Suite
     Download Sync Gateway
     ${cbs_url} =  Install Couchbase Server  host=${COUCHBASE_SERVER_HOST}  version=${COUCHBASE_SERVER_VERSION}
+
     Set Suite Variable  ${cbs_url}
 
 
 Setup Test
     Delete Buckets  url=${cbs_url}
 
-#Teardown Test
+Teardown Test
+    Shutdown Sync Gateway
 #Teardown Suite
 
 
