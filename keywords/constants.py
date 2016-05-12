@@ -8,7 +8,7 @@ DATA_DIR = "resources/data"
 
 MAX_RETRIES = 5
 
-CLIENT_REQUEST_TIMEOUT = 30
+CLIENT_REQUEST_TIMEOUT = 120
 
 class ServerType(Enum):
     syncgateway = "syncgateway"

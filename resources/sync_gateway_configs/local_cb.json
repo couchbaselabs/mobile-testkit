@@ -1,9 +1,0 @@
-{
-	"log": ["*"],
-	"databases": {
-		"{{ sync_gateway_db }}":{
-            "server":"{{ couchbase_server_host }}",
-            "bucket":"{{ couchbase_server_bucket }}"
-        }
-	}
-}

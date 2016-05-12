@@ -7,6 +7,7 @@ from requests.exceptions import HTTPError
 
 from robot.api.logger import console
 
+from CouchbaseServer import CouchbaseServer
 from libraries.data.doc_generators import *
 from constants import *
 
@@ -109,16 +110,27 @@ class MobileRestClient:
 
         return (name, password)
 
-    def create_database(self, url, name):
+    def create_database(self, url, name, server=None):
 
         server_type = self.get_server_type(url)
 
         if server_type == ServerType.listener:
             resp = self._session.put("{}/{}/".format(url, name))
         elif server_type == ServerType.syncgateway:
+            if server is None:
+                raise ValueError("Creating database error. You must provide a server either ('walrus:' or '{coucbase_server_url}')")
+
+            logging.info("Using server: {} for database: {}".format(server, name))
+
+            if server != "walrus:":
+                # Create bucket to support the database
+                logging.info("Creating backing bucket for sync_gateway db '{}' on '{}'".format(name, server))
+                server = CouchbaseServer()
+                server.create_bucket(server, name)
+
             data = {
                 "name": "{}".format(name),
-                "server": "walrus:",
+                "server": server,
                 "bucket": "{}".format(name)
             }
             resp = self._session.put("{}/{}/".format(url, name), data=json.dumps(data))
