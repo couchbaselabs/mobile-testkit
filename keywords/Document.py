@@ -5,11 +5,20 @@ from constants import *
 
 class Document:
 
-    def create_doc(self, id, content, attachment=None):
+    def create_doc(self, id, content=None, attachment=None, channels=[]):
+
+        if not isinstance(channels, list):
+            raise ValueError("channels must be of type 'list'")
+
         doc = {}
+
         if id is not None:
             doc["_id"] = id
-        doc["content"] = content
+
+        if content is not None:
+            doc["content"] = content
+
+        doc["channels"] = channels
 
         if attachment is not None:
             with open ("{}/{}".format(DATA_DIR, attachment)) as f:
