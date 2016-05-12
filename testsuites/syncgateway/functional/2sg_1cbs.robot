@@ -12,6 +12,8 @@ Library     test_sg_replicate.py
 Suite Setup     Suite Setup
 Suite Teardown  Suite Teardown
 
+Test Setup  Setup Test
+
 Test Teardown   Test Teardown
 
 Test Timeout    10 minutes
@@ -75,6 +77,9 @@ Test Replication Config
 
 
 *** Keywords ***
+Setup Test
+    Start Packet Capture
+
 Suite Setup
     Log  Setting up suite ...  console=True
     Set Environment Variable  CLUSTER_CONFIG  ${CLUSTER_CONFIG}
@@ -96,4 +101,6 @@ Suite Teardown
 Test Teardown
     Log  Tearing down test ...  console=True
     List Connections
+    Stop Packet Capture
+    Collect Packet Capture
     Run Keyword If Test Failed      Fetch And Analyze Logs

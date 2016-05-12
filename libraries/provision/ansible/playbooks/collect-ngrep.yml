@@ -1,0 +1,9 @@
+---
+- hosts: sync_gateways:sg_accels
+  any_errors_fatal: false
+  become: yes
+
+  tasks:
+  - name: fetch ngrep packet capture
+    fetch: src=/tmp/ngrep.txt dest=/tmp/sg_logs/ngrep_{{ inventory_hostname }}.txt
+
