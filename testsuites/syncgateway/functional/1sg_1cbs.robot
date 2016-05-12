@@ -27,6 +27,8 @@ Suite Teardown  Suite Teardown
 
 Test Teardown   Test Teardown
 
+Test Timeout    10 minutes
+
 *** Variables ***
 ${CLUSTER_CONFIG}           ${CLUSTER_CONFIGS}/1sg_1cbs
 ${SYNC_GATEWAY_CONFIG}      ${SYNC_GATEWAY_CONFIGS}/sync_gateway_default_functional_tests_cc.json
