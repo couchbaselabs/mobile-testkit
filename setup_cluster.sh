@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-vagrant reload
+vagrant up
 
 ssh-add .vagrant/machines/host1/virtualbox/private_key
 ssh-add .vagrant/machines/host2/virtualbox/private_key
