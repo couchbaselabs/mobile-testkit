@@ -97,6 +97,18 @@ class MobileRestClient:
 
         raise ValueError("Unsupported couchbase lite server type")
 
+    def create_user(self, url, db, name, password, channels=[]):
+        data = {
+            "name": name,
+            "password": password,
+            "admin_channels": channels
+        }
+        resp = self._session.post("{}/{}/_user/".format(url, db), data=json.dumps(data))
+        log_r(resp)
+        resp.raise_for_status()
+
+        return (name, password)
+
     def create_database(self, url, name):
 
         server_type = self.get_server_type(url)
@@ -132,7 +144,7 @@ class MobileRestClient:
             log_r(resp)
             resp.raise_for_status()
 
-    def get_doc(self, url, db, doc_id):
+    def get_doc(self, url, db, doc_id, auth):
         """
         returns a dictionary with the following format:
 
@@ -151,23 +163,23 @@ class MobileRestClient:
         }
         """
 
-        resp = self._session.get("{}/{}/{}".format(url, db, doc_id))
+        resp = self._session.get("{}/{}/{}".format(url, db, doc_id), auth=auth)
         log_r(resp)
         resp.raise_for_status()
         resp_obj = resp.json()
 
         return resp_obj
 
-    def add_doc(self, url, db, doc):
+    def add_doc(self, url, db, doc, auth):
         doc["updates"] = 0
-        resp = self._session.post("{}/{}/".format(url, db), data=json.dumps(doc))
+        resp = self._session.post("{}/{}/".format(url, db), data=json.dumps(doc), auth=auth)
         log_r(resp)
         resp.raise_for_status()
         resp_obj = resp.json()
 
         return {"id": resp_obj["id"], "rev": resp_obj["rev"]}
 
-    def update_doc(self, url, db, doc_id, number_updates, rev=None):
+    def update_doc(self, url, db, doc_id, number_updates, auth, rev=None):
         """
         Updates a doc on a db a number of times.
             1. GETs the doc
@@ -180,14 +192,14 @@ class MobileRestClient:
         logging.info(rev)
 
         if rev is None:
-            doc = self.get_doc(url, db, doc_id)
+            doc = self.get_doc(url, db, doc_id, auth)
             current_rev = doc["_rev"]
         else:
             current_rev = rev
 
         for i in xrange(number_updates):
 
-            doc = self.get_doc(url, db, doc_id)
+            doc = self.get_doc(url, db, doc_id, auth)
 
             current_update_number = doc["updates"]
             doc["updates"] = current_update_number + 1
@@ -196,9 +208,9 @@ class MobileRestClient:
             if rev is not None:
                 # Force a conflict if explicit rev is passed in
                 params = {"new_edits": "false"}
-                resp = self._session.put("{}/{}/{}".format(url, db, doc_id), params=params, data=json.dumps(doc))
+                resp = self._session.put("{}/{}/{}".format(url, db, doc_id), params=params, data=json.dumps(doc), auth=auth)
             else:
-                resp = self._session.put("{}/{}/{}".format(url, db, doc_id), data=json.dumps(doc))
+                resp = self._session.put("{}/{}/{}".format(url, db, doc_id), data=json.dumps(doc), auth=auth)
 
             log_r(resp)
             resp.raise_for_status()

@@ -52,12 +52,15 @@ Test Attachment Revpos When Ancestor Unavailable
     ...  server_url=${cbs_url}
     ...  server_bucket=${sg_db_bucket}
 
-    ${doc_with_att} =  Create Doc  id=att_doc  content={ "sample_key": "sample_value" }  attachment=sample_text.txt
-    ${doc_rev_1} =  Add Doc  url=${sg_url_admin}  db=${sg_db}  doc=${doc_with_att}
-    ${doc_rev_2} =  Update Doc  url=${sg_url_admin}  db=${sg_db}  doc_id=${doc_rev_1["id"]}  number_updates=${1}
-    ${doc_rev_4} =  Update Doc  url=${sg_url_admin}  db=${sg_db}  doc_id=${doc_rev_1["id"]}  number_updates=${2}
+    ${channels_list} =  Create List  NBC
+    ${user1} =  Create User  url=${sg_url_admin}  db=${sg_db}  name=user_1  password=password  channels=${channels_list}
+    ${doc_with_att} =  Create Doc  id=att_doc  content={"sample_key": "sample_val"}  attachment=sample_text.txt  channels=${channels_list}
 
-    ${doc_rev_2_conflict} =  Update Doc  url=${sg_url_admin}  db=${sg_db}  doc_id=${doc_rev_1["id"]}  number_updates=${1}  rev=${doc_rev_2["rev"]}
+    ${doc_rev_1} =  Add Doc  url=${sg_url}  db=${sg_db}  doc=${doc_with_att}  auth=${user1}
+    ${doc_rev_2} =  Update Doc  url=${sg_url}  db=${sg_db}  doc_id=${doc_rev_1["id"]}  number_updates=${1}  auth=${user1}
+    ${doc_rev_4} =  Update Doc  url=${sg_url}  db=${sg_db}  doc_id=${doc_rev_1["id"]}  number_updates=${2}  auth=${user1}
+
+    ${doc_rev_2_conflict} =  Update Doc  url=${sg_url}  db=${sg_db}  doc_id=${doc_rev_1["id"]}  number_updates=${1}  auth=${user1}  rev=${doc_rev_2["rev"]}
 
     Debug
 
