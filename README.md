@@ -436,6 +436,7 @@ This is the list of machines that is used to generate the resources/cluster_conf
 
 *Create a pool.json of endpoints you would like to target (IPs or AWS ec2 endpoints)* 
 - Rename resources/pool.json.example -> resources/pool.json. Update the fake ips with your endpoints or EC2 endpoints.
+- If you do not have IP endpoints and would like to use Vagrant (easiest), see [Spin up Machines on Vagrant](#spin-up-machines-on-vagrant)
 - If you do not have IP endpoints and would like to use AWS, see [Spin up Machines on AWS](#spin-up-machines-on-aws)
 - Make sure you have at least 4 unique endpoints
 - If you are using vms and do not have key access for ssh, you can use the key installer script (Not required for AWS). This will target 'resources/pool.json' and attempt to deploy a public key of your choice to the machines.
@@ -527,6 +528,17 @@ robot testsuites/syncgateway/performance/minimatrix.robot
 ```
 python libraries/provision/teardown_cluster.py --stackname="TestPerfStack
 ```
+
+### Spin Up Machines on Vagrant
+===============================
+
+NOTE: This has only been tested on Mac OSX
+
+1. Install VirtualBox - https://www.virtualbox.org/wiki/Downloads
+2. Install Vagrant - https://www.vagrantup.com/downloads.html
+
+`./setup_cluster.sh`
+
 
 ### Spin Up Machines on AWS
 ==========================
