@@ -68,29 +68,30 @@ class SyncGateway:
         logging.info("sync_gateway binary path: {}".format(sync_gateway_binary_path))
         return sync_gateway_binary_path
 
-    def render_sync_gateway_config(self, config, db, server_url, server_bucket):
-        logging.info("Rendering sync_gateway config template")
-        logging.info("config: {}".format(config))
-        logging.info("db: {}".format(db))
-        logging.info("server_url: {}".format(server_url))
-        logging.info("server_bucket: {}".format(server_url))
-
-        with open(config) as conf_file:
-            template = Template(conf_file.read())
-
-        test = template.render(
-            sync_gateway_db=db,
-            couchbase_server_host=server_url,
-            couchbase_server_bucket=server_bucket
-        )
-        logging.info(test)
-
-        config_name = config.strip(".json")
-        rendered_conf_file = "{}-rendered.json".format(config_name)
-        with open(rendered_conf_file, "w") as rendered_conf:
-            rendered_conf.write(test)
-
-        return rendered_conf_file
+    def render_sync_gateway_config(self, config):
+        pass
+        # logging.info("Rendering sync_gateway config template")
+        # logging.info("config: {}".format(config))
+        # logging.info("db: {}".format(db))
+        # logging.info("server_url: {}".format(server_url))
+        # logging.info("server_bucket: {}".format(server_url))
+        #
+        # with open(config) as conf_file:
+        #     template = Template(conf_file.read())
+        #
+        # test = template.render(
+        #     sync_gateway_db=db,
+        #     couchbase_server_host=server_url,
+        #     couchbase_server_bucket=server_bucket
+        # )
+        # logging.info(test)
+        #
+        # config_name = config.replace(".json", "")
+        # rendered_conf_file = "{}-rendered.json".format(config_name)
+        # with open(rendered_conf_file, "w") as rendered_conf:
+        #     rendered_conf.write(test)
+        #
+        # return rendered_conf_file
 
 
     def verify_sync_gateway_launched(self, host, port, admin_port):

@@ -15,6 +15,8 @@ Library           ${KEYWORDS}/LiteServ.py
 Library           ${KEYWORDS}/SyncGateway.py
 ...                 version_build=${SYNC_GATEWAY_VERSION}
 
+Library           ${KEYWORDS}/CouchbaseServer.py
+
 # Passed in at runtime
 Suite Setup       Setup Suite
 
@@ -22,7 +24,8 @@ Test Setup        Setup Test
 Test Teardown     Teardown Test
 
 *** Variables ***
-${SYNC_GATEWAY_CONFIG}  ${SYNC_GATEWAY_CONFIGS}/walrus.json
+${SYNC_GATEWAY_CONFIG}  ${SYNC_GATEWAY_CONFIGS}/default.json
+${SERVER_BUCKET}        sg-data-bucket
 
 *** Test Cases ***
 Replication with multiple client dbs and single sync_gateway db
@@ -35,7 +38,8 @@ Replication with multiple client dbs and single sync_gateway db
 
     ${ls_db1} =  Create Database  url=${ls_url}  name=ls_db1
     ${ls_db2} =  Create Database  url=${ls_url}  name=ls_db2
-    ${sg_db} =   Create Database  url=${sg_url_admin}  name=sg_db
+
+    ${sg_db} =   Create Database  url=${sg_url_admin}  name=sg_db  server=${cbs_url}
 
     # Setup continuous push / pull replication from ls_db1 to sg_db
     Start Replication
@@ -83,9 +87,18 @@ Setup Suite
     Download LiteServ
     Install LiteServ
     Download Sync Gateway
+    ${cbs_url} =  Install Couchbase Server
+    ...  hosts=${COUCHBASE_SERVER_HOST}
+    ...  version=${COUCHBASE_SERVER_VERSION}
+    Set Suite Variable  ${cbs_url}
 
 Setup Test
-    ${ls_url} =  Start LiteServ  host=${LITESERV_HOST}  port=${LITESERV_PORT}
+    Delete Buckets  url=${cbs_url}
+
+    ${ls_url} =  Start LiteServ
+    ...  host=${LITESERV_HOST}
+    ...  port=${LITESERV_PORT}
+
     ${sg_url}  ${sg_url_admin} =  Start Sync Gateway
     ...  config=${SYNC_GATEWAY_CONFIG}
     ...  host=${SYNC_GATEWAY_HOST}
