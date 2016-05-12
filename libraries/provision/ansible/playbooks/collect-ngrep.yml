@@ -5,5 +5,5 @@
 
   tasks:
   - name: fetch ngrep packet capture
-    fetch: src=/tmp/ngrep.txt dest=/tmp/sg_logs/ngrep_{{ inventory_hostname }}.txt
+    fetch: src=/tmp/ngrep.txt dest=/tmp/sg_logs/ngrep_{{ inventory_hostname }}
 
