@@ -12,6 +12,39 @@ from CouchbaseServer import verify_server_version
 
 class ClusterKeywords:
 
+    def get_cluster_topology(self, cluster_config):
+        """
+        Returns a dictionary of cluster endpoints that will be consumable
+          ${sg1} = cluster["sync_gateways"][0]["public"]
+          ${sg1_admin} = cluster["sync_gateways"][0]["admin"]
+          ${ac1} = cluster["sg_accels"][0]
+          ${cbs} = cluster["couchbase_servers"][0]
+        """
+
+        with open("{}.json".format(cluster_config)) as f:
+            cluster = json.loads(f.read())
+
+        sg_urls = []
+
+        for sg in cluster["sync_gateways"]:
+            public = "http://{}:4984".format(sg["ip"])
+            admin = "http://{}:4985".format(sg["ip"])
+            sg_urls.append({"public": public, "admin": admin})
+
+        ac_urls = ["http://{}:4985".format(sga["ip"]) for sga in cluster["sg_accels"]]
+        cbs_urls = ["http://{}:8091".format(cb["ip"]) for cb in cluster["couchbase_servers"]]
+
+        # Format into urls that robot keywords can consume easily
+        formatted_cluster = {
+            "sync_gateways" : sg_urls,
+            "sg_accels": ac_urls,
+            "couchbase_servers": cbs_urls
+        }
+
+        logging.info(cluster)
+
+        return formatted_cluster
+
     def sync_gateway_version_is_binary(self, version):
         if len(version.split(".")) > 1:
             # ex 1.2.1 or 1.2.1-4
