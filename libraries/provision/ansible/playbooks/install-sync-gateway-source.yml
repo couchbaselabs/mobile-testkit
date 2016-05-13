@@ -75,6 +75,7 @@
 
 - hosts: sync_gateways
   any_errors_fatal: true
+  become: yes
 
   tasks:
   # Copy sync_gateway binary from centos user
@@ -87,6 +88,7 @@
 
 - hosts: sg_accels
   any_errors_fatal: true
+  become: yes
 
   tasks:
   # Copy sg_accel binary from centos user
