@@ -23,7 +23,3 @@
   # Check no servers are running
   - name: verify no servers not listening on port 8081
     wait_for: port=8091 delay=1 state=stopped
-
-  # Remove tmp
-  - name: Remove downloads in /tmp dir
-    shell: rm -rf /tmp/*
