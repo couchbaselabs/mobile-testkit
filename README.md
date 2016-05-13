@@ -537,8 +537,33 @@ NOTE: This has only been tested on Mac OSX
 1. Install VirtualBox - https://www.virtualbox.org/wiki/Downloads
 2. Install Vagrant - https://www.vagrantup.com/downloads.html
 
-`./setup_cluster.sh`
+Create cluster with private network
 
+`vagrant up`
+
+3. Edit your `resources/pools.json` file to use the ips defined in the Vagrantfile
+4. Create an ssh key. `cd ~/.ssh/ && ssh-keygen`
+5. Make sure your ssh-agent is running if you gave the key any name other than `id_rsa` (default)
+```
+eval `ssh-agent`
+```
+5. Install the key into the machines via 
+```
+python libraries/utilities/install_keys.py --key-name=vagrant.pub --ssh-user=vagrant`.
+```
+
+use the password `vagrant`. 
+
+NOTE: This key must be added to your ssh-agent if it is anything other than the default `id_rsa` key.
+The install_keys.py script will attempt to add it but it must be running. 
+
+6. Edit `libraries/provision/ansible/playbooks/ansible.cfg` and change the user to 'vagrant'
+7. Provision the cluster with --install-deps
+```
+python libraries/provision/provision_cluster.py --server-version=4.1.1 --sync-gateway-version=1.2.1-4 --install-deps
+```
+
+Enjoy! You now have a Couchbaes Server + Sync Gateway cluster running on your machine!
 
 ### Spin Up Machines on AWS
 ==========================
