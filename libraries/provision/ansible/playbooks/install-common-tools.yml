@@ -6,6 +6,8 @@
   tasks:
   - name: create centos user
     user: name=centos createhome=yes
+  - name: install epel-release
+    yum: pkg=epel-release state=latest
   - name: install git
     yum: pkg=git state=latest
   - name: install bc
@@ -24,10 +26,10 @@
     yum: pkg=sysstat state=latest
   - name: install the 'Development tools' package group
     yum: name="@Development tools" state=present
-  - name: install pip
-    easy_install: name=pip
   - name: install python-devel
     yum: pkg=python-devel state=latest
+  - name: install pip
+    yum: pkg=python-pip state=latest
   - name: install psutil
     shell: pip install psutil
     # Remove go, can cause issues with version confusion if multple versions of go are on a machine
