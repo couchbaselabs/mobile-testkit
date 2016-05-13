@@ -10,6 +10,8 @@
     yum: pkg=epel-release state=latest
   - name: install git
     yum: pkg=git state=latest
+  - name: install ngrep
+    yum: pkg=ngrep state=latest
   - name: install bc
     yum: pkg=bc state=latest
   - name: install lsof
