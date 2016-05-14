@@ -9,6 +9,7 @@ from requests.exceptions import ConnectionError
 from utils import *
 
 from CouchbaseServer import verify_server_version
+from libraries.testkit.cluster import Cluster
 
 class ClusterKeywords:
 
@@ -170,3 +171,7 @@ class ClusterKeywords:
         # Verify sg_accel versions, use the same expected version for sync_gateway for now
         for ac in cluster_obj["sg_accels"]:
             self.verify_sg_accel_version(ac["ip"], expected_sync_gateway_version)
+
+    def reset_cluster(self, sync_gateway_config):
+        cluster = Cluster()
+        cluster.reset(sync_gateway_config)
