@@ -93,7 +93,7 @@ Teardown Test
 #    ...                     "_revisions":{
 #    ...                        "ids":[
 #    ...                           "foo",
-#    ...                           "${rev1_id}"
+#    ...                           "${rev1_id_digest}"
 #    ...                        ],
 #    ...                        "start":2
 #    ...                     }

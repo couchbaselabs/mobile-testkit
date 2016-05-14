@@ -168,8 +168,8 @@ class CouchbaseServer:
         resp.raise_for_status()
 
         # Create client an retry until KeyNotFound error is thrown
-        client_host = url.lstrip("http://")
-        client_host = client_host.rstrip(":8091")
+        client_host = url.replace("http://", "")
+        client_host = client_host.replace(":8091", "")
         logging.info(client_host)
 
         start = time.time()

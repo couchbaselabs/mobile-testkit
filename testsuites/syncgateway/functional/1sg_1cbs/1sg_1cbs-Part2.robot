@@ -1,12 +1,17 @@
 *** Settings ***
 Resource          resources/common.robot
 
+Library     DebugLibrary
+
 Library     ${Libraries}/NetworkUtils.py
 Library     ${Libraries}/LoggingKeywords.py
 Library     ${Keywords}/CouchbaseServer.py
+Library     ${Keywords}/MobileRestClient.py
+Library     ${Keywords}/Document.py
 
 Test Setup      Setup Test
 Test Teardown   Teardown Test
+
 
 *** Test Cases ***
 Test Attachment Revpos When Ancestor Unavailable
@@ -16,7 +21,7 @@ Test Attachment Revpos When Ancestor Unavailable
     ...              active revision, and validate that it's uploaded successfully.
     ...              Example:
     ...                 1. Document is created with attachment at rev-1
-    ...                 2. Document is updated multiple times on the server, goes to rev-4
+    ...                 2. Document is updated (strip digests and length, only put revpos & stub) multiple times on the server, goes to rev-4
     ...                 3. Client attempts to add a new (conflicting) revision 2, with parent rev-1.
     ...                 4. If the body of rev-1 is no longer available on the server (temporary backup of revision has expired, and is no longer stored
     ...                   in the in-memory rev cache), we were throwing an error to client
@@ -25,20 +30,11 @@ Test Attachment Revpos When Ancestor Unavailable
     ...                  If so, we can validate any revpos values equal to or earlier than the common ancestor against the active revision.
     [Tags]           sanity    attachments  syncgateway
 
-    Set Test Variable  ${cbs_url}  ${cluster_hosts["couchbase_servers"][0]}
-    Set Test Variable  ${sg_url}  ${cluster_hosts["couchbase_servers"][0]}
+    Set Test Variable  ${cbs_url}       ${cluster_hosts["couchbase_servers"][0]}
+    Set Test Variable  ${sg_url}        ${cluster_hosts["sync_gateways"][0]["public"]}
+    Set Test Variable  ${sg_url_admin}  ${cluster_hosts["sync_gateways"][0]["admin"]}
 
-    ${sg_db_bucket} =  Create Bucket  url=${cbs_url}  name=db-bucket
-    ${sg_db} =  Set Variable  testdb
-
-    ${sg_url}  ${sg_url_admin} =  Start Sync Gateway
-    ...  config=${SYNC_GATEWAY_CONFIG}
-    ...  db=${sg_db}
-    ...  host=${SYNC_GATEWAY_HOST}
-    ...  port=${SYNC_GATEWAY_PORT}
-    ...  admin_port=${SYNC_GATEWAY_ADMIN_PORT}
-    ...  server_url=${cbs_url}
-    ...  server_bucket=${sg_db_bucket}
+    ${sg_db} =  Set Variable  db
 
     ${channels_list} =  Create List  NBC
     ${user1} =  Create User  url=${sg_url_admin}  db=${sg_db}  name=user_1  password=password  channels=${channels_list}
@@ -80,9 +76,11 @@ Test Attachment Revpos When Ancestor Unavailable
 *** Keywords ***
 Setup Test
     Log  Using cluster %{CLUSTER_CONFIG}  console=True
+
+    Reset Cluster  sync_gateway_config=${SYNC_GATEWAY_CONFIGS}/sync_gateway_default_cc.json
+
     ${cluster_hosts} =  Get Cluster Topology  %{CLUSTER_CONFIG}
     Set Test Variable  ${cluster_hosts}
-    Delete Buckets  url=${cluster_hosts["couchbase_servers"][0]}
 
 Teardown Test
     Log  Tearing down test ...  console=True
