@@ -78,7 +78,7 @@
   become: yes
 
   tasks:
-  # Copy sync_gateway binary from centos user
+  # Create target directory and deploy binary
   - name: Creates /opt/couchbase-sync-gateway
     file: path=/opt/couchbase-sync-gateway state=directory
   - name: Creates /opt/couchbase-sync-gateway/bin
@@ -91,7 +91,7 @@
   become: yes
 
   tasks:
-  # Copy sg_accel binary from centos user
+  # Create target directory and deploy binary
   - name: Creates /opt/couchbase-sg-accel
     file: path=/opt/couchbase-sg-accel state=directory
   - name: Creates /opt/couchbase-sg-accel/bin

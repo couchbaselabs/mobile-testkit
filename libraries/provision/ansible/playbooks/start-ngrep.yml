@@ -1,0 +1,11 @@
+---
+- hosts: sync_gateways:sg_accels
+  any_errors_fatal: false
+  become: yes
+
+  tasks:
+  - name: copy the run ngrep script
+    copy: src=files/run_ngrep.sh dest=/home/centos/ owner=centos group=centos mode=0755
+
+  - name: start ngrep in screen
+    shell: screen -d -m -S ngrep ./run_ngrep.sh chdir=/home/centos/

@@ -1,0 +1,9 @@
+---
+- hosts: sync_gateways:sg_accels
+  any_errors_fatal: false
+  become: yes
+
+  tasks:
+  - name: kill any running ngrep screens
+    shell: for session in $(screen -ls | grep -o '[0-9]*\.ngrep'); do screen -S "${session}" -X quit; done
+    ignore_errors: yes
