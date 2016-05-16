@@ -161,6 +161,7 @@ class CouchbaseServer:
             "authType": "sasl",
             "proxyPort": "11211",
             "bucketType": "couchbase",
+            "flushEnabled": "1"
         }
 
         resp = requests.post("{}/pools/default/buckets".format(url), auth=self._auth, data=data)
