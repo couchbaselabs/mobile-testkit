@@ -103,4 +103,4 @@ Test Teardown
     List Connections
     Stop Packet Capture
     Collect Packet Capture  ${TEST_NAME}
-    Run Keyword If Test Failed      Fetch And Analyze Logs
+    Run Keyword If Test Failed      Fetch And Analyze Logs  ${TEST_NAME}

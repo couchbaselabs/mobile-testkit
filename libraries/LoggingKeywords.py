@@ -12,11 +12,13 @@ log = logging.getLogger(testkit.settings.LOGGER)
 
 class LoggingKeywords:
 
-    def fetch_and_analyze_logs(self):
+    def fetch_and_analyze_logs(self, test_name):
 
         log.error("\n!!!!!!!!!! TEST FAILURE !!!!!!!!!!")
 
-        zip_file_path = fetch_sync_gateway_logs("TEST-FAILURE")
+        log_file_prefix = "{}-Sync-Gateway-Logs".format(test_name)
+
+        zip_file_path = fetch_sync_gateway_logs(log_file_prefix)
 
         if self.detected_data_races(zip_file_path):
             log.error("Detected data races in logs: {}".format(zip_file_path))
