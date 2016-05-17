@@ -180,6 +180,11 @@ class MobileRestClient:
         resp.raise_for_status()
         resp_obj = resp.json()
 
+        if "_attachments" in resp_obj:
+            for k in resp_obj["_attachments"].keys():
+                del resp_obj["_attachments"][k]["digest"]
+                del resp_obj["_attachments"][k]["length"]
+
         return resp_obj
 
     def add_doc(self, url, db, doc, auth):
@@ -191,23 +196,66 @@ class MobileRestClient:
 
         return {"id": resp_obj["id"], "rev": resp_obj["rev"]}
 
-    def update_doc(self, url, db, doc_id, number_updates, auth, rev=None):
+    def add_conflict(self, url, db, doc_id, parent_revision, new_revision, auth):
+        """
+            1. GETs the doc with id == doc_id
+            2. adds a _revisions property with
+                ids[0] == new_revision's digest
+
+            Sample doc JSON:
+            {
+                "_rev":"2-foo",
+                "_attachments":{"hello.txt":{"stub":true,"revpos":1}},
+                "_revisions":{
+                    "ids":[
+                        "${new_revision's digest}",
+                        "${parent_revision's digest}"
+                    ],
+                    "start":${new_revision's generation number}
+                }
+            }
+        """
+        logging.info("PARENT: {}".format(parent_revision))
+        logging.info("NEW: {}".format(new_revision))
+
+        doc = self.get_doc(url, db, doc_id, auth)
+
+        # Delete rev property and add our own "_revisions"
+        parent_revision_parts = parent_revision.split("-")
+        parent_revision_generation = int(parent_revision_parts[0])
+        parent_revision_digest = parent_revision_parts[1]
+
+        new_revision_parts = new_revision.split("-")
+        new_revision_generation = int(new_revision_parts[0])
+        new_revision_digest = new_revision_parts[1]
+
+        logging.debug("Parent Generation: {}".format(parent_revision_generation))
+        logging.debug("Parent Digest: {}".format(parent_revision_digest))
+        logging.debug("New Generation: {}".format(new_revision_generation))
+        logging.debug("New Digest: {}".format(new_revision_digest))
+
+        doc["_rev"] = new_revision
+        doc["_revisions"] = {
+            "ids": [
+                new_revision_digest,
+                parent_revision_digest
+            ],
+            "start": new_revision_generation
+        }
+
+        params = {"new_edits": "false"}
+        resp = self._session.put("{}/{}/{}".format(url, db, doc_id), params=params, data=json.dumps(doc), auth=auth)
+        log_r(resp)
+        resp.raise_for_status()
+
+
+    def update_doc(self, url, db, doc_id, number_updates, auth):
         """
         Updates a doc on a db a number of times.
             1. GETs the doc
             2. It increments the "updates" propery
-            3 (rev == None). PUTs the doc
-            4 (rev != None). PUTs the doc to a specific rev
+            3. PUTS the doc
         """
-
-        logging.info(doc_id)
-        logging.info(rev)
-
-        if rev is None:
-            doc = self.get_doc(url, db, doc_id, auth)
-            current_rev = doc["_rev"]
-        else:
-            current_rev = rev
 
         for i in xrange(number_updates):
 
@@ -215,20 +263,12 @@ class MobileRestClient:
 
             current_update_number = doc["updates"]
             doc["updates"] = current_update_number + 1
-            doc["_rev"] = current_rev
 
-            if rev is not None:
-                # Force a conflict if explicit rev is passed in
-                params = {"new_edits": "false"}
-                resp = self._session.put("{}/{}/{}".format(url, db, doc_id), params=params, data=json.dumps(doc), auth=auth)
-            else:
-                resp = self._session.put("{}/{}/{}".format(url, db, doc_id), data=json.dumps(doc), auth=auth)
+            resp = self._session.put("{}/{}/{}".format(url, db, doc_id), data=json.dumps(doc), auth=auth)
 
             log_r(resp)
             resp.raise_for_status()
             resp_obj = resp.json()
-
-            current_rev = resp_obj["rev"]
 
         return {"id": resp_obj["id"], "rev": resp_obj["rev"]}
 

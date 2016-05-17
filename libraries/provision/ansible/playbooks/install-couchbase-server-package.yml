@@ -10,7 +10,10 @@
 
     couchbase_server_admin: Administrator
     couchbase_server_password: password
-    couchbase_server_cluster_ram: "{{ ((ansible_memtotal_mb|int)*0.8)|int }}"
+
+    # 512 reserved for query service
+    couchbase_server_index_ram: 512
+    couchbase_server_cluster_ram: "{{((ansible_memtotal_mb|int)*0.8)|int - 512 }}"
     couchbase_server_admin_port: 8091
     couchbase_server_home_path: /opt/couchbase
 
@@ -23,7 +26,7 @@
     couchbase_server_bucket_type: couchbase
     couchbase_server_bucket_port: 11211
     couchbase_server_bucket_replica: 1
-    couchbase_server_bucket_ram: "{{ ((couchbase_server_cluster_ram|int)*0.5)|int }}"
+    couchbase_server_bucket_ram: "{{ ((couchbase_server_cluster_ram | int)*0.5) | int }}"
 
   tasks:
     - debug: msg="Couchbase server primary node {{ couchbase_server_primary_node }}"
@@ -70,7 +73,7 @@
       wait_for: port=8091 delay=5 timeout=30
 
     - name: Configure cluster settings
-      shell: "{{ couchbase_server_home_path }}/bin/couchbase-cli cluster-init -c {{ couchbase_server_node }}:{{ couchbase_server_admin_port }} --user={{ couchbase_server_admin }} --password={{ couchbase_server_password }} --cluster-init-username={{ couchbase_server_admin }} --cluster-init-password={{ couchbase_server_password }} --cluster-init-port={{couchbase_server_admin_port}} --cluster-init-ramsize={{ couchbase_server_cluster_ram }}"
+      shell: "{{ couchbase_server_home_path }}/bin/couchbase-cli cluster-init -c {{ couchbase_server_node }}:{{ couchbase_server_admin_port }} --user={{ couchbase_server_admin }} --password={{ couchbase_server_password }} --cluster-init-username={{ couchbase_server_admin }} --cluster-init-password={{ couchbase_server_password }} --cluster-init-port={{couchbase_server_admin_port}} --cluster-init-ramsize={{ couchbase_server_cluster_ram }}  --services=data,index,query  --cluster-index-ramsize={{ couchbase_server_index_ram }}"
 
     - name: Initialize primary node
       shell: "{{ couchbase_server_home_path }}/bin/couchbase-cli node-init -c {{ couchbase_server_node }}:{{ couchbase_server_admin_port }} --user={{ couchbase_server_admin }} --password={{ couchbase_server_password }} --cluster-init-username={{ couchbase_server_admin }} --node-init-hostname={{ couchbase_server_node }}"
