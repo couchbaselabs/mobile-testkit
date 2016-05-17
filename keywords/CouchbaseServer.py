@@ -12,6 +12,9 @@ from requests.exceptions import ConnectionError
 
 from couchbase.bucket import Bucket
 from couchbase.exceptions import *
+from couchbase.views.iterator import View
+from couchbase.n1ql import N1QLQuery
+from couchbase.views.params import Query
 
 from constants import *
 from utils import *
@@ -223,3 +226,26 @@ class CouchbaseServer:
             break
 
         return name
+
+    def delete_couchbase_server_cached_rev_bodies(self, url, bucket):
+        """
+        Deletes docs that follow the below format
+        _sync:rev:att_doc:34:1-e7fa9a5e6bb25f7a40f36297247ca93e
+
+        """
+        client_host = url.replace("http://", "")
+        client_host = client_host.replace(":8091", "")
+
+        b = Bucket("couchbase://{}/{}".format(client_host, bucket))
+
+        cached_rev_doc_ids = []
+        b.n1ql_query("CREATE PRIMARY INDEX ON `{}`".format(bucket)).execute()
+        for row in b.n1ql_query("SELECT meta(`{}`) FROM `{}`".format(bucket, bucket)):
+            if row["$1"]["id"].startswith("_sync:rev"):
+                cached_rev_doc_ids.append(row["$1"]["id"])
+
+        logging.info("Found temp rev docs: {}".format(cached_rev_doc_ids))
+        for doc_id in cached_rev_doc_ids:
+            logging.debug("Removing: {}".format(doc_id))
+            b.remove(doc_id)
+

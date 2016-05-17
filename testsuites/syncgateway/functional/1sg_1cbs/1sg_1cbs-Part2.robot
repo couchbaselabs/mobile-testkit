@@ -33,6 +33,8 @@ Test Attachment Revpos When Ancestor Unavailable
     Set Test Variable  ${cbs_url}       ${cluster_hosts["couchbase_servers"][0]}
     Set Test Variable  ${sg_url}        ${cluster_hosts["sync_gateways"][0]["public"]}
     Set Test Variable  ${sg_url_admin}  ${cluster_hosts["sync_gateways"][0]["admin"]}
+    Set Test Variable  ${sg_db}  db
+    Set Test Variable  ${bucket}  data-bucket
 
     ${sg_db} =  Set Variable  db
 
@@ -40,25 +42,18 @@ Test Attachment Revpos When Ancestor Unavailable
     ${user1} =  Create User  url=${sg_url_admin}  db=${sg_db}  name=user_1  password=password  channels=${channels_list}
     ${doc_with_att} =  Create Doc  id=att_doc  content={"sample_key": "sample_val"}  attachment=sample_text.txt  channels=${channels_list}
 
-    ${doc_rev_1} =  Add Doc  url=${sg_url}  db=${sg_db}  doc=${doc_with_att}  auth=${user1}
-    ${doc_rev_2} =  Update Doc  url=${sg_url}  db=${sg_db}  doc_id=${doc_rev_1["id"]}  number_updates=${1}  auth=${user1}
-    ${doc_rev_4} =  Update Doc  url=${sg_url}  db=${sg_db}  doc_id=${doc_rev_1["id"]}  number_updates=${2}  auth=${user1}
+    ${doc_gen_1} =  Add Doc  url=${sg_url}  db=${sg_db}  doc=${doc_with_att}  auth=${user1}
+    ${doc_gen_11} =  Update Doc  url=${sg_url}  db=${sg_db}  doc_id=${doc_gen_1["id"]}  number_updates=${10}  auth=${user1}
 
-    ${doc_rev_2_conflict} =  Update Doc  url=${sg_url}  db=${sg_db}  doc_id=${doc_rev_1["id"]}  number_updates=${1}  auth=${user1}  rev=${doc_rev_2["rev"]}
+    ${conflict_doc} =  Add Conflict  url=${sg_url}  db=${sg_db}
+    ...  doc_id=${doc_gen_1["id"]}
+    ...  parent_revision=${doc_gen_1["rev"]}
+    ...  new_revision=2-foo
+    ...  auth=${user1}
 
-    Debug
+    Shutdown Sync Gateway  ${sg_url}
+    Delete Couchbase Server Cached Rev Bodies  url=${cbs_url}  bucket=${bucket}
 
-    #${doc_handle} =  Add Doc  url=${sg_url}  db=${db}  ${doc}
-
-     #Debug
-
-#    ${dburl} =       http://localhost:4985/default
-#    ${docid} =       TestDoc
-#
-#    ${doc1} =       Create Doc With Attachment  url=${sg_url}  db=${db}  doc_id=${docid}
-#    ${revid} =       Update Doc With Attachment Stub ${dburl} ${doc1.id} ${doc1.revid}
-#    ${revid} =       Update Doc With Attachment Stub ${dburl} ${docid} ${revid}
-#    ${revid} =       Update Doc With Attachment Stub ${dburl} ${docid} ${revid}
 
     # In order to remove ensure rev 1 isn't available from the in-memory revision cache, restart SG and wait 5 minutes for archived
     # version to expire from bucket.  TODO: Add config to reduce the 5 minute expiry time for testing purposes

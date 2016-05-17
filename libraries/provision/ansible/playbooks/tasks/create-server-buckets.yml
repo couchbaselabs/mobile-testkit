@@ -28,7 +28,8 @@
     bucket_names:
     bucket_num: "{{ (bucket_names|count) }}"
 
-    couchbase_server_cluster_ram: "{{ ((ansible_memtotal_mb|int)*0.8)|int }}"
+    # 512 is dedicated to query
+    couchbase_server_cluster_ram: "{{ ((ansible_memtotal_mb|int)*0.8)|int - 512 }}"
     couchbase_server_bucket_ram: "{{ ((couchbase_server_cluster_ram|int)/(bucket_num|int))|int }}"
 
   tasks:
