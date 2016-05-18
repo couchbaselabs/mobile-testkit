@@ -65,4 +65,4 @@ Suite Teardown
 Test Teardown
     Log  Tearing down test ...  console=True
     List Connections
-    Run Keyword If Test Failed      Fetch And Analyze Logs
+    Run Keyword If Test Failed      Fetch And Analyze Logs  ${TEST_NAME}
