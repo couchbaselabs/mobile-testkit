@@ -12,17 +12,15 @@ from requests import ConnectionError
 
 from constants import *
 from utils import version_and_build
+from utils import hostname_for_url
+from libraries.provision.ansible_runner import AnsibleRunner
 
 class SyncGateway:
 
-    def __init__(self, version_build):
-
-        self._version_build = version_build
-        self.extracted_file_name = "couchbase-sync_gateway-{}".format(self._version_build)
-
+    def __init__(self):
         self._session = Session()
 
-    def download_sync_gateway(self):
+    def download_local_sync_gateway(self):
 
         # Check if package is already downloaded and return if it is preset
         if os.path.isdir("{}/{}".format(BINARY_DIR, self.extracted_file_name)):
@@ -59,41 +57,14 @@ class SyncGateway:
         # Remove .tar.gz and return to root directory
         os.remove(file_name)
 
-    def remove_sync_gateway(self):
+    def remove_local_sync_gateway(self):
         logging.info("Removing {}".format(self.extracted_file_name))
         shutil.rmtree("deps/binaries/{}".format(self.extracted_file_name))
 
-    def get_sync_gateway_binary_path(self):
+    def get_local_sync_gateway_binary_path(self):
         sync_gateway_binary_path = "{}/{}/couchbase-sync-gateway/bin/sync_gateway".format(BINARY_DIR, self.extracted_file_name)
         logging.info("sync_gateway binary path: {}".format(sync_gateway_binary_path))
         return sync_gateway_binary_path
-
-    def render_sync_gateway_config(self, config):
-        pass
-        # logging.info("Rendering sync_gateway config template")
-        # logging.info("config: {}".format(config))
-        # logging.info("db: {}".format(db))
-        # logging.info("server_url: {}".format(server_url))
-        # logging.info("server_bucket: {}".format(server_url))
-        #
-        # with open(config) as conf_file:
-        #     template = Template(conf_file.read())
-        #
-        # test = template.render(
-        #     sync_gateway_db=db,
-        #     couchbase_server_host=server_url,
-        #     couchbase_server_bucket=server_bucket
-        # )
-        # logging.info(test)
-        #
-        # config_name = config.replace(".json", "")
-        # rendered_conf_file = "{}-rendered.json".format(config_name)
-        # with open(rendered_conf_file, "w") as rendered_conf:
-        #     rendered_conf.write(test)
-        #
-        # return rendered_conf_file
-
-
     def verify_sync_gateway_launched(self, host, port, admin_port):
 
         url = "http://{}:{}".format(host, port)
@@ -131,3 +102,25 @@ class SyncGateway:
 
         return url, admin_url
 
+    def start_sync_gateway(self, url, config):
+        target = hostname_for_url(url)
+        logging.info("Starting sync_gateway on {} ...".format(target))
+        ansible_runner = AnsibleRunner()
+        config_path =  os.path.abspath(config)
+        status = ansible_runner.run_targeted_ansible_playbook(
+            "start-sync-gateway.yml",
+            extra_vars="sync_gateway_config_filepath={0}".format(config_path),
+            target_name=target,
+            stop_on_fail=False
+        )
+        assert status == 0, "Could not start sync_gateway"
+
+    def shutdown_sync_gateway(self, url):
+        target = hostname_for_url(url)
+        logging.info("Shutting down sync_gateway on {} ...".format(target))
+        ansible_runner = AnsibleRunner()
+        status = ansible_runner.run_targeted_ansible_playbook(
+            "stop-sync-gateway.yml",
+            target_name=target,
+            stop_on_fail=False)
+        assert status == 0, "Could not stop sync_gateway"

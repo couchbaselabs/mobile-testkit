@@ -148,7 +148,7 @@ Shutdown Net ListenerConsole
     Kill Mono Process
 
 # sync_gateway keywords
-Start Sync Gateway
+Start Local Sync Gateway
     [Documentation]   Starts sync_gateway with a provided configuration on a host and port(s).
     ...  The sync_gateway binary is located in deps/binaries.
     [Timeout]       1 minute
@@ -172,7 +172,7 @@ Start Sync Gateway
     ${sg_url} =  Verify Sync Gateway Launched  host=${host}  port=${port}  admin_port=${admin_port}
     [return]    ${sg_url}
 
-Shutdown Sync Gateway
+Shutdown Local Sync Gateway
     [Documentation]   Stops sync_gateway running on a local machine.
     ...  The LiteServ binaries are located in deps/binaries.
     [Timeout]       1 minute
