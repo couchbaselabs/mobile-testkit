@@ -27,10 +27,10 @@ Replication with multiple client dbs and single sync_gateway db
 
     Log  Using LiteServ: ${ls_url}
     Log  Using Sync Gateway: ${sg_url}
+    Log  Using Sync Gateway: ${sg_url_admin}
 
     ${ls_db1} =  Create Database  url=${ls_url}  name=ls_db1
     ${ls_db2} =  Create Database  url=${ls_url}  name=ls_db2
-
     ${sg_db} =   Create Database  url=${sg_url_admin}  name=sg_db  server=walrus:
 
     # Setup continuous push / pull replication from ls_db1 to sg_db
@@ -79,6 +79,7 @@ Setup Test
     ...  host=${LITESERV_HOST}
     ...  port=${LITESERV_PORT}
 
+    Set Environment Variable  CLUSTER_CONFIG  ${CLUSTER_CONFIGS}/1sg
     ${cluster_hosts} =  Get Cluster Topology  %{CLUSTER_CONFIG}
 
     Set Test Variable  ${ls_url}

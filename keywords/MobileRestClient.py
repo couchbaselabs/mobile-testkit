@@ -51,7 +51,6 @@ def parse_multipart_response(response):
         # ]
         # Only include part that has doc property
         if part_lines and len(part_lines) > 2:
-            logging.info(part_lines)
             doc = part_lines[-1]
             try:
                 doc_obj = json.loads(doc)
