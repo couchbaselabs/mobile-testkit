@@ -248,7 +248,6 @@ class MobileRestClient:
         log_r(resp)
         resp.raise_for_status()
 
-
     def update_doc(self, url, db, doc_id, number_updates, auth):
         """
         Updates a doc on a db a number of times.

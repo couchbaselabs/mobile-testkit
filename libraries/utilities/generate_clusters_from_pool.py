@@ -144,6 +144,7 @@ if __name__ == "__main__":
     min_num_machines = 4
 
     cluster_configs = [
+        ClusterDef("1sg",           num_sgs=1, num_acs=0, num_cbs=0, num_lgs=0),
         ClusterDef("1sg_1cbs",      num_sgs=1, num_acs=0, num_cbs=1, num_lgs=0),
         ClusterDef("1sg_1ac_1cbs",  num_sgs=1, num_acs=1, num_cbs=1, num_lgs=0),
         ClusterDef("1sg_2ac_1cbs",  num_sgs=1, num_acs=2, num_cbs=1, num_lgs=0),

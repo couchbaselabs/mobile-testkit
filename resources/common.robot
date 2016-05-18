@@ -67,13 +67,11 @@ Install Server
     Log To Console  ${result.stdout}
 
 Install Sync Gateway
-    [Arguments]     ${sync_gateway_version}  ${sync_gateway_config}
+    [Arguments]     ${version}  ${config}
     Log                         Cluster Config: %{CLUSTER_CONFIG}
-    ${sync_gateway_arg}         Catenate  SEPARATOR=  --version=      ${sync_gateway_version}
-    ${sync_gateway_config_arg}  Catenate  SEPARATOR=  --config-file=  ${sync_gateway_config}
-    ${result} =  Run Process  python  ${LIBRARIES}/provision/install_sync_gateway.py  ${sync_gateway_arg}  ${sync_gateway_config_arg}
-    Log To Console  ${result.stderr}
-    Log To Console  ${result.stdout}
+    ${result} =  Run Process  python  ${LIBRARIES}/provision/install_sync_gateway.py  --version\=${sync_gateway_version}  --config-file\=${sync_gateway_config}
+    Log  ${result.stderr}  console=True
+    Log  ${result.stdout}  console=True
 
 # LiteServ Keywords
 Install LiteServ
