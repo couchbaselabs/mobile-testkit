@@ -26,7 +26,7 @@
     couchbase_server_bucket_type: couchbase
     couchbase_server_bucket_port: 11211
     couchbase_server_bucket_replica: 1
-    couchbase_server_bucket_ram: "{{ ((couchbase_server_cluster_ram | int)*0.5) | int }}"
+    couchbase_server_bucket_ram: "{{ ((couchbase_server_cluster_ram|int)*0.5)|int }}"
 
   tasks:
     - debug: msg="Couchbase server primary node {{ couchbase_server_primary_node }}"
