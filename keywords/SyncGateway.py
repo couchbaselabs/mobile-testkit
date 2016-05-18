@@ -115,7 +115,7 @@ class SyncGateway:
         )
         assert status == 0, "Could not start sync_gateway"
 
-    def shutdown_sync_gateway(self, url):
+    def stop_sync_gateway(self, url):
         target = hostname_for_url(url)
         logging.info("Shutting down sync_gateway on {} ...".format(target))
         ansible_runner = AnsibleRunner()

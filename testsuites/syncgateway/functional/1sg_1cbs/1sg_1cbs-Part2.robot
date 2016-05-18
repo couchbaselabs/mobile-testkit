@@ -47,7 +47,7 @@ Test Attachment Revpos When Ancestor Unavailable
     ${doc_gen_11} =  Update Doc  url=${sg_url}  db=${sg_db}  doc_id=${doc_gen_1["id"]}  number_updates=${10}  auth=${user1}
 
     # Clear cached rev doc bodys from server and cycle sync_gateway
-    Shutdown Sync Gateway  url=${sg_url}
+    Stop Sync Gateway  url=${sg_url}
     Delete Couchbase Server Cached Rev Bodies  url=${cbs_url}  bucket=${bucket}
     Start Sync Gateway  url=${sg_url}  config=${sg_config}
 
