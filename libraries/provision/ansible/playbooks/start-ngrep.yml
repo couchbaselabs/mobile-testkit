@@ -7,5 +7,11 @@
   - name: copy the run ngrep script
     copy: src=files/run_ngrep.sh dest=/home/centos/ owner=centos group=centos mode=0755
 
-  - name: start ngrep in screen
-    shell: screen -d -m -S ngrep ./run_ngrep.sh chdir=/home/centos/
+  - name: start ngrep on loopback interface in screen
+    shell: screen -d -m -S ngrep_loopback ./run_ngrep.sh lo  chdir=/home/centos/
+
+  - name: start ngrep on eth0 in screen
+    shell: screen -d -m -S ngrep_eth0 ./run_ngrep.sh eth0  chdir=/home/centos/
+
+  - name: start ngrep on eth1 in screen
+    shell: screen -d -m -S ngrep_eth1 ./run_ngrep.sh eth1  chdir=/home/centos/
