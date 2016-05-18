@@ -4,6 +4,12 @@
   become: yes
 
   tasks:
-  - name: fetch ngrep packet capture
-    fetch: src=/tmp/ngrep.txt dest=/tmp/sys-logs/ngrep_{{ inventory_hostname }}
 
+  - name: fetch ngrep packet capture from loopback device
+    fetch: src=/tmp/ngrep_lo.txt dest=/tmp/sys-logs/ngrep_lo_{{ inventory_hostname }}
+
+  - name: fetch ngrep packet capture from eth0 device
+    fetch: src=/tmp/ngrep_eth0.txt dest=/tmp/sys-logs/ngrep_eth0_{{ inventory_hostname }}
+
+  - name: fetch ngrep packet capture from eth1 device
+    fetch: src=/tmp/ngrep_eth1.txt dest=/tmp/sys-logs/ngrep_eth1_{{ inventory_hostname }}
