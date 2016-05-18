@@ -6,6 +6,7 @@ Library     DebugLibrary
 Library     ${Libraries}/NetworkUtils.py
 Library     ${Libraries}/LoggingKeywords.py
 Library     ${Keywords}/CouchbaseServer.py
+Library     ${Keywords}/SyncGateway.py
 Library     ${Keywords}/MobileRestClient.py
 Library     ${Keywords}/Document.py
 
@@ -51,8 +52,9 @@ Test Attachment Revpos When Ancestor Unavailable
     ...  new_revision=2-foo
     ...  auth=${user1}
 
-    Shutdown Sync Gateway  ${sg_url}
+    Shutdown Sync Gateway  url=${sg_url}
     Delete Couchbase Server Cached Rev Bodies  url=${cbs_url}  bucket=${bucket}
+    Start Sync Gateway  url=${sg_url}  config=${sg_config}
 
 
     # In order to remove ensure rev 1 isn't available from the in-memory revision cache, restart SG and wait 5 minutes for archived
@@ -72,7 +74,8 @@ Test Attachment Revpos When Ancestor Unavailable
 Setup Test
     Log  Using cluster %{CLUSTER_CONFIG}  console=True
 
-    Reset Cluster  sync_gateway_config=${SYNC_GATEWAY_CONFIGS}/sync_gateway_default_cc.json
+    Set Test Variable  ${sg_config}  ${SYNC_GATEWAY_CONFIGS}/sync_gateway_default_cc.json
+    Reset Cluster  ${sg_config}
 
     ${cluster_hosts} =  Get Cluster Topology  %{CLUSTER_CONFIG}
     Set Test Variable  ${cluster_hosts}
