@@ -46,29 +46,16 @@ Test Attachment Revpos When Ancestor Unavailable
     ${doc_gen_1} =  Add Doc  url=${sg_url}  db=${sg_db}  doc=${doc_with_att}  auth=${user1}
     ${doc_gen_11} =  Update Doc  url=${sg_url}  db=${sg_db}  doc_id=${doc_gen_1["id"]}  number_updates=${10}  auth=${user1}
 
+    # Clear cached rev doc bodys from server and cycle sync_gateway
+    Shutdown Sync Gateway  url=${sg_url}
+    Delete Couchbase Server Cached Rev Bodies  url=${cbs_url}  bucket=${bucket}
+    Start Sync Gateway  url=${sg_url}  config=${sg_config}
+
     ${conflict_doc} =  Add Conflict  url=${sg_url}  db=${sg_db}
     ...  doc_id=${doc_gen_1["id"]}
     ...  parent_revision=${doc_gen_1["rev"]}
     ...  new_revision=2-foo
     ...  auth=${user1}
-
-    Shutdown Sync Gateway  url=${sg_url}
-    Delete Couchbase Server Cached Rev Bodies  url=${cbs_url}  bucket=${bucket}
-    Start Sync Gateway  url=${sg_url}  config=${sg_config}
-
-
-    # In order to remove ensure rev 1 isn't available from the in-memory revision cache, restart SG and wait 5 minutes for archived
-    # version to expire from bucket.  TODO: Add config to reduce the 5 minute expiry time for testing purposes
-
-#    Stop Sync Gateway
-#    Start Sync Gateway
-
-    # Wait five minutes for doc to expire from CBS (or even better, delete the backup document directly via the SDK)
-    # (when it's implemented, could also set the expiry config property https://github.com/couchbase/sync_gateway/issues/1729)
-
-    # Create a conflicting revision with revision 1 as ancestor, referencing revpos
-
-    #${revid} =      Update Doc With Conflicting Attachment Stub ${dburl} ${docid} ${rev1id} 2 foo 201
 
 *** Keywords ***
 Setup Test
