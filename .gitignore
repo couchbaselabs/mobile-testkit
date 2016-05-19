@@ -44,12 +44,13 @@ resources/cluster_configs/*
 !resources/cluster_configs/README.md
 resources/pool.json
 !resources/cluster_configs/1sg_1cbs.sample
-libraries/provision/ansible/playbooks/ansible.cfg
 debug.txt
 
 deps/*
 !deps/binaries/README.md
 
 scripts
+
+ansible.cfg
 
 .vagrant/
