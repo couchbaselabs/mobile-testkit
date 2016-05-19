@@ -6,7 +6,7 @@ Library     OperatingSystem
 Library     ${Libraries}/NetworkUtils.py
 Library     ${Libraries}/LoggingKeywords.py
 
-Library     test_cbgt_pindex.py
+Library     ../test_cbgt_pindex.py
 Library     test_dcp_reshard.py
 
 Suite Setup     Suite Setup
