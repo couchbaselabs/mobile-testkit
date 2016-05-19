@@ -494,22 +494,22 @@ Run the whole suite
 
 Run a single suite  
 
-`robot -b debug.txt -v SERVER_VERSION:4.1.0 -v SYNC_GATEWAY_VERSION:1.2.0-79 testsuites/syncgateway/functional/1sg_1cbs.robot`
+`robot -b debug.txt -v SERVER_VERSION:4.1.0 -v SYNC_GATEWAY_VERSION:1.2.0-79 testsuites/syncgateway/functional/1sg_1cbs/`
 
 Run a single test   
 
-`robot -b debug.txt -v SERVER_VERSION:4.1.0 -v SYNC_GATEWAY_VERSION:1.2.0-79 -t "test bulk get compression no compression" testsuites/syncgateway/functional/1sg_1cbs.robot`
+`robot -b debug.txt -v SERVER_VERSION:4.1.0 -v SYNC_GATEWAY_VERSION:1.2.0-79 -t "test bulk get compression no compression" testsuites/syncgateway/functional/1sg_1cbs/`
 
 Running a test (using a source commit)
 
-``robot -b debug.txt -v SERVER_VERSION:4.1.0 -v SYNC_GATEWAY_VERSION:062bc26a8b65e63b3a80ba0f11506e49681d4c8c -t "test bulk get compression no compression" testsuites/syncgateway/functional/1sg_1cbs.robot``
+`robot -b debug.txt -v SERVER_VERSION:4.1.0 -v SYNC_GATEWAY_VERSION:062bc26a8b65e63b3a80ba0f11506e49681d4c8c -t "test bulk get compression no compression" testsuites/syncgateway/functional/1sg_1cbs/`
 
 Although it is not necessary, the `-b debug.txt` will provide more output and stacktraces for deeper investigation
 
 Skipping the cluster provisioning (i.e. You are writing tests and know your cluster is the topology you are expecting)
 
-`robot -b debug.txt -v SERVER_VERSION:4.1.0 -v SYNC_GATEWAY_VERSION:1.2.0-79 -v PROVISION_CLUSTER:False testsuites/syncgateway/functional/1sg_1ac_1cbs.robot`
-`robot -b debug.txt -v SERVER_VERSION:4.1.0 -v SYNC_GATEWAY_VERSION:1.2.0-79 -v PROVISION_CLUSTER:False -t "test sync sanity" testsuites/syncgateway/functional/1sg_1ac_1cbs.robot`
+`robot -b debug.txt -v SERVER_VERSION:4.1.0 -v SYNC_GATEWAY_VERSION:1.2.0-79 -v PROVISION_CLUSTER:False testsuites/syncgateway/functional/1sg_1ac_1cbs/`
+`robot -b debug.txt -v SERVER_VERSION:4.1.0 -v SYNC_GATEWAY_VERSION:1.2.0-79 -v PROVISION_CLUSTER:False -t "test sync sanity" testsuites/syncgateway/functional/1sg_1ac_1cbs/`
 
 **Running Performance Tests**
 
