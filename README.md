@@ -85,7 +85,7 @@ $ brew install libcouchbase
 
 On CentOS7
 ```
-$ sudo yum install python-devel
+$ yum install gcc libffi-devel python-devel openssl-devel
 ```
 
 ```
