@@ -186,7 +186,6 @@ class LiteServ:
             expected_version = "{} (build {})".format(version, build)
             assert lite_version == expected_version, "Expected version does not match actual version: Expected={}  Actual={}".format(expected_version, lite_version)
         elif is_android:
-            # TODO need version and build
             assert lite_version == self._version_build, "Expected version does not match actual version: Expected={}  Actual={}".format(self._version_build, lite_version)
         elif is_net:
             running_version_parts = re.split("[ /-]", lite_version)
