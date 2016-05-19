@@ -144,35 +144,3 @@ Shutdown Net ListenerConsole
     ...  The LiteServ binaries are located in deps/binaries.
     [Timeout]       1 minute
     Kill Mono Process
-
-# sync_gateway keywords
-Start Local Sync Gateway
-    [Documentation]   Starts sync_gateway with a provided configuration on a host and port(s).
-    ...  The sync_gateway binary is located in deps/binaries.
-    [Timeout]       1 minute
-    [Arguments]  ${config}  ${host}  ${port}  ${admin_port}
-
-#    ${rendered_config} =  Render Sync Gateway Config
-#    ...  config=${config}
-#    ...  db=${db}
-#    ...  server_url=${server_url}
-#    ...  server_bucket=${server_bucket}
-
-    ${binary_path} =  Get Sync Gateway Binary Path
-    Start Process   ${binary_path}
-    ...             -interface       ${host}:${port}
-    ...             -adminInterface  ${host}:${admin_port}
-    ...             ${config}
-    ...             alias=sync_gateway
-    ...             stdout=${RESULTS}/${TEST_NAME}-sync-gateway-stdout.log
-    ...             stderr=${RESULTS}/${TEST_NAME}-sync-gateway-stderr.log
-    Process Should Be Running   handle=sync_gateway
-    ${sg_url} =  Verify Sync Gateway Launched  host=${host}  port=${port}  admin_port=${admin_port}
-    [return]    ${sg_url}
-
-Shutdown Local Sync Gateway
-    [Documentation]   Stops sync_gateway running on a local machine.
-    ...  The LiteServ binaries are located in deps/binaries.
-    [Timeout]       1 minute
-    Terminate Process          handle=sync_gateway
-    Process Should Be Stopped  handle=sync_gateway
