@@ -67,13 +67,11 @@ Install Server
     Log To Console  ${result.stdout}
 
 Install Sync Gateway
-    [Arguments]     ${sync_gateway_version}  ${sync_gateway_config}
+    [Arguments]     ${version}  ${config}
     Log                         Cluster Config: %{CLUSTER_CONFIG}
-    ${sync_gateway_arg}         Catenate  SEPARATOR=  --version=      ${sync_gateway_version}
-    ${sync_gateway_config_arg}  Catenate  SEPARATOR=  --config-file=  ${sync_gateway_config}
-    ${result} =  Run Process  python  ${LIBRARIES}/provision/install_sync_gateway.py  ${sync_gateway_arg}  ${sync_gateway_config_arg}
-    Log To Console  ${result.stderr}
-    Log To Console  ${result.stdout}
+    ${result} =  Run Process  python  ${LIBRARIES}/provision/install_sync_gateway.py  --version\=${sync_gateway_version}  --config-file\=${sync_gateway_config}
+    Log  ${result.stderr}  console=True
+    Log  ${result.stdout}  console=True
 
 # LiteServ Keywords
 Install LiteServ
@@ -146,28 +144,3 @@ Shutdown Net ListenerConsole
     ...  The LiteServ binaries are located in deps/binaries.
     [Timeout]       1 minute
     Kill Mono Process
-
-# sync_gateway keywords
-Start Sync Gateway
-    [Documentation]   Starts sync_gateway with a provided configuration on a host and port(s).
-    ...  The sync_gateway binary is located in deps/binaries.
-    [Timeout]       1 minute
-    [Arguments]  ${config}  ${host}  ${port}  ${admin_port}
-    ${binary_path} =  Get Sync Gateway Binary Path
-    Start Process   ${binary_path}
-    ...             -interface       ${host}:${port}
-    ...             -adminInterface  ${host}:${admin_port}
-    ...             ${config}
-    ...             alias=sync_gateway
-    ...             stdout=${RESULTS}/${TEST_NAME}-sync-gateway-stdout.log
-    ...             stderr=${RESULTS}/${TEST_NAME}-sync-gateway-stderr.log
-    Process Should Be Running   handle=sync_gateway
-    ${sg_url} =  Verify Sync Gateway Launched  host=${host}  port=${port}  admin_port=${admin_port}
-    [return]    ${sg_url}
-
-Shutdown Sync Gateway
-    [Documentation]   Stops sync_gateway running on a local machine.
-    ...  The LiteServ binaries are located in deps/binaries.
-    [Timeout]       1 minute
-    Terminate Process          handle=sync_gateway
-    Process Should Be Stopped  handle=sync_gateway

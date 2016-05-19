@@ -1,38 +1,26 @@
 *** Settings ***
 Resource    resources/common.robot
 
-Library     Process
-Library     OperatingSystem
 Library     ${Libraries}/NetworkUtils.py
 Library     ${Libraries}/LoggingKeywords.py
 
-Library     test_bucket_shadow.py
-Library     test_bulk_get_compression.py
-Library     test_continuous.py
-Library     test_db_online_offline.py
-Library     test_db_online_offline_resync.py
-Library     test_db_online_offline_webhooks.py
-Library     test_longpoll.py
-Library     test_multiple_dbs.py
-Library     test_multiple_users_multiple_channels_multiple_revisions.py
-Library     test_overloaded_channel_cache.py
-Library     test_roles.py
-Library     test_seq.py
-Library     test_single_user_single_channel_doc_updates.py
-Library     test_sync.py
-Library     test_users_channels.py
-
-Suite Setup     Suite Setup
-Suite Teardown  Suite Teardown
+Library     ../test_bucket_shadow.py
+Library     ../test_bulk_get_compression.py
+Library     ../test_continuous.py
+Library     ../test_db_online_offline.py
+Library     ../test_db_online_offline_resync.py
+Library     ../test_db_online_offline_webhooks.py
+Library     ../test_longpoll.py
+Library     ../test_multiple_dbs.py
+Library     ../test_multiple_users_multiple_channels_multiple_revisions.py
+Library     ../test_overloaded_channel_cache.py
+Library     ../test_roles.py
+Library     ../test_seq.py
+Library     ../test_single_user_single_channel_doc_updates.py
+Library     ../test_sync.py
+Library     ../test_users_channels.py
 
 Test Teardown   Test Teardown
-
-Test Timeout    10 minutes
-
-*** Variables ***
-${CLUSTER_CONFIG}           ${CLUSTER_CONFIGS}/1sg_1cbs
-${SYNC_GATEWAY_CONFIG}      ${SYNC_GATEWAY_CONFIGS}/sync_gateway_default_functional_tests_cc.json
-${PROVISION_CLUSTER}        True
 
 *** Test Cases ***
 # Cluster has been setup
@@ -302,26 +290,7 @@ test single user single channel
     [Tags]   sanity
     test single user single channel         ${SYNC_GATEWAY_CONFIGS}/sync_gateway_default_functional_tests_cc.json
 
-
 *** Keywords ***
-Suite Setup
-    Log  Setting up suite ...  console=True
-    Set Environment Variable  CLUSTER_CONFIG  ${CLUSTER_CONFIG}
-
-    Run Keyword If  ${PROVISION_CLUSTER}
-    ...  Provision Cluster
-    ...     server_version=${SERVER_VERSION}
-    ...     sync_gateway_version=${SYNC_GATEWAY_VERSION}
-    ...     sync_gateway_config=${SYNC_GATEWAY_CONFIG}
-
-    Verify Cluster Versions
-    ...  cluster_config=%{CLUSTER_CONFIG}
-    ...  expected_server_version=${SERVER_VERSION}
-    ...  expected_sync_gateway_version=${SYNC_GATEWAY_VERSION}
-
-Suite Teardown
-    Log  Tearing down suite ...  console=True
-
 Test Teardown
     Log  Tearing down test ...  console=True
     List Connections

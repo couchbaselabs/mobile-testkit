@@ -7,6 +7,7 @@ from requests.exceptions import HTTPError
 
 from robot.api.logger import console
 
+from CouchbaseServer import CouchbaseServer
 from libraries.data.doc_generators import *
 from constants import *
 
@@ -96,16 +97,39 @@ class MobileRestClient:
 
         raise ValueError("Unsupported couchbase lite server type")
 
-    def create_database(self, url, name):
+    def create_user(self, url, db, name, password, channels=[]):
+        data = {
+            "name": name,
+            "password": password,
+            "admin_channels": channels
+        }
+        resp = self._session.post("{}/{}/_user/".format(url, db), data=json.dumps(data))
+        log_r(resp)
+        resp.raise_for_status()
+
+        return (name, password)
+
+    def create_database(self, url, name, server=None):
 
         server_type = self.get_server_type(url)
 
         if server_type == ServerType.listener:
             resp = self._session.put("{}/{}/".format(url, name))
         elif server_type == ServerType.syncgateway:
+            if server is None:
+                raise ValueError("Creating database error. You must provide a server either ('walrus:' or '{coucbase_server_url}')")
+
+            logging.info("Using server: {} for database: {}".format(server, name))
+
+            if server != "walrus:":
+                # Create bucket to support the database
+                logging.info("Creating backing bucket for sync_gateway db '{}' on '{}'".format(name, server))
+                server = CouchbaseServer()
+                server.create_bucket(server, name)
+
             data = {
                 "name": "{}".format(name),
-                "server": "walrus:",
+                "server": server,
                 "bucket": "{}".format(name)
             }
             resp = self._session.put("{}/{}/".format(url, name), data=json.dumps(data))
@@ -130,6 +154,121 @@ class MobileRestClient:
             resp = self._session.delete("{}/{}".format(url, db))
             log_r(resp)
             resp.raise_for_status()
+
+    def get_doc(self, url, db, doc_id, auth):
+        """
+        returns a dictionary with the following format:
+
+        {
+            "_attachments":{
+                "sample_text.txt":{
+                    "digest":"sha1-x6zPGLnfGXxKdGqxUN2YzvFGdho=",
+                    "length":445,
+                    "revpos":1,
+                    "stub":true}
+                },
+            "_id":"att_doc",
+            "_rev":"1-59bd81bc19049947b4728f8c769a44bd",
+            "content":"{ \"sample_key\": \"sample_value\" }"
+            ,"updates":0
+        }
+        """
+
+        resp = self._session.get("{}/{}/{}".format(url, db, doc_id), auth=auth)
+        log_r(resp)
+        resp.raise_for_status()
+        resp_obj = resp.json()
+
+        if "_attachments" in resp_obj:
+            for k in resp_obj["_attachments"].keys():
+                del resp_obj["_attachments"][k]["digest"]
+                del resp_obj["_attachments"][k]["length"]
+
+        return resp_obj
+
+    def add_doc(self, url, db, doc, auth):
+        doc["updates"] = 0
+        resp = self._session.post("{}/{}/".format(url, db), data=json.dumps(doc), auth=auth)
+        log_r(resp)
+        resp.raise_for_status()
+        resp_obj = resp.json()
+
+        return {"id": resp_obj["id"], "rev": resp_obj["rev"]}
+
+    def add_conflict(self, url, db, doc_id, parent_revision, new_revision, auth):
+        """
+            1. GETs the doc with id == doc_id
+            2. adds a _revisions property with
+                ids[0] == new_revision's digest
+
+            Sample doc JSON:
+            {
+                "_rev":"2-foo",
+                "_attachments":{"hello.txt":{"stub":true,"revpos":1}},
+                "_revisions":{
+                    "ids":[
+                        "${new_revision's digest}",
+                        "${parent_revision's digest}"
+                    ],
+                    "start":${new_revision's generation number}
+                }
+            }
+        """
+        logging.info("PARENT: {}".format(parent_revision))
+        logging.info("NEW: {}".format(new_revision))
+
+        doc = self.get_doc(url, db, doc_id, auth)
+
+        # Delete rev property and add our own "_revisions"
+        parent_revision_parts = parent_revision.split("-")
+        parent_revision_generation = int(parent_revision_parts[0])
+        parent_revision_digest = parent_revision_parts[1]
+
+        new_revision_parts = new_revision.split("-")
+        new_revision_generation = int(new_revision_parts[0])
+        new_revision_digest = new_revision_parts[1]
+
+        logging.debug("Parent Generation: {}".format(parent_revision_generation))
+        logging.debug("Parent Digest: {}".format(parent_revision_digest))
+        logging.debug("New Generation: {}".format(new_revision_generation))
+        logging.debug("New Digest: {}".format(new_revision_digest))
+
+        doc["_rev"] = new_revision
+        doc["_revisions"] = {
+            "ids": [
+                new_revision_digest,
+                parent_revision_digest
+            ],
+            "start": new_revision_generation
+        }
+
+        params = {"new_edits": "false"}
+        resp = self._session.put("{}/{}/{}".format(url, db, doc_id), params=params, data=json.dumps(doc), auth=auth)
+        log_r(resp)
+        resp.raise_for_status()
+
+    def update_doc(self, url, db, doc_id, number_updates, auth):
+        """
+        Updates a doc on a db a number of times.
+            1. GETs the doc
+            2. It increments the "updates" propery
+            3. PUTS the doc
+        """
+
+        for i in xrange(number_updates):
+
+            doc = self.get_doc(url, db, doc_id, auth)
+
+            current_update_number = doc["updates"]
+            doc["updates"] = current_update_number + 1
+
+            resp = self._session.put("{}/{}/{}".format(url, db, doc_id), data=json.dumps(doc), auth=auth)
+
+            log_r(resp)
+            resp.raise_for_status()
+            resp_obj = resp.json()
+
+        return {"id": resp_obj["id"], "rev": resp_obj["rev"]}
 
     def add_docs(self, url, db, number, id_prefix, generator=simple()):
 

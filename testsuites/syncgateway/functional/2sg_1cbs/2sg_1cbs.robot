@@ -6,8 +6,8 @@ Library     OperatingSystem
 Library     ${Libraries}/NetworkUtils.py
 Library     ${Libraries}/LoggingKeywords.py
 
-Library     test_bucket_shadow.py
-Library     test_sg_replicate.py
+Library     ../test_bucket_shadow.py
+Library     ../test_sg_replicate.py
 
 Suite Setup     Suite Setup
 Suite Teardown  Suite Teardown

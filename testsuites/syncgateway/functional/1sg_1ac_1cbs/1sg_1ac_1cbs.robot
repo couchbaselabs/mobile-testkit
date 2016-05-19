@@ -6,16 +6,16 @@ Library     OperatingSystem
 Library     ${Libraries}/NetworkUtils.py
 Library     ${Libraries}/LoggingKeywords.py
 
-Library     test_continuous.py
-Library     test_db_online_offline.py
-Library     test_longpoll.py
-Library     test_multiple_dbs.py
-Library     test_multiple_users_multiple_channels_multiple_revisions.py
-Library     test_roles.py
-Library     test_seq.py
-Library     test_single_user_single_channel_doc_updates.py
-Library     test_sync.py
-Library     test_users_channels.py
+Library     ../test_continuous.py
+Library     ../test_db_online_offline.py
+Library     ../test_longpoll.py
+Library     ../test_multiple_dbs.py
+Library     ../test_multiple_users_multiple_channels_multiple_revisions.py
+Library     ../test_roles.py
+Library     ../test_seq.py
+Library     ../test_single_user_single_channel_doc_updates.py
+Library     ../test_sync.py
+Library     ../test_users_channels.py
 
 Suite Setup     Suite Setup
 Suite Teardown  Suite Teardown
