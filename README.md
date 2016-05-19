@@ -110,7 +110,7 @@ $ [sudo] pip install virtualenv
 $ cd mobile-testkit/
 ```
 
-Setup PATH and PYTHONPATH
+Setup PATH, PYTHONPATH, and ANSIBLE_CONFIG
 ```
 source setup.sh
 ```
@@ -423,7 +423,6 @@ The sync_gateway tests use [Ansible](https://www.ansible.com/) to provision the 
 **Setup Global Ansible Config**
 
 ```
-$ cd libraries/provision/ansible/playbooks
 $ cp ansible.cfg.example ansible.cfg
 $ vi ansible.cfg  # edit to your liking
 ```

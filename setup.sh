@@ -36,3 +36,5 @@ export PYTHONPATH=$PYTHONPATH:$currentdir/libraries/data
 export PYTHONPATH=$PYTHONPATH:$currentdir/libraries/testkit
 export PYTHONPATH=$PYTHONPATH:$currentdir/libraries/provision
 export PYTHONPATH=$PYTHONPATH:$currentdir/libraries/utilities
+
+export ANSIBLE_CONFIG=$currentdir/ansible.cfg
