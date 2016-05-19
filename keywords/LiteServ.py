@@ -34,7 +34,7 @@ class LiteServ:
         if self._platform == "macosx":
             self.extracted_file_name = "couchbase-lite-macosx-{}".format(self._version_build)
         elif self._platform == "android":
-            self.extracted_file_name = "couchbase-lite-android-liteserv-{}".format(self._version_build)
+            self.extracted_file_name = "couchbase-lite-android-liteserv-SQLite-{}-debug.apk".format(self._version_build)
         elif self._platform == "net":
             # TODO package with version and build
             self.extracted_file_name = "couchbase-lite-net-listenerconsole-{}".format(self._version_build)
@@ -59,8 +59,11 @@ class LiteServ:
             else:
                 url = "{}/couchbase-lite-ios/{}/macosx/{}/{}".format(LATEST_BUILDS, version, self._version_build, file_name)
         elif self._platform == "android":
-            # TODO, requires package to be published via latestbuilds.
+            # http://latestbuilds.hq.couchbase.com/couchbase-lite-android/0.0.0/0.0.0-710/
             # https://github.com/couchbase/couchbase-lite-net/issues/639
+            version, build = version_and_build(self._version_build)
+            file_name = "couchbase-lite-android-liteserv-SQLite-{}-debug.apk".format(self._version_build)
+            url = "{}/couchbase-lite-android/{}/{}/{}".format(LATEST_BUILDS, version, self._version_build, file_name)
             pass
         elif self._platform == "net":
             # TODO, requires package to be published via latestbuilds.
@@ -73,15 +76,16 @@ class LiteServ:
         with open("{}/{}".format(BINARY_DIR, file_name), "wb") as f:
             f.write(resp.content)
 
-        # Unzip the package
-        with ZipFile("{}/{}".format(BINARY_DIR, file_name)) as zip_f:
-            zip_f.extractall("{}/{}".format(BINARY_DIR, self.extracted_file_name))
+        if self._platform != "android":
+            # Unzip the package
+            with ZipFile("{}/{}".format(BINARY_DIR, file_name)) as zip_f:
+                zip_f.extractall("{}/{}".format(BINARY_DIR, self.extracted_file_name))
 
-        # Make binary executable
-        os.chmod("{}/{}/LiteServ".format(BINARY_DIR, self.extracted_file_name), 0755)
+            # Make binary executable
+            os.chmod("{}/{}/LiteServ".format(BINARY_DIR, self.extracted_file_name), 0755)
 
-        # Remove .zip file
-        os.remove("{}/{}".format(BINARY_DIR, file_name))
+            # Remove .zip file
+            os.remove("{}/{}".format(BINARY_DIR, file_name))
 
     def get_liteserv_binary_path(self):
 
@@ -97,7 +101,7 @@ class LiteServ:
 
     def install_apk(self):
 
-        apk_path = "{}/{}/couchbase-lite-android-liteserv.apk".format(BINARY_DIR, self.extracted_file_name)
+        apk_path = "{}/{}".format(BINARY_DIR, self.extracted_file_name)
         logging.info(apk_path)
 
         install_successful = False
@@ -182,9 +186,7 @@ class LiteServ:
             expected_version = "{} (build {})".format(version, build)
             assert lite_version == expected_version, "Expected version does not match actual version: Expected={}  Actual={}".format(expected_version, lite_version)
         elif is_android:
-            # TODO need version and build
-            expected_version = version
-            assert lite_version == expected_version, "Expected version does not match actual version: Expected={}  Actual={}".format(expected_version, lite_version)
+            assert lite_version == self._version_build, "Expected version does not match actual version: Expected={}  Actual={}".format(self._version_build, lite_version)
         elif is_net:
             running_version_parts = re.split("[ /-]", lite_version)
             version = running_version_parts[5]
