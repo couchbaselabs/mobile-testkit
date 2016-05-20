@@ -6,5 +6,5 @@
   shell: /sbin/initctl stop sg_accel
   when: ansible_distribution == "CentOS" and ansible_distribution_major_version == "6"
 - name: verify sg_accel not listening on port
-  wait_for: port=4985 delay=1 state=stopped
+  wait_for: port=4985 state=stopped
 

@@ -4,11 +4,12 @@
 	"log": ["*"],
 	"databases": {
 		"db": {
-			"revs_limit" : 10,
+			"revs_limit": 10,
 			"server": "walrus:",
-			"sync":`function(doc){
-				channel(doc.channels);
-			}`,
+			"sync":
+`function(doc){
+	channel(doc.channels);
+}`
 		}
 	}
 }

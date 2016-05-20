@@ -92,6 +92,7 @@ Teardown Test
     Delete Databases  ${ls_url}
     Shutdown LiteServ
     Stop Sync Gateway  url=${sg_url}
+    Run Keyword If Test Failed  Fetch And Analyze Logs  ${TEST_NAME}
 
 
 
