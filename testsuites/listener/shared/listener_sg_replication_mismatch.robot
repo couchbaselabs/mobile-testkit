@@ -72,7 +72,6 @@ Replication with multiple client dbs and single sync_gateway db
     Verify Docs In Changes  url=${ls_url}        db=${ls_db1}  expected_docs=@{ls_db1_db2_docs}
     Verify Docs In Changes  url=${ls_url}        db=${ls_db2}  expected_docs=@{ls_db1_db2_docs}
 
-
 *** Keywords ***
 Setup Test
     ${ls_url} =  Start LiteServ

@@ -4,7 +4,7 @@ Resource    resources/common.robot
 Library     Process
 Library     OperatingSystem
 Library     ${Libraries}/NetworkUtils.py
-Library     ${Libraries}/LoggingKeywords.py
+Library      ${KEYWORDS}/Logging.py
 
 Library     ../test_continuous.py
 Library     ../test_db_online_offline.py

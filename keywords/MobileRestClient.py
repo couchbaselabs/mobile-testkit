@@ -97,6 +97,24 @@ class MobileRestClient:
 
         raise ValueError("Unsupported couchbase lite server type")
 
+    def get_session(self, url):
+        resp = self._session.get("{}/_session".format(url))
+        log_r(resp)
+        resp.raise_for_status()
+
+        expected_response = {
+            "userCtx": {
+                "name": None,
+                "roles": [
+                    "_admin"
+                    ]
+                },
+                "ok": True
+            }
+
+        assert resp.json() == expected_response, "Unexpected _session response from Listener"
+        return resp.json()
+
     def create_user(self, url, db, name, password, channels=[]):
         data = {
             "name": name,

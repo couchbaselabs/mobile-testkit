@@ -4,7 +4,7 @@ Resource          resources/common.robot
 Library     DebugLibrary
 
 Library     ${Libraries}/NetworkUtils.py
-Library     ${Libraries}/LoggingKeywords.py
+Library     ${KEYWORDS}/Logging.py
 Library     ${Keywords}/CouchbaseServer.py
 Library     ${Keywords}/SyncGateway.py
 Library     ${Keywords}/MobileRestClient.py
