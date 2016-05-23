@@ -4,7 +4,6 @@ This repository contains Mobile QE Functional / Integration tests.
 ```
 $ git clone https://github.com/couchbaselabs/mobile-testkit.git
 $ cd mobile-testkit/
-$ git submodule init && git submodule update
 ```
 
 The mobile test suites leverage Robot Framework (http://robotframework.org/) as an organization platform as well as a test runner and reporter. 
