@@ -4,6 +4,8 @@ import time
 import requests
 from requests import Session
 from requests.exceptions import HTTPError
+import concurrent.futures
+from concurrent.futures import ThreadPoolExecutor
 
 from robot.api.logger import console
 
@@ -12,12 +14,11 @@ from libraries.data.doc_generators import *
 from constants import *
 
 def log_r(request):
-    logging.info("{0} {1} {2}".format(
-            request.request.method,
-            request.request.url,
-            request.status_code
-        )
-    )
+    info_string = "{0} {1} {2}".format(request.request.method,
+                                       request.request.url,
+                                       request.status_code)
+    logging.info(info_string)
+    console(info_string)
     logging.debug("{0} {1}\nHEADERS = {2}\nBODY = {3}".format(
             request.request.method,
             request.request.url,
@@ -60,6 +61,19 @@ def parse_multipart_response(response):
                 logging.error("Could not parse docs as JSON: {} error: {}".format(doc, e))
 
     return {"rows": rows}
+
+def get_auth_type(auth):
+
+    if auth is None:
+        return AuthType.none
+
+    if auth[0] == "SyncGatewaySession":
+        auth_type = AuthType.session
+    else:
+        auth_type = AuthType.http_basic
+
+    logging.debug("Using auth type: {}".format(auth_type))
+    return auth_type
 
 class MobileRestClient:
     """
@@ -123,8 +137,8 @@ class MobileRestClient:
         resp = self._session.post("{}/{}/_session".format(url, db), data=json.dumps(data))
         log_r(resp)
         resp.raise_for_status()
-        return resp.json
-
+        resp_obj = resp.json()
+        return (resp_obj["cookie_name"], resp_obj["session_id"])
 
     def create_user(self, url, db, name, password, channels=[]):
         data = {
@@ -135,7 +149,6 @@ class MobileRestClient:
         resp = self._session.post("{}/{}/_user/".format(url, db), data=json.dumps(data))
         log_r(resp)
         resp.raise_for_status()
-
         return (name, password)
 
     def create_database(self, url, name, server=None):
@@ -184,7 +197,7 @@ class MobileRestClient:
             log_r(resp)
             resp.raise_for_status()
 
-    def get_doc(self, url, db, doc_id, auth):
+    def get_doc(self, url, db, doc_id, auth=None):
         """
         returns a dictionary with the following format:
 
@@ -203,7 +216,15 @@ class MobileRestClient:
         }
         """
 
-        resp = self._session.get("{}/{}/{}".format(url, db, doc_id), auth=auth)
+        auth_type = get_auth_type(auth)
+
+        if auth_type == AuthType.session:
+            resp = self._session.get("{}/{}/{}".format(url, db, doc_id), cookies=dict(SyncGatewaySession=auth[1]))
+        elif auth_type == AuthType.http_basic:
+            resp = self._session.get("{}/{}/{}".format(url, db, doc_id), auth=auth)
+        else:
+            resp = self._session.get("{}/{}/{}".format(url, db, doc_id))
+
         log_r(resp)
         resp.raise_for_status()
         resp_obj = resp.json()
@@ -215,16 +236,27 @@ class MobileRestClient:
 
         return resp_obj
 
-    def add_doc(self, url, db, doc, auth):
+    def add_doc(self, url, db, doc, auth=None):
+
+        logging.info(auth)
+        auth_type = get_auth_type(auth)
+
         doc["updates"] = 0
-        resp = self._session.post("{}/{}/".format(url, db), data=json.dumps(doc), auth=auth)
+
+        if auth_type == AuthType.session:
+            resp = self._session.post("{}/{}/".format(url, db), data=json.dumps(doc), cookies=dict(SyncGatewaySession=auth[1]))
+        elif auth_type == AuthType.http_basic:
+            resp = self._session.post("{}/{}/".format(url, db), data=json.dumps(doc), auth=auth)
+        else:
+            resp = self._session.post("{}/{}/".format(url, db), data=json.dumps(doc))
+
         log_r(resp)
         resp.raise_for_status()
         resp_obj = resp.json()
 
         return {"id": resp_obj["id"], "rev": resp_obj["rev"]}
 
-    def add_conflict(self, url, db, doc_id, parent_revision, new_revision, auth):
+    def add_conflict(self, url, db, doc_id, parent_revision, new_revision, auth=None):
         """
             1. GETs the doc with id == doc_id
             2. adds a _revisions property with
@@ -276,7 +308,23 @@ class MobileRestClient:
         log_r(resp)
         resp.raise_for_status()
 
-    def update_doc(self, url, db, doc_id, number_updates, auth):
+    def update_docs(self, url, db, docs, number_updates, auth=None):
+
+        updated_docs = []
+
+        # for doc in docs:
+        #     update_doc = self.update_doc(url, db, doc, number_updates, auth=auth)
+        #     updated_docs.append(update_doc)
+
+        with ThreadPoolExecutor(max_workers=100) as executor:
+            future_to_url = [executor.submit(self.update_doc, url, db, doc, number_updates, auth) for doc in docs]
+            for future in concurrent.futures.as_completed(future_to_url):
+                updated_doc = future.result()
+                updated_docs.append(updated_doc)
+
+        return updated_docs
+
+    def update_doc(self, url, db, doc_id, number_updates, auth=None):
         """
         Updates a doc on a db a number of times.
             1. GETs the doc
@@ -284,29 +332,52 @@ class MobileRestClient:
             3. PUTS the doc
         """
 
+        auth_type = get_auth_type(auth)
+        doc = self.get_doc(url, db, doc_id, auth)
+        current_rev = doc["_rev"]
+        current_update_number = doc["updates"] + 1
+
         for i in xrange(number_updates):
 
-            doc = self.get_doc(url, db, doc_id, auth)
+            doc["updates"] = current_update_number
+            doc["_rev"] = current_rev
 
-            current_update_number = doc["updates"]
-            doc["updates"] = current_update_number + 1
-
-            resp = self._session.put("{}/{}/{}".format(url, db, doc_id), data=json.dumps(doc), auth=auth)
+            if auth_type == AuthType.session:
+                resp = self._session.put("{}/{}/{}".format(url, db, doc_id), data=json.dumps(doc), cookies=dict(SyncGatewaySession=auth[1]))
+            elif auth_type == AuthType.http_basic:
+                resp = self._session.put("{}/{}/{}".format(url, db, doc_id), data=json.dumps(doc), auth=auth)
+            else:
+                resp = self._session.put("{}/{}/{}".format(url, db, doc_id), data=json.dumps(doc))
 
             log_r(resp)
             resp.raise_for_status()
             resp_obj = resp.json()
 
+            current_update_number += 1
+            current_rev = resp_obj["rev"]
+
+
         return {"id": resp_obj["id"], "rev": resp_obj["rev"]}
 
-    def add_docs(self, url, db, number, id_prefix, generator=simple()):
+    def add_docs(self, url, db, number, id_prefix, auth=None, generator=simple(), channels=None):
 
         docs = {}
+        auth_type = get_auth_type(auth)
 
         for i in xrange(number):
 
             doc_body = generator
-            resp = self._session.put("{}/{}/{}_{}".format(url, db, id_prefix, i), data=doc_body)
+            if channels is not None:
+                doc_body["channels"] = channels
+
+            data = json.dumps(doc_body)
+
+            if auth_type == AuthType.session:
+                resp = self._session.put("{}/{}/{}_{}".format(url, db, id_prefix, i), data=data, cookies=dict(SyncGatewaySession=auth[1]))
+            elif auth_type == AuthType.http_basic:
+                resp = self._session.put("{}/{}/{}_{}".format(url, db, id_prefix, i), data=data, auth=auth)
+            else:
+                resp = self._session.put("{}/{}/{}_{}".format(url, db, id_prefix, i), data=data)
             log_r(resp)
             resp.raise_for_status()
 
