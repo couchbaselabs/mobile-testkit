@@ -5,7 +5,8 @@ from ansible.vars import VariableManager
 from ansible.parsing.dataloader import DataLoader
 from ansible.executor import playbook_executor
 from ansible.utils.display import Display
-
+from ansible.constants import DEFAULT_REMOTE_USER
+from ansible.constants import DEFAULT_BECOME_USER
 
 class Options(object):
     """
@@ -66,6 +67,8 @@ class Runner(object):
 
     def __init__(self, inventory_filename, playbook, run_data, verbosity=0):
 
+        print("Runner __init__.  ansible config: {}".format(os.environ["ANSIBLE_CONFIG"]))
+
         if not os.path.exists(inventory_filename):
             raise Exception("Cannot find inventory_filename: {}.  Current dir: {}".format(inventory_filename, os.getcwd()))
 
@@ -78,12 +81,19 @@ class Runner(object):
 
         self.options = Options()
         self.options.private_key_file = "/Users/tleyden/.ssh/id_rsa"
-        self.options.remote_user = "vagrant"
+        # self.options.remote_user = "vagrant"
+
+        # this gets picked up from the ANSIBLE_CONFIG.  not sure why this
+        # had to be done manually here.
+        # self.options.remote_user = DEFAULT_REMOTE_USER
+
         self.options.verbosity = verbosity
         self.options.connection = 'ssh'  # Need a connection type "smart" or "ssh"
         self.options.become = True
         self.options.become_method = 'sudo'
-        self.options.become_user = 'root'
+        self.options.become_user = DEFAULT_BECOME_USER
+
+        print("DEFAULT_SUDO: {}".format(DEFAULT_SUDO))
 
         # Set global verbosity
         self.display = Display()
