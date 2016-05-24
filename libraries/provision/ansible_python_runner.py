@@ -64,7 +64,7 @@ class Options(object):
 
 class Runner(object):
 
-    def __init__(self, inventory_filename, playbook, run_data, verbosity=0):
+    def __init__(self, inventory_filename, playbook, run_data, verbosity=0, subset=constants.DEFAULT_SUBSET):
 
         if not os.path.exists(inventory_filename):
             raise Exception("Cannot find inventory_filename: {}.  Current dir: {}".format(inventory_filename, os.getcwd()))
@@ -77,6 +77,7 @@ class Runner(object):
         self.options = Options()
         self.options.verbosity = verbosity
         self.options.connection = 'ssh'  # Need a connection type "smart" or "ssh"
+        self.options.subset = subset
 
         # Propagate defaults from ANSIBLE_CONFIG into the options.
         # Note that the following defaults in the ansible cli/__init__.py are missing:
