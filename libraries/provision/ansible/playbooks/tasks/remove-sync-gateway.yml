@@ -22,3 +22,9 @@
 # Delete sync_gateway binary
 - name: delete sync_gateway binary
   file: path=/opt/couchbase-sync-gateway state=absent
+  ignore_errors: yes
+
+# Remove sync gateway source
+- name: remove sync gateway source
+  file: /home/centos state=absent
+  ignore_errors: yes

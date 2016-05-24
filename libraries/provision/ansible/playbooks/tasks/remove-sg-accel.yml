@@ -22,3 +22,4 @@
 # Delete sg_accel binary
 - name: delete sync_gateway binary
   file: path=/opt/couchbase-sg-accel state=absent
+  ignore_errors: yes
