@@ -15,7 +15,9 @@ class AnsibleRunner:
 
         # parse key=value pairs into dictionary
         # shamelessly copied n pasted from http://bit.ly/1syhZ31
-        run_data = dict(re.findall(r'(\S+)=(".*?"|\S+)', extra_vars))
+        run_data = {}
+        if extra_vars is not None and len(extra_vars) > 0:
+            run_data = dict(re.findall(r'(\S+)=(".*?"|\S+)', extra_vars))
 
         inventory_filename = self.provisiong_config
 
