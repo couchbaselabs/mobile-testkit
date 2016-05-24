@@ -1,6 +1,6 @@
 ---
 # Remove sync_gateway
-- hosts: sync_gateways
+- hosts: sync_gateways:sg_accels
   become: yes
 
   tasks:
