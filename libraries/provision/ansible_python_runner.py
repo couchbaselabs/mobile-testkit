@@ -8,6 +8,7 @@ from ansible.utils.display import Display
 from ansible import constants
 from ansible.utils.vars import load_extra_vars
 from ansible.parsing.dataloader import DataLoader
+from robot.api.logger import console
 
 class Options(object):
     """
@@ -140,6 +141,7 @@ class Runner(object):
         # playbook = "%s/%s" % (pb_dir, playbook)
 
         # Setup playbook executor, but don't run until run() called
+        console("Running playbook: {}", playbook)
         self.pbex = playbook_executor.PlaybookExecutor(
             playbooks=[playbook],
             inventory=self.inventory,
