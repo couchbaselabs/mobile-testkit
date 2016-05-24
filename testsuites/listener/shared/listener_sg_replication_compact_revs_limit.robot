@@ -21,11 +21,11 @@ Test Setup        Setup Test
 Test Teardown     Teardown Test
 
 *** Variable ***
-${num_docs}         ${100}
-#${num_docs}         ${10}
+#${num_docs}         ${100}
+${num_docs}         ${2}
 ${num_revs}         ${120}
 #${num_large_revs}   ${480}
-${num_large_revs}   ${5}
+${num_large_revs}   ${50}
 #${num_xlarge_revs}  ${600}
 ${sg_db}            db
 ${sg_user_name}     sg_user
@@ -67,75 +67,43 @@ Client to Sync Gateway Complex Replication With Revs Limit
     ${mock_ls_session} =  Get Session  ${ls_url}
 
     ${sg_user_channels} =  Create List  NBC
-    ${sg_user} =  Create User  url=${sg_url_admin}  db=${sg_db}  name=${sg_user_name}  password=password  channels=${sg_user_channels}
+    ${sg_user} =     Create User  url=${sg_url_admin}  db=${sg_db}  name=${sg_user_name}  password=password  channels=${sg_user_channels}
     ${sg_session} =  Create Session  url=${sg_url_admin}  db=${sg_db}  name=${sg_user_name}
 
-    ${ls_db1} =  Create Database  url=${ls_url}  name=ls_db1
-    ${ls_db1_docs} =  Add Docs  url=${ls_url}  db=${ls_db1}  number=${num_docs}  id_prefix=ls_db1  channels=${sg_user_channels}
+    ${ls_db} =        Create Database  url=${ls_url}  name=ls_db
+    ${ls_db_docs} =  Add Docs  url=${ls_url}  db=${ls_db}  number=${num_docs}  id_prefix=ls_db  channels=${sg_user_channels}
 
-    # Start replication ls_db1 -> sg_db
+    # Start replication ls_db -> sg_db
     Start Replication
     ...  url=${ls_url}
     ...  continuous=${True}
-    ...  from_db=${ls_db1}
+    ...  from_db=${ls_db}
     ...  to_url=${sg_url_admin}  to_db=${sg_db}
 
 
-    Verify Docs Present  url=${sg_url_admin}  db=${sg_db}  expected_docs=${ls_db1_docs}
+    Verify Docs Present  url=${sg_url_admin}  db=${sg_db}  expected_docs=${ls_db_docs}
+
+    ${sg_docs_update} =      Update Docs  url=${sg_url}  db=${sg_db}  docs=${ls_db_docs}  number_updates=${num_large_revs}  auth=${sg_session}
+    ${ls_db_docs_update} =   Update Docs  url=${ls_url}  db=${ls_db}  docs=${ls_db_docs}  number_updates=${num_large_revs}
+
+    # Start replication ls_db <- sg_db
+    Start Replication
+    ...  url=${ls_url}
+    ...  continuous=${True}
+    ...  from_url=${sg_url_admin}  from_db=${sg_db}
+    ...  to_db=${ls_db}
 
     Debug
 
+    Verify Docs Revs Num  url=${sg_url}  db=${sg_db}  docs=${ls_db_docs}  expected_number_revs=${10}  auth=${sg_session}
+    #Verify Docs Present  url=${ls_url}  db=${ls_db}  expected_docs=${sg_docs_update}
 
-    ${sg_doc} =  Add Docs  url=${sg_url}  db=${sg_db}  number=${num_docs}  id_prefix=sg_db  auth=${sg_session}
+    Compact Database  url=${ls_url}  db=${ls_db}
 
-    Log To Console  ${sg_session}
-
-    ${ls_db1_docs_update} =  Update Docs  url=${sg_url}  db=${sg_db}  docs=${ls_db1_docs}  number_updates=${num_large_revs}  auth=${sg_session}
+    ${sg_docs_with_revs} =  Get Docs  url=${sg_url}  db=${sg_db}  docs=${sg_docs_update}  auth=${sg_session}
 
     Debug
 
-#    ${ls_db1} =  Create Database  url=${ls_url}  name=ls_db1
-#    ${ls_db2} =  Create Database  url=${ls_url}  name=ls_db2
-#    ${sg_db} =   Create Database  url=${sg_url_admin}  name=sg_db  server=walrus:
-#
-#    # Setup continuous push / pull replication from ls_db1 to sg_db
-#    Start Replication
-#    ...  url=${ls_url}
-#    ...  continuous=${True}
-#    ...  from_db=${ls_db1}
-#    ...  to_url=${sg_url_admin}  to_db=${sg_db}
-#
-#    Start Replication
-#    ...  url=${ls_url}
-#    ...  continuous=${True}
-#    ...  from_url=${sg_url_admin}  from_db=${sg_db}
-#    ...  to_db=${ls_db1}
-#
-#    # Setup continuous push / pull replication from ls_db2 to sg_db
-#    Start Replication
-#    ...  url=${ls_url}
-#    ...  continuous=${True}
-#    ...  from_db=${ls_db2}
-#    ...  to_url=${sg_url_admin}  to_db=${sg_db}
-#
-#    Start Replication
-#    ...  url=${ls_url}
-#    ...  continuous=${True}
-#    ...  from_url=${sg_url_admin}  from_db=${sg_db}
-#    ...  to_db=${ls_db2}
-#
-#    ${ls_db1_docs} =  Add Docs  url=${ls_url}  db=${ls_db1}  number=${500}  id_prefix=test_ls_db1
-#    ${ls_db2_docs} =  Add Docs  url=${ls_url}  db=${ls_db2}  number=${500}  id_prefix=test_ls_db2
-#
-#    @{ls_db1_db2_docs} =  Create List  ${ls_db1_docs}  ${ls_db2_docs}
-#
-#    Verify Docs Present  url=${ls_url}        db=${ls_db1}  expected_docs=@{ls_db1_db2_docs}
-#    Verify Docs Present  url=${ls_url}        db=${ls_db2}  expected_docs=@{ls_db1_db2_docs}
-#    Verify Docs Present  url=${sg_url_admin}  db=${sg_db}   expected_docs=@{ls_db1_db2_docs}
-#
-#    Verify Docs In Changes  url=${sg_url_admin}  db=${sg_db}   expected_docs=@{ls_db1_db2_docs}
-#    Verify Docs In Changes  url=${ls_url}        db=${ls_db1}  expected_docs=@{ls_db1_db2_docs}
-#    Verify Docs In Changes  url=${ls_url}        db=${ls_db2}  expected_docs=@{ls_db1_db2_docs}
 
 *** Keywords ***
 Setup Test
@@ -157,7 +125,7 @@ Teardown Test
     Delete Databases  ${ls_url}
     Shutdown LiteServ
     Stop Sync Gateway  url=${sg_url}
-    Run Keyword If Test Failed  Fetch And Analyze Logs  ${TEST_NAME}
+    # Run Keyword If Test Failed  Fetch And Analyze Logs  ${TEST_NAME}
 
 
 

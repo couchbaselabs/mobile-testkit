@@ -186,6 +186,11 @@ class MobileRestClient:
         resp_obj = resp.json()
         return resp_obj["db_name"]
 
+    def compact_database(self, url, db):
+        resp = self._session.post("{}/{}/_compact".format(url, db))
+        log_r(resp)
+        resp.raise_for_status()
+
     def delete_databases(self, url):
         resp = self._session.get("{}/_all_dbs".format(url))
         log_r(resp)
@@ -196,6 +201,17 @@ class MobileRestClient:
             resp = self._session.delete("{}/{}".format(url, db))
             log_r(resp)
             resp.raise_for_status()
+
+    def verify_docs_revs_num(self, url, db, docs, expected_number_revs, auth=None):
+        for doc in docs:
+            self.verify_revs_num(url, db, doc, expected_number_revs, auth)
+
+    def verify_revs_num(self, url, db, doc_id, expected_number_revs, auth=None):
+        doc = self.get_doc(url, db, doc_id, auth)
+        doc_revs_number = len(doc["_revisions"]["ids"])
+        assert doc_revs_number == expected_number_revs, "Expected num revs: {}, Actual num revs: {}".format(
+            expected_number_revs, doc_revs_number
+        )
 
     def get_doc(self, url, db, doc_id, auth=None):
         """
@@ -211,19 +227,29 @@ class MobileRestClient:
                 },
             "_id":"att_doc",
             "_rev":"1-59bd81bc19049947b4728f8c769a44bd",
+            "_revisions":{
+                "ids":[
+                    "875459bdcc4b76eb786cf8b956a7bb17",
+                    "2a873ee3ad89be3c9f7bf8ac3c5609f2",
+                    "360c446f680480d02a59293c97fc3ff7",
+                    "22afa551c93e3180c2176f014327d31b",
+                    "49017924815effa622c7d01000f21b95"],
+                "start":5
+            },
             "content":"{ \"sample_key\": \"sample_value\" }"
             ,"updates":0
         }
         """
 
         auth_type = get_auth_type(auth)
+        params = {"revs": "true"}
 
         if auth_type == AuthType.session:
-            resp = self._session.get("{}/{}/{}".format(url, db, doc_id), cookies=dict(SyncGatewaySession=auth[1]))
+            resp = self._session.get("{}/{}/{}".format(url, db, doc_id), params=params, cookies=dict(SyncGatewaySession=auth[1]))
         elif auth_type == AuthType.http_basic:
-            resp = self._session.get("{}/{}/{}".format(url, db, doc_id), auth=auth)
+            resp = self._session.get("{}/{}/{}".format(url, db, doc_id), params=params, auth=auth)
         else:
-            resp = self._session.get("{}/{}/{}".format(url, db, doc_id))
+            resp = self._session.get("{}/{}/{}".format(url, db, doc_id), params=params)
 
         log_r(resp)
         resp.raise_for_status()
@@ -235,6 +261,18 @@ class MobileRestClient:
                 del resp_obj["_attachments"][k]["length"]
 
         return resp_obj
+
+    def get_docs(self, url, db, docs, auth=None):
+
+        logging.error(docs)
+
+        result = {}
+        for doc in docs:
+            logging.error(doc)
+            result["id"] = self.get_doc(url, db, doc, auth=auth)
+
+        logging.debug(result)
+        return result
 
     def add_doc(self, url, db, doc, auth=None):
 
@@ -310,7 +348,7 @@ class MobileRestClient:
 
     def update_docs(self, url, db, docs, number_updates, auth=None):
 
-        updated_docs = []
+        updated_docs = {}
 
         # for doc in docs:
         #     update_doc = self.update_doc(url, db, doc, number_updates, auth=auth)
@@ -319,9 +357,10 @@ class MobileRestClient:
         with ThreadPoolExecutor(max_workers=100) as executor:
             future_to_url = [executor.submit(self.update_doc, url, db, doc, number_updates, auth) for doc in docs]
             for future in concurrent.futures.as_completed(future_to_url):
-                updated_doc = future.result()
-                updated_docs.append(updated_doc)
+                updated_doc_id, updated_doc_rev = future.result()
+                updated_docs[updated_doc_id] = updated_doc_rev
 
+        logging.debug("url: {} db: {} updated: {}".format(url, db, updated_docs))
         return updated_docs
 
     def update_doc(self, url, db, doc_id, number_updates, auth=None):
@@ -339,8 +378,14 @@ class MobileRestClient:
 
         for i in xrange(number_updates):
 
+            # Add "random" this to make each update unique. This will
+            # cause document to conflict rather than optimize out
+            # this behavior due to the same rev hash for doc content
+            doc["random"] = str(uuid.uuid4())
+
             doc["updates"] = current_update_number
             doc["_rev"] = current_rev
+
 
             if auth_type == AuthType.session:
                 resp = self._session.put("{}/{}/{}".format(url, db, doc_id), data=json.dumps(doc), cookies=dict(SyncGatewaySession=auth[1]))
@@ -353,11 +398,13 @@ class MobileRestClient:
             resp.raise_for_status()
             resp_obj = resp.json()
 
+            logging.debug(resp)
+
             current_update_number += 1
             current_rev = resp_obj["rev"]
 
 
-        return {"id": resp_obj["id"], "rev": resp_obj["rev"]}
+        return resp_obj["id"], resp_obj["rev"]
 
     def add_docs(self, url, db, number, id_prefix, auth=None, generator=simple(), channels=None):
 
@@ -485,6 +532,8 @@ class MobileRestClient:
                 elif server_type == ServerType.syncgateway:
                     resp_docs[resp_doc["_id"]] = {"rev": resp_doc["_rev"]}
 
+            logging.debug("Expected: {}".format(expected_doc_map))
+            logging.debug("Actual: {}".format(resp_docs))
             assert(expected_doc_map == resp_docs), "Unable to verify docs present. Dictionaries are not equal"
             break
 
