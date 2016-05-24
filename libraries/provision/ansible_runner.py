@@ -5,6 +5,7 @@ from ansible_python_runner import Runner
 import re
 import logging
 from ansible import constants
+from robot.api.logger import console
 
 class AnsibleRunner:
 
