@@ -187,9 +187,32 @@ class MobileRestClient:
         return resp_obj["db_name"]
 
     def compact_database(self, url, db):
+        """
+        POST /{db}/_compact and will verify compaction by
+        iterating though each document and inspecting the revs_info to make sure all revs are 'missing'
+        except for the leaf revision
+        """
+
         resp = self._session.post("{}/{}/_compact".format(url, db))
         log_r(resp)
         resp.raise_for_status()
+
+        resp = self._session.get("{}/{}/_all_docs".format(url, db))
+        log_r(resp)
+        resp.raise_for_status()
+        resp_obj = resp.json()
+
+        for row in resp_obj["rows"]:
+            doc_id = row["id"]
+            doc = self.get_doc(url, db, doc_id, revs_info=True)
+            available_count = 0
+            revs_info = doc["_revs_info"]
+            for rev_info in revs_info:
+                if rev_info["status"] == "available":
+                    available_count += 1
+
+            # After compaction, the number of a available revs should be 1 (the leaf revision)
+            assert available_count == 1, "Revisions remain after compaction"
 
     def delete_databases(self, url):
         resp = self._session.get("{}/_all_dbs".format(url))
@@ -207,16 +230,22 @@ class MobileRestClient:
             self.verify_revs_num(url, db, doc, expected_number_revs, auth)
 
     def verify_revs_num(self, url, db, doc_id, expected_number_revs, auth=None):
+        """
+        Verify that the number of revisions for a document matches expected number of revisions
+        Validate with ?revs=true. Check that the doc's length of _revisions["ids"]  == expected_number_revs
+        """
+
         doc = self.get_doc(url, db, doc_id, auth)
-        doc_revs_number = len(doc["_revisions"]["ids"])
-        assert doc_revs_number == expected_number_revs, "Expected num revs: {}, Actual num revs: {}".format(
-            expected_number_revs, doc_revs_number
+        logging.debug(doc)
+
+        doc_rev_ids_number = len(doc["_revisions"]["ids"])
+        assert doc_rev_ids_number == expected_number_revs, "Expected num revs: {}, Actual num revs: {}".format(
+            expected_number_revs, doc_rev_ids_number
         )
 
-    def get_doc(self, url, db, doc_id, auth=None):
+    def get_doc(self, url, db, doc_id, auth=None, revs_info=False):
         """
         returns a dictionary with the following format:
-
         {
             "_attachments":{
                 "sample_text.txt":{
@@ -230,19 +259,31 @@ class MobileRestClient:
             "_revisions":{
                 "ids":[
                     "875459bdcc4b76eb786cf8b956a7bb17",
-                    "2a873ee3ad89be3c9f7bf8ac3c5609f2",
-                    "360c446f680480d02a59293c97fc3ff7",
-                    "22afa551c93e3180c2176f014327d31b",
-                    "49017924815effa622c7d01000f21b95"],
+                    ],
                 "start":5
             },
             "content":"{ \"sample_key\": \"sample_value\" }"
             ,"updates":0
         }
+
+        If revs_info is True, also include the following property:
+
+         "_revs_info": [
+            {
+                "rev": "5-875459bdcc4b76eb786cf8b956a7bb17",
+                "status": "available"
+        },
         """
 
         auth_type = get_auth_type(auth)
-        params = {"revs": "true"}
+
+        params = {
+            "conflicts": "true",
+            "revs": "true"
+        }
+
+        if revs_info:
+            params["revs_info"] = "true"
 
         if auth_type == AuthType.session:
             resp = self._session.get("{}/{}/{}".format(url, db, doc_id), params=params, cookies=dict(SyncGatewaySession=auth[1]))
@@ -264,11 +305,8 @@ class MobileRestClient:
 
     def get_docs(self, url, db, docs, auth=None):
 
-        logging.error(docs)
-
         result = {}
         for doc in docs:
-            logging.error(doc)
             result["id"] = self.get_doc(url, db, doc, auth=auth)
 
         logging.debug(result)
@@ -349,10 +387,6 @@ class MobileRestClient:
     def update_docs(self, url, db, docs, number_updates, auth=None):
 
         updated_docs = {}
-
-        # for doc in docs:
-        #     update_doc = self.update_doc(url, db, doc, number_updates, auth=auth)
-        #     updated_docs.append(update_doc)
 
         with ThreadPoolExecutor(max_workers=100) as executor:
             future_to_url = [executor.submit(self.update_doc, url, db, doc, number_updates, auth) for doc in docs]

@@ -50,7 +50,7 @@ Client to Sync Gateway Complex Replication With Revs Limit
     ...  15. Create numDoc number of docs in LiteServ db
     ...  16. Update LiteServ db docs numRevs * 5 (600)
     ...  17. Verify LiteServ db revs is < 602
-    ...  18. Verify LiteServ db docs revs (9 * numRevs + 3)
+    ...  18. Verify LiteServ db docs revs prefix (9 * numRevs + 3)
     ...  19. Compact LiteServ db
     ...  20. Verify number of revs <= 10
     ...  21. Delete LiteServ docs
@@ -70,7 +70,7 @@ Client to Sync Gateway Complex Replication With Revs Limit
     ${sg_user} =     Create User  url=${sg_url_admin}  db=${sg_db}  name=${sg_user_name}  password=password  channels=${sg_user_channels}
     ${sg_session} =  Create Session  url=${sg_url_admin}  db=${sg_db}  name=${sg_user_name}
 
-    ${ls_db} =        Create Database  url=${ls_url}  name=ls_db
+    ${ls_db} =       Create Database  url=${ls_url}  name=ls_db
     ${ls_db_docs} =  Add Docs  url=${ls_url}  db=${ls_db}  number=${num_docs}  id_prefix=ls_db  channels=${sg_user_channels}
 
     # Start replication ls_db -> sg_db
@@ -86,6 +86,7 @@ Client to Sync Gateway Complex Replication With Revs Limit
     ${sg_docs_update} =      Update Docs  url=${sg_url}  db=${sg_db}  docs=${ls_db_docs}  number_updates=${num_large_revs}  auth=${sg_session}
     ${ls_db_docs_update} =   Update Docs  url=${ls_url}  db=${ls_db}  docs=${ls_db_docs}  number_updates=${num_large_revs}
 
+
     # Start replication ls_db <- sg_db
     Start Replication
     ...  url=${ls_url}
@@ -93,16 +94,19 @@ Client to Sync Gateway Complex Replication With Revs Limit
     ...  from_url=${sg_url_admin}  from_db=${sg_db}
     ...  to_db=${ls_db}
 
-    Debug
-
-    Verify Docs Revs Num  url=${sg_url}  db=${sg_db}  docs=${ls_db_docs}  expected_number_revs=${10}  auth=${sg_session}
-    #Verify Docs Present  url=${ls_url}  db=${ls_db}  expected_docs=${sg_docs_update}
 
     Compact Database  url=${ls_url}  db=${ls_db}
 
-    ${sg_docs_with_revs} =  Get Docs  url=${sg_url}  db=${sg_db}  docs=${sg_docs_update}  auth=${sg_session}
+    # After compaction, Mac OSX LiteServ should only have 20 revisions due to built in client revs limit
+    Verify Docs Revs Num  url=${ls_url}  db=${ls_db}  docs=${ls_db_docs}  expected_number_revs=${20}
 
-    Debug
+    # Sync Gateway should have 10 revisions due to the specified revs_limit in the sg config
+    Verify Docs Revs Num  url=${sg_url}  db=${sg_db}  docs=${ls_db_docs}  expected_number_revs=${10}  auth=${sg_session}
+
+
+    #Verify Docs Present  url=${ls_url}  db=${ls_db}  expected_docs=${sg_docs_update}
+
+    #${sg_docs_with_revs} =  Get Docs  url=${sg_url}  db=${sg_db}  docs=${sg_docs_update}  auth=${sg_session}
 
 
 *** Keywords ***
