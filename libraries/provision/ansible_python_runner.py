@@ -5,8 +5,7 @@ from ansible.vars import VariableManager
 from ansible.parsing.dataloader import DataLoader
 from ansible.executor import playbook_executor
 from ansible.utils.display import Display
-from ansible.constants import DEFAULT_REMOTE_USER
-from ansible.constants import DEFAULT_BECOME_USER
+from ansible import constants
 
 class Options(object):
     """
@@ -67,33 +66,40 @@ class Runner(object):
 
     def __init__(self, inventory_filename, playbook, run_data, verbosity=0):
 
-        print("Runner __init__.  ansible config: {}".format(os.environ["ANSIBLE_CONFIG"]))
-
         if not os.path.exists(inventory_filename):
             raise Exception("Cannot find inventory_filename: {}.  Current dir: {}".format(inventory_filename, os.getcwd()))
 
         if not os.path.exists(playbook):
             raise Exception("Cannot find playbook: {}.  Current dir: {}".format(playbook, os.getcwd()))
 
-
-
         self.run_data = run_data
 
         self.options = Options()
-        self.options.private_key_file = "/Users/tleyden/.ssh/id_rsa"
-        # self.options.remote_user = "vagrant"
-
-        # this gets picked up from the ANSIBLE_CONFIG.  not sure why this
-        # had to be done manually here.
-        # self.options.remote_user = DEFAULT_REMOTE_USER
-
         self.options.verbosity = verbosity
         self.options.connection = 'ssh'  # Need a connection type "smart" or "ssh"
-        self.options.become = True
-        self.options.become_method = 'sudo'
-        self.options.become_user = DEFAULT_BECOME_USER
 
-        print("DEFAULT_SUDO: {}".format(DEFAULT_SUDO))
+        # Propagate defaults from ANSIBLE_CONFIG into the options.
+        # Note that the following defaults in the ansible cli/__init__.py are missing:
+        # C.DEFAULT_TRANSPORT
+        # C.DEFAULT_SU
+        # C.DEFAULT_SU_USER
+
+        self.options.module_path = constants.DEFAULT_MODULE_PATH
+        self.options.forks = constants.DEFAULT_FORKS
+        self.options.ask_vault_pass = constants.DEFAULT_ASK_VAULT_PASS
+        self.options.vault_password_files = [ constants.DEFAULT_VAULT_PASSWORD_FILE ]
+        self.options.sudo = constants.DEFAULT_SUDO
+        self.options.become = constants.DEFAULT_BECOME
+        self.options.become_method = constants.DEFAULT_BECOME_METHOD
+        self.options.become_user = constants.DEFAULT_BECOME_USER
+        self.options.ask_sudo_pass = constants.DEFAULT_ASK_SUDO_PASS
+        self.options.ask_su_pass = constants.DEFAULT_ASK_SU_PASS
+        self.options.ask_pass = constants.DEFAULT_ASK_PASS
+        self.options.private_key_file = constants.DEFAULT_PRIVATE_KEY_FILE
+        self.options.remote_user = constants.DEFAULT_REMOTE_USER
+        self.options.timeout = constants.DEFAULT_TIMEOUT
+        self.options.poll_interval = constants.DEFAULT_POLL_INTERVAL
+        self.options.force_handlers = constants.DEFAULT_FORCE_HANDLERS
 
         # Set global verbosity
         self.display = Display()
