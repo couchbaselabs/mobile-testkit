@@ -26,5 +26,5 @@
 
 # Remove sync gateway source
 - name: remove sync gateway source
-  file: path=/home/centos state=absent
+  shell: rm -rf /home/centos/*
   ignore_errors: yes
