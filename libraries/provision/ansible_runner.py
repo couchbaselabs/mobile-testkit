@@ -6,6 +6,8 @@ import re
 import logging
 from ansible import constants
 from robot.api.logger import console
+from ansible.utils.vars import load_extra_vars
+from ansible.parsing.dataloader import DataLoader
 
 class AnsibleRunner:
 
@@ -14,11 +16,19 @@ class AnsibleRunner:
 
     def run_ansible_playbook(self, script_name, extra_vars=None, stop_on_fail=True, subset=constants.DEFAULT_SUBSET):
 
+        console("run_ansible_playbook called with playbook: {}".format(script_name))
+
+
+
         # parse key=value pairs into dictionary
         # shamelessly copied n pasted from http://bit.ly/1syhZ31
-        run_data = {}
-        if extra_vars is not None and len(extra_vars) > 0:
-            run_data = dict(re.findall(r'(\S+)=(".*?"|\S+)', extra_vars))
+        # foo=bar
+        #run_data = {}
+        #if extra_vars is not None and len(extra_vars) > 0:
+        #    run_data = dict(re.findall(r'(\S+)=(".*?"|\S+)', extra_vars))
+        #loader = DataLoader()
+        #extra_vars = load_extra_vars(loader=loader, options=options)
+
 
         inventory_filename = self.provisiong_config
 
@@ -27,12 +37,16 @@ class AnsibleRunner:
         runner = Runner(
             inventory_filename=inventory_filename,
             playbook = playbook_filename,
-            run_data = run_data,
+            extra_vars = extra_vars,
             verbosity = 0,  # change this to a higher number for -vvv debugging (try 10),
             subset = subset
         )
 
         stats = runner.run()
+
+        console(
+            "stats.changed: {} stats.failures: {} stats.processed: {}".format(stats.changed, stats.failures, stats.processed)
+        )
 
         # return a 0 exit code (success) if no failures, otherwise return non-zero exit code
         return len(stats.failures)

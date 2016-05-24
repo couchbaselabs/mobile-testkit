@@ -6,6 +6,8 @@ from ansible.parsing.dataloader import DataLoader
 from ansible.executor import playbook_executor
 from ansible.utils.display import Display
 from ansible import constants
+from ansible.utils.vars import load_extra_vars
+from ansible.parsing.dataloader import DataLoader
 
 class Options(object):
     """
@@ -64,7 +66,7 @@ class Options(object):
 
 class Runner(object):
 
-    def __init__(self, inventory_filename, playbook, run_data, verbosity=0, subset=constants.DEFAULT_SUBSET):
+    def __init__(self, inventory_filename, playbook, extra_vars, verbosity=0, subset=constants.DEFAULT_SUBSET):
 
         if not os.path.exists(inventory_filename):
             raise Exception("Cannot find inventory_filename: {}.  Current dir: {}".format(inventory_filename, os.getcwd()))
@@ -72,9 +74,10 @@ class Runner(object):
         if not os.path.exists(playbook):
             raise Exception("Cannot find playbook: {}.  Current dir: {}".format(playbook, os.getcwd()))
 
-        self.run_data = run_data
-
         self.options = Options()
+
+
+
         self.options.verbosity = verbosity
         self.options.connection = 'ssh'  # Need a connection type "smart" or "ssh"
         self.options.subset = subset
@@ -117,7 +120,15 @@ class Runner(object):
 
         # All the variables from all the various places
         self.variable_manager = VariableManager()
-        self.variable_manager.extra_vars = self.run_data
+        if extra_vars is not None:
+            self.options.extra_vars = [extra_vars]
+            self.options.extra_vars = load_extra_vars(loader=self.loader, options=self.options)
+            self.variable_manager.extra_vars = self.options.extra_vars
+
+        #if extra_vars is not None:
+        #    self.options.extra_vars = extra_vars
+        #   loader = DataLoader()
+        #    self.options.extra_vars = load_extra_vars(loader=loader, options=self.options)
 
         # Set inventory, using most of above objects
         self.inventory = Inventory(loader=self.loader, variable_manager=self.variable_manager, host_list=inventory_filename)
@@ -157,5 +168,7 @@ class Runner(object):
             'record_logs',
             success=run_success
         )
+
+
 
         return stats
