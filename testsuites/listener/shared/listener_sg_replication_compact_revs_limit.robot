@@ -24,8 +24,8 @@ Test Teardown     Teardown Test
 #${num_docs}         ${100}
 ${num_docs}         ${2}
 ${num_revs}         ${120}
-#${num_large_revs}   ${480}
-${num_large_revs}   ${50}
+${num_large_revs}   ${480}
+#${num_large_revs}   ${50}
 #${num_xlarge_revs}  ${600}
 ${sg_db}            db
 ${sg_user_name}     sg_user
@@ -103,6 +103,7 @@ Client to Sync Gateway Complex Replication With Revs Limit
     # Sync Gateway should have 10 revisions due to the specified revs_limit in the sg config
     Verify Docs Revs Num  url=${sg_url}  db=${sg_db}  docs=${ls_db_docs}  expected_number_revs=${10}  auth=${sg_session}
 
+    Delete Conflicts  url=${ls_url}  db=${ls_db}  docs=${ls_db_docs}
 
     #Verify Docs Present  url=${ls_url}  db=${ls_db}  expected_docs=${sg_docs_update}
 

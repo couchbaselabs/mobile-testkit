@@ -384,6 +384,32 @@ class MobileRestClient:
         log_r(resp)
         resp.raise_for_status()
 
+    def delete_conflicts(self, url, db, docs, auth=None):
+        """
+        Deletes all the conflicts for a dictionary of docs.
+        1. Issue a GET with conflicts=true
+        2. Issue a DELETE to {db}/{doc_id}?rev={rev_from_conflicts}
+        3. Loop over all the docs and assert that no more conflicts exist
+        """
+
+        for doc_id in docs:
+            doc = self.get_doc(url, db, doc_id, auth)
+            for rev in doc["_conflicts"]:
+                self.delete_doc(url, db, doc_id, rev)
+
+        for doc_id in docs:
+            doc = self.get_doc(url, db, doc_id, auth)
+            assert len(doc["_conflicts"]) == 0, "Some conflicts still present after deletion: doc={}".format(doc)
+
+    def delete_doc(self, url, db, doc_id, rev, auth=None):
+        """
+        Removes a document with the specfied revision
+        """
+        params = {"rev": rev}
+        resp = self._session.delete("{}/{}/{}".format(url, db, doc_id), params=params)
+        log_r(resp)
+        resp.raise_for_status()
+
     def update_docs(self, url, db, docs, number_updates, auth=None):
 
         updated_docs = {}
