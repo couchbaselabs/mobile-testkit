@@ -63,9 +63,8 @@
     shell: git config --global user.email "foo@couchbase.com"
   - name: Create .git user name to use bootstrap.sh script
     shell: git config --global user.name "Foo"
-
   - name: download bootstrap script
-    get_url: url=https://raw.githubusercontent.com/couchbase/sync_gateway/master/bootstrap.sh dest=/home/centos mode=0751
+    get_url: url=https://raw.githubusercontent.com/couchbase/sync_gateway/master/bootstrap.sh dest=/home/centos/ mode=0751
   - name: run bootstrap script (bootstrap.sh takes a branch and a commit as params, this will be fixed to only take a commit at some point)
     shell: ./bootstrap.sh {{ commit }} chdir=/home/centos/
   - name: build
