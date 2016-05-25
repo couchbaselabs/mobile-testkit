@@ -21,12 +21,11 @@ Test Setup        Setup Test
 Test Teardown     Teardown Test
 
 *** Variable ***
-#${num_docs}         ${100}
-${num_docs}         ${2}
-${num_revs}         ${120}
-${num_large_revs}   ${480}
-#${num_large_revs}   ${50}
-#${num_xlarge_revs}  ${600}
+#${num_docs}         ${2}
+#${num_revs}         ${120}
+#${num_large_revs}   ${480}
+##${num_large_revs}   ${50}
+##${num_xlarge_revs}  ${600}
 ${sg_db}            db
 ${sg_user_name}     sg_user
 
@@ -83,9 +82,8 @@ Client to Sync Gateway Complex Replication With Revs Limit
 
     Verify Docs Present  url=${sg_url_admin}  db=${sg_db}  expected_docs=${ls_db_docs}
 
-    ${sg_docs_update} =      Update Docs  url=${sg_url}  db=${sg_db}  docs=${ls_db_docs}  number_updates=${num_large_revs}  auth=${sg_session}
-    ${ls_db_docs_update} =   Update Docs  url=${ls_url}  db=${ls_db}  docs=${ls_db_docs}  number_updates=${num_large_revs}
-
+    ${sg_docs_update} =      Update Docs  url=${sg_url}  db=${sg_db}  docs=${ls_db_docs}  number_updates=${num_revs}  auth=${sg_session}
+    ${ls_db_docs_update} =   Update Docs  url=${ls_url}  db=${ls_db}  docs=${ls_db_docs}  number_updates=${num_revs}
 
     # Start replication ls_db <- sg_db
     Start Replication
@@ -94,16 +92,17 @@ Client to Sync Gateway Complex Replication With Revs Limit
     ...  from_url=${sg_url_admin}  from_db=${sg_db}
     ...  to_db=${ls_db}
 
-
     Compact Database  url=${ls_url}  db=${ls_db}
 
     # After compaction, Mac OSX LiteServ should only have 20 revisions due to built in client revs limit
     Verify Docs Revs Num  url=${ls_url}  db=${ls_db}  docs=${ls_db_docs}  expected_number_revs=${20}
 
     # Sync Gateway should have 10 revisions due to the specified revs_limit in the sg config
-    Verify Docs Revs Num  url=${sg_url}  db=${sg_db}  docs=${ls_db_docs}  expected_number_revs=${10}  auth=${sg_session}
+    Verify Docs Revs Num  url=${sg_url}  db=${sg_db}  docs=${ls_db_docs}  expected_number_revs=${70}  auth=${sg_session}
 
     Delete Conflicts  url=${ls_url}  db=${ls_db}  docs=${ls_db_docs}
+
+    #Verify Doc Revision  url=${ls_url}  db=${ls_db}  docs=${ls_db_docsres}
 
     #Verify Docs Present  url=${ls_url}  db=${ls_db}  expected_docs=${sg_docs_update}
 
@@ -122,6 +121,18 @@ Setup Test
     Set Test Variable  ${ls_url}
     Set Test Variable  ${sg_url}        ${cluster_hosts["sync_gateways"][0]["public"]}
     Set Test Variable  ${sg_url_admin}  ${cluster_hosts["sync_gateways"][0]["admin"]}
+
+    ${num_docs} =  Set Variable If
+    ...  "${PROFILE}" == "sanity"   ${10}
+    ...  "${PROFILE}" == "nightly"  ${100}
+    ...  "${PROFILE}" == "release"  ${1000}
+    Set Test Variable  ${num_docs}
+
+    ${num_revs} =  Set Variable If
+    ...  "${PROFILE}" == "sanity"   ${100}
+    ...  "${PROFILE}" == "nightly"  ${1000}
+    ...  "${PROFILE}" == "release"  ${10000}
+    Set Test Variable  ${num_revs}
 
     Stop Sync Gateway  url=${sg_url}
     Start Sync Gateway  url=${sg_url}  config=${SYNC_GATEWAY_CONFIGS}/walrus-revs-limit.json

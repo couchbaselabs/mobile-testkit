@@ -4,7 +4,7 @@
 	"log": ["*"],
 	"databases": {
 		"db": {
-			"revs_limit": 10,
+			"revs_limit": 70,
 			"server": "walrus:",
 			"sync":
 `function(doc){

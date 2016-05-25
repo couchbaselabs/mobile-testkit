@@ -394,12 +394,15 @@ class MobileRestClient:
 
         for doc_id in docs:
             doc = self.get_doc(url, db, doc_id, auth)
-            for rev in doc["_conflicts"]:
-                self.delete_doc(url, db, doc_id, rev)
+            if "_conflicts" in doc:
+                for rev in doc["_conflicts"]:
+                    self.delete_doc(url, db, doc_id, rev)
+
+        logging.info("Checkking that no _conflicts property is returned")
 
         for doc_id in docs:
             doc = self.get_doc(url, db, doc_id, auth)
-            assert len(doc["_conflicts"]) == 0, "Some conflicts still present after deletion: doc={}".format(doc)
+            assert "_conflicts" not in doc, "Some conflicts still present after deletion: doc={}".format(doc)
 
     def delete_doc(self, url, db, doc_id, rev, auth=None):
         """
