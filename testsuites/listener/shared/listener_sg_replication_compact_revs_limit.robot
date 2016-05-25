@@ -103,7 +103,9 @@ Client to Sync Gateway Complex Replication With Revs Limit
 
     Delete Conflicts  url=${ls_url}  db=${ls_db}  docs=${ls_db_docs}
 
-    #Verify Doc Revision  url=${ls_url}  db=${ls_db}  docs=${ls_db_docsres}
+    ${expected_generation} =  Evaluate  ${num_revs}+${1}
+    Verify Doc Rev Generations  url=${ls_url}  db=${ls_db}  docs=${ls_db_docs}  expected_generation=${expected_generation}
+    Verify Doc Rev Generations  url=${sg_url}  db=${sg_db}  docs=${ls_db_docs}  expected_generation=${expected_generation}  auth=${sg_session}
 
     #Verify Docs Present  url=${ls_url}  db=${ls_db}  expected_docs=${sg_docs_update}
 

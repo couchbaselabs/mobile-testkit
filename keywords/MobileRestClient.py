@@ -243,6 +243,18 @@ class MobileRestClient:
             expected_number_revs, doc_rev_ids_number
         )
 
+    def verify_doc_rev_generations(self, url, db, docs, expected_generation, auth=None):
+        """
+        Verify that the rev generation (rev = {generation}-{hash}) is the expected generation
+        for a set of docs
+        """
+        for doc_id in docs:
+            doc = self.get_doc(url, db, doc_id, auth)
+            rev = doc["_rev"]
+            generation = int(rev.split("-")[0])
+            logging.debug("Found generation: {}".format(generation))
+            assert generation == expected_generation, "Expected generation: {} not found, found: {}".format(expected_generation, generation)
+
     def get_doc(self, url, db, doc_id, auth=None, revs_info=False):
         """
         returns a dictionary with the following format:
