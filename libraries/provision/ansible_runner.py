@@ -45,10 +45,17 @@ class AnsibleRunner:
         stats = runner.run()
 
         console(
-            "stats.changed: {} stats.failures: {} stats.processed: {}".format(stats.changed, stats.failures, stats.processed)
+            "stats.changed: {} stats.failures: {} stats.processed: {} stats.skipped: {} stats.ok: {}".format(
+                stats.changed,
+                stats.failures,
+                stats.processed,
+                stats.skipped,
+                stats.ok
+            )
         )
 
         # return a 0 exit code (success) if no failures, otherwise return non-zero exit code
+
         return len(stats.failures)
 
     def run_targeted_ansible_playbook(self, script_name, target_name, extra_vars=None, stop_on_fail=True):
