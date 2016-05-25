@@ -225,14 +225,14 @@ class MobileRestClient:
             log_r(resp)
             resp.raise_for_status()
 
-    def verify_docs_revs_num(self, url, db, docs, expected_number_revs, auth=None):
+    def verify_revs_num_for_docs(self, url, db, docs, expected_revs_per_doc, auth=None):
         for doc in docs:
-            self.verify_revs_num(url, db, doc, expected_number_revs, auth)
+            self.verify_revs_num(url, db, doc, expected_revs_per_doc, auth)
 
     def verify_revs_num(self, url, db, doc_id, expected_number_revs, auth=None):
         """
-        Verify that the number of revisions for a document matches expected number of revisions
-        Validate with ?revs=true. Check that the doc's length of _revisions["ids"]  == expected_number_revs
+        Verify that the number of revisions for a document is equal to the expected number of revisions
+        Validate with ?revs=true. Check that the doc's length of _revisions["ids"] == expected_number_revs
         """
 
         doc = self.get_doc(url, db, doc_id, auth)
@@ -402,7 +402,8 @@ class MobileRestClient:
 
         for doc_id in docs:
             doc = self.get_doc(url, db, doc_id, auth)
-            assert "_conflicts" not in doc, "Some conflicts still present after deletion: doc={}".format(doc)
+            if "_conflicts" in doc:
+                assert len(doc["_conflicts"]) == 0, "Some conflicts still present after deletion: doc={}".format(doc)
 
     def delete_doc(self, url, db, doc_id, rev, auth=None):
         """
@@ -523,6 +524,47 @@ class MobileRestClient:
         resp = self._session.post("{}/_replicate".format(url), data=json.dumps(data))
         log_r(resp)
         resp.raise_for_status()
+        resp_obj = resp.json()
+
+        replication_id = resp_obj["session_id"]
+        logging.info("Replication started with: {}".format(replication_id))
+
+        return replication_id
+
+    def wait_for_replication_status_idle(self, url, replication_id):
+        """
+        Polls the /_active_task endpoint and waits for a replication to become idle
+        """
+
+        start = time.time()
+        while True:
+            if time.time() - start > CLIENT_REQUEST_TIMEOUT:
+                raise Exception("Verify Docs Present: TIMEOUT")
+
+            resp = self._session.get("{}/_active_tasks".format(url))
+            log_r(resp)
+            resp.raise_for_status()
+            resp_obj = resp.json()
+
+            replication_busy = False
+            replication_found = False
+
+            for replication in resp_obj:
+                if replication["task"] == replication_id:
+                    replication_found = True
+                    if replication["status"] == "Idle":
+                        replication_busy = False
+                    else:
+                        replication_busy = True
+
+            assert replication_found, "Replication not found: {}".format(replication_id)
+
+            if replication_found and not replication_busy:
+                logging.info("Replication is idle: {}".format(replication_id))
+                break
+            else:
+                logging.info("Replication busy. Retrying ...")
+                time.sleep(1)
 
     def verify_docs_present(self, url, db, expected_docs):
         """

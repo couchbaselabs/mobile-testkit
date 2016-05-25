@@ -73,12 +73,11 @@ Client to Sync Gateway Complex Replication With Revs Limit
     ${ls_db_docs} =  Add Docs  url=${ls_url}  db=${ls_db}  number=${num_docs}  id_prefix=ls_db  channels=${sg_user_channels}
 
     # Start replication ls_db -> sg_db
-    Start Replication
+    ${repl1} =  Start Replication
     ...  url=${ls_url}
     ...  continuous=${True}
     ...  from_db=${ls_db}
     ...  to_url=${sg_url_admin}  to_db=${sg_db}
-
 
     Verify Docs Present  url=${sg_url_admin}  db=${sg_db}  expected_docs=${ls_db_docs}
 
@@ -86,19 +85,21 @@ Client to Sync Gateway Complex Replication With Revs Limit
     ${ls_db_docs_update} =   Update Docs  url=${ls_url}  db=${ls_db}  docs=${ls_db_docs}  number_updates=${num_revs}
 
     # Start replication ls_db <- sg_db
-    Start Replication
+    ${repl2} =  Start Replication
     ...  url=${ls_url}
     ...  continuous=${True}
     ...  from_url=${sg_url_admin}  from_db=${sg_db}
     ...  to_db=${ls_db}
 
+    Wait For Replication Status Idle  url=${ls_url}  replication_id=${repl2}
+
     Compact Database  url=${ls_url}  db=${ls_db}
 
     # After compaction, Mac OSX LiteServ should only have 20 revisions due to built in client revs limit
-    Verify Docs Revs Num  url=${ls_url}  db=${ls_db}  docs=${ls_db_docs}  expected_number_revs=${20}
+    Verify Revs Num For Docs  url=${ls_url}  db=${ls_db}  docs=${ls_db_docs}  expected_revs_per_doc=${20}
 
     # Sync Gateway should have 10 revisions due to the specified revs_limit in the sg config
-    Verify Docs Revs Num  url=${sg_url}  db=${sg_db}  docs=${ls_db_docs}  expected_number_revs=${70}  auth=${sg_session}
+    Verify Revs Num For Docs  url=${sg_url}  db=${sg_db}  docs=${ls_db_docs}  expected_revs_per_doc=${70}  auth=${sg_session}
 
     Delete Conflicts  url=${ls_url}  db=${ls_db}  docs=${ls_db_docs}
 
