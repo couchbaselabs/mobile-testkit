@@ -17,39 +17,31 @@ class CouchbaseServerConfig:
         else:
             self.build = None
 
-        self.released_versions = [
-            "3.1.0",
-            "3.1.1",
-            "3.1.2",
-            "3.1.3",
-            "3.1.4",
-            "3.1.5",
-            "4.0.0",
-            "4.1.0",
-            "4.1.1"
-        ]
-
     def get_baseurl_package(self):
 
-        if self.build is None:
-            if self.version not in self.released_versions:
-                raise ValueError("Version not found in released versions: {}".format(self.version))
+        released_versions = {
+            "4.1.1": "5914",
+            "4.1.0": "5005",
+            "4.0.0": "4051",
+            "3.1.5": "1859"
+        }
 
-            # Download the server release from s3
-            base_url = "https://s3.amazonaws.com/packages.couchbase.com/releases/{}".format(self.version)
-            package_name = "couchbase-server-enterprise-{}-centos7.x86_64.rpm".format(self.version)
+        # Append build for released versions
+        if self.version in released_versions and self.build is None:
+            self.build = released_versions[self.version]
 
+        # Get dev server package from latestbuilds
+        if self.version.startswith("3.1"):
+            base_url = "http://latestbuilds.hq.couchbase.com/"
+            package_name = "couchbase-server-enterprise_centos6_x86_64_{}-{}-rel.rpm".format(self.version, self.build)
+        elif self.version.startswith("4.0") or self.version.startswith("4.1"):
+            base_url = "http://cbnas01.sc.couchbase.com/builds/latestbuilds/couchbase-server/sherlock/{}".format(self.build)
+            package_name = "couchbase-server-enterprise-{}-{}-centos7.x86_64.rpm".format(self.version, self.build)
+        elif self.version.startswith("4.5"):
+            base_url = "http://cbnas01.sc.couchbase.com/builds/latestbuilds/couchbase-server/watson/{}".format(self.build)
+            package_name = "couchbase-server-enterprise-{}-{}-centos7.x86_64.rpm".format(self.version, self.build)
         else:
-
-            # Get dev server package from latestbuilds
-            if self.version.startswith("4.1"):
-                base_url = "http://cbnas01.sc.couchbase.com/builds/latestbuilds/couchbase-server/sherlock/{}".format(self.build)
-                package_name = "couchbase-server-enterprise-{}-{}-centos7.x86_64.rpm".format(self.version, self.build)
-            elif self.version.startswith("4.5"):
-                base_url = "http://cbnas01.sc.couchbase.com/builds/latestbuilds/couchbase-server/watson/{}".format(self.build)
-                package_name = "couchbase-server-enterprise-{}-{}-centos7.x86_64.rpm".format(self.version, self.build)
-            else:
-                raise ValueError("Unable to resolve dev build for version: {}-{}".format(self.version, self.build))
+            raise ValueError("Unable to resolve dev build for version: {}-{}".format(self.version, self.build))
 
         return base_url, package_name
 
