@@ -141,7 +141,7 @@ class Runner(object):
         # playbook = "%s/%s" % (pb_dir, playbook)
 
         # Setup playbook executor, but don't run until run() called
-        console("Running playbook: {}", playbook)
+        console("Running playbook: {}".format(playbook))
         self.pbex = playbook_executor.PlaybookExecutor(
             playbooks=[playbook],
             inventory=self.inventory,
