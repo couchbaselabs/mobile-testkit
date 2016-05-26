@@ -129,6 +129,7 @@ class Runner(object):
 
         # Set inventory, using most of above objects
         self.inventory = Inventory(loader=self.loader, variable_manager=self.variable_manager, host_list=inventory_filename)
+        self.inventory.subset(self.options.subset)
         self.variable_manager.set_inventory(self.inventory)
 
         # Playbook to run. Assumes it is
