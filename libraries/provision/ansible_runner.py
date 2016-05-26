@@ -35,7 +35,8 @@ class AnsibleRunner:
         stats = runner.run()
 
         console(
-            "stats.changed: {} stats.failures: {} stats.processed: {} stats.skipped: {} stats.ok: {}".format(
+            "playbook finished. {} stats.changed: {} stats.failures: {} stats.processed: {} stats.skipped: {} stats.ok: {}".format(
+                script_name,
                 stats.changed,
                 stats.failures,
                 stats.processed,
