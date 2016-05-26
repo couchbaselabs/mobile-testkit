@@ -92,12 +92,12 @@ def install_sync_gateway(sync_gateway_config):
         # Install source
         status = ansible_runner.run_ansible_playbook(
             "install-sync-gateway-source.yml",
-            "sync_gateway_config_filepath={0} commit={1} build_flags={2} skip_bucketflush={3}".format(
-                config_path,
-                sync_gateway_config.commit,
-                sync_gateway_config.build_flags,
-                sync_gateway_config.skip_bucketflush
-            ),
+            extra_vars={
+                "sync_gateway_config_filepath":config_path,
+                "commit": sync_gateway_config.commit,
+                "build_flags": sync_gateway_config.build_flags,
+                "skip_bucketflush": sync_gateway_config.skip_bucketflush
+            },
             stop_on_fail=False
         )
         assert(status == 0)
@@ -107,13 +107,13 @@ def install_sync_gateway(sync_gateway_config):
         sync_gateway_base_url, sync_gateway_package_name, sg_accel_package_name = sync_gateway_config.sync_gateway_base_url_and_package()
         status = ansible_runner.run_ansible_playbook(
             "install-sync-gateway-package.yml",
-            "couchbase_sync_gateway_package_base_url={0} couchbase_sync_gateway_package={1} couchbase_sg_accel_package={2} sync_gateway_config_filepath={3} skip_bucketflush={4}".format(
-                sync_gateway_base_url,
-                sync_gateway_package_name,
-                sg_accel_package_name,
-                config_path,
-                sync_gateway_config.skip_bucketflush
-            ),
+            extra_vars={
+                "couchbase_sync_gateway_package_base_url": sync_gateway_base_url,
+                "couchbase_sync_gateway_package": sync_gateway_package_name,
+                "couchbase_sg_accel_package": sg_accel_package_name,
+                "sync_gateway_config_filepath": config_path,
+                "skip_bucketflush": sync_gateway_config.skip_bucketflush
+            },
             stop_on_fail=False
         )
         assert(status == 0)

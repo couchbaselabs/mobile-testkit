@@ -133,7 +133,9 @@ class Cluster:
         # Start sync-gateway
         status = ansible_runner.run_ansible_playbook(
             "start-sync-gateway.yml",
-            extra_vars="sync_gateway_config_filepath={0}".format(config_path_full),
+            extra_vars={
+                "sync_gateway_config_filepath": config_path_full
+            },
             stop_on_fail=False
         )
         assert status == 0, "Failed to start to Sync Gateway"
@@ -144,7 +146,9 @@ class Cluster:
             # Start sg-accel
             status = ansible_runner.run_ansible_playbook(
                 "start-sg-accel.yml",
-                extra_vars="sync_gateway_config_filepath={0}".format(config_path_full),
+                extra_vars={
+                    "sync_gateway_config_filepath": config_path_full
+                },
                 stop_on_fail=False
             )
             assert(status == 0)
