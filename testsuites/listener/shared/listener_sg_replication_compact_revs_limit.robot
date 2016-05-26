@@ -126,11 +126,6 @@ Client to Sync Gateway Complex Replication With Revs Limit
     Verify Docs Deleted  url=${ls_url}  db=${ls_db}  docs=${ls_db_docs}
 
 
-    #Verify Docs Present  url=${ls_url}  db=${ls_db}  expected_docs=${sg_docs_update}
-
-    #${sg_docs_with_revs} =  Get Docs  url=${sg_url}  db=${sg_db}  docs=${sg_docs_update}  auth=${sg_session}
-
-
 *** Keywords ***
 Setup Test
     ${ls_url} =  Start LiteServ
