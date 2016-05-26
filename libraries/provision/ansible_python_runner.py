@@ -1,14 +1,12 @@
 import os
-from tempfile import NamedTemporaryFile
 from ansible.inventory import Inventory
 from ansible.vars import VariableManager
-from ansible.parsing.dataloader import DataLoader
 from ansible.executor import playbook_executor
 from ansible.utils.display import Display
 from ansible import constants
-from ansible.utils.vars import load_extra_vars
 from ansible.parsing.dataloader import DataLoader
 from robot.api.logger import console
+import ansible.inventory
 
 class Options(object):
     """
@@ -121,15 +119,13 @@ class Runner(object):
 
         # All the variables from all the various places
         self.variable_manager = VariableManager()
-        if extra_vars is not None:
-            self.options.extra_vars = [extra_vars]
-            self.options.extra_vars = load_extra_vars(loader=self.loader, options=self.options)
-            self.variable_manager.extra_vars = self.options.extra_vars
+        self.variable_manager.extra_vars = extra_vars
 
-        #if extra_vars is not None:
-        #    self.options.extra_vars = extra_vars
-        #   loader = DataLoader()
-        #    self.options.extra_vars = load_extra_vars(loader=loader, options=self.options)
+        # WARNING: this is a dirty hack to avoid a situation where creating multiple
+        # instance of this Runner each with it's own Inventory instance was creating
+        # a situation where we ended up with different UUID's for hosts and comparisons
+        # were failing (see http://bit.ly/1qKmV3x)
+        ansible.inventory.HOSTS_PATTERNS_CACHE = {}
 
         # Set inventory, using most of above objects
         self.inventory = Inventory(loader=self.loader, variable_manager=self.variable_manager, host_list=inventory_filename)
