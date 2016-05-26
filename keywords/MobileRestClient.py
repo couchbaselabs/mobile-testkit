@@ -89,6 +89,11 @@ class MobileRestClient:
         self._session.headers = headers
 
     def get_server_type(self, url):
+        """
+        Issues a get to the service running at the specified url.
+        It will return a server type of 'listener' or 'syncgateway'
+        """
+
         resp = self._session.get(url)
         log_r(resp)
         resp.raise_for_status()
@@ -110,6 +115,36 @@ class MobileRestClient:
                 return ServerType.listener
 
         raise ValueError("Unsupported couchbase lite server type")
+
+    def get_server_platform(self, url):
+        """
+        Issues a get to the service running at the specified url.
+        It will return a server type of 'macosx', 'android', or 'net' for listener
+        of centos for sync_gateway
+        """
+
+        resp = self._session.get(url)
+        log_r(resp)
+        resp.raise_for_status()
+        resp_obj = resp.json()
+
+        try:
+            if resp_obj["vendor"]["name"] == "Couchbase Sync Gateway":
+                logging.info("Platform={}".format(Platform.centos))
+                return Platform.centos
+            elif resp_obj["vendor"]["name"] == "Couchbase Lite (Objective-C)":
+                logging.info("Platform={}".format(Platform.macosx))
+                return Platform.macosx
+            elif resp_obj["vendor"]["name"] == "Couchbase Lite (C#)":
+                logging.info("Platform={}".format(Platform.net))
+                return Platform.net
+        except KeyError as ke:
+            # Android LiteServ
+            if resp_obj["CBLite"] == "Welcome":
+                logging.info("Platform={}".format(Platform.android))
+                return Platform.android
+
+        raise ValueError("Unsupported platform type")
 
     def get_session(self, url):
         resp = self._session.get("{}/_session".format(url))
@@ -197,22 +232,43 @@ class MobileRestClient:
         log_r(resp)
         resp.raise_for_status()
 
-        resp = self._session.get("{}/{}/_all_docs".format(url, db))
-        log_r(resp)
-        resp.raise_for_status()
-        resp_obj = resp.json()
+        start = time.time()
+        while True:
 
-        for row in resp_obj["rows"]:
-            doc_id = row["id"]
-            doc = self.get_doc(url, db, doc_id, revs_info=True)
-            available_count = 0
-            revs_info = doc["_revs_info"]
-            for rev_info in revs_info:
-                if rev_info["status"] == "available":
-                    available_count += 1
+            if time.time() - start > CLIENT_REQUEST_TIMEOUT:
+                raise Exception("Verify Docs Present: TIMEOUT")
 
-            # After compaction, the number of a available revs should be 1 (the leaf revision)
-            assert available_count == 1, "Revisions remain after compaction"
+            resp = self._session.get("{}/{}/_all_docs".format(url, db))
+            log_r(resp)
+            resp.raise_for_status()
+            resp_obj = resp.json()
+
+            all_revs_compacted = True
+
+            for row in resp_obj["rows"]:
+                doc_id = row["id"]
+                doc = self.get_doc(url, db, doc_id, revs_info=True)
+
+                revs_info = doc["_revs_info"]
+                # _compact should reduce the revs to 20 on client
+                if len(revs_info) > 20:
+                    all_revs_compacted = False
+                    break
+
+                available_count = 0
+                for rev_info in revs_info:
+                    if rev_info["status"] == "available":
+                        available_count += 1
+
+                # After compaction, the number of a available revs should be 1 (the leaf revision)
+                assert available_count == 1, "Revisions remain after compaction"
+
+            if all_revs_compacted:
+                logging.info("All docs compacted!")
+                break
+            else:
+                logging.info("Found uncompacted revisions. Retrying ...")
+                time.sleep(1)
 
     def delete_databases(self, url):
         resp = self._session.get("{}/_all_dbs".format(url))
@@ -226,21 +282,38 @@ class MobileRestClient:
             resp.raise_for_status()
 
     def verify_revs_num_for_docs(self, url, db, docs, expected_revs_per_doc, auth=None):
-        for doc in docs:
-            self.verify_revs_num(url, db, doc, expected_revs_per_doc, auth)
+        for doc_id in docs:
+            self.verify_revs_num(url, db, doc_id, expected_revs_per_doc, auth)
 
-    def verify_revs_num(self, url, db, doc_id, expected_number_revs, auth=None):
+    def verify_revs_num(self, url, db, doc_id, expected_revs_per_docs, auth=None):
         """
-        Verify that the number of revisions for a document is equal to the expected number of revisions
+        Verify that the number of revisions for a document is equal to the max expected number of revisions
         Validate with ?revs=true. Check that the doc's length of _revisions["ids"] == expected_number_revs
+        """
+        doc = self.get_doc(url, db, doc_id, auth)
+        logging.debug(doc)
+
+        doc_rev_ids_number = len(doc["_revisions"]["ids"])
+        assert doc_rev_ids_number == expected_revs_per_docs, "Expected num revs: {}, Actual num revs: {}".format(
+            expected_revs_per_docs, doc_rev_ids_number
+        )
+
+    def verify_max_revs_num_for_docs(self, url, db, docs, expected_max_number_revs_per_doc, auth=None):
+        for doc in docs:
+            self.verify_max_revs_num(url, db, doc, expected_max_number_revs_per_doc, auth)
+
+    def verify_max_revs_num(self, url, db, doc_id, expected_max_number_revs, auth=None):
+        """
+        Verify that the number of revisions for a document is less than or equal to the max expected number of revisions
+        Validate with ?revs=true. Check that the doc's length of _revisions["ids"] <= expected_number_revs
         """
 
         doc = self.get_doc(url, db, doc_id, auth)
         logging.debug(doc)
 
         doc_rev_ids_number = len(doc["_revisions"]["ids"])
-        assert doc_rev_ids_number == expected_number_revs, "Expected num revs: {}, Actual num revs: {}".format(
-            expected_number_revs, doc_rev_ids_number
+        assert doc_rev_ids_number <= expected_max_number_revs, "Expected num revs: {}, Actual num revs: {}".format(
+            expected_max_number_revs, doc_rev_ids_number
         )
 
     def verify_doc_rev_generations(self, url, db, docs, expected_generation, auth=None):
@@ -450,6 +523,8 @@ class MobileRestClient:
     def verify_docs_deleted(self, url, db, docs, auth=None):
 
         auth_type = get_auth_type(auth)
+        server_type = self.get_server_type(url)
+        server_platform = self.get_server_platform(url)
 
         start = time.time()
         while True:
@@ -472,8 +547,21 @@ class MobileRestClient:
                 if resp.status_code == 200:
                     not_deleted.append(resp_obj)
                 elif resp.status_code == 404:
-                    assert "error" in resp_obj and "reason" in resp_obj, "Should have an error and reason"
-                    assert resp_obj["reason"] == "deleted", "Should be 'not_found' and 'deleted'"
+                    if server_type == ServerType.syncgateway:
+                        assert "error" in resp_obj and "reason" in resp_obj, "Response should have an error and reason"
+                        assert resp_obj["error"] == "not_found", "error should be 'not_found'"
+                        assert resp_obj["reason"] == "deleted", "reason should be 'not_found'"
+                    elif server_type == ServerType.listener and server_platform == Platform.android:
+                        assert "error" in resp_obj and "status" in resp_obj, "Response should have an error and status"
+                        assert resp_obj["error"] == "not_found", "error should be 'not_found'"
+                        assert resp_obj["status"] == 404, "status should be '404'"
+                    elif server_type == ServerType.listener and server_platform == Platform.macosx:
+                        assert "error" in resp_obj and "status" in resp_obj and "reason" in resp_obj, "Response should have an error, status, and reason"
+                        assert resp_obj["error"] == "deleted", "error should be 'deleted'"
+                        assert resp_obj["status"] == 404, "status should be '404'"
+                        assert resp_obj["reason"] == "deleted", "status should be '404'"
+                    else:
+                        raise ValueError("Unsupported server type and platform")
                 else:
                     raise HTTPError("Unexpected error for: {}".format(resp.status_code))
 
