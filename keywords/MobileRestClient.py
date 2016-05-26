@@ -417,14 +417,73 @@ class MobileRestClient:
             if "_conflicts" in doc:
                 assert len(doc["_conflicts"]) == 0, "Some conflicts still present after deletion: doc={}".format(doc)
 
+    def delete_docs(self, url, db, docs, auth=None):
+        """
+        Deletes a set of docs with the latest revision
+        """
+        for doc_id in docs:
+            doc = self.get_doc(url, db, doc_id, auth=auth)
+            latest_rev = doc["_rev"]
+            self.delete_doc(url, db, doc_id, latest_rev, auth=auth)
+
     def delete_doc(self, url, db, doc_id, rev, auth=None):
         """
         Removes a document with the specfied revision
         """
-        params = {"rev": rev}
-        resp = self._session.delete("{}/{}/{}".format(url, db, doc_id), params=params)
+
+        auth_type = get_auth_type(auth)
+
+        params = {}
+        if rev is not None:
+            params["rev"] = rev
+
+        if auth_type == AuthType.session:
+            resp = self._session.delete("{}/{}/{}".format(url, db, doc_id), params=params, cookies=dict(SyncGatewaySession=auth[1]))
+        elif auth_type == AuthType.http_basic:
+            resp = self._session.delete("{}/{}/{}".format(url, db, doc_id), params=params, auth=auth)
+        else:
+            resp = self._session.delete("{}/{}/{}".format(url, db, doc_id), params=params)
+
         log_r(resp)
         resp.raise_for_status()
+
+    def verify_docs_deleted(self, url, db, docs, auth=None):
+
+        auth_type = get_auth_type(auth)
+
+        start = time.time()
+        while True:
+
+            not_deleted = []
+
+            if time.time() - start > CLIENT_REQUEST_TIMEOUT:
+                raise Exception("Verify Docs Deleted: TIMEOUT")
+
+            for doc_id in docs:
+                if auth_type == AuthType.session:
+                    resp = self._session.get("{}/{}/{}".format(url, db, doc_id), cookies=dict(SyncGatewaySession=auth[1]))
+                elif auth_type == AuthType.http_basic:
+                    resp = self._session.get("{}/{}/{}".format(url, db, doc_id), auth=auth)
+                else:
+                    resp = self._session.get("{}/{}/{}".format(url, db, doc_id))
+                log_r(resp)
+                resp_obj = resp.json()
+
+                if resp.status_code == 200:
+                    not_deleted.append(resp_obj)
+                elif resp.status_code == 404:
+                    assert "error" in resp_obj and "reason" in resp_obj, "Should have an error and reason"
+                    assert resp_obj["error"] == "not_found" and resp_obj["reason"] == "deleted", "Should be 'not_found' and 'deleted'"
+                else:
+                    raise HTTPError("Unexpected error for: {}".format(resp.status_code))
+
+            if len(not_deleted) == 0:
+                logging.info("All Docs Deleted")
+                break
+            else:
+                logging.info("{} docs still not deleted. Retrying...".format(not_deleted))
+                time.sleep(1)
+                continue
 
     def update_docs(self, url, db, docs, number_updates, auth=None):
 
