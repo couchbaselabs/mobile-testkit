@@ -64,7 +64,9 @@ class SyncGateway:
         config_path =  os.path.abspath(config)
         status = ansible_runner.run_targeted_ansible_playbook(
             "start-sync-gateway.yml",
-            extra_vars="sync_gateway_config_filepath={0}".format(config_path),
+            extra_vars={
+                "sync_gateway_config_filepath": config_path
+            },
             target_name=target,
             stop_on_fail=False
         )
