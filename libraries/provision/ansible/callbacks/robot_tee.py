@@ -27,9 +27,12 @@ class CallbackModule(CallbackModule_default):
         console("ok: [{}]".format(result._host))
         super(CallbackModule, self).v2_runner_on_ok(result)
 
-    def v2_runner_on_failed(self, result):
-        console("failed: [{}]".format(result._host))
-        super(CallbackModule, self).v2_runner_on_failed(result)
+    def v2_runner_on_failed(self, result, ignore_errors=False):
+        if ignore_errors:
+            console("ignoring errors: [{}]".format(result._host))
+        else:
+            console("failed: [{}]".format(result._host))
+        super(CallbackModule, self).v2_runner_on_failed(result, ignore_errors)
 
     def v2_runner_on_skipped(self, result):
         console("skipping: [{}]".format(result._host))
