@@ -104,13 +104,15 @@ Client to Sync Gateway Complex Replication With Revs Limit
 
     Delete Docs  url=${ls_url}  db=${ls_db}  docs=${ls_db_docs}
     Verify Docs Deleted  url=${ls_url}  db=${ls_db}  docs=${ls_db_docs}
+    Verify Docs Deleted  url=${sg_url_admin}  db=${sg_db}  docs=${ls_db_docs}
 
     ${ls_db_docs} =  Add Docs  url=${ls_url}  db=${ls_db}  number=${num_docs}  id_prefix=ls_db  channels=${sg_user_channels}
 
     ${double_updates} =  Evaluate  ${num_revs}*2
     ${expected_revs} =  Evaluate  ${num_revs}+${20}+${2}
     ${ls_db_docs_update} =   Update Docs  url=${ls_url}  db=${ls_db}  docs=${ls_db_docs}  number_updates=${num_revs}
-    Verify Revs Num For Docs  url=${ls_url}  db=${ls_db}  docs=${ls_db_docs}  expected_revs_per_doc=${expected_revs}
+
+    Verify Max Revs Num For Docs  url=${ls_url}  db=${ls_db}  docs=${ls_db_docs}  expected_max_number_revs_per_doc=${expected_revs}
 
     ${expected_generation} =  Evaluate  ${num_revs}*${2}+${3}
     Verify Doc Rev Generations  url=${ls_url}  db=${ls_db}  docs=${ls_db_docs}  expected_generation=${expected_generation}
@@ -120,7 +122,6 @@ Client to Sync Gateway Complex Replication With Revs Limit
     Verify Revs Num For Docs  url=${ls_url}  db=${ls_db}  docs=${ls_db_docs}  expected_revs_per_doc=${20}
 
     Delete Docs  url=${ls_url}  db=${ls_db}  docs=${ls_db_docs}
-
     Verify Docs Deleted  url=${sg_url_admin}  db=${sg_db}  docs=${ls_db_docs}
     Verify Docs Deleted  url=${ls_url}  db=${ls_db}  docs=${ls_db_docs}
 
@@ -162,7 +163,7 @@ Teardown Test
     Delete Databases  ${ls_url}
     Shutdown LiteServ
     Stop Sync Gateway  url=${sg_url}
-    # Run Keyword If Test Failed  Fetch And Analyze Logs  ${TEST_NAME}
+    Run Keyword If Test Failed  Fetch And Analyze Logs  ${TEST_NAME}
 
 
 
