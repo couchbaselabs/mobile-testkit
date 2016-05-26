@@ -473,7 +473,7 @@ class MobileRestClient:
                     not_deleted.append(resp_obj)
                 elif resp.status_code == 404:
                     assert "error" in resp_obj and "reason" in resp_obj, "Should have an error and reason"
-                    assert resp_obj["error"] == "not_found" and resp_obj["reason"] == "deleted", "Should be 'not_found' and 'deleted'"
+                    assert resp_obj["reason"] == "deleted", "Should be 'not_found' and 'deleted'"
                 else:
                     raise HTTPError("Unexpected error for: {}".format(resp.status_code))
 

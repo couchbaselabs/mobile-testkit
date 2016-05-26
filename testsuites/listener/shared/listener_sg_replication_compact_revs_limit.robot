@@ -21,11 +21,6 @@ Test Setup        Setup Test
 Test Teardown     Teardown Test
 
 *** Variable ***
-#${num_docs}         ${2}
-#${num_revs}         ${120}
-#${num_large_revs}   ${480}
-##${num_large_revs}   ${50}
-##${num_xlarge_revs}  ${600}
 ${sg_db}            db
 ${sg_user_name}     sg_user
 
@@ -98,7 +93,7 @@ Client to Sync Gateway Complex Replication With Revs Limit
     # After compaction, Mac OSX LiteServ should only have 20 revisions due to built in client revs limit
     Verify Revs Num For Docs  url=${ls_url}  db=${ls_db}  docs=${ls_db_docs}  expected_revs_per_doc=${20}
 
-    # Sync Gateway should have 10 revisions due to the specified revs_limit in the sg config
+    # Sync Gateway should have 70 revisions due to the specified revs_limit in the sg config
     Verify Revs Num For Docs  url=${sg_url}  db=${sg_db}  docs=${ls_db_docs}  expected_revs_per_doc=${70}  auth=${sg_session}
 
     Delete Conflicts  url=${ls_url}  db=${ls_db}  docs=${ls_db_docs}
@@ -108,6 +103,7 @@ Client to Sync Gateway Complex Replication With Revs Limit
     Verify Doc Rev Generations  url=${sg_url}  db=${sg_db}  docs=${ls_db_docs}  expected_generation=${expected_generation}  auth=${sg_session}
 
     Delete Docs  url=${ls_url}  db=${ls_db}  docs=${ls_db_docs}
+    Verify Docs Deleted  url=${ls_url}  db=${ls_db}  docs=${ls_db_docs}
 
     ${ls_db_docs} =  Add Docs  url=${ls_url}  db=${ls_db}  number=${num_docs}  id_prefix=ls_db  channels=${sg_user_channels}
 
@@ -126,6 +122,7 @@ Client to Sync Gateway Complex Replication With Revs Limit
     Delete Docs  url=${ls_url}  db=${ls_db}  docs=${ls_db_docs}
 
     Verify Docs Deleted  url=${sg_url_admin}  db=${sg_db}  docs=${ls_db_docs}
+    Verify Docs Deleted  url=${ls_url}  db=${ls_db}  docs=${ls_db_docs}
 
 
     #Verify Docs Present  url=${ls_url}  db=${ls_db}  expected_docs=${sg_docs_update}
