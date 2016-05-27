@@ -10,9 +10,6 @@ from utils import *
 
 from CouchbaseServer import verify_server_version
 from libraries.testkit.cluster import Cluster
-from libraries.provision.provision_cluster import provision_cluster
-from libraries.provision.install_couchbase_server import CouchbaseServerConfig
-from libraries.provision.install_sync_gateway import SyncGatewayConfig
 
 class ClusterKeywords:
 
@@ -180,6 +177,12 @@ class ClusterKeywords:
         cluster.reset(sync_gateway_config)
 
     def provision_cluster(self, server_version, sync_gateway_version, sync_gateway_config):
+
+        # Dirty hack -- these have to be put here in order to avoid circular imports
+        from libraries.provision.install_couchbase_server import CouchbaseServerConfig
+        from libraries.provision.provision_cluster import provision_cluster
+        from libraries.provision.install_sync_gateway import SyncGatewayConfig
+
         cbs_config = CouchbaseServerConfig(server_version)
 
         if self.sync_gateway_version_is_binary(sync_gateway_version):
