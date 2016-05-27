@@ -1,15 +1,6 @@
 import os
-import sys
-import subprocess
 from ansible_python_runner import Runner
-import re
-import logging
 from ansible import constants
-from robot.api.logger import console
-from ansible.utils.vars import load_extra_vars
-from ansible.parsing.dataloader import DataLoader
-
-
 
 class AnsibleRunner:
 
@@ -17,8 +8,6 @@ class AnsibleRunner:
         self.provisiong_config = os.environ["CLUSTER_CONFIG"]
 
     def run_ansible_playbook(self, script_name, extra_vars={}, stop_on_fail=True, subset=constants.DEFAULT_SUBSET):
-
-        console("run_ansible_playbook called with playbook: {}".format(script_name))
 
         inventory_filename = self.provisiong_config
 
@@ -33,19 +22,6 @@ class AnsibleRunner:
         )
 
         stats = runner.run()
-
-        console(
-            "playbook finished. {} stats.changed: {} stats.failures: {} stats.processed: {} stats.skipped: {} stats.ok: {}".format(
-                script_name,
-                stats.changed,
-                stats.failures,
-                stats.processed,
-                stats.skipped,
-                stats.ok
-            )
-        )
-
-        # return a 0 exit code (success) if no failures, otherwise return non-zero exit code
 
         return len(stats.failures)
 
