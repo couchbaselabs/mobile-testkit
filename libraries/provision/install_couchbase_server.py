@@ -78,7 +78,7 @@ def install_couchbase_server(couchbase_server_config):
     # Create default buckets
     status = ansible_runner.run_ansible_playbook(
         "create-server-buckets.yml",
-        extra_vars=json.dumps({"bucket_names": ["data-bucket", "index-bucket"]})
+        extra_vars={"bucket_names": ["data-bucket", "index-bucket"]}
     )
     assert (status == 0), "Failed to create Couchbase Server buckets"
 
