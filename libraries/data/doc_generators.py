@@ -44,7 +44,7 @@ def simple():
             ]
         }
     }
-    return json.dumps(data)
+    return data
 
 def simple_user():
     data = {
@@ -88,4 +88,4 @@ def simple_user():
             }
         ]
     }
-    return json.dumps(data)
+    return data

@@ -15,6 +15,7 @@ Library           ${KEYWORDS}/LiteServ.py
 
 Library           ${KEYWORDS}/SyncGateway.py
 Library           ${KEYWORDS}/CouchbaseServer.py
+Library           ${KEYWORDS}/Logging.py
 
 Test Setup        Setup Test
 Test Teardown     Teardown Test
@@ -59,8 +60,8 @@ Replication with multiple client dbs and single sync_gateway db
     ...  from_url=${sg_url_admin}  from_db=${sg_db}
     ...  to_db=${ls_db2}
 
-    ${ls_db1_docs} =  Add Docs  url=${ls_url}  db=${ls_db1}  number=${500}  id_prefix=test_ls_db1
-    ${ls_db2_docs} =  Add Docs  url=${ls_url}  db=${ls_db2}  number=${500}  id_prefix=test_ls_db2
+    ${ls_db1_docs} =  Add Docs  url=${ls_url}  db=${ls_db1}  number=${num_docs}  id_prefix=test_ls_db1
+    ${ls_db2_docs} =  Add Docs  url=${ls_url}  db=${ls_db2}  number=${num_docs}  id_prefix=test_ls_db2
 
     @{ls_db1_db2_docs} =  Create List  ${ls_db1_docs}  ${ls_db2_docs}
 
@@ -71,7 +72,6 @@ Replication with multiple client dbs and single sync_gateway db
     Verify Docs In Changes  url=${sg_url_admin}  db=${sg_db}   expected_docs=@{ls_db1_db2_docs}
     Verify Docs In Changes  url=${ls_url}        db=${ls_db1}  expected_docs=@{ls_db1_db2_docs}
     Verify Docs In Changes  url=${ls_url}        db=${ls_db2}  expected_docs=@{ls_db1_db2_docs}
-
 
 *** Keywords ***
 Setup Test
@@ -86,6 +86,13 @@ Setup Test
     Set Test Variable  ${sg_url}        ${cluster_hosts["sync_gateways"][0]["public"]}
     Set Test Variable  ${sg_url_admin}  ${cluster_hosts["sync_gateways"][0]["admin"]}
 
+    ${num_docs} =  Set Variable If
+    ...  "${PROFILE}" == "sanity"   ${10}
+    ...  "${PROFILE}" == "nightly"  ${500}
+    ...  "${PROFILE}" == "release"  ${10000}
+    Set Test Variable  ${num_docs}
+
+
     Stop Sync Gateway  url=${sg_url}
     Start Sync Gateway  url=${sg_url}  config=${SYNC_GATEWAY_CONFIGS}/walrus.json
 
@@ -93,6 +100,7 @@ Teardown Test
     Delete Databases  ${ls_url}
     Shutdown LiteServ
     Stop Sync Gateway  url=${sg_url}
+    Run Keyword If Test Failed  Fetch And Analyze Logs  ${TEST_NAME}
 
 
 

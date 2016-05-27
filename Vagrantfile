@@ -8,16 +8,16 @@
 Vagrant.configure(2) do |config|
 
   host_ip = {
-    "host1" => "192.168.33.10",
-    "host2" => "192.168.33.11",
-    "host3" => "192.168.33.12",
-    "host4" => "192.168.33.13",
+    "host1" => "192.168.0.111",
+    "host2" => "192.168.0.112",
+    "host3" => "192.168.0.113",
+    "host4" => "192.168.0.114",
   }
 
   host_ip.each do |host_name, ip|
       config.vm.define host_name do |host|
         host.vm.box = "centos/7"
-        host.vm.network "private_network", ip: ip
+        host.vm.network "public_network", ip: ip, bridge: "en0: Wi-Fi (AirPort)"
         host.vm.synced_folder ".", "/home/vagrant/sync", disabled: true
         host.vm.provider "virtualbox" do |vb|
             # Customize the amount of memory on the VM:

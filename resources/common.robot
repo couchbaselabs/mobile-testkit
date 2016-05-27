@@ -109,6 +109,13 @@ Start Android LiteServ
     ...  The LiteServ binaries are located in deps/.
     [Arguments]  ${host}  ${port}
     [Timeout]       1 minute
+
+    Start Process   adb  logcat
+    ...             alias=adb-logcat
+    ...             stdout=${RESULTS}/${TEST_NAME}-${PLATFORM}-logcat-stdout.log
+    ...             stderr=${RESULTS}/${TEST_NAME}-${PLATFORM}-logcat-stderr.log
+    Process Should Be Running   handle=adb-logcat
+
     Launch Activity  ${port}
 
 Start Net ListenerConsole
@@ -138,6 +145,9 @@ Shutdown Android LiteServ
     ...  The LiteServ binaries are located in deps/binaries.
     [Timeout]       1 minute
     Stop Activity
+    Terminate Process          handle=adb-logcat
+    Process Should Be Stopped  handle=adb-logcat
+
 
 Shutdown Net ListenerConsole
     [Documentation]   Kills Net Listener Console Process.

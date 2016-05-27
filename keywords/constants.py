@@ -13,3 +13,14 @@ CLIENT_REQUEST_TIMEOUT = 120
 class ServerType(Enum):
     syncgateway = "syncgateway"
     listener = "listener"
+
+class Platform(Enum):
+    macosx = "macosx"
+    android = "android"
+    net = "net"
+    centos = "centos"
+
+class AuthType(Enum):
+    http_basic = "http_basic"
+    session = "session"
+    none = "none"

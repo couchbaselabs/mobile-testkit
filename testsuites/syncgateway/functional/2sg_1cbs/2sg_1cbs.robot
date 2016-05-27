@@ -4,7 +4,7 @@ Resource    resources/common.robot
 Library     Process
 Library     OperatingSystem
 Library     ${Libraries}/NetworkUtils.py
-Library     ${Libraries}/LoggingKeywords.py
+Library     ${KEYWORDS}/Logging.py
 
 Library     ../test_bucket_shadow.py
 Library     ../test_sg_replicate.py

@@ -1,0 +1,15 @@
+{
+	"interface":":4984",
+    "adminInterface": "0.0.0.0:4985",
+	"log": ["*"],
+	"databases": {
+		"db": {
+			"revs_limit": 70,
+			"server": "walrus:",
+			"sync":
+`function(doc){
+	channel(doc.channels);
+}`
+		}
+	}
+}

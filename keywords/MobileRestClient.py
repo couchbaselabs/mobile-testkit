@@ -4,6 +4,8 @@ import time
 import requests
 from requests import Session
 from requests.exceptions import HTTPError
+import concurrent.futures
+from concurrent.futures import ThreadPoolExecutor
 
 from robot.api.logger import console
 
@@ -12,12 +14,11 @@ from libraries.data.doc_generators import *
 from constants import *
 
 def log_r(request):
-    logging.info("{0} {1} {2}".format(
-            request.request.method,
-            request.request.url,
-            request.status_code
-        )
-    )
+    info_string = "{0} {1} {2}".format(request.request.method,
+                                       request.request.url,
+                                       request.status_code)
+    logging.info(info_string)
+    console(info_string)
     logging.debug("{0} {1}\nHEADERS = {2}\nBODY = {3}".format(
             request.request.method,
             request.request.url,
@@ -61,6 +62,19 @@ def parse_multipart_response(response):
 
     return {"rows": rows}
 
+def get_auth_type(auth):
+
+    if auth is None:
+        return AuthType.none
+
+    if auth[0] == "SyncGatewaySession":
+        auth_type = AuthType.session
+    else:
+        auth_type = AuthType.http_basic
+
+    logging.debug("Using auth type: {}".format(auth_type))
+    return auth_type
+
 class MobileRestClient:
     """
     A set of robot keyworks that can be executed against
@@ -75,6 +89,11 @@ class MobileRestClient:
         self._session.headers = headers
 
     def get_server_type(self, url):
+        """
+        Issues a get to the service running at the specified url.
+        It will return a server type of 'listener' or 'syncgateway'
+        """
+
         resp = self._session.get(url)
         log_r(resp)
         resp.raise_for_status()
@@ -97,6 +116,65 @@ class MobileRestClient:
 
         raise ValueError("Unsupported couchbase lite server type")
 
+    def get_server_platform(self, url):
+        """
+        Issues a get to the service running at the specified url.
+        It will return a server type of 'macosx', 'android', or 'net' for listener
+        of centos for sync_gateway
+        """
+
+        resp = self._session.get(url)
+        log_r(resp)
+        resp.raise_for_status()
+        resp_obj = resp.json()
+
+        try:
+            if resp_obj["vendor"]["name"] == "Couchbase Sync Gateway":
+                logging.info("Platform={}".format(Platform.centos))
+                return Platform.centos
+            elif resp_obj["vendor"]["name"] == "Couchbase Lite (Objective-C)":
+                logging.info("Platform={}".format(Platform.macosx))
+                return Platform.macosx
+            elif resp_obj["vendor"]["name"] == "Couchbase Lite (C#)":
+                logging.info("Platform={}".format(Platform.net))
+                return Platform.net
+        except KeyError as ke:
+            # Android LiteServ
+            if resp_obj["CBLite"] == "Welcome":
+                logging.info("Platform={}".format(Platform.android))
+                return Platform.android
+
+        raise ValueError("Unsupported platform type")
+
+    def get_session(self, url):
+        resp = self._session.get("{}/_session".format(url))
+        log_r(resp)
+        resp.raise_for_status()
+
+        expected_response = {
+            "userCtx": {
+                "name": None,
+                "roles": [
+                    "_admin"
+                    ]
+                },
+                "ok": True
+            }
+
+        assert resp.json() == expected_response, "Unexpected _session response from Listener"
+        return resp.json()
+
+    def create_session(self, url, db, name, ttl=86400):
+        data = {
+            "name": name,
+            "ttl": ttl
+        }
+        resp = self._session.post("{}/{}/_session".format(url, db), data=json.dumps(data))
+        log_r(resp)
+        resp.raise_for_status()
+        resp_obj = resp.json()
+        return (resp_obj["cookie_name"], resp_obj["session_id"])
+
     def create_user(self, url, db, name, password, channels=[]):
         data = {
             "name": name,
@@ -106,7 +184,6 @@ class MobileRestClient:
         resp = self._session.post("{}/{}/_user/".format(url, db), data=json.dumps(data))
         log_r(resp)
         resp.raise_for_status()
-
         return (name, password)
 
     def create_database(self, url, name, server=None):
@@ -144,6 +221,55 @@ class MobileRestClient:
         resp_obj = resp.json()
         return resp_obj["db_name"]
 
+    def compact_database(self, url, db):
+        """
+        POST /{db}/_compact and will verify compaction by
+        iterating though each document and inspecting the revs_info to make sure all revs are 'missing'
+        except for the leaf revision
+        """
+
+        resp = self._session.post("{}/{}/_compact".format(url, db))
+        log_r(resp)
+        resp.raise_for_status()
+
+        start = time.time()
+        while True:
+
+            if time.time() - start > CLIENT_REQUEST_TIMEOUT:
+                raise Exception("Verify Docs Present: TIMEOUT")
+
+            resp = self._session.get("{}/{}/_all_docs".format(url, db))
+            log_r(resp)
+            resp.raise_for_status()
+            resp_obj = resp.json()
+
+            all_revs_compacted = True
+
+            for row in resp_obj["rows"]:
+                doc_id = row["id"]
+                doc = self.get_doc(url, db, doc_id, revs_info=True)
+
+                revs_info = doc["_revs_info"]
+                # _compact should reduce the revs to 20 on client
+                if len(revs_info) > 20:
+                    all_revs_compacted = False
+                    break
+
+                available_count = 0
+                for rev_info in revs_info:
+                    if rev_info["status"] == "available":
+                        available_count += 1
+
+                # After compaction, the number of a available revs should be 1 (the leaf revision)
+                assert available_count == 1, "Revisions remain after compaction"
+
+            if all_revs_compacted:
+                logging.info("All docs compacted!")
+                break
+            else:
+                logging.info("Found uncompacted revisions. Retrying ...")
+                time.sleep(1)
+
     def delete_databases(self, url):
         resp = self._session.get("{}/_all_dbs".format(url))
         log_r(resp)
@@ -155,10 +281,56 @@ class MobileRestClient:
             log_r(resp)
             resp.raise_for_status()
 
-    def get_doc(self, url, db, doc_id, auth):
+    def verify_revs_num_for_docs(self, url, db, docs, expected_revs_per_doc, auth=None):
+        for doc_id in docs:
+            self.verify_revs_num(url, db, doc_id, expected_revs_per_doc, auth)
+
+    def verify_revs_num(self, url, db, doc_id, expected_revs_per_docs, auth=None):
+        """
+        Verify that the number of revisions for a document is equal to the max expected number of revisions
+        Validate with ?revs=true. Check that the doc's length of _revisions["ids"] == expected_number_revs
+        """
+        doc = self.get_doc(url, db, doc_id, auth)
+        logging.debug(doc)
+
+        doc_rev_ids_number = len(doc["_revisions"]["ids"])
+        assert doc_rev_ids_number == expected_revs_per_docs, "Expected num revs: {}, Actual num revs: {}".format(
+            expected_revs_per_docs, doc_rev_ids_number
+        )
+
+    def verify_max_revs_num_for_docs(self, url, db, docs, expected_max_number_revs_per_doc, auth=None):
+        for doc in docs:
+            self.verify_max_revs_num(url, db, doc, expected_max_number_revs_per_doc, auth)
+
+    def verify_max_revs_num(self, url, db, doc_id, expected_max_number_revs, auth=None):
+        """
+        Verify that the number of revisions for a document is less than or equal to the max expected number of revisions
+        Validate with ?revs=true. Check that the doc's length of _revisions["ids"] <= expected_number_revs
+        """
+
+        doc = self.get_doc(url, db, doc_id, auth)
+        logging.debug(doc)
+
+        doc_rev_ids_number = len(doc["_revisions"]["ids"])
+        assert doc_rev_ids_number <= expected_max_number_revs, "Expected num revs: {}, Actual num revs: {}".format(
+            expected_max_number_revs, doc_rev_ids_number
+        )
+
+    def verify_doc_rev_generations(self, url, db, docs, expected_generation, auth=None):
+        """
+        Verify that the rev generation (rev = {generation}-{hash}) is the expected generation
+        for a set of docs
+        """
+        for doc_id in docs:
+            doc = self.get_doc(url, db, doc_id, auth)
+            rev = doc["_rev"]
+            generation = int(rev.split("-")[0])
+            logging.debug("Found generation: {}".format(generation))
+            assert generation == expected_generation, "Expected generation: {} not found, found: {}".format(expected_generation, generation)
+
+    def get_doc(self, url, db, doc_id, auth=None, revs_info=False):
         """
         returns a dictionary with the following format:
-
         {
             "_attachments":{
                 "sample_text.txt":{
@@ -169,12 +341,42 @@ class MobileRestClient:
                 },
             "_id":"att_doc",
             "_rev":"1-59bd81bc19049947b4728f8c769a44bd",
+            "_revisions":{
+                "ids":[
+                    "875459bdcc4b76eb786cf8b956a7bb17",
+                    ],
+                "start":5
+            },
             "content":"{ \"sample_key\": \"sample_value\" }"
             ,"updates":0
         }
+
+        If revs_info is True, also include the following property:
+
+         "_revs_info": [
+            {
+                "rev": "5-875459bdcc4b76eb786cf8b956a7bb17",
+                "status": "available"
+        },
         """
 
-        resp = self._session.get("{}/{}/{}".format(url, db, doc_id), auth=auth)
+        auth_type = get_auth_type(auth)
+
+        params = {
+            "conflicts": "true",
+            "revs": "true"
+        }
+
+        if revs_info:
+            params["revs_info"] = "true"
+
+        if auth_type == AuthType.session:
+            resp = self._session.get("{}/{}/{}".format(url, db, doc_id), params=params, cookies=dict(SyncGatewaySession=auth[1]))
+        elif auth_type == AuthType.http_basic:
+            resp = self._session.get("{}/{}/{}".format(url, db, doc_id), params=params, auth=auth)
+        else:
+            resp = self._session.get("{}/{}/{}".format(url, db, doc_id), params=params)
+
         log_r(resp)
         resp.raise_for_status()
         resp_obj = resp.json()
@@ -186,16 +388,36 @@ class MobileRestClient:
 
         return resp_obj
 
-    def add_doc(self, url, db, doc, auth):
+    def get_docs(self, url, db, docs, auth=None):
+
+        result = {}
+        for doc in docs:
+            result["id"] = self.get_doc(url, db, doc, auth=auth)
+
+        logging.debug(result)
+        return result
+
+    def add_doc(self, url, db, doc, auth=None):
+
+        logging.info(auth)
+        auth_type = get_auth_type(auth)
+
         doc["updates"] = 0
-        resp = self._session.post("{}/{}/".format(url, db), data=json.dumps(doc), auth=auth)
+
+        if auth_type == AuthType.session:
+            resp = self._session.post("{}/{}/".format(url, db), data=json.dumps(doc), cookies=dict(SyncGatewaySession=auth[1]))
+        elif auth_type == AuthType.http_basic:
+            resp = self._session.post("{}/{}/".format(url, db), data=json.dumps(doc), auth=auth)
+        else:
+            resp = self._session.post("{}/{}/".format(url, db), data=json.dumps(doc))
+
         log_r(resp)
         resp.raise_for_status()
         resp_obj = resp.json()
 
         return {"id": resp_obj["id"], "rev": resp_obj["rev"]}
 
-    def add_conflict(self, url, db, doc_id, parent_revision, new_revision, auth):
+    def add_conflict(self, url, db, doc_id, parent_revision, new_revision, auth=None):
         """
             1. GETs the doc with id == doc_id
             2. adds a _revisions property with
@@ -214,6 +436,9 @@ class MobileRestClient:
                 }
             }
         """
+
+        auth_type = get_auth_type(auth)
+
         logging.info("PARENT: {}".format(parent_revision))
         logging.info("NEW: {}".format(new_revision))
 
@@ -243,11 +468,135 @@ class MobileRestClient:
         }
 
         params = {"new_edits": "false"}
-        resp = self._session.put("{}/{}/{}".format(url, db, doc_id), params=params, data=json.dumps(doc), auth=auth)
+
+        if auth_type == AuthType.session:
+            resp = self._session.put("{}/{}/{}".format(url, db, doc_id), params=params, data=json.dumps(doc), cookies=dict(SyncGatewaySession=auth[1]))
+        elif auth_type == AuthType.http_basic:
+            resp = self._session.put("{}/{}/{}".format(url, db, doc_id), params=params, data=json.dumps(doc), auth=auth)
+        else:
+            resp = self._session.put("{}/{}/{}".format(url, db, doc_id), params=params, data=json.dumps(doc))
+
         log_r(resp)
         resp.raise_for_status()
 
-    def update_doc(self, url, db, doc_id, number_updates, auth):
+    def delete_conflicts(self, url, db, docs, auth=None):
+        """
+        Deletes all the conflicts for a dictionary of docs.
+        1. Issue a GET with conflicts=true
+        2. Issue a DELETE to {db}/{doc_id}?rev={rev_from_conflicts}
+        3. Loop over all the docs and assert that no more conflicts exist
+        """
+
+        for doc_id in docs:
+            doc = self.get_doc(url, db, doc_id, auth)
+            if "_conflicts" in doc:
+                for rev in doc["_conflicts"]:
+                    self.delete_doc(url, db, doc_id, rev)
+
+        logging.info("Checkking that no _conflicts property is returned")
+
+        for doc_id in docs:
+            doc = self.get_doc(url, db, doc_id, auth)
+            if "_conflicts" in doc:
+                assert len(doc["_conflicts"]) == 0, "Some conflicts still present after deletion: doc={}".format(doc)
+
+    def delete_docs(self, url, db, docs, auth=None):
+        """
+        Deletes a set of docs with the latest revision
+        """
+        for doc_id in docs:
+            doc = self.get_doc(url, db, doc_id, auth=auth)
+            latest_rev = doc["_rev"]
+            self.delete_doc(url, db, doc_id, latest_rev, auth=auth)
+
+    def delete_doc(self, url, db, doc_id, rev, auth=None):
+        """
+        Removes a document with the specfied revision
+        """
+
+        auth_type = get_auth_type(auth)
+
+        params = {}
+        if rev is not None:
+            params["rev"] = rev
+
+        if auth_type == AuthType.session:
+            resp = self._session.delete("{}/{}/{}".format(url, db, doc_id), params=params, cookies=dict(SyncGatewaySession=auth[1]))
+        elif auth_type == AuthType.http_basic:
+            resp = self._session.delete("{}/{}/{}".format(url, db, doc_id), params=params, auth=auth)
+        else:
+            resp = self._session.delete("{}/{}/{}".format(url, db, doc_id), params=params)
+
+        log_r(resp)
+        resp.raise_for_status()
+
+    def verify_docs_deleted(self, url, db, docs, auth=None):
+
+        auth_type = get_auth_type(auth)
+        server_type = self.get_server_type(url)
+        server_platform = self.get_server_platform(url)
+
+        start = time.time()
+        while True:
+
+            not_deleted = []
+
+            if time.time() - start > CLIENT_REQUEST_TIMEOUT:
+                raise Exception("Verify Docs Deleted: TIMEOUT")
+
+            for doc_id in docs:
+                if auth_type == AuthType.session:
+                    resp = self._session.get("{}/{}/{}".format(url, db, doc_id), cookies=dict(SyncGatewaySession=auth[1]))
+                elif auth_type == AuthType.http_basic:
+                    resp = self._session.get("{}/{}/{}".format(url, db, doc_id), auth=auth)
+                else:
+                    resp = self._session.get("{}/{}/{}".format(url, db, doc_id))
+                log_r(resp)
+                resp_obj = resp.json()
+
+                if resp.status_code == 200:
+                    not_deleted.append(resp_obj)
+                elif resp.status_code == 404:
+                    if server_type == ServerType.syncgateway:
+                        assert "error" in resp_obj and "reason" in resp_obj, "Response should have an error and reason"
+                        assert resp_obj["error"] == "not_found", "error should be 'not_found'"
+                        assert resp_obj["reason"] == "deleted", "reason should be 'not_found'"
+                    elif server_type == ServerType.listener and server_platform == Platform.android:
+                        assert "error" in resp_obj and "status" in resp_obj, "Response should have an error and status"
+                        assert resp_obj["error"] == "not_found", "error should be 'not_found'"
+                        assert resp_obj["status"] == 404, "status should be '404'"
+                    elif server_type == ServerType.listener and server_platform == Platform.macosx:
+                        assert "error" in resp_obj and "status" in resp_obj and "reason" in resp_obj, "Response should have an error, status, and reason"
+                        assert resp_obj["error"] == "deleted", "error should be 'deleted'"
+                        assert resp_obj["status"] == 404, "status should be '404'"
+                        assert resp_obj["reason"] == "deleted", "status should be '404'"
+                    else:
+                        raise ValueError("Unsupported server type and platform")
+                else:
+                    raise HTTPError("Unexpected error for: {}".format(resp.status_code))
+
+            if len(not_deleted) == 0:
+                logging.info("All Docs Deleted")
+                break
+            else:
+                logging.info("{} docs still not deleted. Retrying...".format(not_deleted))
+                time.sleep(1)
+                continue
+
+    def update_docs(self, url, db, docs, number_updates, auth=None):
+
+        updated_docs = {}
+
+        with ThreadPoolExecutor(max_workers=100) as executor:
+            future_to_url = [executor.submit(self.update_doc, url, db, doc, number_updates, auth) for doc in docs]
+            for future in concurrent.futures.as_completed(future_to_url):
+                updated_doc_id, updated_doc_rev = future.result()
+                updated_docs[updated_doc_id] = updated_doc_rev
+
+        logging.debug("url: {} db: {} updated: {}".format(url, db, updated_docs))
+        return updated_docs
+
+    def update_doc(self, url, db, doc_id, number_updates, auth=None):
         """
         Updates a doc on a db a number of times.
             1. GETs the doc
@@ -255,29 +604,60 @@ class MobileRestClient:
             3. PUTS the doc
         """
 
+        auth_type = get_auth_type(auth)
+        doc = self.get_doc(url, db, doc_id, auth)
+        current_rev = doc["_rev"]
+        current_update_number = doc["updates"] + 1
+
         for i in xrange(number_updates):
 
-            doc = self.get_doc(url, db, doc_id, auth)
+            # Add "random" this to make each update unique. This will
+            # cause document to conflict rather than optimize out
+            # this behavior due to the same rev hash for doc content
+            doc["random"] = str(uuid.uuid4())
 
-            current_update_number = doc["updates"]
-            doc["updates"] = current_update_number + 1
+            doc["updates"] = current_update_number
+            doc["_rev"] = current_rev
 
-            resp = self._session.put("{}/{}/{}".format(url, db, doc_id), data=json.dumps(doc), auth=auth)
+
+            if auth_type == AuthType.session:
+                resp = self._session.put("{}/{}/{}".format(url, db, doc_id), data=json.dumps(doc), cookies=dict(SyncGatewaySession=auth[1]))
+            elif auth_type == AuthType.http_basic:
+                resp = self._session.put("{}/{}/{}".format(url, db, doc_id), data=json.dumps(doc), auth=auth)
+            else:
+                resp = self._session.put("{}/{}/{}".format(url, db, doc_id), data=json.dumps(doc))
 
             log_r(resp)
             resp.raise_for_status()
             resp_obj = resp.json()
 
-        return {"id": resp_obj["id"], "rev": resp_obj["rev"]}
+            logging.debug(resp)
 
-    def add_docs(self, url, db, number, id_prefix, generator=simple()):
+            current_update_number += 1
+            current_rev = resp_obj["rev"]
+
+
+        return resp_obj["id"], resp_obj["rev"]
+
+    def add_docs(self, url, db, number, id_prefix, auth=None, generator=simple(), channels=None):
 
         docs = {}
+        auth_type = get_auth_type(auth)
 
         for i in xrange(number):
 
             doc_body = generator
-            resp = self._session.put("{}/{}/{}_{}".format(url, db, id_prefix, i), data=doc_body)
+            if channels is not None:
+                doc_body["channels"] = channels
+
+            data = json.dumps(doc_body)
+
+            if auth_type == AuthType.session:
+                resp = self._session.put("{}/{}/{}_{}".format(url, db, id_prefix, i), data=data, cookies=dict(SyncGatewaySession=auth[1]))
+            elif auth_type == AuthType.http_basic:
+                resp = self._session.put("{}/{}/{}_{}".format(url, db, id_prefix, i), data=data, auth=auth)
+            else:
+                resp = self._session.put("{}/{}/{}_{}".format(url, db, id_prefix, i), data=data)
             log_r(resp)
             resp.raise_for_status()
 
@@ -313,6 +693,47 @@ class MobileRestClient:
         resp = self._session.post("{}/_replicate".format(url), data=json.dumps(data))
         log_r(resp)
         resp.raise_for_status()
+        resp_obj = resp.json()
+
+        replication_id = resp_obj["session_id"]
+        logging.info("Replication started with: {}".format(replication_id))
+
+        return replication_id
+
+    def wait_for_replication_status_idle(self, url, replication_id):
+        """
+        Polls the /_active_task endpoint and waits for a replication to become idle
+        """
+
+        start = time.time()
+        while True:
+            if time.time() - start > CLIENT_REQUEST_TIMEOUT:
+                raise Exception("Verify Docs Present: TIMEOUT")
+
+            resp = self._session.get("{}/_active_tasks".format(url))
+            log_r(resp)
+            resp.raise_for_status()
+            resp_obj = resp.json()
+
+            replication_busy = False
+            replication_found = False
+
+            for replication in resp_obj:
+                if replication["task"] == replication_id:
+                    replication_found = True
+                    if replication["status"] == "Idle":
+                        replication_busy = False
+                    else:
+                        replication_busy = True
+
+            assert replication_found, "Replication not found: {}".format(replication_id)
+
+            if replication_found and not replication_busy:
+                logging.info("Replication is idle: {}".format(replication_id))
+                break
+            else:
+                logging.info("Replication busy. Retrying ...")
+                time.sleep(1)
 
     def verify_docs_present(self, url, db, expected_docs):
         """
@@ -385,6 +806,8 @@ class MobileRestClient:
                 elif server_type == ServerType.syncgateway:
                     resp_docs[resp_doc["_id"]] = {"rev": resp_doc["_rev"]}
 
+            logging.debug("Expected: {}".format(expected_doc_map))
+            logging.debug("Actual: {}".format(resp_docs))
             assert(expected_doc_map == resp_docs), "Unable to verify docs present. Dictionaries are not equal"
             break
 

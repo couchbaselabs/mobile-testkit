@@ -4,7 +4,7 @@ Resource          resources/common.robot
 Library     DebugLibrary
 
 Library     ${Libraries}/NetworkUtils.py
-Library     ${Libraries}/LoggingKeywords.py
+Library     ${KEYWORDS}/Logging.py
 Library     ${Keywords}/CouchbaseServer.py
 Library     ${Keywords}/SyncGateway.py
 Library     ${Keywords}/MobileRestClient.py
@@ -70,5 +70,5 @@ Setup Test
 Teardown Test
     Log  Tearing down test ...  console=True
     List Connections
-    Run Keyword If Test Failed      Fetch And Analyze Logs
+    Run Keyword If Test Failed  Fetch And Analyze Logs  ${TEST_NAME}
 
