@@ -28,3 +28,7 @@
 - name: remove sync gateway source
   shell: rm -rf /home/centos/*
   ignore_errors: yes
+
+- name: remove sync gateway source .repo directory
+  shell: rm -rf /home/centos/.repo
+  ignore_errors: yes
