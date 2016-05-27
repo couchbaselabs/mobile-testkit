@@ -14,6 +14,8 @@ from testkit.config import Config
 from testkit import settings
 from provision.ansible_runner import AnsibleRunner
 
+import keywords.CouchbaseServer
+
 import logging
 log = logging.getLogger(settings.LOGGER)
 
@@ -48,6 +50,9 @@ class Cluster:
         self.sg_accels = [SgAccel(ac) for ac in acs]
         self.servers = [Server(cb) for cb in cbs]
         self.sync_gateway_config = None  # will be set to Config object when reset() called
+
+        # for integrating keywords
+        self.server_keywords = keywords.CouchbaseServer.CouchbaseServer()
 
     def validate_cluster(self):
 
@@ -106,6 +111,11 @@ class Cluster:
                 status = self.servers[0].create_buckets(bucket_name_set)
                 assert (status == 0)
                 log.info(">>> Bucket creation status: {}".format(status))
+
+                # Wait for server to be in a warmup state to work around
+                # https://github.com/couchbase/sync_gateway/issues/1745
+                log.info(">>> Waiting for Server: {} to be in a healthy state".format(self.servers[0].url))
+                self.server_keywords.wait_for_ready_state(self.servers[0].url)
 
                 # Both steps are successful, break out of retry loop
                 break

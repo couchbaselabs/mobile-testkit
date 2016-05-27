@@ -146,6 +146,39 @@ class CouchbaseServer:
         # Check that max retries did not occur
         assert count != 3, "Could not delete bucket"
 
+    def wait_for_ready_state(self, url):
+        """
+        Verify all server node is in are in a "healthy" state to avoid sync_gateway startup failures
+        Work around for this - https://github.com/couchbase/sync_gateway/issues/1745
+        """
+        start = time.time()
+        while True:
+
+            if time.time() - start > CLIENT_REQUEST_TIMEOUT:
+                raise Exception("Verify Docs Present: TIMEOUT")
+
+            # Verfy the server is in a "healthy", not "warmup" state
+            resp = requests.get("{}/pools/nodes".format(url), auth=self._auth, headers=self._headers)
+            log_r(resp)
+
+            resp_obj = resp.json()
+
+            all_nodes_healthy = True
+            for node in resp_obj["nodes"]:
+                if node["status"] != "healthy":
+                    all_nodes_healthy = False
+                    logging.info("Node: {} is still not healthy. Retrying ...".format(node))
+                    time.sleep(1)
+
+            if not all_nodes_healthy:
+                continue
+
+            logging.info("All nodes are healthy")
+            logging.debug(resp_obj)
+            # All nodes are heathy if it made it to here
+            break
+
+
     def create_bucket(self, url, name):
         """
         1. Create CBS bucket via REST
@@ -197,33 +230,7 @@ class CouchbaseServer:
                 logging.info("Key not found error: {} Bucket is ready!".format(nfe))
                 break
 
-        # Verify all nodes are in a "healthy" state to avoid sync_gateway startup failures
-        start = time.time()
-        while True:
-
-            if time.time() - start > CLIENT_REQUEST_TIMEOUT:
-                raise Exception("Verify Docs Present: TIMEOUT")
-
-            # Verfy the server is in a "healthy", not "warmup" state
-            resp = requests.get("{}/pools/nodes".format(url), auth=self._auth, headers=self._headers)
-            log_r(resp)
-
-            resp_obj = resp.json()
-
-            all_nodes_healthy = True
-            for node in resp_obj["nodes"]:
-                if node["status"] != "healthy":
-                    all_nodes_healthy = False
-                    logging.info("Node: {} is still not healthy. Retrying ...".format(node))
-                    time.sleep(1)
-
-            if not all_nodes_healthy:
-                continue
-
-            logging.info("All nodes are healthy")
-            logging.debug(resp_obj)
-            # All nodes are heathy if it made it to here
-            break
+        self.wait_for_ready_state(url)
 
         return name
 

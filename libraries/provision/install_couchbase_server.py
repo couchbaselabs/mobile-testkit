@@ -1,9 +1,12 @@
 import os
 import sys
 from optparse import OptionParser
+import json
 
 from ansible_runner import AnsibleRunner
 
+from keywords.ClusterKeywords import ClusterKeywords
+from keywords.CouchbaseServer import CouchbaseServer
 
 class CouchbaseServerConfig:
 
@@ -58,6 +61,8 @@ def install_couchbase_server(couchbase_server_config):
 
     ansible_runner = AnsibleRunner()
 
+    print(">>> Installing Couchbase Server")
+    # Install Server
     server_baseurl, server_package_name = couchbase_server_config.get_baseurl_package()
     status = ansible_runner.run_ansible_playbook(
         "install-couchbase-server-package.yml",
@@ -68,6 +73,23 @@ def install_couchbase_server(couchbase_server_config):
         stop_on_fail=False
     )
     assert(status == 0), "Failed to install Couchbase Server"
+
+    print(">>> Creating server buckets")
+    # Create default buckets
+    status = ansible_runner.run_ansible_playbook(
+        "create-server-buckets.yml",
+        extra_vars=json.dumps({"bucket_names": ["data-bucket, index-bucket"]})
+    )
+    assert (status == 0), "Failed to create Couchbase Server buckets"
+
+    # Wait for server to be in 'healthy state'
+    print(">>> Waiting for server to be in 'healthy' state")
+    cluster_keywords = ClusterKeywords()
+    cluster_topology = cluster_keywords.get_cluster_topology(os.environ["CLUSTER_CONFIG"])
+    server = cluster_topology["couchbase_servers"][0]
+    server_keywords = CouchbaseServer()
+    server_keywords.wait_for_ready_state(server)
+
 
 if __name__ == "__main__":
     usage = "usage: python install_couchbase_server.py --version=<couchbase_server_version> --build-number=<server_build_number>"
