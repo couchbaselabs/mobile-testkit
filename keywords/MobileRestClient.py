@@ -436,6 +436,9 @@ class MobileRestClient:
                 }
             }
         """
+
+        auth_type = get_auth_type(auth)
+
         logging.info("PARENT: {}".format(parent_revision))
         logging.info("NEW: {}".format(new_revision))
 
@@ -465,7 +468,14 @@ class MobileRestClient:
         }
 
         params = {"new_edits": "false"}
-        resp = self._session.put("{}/{}/{}".format(url, db, doc_id), params=params, data=json.dumps(doc), auth=auth)
+
+        if auth_type == AuthType.session:
+            resp = self._session.put("{}/{}/{}".format(url, db, doc_id), params=params, data=json.dumps(doc), cookies=dict(SyncGatewaySession=auth[1]))
+        elif auth_type == AuthType.http_basic:
+            resp = self._session.put("{}/{}/{}".format(url, db, doc_id), params=params, data=json.dumps(doc), auth=auth)
+        else:
+            resp = self._session.put("{}/{}/{}".format(url, db, doc_id), params=params, data=json.dumps(doc))
+
         log_r(resp)
         resp.raise_for_status()
 
