@@ -20,36 +20,6 @@ ${CLUSTER_CONFIGS}          ${RESOURCES}/cluster_configs
 ${SYNC_GATEWAY_SUITE_FUNCTIONAL}  testsuites/syncgateway/functional
 
 *** Keywords ***
-# Provisioning Keywords
-#Provision Cluster
-#    [Arguments]  ${server_version}  ${sync_gateway_version}  ${sync_gateway_config}
-#    [Documentation]    Installs a Sync Gateway (build) + Sg Accel cluster based on the CLUSTER_CONFIG environment variable
-#    ...  server_version = the version of Couchbase Server to install (ex. 4.1.0 or 4.5.0-2151)
-#    ...  sync_gateway_version = the version of Sync Gateway and Sg Accel to install (ex. 1.2.1-4 or commit hash)
-#    ...  sync_gateway_config = the config to launch the Sync Gateways and Sg Accels with.
-#    ...  Cluster configs can be found in 'resources/cluster_configs'
-#
-#    Clean Cluster
-#    Verfiy No Running Services  %{CLUSTER_CONFIG}
-#
-#    ${is_binary} =  Sync Gateway Version Is Binary  version=${sync_gateway_version}
-#    Log  Is Sync Gateway Version Binary: ${is_binary}
-#
-#    ${result} =  Run Keyword If  ${is_binary}
-#    ...  Run Process  python  ${LIBRARIES}/provision/provision_cluster.py
-#    ...  --server-version\=${server_version}
-#    ...  --sync-gateway-version\=${sync_gateway_version}
-#    ...  --sync-gateway-config-file\=${sync_gateway_config}
-#    ...  ELSE
-#    ...  Run Process  python  ${LIBRARIES}/provision/provision_cluster.py
-#    ...  --server-version\=${server_version}
-#    ...  --sync-gateway-commit\=${sync_gateway_version}
-#    ...  --sync-gateway-config-file\=${sync_gateway_config}
-#
-#    Log  ${result.stderr}
-#    Log  ${result.stdout}
-#
-#    Should Be Equal As Integers  ${result.rc}  0
 
 Clean Cluster
     Log                         Cluster Config: %{CLUSTER_CONFIG}
