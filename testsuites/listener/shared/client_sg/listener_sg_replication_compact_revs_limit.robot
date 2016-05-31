@@ -51,7 +51,7 @@ Client to Sync Gateway Complex Replication With Revs Limit
     ...  22. Delete Server bucket
     ...  23. Delete LiteServ db
     [Tags]           sanity     listener    ${PLATFORM}    syncgateway
-    #[Timeout]        5 minutes
+    [Timeout]        5 minutes
 
     Log  Using LiteServ: ${ls_url}
     Log  Using Sync Gateway: ${sg_url}
