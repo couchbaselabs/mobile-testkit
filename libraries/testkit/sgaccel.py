@@ -35,7 +35,9 @@ class SgAccel:
 
         status = self.ansible_runner.run_targeted_ansible_playbook(
             "start-sg-accel.yml",
-            extra_vars="sync_gateway_config_filepath={0}".format(conf_path),
+            extra_vars={
+                "sync_gateway_config_filepath": conf_path
+            },
             target_name=self.hostname,
             stop_on_fail=False
         )

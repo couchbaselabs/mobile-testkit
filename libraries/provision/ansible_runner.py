@@ -1,53 +1,41 @@
 import os
-import sys
-import subprocess
-
+from ansible_python_runner import Runner
+from ansible import constants
+import logging
 
 class AnsibleRunner:
 
     def __init__(self):
         self.provisiong_config = os.environ["CLUSTER_CONFIG"]
 
-    def run_ansible_playbook(self, script_name, extra_vars=None, stop_on_fail=True):
+    def run_ansible_playbook(self, script_name, extra_vars={}, stop_on_fail=True, subset=constants.DEFAULT_SUBSET):
 
-        # Need to cd here to pick up dynamic inventory
-        os.chdir("libraries/provision/ansible/playbooks")
+        inventory_filename = self.provisiong_config
 
-        if not os.path.isfile(script_name):
-            print("Could not locate ansible script {0} in {1}".format(script_name, os.getcwd()))
-            sys.exit(1)
+        playbook_filename = "libraries/provision/ansible/playbooks/{}".format(script_name)
 
-        if extra_vars is not None:
-            status = subprocess.call(["ansible-playbook", "-i", "../../../../{}".format(self.provisiong_config), script_name, "--extra-vars", extra_vars])
-        else:
-            status = subprocess.call(["ansible-playbook", "-i", "../../../../{}".format(self.provisiong_config), script_name])
+        runner = Runner(
+            inventory_filename=inventory_filename,
+            playbook = playbook_filename,
+            extra_vars = extra_vars,
+            verbosity = 0,  # change this to a higher number for -vvv debugging (try 10),
+            subset = subset
+        )
 
-        if status != 0 and stop_on_fail:
-            sys.exit(1)
+        stats = runner.run()
+        logging.info(stats)
 
-        os.chdir("../../../../")
+        return len(stats.failures)
 
-        return status
+    def run_targeted_ansible_playbook(self, script_name, target_name, extra_vars={}, stop_on_fail=True):
 
-    def run_targeted_ansible_playbook(self, script_name, target_name, extra_vars=None, stop_on_fail=True):
+        return self.run_ansible_playbook(
+            script_name=script_name,
+            extra_vars=extra_vars,
+            stop_on_fail=stop_on_fail,
+            subset = target_name
+        )
 
-        # Need to cd here to pick up dynamic inventory
-        os.chdir("libraries/provision/ansible/playbooks")
 
-        if not os.path.isfile(script_name):
-            print("Could not locate ansible script {0} in {1}".format(script_name, os.getcwd()))
-            sys.exit(1)
-
-        if extra_vars is not None:
-            status = subprocess.call(["ansible-playbook", "-i", "../../../../{}".format(self.provisiong_config), script_name, "--extra-vars", extra_vars, "--limit", target_name])
-        else:
-            status = subprocess.call(["ansible-playbook", "-i", "../../../../{}".format(self.provisiong_config), script_name, "--limit", target_name])
-
-        if status != 0 and stop_on_fail:
-            sys.exit(1)
-
-        os.chdir("../../../../")
-
-        return status
 
 

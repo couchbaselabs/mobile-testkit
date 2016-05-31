@@ -83,10 +83,11 @@ class Server:
 
     def create_buckets(self, names):
         # Create buckets
-        extra_vars = {"bucket_names": names}
         status = self.ansible_runner.run_ansible_playbook(
             "create-server-buckets.yml",
-            extra_vars=json.dumps(extra_vars),
+            extra_vars={
+                "bucket_names": names
+            },
             stop_on_fail=False
         )
         return status

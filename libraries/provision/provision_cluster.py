@@ -1,5 +1,6 @@
 import os
 import sys
+import logging
 from optparse import OptionParser
 
 import install_sync_gateway
@@ -9,29 +10,29 @@ from install_couchbase_server import CouchbaseServerConfig
 from install_sync_gateway import SyncGatewayConfig
 
 from ansible_runner import AnsibleRunner
-
+from robot.api.logger import console
 
 def provision_cluster(couchbase_server_config, sync_gateway_config, install_deps):
 
-    print "\n>>> Host info:\n"
+    test_output("\n>>> Cluster info:\n")
 
     with open(os.environ["CLUSTER_CONFIG"], "r") as ansible_hosts:
-        print(ansible_hosts.read())
+        test_output(ansible_hosts.read())
 
-    print(couchbase_server_config)
-    print(sync_gateway_config)
+    test_output(couchbase_server_config)
+    test_output(sync_gateway_config)
 
     if not sync_gateway_config.is_valid():
-        print("Invalid sync_gateway provisioning configuration. Exiting ...")
+        test_output("Invalid sync_gateway provisioning configuration. Exiting ...")
         sys.exit(1)
 
-    print(">>> Provisioning cluster...")
+    test_output(">>> Provisioning cluster...")
 
     # Get server base url and package name
     server_baseurl, server_package_name = couchbase_server_config.get_baseurl_package()
 
-    print(">>> Server package: {0}/{1}".format(server_baseurl, server_package_name))
-    print(">>> Using sync_gateway config: {}".format(sync_gateway_config.config_path))
+    test_output(">>> Server package: {0}/{1}".format(server_baseurl, server_package_name))
+    test_output(">>> Using sync_gateway config: {}".format(sync_gateway_config.config_path))
 
     ansible_runner = AnsibleRunner()
 
@@ -57,6 +58,12 @@ def provision_cluster(couchbase_server_config, sync_gateway_config, install_deps
 
     # Install sync_gateway
     install_sync_gateway.install_sync_gateway(sync_gateway_config)
+
+    test_output(">>> Done provisioning cluster...")
+
+def test_output(output):
+    console(output)
+    logging.info(output)
 
 if __name__ == "__main__":
     usage = """usage: python provision_cluster.py

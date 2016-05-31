@@ -66,10 +66,10 @@ def install_couchbase_server(couchbase_server_config):
     server_baseurl, server_package_name = couchbase_server_config.get_baseurl_package()
     status = ansible_runner.run_ansible_playbook(
         "install-couchbase-server-package.yml",
-        "couchbase_server_package_base_url={0} couchbase_server_package_name={1}".format(
-            server_baseurl,
-            server_package_name
-        ),
+        extra_vars={
+            "couchbase_server_package_base_url": server_baseurl,
+            "couchbase_server_package_name": server_package_name
+        },
         stop_on_fail=False
     )
     assert(status == 0), "Failed to install Couchbase Server"
@@ -78,7 +78,7 @@ def install_couchbase_server(couchbase_server_config):
     # Create default buckets
     status = ansible_runner.run_ansible_playbook(
         "create-server-buckets.yml",
-        extra_vars=json.dumps({"bucket_names": ["data-bucket", "index-bucket"]})
+        extra_vars={"bucket_names": ["data-bucket", "index-bucket"]}
     )
     assert (status == 0), "Failed to create Couchbase Server buckets"
 

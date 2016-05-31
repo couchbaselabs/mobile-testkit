@@ -22,3 +22,13 @@
 # Delete sg_accel binary
 - name: delete sync_gateway binary
   file: path=/opt/couchbase-sg-accel state=absent
+  ignore_errors: yes
+
+# Remove sg accel source
+- name: remove sg accel source
+  shell: rm -rf /home/centos/*
+  ignore_errors: yes
+
+- name: remove sg accel source .repo directory
+  shell: rm -rf /home/centos/.repo
+  ignore_errors: yes
