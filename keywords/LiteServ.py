@@ -47,7 +47,7 @@ class LiteServ:
         elif platform == "android":
             extracted_file_name = "couchbase-lite-android-liteserv-SQLite-{}-debug.apk".format(version_build)
         elif platform == "net":
-            raise NotImplementedError("Need .NET in CI")
+            extracted_file_name = "couchbase-lite-net-listenerconsole-{}".format(version_build)
         else:
             raise ValueError("Unsupported platform")
 
@@ -76,21 +76,21 @@ class LiteServ:
 
         return url
 
-    def download_liteserv(self, platform, version_build):
+    def download_liteserv(self, platform, version):
 
         supported_platforms = ["macosx", "android", "net"]
         if platform not in supported_platforms:
             raise ValueError("Unsupported version of LiteServ")
 
-        extracted_file_name = self.get_extracted_package_name(platform, version_build)
+        extracted_file_name = self.get_extracted_package_name(platform, version)
         logging.info("{}/{}".format(BINARY_DIR, extracted_file_name))
         # Check if package is already downloaded and return if it is preset
         if os.path.isdir("{}/{}".format(BINARY_DIR, extracted_file_name)):
             logging.info("Package exists: {}. Skipping download".format(extracted_file_name))
             return
 
-        url = self.get_download_url(platform, version_build)
-        file_name = self.get_download_package_name(platform, version_build)
+        url = self.get_download_url(platform, version)
+        file_name = self.get_download_package_name(platform, version)
 
         # Download the packages to binary directory
         print("Downloading: {}".format(url))
@@ -110,9 +110,9 @@ class LiteServ:
             # Remove .zip file
             os.remove("{}/{}".format(BINARY_DIR, file_name))
 
-    def get_liteserv_binary_path(self, platform, version_build):
+    def get_liteserv_binary_path(self, platform, version):
 
-        extracted_file_name = self.get_extracted_package_name(platform, version_build)
+        extracted_file_name = self.get_extracted_package_name(platform, version)
 
         if platform == "macosx":
             binary_path = "{}/{}/LiteServ".format(BINARY_DIR, extracted_file_name)
