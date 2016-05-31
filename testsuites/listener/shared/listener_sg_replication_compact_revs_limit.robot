@@ -129,6 +129,8 @@ Client to Sync Gateway Complex Replication With Revs Limit
 *** Keywords ***
 Setup Test
     ${ls_url} =  Start LiteServ
+    ...  platform=${PLATFORM}
+    ...  version=${LITESERV_VERSION}
     ...  host=${LITESERV_HOST}
     ...  port=${LITESERV_PORT}
 

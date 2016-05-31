@@ -45,19 +45,23 @@ Install Sync Gateway
 
 # LiteServ Keywords
 Install LiteServ
-    Run Keyword If  "${PLATFORM}" == "android"  Install Apk  ELSE  Log  No install need
+    [Documentation]   Bootstraps any installation (deploying apps, etc)
+    ...  The LiteServ binaries are located in deps/.
+    [Arguments]  ${platform}  ${version}
+    [Timeout]       2 minutes
+    Run Keyword If  "${platform}" == "android"  Install Apk  ${version}  ELSE  Log  No install need
 
 Start LiteServ
     [Documentation]   Starts LiteServ for a specific platform.
     ...  The LiteServ binaries are located in deps/.
-    [Arguments]  ${host}  ${port}
+    [Arguments]  ${platform}  ${version}  ${host}  ${port}
     [Timeout]       1 minute
 
-    ${ls_url} =  Run Keyword If  "${PLATFORM}" == "macosx"  Start MacOSX LiteServ  host=${host}  port=${port}
-    ${ls_url} =  Run Keyword If  "${PLATFORM}" == "android"  Start Android LiteServ  host=${host}  port=${port}
-    ${ls_url} =  Run Keyword If  "${PLATFORM}" == "net"  Start Net ListenerConsole  host=${host}  port=${port}
+    ${ls_url} =  Run Keyword If  "${platform}" == "macosx"   Start MacOSX LiteServ      host=${host}  port=${port}
+    ${ls_url} =  Run Keyword If  "${platform}" == "android"  Start Android LiteServ     host=${host}  port=${port}
+    ${ls_url} =  Run Keyword If  "${platform}" == "net"      Start Net ListenerConsole  host=${host}  port=${port}
 
-    ${ls_url} =  Verify LiteServ Launched  host=${host}  port=${port}
+    ${ls_url} =  Verify LiteServ Launched  host=${host}  port=${port}  version_build=${version}
     [return]  ${ls_url}
 
 Start MacOSX LiteServ
