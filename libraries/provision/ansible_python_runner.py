@@ -74,19 +74,11 @@ class Runner(object):
             raise Exception("Cannot find playbook: {}.  Current dir: {}".format(playbook, os.getcwd()))
 
         self.options = Options()
-
-
-
         self.options.verbosity = verbosity
         self.options.connection = 'ssh'  # Need a connection type "smart" or "ssh"
         self.options.subset = subset
 
-        # Propagate defaults from ANSIBLE_CONFIG into the options.
-        # Note that the following defaults in the ansible cli/__init__.py are missing:
-        # C.DEFAULT_TRANSPORT
-        # C.DEFAULT_SU
-        # C.DEFAULT_SU_USER
-
+        # Propagate defaults from ANSIBLE_CONFIG into options
         self.options.module_path = constants.DEFAULT_MODULE_PATH
         self.options.forks = constants.DEFAULT_FORKS
         self.options.ask_vault_pass = constants.DEFAULT_ASK_VAULT_PASS
@@ -132,11 +124,6 @@ class Runner(object):
         self.inventory.subset(self.options.subset)
         self.variable_manager.set_inventory(self.inventory)
 
-        # Playbook to run. Assumes it is
-        # local to this python file
-        # pb_dir = os.path.dirname(__file__)
-        # playbook = "%s/%s" % (pb_dir, playbook)
-
         # Setup playbook executor, but don't run until run() called
         console("Running playbook: {}".format(playbook))
         self.pbex = playbook_executor.PlaybookExecutor(
@@ -167,7 +154,5 @@ class Runner(object):
             'record_logs',
             success=run_success
         )
-
-
 
         return stats
