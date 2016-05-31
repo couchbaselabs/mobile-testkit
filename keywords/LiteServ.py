@@ -85,7 +85,7 @@ class LiteServ:
         extracted_file_name = self.get_extracted_package_name(platform, version)
         logging.info("{}/{}".format(BINARY_DIR, extracted_file_name))
         # Check if package is already downloaded and return if it is preset
-        if os.path.isdir("{}/{}".format(BINARY_DIR, extracted_file_name)):
+        if os.path.isdir("{}/{}".format(BINARY_DIR, extracted_file_name)) or os.path.isfile("{}/{}".format(BINARY_DIR, extracted_file_name)):
             logging.info("Package exists: {}. Skipping download".format(extracted_file_name))
             return
 

@@ -55,8 +55,8 @@ Replication with multiple client dbs and single sync_gateway db
     ...  from_url=${ls_url_net}  from_db=${ls_db1}
     ...  to_db=${ls_db2}
 
-    ${ls_db1_docs} =  Add Docs  url=${ls_url_net}  db=${ls_db1}  number=${500}  id_prefix=test_ls_db1
-    ${ls_db2_docs} =  Add Docs  url=${ls_url_droid}  db=${ls_db2}  number=${500}  id_prefix=test_ls_db2
+    ${ls_db1_docs} =  Add Docs  url=${ls_url_net}  db=${ls_db1}  number=${num_docs}  id_prefix=test_ls_db1
+    ${ls_db2_docs} =  Add Docs  url=${ls_url_droid}  db=${ls_db2}  number=${num_docs}  id_prefix=test_ls_db2
 
     @{ls_db1_db2_docs} =  Create List  ${ls_db1_docs}  ${ls_db2_docs}
 
@@ -81,6 +81,12 @@ Setup Test
     ...  version=${LITESERV_TWO_VERSION}
     ...  host=${LITESERV_TWO_HOST}
     ...  port=${LITESERV_TWO_PORT}
+
+    ${num_docs} =  Set Variable If
+    ...  "${PROFILE}" == "sanity"   ${10}
+    ...  "${PROFILE}" == "nightly"  ${500}
+    ...  "${PROFILE}" == "release"  ${10000}
+    Set Test Variable  ${num_docs}
 
     Set Test Variable  ${ls_url_net}
     Set Test Variable  ${ls_url_droid}
