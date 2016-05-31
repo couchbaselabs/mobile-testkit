@@ -1,6 +1,7 @@
 import os
 from ansible_python_runner import Runner
 from ansible import constants
+import logging
 
 class AnsibleRunner:
 
@@ -22,6 +23,7 @@ class AnsibleRunner:
         )
 
         stats = runner.run()
+        logging.info(stats)
 
         return len(stats.failures)
 
