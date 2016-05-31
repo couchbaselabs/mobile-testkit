@@ -14,7 +14,7 @@ from robot.api.logger import console
 
 def provision_cluster(couchbase_server_config, sync_gateway_config, install_deps):
 
-    test_output("\n>>> Host info:\n")
+    test_output("\n>>> Cluster info:\n")
 
     with open(os.environ["CLUSTER_CONFIG"], "r") as ansible_hosts:
         test_output(ansible_hosts.read())
@@ -58,6 +58,8 @@ def provision_cluster(couchbase_server_config, sync_gateway_config, install_deps
 
     # Install sync_gateway
     install_sync_gateway.install_sync_gateway(sync_gateway_config)
+
+    test_output(">>> Done provisioning cluster...")
 
 def test_output(output):
     console(output)
