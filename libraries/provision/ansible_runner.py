@@ -26,15 +26,3 @@ class AnsibleRunner:
         logging.info(stats)
 
         return len(stats.failures)
-
-    def run_targeted_ansible_playbook(self, script_name, target_name, extra_vars={}):
-
-        return self.run_ansible_playbook(
-            script_name=script_name,
-            extra_vars=extra_vars,
-            subset = target_name
-        )
-
-
-
-

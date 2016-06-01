@@ -21,10 +21,9 @@ class SgAccel:
         return r.text
 
     def stop(self):
-        status = self.ansible_runner.run_targeted_ansible_playbook(
+        status = self.ansible_runner.run_ansible_playbook(
             "stop-sg-accel.yml",
-            target_name=self.hostname,
-            stop_on_fail=False,
+            subset=self.hostname
         )
         return status
 
@@ -33,13 +32,12 @@ class SgAccel:
 
         log.info(">>> Starting sg_accel with configuration: {}".format(conf_path))
 
-        status = self.ansible_runner.run_targeted_ansible_playbook(
+        status = self.ansible_runner.run_ansible_playbook(
             "start-sg-accel.yml",
             extra_vars={
                 "sync_gateway_config_filepath": conf_path
             },
-            target_name=self.hostname,
-            stop_on_fail=False
+            subset=self.hostname
         )
         return status
 
