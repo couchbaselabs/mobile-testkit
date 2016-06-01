@@ -1,5 +1,5 @@
 from ansible.plugins.callback.default import CallbackModule as CallbackModule_default
-from robot.api.logger import info
+from robot.api.logger import console
 
 class CallbackModule(CallbackModule_default):
 
@@ -15,29 +15,29 @@ class CallbackModule(CallbackModule_default):
 
     def v2_playbook_on_task_start(self, task, is_conditional):
         if len(task.name) > 0:
-            info("TASK [{}] ---------------------------------------------- ".format(task.name), also_console=True)
+            console("TASK [{}] ---------------------------------------------- ".format(task.name))
         super(CallbackModule, self).v2_playbook_on_task_start(task, is_conditional)
 
     def v2_playbook_on_include(self, included_file):
-        info("TASK [include] ---------------------------------------------- ", also_console=True)
-        info("included: {}".format(included_file), also_console=True)
+        console("TASK [include] ---------------------------------------------- ")
+        console("included: {}".format(included_file))
         super(CallbackModule, self).v2_playbook_on_include(included_file)
 
     def v2_runner_on_ok(self, result):
-        info("ok: [{}]".format(result._host), also_console=True)
+        console("ok: [{}]".format(result._host))
         super(CallbackModule, self).v2_runner_on_ok(result)
 
     def v2_runner_on_failed(self, result, ignore_errors=False):
         if ignore_errors:
-            info("ignoring errors: [{}]".format(result._host), also_console=True)
+            console("ignoring errors: [{}]".format(result._host))
         else:
-            info("failed: [{}]".format(result._host), also_console=True)
+            console("failed: [{}]".format(result._host))
         super(CallbackModule, self).v2_runner_on_failed(result, ignore_errors)
 
     def v2_runner_on_skipped(self, result):
-        info("skipping: [{}]".format(result._host), also_console=True)
+        console("skipping: [{}]".format(result._host))
         super(CallbackModule, self).v2_runner_on_skipped(result)
 
     def v2_runner_on_unreachable(self, result):
-        info("unreachable: [{}]".format(result._host), also_console=True)
+        console("unreachable: [{}]".format(result._host))
         super(CallbackModule, self).v2_runner_on_unreachable(result)
