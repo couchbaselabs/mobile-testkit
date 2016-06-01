@@ -29,22 +29,19 @@ def test_dcp_reshard_sync_gateway_goes_down(conf):
 
         futures = dict()
 
-        # take down a sync_gateway
-        futures[executor.submit(cluster.sg_accels[0].stop)] = "sg_down"
-
         log.info(">>> Adding Seth docs")  # FOX
         futures[executor.submit(seth.add_docs, 8000)] = "seth"
 
         log.info(">>> Adding Traun docs")  # ABC, NBC, CBS
         futures[executor.submit(traun.add_docs, 2000, bulk=True)] = "traun"
 
+        # stop sg_accel
+        shutdown_status = cluster.sg_accels[0].stop()
+        assert shutdown_status == 0
+
         for future in concurrent.futures.as_completed(futures):
             tag = futures[future]
             log.info("{} Completed:".format(tag))
-            if tag == "sg_down":
-                # Assert takedown was successful
-                shutdown_status = future.result()
-                assert shutdown_status == 0
 
     # TODO better way to do this
     time.sleep(120)
@@ -63,7 +60,8 @@ def test_dcp_reshard_sync_gateway_comes_up(conf):
 
     cluster = Cluster()
     mode = cluster.reset(config_path=conf)
-    cluster.sg_accels[0].stop()
+    stop_status = cluster.sg_accels[0].stop()
+    assert stop_status == 0, "Failed to stop sg_accel"
 
     admin = Admin(cluster.sync_gateways[0])
 
@@ -76,9 +74,6 @@ def test_dcp_reshard_sync_gateway_comes_up(conf):
 
         futures = dict()
 
-        # Bring up a sync_gateway
-        futures[executor.submit(cluster.sg_accels[0].start, conf)] = "sg_up"
-
         time.sleep(5)
 
         log.info(">>> Adding Traun docs")  # ABC, NBC, CBS
@@ -87,12 +82,13 @@ def test_dcp_reshard_sync_gateway_comes_up(conf):
         log.info(">>> Adding Seth docs")  # FOX
         futures[executor.submit(seth.add_docs, 4000)] = "seth"
 
+        # Bring up a sync_gateway
+        up_status = cluster.sg_accels[0].start(conf)
+        assert up_status == 0
+
         for future in concurrent.futures.as_completed(futures):
             tag = futures[future]
             log.info("{} Completed:".format(tag))
-            if tag == "sg_up":
-                up_status = future.result()
-                assert up_status == 0
 
     # TODO better way to do this
     time.sleep(60)
@@ -113,7 +109,8 @@ def test_dcp_reshard_single_sg_accel_goes_down_and_up(conf):
     mode = cluster.reset(config_path=conf)
 
     # Stop the second sg_accel
-    cluster.sg_accels[1].stop()
+    stop_status = cluster.sg_accels[1].stop()
+    assert stop_status == 0, "Failed to stop sg_accel"
 
     admin = Admin(cluster.sync_gateways[0])
 
@@ -126,30 +123,27 @@ def test_dcp_reshard_single_sg_accel_goes_down_and_up(conf):
 
         futures = dict()
 
-        # take down a sync_gateway
-        futures[executor.submit(cluster.sg_accels[0].stop)] = "sg_accel_down"
-
         log.info(">>> Adding Seth docs")  # FOX
         futures[executor.submit(seth.add_docs, 8000)] = "seth"
 
         log.info(">>> Adding Traun docs")  # ABC, NBC, CBS
         futures[executor.submit(traun.add_docs, 10000, bulk=True)] = "traun"
 
+        # take down a sync_gateway
+        shutdown_status = cluster.sg_accels[0].stop()
+        assert shutdown_status == 0
+
+        # Add more docs while no writers are online
+        log.info(">>> Adding Seth docs")  # FOX
+        futures[executor.submit(seth.add_docs, 2000, bulk=True)] = "seth"
+
+        # Start a single writer
+        start_status = cluster.sg_accels[0].start(conf)
+        assert start_status == 0
+
         for future in concurrent.futures.as_completed(futures):
             tag = futures[future]
             log.info("{} Completed:".format(tag))
-            if tag == "sg_accel_down":
-                # Assert takedown was successful
-                shutdown_status = future.result()
-                assert shutdown_status == 0
-
-                # Add more docs while no writers are online
-                log.info(">>> Adding Seth docs")  # FOX
-                futures[executor.submit(seth.add_docs, 2000, bulk=True)] = "seth"
-
-                # Start a single writer
-                start_status = cluster.sg_accels[0].start(conf)
-                assert start_status == 0
 
     # TODO better way to do this
     time.sleep(120)
