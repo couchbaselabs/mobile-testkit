@@ -3,6 +3,11 @@ import base64
 
 from constants import *
 
+def get_attachment(name):
+    with open("{}/{}".format(DATA_DIR, name)) as f:
+         result = base64.standard_b64encode(f.read())
+    return result
+
 class Document:
 
     def create_doc(self, id, content=None, attachment=None, channels=[]):
@@ -21,10 +26,9 @@ class Document:
         doc["channels"] = channels
 
         if attachment is not None:
-            with open ("{}/{}".format(DATA_DIR, attachment)) as f:
-                doc["_attachments"] = {
-                    attachment: { "data": base64.standard_b64encode(f.read()) }
-                }
+            doc["_attachments"] = {
+                attachment: { "data": get_attachment(attachment) }
+            }
 
         logging.debug(doc)
 

@@ -10,6 +10,8 @@ from concurrent.futures import ThreadPoolExecutor
 from robot.api.logger import console
 
 from CouchbaseServer import CouchbaseServer
+from Document import get_attachment
+
 from libraries.data.doc_generators import *
 from constants import *
 
@@ -596,7 +598,7 @@ class MobileRestClient:
         logging.debug("url: {} db: {} updated: {}".format(url, db, updated_docs))
         return updated_docs
 
-    def update_doc(self, url, db, doc_id, number_updates, auth=None):
+    def update_doc(self, url, db, doc_id, number_updates=1, attachment=None, auth=None):
         """
         Updates a doc on a db a number of times.
             1. GETs the doc
@@ -618,6 +620,11 @@ class MobileRestClient:
 
             doc["updates"] = current_update_number
             doc["_rev"] = current_rev
+
+            if attachment is not None:
+                doc["_attachments"] = {
+                    attachment: {"data": get_attachment(attachment)}
+                }
 
 
             if auth_type == AuthType.session:
