@@ -11,7 +11,8 @@ def fetch_sync_gateway_profile(folder_name):
 
     print("Pulling sync_gateway profile ...")
     # fetch logs from sync_gateway instances
-    ansible_runner.run_ansible_playbook("fetch-sync-gateway-profile.yml")
+    status = ansible_runner.run_ansible_playbook("fetch-sync-gateway-profile.yml")
+    assert status == 0, "Failed to fetch sync_gateway profile"
 
     # zip logs and timestamp
     if os.path.isdir("/tmp/sync_gateway_profile"):

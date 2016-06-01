@@ -14,7 +14,8 @@ def fetch_machine_stats(folder_name):
 
     print("Pulling logs")
     # fetch logs from sync_gateway instances
-    ansible_runner.run_ansible_playbook("fetch-machine-stats.yml")
+    status = ansible_runner.run_ansible_playbook("fetch-machine-stats.yml")
+    assert status == 0, "Failed to fetch machine stats"
 
     # zip logs and timestamp
     if os.path.isdir("/tmp/perf_logs"):

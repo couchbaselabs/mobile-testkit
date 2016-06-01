@@ -68,25 +68,25 @@ class Cluster:
         
         # Stop sync_gateways
         log.info(">>> Stopping sync_gateway")
-        status = ansible_runner.run_ansible_playbook("stop-sync-gateway.yml", stop_on_fail=False)
+        status = ansible_runner.run_ansible_playbook("stop-sync-gateway.yml")
         if status != 0:
             log.error("Error in provisioning!! Verify your ssh user is correct in 'libraries/provision/playbooks/ansible.cfg'")
             raise Exception("Failed to run provisioning")
 
         # Stop sync_gateways
         log.info(">>> Stopping sg_accel")
-        status = ansible_runner.run_ansible_playbook("stop-sg-accel.yml", stop_on_fail=False)
-        assert(status == 0)
+        status = ansible_runner.run_ansible_playbook("stop-sg-accel.yml")
+        assert status == 0, "Failed to stop sg_accel"
 
         # Deleting sync_gateway artifacts
         log.info(">>> Deleting sync_gateway artifacts")
-        status = ansible_runner.run_ansible_playbook("delete-sync-gateway-artifacts.yml", stop_on_fail=False)
-        assert(status == 0)
+        status = ansible_runner.run_ansible_playbook("delete-sync-gateway-artifacts.yml")
+        assert status == 0, "Failed to delete sync_gateway artifacts"
 
         # Deleting sg_accel artifacts
         log.info(">>> Deleting sg_accel artifacts")
-        status = ansible_runner.run_ansible_playbook("delete-sg-accel-artifacts.yml", stop_on_fail=False)
-        assert(status == 0)
+        status = ansible_runner.run_ansible_playbook("delete-sg-accel-artifacts.yml")
+        assert status == 0, "Failed to delete sg_accel artifacts"
 
         bucket_delete_create_max_retries = 3
         bucket_delete_create_attempt_num = 0
@@ -135,8 +135,7 @@ class Cluster:
             "start-sync-gateway.yml",
             extra_vars={
                 "sync_gateway_config_filepath": config_path_full
-            },
-            stop_on_fail=False
+            }
         )
         assert status == 0, "Failed to start to Sync Gateway"
 
@@ -148,10 +147,9 @@ class Cluster:
                 "start-sg-accel.yml",
                 extra_vars={
                     "sync_gateway_config_filepath": config_path_full
-                },
-                stop_on_fail=False
+                }
             )
-            assert(status == 0)
+            assert status == 0, "Failed to start sg_accel"
 
         # Validate CBGT
         if mode == "distributed_index":

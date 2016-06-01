@@ -13,26 +13,17 @@ class NetworkUtils:
 
     def start_packet_capture(self):
         ansible_runner = AnsibleRunner()
-        status = ansible_runner.run_ansible_playbook(
-            "start-ngrep.yml",
-            stop_on_fail=False
-        )
+        status = ansible_runner.run_ansible_playbook("start-ngrep.yml")
         assert status == 0, "Failed to start packet capture"
 
     def stop_packet_capture(self):
         ansible_runner = AnsibleRunner()
-        status = ansible_runner.run_ansible_playbook(
-            "stop-ngrep.yml",
-            stop_on_fail=False
-        )
+        status = ansible_runner.run_ansible_playbook("stop-ngrep.yml")
         assert status == 0, "Failed to stop packet capture"
 
     def collect_packet_capture(self, test_name):
         ansible_runner = AnsibleRunner()
-        status = ansible_runner.run_ansible_playbook(
-            "collect-ngrep.yml",
-            stop_on_fail=False
-        )
+        status = ansible_runner.run_ansible_playbook("collect-ngrep.yml")
         assert status == 0, "Failed to collect packet capture"
 
         # zip logs and timestamp

@@ -62,13 +62,12 @@ class SyncGateway:
         logging.info("Starting sync_gateway on {} ...".format(target))
         ansible_runner = AnsibleRunner()
         config_path =  os.path.abspath(config)
-        status = ansible_runner.run_targeted_ansible_playbook(
+        status = ansible_runner.run_ansible_playbook(
             "start-sync-gateway.yml",
             extra_vars={
                 "sync_gateway_config_filepath": config_path
             },
-            target_name=target,
-            stop_on_fail=False
+            subset=target
         )
         assert status == 0, "Could not start sync_gateway"
 
@@ -76,8 +75,8 @@ class SyncGateway:
         target = hostname_for_url(url)
         logging.info("Shutting down sync_gateway on {} ...".format(target))
         ansible_runner = AnsibleRunner()
-        status = ansible_runner.run_targeted_ansible_playbook(
+        status = ansible_runner.run_ansible_playbook(
             "stop-sync-gateway.yml",
-            target_name=target,
-            stop_on_fail=False)
+            subset=target
+        )
         assert status == 0, "Could not stop sync_gateway"

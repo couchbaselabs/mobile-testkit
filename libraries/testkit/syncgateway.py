@@ -29,10 +29,9 @@ class SyncGateway:
         return r.text
 
     def stop(self):
-        status = self.ansible_runner.run_targeted_ansible_playbook(
+        status = self.ansible_runner.run_ansible_playbook(
             "stop-sync-gateway.yml",
-            target_name=self.hostname,
-            stop_on_fail=False,
+            subset=self.hostname
         )
         return status
 
@@ -42,13 +41,12 @@ class SyncGateway:
 
         log.info(">>> Starting sync_gateway with configuration: {}".format(conf_path))
 
-        status = self.ansible_runner.run_targeted_ansible_playbook(
+        status = self.ansible_runner.run_ansible_playbook(
             "start-sync-gateway.yml",
             extra_vars={
                 "sync_gateway_config_filepath": conf_path
             },
-            target_name=self.hostname,
-            stop_on_fail=False
+            subset=self.hostname
         )
         return status
 
@@ -57,13 +55,12 @@ class SyncGateway:
 
         log.info(">>> Restarting sync_gateway with configuration: {}".format(conf_path))
 
-        status = self.ansible_runner.run_targeted_ansible_playbook(
+        status = self.ansible_runner.run_ansible_playbook(
             "reset-sync-gateway.yml",
             extra_vars={
                 "sync_gateway_config_filepath": conf_path,
             },
-            target_name=self.hostname,
-            stop_on_fail=False
+            subset=self.hostname
         )
         return status
 

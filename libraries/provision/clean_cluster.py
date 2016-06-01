@@ -13,8 +13,8 @@ def clean_cluster():
     print("Cleaning cluster: {}".format(cluster_config))
 
     ansible_runner = AnsibleRunner()
-    status = ansible_runner.run_ansible_playbook("remove-previous-installs.yml", stop_on_fail=False)
-    assert(status == 0)
+    status = ansible_runner.run_ansible_playbook("remove-previous-installs.yml")
+    assert(status == 0), "Failed to removed previous installs"
 
 
 if __name__ == "__main__":

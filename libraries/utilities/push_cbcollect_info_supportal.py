@@ -8,7 +8,8 @@ def push_cbcollect_info_supportal():
     2. Pushes to supportal.couchbase.com
     """
     ansible_runner = AnsibleRunner()
-    ansible_runner.run_ansible_playbook("push-cbcollect-info-supportal.yml")
+    status = ansible_runner.run_ansible_playbook("push-cbcollect-info-supportal.yml")
+    assert status == 0, "Failed to push cbcollect info"
     
 
 if __name__ == "__main__":
