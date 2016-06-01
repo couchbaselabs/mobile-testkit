@@ -37,21 +37,21 @@ def provision_cluster(couchbase_server_config, sync_gateway_config, install_deps
     ansible_runner = AnsibleRunner()
 
     # Reset previous installs
-    status = ansible_runner.run_ansible_playbook("remove-previous-installs.yml", stop_on_fail=False)
-    assert(status == 0)
+    status = ansible_runner.run_ansible_playbook("remove-previous-installs.yml")
+    assert status == 0, "Failed to remove previous installs"
 
     if install_deps:
         # OS-level modifications
-        status = ansible_runner.run_ansible_playbook("os-level-modifications.yml", stop_on_fail=False)
-        assert(status == 0)
+        status = ansible_runner.run_ansible_playbook("os-level-modifications.yml")
+        assert status == 0, "OS level modifications failed"
 
         # Install dependencies
-        status = ansible_runner.run_ansible_playbook("install-common-tools.yml", stop_on_fail=False)
-        assert(status == 0)
+        status = ansible_runner.run_ansible_playbook("install-common-tools.yml")
+        assert status == 0, "Failed to install common tools"
 
     # Clear firewall rules
-    status = ansible_runner.run_ansible_playbook("flush-firewall.yml", stop_on_fail=False)
-    assert(status == 0)
+    status = ansible_runner.run_ansible_playbook("flush-firewall.yml")
+    assert status == 0, "Failed to flush firewall"
 
     # Install server package
     install_couchbase_server.install_couchbase_server(couchbase_server_config)

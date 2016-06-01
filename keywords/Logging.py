@@ -20,7 +20,7 @@ def fetch_sync_gateway_logs(prefix, is_perf_run=False):
 
     print("Pulling logs")
     # fetch logs from sync_gateway instances
-    status = ansible_runner.run_ansible_playbook("fetch-sync-gateway-logs.yml", stop_on_fail=False)
+    status = ansible_runner.run_ansible_playbook("fetch-sync-gateway-logs.yml")
     if status != 0:
         log.error("Error pulling logs")
 

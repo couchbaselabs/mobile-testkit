@@ -69,10 +69,9 @@ def install_couchbase_server(couchbase_server_config):
         extra_vars={
             "couchbase_server_package_base_url": server_baseurl,
             "couchbase_server_package_name": server_package_name
-        },
-        stop_on_fail=False
+        }
     )
-    assert(status == 0), "Failed to install Couchbase Server"
+    assert status == 0, "Failed to install Couchbase Server"
 
     print(">>> Creating server buckets")
     # Create default buckets
@@ -80,7 +79,7 @@ def install_couchbase_server(couchbase_server_config):
         "create-server-buckets.yml",
         extra_vars={"bucket_names": ["data-bucket", "index-bucket"]}
     )
-    assert (status == 0), "Failed to create Couchbase Server buckets"
+    assert status == 0, "Failed to create Couchbase Server buckets"
 
     # Wait for server to be in 'healthy state'
     print(">>> Waiting for server to be in 'healthy' state")

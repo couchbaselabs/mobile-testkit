@@ -97,10 +97,9 @@ def install_sync_gateway(sync_gateway_config):
                 "commit": sync_gateway_config.commit,
                 "build_flags": sync_gateway_config.build_flags,
                 "skip_bucketflush": sync_gateway_config.skip_bucketflush
-            },
-            stop_on_fail=False
+            }
         )
-        assert(status == 0)
+        assert status == 0, "Failed to install sync_gateway source"
 
     else:
         # Install build
@@ -113,10 +112,9 @@ def install_sync_gateway(sync_gateway_config):
                 "couchbase_sg_accel_package": sg_accel_package_name,
                 "sync_gateway_config_filepath": config_path,
                 "skip_bucketflush": sync_gateway_config.skip_bucketflush
-            },
-            stop_on_fail=False
+            }
         )
-        assert(status == 0)
+        assert(status == 0), "Failed to install sync_gateway package"
 
 if __name__ == "__main__":
     usage = """usage: python install_sync_gateway.py

@@ -87,8 +87,7 @@ class Server:
             "create-server-buckets.yml",
             extra_vars={
                 "bucket_names": names
-            },
-            stop_on_fail=False
+            }
         )
         return status
 

@@ -8,7 +8,7 @@ class AnsibleRunner:
     def __init__(self):
         self.provisiong_config = os.environ["CLUSTER_CONFIG"]
 
-    def run_ansible_playbook(self, script_name, extra_vars={}, stop_on_fail=True, subset=constants.DEFAULT_SUBSET):
+    def run_ansible_playbook(self, script_name, extra_vars={}, subset=constants.DEFAULT_SUBSET):
 
         inventory_filename = self.provisiong_config
 
@@ -27,12 +27,11 @@ class AnsibleRunner:
 
         return len(stats.failures)
 
-    def run_targeted_ansible_playbook(self, script_name, target_name, extra_vars={}, stop_on_fail=True):
+    def run_targeted_ansible_playbook(self, script_name, target_name, extra_vars={}):
 
         return self.run_ansible_playbook(
             script_name=script_name,
             extra_vars=extra_vars,
-            stop_on_fail=stop_on_fail,
             subset = target_name
         )
 
