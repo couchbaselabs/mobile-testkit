@@ -52,7 +52,7 @@ Test Attachments on Docs Rejected By Sync Function
 *** Keywords ***
 Setup Test
 
-    Set Environment Variable  CLUSTER_CONFIG  ${CLUSTER_CONFIGS}/1sg_1cbs
+
 
     Log  Using cluster %{CLUSTER_CONFIG}  console=True
 
