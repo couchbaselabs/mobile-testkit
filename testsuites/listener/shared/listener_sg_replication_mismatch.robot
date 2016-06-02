@@ -16,6 +16,7 @@ Library           ${KEYWORDS}/LiteServ.py
 Library           ${KEYWORDS}/SyncGateway.py
 Library           ${KEYWORDS}/CouchbaseServer.py
 Library           ${KEYWORDS}/Logging.py
+Library           ${KEYWORDS}/ClusterKeywords.py
 
 Test Setup        Setup Test
 Test Teardown     Teardown Test

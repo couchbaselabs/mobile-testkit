@@ -13,6 +13,7 @@ Library           ${KEYWORDS}/LiteServ.py
 ...                 platform=${PLATFORM}
 ...                 version_build=${LITESERV_VERSION}
 
+Library           ${KEYWORDS}/ClusterKeywords.py
 Library           ${KEYWORDS}/SyncGateway.py
 Library           ${KEYWORDS}/CouchbaseServer.py
 Library           ${KEYWORDS}/Logging.py
