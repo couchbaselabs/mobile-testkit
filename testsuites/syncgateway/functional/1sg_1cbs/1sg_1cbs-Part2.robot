@@ -63,7 +63,7 @@ Test Attachment Revpos When Ancestor Unavailable, Active Revision doesn't share 
     ...                 3. Client attempts to add a new (conflicting) revision 3a, with ancestors rev-2a (with it's own attachment), rev-1.
     ...                 4. When client attempts to push rev-3a with attachment stub {"hello.txt", revpos=2}.  Should throw an error, since the revpos
     ...                 of the attachment is later than the common ancestor (rev-1)
-    [Tags]           sanity    attachments  syncgateway
+    [Tags]  sanity  attachments  syncgateway
 
     Set Test Variable  ${sg_user_name}  sg_user
     Set Test Variable  ${sg_uset_password}  password

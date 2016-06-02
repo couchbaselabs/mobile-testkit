@@ -178,7 +178,6 @@ class CouchbaseServer:
             # All nodes are heathy if it made it to here
             break
 
-
     def create_bucket(self, url, name):
         """
         1. Create CBS bucket via REST
@@ -238,7 +237,6 @@ class CouchbaseServer:
         """
         Deletes docs that follow the below format
         _sync:rev:att_doc:34:1-e7fa9a5e6bb25f7a40f36297247ca93e
-
         """
         client_host = url.replace("http://", "")
         client_host = client_host.replace(":8091", "")
@@ -256,3 +254,19 @@ class CouchbaseServer:
             logging.debug("Removing: {}".format(doc_id))
             b.remove(doc_id)
 
+    def get_server_docs_with_prefix(self, url, bucket, prefix):
+        """
+        Returns server doc ids matching a prefix (ex. '_sync:rev:')
+        """
+        client_host = url.replace("http://", "")
+        client_host = client_host.replace(":8091", "")
+
+        b = Bucket("couchbase://{}/{}".format(client_host, bucket))
+
+        found_ids = []
+        b.n1ql_query("CREATE PRIMARY INDEX ON `{}`".format(bucket)).execute()
+        for row in b.n1ql_query("SELECT meta(`{}`) FROM `{}`".format(bucket, bucket)):
+            if row["$1"]["id"].startswith(prefix):
+                found_ids.append(row["$1"]["id"])
+
+        return found_ids

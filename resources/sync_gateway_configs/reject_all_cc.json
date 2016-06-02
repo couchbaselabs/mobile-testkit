@@ -1,0 +1,21 @@
+{
+    "interface":":4984",
+    "adminInterface": "0.0.0.0:4985",
+    "maxIncomingConnections": 0,
+    "maxCouchbaseConnections": 16,
+    "maxFileDescriptors": 90000,
+    "slowServerCallWarningThreshold": 500,
+    "compressResponses": true,
+    "log": ["*"],
+    "databases":{
+        "db":{
+            "server":"http://{{ couchbase_server_primary_node }}:8091",
+            "bucket":"data-bucket",
+            "sync":
+            `function(doc) {
+                throw({forbidden:"No writes!"});
+            }`
+        }
+    }
+}
+
