@@ -11,6 +11,7 @@ Library           ${KEYWORDS}/Async.py
 Library           ${KEYWORDS}/MobileRestClient.py
 Library           ${KEYWORDS}/LiteServ.py
 
+Library           ${KEYWORDS}/ClusterKeywords.py
 Library           ${KEYWORDS}/SyncGateway.py
 Library           ${KEYWORDS}/CouchbaseServer.py
 Library           ${KEYWORDS}/Logging.py

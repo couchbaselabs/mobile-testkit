@@ -2,7 +2,6 @@
 Documentation    Common Variables / Keywords
 
 Library     Process
-Library     ${KEYWORDS}/ClusterKeywords.py
 
 *** Variables ***
 ${LIBRARIES}                libraries
@@ -27,21 +26,6 @@ Clean Cluster
     Log  ${result.stderr}
     Log  ${result.stdout}
     Should Be Equal As Integers  ${result.rc}  0
-
-Install Server
-    [Arguments]     ${server_version}
-    Log                         Cluster Config: %{CLUSTER_CONFIG}
-    ${server_arg}               Catenate  SEPARATOR=  --version=          ${server_version}
-    ${result} =  Run Process  python  ${LIBRARIES}/provision/install_couchbase_server.py  ${server_arg}
-    Log To Console  ${result.stderr}
-    Log To Console  ${result.stdout}
-
-Install Sync Gateway
-    [Arguments]     ${version}  ${config}
-    Log                         Cluster Config: %{CLUSTER_CONFIG}
-    ${result} =  Run Process  python  ${LIBRARIES}/provision/install_sync_gateway.py  --version\=${sync_gateway_version}  --config-file\=${sync_gateway_config}
-    Log  ${result.stderr}  console=True
-    Log  ${result.stdout}  console=True
 
 # LiteServ Keywords
 Install LiteServ
