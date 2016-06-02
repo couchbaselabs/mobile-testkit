@@ -46,7 +46,7 @@ Test Attachment Revpos When Ancestor Unavailable
 
     ${conflict_doc} =  Add Conflict  url=${sg_url}  db=${sg_db}
     ...  doc_id=${doc_gen_1["id"]}
-    ...  parent_revision=${doc_gen_1["rev"]}
+    ...  parent_revisions=${doc_gen_1["rev"]}
     ...  new_revision=2-foo
     ...  auth=${user1}
 
@@ -75,9 +75,20 @@ Test Attachment Revpos When Ancestor Unavailable, Active Revision doesn't share 
     ${doc} =  Create Doc  id=doc_1  content={"sample_key": "sample_val"}  channels=${sg_user_channels}
     ${doc_gen_1} =  Add Doc  url=${sg_url}  db=${sg_db}  doc=${doc}  auth=${sg_user_session}
     ${doc_gen_2} =  Update Doc  url=${sg_url}  db=${sg_db}  doc_id=${doc_gen_1["id"]}  attachment=sample_text.txt  auth=${sg_user_session}
+    ${doc_gen_3} =  Update Doc  url=${sg_url}  db=${sg_db}  doc_id=${doc_gen_1["id"]}  auth=${sg_user_session}
+    ${doc_gen_4} =  Update Doc  url=${sg_url}  db=${sg_db}  doc_id=${doc_gen_1["id"]}  auth=${sg_user_session}
 
+    ${parent_rev_list} =  Create List  2-foo2  ${doc_gen_1["rev"]}
 
-    Debug
+    # Sync Gateway should error since it has no references attachment in its ancestors
+    Set Test Variable  ${expected_error}  HTTPError: 400 Client Error: Bad Request for url: */db/doc_1?new_edits=false
+    Run Keyword And Expect Error  ${expected_error}  Add Conflict
+    ...  url=${sg_url}
+    ...  db=${sg_db}
+    ...  doc_id=${doc_gen_1["id"]}
+    ...  parent_revisions=${parent_rev_list}
+    ...  new_revision=3-foo3
+    ...  auth=${sg_user_session}
 
 *** Keywords ***
 Setup Test

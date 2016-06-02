@@ -419,7 +419,7 @@ class MobileRestClient:
 
         return {"id": resp_obj["id"], "rev": resp_obj["rev"]}
 
-    def add_conflict(self, url, db, doc_id, parent_revision, new_revision, auth=None):
+    def add_conflict(self, url, db, doc_id, parent_revisions, new_revision, attachment=None, auth=None):
         """
             1. GETs the doc with id == doc_id
             2. adds a _revisions property with
@@ -437,37 +437,53 @@ class MobileRestClient:
                     "start":${new_revision's generation number}
                 }
             }
+
+            IMPORTANT: If you specify a list of parent revisions, you need to make sure that they
+            are ordered from latest to oldest to ensure the document is built correctly
         """
+
+        if isinstance(parent_revisions, basestring):
+            # if only one rev is specified, wrap it in a list
+            parent_revs = [parent_revisions]
+        elif isinstance(parent_revisions, list):
+            parent_revs = parent_revisions
+        else:
+            raise TypeError("Add Conflict expects a list or str for parent_revisions")
 
         auth_type = get_auth_type(auth)
 
-        logging.info("PARENT: {}".format(parent_revision))
+        logging.info("PARENT: {}".format(parent_revs))
         logging.info("NEW: {}".format(new_revision))
 
         doc = self.get_doc(url, db, doc_id, auth)
 
         # Delete rev property and add our own "_revisions"
-        parent_revision_parts = parent_revision.split("-")
-        parent_revision_generation = int(parent_revision_parts[0])
-        parent_revision_digest = parent_revision_parts[1]
 
         new_revision_parts = new_revision.split("-")
         new_revision_generation = int(new_revision_parts[0])
         new_revision_digest = new_revision_parts[1]
 
-        logging.debug("Parent Generation: {}".format(parent_revision_generation))
-        logging.debug("Parent Digest: {}".format(parent_revision_digest))
         logging.debug("New Generation: {}".format(new_revision_generation))
         logging.debug("New Digest: {}".format(new_revision_digest))
 
         doc["_rev"] = new_revision
         doc["_revisions"] = {
             "ids": [
-                new_revision_digest,
-                parent_revision_digest
+                new_revision_digest
             ],
             "start": new_revision_generation
         }
+
+        if attachment is not None:
+            doc["_attachments"] = {
+                attachment: {"data": get_attachment(attachment)}
+            }
+
+
+        parent_revision_digests = [parent_rev.split("-")[1] for parent_rev in parent_revs]
+        logging.debug("parent_revision_digests: {}".format(parent_revision_digests))
+
+        doc["_revisions"]["ids"].extend(parent_revision_digests)
 
         params = {"new_edits": "false"}
 
@@ -480,6 +496,8 @@ class MobileRestClient:
 
         log_r(resp)
         resp.raise_for_status()
+
+        return {"id": doc_id, "rev": new_revision}
 
     def delete_conflicts(self, url, db, docs, auth=None):
         """
@@ -592,8 +610,8 @@ class MobileRestClient:
         with ThreadPoolExecutor(max_workers=100) as executor:
             future_to_url = [executor.submit(self.update_doc, url, db, doc, number_updates, auth) for doc in docs]
             for future in concurrent.futures.as_completed(future_to_url):
-                updated_doc_id, updated_doc_rev = future.result()
-                updated_docs[updated_doc_id] = updated_doc_rev
+                result = future.result()
+                updated_docs[result["id"]] = result["rev"]
 
         logging.debug("url: {} db: {} updated: {}".format(url, db, updated_docs))
         return updated_docs
@@ -644,7 +662,7 @@ class MobileRestClient:
             current_rev = resp_obj["rev"]
 
 
-        return resp_obj["id"], resp_obj["rev"]
+        return {"id": resp_obj["id"], "rev": resp_obj["rev"]}
 
     def add_docs(self, url, db, number, id_prefix, auth=None, generator=simple(), channels=None):
 

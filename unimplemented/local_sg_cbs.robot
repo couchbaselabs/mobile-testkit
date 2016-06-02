@@ -23,19 +23,6 @@ ${SYNC_GATEWAY_CONFIG}  ${SYNC_GATEWAY_CONFIGS}/local_cb.json
 
 
 *** Test Cases ***
-Test Attachment Revpos When Ancestor Unavailable, Active Revision doesn't share ancestor
-    Documentation    Creates a document with an attachment, then updates that document so that
-    ...              the body of the revision that originally pushed the document is no
-    ...              longer available.  Add a new revision that's not a child of the
-    ...              active revision, and validate that it's uploaded successfully.
-    ...              Example:
-    ...                 1. Document is created with no attachment at rev-1
-    ...                 2. Server adds revision with attachment at rev-2 {"hello.txt", revpos=2}
-    ...                 2. Document is updated multiple times on the server, goes to rev-4
-    ...                 3. Client attempts to add a new (conflicting) revision 3a, with ancestors rev-2a (with it's own attachment), rev-1.
-    ...                 4. When client attempts to push rev-3a with attachment stub {"hello.txt", revpos=2}.  Should throw an error, since the revpos
-    ...                 of the attachment is later than the common ancestor (rev-1)
-
 Test Attachments on Docs Rejected By Sync Function
     Documentation
     ...  1. Start sync_gateway with sync function that rejects all writes:
