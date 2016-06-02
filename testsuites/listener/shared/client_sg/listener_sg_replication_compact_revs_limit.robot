@@ -10,8 +10,6 @@ Library           OperatingSystem
 Library           ${KEYWORDS}/Async.py
 Library           ${KEYWORDS}/MobileRestClient.py
 Library           ${KEYWORDS}/LiteServ.py
-...                 platform=${PLATFORM}
-...                 version_build=${LITESERV_VERSION}
 
 Library           ${KEYWORDS}/SyncGateway.py
 Library           ${KEYWORDS}/CouchbaseServer.py
