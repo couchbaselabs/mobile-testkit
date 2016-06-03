@@ -10,24 +10,17 @@ Library           Process
 Library           ${KEYWORDS}/Async.py
 Library           ${KEYWORDS}/MobileRestClient.py
 
-*** !!! Instead of this, the platform should be passed in the keyword I think !!! ***
 Library           ${KEYWORDS}/LiteServ.py
-...                 platform=${PLATFORM}
-...                 version_build=${LITESERV_VERSION}
-
-# Passed in at runtime
-Suite Setup       Setup Suite
 
 Test Setup        Setup Test
 Test Teardown     Teardown Test
 
 *** Variables ***
-${SYNC_GATEWAY_CONFIG}  ${SYNC_GATEWAY_CONFIGS}/walrus.json
 
 *** Test Cases ***
 Replication with multiple client dbs and single sync_gateway db
     [Documentation]
-    [Tags]           sanity     listener    ${PLATFORM}    syncgateway
+    [Tags]           sanity     listener    ${LITESERV_ONE_PLATFORM}    ${LITESERV_TWO_PLATFORM}
     [Timeout]        5 minutes
 
     Log  Using LiteServ .NET: ${ls_url_net}
@@ -62,8 +55,8 @@ Replication with multiple client dbs and single sync_gateway db
     ...  from_url=${ls_url_net}  from_db=${ls_db1}
     ...  to_db=${ls_db2}
 
-    ${ls_db1_docs} =  Add Docs  url=${ls_url_net}  db=${ls_db1}  number=${500}  id_prefix=test_ls_db1
-    ${ls_db2_docs} =  Add Docs  url=${ls_url_droid}  db=${ls_db2}  number=${500}  id_prefix=test_ls_db2
+    ${ls_db1_docs} =  Add Docs  url=${ls_url_net}  db=${ls_db1}  number=${num_docs}  id_prefix=test_ls_db1
+    ${ls_db2_docs} =  Add Docs  url=${ls_url_droid}  db=${ls_db2}  number=${num_docs}  id_prefix=test_ls_db2
 
     @{ls_db1_db2_docs} =  Create List  ${ls_db1_docs}  ${ls_db2_docs}
 
@@ -75,20 +68,25 @@ Replication with multiple client dbs and single sync_gateway db
 
 
 *** Keywords ***
-Setup Suite
-    [Documentation]  Download, install, and launch LiteServ.
-    Download LiteServ
-    ...  platform=${NET_PLATFORM}
-    Download LiteServ
-    ...  platform=${DROID_PLATFORM}
-    Install LiteServ
-    ...  platform=${NET_PLATFORM}
-    Install Android Liteserv
-    ...  platform=${DROID_PLATFORM}
-
 Setup Test
-    ${ls_url_net} =  Start LiteServ  host=${LITESERV_NET_HOST}  port=${LITESERV_NET_PORT} platform=${NET_PLATFORM}
-    ${ls_url_droid} =  Start LiteServ host=${LITESERV_DROID_HOST}  port=${LITESERV_DROID_PORT} platform=${DROID_PLATFORM}
+
+    ${ls_url_net} =  Start LiteServ
+    ...  platform=${LITESERV_ONE_PLATFORM}
+    ...  version=${LITESERV_ONE_VERSION}
+    ...  host=${LITESERV_ONE_HOST}
+    ...  port=${LITESERV_ONE_PORT}
+
+     ${ls_url_droid} =  Start LiteServ
+    ...  platform=${LITESERV_TWO_PLATFORM}
+    ...  version=${LITESERV_TWO_VERSION}
+    ...  host=${LITESERV_TWO_HOST}
+    ...  port=${LITESERV_TWO_PORT}
+
+    ${num_docs} =  Set Variable If
+    ...  "${PROFILE}" == "sanity"   ${10}
+    ...  "${PROFILE}" == "nightly"  ${500}
+    ...  "${PROFILE}" == "release"  ${10000}
+    Set Test Variable  ${num_docs}
 
     Set Test Variable  ${ls_url_net}
     Set Test Variable  ${ls_url_droid}
@@ -96,10 +94,8 @@ Setup Test
 Teardown Test
     Delete Databases  ${ls_url_net}
     Delete Databases  ${ls_url_droid}
-    Shutdown LiteServ
-    ...  platform=${NET_PLATFORM}
-    Shutdown LiteServ
-    ...  platform=${DROID_PLATFORM}
+    Shutdown LiteServ  platform=${LITESERV_ONE_PLATFORM}
+    Shutdown LiteServ  platform=${LITESERV_TWO_PLATFORM}
 
 
 

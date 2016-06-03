@@ -10,8 +10,6 @@ Library           OperatingSystem
 Library           ${KEYWORDS}/Async.py
 Library           ${KEYWORDS}/MobileRestClient.py
 Library           ${KEYWORDS}/LiteServ.py
-...                 platform=${PLATFORM}
-...                 version_build=${LITESERV_VERSION}
 
 Library           ${KEYWORDS}/SyncGateway.py
 Library           ${KEYWORDS}/CouchbaseServer.py
@@ -51,7 +49,7 @@ Client to Sync Gateway Complex Replication With Revs Limit
     ...  22. Delete Server bucket
     ...  23. Delete LiteServ db
     [Tags]           sanity     listener    ${PLATFORM}    syncgateway
-    #[Timeout]        5 minutes
+    [Timeout]        5 minutes
 
     Log  Using LiteServ: ${ls_url}
     Log  Using Sync Gateway: ${sg_url}
@@ -129,6 +127,8 @@ Client to Sync Gateway Complex Replication With Revs Limit
 *** Keywords ***
 Setup Test
     ${ls_url} =  Start LiteServ
+    ...  platform=${PLATFORM}
+    ...  version=${LITESERV_VERSION}
     ...  host=${LITESERV_HOST}
     ...  port=${LITESERV_PORT}
 
@@ -156,7 +156,7 @@ Setup Test
 
 Teardown Test
     Delete Databases  ${ls_url}
-    Shutdown LiteServ
+    Shutdown LiteServ  platform=${PLATFORM}
     Stop Sync Gateway  url=${sg_url}
     Run Keyword If Test Failed  Fetch And Analyze Logs  ${TEST_NAME}
 

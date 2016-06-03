@@ -22,52 +22,75 @@ def version_and_build(full_version):
 
 class LiteServ:
 
-    def __init__(self, platform, version_build):
+    def __init__(self):
+        self._session = Session()
+
+    def get_download_package_name(self, platform, version_build):
+
+        if platform == "macosx":
+            package = "couchbase-lite-macosx-enterprise_{}.zip".format(version_build)
+        elif platform == "android":
+            package = "couchbase-lite-android-liteserv-SQLite-{}-debug.apk".format(version_build)
+        elif platform == "net":
+            package = "LiteServ.zip"
+        else:
+            raise ValueError("Unsupported platform")
+
+        logging.info("Download package: {}".format(package))
+
+        return package
+
+    def get_extracted_package_name(self, platform, version_build):
+
+        if platform == "macosx":
+            extracted_file_name = "couchbase-lite-macosx-{}".format(version_build)
+        elif platform == "android":
+            extracted_file_name = "couchbase-lite-android-liteserv-SQLite-{}-debug.apk".format(version_build)
+        elif platform == "net":
+            extracted_file_name = "couchbase-lite-net-liteserv-{}".format(version_build)
+        else:
+            raise ValueError("Unsupported platform")
+
+        logging.info("Extracted package: {}".format(extracted_file_name))
+
+        return extracted_file_name
+
+    def get_download_url(self, platform, version_build):
+        logging.info("Downloading {} LiteServ, version: {}".format(platform, version_build))
+
+        version, build = version_and_build(version_build)
+        file_name = self.get_download_package_name(platform, version_build)
+
+        if platform == "macosx":
+            if version == "1.2.0":
+                url = "{}/couchbase-lite-ios/release/{}/macosx/{}/{}".format(LATEST_BUILDS, version, version_build, file_name)
+            else:
+                url = "{}/couchbase-lite-ios/{}/macosx/{}/{}".format(LATEST_BUILDS, version, version_build, file_name)
+        elif platform == "android":
+            url = "{}/couchbase-lite-android/{}/{}/{}".format(LATEST_BUILDS, version, version_build, file_name)
+        elif platform == "net":
+            url = "{}/couchbase-lite-net/{}/{}/{}".format(LATEST_BUILDS, version, build, file_name)
+
+        logging.info("Download url: {}".format(url))
+
+        return url
+
+    def download_liteserv(self, platform, version):
 
         supported_platforms = ["macosx", "android", "net"]
         if platform not in supported_platforms:
             raise ValueError("Unsupported version of LiteServ")
 
-        self._platform = platform
-        self._version_build = version_build
+        extracted_file_name = self.get_extracted_package_name(platform, version)
 
-        if self._platform == "macosx":
-            self.extracted_file_name = "couchbase-lite-macosx-{}".format(self._version_build)
-        elif self._platform == "android":
-            self.extracted_file_name = "couchbase-lite-android-liteserv-SQLite-{}-debug.apk".format(self._version_build)
-        elif self._platform == "net":
-            # TODO package with version and build
-            self.extracted_file_name = "couchbase-lite-net-listenerconsole-{}".format(self._version_build)
-
-        self._session = Session()
-
-    def download_liteserv(self):
-
-        logging.info("{}/{}".format(BINARY_DIR, self.extracted_file_name))
-
+        logging.info("{}/{}".format(BINARY_DIR, extracted_file_name))
         # Check if package is already downloaded and return if it is preset
-        if os.path.isdir("{}/{}".format(BINARY_DIR, self.extracted_file_name)):
-            logging.info("Package exists: {}. Skipping download".format(self.extracted_file_name))
+        if os.path.isdir("{}/{}".format(BINARY_DIR, extracted_file_name)) or os.path.isfile("{}/{}".format(BINARY_DIR, extracted_file_name)):
+            logging.info("Package exists: {}. Skipping download".format(extracted_file_name))
             return
 
-        logging.info("Downloading {} LiteServ, version: {}".format(self._platform, self._version_build))
-        if self._platform == "macosx":
-            version, build = version_and_build(self._version_build)
-            file_name = "couchbase-lite-macosx-enterprise_{}.zip".format(self._version_build)
-            if version == "1.2.0":
-                url = "{}/couchbase-lite-ios/release/{}/macosx/{}/{}".format(LATEST_BUILDS, version, self._version_build, file_name)
-            else:
-                url = "{}/couchbase-lite-ios/{}/macosx/{}/{}".format(LATEST_BUILDS, version, self._version_build, file_name)
-        elif self._platform == "android":
-            # http://latestbuilds.hq.couchbase.com/couchbase-lite-android/0.0.0/0.0.0-710/
-            # https://github.com/couchbase/couchbase-lite-net/issues/639
-            version, build = version_and_build(self._version_build)
-            file_name = "couchbase-lite-android-liteserv-SQLite-{}-debug.apk".format(self._version_build)
-            url = "{}/couchbase-lite-android/{}/{}/{}".format(LATEST_BUILDS, version, self._version_build, file_name)
-            pass
-        elif self._platform == "net":
-            # TODO, requires package to be published via latestbuilds.
-            pass
+        url = self.get_download_url(platform, version)
+        file_name = self.get_download_package_name(platform, version)
 
         # Download the packages to binary directory
         print("Downloading: {}".format(url))
@@ -76,32 +99,37 @@ class LiteServ:
         with open("{}/{}".format(BINARY_DIR, file_name), "wb") as f:
             f.write(resp.content)
 
-        if self._platform != "android":
+        if platform != "android":
             # Unzip the package
             with ZipFile("{}/{}".format(BINARY_DIR, file_name)) as zip_f:
-                zip_f.extractall("{}/{}".format(BINARY_DIR, self.extracted_file_name))
+                zip_f.extractall("{}/{}".format(BINARY_DIR, extracted_file_name))
 
-            # Make binary executable
-            os.chmod("{}/{}/LiteServ".format(BINARY_DIR, self.extracted_file_name), 0755)
+            if platform == "macosx":
+                # Make binary executable
+                os.chmod("{}/{}/LiteServ".format(BINARY_DIR, extracted_file_name), 0755)
 
             # Remove .zip file
             os.remove("{}/{}".format(BINARY_DIR, file_name))
 
-    def get_liteserv_binary_path(self):
+    def get_liteserv_binary_path(self, platform, version):
 
-        if self._platform == "macosx":
-            binary_path = "{}/{}/LiteServ".format(BINARY_DIR, self.extracted_file_name)
-        elif self._platform == "net":
-            binary_path = "{}/{}/Listener.exe".format(BINARY_DIR, self.extracted_file_name)
+        extracted_file_name = self.get_extracted_package_name(platform, version)
+
+        if platform == "macosx":
+            binary_path = "{}/{}/LiteServ".format(BINARY_DIR, extracted_file_name)
+        elif platform == "net":
+            binary_path = "{}/{}/LiteServ.exe".format(BINARY_DIR, extracted_file_name)
         else:
-            raise ValueError("Unsupported standalone LiteServ binary")
+            raise ValueError("Standalone binaries only avaiable for Mac OSX and .NET")
 
         logging.info(binary_path)
         return binary_path
 
-    def install_apk(self):
+    def install_apk(self, version_build):
 
-        apk_path = "{}/{}".format(BINARY_DIR, self.extracted_file_name)
+        extracted_file_name = self.get_extracted_package_name("android", version_build)
+
+        apk_path = "{}/{}".format(BINARY_DIR, extracted_file_name)
         logging.info(apk_path)
 
         install_successful = False
@@ -136,13 +164,14 @@ class LiteServ:
         ])
         logging.info(output)
 
-    def remove_liteserv(self):
-        logging.info("Removing {} LiteServ, version: {}".format(self._platform, self._version_build))
+    def remove_liteserv(self, platform, version_build):
+        logging.info("Removing {} LiteServ, version: {}".format(platform, version_build))
         os.chdir(BINARY_DIR)
-        shutil.rmtree(self.extracted_file_name)
+        extracted_file_name = self.get_extracted_package_name(platform, version_build)
+        shutil.rmtree(extracted_file_name)
         os.chdir("../..")
 
-    def verify_liteserv_launched(self, host, port):
+    def verify_liteserv_launched(self, host, port, version_build):
 
         url = "http://{}:{}".format(host, port)
         logging.info("Verifying LiteServ running at {}".format(url))
@@ -181,18 +210,18 @@ class LiteServ:
 
         # Validate that the version launched is the expected LiteServ version
         # Mac OSX - LiteServ: 1.2.1 (build 13)
-        version, build = version_and_build(self._version_build)
+        version, build = version_and_build(version_build)
         if is_macosx:
             expected_version = "{} (build {})".format(version, build)
             assert lite_version == expected_version, "Expected version does not match actual version: Expected={}  Actual={}".format(expected_version, lite_version)
         elif is_android:
-            assert lite_version == self._version_build, "Expected version does not match actual version: Expected={}  Actual={}".format(self._version_build, lite_version)
+            assert lite_version == version_build, "Expected version does not match actual version: Expected={}  Actual={}".format(version_build, lite_version)
         elif is_net:
             running_version_parts = re.split("[ /-]", lite_version)
             version = running_version_parts[5]
             build = int(running_version_parts[6].strip("build"))
             running_version_composed = "{}-{}".format(version, build)
-            assert self._version_build == running_version_composed, "Expected version does not match actual version: Expected={}  Actual={}".format(self._version_build, running_version_composed)
+            assert version_build == running_version_composed, "Expected version does not match actual version: Expected={}  Actual={}".format(version_build, running_version_composed)
         else:
             raise ValueError("Unexpected Listener platform")
 

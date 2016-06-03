@@ -10,8 +10,7 @@ Library           OperatingSystem
 Library           ${KEYWORDS}/Async.py
 Library           ${KEYWORDS}/MobileRestClient.py
 Library           ${KEYWORDS}/LiteServ.py
-...                 platform=${PLATFORM}
-...                 version_build=${LITESERV_VERSION}
+
 
 Library           ${KEYWORDS}/SyncGateway.py
 Library           ${KEYWORDS}/CouchbaseServer.py
@@ -76,6 +75,8 @@ Replication with multiple client dbs and single sync_gateway db
 *** Keywords ***
 Setup Test
     ${ls_url} =  Start LiteServ
+    ...  platform=${PLATFORM}
+    ...  version=${LITESERV_VERSION}
     ...  host=${LITESERV_HOST}
     ...  port=${LITESERV_PORT}
 
@@ -98,7 +99,7 @@ Setup Test
 
 Teardown Test
     Delete Databases  ${ls_url}
-    Shutdown LiteServ
+    Shutdown LiteServ  platform=${PLATFORM}
     Stop Sync Gateway  url=${sg_url}
     Run Keyword If Test Failed  Fetch And Analyze Logs  ${TEST_NAME}
 
