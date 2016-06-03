@@ -1,17 +1,15 @@
-import tarfile
-import os
-import shutil
-import logging
-import time
 import re
+import os
+import json
+import logging
 
-from jinja2 import Template
 import requests
 from requests import Session
-from requests import ConnectionError
 
-from constants import *
-from utils import *
+from utils import version_is_binary
+from utils import log_r
+from utils import version_and_build
+from utils import hostname_for_url
 
 from libraries.provision.ansible_runner import AnsibleRunner
 
@@ -25,8 +23,10 @@ def get_sync_gateway_version(host):
     running_version_parts = re.split("[ /(;)]", running_version)
 
     if running_version_parts[3] == "HEAD":
+        # Example: resp_obj["version"] = Couchbase Sync Gateway/HEAD(nobranch)(e986c8a)
         running_version_formatted = running_version_parts[6]
     else:
+        # Example: resp_obj["version"] = "Couchbase Sync Gateway/1.3.0(183;bfe61c7)"
         running_version_formatted = "{}-{}".format(running_version_parts[3], running_version_parts[4])
 
     # Returns the version as 338493 commit format or 1.2.1-4 version format
@@ -130,7 +130,6 @@ class SyncGateway:
             subset=target
         )
         assert status == 0, "Could not start sync_gateway"
-
 
     def stop_sync_gateway(self, url):
         target = hostname_for_url(url)
