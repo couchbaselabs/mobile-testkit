@@ -32,7 +32,7 @@ class LiteServ:
         elif platform == "android":
             package = "couchbase-lite-android-liteserv-SQLite-{}-debug.apk".format(version_build)
         elif platform == "net":
-            raise NotImplementedError("Need .NET in CI")
+            package = "LiteServ.zip"
         else:
             raise ValueError("Unsupported platform")
 
@@ -47,7 +47,7 @@ class LiteServ:
         elif platform == "android":
             extracted_file_name = "couchbase-lite-android-liteserv-SQLite-{}-debug.apk".format(version_build)
         elif platform == "net":
-            extracted_file_name = "couchbase-lite-net-listenerconsole-{}".format(version_build)
+            extracted_file_name = "couchbase-lite-net-liteserv-{}".format(version_build)
         else:
             raise ValueError("Unsupported platform")
 
@@ -69,8 +69,7 @@ class LiteServ:
         elif platform == "android":
             url = "{}/couchbase-lite-android/{}/{}/{}".format(LATEST_BUILDS, version, version_build, file_name)
         elif platform == "net":
-            # TODO, requires package to be published via latestbuilds.
-            raise NotImplementedError("Need .NET in CI")
+            url = "{}/couchbase-lite-net/{}/{}/{}".format(LATEST_BUILDS, version, build, file_name)
 
         logging.info("Download url: {}".format(url))
 
@@ -83,6 +82,7 @@ class LiteServ:
             raise ValueError("Unsupported version of LiteServ")
 
         extracted_file_name = self.get_extracted_package_name(platform, version)
+
         logging.info("{}/{}".format(BINARY_DIR, extracted_file_name))
         # Check if package is already downloaded and return if it is preset
         if os.path.isdir("{}/{}".format(BINARY_DIR, extracted_file_name)) or os.path.isfile("{}/{}".format(BINARY_DIR, extracted_file_name)):
@@ -104,8 +104,9 @@ class LiteServ:
             with ZipFile("{}/{}".format(BINARY_DIR, file_name)) as zip_f:
                 zip_f.extractall("{}/{}".format(BINARY_DIR, extracted_file_name))
 
-            # Make binary executable
-            os.chmod("{}/{}/LiteServ".format(BINARY_DIR, extracted_file_name), 0755)
+            if platform == "macosx":
+                # Make binary executable
+                os.chmod("{}/{}/LiteServ".format(BINARY_DIR, extracted_file_name), 0755)
 
             # Remove .zip file
             os.remove("{}/{}".format(BINARY_DIR, file_name))
@@ -117,7 +118,7 @@ class LiteServ:
         if platform == "macosx":
             binary_path = "{}/{}/LiteServ".format(BINARY_DIR, extracted_file_name)
         elif platform == "net":
-            binary_path = "{}/{}/Listener.exe".format(BINARY_DIR, extracted_file_name)
+            binary_path = "{}/{}/LiteServ.exe".format(BINARY_DIR, extracted_file_name)
         else:
             raise ValueError("Standalone binaries only avaiable for Mac OSX and .NET")
 
