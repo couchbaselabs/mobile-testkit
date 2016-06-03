@@ -623,8 +623,8 @@ class MobileRestClient:
         with ThreadPoolExecutor(max_workers=100) as executor:
             future_to_url = [executor.submit(self.update_doc, url, db, doc, number_updates, auth) for doc in docs]
             for future in concurrent.futures.as_completed(future_to_url):
-                result = future.result()
-                updated_docs[result["id"]] = result["rev"]
+                update_doc_result = future.result()
+                updated_docs[update_doc_result["id"]] = update_doc_result["rev"]
 
         logging.debug("url: {} db: {} updated: {}".format(url, db, updated_docs))
         return updated_docs
