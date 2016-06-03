@@ -283,6 +283,15 @@ class MobileRestClient:
             log_r(resp)
             resp.raise_for_status()
 
+    def get_rev_generation_digest(self, rev):
+        """
+        helper function that returns a tuple of generation and digest for a revision
+        """
+        rev_parts = rev.split("-")
+        assert len(rev_parts) == 2, "Revision should have a generation and a digest"
+
+        return rev_parts[0], rev_parts[1]
+
     def verify_revs_num_for_docs(self, url, db, docs, expected_revs_per_doc, auth=None):
         for doc_id in docs:
             self.verify_revs_num(url, db, doc_id, expected_revs_per_doc, auth)
@@ -480,7 +489,11 @@ class MobileRestClient:
             }
 
 
-        parent_revision_digests = [parent_rev.split("-")[1] for parent_rev in parent_revs]
+        parent_revision_digests = []
+        for parent_rev in parent_revs:
+            generation, digest = self.get_rev_generation_digest(parent_rev)
+            parent_revision_digests.append(digest)
+
         logging.debug("parent_revision_digests: {}".format(parent_revision_digests))
 
         doc["_revisions"]["ids"].extend(parent_revision_digests)
@@ -616,7 +629,7 @@ class MobileRestClient:
         logging.debug("url: {} db: {} updated: {}".format(url, db, updated_docs))
         return updated_docs
 
-    def update_doc(self, url, db, doc_id, number_updates=1, attachment=None, auth=None):
+    def update_doc(self, url, db, doc_id, number_updates=1, attachment_name=None, auth=None):
         """
         Updates a doc on a db a number of times.
             1. GETs the doc
@@ -639,9 +652,9 @@ class MobileRestClient:
             doc["updates"] = current_update_number
             doc["_rev"] = current_rev
 
-            if attachment is not None:
+            if attachment_name is not None:
                 doc["_attachments"] = {
-                    attachment: {"data": get_attachment(attachment)}
+                    attachment_name: {"data": get_attachment(attachment_name)}
                 }
 
 
