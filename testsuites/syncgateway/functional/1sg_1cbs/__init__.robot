@@ -24,10 +24,6 @@ Suite Setup
     ...     sync_gateway_version=${SYNC_GATEWAY_VERSION}
     ...     sync_gateway_config=${SYNC_GATEWAY_CONFIG}
 
-    Verify Cluster Versions
-    ...  cluster_config=%{CLUSTER_CONFIG}
-    ...  expected_server_version=${SERVER_VERSION}
-    ...  expected_sync_gateway_version=${SYNC_GATEWAY_VERSION}
 
 Suite Teardown
     Log  Tearing down suite ...  console=True

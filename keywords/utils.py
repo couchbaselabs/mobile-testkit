@@ -18,6 +18,14 @@ def log_r(request):
     )
     logging.debug("{}".format(request.text))
 
+
+def version_is_binary(version):
+    if len(version.split(".")) > 1:
+        # ex 1.2.1 or 1.2.1-4
+        return True
+    else:
+        return False
+
 def version_and_build(full_version):
     version_parts = full_version.split("-")
     assert (len(version_parts) == 2)
