@@ -2,6 +2,7 @@
 Documentation    Common Variables / Keywords
 
 Library     Process
+Library     ${KEYWORDS}/ClusterKeywords.py
 
 *** Variables ***
 ${LIBRARIES}                libraries
