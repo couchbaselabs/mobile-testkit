@@ -34,7 +34,7 @@ Test Attachment Revpos When Ancestor Unavailable
 
     ${channels_list} =  Create List  NBC
     ${user1} =  Create User  url=${sg_url_admin}  db=${sg_db}  name=user_1  password=password  channels=${channels_list}
-    ${doc_with_att} =  Create Doc  id=att_doc  content={"sample_key": "sample_val"}  attachment=sample_text.txt  channels=${channels_list}
+    ${doc_with_att} =  Create Doc  id=att_doc  content={"sample_key": "sample_val"}  attachment_name=sample_text.txt  channels=${channels_list}
 
     ${doc_gen_1} =  Add Doc  url=${sg_url}  db=${sg_db}  doc=${doc_with_att}  auth=${user1}
     ${doc_gen_11} =  Update Doc  url=${sg_url}  db=${sg_db}  doc_id=${doc_gen_1["id"]}  number_updates=${10}  auth=${user1}
@@ -74,7 +74,7 @@ Test Attachment Revpos When Ancestor Unavailable, Active Revision doesn't share 
 
     ${doc} =  Create Doc  id=doc_1  content={"sample_key": "sample_val"}  channels=${sg_user_channels}
     ${doc_gen_1} =  Add Doc  url=${sg_url}  db=${sg_db}  doc=${doc}  auth=${sg_user_session}
-    ${doc_gen_2} =  Update Doc  url=${sg_url}  db=${sg_db}  doc_id=${doc_gen_1["id"]}  attachment=sample_text.txt  auth=${sg_user_session}
+    ${doc_gen_2} =  Update Doc  url=${sg_url}  db=${sg_db}  doc_id=${doc_gen_1["id"]}  attachment_name=sample_text.txt  auth=${sg_user_session}
     ${doc_gen_3} =  Update Doc  url=${sg_url}  db=${sg_db}  doc_id=${doc_gen_1["id"]}  auth=${sg_user_session}
     ${doc_gen_4} =  Update Doc  url=${sg_url}  db=${sg_db}  doc_id=${doc_gen_1["id"]}  auth=${sg_user_session}
 

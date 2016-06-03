@@ -419,7 +419,7 @@ class MobileRestClient:
 
         return {"id": resp_obj["id"], "rev": resp_obj["rev"]}
 
-    def add_conflict(self, url, db, doc_id, parent_revisions, new_revision, attachment=None, auth=None):
+    def add_conflict(self, url, db, doc_id, parent_revisions, new_revision, attachment_name=None, auth=None):
         """
             1. GETs the doc with id == doc_id
             2. adds a _revisions property with
@@ -474,9 +474,9 @@ class MobileRestClient:
             "start": new_revision_generation
         }
 
-        if attachment is not None:
+        if attachment_name is not None:
             doc["_attachments"] = {
-                attachment: {"data": get_attachment(attachment)}
+                attachment_name: {"data": get_attachment(attachment_name)}
             }
 
 

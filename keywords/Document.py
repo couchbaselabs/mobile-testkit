@@ -10,7 +10,7 @@ def get_attachment(name):
 
 class Document:
 
-    def create_doc(self, id, content=None, attachment=None, channels=[]):
+    def create_doc(self, id, content=None, attachment_name=None, channels=[]):
 
         if not isinstance(channels, list):
             raise ValueError("channels must be of type 'list'")
@@ -25,9 +25,9 @@ class Document:
 
         doc["channels"] = channels
 
-        if attachment is not None:
+        if attachment_name is not None:
             doc["_attachments"] = {
-                attachment: { "data": get_attachment(attachment) }
+                attachment_name: { "data": get_attachment(attachment_name) }
             }
 
         logging.debug(doc)
