@@ -2,6 +2,13 @@ import logging
 import os
 import json
 
+from robot.api.logger import console
+
+def log_info(message):
+    console(message)
+    logging.info(message)
+
+
 def log_r(request):
     logging.info("{0} {1} {2}".format(
             request.request.method,
