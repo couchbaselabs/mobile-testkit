@@ -13,6 +13,7 @@ from requests.exceptions import ConnectionError
 from constants import BINARY_DIR
 from constants import LATEST_BUILDS
 from constants import MAX_RETRIES
+from constants import RESULTS_DIR
 
 from utils import log_info
 
@@ -65,7 +66,7 @@ class LiteServ:
                 expected_binaries.append("couchbase-lite-android-liteserv-SQLite-{}-debug.apk".format(version_build))
                 expected_binaries.append("couchbase-lite-android-liteserv-ForestDB-{}-debug.apk".format(version_build))
         elif platform == "net":
-            expected_binaries.append("couchbase-lite-net-liteserv-{}/LiteServ.exe".format(version_build))
+            expected_binaries.append("couchbase-lite-net-{}-liteserv/LiteServ.exe".format(version_build))
         else:
             raise ValueError("Unsupported platform")
 
@@ -134,7 +135,14 @@ class LiteServ:
 
             if platform != "android":
                 # Unzip the package
-                directory_name = file_name.replace(".zip", "")
+                if platform == "net":
+                    # hack to get unzip the net 'LiteServ.zip' into a folder name that has the
+                    # that has more information (version, etc)
+                    # http://latestbuilds.hq.couchbase.com/couchbase-lite-net/1.3.0/41/LiteServ.zip
+                    url_parts = url.split("/")
+                    directory_name = "{}-{}-{}-liteserv".format(url_parts[3], url_parts[4], url_parts[5])
+                else:
+                    directory_name = file_name.replace(".zip", "")
                 with ZipFile("{}/{}".format(BINARY_DIR, file_name)) as zip_f:
                     zip_f.extractall("{}/{}".format(BINARY_DIR, directory_name))
 
