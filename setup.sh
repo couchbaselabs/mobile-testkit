@@ -10,14 +10,14 @@ if [[ $version == 2.7.* ]]; then
     printf "Using Python version: %s\n" $version
 else
     echo "Exiting. Make sure Python version is 2.7."
-    exit 1
+    return 1
 fi
 
 python -m virtualenv --version
 if [ $? -ne 0 ]; then
     # Install virtual env
     "You need to 'pip install virtualenv' on the machine running tests"
-    exit 1
+    return 1
 fi
 
 currentdir=`pwd`
