@@ -42,12 +42,21 @@ Start LiteServ
     [Arguments]  ${platform}  ${version}  ${host}  ${port}  ${storage_type}
     [Timeout]       1 minute
 
-    ${ls_url} =  Run Keyword If  "${platform}" == "macosx"   Start MacOSX LiteServ      version=${version}  host=${host}  port=${port}  storage_type=${storage_type}
-    ${ls_url} =  Run Keyword If  "${platform}" == "android"  Start Android LiteServ                         host=${host}  port=${port}
-    ${ls_url} =  Run Keyword If  "${platform}" == "net"      Start Net ListenerConsole  version=${version}  host=${host}  port=${port}  storage_type=${storage_type}
+    ${ls_url} =  Run Keyword If  "${platform}" == "macosx"   Start MacOSX LiteServ    version=${version}  host=${host}  port=${port}  storage_type=${storage_type}
+    ${ls_url} =  Run Keyword If  "${platform}" == "android"  Start Android LiteServ                       host=${host}  port=${port}
+    ${ls_url} =  Run Keyword If  "${platform}" == "net"      Start Net LiteServ       version=${version}  host=${host}  port=${port}  storage_type=${storage_type}
 
     ${ls_url} =  Verify LiteServ Launched  host=${host}  port=${port}  version_build=${version}
     [return]  ${ls_url}
+
+Shutdown LiteServ
+    [Documentation]   Stops LiteServ for a specific platform.
+    ...  The LiteServ binaries are located in
+    [Arguments]  ${platform}
+    [Timeout]       1 minute
+    Run Keyword If  "${platform}" == "macosx"   Shutdown MacOSX LiteServ
+    Run Keyword If  "${platform}" == "android"  Shutdown Android LiteServ
+    Run Keyword If  "${platform}" == "net"      Shutdown Net LiteServ
 
 Start MacOSX LiteServ
     [Documentation]   Starts LiteServ for MacOSX platform.
@@ -77,21 +86,17 @@ Start Android LiteServ
 
     Launch Activity  ${port}
 
-Start Net ListenerConsole
-    [Documentation]   Starts a .net ListenerConsole on a port.
+Start Net LiteServ
+    [Documentation]   Starts a .net LiteServ on a port.
     [Arguments]  ${version}  ${host}  ${port}  ${storage_type}
     [Timeout]       1 minute
     ${binary_path} =  Get LiteServ Binary Path  platform=net  version=${version}
-    Start Mono Process  ${binary_path}  ${port}
-
-Shutdown LiteServ
-    [Documentation]   Stops LiteServ for a specific platform.
-    ...  The LiteServ binaries are located in
-    [Arguments]  ${platform}
-    [Timeout]       1 minute
-    Run Keyword If  "${platform}" == "macosx"  Shutdown MacOSX LiteServ
-    Run Keyword If  "${platform}" == "android"  Shutdown Android LiteServ
-    Run Keyword If  "${platform}" == "net"  Shutdown Net ListenerConsole
+    #Start Mono Process  ${binary_path}  ${port}
+    Start Process   mono  ${binary_path}  --port\=${port}
+    ...             alias=liteserv-net
+    ...             shell=True
+    ...             stdout=${RESULTS}/${TEST_NAME}-net-liteserv-stdout.log
+    ...             stderr=${RESULTS}/${TEST_NAME}-net-liteserv-stderr.log
 
 Shutdown MacOSX LiteServ
     [Documentation]   Stops Mac OSX LiteServ.
@@ -109,8 +114,9 @@ Shutdown Android LiteServ
     Process Should Be Stopped  handle=adb-logcat
 
 
-Shutdown Net ListenerConsole
-    [Documentation]   Kills Net Listener Console Process.
+Shutdown Net LiteServ
+    [Documentation]   Stops Net LiteServ.
     ...  The LiteServ binaries are located in deps/binaries.
     [Timeout]       1 minute
-    Kill Mono Process
+    Terminate Process          handle=liteserv-net
+    Process Should Be Stopped  handle=liteserv-net

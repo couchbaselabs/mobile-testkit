@@ -284,12 +284,3 @@ class LiteServ:
         log_info("LiteServ: {} is running".format(lite_version))
 
         return url
-
-    def start_mono_process(self, path, port):
-        log_info("Starting mono process: {}".format(path))
-        self._mono_process = subprocess.Popen(["mono", path, "--port={}".format(port)])
-
-    def kill_mono_process(self):
-        self._mono_process.kill()
-        self._mono_process.wait()
-        log_info(self._mono_process.returncode)
