@@ -507,8 +507,15 @@ Although it is not necessary, the `-b debug.txt` will provide more output and st
 
 Skipping the cluster provisioning (i.e. You are writing tests and know your cluster is the topology you are expecting)
 
-`robot -b debug.txt -v SERVER_VERSION:4.1.1 -v SYNC_GATEWAY_VERSION:1.2.0-79 -v testsuites/syncgateway/functional/1sg_1ac_1cbs/1sg_1ac_1cbs.robot`
-`robot -b debug.txt -v SERVER_VERSION:4.1.1 -v SYNC_GATEWAY_VERSION:1.2.0-79 -v -t "test sync sanity" testsuites/syncgateway/functional/1sg_1ac_1cbs/1sg_1ac_1cbs.robot`
+```
+robot -b debug.txt -v SERVER_VERSION:4.1.1 -v SYNC_GATEWAY_VERSION:1.2.0-79 -v testsuites/syncgateway/functional/1sg_1ac_1cbs/1sg_1ac_1cbs.robot
+```
+
+Skipping the cluster provisioning and running a single test:
+
+```
+robot -b debug.txt -v SERVER_VERSION:4.1.1 -v SYNC_GATEWAY_VERSION:1.2.0-79 -v -t "test sync sanity" testsuites/syncgateway/functional/1sg_1ac_1cbs/1sg_1ac_1cbs.robot
+```
 
 **Running Performance Tests**
 
