@@ -14,7 +14,7 @@ ${SYNC_GATEWAY_CONFIG}  ${SYNC_GATEWAY_CONFIGS}/walrus.json
 Setup Suite
     [Documentation]  Download, install, and launch LiteServ.
     Download LiteServ  platform=${PLATFORM}  version=${LITESERV_VERSION}
-    Install LiteServ  platform-${PLATFORM}  version=${LITESERV_VERSION}
+    Install LiteServ   platform=${PLATFORM}  version=${LITESERV_VERSION}
 
     Set Environment Variable  CLUSTER_CONFIG  ${CLUSTER_CONFIGS}/1sg
     Install Sync Gateway  sync_gateway_version=${SYNC_GATEWAY_VERSION}  sync_gateway_config=${SYNC_GATEWAY_CONFIG}

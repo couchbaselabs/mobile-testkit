@@ -30,7 +30,11 @@ class LiteServ:
         if platform == "macosx":
             package = "couchbase-lite-macosx-enterprise_{}.zip".format(version_build)
         elif platform == "android":
-            package = "couchbase-lite-android-liteserv-SQLite-{}-debug.apk".format(version_build)
+            version, build = version_and_build(version_build)
+            if version == "1.2.1":
+                package = "couchbase-lite-android-liteserv-SQLite-{}-debug.apk".format(version)
+            else:
+                package = "couchbase-lite-android-liteserv-SQLite-{}-debug.apk".format(version_build)
         elif platform == "net":
             package = "LiteServ.zip"
         else:
@@ -42,10 +46,15 @@ class LiteServ:
 
     def get_extracted_package_name(self, platform, version_build):
 
+        version, build = version_and_build(version_build)
+
         if platform == "macosx":
             extracted_file_name = "couchbase-lite-macosx-{}".format(version_build)
         elif platform == "android":
-            extracted_file_name = "couchbase-lite-android-liteserv-SQLite-{}-debug.apk".format(version_build)
+            if version == "1.2.1":
+                extracted_file_name = "couchbase-lite-android-liteserv-SQLite-{}-debug.apk".format(version)
+            else:
+                extracted_file_name = "couchbase-lite-android-liteserv-SQLite-{}-debug.apk".format(version_build)
         elif platform == "net":
             extracted_file_name = "couchbase-lite-net-liteserv-{}".format(version_build)
         else:
@@ -67,7 +76,10 @@ class LiteServ:
             else:
                 url = "{}/couchbase-lite-ios/{}/macosx/{}/{}".format(LATEST_BUILDS, version, version_build, file_name)
         elif platform == "android":
-            url = "{}/couchbase-lite-android/{}/{}/{}".format(LATEST_BUILDS, version, version_build, file_name)
+            if version == "1.2.1":
+                url = "{}/couchbase-lite-android/release/{}/{}/{}".format(LATEST_BUILDS, version, version_build, file_name)
+            else:
+                url = "{}/couchbase-lite-android/{}/{}/{}".format(LATEST_BUILDS, version, version_build, file_name)
         elif platform == "net":
             url = "{}/couchbase-lite-net/{}/{}/{}".format(LATEST_BUILDS, version, build, file_name)
 
@@ -215,7 +227,11 @@ class LiteServ:
             expected_version = "{} (build {})".format(version, build)
             assert lite_version == expected_version, "Expected version does not match actual version: Expected={}  Actual={}".format(expected_version, lite_version)
         elif is_android:
-            assert lite_version == version_build, "Expected version does not match actual version: Expected={}  Actual={}".format(version_build, lite_version)
+            if version == "1.2.1":
+                # released binaries do not have a build number
+                assert lite_version == version, "Expected version does not match actual version: Expected={}  Actual={}".format(version, lite_version)
+            else:
+                assert lite_version == version_build, "Expected version does not match actual version: Expected={}  Actual={}".format(version_build, lite_version)
         elif is_net:
             running_version_parts = re.split("[ /-]", lite_version)
             version = running_version_parts[5]
