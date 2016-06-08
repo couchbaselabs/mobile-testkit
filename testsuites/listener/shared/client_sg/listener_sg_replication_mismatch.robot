@@ -80,6 +80,7 @@ Setup Test
     ...  version=${LITESERV_VERSION}
     ...  host=${LITESERV_HOST}
     ...  port=${LITESERV_PORT}
+    ...  storage_engine=${LITESERV_STORAGE_ENGINE}
 
     Set Environment Variable  CLUSTER_CONFIG  ${CLUSTER_CONFIGS}/1sg
     ${cluster_hosts} =  Get Cluster Topology  %{CLUSTER_CONFIG}

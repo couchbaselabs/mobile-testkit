@@ -7,28 +7,18 @@ from requests.exceptions import HTTPError
 import concurrent.futures
 from concurrent.futures import ThreadPoolExecutor
 
-from robot.api.logger import console
-
 from CouchbaseServer import CouchbaseServer
 from Document import get_attachment
 
 from libraries.data.doc_generators import *
-from constants import *
 
-def log_r(request):
-    info_string = "{0} {1} {2}".format(request.request.method,
-                                       request.request.url,
-                                       request.status_code)
-    logging.info(info_string)
-    console(info_string)
-    logging.debug("{0} {1}\nHEADERS = {2}\nBODY = {3}".format(
-            request.request.method,
-            request.request.url,
-            request.request.headers,
-            request.request.body,
-        )
-    )
-    logging.debug("{}".format(request.text))
+from constants import AuthType
+from constants import ServerType
+from constants import Platform
+from constants import CLIENT_REQUEST_TIMEOUT
+
+from utils import log_r
+from utils import log_info
 
 def parse_multipart_response(response):
     """
@@ -327,17 +317,67 @@ class MobileRestClient:
             expected_max_number_revs, doc_rev_ids_number
         )
 
-    def verify_doc_rev_generations(self, url, db, docs, expected_generation, auth=None):
+    def verify_docs_rev_generations(self, url, db, docs, expected_generation, auth=None):
         """
         Verify that the rev generation (rev = {generation}-{hash}) is the expected generation
         for a set of docs
         """
         for doc_id in docs:
-            doc = self.get_doc(url, db, doc_id, auth)
-            rev = doc["_rev"]
-            generation = int(rev.split("-")[0])
-            logging.debug("Found generation: {}".format(generation))
-            assert generation == expected_generation, "Expected generation: {} not found, found: {}".format(expected_generation, generation)
+            self.verify_doc_rev_generation(url, db, doc_id, expected_generation, auth)
+
+    def verify_doc_rev_generation(self, url, db, doc_id, expected_generation, auth=None):
+        """
+        Verify that the rev generation (rev = {generation}-{hash}) is the expected generation for a doc
+        """
+        doc = self.get_doc(url, db, doc_id, auth)
+        rev = doc["_rev"]
+        generation = int(rev.split("-")[0])
+        logging.debug("Found generation: {}".format(generation))
+        assert generation == expected_generation, "Expected generation: {} not found, found: {}".format(expected_generation, generation)
+
+    def verify_open_revs(self, url, db, doc_id, expected_open_revs, auth=None):
+        """
+        1. Gets a current doc for doc_id
+        2. Verifies that the /{db}/{doc_id}?open_revs=all matches that expected revisions
+        """
+
+        open_rev_resp = self.get_open_revs(url, db, doc_id, auth)
+
+        open_revs = []
+        for row in open_rev_resp:
+            logging.debug(row)
+            open_revs.append(row["ok"]["_rev"])
+
+        assert len(open_revs) == len(expected_open_revs), "Unexpected open_revisions length! Expected: {}, Actual: {}".format(len(expected_open_revs), len(open_revs))
+        assert set(open_revs) == set(expected_open_revs), "Unexpected open_revisions found! Expected: {}, Actual: {}".format(expected_open_revs, open_revs)
+        log_info("Found expected open revs.")
+
+    def get_open_revs(self, url, db, doc_id, auth=None):
+        """
+        Gets the open_revs=all for a specified doc_id.
+        Returns a parsed multipart reponse in the below format
+        {"rows" : docs}
+        """
+        # Returns multipart by default, specify json for cleaner code
+        headers = {"Accept": "application/json"}
+
+        auth_type = get_auth_type(auth)
+
+        params = {"open_revs": "all"}
+
+
+        if auth_type == AuthType.session:
+            resp = self._session.get("{}/{}/{}".format(url, db, doc_id), headers=headers, params=params, cookies=dict(SyncGatewaySession=auth[1]))
+        elif auth_type == AuthType.http_basic:
+            resp = self._session.get("{}/{}/{}".format(url, db, doc_id), headers=headers, params=params, auth=auth)
+        else:
+            resp = self._session.get("{}/{}/{}".format(url, db, doc_id), headers=headers, params=params)
+
+        log_r(resp)
+        resp.raise_for_status()
+        resp_obj = resp.json()
+
+        return resp_obj
 
     def get_doc(self, url, db, doc_id, auth=None, revs_info=False):
         """
@@ -600,7 +640,7 @@ class MobileRestClient:
                         assert resp_obj["status"] == 404, "status should be '404'"
                     elif server_type == ServerType.listener and server_platform == Platform.macosx:
                         assert "error" in resp_obj and "status" in resp_obj and "reason" in resp_obj, "Response should have an error, status, and reason"
-                        assert resp_obj["error"] == "deleted", "error should be 'deleted'"
+                        assert resp_obj["error"] == "not_found", "error should be 'not_found'"
                         assert resp_obj["status"] == 404, "status should be '404'"
                         assert resp_obj["reason"] == "deleted", "status should be '404'"
                     else:
@@ -621,7 +661,7 @@ class MobileRestClient:
         updated_docs = {}
 
         with ThreadPoolExecutor(max_workers=100) as executor:
-            future_to_url = [executor.submit(self.update_doc, url, db, doc, number_updates, auth) for doc in docs]
+            future_to_url = [executor.submit(self.update_doc, url, db, doc, number_updates, auth=auth) for doc in docs]
             for future in concurrent.futures.as_completed(future_to_url):
                 update_doc_result = future.result()
                 updated_docs[update_doc_result["id"]] = update_doc_result["rev"]

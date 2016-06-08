@@ -40,7 +40,7 @@ Test Attachments on Docs Rejected By Sync Function
     ...  url=${sg_url}  db=${sg_db}  number=${100}  id_prefix=sg_db  channels=${sg_user_channels}  auth=${sg_user_session}
 
     # Create doc with attachment and push to sync_gateway
-    ${doc_with_att} =  Create Doc  id=att_doc  content={"sample_key": "sample_val"}  attachment=sample_text.txt  channels=${sg_user_channels}
+    ${doc_with_att} =  Create Doc  id=att_doc  content={"sample_key": "sample_val"}  attachment_name=sample_text.txt  channels=${sg_user_channels}
     Run Keyword And Expect Error  ${expected_error}  Add Doc
     ...  url=${sg_url}  db=${sg_db}  doc=${doc_with_att}  auth=${sg_user_session}
 
@@ -51,8 +51,6 @@ Test Attachments on Docs Rejected By Sync Function
 
 *** Keywords ***
 Setup Test
-
-
 
     Log  Using cluster %{CLUSTER_CONFIG}  console=True
 

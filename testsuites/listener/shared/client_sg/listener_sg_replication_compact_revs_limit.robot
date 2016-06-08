@@ -98,8 +98,8 @@ Client to Sync Gateway Complex Replication With Revs Limit
     Delete Conflicts  url=${ls_url}  db=${ls_db}  docs=${ls_db_docs}
 
     ${expected_generation} =  Evaluate  ${num_revs}+${1}
-    Verify Doc Rev Generations  url=${ls_url}  db=${ls_db}  docs=${ls_db_docs}  expected_generation=${expected_generation}
-    Verify Doc Rev Generations  url=${sg_url}  db=${sg_db}  docs=${ls_db_docs}  expected_generation=${expected_generation}  auth=${sg_session}
+    Verify Docs Rev Generations  url=${ls_url}  db=${ls_db}  docs=${ls_db_docs}  expected_generation=${expected_generation}
+    Verify Docs Rev Generations  url=${sg_url}  db=${sg_db}  docs=${ls_db_docs}  expected_generation=${expected_generation}  auth=${sg_session}
 
     Delete Docs  url=${ls_url}  db=${ls_db}  docs=${ls_db_docs}
     Verify Docs Deleted  url=${ls_url}  db=${ls_db}  docs=${ls_db_docs}
@@ -114,7 +114,7 @@ Client to Sync Gateway Complex Replication With Revs Limit
     Verify Max Revs Num For Docs  url=${ls_url}  db=${ls_db}  docs=${ls_db_docs}  expected_max_number_revs_per_doc=${expected_revs}
 
     ${expected_generation} =  Evaluate  ${num_revs}*${2}+${3}
-    Verify Doc Rev Generations  url=${ls_url}  db=${ls_db}  docs=${ls_db_docs}  expected_generation=${expected_generation}
+    Verify Docs Rev Generations  url=${ls_url}  db=${ls_db}  docs=${ls_db_docs}  expected_generation=${expected_generation}
 
     Compact Database  url=${ls_url}  db=${ls_db}
 
@@ -132,6 +132,7 @@ Setup Test
     ...  version=${LITESERV_VERSION}
     ...  host=${LITESERV_HOST}
     ...  port=${LITESERV_PORT}
+    ...  storage_engine=${LITESERV_STORAGE_ENGINE}
 
     Set Environment Variable  CLUSTER_CONFIG  ${CLUSTER_CONFIGS}/1sg
     ${cluster_hosts} =  Get Cluster Topology  %{CLUSTER_CONFIG}

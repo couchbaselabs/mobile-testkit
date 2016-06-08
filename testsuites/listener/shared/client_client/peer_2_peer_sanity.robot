@@ -75,12 +75,14 @@ Setup Test
     ...  version=${LITESERV_ONE_VERSION}
     ...  host=${LITESERV_ONE_HOST}
     ...  port=${LITESERV_ONE_PORT}
+    ...  storage_engine=${LITESERV_ONE_STORAGE_ENGINE}
 
      ${ls_url_droid} =  Start LiteServ
     ...  platform=${LITESERV_TWO_PLATFORM}
     ...  version=${LITESERV_TWO_VERSION}
     ...  host=${LITESERV_TWO_HOST}
     ...  port=${LITESERV_TWO_PORT}
+    ...  storage_engine=${LITESERV_TWO_STORAGE_ENGINE}
 
     ${num_docs} =  Set Variable If
     ...  "${PROFILE}" == "sanity"   ${10}
