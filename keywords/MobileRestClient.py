@@ -7,28 +7,18 @@ from requests.exceptions import HTTPError
 import concurrent.futures
 from concurrent.futures import ThreadPoolExecutor
 
-from robot.api.logger import console
-
 from CouchbaseServer import CouchbaseServer
 from Document import get_attachment
 
 from libraries.data.doc_generators import *
-from constants import *
 
-def log_r(request):
-    info_string = "{0} {1} {2}".format(request.request.method,
-                                       request.request.url,
-                                       request.status_code)
-    logging.info(info_string)
-    console(info_string)
-    logging.debug("{0} {1}\nHEADERS = {2}\nBODY = {3}".format(
-            request.request.method,
-            request.request.url,
-            request.request.headers,
-            request.request.body,
-        )
-    )
-    logging.debug("{}".format(request.text))
+from constants import AuthType
+from constants import ServerType
+from constants import Platform
+from constants import CLIENT_REQUEST_TIMEOUT
+
+from utils import log_r
+from utils import log_info
 
 def parse_multipart_response(response):
     """
@@ -338,6 +328,33 @@ class MobileRestClient:
             generation = int(rev.split("-")[0])
             logging.debug("Found generation: {}".format(generation))
             assert generation == expected_generation, "Expected generation: {} not found, found: {}".format(expected_generation, generation)
+
+    def verify_open_revs(self, url, db, doc_id, expected_open_revs, auth=None):
+        rows = self.get_open_revs(url, db, doc_id, auth)
+        log_info(rows)
+
+    def get_open_revs(self, url, db, doc_id, auth=None):
+        """
+        Gets the open_revs=all for a specified doc_id.
+        Returns a parsed multipart reponse in the below format
+        {"rows" : docs}
+        """
+
+        auth_type = get_auth_type(auth)
+
+        params = {"open_revs": "all"}
+
+        if auth_type == AuthType.session:
+            resp = self._session.get("{}/{}/{}".format(url, db, doc_id), params=params, cookies=dict(SyncGatewaySession=auth[1]))
+        elif auth_type == AuthType.http_basic:
+            resp = self._session.get("{}/{}/{}".format(url, db, doc_id), params=params, auth=auth)
+        else:
+            resp = self._session.get("{}/{}/{}".format(url, db, doc_id), params=params)
+
+        log_r(resp)
+
+        rows = parse_multipart_response(resp)
+        return rows
 
     def get_doc(self, url, db, doc_id, auth=None, revs_info=False):
         """
