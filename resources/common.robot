@@ -62,7 +62,7 @@ Start MacOSX LiteServ
     [Documentation]   Starts LiteServ for MacOSX platform.
     ...  The LiteServ binaries are located in deps/.
     [Arguments]  ${version}  ${host}  ${port}  ${storage_type}
-    #[Timeout]       1 minute
+    [Timeout]       1 minute
     ${binary_path} =  Get LiteServ Binary Path  platform=macosx  version=${version}
     Start Process   ${binary_path}  --port  ${port}  --storage  ${storage_type}
     ...             -Log  YES  -LogSync  YES  -LogCBLRouter  YES  -LogSyncVerbose  YES  -LogRemoteRequest  YES
@@ -88,10 +88,10 @@ Start Android LiteServ
 
 Start Net LiteServ
     [Documentation]   Starts a .net LiteServ on a port.
+    ...  The LiteServ binaries are located in deps/.
     [Arguments]  ${version}  ${host}  ${port}  ${storage_type}
     [Timeout]       1 minute
     ${binary_path} =  Get LiteServ Binary Path  platform=net  version=${version}
-    #Start Mono Process  ${binary_path}  ${port}
     Start Process   mono  ${binary_path}  --port\=${port}
     ...             alias=liteserv-net
     ...             shell=True
