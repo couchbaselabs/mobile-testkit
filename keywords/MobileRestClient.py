@@ -600,7 +600,7 @@ class MobileRestClient:
                         assert resp_obj["status"] == 404, "status should be '404'"
                     elif server_type == ServerType.listener and server_platform == Platform.macosx:
                         assert "error" in resp_obj and "status" in resp_obj and "reason" in resp_obj, "Response should have an error, status, and reason"
-                        assert resp_obj["error"] == "deleted", "error should be 'deleted'"
+                        assert resp_obj["error"] == "not_found", "error should be 'not_found'"
                         assert resp_obj["status"] == 404, "status should be '404'"
                         assert resp_obj["reason"] == "deleted", "status should be '404'"
                     else:
