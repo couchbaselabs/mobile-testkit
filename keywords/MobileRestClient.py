@@ -317,21 +317,43 @@ class MobileRestClient:
             expected_max_number_revs, doc_rev_ids_number
         )
 
-    def verify_doc_rev_generations(self, url, db, docs, expected_generation, auth=None):
+    def verify_docs_rev_generations(self, url, db, docs, expected_generation, auth=None):
         """
         Verify that the rev generation (rev = {generation}-{hash}) is the expected generation
         for a set of docs
         """
         for doc_id in docs:
-            doc = self.get_doc(url, db, doc_id, auth)
-            rev = doc["_rev"]
-            generation = int(rev.split("-")[0])
-            logging.debug("Found generation: {}".format(generation))
-            assert generation == expected_generation, "Expected generation: {} not found, found: {}".format(expected_generation, generation)
+            self.verify_doc_rev_generation(url, db, doc_id, expected_generation, auth)
+
+    def verify_doc_rev_generation(self, url, db, doc_id, expected_generation, auth=None):
+        """
+        Verify that the rev generation (rev = {generation}-{hash}) is the expected generation for a doc
+        """
+        doc = self.get_doc(url, db, doc_id, auth)
+        rev = doc["_rev"]
+        generation = int(rev.split("-")[0])
+        logging.debug("Found generation: {}".format(generation))
+        assert generation == expected_generation, "Expected generation: {} not found, found: {}".format(expected_generation, generation)
 
     def verify_open_revs(self, url, db, doc_id, expected_open_revs, auth=None):
-        rows = self.get_open_revs(url, db, doc_id, auth)
-        log_info(rows)
+        """
+        1. Gets a current doc for doc_id
+        2. Verifies that the /{db}/{doc_id}?open_revs=all matches that expected revisions
+        """
+
+        server_type = self.get_server_type(url)
+        open_rev_resp = self.get_open_revs(url, db, doc_id, auth)
+
+        open_revs = []
+        for row in open_rev_resp["rows"]:
+            log_info(row)
+            if server_type == ServerType.listener:
+                open_revs.append(row["ok"]["_rev"])
+            else:
+                open_revs.append(row["_rev"])
+
+        assert open_revs == expected_open_revs, "Unexpected open_revisions found! Expected: {}, Actual: {}".format(expected_open_revs, open_revs)
+        log_info("Found expected open revs.")
 
     def get_open_revs(self, url, db, doc_id, auth=None):
         """
@@ -353,7 +375,7 @@ class MobileRestClient:
 
         log_r(resp)
 
-        rows = parse_multipart_response(resp)
+        rows = parse_multipart_response(resp.text)
         return rows
 
     def get_doc(self, url, db, doc_id, auth=None, revs_info=False):

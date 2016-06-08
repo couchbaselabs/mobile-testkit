@@ -55,17 +55,24 @@ Verify Open Revs With Revs Limit Push Conflict
     ${sg_docs_update} =  Update Docs  url=${sg_url}  db=${sg_db}  docs=${ls_db_docs}  number_updates=${num_revs}  auth=${sg_session}
     ${ls_db_docs_update} =   Update Docs  url=${ls_url}  db=${ls_db}  docs=${ls_db_docs}  number_updates=${num_revs}
 
+    Wait For Replication Status Idle  url=${ls_url}  replication_id=${repl1}
+
     ${sg_current_doc} =  Get Doc  url=${sg_url}  db=${sg_db}  doc_id=ls_db_2  auth=${sg_session}
     ${ls_current_doc} =  Get Doc  url=${ls_url}  db=${ls_db}  doc_id=ls_db_2
 
     Log  ${sg_current_doc}
     Log  ${ls_current_doc}
 
-    # TODO: Verify that ls has one open rev with generation 100
-    Verify Open Revs  url=${ls_url}  db=${ls_db}  doc_id=${ls_current_doc}  expected_open_revs=None
+    Verify Doc Rev Generation  url=${ls_url}  db=${ls_db}  doc_id=${ls_current_doc["_id"]}  expected_generation=${101}
+    Verify Doc Rev Generation  url=${sg_url}  db=${sg_db}  doc_id=${sg_current_doc["_id"]}  expected_generation=${101}  auth=${sg_session}
 
+    # TODO: Verify that ls has one open rev with generation 100
+    ${expected_ls_revs} =  Create List  ${ls_current_doc["_rev"]}
+    Verify Open Revs  url=${ls_url}  db=${ls_db}  doc_id=${ls_current_doc["_id"]}  expected_open_revs=${expected_ls_revs}
+
+    ${expected_sg_revs} =  Create List  ${ls_current_doc["_rev"]}  ${sg_current_doc["_rev"]}
     # TODO: Verify that sync_gateway has 2 open revs, one is the liteserv, 1 is sync_gateway
-    Verify Open Revc  url=${sg_url_admin}  db=${sg_db}  doc_id=${sg_current_doc}  expected_open_revs=None
+    Verify Open Revs  url=${sg_url_admin}  db=${sg_db}  doc_id=${sg_current_doc["_id"]}  expected_open_revs=${expected_sg_revs}
 
 
 *** Keywords ***
@@ -84,17 +91,8 @@ Setup Test
     Set Test Variable  ${sg_url}        ${cluster_hosts["sync_gateways"][0]["public"]}
     Set Test Variable  ${sg_url_admin}  ${cluster_hosts["sync_gateways"][0]["admin"]}
 
-    ${num_docs} =  Set Variable If
-    ...  "${PROFILE}" == "sanity"   ${10}
-    ...  "${PROFILE}" == "nightly"  ${100}
-    ...  "${PROFILE}" == "release"  ${1000}
-    Set Test Variable  ${num_docs}
-
-    ${num_revs} =  Set Variable If
-    ...  "${PROFILE}" == "sanity"   ${100}
-    ...  "${PROFILE}" == "nightly"  ${1000}
-    ...  "${PROFILE}" == "release"  ${10000}
-    Set Test Variable  ${num_revs}
+    Set Test Variable  ${num_docs}  ${10}
+    Set Test Variable  ${num_revs}  ${100}
 
     Stop Sync Gateway  url=${sg_url}
     Start Sync Gateway  url=${sg_url}  config=${SYNC_GATEWAY_CONFIGS}/walrus-revs-limit.json
