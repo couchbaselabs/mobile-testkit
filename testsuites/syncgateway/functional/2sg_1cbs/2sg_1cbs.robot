@@ -21,7 +21,6 @@ Test Timeout    10 minutes
 *** Variables ***
 ${CLUSTER_CONFIG}           ${CLUSTER_CONFIGS}/2sg_1cbs
 ${SYNC_GATEWAY_CONFIG}      ${SYNC_GATEWAY_CONFIGS}/sync_gateway_default_functional_tests_cc.json
-${PROVISION_CLUSTER}        True
 
 *** Test Cases ***
 # Cluster has been setup
@@ -84,11 +83,10 @@ Suite Setup
     Log  Setting up suite ...  console=True
     Set Environment Variable  CLUSTER_CONFIG  ${CLUSTER_CONFIG}
 
-    Run Keyword If  ${PROVISION_CLUSTER}
-    ...  Provision Cluster
-    ...     server_version=${SERVER_VERSION}
-    ...     sync_gateway_version=${SYNC_GATEWAY_VERSION}
-    ...     sync_gateway_config=${SYNC_GATEWAY_CONFIG}
+    Provision Cluster
+    ...  server_version=${SERVER_VERSION}
+    ...  sync_gateway_version=${SYNC_GATEWAY_VERSION}
+    ...  sync_gateway_config=${SYNC_GATEWAY_CONFIG}
 
 
 Suite Teardown

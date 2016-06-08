@@ -345,7 +345,7 @@ class MobileRestClient:
 
         open_revs = []
         for row in open_rev_resp:
-            log_info(row)
+            logging.debug(row)
             open_revs.append(row["ok"]["_rev"])
 
         assert len(open_revs) == len(expected_open_revs), "Unexpected open_revisions length! Expected: {}, Actual: {}".format(len(expected_open_revs), len(open_revs))

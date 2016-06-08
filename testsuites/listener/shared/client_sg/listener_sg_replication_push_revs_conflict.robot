@@ -66,12 +66,10 @@ Verify Open Revs With Revs Limit Push Conflict
     Verify Doc Rev Generation  url=${ls_url}  db=${ls_db}  doc_id=${ls_current_doc["_id"]}  expected_generation=${101}
     Verify Doc Rev Generation  url=${sg_url}  db=${sg_db}  doc_id=${sg_current_doc["_id"]}  expected_generation=${101}  auth=${sg_session}
 
-    # TODO: Verify that ls has one open rev with generation 100
     ${expected_ls_revs} =  Create List  ${ls_current_doc["_rev"]}
     Verify Open Revs  url=${ls_url}  db=${ls_db}  doc_id=${ls_current_doc["_id"]}  expected_open_revs=${expected_ls_revs}
 
     ${expected_sg_revs} =  Create List  ${ls_current_doc["_rev"]}  ${sg_current_doc["_rev"]}
-    # TODO: Verify that sync_gateway has 2 open revs, one is the liteserv, 1 is sync_gateway
     Verify Open Revs  url=${sg_url_admin}  db=${sg_db}  doc_id=${sg_current_doc["_id"]}  expected_open_revs=${expected_sg_revs}
 
 
