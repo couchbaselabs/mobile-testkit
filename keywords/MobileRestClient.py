@@ -341,18 +341,15 @@ class MobileRestClient:
         2. Verifies that the /{db}/{doc_id}?open_revs=all matches that expected revisions
         """
 
-        server_type = self.get_server_type(url)
         open_rev_resp = self.get_open_revs(url, db, doc_id, auth)
 
         open_revs = []
-        for row in open_rev_resp["rows"]:
+        for row in open_rev_resp:
             log_info(row)
-            if server_type == ServerType.listener:
-                open_revs.append(row["ok"]["_rev"])
-            else:
-                open_revs.append(row["_rev"])
+            open_revs.append(row["ok"]["_rev"])
 
-        assert open_revs == expected_open_revs, "Unexpected open_revisions found! Expected: {}, Actual: {}".format(expected_open_revs, open_revs)
+        assert len(open_revs) == len(expected_open_revs), "Unexpected open_revisions length! Expected: {}, Actual: {}".format(len(expected_open_revs), len(open_revs))
+        assert set(open_revs) == set(expected_open_revs), "Unexpected open_revisions found! Expected: {}, Actual: {}".format(expected_open_revs, open_revs)
         log_info("Found expected open revs.")
 
     def get_open_revs(self, url, db, doc_id, auth=None):
@@ -361,22 +358,26 @@ class MobileRestClient:
         Returns a parsed multipart reponse in the below format
         {"rows" : docs}
         """
+        # Returns multipart by default, specify json for cleaner code
+        headers = {"Accept": "application/json"}
 
         auth_type = get_auth_type(auth)
 
         params = {"open_revs": "all"}
 
+
         if auth_type == AuthType.session:
-            resp = self._session.get("{}/{}/{}".format(url, db, doc_id), params=params, cookies=dict(SyncGatewaySession=auth[1]))
+            resp = self._session.get("{}/{}/{}".format(url, db, doc_id), headers=headers, params=params, cookies=dict(SyncGatewaySession=auth[1]))
         elif auth_type == AuthType.http_basic:
-            resp = self._session.get("{}/{}/{}".format(url, db, doc_id), params=params, auth=auth)
+            resp = self._session.get("{}/{}/{}".format(url, db, doc_id), headers=headers, params=params, auth=auth)
         else:
-            resp = self._session.get("{}/{}/{}".format(url, db, doc_id), params=params)
+            resp = self._session.get("{}/{}/{}".format(url, db, doc_id), headers=headers, params=params)
 
         log_r(resp)
+        resp.raise_for_status()
+        resp_obj = resp.json()
 
-        rows = parse_multipart_response(resp.text)
-        return rows
+        return resp_obj
 
     def get_doc(self, url, db, doc_id, auth=None, revs_info=False):
         """

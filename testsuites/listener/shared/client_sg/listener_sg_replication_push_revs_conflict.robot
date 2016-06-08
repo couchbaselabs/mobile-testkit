@@ -53,12 +53,12 @@ Verify Open Revs With Revs Limit Push Conflict
     Verify Docs Present  url=${sg_url_admin}  db=${sg_db}  expected_docs=${ls_db_docs}
 
     ${sg_docs_update} =  Update Docs  url=${sg_url}  db=${sg_db}  docs=${ls_db_docs}  number_updates=${num_revs}  auth=${sg_session}
+    ${sg_current_doc} =  Get Doc  url=${sg_url}  db=${sg_db}  doc_id=ls_db_2  auth=${sg_session}
+
     ${ls_db_docs_update} =   Update Docs  url=${ls_url}  db=${ls_db}  docs=${ls_db_docs}  number_updates=${num_revs}
+    ${ls_current_doc} =  Get Doc  url=${ls_url}  db=${ls_db}  doc_id=ls_db_2
 
     Wait For Replication Status Idle  url=${ls_url}  replication_id=${repl1}
-
-    ${sg_current_doc} =  Get Doc  url=${sg_url}  db=${sg_db}  doc_id=ls_db_2  auth=${sg_session}
-    ${ls_current_doc} =  Get Doc  url=${ls_url}  db=${ls_db}  doc_id=ls_db_2
 
     Log  ${sg_current_doc}
     Log  ${ls_current_doc}
