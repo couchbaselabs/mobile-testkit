@@ -166,7 +166,7 @@ class LiteServ:
         log_info("Launching binary: {}".format(binary_path))
         return binary_path
 
-    def install_apk(self, version_build, storage_type):
+    def install_apk(self, version_build, storage_engine):
 
         apks = self.get_expected_binary_list("android", version_build)
         found_apk = False
@@ -174,7 +174,7 @@ class LiteServ:
             # Split string to resolve the proper storage engine to install
             # ex. couchbase-lite-android-liteserv-SQLite-1.3.0-150-debug.apk
             apk_name_parts = apk.split("-")
-            if apk_name_parts[4] == storage_type:
+            if apk_name_parts[4] == storage_engine:
                 found_apk = True
                 apk_to_install = apk
                 break

@@ -32,19 +32,19 @@ Clean Cluster
 Install LiteServ
     [Documentation]   Bootstraps any installation (deploying apps, etc)
     ...  The LiteServ binaries are located in deps/.
-    [Arguments]  ${platform}  ${version}  ${storage_type}
+    [Arguments]  ${platform}  ${version}  ${storage_engine}
     [Timeout]       2 minutes
-    Run Keyword If  "${platform}" == "android"  Install Apk  ${version}  ${storage_type}  ELSE  Log  No install need
+    Run Keyword If  "${platform}" == "android"  Install Apk  ${version}  ${storage_engine}  ELSE  Log  No install need
 
 Start LiteServ
     [Documentation]   Starts LiteServ for a specific platform.
     ...  The LiteServ binaries are located in deps/.
-    [Arguments]  ${platform}  ${version}  ${host}  ${port}  ${storage_type}
+    [Arguments]  ${platform}  ${version}  ${host}  ${port}  ${storage_engine}
     [Timeout]       1 minute
 
-    ${ls_url} =  Run Keyword If  "${platform}" == "macosx"   Start MacOSX LiteServ    version=${version}  host=${host}  port=${port}  storage_type=${storage_type}
+    ${ls_url} =  Run Keyword If  "${platform}" == "macosx"   Start MacOSX LiteServ    version=${version}  host=${host}  port=${port}  storage_engine=${storage_engine}
     ${ls_url} =  Run Keyword If  "${platform}" == "android"  Start Android LiteServ                       host=${host}  port=${port}
-    ${ls_url} =  Run Keyword If  "${platform}" == "net"      Start Net LiteServ       version=${version}  host=${host}  port=${port}  storage_type=${storage_type}
+    ${ls_url} =  Run Keyword If  "${platform}" == "net"      Start Net LiteServ       version=${version}  host=${host}  port=${port}  storage_engine=${storage_engine}
 
     ${ls_url} =  Verify LiteServ Launched  host=${host}  port=${port}  version_build=${version}
     [return]  ${ls_url}
@@ -61,10 +61,10 @@ Shutdown LiteServ
 Start MacOSX LiteServ
     [Documentation]   Starts LiteServ for MacOSX platform.
     ...  The LiteServ binaries are located in deps/.
-    [Arguments]  ${version}  ${host}  ${port}  ${storage_type}
+    [Arguments]  ${version}  ${host}  ${port}  ${storage_engine}
     [Timeout]       1 minute
     ${binary_path} =  Get LiteServ Binary Path  platform=macosx  version=${version}
-    Start Process   ${binary_path}  --port  ${port}  --storage  ${storage_type}
+    Start Process   ${binary_path}  --port  ${port}  --storage  ${storage_engine}
     ...             -Log  YES  -LogSync  YES  -LogCBLRouter  YES  -LogSyncVerbose  YES  -LogRemoteRequest  YES
     ...             alias=liteserv-ios
     ...             shell=True
@@ -89,7 +89,7 @@ Start Android LiteServ
 Start Net LiteServ
     [Documentation]   Starts a .net LiteServ on a port.
     ...  The LiteServ binaries are located in deps/.
-    [Arguments]  ${version}  ${host}  ${port}  ${storage_type}
+    [Arguments]  ${version}  ${host}  ${port}  ${storage_engine}
     [Timeout]       1 minute
     ${binary_path} =  Get LiteServ Binary Path  platform=net  version=${version}
     Start Process   mono  ${binary_path}  --port\=${port}
