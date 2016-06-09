@@ -19,7 +19,7 @@ Library           ${KEYWORDS}/Logging.py
 Test Setup        Setup Test
 Test Teardown     Teardown Test
 
-*** Variable ***
+*** Variables ***
 ${sg_db}            db
 ${sg_user_name}     sg_user
 
