@@ -1,25 +1,4 @@
 *** Settings ***
-
-*** Test Cases ***
-Stale revision should not be in the index
-    [Documentation]
-    ...  original ticket: https://github.com/couchbase/couchbase-lite-android/issues/855
-    ...  scenario:
-    ...  1. Running sync_gateway
-    ...  2. Create database and starts both push and pull replicators through client REST API
-    ...  3. Create two or more views through client REST API
-    ...  4. Add doc, and verify doc is index with current revision through client REST API
-    ...  5. Make sure document is pushed to sync gateway through sync gateway REST API
-    ...  6. Update doc with sync gateway (not client side) through sync gateway REST API
-    ...  7. Make sure updated document is pull replicated to client  through client REST API
-    ...  8. Make sure updated document is indexed through client REST API
-    ...  9. Make sure stale revision is deleted from index.  through client REST API
-    ...  10. Pass criteria
-
-*** Keywords ***
-
-
-*** Settings ***
 Documentation     A test suite containing functional tests of the Listener's
 ...               replication with sync_gateway
 
@@ -31,7 +10,7 @@ Library           OperatingSystem
 Library           ${KEYWORDS}/Async.py
 Library           ${KEYWORDS}/MobileRestClient.py
 Library           ${KEYWORDS}/LiteServ.py
-
+Library           ${KEYWORDS}/Document.py
 Library           ${KEYWORDS}/ClusterKeywords.py
 Library           ${KEYWORDS}/SyncGateway.py
 Library           ${KEYWORDS}/CouchbaseServer.py
@@ -41,6 +20,8 @@ Test Setup        Setup Test
 Test Teardown     Teardown Test
 
 *** Variables ***
+${d_doc_name}  dd
+
 
 *** Test Cases ***
 Stale revision should not be in the index
@@ -57,6 +38,27 @@ Stale revision should not be in the index
     ...  8. Make sure updated document is indexed through client REST API
     ...  9. Make sure stale revision is deleted from index.  through client REST API
     ...  10. Pass criteria
+
+    ${view} =  catenate  SEPARATOR=
+    ...  {
+    ...    "language" : "javascript",
+    ...    "views" : {
+    ...        "test_view" : {
+    ...            "map" : "function(doc, meta) { emit(doc.content, null); }"
+    ...        }
+    ...    }
+    ...  }
+
+    ${ls_db} =       Create Database  url=${ls_url}  name=ls_db
+    ${design_doc_id} =  Add Design Doc  url=${ls_url}  db=${ls_db}  name=${d_doc_name}  view=${view}
+    ${design_doc} =  Get Doc  url=${ls_url}  db=${ls_db}  doc_id=${design_doc_id}
+
+    ${doc_body} =  Create Doc  id=doc_1  content={"hi": "I should be in the view"}
+    ${doc_body_2} =  Create Doc  id=doc_2
+    ${doc} =  Add Doc  url=${ls_url}  db=${ls_db}  doc=${doc_body}
+    ${doc} =  Add Doc  url=${ls_url}  db=${ls_db}  doc=${doc_body_2}
+
+    ${rows} =  Get View  url=${ls_url}  db=${ls_db}  design_doc_id=${design_doc_id}  view_name=test_view
     Debug
 
 *** Keywords ***

@@ -963,7 +963,18 @@ class MobileRestClient:
 
             time.sleep(1)
 
+    def add_design_doc(self, url, db, name, view):
+        resp = self._session.put("{}/{}/_design/{}".format(url, db, name), data=view)
+        log_r(resp)
+        resp.raise_for_status()
 
+        resp_obj = resp.json()
 
+        return resp_obj["id"]
 
+    def get_view(self, url, db, design_doc_id, view_name):
+        resp = self._session.get("{}/{}/{}/_view/{}".format(url, db, design_doc_id, view_name))
+        log_r(resp)
+        resp.raise_for_status()
+        return resp.json()
 
