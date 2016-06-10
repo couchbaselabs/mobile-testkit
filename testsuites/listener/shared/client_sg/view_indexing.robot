@@ -89,7 +89,12 @@ Stale revision should not be in the index
 
     ${expected_docs_list} =  Create List  ${doc}  ${doc_2}
     Verify Docs Present  url=${sg_url}  db=${sg_db}  expected_docs=${expected_docs_list}  auth=${sg_session}
-    #Debug
+
+    ${updated_doc} =  Update Doc  url=${sg_url}  db=${sg_db}  doc_id=${doc["id"]}  number_updates=${10}  auth=${sg_session}
+
+    # Make sure revision sync_to client
+    # TODO update verify docs present to poll on revision as well
+    Verify Docs Present  url=${ls_url}  db=${ls_db}  expected_docs=${updated_doc}
 
 *** Keywords ***
 Setup Test
