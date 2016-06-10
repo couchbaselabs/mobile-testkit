@@ -63,7 +63,7 @@ Replication with multiple client dbs and single sync_gateway db
     ${ls_db1_docs} =  Add Docs  url=${ls_url}  db=${ls_db1}  number=${num_docs}  id_prefix=test_ls_db1
     ${ls_db2_docs} =  Add Docs  url=${ls_url}  db=${ls_db2}  number=${num_docs}  id_prefix=test_ls_db2
 
-    @{ls_db1_db2_docs} =  Create List  ${ls_db1_docs}  ${ls_db2_docs}
+    @{ls_db1_db2_docs} =  Merge  ${ls_db1_docs}  ${ls_db2_docs}
 
     Verify Docs Present  url=${ls_url}        db=${ls_db1}  expected_docs=@{ls_db1_db2_docs}
     Verify Docs Present  url=${ls_url}        db=${ls_db2}  expected_docs=@{ls_db1_db2_docs}

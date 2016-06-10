@@ -21,7 +21,8 @@ Test Teardown     Teardown Test
 
 *** Variables ***
 ${d_doc_name}  dd
-
+${sg_user_name}  sg_user
+${sg_db}  db
 
 *** Test Cases ***
 Stale revision should not be in the index
@@ -39,27 +40,56 @@ Stale revision should not be in the index
     ...  9. Make sure stale revision is deleted from index.  through client REST API
     ...  10. Pass criteria
 
+    ${sg_user_channels} =  Create List  NBC
+    ${sg_user} =     Create User  url=${sg_url_admin}  db=${sg_db}  name=${sg_user_name}  password=password  channels=${sg_user_channels}
+    ${sg_session} =  Create Session  url=${sg_url_admin}  db=${sg_db}  name=${sg_user_name}
+
     ${view} =  catenate  SEPARATOR=
     ...  {
     ...    "language" : "javascript",
     ...    "views" : {
-    ...        "test_view" : {
+    ...        "content_view" : {
     ...            "map" : "function(doc, meta) { emit(doc.content, null); }"
+    ...        },
+    ...         "update_view" : {
+    ...            "map" : "function(doc, meta) { emit(doc.updates, null); }"
     ...        }
     ...    }
     ...  }
 
     ${ls_db} =       Create Database  url=${ls_url}  name=ls_db
+
+    # Setup continuous push / pull replication from ls_db1 to sg_db
+    ${repl_push} =  Start Replication
+    ...  url=${ls_url}
+    ...  continuous=${True}
+    ...  from_db=${ls_db}
+    ...  to_url=${sg_url_admin}  to_db=${sg_db}
+
+    ${repl_pull} =  Start Replication
+    ...  url=${ls_url}
+    ...  continuous=${True}
+    ...  from_url=${sg_url_admin}  from_db=${sg_db}
+    ...  to_db=${ls_db}
+
     ${design_doc_id} =  Add Design Doc  url=${ls_url}  db=${ls_db}  name=${d_doc_name}  view=${view}
     ${design_doc} =  Get Doc  url=${ls_url}  db=${ls_db}  doc_id=${design_doc_id}
 
-    ${doc_body} =  Create Doc  id=doc_1  content={"hi": "I should be in the view"}
-    ${doc_body_2} =  Create Doc  id=doc_2
-    ${doc} =  Add Doc  url=${ls_url}  db=${ls_db}  doc=${doc_body}
-    ${doc} =  Add Doc  url=${ls_url}  db=${ls_db}  doc=${doc_body_2}
+    ${doc_body} =  Create Doc  id=doc_1  content={"hi": "I should be in the view"}  channels=${sg_user_channels}
+    ${doc_body_2} =  Create Doc  id=doc_2  channels=${sg_user_channels}
 
-    ${rows} =  Get View  url=${ls_url}  db=${ls_db}  design_doc_id=${design_doc_id}  view_name=test_view
-    Debug
+    ${doc} =  Add Doc  url=${ls_url}  db=${ls_db}  doc=${doc_body}
+    ${doc_2} =  Add Doc  url=${ls_url}  db=${ls_db}  doc=${doc_body_2}
+
+    ${content_view_rows} =  Get View  url=${ls_url}  db=${ls_db}  design_doc_id=${design_doc_id}  view_name=content_view
+    Verify View Row Num  view_response=${content_view_rows}  expected_num_rows=${1}
+
+    ${update_view_rows} =  Get View  url=${ls_url}  db=${ls_db}  design_doc_id=${design_doc_id}  view_name=update_view
+    Verify View Row Num  view_response=${update_view_rows}  expected_num_rows=${2}
+
+    ${expected_docs_list} =  Create List  ${doc}  ${doc_2}
+    Verify Docs Present  url=${sg_url}  db=${sg_db}  expected_docs=${expected_docs_list}  auth=${sg_session}
+    #Debug
 
 *** Keywords ***
 Setup Test
