@@ -49,7 +49,7 @@ Stale revision should not be in the index
     ...    "language" : "javascript",
     ...    "views" : {
     ...        "content_view" : {
-    ...            "map" : "function(doc, meta) { emit(doc.content, null); }"
+    ...            "map" : "function(doc, meta) { if (doc.content) { emit(doc._id, doc._rev); } }"
     ...        },
     ...         "update_view" : {
     ...            "map" : "function(doc, meta) { emit(doc.updates, null); }"
@@ -93,8 +93,15 @@ Stale revision should not be in the index
     ${updated_doc} =  Update Doc  url=${sg_url}  db=${sg_db}  doc_id=${doc["id"]}  number_updates=${10}  auth=${sg_session}
 
     # Make sure revision sync_to client
-    # TODO update verify docs present to poll on revision as well
     Verify Docs Present  url=${ls_url}  db=${ls_db}  expected_docs=${updated_doc}
+
+    # Verify rows is still one
+    ${content_view_rows_2} =  Get View  url=${ls_url}  db=${ls_db}  design_doc_id=${design_doc_id}  view_name=content_view
+    Verify View Row Num  view_response=${content_view_rows_2}  expected_num_rows=${1}
+
+    Verify View Contains Keys    view_response=${content_view_rows_2}  keys=${doc["id"]}
+    Verify View Contains Values  view_response=${content_view_rows_2}  values=${updated_doc["rev"]}
+
 
 *** Keywords ***
 Setup Test

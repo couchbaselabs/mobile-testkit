@@ -1017,3 +1017,24 @@ class MobileRestClient:
         logging.info("Number of total_rows: {}".format(num_total_rows))
         assert num_row_entries == expected_num_rows, "Expeced number of rows did not match number of 'rows'"
         assert num_row_entries == num_total_rows, "Expeced number of rows did not match number of 'total_rows'"
+
+    def verify_view_contains_keys(self, view_response, keys):
+        if not isinstance(keys, list):
+            keys = [keys]
+
+        logging.debug(keys)
+
+        assert len(view_response["rows"]) == len(keys), "More rows were returned than expected keys"
+        for row in view_response["rows"]:
+            assert row["key"] in keys, "Did not find expected key in view response"
+
+
+    def verify_view_contains_values(self, view_response, values):
+        if not isinstance(values, list):
+            values = [values]
+
+        logging.debug(values)
+
+        assert len(view_response["rows"]) == len(values), "More rows were returned than expected values"
+        for row in view_response["rows"]:
+            assert row["value"] in values, "Did not find expected value in view response"
