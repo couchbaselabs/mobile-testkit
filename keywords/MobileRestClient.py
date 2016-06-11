@@ -884,15 +884,21 @@ class MobileRestClient:
             # Mac OSX - {"key":"test_ls_db2_5","error":"not_found"}
             # Android - {"doc":null,"id":"test_ls_db2_5","key":"test_ls_db2_5","value":{}}
 
-            logging.error(resp_obj)
-
             all_docs_returned = True
             missing_docs = []
             for resp_doc in resp_obj["rows"]:
                 if "error" in resp_doc or ("value" in resp_doc and len(resp_doc["value"]) == 0):
+                    # Doc not found
                     missing_docs.append(resp_doc)
                     all_docs_returned = False
-                if resp_doc in expected_docs and resp_doc[]
+                elif server_type == ServerType.listener and resp_doc["value"]["rev"] != expected_doc_map[resp_doc["id"]]:
+                    # Found the doc but unexpected rev on LiteServ
+                    missing_docs.append(resp_doc)
+                    all_docs_returned = False
+                elif server_type == ServerType.syncgateway and resp_doc["_rev"] != expected_doc_map[resp_doc["_id"]]:
+                    # Found the doc but unexpected rev on LiteServ
+                    missing_docs.append(resp_doc)
+                    all_docs_returned = False
 
             logging.info("Missing Docs = {}".format(missing_docs))
             # Issue the request again, docs my still be replicating
