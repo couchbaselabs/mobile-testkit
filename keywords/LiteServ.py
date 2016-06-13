@@ -189,8 +189,6 @@ class LiteServ:
         log_info("Installing: {}".format(apk_path))
         log_info(apk_path)
 
-        logging.info("Current dir: {}".format(os.getcwd()))
-
         install_successful = False
         while not install_successful:
             output = subprocess.check_output(["adb", "install", apk_path])
