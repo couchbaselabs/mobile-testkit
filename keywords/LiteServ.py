@@ -152,9 +152,6 @@ class LiteServ:
 
                 # Remove .zip file
                 os.remove("{}/{}".format(BINARY_DIR, file_name))
-            else:
-                # make .apk installable via jenkins
-                os.chmod("{}/{}".format(BINARY_DIR, file_name), 0755)
 
     def get_liteserv_binary_path(self, platform, version):
 
