@@ -82,6 +82,12 @@ class MobileRestClient:
         self._session.headers = headers
 
     def merge(self, *doc_lists):
+        """
+        Keyword to merge multiple lists of document dictionarys into one list
+        eg. [{u'id': u'ls_db1_0'}, ...] + [{u'id': u'ls_db2_0'}, ...] => [{u'id': u'ls_db1_0'}, {u'id': u'ls_db2_0'} ...]
+        :param doc_lists: lists of document dictionaries to merge into one list
+        :return: single list of documents
+        """
         merged_list = []
         for doc_list in doc_lists:
             merged_list.extend(doc_list)
@@ -832,10 +838,10 @@ class MobileRestClient:
         a list of {id: {rev: ""}}. If the expected docs are a list, they will be converted to a single map.
         """
 
-        num_expected_docs = len(expected_docs)
-
         auth_type = get_auth_type(auth)
         server_type = self.get_server_type(url)
+
+        logging.debug(expected_docs)
 
         if isinstance(expected_docs, list):
             # Create single dictionary for comparison, will also blow up for duplicate docs with the same id
@@ -845,6 +851,8 @@ class MobileRestClient:
             expected_doc_map = {expected_docs["id"]: expected_docs["rev"]}
         else:
             raise TypeError("Verify Docs Preset expects a list or dict of expected docs")
+
+        logging.debug(expected_docs)
 
         start = time.time()
         while True:
@@ -903,7 +911,7 @@ class MobileRestClient:
             logging.info("Missing Docs = {}".format(missing_docs))
             # Issue the request again, docs my still be replicating
             if not all_docs_returned:
-                logging.info("Retrying ...")
+                logging.info("Retrying to verify all docs are present ...")
                 time.sleep(1)
                 continue
 
@@ -995,6 +1003,9 @@ class MobileRestClient:
             time.sleep(1)
 
     def add_design_doc(self, url, db, name, view):
+        """
+        Keyword that adds a Design Doc to the database
+        """
         resp = self._session.put("{}/{}/_design/{}".format(url, db, name), data=view)
         log_r(resp)
         resp.raise_for_status()
@@ -1004,12 +1015,18 @@ class MobileRestClient:
         return resp_obj["id"]
 
     def get_view(self, url, db, design_doc_id, view_name):
+        """
+        Keyword that returns a view query for a design doc with a view name
+        """
         resp = self._session.get("{}/{}/{}/_view/{}".format(url, db, design_doc_id, view_name))
         log_r(resp)
         resp.raise_for_status()
         return resp.json()
 
     def verify_view_row_num(self, view_response, expected_num_rows):
+        """
+        Keyword that verifies the length of rows return from a view is the expected number of rows
+        """
         num_row_entries = len(view_response["rows"])
         num_total_rows = view_response["total_rows"]
         logging.info("Expected rows: {}".format(expected_num_rows))
@@ -1019,22 +1036,27 @@ class MobileRestClient:
         assert num_row_entries == num_total_rows, "Expeced number of rows did not match number of 'total_rows'"
 
     def verify_view_contains_keys(self, view_response, keys):
+        """
+        Keyword that verifies a view response contain all of the keys specified and no more than that
+        """
         if not isinstance(keys, list):
             keys = [keys]
 
         logging.debug(keys)
 
-        assert len(view_response["rows"]) == len(keys), "More rows were returned than expected keys"
+        assert len(view_response["rows"]) == len(keys), "Different number of rows were returned than expected keys"
         for row in view_response["rows"]:
             assert row["key"] in keys, "Did not find expected key in view response"
 
-
     def verify_view_contains_values(self, view_response, values):
+        """
+        Keyword that verifies a view response contain all of the values specified and no more than that
+        """
         if not isinstance(values, list):
             values = [values]
 
         logging.debug(values)
 
-        assert len(view_response["rows"]) == len(values), "More rows were returned than expected values"
+        assert len(view_response["rows"]) == len(values), "Different number of rows were returned than expected values"
         for row in view_response["rows"]:
             assert row["value"] in values, "Did not find expected value in view response"
