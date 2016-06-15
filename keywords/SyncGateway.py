@@ -22,7 +22,8 @@ def get_sync_gateway_version(host):
     running_version = resp_obj["version"]
     running_version_parts = re.split("[ /(;)]", running_version)
 
-    running_vendor_version = resp_obj["vendor"]["version"]
+    # Vendor version is parsed as a float, convert so it can be compared with full version strings
+    running_vendor_version = str(resp_obj["vendor"]["version"])
 
     if running_version_parts[3] == "HEAD":
         # Example: resp_obj["version"] = Couchbase Sync Gateway/HEAD(nobranch)(e986c8a)
@@ -38,8 +39,10 @@ def get_sync_gateway_version(host):
 def verify_sync_gateway_version(host, expected_sync_gateway_version):
     running_sg_version, running_sg_vendor_version = get_sync_gateway_version(host)
 
+
     logging.info("Expected sync_gateway Version: {}".format(expected_sync_gateway_version))
     logging.info("Running sync_gateway Version: {}".format(running_sg_version))
+    logging.info("Running sync_gateway Vendor Version: {}".format(running_sg_vendor_version))
 
     if version_is_binary(expected_sync_gateway_version):
         # Example, 1.2.1-4
