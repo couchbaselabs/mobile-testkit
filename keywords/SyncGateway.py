@@ -39,7 +39,6 @@ def get_sync_gateway_version(host):
 def verify_sync_gateway_version(host, expected_sync_gateway_version):
     running_sg_version, running_sg_vendor_version = get_sync_gateway_version(host)
 
-
     logging.info("Expected sync_gateway Version: {}".format(expected_sync_gateway_version))
     logging.info("Running sync_gateway Version: {}".format(running_sg_version))
     logging.info("Running sync_gateway Vendor Version: {}".format(running_sg_vendor_version))
