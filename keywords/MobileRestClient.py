@@ -1,6 +1,7 @@
 import logging
 import json
 import time
+import uuid
 import requests
 from requests import Session
 from requests.exceptions import HTTPError
@@ -10,7 +11,7 @@ from concurrent.futures import ThreadPoolExecutor
 from CouchbaseServer import CouchbaseServer
 from Document import get_attachment
 
-from libraries.data.doc_generators import *
+from libraries.data.doc_generators import simple
 
 from constants import AuthType
 from constants import ServerType
@@ -79,6 +80,18 @@ class MobileRestClient:
         headers = {"Content-Type": "application/json"}
         self._session = Session()
         self._session.headers = headers
+
+    def merge(self, *doc_lists):
+        """
+        Keyword to merge multiple lists of document dictionarys into one list
+        eg. [{u'id': u'ls_db1_0'}, ...] + [{u'id': u'ls_db2_0'}, ...] => [{u'id': u'ls_db1_0'}, {u'id': u'ls_db2_0'} ...]
+        :param doc_lists: lists of document dictionaries to merge into one list
+        :return: single list of documents
+        """
+        merged_list = []
+        for doc_list in doc_lists:
+            merged_list.extend(doc_list)
+        return merged_list
 
     def get_server_type(self, url):
         """
@@ -283,8 +296,8 @@ class MobileRestClient:
         return rev_parts[0], rev_parts[1]
 
     def verify_revs_num_for_docs(self, url, db, docs, expected_revs_per_doc, auth=None):
-        for doc_id in docs:
-            self.verify_revs_num(url, db, doc_id, expected_revs_per_doc, auth)
+        for doc in docs:
+            self.verify_revs_num(url, db, doc["id"], expected_revs_per_doc, auth)
 
     def verify_revs_num(self, url, db, doc_id, expected_revs_per_docs, auth=None):
         """
@@ -301,7 +314,7 @@ class MobileRestClient:
 
     def verify_max_revs_num_for_docs(self, url, db, docs, expected_max_number_revs_per_doc, auth=None):
         for doc in docs:
-            self.verify_max_revs_num(url, db, doc, expected_max_number_revs_per_doc, auth)
+            self.verify_max_revs_num(url, db, doc["id"], expected_max_number_revs_per_doc, auth)
 
     def verify_max_revs_num(self, url, db, doc_id, expected_max_number_revs, auth=None):
         """
@@ -322,8 +335,8 @@ class MobileRestClient:
         Verify that the rev generation (rev = {generation}-{hash}) is the expected generation
         for a set of docs
         """
-        for doc_id in docs:
-            self.verify_doc_rev_generation(url, db, doc_id, expected_generation, auth)
+        for doc in docs:
+            self.verify_doc_rev_generation(url, db, doc["id"], expected_generation, auth)
 
     def verify_doc_rev_generation(self, url, db, doc_id, expected_generation, auth=None):
         """
@@ -439,16 +452,13 @@ class MobileRestClient:
 
         return resp_obj
 
-    def get_docs(self, url, db, docs, auth=None):
-
-        result = {}
-        for doc in docs:
-            result["id"] = self.get_doc(url, db, doc, auth=auth)
-
-        logging.debug(result)
-        return result
-
     def add_doc(self, url, db, doc, auth=None):
+        """
+        Add a doc to a database. Either LiteServ or Sync Gateway
+
+        Returns doc dictionary:
+        {u'ok': True, u'rev': u'1-ccd39f3091bb9bb51524b97e69571f80', u'id': u'test_ls_db1_0'}
+        """
 
         logging.info(auth)
         auth_type = get_auth_type(auth)
@@ -466,7 +476,7 @@ class MobileRestClient:
         resp.raise_for_status()
         resp_obj = resp.json()
 
-        return {"id": resp_obj["id"], "rev": resp_obj["rev"]}
+        return resp_obj
 
     def add_conflict(self, url, db, doc_id, parent_revisions, new_revision, attachment_name=None, auth=None):
         """
@@ -560,27 +570,27 @@ class MobileRestClient:
         3. Loop over all the docs and assert that no more conflicts exist
         """
 
-        for doc_id in docs:
-            doc = self.get_doc(url, db, doc_id, auth)
-            if "_conflicts" in doc:
-                for rev in doc["_conflicts"]:
-                    self.delete_doc(url, db, doc_id, rev)
+        for doc in docs:
+            doc_resp = self.get_doc(url, db, doc["id"], auth)
+            if "_conflicts" in doc_resp:
+                for rev in doc_resp["_conflicts"]:
+                    self.delete_doc(url, db, doc["id"], rev)
 
         logging.info("Checkking that no _conflicts property is returned")
 
-        for doc_id in docs:
-            doc = self.get_doc(url, db, doc_id, auth)
+        for doc in docs:
+            doc_resp = self.get_doc(url, db, doc["id"], auth)
             if "_conflicts" in doc:
-                assert len(doc["_conflicts"]) == 0, "Some conflicts still present after deletion: doc={}".format(doc)
+                assert len(doc_resp["_conflicts"]) == 0, "Some conflicts still present after deletion: doc={}".format(doc)
 
     def delete_docs(self, url, db, docs, auth=None):
         """
         Deletes a set of docs with the latest revision
         """
-        for doc_id in docs:
-            doc = self.get_doc(url, db, doc_id, auth=auth)
-            latest_rev = doc["_rev"]
-            self.delete_doc(url, db, doc_id, latest_rev, auth=auth)
+        for doc in docs:
+            doc_resp = self.get_doc(url, db, doc["id"], auth=auth)
+            latest_rev = doc_resp["_rev"]
+            self.delete_doc(url, db, doc["id"], latest_rev, auth=auth)
 
     def delete_doc(self, url, db, doc_id, rev, auth=None):
         """
@@ -617,13 +627,13 @@ class MobileRestClient:
             if time.time() - start > CLIENT_REQUEST_TIMEOUT:
                 raise Exception("Verify Docs Deleted: TIMEOUT")
 
-            for doc_id in docs:
+            for doc in docs:
                 if auth_type == AuthType.session:
-                    resp = self._session.get("{}/{}/{}".format(url, db, doc_id), cookies=dict(SyncGatewaySession=auth[1]))
+                    resp = self._session.get("{}/{}/{}".format(url, db, doc["id"]), cookies=dict(SyncGatewaySession=auth[1]))
                 elif auth_type == AuthType.http_basic:
-                    resp = self._session.get("{}/{}/{}".format(url, db, doc_id), auth=auth)
+                    resp = self._session.get("{}/{}/{}".format(url, db, doc["id"]), auth=auth)
                 else:
-                    resp = self._session.get("{}/{}/{}".format(url, db, doc_id))
+                    resp = self._session.get("{}/{}/{}".format(url, db, doc["id"]))
                 log_r(resp)
                 resp_obj = resp.json()
 
@@ -658,13 +668,13 @@ class MobileRestClient:
 
     def update_docs(self, url, db, docs, number_updates, auth=None):
 
-        updated_docs = {}
+        updated_docs = []
 
-        with ThreadPoolExecutor(max_workers=100) as executor:
-            future_to_url = [executor.submit(self.update_doc, url, db, doc, number_updates, auth=auth) for doc in docs]
+        with ThreadPoolExecutor(max_workers=2) as executor:
+            future_to_url = [executor.submit(self.update_doc, url, db, doc["id"], number_updates, auth=auth) for doc in docs]
             for future in concurrent.futures.as_completed(future_to_url):
                 update_doc_result = future.result()
-                updated_docs[update_doc_result["id"]] = update_doc_result["rev"]
+                updated_docs.append(update_doc_result)
 
         logging.debug("url: {} db: {} updated: {}".format(url, db, updated_docs))
         return updated_docs
@@ -715,11 +725,17 @@ class MobileRestClient:
             current_rev = resp_obj["rev"]
 
 
-        return {"id": resp_obj["id"], "rev": resp_obj["rev"]}
+        return resp_obj
 
     def add_docs(self, url, db, number, id_prefix, auth=None, generator=simple(), channels=None):
+        """
+        Add a 'number' of docs with a prefix 'id_prefix' using the provided generator from libraries.data.doc_generators.
+        ex. id_prefix=testdoc with a number of 3 would create 'testdoc_0', 'testdoc_1', and 'testdoc_2'
 
-        docs = {}
+        Returns list of docs with the format
+        [{u'ok': True, u'rev': u'1-ccd39f3091bb9bb51524b97e69571f80', u'id': u'test_ls_db1_0'}, ... ]
+        """
+        added_docs = []
         auth_type = get_auth_type(auth)
 
         for i in xrange(number):
@@ -740,15 +756,15 @@ class MobileRestClient:
             resp.raise_for_status()
 
             doc_obj = resp.json()
-            docs[doc_obj["id"]] = { "rev": doc_obj["rev"] }
+            added_docs.append(doc_obj)
 
         # check that the docs returned in the responses equals the expected number
-        if len(docs) != number:
+        if len(added_docs) != number:
             raise RuntimeError("Client was not able to add all docs to: {}".format(url))
 
-        logging.info(docs)
+        logging.info(added_docs)
 
-        return docs
+        return added_docs
 
     def start_replication(self, url, continuous, from_url=None, from_db=None, to_url=None, to_db=None):
 
@@ -813,7 +829,7 @@ class MobileRestClient:
                 logging.info("Replication busy. Retrying ...")
                 time.sleep(1)
 
-    def verify_docs_present(self, url, db, expected_docs):
+    def verify_docs_present(self, url, db, expected_docs, auth=None):
         """
         Verifies the expected docs are present in the database using a polling loop with
         POST _all_docs with Listener and a POST _bulk_get for sync_gateway
@@ -822,15 +838,21 @@ class MobileRestClient:
         a list of {id: {rev: ""}}. If the expected docs are a list, they will be converted to a single map.
         """
 
+        auth_type = get_auth_type(auth)
         server_type = self.get_server_type(url)
 
+        logging.debug(expected_docs)
+
         if isinstance(expected_docs, list):
-            # Create single dictionary for comparison
-            expected_doc_map = {k: v for expected_doc_dict in expected_docs for k, v in expected_doc_dict.iteritems()}
+            # Create single dictionary for comparison, will also blow up for duplicate docs with the same id
+            expected_doc_map = {expected_doc["id"]: expected_doc["rev"] for expected_doc in expected_docs}
         elif isinstance(expected_docs, dict):
-            expected_doc_map = expected_docs
+            # When expected docs is a single doc
+            expected_doc_map = {expected_docs["id"]: expected_docs["rev"]}
         else:
             raise TypeError("Verify Docs Preset expects a list or dict of expected docs")
+
+        logging.debug(expected_docs)
 
         start = time.time()
         while True:
@@ -854,7 +876,13 @@ class MobileRestClient:
                     bulk_get_body_id_list.append({"id": key})
                 bulk_get_body = {"docs": bulk_get_body_id_list}
 
-                resp = self._session.post("{}/{}/_bulk_get".format(url, db), data=json.dumps(bulk_get_body))
+                if auth_type == AuthType.session:
+                    resp = self._session.post("{}/{}/_bulk_get".format(url, db), data=json.dumps(bulk_get_body), cookies=dict(SyncGatewaySession=auth[1]))
+                elif auth_type == AuthType.http_basic:
+                    resp = self._session.post("{}/{}/_bulk_get".format(url, db), data=json.dumps(bulk_get_body), auth=auth)
+                else:
+                    resp = self._session.post("{}/{}/_bulk_get".format(url, db), data=json.dumps(bulk_get_body))
+
                 log_r(resp)
                 resp.raise_for_status()
 
@@ -863,26 +891,36 @@ class MobileRestClient:
             # See any docs were not retured
             # Mac OSX - {"key":"test_ls_db2_5","error":"not_found"}
             # Android - {"doc":null,"id":"test_ls_db2_5","key":"test_ls_db2_5","value":{}}
+
             all_docs_returned = True
             missing_docs = []
             for resp_doc in resp_obj["rows"]:
                 if "error" in resp_doc or ("value" in resp_doc and len(resp_doc["value"]) == 0):
+                    # Doc not found
+                    missing_docs.append(resp_doc)
+                    all_docs_returned = False
+                elif server_type == ServerType.listener and resp_doc["value"]["rev"] != expected_doc_map[resp_doc["id"]]:
+                    # Found the doc but unexpected rev on LiteServ
+                    missing_docs.append(resp_doc)
+                    all_docs_returned = False
+                elif server_type == ServerType.syncgateway and resp_doc["_rev"] != expected_doc_map[resp_doc["_id"]]:
+                    # Found the doc but unexpected rev on LiteServ
                     missing_docs.append(resp_doc)
                     all_docs_returned = False
 
             logging.info("Missing Docs = {}".format(missing_docs))
             # Issue the request again, docs my still be replicating
             if not all_docs_returned:
-                logging.info("Retrying ...")
+                logging.info("Retrying to verify all docs are present ...")
                 time.sleep(1)
                 continue
 
             resp_docs = {}
             for resp_doc in resp_obj["rows"]:
                 if server_type == ServerType.listener:
-                    resp_docs[resp_doc["id"]] = { "rev": resp_doc["value"]["rev"] }
+                    resp_docs[resp_doc["id"]] = resp_doc["value"]["rev"]
                 elif server_type == ServerType.syncgateway:
-                    resp_docs[resp_doc["_id"]] = {"rev": resp_doc["_rev"]}
+                    resp_docs[resp_doc["_id"]] = resp_doc["_rev"]
 
             logging.debug("Expected: {}".format(expected_doc_map))
             logging.debug("Actual: {}".format(resp_docs))
@@ -900,12 +938,13 @@ class MobileRestClient:
         """
 
         if isinstance(expected_docs, list):
-            # Create single dictionary for comparison
-            expected_doc_map = {k: v for expected_doc_dict in expected_docs for k, v in expected_doc_dict.iteritems()}
+            # Create single dictionary for comparison, will also blow up for duplicate docs with the same id
+            expected_doc_map = {expected_doc["id"]: expected_doc["rev"] for expected_doc in expected_docs}
         elif isinstance(expected_docs, dict):
-            expected_doc_map = expected_docs
+            # When expected docs is a single doc
+            expected_doc_map = {expected_docs["id"]: expected_docs["rev"]}
         else:
-            raise TypeError("Verify Docs Preset expects a list or dict of expected docs")
+            raise TypeError("Verify Docs In Changes expects a list or dict of expected docs")
 
         server_type = self.get_server_type(url)
         sequence_number_map = {}
@@ -941,7 +980,7 @@ class MobileRestClient:
                     sequence_number_map[resp_doc["seq"]] = resp_doc["id"]
                     # Check that the rev of the changes docs matches the expected docs rev
                     for resp_doc_change in resp_doc["changes"]:
-                        if resp_doc_change["rev"] == expected_doc_map[resp_doc["id"]]["rev"]:
+                        if resp_doc_change["rev"] == expected_doc_map[resp_doc["id"]]:
                             # expected doc with expected revision found in changes, cross out doc from expected docs
                             del expected_doc_map[resp_doc["id"]]
                         else:
@@ -963,7 +1002,57 @@ class MobileRestClient:
 
             time.sleep(1)
 
+    def add_design_doc(self, url, db, name, view):
+        """
+        Keyword that adds a Design Doc to the database
+        """
+        resp = self._session.put("{}/{}/_design/{}".format(url, db, name), data=view)
+        log_r(resp)
+        resp.raise_for_status()
 
+        resp_obj = resp.json()
 
+        return resp_obj["id"]
 
+    def get_view(self, url, db, design_doc_id, view_name):
+        """
+        Keyword that returns a view query for a design doc with a view name
+        """
+        resp = self._session.get("{}/{}/{}/_view/{}".format(url, db, design_doc_id, view_name))
+        log_r(resp)
+        resp.raise_for_status()
+        return resp.json()
 
+    def verify_view_row_num(self, view_response, expected_num_rows):
+        """
+        Keyword that verifies the length of rows return from a view is the expected number of rows
+        """
+        num_row_entries = len(view_response["rows"])
+        num_total_rows = view_response["total_rows"]
+        logging.info("Expected rows: {}".format(expected_num_rows))
+        logging.info("Number of row entries: {}".format(num_row_entries))
+        logging.info("Number of total_rows: {}".format(num_total_rows))
+        assert num_row_entries == expected_num_rows, "Expeced number of rows did not match number of 'rows'"
+        assert num_row_entries == num_total_rows, "Expeced number of rows did not match number of 'total_rows'"
+
+    def verify_view_contains_keys(self, view_response, keys):
+        """
+        Keyword that verifies a view response contain all of the keys specified and no more than that
+        """
+        if not isinstance(keys, list):
+            keys = [keys]
+
+        assert len(view_response["rows"]) == len(keys), "Different number of rows were returned than expected keys"
+        for row in view_response["rows"]:
+            assert row["key"] in keys, "Did not find expected key in view response"
+
+    def verify_view_contains_values(self, view_response, values):
+        """
+        Keyword that verifies a view response contain all of the values specified and no more than that
+        """
+        if not isinstance(values, list):
+            values = [values]
+
+        assert len(view_response["rows"]) == len(values), "Different number of rows were returned than expected values"
+        for row in view_response["rows"]:
+            assert row["value"] in values, "Did not find expected value in view response"
