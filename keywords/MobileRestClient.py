@@ -1042,8 +1042,6 @@ class MobileRestClient:
         if not isinstance(keys, list):
             keys = [keys]
 
-        logging.debug(keys)
-
         assert len(view_response["rows"]) == len(keys), "Different number of rows were returned than expected keys"
         for row in view_response["rows"]:
             assert row["key"] in keys, "Did not find expected key in view response"
@@ -1054,8 +1052,6 @@ class MobileRestClient:
         """
         if not isinstance(values, list):
             values = [values]
-
-        logging.debug(values)
 
         assert len(view_response["rows"]) == len(values), "Different number of rows were returned than expected values"
         for row in view_response["rows"]:
