@@ -90,7 +90,7 @@ test continuous changes parametrized 50 users 10 docs 10 revisions
 
 test continuous changes parametrized 50 user 50 docs 1000 revisions
     [Tags]   nightly
-    test continuous changes parametrized    ${SYNC_GATEWAY_CONFIGS}/sync_gateway_default_functional_tests_cc.json  ${50}  ${50}  ${1000}
+    test continuous changes parametrized    ${SYNC_GATEWAY_CONFIGS}/sync_gateway_default_functional_tests_revslimit50_cc.json  ${50}  ${50}  ${1000}
 
 test continuous changes sanity
     [Tags]   sanity
