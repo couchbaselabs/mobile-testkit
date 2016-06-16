@@ -27,7 +27,7 @@ ${sg_user_name}     sg_user
 Test Auto Prune Listener Sanity
     [Documentation]  Test to verify auto pruning is working for the listener
     [Tags]           sanity     listener    ${PLATFORM}    syncgateway
-    #[Timeout]        5 minutes
+    [Timeout]        5 minutes
 
     Log  Using LiteServ: ${ls_url}
     Log  Using Sync Gateway: ${sg_url}
@@ -53,7 +53,7 @@ Test Auto Prune Listener Keeps Confilts Sanity
     ...  5. Assert that pruned conflict is still present
     ...  6. Delete the current revision and check that a GET returns the old conflict as the current rev
     [Tags]           sanity     listener    ${PLATFORM}    syncgateway
-    #[Timeout]        5 minutes
+    [Timeout]        5 minutes
 
     Log  Using LiteServ: ${ls_url}
     Log  Using Sync Gateway: ${sg_url}
