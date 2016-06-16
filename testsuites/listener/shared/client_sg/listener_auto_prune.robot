@@ -27,7 +27,7 @@ ${sg_user_name}     sg_user
 Test Auto Prune Listener Sanity
     [Documentation]  Test to verify auto pruning is working for the listener
     [Tags]           sanity     listener    ${PLATFORM}    syncgateway
-    [Timeout]        5 minutes
+    #[Timeout]        5 minutes
 
     Log  Using LiteServ: ${ls_url}
     Log  Using Sync Gateway: ${sg_url}
@@ -53,22 +53,46 @@ Test Auto Prune Listener Keeps Confilts Sanity
     ...  5. Assert that pruned conflict is still present
     ...  6. Delete the current revision and check that a GET returns the old conflict as the current rev
     [Tags]           sanity     listener    ${PLATFORM}    syncgateway
-    [Timeout]        5 minutes
+    #[Timeout]        5 minutes
 
     Log  Using LiteServ: ${ls_url}
     Log  Using Sync Gateway: ${sg_url}
     Log  Using Sync Gateway: ${sg_url_admin}
-
 
     ${sg_user_channels} =  Create List  NBC
     ${sg_user} =     Create User  url=${sg_url_admin}  db=${sg_db}  name=${sg_user_name}  password=password  channels=${sg_user_channels}
     ${sg_session} =  Create Session  url=${sg_url_admin}  db=${sg_db}  name=${sg_user_name}
 
     ${ls_db} =       Create Database  url=${ls_url}  name=ls_db
-    ${ls_db_docs} =  Add Docs  url=${ls_url}  db=${ls_db}  number=${num_docs}  id_prefix=ls_db  channels=${sg_user_channels}
-    ${ls_db_docs_update} =   Update Docs  url=${ls_url}  db=${ls_db}  docs=${ls_db_docs}  number_updates=${num_revs}
 
-    Verify Revs Num For Docs  url=${ls_url}  db=${ls_db}  docs=${ls_db_docs}  expected_revs_per_doc=${20}
+    # Create docs with same prefix to create conflicts when the dbs complete 1 shot replication
+    ${ls_db_docs} =  Add Docs  url=${ls_url}  db=${ls_db}  number=${num_docs}  id_prefix=doc  channels=${sg_user_channels}
+    ${ls_db_docs} =  Add Docs  url=${sg_url}  db=${sg_db}  number=${num_docs}  id_prefix=doc  channels=${sg_user_channels}  auth=${sg_session}
+
+    # Setup one shot pull replication and wait for idle.
+    ${repl_id} =  Start Replication
+    ...  url=${ls_url}
+    ...  continuous=${False}
+    ...  from_url=${sg_url_admin}  from_db=${sg_db}
+    ...  to_db=${ls_db}
+
+    Wait For No Replications  url=${ls_url}
+
+    # There should now be a conflict on the client
+    ${conflicting_revs} =  Get Conflict Revs  url=${ls_url}  db=${ls_db}  doc=${ls_db_docs[0]}
+
+    # Get the doc with conflict rev
+    ${conflict_doc} =  Get Doc  url=${ls_url}  db=${ls_db}  doc_id=${ls_db_docs[0]["id"]}  rev=${conflicting_revs[0]}
+
+    # Update doc past revs limit and make sure conflict is still available
+    ${updated_doc} =  Update Doc  url=${ls_url}  db=${ls_db}  doc_id=${ls_db_docs[0]["id"]}  number_updates=${100}
+    ${conflict_doc} =  Get Doc  url=${ls_url}  db=${ls_db}  doc_id=${ls_db_docs[0]["id"]}  rev=${conflicting_revs[0]}
+
+    # Delete doc and ensure that the conflict is now the current rev
+    ${deleted_doc} =  Delete Doc  url=${ls_url}  db=${ls_db}  doc_id=${ls_db_docs[0]["id"]}  rev=${updated_doc["rev"]}
+    ${current_doc} =  Get Doc  url=${ls_url}  db=${ls_db}  doc_id=${ls_db_docs[0]["id"]}
+    Should Be Equal  ${current_doc["_rev"]}  ${conflicting_revs[0]}
+
 
 *** Keywords ***
 Setup Test
@@ -86,11 +110,10 @@ Setup Test
     Set Test Variable  ${sg_url}        ${cluster_hosts["sync_gateways"][0]["public"]}
     Set Test Variable  ${sg_url_admin}  ${cluster_hosts["sync_gateways"][0]["admin"]}
 
-    Set Test Variable  ${num_docs}  ${100}
-    Set Test Variable  ${num_revs}  ${100}
+    Set Test Variable  ${num_docs}  ${1}
 
     Stop Sync Gateway  url=${sg_url}
-    Start Sync Gateway  url=${sg_url}  config=${SYNC_GATEWAY_CONFIGS}/walrus-revs-limit.json
+    Start Sync Gateway  url=${sg_url}  config=${SYNC_GATEWAY_CONFIGS}/walrus.json
 
 Teardown Test
     Delete Databases  ${ls_url}

@@ -11,7 +11,7 @@ from concurrent.futures import ThreadPoolExecutor
 from CouchbaseServer import CouchbaseServer
 from Document import get_attachment
 
-from libraries.data.doc_generators import simple
+from libraries.data import doc_generators
 
 from constants import AuthType
 from constants import ServerType
@@ -392,7 +392,7 @@ class MobileRestClient:
 
         return resp_obj
 
-    def get_doc(self, url, db, doc_id, auth=None, revs_info=False):
+    def get_doc(self, url, db, doc_id, auth=None, rev=None, revs_info=False):
         """
         returns a dictionary with the following format:
         {
@@ -433,6 +433,9 @@ class MobileRestClient:
 
         if revs_info:
             params["revs_info"] = "true"
+
+        if rev:
+            params["rev"] = rev
 
         if auth_type == AuthType.session:
             resp = self._session.get("{}/{}/{}".format(url, db, doc_id), params=params, cookies=dict(SyncGatewaySession=auth[1]))
@@ -562,6 +565,15 @@ class MobileRestClient:
 
         return {"id": doc_id, "rev": new_revision}
 
+    def get_conflict_revs(self, url, db, doc, auth=None):
+        """
+        Keyword that return the _conflicts revs array for a doc. It expects conflicts to exist.
+        """
+        doc_resp = self.get_doc(url, db, doc["id"], auth)
+        conflict_revs = doc_resp["_conflicts"]
+        logging.debug("Conflict revs: {}".format(conflict_revs))
+        return conflict_revs
+
     def delete_conflicts(self, url, db, docs, auth=None):
         """
         Deletes all the conflicts for a dictionary of docs.
@@ -612,6 +624,9 @@ class MobileRestClient:
 
         log_r(resp)
         resp.raise_for_status()
+        resp_obj = resp.json()
+
+        return resp_obj
 
     def verify_docs_deleted(self, url, db, docs, auth=None):
 
@@ -727,7 +742,7 @@ class MobileRestClient:
 
         return resp_obj
 
-    def add_docs(self, url, db, number, id_prefix, auth=None, generator=simple(), channels=None):
+    def add_docs(self, url, db, number, id_prefix, auth=None, channels=None):
         """
         Add a 'number' of docs with a prefix 'id_prefix' using the provided generator from libraries.data.doc_generators.
         ex. id_prefix=testdoc with a number of 3 would create 'testdoc_0', 'testdoc_1', and 'testdoc_2'
@@ -740,7 +755,7 @@ class MobileRestClient:
 
         for i in xrange(number):
 
-            doc_body = generator
+            doc_body = doc_generators.simple()
             if channels is not None:
                 doc_body["channels"] = channels
 
@@ -827,6 +842,27 @@ class MobileRestClient:
                 break
             else:
                 logging.info("Replication busy. Retrying ...")
+                time.sleep(1)
+
+    def wait_for_no_replications(self, url):
+        """
+        Polls the /_active_task endpoint and wait for an empty array
+        """
+        start = time.time()
+        while True:
+            if time.time() - start > CLIENT_REQUEST_TIMEOUT:
+                raise Exception("Verify Docs Present: TIMEOUT")
+
+            resp = self._session.get("{}/_active_tasks".format(url))
+            log_r(resp)
+            resp.raise_for_status()
+            resp_obj = resp.json()
+
+            if not resp_obj:
+                # active tasks is an empty array
+                break
+            else:
+                logging.info("Replications still running. Retrying")
                 time.sleep(1)
 
     def verify_docs_present(self, url, db, expected_docs, auth=None):
