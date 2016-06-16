@@ -377,6 +377,9 @@ def test_sync_require_roles(conf):
     # Dictionary should be empty if they were blocked from pushing docs
     assert len(read_only_user_docs.items()) == 0
 
+    # wait, some changes are not instant
+    time.sleep(5)
+
     # Should recieve docs from radio_channels
     verify_changes(radio_channels_no_roles_user, expected_num_docs=expected_num_radio_docs, expected_num_revisions=0, expected_docs=all_radio_docs)
 
