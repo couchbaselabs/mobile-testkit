@@ -22,7 +22,7 @@ Suite Teardown  Suite Teardown
 
 Test Teardown   Test Teardown
 
-Test Timeout    60 minutes
+Test Timeout    30 minutes
 
 *** Variables ***
 ${CLUSTER_CONFIG}           ${CLUSTER_CONFIGS}/1sg_1ac_1cbs
@@ -46,7 +46,7 @@ test continuous changes parametrized 50 users 10 docs 10 revisions
 
 test continuous changes parametrized 50 user 50 docs 1000 revisions
     [Tags]   nightly
-    test continuous changes parametrized    ${SYNC_GATEWAY_CONFIGS}/sync_gateway_default_functional_tests_di.json  ${50}  ${50}  ${1000}
+    test continuous changes parametrized    ${SYNC_GATEWAY_CONFIGS}/sync_gateway_default_functional_tests_revslimit50_di.json  ${50}  ${50}  ${1000}
 
 test continuous changes sanity
     [Tags]   sanity
