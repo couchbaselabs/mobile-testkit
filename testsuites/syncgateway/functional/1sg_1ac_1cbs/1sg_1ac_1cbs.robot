@@ -22,7 +22,7 @@ Suite Teardown  Suite Teardown
 
 Test Teardown   Test Teardown
 
-Test Timeout    10 minutes
+Test Timeout    60 minutes
 
 *** Variables ***
 ${CLUSTER_CONFIG}           ${CLUSTER_CONFIGS}/1sg_1ac_1cbs

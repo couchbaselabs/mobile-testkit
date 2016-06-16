@@ -7,7 +7,7 @@ Library     OperatingSystem
 Suite Setup     Suite Setup
 Suite Teardown  Suite Teardown
 
-Test Timeout    10 minutes
+Test Timeout    60 minutes
 
 *** Variables ***
 ${SYNC_GATEWAY_CONFIG}      ${SYNC_GATEWAY_CONFIGS}/sync_gateway_default_functional_tests_cc.json
