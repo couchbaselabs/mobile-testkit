@@ -55,7 +55,7 @@ Verify Open Revs With Revs Limit Push Conflict
     ${sg_docs_update} =  Update Docs  url=${sg_url}  db=${sg_db}  docs=${ls_db_docs}  number_updates=${num_revs}  auth=${sg_session}
     ${sg_current_doc} =  Get Doc  url=${sg_url}  db=${sg_db}  doc_id=ls_db_2  auth=${sg_session}
 
-    ${ls_db_docs_update} =   Update Docs  url=${ls_url}  db=${ls_db}  docs=${ls_db_docs}  number_updates=${num_revs}
+    ${ls_db_docs_update} =  Update Docs  url=${ls_url}  db=${ls_db}  docs=${ls_db_docs}  number_updates=${num_revs}
     ${ls_current_doc} =  Get Doc  url=${ls_url}  db=${ls_db}  doc_id=ls_db_2
 
     Wait For Replication Status Idle  url=${ls_url}  replication_id=${repl1}
@@ -63,8 +63,8 @@ Verify Open Revs With Revs Limit Push Conflict
     Log  ${sg_current_doc}
     Log  ${ls_current_doc}
 
-    Verify Doc Rev Generation  url=${ls_url}  db=${ls_db}  doc_id=${ls_current_doc["_id"]}  expected_generation=${101}
-    Verify Doc Rev Generation  url=${sg_url}  db=${sg_db}  doc_id=${sg_current_doc["_id"]}  expected_generation=${101}  auth=${sg_session}
+    Verify Doc Rev Generation  url=${ls_url}  db=${ls_db}  doc_id=${ls_current_doc["_id"]}  expected_generation=${21}
+    Verify Doc Rev Generation  url=${sg_url}  db=${sg_db}  doc_id=${sg_current_doc["_id"]}  expected_generation=${21}  auth=${sg_session}
 
     ${expected_ls_revs} =  Create List  ${ls_current_doc["_rev"]}
     Verify Open Revs  url=${ls_url}  db=${ls_db}  doc_id=${ls_current_doc["_id"]}  expected_open_revs=${expected_ls_revs}
@@ -89,11 +89,11 @@ Setup Test
     Set Test Variable  ${sg_url}        ${cluster_hosts["sync_gateways"][0]["public"]}
     Set Test Variable  ${sg_url_admin}  ${cluster_hosts["sync_gateways"][0]["admin"]}
 
-    Set Test Variable  ${num_docs}  ${10}
-    Set Test Variable  ${num_revs}  ${100}
+    Set Test Variable  ${num_docs}  ${100}
+    Set Test Variable  ${num_revs}  ${20}
 
     Stop Sync Gateway  url=${sg_url}
-    Start Sync Gateway  url=${sg_url}  config=${SYNC_GATEWAY_CONFIGS}/walrus-revs-limit.json
+    Start Sync Gateway  url=${sg_url}  config=${SYNC_GATEWAY_CONFIGS}/walrus.json
 
 Teardown Test
     Delete Databases  ${ls_url}

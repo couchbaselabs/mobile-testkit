@@ -33,6 +33,8 @@ Test Auto Prune Listener Sanity
     Log  Using Sync Gateway: ${sg_url}
     Log  Using Sync Gateway: ${sg_url_admin}
 
+    Set Test Variable  ${num_docs}  ${100}
+    Set Test Variable  ${num_revs}  ${100}
 
     ${sg_user_channels} =  Create List  NBC
     ${sg_user} =     Create User  url=${sg_url_admin}  db=${sg_db}  name=${sg_user_name}  password=password  channels=${sg_user_channels}
@@ -58,6 +60,9 @@ Test Auto Prune Listener Keeps Confilts Sanity
     Log  Using LiteServ: ${ls_url}
     Log  Using Sync Gateway: ${sg_url}
     Log  Using Sync Gateway: ${sg_url_admin}
+
+    Set Test Variable  ${num_docs}  ${1}
+    Set Test Variable  ${num_revs}  ${100}
 
     ${sg_user_channels} =  Create List  NBC
     ${sg_user} =     Create User  url=${sg_url_admin}  db=${sg_db}  name=${sg_user_name}  password=password  channels=${sg_user_channels}
@@ -85,7 +90,7 @@ Test Auto Prune Listener Keeps Confilts Sanity
     ${conflict_doc} =  Get Doc  url=${ls_url}  db=${ls_db}  doc_id=${ls_db_docs[0]["id"]}  rev=${conflicting_revs[0]}
 
     # Update doc past revs limit and make sure conflict is still available
-    ${updated_doc} =  Update Doc  url=${ls_url}  db=${ls_db}  doc_id=${ls_db_docs[0]["id"]}  number_updates=${100}
+    ${updated_doc} =  Update Doc  url=${ls_url}  db=${ls_db}  doc_id=${ls_db_docs[0]["id"]}  number_updates=${num_revs}
     ${conflict_doc} =  Get Doc  url=${ls_url}  db=${ls_db}  doc_id=${ls_db_docs[0]["id"]}  rev=${conflicting_revs[0]}
 
     # Delete doc and ensure that the conflict is now the current rev
@@ -110,7 +115,7 @@ Setup Test
     Set Test Variable  ${sg_url}        ${cluster_hosts["sync_gateways"][0]["public"]}
     Set Test Variable  ${sg_url_admin}  ${cluster_hosts["sync_gateways"][0]["admin"]}
 
-    Set Test Variable  ${num_docs}  ${1}
+
 
     Stop Sync Gateway  url=${sg_url}
     Start Sync Gateway  url=${sg_url}  config=${SYNC_GATEWAY_CONFIGS}/walrus.json
