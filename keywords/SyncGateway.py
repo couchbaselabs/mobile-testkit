@@ -22,6 +22,9 @@ def get_sync_gateway_version(host):
     running_version = resp_obj["version"]
     running_version_parts = re.split("[ /(;)]", running_version)
 
+    # Vendor version is parsed as a float, convert so it can be compared with full version strings
+    running_vendor_version = str(resp_obj["vendor"]["version"])
+
     if running_version_parts[3] == "HEAD":
         # Example: resp_obj["version"] = Couchbase Sync Gateway/HEAD(nobranch)(e986c8a)
         running_version_formatted = running_version_parts[6]
@@ -30,19 +33,23 @@ def get_sync_gateway_version(host):
         running_version_formatted = "{}-{}".format(running_version_parts[3], running_version_parts[4])
 
     # Returns the version as 338493 commit format or 1.2.1-4 version format
-    return running_version_formatted
+    return running_version_formatted, running_vendor_version
 
 
 def verify_sync_gateway_version(host, expected_sync_gateway_version):
-    running_sg_version = get_sync_gateway_version(host)
+    running_sg_version, running_sg_vendor_version = get_sync_gateway_version(host)
 
     logging.info("Expected sync_gateway Version: {}".format(expected_sync_gateway_version))
     logging.info("Running sync_gateway Version: {}".format(running_sg_version))
+    logging.info("Running sync_gateway Vendor Version: {}".format(running_sg_vendor_version))
 
     if version_is_binary(expected_sync_gateway_version):
         # Example, 1.2.1-4
         if running_sg_version != expected_sync_gateway_version:
             raise ValueError("Unexpected sync_gateway version!! Expected: {} Actual: {}".format(expected_sync_gateway_version, running_sg_version))
+        # Running vendor version: ex. '1.2', check that the expected version start with the vendor version
+        if not expected_sync_gateway_version.startswith(running_sg_vendor_version):
+            raise ValueError("Unexpected sync_gateway vendor version!! Expected: {} Actual: {}".format(expected_sync_gateway_version, running_sg_vendor_version))
     else:
         # Since sync_gateway does not return the full commit, verify the prefix
         if running_sg_version != expected_sync_gateway_version[:7]:
