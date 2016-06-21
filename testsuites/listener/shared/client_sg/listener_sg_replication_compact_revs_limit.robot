@@ -89,11 +89,11 @@ Client to Sync Gateway Complex Replication With Revs Limit
 
     Compact Database  url=${ls_url}  db=${ls_db}
 
-    # After compaction, Mac OSX LiteServ should only have 20 revisions due to built in client revs limit
+    # Mac OSX LiteServ should only have 20 revisions due to built in client revs limit
     Verify Revs Num For Docs  url=${ls_url}  db=${ls_db}  docs=${ls_db_docs}  expected_revs_per_doc=${20}
 
-    # Sync Gateway should have 70 or 20 revisions due to the specified revs_limit in the sg config and possible conflict winners from the liteserv db
-    Verify Max Revs Num For Docs  url=${sg_url}  db=${sg_db}  docs=${ls_db_docs}  expected_max_number_revs_per_doc=${70}  auth=${sg_session}
+    # Sync Gateway should have 100 revisions due to the specified revs_limit in the sg config and possible conflict winners from the liteserv db
+    Verify Max Revs Num For Docs  url=${sg_url}  db=${sg_db}  docs=${ls_db_docs}  expected_max_number_revs_per_doc=${100}  auth=${sg_session}
 
     Delete Conflicts  url=${ls_url}  db=${ls_db}  docs=${ls_db_docs}
 
@@ -120,9 +120,11 @@ Client to Sync Gateway Complex Replication With Revs Limit
 
     Verify Revs Num For Docs  url=${ls_url}  db=${ls_db}  docs=${ls_db_docs}  expected_revs_per_doc=${20}
 
+    Delete Conflicts  url=${ls_url}  db=${ls_db}  docs=${ls_db_docs}
+
     Delete Docs  url=${ls_url}  db=${ls_db}  docs=${ls_db_docs}
-    Verify Docs Deleted  url=${sg_url_admin}  db=${sg_db}  docs=${ls_db_docs}
     Verify Docs Deleted  url=${ls_url}  db=${ls_db}  docs=${ls_db_docs}
+    Verify Docs Deleted  url=${sg_url_admin}  db=${sg_db}  docs=${ls_db_docs}
 
 
 *** Keywords ***
