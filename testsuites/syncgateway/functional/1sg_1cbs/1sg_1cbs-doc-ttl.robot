@@ -131,7 +131,7 @@ Numeric Expiry as Unix Date
     ${doc_exp_3} =  Add Doc  url=${sg_url}  db=${sg_db}  doc=${doc_exp_3_body}  auth=${sg_user_session}
     ${doc_exp_years} =  Add Doc  url=${sg_url}  db=${sg_db}  doc=${doc_exp_years_body}  auth=${sg_user_session}
 
-    Sleep  5s  reason=Sleep should allow doc_exp_3 to expire, but still be in the window to get doc_exp_10
+    Sleep  10s  reason=Sleep should allow doc_exp_3 to expire, but still be in the window to get doc_exp_10
 
     # doc_exp_3 should be expired
     Run Keyword And Expect Error  HTTPError: 404 Client Error: Not Found for url:*
@@ -150,6 +150,28 @@ String Expiry as Unix Date
     ...  3. Wait five seconds
     ...  4. Get /db/doc1.  Assert response is 404
     ...     Get /db/doc2.  Assert response is 200
+
+    ${sg_user} =     Create User  url=${sg_url_admin}  db=${sg_db}  name=${SG_USER_NAME}  password=$${SG_USER_PASSWORD}  channels=@{SG_USER_CHANNELS}
+    ${sg_user_session} =  Create Session  url=${sg_url_admin}  db=${SG_DB}  name=${SG_USER_NAME}
+
+    ${unix_time_3s_ahead} =  Get Unix Timestamp  delta=${3}
+    ${unix_time_3s_ahead_string} =  Convert To String  ${unix_time_3s_ahead}
+
+    # Using string representation for unix time
+    ${doc_exp_3_body} =  Create Doc  id=exp_3  expiry=${unix_time_3s_ahead_string}  channels=@{SG_USER_CHANNELS}
+    ${doc_exp_years_body} =  Create Doc  id=exp_10  expiry=1767225600  channels=@{SG_USER_CHANNELS}
+
+    ${doc_exp_3} =  Add Doc  url=${sg_url}  db=${sg_db}  doc=${doc_exp_3_body}  auth=${sg_user_session}
+    ${doc_exp_years} =  Add Doc  url=${sg_url}  db=${sg_db}  doc=${doc_exp_years_body}  auth=${sg_user_session}
+
+    Sleep  10s  reason=Sleep should allow doc_exp_3 to expire, but still be in the window to get doc_exp_10
+
+    # doc_exp_3 should be expired
+    Run Keyword And Expect Error  HTTPError: 404 Client Error: Not Found for url:*
+    ...  Get Doc  url=${sg_url}  db=${sg_db}  doc_id=${doc_exp_3["id"]}  auth=${sg_user_session}
+
+    # doc_exp_10 should be available still
+    ${doc_exp_years_result} =  Get Doc  url=${sg_url}  db=${sg_db}  doc_id=${doc_exp_years["id"]}  auth=${sg_user_session}
 
 
 String Expiry as ISO-8601 Date
