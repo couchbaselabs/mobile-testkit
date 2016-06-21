@@ -10,7 +10,7 @@ def get_attachment(name):
 
 class Document:
 
-    def create_doc(self, id, content=None, attachment_name=None, channels=[]):
+    def create_doc(self, id, content=None, attachment_name=None, expiry=None, channels=[]):
 
         if not isinstance(channels, list):
             raise ValueError("channels must be of type 'list'")
@@ -19,6 +19,9 @@ class Document:
 
         if id is not None:
             doc["_id"] = id
+
+        if expiry is not None:
+            doc["_exp"] = expiry
 
         if content is not None:
             doc["content"] = content

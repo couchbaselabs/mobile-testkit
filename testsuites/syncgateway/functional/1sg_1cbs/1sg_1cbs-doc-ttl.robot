@@ -49,6 +49,13 @@ Library     ${Keywords}/Document.py
 Test Setup      Setup Test
 Test Teardown   Teardown Test
 
+*** Variables ***
+${SG_DB}                db
+${SG_USER_NAME}         sg_user
+${SG_USER_PASSWORD}     p@ssw0rd
+@{SG_USER_CHANNELS}     NBC  ABC
+
+${SERVER_BUCKET}        data-bucket
 
 *** Test Cases ***
 Numeric Expiry as TTL
@@ -60,6 +67,21 @@ Numeric Expiry as TTL
     ...  3. Get /db/doc1.  Assert response is 404
     ...     Get /db/doc2.  Assert response is 200
 
+    ${sg_user} =     Create User  url=${sg_url_admin}  db=${sg_db}  name=${SG_USER_NAME}  password=$${SG_USER_PASSWORD}  channels=@{SG_USER_CHANNELS}
+    ${sg_user_session} =  Create Session  url=${sg_url_admin}  db=${SG_DB}  name=${SG_USER_NAME}
+    ${doc_exp_3_body} =  Create Doc  id=exp_3  expiry=${3}  channels=@{SG_USER_CHANNELS}
+    ${doc_exp_10_body} =  Create Doc  id=exp_10  expiry=${10}  channels=@{SG_USER_CHANNELS}
+    ${doc_exp_3} =  Add Doc  url=${sg_url}  db=${sg_db}  doc=${doc_exp_3_body}  auth=${sg_user_session}
+    ${doc_exp_10} =  Add Doc  url=${sg_url}  db=${sg_db}  doc=${doc_exp_10_body}  auth=${sg_user_session}
+
+    Sleep  5s  reason=Sleep should allow doc_exp_3 to expire, but still be in the window to get doc_exp_10
+
+    # doc_exp_3 should be expired
+    Run Keyword And Expect Error  HTTPError: 404 Client Error: Not Found for url:*
+    ...  Get Doc  url=${sg_url}  db=${sg_db}  doc_id=${doc_exp_3["id"]}  auth=${sg_user_session}
+
+    # doc_exp_10 should be available still
+    ${doc_exp_10_result} =  Get Doc  url=${sg_url}  db=${sg_db}  doc_id=${doc_exp_10["id"]}  auth=${sg_user_session}
 
 String Expiry as TTL
     [Tags]  sanity  syncgateway  ttl
@@ -142,18 +164,15 @@ Setup Test
 
     Log  Using cluster %{CLUSTER_CONFIG}  console=True
 
-    Set Test Variable  ${sg_config}  ${SYNC_GATEWAY_CONFIGS}/reject_all_cc.json
+    Set Test Variable  ${sg_config}  ${SYNC_GATEWAY_CONFIGS}/sync_gateway_default_functional_tests_cc.json
     Reset Cluster  ${sg_config}
 
     ${cluster_hosts} =  Get Cluster Topology  %{CLUSTER_CONFIG}
-    Set Test Variable  ${cluster_hosts}
 
+    Set Test Variable  ${cluster_hosts}
     Set Test Variable  ${cbs_url}       ${cluster_hosts["couchbase_servers"][0]}
     Set Test Variable  ${sg_url}        ${cluster_hosts["sync_gateways"][0]["public"]}
     Set Test Variable  ${sg_url_admin}  ${cluster_hosts["sync_gateways"][0]["admin"]}
-
-    Set Test Variable  ${sg_db}  db
-    Set Test Variable  ${bucket}  data-bucket
 
 Teardown Test
     Log  Tearing down test ...  console=True
