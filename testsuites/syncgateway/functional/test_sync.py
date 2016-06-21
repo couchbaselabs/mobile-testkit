@@ -377,7 +377,8 @@ def test_sync_require_roles(conf):
     # Dictionary should be empty if they were blocked from pushing docs
     assert len(read_only_user_docs.items()) == 0
 
-    # wait, some changes are not instant
+    # It seems be non deterministic but sometimes when issuing the changes call return, some of the documents are returned but not all.
+    # There is currently no retry loop in verify_changes and I'm guessing that the bulk_docs requests are still processing.
     time.sleep(5)
 
     # Should recieve docs from radio_channels
