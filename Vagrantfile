@@ -22,8 +22,12 @@ Vagrant.configure(2) do |config|
         host.vm.provider "virtualbox" do |vb|
             # Customize the amount of memory on the VM:
             vb.memory = "2048"
+
             # Allow vm to send data via VPN
             vb.customize ["modifyvm", :id, "--natdnshostresolver1", "on"]
+
+            # Resync the vm and host time every 10 seconds
+            vb.customize ["guestproperty", "set", :id, "/VirtualBox/GuestAdd/VBoxService/--timesync-set-threshold", 10000]
         end
       end
   end
