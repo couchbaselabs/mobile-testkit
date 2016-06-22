@@ -786,6 +786,63 @@ class MobileRestClient:
 
         return added_docs
 
+    def add_bulk_docs(self, url, db, docs, auth=None):
+        """
+        Keyword that issues POST _bulk docs with the specified 'docs'.
+        Use the Document.create_docs() to create the docs.
+        """
+
+        # transform 'docs' into a format expected by _bulk_docs
+        request_body = {"docs": docs}
+
+        auth_type = get_auth_type(auth)
+
+        if auth_type == AuthType.session:
+            resp = self._session.post("{}/{}/_bulk_docs".format(url, db),  data=json.dumps(request_body), cookies=dict(SyncGatewaySession=auth[1]))
+        elif auth_type == AuthType.http_basic:
+            resp = self._session.post("{}/{}/_bulk_docs".format(url, db), data=json.dumps(request_body), auth=auth)
+        else:
+            resp = self._session.post("{}/{}/_bulk_docs".format(url, db), data=json.dumps(request_body))
+
+        log_r(resp)
+        resp.raise_for_status()
+
+        resp_obj = resp.json()
+        return resp_obj
+
+    def get_bulk_docs(self, url, db, docs, auth=None):
+        """
+        Keyword that issues POST _bulk_get docs with the specified 'docs' array.
+        doc need to be in the format (python list of {id: "", rev: ""} dictionaries):
+        [
+            {u'rev': u'1-efda114d144b5220fa77c4e51f3e70a8', u'id': u'exp_3_0'},
+            {u'rev': u'1-efda114d144b5220fa77c4e51f3e70a8', u'id': u'exp_3_1'}, ...
+        ]
+        """
+
+        logging.debug(docs)
+
+        # extract ids from docs and format for _bulk_get request
+        ids = [{"id": doc["id"]} for doc in docs]
+        request_body ={"docs": ids}
+
+        auth_type = get_auth_type(auth)
+
+        if auth_type == AuthType.session:
+            resp = self._session.post("{}/{}/_bulk_get".format(url, db), data=json.dumps(request_body), cookies=dict(SyncGatewaySession=auth[1]))
+        elif auth_type == AuthType.http_basic:
+            resp = self._session.post("{}/{}/_bulk_get".format(url, db), data=json.dumps(request_body), auth=auth)
+        else:
+            resp = self._session.post("{}/{}/_bulk_get".format(url, db), data=json.dumps(request_body))
+
+        log_r(resp)
+        resp.raise_for_status()
+
+        resp_obj = parse_multipart_response(resp.text)
+        logging.debug(resp_obj)
+
+        return resp_obj
+
     def start_replication(self, url, continuous, from_url=None, from_db=None, to_url=None, to_db=None):
 
         if from_url is None:

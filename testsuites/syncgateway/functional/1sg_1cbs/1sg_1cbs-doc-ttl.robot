@@ -40,7 +40,7 @@ Library     DebugLibrary
 Library     OperatingSystem
 
 Library     ${Libraries}/NetworkUtils.py
-Library     ${KEYWORDS}/Logging.py
+Library     ${Keywords}/Logging.py
 Library     ${Keywords}/CouchbaseServer.py
 Library     ${Keywords}/SyncGateway.py
 Library     ${Keywords}/MobileRestClient.py
@@ -68,21 +68,21 @@ Numeric Expiry as TTL
     ...  3. Get /db/doc1.  Assert response is 404
     ...     Get /db/doc2.  Assert response is 200
 
-    ${sg_user} =     Create User  url=${sg_url_admin}  db=${sg_db}  name=${SG_USER_NAME}  password=$${SG_USER_PASSWORD}  channels=@{SG_USER_CHANNELS}
+    ${sg_user} =     Create User  url=${sg_url_admin}  db=${SG_DB}  name=${SG_USER_NAME}  password=$${SG_USER_PASSWORD}  channels=@{SG_USER_CHANNELS}
     ${sg_user_session} =  Create Session  url=${sg_url_admin}  db=${SG_DB}  name=${SG_USER_NAME}
     ${doc_exp_3_body} =  Create Doc  id=exp_3  expiry=${3}  channels=@{SG_USER_CHANNELS}
     ${doc_exp_10_body} =  Create Doc  id=exp_10  expiry=${10}  channels=@{SG_USER_CHANNELS}
-    ${doc_exp_3} =  Add Doc  url=${sg_url}  db=${sg_db}  doc=${doc_exp_3_body}  auth=${sg_user_session}
-    ${doc_exp_10} =  Add Doc  url=${sg_url}  db=${sg_db}  doc=${doc_exp_10_body}  auth=${sg_user_session}
+    ${doc_exp_3} =  Add Doc  url=${sg_url}  db=${SG_DB}  doc=${doc_exp_3_body}  auth=${sg_user_session}
+    ${doc_exp_10} =  Add Doc  url=${sg_url}  db=${SG_DB}  doc=${doc_exp_10_body}  auth=${sg_user_session}
 
     Sleep  5s  reason=Sleep should allow doc_exp_3 to expire, but still be in the window to get doc_exp_10
 
     # doc_exp_3 should be expired
     Run Keyword And Expect Error  HTTPError: 404 Client Error: Not Found for url:*
-    ...  Get Doc  url=${sg_url}  db=${sg_db}  doc_id=${doc_exp_3["id"]}  auth=${sg_user_session}
+    ...  Get Doc  url=${sg_url}  db=${SG_DB}  doc_id=${doc_exp_3["id"]}  auth=${sg_user_session}
 
     # doc_exp_10 should be available still
-    ${doc_exp_10_result} =  Get Doc  url=${sg_url}  db=${sg_db}  doc_id=${doc_exp_10["id"]}  auth=${sg_user_session}
+    ${doc_exp_10_result} =  Get Doc  url=${sg_url}  db=${SG_DB}  doc_id=${doc_exp_10["id"]}  auth=${sg_user_session}
 
 String Expiry as TTL
     [Tags]  sanity  syncgateway  ttl
@@ -93,21 +93,21 @@ String Expiry as TTL
     ...  3. Get /db/doc1.  Assert response is 404
     ...     Get /db/doc2.  Assert response is 200
 
-    ${sg_user} =     Create User  url=${sg_url_admin}  db=${sg_db}  name=${SG_USER_NAME}  password=$${SG_USER_PASSWORD}  channels=@{SG_USER_CHANNELS}
+    ${sg_user} =     Create User  url=${sg_url_admin}  db=${SG_DB}  name=${SG_USER_NAME}  password=$${SG_USER_PASSWORD}  channels=@{SG_USER_CHANNELS}
     ${sg_user_session} =  Create Session  url=${sg_url_admin}  db=${SG_DB}  name=${SG_USER_NAME}
     ${doc_exp_3_body} =  Create Doc  id=exp_3  expiry=3  channels=@{SG_USER_CHANNELS}
     ${doc_exp_10_body} =  Create Doc  id=exp_10  expiry=10  channels=@{SG_USER_CHANNELS}
-    ${doc_exp_3} =  Add Doc  url=${sg_url}  db=${sg_db}  doc=${doc_exp_3_body}  auth=${sg_user_session}
-    ${doc_exp_10} =  Add Doc  url=${sg_url}  db=${sg_db}  doc=${doc_exp_10_body}  auth=${sg_user_session}
+    ${doc_exp_3} =  Add Doc  url=${sg_url}  db=${SG_DB}  doc=${doc_exp_3_body}  auth=${sg_user_session}
+    ${doc_exp_10} =  Add Doc  url=${sg_url}  db=${SG_DB}  doc=${doc_exp_10_body}  auth=${sg_user_session}
 
     Sleep  5s  reason=Sleep should allow doc_exp_3 to expire, but still be in the window to get doc_exp_10
 
     # doc_exp_3 should be expired
     Run Keyword And Expect Error  HTTPError: 404 Client Error: Not Found for url:*
-    ...  Get Doc  url=${sg_url}  db=${sg_db}  doc_id=${doc_exp_3["id"]}  auth=${sg_user_session}
+    ...  Get Doc  url=${sg_url}  db=${SG_DB}  doc_id=${doc_exp_3["id"]}  auth=${sg_user_session}
 
     # doc_exp_10 should be available still
-    ${doc_exp_10_result} =  Get Doc  url=${sg_url}  db=${sg_db}  doc_id=${doc_exp_10["id"]}  auth=${sg_user_session}
+    ${doc_exp_10_result} =  Get Doc  url=${sg_url}  db=${SG_DB}  doc_id=${doc_exp_10["id"]}  auth=${sg_user_session}
 
 
 Numeric Expiry as Unix Date
@@ -120,7 +120,7 @@ Numeric Expiry as Unix Date
     ...  4. Get /db/doc1.  Assert response is 404
     ...     Get /db/doc2.  Assert response is 200
 
-    ${sg_user} =     Create User  url=${sg_url_admin}  db=${sg_db}  name=${SG_USER_NAME}  password=$${SG_USER_PASSWORD}  channels=@{SG_USER_CHANNELS}
+    ${sg_user} =     Create User  url=${sg_url_admin}  db=${SG_DB}  name=${SG_USER_NAME}  password=$${SG_USER_PASSWORD}  channels=@{SG_USER_CHANNELS}
     ${sg_user_session} =  Create Session  url=${sg_url_admin}  db=${SG_DB}  name=${SG_USER_NAME}
 
     ${unix_time_3s_ahead} =  Get Unix Timestamp  delta=${3}
@@ -128,17 +128,17 @@ Numeric Expiry as Unix Date
     ${doc_exp_3_body} =  Create Doc  id=exp_3  expiry=${unix_time_3s_ahead}  channels=@{SG_USER_CHANNELS}
     ${doc_exp_years_body} =  Create Doc  id=exp_10  expiry=${1767225600}  channels=@{SG_USER_CHANNELS}
 
-    ${doc_exp_3} =  Add Doc  url=${sg_url}  db=${sg_db}  doc=${doc_exp_3_body}  auth=${sg_user_session}
-    ${doc_exp_years} =  Add Doc  url=${sg_url}  db=${sg_db}  doc=${doc_exp_years_body}  auth=${sg_user_session}
+    ${doc_exp_3} =  Add Doc  url=${sg_url}  db=${SG_DB}  doc=${doc_exp_3_body}  auth=${sg_user_session}
+    ${doc_exp_years} =  Add Doc  url=${sg_url}  db=${SG_DB}  doc=${doc_exp_years_body}  auth=${sg_user_session}
 
     Sleep  10s  reason=Sleep should allow doc_exp_3 to expire
 
     # doc_exp_3 should be expired
     Run Keyword And Expect Error  HTTPError: 404 Client Error: Not Found for url:*
-    ...  Get Doc  url=${sg_url}  db=${sg_db}  doc_id=${doc_exp_3["id"]}  auth=${sg_user_session}
+    ...  Get Doc  url=${sg_url}  db=${SG_DB}  doc_id=${doc_exp_3["id"]}  auth=${sg_user_session}
 
     # doc_exp_10 should be available still
-    ${doc_exp_years_result} =  Get Doc  url=${sg_url}  db=${sg_db}  doc_id=${doc_exp_years["id"]}  auth=${sg_user_session}
+    ${doc_exp_years_result} =  Get Doc  url=${sg_url}  db=${SG_DB}  doc_id=${doc_exp_years["id"]}  auth=${sg_user_session}
 
 
 String Expiry as Unix Date
@@ -151,7 +151,7 @@ String Expiry as Unix Date
     ...  4. Get /db/doc1.  Assert response is 404
     ...     Get /db/doc2.  Assert response is 200
 
-    ${sg_user} =     Create User  url=${sg_url_admin}  db=${sg_db}  name=${SG_USER_NAME}  password=$${SG_USER_PASSWORD}  channels=@{SG_USER_CHANNELS}
+    ${sg_user} =     Create User  url=${sg_url_admin}  db=${SG_DB}  name=${SG_USER_NAME}  password=$${SG_USER_PASSWORD}  channels=@{SG_USER_CHANNELS}
     ${sg_user_session} =  Create Session  url=${sg_url_admin}  db=${SG_DB}  name=${SG_USER_NAME}
 
     ${unix_time_3s_ahead} =  Get Unix Timestamp  delta=${3}
@@ -161,17 +161,17 @@ String Expiry as Unix Date
     ${doc_exp_3_body} =  Create Doc  id=exp_3  expiry=${unix_time_3s_ahead_string}  channels=@{SG_USER_CHANNELS}
     ${doc_exp_years_body} =  Create Doc  id=exp_10  expiry=1767225600  channels=@{SG_USER_CHANNELS}
 
-    ${doc_exp_3} =  Add Doc  url=${sg_url}  db=${sg_db}  doc=${doc_exp_3_body}  auth=${sg_user_session}
-    ${doc_exp_years} =  Add Doc  url=${sg_url}  db=${sg_db}  doc=${doc_exp_years_body}  auth=${sg_user_session}
+    ${doc_exp_3} =  Add Doc  url=${sg_url}  db=${SG_DB}  doc=${doc_exp_3_body}  auth=${sg_user_session}
+    ${doc_exp_years} =  Add Doc  url=${sg_url}  db=${SG_DB}  doc=${doc_exp_years_body}  auth=${sg_user_session}
 
     Sleep  10s  reason=Sleep should allow doc_exp_3 to expire
 
     # doc_exp_3 should be expired
     Run Keyword And Expect Error  HTTPError: 404 Client Error: Not Found for url:*
-    ...  Get Doc  url=${sg_url}  db=${sg_db}  doc_id=${doc_exp_3["id"]}  auth=${sg_user_session}
+    ...  Get Doc  url=${sg_url}  db=${SG_DB}  doc_id=${doc_exp_3["id"]}  auth=${sg_user_session}
 
     # doc_exp_10 should be available still
-    ${doc_exp_years_result} =  Get Doc  url=${sg_url}  db=${sg_db}  doc_id=${doc_exp_years["id"]}  auth=${sg_user_session}
+    ${doc_exp_years_result} =  Get Doc  url=${sg_url}  db=${SG_DB}  doc_id=${doc_exp_years["id"]}  auth=${sg_user_session}
 
 
 String Expiry as ISO-8601 Date
@@ -184,7 +184,7 @@ String Expiry as ISO-8601 Date
     ...  4. Get /db/doc1.  Assert response is 404
     ...     Get /db/doc2.  Assert response is 200
 
-    ${sg_user} =     Create User  url=${sg_url_admin}  db=${sg_db}  name=${SG_USER_NAME}  password=$${SG_USER_PASSWORD}  channels=@{SG_USER_CHANNELS}
+    ${sg_user} =     Create User  url=${sg_url_admin}  db=${SG_DB}  name=${SG_USER_NAME}  password=$${SG_USER_PASSWORD}  channels=@{SG_USER_CHANNELS}
     ${sg_user_session} =  Create Session  url=${sg_url_admin}  db=${SG_DB}  name=${SG_USER_NAME}
 
     ${iso_datetime} =  Get ISO Datetime  delta=${3}
@@ -192,17 +192,17 @@ String Expiry as ISO-8601 Date
     ${doc_exp_3_body} =  Create Doc  id=exp_3  expiry=${iso_datetime}  channels=@{SG_USER_CHANNELS}
     ${doc_exp_years_body} =  Create Doc  id=exp_10  expiry=2026-01-01T00:00:00.000+00:00  channels=@{SG_USER_CHANNELS}
 
-    ${doc_exp_3} =  Add Doc  url=${sg_url}  db=${sg_db}  doc=${doc_exp_3_body}  auth=${sg_user_session}
-    ${doc_exp_years} =  Add Doc  url=${sg_url}  db=${sg_db}  doc=${doc_exp_years_body}  auth=${sg_user_session}
+    ${doc_exp_3} =  Add Doc  url=${sg_url}  db=${SG_DB}  doc=${doc_exp_3_body}  auth=${sg_user_session}
+    ${doc_exp_years} =  Add Doc  url=${sg_url}  db=${SG_DB}  doc=${doc_exp_years_body}  auth=${sg_user_session}
 
     Sleep  10s  reason=Sleep should allow doc_exp_3 to expire
 
     # doc_exp_3 should be expired
     Run Keyword And Expect Error  HTTPError: 404 Client Error: Not Found for url:*
-    ...  Get Doc  url=${sg_url}  db=${sg_db}  doc_id=${doc_exp_3["id"]}  auth=${sg_user_session}
+    ...  Get Doc  url=${sg_url}  db=${SG_DB}  doc_id=${doc_exp_3["id"]}  auth=${sg_user_session}
 
     # doc_exp_10 should be available still
-    ${doc_exp_years_result} =  Get Doc  url=${sg_url}  db=${sg_db}  doc_id=${doc_exp_years["id"]}  auth=${sg_user_session}
+    ${doc_exp_years_result} =  Get Doc  url=${sg_url}  db=${SG_DB}  doc_id=${doc_exp_years["id"]}  auth=${sg_user_session}
 
 
 Removing expiry
@@ -212,22 +212,22 @@ Removing expiry
     ...  2. Update /db/doc1 with a new revision with no expiry value
     ...  3. After 10 updates, update /db/doc1 with a revision with no expiry
 
-    ${sg_user} =     Create User  url=${sg_url_admin}  db=${sg_db}  name=${SG_USER_NAME}  password=$${SG_USER_PASSWORD}  channels=@{SG_USER_CHANNELS}
+    ${sg_user} =     Create User  url=${sg_url_admin}  db=${SG_DB}  name=${SG_USER_NAME}  password=$${SG_USER_PASSWORD}  channels=@{SG_USER_CHANNELS}
     ${sg_user_session} =  Create Session  url=${sg_url_admin}  db=${SG_DB}  name=${SG_USER_NAME}
     ${doc_exp_3_body} =  Create Doc  id=exp_3  expiry=${3}  channels=@{SG_USER_CHANNELS}
     ${doc_exp_10_body} =  Create Doc  id=exp_10  expiry=${10}  channels=@{SG_USER_CHANNELS}
-    ${doc_exp_3} =  Add Doc  url=${sg_url}  db=${sg_db}  doc=${doc_exp_3_body}  auth=${sg_user_session}
-    ${doc_exp_10} =  Add Doc  url=${sg_url}  db=${sg_db}  doc=${doc_exp_10_body}  auth=${sg_user_session}
+    ${doc_exp_3} =  Add Doc  url=${sg_url}  db=${SG_DB}  doc=${doc_exp_3_body}  auth=${sg_user_session}
+    ${doc_exp_10} =  Add Doc  url=${sg_url}  db=${SG_DB}  doc=${doc_exp_10_body}  auth=${sg_user_session}
 
-    ${doc_exp_3_updated} =  Update Doc  url=${sg_url}  db=${sg_db}  doc_id=${doc_exp_3["id"]}  number_updates=${10}  auth=${sg_user_session}
+    ${doc_exp_3_updated} =  Update Doc  url=${sg_url}  db=${SG_DB}  doc_id=${doc_exp_3["id"]}  number_updates=${10}  auth=${sg_user_session}
 
     Sleep  5s  reason=Sleep should allow doc_exp_3 to expire, but still be in the window to get doc_exp_10
 
     # doc_exp_3 should no longer have an expiry and should return a 200
-    ${doc_exp_3_updated} =  Get Doc  url=${sg_url}  db=${sg_db}  doc_id=${doc_exp_3["id"]}  auth=${sg_user_session}
+    ${doc_exp_3_updated} =  Get Doc  url=${sg_url}  db=${SG_DB}  doc_id=${doc_exp_3["id"]}  auth=${sg_user_session}
 
     # doc_exp_10 should be available still and should return a 200
-    ${doc_exp_10_result} =  Get Doc  url=${sg_url}  db=${sg_db}  doc_id=${doc_exp_10["id"]}  auth=${sg_user_session}
+    ${doc_exp_10_result} =  Get Doc  url=${sg_url}  db=${SG_DB}  doc_id=${doc_exp_10["id"]}  auth=${sg_user_session}
 
 Rolling TTL Expires
     [Tags]  sanity  syncgateway  ttl
@@ -237,22 +237,22 @@ Rolling TTL Expires
     ...  3. Wait 5 seconds
     ...  3. Get /db/doc1.  Assert response is 200
 
-    ${sg_user} =     Create User  url=${sg_url_admin}  db=${sg_db}  name=${SG_USER_NAME}  password=$${SG_USER_PASSWORD}  channels=@{SG_USER_CHANNELS}
+    ${sg_user} =     Create User  url=${sg_url_admin}  db=${SG_DB}  name=${SG_USER_NAME}  password=$${SG_USER_PASSWORD}  channels=@{SG_USER_CHANNELS}
     ${sg_user_session} =  Create Session  url=${sg_url_admin}  db=${SG_DB}  name=${SG_USER_NAME}
     ${doc_exp_3_body} =  Create Doc  id=exp_3  expiry=${3}  channels=@{SG_USER_CHANNELS}
     ${doc_exp_10_body} =  Create Doc  id=exp_10  expiry=${10}  channels=@{SG_USER_CHANNELS}
-    ${doc_exp_3} =  Add Doc  url=${sg_url}  db=${sg_db}  doc=${doc_exp_3_body}  auth=${sg_user_session}
-    ${doc_exp_10} =  Add Doc  url=${sg_url}  db=${sg_db}  doc=${doc_exp_10_body}  auth=${sg_user_session}
+    ${doc_exp_3} =  Add Doc  url=${sg_url}  db=${SG_DB}  doc=${doc_exp_3_body}  auth=${sg_user_session}
+    ${doc_exp_10} =  Add Doc  url=${sg_url}  db=${SG_DB}  doc=${doc_exp_10_body}  auth=${sg_user_session}
 
-    ${doc_exp_3_updated} =  Update Doc  url=${sg_url}  db=${sg_db}  doc_id=${doc_exp_3["id"]}  number_updates=${10}  expiry=${3}  auth=${sg_user_session}
+    ${doc_exp_3_updated} =  Update Doc  url=${sg_url}  db=${SG_DB}  doc_id=${doc_exp_3["id"]}  number_updates=${10}  expiry=${3}  auth=${sg_user_session}
 
     Sleep  5s  reason=Sleep should allow doc_exp_3 to expire, but still be in the window to get doc_exp_10
 
     Run Keyword And Expect Error  HTTPError: 404 Client Error: Not Found for url:*
-    ...  Get Doc  url=${sg_url}  db=${sg_db}  doc_id=${doc_exp_3["id"]}  auth=${sg_user_session}
+    ...  Get Doc  url=${sg_url}  db=${SG_DB}  doc_id=${doc_exp_3["id"]}  auth=${sg_user_session}
 
     # doc_exp_10 should be available still and should return a 200
-    ${doc_exp_10_result} =  Get Doc  url=${sg_url}  db=${sg_db}  doc_id=${doc_exp_10["id"]}  auth=${sg_user_session}
+    ${doc_exp_10_result} =  Get Doc  url=${sg_url}  db=${SG_DB}  doc_id=${doc_exp_10["id"]}  auth=${sg_user_session}
 
 Rolling TTL Remove Expiry
     [Tags]  sanity  syncgateway  ttl
@@ -262,23 +262,23 @@ Rolling TTL Remove Expiry
     ...  3. Update /db/doc1 with a revision with no expiry
     ...  3. Get /db/doc1.  Assert response is 200
 
-    ${sg_user} =     Create User  url=${sg_url_admin}  db=${sg_db}  name=${SG_USER_NAME}  password=$${SG_USER_PASSWORD}  channels=@{SG_USER_CHANNELS}
+    ${sg_user} =     Create User  url=${sg_url_admin}  db=${SG_DB}  name=${SG_USER_NAME}  password=$${SG_USER_PASSWORD}  channels=@{SG_USER_CHANNELS}
     ${sg_user_session} =  Create Session  url=${sg_url_admin}  db=${SG_DB}  name=${SG_USER_NAME}
     ${doc_exp_3_body} =  Create Doc  id=exp_3  expiry=${3}  channels=@{SG_USER_CHANNELS}
     ${doc_exp_10_body} =  Create Doc  id=exp_10  expiry=${10}  channels=@{SG_USER_CHANNELS}
-    ${doc_exp_3} =  Add Doc  url=${sg_url}  db=${sg_db}  doc=${doc_exp_3_body}  auth=${sg_user_session}
-    ${doc_exp_10} =  Add Doc  url=${sg_url}  db=${sg_db}  doc=${doc_exp_10_body}  auth=${sg_user_session}
+    ${doc_exp_3} =  Add Doc  url=${sg_url}  db=${SG_DB}  doc=${doc_exp_3_body}  auth=${sg_user_session}
+    ${doc_exp_10} =  Add Doc  url=${sg_url}  db=${SG_DB}  doc=${doc_exp_10_body}  auth=${sg_user_session}
 
-    ${doc_exp_3_updated} =  Update Doc  url=${sg_url}  db=${sg_db}  doc_id=${doc_exp_3["id"]}  number_updates=${10}  expiry=${3}  delay=${1}  auth=${sg_user_session}
-    ${doc_exp_3_updated_no_expiry} =  Update Doc  url=${sg_url}  db=${sg_db}  doc_id=${doc_exp_3["id"]}  number_updates=${10}  auth=${sg_user_session}
+    ${doc_exp_3_updated} =  Update Doc  url=${sg_url}  db=${SG_DB}  doc_id=${doc_exp_3["id"]}  number_updates=${10}  expiry=${3}  delay=${1}  auth=${sg_user_session}
+    ${doc_exp_3_updated_no_expiry} =  Update Doc  url=${sg_url}  db=${SG_DB}  doc_id=${doc_exp_3["id"]}  number_updates=${10}  auth=${sg_user_session}
 
     Sleep  5s  reason=Sleep should allow doc_exp_3 to expire, but still be in the window to get doc_exp_10
 
-    ${doc_exp_3} =  Get Doc  url=${sg_url}  db=${sg_db}  doc_id=${doc_exp_3["id"]}  auth=${sg_user_session}
+    ${doc_exp_3} =  Get Doc  url=${sg_url}  db=${SG_DB}  doc_id=${doc_exp_3["id"]}  auth=${sg_user_session}
 
     # doc_exp_10 should now be expired
     Run Keyword And Expect Error  HTTPError: 404 Client Error: Not Found for url:*
-    ...  Get Doc  url=${sg_url}  db=${sg_db}  doc_id=${doc_exp_10["id"]}  auth=${sg_user_session}
+    ...  Get Doc  url=${sg_url}  db=${SG_DB}  doc_id=${doc_exp_10["id"]}  auth=${sg_user_session}
 
 Setting expiry in bulk docs
     [Tags]  sanity  syncgateway  ttl
@@ -286,6 +286,22 @@ Setting expiry in bulk docs
     ...  1. PUT /db/_bulk_docs with 10 documents.  Set the "_exp":3 on 5 of these documents
     ...  2. Wait five seconds
     ...  3. POST /db/_bulk_get for the 10 documents.  Validate that only the 5 non-expiring documents are returned
+
+    ${sg_user} =     Create User  url=${sg_url_admin}  db=${SG_DB}  name=${SG_USER_NAME}  password=$${SG_USER_PASSWORD}  channels=@{SG_USER_CHANNELS}
+    ${sg_user_session} =  Create Session  url=${sg_url_admin}  db=${SG_DB}  name=${SG_USER_NAME}
+
+    ${doc_exp_3_bodies} =  Create Docs  id_prefix=exp_3  number=${5}  expiry=${3}  channels=@{SG_USER_CHANNELS}
+    ${doc_exp_10_bodies} =  Create Docs  id_prefix=exp_10  number=${5}  expiry=${10}  channels=@{SG_USER_CHANNELS}
+
+    ${bulk_bodies} =  Merge  ${doc_exp_3_bodies}  ${doc_exp_10_bodies}
+
+    ${bulk_docs} =  Add Bulk Docs  url=${sg_url}  db=${SG_DB}  docs=${bulk_bodies}  auth=${sg_user_session}
+
+    Sleep  5s  reason=Sleep should allow exp_3_x docs to expire, but still be in the window to get exp_10_x docs
+
+    ${bulk_get_docs} =  Get Bulk Docs  url=${sg_url}  db=${SG_DB}  docs=${bulk_docs}  auth=${sg_user_session}
+
+    # TODO: Validate expected result
 
 Validating retrieval of expiry value (Optional)
     [Tags]  sanity  syncgateway  ttl
