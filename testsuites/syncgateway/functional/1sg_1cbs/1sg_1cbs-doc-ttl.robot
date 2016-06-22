@@ -211,15 +211,74 @@ Removing expiry
     ...  1. PUT /db/doc1 via SG with property "_exp":3
     ...  2. Update /db/doc1 with a new revision with no expiry value
     ...  3. After 10 updates, update /db/doc1 with a revision with no expiry
+
+    ${sg_user} =     Create User  url=${sg_url_admin}  db=${sg_db}  name=${SG_USER_NAME}  password=$${SG_USER_PASSWORD}  channels=@{SG_USER_CHANNELS}
+    ${sg_user_session} =  Create Session  url=${sg_url_admin}  db=${SG_DB}  name=${SG_USER_NAME}
+    ${doc_exp_3_body} =  Create Doc  id=exp_3  expiry=${3}  channels=@{SG_USER_CHANNELS}
+    ${doc_exp_10_body} =  Create Doc  id=exp_10  expiry=${10}  channels=@{SG_USER_CHANNELS}
+    ${doc_exp_3} =  Add Doc  url=${sg_url}  db=${sg_db}  doc=${doc_exp_3_body}  auth=${sg_user_session}
+    ${doc_exp_10} =  Add Doc  url=${sg_url}  db=${sg_db}  doc=${doc_exp_10_body}  auth=${sg_user_session}
+
+    ${doc_exp_3_updated} =  Update Doc  url=${sg_url}  db=${sg_db}  doc_id=${doc_exp_3["id"]}  number_updates=${10}  auth=${sg_user_session}
+
+    Sleep  5s  reason=Sleep should allow doc_exp_3 to expire, but still be in the window to get doc_exp_10
+
+    # doc_exp_3 should no longer have an expiry and should return a 200
+    ${doc_exp_3_updated} =  Get Doc  url=${sg_url}  db=${sg_db}  doc_id=${doc_exp_3["id"]}  auth=${sg_user_session}
+
+    # doc_exp_10 should be available still and should return a 200
+    ${doc_exp_10_result} =  Get Doc  url=${sg_url}  db=${sg_db}  doc_id=${doc_exp_10["id"]}  auth=${sg_user_session}
+
+Rolling TTL Expires
+    [Tags]  sanity  syncgateway  ttl
+    [Documentation]
+    ...  1. PUT /db/doc1 via SG with property "_exp":3
+    ...  2. Update /db/doc1 10 times with a new revision (also with "_exp":3)
+    ...  3. Wait 5 seconds
     ...  3. Get /db/doc1.  Assert response is 200
 
-Rolling TTL
+    ${sg_user} =     Create User  url=${sg_url_admin}  db=${sg_db}  name=${SG_USER_NAME}  password=$${SG_USER_PASSWORD}  channels=@{SG_USER_CHANNELS}
+    ${sg_user_session} =  Create Session  url=${sg_url_admin}  db=${SG_DB}  name=${SG_USER_NAME}
+    ${doc_exp_3_body} =  Create Doc  id=exp_3  expiry=${3}  channels=@{SG_USER_CHANNELS}
+    ${doc_exp_10_body} =  Create Doc  id=exp_10  expiry=${10}  channels=@{SG_USER_CHANNELS}
+    ${doc_exp_3} =  Add Doc  url=${sg_url}  db=${sg_db}  doc=${doc_exp_3_body}  auth=${sg_user_session}
+    ${doc_exp_10} =  Add Doc  url=${sg_url}  db=${sg_db}  doc=${doc_exp_10_body}  auth=${sg_user_session}
+
+    ${doc_exp_3_updated} =  Update Doc  url=${sg_url}  db=${sg_db}  doc_id=${doc_exp_3["id"]}  number_updates=${10}  expiry=${3}  auth=${sg_user_session}
+
+    Sleep  5s  reason=Sleep should allow doc_exp_3 to expire, but still be in the window to get doc_exp_10
+
+    Run Keyword And Expect Error  HTTPError: 404 Client Error: Not Found for url:*
+    ...  Get Doc  url=${sg_url}  db=${sg_db}  doc_id=${doc_exp_3["id"]}  auth=${sg_user_session}
+
+    # doc_exp_10 should be available still and should return a 200
+    ${doc_exp_10_result} =  Get Doc  url=${sg_url}  db=${sg_db}  doc_id=${doc_exp_10["id"]}  auth=${sg_user_session}
+
+Rolling TTL Remove Expiry
     [Tags]  sanity  syncgateway  ttl
     [Documentation]
     ...  1. PUT /db/doc1 via SG with property "_exp":3
     ...  2. Once per second for 10 seconds, update /db/doc1 with a new revision (also with "_exp":3)
     ...  3. Update /db/doc1 with a revision with no expiry
     ...  3. Get /db/doc1.  Assert response is 200
+
+    ${sg_user} =     Create User  url=${sg_url_admin}  db=${sg_db}  name=${SG_USER_NAME}  password=$${SG_USER_PASSWORD}  channels=@{SG_USER_CHANNELS}
+    ${sg_user_session} =  Create Session  url=${sg_url_admin}  db=${SG_DB}  name=${SG_USER_NAME}
+    ${doc_exp_3_body} =  Create Doc  id=exp_3  expiry=${3}  channels=@{SG_USER_CHANNELS}
+    ${doc_exp_10_body} =  Create Doc  id=exp_10  expiry=${10}  channels=@{SG_USER_CHANNELS}
+    ${doc_exp_3} =  Add Doc  url=${sg_url}  db=${sg_db}  doc=${doc_exp_3_body}  auth=${sg_user_session}
+    ${doc_exp_10} =  Add Doc  url=${sg_url}  db=${sg_db}  doc=${doc_exp_10_body}  auth=${sg_user_session}
+
+    ${doc_exp_3_updated} =  Update Doc  url=${sg_url}  db=${sg_db}  doc_id=${doc_exp_3["id"]}  number_updates=${10}  expiry=${3}  delay=${1}  auth=${sg_user_session}
+    ${doc_exp_3_updated_no_expiry} =  Update Doc  url=${sg_url}  db=${sg_db}  doc_id=${doc_exp_3["id"]}  number_updates=${10}  auth=${sg_user_session}
+
+    Sleep  5s  reason=Sleep should allow doc_exp_3 to expire, but still be in the window to get doc_exp_10
+
+    ${doc_exp_3} =  Get Doc  url=${sg_url}  db=${sg_db}  doc_id=${doc_exp_3["id"]}  auth=${sg_user_session}
+
+    # doc_exp_10 should now be expired
+    Run Keyword And Expect Error  HTTPError: 404 Client Error: Not Found for url:*
+    ...  Get Doc  url=${sg_url}  db=${sg_db}  doc_id=${doc_exp_10["id"]}  auth=${sg_user_session}
 
 Setting expiry in bulk docs
     [Tags]  sanity  syncgateway  ttl

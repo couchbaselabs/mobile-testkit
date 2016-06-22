@@ -694,7 +694,7 @@ class MobileRestClient:
         logging.debug("url: {} db: {} updated: {}".format(url, db, updated_docs))
         return updated_docs
 
-    def update_doc(self, url, db, doc_id, number_updates=1, attachment_name=None, auth=None):
+    def update_doc(self, url, db, doc_id, number_updates=1, attachment_name=None, expiry=None, delay=None, auth=None):
         """
         Updates a doc on a db a number of times.
             1. GETs the doc
@@ -722,6 +722,8 @@ class MobileRestClient:
                     attachment_name: {"data": get_attachment(attachment_name)}
                 }
 
+            if expiry is not None:
+                doc["_exp"] = expiry
 
             if auth_type == AuthType.session:
                 resp = self._session.put("{}/{}/{}".format(url, db, doc_id), data=json.dumps(doc), cookies=dict(SyncGatewaySession=auth[1]))
@@ -738,6 +740,9 @@ class MobileRestClient:
 
             current_update_number += 1
             current_rev = resp_obj["rev"]
+
+            if delay is not None:
+                time.sleep(delay)
 
 
         return resp_obj
