@@ -1154,3 +1154,31 @@ class MobileRestClient:
         assert len(view_response["rows"]) == len(values), "Different number of rows were returned than expected values"
         for row in view_response["rows"]:
             assert row["value"] in values, "Did not find expected value in view response"
+
+    def verify_doc_ids_found_in_response(self, response, expected_doc_ids):
+        doc_list = response["rows"]
+        logging.debug(doc_list)
+
+        found_doc_ids = []
+        for doc in doc_list:
+            if not "error" in doc:
+                # doc was found
+                found_doc_ids.append(doc["_id"])
+
+        logging.debug("Found Doc Ids: {}".format(found_doc_ids))
+        logging.debug("Expected Doc Ids: {}".format(expected_doc_ids))
+        assert found_doc_ids == expected_doc_ids, "Found doc ids should be the same as expected doc ids"
+
+    def verify_doc_ids_not_found_in_response(self, response, expected_missing_doc_ids):
+        doc_list = response["rows"]
+        logging.debug(doc_list)
+
+        missing_doc_ids = []
+        for doc in doc_list:
+            if "error" in doc:
+                # missing doc was found
+                missing_doc_ids.append(doc["id"])
+
+        logging.debug("Found Doc Ids: {}".format(missing_doc_ids))
+        logging.debug("Expected Doc Ids: {}".format(expected_missing_doc_ids))
+        assert missing_doc_ids == expected_missing_doc_ids, "Found doc ids should be the same as expected doc ids"

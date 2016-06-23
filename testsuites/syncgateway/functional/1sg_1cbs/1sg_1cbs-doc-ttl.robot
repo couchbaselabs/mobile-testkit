@@ -270,9 +270,9 @@ Rolling TTL Remove Expiry
     ${doc_exp_10} =  Add Doc  url=${sg_url}  db=${SG_DB}  doc=${doc_exp_10_body}  auth=${sg_user_session}
 
     ${doc_exp_3_updated} =  Update Doc  url=${sg_url}  db=${SG_DB}  doc_id=${doc_exp_3["id"]}  number_updates=${10}  expiry=${3}  delay=${1}  auth=${sg_user_session}
-    ${doc_exp_3_updated_no_expiry} =  Update Doc  url=${sg_url}  db=${SG_DB}  doc_id=${doc_exp_3["id"]}  number_updates=${10}  auth=${sg_user_session}
+    ${doc_exp_3_updated_no_expiry} =  Update Doc  url=${sg_url}  db=${SG_DB}  doc_id=${doc_exp_3["id"]}  number_updates=${1}  auth=${sg_user_session}
 
-    Sleep  5s  reason=Sleep should allow doc_exp_3 to expire, but still be in the window to get doc_exp_10
+    Sleep  5s  reason=Sleep to check that doc does not still have expiry
 
     ${doc_exp_3} =  Get Doc  url=${sg_url}  db=${SG_DB}  doc_id=${doc_exp_3["id"]}  auth=${sg_user_session}
 
@@ -301,22 +301,27 @@ Setting expiry in bulk docs
 
     ${bulk_get_docs} =  Get Bulk Docs  url=${sg_url}  db=${SG_DB}  docs=${bulk_docs}  auth=${sg_user_session}
 
-    # TODO: Validate expected result
+    @{expected_ids} =  Create List  exp_10_0  exp_10_1  exp_10_2  exp_10_3  exp_10_4
+    @{expected_missing_ids} =  Create List  exp_3_0  exp_3_1  exp_3_2  exp_3_3  exp_3_4
+    Verify Doc Ids Found In Response  response=${bulk_get_docs}  expected_doc_ids=@{expected_ids}
+    Verify Doc Ids Not Found In Response  response=${bulk_get_docs}  expected_missing_doc_ids=@{expected_missing_ids}
 
-Validating retrieval of expiry value (Optional)
-    [Tags]  sanity  syncgateway  ttl
-    [Documentation]
-    ...  I think these scenarios are well-covered by unit tests, so functional tests are probably not strictly required
-    ...  unless the functional tests are trying to cover the full API parameter space.
-    ...  1. PUT /db/doc1 via SG with property "_exp":100
-    ...  2. GET /db/doc1.  Assert response doesn't include _exp property
-    ...  3. GET /db/doc1?show_exp=true.  Assert response includes _exp property, and it's a datetime approximately 100 seconds in the future
-    ...  4. POST /db/_bulk_docs with doc1 in the set of requested docs.  Assert response doesn't include _exp property
-    ...  5. POST /db/_bulk_docs?show_exp=true with doc1 in the set of requested docs.  Assert response includes _exp property, and it's a datetime approx 100s in the future.
+# TODO
+#Validating retrieval of expiry value (Optional)
+#    [Tags]  sanity  syncgateway  ttl
+#    [Documentation]
+#    ...  I think these scenarios are well-covered by unit tests, so functional tests are probably not strictly required
+#    ...  unless the functional tests are trying to cover the full API parameter space.
+#    ...  1. PUT /db/doc1 via SG with property "_exp":100
+#    ...  2. GET /db/doc1.  Assert response doesn't include _exp property
+#    ...  3. GET /db/doc1?show_exp=true.  Assert response includes _exp property, and it's a datetime approximately 100 seconds in the future
+#    ...  4. POST /db/_bulk_docs with doc1 in the set of requested docs.  Assert response doesn't include _exp property
+#    ...  5. POST /db/_bulk_docs?show_exp=true with doc1 in the set of requested docs.  Assert response includes _exp property, and it's a datetime approx 100s in the future.
 
-Validating put with unix past timestamp (Optional)
-    [Tags]  sanity  syncgateway  ttl
-    [Documentation]
+# TODO
+#Validating put with unix past timestamp (Optional)
+#    [Tags]  sanity  syncgateway  ttl
+#    [Documentation]
 
 *** Keywords ***
 Setup Test
