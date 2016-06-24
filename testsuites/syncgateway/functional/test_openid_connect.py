@@ -174,6 +174,13 @@ def test_openidconnect_basic_test(sg_url, sg_db, is_admin_port):
         id_token_refresh = authenticate_response_json["id_token"]
         # make sure we get a unique id token each time
         assert id_token_refresh not in id_tokens
+
+        # make a request using the ID token against the db and expect a 200 response
+        headers = {"Authorization": "Bearer {}".format(id_token_refresh)}
+        resp = requests.get(db_url, headers=headers)
+        log_r(resp)
+        assert resp.status_code == 200, "Expected 200 response"
+
         id_tokens.append(id_token_refresh)
 
 
