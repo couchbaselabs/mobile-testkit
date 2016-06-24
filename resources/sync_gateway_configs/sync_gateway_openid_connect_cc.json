@@ -9,6 +9,13 @@
          "oidc":{
             "default_provider":"test",
             "providers":{
+               "testinvalidclientid":{
+                  "issuer":"http://localhost:4984/db/_oidc_testing",
+                  "client_id":"invalid",
+                  "validation_key":"R75hfd9lasdwertwerutecw8",
+                  "callback_url":"http://localhost:4984/db/_oidc_callback",
+                  "register":true
+               },
                "test":{
                   "issuer":"http://localhost:4984/db/_oidc_testing",
                   "client_id":"sync_gateway",
