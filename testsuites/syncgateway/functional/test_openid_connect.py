@@ -85,15 +85,19 @@ def discover_authenticate_endpoint(sg_url, sg_db, provider):
     # 'OIDC login="http://localhost:4984/db/_oidc_testing/authorize?client_id=sync_gateway&redirect_uri=http%3A%2F%2Flocalhost%3A4984%2Fdb%2F_oidc_callback&response_type=code&scope=openid+email&state="'
     www_auth_header = response.headers['Www-Authenticate']
     max_split = 1
-    oidc_login_url = www_auth_header.split("=", max_split)[1]              # '"http://localhost:4984/db/_oid ..."'
+
+    # Split the string on '=' and we should have something like: '"http://localhost:4984/db/_oid ..."' at this point
+    oidc_login_url = www_auth_header.split("=", max_split)[1]
+
+    # Remove unwanted double quotes (eg, '"stuff"' -> 'stuff')
     if oidc_login_url.startswith('"') and oidc_login_url.endswith('"'):
-        oidc_login_url = oidc_login_url[1:-1]                              # 'http://localhost:4984/db/_oid ...'
+        oidc_login_url = oidc_login_url[1:-1]
 
     # get the sg hostname, since we need to substitute this for any instances of localhost
     # needed until https://github.com/couchbase/sync_gateway/issues/1849 is fixed
     sg_url_parsed = urlparse(sg_url)
     sg_hostname = sg_url_parsed.hostname
-    oidc_login_url = oidc_login_url.replace("localhost", sg_hostname)      # http://192.168.0.112:4984/db/_oid
+    oidc_login_url = oidc_login_url.replace("localhost", sg_hostname)
 
     # Fetch the oidc_login_url
     response = requests.get(oidc_login_url)
