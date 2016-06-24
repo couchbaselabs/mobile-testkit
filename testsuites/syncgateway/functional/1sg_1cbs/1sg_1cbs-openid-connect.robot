@@ -56,6 +56,15 @@ Test OpenIDConnect Expired Token
     [Tags]   sanity
     Test OpenIDConnect Expired Token  sg_url=${sg_url}  sg_db=${sg_db}
 
+
+Test OpenIDConnect Negative Token Expiry
+    [Documentation]
+    ...  Create a token with a negative expiry time and expect that authentication
+    ...  is not possible
+    [Tags]   sanity
+    Test OpenIDConnect Negative Token Expiry  sg_url=${sg_url}  sg_db=${sg_db}
+
+
 Test OpenIDConnect Garbage Token
     [Documentation]
     ...  Send a garbage/invalid token and make sure it cannot be used

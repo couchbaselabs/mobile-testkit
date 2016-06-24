@@ -266,7 +266,8 @@ def test_openidconnect_expired_token(sg_url, sg_db):
     response_json = response.json()
     id_token = response_json["id_token"]
 
-    time.sleep(token_expiry_seconds * 2)
+    # wait until token expires
+    time.sleep(token_expiry_seconds + 1)
 
     # make a request using the ID token against the db and expect a 200 response
     headers = {"Authorization": "Bearer {}".format(id_token)}
@@ -274,6 +275,35 @@ def test_openidconnect_expired_token(sg_url, sg_db):
     resp = requests.get(db_url, headers=headers)
     log_r(resp)
     assert resp.status_code != 200, "Expected non-200 response"
+
+
+
+def test_openidconnect_negative_token_expiry(sg_url, sg_db):
+
+    token_expiry_seconds = -5
+
+    # multipart/form data content
+    formdata = {
+        'username': ('', 'testuser'),
+        'authenticated': ('', 'Return a valid authorization code for this user'),
+        'tokenttl': ('', "{}".format(token_expiry_seconds)),
+    }
+
+    # get the authenticate endpoint and query params, should look something like:
+    #     authenticate?client_id=sync_gateway&redirect_uri= ...
+    authenticate_endpoint = discover_authenticate_endpoint(sg_url, sg_db, DEFAULT_PROVIDER)
+
+    # build the full url
+    url = "{}/{}/_oidc_testing/{}".format(
+        sg_url,
+        sg_db,
+        authenticate_endpoint
+    )
+
+    response = requests.post(url, files=formdata)
+    assert response.status_code == 500
+
+
 
 
 def test_openidconnect_garbage_token(sg_url, sg_db):
