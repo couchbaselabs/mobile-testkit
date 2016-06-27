@@ -742,6 +742,7 @@ class MobileRestClient:
             current_rev = resp_obj["rev"]
 
             if delay is not None:
+                logging.debug("Sleeping: {}s ...".format(delay))
                 time.sleep(delay)
 
 
@@ -819,8 +820,6 @@ class MobileRestClient:
             {u'rev': u'1-efda114d144b5220fa77c4e51f3e70a8', u'id': u'exp_3_1'}, ...
         ]
         """
-
-        logging.debug(docs)
 
         # extract ids from docs and format for _bulk_get request
         ids = [{"id": doc["id"]} for doc in docs]
