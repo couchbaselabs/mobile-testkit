@@ -513,6 +513,10 @@ Skipping the cluster provisioning and running a single test:
 
 `robot -b debug.txt -v SERVER_VERSION:4.1.1 -v SYNC_GATEWAY_VERSION:1.2.0-79 -t "test sync sanity" testsuites/syncgateway/functional/1sg_1ac_1cbs/1sg_1ac_1cbs.robot`
 
+Running a subsuite with parent suite setup
+
+`robot --loglevel DEBUG -v SERVER_VERSION:4.1.0 -v SYNC_GATEWAY_VERSION:42fc10bbc819fe34940c66abd1fd02a8d51490ca -s 1sg_1cbs-openid-connect testsuites/syncgateway/functional/1sg_1cbs`
+
 **Running Performance Tests**
 
 - [Spin up a AWS CloudFormation stack](#Spin=Up-Machines-on-AWS)
