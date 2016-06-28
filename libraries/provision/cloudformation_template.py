@@ -6,6 +6,7 @@
 
 from troposphere import Ref, Template, Parameter, Output, Join, GetAtt, Tags
 import troposphere.ec2 as ec2
+from troposphere.route53 import RecordSetType
 
 
 def gen_template(config):
@@ -146,6 +147,9 @@ def gen_template(config):
         ]
         t.add_resource(instance)
 
+        t.add_resource(create_dns_entry(instance, name, config))
+
+
     # Sync Gw instances (ubuntu ami)
     for i in xrange(num_sync_gateway_servers):
         name = "syncgateway{}".format(i)
@@ -174,6 +178,8 @@ def gen_template(config):
 
         t.add_resource(instance)
 
+        t.add_resource(create_dns_entry(instance, name, config))
+
     # Gateload instances (ubuntu ami)
     for i in xrange(num_gateloads):
         name = "gateload{}".format(i)
@@ -196,7 +202,9 @@ def gen_template(config):
 
         t.add_resource(instance)
 
-        # Load Balancer instances (ubuntu ami)
+        t.add_resource(create_dns_entry(instance, name, config))
+
+    # Load Balancer instances (ubuntu ami)
     for i in xrange(num_lbs):
         name = "loadbalancer{}".format(i)
         instance = ec2.Instance(name)
@@ -218,7 +226,20 @@ def gen_template(config):
 
         t.add_resource(instance)
 
+        t.add_resource(create_dns_entry(instance, name, config))
 
     return t.to_json()
 
+
+def create_dns_entry(instance, name, config):
+    return RecordSetType(
+        title=name + "dns",
+        ResourceRecords=[
+            GetAtt(instance, "PublicIp")
+        ],
+        TTL="900",
+        Name="{}.{}.couchbasemobile.com".format(name, config.name),
+        HostedZoneName="couchbasemobile.com.",
+        Type="A",
+    )
 
