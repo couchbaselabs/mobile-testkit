@@ -40,7 +40,7 @@ def fetch_sync_gateway_logs(prefix, is_perf_run=False):
 
         # Copy logs to results dir
         zip_file_path = "{}.zip".format(name)
-        shutil.copy(zip_file_path, "{}/".format(RESULTS_DIR))
+        shutil.copy(zip_file_path, "{}/logs/".format(RESULTS_DIR))
 
         print("sync_gateway logs copied to {}/\n".format(RESULTS_DIR))
 
