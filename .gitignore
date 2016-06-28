@@ -40,6 +40,10 @@ report.html
 
 results/*
 
+!results/logs
+results/logs/*
+!results/logs/README.md
+
 resources/cluster_configs/*
 !resources/cluster_configs/README.md
 resources/pool.json
