@@ -6,6 +6,7 @@
 
 from troposphere import Ref, Template, Parameter, Output, Join, GetAtt, Tags
 import troposphere.ec2 as ec2
+from troposphere.route53 import RecordSetType
 
 
 def gen_template(config):
@@ -145,6 +146,18 @@ def gen_template(config):
             )
         ]
         t.add_resource(instance)
+
+        t.add_resource(RecordSetType(
+            title=name+"dns",
+            ResourceRecords=[
+                GetAtt(instance, "PublicIp")
+            ],
+            TTL="900",
+            Name="{}.{}.couchbasemobile.com".format(name, config.name),
+            HostedZoneName="couchbasemobile.com.",
+            Type="A",
+        ))
+
 
     # Sync Gw instances (ubuntu ami)
     for i in xrange(num_sync_gateway_servers):
