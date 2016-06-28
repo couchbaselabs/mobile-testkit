@@ -143,12 +143,18 @@ class LiteServ:
                     directory_name = "{}-{}-{}-liteserv".format(url_parts[3], url_parts[4], url_parts[5])
                 else:
                     directory_name = file_name.replace(".zip", "")
+
                 with ZipFile("{}/{}".format(BINARY_DIR, file_name)) as zip_f:
                     zip_f.extractall("{}/{}".format(BINARY_DIR, directory_name))
 
                 if platform == "macosx":
                     # Make binary executable
                     os.chmod("{}/{}/LiteServ".format(BINARY_DIR, directory_name), 0755)
+                elif platform == "net":
+                    # Remove x64 and x86 HACK - To get around https://github.com/couchbase/couchbase-lite-net/issues/672
+                    # Need to remove once the issue is resolved
+                    shutil.rmtree("{}/{}/x64".format(BINARY_DIR, directory_name))
+                    shutil.rmtree("{}/{}/x86".format(BINARY_DIR, directory_name))
 
                 # Remove .zip file
                 os.remove("{}/{}".format(BINARY_DIR, file_name))
