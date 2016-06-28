@@ -481,6 +481,29 @@ class MobileRestClient:
 
         return resp_obj
 
+    def get_attachment(self, url, db, doc_id, attachment_name, auth=None):
+        """
+        Keyword to get a raw attachment with name 'attachment_name' for the specified 'doc_id'.
+        ex. GET http://localhost:59840/ls_db/att_doc/sample_text.txt
+        Returns the raw response.
+        """
+
+        headers = {"Accept": "*/*"}
+
+        auth_type = get_auth_type(auth)
+
+        if auth_type == AuthType.session:
+            resp = self._session.get("{}/{}/{}/{}".format(url, db, doc_id, attachment_name), headers=headers, cookies=dict(SyncGatewaySession=auth[1]))
+        elif auth_type == AuthType.http_basic:
+            resp = self._session.get("{}/{}/{}/{}".format(url, db, doc_id, attachment_name), headers=headers, auth=auth)
+        else:
+            resp = self._session.get("{}/{}/{}/{}".format(url, db, doc_id, attachment_name), headers=headers)
+
+        log_r(resp)
+        resp.raise_for_status()
+
+        return resp.text
+
     def add_conflict(self, url, db, doc_id, parent_revisions, new_revision, attachment_name=None, auth=None):
         """
             1. GETs the doc with id == doc_id
