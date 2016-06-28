@@ -68,8 +68,8 @@ Start MacOSX LiteServ
     ...             -Log  YES  -LogSync  YES  -LogCBLRouter  YES  -LogSyncVerbose  YES  -LogRemoteRequest  YES
     ...             alias=liteserv-ios
     ...             shell=True
-    ...             stdout=${RESULTS}/${TEST_NAME}-macosx-liteserv-stdout.log
-    ...             stderr=${RESULTS}/${TEST_NAME}-macosx-liteserv-stderr.log
+    ...             stdout=${RESULTS}/logs/${TEST_NAME}-macosx-liteserv-stdout.log
+    ...             stderr=${RESULTS}/logs/${TEST_NAME}-macosx-liteserv-stderr.log
     Process Should Be Running   handle=liteserv-ios
 
 Start Android LiteServ
@@ -80,8 +80,8 @@ Start Android LiteServ
 
     Start Process   adb  logcat
     ...             alias=adb-logcat
-    ...             stdout=${RESULTS}/${TEST_NAME}-android-logcat-stdout.log
-    ...             stderr=${RESULTS}/${TEST_NAME}-android-logcat-stderr.log
+    ...             stdout=${RESULTS}/logs/${TEST_NAME}-android-logcat-stdout.log
+    ...             stderr=${RESULTS}/logs/${TEST_NAME}-android-logcat-stderr.log
     Process Should Be Running   handle=adb-logcat
 
     Launch Activity  ${port}
@@ -95,8 +95,8 @@ Start Net LiteServ
     Start Process   mono  ${binary_path}  --port\=${port}
     ...             alias=liteserv-net
     ...             shell=True
-    ...             stdout=${RESULTS}/${TEST_NAME}-net-liteserv-stdout.log
-    ...             stderr=${RESULTS}/${TEST_NAME}-net-liteserv-stderr.log
+    ...             stdout=${RESULTS}/logs/${TEST_NAME}-net-liteserv-stdout.log
+    ...             stderr=${RESULTS}/logs/${TEST_NAME}-net-liteserv-stderr.log
 
 Shutdown MacOSX LiteServ
     [Documentation]   Stops Mac OSX LiteServ.
