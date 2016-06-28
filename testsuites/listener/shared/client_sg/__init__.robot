@@ -7,8 +7,9 @@ Library           OperatingSystem
 Library           ${KEYWORDS}/LiteServ.py
 Library           ${KEYWORDS}/SyncGateway.py
 
+Test Timeout      10 minutes
+
 *** Variables ***
-${SYNC_GATEWAY_CONFIG}  ${SYNC_GATEWAY_CONFIGS}/walrus.json
 
 *** Keywords ***
 Setup Suite
@@ -18,4 +19,4 @@ Setup Suite
 
     Set Environment Variable  CLUSTER_CONFIG  ${CLUSTER_CONFIGS}/1sg
     Clean Cluster
-    Install Sync Gateway  sync_gateway_version=${SYNC_GATEWAY_VERSION}  sync_gateway_config=${SYNC_GATEWAY_CONFIG}
+    Install Sync Gateway  sync_gateway_version=${SYNC_GATEWAY_VERSION}  sync_gateway_config=${SYNC_GATEWAY_CONFIGS}/walrus.json

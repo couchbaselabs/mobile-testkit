@@ -742,7 +742,7 @@ class MobileRestClient:
 
         return resp_obj
 
-    def add_docs(self, url, db, number, id_prefix, auth=None, channels=None):
+    def add_docs(self, url, db, number, id_prefix, auth=None, channels=None, generator=None):
         """
         Add a 'number' of docs with a prefix 'id_prefix' using the provided generator from libraries.data.doc_generators.
         ex. id_prefix=testdoc with a number of 3 would create 'testdoc_0', 'testdoc_1', and 'testdoc_2'
@@ -755,7 +755,11 @@ class MobileRestClient:
 
         for i in xrange(number):
 
-            doc_body = doc_generators.simple()
+            if generator == "four_k":
+                doc_body = doc_generators.four_k()
+            else:
+                doc_body = doc_generators.simple()
+
             if channels is not None:
                 doc_body["channels"] = channels
 
