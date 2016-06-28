@@ -78,6 +78,9 @@ Start Android LiteServ
     [Arguments]  ${host}  ${port}
     [Timeout]       1 minute
 
+    # Clear logcat
+    Run Process  adb  logcat  -c
+
     Start Process   adb  logcat
     ...             alias=adb-logcat
     ...             stdout=${RESULTS}/logs/${TEST_NAME}-android-logcat-stdout.log
