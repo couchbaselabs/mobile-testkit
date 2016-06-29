@@ -196,9 +196,9 @@ class LiteServ:
         while not install_successful:
             output = subprocess.check_output(["adb", "install", apk_path])
             log_info(output)
-            if "INSTALL_FAILED_ALREADY_EXISTS" in output:
+            if "INSTALL_FAILED_ALREADY_EXISTS" in output or "INSTALL_FAILED_UPDATE_INCOMPATIBLE" in output:
                 logging.error("APK already exists. Removing and trying again ...")
-                output = subprocess.check_output(["adb", "shell", "pm", "uninstall", "com.couchbase.liteservandroid"])
+                output = subprocess.check_output(["adb", "uninstall", "com.couchbase.liteservandroid"])
                 log_info(output)
             else:
                 install_successful = True
