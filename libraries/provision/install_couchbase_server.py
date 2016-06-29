@@ -30,25 +30,38 @@ class CouchbaseServerConfig:
             "3.1.5": "1859"
         }
 
+
         # Append build for released versions
         if self.version in released_versions and self.build is None:
-            self.build = released_versions[self.version]
+            build_for_release = released_versions[self.version]
 
         # Get dev server package from latestbuilds
         if self.version.startswith("3.1"):
-            base_url = "http://latestbuilds.hq.couchbase.com/"
-            package_name = "couchbase-server-enterprise_centos6_x86_64_{}-{}-rel.rpm".format(self.version, self.build)
+            if self.build is None:
+                base_url = "http://cbmobile-packages.s3.amazonaws.com"
+            else:
+                base_url = "http://latestbuilds.hq.couchbase.com/"
+            package_name = "couchbase-server-enterprise_centos6_x86_64_{}-{}-rel.rpm".format(self.version, build_for_release)
         elif self.version.startswith("4.0") or self.version.startswith("4.1"):
-            base_url = "http://cbnas01.sc.couchbase.com/builds/latestbuilds/couchbase-server/sherlock/{}".format(self.build)
-            package_name = "couchbase-server-enterprise-{}-{}-centos7.x86_64.rpm".format(self.version, self.build)
+            if self.build is None:
+                base_url = "http://cbmobile-packages.s3.amazonaws.com"
+            else:
+                base_url = "http://cbnas01.sc.couchbase.com/builds/latestbuilds/couchbase-server/sherlock/{}".format(build_for_release)
+            package_name = "couchbase-server-enterprise-{}-{}-centos7.x86_64.rpm".format(self.version, build_for_release)
         elif self.version.startswith("4.5"):
-            base_url = "http://cbnas01.sc.couchbase.com/builds/latestbuilds/couchbase-server/watson/{}".format(self.build)
-            package_name = "couchbase-server-enterprise-{}-{}-centos7.x86_64.rpm".format(self.version, self.build)
+            if self.build is None:
+                base_url = "http://cbmobile-packages.s3.amazonaws.com"
+            else:
+                base_url = "http://cbnas01.sc.couchbase.com/builds/latestbuilds/couchbase-server/watson/{}".format(build_for_release)
+            package_name = "couchbase-server-enterprise-{}-{}-centos7.x86_64.rpm".format(self.version, build_for_release)
         elif self.version.startswith("4.7"):
-            base_url = "http://cbnas01.sc.couchbase.com/builds/latestbuilds/couchbase-server/spock/{}".format(self.build)
-            package_name = "couchbase-server-enterprise-{}-{}-centos7.x86_64.rpm".format(self.version, self.build)
+            if self.build is None:
+                base_url = "http://cbmobile-packages.s3.amazonaws.com"
+            else:
+                base_url = "http://cbnas01.sc.couchbase.com/builds/latestbuilds/couchbase-server/spock/{}".format(build_for_release)
+            package_name = "couchbase-server-enterprise-{}-{}-centos7.x86_64.rpm".format(self.version, build_for_release)
         else:
-            raise ValueError("Unable to resolve build for version: {}-{}".format(self.version, self.build))
+            raise ValueError("Unable to resolve build for version: {}-{}".format(self.version, self.build_for_release))
 
         return base_url, package_name
 
