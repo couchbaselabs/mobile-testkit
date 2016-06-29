@@ -23,6 +23,7 @@ class CouchbaseServerConfig:
     def get_baseurl_package(self):
 
         released_versions = {
+            "4.5.0": "2601",
             "4.1.1": "5914",
             "4.1.0": "5005",
             "4.0.0": "4051",
@@ -47,7 +48,7 @@ class CouchbaseServerConfig:
             base_url = "http://cbnas01.sc.couchbase.com/builds/latestbuilds/couchbase-server/spock/{}".format(self.build)
             package_name = "couchbase-server-enterprise-{}-{}-centos7.x86_64.rpm".format(self.version, self.build)
         else:
-            raise ValueError("Unable to resolve dev build for version: {}-{}".format(self.version, self.build))
+            raise ValueError("Unable to resolve build for version: {}-{}".format(self.version, self.build))
 
         return base_url, package_name
 
