@@ -17,12 +17,28 @@ class ClusterDef:
         self.num_lgs = num_lgs
 
 
+    def num_machines_required(self):
+        return (
+            self.num_sgs +
+            self.num_acs +
+            self.num_cbs +
+            self.num_lgs
+        )
+
+
 def write_config(config):
-
-    print("\nGenerating config: {}".format(config.name))
-
     ips = get_ips()
     print("ips: {}".format(ips))
+
+    if len(ips) < config.num_machines_required():
+        print("WARNING: Skipping config {} since {} machines required, but only {} provided".format(
+            config.name,
+            config.num_machines_required(),
+            len(ips))
+        )
+        return
+
+    print("\nGenerating config: {}".format(config.name))
 
     ansible_cluster_conf_file = "resources/cluster_configs/{}".format(config.name)
     cluster_json_file = "resources/cluster_configs/{}.json".format(config.name)
@@ -159,8 +175,6 @@ if __name__ == "__main__":
     usage: python generate_cluster_from_pool.py"
     """
 
-    min_num_machines = 4
-
     cluster_configs = [
         ClusterDef("1sg",           num_sgs=1, num_acs=0, num_cbs=0, num_lgs=0),
         ClusterDef("1cbs",          num_sgs=0, num_acs=0, num_cbs=1, num_lgs=0),
@@ -175,9 +189,6 @@ if __name__ == "__main__":
         print("Pool file not found in 'resources/'. Please modify the example to include your machines.")
         sys.exit(1)
 
-    if len(get_ips()) < min_num_machines:
-        print("You are required to have {} machines defined to be able to run the full suite.".format(min_num_machines))
-        sys.exit(1)
 
     print("Using the following machines to run functional tests ... ")
     for host in get_ips():
