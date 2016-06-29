@@ -33,6 +33,7 @@ def write_config(config):
         couchbase_servers = []
         sync_gateways = []
         accels = []
+        load_generators = []
 
         f.write("[pool]\n")
         count = 1
@@ -95,6 +96,22 @@ def write_config(config):
 
         f.write("\n")
 
+        lg_ips_to_remove = []
+        f.write("[load_generators]\n")
+        for i in range(config.num_lgs):
+            ip = ips[i]
+            f.write("lg{} ansible_host={}\n".format(i + 1, ip))
+            load_generators.append({
+                "name": "lg{}".format(i + 1),
+                "ip": ip
+            })
+            lg_ips_to_remove.append(ip)
+
+        for lg_ip in lg_ips_to_remove:
+            ips.remove(lg_ip)
+
+        f.write("\n")
+
         # Get local address to run webhook server on
         # TODO: make the webhook receiver it's own endpoint, or come up w/ better design.
         try:
@@ -117,7 +134,8 @@ def write_config(config):
             "hosts": hosts,
             "couchbase_servers": couchbase_servers,
             "sync_gateways": sync_gateways,
-            "sg_accels": accels
+            "sg_accels": accels,
+            "load_generators": load_generators,
         }
 
         with open(cluster_json_file, "w") as f_json:
