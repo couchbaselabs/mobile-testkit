@@ -40,14 +40,14 @@ def log_expvars(folder_name):
     lgs_host_vars = hosts_for_tag("load_generators")
     lgs = [lg["ansible_host"] for lg in lgs_host_vars]
 
-    print("Monitoring gateloads: {}".format(lgs))
+    print("Monitoring gateloads until they finish: {}".format(lgs))
     lgs_expvar_endpoints = [lg + ":9876/debug/vars" for lg in lgs]
 
     # Get sync_gateway ips from ansible inventory
     sgs_host_vars = hosts_for_tag("sync_gateways")
     sgs = [sgv["ansible_host"] for sgv in sgs_host_vars]
 
-    print("Monitoring sync_gateways: {}".format(sgs))
+    print("Monitoring sync_gateways: {} until gateloads finish".format(sgs))
     sgs_expvar_endpoints = [sg + ":4985/_expvar" for sg in sgs]
 
     start_time = time.time()
