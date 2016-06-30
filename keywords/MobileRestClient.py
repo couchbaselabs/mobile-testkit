@@ -686,7 +686,7 @@ class MobileRestClient:
                         assert "error" in resp_obj and "status" in resp_obj, "Response should have an error and status"
                         assert resp_obj["error"] == "not_found", "error should be 'not_found'"
                         assert resp_obj["status"] == 404, "status should be '404'"
-                    elif server_type == ServerType.listener and server_platform == Platform.macosx:
+                    elif server_type == ServerType.listener and (server_platform == Platform.macosx or server_platform == Platform.net):
                         assert "error" in resp_obj and "status" in resp_obj and "reason" in resp_obj, "Response should have an error, status, and reason"
                         assert resp_obj["error"] == "not_found", "error should be 'not_found'"
                         assert resp_obj["status"] == 404, "status should be '404'"
@@ -704,12 +704,12 @@ class MobileRestClient:
                 time.sleep(1)
                 continue
 
-    def update_docs(self, url, db, docs, number_updates, auth=None):
+    def update_docs(self, url, db, docs, number_updates, delay=None, auth=None):
 
         updated_docs = []
 
         with ThreadPoolExecutor(max_workers=2) as executor:
-            future_to_url = [executor.submit(self.update_doc, url, db, doc["id"], number_updates, auth=auth) for doc in docs]
+            future_to_url = [executor.submit(self.update_doc, url, db, doc["id"], number_updates, delay=delay, auth=auth) for doc in docs]
             for future in concurrent.futures.as_completed(future_to_url):
                 update_doc_result = future.result()
                 updated_docs.append(update_doc_result)
@@ -896,6 +896,34 @@ class MobileRestClient:
         logging.info("Replication started with: {}".format(replication_id))
 
         return replication_id
+
+    def stop_replication(self, url, continuous, from_url=None, from_db=None, to_url=None, to_db=None):
+
+        if from_url is None:
+            source = from_db
+        else:
+            source = "{}/{}".format(from_url, from_db)
+
+        if to_url is None:
+            target = to_db
+        else:
+            target = "{}/{}".format(to_url, to_db)
+
+        data = {
+            "continuous": continuous,
+            "cancel": True,
+            "source": source,
+            "target": target
+        }
+
+        resp = self._session.post("{}/_replicate".format(url), data=json.dumps(data))
+
+        log_r(resp)
+        resp.raise_for_status()
+
+        resp_obj = resp.json()
+
+        assert resp_obj["ok"] == True, "Unexpected response for cancelling a replication"
 
     def wait_for_replication_status_idle(self, url, replication_id):
         """

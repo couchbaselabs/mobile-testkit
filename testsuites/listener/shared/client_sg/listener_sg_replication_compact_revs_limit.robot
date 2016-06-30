@@ -50,7 +50,6 @@ Client to Sync Gateway Complex Replication With Revs Limit
     ...  22. Delete Server bucket
     ...  23. Delete LiteServ db
     [Tags]           sanity     listener    ${PLATFORM}    syncgateway
-    [Timeout]        5 minutes
 
     Log  Using LiteServ: ${ls_url}
     Log  Using Sync Gateway: ${sg_url}
@@ -75,8 +74,8 @@ Client to Sync Gateway Complex Replication With Revs Limit
 
     Verify Docs Present  url=${sg_url_admin}  db=${sg_db}  expected_docs=${ls_db_docs}
 
-    ${sg_docs_update} =      Update Docs  url=${sg_url}  db=${sg_db}  docs=${ls_db_docs}  number_updates=${num_revs}  auth=${sg_session}
-    ${ls_db_docs_update} =   Update Docs  url=${ls_url}  db=${ls_db}  docs=${ls_db_docs}  number_updates=${num_revs}
+    ${sg_docs_update} =      Update Docs  url=${sg_url}  db=${sg_db}  docs=${ls_db_docs}  number_updates=${num_revs}  delay=${0.1}  auth=${sg_session}
+    ${ls_db_docs_update} =   Update Docs  url=${ls_url}  db=${ls_db}  docs=${ls_db_docs}  number_updates=${num_revs}  delay=${0.1}
 
     # Start replication ls_db <- sg_db
     ${repl2} =  Start Replication
@@ -85,6 +84,7 @@ Client to Sync Gateway Complex Replication With Revs Limit
     ...  from_url=${sg_url_admin}  from_db=${sg_db}
     ...  to_db=${ls_db}
 
+    Wait For Replication Status Idle  url=${ls_url}  replication_id=${repl1}
     Wait For Replication Status Idle  url=${ls_url}  replication_id=${repl2}
 
     Compact Database  url=${ls_url}  db=${ls_db}
@@ -109,7 +109,7 @@ Client to Sync Gateway Complex Replication With Revs Limit
 
     ${double_updates} =  Evaluate  ${num_revs}*2
     ${expected_revs} =  Evaluate  ${num_revs}+${20}+${2}
-    ${ls_db_docs_update} =   Update Docs  url=${ls_url}  db=${ls_db}  docs=${ls_db_docs}  number_updates=${num_revs}
+    ${ls_db_docs_update} =   Update Docs  url=${ls_url}  db=${ls_db}  docs=${ls_db_docs}  delay=${0.1}  number_updates=${num_revs}
 
     Verify Max Revs Num For Docs  url=${ls_url}  db=${ls_db}  docs=${ls_db_docs}  expected_max_number_revs_per_doc=${expected_revs}
 
@@ -120,9 +120,39 @@ Client to Sync Gateway Complex Replication With Revs Limit
 
     Verify Revs Num For Docs  url=${ls_url}  db=${ls_db}  docs=${ls_db_docs}  expected_revs_per_doc=${20}
 
+    # Stop replications to delete conflicts on both ls and sg
+    Stop Replication
+    ...  url=${ls_url}
+    ...  continuous=${True}
+    ...  from_db=${ls_db}
+    ...  to_url=${sg_url_admin}  to_db=${sg_db}
+
+    Stop Replication
+    ...  url=${ls_url}
+    ...  continuous=${True}
+    ...  from_url=${sg_url_admin}  from_db=${sg_db}
+    ...  to_db=${ls_db}
+
     Delete Conflicts  url=${ls_url}  db=${ls_db}  docs=${ls_db_docs}
+    Delete Conflicts  url=${sg_url}  db=${sg_db}  docs=${ls_db_docs}  auth=${sg_session}
 
     Delete Docs  url=${ls_url}  db=${ls_db}  docs=${ls_db_docs}
+
+    # Start push pull and verify that all docs are deleted
+    # Start replication ls_db -> sg_db
+    ${repl1} =  Start Replication
+    ...  url=${ls_url}
+    ...  continuous=${True}
+    ...  from_db=${ls_db}
+    ...  to_url=${sg_url_admin}  to_db=${sg_db}
+
+    # Start replication ls_db <- sg_db
+    ${repl2} =  Start Replication
+    ...  url=${ls_url}
+    ...  continuous=${True}
+    ...  from_url=${sg_url_admin}  from_db=${sg_db}
+    ...  to_db=${ls_db}
+
     Verify Docs Deleted  url=${ls_url}  db=${ls_db}  docs=${ls_db_docs}
     Verify Docs Deleted  url=${sg_url_admin}  db=${sg_db}  docs=${ls_db_docs}
 
