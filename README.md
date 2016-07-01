@@ -639,8 +639,16 @@ python libraries/provision/generate_pools_json_from_aws.py --stackname=TleydenPe
 
 - Generate clusters from pool
 
+This will create the `2sg_3cbs_2lgs` and `2sg_3cbs_2lgs.json` cluster config that is used for performance testing
+
 ```
 python libraries/utilities/generate_clusters_from_pool.py
+```
+
+- Set CLUSTER_CONFIG
+
+```
+export CLUSTER_CONFIG=resources/cluster_configs/2sg_3cbs_2lgs
 ```
 
 - Provision cluster
