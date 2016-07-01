@@ -20,6 +20,8 @@
     yum: pkg=screen state=latest
   - name: install emacs
     yum: pkg=emacs-nox state=latest
+  - name: install jq JSON tool
+    yum: pkg=jq state=latest
   - name: install wget
     yum: pkg=wget state=latest
   - name: install graphviz
