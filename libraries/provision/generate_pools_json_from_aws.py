@@ -84,10 +84,23 @@ if __name__=="__main__":
     if opts.dumpinventory:
         print "Inventory: {}".format(json.dumps(ec2Inventory.inventory, indent=4))
 
-    # get ip addresses of [u'54.242.119.83', u'54.234.207.138', u'54.209.218.97', u'54.242.55.56', u'54.242.29.78', u'52.90.171.161', u'54.175.81.204']
-    cloud_formation_stack_ip_addresses = ec2Inventory.inventory[cloud_formation_stack_key]
-    cloud_formation_stack_ip_addresses = list(set(cloud_formation_stack_ip_addresses))
 
+    # it's important that these are in the _same order_ as they are generated in generate_clusters_from_pool.py
+    # so that things "line up" and the right machines are used for the role type as specified in the
+    # initial call to create_and_instantiate_cluster.py.  It's a bit of a hack, and very brittle, and should
+    # be reworked to explicitly record the machine size somewhere, or assert that the vm's spun up
+    # all have the identical sizes.
+    couchbase_server_ip_addresses = ec2Inventory.inventory["tag_Type_couchbaseserver"]
+    print("couchbase_server_ip_addresses: {}".format(couchbase_server_ip_addresses))
+    sync_gateway_ip_addresses = ec2Inventory.inventory["tag_Type_syncgateway"]
+    print("sync_gateway_ip_addresses: {}".format(sync_gateway_ip_addresses))
+    load_generator_ip_addresses = ec2Inventory.inventory["tag_Type_gateload"]
+    print("load_generator_ip_addresses: {}".format(load_generator_ip_addresses))
+
+    # get ip addresses of [u'54.242.119.83', u'54.234.207.138', u'54.209.218.97', u'54.242.55.56', u'54.242.29.78', u'52.90.171.161', u'54.175.81.204']
+    cloud_formation_stack_ip_addresses = couchbase_server_ip_addresses + sync_gateway_ip_addresses + load_generator_ip_addresses
+    print("cloud_formation_stack_ip_addresses: {}".format(cloud_formation_stack_ip_addresses))
+    
     # convert to dns names
     cloud_formation_stack_dns_addresses = lookup_dns_names(ec2Inventory.inventory, cloud_formation_stack_ip_addresses)
 
