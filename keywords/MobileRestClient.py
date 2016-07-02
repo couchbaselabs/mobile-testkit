@@ -933,7 +933,7 @@ class MobileRestClient:
         start = time.time()
         while True:
             if time.time() - start > CLIENT_REQUEST_TIMEOUT:
-                raise Exception("Verify Docs Present: TIMEOUT")
+                raise Exception("Wait for Replication Status Idle: TIMEOUT")
 
             resp = self._session.get("{}/_active_tasks".format(url))
             log_r(resp)

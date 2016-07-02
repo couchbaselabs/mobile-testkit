@@ -31,11 +31,11 @@ Test Auto Prune Listener Sanity
 
     Log  Using LiteServ: ${ls_url}
 
-    Set Test Variable  ${num_docs}  ${100}
+    Set Test Variable  ${num_docs}  ${1}
     Set Test Variable  ${num_revs}  ${100}
 
     ${ls_db} =       Create Database  url=${ls_url}  name=ls_db
-    ${ls_db_docs} =  Add Docs  url=${ls_url}  db=${ls_db}  number=${num_docs}  id_prefix=ls_db  channels=${sg_user_channels}
+    ${ls_db_docs} =  Add Docs  url=${ls_url}  db=${ls_db}  number=${num_docs}  id_prefix=ls_db
     ${ls_db_docs_update} =   Update Docs  url=${ls_url}  db=${ls_db}  docs=${ls_db_docs}  number_updates=${num_revs}
 
     Verify Revs Num For Docs  url=${ls_url}  db=${ls_db}  docs=${ls_db_docs}  expected_revs_per_doc=${20}
@@ -63,31 +63,20 @@ Test Auto Prune With Pull Replication
     ${sg_session} =  Create Session  url=${sg_url_admin}  db=${sg_db}  name=${sg_user_name}
 
     ${ls_db} =       Create Database  url=${ls_url}  name=ls_db
-    ${ls_db_docs} =  Add Docs  url=${ls_url}  db=${ls_db}  number=${num_docs}  id_prefix=ls_db  channels=${sg_user_channels}
 
-    # Start replication ls_db -> sg_db
-    ${repl1} =  Start Replication
-    ...  url=${ls_url}
-    ...  continuous=${True}
-    ...  from_db=${ls_db}
-    ...  to_url=${sg_url_admin}  to_db=${sg_db}
-
-    Verify Docs Present  url=${sg_url_admin}  db=${sg_db}  expected_docs=${ls_db_docs}
-
-    ${sg_docs_update} =      Update Docs  url=${sg_url}  db=${sg_db}  docs=${ls_db_docs}  number_updates=${num_revs}  delay=${0.1}  auth=${sg_session}
-    ${ls_db_docs_update} =   Update Docs  url=${ls_url}  db=${ls_db}  docs=${ls_db_docs}  number_updates=${num_revs}  delay=${0.1}
+    ${sg_db_docs} =  Add Docs  url=${sg_url}  db=${sg_db}  number=${num_docs}  id_prefix=sg_db  channels=${sg_user_channels}  auth=${sg_session}
+    ${sg_docs_update} =  Update Docs  url=${sg_url}  db=${sg_db}  docs=${sg_db_docs}  number_updates=${num_revs}  auth=${sg_session}
 
     # Start replication ls_db <- sg_db
-    ${repl2} =  Start Replication
+    ${repl} =  Start Replication
     ...  url=${ls_url}
     ...  continuous=${True}
     ...  from_url=${sg_url_admin}  from_db=${sg_db}
     ...  to_db=${ls_db}
 
-    Wait For Replication Status Idle  url=${ls_url}  replication_id=${repl1}
-    Wait For Replication Status Idle  url=${ls_url}  replication_id=${repl2}
-
-    Verify Revs Num For Docs  url=${ls_url}  db=${ls_db}  docs=${ls_db_docs}  expected_revs_per_doc=${20}
+    Wait For Replication Status Idle  url=${ls_url}  replication_id=${repl}
+    Verify Docs Present  url=${ls_url}  db=${ls_db}  expected_docs=${sg_docs_update}
+    Verify Revs Num For Docs  url=${ls_url}  db=${ls_db}  docs=${sg_docs_update}  expected_revs_per_doc=${20}
 
 
 Test Auto Prune Listener Keeps Conflicts Sanity
