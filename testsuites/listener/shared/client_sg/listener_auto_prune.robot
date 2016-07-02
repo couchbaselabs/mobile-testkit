@@ -44,12 +44,10 @@ Test Auto Prune Listener Sanity
 Test Auto Prune With Pull Replication
     [Documentation]  Tests that auto prune is happing after a pull replication
     ...  1. Create a database on LiteServ (ls_db)
-    ...  2. Add docs tp ls_db
-    ...  3. Set up push replication to sync_gateway
-    ...  4. Update docs on sync_gateway
-    ...  5. Update docs on LiteServ
-    ...  6. Set up push replication from sync_gateway
-    ...  7. Verify number of revisions on client is default (20)
+    ...  2. Add doc to sync gateway
+    ...  3. Update doc 50 times
+    ...  4. Set up pull replication from sync_gateway db to LiteServ db
+    ...  5. Verify number of revisions on client is default (20)
 
     Log  Using LiteServ: ${ls_url}
     Log  Using Sync Gateway: ${sg_url}
