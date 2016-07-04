@@ -128,11 +128,42 @@ Start Net LiteServ
     [Arguments]  ${version}  ${host}  ${port}  ${storage_engine}
     [Timeout]       1 minute
     ${binary_path} =  Get LiteServ Binary Path  platform=net  version=${version}
-    Start Process   mono  ${binary_path}  --port\=${port}
-    ...             alias=liteserv-net
-    ...             shell=True
-    ...             stdout=${RESULTS}/logs/${TEST_NAME}-net-liteserv-stdout.log
-    ...             stderr=${RESULTS}/logs/${TEST_NAME}-net-liteserv-stderr.log
+
+    Run Keyword If  '${storage_engine}' == 'ForestDB+Encryption'
+    ...  Start Process  mono  ${binary_path}
+    ...    --port  ${port}
+    ...    --storage  ForestDB
+    ...    --dir  ${RESULTS}/dbs
+    ...    --dbpassword  ls_db\=pass
+    ...    --dbpassword  ls_db1\=pass
+    ...    --dbpassword  ls_db2\=pass
+    ...    alias=liteserv-net
+    ...    shell=True
+    ...    stdout=${RESULTS}/logs/${TEST_NAME}-net-liteserv-stdout.log
+    ...    stderr=${RESULTS}/logs/${TEST_NAME}-net-liteserv-stderr.log
+    ...  ELSE IF  '${storage_engine}' == 'SQLCipher'
+    ...  Start Process  mono  ${binary_path}
+    ...    --port  ${port}
+    ...    --storage  SQLite
+    ...    --dir  ${RESULTS}/dbs
+    ...    --dbpassword  ls_db\=pass
+    ...    --dbpassword  ls_db1\=pass
+    ...    --dbpassword  ls_db2\=pass
+    ...    alias=liteserv-net
+    ...    shell=True
+    ...    stdout=${RESULTS}/logs/${TEST_NAME}-net-liteserv-stdout.log
+    ...    stderr=${RESULTS}/logs/${TEST_NAME}-net-liteserv-stderr.log
+    ...  ELSE
+    ...  Start Process  mono  ${binary_path}
+    ...    --port  ${port}
+    ...    --storage  ${storage_engine}
+    ...    --dir  ${RESULTS}/dbs
+    ...    alias=liteserv-net
+    ...    shell=True
+    ...    stdout=${RESULTS}/logs/${TEST_NAME}-net-liteserv-stdout.log
+    ...    stderr=${RESULTS}/logs/${TEST_NAME}-net-liteserv-stderr.log
+
+    Process Should Be Running   handle=liteserv-net
 
 Shutdown MacOSX LiteServ
     [Documentation]   Stops Mac OSX LiteServ.
