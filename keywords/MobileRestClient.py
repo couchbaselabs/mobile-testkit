@@ -192,6 +192,11 @@ class MobileRestClient:
         return (name, password)
 
     def create_database(self, url, name, server=None):
+        """
+        Create a Listener or Sync Gateway database via REST.
+        IMPORTANT: If you want your database to run in encrypted mode on Mac, you must add the
+        database name=password to the 'Start MacOSX LiteServ' keyword (resources/common.robot)
+        """
 
         server_type = self.get_server_type(url)
 

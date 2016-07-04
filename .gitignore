@@ -40,6 +40,10 @@ report.html
 
 results/*
 
+!results/dbs
+results/dbs/*
+!results/dbs/README.md
+
 !results/logs
 results/logs/*
 !results/logs/README.md

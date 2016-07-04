@@ -63,13 +63,46 @@ Start MacOSX LiteServ
     ...  The LiteServ binaries are located in deps/.
     [Arguments]  ${version}  ${host}  ${port}  ${storage_engine}
     [Timeout]       1 minute
+
     ${binary_path} =  Get LiteServ Binary Path  platform=macosx  version=${version}
-    Start Process   ${binary_path}  --port  ${port}  --storage  ${storage_engine}
-    ...             -Log  YES  -LogSync  YES  -LogCBLRouter  YES  -LogSyncVerbose  YES  -LogRemoteRequest  YES
-    ...             alias=liteserv-ios
-    ...             shell=True
-    ...             stdout=${RESULTS}/logs/${TEST_NAME}-macosx-liteserv-stdout.log
-    ...             stderr=${RESULTS}/logs/${TEST_NAME}-macosx-liteserv-stderr.log
+
+    Run Keyword If  '${storage_engine}' == 'ForestDB+Encryption'
+    ...  Start Process  ${binary_path}
+    ...    --port  ${port}
+    ...    --storage  ForestDB
+    ...    --dir  ${RESULTS}/dbs
+    ...    --dbpassword  ls_db\=pass
+    ...    --dbpassword  ls_db1\=pass
+    ...    --dbpassword  ls_db2\=pass
+    ...    -Log  YES  -LogSync  YES  -LogCBLRouter  YES  -LogSyncVerbose  YES  -LogRemoteRequest  YES
+    ...    alias=liteserv-ios
+    ...    shell=True
+    ...    stdout=${RESULTS}/logs/${TEST_NAME}-macosx-liteserv-stdout.log
+    ...    stderr=${RESULTS}/logs/${TEST_NAME}-macosx-liteserv-stderr.log
+    ...  ELSE IF  '${storage_engine}' == 'SQLCipher'
+    ...  Start Process  ${binary_path}
+    ...    --port  ${port}
+    ...    --storage  SQLite
+    ...    --dir  ${RESULTS}/dbs
+    ...    --dbpassword  ls_db\=pass
+    ...    --dbpassword  ls_db1\=pass
+    ...    --dbpassword  ls_db2\=pass
+    ...    -Log  YES  -LogSync  YES  -LogCBLRouter  YES  -LogSyncVerbose  YES  -LogRemoteRequest  YES
+    ...    alias=liteserv-ios
+    ...    shell=True
+    ...    stdout=${RESULTS}/logs/${TEST_NAME}-macosx-liteserv-stdout.log
+    ...    stderr=${RESULTS}/logs/${TEST_NAME}-macosx-liteserv-stderr.log
+    ...  ELSE
+    ...  Start Process  ${binary_path}
+    ...    --port  ${port}
+    ...    --storage  ${storage_engine}
+    ...    --dir  ${RESULTS}/dbs
+    ...    -Log  YES  -LogSync  YES  -LogCBLRouter  YES  -LogSyncVerbose  YES  -LogRemoteRequest  YES
+    ...    alias=liteserv-ios
+    ...    shell=True
+    ...    stdout=${RESULTS}/logs/${TEST_NAME}-macosx-liteserv-stdout.log
+    ...    stderr=${RESULTS}/logs/${TEST_NAME}-macosx-liteserv-stderr.log
+
     Process Should Be Running   handle=liteserv-ios
 
 Start Android LiteServ
