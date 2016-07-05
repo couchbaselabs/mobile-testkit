@@ -63,13 +63,49 @@ Start MacOSX LiteServ
     ...  The LiteServ binaries are located in deps/.
     [Arguments]  ${version}  ${host}  ${port}  ${storage_engine}
     [Timeout]       1 minute
+
     ${binary_path} =  Get LiteServ Binary Path  platform=macosx  version=${version}
-    Start Process   ${binary_path}  --port  ${port}  --storage  ${storage_engine}
-    ...             -Log  YES  -LogSync  YES  -LogCBLRouter  YES  -LogSyncVerbose  YES  -LogRemoteRequest  YES
-    ...             alias=liteserv-ios
-    ...             shell=True
-    ...             stdout=${RESULTS}/logs/${TEST_NAME}-macosx-liteserv-stdout.log
-    ...             stderr=${RESULTS}/logs/${TEST_NAME}-macosx-liteserv-stderr.log
+
+     # Get a list of db names / password for running LiteServ with encrypted databases
+    @{db_name_passwords} =  Run Keyword If  '${storage_engine}' == 'ForestDB+Encryption' or '${storage_engine}' == 'SQLCipher'
+    ...  Build Name Passwords For Registered Dbs
+
+    Run Keyword If  '${storage_engine}' == 'ForestDB+Encryption' or '${storage_engine}' == 'SQLCipher'
+    ...  Log  Using ENCRYPTION: ${db_name_passwords}  console=yes
+
+    Run Keyword If  '${storage_engine}' == 'ForestDB+Encryption'
+    ...  Start Process  ${binary_path}
+    ...    --port  ${port}
+    ...    --storage  ForestDB
+    ...    --dir  ${RESULTS}/dbs
+    ...    @{db_name_passwords}
+    ...    -Log  YES  -LogSync  YES  -LogCBLRouter  YES  -LogSyncVerbose  YES  -LogRemoteRequest  YES
+    ...    alias=liteserv-ios
+    ...    shell=True
+    ...    stdout=${RESULTS}/logs/${TEST_NAME}-macosx-liteserv-stdout.log
+    ...    stderr=${RESULTS}/logs/${TEST_NAME}-macosx-liteserv-stderr.log
+    ...  ELSE IF  '${storage_engine}' == 'SQLCipher'
+    ...  Start Process  ${binary_path}
+    ...    --port  ${port}
+    ...    --storage  SQLite
+    ...    --dir  ${RESULTS}/dbs
+    ...    @{db_name_passwords}
+    ...    -Log  YES  -LogSync  YES  -LogCBLRouter  YES  -LogSyncVerbose  YES  -LogRemoteRequest  YES
+    ...    alias=liteserv-ios
+    ...    shell=True
+    ...    stdout=${RESULTS}/logs/${TEST_NAME}-macosx-liteserv-stdout.log
+    ...    stderr=${RESULTS}/logs/${TEST_NAME}-macosx-liteserv-stderr.log
+    ...  ELSE
+    ...  Start Process  ${binary_path}
+    ...    --port  ${port}
+    ...    --storage  ${storage_engine}
+    ...    --dir  ${RESULTS}/dbs
+    ...    -Log  YES  -LogSync  YES  -LogCBLRouter  YES  -LogSyncVerbose  YES  -LogRemoteRequest  YES
+    ...    alias=liteserv-ios
+    ...    shell=True
+    ...    stdout=${RESULTS}/logs/${TEST_NAME}-macosx-liteserv-stdout.log
+    ...    stderr=${RESULTS}/logs/${TEST_NAME}-macosx-liteserv-stderr.log
+
     Process Should Be Running   handle=liteserv-ios
 
 Start Android LiteServ
@@ -95,11 +131,45 @@ Start Net LiteServ
     [Arguments]  ${version}  ${host}  ${port}  ${storage_engine}
     [Timeout]       1 minute
     ${binary_path} =  Get LiteServ Binary Path  platform=net  version=${version}
-    Start Process   mono  ${binary_path}  --port\=${port}
-    ...             alias=liteserv-net
-    ...             shell=True
-    ...             stdout=${RESULTS}/logs/${TEST_NAME}-net-liteserv-stdout.log
-    ...             stderr=${RESULTS}/logs/${TEST_NAME}-net-liteserv-stderr.log
+
+    # Get a list of db names / password for running LiteServ with encrypted databases
+    @{db_name_passwords} =  Run Keyword If  '${storage_engine}' == 'ForestDB+Encryption' or '${storage_engine}' == 'SQLCipher'
+    ...  Build Name Passwords For Registered Dbs
+
+    Run Keyword If  '${storage_engine}' == 'ForestDB+Encryption' or '${storage_engine}' == 'SQLCipher'
+    ...  Log  Using ENCRYPTION: ${db_name_passwords}  console=yes
+
+    Run Keyword If  '${storage_engine}' == 'ForestDB+Encryption'
+    ...  Start Process  mono  ${binary_path}
+    ...    --port  ${port}
+    ...    --storage  ForestDB
+    ...    --dir  ${RESULTS}/dbs
+    ...    @{db_name_passwords}
+    ...    alias=liteserv-net
+    ...    shell=True
+    ...    stdout=${RESULTS}/logs/${TEST_NAME}-net-liteserv-stdout.log
+    ...    stderr=${RESULTS}/logs/${TEST_NAME}-net-liteserv-stderr.log
+    ...  ELSE IF  '${storage_engine}' == 'SQLCipher'
+    ...  Start Process  mono  ${binary_path}
+    ...    --port  ${port}
+    ...    --storage  SQLite
+    ...    --dir  ${RESULTS}/dbs
+    ...    @{db_name_passwords}
+    ...    alias=liteserv-net
+    ...    shell=True
+    ...    stdout=${RESULTS}/logs/${TEST_NAME}-net-liteserv-stdout.log
+    ...    stderr=${RESULTS}/logs/${TEST_NAME}-net-liteserv-stderr.log
+    ...  ELSE
+    ...  Start Process  mono  ${binary_path}
+    ...    --port  ${port}
+    ...    --storage  ${storage_engine}
+    ...    --dir  ${RESULTS}/dbs
+    ...    alias=liteserv-net
+    ...    shell=True
+    ...    stdout=${RESULTS}/logs/${TEST_NAME}-net-liteserv-stdout.log
+    ...    stderr=${RESULTS}/logs/${TEST_NAME}-net-liteserv-stderr.log
+
+    Process Should Be Running   handle=liteserv-net
 
 Shutdown MacOSX LiteServ
     [Documentation]   Stops Mac OSX LiteServ.

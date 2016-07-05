@@ -10,6 +10,10 @@ MAX_RETRIES = 5
 
 CLIENT_REQUEST_TIMEOUT = 120
 
+# Required to make sure that these are created with encryption
+# Use to build the command line flags for encryption
+REGISTERED_CLIENT_DBS = ["ls_db", "ls_db1", "ls_db2"]
+
 class ServerType(Enum):
     syncgateway = "syncgateway"
     listener = "listener"

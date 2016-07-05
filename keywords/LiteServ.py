@@ -13,6 +13,7 @@ from requests.exceptions import ConnectionError
 from constants import BINARY_DIR
 from constants import LATEST_BUILDS
 from constants import MAX_RETRIES
+from constants import REGISTERED_CLIENT_DBS
 from constants import RESULTS_DIR
 
 from utils import log_info
@@ -290,3 +291,14 @@ class LiteServ:
         log_info("LiteServ: {} is running".format(lite_version))
 
         return url
+
+    def build_name_passwords_for_registered_dbs(self):
+        """
+        Returns a list of name=password for each db in registered dbs
+        to allow the db to be encrypted for Mac OSX / .NET LiteServ
+        """
+        db_flags = []
+        for db_name in REGISTERED_CLIENT_DBS:
+            db_flags.append("--dbpassword")
+            db_flags.append("{}=pass".format(db_name))
+        return db_flags
