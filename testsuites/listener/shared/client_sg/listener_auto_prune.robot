@@ -30,23 +30,54 @@ Test Auto Prune Listener Sanity
     [Timeout]        5 minutes
 
     Log  Using LiteServ: ${ls_url}
+
+    Set Test Variable  ${num_docs}  ${1}
+    Set Test Variable  ${num_revs}  ${100}
+
+    ${ls_db} =       Create Database  url=${ls_url}  name=ls_db
+    ${ls_db_docs} =  Add Docs  url=${ls_url}  db=${ls_db}  number=${num_docs}  id_prefix=ls_db
+    ${ls_db_docs_update} =   Update Docs  url=${ls_url}  db=${ls_db}  docs=${ls_db_docs}  number_updates=${num_revs}
+
+    Verify Revs Num For Docs  url=${ls_url}  db=${ls_db}  docs=${ls_db_docs}  expected_revs_per_doc=${20}
+
+
+Test Auto Prune With Pull Replication
+    [Documentation]  Tests that auto prune is happing after a pull replication
+    ...  1. Create a database on LiteServ (ls_db)
+    ...  2. Add doc to sync gateway
+    ...  3. Update doc 50 times
+    ...  4. Set up pull replication from sync_gateway db to LiteServ db
+    ...  5. Verify number of revisions on client is default (20)
+
+    Log  Using LiteServ: ${ls_url}
     Log  Using Sync Gateway: ${sg_url}
     Log  Using Sync Gateway: ${sg_url_admin}
 
-    Set Test Variable  ${num_docs}  ${100}
-    Set Test Variable  ${num_revs}  ${100}
+    Set Test Variable  ${num_docs}  ${1}
+    Set Test Variable  ${num_revs}  ${50}
 
     ${sg_user_channels} =  Create List  NBC
     ${sg_user} =     Create User  url=${sg_url_admin}  db=${sg_db}  name=${sg_user_name}  password=password  channels=${sg_user_channels}
     ${sg_session} =  Create Session  url=${sg_url_admin}  db=${sg_db}  name=${sg_user_name}
 
     ${ls_db} =       Create Database  url=${ls_url}  name=ls_db
-    ${ls_db_docs} =  Add Docs  url=${ls_url}  db=${ls_db}  number=${num_docs}  id_prefix=ls_db  channels=${sg_user_channels}
-    ${ls_db_docs_update} =   Update Docs  url=${ls_url}  db=${ls_db}  docs=${ls_db_docs}  number_updates=${num_revs}
 
-    Verify Revs Num For Docs  url=${ls_url}  db=${ls_db}  docs=${ls_db_docs}  expected_revs_per_doc=${20}
+    ${sg_db_docs} =  Add Docs  url=${sg_url}  db=${sg_db}  number=${num_docs}  id_prefix=sg_db  channels=${sg_user_channels}  auth=${sg_session}
+    ${sg_docs_update} =  Update Docs  url=${sg_url}  db=${sg_db}  docs=${sg_db_docs}  number_updates=${num_revs}  auth=${sg_session}
 
-Test Auto Prune Listener Keeps Confilts Sanity
+    # Start replication ls_db <- sg_db
+    ${repl} =  Start Replication
+    ...  url=${ls_url}
+    ...  continuous=${True}
+    ...  from_url=${sg_url_admin}  from_db=${sg_db}
+    ...  to_db=${ls_db}
+
+    Wait For Replication Status Idle  url=${ls_url}  replication_id=${repl}
+    Verify Docs Present  url=${ls_url}  db=${ls_db}  expected_docs=${sg_docs_update}
+    Verify Revs Num For Docs  url=${ls_url}  db=${ls_db}  docs=${sg_docs_update}  expected_revs_per_doc=${20}
+
+
+Test Auto Prune Listener Keeps Conflicts Sanity
     [Documentation]  Test to verify auto pruning is working for the listener
     ...  1. Create db on LiteServ and add docs
     ...  2. Create db on sync_gateway and add docs with the same id
@@ -114,8 +145,6 @@ Setup Test
     Set Test Variable  ${ls_url}
     Set Test Variable  ${sg_url}        ${cluster_hosts["sync_gateways"][0]["public"]}
     Set Test Variable  ${sg_url_admin}  ${cluster_hosts["sync_gateways"][0]["admin"]}
-
-
 
     Stop Sync Gateway  url=${sg_url}
     Start Sync Gateway  url=${sg_url}  config=${SYNC_GATEWAY_CONFIGS}/walrus.json
