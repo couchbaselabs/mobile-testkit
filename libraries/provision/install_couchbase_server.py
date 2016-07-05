@@ -11,6 +11,16 @@ from keywords.CouchbaseServer import CouchbaseServer
 class CouchbaseServerConfig:
 
     def __init__(self, version):
+        """
+        The Couchbase Server version will either be of the form:
+
+        4.5.0 (eg, no build number specified)
+
+        OR
+
+        4.5.0-2601 (a particular build number is specified)
+
+        """
 
         version_build = version.split("-")
         self.version = version_build[0]
@@ -19,6 +29,7 @@ class CouchbaseServerConfig:
             self.build = version_build[1]
         else:
             self.build = None
+
 
     def get_baseurl_package(self):
 
@@ -31,38 +42,12 @@ class CouchbaseServerConfig:
             "4.5.0": "2601"
         }
 
-
-        # Append build for released versions
+        # Get the build number for released versions
         if self.version in released_versions and self.build is None:
-            build_for_release = released_versions[self.version]
+            buildnum_for_release = released_versions[self.version]
 
-        # Get dev server package from latestbuilds
-        if self.version.startswith("3.1"):
-            if self.build is None:
-                base_url = "http://cbmobile-packages.s3.amazonaws.com"
-            else:
-                base_url = "http://latestbuilds.hq.couchbase.com/"
-            package_name = "couchbase-server-enterprise_centos6_x86_64_{}-{}-rel.rpm".format(self.version, build_for_release)
-        elif self.version.startswith("4.0") or self.version.startswith("4.1"):
-            if self.build is None:
-                base_url = "http://cbmobile-packages.s3.amazonaws.com"
-            else:
-                base_url = "http://cbnas01.sc.couchbase.com/builds/latestbuilds/couchbase-server/sherlock/{}".format(build_for_release)
-            package_name = "couchbase-server-enterprise-{}-{}-centos7.x86_64.rpm".format(self.version, build_for_release)
-        elif self.version.startswith("4.5"):
-            if self.build is None:
-                base_url = "http://cbmobile-packages.s3.amazonaws.com"
-            else:
-                base_url = "http://cbnas01.sc.couchbase.com/builds/latestbuilds/couchbase-server/watson/{}".format(build_for_release)
-            package_name = "couchbase-server-enterprise-{}-{}-centos7.x86_64.rpm".format(self.version, build_for_release)
-        elif self.version.startswith("4.7"):
-            if self.build is None:
-                base_url = "http://cbmobile-packages.s3.amazonaws.com"
-            else:
-                base_url = "http://cbnas01.sc.couchbase.com/builds/latestbuilds/couchbase-server/spock/{}".format(build_for_release)
-            package_name = "couchbase-server-enterprise-{}-{}-centos7.x86_64.rpm".format(self.version, build_for_release)
-        else:
-            raise ValueError("Unable to resolve build for version: {}-{}".format(self.version, self.build_for_release))
+        base_url = get_base_url(self.version, buildnum_for_release, self.build)
+        package_name = get_package_name(self.version, buildnum_for_release)
 
         return base_url, package_name
 
@@ -71,6 +56,55 @@ class CouchbaseServerConfig:
         output += "  ------------------------------------------\n"
         output += "  version:      {}\n".format(self.version)
         return output
+
+
+
+def get_base_url(version, buildnum_for_release, user_specified_build):
+    """
+    Given:
+
+    version - the version without any build number information, eg 4.5.0
+    buildnum_for_release - the build number associated with this major version release, eg, 2601 (or None)
+    user_specified_build - if the user requested a particular build, eg 2601 (or None)
+
+    Return the base_url of the package download URL (everything except the filename)
+
+    """
+
+    # if the user did not specify a particular build, that means we are going to use
+    # an official build, which is expected to be stored (mirrored) on a separate S3 bucket
+    # (in order to not skew stats for packages.couchbase.com)
+    if user_specified_build is None:
+        return "http://cbmobile-packages.s3.amazonaws.com"
+
+    cbnas_base_url = "http://cbnas01.sc.couchbase.com/builds/latestbuilds/couchbase-server"
+
+    if version.startswith("3.1"):
+        return "http://latestbuilds.hq.couchbase.com/"
+    elif version.startswith("4.0") or version.startswith("4.1"):
+        return "{}/sherlock/{}".format(cbnas_base_url, buildnum_for_release)
+    elif version.startswith("4.5"):
+        return "{}/watson/{}".format(cbnas_base_url, buildnum_for_release)
+    elif version.startswith("4.7"):
+        return "{}/spock/{}".format(cbnas_base_url, buildnum_for_release)
+    else:
+        raise Exception("Unexpected couchbase server version: {}".format(version))
+
+def get_package_name(version, buildnum_for_release):
+    """
+    Given:
+
+    version - the version without any build number information, eg 4.5.0
+    buildnum_for_release - the build number associated with this major version release, eg, 2601 (or None)
+
+    Return the filename portion of the package download URL
+
+    """
+
+    if version.startswith("3.1"):
+        return "couchbase-server-enterprise_centos6_x86_64_{}-{}-rel.rpm".format(version, buildnum_for_release)
+    else:
+        return "couchbase-server-enterprise-{}-{}-centos7.x86_64.rpm".format(version, buildnum_for_release)
 
 
 def install_couchbase_server(couchbase_server_config):
