@@ -66,14 +66,19 @@ Start MacOSX LiteServ
 
     ${binary_path} =  Get LiteServ Binary Path  platform=macosx  version=${version}
 
+     # Get a list of db names / password for running LiteServ with encrypted databases
+    @{db_name_passwords} =  Run Keyword If  '${storage_engine}' == 'ForestDB+Encryption' or '${storage_engine}' == 'SQLCipher'
+    ...  Build Name Passwords For Registered Dbs
+
+    Run Keyword If  '${storage_engine}' == 'ForestDB+Encryption' or '${storage_engine}' == 'SQLCipher'
+    ...  Log  Using ENCRYPTION: ${db_name_passwords}  console=yes
+
     Run Keyword If  '${storage_engine}' == 'ForestDB+Encryption'
     ...  Start Process  ${binary_path}
     ...    --port  ${port}
     ...    --storage  ForestDB
     ...    --dir  ${RESULTS}/dbs
-    ...    --dbpassword  ls_db\=pass
-    ...    --dbpassword  ls_db1\=pass
-    ...    --dbpassword  ls_db2\=pass
+    ...    @{db_name_passwords}
     ...    -Log  YES  -LogSync  YES  -LogCBLRouter  YES  -LogSyncVerbose  YES  -LogRemoteRequest  YES
     ...    alias=liteserv-ios
     ...    shell=True
@@ -84,9 +89,7 @@ Start MacOSX LiteServ
     ...    --port  ${port}
     ...    --storage  SQLite
     ...    --dir  ${RESULTS}/dbs
-    ...    --dbpassword  ls_db\=pass
-    ...    --dbpassword  ls_db1\=pass
-    ...    --dbpassword  ls_db2\=pass
+    ...    @{db_name_passwords}
     ...    -Log  YES  -LogSync  YES  -LogCBLRouter  YES  -LogSyncVerbose  YES  -LogRemoteRequest  YES
     ...    alias=liteserv-ios
     ...    shell=True
@@ -129,14 +132,19 @@ Start Net LiteServ
     [Timeout]       1 minute
     ${binary_path} =  Get LiteServ Binary Path  platform=net  version=${version}
 
+    # Get a list of db names / password for running LiteServ with encrypted databases
+    @{db_name_passwords} =  Run Keyword If  '${storage_engine}' == 'ForestDB+Encryption' or '${storage_engine}' == 'SQLCipher'
+    ...  Build Name Passwords For Registered Dbs
+
+    Run Keyword If  '${storage_engine}' == 'ForestDB+Encryption' or '${storage_engine}' == 'SQLCipher'
+    ...  Log  Using ENCRYPTION: ${db_name_passwords}  console=yes
+
     Run Keyword If  '${storage_engine}' == 'ForestDB+Encryption'
     ...  Start Process  mono  ${binary_path}
     ...    --port  ${port}
     ...    --storage  ForestDB
     ...    --dir  ${RESULTS}/dbs
-    ...    --dbpassword  ls_db\=pass
-    ...    --dbpassword  ls_db1\=pass
-    ...    --dbpassword  ls_db2\=pass
+    ...    @{db_name_passwords}
     ...    alias=liteserv-net
     ...    shell=True
     ...    stdout=${RESULTS}/logs/${TEST_NAME}-net-liteserv-stdout.log
@@ -146,9 +154,7 @@ Start Net LiteServ
     ...    --port  ${port}
     ...    --storage  SQLite
     ...    --dir  ${RESULTS}/dbs
-    ...    --dbpassword  ls_db\=pass
-    ...    --dbpassword  ls_db1\=pass
-    ...    --dbpassword  ls_db2\=pass
+    ...    @{db_name_passwords}
     ...    alias=liteserv-net
     ...    shell=True
     ...    stdout=${RESULTS}/logs/${TEST_NAME}-net-liteserv-stdout.log

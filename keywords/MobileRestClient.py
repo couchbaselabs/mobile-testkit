@@ -17,6 +17,7 @@ from constants import AuthType
 from constants import ServerType
 from constants import Platform
 from constants import CLIENT_REQUEST_TIMEOUT
+from constants import REGISTERED_CLIENT_DBS
 
 from utils import log_r
 from utils import log_info
@@ -201,6 +202,13 @@ class MobileRestClient:
         server_type = self.get_server_type(url)
 
         if server_type == ServerType.listener:
+
+            if name not in REGISTERED_CLIENT_DBS:
+                # If the db name is not in registered dbs and you are running in excrypted mode (SQLCipher or ForestDB+Encryption),
+                #  the db will be created with no encryption silently. Adding the db to REGISTERED_CLIENT_DBS makes sure that
+                #  the db has a password and will be encrypted upon creation.
+                raise ValueError("Make sure you have registered you db name in keywords/constants: {}".format(name))
+
             resp = self._session.put("{}/{}/".format(url, name))
         elif server_type == ServerType.syncgateway:
             if server is None:
