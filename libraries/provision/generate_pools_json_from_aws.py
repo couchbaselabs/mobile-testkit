@@ -20,10 +20,9 @@ def write_to_file(cloud_formation_stack_dns_addresses, filename):
     """
     output_dictionary = {"ips": cloud_formation_stack_dns_addresses}
 
-    target = open("{}".format(filename), 'w')
-    target.truncate()
-    target.write(json.dumps(output_dictionary, sort_keys=True, indent=4, separators=(',', ': ')))
-    target.close()
+    with open(filename, 'w') as target:
+        target.truncate()
+        target.write(json.dumps(output_dictionary, sort_keys=True, indent=4, separators=(',', ': ')))
 
 def lookup_dns_names(inventory, cloud_formation_stack_ip_addresses):
     """
