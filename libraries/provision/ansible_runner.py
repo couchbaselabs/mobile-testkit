@@ -3,6 +3,8 @@ from ansible_python_runner import Runner
 from ansible import constants
 import logging
 
+PLAYBOOKS_HOME="libraries/provision/ansible/playbooks"
+
 class AnsibleRunner:
 
     def __init__(self):
@@ -12,7 +14,7 @@ class AnsibleRunner:
 
         inventory_filename = self.provisiong_config
 
-        playbook_filename = "libraries/provision/ansible/playbooks/{}".format(script_name)
+        playbook_filename = "{}/{}".format(PLAYBOOKS_HOME, script_name)
 
         runner = Runner(
             inventory_filename=inventory_filename,

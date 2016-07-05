@@ -17,12 +17,28 @@ class ClusterDef:
         self.num_lgs = num_lgs
 
 
+    def num_machines_required(self):
+        return (
+            self.num_sgs +
+            self.num_acs +
+            self.num_cbs +
+            self.num_lgs
+        )
+
+
 def write_config(config):
-
-    print("\nGenerating config: {}".format(config.name))
-
     ips = get_ips()
     print("ips: {}".format(ips))
+
+    if len(ips) < config.num_machines_required():
+        print("WARNING: Skipping config {} since {} machines required, but only {} provided".format(
+            config.name,
+            config.num_machines_required(),
+            len(ips))
+        )
+        return
+
+    print("\nGenerating config: {}".format(config.name))
 
     ansible_cluster_conf_file = "resources/cluster_configs/{}".format(config.name)
     cluster_json_file = "resources/cluster_configs/{}.json".format(config.name)
@@ -33,6 +49,7 @@ def write_config(config):
         couchbase_servers = []
         sync_gateways = []
         accels = []
+        load_generators = []
 
         f.write("[pool]\n")
         count = 1
@@ -95,6 +112,22 @@ def write_config(config):
 
         f.write("\n")
 
+        lg_ips_to_remove = []
+        f.write("[load_generators]\n")
+        for i in range(config.num_lgs):
+            ip = ips[i]
+            f.write("lg{} ansible_host={}\n".format(i + 1, ip))
+            load_generators.append({
+                "name": "lg{}".format(i + 1),
+                "ip": ip
+            })
+            lg_ips_to_remove.append(ip)
+
+        for lg_ip in lg_ips_to_remove:
+            ips.remove(lg_ip)
+
+        f.write("\n")
+
         # Get local address to run webhook server on
         # TODO: make the webhook receiver it's own endpoint, or come up w/ better design.
         try:
@@ -117,7 +150,8 @@ def write_config(config):
             "hosts": hosts,
             "couchbase_servers": couchbase_servers,
             "sync_gateways": sync_gateways,
-            "sg_accels": accels
+            "sg_accels": accels,
+            "load_generators": load_generators,
         }
 
         with open(cluster_json_file, "w") as f_json:
@@ -141,8 +175,6 @@ if __name__ == "__main__":
     usage: python generate_cluster_from_pool.py"
     """
 
-    min_num_machines = 4
-
     cluster_configs = [
         ClusterDef("1sg",           num_sgs=1, num_acs=0, num_cbs=0, num_lgs=0),
         ClusterDef("1cbs",          num_sgs=0, num_acs=0, num_cbs=1, num_lgs=0),
@@ -150,15 +182,13 @@ if __name__ == "__main__":
         ClusterDef("1sg_1ac_1cbs",  num_sgs=1, num_acs=1, num_cbs=1, num_lgs=0),
         ClusterDef("1sg_2ac_1cbs",  num_sgs=1, num_acs=2, num_cbs=1, num_lgs=0),
         ClusterDef("2sg_1cbs",      num_sgs=2, num_acs=0, num_cbs=1, num_lgs=0),
+        ClusterDef("2sg_3cbs_2lgs", num_sgs=2, num_acs=0, num_cbs=3, num_lgs=2),
     ]
 
     if not os.path.isfile(pool_file):
         print("Pool file not found in 'resources/'. Please modify the example to include your machines.")
         sys.exit(1)
 
-    if len(get_ips()) < min_num_machines:
-        print("You are required to have {} machines defined to be able to run the full suite.".format(min_num_machines))
-        sys.exit(1)
 
     print("Using the following machines to run functional tests ... ")
     for host in get_ips():

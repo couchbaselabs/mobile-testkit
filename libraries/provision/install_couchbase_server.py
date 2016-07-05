@@ -11,6 +11,16 @@ from keywords.CouchbaseServer import CouchbaseServer
 class CouchbaseServerConfig:
 
     def __init__(self, version):
+        """
+        The Couchbase Server version will either be of the form:
+
+        4.5.0 (eg, no build number specified)
+
+        OR
+
+        4.5.0-2601 (a particular build number is specified)
+
+        """
 
         version_build = version.split("-")
         self.version = version_build[0]
@@ -22,41 +32,95 @@ class CouchbaseServerConfig:
 
     def get_baseurl_package(self):
 
-        released_versions = {
-            "4.5.0": "2601",
-            "4.1.1": "5914",
-            "4.1.0": "5005",
-            "4.0.0": "4051",
-            "3.1.5": "1859"
-        }
-
-        # Append build for released versions
-        if self.version in released_versions and self.build is None:
-            self.build = released_versions[self.version]
-
-        # Get dev server package from latestbuilds
-        if self.version.startswith("3.1"):
-            base_url = "http://latestbuilds.hq.couchbase.com/"
-            package_name = "couchbase-server-enterprise_centos6_x86_64_{}-{}-rel.rpm".format(self.version, self.build)
-        elif self.version.startswith("4.0") or self.version.startswith("4.1"):
-            base_url = "http://cbnas01.sc.couchbase.com/builds/latestbuilds/couchbase-server/sherlock/{}".format(self.build)
-            package_name = "couchbase-server-enterprise-{}-{}-centos7.x86_64.rpm".format(self.version, self.build)
-        elif self.version.startswith("4.5"):
-            base_url = "http://cbnas01.sc.couchbase.com/builds/latestbuilds/couchbase-server/watson/{}".format(self.build)
-            package_name = "couchbase-server-enterprise-{}-{}-centos7.x86_64.rpm".format(self.version, self.build)
-        elif self.version.startswith("4.7"):
-            base_url = "http://cbnas01.sc.couchbase.com/builds/latestbuilds/couchbase-server/spock/{}".format(self.build)
-            package_name = "couchbase-server-enterprise-{}-{}-centos7.x86_64.rpm".format(self.version, self.build)
+        if self.build is None:
+            # since the user didn't specify a build number,
+            # this means user wants an official released version, so
+            # return cbmobile-packages bucket url
+            return resolve_cb_mobile_url(self.version)
         else:
-            raise ValueError("Unable to resolve build for version: {}-{}".format(self.version, self.build))
+            # the user specified an explicit build number, so grab the
+            # build off the "cbnas" server (Couchbase VPN only)
+            return resolve_cb_nas_url(self.version, self.build)
 
-        return base_url, package_name
 
     def __str__(self):
         output = "\n  Couchbase Server configuration\n"
         output += "  ------------------------------------------\n"
         output += "  version:      {}\n".format(self.version)
         return output
+
+
+def resolve_cb_mobile_url(version):
+    """
+    Resolve a download URL for the corresponding package to given
+    version on http://cbmobile-packages.s3.amazonaws.com (an S3 bucket
+    for couchbase mobile that mirrors released couchbase server versions)
+
+    Given:
+
+    version - the version without any build number information, eg 4.5.0
+
+    Return the base_url of the package download URL (everything except the filename)
+
+    """
+    released_versions = {
+        "4.5.0": "2601",
+        "4.1.1": "5914",
+        "4.1.0": "5005",
+        "4.0.0": "4051",
+        "3.1.5": "1859"
+    }
+    build_number = released_versions[version]
+    base_url = "http://cbmobile-packages.s3.amazonaws.com"
+    package_name = get_package_name(version, build_number)
+    return base_url, package_name
+
+
+def resolve_cb_nas_url(version, build_number):
+    """
+    Resolve a download URL for couchbase server on the internal VPN download site
+
+    Given:
+
+    version - the version without any build number information, eg 4.5.0
+    build_number - the build number associated with this major version release, eg, 2601 (or None)
+
+    Return the base_url of the package download URL (everything except the filename)
+
+    """
+
+    cbnas_base_url = "http://cbnas01.sc.couchbase.com/builds/latestbuilds/couchbase-server"
+
+    if version.startswith("3.1"):
+        base_url = "http://latestbuilds.hq.couchbase.com/"
+    elif version.startswith("4.0") or version.startswith("4.1"):
+        base_url = "{}/sherlock/{}".format(cbnas_base_url, build_number)
+    elif version.startswith("4.5"):
+        base_url = "{}/watson/{}".format(cbnas_base_url, build_number)
+    elif version.startswith("4.7"):
+        base_url = "{}/spock/{}".format(cbnas_base_url, build_number)
+    else:
+        raise Exception("Unexpected couchbase server version: {}".format(version))
+
+    package_name = get_package_name(version, build_number)
+    return base_url, package_name
+
+
+def get_package_name(version, build_number):
+    """
+    Given:
+
+    version - the version without any build number information, eg 4.5.0
+    build_number - the build number associated with this major version release, eg, 2601 (or None)
+
+    Return the filename portion of the package download URL
+
+    """
+
+    if version.startswith("3.1"):
+        return "couchbase-server-enterprise_centos6_x86_64_{}-{}-rel.rpm".format(version, build_number)
+    else:
+        return "couchbase-server-enterprise-{}-{}-centos7.x86_64.rpm".format(version, build_number)
 
 
 def install_couchbase_server(couchbase_server_config):

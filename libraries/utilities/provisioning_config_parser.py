@@ -7,10 +7,11 @@ from ansible.vars import VariableManager
 
 
 def hosts_for_tag(tag):
-    hostfile = "provisioning_config"
+
+    hostfile = "{}".format(os.environ["CLUSTER_CONFIG"])
 
     if not os.path.isfile(hostfile):
-        print("File 'provisioning_config' not found at {}".format(os.getcwd()))
+        print("Hostfile does not exist {}".format(hostfile))
         sys.exit(1)
 
     variable_manager = VariableManager()
