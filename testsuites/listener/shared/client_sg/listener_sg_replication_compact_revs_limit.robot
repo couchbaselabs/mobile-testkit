@@ -74,6 +74,12 @@ Client to Sync Gateway Complex Replication With Revs Limit
 
     Verify Docs Present  url=${sg_url_admin}  db=${sg_db}  expected_docs=${ls_db_docs}
 
+    # Delay is to the updates here due to couchbase/couchbase-lite-ios#1277.
+    # Basically, if your revs depth is small and someone is updating a doc past the revs depth before a push replication,
+    # the push replication will have no common ancestor with sync_gateway causing conflicts to be created.
+    # Adding a delay between updates helps this situation. There is an alternative for CBL mac and CBL NET to change the default revs client depth
+    # but that is not configurable for Android.
+    # Currently adding a delay will allow the replication to act as expected for all platforms now.
     ${sg_docs_update} =      Update Docs  url=${sg_url}  db=${sg_db}  docs=${ls_db_docs}  number_updates=${num_revs}  delay=${0.1}  auth=${sg_session}
     ${ls_db_docs_update} =   Update Docs  url=${ls_url}  db=${ls_db}  docs=${ls_db_docs}  number_updates=${num_revs}  delay=${0.1}
 
