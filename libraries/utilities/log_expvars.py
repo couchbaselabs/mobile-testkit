@@ -11,10 +11,14 @@ from provisioning_config_parser import hosts_for_tag
 
 
 def dump_results(test_folder, gateload_results, sync_gateway_results):
-    with open("testsuites/syncgateway/performance/results/{}/gateload_expvars.json".format(test_folder), "w") as f:
+    filename = "testsuites/syncgateway/performance/results/{}/gateload_expvars.json".format(test_folder)
+    print("Writing gateload_expvars to: {}".format(filename))
+    with open(filename, "w") as f:
         f.write(json.dumps(gateload_results))
 
-    with open("testsuites/syncgateway/performance/results/{}/sync_gateway_expvars.json".format(test_folder), "w") as f:
+    filename = "testsuites/syncgateway/performance/results/{}/sync_gateway_expvars.json".format(test_folder)
+    print("Writing sync_gateway_expvars to: {}".format(filename))
+    with open(filename, "w") as f:
         f.write(json.dumps(sync_gateway_results))
 
 
@@ -64,8 +68,7 @@ def log_expvars(folder_name):
                 write_expvars(gateload_results, endpoint)
             except ConnectionError as he:
                 # connection to gateload expvars has been closed
-                print(he)
-                print("Gateload no longer reachable. Writing expvars ...")
+                print("Gateload no longer reachable. Writing expvars to {}".format(folder_name))
                 dump_results(folder_name, gateload_results, sync_gateway_results)
                 gateload_is_running = False
 
@@ -76,7 +79,7 @@ def log_expvars(folder_name):
             except ConnectionError as he:
                 # Should not happen unless sg crashes
                 print(he)
-                print("ERROR: sync_gateway not reachable. Dumping results")
+                print("ERROR: sync_gateway not reachable. Dumping results to {}".format(folder_name))
                 dump_results(folder_name, gateload_results, sync_gateway_results)
 
         print("Elapsed: {} minutes".format((time.time() - start_time) / 60.0))
