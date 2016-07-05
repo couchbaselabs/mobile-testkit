@@ -54,7 +54,7 @@ if __name__=="__main__":
                       help="aws cloudformation stack name")
 
     parser.add_option("", "--targetfile",
-                      action="store", type="string", dest="targetfile", default=None,
+                      action="store", type="string", dest="targetfile", default="resources/pool.json",
                       help="ansible inventory target file")
 
     parser.add_option("", "--dumpinventory",
@@ -66,7 +66,7 @@ if __name__=="__main__":
     (opts, args) = parser.parse_args(arg_parameters)
 
     if opts.stackname is None or opts.targetfile is None:
-        print("You must specify --stackname=<stack_name> and --targetfile=<file_name>")
+        print("You must specify --stackname=<stack_name>")
         sys.exit(1)
 
     print "Getting inventory from AWS ... (may take a few minutes)"
@@ -89,11 +89,19 @@ if __name__=="__main__":
     # initial call to create_and_instantiate_cluster.py.  It's a bit of a hack, and very brittle, and should
     # be reworked to explicitly record the machine size somewhere, or assert that the vm's spun up
     # all have the identical sizes.
-    couchbase_server_ip_addresses = ec2Inventory.inventory["tag_Type_couchbaseserver"]
+    couchbase_server_ip_addresses = []
+    if "tag_Type_couchbaseserver" in ec2Inventory.inventory:
+        couchbase_server_ip_addresses = ec2Inventory.inventory["tag_Type_couchbaseserver"]
     print("couchbase_server_ip_addresses: {}".format(couchbase_server_ip_addresses))
-    sync_gateway_ip_addresses = ec2Inventory.inventory["tag_Type_syncgateway"]
+
+    sync_gateway_ip_addresses = []
+    if "tag_Type_syncgateway" in ec2Inventory.inventory:
+        sync_gateway_ip_addresses = ec2Inventory.inventory["tag_Type_syncgateway"]
     print("sync_gateway_ip_addresses: {}".format(sync_gateway_ip_addresses))
-    load_generator_ip_addresses = ec2Inventory.inventory["tag_Type_gateload"]
+
+    load_generator_ip_addresses = []
+    if "tag_Type_gateload" in ec2Inventory.inventory:
+        load_generator_ip_addresses = ec2Inventory.inventory["tag_Type_gateload"]
     print("load_generator_ip_addresses: {}".format(load_generator_ip_addresses))
 
     # get ip addresses of [u'54.242.119.83', u'54.234.207.138', u'54.209.218.97', u'54.242.55.56', u'54.242.29.78', u'52.90.171.161', u'54.175.81.204']
