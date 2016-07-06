@@ -26,6 +26,7 @@ from jinja2 import Template
 import ansible.inventory
 from ansible.parsing.dataloader import DataLoader
 from ansible.vars import VariableManager
+from ansible import constants
 
 from libraries.provision.ansible_runner import PLAYBOOKS_HOME
 
@@ -95,8 +96,12 @@ def upload_gateload_config(gateload, sync_gateway, user_offset, number_of_puller
     print "Wrote to file: {}".format(outfile)
 
     # transfer file to remote host
-
-    cmd = 'ansible {} -i {} -m copy -a "src={} dest=/home/centos/gateload_config.json" --user centos'.format(gateload_inventory_hostname, os.environ["CLUSTER_CONFIG"], outfile)
+    cmd = 'ansible {} -i {} -m copy -a "src={} dest=/home/centos/gateload_config.json" --user {}'.format(
+        gateload_inventory_hostname,
+        os.environ["CLUSTER_CONFIG"],
+        outfile,
+        constants.DEFAULT_REMOTE_USER
+    )
     print "Uploading gateload config using command: {}".format(cmd)
     result = subprocess.check_output(cmd, shell=True)
     print "File transfer result: {}".format(result)
