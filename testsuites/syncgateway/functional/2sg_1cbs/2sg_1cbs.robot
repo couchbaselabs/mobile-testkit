@@ -50,9 +50,10 @@ Test Sg Replicate Continuous Replication
     [Tags]   sanity
     Test Sg Replicate Continuous Replication
 
-Test Sg Replicate Delete Db Replication In Progress
-    [Tags]   sanity
-    Test Sg Replicate Delete Db Replication In Progress
+# Disable for 1.3 - https://github.com/couchbaselabs/mobile-testkit/issues/582
+#Test Sg Replicate Delete Db Replication In Progress
+#    [Tags]   sanity
+#    Test Sg Replicate Delete Db Replication In Progress
 
 Test Sg Replicate Basic Test Channels
     [Tags]   sanity
