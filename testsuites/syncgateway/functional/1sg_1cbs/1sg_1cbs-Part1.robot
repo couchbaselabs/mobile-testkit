@@ -178,11 +178,11 @@ test db online offline_webhooks offline two
     test db online offline_webhooks offline two     ${5}    ${1}    ${1}    ${2}
 
 # test_longpoll (channel cache mode)
-test longpoll changes parametrized
+test longpoll changes parametrized 5000 1
     [Tags]   sanity
     test longpoll changes parametrized      ${SYNC_GATEWAY_CONFIGS}/sync_gateway_default_functional_tests_cc.json   ${5000}  ${1}
 
-test longpoll changes parametrized
+test longpoll changes parametrized 50 100
     [Tags]   sanity
     test longpoll changes parametrized      ${SYNC_GATEWAY_CONFIGS}/sync_gateway_default_functional_tests_cc.json   ${50}   ${100}
 
