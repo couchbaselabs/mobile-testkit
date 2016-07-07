@@ -28,14 +28,14 @@ def install_keys(key_name, user_name):
                 "{0}@{1}".format(user_name, ip)
             ])
         except CalledProcessError as e:
-            print("ssh-copy-id failed: {}".format(key_name))
+            print("ssh-copy-id failed: {} with error: {}".format(key_name, e))
             print("Make sure '{}' is in ~/.ssh/".format(key_name))
             sys.exit(1)
 
     split_key = key_name.split(".")
     private_key = split_key[0]
 
-    print("Add '{0}' to you ssh agent?".format(private_key))
+    print("Add '{0}' to your ssh agent?".format(private_key))
     validate = raw_input("Enter 'y' to continue or 'n' to exit: ")
     if validate != "y":
         print("Exiting...")
