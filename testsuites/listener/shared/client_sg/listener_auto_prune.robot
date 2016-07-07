@@ -45,7 +45,7 @@ Test Auto Prune With Pull Replication
     [Documentation]  Tests that auto prune is happing after a pull replication
     ...  1. Create a database on LiteServ (ls_db)
     ...  2. Add doc to sync gateway
-    ...  3. Update doc 50 times
+    ...  3. Update doc 50 times on sync_gateway
     ...  4. Set up pull replication from sync_gateway db to LiteServ db
     ...  5. Verify number of revisions on client is default (20)
 
