@@ -97,13 +97,13 @@ def run_perf_test(number_pullers, number_pushers, use_gateload, gen_gateload_con
     # Killing sync_gateway and sg_accel will trigger collection of
     #    1) machine_stats
     #    2) sync_gateway profile data
-    #print ">>> Stopping Sync Gateway"
-    #stop_sync_gateway_status = ansible_runner.run_ansible_playbook("stop-sync-gateway.yml")
-    #assert stop_sync_gateway_status == 0, "Failed to stop sync_gateway"
+    print ">>> Stopping Sync Gateway"
+    stop_sync_gateway_status = ansible_runner.run_ansible_playbook("stop-sync-gateway.yml")
+    assert stop_sync_gateway_status == 0, "Failed to stop sync_gateway"
 
-    #print ">>> Stopping SG Accel"
-    #stop_sg_accel_status = ansible_runner.run_ansible_playbook("stop-sg-accel.yml")
-    #assert stop_sg_accel_status == 0, "Failed to stop sg_accel"
+    print ">>> Stopping SG Accel"
+    stop_sg_accel_status = ansible_runner.run_ansible_playbook("stop-sg-accel.yml")
+    assert stop_sg_accel_status == 0, "Failed to stop sg_accel"
 
     # HACK: refresh interval for resource stat collection is 10 seconds.
     #  Make sure enough time has passed before collecting json
