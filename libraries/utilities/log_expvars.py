@@ -59,16 +59,21 @@ def log_expvars(folder_name):
     gateload_results = OrderedDict()
     sync_gateway_results = OrderedDict()
 
+    # Give gateload some time to startup
+    print("Sleeping a few seconds to allow gateload to start")
+    time.sleep(10)
+
     gateload_is_running = True
     while gateload_is_running:
 
         # Caputure expvars for gateloads
         for endpoint in lgs_expvar_endpoints:
+            print("Capturing expvars for gateload: {}".format(endpoint))
             try:
                 write_expvars(gateload_results, endpoint)
             except ConnectionError as he:
                 # connection to gateload expvars has been closed
-                print("Gateload no longer reachable. Writing expvars to {}".format(folder_name))
+                print("Gateload no longer reachable due to connection error: {}. Writing expvars to {}".format(he, folder_name))
                 dump_results(folder_name, gateload_results, sync_gateway_results)
                 gateload_is_running = False
 
