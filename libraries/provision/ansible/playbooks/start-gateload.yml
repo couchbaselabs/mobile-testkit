@@ -66,11 +66,17 @@
     copy: src=files/run_gateload.sh dest=/home/centos/ owner=centos group=centos mode=0755
   - name: start gateload in screen
     shell: screen -d -m -S gateload ./run_gateload.sh
+    args:
+      chdir: /home/centos/
   - name: remove previous expvar json files
     shell: rm -rf expvar*.json
+    args:
+      chdir: /home/centos/
   - name: copy the expvar collection script
     copy: src=files/collect_expvars.sh dest=/home/centos/collect_expvars.sh owner=centos group=centos mode=0755
   - name: collect expvar json in screen
     shell: screen -d -m -S gateload_expvars ./collect_expvars.sh
+    args:
+      chdir: /home/centos/
 
 
