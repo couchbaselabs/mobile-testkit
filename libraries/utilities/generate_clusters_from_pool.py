@@ -4,8 +4,7 @@ import platform
 import sys
 import socket
 import netifaces
-
-pool_file = "resources/pool.json"
+from optparse import OptionParser
 
 
 class ClusterDef:
@@ -26,8 +25,8 @@ class ClusterDef:
         )
 
 
-def write_config(config):
-    ips = get_ips()
+def write_config(pool_file, config):
+    ips = get_ips(pool_file)
     print("ips: {}".format(ips))
 
     if len(ips) < config.num_machines_required():
@@ -158,7 +157,7 @@ def write_config(config):
             f_json.write(json.dumps(cluster_dict, indent=4))
 
 
-def get_ips():
+def get_ips(pool_file):
     with open(pool_file) as f:
         pool_dict = json.loads(f.read())
         ips = pool_dict["ips"]
@@ -175,6 +174,16 @@ if __name__ == "__main__":
     usage: python generate_cluster_from_pool.py"
     """
 
+    parser = OptionParser(usage=usage)
+
+    parser.add_option("", "--pool-file",
+                      action="store", type="string", dest="pool_file", default="resources/pool.json",
+                      help="path to pool.json file")
+
+    arg_parameters = sys.argv[1:]
+
+    (opts, args) = parser.parse_args(arg_parameters)
+
     cluster_configs = [
         ClusterDef("1sg",           num_sgs=1, num_acs=0, num_cbs=0, num_lgs=0),
         ClusterDef("1cbs",          num_sgs=0, num_acs=0, num_cbs=1, num_lgs=0),
@@ -183,18 +192,19 @@ if __name__ == "__main__":
         ClusterDef("1sg_2ac_1cbs",  num_sgs=1, num_acs=2, num_cbs=1, num_lgs=0),
         ClusterDef("2sg_1cbs",      num_sgs=2, num_acs=0, num_cbs=1, num_lgs=0),
         ClusterDef("2sg_3cbs_2lgs", num_sgs=2, num_acs=0, num_cbs=3, num_lgs=2),
+        ClusterDef("2sg_2ac_3cbs_2lgs", num_sgs=2, num_acs=2, num_cbs=3, num_lgs=2),
     ]
 
-    if not os.path.isfile(pool_file):
+    if not os.path.isfile(opts.pool_file):
         print("Pool file not found in 'resources/'. Please modify the example to include your machines.")
         sys.exit(1)
 
 
     print("Using the following machines to run functional tests ... ")
-    for host in get_ips():
+    for host in get_ips(opts.pool_file):
         print(host)
 
     print("Generating 'resources/cluster_configs/'")
     for cluster_config in cluster_configs:
-        write_config(cluster_config)
+        write_config(opts.pool_file, cluster_config)
 
