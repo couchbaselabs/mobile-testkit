@@ -25,7 +25,7 @@ class ClusterDef:
         )
 
 
-def write_config(pool_file, config):
+def write_config(config, pool_file="resources/pool.json"):
     ips = get_ips(pool_file)
     print("ips: {}".format(ips))
 
@@ -157,7 +157,7 @@ def write_config(pool_file, config):
             f_json.write(json.dumps(cluster_dict, indent=4))
 
 
-def get_ips(pool_file):
+def get_ips(pool_file="resources/pool.json"):
     with open(pool_file) as f:
         pool_dict = json.loads(f.read())
         ips = pool_dict["ips"]
@@ -206,5 +206,5 @@ if __name__ == "__main__":
 
     print("Generating 'resources/cluster_configs/'")
     for cluster_config in cluster_configs:
-        write_config(opts.pool_file, cluster_config)
+        write_config(cluster_config, opts.pool_file)
 
