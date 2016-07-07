@@ -1,7 +1,6 @@
 ---
 - hosts: load_generators
   any_errors_fatal: true
-  remote_user: centos
 
   # Kill gateload
   tasks:
@@ -14,7 +13,6 @@
 
 - hosts: sync_gateways
   any_errors_fatal: true
-  remote_user: centos
   sudo: true
 
   # Copy machine stat collection script to sync_gateways
@@ -38,7 +36,6 @@
 
 - hosts: sg_accels
   any_errors_fatal: true
-  remote_user: centos
   sudo: true
 
   # Copy machine stat collection script to sg_accels
@@ -62,7 +59,6 @@
 
 - hosts: load_generators
   any_errors_fatal: true
-  remote_user: centos
 
   # Deploy gateload script and start gateload
   tasks:

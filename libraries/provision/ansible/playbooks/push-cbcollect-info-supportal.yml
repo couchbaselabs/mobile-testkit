@@ -1,6 +1,5 @@
 ---
 - hosts: cb1
-  remote_user: centos
   any_errors_fatal: true
   tasks:
 
