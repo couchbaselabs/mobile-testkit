@@ -964,13 +964,11 @@ class MobileRestClient:
                     else:
                         replication_busy = True
 
-            assert replication_found, "Replication not found: {}".format(replication_id)
-
             if replication_found and not replication_busy:
                 logging.info("Replication is idle: {}".format(replication_id))
                 break
             else:
-                logging.info("Replication busy. Retrying ...")
+                logging.info("Replication busy or not found. Retrying ...")
                 time.sleep(1)
 
     def wait_for_no_replications(self, url):

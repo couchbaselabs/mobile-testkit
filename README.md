@@ -298,50 +298,86 @@ TODO
 Listener Tests
 ==============
 
-The listener tests are a series of tests utilizing Couchbase Lite Listener and Sync Gateway. They are meant to be cross platform and should be able to run for
-for all the platforms that support the Listener
+The listener tests are a series of tests utilizing Couchbase Lite Listener and Sync Gateway or P2P. They are meant to be cross platform and should be able to run for
+for all the platforms that expose the Listener (Mac OSX, .NET, Android)
 
-Running Mac OSX
+The Listener is exposed via a LiteServ application which will be downloaded and launched when running the test.
+
+You are able to run in 4 modes:
+- SQLite
+- ForestDB
+- SQLCipher
+- ForestDB+Encryption
+
+NOTE: For running with Android, you must be running an emulator or device. The easiest is Genymotion with NAT,
+however devices are supported as long the sync_gateway and the android device can communicate. 
+
+Running Client Client (P2P) tests:
+
 ```
-robot --loglevel DEBUG -d results \
+robot --loglevel DEBUG \
+    -d results/ \
+    -v PROFILE:sanity \
+    -v LITESERV_ONE_PLATFORM:net \
+    -v LITESERV_ONE_VERSION:1.3.0-67 \
+    -v LITESERV_ONE_HOST:192.168.0.12 \
+    -v LITESERV_ONE_PORT:59840 \
+    -v LITESERV_ONE_STORAGE_ENGINE:ForestDB+Encryption \
+    -v LITESERV_TWO_PLATFORM:android \
+    -v LITESERV_TWO_VERSION:1.3.0-12 \
+    -v LITESERV_TWO_HOST:192.168.0.19 \
+    -v LITESERV_TWO_PORT:5984  \
+    -v LITESERV_TWO_STORAGE_ENGINE:SQLite \
+    testsuites/listener/shared/client_client/
+```
+
+Running Client + Sync Gateway tests:
+
+Make sure to set up vm cluster [Spin Up Machines on Vagrant](#spin-up-machines-on-vagrant)
+
+Running Mac OSX + sync_gateway. You must have a running sync_gateway. The test will install / start the sync_gateway
+```
+robot --loglevel DEBUG \
+    -d results/ \
+    -v PROFILE:sanity \
     -v PLATFORM:macosx \
-    -v LITESERV_VERSION:1.2.1-13 \
+    -v LITESERV_VERSION:1.3.0-37 \
     -v LITESERV_HOST:localhost \
     -v LITESERV_PORT:59840 \
-    -v SYNC_GATEWAY_VERSION:1.2.1-4 \
-    -v SYNC_GATEWAY_HOST:localhost \
-    -v SYNC_GATEWAY_PORT:4984 \
-    -v SYNC_GATEWAY_ADMIN_PORT:4985 \
-    testsuites/listener/shared/replication.robot
+    -v LITESERV_STORAGE_ENGINE:SQLCipher \
+    -v SYNC_GATEWAY_VERSION:1.3.0-247 \
+    testsuites/listener/shared/client_sg/
 ```
 
-Running Android. For Android you need to provide the IP of the connected Android device you are using for LITESERV_HOST as well as the IP of the computer 
-running sync_gateway. In this case it will be the computer running your tests. 
+Running Android. For Android you need to provide the IP of the Android device you are using for LITESERV_HOST
+
 ```
-robot --loglevel DEBUG -d results \
+robot --loglevel DEBUG \
+    -d results/ \
+    -v PROFILE:sanity \
     -v PLATFORM:android \
-    -v LITESERV_VERSION:1.2.1-18 \
-    -v LITESERV_HOST:192.168.0.18 \
+    -v LITESERV_VERSION:1.3.0-12 \
+    -v LITESERV_HOST:192.168.56.101 \
     -v LITESERV_PORT:5984 \
+    -v LITESERV_STORAGE_ENGINE:SQLite \
     -v SYNC_GATEWAY_VERSION:1.2.1-4 \
-    -v SYNC_GATEWAY_HOST:192.168.0.14 \
-    -v SYNC_GATEWAY_PORT:4984 \
-    -v SYNC_GATEWAY_ADMIN_PORT:4985 \
-    testsuites/listener/shared/replication.robot
+    testsuites/listener/shared/client_sg/
 ```
 
 Running .NET
+
 ```
-robot --loglevel INFO -d results \
+robot --loglevel DEBUG \
+    -d results/ \
+    -v PROFILE:sanity \
     -v PLATFORM:net \
-    -v LITESERV_VERSION:1.3.0-15 \
+    -v LITESERV_VERSION:1.3.0-97 \
     -v LITESERV_HOST:localhost \
     -v LITESERV_PORT:59840 \
-    -v SYNC_GATEWAY_VERSION:1.2.1-4 \
-    -v SYNC_GATEWAY_HOST:localhost \
-    -v SYNC_GATEWAY_PORT:4984 \
-    -v SYNC_GATEWAY_ADMIN_PORT:4985 \
-    testsuites/listener/shared/replication.robot
+    -v LITESERV_STORAGE_ENGINE:ForestDB+Encryption \
+    -v SYNC_GATEWAY_VERSION:1.3.0-234 \
+    -t "Test Raw attachment" \
+    testsuites/listener/shared/client_sg/
 ```
 
 
@@ -676,3 +712,4 @@ Known Issues And Limitations
 - This repo now only supports ansible 2.0.0.2. There are known issues with certain versions of ansible.
 
 - For AWS, the  `libraries/provision/generate_ansible_inventory_from_aws.py` script needs to be resurrected to support the new `resources/cluster_configs` file format (generated from pool.json)
+
