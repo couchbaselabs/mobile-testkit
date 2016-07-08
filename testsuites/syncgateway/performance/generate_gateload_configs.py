@@ -61,7 +61,7 @@ def sync_gateway_non_index_writers():
     return [sg for sg in sync_gateways if sg not in sync_gateway_index_writers]
 
 
-def render_gateload_template(sync_gateway, user_offset, number_of_pullers, number_of_pushers):
+def render_gateload_template(sync_gateway, user_offset, number_of_pullers, number_of_pushers, doc_size, runtime_ms, rampup_interval_ms):
         # run template to produce file
         gateload_config = open("{}/files/gateload_config.json".format(PLAYBOOKS_HOME))
         template = Template(gateload_config.read())
@@ -69,12 +69,15 @@ def render_gateload_template(sync_gateway, user_offset, number_of_pullers, numbe
             sync_gateway_private_ip=sync_gateway['ansible_host'],
             user_offset=user_offset,
             number_of_pullers=number_of_pullers,
-            number_of_pushers=number_of_pushers
+            number_of_pushers=number_of_pushers,
+            doc_size=doc_size,
+            runtime_ms=runtime_ms,
+            rampup_interval_ms=rampup_interval_ms
         )
         return rendered 
 
 
-def upload_gateload_config(gateload, sync_gateway, user_offset, number_of_pullers, number_of_pushers, test_id):
+def upload_gateload_config(gateload, sync_gateway, user_offset, number_of_pullers, number_of_pushers, test_id, doc_size, rampup_interval_ms, runtime_ms):
 
     gateload_inventory_hostname = gateload['inventory_hostname']    
     
@@ -82,7 +85,10 @@ def upload_gateload_config(gateload, sync_gateway, user_offset, number_of_puller
         sync_gateway,
         user_offset,
         number_of_pullers,
-        number_of_pushers
+        number_of_pushers,
+        doc_size,
+        rampup_interval_ms,
+        runtime_ms
     )
     print rendered
 
@@ -107,7 +113,7 @@ def upload_gateload_config(gateload, sync_gateway, user_offset, number_of_puller
     print "File transfer result: {}".format(result)
 
 
-def main(number_of_pullers, number_of_pushers, test_id):
+def main(number_of_pullers, number_of_pushers, test_id, doc_size, runtime_ms, rampup_interval_ms):
 
     sync_gateway_hosts = sync_gateway_non_index_writers()
 
@@ -131,7 +137,10 @@ def main(number_of_pullers, number_of_pushers, test_id):
             user_offset,
             number_of_pullers,
             number_of_pushers,
-            test_id
+            test_id,
+            doc_size,
+            rampup_interval_ms,
+            runtime_ms
         )
 
     print "Finished successfully"
