@@ -68,6 +68,6 @@ def hostname_for_url(url):
 
 def dump_file_contents_to_logs(filename):
     try:
-        logging.info("Contents of {}: {}".format(filename, open(filename).read()))
+        log_info("Contents of {}: {}".format(filename, open(filename).read()))
     except Exception as e:
-        logging.error("Error reading {}: {}".format(filename, e))
+        log_info("Error reading {}: {}".format(filename, e))
