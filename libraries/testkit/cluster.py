@@ -13,6 +13,7 @@ from testkit.admin import Admin
 from testkit.config import Config
 from testkit import settings
 from provision.ansible_runner import AnsibleRunner
+from keywords import utils
 
 import keywords.CouchbaseServer
 
@@ -128,6 +129,8 @@ class Cluster:
             raise RuntimeError("Max tries exceeded to delete / create buckets")
 
         log.info(">>> Starting sync_gateway with configuration: {}".format(config_path_full))
+        utils.dump_file_contents_to_logs(config_path_full)
+
         # Start sync-gateway
         status = ansible_runner.run_ansible_playbook(
             "start-sync-gateway.yml",
