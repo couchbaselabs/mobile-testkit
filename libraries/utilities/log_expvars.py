@@ -43,19 +43,27 @@ def log_expvars(folder_name):
     # Get gateload ips from ansible inventory
     lgs_host_vars = hosts_for_tag("load_generators")
     lgs = [lg["ansible_host"] for lg in lgs_host_vars]
-
-    print("Monitoring gateloads until they finish: {}".format(lgs))
     lgs_expvar_endpoints = [lg + ":9876/debug/vars" for lg in lgs]
+    print("Monitoring gateloads until they finish: {}".format("\n".join(lgs_expvar_endpoints)))
 
     # Get sync_gateway ips from ansible inventory
     sgs_host_vars = hosts_for_tag("sync_gateways")
     sgs = [sgv["ansible_host"] for sgv in sgs_host_vars]
-
-    print("Monitoring sync_gateways: {} until gateloads finish".format(sgs))
     sgs_expvar_endpoints = [sg + ":4985/_expvar" for sg in sgs]
+    print("Monitoring sync_gateways: {}".format("\n".join(sgs_expvar_endpoints)))
+
+    # Give gateload a chance to startup, also useful for debugging issues
+    print("Waiting 15s for gateload to startup")
+    time.sleep(15)
+    print("Done waiting for gateload to startup")
+
+    # Verify that sync gateway expvar endpoints are reachable
+    for sgs_expvar_endpoint in sgs_expvar_endpoints:
+        resp = requests.get(sgs_expvar_endpoint)
+        resp.raise_for_status()
+        print("{}: OK".format(sgs_expvar_endpoint))
 
     start_time = time.time()
-
     gateload_results = OrderedDict()
     sync_gateway_results = OrderedDict()
 
