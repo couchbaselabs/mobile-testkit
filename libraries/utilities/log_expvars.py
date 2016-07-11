@@ -59,9 +59,9 @@ def log_expvars(folder_name):
 
     # Verify that sync gateway expvar endpoints are reachable
     for sgs_expvar_endpoint in sgs_expvar_endpoints:
-        resp = requests.get(sgs_expvar_endpoint)
+        resp = requests.get("http://{}".format(sgs_expvar_endpoint))
         resp.raise_for_status()
-        print("{}: OK".format(sgs_expvar_endpoint))
+        print("http://{}: OK".format(sgs_expvar_endpoint))
 
     start_time = time.time()
     gateload_results = OrderedDict()
