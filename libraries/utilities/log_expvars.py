@@ -53,16 +53,11 @@ def log_expvars(folder_name):
     sgs_expvar_endpoints = [sg + ":4985/_expvar" for sg in sgs]
     log_info("Monitoring sync_gateways: {}".format("\n".join(sgs_expvar_endpoints)))
 
-    # Give gateload a chance to startup, also useful for debugging issues
-    log_info("Waiting 15s for gateload to startup")
-    time.sleep(15)
-    log_info("Done waiting for gateload to startup")
-
     # Verify that sync gateway expvar endpoints are reachable
-    for sgs_expvar_endpoint in sgs_expvar_endpoints:
-        resp = requests.get("http://{}".format(sgs_expvar_endpoint))
-        resp.raise_for_status()
-        log_info("http://{}: OK".format(sgs_expvar_endpoint))
+    wait_for_endpoints_alive_or_raise(sgs_expvar_endpoints)
+
+    # Wait until the gateload expvar endpoints are up, or raise an exception and abort
+    wait_for_endpoints_alive_or_raise(lgs_expvar_endpoints)
 
     start_time = time.time()
     gateload_results = OrderedDict()
@@ -77,7 +72,7 @@ def log_expvars(folder_name):
                 write_expvars(gateload_results, endpoint)
             except ConnectionError as he:
                 # connection to gateload expvars has been closed
-                log_info("Gateload no longer reachable. Writing expvars to {}".format(folder_name))
+                log_info("Gateload {} no longer reachable. Writing expvars to {}".format(endpoint, folder_name))
                 dump_results(folder_name, gateload_results, sync_gateway_results)
                 gateload_is_running = False
 
@@ -93,3 +88,39 @@ def log_expvars(folder_name):
 
         log_info("Elapsed: {} minutes".format((time.time() - start_time) / 60.0))
         time.sleep(30)
+
+def wait_for_endpoints_alive_or_raise(endpoints, num_attempts=5):
+    """
+    Wait for the given endpoints to be up or throw an exception
+    """
+    for i in xrange(num_attempts):
+        endpoints_are_up = True
+        for endpoint in endpoints:
+            endpoint_url = endpoint
+            if not endpoint_url.startswith("http"):
+                endpoint_url = "http://{}".format(endpoint_url)
+
+            try:
+                log_info("Checking if endpoint is up: {}".format(endpoint_url))
+                resp = requests.get(endpoint_url)
+                resp.raise_for_status()
+                log_info("Endpoint is up")
+            except Exception as e:
+                endpoints_are_up = False
+                log_info("Endpoint not up. Got exception: {}".format(e))
+                pass
+
+        if endpoints_are_up:
+            return
+
+        time.sleep(i*2)
+
+    raise Exception("Give up waiting for endpoints after {} attempts".format(num_attempts))
+
+
+
+
+    pass
+
+
+
