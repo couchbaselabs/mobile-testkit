@@ -25,7 +25,7 @@ class ClusterDef:
         )
 
 
-def write_config(config, pool_file="resources/pool.json"):
+def write_config(config, pool_file):
     ips = get_ips(pool_file)
     print("ips: {}".format(ips))
 

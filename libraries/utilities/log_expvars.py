@@ -120,7 +120,3 @@ def wait_for_endpoints_alive_or_raise(endpoints, num_attempts=5):
 
 
 
-    pass
-
-
-
