@@ -86,7 +86,7 @@ class LiteServ:
         elif platform == "net":
             url = "{}/couchbase-lite-net/{}/{}/{}".format(LATEST_BUILDS, version, build, file_name)
 
-        logging.info("Download url(s): {}".format(url))
+        log_info("Download url: {}".format(url))
 
         return url
 
