@@ -42,7 +42,13 @@ results/*
 
 !results/dbs
 results/dbs/*
-!results/dbs/README.md
+
+!results/dbs/macosx/
+results/dbs/macosx/*
+!results/dbs/macosx/README.md
+!results/dbs/net/
+results/dbs/net/*
+!results/dbs/net/README.md
 
 !results/logs
 results/logs/*

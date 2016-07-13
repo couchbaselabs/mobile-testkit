@@ -34,7 +34,7 @@ Install LiteServ
     ...  The LiteServ binaries are located in deps/.
     [Arguments]  ${platform}  ${version}  ${storage_engine}
     [Timeout]       2 minutes
-    Run Keyword If  "${platform}" == "android"  Install Apk  ${version}  ${storage_engine}  ELSE  Log  No install need
+    Run Keyword If  "${platform}" == "android"  Install Apk  ${version}  ELSE  Log  No install need
 
 Start LiteServ
     [Documentation]   Starts LiteServ for a specific platform.
@@ -43,7 +43,7 @@ Start LiteServ
     [Timeout]       1 minute
 
     ${ls_url} =  Run Keyword If  "${platform}" == "macosx"   Start MacOSX LiteServ    version=${version}  host=${host}  port=${port}  storage_engine=${storage_engine}
-    ${ls_url} =  Run Keyword If  "${platform}" == "android"  Start Android LiteServ                       host=${host}  port=${port}
+    ${ls_url} =  Run Keyword If  "${platform}" == "android"  Start Android LiteServ                       host=${host}  port=${port}  storage_engine=${storage_engine}
     ${ls_url} =  Run Keyword If  "${platform}" == "net"      Start Net LiteServ       version=${version}  host=${host}  port=${port}  storage_engine=${storage_engine}
 
     ${ls_url} =  Verify LiteServ Launched  host=${host}  port=${port}  version_build=${version}
@@ -68,7 +68,7 @@ Start MacOSX LiteServ
 
      # Get a list of db names / password for running LiteServ with encrypted databases
     @{db_name_passwords} =  Run Keyword If  '${storage_engine}' == 'ForestDB+Encryption' or '${storage_engine}' == 'SQLCipher'
-    ...  Build Name Passwords For Registered Dbs
+    ...  Build Name Passwords For Registered Dbs  platform=macosx
 
     Run Keyword If  '${storage_engine}' == 'ForestDB+Encryption' or '${storage_engine}' == 'SQLCipher'
     ...  Log  Using ENCRYPTION: ${db_name_passwords}  console=yes
@@ -77,7 +77,7 @@ Start MacOSX LiteServ
     ...  Start Process  ${binary_path}
     ...    --port  ${port}
     ...    --storage  ForestDB
-    ...    --dir  ${RESULTS}/dbs
+    ...    --dir  ${RESULTS}/dbs/macosx/
     ...    @{db_name_passwords}
     ...    -Log  YES  -LogSync  YES  -LogCBLRouter  YES  -LogSyncVerbose  YES  -LogRemoteRequest  YES
     ...    alias=liteserv-ios
@@ -88,7 +88,7 @@ Start MacOSX LiteServ
     ...  Start Process  ${binary_path}
     ...    --port  ${port}
     ...    --storage  SQLite
-    ...    --dir  ${RESULTS}/dbs
+    ...    --dir  ${RESULTS}/dbs/macosx/
     ...    @{db_name_passwords}
     ...    -Log  YES  -LogSync  YES  -LogCBLRouter  YES  -LogSyncVerbose  YES  -LogRemoteRequest  YES
     ...    alias=liteserv-ios
@@ -99,7 +99,7 @@ Start MacOSX LiteServ
     ...  Start Process  ${binary_path}
     ...    --port  ${port}
     ...    --storage  ${storage_engine}
-    ...    --dir  ${RESULTS}/dbs
+    ...    --dir  ${RESULTS}/dbs/macosx/
     ...    -Log  YES  -LogSync  YES  -LogCBLRouter  YES  -LogSyncVerbose  YES  -LogRemoteRequest  YES
     ...    alias=liteserv-ios
     ...    shell=True
@@ -111,7 +111,7 @@ Start MacOSX LiteServ
 Start Android LiteServ
     [Documentation]   Starts LiteServ Activity on Running on port.
     ...  The LiteServ binaries are located in deps/.
-    [Arguments]  ${host}  ${port}
+    [Arguments]  ${host}  ${port}  ${storage_engine}
     [Timeout]       1 minute
 
     # Clear logcat
@@ -123,7 +123,7 @@ Start Android LiteServ
     ...             stderr=${RESULTS}/logs/${TEST_NAME}-android-logcat-stderr.log
     Process Should Be Running   handle=adb-logcat
 
-    Launch Activity  ${port}
+    Launch Activity  ${port}  ${storage_engine}
 
 Start Net LiteServ
     [Documentation]   Starts a .net LiteServ on a port.
@@ -134,7 +134,7 @@ Start Net LiteServ
 
     # Get a list of db names / password for running LiteServ with encrypted databases
     @{db_name_passwords} =  Run Keyword If  '${storage_engine}' == 'ForestDB+Encryption' or '${storage_engine}' == 'SQLCipher'
-    ...  Build Name Passwords For Registered Dbs
+    ...  Build Name Passwords For Registered Dbs  platform=net
 
     Run Keyword If  '${storage_engine}' == 'ForestDB+Encryption' or '${storage_engine}' == 'SQLCipher'
     ...  Log  Using ENCRYPTION: ${db_name_passwords}  console=yes
@@ -143,7 +143,7 @@ Start Net LiteServ
     ...  Start Process  mono  ${binary_path}
     ...    --port  ${port}
     ...    --storage  ForestDB
-    ...    --dir  ${RESULTS}/dbs
+    ...    --dir  ${RESULTS}/dbs/net/
     ...    @{db_name_passwords}
     ...    alias=liteserv-net
     ...    shell=True
@@ -153,7 +153,7 @@ Start Net LiteServ
     ...  Start Process  mono  ${binary_path}
     ...    --port  ${port}
     ...    --storage  SQLite
-    ...    --dir  ${RESULTS}/dbs
+    ...    --dir  ${RESULTS}/dbs/net/
     ...    @{db_name_passwords}
     ...    alias=liteserv-net
     ...    shell=True
@@ -163,7 +163,7 @@ Start Net LiteServ
     ...  Start Process  mono  ${binary_path}
     ...    --port  ${port}
     ...    --storage  ${storage_engine}
-    ...    --dir  ${RESULTS}/dbs
+    ...    --dir  ${RESULTS}/dbs/net/
     ...    alias=liteserv-net
     ...    shell=True
     ...    stdout=${RESULTS}/logs/${TEST_NAME}-net-liteserv-stdout.log
