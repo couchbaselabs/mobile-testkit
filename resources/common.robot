@@ -77,7 +77,7 @@ Start MacOSX LiteServ
     ...  Start Process  ${binary_path}
     ...    --port  ${port}
     ...    --storage  ForestDB
-    ...    --dir  ${RESULTS}/dbs
+    ...    --dir  ${RESULTS}/dbs/macosx/
     ...    @{db_name_passwords}
     ...    -Log  YES  -LogSync  YES  -LogCBLRouter  YES  -LogSyncVerbose  YES  -LogRemoteRequest  YES
     ...    alias=liteserv-ios
@@ -88,7 +88,7 @@ Start MacOSX LiteServ
     ...  Start Process  ${binary_path}
     ...    --port  ${port}
     ...    --storage  SQLite
-    ...    --dir  ${RESULTS}/dbs
+    ...    --dir  ${RESULTS}/dbs/macosx/
     ...    @{db_name_passwords}
     ...    -Log  YES  -LogSync  YES  -LogCBLRouter  YES  -LogSyncVerbose  YES  -LogRemoteRequest  YES
     ...    alias=liteserv-ios
@@ -99,7 +99,7 @@ Start MacOSX LiteServ
     ...  Start Process  ${binary_path}
     ...    --port  ${port}
     ...    --storage  ${storage_engine}
-    ...    --dir  ${RESULTS}/dbs
+    ...    --dir  ${RESULTS}/dbs/macosx/
     ...    -Log  YES  -LogSync  YES  -LogCBLRouter  YES  -LogSyncVerbose  YES  -LogRemoteRequest  YES
     ...    alias=liteserv-ios
     ...    shell=True
@@ -143,7 +143,7 @@ Start Net LiteServ
     ...  Start Process  mono  ${binary_path}
     ...    --port  ${port}
     ...    --storage  ForestDB
-    ...    --dir  ${RESULTS}/dbs
+    ...    --dir  ${RESULTS}/dbs/net/
     ...    @{db_name_passwords}
     ...    alias=liteserv-net
     ...    shell=True
@@ -153,7 +153,7 @@ Start Net LiteServ
     ...  Start Process  mono  ${binary_path}
     ...    --port  ${port}
     ...    --storage  SQLite
-    ...    --dir  ${RESULTS}/dbs
+    ...    --dir  ${RESULTS}/dbs/net/
     ...    @{db_name_passwords}
     ...    alias=liteserv-net
     ...    shell=True
@@ -163,7 +163,7 @@ Start Net LiteServ
     ...  Start Process  mono  ${binary_path}
     ...    --port  ${port}
     ...    --storage  ${storage_engine}
-    ...    --dir  ${RESULTS}/dbs
+    ...    --dir  ${RESULTS}/dbs/net/
     ...    alias=liteserv-net
     ...    shell=True
     ...    stdout=${RESULTS}/logs/${TEST_NAME}-net-liteserv-stdout.log
