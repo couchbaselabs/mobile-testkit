@@ -4,7 +4,8 @@ import ansible.inventory
 from optparse import OptionParser
 import sys
 import json
-
+from keywords.utils import log_info
+import time
 
 # This generates a pool.json file from the current AWS EC2 inventory.
 # The pool.json file can then be used to generate cluster configs under resources/cluster_configs
@@ -96,7 +97,18 @@ if __name__=="__main__":
     # the inventory will contain all the hosts for the given cloudformation stack
     # under a key that looks like tag_aws_cloudformation_stack_name_TLeydenTestCluster
     cloud_formation_stack_key = "tag_aws_cloudformation_stack_name_{}".format(opts.stackname)
-    cloud_formation_stack_ip_addresses = ec2Inventory.inventory[cloud_formation_stack_key]
+    got_stack_ip_addresses = False
+    for i in xrange(10):
+        try:
+            log_info("Getting stack ip addresses for {}".format(cloud_formation_stack_key))
+            cloud_formation_stack_ip_addresses = ec2Inventory.inventory[cloud_formation_stack_key]
+            got_stack_ip_addresses = True
+            break
+        except Exception as e:
+            print("Couldn't get stack ip addresses due to exception: {}.  Going to retry in a few seconds".format(e))
+            time.sleep(10)
+    if not got_stack_ip_addresses:
+        raise Exception("Could not find ip addresses for {}".format(cloud_formation_stack_key))
 
     # get all hosts for that cloudformation stack + uniquify
     if opts.dumpinventory:
