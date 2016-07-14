@@ -1,6 +1,5 @@
 ---
 - hosts: load_generators
-  remote_user: centos
   any_errors_fatal: true
   sudo: yes
 

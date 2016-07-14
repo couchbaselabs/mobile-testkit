@@ -1,7 +1,6 @@
 ---
 - hosts: couchbase_servers
   any_errors_fatal: true
-  remote_user: centos
   serial: 1
   vars:
     couchbase_server_primary_node: "{{ inventory_hostname }}"
@@ -11,7 +10,6 @@
 
 
 - hosts: load_generators
-  remote_user: centos
   vars:
     gateload_node: "{{ inventory_hostname }}"
   connection: local
@@ -34,7 +32,6 @@
 
 
 - hosts: couchbase_servers:sync_gateways:load_generators
-  remote_user: centos
   any_errors_fatal: true
   sudo: true
   vars:
@@ -99,7 +96,6 @@
     sudo: true
 
 - hosts: sync_gateways
-  remote_user: centos
   any_errors_fatal: true
   sudo: true
   vars:
@@ -118,7 +114,6 @@
     shell: /opt/splunkforwarder/bin/splunk add monitor /home/centos/_expvar.logs -index main -sourcetype sync_gateway_expvars  -auth {{ forward_server_auth }}
 
 - hosts: load_generators
-  remote_user: centos
   any_errors_fatal: true
   vars:
     gateload_node: "{{ inventory_hostname }}"
@@ -205,7 +200,6 @@
 
 
 - hosts: couchbase_servers
-  remote_user: centos
   any_errors_fatal: true
   sudo: true
   vars:

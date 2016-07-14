@@ -65,3 +65,9 @@ def hostname_for_url(url):
             return endpoint["name"]
 
     raise ValueError("Could not find name for url: {} in cluster_config: {}".format(url, cluster_config))
+
+def dump_file_contents_to_logs(filename):
+    try:
+        log_info("Contents of {}: {}".format(filename, open(filename).read()))
+    except Exception as e:
+        log_info("Error reading {}: {}".format(filename, e))

@@ -1,7 +1,6 @@
 ---
 - hosts: load_generators
   any_errors_fatal: true
-  remote_user: centos
 
   # Kill gateload
   tasks:
@@ -14,7 +13,6 @@
 
 - hosts: sync_gateways
   any_errors_fatal: true
-  remote_user: centos
   sudo: true
 
   # Copy machine stat collection script to sync_gateways
@@ -38,7 +36,6 @@
 
 - hosts: sg_accels
   any_errors_fatal: true
-  remote_user: centos
   sudo: true
 
   # Copy machine stat collection script to sg_accels
@@ -62,7 +59,6 @@
 
 - hosts: load_generators
   any_errors_fatal: true
-  remote_user: centos
 
   # Deploy gateload script and start gateload
   tasks:
@@ -70,11 +66,17 @@
     copy: src=files/run_gateload.sh dest=/home/centos/ owner=centos group=centos mode=0755
   - name: start gateload in screen
     shell: screen -d -m -S gateload ./run_gateload.sh
+    args:
+      chdir: /home/centos/
   - name: remove previous expvar json files
     shell: rm -rf expvar*.json
+    args:
+      chdir: /home/centos/
   - name: copy the expvar collection script
     copy: src=files/collect_expvars.sh dest=/home/centos/collect_expvars.sh owner=centos group=centos mode=0755
   - name: collect expvar json in screen
     shell: screen -d -m -S gateload_expvars ./collect_expvars.sh
+    args:
+      chdir: /home/centos/
 
 

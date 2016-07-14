@@ -18,7 +18,7 @@ from utilities.fetch_sync_gateway_profile import fetch_sync_gateway_profile
 from utilities.push_cbcollect_info_supportal import push_cbcollect_info_supportal
 
 
-def run_perf_test(number_pullers, number_pushers, use_gateload, gen_gateload_config, test_id, sync_gateway_config_path, reset_sync_gateway):
+def run_perf_test(number_pullers, number_pushers, use_gateload, gen_gateload_config, test_id, sync_gateway_config_path, reset_sync_gateway, doc_size, runtime_ms, rampup_interval_ms):
 
 
     try:
@@ -63,7 +63,14 @@ def run_perf_test(number_pullers, number_pushers, use_gateload, gen_gateload_con
         # Generate gateload config
         print ">>> Generate gateload configs"
         if gen_gateload_config:
-            generate_gateload_configs.main(number_pullers, number_pushers, test_run_id)
+            generate_gateload_configs.main(
+                number_pullers,
+                number_pushers,
+                test_run_id,
+                doc_size,
+                runtime_ms,
+                rampup_interval_ms
+            )
 
         # Start gateload
         print ">>> Starting gateload with {0} pullers and {1} pushers".format(number_pullers, number_pushers)
@@ -134,6 +141,10 @@ if __name__ == "__main__":
     --use-gateload
     --gen-gateload-config
     --cb-collect-info
+    --test-id
+    --doc-size
+    --runtime-ms
+    --rampup-interval-ms
     """
 
     parser = OptionParser(usage=usage)
@@ -170,6 +181,20 @@ if __name__ == "__main__":
                       action="store", dest="sync_gateway_config_path", default="resources/sync_gateway_configs/performance/sync_gateway_default_performance.json",
                       help="Path to sync gateway config file to use")
 
+    parser.add_option("", "--doc-size",
+                      action="store", dest="doc_size",
+                      default="1024",
+                      help="Document size in bytes")
+
+    parser.add_option("", "--runtime-ms",
+                      action="store", dest="runtime_ms",
+                      default="2400000",
+                      help="How long to run for, in milliseconds")
+
+    parser.add_option("", "--rampup-interval-ms",
+                      action="store", dest="rampup_interval_ms",
+                      default="120000",
+                      help="How long to ramp up for, in milliseconds")
 
     arg_parameters = sys.argv[1:]
 
@@ -189,6 +214,9 @@ if __name__ == "__main__":
         test_id=opts.test_id,
         sync_gateway_config_path=opts.sync_gateway_config_path,
         reset_sync_gateway=opts.reset_sync_gateway,
+        doc_size=opts.doc_size,
+        runtime_ms=opts.runtime_ms,
+        rampup_interval_ms=opts.rampup_interval_ms,
     )
 
 

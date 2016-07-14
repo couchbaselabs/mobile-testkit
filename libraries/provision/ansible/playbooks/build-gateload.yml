@@ -1,7 +1,6 @@
 ---
 - hosts: load_generators
   any_errors_fatal: true
-  remote_user: centos
   tasks:
   - name: go get gateload
     shell: GOPATH=/opt/go go get -u -v github.com/couchbaselabs/gateload

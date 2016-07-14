@@ -1,6 +1,5 @@
 ---
 - hosts: sync_gateways
-  remote_user: centos
   any_errors_fatal: true
   become: yes
   # Fetch generated profile results
@@ -11,7 +10,6 @@
     debug: msg="Profile data has been saved in /tmp/sync_gateway_profile.tar.gz"
 
 - hosts: sg_accels
-  remote_user: centos
   any_errors_fatal: true
   become: yes
   # Fetch generated profile results on sg_accels
