@@ -38,6 +38,24 @@ def lookup_dns_names(inventory, cloud_formation_stack_ip_addresses):
 
     return [inventory["_meta"]["hostvars"][ip_address]["ec2_public_dns_name"] for ip_address in cloud_formation_stack_ip_addresses]
 
+def filter_cloud_formation(cloud_formation_stack_ip_addresses, ip_addresses):
+    """
+    Given a list of ip addresses that are in the cloud_formation_stack, eg:
+
+    ["ip1","ip2","ip3"]
+
+    and the list of ip_addresses we want to filter:
+
+    ["ip3", "ip4"]
+
+    which may represent Couchbase Server ip addresses across multiple AWS cloudformation stacks
+
+    Return the ip addresses that are in the given cloudformation, eg    :
+
+    ["ip3"]
+
+    """
+    return filter(lambda x: x in cloud_formation_stack_ip_addresses, ip_addresses)
 
 if __name__=="__main__":
 
@@ -78,11 +96,11 @@ if __name__=="__main__":
     # the inventory will contain all the hosts for the given cloudformation stack
     # under a key that looks like tag_aws_cloudformation_stack_name_TLeydenTestCluster
     cloud_formation_stack_key = "tag_aws_cloudformation_stack_name_{}".format(opts.stackname)
+    cloud_formation_stack_ip_addresses = ec2Inventory.inventory[cloud_formation_stack_key]
 
     # get all hosts for that cloudformation stack + uniquify
     if opts.dumpinventory:
         print "Inventory: {}".format(json.dumps(ec2Inventory.inventory, indent=4))
-
 
     # it's important that these are in the _same order_ as they are generated in generate_clusters_from_pool.py
     # so that things "line up" and the right machines are used for the role type as specified in the
@@ -92,26 +110,29 @@ if __name__=="__main__":
     couchbase_server_ip_addresses = []
     if "tag_Type_couchbaseserver" in ec2Inventory.inventory:
         couchbase_server_ip_addresses = ec2Inventory.inventory["tag_Type_couchbaseserver"]
+        couchbase_server_ip_addresses = filter_cloud_formation(cloud_formation_stack_ip_addresses, couchbase_server_ip_addresses)
     print("couchbase_server_ip_addresses: {}".format(couchbase_server_ip_addresses))
 
     sync_gateway_ip_addresses = []
     if "tag_Type_syncgateway" in ec2Inventory.inventory:
         sync_gateway_ip_addresses = ec2Inventory.inventory["tag_Type_syncgateway"]
+        sync_gateway_ip_addresses = filter_cloud_formation(cloud_formation_stack_ip_addresses, sync_gateway_ip_addresses)
     print("sync_gateway_ip_addresses: {}".format(sync_gateway_ip_addresses))
 
     load_generator_ip_addresses = []
     if "tag_Type_gateload" in ec2Inventory.inventory:
         load_generator_ip_addresses = ec2Inventory.inventory["tag_Type_gateload"]
+        load_generator_ip_addresses = filter_cloud_formation(cloud_formation_stack_ip_addresses, load_generator_ip_addresses)
     print("load_generator_ip_addresses: {}".format(load_generator_ip_addresses))
 
     # get ip addresses of [u'54.242.119.83', u'54.234.207.138', u'54.209.218.97', u'54.242.55.56', u'54.242.29.78', u'52.90.171.161', u'54.175.81.204']
-    cloud_formation_stack_ip_addresses = couchbase_server_ip_addresses + sync_gateway_ip_addresses + load_generator_ip_addresses
-    print("cloud_formation_stack_ip_addresses: {}".format(cloud_formation_stack_ip_addresses))
+    pool_ip_addresses = couchbase_server_ip_addresses + sync_gateway_ip_addresses + load_generator_ip_addresses
+    print("pool_ip_addresses: {}".format(pool_ip_addresses))
     
     # convert to dns names
-    cloud_formation_stack_dns_addresses = lookup_dns_names(ec2Inventory.inventory, cloud_formation_stack_ip_addresses)
+    pool_dns_addresses = lookup_dns_names(ec2Inventory.inventory, pool_ip_addresses)
 
-    write_to_file(cloud_formation_stack_dns_addresses, opts.targetfile)
+    write_to_file(pool_dns_addresses, opts.targetfile)
 
     print "Generated {}".format(opts.targetfile)
 
