@@ -4,7 +4,6 @@ import ansible.inventory
 from optparse import OptionParser
 import sys
 import json
-from keywords.utils import log_info
 import time
 
 # This generates a pool.json file from the current AWS EC2 inventory.
@@ -100,7 +99,7 @@ if __name__=="__main__":
     got_stack_ip_addresses = False
     for i in xrange(10):
         try:
-            log_info("Getting stack ip addresses for {}".format(cloud_formation_stack_key))
+            print("Getting stack ip addresses for {}".format(cloud_formation_stack_key))
             cloud_formation_stack_ip_addresses = ec2Inventory.inventory[cloud_formation_stack_key]
             got_stack_ip_addresses = True
             break
