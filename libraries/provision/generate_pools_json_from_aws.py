@@ -11,13 +11,13 @@ import socket
 # The pool.json file can then be used to generate cluster configs under resources/cluster_configs
 
 DEFAULT_REGION="us-east-1"
+NUM_RETRIES=25
 
 def main():
 
     usage = """usage: python generate_ansible_inventory_from_aws.py
         --stackname=<aws_cloudformation_stack_name>
         --targetfile=<ansible_inventory_target_file_path>
-        --dumpinventory=true|false
         """
 
     parser = OptionParser(usage=usage)
@@ -30,10 +30,6 @@ def main():
                       action="store", type="string", dest="targetfile", default="resources/pool.json",
                       help="ansible inventory target file")
 
-    parser.add_option("", "--dumpinventory",
-                      action="store", dest="dumpinventory", default=False,
-                      help="dump raw AWS inventory (for debugging)")
-
     arg_parameters = sys.argv[1:]
 
     (opts, args) = parser.parse_args(arg_parameters)
@@ -42,7 +38,7 @@ def main():
         print("You must specify --stackname=<stack_name>")
         sys.exit(1)
 
-    pool_dns_addresses = generate_pools(opts.stackname, opts.dumpinventory)
+    pool_dns_addresses = get_public_dns_names_cloudformation_stack(opts.stackname)
 
     print("pool_dns_addresses: {}".format(pool_dns_addresses))
 
@@ -50,7 +46,14 @@ def main():
 
     print "Generated {}".format(opts.targetfile)
 
-def generate_pools(stackname, dumpinventory):
+def get_public_dns_names_cloudformation_stack(stackname):
+
+    """
+    Blocks until CloudFormation stack is fully up and running and all EC2 instances
+    are listening on port 22.
+
+    Returns the public DNS names of all EC2 instances in the stack
+    """
 
     # wait for stack creation to finish
     wait_until_stack_create_complete(stackname)
@@ -105,7 +108,7 @@ def wait_until_stack_create_complete(stackname):
     event.resource_type = AWS::CloudFormation::Stack
     event.resource_status = CREATE_COMPLETE
     """
-    for x in xrange(25):
+    for x in xrange(NUM_RETRIES):
         print("Waiting for {} to finish launching.  Attempt: {}".format(stackname, x))
         region = cloudformation.connect_to_region(DEFAULT_REGION)
         stack_events = region.describe_stack_events(stackname)
@@ -129,7 +132,7 @@ def wait_until_state(instances, instance_ids, state):
     passed in case the instance objects need to be refreshed from AWS
     """
 
-    for x in xrange(25):
+    for x in xrange(NUM_RETRIES):
 
         print("Waiting for instances {} to be {}".format(instance_ids, state))
         all_instances_in_state = True
@@ -150,7 +153,7 @@ def wait_until_state(instances, instance_ids, state):
 
 def wait_until_sshd_port_listening(instances):
 
-    for x in xrange(25):
+    for x in xrange(NUM_RETRIES):
 
         print("Waiting for instances to be listening on port 22")
         all_instances_listening = True
@@ -161,7 +164,7 @@ def wait_until_sshd_port_listening(instances):
             except Exception as e:
                 print("Couldn't connect to {} on port 22".format(instance.ip_address))
                 all_instances_listening = False
-                
+
         # if all instances were in the given state, we're done
         if all_instances_listening:
             return
@@ -190,7 +193,6 @@ def write_to_file(cloud_formation_stack_dns_addresses, filename):
     output_dictionary = {"ips": cloud_formation_stack_dns_addresses}
 
     with open(filename, 'w') as target:
-        target.truncate()
         target.write(json.dumps(output_dictionary, sort_keys=True, indent=4, separators=(',', ': ')))
 
 if __name__=="__main__":
