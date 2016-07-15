@@ -5,6 +5,7 @@ import json
 import time
 from boto import cloudformation
 from boto import ec2
+import socket
 
 # This generates a pool.json file from the current AWS EC2 inventory.
 # The pool.json file can then be used to generate cluster configs under resources/cluster_configs
@@ -63,6 +64,9 @@ def generate_pools(stackname, dumpinventory):
     # wait until stack ec2 instances are all in running state
     wait_until_state(instances_for_stack, instance_ids_for_stack, "running")
 
+    # wait until all ec2 instances are listening on port 22
+    wait_until_sshd_port_listening(instances_for_stack)
+
     # get public_dns_name for all instances
     return get_public_dns_names(instances_for_stack)
 
@@ -101,7 +105,7 @@ def wait_until_stack_create_complete(stackname):
     event.resource_type = AWS::CloudFormation::Stack
     event.resource_status = CREATE_COMPLETE
     """
-    for x in xrange(10):
+    for x in xrange(25):
         print("Waiting for {} to finish launching.  Attempt: {}".format(stackname, x))
         region = cloudformation.connect_to_region(DEFAULT_REGION)
         stack_events = region.describe_stack_events(stackname)
@@ -124,9 +128,10 @@ def wait_until_state(instances, instance_ids, state):
     Wait until all instances are in the given state.  The instance_ids are
     passed in case the instance objects need to be refreshed from AWS
     """
-    print("Waiting for instances {} to be {}".format(instance_ids, state))
-    for x in xrange(10):
 
+    for x in xrange(25):
+
+        print("Waiting for instances {} to be {}".format(instance_ids, state))
         all_instances_in_state = True
         for instance in instances:
             if instance.state != state:
@@ -142,6 +147,32 @@ def wait_until_state(instances, instance_ids, state):
         instances = lookup_instances_from_ids(instance_ids)
 
     raise Exception("Gave up waiting for instances {} to reach state {}".format(instance_ids, state))
+
+def wait_until_sshd_port_listening(instances):
+
+    for x in xrange(25):
+
+        print("Waiting for instances to be listening on port 22")
+        all_instances_listening = True
+        for instance in instances:
+            client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            try:
+                client_socket.connect((instance.ip_address, 22))
+            except Exception as e:
+                print("Couldn't connect to {} on port 22".format(instance.ip_address))
+                all_instances_listening = False
+                
+        # if all instances were in the given state, we're done
+        if all_instances_listening:
+            return
+
+        # otherwise ..
+        print(
+        "Not all instances listening on port 22.  Waiting and will retry.. Iteration: {}".format(x))
+        time.sleep(5)
+
+    raise Exception("Gave up waiting for instances to be listening on port 22")
+
 
 def get_public_dns_names(instances):
 
