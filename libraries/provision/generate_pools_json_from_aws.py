@@ -108,7 +108,7 @@ def wait_until_stack_create_complete(stackname):
 
         for stack_event in stack_events:
             if stack_event.logical_resource_id != stackname:
-                print("Ignoring {} since it's not part of {}".format(stack_event, stackname))
+                print("Ignoring {} since it's logical_resource_id is {} instead of {}".format(stack_event, stack_event.logical_resource_id, stackname))
                 continue
             if stack_event.resource_type == "AWS::CloudFormation::Stack" and stack_event.resource_status == "CREATE_COMPLETE":
                 print("Stack {} has successfully been created".format(stackname))
