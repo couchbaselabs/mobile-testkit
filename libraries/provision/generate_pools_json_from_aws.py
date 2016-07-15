@@ -51,6 +51,9 @@ def main():
 
 def generate_pools(stackname, dumpinventory):
 
+    # wait for stack creation to finish
+    wait_until_stack_create_complete(stackname)
+
     # find all ec2 instance ids for stack
     instance_ids_for_stack = get_instance_ids_for_stack(stackname)
 
@@ -89,13 +92,40 @@ def lookup_instances_from_ids(instance_ids):
             instances.append(instance)
     return instances
 
+def wait_until_stack_create_complete(stackname):
+
+    """
+    Wait until this stack is complete.  In other words, when there is a stack event
+    with:
+
+    event.resource_type = AWS::CloudFormation::Stack
+    event.resource_status = CREATE_COMPLETE
+    """
+    for x in xrange(10):
+        print("Waiting for {} to finish launching.  Attempt: {}".format(stackname, x))
+        region = cloudformation.connect_to_region(DEFAULT_REGION)
+        stack_events = region.describe_stack_events(stackname)
+
+        for stack_event in stack_events:
+            if stack_event.logical_resource_id != stackname:
+                print("Ignoring {} since it's not part of {}".format(stack_event, stackname))
+                continue
+            if stack_event.resource_type == "AWS::CloudFormation::Stack" and stack_event.resource_status == "CREATE_COMPLETE":
+                print("Stack {} has successfully been created".format(stackname))
+                return
+
+        # didn't find it, lets wait and try again
+        time.sleep(5)
+
+
 def wait_until_state(instances, instance_ids, state):
 
     """
     Wait until all instances are in the given state.  The instance_ids are
     passed in case the instance objects need to be refreshed from AWS
     """
-    for x in xrange(50):
+    print("Waiting for instances {} to be {}".format(instance_ids, state))
+    for x in xrange(10):
 
         all_instances_in_state = True
         for instance in instances:
