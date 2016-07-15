@@ -105,7 +105,8 @@ if __name__=="__main__":
             break
         except Exception as e:
             print("Couldn't get stack ip addresses due to exception: {}.  Going to retry in a few seconds".format(e))
-            time.sleep(10)
+            print "Getting inventory from AWS ... (may take a few minutes)"
+            ec2Inventory.do_api_calls_update_cache()
     if not got_stack_ip_addresses:
         raise Exception("Could not find ip addresses for {}".format(cloud_formation_stack_key))
 
