@@ -38,6 +38,22 @@ def lookup_dns_names(inventory, cloud_formation_stack_ip_addresses):
 
     return [inventory["_meta"]["hostvars"][ip_address]["ec2_public_dns_name"] for ip_address in cloud_formation_stack_ip_addresses]
 
+def wait_until_ip_addresses_in_running_state(ip_addresses, ec2Inventory):
+    for ip_address in ip_addresses:
+        print("Checking to see if {} in running state".format(ip_address))
+        running = False
+        for i in xrange(10):
+            state = ec2Inventory.inventory["_meta"]["hostvars"][ip_address]["ec2_state"]
+            if state != "running":
+                print("Not in running state: {}.  Updating cache and retrying".format(ip_address))
+                ec2Inventory.do_api_calls_update_cache()
+            else:
+                running = True
+                break
+        if not running:
+            raise Exception("IP {} didn't go into running state after several retries".format(ip_address))
+
+
 def filter_cloud_formation(cloud_formation_stack_ip_addresses, ip_addresses):
     """
     Given a list of ip addresses that are in the cloud_formation_stack, eg:
@@ -154,6 +170,9 @@ if __name__=="__main__":
     if not saw_all_cloudformation_instances:
         raise Exception("Did not see all cloudformation instances: {}".format(cloud_formation_stack_ip_addresses))
 
+    print("Waiting until all instances are in the running state")
+    wait_until_ip_addresses_in_running_state(pool_ip_addresses, ec2Inventory)
+    print("All instances are now in the running state")
     
     # convert to dns names
     pool_dns_addresses = lookup_dns_names(ec2Inventory.inventory, pool_ip_addresses)
