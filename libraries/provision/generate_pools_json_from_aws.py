@@ -110,36 +110,50 @@ if __name__=="__main__":
     if not got_stack_ip_addresses:
         raise Exception("Could not find ip addresses for {}".format(cloud_formation_stack_key))
 
-    # get all hosts for that cloudformation stack + uniquify
-    if opts.dumpinventory:
-        print "Inventory: {}".format(json.dumps(ec2Inventory.inventory, indent=4))
+    saw_all_cloudformation_instances = False
+    for i in xrange(10):
 
-    # it's important that these are in the _same order_ as they are generated in generate_clusters_from_pool.py
-    # so that things "line up" and the right machines are used for the role type as specified in the
-    # initial call to create_and_instantiate_cluster.py.  It's a bit of a hack, and very brittle, and should
-    # be reworked to explicitly record the machine size somewhere, or assert that the vm's spun up
-    # all have the identical sizes.
-    couchbase_server_ip_addresses = []
-    if "tag_Type_couchbaseserver" in ec2Inventory.inventory:
-        couchbase_server_ip_addresses = ec2Inventory.inventory["tag_Type_couchbaseserver"]
-        couchbase_server_ip_addresses = filter_cloud_formation(cloud_formation_stack_ip_addresses, couchbase_server_ip_addresses)
-    print("couchbase_server_ip_addresses: {}".format(couchbase_server_ip_addresses))
+        # get all hosts for that cloudformation stack + uniquify
+        if opts.dumpinventory:
+            print "Inventory: {}".format(json.dumps(ec2Inventory.inventory, indent=4))
 
-    sync_gateway_ip_addresses = []
-    if "tag_Type_syncgateway" in ec2Inventory.inventory:
-        sync_gateway_ip_addresses = ec2Inventory.inventory["tag_Type_syncgateway"]
-        sync_gateway_ip_addresses = filter_cloud_formation(cloud_formation_stack_ip_addresses, sync_gateway_ip_addresses)
-    print("sync_gateway_ip_addresses: {}".format(sync_gateway_ip_addresses))
+        # it's important that these are in the _same order_ as they are generated in generate_clusters_from_pool.py
+        # so that things "line up" and the right machines are used for the role type as specified in the
+        # initial call to create_and_instantiate_cluster.py.  It's a bit of a hack, and very brittle, and should
+        # be reworked to explicitly record the machine size somewhere, or assert that the vm's spun up
+        # all have the identical sizes.
+        couchbase_server_ip_addresses = []
+        if "tag_Type_couchbaseserver" in ec2Inventory.inventory:
+            couchbase_server_ip_addresses = ec2Inventory.inventory["tag_Type_couchbaseserver"]
+            couchbase_server_ip_addresses = filter_cloud_formation(cloud_formation_stack_ip_addresses, couchbase_server_ip_addresses)
+        print("couchbase_server_ip_addresses: {}".format(couchbase_server_ip_addresses))
 
-    load_generator_ip_addresses = []
-    if "tag_Type_gateload" in ec2Inventory.inventory:
-        load_generator_ip_addresses = ec2Inventory.inventory["tag_Type_gateload"]
-        load_generator_ip_addresses = filter_cloud_formation(cloud_formation_stack_ip_addresses, load_generator_ip_addresses)
-    print("load_generator_ip_addresses: {}".format(load_generator_ip_addresses))
+        sync_gateway_ip_addresses = []
+        if "tag_Type_syncgateway" in ec2Inventory.inventory:
+            sync_gateway_ip_addresses = ec2Inventory.inventory["tag_Type_syncgateway"]
+            sync_gateway_ip_addresses = filter_cloud_formation(cloud_formation_stack_ip_addresses, sync_gateway_ip_addresses)
+        print("sync_gateway_ip_addresses: {}".format(sync_gateway_ip_addresses))
 
-    # get ip addresses of [u'54.242.119.83', u'54.234.207.138', u'54.209.218.97', u'54.242.55.56', u'54.242.29.78', u'52.90.171.161', u'54.175.81.204']
-    pool_ip_addresses = couchbase_server_ip_addresses + sync_gateway_ip_addresses + load_generator_ip_addresses
-    print("pool_ip_addresses: {}".format(pool_ip_addresses))
+        load_generator_ip_addresses = []
+        if "tag_Type_gateload" in ec2Inventory.inventory:
+            load_generator_ip_addresses = ec2Inventory.inventory["tag_Type_gateload"]
+            load_generator_ip_addresses = filter_cloud_formation(cloud_formation_stack_ip_addresses, load_generator_ip_addresses)
+        print("load_generator_ip_addresses: {}".format(load_generator_ip_addresses))
+
+        # get ip addresses of [u'54.242.119.83', u'54.234.207.138', u'54.209.218.97', u'54.242.55.56', u'54.242.29.78', u'52.90.171.161', u'54.175.81.204']
+        pool_ip_addresses = couchbase_server_ip_addresses + sync_gateway_ip_addresses + load_generator_ip_addresses
+        print("pool_ip_addresses: {}".format(pool_ip_addresses))
+
+        if len(pool_ip_addresses) == len(cloud_formation_stack_ip_addresses):
+            saw_all_cloudformation_instances = True
+            break
+        else:
+            print "Waiting for more instances to show up.  Getting inventory from AWS ... (may take a few minutes)"
+            ec2Inventory.do_api_calls_update_cache()
+
+    if not saw_all_cloudformation_instances:
+        raise Exception("Did not see all cloudformation instances: {}".format(cloud_formation_stack_ip_addresses))
+
     
     # convert to dns names
     pool_dns_addresses = lookup_dns_names(ec2Inventory.inventory, pool_ip_addresses)
