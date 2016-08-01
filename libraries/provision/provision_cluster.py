@@ -50,6 +50,9 @@ def provision_cluster(couchbase_server_config, sync_gateway_config):
     # Install sync_gateway
     install_sync_gateway.install_sync_gateway(sync_gateway_config)
 
+    # Install nginx
+    ansible_runner.run_ansible_playbook("install-nginx.yml")
+
     test_output(">>> Done provisioning cluster...")
 
 def test_output(output):

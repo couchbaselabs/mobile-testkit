@@ -13,6 +13,9 @@
   # Remove sync_gateway
   - include: tasks/remove-sg-accel.yml
 
+  # Remove nginx
+  - include: tasks/remove-nginx.yml
+
   # Delete sync_gateway and sg_accel uses
   - include: tasks/clean-users.yml
 

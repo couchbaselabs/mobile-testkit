@@ -1,0 +1,39 @@
+#user  nobody;
+#Defines which Linux system user will own and run the Nginx server
+
+worker_processes  1;
+#Referes to single threaded process. Generally set to be equal to the number of CPUs or cores.
+
+#error_log  logs/error.log; #error_log  logs/error.log  notice;
+#Specifies the file where server logs.
+
+#pid        logs/nginx.pid;
+#nginx will write its master process ID(PID).
+
+events {
+    worker_connections  1024;
+    # worker_processes and worker_connections allows you to calculate maxclients value:
+    # max_clients = worker_processes * worker_connections
+}
+
+http {
+    upstream sync_gateway {
+        server 192.168.33.11:4984;
+        server 192.168.33.12:4984;
+    }
+
+    server {
+        listen 80;
+        server_name  myservice.example.org;
+        client_max_body_size 20m;
+        location / {
+            proxy_pass              http://sync_gateway;
+            proxy_pass_header       Accept;
+            proxy_pass_header       Server;
+            proxy_http_version      1.1;
+            keepalive_requests      1000;
+            keepalive_timeout       360s;
+            proxy_read_timeout      360s;
+        }
+    }
+}

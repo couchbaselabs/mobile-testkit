@@ -36,12 +36,14 @@ class ClusterKeywords:
 
         ac_urls = ["http://{}:4985".format(sga["ip"]) for sga in cluster["sg_accels"]]
         cbs_urls = ["http://{}:8091".format(cb["ip"]) for cb in cluster["couchbase_servers"]]
+        lbs_urls = ["http://{}".format(lb["ip"]) for lb in cluster["load_balancers"]]
 
         # Format into urls that robot keywords can consume easily
         formatted_cluster = {
             "sync_gateways" : sg_urls,
             "sg_accels": ac_urls,
-            "couchbase_servers": cbs_urls
+            "couchbase_servers": cbs_urls,
+            "load_balancers": lbs_urls
         }
 
         logging.info(cluster)
@@ -104,8 +106,26 @@ class ClusterKeywords:
             verify_sg_accel_version(ac["ip"], expected_sync_gateway_version)
 
     def reset_cluster(self, sync_gateway_config):
+        """
+        1. Stop sync_gateways
+        2. Stop sg_accels
+        3. Delete sync_gateway artifacts (logs, conf)
+        4. Delete sg_accel artifacts (logs, conf)
+        5. Delete all server buckets
+        6. Create buckets from 'sync_gateway_config'
+        7. Wait for server to be in 'healthy' state
+        8. Deploy sync_gateway config and start
+        9. Deploy sg_accel config and start (distributed index mode only)
+        10. Stop nginx
+        11. Deploy nginx config
+        12. Start nginx
+        """
+
         cluster = Cluster()
         cluster.reset(sync_gateway_config)
+
+        # stop nginx_
+
 
     def provision_cluster(self, server_version, sync_gateway_version, sync_gateway_config):
 

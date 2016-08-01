@@ -1,0 +1,8 @@
+---
+- hosts: load_balancers
+  any_errors_fatal: true
+  become: yes
+
+  tasks:
+  - name: install nginx
+    yum: pkg=nginx state=latest
