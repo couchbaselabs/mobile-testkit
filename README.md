@@ -31,7 +31,7 @@ Table of Contents
 Repo Structure
 ==============
 
-The repo is organized as following
+The repo structure is the following:
 
 * libraries
  * provision
@@ -115,11 +115,11 @@ Setup PATH, PYTHONPATH, and ANSIBLE_CONFIG
 source setup.sh
 ```
 
-If you plan on doing development, it may be helpful to add the PYTHONPATH env variables to you .bashrc file so that you do not have to run setup everytime you open a new shell.
+If you plan on doing development, it may be helpful to add the PYTHONPATH env variables to your .bashrc file so that you do not have to run this setup everytime you open a new shell.
 
 ### Development Environment
-===========================
-You may use what ever environment you would like, however PyCharm [PyCharm](https://www.jetbrains.com/pycharm/) is very good option. There are a couple steps required to get going with this IDE if you choose to use it. 
+
+You may use what ever environment you would like, however [PyCharm](https://www.jetbrains.com/pycharm/) is a very good option. There are a couple steps required to get going with this IDE if you choose to use it. 
 
 **Set Interpreter and Library Home**
 - Go to PyCharm -> Preferences
@@ -133,7 +133,7 @@ You may use what ever environment you would like, however PyCharm [PyCharm](http
 - Select libraries from inside the repo directory
 - Click OK, OK, Apply
 
-Now PyCharm should recognize the custom libraries and provide intellisense
+Now PyCharm should recognize the custom libraries and provide intellisense.
 
 Android Tests
 ===============
@@ -419,38 +419,37 @@ sync_gateway Tests
 ### sync_gateway Test Dependencies
 ==================================
 
-The sync_gateway tests require targeting different cluster topologies of sync_gateway(s) + Couchbase Server(s). Don't worry! We will set this up for you. There are two options for these cluster nodes. You can use EC2 AWS instances or vms. 
+The sync_gateway tests require targeting different cluster topologies of sync_gateway(s) + Couchbase Server(s). Don't worry! We will set this up for you. There are two options for these cluster nodes. You can use EC2 AWS instances or vms.
 
 NOTE: This is currently only running on CentOS 7. 
 
-** AWS Environment requirements
+## AWS Environment requirements
 
-* Add boto configuration
+You will need an access key and secret access key. [This guide](http://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSGettingStartedGuide/AWSCredentials.html) explains how to get them from your AWS account.
 
-```
-$ cd ~/ 
-$ touch .boto
-$ vi .boto
-```
+Then you will need an AWS keypair. [This guide](http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-key-pairs.html#how-to-generate-your-own-key-and-import-it-to-aws) explains how to import your own Key Pair to Amazon EC2. Mobile-testkit creates a key-pair in the us-east region so the key pair must be set on this region too.
 
-#### IMPORTANT: Do not check in the information below
+- Add boto configuration
+    ```
+    $ cd ~/ 
+    $ touch .boto
+    $ vi .boto
+    ```
+    #### IMPORTANT: Do not check in the information below
 
-**Add your AWS credentials (Below are a fake example).**
+- Add your AWS credentials (Below are a fake example).
+    ```
+    [Credentials]
+    aws_access_key_id = CDABGHEFCDABGHEFCDAB
+    aws_secret_access_key = ABGHEFCDABGHEFCDABGHEFCDABGHEFCDABGHEFCDAB
+    ```
 
-```
-[Credentials]
-aws_access_key_id = CDABGHEFCDABGHEFCDAB
-aws_secret_access_key = ABGHEFCDABGHEFCDABGHEFCDABGHEFCDABGHEFCDAB
-```
-
-**Add AWS env variables**
-
-```
-$ export AWS_ACCESS_KEY_ID=CDABGHEFCDABGHEFCDAB
-$ export AWS_SECRET_ACCESS_KEY=ABGHEFCDABGHEFCDABGHEFCDABGHEFCDABGHEFCDAB
-$ export AWS_KEY=<your-aws-keypair-name>
-$ export KEYNAME=key_<your-aws-keypair-name>
-```
+- Add AWS env variables
+    ```
+    $ export AWS_ACCESS_KEY_ID=CDABGHEFCDABGHEFCDAB
+    $ export AWS_SECRET_ACCESS_KEY=ABGHEFCDABGHEFCDABGHEFCDABGHEFCDABGHEFCDAB
+    $ export AWS_KEY=<your-aws-keypair-name>
+    ```
 
 You probably want to persist these in your `~/.bash_profile`.
 
