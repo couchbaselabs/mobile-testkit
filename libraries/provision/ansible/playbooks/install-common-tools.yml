@@ -36,6 +36,8 @@
     yum: pkg=python-devel state=latest
   - name: install pip
     yum: pkg=python-pip state=latest
+  - name: install nginx
+    yum: pkg=nginx state=latest
   - name: install psutil
     shell: pip install psutil
     # Remove go, can cause issues with version confusion if multple versions of go are on a machine

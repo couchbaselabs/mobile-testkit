@@ -493,13 +493,17 @@ This targets the 'resources/pool.json' you supplied above and generates cluster 
 
 - Set the `CLUSTER_CONFIG` environment variable that is required by the `provision_cluster.py` script.  Eg: `$ export CLUSTER_CONFIG=resources/cluster_configs/2sg_1cbs`
 
+- Install the dependencies:
+```
+python libraries/provision/install_deps.py
+```
+
 - Install sync_gateway package:
 
 ```
 $ python libraries/provision/provision_cluster.py \
     --server-version=4.1.1 \
     --sync-gateway-version=1.2.0-79
-    --install-deps (first time only, this will install prerequisites to build / debug)
 ```
 
 - OR Install sync_gateway source:
@@ -508,7 +512,6 @@ $ python libraries/provision/provision_cluster.py \
 $ python libraries/provision/provision_cluster.py \
     --server-version=4.1.1 \
     --sync-gateway-commit=062bc26a8b65e63b3a80ba0f11506e49681d4c8c (requires full commit hash)
-    --install-deps (first time only, this will install prerequisites to build / debug)
 ```
 
 If you experience ssh errors, you may need to verify that the key has been added to your ssh agent
@@ -591,8 +594,12 @@ NOTE: This key must be added to your ssh-agent if it is anything other than the 
 The install_keys.py script will attempt to add it but it must be running. 
 
 1. Edit `libraries/provision/ansible/playbooks/ansible.cfg` and change the user to 'vagrant'
-1. Run `python libraries/utilities/generate_clusters_from_pool.py` 
-1. Provision the cluster with --install-deps
+1. Run `python libraries/utilities/generate_clusters_from_pool.py`
+1. Install the dependencies
+```
+python libraries/provision/install_deps.py
+```
+1. Provision the cluster
 ```
 python libraries/provision/provision_cluster.py --server-version=4.1.1 --sync-gateway-version=1.2.1-4 --install-deps
 ```
@@ -687,10 +694,15 @@ python libraries/utilities/generate_clusters_from_pool.py
 export CLUSTER_CONFIG=resources/cluster_configs/2sg_3cbs_2lgs
 ```
 
+- Install dependencies
+```
+python libraries/provision/install_deps.py
+```
+
 - Provision cluster
 
 ```
-python libraries/provision/provision_cluster.py --server-version 4.1.1 --sync-gateway-version 1.3.0-234 --install-deps
+python libraries/provision/provision_cluster.py --server-version 4.1.1 --sync-gateway-version 1.3.0-274
 ```
 
 - Run tests
