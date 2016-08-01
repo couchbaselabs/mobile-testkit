@@ -419,7 +419,7 @@ sync_gateway Tests
 ### sync_gateway Test Dependencies
 ==================================
 
-The sync\_gateway tests require targeting different cluster topologies of sync_gateway(s) + Couchbase Server(s). Don't worry! We will set this up for you. There are two options for these cluster nodes. You can use EC2 AWS instances or vms. 
+The sync_gateway tests require targeting different cluster topologies of sync_gateway(s) + Couchbase Server(s). Don't worry! We will set this up for you. There are two options for these cluster nodes. You can use EC2 AWS instances or vms.
 
 NOTE: This is currently only running on CentOS 7. 
 
