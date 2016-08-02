@@ -1,4 +1,4 @@
-#user  nobody;
+# user  nobody;
 #Defines which Linux system user will own and run the Nginx server
 
 worker_processes  1;
@@ -16,10 +16,19 @@ events {
     # max_clients = worker_processes * worker_connections
 }
 
+# Need to render the template to the following format.
+#  This is done in the libraries/provision/install_nginx.py script
+#  Expected output for the upstream definitions on the load balancer
+#  node(s) should look like the format
+#
+#       upstream sync_gateway {
+#           server 192.168.33.11:4984;
+#           server 192.168.33.12:4984;
+#       }
+
 http {
     upstream sync_gateway {
-        server 192.168.33.11:4984;
-        server 192.168.33.12:4984;
+       {{ upstream_sync_gatways }}
     }
 
     server {
