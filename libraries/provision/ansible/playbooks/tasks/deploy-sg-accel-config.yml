@@ -1,3 +1,3 @@
-- name: copy sg_accel config to host
+- name: SG ACCEL | copy sg_accel config to host
   template: src={{ sync_gateway_config_filepath }} dest=/home/sg_accel/sg_accel.json owner=sg_accel group=sg_accel mode=0644 force=true
 

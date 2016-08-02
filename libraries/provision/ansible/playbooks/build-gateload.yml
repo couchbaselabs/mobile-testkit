@@ -2,15 +2,18 @@
 - hosts: load_generators
   any_errors_fatal: true
   tasks:
-  - name: go get gateload
+  - name: GATELOAD | go get gateload
     shell: GOPATH=/opt/go go get -u -v github.com/couchbaselabs/gateload
-  - name: symlink gateload into /usr/local/bin
+
+  - name: GATELOAD | Symlink gateload into /usr/local/bin
     file: src=/opt/go/bin/gateload dest=/usr/local/bin/gateload owner=centos group=centos state=link
     sudo: true
-  - name: sysctl file to increase available port range for outgoing socket connections
+
+  - name: GATELOAD | Sysctl file to increase available port range for outgoing socket connections
     copy: src=files/sysctld.conf dest=/etc/sysctl.d/20-increase-port-range.conf owner=root group=root mode=0644
     sudo: true
-  - name: shell cmd to increase available port range for outgoing socket connections
+
+  - name: GATELOAD | Shell cmd to increase available port range for outgoing socket connections
     shell: sysctl --system
     sudo: true
 

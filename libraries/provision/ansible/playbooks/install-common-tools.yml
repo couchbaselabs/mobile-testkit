@@ -4,63 +4,90 @@
   become: yes
 
   tasks:
-  - name: create centos user
+  - name: DEPS | Create centos user
     user: name=centos createhome=yes
-  - name: install epel-release
+
+  - name: DEPS | install epel-release
     yum: pkg=epel-release state=latest
-  - name: install git
+
+  - name: DEPS | install git
     yum: pkg=git state=latest
-  - name: install ngrep
+
+  - name: DEPS | install ngrep
     yum: pkg=ngrep state=latest
-  - name: install bc
+
+  - name: DEPS | install bc
     yum: pkg=bc state=latest
-  - name: install lsof
+
+  - name: DEPS | install lsof
     yum: pkg=lsof state=latest
-  - name: install screen
+
+  - name: DEPS | install screen
     yum: pkg=screen state=latest
-  - name: install emacs
+
+  - name: DEPS | install emacs
     yum: pkg=emacs-nox state=latest
-  - name: install jq JSON tool
+
+  - name: DEPS | install jq JSON tool
     yum: pkg=jq state=latest
-  - name: install wget
+
+  - name: DEPS | install wget
     yum: pkg=wget state=latest
-  - name: install graphviz
+
+  - name: DEPS | install graphviz
     yum: pkg=graphviz state=latest
-  - name: install sysstat
+
+  - name: DEPS | install sysstat
     yum: pkg=sysstat state=latest
-  - name: install mlocate
+
+  - name: DEPS | install mlocate
     yum: pkg=mlocate state=latest
-  - name: install the 'Development tools' package group
+
+  - name: DEPS | install the 'Development tools' package group
     yum: name="@Development tools" state=present
-  - name: install python-devel
+
+  - name: DEPS | install python-devel
     yum: pkg=python-devel state=latest
-  - name: install pip
+
+  - name: DEPS | install pip
     yum: pkg=python-pip state=latest
-  - name: install nginx
+
+  - name: DEPS | install nginx
     yum: pkg=nginx state=latest
-  - name: install psutil
+
+  - name: DEPS | install psutil
     shell: pip install psutil
     # Remove go, can cause issues with version confusion if multple versions of go are on a machine
-  - name: delete existing go installations
+
+  - name: DEPS | delete existing go installations
     file: path=/usr/local/go state=absent
     ignore_errors: yes
-  - name: download golang
+
+  - name: DEPS | download golang
     get_url: url=https://storage.googleapis.com/golang/go1.5.3.linux-amd64.tar.gz dest=/tmp mode=0440
-  - name: extract go
+
+  - name: DEPS | extract go
     unarchive: src=/tmp/go1.5.3.linux-amd64.tar.gz dest=/usr/local copy=no
-  - name: symlink go into /usr/bin
+
+  - name: DEPS | symlink go into /usr/bin
     file: src=/usr/local/go/bin/go dest=/usr/bin/go owner=centos group=centos state=link
-  - name: symlink godoc into /usr/bin
+
+  - name: DEPS | symlink godoc into /usr/bin
     file: src=/usr/local/go/bin/godoc dest=/usr/bin/godoc owner=centos group=centos state=link
-  - name: symlink gofmt into /usr/bin
+
+  - name: DEPS | symlink gofmt into /usr/bin
     file: src=/usr/local/go/bin/gofmt dest=/usr/bin/gofmt owner=centos group=centos state=link
-  - name: create GOPATH directory
+
+  - name: DEPS | create GOPATH directory
     shell: mkdir -p /opt/go
-  - name: chown GOPATH to be owned by centos user
+
+  - name: DEPS | chown GOPATH to be owned by centos user
     file: path=/opt/go owner=centos group=centos recurse=yes
-  - name: raise max file descriptors
+
+  - name: DEPS | raise max file descriptors
     copy: src=files/security-nofiles-limit.conf dest=/etc/security/limits.d/20-nofiles.conf owner=root group=root mode=0644
-  - name: install repo tool
+
+  - name: DEPS | install repo tool
     get_url: url=https://storage.googleapis.com/git-repo-downloads/repo dest=/usr/bin/repo mode=0751
 
 

@@ -4,10 +4,11 @@
   tasks:
 
   tasks:
-  - name: Run collectcb_info
+  - name: CBCOLLECT INFO | Run collectcb_info
     shell: curl 'http://Administrator:password@localhost:8091/controller/startLogsCollection' --data 'uploadHost=s3.amazonaws.com%2Fcb-customers&customer=mobileperf&nodes=*'
     register: curl_out
-  - name: Dump curl stdout/stderr
+
+  - name: CBCOLLECT INFO | Dump curl stdout/stderr
     debug: msg="{{ curl_out.stdout }} {{ curl_out.stderr }}"
 
 

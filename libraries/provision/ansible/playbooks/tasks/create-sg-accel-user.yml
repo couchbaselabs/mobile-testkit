@@ -1,4 +1,4 @@
 # Add sg_accel user
-- name: Create sg_accel user
+- name: SG ACCEL | Create sg_accel user
   user: name=sg_accel createhome=yes
 

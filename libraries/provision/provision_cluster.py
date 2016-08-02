@@ -8,6 +8,7 @@ import install_couchbase_server
 
 from install_couchbase_server import CouchbaseServerConfig
 from install_sync_gateway import SyncGatewayConfig
+from install_nginx import install_nginx
 
 from ansible_runner import AnsibleRunner
 from robot.api.logger import console
@@ -51,7 +52,7 @@ def provision_cluster(couchbase_server_config, sync_gateway_config):
     install_sync_gateway.install_sync_gateway(sync_gateway_config)
 
     # Install nginx
-    ansible_runner.run_ansible_playbook("install-nginx.yml")
+    install_nginx(os.environ["CLUSTER_CONFIG"])
 
     test_output(">>> Done provisioning cluster...")
 
