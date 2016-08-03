@@ -51,30 +51,6 @@ def install_nginx(cluster_config):
 
     assert status == 0, "Failed to install nginx!"
 
-    #
-    # if not sync_gateway_config.is_valid():
-    #     print "Invalid sync_gateway provisioning configuration. Exiting ..."
-    #     sys.exit(1)
-    #
-    # if sync_gateway_config.build_flags != "":
-    #     print("\n\n!!! WARNING: You are building with flags: {} !!!\n\n".format(sync_gateway_config.build_flags))
-    #
-    # ansible_runner = AnsibleRunner()
-    # config_path = os.path.abspath(sync_gateway_config.config_path)
-    #
-    # sync_gateway_config.commit is not None:
-    #     # Install source
-    #     status = ansible_runner.run_ansible_playbook(
-    #         "install-sync-gateway-source.yml",
-    #         extra_vars={
-    #             "sync_gateway_config_filepath": config_path,
-    #             "commit": sync_gateway_config.commit,
-    #             "build_flags": sync_gateway_config.build_flags,
-    #             "skip_bucketflush": sync_gateway_config.skip_bucketflush
-    #         }
-    #     )
-    #     assert status == 0, "Failed to install sync_gateway source"
-
 
 
 if __name__ == "__main__":
