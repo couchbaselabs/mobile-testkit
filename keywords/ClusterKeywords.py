@@ -116,16 +116,10 @@ class ClusterKeywords:
         7. Wait for server to be in 'healthy' state
         8. Deploy sync_gateway config and start
         9. Deploy sg_accel config and start (distributed index mode only)
-        10. Stop nginx
-        11. Deploy nginx config
-        12. Start nginx
         """
 
         cluster = Cluster()
         cluster.reset(sync_gateway_config)
-
-        # stop nginx_
-
 
     def provision_cluster(self, server_version, sync_gateway_version, sync_gateway_config):
 
