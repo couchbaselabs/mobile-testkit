@@ -600,10 +600,10 @@ python libraries/provision/install_deps.py
 ```
 1. Provision the cluster
 ```
-python libraries/provision/provision_cluster.py --server-version=4.1.1 --sync-gateway-version=1.2.1-4 --install-deps
+python libraries/provision/provision_cluster.py --server-version=4.1.1 --sync-gateway-version=1.2.1-4
 ```
 
-Enjoy! You now have a Couchbaes Server + Sync Gateway cluster running on your machine!
+Enjoy! You now have a Couchbase Server + Sync Gateway cluster running on your machine!
 
 ### Spin Up Machines on AWS
 ==========================

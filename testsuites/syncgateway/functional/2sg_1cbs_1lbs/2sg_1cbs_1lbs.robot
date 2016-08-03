@@ -13,8 +13,6 @@ Test Timeout    10 minutes
 
 *** Variables ***
 ${CLUSTER_CONFIG}           ${CLUSTER_CONFIGS}/2sg_1cbs_1lbs
-${SYNC_GATEWAY_CONFIG}      ${SYNC_GATEWAY_CONFIGS}/sync_gateway_default_functional_tests_cc.json
-
 
 *** Test Cases ***
 # Cluster has been setup

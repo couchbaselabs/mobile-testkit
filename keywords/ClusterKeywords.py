@@ -136,7 +136,7 @@ class ClusterKeywords:
         else:
             sg_config = SyncGatewayConfig(sync_gateway_version, None, None, sync_gateway_config, "", False)
 
-        provision_cluster(cbs_config, sg_config, install_deps=False)
+        provision_cluster(cbs_config, sg_config)
 
         # verify running services are the expected versions
         self.verify_cluster_versions(server_version, sync_gateway_version)
