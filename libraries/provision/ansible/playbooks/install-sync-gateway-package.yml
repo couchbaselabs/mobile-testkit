@@ -9,7 +9,7 @@
   - include: tasks/clean-users.yml
 
   # Check no sync_gateways or accels running
-  - name: verify no service on 4985
+  - name: SYNC GATEWAY | verify no service on 4985
     wait_for: port=4985 delay=1 state=stopped
 
 # Flush server buckets
@@ -63,7 +63,7 @@
 
   tasks:
   - debug: msg="Downloading sync_gateway v. {{ couchbase_sync_gateway_package_url }}"
-  - name: Download sync_gateway rpm
+  - name: SYNC GATEWAY |  Download sync_gateway rpm
     get_url: url={{ couchbase_sync_gateway_package_url }} dest=/tmp/{{ couchbase_sync_gateway_package }}
 
 # Download sg accel package
@@ -78,7 +78,7 @@
 
   tasks:
   - debug: msg="Downloading sg_accel v. {{ couchbase_sg_accel_package_url }}"
-  - name: Download sg_accel rpm
+  - name: SYNC GATEWAY | Download sg_accel rpm
     get_url: url={{ couchbase_sg_accel_package_url }} dest=/tmp/{{ couchbase_sg_accel_package }}
 
 # Deploy non writer sync_gateway configs
@@ -112,9 +112,10 @@
   become: yes
   tasks:
   # Install and start service
-  - name: Install sync_gateway rpm
+  - name: SYNC GATEWAY | Install sync_gateway rpm
     shell: rpm -i /tmp/{{ couchbase_sync_gateway_package }}
-  - name: wait until sync gateway to listen on port
+
+  - name: SYNC GATEWAY | wait until sync gateway to listen on port
     wait_for: port=4985 timeout=120
 
 # Install and launch sg_accel service
@@ -123,9 +124,11 @@
   become: yes
   tasks:
   # Install and start service
-  - name: Install sg_accel rpm
+  - name: SYNC GATEWAY | Install sg_accel rpm
     shell: rpm -i /tmp/{{ couchbase_sg_accel_package }}
-  - name: Start the service
+
+  - name: SYNC GATEWAY | Start the service
     service: name=sg_accel state=started
-  - name: wait for sg_accel to listen on port
+
+  - name: SYNC GATEWAY | wait for sg_accel to listen on port
     wait_for: port=4985 delay=2 timeout=120

@@ -5,41 +5,41 @@
 
   tasks:
 
-  - name: install git
+  - name: GATLING | Install git
     yum: pkg=git state=latest
 
-  - name: install java
+  - name: GATLING | Install java
     yum: pkg=java-1.7.0-openjdk-devel
 
-  - name: Create /opt directory
+  - name: GATLING | Create /opt directory
     file: path=/opt state=directory
 
-  - name: Create /home/projects/sg-gatling-load/ directory
+  - name: GATLING | Create /home/projects/sg-gatling-load/ directory
     file: path=/home/projects/sg-gatling-load/ state=directory
 
-  - name: Download Maven3
+  - name: GATLING | Download Maven3
     get_url: dest=/opt/maven3.tar.gz url=http://apache.proserve.nl/maven/maven-3/3.2.5/binaries/apache-maven-3.2.5-bin.tar.gz
 
-  - name: Unpack Maven3
+  - name: GATLING | Unpack Maven3
     action: command creates=/opt/maven chdir=/opt tar zxvf /opt/maven3.tar.gz
 
-  - name: Create Maven3 directory link
+  - name: GATLING | Create Maven3 directory link
     file: path=/opt/maven src=/opt/apache-maven-3.2.5 state=link
 
-  - name: Set mvn link
+  - name: GATLING | Set mvn link
     action: command update-alternatives --install /usr/bin/mvn mvn /opt/maven/bin/mvn 1
 
-  - name: Remove all files in sg-gatling-load except 'themes' folder that could be already attached to splunk
+  - name: GATLING | Remove all files in sg-gatling-load except 'themes' folder that could be already attached to splunk
     shell: cd /home/projects/sg-gatling-load/ && rm -rf .[^.] .??* && find ! -name 'themes' -type f -exec rm -f {} + && find ! -name 'themes' -type d -exec rm -rf {} + 2
     ignore_errors: yes
 
-  - name: Checkout sg-gatling load project from github
+  - name: GATLING | Checkout sg-gatling load project from github
     shell: cd /home/projects/sg-gatling-load && git init && git remote add origin https://github.com/couchbaselabs/sg-gatling-load.git && git fetch && git checkout -t origin/master
 
-  - name: Remove somelog.txt before running theme
+  - name: GATLING | Remove somelog.txt before running theme
     file: path=/home/projects/sg-gatling-load/somelog.txt state=absent
 
-  - name: Set sg-gatling-load baseURL for all themes
+  - name: GATLING | Set sg-gatling-load baseURL for all themes
     lineinfile: 
       dest=/home/projects/sg-gatling-load/pom.xml 
       regexp='<simulation.targetHosts>.*</simulation.targetHosts>' 

@@ -3,7 +3,7 @@
 - debug: msg="Couchbase cluster RAM {{ couchbase_server_cluster_ram }}"
 - debug: msg="Couchbase bucket RAM {{ couchbase_server_bucket_ram }}"
 
-- name: Delete buckets
+- name: COUCHBASE SERVER | Delete buckets
   shell: "{{ couchbase_server_home_path }}/bin/couchbase-cli bucket-delete --cluster={{ couchbase_server_primary_node }}:{{ couchbase_server_admin_port }} --user={{ couchbase_server_admin }} --password={{ couchbase_server_password }} --bucket={{ item }}"
   register: bucket_flush
   ignore_errors: true
@@ -13,7 +13,7 @@
   when: couchbase_server_node == couchbase_server_primary_node
 
 # Create buckets and wait
-- name: Create new buckets
+- name: COUCHBASE SERVER | Create new buckets
   shell: "{{ couchbase_server_home_path }}/bin/couchbase-cli bucket-create --cluster={{ couchbase_server_primary_node }}:{{ couchbase_server_admin_port }} --user={{ couchbase_server_admin }} --password={{ couchbase_server_password }} --bucket={{ item }} --bucket-type={{ couchbase_server_bucket_type }} --bucket-port={{ couchbase_server_bucket_port }} --bucket-ramsize={{ couchbase_server_bucket_ram }} --bucket-replica={{ couchbase_server_bucket_replica }} --wait"
   with_items:
     - data-bucket

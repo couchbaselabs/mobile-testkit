@@ -38,26 +38,26 @@
     - include: tasks/clean-users.yml
 
     # Download and install
-    - name: Download couchbase server
+    - name: COUCHBASE SERVER | Download couchbase server
       get_url: url={{ couchbase_server_package_url }} dest=/tmp/{{ couchbase_server_package_name }}
     - name: Install Couchbase Server
       yum: name=/tmp/{{ couchbase_server_package_name }} state=present
 
     # Change system settings for Couchbase Server
-    - name: raise max file descriptors
+    - name: COUCHBASE SERVER | raise max file descriptors
       copy: src=files/security-nofiles-limit.conf dest=/etc/security/limits.d/20-nofiles.conf owner=root group=root mode=0644
 
-    - name: Disable Transparent Huge Pages
+    - name: COUCHBASE SERVER | Disable Transparent Huge Pages
       shell: echo 'for i in /sys/kernel/mm/*transparent_hugepage/enabled; do echo never > $i; done' >> /etc/rc.local
       shell: echo 'for i in /sys/kernel/mm/*transparent_hugepage/defrag; do echo never > $i; done' >> /etc/rc.local
       shell: for i in /sys/kernel/mm/*transparent_hugepage/enabled; do echo never > $i; done
 
     # Start via init scipt if running CBS 4.0.0 or 4.1.0 on CentOS 7.2 due to https://issues.couchbase.com/browse/MB-17193
-    - name: Start Couchbase Service (Hack around 7.2 and CBS 4.1.0 issue)
+    - name: COUCHBASE SERVER | Start Couchbase Service (Hack around 7.2 and CBS 4.1.0 issue)
       shell: /opt/couchbase/etc/couchbase_init.d start
       when: ansible_distribution == 'CentOS' and (ansible_distribution_version == '7.2.1511' and (couchbase_server_package_name == 'couchbase-server-enterprise-4.1.0-5005-centos7.x86_64.rpm' or couchbase_server_package_name == 'couchbase-server-enterprise-4.0.0-4051-centos7.x86_64.rpm'))
 
-    - name: Restart Couchbase Service
+    - name: COUCHBASE SERVER | Restart Couchbase Service
       service: name=couchbase-server state=restarted
       when: ansible_distribution == 'CentOS' and (not ansible_distribution_version == '7.2.1511' or (not couchbase_server_package_name == 'couchbase-server-enterprise-4.1.0-5005-centos7.x86_64.rpm' and not couchbase_server_package_name == 'couchbase-server-enterprise-4.0.0-4051-centos7.x86_64.rpm'))
 
@@ -65,32 +65,32 @@
     - debug: msg="Couchbase cluster RAM {{ couchbase_server_cluster_ram }}"
     - debug: msg="Couchbase bucket RAM {{ couchbase_server_bucket_ram }}"
 
-    - name: Get major version
+    - name: COUCHBASE SERVER | Get major version
       shell: cat /opt/couchbase/VERSION.txt | cut -d '.' -f1
       register: cb_major_version
 
-    - name: Wait for node to be listening on port 8091
+    - name: COUCHBASE SERVER | Wait for node to be listening on port 8091
       wait_for: port=8091 delay=5 timeout=30
 
-    - name: Configure cluster settings (4.0.X and 4.1.X)
+    - name: COUCHBASE SERVER | Configure cluster settings (4.0.X and 4.1.X)
       shell: "{{ couchbase_server_home_path }}/bin/couchbase-cli cluster-init -c {{ couchbase_server_node }}:{{ couchbase_server_admin_port }} --user={{ couchbase_server_admin }} --password={{ couchbase_server_password }} --cluster-init-username={{ couchbase_server_admin }} --cluster-init-password={{ couchbase_server_password }} --cluster-init-port={{couchbase_server_admin_port}} --cluster-init-ramsize={{ couchbase_server_cluster_ram }}  --services=data,index,query  --cluster-index-ramsize={{ couchbase_server_index_ram }}"
       when:  "'4.0' in couchbase_server_package_name or '4.1' in couchbase_server_package_name"
 
-    - name: Configure cluster settings (4.5.X and up)
+    - name: COUCHBASE SERVER | Configure cluster settings (4.5.X and up)
       shell: "{{ couchbase_server_home_path }}/bin/couchbase-cli cluster-init -c {{ couchbase_server_node }}:{{ couchbase_server_admin_port }} --user={{ couchbase_server_admin }} --password={{ couchbase_server_password }} --cluster-init-username={{ couchbase_server_admin }} --cluster-init-password={{ couchbase_server_password }} --cluster-init-port={{couchbase_server_admin_port}} --cluster-init-ramsize={{ couchbase_server_cluster_ram }}  --services=data,index,query  --cluster-index-ramsize={{ couchbase_server_index_ram }}  --index-storage-setting=default"
       when:  "not '4.0' in couchbase_server_package_name and not '4.1' in couchbase_server_package_name"
 
-    - name: Initialize primary node
+    - name: COUCHBASE SERVER | Initialize primary node
       shell: "{{ couchbase_server_home_path }}/bin/couchbase-cli node-init -c {{ couchbase_server_node }}:{{ couchbase_server_admin_port }} --user={{ couchbase_server_admin }} --password={{ couchbase_server_password }} --cluster-init-username={{ couchbase_server_admin }} --node-init-hostname={{ couchbase_server_node }}"
       when: "{{ cb_major_version['stdout'] }} != 2"
 
-    - name: Wait for node to be listening on port 8091
+    - name: COUCHBASE SERVER | Wait for node to be listening on port 8091
       wait_for: port=8091 delay=5 timeout=30
 
-    - name: Join additional cluster nodes
+    - name: COUCHBASE SERVER | Join additional cluster nodes
       shell: "{{ couchbase_server_home_path }}/bin/couchbase-cli server-add -c {{ couchbase_server_primary_node }}:{{ couchbase_server_admin_port }} --user={{ couchbase_server_admin }} --password={{ couchbase_server_password }} --server-add={{ couchbase_server_node }}:{{ couchbase_server_admin_port }} --server-add-username={{ couchbase_server_admin }} --server-add-password={{ couchbase_server_password }}"
       when: not (couchbase_server_node == couchbase_server_primary_node )
 
-    - name: Rebalance cluster
+    - name: COUCHBASE SERVER | Rebalance cluster
       shell: "{{ couchbase_server_home_path }}/bin/couchbase-cli rebalance -c {{ couchbase_server_primary_node }}:{{ couchbase_server_admin_port }} --user={{ couchbase_server_admin }} --password={{ couchbase_server_password }}"
       ignore_errors: yes

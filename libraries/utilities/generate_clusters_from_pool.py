@@ -8,12 +8,13 @@ from optparse import OptionParser
 
 
 class ClusterDef:
-    def __init__(self, name, num_sgs, num_acs, num_cbs, num_lgs):
+    def __init__(self, name, num_sgs, num_acs, num_cbs, num_lgs, num_lbs):
         self.name = name
         self.num_sgs = num_sgs
         self.num_acs = num_acs
         self.num_cbs = num_cbs
         self.num_lgs = num_lgs
+        self.num_lbs = num_lbs
 
 
     def num_machines_required(self):
@@ -21,7 +22,8 @@ class ClusterDef:
             self.num_sgs +
             self.num_acs +
             self.num_cbs +
-            self.num_lgs
+            self.num_lgs +
+            self.num_lbs
         )
 
 
@@ -49,6 +51,7 @@ def write_config(config, pool_file):
         sync_gateways = []
         accels = []
         load_generators = []
+        load_balancers = []
 
         f.write("[pool]\n")
         count = 1
@@ -63,6 +66,7 @@ def write_config(config, pool_file):
         f.write("\n")
         f.write("\n")
 
+        # Write Servers
         cbs_ips_to_remove = []
         f.write("[couchbase_servers]\n")
         for i in range(config.num_cbs):
@@ -79,6 +83,7 @@ def write_config(config, pool_file):
 
         f.write("\n")
 
+        # Write sync_gateways
         f.write("[sync_gateways]\n")
         sg_ips_to_remove = []
         for i in range(config.num_sgs):
@@ -95,6 +100,7 @@ def write_config(config, pool_file):
 
         f.write("\n")
 
+        # Write sg_accels
         ac_ips_to_remove = []
         f.write("[sg_accels]\n")
         for i in range(config.num_acs):
@@ -111,6 +117,7 @@ def write_config(config, pool_file):
 
         f.write("\n")
 
+        # Write load generators
         lg_ips_to_remove = []
         f.write("[load_generators]\n")
         for i in range(config.num_lgs):
@@ -124,6 +131,23 @@ def write_config(config, pool_file):
 
         for lg_ip in lg_ips_to_remove:
             ips.remove(lg_ip)
+
+        f.write("\n")
+
+        # Write load balancers
+        lb_ips_to_remove = []
+        f.write("[load_balancers]\n")
+        for i in range(config.num_lbs):
+            ip = ips[i]
+            f.write("lb{} ansible_host={}\n".format(i + 1, ip))
+            load_balancers.append({
+                "name": "lb{}".format(i + 1),
+                "ip": ip
+            })
+            lb_ips_to_remove.append(ip)
+
+        for lb_ip in lb_ips_to_remove:
+            ips.remove(lb_ip)
 
         f.write("\n")
 
@@ -151,6 +175,7 @@ def write_config(config, pool_file):
             "sync_gateways": sync_gateways,
             "sg_accels": accels,
             "load_generators": load_generators,
+            "load_balancers": load_balancers
         }
 
         with open(cluster_json_file, "w") as f_json:
@@ -185,14 +210,15 @@ if __name__ == "__main__":
     (opts, args) = parser.parse_args(arg_parameters)
 
     cluster_configs = [
-        ClusterDef("1sg",           num_sgs=1, num_acs=0, num_cbs=0, num_lgs=0),
-        ClusterDef("1cbs",          num_sgs=0, num_acs=0, num_cbs=1, num_lgs=0),
-        ClusterDef("1sg_1cbs",      num_sgs=1, num_acs=0, num_cbs=1, num_lgs=0),
-        ClusterDef("1sg_1ac_1cbs",  num_sgs=1, num_acs=1, num_cbs=1, num_lgs=0),
-        ClusterDef("1sg_2ac_1cbs",  num_sgs=1, num_acs=2, num_cbs=1, num_lgs=0),
-        ClusterDef("2sg_1cbs",      num_sgs=2, num_acs=0, num_cbs=1, num_lgs=0),
-        ClusterDef("2sg_3cbs_2lgs", num_sgs=2, num_acs=0, num_cbs=3, num_lgs=2),
-        ClusterDef("2sg_2ac_3cbs_2lgs", num_sgs=2, num_acs=2, num_cbs=3, num_lgs=2),
+        ClusterDef("1sg",               num_sgs=1, num_acs=0, num_cbs=0, num_lgs=0, num_lbs=0),
+        ClusterDef("1cbs",              num_sgs=0, num_acs=0, num_cbs=1, num_lgs=0, num_lbs=0),
+        ClusterDef("1sg_1cbs",          num_sgs=1, num_acs=0, num_cbs=1, num_lgs=0, num_lbs=0),
+        ClusterDef("1sg_1ac_1cbs",      num_sgs=1, num_acs=1, num_cbs=1, num_lgs=0, num_lbs=0),
+        ClusterDef("1sg_2ac_1cbs",      num_sgs=1, num_acs=2, num_cbs=1, num_lgs=0, num_lbs=0),
+        ClusterDef("2sg_1cbs",          num_sgs=2, num_acs=0, num_cbs=1, num_lgs=0, num_lbs=0),
+        ClusterDef("2sg_1cbs_1lbs",     num_sgs=2, num_acs=0, num_cbs=1, num_lgs=0, num_lbs=1),
+        ClusterDef("2sg_3cbs_2lgs",     num_sgs=2, num_acs=0, num_cbs=3, num_lgs=2, num_lbs=0),
+        ClusterDef("2sg_2ac_3cbs_2lgs", num_sgs=2, num_acs=2, num_cbs=3, num_lgs=2, num_lbs=0),
     ]
 
     if not os.path.isfile(opts.pool_file):

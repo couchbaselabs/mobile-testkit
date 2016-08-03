@@ -9,7 +9,7 @@
   - include: tasks/clean-users.yml
 
   # Check no sync_gateways or accels running
-  - name: verify no service on 4985
+  - name: SYNC GATEWAY | verify no service on 4985
     wait_for: port=4985 delay=1 state=stopped
 
 # Flush server buckets
@@ -59,15 +59,19 @@
     build_flags:
 
   tasks:
-  - name: Create .git email to use bootstrap.sh script
+  - name: SYNC GATEWAY & SG ACCEL | Create .git email to use bootstrap.sh script
     shell: git config --global user.email "foo@couchbase.com"
-  - name: Create .git user name to use bootstrap.sh script
+
+  - name: SYNC GATEWAY & SG ACCEL | Create .git user name to use bootstrap.sh script
     shell: git config --global user.name "Foo"
-  - name: download bootstrap script
+
+  - name: SYNC GATEWAY & SG ACCEL | Download bootstrap script
     get_url: url=https://raw.githubusercontent.com/couchbase/sync_gateway/master/bootstrap.sh dest=/home/centos/ mode=0751
-  - name: run bootstrap script (bootstrap.sh takes a branch and a commit as params, this will be fixed to only take a commit at some point)
+
+  - name: SYNC GATEWAY & SG ACCEL | Run bootstrap script (bootstrap.sh takes a branch and a commit as params, this will be fixed to only take a commit at some point)
     shell: ./bootstrap.sh {{ commit }} chdir=/home/centos/
-  - name: build
+
+  - name: SYNC GATEWAY & SG ACCEL | Build
     shell: ./build.sh {{ build_flags }} chdir=/home/centos/
 
 - hosts: sync_gateways
@@ -76,11 +80,13 @@
 
   tasks:
   # Create target directory and deploy binary
-  - name: Creates /opt/couchbase-sync-gateway
+  - name: SYNC GATEWAY | Creates /opt/couchbase-sync-gateway
     file: path=/opt/couchbase-sync-gateway state=directory
-  - name: Creates /opt/couchbase-sync-gateway/bin
+
+  - name: SYNC GATEWAY | Creates /opt/couchbase-sync-gateway/bin
     file: path=/opt/couchbase-sync-gateway/bin state=directory
-  - name: copy sync_gateway binary to /opt/
+
+  - name: SYNC GATEWAY | Copy sync_gateway binary to /opt/
     shell: cp /home/centos/godeps/bin/sync_gateway /opt/couchbase-sync-gateway/bin/
 
 - hosts: sg_accels
@@ -89,11 +95,13 @@
 
   tasks:
   # Create target directory and deploy binary
-  - name: Creates /opt/couchbase-sg-accel
-    file: path=/opt/couchbase-sg-accel state=directory
+  - name: SG ACCEL | Creates /opt/couchbase-sg-accel
+    file: SG ACCEL | path=/opt/couchbase-sg-accel state=directory
+
   - name: Creates /opt/couchbase-sg-accel/bin
     file: path=/opt/couchbase-sg-accel/bin state=directory
-  - name: copy sg_accel binary to /opt/
+
+  - name: Copy sg_accel binary to /opt/
     shell: cp /home/centos/godeps/bin/sg_accel /opt/couchbase-sg-accel/bin/
 
 # Deploy sync gateway configs
@@ -127,11 +135,13 @@
   any_errors_fatal: true
   become: yes
   tasks:
-  - name: make service install script executable
+  - name: SYNC GATEWAY | Make service install script executable
     file: path=/home/centos/godeps/src/github.com/couchbase/sync_gateway/service/sync_gateway_service_install.sh mode=a+x
-  - name: install sync gateway service
+
+  - name: SYNC GATEWAY | Install sync gateway service
     shell: ./sync_gateway_service_install.sh chdir=/home/centos/godeps/src/github.com/couchbase/sync_gateway/service
-  - name: wait until sync gateway to listen on port
+
+  - name: SYNC GATEWAY | Wait until sync gateway to listen on port
     wait_for: port=4985 timeout=120
 
 # Install sg_accel service and wait for launch
@@ -139,11 +149,14 @@
   any_errors_fatal: true
   become: yes
   tasks:
-  - name: make service install script executable
+  - name: SYNC GATEWAY | Make service install script executable
     file: path=/home/centos/godeps/src/github.com/couchbase/sync_gateway/service/sg_accel_service_install.sh mode=a+x
-  - name: install sg_accell service
+
+  - name: SYNC GATEWAY | Install sg_accell service
     shell: ./sg_accel_service_install.sh chdir=/home/centos/godeps/src/github.com/couchbase/sync_gateway/service
-  - name: Start the service
+
+  - name: SYNC GATEWAY | Start the service
     service: name=sg_accel state=started
-  - name: wait until sync gateway to listen on port
+
+  - name: SYNC GATEWAY | Wait until sync gateway to listen on port
     wait_for: port=4985 timeout=120
