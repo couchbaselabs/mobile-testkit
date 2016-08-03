@@ -36,6 +36,9 @@ class ChangesTracker:
                     self.processed_changes[doc["id"]] = doc["changes"]
 
     def start(self):
+        """
+        Start a longpoll changes feed and and store the results in self.processed changes
+        """
 
         auth_type = get_auth_type(self.auth)
         current_seq_num = 0
@@ -64,16 +67,23 @@ class ChangesTracker:
             resp.raise_for_status()
             resp_obj = resp.json()
 
-            # log_info("RESP_OBJ: {}".format(resp_obj))
-
             self.process_changes(resp_obj["results"])
             current_seq_num = resp_obj["last_seq"]
 
     def stop(self):
+        """
+        Stop the longpoll changes feed
+        """
         log_info("Closing _changes feed ...")
         self.cancel = True
 
     def wait_until(self, expected_docs, timeout=30):
+        """
+        Poll self.processed_changes to see if all expected docs have been recieved
+        via the changes feed. This will return false if the polling exceeds the timeout
+
+        expected docs format: [{"id": "doc_id1" "rev": "rev1", "ok", "true"}, ...]
+        """
 
         start = time.time()
         while True:
