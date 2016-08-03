@@ -19,7 +19,7 @@ ${SYNC_GATEWAY_CONFIG}      ${SYNC_GATEWAY_CONFIGS}/sync_gateway_default_functio
 *** Keywords ***
 Suite Setup
     Log  Setting up suite ...  console=True
-    Set Environment Variable  CLUSTER_CONFIG  ${CLUSTER_CONFIGS}/1sg_1cbs
+    Set Environment Variable  CLUSTER_CONFIG  ${CLUSTER_CONFIGS}/2sg_1cbs_1lbs
 
     Provision Cluster
     ...  server_version=${SERVER_VERSION}
