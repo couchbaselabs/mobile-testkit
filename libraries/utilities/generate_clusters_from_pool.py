@@ -195,13 +195,14 @@ def get_ips(pool_file="resources/pool.json"):
 
 
 def generate_clusters_from_pool(pool_file):
-    cluster_configs = [
+    cluster_confs = [
         ClusterDef("1sg", num_sgs=1, num_acs=0, num_cbs=0, num_lgs=0, num_lbs=0),
         ClusterDef("2sgs", num_sgs=2, num_acs=0, num_cbs=0, num_lgs=0, num_lbs=0),
         ClusterDef("1cbs", num_sgs=0, num_acs=0, num_cbs=1, num_lgs=0, num_lbs=0),
         ClusterDef("1sg_1cbs", num_sgs=1, num_acs=0, num_cbs=1, num_lgs=0, num_lbs=0),
         ClusterDef("1sg_1ac_1cbs", num_sgs=1, num_acs=1, num_cbs=1, num_lgs=0, num_lbs=0),
         ClusterDef("1sg_1ac_1cbs_1lgs", num_sgs=1, num_acs=1, num_cbs=1, num_lgs=1, num_lbs=0),
+        ClusterDef("1sg_1ac_2cbs", num_sgs=1, num_acs=1, num_cbs=2, num_lgs=0, num_lbs=0),
         ClusterDef("1sg_2ac_1cbs", num_sgs=1, num_acs=2, num_cbs=1, num_lgs=0, num_lbs=0),
         ClusterDef("2sg_1cbs", num_sgs=2, num_acs=0, num_cbs=1, num_lgs=0, num_lbs=0),
         ClusterDef("2sg_1cbs_1lbs", num_sgs=2, num_acs=0, num_cbs=1, num_lgs=0, num_lbs=1),
@@ -218,8 +219,8 @@ def generate_clusters_from_pool(pool_file):
         print(host)
 
     print("Generating 'resources/cluster_configs/'")
-    for cluster_config in cluster_configs:
-        write_config(cluster_config, pool_file)
+    for cluster_conf in cluster_confs:
+        write_config(cluster_conf, pool_file)
 
 if __name__ == "__main__":
     usage = """
