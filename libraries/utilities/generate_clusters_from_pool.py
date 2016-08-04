@@ -214,6 +214,7 @@ if __name__ == "__main__":
         ClusterDef("1cbs",              num_sgs=0, num_acs=0, num_cbs=1, num_lgs=0, num_lbs=0),
         ClusterDef("1sg_1cbs",          num_sgs=1, num_acs=0, num_cbs=1, num_lgs=0, num_lbs=0),
         ClusterDef("1sg_1ac_1cbs",      num_sgs=1, num_acs=1, num_cbs=1, num_lgs=0, num_lbs=0),
+        ClusterDef("1sg_1ac_2cbs",      num_sgs=1, num_acs=1, num_cbs=2, num_lgs=0, num_lbs=0),
         ClusterDef("1sg_2ac_1cbs",      num_sgs=1, num_acs=2, num_cbs=1, num_lgs=0, num_lbs=0),
         ClusterDef("2sg_1cbs",          num_sgs=2, num_acs=0, num_cbs=1, num_lgs=0, num_lbs=0),
         ClusterDef("2sg_1cbs_1lbs",     num_sgs=2, num_acs=0, num_cbs=1, num_lgs=0, num_lbs=1),
