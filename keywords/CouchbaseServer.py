@@ -1,10 +1,5 @@
-import os
-import shutil
 import subprocess
-import logging
 import requests
-import json
-import base64
 import time
 from subprocess import CalledProcessError
 
@@ -12,13 +7,9 @@ from requests.exceptions import ConnectionError
 
 from couchbase.bucket import Bucket
 from couchbase.exceptions import *
-from couchbase.views.iterator import View
-from couchbase.n1ql import N1QLQuery
-from couchbase.views.params import Query
 
 from constants import *
 from utils import *
-from utils import version_and_build
 
 
 def get_server_version(host):
@@ -270,3 +261,106 @@ class CouchbaseServer:
                 found_ids.append(row["$1"]["id"])
 
         return found_ids
+
+    def wait_for_rebalance_complete(self, url):
+        """
+        Polls couchbase server tasks endpoint for any running rebalances.
+        Exits when no rebalances are in running state
+
+        /pools/default/tasks format:
+        [
+            {
+                "type": "rebalance",
+                "status": "running",
+                ...
+            }
+        ]
+        """
+
+        start = time.time()
+        while True:
+
+            if time.time() - start > REBALANCE_TIMEOUT:
+                raise Exception("wait_for_rebalance_complete: TIMEOUT")
+
+            resp = requests.get("{}/pools/default/tasks".format(url), auth=self._auth)
+            log_r(resp)
+            resp.raise_for_status()
+
+            resp_obj = resp.json()
+
+            done_rebalacing = True
+            for task in resp_obj:
+                # loop through each task and see if any rebalance tasks are running
+                task_type = task["type"]
+                task_status = task["status"]
+                log_info("{} is {}".format(task_type, task_status))
+                if task_type == "rebalance" and task_status == "running":
+                    done_rebalacing = False
+
+            if done_rebalacing:
+                break;
+
+            time.sleep(1)
+
+    def rebalance_out(self, admin_server, server_to_remove):
+        """
+        Issues a call to the admin_serve to remove a server from a pool.
+        Then wait for rebalance to complete.
+        """
+
+        admin_server_stripped = admin_server.replace("http://", "")
+        admin_server_stripped = admin_server_stripped.replace(":8091", "")
+
+        server_to_remove_stripped = server_to_remove.replace("http://", "")
+        server_to_remove_stripped = server_to_remove_stripped.replace(":8091", "")
+
+        log_info("Starting rebalance out: {}".format(server_to_remove))
+        data = "ejectedNodes=ns_1@{}&knownNodes=ns_1@{},ns_1@{}".format(
+            server_to_remove_stripped,
+            admin_server_stripped,
+            server_to_remove_stripped
+        )
+
+        resp = requests.post(
+            "{}/controller/rebalance".format(admin_server),
+            headers={"Content-Type": "application/x-www-form-urlencoded"},
+            auth=self._auth,
+            data=data
+        )
+        log_r(resp)
+        resp.raise_for_status()
+
+        self.wait_for_rebalance_complete(admin_server)
+
+        return True
+
+    def rebalance_in(self, admin_server, server_to_add):
+        """
+        Adds a server from a pool and waits for rebalance to complete.
+        """
+
+        admin_server_stripped = admin_server.replace("http://", "")
+        admin_server_stripped = admin_server_stripped.replace(":8091", "")
+
+        server_to_add_stripped = server_to_add.replace("http://", "")
+        server_to_add_stripped = server_to_add_stripped.replace(":8091", "")
+
+        log_info("Starting rebalance in: {}".format(server_to_add))
+        data = "knownNodes=ns_1@{},ns_1@{}".format(
+            admin_server_stripped,
+            server_to_add_stripped
+        )
+
+        resp = requests.post(
+            "{}/controller/rebalance".format(admin_server),
+            headers={"Content-Type": "application/x-www-form-urlencoded"},
+            auth=self._auth,
+            data=data
+        )
+        log_r(resp)
+        resp.raise_for_status()
+
+        self.wait_for_rebalance_complete(admin_server)
+
+        return True
