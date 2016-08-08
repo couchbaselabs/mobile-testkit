@@ -334,6 +334,10 @@ class CouchbaseServer:
         server_to_add_stripped = server_to_add.replace("http://", "")
         server_to_add_stripped = server_to_add_stripped.replace(":8091", "")
 
+        # Add node
+        self.add_node(admin_server, server_to_add)
+
+        # Rebalance nodes
         log_info("Starting rebalance in: {}".format(server_to_add))
         data = "knownNodes=ns_1@{},ns_1@{}".format(
             admin_server_stripped,
@@ -352,3 +356,22 @@ class CouchbaseServer:
         self.wait_for_rebalance_complete(admin_server)
 
         return True
+
+    def add_node(self, admin_server, server_to_add):
+
+        server_to_add_stripped = server_to_add.replace("http://", "")
+        server_to_add_stripped = server_to_add_stripped.replace(":8091", "")
+
+        log_info("Adding server node {} to cluster ...".format(server_to_add))
+        data = "hostname={}&user=Administrator&password=password&services=kv".format(
+            server_to_add_stripped
+        )
+
+        resp = requests.post(
+            "{}/controller/addNode".format(admin_server),
+            headers={"Content-Type": "application/x-www-form-urlencoded"},
+            auth=self._auth,
+            data=data
+        )
+        log_r(resp)
+        resp.raise_for_status()
