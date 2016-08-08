@@ -1,6 +1,8 @@
 import concurrent.futures
 from concurrent.futures import ThreadPoolExecutor
 
+from testkit.cluster import Cluster
+
 from keywords.utils import log_info
 from keywords.MobileRestClient import MobileRestClient
 from keywords.CouchbaseServer import CouchbaseServer
@@ -47,3 +49,10 @@ def test_distributed_index_rebalance_sanity(cluster_config):
     # Verify docs / revisions present
     client.verify_docs_present(admin_sg_one, sg_db, updated_docs, auth=session)
 
+    # Rebalance Server back in to the pool
+    assert server.rebalance_in(admin_server=cbs_one_url, server_to_add=cbs_two_url), "Could not rebalance node back in .."
+
+    # Verify all sgs and accels are still running
+    cluster = Cluster()
+    errors = cluster.verify_alive("distributed_index")
+    assert (len(errors) == 0)
