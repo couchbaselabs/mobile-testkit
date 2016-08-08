@@ -36,10 +36,5 @@ Setup Test
 Teardown Test
     Log  Tearing down test ...  console=True
 
-    # Rebalance node back into the cluster
-    Rebalance In
-    ...  admin_server=${cluster_hosts["couchbase_servers"][0]}
-    ...  server_to_add=${cluster_hosts["couchbase_servers"][1]}
-
     List Connections
     Run Keyword If Test Failed  Fetch And Analyze Logs  ${TEST_NAME}
