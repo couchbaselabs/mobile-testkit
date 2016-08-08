@@ -4,7 +4,6 @@ from concurrent.futures import ThreadPoolExecutor
 from keywords.utils import log_info
 from keywords.MobileRestClient import MobileRestClient
 from keywords.CouchbaseServer import CouchbaseServer
-from keywords.ChangesTracker import ChangesTracker
 
 
 def test_distributed_index_rebalance_sanity(cluster_config):
@@ -28,12 +27,7 @@ def test_distributed_index_rebalance_sanity(cluster_config):
     user = client.create_user(admin_sg_one, sg_db, sg_user_name, sg_user_password, channels=channels)
     session = client.create_session(admin_sg_one, sg_db, sg_user_name)
 
-    # ct = ChangesTracker(url=sg_one_url, db=sg_db, auth=session)
-
     with ThreadPoolExecutor(5) as executor:
-
-        # Start changes tracker
-        # executor.submit(ct.start)
 
         # Add docs to sg
         log_info("Adding docs to sync_gateway")
@@ -50,17 +44,6 @@ def test_distributed_index_rebalance_sanity(cluster_config):
         updated_docs = update_docs_task.result()
         log_info(updated_docs)
 
-        # Make sure all the changes for the doc updates show up in the changes tracker
-        # wait_for_changes_task = executor.submit(ct.wait_until, updated_docs)
-
-        # if wait_for_changes_task.result():
-        #     log_info("Stopping ...")
-        #     log_info("Found all docs ...")
-        #     executor.submit(ct.stop)
-        # else:
-        #    executor.submit(ct.stop)
-        #    raise Exception("Could not find all changes in feed before timeout!!")
-
-    # Rebalance Server back in to the pool
-    server.rebalance_in(admin_server=cbs_one_url, server_to_add=cbs_two_url)
+    # Verify docs / revisions present
+    client.verify_docs_present(admin_sg_one, sg_db, updated_docs, auth=session)
 
