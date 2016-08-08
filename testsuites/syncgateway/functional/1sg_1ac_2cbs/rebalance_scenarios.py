@@ -47,7 +47,10 @@ def test_distributed_index_rebalance_sanity(cluster_config):
         log_info(updated_docs)
 
     # Verify docs / revisions present
-    client.verify_docs_present(admin_sg_one, sg_db, updated_docs, auth=session)
+    client.verify_docs_present(sg_one_url, sg_db, updated_docs, auth=session)
+
+    # Verify docs revisions in changes feed
+    client.verify_docs_in_changes(sg_one_url, sg_db, updated_docs, auth=session)
 
     # Rebalance Server back in to the pool
     assert server.rebalance_in(admin_server=cbs_one_url, server_to_add=cbs_two_url), "Could not rebalance node back in .."
