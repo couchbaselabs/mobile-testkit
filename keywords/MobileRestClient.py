@@ -1090,7 +1090,7 @@ class MobileRestClient:
             assert(expected_doc_map == resp_docs), "Unable to verify docs present. Dictionaries are not equal"
             break
 
-    def verify_docs_in_changes(self, url, db, expected_docs):
+    def verify_docs_in_changes(self, url, db, expected_docs, auth=None):
         """
         Verifies the expected docs are present in the database _changes feed using longpoll in a loop with
         Uses a GET _changes?feed=longpoll&since=last_seq for Listener
@@ -1099,6 +1099,8 @@ class MobileRestClient:
         expected_docs should be a dict {id: {rev: ""}} or
         a list of {id: {rev: ""}}. If the expected docs are a list, they will be converted to a single map.
         """
+
+        auth_type = get_auth_type(auth)
 
         if isinstance(expected_docs, list):
             # Create single dictionary for comparison, will also blow up for duplicate docs with the same id
@@ -1129,7 +1131,13 @@ class MobileRestClient:
                     "feed": "longpoll",
                     "since": last_seq
                 }
-                resp = self._session.post("{}/{}/_changes".format(url, db), data=json.dumps(body))
+
+                if auth_type == AuthType.session:
+                    resp = self._session.post("{}/{}/_changes".format(url, db), data=json.dumps(body), cookies=dict(SyncGatewaySession=auth[1]))
+                elif auth_type == AuthType.http_basic:
+                    resp = self._session.post("{}/{}/_changes".format(url, db), data=json.dumps(body), auth=auth)
+                else:
+                    resp = self._session.post("{}/{}/_changes".format(url, db), data=json.dumps(body))
 
             log_r(resp)
             resp.raise_for_status()
