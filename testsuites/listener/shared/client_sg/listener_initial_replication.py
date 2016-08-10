@@ -4,7 +4,7 @@ from keywords.MobileRestClient import MobileRestClient
 from libraries.data import doc_generators
 
 
-def large_one_shot_pull_replication(ls_url, cluster_config, num_docs, continuous):
+def large_initial_pull_replication(ls_url, cluster_config, num_docs, continuous):
 
     sg_db = "db"
     ls_db = "ls_db"
@@ -26,7 +26,7 @@ def large_one_shot_pull_replication(ls_url, cluster_config, num_docs, continuous
         db=sg_db,
         number=num_docs,
         id_prefix="seeded_doc",
-        generator=doc_generators.four_k(),
+        generator="four_k",
         auth=session
     )
 
@@ -48,7 +48,7 @@ def large_one_shot_pull_replication(ls_url, cluster_config, num_docs, continuous
     client.verify_docs_in_changes(url=ls_url, db=ls_db, expected_docs=docs)
 
 
-def large_one_shot_push_replication(ls_url, cluster_config, num_docs, continuous):
+def large_initial_push_replication(ls_url, cluster_config, num_docs, continuous):
 
     sg_db = "db"
     ls_db = "ls_db"
@@ -73,7 +73,8 @@ def large_one_shot_push_replication(ls_url, cluster_config, num_docs, continuous
         db=ls_db,
         number=num_docs,
         id_prefix="seeded_doc",
-        generator=doc_generators.four_k(channels=seth_channels)
+        generator="four_k",
+        channels=seth_channels
     )
 
     # Start oneshot pull replication
@@ -82,11 +83,11 @@ def large_one_shot_push_replication(ls_url, cluster_config, num_docs, continuous
         continuous=continuous,
         from_db=ls_db,
         to_url=sg_one_admin,
-        to_db=ls_db
+        to_db=sg_db
     )
 
     # Verify docs replicated to client
     client.verify_docs_present(url=sg_one_public, db=sg_db, expected_docs=docs, auth=session)
 
     # Verify docs show up in client's changes feed
-    client.verify_docs_in_changes(url=sg_one_public, db=sg_db, expected_docs=docs, )
+    client.verify_docs_in_changes(url=sg_one_public, db=sg_db, expected_docs=docs, auth=session)

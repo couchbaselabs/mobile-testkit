@@ -27,7 +27,7 @@ ${num_docs}  ${10000}
 *** Test Cases ***
 Large One Shot Pull Replication
     [Documentation]
-    ...  1. Prepare sync-gateway to have 1000 documents.
+    ...  1. Prepare sync-gateway to have 10000 documents.
     ...  2. Create a single shot pull replicator and to pull the docs into a database.
     ...  3. Verify if all of the docs get pulled.
     ...  Referenced issue: couchbase/couchbase-lite-android#955.
@@ -39,10 +39,9 @@ Large One Shot Pull Replication
 
 Large Continuous Pull Replication
     [Documentation]
-    ...  1. Prepare sync-gateway to have 1000 documents.
+    ...  1. Prepare sync-gateway to have 10000 documents.
     ...  2. Create a single continuous pull replicator and to pull the docs into a database.
     ...  3. Verify if all of the docs get pulled.
-    ...  Referenced issue: couchbase/couchbase-lite-android#955.
     Large Initial Pull Replication
     ...  ls_url=${ls_url}
     ...  cluster_config=${cluster_hosts}
@@ -51,16 +50,25 @@ Large Continuous Pull Replication
 
 Large One Shot Push Replication
     [Documentation]
-    ...  1. Prepare sync-gateway to have 1000 documents.
-    ...  2. Create a single shot pull replicator and to pull the docs into a database.
-    ...  3. Verify if all of the docs get pulled.
-    ...  Referenced issue: couchbase/couchbase-lite-android#955.
-    Large Initial Pull Replication
+    ...  1. Prepare LiteServ to have 10000 documents.
+    ...  2. Create a single shot push replicator and to push the docs into a sync_gateway database.
+    ...  3. Verify if all of the docs get pushed.
+    Large Initial Push Replication
     ...  ls_url=${ls_url}
     ...  cluster_config=${cluster_hosts}
     ...  num_docs=${num_docs}
     ...  continuous=${False}
 
+Large Continuous Push Replication
+    [Documentation]
+    ...  1. Prepare LiteServ to have 10000 documents.
+    ...  2. Create continuous push replicator and to push the docs into a sync_gateway database.
+    ...  3. Verify if all of the docs get pushed.
+    Large Initial Push Replication
+    ...  ls_url=${ls_url}
+    ...  cluster_config=${cluster_hosts}
+    ...  num_docs=${num_docs}
+    ...  continuous=${False}
 
 
 *** Keywords ***
@@ -85,8 +93,6 @@ Setup Test
     Start Sync Gateway  url=${sg_url}  config=${SYNC_GATEWAY_CONFIGS}/walrus.json
 
 Teardown Test
-
-    Debug
 
     Delete Databases  ${ls_url}
     Shutdown LiteServ  platform=${PLATFORM}
