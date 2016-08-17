@@ -52,6 +52,18 @@ def large_initial_pull_replication(ls_url, cluster_config, num_docs, continuous)
     # Verify docs show up in client's changes feed
     client.verify_docs_in_changes(url=ls_url, db=ls_db, expected_docs=docs)
 
+    replications = client.get_replications(url=ls_url)
+
+    if continuous:
+        assert len(replications) == 1, "There should only be one replication running"
+        assert replications[0]["status"] == "Idle", "Replication Status should be 'Idle'"
+        assert replications[0]["continuous"] == True, "Running replication should be continuous"
+        # Only .NET has an 'error' property
+        if "error" in replications[0]:
+            assert len(replications[0]["error"]) == 0
+    else:
+        assert len(replications) == 0, "No replications should be running"
+
 
 def large_initial_push_replication(ls_url, cluster_config, num_docs, continuous):
 
@@ -82,7 +94,7 @@ def large_initial_push_replication(ls_url, cluster_config, num_docs, continuous)
         channels=seth_channels
     )
 
-    # Start oneshot pull replication
+    # Start push replication
     repl_id = client.start_replication(
         url=ls_url,
         continuous=continuous,
@@ -103,3 +115,15 @@ def large_initial_push_replication(ls_url, cluster_config, num_docs, continuous)
 
     # Verify docs show up in sync_gateway's changes feed
     client.verify_docs_in_changes(url=sg_one_public, db=sg_db, expected_docs=docs, auth=session)
+
+    replications = client.get_replications(url=ls_url)
+
+    if continuous:
+        assert len(replications) == 1, "There should only be one replication running"
+        assert replications[0]["status"] == "Idle", "Replication Status should be 'Idle'"
+        assert replications[0]["continuous"] == True, "Running replication should be continuous"
+        # Only .NET has an 'error' property
+        if "error" in replications[0]:
+            assert len(replications[0]["error"]) == 0
+    else:
+        assert len(replications) == 0, "No replications should be running"

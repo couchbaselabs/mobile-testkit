@@ -3,6 +3,8 @@ import json
 import time
 import uuid
 import requests
+import sys
+
 from requests import Session
 from requests.exceptions import HTTPError
 import concurrent.futures
@@ -795,6 +797,8 @@ class MobileRestClient:
         added_docs = []
         auth_type = get_auth_type(auth)
 
+        log_info("PUT {} docs to {}/{}/ with prefix {}".format(number, url, db, id_prefix))
+
         for i in xrange(number):
 
             if generator == "four_k":
@@ -813,7 +817,7 @@ class MobileRestClient:
                 resp = self._session.put("{}/{}/{}_{}".format(url, db, id_prefix, i), data=data, auth=auth)
             else:
                 resp = self._session.put("{}/{}/{}_{}".format(url, db, id_prefix, i), data=data)
-            log_r(resp)
+            log_r(resp, info=False)
             resp.raise_for_status()
 
             doc_obj = resp.json()
@@ -991,6 +995,17 @@ class MobileRestClient:
             else:
                 logging.info("Replications still running. Retrying")
                 time.sleep(1)
+
+    def get_replications(self, url):
+        """
+        Issues a GET on the /_active tasks endpoint and returns the response in the format below:
+
+        """
+        resp = self._session.get("{}/_active_tasks".format(url))
+        resp.raise_for_status()
+        log_r(resp)
+
+        return resp.json()
 
     def verify_docs_present(self, url, db, expected_docs, auth=None):
         """
