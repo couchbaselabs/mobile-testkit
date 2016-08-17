@@ -295,6 +295,8 @@ class CouchbaseServer:
         """
         Issues a call to the admin_serve to remove a server from a pool.
         Then wait for rebalance to complete.
+        admin_server format:        http://localhost:8091
+        server_to_remove format:    http://localhost:8091
         """
 
         admin_server_stripped = admin_server.replace("http://", "")
@@ -326,6 +328,8 @@ class CouchbaseServer:
     def rebalance_in(self, admin_server, server_to_add):
         """
         Adds a server from a pool and waits for rebalance to complete.
+        admin_server format:    http://localhost:8091
+        server_to_add format:   http://localhost:8091
         """
 
         admin_server_stripped = admin_server.replace("http://", "")
@@ -358,6 +362,11 @@ class CouchbaseServer:
         return True
 
     def add_node(self, admin_server, server_to_add):
+        """
+        Add the server_to_add to a Couchbase Server cluster
+        admin_server format:    http://localhost:8091
+        server_to_add format:   http://localhost:8091
+        """
 
         server_to_add_stripped = server_to_add.replace("http://", "")
         server_to_add_stripped = server_to_add_stripped.replace(":8091", "")
@@ -367,11 +376,30 @@ class CouchbaseServer:
             server_to_add_stripped
         )
 
-        resp = requests.post(
-            "{}/controller/addNode".format(admin_server),
-            headers={"Content-Type": "application/x-www-form-urlencoded"},
-            auth=self._auth,
-            data=data
-        )
-        log_r(resp)
-        resp.raise_for_status()
+        # HACK: Retries added to handle the following scenario.
+        # 1. A node has been rebalanced out of a cluster
+        # 2. Try to rebalance the node back in immediately.
+        # The node may not be in a ready status. There in no property expose on the
+        #   REST API to poll so a retry will have to do
+        start = time.time()
+        while True:
+
+            if time.time() - start > CLIENT_REQUEST_TIMEOUT:
+                raise Exception("wait_for_rebalance_complete: TIMEOUT")
+
+            resp = requests.post(
+                "{}/controller/addNode".format(admin_server),
+                headers={"Content-Type": "application/x-www-form-urlencoded"},
+                auth=self._auth,
+                data=data
+            )
+
+            log_r(resp)
+
+            # If status of the POST is not 200, retry the request after a second
+            if resp.status_code == 200:
+                log_info("{} added to cluster successfully".format(server_to_add))
+                break
+            else:
+                log_info("{}: Could not add {} to cluster. Retrying ...".format(resp.status_code, server_to_add))
+                time.sleep(1)
