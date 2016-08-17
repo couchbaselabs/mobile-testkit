@@ -68,7 +68,7 @@ Large Continuous Push Replication
     ...  ls_url=${ls_url}
     ...  cluster_config=${cluster_hosts}
     ...  num_docs=${num_docs}
-    ...  continuous=${False}
+    ...  continuous=${True}
 
 
 *** Keywords ***

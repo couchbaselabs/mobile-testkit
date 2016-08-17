@@ -1,7 +1,5 @@
 from keywords.utils import log_info
-from keywords.utils import log_r
 from keywords.MobileRestClient import MobileRestClient
-from libraries.data import doc_generators
 
 
 def large_initial_pull_replication(ls_url, cluster_config, num_docs, continuous):
@@ -40,6 +38,13 @@ def large_initial_pull_replication(ls_url, cluster_config, num_docs, continuous)
         from_db=sg_db,
         to_db=ls_db
     )
+
+    if continuous:
+        log_info("Waiting for replication status 'Idle' for: {}".format(repl_id))
+        client.wait_for_replication_status_idle(ls_url, repl_id)
+    else:
+        log_info("Waiting for no replications".format(repl_id))
+        client.wait_for_no_replications(ls_url)
 
     # Verify docs replicated to client
     client.verify_docs_present(url=ls_url, db=ls_db, expected_docs=docs)
@@ -86,8 +91,15 @@ def large_initial_push_replication(ls_url, cluster_config, num_docs, continuous)
         to_db=sg_db
     )
 
-    # Verify docs replicated to client
+    if continuous:
+        log_info("Waiting for replication status 'Idle' for: {}".format(repl_id))
+        client.wait_for_replication_status_idle(ls_url, repl_id)
+    else:
+        log_info("Waiting for no replications".format(repl_id))
+        client.wait_for_no_replications(ls_url)
+
+    # Verify docs replicated to sync_gateway
     client.verify_docs_present(url=sg_one_public, db=sg_db, expected_docs=docs, auth=session)
 
-    # Verify docs show up in client's changes feed
+    # Verify docs show up in sync_gateway's changes feed
     client.verify_docs_in_changes(url=sg_one_public, db=sg_db, expected_docs=docs, auth=session)

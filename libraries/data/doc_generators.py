@@ -94,7 +94,7 @@ def four_k(channels=[]):
 
     return {
             "channels": channels,
-            "_id": "568ff5e16b1faf957a6feeef",
+            "iden": "568ff5e16b1faf957a6feeef",
             "index": 0,
             "guid": "d5dfa5fe-a19a-42fa-a421-c0f5a406d65a",
             "isActive": False,
