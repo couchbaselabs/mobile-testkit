@@ -27,4 +27,4 @@ class AnsibleRunner:
         stats = runner.run()
         logging.info(stats)
 
-        return len(stats.failures)
+        return len(stats.failures) + len(stats.dark)
