@@ -379,7 +379,7 @@ class CouchbaseServer:
         # HACK: Retries added to handle the following scenario.
         # 1. A node has been rebalanced out of a cluster
         # 2. Try to rebalance the node back in immediately.
-        # The node may not be in a ready status. There in no property expose on the
+        # The node may not be in a ready state. There in no property exposed on the
         #   REST API to poll so a retry will have to do
         start = time.time()
         while True:
