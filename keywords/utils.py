@@ -9,13 +9,14 @@ def log_info(message):
     logging.info(message)
 
 
-def log_r(request):
+def log_r(request, info=True):
     request_summary = "{0} {1} {2}".format(
         request.request.method,
         request.request.url,
         request.status_code
     )
-    log_info(request_summary)
+    if info:
+        log_info(request_summary)
     logging.debug("{0} {1}\nHEADERS = {2}\nBODY = {3}".format(
             request.request.method,
             request.request.url,
