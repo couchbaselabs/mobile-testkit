@@ -628,13 +628,16 @@ Wait until the resources are up, then create the `pool.json` file by hand accord
 Debugging
 =========
 
-When developing custom keyworks, you may want to break and inspect at a certain point. Adding the following lines will do what you need
+When developing custom keyworks, you may want to break and inspect at a certain point in the python code. 
+Adding the following lines will do what you need
 
 ```
-import pdb
-for attr in ('stdin', 'stdout', 'stderr'):
-    setattr(sys, attr, getattr(sys, '__%s__' % attr))
-pdb.set_trace()
+from keywords.utils import breakpoint
+
+for thing in things:
+    breakpoint()
+    # break here ^
+    thing.do()
 ```
 
 They will redirect the stdin, stdout, and stderr from robot back to your control
