@@ -1,6 +1,8 @@
 import logging
 import os
 import json
+import pdb
+import sys
 
 from robot.api.logger import console
 
@@ -72,3 +74,8 @@ def dump_file_contents_to_logs(filename):
         log_info("Contents of {}: {}".format(filename, open(filename).read()))
     except Exception as e:
         log_info("Error reading {}: {}".format(filename, e))
+
+def breakpoint():
+    for attr in ('stdin', 'stdout', 'stderr'):
+        setattr(sys, attr, getattr(sys, '__%s__' % attr))
+    pdb.set_trace()
