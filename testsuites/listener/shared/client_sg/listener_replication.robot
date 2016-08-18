@@ -15,7 +15,7 @@ Library           ${KEYWORDS}/ClusterKeywords.py
 Library           ${KEYWORDS}/SyncGateway.py
 Library           ${KEYWORDS}/CouchbaseServer.py
 Library           ${KEYWORDS}/Logging.py
-Library           listener_initial_replication.py
+Library           listener_replication.py
 
 Test Setup        Setup Test
 Test Teardown     Teardown Test
@@ -25,7 +25,7 @@ ${sg_db}  db
 ${num_docs}  ${10000}
 
 *** Test Cases ***
-Large One Shot Pull Replication
+Large Initial One Shot Pull Replication
     [Documentation]
     ...  1. Prepare sync-gateway to have 10000 documents.
     ...  2. Create a single shot pull replicator and to pull the docs into a database.
@@ -37,7 +37,7 @@ Large One Shot Pull Replication
     ...  num_docs=${num_docs}
     ...  continuous=${False}
 
-Large Continuous Pull Replication
+Large Initial Continuous Pull Replication
     [Documentation]
     ...  1. Prepare sync-gateway to have 10000 documents.
     ...  2. Create a single continuous pull replicator and to pull the docs into a database.
@@ -48,7 +48,7 @@ Large Continuous Pull Replication
     ...  num_docs=${num_docs}
     ...  continuous=${True}
 
-Large One Shot Push Replication
+Large Initial One Shot Push Replication
     [Documentation]
     ...  1. Prepare LiteServ to have 10000 documents.
     ...  2. Create a single shot push replicator and to push the docs into a sync_gateway database.
@@ -59,7 +59,7 @@ Large One Shot Push Replication
     ...  num_docs=${num_docs}
     ...  continuous=${False}
 
-Large Continuous Push Replication
+Large Initial Continuous Push Replication
     [Documentation]
     ...  1. Prepare LiteServ to have 10000 documents.
     ...  2. Create continuous push replicator and to push the docs into a sync_gateway database.
@@ -69,6 +69,23 @@ Large Continuous Push Replication
     ...  cluster_config=${cluster_hosts}
     ...  num_docs=${num_docs}
     ...  continuous=${True}
+
+Multiple Replications Not Created With Same Properties
+    [Documentation]
+    ...  Regression test for https://github.com/couchbase/couchbase-lite-android/issues/939
+    ...  1. Create LiteServ database and launch sync_gateway with database
+    ...  2. Start 5 continuous push replicators with the same source and target
+    ...  3. Make sure the sample replication id is returned
+    ...  4. Check that 1 one replication exists in 'active_tasks'
+    ...  5. Stop the replication with POST /_replicate cancel=true
+    ...  6. Start 5 continuous pull replicators with the same source and target
+    ...  7. Make sure the sample replication id is returned
+    ...  8. Check that 1 one replication exists in 'active_tasks'
+    ...  9. Stop the replication with POST /_replicate cancel=true
+    Multiple Replications Not Created With Same Properties
+    ...  ls_url=${ls_url}
+    ...  cluster_config=${cluster_hosts}
+
 
 
 *** Keywords ***

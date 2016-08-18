@@ -1,4 +1,8 @@
+from concurrent.futures import as_completed
+from concurrent.futures import ThreadPoolExecutor
+
 from keywords.utils import log_info
+from keywords.utils import breakpoint
 from keywords.MobileRestClient import MobileRestClient
 
 
@@ -127,3 +131,105 @@ def large_initial_push_replication(ls_url, cluster_config, num_docs, continuous)
             assert len(replications[0]["error"]) == 0
     else:
         assert len(replications) == 0, "No replications should be running"
+
+def multiple_replications_not_created_with_same_properties(ls_url, cluster_config):
+    sg_db = "db"
+    ls_db = "ls_db"
+
+    sg_one_admin = cluster_config["sync_gateways"][0]["admin"]
+    sg_one_public = cluster_config["sync_gateways"][0]["public"]
+
+    log_info("Running: multiple_replications_not_created_with_same_properties")
+    log_info(ls_url)
+    log_info(sg_one_admin)
+    log_info(sg_one_public)
+
+    client = MobileRestClient()
+    client.create_database(url=ls_url, name=ls_db)
+
+    repl_id = "repl001"
+
+    # launch 50 concurrent push replication requests with the same source / target
+    with ThreadPoolExecutor(max_workers=10) as executor:
+        futures = [executor.submit(
+            client.start_replication,
+            url=ls_url,
+            continuous=True,
+            from_db=ls_db,
+            to_url=sg_one_admin,
+            to_db=sg_db
+        ) for _ in range(50)]
+
+        for future in as_completed(futures):
+            response_id = future.result()
+            assert response_id == repl_id, "Expected replication id: {} Actual: {}".format(
+                repl_id,
+                response_id
+            )
+
+    # Check there is only one replication running
+    replications = client.get_replications(ls_url)
+    assert len(replications) == 1, "Number of replications, Expected: {} Actual {}".format(
+        1,
+        len(replications)
+    )
+
+    # Stop replication
+    client.stop_replication(
+        url=ls_url,
+        continuous=True,
+        from_db=ls_db,
+        to_url=sg_one_admin,
+        to_db=sg_db
+    )
+
+    # Check that no replications are running
+    replications = client.get_replications(ls_url)
+    assert len(replications) == 0, "Number of replications, Expected: {} Actual {}".format(
+        0,
+        len(replications)
+    )
+
+    # Global var gets incremented according to Pasin.
+    repl_id = "repl052"
+
+    # launch 50 concurrent pull replication requests with the same source / target
+    with ThreadPoolExecutor(max_workers=10) as executor:
+        futures = [executor.submit(
+            client.start_replication,
+            url=ls_url,
+            continuous=True,
+            from_db=sg_db,
+            from_url=sg_one_admin,
+            to_db=ls_db
+        ) for _ in range(50)]
+
+        for future in as_completed(futures):
+            response_id = future.result()
+            assert response_id == repl_id, "Expected replication id: {} Actual: {}".format(
+                repl_id,
+                response_id
+            )
+
+    # Check there is only one replication running
+    replications = client.get_replications(ls_url)
+    assert len(replications) == 1, "Number of replications, Expected: {} Actual {}".format(
+        1,
+        len(replications)
+    )
+
+    # Stop replication
+    client.stop_replication(
+        url=ls_url,
+        continuous=True,
+        from_db=sg_db,
+        from_url=sg_one_admin,
+        to_db=ls_db
+    )
+
+    # Check that no replications are running
+    replications = client.get_replications(ls_url)
+    assert len(replications) == 0, "Number of replications, Expected: {} Actual {}".format(
+        0,
+        len(replications)
+    )
