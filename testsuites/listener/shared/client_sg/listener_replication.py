@@ -132,6 +132,7 @@ def large_initial_push_replication(ls_url, cluster_config, num_docs, continuous)
     else:
         assert len(replications) == 0, "No replications should be running"
 
+
 def multiple_replications_not_created_with_same_properties(ls_url, cluster_config):
     sg_db = "db"
     ls_db = "ls_db"
@@ -233,3 +234,56 @@ def multiple_replications_not_created_with_same_properties(ls_url, cluster_confi
         0,
         len(replications)
     )
+
+
+def multiple_replications_created_with_unique_properties(ls_url, cluster_config):
+    sg_db = "db"
+    ls_db = "ls_db"
+
+    sg_one_admin = cluster_config["sync_gateways"][0]["admin"]
+    sg_one_public = cluster_config["sync_gateways"][0]["public"]
+
+    log_info("Running: multiple_replications_created_with_unique_properties")
+    log_info(ls_url)
+    log_info(sg_one_admin)
+    log_info(sg_one_public)
+
+    client = MobileRestClient()
+    client.create_database(url=ls_url, name=ls_db)
+
+    # Start 3 unique push replication requests
+    repl_one = client.start_replication(
+        url=ls_url,
+        continuous=True,
+        from_db=ls_db,
+        to_url=sg_one_admin,
+        to_db=sg_db
+    )
+    assert repl_one == "repl001", "Replication {} should have id: repl001".format(repl_one)
+
+    repl_two = client.start_replication(
+        url=ls_url,
+        continuous=True,
+        from_db=ls_db,
+        to_url=sg_one_admin,
+        to_db=sg_db,
+        doc_ids=["doc_1", "doc_2"]
+    )
+    assert repl_two == "repl002", "Replication {} should have id: repl002".format(repl_two)
+
+    # repl_two = client.start_replication(
+    #     url=ls_url,
+    #     continuous=True,
+    #     from_db=ls_db,
+    #     to_url=sg_one_admin,
+    #     to_db=sg_db,
+    #     repl_filter="filter1"
+    # )
+    #assert repl_two == "repl002", "Replication {} should have id: repl002".format(repl_two)
+
+    replications = client.get_replications(ls_url)
+    assert len(replications) == 2, "Number of replications, Expected: {} Actual: {}".format(
+        2,
+        len(replications)
+    )
+
