@@ -904,11 +904,11 @@ class MobileRestClient:
             "target": target
         }
 
-        if filter is not None:
+        if repl_filter is not None:
             data["filter"] = repl_filter
 
         if doc_ids is not None:
-            data["docids"] = doc_ids
+            data["doc_ids"] = doc_ids
 
         resp = self._session.post("{}/_replicate".format(url), data=json.dumps(data))
         log_r(resp)
@@ -939,11 +939,11 @@ class MobileRestClient:
             "target": target
         }
 
-        if filter is not None:
+        if repl_filter is not None:
             data["filter"] = repl_filter
 
         if doc_ids is not None:
-            data["docids"] = doc_ids
+            data["doc_ids"] = doc_ids
 
         resp = self._session.post("{}/_replicate".format(url), data=json.dumps(data))
 
@@ -1011,7 +1011,6 @@ class MobileRestClient:
     def get_replications(self, url):
         """
         Issues a GET on the /_active tasks endpoint and returns the response in the format below:
-
         """
         resp = self._session.get("{}/_active_tasks".format(url))
         resp.raise_for_status()
