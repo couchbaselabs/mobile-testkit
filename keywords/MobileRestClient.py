@@ -886,7 +886,7 @@ class MobileRestClient:
 
         return resp_obj
 
-    def start_replication(self, url, continuous, from_url=None, from_db=None, to_url=None, to_db=None):
+    def start_replication(self, url, continuous, from_url=None, from_db=None, to_url=None, to_db=None, repl_filter=None, doc_ids=None):
 
         if from_url is None:
             source = from_db
@@ -904,6 +904,12 @@ class MobileRestClient:
             "target": target
         }
 
+        if filter is not None:
+            data["filter"] = repl_filter
+
+        if doc_ids is not None:
+            data["docids"] = doc_ids
+
         resp = self._session.post("{}/_replicate".format(url), data=json.dumps(data))
         log_r(resp)
         resp.raise_for_status()
@@ -914,7 +920,7 @@ class MobileRestClient:
 
         return replication_id
 
-    def stop_replication(self, url, continuous, from_url=None, from_db=None, to_url=None, to_db=None):
+    def stop_replication(self, url, continuous, from_url=None, from_db=None, to_url=None, to_db=None, repl_filter=None, doc_ids=None):
 
         if from_url is None:
             source = from_db
@@ -932,6 +938,12 @@ class MobileRestClient:
             "source": source,
             "target": target
         }
+
+        if filter is not None:
+            data["filter"] = repl_filter
+
+        if doc_ids is not None:
+            data["docids"] = doc_ids
 
         resp = self._session.post("{}/_replicate".format(url), data=json.dumps(data))
 

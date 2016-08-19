@@ -86,7 +86,21 @@ Multiple Replications Not Created With Same Properties
     ...  ls_url=${ls_url}
     ...  cluster_config=${cluster_hosts}
 
-
+Multiple Replications Created with Unique Properties
+    [Documentation]
+    ...  Regression test for couchbase/couchbase-lite-java-core#1386
+    ...  1. Setup SGW with a remote database name db for an example
+    ...  2. Create a local database such as ls_db
+    ...  3. Send POST /_replicate with source = ls_db, target = http://localhost:4985/db, continuous = true
+    ...  4. Send POST /_replicate with source = ls_db, target = http://localhost:4985/db, continuous = true, doc_ids=["doc1", "doc2"]
+    ...  5. Send POST /_replicate with source = ls_db, target = http://localhost:498\5/db, continuous = true, filter="filter1"
+    ...  6. Make sure that the session_id from each POST /_replicate are different.
+    ...  7. Send GET /_active_tasks to make sure that there are 3 tasks created.
+    ...  8. Send 3 POST /_replicate withe the same parameter as Step 3=5 plus cancel=true to stop those replicators
+    ...  9. Repeat Step 3 - 8 with source = and target = db for testing the pull replicator.
+    Multiple Replications Created with Unique Properties
+    ...  ls_url=${ls_url}
+    ...  cluster_config=${cluster_hosts}
 
 *** Keywords ***
 Setup Test
