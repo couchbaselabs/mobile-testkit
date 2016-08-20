@@ -1,3 +1,5 @@
+import json
+
 from concurrent.futures import as_completed
 from concurrent.futures import ThreadPoolExecutor
 
@@ -251,6 +253,9 @@ def multiple_replications_created_with_unique_properties(ls_url, cluster_config)
     client = MobileRestClient()
     client.create_database(url=ls_url, name=ls_db)
 
+    ########
+    # PUSH #
+    ########
     # Start 3 unique push replication requests
     repl_one = client.start_replication(
         url=ls_url,
@@ -271,19 +276,157 @@ def multiple_replications_created_with_unique_properties(ls_url, cluster_config)
     )
     assert repl_two == "repl002", "Replication {} should have id: repl002".format(repl_two)
 
-    # repl_two = client.start_replication(
-    #     url=ls_url,
-    #     continuous=True,
-    #     from_db=ls_db,
-    #     to_url=sg_one_admin,
-    #     to_db=sg_db,
-    #     repl_filter="filter1"
-    # )
-    #assert repl_two == "repl002", "Replication {} should have id: repl002".format(repl_two)
+    # Create doc filter and add to the design doc
+    filters = {
+        "language": "javascript",
+        "filters" : {
+            "sample_filter" : "function(doc, req) { if (doc.type && doc.type === \"skip\") { return false; } return true; }"
+        }
+    }
+    client.add_design_doc(url=ls_url, db=ls_db, name="by_type", doc=json.dumps(filters))
 
+    repl_three = client.start_replication(
+        url=ls_url,
+        continuous=True,
+        from_db=ls_db,
+        to_url=sg_one_admin,
+        to_db=sg_db,
+        repl_filter="by_type/sample_filter"
+    )
+    assert repl_three == "repl003", "Replication {} should have id: repl003".format(repl_three)
+
+    # Verify 3 replicaitons are running
     replications = client.get_replications(ls_url)
-    assert len(replications) == 2, "Number of replications, Expected: {} Actual: {}".format(
-        2,
+    log_info(replications)
+    assert len(replications) == 3, "Number of replications, Expected: {} Actual: {}".format(
+        3,
         len(replications)
     )
+
+    # Stop repl001
+    client.stop_replication(
+        url=ls_url,
+        continuous=True,
+        from_db=ls_db,
+        to_url=sg_one_admin,
+        to_db=sg_db
+    )
+
+    # Stop repl002
+    client.stop_replication(
+        url=ls_url,
+        continuous=True,
+        from_db=ls_db,
+        to_url=sg_one_admin,
+        to_db=sg_db,
+        doc_ids=["doc_1", "doc_2"]
+    )
+
+    # Stop repl003
+    client.stop_replication(
+        url=ls_url,
+        continuous=True,
+        from_db=ls_db,
+        to_url=sg_one_admin,
+        to_db=sg_db,
+        repl_filter="by_type/sample_filter"
+    )
+
+    # Verify no replications are running
+    replications = client.get_replications(ls_url)
+    log_info(replications)
+    assert len(replications) == 0, "Number of replications, Expected: {} Actual: {}".format(
+        0,
+        len(replications)
+    )
+
+    ########
+    # PULL #
+    ########
+    # Start 3 unique push replication requests
+    repl_seven = client.start_replication(
+        url=ls_url,
+        continuous=True,
+        from_url=sg_one_admin,
+        from_db=sg_db,
+        to_db=ls_db
+    )
+    assert repl_seven == "repl007", "Replication {} should have id: repl007".format(repl_seven)
+
+    repl_eight = client.start_replication(
+        url=ls_url,
+        continuous=True,
+        from_url=sg_one_admin,
+        from_db=sg_db,
+        to_db=ls_db,
+        doc_ids=["doc_1", "doc_2"]
+    )
+    assert repl_eight == "repl008", "Replication {} should have id: repl008".format(repl_eight)
+
+    # Todo: Use sg filters
+    # repl_nine = client.start_replication(
+    #     url=ls_url,
+    #     continuous=True,
+    #     from_url=sg_one_admin,
+    #     from_db=sg_db,
+    #     to_db=ls_db,
+    #     repl_filter="by_type/sample_filter"
+    # )
+    # assert repl_nine == "repl009", "Replication {} should have id: repl009".format(repl_nine)
+
+    # Verify 3 replicaitons are running
+    replications = client.get_replications(ls_url)
+    log_info(replications)
+    assert len(replications) == 3, "Number of replications, Expected: {} Actual: {}".format(
+        3,
+        len(replications)
+    )
+
+    breakpoint()
+
+    # Stop repl007
+    client.stop_replication(
+        url=ls_url,
+        continuous=True,
+        from_url=sg_one_admin,
+        from_db=sg_db,
+        to_db=ls_db
+    )
+
+    breakpoint()
+
+    # Stop repl008
+    client.stop_replication(
+        url=ls_url,
+        continuous=True,
+        from_url=sg_one_admin,
+        from_db=sg_db,
+        to_db=ls_db,
+        doc_ids=["doc_1", "doc_2"]
+    )
+
+    breakpoint()
+
+    # Stop repl009
+    client.stop_replication(
+        url=ls_url,
+        continuous=True,
+        from_url=sg_one_admin,
+        from_db=sg_db,
+        to_db=ls_db,
+        repl_filter="by_type/sample_filter"
+    )
+
+    breakpoint()
+
+    # Verify no replications are running
+    replications = client.get_replications(ls_url)
+    log_info(replications)
+    assert len(replications) == 0, "Number of replications, Expected: {} Actual: {}".format(
+        0,
+        len(replications)
+    )
+
+
+
 

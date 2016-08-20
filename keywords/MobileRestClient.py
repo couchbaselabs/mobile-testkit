@@ -1199,11 +1199,11 @@ class MobileRestClient:
 
             time.sleep(1)
 
-    def add_design_doc(self, url, db, name, view):
+    def add_design_doc(self, url, db, name, doc):
         """
         Keyword that adds a Design Doc to the database
         """
-        resp = self._session.put("{}/{}/_design/{}".format(url, db, name), data=view)
+        resp = self._session.put("{}/{}/_design/{}".format(url, db, name), data=doc)
         log_r(resp)
         resp.raise_for_status()
 
