@@ -353,36 +353,24 @@ def multiple_replications_created_with_unique_properties(ls_url, cluster_config)
     )
     assert repl_seven == "repl007", "Replication {} should have id: repl007".format(repl_seven)
 
+    # Start filtered pull from sync gateway to LiteServ
     repl_eight = client.start_replication(
         url=ls_url,
         continuous=True,
         from_url=sg_one_admin,
         from_db=sg_db,
         to_db=ls_db,
-        doc_ids=["doc_1", "doc_2"]
+        channels_filter=["ABC", "CBS"]
     )
     assert repl_eight == "repl008", "Replication {} should have id: repl008".format(repl_eight)
-
-    # Todo: Use sg filters
-    # repl_nine = client.start_replication(
-    #     url=ls_url,
-    #     continuous=True,
-    #     from_url=sg_one_admin,
-    #     from_db=sg_db,
-    #     to_db=ls_db,
-    #     repl_filter="by_type/sample_filter"
-    # )
-    # assert repl_nine == "repl009", "Replication {} should have id: repl009".format(repl_nine)
 
     # Verify 3 replicaitons are running
     replications = client.get_replications(ls_url)
     log_info(replications)
-    assert len(replications) == 3, "Number of replications, Expected: {} Actual: {}".format(
-        3,
+    assert len(replications) == 2, "Number of replications, Expected: {} Actual: {}".format(
+        2,
         len(replications)
     )
-
-    breakpoint()
 
     # Stop repl007
     client.stop_replication(
@@ -393,8 +381,6 @@ def multiple_replications_created_with_unique_properties(ls_url, cluster_config)
         to_db=ls_db
     )
 
-    breakpoint()
-
     # Stop repl008
     client.stop_replication(
         url=ls_url,
@@ -402,22 +388,8 @@ def multiple_replications_created_with_unique_properties(ls_url, cluster_config)
         from_url=sg_one_admin,
         from_db=sg_db,
         to_db=ls_db,
-        doc_ids=["doc_1", "doc_2"]
+        channels_filter=["ABC", "CBS"]
     )
-
-    breakpoint()
-
-    # Stop repl009
-    client.stop_replication(
-        url=ls_url,
-        continuous=True,
-        from_url=sg_one_admin,
-        from_db=sg_db,
-        to_db=ls_db,
-        repl_filter="by_type/sample_filter"
-    )
-
-    breakpoint()
 
     # Verify no replications are running
     replications = client.get_replications(ls_url)
