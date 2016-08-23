@@ -11,7 +11,7 @@ from keywords.utils import log_info
 
 class ChangesTracker:
 
-    def __init__(self, url, db, auth):
+    def __init__(self, url, db, auth=None):
         self.processed_changes = {}
         self.endpoint = "{}/{}".format(url, db)
         self.auth = auth
@@ -35,7 +35,7 @@ class ChangesTracker:
                     # Stored the doc with the list of rev changes
                     self.processed_changes[doc["id"]] = doc["changes"]
 
-    def start(self):
+    def start(self, timeout=1000):
         """
         Start a longpoll changes feed and and store the results in self.processed changes
         """
@@ -50,7 +50,7 @@ class ChangesTracker:
             data = {
                 "feed": "longpoll",
                 "style": "all_docs",
-                "timeout": 1000,
+                "timeout": timeout,
                 "since": current_seq_num
             }
 
