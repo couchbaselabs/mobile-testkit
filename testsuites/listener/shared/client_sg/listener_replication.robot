@@ -26,6 +26,7 @@ ${num_docs}  ${10000}
 
 *** Test Cases ***
 Large Initial One Shot Pull Replication
+    [Tags]  Listener  Sync Gateway  Replication
     [Documentation]
     ...  1. Prepare sync-gateway to have 10000 documents.
     ...  2. Create a single shot pull replicator and to pull the docs into a database.
@@ -38,6 +39,7 @@ Large Initial One Shot Pull Replication
     ...  continuous=${False}
 
 Large Initial Continuous Pull Replication
+    [Tags]  Listener  Sync Gateway  Replication
     [Documentation]
     ...  1. Prepare sync-gateway to have 10000 documents.
     ...  2. Create a single continuous pull replicator and to pull the docs into a database.
@@ -49,6 +51,7 @@ Large Initial Continuous Pull Replication
     ...  continuous=${True}
 
 Large Initial One Shot Push Replication
+    [Tags]  Listener  Sync Gateway  Replication
     [Documentation]
     ...  1. Prepare LiteServ to have 10000 documents.
     ...  2. Create a single shot push replicator and to push the docs into a sync_gateway database.
@@ -60,6 +63,7 @@ Large Initial One Shot Push Replication
     ...  continuous=${False}
 
 Large Initial Continuous Push Replication
+    [Tags]  Listener  Sync Gateway  Replication
     [Documentation]
     ...  1. Prepare LiteServ to have 10000 documents.
     ...  2. Create continuous push replicator and to push the docs into a sync_gateway database.
@@ -71,6 +75,7 @@ Large Initial Continuous Push Replication
     ...  continuous=${True}
 
 Multiple Replications Not Created With Same Properties
+    [Tags]  Listener  Sync Gateway  Replication
     [Documentation]
     ...  Regression test for https://github.com/couchbase/couchbase-lite-android/issues/939
     ...  1. Create LiteServ database and launch sync_gateway with database
@@ -87,6 +92,7 @@ Multiple Replications Not Created With Same Properties
     ...  cluster_config=${cluster_hosts}
 
 Multiple Replications Created with Unique Properties
+    [Tags]  Listener  Sync Gateway  Replication
     [Documentation]
     ...  Regression test for couchbase/couchbase-lite-java-core#1386
     ...  1. Setup SGW with a remote database name db for an example
