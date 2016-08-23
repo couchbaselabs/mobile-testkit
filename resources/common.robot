@@ -46,7 +46,7 @@ Start LiteServ
     ${ls_url} =  Run Keyword If  "${platform}" == "android"  Start Android LiteServ                       host=${host}  port=${port}  storage_engine=${storage_engine}
     ${ls_url} =  Run Keyword If  "${platform}" == "net"      Start Net LiteServ       version=${version}  host=${host}  port=${port}  storage_engine=${storage_engine}
 
-    ${ls_url} =  Verify LiteServ Launched  host=${host}  port=${port}  version_build=${version}
+    ${ls_url} =  Verify LiteServ Launched  platform=${platform}  host=${host}  port=${port}  version_build=${version}
     [return]  ${ls_url}
 
 Shutdown LiteServ

@@ -260,7 +260,7 @@ class LiteServ:
         shutil.rmtree(extracted_file_name)
         os.chdir("../..")
 
-    def verify_liteserv_launched(self, host, port, version_build):
+    def verify_liteserv_launched(self, platform, host, port, version_build):
 
         url = "http://{}:{}".format(host, port)
         logging.info("Verifying LiteServ running at {}".format(url))
@@ -294,6 +294,16 @@ class LiteServ:
             # Android
             lite_version = resp_json["version"]
             is_android = True
+
+        # Validate the running platform is the expected platform
+        if platform == "macosx":
+            assert is_macosx, "Tried to run macosx but different platform running on {}:{} ...".format(host, port)
+        elif platform == "android":
+            assert is_android, "Tried to run android but different platform running on {}:{} ...".format(host, port)
+        elif platform == "net":
+            assert  is_net, "Tried to run net but different platform running on {}:{} ...".format(host, port)
+        else:
+            raise ValueError("Unsupported platform: {}".format(platform))
 
         # Validate that the version launched is the expected LiteServ version
         # Mac OSX - LiteServ: 1.2.1 (build 13)
