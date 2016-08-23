@@ -34,7 +34,7 @@ Install LiteServ
     ...  The LiteServ binaries are located in deps/.
     [Arguments]  ${platform}  ${version}  ${storage_engine}
     [Timeout]       2 minutes
-    Run Keyword If  "${platform}" == "android"  Install Apk  ${version}  ELSE  Log  No install need
+    Run Keyword If  "${platform}" == "android"  Install Apk  ${version}  ${storage_engine}  ELSE  Log  No install need
 
 Start LiteServ
     [Documentation]   Starts LiteServ for a specific platform.
@@ -64,7 +64,7 @@ Start MacOSX LiteServ
     [Arguments]  ${version}  ${host}  ${port}  ${storage_engine}
     [Timeout]       1 minute
 
-    ${binary_path} =  Get LiteServ Binary Path  platform=macosx  version=${version}
+    ${binary_path} =  Get LiteServ Binary Path  platform=macosx  version=${version}  storage_engine=${storage_engine}
 
      # Get a list of db names / password for running LiteServ with encrypted databases
     @{db_name_passwords} =  Run Keyword If  '${storage_engine}' == 'ForestDB+Encryption' or '${storage_engine}' == 'SQLCipher'
@@ -130,7 +130,7 @@ Start Net LiteServ
     ...  The LiteServ binaries are located in deps/.
     [Arguments]  ${version}  ${host}  ${port}  ${storage_engine}
     [Timeout]       1 minute
-    ${binary_path} =  Get LiteServ Binary Path  platform=net  version=${version}
+    ${binary_path} =  Get LiteServ Binary Path  platform=net  version=${version}  storage_engine=${storage_engine}
 
     # Get a list of db names / password for running LiteServ with encrypted databases
     @{db_name_passwords} =  Run Keyword If  '${storage_engine}' == 'ForestDB+Encryption' or '${storage_engine}' == 'SQLCipher'

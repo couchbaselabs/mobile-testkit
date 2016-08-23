@@ -14,7 +14,7 @@ Test Timeout      10 minutes
 *** Keywords ***
 Setup Suite
     [Documentation]  Download, install, and launch LiteServ.
-    Download LiteServ  platform=${PLATFORM}  version=${LITESERV_VERSION}
+    Download LiteServ  platform=${PLATFORM}  version=${LITESERV_VERSION}  storage_engine=${LITESERV_STORAGE_ENGINE}
     Install LiteServ   platform=${PLATFORM}  version=${LITESERV_VERSION}  storage_engine=${LITESERV_STORAGE_ENGINE}
 
     Set Environment Variable  CLUSTER_CONFIG  ${CLUSTER_CONFIGS}/1sg
