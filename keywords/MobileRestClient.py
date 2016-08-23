@@ -886,7 +886,30 @@ class MobileRestClient:
 
         return resp_obj
 
-    def start_replication(self, url, continuous, from_url=None, from_db=None, to_url=None, to_db=None):
+    def start_replication(self,
+                          url,
+                          continuous,
+                          from_url=None, from_db=None,
+                          to_url=None, to_db=None,
+                          repl_filter=None,
+                          doc_ids=None,
+                          channels_filter=None):
+        """
+        Starts a replication (one-shot or continous) between Lite instances (P2P),
+        Sync Gateways, or Lite <-> Sync Gateways
+
+        :param url: endpoint to start the replication on
+        :param continuous: True = continuous, False = one-shot
+        :param from_url: source url of the replication
+        :param from_db: source db of the replication
+        :param to_url: target url of the replication
+        :param to_db: target db of the replication
+        :param repl_filter: ** Lite only ** Custom filter that can be defined in design doc
+        :param doc_ids: ** Will not work with continuous pull from LITE <- SG ** Doc ids to filter
+            replication by
+        :param channels_filter: ** Only works with pull from Sync Gateway ** This will filter the
+            replication by the array of string channel names
+        """
 
         if from_url is None:
             source = from_db
@@ -904,6 +927,16 @@ class MobileRestClient:
             "target": target
         }
 
+        if repl_filter is not None:
+            data["filter"] = repl_filter
+
+        if channels_filter is not None:
+            data["filter"] = "sync_gateway/bychannel"
+            data["query_params"] = {"channels": ",".join(channels_filter)}
+
+        if doc_ids is not None:
+            data["doc_ids"] = doc_ids
+
         resp = self._session.post("{}/_replicate".format(url), data=json.dumps(data))
         log_r(resp)
         resp.raise_for_status()
@@ -914,7 +947,31 @@ class MobileRestClient:
 
         return replication_id
 
-    def stop_replication(self, url, continuous, from_url=None, from_db=None, to_url=None, to_db=None):
+    def stop_replication(self,
+                         url,
+                         continuous,
+                         from_url=None, from_db=None,
+                         to_url=None, to_db=None,
+                         repl_filter=None,
+                         doc_ids=None,
+                         channels_filter=None):
+
+        """
+        Starts a replication (one-shot or continous) between Lite instances (P2P),
+        Sync Gateways, or Lite <-> Sync Gateways
+
+        :param url: endpoint to start the replication on
+        :param continuous: True = continuous, False = one-shot
+        :param from_url: source url of the replication
+        :param from_db: source db of the replication
+        :param to_url: target url of the replication
+        :param to_db: target db of the replication
+        :param repl_filter: ** Lite only ** Custom filter that can be defined in design doc
+        :param doc_ids: ** Will not work with continuous pull from LITE <- SG ** Doc ids to filter
+            replication by
+        :param channels_filter: ** Only works with pull from Sync Gateway ** This will filter the
+            replication by the array of string channel names
+        """
 
         if from_url is None:
             source = from_db
@@ -932,6 +989,16 @@ class MobileRestClient:
             "source": source,
             "target": target
         }
+
+        if repl_filter is not None:
+            data["filter"] = repl_filter
+
+        if channels_filter is not None:
+            data["filter"] = "sync_gateway/bychannel"
+            data["query_params"] = {"channels": ",".join(channels_filter)}
+
+        if doc_ids is not None:
+            data["doc_ids"] = doc_ids
 
         resp = self._session.post("{}/_replicate".format(url), data=json.dumps(data))
 
@@ -999,7 +1066,6 @@ class MobileRestClient:
     def get_replications(self, url):
         """
         Issues a GET on the /_active tasks endpoint and returns the response in the format below:
-
         """
         resp = self._session.get("{}/_active_tasks".format(url))
         resp.raise_for_status()
@@ -1188,11 +1254,11 @@ class MobileRestClient:
 
             time.sleep(1)
 
-    def add_design_doc(self, url, db, name, view):
+    def add_design_doc(self, url, db, name, doc):
         """
         Keyword that adds a Design Doc to the database
         """
-        resp = self._session.put("{}/{}/_design/{}".format(url, db, name), data=view)
+        resp = self._session.put("{}/{}/_design/{}".format(url, db, name), data=doc)
         log_r(resp)
         resp.raise_for_status()
 

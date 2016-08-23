@@ -95,7 +95,7 @@ def resolve_cb_nas_url(version, build_number):
         base_url = "http://latestbuilds.hq.couchbase.com/"
     elif version.startswith("4.0") or version.startswith("4.1"):
         base_url = "{}/sherlock/{}".format(cbnas_base_url, build_number)
-    elif version.startswith("4.5"):
+    elif version.startswith("4.5") or version.startswith("4.6"):
         base_url = "{}/watson/{}".format(cbnas_base_url, build_number)
     elif version.startswith("4.7"):
         base_url = "{}/spock/{}".format(cbnas_base_url, build_number)

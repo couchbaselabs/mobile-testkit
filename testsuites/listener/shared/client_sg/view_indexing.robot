@@ -72,7 +72,7 @@ Stale revision should not be in the index
     ...  from_url=${sg_url_admin}  from_db=${sg_db}
     ...  to_db=${ls_db}
 
-    ${design_doc_id} =  Add Design Doc  url=${ls_url}  db=${ls_db}  name=${d_doc_name}  view=${view}
+    ${design_doc_id} =  Add Design Doc  url=${ls_url}  db=${ls_db}  name=${d_doc_name}  doc=${view}
     ${design_doc} =  Get Doc  url=${ls_url}  db=${ls_db}  doc_id=${design_doc_id}
 
     ${doc_body} =  Create Doc  id=doc_1  content={"hi": "I should be in the view"}  channels=${sg_user_channels}
