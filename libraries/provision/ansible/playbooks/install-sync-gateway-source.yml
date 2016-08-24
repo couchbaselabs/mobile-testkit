@@ -96,7 +96,7 @@
   tasks:
   # Create target directory and deploy binary
   - name: SG ACCEL | Creates /opt/couchbase-sg-accel
-    file: SG ACCEL | path=/opt/couchbase-sg-accel state=directory
+    file: path=/opt/couchbase-sg-accel state=directory
 
   - name: Creates /opt/couchbase-sg-accel/bin
     file: path=/opt/couchbase-sg-accel/bin state=directory
