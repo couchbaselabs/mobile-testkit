@@ -107,7 +107,7 @@ def discover_authenticate_endpoint(sg_url, sg_db, provider):
     return parser.form_action
 
 
-def test_openidconnect_basic_test(sg_url, sg_db, is_admin_port):
+def test_openidconnect_basic_test(sg_url, sg_db, is_admin_port, expect_signed_id_token):
 
     # make a request against the db and expect a 401 response since we haven't authenticated yet.
     # (but there's no point in doing this on the admin port since we'll never get a 401)
@@ -151,17 +151,20 @@ def test_openidconnect_basic_test(sg_url, sg_db, is_admin_port):
     db_url = "{}/{}".format(sg_url, sg_db)
     resp = requests.get(db_url, headers=headers)
     log_r(resp)
-    assert resp.status_code == 200, "Expected 200 response"
+    if expect_signed_id_token:
+        assert resp.status_code == 200, "Expected 200 response for bearer ID token"
+    else:
+        assert resp.status_code == 401, "Expected 401 response for bearer ID token"
 
     # make a request using the cookie against the db and expect a 200 response
     db_url = "{}/{}".format(sg_url, sg_db)
     resp = requests.get(db_url, cookies=extract_cookie(set_cookie_response_header))
     log_r(resp)
-    assert resp.status_code == 200, "Expected 200 response"
+    assert resp.status_code == 200, "Expected 200 response when using session cookie"
 
     # make a request using the session_id that's sent in the body
     resp = requests.get(db_url, cookies={"SyncGatewaySession": authenticate_response_json["session_id"]})
-    assert resp.status_code == 200, "Expected 200 response"
+    assert resp.status_code == 200, "Expected 200 response using session_id from body"
 
     # try to use the refresh token to get a few new id_tokens
     id_tokens = [ id_token ]
@@ -183,7 +186,10 @@ def test_openidconnect_basic_test(sg_url, sg_db, is_admin_port):
         headers = {"Authorization": "Bearer {}".format(id_token_refresh)}
         resp = requests.get(db_url, headers=headers)
         log_r(resp)
-        assert resp.status_code == 200, "Expected 200 response"
+        if expect_signed_id_token:
+            assert resp.status_code == 200, "Expected 200 response for bearer ID token on refresh"
+        else:
+            assert resp.status_code == 401, "Expected 401 response for bearer ID token on refresh"
 
         id_tokens.append(id_token_refresh)
 
