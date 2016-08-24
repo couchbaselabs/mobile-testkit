@@ -4,6 +4,8 @@ from concurrent.futures import as_completed
 from concurrent.futures import ThreadPoolExecutor
 
 from keywords.utils import log_info
+from keywords.constants import SYNC_GATEWAY_CONFIGS
+from keywords.SyncGateway import SyncGateway
 from keywords.utils import breakpoint
 from keywords.MobileRestClient import MobileRestClient
 
@@ -405,5 +407,10 @@ def replication_with_session_cookie(ls_url, sg_admin_url, sg_url):
     log_info("ls_url: {}".format(ls_url))
     log_info("sg_admin_url: {}".format(sg_admin_url))
     log_info("sg_url: {}".format(sg_url))
-    pass
+
+    sg = SyncGateway()
+    sg.stop_sync_gateway(sg_url)
+    sg.start_sync_gateway(sg_url, "{}/walrus-user.json".format(SYNC_GATEWAY_CONFIGS))
+
+
 
