@@ -592,7 +592,7 @@ use the password `vagrant`.
 NOTE: This key must be added to your ssh-agent if it is anything other than the default `id_rsa` key.
 The install_keys.py script will attempt to add it but it must be running. 
 
-1. Edit `libraries/provision/ansible/playbooks/ansible.cfg` and change the user to 'vagrant'
+1. Edit `ansible.cfg` and change the user to 'vagrant'
 1. Run `python libraries/utilities/generate_clusters_from_pool.py`
 1. Install the dependencies
 ```
