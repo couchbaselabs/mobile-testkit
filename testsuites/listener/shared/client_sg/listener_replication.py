@@ -400,5 +400,10 @@ def multiple_replications_created_with_unique_properties(ls_url, cluster_config)
     )
 
 
-
+def replication_with_session_cookie(ls_url, sg_admin_url, sg_url):
+    log_info("Running 'replication_with_session_cookie' ...")
+    log_info("ls_url: {}".format(ls_url))
+    log_info("sg_admin_url: {}".format(sg_admin_url))
+    log_info("sg_url: {}".format(sg_url))
+    pass
 

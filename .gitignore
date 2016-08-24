@@ -25,6 +25,7 @@ conf/hosts.ini
 
 provisioning_config*
 !libraries/utilities/provisioning_config_parser.py
+*.retry
 
 results.xml
 test-framework.log
