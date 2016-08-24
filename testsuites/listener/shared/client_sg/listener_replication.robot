@@ -108,6 +108,23 @@ Multiple Replications Created with Unique Properties
     ...  ls_url=${ls_url}
     ...  cluster_config=${cluster_hosts}
 
+Replication with Session Cookie
+    [Tags]  Listener  Sync Gateway  Replication  Sessions
+    [Documentation]
+    ...  Regression test for https://github.com/couchbase/couchbase-lite-android/issues/817
+    ...  1. SyncGateway Config with guest disabled = true and One user added (e.g. user1 / 1234)
+    ...  2. Create a new session on SGW for the user1 by using POST /_session.
+    ...     Capture the SyncGatewaySession cookie from the set-cookie in the response header.
+    ...  3. Start continuous push and pull replicator on the LiteServ with SyncGatewaySession cookie.
+    ...     Make sure that both replicators start correctly
+    ...  4. Delete the session from SGW by sending DELETE /_sessions/ to SGW
+    ...  5. Cancel both push and pull replicator on the LiteServ
+    ...  6. Repeat step 1 and 2
+    Replication with Session Cookie
+    ...  ls_url=${ls_url}
+    ...  sg_admin_url=${sg_admin_url}
+    ...  sg_url=${sg_url}
+
 *** Keywords ***
 Setup Test
     ${ls_url} =  Start LiteServ
@@ -123,8 +140,8 @@ Setup Test
 
     Set Test Variable  ${cluster_hosts}
     Set Test Variable  ${ls_url}
+    Set Test Variable  ${sg_admin_url}        ${cluster_hosts["sync_gateways"][0]["admin"]}
     Set Test Variable  ${sg_url}        ${cluster_hosts["sync_gateways"][0]["public"]}
-
 
     Stop Sync Gateway  url=${sg_url}
     Start Sync Gateway  url=${sg_url}  config=${SYNC_GATEWAY_CONFIGS}/walrus.json
