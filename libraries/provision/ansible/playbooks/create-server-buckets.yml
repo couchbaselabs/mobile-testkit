@@ -22,7 +22,6 @@
     couchbase_server_password: password
 
     couchbase_server_bucket_type: couchbase
-    couchbase_server_bucket_port: 11211
     couchbase_server_bucket_replica: 1
 
     bucket_names:
@@ -42,7 +41,7 @@
 
   # Create buckets and wait
   - name: COUCHBASE SERVER | Create new buckets
-    shell: "{{ couchbase_server_home_path }}/bin/couchbase-cli bucket-create --cluster={{ couchbase_server_primary_node }}:{{ couchbase_server_admin_port }} --user={{ couchbase_server_admin }} --password={{ couchbase_server_password }} --bucket={{ item }} --bucket-type={{ couchbase_server_bucket_type }} --bucket-port={{ couchbase_server_bucket_port }} --bucket-ramsize={{ couchbase_server_bucket_ram }} --bucket-replica={{ couchbase_server_bucket_replica }} --wait"
+    shell: "{{ couchbase_server_home_path }}/bin/couchbase-cli bucket-create --cluster={{ couchbase_server_primary_node }}:{{ couchbase_server_admin_port }} --user={{ couchbase_server_admin }} --password={{ couchbase_server_password }} --bucket={{ item }} --bucket-type={{ couchbase_server_bucket_type }} --bucket-ramsize={{ couchbase_server_bucket_ram }} --bucket-replica={{ couchbase_server_bucket_replica }} --wait"
     with_items: "{{ bucket_names }}"
     when: couchbase_server_node == couchbase_server_primary_node
 
