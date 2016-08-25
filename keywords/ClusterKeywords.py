@@ -13,6 +13,7 @@ from SyncGateway import verify_sync_gateway_version
 from SyncGateway import verify_sg_accel_version
 from libraries.testkit.cluster import Cluster
 
+
 class ClusterKeywords:
 
     def get_cluster_topology(self, cluster_config):
