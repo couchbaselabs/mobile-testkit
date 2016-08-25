@@ -2,6 +2,7 @@ import logging
 import json
 import time
 import uuid
+import re
 import requests
 import sys
 
@@ -12,6 +13,7 @@ from concurrent.futures import ThreadPoolExecutor
 
 from CouchbaseServer import CouchbaseServer
 from Document import get_attachment
+from utils import breakpoint
 
 from libraries.data import doc_generators
 
@@ -172,16 +174,50 @@ class MobileRestClient:
         assert resp.json() == expected_response, "Unexpected _session response from Listener"
         return resp.json()
 
-    def create_session(self, url, db, name, ttl=86400):
+    def request_session(self, url, db, name, password=None, ttl=86400):
         data = {
             "name": name,
             "ttl": ttl
         }
+
+        if password:
+            data["password"] = password
+
         resp = self._session.post("{}/{}/_session".format(url, db), data=json.dumps(data))
         log_r(resp)
         resp.raise_for_status()
+        return resp
+
+    def create_session(self, url, db, name, password=None, ttl=86400):
+        resp = self.request_session(url, db, name, password, ttl)
         resp_obj = resp.json()
-        return (resp_obj["cookie_name"], resp_obj["session_id"])
+
+        if "cookie_name" in resp_obj:
+            # _session called via admin port
+            # Cookie name / session is returned in response
+            cookie_name = resp_obj["cookie_name"]
+            session_id = resp_obj["session_id"]
+        else:
+            # _session called via public port.
+            # get session info from 'Set-Cookie' header
+            set_cookie_header = resp.headers["Set-Cookie"]
+
+            # Split header on '=' and ';' characters
+            cookie_parts = re.split("=|;", set_cookie_header)
+
+            cookie_name = cookie_parts[0]
+            session_id = cookie_parts[1]
+
+        return cookie_name, session_id
+
+    def get_session_header(self, url, db, name, password=None, ttl=86400):
+        """
+        Issues a POST to the public _session enpoint on sync_gateway for a user.
+        Return the entire 'Set-Cookie' header. This is useful for creating authenticated
+        push and pull replication via the Listener and REST
+        """
+        resp = self.request_session(url, db, name, password, ttl)
+        return resp.headers["Set-Cookie"]
 
     def create_user(self, url, db, name, password, channels=[]):
         data = {
@@ -889,8 +925,8 @@ class MobileRestClient:
     def start_replication(self,
                           url,
                           continuous,
-                          from_url=None, from_db=None,
-                          to_url=None, to_db=None,
+                          from_url=None, from_db=None, from_auth=None,
+                          to_url=None, to_db=None, to_auth=None,
                           repl_filter=None,
                           doc_ids=None,
                           channels_filter=None):
@@ -902,8 +938,10 @@ class MobileRestClient:
         :param continuous: True = continuous, False = one-shot
         :param from_url: source url of the replication
         :param from_db: source db of the replication
+        :param from_auth: session header to provide to source
         :param to_url: target url of the replication
         :param to_db: target db of the replication
+        :param to_auth: session header to provide to target
         :param repl_filter: ** Lite only ** Custom filter that can be defined in design doc
         :param doc_ids: ** Will not work with continuous pull from LITE <- SG ** Doc ids to filter
             replication by
@@ -923,8 +961,8 @@ class MobileRestClient:
 
         data = {
             "continuous": continuous,
-            "source": source,
-            "target": target
+            "source": {"url": source},
+            "target": {"url": target}
         }
 
         if repl_filter is not None:
@@ -936,6 +974,12 @@ class MobileRestClient:
 
         if doc_ids is not None:
             data["doc_ids"] = doc_ids
+
+        if to_auth is not None:
+            data["target"]["headers"] = {"Cookie": to_auth}
+
+        if from_auth is not None:
+            data["source"]["headers"] = {"Cookie": from_auth}
 
         resp = self._session.post("{}/_replicate".format(url), data=json.dumps(data))
         log_r(resp)
@@ -950,8 +994,8 @@ class MobileRestClient:
     def stop_replication(self,
                          url,
                          continuous,
-                         from_url=None, from_db=None,
-                         to_url=None, to_db=None,
+                         from_url=None, from_db=None, from_auth=None,
+                         to_url=None, to_db=None, to_auth=None,
                          repl_filter=None,
                          doc_ids=None,
                          channels_filter=None):
@@ -964,8 +1008,10 @@ class MobileRestClient:
         :param continuous: True = continuous, False = one-shot
         :param from_url: source url of the replication
         :param from_db: source db of the replication
+        :param from_auth: session header to provide to source
         :param to_url: target url of the replication
         :param to_db: target db of the replication
+        :param to_auth: session header to provide to target
         :param repl_filter: ** Lite only ** Custom filter that can be defined in design doc
         :param doc_ids: ** Will not work with continuous pull from LITE <- SG ** Doc ids to filter
             replication by
@@ -986,8 +1032,8 @@ class MobileRestClient:
         data = {
             "continuous": continuous,
             "cancel": True,
-            "source": source,
-            "target": target
+            "source": {"url": source},
+            "target": {"url": target}
         }
 
         if repl_filter is not None:
@@ -1000,6 +1046,12 @@ class MobileRestClient:
         if doc_ids is not None:
             data["doc_ids"] = doc_ids
 
+        if to_auth is not None:
+            data["target"]["headers"] = {"Cookie": to_auth}
+
+        if from_auth is not None:
+            data["source"]["headers"] = {"Cookie": from_auth}
+
         resp = self._session.post("{}/_replicate".format(url), data=json.dumps(data))
 
         log_r(resp)
@@ -1007,7 +1059,7 @@ class MobileRestClient:
 
         resp_obj = resp.json()
 
-        assert resp_obj["ok"] == True, "Unexpected response for cancelling a replication"
+        assert resp_obj["ok"], "Unexpected response for cancelling a replication"
 
     def wait_for_replication_status_idle(self, url, replication_id):
         """

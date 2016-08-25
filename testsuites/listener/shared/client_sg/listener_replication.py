@@ -403,14 +403,50 @@ def multiple_replications_created_with_unique_properties(ls_url, cluster_config)
 
 
 def replication_with_session_cookie(ls_url, sg_admin_url, sg_url):
+
+    ls_db = "ls_db"
+    sg_db = "db"
+
     log_info("Running 'replication_with_session_cookie' ...")
     log_info("ls_url: {}".format(ls_url))
     log_info("sg_admin_url: {}".format(sg_admin_url))
     log_info("sg_url: {}".format(sg_url))
 
-    sg = SyncGateway()
-    sg.stop_sync_gateway(sg_url)
-    sg.start_sync_gateway(sg_url, "{}/walrus-user.json".format(SYNC_GATEWAY_CONFIGS))
+    client = MobileRestClient()
+    client.create_database(url=ls_url, name=ls_db)
+
+    # Get session header for user_1
+    session_header = client.get_session_header(url=sg_url, db=sg_db, name="user_1", password="foo")
+    log_info(session_header)
+
+    # Start authenticated push replication
+    repl_one = client.start_replication(
+        url=ls_url,
+        continuous=True,
+        from_db=ls_db,
+        to_url=sg_url,
+        to_db=sg_db,
+        to_auth=session_header
+    )
+
+    breakpoint()
+
+    # Start authenticated pull replication
+    repl_two = client.start_replication(
+        url=ls_url,
+        continuous=True,
+        from_url=sg_url,
+        from_db=sg_db,
+        from_auth=session_header,
+        to_db=ls_db,
+    )
+
+    breakpoint()
+    replications = client.get_replications(ls_url)
+    breakpoint()
+    #assert len(replications) == 3, "2 replications (push / pull should be running)"
+
+
 
 
 
