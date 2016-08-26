@@ -26,6 +26,7 @@ from constants import REGISTERED_CLIENT_DBS
 from utils import log_r
 from utils import log_info
 
+
 def parse_multipart_response(response):
     """
     Parses a multipart response where each section looks like below:
@@ -60,6 +61,7 @@ def parse_multipart_response(response):
 
     return {"rows": rows}
 
+
 def get_auth_type(auth):
 
     if auth is None:
@@ -72,6 +74,7 @@ def get_auth_type(auth):
 
     logging.debug("Using auth type: {}".format(auth_type))
     return auth_type
+
 
 class MobileRestClient:
     """
@@ -156,22 +159,44 @@ class MobileRestClient:
 
         raise ValueError("Unsupported platform type")
 
-    def get_session(self, url):
-        resp = self._session.get("{}/_session".format(url))
-        log_r(resp)
-        resp.raise_for_status()
+    def get_session(self, url, db=None, session_id=None):
 
-        expected_response = {
-            "userCtx": {
-                "name": None,
-                "roles": [
-                    "_admin"
-                    ]
-                },
+        """
+        :param url: url to get session from
+        :param session_id: the session id to get information from
+        :param db: database where session lives
+        """
+
+        if self.get_server_type(url) == ServerType.listener:
+            # Listener should support the endpoint
+            resp = self._session.get("{}/_session".format(url))
+            log_r(resp)
+            resp.raise_for_status()
+
+            expected_response = {
+                "userCtx": {
+                    "name": None,
+                    "roles": [
+                        "_admin"
+                        ]
+                    },
                 "ok": True
             }
 
-        assert resp.json() == expected_response, "Unexpected _session response from Listener"
+            assert resp.json() == expected_response, "Unexpected _session response from Listener"
+
+        else:
+            # Sync Gateway
+            # Make sure session exists
+            resp = self._session.get("{}/{}/_session/{}".format(url, db, session_id))
+            log_r(resp)
+            resp.raise_for_status()
+
+            resp_obj = resp.json()
+            assert resp_obj["ok"], "Make sure response includes 'ok'"
+
+            return resp.json()
+
         return resp.json()
 
     def request_session(self, url, db, name, password=None, ttl=86400):
@@ -218,6 +243,27 @@ class MobileRestClient:
         """
         resp = self.request_session(url, db, name, password, ttl)
         return resp.headers["Set-Cookie"]
+
+    def delete_session(self, url, db, user_name=None, session_id=None):
+        """
+        Sync Gateway only.
+
+        :param url: sync_gateway endpoint (either public or admin port)
+        :param db: database to delete the cookie from
+        :param user_name: user_name associated with the cookie
+        :param session_id: cookie session id to delete
+        """
+
+        if user_name is not None:
+            # Delete session via /{db}/_user/{user-name}/_session/{session-id}
+            resp = self._session.delete("{}/{}/_user/{}/_session/{}".format(url, db, user_name, session_id))
+            log_r(resp)
+            resp.raise_for_status()
+        else:
+            # Delete session via /{db}/_session/{session-id}
+            resp = self._session.delete("{}/{}/_session/{}".format(url, db, session_id))
+            log_r(resp)
+            resp.raise_for_status()
 
     def create_user(self, url, db, name, password, channels=[]):
         data = {
