@@ -1,4 +1,5 @@
 import json
+import re
 
 from concurrent.futures import as_completed
 from concurrent.futures import ThreadPoolExecutor
@@ -417,7 +418,11 @@ def replication_with_session_cookie(ls_url, sg_admin_url, sg_url):
 
     # Get session header for user_1
     session_header = client.get_session_header(url=sg_url, db=sg_db, name="user_1", password="foo")
-    log_info(session_header)
+
+    # Get session id from header
+    session_parts = re.split("=|;", session_header)
+    session_id = session_parts[1]
+    log_info("{}: {}".format(session_parts[0], session_id))
 
     # Start authenticated push replication
     repl_one = client.start_replication(
@@ -429,7 +434,6 @@ def replication_with_session_cookie(ls_url, sg_admin_url, sg_url):
         to_auth=session_header
     )
 
-    breakpoint()
 
     # Start authenticated pull replication
     repl_two = client.start_replication(
@@ -441,12 +445,26 @@ def replication_with_session_cookie(ls_url, sg_admin_url, sg_url):
         to_db=ls_db,
     )
 
-    breakpoint()
     replications = client.get_replications(ls_url)
-    breakpoint()
-    #assert len(replications) == 3, "2 replications (push / pull should be running)"
+    assert len(replications) == 2, "2 replications (push / pull should be running)"
 
+    # GET from session endpoint /{db}/_session/{session-id}
+    session = client.get_session(url=sg_admin_url, db=sg_db, session_id=session_id)
+    assert len(session["userCtx"]["channels"]) == 2, "There should be only 2 channels for the user"
+    assert "ABC" in session["userCtx"]["channels"], "The channel info should contain 'ABC'"
+    assert session["userCtx"]["name"] == "user_1", "The user should have the name 'user_1'"
+    assert len(session["authentication_handlers"]) == 2, "There should be 2 authentication_handlers"
+    assert "default" in session["authentication_handlers"], "Did not find 'default' in authentication_headers"
+    assert "cookie" in session["authentication_handlers"], "Did not find 'cookie' in authentication_headers"
 
+    log_info("SESSIONs: {}".format(session))
+
+    client.delete_session(url=sg_admin_url, db=sg_db, user_name="user_1", session_id=session_id)
+
+    # Todo: Delete Session on SGW
+    # Todo: Cancel both replications
+    # Todo: Create new session
+    # Todo: Create push / pull replication with new session
 
 
 
