@@ -4,7 +4,10 @@ import re
 from concurrent.futures import as_completed
 from concurrent.futures import ThreadPoolExecutor
 
+from requests.exceptions import HTTPError
+
 from keywords.utils import log_info
+
 from keywords.constants import SYNC_GATEWAY_CONFIGS
 from keywords.SyncGateway import SyncGateway
 from keywords.utils import breakpoint
@@ -417,7 +420,94 @@ def replication_with_session_cookie(ls_url, sg_admin_url, sg_url):
     client.create_database(url=ls_url, name=ls_db)
 
     # Get session header for user_1
-    session_header = client.get_session_header(url=sg_url, db=sg_db, name="user_1", password="foo")
+    session_header = client.create_session_header(url=sg_url, db=sg_db, name="user_1", password="foo")
+
+    # Get session id from header
+    session_parts = re.split("=|;", session_header)
+    session_id = session_parts[1]
+    log_info("{}: {}".format(session_parts[0], session_id))
+    session = (session_parts[0], session_id)
+
+    # Start authenticated push replication
+    repl_one = client.start_replication(
+        url=ls_url,
+        continuous=True,
+        from_db=ls_db,
+        to_url=sg_url,
+        to_db=sg_db,
+        to_auth=session_header
+    )
+
+    # Start authenticated pull replication
+    repl_two = client.start_replication(
+        url=ls_url,
+        continuous=True,
+        from_url=sg_url,
+        from_db=sg_db,
+        from_auth=session_header,
+        to_db=ls_db,
+    )
+
+    replications = client.get_replications(ls_url)
+    assert len(replications) == 2, "2 replications (push / pull should be running)"
+
+    # Sanity test docs
+    ls_docs = client.add_docs(url=ls_url, db=ls_db, number=100, id_prefix="ls_doc", channels=["ABC"])
+    sg_docs = client.add_docs(url=sg_url, db=sg_db, number=100, id_prefix="sg_doc", auth=session, channels=["ABC"])
+    all_docs = client.merge(ls_docs, sg_docs)
+    log_info(all_docs)
+
+    client.verify_docs_present(url=sg_admin_url, db=sg_db, expected_docs=all_docs)
+    client.verify_docs_present(url=ls_url, db=ls_db, expected_docs=all_docs)
+
+    # GET from session endpoint /{db}/_session/{session-id}
+    session = client.get_session(url=sg_admin_url, db=sg_db, session_id=session_id)
+    assert len(session["userCtx"]["channels"]) == 2, "There should be only 2 channels for the user"
+    assert "ABC" in session["userCtx"]["channels"], "The channel info should contain 'ABC'"
+    assert session["userCtx"]["name"] == "user_1", "The user should have the name 'user_1'"
+    assert len(session["authentication_handlers"]) == 2, "There should be 2 authentication_handlers"
+    assert "default" in session["authentication_handlers"], "Did not find 'default' in authentication_headers"
+    assert "cookie" in session["authentication_handlers"], "Did not find 'cookie' in authentication_headers"
+
+    log_info("SESSIONs: {}".format(session))
+
+    client.delete_session(url=sg_admin_url, db=sg_db, user_name="user_1", session_id=session_id)
+
+    # Make sure session is deleted
+    try:
+        session = client.get_session(url=sg_admin_url, db=sg_db, session_id=session_id)
+    except HTTPError as he:
+        expected_error_code = he.response.status_code
+        log_info(expected_error_code)
+
+    assert expected_error_code == 404, "Expected 404 status, actual {}".format(expected_error_code)
+
+    # Cancel the replications
+    # Stop repl_one
+    client.stop_replication(
+        url=ls_url,
+        continuous=True,
+        from_db=ls_db,
+        to_url=sg_url,
+        to_db=sg_db,
+        to_auth=session_header
+    )
+
+    # Stop repl_two
+    client.stop_replication(
+        url=ls_url,
+        continuous=True,
+        from_url=sg_url,
+        from_db=sg_db,
+        from_auth=session_header,
+        to_db=ls_db,
+    )
+
+    replications = client.get_replications(ls_url)
+    assert len(replications) == 0, "All replications should be stopped"
+
+    # Create new session and new push / pull replications
+    session_header = client.create_session_header(url=sg_url, db=sg_db, name="user_1", password="foo")
 
     # Get session id from header
     session_parts = re.split("=|;", session_header)
@@ -434,7 +524,6 @@ def replication_with_session_cookie(ls_url, sg_admin_url, sg_url):
         to_auth=session_header
     )
 
-
     # Start authenticated pull replication
     repl_two = client.start_replication(
         url=ls_url,
@@ -446,25 +535,7 @@ def replication_with_session_cookie(ls_url, sg_admin_url, sg_url):
     )
 
     replications = client.get_replications(ls_url)
-    assert len(replications) == 2, "2 replications (push / pull should be running)"
-
-    # GET from session endpoint /{db}/_session/{session-id}
-    session = client.get_session(url=sg_admin_url, db=sg_db, session_id=session_id)
-    assert len(session["userCtx"]["channels"]) == 2, "There should be only 2 channels for the user"
-    assert "ABC" in session["userCtx"]["channels"], "The channel info should contain 'ABC'"
-    assert session["userCtx"]["name"] == "user_1", "The user should have the name 'user_1'"
-    assert len(session["authentication_handlers"]) == 2, "There should be 2 authentication_handlers"
-    assert "default" in session["authentication_handlers"], "Did not find 'default' in authentication_headers"
-    assert "cookie" in session["authentication_handlers"], "Did not find 'cookie' in authentication_headers"
-
-    log_info("SESSIONs: {}".format(session))
-
-    client.delete_session(url=sg_admin_url, db=sg_db, user_name="user_1", session_id=session_id)
-
-    # Todo: Delete Session on SGW
-    # Todo: Cancel both replications
-    # Todo: Create new session
-    # Todo: Create push / pull replication with new session
+    assert len(replications) == 2, "2 replications (push / pull should be running), found: {}".format(2)
 
 
 

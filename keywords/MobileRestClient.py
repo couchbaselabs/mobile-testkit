@@ -235,7 +235,7 @@ class MobileRestClient:
 
         return cookie_name, session_id
 
-    def get_session_header(self, url, db, name, password=None, ttl=86400):
+    def create_session_header(self, url, db, name, password=None, ttl=86400):
         """
         Issues a POST to the public _session enpoint on sync_gateway for a user.
         Return the entire 'Set-Cookie' header. This is useful for creating authenticated
