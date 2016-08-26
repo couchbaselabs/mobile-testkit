@@ -471,6 +471,7 @@ def replication_with_session_cookie(ls_url, sg_admin_url, sg_url):
 
     log_info("SESSIONs: {}".format(session))
 
+    # Delete session via sg admin port and _user rest endpoint
     client.delete_session(url=sg_admin_url, db=sg_db, user_name="user_1", session_id=session_id)
 
     # Make sure session is deleted
@@ -536,6 +537,28 @@ def replication_with_session_cookie(ls_url, sg_admin_url, sg_url):
 
     replications = client.get_replications(ls_url)
     assert len(replications) == 2, "2 replications (push / pull should be running), found: {}".format(2)
+
+    session = client.get_session(url=sg_admin_url, db=sg_db, session_id=session_id)
+    assert len(session["userCtx"]["channels"]) == 2, "There should be only 2 channels for the user"
+    assert "ABC" in session["userCtx"]["channels"], "The channel info should contain 'ABC'"
+    assert session["userCtx"]["name"] == "user_1", "The user should have the name 'user_1'"
+    assert len(session["authentication_handlers"]) == 2, "There should be 2 authentication_handlers"
+    assert "default" in session["authentication_handlers"], "Did not find 'default' in authentication_headers"
+    assert "cookie" in session["authentication_handlers"], "Did not find 'cookie' in authentication_headers"
+
+    log_info("SESSIONs: {}".format(session))
+
+    # Delete session via sg admin port and db rest endpoint
+    client.delete_session(url=sg_admin_url, db=sg_db, session_id=session_id)
+
+    # Make sure session is deleted
+    try:
+        session = client.get_session(url=sg_admin_url, db=sg_db, session_id=session_id)
+    except HTTPError as he:
+        expected_error_code = he.response.status_code
+        log_info(expected_error_code)
+
+    assert expected_error_code == 404, "Expected 404 status, actual {}".format(expected_error_code)
 
 
 
