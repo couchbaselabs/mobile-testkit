@@ -35,7 +35,7 @@ class ChangesTracker:
                     # Stored the doc with the list of rev changes
                     self.processed_changes[doc["id"]] = doc["changes"]
 
-    def start(self, timeout=1000, request_timeout=None):
+    def start(self, timeout=1000, heartbeat=None, request_timeout=None):
         """
         Start a longpoll changes feed and and store the results in self.processed changes
         """
@@ -53,11 +53,14 @@ class ChangesTracker:
             data = {
                 "feed": "longpoll",
                 "style": "all_docs",
-                "timeout": timeout,
                 "since": current_seq_num
             }
 
-            log_info("Making Request")
+            if timeout is not None:
+                data["timeout"] = timeout
+
+            if heartbeat is not None:
+                data["heartbeat"] = heartbeat
 
             if auth_type == AuthType.session:
                 resp = requests.post("{}/_changes".format(self.endpoint), data=json.dumps(data), cookies=dict(SyncGatewaySession=self.auth[1]), timeout=request_timeout)

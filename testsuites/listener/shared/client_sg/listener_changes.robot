@@ -20,7 +20,7 @@ Test Teardown     Teardown Test
 ${sg_db}  db
 
 *** Test Cases ***
-Longpoll Changes Termination
+Longpoll Changes Termination Timeout
     [Tags]  Listener  Sync Gateway  Changes
     [Documentation]
     ...  https://github.com/couchbase/couchbase-lite-java-core/issues/1296
@@ -28,9 +28,22 @@ Longpoll Changes Termination
     ...  Cancel the request after 2s
     ...  Wait 5.1s
     ...  Create another request GET /db/ on listener and make sure the listener responds
-    Longpoll Changes Termination
+    Longpoll Changes Termination Timeout
     ...  ls_url=${ls_url}
     ...  cluster_config=${cluster_hosts}
+
+Longpoll Changes Termination Heartbeat
+    [Tags]  Listener  Sync Gateway  Changes
+    [Documentation]
+    ...  https://github.com/couchbase/couchbase-lite-java-core/issues/1296
+    ...  Create 30 longpoll _changes in a loop (with heartbeat parameter = 5s)
+    ...  Cancel the request after 2s
+    ...  Wait 5.1s
+    ...  Create another request GET /db/ on listener and make sure the listener responds
+    Longpoll Changes Termination Heartbeat
+    ...  ls_url=${ls_url}
+    ...  cluster_config=${cluster_hosts}
+
 
 *** Keywords ***
 Setup Test
