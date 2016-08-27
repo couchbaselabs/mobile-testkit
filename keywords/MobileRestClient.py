@@ -1171,7 +1171,7 @@ class MobileRestClient:
 
         return resp.json()
 
-    def verify_docs_present(self, url, db, expected_docs, auth=None):
+    def verify_docs_present(self, url, db, expected_docs, auth=None, timeout=CLIENT_REQUEST_TIMEOUT):
         """
         Verifies the expected docs are present in the database using a polling loop with
         POST _all_docs with Listener and a POST _bulk_get for sync_gateway
@@ -1199,7 +1199,7 @@ class MobileRestClient:
         start = time.time()
         while True:
 
-            if time.time() - start > CLIENT_REQUEST_TIMEOUT:
+            if time.time() - start > timeout:
                 raise Exception("Verify Docs Present: TIMEOUT")
 
             if server_type == ServerType.listener:
@@ -1250,7 +1250,8 @@ class MobileRestClient:
                     missing_docs.append(resp_doc)
                     all_docs_returned = False
 
-            logging.info("Missing Docs = {}".format(missing_docs))
+            logging.debug("Missing Docs = {}".format(missing_docs))
+            log_info("Num missing docs: {}".format(len(missing_docs)))
             # Issue the request again, docs my still be replicating
             if not all_docs_returned:
                 logging.info("Retrying to verify all docs are present ...")

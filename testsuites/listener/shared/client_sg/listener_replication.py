@@ -1,5 +1,6 @@
 import json
 import re
+import time
 
 from concurrent.futures import as_completed
 from concurrent.futures import ThreadPoolExecutor
@@ -51,6 +52,8 @@ def large_initial_pull_replication(ls_url, cluster_config, num_docs, continuous)
         to_db=ls_db
     )
 
+    start = time.time()
+
     if continuous:
         log_info("Waiting for replication status 'Idle' for: {}".format(repl_id))
         client.wait_for_replication_status_idle(ls_url, repl_id)
@@ -59,7 +62,10 @@ def large_initial_pull_replication(ls_url, cluster_config, num_docs, continuous)
         client.wait_for_no_replications(ls_url)
 
     # Verify docs replicated to client
-    client.verify_docs_present(url=ls_url, db=ls_db, expected_docs=docs)
+    client.verify_docs_present(url=ls_url, db=ls_db, expected_docs=docs, timeout=240)
+
+    all_docs_replicated_time = time.time() - start
+    log_info("Replication took: {}s".format(all_docs_replicated_time))
 
     # Verify docs show up in client's changes feed
     client.verify_docs_in_changes(url=ls_url, db=ls_db, expected_docs=docs)
