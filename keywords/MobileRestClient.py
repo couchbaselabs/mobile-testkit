@@ -336,6 +336,19 @@ class MobileRestClient:
 
         return resp.json()
 
+    def get_database(self, url, db_name):
+        """
+        Gets the databases for LiteServ or sync_gateway
+        :param url: url of running service
+        :return: array of database names
+        """
+
+        resp = self._session.get("{}/{}".format(url, db_name))
+        log_r(resp)
+        resp.raise_for_status()
+
+        return resp.json()
+
     def compact_database(self, url, db):
         """
         POST /{db}/_compact and will verify compaction by
