@@ -35,10 +35,13 @@ class ChangesTracker:
                     # Stored the doc with the list of rev changes
                     self.processed_changes[doc["id"]] = doc["changes"]
 
-    def start(self, timeout=1000):
+    def start(self, timeout=1000, request_timeout=None):
         """
         Start a longpoll changes feed and and store the results in self.processed changes
         """
+
+        # convert to seconds for use with requests lib api
+        request_timeout /= 1000
 
         auth_type = get_auth_type(self.auth)
         current_seq_num = 0
@@ -57,11 +60,11 @@ class ChangesTracker:
             log_info("Making Request")
 
             if auth_type == AuthType.session:
-                resp = requests.post("{}/_changes".format(self.endpoint), data=json.dumps(data), cookies=dict(SyncGatewaySession=self.auth[1]), stream=True)
+                resp = requests.post("{}/_changes".format(self.endpoint), data=json.dumps(data), cookies=dict(SyncGatewaySession=self.auth[1]), timeout=request_timeout)
             elif auth_type == AuthType.http_basic:
-                resp = requests.post("{}/_changes".format(self.endpoint), data=json.dumps(data), auth=self.auth, stream=True)
+                resp = requests.post("{}/_changes".format(self.endpoint), data=json.dumps(data), auth=self.auth, timeout=request_timeout)
             else:
-                resp = requests.post("{}/_changes".format(self.endpoint), data=json.dumps(data), stream=True)
+                resp = requests.post("{}/_changes".format(self.endpoint), data=json.dumps(data), timeout=request_timeout)
 
             log_r(resp)
             resp.raise_for_status()

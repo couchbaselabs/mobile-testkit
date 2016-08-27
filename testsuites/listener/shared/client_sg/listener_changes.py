@@ -11,7 +11,7 @@ from keywords.ChangesTracker import ChangesTracker
 
 def start_changes_tracking(url, db):
     ct = ChangesTracker(url, db)
-    ct.start(timeout=5000)
+    ct.start(timeout=5000, request_timeout=2000)
     return ct
 
 def longpoll_changes_termination(ls_url, cluster_config):
@@ -31,13 +31,16 @@ def longpoll_changes_termination(ls_url, cluster_config):
             start_changes_tracking,
             ls_url,
             ls_db
-
         ) for _ in range(30)]
 
-        time.sleep(2)
+        # for future in as_completed(futures):
+        #     future.stop()
 
-        for future in as_completed(futures):
-            future.stop()
+    log_info("Futures exited")
+
+    # make sure client can still take connections
+    dbs = client.get_databases(url=ls_url)
+    log_info(dbs)
 
 
 
