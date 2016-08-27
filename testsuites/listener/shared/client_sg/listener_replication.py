@@ -56,6 +56,8 @@ def large_initial_pull_replication(ls_url, cluster_config, num_docs, continuous)
 
     if continuous:
         log_info("Waiting for replication status 'Idle' for: {}".format(repl_id))
+        # Android will report IDLE status, and drop into the 'verify_docs_present' below
+        # due to https://github.com/couchbase/couchbase-lite-java-core/issues/1409
         client.wait_for_replication_status_idle(ls_url, repl_id)
     else:
         log_info("Waiting for no replications".format(repl_id))
