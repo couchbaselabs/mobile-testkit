@@ -75,7 +75,7 @@ def large_initial_pull_replication(ls_url, cluster_config, num_docs, continuous)
     if continuous:
         assert len(replications) == 1, "There should only be one replication running"
         assert replications[0]["status"] == "Idle", "Replication Status should be 'Idle'"
-        assert replications[0]["continuous"] == True, "Running replication should be continuous"
+        assert replications[0]["continuous"], "Running replication should be continuous"
         # Only .NET has an 'error' property
         if "error" in replications[0]:
             assert len(replications[0]["error"]) == 0
