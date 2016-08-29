@@ -164,7 +164,9 @@ def multiple_replications_not_created_with_same_properties(ls_url, cluster_confi
     client = MobileRestClient()
     client.create_database(url=ls_url, name=ls_db)
 
-    repl_id = "repl001"
+    repl_id_num = 0
+    response_one_id_num = 0
+    response_two_id_num = 0
 
     # launch 50 concurrent push replication requests with the same source / target
     with ThreadPoolExecutor(max_workers=10) as executor:
@@ -178,11 +180,16 @@ def multiple_replications_not_created_with_same_properties(ls_url, cluster_confi
         ) for _ in range(50)]
 
         for future in as_completed(futures):
-            response_id = future.result()
-            assert response_id == repl_id, "Expected replication id: {} Actual: {}".format(
-                repl_id,
-                response_id
-            )
+            response_one_id = future.result()
+            # Convert session_id from string "repl001" -> int 1
+            response_one_id_num = int(response_one_id.replace("repl", ""))
+            log_info(response_one_id_num)
+
+    # Assert that concurrent replications have a greater session id than 0
+    assert response_one_id_num > repl_id_num, "'response_one_id_num': {} should be greater than 'repl_id_num': {}".format(
+        response_one_id_num,
+        repl_id_num
+    )
 
     # Check there is only one replication running
     replications = client.get_replications(ls_url)
@@ -207,9 +214,6 @@ def multiple_replications_not_created_with_same_properties(ls_url, cluster_confi
         len(replications)
     )
 
-    # Global var gets incremented according to Pasin.
-    repl_id = "repl052"
-
     # launch 50 concurrent pull replication requests with the same source / target
     with ThreadPoolExecutor(max_workers=10) as executor:
         futures = [executor.submit(
@@ -222,11 +226,16 @@ def multiple_replications_not_created_with_same_properties(ls_url, cluster_confi
         ) for _ in range(50)]
 
         for future in as_completed(futures):
-            response_id = future.result()
-            assert response_id == repl_id, "Expected replication id: {} Actual: {}".format(
-                repl_id,
-                response_id
-            )
+            response_two_id = future.result()
+            # Convert session_id from string "repl001" -> int 1
+            response_two_id_num = int(response_two_id.replace("repl", ""))
+            log_info(response_two_id_num)
+
+    # Assert that the second set of concurrent replication requests has a higher id than the first
+    assert response_two_id_num > response_one_id_num, "'response_two_id_num': {} should be greater than 'response_one_id_num': {}".format(
+        response_two_id_num,
+        response_one_id_num
+    )
 
     # Check there is only one replication running
     replications = client.get_replications(ls_url)
@@ -278,7 +287,9 @@ def multiple_replications_created_with_unique_properties(ls_url, cluster_config)
         to_url=sg_one_admin,
         to_db=sg_db
     )
+    client.wait_for_replication_status_idle(ls_url, "repl001")
     assert repl_one == "repl001", "Replication {} should have id: repl001".format(repl_one)
+
 
     repl_two = client.start_replication(
         url=ls_url,
@@ -288,13 +299,14 @@ def multiple_replications_created_with_unique_properties(ls_url, cluster_config)
         to_db=sg_db,
         doc_ids=["doc_1", "doc_2"]
     )
+    client.wait_for_replication_status_idle(ls_url, "repl002")
     assert repl_two == "repl002", "Replication {} should have id: repl002".format(repl_two)
 
     # Create doc filter and add to the design doc
     filters = {
         "language": "javascript",
         "filters" : {
-            "sample_filter" : "function(doc, req) { if (doc.type && doc.type === \"skip\") { return false; } return true; }"
+            "sample_filter": "function(doc, req) { if (doc.type && doc.type === \"skip\") { return false; } return true; }"
         }
     }
     client.add_design_doc(url=ls_url, db=ls_db, name="by_type", doc=json.dumps(filters))
@@ -307,6 +319,7 @@ def multiple_replications_created_with_unique_properties(ls_url, cluster_config)
         to_db=sg_db,
         repl_filter="by_type/sample_filter"
     )
+    client.wait_for_replication_status_idle(ls_url, "repl003")
     assert repl_three == "repl003", "Replication {} should have id: repl003".format(repl_three)
 
     # Verify 3 replicaitons are running
@@ -354,6 +367,8 @@ def multiple_replications_created_with_unique_properties(ls_url, cluster_config)
         len(replications)
     )
 
+
+
     ########
     # PULL #
     ########
@@ -365,6 +380,7 @@ def multiple_replications_created_with_unique_properties(ls_url, cluster_config)
         from_db=sg_db,
         to_db=ls_db
     )
+    client.wait_for_replication_status_idle(ls_url, "repl007")
     assert repl_seven == "repl007", "Replication {} should have id: repl007".format(repl_seven)
 
     # Start filtered pull from sync gateway to LiteServ
@@ -376,6 +392,7 @@ def multiple_replications_created_with_unique_properties(ls_url, cluster_config)
         to_db=ls_db,
         channels_filter=["ABC", "CBS"]
     )
+    client.wait_for_replication_status_idle(ls_url, "repl008")
     assert repl_eight == "repl008", "Replication {} should have id: repl008".format(repl_eight)
 
     # Verify 3 replicaitons are running
@@ -455,6 +472,10 @@ def replication_with_session_cookie(ls_url, sg_admin_url, sg_url):
         from_auth=session_header,
         to_db=ls_db,
     )
+
+    # Wait for 2 replications to be 'Idle', On .NET they may not be immediately available via _active_tasks
+    client.wait_for_replication_status_idle(ls_url, repl_one)
+    client.wait_for_replication_status_idle(ls_url, repl_two)
 
     replications = client.get_replications(ls_url)
     assert len(replications) == 2, "2 replications (push / pull should be running)"
