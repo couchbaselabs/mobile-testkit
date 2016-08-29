@@ -55,7 +55,7 @@ def longpoll_changes_termination_heartbeat(ls_url, cluster_config):
     with ThreadPoolExecutor(max_workers=35) as executor:
         futures = [executor.submit(
             ct.start,
-            timeout=None,
+            timeout=5000,
             heartbeat=5000,
             request_timeout=2000
         ) for _ in range(30)]
