@@ -287,9 +287,7 @@ def multiple_replications_created_with_unique_properties(ls_url, cluster_config)
         to_url=sg_one_admin,
         to_db=sg_db
     )
-    client.wait_for_replication_status_idle(ls_url, "repl001")
-    assert repl_one == "repl001", "Replication {} should have id: repl001".format(repl_one)
-
+    client.wait_for_replication_status_idle(ls_url, repl_one)
 
     repl_two = client.start_replication(
         url=ls_url,
@@ -299,8 +297,7 @@ def multiple_replications_created_with_unique_properties(ls_url, cluster_config)
         to_db=sg_db,
         doc_ids=["doc_1", "doc_2"]
     )
-    client.wait_for_replication_status_idle(ls_url, "repl002")
-    assert repl_two == "repl002", "Replication {} should have id: repl002".format(repl_two)
+    client.wait_for_replication_status_idle(ls_url, repl_two)
 
     # Create doc filter and add to the design doc
     filters = {
@@ -319,8 +316,7 @@ def multiple_replications_created_with_unique_properties(ls_url, cluster_config)
         to_db=sg_db,
         repl_filter="by_type/sample_filter"
     )
-    client.wait_for_replication_status_idle(ls_url, "repl003")
-    assert repl_three == "repl003", "Replication {} should have id: repl003".format(repl_three)
+    client.wait_for_replication_status_idle(ls_url, repl_three)
 
     # Verify 3 replicaitons are running
     replications = client.get_replications(ls_url)
@@ -373,18 +369,17 @@ def multiple_replications_created_with_unique_properties(ls_url, cluster_config)
     # PULL #
     ########
     # Start 3 unique push replication requests
-    repl_seven = client.start_replication(
+    repl_four = client.start_replication(
         url=ls_url,
         continuous=True,
         from_url=sg_one_admin,
         from_db=sg_db,
         to_db=ls_db
     )
-    client.wait_for_replication_status_idle(ls_url, "repl007")
-    assert repl_seven == "repl007", "Replication {} should have id: repl007".format(repl_seven)
+    client.wait_for_replication_status_idle(ls_url, repl_four)
 
     # Start filtered pull from sync gateway to LiteServ
-    repl_eight = client.start_replication(
+    repl_five = client.start_replication(
         url=ls_url,
         continuous=True,
         from_url=sg_one_admin,
@@ -392,8 +387,7 @@ def multiple_replications_created_with_unique_properties(ls_url, cluster_config)
         to_db=ls_db,
         channels_filter=["ABC", "CBS"]
     )
-    client.wait_for_replication_status_idle(ls_url, "repl008")
-    assert repl_eight == "repl008", "Replication {} should have id: repl008".format(repl_eight)
+    client.wait_for_replication_status_idle(ls_url, repl_five)
 
     # Verify 3 replicaitons are running
     replications = client.get_replications(ls_url)
@@ -403,7 +397,7 @@ def multiple_replications_created_with_unique_properties(ls_url, cluster_config)
         len(replications)
     )
 
-    # Stop repl007
+    # Stop repl_four
     client.stop_replication(
         url=ls_url,
         continuous=True,
@@ -412,7 +406,7 @@ def multiple_replications_created_with_unique_properties(ls_url, cluster_config)
         to_db=ls_db
     )
 
-    # Stop repl008
+    # Stop repl_five
     client.stop_replication(
         url=ls_url,
         continuous=True,
