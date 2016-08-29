@@ -104,7 +104,7 @@ def large_initial_push_replication(ls_url, cluster_config, num_docs, continuous)
 
     client.create_database(url=ls_url, name=ls_db)
 
-    # Create 'num_docs' docs on sync_gateway
+    # Create 'num_docs' docs on LiteServ
     docs = client.add_docs(
         url=ls_url,
         db=ls_db,
