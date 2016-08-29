@@ -33,7 +33,7 @@ Large Initial One Shot Pull Replication
     ...  3. Verify if all of the docs get pulled.
     ...  Referenced issue: couchbase/couchbase-lite-android#955.
     Start Sync Gateway  url=${sg_url}  config=${SYNC_GATEWAY_CONFIGS}/walrus.json
-    Large Initial Pull Replication
+    Initial Pull Replication
     ...  ls_url=${ls_url}
     ...  cluster_config=${cluster_hosts}
     ...  num_docs=${num_docs}
@@ -46,7 +46,7 @@ Large Initial Continuous Pull Replication
     ...  2. Create a single continuous pull replicator and to pull the docs into a database.
     ...  3. Verify if all of the docs get pulled.
     Start Sync Gateway  url=${sg_url}  config=${SYNC_GATEWAY_CONFIGS}/walrus.json
-    Large Initial Pull Replication
+    Initial Pull Replication
     ...  ls_url=${ls_url}
     ...  cluster_config=${cluster_hosts}
     ...  num_docs=${num_docs}
@@ -59,7 +59,7 @@ Large Initial One Shot Push Replication
     ...  2. Create a single shot push replicator and to push the docs into a sync_gateway database.
     ...  3. Verify if all of the docs get pushed.
     Start Sync Gateway  url=${sg_url}  config=${SYNC_GATEWAY_CONFIGS}/walrus.json
-    Large Initial Push Replication
+    Initial Push Replication
     ...  ls_url=${ls_url}
     ...  cluster_config=${cluster_hosts}
     ...  num_docs=${num_docs}
@@ -72,7 +72,7 @@ Large Initial Continuous Push Replication
     ...  2. Create continuous push replicator and to push the docs into a sync_gateway database.
     ...  3. Verify if all of the docs get pushed.
     Start Sync Gateway  url=${sg_url}  config=${SYNC_GATEWAY_CONFIGS}/walrus.json
-    Large Initial Push Replication
+    Initial Push Replication
     ...  ls_url=${ls_url}
     ...  cluster_config=${cluster_hosts}
     ...  num_docs=${num_docs}

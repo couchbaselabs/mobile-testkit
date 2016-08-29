@@ -15,7 +15,7 @@ from keywords.utils import breakpoint
 from keywords.MobileRestClient import MobileRestClient
 
 
-def large_initial_pull_replication(ls_url, cluster_config, num_docs, continuous):
+def initial_pull_replication(ls_url, cluster_config, num_docs, continuous):
 
     sg_db = "db"
     ls_db = "ls_db"
@@ -85,7 +85,7 @@ def large_initial_pull_replication(ls_url, cluster_config, num_docs, continuous)
         assert len(replications) == 0, "No replications should be running"
 
 
-def large_initial_push_replication(ls_url, cluster_config, num_docs, continuous):
+def initial_push_replication(ls_url, cluster_config, num_docs, continuous):
 
     sg_db = "db"
     ls_db = "ls_db"
