@@ -2,6 +2,7 @@ import logging
 import json
 import time
 import uuid
+import re
 import requests
 import sys
 
@@ -12,6 +13,7 @@ from concurrent.futures import ThreadPoolExecutor
 
 from CouchbaseServer import CouchbaseServer
 from Document import get_attachment
+from utils import breakpoint
 
 from libraries.data import doc_generators
 
@@ -23,6 +25,7 @@ from constants import REGISTERED_CLIENT_DBS
 
 from utils import log_r
 from utils import log_info
+
 
 def parse_multipart_response(response):
     """
@@ -58,6 +61,7 @@ def parse_multipart_response(response):
 
     return {"rows": rows}
 
+
 def get_auth_type(auth):
 
     if auth is None:
@@ -70,6 +74,7 @@ def get_auth_type(auth):
 
     logging.debug("Using auth type: {}".format(auth_type))
     return auth_type
+
 
 class MobileRestClient:
     """
@@ -154,34 +159,110 @@ class MobileRestClient:
 
         raise ValueError("Unsupported platform type")
 
-    def get_session(self, url):
-        resp = self._session.get("{}/_session".format(url))
-        log_r(resp)
-        resp.raise_for_status()
+    def get_session(self, url, db=None, session_id=None):
 
-        expected_response = {
-            "userCtx": {
-                "name": None,
-                "roles": [
-                    "_admin"
-                    ]
-                },
+        """
+        :param url: url to get session from
+        :param session_id: the session id to get information from
+        :param db: database where session lives
+        """
+
+        if self.get_server_type(url) == ServerType.listener:
+            # Listener should support the endpoint
+            resp = self._session.get("{}/_session".format(url))
+            log_r(resp)
+            resp.raise_for_status()
+
+            expected_response = {
+                "userCtx": {
+                    "name": None,
+                    "roles": [
+                        "_admin"
+                        ]
+                    },
                 "ok": True
             }
 
-        assert resp.json() == expected_response, "Unexpected _session response from Listener"
-        return resp.json()
+            resp_obj = resp.json()
+            assert resp_obj == expected_response, "Unexpected _session response from Listener"
 
-    def create_session(self, url, db, name, ttl=86400):
+        else:
+            # Sync Gateway
+            # Make sure session exists
+            resp = self._session.get("{}/{}/_session/{}".format(url, db, session_id))
+            log_r(resp)
+            resp.raise_for_status()
+
+            resp_obj = resp.json()
+            assert resp_obj["ok"], "Make sure response includes 'ok'"
+
+        return resp_obj
+
+    def request_session(self, url, db, name, password=None, ttl=86400):
         data = {
             "name": name,
             "ttl": ttl
         }
+
+        if password:
+            data["password"] = password
+
         resp = self._session.post("{}/{}/_session".format(url, db), data=json.dumps(data))
         log_r(resp)
         resp.raise_for_status()
+        return resp
+
+    def create_session(self, url, db, name, password=None, ttl=86400):
+        resp = self.request_session(url, db, name, password, ttl)
         resp_obj = resp.json()
-        return (resp_obj["cookie_name"], resp_obj["session_id"])
+
+        if "cookie_name" in resp_obj:
+            # _session called via admin port
+            # Cookie name / session is returned in response
+            cookie_name = resp_obj["cookie_name"]
+            session_id = resp_obj["session_id"]
+        else:
+            # _session called via public port.
+            # get session info from 'Set-Cookie' header
+            set_cookie_header = resp.headers["Set-Cookie"]
+
+            # Split header on '=' and ';' characters
+            cookie_parts = re.split("=|;", set_cookie_header)
+
+            cookie_name = cookie_parts[0]
+            session_id = cookie_parts[1]
+
+        return cookie_name, session_id
+
+    def create_session_header(self, url, db, name, password=None, ttl=86400):
+        """
+        Issues a POST to the public _session enpoint on sync_gateway for a user.
+        Return the entire 'Set-Cookie' header. This is useful for creating authenticated
+        push and pull replication via the Listener and REST
+        """
+        resp = self.request_session(url, db, name, password, ttl)
+        return resp.headers["Set-Cookie"]
+
+    def delete_session(self, url, db, user_name=None, session_id=None):
+        """
+        Sync Gateway only.
+
+        :param url: sync_gateway endpoint (either public or admin port)
+        :param db: database to delete the cookie from
+        :param user_name: user_name associated with the cookie
+        :param session_id: cookie session id to delete
+        """
+
+        if user_name is not None:
+            # Delete session via /{db}/_user/{user-name}/_session/{session-id}
+            resp = self._session.delete("{}/{}/_user/{}/_session/{}".format(url, db, user_name, session_id))
+            log_r(resp)
+            resp.raise_for_status()
+        else:
+            # Delete session via /{db}/_session/{session-id}
+            resp = self._session.delete("{}/{}/_session/{}".format(url, db, session_id))
+            log_r(resp)
+            resp.raise_for_status()
 
     def create_user(self, url, db, name, password, channels=[]):
         data = {
@@ -240,6 +321,32 @@ class MobileRestClient:
 
         resp_obj = resp.json()
         return resp_obj["db_name"]
+
+    def get_databases(self, url):
+        """
+        Gets the databases for LiteServ or sync_gateway
+        :param url: url of running service
+        :return: array of database names
+        """
+
+        resp = self._session.get("{}/_all_dbs".format(url))
+        log_r(resp)
+        resp.raise_for_status()
+
+        return resp.json()
+
+    def get_database(self, url, db_name):
+        """
+        Gets the databases for LiteServ or sync_gateway
+        :param url: url of running service
+        :return: array of database names
+        """
+
+        resp = self._session.get("{}/{}".format(url, db_name))
+        log_r(resp)
+        resp.raise_for_status()
+
+        return resp.json()
 
     def compact_database(self, url, db):
         """
@@ -886,7 +993,32 @@ class MobileRestClient:
 
         return resp_obj
 
-    def start_replication(self, url, continuous, from_url=None, from_db=None, to_url=None, to_db=None):
+    def start_replication(self,
+                          url,
+                          continuous,
+                          from_url=None, from_db=None, from_auth=None,
+                          to_url=None, to_db=None, to_auth=None,
+                          repl_filter=None,
+                          doc_ids=None,
+                          channels_filter=None):
+        """
+        Starts a replication (one-shot or continous) between Lite instances (P2P),
+        Sync Gateways, or Lite <-> Sync Gateways
+
+        :param url: endpoint to start the replication on
+        :param continuous: True = continuous, False = one-shot
+        :param from_url: source url of the replication
+        :param from_db: source db of the replication
+        :param from_auth: session header to provide to source
+        :param to_url: target url of the replication
+        :param to_db: target db of the replication
+        :param to_auth: session header to provide to target
+        :param repl_filter: ** Lite only ** Custom filter that can be defined in design doc
+        :param doc_ids: ** Will not work with continuous pull from LITE <- SG ** Doc ids to filter
+            replication by
+        :param channels_filter: ** Only works with pull from Sync Gateway ** This will filter the
+            replication by the array of string channel names
+        """
 
         if from_url is None:
             source = from_db
@@ -900,9 +1032,25 @@ class MobileRestClient:
 
         data = {
             "continuous": continuous,
-            "source": source,
-            "target": target
+            "source": {"url": source},
+            "target": {"url": target}
         }
+
+        if repl_filter is not None:
+            data["filter"] = repl_filter
+
+        if channels_filter is not None:
+            data["filter"] = "sync_gateway/bychannel"
+            data["query_params"] = {"channels": ",".join(channels_filter)}
+
+        if doc_ids is not None:
+            data["doc_ids"] = doc_ids
+
+        if to_auth is not None:
+            data["target"]["headers"] = {"Cookie": to_auth}
+
+        if from_auth is not None:
+            data["source"]["headers"] = {"Cookie": from_auth}
 
         resp = self._session.post("{}/_replicate".format(url), data=json.dumps(data))
         log_r(resp)
@@ -914,7 +1062,33 @@ class MobileRestClient:
 
         return replication_id
 
-    def stop_replication(self, url, continuous, from_url=None, from_db=None, to_url=None, to_db=None):
+    def stop_replication(self,
+                         url,
+                         continuous,
+                         from_url=None, from_db=None, from_auth=None,
+                         to_url=None, to_db=None, to_auth=None,
+                         repl_filter=None,
+                         doc_ids=None,
+                         channels_filter=None):
+
+        """
+        Starts a replication (one-shot or continous) between Lite instances (P2P),
+        Sync Gateways, or Lite <-> Sync Gateways
+
+        :param url: endpoint to start the replication on
+        :param continuous: True = continuous, False = one-shot
+        :param from_url: source url of the replication
+        :param from_db: source db of the replication
+        :param from_auth: session header to provide to source
+        :param to_url: target url of the replication
+        :param to_db: target db of the replication
+        :param to_auth: session header to provide to target
+        :param repl_filter: ** Lite only ** Custom filter that can be defined in design doc
+        :param doc_ids: ** Will not work with continuous pull from LITE <- SG ** Doc ids to filter
+            replication by
+        :param channels_filter: ** Only works with pull from Sync Gateway ** This will filter the
+            replication by the array of string channel names
+        """
 
         if from_url is None:
             source = from_db
@@ -929,9 +1103,25 @@ class MobileRestClient:
         data = {
             "continuous": continuous,
             "cancel": True,
-            "source": source,
-            "target": target
+            "source": {"url": source},
+            "target": {"url": target}
         }
+
+        if repl_filter is not None:
+            data["filter"] = repl_filter
+
+        if channels_filter is not None:
+            data["filter"] = "sync_gateway/bychannel"
+            data["query_params"] = {"channels": ",".join(channels_filter)}
+
+        if doc_ids is not None:
+            data["doc_ids"] = doc_ids
+
+        if to_auth is not None:
+            data["target"]["headers"] = {"Cookie": to_auth}
+
+        if from_auth is not None:
+            data["source"]["headers"] = {"Cookie": from_auth}
 
         resp = self._session.post("{}/_replicate".format(url), data=json.dumps(data))
 
@@ -940,7 +1130,7 @@ class MobileRestClient:
 
         resp_obj = resp.json()
 
-        assert resp_obj["ok"] == True, "Unexpected response for cancelling a replication"
+        assert resp_obj["ok"], "Unexpected response for cancelling a replication"
 
     def wait_for_replication_status_idle(self, url, replication_id):
         """
@@ -999,7 +1189,6 @@ class MobileRestClient:
     def get_replications(self, url):
         """
         Issues a GET on the /_active tasks endpoint and returns the response in the format below:
-
         """
         resp = self._session.get("{}/_active_tasks".format(url))
         resp.raise_for_status()
@@ -1007,7 +1196,7 @@ class MobileRestClient:
 
         return resp.json()
 
-    def verify_docs_present(self, url, db, expected_docs, auth=None):
+    def verify_docs_present(self, url, db, expected_docs, auth=None, timeout=CLIENT_REQUEST_TIMEOUT):
         """
         Verifies the expected docs are present in the database using a polling loop with
         POST _all_docs with Listener and a POST _bulk_get for sync_gateway
@@ -1035,7 +1224,7 @@ class MobileRestClient:
         start = time.time()
         while True:
 
-            if time.time() - start > CLIENT_REQUEST_TIMEOUT:
+            if time.time() - start > timeout:
                 raise Exception("Verify Docs Present: TIMEOUT")
 
             if server_type == ServerType.listener:
@@ -1086,7 +1275,8 @@ class MobileRestClient:
                     missing_docs.append(resp_doc)
                     all_docs_returned = False
 
-            logging.info("Missing Docs = {}".format(missing_docs))
+            logging.debug("Missing Docs = {}".format(missing_docs))
+            log_info("Num missing docs: {}".format(len(missing_docs)))
             # Issue the request again, docs my still be replicating
             if not all_docs_returned:
                 logging.info("Retrying to verify all docs are present ...")
@@ -1188,11 +1378,11 @@ class MobileRestClient:
 
             time.sleep(1)
 
-    def add_design_doc(self, url, db, name, view):
+    def add_design_doc(self, url, db, name, doc):
         """
         Keyword that adds a Design Doc to the database
         """
-        resp = self._session.put("{}/{}/_design/{}".format(url, db, name), data=view)
+        resp = self._session.put("{}/{}/_design/{}".format(url, db, name), data=doc)
         log_r(resp)
         resp.raise_for_status()
 

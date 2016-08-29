@@ -34,7 +34,7 @@ Install LiteServ
     ...  The LiteServ binaries are located in deps/.
     [Arguments]  ${platform}  ${version}  ${storage_engine}
     [Timeout]       2 minutes
-    Run Keyword If  "${platform}" == "android"  Install Apk  ${version}  ELSE  Log  No install need
+    Run Keyword If  "${platform}" == "android"  Install Apk  ${version}  ${storage_engine}  ELSE  Log  No install need
 
 Start LiteServ
     [Documentation]   Starts LiteServ for a specific platform.
@@ -46,7 +46,7 @@ Start LiteServ
     ${ls_url} =  Run Keyword If  "${platform}" == "android"  Start Android LiteServ                       host=${host}  port=${port}  storage_engine=${storage_engine}
     ${ls_url} =  Run Keyword If  "${platform}" == "net"      Start Net LiteServ       version=${version}  host=${host}  port=${port}  storage_engine=${storage_engine}
 
-    ${ls_url} =  Verify LiteServ Launched  host=${host}  port=${port}  version_build=${version}
+    ${ls_url} =  Verify LiteServ Launched  platform=${platform}  host=${host}  port=${port}  version_build=${version}
     [return]  ${ls_url}
 
 Shutdown LiteServ
@@ -64,7 +64,7 @@ Start MacOSX LiteServ
     [Arguments]  ${version}  ${host}  ${port}  ${storage_engine}
     [Timeout]       1 minute
 
-    ${binary_path} =  Get LiteServ Binary Path  platform=macosx  version=${version}
+    ${binary_path} =  Get LiteServ Binary Path  platform=macosx  version=${version}  storage_engine=${storage_engine}
 
      # Get a list of db names / password for running LiteServ with encrypted databases
     @{db_name_passwords} =  Run Keyword If  '${storage_engine}' == 'ForestDB+Encryption' or '${storage_engine}' == 'SQLCipher'
@@ -130,7 +130,7 @@ Start Net LiteServ
     ...  The LiteServ binaries are located in deps/.
     [Arguments]  ${version}  ${host}  ${port}  ${storage_engine}
     [Timeout]       1 minute
-    ${binary_path} =  Get LiteServ Binary Path  platform=net  version=${version}
+    ${binary_path} =  Get LiteServ Binary Path  platform=net  version=${version}  storage_engine=${storage_engine}
 
     # Get a list of db names / password for running LiteServ with encrypted databases
     @{db_name_passwords} =  Run Keyword If  '${storage_engine}' == 'ForestDB+Encryption' or '${storage_engine}' == 'SQLCipher'

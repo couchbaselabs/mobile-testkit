@@ -28,7 +28,7 @@ class LiteServ:
     def __init__(self):
         self._session = Session()
 
-    def get_download_package_name(self, platform, version_build):
+    def get_download_package_name(self, platform, version_build, storage_engine):
 
         if platform == "macosx":
             package_name = "couchbase-lite-macosx-enterprise_{}.zip".format(version_build)
@@ -37,7 +37,10 @@ class LiteServ:
             if version == "1.2.1":
                 package_name = "couchbase-lite-android-liteserv-SQLite-{}-debug.apk".format(version)
             else:
-                package_name = "couchbase-lite-android-liteserv-SQLite-{}-debug.apk".format(version_build)
+                if storage_engine == "SQLite":
+                    package_name = "couchbase-lite-android-liteserv-SQLite-{}-debug.apk".format(version_build)
+                else:
+                    package_name = "couchbase-lite-android-liteserv-SQLCipher-ForestDB-Encryption-{}-debug.apk".format(version_build)
         elif platform == "net":
             package_name = "LiteServ.zip"
         else:
@@ -47,7 +50,7 @@ class LiteServ:
 
         return package_name
 
-    def get_binary(self, platform, version_build):
+    def get_binary(self, platform, version_build, storage_engine):
 
         version, build = version_and_build(version_build)
 
@@ -57,7 +60,10 @@ class LiteServ:
             if version == "1.2.1":
                 expected_binary = "couchbase-lite-android-liteserv-SQLite-{}-debug.apk".format(version)
             else:
-                expected_binary = "couchbase-lite-android-liteserv-SQLite-{}-debug.apk".format(version_build)
+                if storage_engine == "SQLite":
+                    expected_binary = "couchbase-lite-android-liteserv-SQLite-{}-debug.apk".format(version_build)
+                else:
+                    expected_binary = "couchbase-lite-android-liteserv-SQLCipher-ForestDB-Encryption-{}-debug.apk".format(version_build)
         elif platform == "net":
             expected_binary = "couchbase-lite-net-{}-liteserv/LiteServ.exe".format(version_build)
         else:
@@ -67,11 +73,11 @@ class LiteServ:
 
         return expected_binary
 
-    def get_download_url(self, platform, version_build):
+    def get_download_url(self, platform, version_build, storage_engine):
         log_info("Downloading {} LiteServ, version: {}".format(platform, version_build))
 
         version, build = version_and_build(version_build)
-        file_name = self.get_download_package_name(platform, version_build)
+        file_name = self.get_download_package_name(platform, version_build, storage_engine)
 
         if platform == "macosx":
             if version == "1.2.0":
@@ -90,13 +96,15 @@ class LiteServ:
 
         return url
 
-    def download_liteserv(self, platform, version):
+    def download_liteserv(self, platform, version, storage_engine):
 
-        supported_platforms = ["macosx", "android", "net"]
-        if platform not in supported_platforms:
-            raise ValueError("Unsupported version of LiteServ")
+        if platform not in ["macosx", "android", "net"]:
+            raise ValueError("Unsupported platform of LiteServ: ".format(platform))
 
-        expected_binary = self.get_binary(platform, version)
+        if storage_engine not in ["SQLite", "SQLCipher", "ForestDB", "ForestDB+Encryption"]:
+            raise ValueError("Unsupported storage engine for LiteServ: {}".format(storage_engine))
+
+        expected_binary = self.get_binary(platform, version, storage_engine)
         logging.info("{}/{}".format(BINARY_DIR, expected_binary))
 
         # Check if package is already downloaded and return if it is preset
@@ -114,7 +122,7 @@ class LiteServ:
             return
 
         # Download the packages to binary directory
-        url = self.get_download_url(platform, version)
+        url = self.get_download_url(platform, version, storage_engine)
         file_name = url.split("/")[-1]
         log_info("Downloading {} -> {}/{}".format(url, BINARY_DIR, file_name))
         resp = requests.get(url)
@@ -148,9 +156,9 @@ class LiteServ:
                 # Remove .zip file
                 os.remove("{}/{}".format(BINARY_DIR, file_name))
 
-    def get_liteserv_binary_path(self, platform, version):
+    def get_liteserv_binary_path(self, platform, version, storage_engine):
 
-        binary_name = self.get_binary(platform, version)
+        binary_name = self.get_binary(platform, version, storage_engine)
 
         if platform == "macosx" or platform == "net":
             binary_path = "{}/{}".format(BINARY_DIR, binary_name)
@@ -160,9 +168,9 @@ class LiteServ:
         log_info("Launching binary: {}".format(binary_path))
         return binary_path
 
-    def install_apk(self, version_build):
+    def install_apk(self, version_build, storage_engine):
 
-        binary = self.get_binary("android", version_build)
+        binary = self.get_binary("android", version_build, storage_engine)
 
         apk_path = "{}/{}".format(BINARY_DIR, binary)
         log_info("Installing: {}".format(apk_path))
@@ -252,7 +260,7 @@ class LiteServ:
         shutil.rmtree(extracted_file_name)
         os.chdir("../..")
 
-    def verify_liteserv_launched(self, host, port, version_build):
+    def verify_liteserv_launched(self, platform, host, port, version_build):
 
         url = "http://{}:{}".format(host, port)
         logging.info("Verifying LiteServ running at {}".format(url))
@@ -286,6 +294,16 @@ class LiteServ:
             # Android
             lite_version = resp_json["version"]
             is_android = True
+
+        # Validate the running platform is the expected platform
+        if platform == "macosx":
+            assert is_macosx, "Tried to run macosx but different platform running on {}:{} ...".format(host, port)
+        elif platform == "android":
+            assert is_android, "Tried to run android but different platform running on {}:{} ...".format(host, port)
+        elif platform == "net":
+            assert  is_net, "Tried to run net but different platform running on {}:{} ...".format(host, port)
+        else:
+            raise ValueError("Unsupported platform: {}".format(platform))
 
         # Validate that the version launched is the expected LiteServ version
         # Mac OSX - LiteServ: 1.2.1 (build 13)

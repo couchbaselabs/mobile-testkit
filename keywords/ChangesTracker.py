@@ -3,6 +3,7 @@ import time
 import logging
 
 import requests
+from requests.exceptions import Timeout
 
 from keywords.MobileRestClient import get_auth_type
 from keywords.constants import AuthType
@@ -11,7 +12,7 @@ from keywords.utils import log_info
 
 class ChangesTracker:
 
-    def __init__(self, url, db, auth):
+    def __init__(self, url, db, auth=None):
         self.processed_changes = {}
         self.endpoint = "{}/{}".format(url, db)
         self.auth = auth
@@ -35,10 +36,13 @@ class ChangesTracker:
                     # Stored the doc with the list of rev changes
                     self.processed_changes[doc["id"]] = doc["changes"]
 
-    def start(self):
+    def start(self, timeout=1000, heartbeat=None, request_timeout=None):
         """
         Start a longpoll changes feed and and store the results in self.processed changes
         """
+
+        # convert to seconds for use with requests lib api
+        request_timeout /= 1000
 
         auth_type = get_auth_type(self.auth)
         current_seq_num = 0
@@ -50,18 +54,36 @@ class ChangesTracker:
             data = {
                 "feed": "longpoll",
                 "style": "all_docs",
-                "timeout": 1000,
                 "since": current_seq_num
             }
 
-            log_info("Making Request")
+            if timeout is not None:
+                data["timeout"] = timeout
+
+            if heartbeat is not None:
+                data["heartbeat"] = heartbeat
 
             if auth_type == AuthType.session:
-                resp = requests.post("{}/_changes".format(self.endpoint), data=json.dumps(data), cookies=dict(SyncGatewaySession=self.auth[1]), stream=True)
+                try:
+                    resp = requests.post("{}/_changes".format(self.endpoint), data=json.dumps(data), cookies=dict(SyncGatewaySession=self.auth[1]), timeout=request_timeout)
+                except Timeout as to:
+                    log_info("Request timed out. Exiting longpoll loop ...")
+                    logging.debug(to)
+                    break
             elif auth_type == AuthType.http_basic:
-                resp = requests.post("{}/_changes".format(self.endpoint), data=json.dumps(data), auth=self.auth, stream=True)
+                try:
+                    resp = requests.post("{}/_changes".format(self.endpoint), data=json.dumps(data), auth=self.auth, timeout=request_timeout)
+                except Timeout as to:
+                    log_info("Request timed out. Exiting longpoll loop ...")
+                    logging.debug(to)
+                    break
             else:
-                resp = requests.post("{}/_changes".format(self.endpoint), data=json.dumps(data), stream=True)
+                try:
+                    resp = requests.post("{}/_changes".format(self.endpoint), data=json.dumps(data), timeout=request_timeout)
+                except Timeout as to:
+                    log_info("Request timed out. Exiting longpoll loop ...")
+                    logging.debug(to)
+                    break
 
             log_r(resp)
             resp.raise_for_status()
@@ -69,6 +91,8 @@ class ChangesTracker:
 
             self.process_changes(resp_obj["results"])
             current_seq_num = resp_obj["last_seq"]
+
+        log_info("End of longpoll changes loop")
 
     def stop(self):
         """

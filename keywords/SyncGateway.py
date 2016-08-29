@@ -13,6 +13,7 @@ from utils import hostname_for_url
 
 from libraries.provision.ansible_runner import AnsibleRunner
 
+
 def get_sync_gateway_version(host):
     resp = requests.get("http://{}:4984".format(host))
     log_r(resp)

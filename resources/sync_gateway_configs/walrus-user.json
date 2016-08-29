@@ -1,0 +1,20 @@
+{
+  "interface": ":4984",
+  "adminInterface": "0.0.0.0:4985",
+  "log": [
+    "*"
+  ],
+  "databases": {
+    "db": {
+      "server": "walrus:",
+      "users": {
+        "user_1": {
+          "admin_channels": [
+            "ABC"
+          ],
+          "password": "foo"
+        }
+      }
+    }
+  }
+}
