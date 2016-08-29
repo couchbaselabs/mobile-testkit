@@ -31,7 +31,7 @@ def large_initial_pull_replication(ls_url, cluster_config, num_docs, continuous)
     client.create_user(sg_one_admin, sg_db, "seth", password="password", channels=["ABC", "NBC"])
     session = client.create_session(sg_one_admin, sg_db, "seth")
 
-    # Create 10000 docs on sync_gateway
+    # Create 'num_docs' docs on sync_gateway
     docs = client.add_docs(
         url=sg_one_public,
         db=sg_db,
@@ -104,7 +104,7 @@ def large_initial_push_replication(ls_url, cluster_config, num_docs, continuous)
 
     client.create_database(url=ls_url, name=ls_db)
 
-    # Create 10000 docs on LiteServ
+    # Create 'num_docs' docs on sync_gateway
     docs = client.add_docs(
         url=ls_url,
         db=ls_db,
