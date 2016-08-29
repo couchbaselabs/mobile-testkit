@@ -183,7 +183,8 @@ class MobileRestClient:
                 "ok": True
             }
 
-            assert resp.json() == expected_response, "Unexpected _session response from Listener"
+            resp_obj = resp.json()
+            assert resp_obj == expected_response, "Unexpected _session response from Listener"
 
         else:
             # Sync Gateway
@@ -195,9 +196,7 @@ class MobileRestClient:
             resp_obj = resp.json()
             assert resp_obj["ok"], "Make sure response includes 'ok'"
 
-            return resp.json()
-
-        return resp.json()
+        return resp_obj
 
     def request_session(self, url, db, name, password=None, ttl=86400):
         data = {
