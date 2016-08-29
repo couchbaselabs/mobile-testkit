@@ -3,6 +3,7 @@ import time
 import logging
 
 import requests
+from requests.exceptions import Timeout
 
 from keywords.MobileRestClient import get_auth_type
 from keywords.constants import AuthType
@@ -63,11 +64,26 @@ class ChangesTracker:
                 data["heartbeat"] = heartbeat
 
             if auth_type == AuthType.session:
-                resp = requests.post("{}/_changes".format(self.endpoint), data=json.dumps(data), cookies=dict(SyncGatewaySession=self.auth[1]), timeout=request_timeout)
+                try:
+                    resp = requests.post("{}/_changes".format(self.endpoint), data=json.dumps(data), cookies=dict(SyncGatewaySession=self.auth[1]), timeout=request_timeout)
+                except Timeout as to:
+                    log_info("Request timed out. Exiting longpoll loop ...")
+                    logging.debug(to)
+                    break
             elif auth_type == AuthType.http_basic:
-                resp = requests.post("{}/_changes".format(self.endpoint), data=json.dumps(data), auth=self.auth, timeout=request_timeout)
+                try:
+                    resp = requests.post("{}/_changes".format(self.endpoint), data=json.dumps(data), auth=self.auth, timeout=request_timeout)
+                except Timeout as to:
+                    log_info("Request timed out. Exiting longpoll loop ...")
+                    logging.debug(to)
+                    break
             else:
-                resp = requests.post("{}/_changes".format(self.endpoint), data=json.dumps(data), timeout=request_timeout)
+                try:
+                    resp = requests.post("{}/_changes".format(self.endpoint), data=json.dumps(data), timeout=request_timeout)
+                except Timeout as to:
+                    log_info("Request timed out. Exiting longpoll loop ...")
+                    logging.debug(to)
+                    break
 
             log_r(resp)
             resp.raise_for_status()
@@ -75,6 +91,8 @@ class ChangesTracker:
 
             self.process_changes(resp_obj["results"])
             current_seq_num = resp_obj["last_seq"]
+
+        log_info("End of longpoll changes loop")
 
     def stop(self):
         """

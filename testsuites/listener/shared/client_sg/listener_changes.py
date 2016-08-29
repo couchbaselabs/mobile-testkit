@@ -30,6 +30,9 @@ def longpoll_changes_termination_timeout(ls_url, cluster_config):
             request_timeout=2000
         ) for _ in range(30)]
 
+        for futures in as_completed(futures):
+            log_info("Future _changes loop complete")
+
     log_info("Futures exited")
 
     # make sure client can still take connections
@@ -59,6 +62,9 @@ def longpoll_changes_termination_heartbeat(ls_url, cluster_config):
             heartbeat=5000,
             request_timeout=2000
         ) for _ in range(30)]
+
+        for futures in as_completed(futures):
+            log_info("Future _changes loop complete")
 
     log_info("Futures exited")
 
