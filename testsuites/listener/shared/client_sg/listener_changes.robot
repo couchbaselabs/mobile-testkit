@@ -16,6 +16,8 @@ Library           listener_changes.py
 Test Setup        Setup Test
 Test Teardown     Teardown Test
 
+Test Timeout      1 minute
+
 *** Variables ***
 ${sg_db}  db
 
