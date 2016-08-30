@@ -1,6 +1,6 @@
 ---
 # https://github.com/couchbase/sync_gateway/issues/1193#issuecomment-150395613
-- hosts: sync_gateways:couchbase_servers:load_generators:load_balancers
+- hosts: pool
   any_errors_fatal: true
   become: yes
   tasks:
