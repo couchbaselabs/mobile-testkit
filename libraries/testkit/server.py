@@ -15,6 +15,12 @@ log = logging.getLogger(testkit.settings.LOGGER)
 
 class Server:
 
+    """
+    Old code -- slowly being deprecated
+
+    Use keywords/CouchbaseServer.py for future development
+    """
+
     def __init__(self, target):
         self.ansible_runner = AnsibleRunner()
         self.ip = target["ip"]
