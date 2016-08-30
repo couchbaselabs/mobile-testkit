@@ -18,8 +18,6 @@ from couchbase.views.params import Query
 
 from constants import *
 from utils import *
-from utils import version_and_build
-
 
 def get_server_version(host):
     resp = requests.get("http://Administrator:password@{}:8091/pools".format(host))
@@ -177,7 +175,32 @@ class CouchbaseServer:
             # All nodes are heathy if it made it to here
             break
 
-    def create_bucket(self, url, name):
+    def get_available_ram(self, url):
+        """
+        Call the Couchbase REST API to get the total memory available on the machine
+        """
+        resp = requests.get("{}/pools/default".format(url), auth=self._auth)
+        resp_json = resp.json()
+        mem_total = resp_json["nodes"][0]["systemStats"]["mem_total"]
+        return mem_total
+
+    def create_buckets(self, url, bucket_names):
+        """
+        # Figure out what total ram available is
+        # Divide by number of buckets
+        """
+        # couchbase_server_cluster_ram: "{{ ((ansible_memtotal_mb|int)*0.8)|int - 512 }}"
+        # couchbase_server_bucket_ram: "{{ ((couchbase_server_cluster_ram|int)/(bucket_num|int))|int }}"
+
+        ram_multiplier = 0.3  # TODO: should be 0.8!!  Temp hack
+        n1ql_indexer_ram_bytes = 512 * (1024 * 1024)
+        effective_avail_ram_bytes = int(self.get_available_ram(url) * ram_multiplier) - n1ql_indexer_ram_bytes
+        effective_avail_ram_mb = effective_avail_ram_bytes / (1024 * 1024)
+        per_bucket_ram = int(effective_avail_ram_mb / len(bucket_names))
+        for bucket_name in bucket_names:
+            self.create_bucket(url, bucket_name, per_bucket_ram)
+
+    def create_bucket(self, url, name, ramQuotaMB=1024):
         """
         1. Create CBS bucket via REST
         2. Create client connection and poll until bucket is available
@@ -188,10 +211,11 @@ class CouchbaseServer:
         http://docs.couchbase.com/admin/admin/REST/rest-bucket-create.html
         """
 
-        # Todo, make ramQuotaMB more flexible
+        logging.info("Creating bucket {} with RAM {}".format(name, ramQuotaMB))
+
         data = {
             "name": name,
-            "ramQuotaMB": "1024",
+            "ramQuotaMB": str(ramQuotaMB),
             "authType": "sasl",
             "proxyPort": "11211",
             "bucketType": "couchbase",
