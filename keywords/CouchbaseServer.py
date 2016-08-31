@@ -189,16 +189,16 @@ class CouchbaseServer:
         # Figure out what total ram available is
         # Divide by number of buckets
         """
-        # couchbase_server_cluster_ram: "{{ ((ansible_memtotal_mb|int)*0.8)|int - 512 }}"
-        # couchbase_server_bucket_ram: "{{ ((couchbase_server_cluster_ram|int)/(bucket_num|int))|int }}"
-
-        ram_multiplier = 0.3  # TODO: should be 0.8!!  Temp hack
+        log_info("Creating buckets: {}".format(bucket_names))
+        ram_multiplier = 0.3
+        total_avail_ram_bytes = self.get_available_ram(url)
         n1ql_indexer_ram_bytes = 512 * (1024 * 1024)
-        effective_avail_ram_bytes = int(self.get_available_ram(url) * ram_multiplier) - n1ql_indexer_ram_bytes
+        effective_avail_ram_bytes = int(total_avail_ram_bytes * ram_multiplier) - n1ql_indexer_ram_bytes
         effective_avail_ram_mb = effective_avail_ram_bytes / (1024 * 1024)
-        per_bucket_ram = int(effective_avail_ram_mb / len(bucket_names))
+        per_bucket_ram_mb = int(effective_avail_ram_mb / len(bucket_names))
         for bucket_name in bucket_names:
-            self.create_bucket(url, bucket_name, per_bucket_ram)
+            log_info("Create bucket {} with per_bucket_ram_mb {}".format(bucket_name, per_bucket_ram_mb))
+            self.create_bucket(url, bucket_name, per_bucket_ram_mb)
 
     def create_bucket(self, url, name, ramQuotaMB=1024):
         """

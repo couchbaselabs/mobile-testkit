@@ -13,6 +13,8 @@ from install_nginx import install_nginx
 from ansible_runner import AnsibleRunner
 from robot.api.logger import console
 
+from keywords.utils import log_info
+
 def provision_cluster(couchbase_server_config, sync_gateway_config):
 
     test_output("\n>>> Cluster info:\n")
@@ -47,19 +49,17 @@ def provision_cluster(couchbase_server_config, sync_gateway_config):
     assert status == 0, "Failed to flush firewall"
 
     # Install server package
+    log_info("Installing Couchbase Server")
     install_couchbase_server.install_couchbase_server(couchbase_server_config)
 
-    # Create server buckets according to what's in sync_gateway_config
-    create_server_buckets(cluster_config, sync_gateway_config)
-
     # Install sync_gateway
-    # sync_gateway_config.skip_bucketflush = True
+    log_info("Installing Sync Gateway")
     install_sync_gateway.install_sync_gateway(sync_gateway_config)
 
     # Install nginx
     install_nginx(cluster_config)
 
-    test_output(">>> Done provisioning cluster...")
+    log_info(">>> Done provisioning cluster...")
 
 
 
@@ -99,10 +99,6 @@ if __name__ == "__main__":
                       action="store", type="string", dest="source_commit", default=None,
                       help="sync_gateway branch to checkout and build")
 
-    parser.add_option("", "--skip-bucketflush",
-                      action="store", dest="skip_bucketflush", default=False,
-                      help="skip the bucketflush step")
-
     parser.add_option("", "--build-flags",
                       action="store", type="string", dest="build_flags", default="",
                       help="build flags to pass when building sync gateway (ex. -race)")
@@ -138,7 +134,7 @@ if __name__ == "__main__":
         commit=opts.source_commit,
         build_flags=opts.build_flags,
         config_path=opts.sync_gateway_config_file,
-        skip_bucketflush=opts.skip_bucketflush
+        skip_bucketcreation=False
     )
 
     provision_cluster(
