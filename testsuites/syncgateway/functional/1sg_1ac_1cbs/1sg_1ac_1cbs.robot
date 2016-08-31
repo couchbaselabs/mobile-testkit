@@ -37,7 +37,7 @@ test continuous changes parametrized 1 user 5000 docs 1 revision
     test continuous changes parametrized    ${SYNC_GATEWAY_CONFIGS}/sync_gateway_default_functional_tests_di.json  ${1}  ${5000}  ${1}
 
 test continuous changes parametrized 50 users 5000 docs 1 revision
-    [Tags]   sanity  syncgateway  changes
+    [Tags]   nightly  syncgateway  changes
     test continuous changes parametrized    ${SYNC_GATEWAY_CONFIGS}/sync_gateway_default_functional_tests_di.json  ${50}  ${5000}  ${1}
 
 test continuous changes parametrized 50 users 10 docs 10 revisions
@@ -45,7 +45,7 @@ test continuous changes parametrized 50 users 10 docs 10 revisions
     test continuous changes parametrized    ${SYNC_GATEWAY_CONFIGS}/sync_gateway_default_functional_tests_di.json  ${50}  ${10}  ${10}
 
 test continuous changes parametrized 50 user 50 docs 1000 revisions
-    [Tags]   sanity  syncgateway  changes
+    [Tags]   nightly  syncgateway  changes
     test continuous changes parametrized    ${SYNC_GATEWAY_CONFIGS}/sync_gateway_default_functional_tests_revslimit50_di.json  ${50}  ${50}  ${1000}
 
 test continuous changes sanity
@@ -101,7 +101,7 @@ test multiple dbs unique buckets lose tap
 
 # test_longpoll (distributed index mode)
 test longpoll changes parametrized 5000 docs 1 rev
-    [Tags]   sanity  syncgateway  changes
+    [Tags]   nightly  syncgateway  changes
     test longpoll changes parametrized      ${SYNC_GATEWAY_CONFIGS}/sync_gateway_default_functional_tests_di.json   ${5000}  ${1}
 
 test longpoll changes parametrized 50 docs 100 rev
