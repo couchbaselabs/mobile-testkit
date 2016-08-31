@@ -13,9 +13,6 @@
   - name: DEPS | install ntp
     yum: pkg=ntp state=latest
 
-  - name: DEPS | update clock
-    shell: ntpdate 0.us.pool.ntp.org
-
   - name: DEPS | install git
     yum: pkg=git state=latest
 
