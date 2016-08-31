@@ -1,6 +1,10 @@
 import sys
 import os
 
+from keywords.CouchbaseServer import CouchbaseServer
+from keywords.ClusterKeywords import ClusterKeywords
+from libraries.testkit.config import Config
+
 from optparse import OptionParser
 
 from ansible_runner import AnsibleRunner
@@ -13,7 +17,7 @@ class SyncGatewayConfig:
                  build_number,
                  config_path,
                  build_flags,
-                 skip_bucketflush):
+                 skip_bucketcreation):
 
         self._version_number = version_number
         self._build_number = build_number
@@ -29,7 +33,7 @@ class SyncGatewayConfig:
         self.commit = commit
         self.build_flags = build_flags
         self.config_path = config_path
-        self.skip_bucketflush = skip_bucketflush
+        self.skip_bucketcreation = skip_bucketcreation
 
     def __str__(self):
         output = "\n  sync_gateway configuration\n"
@@ -39,7 +43,7 @@ class SyncGatewayConfig:
         output += "  commit:           {}\n".format(self.commit)
         output += "  config path:      {}\n".format(self.config_path)
         output += "  build flags:      {}\n".format(self.build_flags)
-        output += "  skip bucketflush: {}\n".format(self.skip_bucketflush)
+        output += "  skip bucketcreation: {}\n".format(self.skip_bucketcreation)
         return output
 
     def sync_gateway_base_url_and_package(self):
@@ -89,21 +93,25 @@ def install_sync_gateway(sync_gateway_config):
     ansible_runner = AnsibleRunner()
     config_path = os.path.abspath(sync_gateway_config.config_path)
 
+    # Create buckets unless the user explicitly asked to skip this step
+    if not sync_gateway_config.skip_bucketcreation:
+        create_server_buckets(os.environ["CLUSTER_CONFIG"], sync_gateway_config)
+
+    # Install Sync Gateway via Source or Package
     if sync_gateway_config.commit is not None:
-        # Install source
+        # Install from source
         status = ansible_runner.run_ansible_playbook(
             "install-sync-gateway-source.yml",
             extra_vars={
                 "sync_gateway_config_filepath":config_path,
                 "commit": sync_gateway_config.commit,
-                "build_flags": sync_gateway_config.build_flags,
-                "skip_bucketflush": sync_gateway_config.skip_bucketflush
+                "build_flags": sync_gateway_config.build_flags
             }
         )
         assert status == 0, "Failed to install sync_gateway source"
 
     else:
-        # Install build
+        # Install from Package
         sync_gateway_base_url, sync_gateway_package_name, sg_accel_package_name = sync_gateway_config.sync_gateway_base_url_and_package()
         status = ansible_runner.run_ansible_playbook(
             "install-sync-gateway-package.yml",
@@ -111,11 +119,36 @@ def install_sync_gateway(sync_gateway_config):
                 "couchbase_sync_gateway_package_base_url": sync_gateway_base_url,
                 "couchbase_sync_gateway_package": sync_gateway_package_name,
                 "couchbase_sg_accel_package": sg_accel_package_name,
-                "sync_gateway_config_filepath": config_path,
-                "skip_bucketflush": sync_gateway_config.skip_bucketflush
+                "sync_gateway_config_filepath": config_path
             }
         )
         assert(status == 0), "Failed to install sync_gateway package"
+
+
+def create_server_buckets(cluster_config, sync_gateway_config):
+
+    # get the couchbase server url
+    cluster_helper = ClusterKeywords()
+    cluster_topology = cluster_helper.get_cluster_topology(cluster_config)
+    couchbase_server_url = cluster_topology["couchbase_servers"][0]
+
+    # delete existing buckets
+    server_helper = CouchbaseServer()
+    server_helper.delete_buckets(couchbase_server_url)
+
+    # find bucket names from sg config
+    bucket_names = get_buckets_from_sync_gateway_config(sync_gateway_config.config_path)
+
+    # create couchbase server buckets
+    server_helper.create_buckets(couchbase_server_url, bucket_names)
+
+def get_buckets_from_sync_gateway_config(sync_gateway_config_path):
+
+    config_path_full = os.path.abspath(sync_gateway_config_path)
+    config = Config(config_path_full)
+    bucket_name_set = config.get_bucket_name_set()
+    return bucket_name_set
+
 
 if __name__ == "__main__":
     usage = """usage: python install_sync_gateway.py
@@ -143,9 +176,9 @@ if __name__ == "__main__":
                       action="store", type="string", dest="build_flags", default="",
                       help="build flags to pass when building sync gateway (ex. -race)")
 
-    parser.add_option("", "--skip-bucketflush",
-                      action="store", dest="skip_bucketflush", default=False,
-                      help="skip the bucketflush step")
+    parser.add_option("", "--skip-bucketcreation",
+                      action="store", dest="skip_bucketcreation", default=False,
+                      help="skip the bucketcreation step")
     
     arg_parameters = sys.argv[1:]
 
@@ -174,7 +207,7 @@ if __name__ == "__main__":
         commit=opts.commit,
         config_path=opts.sync_gateway_config_file,
         build_flags=opts.build_flags,
-        skip_bucketflush=opts.skip_bucketflush
+        skip_bucketcreation=opts.skip_bucketcreation
     )
 
     install_sync_gateway(sync_gateway_install_config)

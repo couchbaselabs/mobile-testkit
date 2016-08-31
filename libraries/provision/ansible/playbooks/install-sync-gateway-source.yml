@@ -31,10 +31,6 @@
     couchbase_server_cluster_ram: "{{ ((ansible_memtotal_mb|int)*0.8)|int - 512 }}"
     couchbase_server_bucket_ram: "{{ ((couchbase_server_cluster_ram|int)*0.5)|int }}"
 
-  tasks:
-  - include: tasks/flush-server-buckets.yml
-    when: (skip_bucketflush != 'true') and (skip_bucketflush != 'True')
-
 # Create sync_gateway user
 - hosts: sync_gateways
   any_errors_fatal: true

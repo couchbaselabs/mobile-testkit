@@ -12,9 +12,6 @@ from install_nginx import install_nginx
 
 from ansible_runner import AnsibleRunner
 from robot.api.logger import console
-from keywords.CouchbaseServer import CouchbaseServer
-from keywords.ClusterKeywords import ClusterKeywords
-from libraries.testkit.config import Config
 
 def provision_cluster(couchbase_server_config, sync_gateway_config):
 
@@ -56,6 +53,7 @@ def provision_cluster(couchbase_server_config, sync_gateway_config):
     create_server_buckets(cluster_config, sync_gateway_config)
 
     # Install sync_gateway
+    # sync_gateway_config.skip_bucketflush = True
     install_sync_gateway.install_sync_gateway(sync_gateway_config)
 
     # Install nginx
@@ -63,29 +61,6 @@ def provision_cluster(couchbase_server_config, sync_gateway_config):
 
     test_output(">>> Done provisioning cluster...")
 
-def create_server_buckets(cluster_config, sync_gateway_config):
-
-    # get the couchbase server url
-    cluster_helper = ClusterKeywords()
-    cluster_topology = cluster_helper.get_cluster_topology(cluster_config)
-    couchbase_server_url = cluster_topology["couchbase_servers"][0]
-
-    # delete existing buckets
-    server_helper = CouchbaseServer()
-    server_helper.delete_buckets(couchbase_server_url)
-
-    # find bucket names from sg config
-    bucket_names = get_buckets_from_sync_gateway_config(sync_gateway_config.config_path)
-
-    # create couchbase server buckets
-    server_helper.create_buckets(couchbase_server_url, bucket_names)
-
-def get_buckets_from_sync_gateway_config(sync_gateway_config_path):
-
-    config_path_full = os.path.abspath(sync_gateway_config_path)
-    config = Config(config_path_full)
-    bucket_name_set = config.get_bucket_name_set()
-    return bucket_name_set
 
 
 def test_output(output):
