@@ -46,7 +46,7 @@ class LiteServ:
         else:
             raise ValueError("Unsupported platform")
 
-        logging.info("Download package(s): {}".format(package_name))
+        log_info("Download package(s): {}".format(package_name))
 
         return package_name
 
@@ -69,7 +69,7 @@ class LiteServ:
         else:
             raise ValueError("Unsupported platform")
 
-        logging.info("Binary: {}".format(expected_binary))
+        log_info("Binary: {}".format(expected_binary))
 
         return expected_binary
 
@@ -105,7 +105,7 @@ class LiteServ:
             raise ValueError("Unsupported storage engine for LiteServ: {}".format(storage_engine))
 
         expected_binary = self.get_binary(platform, version, storage_engine)
-        logging.info("{}/{}".format(BINARY_DIR, expected_binary))
+        log_info("{}/{}".format(BINARY_DIR, expected_binary))
 
         # Check if package is already downloaded and return if it is preset
         packages_present = True
@@ -263,7 +263,7 @@ class LiteServ:
     def verify_liteserv_launched(self, platform, host, port, version_build):
 
         url = "http://{}:{}".format(host, port)
-        logging.info("Verifying LiteServ running at {}".format(url))
+        log_info("Verifying LiteServ running at {}".format(url))
 
         count = 0
         while count < MAX_RETRIES:
@@ -272,7 +272,7 @@ class LiteServ:
                 # If request does not throw, exit retry loop
                 break
             except ConnectionError as ce:
-                logging.info("LiteServ may not be launched (Retrying): {}".format(ce))
+                log_info("LiteServ may not be launched (Retrying): {}".format(ce))
                 time.sleep(1)
                 count += 1
 
@@ -301,7 +301,7 @@ class LiteServ:
         elif platform == "android":
             assert is_android, "Tried to run android but different platform running on {}:{} ...".format(host, port)
         elif platform == "net":
-            assert  is_net, "Tried to run net but different platform running on {}:{} ...".format(host, port)
+            assert is_net, "Tried to run net but different platform running on {}:{} ...".format(host, port)
         else:
             raise ValueError("Unsupported platform: {}".format(platform))
 
