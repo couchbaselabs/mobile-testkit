@@ -47,7 +47,7 @@ class ClusterKeywords:
             "load_balancers": lbs_urls
         }
 
-        logging.info(cluster)
+        log_info(cluster)
 
         return formatted_cluster
 
@@ -65,7 +65,7 @@ class ClusterKeywords:
                 log_r(resp)
                 running_services.append(resp.url)
             except ConnectionError as he:
-                logging.info(he)
+                log_info(he)
 
             # Sync Gateway
             try:
@@ -73,7 +73,7 @@ class ClusterKeywords:
                 log_r(resp)
                 running_services.append(resp.url)
             except ConnectionError as he:
-                logging.info(he)
+                log_info(he)
 
             # Sg Accel
             try:
@@ -81,7 +81,7 @@ class ClusterKeywords:
                 log_r(resp)
                 running_services.append(resp.url)
             except ConnectionError as he:
-                logging.info(he)
+                log_info(he)
 
         assert len(running_services) == 0, "Running Services Found: {}".format(running_services)
 
@@ -89,7 +89,7 @@ class ClusterKeywords:
 
         cluster_config = os.environ["CLUSTER_CONFIG"]
 
-        logging.info("Verfying versions for cluster: {}".format(cluster_config))
+        log_info("Verfying versions for cluster: {}".format(cluster_config))
 
         with open("{}.json".format(cluster_config)) as f:
             cluster_obj = json.loads(f.read())

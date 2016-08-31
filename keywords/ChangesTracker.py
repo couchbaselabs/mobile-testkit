@@ -137,6 +137,6 @@ class ChangesTracker:
 
                 return True
 
-            log_info("Docs missing from changes feed: {}".format(missing_docs))
+            log_info("Docs missing from changes feed: {}".format(len(missing_docs)))
 
             time.sleep(1)

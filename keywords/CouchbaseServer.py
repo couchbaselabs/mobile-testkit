@@ -41,14 +41,14 @@ def verify_server_version(host, expected_server_version):
     # Check both version parts if expected version contains a build
     if len(expected_server_version_parts) == 2:
         # 4.1.1-5487
-        logging.info("Expected Server Version: {}".format(expected_server_version))
-        logging.info("Running Server Version: {}".format(running_server_version))
+        log_info("Expected Server Version: {}".format(expected_server_version))
+        log_info("Running Server Version: {}".format(running_server_version))
         assert(running_server_version == expected_server_version), "Unexpected server version!! Expected: {} Actual: {}".format(expected_server_version, running_server_version)
     elif len(expected_server_version_parts) == 1:
         # 4.1.1
         running_server_version_parts = running_server_version.split("-")
-        logging.info("Expected Server Version: {}".format(expected_server_version))
-        logging.info("Running Server Version: {}".format(running_server_version_parts[0]))
+        log_info("Expected Server Version: {}".format(expected_server_version))
+        log_info("Running Server Version: {}".format(running_server_version_parts[0]))
         assert(expected_server_version == running_server_version_parts[0]), "Unexpected server version!! Expected: {} Actual: {}".format(expected_server_version, running_server_version_parts[0])
     else:
         raise ValueError("Unsupported version format")
@@ -66,16 +66,16 @@ class CouchbaseServer:
 
         try:
             verify_server_version(host, version)
-            logging.info("Server version already running: {} Skipping provisioning".format(version))
+            log_info("Server version already running: {} Skipping provisioning".format(version))
             return url
         except AssertionError as ae:
             # Server is not the version we are expecting
-            logging.info(ae.message)
+            log_info(ae.message)
         except ConnectionError as ce:
             # Server is not running
-            logging.info(ce.message)
+            log_info(ce.message)
 
-        logging.info("Installing Couchbase Server: {}".format(version))
+        log_info("Installing Couchbase Server: {}".format(version))
 
         temp_conf_file_name = "{}/temp_server_conf".format(CLUSTER_CONFIGS_DIR)
 
@@ -89,14 +89,13 @@ class CouchbaseServer:
 
         # Install server using that file as context
         os.environ["CLUSTER_CONFIG"] = temp_conf_file_name
-        logging.info("Using CLUSTER_CONFIG: {}".format(os.environ["CLUSTER_CONFIG"]))
-
-        logging.info("Installing server: {} on {}".format(version, host))
+        log_info("Using CLUSTER_CONFIG: {}".format(os.environ["CLUSTER_CONFIG"]))
+        log_info("Installing server: {} on {}".format(version, host))
         try :
             install_output = subprocess.check_output(["python",
                                                       "libraries/provision/install_couchbase_server.py",
                                                       "--version={}".format(version)])
-            logging.info(install_output)
+            log_info(install_output)
         except CalledProcessError as cpe:
             logging.error("Install Status: {}".format(cpe.returncode))
             logging.error(cpe.output)
@@ -124,8 +123,8 @@ class CouchbaseServer:
             for entry in obj:
                 existing_bucket_names.append(entry["name"])
 
-            logging.info("Existing buckets: {}".format(existing_bucket_names))
-            logging.info("Deleting buckets: {}".format(existing_bucket_names))
+            log_info("Existing buckets: {}".format(existing_bucket_names))
+            log_info("Deleting buckets: {}".format(existing_bucket_names))
 
             # HACK around Couchbase Server issue where issuing a bucket delete via REST occasionally returns 500 error
             delete_num = 0
@@ -173,7 +172,7 @@ class CouchbaseServer:
             if not all_nodes_healthy:
                 continue
 
-            logging.info("All nodes are healthy")
+            log_info("All nodes are healthy")
             logging.debug(resp_obj)
             # All nodes are heathy if it made it to here
             break
@@ -206,7 +205,7 @@ class CouchbaseServer:
         # Create client an retry until KeyNotFound error is thrown
         client_host = url.replace("http://", "")
         client_host = client_host.replace(":8091", "")
-        logging.info(client_host)
+        log_info(client_host)
 
         start = time.time()
         while True:
@@ -218,15 +217,15 @@ class CouchbaseServer:
                 bucket = Bucket("couchbase://{}/{}".format(client_host, name))
                 rv = bucket.get('foo')
             except ProtocolError as pe:
-                logging.info("Client Connection failed: {} Retrying ...".format(pe))
+                log_info("Client Connection failed: {} Retrying ...".format(pe))
                 time.sleep(1)
                 continue
             except TemporaryFailError as te:
-                logging.info("Failure from server: {} Retrying ...".format(te))
+                log_info("Failure from server: {} Retrying ...".format(te))
                 time.sleep(1)
                 continue
             except NotFoundError as nfe:
-                logging.info("Key not found error: {} Bucket is ready!".format(nfe))
+                log_info("Key not found error: {} Bucket is ready!".format(nfe))
                 break
 
         self.wait_for_ready_state(url)
@@ -249,7 +248,7 @@ class CouchbaseServer:
             if row["$1"]["id"].startswith("_sync:rev"):
                 cached_rev_doc_ids.append(row["$1"]["id"])
 
-        logging.info("Found temp rev docs: {}".format(cached_rev_doc_ids))
+        log_info("Found temp rev docs: {}".format(cached_rev_doc_ids))
         for doc_id in cached_rev_doc_ids:
             logging.debug("Removing: {}".format(doc_id))
             b.remove(doc_id)

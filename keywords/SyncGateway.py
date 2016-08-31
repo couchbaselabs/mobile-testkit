@@ -10,6 +10,7 @@ from utils import version_is_binary
 from utils import log_r
 from utils import version_and_build
 from utils import hostname_for_url
+from utils import log_info
 
 from libraries.provision.ansible_runner import AnsibleRunner
 
@@ -40,9 +41,9 @@ def get_sync_gateway_version(host):
 def verify_sync_gateway_version(host, expected_sync_gateway_version):
     running_sg_version, running_sg_vendor_version = get_sync_gateway_version(host)
 
-    logging.info("Expected sync_gateway Version: {}".format(expected_sync_gateway_version))
-    logging.info("Running sync_gateway Version: {}".format(running_sg_version))
-    logging.info("Running sync_gateway Vendor Version: {}".format(running_sg_vendor_version))
+    log_info("Expected sync_gateway Version: {}".format(expected_sync_gateway_version))
+    log_info("Running sync_gateway Version: {}".format(running_sg_version))
+    log_info("Running sync_gateway Vendor Version: {}".format(running_sg_vendor_version))
 
     if version_is_binary(expected_sync_gateway_version):
         # Example, 1.2.1-4
@@ -78,8 +79,8 @@ def get_sg_accel_version(host):
 def verify_sg_accel_version(host, expected_sg_accel_version):
     running_ac_version = get_sg_accel_version(host)
 
-    logging.info("Expected sg_accel Version: {}".format(expected_sg_accel_version))
-    logging.info("Running sg_accel Version: {}".format(running_ac_version))
+    log_info("Expected sg_accel Version: {}".format(expected_sg_accel_version))
+    log_info("Running sg_accel Version: {}".format(running_ac_version))
 
     if version_is_binary(expected_sg_accel_version):
         # Example, 1.2.1-4
@@ -112,7 +113,7 @@ class SyncGateway:
         install_sync_gateway(sg_config)
 
         cluster_config = os.environ["CLUSTER_CONFIG"]
-        logging.info("Verfying versions for cluster: {}".format(cluster_config))
+        log_info("Verfying versions for cluster: {}".format(cluster_config))
 
         with open("{}.json".format(cluster_config)) as f:
             cluster_obj = json.loads(f.read())
@@ -127,7 +128,7 @@ class SyncGateway:
 
     def start_sync_gateway(self, url, config):
         target = hostname_for_url(url)
-        logging.info("Starting sync_gateway on {} ...".format(target))
+        log_info("Starting sync_gateway on {} ...".format(target))
         ansible_runner = AnsibleRunner()
         config_path =  os.path.abspath(config)
         status = ansible_runner.run_ansible_playbook(
@@ -141,7 +142,7 @@ class SyncGateway:
 
     def stop_sync_gateway(self, url):
         target = hostname_for_url(url)
-        logging.info("Shutting down sync_gateway on {} ...".format(target))
+        log_info("Shutting down sync_gateway on {} ...".format(target))
         ansible_runner = AnsibleRunner()
         status = ansible_runner.run_ansible_playbook(
             "stop-sync-gateway.yml",
