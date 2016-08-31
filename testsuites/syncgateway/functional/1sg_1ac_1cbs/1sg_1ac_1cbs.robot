@@ -101,7 +101,7 @@ test multiple dbs unique buckets lose tap
 
 # test_longpoll (distributed index mode)
 test longpoll changes parametrized 5000 docs 1 rev
-    [Tags]   nightly  syncgateway  changes
+    [Tags]   sanity  syncgateway  changes
     test longpoll changes parametrized      ${SYNC_GATEWAY_CONFIGS}/sync_gateway_default_functional_tests_di.json   ${5000}  ${1}
 
 test longpoll changes parametrized 50 docs 100 rev
