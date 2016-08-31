@@ -19,7 +19,7 @@ ${CLUSTER_CONFIG}           ${CLUSTER_CONFIGS}/2sg_1cbs_1lbs
 
 # test bucket shadow
 Test Load Balance Sanity
-    [Tags]   sanity
+    [Tags]   sanity  syncgateway  changes  nginx
     Test Load Balance Sanity  ${cluster_hosts}
 
 

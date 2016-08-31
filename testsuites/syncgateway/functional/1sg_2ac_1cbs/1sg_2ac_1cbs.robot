@@ -30,15 +30,15 @@ test_pindex_distribution
 
 # test_dcp_reshard
 test dcp reshard sync gateway goes down
-    [Tags]   sanity
+    [Tags]   sanity  syncgateway
     test dcp reshard sync gateway goes down             ${SYNC_GATEWAY_CONFIGS}/sync_gateway_default_functional_tests_di.json
 
 test dcp reshard sync_gateway comes up
-    [Tags]   sanity
+    [Tags]   sanity  syncgateway
     test dcp reshard sync_gateway comes up              ${SYNC_GATEWAY_CONFIGS}/sync_gateway_default_functional_tests_di.json
 
 test dcp reshard single sg accel goes down and up
-    [Tags]   nightly
+    [Tags]   nightly  syncgateway
     test dcp reshard single sg accel goes down and up   ${SYNC_GATEWAY_CONFIGS}/sync_gateway_default_functional_tests_di.json
 
 

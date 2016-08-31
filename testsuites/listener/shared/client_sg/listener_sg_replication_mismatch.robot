@@ -23,7 +23,7 @@ Test Teardown     Teardown Test
 *** Test Cases ***
 Replication with multiple client dbs and single sync_gateway db
     [Documentation]
-    [Tags]           sanity     listener    ${PLATFORM}    syncgateway
+    [Tags]           sanity     listener    syncgateway
     [Timeout]        5 minutes
 
     Log  Using LiteServ: ${ls_url}

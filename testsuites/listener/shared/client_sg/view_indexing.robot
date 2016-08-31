@@ -26,6 +26,7 @@ ${sg_db}  db
 
 *** Test Cases ***
 Stale revision should not be in the index
+    [Tags]           sanity     listener    syncgateway    views
     [Documentation]
     ...  original ticket: https://github.com/couchbase/couchbase-lite-android/issues/855
     ...  scenario:

@@ -24,6 +24,7 @@ ${sg_db}  db
 
 *** Test Cases ***
 Test Raw attachment
+    [Tags]  sanity  listener  syncgateway  attachments
     [Documentation]
     ...  1.  Add Text attachment to sync_gateway
     ...  2.  Try to get the raw attachment
