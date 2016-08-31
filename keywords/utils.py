@@ -6,6 +6,7 @@ import sys
 
 from robot.api.logger import console
 
+
 def log_info(message):
     console(message)
     logging.info(message)

@@ -27,127 +27,127 @@ Test Teardown   Test Teardown
 
 # test_bulk_get_compression (channel cache mode)
 test bulk get compression no compression
-    [Tags]   sanity
+    [Tags]   sanity  syncgateway  compression
     test bulk get compression   ${SYNC_GATEWAY_CONFIGS}/sync_gateway_default_cc.json    ${300}
 
 test bulk get compression no compression 1.1 user agent
-    [Tags]   sanity
+    [Tags]   sanity  syncgateway  compression
     test bulk get compression   ${SYNC_GATEWAY_CONFIGS}/sync_gateway_default_cc.json    ${300}  user_agent=CouchbaseLite/1.1
 
 test bulk get compression accept encoding gzip
-    [Tags]   sanity
+    [Tags]   sanity  syncgateway  compression
     test bulk get compression   ${SYNC_GATEWAY_CONFIGS}/sync_gateway_default_cc.json    ${300}  accept_encoding=gzip
 
 test bulk get compression accept encoding gzip 1.1 user agent
-    [Tags]   sanity
+    [Tags]   sanity  syncgateway  compression
     test bulk get compression   ${SYNC_GATEWAY_CONFIGS}/sync_gateway_default_cc.json    ${300}  accept_encoding=gzip  user_agent=CouchbaseLite/1.1
 
 test bulk get compression x accept part encoding gzip
-    [Tags]   sanity
+    [Tags]   sanity  syncgateway  compression
     test bulk get compression   ${SYNC_GATEWAY_CONFIGS}/sync_gateway_default_cc.json    ${300}  x_accept_part_encoding=gzip
 
 test bulk get compression x accept part encoding gzip 1.1 user agent
-    [Tags]   sanity
+    [Tags]   sanity  syncgateway  compression
     test bulk get compression   ${SYNC_GATEWAY_CONFIGS}/sync_gateway_default_cc.json    ${300}  x_accept_part_encoding=gzip  user_agent=CouchbaseLite/1.1
 
 test bulk get compression accept encoding gzip x accept part encoding gzip
-    [Tags]   sanity
+    [Tags]   sanity  syncgateway  compression
     test bulk get compression   ${SYNC_GATEWAY_CONFIGS}/sync_gateway_default_cc.json    ${300}  accept_encoding=gzip  x_accept_part_encoding=gzip
 
 test bulk get compression accept encoding gzip x accept part encoding gzip 1.1 user agent
-    [Tags]   sanity
+    [Tags]   sanity  syncgateway  compression
     test bulk get compression   ${SYNC_GATEWAY_CONFIGS}/sync_gateway_default_cc.json    ${300}  accept_encoding=gzip  x_accept_part_encoding=gzip  user_agent=CouchbaseLite/1.1
 
 test bulk get compression no compression 1.2 user agent
-    [Tags]   sanity
+    [Tags]   sanity  syncgateway  compression
     test bulk get compression   ${SYNC_GATEWAY_CONFIGS}/sync_gateway_default_cc.json    ${300}  user_agent=CouchbaseLite/1.2
 
 test bulk get compression accept encoding gzip 1.2 user agent
-    [Tags]   sanity
+    [Tags]   sanity  syncgateway  compression
     test bulk get compression   ${SYNC_GATEWAY_CONFIGS}/sync_gateway_default_cc.json    ${300}  accept_encoding=gzip  user_agent=CouchbaseLite/1.2
 
 test bulk get compression x accept part encoding gzip 1.2 user agent
-    [Tags]   sanity
+    [Tags]   sanity  syncgateway  compression
     test bulk get compression   ${SYNC_GATEWAY_CONFIGS}/sync_gateway_default_cc.json    ${300}  x_accept_part_encoding=gzip  user_agent=CouchbaseLite/1.2
 
 test bulk get compression accept encoding gzip x accept part encoding gzip 1.2 user agent
-    [Tags]   sanity
+    [Tags]   sanity  syncgateway  compression
     test bulk get compression   ${SYNC_GATEWAY_CONFIGS}/sync_gateway_default_cc.json    ${300}  accept_encoding=gzip  x_accept_part_encoding=gzip  user_agent=CouchbaseLite/1.2
 
 
 # test_continuous (channel cache mode)
 test continuous changes parametrized 1 user 5000 docs 1 revision
-    [Tags]   sanity
+    [Tags]   sanity  syncgateway  changes
     test continuous changes parametrized    ${SYNC_GATEWAY_CONFIGS}/sync_gateway_default_functional_tests_cc.json  ${1}  ${5000}  ${1}
 
 test continuous changes parametrized 50 users 5000 docs 1 revision
-    [Tags]   nightly
+    [Tags]   nightly  syncgateway  changes
     test continuous changes parametrized    ${SYNC_GATEWAY_CONFIGS}/sync_gateway_default_functional_tests_cc.json  ${50}  ${5000}  ${1}
 
 test continuous changes parametrized 50 users 10 docs 10 revisions
-    [Tags]   sanity
+    [Tags]   sanity  syncgateway  changes
     test continuous changes parametrized    ${SYNC_GATEWAY_CONFIGS}/sync_gateway_default_functional_tests_cc.json  ${50}  ${10}  ${10}
 
 test continuous changes parametrized 50 user 50 docs 1000 revisions
-    [Tags]   nightly
+    [Tags]   nightly  syncgateway  changes
     test continuous changes parametrized    ${SYNC_GATEWAY_CONFIGS}/sync_gateway_default_functional_tests_revslimit50_cc.json  ${50}  ${50}  ${1000}
 
 test continuous changes sanity
-    [Tags]   sanity
+    [Tags]   sanity  syncgateway  changes
     test_continuous_changes_sanity          ${SYNC_GATEWAY_CONFIGS}/sync_gateway_default_functional_tests_cc.json  ${10}  ${10}
 
 
 # test_db_online_offline (channel cache mode)
 test online default rest
-    [Tags]   sanity
+    [Tags]   sanity  syncgateway  onlineoffline
     test online default rest                                                                ${SYNC_GATEWAY_CONFIGS}/bucket_online_offline/bucket_online_offline_default_cc.json             ${100}
 
 test offline false config_rest
-    [Tags]   sanity
+    [Tags]   sanity  syncgateway  onlineoffline
     test offline false config_rest                                                          ${SYNC_GATEWAY_CONFIGS}/bucket_online_offline/bucket_online_offline_offline_false_cc.json       ${100}
 
 test online to offline check 503
-    [Tags]   sanity
+    [Tags]   sanity  syncgateway  onlineoffline
     test online to offline check 503                                                        ${SYNC_GATEWAY_CONFIGS}/bucket_online_offline/bucket_online_offline_default_cc.json           ${100}
 
 test online to offline changes feed controlled close continuous
-    [Tags]   sanity
+    [Tags]   sanity  syncgateway  onlineoffline  changes
     test online to offline changes feed controlled close continuous                         ${SYNC_GATEWAY_CONFIGS}/bucket_online_offline/bucket_online_offline_default_cc.json   ${5000}
 
 test online to offline continous changes feed controlled close sanity mulitple users
-    [Tags]   sanity
+    [Tags]   sanity  syncgateway  onlineoffline  changes
     test online to offline continous changes feed controlled close sanity mulitple users    ${SYNC_GATEWAY_CONFIGS}/bucket_online_offline/bucket_online_offline_default_cc.json     ${5000}     ${40}
 
 test online to offline changes feed controlled close longpoll sanity
-    [Tags]   sanity
+    [Tags]   sanity  syncgateway  onlineoffline  changes
     test online to offline changes feed controlled close longpoll sanity                    ${SYNC_GATEWAY_CONFIGS}/bucket_online_offline/bucket_online_offline_default_cc.json     ${5000}
 
 test online to offline longpoll changes feed controlled close sanity mulitple users
-    [Tags]   sanity
+    [Tags]   sanity  syncgateway  onlineoffline  changes
     test online to offline longpoll changes feed controlled close sanity mulitple users     ${SYNC_GATEWAY_CONFIGS}/bucket_online_offline/bucket_online_offline_default_cc.json     ${5000}     ${40}
 
 test online to offline changes feed controlled close longpoll
-    [Tags]   sanity
+    [Tags]   sanity  syncgateway  onlineoffline  changes
     test online to offline changes feed controlled close longpoll                           ${SYNC_GATEWAY_CONFIGS}/bucket_online_offline/bucket_online_offline_default_cc.json     ${5000}
 
 test offline true config bring online
-    [Tags]   sanity
+    [Tags]   sanity  syncgateway  onlineoffline
     test offline true config bring online                                                   ${SYNC_GATEWAY_CONFIGS}/bucket_online_offline/bucket_online_offline_offline_true_cc.json    ${100}
 
 test db offline tap loss sanity dcp
-    [Tags]   sanity
+    [Tags]   sanity  syncgateway  onlineoffline
     test db offline tap loss sanity                                                         ${SYNC_GATEWAY_CONFIGS}/bucket_online_offline/bucket_online_offline_default_dcp_cc.json     ${100}
 
 test db offline tap loss sanity
-    [Tags]   sanity
+    [Tags]   sanity  syncgateway  onlineoffline
     test db offline tap loss sanity                                                         ${SYNC_GATEWAY_CONFIGS}/bucket_online_offline/bucket_online_offline_default_cc.json     ${100}
 
 test db delayed online
-    [Tags]   sanity
+    [Tags]   sanity  syncgateway  onlineoffline
     test db delayed online                                                                  ${SYNC_GATEWAY_CONFIGS}/bucket_online_offline/bucket_online_offline_default_cc.json     ${100}
 
 test multiple dbs unique buckets lose tap
-    [Tags]   sanity
+    [Tags]   sanity  syncgateway  onlineoffline
     test multiple dbs unique buckets lose tap                                               ${SYNC_GATEWAY_CONFIGS}/bucket_online_offline/bucket_online_offline_multiple_dbs_unique_buckets_cc.json     ${100}
 
 

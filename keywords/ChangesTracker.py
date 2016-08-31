@@ -10,6 +10,7 @@ from keywords.constants import AuthType
 from keywords.utils import log_r
 from keywords.utils import log_info
 
+
 class ChangesTracker:
 
     def __init__(self, url, db, auth=None):
@@ -24,6 +25,8 @@ class ChangesTracker:
         Add each doc from longpoll changes results to the processed changes list in the following format:
         { "doc_id": [ {"rev": "rev1"}, {"rev", "rev2"}, ...] }
         """
+
+        log_info("[Changes Tracker] New changes: {}".format(len(results)))
         for doc in results:
             if len(doc["changes"]) > 0:
                 if doc["id"] in self.processed_changes:
@@ -35,6 +38,7 @@ class ChangesTracker:
                 else:
                     # Stored the doc with the list of rev changes
                     self.processed_changes[doc["id"]] = doc["changes"]
+        log_info("[Changes Tracker] Total processed changes: {}".format(len(self.processed_changes)))
 
     def start(self, timeout=1000, heartbeat=None, request_timeout=None):
         """
@@ -42,14 +46,15 @@ class ChangesTracker:
         """
 
         # convert to seconds for use with requests lib api
-        request_timeout /= 1000
+        if request_timeout is not None:
+            request_timeout /= 1000
 
         auth_type = get_auth_type(self.auth)
         current_seq_num = 0
 
-        while not self.cancel:
+        log_info("[Changes Tracker] Changes Tracker Starting ...")
 
-            log_info("self.cancel: {}".format(self.cancel))
+        while not self.cancel:
 
             data = {
                 "feed": "longpoll",
@@ -92,13 +97,13 @@ class ChangesTracker:
             self.process_changes(resp_obj["results"])
             current_seq_num = resp_obj["last_seq"]
 
-        log_info("End of longpoll changes loop")
+        log_info("[Changes Tracker] End of longpoll changes loop")
 
     def stop(self):
         """
         Stop the longpoll changes feed
         """
-        log_info("Closing _changes feed ...")
+        log_info("[Changes Tracker] Closing _changes feed ...")
         self.cancel = True
 
     def wait_until(self, expected_docs, timeout=30):
@@ -112,7 +117,7 @@ class ChangesTracker:
         start = time.time()
         while True:
             if time.time() - start > timeout:
-                log_info("ChangeTracker.wait_until: TIMEOUT")
+                logging.error("[Changes Tracker] wait_until: TIMEOUT")
                 return False
 
             # Check that the expected docs exist in the the
@@ -126,17 +131,17 @@ class ChangesTracker:
                     for rev in self.processed_changes[doc["id"]]:
                         if rev["rev"] == doc["rev"]:
                             # Found rev in changes feed, continue with the next dox
-                            log_info("FOUND id: {}, rev: {}".format(doc["id"], doc["rev"]))
+                            logging.debug("FOUND id: {}, rev: {}".format(doc["id"], doc["rev"]))
                             rev_found = True
 
                     if not rev_found:
                         missing_docs.append(doc)
 
             if len(missing_docs) == 0:
-                log_info(":) Saw all docs in the changes feed for ({})!".format(self.auth))
+                log_info("[Changes Tracker] :) Saw all docs in the changes feed for ({})!".format(self.auth))
 
                 return True
 
-            log_info("Docs missing from changes feed: {}".format(len(missing_docs)))
+            log_info("[Changes Tracker] Docs missing from changes feed: {}".format(len(missing_docs)))
 
             time.sleep(1)

@@ -25,7 +25,7 @@ Test Attachments on Docs Rejected By Sync Function
     ...  2. Create a doc with attachment
     ...  3. Use CBS sdk to see if attachment doc exists.  Doc ID will look like _sync:att:sha1-Kq5sNclPz7QV2+lfQIuc6R7oRu0= (where the suffix is the digest)
     ...  4. Assert att doc does not exist
-    [Tags]  sanity  attachments  syncgateway
+    [Tags]  sanity  attachments  syncgateway  sync
 
     Set Test Variable  ${sg_user_name}  sg_user
     Set Test Variable  ${sg_uset_password}  password

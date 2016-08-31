@@ -23,7 +23,7 @@ ${sg_db}  db
 
 *** Test Cases ***
 Longpoll Changes Termination Timeout
-    [Tags]  Listener  Sync Gateway  Changes
+    [Tags]  sanity  listener  syncgateway  changes
     [Documentation]
     ...  https://github.com/couchbase/couchbase-lite-java-core/issues/1296
     ...  Create 30 longpoll _changes in a loop (with timeout parameter = 5s)
@@ -35,7 +35,7 @@ Longpoll Changes Termination Timeout
     ...  cluster_config=${cluster_hosts}
 
 Longpoll Changes Termination Heartbeat
-    [Tags]  Listener  Sync Gateway  Changes
+    [Tags]  sanity  listener  syncgateway  changes
     [Documentation]
     ...  https://github.com/couchbase/couchbase-lite-java-core/issues/1296
     ...  Create 30 longpoll _changes in a loop (with heartbeat parameter = 5s)

@@ -26,7 +26,7 @@ ${sg_user_name}     sg_user
 *** Test Cases ***
 Test Auto Prune Listener Sanity
     [Documentation]  Test to verify auto pruning is working for the listener
-    [Tags]           sanity     listener    ${PLATFORM}    syncgateway
+    [Tags]           sanity  listener  syncgateway  autoprune
     [Timeout]        5 minutes
 
     Log  Using LiteServ: ${ls_url}
@@ -41,7 +41,8 @@ Test Auto Prune Listener Sanity
     Verify Revs Num For Docs  url=${ls_url}  db=${ls_db}  docs=${ls_db_docs}  expected_revs_per_doc=${20}
 
 
-Test Auto Prune With Pull Replication
+Test Auto Prune With Pull
+    [Tags]           sanity  listener  syncgateway  autoprune  replication
     [Documentation]  Tests that auto prune is happing after a pull replication
     ...  1. Create a database on LiteServ (ls_db)
     ...  2. Add doc to sync gateway
@@ -85,7 +86,7 @@ Test Auto Prune Listener Keeps Conflicts Sanity
     ...  4. Update LiteServ 50 times
     ...  5. Assert that pruned conflict is still present
     ...  6. Delete the current revision and check that a GET returns the old conflict as the current rev
-    [Tags]           sanity     listener    ${PLATFORM}    syncgateway
+    [Tags]           sanity  listener  syncgateway
     [Timeout]        5 minutes
 
     Log  Using LiteServ: ${ls_url}
