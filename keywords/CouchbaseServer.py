@@ -190,12 +190,13 @@ class CouchbaseServer:
         # Divide by number of buckets
         """
         log_info("Creating buckets: {}".format(bucket_names))
-        ram_multiplier = 0.3
+        ram_multiplier = 0.80
         total_avail_ram_bytes = self.get_available_ram(url)
-        n1ql_indexer_ram_bytes = 512 * (1024 * 1024)
-        effective_avail_ram_bytes = int(total_avail_ram_bytes * ram_multiplier) - n1ql_indexer_ram_bytes
-        effective_avail_ram_mb = effective_avail_ram_bytes / (1024 * 1024)
+        total_avail_ram_mb = int(total_avail_ram_bytes / (1024 * 1024))
+        n1ql_indexer_ram_mb = 512
+        effective_avail_ram_mb = int(total_avail_ram_mb * ram_multiplier) - n1ql_indexer_ram_mb
         per_bucket_ram_mb = int(effective_avail_ram_mb / len(bucket_names))
+        log_info("total_avail_ram_mb: {} effective_avail_ram_mb: {} effective_avail_ram_mb: {}".format(total_avail_ram_mb, effective_avail_ram_mb, effective_avail_ram_mb))
         for bucket_name in bucket_names:
             log_info("Create bucket {} with per_bucket_ram_mb {}".format(bucket_name, per_bucket_ram_mb))
             self.create_bucket(url, bucket_name, per_bucket_ram_mb)
