@@ -49,7 +49,7 @@ Client to Sync Gateway Complex Replication With Revs Limit
     ...  21. Delete LiteServ docs
     ...  22. Delete Server bucket
     ...  23. Delete LiteServ db
-    [Tags]           sanity  listener  syncgateway
+    [Tags]           sanity  listener  syncgateway  replication
 
     Log  Using LiteServ: ${ls_url}
     Log  Using Sync Gateway: ${sg_url}

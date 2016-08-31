@@ -26,7 +26,7 @@ ${sg_user_name}     sg_user
 *** Test Cases ***
 Verify Open Revs With Revs Limit Push Conflict
     [Documentation]  https://github.com/couchbase/couchbase-lite-ios/issues/1277
-    [Tags]           sanity     listener    syncgateway
+    [Tags]           sanity     listener    syncgateway  replication
     [Timeout]        5 minutes
 
     Log  Using LiteServ: ${ls_url}
