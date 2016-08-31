@@ -15,6 +15,7 @@ from testkit import settings
 from provision.ansible_runner import AnsibleRunner
 
 import keywords.CouchbaseServer
+from keywords import utils
 
 import logging
 log = logging.getLogger(settings.LOGGER)
