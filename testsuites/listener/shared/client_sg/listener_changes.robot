@@ -15,7 +15,6 @@ Library           listener_changes.py
 
 Test Setup        Setup Test
 Test Teardown     Teardown Test
-
 Test Timeout      1 minute
 
 *** Variables ***
@@ -30,9 +29,13 @@ Longpoll Changes Termination Timeout
     ...  Cancel the request after 2s
     ...  Wait 5.1s
     ...  Create another request GET /db/ on listener and make sure the listener responds
-    Longpoll Changes Termination Timeout
+
+    Run Keyword If  '${PLATFORM}' == 'android' or '${PLATFORM}' == 'net'
+    ...  Longpoll Changes Termination Timeout
     ...  ls_url=${ls_url}
     ...  cluster_config=${cluster_hosts}
+    ...  ELSE
+    ...  Fail  Mac OSX fails due to https://github.com/couchbase/couchbase-lite-ios/issues/1236
 
 Longpoll Changes Termination Heartbeat
     [Tags]  sanity  listener  syncgateway  changes
@@ -42,9 +45,13 @@ Longpoll Changes Termination Heartbeat
     ...  Cancel the request after 2s
     ...  Wait 5.1s
     ...  Create another request GET /db/ on listener and make sure the listener responds
-    Longpoll Changes Termination Heartbeat
+
+    Run Keyword If  '${PLATFORM}' == 'android' or '${PLATFORM}' == 'net'
+    ...  Longpoll Changes Termination Heartbeat
     ...  ls_url=${ls_url}
     ...  cluster_config=${cluster_hosts}
+    ...  ELSE
+    ...  Fail  Mac OSX fails due to https://github.com/couchbase/couchbase-lite-ios/issues/1236
 
 
 *** Keywords ***
