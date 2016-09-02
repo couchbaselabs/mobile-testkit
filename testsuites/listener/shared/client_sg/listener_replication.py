@@ -208,6 +208,7 @@ def multiple_replications_not_created_with_same_properties(ls_url, cluster_confi
     )
 
     # Check that no replications are running
+    client.wait_for_no_replications(ls_url)
     replications = client.get_replications(ls_url)
     assert len(replications) == 0, "Number of replications, Expected: {} Actual {}".format(
         0,
@@ -254,6 +255,7 @@ def multiple_replications_not_created_with_same_properties(ls_url, cluster_confi
     )
 
     # Check that no replications are running
+    client.wait_for_no_replications(ls_url)
     replications = client.get_replications(ls_url)
     assert len(replications) == 0, "Number of replications, Expected: {} Actual {}".format(
         0,
@@ -356,14 +358,13 @@ def multiple_replications_created_with_unique_properties(ls_url, cluster_config)
     )
 
     # Verify no replications are running
+    client.wait_for_no_replications(ls_url)
     replications = client.get_replications(ls_url)
     log_info(replications)
     assert len(replications) == 0, "Number of replications, Expected: {} Actual: {}".format(
         0,
         len(replications)
     )
-
-
 
     ########
     # PULL #
@@ -417,6 +418,7 @@ def multiple_replications_created_with_unique_properties(ls_url, cluster_config)
     )
 
     # Verify no replications are running
+    client.wait_for_no_replications(ls_url)
     replications = client.get_replications(ls_url)
     log_info(replications)
     assert len(replications) == 0, "Number of replications, Expected: {} Actual: {}".format(
@@ -527,6 +529,7 @@ def replication_with_session_cookie(ls_url, sg_admin_url, sg_url):
         to_db=ls_db,
     )
 
+    client.wait_for_no_replications(ls_url)
     replications = client.get_replications(ls_url)
     assert len(replications) == 0, "All replications should be stopped"
 

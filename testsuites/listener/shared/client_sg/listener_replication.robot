@@ -104,7 +104,7 @@ Multiple Replications Created with Unique Properties
     ...  2. Create a local database such as ls_db
     ...  3. Send POST /_replicate with source = ls_db, target = http://localhost:4985/db, continuous = true
     ...  4. Send POST /_replicate with source = ls_db, target = http://localhost:4985/db, continuous = true, doc_ids=["doc1", "doc2"]
-    ...  5. Send POST /_replicate with source = ls_db, target = http://localhost:498\5/db, continuous = true, filter="filter1"
+    ...  5. Send POST /_replicate with source = ls_db, target = http://localhost:4985/db, continuous = true, filter="filter1"
     ...  6. Make sure that the session_id from each POST /_replicate are different.
     ...  7. Send GET /_active_tasks to make sure that there are 3 tasks created.
     ...  8. Send 3 POST /_replicate withe the same parameter as Step 3=5 plus cancel=true to stop those replicators
