@@ -211,6 +211,7 @@ if __name__ == "__main__":
 
     cluster_configs = [
         ClusterDef("1sg",               num_sgs=1, num_acs=0, num_cbs=0, num_lgs=0, num_lbs=0),
+        ClusterDef("2sgs",              num_sgs=2, num_acs=0, num_cbs=0, num_lgs=0, num_lbs=0),
         ClusterDef("1cbs",              num_sgs=0, num_acs=0, num_cbs=1, num_lgs=0, num_lbs=0),
         ClusterDef("1sg_1cbs",          num_sgs=1, num_acs=0, num_cbs=1, num_lgs=0, num_lbs=0),
         ClusterDef("1sg_1ac_1cbs",      num_sgs=1, num_acs=1, num_cbs=1, num_lgs=0, num_lbs=0),
