@@ -15,6 +15,7 @@ Library           ${KEYWORDS}/ClusterKeywords.py
 Library           ${KEYWORDS}/SyncGateway.py
 Library           ${KEYWORDS}/CouchbaseServer.py
 Library           ${KEYWORDS}/Logging.py
+Library           attachments.py
 
 Test Setup        Setup Test
 Test Teardown     Teardown Test
@@ -23,6 +24,23 @@ Test Teardown     Teardown Test
 ${sg_db}  db
 
 *** Test Cases ***
+
+Test Inline Large Attachments
+    [Tags]  sanity  listener  syncgateway  attachments  replication
+    ...  1.  Start LiteServ and Sync Gateway
+    ...  2.  Create 2 databases on LiteServ (ls_db1, ls_db2)
+    ...  3.  Start continuous push replication from ls_db1 to sg_db
+    ...  4.  Start continuous pull replication from sg_db to ls_db2
+    ...  5.  PUT 5 large inline attachments to ls_db1
+    ...  6.  DELETE the docs on ls_db1
+    ...  7.  PUT same 5 large inline attachments to ls_db1
+    ...  8.  Verify docs replicate to ls_db2
+    ...  9.  Purge ls_db1
+    ...  10. Verify docs removed
+    Test Inline Large Attachments
+    ...  liteserv_url=${ls_url}
+    ...  cluster=${cluster_hosts}
+
 Test Raw attachment
     [Tags]  sanity  listener  syncgateway  attachments
     [Documentation]
@@ -57,6 +75,7 @@ Setup Test
 
     Set Environment Variable  CLUSTER_CONFIG  ${CLUSTER_CONFIGS}/1sg
     ${cluster_hosts} =  Get Cluster Topology  %{CLUSTER_CONFIG}
+    Set Test Variable  ${cluster_hosts}
 
     Set Test Variable  ${ls_url}
     Set Test Variable  ${sg_url}        ${cluster_hosts["sync_gateways"][0]["public"]}
