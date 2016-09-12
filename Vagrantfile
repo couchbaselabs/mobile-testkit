@@ -7,17 +7,17 @@
 # you're doing.
 Vagrant.configure(2) do |config|
 
-  host_ip = {
-    "host1" => "192.168.33.10",
-    "host2" => "192.168.33.11",
-    "host3" => "192.168.33.12",
-    "host4" => "192.168.33.13",
-  }
+  host_ips = [
+    "host1",
+    "host2",
+    "host3",
+    "host4"
+  ]
 
-  host_ip.each do |host_name, ip|
+  host_ips.each do |host_name|
       config.vm.define host_name do |host|
-        host.vm.box = "centos/7"
-        host.vm.network "private_network", ip: ip
+        host.vm.box = "centos/6"
+        config.vm.network "public_network", bridge: "en0: Wi-Fi (AirPort)"
         host.vm.synced_folder ".", "/home/vagrant/sync", disabled: true
         host.vm.provider "virtualbox" do |vb|
             # Customize the amount of memory on the VM:
