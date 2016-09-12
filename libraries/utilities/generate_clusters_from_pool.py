@@ -194,6 +194,33 @@ def get_ips(pool_file="resources/pool.json"):
 
     return ips
 
+
+def generate_clusters_from_pool(pool_file):
+    cluster_configs = [
+        ClusterDef("1sg", num_sgs=1, num_acs=0, num_cbs=0, num_lgs=0, num_lbs=0),
+        ClusterDef("2sgs", num_sgs=2, num_acs=0, num_cbs=0, num_lgs=0, num_lbs=0),
+        ClusterDef("1cbs", num_sgs=0, num_acs=0, num_cbs=1, num_lgs=0, num_lbs=0),
+        ClusterDef("1sg_1cbs", num_sgs=1, num_acs=0, num_cbs=1, num_lgs=0, num_lbs=0),
+        ClusterDef("1sg_1ac_1cbs", num_sgs=1, num_acs=1, num_cbs=1, num_lgs=0, num_lbs=0),
+        ClusterDef("1sg_2ac_1cbs", num_sgs=1, num_acs=2, num_cbs=1, num_lgs=0, num_lbs=0),
+        ClusterDef("2sg_1cbs", num_sgs=2, num_acs=0, num_cbs=1, num_lgs=0, num_lbs=0),
+        ClusterDef("2sg_1cbs_1lbs", num_sgs=2, num_acs=0, num_cbs=1, num_lgs=0, num_lbs=1),
+        ClusterDef("2sg_3cbs_2lgs", num_sgs=2, num_acs=0, num_cbs=3, num_lgs=2, num_lbs=0),
+        ClusterDef("2sg_2ac_3cbs_2lgs", num_sgs=2, num_acs=2, num_cbs=3, num_lgs=2, num_lbs=0),
+    ]
+
+    if not os.path.isfile(pool_file):
+        print("Pool file not found in 'resources/'. Please modify the example to include your machines.")
+        sys.exit(1)
+
+    print("Using the following machines to run functional tests ... ")
+    for host in get_ips(pool_file):
+        print(host)
+
+    print("Generating 'resources/cluster_configs/'")
+    for cluster_config in cluster_configs:
+        write_config(cluster_config, pool_file)
+
 if __name__ == "__main__":
     usage = """
     usage: python generate_cluster_from_pool.py"
@@ -209,29 +236,7 @@ if __name__ == "__main__":
 
     (opts, args) = parser.parse_args(arg_parameters)
 
-    cluster_configs = [
-        ClusterDef("1sg",               num_sgs=1, num_acs=0, num_cbs=0, num_lgs=0, num_lbs=0),
-        ClusterDef("2sgs",              num_sgs=2, num_acs=0, num_cbs=0, num_lgs=0, num_lbs=0),
-        ClusterDef("1cbs",              num_sgs=0, num_acs=0, num_cbs=1, num_lgs=0, num_lbs=0),
-        ClusterDef("1sg_1cbs",          num_sgs=1, num_acs=0, num_cbs=1, num_lgs=0, num_lbs=0),
-        ClusterDef("1sg_1ac_1cbs",      num_sgs=1, num_acs=1, num_cbs=1, num_lgs=0, num_lbs=0),
-        ClusterDef("1sg_2ac_1cbs",      num_sgs=1, num_acs=2, num_cbs=1, num_lgs=0, num_lbs=0),
-        ClusterDef("2sg_1cbs",          num_sgs=2, num_acs=0, num_cbs=1, num_lgs=0, num_lbs=0),
-        ClusterDef("2sg_1cbs_1lbs",     num_sgs=2, num_acs=0, num_cbs=1, num_lgs=0, num_lbs=1),
-        ClusterDef("2sg_3cbs_2lgs",     num_sgs=2, num_acs=0, num_cbs=3, num_lgs=2, num_lbs=0),
-        ClusterDef("2sg_2ac_3cbs_2lgs", num_sgs=2, num_acs=2, num_cbs=3, num_lgs=2, num_lbs=0),
-    ]
-
-    if not os.path.isfile(opts.pool_file):
-        print("Pool file not found in 'resources/'. Please modify the example to include your machines.")
-        sys.exit(1)
+    generate_clusters_from_pool(opts.pool_file)
 
 
-    print("Using the following machines to run functional tests ... ")
-    for host in get_ips(opts.pool_file):
-        print(host)
-
-    print("Generating 'resources/cluster_configs/'")
-    for cluster_config in cluster_configs:
-        write_config(cluster_config, opts.pool_file)
 

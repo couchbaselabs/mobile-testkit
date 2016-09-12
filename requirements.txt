@@ -22,6 +22,7 @@ pycparser==2.14
 pycrypto==2.6.1
 PyJWT==1.4.0
 python-dateutil==2.5.1
+python-vagrant==0.5.14
 PyYAML==3.11
 requests==2.9.1
 robotframework==3.0
