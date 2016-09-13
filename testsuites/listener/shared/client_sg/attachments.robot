@@ -27,6 +27,7 @@ ${sg_db}  db
 
 Test Inline Large Attachments
     [Tags]  sanity  listener  syncgateway  attachments  replication
+    [Documentation]
     ...  1.  Start LiteServ and Sync Gateway
     ...  2.  Create 2 databases on LiteServ (ls_db1, ls_db2)
     ...  3.  Start continuous push replication from ls_db1 to sg_db
@@ -38,8 +39,8 @@ Test Inline Large Attachments
     ...  9.  Purge ls_db1
     ...  10. Verify docs removed
     Test Inline Large Attachments
-    ...  liteserv_url=${ls_url}
-    ...  cluster=${cluster_hosts}
+    ...  ls_url=${ls_url}
+    ...  cluster_config=${cluster_hosts}
 
 Test Raw attachment
     [Tags]  sanity  listener  syncgateway  attachments
@@ -75,8 +76,8 @@ Setup Test
 
     Set Environment Variable  CLUSTER_CONFIG  ${CLUSTER_CONFIGS}/1sg
     ${cluster_hosts} =  Get Cluster Topology  %{CLUSTER_CONFIG}
-    Set Test Variable  ${cluster_hosts}
 
+    Set Test Variable  ${cluster_hosts}
     Set Test Variable  ${ls_url}
     Set Test Variable  ${sg_url}        ${cluster_hosts["sync_gateways"][0]["public"]}
     Set Test Variable  ${sg_url_admin}  ${cluster_hosts["sync_gateways"][0]["admin"]}

@@ -577,7 +577,7 @@ class MobileRestClient:
 
         return resp_obj
 
-    def add_doc(self, url, db, doc, auth=None):
+    def add_doc(self, url, db, doc, auth=None, use_post=True):
         """
         Add a doc to a database. Either LiteServ or Sync Gateway
 
@@ -591,11 +591,20 @@ class MobileRestClient:
         doc["updates"] = 0
 
         if auth_type == AuthType.session:
-            resp = self._session.post("{}/{}/".format(url, db), data=json.dumps(doc), cookies=dict(SyncGatewaySession=auth[1]))
+            if use_post:
+                resp = self._session.post("{}/{}/".format(url, db), data=json.dumps(doc), cookies=dict(SyncGatewaySession=auth[1]))
+            else:
+                resp = self._session.put("{}/{}/{}".format(url, db, doc["_id"]), data=json.dumps(doc), cookies=dict(SyncGatewaySession=auth[1]))
         elif auth_type == AuthType.http_basic:
-            resp = self._session.post("{}/{}/".format(url, db), data=json.dumps(doc), auth=auth)
+            if use_post:
+                resp = self._session.post("{}/{}/".format(url, db), data=json.dumps(doc), auth=auth)
+            else:
+                resp = self._session.put("{}/{}/{}".format(url, db, doc["_id"]), data=json.dumps(doc), auth=auth)
         else:
-            resp = self._session.post("{}/{}/".format(url, db), data=json.dumps(doc))
+            if use_post:
+                resp = self._session.post("{}/{}/".format(url, db), data=json.dumps(doc))
+            else:
+                resp = self._session.put("{}/{}/{}".format(url, db, doc["_id"]), data=json.dumps(doc))
 
         log_r(resp)
         resp.raise_for_status()

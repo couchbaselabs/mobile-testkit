@@ -35,7 +35,7 @@ class Document:
 
         if attachment_name is not None:
             doc["_attachments"] = {
-                attachment_name: { "data": get_attachment(attachment_name) }
+                attachment_name: {"data": get_attachment(attachment_name)}
             }
 
         logging.debug(doc)
