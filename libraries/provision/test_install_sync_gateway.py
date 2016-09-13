@@ -1,13 +1,66 @@
 import unittest
-# from libraries.provision.install_sync_gateway import get_buckets_from_sync_gateway_config
+import os
+from libraries.provision.install_sync_gateway import get_buckets_from_sync_gateway_config
+
+
+
 
 class TestInstallSyncGateway(unittest.TestCase):
 
     def test_get_buckets_from_sync_gateway_config(self):
-        print("hello")
-        # buckets = get_buckets_from_sync_gateway_config("resources/sync_gateway_configs/sync_gateway_default_functional_tests_di.json")
-        # self.assertEquals("blah", buckets)
+
+        configJson = """
+        {
+    "interface":":4984",
+    "adminInterface": "0.0.0.0:4985",
+    "maxIncomingConnections": 0,
+    "maxCouchbaseConnections": 16,
+    "maxFileDescriptors": 90000,
+    "slowServerCallWarningThreshold": 500,
+    "compressResponses": true,
+    "log": ["CRUD+", "Cache+", "HTTP+", "Changes+"],
+    "cluster_config": {
+        "server":"http://{{ couchbase_server_primary_node }}:8091",
+        "data_dir":".",
+        "bucket":"data-bucket"
+    },
+    "databases":{
+        "db":{
+            "feed_type":"DCPSHARD",
+            "feed_params":{
+                "num_shards":64
+            },
+            "server":"http://{{ couchbase_server_primary_node }}:8091",
+            "bucket":"data-bucket",
+            "users":{
+                "GUEST":{
+                    "disabled":true,
+                    "admin_channels":[
+                        "*"
+                    ]
+                }
+            },
+            "channel_index":{
+                "server":"http://{{ couchbase_server_primary_node }}:8091",
+                "bucket":"index-bucket",
+                "writer":{{ is_index_writer }}
+            }
+        }
+    }
+}
 
 
-# if __name__ == '__main__':
-#     unittest.main()
+        """
+
+        tmpConfigFileName = "/tmp/test_install_sync_gateway_temp_config.json"
+        tmpConfigFile = open(tmpConfigFileName, "w")
+        tmpConfigFile.write(configJson)
+        tmpConfigFile.close()
+
+        buckets = get_buckets_from_sync_gateway_config(tmpConfigFileName)
+
+        numBucketsExpected = 2
+        self.assertEquals(len(buckets), numBucketsExpected, msg="Expected {} buckets".format(numBucketsExpected))
+
+        # clean up temp file
+        os.remove(tmpConfigFileName)

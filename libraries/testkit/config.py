@@ -3,6 +3,7 @@ import re
 import sys
 import json
 import time
+from jinja2 import Template
 
 from testkit import settings
 
@@ -18,9 +19,37 @@ class Config:
         self.bucket_name_set = []
         
         with open(conf_path, "r") as config:
+
             data = config.read()
 
-            # strip out templated variables {{ ... }} and sync functions `function ... }`
+            # Render the jinja2 template, which will strip out any
+            # templated variables in {{ ... }}
+            template = Template(data)
+
+            # In order to render the template and produce _valid json_, we need to
+            # replace any JSON boolean variables with actual values.  Simply rendering
+            # the template with no variables will end up with JSON that looks like:
+            #
+            # {
+            #   ...
+            #   "writer":
+            # }
+            #
+            # which won't parse!  Note that template variables embedded in strings don't have this issue:
+            #
+            # "server":"http://{{ couchbase_server_primary_node }}:8091",
+            #
+            # There doesn't seem to be an easy way to get the list of all template variables from
+            # jinja2, and so the code below just sets all template variables that are known to be
+            # boolean values -- yes this is a dirty filthy hack.  And yes, when people create
+            # sync gateway configs that have new JSON template values, this will completely break.
+            #
+            # TODO: find a better way to handle this
+            data = template.render(
+                is_index_writer="false"
+            )
+
+            # strip out sync functions `function ... }`
             data = convert_to_valid_json(data)
 
             # Find all bucket names in config's databases: {}
