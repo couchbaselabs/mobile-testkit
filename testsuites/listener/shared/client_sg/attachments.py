@@ -75,3 +75,8 @@ def test_inline_large_attachments(ls_url, cluster_config):
     for doc in attachment_docs:
         docs.append(client.add_doc(ls_url, ls_db1, doc, use_post=False))
 
+    client.verify_docs_present(ls_url, ls_db1, docs)
+    client.verify_docs_present(sg_url, sg_db, docs)
+    client.verify_docs_present(ls_url, ls_db2, docs)
+
+    
