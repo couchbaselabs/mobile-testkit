@@ -25,6 +25,7 @@ Table of Contents
 * [sync_gateway Performance Tests](#sync_gateway-peftests)
 * [Debugging](#debugging)
 * [Monitoring](#monitoring)
+* [Running Mobile-Testkit Framework Unit Tests](#running-mobile-testkit-framework-unit-tests)
 * [Known Issues And Limitations](#known-issues-and-limitations)
 
 
@@ -667,6 +668,15 @@ python libraries/utilities/monitor_sync_gateway.py
 
 ```
 $ python libraries/utilities/fetch_sg_logs.py
+```
+
+Running Mobile-Testkit Framework Unit Tests
+===========================================
+
+Below is an example on how to run mobile testkit framework unit tests
+
+```
+pytest libraries/provision/test_install_sync_gateway.py
 ```
 
 sync_gateway Perf Tests
