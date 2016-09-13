@@ -13,19 +13,7 @@ from keywords.ChangesTracker import ChangesTracker
 
 def test_inline_large_attachments(ls_url, cluster_config):
 
-    """...  1.  Start LiteServ and Sync Gateway
-    ...  2.  Create 2 databases on LiteServ (ls_db1, ls_db2)
-    ...  3.  Start continuous push replication from ls_db1 to sg_db
-    ...  4.  Start continuous pull replication from sg_db to ls_db2
-    ...  5.  PUT 5 large inline attachments to ls_db1
-    ...  6.  DELETE the docs on ls_db1
-    ...  7.  PUT same 5 large inline attachments to ls_db1
-    ...  8.  Verify docs replicate to ls_db2
-    ...  9.  Purge ls_db1
-    ...  10. Verify docs removed"""
-
     log_info("Running 'test_inline_large_attachments' ...")
-
     log_info(cluster_config)
 
     sg_url = cluster_config["sync_gateways"][0]["admin"]
