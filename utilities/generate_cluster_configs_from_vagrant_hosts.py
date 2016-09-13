@@ -15,6 +15,7 @@ def generate_cluster_configs_from_vagrant():
     v = vagrant.Vagrant()
     status = v.status()
 
+    # Get vagrant ips
     vagrant_ips = []
     print("Getting ip addresses from running vagrant vms ...")
     for stat in status:
@@ -24,15 +25,17 @@ def generate_cluster_configs_from_vagrant():
         print("host: {} ip: {}".format(name, cleaned_output))
         vagrant_ips.append(cleaned_output)
 
+    # Write pool.json
     pool_file = "resources/pool.json"
     pool_def = {"ips": vagrant_ips}
     with open(pool_file, "w") as f:
         print("Writing 'resources/pool.json' ...")
         f.write(json.dumps(pool_def, indent=4))
 
+    # Generate cluster configs
     print("Generating cluster_configs ...")
     generate_clusters_from_pool(pool_file)
 
 if __name__ == "__main__":
-    usage = """usage: generate_cluster_configs_from_vagrant.py"""
+    usage = """usage: generate_cluster_configs_from_vagrant_hosts.py"""
     generate_cluster_configs_from_vagrant()
