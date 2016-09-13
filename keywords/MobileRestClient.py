@@ -852,6 +852,26 @@ class MobileRestClient:
                 time.sleep(1)
                 continue
 
+    def purge_docs(self, url, db, docs):
+        """
+        Purges the each doc in the provided 'docs' given the 'id' and 'rev'
+
+        docs format: [{u'ok': True, u'rev': u'3-56e50918afe3e9b3c29e94ad55cc6b15', u'id': u'large_attach_0'}, ...]
+        """
+
+        purged_docs = []
+        for doc in docs:
+            data = {
+                doc["id"]: [doc["rev"]]
+            }
+            resp = self._session.post("{}/{}/_purge".format(url, db), json.dumps(data))
+            log_r(resp)
+            resp.raise_for_status()
+            resp_obj = resp.json()
+            purged_docs.append(resp_obj)
+
+        return purged_docs
+
     def update_docs(self, url, db, docs, number_updates, delay=None, auth=None):
 
         updated_docs = []

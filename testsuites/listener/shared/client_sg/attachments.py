@@ -75,8 +75,24 @@ def test_inline_large_attachments(ls_url, cluster_config):
     for doc in attachment_docs:
         docs.append(client.add_doc(ls_url, ls_db1, doc, use_post=False))
 
-    client.verify_docs_present(ls_url, ls_db1, docs)
-    client.verify_docs_present(sg_url, sg_db, docs)
-    client.verify_docs_present(ls_url, ls_db2, docs)
+    # Delete docs
+    client.delete_docs(ls_url, ls_db1, docs)
+    client.verify_docs_deleted(ls_url, ls_db1, docs)
 
-    
+    # Recreated docs
+    recreated_docs = []
+    for doc in attachment_docs:
+        recreated_docs.append(client.add_doc(ls_url, ls_db1, doc, use_post=False))
+
+    client.verify_docs_present(ls_url, ls_db1, recreated_docs)
+    client.verify_docs_present(sg_url, sg_db, recreated_docs)
+    client.verify_docs_present(ls_url, ls_db2, recreated_docs)
+
+    purged_docs = client.purge_docs(ls_url, ls_db1, recreated_docs)
+    log_info(purged_docs)
+
+    # All purged docs should have replicated and should be gone now.
+    # This is currently failing due to some docs not replicating to ls_db2
+    client.verify_docs_deleted(ls_url, ls_db1, recreated_docs)
+    client.verify_docs_deleted(sg_url, sg_db, recreated_docs)
+    client.verify_docs_deleted(ls_url, ls_db2, recreated_docs)
