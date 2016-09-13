@@ -82,7 +82,6 @@ Start MacOSX LiteServ
     ...    -Log  YES  -LogSync  YES  -LogCBLRouter  YES  -LogSyncVerbose  YES  -LogRemoteRequest  YES
     ...    alias=liteserv-ios
     ...    shell=True
-    ...    stdout=${RESULTS}/logs/${TEST_NAME}-macosx-liteserv-stdout.log
     ...    stderr=${RESULTS}/logs/${TEST_NAME}-macosx-liteserv-stderr.log
     ...  ELSE IF  '${storage_engine}' == 'SQLCipher'
     ...  Start Process  ${binary_path}
@@ -93,7 +92,6 @@ Start MacOSX LiteServ
     ...    -Log  YES  -LogSync  YES  -LogCBLRouter  YES  -LogSyncVerbose  YES  -LogRemoteRequest  YES
     ...    alias=liteserv-ios
     ...    shell=True
-    ...    stdout=${RESULTS}/logs/${TEST_NAME}-macosx-liteserv-stdout.log
     ...    stderr=${RESULTS}/logs/${TEST_NAME}-macosx-liteserv-stderr.log
     ...  ELSE
     ...  Start Process  ${binary_path}
@@ -103,7 +101,6 @@ Start MacOSX LiteServ
     ...    -Log  YES  -LogSync  YES  -LogCBLRouter  YES  -LogSyncVerbose  YES  -LogRemoteRequest  YES
     ...    alias=liteserv-ios
     ...    shell=True
-    ...    stdout=${RESULTS}/logs/${TEST_NAME}-macosx-liteserv-stdout.log
     ...    stderr=${RESULTS}/logs/${TEST_NAME}-macosx-liteserv-stderr.log
 
     Process Should Be Running   handle=liteserv-ios
@@ -120,7 +117,6 @@ Start Android LiteServ
     Start Process   adb  logcat
     ...             alias=adb-logcat
     ...             stdout=${RESULTS}/logs/${TEST_NAME}-android-logcat-stdout.log
-    ...             stderr=${RESULTS}/logs/${TEST_NAME}-android-logcat-stderr.log
     Process Should Be Running   handle=adb-logcat
 
     Launch Activity  ${port}  ${storage_engine}
@@ -148,7 +144,6 @@ Start Net LiteServ
     ...    alias=liteserv-net
     ...    shell=True
     ...    stdout=${RESULTS}/logs/${TEST_NAME}-net-liteserv-stdout.log
-    ...    stderr=${RESULTS}/logs/${TEST_NAME}-net-liteserv-stderr.log
     ...  ELSE IF  '${storage_engine}' == 'SQLCipher'
     ...  Start Process  mono  ${binary_path}
     ...    --port  ${port}
@@ -158,7 +153,6 @@ Start Net LiteServ
     ...    alias=liteserv-net
     ...    shell=True
     ...    stdout=${RESULTS}/logs/${TEST_NAME}-net-liteserv-stdout.log
-    ...    stderr=${RESULTS}/logs/${TEST_NAME}-net-liteserv-stderr.log
     ...  ELSE
     ...  Start Process  mono  ${binary_path}
     ...    --port  ${port}
@@ -167,7 +161,6 @@ Start Net LiteServ
     ...    alias=liteserv-net
     ...    shell=True
     ...    stdout=${RESULTS}/logs/${TEST_NAME}-net-liteserv-stdout.log
-    ...    stderr=${RESULTS}/logs/${TEST_NAME}-net-liteserv-stderr.log
 
     Process Should Be Running   handle=liteserv-net
 
