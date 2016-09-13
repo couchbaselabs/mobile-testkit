@@ -574,33 +574,27 @@ Create cluster with private network
 
 `vagrant up`
 
-1. Edit your `resources/pools.json` file to use the ips defined in the Vagrantfile
+1. Run `python utilities/generate_cluster_configs_from_vagrant_hosts.py` 
+    - This will discover running vagrant boxes and get their ips
+    - Generate `resources/pool.json`
+    - Generate `resources/cluster_configs/`
 1. Create an ssh key. `cd ~/.ssh/ && ssh-keygen`
-1. Make sure your ssh-agent is running if you gave the key any name other than `id_rsa` (default)
-```
-eval `ssh-agent`
-```
-
-1. Install the key into the machines via 
+1. Install the ssh key into the machines via 
 
 ```
-python libraries/utilities/install_keys.py --key-name=vagrant.pub --ssh-user=vagrant
+python libraries/utilities/install_keys.py --key-name=id_rsa.pub --ssh-user=vagrant
 ```
 
 use the password `vagrant`. 
 
-NOTE: This key must be added to your ssh-agent if it is anything other than the default `id_rsa` key.
-The install_keys.py script will attempt to add it but it must be running. 
-
 1. Edit `ansible.cfg` and change the user to 'vagrant'
-1. Run `python libraries/utilities/generate_clusters_from_pool.py`
 1. Install the dependencies
 ```
 python libraries/provision/install_deps.py
 ```
 1. Provision the cluster
 ```
-python libraries/provision/provision_cluster.py --server-version=4.1.1 --sync-gateway-version=1.2.1-4
+python libraries/provision/provision_cluster.py --server-version=4.5.0 --sync-gateway-version=1.3.1-16
 ```
 
 Enjoy! You now have a Couchbase Server + Sync Gateway cluster running on your machine!
