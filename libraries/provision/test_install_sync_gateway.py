@@ -7,7 +7,7 @@ from libraries.provision.install_sync_gateway import get_buckets_from_sync_gatew
 
 class TestInstallSyncGateway(unittest.TestCase):
 
-    def test_get_buckets_from_sync_gateway_config(self):
+    def test_get_buckets_from_sync_gateway_config_template_vars(self):
 
         configJson = """
         {
@@ -52,7 +52,7 @@ class TestInstallSyncGateway(unittest.TestCase):
 
         """
 
-        tmpConfigFileName = "/tmp/test_install_sync_gateway_temp_config.json"
+        tmpConfigFileName = "/tmp/test_get_buckets_from_sync_gateway_config_template_vars.json"
         tmpConfigFile = open(tmpConfigFileName, "w")
         tmpConfigFile.write(configJson)
         tmpConfigFile.close()
@@ -60,6 +60,50 @@ class TestInstallSyncGateway(unittest.TestCase):
         buckets = get_buckets_from_sync_gateway_config(tmpConfigFileName)
 
         numBucketsExpected = 2
+        self.assertEquals(len(buckets), numBucketsExpected, msg="Expected {} buckets".format(numBucketsExpected))
+
+        # clean up temp file
+        os.remove(tmpConfigFileName)
+
+    def test_get_buckets_from_sync_gateway_config_no_buckets(self):
+
+        configJson = """
+            {
+              "log":[
+                "*"
+              ],
+              "databases":{
+                "db":{
+                  "server":"walrus:",
+                  "users":{
+                    "GUEST":{
+                      "disabled":true,
+                      "admin_channels":[
+                        "*"
+                      ]
+                    },
+                  "foo": {
+                      "disabled":false,
+                      "admin_channels": [
+                      "*"
+                      ],
+                      "password": "bar"
+                  }
+                  },
+                  "allow_empty_password":true
+                }
+              }
+            }
+        """
+
+        tmpConfigFileName = "/tmp/test_get_buckets_from_sync_gateway_config_no_buckets.json"
+        tmpConfigFile = open(tmpConfigFileName, "w")
+        tmpConfigFile.write(configJson)
+        tmpConfigFile.close()
+
+        buckets = get_buckets_from_sync_gateway_config(tmpConfigFileName)
+
+        numBucketsExpected = 0
         self.assertEquals(len(buckets), numBucketsExpected, msg="Expected {} buckets".format(numBucketsExpected))
 
         # clean up temp file

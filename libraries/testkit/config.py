@@ -84,11 +84,14 @@ class Config:
 
             dbs = conf_obj["databases"]
             for key, val in dbs.iteritems():
-                # Add data buckets
-                bucket_names_from_config.append(val["bucket"])
-                if "channel_index" in val:
-                    # index buckets
-                    bucket_names_from_config.append(val["channel_index"]["bucket"])
+
+                if val.has_key("bucket"):
+        
+                    # Add data buckets
+                    bucket_names_from_config.append(val["bucket"])
+                    if "channel_index" in val:
+                        # index buckets
+                        bucket_names_from_config.append(val["channel_index"]["bucket"])
 
                 if not val.has_key("shadow"):
                     continue
