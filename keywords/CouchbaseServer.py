@@ -189,6 +189,8 @@ class CouchbaseServer:
         # Figure out what total ram available is
         # Divide by number of buckets
         """
+        if len(bucket_names) == 0:
+            return
         log_info("Creating buckets: {}".format(bucket_names))
         ram_multiplier = 0.80
         total_avail_ram_bytes = self.get_available_ram(url)
