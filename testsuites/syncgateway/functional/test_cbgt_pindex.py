@@ -11,7 +11,7 @@ def test_pindex_distribution():
 
     # Verify all sync_gateways are running
     errors = cluster.verify_alive(mode)
-    assert(len(errors) == 0)
+    assert len(errors) == 0
 
 
 

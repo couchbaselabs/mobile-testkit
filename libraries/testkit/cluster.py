@@ -95,7 +95,7 @@ class Cluster:
                 # Delete buckets
                 log.info(">>> Deleting buckets on: {}".format(self.servers[0].ip))
                 status = self.servers[0].delete_buckets()
-                assert (status == 0)
+                assert status == 0
                 log.info(">>> Bucket deletion status: {}".format(status))
 
                 # Parse config and grab bucket names
@@ -108,7 +108,7 @@ class Cluster:
                 log.info(">>> Creating buckets on: {}".format(self.servers[0].ip))
                 log.info(">>> Creating buckets {}".format(bucket_name_set))
                 status = self.servers[0].create_buckets(bucket_name_set)
-                assert (status == 0)
+                assert status == 0
                 log.info(">>> Bucket creation status: {}".format(status))
 
                 # Wait for server to be in a warmup state to work around

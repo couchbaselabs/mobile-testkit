@@ -64,7 +64,7 @@ def test_roles_sanity(conf):
 
     # Verify all sync_gateways are running
     errors = cluster.verify_alive(mode)
-    assert(len(errors) == 0)
+    assert len(errors) == 0
 
 # TODO - Add role mid scenario
 # TODO - Delete role mid scenario

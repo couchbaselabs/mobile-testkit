@@ -39,7 +39,7 @@ def test_continuous_changes_parametrized(conf, num_users, num_docs, num_revision
             if task_name == "doc_pusher":
 
                 errors = future.result()
-                assert(len(errors) == 0)
+                assert len(errors) == 0
                 abc_doc_pusher.update_docs(num_revs_per_doc=num_revisions)
 
                 time.sleep(10)
@@ -56,7 +56,7 @@ def test_continuous_changes_parametrized(conf, num_users, num_docs, num_revision
 
     # Verify all sync_gateways are running
     errors = cluster.verify_alive(mode)
-    assert(len(errors) == 0)
+    assert len(errors) == 0
 
 
 def test_continuous_changes_sanity(conf, num_docs, num_revisions):
@@ -102,4 +102,4 @@ def test_continuous_changes_sanity(conf, num_docs, num_revisions):
 
     # Verify all sync_gateways are running
     errors = cluster.verify_alive(mode)
-    assert(len(errors) == 0)
+    assert len(errors) == 0

@@ -115,7 +115,7 @@ def install_sync_gateway(sync_gateway_config):
                 "skip_bucketflush": sync_gateway_config.skip_bucketflush
             }
         )
-        assert(status == 0), "Failed to install sync_gateway package"
+        assert status == 0, "Failed to install sync_gateway package"
 
 if __name__ == "__main__":
     usage = """usage: python install_sync_gateway.py

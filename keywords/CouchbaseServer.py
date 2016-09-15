@@ -43,13 +43,13 @@ def verify_server_version(host, expected_server_version):
         # 4.1.1-5487
         log_info("Expected Server Version: {}".format(expected_server_version))
         log_info("Running Server Version: {}".format(running_server_version))
-        assert(running_server_version == expected_server_version), "Unexpected server version!! Expected: {} Actual: {}".format(expected_server_version, running_server_version)
+        assert running_server_version == expected_server_version, "Unexpected server version!! Expected: {} Actual: {}".format(expected_server_version, running_server_version)
     elif len(expected_server_version_parts) == 1:
         # 4.1.1
         running_server_version_parts = running_server_version.split("-")
         log_info("Expected Server Version: {}".format(expected_server_version))
         log_info("Running Server Version: {}".format(running_server_version_parts[0]))
-        assert(expected_server_version == running_server_version_parts[0]), "Unexpected server version!! Expected: {} Actual: {}".format(expected_server_version, running_server_version_parts[0])
+        assert expected_server_version == running_server_version_parts[0], "Unexpected server version!! Expected: {} Actual: {}".format(expected_server_version, running_server_version_parts[0])
     else:
         raise ValueError("Unsupported version format")
 

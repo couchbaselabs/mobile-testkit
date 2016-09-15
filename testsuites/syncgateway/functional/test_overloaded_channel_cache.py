@@ -84,11 +84,11 @@ def test_overloaded_channel_cache(conf, num_docs, user_channels, filter, limit):
 
         if user_channels == "*" and num_docs == 5000:
             # "*" channel includes _user docs so the verify_changes will result in 10 view queries
-            assert(resp_obj["syncGateway_changeCache"]["view_queries"] == 10)
+            assert resp_obj["syncGateway_changeCache"]["view_queries"] == 10
         else:
             # If number of view queries == 0 the key will not exist in the expvars
-            assert("view_queries" not in resp_obj["syncGateway_changeCache"])
+            assert "view_queries" not in resp_obj["syncGateway_changeCache"]
 
     # Verify all sync_gateways are running
     errors = cluster.verify_alive(mode)
-    assert(len(errors) == 0)
+    assert len(errors) == 0

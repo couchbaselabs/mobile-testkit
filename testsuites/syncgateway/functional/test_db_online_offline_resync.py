@@ -81,7 +81,7 @@ def test_bucket_online_offline_resync_sanity(num_users, num_docs, num_revisions)
 
     # Take "db" offline
     status = admin.take_db_offline(db="db")
-    assert(status == 200)
+    assert status == 200
 
     restart_status = cluster.sync_gateways[0].restart("resources/sync_gateway_configs/bucket_online_offline/db_online_offline_access_restricted_cc.json")
     assert restart_status == 0
@@ -90,10 +90,10 @@ def test_bucket_online_offline_resync_sanity(num_users, num_docs, num_revisions)
 
     num_changes = admin.db_resync(db="db")
     log.info("expecting num_changes {} == num_docs {} * num_users {}".format(num_changes, num_docs, num_users))
-    assert(num_changes['payload']['changes'] == num_docs * num_users)
+    assert num_changes['payload']['changes'] == num_docs * num_users
 
     status = admin.bring_db_online(db="db")
-    assert(status == 200)
+    assert status == 200
 
     time.sleep(5)
     global_cache = list()
@@ -106,7 +106,7 @@ def test_bucket_online_offline_resync_sanity(num_users, num_docs, num_revisions)
 
     # Verify all sync_gateways are running
     errors = cluster.verify_alive(mode)
-    assert(len(errors) == 0)
+    assert len(errors) == 0
 
     end = time.time()
     log.info("Test ended.")
@@ -191,7 +191,7 @@ def test_bucket_online_offline_resync_with_online(num_users, num_docs, num_revis
 
     # Take "db" offline
     status = admin.take_db_offline(db="db")
-    assert(status == 200)
+    assert status == 200
 
     restart_status = cluster.sync_gateways[0].restart("resources/sync_gateway_configs/bucket_online_offline/db_online_offline_access_restricted_cc.json")
     assert restart_status == 0
@@ -205,7 +205,7 @@ def test_bucket_online_offline_resync_with_online(num_users, num_docs, num_revis
 
     db_info = admin.get_db_info("db")
     log.info("Status of db = {}".format(db_info["state"]))
-    assert(db_info["state"] == "Offline")
+    assert db_info["state"] == "Offline"
 
     try:
         async_resync_result = pool.apply_async(admin.db_resync, ("db",))
@@ -245,13 +245,13 @@ def test_bucket_online_offline_resync_with_online(num_users, num_docs, num_revis
     time.sleep(5)
     db_info = admin.get_db_info("db")
     log.info("Status of db = {}".format(db_info["state"]))
-    assert (db_info["state"] == "Online")
+    assert db_info["state"] == "Online"
 
     resync_result = async_resync_result.get()
     log.info("resync_changes {}".format(resync_result))
     log.info("expecting num_changes  == num_docs {} * num_users {}".format( num_docs, num_users))
-    assert(resync_result['payload']['changes'] == num_docs * num_users)
-    assert(resync_result['status_code'] == 200)
+    assert resync_result['payload']['changes'] == num_docs * num_users
+    assert resync_result['status_code'] == 200
 
     time.sleep(5)
     global_cache = list()
@@ -264,7 +264,7 @@ def test_bucket_online_offline_resync_with_online(num_users, num_docs, num_revis
 
     # Verify all sync_gateways are running
     errors = cluster.verify_alive(mode)
-    assert(len(errors) == 0)
+    assert len(errors) == 0
 
     end = time.time()
     log.info("Test ended.")
@@ -350,7 +350,7 @@ def test_bucket_online_offline_resync_with_offline(num_users, num_docs, num_revi
 
     # Take "db" offline
     status = admin.take_db_offline(db="db")
-    assert(status == 200)
+    assert status == 200
 
     restart_status = cluster.sync_gateways[0].restart("resources/sync_gateway_configs/bucket_online_offline/db_online_offline_access_restricted_cc.json")
     assert restart_status == 0
@@ -364,7 +364,7 @@ def test_bucket_online_offline_resync_with_offline(num_users, num_docs, num_revi
 
     db_info = admin.get_db_info("db")
     log.info("Status of db = {}".format(db_info["state"]))
-    assert(db_info["state"] == "Offline")
+    assert db_info["state"] == "Offline"
 
     try:
         async_resync_result = pool.apply_async(admin.db_resync, ("db",))
@@ -403,13 +403,13 @@ def test_bucket_online_offline_resync_with_offline(num_users, num_docs, num_revi
     time.sleep(5)
     db_info = admin.get_db_info("db")
     log.info("Status of db = {}".format(db_info["state"]))
-    assert (db_info["state"] == "Online")
+    assert db_info["state"] == "Online"
 
     resync_result = async_resync_result.get()
     log.info("resync_changes {}".format(resync_result))
     log.info("expecting num_changes  == num_docs {} * num_users {}".format( num_docs, num_users))
-    assert(resync_result['payload']['changes'] == num_docs * num_users)
-    assert(resync_result['status_code'] == 200)
+    assert resync_result['payload']['changes'] == num_docs * num_users
+    assert resync_result['status_code'] == 200
 
     time.sleep(5)
     global_cache = list()
@@ -422,7 +422,7 @@ def test_bucket_online_offline_resync_with_offline(num_users, num_docs, num_revi
 
     # Verify all sync_gateways are running
     errors = cluster.verify_alive(mode)
-    assert(len(errors) == 0)
+    assert len(errors) == 0
 
     end = time.time()
     log.info("Test ended.")

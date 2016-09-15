@@ -46,11 +46,11 @@ def test_webhooks(num_users, num_channels, num_docs, num_revisions):
     expected_events = (num_users * num_docs * num_revisions) + (num_users * num_docs)
     received_events = len(ws.get_data())
     log.info("expected_events: {} received_events {}".format(expected_events, received_events))
-    assert (expected_events == received_events)
+    assert expected_events == received_events
 
     # Verify all sync_gateways are running
     errors = cluster.verify_alive(mode)
-    assert(len(errors) == 0)
+    assert len(errors) == 0
 
 
 # implements scenarios: 18 and 19
@@ -92,22 +92,22 @@ def test_db_online_offline_webhooks_offline(num_users, num_channels, num_docs, n
     time.sleep(5)
     db_info = admin.get_db_info("db")
     log.info("Expecting db state {} found db state {}".format("Offline",db_info['state']))
-    assert (db_info["state"] == "Offline")
+    assert db_info["state"] == "Offline"
 
     webhook_events = ws.get_data()
     time.sleep(5)
     log.info("webhook event {}".format(webhook_events))
     last_event = webhook_events[-1]
-    assert (last_event['state'] == 'offline')
+    assert last_event['state'] == 'offline'
 
     admin.bring_db_online("db")
     time.sleep(5)
     db_info = admin.get_db_info("db")
     log.info("Expecting db state {} found db state {}".format("Online", db_info['state']))
-    assert (db_info["state"] == "Online")
+    assert db_info["state"] == "Online"
     webhook_events = ws.get_data()
     last_event = webhook_events[-1]
-    assert (last_event['state'] == 'online')
+    assert last_event['state'] == 'online'
     time.sleep(10)
     log.info("webhook event {}".format(webhook_events))
 
@@ -116,7 +116,7 @@ def test_db_online_offline_webhooks_offline(num_users, num_channels, num_docs, n
 
     # Verify all sync_gateways are running
     errors = cluster.verify_alive(mode)
-    assert(len(errors) == 0)
+    assert len(errors) == 0
 
 
 # implements scenarios: 21
@@ -155,7 +155,7 @@ def test_db_online_offline_webhooks_offline_two(num_users, num_channels, num_doc
     time.sleep(10)
 
     status = cluster.servers[0].delete_bucket("data-bucket")
-    assert(status == 0)
+    assert status == 0
 
     log.info("Sleeping for 120 seconds...")
     time.sleep(120)
@@ -164,11 +164,11 @@ def test_db_online_offline_webhooks_offline_two(num_users, num_channels, num_doc
     time.sleep(5)
     log.info("webhook event {}".format(webhook_events))
     last_event = webhook_events[-1]
-    assert (last_event['state'] == 'offline')
+    assert last_event['state'] == 'offline'
 
     ws.stop()
 
     # Verify all sync_gateways are running
     errors = cluster.verify_alive(mode)
-    assert(len(errors) == 0)
+    assert len(errors) == 0
 

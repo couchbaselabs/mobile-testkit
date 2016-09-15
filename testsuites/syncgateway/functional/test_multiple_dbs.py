@@ -52,7 +52,7 @@ def test_multiple_db_unique_data_bucket_unique_index_bucket(conf, num_users, num
 
     # Verify all sync_gateways are running
     errors = cluster.verify_alive(mode)
-    assert(len(errors) == 0)
+    assert len(errors) == 0
 
 
 # Kind of an edge case in that most users would not point multiple dbs at the same server bucket
@@ -98,4 +98,4 @@ def test_multiple_db_single_data_bucket_single_index_bucket(conf, num_users, num
 
     # Verify all sync_gateways are running
     errors = cluster.verify_alive(mode)
-    assert(len(errors) == 0)
+    assert len(errors) == 0

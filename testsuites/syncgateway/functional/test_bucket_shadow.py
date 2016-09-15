@@ -122,7 +122,7 @@ def test_bucket_shadow_low_revs_limit_repeated_deletes():
 
     # Check if SG's are up
     errors = cluster.verify_alive(sc.mode)
-    assert(len(errors) == 0)
+    assert len(errors) == 0
 
     # Restart Shadow SG
     sc.shadower_sg.stop()
@@ -130,7 +130,7 @@ def test_bucket_shadow_low_revs_limit_repeated_deletes():
         
     # Check if SG's are up
     errors = cluster.verify_alive(sc.mode)
-    assert(len(errors) == 0)
+    assert len(errors) == 0
     
 
 def test_bucket_shadow_low_revs_limit():
@@ -170,7 +170,7 @@ def test_bucket_shadow_low_revs_limit():
     # Look for panics
     time.sleep(5) # Give tap feed a chance to initialize
     errors = cluster.verify_alive(sc.mode)
-    assert(len(errors) == 0)
+    assert len(errors) == 0
     
     # Verify that the latest revision sync'd to source bucket
     get_doc_with_content_from_source_bucket_retry(doc_id, fake_doc_content, sc.source_bucket)
@@ -185,7 +185,7 @@ def test_bucket_shadow_low_revs_limit():
     # Look for panics
     time.sleep(5) # Wait until the shadower can process
     errors = cluster.verify_alive(sc.mode)
-    assert(len(errors) == 0)
+    assert len(errors) == 0
 
     
 def test_bucket_shadow_multiple_sync_gateways():
@@ -231,7 +231,7 @@ def test_bucket_shadow_multiple_sync_gateways():
     
     # Verify SG shadower comes up without panicking, given writes from non-shadower during downtime.
     errors = cluster.verify_alive(sc.mode)
-    assert(len(errors) == 0)
+    assert len(errors) == 0
 
     # If SG shadower does come up without panicking, bump a rev on a document that was modified during the downtime of the SG shadower
     sc.bob_non_shadower.update_doc(doc_id_bob, num_revision=10)
@@ -247,7 +247,7 @@ def test_bucket_shadow_multiple_sync_gateways():
     # Verify SG shadower comes up without panicking, given writes from non-shadower during downtime.
     time.sleep(5) # Give tap feed a chance to initialize
     errors = cluster.verify_alive(sc.mode)
-    assert(len(errors) == 0)
+    assert len(errors) == 0
 
 
 def get_doc_with_content_from_source_bucket_retry(doc_id, content_dict, bucket):

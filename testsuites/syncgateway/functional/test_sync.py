@@ -76,7 +76,7 @@ def test_issue_1524(conf, num_docs):
 
     # Verify all sync_gateways are running
     errors = cluster.verify_alive(mode)
-    assert(len(errors) == 0)
+    assert len(errors) == 0
 
 
 def test_sync_access_sanity(conf):
@@ -117,7 +117,7 @@ def test_sync_access_sanity(conf):
 
     # Verify all sync_gateways are running
     errors = cluster.verify_alive(mode)
-    assert(len(errors) == 0)
+    assert len(errors) == 0
 
 
 def test_sync_channel_sanity(conf):
@@ -171,7 +171,7 @@ def test_sync_channel_sanity(conf):
 
     # Verify all sync_gateways are running
     errors = cluster.verify_alive(mode)
-    assert(len(errors) == 0)
+    assert len(errors) == 0
 
     # TODO Push more docs to channel and make sure they do not show up in the users changes feed.
 
@@ -235,7 +235,7 @@ def test_sync_role_sanity(conf):
 
     # Verify all sync_gateways are running
     errors = cluster.verify_alive(mode)
-    assert(len(errors) == 0)
+    assert len(errors) == 0
 
 
 def test_sync_sanity(conf):
@@ -274,7 +274,7 @@ def test_sync_sanity(conf):
 
     # Verify all sync_gateways are running
     errors = cluster.verify_alive(mode)
-    assert(len(errors) == 0)
+    assert len(errors) == 0
 
 
 def test_sync_sanity_backfill(conf):
@@ -313,7 +313,7 @@ def test_sync_sanity_backfill(conf):
 
     # Verify all sync_gateways are running
     errors = cluster.verify_alive(mode)
-    assert(len(errors) == 0)
+    assert len(errors) == 0
 
 
 def test_sync_require_roles(conf):
@@ -405,4 +405,4 @@ def test_sync_require_roles(conf):
 
     # Verify all sync_gateways are running
     errors = cluster.verify_alive(mode)
-    assert(len(errors) == 0)
+    assert len(errors) == 0
