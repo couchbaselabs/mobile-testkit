@@ -1,8 +1,8 @@
 ---
-- hosts: pool
+- hosts: couchbase_servers:sync_gateways:load_generators:load_balancers
   any_errors_fatal: true
   become: yes
 
   tasks:
   - name: Set hostname to current ansible hostname
-    hostname: name={{ansible_hostname}}
+    hostname: name={{ inventory_hostname }}
