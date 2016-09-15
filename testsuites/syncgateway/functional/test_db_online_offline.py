@@ -635,7 +635,7 @@ def test_db_offline_tap_loss_sanity(conf, num_docs):
     assert len(errors) == NUM_ENDPOINTS + (num_docs * 2)
     for error_tuple in errors:
         log.info("({},{})".format(error_tuple[0], error_tuple[1]))
-        assert error_tuple[1] == 500
+        assert error_tuple[1] == 503
 
     # Verify all sync_gateways are running
     errors = cluster.verify_alive(mode)
