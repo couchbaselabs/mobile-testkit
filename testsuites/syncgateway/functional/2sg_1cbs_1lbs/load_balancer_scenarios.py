@@ -47,5 +47,5 @@ def test_load_balance_sanity(cluster_config):
             log_info("Found all docs ...")
             executor.submit(ct.stop)
         else:
-           executor.submit(ct.stop)
-           raise Exception("Could not find all changes in feed before timeout!!")
+            executor.submit(ct.stop)
+            raise Exception("Could not find all changes in feed before timeout!!")
