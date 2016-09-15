@@ -19,6 +19,10 @@ def install_deps(cluster_config):
     if status != 0:
         raise ProvisioningError("Failed to install dependencies")
 
+    status = ansible_runner.run_ansible_playbook("install-telegraf.yml")
+    if status != 0:
+        raise ProvisioningError("Failed to install telegraf")
+    
 if __name__ == "__main__":
     usage = "usage: python install_deps.py"
 

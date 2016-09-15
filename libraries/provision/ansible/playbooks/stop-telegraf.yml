@@ -1,0 +1,8 @@
+---
+- hosts: load_generators:load_balancers:sync_gateways:couchbase_servers
+  any_errors_fatal: false
+  become: true
+  tasks:
+   - name: Stop telegraf service
+     action: shell service telegraf stop
+     ignore_errors: yes
