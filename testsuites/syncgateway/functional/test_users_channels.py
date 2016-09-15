@@ -57,7 +57,7 @@ def test_multiple_users_multiple_channels(conf):
 
     # Verify all sync_gateways are running
     errors = cluster.verify_alive(mode)
-    assert(len(errors) == 0)
+    assert len(errors) == 0
 
 
 def test_muliple_users_single_channel(conf):
@@ -98,7 +98,7 @@ def test_muliple_users_single_channel(conf):
 
     # Verify all sync_gateways are running
     errors = cluster.verify_alive(mode)
-    assert(len(errors) == 0)
+    assert len(errors) == 0
 
 
 def test_single_user_multiple_channels(conf):
@@ -130,7 +130,7 @@ def test_single_user_multiple_channels(conf):
 
     # Verify all sync_gateways are running
     errors = cluster.verify_alive(mode)
-    assert(len(errors) == 0)
+    assert len(errors) == 0
 
     end = time.time()
     log.info("TIME:{}s".format(end - start))
@@ -171,7 +171,7 @@ def test_single_user_single_channel(conf):
 
     # Verify all sync_gateways are running
     errors = cluster.verify_alive(mode)
-    assert(len(errors) == 0)
+    assert len(errors) == 0
 
 
 

@@ -94,7 +94,7 @@ def test_mulitple_users_mulitiple_channels_mulitple_revisions(conf, num_users, n
 
     # Verify all sync_gateways are running
     errors = cluster.verify_alive(mode)
-    assert(len(errors) == 0)
+    assert len(errors) == 0
 
     end = time.time()
     log.info("Test ended.")

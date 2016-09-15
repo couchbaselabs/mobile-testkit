@@ -39,7 +39,7 @@ def test_seq(conf, num_users, num_docs, num_revisions):
     for user in users:
         changes = user.get_changes(since=doc_seq)
         log.info("Trying changes with since={}".format(doc_seq))
-        assert(len(changes["results"]) > 0)
+        assert len(changes["results"]) > 0
 
         second_to_last_doc_entry_seq = changes["results"][-2]["seq"]
         last_doc_entry_seq = changes["results"][-1]["seq"]
@@ -50,11 +50,11 @@ def test_seq(conf, num_users, num_docs, num_revisions):
         if mode == "distributed_index":
             # Verify last "seq" follows the formate 12313-0, not 12313-0::1023.15
             log.info('Verify that the last "seq" is a plain hashed value')
-            assert(len(second_to_last_doc_entry_seq.split("::")) == 2)
-            assert(len(last_doc_entry_seq.split("::")) == 1)
+            assert len(second_to_last_doc_entry_seq.split("::")) == 2
+            assert len(last_doc_entry_seq.split("::")) == 1
         else:
-            assert(second_to_last_doc_entry_seq > 0)
-            assert(last_doc_entry_seq > 0)
+            assert second_to_last_doc_entry_seq > 0
+            assert last_doc_entry_seq > 0
 
     all_doc_caches = [user.cache for user in users]
     all_docs = {k: v for cache in all_doc_caches for k, v in cache.items()}
@@ -62,7 +62,7 @@ def test_seq(conf, num_users, num_docs, num_revisions):
 
     # Verify all sync_gateways are running
     errors = cluster.verify_alive(mode)
-    assert(len(errors) == 0)
+    assert len(errors) == 0
 
 
 

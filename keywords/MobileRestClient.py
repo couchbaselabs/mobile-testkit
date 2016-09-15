@@ -1292,7 +1292,7 @@ class MobileRestClient:
 
             logging.debug("Expected: {}".format(expected_doc_map))
             logging.debug("Actual: {}".format(resp_docs))
-            assert(expected_doc_map == resp_docs), "Unable to verify docs present. Dictionaries are not equal"
+            assert expected_doc_map == resp_docs, "Unable to verify docs present. Dictionaries are not equal"
             break
 
     def verify_docs_in_changes(self, url, db, expected_docs, auth=None):

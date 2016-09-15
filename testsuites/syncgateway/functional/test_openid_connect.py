@@ -452,7 +452,7 @@ def test_openidconnect_large_scope(sg_url, sg_db):
 
     log_info("decoded_id_token: {}".format(decoded_id_token))
 
-    assert "nickname"  in decoded_id_token.keys()
+    assert "nickname" in decoded_id_token.keys()
 
 
 def test_openidconnect_public_session_endpoint(sg_url, sg_db):

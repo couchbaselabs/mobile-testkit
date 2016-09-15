@@ -103,9 +103,9 @@ def rest_scan(sync_gateway, db, online, num_docs, user_name, channels):
     try:
         db_info = admin.get_db_info(db=db)
         if not online:
-            assert (db_info["state"] == "Offline")
+            assert db_info["state"] == "Offline"
         else:
-            assert (db_info["state"] == "Online")
+            assert db_info["state"] == "Online"
         log.info(db_info)
     except HTTPError as e:
         log.info((e.response.url, e.response.status_code))
@@ -155,7 +155,7 @@ def rest_scan(sync_gateway, db, online, num_docs, user_name, channels):
     # GET /{db}/{local-doc-id}
     try:
         doc = user.get_doc("_local/{}".format(local_doc_id))
-        assert(doc["content"]["message"] == "I should not be replicated")
+        assert doc["content"]["message"] == "I should not be replicated"
     except HTTPError as e:
         log.info((e.response.url, e.response.status_code))
         error_responses.append((e.response.url, e.response.status_code))
@@ -164,7 +164,7 @@ def rest_scan(sync_gateway, db, online, num_docs, user_name, channels):
     try:
         all_docs_result = user.get_all_docs()
         # num_docs /{db}/{doc} PUT + num_docs /{db}/_bulk_docs + num_docs POST /{db}/
-        assert(len(all_docs_result["rows"]) == num_docs * 3)
+        assert len(all_docs_result["rows"]) == num_docs * 3
     except HTTPError as e:
         log.info((e.response.url, e.response.status_code))
         error_responses.append((e.response.url, e.response.status_code))
@@ -174,7 +174,7 @@ def rest_scan(sync_gateway, db, online, num_docs, user_name, channels):
         doc_ids = list(user.cache.keys())
         first_ten_ids = doc_ids[:10]
         first_ten = user.get_docs(first_ten_ids)
-        assert(len(first_ten) == 10)
+        assert len(first_ten) == 10
     except HTTPError as e:
         log.info((e.response.url, e.response.status_code))
         error_responses.append((e.response.url, e.response.status_code))
@@ -205,18 +205,18 @@ def test_online_default_rest(conf, num_docs):
 
     # all db endpoints should function as expected
     errors = rest_scan(cluster.sync_gateways[0], db="db", online=True, num_docs=num_docs, user_name="seth", channels=["ABC"])
-    assert(len(errors) == 0)
+    assert len(errors) == 0
 
     # Scenario 4
     # Check the db has an Online state at each running sync_gateway
     for sg in cluster.sync_gateways:
         admin = Admin(sg)
         db_info = admin.get_db_info("db")
-        assert (db_info["state"] == "Online")
+        assert db_info["state"] == "Online"
 
     # Verify all sync_gateways are running
     errors = cluster.verify_alive(mode)
-    assert(len(errors) == 0)
+    assert len(errors) == 0
 
 
 # Scenario 2
@@ -231,18 +231,18 @@ def test_offline_false_config_rest(conf, num_docs):
     # all db endpoints should function as expected
     errors = rest_scan(cluster.sync_gateways[0], db="db", online=True, num_docs=num_docs, user_name="seth", channels=["ABC"])
 
-    assert(len(errors) == 0)
+    assert len(errors) == 0
 
     # Scenario 4
     # Check the db has an Online state at each running sync_gateway
     for sg in cluster.sync_gateways:
         admin = Admin(sg)
         db_info = admin.get_db_info("db")
-        assert (db_info["state"] == "Online")
+        assert db_info["state"] == "Online"
 
     # Verify all sync_gateways are running
     errors = cluster.verify_alive(mode)
-    assert(len(errors) == 0)
+    assert len(errors) == 0
 
 
 # Scenario 3
@@ -257,24 +257,24 @@ def test_online_to_offline_check_503(conf, num_docs):
 
     # all db endpoints should function as expected
     errors = rest_scan(cluster.sync_gateways[0], db="db", online=True, num_docs=num_docs, user_name="seth", channels=["ABC"])
-    assert(len(errors) == 0)
+    assert len(errors) == 0
 
     # Take bucket offline
     status = admin.take_db_offline(db="db")
-    assert(status == 200)
+    assert status == 200
 
     # all db endpoints should return 503
     errors = rest_scan(cluster.sync_gateways[0], db="db", online=False, num_docs=num_docs, user_name="seth", channels=["ABC"])
 
     # We hit NUM_ENDPOINT unique REST endpoints + num of doc PUT failures
-    assert(len(errors) == NUM_ENDPOINTS + (num_docs * 2))
+    assert len(errors) == NUM_ENDPOINTS + (num_docs * 2)
     for error_tuple in errors:
         log.info("({},{})".format(error_tuple[0], error_tuple[1]))
-        assert(error_tuple[1] == 503)
+        assert error_tuple[1] == 503
 
     # Verify all sync_gateways are running
     errors = cluster.verify_alive(mode)
-    assert(len(errors) == 0)
+    assert len(errors) == 0
 
 
 # Scenario 5 - continuous
@@ -305,7 +305,7 @@ def test_online_to_offline_changes_feed_controlled_close_continuous(conf, num_do
             if task_name == "db_offline_task":
                 log.info("DB OFFLINE")
                 # make sure db_offline returns 200
-                assert(future.result() == 200)
+                assert future.result() == 200
             elif task_name == "docs_push":
                 log.info("DONE PUSHING DOCS")
                 doc_add_errors = future.result()
@@ -319,11 +319,11 @@ def test_online_to_offline_changes_feed_controlled_close_continuous(conf, num_do
     log.info("Number of docs add errors ({})".format(len(doc_add_errors)))
 
     # Some docs should have made it to _changes
-    assert(len(docs_in_changes) > 0)
+    assert len(docs_in_changes) > 0
 
     # Bring db back online
     status = admin.bring_db_online("db")
-    assert(status == 200)
+    assert status == 200
 
     # Get all docs that have been pushed
     # Verify that changes returns all of them
@@ -333,11 +333,11 @@ def test_online_to_offline_changes_feed_controlled_close_continuous(conf, num_do
 
     # Check that the number of errors return when trying to push while db is offline + num of docs in db
     # should equal the number of docs
-    assert(num_docs_pushed + len(doc_add_errors) == num_docs)
+    assert num_docs_pushed + len(doc_add_errors) == num_docs
 
     # Verify all sync_gateways are running
     errors = cluster.verify_alive(mode)
-    assert(len(errors) == 0)
+    assert len(errors) == 0
 
 
 # Scenario 6 - longpoll
@@ -367,7 +367,7 @@ def test_online_to_offline_continous_changes_feed_controlled_close_sanity_mulitp
             if task_name == "db_offline_task":
                 log.info("DB OFFLINE")
                 # make sure db_offline returns 200
-                assert(future.result() == 200)
+                assert future.result() == 200
             if task_name.startswith("user"):
                 # Long poll will exit with 503, return docs in the exception
                 log.info("POLLING DONE")
@@ -377,18 +377,18 @@ def test_online_to_offline_continous_changes_feed_controlled_close_sanity_mulitp
                 except Exception as e:
                     log.error("Continious feed close error: {}".format(e))
                     # continuous should be closed so this exception should never happen
-                    assert(0)
+                    assert 0
 
     # Assert that the feed close results length is num_users
-    assert(len(feed_close_results) == num_users)
+    assert len(feed_close_results) == num_users
 
     # No docs should be returned
     for feed_result in feed_close_results:
-        assert(len(feed_result) == 0)
+        assert len(feed_result) == 0
 
     # Verify all sync_gateways are running
     errors = cluster.verify_alive(mode)
-    assert(len(errors) == 0)
+    assert len(errors) == 0
 
 
 # Scenario 6 - longpoll
@@ -418,7 +418,7 @@ def test_online_to_offline_changes_feed_controlled_close_longpoll_sanity(conf, n
             if task_name == "db_offline_task":
                 log.info("DB OFFLINE")
                 # make sure db_offline returns 200
-                assert(future.result() == 200)
+                assert future.result() == 200
             if task_name == "polling":
                 # Long poll will exit with 503, return docs in the exception
                 log.info("POLLING DONE")
@@ -427,17 +427,17 @@ def test_online_to_offline_changes_feed_controlled_close_longpoll_sanity(conf, n
                 except Exception as e:
                     log.error("Longpoll feed close error: {}".format(e))
                     # long poll should be closed so this exception should never happen
-                    assert(0)
+                    assert 0
 
     # Account for _user doc
     # last_seq may be of the form '1' for channel cache or '1-0' for distributed index
     seq_num_component = last_seq_num.split("-")
-    assert(1 == int(seq_num_component[0]))
-    assert(len(docs_in_changes) == 0)
+    assert 1 == int(seq_num_component[0])
+    assert len(docs_in_changes) == 0
 
     # Verify all sync_gateways are running
     errors = cluster.verify_alive(mode)
-    assert(len(errors) == 0)
+    assert len(errors) == 0
 
 
 # Scenario 6 - longpoll
@@ -467,7 +467,7 @@ def test_online_to_offline_longpoll_changes_feed_controlled_close_sanity_mulitpl
             if task_name == "db_offline_task":
                 log.info("DB OFFLINE")
                 # make sure db_offline returns 200
-                assert(future.result() == 200)
+                assert future.result() == 200
             if task_name.startswith("user"):
                 # Long poll will exit with 503, return docs in the exception
                 log.info("POLLING DONE")
@@ -477,23 +477,23 @@ def test_online_to_offline_longpoll_changes_feed_controlled_close_sanity_mulitpl
                 except Exception as e:
                     log.error("Longpoll feed close error: {}".format(e))
                     # long poll should be closed so this exception should never happen
-                    assert(0)
+                    assert 0
 
     # Assert that the feed close results length is num_users
-    assert(len(feed_close_results) == num_users)
+    assert len(feed_close_results) == num_users
 
     # Account for _user doc
     # last_seq may be of the form '1' for channel cache or '1-0' for distributed index
     for feed_result in feed_close_results:
         docs_in_changes = feed_result[0]
         seq_num_component = feed_result[1].split("-")
-        assert(len(docs_in_changes) == 0)
-        assert(int(seq_num_component[0]) > 0)
+        assert len(docs_in_changes) == 0
+        assert int(seq_num_component[0]) > 0
 
 
     # Verify all sync_gateways are running
     errors = cluster.verify_alive(mode)
-    assert(len(errors) == 0)
+    assert len(errors) == 0
 
 
 # Scenario 6 - longpoll
@@ -525,7 +525,7 @@ def test_online_to_offline_changes_feed_controlled_close_longpoll(conf, num_docs
             if task_name == "db_offline_task":
                 log.info("DB OFFLINE")
                 # make sure db_offline returns 200
-                assert(future.result() == 200)
+                assert future.result() == 200
             if task_name == "docs_push":
                 log.info("DONE PUSHING DOCS")
                 doc_add_errors = future.result()
@@ -550,18 +550,18 @@ def test_online_to_offline_changes_feed_controlled_close_longpoll(conf, num_docs
     log.info("Number of docs add errors ({})".format(len(doc_add_errors)))
 
     # Some docs should have made it to _changes
-    assert(len(docs_in_changes) > 0)
+    assert len(docs_in_changes) > 0
 
     seq_num_component = last_seq_num.split("-")
 
     # last_seq may be of the form '1' for channel cache or '1-0' for distributed index
     # assert the last_seq_number == number _changes + 2 (_user doc starts and one and docs start at _user doc seq + 2)
     seq_num_component = last_seq_num.split("-")
-    assert(len(docs_in_changes) + 2 == int(seq_num_component[0]))
+    assert len(docs_in_changes) + 2 == int(seq_num_component[0])
 
     # Bring db back online
     status = admin.bring_db_online("db")
-    assert(status == 200)
+    assert status == 200
     #
     # Get all docs that have been pushed
     # Verify that changes returns all of them
@@ -571,11 +571,11 @@ def test_online_to_offline_changes_feed_controlled_close_longpoll(conf, num_docs
 
     # Check that the number of errors return when trying to push while db is offline + num of docs in db
     # should equal the number of docs
-    assert(num_docs_pushed + len(doc_add_errors) == num_docs)
+    assert num_docs_pushed + len(doc_add_errors) == num_docs
 
     # Verify all sync_gateways are running
     errors = cluster.verify_alive(mode)
-    assert(len(errors) == 0)
+    assert len(errors) == 0
 
 
 # Scenario 6
@@ -592,10 +592,10 @@ def test_offline_true_config_bring_online(conf, num_docs):
     # all db endpoints should fail with 503
     errors = rest_scan(cluster.sync_gateways[0], db="db", online=False, num_docs=num_docs, user_name="seth", channels=["ABC"])
 
-    assert(len(errors) == NUM_ENDPOINTS + (num_docs * 2))
+    assert len(errors) == NUM_ENDPOINTS + (num_docs * 2)
     for error_tuple in errors:
         log.info("({},{})".format(error_tuple[0], error_tuple[1]))
-        assert(error_tuple[1] == 503)
+        assert error_tuple[1] == 503
 
     # Scenario 9
     # POST /db/_online
@@ -604,11 +604,11 @@ def test_offline_true_config_bring_online(conf, num_docs):
 
     # all db endpoints should succeed
     errors = rest_scan(cluster.sync_gateways[0], db="db", online=True, num_docs=num_docs, user_name="seth", channels=["ABC"])
-    assert(len(errors) == 0)
+    assert len(errors) == 0
 
     # Verify all sync_gateways are running
     errors = cluster.verify_alive(mode)
-    assert(len(errors) == 0)
+    assert len(errors) == 0
 
 
 # Scenario 14
@@ -624,22 +624,22 @@ def test_db_offline_tap_loss_sanity(conf, num_docs):
 
     # all db rest enpoints should succeed
     errors = rest_scan(cluster.sync_gateways[0], db="db", online=True, num_docs=num_docs, user_name="seth", channels=["ABC"])
-    assert(len(errors) == 0)
+    assert len(errors) == 0
 
     # Delete bucket to sever TAP feed
     status = cluster.servers[0].delete_bucket("data-bucket")
-    assert (status == 0)
+    assert status == 0
 
     # Check that bucket is in offline state
     errors = rest_scan(cluster.sync_gateways[0], db="db", online=False, num_docs=num_docs, user_name="seth", channels=["ABC"])
-    assert(len(errors) == NUM_ENDPOINTS + (num_docs * 2))
+    assert len(errors) == NUM_ENDPOINTS + (num_docs * 2)
     for error_tuple in errors:
         log.info("({},{})".format(error_tuple[0], error_tuple[1]))
-        assert(error_tuple[1] == 503)
+        assert error_tuple[1] == 500
 
     # Verify all sync_gateways are running
     errors = cluster.verify_alive(mode)
-    assert(len(errors) == 0)
+    assert len(errors) == 0
 
 
 # Scenario 11
@@ -661,7 +661,7 @@ def test_db_delayed_online(conf, num_docs):
     pool = ThreadPool(processes=1)
 
     db_info = admin.get_db_info("db")
-    assert (db_info["state"] == "Offline")
+    assert db_info["state"] == "Offline"
 
     async_result = pool.apply_async(admin.bring_db_online, ("db", 15,))
     status = async_result.get(timeout=15)
@@ -670,15 +670,15 @@ def test_db_delayed_online(conf, num_docs):
     time.sleep(20)
 
     db_info = admin.get_db_info("db")
-    assert (db_info["state"] == "Online")
+    assert db_info["state"] == "Online"
 
     # all db rest enpoints should succeed
     errors = rest_scan(cluster.sync_gateways[0], db="db", online=True, num_docs=num_docs, user_name="seth", channels=["ABC"])
-    assert(len(errors) == 0)
+    assert len(errors) == 0
 
     # Verify all sync_gateways are running
     errors = cluster.verify_alive(mode)
-    assert(len(errors) == 0)
+    assert len(errors) == 0
 
 
 def test_multiple_dbs_unique_buckets_lose_tap(conf, num_docs):
@@ -694,29 +694,29 @@ def test_multiple_dbs_unique_buckets_lose_tap(conf, num_docs):
     # all db rest endpoints should succeed
     for db in dbs:
         errors = rest_scan(cluster.sync_gateways[0], db=db, online=True, num_docs=num_docs, user_name="seth", channels=["ABC"])
-        assert(len(errors) == 0)
+        assert len(errors) == 0
 
     status = cluster.servers[0].delete_bucket("data-bucket-1")
-    assert(status == 0)
+    assert status == 0
     status = cluster.servers[0].delete_bucket("data-bucket-3")
-    assert(status == 0)
+    assert status == 0
 
     # Check that db2 and db4 are still Online
     for db in ["db2", "db4"]:
         errors = rest_scan(cluster.sync_gateways[0], db=db, online=True, num_docs=num_docs, user_name="adam", channels=["CBS"])
-        assert(len(errors) == 0)
+        assert len(errors) == 0
 
     # Check that db1 and db3 go offline
     for db in ["db1", "db3"]:
         errors = rest_scan(cluster.sync_gateways[0], db=db, online=False, num_docs=num_docs, user_name="seth", channels=["ABC"])
-        assert(len(errors) == NUM_ENDPOINTS + (num_docs * 2))
+        assert len(errors) == NUM_ENDPOINTS + (num_docs * 2)
         for error_tuple in errors:
             log.info("({},{})".format(error_tuple[0], error_tuple[1]))
-            assert(error_tuple[1] == 503)
+            assert error_tuple[1] == 503
 
     # Verify all sync_gateways are running
     errors = cluster.verify_alive(mode)
-    assert(len(errors) == 0)
+    assert len(errors) == 0
 
 
 # Reenable for 1.3

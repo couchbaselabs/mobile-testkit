@@ -56,7 +56,7 @@ def test_longpoll_changes_parametrized(conf, num_docs, num_revisions):
 
     # Verify all sync_gateways are running
     errors = cluster.verify_alive(mode)
-    assert(len(errors) == 0)
+    assert len(errors) == 0
 
 
 def test_longpoll_changes_sanity(conf, num_docs, num_revisions):
@@ -103,4 +103,4 @@ def test_longpoll_changes_sanity(conf, num_docs, num_revisions):
 
     # Verify all sync_gateways are running
     errors = cluster.verify_alive(mode)
-    assert(len(errors) == 0)
+    assert len(errors) == 0

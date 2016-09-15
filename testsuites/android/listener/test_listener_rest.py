@@ -90,7 +90,7 @@ def test_selective_db_delete_and_replication_lifecycle():
 
     # Assert each endpoint has 601 docs
     for emu in all_emus:
-        assert(emu.get_num_docs(db_name) == 601)
+        assert emu.get_num_docs(db_name) == 601
 
     # Stop all replication
     stop_pull_replications(db_name, emu_1, targets)
@@ -120,7 +120,7 @@ def test_selective_db_delete_and_replication_lifecycle():
 
     # TODO Verify 3,4,5 have 621
     for emu in [emu_3, emu_4, emu_5]:
-        assert(emu.get_num_docs(db_name) == 621)
+        assert emu.get_num_docs(db_name) == 621
 
     # Create dbs on master and first slave
     emu_1.create_db(db_name)
@@ -140,7 +140,7 @@ def test_selective_db_delete_and_replication_lifecycle():
     for emu in emus:
         doc_num = emu.get_num_docs(db_name)
         log.info("emu: {} doc_num: {}".format(emu.target_device, doc_num))
-        assert (doc_num == 661)
+        assert doc_num == 661
 
 
 def test_replication_unstable_network():
@@ -189,9 +189,9 @@ def test_replication_unstable_network():
     time.sleep(10)
 
     # Assert each endpoint has 100 docs
-    assert(dev.get_num_docs(db_name) == 100)
+    assert dev.get_num_docs(db_name) == 100
     for emu in emus:
-        assert(emu.get_num_docs(db_name) == 100)
+        assert emu.get_num_docs(db_name) == 100
 
     # Create docs on targets
     emu_1_pusher = User(target=emu_1, db=db_name, name="emu1_doc_pusher", password="password", channels=["ABC"])
@@ -211,10 +211,10 @@ def test_replication_unstable_network():
     time.sleep(5)
 
     # Assert each endpoint has 140 docs
-    assert(dev.get_num_docs(db_name) == 160)
+    assert dev.get_num_docs(db_name) == 160
 
     for emu in emus:
-        assert(emu.get_num_docs(db_name) == 160)
+        assert emu.get_num_docs(db_name) == 160
 
 
 

@@ -64,31 +64,31 @@ def verify_response_size(user_agent, accept_encoding, x_accept_part_encoding, re
 
         if accept_encoding is None and x_accept_part_encoding is None:
             # Response size should not be compressed
-            assert((uncompressed_size - 500) < response_size < (uncompressed_size + 500))
+            assert (uncompressed_size - 500) < response_size < (uncompressed_size + 500)
         elif accept_encoding == "gzip" and x_accept_part_encoding is None:
             # Response size should not be compressed
-            assert((uncompressed_size - 500) < response_size < (uncompressed_size + 500))
+            assert (uncompressed_size - 500) < response_size < (uncompressed_size + 500)
         elif accept_encoding is None and x_accept_part_encoding == "gzip":
             # Response size should be part compressed
-            assert((part_encoded_size - 500) < response_size < (part_encoded_size + 500))
+            assert (part_encoded_size - 500) < response_size < (part_encoded_size + 500)
         elif accept_encoding == "gzip" and x_accept_part_encoding == "gzip":
             # Response size should be part compressed
-            assert((part_encoded_size - 500) < response_size < (part_encoded_size + 500))
+            assert (part_encoded_size - 500) < response_size < (part_encoded_size + 500)
 
     elif user_agent == "CouchbaseLite/1.2":
 
         if accept_encoding is None and x_accept_part_encoding is None:
             # Response size should not be compressed
-            assert((uncompressed_size - 500) < response_size < (uncompressed_size + 500))
+            assert (uncompressed_size - 500) < response_size < (uncompressed_size + 500)
         elif accept_encoding == "gzip" and x_accept_part_encoding is None:
             # Response size should be fully compressed
-            assert((whole_response_compressed_size - 500) < response_size < (whole_response_compressed_size + 500))
+            assert (whole_response_compressed_size - 500) < response_size < (whole_response_compressed_size + 500)
         elif accept_encoding is None and x_accept_part_encoding == "gzip":
             # Response size should be part compressed
-            assert((part_encoded_size - 500) < response_size < (part_encoded_size + 500))
+            assert (part_encoded_size - 500) < response_size < (part_encoded_size + 500)
         elif accept_encoding == "gzip" and x_accept_part_encoding == "gzip":
             # Response size should be fully compressed
-            assert((whole_response_compressed_size - 500) < response_size < (whole_response_compressed_size + 500))
+            assert (whole_response_compressed_size - 500) < response_size < (whole_response_compressed_size + 500)
 
     else:
         raise ValueError("Unsupported user agent")
@@ -130,7 +130,7 @@ def test_bulk_get_compression(conf, num_docs, accept_encoding=None, x_accept_par
 
     # Verify all sync_gateways are running
     errors = cluster.verify_alive(mode)
-    assert(len(errors) == 0)
+    assert len(errors) == 0
 
 
 
