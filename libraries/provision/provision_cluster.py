@@ -45,6 +45,10 @@ def provision_cluster(couchbase_server_config, sync_gateway_config):
     status = ansible_runner.run_ansible_playbook("flush-firewall.yml")
     assert status == 0, "Failed to flush firewall"
 
+    # Set hostnames to match ansible hostnames
+    status = ansible_runner.run_ansible_playbook("set-hostnames.yml")
+    assert status == 0, "Failed to set hostnames"
+
     # Install server package
     install_couchbase_server.install_couchbase_server(couchbase_server_config)
 

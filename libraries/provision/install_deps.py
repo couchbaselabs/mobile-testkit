@@ -18,3 +18,6 @@ if __name__ == "__main__":
 
     status = ansible_runner.run_ansible_playbook("install-common-tools.yml")
     assert status == 0, "Failed to install dependencies"
+
+    status = ansible_runner.run_ansible_playbook("install-telegraf.yml")
+    assert status == 0, "Failed to install dependencies"

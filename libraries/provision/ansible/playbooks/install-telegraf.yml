@@ -1,0 +1,52 @@
+---
+
+- hosts: pool
+  any_errors_fatal: true
+  become: yes
+  tasks:
+   - name: Install telegraf from remote RPM
+     yum: name=https://dl.influxdata.com/telegraf/releases/telegraf-1.0.0.x86_64.rpm state=present
+
+- hosts: load_balancers
+  any_errors_fatal: true
+  sudo: true
+  tasks:
+   - name: Configure telegraf for load_balancers
+     template: src=files/security-nofiles-limit.conf dest=/etc/telegraf/telegraf-nginx.conf owner=root group=root mode=0644
+
+   - name: Force telegraf to reload config
+     action: shell pkill -IO -f {{process_string.stdout}} || true
+     ignore_errors: True
+
+- hosts: load_generators
+  any_errors_fatal: true
+  sudo: true
+  tasks:
+   - name: Configure telegraf for load_generators
+     template: src=files/security-nofiles-limit.conf dest=/etc/telegraf/telegraf-gateload.conf owner=root group=root mode=0644
+
+   - name: Force telegraf to reload config
+     action: shell pkill -IO -f {{process_string.stdout}} || true
+     ignore_errors: True
+
+- hosts: sync_gateways
+  any_errors_fatal: true
+  sudo: true
+  tasks:
+   - name: Configure telegraf for sync_gateways
+     template: src=files/security-nofiles-limit.conf dest=/etc/telegraf/telegraf-sync-gateway.conf owner=root group=root mode=0644
+
+   - name: Force telegraf to reload config
+     action: shell pkill -IO -f {{process_string.stdout}} || true
+     ignore_errors: True
+
+- hosts: couchbase_servers
+  any_errors_fatal: true
+  sudo: true
+  tasks:
+   - name: Configure telegraf for couchbase_servers
+     template: src=files/security-nofiles-limit.conf dest=/etc/telegraf/telegraf-couchbase-server.conf owner=root group=root mode=0644
+
+   - name: Force telegraf to reload config
+     action: shell pkill -IO -f {{process_string.stdout}} || true
+     ignore_errors: True
