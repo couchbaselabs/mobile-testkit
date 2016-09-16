@@ -1,8 +1,9 @@
 import pytest
 import logging
 import datetime
+import sys
 
-from requests.exceptions import ConnectionError
+from keywords.utils import log_info
 
 from keywords.constants import RESULTS_DIR
 from keywords.LiteServ import LiteServ
@@ -11,6 +12,8 @@ from keywords.MobileRestClient import MobileRestClient
 
 @pytest.fixture(scope="module")
 def suite_setup(request):
+
+    """Suite setup fixture for p2p client tests"""
 
     logging.info("Setting up P2P suite ...")
 
@@ -49,6 +52,8 @@ def suite_setup(request):
 
 @pytest.fixture(scope="function")
 def test_setup(request):
+
+    """Test setup fixture for p2p client tests"""
 
     logging.info("Setting up P2P test ...")
 
@@ -139,11 +144,12 @@ class TestPeerToPeer:
 
         num_docs_per_db = 1000
 
-        print("ls_url_one: {}".format(ls_url_one))
-        print("ls_url_two: {}".format(ls_url_two))
+        log_info("ls_url_one: {}".format(ls_url_one))
+        log_info("ls_url_two: {}".format(ls_url_two))
 
         client = MobileRestClient()
 
+        log_info("Creating databases")
         ls_db1 = client.create_database(url=ls_url_one, name="ls_db1")
         ls_db2 = client.create_database(url=ls_url_two, name="ls_db2")
 
@@ -197,5 +203,4 @@ class TestPeerToPeer:
 
         client.verify_docs_in_changes(url=ls_url_one, db=ls_db1, expected_docs=all_docs)
         client.verify_docs_in_changes(url=ls_url_two, db=ls_db2, expected_docs=all_docs)
-
 

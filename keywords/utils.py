@@ -4,11 +4,11 @@ import json
 import pdb
 import sys
 
-from robot.api.logger import console
-
 
 def log_info(message):
-    console(message)
+    # pytest will capture stdout / stderr
+    # by using 'print' the html reporting and running the test with -s will pick up this output in the console
+    print(message)
     logging.info(message)
 
 

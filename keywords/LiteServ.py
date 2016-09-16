@@ -260,7 +260,7 @@ class LiteServ:
         if not self.valid_storage_engine(storage_engine):
             raise ValueError("Invalid Storage Engine: {}".format(storage_engine))
 
-        logging.info("Starting LiteServ: {} {} {}:{} using {}".format(platform, version, host, port, storage_engine))
+        log_info("Starting LiteServ: {} {} {}:{} using {}".format(platform, version, host, port, storage_engine))
         if platform == "macosx":
             proc_handle = self.start_macosx_liteserv(
                 version=version,
