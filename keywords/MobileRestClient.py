@@ -974,7 +974,7 @@ class MobileRestClient:
 
         # extract ids from docs and format for _bulk_get request
         ids = [{"id": doc["id"]} for doc in docs]
-        request_body ={"docs": ids}
+        request_body = {"docs": ids}
 
         auth_type = get_auth_type(auth)
 
