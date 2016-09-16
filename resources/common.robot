@@ -36,19 +36,6 @@ Install LiteServ
     [Timeout]       2 minutes
     Run Keyword If  "${platform}" == "android"  Install Apk  ${version}  ${storage_engine}  ELSE  Log  No install need
 
-Start LiteServ
-    [Documentation]   Starts LiteServ for a specific platform.
-    ...  The LiteServ binaries are located in deps/.
-    [Arguments]  ${platform}  ${version}  ${host}  ${port}  ${storage_engine}
-    [Timeout]       1 minute
-
-    ${ls_url} =  Run Keyword If  "${platform}" == "macosx"   Start MacOSX LiteServ    version=${version}  host=${host}  port=${port}  storage_engine=${storage_engine}
-    ${ls_url} =  Run Keyword If  "${platform}" == "android"  Start Android LiteServ                       host=${host}  port=${port}  storage_engine=${storage_engine}
-    ${ls_url} =  Run Keyword If  "${platform}" == "net"      Start Net LiteServ       version=${version}  host=${host}  port=${port}  storage_engine=${storage_engine}
-
-    ${ls_url} =  Verify LiteServ Launched  platform=${platform}  host=${host}  port=${port}  version_build=${version}
-    [return]  ${ls_url}
-
 Shutdown LiteServ
     [Documentation]   Stops LiteServ for a specific platform.
     ...  The LiteServ binaries are located in
@@ -58,55 +45,6 @@ Shutdown LiteServ
     Run Keyword If  "${platform}" == "android"  Shutdown Android LiteServ
     Run Keyword If  "${platform}" == "net"      Shutdown Net LiteServ
 
-Start MacOSX LiteServ
-    [Documentation]   Starts LiteServ for MacOSX platform.
-    ...  The LiteServ binaries are located in deps/.
-    [Arguments]  ${version}  ${host}  ${port}  ${storage_engine}
-    [Timeout]       1 minute
-
-    ${binary_path} =  Get LiteServ Binary Path  platform=macosx  version=${version}  storage_engine=${storage_engine}
-
-     # Get a list of db names / password for running LiteServ with encrypted databases
-    @{db_name_passwords} =  Run Keyword If  '${storage_engine}' == 'ForestDB+Encryption' or '${storage_engine}' == 'SQLCipher'
-    ...  Build Name Passwords For Registered Dbs  platform=macosx
-
-    Run Keyword If  '${storage_engine}' == 'ForestDB+Encryption' or '${storage_engine}' == 'SQLCipher'
-    ...  Log  Using ENCRYPTION: ${db_name_passwords}  console=yes
-
-    Run Keyword If  '${storage_engine}' == 'ForestDB+Encryption'
-    ...  Start Process  ${binary_path}
-    ...    --port  ${port}
-    ...    --storage  ForestDB
-    ...    --dir  ${RESULTS}/dbs/macosx/
-    ...    @{db_name_passwords}
-    ...    -Log  YES  -LogSync  YES  -LogCBLRouter  YES  -LogSyncVerbose  YES  -LogRemoteRequest  YES
-    ...    alias=liteserv-ios
-    ...    shell=True
-    ...    stdout=${RESULTS}/logs/${TEST_NAME}-macosx-liteserv-stdout.log
-    ...    stderr=${RESULTS}/logs/${TEST_NAME}-macosx-liteserv-stderr.log
-    ...  ELSE IF  '${storage_engine}' == 'SQLCipher'
-    ...  Start Process  ${binary_path}
-    ...    --port  ${port}
-    ...    --storage  SQLite
-    ...    --dir  ${RESULTS}/dbs/macosx/
-    ...    @{db_name_passwords}
-    ...    -Log  YES  -LogSync  YES  -LogCBLRouter  YES  -LogSyncVerbose  YES  -LogRemoteRequest  YES
-    ...    alias=liteserv-ios
-    ...    shell=True
-    ...    stdout=${RESULTS}/logs/${TEST_NAME}-macosx-liteserv-stdout.log
-    ...    stderr=${RESULTS}/logs/${TEST_NAME}-macosx-liteserv-stderr.log
-    ...  ELSE
-    ...  Start Process  ${binary_path}
-    ...    --port  ${port}
-    ...    --storage  ${storage_engine}
-    ...    --dir  ${RESULTS}/dbs/macosx/
-    ...    -Log  YES  -LogSync  YES  -LogCBLRouter  YES  -LogSyncVerbose  YES  -LogRemoteRequest  YES
-    ...    alias=liteserv-ios
-    ...    shell=True
-    ...    stdout=${RESULTS}/logs/${TEST_NAME}-macosx-liteserv-stdout.log
-    ...    stderr=${RESULTS}/logs/${TEST_NAME}-macosx-liteserv-stderr.log
-
-    Process Should Be Running   handle=liteserv-ios
 
 Start Android LiteServ
     [Documentation]   Starts LiteServ Activity on Running on port.
@@ -125,59 +63,6 @@ Start Android LiteServ
 
     Launch Activity  ${port}  ${storage_engine}
 
-Start Net LiteServ
-    [Documentation]   Starts a .net LiteServ on a port.
-    ...  The LiteServ binaries are located in deps/.
-    [Arguments]  ${version}  ${host}  ${port}  ${storage_engine}
-    [Timeout]       1 minute
-    ${binary_path} =  Get LiteServ Binary Path  platform=net  version=${version}  storage_engine=${storage_engine}
-
-    # Get a list of db names / password for running LiteServ with encrypted databases
-    @{db_name_passwords} =  Run Keyword If  '${storage_engine}' == 'ForestDB+Encryption' or '${storage_engine}' == 'SQLCipher'
-    ...  Build Name Passwords For Registered Dbs  platform=net
-
-    Run Keyword If  '${storage_engine}' == 'ForestDB+Encryption' or '${storage_engine}' == 'SQLCipher'
-    ...  Log  Using ENCRYPTION: ${db_name_passwords}  console=yes
-
-    Run Keyword If  '${storage_engine}' == 'ForestDB+Encryption'
-    ...  Start Process  mono  ${binary_path}
-    ...    --port  ${port}
-    ...    --storage  ForestDB
-    ...    --dir  ${RESULTS}/dbs/net/
-    ...    @{db_name_passwords}
-    ...    alias=liteserv-net
-    ...    shell=True
-    ...    stdout=${RESULTS}/logs/${TEST_NAME}-net-liteserv-stdout.log
-    ...    stderr=${RESULTS}/logs/${TEST_NAME}-net-liteserv-stderr.log
-    ...  ELSE IF  '${storage_engine}' == 'SQLCipher'
-    ...  Start Process  mono  ${binary_path}
-    ...    --port  ${port}
-    ...    --storage  SQLite
-    ...    --dir  ${RESULTS}/dbs/net/
-    ...    @{db_name_passwords}
-    ...    alias=liteserv-net
-    ...    shell=True
-    ...    stdout=${RESULTS}/logs/${TEST_NAME}-net-liteserv-stdout.log
-    ...    stderr=${RESULTS}/logs/${TEST_NAME}-net-liteserv-stderr.log
-    ...  ELSE
-    ...  Start Process  mono  ${binary_path}
-    ...    --port  ${port}
-    ...    --storage  ${storage_engine}
-    ...    --dir  ${RESULTS}/dbs/net/
-    ...    alias=liteserv-net
-    ...    shell=True
-    ...    stdout=${RESULTS}/logs/${TEST_NAME}-net-liteserv-stdout.log
-    ...    stderr=${RESULTS}/logs/${TEST_NAME}-net-liteserv-stderr.log
-
-    Process Should Be Running   handle=liteserv-net
-
-Shutdown MacOSX LiteServ
-    [Documentation]   Stops Mac OSX LiteServ.
-    ...  The LiteServ binaries are located in deps/binaries.
-    [Timeout]       1 minute
-    Terminate Process          handle=liteserv-ios
-    Process Should Be Stopped  handle=liteserv-ios
-
 Shutdown Android LiteServ
     [Documentation]   Stops Android LiteServ Activity.
     ...  The LiteServ binaries are located in deps/binaries.
@@ -186,10 +71,3 @@ Shutdown Android LiteServ
     Terminate Process          handle=adb-logcat
     Process Should Be Stopped  handle=adb-logcat
 
-
-Shutdown Net LiteServ
-    [Documentation]   Stops Net LiteServ.
-    ...  The LiteServ binaries are located in deps/binaries.
-    [Timeout]       1 minute
-    Terminate Process          handle=liteserv-net
-    Process Should Be Stopped  handle=liteserv-net

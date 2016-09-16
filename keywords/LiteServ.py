@@ -5,6 +5,9 @@ from zipfile import ZipFile
 import time
 import subprocess
 import re
+import pytest
+
+from keywords.constants import RESULTS_DIR
 
 import requests
 from requests.sessions import Session
@@ -17,6 +20,7 @@ from constants import REGISTERED_CLIENT_DBS
 from constants import RESULTS_DIR
 
 from utils import log_info
+from utils import log_r
 
 def version_and_build(full_version):
     version_parts = full_version.split("-")
@@ -27,6 +31,13 @@ class LiteServ:
 
     def __init__(self):
         self._session = Session()
+
+    def valid_storage_engine(self, storage_engine):
+        logging.info(storage_engine)
+        if storage_engine in ["SQLite", "SQLCipher", "ForestDB", "ForestDB+Encryption"]:
+            return True
+        else:
+            return False
 
     def get_download_package_name(self, platform, version_build, storage_engine):
 
@@ -240,6 +251,125 @@ class LiteServ:
             ])
             log_info(output)
 
+    def start_liteserv(self, platform, version, host, port, storage_engine, logfile):
+        """
+        Starts LiteServ for a specific provided platform.
+        Returns a tuple of the listserv_url and the process_handle
+        """
+
+        if not self.valid_storage_engine(storage_engine):
+            raise ValueError("Invalid Storage Engine: {}".format(storage_engine))
+
+        logging.info("Starting LiteServ: {} {} {}:{} using {}".format(platform, version, host, port, storage_engine))
+        if platform == "macosx":
+            proc_handle = self.start_macosx_liteserv(
+                version=version,
+                port=port,
+                storage_engine=storage_engine,
+                logfile=logfile
+            )
+        elif platform == "android":
+            raise NotImplementedError("Unsupported LiteServ Platform")
+        elif platform == "net":
+            proc_handle = self.start_net_liteserv(
+                version=version,
+                port=port,
+                storage_engine=storage_engine,
+                logfile=logfile
+            )
+        else:
+            raise NotImplementedError("Unsupported LiteServ Platform")
+
+        ls_url = self.verify_liteserv_launched(
+            platform=platform,
+            host=host,
+            port=port,
+            version_build=version
+        )
+
+        return ls_url, proc_handle
+
+    def shutdown_liteserv(self, process_handle, logfile):
+        logfile.flush()
+        logfile.close()
+        process_handle.kill()
+        process_handle.wait()
+
+    def start_macosx_liteserv(self, version, port, storage_engine, logfile):
+        """
+        Launches a Mac OSX LiteServ listener on the machine running the tests bound to localhost:<port>
+
+        :param version: Version (ex. 1.3.1-6) of LiteServ to launch
+        :param port: The localhost port to bind to
+        :param storage_engine: The storage engine to launch LiteServ with
+        :param logfile: file to log the process output to
+        :return: the process handle
+        """
+
+        binary_path = self.get_liteserv_binary_path(
+            "macosx",
+            version=version,
+            storage_engine=storage_engine
+        )
+        process_args = [
+            binary_path,
+            "--port", port,
+            "--dir", "{}/dbs/macosx/".format(RESULTS_DIR)
+        ]
+
+        if storage_engine == "ForestDB" or storage_engine == "ForestDB+Encryption":
+            process_args.append("--storage")
+            process_args.append("ForestDB")
+        else:
+            process_args.append("--storage")
+            process_args.append("SQLite")
+
+        if storage_engine == "SQLCipher" or storage_engine == "ForestDB+Encryption":
+            logging.info("Using Encryption ...")
+            db_name_passwords = self.build_name_passwords_for_registered_dbs(platform="macosx")
+            process_args.extend(db_name_passwords)
+
+        p = subprocess.Popen(args=process_args, stderr=logfile)
+        return p
+
+    def start_net_liteserv(self, version, port, storage_engine, logfile):
+        """
+        Launches a Mac OSX .NET LiteServ listener on the machine running the tests bound to localhost:<port>
+
+        :param version: Version (ex. 1.3.1-13) of LiteServ to launch
+        :param port: The localhost port to bind to
+        :param storage_engine: The storage engine to launch LiteServ with
+        :param logfile: file to log the process output to
+        :return: the process handle
+        """
+
+        binary_path = self.get_liteserv_binary_path(
+            "net",
+            version=version,
+            storage_engine=storage_engine
+        )
+        process_args = [
+            "mono",
+            binary_path,
+            "--port", port,
+            "--dir", "{}/dbs/net/".format(RESULTS_DIR)
+        ]
+
+        if storage_engine == "ForestDB" or storage_engine == "ForestDB+Encryption":
+            process_args.append("--storage")
+            process_args.append("ForestDB")
+        else:
+            process_args.append("--storage")
+            process_args.append("SQLite")
+
+        if storage_engine == "SQLCipher" or storage_engine == "ForestDB+Encryption":
+            logging.info("Using Encryption ...")
+            db_name_passwords = self.build_name_passwords_for_registered_dbs(platform="macosx")
+            process_args.extend(db_name_passwords)
+
+        p = subprocess.Popen(args=process_args, stdout=logfile)
+        return p
+
     def stop_activity(self):
         # Stop LiteServ Activity
         output = subprocess.check_output([
@@ -329,6 +459,20 @@ class LiteServ:
         log_info("LiteServ: {} is running".format(lite_version))
 
         return url
+
+    def verify_liteserv_not_running(self, host, port):
+        """
+        Verifys that the endpoint does not return a 200 from a running service
+        """
+        try:
+            resp = self._session.get("http://{}:{}/".format(host, port))
+        except ConnectionError as e:
+            # Expecting connection error if LiteServ is not running on the port
+            return
+
+        log_r(resp)
+        raise AssertionError("There should be no service running on the port")
+
 
     def build_name_passwords_for_registered_dbs(self, platform):
         """
