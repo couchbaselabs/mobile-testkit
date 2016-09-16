@@ -313,6 +313,10 @@ class LiteServ:
         )
         process_args = [
             binary_path,
+            "-Log", "YES",
+            "-LogSync", "YES",
+            "-LogCBLRouter", "YES",
+            "-LogRemoteRequest", "YES",
             "--port", port,
             "--dir", "{}/dbs/macosx/".format(RESULTS_DIR)
         ]
