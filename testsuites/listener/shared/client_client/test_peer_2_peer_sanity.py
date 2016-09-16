@@ -1,7 +1,6 @@
 import pytest
 import logging
 import datetime
-import sys
 
 from keywords.utils import log_info
 
