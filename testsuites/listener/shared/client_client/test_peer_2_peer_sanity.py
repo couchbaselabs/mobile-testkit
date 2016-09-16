@@ -124,9 +124,6 @@ def setup_p2p_test(request):
     ls.verify_liteserv_not_running(host=liteserv_two_host, port=liteserv_two_port)
 
 
-# @pytest.mark.usefixtures("suite_setup")
-# class TestPeerToPeer:
-
 @pytest.mark.sanity
 @pytest.mark.listener
 @pytest.mark.replication
@@ -143,8 +140,8 @@ def test_peer_2_peer_sanity(setup_p2p_suite, setup_p2p_test):
     7. Verify the docs show up in the database's changes feed.
     """
 
-    ls_url_one = setup_p2p_test[0]
-    ls_url_two = setup_p2p_test[1]
+    ls_url_one = setup_p2p_test["ls_url_one"]
+    ls_url_two = setup_p2p_test["ls_url_two"]
 
     num_docs_per_db = 1000
 
@@ -196,7 +193,7 @@ def test_peer_2_peer_sanity(setup_p2p_suite, setup_p2p_test):
     assert len(ls_url_one_replications) == 2
 
     ls_url_two_replications = client.get_replications(ls_url_two)
-    assert len(ls_url_two_replications) == 3
+    assert len(ls_url_two_replications) == 2
 
     ls_db1_docs = client.add_docs(url=ls_url_one, db=ls_db1, number=num_docs_per_db, id_prefix="test_ls_db1")
     ls_db2_docs = client.add_docs(url=ls_url_two, db=ls_db2, number=num_docs_per_db, id_prefix="test_ls_db2")
