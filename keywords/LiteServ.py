@@ -22,24 +22,37 @@ from constants import RESULTS_DIR
 from utils import log_info
 from utils import log_r
 
+
 def version_and_build(full_version):
     version_parts = full_version.split("-")
     assert len(version_parts) == 2
     return version_parts[0], version_parts[1]
+
+
+class LiteServError(Exception):
+    pass
+
 
 class LiteServ:
 
     def __init__(self):
         self._session = Session()
 
-    def valid_storage_engine(self, storage_engine):
+    def verify_platform(self, platform):
+        """Verify that we are installing a supported platform"""
+
+        if platform not in ["macosx", "android", "net"]:
+            raise LiteServError("Unsupported platform: {}".format(platform))
+
+    def verify_storage_engine(self, storage_engine):
         logging.info(storage_engine)
-        if storage_engine in ["SQLite", "SQLCipher", "ForestDB", "ForestDB+Encryption"]:
-            return True
-        else:
-            return False
+        if storage_engine not in ["SQLite", "SQLCipher", "ForestDB", "ForestDB+Encryption"]:
+            raise LiteServError("Unsupported storage engine: {}".format(storage_engine))
 
     def get_download_package_name(self, platform, version_build, storage_engine):
+
+        self.verify_platform(platform)
+        self.verify_storage_engine(storage_engine)
 
         if platform == "macosx":
             package_name = "couchbase-lite-macosx-enterprise_{}.zip".format(version_build)
@@ -54,8 +67,6 @@ class LiteServ:
                     package_name = "couchbase-lite-android-liteserv-SQLCipher-ForestDB-Encryption-{}-debug.apk".format(version_build)
         elif platform == "net":
             package_name = "LiteServ.zip"
-        else:
-            raise ValueError("Unsupported platform")
 
         log_info("Download package(s): {}".format(package_name))
 
@@ -64,6 +75,9 @@ class LiteServ:
     def get_binary(self, platform, version_build, storage_engine):
 
         version, build = version_and_build(version_build)
+
+        self.verify_platform(platform)
+        self.verify_storage_engine(storage_engine)
 
         if platform == "macosx":
             expected_binary = "couchbase-lite-macosx-enterprise_{}/LiteServ".format(version_build)
@@ -77,10 +91,6 @@ class LiteServ:
                     expected_binary = "couchbase-lite-android-liteserv-SQLCipher-ForestDB-Encryption-{}-debug.apk".format(version_build)
         elif platform == "net":
             expected_binary = "couchbase-lite-net-{}-liteserv/LiteServ.exe".format(version_build)
-        else:
-            raise ValueError("Unsupported platform")
-
-        log_info("Binary: {}".format(expected_binary))
 
         return expected_binary
 
@@ -109,14 +119,10 @@ class LiteServ:
 
     def download_liteserv(self, platform, version, storage_engine):
 
-        if platform not in ["macosx", "android", "net"]:
-            raise ValueError("Unsupported platform of LiteServ: ".format(platform))
-
-        if storage_engine not in ["SQLite", "SQLCipher", "ForestDB", "ForestDB+Encryption"]:
-            raise ValueError("Unsupported storage engine for LiteServ: {}".format(storage_engine))
+        self.verify_platform(platform)
+        self.verify_storage_engine(storage_engine)
 
         expected_binary = self.get_binary(platform, version, storage_engine)
-        log_info("{}/{}".format(BINARY_DIR, expected_binary))
 
         # Check if package is already downloaded and return if it is preset
         packages_present = True
@@ -174,9 +180,8 @@ class LiteServ:
         if platform == "macosx" or platform == "net":
             binary_path = "{}/{}".format(BINARY_DIR, binary_name)
         else:
-            raise ValueError("Standalone binaries only avaiable for Mac OSX and .NET")
+            raise LiteServError("Standalone binaries only avaiable for Mac OSX and .NET")
 
-        log_info("Launching binary: {}".format(binary_path))
         return binary_path
 
     def install_apk(self, version_build, storage_engine):
@@ -185,14 +190,13 @@ class LiteServ:
 
         apk_path = "{}/{}".format(BINARY_DIR, binary)
         log_info("Installing: {}".format(apk_path))
-        log_info(apk_path)
 
         install_successful = False
         while not install_successful:
             output = subprocess.check_output(["adb", "install", apk_path])
             log_info(output)
             if "INSTALL_FAILED_ALREADY_EXISTS" in output or "INSTALL_FAILED_UPDATE_INCOMPATIBLE" in output:
-                logging.error("APK already exists. Removing and trying again ...")
+                log_info("APK already exists. Removing and trying again ...")
                 output = subprocess.check_output(["adb", "uninstall", "com.couchbase.liteservandroid"])
                 log_info(output)
             else:
@@ -200,14 +204,7 @@ class LiteServ:
 
     def launch_activity(self, port, storage_engine):
 
-        valid_storage_engines = [
-            "SQLite",
-            "SQLCipher",
-            "ForestDB",
-            "ForestDB+Encryption"
-        ]
-
-        assert storage_engine in valid_storage_engines, "Make sure the storage engine you provided is in: {}".format(valid_storage_engines)
+        self.verify_storage_engine(storage_engine)
 
         log_info("Using storage engine: {}".format(storage_engine))
 
@@ -251,14 +248,32 @@ class LiteServ:
             ])
             log_info(output)
 
+    def install_liteserv(self, platform, version, storage_engine):
+        """Bootstraps install of LiteServ app (Android). Noop for Desktop cmd apps (ex. Mac OSX, .NET)
+
+        :param platform: LiteServ Platform to install
+        :param version: LiteServ Version to install
+        :param storage_engine: Storage Engine to use when running tests
+        """
+
+        log_info("Installing LiteServ ({}, {}, {})".format(platform, version, storage_engine))
+
+        self.verify_platform(platform)
+        self.verify_storage_engine(storage_engine)
+
+        if platform == "android":
+            self.install_apk(version_build=version, storage_engine=storage_engine)
+        else:
+            log_info("Nothing to do.")
+
     def start_liteserv(self, platform, version, host, port, storage_engine, logfile):
         """
         Starts LiteServ for a specific provided platform.
         Returns a tuple of the listserv_url and the process_handle
         """
 
-        if not self.valid_storage_engine(storage_engine):
-            raise ValueError("Invalid Storage Engine: {}".format(storage_engine))
+        self.verify_platform(platform)
+        self.verify_storage_engine(storage_engine)
 
         log_info("Starting LiteServ: {} {} {}:{} using {}".format(platform, version, host, port, storage_engine))
         if platform == "macosx":
@@ -269,7 +284,11 @@ class LiteServ:
                 logfile=logfile
             )
         elif platform == "android":
-            raise NotImplementedError("Unsupported LiteServ Platform")
+            proc_handle = self.start_android_liteserv(
+                host=host,
+                port=port,
+                storage_engine=storage_engine, logfile=logfile
+            )
         elif platform == "net":
             proc_handle = self.start_net_liteserv(
                 version=version,
@@ -277,8 +296,6 @@ class LiteServ:
                 storage_engine=storage_engine,
                 logfile=logfile
             )
-        else:
-            raise NotImplementedError("Unsupported LiteServ Platform")
 
         ls_url = self.verify_liteserv_launched(
             platform=platform,
@@ -289,11 +306,43 @@ class LiteServ:
 
         return ls_url, proc_handle
 
-    def shutdown_liteserv(self, process_handle, logfile):
+    def shutdown_liteserv(self, platform, process_handle, logfile):
+        """Kill a running LiteServ using the process_handle (Desktop apps)
+
+        If the platform is Android, kill the activity via adb, and kill the process handle
+        which is the adb logcat in this case
+        """
+        self.verify_platform(platform)
+
+        log_info("Shutting down LiteServ ({}) and closing {}".format(platform, logfile))
+
+        if platform == "android":
+            self.stop_activity()
+
         logfile.flush()
         logfile.close()
         process_handle.kill()
         process_handle.wait()
+
+    def start_android_liteserv(self, host, port, storage_engine, logfile):
+        """Starts adb logcat capture and launches an installed LiteServ activity
+
+        :param host: Listserv host where apk is installed
+        :param port: Port to launch LiteServ activity on device
+        :param storage_engine: Storage engine to enable in LiteServ
+        :param logfile: File object to write adb logcat output to
+        :return: Process handle for adb logcat
+        """
+
+        # Clear adb buffer
+        subprocess.check_call(["adb", "logcat", "-c"])
+
+        # Start logcat capture
+        p = subprocess.Popen(args=["adb", "logcat"], stdout=logfile)
+
+        self.launch_activity(port=port, storage_engine=storage_engine)
+
+        return p
 
     def start_macosx_liteserv(self, version, port, storage_engine, logfile):
         """
@@ -311,6 +360,8 @@ class LiteServ:
             version=version,
             storage_engine=storage_engine
         )
+        log_info("Launching: {}".format(binary_path))
+
         process_args = [
             binary_path,
             "-Log", "YES",
@@ -352,6 +403,8 @@ class LiteServ:
             version=version,
             storage_engine=storage_engine
         )
+        log_info("Launching: {}".format(binary_path))
+
         process_args = [
             "mono",
             binary_path,
@@ -397,7 +450,6 @@ class LiteServ:
     def verify_liteserv_launched(self, platform, host, port, version_build):
 
         url = "http://{}:{}".format(host, port)
-        log_info("Verifying LiteServ running at {}".format(url))
 
         count = 0
         while count < MAX_RETRIES:
@@ -411,7 +463,7 @@ class LiteServ:
                 count += 1
 
         if count == MAX_RETRIES:
-            raise RuntimeError("Could not connect to LiteServ")
+            raise LiteServError("Could not connect to LiteServ")
 
         resp_json = resp.json()
         is_macosx = False
@@ -431,36 +483,41 @@ class LiteServ:
 
         # Validate the running platform is the expected platform
         if platform == "macosx":
-            assert is_macosx, "Tried to run macosx but different platform running on {}:{} ...".format(host, port)
+            if not is_macosx:
+                raise LiteServError("Expected macosx to be running on port. Other platform detected")
         elif platform == "android":
-            assert is_android, "Tried to run android but different platform running on {}:{} ...".format(host, port)
+            if not is_android:
+                raise LiteServError("Expected android to be running on port. Other platform detected")
         elif platform == "net":
-            assert is_net, "Tried to run net but different platform running on {}:{} ...".format(host, port)
-        else:
-            raise ValueError("Unsupported platform: {}".format(platform))
+            if not is_net:
+                raise LiteServError("Expected android to be running on port. Other platform detected")
 
         # Validate that the version launched is the expected LiteServ version
         # Mac OSX - LiteServ: 1.2.1 (build 13)
         version, build = version_and_build(version_build)
         if is_macosx:
             expected_version = "{} (build {})".format(version, build)
-            assert lite_version == expected_version, "Expected version does not match actual version: Expected={}  Actual={}".format(expected_version, lite_version)
+            if lite_version != expected_version:
+                raise LiteServError("Expected version does not match actual version: Expected={}  Actual={}".format(expected_version, lite_version))
         elif is_android:
             if version == "1.2.1":
                 # released binaries do not have a build number
-                assert lite_version == version, "Expected version does not match actual version: Expected={}  Actual={}".format(version, lite_version)
+                if lite_version != version:
+                    raise LiteServError("Expected version does not match actual version: Expected={}  Actual={}".format(version, lite_version))
             else:
-                assert lite_version == version_build, "Expected version does not match actual version: Expected={}  Actual={}".format(version_build, lite_version)
+                if lite_version != version_build:
+                    raise LiteServError("Expected version does not match actual version: Expected={}  Actual={}".format(version_build, lite_version))
         elif is_net:
             running_version_parts = re.split("[ /-]", lite_version)
             version = running_version_parts[5]
             build = int(running_version_parts[6].strip("build"))
             running_version_composed = "{}-{}".format(version, build)
-            assert version_build == running_version_composed, "Expected version does not match actual version: Expected={}  Actual={}".format(version_build, running_version_composed)
+            if version_build != running_version_composed:
+                raise LiteServError("Expected version does not match actual version: Expected={}  Actual={}".format(version_build, running_version_composed))
         else:
-            raise ValueError("Unexpected Listener platform")
+            raise LiteServError("Unexpected Listener platform")
 
-        log_info("LiteServ: {} is running".format(lite_version))
+        log_info("LiteServ: {} is running at {}".format(lite_version, url))
 
         return url
 
@@ -475,8 +532,7 @@ class LiteServ:
             return
 
         log_r(resp)
-        raise AssertionError("There should be no service running on the port")
-
+        raise LiteServError("There should be no service running on the port")
 
     def build_name_passwords_for_registered_dbs(self, platform):
         """

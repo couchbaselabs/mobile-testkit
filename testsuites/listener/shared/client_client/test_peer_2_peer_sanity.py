@@ -46,6 +46,20 @@ def setup_p2p_suite(request):
         storage_engine=liteserv_two_storage_engine
     )
 
+    # Install LiteServ One
+    ls.install_liteserv(
+        platform=liteserv_one_platform,
+        version=liteserv_one_version,
+        storage_engine=liteserv_one_storage_engine
+    )
+
+    # Install LiteServ Two
+    ls.install_liteserv(
+        platform=liteserv_two_platform,
+        version=liteserv_two_version,
+        storage_engine=liteserv_two_storage_engine
+    )
+
     # Wait at the yeild until tests referencing this suite setup have run,
     # Then execute the teardown
     yield
@@ -116,8 +130,8 @@ def setup_p2p_test(request):
     client.delete_databases(ls_url_one)
     client.delete_databases(ls_url_two)
 
-    ls.shutdown_liteserv(process_handle=ls_handle_one, logfile=ls_logging_one)
-    ls.shutdown_liteserv(process_handle=ls_handle_two, logfile=ls_logging_two)
+    ls.shutdown_liteserv(platform=liteserv_one_platform, process_handle=ls_handle_one, logfile=ls_logging_one)
+    ls.shutdown_liteserv(platform=liteserv_two_platform, process_handle=ls_handle_two, logfile=ls_logging_two)
 
     # Verify LiteServ is killed
     ls.verify_liteserv_not_running(host=liteserv_one_host, port=liteserv_one_port)
