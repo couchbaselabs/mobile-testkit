@@ -180,6 +180,7 @@ class CouchbaseServer:
         Call the Couchbase REST API to get the total memory available on the machine
         """
         resp = requests.get("{}/pools/default".format(url), auth=self._auth)
+        resp.raise_for_status()
         resp_json = resp.json()
         mem_total = resp_json["nodes"][0]["systemStats"]["mem_total"]
         return mem_total
