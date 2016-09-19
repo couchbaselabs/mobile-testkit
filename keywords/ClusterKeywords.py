@@ -13,8 +13,40 @@ from SyncGateway import verify_sync_gateway_version
 from SyncGateway import verify_sg_accel_version
 from libraries.testkit.cluster import Cluster
 
+from constants import CLUSTER_CONFIGS_DIR
+from exceptions import ProvisioningError
+
 
 class ClusterKeywords:
+
+    def set_cluster_config(self, name):
+        """Sets CLUSTER_CONFIG environment variable for provisioning
+
+        Checks if CLUSTER_CONFIG is set, will fail if it is.
+        Checks if cluster configuration file exists, will fail if it does not
+        """
+
+        if "CLUSTER_CONFIG" in os.environ:
+            raise ProvisioningError("CLUSTER_CONFIG will be set by suite setup. Make sure it is unset.")
+
+        path = "{}/{}".format(CLUSTER_CONFIGS_DIR, name)
+        if not os.path.isfile(path):
+            raise ProvisioningError("{} not found. Make sure you have generated your cluster configurations.")
+
+        log_info("Setting CLUSTER_CONFIG: {}".format(path))
+        os.environ["CLUSTER_CONFIG"] = path
+
+    def unset_cluster_config(self):
+        """Will unset the CLUSTER_CONFIG environment variable if it is set.
+
+        Will fail if CLUSTER_CONFIG is not set
+        """
+
+        if "CLUSTER_CONFIG" not in os.environ:
+            raise ProvisioningError("Trying to unset CLUSTER_CONFIG but it is not defined")
+
+        log_info("Unsetting CLUSTER_CONFIG")
+        del os.environ["CLUSTER_CONFIG"]
 
     def get_cluster_topology(self, cluster_config):
         """

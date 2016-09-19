@@ -1,6 +1,7 @@
 import os
 
 from ansible_runner import AnsibleRunner
+from keywords.exceptions import ProvisioningError
 
 
 def clean_cluster():
@@ -14,7 +15,8 @@ def clean_cluster():
 
     ansible_runner = AnsibleRunner()
     status = ansible_runner.run_ansible_playbook("remove-previous-installs.yml")
-    assert status == 0, "Failed to removed previous installs"
+    if status != 0:
+        raise ProvisioningError("Failed to removed previous installs")
 
 
 if __name__ == "__main__":

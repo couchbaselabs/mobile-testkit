@@ -22,15 +22,14 @@ from constants import RESULTS_DIR
 from utils import log_info
 from utils import log_r
 
+from exceptions import LiteServError
+
 
 def version_and_build(full_version):
     version_parts = full_version.split("-")
     assert len(version_parts) == 2
     return version_parts[0], version_parts[1]
 
-
-class LiteServError(Exception):
-    pass
 
 
 class LiteServ:
@@ -297,6 +296,7 @@ class LiteServ:
                 logfile=logfile
             )
 
+        # Verify LiteServ is launched with proper version and build
         ls_url = self.verify_liteserv_launched(
             platform=platform,
             host=host,
@@ -448,6 +448,16 @@ class LiteServ:
         os.chdir("../..")
 
     def verify_liteserv_launched(self, platform, host, port, version_build):
+        """Verify that the LiteServ is running with the expected version and platform.
+
+        The retry loop is neccessary to account for a non zero time for launching a ListServ.
+
+        :param platform: Expected running LiteServ platform
+        :param host: Host to target for verification
+        :param port: Port to target for verification
+        :param version_build: Expected running LiteServ version
+        :return: the url of the verified / running LiteServ
+        """
 
         url = "http://{}:{}".format(host, port)
 

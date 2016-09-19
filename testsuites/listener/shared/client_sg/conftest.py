@@ -1,0 +1,163 @@
+import pytest
+import os
+import datetime
+
+from libraries.provision.clean_cluster import clean_cluster
+
+from keywords.utils import log_info
+
+from keywords.constants import SYNC_GATEWAY_CONFIGS
+
+from keywords.constants import RESULTS_DIR
+from keywords.LiteServ import LiteServ
+from keywords.MobileRestClient import MobileRestClient
+from keywords.ClusterKeywords import ClusterKeywords
+from keywords.SyncGateway import SyncGateway
+from keywords.Logging import Logging
+
+
+# Add custom arguments for executing tests in this directory
+def pytest_addoption(parser):
+    parser.addoption("--liteserv-platform", action="store", help="liteserv-platform: the platform to assign to the liteserv")
+    parser.addoption("--liteserv-version", action="store", help="liteserv-version: the version to download / install for the liteserv")
+    parser.addoption("--liteserv-host", action="store", help="liteserv-host: the host to start liteserv on")
+    parser.addoption("--liteserv-port", action="store", help="liteserv-port: the port to assign to liteserv")
+    parser.addoption("--liteserv-storage-engine", action="store", help="liteserv-storage-engine: the storage engine to use with liteserv")
+
+    parser.addoption("--sync-gateway-version", action="store", help="sync-gateway-version: the version of sync_gateway to run tests against")
+
+
+# Set
+@pytest.hookimpl(tryfirst=True, hookwrapper=True)
+def pytest_runtest_makereport(item, call):
+    """Setup hooks to detect test outcome status in fixtures.
+
+    This allows conditional actions based upon the result. (i.e. pull logs only on failure, etc)
+    Implementation from: http://doc.pytest.org/en/latest/example/simple.html#making-test-result-information-available-in-fixtures
+    """
+
+    # execute all other hooks to obtain the report object
+    outcome = yield
+    rep = outcome.get_result()
+
+    # set an report attribute for each phase of a call, which can
+    # be "setup", "call", "teardown"
+    setattr(item, "rep_" + rep.when, rep)
+
+
+
+# This will get called once before the first test that
+# runs with this as input parameters in this file
+@pytest.fixture(scope="module")
+def setup_client_syncgateway_suite(request):
+
+    """Suite setup fixture for client sync_gateway tests"""
+
+    log_info("Setting up client sync_gateway suite ...")
+
+    liteserv_platform = request.config.getoption("--liteserv-platform")
+    liteserv_version = request.config.getoption("--liteserv-version")
+    liteserv_storage_engine = request.config.getoption("--liteserv-storage-engine")
+
+    sync_gateway_version = request.config.getoption("--sync-gateway-version")
+
+    ls = LiteServ()
+
+    log_info("Downloading LiteServ One ...")
+
+    # Download LiteServ One
+    ls.download_liteserv(
+        platform=liteserv_platform,
+        version=liteserv_version,
+        storage_engine=liteserv_storage_engine
+    )
+
+    # Install LiteServ
+    ls.install_liteserv(
+        platform=liteserv_platform,
+        version=liteserv_version,
+        storage_engine=liteserv_storage_engine
+    )
+
+    cluster_helper = ClusterKeywords()
+    cluster_helper.set_cluster_config("1sg")
+
+    clean_cluster()
+
+    log_info("Installing sync_gateway")
+    sg_helper = SyncGateway()
+    sg_helper.install_sync_gateway(
+        sync_gateway_version=sync_gateway_version,
+        sync_gateway_config="{}/walrus.json".format(SYNC_GATEWAY_CONFIGS)
+    )
+
+    # Wait at the yeild until tests referencing this suite setup have run,
+    # Then execute the teardown
+    yield
+
+    log_info("Tearing down suite ...")
+    cluster_helper.unset_cluster_config()
+
+
+# Passed to each testcase, run for each test_* method in client_sg folder
+@pytest.fixture(scope="function")
+def setup_client_syncgateway_test(request):
+
+    """Test setup fixture for client sync_gateway tests"""
+
+    log_info("Setting up client sync_gateway test ...")
+
+    liteserv_platform = request.config.getoption("--liteserv-platform")
+    liteserv_version = request.config.getoption("--liteserv-version")
+    liteserv_host = request.config.getoption("--liteserv-host")
+    liteserv_port = request.config.getoption("--liteserv-port")
+    liteserv_storage_engine = request.config.getoption("--liteserv-storage-engine")
+
+    ls = LiteServ()
+    client = MobileRestClient()
+
+    test_name = request.node.name
+
+    # Verify LiteServ is not running
+    ls.verify_liteserv_not_running(host=liteserv_host, port=liteserv_port)
+
+    print("Starting LiteServ ...")
+    ls_logging = open("{}/logs/{}-ls1-{}-{}.txt".format(RESULTS_DIR, datetime.datetime.now(), liteserv_platform, test_name), "w")
+    ls_url, ls_handle = ls.start_liteserv(
+        platform=liteserv_platform,
+        version=liteserv_version,
+        host=liteserv_host,
+        port=liteserv_port,
+        storage_engine=liteserv_storage_engine,
+        logfile=ls_logging
+    )
+
+    cluster_helper = ClusterKeywords()
+    sg_helper = SyncGateway()
+
+    cluster_helper.set_cluster_config("1sg")
+
+    cluster_hosts = cluster_helper.get_cluster_topology(os.environ["CLUSTER_CONFIG"])
+
+    sg_url = cluster_hosts["sync_gateways"][0]["public"]
+    sg_helper.stop_sync_gateway(sg_url)
+    sg_helper.start_sync_gateway(url=sg_url, config="{}/walrus-revs-limit.json".format(SYNC_GATEWAY_CONFIGS))
+
+    # Yield values to test case via fixture argument
+    yield {"ls_url": ls_url}
+
+    log_info("Tearing down test")
+
+    # Teardown test
+    client.delete_databases(ls_url)
+    ls.shutdown_liteserv(platform=liteserv_platform, process_handle=ls_handle, logfile=ls_logging)
+
+    # Verify LiteServ is killed
+    ls.verify_liteserv_not_running(host=liteserv_host, port=liteserv_port)
+
+    sg_helper.stop_sync_gateway(sg_url)
+
+    # if the test failed pull logs
+    if request.node.rep_call.failed:
+        logging_helper = Logging()
+        logging_helper.fetch_and_analyze_logs(test_name)

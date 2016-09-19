@@ -16,7 +16,7 @@ def setup_p2p_suite(request):
 
     """Suite setup fixture for p2p client tests"""
 
-    logging.info("Setting up P2P suite ...")
+    log_info("Setting up P2P suite ...")
 
     liteserv_one_platform = request.config.getoption("--liteserv-one-platform")
     liteserv_one_version = request.config.getoption("--liteserv-one-version")
@@ -64,7 +64,7 @@ def setup_p2p_suite(request):
     # Then execute the teardown
     yield
 
-    print("Tearing down suite ...")
+    log_info("Tearing down suite ...")
 
 
 # TODO Add comment
@@ -73,7 +73,7 @@ def setup_p2p_test(request):
 
     """Test setup fixture for p2p client tests"""
 
-    logging.info("Setting up P2P test ...")
+    log_info("Setting up P2P test ...")
 
     liteserv_one_platform = request.config.getoption("--liteserv-one-platform")
     liteserv_one_version = request.config.getoption("--liteserv-one-version")
@@ -118,13 +118,10 @@ def setup_p2p_test(request):
         logfile=ls_logging_two
     )
 
-    ls.verify_liteserv_launched(platform=liteserv_one_platform, host=liteserv_one_host, port=liteserv_one_port, version_build=liteserv_one_version)
-    ls.verify_liteserv_launched(platform=liteserv_two_platform, host=liteserv_two_host, port=liteserv_two_port, version_build=liteserv_two_version)
-
-    # TODO Return values to the test case via setup dict
+    # Yield values to test case via fixture argument
     yield {"ls_url_one": ls_url_one, "ls_url_two": ls_url_two}
 
-    print("Tearing down test")
+    log_info("Tearing down test")
 
     # Teardown test
     client.delete_databases(ls_url_one)
@@ -218,4 +215,3 @@ def test_peer_2_peer_sanity(setup_p2p_suite, setup_p2p_test):
 
     client.verify_docs_in_changes(url=ls_url_one, db=ls_db1, expected_docs=all_docs)
     client.verify_docs_in_changes(url=ls_url_two, db=ls_db2, expected_docs=all_docs)
-

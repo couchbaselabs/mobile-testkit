@@ -12,7 +12,10 @@ from utils import version_and_build
 from utils import hostname_for_url
 from utils import log_info
 
+from exceptions import ProvisioningError
+
 from libraries.provision.ansible_runner import AnsibleRunner
+
 
 
 def get_sync_gateway_version(host):
@@ -48,14 +51,14 @@ def verify_sync_gateway_version(host, expected_sync_gateway_version):
     if version_is_binary(expected_sync_gateway_version):
         # Example, 1.2.1-4
         if running_sg_version != expected_sync_gateway_version:
-            raise ValueError("Unexpected sync_gateway version!! Expected: {} Actual: {}".format(expected_sync_gateway_version, running_sg_version))
+            raise ProvisioningError("Unexpected sync_gateway version!! Expected: {} Actual: {}".format(expected_sync_gateway_version, running_sg_version))
         # Running vendor version: ex. '1.2', check that the expected version start with the vendor version
         if not expected_sync_gateway_version.startswith(running_sg_vendor_version):
-            raise ValueError("Unexpected sync_gateway vendor version!! Expected: {} Actual: {}".format(expected_sync_gateway_version, running_sg_vendor_version))
+            raise ProvisioningError("Unexpected sync_gateway vendor version!! Expected: {} Actual: {}".format(expected_sync_gateway_version, running_sg_vendor_version))
     else:
         # Since sync_gateway does not return the full commit, verify the prefix
         if running_sg_version != expected_sync_gateway_version[:7]:
-            raise ValueError("Unexpected sync_gateway version!! Expected: {} Actual: {}".format(expected_sync_gateway_version, running_sg_version))
+            raise ProvisioningError("Unexpected sync_gateway version!! Expected: {} Actual: {}".format(expected_sync_gateway_version, running_sg_version))
 
 
 def get_sg_accel_version(host):
@@ -85,11 +88,11 @@ def verify_sg_accel_version(host, expected_sg_accel_version):
     if version_is_binary(expected_sg_accel_version):
         # Example, 1.2.1-4
         if running_ac_version != expected_sg_accel_version:
-            raise ValueError("Unexpected sync_gateway version!! Expected: {} Actual: {}".format(expected_sg_accel_version, running_ac_version))
+            raise ProvisioningError("Unexpected sync_gateway version!! Expected: {} Actual: {}".format(expected_sg_accel_version, running_ac_version))
     else:
         # Since sync_gateway does not return the full commit, verify the prefix
         if running_ac_version != expected_sg_accel_version[:7]:
-            raise ValueError("Unexpected sync_gateway version!! Expected: {} Actual: {}".format(expected_sg_accel_version, running_ac_version))
+            raise ProvisioningError("Unexpected sync_gateway version!! Expected: {} Actual: {}".format(expected_sg_accel_version, running_ac_version))
 
 
 class SyncGateway:
@@ -138,7 +141,8 @@ class SyncGateway:
             },
             subset=target
         )
-        assert status == 0, "Could not start sync_gateway"
+        if status != 0:
+            raise ProvisioningError("Could not start sync_gateway")
 
     def stop_sync_gateway(self, url):
         target = hostname_for_url(url)
@@ -148,4 +152,5 @@ class SyncGateway:
             "stop-sync-gateway.yml",
             subset=target
         )
-        assert status == 0, "Could not stop sync_gateway"
+        if status != 0:
+            raise ProvisioningError("Could not stop sync_gateway")
