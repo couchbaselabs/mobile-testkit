@@ -24,21 +24,7 @@ ${sg_db}            db
 ${sg_user_name}     sg_user
 
 *** Test Cases ***
-Test Auto Prune Listener Sanity
-    [Documentation]  Test to verify auto pruning is working for the listener
-    [Tags]           sanity  listener  syncgateway  autoprune
-    [Timeout]        5 minutes
 
-    Log  Using LiteServ: ${ls_url}
-
-    Set Test Variable  ${num_docs}  ${1}
-    Set Test Variable  ${num_revs}  ${100}
-
-    ${ls_db} =       Create Database  url=${ls_url}  name=ls_db
-    ${ls_db_docs} =  Add Docs  url=${ls_url}  db=${ls_db}  number=${num_docs}  id_prefix=ls_db
-    ${ls_db_docs_update} =   Update Docs  url=${ls_url}  db=${ls_db}  docs=${ls_db_docs}  number_updates=${num_revs}
-
-    Verify Revs Num For Docs  url=${ls_url}  db=${ls_db}  docs=${ls_db_docs}  expected_revs_per_doc=${20}
 
 
 Test Auto Prune With Pull

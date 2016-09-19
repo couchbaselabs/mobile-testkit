@@ -45,10 +45,11 @@ def pytest_runtest_makereport(item, call):
     setattr(item, "rep_" + rep.when, rep)
 
 
-
 # This will get called once before the first test that
 # runs with this as input parameters in this file
-@pytest.fixture(scope="module")
+# This setup will be called once for all tests in the
+# testsuites/listener/shared/client_sg/ directory
+@pytest.fixture(scope="session")
 def setup_client_syncgateway_suite(request):
 
     """Suite setup fixture for client sync_gateway tests"""
@@ -135,8 +136,8 @@ def setup_client_syncgateway_test(request):
     cluster_helper = ClusterKeywords()
     sg_helper = SyncGateway()
 
-    cluster_helper.set_cluster_config("1sg")
-
+    # Uncomment when running the test without suite setup
+    # cluster_helper.set_cluster_config("1sg")
     cluster_hosts = cluster_helper.get_cluster_topology(os.environ["CLUSTER_CONFIG"])
 
     sg_url = cluster_hosts["sync_gateways"][0]["public"]

@@ -448,9 +448,14 @@ class MobileRestClient:
         logging.debug(doc)
 
         doc_rev_ids_number = len(doc["_revisions"]["ids"])
-        assert doc_rev_ids_number <= expected_max_number_revs, "Expected num revs: {}, Actual num revs: {}".format(
-            expected_max_number_revs, doc_rev_ids_number
-        )
+
+        log_info("{} num revs: {} expected_max_number_revs: {}".format(doc_id, doc_rev_ids_number, expected_max_number_revs))
+
+        if doc_rev_ids_number > expected_max_number_revs:
+            raise AssertionError("Expected num revs: {}, Actual num revs: {}".format(
+                expected_max_number_revs,
+                doc_rev_ids_number)
+            )
 
     def verify_docs_rev_generations(self, url, db, docs, expected_generation, auth=None):
         """
