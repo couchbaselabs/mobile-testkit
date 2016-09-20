@@ -1431,11 +1431,14 @@ class MobileRestClient:
         """
         num_row_entries = len(view_response["rows"])
         num_total_rows = view_response["total_rows"]
-        logging.info("Expected rows: {}".format(expected_num_rows))
-        logging.info("Number of row entries: {}".format(num_row_entries))
-        logging.info("Number of total_rows: {}".format(num_total_rows))
-        assert num_row_entries == expected_num_rows, "Expeced number of rows did not match number of 'rows'"
-        assert num_row_entries == num_total_rows, "Expeced number of rows did not match number of 'total_rows'"
+        log_info("Expected rows: {}".format(expected_num_rows), is_verify=True)
+        log_info("Number of row entries: {}".format(num_row_entries), is_verify=True)
+        log_info("Number of total_rows: {}".format(num_total_rows), is_verify=True)
+        if num_row_entries != expected_num_rows:
+            raise AssertionError("Expected number of rows did not match number of 'rows'")
+
+        if num_row_entries != num_total_rows:
+            raise AssertionError("Expected number of rows did not match number of 'total_rows'")
 
     def verify_view_contains_keys(self, view_response, keys):
         """
