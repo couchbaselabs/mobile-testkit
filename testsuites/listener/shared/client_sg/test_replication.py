@@ -927,3 +927,76 @@ def test_replication_with_multiple_client_dbs_and_single_sync_gateway_db(setup_c
     client.verify_docs_in_changes(url=sg_admin_url, db=sg_db, expected_docs=ls_db1_db2_docs)
     client.verify_docs_in_changes(url=ls_url, db=ls_db1, expected_docs=ls_db1_db2_docs)
     client.verify_docs_in_changes(url=ls_url, db=ls_db2, expected_docs=ls_db1_db2_docs)
+
+
+@pytest.mark.sanity
+@pytest.mark.listener
+@pytest.mark.syncgateway
+@pytest.mark.replication
+@pytest.mark.usefixtures("setup_client_syncgateway_suite")
+def test_verify_open_revs_with_revs_limit_push_conflict(setup_client_syncgateway_test):
+    """Test replication from multiple client dbs to one sync_gateway db
+
+    https://github.com/couchbase/couchbase-lite-ios/issues/1277
+    """
+
+    ls_url = setup_client_syncgateway_test["ls_url"]
+    sg_url = setup_client_syncgateway_test["sg_url"]
+    sg_admin_url = setup_client_syncgateway_test["sg_admin_url"]
+
+    num_docs = 100
+    num_revs = 20
+
+    sg_db = "db"
+    sg_user_name = "sg_user"
+
+    sg_helper = SyncGateway()
+    sg_helper.start_sync_gateway(url=sg_url, config="{}/walrus.json".format(SYNC_GATEWAY_CONFIGS))
+
+    log_info("Running 'test_verify_open_revs_with_revs_limit_push_conflict'")
+    log_info("ls_url: {}".format(ls_url))
+    log_info("sg_admin_url: {}".format(sg_admin_url))
+    log_info("sg_url: {}".format(sg_url))
+    log_info("num_docs: {}".format(num_docs))
+    log_info("num_revs: {}".format(num_revs))
+
+    client = MobileRestClient()
+
+    # Test the endpoint, listener does not support users but should have a default response
+    mock_ls_session = client.get_session(url=ls_url)
+    sg_user_channels = ["NBC"]
+    sg_user = client.create_user(url=sg_admin_url, db=sg_db, name=sg_user_name, password="password", channels=sg_user_channels)
+    sg_session = client.create_session(url=sg_admin_url, db=sg_db, name=sg_user_name)
+
+    ls_db = client.create_database(url=ls_url, name="ls_db")
+    ls_db_docs = client.add_docs(url=ls_url, db=ls_db, number=num_docs, id_prefix="ls_db", channels=sg_user_channels)
+
+    # Start replication ls_db -> sg_db
+    repl_one = client.start_replication(
+        url=ls_url,
+        continuous=True,
+        from_db=ls_db,
+        to_url=sg_admin_url, to_db=sg_db
+    )
+
+    client.verify_docs_present(url=sg_admin_url, db=sg_db, expected_docs=ls_db_docs)
+
+    sg_docs_update = client.update_docs(url=sg_url, db=sg_db, docs=ls_db_docs, number_updates=num_revs, auth=sg_session)
+    sg_current_doc = client.get_doc(url=sg_url, db=sg_db, doc_id="ls_db_2", auth=sg_session)
+
+    ls_db_docs_update = client.update_docs(url=ls_url, db=ls_db, docs=ls_db_docs, number_updates=num_revs)
+    ls_current_doc = client.get_doc(url=ls_url, db=ls_db, doc_id="ls_db_2")
+
+    client.wait_for_replication_status_idle(url=ls_url, replication_id=repl_one)
+
+    client.verify_doc_rev_generation(url=ls_url, db=ls_db, doc_id=ls_current_doc["_id"], expected_generation=21)
+    client.verify_doc_rev_generation(url=sg_url, db=sg_db, doc_id=sg_current_doc["_id"], expected_generation=21, auth=sg_session)
+
+    expected_ls_revs = [ls_current_doc["_rev"]]
+    client.verify_open_revs(url=ls_url, db=ls_db, doc_id=ls_current_doc["_id"], expected_open_revs=expected_ls_revs)
+
+    expected_sg_revs = [ls_current_doc["_rev"], sg_current_doc["_rev"]]
+    client.verify_open_revs(url=sg_admin_url, db=sg_db, doc_id=sg_current_doc["_id"], expected_open_revs=expected_sg_revs)
+
+
+

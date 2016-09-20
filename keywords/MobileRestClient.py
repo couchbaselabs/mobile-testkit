@@ -478,8 +478,10 @@ class MobileRestClient:
         doc = self.get_doc(url, db, doc_id, auth)
         rev = doc["_rev"]
         generation = int(rev.split("-")[0])
-        logging.debug("Found generation: {}".format(generation))
-        assert generation == expected_generation, "Expected generation: {} not found, found: {}".format(expected_generation, generation)
+        log_info("doc {} has generation: {}, expected_generation: {}".format(doc_id, generation, expected_generation), is_verify=True)
+
+        if generation != expected_generation:
+            raise AssertionError("Expected generation: {} not found, found: {}".format(expected_generation, generation))
 
     def verify_open_revs(self, url, db, doc_id, expected_open_revs, auth=None):
         """
@@ -494,9 +496,13 @@ class MobileRestClient:
             logging.debug(row)
             open_revs.append(row["ok"]["_rev"])
 
-        assert len(open_revs) == len(expected_open_revs), "Unexpected open_revisions length! Expected: {}, Actual: {}".format(len(expected_open_revs), len(open_revs))
-        assert set(open_revs) == set(expected_open_revs), "Unexpected open_revisions found! Expected: {}, Actual: {}".format(expected_open_revs, open_revs)
-        log_info("Found expected open revs.")
+        if len(open_revs) != len(expected_open_revs):
+            raise AssertionError("Unexpected open_revisions length! Expected: {}, Actual: {}".format(len(expected_open_revs), len(open_revs)))
+
+        if set(open_revs) != set(expected_open_revs):
+            raise AssertionError("Unexpected open_revisions found! Expected: {}, Actual: {}".format(expected_open_revs, open_revs))
+
+        log_info("open revs: \n    found: {}\n    expected: {}".format(open_revs, expected_open_revs), is_verify=True)
 
     def get_open_revs(self, url, db, doc_id, auth=None):
         """
