@@ -694,4 +694,173 @@ def test_replication_with_session_cookie(setup_client_syncgateway_test):
     assert expected_error_code == 404, "Expected 404 status, actual {}".format(expected_error_code)
 
 
+@pytest.mark.sanity
+@pytest.mark.listener
+@pytest.mark.syncgateway
+@pytest.mark.replication
+@pytest.mark.compaction
+@pytest.mark.usefixtures("setup_client_syncgateway_suite")
+def test_client_to_sync_gateway_complex_replication_with_revs_limit(setup_client_syncgateway_test):
+    """ Ported from sync_gateway tests repo
+    ...  1.  Clear server buckets
+    ...  2.  Restart liteserv with _session
+    ...  3.  Restart sync_gateway wil that config
+    ...  4.  Create db on LiteServ
+    ...  5.  Add numDocs to LiteServ db
+    ...  6.  Setup push replication from LiteServ db to sync_gateway
+    ...  7.  Verify doc present on sync_gateway (number of docs)
+    ...  8.  Update sg docs numRevs * 4 = 480
+    ...  9.  Update docs on LiteServ db numRevs * 4 = 480
+    ...  10. Setup pull replication from sg -> liteserv db
+    ...  11. Verify all docs are replicated
+    ...  12. compact LiteServ db (POST _compact)
+    ...  13. Verify number of revs in LiteServ db (?revs_info=true) check rev status == available fail if revs available > revs limit
+    ...  14. Delete LiteServ db conflicts (?conflicts=true) DELETE _conflicts
+    ...  15. Create numDoc number of docs in LiteServ db
+    ...  16. Update LiteServ db docs numRevs * 5 (600)
+    ...  17. Verify LiteServ db revs is < 602
+    ...  18. Verify LiteServ db docs revs prefix (9 * numRevs + 3)
+    ...  19. Compact LiteServ db
+    ...  20. Verify number of revs <= 10
+    ...  21. Delete LiteServ docs
+    ...  22. Delete Server bucket
+    ...  23. Delete LiteServ db
+    """
+
+    ls_db_name = "ls_db"
+    sg_db = "db"
+    sg_user_name = "sg_user"
+    num_docs = 10
+    num_revs = 100
+
+    ls_url = setup_client_syncgateway_test["ls_url"]
+    sg_url = setup_client_syncgateway_test["sg_url"]
+    sg_admin_url = setup_client_syncgateway_test["sg_admin_url"]
+
+    sg_helper = SyncGateway()
+    sg_helper.start_sync_gateway(url=sg_url, config="{}/walrus-revs-limit.json".format(SYNC_GATEWAY_CONFIGS))
+
+    log_info("Running 'test_replication_with_session_cookie'")
+    log_info("ls_url: {}".format(ls_url))
+    log_info("sg_admin_url: {}".format(sg_admin_url))
+    log_info("sg_url: {}".format(sg_url))
+
+    client = MobileRestClient()
+
+    # Test the endpoint, listener does not support users but should have a default response
+    mock_session = client.get_session(url=ls_url)
+
+    sg_user_channels = ["NBC"]
+    sg_user = client.create_user(url=sg_admin_url, db=sg_db, name=sg_user_name, password="password", channels=sg_user_channels)
+    sg_session = client.create_session(url=sg_admin_url, db=sg_db, name=sg_user_name)
+
+    ls_db = client.create_database(url=ls_url, name=ls_db_name)
+    ls_db_docs = client.add_docs(url=ls_url, db=ls_db, number=num_docs, id_prefix=ls_db, channels=sg_user_channels)
+
+    # Start replication ls_db -> sg_db
+    repl_one = client.start_replication(
+        url=ls_url,
+        continuous=True,
+        from_db=ls_db,
+        to_url=sg_admin_url, to_db=sg_db
+    )
+
+    client.verify_docs_present(url=sg_admin_url, db=sg_db, expected_docs=ls_db_docs)
+
+    # Delay is to the updates here due to couchbase/couchbase-lite-ios#1277.
+    # Basically, if your revs depth is small and someone is updating a doc past the revs depth before a push replication,
+    # the push replication will have no common ancestor with sync_gateway causing conflicts to be created.
+    # Adding a delay between updates helps this situation. There is an alternative for CBL mac and CBL NET to change the default revs client depth
+    # but that is not configurable for Android.
+    # Currently adding a delay will allow the replication to act as expected for all platforms now.
+    sg_docs_update = client.update_docs(url=sg_url, db=sg_db, docs=ls_db_docs, number_updates=num_revs, delay=0.1, auth=sg_session)
+    ls_db_docs_update = client.update_docs(url=ls_url, db=ls_db, docs=ls_db_docs, number_updates=num_revs, delay=0.1)
+
+    # Start replication ls_db <- sg_db
+    repl_two = client.start_replication(
+        url=ls_url,
+        continuous=True,
+        from_url=sg_admin_url, from_db=sg_db,
+        to_db=ls_db
+    )
+
+    client.wait_for_replication_status_idle(url=ls_url, replication_id=repl_one)
+    client.wait_for_replication_status_idle(url=ls_url, replication_id=repl_two)
+
+    client.compact_database(url=ls_url, db=ls_db)
+
+    # LiteServ should only have 20 revisions due to built in client revs limit
+    client.verify_revs_num_for_docs(url=ls_url, db=ls_db, docs=ls_db_docs, expected_revs_per_doc=20)
+
+    # Sync Gateway should have 100 revisions due to the specified revs_limit in the sg config and possible conflict winners from the liteserv db
+    client.verify_max_revs_num_for_docs(url=sg_url, db=sg_db, docs=ls_db_docs, expected_max_number_revs_per_doc=100, auth=sg_session)
+
+    client.delete_conflicts(url=ls_url, db=ls_db, docs=ls_db_docs)
+    expected_generation = num_revs + 1
+    client.verify_docs_rev_generations(url=ls_url, db=ls_db, docs=ls_db_docs, expected_generation=expected_generation)
+    client.verify_docs_rev_generations(url=sg_url, db=sg_db, docs=ls_db_docs, expected_generation=expected_generation, auth=sg_session)
+
+    client.delete_docs(url=ls_url, db=ls_db, docs=ls_db_docs)
+    client.verify_docs_deleted(url=ls_url, db=ls_db, docs=ls_db_docs)
+    client.verify_docs_deleted(url=sg_admin_url, db=sg_db, docs=ls_db_docs)
+
+    ls_db_docs = client.add_docs(url=ls_url, db=ls_db, number=num_docs, id_prefix=ls_db, channels=sg_user_channels)
+    expected_revs = num_revs + 20 + 2
+    ls_db_docs_update = client.update_docs(url=ls_url, db=ls_db, docs=ls_db_docs, delay=0.1, number_updates=num_revs)
+
+    client.verify_max_revs_num_for_docs(url=ls_url, db=ls_db, docs=ls_db_docs, expected_max_number_revs_per_doc=expected_revs)
+
+    expected_generation = (num_revs * 2) + 3
+    client.verify_docs_rev_generations(url=ls_url, db=ls_db, docs=ls_db_docs, expected_generation=expected_generation)
+
+    client.compact_database(url=ls_url, db=ls_db)
+    client.verify_revs_num_for_docs(url=ls_url, db=ls_db, docs=ls_db_docs, expected_revs_per_doc=20)
+
+    client.stop_replication(
+        url=ls_url,
+        continuous=True,
+        from_db=ls_db,
+        to_url=sg_admin_url, to_db=sg_db
+    )
+
+    client.stop_replication(
+        url=ls_url,
+        continuous=True,
+        from_url=sg_admin_url, from_db=sg_db,
+        to_db=ls_db
+    )
+
+    client.wait_for_no_replications(url=ls_url)
+
+    client.delete_conflicts(url=ls_url, db=ls_db, docs=ls_db_docs)
+    client.delete_conflicts(url=sg_url, db=sg_db, docs=ls_db_docs, auth=sg_session)
+    client.delete_docs(url=ls_url, db=ls_db, docs=ls_db_docs)
+
+    # Start push pull and verify that all docs are deleted
+    # Start replication ls_db -> sg_db
+    repl_one = client.start_replication(
+        url=ls_url,
+        continuous=True,
+        from_db=ls_db,
+        to_url=sg_admin_url, to_db=sg_db
+    )
+
+    # Start replication ls_db <- sg_db
+    repl_two = client.start_replication(
+        url=ls_url,
+        continuous=True,
+        from_url=sg_admin_url, from_db=sg_db,
+        to_db=ls_db
+    )
+
+    client.verify_docs_deleted(url=ls_url, db=ls_db, docs=ls_db_docs)
+    client.verify_docs_deleted(url=sg_admin_url, db=sg_db, docs=ls_db_docs)
+
+
+
+
+
+
+
+
 

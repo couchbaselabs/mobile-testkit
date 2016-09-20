@@ -432,6 +432,8 @@ class MobileRestClient:
 
         doc_rev_ids_number = len(doc["_revisions"]["ids"])
 
+        log_info("{} num revs: {} expected_revs_per_doc: {}".format(doc_id, doc_rev_ids_number, expected_revs_per_docs))
+
         if doc_rev_ids_number != expected_revs_per_docs:
             raise AssertionError("Expected num revs: {}, Actual num revs: {}".format(
                 expected_revs_per_docs,
@@ -861,6 +863,8 @@ class MobileRestClient:
         current_rev = doc["_rev"]
         current_update_number = doc["updates"] + 1
 
+        log_info("Updating {}/{}/{}: {} times".format(url, db, doc_id, number_updates))
+
         for i in xrange(number_updates):
 
             # Add "random" this to make each update unique. This will
@@ -886,7 +890,7 @@ class MobileRestClient:
             else:
                 resp = self._session.put("{}/{}/{}".format(url, db, doc_id), data=json.dumps(doc))
 
-            log_r(resp)
+            log_r(resp, info=False)
             resp.raise_for_status()
             resp_obj = resp.json()
 
