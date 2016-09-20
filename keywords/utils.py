@@ -37,10 +37,12 @@ def version_is_binary(version):
     else:
         return False
 
+
 def version_and_build(full_version):
     version_parts = full_version.split("-")
     assert len(version_parts) == 2
     return version_parts[0], version_parts[1]
+
 
 # Targeted playbooks need to use the host_name (i.e. sg1)
 def hostname_for_url(url):
@@ -70,14 +72,9 @@ def hostname_for_url(url):
 
     raise ValueError("Could not find name for url: {} in cluster_config: {}".format(url, cluster_config))
 
+
 def dump_file_contents_to_logs(filename):
     try:
         log_info("Contents of {}: {}".format(filename, open(filename).read()))
     except Exception as e:
         log_info("Error reading {}: {}".format(filename, e))
-
-def breakpoint():
-    for attr in ('stdin', 'stdout', 'stderr'):
-        setattr(sys, attr, getattr(sys, '__%s__' % attr))
-    pdb.set_trace()
-

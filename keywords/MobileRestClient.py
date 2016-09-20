@@ -13,7 +13,6 @@ from concurrent.futures import ThreadPoolExecutor
 
 from CouchbaseServer import CouchbaseServer
 from Document import get_attachment
-from utils import breakpoint
 
 from libraries.data import doc_generators
 

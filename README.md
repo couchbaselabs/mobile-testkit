@@ -633,10 +633,10 @@ When developing custom keyworks, you may want to break and inspect at a certain 
 Adding the following lines will do what you need
 
 ```
-from keywords.utils import breakpoint
+import pytest
 
 for thing in things:
-    breakpoint()
+    pytest.set_trace()
     # break here ^
     thing.do()
 ```
