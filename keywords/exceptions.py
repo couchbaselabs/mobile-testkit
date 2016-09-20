@@ -4,3 +4,7 @@ class LiteServError(Exception):
 
 class ProvisioningError(Exception):
     pass
+
+
+class TimeoutException(Exception):
+    pass

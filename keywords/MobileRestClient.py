@@ -26,6 +26,8 @@ from constants import REGISTERED_CLIENT_DBS
 from utils import log_r
 from utils import log_info
 
+from exceptions import TimeoutException
+
 
 def parse_multipart_response(response):
     """
@@ -363,7 +365,7 @@ class MobileRestClient:
         while True:
 
             if time.time() - start > CLIENT_REQUEST_TIMEOUT:
-                raise Exception("Verify Docs Present: TIMEOUT")
+                raise TimeoutException("Verify Docs Present: TIMEOUT")
 
             resp = self._session.get("{}/{}/_all_docs".format(url, db))
             log_r(resp)
@@ -430,9 +432,12 @@ class MobileRestClient:
         logging.debug(doc)
 
         doc_rev_ids_number = len(doc["_revisions"]["ids"])
-        assert doc_rev_ids_number == expected_revs_per_docs, "Expected num revs: {}, Actual num revs: {}".format(
-            expected_revs_per_docs, doc_rev_ids_number
-        )
+
+        if doc_rev_ids_number != expected_revs_per_docs:
+            raise AssertionError("Expected num revs: {}, Actual num revs: {}".format(
+                expected_revs_per_docs,
+                doc_rev_ids_number
+            ))
 
     def verify_max_revs_num_for_docs(self, url, db, docs, expected_max_number_revs_per_doc, auth=None):
         for doc in docs:
@@ -790,7 +795,7 @@ class MobileRestClient:
             not_deleted = []
 
             if time.time() - start > CLIENT_REQUEST_TIMEOUT:
-                raise Exception("Verify Docs Deleted: TIMEOUT")
+                raise TimeoutException("Verify Docs Deleted: TIMEOUT")
 
             for doc in docs:
                 if auth_type == AuthType.session:
@@ -895,7 +900,6 @@ class MobileRestClient:
                 logging.debug("Sleeping: {}s ...".format(delay))
                 time.sleep(delay)
 
-
         return resp_obj
 
     def add_docs(self, url, db, number, id_prefix, auth=None, channels=None, generator=None):
@@ -937,7 +941,7 @@ class MobileRestClient:
 
         # check that the docs returned in the responses equals the expected number
         if len(added_docs) != number:
-            raise RuntimeError("Client was not able to add all docs to: {}".format(url))
+            raise AssertionError("Client was not able to add all docs to: {}".format(url))
 
         logging.info(added_docs)
 
@@ -1135,7 +1139,8 @@ class MobileRestClient:
 
         resp_obj = resp.json()
 
-        assert resp_obj["ok"], "Unexpected response for cancelling a replication"
+        if "ok" not in resp_obj:
+            raise AssertionError("Unexpected response for cancelling a replication")
 
     def wait_for_replication_status_idle(self, url, replication_id):
         """
@@ -1145,7 +1150,7 @@ class MobileRestClient:
         start = time.time()
         while True:
             if time.time() - start > CLIENT_REQUEST_TIMEOUT:
-                raise Exception("Wait for Replication Status Idle: TIMEOUT")
+                raise TimeoutException("Wait for Replication Status Idle: TIMEOUT")
 
             resp = self._session.get("{}/_active_tasks".format(url))
             log_r(resp)
@@ -1177,7 +1182,7 @@ class MobileRestClient:
         start = time.time()
         while True:
             if time.time() - start > CLIENT_REQUEST_TIMEOUT:
-                raise Exception("Verify Docs Present: TIMEOUT")
+                raise TimeoutException("Verify Docs Present: TIMEOUT")
 
             resp = self._session.get("{}/_active_tasks".format(url))
             log_r(resp)
@@ -1230,7 +1235,7 @@ class MobileRestClient:
         while True:
 
             if time.time() - start > timeout:
-                raise Exception("Verify Docs Present: TIMEOUT")
+                raise TimeoutException("Verify Docs Present: TIMEOUT")
 
             if server_type == ServerType.listener:
 
@@ -1297,7 +1302,10 @@ class MobileRestClient:
 
             logging.debug("Expected: {}".format(expected_doc_map))
             logging.debug("Actual: {}".format(resp_docs))
-            assert expected_doc_map == resp_docs, "Unable to verify docs present. Dictionaries are not equal"
+
+            if expected_doc_map != resp_docs:
+                raise AssertionError("Unable to verify docs present. Dictionaries are not equal")
+
             break
 
     def verify_docs_in_changes(self, url, db, expected_docs, auth=None):
@@ -1331,7 +1339,7 @@ class MobileRestClient:
             logging.info(time.time() - start)
 
             if time.time() - start > CLIENT_REQUEST_TIMEOUT:
-                raise Exception("Verify Docs In Changes: TIMEOUT")
+                raise TimeoutException("Verify Docs In Changes: TIMEOUT")
 
             if server_type == ServerType.listener:
                 resp = self._session.get("{}/{}/_changes?feed=longpoll&since={}".format(url, db, last_seq))

@@ -133,7 +133,7 @@ class SyncGateway:
         target = hostname_for_url(url)
         log_info("Starting sync_gateway on {} ...".format(target))
         ansible_runner = AnsibleRunner()
-        config_path =  os.path.abspath(config)
+        config_path = os.path.abspath(config)
         status = ansible_runner.run_ansible_playbook(
             "start-sync-gateway.yml",
             extra_vars={

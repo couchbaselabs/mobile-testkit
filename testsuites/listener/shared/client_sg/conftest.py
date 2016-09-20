@@ -141,11 +141,15 @@ def setup_client_syncgateway_test(request):
     cluster_hosts = cluster_helper.get_cluster_topology(os.environ["CLUSTER_CONFIG"])
 
     sg_url = cluster_hosts["sync_gateways"][0]["public"]
+    sg_admin_url = cluster_hosts["sync_gateways"][0]["admin"]
     sg_helper.stop_sync_gateway(sg_url)
-    sg_helper.start_sync_gateway(url=sg_url, config="{}/walrus-revs-limit.json".format(SYNC_GATEWAY_CONFIGS))
 
     # Yield values to test case via fixture argument
-    yield {"ls_url": ls_url}
+    yield {
+        "ls_url": ls_url,
+        "sg_url": sg_url,
+        "sg_admin_url": sg_admin_url
+    }
 
     log_info("Tearing down test")
 
