@@ -740,7 +740,7 @@ def test_client_to_sync_gateway_complex_replication_with_revs_limit(setup_client
     sg_helper = SyncGateway()
     sg_helper.start_sync_gateway(url=sg_url, config="{}/walrus-revs-limit.json".format(SYNC_GATEWAY_CONFIGS))
 
-    log_info("Running 'test_replication_with_session_cookie'")
+    log_info("Running 'test_client_to_sync_gateway_complex_replication_with_revs_limit'")
     log_info("ls_url: {}".format(ls_url))
     log_info("sg_admin_url: {}".format(sg_admin_url))
     log_info("sg_url: {}".format(sg_url))
@@ -857,10 +857,73 @@ def test_client_to_sync_gateway_complex_replication_with_revs_limit(setup_client
     client.verify_docs_deleted(url=sg_admin_url, db=sg_db, docs=ls_db_docs)
 
 
+@pytest.mark.sanity
+@pytest.mark.listener
+@pytest.mark.syncgateway
+@pytest.mark.replication
+@pytest.mark.usefixtures("setup_client_syncgateway_suite")
+def test_replication_with_multiple_client_dbs_and_single_sync_gateway_db(setup_client_syncgateway_test):
+    """Test replication from multiple client dbs to one sync_gateway db"""
 
+    ls_url = setup_client_syncgateway_test["ls_url"]
+    sg_url = setup_client_syncgateway_test["sg_url"]
+    sg_admin_url = setup_client_syncgateway_test["sg_admin_url"]
 
+    num_docs = 1000
 
+    sg_helper = SyncGateway()
+    sg_helper.start_sync_gateway(url=sg_url, config="{}/walrus.json".format(SYNC_GATEWAY_CONFIGS))
 
+    log_info("Running 'test_replication_with_multiple_client_dbs_and_single_sync_gateway_db'")
+    log_info("ls_url: {}".format(ls_url))
+    log_info("sg_admin_url: {}".format(sg_admin_url))
+    log_info("sg_url: {}".format(sg_url))
 
+    client = MobileRestClient()
 
+    ls_db1 = client.create_database(url=ls_url, name="ls_db1")
+    ls_db2 = client.create_database(url=ls_url, name="ls_db2")
+    sg_db = client.create_database(url=sg_admin_url, name="sg_db", server="walrus:")
 
+    # Setup continuous push / pull replication from ls_db1 to sg_db
+    repl_one = client.start_replication(
+        url=ls_url,
+        continuous=True,
+        from_db=ls_db1,
+        to_url=sg_admin_url, to_db=sg_db
+    )
+
+    repl_two = client.start_replication(
+        url=ls_url,
+        continuous=True,
+        from_url=sg_admin_url, from_db=sg_db,
+        to_db=ls_db1
+    )
+
+    # Setup continuous push / pull replication from ls_db2 to sg_db
+    repl_three = client.start_replication(
+        url=ls_url,
+        continuous=True,
+        from_db=ls_db2,
+        to_url=sg_admin_url, to_db=sg_db
+    )
+
+    repl_four = client.start_replication(
+        url=ls_url,
+        continuous=True,
+        from_url=sg_admin_url, from_db=sg_db,
+        to_db=ls_db2
+    )
+
+    ls_db_one_docs = client.add_docs(url=ls_url, db=ls_db1, number=num_docs, id_prefix=ls_db1)
+    ls_db_two_docs = client.add_docs(url=ls_url, db=ls_db2, number=num_docs, id_prefix=ls_db2)
+
+    ls_db1_db2_docs = ls_db_one_docs + ls_db_two_docs
+
+    client.verify_docs_present(url=ls_url, db=ls_db1, expected_docs=ls_db1_db2_docs)
+    client.verify_docs_present(url=ls_url, db=ls_db2, expected_docs=ls_db1_db2_docs)
+    client.verify_docs_present(url=sg_admin_url, db=sg_db, expected_docs=ls_db1_db2_docs)
+
+    client.verify_docs_in_changes(url=sg_admin_url, db=sg_db, expected_docs=ls_db1_db2_docs)
+    client.verify_docs_in_changes(url=ls_url, db=ls_db1, expected_docs=ls_db1_db2_docs)
+    client.verify_docs_in_changes(url=ls_url, db=ls_db2, expected_docs=ls_db1_db2_docs)

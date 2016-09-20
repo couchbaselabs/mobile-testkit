@@ -5,9 +5,14 @@ import pdb
 import sys
 
 
-def log_info(message):
+def log_info(message, is_verify=False):
     # pytest will capture stdout / stderr
     # by using 'print' the html reporting and running the test with -s will pick up this output in the console
+    # If verify is true, the message will have the format "  > This is some message" for cleaner output
+
+    if is_verify:
+        message = "  > {}".format(message)
+
     print(message)
     logging.info(message)
 

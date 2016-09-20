@@ -1234,6 +1234,8 @@ class MobileRestClient:
 
         logging.debug(expected_docs)
 
+        log_info("Verify {}/{} has {} docs".format(url, db, len(expected_doc_map)), is_verify=True)
+
         start = time.time()
         while True:
 
@@ -1331,6 +1333,8 @@ class MobileRestClient:
             expected_doc_map = {expected_docs["id"]: expected_docs["rev"]}
         else:
             raise TypeError("Verify Docs In Changes expects a list or dict of expected docs")
+
+        log_info("Verify {}/{} has {} docs in changes".format(url, db, len(expected_doc_map)), is_verify=True)
 
         server_type = self.get_server_type(url)
         sequence_number_map = {}
