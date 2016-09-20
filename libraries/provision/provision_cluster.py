@@ -17,26 +17,26 @@ from keywords.utils import log_info
 
 def provision_cluster(couchbase_server_config, sync_gateway_config):
 
-    test_output("\n>>> Cluster info:\n")
+    log_info("\n>>> Cluster info:\n")
 
     cluster_config = os.environ["CLUSTER_CONFIG"]
     with open(cluster_config, "r") as ansible_hosts:
-        test_output(ansible_hosts.read())
+        log_info(ansible_hosts.read())
 
-    test_output(couchbase_server_config)
-    test_output(sync_gateway_config)
+    log_info(couchbase_server_config)
+    log_info(sync_gateway_config)
 
     if not sync_gateway_config.is_valid():
-        test_output("Invalid sync_gateway provisioning configuration. Exiting ...")
+        log_info("Invalid sync_gateway provisioning configuration. Exiting ...")
         sys.exit(1)
 
-    test_output(">>> Provisioning cluster...")
+    log_info(">>> Provisioning cluster...")
 
     # Get server base url and package name
     server_baseurl, server_package_name = couchbase_server_config.get_baseurl_package()
 
-    test_output(">>> Server package: {0}/{1}".format(server_baseurl, server_package_name))
-    test_output(">>> Using sync_gateway config: {}".format(sync_gateway_config.config_path))
+    log_info(">>> Server package: {0}/{1}".format(server_baseurl, server_package_name))
+    log_info(">>> Using sync_gateway config: {}".format(sync_gateway_config.config_path))
 
     ansible_runner = AnsibleRunner()
 
@@ -61,11 +61,6 @@ def provision_cluster(couchbase_server_config, sync_gateway_config):
 
     log_info(">>> Done provisioning cluster...")
 
-
-
-def test_output(output):
-    console(output)
-    logging.info(output)
 
 if __name__ == "__main__":
     usage = """usage: python provision_cluster.py
