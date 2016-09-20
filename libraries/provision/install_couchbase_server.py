@@ -141,14 +141,6 @@ def install_couchbase_server(couchbase_server_config):
     )
     assert status == 0, "Failed to install Couchbase Server"
 
-    print(">>> Creating server buckets")
-    # Create default buckets
-    status = ansible_runner.run_ansible_playbook(
-        "create-server-buckets.yml",
-        extra_vars={"bucket_names": ["data-bucket", "index-bucket"]}
-    )
-    assert status == 0, "Failed to create Couchbase Server buckets"
-
     # Wait for server to be in 'healthy state'
     print(">>> Waiting for server to be in 'healthy' state")
     cluster_keywords = ClusterKeywords()

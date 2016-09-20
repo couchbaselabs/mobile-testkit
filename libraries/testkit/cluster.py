@@ -13,15 +13,22 @@ from testkit.admin import Admin
 from testkit.config import Config
 from testkit import settings
 from provision.ansible_runner import AnsibleRunner
-from keywords import utils
 
 import keywords.CouchbaseServer
+from keywords import utils
 
 import logging
 log = logging.getLogger(settings.LOGGER)
 
 
 class Cluster:
+
+    """
+    An older remnant of first pass of Python API
+
+    Before using or extending this, check keywords/ClusterKeywords.py to see if it already
+    has this functionality
+    """
 
     def __init__(self):
 
@@ -103,6 +110,7 @@ class Cluster:
                 config = Config(config_path_full)
                 mode = config.get_mode()
                 bucket_name_set = config.get_bucket_name_set()
+
                 self.sync_gateway_config = config
 
                 log.info(">>> Creating buckets on: {}".format(self.servers[0].ip))

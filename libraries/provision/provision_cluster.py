@@ -13,27 +13,30 @@ from install_nginx import install_nginx
 from ansible_runner import AnsibleRunner
 from robot.api.logger import console
 
+from keywords.utils import log_info
+
 def provision_cluster(couchbase_server_config, sync_gateway_config):
 
-    test_output("\n>>> Cluster info:\n")
+    log_info("\n>>> Cluster info:\n")
 
-    with open(os.environ["CLUSTER_CONFIG"], "r") as ansible_hosts:
-        test_output(ansible_hosts.read())
+    cluster_config = os.environ["CLUSTER_CONFIG"]
+    with open(cluster_config, "r") as ansible_hosts:
+        log_info(ansible_hosts.read())
 
-    test_output(couchbase_server_config)
-    test_output(sync_gateway_config)
+    log_info(couchbase_server_config)
+    log_info(sync_gateway_config)
 
     if not sync_gateway_config.is_valid():
-        test_output("Invalid sync_gateway provisioning configuration. Exiting ...")
+        log_info("Invalid sync_gateway provisioning configuration. Exiting ...")
         sys.exit(1)
 
-    test_output(">>> Provisioning cluster...")
+    log_info(">>> Provisioning cluster...")
 
     # Get server base url and package name
     server_baseurl, server_package_name = couchbase_server_config.get_baseurl_package()
 
-    test_output(">>> Server package: {0}/{1}".format(server_baseurl, server_package_name))
-    test_output(">>> Using sync_gateway config: {}".format(sync_gateway_config.config_path))
+    log_info(">>> Server package: {0}/{1}".format(server_baseurl, server_package_name))
+    log_info(">>> Using sync_gateway config: {}".format(sync_gateway_config.config_path))
 
     ansible_runner = AnsibleRunner()
 
@@ -46,19 +49,18 @@ def provision_cluster(couchbase_server_config, sync_gateway_config):
     assert status == 0, "Failed to flush firewall"
 
     # Install server package
+    log_info("Installing Couchbase Server")
     install_couchbase_server.install_couchbase_server(couchbase_server_config)
 
     # Install sync_gateway
+    log_info("Installing Sync Gateway")
     install_sync_gateway.install_sync_gateway(sync_gateway_config)
 
     # Install nginx
-    install_nginx(os.environ["CLUSTER_CONFIG"])
+    install_nginx(cluster_config)
 
-    test_output(">>> Done provisioning cluster...")
+    log_info(">>> Done provisioning cluster...")
 
-def test_output(output):
-    console(output)
-    logging.info(output)
 
 if __name__ == "__main__":
     usage = """usage: python provision_cluster.py
@@ -91,10 +93,6 @@ if __name__ == "__main__":
     parser.add_option("", "--sync-gateway-commit",
                       action="store", type="string", dest="source_commit", default=None,
                       help="sync_gateway branch to checkout and build")
-
-    parser.add_option("", "--skip-bucketflush",
-                      action="store", dest="skip_bucketflush", default=False,
-                      help="skip the bucketflush step")
 
     parser.add_option("", "--build-flags",
                       action="store", type="string", dest="build_flags", default="",
@@ -131,7 +129,7 @@ if __name__ == "__main__":
         commit=opts.source_commit,
         build_flags=opts.build_flags,
         config_path=opts.sync_gateway_config_file,
-        skip_bucketflush=opts.skip_bucketflush
+        skip_bucketcreation=False
     )
 
     provision_cluster(
