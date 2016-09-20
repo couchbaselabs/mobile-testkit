@@ -1,6 +1,7 @@
 import json
 import re
 import time
+import pytest
 
 from concurrent.futures import as_completed
 from concurrent.futures import ThreadPoolExecutor
@@ -8,24 +9,44 @@ from concurrent.futures import ThreadPoolExecutor
 from requests.exceptions import HTTPError
 
 from keywords.utils import log_info
-
 from keywords.constants import SYNC_GATEWAY_CONFIGS
-from keywords.SyncGateway import SyncGateway
-from keywords.utils import breakpoint
 from keywords.MobileRestClient import MobileRestClient
+from keywords.SyncGateway import SyncGateway
 
 
-def initial_pull_replication(ls_url, cluster_config, num_docs, continuous):
+@pytest.mark.sanity
+@pytest.mark.listener
+@pytest.mark.syncgateway
+@pytest.mark.replication
+@pytest.mark.usefixtures("setup_client_syncgateway_suite")
+@pytest.mark.parametrize("continuous", [
+    True,
+    False
+])
+def test_initial_pull_replication(setup_client_syncgateway_test, continuous):
+    """
+    1. Prepare sync-gateway to have 10000 documents.
+    2. Create a single shot / continuous pull replicator and to pull the docs into a database.
+    3. Verify if all of the docs get pulled.
+    Referenced issue: couchbase/couchbase-lite-android#955.
+    """
 
     sg_db = "db"
     ls_db = "ls_db"
 
-    sg_one_admin = cluster_config["sync_gateways"][0]["admin"]
-    sg_one_public = cluster_config["sync_gateways"][0]["public"]
+    num_docs = 10000
 
-    log_info(ls_url)
-    log_info(sg_one_admin)
-    log_info(sg_one_public)
+    ls_url = setup_client_syncgateway_test["ls_url"]
+    sg_one_admin = setup_client_syncgateway_test["sg_admin_url"]
+    sg_one_public = setup_client_syncgateway_test["sg_url"]
+
+    sg_helper = SyncGateway()
+    sg_helper.start_sync_gateway(url=sg_one_public, config="{}/walrus.json".format(SYNC_GATEWAY_CONFIGS))
+
+    log_info("Running 'test_initial_pull_replication', continuous: {}".format(continuous))
+    log_info("ls_url: {}".format(ls_url))
+    log_info("sg_one_admin: {}".format(sg_one_admin))
+    log_info("sg_one_public: {}".format(sg_one_public))
 
     client = MobileRestClient()
     client.create_user(sg_one_admin, sg_db, "seth", password="password", channels=["ABC", "NBC"])
@@ -85,18 +106,39 @@ def initial_pull_replication(ls_url, cluster_config, num_docs, continuous):
         assert len(replications) == 0, "No replications should be running"
 
 
-def initial_push_replication(ls_url, cluster_config, num_docs, continuous):
+@pytest.mark.sanity
+@pytest.mark.listener
+@pytest.mark.syncgateway
+@pytest.mark.replication
+@pytest.mark.usefixtures("setup_client_syncgateway_suite")
+@pytest.mark.parametrize("continuous", [
+    True,
+    False
+])
+def test_initial_push_replication(setup_client_syncgateway_test, continuous):
+    """
+    1. Prepare LiteServ to have 10000 documents.
+    2. Create a single shot push / continuous replicator and to push the docs into a sync_gateway database.
+    3. Verify if all of the docs get pushed.
+    """
 
     sg_db = "db"
     ls_db = "ls_db"
     seth_channels = ["ABC", "NBC"]
 
-    sg_one_admin = cluster_config["sync_gateways"][0]["admin"]
-    sg_one_public = cluster_config["sync_gateways"][0]["public"]
+    num_docs = 10000
 
-    log_info(ls_url)
-    log_info(sg_one_admin)
-    log_info(sg_one_public)
+    ls_url = setup_client_syncgateway_test["ls_url"]
+    sg_one_admin = setup_client_syncgateway_test["sg_admin_url"]
+    sg_one_public = setup_client_syncgateway_test["sg_url"]
+
+    sg_helper = SyncGateway()
+    sg_helper.start_sync_gateway(url=sg_one_public, config="{}/walrus.json".format(SYNC_GATEWAY_CONFIGS))
+
+    log_info("Running 'test_initial_push_replication', continuous: {}".format(continuous))
+    log_info("ls_url: {}".format(ls_url))
+    log_info("sg_one_admin: {}".format(sg_one_admin))
+    log_info("sg_one_public: {}".format(sg_one_public))
 
     client = MobileRestClient()
     client.create_user(sg_one_admin, sg_db, "seth", password="password", channels=seth_channels)
@@ -149,17 +191,38 @@ def initial_push_replication(ls_url, cluster_config, num_docs, continuous):
         assert len(replications) == 0, "No replications should be running"
 
 
-def multiple_replications_not_created_with_same_properties(ls_url, cluster_config):
+@pytest.mark.sanity
+@pytest.mark.listener
+@pytest.mark.syncgateway
+@pytest.mark.replication
+@pytest.mark.usefixtures("setup_client_syncgateway_suite")
+def test_multiple_replications_not_created_with_same_properties(setup_client_syncgateway_test):
+    """Regression test for https://github.com/couchbase/couchbase-lite-android/issues/939
+    1. Create LiteServ database and launch sync_gateway with database
+    2. Start 5 continuous push replicators with the same source and target
+    3. Make sure the sample replication id is returned
+    4. Check that 1 one replication exists in 'active_tasks'
+    5. Stop the replication with POST /_replicate cancel=true
+    6. Start 5 continuous pull replicators with the same source and target
+    7. Make sure the sample replication id is returned
+    8. Check that 1 one replication exists in 'active_tasks'
+    9. Stop the replication with POST /_replicate cancel=true
+    """
+
     sg_db = "db"
     ls_db = "ls_db"
 
-    sg_one_admin = cluster_config["sync_gateways"][0]["admin"]
-    sg_one_public = cluster_config["sync_gateways"][0]["public"]
+    ls_url = setup_client_syncgateway_test["ls_url"]
+    sg_one_admin = setup_client_syncgateway_test["sg_admin_url"]
+    sg_one_public = setup_client_syncgateway_test["sg_url"]
 
-    log_info("Running: multiple_replications_not_created_with_same_properties")
-    log_info(ls_url)
-    log_info(sg_one_admin)
-    log_info(sg_one_public)
+    sg_helper = SyncGateway()
+    sg_helper.start_sync_gateway(url=sg_one_public, config="{}/walrus.json".format(SYNC_GATEWAY_CONFIGS))
+
+    log_info("Running 'test_multiple_replications_not_created_with_same_properties'")
+    log_info("ls_url: {}".format(ls_url))
+    log_info("sg_one_admin: {}".format(sg_one_admin))
+    log_info("sg_one_public: {}".format(sg_one_public))
 
     client = MobileRestClient()
     client.create_database(url=ls_url, name=ls_db)
@@ -263,17 +326,38 @@ def multiple_replications_not_created_with_same_properties(ls_url, cluster_confi
     )
 
 
-def multiple_replications_created_with_unique_properties(ls_url, cluster_config):
+@pytest.mark.sanity
+@pytest.mark.listener
+@pytest.mark.syncgateway
+@pytest.mark.replication
+@pytest.mark.usefixtures("setup_client_syncgateway_suite")
+def test_multiple_replications_created_with_unique_properties(setup_client_syncgateway_test):
+    """Regression test for couchbase/couchbase-lite-java-core#1386
+    1. Setup SGW with a remote database name db for an example
+    2. Create a local database such as ls_db
+    3. Send POST /_replicate with source = ls_db, target = http://localhost:4985/db, continuous = true
+    4. Send POST /_replicate with source = ls_db, target = http://localhost:4985/db, continuous = true, doc_ids=["doc1", "doc2"]
+    5. Send POST /_replicate with source = ls_db, target = http://localhost:4985/db, continuous = true, filter="filter1"
+    6. Make sure that the session_id from each POST /_replicate are different.
+    7. Send GET /_active_tasks to make sure that there are 3 tasks created.
+    8. Send 3 POST /_replicate withe the same parameter as Step 3=5 plus cancel=true to stop those replicators
+    9. Repeat Step 3 - 8 with source = and target = db for testing the pull replicator.
+    """
+
     sg_db = "db"
     ls_db = "ls_db"
 
-    sg_one_admin = cluster_config["sync_gateways"][0]["admin"]
-    sg_one_public = cluster_config["sync_gateways"][0]["public"]
+    ls_url = setup_client_syncgateway_test["ls_url"]
+    sg_one_admin = setup_client_syncgateway_test["sg_admin_url"]
+    sg_one_public = setup_client_syncgateway_test["sg_url"]
 
-    log_info("Running: multiple_replications_created_with_unique_properties")
-    log_info(ls_url)
-    log_info(sg_one_admin)
-    log_info(sg_one_public)
+    sg_helper = SyncGateway()
+    sg_helper.start_sync_gateway(url=sg_one_public, config="{}/walrus.json".format(SYNC_GATEWAY_CONFIGS))
+
+    log_info("Running 'test_multiple_replications_created_with_unique_properties'")
+    log_info("ls_url: {}".format(ls_url))
+    log_info("sg_one_admin: {}".format(sg_one_admin))
+    log_info("sg_one_public: {}".format(sg_one_public))
 
     client = MobileRestClient()
     client.create_database(url=ls_url, name=ls_db)
@@ -427,12 +511,35 @@ def multiple_replications_created_with_unique_properties(ls_url, cluster_config)
     )
 
 
-def replication_with_session_cookie(ls_url, sg_admin_url, sg_url):
+@pytest.mark.sanity
+@pytest.mark.listener
+@pytest.mark.syncgateway
+@pytest.mark.replication
+@pytest.mark.sessions
+@pytest.mark.usefixtures("setup_client_syncgateway_suite")
+def test_replication_with_session_cookie(setup_client_syncgateway_test):
+    """Regression test for https://github.com/couchbase/couchbase-lite-android/issues/817
+    1. SyncGateway Config with guest disabled = true and One user added (e.g. user1 / 1234)
+    2. Create a new session on SGW for the user1 by using POST /_session.
+       Capture the SyncGatewaySession cookie from the set-cookie in the response header.
+    3. Start continuous push and pull replicator on the LiteServ with SyncGatewaySession cookie.
+       Make sure that both replicators start correctly
+    4. Delete the session from SGW by sending DELETE /_sessions/ to SGW
+    5. Cancel both push and pull replicator on the LiteServ
+    6. Repeat step 1 and 2
+    """
 
     ls_db = "ls_db"
     sg_db = "db"
 
-    log_info("Running 'replication_with_session_cookie' ...")
+    ls_url = setup_client_syncgateway_test["ls_url"]
+    sg_url = setup_client_syncgateway_test["sg_url"]
+    sg_admin_url = setup_client_syncgateway_test["sg_admin_url"]
+
+    sg_helper = SyncGateway()
+    sg_helper.start_sync_gateway(url=sg_url, config="{}/walrus-user.json".format(SYNC_GATEWAY_CONFIGS))
+
+    log_info("Running 'test_replication_with_session_cookie'")
     log_info("ls_url: {}".format(ls_url))
     log_info("sg_admin_url: {}".format(sg_admin_url))
     log_info("sg_url: {}".format(sg_url))

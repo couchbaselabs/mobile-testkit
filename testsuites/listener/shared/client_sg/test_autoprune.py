@@ -106,6 +106,7 @@ def test_auto_prune_with_pull(setup_client_syncgateway_test):
     client.verify_docs_present(url=ls_url, db=ls_db, expected_docs=sg_docs_update)
     client.verify_revs_num_for_docs(url=ls_url, db=ls_db, docs=sg_docs_update, expected_revs_per_doc=20)
 
+
 @pytest.mark.sanity
 @pytest.mark.listener
 @pytest.mark.syncgateway
