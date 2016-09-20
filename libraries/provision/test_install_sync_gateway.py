@@ -4,7 +4,7 @@ from libraries.provision.install_sync_gateway import get_buckets_from_sync_gatew
 
 
 
-
+# TODO: convert to pytest (but pytest can use unittest format as well)
 class TestInstallSyncGateway(unittest.TestCase):
 
     def test_get_buckets_from_sync_gateway_config_template_vars(self):
