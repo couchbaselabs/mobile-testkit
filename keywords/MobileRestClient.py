@@ -726,7 +726,7 @@ class MobileRestClient:
         """
         doc_resp = self.get_doc(url, db, doc["id"], auth)
         conflict_revs = doc_resp["_conflicts"]
-        logging.debug("Conflict revs: {}".format(conflict_revs))
+        log_info("Conflict revs: {}".format(conflict_revs))
         return conflict_revs
 
     def delete_conflicts(self, url, db, docs, auth=None):
