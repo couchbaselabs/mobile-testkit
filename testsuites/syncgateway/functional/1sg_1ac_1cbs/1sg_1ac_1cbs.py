@@ -505,3 +505,62 @@ def test_sync_require_roles(setup_1sg_1ac_1cbs_test, sg_conf):
         cluster_conf=setup_1sg_1ac_1cbs_test["cluster_config"],
         sg_conf=sg_conf
     )
+
+
+@pytest.mark.sanity
+@pytest.mark.syncgateway
+@pytest.mark.usefixtures("setup_1sg_1ac_1cbs_suite")
+@pytest.mark.parametrize("sg_conf", [
+    ("{}/sync_gateway_default_functional_tests_di.json".format(SYNC_GATEWAY_CONFIGS)),
+])
+def test_multiple_users_multiple_channels(setup_1sg_1ac_1cbs_test, sg_conf):
+    multiple_users_multiple_channels(
+        cluster_conf=setup_1sg_1ac_1cbs_test["cluster_config"],
+        sg_conf=sg_conf
+    )
+
+
+@pytest.mark.sanity
+@pytest.mark.syncgateway
+@pytest.mark.usefixtures("setup_1sg_1ac_1cbs_suite")
+@pytest.mark.parametrize("sg_conf", [
+    ("{}/sync_gateway_default_functional_tests_di.json".format(SYNC_GATEWAY_CONFIGS)),
+])
+def test_muliple_users_single_channel(setup_1sg_1ac_1cbs_test, sg_conf):
+    muliple_users_single_channel(
+        cluster_conf=setup_1sg_1ac_1cbs_test["cluster_config"],
+        sg_conf=sg_conf
+    )
+
+
+@pytest.mark.sanity
+@pytest.mark.syncgateway
+@pytest.mark.usefixtures("setup_1sg_1ac_1cbs_suite")
+@pytest.mark.parametrize("sg_conf", [
+    ("{}/sync_gateway_default_functional_tests_di.json".format(SYNC_GATEWAY_CONFIGS)),
+])
+def test_single_user_multiple_channels(setup_1sg_1ac_1cbs_test, sg_conf):
+    single_user_multiple_channels(
+        cluster_conf=setup_1sg_1ac_1cbs_test["cluster_config"],
+        sg_conf=sg_conf
+    )
+
+
+@pytest.mark.sanity
+@pytest.mark.syncgateway
+@pytest.mark.usefixtures("setup_1sg_1ac_1cbs_suite")
+@pytest.mark.parametrize("sg_conf", [
+    ("{}/sync_gateway_default_functional_tests_di.json".format(SYNC_GATEWAY_CONFIGS)),
+])
+def test_single_user_single_channel(setup_1sg_1ac_1cbs_test, sg_conf):
+    single_user_single_channel(
+        cluster_conf=setup_1sg_1ac_1cbs_test["cluster_config"],
+        sg_conf=sg_conf
+    )
+
+
+
+
+
+
+

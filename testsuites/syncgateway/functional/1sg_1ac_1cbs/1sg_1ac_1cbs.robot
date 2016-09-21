@@ -52,22 +52,6 @@ ${SYNC_GATEWAY_CONFIG}      ${SYNC_GATEWAY_CONFIGS}/sync_gateway_default_functio
 
 
 
-# test_users_channels (Distributed Index)
-test multiple users multiple channels (distributed index)
-    [Tags]   sanity  syncgateway
-    test multiple users multiple channels   ${SYNC_GATEWAY_CONFIGS}/sync_gateway_default_functional_tests_di.json
-
-test muliple users single channel (distributed index)
-    [Tags]   sanity  syncgateway
-    test muliple users single channel       ${SYNC_GATEWAY_CONFIGS}/sync_gateway_default_functional_tests_di.json
-
-test single user multiple channels (distributed index)
-    [Tags]   sanity  syncgateway
-    test single user multiple channels      ${SYNC_GATEWAY_CONFIGS}/sync_gateway_default_functional_tests_di.json
-
-test single user single channel (distributed index)
-    [Tags]   sanity  syncgateway
-    test single user single channel         ${SYNC_GATEWAY_CONFIGS}/sync_gateway_default_functional_tests_di.json
 
 *** Keywords ***
 Suite Setup
