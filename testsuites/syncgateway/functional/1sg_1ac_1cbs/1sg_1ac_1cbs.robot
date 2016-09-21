@@ -50,34 +50,7 @@ ${SYNC_GATEWAY_CONFIG}      ${SYNC_GATEWAY_CONFIGS}/sync_gateway_default_functio
 
 
 
-# test_sync (Distributed Index)
-test issue 1524
-    [Tags]   sanity  syncgateway
-    test issue 1524            ${SYNC_GATEWAY_CONFIGS}/custom_sync/grant_access_one_di.json   ${10}
 
-test sync access sanity
-    [Tags]   sanity  syncgateway
-    test sync access sanity     ${SYNC_GATEWAY_CONFIGS}/custom_sync/sync_gateway_custom_sync_access_sanity_di.json
-
-test sync channel sanity
-    [Tags]   sanity  syncgateway
-    test sync channel sanity    ${SYNC_GATEWAY_CONFIGS}/custom_sync/sync_gateway_custom_sync_channel_sanity_di.json
-
-test sync role sanity
-    [Tags]   sanity  syncgateway  roles
-    test sync role sanity       ${SYNC_GATEWAY_CONFIGS}/custom_sync/sync_gateway_custom_sync_role_sanity_di.json
-
-test sync sanity
-    [Tags]   sanity  syncgateway  sync
-    test sync sanity            ${SYNC_GATEWAY_CONFIGS}/custom_sync/sync_gateway_custom_sync_one_di.json
-
-test sync sanity backfill
-    [Tags]   sanity  syncgateway  sync
-    test sync sanity backfill   ${SYNC_GATEWAY_CONFIGS}/custom_sync/sync_gateway_custom_sync_one_di.json
-
-test sync require roles
-    [Tags]   sanity  syncgateway  roles
-    test sync require roles     ${SYNC_GATEWAY_CONFIGS}/custom_sync/sync_gateway_custom_sync_require_roles_di.json
 
 # test_users_channels (Distributed Index)
 test multiple users multiple channels (distributed index)
