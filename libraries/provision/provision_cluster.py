@@ -10,16 +10,18 @@ from install_couchbase_server import CouchbaseServerConfig
 from install_sync_gateway import SyncGatewayConfig
 from install_nginx import install_nginx
 
+from keywords.exceptions import ProvisioningError
+
 from ansible_runner import AnsibleRunner
 from robot.api.logger import console
 
 from keywords.utils import log_info
 
-def provision_cluster(couchbase_server_config, sync_gateway_config):
+
+def provision_cluster(cluster_config, couchbase_server_config, sync_gateway_config):
 
     log_info("\n>>> Cluster info:\n")
 
-    cluster_config = os.environ["CLUSTER_CONFIG"]
     with open(cluster_config, "r") as ansible_hosts:
         log_info(ansible_hosts.read())
 
@@ -42,11 +44,13 @@ def provision_cluster(couchbase_server_config, sync_gateway_config):
 
     # Reset previous installs
     status = ansible_runner.run_ansible_playbook("remove-previous-installs.yml")
-    assert status == 0, "Failed to remove previous installs"
+    if status != 0:
+        raise ProvisioningError("Failed to remove previous installs")
 
     # Clear firewall rules
     status = ansible_runner.run_ansible_playbook("flush-firewall.yml")
-    assert status == 0, "Failed to flush firewall"
+    if status != 0:
+        raise ProvisioningError("Failed to flush firewall")
 
     # Install server package
     log_info("Installing Couchbase Server")
@@ -103,7 +107,7 @@ if __name__ == "__main__":
     (opts, args) = parser.parse_args(arg_parameters)
 
     try:
-        cluster_config = os.environ["CLUSTER_CONFIG"]
+        cluster_conf = os.environ["CLUSTER_CONFIG"]
     except KeyError as ke:
         print ("Make sure CLUSTER_CONFIG is defined and pointing to the configuration you would like to provision")
         raise KeyError("CLUSTER_CONFIG not defined. Unable to provision cluster.")
@@ -133,6 +137,7 @@ if __name__ == "__main__":
     )
 
     provision_cluster(
+        cluster_config=cluster_conf,
         couchbase_server_config=server_config,
         sync_gateway_config=sync_gateway_config
     )

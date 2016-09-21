@@ -117,9 +117,7 @@ class ClusterKeywords:
 
         assert len(running_services) == 0, "Running Services Found: {}".format(running_services)
 
-    def verify_cluster_versions(self, expected_server_version, expected_sync_gateway_version):
-
-        cluster_config = os.environ["CLUSTER_CONFIG"]
+    def verify_cluster_versions(self, cluster_config, expected_server_version, expected_sync_gateway_version):
 
         log_info("Verfying versions for cluster: {}".format(cluster_config))
 
@@ -154,7 +152,7 @@ class ClusterKeywords:
         cluster = Cluster()
         cluster.reset(sync_gateway_config)
 
-    def provision_cluster(self, server_version, sync_gateway_version, sync_gateway_config):
+    def provision_cluster(self, cluster_config, server_version, sync_gateway_version, sync_gateway_config):
 
         # Dirty hack -- these have to be put here in order to avoid circular imports
         from libraries.provision.install_couchbase_server import CouchbaseServerConfig
@@ -169,9 +167,9 @@ class ClusterKeywords:
         else:
             sg_config = SyncGatewayConfig(sync_gateway_version, None, None, sync_gateway_config, "", False)
 
-        provision_cluster(cbs_config, sg_config)
+        provision_cluster(cluster_config, cbs_config, sg_config)
 
         # verify running services are the expected versions
-        self.verify_cluster_versions(server_version, sync_gateway_version)
+        self.verify_cluster_versions(cluster_config, server_version, sync_gateway_version)
 
 

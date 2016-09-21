@@ -8,19 +8,20 @@ from testkit.cluster import Cluster
 from testkit.verify import verify_changes
 from testkit.verify import verify_same_docs
 
-import logging
-log = logging.getLogger(testkit.settings.LOGGER)
+from keywords.utils import log_info
 
 
-def test_continuous_changes_parametrized(conf, num_users, num_docs, num_revisions):
+def continuous_changes_parametrized(cluster_conf, sg_conf, num_users, num_docs, num_revisions):
 
-    log.info("conf: {}".format(conf))
-    log.info("num_users: {}".format(num_users))
-    log.info("num_docs: {}".format(num_docs))
-    log.info("num_revisions: {}".format(num_revisions))
+    log_info("Running 'continuous_changes_parametrized'")
+    log_info("cluster_conf: {}".format(cluster_conf))
+    log_info("sg_conf: {}".format(sg_conf))
+    log_info("num_users: {}".format(num_users))
+    log_info("num_docs: {}".format(num_docs))
+    log_info("num_revisions: {}".format(num_revisions))
 
-    cluster = Cluster()
-    mode = cluster.reset(config_path=conf)
+    cluster = Cluster(config=cluster_conf)
+    mode = cluster.reset(config_path=sg_conf)
 
     admin = Admin(cluster.sync_gateways[0])
     users = admin.register_bulk_users(target=cluster.sync_gateways[0], db="db", name_prefix="user", number=num_users, password="password", channels=["ABC", "TERMINATE"])
@@ -59,14 +60,16 @@ def test_continuous_changes_parametrized(conf, num_users, num_docs, num_revision
     assert len(errors) == 0
 
 
-def test_continuous_changes_sanity(conf, num_docs, num_revisions):
+def continuous_changes_sanity(cluster_conf, sg_conf, num_docs, num_revisions):
 
-    log.info("conf: {}".format(conf))
-    log.info("num_docs: {}".format(num_docs))
-    log.info("num_revisions: {}".format(num_revisions))
+    log_info("Running 'continuous_changes_sanity'")
+    log_info("cluster_conf: {}".format(cluster_conf))
+    log_info("sg_conf: {}".format(sg_conf))
+    log_info("num_docs: {}".format(num_docs))
+    log_info("num_revisions: {}".format(num_revisions))
 
-    cluster = Cluster()
-    mode = cluster.reset(config_path=conf)
+    cluster = Cluster(config=cluster_conf)
+    mode = cluster.reset(config_path=sg_conf)
 
     admin = Admin(cluster.sync_gateways[0])
     seth = admin.register_user(target=cluster.sync_gateways[0], db="db", name="seth", password="password", channels=["ABC", "TERMINATE"])

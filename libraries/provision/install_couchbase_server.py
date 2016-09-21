@@ -5,6 +5,7 @@ import json
 
 from ansible_runner import AnsibleRunner
 
+from keywords.exceptions import ProvisioningError
 from keywords.ClusterKeywords import ClusterKeywords
 from keywords.CouchbaseServer import CouchbaseServer
 
@@ -139,7 +140,8 @@ def install_couchbase_server(couchbase_server_config):
             "couchbase_server_package_name": server_package_name
         }
     )
-    assert status == 0, "Failed to install Couchbase Server"
+    if status != 0:
+        raise ProvisioningError("Failed to install Couchbase Server")
 
     # Wait for server to be in 'healthy state'
     print(">>> Waiting for server to be in 'healthy' state")

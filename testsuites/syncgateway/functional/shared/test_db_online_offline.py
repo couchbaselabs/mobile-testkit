@@ -14,9 +14,7 @@ from requests.exceptions import RetryError
 
 from multiprocessing.pool import ThreadPool
 
-
-import logging
-log = logging.getLogger(testkit.settings.LOGGER)
+from keywords.utils import log_info
 
 NUM_ENDPOINTS = 13
 
@@ -57,46 +55,46 @@ def rest_scan(sync_gateway, db, online, num_docs, user_name, channels):
     try:
         admin.create_role(db=db, name="radio_stations", channels=["HWOD", "KDWB"])
     except HTTPError as e:
-        log.info((e.response.url, e.response.status_code))
+        log_info((e.response.url, e.response.status_code))
         error_responses.append((e.response.url, e.response.status_code))
 
     # GET /{db}/_role
     try:
         roles = admin.get_roles(db=db)
-        log.info(roles)
+        log_info(roles)
     except HTTPError as e:
-        log.info((e.response.url, e.response.status_code))
+        log_info((e.response.url, e.response.status_code))
         error_responses.append((e.response.url, e.response.status_code))
 
     # GET /{db}/_role/{name}
     try:
         role = admin.get_role(db=db, name="radio_stations")
-        log.info(role)
+        log_info(role)
     except HTTPError as e:
-        log.info((e.response.url, e.response.status_code))
+        log_info((e.response.url, e.response.status_code))
         error_responses.append((e.response.url, e.response.status_code))
 
     # PUT /{db}/_user/{name}
     try:
         user = admin.register_user(target=sync_gateway, db=db, name=user_name, password="password", channels=channels)
     except HTTPError as e:
-        log.info((e.response.url, e.response.status_code))
+        log_info((e.response.url, e.response.status_code))
         error_responses.append((e.response.url, e.response.status_code))
 
     # GET /{db}/_user
     try:
         users_info = admin.get_users_info(db=db)
-        log.info(users_info)
+        log_info(users_info)
     except HTTPError as e:
-        log.info((e.response.url, e.response.status_code))
+        log_info((e.response.url, e.response.status_code))
         error_responses.append((e.response.url, e.response.status_code))
 
     # GET /{db}/_user/{name}
     try:
         user_info = admin.get_user_info(db=db, name=user_name)
-        log.info(user_info)
+        log_info(user_info)
     except HTTPError as e:
-        log.info((e.response.url, e.response.status_code))
+        log_info((e.response.url, e.response.status_code))
         error_responses.append((e.response.url, e.response.status_code))
 
     # GET /{db}
@@ -106,9 +104,9 @@ def rest_scan(sync_gateway, db, online, num_docs, user_name, channels):
             assert db_info["state"] == "Offline"
         else:
             assert db_info["state"] == "Online"
-        log.info(db_info)
+        log_info(db_info)
     except HTTPError as e:
-        log.info((e.response.url, e.response.status_code))
+        log_info((e.response.url, e.response.status_code))
         error_responses.append((e.response.url, e.response.status_code))
 
     # Create dummy user to hit endpoint if offline, user creation above will fail
@@ -128,7 +126,7 @@ def rest_scan(sync_gateway, db, online, num_docs, user_name, channels):
         try:
             user.add_doc()
         except HTTPError as e:
-            log.info((e.response.url, e.response.status_code))
+            log_info((e.response.url, e.response.status_code))
             error_responses.append((e.response.url, e.response.status_code))
 
     # GET /{db}/{name}
@@ -141,7 +139,7 @@ def rest_scan(sync_gateway, db, online, num_docs, user_name, channels):
             # Try to hit the GET enpoint for "test-id"
             user.update_doc("test-id")
         except HTTPError as e:
-            log.info((e.response.url, e.response.status_code))
+            log_info((e.response.url, e.response.status_code))
             error_responses.append((e.response.url, e.response.status_code))
 
     # PUT /{db}/{local-doc-id}
@@ -149,7 +147,7 @@ def rest_scan(sync_gateway, db, online, num_docs, user_name, channels):
     try:
         doc = user.add_doc("_local/{}".format(local_doc_id), content={"message": "I should not be replicated"})
     except HTTPError as e:
-        log.info((e.response.url, e.response.status_code))
+        log_info((e.response.url, e.response.status_code))
         error_responses.append((e.response.url, e.response.status_code))
 
     # GET /{db}/{local-doc-id}
@@ -157,7 +155,7 @@ def rest_scan(sync_gateway, db, online, num_docs, user_name, channels):
         doc = user.get_doc("_local/{}".format(local_doc_id))
         assert doc["content"]["message"] == "I should not be replicated"
     except HTTPError as e:
-        log.info((e.response.url, e.response.status_code))
+        log_info((e.response.url, e.response.status_code))
         error_responses.append((e.response.url, e.response.status_code))
 
     # GET /{db}/_all_docs
@@ -166,7 +164,7 @@ def rest_scan(sync_gateway, db, online, num_docs, user_name, channels):
         # num_docs /{db}/{doc} PUT + num_docs /{db}/_bulk_docs + num_docs POST /{db}/
         assert len(all_docs_result["rows"]) == num_docs * 3
     except HTTPError as e:
-        log.info((e.response.url, e.response.status_code))
+        log_info((e.response.url, e.response.status_code))
         error_responses.append((e.response.url, e.response.status_code))
 
     # POST /{db}/_bulk_get
@@ -176,7 +174,7 @@ def rest_scan(sync_gateway, db, online, num_docs, user_name, channels):
         first_ten = user.get_docs(first_ten_ids)
         assert len(first_ten) == 10
     except HTTPError as e:
-        log.info((e.response.url, e.response.status_code))
+        log_info((e.response.url, e.response.status_code))
         error_responses.append((e.response.url, e.response.status_code))
 
     # wait for changes
@@ -188,20 +186,21 @@ def rest_scan(sync_gateway, db, online, num_docs, user_name, channels):
         # If successful, verify the _changes feed
         verify_changes(user, expected_num_docs=num_docs * 3, expected_num_revisions=1, expected_docs=user.cache)
     except HTTPError as e:
-        log.info((e.response.url, e.response.status_code))
+        log_info((e.response.url, e.response.status_code))
         error_responses.append((e.response.url, e.response.status_code))
 
     return error_responses
 
 
 # Scenario 1
-def test_online_default_rest(conf, num_docs):
+def online_default_rest(cluster_conf, sg_conf, num_docs):
 
-    log.info("Using conf: {}".format(conf))
-    log.info("Using num_docs: {}".format(num_docs))
+    log_info("Using cluster_conf: {}".format(cluster_conf))
+    log_info("Using sg_conf: {}".format(sg_conf))
+    log_info("Using num_docs: {}".format(num_docs))
 
-    cluster = Cluster()
-    mode = cluster.reset(config_path=conf)
+    cluster = Cluster(config=cluster_conf)
+    mode = cluster.reset(config_path=sg_conf)
 
     # all db endpoints should function as expected
     errors = rest_scan(cluster.sync_gateways[0], db="db", online=True, num_docs=num_docs, user_name="seth", channels=["ABC"])
@@ -220,13 +219,14 @@ def test_online_default_rest(conf, num_docs):
 
 
 # Scenario 2
-def test_offline_false_config_rest(conf, num_docs):
+def offline_false_config_rest(cluster_conf, sg_conf, num_docs):
 
-    log.info("Using conf: {}".format(conf))
-    log.info("Using num_docs: {}".format(num_docs))
+    log_info("Using cluster_conf: {}".format(cluster_conf))
+    log_info("Using sg_conf: {}".format(sg_conf))
+    log_info("Using num_docs: {}".format(num_docs))
 
-    cluster = Cluster()
-    mode = cluster.reset(config_path=conf)
+    cluster = Cluster(config=cluster_conf)
+    mode = cluster.reset(config_path=sg_conf)
 
     # all db endpoints should function as expected
     errors = rest_scan(cluster.sync_gateways[0], db="db", online=True, num_docs=num_docs, user_name="seth", channels=["ABC"])
@@ -246,13 +246,14 @@ def test_offline_false_config_rest(conf, num_docs):
 
 
 # Scenario 3
-def test_online_to_offline_check_503(conf, num_docs):
+def online_to_offline_check_503(cluster_conf, sg_conf, num_docs):
 
-    log.info("Using conf: {}".format(conf))
-    log.info("Using num_docs: {}".format(num_docs))
+    log_info("Using cluster_conf: {}".format(cluster_conf))
+    log_info("Using sg_conf: {}".format(sg_conf))
+    log_info("Using num_docs: {}".format(num_docs))
 
-    cluster = Cluster()
-    mode = cluster.reset(config_path=conf)
+    cluster = Cluster(config=cluster_conf)
+    mode = cluster.reset(config_path=sg_conf)
     admin = Admin(cluster.sync_gateways[0])
 
     # all db endpoints should function as expected
@@ -269,7 +270,7 @@ def test_online_to_offline_check_503(conf, num_docs):
     # We hit NUM_ENDPOINT unique REST endpoints + num of doc PUT failures
     assert len(errors) == NUM_ENDPOINTS + (num_docs * 2)
     for error_tuple in errors:
-        log.info("({},{})".format(error_tuple[0], error_tuple[1]))
+        log_info("({},{})".format(error_tuple[0], error_tuple[1]))
         assert error_tuple[1] == 503
 
     # Verify all sync_gateways are running
@@ -278,13 +279,14 @@ def test_online_to_offline_check_503(conf, num_docs):
 
 
 # Scenario 5 - continuous
-def test_online_to_offline_changes_feed_controlled_close_continuous(conf, num_docs):
+def online_to_offline_changes_feed_controlled_close_continuous(cluster_conf, sg_conf, num_docs):
 
-    log.info("Using conf: {}".format(conf))
-    log.info("Using num_docs: {}".format(num_docs))
+    log_info("Using cluster_conf: {}".format(cluster_conf))
+    log_info("Using sg_conf: {}".format(sg_conf))
+    log_info("Using num_docs: {}".format(num_docs))
 
-    cluster = Cluster()
-    mode = cluster.reset(config_path=conf)
+    cluster = Cluster(config=cluster_conf)
+    mode = cluster.reset(config_path=sg_conf)
     admin = Admin(cluster.sync_gateways[0])
     seth = admin.register_user(target=cluster.sync_gateways[0], db="db", name="seth", password="password", channels=["ABC"])
     doc_pusher = admin.register_user(target=cluster.sync_gateways[0], db="db", name="doc_pusher", password="password", channels=["ABC"])
@@ -303,20 +305,20 @@ def test_online_to_offline_changes_feed_controlled_close_continuous(conf, num_do
             task_name = futures[future]
 
             if task_name == "db_offline_task":
-                log.info("DB OFFLINE")
+                log_info("DB OFFLINE")
                 # make sure db_offline returns 200
                 assert future.result() == 200
             elif task_name == "docs_push":
-                log.info("DONE PUSHING DOCS")
+                log_info("DONE PUSHING DOCS")
                 doc_add_errors = future.result()
             elif task_name == "continuous":
                 docs_in_changes = future.result()
-                log.info("DOCS FROM CHANGES")
+                log_info("DOCS FROM CHANGES")
                 for k, v in docs_in_changes.items():
-                    log.debug("DFC -> {}:{}".format(k, v))
+                    log_info("DFC -> {}:{}".format(k, v))
 
-    log.info("Number of docs from _changes ({})".format(len(docs_in_changes)))
-    log.info("Number of docs add errors ({})".format(len(doc_add_errors)))
+    log_info("Number of docs from _changes ({})".format(len(docs_in_changes)))
+    log_info("Number of docs add errors ({})".format(len(doc_add_errors)))
 
     # Some docs should have made it to _changes
     assert len(docs_in_changes) > 0
@@ -341,13 +343,15 @@ def test_online_to_offline_changes_feed_controlled_close_continuous(conf, num_do
 
 
 # Scenario 6 - longpoll
-def test_online_to_offline_continous_changes_feed_controlled_close_sanity_mulitple_users(conf, num_docs, num_users):
+def online_to_offline_continous_changes_feed_controlled_close_sanity_mulitple_users(cluster_conf, sg_conf, num_docs, num_users):
 
-    log.info("Using conf: {}".format(conf))
-    log.info("Using num_docs: {}".format(num_docs))
+    log_info("Using cluster_conf: {}".format(cluster_conf))
+    log_info("Using sg_conf: {}".format(sg_conf))
+    log_info("Using num_docs: {}".format(num_docs))
+    log_info("Using num_users: {}".format(num_users))
 
-    cluster = Cluster()
-    mode = cluster.reset(config_path=conf)
+    cluster = Cluster(config=cluster_conf)
+    mode = cluster.reset(config_path=sg_conf)
 
     admin = Admin(cluster.sync_gateways[0])
     users = admin.register_bulk_users(target=cluster.sync_gateways[0], db="db", name_prefix="user", password="password", number=num_users, channels=["ABC"])
@@ -365,17 +369,17 @@ def test_online_to_offline_continous_changes_feed_controlled_close_sanity_mulitp
             task_name = futures[future]
 
             if task_name == "db_offline_task":
-                log.info("DB OFFLINE")
+                log_info("DB OFFLINE")
                 # make sure db_offline returns 200
                 assert future.result() == 200
             if task_name.startswith("user"):
                 # Long poll will exit with 503, return docs in the exception
-                log.info("POLLING DONE")
+                log_info("POLLING DONE")
                 try:
                     docs = future.result()
                     feed_close_results.append(docs)
                 except Exception as e:
-                    log.error("Continious feed close error: {}".format(e))
+                    log_info("Continious feed close error: {}".format(e))
                     # continuous should be closed so this exception should never happen
                     assert 0
 
@@ -392,13 +396,14 @@ def test_online_to_offline_continous_changes_feed_controlled_close_sanity_mulitp
 
 
 # Scenario 6 - longpoll
-def test_online_to_offline_changes_feed_controlled_close_longpoll_sanity(conf, num_docs):
+def online_to_offline_changes_feed_controlled_close_longpoll_sanity(cluster_conf, sg_conf, num_docs):
 
-    log.info("Using conf: {}".format(conf))
-    log.info("Using num_docs: {}".format(num_docs))
+    log_info("Using cluster_conf: {}".format(cluster_conf))
+    log_info("Using sg_conf: {}".format(sg_conf))
+    log_info("Using num_docs: {}".format(num_docs))
 
-    cluster = Cluster()
-    mode = cluster.reset(config_path=conf)
+    cluster = Cluster(config=cluster_conf)
+    mode = cluster.reset(config_path=sg_conf)
 
     admin = Admin(cluster.sync_gateways[0])
     seth = admin.register_user(target=cluster.sync_gateways[0], db="db", name="seth", password="password", channels=["ABC"])
@@ -416,16 +421,16 @@ def test_online_to_offline_changes_feed_controlled_close_longpoll_sanity(conf, n
             task_name = futures[future]
 
             if task_name == "db_offline_task":
-                log.info("DB OFFLINE")
+                log_info("DB OFFLINE")
                 # make sure db_offline returns 200
                 assert future.result() == 200
             if task_name == "polling":
                 # Long poll will exit with 503, return docs in the exception
-                log.info("POLLING DONE")
+                log_info("POLLING DONE")
                 try:
                     docs_in_changes, last_seq_num = future.result()
                 except Exception as e:
-                    log.error("Longpoll feed close error: {}".format(e))
+                    log_info("Longpoll feed close error: {}".format(e))
                     # long poll should be closed so this exception should never happen
                     assert 0
 
@@ -441,13 +446,15 @@ def test_online_to_offline_changes_feed_controlled_close_longpoll_sanity(conf, n
 
 
 # Scenario 6 - longpoll
-def test_online_to_offline_longpoll_changes_feed_controlled_close_sanity_mulitple_users(conf, num_docs, num_users):
+def online_to_offline_longpoll_changes_feed_controlled_close_sanity_mulitple_users(cluster_conf, sg_conf, num_docs, num_users):
 
-    log.info("Using conf: {}".format(conf))
-    log.info("Using num_docs: {}".format(num_docs))
+    log_info("Using cluster_conf: {}".format(cluster_conf))
+    log_info("Using sg_conf: {}".format(sg_conf))
+    log_info("Using num_docs: {}".format(num_docs))
+    log_info("Using num_users: {}".format(num_users))
 
-    cluster = Cluster()
-    mode = cluster.reset(config_path=conf)
+    cluster = Cluster(config=cluster_conf)
+    mode = cluster.reset(config_path=sg_conf)
 
     admin = Admin(cluster.sync_gateways[0])
     users = admin.register_bulk_users(target=cluster.sync_gateways[0], db="db", name_prefix="user", password="password", number=num_users, channels=["ABC"])
@@ -465,17 +472,17 @@ def test_online_to_offline_longpoll_changes_feed_controlled_close_sanity_mulitpl
             task_name = futures[future]
 
             if task_name == "db_offline_task":
-                log.info("DB OFFLINE")
+                log_info("DB OFFLINE")
                 # make sure db_offline returns 200
                 assert future.result() == 200
             if task_name.startswith("user"):
                 # Long poll will exit with 503, return docs in the exception
-                log.info("POLLING DONE")
+                log_info("POLLING DONE")
                 try:
                     docs_in_changes, last_seq_num = future.result()
                     feed_close_results.append((docs_in_changes, last_seq_num))
                 except Exception as e:
-                    log.error("Longpoll feed close error: {}".format(e))
+                    log_info("Longpoll feed close error: {}".format(e))
                     # long poll should be closed so this exception should never happen
                     assert 0
 
@@ -497,13 +504,14 @@ def test_online_to_offline_longpoll_changes_feed_controlled_close_sanity_mulitpl
 
 
 # Scenario 6 - longpoll
-def test_online_to_offline_changes_feed_controlled_close_longpoll(conf, num_docs):
+def online_to_offline_changes_feed_controlled_close_longpoll(cluster_conf, sg_conf, num_docs):
 
-    log.info("Using conf: {}".format(conf))
-    log.info("Using num_docs: {}".format(num_docs))
+    log_info("Using cluster_conf: {}".format(cluster_conf))
+    log_info("Using sg_conf: {}".format(sg_conf))
+    log_info("Using num_docs: {}".format(num_docs))
 
-    cluster = Cluster()
-    mode = cluster.reset(config_path=conf)
+    cluster = Cluster(config=cluster_conf)
+    mode = cluster.reset(config_path=sg_conf)
 
     admin = Admin(cluster.sync_gateways[0])
     seth = admin.register_user(target=cluster.sync_gateways[0], db="db", name="seth", password="password", channels=["ABC"])
@@ -523,31 +531,31 @@ def test_online_to_offline_changes_feed_controlled_close_longpoll(conf, num_docs
             task_name = futures[future]
 
             if task_name == "db_offline_task":
-                log.info("DB OFFLINE")
+                log_info("DB OFFLINE")
                 # make sure db_offline returns 200
                 assert future.result() == 200
             if task_name == "docs_push":
-                log.info("DONE PUSHING DOCS")
+                log_info("DONE PUSHING DOCS")
                 doc_add_errors = future.result()
             if task_name == "polling":
                 # Long poll will exit with 503, return docs in the exception
-                log.info("POLLING DONE")
+                log_info("POLLING DONE")
                 try:
                     docs_in_changes = future.result()
                 except Exception as e:
-                    log.warn(e)
-                    log.warn("POLLING DONE EXCEPTION")
-                    log.warn("ARGS: {}".format(e.args))
+                    log_info(e)
+                    log_info("POLLING DONE EXCEPTION")
+                    log_info("ARGS: {}".format(e.args))
                     docs_in_changes = e.args[0]["docs"]
                     last_seq_num = e.args[0]["last_seq_num"]
-                    log.warn("DOCS FROM longpoll")
+                    log_info("DOCS FROM longpoll")
                     for k, v in docs_in_changes.items():
-                        log.debug("DFC -> {}:{}".format(k, v))
-                    log.warn("LAST_SEQ_NUM FROM longpoll {}".format(last_seq_num))
+                        log_info("DFC -> {}:{}".format(k, v))
+                    log_info("LAST_SEQ_NUM FROM longpoll {}".format(last_seq_num))
 
-    log.info("Number of docs from _changes ({})".format(len(docs_in_changes)))
-    log.info("last_seq_num _changes ({})".format(last_seq_num))
-    log.info("Number of docs add errors ({})".format(len(doc_add_errors)))
+    log_info("Number of docs from _changes ({})".format(len(docs_in_changes)))
+    log_info("last_seq_num _changes ({})".format(last_seq_num))
+    log_info("Number of docs add errors ({})".format(len(doc_add_errors)))
 
     # Some docs should have made it to _changes
     assert len(docs_in_changes) > 0
@@ -579,13 +587,14 @@ def test_online_to_offline_changes_feed_controlled_close_longpoll(conf, num_docs
 
 
 # Scenario 6
-def test_offline_true_config_bring_online(conf, num_docs):
+def offline_true_config_bring_online(cluster_conf, sg_conf, num_docs):
 
-    log.info("Using conf: {}".format(conf))
-    log.info("Using num_docs: {}".format(num_docs))
+    log_info("Using cluster_conf: {}".format(cluster_conf))
+    log_info("Using sg_conf: {}".format(sg_conf))
+    log_info("Using num_docs: {}".format(num_docs))
 
-    cluster = Cluster()
-    mode = cluster.reset(config_path=conf)
+    cluster = Cluster(config=cluster_conf)
+    mode = cluster.reset(config_path=sg_conf)
 
     admin = Admin(cluster.sync_gateways[0])
 
@@ -594,7 +603,7 @@ def test_offline_true_config_bring_online(conf, num_docs):
 
     assert len(errors) == NUM_ENDPOINTS + (num_docs * 2)
     for error_tuple in errors:
-        log.info("({},{})".format(error_tuple[0], error_tuple[1]))
+        log_info("({},{})".format(error_tuple[0], error_tuple[1]))
         assert error_tuple[1] == 503
 
     # Scenario 9
@@ -612,13 +621,14 @@ def test_offline_true_config_bring_online(conf, num_docs):
 
 
 # Scenario 14
-def test_db_offline_tap_loss_sanity(conf, num_docs):
+def db_offline_tap_loss_sanity(cluster_conf, sg_conf, num_docs):
 
-    log.info("Using conf: {}".format(conf))
-    log.info("Using num_docs: {}".format(num_docs))
+    log_info("Using cluster_conf: {}".format(cluster_conf))
+    log_info("Using sg_conf: {}".format(sg_conf))
+    log_info("Using num_docs: {}".format(num_docs))
 
-    cluster = Cluster()
-    mode = cluster.reset(config_path=conf)
+    cluster = Cluster(config=cluster_conf)
+    mode = cluster.reset(config_path=sg_conf)
 
     admin = Admin(cluster.sync_gateways[0])
 
@@ -634,7 +644,7 @@ def test_db_offline_tap_loss_sanity(conf, num_docs):
     errors = rest_scan(cluster.sync_gateways[0], db="db", online=False, num_docs=num_docs, user_name="seth", channels=["ABC"])
     assert len(errors) == NUM_ENDPOINTS + (num_docs * 2)
     for error_tuple in errors:
-        log.info("({},{})".format(error_tuple[0], error_tuple[1]))
+        log_info("({},{})".format(error_tuple[0], error_tuple[1]))
         assert error_tuple[1] == 503
 
     # Verify all sync_gateways are running
@@ -643,19 +653,20 @@ def test_db_offline_tap_loss_sanity(conf, num_docs):
 
 
 # Scenario 11
-def test_db_delayed_online(conf, num_docs):
+def db_delayed_online(cluster_conf, sg_conf, num_docs):
 
-    log.info("Using conf: {}".format(conf))
-    log.info("Using num_docs: {}".format(num_docs))
+    log_info("Using cluster_conf: {}".format(cluster_conf))
+    log_info("Using sg_conf: {}".format(sg_conf))
+    log_info("Using num_docs: {}".format(num_docs))
 
-    cluster = Cluster()
-    mode = cluster.reset(config_path=conf)
+    cluster = Cluster(config=cluster_conf)
+    mode = cluster.reset(config_path=sg_conf)
 
     admin = Admin(cluster.sync_gateways[0])
 
     time.sleep(2)
     status = admin.take_db_offline("db")
-    log.info("offline request response status: {}".format(status))
+    log_info("offline request response status: {}".format(status))
     time.sleep(10)
 
     pool = ThreadPool(processes=1)
@@ -665,7 +676,7 @@ def test_db_delayed_online(conf, num_docs):
 
     async_result = pool.apply_async(admin.bring_db_online, ("db", 15,))
     status = async_result.get(timeout=15)
-    log.info("offline request response status: {}".format(status))
+    log_info("offline request response status: {}".format(status))
 
     time.sleep(20)
 
@@ -681,13 +692,14 @@ def test_db_delayed_online(conf, num_docs):
     assert len(errors) == 0
 
 
-def test_multiple_dbs_unique_buckets_lose_tap(conf, num_docs):
+def multiple_dbs_unique_buckets_lose_tap(cluster_conf, sg_conf, num_docs):
 
-    log.info("Using conf: {}".format(conf))
-    log.info("Using num_docs: {}".format(num_docs))
+    log_info("Using cluster_conf: {}".format(cluster_conf))
+    log_info("Using sg_conf: {}".format(sg_conf))
+    log_info("Using num_docs: {}".format(num_docs))
 
-    cluster = Cluster()
-    mode = cluster.reset(config_path=conf)
+    cluster = Cluster(config=cluster_conf)
+    mode = cluster.reset(config_path=sg_conf)
 
     dbs = ["db1", "db2", "db3", "db4"]
 
@@ -711,7 +723,7 @@ def test_multiple_dbs_unique_buckets_lose_tap(conf, num_docs):
         errors = rest_scan(cluster.sync_gateways[0], db=db, online=False, num_docs=num_docs, user_name="seth", channels=["ABC"])
         assert len(errors) == NUM_ENDPOINTS + (num_docs * 2)
         for error_tuple in errors:
-            log.info("({},{})".format(error_tuple[0], error_tuple[1]))
+            log_info("({},{})".format(error_tuple[0], error_tuple[1]))
             assert error_tuple[1] == 503
 
     # Verify all sync_gateways are running

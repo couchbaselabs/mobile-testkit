@@ -31,72 +31,17 @@ ${SYNC_GATEWAY_CONFIG}      ${SYNC_GATEWAY_CONFIGS}/sync_gateway_default_functio
 *** Test Cases ***
 # Cluster has been setup
 
-# test_continuous (Distributed Index)
-test continuous changes parametrized 1 user 5000 docs 1 revision
-    [Tags]   sanity  syncgateway  changes
-    test continuous changes parametrized    ${SYNC_GATEWAY_CONFIGS}/sync_gateway_default_functional_tests_di.json  ${1}  ${5000}  ${1}
-
-test continuous changes parametrized 50 users 5000 docs 1 revision
-    [Tags]   nightly  syncgateway  changes
-    test continuous changes parametrized    ${SYNC_GATEWAY_CONFIGS}/sync_gateway_default_functional_tests_di.json  ${50}  ${5000}  ${1}
-
-test continuous changes parametrized 50 users 10 docs 10 revisions
-    [Tags]   sanity  syncgateway  changes
-    test continuous changes parametrized    ${SYNC_GATEWAY_CONFIGS}/sync_gateway_default_functional_tests_di.json  ${50}  ${10}  ${10}
-
-test continuous changes parametrized 50 user 50 docs 1000 revisions
-    [Tags]   nightly  syncgateway  changes
-    test continuous changes parametrized    ${SYNC_GATEWAY_CONFIGS}/sync_gateway_default_functional_tests_revslimit50_di.json  ${50}  ${50}  ${1000}
-
-test continuous changes sanity
-    [Tags]   sanity  syncgateway  changes
-    test_continuous_changes_sanity          ${SYNC_GATEWAY_CONFIGS}/sync_gateway_default_functional_tests_di.json  ${10}  ${10}
 
 
-# test_db_online_offline (Distributed Index)
-test online default rest
-    [Tags]   sanity  syncgateway  onlineoffline
-    test online default rest                                                                ${SYNC_GATEWAY_CONFIGS}/bucket_online_offline/bucket_online_offline_default_di.json             ${100}
 
-test offline false config_rest
-    [Tags]   sanity  syncgateway  onlineoffline
-    test offline false config_rest                                                          ${SYNC_GATEWAY_CONFIGS}/bucket_online_offline/bucket_online_offline_offline_false_di.json       ${100}
 
-test online to offline check 503
-    [Tags]   sanity  syncgateway  onlineoffline
-    test online to offline check 503                                                        ${SYNC_GATEWAY_CONFIGS}/bucket_online_offline/bucket_online_offline_default_di.json           ${100}
 
-#test online to offline changes feed controlled close continuous
-#    test online to offline changes feed controlled close continuous                         ${SYNC_GATEWAY_CONFIGS}/bucket_online_offline/bucket_online_offline_default_di.json   ${5000}
 
-test online to offline continous changes feed controlled close sanity mulitple users
-    [Tags]   sanity  syncgateway  onlineoffline  changes
-    test online to offline continous changes feed controlled close sanity mulitple users    ${SYNC_GATEWAY_CONFIGS}/bucket_online_offline/bucket_online_offline_default_di.json     ${5000}     ${40}
 
-test online to offline changes feed controlled close longpoll sanity
-    [Tags]   sanity  syncgateway  onlineoffline  changes
-    test online to offline changes feed controlled close longpoll sanity                    ${SYNC_GATEWAY_CONFIGS}/bucket_online_offline/bucket_online_offline_default_di.json     ${5000}
 
-test online to offline longpoll changes feed controlled close sanity mulitple users
-    [Tags]   sanity  syncgateway  onlineoffline  changes
-    test online to offline longpoll changes feed controlled close sanity mulitple users     ${SYNC_GATEWAY_CONFIGS}/bucket_online_offline/bucket_online_offline_default_di.json     ${5000}     ${40}
 
-# test online to offline changes feed controlled close longpoll
-#    test online to offline changes feed controlled close longpoll                           ${SYNC_GATEWAY_CONFIGS}/bucket_online_offline/bucket_online_offline_default_di.json     ${5000}
 
-# test offline true config bring online
-#    test offline true config bring online                                                   ${SYNC_GATEWAY_CONFIGS}/bucket_online_offline/bucket_online_offline_offline_true_di.json    ${100}
 
-test db offline tap loss sanity
-    [Tags]   sanity  syncgateway  onlineoffline
-    test db offline tap loss sanity                                                         ${SYNC_GATEWAY_CONFIGS}/bucket_online_offline/bucket_online_offline_default_di.json     ${100}
-
-# test db delayed online
-#    test db delayed online                                                                  ${SYNC_GATEWAY_CONFIGS}/bucket_online_offline/bucket_online_offline_default_di.json     ${100}
-
-test multiple dbs unique buckets lose tap
-    [Tags]   sanity  syncgateway  onlineoffline
-    test multiple dbs unique buckets lose tap                                               ${SYNC_GATEWAY_CONFIGS}/bucket_online_offline/bucket_online_offline_multiple_dbs_unique_buckets_di.json     ${100}
 
 
 # test_longpoll (distributed index mode)
