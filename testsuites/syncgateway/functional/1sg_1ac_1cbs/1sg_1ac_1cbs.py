@@ -22,6 +22,23 @@ from testsuites.syncgateway.functional.shared.test_db_online_offline import db_d
 from testsuites.syncgateway.functional.shared.test_db_online_offline import multiple_dbs_unique_buckets_lose_tap
 from testsuites.syncgateway.functional.shared.test_longpoll import longpoll_changes_parametrized
 from testsuites.syncgateway.functional.shared.test_longpoll import longpoll_changes_sanity
+from testsuites.syncgateway.functional.shared.test_multiple_dbs import multiple_db_unique_data_bucket_unique_index_bucket
+from testsuites.syncgateway.functional.shared.test_multiple_dbs import multiple_db_single_data_bucket_single_index_bucket
+from testsuites.syncgateway.functional.shared.test_multiple_users_multiple_channels_multiple_revisions import mulitple_users_mulitiple_channels_mulitple_revisions
+from testsuites.syncgateway.functional.shared.test_roles import roles_sanity
+from testsuites.syncgateway.functional.shared.test_seq import seq
+from testsuites.syncgateway.functional.shared.test_single_user_single_channel_doc_updates import single_user_single_channel_doc_updates
+from testsuites.syncgateway.functional.shared.test_sync import issue_1524
+from testsuites.syncgateway.functional.shared.test_sync import sync_access_sanity
+from testsuites.syncgateway.functional.shared.test_sync import sync_channel_sanity
+from testsuites.syncgateway.functional.shared.test_sync import sync_role_sanity
+from testsuites.syncgateway.functional.shared.test_sync import sync_sanity
+from testsuites.syncgateway.functional.shared.test_sync import sync_sanity_backfill
+from testsuites.syncgateway.functional.shared.test_sync import sync_require_roles
+from testsuites.syncgateway.functional.shared.test_users_channels import multiple_users_multiple_channels
+from testsuites.syncgateway.functional.shared.test_users_channels import muliple_users_single_channel
+from testsuites.syncgateway.functional.shared.test_users_channels import single_user_multiple_channels
+from testsuites.syncgateway.functional.shared.test_users_channels import single_user_single_channel
 
 
 # This will be called once for the first test in the file.

@@ -12,16 +12,18 @@ log = logging.getLogger(testkit.settings.LOGGER)
 # Single User Single Channel: Create Unique docs and update docs verify all num docs present in changes feed.
 # Verify all revisions in changes feed
 # https://docs.google.com/spreadsheets/d/1nlba3SsWagDrnAep3rDZHXHIDmRH_FFDeTaYJms_55k/edit#gid=598127796
-def test_single_user_single_channel_doc_updates(conf, num_docs, num_revisions):
+def single_user_single_channel_doc_updates(cluster_conf, sg_conf, num_docs, num_revisions):
 
-    log.info("conf: {}".format(conf))
+    log.info("Running 'single_user_single_channel_doc_updates'")
+    log.info("cluster_conf: {}".format(cluster_conf))
+    log.info("sg_conf: {}".format(sg_conf))
     log.info("num_docs: {}".format(num_docs))
     log.info("num_revisions: {}".format(num_revisions))
 
     start = time.time()
 
-    cluster = Cluster()
-    mode = cluster.reset(config_path=conf)
+    cluster = Cluster(config=cluster_conf)
+    mode = cluster.reset(config_path=sg_conf)
     num_docs = num_docs
     num_revisions = num_revisions
     username = "User-1"

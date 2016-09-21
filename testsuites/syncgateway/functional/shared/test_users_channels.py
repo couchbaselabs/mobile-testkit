@@ -5,16 +5,17 @@ from testkit.cluster import Cluster
 from testkit.verify import verify_changes
 
 import testkit.settings
-import logging
-log = logging.getLogger(testkit.settings.LOGGER)
 
+from keywords.utils import log_info
 
-def test_multiple_users_multiple_channels(conf):
+def multiple_users_multiple_channels(cluster_conf, sg_conf):
 
-    log.info("conf: {}".format(conf))
+    log_info("Running 'multiple_users_multiple_channels'")
+    log_info("cluster_conf: {}".format(cluster_conf))
+    log_info("conf: {}".format(sg_conf))
 
-    cluster = Cluster()
-    mode = cluster.reset(config_path=conf)
+    cluster = Cluster(config=cluster_conf)
+    mode = cluster.reset(config_path=sg_conf)
 
     num_docs_seth = 1000
     num_docs_adam = 2000
@@ -60,12 +61,14 @@ def test_multiple_users_multiple_channels(conf):
     assert len(errors) == 0
 
 
-def test_muliple_users_single_channel(conf):
+def muliple_users_single_channel(cluster_conf, sg_conf):
 
-    log.info("conf: {}".format(conf))
+    log_info("Running 'muliple_users_single_channel'")
+    log_info("cluster_conf: {}".format(cluster_conf))
+    log_info("conf: {}".format(sg_conf))
 
-    cluster = Cluster()
-    mode = cluster.reset(config_path=conf)
+    cluster = Cluster(config=cluster_conf)
+    mode = cluster.reset(config_path=sg_conf)
 
     sgs = cluster.sync_gateways
 
@@ -101,12 +104,14 @@ def test_muliple_users_single_channel(conf):
     assert len(errors) == 0
 
 
-def test_single_user_multiple_channels(conf):
+def single_user_multiple_channels(cluster_conf, sg_conf):
 
-    log.info("conf: {}".format(conf))
+    log_info("Running 'single_user_multiple_channels'")
+    log_info("cluster_conf: {}".format(cluster_conf))
+    log_info("conf: {}".format(sg_conf))
 
-    cluster = Cluster()
-    mode = cluster.reset(config_path=conf)
+    cluster = Cluster(config=cluster_conf)
+    mode = cluster.reset(config_path=sg_conf)
 
     start = time.time()
     sgs = cluster.sync_gateways
@@ -122,7 +127,7 @@ def test_single_user_multiple_channels(conf):
         seth.target = cluster.sync_gateways[count % num_sgs]
         count += 1
 
-    log.info(seth)
+    log_info(seth)
 
     time.sleep(10)
 
@@ -133,15 +138,17 @@ def test_single_user_multiple_channels(conf):
     assert len(errors) == 0
 
     end = time.time()
-    log.info("TIME:{}s".format(end - start))
+    log_info("TIME:{}s".format(end - start))
 
 
-def test_single_user_single_channel(conf):
+def single_user_single_channel(cluster_conf, sg_conf):
 
-    log.info("conf: {}".format(conf))
+    log_info("Running 'single_user_single_channel'")
+    log_info("cluster_conf: {}".format(cluster_conf))
+    log_info("conf: {}".format(sg_conf))
 
-    cluster = Cluster()
-    mode = cluster.reset(config_path=conf)
+    cluster = Cluster(config=cluster_conf)
+    mode = cluster.reset(config_path=sg_conf)
 
     sgs = cluster.sync_gateways
 

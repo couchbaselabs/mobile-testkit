@@ -9,18 +9,20 @@ from testkit.verify import verify_same_docs
 from testkit.verify import verify_docs_removed
 
 import testkit.settings
-import logging
-log = logging.getLogger(testkit.settings.LOGGER)
+
+from keywords.utils import log_info
 
 
 # https://github.com/couchbase/sync_gateway/issues/1524
-def test_issue_1524(conf, num_docs):
+def issue_1524(cluster_conf, sg_conf, num_docs):
 
-    log.info("Using conf: {}".format(conf))
-    log.info("Using num_docs: {}".format(num_docs))
+    log_info("Running 'issue_1524'")
+    log_info("Using cluster_conf: {}".format(cluster_conf))
+    log_info("Using sg_conf: {}".format(sg_conf))
+    log_info("Using num_docs: {}".format(num_docs))
 
-    cluster = Cluster()
-    mode = cluster.reset(config_path=conf)
+    cluster = Cluster(config=cluster_conf)
+    mode = cluster.reset(config_path=sg_conf)
     admin = Admin(cluster.sync_gateways[0])
 
     user_no_channels = admin.register_user(target=cluster.sync_gateways[0], db="db", name="user_no_channels", password="password")
@@ -33,19 +35,19 @@ def test_issue_1524(conf, num_docs):
     with concurrent.futures.ThreadPoolExecutor(max_workers=testkit.settings.MAX_REQUEST_WORKERS) as executor:
         futures = dict()
         futures[executor.submit(user_no_channels.start_longpoll_changes_tracking, termination_doc_id="terminator")] = "polling"
-        log.info("Starting longpoll feed")
+        log_info("Starting longpoll feed")
 
         futures[executor.submit(a_doc_pusher.add_docs, num_docs=num_docs, bulk=True, name_prefix="a-doc")] = "a_docs_pushed"
-        log.info("'A' channel docs pushing")
+        log_info("'A' channel docs pushing")
 
         for future in concurrent.futures.as_completed(futures):
             task_name = futures[future]
 
             if task_name == "a_docs_pushed":
-                log.info("'A' channel docs pushed")
+                log_info("'A' channel docs pushed")
                 time.sleep(5)
 
-                log.info("Grant 'user_no_channels' access to channel 'A' via sync function")
+                log_info("Grant 'user_no_channels' access to channel 'A' via sync function")
                 access_doc_pusher.add_doc(
                         doc_id="access_doc",
                         content={
@@ -55,15 +57,15 @@ def test_issue_1524(conf, num_docs):
                 )
 
                 time.sleep(5)
-                log.info("'terminator' pushing termination doc")
+                log_info("'terminator' pushing termination doc")
                 terminator.add_doc(doc_id="terminator")
 
             if task_name == "polling":
-                log.info("Getting changes from longpoll")
+                log_info("Getting changes from longpoll")
                 longpoll_docs, last_seq = future.result()
-                log.info("Verify docs in longpoll changes are the expected docs")
+                log_info("Verify docs in longpoll changes are the expected docs")
 
-    log.info("Verifying 'user_no_channels' has same docs as 'a_doc_pusher' + access_doc")
+    log_info("Verifying 'user_no_channels' has same docs as 'a_doc_pusher' + access_doc")
 
     # One off changes verification will include the termination doc
     expected_docs = {k: v for cache in [a_doc_pusher.cache, terminator.cache] for k, v in cache.items()}
@@ -71,7 +73,7 @@ def test_issue_1524(conf, num_docs):
 
     # TODO: Fix this inconsistency suite wide
     # Longpoll docs do not save termination doc
-    log.info("Verify docs in longpoll changes are the expected docs")
+    log_info("Verify docs in longpoll changes are the expected docs")
     verify_same_docs(num_docs, longpoll_docs, a_doc_pusher.cache)
 
     # Verify all sync_gateways are running
@@ -79,14 +81,16 @@ def test_issue_1524(conf, num_docs):
     assert len(errors) == 0
 
 
-def test_sync_access_sanity(conf):
+def sync_access_sanity(cluster_conf, sg_conf):
 
     num_docs = 100
 
-    log.info("Using conf: {}".format(conf))
+    log_info("Running 'sync_access_sanity'")
+    log_info("Using cluster_conf: {}".format(cluster_conf))
+    log_info("Using sg_conf: {}".format(sg_conf))
 
-    cluster = Cluster()
-    mode = cluster.reset(config_path=conf)
+    cluster = Cluster(config=cluster_conf)
+    mode = cluster.reset(config_path=sg_conf)
     admin = Admin(cluster.sync_gateways[0])
 
     seth = admin.register_user(target=cluster.sync_gateways[0], db="db", name="seth", password="password")
@@ -120,15 +124,17 @@ def test_sync_access_sanity(conf):
     assert len(errors) == 0
 
 
-def test_sync_channel_sanity(conf):
+def sync_channel_sanity(cluster_conf, sg_conf):
 
     num_docs_per_channel = 100
     channels = ["ABC", "NBC", "CBS"]
 
-    log.info("Using conf: {}".format(conf))
+    log_info("Running 'sync_channel_sanity'")
+    log_info("Using cluster_conf: {}".format(cluster_conf))
+    log_info("Using sg_conf: {}".format(sg_conf))
 
-    cluster = Cluster()
-    mode = cluster.reset(config_path=conf)
+    cluster = Cluster(config=cluster_conf)
+    mode = cluster.reset(config_path=sg_conf)
     admin = Admin(cluster.sync_gateways[0])
 
     doc_pushers = []
@@ -176,15 +182,17 @@ def test_sync_channel_sanity(conf):
     # TODO Push more docs to channel and make sure they do not show up in the users changes feed.
 
 
-def test_sync_role_sanity(conf):
+def sync_role_sanity(cluster_conf, sg_conf):
 
     num_docs_per_channel = 100
     tv_channels = ["ABC", "NBC", "CBS"]
 
-    log.info("Using conf: {}".format(conf))
+    log_info("Running 'sync_role_sanity'")
+    log_info("Using cluster_conf: {}".format(cluster_conf))
+    log_info("Using sg_conf: {}".format(sg_conf))
 
-    cluster = Cluster()
-    mode = cluster.reset(config_path=conf)
+    cluster = Cluster(config=cluster_conf)
+    mode = cluster.reset(config_path=sg_conf)
 
     admin = Admin(cluster.sync_gateways[0])
     admin.create_role(db="db", name="tv_stations", channels=tv_channels)
@@ -238,12 +246,14 @@ def test_sync_role_sanity(conf):
     assert len(errors) == 0
 
 
-def test_sync_sanity(conf):
+def sync_sanity(cluster_conf, sg_conf):
 
-    log.info("Using conf: {}".format(conf))
+    log_info("Running 'sync_sanity'")
+    log_info("Using cluster_conf: {}".format(cluster_conf))
+    log_info("Using sg_conf: {}".format(sg_conf))
 
-    cluster = Cluster()
-    mode = cluster.reset(config_path=conf)
+    cluster = Cluster(config=cluster_conf)
+    mode = cluster.reset(config_path=sg_conf)
 
     radio_stations = ["KMOW", "HWOD", "KDWB"]
     number_of_docs_per_pusher = 5000
@@ -277,12 +287,14 @@ def test_sync_sanity(conf):
     assert len(errors) == 0
 
 
-def test_sync_sanity_backfill(conf):
+def sync_sanity_backfill(cluster_conf, sg_conf):
 
-    log.info("Using conf: {}".format(conf))
+    log_info("Running 'sync_sanity_backfill'")
+    log_info("Using cluster_conf: {}".format(cluster_conf))
+    log_info("Using sg_conf: {}".format(sg_conf))
 
-    cluster = Cluster()
-    mode = cluster.reset(config_path=conf)
+    cluster = Cluster(config=cluster_conf)
+    mode = cluster.reset(config_path=sg_conf)
 
     radio_stations = ["KMOW", "HWOD", "KDWB"]
     number_of_docs_per_pusher = 5000
@@ -316,12 +328,14 @@ def test_sync_sanity_backfill(conf):
     assert len(errors) == 0
 
 
-def test_sync_require_roles(conf):
+def sync_require_roles(cluster_conf, sg_conf):
 
-    log.info("Using conf: {}".format(conf))
+    log_info("Running 'sync_require_roles'")
+    log_info("Using cluster_conf: {}".format(cluster_conf))
+    log_info("Using sg_conf: {}".format(sg_conf))
 
-    cluster = Cluster()
-    mode = cluster.reset(config_path=conf)
+    cluster = Cluster(config=cluster_conf)
+    mode = cluster.reset(config_path=sg_conf)
 
     radio_stations = ["KMOW", "HWOD", "KDWB"]
     tv_stations = ["ABC", "CBS", "NBC"]

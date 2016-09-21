@@ -3,16 +3,17 @@ from testkit.cluster import Cluster
 from testkit.verify import verify_changes
 import testkit.settings
 
-import logging
-log = logging.getLogger(testkit.settings.LOGGER)
+from keywords.utils import log_info
 
 
-def test_roles_sanity(conf):
+def roles_sanity(cluster_conf, sg_conf):
 
-    log.info("conf: {}".format(conf))
+    log_info("Running 'roles_sanity'")
+    log_info("cluster_conf: {}".format(cluster_conf))
+    log_info("sg_conf: {}".format(sg_conf))
 
-    cluster = Cluster()
-    mode = cluster.reset(config_path=conf)
+    cluster = Cluster(config=cluster_conf)
+    mode = cluster.reset(config_path=sg_conf)
 
     radio_stations = ["KMOW", "HWOD", "KDWB"]
     tv_stations = ["ABC", "CBS", "NBC"]

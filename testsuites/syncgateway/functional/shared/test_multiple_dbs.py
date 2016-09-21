@@ -3,22 +3,24 @@ from testkit.admin import Admin
 from testkit.cluster import Cluster
 from testkit.verify import verify_changes
 
+from keywords.utils import log_info
+
 import time
 
 import testkit.settings
-import logging
-log = logging.getLogger(testkit.settings.LOGGER)
 
 
-def test_multiple_db_unique_data_bucket_unique_index_bucket(conf, num_users, num_docs_per_user):
+def multiple_db_unique_data_bucket_unique_index_bucket(cluster_conf, sg_conf, num_users, num_docs_per_user):
 
-    log.info("Using conf: {}".format(conf))
-    log.info("Using num_users: {}".format(num_users))
-    log.info("Using num_docs_per_user: {}".format(num_docs_per_user))
+    log_info("Running 'multiple_db_unique_data_bucket_unique_index_bucket'")
+    log_info("Using cluster_conf: {}".format(cluster_conf))
+    log_info("Using sg_conf: {}".format(sg_conf))
+    log_info("Using num_users: {}".format(num_users))
+    log_info("Using num_docs_per_user: {}".format(num_docs_per_user))
 
     # 2 dbs have unique data and unique index buckets
-    cluster = Cluster()
-    mode = cluster.reset(config_path=conf)
+    cluster = Cluster(config=cluster_conf)
+    mode = cluster.reset(config_path=sg_conf)
 
     num_db_users = num_users
     num_db2_users = num_users
@@ -56,15 +58,17 @@ def test_multiple_db_unique_data_bucket_unique_index_bucket(conf, num_users, num
 
 
 # Kind of an edge case in that most users would not point multiple dbs at the same server bucket
-def test_multiple_db_single_data_bucket_single_index_bucket(conf, num_users, num_docs_per_user):
+def multiple_db_single_data_bucket_single_index_bucket(cluster_conf, sg_conf, num_users, num_docs_per_user):
 
-    log.info("Using conf: {}".format(conf))
-    log.info("Using num_users: {}".format(num_users))
-    log.info("Using num_docs_per_user: {}".format(num_docs_per_user))
+    log_info("Running 'multiple_db_unique_data_bucket_unique_index_bucket'")
+    log_info("Using cluster_conf: {}".format(cluster_conf))
+    log_info("Using sg_conf: {}".format(sg_conf))
+    log_info("Using num_users: {}".format(num_users))
+    log_info("Using num_docs_per_user: {}".format(num_docs_per_user))
 
     # 2 dbs share the same data and index bucket
-    cluster = Cluster()
-    mode = cluster.reset(config_path=conf)
+    cluster = Cluster(config=cluster_conf)
+    mode = cluster.reset(config_path=sg_conf)
 
     num_db_users = num_users
     num_db2_users = num_users

@@ -4,20 +4,22 @@ from testkit.admin import Admin
 from testkit.cluster import Cluster
 from testkit.verify import verify_changes
 
+from keywords.utils import log_info
+
 import testkit.settings
-import logging
-log = logging.getLogger(testkit.settings.LOGGER)
 
 
-def test_seq(conf, num_users, num_docs, num_revisions):
+def seq(cluster_conf, sg_conf, num_users, num_docs, num_revisions):
 
-    log.info("conf: {}".format(conf))
-    log.info("num_users: {}".format(num_users))
-    log.info("num_docs: {}".format(num_docs))
-    log.info("num_revisions: {}".format(num_revisions))
+    log_info("Running seq")
+    log_info("cluster_conf: {}".format(cluster_conf))
+    log_info("sg_conf: {}".format(sg_conf))
+    log_info("num_users: {}".format(num_users))
+    log_info("num_docs: {}".format(num_docs))
+    log_info("num_revisions: {}".format(num_revisions))
 
-    cluster = Cluster()
-    mode = cluster.reset(config_path=conf)
+    cluster = Cluster(config=cluster_conf)
+    mode = cluster.reset(config_path=sg_conf)
     admin = Admin(cluster.sync_gateways[0])
 
     # all users will share docs due to having the same channel
@@ -38,18 +40,18 @@ def test_seq(conf, num_users, num_docs, num_revisions):
     # verify you can issue _changes with since=12313-0::1023.15
     for user in users:
         changes = user.get_changes(since=doc_seq)
-        log.info("Trying changes with since={}".format(doc_seq))
+        log_info("Trying changes with since={}".format(doc_seq))
         assert len(changes["results"]) > 0
 
         second_to_last_doc_entry_seq = changes["results"][-2]["seq"]
         last_doc_entry_seq = changes["results"][-1]["seq"]
 
-        log.info('Second to last doc "seq": {}'.format(second_to_last_doc_entry_seq))
-        log.info('Last doc "seq": {}'.format(last_doc_entry_seq))
+        log_info('Second to last doc "seq": {}'.format(second_to_last_doc_entry_seq))
+        log_info('Last doc "seq": {}'.format(last_doc_entry_seq))
 
         if mode == "distributed_index":
             # Verify last "seq" follows the formate 12313-0, not 12313-0::1023.15
-            log.info('Verify that the last "seq" is a plain hashed value')
+            log_info('Verify that the last "seq" is a plain hashed value')
             assert len(second_to_last_doc_entry_seq.split("::")) == 2
             assert len(last_doc_entry_seq.split("::")) == 1
         else:

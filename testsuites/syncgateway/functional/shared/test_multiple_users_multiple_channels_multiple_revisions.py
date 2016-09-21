@@ -4,30 +4,30 @@ from testkit.admin import Admin
 from testkit.cluster import Cluster
 
 from testkit.parallelize import *
-import logging
-log = logging.getLogger(settings.LOGGER)
 
+from keywords.utils import log_info
 
 # Scenario-2:
 # Single User Single Channel: Create Unique docs and update docs verify all num docs present in changes feed.
 # Verify all revisions in changes feed
 # https://docs.google.com/spreadsheets/d/1nlba3SsWagDrnAep3rDZHXHIDmRH_FFDeTaYJms_55k/edit#gid=598127796
-def test_mulitple_users_mulitiple_channels_mulitple_revisions(conf, num_users, num_channels, num_docs, num_revisions):
+def mulitple_users_mulitiple_channels_mulitple_revisions(cluster_conf, sg_conf, num_users, num_channels, num_docs, num_revisions):
 
-    log.info("Starting test...")
-    log.info("conf: {}".format(conf))
-    log.info("num_users: {}".format(num_users))
-    log.info("num_channels: {}".format(num_channels))
-    log.info("num_docs: {}".format(num_docs))
-    log.info("num_revisions: {}".format(num_revisions))
+    log_info("Running 'mulitple_users_mulitiple_channels_mulitple_revisions'")
+    log_info("cluster_conf: {}".format(cluster_conf))
+    log_info("sg_conf: {}".format(sg_conf))
+    log_info("num_users: {}".format(num_users))
+    log_info("num_channels: {}".format(num_channels))
+    log_info("num_docs: {}".format(num_docs))
+    log_info("num_revisions: {}".format(num_revisions))
 
     start = time.time()
 
-    cluster = Cluster()
-    mode = cluster.reset(config_path=conf)
+    cluster = Cluster(config=cluster_conf)
+    mode = cluster.reset(config_path=sg_conf)
 
     init_completed = time.time()
-    log.info("Initialization completed. Time taken:{}s".format(init_completed - start))
+    log_info("Initialization completed. Time taken:{}s".format(init_completed - start))
 
     users = ["User-" + str(i) for i in range(num_users)]
     channels = ["channel-" + str(i) for i in range(num_channels)]
@@ -40,16 +40,16 @@ def test_mulitple_users_mulitiple_channels_mulitple_revisions(conf, num_users, n
     admin = Admin(sgs[0])
 
     # Register User
-    log.info("Register User")
+    log_info("Register User")
     user_objects = admin.register_bulk_users(target=sgs[0], db="db", name_prefix="User",
                                              number=num_users, password=password, channels=channels)
 
     # Add User
-    log.info("Add docs")
+    log_info("Add docs")
     in_parallel(user_objects, 'add_docs', num_docs)
 
     # Update docs
-    log.info("Update docs")
+    log_info("Update docs")
     in_parallel(user_objects, 'update_docs', num_revisions)
 
     # Adding sleep to let sg to catch-up...
@@ -67,7 +67,7 @@ def test_mulitple_users_mulitiple_channels_mulitple_revisions(conf, num_users, n
 
     expected_docs = num_users * num_docs
     for user_obj, docs in recieved_docs.items():
-        log.info('User {} got {} docs, expected docs: {}'.format(user_obj.name, docs, expected_docs))
+        log_info('User {} got {} docs, expected docs: {}'.format(user_obj.name, docs, expected_docs))
         assert docs == expected_docs
 
     # Verify that
@@ -79,7 +79,7 @@ def test_mulitple_users_mulitiple_channels_mulitple_revisions(conf, num_users, n
     for user_obj, docs_revision_dict in docs_rev_dict.items():
         for doc_id in docs_revision_dict.keys():
             rev = docs_revision_dict[doc_id]
-            log.info('User {} doc_id {} has {} revisions, expected revision: {}'.format(user_obj.name,
+            log_infolog_info('User {} doc_id {} has {} revisions, expected revision: {}'.format(user_obj.name,
                                                                                         doc_id, rev, expected_revision))
             if rev != expected_revision:
                 rev_errors.append(doc_id)
@@ -97,10 +97,10 @@ def test_mulitple_users_mulitiple_channels_mulitple_revisions(conf, num_users, n
     assert len(errors) == 0
 
     end = time.time()
-    log.info("Test ended.")
-    log.info("Main test duration: {}".format(end - init_completed))
-    log.info("Test setup time: {}".format(init_completed - start))
-    log.info("Total Time taken: {}s".format(end - start))
+    log_info("Test ended.")
+    log_info("Main test duration: {}".format(end - init_completed))
+    log_info("Test setup time: {}".format(init_completed - start))
+    log_info("Total Time taken: {}s".format(end - start))
 
 
 
