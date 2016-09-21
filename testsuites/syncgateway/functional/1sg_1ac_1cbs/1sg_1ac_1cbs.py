@@ -20,6 +20,8 @@ from testsuites.syncgateway.functional.shared.test_db_online_offline import offl
 from testsuites.syncgateway.functional.shared.test_db_online_offline import db_offline_tap_loss_sanity
 from testsuites.syncgateway.functional.shared.test_db_online_offline import db_delayed_online
 from testsuites.syncgateway.functional.shared.test_db_online_offline import multiple_dbs_unique_buckets_lose_tap
+from testsuites.syncgateway.functional.shared.test_longpoll import longpoll_changes_parametrized
+from testsuites.syncgateway.functional.shared.test_longpoll import longpoll_changes_sanity
 
 
 # This will be called once for the first test in the file.
@@ -59,6 +61,9 @@ def setup_1sg_1ac_1cbs_test(request):
     # cluster_helper.set_cluster_config("1sg_1ac_1cbs")
 
     yield {"cluster_config": os.environ["CLUSTER_CONFIG"]}
+
+    # TODO REMOVE!!!!!!
+    # cluster_helper.unset_cluster_config()
 
     # if the test failed pull logs
     if request.node.rep_call.failed:
@@ -245,7 +250,7 @@ def test_db_offline_tap_loss_sanity(setup_1sg_1ac_1cbs_test, sg_conf, num_docs):
 @pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.onlineoffline
-#@pytest.mark.usefixtures("setup_1sg_1ac_1cbs_suite")
+@pytest.mark.usefixtures("setup_1sg_1ac_1cbs_suite")
 @pytest.mark.parametrize("sg_conf,num_docs", [
     ("{}/bucket_online_offline/bucket_online_offline_multiple_dbs_unique_buckets_di.json".format(SYNC_GATEWAY_CONFIGS), 100)
 ])
@@ -254,4 +259,37 @@ def test_multiple_dbs_unique_buckets_lose_tap(setup_1sg_1ac_1cbs_test, sg_conf, 
         cluster_conf=setup_1sg_1ac_1cbs_test["cluster_config"],
         sg_conf=sg_conf,
         num_docs=num_docs,
+    )
+
+
+@pytest.mark.sanity
+@pytest.mark.syncgateway
+@pytest.mark.changes
+@pytest.mark.usefixtures("setup_1sg_1ac_1cbs_suite")
+@pytest.mark.parametrize("sg_conf,num_docs,num_revs", [
+    ("{}/sync_gateway_default_functional_tests_di.json".format(SYNC_GATEWAY_CONFIGS), 5000, 1),
+    ("{}/sync_gateway_default_functional_tests_di.json".format(SYNC_GATEWAY_CONFIGS), 50, 100)
+])
+def test_longpoll_changes_parametrized(setup_1sg_1ac_1cbs_test, sg_conf, num_docs, num_revs):
+    longpoll_changes_parametrized(
+        cluster_conf=setup_1sg_1ac_1cbs_test["cluster_config"],
+        sg_conf=sg_conf,
+        num_docs=num_docs,
+        num_revisions=num_revs
+    )
+
+
+@pytest.mark.sanity
+@pytest.mark.syncgateway
+@pytest.mark.changes
+@pytest.mark.usefixtures("setup_1sg_1ac_1cbs_suite")
+@pytest.mark.parametrize("sg_conf,num_docs,num_revs", [
+    ("{}/sync_gateway_default_functional_tests_di.json".format(SYNC_GATEWAY_CONFIGS), 10, 10),
+])
+def longpoll_changes_sanity(setup_1sg_1ac_1cbs_test, sg_conf, num_docs, num_revs):
+    longpoll_changes_sanity(
+        cluster_conf=setup_1sg_1ac_1cbs_test["cluster_config"],
+        sg_conf=sg_conf,
+        num_docs=num_docs,
+        num_revisions=num_revs
     )

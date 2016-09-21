@@ -44,18 +44,6 @@ ${SYNC_GATEWAY_CONFIG}      ${SYNC_GATEWAY_CONFIGS}/sync_gateway_default_functio
 
 
 
-# test_longpoll (distributed index mode)
-test longpoll changes parametrized 5000 docs 1 rev
-    [Tags]   sanity  syncgateway  changes
-    test longpoll changes parametrized      ${SYNC_GATEWAY_CONFIGS}/sync_gateway_default_functional_tests_di.json   ${5000}  ${1}
-
-test longpoll changes parametrized 50 docs 100 rev
-    [Tags]   sanity  syncgateway  changes
-    test longpoll changes parametrized      ${SYNC_GATEWAY_CONFIGS}/sync_gateway_default_functional_tests_di.json   ${50}   ${100}
-
-test longpoll changes sanity
-    [Tags]   sanity  syncgateway  changes
-    test longpoll changes sanity            ${SYNC_GATEWAY_CONFIGS}/sync_gateway_default_functional_tests_di.json   ${10}   ${10}
 
 
 # test_multiple_dbs (distributed index mode)
