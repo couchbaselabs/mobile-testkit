@@ -46,20 +46,7 @@ ${SYNC_GATEWAY_CONFIG}      ${SYNC_GATEWAY_CONFIGS}/sync_gateway_default_functio
 
 
 
-# test_multiple_dbs (distributed index mode)
-test multiple db unique data bucket unique index bucket
-    [Tags]   sanity  syncgateway
-    test multiple db unique data bucket unique index bucket     ${SYNC_GATEWAY_CONFIGS}/multiple_dbs_unique_data_unique_index_di.json   ${10}   ${500}
 
-test multiple db single data bucket single index bucket
-    [Tags]   nightly  syncgateway
-    test multiple db single data bucket single index bucket     ${SYNC_GATEWAY_CONFIGS}/multiple_dbs_shared_data_shared_index_di.json   ${10}   ${500}
-
-
-# test_mulitple_users_mulitiple_channels_mulitple_revisions (distributed index mode)
-test mulitple users mulitiple channels mulitple revisions
-    [Tags]   sanity  syncgateway
-    test mulitple users mulitiple channels mulitple revisions   ${SYNC_GATEWAY_CONFIGS}/sync_gateway_default_functional_tests_di.json   ${10}   ${3}    ${10}   ${10}
 
 
 # test_roles (distributed index mode)

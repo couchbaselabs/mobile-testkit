@@ -303,10 +303,57 @@ def test_longpoll_changes_parametrized(setup_1sg_1ac_1cbs_test, sg_conf, num_doc
 @pytest.mark.parametrize("sg_conf,num_docs,num_revs", [
     ("{}/sync_gateway_default_functional_tests_di.json".format(SYNC_GATEWAY_CONFIGS), 10, 10),
 ])
-def longpoll_changes_sanity(setup_1sg_1ac_1cbs_test, sg_conf, num_docs, num_revs):
+def test_longpoll_changes_sanity(setup_1sg_1ac_1cbs_test, sg_conf, num_docs, num_revs):
     longpoll_changes_sanity(
         cluster_conf=setup_1sg_1ac_1cbs_test["cluster_config"],
         sg_conf=sg_conf,
         num_docs=num_docs,
         num_revisions=num_revs
+    )
+
+
+@pytest.mark.sanity
+@pytest.mark.syncgateway
+@pytest.mark.usefixtures("setup_1sg_1ac_1cbs_suite")
+@pytest.mark.parametrize("sg_conf,num_users,num_docs_per_user", [
+    ("{}/multiple_dbs_unique_data_unique_index_di.json".format(SYNC_GATEWAY_CONFIGS), 10, 500),
+])
+def test_multiple_db_unique_data_bucket_unique_index_bucket(setup_1sg_1ac_1cbs_test, sg_conf, num_users, num_docs_per_user):
+    multiple_db_unique_data_bucket_unique_index_bucket(
+        cluster_conf=setup_1sg_1ac_1cbs_test["cluster_config"],
+        sg_conf=sg_conf,
+        num_users=num_users,
+        num_docs_per_user=num_docs_per_user
+    )
+
+
+@pytest.mark.sanity
+@pytest.mark.syncgateway
+@pytest.mark.usefixtures("setup_1sg_1ac_1cbs_suite")
+@pytest.mark.parametrize("sg_conf,num_users,num_docs_per_user", [
+    ("{}/multiple_dbs_shared_data_shared_index_di.json".format(SYNC_GATEWAY_CONFIGS), 10, 500),
+])
+def test_multiple_db_single_data_bucket_single_index_bucket(setup_1sg_1ac_1cbs_test, sg_conf, num_users, num_docs_per_user):
+    multiple_db_single_data_bucket_single_index_bucket(
+        cluster_conf=setup_1sg_1ac_1cbs_test["cluster_config"],
+        sg_conf=sg_conf,
+        num_users=num_users,
+        num_docs_per_user=num_docs_per_user
+    )
+
+
+@pytest.mark.sanity
+@pytest.mark.syncgateway
+@pytest.mark.usefixtures("setup_1sg_1ac_1cbs_suite")
+@pytest.mark.parametrize("sg_conf,num_users,num_channels,num_docs,num_revisions", [
+    ("{}/sync_gateway_default_functional_tests_di.json".format(SYNC_GATEWAY_CONFIGS), 10, 3, 10, 10),
+])
+def test_mulitple_users_mulitiple_channels_mulitple_revisions(setup_1sg_1ac_1cbs_test, sg_conf, num_users, num_channels, num_docs, num_revisions):
+    mulitple_users_mulitiple_channels_mulitple_revisions(
+        cluster_conf=setup_1sg_1ac_1cbs_test["cluster_config"],
+        sg_conf=sg_conf,
+        num_users=num_users,
+        num_channels=num_channels,
+        num_docs=num_docs,
+        num_revisions=num_revisions
     )
