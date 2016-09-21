@@ -49,23 +49,6 @@ ${SYNC_GATEWAY_CONFIG}      ${SYNC_GATEWAY_CONFIGS}/sync_gateway_default_functio
 
 
 
-# test_roles (distributed index mode)
-test roles sanity
-    [Tags]   sanity  syncgateway  roles
-    test roles sanity           ${SYNC_GATEWAY_CONFIGS}/sync_gateway_default_functional_tests_di.json
-
-
-# test_seq (distributed index mode)
-test seq
-    [Tags]   sanity  syncgateway
-    test seq        ${SYNC_GATEWAY_CONFIGS}/sync_gateway_default_functional_tests_di.json   ${10}   ${500}  ${1}
-
-
-# test test_single_user_single_channel_doc_updates (distributed index mode)
-test single user single channel doc updates
-    [Tags]   nightly  syncgateway
-    test single user single channel doc updates     ${SYNC_GATEWAY_CONFIGS}/sync_gateway_default_functional_tests_di.json   ${100}  ${100}
-
 
 # test_sync (Distributed Index)
 test issue 1524
