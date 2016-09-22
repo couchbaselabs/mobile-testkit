@@ -51,7 +51,7 @@ from testsuites.syncgateway.functional.shared.test_users_channels import single_
     ("{}/sync_gateway_default_functional_tests_cc.json".format(SYNC_GATEWAY_CONFIGS), 50, 10, 10),
     ("{}/sync_gateway_default_functional_tests_revslimit50_cc.json".format(SYNC_GATEWAY_CONFIGS), 50, 50, 1000)
 ])
-def test_continuous_changes_parametrized(setup_1sg_1cbs_test, sg_conf, num_users, num_docs, num_revisions):
+def test_continuous_changes_parametrized_cc(setup_1sg_1cbs_test, sg_conf, num_users, num_docs, num_revisions):
     continuous_changes_parametrized(
         cluster_conf=setup_1sg_1cbs_test["cluster_config"],
         sg_conf=sg_conf,
@@ -68,7 +68,7 @@ def test_continuous_changes_parametrized(setup_1sg_1cbs_test, sg_conf, num_users
 @pytest.mark.parametrize("sg_conf,num_docs,num_revisions", [
     ("{}/sync_gateway_default_functional_tests_cc.json".format(SYNC_GATEWAY_CONFIGS), 10, 10)
 ])
-def test_continuous_changes_sanity(setup_1sg_1cbs_test, sg_conf, num_docs, num_revisions):
+def test_continuous_changes_sanity_cc(setup_1sg_1cbs_test, sg_conf, num_docs, num_revisions):
     continuous_changes_sanity(
         cluster_conf=setup_1sg_1cbs_test["cluster_config"],
         sg_conf=sg_conf,
@@ -85,7 +85,7 @@ def test_continuous_changes_sanity(setup_1sg_1cbs_test, sg_conf, num_docs, num_r
 @pytest.mark.parametrize("sg_conf,num_docs", [
     ("{}/bucket_online_offline/bucket_online_offline_default_cc.json".format(SYNC_GATEWAY_CONFIGS), 100)
 ])
-def test_online_default_rest(setup_1sg_1cbs_test, sg_conf, num_docs):
+def test_online_default_rest_cc(setup_1sg_1cbs_test, sg_conf, num_docs):
     online_default_rest(
         cluster_conf=setup_1sg_1cbs_test["cluster_config"],
         sg_conf=sg_conf, num_docs=num_docs
@@ -99,7 +99,7 @@ def test_online_default_rest(setup_1sg_1cbs_test, sg_conf, num_docs):
 @pytest.mark.parametrize("sg_conf,num_docs", [
     ("{}/bucket_online_offline/bucket_online_offline_offline_false_cc.json".format(SYNC_GATEWAY_CONFIGS), 100)
 ])
-def test_offline_false_config_rest(setup_1sg_1cbs_test, sg_conf, num_docs):
+def test_offline_false_config_rest_cc(setup_1sg_1cbs_test, sg_conf, num_docs):
     offline_false_config_rest(
         cluster_conf=setup_1sg_1cbs_test["cluster_config"],
         sg_conf=sg_conf,
@@ -114,7 +114,7 @@ def test_offline_false_config_rest(setup_1sg_1cbs_test, sg_conf, num_docs):
 @pytest.mark.parametrize("sg_conf,num_docs", [
     ("{}/bucket_online_offline/bucket_online_offline_default_cc.json".format(SYNC_GATEWAY_CONFIGS), 100)
 ])
-def test_online_to_offline_check_503(setup_1sg_1cbs_test, sg_conf, num_docs):
+def test_online_to_offline_check_503_cc(setup_1sg_1cbs_test, sg_conf, num_docs):
     online_to_offline_check_503(
         cluster_conf=setup_1sg_1cbs_test["cluster_config"],
         sg_conf=sg_conf,
@@ -129,7 +129,7 @@ def test_online_to_offline_check_503(setup_1sg_1cbs_test, sg_conf, num_docs):
 @pytest.mark.parametrize("sg_conf,num_docs", [
     ("{}/bucket_online_offline/bucket_online_offline_default_cc.json".format(SYNC_GATEWAY_CONFIGS), 5000)
 ])
-def test_online_to_offline_changes_feed_controlled_close_continuous(setup_1sg_1cbs_test, sg_conf, num_docs):
+def test_online_to_offline_changes_feed_controlled_close_continuous_cc(setup_1sg_1cbs_test, sg_conf, num_docs):
     online_to_offline_changes_feed_controlled_close_continuous(
         cluster_conf=setup_1sg_1cbs_test["cluster_config"],
         sg_conf=sg_conf,
@@ -145,7 +145,7 @@ def test_online_to_offline_changes_feed_controlled_close_continuous(setup_1sg_1c
 @pytest.mark.parametrize("sg_conf,num_docs,num_users", [
     ("{}/bucket_online_offline/bucket_online_offline_default_cc.json".format(SYNC_GATEWAY_CONFIGS), 5000, 40)
 ])
-def test_online_to_offline_continous_changes_feed_controlled_close_sanity_mulitple_users(setup_1sg_1cbs_test, sg_conf, num_docs, num_users):
+def test_online_to_offline_continous_changes_feed_controlled_close_sanity_mulitple_users_cc(setup_1sg_1cbs_test, sg_conf, num_docs, num_users):
     online_to_offline_continous_changes_feed_controlled_close_sanity_mulitple_users(
         cluster_conf=setup_1sg_1cbs_test["cluster_config"],
         sg_conf=sg_conf,
@@ -162,7 +162,7 @@ def test_online_to_offline_continous_changes_feed_controlled_close_sanity_mulitp
 @pytest.mark.parametrize("sg_conf,num_docs", [
     ("{}/bucket_online_offline/bucket_online_offline_default_cc.json".format(SYNC_GATEWAY_CONFIGS), 5000)
 ])
-def test_online_to_offline_changes_feed_controlled_close_longpoll_sanity(setup_1sg_1cbs_test, sg_conf, num_docs):
+def test_online_to_offline_changes_feed_controlled_close_longpoll_sanity_cc(setup_1sg_1cbs_test, sg_conf, num_docs):
     online_to_offline_changes_feed_controlled_close_longpoll_sanity(
         cluster_conf=setup_1sg_1cbs_test["cluster_config"],
         sg_conf=sg_conf,
@@ -178,7 +178,7 @@ def test_online_to_offline_changes_feed_controlled_close_longpoll_sanity(setup_1
 @pytest.mark.parametrize("sg_conf,num_docs,num_users", [
     ("{}/bucket_online_offline/bucket_online_offline_default_cc.json".format(SYNC_GATEWAY_CONFIGS), 5000, 40)
 ])
-def test_online_to_offline_longpoll_changes_feed_controlled_close_sanity_mulitple_users(setup_1sg_1cbs_test, sg_conf, num_docs, num_users):
+def test_online_to_offline_longpoll_changes_feed_controlled_close_sanity_mulitple_users_cc(setup_1sg_1cbs_test, sg_conf, num_docs, num_users):
     online_to_offline_longpoll_changes_feed_controlled_close_sanity_mulitple_users(
         cluster_conf=setup_1sg_1cbs_test["cluster_config"],
         sg_conf=sg_conf,
@@ -194,7 +194,7 @@ def test_online_to_offline_longpoll_changes_feed_controlled_close_sanity_mulitpl
 @pytest.mark.parametrize("sg_conf,num_docs", [
     ("{}/bucket_online_offline/bucket_online_offline_default_cc.json".format(SYNC_GATEWAY_CONFIGS), 5000)
 ])
-def test_online_to_offline_changes_feed_controlled_close_longpoll(setup_1sg_1cbs_test, sg_conf, num_docs):
+def test_online_to_offline_changes_feed_controlled_close_longpoll_cc(setup_1sg_1cbs_test, sg_conf, num_docs):
     online_to_offline_changes_feed_controlled_close_longpoll(
         cluster_conf=setup_1sg_1cbs_test["cluster_config"],
         sg_conf=sg_conf,
@@ -210,7 +210,7 @@ def test_online_to_offline_changes_feed_controlled_close_longpoll(setup_1sg_1cbs
 @pytest.mark.parametrize("sg_conf,num_docs", [
     ("{}/bucket_online_offline/bucket_online_offline_offline_true_cc.json".format(SYNC_GATEWAY_CONFIGS), 100)
 ])
-def test_offline_true_config_bring_online(setup_1sg_1cbs_test, sg_conf, num_docs):
+def test_offline_true_config_bring_online_cc(setup_1sg_1cbs_test, sg_conf, num_docs):
     offline_true_config_bring_online(
         cluster_conf=setup_1sg_1cbs_test["cluster_config"],
         sg_conf=sg_conf,
@@ -226,7 +226,7 @@ def test_offline_true_config_bring_online(setup_1sg_1cbs_test, sg_conf, num_docs
     ("{}/bucket_online_offline/bucket_online_offline_default_dcp_cc.json".format(SYNC_GATEWAY_CONFIGS), 100),
     ("{}/bucket_online_offline/bucket_online_offline_default_cc.json".format(SYNC_GATEWAY_CONFIGS), 100)
 ])
-def test_db_offline_tap_loss_sanity(setup_1sg_1cbs_test, sg_conf, num_docs):
+def test_db_offline_tap_loss_sanity_cc(setup_1sg_1cbs_test, sg_conf, num_docs):
     db_offline_tap_loss_sanity(
         cluster_conf=setup_1sg_1cbs_test["cluster_config"],
         sg_conf=sg_conf,
@@ -240,7 +240,7 @@ def test_db_offline_tap_loss_sanity(setup_1sg_1cbs_test, sg_conf, num_docs):
 @pytest.mark.parametrize("sg_conf,num_docs", [
     ("{}/bucket_online_offline/bucket_online_offline_default_cc.json".format(SYNC_GATEWAY_CONFIGS), 100)
 ])
-def test_db_delayed_online(setup_1sg_1cbs_test, sg_conf, num_docs):
+def test_db_delayed_online_cc(setup_1sg_1cbs_test, sg_conf, num_docs):
     db_delayed_online(
         cluster_conf=setup_1sg_1cbs_test["cluster_config"],
         sg_conf=sg_conf,
@@ -255,7 +255,7 @@ def test_db_delayed_online(setup_1sg_1cbs_test, sg_conf, num_docs):
 @pytest.mark.parametrize("sg_conf,num_docs", [
     ("{}/bucket_online_offline/bucket_online_offline_multiple_dbs_unique_buckets_cc.json".format(SYNC_GATEWAY_CONFIGS), 100)
 ])
-def test_multiple_dbs_unique_buckets_lose_tap(setup_1sg_1cbs_test, sg_conf, num_docs):
+def test_multiple_dbs_unique_buckets_lose_tap_cc(setup_1sg_1cbs_test, sg_conf, num_docs):
     multiple_dbs_unique_buckets_lose_tap(
         cluster_conf=setup_1sg_1cbs_test["cluster_config"],
         sg_conf=sg_conf,
@@ -271,7 +271,7 @@ def test_multiple_dbs_unique_buckets_lose_tap(setup_1sg_1cbs_test, sg_conf, num_
     ("{}/sync_gateway_default_functional_tests_cc.json".format(SYNC_GATEWAY_CONFIGS), 5000, 1),
     ("{}/sync_gateway_default_functional_tests_cc.json".format(SYNC_GATEWAY_CONFIGS), 50, 100)
 ])
-def test_longpoll_changes_parametrized(setup_1sg_1cbs_test, sg_conf, num_docs, num_revs):
+def test_longpoll_changes_parametrized_cc(setup_1sg_1cbs_test, sg_conf, num_docs, num_revs):
     longpoll_changes_parametrized(
         cluster_conf=setup_1sg_1cbs_test["cluster_config"],
         sg_conf=sg_conf,
@@ -287,7 +287,7 @@ def test_longpoll_changes_parametrized(setup_1sg_1cbs_test, sg_conf, num_docs, n
 @pytest.mark.parametrize("sg_conf,num_docs,num_revs", [
     ("{}/sync_gateway_default_functional_tests_cc.json".format(SYNC_GATEWAY_CONFIGS), 10, 10),
 ])
-def test_longpoll_changes_sanity(setup_1sg_1cbs_test, sg_conf, num_docs, num_revs):
+def test_longpoll_changes_sanity_cc(setup_1sg_1cbs_test, sg_conf, num_docs, num_revs):
     longpoll_changes_sanity(
         cluster_conf=setup_1sg_1cbs_test["cluster_config"],
         sg_conf=sg_conf,
@@ -302,7 +302,7 @@ def test_longpoll_changes_sanity(setup_1sg_1cbs_test, sg_conf, num_docs, num_rev
 @pytest.mark.parametrize("sg_conf,num_users,num_docs_per_user", [
     ("{}/multiple_dbs_unique_data_unique_index_cc.json".format(SYNC_GATEWAY_CONFIGS), 10, 500),
 ])
-def test_multiple_db_unique_data_bucket_unique_index_bucket(setup_1sg_1cbs_test, sg_conf, num_users, num_docs_per_user):
+def test_multiple_db_unique_data_bucket_unique_index_bucket_cc(setup_1sg_1cbs_test, sg_conf, num_users, num_docs_per_user):
     multiple_db_unique_data_bucket_unique_index_bucket(
         cluster_conf=setup_1sg_1cbs_test["cluster_config"],
         sg_conf=sg_conf,
@@ -317,7 +317,7 @@ def test_multiple_db_unique_data_bucket_unique_index_bucket(setup_1sg_1cbs_test,
 @pytest.mark.parametrize("sg_conf,num_users,num_docs_per_user", [
     ("{}/multiple_dbs_shared_data_shared_index_cc.json".format(SYNC_GATEWAY_CONFIGS), 10, 500),
 ])
-def test_multiple_db_single_data_bucket_single_index_bucket(setup_1sg_1cbs_test, sg_conf, num_users, num_docs_per_user):
+def test_multiple_db_single_data_bucket_single_index_bucket_cc(setup_1sg_1cbs_test, sg_conf, num_users, num_docs_per_user):
     multiple_db_single_data_bucket_single_index_bucket(
         cluster_conf=setup_1sg_1cbs_test["cluster_config"],
         sg_conf=sg_conf,
@@ -332,7 +332,7 @@ def test_multiple_db_single_data_bucket_single_index_bucket(setup_1sg_1cbs_test,
 @pytest.mark.parametrize("sg_conf,num_users,num_channels,num_docs,num_revisions", [
     ("{}/sync_gateway_default_functional_tests_cc.json".format(SYNC_GATEWAY_CONFIGS), 10, 3, 10, 10),
 ])
-def test_mulitple_users_mulitiple_channels_mulitple_revisions(setup_1sg_1cbs_test, sg_conf, num_users, num_channels, num_docs, num_revisions):
+def test_mulitple_users_mulitiple_channels_mulitple_revisions_cc(setup_1sg_1cbs_test, sg_conf, num_users, num_channels, num_docs, num_revisions):
     mulitple_users_mulitiple_channels_mulitple_revisions(
         cluster_conf=setup_1sg_1cbs_test["cluster_config"],
         sg_conf=sg_conf,
@@ -350,7 +350,7 @@ def test_mulitple_users_mulitiple_channels_mulitple_revisions(setup_1sg_1cbs_tes
 @pytest.mark.parametrize("sg_conf", [
     ("{}/sync_gateway_default_functional_tests_cc.json".format(SYNC_GATEWAY_CONFIGS)),
 ])
-def test_roles_sanity(setup_1sg_1cbs_test, sg_conf):
+def test_roles_sanity_cc(setup_1sg_1cbs_test, sg_conf):
     roles_sanity(
         cluster_conf=setup_1sg_1cbs_test["cluster_config"],
         sg_conf=sg_conf
@@ -363,7 +363,7 @@ def test_roles_sanity(setup_1sg_1cbs_test, sg_conf):
 @pytest.mark.parametrize("sg_conf,num_users,num_docs,num_revisions", [
     ("{}/sync_gateway_default_functional_tests_cc.json".format(SYNC_GATEWAY_CONFIGS), 10, 500, 1),
 ])
-def test_seq(setup_1sg_1cbs_test, sg_conf, num_users, num_docs, num_revisions):
+def test_seq_cc(setup_1sg_1cbs_test, sg_conf, num_users, num_docs, num_revisions):
     seq(
         cluster_conf=setup_1sg_1cbs_test["cluster_config"],
         sg_conf=sg_conf,
@@ -379,7 +379,7 @@ def test_seq(setup_1sg_1cbs_test, sg_conf, num_users, num_docs, num_revisions):
 @pytest.mark.parametrize("sg_conf,num_docs,num_revisions", [
     ("{}/sync_gateway_default_functional_tests_cc.json".format(SYNC_GATEWAY_CONFIGS), 100, 100),
 ])
-def test_single_user_single_channel_doc_updates(setup_1sg_1cbs_test, sg_conf, num_docs, num_revisions):
+def test_single_user_single_channel_doc_updates_cc(setup_1sg_1cbs_test, sg_conf, num_docs, num_revisions):
     single_user_single_channel_doc_updates(
         cluster_conf=setup_1sg_1cbs_test["cluster_config"],
         sg_conf=sg_conf,
@@ -395,7 +395,7 @@ def test_single_user_single_channel_doc_updates(setup_1sg_1cbs_test, sg_conf, nu
 @pytest.mark.parametrize("sg_conf,num_docs", [
     ("{}/custom_sync/grant_access_one_cc.json".format(SYNC_GATEWAY_CONFIGS), 10),
 ])
-def test_issue_1524(setup_1sg_1cbs_test, sg_conf, num_docs):
+def test_issue_1524_cc(setup_1sg_1cbs_test, sg_conf, num_docs):
     issue_1524(
         cluster_conf=setup_1sg_1cbs_test["cluster_config"],
         sg_conf=sg_conf,
@@ -411,7 +411,7 @@ def test_issue_1524(setup_1sg_1cbs_test, sg_conf, num_docs):
 @pytest.mark.parametrize("sg_conf", [
     ("{}/sync_gateway_custom_sync_access_sanity_cc.json".format(SYNC_GATEWAY_CONFIGS)),
 ])
-def test_sync_access_sanity(setup_1sg_1cbs_test, sg_conf):
+def test_sync_access_sanity_cc(setup_1sg_1cbs_test, sg_conf):
     sync_access_sanity(
         cluster_conf=setup_1sg_1cbs_test["cluster_config"],
         sg_conf=sg_conf
@@ -426,7 +426,7 @@ def test_sync_access_sanity(setup_1sg_1cbs_test, sg_conf):
 @pytest.mark.parametrize("sg_conf", [
     ("{}/custom_sync/sync_gateway_custom_sync_channel_sanity_cc.json".format(SYNC_GATEWAY_CONFIGS)),
 ])
-def test_sync_channel_sanity(setup_1sg_1cbs_test, sg_conf):
+def test_sync_channel_sanity_cc(setup_1sg_1cbs_test, sg_conf):
     sync_channel_sanity(
         cluster_conf=setup_1sg_1cbs_test["cluster_config"],
         sg_conf=sg_conf
@@ -441,7 +441,7 @@ def test_sync_channel_sanity(setup_1sg_1cbs_test, sg_conf):
 @pytest.mark.parametrize("sg_conf", [
     ("{}/custom_sync/sync_gateway_custom_sync_role_sanity_cc.json".format(SYNC_GATEWAY_CONFIGS)),
 ])
-def test_sync_role_sanity(setup_1sg_1cbs_test, sg_conf):
+def test_sync_role_sanity_cc(setup_1sg_1cbs_test, sg_conf):
     sync_role_sanity(
         cluster_conf=setup_1sg_1cbs_test["cluster_config"],
         sg_conf=sg_conf
@@ -455,7 +455,7 @@ def test_sync_role_sanity(setup_1sg_1cbs_test, sg_conf):
 @pytest.mark.parametrize("sg_conf", [
     ("{}/custom_sync/sync_gateway_custom_sync_one_cc.json".format(SYNC_GATEWAY_CONFIGS)),
 ])
-def test_sync_sanity(setup_1sg_1cbs_test, sg_conf):
+def test_sync_sanity_cc(setup_1sg_1cbs_test, sg_conf):
     sync_sanity(
         cluster_conf=setup_1sg_1cbs_test["cluster_config"],
         sg_conf=sg_conf
@@ -469,7 +469,7 @@ def test_sync_sanity(setup_1sg_1cbs_test, sg_conf):
 @pytest.mark.parametrize("sg_conf", [
     ("{}/custom_sync/sync_gateway_custom_sync_one_cc.json".format(SYNC_GATEWAY_CONFIGS)),
 ])
-def test_sync_sanity_backfill(setup_1sg_1cbs_test, sg_conf):
+def test_sync_sanity_backfill_cc(setup_1sg_1cbs_test, sg_conf):
     sync_sanity_backfill(
         cluster_conf=setup_1sg_1cbs_test["cluster_config"],
         sg_conf=sg_conf
@@ -484,7 +484,7 @@ def test_sync_sanity_backfill(setup_1sg_1cbs_test, sg_conf):
 @pytest.mark.parametrize("sg_conf", [
     ("{}/custom_sync/sync_gateway_custom_sync_require_roles_cc.json".format(SYNC_GATEWAY_CONFIGS)),
 ])
-def test_sync_require_roles(setup_1sg_1cbs_test, sg_conf):
+def test_sync_require_roles_cc(setup_1sg_1cbs_test, sg_conf):
     sync_require_roles(
         cluster_conf=setup_1sg_1cbs_test["cluster_config"],
         sg_conf=sg_conf
@@ -497,7 +497,7 @@ def test_sync_require_roles(setup_1sg_1cbs_test, sg_conf):
 @pytest.mark.parametrize("sg_conf", [
     ("{}/sync_gateway_default_functional_tests_cc.json".format(SYNC_GATEWAY_CONFIGS)),
 ])
-def test_multiple_users_multiple_channels(setup_1sg_1cbs_test, sg_conf):
+def test_multiple_users_multiple_channels_cc(setup_1sg_1cbs_test, sg_conf):
     multiple_users_multiple_channels(
         cluster_conf=setup_1sg_1cbs_test["cluster_config"],
         sg_conf=sg_conf
@@ -510,7 +510,7 @@ def test_multiple_users_multiple_channels(setup_1sg_1cbs_test, sg_conf):
 @pytest.mark.parametrize("sg_conf", [
     ("{}/sync_gateway_default_functional_tests_cc.json".format(SYNC_GATEWAY_CONFIGS)),
 ])
-def test_muliple_users_single_channel(setup_1sg_1cbs_test, sg_conf):
+def test_muliple_users_single_channel_cc(setup_1sg_1cbs_test, sg_conf):
     muliple_users_single_channel(
         cluster_conf=setup_1sg_1cbs_test["cluster_config"],
         sg_conf=sg_conf
@@ -523,7 +523,7 @@ def test_muliple_users_single_channel(setup_1sg_1cbs_test, sg_conf):
 @pytest.mark.parametrize("sg_conf", [
     ("{}/sync_gateway_default_functional_tests_cc.json".format(SYNC_GATEWAY_CONFIGS)),
 ])
-def test_single_user_multiple_channels(setup_1sg_1cbs_test, sg_conf):
+def test_single_user_multiple_channels_cc(setup_1sg_1cbs_test, sg_conf):
     single_user_multiple_channels(
         cluster_conf=setup_1sg_1cbs_test["cluster_config"],
         sg_conf=sg_conf
@@ -536,7 +536,7 @@ def test_single_user_multiple_channels(setup_1sg_1cbs_test, sg_conf):
 @pytest.mark.parametrize("sg_conf", [
     ("{}/sync_gateway_default_functional_tests_cc.json".format(SYNC_GATEWAY_CONFIGS)),
 ])
-def test_single_user_single_channel(setup_1sg_1cbs_test, sg_conf):
+def test_single_user_single_channel_cc(setup_1sg_1cbs_test, sg_conf):
     single_user_single_channel(
         cluster_conf=setup_1sg_1cbs_test["cluster_config"],
         sg_conf=sg_conf
