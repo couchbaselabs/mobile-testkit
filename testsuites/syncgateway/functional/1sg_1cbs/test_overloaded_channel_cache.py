@@ -1,4 +1,6 @@
 import time
+import pytest
+
 from testkit.admin import Admin
 from testkit.cluster import Cluster
 from testkit.verify import verify_changes
@@ -7,21 +9,33 @@ import concurrent
 import concurrent.futures
 import requests
 
-import testkit.settings
-import logging
-log = logging.getLogger(testkit.settings.LOGGER)
+from keywords.utils import log_info
+from keywords.constants import SYNC_GATEWAY_CONFIGS
 
 
-def test_overloaded_channel_cache(conf, num_docs, user_channels, filter, limit):
+@pytest.mark.sanity
+@pytest.mark.syncgateway
+@pytest.mark.usefixtures("setup_1sg_1cbs_suite")
+@pytest.mark.parametrize("sg_conf, num_docs, user_channels, filter, limit", [
+    ("{}/sync_gateway_channel_cache_cc.json".format(SYNC_GATEWAY_CONFIGS), 5000, "*", True, 50),
+    ("{}/sync_gateway_channel_cache_cc.json".format(SYNC_GATEWAY_CONFIGS), 1000, "*", True, 50),
+    ("{}/sync_gateway_channel_cache_cc.json".format(SYNC_GATEWAY_CONFIGS), 1000, "ABC", False, 50),
+    ("{}/sync_gateway_channel_cache_cc.json".format(SYNC_GATEWAY_CONFIGS), 1000, "ABC", True, 50),
+])
+def test_overloaded_channel_cache(setup_1sg_1cbs_test, sg_conf, num_docs, user_channels, filter, limit):
 
-    log.info("Using conf: {}".format(conf))
-    log.info("Using num_docs: {}".format(num_docs))
-    log.info("Using user_channels: {}".format(user_channels))
-    log.info("Using filter: {}".format(filter))
-    log.info("Using limit: {}".format(limit))
+    cluster_conf = setup_1sg_1cbs_test["cluster_config"]
 
-    cluster = Cluster()
-    mode = cluster.reset(config_path=conf)
+    log_info("Running 'test_overloaded_channel_cache'")
+    log_info("Using cluster_conf: {}".format(cluster_conf))
+    log_info("Using sg_conf: {}".format(sg_conf))
+    log_info("Using num_docs: {}".format(num_docs))
+    log_info("Using user_channels: {}".format(user_channels))
+    log_info("Using filter: {}".format(filter))
+    log_info("Using limit: {}".format(limit))
+
+    cluster = Cluster(config=cluster_conf)
+    mode = cluster.reset(config_path=sg_conf)
 
     target_sg = cluster.sync_gateways[0]
 
@@ -61,14 +75,14 @@ def test_overloaded_channel_cache(conf, num_docs, user_channels, filter, limit):
                 assert len(changes["results"]) == 5001
 
         # changes feed should all be successful
-        log.info(len(errors))
+        log_info(len(errors))
         assert len(errors) == 0
 
         if limit is not None:
             # HACK: Should be less than a minute unless blocking on view calls
             end = time.time()
             time_for_users_to_get_all_changes = end - start
-            log.info("Time for users to get all changes: {}".format(time_for_users_to_get_all_changes))
+            log_info("Time for users to get all changes: {}".format(time_for_users_to_get_all_changes))
             assert time_for_users_to_get_all_changes < 120, "Time to get all changes was greater than a minute: {}s".format(
                 time_for_users_to_get_all_changes
             )

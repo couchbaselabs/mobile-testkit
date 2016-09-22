@@ -2,23 +2,42 @@ from testkit.verify import verify_changes
 from testkit.cluster import Cluster
 
 import time
+import pytest
+
 from testkit.admin import Admin
 from multiprocessing.pool import ThreadPool
 from requests.exceptions import HTTPError
 from testkit.parallelize import *
-import logging
-log = logging.getLogger(settings.LOGGER)
+
+from keywords.utils import log_info
+from keywords.utils import log_debug
+from keywords.utils import log_error
 
 
-def test_bucket_online_offline_resync_sanity(num_users, num_docs, num_revisions):
-    log.info("Starting test...")
+@pytest.mark.sanity
+@pytest.mark.syncgateway
+@pytest.mark.onlineoffline
+@pytest.mark.usefixtures("setup_1sg_1cbs_suite")
+@pytest.mark.parametrize("num_users, num_docs, num_revisions", [
+    (5, 100, 10),
+])
+def test_bucket_online_offline_resync_sanity(setup_1sg_1cbs_test, num_users, num_docs, num_revisions):
+
+    cluster_conf = setup_1sg_1cbs_test["cluster_config"]
+
+    log_info("Running 'test_bucket_online_offline_resync_sanity'")
+    log_info("Using cluster_conf: {}".format(cluster_conf))
+    log_info("Using num_users: {}".format(num_users))
+    log_info("Using num_docs: {}".format(num_docs))
+    log_info("Using num_revisions: {}".format(num_revisions))
+
     start = time.time()
 
-    cluster = Cluster()
+    cluster = Cluster(config=cluster_conf)
     mode = cluster.reset("resources/sync_gateway_configs/bucket_online_offline/db_online_offline_access_all_cc.json")
 
     init_completed = time.time()
-    log.info("Initialization completed. Time taken:{}s".format(init_completed - start))
+    log_info("Initialization completed. Time taken:{}s".format(init_completed - start))
 
     num_channels = 1
     channels = ["channel-" + str(i) for i in range(num_channels)]
@@ -29,17 +48,17 @@ def test_bucket_online_offline_resync_sanity(num_users, num_docs, num_revisions)
     admin = Admin(sgs[0])
 
     # Register User
-    log.info("Register User")
+    log_info("Register User")
     user_objects = admin.register_bulk_users(target=sgs[0], db="db", name_prefix="User",
                                              number=num_users, password=password, channels=channels)
     user_x = admin.register_user(target=sgs[0], db="db", name="User-X", password="password", channels=["channel_x"])
 
     # Add User
-    log.info("Add docs")
+    log_info("Add docs")
     in_parallel(user_objects, 'add_docs', num_docs)
 
     # Update docs
-    log.info("Update docs")
+    log_info("Update docs")
     in_parallel(user_objects, 'update_docs', num_revisions)
 
     time.sleep(10)
@@ -53,7 +72,7 @@ def test_bucket_online_offline_resync_sanity(num_users, num_docs, num_revisions)
 
     expected_docs = num_users * num_docs
     for user_obj, docs in recieved_docs.items():
-        log.info('User {} got {} docs, expected docs: {}'.format(user_obj.name, docs, expected_docs))
+        log_info('User {} got {} docs, expected docs: {}'.format(user_obj.name, docs, expected_docs))
         assert docs == expected_docs
 
 
@@ -66,11 +85,11 @@ def test_bucket_online_offline_resync_sanity(num_users, num_docs, num_revisions)
     for user_obj, docs_revision_dict in docs_rev_dict.items():
         for doc_id in docs_revision_dict.keys():
             rev = docs_revision_dict[doc_id]
-            log.info('User {} doc_id {} has {} revisions, expected revision: {}'.format(user_obj.name,
+            log_info('User {} doc_id {} has {} revisions, expected revision: {}'.format(user_obj.name,
                                                                                         doc_id, rev, expected_revision))
             if rev != expected_revision:
                 rev_errors.append(doc_id)
-                log.error('User {} doc_id got revision {}, expected revision {}'.format(user_obj.name,
+                log_error('User {} doc_id got revision {}, expected revision {}'.format(user_obj.name,
                                                                                         doc_id, rev, expected_revision))
 
     assert len(rev_errors) == 0
@@ -89,7 +108,7 @@ def test_bucket_online_offline_resync_sanity(num_users, num_docs, num_revisions)
     time.sleep(10)
 
     num_changes = admin.db_resync(db="db")
-    log.info("expecting num_changes {} == num_docs {} * num_users {}".format(num_changes, num_docs, num_users))
+    log_info("expecting num_changes {} == num_docs {} * num_users {}".format(num_changes, num_docs, num_users))
     assert num_changes['payload']['changes'] == num_docs * num_users
 
     status = admin.bring_db_online(db="db")
@@ -109,10 +128,10 @@ def test_bucket_online_offline_resync_sanity(num_users, num_docs, num_revisions)
     assert len(errors) == 0
 
     end = time.time()
-    log.info("Test ended.")
-    log.info("Main test duration: {}".format(end - init_completed))
-    log.info("Test setup time: {}".format(init_completed - start))
-    log.info("Total Time taken: {}s".format(end - start))
+    log_info("Test ended.")
+    log_info("Main test duration: {}".format(end - init_completed))
+    log_info("Test setup time: {}".format(init_completed - start))
+    log_info("Total Time taken: {}s".format(end - start))
 
 
 # implements scenario: 11
@@ -120,15 +139,30 @@ def test_bucket_online_offline_resync_sanity(num_users, num_docs, num_revisions)
 # put DB offline, run _resync, attempt to bring DB online while _resync is running,
 # expected result _online will fail with status 503, when _resync is complete,
 # attempt to bring DB _online, expected result _online will succeed, return status 200.
-def test_bucket_online_offline_resync_with_online(num_users, num_docs, num_revisions):
-    log.info("Starting test...")
+@pytest.mark.sanity
+@pytest.mark.syncgateway
+@pytest.mark.onlineoffline
+@pytest.mark.usefixtures("setup_1sg_1cbs_suite")
+@pytest.mark.parametrize("num_users, num_docs, num_revisions", [
+    (5, 100, 10),
+])
+def test_bucket_online_offline_resync_with_online(setup_1sg_1cbs_test, num_users, num_docs, num_revisions):
+    log_info("Starting test...")
     start = time.time()
 
-    cluster = Cluster()
+    cluster_conf = setup_1sg_1cbs_test["cluster_config"]
+
+    log_info("Running 'test_bucket_online_offline_resync_with_online'")
+    log_info("Using cluster_conf: {}".format(cluster_conf))
+    log_info("Using num_users: {}".format(num_users))
+    log_info("Using num_docs: {}".format(num_docs))
+    log_info("Using num_revisions: {}".format(num_revisions))
+
+    cluster = Cluster(config=cluster_conf)
     mode = cluster.reset("resources/sync_gateway_configs/bucket_online_offline/db_online_offline_access_all_cc.json")
 
     init_completed = time.time()
-    log.info("Initialization completed. Time taken:{}s".format(init_completed - start))
+    log_info("Initialization completed. Time taken:{}s".format(init_completed - start))
 
     num_channels = 1
     channels = ["channel-" + str(i) for i in range(num_channels)]
@@ -139,17 +173,17 @@ def test_bucket_online_offline_resync_with_online(num_users, num_docs, num_revis
     admin = Admin(sgs[0])
 
     # Register User
-    log.info("Register User")
+    log_info("Register User")
     user_objects = admin.register_bulk_users(target=sgs[0], db="db", name_prefix="User",
                                              number=num_users, password=password, channels=channels)
     user_x = admin.register_user(target=sgs[0], db="db", name="User-X", password="password", channels=["channel_x"])
 
     # Add User
-    log.info("Add docs")
+    log_info("Add docs")
     in_parallel(user_objects, 'add_docs', num_docs)
 
     # Update docs
-    log.info("Update docs")
+    log_info("Update docs")
     in_parallel(user_objects, 'update_docs', num_revisions)
 
     time.sleep(10)
@@ -163,7 +197,7 @@ def test_bucket_online_offline_resync_with_online(num_users, num_docs, num_revis
 
     expected_docs = num_users * num_docs
     for user_obj, docs in recieved_docs.items():
-        log.info('User {} got {} docs, expected docs: {}'.format(user_obj.name, docs, expected_docs))
+        log_info('User {} got {} docs, expected docs: {}'.format(user_obj.name, docs, expected_docs))
         assert docs == expected_docs
 
 
@@ -176,11 +210,11 @@ def test_bucket_online_offline_resync_with_online(num_users, num_docs, num_revis
     for user_obj, docs_revision_dict in docs_rev_dict.items():
         for doc_id in docs_revision_dict.keys():
             rev = docs_revision_dict[doc_id]
-            log.info('User {} doc_id {} has {} revisions, expected revision: {}'.format(user_obj.name,
+            log_info('User {} doc_id {} has {} revisions, expected revision: {}'.format(user_obj.name,
                                                                                         doc_id, rev, expected_revision))
             if rev != expected_revision:
                 rev_errors.append(doc_id)
-                log.error('User {} doc_id got revision {}, expected revision {}'.format(user_obj.name,
+                log_error('User {} doc_id got revision {}, expected revision {}'.format(user_obj.name,
                                                                                         doc_id, rev, expected_revision))
 
     assert len(rev_errors) == 0
@@ -196,41 +230,41 @@ def test_bucket_online_offline_resync_with_online(num_users, num_docs, num_revis
     restart_status = cluster.sync_gateways[0].restart("resources/sync_gateway_configs/bucket_online_offline/db_online_offline_access_restricted_cc.json")
     assert restart_status == 0
 
-    log.info("Sleeping....")
+    log_info("Sleeping....")
     time.sleep(10)
     pool = ThreadPool(processes=1)
 
-    log.info("Restarted SG....")
+    log_info("Restarted SG....")
     time.sleep(5)
 
     db_info = admin.get_db_info("db")
-    log.info("Status of db = {}".format(db_info["state"]))
+    log_info("Status of db = {}".format(db_info["state"]))
     assert db_info["state"] == "Offline"
 
     try:
         async_resync_result = pool.apply_async(admin.db_resync, ("db",))
-        log.info("resync issued !!!!!!")
+        log_info("resync issued !!!!!!")
     except Exception as e:
-        log.info("Catch resync exception: {}".format(e))
+        log_info("Catch resync exception: {}".format(e))
 
     time.sleep(1)
     resync_occured = False
 
     for i in range(20):
         db_info = admin.get_db_info("db")
-        log.info("Status of db = {}".format(db_info["state"]))
+        log_info("Status of db = {}".format(db_info["state"]))
         if db_info["state"] == "Resyncing":
             resync_occured = True
-            log.info("Resync occured")
+            log_info("Resync occured")
             try:
                 status = admin.bring_db_online(db="db")
-                log.info("online issued !!!!!online request status: {}".format(status))
+                log_info("online issued !!!!!online request status: {}".format(status))
             except HTTPError as e:
-                log.info("status = {} exception = {}".format(status, e.response.status_code))
+                log_info("status = {} exception = {}".format(status, e.response.status_code))
                 if e.response.status_code == 503:
-                    log.info("Got correct error code")
+                    log_info("Got correct error code")
                 else:
-                    log.info("Got some other error failing test")
+                    log_info("Got some other error failing test")
                     assert False
 
         time.sleep(1)
@@ -240,16 +274,16 @@ def test_bucket_online_offline_resync_with_online(num_users, num_docs, num_revis
     time.sleep(10)
 
     status = admin.bring_db_online(db="db")
-    log.info("online request issued !!!!! response status: {}".format(status))
+    log_info("online request issued !!!!! response status: {}".format(status))
 
     time.sleep(5)
     db_info = admin.get_db_info("db")
-    log.info("Status of db = {}".format(db_info["state"]))
+    log_info("Status of db = {}".format(db_info["state"]))
     assert db_info["state"] == "Online"
 
     resync_result = async_resync_result.get()
-    log.info("resync_changes {}".format(resync_result))
-    log.info("expecting num_changes  == num_docs {} * num_users {}".format( num_docs, num_users))
+    log_info("resync_changes {}".format(resync_result))
+    log_info("expecting num_changes  == num_docs {} * num_users {}".format( num_docs, num_users))
     assert resync_result['payload']['changes'] == num_docs * num_users
     assert resync_result['status_code'] == 200
 
@@ -267,10 +301,10 @@ def test_bucket_online_offline_resync_with_online(num_users, num_docs, num_revis
     assert len(errors) == 0
 
     end = time.time()
-    log.info("Test ended.")
-    log.info("Main test duration: {}".format(end - init_completed))
-    log.info("Test setup time: {}".format(init_completed - start))
-    log.info("Total Time taken: {}s".format(end - start))
+    log_info("Test ended.")
+    log_info("Main test duration: {}".format(end - init_completed))
+    log_info("Test setup time: {}".format(init_completed - start))
+    log_info("Total Time taken: {}s".format(end - start))
 
 
 # implements scenario: 12 and 13
@@ -279,15 +313,29 @@ def test_bucket_online_offline_resync_with_online(num_users, num_docs, num_revis
 # #13
 # With DB running a _resync, make REST API call to get DB runtime details /db/,
 # expected result 'state' property with value 'Resyncing' is returned.
-def test_bucket_online_offline_resync_with_offline(num_users, num_docs, num_revisions):
-    log.info("Starting test...")
+@pytest.mark.sanity
+@pytest.mark.syncgateway
+@pytest.mark.onlineoffline
+@pytest.mark.usefixtures("setup_1sg_1cbs_suite")
+@pytest.mark.parametrize("num_users, num_docs, num_revisions", [
+    (5, 100, 10),
+])
+def test_bucket_online_offline_resync_with_offline(setup_1sg_1cbs_test, num_users, num_docs, num_revisions):
     start = time.time()
 
-    cluster = Cluster()
+    cluster_conf = setup_1sg_1cbs_test["cluster_config"]
+
+    log_info("Running 'test_bucket_online_offline_resync_with_online'")
+    log_info("Using cluster_conf: {}".format(cluster_conf))
+    log_info("Using num_users: {}".format(num_users))
+    log_info("Using num_docs: {}".format(num_docs))
+    log_info("Using num_revisions: {}".format(num_revisions))
+
+    cluster = Cluster(config=cluster_conf)
     mode = cluster.reset("resources/sync_gateway_configs/bucket_online_offline/db_online_offline_access_all_cc.json")
 
     init_completed = time.time()
-    log.info("Initialization completed. Time taken:{}s".format(init_completed - start))
+    log_info("Initialization completed. Time taken:{}s".format(init_completed - start))
 
     num_channels = 1
     channels = ["channel-" + str(i) for i in range(num_channels)]
@@ -298,17 +346,17 @@ def test_bucket_online_offline_resync_with_offline(num_users, num_docs, num_revi
     admin = Admin(sgs[0])
 
     # Register User
-    log.info("Register User")
+    log_info("Register User")
     user_objects = admin.register_bulk_users(target=sgs[0], db="db", name_prefix="User",
                                              number=num_users, password=password, channels=channels)
     user_x = admin.register_user(target=sgs[0], db="db", name="User-X", password="password", channels=["channel_x"])
 
     # Add User
-    log.info("Add docs")
+    log_info("Add docs")
     in_parallel(user_objects, 'add_docs', num_docs)
 
     # Update docs
-    log.info("Update docs")
+    log_info("Update docs")
     in_parallel(user_objects, 'update_docs', num_revisions)
 
     time.sleep(10)
@@ -322,7 +370,7 @@ def test_bucket_online_offline_resync_with_offline(num_users, num_docs, num_revi
 
     expected_docs = num_users * num_docs
     for user_obj, docs in recieved_docs.items():
-        log.info('User {} got {} docs, expected docs: {}'.format(user_obj.name, docs, expected_docs))
+        log_info('User {} got {} docs, expected docs: {}'.format(user_obj.name, docs, expected_docs))
         assert docs == expected_docs
 
 
@@ -335,11 +383,11 @@ def test_bucket_online_offline_resync_with_offline(num_users, num_docs, num_revi
     for user_obj, docs_revision_dict in docs_rev_dict.items():
         for doc_id in docs_revision_dict.keys():
             rev = docs_revision_dict[doc_id]
-            log.info('User {} doc_id {} has {} revisions, expected revision: {}'.format(user_obj.name,
+            log_info('User {} doc_id {} has {} revisions, expected revision: {}'.format(user_obj.name,
                                                                                         doc_id, rev, expected_revision))
             if rev != expected_revision:
                 rev_errors.append(doc_id)
-                log.error('User {} doc_id got revision {}, expected revision {}'.format(user_obj.name,
+                log_error('User {} doc_id got revision {}, expected revision {}'.format(user_obj.name,
                                                                                         doc_id, rev, expected_revision))
 
     assert len(rev_errors) == 0
@@ -355,40 +403,40 @@ def test_bucket_online_offline_resync_with_offline(num_users, num_docs, num_revi
     restart_status = cluster.sync_gateways[0].restart("resources/sync_gateway_configs/bucket_online_offline/db_online_offline_access_restricted_cc.json")
     assert restart_status == 0
 
-    log.info("Sleeping....")
+    log_info("Sleeping....")
     time.sleep(10)
     pool = ThreadPool(processes=1)
 
-    log.info("Restarted SG....")
+    log_info("Restarted SG....")
     time.sleep(5)
 
     db_info = admin.get_db_info("db")
-    log.info("Status of db = {}".format(db_info["state"]))
+    log_info("Status of db = {}".format(db_info["state"]))
     assert db_info["state"] == "Offline"
 
     try:
         async_resync_result = pool.apply_async(admin.db_resync, ("db",))
-        log.info("resync issued !!!!!!")
+        log_info("resync issued !!!!!!")
     except Exception as e:
-        log.info("Catch resync exception: {}".format(e))
+        log_info("Catch resync exception: {}".format(e))
 
     time.sleep(1)
     resync_occured = False
 
     for i in range(20):
         db_info = admin.get_db_info("db")
-        log.info("Status of db = {}".format(db_info["state"]))
+        log_info("Status of db = {}".format(db_info["state"]))
         if db_info["state"] == "Resyncing":
             resync_occured = True
-            log.info("Resync occured")
+            log_info("Resync occured")
             try:
                 status = admin.get_db_info(db="db")
-                log.info("Got db_info request status: {}".format(status))
+                log_info("Got db_info request status: {}".format(status))
             except HTTPError as e:
-                log.info("status = {} exception = {}".format(status, e.response.status_code))
+                log_info("status = {} exception = {}".format(status, e.response.status_code))
                 assert False
             else:
-                log.info("Got 200 ok for supported operation")
+                log_info("Got 200 ok for supported operation")
 
 
         time.sleep(1)
@@ -398,16 +446,16 @@ def test_bucket_online_offline_resync_with_offline(num_users, num_docs, num_revi
     time.sleep(10)
 
     status = admin.bring_db_online(db="db")
-    log.info("online request issued !!!!! response status: {}".format(status))
+    log_info("online request issued !!!!! response status: {}".format(status))
 
     time.sleep(5)
     db_info = admin.get_db_info("db")
-    log.info("Status of db = {}".format(db_info["state"]))
+    log_info("Status of db = {}".format(db_info["state"]))
     assert db_info["state"] == "Online"
 
     resync_result = async_resync_result.get()
-    log.info("resync_changes {}".format(resync_result))
-    log.info("expecting num_changes  == num_docs {} * num_users {}".format( num_docs, num_users))
+    log_info("resync_changes {}".format(resync_result))
+    log_info("expecting num_changes  == num_docs {} * num_users {}".format( num_docs, num_users))
     assert resync_result['payload']['changes'] == num_docs * num_users
     assert resync_result['status_code'] == 200
 
@@ -425,7 +473,7 @@ def test_bucket_online_offline_resync_with_offline(num_users, num_docs, num_revi
     assert len(errors) == 0
 
     end = time.time()
-    log.info("Test ended.")
-    log.info("Main test duration: {}".format(end - init_completed))
-    log.info("Test setup time: {}".format(init_completed - start))
-    log.info("Total Time taken: {}s".format(end - start))
+    log_info("Test ended.")
+    log_info("Main test duration: {}".format(end - init_completed))
+    log_info("Test setup time: {}".format(init_completed - start))
+    log_info("Total Time taken: {}s".format(end - start))

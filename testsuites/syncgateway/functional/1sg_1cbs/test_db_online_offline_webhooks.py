@@ -1,24 +1,40 @@
 import time
+import pytest
 
 from testkit.admin import Admin
 from testkit.cluster import Cluster
 from testkit.web_server import WebServer
 from testkit.parallelize import *
 
-import logging
-log = logging.getLogger(settings.LOGGER)
+from keywords.utils import log_info
 
 
-def test_webhooks(num_users, num_channels, num_docs, num_revisions):
+@pytest.mark.sanity
+@pytest.mark.syncgateway
+@pytest.mark.onlineoffline
+@pytest.mark.webhooks
+@pytest.mark.usefixtures("setup_1sg_1cbs_suite")
+@pytest.mark.parametrize("num_users, num_channels, num_docs, num_revisions", [
+    (5, 1, 1, 2),
+])
+def test_webhooks(setup_1sg_1cbs_test, num_users, num_channels, num_docs, num_revisions):
 
-    log.info("Starting test...")
     start = time.time()
 
-    cluster = Cluster()
+    cluster_conf = setup_1sg_1cbs_test["cluster_config"]
+
+    log_info("Running 'test_webhooks'")
+    log_info("Using cluster_conf: {}".format(cluster_conf))
+    log_info("Using num_users: {}".format(num_users))
+    log_info("Using num_channels: {}".format(num_channels))
+    log_info("Using num_docs: {}".format(num_docs))
+    log_info("Using num_revisions: {}".format(num_revisions))
+
+    cluster = Cluster(config=cluster_conf)
     mode = cluster.reset(config_path="resources/sync_gateway_configs/sync_gateway_webhook_cc.json")
 
     init_completed = time.time()
-    log.info("Initialization completed. Time taken:{}s".format(init_completed - start))
+    log_info("Initialization completed. Time taken:{}s".format(init_completed - start))
 
     channels = ["channel-" + str(i) for i in range(num_channels)]
     password = "password"
@@ -30,22 +46,22 @@ def test_webhooks(num_users, num_channels, num_docs, num_revisions):
     admin = Admin(sgs[0])
 
     # Register User
-    log.info("Register User")
+    log_info("Register User")
     user_objects = admin.register_bulk_users(target=sgs[0], db="db", name_prefix="User",
                                              number=num_users, password=password, channels=channels)
 
     # Add User
-    log.info("Add docs")
+    log_info("Add docs")
     in_parallel(user_objects, 'add_docs', num_docs)
 
     # Update docs
-    log.info("Update docs")
+    log_info("Update docs")
     in_parallel(user_objects, 'update_docs', num_revisions)
     time.sleep(30)
     ws.stop()
     expected_events = (num_users * num_docs * num_revisions) + (num_users * num_docs)
     received_events = len(ws.get_data())
-    log.info("expected_events: {} received_events {}".format(expected_events, received_events))
+    log_info("expected_events: {} received_events {}".format(expected_events, received_events))
     assert expected_events == received_events
 
     # Verify all sync_gateways are running
@@ -54,16 +70,32 @@ def test_webhooks(num_users, num_channels, num_docs, num_revisions):
 
 
 # implements scenarios: 18 and 19
-def test_db_online_offline_webhooks_offline(num_users, num_channels, num_docs, num_revisions):
+@pytest.mark.sanity
+@pytest.mark.syncgateway
+@pytest.mark.onlineoffline
+@pytest.mark.webhooks
+@pytest.mark.usefixtures("setup_1sg_1cbs_suite")
+@pytest.mark.parametrize("num_users, num_channels, num_docs, num_revisions", [
+    (5, 1, 1, 2),
+])
+def test_db_online_offline_webhooks_offline(setup_1sg_1cbs_test, num_users, num_channels, num_docs, num_revisions):
 
-    log.info("Starting test...")
     start = time.time()
 
-    cluster = Cluster()
+    cluster_conf = setup_1sg_1cbs_test["cluster_config"]
+
+    log_info("Running 'test_db_online_offline_webhooks_offline'")
+    log_info("Using cluster_conf: {}".format(cluster_conf))
+    log_info("Using num_users: {}".format(num_users))
+    log_info("Using num_channels: {}".format(num_channels))
+    log_info("Using num_docs: {}".format(num_docs))
+    log_info("Using num_revisions: {}".format(num_revisions))
+
+    cluster = Cluster(config=cluster_conf)
     mode = cluster.reset(config_path="resources/sync_gateway_configs/sync_gateway_webhook_cc.json")
 
     init_completed = time.time()
-    log.info("Initialization completed. Time taken:{}s".format(init_completed - start))
+    log_info("Initialization completed. Time taken:{}s".format(init_completed - start))
 
     channels = ["channel-" + str(i) for i in range(num_channels)]
     password = "password"
@@ -75,41 +107,41 @@ def test_db_online_offline_webhooks_offline(num_users, num_channels, num_docs, n
     admin = Admin(sgs[0])
 
     # Register User
-    log.info("Register User")
+    log_info("Register User")
     user_objects = admin.register_bulk_users(target=sgs[0], db="db", name_prefix="User",
                                              number=num_users, password=password, channels=channels)
 
     # Add User
-    log.info("Add docs")
+    log_info("Add docs")
     in_parallel(user_objects, 'add_docs', num_docs)
 
     # Update docs
-    log.info("Update docs")
+    log_info("Update docs")
     in_parallel(user_objects, 'update_docs', num_revisions)
     time.sleep(10)
 
     admin.take_db_offline("db")
     time.sleep(5)
     db_info = admin.get_db_info("db")
-    log.info("Expecting db state {} found db state {}".format("Offline",db_info['state']))
+    log_info("Expecting db state {} found db state {}".format("Offline",db_info['state']))
     assert db_info["state"] == "Offline"
 
     webhook_events = ws.get_data()
     time.sleep(5)
-    log.info("webhook event {}".format(webhook_events))
+    log_info("webhook event {}".format(webhook_events))
     last_event = webhook_events[-1]
     assert last_event['state'] == 'offline'
 
     admin.bring_db_online("db")
     time.sleep(5)
     db_info = admin.get_db_info("db")
-    log.info("Expecting db state {} found db state {}".format("Online", db_info['state']))
+    log_info("Expecting db state {} found db state {}".format("Online", db_info['state']))
     assert db_info["state"] == "Online"
     webhook_events = ws.get_data()
     last_event = webhook_events[-1]
     assert last_event['state'] == 'online'
     time.sleep(10)
-    log.info("webhook event {}".format(webhook_events))
+    log_info("webhook event {}".format(webhook_events))
 
 
     ws.stop()
@@ -120,16 +152,32 @@ def test_db_online_offline_webhooks_offline(num_users, num_channels, num_docs, n
 
 
 # implements scenarios: 21
-def test_db_online_offline_webhooks_offline_two(num_users, num_channels, num_docs, num_revisions):
+@pytest.mark.sanity
+@pytest.mark.syncgateway
+@pytest.mark.onlineoffline
+@pytest.mark.webhooks
+@pytest.mark.usefixtures("setup_1sg_1cbs_suite")
+@pytest.mark.parametrize("num_users, num_channels, num_docs, num_revisions", [
+    (5, 1, 1, 2),
+])
+def test_db_online_offline_webhooks_offline_two(setup_1sg_1cbs_test, num_users, num_channels, num_docs, num_revisions):
 
-    log.info("Starting test...")
     start = time.time()
 
-    cluster = Cluster()
+    cluster_conf = setup_1sg_1cbs_test["cluster_config"]
+
+    log_info("Running 'test_db_online_offline_webhooks_offline_two'")
+    log_info("Using cluster_conf: {}".format(cluster_conf))
+    log_info("Using num_users: {}".format(num_users))
+    log_info("Using num_channels: {}".format(num_channels))
+    log_info("Using num_docs: {}".format(num_docs))
+    log_info("Using num_revisions: {}".format(num_revisions))
+
+    cluster = Cluster(config=cluster_conf)
     mode = cluster.reset(config_path="resources/sync_gateway_configs/sync_gateway_webhook_cc.json")
 
     init_completed = time.time()
-    log.info("Initialization completed. Time taken:{}s".format(init_completed - start))
+    log_info("Initialization completed. Time taken:{}s".format(init_completed - start))
 
     channels = ["channel-" + str(i) for i in range(num_channels)]
     password = "password"
@@ -141,28 +189,28 @@ def test_db_online_offline_webhooks_offline_two(num_users, num_channels, num_doc
     admin = Admin(sgs[0])
 
     # Register User
-    log.info("Register User")
+    log_info("Register User")
     user_objects = admin.register_bulk_users(target=sgs[0], db="db", name_prefix="User",
                                              number=num_users, password=password, channels=channels)
 
     # Add User
-    log.info("Add docs")
+    log_info("Add docs")
     in_parallel(user_objects, 'add_docs', num_docs)
 
     # Update docs
-    log.info("Update docs")
+    log_info("Update docs")
     in_parallel(user_objects, 'update_docs', num_revisions)
     time.sleep(10)
 
     status = cluster.servers[0].delete_bucket("data-bucket")
     assert status == 0
 
-    log.info("Sleeping for 120 seconds...")
+    log_info("Sleeping for 120 seconds...")
     time.sleep(120)
 
     webhook_events = ws.get_data()
     time.sleep(5)
-    log.info("webhook event {}".format(webhook_events))
+    log_info("webhook event {}".format(webhook_events))
     last_event = webhook_events[-1]
     assert last_event['state'] == 'offline'
 

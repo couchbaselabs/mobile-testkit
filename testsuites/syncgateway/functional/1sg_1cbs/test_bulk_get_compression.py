@@ -1,5 +1,5 @@
 import concurrent.futures
-
+import pytest
 import subprocess
 import json
 import os
@@ -9,8 +9,9 @@ from testkit.cluster import Cluster
 from testkit.data import Data
 from testkit.admin import Admin
 
-import logging
-log = logging.getLogger(testkit.settings.LOGGER)
+from keywords.utils import log_info
+from keywords.constants import SYNC_GATEWAY_CONFIGS
+
 
 uncompressed_size = 6320500
 part_encoded_size = 2244500
@@ -46,7 +47,7 @@ def issue_request(target, user_agent, accept_encoding, x_accept_part_encoding, p
         json.dumps(payload)
     )
 
-    log.info("Request: {}".format(bulk_get_curl_command))
+    log_info("Request: {}".format(bulk_get_curl_command))
 
     with open("response", "w") as f:
         subprocess.call(bulk_get_curl_command, shell=True, stdout=f)
@@ -94,16 +95,37 @@ def verify_response_size(user_agent, accept_encoding, x_accept_part_encoding, re
         raise ValueError("Unsupported user agent")
 
 
-def test_bulk_get_compression(conf, num_docs, accept_encoding=None, x_accept_part_encoding=None, user_agent=None):
+@pytest.mark.sanity
+@pytest.mark.syncgateway
+@pytest.mark.usefixtures("setup_1sg_1cbs_suite")
+@pytest.mark.parametrize("sg_conf, num_docs, accept_encoding, x_accept_part_encoding, user_agent", [
+    ("{}/sync_gateway_default_cc.json".format(SYNC_GATEWAY_CONFIGS), 300, None, None, None),
+    ("{}/sync_gateway_default_cc.json".format(SYNC_GATEWAY_CONFIGS), 300, None, None, "CouchbaseLite/1.1"),
+    ("{}/sync_gateway_default_cc.json".format(SYNC_GATEWAY_CONFIGS), 300, "gzip", None, None),
+    ("{}/sync_gateway_default_cc.json".format(SYNC_GATEWAY_CONFIGS), 300, "gzip", None, "CouchbaseLite/1.1"),
+    ("{}/sync_gateway_default_cc.json".format(SYNC_GATEWAY_CONFIGS), 300, None, "gzip", None),
+    ("{}/sync_gateway_default_cc.json".format(SYNC_GATEWAY_CONFIGS), 300, None, "gzip", "CouchbaseLite/1.1"),
+    ("{}/sync_gateway_default_cc.json".format(SYNC_GATEWAY_CONFIGS), 300, "gzip", "gzip", None),
+    ("{}/sync_gateway_default_cc.json".format(SYNC_GATEWAY_CONFIGS), 300, "gzip", "gzip", "CouchbaseLite/1.1"),
+    ("{}/sync_gateway_default_cc.json".format(SYNC_GATEWAY_CONFIGS), 300, None, None, "CouchbaseLite/1.2"),
+    ("{}/sync_gateway_default_cc.json".format(SYNC_GATEWAY_CONFIGS), 300, "gzip", None, "CouchbaseLite/1.2"),
+    ("{}/sync_gateway_default_cc.json".format(SYNC_GATEWAY_CONFIGS), 300, None, "gzip", "CouchbaseLite/1.2"),
+    ("{}/sync_gateway_default_cc.json".format(SYNC_GATEWAY_CONFIGS), 300, "gzip", "gzip", "CouchbaseLite/1.2")
+])
+def test_bulk_get_compression(setup_1sg_1cbs_test, sg_conf, num_docs, accept_encoding, x_accept_part_encoding, user_agent):
 
-    log.info("Using conf: {}".format(conf))
-    log.info("Using num_docs: {}".format(num_docs))
-    log.info("Using user_agent: {}".format(user_agent))
-    log.info("Using accept_encoding: {}".format(accept_encoding))
-    log.info("Using x_accept_part_encoding: {}".format(x_accept_part_encoding))
+    cluster_config = setup_1sg_1cbs_test["cluster_config"]
 
-    cluster = Cluster()
-    mode = cluster.reset(config_path=conf)
+    log_info("Running 'test_bulk_get_compression'")
+    log_info("Using cluster_config: {}".format(cluster_config))
+    log_info("Using sg_conf: {}".format(sg_conf))
+    log_info("Using num_docs: {}".format(num_docs))
+    log_info("Using user_agent: {}".format(user_agent))
+    log_info("Using accept_encoding: {}".format(accept_encoding))
+    log_info("Using x_accept_part_encoding: {}".format(x_accept_part_encoding))
+
+    cluster = Cluster(config=cluster_config)
+    mode = cluster.reset(config_path=sg_conf)
     admin = Admin(cluster.sync_gateways[0])
 
     user = admin.register_user(cluster.sync_gateways[0], "db", "seth", "password", channels=["seth"])
@@ -114,16 +136,16 @@ def test_bulk_get_compression(conf, num_docs, accept_encoding=None, x_accept_par
         futures = [executor.submit(user.add_doc, doc_id="test-{}".format(i), content=doc_body) for i in range(num_docs)]
         for future in concurrent.futures.as_completed(futures):
             try:
-                log.info(future.result())
+                log_info(future.result())
             except Exception as e:
-                log.error("Failed to push doc: {}".format(e))
+                log_info("Failed to push doc: {}".format(e))
 
     docs = [{"id": "test-{}".format(i)} for i in range(num_docs)]
     payload = {"docs": docs}
 
     # Issue curl request and get size of request
     response_size = issue_request(cluster.sync_gateways[0], user_agent, accept_encoding, x_accept_part_encoding, payload)
-    log.info("Response size: {}".format(response_size))
+    log_info("Response size: {}".format(response_size))
 
     # Verfiy size matches expected size
     verify_response_size(user_agent, accept_encoding, x_accept_part_encoding, response_size)

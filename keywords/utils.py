@@ -17,6 +17,21 @@ def log_info(message, is_verify=False):
     logging.info(message)
 
 
+def log_debug(message):
+    """Wrapper around logging.debug if we want to add hooks in the future."""
+    logging.debug(message)
+
+
+def log_error(message):
+    """Wrapper around logging.error if we want to add hooks in the future."""
+    logging.error(message)
+
+
+def log_warn(message):
+    """Wrapper around logging.warn if we want to add hooks in the future."""
+    logging.warn(message)
+
+
 def log_r(request, info=True):
     request_summary = "{0} {1} {2}".format(
         request.request.method,
