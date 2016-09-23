@@ -1,3 +1,4 @@
+[![Stories in Ready](https://badge.waffle.io/couchbaselabs/mobile-testkit.png?label=ready&title=Ready)](https://waffle.io/couchbaselabs/mobile-testkit)
 
 This repository contains Mobile QE Functional / Integration tests. 
 
