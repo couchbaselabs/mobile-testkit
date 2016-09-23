@@ -40,5 +40,6 @@ def setup_1sg_1cbs_suite(request):
     yield
 
     log_info("Tearing down suite ...")
+    cluster_helper.unset_cluster_config()
 
 

@@ -64,6 +64,7 @@ def setup_1sg_1ac_1cbs_suite(request):
     yield
 
     log_info("Tearing down suite ...")
+    cluster_helper.unset_cluster_config()
 
 
 # This is called before each test and will yield the cluster config to each test in the file
