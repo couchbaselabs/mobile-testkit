@@ -20,7 +20,7 @@ def multiple_db_unique_data_bucket_unique_index_bucket(cluster_conf, sg_conf, nu
 
     # 2 dbs have unique data and unique index buckets
     cluster = Cluster(config=cluster_conf)
-    mode = cluster.reset(config_path=sg_conf)
+    mode = cluster.reset(sg_config_path=sg_conf)
 
     num_db_users = num_users
     num_db2_users = num_users
@@ -68,7 +68,7 @@ def multiple_db_single_data_bucket_single_index_bucket(cluster_conf, sg_conf, nu
 
     # 2 dbs share the same data and index bucket
     cluster = Cluster(config=cluster_conf)
-    mode = cluster.reset(config_path=sg_conf)
+    mode = cluster.reset(sg_config_path=sg_conf)
 
     num_db_users = num_users
     num_db2_users = num_users

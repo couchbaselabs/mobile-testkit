@@ -15,7 +15,7 @@ def multiple_users_multiple_channels(cluster_conf, sg_conf):
     log_info("conf: {}".format(sg_conf))
 
     cluster = Cluster(config=cluster_conf)
-    mode = cluster.reset(config_path=sg_conf)
+    mode = cluster.reset(sg_config_path=sg_conf)
 
     num_docs_seth = 1000
     num_docs_adam = 2000
@@ -68,7 +68,7 @@ def muliple_users_single_channel(cluster_conf, sg_conf):
     log_info("conf: {}".format(sg_conf))
 
     cluster = Cluster(config=cluster_conf)
-    mode = cluster.reset(config_path=sg_conf)
+    mode = cluster.reset(sg_config_path=sg_conf)
 
     sgs = cluster.sync_gateways
 
@@ -111,7 +111,7 @@ def single_user_multiple_channels(cluster_conf, sg_conf):
     log_info("conf: {}".format(sg_conf))
 
     cluster = Cluster(config=cluster_conf)
-    mode = cluster.reset(config_path=sg_conf)
+    mode = cluster.reset(sg_config_path=sg_conf)
 
     start = time.time()
     sgs = cluster.sync_gateways
@@ -148,7 +148,7 @@ def single_user_single_channel(cluster_conf, sg_conf):
     log_info("conf: {}".format(sg_conf))
 
     cluster = Cluster(config=cluster_conf)
-    mode = cluster.reset(config_path=sg_conf)
+    mode = cluster.reset(sg_config_path=sg_conf)
 
     sgs = cluster.sync_gateways
 

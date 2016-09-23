@@ -24,7 +24,7 @@ def mulitple_users_mulitiple_channels_mulitple_revisions(cluster_conf, sg_conf, 
     start = time.time()
 
     cluster = Cluster(config=cluster_conf)
-    mode = cluster.reset(config_path=sg_conf)
+    mode = cluster.reset(sg_config_path=sg_conf)
 
     init_completed = time.time()
     log_info("Initialization completed. Time taken:{}s".format(init_completed - start))

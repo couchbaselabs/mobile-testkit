@@ -19,7 +19,7 @@ def seq(cluster_conf, sg_conf, num_users, num_docs, num_revisions):
     log_info("num_revisions: {}".format(num_revisions))
 
     cluster = Cluster(config=cluster_conf)
-    mode = cluster.reset(config_path=sg_conf)
+    mode = cluster.reset(sg_config_path=sg_conf)
     admin = Admin(cluster.sync_gateways[0])
 
     # all users will share docs due to having the same channel

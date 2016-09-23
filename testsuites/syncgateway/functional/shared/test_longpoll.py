@@ -22,7 +22,7 @@ def longpoll_changes_parametrized(cluster_conf, sg_conf, num_docs, num_revisions
     log_info("num_revisions: {}".format(num_revisions))
 
     cluster = Cluster(config=cluster_conf)
-    mode = cluster.reset(config_path=sg_conf)
+    mode = cluster.reset(sg_config_path=sg_conf)
 
     admin = Admin(cluster.sync_gateways[0])
     seth = admin.register_user(target=cluster.sync_gateways[0], db="db", name="seth", password="password", channels=["ABC", "TERMINATE"])
@@ -70,7 +70,7 @@ def longpoll_changes_sanity(cluster_conf, sg_conf, num_docs, num_revisions):
     log_info("num_revisions: {}".format(num_revisions))
 
     cluster = Cluster(config=cluster_conf)
-    mode = cluster.reset(config_path=sg_conf)
+    mode = cluster.reset(sg_config_path=sg_conf)
 
     admin = Admin(cluster.sync_gateways[0])
     seth = admin.register_user(target=cluster.sync_gateways[0], db="db", name="seth", password="password", channels=["ABC", "TERMINATE"])

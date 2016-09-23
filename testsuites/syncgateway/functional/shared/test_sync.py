@@ -192,7 +192,7 @@ def sync_role_sanity(cluster_conf, sg_conf):
     log_info("Using sg_conf: {}".format(sg_conf))
 
     cluster = Cluster(config=cluster_conf)
-    mode = cluster.reset(config_path=sg_conf)
+    mode = cluster.reset(sg_config_path=sg_conf)
 
     admin = Admin(cluster.sync_gateways[0])
     admin.create_role(db="db", name="tv_stations", channels=tv_channels)
@@ -253,7 +253,7 @@ def sync_sanity(cluster_conf, sg_conf):
     log_info("Using sg_conf: {}".format(sg_conf))
 
     cluster = Cluster(config=cluster_conf)
-    mode = cluster.reset(config_path=sg_conf)
+    mode = cluster.reset(sg_config_path=sg_conf)
 
     radio_stations = ["KMOW", "HWOD", "KDWB"]
     number_of_docs_per_pusher = 5000
@@ -294,7 +294,7 @@ def sync_sanity_backfill(cluster_conf, sg_conf):
     log_info("Using sg_conf: {}".format(sg_conf))
 
     cluster = Cluster(config=cluster_conf)
-    mode = cluster.reset(config_path=sg_conf)
+    mode = cluster.reset(sg_config_path=sg_conf)
 
     radio_stations = ["KMOW", "HWOD", "KDWB"]
     number_of_docs_per_pusher = 5000
@@ -335,7 +335,7 @@ def sync_require_roles(cluster_conf, sg_conf):
     log_info("Using sg_conf: {}".format(sg_conf))
 
     cluster = Cluster(config=cluster_conf)
-    mode = cluster.reset(config_path=sg_conf)
+    mode = cluster.reset(sg_config_path=sg_conf)
 
     radio_stations = ["KMOW", "HWOD", "KDWB"]
     tv_stations = ["ABC", "CBS", "NBC"]

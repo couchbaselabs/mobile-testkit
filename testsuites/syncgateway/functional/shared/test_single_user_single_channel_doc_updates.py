@@ -23,7 +23,7 @@ def single_user_single_channel_doc_updates(cluster_conf, sg_conf, num_docs, num_
     start = time.time()
 
     cluster = Cluster(config=cluster_conf)
-    mode = cluster.reset(config_path=sg_conf)
+    mode = cluster.reset(sg_config_path=sg_conf)
     num_docs = num_docs
     num_revisions = num_revisions
     username = "User-1"
