@@ -5,6 +5,7 @@ from keywords.constants import SYNC_GATEWAY_CONFIGS
 from keywords.utils import log_info
 from keywords.ClusterKeywords import ClusterKeywords
 from keywords.Logging import Logging
+from libraries.NetworkUtils import NetworkUtils
 
 from testsuites.syncgateway.functional.shared.test_continuous import continuous_changes_parametrized
 from testsuites.syncgateway.functional.shared.test_continuous import continuous_changes_sanity
@@ -78,6 +79,9 @@ def setup_1sg_1ac_1cbs_test(request):
     yield {"cluster_config": os.environ["CLUSTER_CONFIG"]}
 
     log_info("Tearing down test '{}'".format(test_name))
+
+    network_utils = NetworkUtils()
+    network_utils.list_connections()
 
     # if the test failed pull logs
     if request.node.rep_call.failed:

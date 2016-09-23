@@ -13,8 +13,7 @@ from keywords.utils import log_info
 from keywords.ClusterKeywords import ClusterKeywords
 from keywords.constants import SYNC_GATEWAY_CONFIGS
 from keywords.Logging import Logging
-
-import testkit.settings
+from libraries.NetworkUtils import NetworkUtils
 
 
 # This will be called once for the first test in the directory.
@@ -27,7 +26,7 @@ def setup_1sg_2ac_1cbs_suite(request):
     server_version = request.config.getoption("--server-version")
     sync_gateway_version = request.config.getoption("--sync-gateway-version")
 
-    # Set the CLUSTER_CONFIG environment variable to 1sg_1cbs
+    # Set the CLUSTER_CONFIG environment variable to 1sg_2ac_1cbs
     cluster_helper = ClusterKeywords()
     cluster_helper.set_cluster_config("1sg_2ac_1cbs")
 
@@ -56,6 +55,9 @@ def setup_1sg_2ac_1cbs_test(request):
     yield {"cluster_config": os.environ["CLUSTER_CONFIG"]}
 
     log_info("Tearing down test '{}'".format(test_name))
+
+    network_utils = NetworkUtils()
+    network_utils.list_connections()
 
     # if the test failed pull logs
     if request.node.rep_call.failed:

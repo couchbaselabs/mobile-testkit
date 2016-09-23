@@ -11,18 +11,18 @@ class NetworkUtils:
         output = subprocess.check_output("netstat -ant | awk '{print $6}' | sort | uniq -c | sort -n", shell=True)
         print(output)
 
-    def start_packet_capture(self):
-        ansible_runner = AnsibleRunner()
+    def start_packet_capture(self, cluster_config):
+        ansible_runner = AnsibleRunner(config=cluster_config)
         status = ansible_runner.run_ansible_playbook("start-ngrep.yml")
         assert status == 0, "Failed to start packet capture"
 
-    def stop_packet_capture(self):
-        ansible_runner = AnsibleRunner()
+    def stop_packet_capture(self, cluster_config):
+        ansible_runner = AnsibleRunner(config=cluster_config)
         status = ansible_runner.run_ansible_playbook("stop-ngrep.yml")
         assert status == 0, "Failed to stop packet capture"
 
-    def collect_packet_capture(self, test_name):
-        ansible_runner = AnsibleRunner()
+    def collect_packet_capture(self, cluster_config, test_name):
+        ansible_runner = AnsibleRunner(config=cluster_config)
         status = ansible_runner.run_ansible_playbook("collect-ngrep.yml")
         assert status == 0, "Failed to collect packet capture"
 

@@ -9,17 +9,62 @@ from testkit.syncgateway import assert_does_not_have_doc
 from testkit.syncgateway import assert_has_doc
 from requests import HTTPError
 
+import pytest
+
 import time
-import logging 
+import logging
+import os
+
+from keywords.utils import log_info
+from keywords.Logging import Logging
+from libraries.NetworkUtils import NetworkUtils
 
 DB1 = "db1"
 DB2 = "db2"
 DEFAULT_CONFIG_PATH = "resources/sync_gateway_configs/sync_gateway_sg_replicate_cc.json"
 
 
-def test_sg_replicate_basic_test():
+# This is called before each test and will yield the cluster_config to each test in the file
+# After each test_* function, execution will continue from the yield a pull logs on failure
+@pytest.fixture(scope="function")
+def setup_2sg_1cbs_test(request):
 
-    sg1, sg2 = create_sync_gateways(DEFAULT_CONFIG_PATH)
+    cluster_config = os.environ["CLUSTER_CONFIG"]
+
+    network_utils = NetworkUtils()
+    network_utils.start_packet_capture(cluster_config)
+
+    test_name = request.node.name
+    log_info("Setting up test '{}'".format(test_name))
+
+    yield {"cluster_config": cluster_config}
+
+    log_info("Tearing down test '{}'".format(test_name))
+
+    network_utils.list_connections()
+    network_utils.stop_packet_capture(cluster_config)
+    network_utils.collect_packet_capture(cluster_config)
+
+    # if the test failed pull logs
+    if request.node.rep_call.failed:
+        logging_helper = Logging()
+        logging_helper.fetch_and_analyze_logs(cluster_config=cluster_config, test_name=test_name)
+
+
+@pytest.mark.sanity
+@pytest.mark.syncgateway
+@pytest.mark.sgreplicate
+@pytest.mark.usefixtures("setup_2sg_1cbs_suite")
+def test_sg_replicate_basic_test(setup_2sg_1cbs_test):
+
+    cluster_config = setup_2sg_1cbs_test["cluster_config"]
+    log_info("Running 'test_sg_replicate_basic_test'")
+    log_info("Using cluster_config: {}".format(cluster_config))
+
+    sg1, sg2 = create_sync_gateways(
+        cluster_config=cluster_config,
+        sg_config_path=DEFAULT_CONFIG_PATH
+    )
 
     admin = Admin(sg1)
     admin.admin_url = sg1.url
@@ -84,9 +129,20 @@ def test_sg_replicate_basic_test():
     assert_has_doc(sg1_user, doc_id_sg2)
 
 
-def test_sg_replicate_basic_test_channels():
+@pytest.mark.sanity
+@pytest.mark.syncgateway
+@pytest.mark.sgreplicate
+@pytest.mark.usefixtures("setup_2sg_1cbs_suite")
+def test_sg_replicate_basic_test_channels(setup_2sg_1cbs_test):
 
-    sg1, sg2 = create_sync_gateways(DEFAULT_CONFIG_PATH)
+    cluster_config = setup_2sg_1cbs_test["cluster_config"]
+    log_info("Running 'test_sg_replicate_basic_test_channels'")
+    log_info("Using cluster_config: {}".format(cluster_config))
+
+    sg1, sg2 = create_sync_gateways(
+        cluster_config=cluster_config,
+        sg_config_path=DEFAULT_CONFIG_PATH
+    )
 
     admin = Admin(sg1)
     admin.admin_url = sg1.url
@@ -124,9 +180,20 @@ def test_sg_replicate_basic_test_channels():
     assert_has_doc(sg2_user, doc_id_sg1a)
 
 
-def test_sg_replicate_continuous_replication():
+@pytest.mark.sanity
+@pytest.mark.syncgateway
+@pytest.mark.sgreplicate
+@pytest.mark.usefixtures("setup_2sg_1cbs_suite")
+def test_sg_replicate_continuous_replication(setup_2sg_1cbs_test):
 
-    sg1, sg2 = create_sync_gateways(DEFAULT_CONFIG_PATH)
+    cluster_config = setup_2sg_1cbs_test["cluster_config"]
+    log_info("Running 'test_sg_replicate_continuous_replication'")
+    log_info("Using cluster_config: {}".format(cluster_config))
+
+    sg1, sg2 = create_sync_gateways(
+        cluster_config=cluster_config,
+        sg_config_path=DEFAULT_CONFIG_PATH
+    )
 
     # Create users (in order to add docs)
     sg1_user, sg2_user = create_sg_users(sg1, sg2, DB1, DB2)
@@ -185,9 +252,20 @@ def test_sg_replicate_continuous_replication():
     assert_does_not_have_doc(sg2_user, doc_id_3)
 
 
-def test_sg_replicate_delete_db_replication_in_progress():
+@pytest.mark.sanity
+@pytest.mark.syncgateway
+@pytest.mark.sgreplicate
+@pytest.mark.usefixtures("setup_2sg_1cbs_suite")
+def test_sg_replicate_delete_db_replication_in_progress(setup_2sg_1cbs_test):
 
-    sg1, sg2 = create_sync_gateways(DEFAULT_CONFIG_PATH)
+    cluster_config = setup_2sg_1cbs_test["cluster_config"]
+    log_info("Running 'test_sg_replicate_delete_db_replication_in_progress'")
+    log_info("Using cluster_config: {}".format(cluster_config))
+
+    sg1, sg2 = create_sync_gateways(
+        cluster_config=cluster_config,
+        sg_config_path=DEFAULT_CONFIG_PATH
+    )
 
     # Kick off continuous replication
     sg1.start_push_replication(
@@ -210,9 +288,20 @@ def test_sg_replicate_delete_db_replication_in_progress():
     wait_until_active_tasks_empty(sg1)
 
 
-def test_sg_replicate_non_existent_db():
+@pytest.mark.sanity
+@pytest.mark.syncgateway
+@pytest.mark.sgreplicate
+@pytest.mark.usefixtures("setup_2sg_1cbs_suite")
+def test_sg_replicate_non_existent_db(setup_2sg_1cbs_test):
 
-    sg1, sg2 = create_sync_gateways(DEFAULT_CONFIG_PATH)
+    cluster_config = setup_2sg_1cbs_test["cluster_config"]
+    log_info("Running 'test_sg_replicate_non_existent_db'")
+    log_info("Using cluster_config: {}".format(cluster_config))
+
+    sg1, sg2 = create_sync_gateways(
+        cluster_config=cluster_config,
+        sg_config_path=DEFAULT_CONFIG_PATH
+    )
 
     # delete databases if they exist
     try:
@@ -238,7 +327,15 @@ def test_sg_replicate_non_existent_db():
     assert got_exception is True, 'Expected an exception trying to create a replication against non-existent db'
 
 
-def test_sg_replicate_push_async(num_docs):
+@pytest.mark.sanity
+@pytest.mark.syncgateway
+@pytest.mark.sgreplicate
+@pytest.mark.usefixtures("setup_2sg_1cbs_suite")
+@pytest.mark.parametrize("num_docs", [
+    (100),
+    (250)
+])
+def test_sg_replicate_push_async(setup_2sg_1cbs_test, num_docs):
 
     assert num_docs > 0
 
@@ -246,7 +343,14 @@ def test_sg_replicate_push_async(num_docs):
     # push replication and get a missing doc before the replication has
     # a chance to finish.  And then we should later see that doc.
 
-    sg1, sg2 = create_sync_gateways(DEFAULT_CONFIG_PATH)
+    cluster_config = setup_2sg_1cbs_test["cluster_config"]
+    log_info("Running 'test_sg_replicate_push_async'")
+    log_info("Using cluster_config: {}".format(cluster_config))
+
+    sg1, sg2 = create_sync_gateways(
+        cluster_config=cluster_config,
+        sg_config_path=DEFAULT_CONFIG_PATH
+    )
 
     admin = Admin(sg1)
     admin.admin_url = sg1.url
@@ -285,9 +389,20 @@ def test_sg_replicate_push_async(num_docs):
     wait_until_active_tasks_empty(sg1)
 
 
-def test_stop_replication_via_replication_id():
+@pytest.mark.sanity
+@pytest.mark.syncgateway
+@pytest.mark.sgreplicate
+@pytest.mark.usefixtures("setup_2sg_1cbs_suite")
+def test_stop_replication_via_replication_id(setup_2sg_1cbs_test):
 
-    sg1, sg2 = create_sync_gateways(DEFAULT_CONFIG_PATH)
+    cluster_config = setup_2sg_1cbs_test["cluster_config"]
+    log_info("Running 'test_stop_replication_via_replication_id'")
+    log_info("Using cluster_config: {}".format(cluster_config))
+
+    sg1, sg2 = create_sync_gateways(
+        cluster_config=cluster_config,
+        sg_config_path=DEFAULT_CONFIG_PATH
+    )
 
     # Create users (in order to add docs)
     sg1_user, sg2_user = create_sg_users(sg1, sg2, DB1, DB2)
@@ -315,13 +430,24 @@ def test_stop_replication_via_replication_id():
 
     # verify that the replication is stopped
     active_tasks = sg1.admin.get_active_tasks()
-    print "active_tasks after stop: {}".format(active_tasks)
+    log_info("active_tasks after stop: {}".format(active_tasks))
     assert len(active_tasks) == 0
 
 
-def test_replication_config():
+@pytest.mark.sanity
+@pytest.mark.syncgateway
+@pytest.mark.sgreplicate
+@pytest.mark.usefixtures("setup_2sg_1cbs_suite")
+def test_replication_config(setup_2sg_1cbs_test):
 
-    sg1, sg2 = create_sync_gateways("resources/sync_gateway_configs/sync_gateway_sg_replicate_continuous_cc.json")
+    cluster_config = setup_2sg_1cbs_test["cluster_config"]
+    log_info("Running 'test_replication_config'")
+    log_info("Using cluster_config: {}".format(cluster_config))
+
+    sg1, sg2 = create_sync_gateways(
+        cluster_config=cluster_config,
+        sg_config_path="resources/sync_gateway_configs/sync_gateway_sg_replicate_continuous_cc.json"
+    )
 
     # Wait until active_tasks is non empty
     wait_until_active_tasks_non_empty(sg1)
@@ -329,10 +455,10 @@ def test_replication_config():
     pass
 
 
-def create_sync_gateways(config_path):
+def create_sync_gateways(cluster_config, sg_config_path):
 
-    cluster = Cluster()
-    cluster.reset(config_path=config_path)
+    cluster = Cluster(config=cluster_config)
+    cluster.reset(sg_config_path=sg_config_path)
     sg1 = cluster.sync_gateways[0]
     sg2 = cluster.sync_gateways[1]
 

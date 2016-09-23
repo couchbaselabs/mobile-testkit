@@ -1,11 +1,39 @@
 import time
+import os
 import json
 
-import json
+import pytest
+
 from testkit.admin import Admin
 from testkit.cluster import Cluster
 
+from keywords.utils import log_info
+from keywords.Logging import Logging
+from libraries.NetworkUtils import NetworkUtils
+
 from collections import namedtuple
+
+
+# This is called before each test and will yield the cluster_config to each test in the file
+# After each test_* function, execution will continue from the yield a pull logs on failure
+@pytest.fixture(scope="function")
+def setup_2sg_1cbs_test(request):
+
+    test_name = request.node.name
+    log_info("Setting up test '{}'".format(test_name))
+
+    yield {"cluster_config": os.environ["CLUSTER_CONFIG"]}
+
+    log_info("Tearing down test '{}'".format(test_name))
+
+    network_utils = NetworkUtils()
+    network_utils.list_connections()
+
+    # if the test failed pull logs
+    if request.node.rep_call.failed:
+        logging_helper = Logging()
+        logging_helper.fetch_and_analyze_logs(cluster_config=os.environ["CLUSTER_CONFIG"], test_name=test_name)
+
 
 default_config_path_shadower = "resources/sync_gateway_configs/sync_gateway_bucketshadow_cc.json"
 default_config_path_shadower_low_revs = "resources/sync_gateway_configs/sync_gateway_bucketshadow_low_revs_cc.json"
@@ -78,19 +106,29 @@ def init_shadow_cluster(cluster, config_path_shadower, config_path_non_shadower)
     return sc
 
 
-# Validate that Sync Gateway doesn't panic (and instead creates a conflict branch
-# and prints a warning) after doing the following steps:
-# 
-# - Set revs_limit to 5 
-# - Create a doc via SG
-# - Issue a delete operation for that doc via SG
-# - Repeat step 3 5x. (each additional delete will create a new revision in SG, but the delete on the source bucket will fail with the 'not found' error, which also means that upstream_rev won't get incremented
-# - Recreate the doc in the source bucket
-#
-# See https://github.com/couchbaselabs/sync-gateway-testcluster/issues/291#issuecomment-191521993 
-def test_bucket_shadow_low_revs_limit_repeated_deletes():
+@pytest.mark.sanity
+@pytest.mark.syncgateway
+@pytest.mark.bucketshadow
+@pytest.mark.usefixtures("setup_2sg_1cbs_suite")
+def test_bucket_shadow_low_revs_limit_repeated_deletes(setup_2sg_1cbs_test):
+    """
+    Validate that Sync Gateway doesn't panic (and instead creates a conflict branch
+    and prints a warning) after doing the following steps:
 
-    cluster = Cluster()
+    - Set revs_limit to 5
+    - Create a doc via SG
+    - Issue a delete operation for that doc via SG
+    - Repeat step 3 5x. (each additional delete will create a new revision in SG, but the delete on the source bucket will fail with the 'not found' error, which also means that upstream_rev won't get incremented
+    - Recreate the doc in the source bucket
+    See https://github.com/couchbaselabs/sync-gateway-testcluster/issues/291#issuecomment-191521993
+    """
+
+    cluster_config = setup_2sg_1cbs_test["cluster_config"]
+
+    log_info("Running 'test_bucket_shadow_low_revs_limit_repeated_deletes'")
+    log_info("Using cluster_config: {}".format(cluster_config))
+
+    cluster = Cluster(config=cluster_config)
     sc = init_shadow_cluster(cluster,
                              default_config_path_shadower_low_revs,
                              default_config_path_non_shadower_low_revs)
@@ -133,7 +171,11 @@ def test_bucket_shadow_low_revs_limit_repeated_deletes():
     assert len(errors) == 0
     
 
-def test_bucket_shadow_low_revs_limit():
+@pytest.mark.sanity
+@pytest.mark.syncgateway
+@pytest.mark.bucketshadow
+@pytest.mark.usefixtures("setup_2sg_1cbs_suite")
+def test_bucket_shadow_low_revs_limit(setup_2sg_1cbs_test):
     """
     Set revs limit to 40
     Add doc and makes sure it syncs to source bucket
@@ -145,7 +187,13 @@ def test_bucket_shadow_low_revs_limit():
     Look for panics
     (TODO: Update doc in shadow bucket and look for panics?)
     """
-    cluster = Cluster()
+
+    cluster_config = setup_2sg_1cbs_test["cluster_config"]
+
+    log_info("Running 'test_bucket_shadow_low_revs_limit'")
+    log_info("Using cluster_config: {}".format(cluster_config))
+
+    cluster = Cluster(config=cluster_config)
     sc = init_shadow_cluster(cluster, default_config_path_shadower_low_revs, default_config_path_non_shadower_low_revs)
 
     # Write doc into shadower SG
@@ -187,10 +235,19 @@ def test_bucket_shadow_low_revs_limit():
     errors = cluster.verify_alive(sc.mode)
     assert len(errors) == 0
 
-    
-def test_bucket_shadow_multiple_sync_gateways():
 
-    cluster = Cluster()
+@pytest.mark.sanity
+@pytest.mark.syncgateway
+@pytest.mark.bucketshadow
+@pytest.mark.usefixtures("setup_2sg_1cbs_suite")
+def test_bucket_shadow_multiple_sync_gateways(setup_2sg_1cbs_test):
+
+    cluster_config = setup_2sg_1cbs_test["cluster_config"]
+
+    log_info("Running 'test_bucket_shadow_multiple_sync_gateways'")
+    log_info("Using cluster_config: {}".format(cluster_config))
+
+    cluster = Cluster(config=cluster_config)
     sc = init_shadow_cluster(
         cluster,
         default_config_path_shadower,
@@ -294,4 +351,5 @@ def get_doc_from_source_bucket_retry(doc_id, bucket):
             time.sleep(i)
             continue
     return doc 
+
 
