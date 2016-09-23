@@ -1,17 +1,81 @@
-import time
 import concurrent.futures
+import os
+
+import pytest
 
 from keywords.utils import log_info
 from keywords.MobileRestClient import MobileRestClient
 from keywords.ChangesTracker import ChangesTracker
+from keywords.ClusterKeywords import ClusterKeywords
+from keywords.Logging import Logging
+from keywords.constants import SYNC_GATEWAY_CONFIGS
+
+from libraries.NetworkUtils import NetworkUtils
 
 
-def test_load_balance_sanity(cluster_config):
-    log_info(cluster_config)
+# This will be called once for the first test in this file.
+# After all the tests have completed in the directory
+# the function will execute everything after the yield
+@pytest.fixture(scope="module")
+def setup_2sg_1cbs_1lbs_suite(request):
+    log_info("Setting up client sync_gateway suite ...")
 
-    admin_sg_one = cluster_config["sync_gateways"][0]["admin"]
-    sg_one_url = cluster_config["sync_gateways"][0]["public"]
-    lb_url = cluster_config["load_balancers"][0]
+    server_version = request.config.getoption("--server-version")
+    sync_gateway_version = request.config.getoption("--sync-gateway-version")
+
+    # Set the CLUSTER_CONFIG environment variable to 2sg_1cbs_1lbs
+    cluster_helper = ClusterKeywords()
+    cluster_helper.set_cluster_config("2sg_1cbs_1lbs")
+
+    cluster_helper.provision_cluster(
+        cluster_config=os.environ["CLUSTER_CONFIG"],
+        server_version=server_version,
+        sync_gateway_version=sync_gateway_version,
+        sync_gateway_config="{}/sync_gateway_default_functional_tests_di.json".format(SYNC_GATEWAY_CONFIGS)
+    )
+
+    yield
+
+    cluster_helper.unset_cluster_config()
+
+    log_info("Tearing down suite ...")
+
+
+# This is called before each test and will yield the cluster_config to each test in the file
+# After each test_* function, execution will continue from the yield a pull logs on failure
+@pytest.fixture(scope="function")
+def setup_2sg_1cb_1lbs_test(request):
+
+    test_name = request.node.name
+    log_info("Setting up test '{}'".format(test_name))
+
+    yield {"cluster_config": os.environ["CLUSTER_CONFIG"]}
+
+    log_info("Tearing down test '{}'".format(test_name))
+
+    network_utils = NetworkUtils()
+    network_utils.list_connections()
+
+    # if the test failed pull logs
+    if request.node.rep_call.failed:
+        logging_helper = Logging()
+        logging_helper.fetch_and_analyze_logs(cluster_config=os.environ["CLUSTER_CONFIG"], test_name=test_name)
+
+
+@pytest.mark.sanity
+@pytest.mark.syncgateway
+@pytest.mark.nginx
+@pytest.mark.changes
+@pytest.mark.usefixtures(setup_2sg_1cbs_1lbs_suite)
+def test_load_balance_sanity(setup_2sg_1cb_1lbs_test):
+
+    cluster_util = ClusterKeywords()
+
+    cluster_config = setup_2sg_1cb_1lbs_test["cluster_config"]
+    topology = cluster_util.get_cluster_topology(cluster_config)
+
+    admin_sg_one = topology["sync_gateways"][0]["admin"]
+    lb_url = topology["load_balancers"][0]
 
     sg_db = "db"
     num_docs = 1000
