@@ -1,5 +1,6 @@
 import pytest
 
+
 @pytest.hookimpl(tryfirst=True, hookwrapper=True)
 def pytest_runtest_makereport(item, call):
     """Setup hooks to detect test outcome status in all test fixtures.

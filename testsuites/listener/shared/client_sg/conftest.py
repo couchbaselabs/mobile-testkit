@@ -147,4 +147,4 @@ def setup_client_syncgateway_test(request):
     # if the test failed pull logs
     if request.node.rep_call.failed:
         logging_helper = Logging()
-        logging_helper.fetch_and_analyze_logs(test_name)
+        logging_helper.fetch_and_analyze_logs(cluster_config=os.environ["CLUSTER_CONFIG"], test_name=test_name)

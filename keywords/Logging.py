@@ -13,8 +13,9 @@ log = logging.getLogger(testkit.settings.LOGGER)
 
 from constants import *
 
-def fetch_sync_gateway_logs(prefix, is_perf_run=False):
-    ansible_runner = AnsibleRunner()
+
+def fetch_sync_gateway_logs(cluster_config, prefix, is_perf_run=False):
+    ansible_runner = AnsibleRunner(cluster_config)
 
     print("\n")
 
@@ -55,9 +56,12 @@ def fetch_sync_gateway_logs(prefix, is_perf_run=False):
 
 class Logging:
 
-    def fetch_and_analyze_logs(self, test_name):
+    def fetch_and_analyze_logs(self, cluster_config, test_name):
 
-        zip_file_path = fetch_sync_gateway_logs(test_name)
+        zip_file_path = fetch_sync_gateway_logs(
+            cluster_config=cluster_config,
+            prefix=test_name
+        )
 
         if self.detected_data_races(zip_file_path):
             log.error("Detected data races in logs: {}".format(zip_file_path))

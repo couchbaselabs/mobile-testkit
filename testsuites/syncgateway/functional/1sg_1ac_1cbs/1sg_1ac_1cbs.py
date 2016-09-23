@@ -72,20 +72,16 @@ def setup_1sg_1ac_1cbs_suite(request):
 def setup_1sg_1ac_1cbs_test(request):
 
     test_name = request.node.name
-
-    # TODO REMOVE!!!!!!
-    # cluster_helper = ClusterKeywords()
-    # cluster_helper.set_cluster_config("1sg_1ac_1cbs")
+    log_info("Setting up test '{}'".format(test_name))
 
     yield {"cluster_config": os.environ["CLUSTER_CONFIG"]}
 
-    # TODO REMOVE!!!!!!
-    # cluster_helper.unset_cluster_config()
+    log_info("Tearing down test '{}'".format(test_name))
 
     # if the test failed pull logs
     if request.node.rep_call.failed:
         logging_helper = Logging()
-        logging_helper.fetch_and_analyze_logs(test_name)
+        logging_helper.fetch_and_analyze_logs(cluster_config=os.environ["CLUSTER_CONFIG"], test_name=test_name)
 
 
 @pytest.mark.sanity

@@ -136,7 +136,7 @@ class ClusterKeywords:
         for ac in cluster_obj["sg_accels"]:
             verify_sg_accel_version(ac["ip"], expected_sync_gateway_version)
 
-    def reset_cluster(self, sync_gateway_config):
+    def reset_cluster(self, cluster_config, sync_gateway_config):
         """
         1. Stop sync_gateways
         2. Stop sg_accels
@@ -149,7 +149,7 @@ class ClusterKeywords:
         9. Deploy sg_accel config and start (distributed index mode only)
         """
 
-        cluster = Cluster()
+        cluster = Cluster(config=cluster_config)
         cluster.reset(sync_gateway_config)
 
     def provision_cluster(self, cluster_config, server_version, sync_gateway_version, sync_gateway_config):

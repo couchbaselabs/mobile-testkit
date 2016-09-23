@@ -9,8 +9,8 @@ from provision.ansible_runner import AnsibleRunner
 
 class SgAccel:
 
-    def __init__(self, target):
-        self.ansible_runner = AnsibleRunner()
+    def __init__(self, cluster_config, target):
+        self.ansible_runner = AnsibleRunner(cluster_config)
         self.ip = target["ip"]
         self.url = "http://{}:4985".format(target["ip"])
         self.hostname = target["name"]

@@ -40,7 +40,7 @@ def provision_cluster(cluster_config, couchbase_server_config, sync_gateway_conf
     log_info(">>> Server package: {0}/{1}".format(server_baseurl, server_package_name))
     log_info(">>> Using sync_gateway config: {}".format(sync_gateway_config.config_path))
 
-    ansible_runner = AnsibleRunner()
+    ansible_runner = AnsibleRunner(cluster_config)
 
     # Reset previous installs
     status = ansible_runner.run_ansible_playbook("remove-previous-installs.yml")
@@ -54,11 +54,17 @@ def provision_cluster(cluster_config, couchbase_server_config, sync_gateway_conf
 
     # Install server package
     log_info("Installing Couchbase Server")
-    install_couchbase_server.install_couchbase_server(couchbase_server_config)
+    install_couchbase_server.install_couchbase_server(
+        cluster_config=cluster_config,
+        couchbase_server_config=couchbase_server_config
+    )
 
     # Install sync_gateway
     log_info("Installing Sync Gateway")
-    install_sync_gateway.install_sync_gateway(sync_gateway_config)
+    install_sync_gateway.install_sync_gateway(
+        cluster_config=cluster_config,
+        sync_gateway_config=sync_gateway_config
+    )
 
     # Install nginx
     install_nginx(cluster_config)
@@ -127,7 +133,7 @@ if __name__ == "__main__":
         sync_gateway_version = version_build[0]
         sync_gateway_build = version_build[1]
 
-    sync_gateway_config = SyncGatewayConfig(
+    sync_gateway_conf = SyncGatewayConfig(
         version_number=sync_gateway_version,
         build_number=sync_gateway_build,
         commit=opts.source_commit,
@@ -139,5 +145,5 @@ if __name__ == "__main__":
     provision_cluster(
         cluster_config=cluster_conf,
         couchbase_server_config=server_config,
-        sync_gateway_config=sync_gateway_config
+        sync_gateway_config=sync_gateway_conf
     )

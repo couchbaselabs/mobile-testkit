@@ -19,8 +19,8 @@ from keywords import utils
 
 from keywords.utils import log_info
 
-class Cluster:
 
+class Cluster:
     """
     An older remnant of first pass of Python API
 
@@ -30,11 +30,13 @@ class Cluster:
 
     def __init__(self, config):
 
-        if not os.path.isfile(config):
+        self._cluster_config = config
+
+        if not os.path.isfile(self._cluster_config):
             log_info("Cluster config not found in 'resources/cluster_configs/'")
             raise IOError("Cluster config not found in 'resources/cluster_configs/'")
 
-        log_info(config)
+        log_info(self._cluster_config)
 
         # Load resources/cluster_configs/<cluster_config>.json
         with open("{}.json".format(config)) as f:
@@ -48,9 +50,9 @@ class Cluster:
         log_info("sgs: {}".format(sgs))
         log_info("acs: {}".format(acs))
 
-        self.sync_gateways = [SyncGateway(sg) for sg in sgs]
-        self.sg_accels = [SgAccel(ac) for ac in acs]
-        self.servers = [Server(cb) for cb in cbs]
+        self.sync_gateways = [SyncGateway(cluster_config=self._cluster_config, target=sg) for sg in sgs]
+        self.sg_accels = [SgAccel(cluster_config=self._cluster_config, target=ac) for ac in acs]
+        self.servers = [Server(cluster_config=self._cluster_config, target=cb) for cb in cbs]
         self.sync_gateway_config = None  # will be set to Config object when reset() called
 
         # for integrating keywords
@@ -62,11 +64,11 @@ class Cluster:
         if len(self.sync_gateways) == 0:
             raise Exception("Functional tests require at least 1 index reader")        
         
-    def reset(self, config_path):
+    def reset(self, sg_config_path):
 
         self.validate_cluster()
 
-        ansible_runner = AnsibleRunner()
+        ansible_runner = AnsibleRunner(self._cluster_config)
         
         # Stop sync_gateways
         log_info(">>> Stopping sync_gateway")
@@ -100,7 +102,7 @@ class Cluster:
                 log_info(">>> Bucket deletion status: {}".format(status))
 
                 # Parse config and grab bucket names
-                config_path_full = os.path.abspath(config_path)
+                config_path_full = os.path.abspath(sg_config_path)
                 config = Config(config_path_full)
                 mode = config.get_mode()
                 bucket_name_set = config.get_bucket_name_set()

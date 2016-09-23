@@ -1474,7 +1474,8 @@ class MobileRestClient:
 
         logging.debug("Found Doc Ids: {}".format(found_doc_ids))
         logging.debug("Expected Doc Ids: {}".format(expected_doc_ids))
-        assert found_doc_ids == expected_doc_ids, "Found doc ids should be the same as expected doc ids"
+        if found_doc_ids != expected_doc_ids:
+            raise AssertionError("Found doc ids should be the same as expected doc ids")
 
     def verify_doc_ids_not_found_in_response(self, response, expected_missing_doc_ids):
         doc_list = response["rows"]
@@ -1488,4 +1489,5 @@ class MobileRestClient:
 
         logging.debug("Found Doc Ids: {}".format(missing_doc_ids))
         logging.debug("Expected Doc Ids: {}".format(expected_missing_doc_ids))
-        assert missing_doc_ids == expected_missing_doc_ids, "Found doc ids should be the same as expected doc ids"
+        if missing_doc_ids != expected_missing_doc_ids:
+            raise AssertionError("Found doc ids should be the same as expected doc ids")

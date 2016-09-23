@@ -5,6 +5,7 @@ import pdb
 import sys
 
 
+# TODO: Use python logging hooks instead of wrappers - https://github.com/couchbaselabs/mobile-testkit/issues/686
 def log_info(message, is_verify=False):
     # pytest will capture stdout / stderr
     # by using 'print' the html reporting and running the test with -s will pick up this output in the console
@@ -24,11 +25,13 @@ def log_debug(message):
 
 def log_error(message):
     """Wrapper around logging.error if we want to add hooks in the future."""
+    print(message)
     logging.error(message)
 
 
 def log_warn(message):
     """Wrapper around logging.warn if we want to add hooks in the future."""
+    print(message)
     logging.warn(message)
 
 

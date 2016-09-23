@@ -42,23 +42,3 @@ def setup_1sg_1cbs_suite(request):
     log_info("Tearing down suite ...")
 
 
-# This is called before each test and will yield the cluster_config to each test in the file
-# After each test_* function, execution will continue from the yield a pull logs on failure
-@pytest.fixture(scope="function")
-def setup_1sg_1cbs_test(request):
-
-    test_name = request.node.name
-
-    # TODO REMOVE!!!!!!
-    # cluster_helper = ClusterKeywords()
-    # cluster_helper.set_cluster_config("1sg_1cbs")
-
-    yield {"cluster_config": os.environ["CLUSTER_CONFIG"]}
-
-    # TODO REMOVE!!!!!!
-    # cluster_helper.unset_cluster_config()
-
-    # if the test failed pull logs
-    if request.node.rep_call.failed:
-        logging_helper = Logging()
-        logging_helper.fetch_and_analyze_logs(test_name)

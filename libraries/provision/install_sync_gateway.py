@@ -89,7 +89,7 @@ class SyncGatewayConfig:
         return True
 
 
-def install_sync_gateway(sync_gateway_config):
+def install_sync_gateway(cluster_config, sync_gateway_config):
     log_info(sync_gateway_config)
 
     if not sync_gateway_config.is_valid():
@@ -98,7 +98,7 @@ def install_sync_gateway(sync_gateway_config):
     if sync_gateway_config.build_flags != "":
         log_info("\n\n!!! WARNING: You are building with flags: {} !!!\n\n".format(sync_gateway_config.build_flags))
 
-    ansible_runner = AnsibleRunner()
+    ansible_runner = AnsibleRunner(cluster_config)
     config_path = os.path.abspath(sync_gateway_config.config_path)
 
     # Create buckets unless the user explicitly asked to skip this step
@@ -203,7 +203,7 @@ if __name__ == "__main__":
     (opts, args) = parser.parse_args(arg_parameters)
 
     try:
-        cluster_config = os.environ["CLUSTER_CONFIG"]
+        cluster_conf = os.environ["CLUSTER_CONFIG"]
     except KeyError as ke:
         log_info("Make sure CLUSTER_CONFIG is defined and pointing to the configuration you would like to provision")
         raise KeyError("CLUSTER_CONFIG not defined. Unable to provision cluster.")
@@ -228,5 +228,8 @@ if __name__ == "__main__":
         skip_bucketcreation=opts.skip_bucketcreation
     )
 
-    install_sync_gateway(sync_gateway_install_config)
+    install_sync_gateway(
+        cluster_config=cluster_conf,
+        sync_gateway_config=sync_gateway_install_config
+    )
 

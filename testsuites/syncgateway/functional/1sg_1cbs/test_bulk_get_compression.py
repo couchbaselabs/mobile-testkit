@@ -11,11 +11,30 @@ from testkit.admin import Admin
 
 from keywords.utils import log_info
 from keywords.constants import SYNC_GATEWAY_CONFIGS
+from keywords.Logging import Logging
 
 
 uncompressed_size = 6320500
 part_encoded_size = 2244500
 whole_response_compressed_size = 75500
+
+
+# This is called before each test and will yield the cluster_config to each test in the file
+# After each test_* function, execution will continue from the yield a pull logs on failure
+@pytest.fixture(scope="function")
+def setup_1sg_1cbs_test(request):
+
+    test_name = request.node.name
+    log_info("Setting up test '{}'".format(test_name))
+
+    yield {"cluster_config": os.environ["CLUSTER_CONFIG"]}
+
+    log_info("Tearing down test '{}'".format(test_name))
+
+    # if the test failed pull logs
+    if request.node.rep_call.failed:
+        logging_helper = Logging()
+        logging_helper.fetch_and_analyze_logs(cluster_config=os.environ["CLUSTER_CONFIG"], test_name=test_name)
 
 
 def issue_request(target, user_agent, accept_encoding, x_accept_part_encoding, payload):
