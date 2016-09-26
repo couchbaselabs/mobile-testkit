@@ -43,7 +43,7 @@ def setup_2sg_1cbs_test(request):
 
     network_utils.list_connections()
     network_utils.stop_packet_capture(cluster_config)
-    network_utils.collect_packet_capture(cluster_config)
+    network_utils.collect_packet_capture(cluster_config=cluster_config, test_name=test_name)
 
     # if the test failed pull logs
     if request.node.rep_call.failed:

@@ -10,9 +10,9 @@ from keywords.constants import SYNC_GATEWAY_CONFIGS
 # This will be called once for the first test in the directory.
 # After all the tests have completed in the directory
 # the function will execute everything after the yield
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="module")
 def setup_1sg_1cbs_suite(request):
-    log_info("Setting up client sync_gateway suite ...")
+    log_info("Setting up 'setup_1sg_1cbs_suite' ...")
 
     server_version = request.config.getoption("--server-version")
     sync_gateway_version = request.config.getoption("--sync-gateway-version")
@@ -30,7 +30,7 @@ def setup_1sg_1cbs_suite(request):
 
     yield
 
-    log_info("Tearing down suite ...")
+    log_info("Tearing down 'setup_1sg_1cbs_suite' ...")
     cluster_helper.unset_cluster_config()
 
 

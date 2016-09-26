@@ -18,7 +18,7 @@ from libraries.NetworkUtils import NetworkUtils
 # the function will execute everything after the yield
 @pytest.fixture(scope="module")
 def setup_2sg_1cbs_1lbs_suite(request):
-    log_info("Setting up client sync_gateway suite ...")
+    log_info("Setting up 'setup_2sg_1cbs_1lbs_suite' ...")
 
     server_version = request.config.getoption("--server-version")
     sync_gateway_version = request.config.getoption("--sync-gateway-version")
@@ -38,7 +38,7 @@ def setup_2sg_1cbs_1lbs_suite(request):
 
     cluster_helper.unset_cluster_config()
 
-    log_info("Tearing down suite ...")
+    log_info("Tearing down 'setup_2sg_1cbs_1lbs_suite' ...")
 
 
 # This is called before each test and will yield the cluster_config to each test in the file

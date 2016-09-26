@@ -62,7 +62,7 @@ def init_shadow_cluster(cluster, config_path_shadower, config_path_non_shadower)
 
     # initially, setup both sync gateways as shadowers -- this needs to be
     # the initial config so that both buckets (source and data) will be created
-    mode = cluster.reset(config_path=config_path_shadower)
+    mode = cluster.reset(sg_config_path=config_path_shadower)
 
     # pick a sync gateway and choose it as non-shadower.  reset with config.
     non_shadower_sg = cluster.sync_gateways[1]
