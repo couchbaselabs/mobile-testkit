@@ -5,6 +5,8 @@ from keywords.CouchbaseServer import CouchbaseServer
 from keywords.ClusterKeywords import ClusterKeywords
 from libraries.testkit.config import Config
 
+from keywords.utils import log_info
+
 from optparse import OptionParser
 
 from ansible_runner import AnsibleRunner
@@ -130,6 +132,13 @@ def create_server_buckets(cluster_config, sync_gateway_config):
     # get the couchbase server url
     cluster_helper = ClusterKeywords()
     cluster_topology = cluster_helper.get_cluster_topology(cluster_config)
+
+    # Handle the case of resources/cluster_configs/1sg, where we are targeting a
+    #   sync_gateway without a backing server
+    if len(cluster_topology["couchbase_servers"]) == 0:
+        log_info("The cluster_config: {} does not have a couchbase server. Skipping bucket creation!!".format(cluster_config))
+        return
+
     couchbase_server_url = cluster_topology["couchbase_servers"][0]
 
     # delete existing buckets
