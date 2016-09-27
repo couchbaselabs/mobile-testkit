@@ -294,7 +294,14 @@ TODO
 
 iOS Tests
 =========
-TODO
+Can only be run on a mac test runner.
+
+Install libimobiledevice for capture logging and allow the framework to leverage install of a 
+development .app/.ipa packages
+```
+$ brew install --HEAD libimobiledevice
+$ brew install ideviceinstaller
+```
 
 Listener Tests
 ==============
