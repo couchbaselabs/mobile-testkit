@@ -100,7 +100,7 @@ class SyncGateway:
     def __init__(self):
         self._session = Session()
 
-    def install_sync_gateway(self, sync_gateway_version, sync_gateway_config):
+    def install_sync_gateway(self, cluster_config, sync_gateway_version, sync_gateway_config):
 
         # Dirty hack -- these have to be put here in order to avoid circular imports
         from libraries.provision.install_sync_gateway import install_sync_gateway
@@ -113,9 +113,8 @@ class SyncGateway:
         else:
             sg_config = SyncGatewayConfig(sync_gateway_version, None, None, sync_gateway_config, "", False)
 
-        install_sync_gateway(sg_config)
+        install_sync_gateway(cluster_config=cluster_config, sync_gateway_config=sg_config)
 
-        cluster_config = os.environ["CLUSTER_CONFIG"]
         log_info("Verfying versions for cluster: {}".format(cluster_config))
 
         with open("{}.json".format(cluster_config)) as f:

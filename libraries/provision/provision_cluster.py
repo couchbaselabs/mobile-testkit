@@ -6,14 +6,11 @@ from optparse import OptionParser
 import install_sync_gateway
 import install_couchbase_server
 
+from clean_cluster import clean_cluster
 from install_couchbase_server import CouchbaseServerConfig
 from install_sync_gateway import SyncGatewayConfig
 from install_nginx import install_nginx
 
-from keywords.exceptions import ProvisioningError
-
-from ansible_runner import AnsibleRunner
-from robot.api.logger import console
 
 from keywords.utils import log_info
 
@@ -40,17 +37,8 @@ def provision_cluster(cluster_config, couchbase_server_config, sync_gateway_conf
     log_info(">>> Server package: {0}/{1}".format(server_baseurl, server_package_name))
     log_info(">>> Using sync_gateway config: {}".format(sync_gateway_config.config_path))
 
-    ansible_runner = AnsibleRunner(cluster_config)
-
     # Reset previous installs
-    status = ansible_runner.run_ansible_playbook("remove-previous-installs.yml")
-    if status != 0:
-        raise ProvisioningError("Failed to remove previous installs")
-
-    # Clear firewall rules
-    status = ansible_runner.run_ansible_playbook("flush-firewall.yml")
-    if status != 0:
-        raise ProvisioningError("Failed to flush firewall")
+    clean_cluster(cluster_config)
 
     # Install server package
     log_info("Installing Couchbase Server")
