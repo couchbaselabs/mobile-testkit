@@ -40,7 +40,7 @@ class LiteServ:
     def verify_platform(self, platform):
         """Verify that we are installing a supported platform"""
 
-        if platform not in ["macosx", "android", "net"]:
+        if platform not in ["macosx", "android", "net", "ios"]:
             raise LiteServError("Unsupported platform: {}".format(platform))
 
     def verify_storage_engine(self, storage_engine):
@@ -90,6 +90,8 @@ class LiteServ:
                     expected_binary = "couchbase-lite-android-liteserv-SQLCipher-ForestDB-Encryption-{}-debug.apk".format(version_build)
         elif platform == "net":
             expected_binary = "couchbase-lite-net-{}-liteserv/LiteServ.exe".format(version_build)
+        elif platform == "ios":
+            expected_binary = "couchbase-lite-ios-liteserv-{}.ipa".format(version_build)
 
         return expected_binary
 
@@ -201,6 +203,31 @@ class LiteServ:
             else:
                 install_successful = True
 
+    def install_ipa(self, version_build, storage_engine):
+        """
+        Installs an iOS .ipa to a connected device.
+        Important: Currently one works with one device
+        """
+
+        binary = self.get_binary("ios", version_build, storage_engine)
+        ipa_path = "{}/{}".format(BINARY_DIR, binary)
+        log_info("Installing: {}".format(ipa_path))
+
+        # Check if app is installed
+        app_id = "com.couchbase.LiteServ-iOS"
+        output = subprocess.check_output(["ideviceinstaller", "-l"])
+        if app_id in output:
+            # Remove existing install
+            log_info("Install detected. Removing application ...")
+            output = subprocess.check_output([ "ideviceinstaller", "-U", app_id])
+            log_info(output)
+
+        # Install .ipa from dep/binaries/ folder
+        output = subprocess.check_output(["ideviceinstaller", "-i", ipa_path])
+        log_info(output)
+
+        raise LiteServError("Break")
+
     def launch_activity(self, port, storage_engine):
 
         self.verify_storage_engine(storage_engine)
@@ -263,7 +290,7 @@ class LiteServ:
         if platform == "android":
             self.install_apk(version_build=version, storage_engine=storage_engine)
         else:
-            log_info("Nothing to do.")
+            self.install_ipa(version_build=version, storage_engine=storage_engine)
 
     def start_liteserv(self, platform, version, host, port, storage_engine, logfile):
         """
