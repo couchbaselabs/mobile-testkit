@@ -22,7 +22,7 @@ def issue_1524(cluster_conf, sg_conf, num_docs):
     log_info("Using num_docs: {}".format(num_docs))
 
     cluster = Cluster(config=cluster_conf)
-    mode = cluster.reset(config_path=sg_conf)
+    mode = cluster.reset(sg_config_path=sg_conf)
     admin = Admin(cluster.sync_gateways[0])
 
     user_no_channels = admin.register_user(target=cluster.sync_gateways[0], db="db", name="user_no_channels", password="password")
@@ -90,7 +90,7 @@ def sync_access_sanity(cluster_conf, sg_conf):
     log_info("Using sg_conf: {}".format(sg_conf))
 
     cluster = Cluster(config=cluster_conf)
-    mode = cluster.reset(config_path=sg_conf)
+    mode = cluster.reset(sg_config_path=sg_conf)
     admin = Admin(cluster.sync_gateways[0])
 
     seth = admin.register_user(target=cluster.sync_gateways[0], db="db", name="seth", password="password")
@@ -134,7 +134,7 @@ def sync_channel_sanity(cluster_conf, sg_conf):
     log_info("Using sg_conf: {}".format(sg_conf))
 
     cluster = Cluster(config=cluster_conf)
-    mode = cluster.reset(config_path=sg_conf)
+    mode = cluster.reset(sg_config_path=sg_conf)
     admin = Admin(cluster.sync_gateways[0])
 
     doc_pushers = []

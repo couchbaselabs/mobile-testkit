@@ -51,7 +51,7 @@ def test_webhooks(setup_1sg_1cbs_test, num_users, num_channels, num_docs, num_re
     log_info("Using num_revisions: {}".format(num_revisions))
 
     cluster = Cluster(config=cluster_conf)
-    mode = cluster.reset(config_path="resources/sync_gateway_configs/sync_gateway_webhook_cc.json")
+    mode = cluster.reset(sg_config_path="resources/sync_gateway_configs/sync_gateway_webhook_cc.json")
 
     init_completed = time.time()
     log_info("Initialization completed. Time taken:{}s".format(init_completed - start))
@@ -112,7 +112,7 @@ def test_db_online_offline_webhooks_offline(setup_1sg_1cbs_test, num_users, num_
     log_info("Using num_revisions: {}".format(num_revisions))
 
     cluster = Cluster(config=cluster_conf)
-    mode = cluster.reset(config_path="resources/sync_gateway_configs/sync_gateway_webhook_cc.json")
+    mode = cluster.reset(sg_config_path="resources/sync_gateway_configs/sync_gateway_webhook_cc.json")
 
     init_completed = time.time()
     log_info("Initialization completed. Time taken:{}s".format(init_completed - start))
@@ -194,7 +194,7 @@ def test_db_online_offline_webhooks_offline_two(setup_1sg_1cbs_test, num_users, 
     log_info("Using num_revisions: {}".format(num_revisions))
 
     cluster = Cluster(config=cluster_conf)
-    mode = cluster.reset(config_path="resources/sync_gateway_configs/sync_gateway_webhook_cc.json")
+    mode = cluster.reset(sg_config_path="resources/sync_gateway_configs/sync_gateway_webhook_cc.json")
 
     init_completed = time.time()
     log_info("Initialization completed. Time taken:{}s".format(init_completed - start))

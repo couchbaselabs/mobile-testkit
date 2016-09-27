@@ -6,6 +6,7 @@ from testkit.cluster import Cluster
 from testkit.parallelize import *
 
 from keywords.utils import log_info
+from keywords.utils import log_error
 
 # Scenario-2:
 # Single User Single Channel: Create Unique docs and update docs verify all num docs present in changes feed.
@@ -79,11 +80,11 @@ def mulitple_users_mulitiple_channels_mulitple_revisions(cluster_conf, sg_conf, 
     for user_obj, docs_revision_dict in docs_rev_dict.items():
         for doc_id in docs_revision_dict.keys():
             rev = docs_revision_dict[doc_id]
-            log_infolog_info('User {} doc_id {} has {} revisions, expected revision: {}'.format(user_obj.name,
+            log_info('User {} doc_id {} has {} revisions, expected revision: {}'.format(user_obj.name,
                                                                                         doc_id, rev, expected_revision))
             if rev != expected_revision:
                 rev_errors.append(doc_id)
-                log.error('User {} doc_id got revision {}, expected revision {}'.format(user_obj.name,
+                log_error('User {} doc_id got revision {}, expected revision {}'.format(user_obj.name,
                                                                                         doc_id, rev, expected_revision))
 
     assert len(rev_errors) == 0

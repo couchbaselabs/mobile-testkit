@@ -55,7 +55,7 @@ def test_overloaded_channel_cache(setup_1sg_1cbs_test, sg_conf, num_docs, user_c
     log_info("Using limit: {}".format(limit))
 
     cluster = Cluster(config=cluster_conf)
-    mode = cluster.reset(config_path=sg_conf)
+    mode = cluster.reset(sg_config_path=sg_conf)
 
     target_sg = cluster.sync_gateways[0]
 

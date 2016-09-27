@@ -182,7 +182,7 @@ def test_online_to_offline_continous_changes_feed_controlled_close_sanity_mulitp
 @pytest.mark.parametrize("sg_conf,num_docs", [
     ("{}/bucket_online_offline/bucket_online_offline_default_di.json".format(SYNC_GATEWAY_CONFIGS), 5000)
 ])
-def test_online_to_offline_changes_feed_controlled_close_longpoll_sanity_di(setup_1sg_1ac_1cbs_test, sg_conf, num_docs, num_users):
+def test_online_to_offline_changes_feed_controlled_close_longpoll_sanity_di(setup_1sg_1ac_1cbs_test, sg_conf, num_docs):
     online_to_offline_changes_feed_controlled_close_longpoll_sanity(
         cluster_conf=setup_1sg_1ac_1cbs_test["cluster_config"],
         sg_conf=sg_conf,
