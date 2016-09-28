@@ -27,6 +27,7 @@ def test_stale_revision_should_not_be_in_the_index(setup_client_syncgateway_test
     10. Pass criteria
     """
 
+    cluster_config = setup_client_syncgateway_test["cluster_config"]
     ls_url = setup_client_syncgateway_test["ls_url"]
     sg_url = setup_client_syncgateway_test["sg_url"]
     sg_admin_url = setup_client_syncgateway_test["sg_admin_url"]
@@ -39,7 +40,11 @@ def test_stale_revision_should_not_be_in_the_index(setup_client_syncgateway_test
     sg_user_name = "sg_user"
 
     sg_helper = SyncGateway()
-    sg_helper.start_sync_gateway(url=sg_url, config="{}/walrus.json".format(SYNC_GATEWAY_CONFIGS))
+    sg_helper.start_sync_gateway(
+        cluster_config=cluster_config,
+        url=sg_url,
+        config="{}/walrus.json".format(SYNC_GATEWAY_CONFIGS)
+    )
 
     log_info("Running 'test_stale_revision_should_not_be_in_the_index'")
     log_info("ls_url: {}".format(ls_url))

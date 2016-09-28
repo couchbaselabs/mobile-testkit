@@ -5,6 +5,8 @@ from zipfile import ZipFile
 import time
 import subprocess
 import re
+import json
+import pdb
 import pytest
 
 from keywords.constants import RESULTS_DIR
@@ -36,6 +38,7 @@ class LiteServ:
 
     def __init__(self):
         self._session = Session()
+        self._session.headers['Content-Type'] = 'application/json'
 
     def verify_platform(self, platform):
         """Verify that we are installing a supported platform"""
@@ -67,6 +70,10 @@ class LiteServ:
         elif platform == "net":
             package_name = "LiteServ.zip"
 
+        elif platform == "ios":
+            # TODO: Needs to be looked at when https://github.com/couchbaselabs/liteserv-ios/issues/1 is fixed
+            package_name = ""
+
         log_info("Download package(s): {}".format(package_name))
 
         return package_name
@@ -91,7 +98,7 @@ class LiteServ:
         elif platform == "net":
             expected_binary = "couchbase-lite-net-{}-liteserv/LiteServ.exe".format(version_build)
         elif platform == "ios":
-            expected_binary = "couchbase-lite-ios-liteserv-{}.ipa".format(version_build)
+            expected_binary = "couchbase-lite-ios-liteserv-{}.app".format(version_build)
 
         return expected_binary
 
@@ -113,6 +120,9 @@ class LiteServ:
                 url = "{}/couchbase-lite-android/{}/{}/{}".format(LATEST_BUILDS, version, version_build, file_name)
         elif platform == "net":
             url = "{}/couchbase-lite-net/{}/{}/{}".format(LATEST_BUILDS, version, build, file_name)
+        elif platform == "ios":
+            # TODO: Needs to be looked at when https://github.com/couchbaselabs/liteserv-ios/issues/1 is fixed
+            url = ""
 
         log_info("Download url: {}".format(url))
 
@@ -203,31 +213,6 @@ class LiteServ:
             else:
                 install_successful = True
 
-    def install_ipa(self, version_build, storage_engine):
-        """
-        Installs an iOS .ipa to a connected device.
-        Important: Currently one works with one device
-        """
-
-        binary = self.get_binary("ios", version_build, storage_engine)
-        ipa_path = "{}/{}".format(BINARY_DIR, binary)
-        log_info("Installing: {}".format(ipa_path))
-
-        # Check if app is installed
-        app_id = "com.couchbase.LiteServ-iOS"
-        output = subprocess.check_output(["ideviceinstaller", "-l"])
-        if app_id in output:
-            # Remove existing install
-            log_info("Install detected. Removing application ...")
-            output = subprocess.check_output([ "ideviceinstaller", "-U", app_id])
-            log_info(output)
-
-        # Install .ipa from dep/binaries/ folder
-        output = subprocess.check_output(["ideviceinstaller", "-i", ipa_path])
-        log_info(output)
-
-        raise LiteServError("Break")
-
     def launch_activity(self, port, storage_engine):
 
         self.verify_storage_engine(storage_engine)
@@ -274,6 +259,21 @@ class LiteServ:
             ])
             log_info(output)
 
+    def install_and_launch_ios_app(self, version_build, storage_engine):
+        """Launches LiteServ on iOS device
+        Warning: Only works with a single device at the moment
+        """
+
+        binary = self.get_binary("ios", version_build, storage_engine)
+        app_path = "{}/{}".format(BINARY_DIR, binary)
+        log_info("Installing: {}".format(app_path))
+
+        # install app / launch app to connected device
+        output = subprocess.check_output([
+            "ios-deploy", "--uninstall", "--justlaunch", "--debug", "--bundle", app_path
+        ])
+        log_info(output)
+
     def install_liteserv(self, platform, version, storage_engine):
         """Bootstraps install of LiteServ app (Android). Noop for Desktop cmd apps (ex. Mac OSX, .NET)
 
@@ -289,8 +289,10 @@ class LiteServ:
 
         if platform == "android":
             self.install_apk(version_build=version, storage_engine=storage_engine)
+        elif platform == "ios":
+            self.install_and_launch_ios_app(version_build=version, storage_engine=storage_engine)
         else:
-            self.install_ipa(version_build=version, storage_engine=storage_engine)
+            log_info("No install necessary. Skipping ...")
 
     def start_liteserv(self, platform, version, host, port, storage_engine, logfile):
         """
@@ -322,6 +324,13 @@ class LiteServ:
                 storage_engine=storage_engine,
                 logfile=logfile
             )
+        elif platform == "ios":
+            proc_handle = self.start_ios_liteserv(
+                host=host,
+                port=port,
+                storage_engine=storage_engine,
+                logfile=logfile
+            )
 
         # Verify LiteServ is launched with proper version and build
         ls_url = self.verify_liteserv_launched(
@@ -333,7 +342,7 @@ class LiteServ:
 
         return ls_url, proc_handle
 
-    def shutdown_liteserv(self, platform, process_handle, logfile):
+    def shutdown_liteserv(self, host, platform, process_handle, logfile):
         """Kill a running LiteServ using the process_handle (Desktop apps)
 
         If the platform is Android, kill the activity via adb, and kill the process handle
@@ -345,6 +354,8 @@ class LiteServ:
 
         if platform == "android":
             self.stop_activity()
+        elif platform == "ios":
+            self.stop_ios_liteserv(host)
 
         logfile.flush()
         logfile.close()
@@ -370,6 +381,37 @@ class LiteServ:
         self.launch_activity(port=port, storage_engine=storage_engine)
 
         return p
+
+    def start_ios_liteserv(self, host, port, storage_engine, logfile):
+        """Starts capturing logging via idevicesyslog and starts the application
+        """
+
+        p = subprocess.Popen(args=["idevicesyslog"], stdout=logfile)
+
+        # make sure to stop liteserv if it is running
+        self.stop_ios_liteserv(host)
+
+        liteserv_admin_url = "http://{}:59850".format(host)
+        log_info("Starting LiteServ: {}".format(liteserv_admin_url))
+
+        data = {
+            "port": int(port)
+        }
+
+        resp = self._session.put("{}/start".format(liteserv_admin_url), data=json.dumps(data))
+        log_r(resp)
+        resp.raise_for_status()
+
+        return p
+
+    def stop_ios_liteserv(self, host):
+        """Stops an iOS LiteServ running on 'host'"""
+
+        liteserv_admin_url = "http://{}:59850".format(host)
+        log_info("Stopping LiteServ: {}".format(liteserv_admin_url))
+        resp = self._session.put("{}/stop".format(liteserv_admin_url))
+        log_r(resp)
+        resp.raise_for_status()
 
     def start_macosx_liteserv(self, version, port, storage_engine, logfile):
         """

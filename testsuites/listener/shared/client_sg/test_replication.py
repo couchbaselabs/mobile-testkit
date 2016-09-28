@@ -36,12 +36,17 @@ def test_initial_pull_replication(setup_client_syncgateway_test, continuous):
 
     num_docs = 10000
 
+    cluster_config = setup_client_syncgateway_test["cluster_config"]
     ls_url = setup_client_syncgateway_test["ls_url"]
     sg_one_admin = setup_client_syncgateway_test["sg_admin_url"]
     sg_one_public = setup_client_syncgateway_test["sg_url"]
 
     sg_helper = SyncGateway()
-    sg_helper.start_sync_gateway(url=sg_one_public, config="{}/walrus.json".format(SYNC_GATEWAY_CONFIGS))
+    sg_helper.start_sync_gateway(
+        cluster_config=cluster_config,
+        url=sg_one_public,
+        config="{}/walrus.json".format(SYNC_GATEWAY_CONFIGS)
+    )
 
     log_info("Running 'test_initial_pull_replication', continuous: {}".format(continuous))
     log_info("ls_url: {}".format(ls_url))
@@ -128,12 +133,17 @@ def test_initial_push_replication(setup_client_syncgateway_test, continuous):
 
     num_docs = 10000
 
+    cluster_config = setup_client_syncgateway_test["cluster_config"]
     ls_url = setup_client_syncgateway_test["ls_url"]
     sg_one_admin = setup_client_syncgateway_test["sg_admin_url"]
     sg_one_public = setup_client_syncgateway_test["sg_url"]
 
     sg_helper = SyncGateway()
-    sg_helper.start_sync_gateway(url=sg_one_public, config="{}/walrus.json".format(SYNC_GATEWAY_CONFIGS))
+    sg_helper.start_sync_gateway(
+        cluster_config=cluster_config,
+        url=sg_one_public,
+        config="{}/walrus.json".format(SYNC_GATEWAY_CONFIGS)
+    )
 
     log_info("Running 'test_initial_push_replication', continuous: {}".format(continuous))
     log_info("ls_url: {}".format(ls_url))
@@ -212,12 +222,17 @@ def test_multiple_replications_not_created_with_same_properties(setup_client_syn
     sg_db = "db"
     ls_db = "ls_db"
 
+    cluster_config = setup_client_syncgateway_test["cluster_config"]
     ls_url = setup_client_syncgateway_test["ls_url"]
     sg_one_admin = setup_client_syncgateway_test["sg_admin_url"]
     sg_one_public = setup_client_syncgateway_test["sg_url"]
 
     sg_helper = SyncGateway()
-    sg_helper.start_sync_gateway(url=sg_one_public, config="{}/walrus.json".format(SYNC_GATEWAY_CONFIGS))
+    sg_helper.start_sync_gateway(
+        cluster_config=cluster_config,
+        url=sg_one_public,
+        config="{}/walrus.json".format(SYNC_GATEWAY_CONFIGS)
+    )
 
     log_info("Running 'test_multiple_replications_not_created_with_same_properties'")
     log_info("ls_url: {}".format(ls_url))
@@ -347,12 +362,17 @@ def test_multiple_replications_created_with_unique_properties(setup_client_syncg
     sg_db = "db"
     ls_db = "ls_db"
 
+    cluster_config = setup_client_syncgateway_test["cluster_config"]
     ls_url = setup_client_syncgateway_test["ls_url"]
     sg_one_admin = setup_client_syncgateway_test["sg_admin_url"]
     sg_one_public = setup_client_syncgateway_test["sg_url"]
 
     sg_helper = SyncGateway()
-    sg_helper.start_sync_gateway(url=sg_one_public, config="{}/walrus.json".format(SYNC_GATEWAY_CONFIGS))
+    sg_helper.start_sync_gateway(
+        cluster_config=cluster_config,
+        url=sg_one_public,
+        config="{}/walrus.json".format(SYNC_GATEWAY_CONFIGS)
+    )
 
     log_info("Running 'test_multiple_replications_created_with_unique_properties'")
     log_info("ls_url: {}".format(ls_url))
@@ -532,12 +552,17 @@ def test_replication_with_session_cookie(setup_client_syncgateway_test):
     ls_db = "ls_db"
     sg_db = "db"
 
+    cluster_config = setup_client_syncgateway_test["cluster_config"]
     ls_url = setup_client_syncgateway_test["ls_url"]
     sg_url = setup_client_syncgateway_test["sg_url"]
     sg_admin_url = setup_client_syncgateway_test["sg_admin_url"]
 
     sg_helper = SyncGateway()
-    sg_helper.start_sync_gateway(url=sg_url, config="{}/walrus-user.json".format(SYNC_GATEWAY_CONFIGS))
+    sg_helper.start_sync_gateway(
+        cluster_config=cluster_config,
+        url=sg_url,
+        config="{}/walrus-user.json".format(SYNC_GATEWAY_CONFIGS)
+    )
 
     log_info("Running 'test_replication_with_session_cookie'")
     log_info("ls_url: {}".format(ls_url))
@@ -733,12 +758,17 @@ def test_client_to_sync_gateway_complex_replication_with_revs_limit(setup_client
     num_docs = 10
     num_revs = 100
 
+    cluster_config = setup_client_syncgateway_test["cluster_config"]
     ls_url = setup_client_syncgateway_test["ls_url"]
     sg_url = setup_client_syncgateway_test["sg_url"]
     sg_admin_url = setup_client_syncgateway_test["sg_admin_url"]
 
     sg_helper = SyncGateway()
-    sg_helper.start_sync_gateway(url=sg_url, config="{}/walrus-revs-limit.json".format(SYNC_GATEWAY_CONFIGS))
+    sg_helper.start_sync_gateway(
+        cluster_config=cluster_config,
+        url=sg_url,
+        config="{}/walrus-revs-limit.json".format(SYNC_GATEWAY_CONFIGS)
+    )
 
     log_info("Running 'test_client_to_sync_gateway_complex_replication_with_revs_limit'")
     log_info("ls_url: {}".format(ls_url))
@@ -865,6 +895,7 @@ def test_client_to_sync_gateway_complex_replication_with_revs_limit(setup_client
 def test_replication_with_multiple_client_dbs_and_single_sync_gateway_db(setup_client_syncgateway_test):
     """Test replication from multiple client dbs to one sync_gateway db"""
 
+    cluster_config = setup_client_syncgateway_test["cluster_config"]
     ls_url = setup_client_syncgateway_test["ls_url"]
     sg_url = setup_client_syncgateway_test["sg_url"]
     sg_admin_url = setup_client_syncgateway_test["sg_admin_url"]
@@ -872,7 +903,11 @@ def test_replication_with_multiple_client_dbs_and_single_sync_gateway_db(setup_c
     num_docs = 1000
 
     sg_helper = SyncGateway()
-    sg_helper.start_sync_gateway(url=sg_url, config="{}/walrus.json".format(SYNC_GATEWAY_CONFIGS))
+    sg_helper.start_sync_gateway(
+        cluster_config=cluster_config,
+        url=sg_url,
+        config="{}/walrus.json".format(SYNC_GATEWAY_CONFIGS)
+    )
 
     log_info("Running 'test_replication_with_multiple_client_dbs_and_single_sync_gateway_db'")
     log_info("ls_url: {}".format(ls_url))
@@ -940,6 +975,7 @@ def test_verify_open_revs_with_revs_limit_push_conflict(setup_client_syncgateway
     https://github.com/couchbase/couchbase-lite-ios/issues/1277
     """
 
+    cluster_config = setup_client_syncgateway_test["cluster_config"]
     ls_url = setup_client_syncgateway_test["ls_url"]
     sg_url = setup_client_syncgateway_test["sg_url"]
     sg_admin_url = setup_client_syncgateway_test["sg_admin_url"]
@@ -951,7 +987,11 @@ def test_verify_open_revs_with_revs_limit_push_conflict(setup_client_syncgateway
     sg_user_name = "sg_user"
 
     sg_helper = SyncGateway()
-    sg_helper.start_sync_gateway(url=sg_url, config="{}/walrus.json".format(SYNC_GATEWAY_CONFIGS))
+    sg_helper.start_sync_gateway(
+        cluster_config=cluster_config,
+        url=sg_url,
+        config="{}/walrus.json".format(SYNC_GATEWAY_CONFIGS)
+    )
 
     log_info("Running 'test_verify_open_revs_with_revs_limit_push_conflict'")
     log_info("ls_url: {}".format(ls_url))

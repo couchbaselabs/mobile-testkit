@@ -30,7 +30,7 @@ def test_auto_prune_listener_sanity(setup_client_syncgateway_test):
 
     ls_db = client.create_database(url=ls_url, name="ls_db")
     docs = client.add_docs(url=ls_url, db=ls_db, number=num_docs, id_prefix="ls_db_doc")
-    updated_docs = client.update_docs(url=ls_url, db=ls_db, docs=docs, number_updates=num_revs)
+    client.update_docs(url=ls_url, db=ls_db, docs=docs, number_updates=num_revs)
 
     client.verify_max_revs_num_for_docs(url=ls_url, db=ls_db, docs=docs, expected_max_number_revs_per_doc=20)
 
@@ -51,13 +51,14 @@ def test_auto_prune_with_pull(setup_client_syncgateway_test):
     5. Verify number of revisions on client is default (20)
     """
 
+    cluster_config = setup_client_syncgateway_test["cluster_config"]
     ls_url = setup_client_syncgateway_test["ls_url"]
     sg_url = setup_client_syncgateway_test["sg_url"]
     sg_admin_url = setup_client_syncgateway_test["sg_admin_url"]
 
     client = MobileRestClient()
     sg_helper = SyncGateway()
-    sg_helper.start_sync_gateway(url=sg_url, config="{}/walrus.json".format(SYNC_GATEWAY_CONFIGS))
+    sg_helper.start_sync_gateway(cluster_config=cluster_config, url=sg_url, config="{}/walrus.json".format(SYNC_GATEWAY_CONFIGS))
 
     log_info("Running 'test_auto_prune_listener_sanity' ...")
     log_info("ls_url: {}".format(ls_url))
@@ -71,7 +72,7 @@ def test_auto_prune_with_pull(setup_client_syncgateway_test):
     sg_db = "db"
     sg_user_name = "sg_user"
 
-    sg_user = client.create_user(url=sg_admin_url, db=sg_db, name=sg_user_name, password="password", channels=sg_user_channels)
+    client.create_user(url=sg_admin_url, db=sg_db, name=sg_user_name, password="password", channels=sg_user_channels)
     sg_session = client.create_session(url=sg_admin_url, db=sg_db, name=sg_user_name)
 
     ls_db = client.create_database(url=ls_url, name="ls_db")
@@ -123,13 +124,18 @@ def test_auto_prune_listener_keeps_conflicts_sanity(setup_client_syncgateway_tes
     6. Delete the current revision and check that a GET returns the old conflict as the current rev
     """
 
+    cluster_config = setup_client_syncgateway_test["cluster_config"]
     ls_url = setup_client_syncgateway_test["ls_url"]
     sg_url = setup_client_syncgateway_test["sg_url"]
     sg_admin_url = setup_client_syncgateway_test["sg_admin_url"]
 
     client = MobileRestClient()
     sg_helper = SyncGateway()
-    sg_helper.start_sync_gateway(url=sg_url, config="{}/walrus.json".format(SYNC_GATEWAY_CONFIGS))
+    sg_helper.start_sync_gateway(
+        cluster_config=cluster_config,
+        url=sg_url,
+        config="{}/walrus.json".format(SYNC_GATEWAY_CONFIGS)
+    )
 
     log_info("Running 'test_auto_prune_listener_keeps_conflicts_sanity' ...")
     log_info("ls_url: {}".format(ls_url))
@@ -142,7 +148,7 @@ def test_auto_prune_listener_keeps_conflicts_sanity(setup_client_syncgateway_tes
     ls_db = "ls_db"
     sg_user_name = "sg_user"
     sg_user_channels = ["NBC"]
-    sg_user = client.create_user(
+    client.create_user(
         url=sg_admin_url,
         db=sg_db,
         name=sg_user_name,
@@ -155,10 +161,10 @@ def test_auto_prune_listener_keeps_conflicts_sanity(setup_client_syncgateway_tes
 
     # Create docs with same prefix to create conflicts when the dbs complete 1 shot replication
     ls_db_docs = client.add_docs(url=ls_url, db=ls_db, number=num_docs, id_prefix="doc", channels=sg_user_channels)
-    sg_db_docs = client.add_docs(url=sg_url, db=sg_db, number=num_docs, id_prefix="doc", channels=sg_user_channels, auth=sg_session)
+    client.add_docs(url=sg_url, db=sg_db, number=num_docs, id_prefix="doc", channels=sg_user_channels, auth=sg_session)
 
     # Setup one shot pull replication and wait for idle.
-    repl_one = client.start_replication(
+    client.start_replication(
         url=ls_url,
         continuous=False,
         from_url=sg_admin_url, from_db=sg_db,
@@ -171,16 +177,13 @@ def test_auto_prune_listener_keeps_conflicts_sanity(setup_client_syncgateway_tes
     conflicting_revs = client.get_conflict_revs(url=ls_url, db=ls_db, doc=ls_db_docs[0])
 
     # Get the doc with conflict rev
-    conflict_doc = client.get_doc(url=ls_url, db=ls_db, doc_id=ls_db_docs[0]["id"], rev=conflicting_revs[0])
+    client.get_doc(url=ls_url, db=ls_db, doc_id=ls_db_docs[0]["id"], rev=conflicting_revs[0])
 
     # Update doc past revs limit and make sure conflict is still available
     updated_doc = client.update_doc(url=ls_url, db=ls_db, doc_id=ls_db_docs[0]["id"], number_updates=num_revs)
-    conflict_doc = client.get_doc(url=ls_url, db=ls_db, doc_id=ls_db_docs[0]["id"], rev=conflicting_revs[0])
+    client.get_doc(url=ls_url, db=ls_db, doc_id=ls_db_docs[0]["id"], rev=conflicting_revs[0])
 
     # Delete doc and ensure that the conflict is now the current rev
-    deleted_doc = client.delete_doc(url=ls_url, db=ls_db, doc_id=ls_db_docs[0]["id"], rev=updated_doc["rev"])
+    client.delete_doc(url=ls_url, db=ls_db, doc_id=ls_db_docs[0]["id"], rev=updated_doc["rev"])
     current_doc = client.get_doc(url=ls_url, db=ls_db, doc_id=ls_db_docs[0]["id"])
     assert current_doc["_rev"] == conflicting_revs[0]
-
-
-

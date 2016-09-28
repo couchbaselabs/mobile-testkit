@@ -296,11 +296,15 @@ iOS Tests
 =========
 Can only be run on a mac test runner.
 
-Install libimobiledevice for capture logging and allow the framework to leverage install of a 
-development .app/.ipa packages
+Install libimobiledevice for capture logging
 ```
 $ brew install --HEAD libimobiledevice
 $ brew install ideviceinstaller
+```
+Install ios-deploy to bootstrap install / lauching of iOS apps
+```
+brew install node
+npm install -g ios-deploy
 ```
 
 Listener Tests

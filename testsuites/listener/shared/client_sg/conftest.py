@@ -23,7 +23,6 @@ def pytest_addoption(parser):
     parser.addoption("--liteserv-host", action="store", help="liteserv-host: the host to start liteserv on")
     parser.addoption("--liteserv-port", action="store", help="liteserv-port: the port to assign to liteserv")
     parser.addoption("--liteserv-storage-engine", action="store", help="liteserv-storage-engine: the storage engine to use with liteserv")
-
     parser.addoption("--sync-gateway-version", action="store", help="sync-gateway-version: the version of sync_gateway to run tests against")
 
 
@@ -64,12 +63,14 @@ def setup_client_syncgateway_suite(request):
 
     cluster_helper = ClusterKeywords()
     cluster_helper.set_cluster_config("1sg")
+    cluster_config = os.environ["CLUSTER_CONFIG"]
 
-    clean_cluster()
+    clean_cluster(cluster_config=cluster_config)
 
     log_info("Installing sync_gateway")
     sg_helper = SyncGateway()
     sg_helper.install_sync_gateway(
+        cluster_config=cluster_config,
         sync_gateway_version=sync_gateway_version,
         sync_gateway_config="{}/walrus.json".format(SYNC_GATEWAY_CONFIGS)
     )
@@ -118,16 +119,15 @@ def setup_client_syncgateway_test(request):
     cluster_helper = ClusterKeywords()
     sg_helper = SyncGateway()
 
-    # Uncomment when running the test without suite setup
-    # cluster_helper.set_cluster_config("1sg")
     cluster_hosts = cluster_helper.get_cluster_topology(os.environ["CLUSTER_CONFIG"])
 
     sg_url = cluster_hosts["sync_gateways"][0]["public"]
     sg_admin_url = cluster_hosts["sync_gateways"][0]["admin"]
-    sg_helper.stop_sync_gateway(sg_url)
+    sg_helper.stop_sync_gateway(cluster_config=os.environ["CLUSTER_CONFIG"], url=sg_url)
 
     # Yield values to test case via fixture argument
     yield {
+        "cluster_config": os.environ["CLUSTER_CONFIG"],
         "ls_url": ls_url,
         "sg_url": sg_url,
         "sg_admin_url": sg_admin_url
@@ -137,12 +137,12 @@ def setup_client_syncgateway_test(request):
 
     # Teardown test
     client.delete_databases(ls_url)
-    ls.shutdown_liteserv(platform=liteserv_platform, process_handle=ls_handle, logfile=ls_logging)
+    ls.shutdown_liteserv(host=liteserv_host, platform=liteserv_platform, process_handle=ls_handle, logfile=ls_logging)
 
     # Verify LiteServ is killed
     ls.verify_liteserv_not_running(host=liteserv_host, port=liteserv_port)
 
-    sg_helper.stop_sync_gateway(sg_url)
+    sg_helper.stop_sync_gateway(cluster_config=os.environ["CLUSTER_CONFIG"], url=sg_url)
 
     # if the test failed pull logs
     if request.node.rep_call.failed:

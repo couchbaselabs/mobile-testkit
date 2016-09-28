@@ -4,6 +4,7 @@ from keywords.utils import log_info
 from keywords.MobileRestClient import MobileRestClient
 from keywords.Document import Document
 
+
 @pytest.mark.sanity
 @pytest.mark.listener
 @pytest.mark.syncgateway

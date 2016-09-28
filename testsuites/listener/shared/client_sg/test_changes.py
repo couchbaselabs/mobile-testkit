@@ -9,6 +9,7 @@ from keywords.MobileRestClient import MobileRestClient
 from keywords.ChangesTracker import ChangesTracker
 from keywords.SyncGateway import SyncGateway
 
+
 @pytest.mark.sanity
 @pytest.mark.listener
 @pytest.mark.syncgateway
@@ -23,6 +24,7 @@ def test_longpoll_changes_termination_timeout(setup_client_syncgateway_test):
     """
 
     ls_db = "ls_db"
+    cluster_config = setup_client_syncgateway_test["cluster_config"]
     sg_url = setup_client_syncgateway_test["sg_url"]
     ls_url = setup_client_syncgateway_test["ls_url"]
 
@@ -31,7 +33,11 @@ def test_longpoll_changes_termination_timeout(setup_client_syncgateway_test):
     log_info("sg_url: {}".format(sg_url))
 
     sg_helper = SyncGateway()
-    sg_helper.start_sync_gateway(url=sg_url, config="{}/walrus.json".format(SYNC_GATEWAY_CONFIGS))
+    sg_helper.start_sync_gateway(
+        cluster_config=cluster_config,
+        url=sg_url,
+        config="{}/walrus.json".format(SYNC_GATEWAY_CONFIGS)
+    )
 
     client = MobileRestClient()
     client.create_database(ls_url, ls_db)
@@ -74,6 +80,7 @@ def test_longpoll_changes_termination_heartbeat(setup_client_syncgateway_test):
     log_info("Running 'longpoll_changes_termination' ...")
 
     ls_db = "ls_db"
+    cluster_config = setup_client_syncgateway_test["cluster_config"]
     sg_url = setup_client_syncgateway_test["sg_url"]
     ls_url = setup_client_syncgateway_test["ls_url"]
 
@@ -82,7 +89,11 @@ def test_longpoll_changes_termination_heartbeat(setup_client_syncgateway_test):
     log_info("sg_url: {}".format(sg_url))
 
     sg_helper = SyncGateway()
-    sg_helper.start_sync_gateway(url=sg_url, config="{}/walrus.json".format(SYNC_GATEWAY_CONFIGS))
+    sg_helper.start_sync_gateway(
+        cluster_config=cluster_config,
+        url=sg_url,
+        config="{}/walrus.json".format(SYNC_GATEWAY_CONFIGS)
+    )
 
     client = MobileRestClient()
     client.create_database(ls_url, ls_db)
