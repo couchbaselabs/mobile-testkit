@@ -1,5 +1,4 @@
 import pytest
-import logging
 import datetime
 
 from keywords.utils import log_info
@@ -9,8 +8,9 @@ from keywords.LiteServ import LiteServ
 from keywords.MobileRestClient import MobileRestClient
 
 
-# This will get called once before the first test that
-# runs with this as input parameters in this file
+# This will get called once before the first test and waits at the yeild
+# until the last test in this file is executed. It will continue excecution
+# from the yeild until the end of the method after the last test
 @pytest.fixture(scope="module")
 def setup_p2p_suite(request):
 
@@ -67,7 +67,9 @@ def setup_p2p_suite(request):
     log_info("Tearing down suite ...")
 
 
-# TODO Add comment
+# Runs as a setup to each test_* function in the file. It will yeild the
+# dictionary to the test and execute everything after the yield once the
+# test has completed
 @pytest.fixture(scope="function")
 def setup_p2p_test(request):
 
