@@ -193,7 +193,7 @@ def test_initial_push_replication(setup_client_syncgateway_test, continuous):
     if continuous:
         assert len(replications) == 1, "There should only be one replication running"
         assert replications[0]["status"] == "Idle", "Replication Status should be 'Idle'"
-        assert replications[0]["continuous"] == True, "Running replication should be continuous"
+        assert replications[0]["continuous"], "Running replication should be continuous"
         # Only .NET has an 'error' property
         if "error" in replications[0]:
             assert len(replications[0]["error"]) == 0
@@ -408,7 +408,7 @@ def test_multiple_replications_created_with_unique_properties(setup_client_syncg
     # Create doc filter and add to the design doc
     filters = {
         "language": "javascript",
-        "filters" : {
+        "filters": {
             "sample_filter": "function(doc, req) { if (doc.type && doc.type === \"skip\") { return false; } return true; }"
         }
     }
@@ -778,10 +778,10 @@ def test_client_to_sync_gateway_complex_replication_with_revs_limit(setup_client
     client = MobileRestClient()
 
     # Test the endpoint, listener does not support users but should have a default response
-    mock_session = client.get_session(url=ls_url)
+    client.get_session(url=ls_url)
 
     sg_user_channels = ["NBC"]
-    sg_user = client.create_user(url=sg_admin_url, db=sg_db, name=sg_user_name, password="password", channels=sg_user_channels)
+    client.create_user(url=sg_admin_url, db=sg_db, name=sg_user_name, password="password", channels=sg_user_channels)
     sg_session = client.create_session(url=sg_admin_url, db=sg_db, name=sg_user_name)
 
     ls_db = client.create_database(url=ls_url, name=ls_db_name)
@@ -803,8 +803,8 @@ def test_client_to_sync_gateway_complex_replication_with_revs_limit(setup_client
     # Adding a delay between updates helps this situation. There is an alternative for CBL mac and CBL NET to change the default revs client depth
     # but that is not configurable for Android.
     # Currently adding a delay will allow the replication to act as expected for all platforms now.
-    sg_docs_update = client.update_docs(url=sg_url, db=sg_db, docs=ls_db_docs, number_updates=num_revs, delay=0.1, auth=sg_session)
-    ls_db_docs_update = client.update_docs(url=ls_url, db=ls_db, docs=ls_db_docs, number_updates=num_revs, delay=0.1)
+    client.update_docs(url=sg_url, db=sg_db, docs=ls_db_docs, number_updates=num_revs, delay=0.1, auth=sg_session)
+    client.update_docs(url=ls_url, db=ls_db, docs=ls_db_docs, number_updates=num_revs, delay=0.1)
 
     # Start replication ls_db <- sg_db
     repl_two = client.start_replication(
@@ -921,14 +921,14 @@ def test_replication_with_multiple_client_dbs_and_single_sync_gateway_db(setup_c
     sg_db = client.create_database(url=sg_admin_url, name="sg_db", server="walrus:")
 
     # Setup continuous push / pull replication from ls_db1 to sg_db
-    repl_one = client.start_replication(
+    client.start_replication(
         url=ls_url,
         continuous=True,
         from_db=ls_db1,
         to_url=sg_admin_url, to_db=sg_db
     )
 
-    repl_two = client.start_replication(
+    client.start_replication(
         url=ls_url,
         continuous=True,
         from_url=sg_admin_url, from_db=sg_db,
@@ -936,14 +936,14 @@ def test_replication_with_multiple_client_dbs_and_single_sync_gateway_db(setup_c
     )
 
     # Setup continuous push / pull replication from ls_db2 to sg_db
-    repl_three = client.start_replication(
+    client.start_replication(
         url=ls_url,
         continuous=True,
         from_db=ls_db2,
         to_url=sg_admin_url, to_db=sg_db
     )
 
-    repl_four = client.start_replication(
+    client.start_replication(
         url=ls_url,
         continuous=True,
         from_url=sg_admin_url, from_db=sg_db,
@@ -1003,9 +1003,9 @@ def test_verify_open_revs_with_revs_limit_push_conflict(setup_client_syncgateway
     client = MobileRestClient()
 
     # Test the endpoint, listener does not support users but should have a default response
-    mock_ls_session = client.get_session(url=ls_url)
+    client.get_session(url=ls_url)
     sg_user_channels = ["NBC"]
-    sg_user = client.create_user(url=sg_admin_url, db=sg_db, name=sg_user_name, password="password", channels=sg_user_channels)
+    client.create_user(url=sg_admin_url, db=sg_db, name=sg_user_name, password="password", channels=sg_user_channels)
     sg_session = client.create_session(url=sg_admin_url, db=sg_db, name=sg_user_name)
 
     ls_db = client.create_database(url=ls_url, name="ls_db")
@@ -1021,10 +1021,10 @@ def test_verify_open_revs_with_revs_limit_push_conflict(setup_client_syncgateway
 
     client.verify_docs_present(url=sg_admin_url, db=sg_db, expected_docs=ls_db_docs)
 
-    sg_docs_update = client.update_docs(url=sg_url, db=sg_db, docs=ls_db_docs, number_updates=num_revs, auth=sg_session)
+    client.update_docs(url=sg_url, db=sg_db, docs=ls_db_docs, number_updates=num_revs, auth=sg_session)
     sg_current_doc = client.get_doc(url=sg_url, db=sg_db, doc_id="ls_db_2", auth=sg_session)
 
-    ls_db_docs_update = client.update_docs(url=ls_url, db=ls_db, docs=ls_db_docs, number_updates=num_revs)
+    client.update_docs(url=ls_url, db=ls_db, docs=ls_db_docs, number_updates=num_revs)
     ls_current_doc = client.get_doc(url=ls_url, db=ls_db, doc_id="ls_db_2")
 
     client.wait_for_replication_status_idle(url=ls_url, replication_id=repl_one)

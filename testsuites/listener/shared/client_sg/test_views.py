@@ -6,6 +6,7 @@ from keywords.Document import Document
 from keywords.constants import SYNC_GATEWAY_CONFIGS
 from keywords.utils import log_info
 
+
 @pytest.mark.sanity
 @pytest.mark.listener
 @pytest.mark.syncgateway
@@ -56,7 +57,7 @@ def test_stale_revision_should_not_be_in_the_index(setup_client_syncgateway_test
     client = MobileRestClient()
 
     sg_user_channels = ["NBC"]
-    sg_user = client.create_user(url=sg_admin_url, db=sg_db, name=sg_user_name, password="password", channels=sg_user_channels)
+    client.create_user(url=sg_admin_url, db=sg_db, name=sg_user_name, password="password", channels=sg_user_channels)
     sg_session = client.create_session(url=sg_admin_url, db=sg_db, name=sg_user_name)
 
     view = """{
@@ -74,14 +75,14 @@ def test_stale_revision_should_not_be_in_the_index(setup_client_syncgateway_test
     ls_db = client.create_database(url=ls_url, name="ls_db")
 
     # Setup continuous push / pull replication from ls_db1 to sg_db
-    repl_push = client.start_replication(
+    client.start_replication(
         url=ls_url,
         continuous=True,
         from_db=ls_db,
         to_url=sg_admin_url, to_db=sg_db
     )
 
-    repl_pull = client.start_replication(
+    client.start_replication(
         url=ls_url,
         continuous=True,
         from_url=sg_admin_url, from_db=sg_db,
@@ -89,7 +90,7 @@ def test_stale_revision_should_not_be_in_the_index(setup_client_syncgateway_test
     )
 
     design_doc_id = client.add_design_doc(url=ls_url, db=ls_db, name=d_doc_name, doc=view)
-    design_doc = client.get_doc(url=ls_url, db=ls_db, doc_id=design_doc_id)
+    client.get_doc(url=ls_url, db=ls_db, doc_id=design_doc_id)
 
     doc_helper = Document()
     doc_body = doc_helper.create_doc(id="doc_1", content={"hi": "I should be in the view"}, channels=sg_user_channels)
