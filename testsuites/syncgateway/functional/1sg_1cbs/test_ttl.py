@@ -126,7 +126,7 @@ def test_numeric_expiry_as_ttl(setup_1sg_1cbs_test):
 
     # doc_exp_10 should be available still
     doc_exp_10_result = client.get_doc(url=sg_url, db=sg_db, doc_id=doc_exp_10["id"], auth=sg_user_session)
-    assert doc_exp_10_result["id"] == "exp_10"
+    assert doc_exp_10_result["_id"] == "exp_10"
 
 
 @pytest.mark.sanity
@@ -179,7 +179,7 @@ def test_string_expiry_as_ttl(setup_1sg_1cbs_test):
 
     # doc_exp_10 should be available still
     doc_exp_10_result = client.get_doc(url=sg_url, db=sg_db, doc_id=doc_exp_10["id"], auth=sg_user_session)
-    assert doc_exp_10_result["id"] == "exp_10"
+    assert doc_exp_10_result["_id"] == "exp_10"
 
 
 @pytest.mark.sanity
@@ -236,7 +236,7 @@ def test_numeric_expiry_as_unix_date(setup_1sg_1cbs_test):
 
     # doc_exp_years should be available still
     doc_exp_years_result = client.get_doc(url=sg_url, db=sg_db, doc_id=doc_exp_years["id"], auth=sg_user_session)
-    assert doc_exp_years_result["id"] == "exp_years"
+    assert doc_exp_years_result["_id"] == "exp_years"
 
 
 @pytest.mark.sanity
@@ -297,7 +297,7 @@ def test_string_expiry_as_unix_date(setup_1sg_1cbs_test):
 
     # doc_exp_years should be available still
     doc_exp_years_result = client.get_doc(url=sg_url, db=sg_db, doc_id=doc_exp_years["id"], auth=sg_user_session)
-    assert doc_exp_years_result["id"] == "exp_years"
+    assert doc_exp_years_result["_id"] == "exp_years"
 
 
 @pytest.mark.sanity
@@ -354,7 +354,7 @@ def test_string_expiry_as_iso_8601_date(setup_1sg_1cbs_test):
 
     # doc_exp_years should be available still
     doc_exp_years_result = client.get_doc(url=sg_url, db=sg_db, doc_id=doc_exp_years["id"], auth=sg_user_session)
-    assert doc_exp_years_result["id"] == "exp_years"
+    assert doc_exp_years_result["_id"] == "exp_years"
 
 
 @pytest.mark.sanity
@@ -402,11 +402,11 @@ def test_removing_expiry(setup_1sg_1cbs_test):
 
     # doc_exp_3 should no longer have an expiry and should not raise an exception
     doc_exp_3_updated_result = client.get_doc(url=sg_url, db=sg_db, doc_id=doc_exp_3_updated["id"], auth=sg_user_session)
-    assert doc_exp_3_updated_result["id"] == "exp_3"
+    assert doc_exp_3_updated_result["_id"] == "exp_3"
 
     # doc_exp_10 should be available still and should not raise an exception
     doc_exp_10_result = client.get_doc(url=sg_url, db=sg_db, doc_id=doc_exp_10["id"], auth=sg_user_session)
-    assert doc_exp_10_result["id"] == "exp_10"
+    assert doc_exp_10_result["_id"] == "exp_10"
 
 
 @pytest.mark.sanity
@@ -459,7 +459,7 @@ def test_rolling_ttl_expires(setup_1sg_1cbs_test):
 
     # doc_exp_10 should be available still
     doc_exp_10_result = client.get_doc(url=sg_url, db=sg_db, doc_id=doc_exp_10["id"], auth=sg_user_session)
-    assert doc_exp_10_result["id"] == "exp_10"
+    assert doc_exp_10_result["_id"] == "exp_10"
 
 
 @pytest.mark.sanity
@@ -508,7 +508,7 @@ def test_rolling_ttl_remove_expirary(setup_1sg_1cbs_test):
 
     # doc_exp_3 should still be around due to removal of expiry
     doc_exp_3 = client.get_doc(url=sg_url, db=sg_db, doc_id=doc_exp_3["id"], auth=sg_user_session)
-    assert doc_exp_3["id"] == "exp_3"
+    assert doc_exp_3["_id"] == "exp_3"
 
     # doc_exp_10 should be expired due to the updates (10s) + sleep (5s)
     with pytest.raises(HTTPError) as he:
