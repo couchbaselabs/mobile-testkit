@@ -384,7 +384,7 @@ def test_removing_expiry(setup_1sg_1cbs_test):
 
     client = MobileRestClient()
 
-    sg_user = client.create_user(url=sg_url_admin, db=sg_db, name=sg_user_name, password=sg_user_password, channels=sg_user_channels)
+    client.create_user(url=sg_url_admin, db=sg_db, name=sg_user_name, password=sg_user_password, channels=sg_user_channels)
     sg_user_session = client.create_session(url=sg_url_admin, db=sg_db, name=sg_user_name)
 
     doc_util = Document()
@@ -437,7 +437,7 @@ def test_rolling_ttl_expires(setup_1sg_1cbs_test):
 
     client = MobileRestClient()
 
-    sg_user = client.create_user(url=sg_url_admin, db=sg_db, name=sg_user_name, password=sg_user_password, channels=sg_user_channels)
+    client.create_user(url=sg_url_admin, db=sg_db, name=sg_user_name, password=sg_user_password, channels=sg_user_channels)
     sg_user_session = client.create_session(url=sg_url_admin, db=sg_db, name=sg_user_name)
 
     doc_util = Document()
