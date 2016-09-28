@@ -99,10 +99,10 @@ def test_sg_replicate_basic_test(setup_2sg_1cbs_test):
     )
 
     logging.debug("replication_result 1: {}".format(replication_result))
-    
+
     assert replication_result["continuous"] is False, 'replication_result["continuous"] != False'
-    assert replication_result["docs_written"] == 1, 'replication_result["docs_written"] != 1' 
-    assert replication_result["docs_read"] == 1, 'replication_result["docs_read"] != 1' 
+    assert replication_result["docs_written"] == 1, 'replication_result["docs_written"] != 1'
+    assert replication_result["docs_read"] == 1, 'replication_result["docs_read"] != 1'
     assert replication_result["doc_write_failures"] == 0, 'replication_result["doc_write_failures"] != 0'
 
     # Start a pull replication sg1 <- sg2

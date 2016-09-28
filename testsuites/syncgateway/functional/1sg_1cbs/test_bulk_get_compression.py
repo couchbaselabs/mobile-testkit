@@ -172,8 +172,3 @@ def test_bulk_get_compression(setup_1sg_1cbs_test, sg_conf, num_docs, accept_enc
     # Verify all sync_gateways are running
     errors = cluster.verify_alive(mode)
     assert len(errors) == 0
-
-
-
-
-

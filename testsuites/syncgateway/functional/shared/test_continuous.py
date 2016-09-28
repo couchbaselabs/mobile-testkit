@@ -2,7 +2,6 @@ import time
 
 import concurrent.futures
 
-import testkit.settings
 from testkit.admin import Admin
 from testkit.cluster import Cluster
 from testkit.verify import verify_changes

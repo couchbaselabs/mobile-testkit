@@ -7,8 +7,6 @@ from keywords.utils import log_info
 
 import time
 
-import testkit.settings
-
 
 def multiple_db_unique_data_bucket_unique_index_bucket(cluster_conf, sg_conf, num_users, num_docs_per_user):
 

@@ -49,11 +49,11 @@ def issue_1524(cluster_conf, sg_conf, num_docs):
 
                 log_info("Grant 'user_no_channels' access to channel 'A' via sync function")
                 access_doc_pusher.add_doc(
-                        doc_id="access_doc",
-                        content={
-                            "accessUser": "user_no_channels",
-                            "accessChannels": ["A"]
-                        }
+                    doc_id="access_doc",
+                    content={
+                        "accessUser": "user_no_channels",
+                        "accessChannels": ["A"]
+                    }
                 )
 
                 time.sleep(5)

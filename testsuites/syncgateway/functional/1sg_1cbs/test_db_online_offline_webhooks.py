@@ -5,7 +5,7 @@ import os
 from testkit.admin import Admin
 from testkit.cluster import Cluster
 from testkit.web_server import WebServer
-from testkit.parallelize import *
+from testkit.parallelize import in_parallel
 
 from keywords.utils import log_info
 from keywords.Logging import Logging
@@ -163,7 +163,6 @@ def test_db_online_offline_webhooks_offline(setup_1sg_1cbs_test, num_users, num_
     time.sleep(10)
     log_info("webhook event {}".format(webhook_events))
 
-
     ws.stop()
 
     # Verify all sync_gateways are running
@@ -239,4 +238,3 @@ def test_db_online_offline_webhooks_offline_two(setup_1sg_1cbs_test, num_users, 
     # Verify all sync_gateways are running
     errors = cluster.verify_alive(mode)
     assert len(errors) == 0
-

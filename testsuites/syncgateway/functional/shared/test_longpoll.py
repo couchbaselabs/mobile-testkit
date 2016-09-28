@@ -10,8 +10,6 @@ from testkit.verify import verify_same_docs
 
 from keywords.utils import log_info
 
-import testkit.settings
-
 
 def longpoll_changes_parametrized(cluster_conf, sg_conf, num_docs, num_revisions):
 

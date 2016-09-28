@@ -3,7 +3,6 @@ import os
 
 from keywords.constants import SYNC_GATEWAY_CONFIGS
 from keywords.utils import log_info
-from keywords.ClusterKeywords import ClusterKeywords
 from keywords.Logging import Logging
 
 from testsuites.syncgateway.functional.shared.test_continuous import continuous_changes_parametrized
@@ -93,7 +92,6 @@ def test_continuous_changes_sanity_cc(setup_1sg_1cbs_test, sg_conf, num_docs, nu
         num_docs=num_docs,
         num_revisions=num_revisions
     )
-
 
 
 @pytest.mark.sanity
@@ -204,6 +202,7 @@ def test_online_to_offline_longpoll_changes_feed_controlled_close_sanity_mulitpl
         num_users=num_users
     )
 
+
 @pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.onlineoffline
@@ -218,7 +217,6 @@ def test_online_to_offline_changes_feed_controlled_close_longpoll_cc(setup_1sg_1
         sg_conf=sg_conf,
         num_docs=num_docs,
     )
-
 
 
 @pytest.mark.sanity
@@ -427,7 +425,7 @@ def test_issue_1524_cc(setup_1sg_1cbs_test, sg_conf, num_docs):
 @pytest.mark.access
 @pytest.mark.usefixtures("setup_1sg_1cbs_suite")
 @pytest.mark.parametrize("sg_conf", [
-    ("{}/sync_gateway_custom_sync_access_sanity_cc.json".format(SYNC_GATEWAY_CONFIGS)),
+    ("{}/custom_sync/sync_gateway_custom_sync_access_sanity_cc.json".format(SYNC_GATEWAY_CONFIGS)),
 ])
 def test_sync_access_sanity_cc(setup_1sg_1cbs_test, sg_conf):
     sync_access_sanity(

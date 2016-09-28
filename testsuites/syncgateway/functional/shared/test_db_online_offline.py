@@ -10,7 +10,6 @@ from testkit.verify import verify_changes
 import testkit.settings
 
 from requests.exceptions import HTTPError
-from requests.exceptions import RetryError
 
 from multiprocessing.pool import ThreadPool
 
@@ -182,7 +181,7 @@ def rest_scan(sync_gateway, db, online, num_docs, user_name, channels):
 
     # GET /{db}/_changes
     try:
-        changes = user.get_changes()
+        user.get_changes()
         # If successful, verify the _changes feed
         verify_changes(user, expected_num_docs=num_docs * 3, expected_num_revisions=1, expected_docs=user.cache)
     except HTTPError as e:
@@ -497,7 +496,6 @@ def online_to_offline_longpoll_changes_feed_controlled_close_sanity_mulitple_use
         assert len(docs_in_changes) == 0
         assert int(seq_num_component[0]) > 0
 
-
     # Verify all sync_gateways are running
     errors = cluster.verify_alive(mode)
     assert len(errors) == 0
@@ -629,8 +627,6 @@ def db_offline_tap_loss_sanity(cluster_conf, sg_conf, num_docs):
 
     cluster = Cluster(config=cluster_conf)
     mode = cluster.reset(sg_config_path=sg_conf)
-
-    admin = Admin(cluster.sync_gateways[0])
 
     # all db rest enpoints should succeed
     errors = rest_scan(cluster.sync_gateways[0], db="db", online=True, num_docs=num_docs, user_name="seth", channels=["ABC"])
@@ -780,9 +776,9 @@ def multiple_dbs_unique_buckets_lose_tap(cluster_conf, sg_conf, num_docs):
 #     assert(status == 500)
 
 
-## Scenario 17
-#@pytest.mark.dbonlineoffline
-#def test_db_online_offline_with_invalid_legal_config(cluster, disable_http_retry):
+# # Scenario 17
+# @pytest.mark.dbonlineoffline
+# def test_db_online_offline_with_invalid_legal_config(cluster, disable_http_retry):
 #    cluster.reset("bucket_online_offline/bucket_online_offline_offline_false_cc.json")
 #    admin = Admin(cluster.sync_gateways[0])
 #

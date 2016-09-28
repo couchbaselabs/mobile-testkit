@@ -82,12 +82,12 @@ def test_attachments_on_docs_rejected_by_sync_function(setup_1sg_1cbs_test):
     client = MobileRestClient()
     doc_util = Document()
 
-    sg_user = client.create_user(url=sg_url_admin, db=sg_db, name=sg_user_name, password=sg_user_password, channels=sg_user_channels)
+    client.create_user(url=sg_url_admin, db=sg_db, name=sg_user_name, password=sg_user_password, channels=sg_user_channels)
     sg_user_session = client.create_session(url=sg_url_admin, db=sg_db, name=sg_user_name)
 
     # Verify all docs are getting rejected
     with pytest.raises(HTTPError) as he:
-        docs = client.add_docs(url=sg_url, db=sg_db, number=100, id_prefix=sg_db, channels=sg_user_channels, auth=sg_user_session)
+        client.add_docs(url=sg_url, db=sg_db, number=100, id_prefix=sg_db, channels=sg_user_channels, auth=sg_user_session)
     assert he.value[0].startswith("403 Client Error: Forbidden for url:")
 
     # Create doc with attachment and push to sync_gateway
@@ -95,7 +95,7 @@ def test_attachments_on_docs_rejected_by_sync_function(setup_1sg_1cbs_test):
 
     # Verify all docs are getting rejected
     with pytest.raises(HTTPError) as he:
-        doc = client.add_doc(url=sg_url, db=sg_db, doc=doc_with_att, auth=sg_user_session)
+        client.add_doc(url=sg_url, db=sg_db, doc=doc_with_att, auth=sg_user_session)
     assert he.value[0].startswith("403 Client Error: Forbidden for url:")
 
     cb_util = CouchbaseServer()

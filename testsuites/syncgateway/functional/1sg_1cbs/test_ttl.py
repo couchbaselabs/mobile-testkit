@@ -107,7 +107,7 @@ def test_numeric_expiry_as_ttl(setup_1sg_1cbs_test):
     client = MobileRestClient()
     doc_util = Document()
 
-    sg_user = client.create_user(url=sg_url_admin, db=sg_db, name=sg_user_name, password=sg_user_password, channels=sg_user_channels)
+    client.create_user(url=sg_url_admin, db=sg_db, name=sg_user_name, password=sg_user_password, channels=sg_user_channels)
     sg_user_session = client.create_session(url=sg_url_admin, db=sg_db, name=sg_user_name)
 
     doc_exp_3_body = doc_util.create_doc(id="exp_3", expiry=3, channels=sg_user_channels)
@@ -121,11 +121,12 @@ def test_numeric_expiry_as_ttl(setup_1sg_1cbs_test):
 
     # doc_exp_3 should be expired
     with pytest.raises(HTTPError) as he:
-        doc_exp_3_result = client.get_doc(url=sg_url, db=sg_db, doc_id=doc_exp_3["id"], auth=sg_user_session)
+        client.get_doc(url=sg_url, db=sg_db, doc_id=doc_exp_3["id"], auth=sg_user_session)
     assert he.value[0].startswith("404 Client Error: Not Found for url:")
 
     # doc_exp_10 should be available still
     doc_exp_10_result = client.get_doc(url=sg_url, db=sg_db, doc_id=doc_exp_10["id"], auth=sg_user_session)
+    assert doc_exp_10_result["id"] == "exp_10"
 
 
 @pytest.mark.sanity
@@ -157,7 +158,7 @@ def test_string_expiry_as_ttl(setup_1sg_1cbs_test):
 
     client = MobileRestClient()
 
-    sg_user = client.create_user(url=sg_url_admin, db=sg_db, name=sg_user_name, password=sg_user_password, channels=sg_user_channels)
+    client.create_user(url=sg_url_admin, db=sg_db, name=sg_user_name, password=sg_user_password, channels=sg_user_channels)
     sg_user_session = client.create_session(url=sg_url_admin, db=sg_db, name=sg_user_name)
 
     doc_util = Document()
@@ -173,11 +174,12 @@ def test_string_expiry_as_ttl(setup_1sg_1cbs_test):
 
     # doc_exp_3 should be expired
     with pytest.raises(HTTPError) as he:
-        doc_exp_3_result = client.get_doc(url=sg_url, db=sg_db, doc_id=doc_exp_3["id"], auth=sg_user_session)
+        client.get_doc(url=sg_url, db=sg_db, doc_id=doc_exp_3["id"], auth=sg_user_session)
     assert he.value[0].startswith("404 Client Error: Not Found for url:")
 
     # doc_exp_10 should be available still
     doc_exp_10_result = client.get_doc(url=sg_url, db=sg_db, doc_id=doc_exp_10["id"], auth=sg_user_session)
+    assert doc_exp_10_result["id"] == "exp_10"
 
 
 @pytest.mark.sanity
@@ -210,7 +212,7 @@ def test_numeric_expiry_as_unix_date(setup_1sg_1cbs_test):
 
     client = MobileRestClient()
 
-    sg_user = client.create_user(url=sg_url_admin, db=sg_db, name=sg_user_name, password=sg_user_password, channels=sg_user_channels)
+    client.create_user(url=sg_url_admin, db=sg_db, name=sg_user_name, password=sg_user_password, channels=sg_user_channels)
     sg_user_session = client.create_session(url=sg_url_admin, db=sg_db, name=sg_user_name)
 
     time_util = Time()
@@ -219,7 +221,7 @@ def test_numeric_expiry_as_unix_date(setup_1sg_1cbs_test):
     doc_util = Document()
 
     doc_exp_3_body = doc_util.create_doc(id="exp_3", expiry=unix_time_3s_ahead, channels=sg_user_channels)
-    doc_exp_years_body = doc_util.create_doc(id="exp_10", expiry=1767225600, channels=sg_user_channels)
+    doc_exp_years_body = doc_util.create_doc(id="exp_years", expiry=1767225600, channels=sg_user_channels)
 
     doc_exp_3 = client.add_doc(url=sg_url, db=sg_db, doc=doc_exp_3_body, auth=sg_user_session)
     doc_exp_years = client.add_doc(url=sg_url, db=sg_db, doc=doc_exp_years_body, auth=sg_user_session)
@@ -229,11 +231,12 @@ def test_numeric_expiry_as_unix_date(setup_1sg_1cbs_test):
 
     # doc_exp_3 should be expired
     with pytest.raises(HTTPError) as he:
-        doc_exp_3_result = client.get_doc(url=sg_url, db=sg_db, doc_id=doc_exp_3["id"], auth=sg_user_session)
+        client.get_doc(url=sg_url, db=sg_db, doc_id=doc_exp_3["id"], auth=sg_user_session)
     assert he.value[0].startswith("404 Client Error: Not Found for url:")
 
-    # doc_exp_10 should be available still
+    # doc_exp_years should be available still
     doc_exp_years_result = client.get_doc(url=sg_url, db=sg_db, doc_id=doc_exp_years["id"], auth=sg_user_session)
+    assert doc_exp_years_result["id"] == "exp_years"
 
 
 @pytest.mark.sanity
@@ -266,7 +269,7 @@ def test_string_expiry_as_unix_date(setup_1sg_1cbs_test):
 
     client = MobileRestClient()
 
-    sg_user = client.create_user(url=sg_url_admin, db=sg_db, name=sg_user_name, password=sg_user_password, channels=sg_user_channels)
+    client.create_user(url=sg_url_admin, db=sg_db, name=sg_user_name, password=sg_user_password, channels=sg_user_channels)
     sg_user_session = client.create_session(url=sg_url_admin, db=sg_db, name=sg_user_name)
 
     time_util = Time()
@@ -279,7 +282,7 @@ def test_string_expiry_as_unix_date(setup_1sg_1cbs_test):
     doc_util = Document()
 
     doc_exp_3_body = doc_util.create_doc(id="exp_3", expiry=unix_time_3s_ahead_string, channels=sg_user_channels)
-    doc_exp_years_body = doc_util.create_doc(id="exp_10", expiry="1767225600", channels=sg_user_channels)
+    doc_exp_years_body = doc_util.create_doc(id="exp_years", expiry="1767225600", channels=sg_user_channels)
 
     doc_exp_3 = client.add_doc(url=sg_url, db=sg_db, doc=doc_exp_3_body, auth=sg_user_session)
     doc_exp_years = client.add_doc(url=sg_url, db=sg_db, doc=doc_exp_years_body, auth=sg_user_session)
@@ -289,11 +292,12 @@ def test_string_expiry_as_unix_date(setup_1sg_1cbs_test):
 
     # doc_exp_3 should be expired
     with pytest.raises(HTTPError) as he:
-        doc_exp_3_result = client.get_doc(url=sg_url, db=sg_db, doc_id=doc_exp_3["id"], auth=sg_user_session)
+        client.get_doc(url=sg_url, db=sg_db, doc_id=doc_exp_3["id"], auth=sg_user_session)
     assert he.value[0].startswith("404 Client Error: Not Found for url:")
 
-    # doc_exp_10 should be available still
+    # doc_exp_years should be available still
     doc_exp_years_result = client.get_doc(url=sg_url, db=sg_db, doc_id=doc_exp_years["id"], auth=sg_user_session)
+    assert doc_exp_years_result["id"] == "exp_years"
 
 
 @pytest.mark.sanity
@@ -326,7 +330,7 @@ def test_string_expiry_as_iso_8601_date(setup_1sg_1cbs_test):
 
     client = MobileRestClient()
 
-    sg_user = client.create_user(url=sg_url_admin, db=sg_db, name=sg_user_name, password=sg_user_password, channels=sg_user_channels)
+    client.create_user(url=sg_url_admin, db=sg_db, name=sg_user_name, password=sg_user_password, channels=sg_user_channels)
     sg_user_session = client.create_session(url=sg_url_admin, db=sg_db, name=sg_user_name)
 
     time_util = Time()
@@ -335,7 +339,7 @@ def test_string_expiry_as_iso_8601_date(setup_1sg_1cbs_test):
     doc_util = Document()
 
     doc_exp_3_body = doc_util.create_doc(id="exp_3", expiry=iso_datetime, channels=sg_user_channels)
-    doc_exp_years_body = doc_util.create_doc(id="exp_10", expiry="2026-01-01T00:00:00.000+00:00", channels=sg_user_channels)
+    doc_exp_years_body = doc_util.create_doc(id="exp_years", expiry="2026-01-01T00:00:00.000+00:00", channels=sg_user_channels)
 
     doc_exp_3 = client.add_doc(url=sg_url, db=sg_db, doc=doc_exp_3_body, auth=sg_user_session)
     doc_exp_years = client.add_doc(url=sg_url, db=sg_db, doc=doc_exp_years_body, auth=sg_user_session)
@@ -345,11 +349,12 @@ def test_string_expiry_as_iso_8601_date(setup_1sg_1cbs_test):
 
     # doc_exp_3 should be expired
     with pytest.raises(HTTPError) as he:
-        doc_exp_3_result = client.get_doc(url=sg_url, db=sg_db, doc_id=doc_exp_3["id"], auth=sg_user_session)
+        client.get_doc(url=sg_url, db=sg_db, doc_id=doc_exp_3["id"], auth=sg_user_session)
     assert he.value[0].startswith("404 Client Error: Not Found for url:")
 
-    # doc_exp_10 should be available still
+    # doc_exp_years should be available still
     doc_exp_years_result = client.get_doc(url=sg_url, db=sg_db, doc_id=doc_exp_years["id"], auth=sg_user_session)
+    assert doc_exp_years_result["id"] == "exp_years"
 
 
 @pytest.mark.sanity
@@ -397,9 +402,11 @@ def test_removing_expiry(setup_1sg_1cbs_test):
 
     # doc_exp_3 should no longer have an expiry and should not raise an exception
     doc_exp_3_updated_result = client.get_doc(url=sg_url, db=sg_db, doc_id=doc_exp_3_updated["id"], auth=sg_user_session)
+    assert doc_exp_3_updated_result["id"] == "exp_3"
 
     # doc_exp_10 should be available still and should not raise an exception
     doc_exp_10_result = client.get_doc(url=sg_url, db=sg_db, doc_id=doc_exp_10["id"], auth=sg_user_session)
+    assert doc_exp_10_result["id"] == "exp_10"
 
 
 @pytest.mark.sanity
@@ -440,18 +447,19 @@ def test_rolling_ttl_expires(setup_1sg_1cbs_test):
     doc_exp_3 = client.add_doc(url=sg_url, db=sg_db, doc=doc_exp_3_body, auth=sg_user_session)
     doc_exp_10 = client.add_doc(url=sg_url, db=sg_db, doc=doc_exp_10_body, auth=sg_user_session)
 
-    doc_exp_3_updated = client.update_doc(url=sg_url, db=sg_db, doc_id=doc_exp_3["id"], number_updates=10, expiry=3, auth=sg_user_session)
+    client.update_doc(url=sg_url, db=sg_db, doc_id=doc_exp_3["id"], number_updates=10, expiry=3, auth=sg_user_session)
 
     # Sleep should allow doc_exp_3 to expire, but still be in the window to get doc_exp_10
     time.sleep(5)
 
     # doc_exp_3 should be expired
     with pytest.raises(HTTPError) as he:
-        doc_exp_3_result = client.get_doc(url=sg_url, db=sg_db, doc_id=doc_exp_3["id"], auth=sg_user_session)
+        client.get_doc(url=sg_url, db=sg_db, doc_id=doc_exp_3["id"], auth=sg_user_session)
     assert he.value[0].startswith("404 Client Error: Not Found for url:")
 
     # doc_exp_10 should be available still
-    doc_exp_years_result = client.get_doc(url=sg_url, db=sg_db, doc_id=doc_exp_10["id"], auth=sg_user_session)
+    doc_exp_10_result = client.get_doc(url=sg_url, db=sg_db, doc_id=doc_exp_10["id"], auth=sg_user_session)
+    assert doc_exp_10_result["id"] == "exp_10"
 
 
 @pytest.mark.sanity
@@ -482,7 +490,7 @@ def test_rolling_ttl_remove_expirary(setup_1sg_1cbs_test):
 
     client = MobileRestClient()
 
-    sg_user = client.create_user(url=sg_url_admin, db=sg_db, name=sg_user_name, password=sg_user_password, channels=sg_user_channels)
+    client.create_user(url=sg_url_admin, db=sg_db, name=sg_user_name, password=sg_user_password, channels=sg_user_channels)
     sg_user_session = client.create_session(url=sg_url_admin, db=sg_db, name=sg_user_name)
 
     doc_util = Document()
@@ -492,18 +500,19 @@ def test_rolling_ttl_remove_expirary(setup_1sg_1cbs_test):
     doc_exp_3 = client.add_doc(url=sg_url, db=sg_db, doc=doc_exp_3_body, auth=sg_user_session)
     doc_exp_10 = client.add_doc(url=sg_url, db=sg_db, doc=doc_exp_10_body, auth=sg_user_session)
 
-    doc_exp_3_updated = client.update_doc(url=sg_url, db=sg_db, doc_id=doc_exp_3["id"], number_updates=10, expiry=3, delay=1, auth=sg_user_session)
-    doc_exp_3_updated_no_expiry = client.update_doc(url=sg_url, db=sg_db, doc_id=doc_exp_3["id"], number_updates=1, auth=sg_user_session)
+    client.update_doc(url=sg_url, db=sg_db, doc_id=doc_exp_3["id"], number_updates=10, expiry=3, delay=1, auth=sg_user_session)
+    client.update_doc(url=sg_url, db=sg_db, doc_id=doc_exp_3["id"], number_updates=1, auth=sg_user_session)
 
     # If expiry was not removed in the last update, this would expire doc_exp_3
     time.sleep(5)
 
     # doc_exp_3 should still be around due to removal of expiry
     doc_exp_3 = client.get_doc(url=sg_url, db=sg_db, doc_id=doc_exp_3["id"], auth=sg_user_session)
+    assert doc_exp_3["id"] == "exp_3"
 
     # doc_exp_10 should be expired due to the updates (10s) + sleep (5s)
     with pytest.raises(HTTPError) as he:
-        doc_exp_10_result = client.get_doc(url=sg_url, db=sg_db, doc_id=doc_exp_10["id"], auth=sg_user_session)
+        client.get_doc(url=sg_url, db=sg_db, doc_id=doc_exp_10["id"], auth=sg_user_session)
     assert he.value[0].startswith("404 Client Error: Not Found for url:")
 
 
@@ -534,7 +543,7 @@ def test_setting_expiry_in_bulk_docs(setup_1sg_1cbs_test):
 
     client = MobileRestClient()
 
-    sg_user = client.create_user(url=sg_url_admin, db=sg_db, name=sg_user_name, password=sg_user_password, channels=sg_user_channels)
+    client.create_user(url=sg_url_admin, db=sg_db, name=sg_user_name, password=sg_user_password, channels=sg_user_channels)
     sg_user_session = client.create_session(url=sg_url_admin, db=sg_db, name=sg_user_name)
 
     doc_util = Document()

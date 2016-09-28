@@ -1,5 +1,4 @@
 import time
-from testkit.user import User
 from testkit.admin import Admin
 from testkit.cluster import Cluster
 from testkit.verify import verify_changes
@@ -56,6 +55,3 @@ def single_user_single_channel_doc_updates(cluster_conf, sg_conf, num_docs, num_
 
     end = time.time()
     log.info("TIME:{}s".format(end - start))
-
-
-

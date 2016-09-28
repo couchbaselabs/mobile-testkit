@@ -6,8 +6,6 @@ from testkit.verify import verify_changes
 
 from keywords.utils import log_info
 
-import testkit.settings
-
 
 def seq(cluster_conf, sg_conf, num_users, num_docs, num_revisions):
 
@@ -65,7 +63,3 @@ def seq(cluster_conf, sg_conf, num_users, num_docs, num_revisions):
     # Verify all sync_gateways are running
     errors = cluster.verify_alive(mode)
     assert len(errors) == 0
-
-
-
-

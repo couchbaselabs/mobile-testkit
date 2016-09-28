@@ -1,7 +1,6 @@
 from testkit.admin import Admin
 from testkit.cluster import Cluster
 from testkit.verify import verify_changes
-import testkit.settings
 
 from keywords.utils import log_info
 

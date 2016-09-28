@@ -4,9 +4,8 @@ from testkit.admin import Admin
 from testkit.cluster import Cluster
 from testkit.verify import verify_changes
 
-import testkit.settings
-
 from keywords.utils import log_info
+
 
 def multiple_users_multiple_channels(cluster_conf, sg_conf):
 
@@ -179,6 +178,3 @@ def single_user_single_channel(cluster_conf, sg_conf):
     # Verify all sync_gateways are running
     errors = cluster.verify_alive(mode)
     assert len(errors) == 0
-
-
-

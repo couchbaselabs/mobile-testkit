@@ -3,10 +3,11 @@ import time
 from testkit.admin import Admin
 from testkit.cluster import Cluster
 
-from testkit.parallelize import *
+from testkit.parallelize import in_parallel
 
 from keywords.utils import log_info
 from keywords.utils import log_error
+
 
 # Scenario-2:
 # Single User Single Channel: Create Unique docs and update docs verify all num docs present in changes feed.
@@ -30,11 +31,8 @@ def mulitple_users_mulitiple_channels_mulitple_revisions(cluster_conf, sg_conf, 
     init_completed = time.time()
     log_info("Initialization completed. Time taken:{}s".format(init_completed - start))
 
-    users = ["User-" + str(i) for i in range(num_users)]
     channels = ["channel-" + str(i) for i in range(num_channels)]
     password = "password"
-    user_objects = []
-    use_uuid_names = True
 
     sgs = cluster.sync_gateways
 
@@ -102,9 +100,3 @@ def mulitple_users_mulitiple_channels_mulitple_revisions(cluster_conf, sg_conf, 
     log_info("Main test duration: {}".format(end - init_completed))
     log_info("Test setup time: {}".format(init_completed - start))
     log_info("Total Time taken: {}s".format(end - start))
-
-
-
-
-
-

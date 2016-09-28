@@ -228,7 +228,7 @@ def test_openidconnect_basic_test(setup_1sg_1cbs_test, sg_conf, is_admin_port, e
     assert resp.status_code == 200, "Expected 200 response using session_id from body"
 
     # try to use the refresh token to get a few new id_tokens
-    id_tokens = [ id_token ]
+    id_tokens = [id_token]
     for i in xrange(3):
 
         # This pause is required because according to @ajres:
@@ -501,7 +501,7 @@ def test_openidconnect_negative_token_expiry(setup_1sg_1cbs_test, sg_conf):
 def test_openidconnect_garbage_token(setup_1sg_1cbs_test, sg_conf):
     """Send a garbage/invalid token and make sure it cannot be used"""
 
-    ## WARNING!!!! SHOULD THERE BE A RESET?
+    # WARNING!!!! SHOULD THERE BE A RESET?
 
     cluster_config = setup_1sg_1cbs_test["cluster_config"]
     sg_url = setup_1sg_1cbs_test["sg_url"]
@@ -785,7 +785,3 @@ def test_openidconnect_public_session_endpoint(setup_1sg_1cbs_test, sg_conf):
     assert "Set-Cookie" in response.headers.keys()
     set_cookie_response = response.headers['Set-Cookie']
     assert "SyncGatewaySession" in set_cookie_response
-
-
-
-

@@ -70,7 +70,7 @@ def init_shadow_cluster(cluster, config_path_shadower, config_path_non_shadower)
 
     # the other sync gateway will be the shadower
     shadower_sg = cluster.sync_gateways[0]
-    
+
     admin = Admin(non_shadower_sg)
 
     alice_shadower = admin.register_user(
@@ -102,7 +102,7 @@ def init_shadow_cluster(cluster, config_path_shadower, config_path_non_shadower)
         source_bucket=source_bucket,
         data_bucket=data_bucket,
     )
-    
+
     return sc
 
 
@@ -137,17 +137,17 @@ def test_bucket_shadow_low_revs_limit_repeated_deletes(setup_2sg_1cbs_test):
     doc_id = sc.alice_shadower.add_doc()
 
     # Wait until it gets to source bucket
-    get_doc_from_source_bucket_retry(doc_id, sc.source_bucket)    
+    get_doc_from_source_bucket_retry(doc_id, sc.source_bucket)
 
     # Wait until upstream-rev in _sync metadata is non empty
-    # Otherwise, this will not reproduce a panic 
+    # Otherwise, this will not reproduce a panic
     while True:
         doc = sc.data_bucket.get(doc_id)
         if doc.success:
             if "upstream_rev" in doc.value["_sync"]:
                 break
         time.sleep(1)
-    
+
     # Repeatedly issue a delete operation for that doc via SG
     # Keep adding tombstone revs to the one and only branch
     rev_id_to_delete = None
@@ -165,11 +165,11 @@ def test_bucket_shadow_low_revs_limit_repeated_deletes(setup_2sg_1cbs_test):
     # Restart Shadow SG
     sc.shadower_sg.stop()
     sc.shadower_sg.start(default_config_path_shadower_low_revs)
-        
+
     # Check if SG's are up
     errors = cluster.verify_alive(sc.mode)
     assert len(errors) == 0
-    
+
 
 @pytest.mark.sanity
 @pytest.mark.syncgateway
@@ -183,7 +183,7 @@ def test_bucket_shadow_low_revs_limit(setup_2sg_1cbs_test):
     Update one doc more than 50 times
     Bring shadower online
     Look for panics
-    Add more revisions to SG -- expected issue 
+    Add more revisions to SG -- expected issue
     Look for panics
     (TODO: Update doc in shadow bucket and look for panics?)
     """
@@ -198,10 +198,10 @@ def test_bucket_shadow_low_revs_limit(setup_2sg_1cbs_test):
 
     # Write doc into shadower SG
     doc_id = sc.alice_shadower.add_doc()
-    
+
     # Update the doc just so we have a rev_id
     sc.alice_shadower.update_doc(doc_id, content=fake_doc_content, num_revision=1)
-    
+
     # Make sure it makes it to source bucket
     get_doc_with_content_from_source_bucket_retry(doc_id, fake_doc_content, sc.source_bucket)
 
@@ -216,22 +216,22 @@ def test_bucket_shadow_low_revs_limit(setup_2sg_1cbs_test):
     sc.shadower_sg.start(default_config_path_shadower_low_revs)
 
     # Look for panics
-    time.sleep(5) # Give tap feed a chance to initialize
+    time.sleep(5)  # Give tap feed a chance to initialize
     errors = cluster.verify_alive(sc.mode)
     assert len(errors) == 0
-    
+
     # Verify that the latest revision sync'd to source bucket
     get_doc_with_content_from_source_bucket_retry(doc_id, fake_doc_content, sc.source_bucket)
-    
+
     # Add more revisions
     sc.bob_non_shadower.update_doc(doc_id, num_revision=50)
     sc.bob_non_shadower.update_doc(doc_id, content=fake_doc_content, num_revision=1)
-    
+
     # Verify that the latest revision sync'd to source bucket
     get_doc_with_content_from_source_bucket_retry(doc_id, fake_doc_content, sc.source_bucket)
-    
+
     # Look for panics
-    time.sleep(5) # Wait until the shadower can process
+    time.sleep(5)  # Wait until the shadower can process
     errors = cluster.verify_alive(sc.mode)
     assert len(errors) == 0
 
@@ -253,15 +253,15 @@ def test_bucket_shadow_multiple_sync_gateways(setup_2sg_1cbs_test):
         default_config_path_shadower,
         default_config_path_non_shadower,
     )
-    
+
     # Write several docs into shadower SG
     doc_id_alice = sc.alice_shadower.add_doc()
-    
+
     doc_id_will_delete = sc.alice_shadower.add_doc()
-    
+
     # Write several docs into non-shadower SG
     doc_id_bob = sc.bob_non_shadower.add_doc()
-        
+
     # Ditto as above, but bump revs rather than writing brand new docs
     sc.bob_non_shadower.update_doc(doc_id_bob, num_revision=10)
     sc.alice_shadower.update_doc(doc_id_alice, num_revision=10)
@@ -271,21 +271,21 @@ def test_bucket_shadow_multiple_sync_gateways(setup_2sg_1cbs_test):
     get_doc_from_source_bucket_retry(doc_id_bob, sc.source_bucket)
     get_doc_from_source_bucket_retry(doc_id_alice, sc.source_bucket)
     get_doc_from_source_bucket_retry(doc_id_will_delete, sc.source_bucket)
-    
+
     # Stop the SG shadower
     sc.shadower_sg.stop()
-    
+
     # Write several docs + bump revs into non-shadower SG
     sc.bob_non_shadower.update_doc(doc_id_bob, num_revision=10)
-    doc_id_shadower_down = sc.bob_non_shadower.add_doc()
-    
+    sc.bob_non_shadower.add_doc()
+
     # Delete one of the docs
     sc.bob_non_shadower.delete_doc(doc_id_will_delete)
-    
+
     # Bring SG shadower back up
     sc.shadower_sg.start(default_config_path_shadower)
     time.sleep(5)  # Give tap feed a chance to initialize
-    
+
     # Verify SG shadower comes up without panicking, given writes from non-shadower during downtime.
     errors = cluster.verify_alive(sc.mode)
     assert len(errors) == 0
@@ -294,15 +294,15 @@ def test_bucket_shadow_multiple_sync_gateways(setup_2sg_1cbs_test):
     sc.bob_non_shadower.update_doc(doc_id_bob, num_revision=10)
 
     # Make sure the doc that was added while shadower was down makes it to source bucket
-    # FAILING: Currently known to be failing, so temporarily disabled 
+    # FAILING: Currently known to be failing, so temporarily disabled
     # get_doc_from_source_bucket_retry(doc_id_shadower_down, sc.source_bucket)
 
     # Manual check
     # Grep logs for:
     # WARNING: Error pushing rev of "f6eb40bf-d02a-4b4d-a3ab-779cce2fe9d5" to external bucket: MCResponse status=KEY_ENOENT, opcode=DELETE, opaque=0, msg: Not found -- db.(*Shadower).PushRevision() at shadower.go:164
-    
+
     # Verify SG shadower comes up without panicking, given writes from non-shadower during downtime.
-    time.sleep(5) # Give tap feed a chance to initialize
+    time.sleep(5)  # Give tap feed a chance to initialize
     errors = cluster.verify_alive(sc.mode)
     assert len(errors) == 0
 
@@ -327,9 +327,9 @@ def get_doc_with_content_from_source_bucket_retry(doc_id, content_dict, bucket):
                 raise Exception("Doc {} never made it to source bucket.  Aborting".format(doc_id))
             time.sleep(i)
             continue
-    return doc 
+    return doc
 
-    
+
 def get_doc_from_source_bucket_retry(doc_id, bucket):
     """
     Get a document from the couchbase source bucket
@@ -350,6 +350,4 @@ def get_doc_from_source_bucket_retry(doc_id, bucket):
                 raise Exception("Doc {} never made it to source bucket.  Aborting".format(doc_id))
             time.sleep(i)
             continue
-    return doc 
-
-
+    return doc

@@ -95,14 +95,14 @@ def test_attachment_revpos_when_ancestor_unavailable(setup_1sg_1cbs_test):
     doc_with_att = doc_util.create_doc(id="att_doc", content={"sample_key": "sample_val"}, attachment_name="sample_text.txt", channels=channels_list)
 
     doc_gen_1 = client.add_doc(url=sg_url, db=sg_db, doc=doc_with_att, auth=user1)
-    doc_gen_11 = client.update_doc(url=sg_url, db=sg_db, doc_id=doc_gen_1["id"], number_updates=10, auth=user1)
+    client.update_doc(url=sg_url, db=sg_db, doc_id=doc_gen_1["id"], number_updates=10, auth=user1)
 
     # Clear cached rev doc bodys from server and cycle sync_gateway
     sg_util.stop_sync_gateway(cluster_config=cluster_config, url=sg_url)
     cb_util.delete_couchbase_server_cached_rev_bodies(url=cbs_url, bucket=bucket)
     sg_util.start_sync_gateway(cluster_config=cluster_config, url=sg_url, config=sg_config)
 
-    conflict_doc = client.add_conflict(
+    client.add_conflict(
         url=sg_url, db=sg_db,
         doc_id=doc_gen_1["id"],
         parent_revisions=doc_gen_1["rev"],
@@ -135,7 +135,6 @@ def test_attachment_revpos_when_ancestor_unavailable_active_revision_doesnt_shar
     sg_url_admin = setup_1sg_1cbs_test["sg_url_admin"]
     sg_db = setup_1sg_1cbs_test["sg_db"]
     bucket = setup_1sg_1cbs_test["bucket"]
-    sg_config = setup_1sg_1cbs_test["sg_config"]
 
     log_info("Running 'test_attachment_revpos_when_ancestor_unavailable_active_revision_doesnt_share_ancestor'")
     log_info("Using cbs_url: {}".format(cbs_url))
@@ -152,14 +151,14 @@ def test_attachment_revpos_when_ancestor_unavailable_active_revision_doesnt_shar
     client = MobileRestClient()
     doc_util = Document()
 
-    sg_user = client.create_user(url=sg_url_admin, db=sg_db, name=sg_user_name, password=sg_user_password, channels=sg_user_channels)
+    client.create_user(url=sg_url_admin, db=sg_db, name=sg_user_name, password=sg_user_password, channels=sg_user_channels)
     sg_user_session = client.create_session(url=sg_url_admin, db=sg_db, name=sg_user_name)
 
     doc = doc_util.create_doc(id="doc_1", content={"sample_key": "sample_val"}, channels=sg_user_channels)
     doc_gen_1 = client.add_doc(url=sg_url, db=sg_db, doc=doc, auth=sg_user_session)
-    doc_gen_2 = client.update_doc(url=sg_url, db=sg_db, doc_id=doc_gen_1["id"], attachment_name="sample_text.txt", auth=sg_user_session)
-    doc_gen_3 = client.update_doc(url=sg_url, db=sg_db, doc_id=doc_gen_1["id"], auth=sg_user_session)
-    doc_gen_4 = client.update_doc(url=sg_url, db=sg_db, doc_id=doc_gen_1["id"], auth=sg_user_session)
+    client.update_doc(url=sg_url, db=sg_db, doc_id=doc_gen_1["id"], attachment_name="sample_text.txt", auth=sg_user_session)
+    client.update_doc(url=sg_url, db=sg_db, doc_id=doc_gen_1["id"], auth=sg_user_session)
+    client.update_doc(url=sg_url, db=sg_db, doc_id=doc_gen_1["id"], auth=sg_user_session)
 
     parent_rev_list = ["2-foo2", doc_gen_1["rev"]]
 

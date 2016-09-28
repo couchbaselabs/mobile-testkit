@@ -3,7 +3,6 @@ import os
 
 from keywords.ClusterKeywords import ClusterKeywords
 from keywords.utils import log_info
-from keywords.Logging import Logging
 from keywords.constants import SYNC_GATEWAY_CONFIGS
 
 
@@ -32,5 +31,3 @@ def setup_1sg_1cbs_suite(request):
 
     log_info("Tearing down 'setup_1sg_1cbs_suite' ...")
     cluster_helper.unset_cluster_config()
-
-
