@@ -33,7 +33,6 @@ def version_and_build(full_version):
     return version_parts[0], version_parts[1]
 
 
-
 class LiteServ:
 
     def __init__(self):
@@ -435,6 +434,7 @@ class LiteServ:
             binary_path,
             "-Log", "YES",
             "-LogSync", "YES",
+            "-LogSyncVerbose", "YES",
             "-LogCBLRouter", "YES",
             "-LogRemoteRequest", "YES",
             "--port", port,
