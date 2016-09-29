@@ -1,0 +1,21 @@
+---
+- hosts: load_generators
+  any_errors_fatal: true
+  tasks:
+  - name: SGOAD | go get sgload
+    shell: GOPATH=/opt/go go get -u -v github.com/couchbaselabs/sgload
+
+  - name: SGLOAD | Symlink sgload into /usr/local/bin
+    file: src=/opt/go/bin/sgload dest=/usr/local/bin/sgload owner=centos group=centos state=link
+    sudo: true
+
+  - name: SGLOAD | Sysctl file to increase available port range for outgoing socket connections
+    copy: src=files/sysctld.conf dest=/etc/sysctl.d/20-increase-port-range.conf owner=root group=root mode=0644
+    sudo: true
+
+  - name: SGLOAD | Shell cmd to increase available port range for outgoing socket connections
+    shell: sysctl --system
+    sudo: true
+
+
+
