@@ -3,9 +3,9 @@ import shutil
 from provision.ansible_runner import AnsibleRunner
 
 
-def fetch_sync_gateway_profile(folder_name):
+def fetch_sync_gateway_profile(cluster_config, folder_name):
 
-    ansible_runner = AnsibleRunner()
+    ansible_runner = AnsibleRunner(cluster_config=cluster_config)
 
     print("\n")
 

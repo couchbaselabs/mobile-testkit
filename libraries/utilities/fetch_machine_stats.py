@@ -6,9 +6,9 @@ from optparse import OptionParser
 from provision.ansible_runner import AnsibleRunner
 
 
-def fetch_machine_stats(folder_name):
+def fetch_machine_stats(cluster_config, folder_name):
 
-    ansible_runner = AnsibleRunner()
+    ansible_runner = AnsibleRunner(config=cluster_config)
 
     print("\n")
 
