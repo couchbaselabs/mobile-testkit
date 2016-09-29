@@ -836,7 +836,7 @@ def test_client_to_sync_gateway_complex_replication_with_revs_limit(setup_client
 
     ls_db_docs = client.add_docs(url=ls_url, db=ls_db, number=num_docs, id_prefix=ls_db, channels=sg_user_channels)
     expected_revs = num_revs + 20 + 2
-    ls_db_docs_update = client.update_docs(url=ls_url, db=ls_db, docs=ls_db_docs, delay=0.1, number_updates=num_revs)
+    client.update_docs(url=ls_url, db=ls_db, docs=ls_db_docs, delay=0.1, number_updates=num_revs)
 
     client.verify_max_revs_num_for_docs(url=ls_url, db=ls_db, docs=ls_db_docs, expected_max_number_revs_per_doc=expected_revs)
 
@@ -1037,6 +1037,3 @@ def test_verify_open_revs_with_revs_limit_push_conflict(setup_client_syncgateway
 
     expected_sg_revs = [ls_current_doc["_rev"], sg_current_doc["_rev"]]
     client.verify_open_revs(url=sg_admin_url, db=sg_db, doc_id=sg_current_doc["_id"], expected_open_revs=expected_sg_revs)
-
-
-

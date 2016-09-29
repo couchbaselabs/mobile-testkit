@@ -8,6 +8,7 @@ from keywords.constants import SYNC_GATEWAY_CONFIGS
 from keywords.MobileRestClient import MobileRestClient
 from keywords.ChangesTracker import ChangesTracker
 from keywords.SyncGateway import SyncGateway
+from keywords.constants import Platform
 
 
 @pytest.mark.sanity
@@ -40,6 +41,10 @@ def test_longpoll_changes_termination_timeout(setup_client_syncgateway_test):
     )
 
     client = MobileRestClient()
+    if client.get_server_platform(ls_url) == Platform.macosx:
+        # Fail until this is fixed: https://github.com/couchbase/couchbase-lite-ios/issues/1236
+        assert 0
+
     client.create_database(ls_url, ls_db)
 
     ct = ChangesTracker(ls_url, ls_db)
@@ -96,6 +101,10 @@ def test_longpoll_changes_termination_heartbeat(setup_client_syncgateway_test):
     )
 
     client = MobileRestClient()
+    if client.get_server_platform(ls_url) == Platform.macosx:
+        # Fail until this is fixed: https://github.com/couchbase/couchbase-lite-ios/issues/1236
+        assert 0
+
     client.create_database(ls_url, ls_db)
 
     ct = ChangesTracker(ls_url, ls_db)
@@ -118,13 +127,3 @@ def test_longpoll_changes_termination_heartbeat(setup_client_syncgateway_test):
     log_info(dbs)
     database = client.get_database(url=ls_url, db_name=ls_db)
     log_info(database)
-
-
-
-
-
-
-
-
-
-
