@@ -12,7 +12,7 @@ if __name__ == "__main__":
         print ("Make sure CLUSTER_CONFIG is defined and pointing to the configuration you would like to provision")
         raise KeyError("CLUSTER_CONFIG not defined. Unable to provision cluster.")
 
-    ansible_runner = AnsibleRunner()
+    ansible_runner = AnsibleRunner(config=cluster_config)
     status = ansible_runner.run_ansible_playbook("os-level-modifications.yml")
     assert status == 0, "Failed to make os modifications"
 

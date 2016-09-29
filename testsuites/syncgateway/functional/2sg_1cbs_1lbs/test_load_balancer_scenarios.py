@@ -66,7 +66,7 @@ def setup_2sg_1cb_1lbs_test(request):
 @pytest.mark.syncgateway
 @pytest.mark.nginx
 @pytest.mark.changes
-@pytest.mark.usefixtures(setup_2sg_1cbs_1lbs_suite)
+@pytest.mark.usefixtures("setup_2sg_1cbs_1lbs_suite")
 def test_load_balance_sanity(setup_2sg_1cb_1lbs_test):
 
     cluster_util = ClusterKeywords()

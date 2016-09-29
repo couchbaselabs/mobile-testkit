@@ -28,7 +28,6 @@ pycrypto==2.6.1
 pyflakes==1.2.3
 PyJWT==1.4.0
 pytest==3.0.2
-pytest-flake8==0.6
 pytest-html==1.10.0
 pytest-sugar==0.7.1
 pytest-timeout==1.0.0

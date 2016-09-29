@@ -154,6 +154,9 @@ class ClusterKeywords:
 
     def provision_cluster(self, cluster_config, server_version, sync_gateway_version, sync_gateway_config):
 
+        if server_version is None or sync_gateway_version is None or sync_gateway_version is None:
+            raise ProvisioningError("Please make sure you have server_version, sync_gateway_version, and sync_gateway_config are set")
+
         # Dirty hack -- these have to be put here in order to avoid circular imports
         from libraries.provision.install_couchbase_server import CouchbaseServerConfig
         from libraries.provision.provision_cluster import provision_cluster
