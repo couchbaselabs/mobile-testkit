@@ -1,0 +1,82 @@
+---
+- hosts: load_generators
+  any_errors_fatal: true
+
+  # Kill gateload
+  tasks:
+  - name: kill previous sgload screen
+    shell: screen -X -S sgload kill
+    ignore_errors: yes
+  - name: kill previous sgload_expvars screen
+    shell: screen -X -S sgload_expvars kill
+    ignore_errors: yes
+
+- hosts: sync_gateways
+  any_errors_fatal: true
+  sudo: true
+
+  # Copy machine stat collection script to sync_gateways
+  tasks:
+  - name: copy the machine collection script
+    copy: src=files/log_machine_stats.py dest=/home/sync_gateway/ owner=sync_gateway group=sync_gateway mode=755
+  # Start collecting machine stats, no polling and a 24 hour timeout
+  - name: start stat collection
+    shell: ./log_machine_stats.py chdir=/home/sync_gateway/
+    async: 86400
+    poll: 0
+
+  # Copy profile collection script to sync_gateways
+  - name: copy the profile collection script
+    copy: src=files/sync_gateway_collect_profile.py dest=/home/sync_gateway/ owner=sync_gateway group=sync_gateway mode=755
+  # Start collecting profile, no polling and a 24 hour timeout
+  - name: start profile collection
+    shell: ./sync_gateway_collect_profile.py /opt/couchbase-sync-gateway/bin/sync_gateway chdir=/home/sync_gateway/
+    async: 86400
+    poll: 0
+
+- hosts: sg_accels
+  any_errors_fatal: true
+  sudo: true
+
+  # Copy machine stat collection script to sg_accels
+  tasks:
+  - name: copy the machine collection script
+    copy: src=files/log_machine_stats.py dest=/home/sg_accel/ owner=sg_accel group=sg_accel mode=755
+  # Start collecting machine stats, no polling and a 24 hour timeout
+  - name: start stat collection
+    shell: ./log_machine_stats.py chdir=/home/sg_accel/
+    async: 86400
+    poll: 0
+
+  # Copy profile collection script to sg_accels
+  - name: copy the profile collection script
+    copy: src=files/sync_gateway_collect_profile.py dest=/home/sg_accel/ owner=sg_accel group=sg_accel mode=755
+  # Start collecting profile, no polling and a 24 hour timeout
+  - name: start profile collection
+    shell: ./sync_gateway_collect_profile.py /opt/couchbase-sg-accel/bin/sg_accel chdir=/home/sg_accel/
+    async: 86400
+    poll: 0
+
+- hosts: load_generators
+  any_errors_fatal: true
+
+  # Deploy gateload script and start gateload
+  tasks:
+  - name: copy the run sgload script
+    copy: src=files/run_sgload.sh dest=/home/centos/ owner=centos group=centos mode=0755
+  - name: start sgload in screen
+    shell: screen -d -m -S sgload ./run_sgload.sh
+    args:
+      chdir: /home/centos/
+  - name: remove previous expvar json files
+    shell: rm -rf expvar*.json
+    args:
+      chdir: /home/centos/
+  - name: copy the expvar collection script
+    copy: src=files/collect_expvars.sh dest=/home/centos/collect_expvars.sh owner=centos group=centos mode=0755
+  - name: collect expvar json in screen
+    shell: screen -d -m -S sgload_expvars ./collect_expvars.sh
+    args:
+      chdir: /home/centos/
+
+
