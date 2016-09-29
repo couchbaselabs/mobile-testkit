@@ -218,7 +218,6 @@ def test_bucket_online_offline_resync_with_online(setup_1sg_1cbs_test, num_users
         log_info('User {} got {} docs, expected docs: {}'.format(user_obj.name, docs, expected_docs))
         assert docs == expected_docs
 
-
     # Verify that
     # user created doc-ids exist in docs received in changes feed
     # expected revision is equal to received revision
@@ -391,7 +390,6 @@ def test_bucket_online_offline_resync_with_offline(setup_1sg_1cbs_test, num_user
         log_info('User {} got {} docs, expected docs: {}'.format(user_obj.name, docs, expected_docs))
         assert docs == expected_docs
 
-
     # Verify that
     # user created doc-ids exist in docs received in changes feed
     # expected revision is equal to received revision
@@ -472,7 +470,7 @@ def test_bucket_online_offline_resync_with_offline(setup_1sg_1cbs_test, num_user
 
     resync_result = async_resync_result.get()
     log_info("resync_changes {}".format(resync_result))
-    log_info("expecting num_changes  == num_docs {} * num_users {}".format( num_docs, num_users))
+    log_info("expecting num_changes  == num_docs {} * num_users {}".format(num_docs, num_users))
     assert resync_result['payload']['changes'] == num_docs * num_users
     assert resync_result['status_code'] == 200
 

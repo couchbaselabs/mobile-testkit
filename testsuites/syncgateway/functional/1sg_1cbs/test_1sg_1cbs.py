@@ -249,6 +249,7 @@ def test_db_offline_tap_loss_sanity_cc(setup_1sg_1cbs_test, sg_conf, num_docs):
         num_docs=num_docs,
     )
 
+
 @pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.onlineoffline
@@ -557,8 +558,3 @@ def test_single_user_single_channel_cc(setup_1sg_1cbs_test, sg_conf):
         cluster_conf=setup_1sg_1cbs_test["cluster_config"],
         sg_conf=sg_conf
     )
-
-
-
-
-

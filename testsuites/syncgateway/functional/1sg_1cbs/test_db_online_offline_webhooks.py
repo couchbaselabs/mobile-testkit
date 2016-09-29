@@ -143,7 +143,7 @@ def test_db_online_offline_webhooks_offline(setup_1sg_1cbs_test, num_users, num_
     admin.take_db_offline("db")
     time.sleep(5)
     db_info = admin.get_db_info("db")
-    log_info("Expecting db state {} found db state {}".format("Offline",db_info['state']))
+    log_info("Expecting db state {} found db state {}".format("Offline", db_info['state']))
     assert db_info["state"] == "Offline"
 
     webhook_events = ws.get_data()

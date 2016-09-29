@@ -173,6 +173,3 @@ def test_attachment_revpos_when_ancestor_unavailable_active_revision_doesnt_shar
             auth=sg_user_session
         )
     assert he.value[0].startswith("400 Client Error: Bad Request for url: ")
-
-
-

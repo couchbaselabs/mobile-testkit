@@ -156,7 +156,7 @@ def test_bucket_shadow_low_revs_limit_repeated_deletes(setup_2sg_1cbs_test):
         rev_id_to_delete = resp["rev"]
 
     # Recreate doc with that ID in the source bucket
-    result = sc.source_bucket.upsert(doc_id, json.loads('{"foo":"bar"}'))
+    sc.source_bucket.upsert(doc_id, json.loads('{"foo":"bar"}'))
 
     # Check if SG's are up
     errors = cluster.verify_alive(sc.mode)
