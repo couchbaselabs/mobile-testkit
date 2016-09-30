@@ -53,48 +53,5 @@ class Logging:
             prefix=test_name
         )
 
-        log_info("Analyzing: {}".format(zip_file_path))
-
-        if self.detected_data_races(zip_file_path):
-            log_error("Detected data races in logs: {}".format(zip_file_path))
-        else:
-            log_info("No 'DATA RACES' detected in sync_gateway logs")
-
-        if self.detected_panics(zip_file_path):
-            log_error("Detected panics in logs: {}".format(zip_file_path))
-        else:
-            log_info("No 'panics' detected in sync_gateway logs")
-
-    def detected_data_races(self, zip_file_path):
-        return self.detected_pattern("DATA RACE", zip_file_path)
-
-    def detected_panics(self, zip_file_path):
-        return self.detected_pattern("panic", zip_file_path)
-
-    def detected_pattern(self, pattern, zip_file_path):
-
-        if not zip_file_path:
-            raise IOError("File not found")
-
-        if not os.path.isfile(zip_file_path):
-            log_error("Can't run zipgrep, cannot find zipfile: {}".format(zip_file_path))
-            raise IOError("File not found")
-
-        log_info("Looking for '{}' in {}".format(pattern, zip_file_path))
-        process = Popen(["zipgrep", pattern, zip_file_path], stdout=PIPE)
-        (output, err) = process.communicate()
-
-        exit_code = process.wait()
-        if exit_code == 0:
-            log_info(output)
-            log_info(err)
-            log_info("Detected pattern {}: {}".format(pattern, output))
-            raise RuntimeError("DATA RACE or panic found!")
-
-        return False
-
-
-
-
-
-
+        # TODO: https://github.com/couchbaselabs/mobile-testkit/issues/707
+        log_info("TODO: Running Analysis: {}".format(zip_file_path))
