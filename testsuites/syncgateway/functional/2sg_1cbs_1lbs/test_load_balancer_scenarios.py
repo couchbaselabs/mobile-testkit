@@ -49,6 +49,12 @@ def setup_2sg_1cb_1lbs_test(request):
     test_name = request.node.name
     log_info("Setting up test '{}'".format(test_name))
 
+    cluster_util = ClusterKeywords()
+    cluster_util.reset_cluster(
+        cluster_config=os.environ["CLUSTER_CONFIG"],
+        sync_gateway_config="{}/sync_gateway_default_functional_tests_cc.json".format(SYNC_GATEWAY_CONFIGS)
+    )
+
     yield {"cluster_config": os.environ["CLUSTER_CONFIG"]}
 
     log_info("Tearing down test '{}'".format(test_name))
