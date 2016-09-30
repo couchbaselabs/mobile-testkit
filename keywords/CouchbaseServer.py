@@ -182,8 +182,15 @@ class CouchbaseServer:
         resp = requests.get("{}/pools/default".format(url), auth=self._auth)
         resp.raise_for_status()
         resp_json = resp.json()
-        mem_total = resp_json["nodes"][0]["systemStats"]["mem_total"]
-        return mem_total
+
+        # Workaround for https://github.com/couchbaselabs/mobile-testkit/issues/709
+        # where some node report mem_total = 0. Loop over all the nodes and find highest val
+        mem_total_highest = 0
+        for node in resp_json["nodes"]:
+            mem_total = node["systemStats"]["mem_total"]
+            if mem_total > mem_total_highest:
+                mem_total_highest = mem_total
+        return mem_total_highest
 
     def create_buckets(self, url, bucket_names):
         """
