@@ -98,7 +98,7 @@ def run_perf_test(number_pullers, number_pushers, use_gateload, gen_gateload_con
 
     # write expvars to file, will exit when gateload scenario is done
     print ">>> Logging expvars"
-    log_expvars(test_run_id)
+    log_expvars(cluster_config, test_run_id)
 
     # Killing sync_gateway and sg_accel will trigger collection of
     #    1) machine_stats
@@ -117,19 +117,19 @@ def run_perf_test(number_pullers, number_pushers, use_gateload, gen_gateload_con
     time.sleep(61)
 
     print ">>> Fetch machine stats"
-    fetch_machine_stats(test_run_id)
+    fetch_machine_stats(cluster_config, test_run_id)
 
     # Fetch profile for sync_gateway while the endpoints are still running
     print ">>> Fetch Sync Gateway profile"
-    fetch_sync_gateway_profile(test_run_id)
+    fetch_sync_gateway_profile(cluster_config, test_run_id)
 
     # Copy sync_gateway logs to test results directory
     print ">>> Fetch Sync Gateway logs"
-    fetch_sync_gateway_logs(test_run_id, is_perf_run=True)
+    fetch_sync_gateway_logs(cluster_config, test_run_id, is_perf_run=True)
 
     # Invoke cb-collect-info and push to support portal
     print ">>> Invoke cbcollect info and push to support portal"
-    push_cbcollect_info_supportal()
+    push_cbcollect_info_supportal(cluster_config)
 
 
 if __name__ == "__main__":
