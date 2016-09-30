@@ -16,7 +16,7 @@ def install_deps(cluster_config):
         raise ProvisioningError("Failed to make os modifications")
 
     status = ansible_runner.run_ansible_playbook("install-common-tools.yml")
-    if status == 0:
+    if status != 0:
         raise ProvisioningError("Failed to install dependencies")
 
 if __name__ == "__main__":
