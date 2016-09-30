@@ -27,7 +27,8 @@ def run_perf_test(number_pullers, number_pushers, use_gateload, gen_gateload_con
         print ("Make sure CLUSTER_CONFIG is defined and pointing to the configuration you would like to provision")
         sys.exit(1)
 
-    ansible_runner = AnsibleRunner()
+    print("Running perf test against cluster: {}".format(cluster_config))
+    ansible_runner = AnsibleRunner(cluster_config)
 
     test_run_id = "{}_{}".format(test_id, time.strftime("%Y-%m-%d-%H-%M-%S"))
 
@@ -37,7 +38,7 @@ def run_perf_test(number_pullers, number_pushers, use_gateload, gen_gateload_con
     print "Resetting Sync Gateway"
     if sync_gateway_config_path is None or len(sync_gateway_config_path) == 0:
         raise Exception("Missing Sync Gateway config file path")
-    cluster = Cluster()
+    cluster = Cluster(config=cluster_config)
     if reset_sync_gateway:
         mode = cluster.reset(sync_gateway_config_path)
         print("Running in mode: {}".format(mode))
@@ -53,7 +54,6 @@ def run_perf_test(number_pullers, number_pushers, use_gateload, gen_gateload_con
 
         # Build gateload
         print ">>> Building gateload"
-        ansible_runner = AnsibleRunner()
         status = ansible_runner.run_ansible_playbook(
             "build-gateload.yml",
             extra_vars={},
@@ -64,6 +64,7 @@ def run_perf_test(number_pullers, number_pushers, use_gateload, gen_gateload_con
         print ">>> Generate gateload configs"
         if gen_gateload_config:
             generate_gateload_configs.main(
+                cluster_config,
                 number_pullers,
                 number_pushers,
                 test_run_id,
@@ -79,8 +80,6 @@ def run_perf_test(number_pullers, number_pushers, use_gateload, gen_gateload_con
             extra_vars={},
         )
         assert status == 0, "Could not start gateload"
-
-
 
     else:
         print "Using Gatling"

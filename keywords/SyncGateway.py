@@ -129,7 +129,7 @@ class SyncGateway:
             verify_sg_accel_version(ac["ip"], sync_gateway_version)
 
     def start_sync_gateway(self, cluster_config, url, config):
-        target = hostname_for_url(url)
+        target = hostname_for_url(cluster_config, url)
         log_info("Starting sync_gateway on {} ...".format(target))
         ansible_runner = AnsibleRunner(cluster_config)
         config_path = os.path.abspath(config)
@@ -144,7 +144,7 @@ class SyncGateway:
             raise ProvisioningError("Could not start sync_gateway")
 
     def stop_sync_gateway(self, cluster_config, url):
-        target = hostname_for_url(url)
+        target = hostname_for_url(cluster_config, url)
         log_info("Shutting down sync_gateway on {} ...".format(target))
         ansible_runner = AnsibleRunner(cluster_config)
         status = ansible_runner.run_ansible_playbook(

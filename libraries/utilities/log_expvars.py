@@ -36,19 +36,19 @@ def write_expvars(results_obj, endpoint):
         }
 
 
-def log_expvars(folder_name):
+def log_expvars(cluster_config, folder_name):
     usage = """
     usage: log_expvars.py"
     """
 
     # Get gateload ips from ansible inventory
-    lgs_host_vars = hosts_for_tag("load_generators")
+    lgs_host_vars = hosts_for_tag(cluster_config, "load_generators")
     lgs = [lg["ansible_host"] for lg in lgs_host_vars]
     lgs_expvar_endpoints = [lg + ":9876/debug/vars" for lg in lgs]
     log_info("Monitoring gateloads until they finish: {}".format("\n".join(lgs_expvar_endpoints)))
 
     # Get sync_gateway ips from ansible inventory
-    sgs_host_vars = hosts_for_tag("sync_gateways")
+    sgs_host_vars = hosts_for_tag(cluster_config, "sync_gateways")
     sgs = [sgv["ansible_host"] for sgv in sgs_host_vars]
     sgs_expvar_endpoints = [sg + ":4985/_expvar" for sg in sgs]
     log_info("Monitoring sync_gateways: {}".format("\n".join(sgs_expvar_endpoints)))

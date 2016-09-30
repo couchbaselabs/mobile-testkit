@@ -52,7 +52,6 @@ def install_nginx(cluster_config):
     assert status == 0, "Failed to install nginx!"
 
 
-
 if __name__ == "__main__":
     usage = """usage: python libraries/provision/install_nginx.py"""
 

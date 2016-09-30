@@ -103,7 +103,7 @@ def install_sync_gateway(cluster_config, sync_gateway_config):
 
     # Create buckets unless the user explicitly asked to skip this step
     if not sync_gateway_config.skip_bucketcreation:
-        create_server_buckets(os.environ["CLUSTER_CONFIG"], sync_gateway_config)
+        create_server_buckets(cluster_config, sync_gateway_config)
 
     # Install Sync Gateway via Source or Package
     if sync_gateway_config.commit is not None:

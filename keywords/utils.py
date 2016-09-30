@@ -68,8 +68,8 @@ def version_and_build(full_version):
 
 
 # Targeted playbooks need to use the host_name (i.e. sg1)
-def hostname_for_url(url):
-    cluster_config = "{}.json".format(os.environ["CLUSTER_CONFIG"])
+def hostname_for_url(cluster_config, url):
+    cluster_config = "{}.json".format(cluster_config)
     with open(cluster_config) as f:
         logging.info("Using cluster config: {}".format(cluster_config))
         cluster = json.loads(f.read())

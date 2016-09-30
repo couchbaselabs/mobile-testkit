@@ -1,15 +1,23 @@
 import subprocess
 import sys
+import os
 from provisioning_config_parser import hosts_for_tag
 
+from keywords.utils import log_info
 
 if __name__ == "__main__":
     usage = """
     usage: python monitor_gateload.py"
     """
 
+    try:
+        cluster_conf = os.environ["CLUSTER_CONFIG"]
+    except KeyError as ke:
+        log_info("Make sure CLUSTER_CONFIG is defined and pointing to the configuration you would like to provision")
+        raise KeyError("CLUSTER_CONFIG not defined. Unable to provision cluster.")
+
     # Get gateload ips from ansible inventory
-    lgs_host_vars = hosts_for_tag("load_generators")
+    lgs_host_vars = hosts_for_tag(cluster_conf, "load_generators")
     lgs = [lg["ansible_host"] for lg in lgs_host_vars]
 
     if len(lgs) == 0:

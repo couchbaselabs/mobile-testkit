@@ -58,7 +58,10 @@ def test_auto_prune_with_pull(setup_client_syncgateway_test):
 
     client = MobileRestClient()
     sg_helper = SyncGateway()
-    sg_helper.start_sync_gateway(cluster_config=cluster_config, url=sg_url, config="{}/walrus.json".format(SYNC_GATEWAY_CONFIGS))
+    sg_helper.start_sync_gateway(
+        cluster_config=cluster_config, url=sg_url,
+        config="{}/walrus.json".format(SYNC_GATEWAY_CONFIGS)
+    )
 
     log_info("Running 'test_auto_prune_listener_sanity' ...")
     log_info("ls_url: {}".format(ls_url))
