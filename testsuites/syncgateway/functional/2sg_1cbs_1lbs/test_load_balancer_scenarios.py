@@ -28,11 +28,11 @@ def setup_2sg_1cbs_1lbs_suite(request):
     cluster_helper.set_cluster_config("2sg_1cbs_1lbs")
 
     cluster_helper.provision_cluster(
-        cluster_config=os.environ["CLUSTER_CONFIG"],
-        server_version=server_version,
-        sync_gateway_version=sync_gateway_version,
-        sync_gateway_config="{}/sync_gateway_default_functional_tests_di.json".format(SYNC_GATEWAY_CONFIGS)
-    )
+         cluster_config=os.environ["CLUSTER_CONFIG"],
+         server_version=server_version,
+         sync_gateway_version=sync_gateway_version,
+         sync_gateway_config="{}/sync_gateway_default_functional_tests_cc.json".format(SYNC_GATEWAY_CONFIGS)
+     )
 
     yield
 
