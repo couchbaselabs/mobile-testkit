@@ -109,7 +109,7 @@ def plot_sync_gateway_expvars(cluster_config, figure, json_file_name):
     print("Plotting sync_gateway expvars ...")
 
     # Get writer hostnames for provisioning_config
-    sg_writers = hosts_for_tag(cluster_config, "sync_gateway_index_writers")
+    sg_writers = hosts_for_tag(cluster_config, "sg_accels")
     sg_writer_hostnames = [sg_writer["ansible_host"] for sg_writer in sg_writers]
 
     with open(json_file_name, "r") as f:
@@ -169,7 +169,7 @@ def plot_machine_stats(cluster_config, figure, folder_path):
     ax3.set_title("CPU percent (writers=blue, readers=green")
 
     # Get writer hostnames for provisioning_config
-    sg_writers = hosts_for_tag(cluster_config, "sync_gateway_index_writers")
+    sg_writers = hosts_for_tag(cluster_config, "sg_accels")
     sg_writer_hostnames = [sg_writer["inventory_hostname"] for sg_writer in sg_writers]
 
     for machine in machine_stats:

@@ -50,16 +50,6 @@ def gateloads(cluster_config):
     return hosts_for_tag(cluster_config, tag)
 
 
-def sync_gateway_non_index_writers(cluster_config):
-    """
-    Get all the sync gateways that are not index writers, since we 
-    don't want to send load to those
-    """
-    sync_gateways = hosts_for_tag(cluster_config, "sync_gateways")
-    sync_gateway_index_writers = hosts_for_tag(cluster_config, "sync_gateway_index_writers")
-    return [sg for sg in sync_gateways if sg not in sync_gateway_index_writers]
-
-
 def render_gateload_template(sync_gateway, user_offset, number_of_pullers, number_of_pushers, doc_size, runtime_ms, rampup_interval_ms):
         # run template to produce file
         gateload_config = open("{}/files/gateload_config.json".format(PLAYBOOKS_HOME))
@@ -114,7 +104,7 @@ def upload_gateload_config(cluster_config, gateload, sync_gateway, user_offset, 
 
 def main(cluster_config, number_of_pullers, number_of_pushers, test_id, doc_size, runtime_ms, rampup_interval_ms):
 
-    sync_gateway_hosts = sync_gateway_non_index_writers(cluster_config)
+    sync_gateway_hosts = hosts_for_tag(cluster_config, "sync_gateways")
 
     gateload_hosts = gateloads(cluster_config)
 

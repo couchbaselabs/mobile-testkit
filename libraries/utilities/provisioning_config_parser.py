@@ -23,20 +23,3 @@ def hosts_for_tag(cluster_config, tag):
         return []
     hosts = group.get_hosts()
     return [host.get_vars() for host in hosts]
-
-
-def get_host_ips(cluster_conf):
-
-    ips = []
-    cbs_vars = hosts_for_tag(cluster_conf, "couchbase_servers")
-    sg_vars = hosts_for_tag(cluster_conf, "sync_gateways")
-    lg_vars = hosts_for_tag(cluster_conf, "load_generators")
-    sgw_vars = hosts_for_tag(cluster_conf, "sync_gateway_index_writers")
-
-    ips.extend([cbs_var["ansible_host"] for cbs_var in cbs_vars])
-    ips.extend([sg_var["ansible_host"] for sg_var in sg_vars])
-    ips.extend([lg_var["ansible_host"] for lg_var in lg_vars])
-    ips.extend([sgw_var["ansible_host"] for sgw_var in sgw_vars])
-
-    # Ips may be used for multiple purposes
-    return set(ips)
