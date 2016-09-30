@@ -509,13 +509,6 @@ class LiteServ:
         ])
         log_info(output)
 
-    def remove_liteserv(self, platform, version_build):
-        log_info("Removing {} LiteServ, version: {}".format(platform, version_build))
-        os.chdir(BINARY_DIR)
-        extracted_file_name = self.get_extracted_package_name(platform, version_build)
-        shutil.rmtree(extracted_file_name)
-        os.chdir("../..")
-
     def verify_liteserv_launched(self, platform, host, port, version_build):
         """Verify that the LiteServ is running with the expected version and platform.
 
