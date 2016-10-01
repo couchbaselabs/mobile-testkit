@@ -212,6 +212,8 @@ def test_peer_2_peer_sanity(setup_p2p_suite, setup_p2p_test):
     ls_db2_docs = client.add_docs(url=ls_url_two, db=ls_db2, number=num_docs_per_db, id_prefix="test_ls_db2")
 
     all_docs = client.merge(ls_db1_docs, ls_db2_docs)
+    assert len(all_docs) == 2000
+
     client.verify_docs_present(url=ls_url_one, db=ls_db1, expected_docs=all_docs)
     client.verify_docs_present(url=ls_url_two, db=ls_db2, expected_docs=all_docs)
 

@@ -4,7 +4,7 @@ import os
 from keywords.CouchbaseServer import CouchbaseServer
 from keywords.ClusterKeywords import ClusterKeywords
 from keywords.exceptions import ProvisioningError
-from keywords.utils import log_info
+from keywords.utils import log_warn
 
 from libraries.testkit.config import Config
 
@@ -96,7 +96,7 @@ def install_sync_gateway(cluster_config, sync_gateway_config):
         raise ProvisioningError("Invalid sync_gateway provisioning configuration. Exiting ...")
 
     if sync_gateway_config.build_flags != "":
-        log_info("\n\n!!! WARNING: You are building with flags: {} !!!\n\n".format(sync_gateway_config.build_flags))
+        log_warn("\n\n!!! WARNING: You are building with flags: {} !!!\n\n".format(sync_gateway_config.build_flags))
 
     ansible_runner = AnsibleRunner(cluster_config)
     config_path = os.path.abspath(sync_gateway_config.config_path)
