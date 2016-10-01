@@ -71,7 +71,7 @@ class LiteServ:
 
         elif platform == "ios":
             # TODO: Needs to be looked at when https://github.com/couchbaselabs/liteserv-ios/issues/1 is fixed
-            package_name = ""
+            raise LiteServError("https://github.com/couchbaselabs/liteserv-ios/issues/1")
 
         log_info("Download package(s): {}".format(package_name))
 
@@ -121,7 +121,7 @@ class LiteServ:
             url = "{}/couchbase-lite-net/{}/{}/{}".format(LATEST_BUILDS, version, build, file_name)
         elif platform == "ios":
             # TODO: Needs to be looked at when https://github.com/couchbaselabs/liteserv-ios/issues/1 is fixed
-            url = ""
+            raise LiteServError("https://github.com/couchbaselabs/liteserv-ios/issues/1")
 
         log_info("Download url: {}".format(url))
 
@@ -262,6 +262,9 @@ class LiteServ:
         """Launches LiteServ on iOS device
         Warning: Only works with a single device at the moment
         """
+
+        if storage_engine != "SQLite":
+            raise LiteServError("https://github.com/couchbaselabs/liteserv-ios/issues/1")
 
         binary = self.get_binary("ios", version_build, storage_engine)
         app_path = "{}/{}".format(BINARY_DIR, binary)
@@ -563,6 +566,8 @@ class LiteServ:
         elif platform == "net":
             if not is_net:
                 raise LiteServError("Expected android to be running on port. Other platform detected")
+        elif platform == "ios":
+            raise LiteServError("https://github.com/couchbaselabs/liteserv-ios/issues/1")
 
         # Validate that the version launched is the expected LiteServ version
         # Mac OSX - LiteServ: 1.2.1 (build 13)
