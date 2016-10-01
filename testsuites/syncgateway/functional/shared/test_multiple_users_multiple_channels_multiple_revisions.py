@@ -82,8 +82,12 @@ def mulitple_users_mulitiple_channels_mulitple_revisions(cluster_conf, sg_conf, 
                                                                                         doc_id, rev, expected_revision))
             if rev != expected_revision:
                 rev_errors.append(doc_id)
-                log_error('User {} doc_id got revision {}, expected revision {}'.format(user_obj.name,
-                                                                                        doc_id, rev, expected_revision))
+                log_error('User {} doc_id {} got revision {}, expected revision {}'.format(
+                    user_obj.name,
+                    doc_id,
+                    rev,
+                    expected_revision)
+                )
 
     assert len(rev_errors) == 0
 

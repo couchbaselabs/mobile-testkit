@@ -125,7 +125,7 @@ def run_perf_test(number_pullers, number_pushers, use_gateload, gen_gateload_con
 
     # Copy sync_gateway logs to test results directory
     print ">>> Fetch Sync Gateway logs"
-    fetch_sync_gateway_logs(cluster_config, test_run_id, is_perf_run=True)
+    fetch_sync_gateway_logs(cluster_config, test_run_id)
 
     # Invoke cb-collect-info and push to support portal
     print ">>> Invoke cbcollect info and push to support portal"

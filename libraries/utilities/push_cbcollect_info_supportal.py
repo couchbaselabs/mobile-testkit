@@ -1,6 +1,8 @@
+import os
 
 from provision.ansible_runner import AnsibleRunner
 
+from keywords.utils import log_info
 
 def push_cbcollect_info_supportal(cluster_config):
     """
@@ -13,4 +15,11 @@ def push_cbcollect_info_supportal(cluster_config):
     
 
 if __name__ == "__main__":
-    push_cbcollect_info_supportal()
+
+    try:
+        cluster_conf = os.environ["CLUSTER_CONFIG"]
+    except KeyError as ke:
+        log_info("Make sure CLUSTER_CONFIG is defined and pointing to the configuration you would like to provision")
+        raise KeyError("CLUSTER_CONFIG not defined. Unable to provision cluster.")
+
+    push_cbcollect_info_supportal(cluster_conf)

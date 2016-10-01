@@ -294,8 +294,5 @@ class Cluster:
         s += "\nCouchbase Servers\n"
         for server in self.servers:
             s += str(server)
-        s += "\nLoad Generators\n"
-        for lg in self.load_generators:
-            s += str(lg)
         s += "\n"
         return s

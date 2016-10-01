@@ -1,10 +1,5 @@
 import subprocess
-import requests
-import os
-import time
-import json
 
-from testkit.debug import *
 from testkit.syncgateway import SyncGateway
 
 from testkit import settings
@@ -14,7 +9,7 @@ log = logging.getLogger(settings.LOGGER)
 
 # For use with any listener based application (Android only)
 class Listener:
-    def __init__(self, target, local_port, apk_path, activity, reinstall):
+    def __init__(self, cluster_config, target, local_port, apk_path, activity, reinstall):
 
         self.target = target
         self.local_port = local_port
@@ -30,7 +25,7 @@ class Listener:
         # Wrap a Sync Gateway instance and use that as a client to hit the LiteServ listener
         # in Couchbase Lite
         fake_target = {"ip": None, "name": None}
-        self.sg = SyncGateway(fake_target)
+        self.sg = SyncGateway(cluster_config, fake_target)
         self.sg.url = self.url
 
         log.info("Listener running at {} ...".format(self.url))

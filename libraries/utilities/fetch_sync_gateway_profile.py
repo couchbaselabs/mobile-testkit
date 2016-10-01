@@ -2,10 +2,12 @@ import os.path
 import shutil
 from provision.ansible_runner import AnsibleRunner
 
+from keywords.utils import log_info
+
 
 def fetch_sync_gateway_profile(cluster_config, folder_name):
 
-    ansible_runner = AnsibleRunner(cluster_config=cluster_config)
+    ansible_runner = AnsibleRunner(config=cluster_config)
 
     print("\n")
 
@@ -21,7 +23,3 @@ def fetch_sync_gateway_profile(cluster_config, folder_name):
         shutil.move("/tmp/sync_gateway_profile", "testsuites/syncgateway/performance/results/{}/".format(folder_name))
 
     print("\n")
-
-
-if __name__ == "__main__":
-    fetch_sync_gateway_profile()

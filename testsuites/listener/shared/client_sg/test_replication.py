@@ -86,7 +86,7 @@ def test_initial_pull_replication(setup_client_syncgateway_test, continuous):
         # due to https://github.com/couchbase/couchbase-lite-java-core/issues/1409
         client.wait_for_replication_status_idle(ls_url, repl_id)
     else:
-        log_info("Waiting for no replications".format(repl_id))
+        log_info("Waiting for no replications: {}".format(repl_id))
         client.wait_for_no_replications(ls_url)
 
     # Verify docs replicated to client
@@ -179,7 +179,7 @@ def test_initial_push_replication(setup_client_syncgateway_test, continuous):
         log_info("Waiting for replication status 'Idle' for: {}".format(repl_id))
         client.wait_for_replication_status_idle(ls_url, repl_id)
     else:
-        log_info("Waiting for no replications".format(repl_id))
+        log_info("Waiting for no replications: {}".format(repl_id))
         client.wait_for_no_replications(ls_url)
 
     # Verify docs replicated to sync_gateway

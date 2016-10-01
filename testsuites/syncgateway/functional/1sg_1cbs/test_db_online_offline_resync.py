@@ -107,8 +107,12 @@ def test_bucket_online_offline_resync_sanity(setup_1sg_1cbs_test, num_users, num
                                                                                         doc_id, rev, expected_revision))
             if rev != expected_revision:
                 rev_errors.append(doc_id)
-                log_error('User {} doc_id got revision {}, expected revision {}'.format(user_obj.name,
-                                                                                        doc_id, rev, expected_revision))
+                log_error('User {} doc_id {} got revision {}, expected revision {}'.format(
+                    user_obj.name,
+                    doc_id,
+                    rev,
+                    expected_revision)
+                )
 
     assert len(rev_errors) == 0
 
@@ -227,12 +231,20 @@ def test_bucket_online_offline_resync_with_online(setup_1sg_1cbs_test, num_users
     for user_obj, docs_revision_dict in docs_rev_dict.items():
         for doc_id in docs_revision_dict.keys():
             rev = docs_revision_dict[doc_id]
-            log_info('User {} doc_id {} has {} revisions, expected revision: {}'.format(user_obj.name,
-                                                                                        doc_id, rev, expected_revision))
+            log_info('User {} doc_id {} has {} revisions, expected revision: {}'.format(
+                user_obj.name,
+                doc_id,
+                rev,
+                expected_revision)
+            )
             if rev != expected_revision:
                 rev_errors.append(doc_id)
-                log_error('User {} doc_id got revision {}, expected revision {}'.format(user_obj.name,
-                                                                                        doc_id, rev, expected_revision))
+                log_error('User {} doc_id {} got revision {}, expected revision {}'.format(
+                    user_obj.name,
+                    doc_id,
+                    rev,
+                    expected_revision)
+                )
 
     assert len(rev_errors) == 0
 
@@ -399,12 +411,20 @@ def test_bucket_online_offline_resync_with_offline(setup_1sg_1cbs_test, num_user
     for user_obj, docs_revision_dict in docs_rev_dict.items():
         for doc_id in docs_revision_dict.keys():
             rev = docs_revision_dict[doc_id]
-            log_info('User {} doc_id {} has {} revisions, expected revision: {}'.format(user_obj.name,
-                                                                                        doc_id, rev, expected_revision))
+            log_info('User {} doc_id {} has {} revisions, expected revision: {}'.format(
+                user_obj.name,
+                doc_id,
+                rev,
+                expected_revision
+            ))
             if rev != expected_revision:
                 rev_errors.append(doc_id)
-                log_error('User {} doc_id got revision {}, expected revision {}'.format(user_obj.name,
-                                                                                        doc_id, rev, expected_revision))
+                log_error('User {} doc_id {} got revision {}, expected revision {}'.format(
+                    user_obj.name,
+                    doc_id,
+                    rev,
+                    expected_revision
+                ))
 
     assert len(rev_errors) == 0
 
