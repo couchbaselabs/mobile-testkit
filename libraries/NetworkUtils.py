@@ -4,6 +4,8 @@ import time
 import os
 from libraries.provision.ansible_runner import AnsibleRunner
 
+from keywords.exceptions import ProvisioningError
+
 
 class NetworkUtils:
 
@@ -14,17 +16,20 @@ class NetworkUtils:
     def start_packet_capture(self, cluster_config):
         ansible_runner = AnsibleRunner(config=cluster_config)
         status = ansible_runner.run_ansible_playbook("start-ngrep.yml")
-        assert status == 0, "Failed to start packet capture"
+        if status != 0:
+            raise ProvisioningError("Failed to start packet capture")
 
     def stop_packet_capture(self, cluster_config):
         ansible_runner = AnsibleRunner(config=cluster_config)
         status = ansible_runner.run_ansible_playbook("stop-ngrep.yml")
-        assert status == 0, "Failed to stop packet capture"
+        if status != 0:
+            raise ProvisioningError("Failed to stop packet capture")
 
     def collect_packet_capture(self, cluster_config, test_name):
         ansible_runner = AnsibleRunner(config=cluster_config)
         status = ansible_runner.run_ansible_playbook("collect-ngrep.yml")
-        assert status == 0, "Failed to collect packet capture"
+        if status != 0:
+            raise ProvisioningError("Failed to collect packet capture")
 
         # zip logs and timestamp
         if os.path.isdir("/tmp/sys-logs"):
