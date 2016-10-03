@@ -1,0 +1,24 @@
+# http://latestbuilds.hq.couchbase.com/couchbase-lite-net/1.4.0/43/
+- name: Windows - Download LiteServ
+  hosts: windows
+  tasks:
+
+  - name: Delete Existing LiteServ
+    win_file: path=C:\\Users\\Administrator\\Desktop\\LiteServ state=absent
+
+  - name: Create LiteServ Directory
+    win_file: path=C:\\Users\\Administrator\\Desktop\\LiteServ state=directory
+
+  - name: Download LiteServ to Desktop for Administrator
+    win_get_url:
+      url: "http://latestbuilds.hq.couchbase.com/couchbase-lite-net/1.4.0/43/LiteServ.zip"
+      dest: "C:\\Users\\Administrator\\Desktop\\LiteServ\\LiteServ.zip"
+
+  - name: Extract LiteServ.zip -> LiteServ
+    win_unzip:
+      src: "C:\\Users\\Administrator\\Desktop\\LiteServ\\LiteServ.zip"
+      dest: "C:\\Users\\Administrator\\Desktop\\LiteServ\\LiteServ"
+
+  - name: Remove LiteServ.zip
+    win_file: path=C:\\Users\\Administrator\\Desktop\\LiteServ\\LiteServ.zip state=absent
+
