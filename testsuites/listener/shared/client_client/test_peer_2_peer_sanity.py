@@ -219,3 +219,98 @@ def test_peer_2_peer_sanity(setup_p2p_suite, setup_p2p_test):
 
     client.verify_docs_in_changes(url=ls_url_one, db=ls_db1, expected_docs=all_docs)
     client.verify_docs_in_changes(url=ls_url_two, db=ls_db2, expected_docs=all_docs)
+
+
+@pytest.mark.sanity
+@pytest.mark.listener
+@pytest.mark.replication
+@pytest.mark.p2p
+@pytest.mark.changes
+def test_peer_2_peer_sanity_pull(setup_p2p_suite, setup_p2p_test):
+    """
+    1. Create ls_db1 database on LiteServ One
+    2. Create ls_db2 database on LiteServ Two
+    3. Create continuous pull replication LiteServ 1 ls_db1 <- LiteServ 2 ls_db2
+    4. Add 5000 docs to LiteServ 2 ls_db2
+    5. Verify all docs replicate to LiteServ 1 ls_db1
+    6. Verify all docs show up in changes for LiteServ 1 ls_db1
+    """
+
+    ls_url_one = setup_p2p_test["ls_url_one"]
+    ls_url_two = setup_p2p_test["ls_url_two"]
+
+    num_docs_per_db = 5000
+
+    log_info("ls_url_one: {}".format(ls_url_one))
+    log_info("ls_url_two: {}".format(ls_url_two))
+
+    client = MobileRestClient()
+
+    log_info("Creating databases")
+    ls_db1 = client.create_database(url=ls_url_one, name="ls_db1")
+    ls_db2 = client.create_database(url=ls_url_two, name="ls_db2")
+
+    # Setup continuous pull replication from LiteServ 2 ls_db2 to LiteServ 1 ls_db1
+
+    pull_repl = client.start_replication(
+        url=ls_url_one,
+        continuous=True,
+        from_url=ls_url_two, from_db=ls_db2,
+        to_db=ls_db1
+    )
+
+    client.wait_for_replication_status_idle(url=ls_url_one, replication_id=pull_repl)
+
+    ls_db2_docs = client.add_docs(url=ls_url_two, db=ls_db2, number=num_docs_per_db, id_prefix="test_ls_db2")
+
+    assert len(ls_db2_docs) == num_docs_per_db
+
+    client.verify_docs_present(url=ls_url_one, db=ls_db1, expected_docs=ls_db2_docs)
+    client.verify_docs_in_changes(url=ls_url_one, db=ls_db1, expected_docs=ls_db2_docs)
+
+
+@pytest.mark.sanity
+@pytest.mark.listener
+@pytest.mark.replication
+@pytest.mark.p2p
+@pytest.mark.changes
+def test_peer_2_peer_sanity_push(setup_p2p_suite, setup_p2p_test):
+    """
+    1. Create ls_db1 database on LiteServ One
+    2. Create ls_db2 database on LiteServ Two
+    3. Create continuous push replication LiteServ 1 ls_db1 -> LiteServ 2 ls_db2
+    4. Add 5000 docs to LiteServ 1 ls_db1
+    5. Verify all docs replicate to LiteServ 2 ls_db2
+    6. Verify all docs show up in changes for LiteServ 2 ls_db2
+    """
+
+    ls_url_one = setup_p2p_test["ls_url_one"]
+    ls_url_two = setup_p2p_test["ls_url_two"]
+
+    num_docs_per_db = 5000
+
+    log_info("ls_url_one: {}".format(ls_url_one))
+    log_info("ls_url_two: {}".format(ls_url_two))
+
+    client = MobileRestClient()
+
+    log_info("Creating databases")
+    ls_db1 = client.create_database(url=ls_url_one, name="ls_db1")
+    ls_db2 = client.create_database(url=ls_url_two, name="ls_db2")
+
+    # Setup continuous push replication from LiteServ 1 ls_db1 to LiteServ 2 ls_db2
+    push_repl = client.start_replication(
+        url=ls_url_one,
+        continuous=True,
+        from_db=ls_db1,
+        to_url=ls_url_two, to_db=ls_db2,
+    )
+
+    client.wait_for_replication_status_idle(url=ls_url_one, replication_id=push_repl)
+
+    ls_db1_docs = client.add_docs(url=ls_url_one, db=ls_db1, number=num_docs_per_db, id_prefix="test_ls_db1")
+
+    assert len(ls_db1_docs) == num_docs_per_db
+
+    client.verify_docs_present(url=ls_url_two, db=ls_db2, expected_docs=ls_db1_docs)
+    client.verify_docs_in_changes(url=ls_url_two, db=ls_db2, expected_docs=ls_db1_docs)
