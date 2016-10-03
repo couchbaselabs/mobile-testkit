@@ -3,6 +3,9 @@ import os
 
 from keywords.CouchbaseServer import CouchbaseServer
 from keywords.ClusterKeywords import ClusterKeywords
+from keywords.exceptions import ProvisioningError
+from keywords.utils import log_warn
+
 from libraries.testkit.config import Config
 
 from keywords.utils import log_info
@@ -51,8 +54,8 @@ class SyncGatewayConfig:
 
     def sync_gateway_base_url_and_package(self):
         if self._version_number == "1.1.0" or self._build_number == "1.1.1":
-            print("Version unsupported in provisioning.")
-            raise ValueError("Unsupport version of sync_gateway")
+            log_info("Version unsupported in provisioning.")
+            raise ProvisioningError("Unsupport version of sync_gateway")
             # http://latestbuilds.hq.couchbase.com/couchbase-sync-gateway/release/1.1.1/1.1.1-10/couchbase-sync-gateway-enterprise_1.1.1-10_x86_64.rpm
             # base_url = "http://latestbuilds.hq.couchbase.com/couchbase-sync-gateway/release/{0}/{1}-{2}".format(version, version, build)
             # sg_package_name  = "couchbase-sync-gateway-enterprise_{0}-{1}_x86_64.rpm".format(version, build)
@@ -63,42 +66,44 @@ class SyncGatewayConfig:
             accel_package_name = "couchbase-sg-accel-enterprise_{0}-{1}_x86_64.rpm".format(self._version_number, self._build_number)
         return base_url, sg_package_name, accel_package_name
 
-
     def is_valid(self):
         if self._version_number is not None and self._build_number is not None:
-            assert self.commit is None
-            assert self._version_number in self._valid_versions
+            if self.commit is not None:
+                raise ProvisioningError("Commit should be empty when provisioning with a binary")
+            if self._version_number not in self._valid_versions:
+                raise ProvisioningError("Could not find version in valid versions")
         elif self.commit is not None:
-            assert self._version_number is None
-            assert self._build_number is None
+            if self._version_number is not None:
+                raise ProvisioningError("Do not specify a version number when provisioning via a commit.")
+            if self._build_number is not None:
+                raise ProvisioningError("Do not specify a build number when provisioning via a commit.")
         else:
-            print "You must provide a (version and build number) or (dev url and dev build number) or commit to build for sync_gateway"
+            log_info("You must provide a (version and build number) or (dev url and dev build number) or commit to build for sync_gateway")
             return False
 
         if not os.path.isfile(self.config_path):
-            print "Could not find sync_gateway config file: {}".format(self.config_path)
-            print "Try to use an absolute path."
+            log_info("Could not find sync_gateway config file: {}".format(self.config_path))
+            log_info("Try to use an absolute path.")
             return False
 
         return True
 
 
-def install_sync_gateway(sync_gateway_config):
-    print(sync_gateway_config)
+def install_sync_gateway(cluster_config, sync_gateway_config):
+    log_info(sync_gateway_config)
 
     if not sync_gateway_config.is_valid():
-        print "Invalid sync_gateway provisioning configuration. Exiting ..."
-        sys.exit(1)
+        raise ProvisioningError("Invalid sync_gateway provisioning configuration. Exiting ...")
 
     if sync_gateway_config.build_flags != "":
-        print("\n\n!!! WARNING: You are building with flags: {} !!!\n\n".format(sync_gateway_config.build_flags))
+        log_warn("\n\n!!! WARNING: You are building with flags: {} !!!\n\n".format(sync_gateway_config.build_flags))
 
-    ansible_runner = AnsibleRunner()
+    ansible_runner = AnsibleRunner(cluster_config)
     config_path = os.path.abspath(sync_gateway_config.config_path)
 
     # Create buckets unless the user explicitly asked to skip this step
     if not sync_gateway_config.skip_bucketcreation:
-        create_server_buckets(os.environ["CLUSTER_CONFIG"], sync_gateway_config)
+        create_server_buckets(cluster_config, sync_gateway_config)
 
     # Install Sync Gateway via Source or Package
     if sync_gateway_config.commit is not None:
@@ -106,12 +111,13 @@ def install_sync_gateway(sync_gateway_config):
         status = ansible_runner.run_ansible_playbook(
             "install-sync-gateway-source.yml",
             extra_vars={
-                "sync_gateway_config_filepath":config_path,
+                "sync_gateway_config_filepath": config_path,
                 "commit": sync_gateway_config.commit,
                 "build_flags": sync_gateway_config.build_flags
             }
         )
-        assert status == 0, "Failed to install sync_gateway source"
+        if status != 0:
+            raise ProvisioningError("Failed to install sync_gateway source")
 
     else:
         # Install from Package
@@ -125,7 +131,8 @@ def install_sync_gateway(sync_gateway_config):
                 "sync_gateway_config_filepath": config_path
             }
         )
-        assert status == 0, "Failed to install sync_gateway package"
+        if status != 0:
+            raise ProvisioningError("Failed to install sync_gateway package")
 
 
 def create_server_buckets(cluster_config, sync_gateway_config):
@@ -151,6 +158,7 @@ def create_server_buckets(cluster_config, sync_gateway_config):
 
     # create couchbase server buckets
     server_helper.create_buckets(couchbase_server_url, bucket_names)
+
 
 def get_buckets_from_sync_gateway_config(sync_gateway_config_path):
 
@@ -195,9 +203,9 @@ if __name__ == "__main__":
     (opts, args) = parser.parse_args(arg_parameters)
 
     try:
-        cluster_config = os.environ["CLUSTER_CONFIG"]
+        cluster_conf = os.environ["CLUSTER_CONFIG"]
     except KeyError as ke:
-        print ("Make sure CLUSTER_CONFIG is defined and pointing to the configuration you would like to provision")
+        log_info("Make sure CLUSTER_CONFIG is defined and pointing to the configuration you would like to provision")
         raise KeyError("CLUSTER_CONFIG not defined. Unable to provision cluster.")
     
     version = None
@@ -206,7 +214,7 @@ if __name__ == "__main__":
     if opts.version is not None:
         version_build = opts.version.split("-")
         if len(version_build) != 2:
-            print("Make sure the sync_gateway version follows pattern: 1.2.3-456")
+            log_info("Make sure the sync_gateway version follows pattern: 1.2.3-456")
             raise ValueError("Invalid format for sync_gateway version. Make sure to follow the patter '1.2.3-456'")
         version = version_build[0]
         build = version_build[1]
@@ -220,5 +228,8 @@ if __name__ == "__main__":
         skip_bucketcreation=opts.skip_bucketcreation
     )
 
-    install_sync_gateway(sync_gateway_install_config)
+    install_sync_gateway(
+        cluster_config=cluster_conf,
+        sync_gateway_config=sync_gateway_install_config
+    )
 

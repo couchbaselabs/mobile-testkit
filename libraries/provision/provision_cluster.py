@@ -6,20 +6,19 @@ from optparse import OptionParser
 import install_sync_gateway
 import install_couchbase_server
 
+from clean_cluster import clean_cluster
 from install_couchbase_server import CouchbaseServerConfig
 from install_sync_gateway import SyncGatewayConfig
 from install_nginx import install_nginx
 
-from ansible_runner import AnsibleRunner
-from robot.api.logger import console
 
 from keywords.utils import log_info
 
-def provision_cluster(couchbase_server_config, sync_gateway_config):
+
+def provision_cluster(cluster_config, couchbase_server_config, sync_gateway_config):
 
     log_info("\n>>> Cluster info:\n")
 
-    cluster_config = os.environ["CLUSTER_CONFIG"]
     with open(cluster_config, "r") as ansible_hosts:
         log_info(ansible_hosts.read())
 
@@ -38,23 +37,22 @@ def provision_cluster(couchbase_server_config, sync_gateway_config):
     log_info(">>> Server package: {0}/{1}".format(server_baseurl, server_package_name))
     log_info(">>> Using sync_gateway config: {}".format(sync_gateway_config.config_path))
 
-    ansible_runner = AnsibleRunner()
-
     # Reset previous installs
-    status = ansible_runner.run_ansible_playbook("remove-previous-installs.yml")
-    assert status == 0, "Failed to remove previous installs"
-
-    # Clear firewall rules
-    status = ansible_runner.run_ansible_playbook("flush-firewall.yml")
-    assert status == 0, "Failed to flush firewall"
+    clean_cluster(cluster_config)
 
     # Install server package
     log_info("Installing Couchbase Server")
-    install_couchbase_server.install_couchbase_server(couchbase_server_config)
+    install_couchbase_server.install_couchbase_server(
+        cluster_config=cluster_config,
+        couchbase_server_config=couchbase_server_config
+    )
 
     # Install sync_gateway
     log_info("Installing Sync Gateway")
-    install_sync_gateway.install_sync_gateway(sync_gateway_config)
+    install_sync_gateway.install_sync_gateway(
+        cluster_config=cluster_config,
+        sync_gateway_config=sync_gateway_config
+    )
 
     # Install nginx
     install_nginx(cluster_config)
@@ -103,7 +101,7 @@ if __name__ == "__main__":
     (opts, args) = parser.parse_args(arg_parameters)
 
     try:
-        cluster_config = os.environ["CLUSTER_CONFIG"]
+        cluster_conf = os.environ["CLUSTER_CONFIG"]
     except KeyError as ke:
         print ("Make sure CLUSTER_CONFIG is defined and pointing to the configuration you would like to provision")
         raise KeyError("CLUSTER_CONFIG not defined. Unable to provision cluster.")
@@ -123,7 +121,7 @@ if __name__ == "__main__":
         sync_gateway_version = version_build[0]
         sync_gateway_build = version_build[1]
 
-    sync_gateway_config = SyncGatewayConfig(
+    sync_gateway_conf = SyncGatewayConfig(
         version_number=sync_gateway_version,
         build_number=sync_gateway_build,
         commit=opts.source_commit,
@@ -133,6 +131,7 @@ if __name__ == "__main__":
     )
 
     provision_cluster(
+        cluster_config=cluster_conf,
         couchbase_server_config=server_config,
-        sync_gateway_config=sync_gateway_config
+        sync_gateway_config=sync_gateway_conf
     )

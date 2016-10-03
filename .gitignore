@@ -3,6 +3,8 @@
 .#*
 \#*\#
 
+.cache/
+
 *.class
 
 .idea

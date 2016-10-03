@@ -2,10 +2,10 @@ import concurrent.futures
 from testkit import settings
 import copy_reg
 import types
-import logging
 from threading import Thread
-log = logging.getLogger(settings.LOGGER)
 
+from keywords.utils import log_info
+from keywords.utils import log_debug
 
 # This function is added to use ProcessExecutor
 # concurrent.futures.
@@ -27,9 +27,9 @@ def parallel_process(objects, method, *args):
             if concurrent.futures.as_completed(futures):
                 obj = futures[future]
                 try:
-                    log.debug("Object {} method {} output {}".format(obj, method, future.result()))
+                    log_debug("Object {} method {} output {}".format(obj, method, future.result()))
                 except Exception as exception:
-                    log.info('Generated an exception : {} : {}'.format(obj, exception))
+                    log_info('Generated an exception : {} : {}'.format(obj, exception))
 
 
 # Using Thread Pool
@@ -42,9 +42,9 @@ def in_parallel(objects, method, *args):
                 obj = futures[future]
                 try:
                     result[obj] = future.result()
-                    log.debug("Object {} method {} output {}".format(obj, method, result[obj]))
+                    log_debug("Object {} method {} output {}".format(obj, method, result[obj]))
                 except Exception as exception:
-                    log.info('Generated an exception : {} : {}'.format(obj, exception))
+                    log_info('Generated an exception : {} : {}'.format(obj, exception))
                     raise ValueError('in_parallel: got exception', exception, obj)
     return result
 

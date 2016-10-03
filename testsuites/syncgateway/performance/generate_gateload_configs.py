@@ -31,13 +31,12 @@ from ansible import constants
 from libraries.provision.ansible_runner import PLAYBOOKS_HOME
 
 
-def hosts_for_tag(tag):
+def hosts_for_tag(cluster_config, tag):
     print(os.getcwd())
 
     variable_manager = VariableManager()
     loader = DataLoader()
-    hostfile = "{}".format(os.environ["CLUSTER_CONFIG"])
-    i = ansible.inventory.Inventory(loader=loader, variable_manager=variable_manager, host_list=hostfile)
+    i = ansible.inventory.Inventory(loader=loader, variable_manager=variable_manager, host_list=cluster_config)
 
     group = i.get_group(tag)
     if group is None:
@@ -46,19 +45,9 @@ def hosts_for_tag(tag):
     return [host.get_vars() for host in hosts]
 
 
-def gateloads():
+def gateloads(cluster_config):
     tag = "load_generators"
-    return hosts_for_tag(tag)
-
-
-def sync_gateway_non_index_writers():
-    """
-    Get all the sync gateways that are not index writers, since we 
-    don't want to send load to those
-    """
-    sync_gateways = hosts_for_tag("sync_gateways")
-    sync_gateway_index_writers = hosts_for_tag("sync_gateway_index_writers")
-    return [sg for sg in sync_gateways if sg not in sync_gateway_index_writers]
+    return hosts_for_tag(cluster_config, tag)
 
 
 def render_gateload_template(sync_gateway, user_offset, number_of_pullers, number_of_pushers, doc_size, runtime_ms, rampup_interval_ms):
@@ -77,7 +66,7 @@ def render_gateload_template(sync_gateway, user_offset, number_of_pullers, numbe
         return rendered 
 
 
-def upload_gateload_config(gateload, sync_gateway, user_offset, number_of_pullers, number_of_pushers, test_id, doc_size, rampup_interval_ms, runtime_ms):
+def upload_gateload_config(cluster_config, gateload, sync_gateway, user_offset, number_of_pullers, number_of_pushers, test_id, doc_size, rampup_interval_ms, runtime_ms):
 
     gateload_inventory_hostname = gateload['inventory_hostname']    
     
@@ -104,7 +93,7 @@ def upload_gateload_config(gateload, sync_gateway, user_offset, number_of_puller
     # transfer file to remote host
     cmd = 'ansible {} -i {} -m copy -a "src={} dest=/home/centos/gateload_config.json" --user {}'.format(
         gateload_inventory_hostname,
-        os.environ["CLUSTER_CONFIG"],
+        cluster_config,
         outfile,
         constants.DEFAULT_REMOTE_USER
     )
@@ -113,11 +102,11 @@ def upload_gateload_config(gateload, sync_gateway, user_offset, number_of_puller
     print "File transfer result: {}".format(result)
 
 
-def main(number_of_pullers, number_of_pushers, test_id, doc_size, runtime_ms, rampup_interval_ms):
+def main(cluster_config, number_of_pullers, number_of_pushers, test_id, doc_size, runtime_ms, rampup_interval_ms):
 
-    sync_gateway_hosts = sync_gateway_non_index_writers()
+    sync_gateway_hosts = hosts_for_tag(cluster_config, "sync_gateways")
 
-    gateload_hosts = gateloads()
+    gateload_hosts = gateloads(cluster_config)
 
     if len(sync_gateway_hosts) != len(gateload_hosts):
         print "Warning: you have {} sync gateway non index writers, but does not match up with {} load generators".format(len(sync_gateway_hosts), len(gateload_hosts))
@@ -132,6 +121,7 @@ def main(number_of_pullers, number_of_pushers, test_id, doc_size, runtime_ms, ra
         sync_gateway = sync_gateway_hosts[idx]
 
         upload_gateload_config(
+            cluster_config,
             gateload,
             sync_gateway,
             user_offset,
@@ -144,7 +134,3 @@ def main(number_of_pullers, number_of_pushers, test_id, doc_size, runtime_ms, ra
         )
 
     print "Finished successfully"
-
-if __name__ == "__main__":
-    main(100, 100)
-

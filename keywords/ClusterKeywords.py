@@ -13,8 +13,40 @@ from SyncGateway import verify_sync_gateway_version
 from SyncGateway import verify_sg_accel_version
 from libraries.testkit.cluster import Cluster
 
+from constants import CLUSTER_CONFIGS_DIR
+from exceptions import ProvisioningError
+
 
 class ClusterKeywords:
+
+    def set_cluster_config(self, name):
+        """Sets CLUSTER_CONFIG environment variable for provisioning
+
+        Checks if CLUSTER_CONFIG is set, will fail if it is.
+        Checks if cluster configuration file exists, will fail if it does not
+        """
+
+        if "CLUSTER_CONFIG" in os.environ:
+            raise ProvisioningError("CLUSTER_CONFIG will be set by suite setup. Make sure it is unset.")
+
+        path = "{}/{}".format(CLUSTER_CONFIGS_DIR, name)
+        if not os.path.isfile(path):
+            raise ProvisioningError("{} not found. Make sure you have generated your cluster configurations.")
+
+        log_info("Setting CLUSTER_CONFIG: {}".format(path))
+        os.environ["CLUSTER_CONFIG"] = path
+
+    def unset_cluster_config(self):
+        """Will unset the CLUSTER_CONFIG environment variable if it is set.
+
+        Will fail if CLUSTER_CONFIG is not set
+        """
+
+        if "CLUSTER_CONFIG" not in os.environ:
+            raise ProvisioningError("Trying to unset CLUSTER_CONFIG but it is not defined")
+
+        log_info("Unsetting CLUSTER_CONFIG")
+        del os.environ["CLUSTER_CONFIG"]
 
     def get_cluster_topology(self, cluster_config):
         """
@@ -85,9 +117,7 @@ class ClusterKeywords:
 
         assert len(running_services) == 0, "Running Services Found: {}".format(running_services)
 
-    def verify_cluster_versions(self, expected_server_version, expected_sync_gateway_version):
-
-        cluster_config = os.environ["CLUSTER_CONFIG"]
+    def verify_cluster_versions(self, cluster_config, expected_server_version, expected_sync_gateway_version):
 
         log_info("Verfying versions for cluster: {}".format(cluster_config))
 
@@ -106,7 +136,7 @@ class ClusterKeywords:
         for ac in cluster_obj["sg_accels"]:
             verify_sg_accel_version(ac["ip"], expected_sync_gateway_version)
 
-    def reset_cluster(self, sync_gateway_config):
+    def reset_cluster(self, cluster_config, sync_gateway_config):
         """
         1. Stop sync_gateways
         2. Stop sg_accels
@@ -119,10 +149,13 @@ class ClusterKeywords:
         9. Deploy sg_accel config and start (distributed index mode only)
         """
 
-        cluster = Cluster()
+        cluster = Cluster(config=cluster_config)
         cluster.reset(sync_gateway_config)
 
-    def provision_cluster(self, server_version, sync_gateway_version, sync_gateway_config):
+    def provision_cluster(self, cluster_config, server_version, sync_gateway_version, sync_gateway_config):
+
+        if server_version is None or sync_gateway_version is None or sync_gateway_version is None:
+            raise ProvisioningError("Please make sure you have server_version, sync_gateway_version, and sync_gateway_config are set")
 
         # Dirty hack -- these have to be put here in order to avoid circular imports
         from libraries.provision.install_couchbase_server import CouchbaseServerConfig
@@ -137,9 +170,9 @@ class ClusterKeywords:
         else:
             sg_config = SyncGatewayConfig(sync_gateway_version, None, None, sync_gateway_config, "", False)
 
-        provision_cluster(cbs_config, sg_config)
+        provision_cluster(cluster_config, cbs_config, sg_config)
 
         # verify running services are the expected versions
-        self.verify_cluster_versions(server_version, sync_gateway_version)
+        self.verify_cluster_versions(cluster_config, server_version, sync_gateway_version)
 
 

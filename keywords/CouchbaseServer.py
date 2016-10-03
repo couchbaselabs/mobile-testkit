@@ -58,56 +58,6 @@ class CouchbaseServer:
         self._headers = {"Content-Type": "application/json"}
         self._auth = ("Administrator", "password")
 
-    def install_couchbase_server(self, host, version):
-
-        url = "http://{}:8091".format(host)
-
-        try:
-            verify_server_version(host, version)
-            log_info("Server version already running: {} Skipping provisioning".format(version))
-            return url
-        except AssertionError as ae:
-            # Server is not the version we are expecting
-            log_info(ae.message)
-        except ConnectionError as ce:
-            # Server is not running
-            log_info(ce.message)
-
-        log_info("Installing Couchbase Server: {}".format(version))
-
-        temp_conf_file_name = "{}/temp_server_conf".format(CLUSTER_CONFIGS_DIR)
-
-        # Write Server only ansible inventory file
-        with open(temp_conf_file_name, "w") as temp_conf:
-            temp_conf.write("[couchbase_servers]\n")
-            temp_conf.write("cb1 ansible_host={}\n".format(host))
-
-        with open(temp_conf_file_name) as temp_conf:
-            logging.info("temp_conf: {}".format(temp_conf.read()))
-
-        # Install server using that file as context
-        os.environ["CLUSTER_CONFIG"] = temp_conf_file_name
-        log_info("Using CLUSTER_CONFIG: {}".format(os.environ["CLUSTER_CONFIG"]))
-        log_info("Installing server: {} on {}".format(version, host))
-        try :
-            install_output = subprocess.check_output(["python",
-                                                      "libraries/provision/install_couchbase_server.py",
-                                                      "--version={}".format(version)])
-            log_info(install_output)
-        except CalledProcessError as cpe:
-            logging.error("Install Status: {}".format(cpe.returncode))
-            logging.error(cpe.output)
-
-        # Remove temp provisioning configuration
-        del os.environ["CLUSTER_CONFIG"]
-        os.remove(temp_conf_file_name)
-
-        # Make sure expected version is installed
-        verify_server_version(host, version)
-
-        # Return server url
-        return url
-
     def delete_buckets(self, url):
         count = 0
         while count < 3:
@@ -182,8 +132,15 @@ class CouchbaseServer:
         resp = requests.get("{}/pools/default".format(url), auth=self._auth)
         resp.raise_for_status()
         resp_json = resp.json()
-        mem_total = resp_json["nodes"][0]["systemStats"]["mem_total"]
-        return mem_total
+
+        # Workaround for https://github.com/couchbaselabs/mobile-testkit/issues/709
+        # where some node report mem_total = 0. Loop over all the nodes and find highest val
+        mem_total_highest = 0
+        for node in resp_json["nodes"]:
+            mem_total = node["systemStats"]["mem_total"]
+            if mem_total > mem_total_highest:
+                mem_total_highest = mem_total
+        return mem_total_highest
 
     def create_buckets(self, url, bucket_names):
         """

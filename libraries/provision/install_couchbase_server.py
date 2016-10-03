@@ -5,8 +5,10 @@ import json
 
 from ansible_runner import AnsibleRunner
 
+from keywords.exceptions import ProvisioningError
 from keywords.ClusterKeywords import ClusterKeywords
 from keywords.CouchbaseServer import CouchbaseServer
+from keywords.utils import log_info
 
 class CouchbaseServerConfig:
 
@@ -123,13 +125,14 @@ def get_package_name(version, build_number):
         return "couchbase-server-enterprise-{}-{}-centos7.x86_64.rpm".format(version, build_number)
 
 
-def install_couchbase_server(couchbase_server_config):
+def install_couchbase_server(cluster_config, couchbase_server_config):
 
-    print(couchbase_server_config)
+    log_info(cluster_config)
+    log_info(couchbase_server_config)
 
-    ansible_runner = AnsibleRunner()
+    ansible_runner = AnsibleRunner(cluster_config)
 
-    print(">>> Installing Couchbase Server")
+    log_info(">>> Installing Couchbase Server")
     # Install Server
     server_baseurl, server_package_name = couchbase_server_config.get_baseurl_package()
     status = ansible_runner.run_ansible_playbook(
@@ -139,12 +142,13 @@ def install_couchbase_server(couchbase_server_config):
             "couchbase_server_package_name": server_package_name
         }
     )
-    assert status == 0, "Failed to install Couchbase Server"
+    if status != 0:
+        raise ProvisioningError("Failed to install Couchbase Server")
 
     # Wait for server to be in 'healthy state'
     print(">>> Waiting for server to be in 'healthy' state")
     cluster_keywords = ClusterKeywords()
-    cluster_topology = cluster_keywords.get_cluster_topology(os.environ["CLUSTER_CONFIG"])
+    cluster_topology = cluster_keywords.get_cluster_topology(cluster_config)
     server = cluster_topology["couchbase_servers"][0]
     server_keywords = CouchbaseServer()
     server_keywords.wait_for_ready_state(server)
@@ -164,7 +168,7 @@ if __name__ == "__main__":
     (opts, args) = parser.parse_args(arg_parameters)
 
     try:
-        cluster_config = os.environ["CLUSTER_CONFIG"]
+        cluster_conf = os.environ["CLUSTER_CONFIG"]
     except KeyError as ke:
         print ("Make sure CLUSTER_CONFIG is defined and pointing to the configuration you would like to provision")
         raise KeyError("CLUSTER_CONFIG not defined. Unable to provision cluster.")
@@ -173,4 +177,7 @@ if __name__ == "__main__":
         version=opts.version
     )
 
-    install_couchbase_server(server_config)
+    install_couchbase_server(
+        cluster_config=cluster_conf,
+        couchbase_server_config=server_config
+    )

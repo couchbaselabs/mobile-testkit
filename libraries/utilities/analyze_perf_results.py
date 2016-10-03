@@ -104,12 +104,12 @@ def plot_gateload_expvars(figure, json_file_name):
     return True
 
 
-def plot_sync_gateway_expvars(figure, json_file_name):
+def plot_sync_gateway_expvars(cluster_config, figure, json_file_name):
 
     print("Plotting sync_gateway expvars ...")
 
     # Get writer hostnames for provisioning_config
-    sg_writers = hosts_for_tag("sync_gateway_index_writers")
+    sg_writers = hosts_for_tag(cluster_config, "sg_accels")
     sg_writer_hostnames = [sg_writer["ansible_host"] for sg_writer in sg_writers]
 
     with open(json_file_name, "r") as f:
@@ -146,7 +146,7 @@ def plot_sync_gateway_expvars(figure, json_file_name):
     figure.autofmt_xdate()
 
 
-def plot_machine_stats(figure, folder_path):
+def plot_machine_stats(cluster_config, figure, folder_path):
 
     print("Plotting machine stats ...")
 
@@ -169,7 +169,7 @@ def plot_machine_stats(figure, folder_path):
     ax3.set_title("CPU percent (writers=blue, readers=green")
 
     # Get writer hostnames for provisioning_config
-    sg_writers = hosts_for_tag("sync_gateway_index_writers")
+    sg_writers = hosts_for_tag(cluster_config, "sg_accels")
     sg_writer_hostnames = [sg_writer["inventory_hostname"] for sg_writer in sg_writers]
 
     for machine in machine_stats:
@@ -192,7 +192,7 @@ def plot_machine_stats(figure, folder_path):
     figure.autofmt_xdate()
 
 
-def analze_perf_results(test_id):
+def analze_perf_results(cluster_config, test_id):
 
     print("Generating graphs for {}".format(test_id))
 
@@ -208,13 +208,13 @@ def analze_perf_results(test_id):
     # Generate plot of sync_gateway expvars
     fig2 = plt.figure()
     fig2.text(0.5, 0.04, 'sync_gateway expvars', ha='center', va='center')
-    plot_sync_gateway_expvars(fig2, "testsuites/syncgateway/performance/results/{}/sync_gateway_expvars.json".format(test_id))
+    plot_sync_gateway_expvars(cluster_config, fig2, "testsuites/syncgateway/performance/results/{}/sync_gateway_expvars.json".format(test_id))
     plt.savefig("testsuites/syncgateway/performance/results/{}/sync_gateway_expvars.png".format(test_id), dpi=300)
 
     # Generate plot of machine stats
     fig3 = plt.figure()
     fig3.text(0.5, 0.04, 'sync_gateway CPU', ha='center', va='center')
-    plot_machine_stats(fig3, "testsuites/syncgateway/performance/results/{}/perf_logs/".format(test_id))
+    plot_machine_stats(cluster_config, fig3, "testsuites/syncgateway/performance/results/{}/perf_logs/".format(test_id))
     plt.savefig("testsuites/syncgateway/performance/results/{}/sync_gateway_machine_stats.png".format(test_id), dpi=300)
 
 if __name__ == "__main__":
@@ -232,8 +232,14 @@ if __name__ == "__main__":
 
     (opts, args) = parser.parse_args(arg_parameters)
 
+    try:
+        cluster_conf = os.environ["CLUSTER_CONFIG"]
+    except KeyError as ke:
+        print ("Make sure CLUSTER_CONFIG is defined and pointing to the configuration you would like to provision")
+        raise KeyError("CLUSTER_CONFIG not defined. Unable to provision cluster.")
+
     if opts.test_id is None:
         print("You must provide a test identifier to run the test")
         sys.exit(1)
 
-    analze_perf_results(opts.test_id)
+    analze_perf_results(cluster_conf, opts.test_id)

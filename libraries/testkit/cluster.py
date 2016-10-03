@@ -17,12 +17,10 @@ from provision.ansible_runner import AnsibleRunner
 import keywords.CouchbaseServer
 from keywords import utils
 
-import logging
-log = logging.getLogger(settings.LOGGER)
+from keywords.utils import log_info
 
 
 class Cluster:
-
     """
     An older remnant of first pass of Python API
 
@@ -30,33 +28,31 @@ class Cluster:
     has this functionality
     """
 
-    def __init__(self):
+    def __init__(self, config):
 
-        host_file = os.environ["CLUSTER_CONFIG"]
+        self._cluster_config = config
 
-        if not os.path.isfile(host_file):
-            log.error("Cluster config not found in 'resources/cluster_configs/'")
+        if not os.path.isfile(self._cluster_config):
+            log_info("Cluster config not found in 'resources/cluster_configs/'")
             raise IOError("Cluster config not found in 'resources/cluster_configs/'")
 
-        log.info(host_file)
+        log_info(self._cluster_config)
 
         # Load resources/cluster_configs/<cluster_config>.json
-        with open("{}.json".format(host_file)) as f:
+        with open("{}.json".format(config)) as f:
             cluster = json.loads(f.read())
-
-        log.info("Cluster: {}".format(cluster))
 
         cbs = [{"name": cbs["name"], "ip": cbs["ip"]} for cbs in cluster["couchbase_servers"]]
         sgs = [{"name": sg["name"], "ip": sg["ip"]} for sg in cluster["sync_gateways"]]
         acs = [{"name": ac["name"], "ip": ac["ip"]} for ac in cluster["sg_accels"]]
 
-        log.info("cbs: {}".format(cbs))
-        log.info("sgs: {}".format(sgs))
-        log.info("acs: {}".format(acs))
+        log_info("cbs: {}".format(cbs))
+        log_info("sgs: {}".format(sgs))
+        log_info("acs: {}".format(acs))
 
-        self.sync_gateways = [SyncGateway(sg) for sg in sgs]
-        self.sg_accels = [SgAccel(ac) for ac in acs]
-        self.servers = [Server(cb) for cb in cbs]
+        self.sync_gateways = [SyncGateway(cluster_config=self._cluster_config, target=sg) for sg in sgs]
+        self.sg_accels = [SgAccel(cluster_config=self._cluster_config, target=ac) for ac in acs]
+        self.servers = [Server(cluster_config=self._cluster_config, target=cb) for cb in cbs]
         self.sync_gateway_config = None  # will be set to Config object when reset() called
 
         # for integrating keywords
@@ -68,29 +64,29 @@ class Cluster:
         if len(self.sync_gateways) == 0:
             raise Exception("Functional tests require at least 1 index reader")        
         
-    def reset(self, config_path):
+    def reset(self, sg_config_path):
 
         self.validate_cluster()
 
-        ansible_runner = AnsibleRunner()
+        ansible_runner = AnsibleRunner(self._cluster_config)
         
         # Stop sync_gateways
-        log.info(">>> Stopping sync_gateway")
+        log_info(">>> Stopping sync_gateway")
         status = ansible_runner.run_ansible_playbook("stop-sync-gateway.yml")
         assert status == 0, "Failed to stop sync gateway"
 
         # Stop sync_gateways
-        log.info(">>> Stopping sg_accel")
+        log_info(">>> Stopping sg_accel")
         status = ansible_runner.run_ansible_playbook("stop-sg-accel.yml")
         assert status == 0, "Failed to stop sg_accel"
 
         # Deleting sync_gateway artifacts
-        log.info(">>> Deleting sync_gateway artifacts")
+        log_info(">>> Deleting sync_gateway artifacts")
         status = ansible_runner.run_ansible_playbook("delete-sync-gateway-artifacts.yml")
         assert status == 0, "Failed to delete sync_gateway artifacts"
 
         # Deleting sg_accel artifacts
-        log.info(">>> Deleting sg_accel artifacts")
+        log_info(">>> Deleting sg_accel artifacts")
         status = ansible_runner.run_ansible_playbook("delete-sg-accel-artifacts.yml")
         assert status == 0, "Failed to delete sg_accel artifacts"
 
@@ -98,36 +94,36 @@ class Cluster:
         bucket_delete_create_attempt_num = 0
         while bucket_delete_create_attempt_num < bucket_delete_create_max_retries:
             try:
-                log.info(">>> Deleting / Creating server buckets: Attempt {}".format(bucket_delete_create_attempt_num))
+                log_info(">>> Deleting / Creating server buckets: Attempt {}".format(bucket_delete_create_attempt_num))
                 # Delete buckets
-                log.info(">>> Deleting buckets on: {}".format(self.servers[0].ip))
+                log_info(">>> Deleting buckets on: {}".format(self.servers[0].ip))
                 status = self.servers[0].delete_buckets()
                 assert status == 0
-                log.info(">>> Bucket deletion status: {}".format(status))
+                log_info(">>> Bucket deletion status: {}".format(status))
 
                 # Parse config and grab bucket names
-                config_path_full = os.path.abspath(config_path)
+                config_path_full = os.path.abspath(sg_config_path)
                 config = Config(config_path_full)
                 mode = config.get_mode()
                 bucket_name_set = config.get_bucket_name_set()
 
                 self.sync_gateway_config = config
 
-                log.info(">>> Creating buckets on: {}".format(self.servers[0].ip))
-                log.info(">>> Creating buckets {}".format(bucket_name_set))
+                log_info(">>> Creating buckets on: {}".format(self.servers[0].ip))
+                log_info(">>> Creating buckets {}".format(bucket_name_set))
                 status = self.servers[0].create_buckets(bucket_name_set)
                 assert status == 0
-                log.info(">>> Bucket creation status: {}".format(status))
+                log_info(">>> Bucket creation status: {}".format(status))
 
                 # Wait for server to be in a warmup state to work around
                 # https://github.com/couchbase/sync_gateway/issues/1745
-                log.info(">>> Waiting for Server: {} to be in a healthy state".format(self.servers[0].url))
+                log_info(">>> Waiting for Server: {} to be in a healthy state".format(self.servers[0].url))
                 self.server_keywords.wait_for_ready_state(self.servers[0].url)
 
                 # Both steps are successful, break out of retry loop
                 break
             except AssertionError as e:
-                log.error("Failed to delete / create buckets. Trying again ...")
+                log_info("Failed to delete / create buckets. Trying again ...")
                 bucket_delete_create_attempt_num += 1
                 # Wait 3 sec before retry
                 time.sleep(3)
@@ -136,7 +132,7 @@ class Cluster:
         if bucket_delete_create_attempt_num == bucket_delete_create_max_retries:
             raise RuntimeError("Max tries exceeded to delete / create buckets")
 
-        log.info(">>> Starting sync_gateway with configuration: {}".format(config_path_full))
+        log_info(">>> Starting sync_gateway with configuration: {}".format(config_path_full))
         utils.dump_file_contents_to_logs(config_path_full)
 
         # Start sync-gateway
@@ -165,9 +161,9 @@ class Cluster:
             if not self.validate_cbgt_pindex_distribution_retry():
                 self.save_cbgt_diagnostics()
                 raise Exception("Failed to validate CBGT Pindex distribution")
-            log.info(">>> Detected valid CBGT Pindex distribution")
+            log_info(">>> Detected valid CBGT Pindex distribution")
         else:
-            log.info(">>> Running in channel cache")
+            log_info(">>> Running in channel cache")
 
         return mode
 
@@ -182,7 +178,7 @@ class Cluster:
         
             # dump raw diagnostics
             pretty_print_json = json.dumps(cbgt_diagnostics, sort_keys=True, indent=4, separators=(',', ': '))
-            log.info("SG {} CBGT diagnostic output: {}".format(sync_gateway_writer, pretty_print_json))
+            log_info("SG {} CBGT diagnostic output: {}".format(sync_gateway_writer, pretty_print_json))
         
     def validate_cbgt_pindex_distribution_retry(self):
         """
@@ -194,7 +190,7 @@ class Cluster:
             if is_valid:
                return True
             else:
-                log.error("Could not validate CBGT Pindex distribution.  Will retry after sleeping ..")
+                log_info("Could not validate CBGT Pindex distribution.  Will retry after sleeping ..")
                 time.sleep(5)
 
         return False 
@@ -230,11 +226,11 @@ class Cluster:
                 current_pindex_count += 1
                 node_defs_pindex_counts[node] = current_pindex_count
 
-        log.info("CBGT node to pindex counts: {}".format(node_defs_pindex_counts))
+        log_info("CBGT node to pindex counts: {}".format(node_defs_pindex_counts))
         
         # make sure number of unique node uuids is equal to the number of sync gateway writers
         if len(node_defs_pindex_counts) != len(self.sg_accels):
-            log.error("CBGT len(unique_node_uuids) != len(self.sync_gateway_writers) ({} != {})".format(
+            log_info("CBGT len(unique_node_uuids) != len(self.sync_gateway_writers) ({} != {})".format(
                 len(node_defs_pindex_counts),
                 len(self.sg_accels)
             ))
@@ -256,7 +252,7 @@ class Cluster:
             # divided evenly across the cluster)
             delta = abs(num_pindex_first_node - num_pindexes)
             if delta > 1:
-                log.info("CBGT Sync Gateway node {} has {} pindexes, but other node has {} pindexes.".format(
+                log_info("CBGT Sync Gateway node {} has {} pindexes, but other node has {} pindexes.".format(
                     node_def_uuid,
                     num_pindexes,
                     num_pindex_first_node
@@ -271,18 +267,18 @@ class Cluster:
         for sg in self.sync_gateways:
             try:
                 info = sg.info()
-                log.info("sync_gateway: {}, info: {}".format(sg.url, info))
+                log_info("sync_gateway: {}, info: {}".format(sg.url, info))
             except ConnectionError as e:
-                log.error("sync_gateway down: {}".format(e))
+                log_info("sync_gateway down: {}".format(e))
                 errors.append((sg, e))
 
         if mode == "distributed_index":
             for sa in self.sg_accels:
                 try:
                     info = sa.info()
-                    log.info("sg_accel: {}, info: {}".format(sa.url, info))
+                    log_info("sg_accel: {}, info: {}".format(sa.url, info))
                 except ConnectionError as e:
-                    log.error("sg_accel down: {}".format(e))
+                    log_info("sg_accel down: {}".format(e))
                     errors.append((sa, e))
 
         return errors
@@ -298,8 +294,5 @@ class Cluster:
         s += "\nCouchbase Servers\n"
         for server in self.servers:
             s += str(server)
-        s += "\nLoad Generators\n"
-        for lg in self.load_generators:
-            s += str(lg)
         s += "\n"
         return s
