@@ -41,7 +41,7 @@ def install_nginx(cluster_config):
     log_info("Upstream definition: ")
     log_info(upstream_definition)
 
-    ansible_runner = AnsibleRunner()
+    ansible_runner = AnsibleRunner(cluster_config)
     status = ansible_runner.run_ansible_playbook(
         "install-nginx.yml",
         extra_vars={
@@ -52,16 +52,14 @@ def install_nginx(cluster_config):
     assert status == 0, "Failed to install nginx!"
 
 
-
 if __name__ == "__main__":
     usage = """usage: python libraries/provision/install_nginx.py"""
 
-
     try:
-        cluster_config = os.environ["CLUSTER_CONFIG"]
+        cluster_conf = os.environ["CLUSTER_CONFIG"]
     except KeyError as ke:
         print ("Make sure CLUSTER_CONFIG is defined and pointing to the configuration you would like to provision")
         raise KeyError("CLUSTER_CONFIG not defined. Unable to provision cluster.")
 
-    install_nginx(cluster_config)
+    install_nginx(cluster_conf)
 

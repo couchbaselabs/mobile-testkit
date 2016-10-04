@@ -1,17 +1,14 @@
-import concurrent.futures
-from concurrent.futures import ThreadPoolExecutor
 import os
 import time
 
-import testkit.settings
-from testkit.listener import Listener
-from testkit.user import User
-from testkit.verify import verify_same_docs
 from testkit.android import parallel_install
 
 from testkit import settings
+from testkit.user import User
 import logging
 log = logging.getLogger(settings.LOGGER)
+
+from keywords.utils import log_info
 
 
 def start_pull_replications(db_name, source, targets):
@@ -36,6 +33,12 @@ def stop_push_replications(db_name, source, targets):
 
 def test_selective_db_delete_and_replication_lifecycle():
 
+    try:
+        cluster_conf = os.environ["CLUSTER_CONFIG"]
+    except KeyError as ke:
+        log_info("Make sure CLUSTER_CONFIG is defined and pointing to the configuration you would like to provision")
+        raise KeyError("CLUSTER_CONFIG not defined. Unable to provision cluster.")
+
     should_reinstall = True
     apk_path = os.environ["P2P_APP"]
     activity = "com.couchbase.ui.maven/com.couchbase.ui.MainActivity"
@@ -49,7 +52,7 @@ def test_selective_db_delete_and_replication_lifecycle():
         {"target_device": "emulator-5562", "local_port": 14000, "apk_path": apk_path, "activity": activity},
     ]
 
-    listeners = parallel_install(device_defs, should_reinstall)
+    listeners = parallel_install(cluster_conf, device_defs, should_reinstall)
 
     time.sleep(2)
 
@@ -145,6 +148,12 @@ def test_selective_db_delete_and_replication_lifecycle():
 
 def test_replication_unstable_network():
 
+    try:
+        cluster_conf = os.environ["CLUSTER_CONFIG"]
+    except KeyError as ke:
+        log_info("Make sure CLUSTER_CONFIG is defined and pointing to the configuration you would like to provision")
+        raise KeyError("CLUSTER_CONFIG not defined. Unable to provision cluster.")
+
     should_reinstall = False
     apk_path = os.environ["P2P_APP"]
     activity = "com.couchbase.ui.maven/com.couchbase.ui.MainActivity"
@@ -160,7 +169,7 @@ def test_replication_unstable_network():
         {"target": "emulator-5564", "local_port": 15000, "apk_path": apk_path, "activity": activity},
     ]
 
-    listeners = parallel_install(device_defs, should_reinstall)
+    listeners = parallel_install(cluster_conf, device_defs, should_reinstall)
 
     dev = listeners["06c455850b3fa11e"]
     emu_1 = listeners["emulator-5554"]

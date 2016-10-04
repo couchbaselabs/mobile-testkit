@@ -27,7 +27,8 @@ def run_perf_test(number_pullers, number_pushers, use_gateload, gen_gateload_con
         print ("Make sure CLUSTER_CONFIG is defined and pointing to the configuration you would like to provision")
         sys.exit(1)
 
-    ansible_runner = AnsibleRunner()
+    print("Running perf test against cluster: {}".format(cluster_config))
+    ansible_runner = AnsibleRunner(cluster_config)
 
     test_run_id = "{}_{}".format(test_id, time.strftime("%Y-%m-%d-%H-%M-%S"))
 
@@ -37,7 +38,7 @@ def run_perf_test(number_pullers, number_pushers, use_gateload, gen_gateload_con
     print "Resetting Sync Gateway"
     if sync_gateway_config_path is None or len(sync_gateway_config_path) == 0:
         raise Exception("Missing Sync Gateway config file path")
-    cluster = Cluster()
+    cluster = Cluster(config=cluster_config)
     if reset_sync_gateway:
         mode = cluster.reset(sync_gateway_config_path)
         print("Running in mode: {}".format(mode))
@@ -53,7 +54,6 @@ def run_perf_test(number_pullers, number_pushers, use_gateload, gen_gateload_con
 
         # Build gateload
         print ">>> Building gateload"
-        ansible_runner = AnsibleRunner()
         status = ansible_runner.run_ansible_playbook(
             "build-gateload.yml",
             extra_vars={},
@@ -64,6 +64,7 @@ def run_perf_test(number_pullers, number_pushers, use_gateload, gen_gateload_con
         print ">>> Generate gateload configs"
         if gen_gateload_config:
             generate_gateload_configs.main(
+                cluster_config,
                 number_pullers,
                 number_pushers,
                 test_run_id,
@@ -79,8 +80,6 @@ def run_perf_test(number_pullers, number_pushers, use_gateload, gen_gateload_con
             extra_vars={},
         )
         assert status == 0, "Could not start gateload"
-
-
 
     else:
         print "Using Gatling"
@@ -99,7 +98,7 @@ def run_perf_test(number_pullers, number_pushers, use_gateload, gen_gateload_con
 
     # write expvars to file, will exit when gateload scenario is done
     print ">>> Logging expvars"
-    log_expvars(test_run_id)
+    log_expvars(cluster_config, test_run_id)
 
     # Killing sync_gateway and sg_accel will trigger collection of
     #    1) machine_stats
@@ -118,19 +117,19 @@ def run_perf_test(number_pullers, number_pushers, use_gateload, gen_gateload_con
     time.sleep(61)
 
     print ">>> Fetch machine stats"
-    fetch_machine_stats(test_run_id)
+    fetch_machine_stats(cluster_config, test_run_id)
 
     # Fetch profile for sync_gateway while the endpoints are still running
     print ">>> Fetch Sync Gateway profile"
-    fetch_sync_gateway_profile(test_run_id)
+    fetch_sync_gateway_profile(cluster_config, test_run_id)
 
     # Copy sync_gateway logs to test results directory
     print ">>> Fetch Sync Gateway logs"
-    fetch_sync_gateway_logs(test_run_id, is_perf_run=True)
+    fetch_sync_gateway_logs(cluster_config, test_run_id)
 
     # Invoke cb-collect-info and push to support portal
     print ">>> Invoke cbcollect info and push to support portal"
-    push_cbcollect_info_supportal()
+    push_cbcollect_info_supportal(cluster_config)
 
 
 if __name__ == "__main__":

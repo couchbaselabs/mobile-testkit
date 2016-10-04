@@ -13,7 +13,6 @@ from concurrent.futures import ThreadPoolExecutor
 
 from CouchbaseServer import CouchbaseServer
 from Document import get_attachment
-from utils import breakpoint
 
 from libraries.data import doc_generators
 
@@ -25,6 +24,8 @@ from constants import REGISTERED_CLIENT_DBS
 
 from utils import log_r
 from utils import log_info
+
+from exceptions import TimeoutException
 
 
 def parse_multipart_response(response):
@@ -363,7 +364,7 @@ class MobileRestClient:
         while True:
 
             if time.time() - start > CLIENT_REQUEST_TIMEOUT:
-                raise Exception("Verify Docs Present: TIMEOUT")
+                raise TimeoutException("Verify Docs Present: TIMEOUT")
 
             resp = self._session.get("{}/{}/_all_docs".format(url, db))
             log_r(resp)
@@ -430,9 +431,14 @@ class MobileRestClient:
         logging.debug(doc)
 
         doc_rev_ids_number = len(doc["_revisions"]["ids"])
-        assert doc_rev_ids_number == expected_revs_per_docs, "Expected num revs: {}, Actual num revs: {}".format(
-            expected_revs_per_docs, doc_rev_ids_number
-        )
+
+        log_info("{} num revs: {} expected_revs_per_doc: {}".format(doc_id, doc_rev_ids_number, expected_revs_per_docs))
+
+        if doc_rev_ids_number != expected_revs_per_docs:
+            raise AssertionError("Expected num revs: {}, Actual num revs: {}".format(
+                expected_revs_per_docs,
+                doc_rev_ids_number
+            ))
 
     def verify_max_revs_num_for_docs(self, url, db, docs, expected_max_number_revs_per_doc, auth=None):
         for doc in docs:
@@ -448,9 +454,14 @@ class MobileRestClient:
         logging.debug(doc)
 
         doc_rev_ids_number = len(doc["_revisions"]["ids"])
-        assert doc_rev_ids_number <= expected_max_number_revs, "Expected num revs: {}, Actual num revs: {}".format(
-            expected_max_number_revs, doc_rev_ids_number
-        )
+
+        log_info("{} num revs: {} expected_max_number_revs: {}".format(doc_id, doc_rev_ids_number, expected_max_number_revs))
+
+        if doc_rev_ids_number > expected_max_number_revs:
+            raise AssertionError("Expected num revs: {}, Actual num revs: {}".format(
+                expected_max_number_revs,
+                doc_rev_ids_number)
+            )
 
     def verify_docs_rev_generations(self, url, db, docs, expected_generation, auth=None):
         """
@@ -467,8 +478,10 @@ class MobileRestClient:
         doc = self.get_doc(url, db, doc_id, auth)
         rev = doc["_rev"]
         generation = int(rev.split("-")[0])
-        logging.debug("Found generation: {}".format(generation))
-        assert generation == expected_generation, "Expected generation: {} not found, found: {}".format(expected_generation, generation)
+        log_info("doc {} has generation: {}, expected_generation: {}".format(doc_id, generation, expected_generation), is_verify=True)
+
+        if generation != expected_generation:
+            raise AssertionError("Expected generation: {} not found, found: {}".format(expected_generation, generation))
 
     def verify_open_revs(self, url, db, doc_id, expected_open_revs, auth=None):
         """
@@ -483,9 +496,13 @@ class MobileRestClient:
             logging.debug(row)
             open_revs.append(row["ok"]["_rev"])
 
-        assert len(open_revs) == len(expected_open_revs), "Unexpected open_revisions length! Expected: {}, Actual: {}".format(len(expected_open_revs), len(open_revs))
-        assert set(open_revs) == set(expected_open_revs), "Unexpected open_revisions found! Expected: {}, Actual: {}".format(expected_open_revs, open_revs)
-        log_info("Found expected open revs.")
+        if len(open_revs) != len(expected_open_revs):
+            raise AssertionError("Unexpected open_revisions length! Expected: {}, Actual: {}".format(len(expected_open_revs), len(open_revs)))
+
+        if set(open_revs) != set(expected_open_revs):
+            raise AssertionError("Unexpected open_revisions found! Expected: {}, Actual: {}".format(expected_open_revs, open_revs))
+
+        log_info("open revs: \n    found: {}\n    expected: {}".format(open_revs, expected_open_revs), is_verify=True)
 
     def get_open_revs(self, url, db, doc_id, auth=None):
         """
@@ -716,7 +733,7 @@ class MobileRestClient:
         """
         doc_resp = self.get_doc(url, db, doc["id"], auth)
         conflict_revs = doc_resp["_conflicts"]
-        logging.debug("Conflict revs: {}".format(conflict_revs))
+        log_info("Conflict revs: {}".format(conflict_revs))
         return conflict_revs
 
     def delete_conflicts(self, url, db, docs, auth=None):
@@ -785,7 +802,7 @@ class MobileRestClient:
             not_deleted = []
 
             if time.time() - start > CLIENT_REQUEST_TIMEOUT:
-                raise Exception("Verify Docs Deleted: TIMEOUT")
+                raise TimeoutException("Verify Docs Deleted: TIMEOUT")
 
             for doc in docs:
                 if auth_type == AuthType.session:
@@ -852,6 +869,8 @@ class MobileRestClient:
         current_rev = doc["_rev"]
         current_update_number = doc["updates"] + 1
 
+        log_info("Updating {}/{}/{}: {} times".format(url, db, doc_id, number_updates))
+
         for i in xrange(number_updates):
 
             # Add "random" this to make each update unique. This will
@@ -877,7 +896,7 @@ class MobileRestClient:
             else:
                 resp = self._session.put("{}/{}/{}".format(url, db, doc_id), data=json.dumps(doc))
 
-            log_r(resp)
+            log_r(resp, info=False)
             resp.raise_for_status()
             resp_obj = resp.json()
 
@@ -889,7 +908,6 @@ class MobileRestClient:
             if delay is not None:
                 logging.debug("Sleeping: {}s ...".format(delay))
                 time.sleep(delay)
-
 
         return resp_obj
 
@@ -932,7 +950,7 @@ class MobileRestClient:
 
         # check that the docs returned in the responses equals the expected number
         if len(added_docs) != number:
-            raise RuntimeError("Client was not able to add all docs to: {}".format(url))
+            raise AssertionError("Client was not able to add all docs to: {}".format(url))
 
         logging.info(added_docs)
 
@@ -974,7 +992,7 @@ class MobileRestClient:
 
         # extract ids from docs and format for _bulk_get request
         ids = [{"id": doc["id"]} for doc in docs]
-        request_body ={"docs": ids}
+        request_body = {"docs": ids}
 
         auth_type = get_auth_type(auth)
 
@@ -1130,7 +1148,8 @@ class MobileRestClient:
 
         resp_obj = resp.json()
 
-        assert resp_obj["ok"], "Unexpected response for cancelling a replication"
+        if "ok" not in resp_obj:
+            raise AssertionError("Unexpected response for cancelling a replication")
 
     def wait_for_replication_status_idle(self, url, replication_id):
         """
@@ -1140,7 +1159,7 @@ class MobileRestClient:
         start = time.time()
         while True:
             if time.time() - start > CLIENT_REQUEST_TIMEOUT:
-                raise Exception("Wait for Replication Status Idle: TIMEOUT")
+                raise TimeoutException("Wait for Replication Status Idle: TIMEOUT")
 
             resp = self._session.get("{}/_active_tasks".format(url))
             log_r(resp)
@@ -1172,7 +1191,7 @@ class MobileRestClient:
         start = time.time()
         while True:
             if time.time() - start > CLIENT_REQUEST_TIMEOUT:
-                raise Exception("Verify Docs Present: TIMEOUT")
+                raise TimeoutException("Verify Docs Present: TIMEOUT")
 
             resp = self._session.get("{}/_active_tasks".format(url))
             log_r(resp)
@@ -1221,11 +1240,13 @@ class MobileRestClient:
 
         logging.debug(expected_docs)
 
+        log_info("Verify {}/{} has {} docs".format(url, db, len(expected_doc_map)), is_verify=True)
+
         start = time.time()
         while True:
 
             if time.time() - start > timeout:
-                raise Exception("Verify Docs Present: TIMEOUT")
+                raise TimeoutException("Verify Docs Present: TIMEOUT")
 
             if server_type == ServerType.listener:
 
@@ -1292,7 +1313,10 @@ class MobileRestClient:
 
             logging.debug("Expected: {}".format(expected_doc_map))
             logging.debug("Actual: {}".format(resp_docs))
-            assert expected_doc_map == resp_docs, "Unable to verify docs present. Dictionaries are not equal"
+
+            if expected_doc_map != resp_docs:
+                raise AssertionError("Unable to verify docs present. Dictionaries are not equal")
+
             break
 
     def verify_docs_in_changes(self, url, db, expected_docs, auth=None):
@@ -1316,6 +1340,8 @@ class MobileRestClient:
         else:
             raise TypeError("Verify Docs In Changes expects a list or dict of expected docs")
 
+        log_info("Verify {}/{} has {} docs in changes".format(url, db, len(expected_doc_map)), is_verify=True)
+
         server_type = self.get_server_type(url)
         sequence_number_map = {}
 
@@ -1326,7 +1352,7 @@ class MobileRestClient:
             logging.info(time.time() - start)
 
             if time.time() - start > CLIENT_REQUEST_TIMEOUT:
-                raise Exception("Verify Docs In Changes: TIMEOUT")
+                raise TimeoutException("Verify Docs In Changes: TIMEOUT")
 
             if server_type == ServerType.listener:
                 resp = self._session.get("{}/{}/_changes?feed=longpoll&since={}".format(url, db, last_seq))
@@ -1405,11 +1431,14 @@ class MobileRestClient:
         """
         num_row_entries = len(view_response["rows"])
         num_total_rows = view_response["total_rows"]
-        logging.info("Expected rows: {}".format(expected_num_rows))
-        logging.info("Number of row entries: {}".format(num_row_entries))
-        logging.info("Number of total_rows: {}".format(num_total_rows))
-        assert num_row_entries == expected_num_rows, "Expeced number of rows did not match number of 'rows'"
-        assert num_row_entries == num_total_rows, "Expeced number of rows did not match number of 'total_rows'"
+        log_info("Expected rows: {}".format(expected_num_rows), is_verify=True)
+        log_info("Number of row entries: {}".format(num_row_entries), is_verify=True)
+        log_info("Number of total_rows: {}".format(num_total_rows), is_verify=True)
+        if num_row_entries != expected_num_rows:
+            raise AssertionError("Expected number of rows did not match number of 'rows'")
+
+        if num_row_entries != num_total_rows:
+            raise AssertionError("Expected number of rows did not match number of 'total_rows'")
 
     def verify_view_contains_keys(self, view_response, keys):
         """
@@ -1445,7 +1474,8 @@ class MobileRestClient:
 
         logging.debug("Found Doc Ids: {}".format(found_doc_ids))
         logging.debug("Expected Doc Ids: {}".format(expected_doc_ids))
-        assert found_doc_ids == expected_doc_ids, "Found doc ids should be the same as expected doc ids"
+        if found_doc_ids != expected_doc_ids:
+            raise AssertionError("Found doc ids should be the same as expected doc ids")
 
     def verify_doc_ids_not_found_in_response(self, response, expected_missing_doc_ids):
         doc_list = response["rows"]
@@ -1459,4 +1489,5 @@ class MobileRestClient:
 
         logging.debug("Found Doc Ids: {}".format(missing_doc_ids))
         logging.debug("Expected Doc Ids: {}".format(expected_missing_doc_ids))
-        assert missing_doc_ids == expected_missing_doc_ids, "Found doc ids should be the same as expected doc ids"
+        if missing_doc_ids != expected_missing_doc_ids:
+            raise AssertionError("Found doc ids should be the same as expected doc ids")

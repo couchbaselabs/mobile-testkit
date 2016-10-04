@@ -15,17 +15,13 @@ Table of Contents
 * [Repo Structure](#repo-structure)
 * [Repo Dependencies](#repo-dependencies)
 * [Development Environment](#development-environment)
-* [Android Tests](#android-tests)
-* [GrocerySync Tests](#grocerysync-tests)
-* [iOS Tests](#ios-tests)
 * [Listener Tests](#listener-tests)
-* [NET Tests](#net-tests)
-* [sgcollectinfo Tests](#sgcollectinfo-tests)
 * [sync_gateway Tests](#sync_gateway-tests)
 * [sync_gateway Performance Tests](#sync_gateway-peftests)
 * [Debugging](#debugging)
 * [Monitoring](#monitoring)
 * [Running Mobile-Testkit Framework Unit Tests](#running-mobile-testkit-framework-unit-tests)
+* [Setting up Google Emulators](#setting-up-google-emulators)
 * [Known Issues And Limitations](#known-issues-and-limitations)
 
 
@@ -35,16 +31,13 @@ Repo Structure
 The repo structure is the following:
 
 * libraries
+ * keywords (new devopement, will be renamed to testkit in the near future)
  * provision
- * testkit
+ * testkit (legacy)
  * utilities
 
 * testsuites
- * android
- * grocerysync
- * ios
- * net
- * sgcollectinfo
+ * listener
  * syncgateway
 
 
@@ -136,171 +129,36 @@ You may use what ever environment you would like, however [PyCharm](https://www.
 
 Now PyCharm should recognize the custom libraries and provide intellisense.
 
-Android Tests
-===============
+Listener Tests
+==============
 
-### Android Test Dependencies
-=============================
+The listener tests are a series of tests utilizing Couchbase Lite Listener and Sync Gateway or P2P. They are meant to be cross platform and should be able to run for
+for all the platforms that expose the Listener (Mac OSX, .NET, Android, iOS)
 
-* Android SDK. Download [Android Studio](http://developer.android.com/sdk/index.html) to install
-    * API 23
-    * API 22
-    * Android SDK Build-tools 22.0.1
-* Monkeyrunner (ships with Android Studio, must be in your PATH). You will need this to bootstrap apk installation on your emulators. Test by executing:
+### Dependencies
 
-You will need this to bootstrap apk installation on your emulators.
-
-```
-$ monkeyrunner
-```
-
-You should see something similar to the output below
-
-```
-Jython 2.5.3 (2.5:c56500f08d34+, Aug 13 2012, 14:54:35)
-[Java HotSpot(TM) 64-Bit Server VM (Oracle Corporation)] on java1.7.0_79
->>>
-```
-Ctrl+D to escape 
-
+Android SDK. Download [Android Studio](http://developer.android.com/sdk/index.html) to install
 
 ```
 export ANDROID_HOME=$HOME/Library/Android/sdk
 export PATH=$ANDROID_HOME/tools:$ANDROID_HOME/platform-tools:$PATH
 ```
 
-### Create Android Emulator (AVD)
-
-* Create new "dummy" project
-* Click on AVD manager (purple icon)
-* Create Virtual Device
-* Click "Download" next to Marshmallow x86_64
-* Hit Next/Finish to create it
-
-The scenarios can run on Android stock emulators/Genymotion emulators and devices.
-
-If you're running Android stock emulators you should make sure they are using HAXM. Follow the instructions here to install (https://software.intel.com/en-us/android/articles/installation-instructions-for-intel-hardware-accelerated-execution-manager-mac-os-x).
-
-Ensure the RAM allocated to your combined running emulators is less than the total allocated to HAXM. You can configure the RAM for your emulator images in the Android Virtual Device Manager and in HAXM by reinstalling via the .dmg in the android sdk folder.
- 
-To run the tests make sure you have lauched the correct number of emulators. You can launch them using the following command. 
+Mono to execute LiteServ .NET on macosx
 ```
-emulator -scale 0.25 @Nexus_5_API_23 &
-emulator -scale 0.25 @Nexus_5_API_23 &
-emulator -scale 0.25 @Nexus_5_API_23 &
-emulator -scale 0.25 @Nexus_5_API_23 &
-emulator -scale 0.25 @Nexus_5_API_23 &
-```
-Verify that the names listed below match the device definitions for the test you are trying to run
-```
-adb devices -l
-```
-```
-List of devices attached
-emulator-5562          device product:sdk_google_phone_x86 model:Android_SDK_built_for_x86 device:generic_x86
-emulator-5560          device product:sdk_google_phone_x86 model:Android_SDK_built_for_x86 device:generic_x86
-emulator-5558          device product:sdk_google_phone_x86 model:Android_SDK_built_for_x86 device:generic_x86
-emulator-5556          device product:sdk_google_phone_x86 model:Android_SDK_built_for_x86 device:generic_x86
-emulator-5554          device product:sdk_google_phone_x86 model:Android_SDK_built_for_x86 device:generic_x86
+http://www.mono-project.com/docs/getting-started/install/mac/
 ```
 
-Most of the port forwarding will be set up via instantiation of the Listener. However, you do need to complete some additional steps.
-
-**Note:** Instantiating a Listener in `test_listener_rest.py` will automatically forward the port the listener is running on to one on localhost. However, that port forwarding will not be bound on the local IP of your computer. This can be useful when combining actual devices and emulators. The following section describes how to make the emulators reachable from devices.
-
-Once you have emulators and possibly port forwarding setup, set the `P2P_APP` environment variable to the `.apk` of the application to be tested.
-
+Install libimobiledevice for capture device logging for iOS
 ```
-$ export P2P_APP=/path/to/apk
+$ brew install --HEAD libimobiledevice
+$ brew install ideviceinstaller
 ```
-
-If the test fails with a hostname unreachable error then it's probably because port forwarding needs to be configured (read section below).
-
-### Port forwarding (setup once)
-
-Add the following lines to the file `/etc/sysctl.conf`
+Install ios-deploy to bootstrap install / lauching of iOS apps
 ```
-net.inet.ip.forwarding=1
-net.inet6.ip6.forwarding=1
+brew install node
+npm install -g ios-deploy
 ```
-
-Specifying the 'local_port' when instantiating a Listener will forward the port on localhost only.
- 
- We need to bind the port on the `en0` interface to be reachable on the Wi-Fi. On Mac, this can be done with `pfctl`. Create a new anchor file under `/etc/pf.anchors/com.p2p`:
-
-```
-rdr pass on lo0 inet proto tcp from any to any port 10000 -> 127.0.0.1 port 10000
-rdr pass on en0 inet proto tcp from any to any port 10000 -> 127.0.0.1 port 10000
-
-rdr pass on lo0 inet proto tcp from any to any port 11000 -> 127.0.0.1 port 11000
-rdr pass on en0 inet proto tcp from any to any port 11000 -> 127.0.0.1 port 11000
-...
-
-```
-Parse and test your anchor file to make sure there a no errors:
-```
-sudo pfctl -vnf /etc/pf.anchors/com.p2p
-```
-
-The file at `/etc/pf.conf` is the main configuration file that `pf` loads at boot. Make sure to add both lines below to `/etc/pf.conf`:
-
-```
-scrub-anchor "com.apple/*"
-nat-anchor "com.apple/*"
-rdr-anchor "com.apple/*"
-rdr-anchor "com.p2p"      # Port forwading for p2p replications 
-dummynet-anchor "com.apple/*"
-anchor "com.apple/*"
-load anchor "com.apple" from "/etc/pf.anchors/com.apple"
-load anchor "com.p2p" from "/etc/pf.anchors/com.p2p"     # Port forwarding for p2p replications
-```
-
-The `lo0` are for local requests, and the `en0` entries are for external requests (coming from an actual device or another emulator targeting your host).
-
-Next, load and enable `pf` by running the following:
-
-```
-$ sudo pfctl -ef /etc/pf.conf
-```
-
-Now, all the databases are reachable on the internal network via host:forwarded_port (ex. http://192.168.0.21:10000/db), where 192.168.0.21 is your host computer's ip and 10000 is the 'local_port' passed when instantiating the Listener.
-
-
-### Android Test Excecution
-===========================
-To run the tests
-```
-$ robot testsuites/android/listener/
-```
-
-GrocerySync Tests
-=================
-
-### GrocerySync Test Dependencies
-=================================
-
-The GrocerySync tests use [Appium](http://appium.io/) under the hood.
-
-```
-$ brew install node
-$ npm install -g appium
-```
-
-
-### GrocerySync Test Excecution
-===============================
-TODO
-
-
-iOS Tests
-=========
-TODO
-
-Listener Tests
-==============
-
-The listener tests are a series of tests utilizing Couchbase Lite Listener and Sync Gateway or P2P. They are meant to be cross platform and should be able to run for
-for all the platforms that expose the Listener (Mac OSX, .NET, Android)
 
 The Listener is exposed via a LiteServ application which will be downloaded and launched when running the test.
 
@@ -316,103 +174,76 @@ however devices are supported as long the sync_gateway and the android device ca
 Running Client Client (P2P) tests:
 
 ```
-robot --loglevel DEBUG \
-    -d results/ \
-    -v PROFILE:sanity \
-    -v LITESERV_ONE_PLATFORM:net \
-    -v LITESERV_ONE_VERSION:1.3.0-67 \
-    -v LITESERV_ONE_HOST:192.168.0.12 \
-    -v LITESERV_ONE_PORT:59840 \
-    -v LITESERV_ONE_STORAGE_ENGINE:ForestDB+Encryption \
-    -v LITESERV_TWO_PLATFORM:android \
-    -v LITESERV_TWO_VERSION:1.3.0-12 \
-    -v LITESERV_TWO_HOST:192.168.0.19 \
-    -v LITESERV_TWO_PORT:5984  \
-    -v LITESERV_TWO_STORAGE_ENGINE:SQLite \
-    testsuites/listener/shared/client_client/
+pytest  -s \
+        --liteserv-one-platform=android \
+        --liteserv-one-version=1.3.1-30 \
+        --liteserv-one-host=192.168.0.19 \
+        --liteserv-one-port=5000 \
+        --liteserv-one-storage-engine=SQLite \
+        --liteserv-two-platform=net \
+        --liteserv-two-version=1.3.1-6 \
+        --liteserv-two-host=192.168.0.12 \
+        --liteserv-two-port=51000 \
+        --liteserv-two-storage-engine=SQLite \
+        testsuites/listener/shared/client_client/
 ```
 
 Running Client + Sync Gateway tests:
 
 Make sure to set up vm cluster [Spin Up Machines on Vagrant](#spin-up-machines-on-vagrant)
 
-Running Mac OSX + sync_gateway. You must have a running sync_gateway. The test will install / start the sync_gateway
-```
-robot --loglevel DEBUG \
-    -d results/ \
-    -v PROFILE:sanity \
-    -v PLATFORM:macosx \
-    -v LITESERV_VERSION:1.3.0-37 \
-    -v LITESERV_HOST:localhost \
-    -v LITESERV_PORT:59840 \
-    -v LITESERV_STORAGE_ENGINE:SQLCipher \
-    -v SYNC_GATEWAY_VERSION:1.3.0-247 \
-    testsuites/listener/shared/client_sg/
-```
-
-Running Android. For Android you need to provide the IP of the Android device you are using for LITESERV_HOST
+Running Mac OSX + sync_gateway. The test will install macosx LiteServ and start the sync_gateway
 
 ```
-robot --loglevel DEBUG \
-    -d results/ \
-    -v PROFILE:sanity \
-    -v PLATFORM:android \
-    -v LITESERV_VERSION:1.3.0-12 \
-    -v LITESERV_HOST:192.168.56.101 \
-    -v LITESERV_PORT:5984 \
-    -v LITESERV_STORAGE_ENGINE:SQLite \
-    -v SYNC_GATEWAY_VERSION:1.2.1-4 \
-    testsuites/listener/shared/client_sg/
+pytest  -s \
+        --liteserv-platform=macosx \
+        --liteserv-version=1.3.1-6 \
+        --liteserv-host=localhost \
+        --liteserv-port=59840 \
+        --liteserv-storage-engine=SQLite \
+        --sync-gateway-version=1.3.1-16 \
+        testsuites/listener/shared/client_sg/
 ```
 
-Running .NET
+Running Android LiteServ + Sync Gateway. You need to provide the IP of the running Android device you are using for --liteserv-host
 
 ```
-robot --loglevel DEBUG \
-    -d results/ \
-    -v PROFILE:sanity \
-    -v PLATFORM:net \
-    -v LITESERV_VERSION:1.3.0-97 \
-    -v LITESERV_HOST:localhost \
-    -v LITESERV_PORT:59840 \
-    -v LITESERV_STORAGE_ENGINE:ForestDB+Encryption \
-    -v SYNC_GATEWAY_VERSION:1.3.0-234 \
-    -t "Test Raw attachment" \
-    testsuites/listener/shared/client_sg/
+pytest  -s \
+        --liteserv-platform=android \
+        --liteserv-version=1.3.1-30 \
+        --liteserv-host=<ip-of-device> \
+        --liteserv-port=5000 \
+        --liteserv-storage-engine=SQLite \
+        --sync-gateway-version=1.3.1-16 \
+        testsuites/listener/shared/client_sg/
 ```
 
+Running iOS LiteServ + Sync Gateway. You need to provide the IP of the running iOS device you are using for --liteserv-host.
 
-### iOS Test Dependencies
-=========================
-TODO
+```
+pytest  -s \
+        --liteserv-platform=ios \
+        --liteserv-version=1.3.1-6 \
+        --liteserv-host=<ip-of-device> \
+        --liteserv-port=5000 \
+        --liteserv-storage-engine=SQLite \
+        --sync-gateway-version=1.3.1-16 \
+        testsuites/listener/shared/client_sg/
+```
 
-### iOS Test Excecution
-=======================
-TODO
+Running mono .NET LiteServ + Sync Gateway.
 
-NET Tests
-=========
-TODO
+```
+pytest  -s \
+        --liteserv-platform=net \
+        --liteserv-version=1.3.1-13 \
+        --liteserv-host=localhost \
+        --liteserv-port=59840 \
+        --liteserv-storage-engine=SQLite \
+        --sync-gateway-version=1.3.1-16 \
+        testsuites/listener/shared/client_sg/
+```
 
-### NET Test Dependencies
-=========================
-TODO
-
-### NET Test Excecution
-=======================
-TODO
-
-sgcollectinfo Tests
-===================
-TODO
-
-### sgcollectinfo Test Dependencies
-===================================
-TODO
-
-### sgcollectinfo Test Excecution
-=================================
-TODO
 
 sync_gateway Tests
 ==================
@@ -529,39 +360,46 @@ ssh-add ~/.ssh/sample_key
 
 Run the whole suite 
 
-`robot -b debug.txt -v SERVER_VERSION:4.1.1 -v SYNC_GATEWAY_VERSION:1.2.0-79 testsuites/syncgateway/functional/ `
+```
+pytest  -s --server-version=4.5.0 \
+        --sync-gateway-version=1.3.1-16 \
+        testsuites/syncgateway/functional/
+```
 
 Run a single suite  
 
-`robot -b debug.txt -v SERVER_VERSION:4.1.1 -v SYNC_GATEWAY_VERSION:1.2.0-79 testsuites/syncgateway/functional/1sg_1cbs/`
+```
+pytest  -s --server-version=4.5.0 \
+        --sync-gateway-version=1.3.1-16 \
+        testsuites/syncgateway/functional/1sg_1cbs/test_openid_connect.py
+```
 
 Run a single test   
 
-`robot -b debug.txt -v SERVER_VERSION:4.1.1 -v SYNC_GATEWAY_VERSION:1.2.0-79 -t "test bulk get compression no compression" testsuites/syncgateway/functional/1sg_1cbs/`
+```
+pytest  -s --server-version=4.5.0 \
+        -k "test_openidconnect_basic_test" \
+        --sync-gateway-version=1.3.1-16 \
+        testsuites/syncgateway/functional/
+```
 
-Running a test (using a source commit)
-
-`robot -b debug.txt -v SERVER_VERSION:4.1.1 -v SYNC_GATEWAY_VERSION:062bc26a8b65e63b3a80ba0f11506e49681d4c8c -t "test bulk get compression no compression" testsuites/syncgateway/functional/1sg_1cbs/`
-
-Although it is not necessary, the `-b debug.txt` will provide more output and stacktraces for deeper investigation
-
-Skipping the cluster provisioning (i.e. You are writing tests and know your cluster is the topology you are expecting)
-
-`robot -b debug.txt -v SERVER_VERSION:4.1.1 -v SYNC_GATEWAY_VERSION:1.2.0-79 testsuites/syncgateway/functional/1sg_1ac_1cbs/1sg_1ac_1cbs.robot`
-
-Skipping the cluster provisioning and running a single test:
-
-`robot -b debug.txt -v SERVER_VERSION:4.1.1 -v SYNC_GATEWAY_VERSION:1.2.0-79 -t "test sync sanity" testsuites/syncgateway/functional/1sg_1ac_1cbs/1sg_1ac_1cbs.robot`
-
-Running a subsuite with parent suite setup
-
-`robot --loglevel DEBUG -v SERVER_VERSION:4.1.0 -v SYNC_GATEWAY_VERSION:42fc10bbc819fe34940c66abd1fd02a8d51490ca -s 1sg_1cbs-openid-connect testsuites/syncgateway/functional/1sg_1cbs`
-
-- Teardown the CloudFormation Stack
+-k can match patterns as well (run all tests prefixed with 'test_openidconnect')
 
 ```
-python libraries/provision/teardown_cluster.py --stackname="TestPerfStack
+pytest  -s --server-version=4.5.0 \
+        -k "test_openidconnect*" \
+        --sync-gateway-version=1.3.1-16 \
+        testsuites/syncgateway/functional/
 ```
+
+Running tests (using a source commit)
+
+```
+pytest  -s --server-version=4.5.0 \
+        --sync-gateway-version=8c3ee28ae746b1e4a5a98e5df3b890d2f6a559e0 \
+        testsuites/syncgateway/functional/
+```
+
 
 ### Spin Up Machines on Vagrant
 ===============================
@@ -629,19 +467,22 @@ Wait until the resources are up, then create the `pool.json` file by hand accord
 Debugging
 =========
 
-When developing custom keyworks, you may want to break and inspect at a certain point in the python code. 
-Adding the following lines will do what you need
+Thanks to pytest, you can break into pdb very easily
 
 ```
-from keywords.utils import breakpoint
+import pdb
 
 for thing in things:
-    breakpoint()
+    pdb.set_trace()
     # break here ^
     thing.do()
 ```
 
-They will redirect the stdin, stdout, and stderr from robot back to your control
+If you want the test to drop into pdb at the point of failure, you can execute the test with the flag
+
+```
+pytest --pdb
+```
 
 
 Monitoring
@@ -723,17 +564,105 @@ python libraries/provision/provision_cluster.py --server-version 4.1.1 --sync-ga
 python testsuites/syncgateway/performance/run_perf_test.py --number-pullers 1000 --number-pushers 1000 --use-gateload --test-id 1 --sync-gateway-config-path resources/sync_gateway_configs/performance/sync_gateway_default_performance_cc.json
 ```
 
-OR:
+Setting up Google Emulators
+===========================
+* Open Android Studio
+* Create new "dummy" project
+* Click on AVD manager (purple icon)
+* Create Virtual Device
+* Click "Download" next to Marshmallow x86_64
+* Hit Next/Finish to create it
+
+The scenarios can run on Android stock emulators/Genymotion emulators and devices.
+
+If you're running Android stock emulators you should make sure they are using HAXM. Follow the instructions here to install (https://software.intel.com/en-us/android/articles/installation-instructions-for-intel-hardware-accelerated-execution-manager-mac-os-x).
+
+Ensure the RAM allocated to your combined running emulators is less than the total allocated to HAXM. You can configure the RAM for your emulator images in the Android Virtual Device Manager and in HAXM by reinstalling via the .dmg in the android sdk folder.
+ 
+To run the tests make sure you have lauched the correct number of emulators. You can launch them using the following command. 
+```
+emulator -scale 0.25 @Nexus_5_API_23 &
+emulator -scale 0.25 @Nexus_5_API_23 &
+emulator -scale 0.25 @Nexus_5_API_23 &
+emulator -scale 0.25 @Nexus_5_API_23 &
+emulator -scale 0.25 @Nexus_5_API_23 &
+```
+Verify that the names listed below match the device definitions for the test you are trying to run
+```
+adb devices -l
+```
+```
+List of devices attached
+emulator-5562          device product:sdk_google_phone_x86 model:Android_SDK_built_for_x86 device:generic_x86
+emulator-5560          device product:sdk_google_phone_x86 model:Android_SDK_built_for_x86 device:generic_x86
+emulator-5558          device product:sdk_google_phone_x86 model:Android_SDK_built_for_x86 device:generic_x86
+emulator-5556          device product:sdk_google_phone_x86 model:Android_SDK_built_for_x86 device:generic_x86
+emulator-5554          device product:sdk_google_phone_x86 model:Android_SDK_built_for_x86 device:generic_x86
+```
+
+Most of the port forwarding will be set up via instantiation of the Listener. However, you do need to complete some additional steps.
+
+**Note:** Instantiating a Listener in `test_listener_rest.py` will automatically forward the port the listener is running on to one on localhost. However, that port forwarding will not be bound on the local IP of your computer. This can be useful when combining actual devices and emulators. The following section describes how to make the emulators reachable from devices.
+
+Once you have emulators and possibly port forwarding setup, set the `P2P_APP` environment variable to the `.apk` of the application to be tested.
 
 ```
-robot testsuites/syncgateway/performance/minimatrix.robot
+$ export P2P_APP=/path/to/apk
 ```
+
+If the test fails with a hostname unreachable error then it's probably because port forwarding needs to be configured (read section below).
+
+### Port forwarding (setup once)
+
+Add the following lines to the file `/etc/sysctl.conf`
+```
+net.inet.ip.forwarding=1
+net.inet6.ip6.forwarding=1
+```
+
+Specifying the 'local_port' when instantiating a Listener will forward the port on localhost only.
+ 
+ We need to bind the port on the `en0` interface to be reachable on the Wi-Fi. On Mac, this can be done with `pfctl`. Create a new anchor file under `/etc/pf.anchors/com.p2p`:
+
+```
+rdr pass on lo0 inet proto tcp from any to any port 10000 -> 127.0.0.1 port 10000
+rdr pass on en0 inet proto tcp from any to any port 10000 -> 127.0.0.1 port 10000
+
+rdr pass on lo0 inet proto tcp from any to any port 11000 -> 127.0.0.1 port 11000
+rdr pass on en0 inet proto tcp from any to any port 11000 -> 127.0.0.1 port 11000
+...
+
+```
+Parse and test your anchor file to make sure there a no errors:
+```
+sudo pfctl -vnf /etc/pf.anchors/com.p2p
+```
+
+The file at `/etc/pf.conf` is the main configuration file that `pf` loads at boot. Make sure to add both lines below to `/etc/pf.conf`:
+
+```
+scrub-anchor "com.apple/*"
+nat-anchor "com.apple/*"
+rdr-anchor "com.apple/*"
+rdr-anchor "com.p2p"      # Port forwading for p2p replications 
+dummynet-anchor "com.apple/*"
+anchor "com.apple/*"
+load anchor "com.apple" from "/etc/pf.anchors/com.apple"
+load anchor "com.p2p" from "/etc/pf.anchors/com.p2p"     # Port forwarding for p2p replications
+```
+
+The `lo0` are for local requests, and the `en0` entries are for external requests (coming from an actual device or another emulator targeting your host).
+
+Next, load and enable `pf` by running the following:
+
+```
+$ sudo pfctl -ef /etc/pf.conf
+```
+
+Now, all the databases are reachable on the internal network via host:forwarded_port (ex. http://192.168.0.21:10000/db), where 192.168.0.21 is your host computer's ip and 10000 is the 'local_port' passed when instantiating the Listener.
+
 
 
 Known Issues And Limitations
 ============================
-
-- This repo now only supports ansible 2.0.0.2. There are known issues with certain versions of ansible.
-
-- For AWS, the  `libraries/provision/generate_ansible_inventory_from_aws.py` script needs to be resurrected to support the new `resources/cluster_configs` file format (generated from pool.json)
 

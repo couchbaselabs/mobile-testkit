@@ -4,6 +4,7 @@
   tasks:
   - name: GATELOAD | go get gateload
     shell: GOPATH=/opt/go go get -u -v github.com/couchbaselabs/gateload
+    sudo: true
 
   - name: GATELOAD | Symlink gateload into /usr/local/bin
     file: src=/opt/go/bin/gateload dest=/usr/local/bin/gateload owner=centos group=centos state=link

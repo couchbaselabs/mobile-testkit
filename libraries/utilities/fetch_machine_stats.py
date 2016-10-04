@@ -3,12 +3,14 @@ import shutil
 import sys
 from optparse import OptionParser
 
+from keywords.utils import log_info
+
 from provision.ansible_runner import AnsibleRunner
 
 
-def fetch_machine_stats(folder_name):
+def fetch_machine_stats(cluster_config, folder_name):
 
-    ansible_runner = AnsibleRunner()
+    ansible_runner = AnsibleRunner(config=cluster_config)
 
     print("\n")
 
@@ -41,8 +43,14 @@ if __name__ == "__main__":
 
     (opts, args) = parser.parse_args(arg_parameters)
 
+    try:
+        cluster_conf = os.environ["CLUSTER_CONFIG"]
+    except KeyError as ke:
+        log_info("Make sure CLUSTER_CONFIG is defined and pointing to the configuration you would like to provision")
+        raise KeyError("CLUSTER_CONFIG not defined. Unable to provision cluster.")
+
     if opts.test_id is None:
         print("You must provide a test identifier to run the test")
         sys.exit(1)
 
-    fetch_machine_stats(opts.test_id)
+    fetch_machine_stats(cluster_conf, opts.test_id)

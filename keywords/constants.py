@@ -15,15 +15,18 @@ CLIENT_REQUEST_TIMEOUT = 120
 # Use to build the command line flags for encryption
 REGISTERED_CLIENT_DBS = ["ls_db", "ls_db1", "ls_db2"]
 
+
 class ServerType(Enum):
     syncgateway = "syncgateway"
     listener = "listener"
+
 
 class Platform(Enum):
     macosx = "macosx"
     android = "android"
     net = "net"
     centos = "centos"
+
 
 class AuthType(Enum):
     http_basic = "http_basic"

@@ -8,10 +8,8 @@ import requests
 from couchbase.bucket import Bucket
 from provision.ansible_runner import AnsibleRunner
 
-import testkit.settings
-
-import logging
-log = logging.getLogger(testkit.settings.LOGGER)
+from keywords.utils import log_info
+from keywords.utils import log_error
 
 class Server:
 
@@ -21,8 +19,8 @@ class Server:
     Use keywords/CouchbaseServer.py for future development
     """
 
-    def __init__(self, target):
-        self.ansible_runner = AnsibleRunner()
+    def __init__(self, cluster_config, target):
+        self.ansible_runner = AnsibleRunner(cluster_config)
         self.ip = target["ip"]
         self.url = "http://{}:8091".format(target["ip"])
         self.hostname = target["name"]
@@ -43,8 +41,8 @@ class Server:
             for entry in obj:
                 existing_bucket_names.append(entry["name"])
 
-            log.info(">>> Existing buckets: {}".format(existing_bucket_names))
-            log.info(">>> Deleting buckets: {}".format(existing_bucket_names))
+            log_info(">>> Existing buckets: {}".format(existing_bucket_names))
+            log_info(">>> Deleting buckets: {}".format(existing_bucket_names))
 
             # HACK around Couchbase Server issue where issuing a bucket delete via REST occasionally returns 500 error
             delete_num = 0
@@ -62,7 +60,7 @@ class Server:
                 count += 1
 
         if count == 3:
-            log.error("Could not delete bucket")
+            log_error("Could not delete bucket")
             status = 1
 
         return status
@@ -72,7 +70,7 @@ class Server:
         count = 0
         status = 0
         while count < 3:
-            log.info(">>> Deleting buckets: {}".format(name))
+            log_info(">>> Deleting buckets: {}".format(name))
             resp = requests.delete("{0}/pools/default/buckets/{1}".format(self.url, name), headers=self._headers)
             if resp.status_code == 200 or resp.status_code == 404:
                 break
@@ -82,7 +80,7 @@ class Server:
                 time.sleep(5)
 
         if count == 3:
-            log.error("Could not delete bucket")
+            log_error("Could not delete bucket")
             status = 1
 
         return status

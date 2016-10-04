@@ -1,11 +1,13 @@
 import os
+
+from keywords.utils import log_info
+
 from ansible.inventory import Inventory
 from ansible.vars import VariableManager
 from ansible.executor import playbook_executor
 from ansible.utils.display import Display
 from ansible import constants
 from ansible.parsing.dataloader import DataLoader
-from robot.api.logger import console
 import ansible.inventory
 
 class Options(object):
@@ -125,7 +127,7 @@ class Runner(object):
         self.variable_manager.set_inventory(self.inventory)
 
         # Setup playbook executor, but don't run until run() called
-        console("Running playbook: {}".format(playbook))
+        log_info("Running playbook: {}".format(playbook))
         self.pbex = playbook_executor.PlaybookExecutor(
             playbooks=[playbook],
             inventory=self.inventory,

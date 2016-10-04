@@ -1,7 +1,5 @@
 [defaults]
 remote_user = vagrant
-callback_plugins = libraries/provision/ansible/callbacks
-stdout_callback = robot_tee
 
 ; http://docs.ansible.com/ansible/intro_configuration.html#control-path
 ; prevent socket names that may be too long with (AWS host names)

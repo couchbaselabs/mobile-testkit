@@ -15,8 +15,8 @@ log = logging.getLogger(testkit.settings.LOGGER)
 
 class SyncGateway:
 
-    def __init__(self, target):
-        self.ansible_runner = AnsibleRunner()
+    def __init__(self, cluster_config, target):
+        self.ansible_runner = AnsibleRunner(cluster_config)
         self.ip = target["ip"]
         self.url = "http://{}:4984".format(target["ip"])
         self.hostname = target["name"]
