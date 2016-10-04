@@ -22,6 +22,7 @@ Table of Contents
 * [Monitoring](#monitoring)
 * [Running Mobile-Testkit Framework Unit Tests](#running-mobile-testkit-framework-unit-tests)
 * [Setting up Google Emulators](#setting-up-google-emulators)
+* [Windows Setup for Ansible](#windows-setup-for-ansible)
 * [Known Issues And Limitations](#known-issues-and-limitations)
 
 
@@ -656,6 +657,45 @@ $ sudo pfctl -ef /etc/pf.conf
 
 Now, all the databases are reachable on the internal network via host:forwarded_port (ex. http://192.168.0.21:10000/db), where 192.168.0.21 is your host computer's ip and 10000 is the 'local_port' passed when instantiating the Listener.
 
+
+Windows Setup for Ansible
+=========================
+- Follow instructions here - http://docs.ansible.com/ansible/intro_windows.html
+
+- Create an inventory similar to - 
+```
+[windows]
+win1 ansible_host=111.22.333.444
+
+[windows:vars]
+# Use your RDP / local windows user credentials for ansible_user / ansible_password
+ansible_user=FakeUser
+ansible_password=FakePassword
+ansible_port=5986
+ansible_connection=winrm
+# The following is necessary for Python 2.7.9+ when using default WinRM self-signed certificates:
+ansible_winrm_server_cert_validation=ignore
+```
+Save as `inventory_windows` or whatever name you want
+
+### IMPORTANT: Do not publish or check this in. If you do, anyone could potentially access your machine.
+
+- Download and execute this in the windows target PowerShell (Run as Administrator)
+https://github.com/ansible/ansible/blob/devel/examples/scripts/ConfigureRemotingForAnsible.ps1
+
+```
+.\ConfigureRemotingForAnsible.ps1
+```
+
+If you hit errors, you may have to allow unsigned script execution (Use with caution)
+```
+Set-ExecutionPolicy Unrestricted
+```
+
+Test by:
+```
+ansible windows -i inventory_windows -m win_ping
+```
 
 
 Known Issues And Limitations
