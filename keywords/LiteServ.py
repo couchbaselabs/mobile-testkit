@@ -21,6 +21,8 @@ from utils import log_info
 from utils import log_r
 
 from exceptions import LiteServError
+from exceptions import ProvisioningError
+from libraries.provision.ansible_runner import AnsibleRunner
 
 
 def version_and_build(full_version):
@@ -38,7 +40,7 @@ class LiteServ:
     def verify_platform(self, platform):
         """Verify that we are installing a supported platform"""
 
-        if platform not in ["macosx", "android", "net", "ios"]:
+        if platform not in ["macosx", "android", "net", "net-win", "ios"]:
             raise LiteServError("Unsupported platform: {}".format(platform))
 
     def verify_storage_engine(self, storage_engine):
@@ -170,12 +172,7 @@ class LiteServ:
             if platform == "macosx":
                 # Make binary executable
                 os.chmod("{}/{}/LiteServ".format(BINARY_DIR, directory_name), 0755)
-            elif platform == "net":
-                # Remove x64 and x86 HACK - To get around https://github.com/couchbase/couchbase-lite-net/issues/672
-                # Need to remove once the issue is resolved
-                shutil.rmtree("{}/{}/x64".format(BINARY_DIR, directory_name))
-                shutil.rmtree("{}/{}/x86".format(BINARY_DIR, directory_name))
-
+            elif platform == "net" or platform == "net-win":
                 # Remove .zip file
                 os.remove("{}/{}".format(BINARY_DIR, file_name))
 
@@ -272,12 +269,20 @@ class LiteServ:
         ])
         log_info(output)
 
-    def install_liteserv(self, platform, version, storage_engine):
+    def install_liteserv_windows(self, version_build, cluster_config):
+        binary = self.get_binary("net", version_build)
+
+        ansible_runner = AnsibleRunner(config=cluster_config)
+
+        ansible_runner.run_ansible_playbook("install-")
+
+    def install_liteserv(self, platform, version, storage_engine, cluster_config=None):
         """Bootstraps install of LiteServ app (Android). Noop for Desktop cmd apps (ex. Mac OSX, .NET)
 
         :param platform: LiteServ Platform to install
         :param version: LiteServ Version to install
         :param storage_engine: Storage Engine to use when running tests
+        :param cluster_config: option parameter to specify an external box to install the service on
         """
 
         log_info("Installing LiteServ ({}, {}, {})".format(platform, version, storage_engine))
@@ -286,9 +291,17 @@ class LiteServ:
         self.verify_storage_engine(storage_engine)
 
         if platform == "android":
+            if cluster_config is not None:
+                raise ProvisioningError("cluster_config should not be set for Android")
             self.install_apk(version_build=version, storage_engine=storage_engine)
         elif platform == "ios":
+            if cluster_config is not None:
+                raise ProvisioningError("cluster_config should not be set for iOS")
             self.install_and_launch_ios_app(version_build=version, storage_engine=storage_engine)
+        elif platform == "net-win":
+            if cluster_config is None:
+                raise ProvisioningError("cluster_config cannot be none for .NET on Windows")
+            self.install_liteserv_windows(version_build=version, cluster_config=cluster_config)
         else:
             log_info("No install necessary. Skipping ...")
 
