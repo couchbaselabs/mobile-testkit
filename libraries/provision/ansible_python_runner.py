@@ -1,6 +1,7 @@
 import os
 
 from keywords.utils import log_info
+from keywords.utils import log_error
 
 from ansible.inventory import Inventory
 from ansible.vars import VariableManager
@@ -9,6 +10,7 @@ from ansible.utils.display import Display
 from ansible import constants
 from ansible.parsing.dataloader import DataLoader
 import ansible.inventory
+
 
 class Options(object):
     """
@@ -84,7 +86,7 @@ class Runner(object):
         self.options.module_path = constants.DEFAULT_MODULE_PATH
         self.options.forks = constants.DEFAULT_FORKS
         self.options.ask_vault_pass = constants.DEFAULT_ASK_VAULT_PASS
-        self.options.vault_password_files = [ constants.DEFAULT_VAULT_PASSWORD_FILE ]
+        self.options.vault_password_files = [constants.DEFAULT_VAULT_PASSWORD_FILE]
         self.options.sudo = constants.DEFAULT_SUDO
         self.options.become = constants.DEFAULT_BECOME
         self.options.become_method = constants.DEFAULT_BECOME_METHOD

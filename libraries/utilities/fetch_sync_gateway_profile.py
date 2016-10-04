@@ -2,8 +2,6 @@ import os.path
 import shutil
 from provision.ansible_runner import AnsibleRunner
 
-from keywords.utils import log_info
-
 
 def fetch_sync_gateway_profile(cluster_config, folder_name):
 

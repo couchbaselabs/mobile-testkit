@@ -6,11 +6,10 @@ import uuid
 import re
 import time
 
-from requests.packages.urllib3.util import Retry
-from requests.adapters import HTTPAdapter
 from requests.exceptions import HTTPError
 
-from testkit.debug import *
+from testkit.debug import log_request
+from testkit.debug import log_response
 from testkit import settings
 import logging
 log = logging.getLogger(settings.LOGGER)
@@ -83,7 +82,7 @@ class User:
         else:
             # use specific rev
             rev_to_delete = doc_rev
-        
+
         # delete that revision
         resp = requests.delete("{0}/{1}/{2}?rev={3}".format(
             self.target.url,
@@ -119,10 +118,10 @@ class User:
             doc_url = self.target.url + "/" + self.db + "/" + doc_id
 
             if retries:
-                session = requests.Session()
-                adapter = requests.adapters.HTTPAdapter(max_retries=Retry(total=settings.MAX_HTTP_RETRIES, backoff_factor=settings.BACKOFF_FACTOR, status_forcelist=settings.ERROR_CODE_LIST))
-                session.mount("http://", adapter)
-                resp = session.put(doc_url, headers=self._headers, data=body, timeout=settings.HTTP_REQ_TIMEOUT)
+                # This was using invalid construction of HTTP adapter and currently is not used anywhere.
+                # Retry behavior will be the same as regular behavior. This is a legacy API so just adding this
+                # to do execute the same behavior whether or not retries is specifiec
+                resp = requests.put(doc_url, headers=self._headers, data=body, timeout=settings.HTTP_REQ_TIMEOUT)
             else:
                 resp = requests.put(doc_url, headers=self._headers, data=body, timeout=settings.HTTP_REQ_TIMEOUT)
 
@@ -160,10 +159,10 @@ class User:
         data = json.dumps(docs)
 
         if retries:
-            session = requests.Session()
-            adapter = requests.adapters.HTTPAdapter(max_retries=Retry(total=settings.MAX_HTTP_RETRIES, backoff_factor=settings.BACKOFF_FACTOR, status_forcelist=settings.ERROR_CODE_LIST))
-            session.mount("http://", adapter)
-            resp = session.post("{0}/{1}/_bulk_docs".format(self.target.url, self.db), headers=self._headers, data=data, timeout=settings.HTTP_REQ_TIMEOUT)
+            # This was using invalid construction of HTTP adapter and currently is not used anywhere.
+            # Retry behavior will be the same as regular behavior. This is a legacy API so just adding this
+            # to do execute the same behavior whether or not retries is specifiec
+            resp = requests.post("{0}/{1}/_bulk_docs".format(self.target.url, self.db), headers=self._headers, data=data, timeout=settings.HTTP_REQ_TIMEOUT)
         else:
             resp = requests.post("{0}/{1}/_bulk_docs".format(self.target.url, self.db), headers=self._headers, data=data, timeout=settings.HTTP_REQ_TIMEOUT)
 
@@ -204,8 +203,10 @@ class User:
 
                 for future in concurrent.futures.as_completed(future_to_docs):
                     doc = future_to_docs[future]
+                    log.debug(doc)
                     try:
                         doc_id = future.result()
+                        log.debug(doc_id)
                     except HTTPError as e:
                         log.info("HTTPError: {0} {1} {2}".format(self.name, e.response.url, e.response.status_code))
                         errors.append((e.response.url, e.response.status_code))
@@ -220,7 +221,7 @@ class User:
                 for f in concurrent.futures.as_completed(future):
                     try:
                         doc_list = f.result()
-                        #print(doc_list)
+                        log.debug(doc_list)
                     except HTTPError as e:
                         log.info("HTTPError: {0} {1} {2}".format(self.name, e.response.url, e.response.status_code))
                         errors.append((e.response.url, e.response.status_code))
@@ -258,10 +259,10 @@ class User:
                 body = json.dumps(data)
 
                 if retries:
-                    session = requests.Session()
-                    adapter = requests.adapters.HTTPAdapter(max_retries=Retry(total=settings.MAX_HTTP_RETRIES, backoff_factor=settings.BACKOFF_FACTOR, status_forcelist=settings.ERROR_CODE_LIST))
-                    session.mount("http://", adapter)
-                    put_resp = session.put(doc_url, headers=self._headers, data=body, timeout=settings.HTTP_REQ_TIMEOUT)
+                    # This was using invalid construction of HTTP adapter and currently is not used anywhere.
+                    # Retry behavior will be the same as regular behavior. This is a legacy API so just adding this
+                    # to do execute the same behavior whether or not retries is specifiec
+                    put_resp = requests.put(doc_url, headers=self._headers, data=body, timeout=settings.HTTP_REQ_TIMEOUT)
                 else:
                     put_resp = requests.put(doc_url, headers=self._headers, data=body, timeout=settings.HTTP_REQ_TIMEOUT)
 
@@ -285,7 +286,7 @@ class User:
             resp.raise_for_status()
 
         return updated_docs
-                
+
     def update_docs(self, num_revs_per_doc=1, retries=False):
 
         errors = list()
@@ -299,11 +300,12 @@ class User:
                 future_to_docs = {executor.submit(self.update_doc, doc_id, num_revs_per_doc, retries=True): doc_id for doc_id in self.cache.keys()}
             else:
                 future_to_docs = {executor.submit(self.update_doc, doc_id, num_revs_per_doc): doc_id for doc_id in self.cache.keys()}
-            
+
             for future in concurrent.futures.as_completed(future_to_docs):
                 doc = future_to_docs[future]
                 try:
                     doc_id = future.result()
+                    logging.debug(doc_id)
                 except HTTPError as e:
                     log.error("{0} {1} {2}".format(self.name, e.response.url, e.response.status_code))
                     errors.append((e.response.url, e.response.status_code))
@@ -447,13 +449,11 @@ class User:
 
                 r = requests.post("{}/{}/_changes".format(self.target.url, self.db), headers=self._headers, data=data)
                 log.debug("{0} {1} {2}\n{3}\n{4}".format(
-                        self.name,
-                        r.request.method,
-                        r.request.url,
-                        r.request.headers,
-                        r.request.body
-                    )
-                )
+                    self.name,
+                    r.request.method,
+                    r.request.url,
+                    r.request.headers,
+                    r.request.body))
 
                 # If call is unsuccessful (ex. db goes offline), return docs
                 if r.status_code != 200:

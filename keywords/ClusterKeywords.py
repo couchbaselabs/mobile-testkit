@@ -1,12 +1,13 @@
-import logging
-import json
 import requests
-import re
+import os
+import json
 
-from requests.exceptions import HTTPError
 from requests.exceptions import ConnectionError
 
-from utils import *
+from keywords.utils import log_info
+from keywords.utils import log_r
+from keywords.utils import version_is_binary
+from keywords.utils import version_and_build
 
 from CouchbaseServer import verify_server_version
 from SyncGateway import verify_sync_gateway_version
@@ -73,7 +74,7 @@ class ClusterKeywords:
 
         # Format into urls that robot keywords can consume easily
         formatted_cluster = {
-            "sync_gateways" : sg_urls,
+            "sync_gateways": sg_urls,
             "sg_accels": ac_urls,
             "couchbase_servers": cbs_urls,
             "load_balancers": lbs_urls
@@ -174,5 +175,3 @@ class ClusterKeywords:
 
         # verify running services are the expected versions
         self.verify_cluster_versions(cluster_config, server_version, sync_gateway_version)
-
-

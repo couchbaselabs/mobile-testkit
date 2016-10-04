@@ -4,6 +4,7 @@ from provision.ansible_runner import AnsibleRunner
 
 from keywords.utils import log_info
 
+
 def push_cbcollect_info_supportal(cluster_config):
     """
     1. Runs cbcollect_info on one of the couchbase server nodes
@@ -12,7 +13,7 @@ def push_cbcollect_info_supportal(cluster_config):
     ansible_runner = AnsibleRunner(config=cluster_config)
     status = ansible_runner.run_ansible_playbook("push-cbcollect-info-supportal.yml")
     assert status == 0, "Failed to push cbcollect info"
-    
+
 
 if __name__ == "__main__":
 

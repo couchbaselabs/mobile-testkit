@@ -1,11 +1,10 @@
 #!/usr/bin/python
 
-## Collect profile data as PDFs and create a .tar.gz file
+# Collect profile data as PDFs and create a .tar.gz file
 
 import os
 import shutil
 import sys
-import tempfile
 import psutil
 import time
 

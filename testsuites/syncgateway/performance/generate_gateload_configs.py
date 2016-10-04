@@ -3,8 +3,8 @@
 
 This attempts to automate the the Gateload config creation
 
-* Find a list of ip's of all the sync gateway machines 
-* Find the ip of the writer and remove from the list 
+* Find a list of ip's of all the sync gateway machines
+* Find the ip of the writer and remove from the list
 * Find a list of ip's of all the gateload machines
 * Assert that list_sync_gateways and list_gateloads are of the same length
 * Assign each gateload a sync gateway
@@ -19,7 +19,6 @@ This attempts to automate the the Gateload config creation
 """
 
 import subprocess
-import json
 import os
 from jinja2 import Template
 
@@ -63,13 +62,13 @@ def render_gateload_template(sync_gateway, user_offset, number_of_pullers, numbe
             runtime_ms=runtime_ms,
             rampup_interval_ms=rampup_interval_ms
         )
-        return rendered 
+        return rendered
 
 
 def upload_gateload_config(cluster_config, gateload, sync_gateway, user_offset, number_of_pullers, number_of_pushers, test_id, doc_size, rampup_interval_ms, runtime_ms):
 
-    gateload_inventory_hostname = gateload['inventory_hostname']    
-    
+    gateload_inventory_hostname = gateload['inventory_hostname']
+
     rendered = render_gateload_template(
         sync_gateway,
         user_offset,
@@ -85,7 +84,7 @@ def upload_gateload_config(cluster_config, gateload, sync_gateway, user_offset, 
     with open("testsuites/syncgateway/performance/results/{}/{}.json".format(test_id, gateload_inventory_hostname), "w") as f:
         f.write(rendered)
 
-    outfile = os.path.join("/tmp", gateload_inventory_hostname) 
+    outfile = os.path.join("/tmp", gateload_inventory_hostname)
     with open(outfile, 'w') as f:
         f.write(rendered)
     print "Wrote to file: {}".format(outfile)

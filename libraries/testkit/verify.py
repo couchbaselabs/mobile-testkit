@@ -1,10 +1,7 @@
-
-from testkit.user import User
-from testkit import settings
-
 from keywords.utils import log_info
 from keywords.utils import log_error
 from keywords.utils import log_warn
+
 
 def verify_same_docs(expected_num_docs, doc_dict_one, doc_dict_two):
 

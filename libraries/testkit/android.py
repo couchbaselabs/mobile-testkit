@@ -1,6 +1,5 @@
 import concurrent
 import concurrent.futures
-from concurrent.futures import ThreadPoolExecutor
 from testkit.listener import Listener
 
 from testkit import settings
@@ -16,7 +15,7 @@ def create_listener(cluster_config, target, local_port, apk_path, activity, rein
 def parallel_install(cluster_config, device_defs, should_reinstall):
 
     listeners = {}
-     # Create all listeners concurrently
+    # Create all listeners concurrently
     with concurrent.futures.ThreadPoolExecutor(max_workers=len(device_defs)) as executor:
 
         future_to_device_name = {

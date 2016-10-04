@@ -10,8 +10,9 @@ import socket
 # This generates a pool.json file from the current AWS EC2 inventory.
 # The pool.json file can then be used to generate cluster configs under resources/cluster_configs
 
-DEFAULT_REGION="us-east-1"
-NUM_RETRIES=25
+DEFAULT_REGION = "us-east-1"
+NUM_RETRIES = 25
+
 
 def main():
 
@@ -46,6 +47,7 @@ def main():
 
     print "Generated {}".format(opts.targetfile)
 
+
 def get_public_dns_names_cloudformation_stack(stackname):
 
     """
@@ -73,6 +75,7 @@ def get_public_dns_names_cloudformation_stack(stackname):
     # get public_dns_name for all instances
     return get_public_dns_names(instances_for_stack)
 
+
 def get_instance_ids_for_stack(stackname):
     """
     For a given cloudformation stack, return all of the instance ids, eg
@@ -86,6 +89,7 @@ def get_instance_ids_for_stack(stackname):
             instance_ids_for_stack.append(stack_resource.physical_resource_id)
     return instance_ids_for_stack
 
+
 def lookup_instances_from_ids(instance_ids):
     """
     Given an array of instance ids, lookup the instance objects
@@ -98,6 +102,7 @@ def lookup_instances_from_ids(instance_ids):
         for instance in reservation.instances:
             instances.append(instance)
     return instances
+
 
 def wait_until_stack_create_complete(stackname):
 
@@ -151,6 +156,7 @@ def wait_until_state(instances, instance_ids, state):
 
     raise Exception("Gave up waiting for instances {} to reach state {}".format(instance_ids, state))
 
+
 def wait_until_sshd_port_listening(instances):
 
     for x in xrange(NUM_RETRIES):
@@ -161,7 +167,7 @@ def wait_until_sshd_port_listening(instances):
             client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             try:
                 client_socket.connect((instance.ip_address, 22))
-            except Exception as e:
+            except Exception:
                 print("Couldn't connect to {} on port 22".format(instance.ip_address))
                 all_instances_listening = False
 
@@ -170,8 +176,7 @@ def wait_until_sshd_port_listening(instances):
             return
 
         # otherwise ..
-        print(
-        "Not all instances listening on port 22.  Waiting and will retry.. Iteration: {}".format(x))
+        print("Not all instances listening on port 22.  Waiting and will retry.. Iteration: {}".format(x))
         time.sleep(5)
 
     raise Exception("Gave up waiting for instances to be listening on port 22")
@@ -181,12 +186,13 @@ def get_public_dns_names(instances):
 
     return [instance.public_dns_name for instance in instances]
 
+
 def write_to_file(cloud_formation_stack_dns_addresses, filename):
     """
     {
         "ips": [
-	        "ec2-54-242-119-83.compute-1.amazonaws.com",
-	        "ec2-54-242-119-84.compute-1.amazonaws.com",
+            "ec2-54-242-119-83.compute-1.amazonaws.com",
+            "ec2-54-242-119-84.compute-1.amazonaws.com",
         ]
     }
     """
@@ -195,6 +201,6 @@ def write_to_file(cloud_formation_stack_dns_addresses, filename):
     with open(filename, 'w') as target:
         target.write(json.dumps(output_dictionary, sort_keys=True, indent=4, separators=(',', ': ')))
 
-if __name__=="__main__":
+if __name__ == "__main__":
 
     main()

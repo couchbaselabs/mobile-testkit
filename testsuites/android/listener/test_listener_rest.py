@@ -5,10 +5,10 @@ from testkit.android import parallel_install
 
 from testkit import settings
 from testkit.user import User
+from keywords.utils import log_info
+
 import logging
 log = logging.getLogger(settings.LOGGER)
-
-from keywords.utils import log_info
 
 
 def start_pull_replications(db_name, source, targets):
@@ -35,7 +35,7 @@ def test_selective_db_delete_and_replication_lifecycle():
 
     try:
         cluster_conf = os.environ["CLUSTER_CONFIG"]
-    except KeyError as ke:
+    except KeyError:
         log_info("Make sure CLUSTER_CONFIG is defined and pointing to the configuration you would like to provision")
         raise KeyError("CLUSTER_CONFIG not defined. Unable to provision cluster.")
 
@@ -150,7 +150,7 @@ def test_replication_unstable_network():
 
     try:
         cluster_conf = os.environ["CLUSTER_CONFIG"]
-    except KeyError as ke:
+    except KeyError:
         log_info("Make sure CLUSTER_CONFIG is defined and pointing to the configuration you would like to provision")
         raise KeyError("CLUSTER_CONFIG not defined. Unable to provision cluster.")
 
@@ -224,6 +224,3 @@ def test_replication_unstable_network():
 
     for emu in emus:
         assert emu.get_num_docs(db_name) == 160
-
-
-

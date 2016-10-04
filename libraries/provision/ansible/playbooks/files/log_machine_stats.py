@@ -42,4 +42,3 @@ with open("cpu_stats.json", "w") as f:
 
     # Write stats human readible
     f.write(json.dumps(obj, indent=4))
-

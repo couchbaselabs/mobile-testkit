@@ -30,4 +30,3 @@ if __name__ == "__main__":
         raise KeyError("CLUSTER_CONFIG not defined. Unable to provision cluster.")
 
     clean_cluster(cluster_config=cluster_conf)
-

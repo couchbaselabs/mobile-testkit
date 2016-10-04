@@ -1,5 +1,4 @@
 from BaseHTTPServer import BaseHTTPRequestHandler
-import urlparse
 import time
 import json
 from BaseHTTPServer import HTTPServer
@@ -10,6 +9,7 @@ log = logging.getLogger(settings.LOGGER)
 
 
 server_received_data = []
+
 
 class HttpHandler(BaseHTTPRequestHandler):
 

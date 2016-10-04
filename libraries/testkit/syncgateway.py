@@ -294,7 +294,7 @@ def assert_does_not_have_doc(sg_user, doc_id):
     # Make sure the doc did not propagate to the target
     got_exception = False
     try:
-        _ = sg_user.get_doc(doc_id)
+        sg_user.get_doc(doc_id)
     except HTTPError:
         got_exception = True
     assert got_exception is True

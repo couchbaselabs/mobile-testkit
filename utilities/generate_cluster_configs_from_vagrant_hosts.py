@@ -5,6 +5,7 @@ import vagrant
 
 from libraries.utilities.generate_clusters_from_pool import generate_clusters_from_pool
 
+
 def generate_cluster_configs_from_vagrant():
     """
     1. Gets the status for a running vagrant vm set.

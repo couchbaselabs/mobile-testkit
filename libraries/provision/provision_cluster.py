@@ -1,6 +1,5 @@
 import os
 import sys
-import logging
 from optparse import OptionParser
 
 import install_sync_gateway
@@ -95,7 +94,7 @@ if __name__ == "__main__":
     parser.add_option("", "--build-flags",
                       action="store", type="string", dest="build_flags", default="",
                       help="build flags to pass when building sync gateway (ex. -race)")
-    
+
     arg_parameters = sys.argv[1:]
 
     (opts, args) = parser.parse_args(arg_parameters)

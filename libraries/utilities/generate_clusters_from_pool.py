@@ -16,7 +16,6 @@ class ClusterDef:
         self.num_lgs = num_lgs
         self.num_lbs = num_lbs
 
-
     def num_machines_required(self):
         return (
             self.num_sgs +
@@ -237,6 +236,3 @@ if __name__ == "__main__":
     (opts, args) = parser.parse_args(arg_parameters)
 
     generate_clusters_from_pool(opts.pool_file)
-
-
-

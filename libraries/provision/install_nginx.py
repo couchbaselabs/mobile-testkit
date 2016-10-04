@@ -1,7 +1,4 @@
-import sys
 import os
-
-from optparse import OptionParser
 
 from keywords.ClusterKeywords import ClusterKeywords
 from keywords.utils import log_info
@@ -62,4 +59,3 @@ if __name__ == "__main__":
         raise KeyError("CLUSTER_CONFIG not defined. Unable to provision cluster.")
 
     install_nginx(cluster_conf)
-

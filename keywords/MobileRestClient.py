@@ -3,8 +3,6 @@ import json
 import time
 import uuid
 import re
-import requests
-import sys
 
 from requests import Session
 from requests.exceptions import HTTPError
@@ -123,7 +121,7 @@ class MobileRestClient:
             elif resp_obj["vendor"]["name"] == "Couchbase Lite (C#)":
                 logging.info("ServerType={}".format(ServerType.listener))
                 return ServerType.listener
-        except KeyError as ke:
+        except KeyError:
             # Android LiteServ
             if resp_obj["CBLite"] == "Welcome":
                 return ServerType.listener
@@ -152,7 +150,7 @@ class MobileRestClient:
             elif resp_obj["vendor"]["name"] == "Couchbase Lite (C#)":
                 logging.info("Platform={}".format(Platform.net))
                 return Platform.net
-        except KeyError as ke:
+        except KeyError:
             # Android LiteServ
             if resp_obj["CBLite"] == "Welcome":
                 logging.info("Platform={}".format(Platform.android))
@@ -177,10 +175,8 @@ class MobileRestClient:
             expected_response = {
                 "userCtx": {
                     "name": None,
-                    "roles": [
-                        "_admin"
-                        ]
-                    },
+                    "roles": ["_admin"]
+                },
                 "ok": True
             }
 
@@ -517,7 +513,6 @@ class MobileRestClient:
 
         params = {"open_revs": "all"}
 
-
         if auth_type == AuthType.session:
             resp = self._session.get("{}/{}/{}".format(url, db, doc_id), headers=headers, params=params, cookies=dict(SyncGatewaySession=auth[1]))
         elif auth_type == AuthType.http_basic:
@@ -711,7 +706,6 @@ class MobileRestClient:
             doc["_attachments"] = {
                 attachment_name: {"data": get_attachment(attachment_name)}
             }
-
 
         parent_revision_digests = []
         for parent_rev in parent_revs:
@@ -997,7 +991,7 @@ class MobileRestClient:
         auth_type = get_auth_type(auth)
 
         if auth_type == AuthType.session:
-            resp = self._session.post("{}/{}/_bulk_docs".format(url, db),  data=json.dumps(request_body), cookies=dict(SyncGatewaySession=auth[1]))
+            resp = self._session.post("{}/{}/_bulk_docs".format(url, db), data=json.dumps(request_body), cookies=dict(SyncGatewaySession=auth[1]))
         elif auth_type == AuthType.http_basic:
             resp = self._session.post("{}/{}/_bulk_docs".format(url, db), data=json.dumps(request_body), auth=auth)
         else:
@@ -1497,7 +1491,7 @@ class MobileRestClient:
 
         found_doc_ids = []
         for doc in doc_list:
-            if not "error" in doc:
+            if "error" not in doc:
                 # doc was found
                 found_doc_ids.append(doc["_id"])
 

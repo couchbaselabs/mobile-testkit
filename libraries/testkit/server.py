@@ -1,7 +1,6 @@
 import base64
 import json
 import time
-import sys
 
 import requests
 
@@ -10,6 +9,7 @@ from provision.ansible_runner import AnsibleRunner
 
 from keywords.utils import log_info
 from keywords.utils import log_error
+
 
 class Server:
 
@@ -98,8 +98,6 @@ class Server:
     def get_bucket(self, bucket_name):
         connection_str = "couchbase://{}/{}".format(self.ip, bucket_name)
         return Bucket(connection_str)
-        
+
     def __repr__(self):
         return "Server: {}:{}\n".format(self.hostname, self.ip)
-
-
