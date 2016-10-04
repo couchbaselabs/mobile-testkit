@@ -1,15 +1,32 @@
-import time
-
-from concurrent.futures import as_completed
-from concurrent.futures import ThreadPoolExecutor
+import pytest
 
 from keywords.utils import log_info
-from keywords.utils import breakpoint
 from keywords.MobileRestClient import MobileRestClient
-from keywords.ChangesTracker import ChangesTracker
 
 
+@pytest.mark.sanity
+@pytest.mark.listener
+@pytest.mark.syncgateway
+@pytest.mark.attachments
+@pytest.mark.usefixtures("setup_client_2sgs_suite")
 def listener_two_sync_gateways(ls_url, cluster_config, num_docs):
+    """
+    Port of https://github.com/couchbaselabs/sync-gateway-tests/blob/master/tests/cbl-replication-mismatch-2-gateways.js
+    Scenario:
+      1. Start 2 sync_gateways
+      2. Create sg_db_one db on sync_gateway one
+      3. Create sg_db_two db on sync_gateway two
+      4. Create ls_db_one and ls_db_two on Liteserv
+      5. Setup continuous push / pull replication from ls_db_one <-> sg_db_one
+      6. Setup continuous push / pull replication from ls_db_two <-> sg_db_two
+      7. Setup continuous push / pull replication from sg_db_one <-> ls_db_two
+      8. Setup continuous push / pull replication from sg_db_two <-> ls_db_one
+      9. Add num_docs / 2 to each liteserv database
+      10. Verify each database has num_docs docs
+      11. Verify all_docs in all dbs
+      12. Verify changes feed for sg_db_one and sg_db_two
+      13. Verify chnages feed for ls_db_one and ls_db_two
+    """
 
     log_info("ls_url: {}".format(ls_url))
     log_info("cluster_config: {}".format(cluster_config))
