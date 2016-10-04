@@ -118,18 +118,18 @@ def verify_response_size(user_agent, accept_encoding, x_accept_part_encoding, re
 @pytest.mark.syncgateway
 @pytest.mark.usefixtures("setup_1sg_1cbs_suite")
 @pytest.mark.parametrize("sg_conf, num_docs, accept_encoding, x_accept_part_encoding, user_agent", [
-    ("{}/sync_gateway_default_cc.json".format(SYNC_GATEWAY_CONFIGS), 300, None, None, None),
-    ("{}/sync_gateway_default_cc.json".format(SYNC_GATEWAY_CONFIGS), 300, None, None, "CouchbaseLite/1.1"),
-    ("{}/sync_gateway_default_cc.json".format(SYNC_GATEWAY_CONFIGS), 300, "gzip", None, None),
-    ("{}/sync_gateway_default_cc.json".format(SYNC_GATEWAY_CONFIGS), 300, "gzip", None, "CouchbaseLite/1.1"),
-    ("{}/sync_gateway_default_cc.json".format(SYNC_GATEWAY_CONFIGS), 300, None, "gzip", None),
-    ("{}/sync_gateway_default_cc.json".format(SYNC_GATEWAY_CONFIGS), 300, None, "gzip", "CouchbaseLite/1.1"),
-    ("{}/sync_gateway_default_cc.json".format(SYNC_GATEWAY_CONFIGS), 300, "gzip", "gzip", None),
-    ("{}/sync_gateway_default_cc.json".format(SYNC_GATEWAY_CONFIGS), 300, "gzip", "gzip", "CouchbaseLite/1.1"),
-    ("{}/sync_gateway_default_cc.json".format(SYNC_GATEWAY_CONFIGS), 300, None, None, "CouchbaseLite/1.2"),
-    ("{}/sync_gateway_default_cc.json".format(SYNC_GATEWAY_CONFIGS), 300, "gzip", None, "CouchbaseLite/1.2"),
-    ("{}/sync_gateway_default_cc.json".format(SYNC_GATEWAY_CONFIGS), 300, None, "gzip", "CouchbaseLite/1.2"),
-    ("{}/sync_gateway_default_cc.json".format(SYNC_GATEWAY_CONFIGS), 300, "gzip", "gzip", "CouchbaseLite/1.2")
+    ("{}/sync_gateway_gzip_cc.json".format(SYNC_GATEWAY_CONFIGS), 300, None, None, None),
+    ("{}/sync_gateway_gzip_cc.json".format(SYNC_GATEWAY_CONFIGS), 300, None, None, "CouchbaseLite/1.1"),
+    ("{}/sync_gateway_gzip_cc.json".format(SYNC_GATEWAY_CONFIGS), 300, "gzip", None, None),
+    ("{}/sync_gateway_gzip_cc.json".format(SYNC_GATEWAY_CONFIGS), 300, "gzip", None, "CouchbaseLite/1.1"),
+    ("{}/sync_gateway_gzip_cc.json".format(SYNC_GATEWAY_CONFIGS), 300, None, "gzip", None),
+    ("{}/sync_gateway_gzip_cc.json".format(SYNC_GATEWAY_CONFIGS), 300, None, "gzip", "CouchbaseLite/1.1"),
+    ("{}/sync_gateway_gzip_cc.json".format(SYNC_GATEWAY_CONFIGS), 300, "gzip", "gzip", None),
+    ("{}/sync_gateway_gzip_cc.json".format(SYNC_GATEWAY_CONFIGS), 300, "gzip", "gzip", "CouchbaseLite/1.1"),
+    ("{}/sync_gateway_gzip_cc.json".format(SYNC_GATEWAY_CONFIGS), 300, None, None, "CouchbaseLite/1.2"),
+    ("{}/sync_gateway_gzip_cc.json".format(SYNC_GATEWAY_CONFIGS), 300, "gzip", None, "CouchbaseLite/1.2"),
+    ("{}/sync_gateway_gzip_cc.json".format(SYNC_GATEWAY_CONFIGS), 300, None, "gzip", "CouchbaseLite/1.2"),
+    ("{}/sync_gateway_gzip_cc.json".format(SYNC_GATEWAY_CONFIGS), 300, "gzip", "gzip", "CouchbaseLite/1.2")
 ])
 def test_bulk_get_compression(setup_1sg_1cbs_test, sg_conf, num_docs, accept_encoding, x_accept_part_encoding, user_agent):
 
