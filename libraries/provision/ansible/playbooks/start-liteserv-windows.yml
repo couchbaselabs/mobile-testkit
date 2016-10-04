@@ -1,0 +1,10 @@
+- name: Windows - Start LiteServ
+  hosts: windows
+  tasks:
+    - name: Start LiteServ
+      win_nssm:
+        name: LiteServ
+        application: C:\Users\Administrator\Desktop\LiteServ\LiteServ\LiteServ.exe
+        state: started
+        stdout_file: C:\Users\Administrator\Desktop\LiteServ\LiteServ\LiteServ.log
+        stderr_file: C:\Users\Administrator\Desktop\LiteServ\LiteServ\LiteServ.log

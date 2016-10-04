@@ -1,0 +1,8 @@
+- name: Windows - Start LiteServ
+  hosts: windows
+  tasks:
+    - name: Stop LiteServ
+      win_nssm:
+        name: LiteServ
+        application: C:\Users\Administrator\Desktop\LiteServ\LiteServ\LiteServ.exe
+        state: stopped
