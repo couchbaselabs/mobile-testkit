@@ -1,4 +1,5 @@
 import os
+import pdb
 
 from keywords.utils import log_info
 from keywords.utils import log_error
@@ -142,13 +143,4 @@ class Runner(object):
         # Results of PlaybookExecutor
         self.pbex.run()
         stats = self.pbex._tqm._stats
-
-        # Test if success for record_logs
-        run_success = True
-        hosts = sorted(stats.processed.keys())
-        for h in hosts:
-            t = stats.summarize(h)
-            if t['unreachable'] > 0 or t['failures'] > 0:
-                run_success = False
-
         return stats
