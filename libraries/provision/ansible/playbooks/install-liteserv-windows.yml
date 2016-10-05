@@ -7,6 +7,9 @@
     - name: Install nssm (https://nssm.cc/)
       win_chocolatey: name=nssm
 
+    - name: Install VS2015 C++ Runtime
+      win_chocolatey: name=vcredist2015
+
     - name: Remove Service Wrapper
       win_nssm:
         name: LiteServ
