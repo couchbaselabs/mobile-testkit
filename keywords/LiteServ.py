@@ -64,7 +64,7 @@ class LiteServ:
                     package_name = "couchbase-lite-android-liteserv-SQLite-{}-debug.apk".format(version_build)
                 else:
                     package_name = "couchbase-lite-android-liteserv-SQLCipher-ForestDB-Encryption-{}-debug.apk".format(version_build)
-        elif platform == "net":
+        elif platform == "net" or platform == "net-win":
             package_name = "LiteServ.zip"
 
         elif platform == "ios":
@@ -115,7 +115,7 @@ class LiteServ:
                 url = "{}/couchbase-lite-android/release/{}/{}/{}".format(LATEST_BUILDS, version, version_build, file_name)
             else:
                 url = "{}/couchbase-lite-android/{}/{}/{}".format(LATEST_BUILDS, version, version_build, file_name)
-        elif platform == "net":
+        elif platform == "net" or platform == "net-win":
             url = "{}/couchbase-lite-net/{}/{}/{}".format(LATEST_BUILDS, version, build, file_name)
         elif platform == "ios":
             # TODO: Needs to be looked at when https://github.com/couchbaselabs/liteserv-ios/issues/1 is fixed
@@ -157,7 +157,7 @@ class LiteServ:
 
         if platform != "android":
             # Unzip the package
-            if platform == "net":
+            if platform == "net" or platform == "net-win":
                 # hack to get unzip the net 'LiteServ.zip' into a folder name that has the
                 # that has more information (version, etc)
                 # http://latestbuilds.hq.couchbase.com/couchbase-lite-net/1.3.0/41/LiteServ.zip
@@ -379,7 +379,7 @@ class LiteServ:
 
         return ls_url, proc_handle
 
-    def shutdown_liteserv(self, host, platform, process_handle, logfile, cluster_config=None):
+    def shutdown_liteserv(self, host, platform, version, storage_engine, process_handle, logfile, cluster_config=None):
         """Kill a running LiteServ using the process_handle (Desktop apps)
 
         If the platform is Android, kill the activity via adb, and kill the process handle
@@ -405,12 +405,18 @@ class LiteServ:
         elif platform == "ios":
             self.stop_ios_liteserv(host)
         elif platform == "net-win":
-            self.stop_net_win_liteserv(cluster_config, log_file_name)
+            self.stop_net_win_liteserv(
+                cluster_config,
+                version=version,
+                storage_engine=storage_engine,
+                log_file_name=logfile
+            )
 
-        logfile.flush()
-        logfile.close()
-        process_handle.kill()
-        process_handle.wait()
+        if platform != "net-win":
+            logfile.flush()
+            logfile.close()
+            process_handle.kill()
+            process_handle.wait()
 
     def start_android_liteserv(self, host, port, storage_engine, logfile):
         """Starts adb logcat capture and launches an installed LiteServ activity
@@ -574,13 +580,17 @@ class LiteServ:
         """
 
         binary_path = self.get_binary("net-win", version_build=version, storage_engine=storage_engine)
+        log_full_path = "{}/{}".format(os.getcwd(), log_file_name)
+
+        log_info("Stoping {} on windows maching ...".format(binary_path))
+        log_info("Pulling logs to {} ...".format(log_full_path))
 
         ansible_runner = AnsibleRunner(config=cluster_config)
         status = ansible_runner.run_ansible_playbook(
             "stop-liteserv-windows.yml",
             extra_vars={
                 "binary_path": binary_path,
-                "log_file_name": log_file_name
+                "log_full_path": log_full_path
             }
         )
         if status != 0:

@@ -2,7 +2,7 @@
   hosts: windows
   vars:
     binary_path:
-    log_file_name:
+    log_full_path:
 
   tasks:
     - name: Stop LiteServ
@@ -11,5 +11,7 @@
         application: C:\Users\Administrator\Desktop\LiteServ\{{ binary_path }}
         state: stopped
 
+    - debug: msg="Copying logs to {{ log_full_path }}"
+
     - name: Fetch logs
-      fetch: src=C:\Users\Administrator\Desktop\LiteServ\LiteServ.log dest=/tmp/{{  }}.log flat=yes
+      fetch: src=C:\Users\Administrator\Desktop\LiteServ\LiteServ.log dest={{ log_full_path }}.log flat=yes
