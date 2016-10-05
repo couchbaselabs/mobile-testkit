@@ -377,7 +377,7 @@ class LiteServ:
 
         return ls_url, proc_handle
 
-    def shutdown_liteserv(self, host, platform, process_handle, logfile):
+    def shutdown_liteserv(self, host, platform, process_handle, logfile, cluster_config=None):
         """Kill a running LiteServ using the process_handle (Desktop apps)
 
         If the platform is Android, kill the activity via adb, and kill the process handle
@@ -385,12 +385,25 @@ class LiteServ:
         """
         self.verify_platform(platform)
 
+        if platform == "net-win":
+            if cluster_config is None:
+                raise ProvisioningError("'cluster_config' needs to be set for net-win platform")
+            if type(logfile) is not str:
+                raise ProvisioningError("'logfile' should be a string for net-win")
+        else:
+            if cluster_config is not None:
+                raise ProvisioningError("'cluster_config' should only be set for win-net platform")
+            if type(logfile) is not file:
+                raise ProvisioningError("'logfile' should be a file")
+
         log_info("Shutting down LiteServ ({}) and closing {}".format(platform, logfile))
 
         if platform == "android":
             self.stop_activity()
         elif platform == "ios":
             self.stop_ios_liteserv(host)
+        elif platform == "net-win":
+            self.stop_net_win_liteserv(cluster_config, log_file_name)
 
         logfile.flush()
         logfile.close()
@@ -533,6 +546,9 @@ class LiteServ:
         return p
 
     def start_net_win_liteserv(self, version, port, storage_engine, cluster_config):
+        """
+        Starts a .NET listener on a remote windows machine via ansible.
+        """
 
         binary_path = self.get_binary("net-win", version_build=version, storage_engine=storage_engine)
 
@@ -549,6 +565,24 @@ class LiteServ:
             raise LiteServError("Could not start Liteserv")
 
         return None
+
+    def stop_net_win_liteserv(self, cluster_config, version, storage_engine, log_file_name):
+        """
+        Stops a .NET listener on a remote windows machine via ansible and pulls logs.
+        """
+
+        binary_path = self.get_binary("net-win", version_build=version, storage_engine=storage_engine)
+
+        ansible_runner = AnsibleRunner(config=cluster_config)
+        status = ansible_runner.run_ansible_playbook(
+            "stop-liteserv-windows.yml",
+            extra_vars={
+                "binary_path": binary_path,
+                "log_file_name": log_file_name
+            }
+        )
+        if status != 0:
+            raise LiteServError("Could not start Liteserv")
 
     def stop_activity(self):
         # Stop LiteServ Activity
@@ -594,14 +628,17 @@ class LiteServ:
         resp_json = resp.json()
         is_macosx = False
         is_net = False
+        is_net_win = False
         is_android = False
         try:
             # Mac OSX
             lite_version = resp_json["vendor"]["version"]
             if resp_json["vendor"]["name"] == "Couchbase Lite (Objective-C)":
                 is_macosx = True
-            elif resp_json["vendor"]["name"] == "Couchbase Lite (C#)":
+            elif resp_json["vendor"]["name"] == "Couchbase Lite (C#)" and resp_json["vendor"]["version"].startswith(".NET OS X"):
                 is_net = True
+            elif resp_json["vendor"]["name"] == "Couchbase Lite (C#)" and resp_json["vendor"]["version"].startswith(".NET Microsoft Windows"):
+                is_net_win = True
         except KeyError:
             # Android
             lite_version = resp_json["version"]
@@ -616,7 +653,10 @@ class LiteServ:
                 raise LiteServError("Expected android to be running on port. Other platform detected")
         elif platform == "net":
             if not is_net:
-                raise LiteServError("Expected android to be running on port. Other platform detected")
+                raise LiteServError("Expected net to be running on port. Other platform detected")
+        elif platform == "net-win":
+            if not is_net_win:
+                raise LiteServError("Expected net-win to be running on port. Other platform detected")
         elif platform == "ios":
             raise LiteServError("https://github.com/couchbaselabs/liteserv-ios/issues/1")
 
@@ -639,6 +679,15 @@ class LiteServ:
             running_version_parts = re.split("[ /-]", lite_version)
             version = running_version_parts[5]
             build = int(running_version_parts[6].strip("build"))
+            running_version_composed = "{}-{}".format(version, build)
+            if version_build != running_version_composed:
+                raise LiteServError("Expected version does not match actual version: Expected={}  Actual={}".format(version_build, running_version_composed))
+        elif is_net_win:
+            # running_version_parts format:
+            #  ['.NET', 'Microsoft', 'Windows', '10', 'Enterprise', 'x64', '1.4.0', 'build0043', '5cfe25b']
+            running_version_parts = re.split("[ /-]", lite_version)
+            version = running_version_parts[6]
+            build = int(running_version_parts[7].strip("build"))
             running_version_composed = "{}-{}".format(version, build)
             if version_build != running_version_composed:
                 raise LiteServError("Expected version does not match actual version: Expected={}  Actual={}".format(version_build, running_version_composed))

@@ -2,6 +2,7 @@
   hosts: windows
   vars:
     binary_path:
+    log_file_name:
 
   tasks:
     - name: Stop LiteServ
@@ -11,4 +12,4 @@
         state: stopped
 
     - name: Fetch logs
-      fetch: src=C:\Users\Administrator\Desktop\LiteServ\LiteServ.log dest=/tmp/ flat=yes
+      fetch: src=C:\Users\Administrator\Desktop\LiteServ\LiteServ.log dest=/tmp/{{  }}.log flat=yes
