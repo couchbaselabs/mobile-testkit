@@ -116,9 +116,11 @@ def setup_client_syncgateway_test(request):
 
     print("Starting LiteServ ...")
     if liteserv_platform != "net-win":
+        # logging is file
         ls_logging = open("{}/logs/{}-ls1-{}-{}.txt".format(RESULTS_DIR, datetime.datetime.now(), liteserv_platform, test_name), "w")
     else:
-        ls_logging = None
+        # logging is name
+        ls_logging = "{}/logs/{}-ls1-{}-{}.txt".format(RESULTS_DIR, datetime.datetime.now(), liteserv_platform, test_name)
 
     ls_url, ls_handle = ls.start_liteserv(
         platform=liteserv_platform,

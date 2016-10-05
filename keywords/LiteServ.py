@@ -283,7 +283,7 @@ class LiteServ:
         abs_path_with_dir = os.path.abspath(relative_path_with_dir)
 
         ansible_runner = AnsibleRunner(config=cluster_config)
-        status = ansible_runner.run_ansible_playbook("copy-directory-to-windows.yml", extra_vars={
+        status = ansible_runner.run_ansible_playbook("install-liteserv-windows.yml", extra_vars={
             "directory_path": abs_path_with_dir
         })
         if status != 0:
@@ -353,6 +353,8 @@ class LiteServ:
                 logfile=logfile
             )
         elif platform == "net-win":
+            # Since we are using ansible to remotely trigger start / stop, set proc_handle to None.
+            proc_handle = None
             self.start_net_win_liteserv(
                 version=version,
                 port=port,
