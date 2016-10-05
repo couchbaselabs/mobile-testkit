@@ -54,11 +54,16 @@ def setup_client_syncgateway_suite(request):
         storage_engine=liteserv_storage_engine
     )
 
+    ls_cluster_target = None
+    if liteserv_platform == "net-win":
+        ls_cluster_target = "resources/cluster_configs/windows"
+
     # Install LiteServ
     ls.install_liteserv(
         platform=liteserv_platform,
         version=liteserv_version,
-        storage_engine=liteserv_storage_engine
+        storage_engine=liteserv_storage_engine,
+        cluster_config=ls_cluster_target
     )
 
     cluster_helper = ClusterKeywords()

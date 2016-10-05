@@ -92,7 +92,7 @@ class LiteServ:
                     expected_binary = "couchbase-lite-android-liteserv-SQLite-{}-debug.apk".format(version_build)
                 else:
                     expected_binary = "couchbase-lite-android-liteserv-SQLCipher-ForestDB-Encryption-{}-debug.apk".format(version_build)
-        elif platform == "net":
+        elif platform == "net" or platform == "net-win":
             expected_binary = "couchbase-lite-net-{}-liteserv/LiteServ.exe".format(version_build)
         elif platform == "ios":
             expected_binary = "couchbase-lite-ios-liteserv-{}.app".format(version_build)
@@ -269,12 +269,25 @@ class LiteServ:
         ])
         log_info(output)
 
-    def install_liteserv_windows(self, version_build, cluster_config):
-        binary = self.get_binary("net", version_build)
+    def install_liteserv_windows(self, version_build, storage_engine, cluster_config):
+        binary = self.get_binary("net", version_build=version_build, storage_engine=storage_engine)
+
+        # binary format: couchbase-lite-net-1.4.0-43-liteserv/LiteServ.exe
+        # We need to strip off the last part of the path to copy the directory to
+        #   the target windows machine
+        # directory_to_copy format: couchbase-lite-net-1.4.0-43-liteserv
+
+        # Construct absolute path for ansible
+        directory_to_copy = os.path.dirname(binary)
+        relative_path_with_dir = "{}/{}".format(BINARY_DIR, directory_to_copy)
+        abs_path_with_dir = os.path.abspath(relative_path_with_dir)
 
         ansible_runner = AnsibleRunner(config=cluster_config)
-
-        ansible_runner.run_ansible_playbook("install-")
+        status = ansible_runner.run_ansible_playbook("copy-directory-to-windows.yml", extra_vars={
+            "directory_path": abs_path_with_dir
+        })
+        if status != 0:
+            raise ProvisioningError("Could not copy LiteServ to Windows box")
 
     def install_liteserv(self, platform, version, storage_engine, cluster_config=None):
         """Bootstraps install of LiteServ app (Android). Noop for Desktop cmd apps (ex. Mac OSX, .NET)
@@ -301,7 +314,7 @@ class LiteServ:
         elif platform == "net-win":
             if cluster_config is None:
                 raise ProvisioningError("cluster_config cannot be none for .NET on Windows")
-            self.install_liteserv_windows(version_build=version, cluster_config=cluster_config)
+            self.install_liteserv_windows(version_build=version, storage_engine=storage_engine, cluster_config=cluster_config)
         else:
             log_info("No install necessary. Skipping ...")
 
@@ -330,6 +343,13 @@ class LiteServ:
             )
         elif platform == "net":
             proc_handle = self.start_net_liteserv(
+                version=version,
+                port=port,
+                storage_engine=storage_engine,
+                logfile=logfile
+            )
+        elif platform == "net-win":
+            self.start_net_win_liteserv(
                 version=version,
                 port=port,
                 storage_engine=storage_engine,
@@ -507,6 +527,9 @@ class LiteServ:
 
         p = subprocess.Popen(args=process_args, stdout=logfile)
         return p
+
+    def start_net_liteserv(self, version, port, storage_engine, logfile):
+        raise NotImplementedError("Need to hook this up to ansible")
 
     def stop_activity(self):
         # Stop LiteServ Activity
