@@ -16,7 +16,7 @@ Vagrant.configure(2) do |config|
 
   host_ips.each do |host_name|
       config.vm.define host_name do |host|
-        host.vm.box = "centos/6"
+        host.vm.box = "centos/7"
         config.vm.network "public_network", bridge: "en0: Wi-Fi (AirPort)"
         host.vm.synced_folder ".", "/home/vagrant/sync", disabled: true
         host.vm.provider "virtualbox" do |vb|
