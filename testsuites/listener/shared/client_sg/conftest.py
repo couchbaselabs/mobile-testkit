@@ -153,7 +153,15 @@ def setup_client_syncgateway_test(request):
 
     # Teardown test
     client.delete_databases(ls_url)
-    ls.shutdown_liteserv(host=liteserv_host, platform=liteserv_platform, process_handle=ls_handle, logfile=ls_logging)
+    ls.shutdown_liteserv(
+        host=liteserv_host,
+        platform=liteserv_platform,
+        version=liteserv_version,
+        storage_engine=liteserv_storage_engine,
+        process_handle=ls_handle,
+        logfile=ls_logging,
+        cluster_config=ls_cluster_target
+    )
 
     # Verify LiteServ is killed
     ls.verify_liteserv_not_running(host=liteserv_host, port=liteserv_port)
