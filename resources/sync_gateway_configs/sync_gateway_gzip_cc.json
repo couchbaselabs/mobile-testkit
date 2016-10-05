@@ -5,16 +5,12 @@
     "maxCouchbaseConnections": 16,
     "maxFileDescriptors": 90000,
     "slowServerCallWarningThreshold": 500,
-    "compressResponses": false,
+    "compressResponses": true,
     "log": ["*"],
     "databases":{
-        "db1":{
+        "db":{
             "server":"http://{{ couchbase_server_primary_node }}:8091",
-            "bucket":"data-bucket-1"
-        },
-        "db2":{
-            "server":"http://{{ couchbase_server_primary_node }}:8091",
-            "bucket":"data-bucket-2"
+            "bucket":"data-bucket"
         }
     }
 }
