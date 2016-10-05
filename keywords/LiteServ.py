@@ -318,7 +318,7 @@ class LiteServ:
         else:
             log_info("No install necessary. Skipping ...")
 
-    def start_liteserv(self, platform, version, host, port, storage_engine, logfile):
+    def start_liteserv(self, platform, version, host, port, storage_engine, logfile, cluster_config=None):
         """
         Starts LiteServ for a specific provided platform.
         Returns a tuple of the listserv_url and the process_handle
@@ -326,6 +326,10 @@ class LiteServ:
 
         self.verify_platform(platform)
         self.verify_storage_engine(storage_engine)
+
+        # Make sure cluster_config is only set if using LiteServ on Windows
+        if cluster_config is not None and platform != "net-win":
+            raise LiteServError("cluster_config is only necessary for LiteServ on Windows")
 
         log_info("Starting LiteServ: {} {} {}:{} using {}".format(platform, version, host, port, storage_engine))
         if platform == "macosx":
@@ -353,7 +357,7 @@ class LiteServ:
                 version=version,
                 port=port,
                 storage_engine=storage_engine,
-                logfile=logfile
+                cluster_config=cluster_config
             )
         elif platform == "ios":
             proc_handle = self.start_ios_liteserv(
@@ -522,14 +526,29 @@ class LiteServ:
 
         if storage_engine == "SQLCipher" or storage_engine == "ForestDB+Encryption":
             logging.info("Using Encryption ...")
-            db_name_passwords = self.build_name_passwords_for_registered_dbs(platform="macosx")
+            db_name_passwords = self.build_name_passwords_for_registered_dbs(platform="net")
             process_args.extend(db_name_passwords)
 
         p = subprocess.Popen(args=process_args, stdout=logfile)
         return p
 
-    def start_net_liteserv(self, version, port, storage_engine, logfile):
-        raise NotImplementedError("Need to hook this up to ansible")
+    def start_net_win_liteserv(self, version, port, storage_engine, cluster_config):
+
+        binary_path = self.get_binary("net-win", version_build=version, storage_engine=storage_engine)
+
+        log_info("Staring {} on windows machine ...".format(binary_path))
+
+        ansible_runner = AnsibleRunner(config=cluster_config)
+        status = ansible_runner.run_ansible_playbook(
+            "start-liteserv-windows.yml",
+            extra_vars={
+                "binary_path": binary_path
+            }
+        )
+        if status != 0:
+            raise LiteServError("Could not start Liteserv")
+
+        return None
 
     def stop_activity(self):
         # Stop LiteServ Activity

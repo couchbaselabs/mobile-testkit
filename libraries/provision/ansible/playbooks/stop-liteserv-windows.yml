@@ -1,8 +1,14 @@
-- name: Windows - Start LiteServ
+- name: Windows - Stop LiteServ
   hosts: windows
+  vars:
+    binary_path:
+
   tasks:
     - name: Stop LiteServ
       win_nssm:
         name: LiteServ
-        application: C:\Users\Administrator\Desktop\LiteServ\LiteServ\LiteServ.exe
+        application: C:\Users\Administrator\Desktop\LiteServ\{{ binary_path }}
         state: stopped
+
+    - name: Fetch logs
+      fetch: src=C:\Users\Administrator\Desktop\LiteServ\LiteServ.log dest=/tmp/ flat=yes

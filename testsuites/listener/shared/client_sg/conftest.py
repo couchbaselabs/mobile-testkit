@@ -110,15 +110,24 @@ def setup_client_syncgateway_test(request):
     # Verify LiteServ is not running
     ls.verify_liteserv_not_running(host=liteserv_host, port=liteserv_port)
 
+    ls_cluster_target = None
+    if liteserv_platform == "net-win":
+        ls_cluster_target = "resources/cluster_configs/windows"
+
     print("Starting LiteServ ...")
-    ls_logging = open("{}/logs/{}-ls1-{}-{}.txt".format(RESULTS_DIR, datetime.datetime.now(), liteserv_platform, test_name), "w")
+    if liteserv_platform != "net-win":
+        ls_logging = open("{}/logs/{}-ls1-{}-{}.txt".format(RESULTS_DIR, datetime.datetime.now(), liteserv_platform, test_name), "w")
+    else:
+        ls_logging = None
+
     ls_url, ls_handle = ls.start_liteserv(
         platform=liteserv_platform,
         version=liteserv_version,
         host=liteserv_host,
         port=liteserv_port,
         storage_engine=liteserv_storage_engine,
-        logfile=ls_logging
+        logfile=ls_logging,
+        cluster_config=ls_cluster_target
     )
 
     cluster_helper = ClusterKeywords()

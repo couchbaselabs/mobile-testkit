@@ -1,10 +1,14 @@
 - name: Windows - Start LiteServ
   hosts: windows
+  vars:
+    binary_path:
+
   tasks:
+    - debug: msg="Starting {{ binary_path }}"
     - name: Start LiteServ
       win_nssm:
         name: LiteServ
-        application: C:\Users\Administrator\Desktop\LiteServ\LiteServ\LiteServ.exe
+        application: C:\Users\Administrator\Desktop\LiteServ\{{ binary_path }}
         state: started
-        stdout_file: C:\Users\Administrator\Desktop\LiteServ\LiteServ\LiteServ.log
-        stderr_file: C:\Users\Administrator\Desktop\LiteServ\LiteServ\LiteServ.log
+        stdout_file: C:\Users\Administrator\Desktop\LiteServ\LiteServ.log
+        stderr_file: C:\Users\Administrator\Desktop\LiteServ\LiteServ.log
