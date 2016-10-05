@@ -171,8 +171,13 @@ def test_listener_two_sync_gateways(setup_client_2sgs_test):
     num_docs = 500
 
     ls_url = setup_client_2sgs_test["ls_url"]
+    cluster_config = setup_client_2sgs_test["cluster_config"]
     sg_one_admin_url = setup_client_2sgs_test["sg_one_admin_url"]
     sg_two_admin_url = setup_client_2sgs_test["sg_two_admin_url"]
+
+    sg_util = SyncGateway()
+    sg_util.start_sync_gateway(cluster_config=cluster_config, url=sg_one_admin_url, config="{}/walrus.json".format(SYNC_GATEWAY_CONFIGS))
+    sg_util.start_sync_gateway(cluster_config=cluster_config, url=sg_two_admin_url, config="{}/walrus.json".format(SYNC_GATEWAY_CONFIGS))
 
     ls_db_one = "ls_db1"
     ls_db_two = "ls_db2"

@@ -1,8 +1,6 @@
 import os
-import pdb
 
 from keywords.utils import log_info
-from keywords.utils import log_error
 
 from ansible.inventory import Inventory
 from ansible.vars import VariableManager
