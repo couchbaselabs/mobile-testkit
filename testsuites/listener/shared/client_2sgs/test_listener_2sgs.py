@@ -16,7 +16,7 @@ from keywords.Logging import Logging
 # This will get called once before the first test that
 # runs with this as input parameters in this file
 # This setup will be called once for all tests in the
-# testsuites/listener/shared/client_sg/ directory
+# testsuites/listener/shared/client_2sgs/ directory
 @pytest.fixture(scope="module")
 def setup_client_2sgs_suite(request):
 
