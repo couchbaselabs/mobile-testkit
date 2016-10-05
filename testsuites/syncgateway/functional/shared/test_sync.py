@@ -153,7 +153,7 @@ def sync_channel_sanity(cluster_conf, sg_conf):
     subscriber = admin.register_user(target=cluster.sync_gateways[0], db="db", name="subscriber", password="password", channels=["tv_station_channel"])
 
     # Allow docs to backfill
-    time.sleep(5)
+    time.sleep(20)
 
     # subscriber should recieve all docs
     all_docs = {k: v for cache in doc_pusher_caches for k, v in cache.items()}
@@ -164,7 +164,7 @@ def sync_channel_sanity(cluster_conf, sg_conf):
     subscriber.update_docs(num_revs_per_doc=1)
 
     # Allow docs to backfill
-    time.sleep(5)
+    time.sleep(20)
 
     # Verify the doc are back in the repective ABC, NBC, CBS channels
     # HACK: Ignoring rev_id verification due to the fact that the doc was updated the the subscriber user and not the
