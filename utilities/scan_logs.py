@@ -17,7 +17,7 @@ def scan_for_errors(error_strings, log_file_path):
     log_info("Looking for {} in {} ...".format(error_strings, log_file_path))
 
     # Scan each line in the log file for the words to search for
-    with open(log_file_path, 'r') as f:
+    with open(log_file_path) as f:
         for line in f:
             for word in error_strings:
                 # convert the word to lowercase and the line to all lower case
