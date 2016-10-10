@@ -11,6 +11,9 @@ def scan_for_errors(error_strings, log_file_path):
     'error_strings' should be a list. Example ['panic', 'error']
     """
 
+    if type(error_strings) != list:
+        raise ValueError("'error_strings must be a list'")
+
     log_info("Looking for {} in {} ...".format(error_strings, log_file_path))
 
     # Scan each line in the log file for the words to search for
