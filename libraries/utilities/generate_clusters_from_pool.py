@@ -4,6 +4,10 @@ import platform
 import sys
 import socket
 import netifaces
+
+from keywords.utils import log_info
+from keywords.utils import log_warn
+from keywords.utils import log_error
 from optparse import OptionParser
 
 
@@ -28,17 +32,17 @@ class ClusterDef:
 
 def write_config(config, pool_file):
     ips = get_ips(pool_file)
-    print("ips: {}".format(ips))
+    log_info("ips: {}".format(ips))
 
     if len(ips) < config.num_machines_required():
-        print("WARNING: Skipping config {} since {} machines required, but only {} provided".format(
+        log_warn("WARNING: Skipping config {} since {} machines required, but only {} provided".format(
             config.name,
             config.num_machines_required(),
             len(ips))
         )
         return
 
-    print("\nGenerating config: {}".format(config.name))
+    log_info("\nGenerating config: {}".format(config.name))
 
     ansible_cluster_conf_file = "resources/cluster_configs/{}".format(config.name)
     cluster_json_file = "resources/cluster_configs/{}.json".format(config.name)
@@ -155,17 +159,22 @@ def write_config(config, pool_file):
         try:
             f.write("[webhook_ip]\n")
             if platform.system() == "Darwin":
-                local_ip = socket.gethostbyname(socket.gethostname())
+                # HACK: http://stackoverflow.com/questions/166506/finding-local-ip-addresses-using-pythons-stdlib
+                # Connect to Google's public DNS server and get the socketname tuple (<local_ip_address>, <port>)
+                s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+                s.connect(("8.8.8.8", 80))
+                local_ip = s.getsockname()[0]
+                s.close()
             elif platform.system() == "Linux":
                 local_ip = netifaces.ifaddresses("eth1")[2][0]["addr"]
             else:
                 local_ip = netifaces.ifaddresses("eth0")[2][0]["addr"]
-            print("webhook ip: {}".format(local_ip))
+            log_info("webhook ip: {}".format(local_ip))
             f.write("tf1 ansible_host={}".format(local_ip))
         except Exception as e:
-            print("Failed to find local_ip, webhook tests will fail.  Error: {}".format(e))
+            log_error("Failed to find local_ip, webhook tests will fail.  Error: {}".format(e))
 
-        print("Generating {}.json".format(config.name))
+        log_info("Generating {}.json".format(config.name))
 
         # Write json file consumable by testkit.cluster class
         cluster_dict = {
@@ -188,13 +197,14 @@ def get_ips(pool_file="resources/pool.json"):
 
     # Make sure there are no duplicate endpoints
     if len(ips) != len(set(ips)):
-        print("Duplicate endpoints found in 'resources/pools'. Make sure they are unique. Exiting ...")
+        log_error("Duplicate endpoints found in 'resources/pools'. Make sure they are unique. Exiting ...")
         sys.exit(1)
 
     return ips
 
 
 def generate_clusters_from_pool(pool_file):
+
     cluster_configs = [
         ClusterDef("1sg", num_sgs=1, num_acs=0, num_cbs=0, num_lgs=0, num_lbs=0),
         ClusterDef("2sgs", num_sgs=2, num_acs=0, num_cbs=0, num_lgs=0, num_lbs=0),
