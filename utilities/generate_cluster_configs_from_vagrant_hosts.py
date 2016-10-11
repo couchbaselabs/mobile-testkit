@@ -64,7 +64,6 @@ def generate_cluster_configs_from_vagrant(private_network, public_network):
     generate_clusters_from_pool(pool_file)
 
 
-
 if __name__ == "__main__":
     usage = """usage: generate_cluster_configs_from_vagrant_hosts.py
        --private-network
