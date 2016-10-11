@@ -558,6 +558,9 @@ class LiteServ:
         Starts a .NET listener on a remote windows machine via ansible.
         """
 
+        if storage_engine != "SQLite":
+            raise NotImplementedError("Need to add support for all storage types")
+
         binary_path = self.get_binary("net-win", version_build=version, storage_engine=storage_engine)
 
         log_info("Staring {} on windows machine ...".format(binary_path))
