@@ -23,8 +23,6 @@ def generate_cluster_configs_from_vagrant(private_network, public_network):
     if not private_network and not public_network:
         raise ProvisioningError("Invalid private_network and public_network flags")
 
-    v = vagrant.Vagrant()
-    status = v.status()
     cwd = os.getcwd()
 
     # Change directory to where the appropriate Vagrantfile lives
@@ -32,6 +30,9 @@ def generate_cluster_configs_from_vagrant(private_network, public_network):
         os.chdir("vagrant/private_network")
     else:
         os.chdir("vagrant/public_network")
+
+    v = vagrant.Vagrant()
+    status = v.status()
 
     # Get vagrant ips
     vagrant_ips = []
