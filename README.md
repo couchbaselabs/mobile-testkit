@@ -339,7 +339,14 @@ $ python libraries/provision/provision_cluster.py \
 
 - OR Install sync_gateway source:
 
+Since building Sync Gateway from source requires access to the private sync-gateway-accel repo, you will need to
+be in possession of the appropriate [SSH key](http://cbmobile-sharedkeys.s3.amazonaws.com/cbmobile_private_repo_read_only).
+See `install-gh-deploy-keys.py` for more info.
+
 ```
+$ python libraries/utilities/install-gh-deploy-keys.py
+    --key-path=/path/to/cbmobile_private_repo_read_only_key
+    --ssh-user=vagrant
 $ python libraries/provision/provision_cluster.py \
     --server-version=4.1.1 \
     --sync-gateway-commit=062bc26a8b65e63b3a80ba0f11506e49681d4c8c (requires full commit hash)

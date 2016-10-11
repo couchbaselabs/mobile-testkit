@@ -64,7 +64,7 @@
     get_url: url=https://raw.githubusercontent.com/couchbase/sync_gateway/master/bootstrap.sh dest=/home/centos/ mode=0751
 
   - name: SYNC GATEWAY & SG ACCEL | Run bootstrap script (bootstrap.sh takes a branch and a commit as params, this will be fixed to only take a commit at some point)
-    shell: ./bootstrap.sh {{ commit }} chdir=/home/centos/
+    shell: ./bootstrap.sh -p sg-accel -c {{ commit }} chdir=/home/centos/
 
   - name: SYNC GATEWAY & SG ACCEL | Build
     shell: ./build.sh {{ build_flags }} chdir=/home/centos/
@@ -97,7 +97,7 @@
     file: path=/opt/couchbase-sg-accel/bin state=directory
 
   - name: Copy sg_accel binary to /opt/
-    shell: cp /home/centos/godeps/bin/sg_accel /opt/couchbase-sg-accel/bin/
+    shell: cp /home/centos/godeps/bin/sync-gateway-accel /opt/couchbase-sg-accel/bin/sg_accel
 
 # Deploy sync gateway configs
 - hosts: sync_gateways
