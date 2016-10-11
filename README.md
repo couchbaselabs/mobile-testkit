@@ -676,7 +676,7 @@ ansible_connection=winrm
 # The following is necessary for Python 2.7.9+ when using default WinRM self-signed certificates:
 ansible_winrm_server_cert_validation=ignore
 ```
-Save as `inventory_windows` or whatever name you want
+Save as `resources/cluster_configs/windows`
 
 ### IMPORTANT: Do not publish or check this in. If you do, anyone could potentially access your machine.
 
@@ -694,7 +694,7 @@ Set-ExecutionPolicy Unrestricted
 
 Test by:
 ```
-ansible windows -i inventory_windows -m win_ping
+ansible windows -i resources/cluster_configs/windows -m win_ping
 ```
 
 

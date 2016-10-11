@@ -8,7 +8,7 @@
     - name: Start LiteServ
       win_nssm:
         name: LiteServ
-        application: C:\Users\Administrator\Desktop\LiteServ\{{ binary_path }}
+        application: C:\Users\{{ ansible_user }}\Desktop\LiteServ\{{ binary_path }}
         state: started
-        stdout_file: C:\Users\Administrator\Desktop\LiteServ\LiteServ.log
-        stderr_file: C:\Users\Administrator\Desktop\LiteServ\LiteServ.log
+        stdout_file: C:\Users\{{ ansible_user }}\Desktop\LiteServ\LiteServ.log
+        stderr_file: C:\Users\{{ ansible_user }}\Desktop\LiteServ\LiteServ.log
