@@ -408,6 +408,7 @@ NOTE: This has only been tested on Mac OSX
 
 1. Install VirtualBox - https://www.virtualbox.org/wiki/Downloads
 1. Install Vagrant - https://www.vagrantup.com/downloads.html
+1. `cd` into `vagrant/private_network` (or `vagrant/public_network` if you need VM's exposed to LAN, for example when testing against actual mobile devices)
 
 Create cluster with private network
 
