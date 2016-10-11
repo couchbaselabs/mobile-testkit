@@ -2,6 +2,7 @@ import subprocess
 import json
 
 import vagrant
+from keywords.exceptions import ProvisioningError
 
 from libraries.utilities.generate_clusters_from_pool import generate_clusters_from_pool
 
@@ -21,10 +22,16 @@ def generate_cluster_configs_from_vagrant():
     print("Getting ip addresses from running vagrant vms ...")
     for stat in status:
         name = stat.name
-        output = subprocess.check_output('vagrant ssh {} -c "hostname -I | cut -d\' \' -f2" 2> /dev/null'.format(name), shell=True)
+        # Expected output: '10.0.2.15 192.168.0.61 2605:e000:9092:200:a00:27ff:fe7b:9bbf \r\n'
+        # where second ip is the publicly routable ip
+        output = subprocess.check_output('vagrant ssh {} -c "hostname -I"'.format(name), shell=True)
         cleaned_output = output.strip()
-        print("host: {} ip: {}".format(name, cleaned_output))
-        vagrant_ips.append(cleaned_output)
+        ip_addresses = cleaned_output.split()
+        if len(ip_addresses) < 2:
+            raise ProvisioningError("Expected at least 2 ip addresses in {}".format(ip_addresses))
+        public_ip = ip_addresses[1]
+        print("host: {} ip: {}".format(name, public_ip))
+        vagrant_ips.append(public_ip)
 
     # Write pool.json
     pool_file = "resources/pool.json"
