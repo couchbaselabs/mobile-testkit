@@ -11,11 +11,11 @@ from provision.ansible_runner import AnsibleRunner
 
 import generate_gateload_configs
 
-from utilities.fetch_machine_stats import fetch_machine_stats
-from utilities.log_expvars import log_expvars
+from libraries.utilities.fetch_machine_stats import fetch_machine_stats
+from libraries.utilities.log_expvars import log_expvars
 from keywords.Logging import fetch_sync_gateway_logs
-from utilities.fetch_sync_gateway_profile import fetch_sync_gateway_profile
-from utilities.push_cbcollect_info_supportal import push_cbcollect_info_supportal
+from libraries.utilities.fetch_sync_gateway_profile import fetch_sync_gateway_profile
+from libraries.utilities.push_cbcollect_info_supportal import push_cbcollect_info_supportal
 
 
 def run_perf_test(number_pullers, number_pushers, use_gateload, gen_gateload_config, test_id, sync_gateway_config_path, reset_sync_gateway, doc_size, runtime_ms, rampup_interval_ms):

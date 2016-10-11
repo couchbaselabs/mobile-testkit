@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 
 from optparse import OptionParser
 from collections import OrderedDict
-from utilities.provisioning_config_parser import hosts_for_tag
+from libraries.utilities.provisioning_config_parser import hosts_for_tag
 
 matplotlib.rcParams.update({'font.size': 6})
 
