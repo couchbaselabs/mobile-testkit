@@ -1,8 +1,5 @@
 import logging
-import os
 import json
-import pdb
-import sys
 
 
 # TODO: Use python logging hooks instead of wrappers - https://github.com/couchbaselabs/mobile-testkit/issues/686
@@ -41,15 +38,16 @@ def log_r(request, info=True):
         request.request.url,
         request.status_code
     )
+
     if info:
         log_info(request_summary)
+
     logging.debug("{0} {1}\nHEADERS = {2}\nBODY = {3}".format(
-            request.request.method,
-            request.request.url,
-            request.request.headers,
-            request.request.body,
-        )
-    )
+        request.request.method,
+        request.request.url,
+        request.request.headers,
+        request.request.body))
+
     logging.debug("{}".format(request.text))
 
 

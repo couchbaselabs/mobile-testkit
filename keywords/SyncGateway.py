@@ -1,7 +1,6 @@
 import re
 import os
 import json
-import logging
 
 import requests
 from requests import Session
@@ -15,7 +14,6 @@ from utils import log_info
 from exceptions import ProvisioningError
 
 from libraries.provision.ansible_runner import AnsibleRunner
-
 
 
 def get_sync_gateway_version(host):

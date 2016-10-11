@@ -1,8 +1,6 @@
 import os.path
-import shutil
 import subprocess
 import sys
-import zlib
 import datetime
 from optparse import OptionParser
 

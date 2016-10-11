@@ -10,6 +10,7 @@ from ansible import constants
 from ansible.parsing.dataloader import DataLoader
 import ansible.inventory
 
+
 class Options(object):
     """
     Options class to replace Ansible OptParser
@@ -84,7 +85,7 @@ class Runner(object):
         self.options.module_path = constants.DEFAULT_MODULE_PATH
         self.options.forks = constants.DEFAULT_FORKS
         self.options.ask_vault_pass = constants.DEFAULT_ASK_VAULT_PASS
-        self.options.vault_password_files = [ constants.DEFAULT_VAULT_PASSWORD_FILE ]
+        self.options.vault_password_files = [constants.DEFAULT_VAULT_PASSWORD_FILE]
         self.options.sudo = constants.DEFAULT_SUDO
         self.options.become = constants.DEFAULT_BECOME
         self.options.become_method = constants.DEFAULT_BECOME_METHOD
@@ -140,13 +141,4 @@ class Runner(object):
         # Results of PlaybookExecutor
         self.pbex.run()
         stats = self.pbex._tqm._stats
-
-        # Test if success for record_logs
-        run_success = True
-        hosts = sorted(stats.processed.keys())
-        for h in hosts:
-            t = stats.summarize(h)
-            if t['unreachable'] > 0 or t['failures'] > 0:
-                run_success = False
-
         return stats

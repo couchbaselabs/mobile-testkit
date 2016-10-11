@@ -1,14 +1,10 @@
 from libraries.provision.ansible_runner import AnsibleRunner
 
-from subprocess import Popen, PIPE
 import os.path
 import shutil
 import time
-import pdb
 
 from keywords.utils import log_info
-from keywords.utils import log_warn
-from keywords.utils import log_error
 from keywords.exceptions import CollectionError
 from keywords.constants import RESULTS_DIR
 

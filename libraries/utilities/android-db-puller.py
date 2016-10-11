@@ -1,8 +1,5 @@
-import os.path
-import shutil
 import subprocess
 import sys
-import zlib
 from optparse import OptionParser
 
 
@@ -41,7 +38,6 @@ if __name__ == "__main__":
     parser.add_option("-t", "--target",
                       action="store", type="string", dest="target", default=None,
                       help="device id to collect from 01234565789101112")
-
 
     arg_parameters = sys.argv[1:]
 

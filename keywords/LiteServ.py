@@ -6,10 +6,6 @@ import time
 import subprocess
 import re
 import json
-import pdb
-import pytest
-
-from keywords.constants import RESULTS_DIR
 
 import requests
 from requests.sessions import Session
@@ -551,7 +547,7 @@ class LiteServ:
                 is_macosx = True
             elif resp_json["vendor"]["name"] == "Couchbase Lite (C#)":
                 is_net = True
-        except KeyError as e:
+        except KeyError:
             # Android
             lite_version = resp_json["version"]
             is_android = True
@@ -604,7 +600,7 @@ class LiteServ:
         """
         try:
             resp = self._session.get("http://{}:{}/".format(host, port))
-        except ConnectionError as e:
+        except ConnectionError:
             # Expecting connection error if LiteServ is not running on the port
             return
 

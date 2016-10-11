@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+
+flake8
+
 RUNPYLINT="pylint -E"
 
 echo "$RUNPYLINT keywords/*.py"

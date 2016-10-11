@@ -1,7 +1,6 @@
 import os
 import sys
 from optparse import OptionParser
-import json
 
 from ansible_runner import AnsibleRunner
 
@@ -9,6 +8,7 @@ from keywords.exceptions import ProvisioningError
 from keywords.ClusterKeywords import ClusterKeywords
 from keywords.CouchbaseServer import CouchbaseServer
 from keywords.utils import log_info
+
 
 class CouchbaseServerConfig:
 
@@ -43,7 +43,6 @@ class CouchbaseServerConfig:
             # the user specified an explicit build number, so grab the
             # build off the "cbnas" server (Couchbase VPN only)
             return resolve_cb_nas_url(self.version, self.build)
-
 
     def __str__(self):
         output = "\n  Couchbase Server configuration\n"

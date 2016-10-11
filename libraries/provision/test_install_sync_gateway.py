@@ -3,7 +3,6 @@ import os
 from libraries.provision.install_sync_gateway import get_buckets_from_sync_gateway_config
 
 
-
 # TODO: convert to pytest (but pytest can use unittest format as well)
 class TestInstallSyncGateway(unittest.TestCase):
 
@@ -48,9 +47,7 @@ class TestInstallSyncGateway(unittest.TestCase):
         }
     }
 }
-
-
-        """
+"""
 
         tmpConfigFileName = "/tmp/test_get_buckets_from_sync_gateway_config_template_vars.json"
         tmpConfigFile = open(tmpConfigFileName, "w")

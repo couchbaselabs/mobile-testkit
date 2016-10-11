@@ -1,12 +1,14 @@
 import logging
 import base64
 
-from constants import *
+from constants import DATA_DIR
+
 
 def get_attachment(name):
     with open("{}/{}".format(DATA_DIR, name)) as f:
-         result = base64.standard_b64encode(f.read())
+        result = base64.standard_b64encode(f.read())
     return result
+
 
 class Document:
 
@@ -35,7 +37,7 @@ class Document:
 
         if attachment_name is not None:
             doc["_attachments"] = {
-                attachment_name: { "data": get_attachment(attachment_name) }
+                attachment_name: {"data": get_attachment(attachment_name)}
             }
 
         logging.debug(doc)

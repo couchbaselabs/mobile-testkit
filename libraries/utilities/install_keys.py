@@ -7,6 +7,7 @@ from subprocess import CalledProcessError
 
 from generate_clusters_from_pool import get_ips
 
+
 def install_keys(key_name, user_name):
 
     ips = get_ips()
@@ -78,5 +79,3 @@ if __name__ == "__main__":
         sys.exit(1)
 
     install_keys(opts.key_name, opts.ssh_user)
-
-

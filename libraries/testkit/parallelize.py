@@ -7,6 +7,7 @@ from threading import Thread
 from keywords.utils import log_info
 from keywords.utils import log_debug
 
+
 # This function is added to use ProcessExecutor
 # concurrent.futures.
 #
@@ -18,6 +19,7 @@ def _pickle_method(m):
 
 
 copy_reg.pickle(types.MethodType, _pickle_method)
+
 
 # Using Process Pool
 def parallel_process(objects, method, *args):

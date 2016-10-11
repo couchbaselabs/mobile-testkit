@@ -1,6 +1,4 @@
 import os
-import re
-import sys
 import json
 import time
 
@@ -11,7 +9,6 @@ from testkit.sgaccel import SgAccel
 from testkit.server import Server
 from testkit.admin import Admin
 from testkit.config import Config
-from testkit import settings
 from provision.ansible_runner import AnsibleRunner
 
 import keywords.CouchbaseServer
@@ -62,14 +59,14 @@ class Cluster:
 
         # Validate sync gateways
         if len(self.sync_gateways) == 0:
-            raise Exception("Functional tests require at least 1 index reader")        
-        
+            raise Exception("Functional tests require at least 1 index reader")
+
     def reset(self, sg_config_path):
 
         self.validate_cluster()
 
         ansible_runner = AnsibleRunner(self._cluster_config)
-        
+
         # Stop sync_gateways
         log_info(">>> Stopping sync_gateway")
         status = ansible_runner.run_ansible_playbook("stop-sync-gateway.yml")
@@ -122,7 +119,7 @@ class Cluster:
 
                 # Both steps are successful, break out of retry loop
                 break
-            except AssertionError as e:
+            except AssertionError:
                 log_info("Failed to delete / create buckets. Trying again ...")
                 bucket_delete_create_attempt_num += 1
                 # Wait 3 sec before retry
@@ -168,18 +165,18 @@ class Cluster:
         return mode
 
     def save_cbgt_diagnostics(self):
-        
+
         # CBGT REST Admin API endpoint
         for sync_gateway_writer in self.sg_accels:
 
             adminApi = Admin(sync_gateway_writer)
             cbgt_diagnostics = adminApi.get_cbgt_diagnostics()
-            cbgt_cfg = adminApi.get_cbgt_cfg()
-        
+            adminApi.get_cbgt_cfg()
+
             # dump raw diagnostics
             pretty_print_json = json.dumps(cbgt_diagnostics, sort_keys=True, indent=4, separators=(',', ': '))
             log_info("SG {} CBGT diagnostic output: {}".format(sync_gateway_writer, pretty_print_json))
-        
+
     def validate_cbgt_pindex_distribution_retry(self):
         """
         Validates the CBGT pindex distribution by looking for nodes that don't have
@@ -188,19 +185,19 @@ class Cluster:
         for i in xrange(10):
             is_valid = self.validate_cbgt_pindex_distribution()
             if is_valid:
-               return True
+                return True
             else:
                 log_info("Could not validate CBGT Pindex distribution.  Will retry after sleeping ..")
                 time.sleep(5)
 
-        return False 
+        return False
 
     def validate_cbgt_pindex_distribution(self):
 
         # build a map of node -> num_pindexes
         node_defs_pindex_counts = {}
 
-        # CBGT REST Admin API endpoint 
+        # CBGT REST Admin API endpoint
         adminApi = Admin(self.sg_accels[0])
         cbgt_cfg = adminApi.get_cbgt_cfg()
 
@@ -219,30 +216,30 @@ class Cluster:
             for node in nodes:
 
                 # add a key for this node if we don't already have one
-                if not node_defs_pindex_counts.has_key(node):
+                if node not in node_defs_pindex_counts:
                     node_defs_pindex_counts[node] = 0
-                    
+
                 current_pindex_count = node_defs_pindex_counts[node]
                 current_pindex_count += 1
                 node_defs_pindex_counts[node] = current_pindex_count
 
         log_info("CBGT node to pindex counts: {}".format(node_defs_pindex_counts))
-        
+
         # make sure number of unique node uuids is equal to the number of sync gateway writers
         if len(node_defs_pindex_counts) != len(self.sg_accels):
             log_info("CBGT len(unique_node_uuids) != len(self.sync_gateway_writers) ({} != {})".format(
                 len(node_defs_pindex_counts),
                 len(self.sg_accels)
             ))
-            return False 
+            return False
 
         # make sure that all of the nodes have approx the same number of pindexes assigneed to them
         i = 0
-        num_pindex_first_node = 0 
+        num_pindex_first_node = 0
         for node_def_uuid, num_pindexes in node_defs_pindex_counts.iteritems():
 
             if i == 0:
-                # it's the first node we've looked at, just record number of pindexes and continue 
+                # it's the first node we've looked at, just record number of pindexes and continue
                 num_pindex_first_node = num_pindexes
                 i += 1
                 continue
@@ -258,8 +255,7 @@ class Cluster:
                     num_pindex_first_node
                 ))
                 return False
-                
-    
+
         return True
 
     def verify_alive(self, mode):

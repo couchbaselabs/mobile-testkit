@@ -29,5 +29,3 @@ if __name__ == "__main__":
 
     cluster = Cluster(config=cluster_conf)
     cluster.reset(opts.conf)
-
-

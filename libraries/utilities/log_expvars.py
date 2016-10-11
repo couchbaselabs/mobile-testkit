@@ -37,7 +37,7 @@ def write_expvars(results_obj, endpoint):
 
 
 def log_expvars(cluster_config, folder_name):
-    usage = """
+    """
     usage: log_expvars.py"
     """
 
@@ -89,6 +89,7 @@ def log_expvars(cluster_config, folder_name):
         log_info("Elapsed: {} minutes".format((time.time() - start_time) / 60.0))
         time.sleep(30)
 
+
 def wait_for_endpoints_alive_or_raise(endpoints, num_attempts=5):
     """
     Wait for the given endpoints to be up or throw an exception
@@ -113,10 +114,6 @@ def wait_for_endpoints_alive_or_raise(endpoints, num_attempts=5):
         if endpoints_are_up:
             return
 
-        time.sleep(i*2)
+        time.sleep(i * 2)
 
     raise Exception("Give up waiting for endpoints after {} attempts".format(num_attempts))
-
-
-
-

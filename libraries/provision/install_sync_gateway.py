@@ -197,7 +197,7 @@ if __name__ == "__main__":
     parser.add_option("", "--skip-bucketcreation",
                       action="store", dest="skip_bucketcreation", default=False,
                       help="skip the bucketcreation step")
-    
+
     arg_parameters = sys.argv[1:]
 
     (opts, args) = parser.parse_args(arg_parameters)
@@ -207,7 +207,7 @@ if __name__ == "__main__":
     except KeyError as ke:
         log_info("Make sure CLUSTER_CONFIG is defined and pointing to the configuration you would like to provision")
         raise KeyError("CLUSTER_CONFIG not defined. Unable to provision cluster.")
-    
+
     version = None
     build = None
 
@@ -232,4 +232,3 @@ if __name__ == "__main__":
         cluster_config=cluster_conf,
         sync_gateway_config=sync_gateway_install_config
     )
-

@@ -3,9 +3,11 @@ import requests
 
 import testkit.settings
 import logging
-log = logging.getLogger(testkit.settings.LOGGER)
 
 from provision.ansible_runner import AnsibleRunner
+
+log = logging.getLogger(testkit.settings.LOGGER)
+
 
 class SgAccel:
 

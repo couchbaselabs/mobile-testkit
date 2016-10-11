@@ -1,8 +1,4 @@
-import os
-import re
-import sys
 import json
-import time
 from jinja2 import Template
 
 from testkit import settings
@@ -10,14 +6,15 @@ from testkit import settings
 import logging
 log = logging.getLogger(settings.LOGGER)
 
+
 class Config:
 
     def __init__(self, conf_path):
 
         self.conf_path = conf_path
-        self.mode = None 
+        self.mode = None
         self.bucket_name_set = []
-        
+
         with open(conf_path, "r") as config:
 
             data = config.read()
@@ -59,7 +56,6 @@ class Config:
 
             self.discover_bucket_name_set(conf_obj)
 
-
     def get_mode(self):
 
         return self.mode
@@ -69,12 +65,12 @@ class Config:
         return self.bucket_name_set
 
     def discover_mode(self, conf_obj):
-        
+
         if "cluster_config" in conf_obj.keys():
             self.mode = "distributed_index"
         else:
             self.mode = "channel_cache"
-        
+
     def discover_bucket_name_set(self, conf_obj):
 
             bucket_names_from_config = []
@@ -85,15 +81,15 @@ class Config:
             dbs = conf_obj["databases"]
             for key, val in dbs.iteritems():
 
-                if val.has_key("bucket"):
-        
+                if "bucket" in val:
+
                     # Add data buckets
                     bucket_names_from_config.append(val["bucket"])
                     if "channel_index" in val:
                         # index buckets
                         bucket_names_from_config.append(val["channel_index"]["bucket"])
 
-                if not val.has_key("shadow"):
+                if "shadow" not in val:
                     continue
 
                 shadow = val["shadow"]

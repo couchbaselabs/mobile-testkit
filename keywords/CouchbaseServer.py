@@ -1,23 +1,17 @@
-import os
-import shutil
-import subprocess
-import logging
 import requests
-import json
-import base64
 import time
-from subprocess import CalledProcessError
-
-from requests.exceptions import ConnectionError
+import json
 
 from couchbase.bucket import Bucket
-from couchbase.exceptions import *
-from couchbase.views.iterator import View
-from couchbase.n1ql import N1QLQuery
-from couchbase.views.params import Query
+from couchbase.exceptions import ProtocolError
+from couchbase.exceptions import TemporaryFailError
+from couchbase.exceptions import NotFoundError
 
-from constants import *
-from utils import *
+from constants import CLIENT_REQUEST_TIMEOUT
+from utils import log_r
+from utils import log_info
+from utils import log_debug
+
 
 def get_server_version(host):
     resp = requests.get("http://Administrator:password@{}:8091/pools".format(host))
@@ -31,6 +25,7 @@ def get_server_version(host):
 
     # Return version in the formatt 4.1.1-5487
     return "{}-{}".format(running_server_version_parts[0], running_server_version_parts[1])
+
 
 def verify_server_version(host, expected_server_version):
     running_server_version = get_server_version(host)
@@ -50,6 +45,7 @@ def verify_server_version(host, expected_server_version):
         assert expected_server_version == running_server_version_parts[0], "Unexpected server version!! Expected: {} Actual: {}".format(expected_server_version, running_server_version_parts[0])
     else:
         raise ValueError("Unsupported version format")
+
 
 class CouchbaseServer:
     """ Installs Couchbase Server on machine host"""
@@ -114,14 +110,14 @@ class CouchbaseServer:
             for node in resp_obj["nodes"]:
                 if node["status"] != "healthy":
                     all_nodes_healthy = False
-                    logging.info("Node: {} is still not healthy. Retrying ...".format(node))
+                    log_info("Node: {} is still not healthy. Retrying ...".format(node))
                     time.sleep(1)
 
             if not all_nodes_healthy:
                 continue
 
             log_info("All nodes are healthy")
-            logging.debug(resp_obj)
+            log_debug(resp_obj)
             # All nodes are heathy if it made it to here
             break
 
@@ -172,7 +168,7 @@ class CouchbaseServer:
         http://docs.couchbase.com/admin/admin/REST/rest-bucket-create.html
         """
 
-        logging.info("Creating bucket {} with RAM {}".format(name, ramQuotaMB))
+        log_info("Creating bucket {} with RAM {}".format(name, ramQuotaMB))
 
         data = {
             "name": name,
@@ -197,10 +193,9 @@ class CouchbaseServer:
 
             if time.time() - start > CLIENT_REQUEST_TIMEOUT:
                 raise Exception("Verify Docs Present: TIMEOUT")
-
             try:
                 bucket = Bucket("couchbase://{}/{}".format(client_host, name))
-                rv = bucket.get('foo')
+                bucket.get('foo')
             except ProtocolError as pe:
                 log_info("Client Connection failed: {} Retrying ...".format(pe))
                 time.sleep(1)
@@ -235,7 +230,7 @@ class CouchbaseServer:
 
         log_info("Found temp rev docs: {}".format(cached_rev_doc_ids))
         for doc_id in cached_rev_doc_ids:
-            logging.debug("Removing: {}".format(doc_id))
+            log_debug("Removing: {}".format(doc_id))
             b.remove(doc_id)
 
     def get_server_docs_with_prefix(self, url, bucket, prefix):

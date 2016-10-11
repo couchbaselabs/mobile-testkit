@@ -13,7 +13,7 @@ class Time:
         ex. delta=-3, if epoch=1466540261, then the return value will be 1466540258
         """
 
-        unix_time_now= int(time.time())
+        unix_time_now = int(time.time())
         log_info("Unix timestamp: {}".format(unix_time_now))
         timestamp_with_delta = unix_time_now + delta
         log_info("Unix timestamp with delta: {}".format(timestamp_with_delta))
