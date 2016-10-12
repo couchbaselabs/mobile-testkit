@@ -21,6 +21,7 @@ from optparse import OptionParser
 
 from generate_clusters_from_pool import get_ips
 
+
 def install_gh_deploy_keys(key_path, user_name):
 
     ips = get_ips()
@@ -81,9 +82,6 @@ def install_gh_deploy_keys(key_path, user_name):
         ])
 
 
-
-
-
 if __name__ == "__main__":
 
     usage = "usage: install-gh-deploy-keys.py --key-path=<path_to_private_deploy_key> --ssh-user=<user>"
@@ -114,8 +112,6 @@ if __name__ == "__main__":
         print(">>> Please provide --key-path=<path_to_private_deploy_key> AND --ssh-user=<user>")
         sys.exit(1)
 
-
     install_gh_deploy_keys(opts.key_path, opts.ssh_user)
 
     print "Successful!"
-
