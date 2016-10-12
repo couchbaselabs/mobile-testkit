@@ -10,9 +10,9 @@ from install_couchbase_server import CouchbaseServerConfig
 from install_sync_gateway import SyncGatewayConfig
 from install_nginx import install_nginx
 
-
 from keywords.utils import log_info
 
+from libraries.provision.ansible_runner import AnsibleRunner
 
 def provision_cluster(cluster_config, couchbase_server_config, sync_gateway_config):
 
