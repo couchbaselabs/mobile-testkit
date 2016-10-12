@@ -48,7 +48,7 @@ def run_perf_test(number_pullers, number_pushers, use_loadgenerator, gen_gateloa
     if use_loadgenerator:
         print "Using Load Generator: {0}".format(use_loadgenerator)
 
-        if use_loadgenerator == '--use-gateload'
+        if use_loadgenerator == '--use-gateload':
             if int(number_pullers) > 0 and not gen_gateload_config:
                 raise Exception("You specified --num-pullers but did not set --gen-gateload-config")
 
