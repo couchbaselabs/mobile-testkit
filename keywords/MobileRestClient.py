@@ -1153,12 +1153,29 @@ class MobileRestClient:
         else:
             target = "{}/{}".format(to_url, to_db)
 
-        data = {
-            "continuous": continuous,
-            "cancel": True,
-            "source": {"url": source},
-            "target": {"url": target}
-        }
+        # The replication endpoint should support a value or dictionary for source / target keys
+        if to_auth is None and from_auth is None:
+            data = {
+                "continuous": continuous,
+                "cancel": True,
+                "source": source,
+                "target": target
+            }
+        else:
+            # Use dictionary format for source and target to provide authentication
+            # for each enpoint in the source and target dictionary
+            data = {
+                "continuous": continuous,
+                "cancel": True,
+                "source": {"url": source},
+                "target": {"url": target}
+            }
+
+            if to_auth is not None:
+                data["target"]["headers"] = {"Cookie": to_auth}
+
+            if from_auth is not None:
+                data["source"]["headers"] = {"Cookie": from_auth}
 
         if repl_filter is not None:
             data["filter"] = repl_filter
@@ -1169,12 +1186,6 @@ class MobileRestClient:
 
         if doc_ids is not None:
             data["doc_ids"] = doc_ids
-
-        if to_auth is not None:
-            data["target"]["headers"] = {"Cookie": to_auth}
-
-        if from_auth is not None:
-            data["source"]["headers"] = {"Cookie": from_auth}
 
         resp = self._session.post("{}/_replicate".format(url), data=json.dumps(data))
 
