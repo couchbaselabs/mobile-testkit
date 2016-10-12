@@ -40,6 +40,7 @@ def provision_cluster(cluster_config, couchbase_server_config, sync_gateway_conf
     clean_cluster(cluster_config)
 
     # Set hostnames to match ansible hostnames
+    ansible_runner = AnsibleRunner(cluster_config)    
     status = ansible_runner.run_ansible_playbook("set-hostnames.yml")
     assert status == 0, "Failed to set hostnames"
 
