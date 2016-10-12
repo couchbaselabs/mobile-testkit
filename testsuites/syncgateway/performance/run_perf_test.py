@@ -235,7 +235,7 @@ if __name__ == "__main__":
     run_perf_test(
         number_pullers=opts.number_pullers,
         number_pushers=opts.number_pushers,
-        use_gateload=opts.use_gateload,
+        use_loadgenerator=opts.use_gateload,
         gen_gateload_config=opts.gen_gateload_config,
         test_id=opts.test_id,
         sync_gateway_config_path=opts.sync_gateway_config_path,
