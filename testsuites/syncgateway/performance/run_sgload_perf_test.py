@@ -64,15 +64,31 @@ def execute_sgload(lgs_host, sgload_arg_list):
     log_info("execute_sgload done.")
 
 def get_load_generators_hosts(cluster_config):
-    # Get gateload ips from ansible inventory
-    lgs_hosts = hosts_for_tag(cluster_config, "load_generators")
+    # Get load generator ips from ansible inventory
+    return get_hosts_by_type(cluster_config, "load_generators")
+
+def get_sync_gateways_hosts(cluster_config):
+    # Get sync gateway ips from ansible inventory
+    return get_hosts_by_type(cluster_config, "sync_gateways")
+
+def get_hosts_by_type(cluster_config, host_type="load_generators"):
+    lgs_hosts = hosts_for_tag(cluster_config, host_type)
     lgs = [lg["ansible_host"] for lg in lgs_hosts]
     return lgs
+
+def add_sync_gateway_url(cluster_config, sgload_arg_list):
+    """
+    Add ['--sg-url', 'http://..'] to the list of args that will be passed to sgload
+    """
+    sg_hosts = get_sync_gateways_hosts(cluster_config)
+    sgload_arg_list.append("--sg-url")
+    sgload_arg_list.append("http://{}:4984/db/".format(sg_hosts[0]))  ## TODO: don't hardcode port or DB name
+    return sgload_arg_list
 
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('--skip-build', action='store_true')
+    parser.add_argument('--skip-build-sgload', action='store_true')
     args = parser.parse_known_args()
     known_args, sgload_arg_list = args  # unroll this tuple into named args
     log_info("known_args: {}".format(known_args))
@@ -84,11 +100,13 @@ if __name__ == "__main__":
         print ("Make sure CLUSTER_CONFIG is defined and pointing to the configuration you would like to provision")
         sys.exit(1)
 
+    sgload_arg_list = add_sync_gateway_url(main_cluster_config, sgload_arg_list)
+
     print("Running perf test against cluster: {}".format(main_cluster_config))
     main_ansible_runner = AnsibleRunner(main_cluster_config)
 
     # build_sgload (ansible)
-    if not known_args.skip_build:
+    if not known_args.skip_build_sgload:
         build_sgload(main_ansible_runner)
 
     # call start-sgload.yml (ansible) -- just hardcode params in start-sgload.yml
