@@ -25,9 +25,6 @@
    - name: Configure telegraf for load_generators
      template: src=files/telegraf-gateload.conf dest=/etc/telegraf/telegraf.conf owner=root group=root mode=0644
 
-   - name: Copy custom telegraf binary with gateload plugin
-     copy: src=files/telegraf dest=/usr/bin/telegraf owner=root group=root mode=0775
-
 - hosts: sync_gateways
   vars:
      grafana_db: "{{ lookup('env','GRAFANA_DB') }}"
