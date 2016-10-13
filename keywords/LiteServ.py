@@ -172,8 +172,18 @@ class LiteServ:
             if platform == "macosx":
                 # Make binary executable
                 os.chmod("{}/{}/LiteServ".format(BINARY_DIR, directory_name), 0755)
-            elif platform == "net" or platform == "net-win":
+                
+            elif platform == "net":
+
+                # Remove x64 and x86 HACK - To get around https://github.com/couchbase/couchbase-lite-net/issues/672
+                # Need to remove once the issue is resolved
+                shutil.rmtree("{}/{}/x64".format(BINARY_DIR, directory_name))
+                shutil.rmtree("{}/{}/x86".format(BINARY_DIR, directory_name))
+
                 # Remove .zip file
+                os.remove("{}/{}".format(BINARY_DIR, file_name))
+
+            elif platform == "net-win":
                 os.remove("{}/{}".format(BINARY_DIR, file_name))
 
     def get_liteserv_binary_path(self, platform, version, storage_engine):
