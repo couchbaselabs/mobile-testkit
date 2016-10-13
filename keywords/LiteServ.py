@@ -558,18 +558,36 @@ class LiteServ:
         Starts a .NET listener on a remote windows machine via ansible.
         """
 
-        if storage_engine != "SQLite":
-            raise NotImplementedError("Need to add support for all storage types")
-
         binary_path = self.get_binary("net-win", version_build=version, storage_engine=storage_engine)
 
         log_info("Staring {} on windows machine ...".format(binary_path))
+
+        process_args = [
+            "--port", port,
+            "--dir", "."
+        ]
+
+        if storage_engine == "ForestDB" or storage_engine == "ForestDB+Encryption":
+            process_args.append("--storage")
+            process_args.append("ForestDB")
+        else:
+            process_args.append("--storage")
+            process_args.append("SQLite")
+
+        if storage_engine == "SQLCipher" or storage_engine == "ForestDB+Encryption":
+            logging.info("Using Encryption ...")
+            db_name_passwords = self.build_name_passwords_for_registered_dbs(platform="net")
+            process_args.extend(db_name_passwords)
+
+        joined_args = " ".join(process_args)
+        log_info("Starting LiteServ with: {}".format(joined_args))
 
         ansible_runner = AnsibleRunner(config=cluster_config)
         status = ansible_runner.run_ansible_playbook(
             "start-liteserv-windows.yml",
             extra_vars={
-                "binary_path": binary_path
+                "binary_path": binary_path,
+                "launch_args": joined_args
             }
         )
         if status != 0:
