@@ -1,2 +1,3 @@
-mkdir -p logs
-sgload -workload=sgload_config.json > logs/sgload.log 2>&1
+
+echo "Run sgload with url: $1" > /tmp/run_sgload_out
+/usr/local/bin/sgload gateload --createwriters --createreaders --sg-url $1

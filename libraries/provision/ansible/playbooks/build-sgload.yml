@@ -2,10 +2,10 @@
 - hosts: load_generators
   any_errors_fatal: true
   tasks:
-  - name: SGOAD | go get sgload
+  - name: SGLOAD | go get sgload
     shell: GOPATH=/opt/go go get -u -v github.com/couchbaselabs/sgload
     become: yes
-    
+
   - name: SGLOAD | Symlink sgload into /usr/local/bin
     file: src=/opt/go/bin/sgload dest=/usr/local/bin/sgload owner=centos group=centos state=link
     become: yes

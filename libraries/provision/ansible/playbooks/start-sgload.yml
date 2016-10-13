@@ -14,15 +14,19 @@
 
 - hosts: load_generators
   any_errors_fatal: true
+  become: yes
+  vars:
+    sync_gateway_node: "{{ hostvars[groups.sync_gateways[0]].ansible_host }}"
 
   # Deploy sgload script and start it
   tasks:
-  - name: copy the run sgload script
-    copy: src=files/run_sgload.sh dest=/home/centos/ owner=centos group=centos mode=0755
-  - name: start sgload in screen
-    shell: screen -d -m -S sgload ./run_sgload.sh
-    args:
-      chdir: /home/centos/
+    - debug: msg={{ sync_gateway_node }}
+    - name: copy the run sgload script
+      copy: src=files/run_sgload.sh dest=/home/centos/ owner=centos group=centos mode=0755
+    - name: start sgload in screen
+      shell: screen -d -m -S sgload ./run_sgload.sh "http://{{ sync_gateway_node }}:4984/db/" chdir=/home/centos/
+      args:
+        chdir: /home/centos/
 
 
 
