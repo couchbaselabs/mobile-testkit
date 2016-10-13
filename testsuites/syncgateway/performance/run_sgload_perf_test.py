@@ -5,11 +5,12 @@ import requests
 import time
 import sys
 import os
+import paramiko
 
 from provision.ansible_runner import AnsibleRunner
 from keywords.exceptions import ProvisioningError
 
-from provisioning_config_parser import hosts_for_tag
+from libraries.utilities.provisioning_config_parser import hosts_for_tag
 
 from keywords.utils import log_info
 from libraries.utilities.log_expvars import wait_for_endpoints_alive_or_raise
@@ -25,14 +26,16 @@ def build_sgload(ansible_runner):
         raise ProvisioningError("Failed to build sgload")
 
 
-def start_sgload(ansible_runner):
+def start_sgload(lgs_hosts):
+    for lgs_host in lgs_hosts:
 
-    status = ansible_runner.run_ansible_playbook(
-        "start-sgload.yml",
-        extra_vars={},
-    )
-    if status != 0:
-        raise ProvisioningError("Failed to start sgload")
+        ssh = paramiko.SSHClient()
+        ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        log_info("SSH connection to {}".format(lgs_host))
+        ssh.connect(lgs_host, username="vagrant") # TODO!! get this from ansible.cfg
+        stdin, stdout, stderr = ssh.exec_command("sgload")
+        log_info("stdout: {}".format(stdout.read()))
+        log_info("stderr: {}".format(stderr.read()))
 
 
 def wait_for_endpoints_dead(endpoints, num_attempts=1000, num_secs_between_attepts=5):
@@ -61,11 +64,14 @@ def wait_for_endpoints_dead(endpoints, num_attempts=1000, num_secs_between_attep
     raise Exception("Give up waiting for endpoints to go down after {} attempts".format(num_attempts))
 
 
-def get_load_generators_ip_addresses(cluster_config):
-
+def get_load_generators_hosts(cluster_config):
     # Get gateload ips from ansible inventory
-    lgs_host_vars = hosts_for_tag(cluster_config, "load_generators")
-    lgs = [lg["ansible_host"] for lg in lgs_host_vars]
+    lgs_hosts = hosts_for_tag(cluster_config, "load_generators")
+    lgs = [lg["ansible_host"] for lg in lgs_hosts]
+    return lgs
+
+def get_load_generators_expvar_urls(cluster_config):
+    lgs = get_load_generators_hosts(cluster_config)
     return [lg + ":9876/debug/vars" for lg in lgs]
 
 if __name__ == "__main__":
@@ -80,13 +86,14 @@ if __name__ == "__main__":
     main_ansible_runner = AnsibleRunner(main_cluster_config)
 
     # build_sgload (ansible)
-    build_sgload(main_ansible_runner)
+    # build_sgload(main_ansible_runner)
 
     # call start-sgload.yml (ansible) -- just hardcode params in start-sgload.yml
-    start_sgload(main_ansible_runner)
+    main_lgs_hosts = get_load_generators_hosts(main_cluster_config)
+    start_sgload(main_lgs_hosts)
 
     # polling loop until can connect to expvars
-    lgs_expvar_endpoints = get_load_generators_ip_addresses(main_cluster_config)
+    lgs_expvar_endpoints = get_load_generators_expvar_urls(main_cluster_config)
     wait_for_endpoints_alive_or_raise(lgs_expvar_endpoints, num_attempts=5)
 
     # polling loop until no longer listening on expvars port
