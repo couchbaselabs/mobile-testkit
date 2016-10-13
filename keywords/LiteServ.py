@@ -172,7 +172,7 @@ class LiteServ:
             if platform == "macosx":
                 # Make binary executable
                 os.chmod("{}/{}/LiteServ".format(BINARY_DIR, directory_name), 0755)
-                
+
             elif platform == "net":
 
                 # Remove x64 and x86 HACK - To get around https://github.com/couchbase/couchbase-lite-net/issues/672

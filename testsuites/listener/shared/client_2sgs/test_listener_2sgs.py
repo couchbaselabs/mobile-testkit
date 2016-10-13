@@ -41,11 +41,16 @@ def setup_client_2sgs_suite(request):
         storage_engine=liteserv_storage_engine
     )
 
+    ls_cluster_target = None
+    if liteserv_platform == "net-win":
+        ls_cluster_target = "resources/cluster_configs/windows"
+
     # Install LiteServ
     ls.install_liteserv(
         platform=liteserv_platform,
         version=liteserv_version,
-        storage_engine=liteserv_storage_engine
+        storage_engine=liteserv_storage_engine,
+        cluster_config=ls_cluster_target
     )
 
     cluster_helper = ClusterKeywords()
@@ -92,15 +97,27 @@ def setup_client_2sgs_test(request):
     # Verify LiteServ is not running
     ls.verify_liteserv_not_running(host=liteserv_host, port=liteserv_port)
 
+    ls_cluster_target = None
+    if liteserv_platform == "net-win":
+        ls_cluster_target = "resources/cluster_configs/windows"
+
     print("Starting LiteServ ...")
-    ls_logging = open("{}/logs/{}-ls1-{}-{}.txt".format(RESULTS_DIR, datetime.datetime.now(), liteserv_platform, test_name), "w")
+
+    if liteserv_platform != "net-win":
+        # logging is file
+        ls_logging = open("{}/logs/{}-ls1-{}-{}.txt".format(RESULTS_DIR, datetime.datetime.now(), liteserv_platform, test_name), "w")
+    else:
+        # logging is name
+        ls_logging = "{}/logs/{}-ls1-{}-{}.txt".format(RESULTS_DIR, datetime.datetime.now(), liteserv_platform, test_name)
+
     ls_url, ls_handle = ls.start_liteserv(
         platform=liteserv_platform,
         version=liteserv_version,
         host=liteserv_host,
         port=liteserv_port,
         storage_engine=liteserv_storage_engine,
-        logfile=ls_logging
+        logfile=ls_logging,
+        cluster_config=ls_cluster_target
     )
 
     cluster_helper = ClusterKeywords()
@@ -130,7 +147,13 @@ def setup_client_2sgs_test(request):
 
     # Teardown test
     client.delete_databases(ls_url)
-    ls.shutdown_liteserv(host=liteserv_host, platform=liteserv_platform, process_handle=ls_handle, logfile=ls_logging)
+    ls.shutdown_liteserv(host=liteserv_host,
+                         platform=liteserv_platform,
+                         version=liteserv_version,
+                         storage_engine=liteserv_storage_engine,
+                         process_handle=ls_handle,
+                         logfile=ls_logging,
+                         cluster_config=ls_cluster_target)
 
     # Verify LiteServ is killed
     ls.verify_liteserv_not_running(host=liteserv_host, port=liteserv_port)
