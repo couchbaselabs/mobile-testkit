@@ -18,7 +18,7 @@ from libraries.utilities.fetch_sync_gateway_profile import fetch_sync_gateway_pr
 from libraries.utilities.push_cbcollect_info_supportal import push_cbcollect_info_supportal
 
 
-def run_perf_test(number_pullers, number_pushers, use_loadgenerator, gen_gateload_config, test_id, sync_gateway_config_path, reset_sync_gateway, doc_size, runtime_ms, rampup_interval_ms):
+def run_perf_test(number_pullers, number_pushers, use_gateload, gen_gateload_config, test_id, sync_gateway_config_path, reset_sync_gateway, doc_size, runtime_ms, rampup_interval_ms):
 
     try:
         cluster_config = os.environ["CLUSTER_CONFIG"]
@@ -45,69 +45,40 @@ def run_perf_test(number_pullers, number_pushers, use_loadgenerator, gen_gateloa
     # Copy provisioning_config to performance_results/ folder
     shutil.copy("{}".format(cluster_config), "testsuites/syncgateway/performance/results/{}".format(test_run_id))
 
-    if use_loadgenerator:
-        print "Using Load Generator: {0}".format(use_loadgenerator)
+    if use_gateload:
+        print "Using Gateload"
 
-        if use_loadgenerator == '--use-gateload':
-            if int(number_pullers) > 0 and not gen_gateload_config:
-                raise Exception("You specified --num-pullers but did not set --gen-gateload-config")
+        if int(number_pullers) > 0 and not gen_gateload_config:
+            raise Exception("You specified --num-pullers but did not set --gen-gateload-config")
 
-            # Build gateload
-            print ">>> Building gateload"
-            status = ansible_runner.run_ansible_playbook(
-                "build-gateload.yml",
-                extra_vars={},
+        # Build gateload
+        print ">>> Building gateload"
+        status = ansible_runner.run_ansible_playbook(
+            "build-gateload.yml",
+            extra_vars={},
+        )
+        assert status == 0, "Could not build gateload"
+
+        # Generate gateload config
+        print ">>> Generate gateload configs"
+        if gen_gateload_config:
+            generate_gateload_configs.main(
+                cluster_config,
+                number_pullers,
+                number_pushers,
+                test_run_id,
+                doc_size,
+                runtime_ms,
+                rampup_interval_ms
             )
-            assert status == 0, "Could not build gateload"
 
-            # Generate gateload config
-            print ">>> Generate gateload configs"
-            if gen_gateload_config:
-                generate_gateload_configs.main(
-                    number_pullers,
-                    number_pushers,
-                    test_run_id,
-                    doc_size,
-                    runtime_ms,
-                    rampup_interval_ms
-                )
-
-            # Start gateload
-            print ">>> Starting gateload with {0} pullers and {1} pushers".format(number_pullers, number_pushers)
-            status = ansible_runner.run_ansible_playbook(
-                "start-gateload.yml",
-                extra_vars={},
-            )
-            assert status == 0, "Could not start gateload"
-
-        elif use_loadgenerator == '--use-sgload':
-            # Build sgload
-            print ">>> Building sgload"
-            status = ansible_runner.run_ansible_playbook(
-                "build-sgload.yml",
-                extra_vars={},
-            )
-            assert status == 0, "Could not build sgload"
-
-            # Generate sgload config
-            print ">>> Generate sgload configs"
-            if gen_sgload_config:
-                generate_sgload_configs.main(
-                    number_pullers,
-                    number_pushers,
-                    test_run_id,
-                    doc_size,
-                    runtime_ms,
-                    rampup_interval_ms
-                )
-
-            # Start sgload
-            print ">>> Starting sgload with {0} pullers and {1} pushers".format(number_pullers, number_pushers)
-            status = ansible_runner.run_ansible_playbook(
-                "start-sgload.yml",
-                extra_vars={},
-            )
-            assert status == 0, "Could not start sgload"
+        # Start gateload
+        print ">>> Starting gateload with {0} pullers and {1} pushers".format(number_pullers, number_pushers)
+        status = ansible_runner.run_ansible_playbook(
+            "start-gateload.yml",
+            extra_vars={},
+        )
+        assert status == 0, "Could not start gateload"
 
     else:
         print "Using Gatling"
@@ -235,7 +206,7 @@ if __name__ == "__main__":
     run_perf_test(
         number_pullers=opts.number_pullers,
         number_pushers=opts.number_pushers,
-        use_loadgenerator=opts.use_gateload,
+        use_gateload=opts.use_gateload,
         gen_gateload_config=opts.gen_gateload_config,
         test_id=opts.test_id,
         sync_gateway_config_path=opts.sync_gateway_config_path,
