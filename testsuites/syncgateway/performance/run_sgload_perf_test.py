@@ -13,8 +13,10 @@ from keywords.exceptions import ProvisioningError
 from libraries.utilities.provisioning_config_parser import hosts_for_tag
 
 from keywords.utils import log_info
-from libraries.utilities.log_expvars import wait_for_endpoints_alive_or_raise
+from keywords.utils import log_error
 
+import concurrent.futures
+import argparse
 
 def build_sgload(ansible_runner):
 
@@ -25,44 +27,41 @@ def build_sgload(ansible_runner):
     if status != 0:
         raise ProvisioningError("Failed to build sgload")
 
-
-def start_sgload(lgs_hosts):
-    for lgs_host in lgs_hosts:
-
-        ssh = paramiko.SSHClient()
-        ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        log_info("SSH connection to {}".format(lgs_host))
-        ssh.connect(lgs_host, username="vagrant") # TODO!! get this from ansible.cfg
-        stdin, stdout, stderr = ssh.exec_command("sgload")
-        log_info("stdout: {}".format(stdout.read()))
-        log_info("stderr: {}".format(stderr.read()))
-
-
-def wait_for_endpoints_dead(endpoints, num_attempts=1000, num_secs_between_attepts=5):
+def run_sgload_on_loadgenerators(lgs_hosts, sgload_arg_list):
     """
-    Wait for the given endpoints to be down
+    This method blocks until sgload completes execution on all of the hosts
+    specified in lgs_hosts
     """
-    for i in range(num_attempts):
-        endpoints_down = {}
-        for endpoint in endpoints:
-            endpoint_url = endpoint
-            if not endpoint_url.startswith("http"):
-                endpoint_url = "http://{}".format(endpoint_url)
+    with concurrent.futures.ThreadPoolExecutor(max_workers=20) as executor:
+        for lgs_host in lgs_hosts:
+            executor.submit(execute_sgload, lgs_host, sgload_arg_list)
 
-            try:
-                log_info("Checking if endpoint is down: {}".format(endpoint_url))
-                requests.get(endpoint_url)
-            except Exception as e:
-                endpoints_down[endpoint_url] = True
-                log_info("Endpoint is down. Got exception: {}".format(e))
+def execute_sgload(lgs_host, sgload_arg_list):
 
-        if len(endpoints_down) == len(endpoints):
-            return
+    # convert from list -> string
+    # eg, ["--createreaders", "--numreaders", "100"] -> "--createreaders --numreaders 100"
+    sgload_args_str = " ".join(sgload_arg_list)
 
-        time.sleep(num_secs_between_attepts)
+    # Create SSH client
+    ssh = paramiko.SSHClient()
+    ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 
-    raise Exception("Give up waiting for endpoints to go down after {} attempts".format(num_attempts))
+    # Connect SSH client to remote machine
+    log_info("SSH connection to {}".format(lgs_host))
+    ssh.connect(lgs_host, username="vagrant")  # TODO!! get this from ansible.cfg
 
+    # Build sgload command to pass to ssh client
+    # eg, "sgload --createreaders --numreaders 100"
+    command = "sgload {}".format(sgload_args_str)
+
+    # Run comamnd on remote machine
+    stdin, stdout, stderr = ssh.exec_command(command)
+
+    # Print out output to console
+    log_info("{}".format(stdout.read()))
+    log_error("{}".format(stderr.read()))
+
+    log_info("execute_sgload done.")
 
 def get_load_generators_hosts(cluster_config):
     # Get gateload ips from ansible inventory
@@ -70,11 +69,14 @@ def get_load_generators_hosts(cluster_config):
     lgs = [lg["ansible_host"] for lg in lgs_hosts]
     return lgs
 
-def get_load_generators_expvar_urls(cluster_config):
-    lgs = get_load_generators_hosts(cluster_config)
-    return [lg + ":9876/debug/vars" for lg in lgs]
-
 if __name__ == "__main__":
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--skip-build', action='store_true')
+    args = parser.parse_known_args()
+    known_args, sgload_arg_list = args  # unroll this tuple into named args
+    log_info("known_args: {}".format(known_args))
+    log_info("sgload_args: {}".format(sgload_arg_list))
 
     try:
         main_cluster_config = os.environ["CLUSTER_CONFIG"]
@@ -86,15 +88,16 @@ if __name__ == "__main__":
     main_ansible_runner = AnsibleRunner(main_cluster_config)
 
     # build_sgload (ansible)
-    # build_sgload(main_ansible_runner)
+    if not known_args.skip_build:
+        build_sgload(main_ansible_runner)
 
     # call start-sgload.yml (ansible) -- just hardcode params in start-sgload.yml
-    main_lgs_hosts = get_load_generators_hosts(main_cluster_config)
-    start_sgload(main_lgs_hosts)
+    load_generator_hostnames = get_load_generators_hosts(main_cluster_config)
+    run_sgload_on_loadgenerators(
+        load_generator_hostnames,
+        sgload_arg_list
+    )
 
-    # polling loop until can connect to expvars
-    lgs_expvar_endpoints = get_load_generators_expvar_urls(main_cluster_config)
-    wait_for_endpoints_alive_or_raise(lgs_expvar_endpoints, num_attempts=5)
+    log_info("Finished")
 
-    # polling loop until no longer listening on expvars port
-    wait_for_endpoints_dead(lgs_expvar_endpoints)
+
