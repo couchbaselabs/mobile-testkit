@@ -7,6 +7,7 @@ import sys
 import os
 import paramiko
 import traceback
+import random
 
 from provision.ansible_runner import AnsibleRunner
 from keywords.exceptions import ProvisioningError
@@ -102,13 +103,30 @@ def add_sync_gateway_url(cluster_config, sgload_arg_list):
     """
     Add ['--sg-url', 'http://..'] to the list of args that will be passed to sgload
     """
-
     sg_hosts = get_sync_gateways_hosts(cluster_config)
     if len(sg_hosts) == 0:
         raise Exception("Did not find any SG hosts")
     sgload_arg_list.append("--sg-url")
     sgload_arg_list.append("http://{}:4984/db/".format(sg_hosts[0]))  ## TODO: don't hardcode port or DB name
     return sgload_arg_list
+
+def get_lg2sg_map(lg_hosts, sg_hosts):
+    """
+    Assign load generators to sync gateways and return a map
+    with the assignments where key=lg, val=sg:
+
+    {'192.168.33.13': '192.168.33.11'}
+    """
+
+    lg2sgmap = {}
+    for lg_host in lg_hosts:
+        r = random.Random()
+        highest_sg_index = len(sg_hosts) - 1
+        sg_index = r.randint(0, highest_sg_index)
+        sg_host = sg_hosts[sg_index]
+        lg2sgmap[lg_host] = sg_host
+    return lg2sgmap
+
 
 if __name__ == "__main__":
 
@@ -136,10 +154,16 @@ if __name__ == "__main__":
     if not known_args.skip_build_sgload:
         build_sgload(main_ansible_runner)
 
-    # call start-sgload.yml (ansible) -- just hardcode params in start-sgload.yml
-    load_generator_hostnames = get_load_generators_hosts(main_cluster_config)
+    # get load generator and sg hostnames
+    lg_hosts = get_load_generators_hosts(main_cluster_config)
+    sg_hosts = get_sync_gateways_hosts(main_cluster_config)
+
+    # Get a map from load generator hostnames to sync gateway hostnames
+    # eg, {'192.168.33.13': '192.168.33.11'} key=lg, val=sg
+    lg2sg = get_lg2sg_map(lg_hosts, sg_hosts)
+
     run_sgload_on_loadgenerators(
-        load_generator_hostnames,
+        lg_hosts,
         sgload_arg_list
     )
 
