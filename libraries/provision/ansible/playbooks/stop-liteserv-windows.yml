@@ -1,0 +1,17 @@
+- name: Windows - Stop LiteServ
+  hosts: windows
+  vars:
+    binary_path:
+    log_full_path:
+
+  tasks:
+    - name: Stop LiteServ
+      win_nssm:
+        name: LiteServ
+        application: C:\Users\{{ ansible_user }}\Desktop\LiteServ\{{ binary_path }}
+        state: stopped
+
+    - debug: msg="Copying logs to {{ log_full_path }}"
+
+    - name: Fetch logs
+      fetch: src=C:\Users\{{ ansible_user }}\Desktop\LiteServ\LiteServ.log dest={{ log_full_path }}.log flat=yes

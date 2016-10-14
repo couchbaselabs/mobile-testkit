@@ -21,6 +21,8 @@ from utils import log_info
 from utils import log_r
 
 from exceptions import LiteServError
+from exceptions import ProvisioningError
+from libraries.provision.ansible_runner import AnsibleRunner
 
 
 def version_and_build(full_version):
@@ -38,7 +40,7 @@ class LiteServ:
     def verify_platform(self, platform):
         """Verify that we are installing a supported platform"""
 
-        if platform not in ["macosx", "android", "net", "ios"]:
+        if platform not in ["macosx", "android", "net", "net-win", "ios"]:
             raise LiteServError("Unsupported platform: {}".format(platform))
 
     def verify_storage_engine(self, storage_engine):
@@ -62,7 +64,7 @@ class LiteServ:
                     package_name = "couchbase-lite-android-liteserv-SQLite-{}-debug.apk".format(version_build)
                 else:
                     package_name = "couchbase-lite-android-liteserv-SQLCipher-ForestDB-Encryption-{}-debug.apk".format(version_build)
-        elif platform == "net":
+        elif platform == "net" or platform == "net-win":
             package_name = "LiteServ.zip"
 
         elif platform == "ios":
@@ -90,7 +92,7 @@ class LiteServ:
                     expected_binary = "couchbase-lite-android-liteserv-SQLite-{}-debug.apk".format(version_build)
                 else:
                     expected_binary = "couchbase-lite-android-liteserv-SQLCipher-ForestDB-Encryption-{}-debug.apk".format(version_build)
-        elif platform == "net":
+        elif platform == "net" or platform == "net-win":
             expected_binary = "couchbase-lite-net-{}-liteserv/LiteServ.exe".format(version_build)
         elif platform == "ios":
             expected_binary = "couchbase-lite-ios-liteserv-{}.app".format(version_build)
@@ -113,7 +115,7 @@ class LiteServ:
                 url = "{}/couchbase-lite-android/release/{}/{}/{}".format(LATEST_BUILDS, version, version_build, file_name)
             else:
                 url = "{}/couchbase-lite-android/{}/{}/{}".format(LATEST_BUILDS, version, version_build, file_name)
-        elif platform == "net":
+        elif platform == "net" or platform == "net-win":
             url = "{}/couchbase-lite-net/{}/{}/{}".format(LATEST_BUILDS, version, build, file_name)
         elif platform == "ios":
             # TODO: Needs to be looked at when https://github.com/couchbaselabs/liteserv-ios/issues/1 is fixed
@@ -155,7 +157,7 @@ class LiteServ:
 
         if platform != "android":
             # Unzip the package
-            if platform == "net":
+            if platform == "net" or platform == "net-win":
                 # hack to get unzip the net 'LiteServ.zip' into a folder name that has the
                 # that has more information (version, etc)
                 # http://latestbuilds.hq.couchbase.com/couchbase-lite-net/1.3.0/41/LiteServ.zip
@@ -170,13 +172,18 @@ class LiteServ:
             if platform == "macosx":
                 # Make binary executable
                 os.chmod("{}/{}/LiteServ".format(BINARY_DIR, directory_name), 0755)
+
             elif platform == "net":
+
                 # Remove x64 and x86 HACK - To get around https://github.com/couchbase/couchbase-lite-net/issues/672
                 # Need to remove once the issue is resolved
                 shutil.rmtree("{}/{}/x64".format(BINARY_DIR, directory_name))
                 shutil.rmtree("{}/{}/x86".format(BINARY_DIR, directory_name))
 
                 # Remove .zip file
+                os.remove("{}/{}".format(BINARY_DIR, file_name))
+
+            elif platform == "net-win":
                 os.remove("{}/{}".format(BINARY_DIR, file_name))
 
     def get_liteserv_binary_path(self, platform, version, storage_engine):
@@ -272,12 +279,33 @@ class LiteServ:
         ])
         log_info(output)
 
-    def install_liteserv(self, platform, version, storage_engine):
+    def install_liteserv_windows(self, version_build, storage_engine, cluster_config):
+        binary = self.get_binary("net", version_build=version_build, storage_engine=storage_engine)
+
+        # binary format: couchbase-lite-net-1.4.0-43-liteserv/LiteServ.exe
+        # We need to strip off the last part of the path to copy the directory to
+        #   the target windows machine
+        # directory_to_copy format: couchbase-lite-net-1.4.0-43-liteserv
+
+        # Construct absolute path for ansible
+        directory_to_copy = os.path.dirname(binary)
+        relative_path_with_dir = "{}/{}".format(BINARY_DIR, directory_to_copy)
+        abs_path_with_dir = os.path.abspath(relative_path_with_dir)
+
+        ansible_runner = AnsibleRunner(config=cluster_config)
+        status = ansible_runner.run_ansible_playbook("install-liteserv-windows.yml", extra_vars={
+            "directory_path": abs_path_with_dir
+        })
+        if status != 0:
+            raise ProvisioningError("Could not copy LiteServ to Windows box")
+
+    def install_liteserv(self, platform, version, storage_engine, cluster_config=None):
         """Bootstraps install of LiteServ app (Android). Noop for Desktop cmd apps (ex. Mac OSX, .NET)
 
         :param platform: LiteServ Platform to install
         :param version: LiteServ Version to install
         :param storage_engine: Storage Engine to use when running tests
+        :param cluster_config: option parameter to specify an external box to install the service on
         """
 
         log_info("Installing LiteServ ({}, {}, {})".format(platform, version, storage_engine))
@@ -286,13 +314,21 @@ class LiteServ:
         self.verify_storage_engine(storage_engine)
 
         if platform == "android":
+            if cluster_config is not None:
+                raise ProvisioningError("cluster_config should not be set for Android")
             self.install_apk(version_build=version, storage_engine=storage_engine)
         elif platform == "ios":
+            if cluster_config is not None:
+                raise ProvisioningError("cluster_config should not be set for iOS")
             self.install_and_launch_ios_app(version_build=version, storage_engine=storage_engine)
+        elif platform == "net-win":
+            if cluster_config is None:
+                raise ProvisioningError("cluster_config cannot be none for .NET on Windows")
+            self.install_liteserv_windows(version_build=version, storage_engine=storage_engine, cluster_config=cluster_config)
         else:
             log_info("No install necessary. Skipping ...")
 
-    def start_liteserv(self, platform, version, host, port, storage_engine, logfile):
+    def start_liteserv(self, platform, version, host, port, storage_engine, logfile, cluster_config=None):
         """
         Starts LiteServ for a specific provided platform.
         Returns a tuple of the listserv_url and the process_handle
@@ -300,6 +336,10 @@ class LiteServ:
 
         self.verify_platform(platform)
         self.verify_storage_engine(storage_engine)
+
+        # Make sure cluster_config is only set if using LiteServ on Windows
+        if cluster_config is not None and platform != "net-win":
+            raise LiteServError("cluster_config is only necessary for LiteServ on Windows")
 
         log_info("Starting LiteServ: {} {} {}:{} using {}".format(platform, version, host, port, storage_engine))
         if platform == "macosx":
@@ -322,6 +362,15 @@ class LiteServ:
                 storage_engine=storage_engine,
                 logfile=logfile
             )
+        elif platform == "net-win":
+            # Since we are using ansible to remotely trigger start / stop, set proc_handle to None.
+            proc_handle = None
+            self.start_net_win_liteserv(
+                version=version,
+                port=port,
+                storage_engine=storage_engine,
+                cluster_config=cluster_config
+            )
         elif platform == "ios":
             proc_handle = self.start_ios_liteserv(
                 host=host,
@@ -340,7 +389,7 @@ class LiteServ:
 
         return ls_url, proc_handle
 
-    def shutdown_liteserv(self, host, platform, process_handle, logfile):
+    def shutdown_liteserv(self, host, platform, version, storage_engine, process_handle, logfile, cluster_config=None):
         """Kill a running LiteServ using the process_handle (Desktop apps)
 
         If the platform is Android, kill the activity via adb, and kill the process handle
@@ -348,17 +397,36 @@ class LiteServ:
         """
         self.verify_platform(platform)
 
+        if platform == "net-win":
+            if cluster_config is None:
+                raise ProvisioningError("'cluster_config' needs to be set for net-win platform")
+            if type(logfile) is not str:
+                raise ProvisioningError("'logfile' should be a string for net-win")
+        else:
+            if cluster_config is not None:
+                raise ProvisioningError("'cluster_config' should only be set for win-net platform")
+            if type(logfile) is not file:
+                raise ProvisioningError("'logfile' should be a file")
+
         log_info("Shutting down LiteServ ({}) and closing {}".format(platform, logfile))
 
         if platform == "android":
             self.stop_activity()
         elif platform == "ios":
             self.stop_ios_liteserv(host)
+        elif platform == "net-win":
+            self.stop_net_win_liteserv(
+                cluster_config,
+                version=version,
+                storage_engine=storage_engine,
+                log_file_name=logfile
+            )
 
-        logfile.flush()
-        logfile.close()
-        process_handle.kill()
-        process_handle.wait()
+        if platform != "net-win":
+            logfile.flush()
+            logfile.close()
+            process_handle.kill()
+            process_handle.wait()
 
     def start_android_liteserv(self, host, port, storage_engine, logfile):
         """Starts adb logcat capture and launches an installed LiteServ activity
@@ -489,11 +557,75 @@ class LiteServ:
 
         if storage_engine == "SQLCipher" or storage_engine == "ForestDB+Encryption":
             logging.info("Using Encryption ...")
-            db_name_passwords = self.build_name_passwords_for_registered_dbs(platform="macosx")
+            db_name_passwords = self.build_name_passwords_for_registered_dbs(platform="net")
             process_args.extend(db_name_passwords)
 
         p = subprocess.Popen(args=process_args, stdout=logfile)
         return p
+
+    def start_net_win_liteserv(self, version, port, storage_engine, cluster_config):
+        """
+        Starts a .NET listener on a remote windows machine via ansible.
+        """
+
+        binary_path = self.get_binary("net-win", version_build=version, storage_engine=storage_engine)
+
+        log_info("Staring {} on windows machine ...".format(binary_path))
+
+        process_args = [
+            "--port", port,
+            "--dir", "."
+        ]
+
+        if storage_engine == "ForestDB" or storage_engine == "ForestDB+Encryption":
+            process_args.append("--storage")
+            process_args.append("ForestDB")
+        else:
+            process_args.append("--storage")
+            process_args.append("SQLite")
+
+        if storage_engine == "SQLCipher" or storage_engine == "ForestDB+Encryption":
+            logging.info("Using Encryption ...")
+            db_name_passwords = self.build_name_passwords_for_registered_dbs(platform="net")
+            process_args.extend(db_name_passwords)
+
+        joined_args = " ".join(process_args)
+        log_info("Starting LiteServ with: {}".format(joined_args))
+
+        ansible_runner = AnsibleRunner(config=cluster_config)
+        status = ansible_runner.run_ansible_playbook(
+            "start-liteserv-windows.yml",
+            extra_vars={
+                "binary_path": binary_path,
+                "launch_args": joined_args
+            }
+        )
+        if status != 0:
+            raise LiteServError("Could not start Liteserv")
+
+        return None
+
+    def stop_net_win_liteserv(self, cluster_config, version, storage_engine, log_file_name):
+        """
+        Stops a .NET listener on a remote windows machine via ansible and pulls logs.
+        """
+
+        binary_path = self.get_binary("net-win", version_build=version, storage_engine=storage_engine)
+        log_full_path = "{}/{}".format(os.getcwd(), log_file_name)
+
+        log_info("Stoping {} on windows maching ...".format(binary_path))
+        log_info("Pulling logs to {} ...".format(log_full_path))
+
+        ansible_runner = AnsibleRunner(config=cluster_config)
+        status = ansible_runner.run_ansible_playbook(
+            "stop-liteserv-windows.yml",
+            extra_vars={
+                "binary_path": binary_path,
+                "log_full_path": log_full_path
+            }
+        )
+        if status != 0:
+            raise LiteServError("Could not start Liteserv")
 
     def stop_activity(self):
         # Stop LiteServ Activity
@@ -539,14 +671,17 @@ class LiteServ:
         resp_json = resp.json()
         is_macosx = False
         is_net = False
+        is_net_win = False
         is_android = False
         try:
             # Mac OSX
             lite_version = resp_json["vendor"]["version"]
             if resp_json["vendor"]["name"] == "Couchbase Lite (Objective-C)":
                 is_macosx = True
-            elif resp_json["vendor"]["name"] == "Couchbase Lite (C#)":
+            elif resp_json["vendor"]["name"] == "Couchbase Lite (C#)" and resp_json["vendor"]["version"].startswith(".NET OS X"):
                 is_net = True
+            elif resp_json["vendor"]["name"] == "Couchbase Lite (C#)" and resp_json["vendor"]["version"].startswith(".NET Microsoft Windows"):
+                is_net_win = True
         except KeyError:
             # Android
             lite_version = resp_json["version"]
@@ -561,7 +696,10 @@ class LiteServ:
                 raise LiteServError("Expected android to be running on port. Other platform detected")
         elif platform == "net":
             if not is_net:
-                raise LiteServError("Expected android to be running on port. Other platform detected")
+                raise LiteServError("Expected net to be running on port. Other platform detected")
+        elif platform == "net-win":
+            if not is_net_win:
+                raise LiteServError("Expected net-win to be running on port. Other platform detected")
         elif platform == "ios":
             raise LiteServError("https://github.com/couchbaselabs/liteserv-ios/issues/1")
 
@@ -584,6 +722,15 @@ class LiteServ:
             running_version_parts = re.split("[ /-]", lite_version)
             version = running_version_parts[5]
             build = int(running_version_parts[6].strip("build"))
+            running_version_composed = "{}-{}".format(version, build)
+            if version_build != running_version_composed:
+                raise LiteServError("Expected version does not match actual version: Expected={}  Actual={}".format(version_build, running_version_composed))
+        elif is_net_win:
+            # running_version_parts format:
+            #  ['.NET', 'Microsoft', 'Windows', '10', 'Enterprise', 'x64', '1.4.0', 'build0043', '5cfe25b']
+            running_version_parts = re.split("[ /-]", lite_version)
+            version = running_version_parts[6]
+            build = int(running_version_parts[7].strip("build"))
             running_version_composed = "{}-{}".format(version, build)
             if version_build != running_version_composed:
                 raise LiteServError("Expected version does not match actual version: Expected={}  Actual={}".format(version_build, running_version_composed))

@@ -98,6 +98,10 @@ def setup_p2p_test(request):
     ls.verify_liteserv_not_running(host=liteserv_one_host, port=liteserv_one_port)
     ls.verify_liteserv_not_running(host=liteserv_two_host, port=liteserv_two_port)
 
+    ls_cluster_target = None
+    if liteserv_one_platform == "net-win" or liteserv_two_platform == "net-win":
+        ls_cluster_target = "resources/cluster_configs/windows"
+
     print("Starting LiteServ One ...")
     ls_logging_one = open("{}/logs/{}-ls1-{}-{}.txt".format(RESULTS_DIR, datetime.datetime.now(), liteserv_one_platform, test_name), "w")
     ls_url_one, ls_handle_one = ls.start_liteserv(
@@ -106,7 +110,8 @@ def setup_p2p_test(request):
         host=liteserv_one_host,
         port=liteserv_one_port,
         storage_engine=liteserv_one_storage_engine,
-        logfile=ls_logging_one
+        logfile=ls_logging_one,
+        cluster_config=ls_cluster_target
     )
 
     print("Starting LiteServ Two ...")
@@ -117,7 +122,8 @@ def setup_p2p_test(request):
         host=liteserv_two_host,
         port=liteserv_two_port,
         storage_engine=liteserv_two_storage_engine,
-        logfile=ls_logging_two
+        logfile=ls_logging_two,
+        cluster_config=ls_cluster_target
     )
 
     # Yield values to test case via fixture argument
@@ -129,8 +135,21 @@ def setup_p2p_test(request):
     client.delete_databases(ls_url_one)
     client.delete_databases(ls_url_two)
 
-    ls.shutdown_liteserv(host=liteserv_one_host, platform=liteserv_one_platform, process_handle=ls_handle_one, logfile=ls_logging_one)
-    ls.shutdown_liteserv(host=liteserv_two_host, platform=liteserv_two_platform, process_handle=ls_handle_two, logfile=ls_logging_two)
+    ls.shutdown_liteserv(host=liteserv_one_host,
+                         platform=liteserv_one_platform,
+                         version=liteserv_one_version,
+                         storage_engine=liteserv_one_storage_engine,
+                         process_handle=ls_handle_one,
+                         logfile=ls_logging_one,
+                         cluster_config=ls_cluster_target)
+
+    ls.shutdown_liteserv(host=liteserv_two_host,
+                         platform=liteserv_two_platform,
+                         version=liteserv_two_version,
+                         storage_engine=liteserv_two_storage_engine,
+                         process_handle=ls_handle_two,
+                         logfile=ls_logging_two,
+                         cluster_config=ls_cluster_target)
 
     # Verify LiteServ is killed
     ls.verify_liteserv_not_running(host=liteserv_one_host, port=liteserv_one_port)

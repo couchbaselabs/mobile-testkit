@@ -38,11 +38,15 @@ pytest-sugar==0.7.1
 pytest-timeout==1.0.0
 python-dateutil==2.5.1
 python-vagrant==0.5.14
+python-ntlm3==1.0.2
+pywinrm==0.2.1
 PyYAML==3.11
 requests==2.9.1
+requests-ntlm==0.3.0
 rsa==3.3
 s3transfer==0.0.1
 six==1.10.0
 termcolor==1.1.0
 troposphere==1.5.0
 wrapt==1.10.8
+xmltodict==0.10.2
