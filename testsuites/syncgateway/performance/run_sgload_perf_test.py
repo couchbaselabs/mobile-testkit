@@ -6,6 +6,7 @@ import time
 import sys
 import os
 import paramiko
+import traceback
 
 from provision.ansible_runner import AnsibleRunner
 from keywords.exceptions import ProvisioningError
@@ -14,6 +15,8 @@ from libraries.utilities.provisioning_config_parser import hosts_for_tag
 
 from keywords.utils import log_info
 from keywords.utils import log_error
+
+from ansible import constants
 
 import concurrent.futures
 import argparse
@@ -32,37 +35,52 @@ def run_sgload_on_loadgenerators(lgs_hosts, sgload_arg_list):
     This method blocks until sgload completes execution on all of the hosts
     specified in lgs_hosts
     """
+    futures = []
     with concurrent.futures.ThreadPoolExecutor(max_workers=20) as executor:
         for lgs_host in lgs_hosts:
-            executor.submit(execute_sgload, lgs_host, sgload_arg_list)
+            future = executor.submit(execute_sgload, lgs_host, sgload_arg_list)
+            futures.append(future)
+
+    for future in futures:
+        if future.exception() is not None:
+            log_error("Exception running run_sgload_on_loadgenerators: {}".format(future.exception()))
+            raise future.exception()
 
 def execute_sgload(lgs_host, sgload_arg_list):
 
-    # convert from list -> string
-    # eg, ["--createreaders", "--numreaders", "100"] -> "--createreaders --numreaders 100"
-    sgload_args_str = " ".join(sgload_arg_list)
+    try:
 
-    # Create SSH client
-    ssh = paramiko.SSHClient()
-    ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        # convert from list -> string
+        # eg, ["--createreaders", "--numreaders", "100"] -> "--createreaders --numreaders 100"
+        sgload_args_str = " ".join(sgload_arg_list)
 
-    # Connect SSH client to remote machine
-    log_info("SSH connection to {}".format(lgs_host))
-    ssh.connect(lgs_host, username="vagrant")  # TODO!! get this from ansible.cfg
+        # Create SSH client
+        ssh = paramiko.SSHClient()
+        ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 
-    # Build sgload command to pass to ssh client
-    # eg, "sgload --createreaders --numreaders 100"
-    log_info("sgload {}".format(sgload_args_str))
-    command = "sgload {}".format(sgload_args_str)
+        # Connect SSH client to remote machine
+        log_info("SSH connection to {}".format(lgs_host))
+        ssh.connect(lgs_host, username=constants.DEFAULT_REMOTE_USER)  # TODO!! get this from ansible.cfg
 
-    # Run comamnd on remote machine
-    stdin, stdout, stderr = ssh.exec_command(command)
+        # Build sgload command to pass to ssh client
+        # eg, "sgload --createreaders --numreaders 100"
+        log_info("sgload {}".format(sgload_args_str))
+        command = "sgload {}".format(sgload_args_str)
 
-    # Print out output to console
-    log_info("{}".format(stdout.read()))
-    log_error("{}".format(stderr.read()))
+        # Run comamnd on remote machine
+        stdin, stdout, stderr = ssh.exec_command(command)
 
-    log_info("execute_sgload done.")
+        # Print out output to console
+        log_info("{}".format(stdout.read()))
+        log_error("{}".format(stderr.read()))
+
+        log_info("execute_sgload done.")
+
+    except Exception as e:
+        log_error("Exception calling execute_sgload: {}".format(e))
+        log_error(traceback.format_exc())
+        raise e
+
 
 def get_load_generators_hosts(cluster_config):
     # Get load generator ips from ansible inventory
