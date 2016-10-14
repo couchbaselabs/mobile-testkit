@@ -31,7 +31,7 @@ def version_and_build(full_version):
     return version_parts[0], version_parts[1]
 
 
-class LiteServ:
+class LiteServOld:
 
     def __init__(self):
         self._session = Session()

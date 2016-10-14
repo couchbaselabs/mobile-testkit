@@ -9,7 +9,7 @@ from keywords.utils import log_info
 from keywords.constants import SYNC_GATEWAY_CONFIGS
 
 from keywords.constants import RESULTS_DIR
-from keywords.LiteServ import LiteServ
+from keywords.LiteServFactory import LiteServFactory
 from keywords.MobileRestClient import MobileRestClient
 from keywords.ClusterKeywords import ClusterKeywords
 from keywords.SyncGateway import SyncGateway
@@ -39,32 +39,33 @@ def setup_client_syncgateway_suite(request):
 
     liteserv_platform = request.config.getoption("--liteserv-platform")
     liteserv_version = request.config.getoption("--liteserv-version")
+    liteserv_host = request.config.getoption("--liteserv-host")
+    liteserv_port = request.config.getoption("--liteserv-port")
     liteserv_storage_engine = request.config.getoption("--liteserv-storage-engine")
 
     sync_gateway_version = request.config.getoption("--sync-gateway-version")
 
-    ls = LiteServ()
+    liteserv = LiteServFactory.create(platform=liteserv_platform,
+                                      version_build=liteserv_version,
+                                      host=liteserv_host,
+                                      port=liteserv_port,
+                                      storage_engine=liteserv_storage_engine)
 
-    log_info("Downloading LiteServ One ...")
+    log_info("Downloading LiteServ ...")
 
     # Download LiteServ One
-    ls.download_liteserv(
-        platform=liteserv_platform,
-        version=liteserv_version,
-        storage_engine=liteserv_storage_engine
-    )
+    liteserv.download()
+
+    # Install LiteServ
+    liteserv.install()
+
+    # ls_cluster_target = None
+    # if liteserv_platform == "net-win":
+    #     ls_cluster_target = "resources/cluster_configs/windows"
 
     ls_cluster_target = None
     if liteserv_platform == "net-win":
         ls_cluster_target = "resources/cluster_configs/windows"
-
-    # Install LiteServ
-    ls.install_liteserv(
-        platform=liteserv_platform,
-        version=liteserv_version,
-        storage_engine=liteserv_storage_engine,
-        cluster_config=ls_cluster_target
-    )
 
     cluster_helper = ClusterKeywords()
     cluster_helper.set_cluster_config("1sg")

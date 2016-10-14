@@ -1,0 +1,139 @@
+import os
+import subprocess
+import time
+from zipfile import ZipFile
+
+import requests
+from requests.exceptions import ConnectionError
+
+from keywords.LiteServBase import LiteServBase
+from keywords.constants import LATEST_BUILDS
+from keywords.constants import BINARY_DIR
+from keywords.constants import RESULTS_DIR
+from keywords.constants import MAX_RETRIES
+from keywords.constants import REGISTERED_CLIENT_DBS
+from keywords.exceptions import LiteServError
+from keywords.utils import version_and_build
+from keywords.utils import log_info
+
+
+class LiteServMacOSX(LiteServBase):
+
+    def download(self):
+        # TODO: Check if already installed
+        # Download LiteServ Package
+
+        package_name = "couchbase-lite-macosx-enterprise_{}.zip".format(self.version_build)
+
+        version, build = version_and_build(self.version_build)
+
+        if version == "1.2.0":
+            package_url = "{}/couchbase-lite-ios/release/{}/macosx/{}/{}".format(LATEST_BUILDS, version, self.version_build, package_name)
+        else:
+            package_url = "{}/couchbase-lite-ios/{}/macosx/{}/{}".format(LATEST_BUILDS, version, self.version_build, package_name)
+
+        # Download package to deps/binaries
+        log_info("Downloading: {}".format(package_url))
+        resp = requests.get(package_url)
+        resp.raise_for_status()
+        with open("{}/{}".format(BINARY_DIR, package_name), "wb") as f:
+            f.write(resp.content)
+
+        # Unzip package
+        directory_name = package_name.replace(".zip", "")
+        with ZipFile("{}/{}".format(BINARY_DIR, package_name)) as zip_f:
+            zip_f.extractall("{}/{}".format(BINARY_DIR, directory_name))
+
+        # Make binary executable
+        binary_path = "{}/{}/LiteServ".format(BINARY_DIR, directory_name)
+        os.chmod(binary_path, 0755)
+        log_info("LiteServ: {}".format(binary_path))
+
+    def install(self):
+        log_info("No install needed for macosx")
+        pass
+
+    def start(self, logfile=None):
+
+        self._verify_not_running()
+
+        binary_path = "{}/couchbase-lite-macosx-enterprise_{}/LiteServ".format(BINARY_DIR, self.version_build)
+        log_info("Launching: {}".format(binary_path))
+
+        process_args = [
+            binary_path,
+            "-Log", "YES",
+            "-LogSync", "YES",
+            "-LogSyncVerbose", "YES",
+            "-LogRouter", "YES",
+            "-LogRemoteRequest", "YES",
+            "--port", str(self.port),
+            "--dir", "{}/dbs/macosx/".format(RESULTS_DIR)
+        ]
+
+        if self.storage_engine == "ForestDB" or self.storage_engine == "ForestDB+Encryption":
+            process_args.append("--storage")
+            process_args.append("ForestDB")
+        else:
+            process_args.append("--storage")
+            process_args.append("SQLite")
+
+        if self.storage_engine == "SQLCipher" or self.storage_engine == "ForestDB+Encryption":
+            log_info("Using Encryption ...")
+
+            db_flags = []
+            for db_name in REGISTERED_CLIENT_DBS:
+                db_flags.append("--dbpassword")
+                db_flags.append("{}=pass".format(db_name))
+            process_args.extend(db_flags)
+
+        log_info("Launching {} with args: {}".format(binary_path, process_args))
+
+        # Launch LiteServ
+        self.process = subprocess.Popen(args=process_args, stderr=logfile)
+
+        # Verify Expected version is running
+        self._verify_launched()
+
+        url = "http://{}:{}".format(self.host, self.port)
+        log_info("LiteServ running on: {}".format(url))
+        return url
+
+    def _verify_launched(self):
+        url = "http://{}:{}".format(self.host, self.port)
+        count = 0
+        while count < MAX_RETRIES:
+            try:
+                resp = requests.get(url)
+                # If request does not throw, exit retry loop
+                break
+            except ConnectionError as ce:
+                log_info("LiteServ may not be launched (Retrying): {}".format(ce))
+                time.sleep(1)
+                count += 1
+
+        if count == MAX_RETRIES:
+            raise LiteServError("Could not connect to LiteServ")
+
+        resp_obj = resp.json()
+        log_info(resp_obj)
+
+        if resp_obj["vendor"]["name"] != "Couchbase Lite (Objective-C)":
+            raise LiteServError("Unexpected LiteServ platform running!")
+
+        version, build = version_and_build(self.version_build)
+        expected_version = "{} (build {})".format(version, build)
+        running_version = resp_obj["vendor"]["version"]
+
+        if expected_version != running_version:
+            raise LiteServError("Expected version: {} does not match running version: {}".format(expected_version, running_version))
+
+    def stop(self, logfile):
+        log_info("Killing LiteServ: http://{}:{}".format(self.host, self.port))
+
+        logfile.flush()
+        logfile.close()
+        self.process.kill()
+        self.process.wait()
+
+        self._verify_not_running()
