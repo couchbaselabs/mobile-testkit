@@ -150,6 +150,11 @@ if __name__ == "__main__":
     print("Running perf test against cluster: {}".format(main_cluster_config))
     main_ansible_runner = AnsibleRunner(main_cluster_config)
 
+    # Install + configure telegraf
+    status = main_ansible_runner.run_ansible_playbook("install-telegraf.yml")
+    if status != 0:
+        raise ProvisioningError("Failed to install telegraf")
+
     # build_sgload (ansible)
     if not known_args.skip_build_sgload:
         build_sgload(main_ansible_runner)

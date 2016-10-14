@@ -11,6 +11,8 @@ from provision.ansible_runner import AnsibleRunner
 
 import generate_gateload_configs
 
+from keywords.exceptions import ProvisioningError
+
 from libraries.utilities.fetch_machine_stats import fetch_machine_stats
 from libraries.utilities.log_expvars import log_expvars
 from keywords.Logging import fetch_sync_gateway_logs
@@ -28,6 +30,11 @@ def run_perf_test(number_pullers, number_pushers, use_gateload, gen_gateload_con
 
     print("Running perf test against cluster: {}".format(cluster_config))
     ansible_runner = AnsibleRunner(cluster_config)
+
+    # Install + configure telegraf
+    status = ansible_runner.run_ansible_playbook("install-telegraf.yml")
+    if status != 0:
+        raise ProvisioningError("Failed to install telegraf")
 
     test_run_id = "{}_{}".format(test_id, time.strftime("%Y-%m-%d-%H-%M-%S"))
 
