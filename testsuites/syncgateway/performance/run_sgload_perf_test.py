@@ -105,6 +105,7 @@ if __name__ == "__main__":
         sys.exit(1)
 
     sgload_arg_list = add_sync_gateway_url(main_cluster_config, sgload_arg_list)
+    log_info("sgload_args w/ sg url: {}".format(sgload_arg_list))
 
     print("Running perf test against cluster: {}".format(main_cluster_config))
     main_ansible_runner = AnsibleRunner(main_cluster_config)
