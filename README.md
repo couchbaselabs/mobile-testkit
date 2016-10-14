@@ -678,11 +678,10 @@ ansible_winrm_server_cert_validation=ignore
 ```
 Save as `resources/cluster_configs/windows`
 
-### IMPORTANT: Do not publish or check this in. If you do, anyone could potentially access your machine.
+### IMPORTANT: Do not publish or check this inventory file in. If you do, anyone could potentially access your machine.
 
 - Download and execute this in the windows target PowerShell (Run as Administrator)
-https://github.com/ansible/ansible/blob/devel/examples/scripts/ConfigureRemotingForAnsible.ps1
-
+[ConfigureRemotingForAnsible.ps1](https://raw.githubusercontent.com/ansible/ansible/devel/examples/scripts/ConfigureRemotingForAnsible.ps1)
 ```
 .\ConfigureRemotingForAnsible.ps1
 ```
