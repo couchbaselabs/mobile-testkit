@@ -60,7 +60,7 @@ def execute_sgload(lgs_host, sgload_arg_list):
 
         # Connect SSH client to remote machine
         log_info("SSH connection to {}".format(lgs_host))
-        ssh.connect(lgs_host, username=constants.DEFAULT_REMOTE_USER)  # TODO!! get this from ansible.cfg
+        ssh.connect(lgs_host, username=constants.DEFAULT_REMOTE_USER)
 
         # Build sgload command to pass to ssh client
         # eg, "sgload --createreaders --numreaders 100"
@@ -73,6 +73,9 @@ def execute_sgload(lgs_host, sgload_arg_list):
         # Print out output to console
         log_info("{}".format(stdout.read()))
         log_error("{}".format(stderr.read()))
+
+        # Close the connection since we're done with it
+        ssh.close()
 
         log_info("execute_sgload done.")
 
@@ -122,6 +125,7 @@ if __name__ == "__main__":
         print ("Make sure CLUSTER_CONFIG is defined and pointing to the configuration you would like to provision")
         sys.exit(1)
 
+    # TODO: this should assign sync gateways to different load generators
     sgload_arg_list = add_sync_gateway_url(main_cluster_config, sgload_arg_list)
     log_info("sgload_args w/ sg url: {}".format(sgload_arg_list))
 
