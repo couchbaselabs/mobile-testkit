@@ -52,6 +52,7 @@ def execute_sgload(lgs_host, sgload_arg_list):
 
     # Build sgload command to pass to ssh client
     # eg, "sgload --createreaders --numreaders 100"
+    log_info("sgload {}".format(sgload_args_str))
     command = "sgload {}".format(sgload_args_str)
 
     # Run comamnd on remote machine
@@ -80,7 +81,10 @@ def add_sync_gateway_url(cluster_config, sgload_arg_list):
     """
     Add ['--sg-url', 'http://..'] to the list of args that will be passed to sgload
     """
+
     sg_hosts = get_sync_gateways_hosts(cluster_config)
+    if len(sg_hosts) == 0:
+        raise Exception("Did not find any SG hosts")
     sgload_arg_list.append("--sg-url")
     sgload_arg_list.append("http://{}:4984/db/".format(sg_hosts[0]))  ## TODO: don't hardcode port or DB name
     return sgload_arg_list
