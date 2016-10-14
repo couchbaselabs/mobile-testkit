@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # This scripts attempts to setup an environment for running mobile testkit tests.
 # 1. Check that you have Python 2.7 and virtualenv installed
 # 2. Installs venv/ in this directory containing a python 2.7 interpreter
