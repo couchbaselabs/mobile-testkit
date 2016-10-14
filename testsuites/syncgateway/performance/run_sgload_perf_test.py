@@ -36,7 +36,7 @@ def run_sgload_on_loadgenerators(lgs_hosts, sgload_arg_list):
     specified in lgs_hosts
     """
     futures = []
-    with concurrent.futures.ThreadPoolExecutor(max_workers=20) as executor:
+    with concurrent.futures.ProcessPoolExecutor(max_workers=20) as executor:
         for lgs_host in lgs_hosts:
             future = executor.submit(execute_sgload, lgs_host, sgload_arg_list)
             futures.append(future)
