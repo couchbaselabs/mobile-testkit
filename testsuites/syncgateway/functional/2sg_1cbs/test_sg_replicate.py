@@ -252,40 +252,40 @@ def test_sg_replicate_continuous_replication(setup_2sg_1cbs_test):
     assert_does_not_have_doc(sg2_user, doc_id_3)
 
 
-@pytest.mark.sanity
-@pytest.mark.syncgateway
-@pytest.mark.sgreplicate
-@pytest.mark.usefixtures("setup_2sg_1cbs_suite")
-def test_sg_replicate_delete_db_replication_in_progress(setup_2sg_1cbs_test):
-
-    cluster_config = setup_2sg_1cbs_test["cluster_config"]
-    log_info("Running 'test_sg_replicate_delete_db_replication_in_progress'")
-    log_info("Using cluster_config: {}".format(cluster_config))
-
-    sg1, sg2 = create_sync_gateways(
-        cluster_config=cluster_config,
-        sg_config_path=DEFAULT_CONFIG_PATH
-    )
-
-    # Kick off continuous replication
-    sg1.start_push_replication(
-        sg2.admin.admin_url,
-        DB1,
-        DB2,
-        continuous=True,
-        use_remote_source=True,
-        use_admin_url=True
-    )
-
-    # Wait until active_tasks is non empty
-    wait_until_active_tasks_non_empty(sg1)
-
-    # Delete the database
-    sg1.admin.delete_db(DB1)
-    sg2.admin.delete_db(DB2)
-
-    # Query active tasks and make sure the replication is gone
-    wait_until_active_tasks_empty(sg1)
+# @pytest.mark.sanity
+# @pytest.mark.syncgateway
+# @pytest.mark.sgreplicate
+# @pytest.mark.usefixtures("setup_2sg_1cbs_suite")
+# def test_sg_replicate_delete_db_replication_in_progress(setup_2sg_1cbs_test):
+#
+#     cluster_config = setup_2sg_1cbs_test["cluster_config"]
+#     log_info("Running 'test_sg_replicate_delete_db_replication_in_progress'")
+#     log_info("Using cluster_config: {}".format(cluster_config))
+#
+#     sg1, sg2 = create_sync_gateways(
+#         cluster_config=cluster_config,
+#         sg_config_path=DEFAULT_CONFIG_PATH
+#     )
+#
+#     # Kick off continuous replication
+#     sg1.start_push_replication(
+#         sg2.admin.admin_url,
+#         DB1,
+#         DB2,
+#         continuous=True,
+#         use_remote_source=True,
+#         use_admin_url=True
+#     )
+#
+#     # Wait until active_tasks is non empty
+#     wait_until_active_tasks_non_empty(sg1)
+#
+#     # Delete the database
+#     sg1.admin.delete_db(DB1)
+#     sg2.admin.delete_db(DB2)
+#
+#     # Query active tasks and make sure the replication is gone
+#     wait_until_active_tasks_empty(sg1)
 
 
 @pytest.mark.sanity
