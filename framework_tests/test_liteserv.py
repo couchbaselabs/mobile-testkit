@@ -35,6 +35,9 @@ def test_running_liteserv():
                                       host="localhost",
                                       port=59840,
                                       storage_engine="SQLite")
+
+    liteserv.download()
+
     logfile = open("{}/test.txt".format(TEST_DIR), "w")
     liteserv.start(logfile=logfile)
 

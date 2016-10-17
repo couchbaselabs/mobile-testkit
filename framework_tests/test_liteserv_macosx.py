@@ -2,8 +2,10 @@ import os
 
 import pytest
 import pdb
+import shutil
 
 from keywords.constants import TEST_DIR
+from keywords.constants import BINARY_DIR
 from keywords.LiteServFactory import LiteServFactory
 from keywords.MobileRestClient import MobileRestClient
 
@@ -73,14 +75,21 @@ def setup_liteserv_macosx_forestdb_encryption():
 
 
 def test_macosx_download():
-    LiteServFactory.create("macosx",
-                           version_build="1.3.1-6",
-                           host="localhost",
-                           port=59840,
-                           storage_engine="SQLite")
+
+    shutil.rmtree("{}/".format(BINARY_DIR))
+    os.makedirs("{}".format(BINARY_DIR))
+
+    liteserv = LiteServFactory.create("macosx",
+                                      version_build="1.3.1-6",
+                                      host="localhost",
+                                      port=59840,
+                                      storage_engine="SQLite")
+
+    liteserv.download()
 
     assert os.path.isdir("deps/binaries/couchbase-lite-macosx-enterprise_1.3.1-6")
     assert os.path.isfile("deps/binaries/couchbase-lite-macosx-enterprise_1.3.1-6/LiteServ")
+    assert not os.path.isfile("deps/binaries/couchbase-lite-macosx-enterprise_1.3.1-6.zip")
 
 
 def test_macosx_install(setup_liteserv_macosx_sqlite):

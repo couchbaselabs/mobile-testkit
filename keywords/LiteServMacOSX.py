@@ -25,6 +25,12 @@ class LiteServMacOSX(LiteServBase):
 
         package_name = "couchbase-lite-macosx-enterprise_{}.zip".format(self.version_build)
 
+        # Skip download if packages is already downloaded
+        expected_binary = "{}/couchbase-lite-macosx-enterprise_{}/LiteServ".format(BINARY_DIR, self.version_build)
+        if os.path.isfile(expected_binary):
+            log_info("Package already downloaded: {}".format(expected_binary))
+            return
+
         version, build = version_and_build(self.version_build)
 
         if version == "1.2.0":
@@ -100,20 +106,8 @@ class LiteServMacOSX(LiteServBase):
         return url
 
     def _verify_launched(self):
-        url = "http://{}:{}".format(self.host, self.port)
-        count = 0
-        while count < MAX_RETRIES:
-            try:
-                resp = requests.get(url)
-                # If request does not throw, exit retry loop
-                break
-            except ConnectionError as ce:
-                log_info("LiteServ may not be launched (Retrying): {}".format(ce))
-                time.sleep(1)
-                count += 1
 
-        if count == MAX_RETRIES:
-            raise LiteServError("Could not connect to LiteServ")
+        resp = self._wait_until_reachable()
 
         resp_obj = resp.json()
         log_info(resp_obj)

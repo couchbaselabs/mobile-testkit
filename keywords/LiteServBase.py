@@ -1,8 +1,12 @@
+import time
+
 import requests
 from requests.exceptions import ConnectionError
 
+from keywords.constants import MAX_RETRIES
 from keywords.exceptions import LiteServError
 from keywords.utils import log_r
+from keywords.utils import log_info
 
 
 class LiteServBase(object):
@@ -37,6 +41,24 @@ class LiteServBase(object):
 
         log_r(resp)
         raise LiteServError("There should be no service running on the port")
+
+    def _wait_until_reachable(self):
+        url = "http://{}:{}".format(self.host, self.port)
+        count = 0
+        while count < MAX_RETRIES:
+            try:
+                resp = requests.get(url)
+                # If request does not throw, exit retry loop
+                break
+            except ConnectionError:
+                log_info("LiteServ may not be launched (Retrying) ...")
+                time.sleep(1)
+                count += 1
+
+        if count == MAX_RETRIES:
+            raise LiteServError("Could not connect to LiteServ")
+
+        return resp
 
     def _verify_launched(self):
         raise NotImplementedError()
