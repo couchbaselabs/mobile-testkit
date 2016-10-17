@@ -163,7 +163,7 @@ def write_config(config, pool_file):
             print("webhook ip: {}".format(local_ip))
             f.write("tf1 ansible_host={}".format(local_ip))
         except Exception as e:
-            print "Failed to find local_ip, webhook tests will fail.  Error: {}".format(e)
+            print("Failed to find local_ip, webhook tests will fail.  Error: {}".format(e))
 
         print("Generating {}.json".format(config.name))
 

@@ -18,7 +18,8 @@ def install_deps(cluster_config):
     status = ansible_runner.run_ansible_playbook("install-common-tools.yml")
     if status != 0:
         raise ProvisioningError("Failed to install dependencies")
-    
+
+
 if __name__ == "__main__":
     usage = "usage: python install_deps.py"
 
