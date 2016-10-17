@@ -31,7 +31,7 @@ def build_sgload(ansible_runner):
         raise ProvisioningError("Failed to build sgload")
 
 
-def run_sgload_on_loadgenerators(lgs_hosts, sgload_arg_list):
+def run_sgload_on_loadgenerators(lgs_hosts, sgload_arg_list, lg2sg_map):
     """
     This method blocks until sgload completes execution on all of the hosts
     specified in lgs_hosts
@@ -39,7 +39,7 @@ def run_sgload_on_loadgenerators(lgs_hosts, sgload_arg_list):
     futures = []
     with concurrent.futures.ProcessPoolExecutor(max_workers=20) as executor:
         for lgs_host in lgs_hosts:
-            future = executor.submit(execute_sgload, lgs_host, sgload_arg_list)
+            future = executor.submit(execute_sgload, lgs_host, sgload_arg_list, lg2sg_map)
             futures.append(future)
 
     for future in futures:
@@ -48,13 +48,17 @@ def run_sgload_on_loadgenerators(lgs_hosts, sgload_arg_list):
             raise future.exception()
 
 
-def execute_sgload(lgs_host, sgload_arg_list):
+def execute_sgload(lgs_host, sgload_arg_list, lg2sg_map):
 
     try:
 
+        # Update the arg list the the appropriate SG
+        sg_host = lg2sg_map[lgs_host]
+        sgload_arg_list_modified = add_sync_gateway_url(sgload_arg_list, sg_host)
+
         # convert from list -> string
         # eg, ["--createreaders", "--numreaders", "100"] -> "--createreaders --numreaders 100"
-        sgload_args_str = " ".join(sgload_arg_list)
+        sgload_args_str = " ".join(sgload_arg_list_modified)
 
         # Create SSH client
         ssh = paramiko.SSHClient()
@@ -103,16 +107,14 @@ def get_hosts_by_type(cluster_config, host_type="load_generators"):
     return lgs
 
 
-def add_sync_gateway_url(cluster_config, sgload_arg_list):
+def add_sync_gateway_url(sgload_arg_list, sg_host):
     """
     Add ['--sg-url', 'http://..'] to the list of args that will be passed to sgload
     """
-    sg_hosts = get_sync_gateways_hosts(cluster_config)
-    if len(sg_hosts) == 0:
-        raise Exception("Did not find any SG hosts")
-    sgload_arg_list.append("--sg-url")
-    sgload_arg_list.append("http://{}:4984/db/".format(sg_hosts[0]))  # TODO: don't hardcode port or DB name
-    return sgload_arg_list
+    sgload_arg_list_copy = sgload_arg_list[:]  # make copy to avoid modifying the original list
+    sgload_arg_list_copy.append("--sg-url")
+    sgload_arg_list_copy.append("http://{}:4984/db/".format(sg_host))  # TODO: don't hardcode port or DB name
+    return sgload_arg_list_copy
 
 
 def get_lg2sg_map(lg_hosts, sg_hosts):
@@ -146,8 +148,6 @@ if __name__ == "__main__":
         print ("Make sure CLUSTER_CONFIG is defined and pointing to the configuration you would like to provision")
         sys.exit(1)
 
-    sgload_arg_list_main = add_sync_gateway_url(main_cluster_config, sgload_arg_list_main)
-
     print("Running sgload perf test against cluster: {}".format(main_cluster_config))
     main_ansible_runner = AnsibleRunner(main_cluster_config)
 
@@ -170,7 +170,8 @@ if __name__ == "__main__":
 
     run_sgload_on_loadgenerators(
         lg_hosts_main,
-        sgload_arg_list_main
+        sgload_arg_list_main,
+        lg2sg
     )
 
     log_info("Finished")
