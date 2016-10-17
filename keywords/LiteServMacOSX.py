@@ -1,16 +1,13 @@
 import os
 import subprocess
-import time
 from zipfile import ZipFile
 
 import requests
-from requests.exceptions import ConnectionError
 
 from keywords.LiteServBase import LiteServBase
 from keywords.constants import LATEST_BUILDS
 from keywords.constants import BINARY_DIR
 from keywords.constants import RESULTS_DIR
-from keywords.constants import MAX_RETRIES
 from keywords.constants import REGISTERED_CLIENT_DBS
 from keywords.exceptions import LiteServError
 from keywords.utils import version_and_build
@@ -20,8 +17,11 @@ from keywords.utils import log_info
 class LiteServMacOSX(LiteServBase):
 
     def download(self):
-        # TODO: Check if already installed
-        # Download LiteServ Package
+        """
+        1. Check to see if package is downloaded already. If so, return
+        2. Download the LiteServ package from latest builds to 'deps/binaries'
+        3. Unzip the packages and make the binary executable
+        """
 
         package_name = "couchbase-lite-macosx-enterprise_{}.zip".format(self.version_build)
 
@@ -50,16 +50,32 @@ class LiteServMacOSX(LiteServBase):
         with ZipFile("{}/{}".format(BINARY_DIR, package_name)) as zip_f:
             zip_f.extractall("{}/{}".format(BINARY_DIR, directory_name))
 
+        # Remove .zip
+        os.remove("{}/{}".format(BINARY_DIR, package_name))
+
         # Make binary executable
         binary_path = "{}/{}/LiteServ".format(BINARY_DIR, directory_name)
         os.chmod(binary_path, 0755)
         log_info("LiteServ: {}".format(binary_path))
 
     def install(self):
+        """
+        Noop on Mac OSX. The LiteServ is a commandline binary
+        """
         log_info("No install needed for macosx")
         pass
 
     def start(self, logfile=None):
+        """
+        1. Starts a LiteServ with logging to provided logfile file object.
+           The running LiteServ process will be stored in the self.process property.
+        2. The method will poll on the endpoint to make sure LiteServ is available.
+        3. The expected version will be compared with the version reported by http://<host>:<port>
+        4. eturn the url of the running LiteServ
+        """
+
+        if not isinstance(logfile, file):
+            raise LiteServError("logfile must be of type 'file'")
 
         self._verify_not_running()
 
@@ -106,6 +122,9 @@ class LiteServMacOSX(LiteServBase):
         return url
 
     def _verify_launched(self):
+        """ Poll on expected http://<host>:<port> until it is reachable
+        Assert that the response contains the expected version information
+        """
 
         resp = self._wait_until_reachable()
 
@@ -123,6 +142,15 @@ class LiteServMacOSX(LiteServBase):
             raise LiteServError("Expected version: {} does not match running version: {}".format(expected_version, running_version))
 
     def stop(self, logfile):
+        """
+        1. Flush and close the logfile capturing the LiteServ output
+        2. Kill the LiteServ process
+        3. Verify that no service is running on http://<host>:<port>
+        """
+
+        if not isinstance(logfile, file):
+            raise LiteServError("logfile must be of type 'file'")
+
         log_info("Killing LiteServ: http://{}:{}".format(self.host, self.port))
 
         logfile.flush()
