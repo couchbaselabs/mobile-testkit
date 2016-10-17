@@ -18,5 +18,7 @@
     "LogRequests": false,
     "UserOffset": {{ user_offset }},
     "AuthType": "basic",
-    "Password": "password"
+    "Password": "password",
+    "StatsdEnabled":true,
+    "StatsdEndpoint":"localhost:8125"
 }
