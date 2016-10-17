@@ -126,9 +126,7 @@ class LiteServMacOSX(LiteServBase):
         Assert that the response contains the expected version information
         """
 
-        resp = self._wait_until_reachable()
-
-        resp_obj = resp.json()
+        resp_obj = self._wait_until_reachable()
         log_info(resp_obj)
 
         if resp_obj["vendor"]["name"] != "Couchbase Lite (Objective-C)":

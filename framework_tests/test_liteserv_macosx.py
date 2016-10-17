@@ -92,7 +92,7 @@ def test_macosx_download():
     assert not os.path.isfile("deps/binaries/couchbase-lite-macosx-enterprise_1.3.1-6.zip")
 
 
-def test_macosx_install(setup_liteserv_macosx_sqlite):
+def test_macosx_install():
     # No install step for macosx
     pass
 

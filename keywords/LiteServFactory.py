@@ -1,3 +1,4 @@
+from LiteServAndroid import LiteServAndroid
 from LiteServMacOSX import LiteServMacOSX
 
 
@@ -21,11 +22,11 @@ class LiteServFactory:
         LiteServFactory.validate_platform(platform)
         LiteServFactory.validate_storage_engine(storage_engine)
 
-        # if platform == "android":
-        #     return AndroidLiteServ(version, host, port, storage_engine)
+        if platform == "android":
+            return LiteServAndroid(version_build, host, port, storage_engine)
         # elif platform == "ios":
         #     return iOSLiteServ(version, host, port, storage_engine)
-        if platform == "macosx":
+        elif platform == "macosx":
             return LiteServMacOSX(version_build, host, port, storage_engine)
         # elif platform == "net-mono":
         #     return NetMonoLiteServ(version, host, port, storage_engine)

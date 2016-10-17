@@ -58,7 +58,7 @@ class LiteServBase(object):
         if count == MAX_RETRIES:
             raise LiteServError("Could not connect to LiteServ")
 
-        return resp
+        return resp.json()
 
     def _verify_launched(self):
         raise NotImplementedError()
