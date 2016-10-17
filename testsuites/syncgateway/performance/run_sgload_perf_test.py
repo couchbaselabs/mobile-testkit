@@ -1,8 +1,6 @@
 
 # This is intended to replace run_perf_test.py once gateload has been replaced by sgload
 
-import requests
-import time
 import sys
 import os
 import paramiko
@@ -22,14 +20,16 @@ from ansible import constants
 import concurrent.futures
 import argparse
 
+
 def build_sgload(ansible_runner):
 
-    status = ansible_runner.run_ansible_playbook(
+    ansible_status = ansible_runner.run_ansible_playbook(
         "build-sgload.yml",
         extra_vars={},
     )
-    if status != 0:
+    if ansible_status != 0:
         raise ProvisioningError("Failed to build sgload")
+
 
 def run_sgload_on_loadgenerators(lgs_hosts, sgload_arg_list):
     """
@@ -46,6 +46,7 @@ def run_sgload_on_loadgenerators(lgs_hosts, sgload_arg_list):
         if future.exception() is not None:
             log_error("Exception running run_sgload_on_loadgenerators: {}".format(future.exception()))
             raise future.exception()
+
 
 def execute_sgload(lgs_host, sgload_arg_list):
 
@@ -90,14 +91,17 @@ def get_load_generators_hosts(cluster_config):
     # Get load generator ips from ansible inventory
     return get_hosts_by_type(cluster_config, "load_generators")
 
+
 def get_sync_gateways_hosts(cluster_config):
     # Get sync gateway ips from ansible inventory
     return get_hosts_by_type(cluster_config, "sync_gateways")
+
 
 def get_hosts_by_type(cluster_config, host_type="load_generators"):
     lgs_hosts = hosts_for_tag(cluster_config, host_type)
     lgs = [lg["ansible_host"] for lg in lgs_hosts]
     return lgs
+
 
 def add_sync_gateway_url(cluster_config, sgload_arg_list):
     """
@@ -107,8 +111,9 @@ def add_sync_gateway_url(cluster_config, sgload_arg_list):
     if len(sg_hosts) == 0:
         raise Exception("Did not find any SG hosts")
     sgload_arg_list.append("--sg-url")
-    sgload_arg_list.append("http://{}:4984/db/".format(sg_hosts[0]))  ## TODO: don't hardcode port or DB name
+    sgload_arg_list.append("http://{}:4984/db/".format(sg_hosts[0]))  # TODO: don't hardcode port or DB name
     return sgload_arg_list
+
 
 def get_lg2sg_map(lg_hosts, sg_hosts):
     """
@@ -133,9 +138,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--skip-build-sgload', action='store_true')
     args = parser.parse_known_args()
-    known_args, sgload_arg_list = args  # unroll this tuple into named args
-    log_info("known_args: {}".format(known_args))
-    log_info("sgload_args: {}".format(sgload_arg_list))
+    known_args, sgload_arg_list_main = args  # unroll this tuple into named args
 
     try:
         main_cluster_config = os.environ["CLUSTER_CONFIG"]
@@ -143,11 +146,9 @@ if __name__ == "__main__":
         print ("Make sure CLUSTER_CONFIG is defined and pointing to the configuration you would like to provision")
         sys.exit(1)
 
-    # TODO: this should assign sync gateways to different load generators
-    sgload_arg_list = add_sync_gateway_url(main_cluster_config, sgload_arg_list)
-    log_info("sgload_args w/ sg url: {}".format(sgload_arg_list))
+    sgload_arg_list_main = add_sync_gateway_url(main_cluster_config, sgload_arg_list_main)
 
-    print("Running perf test against cluster: {}".format(main_cluster_config))
+    print("Running sgload perf test against cluster: {}".format(main_cluster_config))
     main_ansible_runner = AnsibleRunner(main_cluster_config)
 
     # Install + configure telegraf
@@ -160,18 +161,16 @@ if __name__ == "__main__":
         build_sgload(main_ansible_runner)
 
     # get load generator and sg hostnames
-    lg_hosts = get_load_generators_hosts(main_cluster_config)
-    sg_hosts = get_sync_gateways_hosts(main_cluster_config)
+    lg_hosts_main = get_load_generators_hosts(main_cluster_config)
+    sg_hosts_main = get_sync_gateways_hosts(main_cluster_config)
 
     # Get a map from load generator hostnames to sync gateway hostnames
     # eg, {'192.168.33.13': '192.168.33.11'} key=lg, val=sg
-    lg2sg = get_lg2sg_map(lg_hosts, sg_hosts)
+    lg2sg = get_lg2sg_map(lg_hosts_main, sg_hosts_main)
 
     run_sgload_on_loadgenerators(
-        lg_hosts,
-        sgload_arg_list
+        lg_hosts_main,
+        sgload_arg_list_main
     )
 
     log_info("Finished")
-
-
