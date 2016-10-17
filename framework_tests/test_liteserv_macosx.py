@@ -1,48 +1,68 @@
+import os
+
 import pytest
+
+from keywords.constants import TEST_DIR
 from keywords.LiteServFactory import LiteServFactory
-
-from keywords.exceptions import LiteServError
-
-
-def test_invalid_platform():
-
-    with pytest.raises(ValueError) as ve:
-        _ = LiteServFactory.create("ias",
-                                   version_build="1.3.1-6",
-                                   host="localhost",
-                                   port=59840,
-                                   storage_engine="SQLite")
-    ve_message = str(ve.value)
-    assert ve_message == "Unsupported 'platform': ias"
+from keywords.MobileRestClient import MobileRestClient
 
 
-def test_invalid_storage_engine():
-
-    with pytest.raises(ValueError) as ve:
-        _ = LiteServFactory.create("macosx",
-                                   version_build="1.3.1-6",
-                                   host="localhost",
-                                   port=59840,
-                                   storage_engine="SQLit")
-    ve_message = str(ve.value)
-    assert ve_message == "Unsupported 'storage_engine': SQLit"
-
-
-def test_running_liteserv():
+@pytest.fixture(scope="module")
+def setup_liteserv_macosx():
     liteserv = LiteServFactory.create("macosx",
                                       version_build="1.3.1-6",
                                       host="localhost",
                                       port=59840,
                                       storage_engine="SQLite")
-    logfile = open("test.txt", "w")
-    liteserv.start(logfile=logfile)
 
-    logfile_2 = open("test2.txt", "w")
-    with pytest.raises(LiteServError) as lse:
-        liteserv.start(logfile=logfile_2)
+    yield liteserv
 
-    ex_message = str(lse.value)
-    assert ex_message == "There should be no service running on the port"
+
+def test_macosx_download(setup_liteserv_macosx):
+    liteserv = setup_liteserv_macosx
+    liteserv.download()
+
+    assert os.path.isdir("deps/binaries/couchbase-lite-macosx-enterprise_1.3.1-6")
+    assert os.path.isfile("deps/binaries/couchbase-lite-macosx-enterprise_1.3.1-6/LiteServ")
+
+
+def test_macosx_install(setup_liteserv_macosx):
+    # No install step for macosx
+    pass
+
+
+def test_macosx_full_life_cycle(setup_liteserv_macosx):
+    liteserv = setup_liteserv_macosx
+
+    logfile = open("{}/test.txt".format(TEST_DIR), "w")
+    ls_url = liteserv.start(logfile)
+
+    client = MobileRestClient()
+    client.create_database(ls_url, "ls_db")
+    docs = client.add_docs(ls_url, db="ls_db", number=10, id_prefix="test_doc")
+    assert len(docs) == 10
+
+    client.delete_databases(ls_url)
 
     liteserv.stop(logfile)
-    logfile_2.close()
+    # TODO assert logfile
+
+
+def test_macosx_sqllite(setup_liteserv_macosx):
+    # TODO
+    pass
+
+
+def test_macosx_sqlcipher(setup_liteserv_macosx):
+    # TODO
+    pass
+
+
+def test_macosx_forestdb(setup_liteserv_macosx):
+    # TODO
+    pass
+
+
+def test_macosx_forestdb_enc(setup_liteserv_macosx):
+    # TODO
+    pass

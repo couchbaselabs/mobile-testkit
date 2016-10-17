@@ -1,5 +1,6 @@
 import pytest
 from keywords.LiteServFactory import LiteServFactory
+from keywords.constants import TEST_DIR
 
 from keywords.exceptions import LiteServError
 
@@ -34,10 +35,10 @@ def test_running_liteserv():
                                       host="localhost",
                                       port=59840,
                                       storage_engine="SQLite")
-    logfile = open("test.txt", "w")
+    logfile = open("{}/test.txt".format(TEST_DIR), "w")
     liteserv.start(logfile=logfile)
 
-    logfile_2 = open("test2.txt", "w")
+    logfile_2 = open("{}/test2.txt".format(TEST_DIR), "w")
     with pytest.raises(LiteServError) as lse:
         liteserv.start(logfile=logfile_2)
 
