@@ -73,17 +73,24 @@ class LiteServAndroid(LiteServBase):
 
     def start(self, logfile=None):
         """
-        1. Starts a LiteServ with logging to provided logfile file object.
-           The running LiteServ process will be stored in the self.process property.
+        1. Starts a LiteServ with adb logging to provided logfile file object.
+            The adb process will be stored in the self.process property
+        2. Start the Android activity with a launch dictionary
         2. The method will poll on the endpoint to make sure LiteServ is available.
         3. The expected version will be compared with the version reported by http://<host>:<port>
-        4. eturn the url of the running LiteServ
+        4. Return the url of the running LiteServ
         """
 
         if not isinstance(logfile, file):
             raise LiteServError("logfile must be of type 'file'")
 
         self._verify_not_running()
+
+        # Clear adb buffer
+        subprocess.check_call(["adb", "logcat", "-c"])
+
+        # Start redirecting adb output to the logfile
+        self.process = subprocess.Popen(args=["adb", "logcat"], stdout=logfile)
 
         log_info("Using storage engine: {}".format(self.storage_engine))
 
@@ -95,7 +102,16 @@ class LiteServAndroid(LiteServBase):
 
         if encryption_enabled:
             log_info("Encryption enabled ...")
-            db_passwords = self.build_name_passwords_for_registered_dbs("android")
+
+            # Build list of dbs used in the tests and pass them to the activity
+            # to make sure the dbs are encrypted during the tests
+            db_flags = []
+            for db_name in REGISTERED_CLIENT_DBS:
+                db_flags.append("{}:pass".format(db_name))
+            db_flags = ",".join(db_flags)
+
+            log_info("Running with db_flags: {}".format(db_flags))
+
             if self.storage_engine == "SQLCipher":
                 output = subprocess.check_output([
                     "adb", "shell", "am", "start", "-n", activity_name,
@@ -103,7 +119,7 @@ class LiteServAndroid(LiteServBase):
                     "--es", "password", "none",
                     "--ei", "listen_port", str(self.port),
                     "--es", "storage", "SQLite",
-                    "--es", "dbpassword", db_passwords
+                    "--es", "dbpassword", db_flags
                 ])
                 log_info(output)
             elif self.storage_engine == "ForestDB+Encryption":
@@ -113,7 +129,7 @@ class LiteServAndroid(LiteServBase):
                     "--es", "password", "none",
                     "--ei", "listen_port", str(self.port),
                     "--es", "storage", "ForestDB",
-                    "--es", "dbpassword", db_passwords
+                    "--es", "dbpassword", db_flags
                 ])
                 log_info(output)
         else:
@@ -144,7 +160,11 @@ class LiteServAndroid(LiteServBase):
         """
         1. Flush and close the logfile capturing the LiteServ output
         2. Kill the LiteServ activity and clear the package data
+        3. Kill the adb logcat process
         """
+
+        log_info("Stopping LiteServ: http://{}:{}".format(self.host, self.port))
+
         if not isinstance(logfile, file):
             raise LiteServError("logfile must be of type 'file'")
 
@@ -160,5 +180,10 @@ class LiteServAndroid(LiteServBase):
         log_info(output)
 
         self._verify_not_running()
+
+        logfile.flush()
+        logfile.close()
+        self.process.kill()
+        self.process.wait()
 
 

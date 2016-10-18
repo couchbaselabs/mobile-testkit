@@ -17,6 +17,8 @@ def setup_liteserv_macosx_sqlite():
                                       host="localhost",
                                       port=59840,
                                       storage_engine="SQLite")
+    liteserv.download()
+    liteserv.install()
 
     logfile = open("{}/test.txt".format(TEST_DIR), "w")
     ls_url = liteserv.start(logfile)
@@ -33,6 +35,8 @@ def setup_liteserv_macosx_sqlcipher():
                                       host="localhost",
                                       port=59840,
                                       storage_engine="SQLCipher")
+    liteserv.download()
+    liteserv.install()
 
     logfile = open("{}/test.txt".format(TEST_DIR), "w")
     ls_url = liteserv.start(logfile)
@@ -49,6 +53,8 @@ def setup_liteserv_macosx_forestdb():
                                       host="localhost",
                                       port=59840,
                                       storage_engine="ForestDB")
+    liteserv.download()
+    liteserv.install()
 
     logfile = open("{}/test.txt".format(TEST_DIR), "w")
     ls_url = liteserv.start(logfile)
@@ -65,6 +71,8 @@ def setup_liteserv_macosx_forestdb_encryption():
                                       host="localhost",
                                       port=59840,
                                       storage_engine="ForestDB+Encryption")
+    liteserv.download()
+    liteserv.install()
 
     logfile = open("{}/test.txt".format(TEST_DIR), "w")
     ls_url = liteserv.start(logfile)

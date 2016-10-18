@@ -7,6 +7,8 @@ from keywords.constants import TEST_DIR
 from keywords.constants import BINARY_DIR
 from keywords.LiteServFactory import LiteServFactory
 from keywords.MobileRestClient import MobileRestClient
+from keywords.utils import log_info
+from utilities.AndroidUtils import AndroidUtils
 
 
 @pytest.fixture(scope="function")
@@ -19,13 +21,10 @@ def setup_liteserv_android_sqlite(request):
                                       host=android_host,
                                       port=59840,
                                       storage_engine="SQLite")
+    liteserv.download()
+    liteserv.install()
 
-    logfile = open("{}/test.txt".format(TEST_DIR), "w")
-    ls_url = liteserv.start(logfile)
-
-    yield ls_url
-
-    liteserv.stop(logfile)
+    yield liteserv
 
 
 @pytest.fixture(scope="function")
@@ -38,13 +37,10 @@ def setup_liteserv_android_sqlcipher(request):
                                       host=android_host,
                                       port=59840,
                                       storage_engine="SQLCipher")
+    liteserv.download()
+    liteserv.install()
 
-    logfile = open("{}/test.txt".format(TEST_DIR), "w")
-    ls_url = liteserv.start(logfile)
-
-    yield ls_url
-
-    liteserv.stop(logfile)
+    yield liteserv
 
 
 @pytest.fixture(scope="function")
@@ -58,12 +54,10 @@ def setup_liteserv_android_forestdb(request):
                                       port=59840,
                                       storage_engine="ForestDB")
 
-    logfile = open("{}/test.txt".format(TEST_DIR), "w")
-    ls_url = liteserv.start(logfile)
+    liteserv.download()
+    liteserv.install()
 
-    yield ls_url
-
-    liteserv.stop(logfile)
+    yield liteserv
 
 
 @pytest.fixture(scope="function")
@@ -76,13 +70,10 @@ def setup_liteserv_android_forestdb_encryption(request):
                                       host=android_host,
                                       port=59840,
                                       storage_engine="ForestDB+Encryption")
+    liteserv.download()
+    liteserv.install()
 
-    logfile = open("{}/test.txt".format(TEST_DIR), "w")
-    ls_url = liteserv.start(logfile)
-
-    yield ls_url
-
-    liteserv.stop(logfile)
+    yield liteserv
 
 
 def test_android_download(request):
@@ -127,74 +118,101 @@ def test_android_full_life_cycle(setup_liteserv_android_sqlite):
 
 
 def test_android_sqlite(setup_liteserv_android_sqlite):
-    ls_url = setup_liteserv_android_sqlite
+    liteserv = setup_liteserv_android_sqlite
+    logfile = open("{}/test.txt".format(TEST_DIR), "w")
+    ls_url = liteserv.start(logfile)
 
     client = MobileRestClient()
     client.create_database(ls_url, "ls_db")
 
-    db_files = os.listdir("results/dbs/android/ls_db.cblite2")
-    assert "db.sqlite3" in db_files
-    assert "db.sqlite3-shm" in db_files
-    assert "db.sqlite3-wal" in db_files
+    liteserv.stop(logfile)
 
-    att_files = os.listdir("results/dbs/android/ls_db.cblite2/attachments")
-    assert att_files == []
+    # Look in adb logcat to see if output match platform / storage engine expectation
+    # We can't look at the database files directly to my knowledge without a rooted device
+    liteserv_output = []
+    with open("{}/test.txt".format(TEST_DIR), "r") as f:
+        lines = f.readlines()
+        for line in lines:
+            if line.startswith("I/LiteServ"):
+                line = line.strip()
+                liteserv_output.append(line)
 
-    client.delete_databases(ls_url)
-
-    assert not os.path.isdir("results/dbs/android/ls_db.cblite2/")
+    assert len(liteserv_output) == 2
+    assert liteserv_output[0].endswith("storageType=SQLite")
+    assert liteserv_output[1].endswith("dbpassword=")
 
 
 def test_android_sqlcipher(setup_liteserv_android_sqlcipher):
-    ls_url = setup_liteserv_android_sqlcipher
+    liteserv = setup_liteserv_android_sqlcipher
+    logfile = open("{}/test.txt".format(TEST_DIR), "w")
+    ls_url = liteserv.start(logfile)
 
     client = MobileRestClient()
     client.create_database(ls_url, "ls_db")
 
-    db_files = os.listdir("results/dbs/android/ls_db.cblite2")
-    assert "db.sqlite3" in db_files
-    assert "db.sqlite3-shm" in db_files
-    assert "db.sqlite3-wal" in db_files
+    liteserv.stop(logfile)
 
-    att_files = os.listdir("results/dbs/android/ls_db.cblite2/attachments")
-    assert att_files == ["_encryption"]
+    # Look in adb logcat to see if output match platform / storage engine expectation
+    # We can't look at the database files directly to my knowledge without a rooted device
+    liteserv_output = []
+    with open("{}/test.txt".format(TEST_DIR), "r") as f:
+        lines = f.readlines()
+        for line in lines:
+            if line.startswith("I/LiteServ"):
+                line = line.strip()
+                liteserv_output.append(line)
 
-    client.delete_databases(ls_url)
-
-    assert not os.path.isdir("results/dbs/android/ls_db.cblite2/")
+    assert len(liteserv_output) == 2
+    assert liteserv_output[0].endswith("storageType=SQLite")
+    assert liteserv_output[1].endswith("dbpassword=ls_db:pass,ls_db1:pass,ls_db2:pass")
 
 
 def test_android_forestdb(setup_liteserv_android_forestdb):
-    ls_url = setup_liteserv_android_forestdb
+    liteserv = setup_liteserv_android_forestdb
+    logfile = open("{}/test.txt".format(TEST_DIR), "w")
+    ls_url = liteserv.start(logfile)
 
     client = MobileRestClient()
     client.create_database(ls_url, "ls_db")
 
-    db_files = os.listdir("results/dbs/android/ls_db.cblite2")
-    assert "db.forest.0" in db_files
-    assert "db.forest.meta" in db_files
+    liteserv.stop(logfile)
 
-    att_files = os.listdir("results/dbs/android/ls_db.cblite2/attachments")
-    assert att_files == []
+    # Look in adb logcat to see if output match platform / storage engine expectation
+    # We can't look at the database files directly to my knowledge without a rooted device
+    liteserv_output = []
+    with open("{}/test.txt".format(TEST_DIR), "r") as f:
+        lines = f.readlines()
+        for line in lines:
+            if line.startswith("I/LiteServ"):
+                line = line.strip()
+                liteserv_output.append(line)
 
-    client.delete_databases(ls_url)
-
-    assert not os.path.isdir("results/dbs/android/ls_db.cblite2/")
+    assert len(liteserv_output) == 2
+    assert liteserv_output[0].endswith("storageType=ForestDB")
+    assert liteserv_output[1].endswith("dbpassword=")
 
 
 def test_android_forestdb_enc(setup_liteserv_android_forestdb_encryption):
-    ls_url = setup_liteserv_android_forestdb_encryption
+    liteserv = setup_liteserv_android_forestdb_encryption
+    logfile = open("{}/test.txt".format(TEST_DIR), "w")
+    ls_url = liteserv.start(logfile)
 
     client = MobileRestClient()
     client.create_database(ls_url, "ls_db")
 
-    db_files = os.listdir("results/dbs/android/ls_db.cblite2")
-    assert "db.forest.0" in db_files
-    assert "db.forest.meta" in db_files
+    liteserv.stop(logfile)
 
-    att_files = os.listdir("results/dbs/android/ls_db.cblite2/attachments")
-    assert att_files == ["_encryption"]
+    # Look in adb logcat to see if output match platform / storage engine expectation
+    # We can't look at the database files directly to my knowledge without a rooted device
+    liteserv_output = []
+    with open("{}/test.txt".format(TEST_DIR), "r") as f:
+        lines = f.readlines()
+        for line in lines:
+            if line.startswith("I/LiteServ"):
+                line = line.strip()
+                liteserv_output.append(line)
 
-    client.delete_databases(ls_url)
+    assert len(liteserv_output) == 2
+    assert liteserv_output[0].endswith("storageType=ForestDB")
+    assert liteserv_output[1].endswith("dbpassword=ls_db:pass,ls_db1:pass,ls_db2:pass")
 
-    assert not os.path.isdir("results/dbs/android/ls_db.cblite2/")
