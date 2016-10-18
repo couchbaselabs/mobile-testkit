@@ -1,6 +1,8 @@
 
 # This is intended to replace run_perf_test.py once gateload has been replaced by sgload
 
+from __future__ import print_function
+
 import sys
 import os
 import paramiko
@@ -15,6 +17,7 @@ from keywords.utils import log_info
 from keywords.utils import log_error
 
 from ansible import constants
+
 
 import argparse
 
@@ -64,10 +67,11 @@ def execute_sgload(lgs_host, sgload_arg_list, sg_host):
 
         # Run comamnd on remote machine
         stdin, stdout, stderr = ssh.exec_command(command)
+        stdin.close()
 
-        # Print out output to console
-        log_info("{}".format(stdout.read()))
-        log_error("{}".format(stderr.read()))
+        # Stream output to console
+        stream_output(stdout, sys.stdout)
+        stream_output(stderr, sys.stderr, abort_if_panic=True)
 
         # Close the connection since we're done with it
         ssh.close()
@@ -78,6 +82,14 @@ def execute_sgload(lgs_host, sgload_arg_list, sg_host):
         log_error("Exception calling execute_sgload: {}".format(e))
         log_error(traceback.format_exc())
         raise e
+
+
+def stream_output(stdio_file_pointer, dest_file_pointer, abort_if_panic=False):
+
+    for line in stdio_file_pointer:
+        print(line, file=dest_file_pointer)
+        if abort_if_panic and "panic" in line:
+            raise Exception("Detected panic: {}".format(line))
 
 
 def get_load_generators_hosts(cluster_config):
