@@ -1,5 +1,6 @@
 from LiteServAndroid import LiteServAndroid
 from LiteServMacOSX import LiteServMacOSX
+from LiteServNetMono import LiteServNetMono
 
 
 class LiteServFactory:
@@ -28,8 +29,8 @@ class LiteServFactory:
         #     return iOSLiteServ(version, host, port, storage_engine)
         elif platform == "macosx":
             return LiteServMacOSX(version_build, host, port, storage_engine)
-        # elif platform == "net-mono":
-        #     return NetMonoLiteServ(version, host, port, storage_engine)
+        elif platform == "net-mono":
+            return LiteServNetMono(version_build, host, port, storage_engine)
         # elif platform == "net-msft":
         #     return NetMSFT(version, host, port, storage_engine)
         # else:
