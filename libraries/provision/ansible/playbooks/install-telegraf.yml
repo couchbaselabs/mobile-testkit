@@ -37,6 +37,18 @@
    - name: Copy custom telegraf binary with syncgateway plugin
      copy: src=files/telegraf dest=/usr/bin/telegraf owner=root group=root mode=0775
 
+- hosts: sg_accels
+  vars:
+     grafana_db: "{{ lookup('env','GRAFANA_DB') }}"
+  any_errors_fatal: true
+  become: yes
+  tasks:
+   - name: Configure telegraf for sg_accels
+     template: src=files/telegraf-sg-accel.conf dest=/etc/telegraf/telegraf.conf owner=root group=root mode=0644
+
+   - name: Copy custom telegraf binary with syncgateway plugin
+     copy: src=files/telegraf dest=/usr/bin/telegraf owner=root group=root mode=0775
+
 - hosts: couchbase_servers
   vars:
      grafana_db: "{{ lookup('env','GRAFANA_DB') }}"
