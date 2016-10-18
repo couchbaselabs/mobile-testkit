@@ -5,7 +5,6 @@ import sys
 import os
 import paramiko
 import traceback
-import random
 
 from provision.ansible_runner import AnsibleRunner
 from keywords.exceptions import ProvisioningError
@@ -17,7 +16,6 @@ from keywords.utils import log_error
 
 from ansible import constants
 
-import concurrent.futures
 import argparse
 
 
@@ -31,29 +29,20 @@ def build_sgload(ansible_runner):
         raise ProvisioningError("Failed to build sgload")
 
 
-def run_sgload_on_loadgenerators(lgs_hosts, sgload_arg_list, lg2sg_map):
+def run_sgload_on_single_loadgenerator(lgs_hosts, sgload_arg_list, sg_host):
     """
-    This method blocks until sgload completes execution on all of the hosts
-    specified in lgs_hosts
+    This method blocks until sgload completes execution.  It only runs
+    sgload on the first lg host. (for now)
     """
-    futures = []
-    with concurrent.futures.ProcessPoolExecutor(max_workers=20) as executor:
-        for lgs_host in lgs_hosts:
-            future = executor.submit(execute_sgload, lgs_host, sgload_arg_list, lg2sg_map)
-            futures.append(future)
-
-    for future in futures:
-        if future.exception() is not None:
-            log_error("Exception running run_sgload_on_loadgenerators: {}".format(future.exception()))
-            raise future.exception()
+    lg_host = lgs_hosts[0]
+    execute_sgload(lg_host, sgload_arg_list, sg_host)
 
 
-def execute_sgload(lgs_host, sgload_arg_list, lg2sg_map):
+def execute_sgload(lgs_host, sgload_arg_list, sg_host):
 
     try:
 
         # Update the arg list the the appropriate SG
-        sg_host = lg2sg_map[lgs_host]
         sgload_arg_list_modified = add_sync_gateway_url(sgload_arg_list, sg_host)
 
         # convert from list -> string
@@ -117,24 +106,6 @@ def add_sync_gateway_url(sgload_arg_list, sg_host):
     return sgload_arg_list_copy
 
 
-def get_lg2sg_map(lg_hosts, sg_hosts):
-    """
-    Assign load generators to sync gateways and return a map
-    with the assignments where key=lg, val=sg:
-
-    {'192.168.33.13': '192.168.33.11'}
-    """
-
-    lg2sgmap = {}
-    for lg_host in lg_hosts:
-        r = random.Random()
-        highest_sg_index = len(sg_hosts) - 1
-        sg_index = r.randint(0, highest_sg_index)
-        sg_host = sg_hosts[sg_index]
-        lg2sgmap[lg_host] = sg_host
-    return lg2sgmap
-
-
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
@@ -166,12 +137,12 @@ if __name__ == "__main__":
 
     # Get a map from load generator hostnames to sync gateway hostnames
     # eg, {'192.168.33.13': '192.168.33.11'} key=lg, val=sg
-    lg2sg = get_lg2sg_map(lg_hosts_main, sg_hosts_main)
+    sg_host_main = sg_hosts_main[0]
 
-    run_sgload_on_loadgenerators(
+    run_sgload_on_single_loadgenerator(
         lg_hosts_main,
         sgload_arg_list_main,
-        lg2sg
+        sg_host_main
     )
 
     log_info("Finished")
