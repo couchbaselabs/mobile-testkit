@@ -2,6 +2,11 @@
 - hosts: load_generators
   any_errors_fatal: true
   tasks:
+
+  - name: SGLOAD | kill any existing sgload processes
+    shell: ps auxww | grep -i sgload | grep -v grep | awk '{print $2}' | xargs kill
+    become: yes
+
   - name: SGLOAD | go get sgload
     shell: GOPATH=/opt/go go get -u -v github.com/couchbaselabs/sgload
     become: yes
