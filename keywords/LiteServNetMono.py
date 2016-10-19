@@ -1,5 +1,6 @@
 import os
 import subprocess
+import re
 import shutil
 from zipfile import ZipFile
 
@@ -70,13 +71,13 @@ class LiteServNetMono(LiteServBase):
 
         self._verify_not_running()
 
-        binary_path = "couchbase-lite-net-mono-{}-liteserv/LiteServ.exe".format(self.version_build)
+        binary_path = "{}/couchbase-lite-net-mono-{}-liteserv/LiteServ.exe".format(BINARY_DIR, self.version_build)
 
         process_args = [
             "mono",
             binary_path,
             "--port", str(self.port),
-            "--dir", "{}/dbs/net/".format(RESULTS_DIR)
+            "--dir", "{}/dbs/net-mono/".format(RESULTS_DIR)
         ]
 
         if self.storage_engine == "ForestDB" or self.storage_engine == "ForestDB+Encryption":
@@ -107,7 +108,27 @@ class LiteServNetMono(LiteServBase):
         Assert that the response contains the expected version information
         """
 
-        raise NotImplementedError()
+        resp_obj = self._wait_until_reachable()
+        log_info(resp_obj)
+
+        # .NET OS X 10.12/x86_64 1.3.1-build0013/5d1553d
+        running_version = resp_obj["vendor"]["version"]
+
+        if not running_version.startswith(".NET OS X"):
+            raise LiteServError("Invalid platform running!")
+
+        # [u'.NET', u'OS', u'X', u'10.12', u'x86_64', u'1.3.1', u'build0013', u'5d1553d']
+        running_version_parts = re.split("[ /-]", running_version)
+
+        running_version = running_version_parts[5]
+        running_build = int(running_version_parts[6].strip("build"))
+        running_version_composed = "{}-{}".format(running_version, running_build)
+
+        if self.version_build != running_version_composed:
+            raise LiteServError("Expected version does not match actual version: Expected={}  Actual={}".format(
+                self.version_build,
+                running_version_composed)
+            )
 
     def stop(self, logfile):
         """
@@ -116,16 +137,14 @@ class LiteServNetMono(LiteServBase):
         3. Verify that no service is running on http://<host>:<port>
         """
 
-        raise NotImplementedError()
+        if not isinstance(logfile, file):
+            raise LiteServError("logfile must be of type 'file'")
 
-        # if not isinstance(logfile, file):
-        #     raise LiteServError("logfile must be of type 'file'")
-        #
-        # log_info("Killing LiteServ: http://{}:{}".format(self.host, self.port))
-        #
-        # logfile.flush()
-        # logfile.close()
-        # self.process.kill()
-        # self.process.wait()
-        #
-        # self._verify_not_running()
+        log_info("Stopping LiteServ ...")
+
+        logfile.flush()
+        logfile.close()
+        self.process.kill()
+        self.process.wait()
+
+        self._verify_not_running()

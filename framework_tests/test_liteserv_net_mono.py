@@ -1,7 +1,6 @@
 import os
 
 import pytest
-import pdb
 import shutil
 
 from keywords.constants import TEST_DIR

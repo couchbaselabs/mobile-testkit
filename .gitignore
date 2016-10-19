@@ -49,9 +49,9 @@ results/dbs/*
 !results/dbs/macosx/
 results/dbs/macosx/*
 !results/dbs/macosx/README.md
-!results/dbs/net/
-results/dbs/net/*
-!results/dbs/net/README.md
+!results/dbs/net-mono/
+results/dbs/net-mono/*
+!results/dbs/net-mono/README.md
 
 !results/logs
 results/logs/*
