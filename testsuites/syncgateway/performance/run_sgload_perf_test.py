@@ -147,8 +147,7 @@ if __name__ == "__main__":
     lg_hosts_main = get_load_generators_hosts(main_cluster_config)
     sg_hosts_main = get_sync_gateways_hosts(main_cluster_config)
 
-    # Get a map from load generator hostnames to sync gateway hostnames
-    # eg, {'192.168.33.13': '192.168.33.11'} key=lg, val=sg
+    # Get the first SG host from the list of SG hosts
     sg_host_main = sg_hosts_main[0]
 
     run_sgload_on_single_loadgenerator(
