@@ -10,7 +10,6 @@ from install_couchbase_server import CouchbaseServerConfig
 from install_sync_gateway import SyncGatewayConfig
 from install_nginx import install_nginx
 
-
 from keywords.utils import log_info
 
 
@@ -84,8 +83,12 @@ if __name__ == "__main__":
                       help="sync_gateway release version to download (ex. 1.2.0-5)")
 
     parser.add_option("", "--sync-gateway-config-file",
-                      action="store", type="string", dest="sync_gateway_config_file", default=default_sync_gateway_config,
-                      help="path to your sync_gateway_config file, uses 'resources/sync_gateway_configs/sync_gateway_default.json' by default")
+                      action="store",
+                      type="string",
+                      dest="sync_gateway_config_file",
+                      default=default_sync_gateway_config,
+                      help="path to your sync_gateway_config file, uses" +
+                           " 'resources/sync_gateway_configs/sync_gateway_default.json' by default")
 
     parser.add_option("", "--sync-gateway-commit",
                       action="store", type="string", dest="source_commit", default=None,

@@ -19,6 +19,7 @@ def install_deps(cluster_config):
     if status != 0:
         raise ProvisioningError("Failed to install dependencies")
 
+
 if __name__ == "__main__":
     usage = "usage: python install_deps.py"
 

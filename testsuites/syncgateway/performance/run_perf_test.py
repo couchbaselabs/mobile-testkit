@@ -11,6 +11,8 @@ from provision.ansible_runner import AnsibleRunner
 
 import generate_gateload_configs
 
+from keywords.exceptions import ProvisioningError
+
 from libraries.utilities.fetch_machine_stats import fetch_machine_stats
 from libraries.utilities.log_expvars import log_expvars
 from keywords.Logging import fetch_sync_gateway_logs
@@ -18,7 +20,8 @@ from libraries.utilities.fetch_sync_gateway_profile import fetch_sync_gateway_pr
 from libraries.utilities.push_cbcollect_info_supportal import push_cbcollect_info_supportal
 
 
-def run_perf_test(number_pullers, number_pushers, use_gateload, gen_gateload_config, test_id, sync_gateway_config_path, reset_sync_gateway, doc_size, runtime_ms, rampup_interval_ms):
+def run_perf_test(number_pullers, number_pushers, use_gateload, gen_gateload_config,
+                  test_id, sync_gateway_config_path, reset_sync_gateway, doc_size, runtime_ms, rampup_interval_ms):
 
     try:
         cluster_config = os.environ["CLUSTER_CONFIG"]
@@ -29,12 +32,17 @@ def run_perf_test(number_pullers, number_pushers, use_gateload, gen_gateload_con
     print("Running perf test against cluster: {}".format(cluster_config))
     ansible_runner = AnsibleRunner(cluster_config)
 
+    # Install + configure telegraf
+    status = ansible_runner.run_ansible_playbook("install-telegraf.yml")
+    if status != 0:
+        raise ProvisioningError("Failed to install telegraf")
+
     test_run_id = "{}_{}".format(test_id, time.strftime("%Y-%m-%d-%H-%M-%S"))
 
     # Create test results directory
     os.makedirs("testsuites/syncgateway/performance/results/{}".format(test_run_id))
 
-    print "Resetting Sync Gateway"
+    print("Resetting Sync Gateway")
     if sync_gateway_config_path is None or len(sync_gateway_config_path) == 0:
         raise Exception("Missing Sync Gateway config file path")
     cluster = Cluster(config=cluster_config)
@@ -46,13 +54,13 @@ def run_perf_test(number_pullers, number_pushers, use_gateload, gen_gateload_con
     shutil.copy("{}".format(cluster_config), "testsuites/syncgateway/performance/results/{}".format(test_run_id))
 
     if use_gateload:
-        print "Using Gateload"
+        print("Using Gateload")
 
         if int(number_pullers) > 0 and not gen_gateload_config:
             raise Exception("You specified --num-pullers but did not set --gen-gateload-config")
 
         # Build gateload
-        print ">>> Building gateload"
+        print(">>> Building gateload")
         status = ansible_runner.run_ansible_playbook(
             "build-gateload.yml",
             extra_vars={},
@@ -60,7 +68,7 @@ def run_perf_test(number_pullers, number_pushers, use_gateload, gen_gateload_con
         assert status == 0, "Could not build gateload"
 
         # Generate gateload config
-        print ">>> Generate gateload configs"
+        print(">>> Generate gateload configs")
         if gen_gateload_config:
             generate_gateload_configs.main(
                 cluster_config,
@@ -73,7 +81,7 @@ def run_perf_test(number_pullers, number_pushers, use_gateload, gen_gateload_con
             )
 
         # Start gateload
-        print ">>> Starting gateload with {0} pullers and {1} pushers".format(number_pullers, number_pushers)
+        print(">>> Starting gateload with {0} pullers and {1} pushers".format(number_pullers, number_pushers))
         status = ansible_runner.run_ansible_playbook(
             "start-gateload.yml",
             extra_vars={},
@@ -81,8 +89,8 @@ def run_perf_test(number_pullers, number_pushers, use_gateload, gen_gateload_con
         assert status == 0, "Could not start gateload"
 
     else:
-        print "Using Gatling"
-        print ">>> Starting gatling with {0} pullers and {1} pushers".format(number_pullers, number_pushers)
+        print("Using Gatling")
+        print(">>> Starting gatling with {0} pullers and {1} pushers".format(number_pullers, number_pushers))
 
         # Configure gatling
         subprocess.call(["ansible-playbook", "-i", "{}".format(cluster_config), "configure-gatling.yml"])
@@ -96,38 +104,38 @@ def run_perf_test(number_pullers, number_pushers, use_gateload, gen_gateload_con
         ])
 
     # write expvars to file, will exit when gateload scenario is done
-    print ">>> Logging expvars"
+    print(">>> Logging expvars")
     log_expvars(cluster_config, test_run_id)
 
     # Killing sync_gateway and sg_accel will trigger collection of
     #    1) machine_stats
     #    2) sync_gateway profile data
-    print ">>> Stopping Sync Gateway"
+    print(">>> Stopping Sync Gateway")
     stop_sync_gateway_status = ansible_runner.run_ansible_playbook("stop-sync-gateway.yml")
     assert stop_sync_gateway_status == 0, "Failed to stop sync_gateway"
 
-    print ">>> Stopping SG Accel"
+    print(">>> Stopping SG Accel")
     stop_sg_accel_status = ansible_runner.run_ansible_playbook("stop-sg-accel.yml")
     assert stop_sg_accel_status == 0, "Failed to stop sg_accel"
 
     # HACK: refresh interval for resource stat collection is 10 seconds.
     #  Make sure enough time has passed before collecting json
-    print ">>> Sleep for 1 minute before collecting machine stats"
+    print(">>> Sleep for 1 minute before collecting machine stats")
     time.sleep(61)
 
-    print ">>> Fetch machine stats"
+    print(">>> Fetch machine stats")
     fetch_machine_stats(cluster_config, test_run_id)
 
     # Fetch profile for sync_gateway while the endpoints are still running
-    print ">>> Fetch Sync Gateway profile"
+    print(">>> Fetch Sync Gateway profile")
     fetch_sync_gateway_profile(cluster_config, test_run_id)
 
     # Copy sync_gateway logs to test results directory
-    print ">>> Fetch Sync Gateway logs"
+    print(">>> Fetch Sync Gateway logs")
     fetch_sync_gateway_logs(cluster_config, test_run_id)
 
     # Invoke cb-collect-info and push to support portal
-    print ">>> Invoke cbcollect info and push to support portal"
+    print(">>> Invoke cbcollect info and push to support portal")
     push_cbcollect_info_supportal(cluster_config)
 
 
@@ -176,7 +184,9 @@ if __name__ == "__main__":
                       help="test identifier to identify results of performance test")
 
     parser.add_option("", "--sync-gateway-config-path",
-                      action="store", dest="sync_gateway_config_path", default="resources/sync_gateway_configs/performance/sync_gateway_default_performance.json",
+                      action="store",
+                      dest="sync_gateway_config_path",
+                      default="resources/sync_gateway_configs/performance/sync_gateway_default_performance.json",
                       help="Path to sync gateway config file to use")
 
     parser.add_option("", "--doc-size",
@@ -199,7 +209,7 @@ if __name__ == "__main__":
     (opts, args) = parser.parse_args(arg_parameters)
 
     if opts.test_id is None:
-        print "You must provide a test identifier to run the test"
+        print("You must provide a test identifier to run the test")
         sys.exit(1)
 
     # Start load generator
