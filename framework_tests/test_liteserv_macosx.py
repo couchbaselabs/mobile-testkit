@@ -128,7 +128,7 @@ def test_macosx_remove():
     pass
 
 
-def test_logging(setup_liteserv_macosx_logging):
+def test_macosx_logging(setup_liteserv_macosx_logging):
 
     liteserv = setup_liteserv_macosx_logging
     logfile = "{}/test.txt".format(TEST_DIR)

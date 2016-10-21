@@ -60,7 +60,14 @@ class LiteServNetMono(LiteServBase):
         log_info("No install needed for mono .NET")
         pass
 
-    def start(self, logfile):
+    def remove(self):
+        """
+        Noop on mono .NET. The LiteServ is a commandline binary
+        """
+        log_info("No remove needed for mono .NET")
+        pass
+
+    def start(self, logfile_name):
         """
         1. Starts a LiteServ with logging to provided logfile file object.
            The running LiteServ process will be stored in the self.process property.
@@ -97,7 +104,8 @@ class LiteServNetMono(LiteServBase):
 
         log_info("Launching: {} with args: {}".format(binary_path, process_args))
 
-        self.process = subprocess.Popen(args=process_args, stdout=logfile)
+        self.logfile = open(logfile_name, "w")
+        self.process = subprocess.Popen(args=process_args, stdout=self.logfile)
 
         self._verify_launched()
 
@@ -130,20 +138,17 @@ class LiteServNetMono(LiteServBase):
                 running_version_composed)
             )
 
-    def stop(self, logfile):
+    def stop(self):
         """
         1. Flush and close the logfile capturing the LiteServ output
         2. Kill the LiteServ process
         3. Verify that no service is running on http://<host>:<port>
         """
 
-        if not isinstance(logfile, file):
-            raise LiteServError("logfile must be of type 'file'")
-
         log_info("Stopping LiteServ ...")
 
-        logfile.flush()
-        logfile.close()
+        self.logfile.flush()
+        self.logfile.close()
         self.process.kill()
         self.process.wait()
 

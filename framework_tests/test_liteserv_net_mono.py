@@ -10,6 +10,21 @@ from keywords.MobileRestClient import MobileRestClient
 
 
 @pytest.fixture(scope="function")
+def setup_liteserv_net_mono_logging():
+    liteserv = LiteServFactory.create("net-mono",
+                                      version_build="1.3.1-13",
+                                      host="localhost",
+                                      port=59840,
+                                      storage_engine="SQLite")
+    liteserv.download()
+    liteserv.install()
+
+    yield liteserv
+
+    liteserv.remove()
+
+
+@pytest.fixture(scope="function")
 def setup_liteserv_net_mono_sqlite():
     liteserv = LiteServFactory.create("net-mono",
                                       version_build="1.3.1-13",
@@ -113,8 +128,18 @@ def test_net_mono_remove():
     pass
 
 
-def test_logging():
-    raise NotImplementedError()
+def test_net_mono_logging(setup_liteserv_net_mono_logging):
+
+    liteserv = setup_liteserv_net_mono_logging
+
+    logfile = "{}/test.txt".format(TEST_DIR)
+    _ = liteserv.start(logfile)
+
+    liteserv.stop()
+
+    with open("{}/test.txt".format(TEST_DIR), "r") as f:
+        contents = f.read()
+        assert "Starting Manager version: .NET OS X 10.12/x86_64 1.3.1-build0013/5d1553d" in contents
 
 
 def test_net_mono_full_life_cycle(setup_liteserv_net_mono_sqlite):
