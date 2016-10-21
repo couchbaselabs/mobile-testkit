@@ -1,13 +1,11 @@
 import os
 import subprocess
-from zipfile import ZipFile
 
 import requests
 
 from keywords.LiteServBase import LiteServBase
 from keywords.constants import LATEST_BUILDS
 from keywords.constants import BINARY_DIR
-from keywords.constants import RESULTS_DIR
 from keywords.constants import REGISTERED_CLIENT_DBS
 from keywords.exceptions import LiteServError
 from keywords.utils import version_and_build
@@ -60,18 +58,23 @@ class LiteServAndroid(LiteServBase):
         apk_path = "{}/{}".format(BINARY_DIR, apk_name)
         log_info("Installing: {}".format(apk_path))
 
-        install_successful = False
-        while not install_successful:
-            output = subprocess.check_output(["adb", "install", apk_path])
-            log_info(output)
-            if "INSTALL_FAILED_ALREADY_EXISTS" in output or "INSTALL_FAILED_UPDATE_INCOMPATIBLE" in output:
-                log_info("APK already exists. Removing and trying again ...")
-                output = subprocess.check_output(["adb", "uninstall", "com.couchbase.liteservandroid"])
-                log_info(output)
-            else:
-                install_successful = True
+        output = subprocess.check_output(["adb", "install", apk_path])
+        if "INSTALL_FAILED_ALREADY_EXISTS" in output or "INSTALL_FAILED_UPDATE_INCOMPATIBLE" in output:
+            raise LiteServError("Error. APK already exists.")
 
-    def start(self, logfile=None):
+        log_info("LiteServ installed to {}".format(self.host))
+
+    def remove(self):
+        """Removes the LiteServ application from the running device
+        """
+        output = subprocess.check_output(["adb", "uninstall", "com.couchbase.liteservandroid"])
+        if output.strip() != "Success":
+            log_info(output)
+            raise LiteServError("Error. Could not remove app.")
+
+        log_info("LiteServ removed from {}".format(self.host))
+
+    def start(self, logfile_name):
         """
         1. Starts a LiteServ with adb logging to provided logfile file object.
             The adb process will be stored in the self.process property
@@ -81,16 +84,14 @@ class LiteServAndroid(LiteServBase):
         4. Return the url of the running LiteServ
         """
 
-        if not isinstance(logfile, file):
-            raise LiteServError("logfile must be of type 'file'")
-
         self._verify_not_running()
 
         # Clear adb buffer
         subprocess.check_call(["adb", "logcat", "-c"])
 
         # Start redirecting adb output to the logfile
-        self.process = subprocess.Popen(args=["adb", "logcat"], stdout=logfile)
+        self.logfile = open(logfile_name, "w")
+        self.process = subprocess.Popen(args=["adb", "logcat"], stdout=self.logfile)
 
         log_info("Using storage engine: {}".format(self.storage_engine))
 
@@ -156,7 +157,7 @@ class LiteServAndroid(LiteServBase):
         if resp_obj["version"] != self.version_build:
             raise LiteServError("Expected version: {} does not match running version: {}".format(self.version_build, resp_obj["version"]))
 
-    def stop(self, logfile):
+    def stop(self):
         """
         1. Flush and close the logfile capturing the LiteServ output
         2. Kill the LiteServ activity and clear the package data
@@ -164,9 +165,6 @@ class LiteServAndroid(LiteServBase):
         """
 
         log_info("Stopping LiteServ: http://{}:{}".format(self.host, self.port))
-
-        if not isinstance(logfile, file):
-            raise LiteServError("logfile must be of type 'file'")
 
         output = subprocess.check_output([
             "adb", "shell", "am", "force-stop", "com.couchbase.liteservandroid"
@@ -181,9 +179,7 @@ class LiteServAndroid(LiteServBase):
 
         self._verify_not_running()
 
-        logfile.flush()
-        logfile.close()
+        self.logfile.flush()
+        self.logfile.close()
         self.process.kill()
         self.process.wait()
-
-

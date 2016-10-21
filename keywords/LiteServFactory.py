@@ -1,15 +1,18 @@
 from LiteServAndroid import LiteServAndroid
 from LiteServMacOSX import LiteServMacOSX
 from LiteServNetMono import LiteServNetMono
+from LiteServNetMsft import LiteServNetMsft
 
 
 class LiteServFactory:
 
     @staticmethod
-    def validate_storage_engine(storage_engine):
-        valid_storage_engines = ["SQLite", "SQLCipher", "ForestDB", "ForestDB+Encryption"]
-        if storage_engine not in valid_storage_engines:
-            raise ValueError("Unsupported 'storage_engine': {}".format(storage_engine))
+    def validate_version_build(version_build):
+        if version_build is None:
+            raise ValueError("Make sure you provide a version / build!")
+
+        if len(version_build.split("-")) != 2:
+            raise ValueError("Make sure your version_build follows the format: 1.3.1-13")
 
     @staticmethod
     def validate_platform(platform):
@@ -18,9 +21,28 @@ class LiteServFactory:
             raise ValueError("Unsupported 'platform': {}".format(platform))
 
     @staticmethod
+    def validate_host(host):
+        if host is None:
+            raise ValueError("Make sure you provide a host!")
+
+    @staticmethod
+    def validate_port(port):
+        if port is None:
+            raise ValueError("Make sure you provide a port!")
+
+    @staticmethod
+    def validate_storage_engine(storage_engine):
+        valid_storage_engines = ["SQLite", "SQLCipher", "ForestDB", "ForestDB+Encryption"]
+        if storage_engine not in valid_storage_engines:
+            raise ValueError("Unsupported 'storage_engine': {}".format(storage_engine))
+
+    @staticmethod
     def create(platform, version_build, host, port, storage_engine):
 
         LiteServFactory.validate_platform(platform)
+        LiteServFactory.validate_version_build(version_build)
+        LiteServFactory.validate_host(host)
+        LiteServFactory.validate_port(port)
         LiteServFactory.validate_storage_engine(storage_engine)
 
         if platform == "android":
@@ -31,7 +53,7 @@ class LiteServFactory:
             return LiteServMacOSX(version_build, host, port, storage_engine)
         elif platform == "net-mono":
             return LiteServNetMono(version_build, host, port, storage_engine)
-        # elif platform == "net-msft":
-        #     return NetMSFT(version, host, port, storage_engine)
-        # else:
+        elif platform == "net-msft":
+            return LiteServNetMsft(version_build, host, port, storage_engine)
+        else:
             raise NotImplementedError("Unsupported version of LiteServ")

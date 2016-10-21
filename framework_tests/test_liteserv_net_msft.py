@@ -10,10 +10,13 @@ from keywords.MobileRestClient import MobileRestClient
 
 
 @pytest.fixture(scope="function")
-def setup_liteserv_net_mono_sqlite():
-    liteserv = LiteServFactory.create("net-mono",
+def setup_liteserv_net_msft_sqlite(request):
+
+    net_msft_host = request.config.getoption("--net-msft-host")
+
+    liteserv = LiteServFactory.create("net-msft",
                                       version_build="1.3.1-13",
-                                      host="localhost",
+                                      host=net_msft_host,
                                       port=59840,
                                       storage_engine="SQLite")
     liteserv.download()
@@ -29,10 +32,13 @@ def setup_liteserv_net_mono_sqlite():
 
 
 @pytest.fixture(scope="function")
-def setup_liteserv_net_mono_sqlcipher():
-    liteserv = LiteServFactory.create("net-mono",
+def setup_liteserv_net_msft_sqlcipher(request):
+
+    net_msft_host = request.config.getoption("--net-msft-host")
+
+    liteserv = LiteServFactory.create("net-msft",
                                       version_build="1.3.1-13",
-                                      host="localhost",
+                                      host=net_msft_host,
                                       port=59840,
                                       storage_engine="SQLCipher")
     liteserv.download()
@@ -48,10 +54,13 @@ def setup_liteserv_net_mono_sqlcipher():
 
 
 @pytest.fixture(scope="function")
-def setup_liteserv_net_mono_forestdb():
-    liteserv = LiteServFactory.create("net-mono",
+def setup_liteserv_net_msft_forestdb(request):
+
+    net_msft_host = request.config.getoption("--net-msft-host")
+
+    liteserv = LiteServFactory.create("net-msft",
                                       version_build="1.3.1-13",
-                                      host="localhost",
+                                      host=net_msft_host,
                                       port=59840,
                                       storage_engine="ForestDB")
     liteserv.download()
@@ -67,10 +76,13 @@ def setup_liteserv_net_mono_forestdb():
 
 
 @pytest.fixture(scope="function")
-def setup_liteserv_net_mono_forestdb_encryption():
-    liteserv = LiteServFactory.create("net-mono",
+def setup_liteserv_net_msft_forestdb_encryption(request):
+
+    net_msft_host = request.config.getoption("--net-msft-host")
+
+    liteserv = LiteServFactory.create("net-msft",
                                       version_build="1.3.1-13",
-                                      host="localhost",
+                                      host=net_msft_host,
                                       port=59840,
                                       storage_engine="ForestDB+Encryption")
     liteserv.download()
@@ -85,40 +97,40 @@ def setup_liteserv_net_mono_forestdb_encryption():
     liteserv.remove()
 
 
-def test_net_mono_download():
+def test_net_msft_download(request):
 
     shutil.rmtree("{}/".format(BINARY_DIR))
     os.makedirs("{}".format(BINARY_DIR))
 
-    liteserv = LiteServFactory.create("net-mono",
+    net_msft_host = request.config.getoption("--net-msft-host")
+
+    liteserv = LiteServFactory.create("net-msft",
                                       version_build="1.3.1-13",
-                                      host="localhost",
+                                      host=net_msft_host,
                                       port=59840,
                                       storage_engine="SQLite")
 
     liteserv.download()
 
-    assert os.path.isdir("deps/binaries/couchbase-lite-net-mono-1.3.1-13-liteserv")
-    assert os.path.isfile("deps/binaries/couchbase-lite-net-mono-1.3.1-13-liteserv/LiteServ.exe")
-    assert not os.path.isfile("deps/binaries/couchbase-lite-net-mono-1.3.1-13-liteserv.zip")
+    assert os.path.isdir("deps/binaries/couchbase-lite-net-msft-1.3.1-13-liteserv")
+    assert os.path.isfile("deps/binaries/couchbase-lite-net-msft-1.3.1-13-liteserv/LiteServ.exe")
+    assert not os.path.isfile("deps/binaries/couchbase-lite-net-msft-1.3.1-13-liteserv.zip")
 
 
-def test_net_mono_install():
-    # No install step for net-mono since it is a commandline utility
-    pass
+def test_net_msft_install():
+    raise NotImplementedError()
 
 
-def test_net_mono_remove():
-    # No install step for net-mono since it is a commandline utility
-    pass
+def test_net_msft_remove():
+    raise NotImplementedError()
 
 
 def test_logging():
     raise NotImplementedError()
 
 
-def test_net_mono_full_life_cycle(setup_liteserv_net_mono_sqlite):
-    ls_url = setup_liteserv_net_mono_sqlite
+def test_net_msft_full_life_cycle(setup_liteserv_net_msft_sqlite):
+    ls_url = setup_liteserv_net_msft_sqlite
 
     client = MobileRestClient()
     client.create_database(ls_url, "ls_db")
@@ -128,75 +140,75 @@ def test_net_mono_full_life_cycle(setup_liteserv_net_mono_sqlite):
     client.delete_databases(ls_url)
 
 
-def test_net_mono_sqlite(setup_liteserv_net_mono_sqlite):
-    ls_url = setup_liteserv_net_mono_sqlite
+def test_net_msft_sqlite(setup_liteserv_net_msft_sqlite):
+    ls_url = setup_liteserv_net_msft_sqlite
 
     client = MobileRestClient()
     client.create_database(ls_url, "ls_db")
 
-    db_files = os.listdir("results/dbs/net-mono/ls_db.cblite2")
+    db_files = os.listdir("results/dbs/net-msft/ls_db.cblite2")
     assert "db.sqlite3" in db_files
     assert "db.sqlite3-shm" in db_files
     assert "db.sqlite3-wal" in db_files
 
-    att_files = os.listdir("results/dbs/net-mono/ls_db.cblite2/attachments")
+    att_files = os.listdir("results/dbs/net-msft/ls_db.cblite2/attachments")
     assert att_files == []
 
     client.delete_databases(ls_url)
 
-    assert not os.path.isdir("results/dbs/net-mono/ls_db.cblite2/")
+    assert not os.path.isdir("results/dbs/net-msft/ls_db.cblite2/")
 
 
-def test_net_mono_sqlcipher(setup_liteserv_net_mono_sqlcipher):
-    ls_url = setup_liteserv_net_mono_sqlcipher
+def test_net_msft_sqlcipher(setup_liteserv_net_msft_sqlcipher):
+    ls_url = setup_liteserv_net_msft_sqlcipher
 
     client = MobileRestClient()
     client.create_database(ls_url, "ls_db")
 
-    db_files = os.listdir("results/dbs/net-mono/ls_db.cblite2")
+    db_files = os.listdir("results/dbs/net-msft/ls_db.cblite2")
     assert "db.sqlite3" in db_files
     assert "db.sqlite3-shm" in db_files
     assert "db.sqlite3-wal" in db_files
 
-    att_files = os.listdir("results/dbs/net-mono/ls_db.cblite2/attachments")
+    att_files = os.listdir("results/dbs/net-msft/ls_db.cblite2/attachments")
     assert att_files == ["_encryption"]
 
     client.delete_databases(ls_url)
 
-    assert not os.path.isdir("results/dbs/net-mono/ls_db.cblite2/")
+    assert not os.path.isdir("results/dbs/net-msft/ls_db.cblite2/")
 
 
-def test_net_mono_forestdb(setup_liteserv_net_mono_forestdb):
-    ls_url = setup_liteserv_net_mono_forestdb
+def test_net_msft_forestdb(setup_liteserv_net_msft_forestdb):
+    ls_url = setup_liteserv_net_msft_forestdb
 
     client = MobileRestClient()
     client.create_database(ls_url, "ls_db")
 
-    db_files = os.listdir("results/dbs/net-mono/ls_db.cblite2")
+    db_files = os.listdir("results/dbs/net-msft/ls_db.cblite2")
     assert "db.forest.0" in db_files
     assert "db.forest.meta" in db_files
 
-    att_files = os.listdir("results/dbs/net-mono/ls_db.cblite2/attachments")
+    att_files = os.listdir("results/dbs/net-msft/ls_db.cblite2/attachments")
     assert att_files == []
 
     client.delete_databases(ls_url)
 
-    assert not os.path.isdir("results/dbs/net-mono/ls_db.cblite2/")
+    assert not os.path.isdir("results/dbs/net-msft/ls_db.cblite2/")
 
 
-def test_net_mono_forestdb_enc(setup_liteserv_net_mono_forestdb_encryption):
-    ls_url = setup_liteserv_net_mono_forestdb_encryption
+def test_net_msft_forestdb_enc(setup_liteserv_net_msft_forestdb_encryption):
+    ls_url = setup_liteserv_net_msft_forestdb_encryption
 
     client = MobileRestClient()
     client.create_database(ls_url, "ls_db")
 
-    db_files = os.listdir("results/dbs/net-mono/ls_db.cblite2")
+    db_files = os.listdir("results/dbs/net-msft/ls_db.cblite2")
     assert "db.forest.0" in db_files
     assert "db.forest.meta" in db_files
 
-    att_files = os.listdir("results/dbs/net-mono/ls_db.cblite2/attachments")
+    att_files = os.listdir("results/dbs/net-msft/ls_db.cblite2/attachments")
     assert att_files == ["_encryption"]
 
     client.delete_databases(ls_url)
 
-    assert not os.path.isdir("results/dbs/net-mono/ls_db.cblite2/")
+    assert not os.path.isdir("results/dbs/net-msft/ls_db.cblite2/")

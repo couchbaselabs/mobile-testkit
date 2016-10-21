@@ -20,12 +20,13 @@ def setup_liteserv_macosx_sqlite():
     liteserv.download()
     liteserv.install()
 
-    logfile = open("{}/test.txt".format(TEST_DIR), "w")
+    logfile = "{}/test.txt".format(TEST_DIR)
     ls_url = liteserv.start(logfile)
 
     yield ls_url
 
-    liteserv.stop(logfile)
+    liteserv.stop()
+    liteserv.remove()
 
 
 @pytest.fixture(scope="function")
@@ -38,12 +39,13 @@ def setup_liteserv_macosx_sqlcipher():
     liteserv.download()
     liteserv.install()
 
-    logfile = open("{}/test.txt".format(TEST_DIR), "w")
+    logfile = "{}/test.txt".format(TEST_DIR)
     ls_url = liteserv.start(logfile)
 
     yield ls_url
 
-    liteserv.stop(logfile)
+    liteserv.stop()
+    liteserv.remove()
 
 
 @pytest.fixture(scope="function")
@@ -56,12 +58,13 @@ def setup_liteserv_macosx_forestdb():
     liteserv.download()
     liteserv.install()
 
-    logfile = open("{}/test.txt".format(TEST_DIR), "w")
+    logfile = "{}/test.txt".format(TEST_DIR)
     ls_url = liteserv.start(logfile)
 
     yield ls_url
 
-    liteserv.stop(logfile)
+    liteserv.stop()
+    liteserv.remove()
 
 
 @pytest.fixture(scope="function")
@@ -74,12 +77,13 @@ def setup_liteserv_macosx_forestdb_encryption():
     liteserv.download()
     liteserv.install()
 
-    logfile = open("{}/test.txt".format(TEST_DIR), "w")
+    logfile = "{}/test.txt".format(TEST_DIR)
     ls_url = liteserv.start(logfile)
 
     yield ls_url
 
-    liteserv.stop(logfile)
+    liteserv.stop()
+    liteserv.remove()
 
 
 def test_macosx_download():
@@ -103,6 +107,15 @@ def test_macosx_download():
 def test_macosx_install():
     # No install step for macosx
     pass
+
+
+def test_macosx_remove():
+    # No install step for macosx
+    raise NotImplementedError()
+
+
+def test_logging():
+    raise NotImplementedError()
 
 
 def test_macosx_full_life_cycle(setup_liteserv_macosx_sqlite):

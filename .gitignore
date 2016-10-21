@@ -59,6 +59,10 @@ results/logs/*
 
 resources/cluster_configs/*
 !resources/cluster_configs/README.md
+
+resources/liteserv_configs/*
+!resources/liteserv_configs/README.md
+
 resources/pool.json
 !resources/cluster_configs/1sg_1cbs.sample
 debug.txt

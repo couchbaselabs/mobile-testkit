@@ -65,7 +65,7 @@ class LiteServMacOSX(LiteServBase):
         log_info("No install needed for macosx")
         pass
 
-    def start(self, logfile=None):
+    def start(self, logfile):
         """
         1. Starts a LiteServ with logging to provided logfile file object.
            The running LiteServ process will be stored in the self.process property.

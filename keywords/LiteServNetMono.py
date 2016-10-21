@@ -26,7 +26,7 @@ class LiteServNetMono(LiteServBase):
         """
 
         # Skip download if packages is already downloaded
-        expected_binary = "{}/couchbase-lite-net-{}-liteserv/LiteServ.exe".format(BINARY_DIR, self.version_build)
+        expected_binary = "{}/couchbase-lite-net-mono-{}-liteserv/LiteServ.exe".format(BINARY_DIR, self.version_build)
         if os.path.isfile(expected_binary):
             log_info("Package already downloaded: {}".format(expected_binary))
             return
@@ -60,7 +60,7 @@ class LiteServNetMono(LiteServBase):
         log_info("No install needed for mono .NET")
         pass
 
-    def start(self, logfile=None):
+    def start(self, logfile):
         """
         1. Starts a LiteServ with logging to provided logfile file object.
            The running LiteServ process will be stored in the self.process property.

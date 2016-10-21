@@ -12,6 +12,7 @@ from keywords.utils import log_info
 class LiteServBase(object):
 
     def __init__(self, version_build, host, port, storage_engine):
+
         self.version_build = version_build
         self.host = host
         self.port = port
@@ -20,13 +21,16 @@ class LiteServBase(object):
         # Used for commandline programs such as net-mono and macosx
         self.process = None
 
+        # For the subclasses, this property may be a file handle or a string
+        self.logfile = None
+
     def download(self):
         raise NotImplementedError()
 
     def install(self):
         raise NotImplementedError()
 
-    def start(self, logfile=None):
+    def start(self, logfile_name):
         raise NotImplementedError()
 
     def _verify_not_running(self):
@@ -63,5 +67,8 @@ class LiteServBase(object):
     def _verify_launched(self):
         raise NotImplementedError()
 
-    def stop(self, logfile):
+    def stop(self):
+        raise NotImplementedError()
+
+    def remove(self):
         raise NotImplementedError()
