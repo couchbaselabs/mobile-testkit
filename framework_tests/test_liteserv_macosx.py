@@ -1,14 +1,14 @@
+import datetime
 import os
-
-import pytest
-import pdb
 import shutil
 
-from keywords.constants import TEST_DIR
+import pytest
+
+from keywords.constants import RESULTS_DIR
 from keywords.constants import BINARY_DIR
 from keywords.LiteServFactory import LiteServFactory
 from keywords.MobileRestClient import MobileRestClient
-from keywords.utils import version_and_build
+
 
 @pytest.fixture(scope="function")
 def setup_liteserv_macosx_logging():
@@ -24,8 +24,9 @@ def setup_liteserv_macosx_logging():
 
     liteserv.remove()
 
+
 @pytest.fixture(scope="function")
-def setup_liteserv_macosx_sqlite():
+def setup_liteserv_macosx_sqlite(request):
     liteserv = LiteServFactory.create("macosx",
                                       version_build="1.3.1-6",
                                       host="localhost",
@@ -34,7 +35,8 @@ def setup_liteserv_macosx_sqlite():
     liteserv.download()
     liteserv.install()
 
-    logfile = "{}/test.txt".format(TEST_DIR)
+    test_name = request.node.name
+    logfile = "{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(liteserv).__name__, test_name, datetime.datetime.now())
     ls_url = liteserv.start(logfile)
 
     yield ls_url
@@ -44,7 +46,7 @@ def setup_liteserv_macosx_sqlite():
 
 
 @pytest.fixture(scope="function")
-def setup_liteserv_macosx_sqlcipher():
+def setup_liteserv_macosx_sqlcipher(request):
     liteserv = LiteServFactory.create("macosx",
                                       version_build="1.3.1-6",
                                       host="localhost",
@@ -53,7 +55,8 @@ def setup_liteserv_macosx_sqlcipher():
     liteserv.download()
     liteserv.install()
 
-    logfile = "{}/test.txt".format(TEST_DIR)
+    test_name = request.node.name
+    logfile = "{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(liteserv).__name__, test_name, datetime.datetime.now())
     ls_url = liteserv.start(logfile)
 
     yield ls_url
@@ -63,7 +66,7 @@ def setup_liteserv_macosx_sqlcipher():
 
 
 @pytest.fixture(scope="function")
-def setup_liteserv_macosx_forestdb():
+def setup_liteserv_macosx_forestdb(request):
     liteserv = LiteServFactory.create("macosx",
                                       version_build="1.3.1-6",
                                       host="localhost",
@@ -72,7 +75,8 @@ def setup_liteserv_macosx_forestdb():
     liteserv.download()
     liteserv.install()
 
-    logfile = "{}/test.txt".format(TEST_DIR)
+    test_name = request.node.name
+    logfile = "{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(liteserv).__name__, test_name, datetime.datetime.now())
     ls_url = liteserv.start(logfile)
 
     yield ls_url
@@ -82,7 +86,7 @@ def setup_liteserv_macosx_forestdb():
 
 
 @pytest.fixture(scope="function")
-def setup_liteserv_macosx_forestdb_encryption():
+def setup_liteserv_macosx_forestdb_encryption(request):
     liteserv = LiteServFactory.create("macosx",
                                       version_build="1.3.1-6",
                                       host="localhost",
@@ -91,7 +95,8 @@ def setup_liteserv_macosx_forestdb_encryption():
     liteserv.download()
     liteserv.install()
 
-    logfile = "{}/test.txt".format(TEST_DIR)
+    test_name = request.node.name
+    logfile = "{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(liteserv).__name__, test_name, datetime.datetime.now())
     ls_url = liteserv.start(logfile)
 
     yield ls_url
@@ -128,15 +133,16 @@ def test_macosx_remove():
     pass
 
 
-def test_macosx_logging(setup_liteserv_macosx_logging):
-
+def test_macosx_logging(request, setup_liteserv_macosx_logging):
     liteserv = setup_liteserv_macosx_logging
-    logfile = "{}/test.txt".format(TEST_DIR)
+
+    test_name = request.node.name
+    logfile = "{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(liteserv).__name__, test_name, datetime.datetime.now())
     _ = liteserv.start(logfile)
 
     liteserv.stop()
 
-    with open("{}/test.txt".format(TEST_DIR), "r") as f:
+    with open(logfile, "r") as f:
         contents = f.read()
         assert "LiteServ 1.3.1 (build 6) is listening at" in contents
 

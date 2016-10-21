@@ -1,7 +1,9 @@
-import pytest
-from keywords.LiteServFactory import LiteServFactory
-from keywords.constants import TEST_DIR
+import datetime
 
+import pytest
+
+from keywords.LiteServFactory import LiteServFactory
+from keywords.constants import RESULTS_DIR
 from keywords.exceptions import LiteServError
 
 
@@ -29,7 +31,7 @@ def test_invalid_storage_engine():
     assert ve_message == "Unsupported 'storage_engine': SQLit"
 
 
-def test_running_liteserv():
+def test_running_liteserv(request):
     liteserv = LiteServFactory.create("macosx",
                                       version_build="1.3.1-6",
                                       host="localhost",
@@ -38,15 +40,16 @@ def test_running_liteserv():
 
     liteserv.download()
 
-    logfile = open("{}/test.txt".format(TEST_DIR), "w")
-    liteserv.start(logfile=logfile)
+    test_name = request.node.name
 
-    logfile_2 = open("{}/test2.txt".format(TEST_DIR), "w")
+    logfile = "{}/logs/{}-{}-{}-1.txt".format(RESULTS_DIR, type(liteserv).__name__, test_name, datetime.datetime.now())
+    liteserv.start(logfile)
+
+    logfile_2 = "{}/logs/{}-{}-{}-2.txt".format(RESULTS_DIR, type(liteserv).__name__, test_name, datetime.datetime.now())
     with pytest.raises(LiteServError) as lse:
-        liteserv.start(logfile=logfile_2)
+        liteserv.start(logfile_2)
 
     ex_message = str(lse.value)
     assert ex_message == "There should be no service running on the port"
 
-    liteserv.stop(logfile)
-    logfile_2.close()
+    liteserv.stop()

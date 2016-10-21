@@ -1,9 +1,10 @@
+import datetime
 import os
-
-import pytest
 import shutil
 
-from keywords.constants import TEST_DIR
+import pytest
+
+from keywords.constants import RESULTS_DIR
 from keywords.constants import BINARY_DIR
 from keywords.LiteServFactory import LiteServFactory
 from keywords.MobileRestClient import MobileRestClient
@@ -25,7 +26,7 @@ def setup_liteserv_net_mono_logging():
 
 
 @pytest.fixture(scope="function")
-def setup_liteserv_net_mono_sqlite():
+def setup_liteserv_net_mono_sqlite(request):
     liteserv = LiteServFactory.create("net-mono",
                                       version_build="1.3.1-13",
                                       host="localhost",
@@ -34,7 +35,8 @@ def setup_liteserv_net_mono_sqlite():
     liteserv.download()
     liteserv.install()
 
-    logfile = "{}/test.txt".format(TEST_DIR)
+    test_name = request.node.name
+    logfile = "{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(liteserv).__name__, test_name, datetime.datetime.now())
     ls_url = liteserv.start(logfile)
 
     yield ls_url
@@ -44,7 +46,7 @@ def setup_liteserv_net_mono_sqlite():
 
 
 @pytest.fixture(scope="function")
-def setup_liteserv_net_mono_sqlcipher():
+def setup_liteserv_net_mono_sqlcipher(request):
     liteserv = LiteServFactory.create("net-mono",
                                       version_build="1.3.1-13",
                                       host="localhost",
@@ -53,7 +55,8 @@ def setup_liteserv_net_mono_sqlcipher():
     liteserv.download()
     liteserv.install()
 
-    logfile = "{}/test.txt".format(TEST_DIR)
+    test_name = request.node.name
+    logfile = "{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(liteserv).__name__, test_name, datetime.datetime.now())
     ls_url = liteserv.start(logfile)
 
     yield ls_url
@@ -63,7 +66,7 @@ def setup_liteserv_net_mono_sqlcipher():
 
 
 @pytest.fixture(scope="function")
-def setup_liteserv_net_mono_forestdb():
+def setup_liteserv_net_mono_forestdb(request):
     liteserv = LiteServFactory.create("net-mono",
                                       version_build="1.3.1-13",
                                       host="localhost",
@@ -72,7 +75,8 @@ def setup_liteserv_net_mono_forestdb():
     liteserv.download()
     liteserv.install()
 
-    logfile = "{}/test.txt".format(TEST_DIR)
+    test_name = request.node.name
+    logfile = "{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(liteserv).__name__, test_name, datetime.datetime.now())
     ls_url = liteserv.start(logfile)
 
     yield ls_url
@@ -82,7 +86,7 @@ def setup_liteserv_net_mono_forestdb():
 
 
 @pytest.fixture(scope="function")
-def setup_liteserv_net_mono_forestdb_encryption():
+def setup_liteserv_net_mono_forestdb_encryption(request):
     liteserv = LiteServFactory.create("net-mono",
                                       version_build="1.3.1-13",
                                       host="localhost",
@@ -91,7 +95,8 @@ def setup_liteserv_net_mono_forestdb_encryption():
     liteserv.download()
     liteserv.install()
 
-    logfile = "{}/test.txt".format(TEST_DIR)
+    test_name = request.node.name
+    logfile = "{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(liteserv).__name__, test_name, datetime.datetime.now())
     ls_url = liteserv.start(logfile)
 
     yield ls_url
@@ -128,16 +133,17 @@ def test_net_mono_remove():
     pass
 
 
-def test_net_mono_logging(setup_liteserv_net_mono_logging):
+def test_net_mono_logging(request, setup_liteserv_net_mono_logging):
 
     liteserv = setup_liteserv_net_mono_logging
 
-    logfile = "{}/test.txt".format(TEST_DIR)
+    test_name = request.node.name
+    logfile = "{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(liteserv).__name__, test_name, datetime.datetime.now())
     _ = liteserv.start(logfile)
 
     liteserv.stop()
 
-    with open("{}/test.txt".format(TEST_DIR), "r") as f:
+    with open(logfile, "r") as f:
         contents = f.read()
         assert "Starting Manager version: .NET OS X 10.12/x86_64 1.3.1-build0013/5d1553d" in contents
 

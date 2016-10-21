@@ -93,7 +93,7 @@ def setup_client_syncgateway_test(request, setup_client_syncgateway_suite):
     liteserv = setup_client_syncgateway_suite
     test_name = request.node.name
 
-    ls_url = liteserv.start(logfile_name="{}/logs/{}-ls1-{}-{}.txt".format(RESULTS_DIR, type(liteserv).__name__, test_name, datetime.datetime.now()))
+    ls_url = liteserv.start("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(liteserv).__name__, test_name, datetime.datetime.now()))
 
     cluster_helper = ClusterKeywords()
     sg_helper = SyncGateway()

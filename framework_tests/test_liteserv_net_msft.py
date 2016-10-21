@@ -1,9 +1,10 @@
+import datetime
 import os
-
-import pytest
 import shutil
 
-from keywords.constants import TEST_DIR
+import pytest
+
+from keywords.constants import RESULTS_DIR
 from keywords.constants import BINARY_DIR
 from keywords.LiteServFactory import LiteServFactory
 from keywords.MobileRestClient import MobileRestClient
@@ -128,23 +129,25 @@ def test_net_msft_remove():
     pass
 
 
-def test_net_msft_logging(setup_liteserv_net_msft_no_launch):
+def test_net_msft_logging(request, setup_liteserv_net_msft_no_launch):
     liteserv = setup_liteserv_net_msft_no_launch
 
-    logfile = "{}/test.txt".format(TEST_DIR)
+    test_name = request.node.name
+    logfile = "{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(liteserv).__name__, test_name, datetime.datetime.now())
     _ = liteserv.start(logfile)
     liteserv.stop()
 
-    with open("{}/test.txt".format(TEST_DIR), "r") as f:
+    with open(logfile, "r") as f:
         contents = f.read()
         assert "Starting Manager version: .NET Microsoft Windows" in contents
 
 
-def test_net_msft_full_life_cycle(setup_liteserv_net_msft_sqlite):
+def test_net_msft_full_life_cycle(request, setup_liteserv_net_msft_sqlite):
 
     liteserv = setup_liteserv_net_msft_sqlite
 
-    logfile = "{}/test.txt".format(TEST_DIR)
+    test_name = request.node.name
+    logfile = "{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(liteserv).__name__, test_name, datetime.datetime.now())
     ls_url = liteserv.start(logfile)
 
     client = MobileRestClient()
@@ -157,10 +160,11 @@ def test_net_msft_full_life_cycle(setup_liteserv_net_msft_sqlite):
     liteserv.stop()
 
 
-def test_net_msft_sqlite(setup_liteserv_net_msft_sqlite):
+def test_net_msft_sqlite(request, setup_liteserv_net_msft_sqlite):
     liteserv = setup_liteserv_net_msft_sqlite
 
-    logfile = "{}/test.txt".format(TEST_DIR)
+    test_name = request.node.name
+    logfile = "{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(liteserv).__name__, test_name, datetime.datetime.now())
     ls_url = liteserv.start(logfile)
 
     client = MobileRestClient()
@@ -168,17 +172,18 @@ def test_net_msft_sqlite(setup_liteserv_net_msft_sqlite):
 
     liteserv.stop()
 
-    with open("{}/test.txt".format(TEST_DIR), "r") as f:
+    with open(logfile, "r") as f:
         contents = f.read()
         # Note: SQLite mode uses SQLCipher by default
         assert "Using Couchbase.Lite.Storage.SQLCipher.SqliteCouchStore for db at C:\Users\user\Desktop\LiteServ\ls_db.cblite2" in contents
         assert "encryption key given" not in contents
 
 
-def test_net_msft_sqlcipher(setup_liteserv_net_msft_sqlcipher):
+def test_net_msft_sqlcipher(request, setup_liteserv_net_msft_sqlcipher):
     liteserv = setup_liteserv_net_msft_sqlcipher
 
-    logfile = "{}/test.txt".format(TEST_DIR)
+    test_name = request.node.name
+    logfile = "{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(liteserv).__name__, test_name, datetime.datetime.now())
     ls_url = liteserv.start(logfile)
 
     client = MobileRestClient()
@@ -186,17 +191,18 @@ def test_net_msft_sqlcipher(setup_liteserv_net_msft_sqlcipher):
 
     liteserv.stop()
 
-    with open("{}/test.txt".format(TEST_DIR), "r") as f:
+    with open(logfile, "r") as f:
         contents = f.read()
         assert "Using Couchbase.Lite.Storage.SQLCipher.SqliteCouchStore for db at C:\Users\user\Desktop\LiteServ\ls_db.cblite2" in contents
         assert "Open C:\Users\user\Desktop\LiteServ\ls_db.cblite2\db.sqlite3" in contents
         assert "encryption key given"
 
 
-def test_net_msft_forestdb_noenc(setup_liteserv_net_msft_forestdb):
+def test_net_msft_forestdb_noenc(request, setup_liteserv_net_msft_forestdb):
     liteserv = setup_liteserv_net_msft_forestdb
 
-    logfile = "{}/test.txt".format(TEST_DIR)
+    test_name = request.node.name
+    logfile = "{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(liteserv).__name__, test_name, datetime.datetime.now())
     ls_url = liteserv.start(logfile)
 
     client = MobileRestClient()
@@ -204,16 +210,17 @@ def test_net_msft_forestdb_noenc(setup_liteserv_net_msft_forestdb):
 
     liteserv.stop()
 
-    with open("{}/test.txt".format(TEST_DIR), "r") as f:
+    with open(logfile, "r") as f:
         contents = f.read()
         assert "Using Couchbase.Lite.Storage.ForestDB.ForestDBCouchStore for db at C:\Users\user\Desktop\LiteServ\ls_db.cblite2" in contents
         assert "Database is encrypted; setting CBForest encryption key" not in contents
 
 
-def test_net_msft_forestdb_enc(setup_liteserv_net_msft_forestdb_encryption):
+def test_net_msft_forestdb_enc(request, setup_liteserv_net_msft_forestdb_encryption):
     liteserv = setup_liteserv_net_msft_forestdb_encryption
 
-    logfile = "{}/test.txt".format(TEST_DIR)
+    test_name = request.node.name
+    logfile = "{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(liteserv).__name__, test_name, datetime.datetime.now())
     ls_url = liteserv.start(logfile)
 
     client = MobileRestClient()
@@ -221,7 +228,7 @@ def test_net_msft_forestdb_enc(setup_liteserv_net_msft_forestdb_encryption):
 
     liteserv.stop()
 
-    with open("{}/test.txt".format(TEST_DIR), "r") as f:
+    with open(logfile, "r") as f:
         contents = f.read()
         assert "Using Couchbase.Lite.Storage.ForestDB.ForestDBCouchStore for db at C:\Users\user\Desktop\LiteServ\ls_db.cblite2" in contents
         assert "Database is encrypted; setting CBForest encryption key" in contents

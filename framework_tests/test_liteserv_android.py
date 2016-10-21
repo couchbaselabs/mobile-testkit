@@ -3,8 +3,9 @@ import os
 import pytest
 import shutil
 import subprocess
+import datetime
 
-from keywords.constants import TEST_DIR
+from keywords.constants import RESULTS_DIR
 from keywords.constants import BINARY_DIR
 from keywords.LiteServFactory import LiteServFactory
 from keywords.MobileRestClient import MobileRestClient
@@ -135,10 +136,12 @@ def test_android_install_and_remove(request):
     assert "com.couchbase.liteservandroid" not in output
 
 
-def test_android_full_life_cycle(setup_liteserv_android_sqlite):
+def test_android_full_life_cycle(request, setup_liteserv_android_sqlite):
     liteserv = setup_liteserv_android_sqlite
 
-    logfile = "{}/test.txt".format(TEST_DIR)
+    test_name = request.node.name
+
+    logfile = "{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(liteserv).__name__, test_name, datetime.datetime.now())
     ls_url = liteserv.start(logfile)
 
     client = MobileRestClient()
@@ -151,10 +154,12 @@ def test_android_full_life_cycle(setup_liteserv_android_sqlite):
     liteserv.stop()
 
 
-def test_android_sqlite(setup_liteserv_android_sqlite):
+def test_android_sqlite(request, setup_liteserv_android_sqlite):
     liteserv = setup_liteserv_android_sqlite
 
-    logfile = "{}/test.txt".format(TEST_DIR)
+    test_name = request.node.name
+
+    logfile = "{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(liteserv).__name__, test_name, datetime.datetime.now())
     ls_url = liteserv.start(logfile)
 
     client = MobileRestClient()
@@ -165,7 +170,7 @@ def test_android_sqlite(setup_liteserv_android_sqlite):
     # Look in adb logcat to see if output match platform / storage engine expectation
     # We can't look at the database files directly to my knowledge without a rooted device
     liteserv_output = []
-    with open("{}/test.txt".format(TEST_DIR), "r") as f:
+    with open(logfile, "r") as f:
         lines = f.readlines()
         for line in lines:
             if "LiteServ" in line:
@@ -177,10 +182,12 @@ def test_android_sqlite(setup_liteserv_android_sqlite):
     assert liteserv_output[1].endswith("dbpassword=")
 
 
-def test_android_sqlcipher(setup_liteserv_android_sqlcipher):
+def test_android_sqlcipher(request, setup_liteserv_android_sqlcipher):
     liteserv = setup_liteserv_android_sqlcipher
 
-    logfile = "{}/test.txt".format(TEST_DIR)
+    test_name = request.node.name
+
+    logfile = "{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(liteserv).__name__, test_name, datetime.datetime.now())
     ls_url = liteserv.start(logfile)
 
     client = MobileRestClient()
@@ -191,7 +198,7 @@ def test_android_sqlcipher(setup_liteserv_android_sqlcipher):
     # Look in adb logcat to see if output match platform / storage engine expectation
     # We can't look at the database files directly to my knowledge without a rooted device
     liteserv_output = []
-    with open("{}/test.txt".format(TEST_DIR), "r") as f:
+    with open(logfile, "r") as f:
         lines = f.readlines()
         for line in lines:
             if "LiteServ" in line:
@@ -203,10 +210,12 @@ def test_android_sqlcipher(setup_liteserv_android_sqlcipher):
     assert liteserv_output[1].endswith("dbpassword=ls_db:pass,ls_db1:pass,ls_db2:pass")
 
 
-def test_android_forestdb(setup_liteserv_android_forestdb):
+def test_android_forestdb(request, setup_liteserv_android_forestdb):
     liteserv = setup_liteserv_android_forestdb
 
-    logfile = "{}/test.txt".format(TEST_DIR)
+    test_name = request.node.name
+
+    logfile = "{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(liteserv).__name__, test_name, datetime.datetime.now())
     ls_url = liteserv.start(logfile)
 
     client = MobileRestClient()
@@ -217,7 +226,7 @@ def test_android_forestdb(setup_liteserv_android_forestdb):
     # Look in adb logcat to see if output match platform / storage engine expectation
     # We can't look at the database files directly to my knowledge without a rooted device
     liteserv_output = []
-    with open("{}/test.txt".format(TEST_DIR), "r") as f:
+    with open(logfile, "r") as f:
         lines = f.readlines()
         for line in lines:
             if "LiteServ" in line:
@@ -229,10 +238,12 @@ def test_android_forestdb(setup_liteserv_android_forestdb):
     assert liteserv_output[1].endswith("dbpassword=")
 
 
-def test_android_forestdb_enc(setup_liteserv_android_forestdb_encryption):
+def test_android_forestdb_enc(request, setup_liteserv_android_forestdb_encryption):
     liteserv = setup_liteserv_android_forestdb_encryption
 
-    logfile = "{}/test.txt".format(TEST_DIR)
+    test_name = request.node.name
+
+    logfile = "{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(liteserv).__name__, test_name, datetime.datetime.now())
     ls_url = liteserv.start(logfile)
 
     client = MobileRestClient()
@@ -243,7 +254,7 @@ def test_android_forestdb_enc(setup_liteserv_android_forestdb_encryption):
     # Look in adb logcat to see if output match platform / storage engine expectation
     # We can't look at the database files directly to my knowledge without a rooted device
     liteserv_output = []
-    with open("{}/test.txt".format(TEST_DIR), "r") as f:
+    with open(logfile, "r") as f:
         lines = f.readlines()
         for line in lines:
             if "LiteServ" in line:
