@@ -24,6 +24,7 @@ class LiteServBase(object):
         self.logfile = None
 
         self.session = Session()
+        self.session.headers['Content-Type'] = 'application/json'
 
     def download(self):
         raise NotImplementedError()

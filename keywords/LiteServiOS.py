@@ -1,4 +1,5 @@
 import os
+import json
 import subprocess
 from zipfile import ZipFile
 
@@ -61,7 +62,7 @@ class LiteServiOS(LiteServBase):
         """
         Remove the iOS app from the connected device
         """
-        log_info("No remove needed for macosx")
+        log_info("Removing LiteServ-iOS")
 
         bundle_id = "com.couchbase.LiteServ-iOS"
         output = subprocess.check_output([
@@ -93,7 +94,7 @@ class LiteServiOS(LiteServBase):
         if self.port == 59850:
             raise LiteServError("On iOS, port 59850 is reserved for the admin port")
 
-        liteserv_admin_url = "http://{}:59850".format(self)
+        liteserv_admin_url = "http://{}:59850".format(self.host)
         log_info("Starting LiteServ: {}".format(liteserv_admin_url))
 
         data = {
@@ -133,7 +134,7 @@ class LiteServiOS(LiteServBase):
         3. Verify that no service is running on http://<host>:<port>
         """
 
-        log_info("Killing LiteServ: http://{}:{}".format(self.host, self.port))
+        log_info("Stopping LiteServ: http://{}:{}".format(self.host, self.port))
 
         liteserv_admin_url = "http://{}:59850".format(self.host)
         log_info("Stopping LiteServ: {}".format(liteserv_admin_url))
