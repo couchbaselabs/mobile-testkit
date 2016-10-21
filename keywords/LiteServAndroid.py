@@ -62,6 +62,10 @@ class LiteServAndroid(LiteServBase):
         if "INSTALL_FAILED_ALREADY_EXISTS" in output or "INSTALL_FAILED_UPDATE_INCOMPATIBLE" in output:
             raise LiteServError("Error. APK already exists.")
 
+        output = subprocess.check_output(["adb", "shell", "pm", "list", "packages"])
+        if "com.couchbase.liteservandroid" not in output:
+            raise LiteServError("Failed to install package")
+
         log_info("LiteServ installed to {}".format(self.host))
 
     def remove(self):
@@ -71,6 +75,10 @@ class LiteServAndroid(LiteServBase):
         if output.strip() != "Success":
             log_info(output)
             raise LiteServError("Error. Could not remove app.")
+
+        output = subprocess.check_output(["adb", "shell", "pm", "list", "packages"])
+        if "com.couchbase.liteservandroid" in output:
+            raise LiteServError("Error uninstalling app!")
 
         log_info("LiteServ removed from {}".format(self.host))
 
