@@ -8,7 +8,21 @@ from keywords.constants import TEST_DIR
 from keywords.constants import BINARY_DIR
 from keywords.LiteServFactory import LiteServFactory
 from keywords.MobileRestClient import MobileRestClient
+from keywords.utils import version_and_build
 
+@pytest.fixture(scope="function")
+def setup_liteserv_macosx_logging():
+    liteserv = LiteServFactory.create("macosx",
+                                      version_build="1.3.1-6",
+                                      host="localhost",
+                                      port=59840,
+                                      storage_engine="SQLite")
+    liteserv.download()
+    liteserv.install()
+
+    yield liteserv
+
+    liteserv.remove()
 
 @pytest.fixture(scope="function")
 def setup_liteserv_macosx_sqlite():
@@ -111,11 +125,20 @@ def test_macosx_install():
 
 def test_macosx_remove():
     # No install step for macosx
-    raise NotImplementedError()
+    pass
 
 
-def test_logging():
-    raise NotImplementedError()
+def test_logging(setup_liteserv_macosx_logging):
+
+    liteserv = setup_liteserv_macosx_logging
+    logfile = "{}/test.txt".format(TEST_DIR)
+    _ = liteserv.start(logfile)
+
+    liteserv.stop()
+
+    with open("{}/test.txt".format(TEST_DIR), "r") as f:
+        contents = f.read()
+        assert "LiteServ 1.3.1 (build 6) is listening at" in contents
 
 
 def test_macosx_full_life_cycle(setup_liteserv_macosx_sqlite):

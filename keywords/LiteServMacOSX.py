@@ -65,17 +65,21 @@ class LiteServMacOSX(LiteServBase):
         log_info("No install needed for macosx")
         pass
 
-    def start(self, logfile):
+    def remove(self):
+        """
+        Noop on Mac OSX. The LiteServ is a commandline binary
+        """
+        log_info("No remove needed for macosx")
+        pass
+
+    def start(self, logfile_name):
         """
         1. Starts a LiteServ with logging to provided logfile file object.
            The running LiteServ process will be stored in the self.process property.
         2. The method will poll on the endpoint to make sure LiteServ is available.
         3. The expected version will be compared with the version reported by http://<host>:<port>
-        4. eturn the url of the running LiteServ
+        4. Return the url of the running LiteServ
         """
-
-        if not isinstance(logfile, file):
-            raise LiteServError("logfile must be of type 'file'")
 
         self._verify_not_running()
 
@@ -112,7 +116,8 @@ class LiteServMacOSX(LiteServBase):
         log_info("Launching {} with args: {}".format(binary_path, process_args))
 
         # Launch LiteServ
-        self.process = subprocess.Popen(args=process_args, stderr=logfile)
+        self.logfile = open(logfile_name, "w")
+        self.process = subprocess.Popen(args=process_args, stderr=self.logfile)
 
         # Verify Expected version is running
         self._verify_launched()
@@ -139,20 +144,17 @@ class LiteServMacOSX(LiteServBase):
         if expected_version != running_version:
             raise LiteServError("Expected version: {} does not match running version: {}".format(expected_version, running_version))
 
-    def stop(self, logfile):
+    def stop(self):
         """
         1. Flush and close the logfile capturing the LiteServ output
         2. Kill the LiteServ process
         3. Verify that no service is running on http://<host>:<port>
         """
 
-        if not isinstance(logfile, file):
-            raise LiteServError("logfile must be of type 'file'")
-
         log_info("Killing LiteServ: http://{}:{}".format(self.host, self.port))
 
-        logfile.flush()
-        logfile.close()
+        self.logfile.flush()
+        self.logfile.close()
         self.process.kill()
         self.process.wait()
 
