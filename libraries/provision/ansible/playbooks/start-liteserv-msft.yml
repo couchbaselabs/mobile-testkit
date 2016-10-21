@@ -3,10 +3,9 @@
   vars:
     binary_path:
     launch_args:
-    log_name:
 
   tasks:
-    - debug: msg="Starting {{ binary_path }}"
+    - debug: msg="Starting with args {{ launch_args }}"
     - name: Start LiteServ
       win_nssm:
         name: LiteServ
@@ -14,5 +13,5 @@
         app_parameters:
           _: "{{ launch_args }}"
         state: started
-        stdout_file: C:\Users\{{ ansible_user }}\Desktop\LiteServ\{{ log_name }}
-        stderr_file: C:\Users\{{ ansible_user }}\Desktop\LiteServ\{{ log_name }}
+        stdout_file: C:\Users\{{ ansible_user }}\Desktop\LiteServ\LiteServ.log
+        stderr_file: C:\Users\{{ ansible_user }}\Desktop\LiteServ\LiteServ.log

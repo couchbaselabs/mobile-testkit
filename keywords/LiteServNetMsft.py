@@ -76,7 +76,7 @@ class LiteServNetMsft(LiteServBase):
         Installs needed packages on Windows host and removes any existing service wrappers for LiteServ
         """
 
-        directory_path = "couchbase-lite-net-msft-{}-liteserv".format(self.version_build)
+        directory_path = "couchbase-lite-net-msft-{}-liteserv/LiteServ.exe".format(self.version_build)
         status = self.ansible_runner.run_ansible_playbook("install-liteserv-windows.yml", extra_vars={
             "directory_path": directory_path
         })
@@ -121,7 +121,7 @@ class LiteServNetMsft(LiteServBase):
             for db_name in REGISTERED_CLIENT_DBS:
                 db_flags.append("--dbpassword")
                 db_flags.append("{}=pass".format(db_name))
-            process_args.extend(db_name)
+            process_args.extend(db_flags)
 
         binary_path = "couchbase-lite-net-msft-{}-liteserv/LiteServ.exe".format(self.version_build)
 
@@ -132,7 +132,7 @@ class LiteServNetMsft(LiteServBase):
             "start-liteserv-msft.yml",
             extra_vars={
                 "binary_path": binary_path,
-                "launch_args": joined_args
+                "launch_args": joined_args,
             }
         )
         if status != 0:
@@ -143,14 +143,14 @@ class LiteServNetMsft(LiteServBase):
         return "http://{}:{}".format(self.host, self.port)
 
     def _verify_launched(self):
-        """ Poll on expected http://<host>:<port> until it is reachable
+        """Poll on expected http://<host>:<port> until it is reachable
         Assert that the response contains the expected version information
         """
 
         resp_obj = self._wait_until_reachable()
         log_info(resp_obj)
 
-        # .NET .NET Microsoft Windows 10.12/x86_64 1.3.1-build0013/5d1553d
+        # .NET Microsoft Windows 10.12/x86_64 1.3.1-build0013/5d1553d
         running_version = resp_obj["vendor"]["version"]
 
         if not running_version.startswith(".NET Microsoft Windows"):
