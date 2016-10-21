@@ -180,7 +180,7 @@ pytest  -s \
         --liteserv-one-port=5000 \
         --liteserv-one-storage-engine=SQLite \
         --liteserv-two-platform=net \
-        --liteserv-two-version=1.3.1-6 \
+        --liteserv-two-version=1.3.1-13 \
         --liteserv-two-host=192.168.0.12 \
         --liteserv-two-port=51000 \
         --liteserv-two-storage-engine=SQLite \

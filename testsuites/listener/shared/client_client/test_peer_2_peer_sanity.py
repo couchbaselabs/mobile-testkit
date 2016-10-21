@@ -4,7 +4,7 @@ import datetime
 from keywords.utils import log_info
 
 from keywords.constants import RESULTS_DIR
-from keywords.LiteServ import LiteServ
+from keywords.LiteServFactory import LiteServFactory
 from keywords.MobileRestClient import MobileRestClient
 
 
@@ -20,65 +20,6 @@ def setup_p2p_suite(request):
 
     liteserv_one_platform = request.config.getoption("--liteserv-one-platform")
     liteserv_one_version = request.config.getoption("--liteserv-one-version")
-    liteserv_one_storage_engine = request.config.getoption("--liteserv-one-storage-engine")
-
-    liteserv_two_platform = request.config.getoption("--liteserv-two-platform")
-    liteserv_two_version = request.config.getoption("--liteserv-two-version")
-    liteserv_two_storage_engine = request.config.getoption("--liteserv-two-storage-engine")
-
-    ls = LiteServ()
-
-    print("Downloading LiteServ One ...")
-
-    # Download LiteServ One
-    ls.download_liteserv(
-        platform=liteserv_one_platform,
-        version=liteserv_one_version,
-        storage_engine=liteserv_one_storage_engine
-    )
-
-    print("Downloading LiteServ Two ...")
-
-    # Download LiteServ Two
-    ls.download_liteserv(
-        platform=liteserv_two_platform,
-        version=liteserv_two_version,
-        storage_engine=liteserv_two_storage_engine
-    )
-
-    # Install LiteServ One
-    ls.install_liteserv(
-        platform=liteserv_one_platform,
-        version=liteserv_one_version,
-        storage_engine=liteserv_one_storage_engine
-    )
-
-    # Install LiteServ Two
-    ls.install_liteserv(
-        platform=liteserv_two_platform,
-        version=liteserv_two_version,
-        storage_engine=liteserv_two_storage_engine
-    )
-
-    # Wait at the yeild until tests referencing this suite setup have run,
-    # Then execute the teardown
-    yield
-
-    log_info("Tearing down suite ...")
-
-
-# Runs as a setup to each test_* function in the file. It will yeild the
-# dictionary to the test and execute everything after the yield once the
-# test has completed
-@pytest.fixture(scope="function")
-def setup_p2p_test(request):
-
-    """Test setup fixture for p2p client tests"""
-
-    log_info("Setting up P2P test ...")
-
-    liteserv_one_platform = request.config.getoption("--liteserv-one-platform")
-    liteserv_one_version = request.config.getoption("--liteserv-one-version")
     liteserv_one_host = request.config.getoption("--liteserv-one-host")
     liteserv_one_port = request.config.getoption("--liteserv-one-port")
     liteserv_one_storage_engine = request.config.getoption("--liteserv-one-storage-engine")
@@ -89,42 +30,55 @@ def setup_p2p_test(request):
     liteserv_two_port = request.config.getoption("--liteserv-two-port")
     liteserv_two_storage_engine = request.config.getoption("--liteserv-two-storage-engine")
 
-    ls = LiteServ()
-    client = MobileRestClient()
+    liteserv_one = LiteServFactory.create(platform=liteserv_one_platform,
+                                          version_build=liteserv_one_version,
+                                          host=liteserv_one_host,
+                                          port=liteserv_one_port,
+                                          storage_engine=liteserv_one_storage_engine)
+
+    liteserv_two = LiteServFactory.create(platform=liteserv_two_platform,
+                                          version_build=liteserv_two_version,
+                                          host=liteserv_two_host,
+                                          port=liteserv_two_port,
+                                          storage_engine=liteserv_two_storage_engine)
+
+    liteserv_one.download()
+    liteserv_one.install()
+
+    liteserv_two.download()
+    liteserv_two.install()
+
+    yield {"liteserv_one": liteserv_one, "liteserv_two": liteserv_two}
+
+    log_info("Tearing down suite ...")
+
+    liteserv_one.remove()
+
+    liteserv_two.remove()
+
+
+# Runs as a setup to each test_* function in the file. It will yeild the
+# dictionary to the test and execute everything after the yield once the
+# test has completed
+@pytest.fixture(scope="function")
+def setup_p2p_test(request, setup_p2p_suite):
+
+    """Test setup fixture for p2p client tests"""
+
+    log_info("Setting up P2P test ...")
+
+    liteserv_one = setup_p2p_suite["liteserv_one"]
+    liteserv_two = setup_p2p_suite["liteserv_two"]
 
     test_name = request.node.name
 
-    # Verify LiteServ is not running
-    ls.verify_liteserv_not_running(host=liteserv_one_host, port=liteserv_one_port)
-    ls.verify_liteserv_not_running(host=liteserv_two_host, port=liteserv_two_port)
-
-    ls_cluster_target = None
-    if liteserv_one_platform == "net-win" or liteserv_two_platform == "net-win":
-        ls_cluster_target = "resources/cluster_configs/windows"
-
     print("Starting LiteServ One ...")
-    ls_logging_one = open("{}/logs/{}-ls1-{}-{}.txt".format(RESULTS_DIR, datetime.datetime.now(), liteserv_one_platform, test_name), "w")
-    ls_url_one, ls_handle_one = ls.start_liteserv(
-        platform=liteserv_one_platform,
-        version=liteserv_one_version,
-        host=liteserv_one_host,
-        port=liteserv_one_port,
-        storage_engine=liteserv_one_storage_engine,
-        logfile=ls_logging_one,
-        cluster_config=ls_cluster_target
-    )
+    ls_logging_one = "{}/logs/{}-ls1-{}-{}.txt".format(RESULTS_DIR, type(liteserv_one).__name__, test_name, datetime.datetime.now())
+    ls_url_one = liteserv_one.start(ls_logging_one)
 
     print("Starting LiteServ Two ...")
-    ls_logging_two = open("{}/logs/{}-ls1-{}-{}.txt".format(RESULTS_DIR, datetime.datetime.now(), liteserv_two_platform, test_name), "w")
-    ls_url_two, ls_handle_two = ls.start_liteserv(
-        platform=liteserv_two_platform,
-        version=liteserv_two_version,
-        host=liteserv_two_host,
-        port=liteserv_two_port,
-        storage_engine=liteserv_two_storage_engine,
-        logfile=ls_logging_two,
-        cluster_config=ls_cluster_target
-    )
+    ls_logging_two = "{}/logs/{}-ls2-{}-{}.txt".format(RESULTS_DIR, type(liteserv_two).__name__, test_name, datetime.datetime.now())
+    ls_url_two = liteserv_two.start(ls_logging_two)
 
     # Yield values to test case via fixture argument
     yield {"ls_url_one": ls_url_one, "ls_url_two": ls_url_two}
@@ -132,28 +86,12 @@ def setup_p2p_test(request):
     log_info("Tearing down test")
 
     # Teardown test
+    client = MobileRestClient()
     client.delete_databases(ls_url_one)
     client.delete_databases(ls_url_two)
 
-    ls.shutdown_liteserv(host=liteserv_one_host,
-                         platform=liteserv_one_platform,
-                         version=liteserv_one_version,
-                         storage_engine=liteserv_one_storage_engine,
-                         process_handle=ls_handle_one,
-                         logfile=ls_logging_one,
-                         cluster_config=ls_cluster_target)
-
-    ls.shutdown_liteserv(host=liteserv_two_host,
-                         platform=liteserv_two_platform,
-                         version=liteserv_two_version,
-                         storage_engine=liteserv_two_storage_engine,
-                         process_handle=ls_handle_two,
-                         logfile=ls_logging_two,
-                         cluster_config=ls_cluster_target)
-
-    # Verify LiteServ is killed
-    ls.verify_liteserv_not_running(host=liteserv_one_host, port=liteserv_one_port)
-    ls.verify_liteserv_not_running(host=liteserv_two_host, port=liteserv_two_port)
+    liteserv_one.stop()
+    liteserv_two.stop()
 
 
 @pytest.mark.sanity
@@ -161,7 +99,7 @@ def setup_p2p_test(request):
 @pytest.mark.replication
 @pytest.mark.p2p
 @pytest.mark.changes
-def test_peer_2_peer_sanity(setup_p2p_suite, setup_p2p_test):
+def test_peer_2_peer_sanity(setup_p2p_test):
     """
     1. Sanity P2P Scenario
     2. Launch LiteServ 1 and LiteServ 2
@@ -245,7 +183,7 @@ def test_peer_2_peer_sanity(setup_p2p_suite, setup_p2p_test):
 @pytest.mark.replication
 @pytest.mark.p2p
 @pytest.mark.changes
-def test_peer_2_peer_sanity_pull(setup_p2p_suite, setup_p2p_test):
+def test_peer_2_peer_sanity_pull(setup_p2p_test):
     """
     1. Create ls_db1 database on LiteServ One
     2. Create ls_db2 database on LiteServ Two
@@ -293,7 +231,7 @@ def test_peer_2_peer_sanity_pull(setup_p2p_suite, setup_p2p_test):
 @pytest.mark.replication
 @pytest.mark.p2p
 @pytest.mark.changes
-def test_peer_2_peer_sanity_push(setup_p2p_suite, setup_p2p_test):
+def test_peer_2_peer_sanity_push(setup_p2p_test):
     """
     1. Create ls_db1 database on LiteServ One
     2. Create ls_db2 database on LiteServ Two
