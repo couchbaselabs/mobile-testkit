@@ -14,4 +14,10 @@ To run all the tests the following dependencies need to be satisfied
 - export LITESERV_MSFT_HOST_PASSWORD=<rdp_user_password>
 
 ## Running the tests (Execute from root of repo)
-pytest --android-host=192.168.0.7 --ios-host=192.168.0.19 --net-msft-host=192.168.0.16 framework_tests/
+```
+pytest -s \
+       --android-host=192.168.0.7 \
+       --ios-host=192.168.0.19 \
+       --net-msft-host=192.168.0.16 \
+       framework_tests/
+```
