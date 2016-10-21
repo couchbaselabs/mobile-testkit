@@ -27,6 +27,7 @@ def setup_liteserv_ios_no_launch(request):
 
     liteserv.remove()
 
+
 @pytest.fixture(scope="function")
 def setup_liteserv_ios_sqlite(request):
     ios_host = request.config.getoption("--ios-host")
@@ -152,7 +153,7 @@ def test_ios_logging(request, setup_liteserv_ios_logging):
     test_name = request.node.name
 
     logfile = "{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(liteserv).__name__, test_name, datetime.datetime.now())
-    _ = liteserv.start(logfile)
+    liteserv.start(logfile)
 
     liteserv.stop()
 

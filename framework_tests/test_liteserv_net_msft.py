@@ -134,7 +134,7 @@ def test_net_msft_logging(request, setup_liteserv_net_msft_no_launch):
 
     test_name = request.node.name
     logfile = "{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(liteserv).__name__, test_name, datetime.datetime.now())
-    _ = liteserv.start(logfile)
+    liteserv.start(logfile)
     liteserv.stop()
 
     with open(logfile, "r") as f:

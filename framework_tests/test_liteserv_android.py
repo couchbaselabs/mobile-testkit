@@ -132,7 +132,7 @@ def test_android_install_and_remove(request):
 
     liteserv.remove()
 
-    output = subprocess.check_output(["adb", "shell",  "pm", "list", "packages"])
+    output = subprocess.check_output(["adb", "shell", "pm", "list", "packages"])
     assert "com.couchbase.liteservandroid" not in output
 
 
@@ -264,4 +264,3 @@ def test_android_forestdb_enc(request, setup_liteserv_android_forestdb_encryptio
     assert len(liteserv_output) == 4
     assert liteserv_output[0].endswith("storageType=ForestDB")
     assert liteserv_output[1].endswith("dbpassword=ls_db:pass,ls_db1:pass,ls_db2:pass")
-

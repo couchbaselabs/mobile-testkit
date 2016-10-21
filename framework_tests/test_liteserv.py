@@ -10,11 +10,11 @@ from keywords.exceptions import LiteServError
 def test_invalid_platform():
 
     with pytest.raises(ValueError) as ve:
-        _ = LiteServFactory.create("ias",
-                                   version_build="1.3.1-6",
-                                   host="localhost",
-                                   port=59840,
-                                   storage_engine="SQLite")
+        LiteServFactory.create("ias",
+                               version_build="1.3.1-6",
+                               host="localhost",
+                               port=59840,
+                               storage_engine="SQLite")
     ve_message = str(ve.value)
     assert ve_message == "Unsupported 'platform': ias"
 
@@ -22,11 +22,11 @@ def test_invalid_platform():
 def test_invalid_storage_engine():
 
     with pytest.raises(ValueError) as ve:
-        _ = LiteServFactory.create("macosx",
-                                   version_build="1.3.1-6",
-                                   host="localhost",
-                                   port=59840,
-                                   storage_engine="SQLit")
+        LiteServFactory.create("macosx",
+                               version_build="1.3.1-6",
+                               host="localhost",
+                               port=59840,
+                               storage_engine="SQLit")
     ve_message = str(ve.value)
     assert ve_message == "Unsupported 'storage_engine': SQLit"
 

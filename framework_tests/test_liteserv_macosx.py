@@ -138,8 +138,7 @@ def test_macosx_logging(request, setup_liteserv_macosx_logging):
 
     test_name = request.node.name
     logfile = "{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(liteserv).__name__, test_name, datetime.datetime.now())
-    _ = liteserv.start(logfile)
-
+    liteserv.start(logfile)
     liteserv.stop()
 
     with open(logfile, "r") as f:

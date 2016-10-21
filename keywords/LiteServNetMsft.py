@@ -1,15 +1,8 @@
 import os
-import subprocess
 import re
-import shutil
-from zipfile import ZipFile
-
-import requests
 
 from keywords.LiteServBase import LiteServBase
 from keywords.constants import LATEST_BUILDS
-from keywords.constants import BINARY_DIR
-from keywords.constants import RESULTS_DIR
 from keywords.constants import REGISTERED_CLIENT_DBS
 from keywords.exceptions import LiteServError
 from keywords.utils import version_and_build
