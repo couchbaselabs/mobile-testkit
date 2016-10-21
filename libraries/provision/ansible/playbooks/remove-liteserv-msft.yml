@@ -1,0 +1,8 @@
+- name: Windows - Remove LiteServ Service
+  hosts: windows
+
+  tasks:
+    - name: Remove LiteServ Service
+      win_nssm:
+        name: LiteServ
+        state: absent

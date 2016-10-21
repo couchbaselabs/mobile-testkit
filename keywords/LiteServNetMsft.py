@@ -84,7 +84,13 @@ class LiteServNetMsft(LiteServBase):
         if status != 0:
             raise LiteServError("Failed to install Liteserv on Windows host")
 
-    def start(self, logfile):
+    def remove(self):
+        log_info("Removing windows server from: {}".format(self.host))
+        status = self.ansible_runner.run_ansible_playbook("remove-liteserv-msft.yml")
+        if status != 0:
+            raise LiteServError("Failed to install Liteserv on Windows host")
+
+    def start(self, logfile_name):
         """
         1. Starts a LiteServ with logging to provided logfile file object.
            The running LiteServ process will be stored in the self.process property.
@@ -93,11 +99,9 @@ class LiteServNetMsft(LiteServBase):
         4. eturn the url of the running LiteServ
         """
 
-        # TODO: logfile -> logname, store as property on LiteServBase
-        if not isinstance(logfile, file):
-            raise LiteServError("logfile must be of type 'file'")
-
         self._verify_not_running()
+
+        self.logfile = logfile_name
 
         process_args = [
             "--port", str(self.port),
@@ -125,7 +129,7 @@ class LiteServNetMsft(LiteServBase):
         log_info("Starting LiteServ {} with: {}".format(binary_path, joined_args))
 
         status = self.ansible_runner.run_ansible_playbook(
-            "start-liteserv-windows.yml",
+            "start-liteserv-msft.yml",
             extra_vars={
                 "binary_path": binary_path,
                 "launch_args": joined_args
@@ -164,17 +168,14 @@ class LiteServNetMsft(LiteServBase):
                 running_version_composed)
             )
 
-    def stop(self, logfile):
+    def stop(self):
         """
         Stops a .NET listener on a remote windows machine via ansible and pulls logs.
         """
 
-        # TODO: Remove
-        logfile = "test"
-
         binary_path = "couchbase-lite-net-msft-{}-liteserv/LiteServ.exe".format(self.version_build)
 
-        log_full_path = "{}/{}".format(os.getcwd(), logfile)
+        log_full_path = "{}/{}".format(os.getcwd(), self.logfile)
 
         log_info("Stoping {} on windows maching ...".format(binary_path))
         log_info("Pulling logs to {} ...".format(log_full_path))
