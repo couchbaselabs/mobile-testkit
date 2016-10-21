@@ -1,6 +1,6 @@
 import time
 
-import requests
+from requests.sessions import Session
 from requests.exceptions import ConnectionError
 
 from keywords.constants import MAX_RETRIES
@@ -12,7 +12,6 @@ from keywords.utils import log_info
 class LiteServBase(object):
 
     def __init__(self, version_build, host, port, storage_engine):
-
         self.version_build = version_build
         self.host = host
         self.port = port
@@ -23,6 +22,8 @@ class LiteServBase(object):
 
         # For the subclasses, this property may be a file handle or a string
         self.logfile = None
+
+        self.session = Session()
 
     def download(self):
         raise NotImplementedError()
@@ -38,7 +39,7 @@ class LiteServBase(object):
         Verifys that the endpoint does not return a 200 from a running service
         """
         try:
-            resp = requests.get("http://{}:{}/".format(self.host, self.port))
+            resp = self.session.get("http://{}:{}/".format(self.host, self.port))
         except ConnectionError:
             # Expecting connection error if LiteServ is not running on the port
             return
@@ -51,7 +52,7 @@ class LiteServBase(object):
         count = 0
         while count < MAX_RETRIES:
             try:
-                resp = requests.get(url)
+                resp = self.session.get(url)
                 # If request does not throw, exit retry loop
                 break
             except ConnectionError:
