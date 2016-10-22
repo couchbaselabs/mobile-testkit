@@ -144,7 +144,7 @@ def test_net_mono_logging(request, setup_liteserv_net_mono_logging):
 
     with open(logfile, "r") as f:
         contents = f.read()
-        assert "Starting Manager version: .NET OS X 10.12/x86_64 1.3.1-build0013/5d1553d" in contents
+        assert "Starting Manager version: .NET OS X" in contents
 
 
 def test_net_mono_full_life_cycle(setup_liteserv_net_mono_sqlite):
