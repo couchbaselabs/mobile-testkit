@@ -11,9 +11,12 @@ from keywords.MobileRestClient import MobileRestClient
 
 
 @pytest.fixture(scope="function")
-def setup_liteserv_net_mono_logging():
+def setup_liteserv_net_mono_logging(request):
+
+    net_version = request.config.getoption("--net-version")
+
     liteserv = LiteServFactory.create("net-mono",
-                                      version_build="1.3.1-13",
+                                      version_build=net_version,
                                       host="localhost",
                                       port=59840,
                                       storage_engine="SQLite")
@@ -27,8 +30,11 @@ def setup_liteserv_net_mono_logging():
 
 @pytest.fixture(scope="function")
 def setup_liteserv_net_mono_sqlite(request):
+
+    net_version = request.config.getoption("--net-version")
+
     liteserv = LiteServFactory.create("net-mono",
-                                      version_build="1.3.1-13",
+                                      version_build=net_version,
                                       host="localhost",
                                       port=59840,
                                       storage_engine="SQLite")
@@ -47,8 +53,11 @@ def setup_liteserv_net_mono_sqlite(request):
 
 @pytest.fixture(scope="function")
 def setup_liteserv_net_mono_sqlcipher(request):
+
+    net_version = request.config.getoption("--net-version")
+
     liteserv = LiteServFactory.create("net-mono",
-                                      version_build="1.3.1-13",
+                                      version_build=net_version,
                                       host="localhost",
                                       port=59840,
                                       storage_engine="SQLCipher")
@@ -67,8 +76,11 @@ def setup_liteserv_net_mono_sqlcipher(request):
 
 @pytest.fixture(scope="function")
 def setup_liteserv_net_mono_forestdb(request):
+
+    net_version = request.config.getoption("--net-version")
+
     liteserv = LiteServFactory.create("net-mono",
-                                      version_build="1.3.1-13",
+                                      version_build=net_version,
                                       host="localhost",
                                       port=59840,
                                       storage_engine="ForestDB")
@@ -87,8 +99,11 @@ def setup_liteserv_net_mono_forestdb(request):
 
 @pytest.fixture(scope="function")
 def setup_liteserv_net_mono_forestdb_encryption(request):
+
+    net_version = request.config.getoption("--net-version")
+
     liteserv = LiteServFactory.create("net-mono",
-                                      version_build="1.3.1-13",
+                                      version_build=net_version,
                                       host="localhost",
                                       port=59840,
                                       storage_engine="ForestDB+Encryption")
@@ -105,22 +120,24 @@ def setup_liteserv_net_mono_forestdb_encryption(request):
     liteserv.remove()
 
 
-def test_net_mono_download():
+def test_net_mono_download(request):
 
     shutil.rmtree("{}/".format(BINARY_DIR))
     os.makedirs("{}".format(BINARY_DIR))
 
+    net_version = request.config.getoption("--net-version")
+
     liteserv = LiteServFactory.create("net-mono",
-                                      version_build="1.3.1-13",
+                                      version_build=net_version,
                                       host="localhost",
                                       port=59840,
                                       storage_engine="SQLite")
 
     liteserv.download()
 
-    assert os.path.isdir("deps/binaries/couchbase-lite-net-mono-1.3.1-13-liteserv")
-    assert os.path.isfile("deps/binaries/couchbase-lite-net-mono-1.3.1-13-liteserv/LiteServ.exe")
-    assert not os.path.isfile("deps/binaries/couchbase-lite-net-mono-1.3.1-13-liteserv.zip")
+    assert os.path.isdir("deps/binaries/couchbase-lite-net-mono-{}-liteserv".format(net_version))
+    assert os.path.isfile("deps/binaries/couchbase-lite-net-mono-{}-liteserv/LiteServ.exe".format(net_version))
+    assert not os.path.isfile("deps/binaries/couchbase-lite-net-mono-{}-liteserv.zip".format(net_version))
 
 
 def test_net_mono_install():

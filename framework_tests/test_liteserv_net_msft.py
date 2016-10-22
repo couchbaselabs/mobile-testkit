@@ -13,10 +13,11 @@ from keywords.MobileRestClient import MobileRestClient
 @pytest.fixture(scope="function")
 def setup_liteserv_net_msft_no_launch(request):
 
+    net_version = request.config.getoption("--net-version")
     net_msft_host = request.config.getoption("--net-msft-host")
 
     liteserv = LiteServFactory.create("net-msft",
-                                      version_build="1.3.1-13",
+                                      version_build=net_version,
                                       host=net_msft_host,
                                       port=59840,
                                       storage_engine="SQLite")
@@ -31,10 +32,11 @@ def setup_liteserv_net_msft_no_launch(request):
 @pytest.fixture(scope="function")
 def setup_liteserv_net_msft_sqlite(request):
 
+    net_version = request.config.getoption("--net-version")
     net_msft_host = request.config.getoption("--net-msft-host")
 
     liteserv = LiteServFactory.create("net-msft",
-                                      version_build="1.3.1-13",
+                                      version_build=net_version,
                                       host=net_msft_host,
                                       port=59840,
                                       storage_engine="SQLite")
@@ -49,10 +51,11 @@ def setup_liteserv_net_msft_sqlite(request):
 @pytest.fixture(scope="function")
 def setup_liteserv_net_msft_sqlcipher(request):
 
+    net_version = request.config.getoption("--net-version")
     net_msft_host = request.config.getoption("--net-msft-host")
 
     liteserv = LiteServFactory.create("net-msft",
-                                      version_build="1.3.1-13",
+                                      version_build=net_version,
                                       host=net_msft_host,
                                       port=59840,
                                       storage_engine="SQLCipher")
@@ -67,10 +70,11 @@ def setup_liteserv_net_msft_sqlcipher(request):
 @pytest.fixture(scope="function")
 def setup_liteserv_net_msft_forestdb(request):
 
+    net_version = request.config.getoption("--net-version")
     net_msft_host = request.config.getoption("--net-msft-host")
 
     liteserv = LiteServFactory.create("net-msft",
-                                      version_build="1.3.1-13",
+                                      version_build=net_version,
                                       host=net_msft_host,
                                       port=59840,
                                       storage_engine="ForestDB")
@@ -85,10 +89,11 @@ def setup_liteserv_net_msft_forestdb(request):
 @pytest.fixture(scope="function")
 def setup_liteserv_net_msft_forestdb_encryption(request):
 
+    net_version = request.config.getoption("--net-version")
     net_msft_host = request.config.getoption("--net-msft-host")
 
     liteserv = LiteServFactory.create("net-msft",
-                                      version_build="1.3.1-13",
+                                      version_build=net_version,
                                       host=net_msft_host,
                                       port=59840,
                                       storage_engine="ForestDB+Encryption")
@@ -105,10 +110,11 @@ def test_net_msft_download(request):
     shutil.rmtree("{}/".format(BINARY_DIR))
     os.makedirs("{}".format(BINARY_DIR))
 
+    net_version = request.config.getoption("--net-version")
     net_msft_host = request.config.getoption("--net-msft-host")
 
     liteserv = LiteServFactory.create("net-msft",
-                                      version_build="1.3.1-13",
+                                      version_build=net_version,
                                       host=net_msft_host,
                                       port=59840,
                                       storage_engine="SQLite")

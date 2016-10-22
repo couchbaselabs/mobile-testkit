@@ -16,8 +16,12 @@ To run all the tests the following dependencies need to be satisfied
 ## Running the tests (Execute from root of repo)
 ```
 pytest -s \
+       --android-version=1.3.1-30 \
        --android-host=192.168.0.7 \
+       --ios-version=1.3.1-6 \
        --ios-host=192.168.0.19 \
+       --macosx-version=1.3.1-6
+       --net-version=1.3.1-30 \
        --net-msft-host=192.168.0.16 \
        framework_tests/
 ```

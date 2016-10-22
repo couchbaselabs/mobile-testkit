@@ -8,15 +8,17 @@ from keywords.constants import RESULTS_DIR
 from keywords.constants import BINARY_DIR
 from keywords.LiteServFactory import LiteServFactory
 from keywords.MobileRestClient import MobileRestClient
+from keywords.utils import version_and_build
 
 
 @pytest.fixture(scope="function")
 def setup_liteserv_ios_no_launch(request):
 
+    ios_version = request.config.getoption("--ios-version")
     ios_host = request.config.getoption("--ios-host")
 
     liteserv = LiteServFactory.create("ios",
-                                      version_build="1.3.1-6",
+                                      version_build=ios_version,
                                       host=ios_host,
                                       port=59840,
                                       storage_engine="SQLite")
@@ -30,9 +32,12 @@ def setup_liteserv_ios_no_launch(request):
 
 @pytest.fixture(scope="function")
 def setup_liteserv_ios_sqlite(request):
+
+    ios_version = request.config.getoption("--ios-version")
     ios_host = request.config.getoption("--ios-host")
+
     liteserv = LiteServFactory.create("ios",
-                                      version_build="1.3.1-6",
+                                      version_build=ios_version,
                                       host=ios_host,
                                       port=59840,
                                       storage_engine="SQLite")
@@ -52,10 +57,12 @@ def setup_liteserv_ios_sqlite(request):
 
 @pytest.fixture(scope="function")
 def setup_liteserv_ios_sqlcipher(request):
+
+    ios_version = request.config.getoption("--ios-version")
     ios_host = request.config.getoption("--ios-host")
 
     liteserv = LiteServFactory.create("ios",
-                                      version_build="1.3.1-6",
+                                      version_build=ios_version,
                                       host=ios_host,
                                       port=59840,
                                       storage_engine="SQLCipher")
@@ -76,10 +83,11 @@ def setup_liteserv_ios_sqlcipher(request):
 @pytest.fixture(scope="function")
 def setup_liteserv_ios_forestdb(request):
 
+    ios_version = request.config.getoption("--ios-version")
     ios_host = request.config.getoption("--ios-host")
 
     liteserv = LiteServFactory.create("ios",
-                                      version_build="1.3.1-6",
+                                      version_build=ios_version,
                                       host=ios_host,
                                       port=59840,
                                       storage_engine="ForestDB")
@@ -100,10 +108,11 @@ def setup_liteserv_ios_forestdb(request):
 @pytest.fixture(scope="function")
 def setup_liteserv_ios_forestdb_encryption(request):
 
+    ios_version = request.config.getoption("--ios-version")
     ios_host = request.config.getoption("--ios-host")
 
     liteserv = LiteServFactory.create("ios",
-                                      version_build="1.3.1-6",
+                                      version_build=ios_version,
                                       host=ios_host,
                                       port=59840,
                                       storage_engine="ForestDB+Encryption")
@@ -124,13 +133,14 @@ def setup_liteserv_ios_forestdb_encryption(request):
 @pytest.mark.skip(reason="Need to wait until build is setup")
 def test_ios_download(request):
 
+    ios_version = request.config.getoption("--ios-version")
     ios_host = request.config.getoption("--ios-host")
 
     shutil.rmtree("{}/".format(BINARY_DIR))
     os.makedirs("{}".format(BINARY_DIR))
 
     liteserv = LiteServFactory.create("ios",
-                                      version_build="1.3.1-6",
+                                      version_build=ios_version,
                                       host=ios_host,
                                       port=59840,
                                       storage_engine="SQLite")
@@ -157,9 +167,11 @@ def test_ios_logging(request, setup_liteserv_ios_logging):
 
     liteserv.stop()
 
+    version, build = version_and_build(liteserv.version_build)
+
     with open(logfile, "r") as f:
         contents = f.read()
-        assert "LiteServ 1.3.1 (build 6) is listening at" in contents
+        assert "LiteServ {} (build {}) is listening at".format(version, build) in contents
 
 
 @pytest.mark.skip(reason="Need to wait until build is setup")

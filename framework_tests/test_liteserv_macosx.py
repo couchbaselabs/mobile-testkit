@@ -8,12 +8,16 @@ from keywords.constants import RESULTS_DIR
 from keywords.constants import BINARY_DIR
 from keywords.LiteServFactory import LiteServFactory
 from keywords.MobileRestClient import MobileRestClient
+from keywords.utils import version_and_build
 
 
 @pytest.fixture(scope="function")
-def setup_liteserv_macosx_logging():
+def setup_liteserv_macosx_logging(request):
+
+    macosx_version = request.config.getoption("--macosx-version")
+
     liteserv = LiteServFactory.create("macosx",
-                                      version_build="1.3.1-6",
+                                      version_build=macosx_version,
                                       host="localhost",
                                       port=59840,
                                       storage_engine="SQLite")
@@ -27,8 +31,11 @@ def setup_liteserv_macosx_logging():
 
 @pytest.fixture(scope="function")
 def setup_liteserv_macosx_sqlite(request):
+
+    macosx_version = request.config.getoption("--macosx-version")
+
     liteserv = LiteServFactory.create("macosx",
-                                      version_build="1.3.1-6",
+                                      version_build=macosx_version,
                                       host="localhost",
                                       port=59840,
                                       storage_engine="SQLite")
@@ -47,8 +54,11 @@ def setup_liteserv_macosx_sqlite(request):
 
 @pytest.fixture(scope="function")
 def setup_liteserv_macosx_sqlcipher(request):
+
+    macosx_version = request.config.getoption("--macosx-version")
+
     liteserv = LiteServFactory.create("macosx",
-                                      version_build="1.3.1-6",
+                                      version_build=macosx_version,
                                       host="localhost",
                                       port=59840,
                                       storage_engine="SQLCipher")
@@ -67,8 +77,11 @@ def setup_liteserv_macosx_sqlcipher(request):
 
 @pytest.fixture(scope="function")
 def setup_liteserv_macosx_forestdb(request):
+
+    macosx_version = request.config.getoption("--macosx-version")
+
     liteserv = LiteServFactory.create("macosx",
-                                      version_build="1.3.1-6",
+                                      version_build=macosx_version,
                                       host="localhost",
                                       port=59840,
                                       storage_engine="ForestDB")
@@ -87,8 +100,11 @@ def setup_liteserv_macosx_forestdb(request):
 
 @pytest.fixture(scope="function")
 def setup_liteserv_macosx_forestdb_encryption(request):
+
+    macosx_version = request.config.getoption("--macosx-version")
+
     liteserv = LiteServFactory.create("macosx",
-                                      version_build="1.3.1-6",
+                                      version_build=macosx_version,
                                       host="localhost",
                                       port=59840,
                                       storage_engine="ForestDB+Encryption")
@@ -105,22 +121,24 @@ def setup_liteserv_macosx_forestdb_encryption(request):
     liteserv.remove()
 
 
-def test_macosx_download():
+def test_macosx_download(request):
 
     shutil.rmtree("{}/".format(BINARY_DIR))
     os.makedirs("{}".format(BINARY_DIR))
 
+    macosx_version = request.config.getoption("--macosx-version")
+
     liteserv = LiteServFactory.create("macosx",
-                                      version_build="1.3.1-6",
+                                      version_build=macosx_version,
                                       host="localhost",
                                       port=59840,
                                       storage_engine="SQLite")
 
     liteserv.download()
 
-    assert os.path.isdir("deps/binaries/couchbase-lite-macosx-enterprise_1.3.1-6")
-    assert os.path.isfile("deps/binaries/couchbase-lite-macosx-enterprise_1.3.1-6/LiteServ")
-    assert not os.path.isfile("deps/binaries/couchbase-lite-macosx-enterprise_1.3.1-6.zip")
+    assert os.path.isdir("deps/binaries/couchbase-lite-macosx-enterprise_{}".format(macosx_version))
+    assert os.path.isfile("deps/binaries/couchbase-lite-macosx-enterprise_{}/LiteServ".format(macosx_version))
+    assert not os.path.isfile("deps/binaries/couchbase-lite-macosx-enterprise_{}.zip".format(macosx_version))
 
 
 def test_macosx_install():
@@ -134,6 +152,9 @@ def test_macosx_remove():
 
 
 def test_macosx_logging(request, setup_liteserv_macosx_logging):
+
+    macosx_version = request.config.getoption("--macosx-version")
+
     liteserv = setup_liteserv_macosx_logging
 
     test_name = request.node.name
@@ -141,9 +162,11 @@ def test_macosx_logging(request, setup_liteserv_macosx_logging):
     liteserv.start(logfile)
     liteserv.stop()
 
+    version, build = version_and_build(macosx_version)
+
     with open(logfile, "r") as f:
         contents = f.read()
-        assert "LiteServ 1.3.1 (build 6) is listening at" in contents
+        assert "LiteServ {} (build {}) is listening at".format(version, build) in contents
 
 
 def test_macosx_full_life_cycle(setup_liteserv_macosx_sqlite):

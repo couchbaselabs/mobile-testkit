@@ -14,10 +14,11 @@ from keywords.MobileRestClient import MobileRestClient
 @pytest.fixture(scope="function")
 def setup_liteserv_android_sqlite(request):
 
+    android_version = request.config.getoption("--android-version")
     android_host = request.config.getoption("--android-host")
 
     liteserv = LiteServFactory.create("android",
-                                      version_build="1.3.1-30",
+                                      version_build=android_version,
                                       host=android_host,
                                       port=59840,
                                       storage_engine="SQLite")
@@ -32,10 +33,11 @@ def setup_liteserv_android_sqlite(request):
 @pytest.fixture(scope="function")
 def setup_liteserv_android_sqlcipher(request):
 
+    android_version = request.config.getoption("--android-version")
     android_host = request.config.getoption("--android-host")
 
     liteserv = LiteServFactory.create("android",
-                                      version_build="1.3.1-30",
+                                      version_build=android_version,
                                       host=android_host,
                                       port=59840,
                                       storage_engine="SQLCipher")
@@ -50,10 +52,11 @@ def setup_liteserv_android_sqlcipher(request):
 @pytest.fixture(scope="function")
 def setup_liteserv_android_forestdb(request):
 
+    android_version = request.config.getoption("--android-version")
     android_host = request.config.getoption("--android-host")
 
     liteserv = LiteServFactory.create("android",
-                                      version_build="1.3.1-30",
+                                      version_build=android_version,
                                       host=android_host,
                                       port=59840,
                                       storage_engine="ForestDB")
@@ -69,10 +72,11 @@ def setup_liteserv_android_forestdb(request):
 @pytest.fixture(scope="function")
 def setup_liteserv_android_forestdb_encryption(request):
 
+    android_version = request.config.getoption("--android-version")
     android_host = request.config.getoption("--android-host")
 
     liteserv = LiteServFactory.create("android",
-                                      version_build="1.3.1-30",
+                                      version_build=android_version,
                                       host=android_host,
                                       port=59840,
                                       storage_engine="ForestDB+Encryption")
@@ -86,13 +90,14 @@ def setup_liteserv_android_forestdb_encryption(request):
 
 def test_android_download(request):
 
+    android_version = request.config.getoption("--android-version")
     android_host = request.config.getoption("--android-host")
 
     shutil.rmtree("{}/".format(BINARY_DIR))
     os.makedirs("{}".format(BINARY_DIR))
 
     liteserv = LiteServFactory.create("android",
-                                      version_build="1.3.1-30",
+                                      version_build=android_version,
                                       host=android_host,
                                       port=59840,
                                       storage_engine="SQLite")
@@ -100,10 +105,10 @@ def test_android_download(request):
     liteserv.download()
 
     assert len(os.listdir("deps/binaries")) == 1
-    assert os.path.isfile("deps/binaries/couchbase-lite-android-liteserv-SQLite-1.3.1-30-debug.apk")
+    assert os.path.isfile("deps/binaries/couchbase-lite-android-liteserv-SQLite-{}-debug.apk".format(android_version))
 
     liteserv_two = LiteServFactory.create("android",
-                                          version_build="1.3.1-30",
+                                          version_build=android_version,
                                           host=android_host,
                                           port=59840,
                                           storage_engine="SQLCipher")
@@ -111,15 +116,16 @@ def test_android_download(request):
     liteserv_two.download()
 
     assert len(os.listdir("deps/binaries")) == 2
-    assert os.path.isfile("deps/binaries/couchbase-lite-android-liteserv-SQLCipher-ForestDB-Encryption-1.3.1-30-debug.apk")
+    assert os.path.isfile("deps/binaries/couchbase-lite-android-liteserv-SQLCipher-ForestDB-Encryption-{}-debug.apk".format(android_version))
 
 
 def test_android_install_and_remove(request):
 
+    android_version = request.config.getoption("--android-version")
     android_host = request.config.getoption("--android-host")
 
     liteserv = LiteServFactory.create("android",
-                                      version_build="1.3.1-30",
+                                      version_build=android_version,
                                       host=android_host,
                                       port=59840,
                                       storage_engine="SQLite")
