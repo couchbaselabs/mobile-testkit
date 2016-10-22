@@ -139,12 +139,7 @@ def test_net_mono_logging(request, setup_liteserv_net_mono_logging):
 
     test_name = request.node.name
     logfile = "{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(liteserv).__name__, test_name, datetime.datetime.now())
-    ls_url = liteserv.start(logfile)
-
-    client = MobileRestClient()
-    client.create_database(ls_url, "ls_db")
-    client.delete_databases(ls_url)
-
+    liteserv.start(logfile)
     liteserv.stop()
 
     with open(logfile, "r") as f:
