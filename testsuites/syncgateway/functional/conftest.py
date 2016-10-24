@@ -8,3 +8,7 @@ def pytest_addoption(parser):
         action="store",
         help="sync-gateway-version: Sync Gateway version to install (ex. 1.3.1-16 or 590c1c31c7e83503eff304d8c0789bdd268d6291)"
     )
+    parser.addoption(
+        "--skip-provision", action="store_true", default=False,
+        help="add --skip-provision to skip install of services"
+    )
