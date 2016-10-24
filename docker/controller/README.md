@@ -2,29 +2,23 @@
 ## Run docker image
 
 ```
-$ docker run -ti tleyden5iwx/sync-gateway-testcluster /bin/bash
+$ MOBILE_TEST_KIT_CMD="python libraries/provision/create_and_instantiate_cluster.py \    
+--stackname=TestMTKDocker \     
+--num-servers=1 \    
+--server-type=m3.medium \
+--num-sync-gateways=1 \
+--sync-gateway-type=m3.medium \
+--num-gatlings=1 \
+--gatling-type=m3.medium \ 
+--num-lbs=0 \     
+--lb-type=m3.medium"
+
+$ docker run \
+  -e AWS_KEY=your_key \
+  -e AWS_ACCESS_KEY_ID=... \
+  -e AWS_SECRET_ACCESS_KEY=".." couchbase/mobile-testkit $MOBILE_TEST_KIT_CMD
 ```
 
-The rest of the steps should be run **inside** the running docker container.
-
-## Clone repo
-
-```
-$ cd /opt
-$ git clone https://github.com/couchbaselabs/sync-gateway-tests.git
-$ cd sync-gateway-tests/distributed_index_tests
-```
-
-## Create Ansible Inventory and push ssh keys
-
-```
-$ ssh-keygen
-$ python conf/ini_to_ansible_host.py  --install-keys=id_rsa --ini-file=conf/hosts.ini
-```
-
-## Running tests
-
-See `distributed_index_tests/README.md` in this repo for more information
 
 ## Capturing network traffic
 
