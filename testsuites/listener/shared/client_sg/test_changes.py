@@ -42,8 +42,7 @@ def test_longpoll_changes_termination_timeout(setup_client_syncgateway_test):
 
     client = MobileRestClient()
     if client.get_server_platform(ls_url) == Platform.macosx:
-        # Fail until this is fixed: https://github.com/couchbase/couchbase-lite-ios/issues/1236
-        assert 0
+        pytest.skip("https://github.com/couchbase/couchbase-lite-ios/issues/1236")
 
     client.create_database(ls_url, ls_db)
 
@@ -102,8 +101,7 @@ def test_longpoll_changes_termination_heartbeat(setup_client_syncgateway_test):
 
     client = MobileRestClient()
     if client.get_server_platform(ls_url) == Platform.macosx:
-        # Fail until this is fixed: https://github.com/couchbase/couchbase-lite-ios/issues/1236
-        assert 0
+        pytest.skip("https://github.com/couchbase/couchbase-lite-ios/issues/1236")
 
     client.create_database(ls_url, ls_db)
 
