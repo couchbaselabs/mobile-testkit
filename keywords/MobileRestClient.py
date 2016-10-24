@@ -380,8 +380,7 @@ class MobileRestClient:
             if server != "walrus:":
                 # Create bucket to support the database
                 logging.info("Creating backing bucket for sync_gateway db '{}' on '{}'".format(name, server))
-                server = CouchbaseServer()
-                server.create_bucket(server, name)
+                raise NotImplementedError()
 
             data = {
                 "name": "{}".format(name),

@@ -61,7 +61,7 @@ def test_attachment_revpos_when_ancestor_unavailable(params_from_base_test_setup
 
     client = MobileRestClient()
     sg_util = SyncGateway()
-    cb_util = CouchbaseServer()
+    cb_server = CouchbaseServer(cbs_url)
 
     user1 = client.create_user(url=sg_url_admin, db=sg_db, name="user1", password="password", channels=channels_list)
     doc_with_att = document.create_doc(doc_id="att_doc", content={"sample_key": "sample_val"}, attachment_name="sample_text.txt", channels=channels_list)
@@ -71,7 +71,8 @@ def test_attachment_revpos_when_ancestor_unavailable(params_from_base_test_setup
 
     # Clear cached rev doc bodys from server and cycle sync_gateway
     sg_util.stop_sync_gateway(cluster_config=cluster_config, url=sg_url)
-    cb_util.delete_couchbase_server_cached_rev_bodies(url=cbs_url, bucket=bucket)
+
+    cb_server.delete_couchbase_server_cached_rev_bodies(bucket=bucket)
     sg_util.start_sync_gateway(cluster_config=cluster_config, url=sg_url, config=sg_conf)
 
     client.add_conflict(

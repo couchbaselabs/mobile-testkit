@@ -53,7 +53,7 @@ class Cluster:
         self.sync_gateway_config = None  # will be set to Config object when reset() called
 
         # for integrating keywords
-        self.server_keywords = keywords.CouchbaseServer.CouchbaseServer()
+        self.cb_server = keywords.CouchbaseServer.CouchbaseServer(self.servers[0].url)
 
     def validate_cluster(self):
 
@@ -93,8 +93,8 @@ class Cluster:
             try:
                 log_info(">>> Deleting / Creating server buckets: Attempt {}".format(bucket_delete_create_attempt_num))
                 # Delete buckets
-                log_info(">>> Deleting buckets on: {}".format(self.servers[0].ip))
-                status = self.servers[0].delete_buckets()
+                log_info(">>> Deleting buckets on: {}".format(self.cb_server.url))
+                status = self.cb_server.delete_buckets()
                 assert status == 0
                 log_info(">>> Bucket deletion status: {}".format(status))
 
@@ -106,16 +106,16 @@ class Cluster:
 
                 self.sync_gateway_config = config
 
-                log_info(">>> Creating buckets on: {}".format(self.servers[0].ip))
+                log_info(">>> Creating buckets on: {}".format(self.cb_server.url))
                 log_info(">>> Creating buckets {}".format(bucket_name_set))
-                status = self.servers[0].create_buckets(bucket_name_set)
+                status = self.cb_server.create_buckets(bucket_name_set)
                 assert status == 0
                 log_info(">>> Bucket creation status: {}".format(status))
 
                 # Wait for server to be in a warmup state to work around
                 # https://github.com/couchbase/sync_gateway/issues/1745
-                log_info(">>> Waiting for Server: {} to be in a healthy state".format(self.servers[0].url))
-                self.server_keywords.wait_for_ready_state(self.servers[0].url)
+                log_info(">>> Waiting for Server: {} to be in a healthy state".format(self.cb_server.url))
+                self.cb_server.wait_for_ready_state()
 
                 # Both steps are successful, break out of retry loop
                 break
