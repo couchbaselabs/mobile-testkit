@@ -148,9 +148,9 @@ def install_couchbase_server(cluster_config, couchbase_server_config):
     print(">>> Waiting for server to be in 'healthy' state")
     cluster_keywords = ClusterKeywords()
     cluster_topology = cluster_keywords.get_cluster_topology(cluster_config)
-    server = cluster_topology["couchbase_servers"][0]
-    server_keywords = CouchbaseServer()
-    server_keywords.wait_for_ready_state(server)
+    server_url = cluster_topology["couchbase_servers"][0]
+    cb_server = CouchbaseServer(server_url)
+    cb_server.wait_for_ready_state()
 
 
 if __name__ == "__main__":

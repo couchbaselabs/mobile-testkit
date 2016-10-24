@@ -9,7 +9,6 @@ from requests.exceptions import HTTPError
 import concurrent.futures
 from concurrent.futures import ThreadPoolExecutor
 
-from CouchbaseServer import CouchbaseServer
 from Document import get_attachment
 
 from libraries.data import doc_generators
@@ -299,8 +298,7 @@ class MobileRestClient:
             if server != "walrus:":
                 # Create bucket to support the database
                 logging.info("Creating backing bucket for sync_gateway db '{}' on '{}'".format(name, server))
-                server = CouchbaseServer()
-                server.create_bucket(server, name)
+                raise NotImplementedError()
 
             data = {
                 "name": "{}".format(name),
