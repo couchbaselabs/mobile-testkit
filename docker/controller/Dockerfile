@@ -11,6 +11,8 @@ RUN yum install -y \
   git \
   libev \
   libevent \
+  libffi-devel \
+  openssl-devel \
   python-devel \
   python-pip \
   unzip \
@@ -26,17 +28,17 @@ RUN cd /tmp/ && \
 	     libcouchbase2-bin-2.5.6-1.el7.centos.x86_64.rpm \
 	     libcouchbase2-libevent-2.5.6-1.el7.centos.x86_64.rpm && \
     rm -f *.rpm	     
-    
-# Install pip packages
-RUN pip install troposphere && \
-    pip install awscli && \
-    pip install boto && \
-    pip install futures && \
-    pip install requests && \
-    pip install robotframework && \
-    pip install robotframework-appiumlibrary && \
-    pip install robotframework-debuglibrary && \
-    pip install couchbase
+
+
+WORKDIR /opt
+
+# Git clone mobile-testkit
+RUN git clone https://github.com/couchbaselabs/mobile-testkit.git
+
+WORKDIR /opt/mobile-testkit
+
+# Pip install requirements
+RUN pip install -r requirements.txt
 
 
 
