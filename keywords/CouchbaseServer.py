@@ -8,6 +8,7 @@ from couchbase.exceptions import TemporaryFailError
 from couchbase.exceptions import NotFoundError
 
 from keywords.constants import CLIENT_REQUEST_TIMEOUT
+from keywords.constants import REBALANCE_TIMEOUT
 from keywords.utils import log_r
 from keywords.utils import log_info
 from keywords.utils import log_debug
