@@ -3,6 +3,7 @@ import os
 import pytest
 from concurrent.futures import ThreadPoolExecutor
 
+from libraries.testkit.cluster import Cluster
 from libraries.NetworkUtils import NetworkUtils
 
 from keywords.ClusterKeywords import ClusterKeywords
