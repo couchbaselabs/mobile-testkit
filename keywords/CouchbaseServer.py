@@ -51,14 +51,15 @@ def verify_server_version(host, expected_server_version):
 class CouchbaseServer:
     """ Installs Couchbase Server on machine host"""
 
-    def __init__(self):
+    def __init__(self, url):
         self._headers = {"Content-Type": "application/json"}
         self._auth = ("Administrator", "password")
+        self.url = url
 
-    def delete_buckets(self, url):
+    def delete_buckets(self):
         count = 0
         while count < 3:
-            resp = requests.get("{}/pools/default/buckets".format(url), auth=self._auth, headers=self._headers)
+            resp = requests.get("{}/pools/default/buckets".format(self.url), auth=self._auth, headers=self._headers)
             log_r(resp)
             resp.raise_for_status()
 
@@ -75,7 +76,7 @@ class CouchbaseServer:
             delete_num = 0
             # Delete existing buckets
             for bucket_name in existing_bucket_names:
-                resp = requests.delete("{0}/pools/default/buckets/{1}".format(url, bucket_name), auth=self._auth, headers=self._headers)
+                resp = requests.delete("{0}/pools/default/buckets/{1}".format(self.url, bucket_name), auth=self._auth, headers=self._headers)
                 log_r(resp)
                 if resp.status_code == 200:
                     delete_num += 1
@@ -90,7 +91,7 @@ class CouchbaseServer:
         # Check that max retries did not occur
         assert count != 3, "Could not delete bucket"
 
-    def wait_for_ready_state(self, url):
+    def wait_for_ready_state(self):
         """
         Verify all server node is in are in a "healthy" state to avoid sync_gateway startup failures
         Work around for this - https://github.com/couchbase/sync_gateway/issues/1745
@@ -102,7 +103,7 @@ class CouchbaseServer:
                 raise Exception("Verify Docs Present: TIMEOUT")
 
             # Verfy the server is in a "healthy", not "warmup" state
-            resp = requests.get("{}/pools/nodes".format(url), auth=self._auth, headers=self._headers)
+            resp = requests.get("{}/pools/nodes".format(self.url), auth=self._auth, headers=self._headers)
             log_r(resp)
 
             resp_obj = resp.json()
@@ -122,11 +123,11 @@ class CouchbaseServer:
             # All nodes are heathy if it made it to here
             break
 
-    def get_available_ram(self, url):
+    def get_available_ram(self):
         """
         Call the Couchbase REST API to get the total memory available on the machine
         """
-        resp = requests.get("{}/pools/default".format(url), auth=self._auth)
+        resp = requests.get("{}/pools/default".format(self.url), auth=self._auth)
         resp.raise_for_status()
         resp_json = resp.json()
 
@@ -139,7 +140,7 @@ class CouchbaseServer:
                 mem_total_highest = mem_total
         return mem_total_highest
 
-    def create_buckets(self, url, bucket_names):
+    def create_buckets(self, bucket_names):
         """
         # Figure out what total ram available is
         # Divide by number of buckets
@@ -148,7 +149,7 @@ class CouchbaseServer:
             return
         log_info("Creating buckets: {}".format(bucket_names))
         ram_multiplier = 0.80
-        total_avail_ram_bytes = self.get_available_ram(url)
+        total_avail_ram_bytes = self.get_available_ram(self.url)
         total_avail_ram_mb = int(total_avail_ram_bytes / (1024 * 1024))
         n1ql_indexer_ram_mb = 512
         effective_avail_ram_mb = int(total_avail_ram_mb * ram_multiplier) - n1ql_indexer_ram_mb
@@ -156,9 +157,9 @@ class CouchbaseServer:
         log_info("total_avail_ram_mb: {} effective_avail_ram_mb: {} effective_avail_ram_mb: {}".format(total_avail_ram_mb, effective_avail_ram_mb, effective_avail_ram_mb))
         for bucket_name in bucket_names:
             log_info("Create bucket {} with per_bucket_ram_mb {}".format(bucket_name, per_bucket_ram_mb))
-            self.create_bucket(url, bucket_name, per_bucket_ram_mb)
+            self.create_bucket(self.url, bucket_name, per_bucket_ram_mb)
 
-    def create_bucket(self, url, name, ramQuotaMB=1024):
+    def create_bucket(self, name, ramQuotaMB=1024):
         """
         1. Create CBS bucket via REST
         2. Create client connection and poll until bucket is available
@@ -180,12 +181,12 @@ class CouchbaseServer:
             "flushEnabled": "1"
         }
 
-        resp = requests.post("{}/pools/default/buckets".format(url), auth=self._auth, data=data)
+        resp = requests.post("{}/pools/default/buckets".format(self.url), auth=self._auth, data=data)
         log_r(resp)
         resp.raise_for_status()
 
         # Create client an retry until KeyNotFound error is thrown
-        client_host = url.replace("http://", "")
+        client_host = self.replace("http://", "")
         client_host = client_host.replace(":8091", "")
         log_info(client_host)
 
@@ -209,16 +210,16 @@ class CouchbaseServer:
                 log_info("Key not found error: {} Bucket is ready!".format(nfe))
                 break
 
-        self.wait_for_ready_state(url)
+        self.wait_for_ready_state(self.url)
 
         return name
 
-    def delete_couchbase_server_cached_rev_bodies(self, url, bucket):
+    def delete_couchbase_server_cached_rev_bodies(self, bucket):
         """
         Deletes docs that follow the below format
         _sync:rev:att_doc:34:1-e7fa9a5e6bb25f7a40f36297247ca93e
         """
-        client_host = url.replace("http://", "")
+        client_host = self.replace("http://", "")
         client_host = client_host.replace(":8091", "")
 
         b = Bucket("couchbase://{}/{}".format(client_host, bucket))
@@ -234,11 +235,11 @@ class CouchbaseServer:
             log_debug("Removing: {}".format(doc_id))
             b.remove(doc_id)
 
-    def get_server_docs_with_prefix(self, url, bucket, prefix):
+    def get_server_docs_with_prefix(self, bucket, prefix):
         """
         Returns server doc ids matching a prefix (ex. '_sync:rev:')
         """
-        client_host = url.replace("http://", "")
+        client_host = self.replace("http://", "")
         client_host = client_host.replace(":8091", "")
 
         b = Bucket("couchbase://{}/{}".format(client_host, bucket))
@@ -251,7 +252,7 @@ class CouchbaseServer:
 
         return found_ids
 
-    def wait_for_rebalance_complete(self, url):
+    def _wait_for_rebalance_complete(self, url):
         """
         Polls couchbase server tasks endpoint for any running rebalances.
         Exits when no rebalances are in running state
@@ -292,77 +293,7 @@ class CouchbaseServer:
 
             time.sleep(1)
 
-    def rebalance_out(self, admin_server, server_to_remove):
-        """
-        Issues a call to the admin_serve to remove a server from a pool.
-        Then wait for rebalance to complete.
-        admin_server format:        http://localhost:8091
-        server_to_remove format:    http://localhost:8091
-        """
-
-        admin_server_stripped = admin_server.replace("http://", "")
-        admin_server_stripped = admin_server_stripped.replace(":8091", "")
-
-        server_to_remove_stripped = server_to_remove.replace("http://", "")
-        server_to_remove_stripped = server_to_remove_stripped.replace(":8091", "")
-
-        log_info("Starting rebalance out: {}".format(server_to_remove))
-        data = "ejectedNodes=ns_1@{}&knownNodes=ns_1@{},ns_1@{}".format(
-            server_to_remove_stripped,
-            admin_server_stripped,
-            server_to_remove_stripped
-        )
-
-        resp = requests.post(
-            "{}/controller/rebalance".format(admin_server),
-            headers={"Content-Type": "application/x-www-form-urlencoded"},
-            auth=self._auth,
-            data=data
-        )
-        log_r(resp)
-        resp.raise_for_status()
-
-        self.wait_for_rebalance_complete(admin_server)
-
-        return True
-
-    def rebalance_in(self, admin_server, server_to_add):
-        """
-        Adds a server from a pool and waits for rebalance to complete.
-        admin_server format:    http://localhost:8091
-        server_to_add format:   http://localhost:8091
-        """
-
-        admin_server_stripped = admin_server.replace("http://", "")
-        admin_server_stripped = admin_server_stripped.replace(":8091", "")
-
-        server_to_add_stripped = server_to_add.replace("http://", "")
-        server_to_add_stripped = server_to_add_stripped.replace(":8091", "")
-
-        # Add node
-        self.add_node(admin_server, server_to_add)
-
-        # Rebalance nodes
-        log_info("Starting rebalance in: {}".format(server_to_add))
-        data = "knownNodes=ns_1@{},ns_1@{}".format(
-            admin_server_stripped,
-            server_to_add_stripped
-        )
-
-        resp = requests.post(
-            "{}/controller/rebalance".format(admin_server),
-            headers={"Content-Type": "application/x-www-form-urlencoded"},
-            auth=self._auth,
-            data=data
-        )
-        log_r(resp)
-        resp.raise_for_status()
-
-        self.wait_for_rebalance_complete(admin_server)
-
-        return True
-
-    def add_node(self, admin_server, server_to_add):
+    def _add_node(self, server_to_add):
         """
         Add the server_to_add to a Couchbase Server cluster
         admin_server format:    http://localhost:8091
@@ -389,7 +320,7 @@ class CouchbaseServer:
                 raise Exception("wait_for_rebalance_complete: TIMEOUT")
 
             resp = requests.post(
-                "{}/controller/addNode".format(admin_server),
+                "{}/controller/addNode".format(self.url),
                 headers={"Content-Type": "application/x-www-form-urlencoded"},
                 auth=self._auth,
                 data=data
@@ -404,3 +335,79 @@ class CouchbaseServer:
             else:
                 log_info("{}: Could not add {} to cluster. Retrying ...".format(resp.status_code, server_to_add))
                 time.sleep(1)
+
+    def rebalance_out(self, server_to_remove):
+        """
+        Issues a call to the admin_serve to remove a server from a pool.
+        Then wait for rebalance to complete.
+        admin_server format:        http://localhost:8091
+        server_to_remove format:    http://localhost:8091
+        """
+
+        admin_server_stripped = self.url.replace("http://", "")
+        admin_server_stripped = admin_server_stripped.replace(":8091", "")
+
+        server_to_remove_stripped = server_to_remove.replace("http://", "")
+        server_to_remove_stripped = server_to_remove_stripped.replace(":8091", "")
+
+        log_info("Starting rebalance out: {}".format(server_to_remove))
+        data = "ejectedNodes=ns_1@{}&knownNodes=ns_1@{},ns_1@{}".format(
+            server_to_remove_stripped,
+            admin_server_stripped,
+            server_to_remove_stripped
+        )
+
+        resp = requests.post(
+            "{}/controller/rebalance".format(self.url),
+            headers={"Content-Type": "application/x-www-form-urlencoded"},
+            auth=self._auth,
+            data=data
+        )
+        log_r(resp)
+        resp.raise_for_status()
+
+        self._wait_for_rebalance_complete(self.url)
+
+        return True
+
+    def rebalance_in(self, server_to_add):
+        """
+        Adds a server from a pool and waits for rebalance to complete.
+        admin_server format:    http://localhost:8091
+        server_to_add format:   http://localhost:8091
+        """
+
+        admin_server_stripped = self.url.replace("http://", "")
+        admin_server_stripped = admin_server_stripped.replace(":8091", "")
+
+        server_to_add_stripped = server_to_add.replace("http://", "")
+        server_to_add_stripped = server_to_add_stripped.replace(":8091", "")
+
+        # Add node
+        self._add_node(server_to_add)
+
+        # Rebalance nodes
+        log_info("Starting rebalance in: {}".format(server_to_add))
+        data = "knownNodes=ns_1@{},ns_1@{}".format(
+            admin_server_stripped,
+            server_to_add_stripped
+        )
+
+        resp = requests.post(
+            "{}/controller/rebalance".format(self.url),
+            headers={"Content-Type": "application/x-www-form-urlencoded"},
+            auth=self._auth,
+            data=data
+        )
+        log_r(resp)
+        resp.raise_for_status()
+
+        self._wait_for_rebalance_complete(self.url)
+
+        return True
+
+    def kill(self):
+        pass
+
+    def start(self):
+        pass

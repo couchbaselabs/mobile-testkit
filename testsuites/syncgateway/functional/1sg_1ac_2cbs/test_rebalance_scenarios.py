@@ -93,7 +93,7 @@ def test_distributed_index_rebalance_sanity(setup_1sg_1ac_2cbs_test):
     channels = ["ABC", "CBS"]
 
     client = MobileRestClient()
-    server = CouchbaseServer()
+    cb_server = CouchbaseServer(cbs_one_url)
 
     user = client.create_user(admin_sg_one, sg_db, sg_user_name, sg_user_password, channels=channels)
     session = client.create_session(admin_sg_one, sg_db, sg_user_name)
@@ -109,7 +109,7 @@ def test_distributed_index_rebalance_sanity(setup_1sg_1ac_2cbs_test):
         log_info("Updating docs on sync_gateway")
         update_docs_task = executor.submit(client.update_docs, sg_one_url, sg_db, docs, num_updates, auth=session)
 
-        rebalance_task = executor.submit(server.rebalance_out, admin_server=cbs_one_url, server_to_remove=cbs_two_url)
+        rebalance_task = executor.submit(cb_server.rebalance_out, server_to_remove=cbs_two_url)
         assert rebalance_task.result(), "Rebalance out unsuccessful for {}!".format(cbs_two_url)
 
         updated_docs = update_docs_task.result()
@@ -122,7 +122,7 @@ def test_distributed_index_rebalance_sanity(setup_1sg_1ac_2cbs_test):
     client.verify_docs_in_changes(sg_one_url, sg_db, updated_docs, auth=session)
 
     # Rebalance Server back in to the pool
-    assert server.rebalance_in(admin_server=cbs_one_url, server_to_add=cbs_two_url), "Could not rebalance node back in .."
+    assert cb_server.rebalance_in(server_to_add=cbs_two_url), "Could not rebalance node back in .."
 
     # Verify all sgs and accels are still running
     cluster = Cluster()
