@@ -20,7 +20,6 @@ from keywords.constants import ServerType
 from keywords.constants import Platform
 from keywords.constants import CLIENT_REQUEST_TIMEOUT
 from keywords.constants import REGISTERED_CLIENT_DBS
-
 from keywords.utils import log_r
 from keywords.utils import log_info
 from keywords.utils import log_debug
@@ -1035,11 +1034,6 @@ class MobileRestClient:
         """
         Add a 'number' of docs with a prefix 'id_prefix' using the provided generator from libraries.data.doc_generators.
         ex. id_prefix=testdoc with a number of 3 would create 'testdoc_0', 'testdoc_1', and 'testdoc_2'
-
-        If id_prefix is not specified, a uuid will be provided for each doc
-
-        Returns list of docs with the format
-        [{u'ok': True, u'rev': u'1-ccd39f3091bb9bb51524b97e69571f80', u'id': u'test_ls_db1_0'}, ... ]
         """
         added_docs = []
         auth_type = get_auth_type(auth)
@@ -1087,7 +1081,7 @@ class MobileRestClient:
         if len(added_docs) != number:
             raise AssertionError("Client was not able to add all docs to: {}".format(url))
 
-        logging.info(added_docs)
+        log_info("Added: {}".format(added_docs))
 
         return added_docs
 

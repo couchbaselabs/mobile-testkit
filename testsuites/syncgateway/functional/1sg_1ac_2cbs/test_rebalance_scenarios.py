@@ -104,8 +104,9 @@ def test_distributed_index_rebalance_sanity(setup_1sg_1ac_2cbs_test):
 
         # Add docs to sg
         log_info("Adding docs to sync_gateway")
-        add_docs_task = executor.submit(client.add_docs, sg_one_url, sg_db, num_docs, "test_doc", channels=channels, auth=session)
-        docs = add_docs_task.result()
+        docs, errors = client.add_docs(sg_one_url, sg_db, num_docs, "test_doc", channels=channels, auth=session)
+        assert len(docs) == num_docs
+        assert len(errors) == 0
 
         # Start updating docs and rebalance out one CBS node
         log_info("Updating docs on sync_gateway")
@@ -157,26 +158,28 @@ def test_server_goes_down_sanity(setup_1sg_1ac_2cbs_test):
     cbs_two_url = cluster_config["couchbase_servers"][1]
 
     sg_db = "db"
-    num_docs = 100
+    num_docs = 1000
     num_updates = 100
     sg_user_name = "seth"
     sg_user_password = "password"
     channels = ["ABC", "CBS"]
 
     client = MobileRestClient()
-    cb_server = CouchbaseServer(cbs_one_url)
+    cb_server = CouchbaseServer(cbs_two_url)
 
     client.create_user(admin_sg, sg_db, sg_user_name, sg_user_password, channels=channels)
     session = client.create_session(admin_sg, sg_db, sg_user_name)
 
     with concurrent.futures.ProcessPoolExecutor() as executor:
 
-        add_docs_task = executor.submit(client.add_docs, url=sg_url, db=sg_db, number=num_docs, id_prefix="server_down", auth=session)
+        add_docs_task = executor.submit(client.add_docs, url=sg_url, db=sg_db, number=num_docs, id_prefix="server_down", auth=session, allow_errors=True)
 
-        cb_server.kill()
+        # Stop second server
+        cb_server.stop()
 
-        for _ in concurrent.futures.as_completed(add_docs_task):
-            docs = add_docs_task.result()
-            assert len(docs) == num_docs
+        docs, errors = add_docs_task.result()
 
+    log_info(docs)
+    assert len(docs) == num_docs
+    assert len(errors) == 0
     log_info("test_server_goes_down_sanity complete!")

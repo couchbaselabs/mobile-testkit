@@ -62,9 +62,12 @@ def test_attachments_on_docs_rejected_by_sync_function(params_from_base_test_set
     sg_user_session = client.create_session(url=sg_url_admin, db=sg_db, name=sg_user_name)
 
     # Verify all docs are getting rejected
-    with pytest.raises(HTTPError) as he:
-        client.add_docs(url=sg_url, db=sg_db, number=100, id_prefix=sg_db, channels=sg_user_channels, auth=sg_user_session)
-    assert he.value[0].startswith("403 Client Error: Forbidden for url:")
+    docs, errors = client.add_docs(url=sg_url, db=sg_db, number=100, id_prefix=sg_db, channels=sg_user_channels, auth=sg_user_session, allow_errors=True)
+    assert len(docs) == 0
+    assert len(errors) == 100
+    for error in errors:
+        assert error["reason"] == "No writes!"
+        assert error["error"] == "Forbidden"
 
     # Create doc with attachment and push to sync_gateway
     doc_with_att = document.create_doc(doc_id="att_doc", content={"sample_key": "sample_val"}, attachment_name="sample_text.txt", channels=sg_user_channels)

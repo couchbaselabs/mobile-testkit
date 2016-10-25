@@ -271,11 +271,15 @@ def test_listener_two_sync_gateways(setup_client_2sgs_test):
         to_url=sg_two_admin_url, to_db=sg_db_two
     )
 
-    ls_db_one_docs = client.add_docs(url=ls_url, db=ls_db_one, number=num_docs / 2, id_prefix="ls_db_one_doc")
-    ls_db_two_docs = client.add_docs(url=ls_url, db=ls_db_two, number=num_docs / 2, id_prefix="ls_db_two_doc")
+    ls_db_one_docs, errors = client.add_docs(url=ls_url, db=ls_db_one, number=num_docs / 2, id_prefix="ls_db_one_doc")
+    assert len(ls_db_one_docs) == num_docs / 2
+    assert len(errors) == 0
+
+    ls_db_two_docs, errors = client.add_docs(url=ls_url, db=ls_db_two, number=num_docs / 2, id_prefix="ls_db_two_doc")
+    assert len(ls_db_two_docs) == num_docs / 2
+    assert len(errors) == 0
 
     all_docs = client.merge(ls_db_one_docs, ls_db_two_docs)
-
     assert len(all_docs) == 500
 
     # Verify docs replicate to each db
