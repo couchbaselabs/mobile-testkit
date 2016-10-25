@@ -24,3 +24,7 @@ class Error(Exception):
 
 class ChangesError(Error):
     pass
+
+
+class RemoteCommandError(Error):
+    pass

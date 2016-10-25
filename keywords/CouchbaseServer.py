@@ -1,6 +1,10 @@
 import requests
 import time
 import json
+import sys
+
+import paramiko
+import ansible.constants
 
 from couchbase.bucket import Bucket
 from couchbase.exceptions import ProtocolError
@@ -11,9 +15,17 @@ from keywords.constants import CLIENT_REQUEST_TIMEOUT
 from keywords.constants import REBALANCE_TIMEOUT
 from keywords.exceptions import CBServerError
 from keywords.exceptions import ProvisioningError
+from keywords.exceptions import RemoteCommandError
 from keywords.utils import log_r
 from keywords.utils import log_info
 from keywords.utils import log_debug
+
+
+def stream_output(stdio_file_pointer, abort_if_panic=False):
+    for line in stdio_file_pointer:
+        print(line)
+        # if abort_if_panic and "panic" in line:
+        #     raise Exception("Detected panic: {}".format(line))
 
 
 def get_server_version(host):
@@ -49,7 +61,7 @@ def verify_server_version(host, expected_server_version):
         if expected_server_version != running_server_version_parts[0]:
             raise ProvisioningError("Unexpected server version!! Expected: {} Actual: {}".format(expected_server_version, running_server_version_parts[0]))
     else:
-        raise ValueError("Unsupported version format")
+        raise ProvisioningError("Unsupported version format")
 
 
 class CouchbaseServer:
@@ -59,6 +71,11 @@ class CouchbaseServer:
         self._headers = {"Content-Type": "application/json"}
         self._auth = ("Administrator", "password")
         self.url = url
+
+        # Strip http prefix and port to store host
+        host = self.url.replace("http://", "")
+        host = host.replace(":8091", "")
+        self.host = host
 
     def delete_buckets(self):
         count = 0
@@ -104,7 +121,7 @@ class CouchbaseServer:
         start = time.time()
         while True:
 
-            if time.time() - start > CLIENT_REQUEST_TIMEOUT:
+            if time.time() - start > keywords.constants.CLIENT_REQUEST_TIMEOUT:
                 raise Exception("Verify Docs Present: TIMEOUT")
 
             # Verfy the server is in a "healthy", not "warmup" state
@@ -191,17 +208,13 @@ class CouchbaseServer:
         resp.raise_for_status()
 
         # Create client an retry until KeyNotFound error is thrown
-        client_host = self.url.replace("http://", "")
-        client_host = client_host.replace(":8091", "")
-        log_info(client_host)
-
         start = time.time()
         while True:
 
-            if time.time() - start > CLIENT_REQUEST_TIMEOUT:
+            if time.time() - start > keywords.constants.CLIENT_REQUEST_TIMEOUT:
                 raise Exception("TIMEOUT while trying to create server buckets.")
             try:
-                bucket = Bucket("couchbase://{}/{}".format(client_host, name))
+                bucket = Bucket("couchbase://{}/{}".format(self.host, name))
                 bucket.get('foo')
             except ProtocolError:
                 log_info("Client Connection failed: Retrying ...")
@@ -244,10 +257,8 @@ class CouchbaseServer:
         """
         Returns server doc ids matching a prefix (ex. '_sync:rev:')
         """
-        client_host = self.replace("http://", "")
-        client_host = client_host.replace(":8091", "")
 
-        b = Bucket("couchbase://{}/{}".format(client_host, bucket))
+        b = Bucket("couchbase://{}/{}".format(self.host, bucket))
 
         found_ids = []
         b.n1ql_query("CREATE PRIMARY INDEX ON `{}`".format(bucket)).execute()
@@ -276,7 +287,7 @@ class CouchbaseServer:
         start = time.time()
         while True:
 
-            if time.time() - start > REBALANCE_TIMEOUT:
+            if time.time() - start > keywords.constants.REBALANCE_TIMEOUT:
                 raise Exception("wait_for_rebalance_complete: TIMEOUT")
 
             resp = requests.get("{}/pools/default/tasks".format(url), auth=self._auth)
@@ -306,12 +317,9 @@ class CouchbaseServer:
         server_to_add format:   http://localhost:8091
         """
 
-        server_to_add_stripped = server_to_add.replace("http://", "")
-        server_to_add_stripped = server_to_add_stripped.replace(":8091", "")
-
         log_info("Adding server node {} to cluster ...".format(server_to_add))
         data = "hostname={}&user=Administrator&password=password&services=kv".format(
-            server_to_add_stripped
+            self.host
         )
 
         # HACK: Retries added to handle the following scenario.
@@ -322,7 +330,7 @@ class CouchbaseServer:
         start = time.time()
         while True:
 
-            if time.time() - start > CLIENT_REQUEST_TIMEOUT:
+            if time.time() - start > keywords.constants.CLIENT_REQUEST_TIMEOUT:
                 raise Exception("wait_for_rebalance_complete: TIMEOUT")
 
             resp = requests.post(
@@ -350,16 +358,13 @@ class CouchbaseServer:
         server_to_remove format:    http://localhost:8091
         """
 
-        admin_server_stripped = self.url.replace("http://", "")
-        admin_server_stripped = admin_server_stripped.replace(":8091", "")
-
         server_to_remove_stripped = server_to_remove.replace("http://", "")
         server_to_remove_stripped = server_to_remove_stripped.replace(":8091", "")
 
         log_info("Starting rebalance out: {}".format(server_to_remove))
         data = "ejectedNodes=ns_1@{}&knownNodes=ns_1@{},ns_1@{}".format(
             server_to_remove_stripped,
-            admin_server_stripped,
+            self.host,
             server_to_remove_stripped
         )
 
@@ -383,9 +388,6 @@ class CouchbaseServer:
         server_to_add format:   http://localhost:8091
         """
 
-        admin_server_stripped = self.url.replace("http://", "")
-        admin_server_stripped = admin_server_stripped.replace(":8091", "")
-
         server_to_add_stripped = server_to_add.replace("http://", "")
         server_to_add_stripped = server_to_add_stripped.replace(":8091", "")
 
@@ -395,7 +397,7 @@ class CouchbaseServer:
         # Rebalance nodes
         log_info("Starting rebalance in: {}".format(server_to_add))
         data = "knownNodes=ns_1@{},ns_1@{}".format(
-            admin_server_stripped,
+            self.host,
             server_to_add_stripped
         )
 
@@ -412,8 +414,37 @@ class CouchbaseServer:
 
         return True
 
-    def kill(self):
-        pass
+    def stop(self):
+        # Create SSH client
+        ssh = paramiko.SSHClient()
+        ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+
+        # Connect SSH client to remote machine
+        log_info("SSH connection to {}".format(self.host))
+        ssh.connect(self.host, username=ansible.constants.DEFAULT_REMOTE_USER)
+
+        # Build sgload command to pass to ssh client
+        # eg, "sgload --createreaders --numreaders 100"
+        command = "sudo service couchbase-server stop"
+        log_info(command)
+
+        # Run comamnd on remote machine
+        stdin, stdout, stderr = ssh.exec_command(command)
+        stdin.close()
+
+        # Stream output to console
+        stream_output(stdout)
+        stream_output(stderr, abort_if_panic=True)
+
+        if stdout.channel.recv_exit_status() != 0:
+            raise RemoteCommandError("command: {} failed on host: {}".format(command, self.host))
+
+        # Close the connection since we're done with it
+        ssh.close()
+
+        log_info("execute_sgload done.")
 
     def start(self):
         pass
+
+
