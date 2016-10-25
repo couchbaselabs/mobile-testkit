@@ -2,6 +2,10 @@ class LiteServError(Exception):
     pass
 
 
+class CBServerError(Exception):
+    pass
+
+
 class ProvisioningError(Exception):
     pass
 

@@ -87,47 +87,26 @@ class Cluster:
         status = ansible_runner.run_ansible_playbook("delete-sg-accel-artifacts.yml")
         assert status == 0, "Failed to delete sg_accel artifacts"
 
-        bucket_delete_create_max_retries = 3
-        bucket_delete_create_attempt_num = 0
-        while bucket_delete_create_attempt_num < bucket_delete_create_max_retries:
-            try:
-                log_info(">>> Deleting / Creating server buckets: Attempt {}".format(bucket_delete_create_attempt_num))
-                # Delete buckets
-                log_info(">>> Deleting buckets on: {}".format(self.cb_server.url))
-                status = self.cb_server.delete_buckets()
-                assert status == 0
-                log_info(">>> Bucket deletion status: {}".format(status))
+        # Delete buckets
+        log_info(">>> Deleting buckets on: {}".format(self.cb_server.url))
+        self.cb_server.delete_buckets()
 
-                # Parse config and grab bucket names
-                config_path_full = os.path.abspath(sg_config_path)
-                config = Config(config_path_full)
-                mode = config.get_mode()
-                bucket_name_set = config.get_bucket_name_set()
+        # Parse config and grab bucket names
+        config_path_full = os.path.abspath(sg_config_path)
+        config = Config(config_path_full)
+        mode = config.get_mode()
+        bucket_name_set = config.get_bucket_name_set()
 
-                self.sync_gateway_config = config
+        self.sync_gateway_config = config
 
-                log_info(">>> Creating buckets on: {}".format(self.cb_server.url))
-                log_info(">>> Creating buckets {}".format(bucket_name_set))
-                status = self.cb_server.create_buckets(bucket_name_set)
-                assert status == 0
-                log_info(">>> Bucket creation status: {}".format(status))
+        log_info(">>> Creating buckets on: {}".format(self.cb_server.url))
+        log_info(">>> Creating buckets {}".format(bucket_name_set))
+        self.cb_server.create_buckets(bucket_name_set)
 
-                # Wait for server to be in a warmup state to work around
-                # https://github.com/couchbase/sync_gateway/issues/1745
-                log_info(">>> Waiting for Server: {} to be in a healthy state".format(self.cb_server.url))
-                self.cb_server.wait_for_ready_state()
-
-                # Both steps are successful, break out of retry loop
-                break
-            except AssertionError:
-                log_info("Failed to delete / create buckets. Trying again ...")
-                bucket_delete_create_attempt_num += 1
-                # Wait 3 sec before retry
-                time.sleep(3)
-
-        # Max tries to delete / create buckets
-        if bucket_delete_create_attempt_num == bucket_delete_create_max_retries:
-            raise RuntimeError("Max tries exceeded to delete / create buckets")
+        # Wait for server to be in a warmup state to work around
+        # https://github.com/couchbase/sync_gateway/issues/1745
+        log_info(">>> Waiting for Server: {} to be in a healthy state".format(self.cb_server.url))
+        self.cb_server.wait_for_ready_state()
 
         log_info(">>> Starting sync_gateway with configuration: {}".format(config_path_full))
         utils.dump_file_contents_to_logs(config_path_full)

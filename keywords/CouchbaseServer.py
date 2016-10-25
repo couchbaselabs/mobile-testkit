@@ -9,6 +9,7 @@ from couchbase.exceptions import NotFoundError
 
 from keywords.constants import CLIENT_REQUEST_TIMEOUT
 from keywords.constants import REBALANCE_TIMEOUT
+from keywords.exceptions import CBServerError
 from keywords.utils import log_r
 from keywords.utils import log_info
 from keywords.utils import log_debug
@@ -89,7 +90,8 @@ class CouchbaseServer:
                 count += 1
 
         # Check that max retries did not occur
-        assert count != 3, "Could not delete bucket"
+        if count == 3:
+            raise CBServerError("Max retries for bucket creation hit. Could not delete buckets!")
 
     def wait_for_ready_state(self):
         """
@@ -112,7 +114,7 @@ class CouchbaseServer:
             for node in resp_obj["nodes"]:
                 if node["status"] != "healthy":
                     all_nodes_healthy = False
-                    log_info("Node: {} is still not healthy. Retrying ...".format(node))
+                    log_info("Node is still not healthy. Status: {} Retrying ...".format(node["status"]))
                     time.sleep(1)
 
             if not all_nodes_healthy:
@@ -149,7 +151,7 @@ class CouchbaseServer:
             return
         log_info("Creating buckets: {}".format(bucket_names))
         ram_multiplier = 0.80
-        total_avail_ram_bytes = self.get_available_ram(self.url)
+        total_avail_ram_bytes = self.get_available_ram()
         total_avail_ram_mb = int(total_avail_ram_bytes / (1024 * 1024))
         n1ql_indexer_ram_mb = 512
         effective_avail_ram_mb = int(total_avail_ram_mb * ram_multiplier) - n1ql_indexer_ram_mb
@@ -157,7 +159,7 @@ class CouchbaseServer:
         log_info("total_avail_ram_mb: {} effective_avail_ram_mb: {} effective_avail_ram_mb: {}".format(total_avail_ram_mb, effective_avail_ram_mb, effective_avail_ram_mb))
         for bucket_name in bucket_names:
             log_info("Create bucket {} with per_bucket_ram_mb {}".format(bucket_name, per_bucket_ram_mb))
-            self.create_bucket(self.url, bucket_name, per_bucket_ram_mb)
+            self.create_bucket(bucket_name, per_bucket_ram_mb)
 
     def create_bucket(self, name, ramQuotaMB=1024):
         """
@@ -186,7 +188,7 @@ class CouchbaseServer:
         resp.raise_for_status()
 
         # Create client an retry until KeyNotFound error is thrown
-        client_host = self.replace("http://", "")
+        client_host = self.url.replace("http://", "")
         client_host = client_host.replace(":8091", "")
         log_info(client_host)
 
@@ -194,23 +196,23 @@ class CouchbaseServer:
         while True:
 
             if time.time() - start > CLIENT_REQUEST_TIMEOUT:
-                raise Exception("Verify Docs Present: TIMEOUT")
+                raise Exception("TIMEOUT while trying to create server buckets.")
             try:
                 bucket = Bucket("couchbase://{}/{}".format(client_host, name))
                 bucket.get('foo')
-            except ProtocolError as pe:
-                log_info("Client Connection failed: {} Retrying ...".format(pe))
+            except ProtocolError:
+                log_info("Client Connection failed: Retrying ...")
                 time.sleep(1)
                 continue
-            except TemporaryFailError as te:
-                log_info("Failure from server: {} Retrying ...".format(te))
+            except TemporaryFailError:
+                log_info("Failure from server: Retrying ...")
                 time.sleep(1)
                 continue
-            except NotFoundError as nfe:
-                log_info("Key not found error: {} Bucket is ready!".format(nfe))
+            except NotFoundError:
+                log_info("Key not found error: Bucket is ready!")
                 break
 
-        self.wait_for_ready_state(self.url)
+        self.wait_for_ready_state()
 
         return name
 

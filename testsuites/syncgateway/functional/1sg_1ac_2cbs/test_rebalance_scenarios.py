@@ -1,7 +1,9 @@
 import os
 
 import pytest
+import concurrent.futures
 from concurrent.futures import ThreadPoolExecutor
+
 
 from libraries.testkit.cluster import Cluster
 from libraries.NetworkUtils import NetworkUtils
@@ -95,7 +97,7 @@ def test_distributed_index_rebalance_sanity(setup_1sg_1ac_2cbs_test):
     client = MobileRestClient()
     cb_server = CouchbaseServer(cbs_one_url)
 
-    user = client.create_user(admin_sg_one, sg_db, sg_user_name, sg_user_password, channels=channels)
+    client.create_user(admin_sg_one, sg_db, sg_user_name, sg_user_password, channels=channels)
     session = client.create_session(admin_sg_one, sg_db, sg_user_name)
 
     with ThreadPoolExecutor(5) as executor:
@@ -127,4 +129,54 @@ def test_distributed_index_rebalance_sanity(setup_1sg_1ac_2cbs_test):
     # Verify all sgs and accels are still running
     cluster = Cluster()
     errors = cluster.verify_alive("distributed_index")
-    assert (len(errors) == 0)
+    assert len(errors) == 0
+
+
+@pytest.mark.sanity
+@pytest.mark.syncgateway
+@pytest.mark.changes
+@pytest.mark.rebalance
+@pytest.mark.usefixtures("setup_1sg_1ac_2cbs_suite")
+def test_server_goes_down_sanity(setup_1sg_1ac_2cbs_test):
+    """
+    1. Start with a two node couchbase server cluster
+    2. Starting adding docs
+    3. Kill one of the server nodes and signal completion
+    4. Stop adding docs
+    5. Verify that that the expected docs are present and in the changes feed.
+    6. Start server again and add to cluster
+    """
+
+    cluster_config = setup_1sg_1ac_2cbs_test
+
+    log_info(cluster_config)
+
+    admin_sg = cluster_config["sync_gateways"][0]["admin"]
+    sg_url = cluster_config["sync_gateways"][0]["public"]
+    cbs_one_url = cluster_config["couchbase_servers"][0]
+    cbs_two_url = cluster_config["couchbase_servers"][1]
+
+    sg_db = "db"
+    num_docs = 100
+    num_updates = 100
+    sg_user_name = "seth"
+    sg_user_password = "password"
+    channels = ["ABC", "CBS"]
+
+    client = MobileRestClient()
+    cb_server = CouchbaseServer(cbs_one_url)
+
+    client.create_user(admin_sg, sg_db, sg_user_name, sg_user_password, channels=channels)
+    session = client.create_session(admin_sg, sg_db, sg_user_name)
+
+    with concurrent.futures.ProcessPoolExecutor() as executor:
+
+        add_docs_task = executor.submit(client.add_docs, url=sg_url, db=sg_db, number=num_docs, id_prefix="server_down", auth=session)
+
+        cb_server.kill()
+
+        for _ in concurrent.futures.as_completed(add_docs_task):
+            docs = add_docs_task.result()
+            assert len(docs) == num_docs
+
+    log_info("test_server_goes_down_sanity complete!")
