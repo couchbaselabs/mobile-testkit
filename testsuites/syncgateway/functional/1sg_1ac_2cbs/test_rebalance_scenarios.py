@@ -179,5 +179,8 @@ def test_server_goes_down_sanity(setup_1sg_1ac_2cbs_test):
     # TODO: GET
     # TODO: _changes
 
+    # Start server again to return topology to expected state
+    cb_server.start()
+
     # Make sure all docs were not added before server was
     log_info("test_server_goes_down_sanity complete!")

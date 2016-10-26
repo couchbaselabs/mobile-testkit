@@ -1,7 +1,6 @@
 import requests
 import time
 import json
-import sys
 
 import paramiko
 import ansible.constants
@@ -11,8 +10,9 @@ from couchbase.exceptions import ProtocolError
 from couchbase.exceptions import TemporaryFailError
 from couchbase.exceptions import NotFoundError
 
-from keywords.constants import CLIENT_REQUEST_TIMEOUT
-from keywords.constants import REBALANCE_TIMEOUT
+
+import keywords.constants
+from keywords.RemoteExecutor import RemoteExecutor
 from keywords.exceptions import CBServerError
 from keywords.exceptions import ProvisioningError
 from keywords.exceptions import RemoteCommandError
@@ -76,6 +76,7 @@ class CouchbaseServer:
         host = self.url.replace("http://", "")
         host = host.replace(":8091", "")
         self.host = host
+        self.remote_executor = RemoteExecutor(self.host)
 
     def delete_buckets(self):
         count = 0
@@ -415,36 +416,11 @@ class CouchbaseServer:
         return True
 
     def start(self):
-        #TODO
-        raise NotImplementedError()
+        """Starts a running Couchbase Server via 'service couchbase-server stop'"""
+        command = "sudo service couchbase-server start"
+        self.remote_executor.must_execute(command)
 
     def stop(self):
-        # Create SSH client
-        # TODO factor out into RemoteCommand class
-        ssh = paramiko.SSHClient()
-        ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-
-        # Connect SSH client to remote machine
-        log_info("SSH connection to {}".format(self.host))
-        ssh.connect(self.host, username=ansible.constants.DEFAULT_REMOTE_USER)
-
-        # Build sgload command to pass to ssh client
-        # eg, "sgload --createreaders --numreaders 100"
+        """Stops a running Couchbase Server via 'service couchbase-server stop'"""
         command = "sudo service couchbase-server stop"
-        log_info(command)
-
-        # Run comamnd on remote machine
-        stdin, stdout, stderr = ssh.exec_command(command)
-        stdin.close()
-
-        # Stream output to console
-        stream_output(stdout)
-        stream_output(stderr, abort_if_panic=True)
-
-        if stdout.channel.recv_exit_status() != 0:
-            raise RemoteCommandError("command: {} failed on host: {}".format(command, self.host))
-
-        # Close the connection since we're done with it
-        ssh.close()
-
-        log_info("execute_sgload done.")
+        self.remote_executor.must_execute(command)
