@@ -28,3 +28,7 @@ class ChangesError(Error):
 
 class RemoteCommandError(Error):
     pass
+
+
+class RestError(Error):
+    pass
