@@ -414,8 +414,13 @@ class CouchbaseServer:
 
         return True
 
+    def start(self):
+        #TODO
+        raise NotImplementedError()
+
     def stop(self):
         # Create SSH client
+        # TODO factor out into RemoteCommand class
         ssh = paramiko.SSHClient()
         ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 
@@ -443,8 +448,3 @@ class CouchbaseServer:
         ssh.close()
 
         log_info("execute_sgload done.")
-
-    def start(self):
-        pass
-
-

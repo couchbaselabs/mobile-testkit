@@ -158,7 +158,7 @@ def test_server_goes_down_sanity(setup_1sg_1ac_2cbs_test):
     cbs_two_url = cluster_config["couchbase_servers"][1]
 
     sg_db = "db"
-    num_docs = 1000
+    num_docs = 100
     num_updates = 100
     sg_user_name = "seth"
     sg_user_password = "password"
@@ -170,16 +170,14 @@ def test_server_goes_down_sanity(setup_1sg_1ac_2cbs_test):
     client.create_user(admin_sg, sg_db, sg_user_name, sg_user_password, channels=channels)
     session = client.create_session(admin_sg, sg_db, sg_user_name)
 
-    with concurrent.futures.ProcessPoolExecutor() as executor:
+    # Stop second server
+    cb_server.stop()
 
-        add_docs_task = executor.submit(client.add_docs, url=sg_url, db=sg_db, number=num_docs, id_prefix="server_down", auth=session, allow_errors=True)
+    # Try to add 100 docs in a loop until all succeed, if the never do, fail with timeout
+    # TODO: loop with doc puts
+    docs, errors = client.add_docs(url=sg_url, db=sg_db, number=num_docs, id_prefix="server_down", auth=session, allow_errors=True)
+    # TODO: GET
+    # TODO: _changes
 
-        # Stop second server
-        cb_server.stop()
-
-        docs, errors = add_docs_task.result()
-
-    log_info(docs)
-    assert len(docs) == num_docs
-    assert len(errors) == 0
+    # Make sure all docs were not added before server was
     log_info("test_server_goes_down_sanity complete!")
