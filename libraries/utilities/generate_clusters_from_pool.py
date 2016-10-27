@@ -161,6 +161,8 @@ def write_config(config, pool_file):
             if platform.system() == "Darwin":
                 # HACK: http://stackoverflow.com/questions/166506/finding-local-ip-addresses-using-pythons-stdlib
                 # Connect to Google's public DNS server and get the socketname tuple (<local_ip_address>, <port>)
+                # The 'local_ip_address' is the ip of the machine on the LAN. This will be used to run mock server
+                # for the web hook tests. It will be exposed on the LAN so that other machines on the LAN can connect to it
                 s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
                 s.connect(("8.8.8.8", 80))
                 local_ip = s.getsockname()[0]
