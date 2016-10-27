@@ -29,6 +29,15 @@ class ClusterDef:
             self.num_lbs
         )
 
+    def set_name_from_vars(self):
+        self.name = "{}sg_{}ac_{}cbs_{}lgs_{}lbs".format(
+            self.num_sgs,
+            self.num_acs,
+            self.num_cbs,
+            self.num_lgs,
+            self.num_lbs,
+        )
+
 
 def write_config(config, pool_file):
     ips = get_ips(pool_file)
@@ -205,7 +214,7 @@ def get_ips(pool_file="resources/pool.json"):
     return ips
 
 
-def generate_clusters_from_pool(pool_file):
+def generate_clusters_from_pool(pool_file, cluster_def):
 
     cluster_configs = [
         ClusterDef("1sg", num_sgs=1, num_acs=0, num_cbs=0, num_lgs=0, num_lbs=0),
@@ -222,6 +231,9 @@ def generate_clusters_from_pool(pool_file):
         ClusterDef("2sg_2ac_3cbs_2lgs", num_sgs=2, num_acs=2, num_cbs=3, num_lgs=2, num_lbs=0),
     ]
 
+    if cluster_def is not None:
+        cluster_configs.append(cluster_def)
+
     if not os.path.isfile(pool_file):
         print("Pool file not found in 'resources/'. Please modify the example to include your machines.")
         sys.exit(1)
@@ -234,6 +246,20 @@ def generate_clusters_from_pool(pool_file):
     for cluster_config in cluster_configs:
         write_config(cluster_config, pool_file)
 
+def cluster_def_from_opts(opts):
+
+    cluster_def = ClusterDef(
+        "",
+        num_sgs=opts.num_sync_gateways,
+        num_acs=opts.num_sg_accels,
+        num_cbs=opts.num_servers,
+        num_lgs=opts.num_lgs,
+        num_lbs=opts.num_lbs,
+    )
+    cluster_def.set_name_from_vars()
+    return cluster_def
+
+
 if __name__ == "__main__":
     usage = """
     usage: python generate_cluster_from_pool.py"
@@ -245,8 +271,28 @@ if __name__ == "__main__":
                       action="store", type="string", dest="pool_file", default="resources/pool.json",
                       help="path to pool.json file")
 
+    parser.add_option("", "--num-servers",
+                      action="store", type="int", dest="num_servers", default=0,
+                      help="number of couchbase server instances")
+
+    parser.add_option("", "--num-sync-gateways",
+                      action="store", type="int", dest="num_sync_gateways", default=0,
+                      help="number of sync_gateway instances")
+
+    parser.add_option("", "--num-sg-accels",
+                      action="store", type="int", dest="num_sg_accels", default=0,
+                      help="number of sg accel instances")
+
+    parser.add_option("", "--num-lbs",
+                      action="store", type="int", dest="num_lbs", default=0,
+                      help="number of load balancer instances")
+
+    parser.add_option("", "--num-lgs",
+                      action="store", type="int", dest="num_lgs", default=0,
+                      help="number of load generator instances")
+
     arg_parameters = sys.argv[1:]
 
     (opts, args) = parser.parse_args(arg_parameters)
 
-    generate_clusters_from_pool(opts.pool_file)
+    generate_clusters_from_pool(opts.pool_file, cluster_def_from_opts(opts))
