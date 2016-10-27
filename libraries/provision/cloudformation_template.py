@@ -147,7 +147,6 @@ def gen_template(config):
         ]
         t.add_resource(instance)
 
-        t.add_resource(create_dns_entry(instance, name, config))
 
 
     # Sync Gw instances (ubuntu ami)
@@ -178,7 +177,6 @@ def gen_template(config):
 
         t.add_resource(instance)
 
-        t.add_resource(create_dns_entry(instance, name, config))
 
     # Gateload instances (ubuntu ami)
     for i in xrange(num_gateloads):
@@ -202,7 +200,6 @@ def gen_template(config):
 
         t.add_resource(instance)
 
-        t.add_resource(create_dns_entry(instance, name, config))
 
     # Load Balancer instances (ubuntu ami)
     for i in xrange(num_lbs):
@@ -226,20 +223,6 @@ def gen_template(config):
 
         t.add_resource(instance)
 
-        t.add_resource(create_dns_entry(instance, name, config))
 
     return t.to_json()
-
-
-def create_dns_entry(instance, name, config):
-    return RecordSetType(
-        title=name + "dns",
-        ResourceRecords=[
-            GetAtt(instance, "PublicIp")
-        ],
-        TTL="900",
-        Name="{}.{}.couchbasemobile.com".format(name, config.name),
-        HostedZoneName="couchbasemobile.com.",
-        Type="A",
-    )
 
