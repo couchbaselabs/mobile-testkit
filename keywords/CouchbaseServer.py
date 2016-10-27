@@ -1,9 +1,8 @@
-import requests
 import time
 import json
-
-import paramiko
-import ansible.constants
+import requests
+from requests.exceptions import ConnectionError
+from requests import Session
 
 from couchbase.bucket import Bucket
 from couchbase.exceptions import ProtocolError
@@ -15,7 +14,7 @@ import keywords.constants
 from keywords.RemoteExecutor import RemoteExecutor
 from keywords.exceptions import CBServerError
 from keywords.exceptions import ProvisioningError
-from keywords.exceptions import RemoteCommandError
+from keywords.exceptions import TimeoutError
 from keywords.utils import log_r
 from keywords.utils import log_info
 from keywords.utils import log_debug
@@ -78,10 +77,12 @@ class CouchbaseServer:
         self.host = host
         self.remote_executor = RemoteExecutor(self.host)
 
+        self._session = Session()
+
     def delete_buckets(self):
         count = 0
         while count < 3:
-            resp = requests.get("{}/pools/default/buckets".format(self.url), auth=self._auth, headers=self._headers)
+            resp = self._session.get("{}/pools/default/buckets".format(self.url), auth=self._auth, headers=self._headers)
             log_r(resp)
             resp.raise_for_status()
 
@@ -126,7 +127,7 @@ class CouchbaseServer:
                 raise Exception("Verify Docs Present: TIMEOUT")
 
             # Verfy the server is in a "healthy", not "warmup" state
-            resp = requests.get("{}/pools/nodes".format(self.url), auth=self._auth, headers=self._headers)
+            resp = self._session.get("{}/pools/nodes".format(self.url), auth=self._auth, headers=self._headers)
             log_r(resp)
 
             resp_obj = resp.json()
@@ -416,11 +417,32 @@ class CouchbaseServer:
         return True
 
     def start(self):
-        """Starts a running Couchbase Server via 'service couchbase-server stop'"""
+        """Starts a running Couchbase Server via 'service couchbase-server start'"""
+
         command = "sudo service couchbase-server start"
         self.remote_executor.must_execute(command)
+        self.wait_for_ready_state()
+
+    def _verify_stopped(self):
+        """Polls until the server url is unreachable"""
+
+        start = time.time()
+        while True:
+            if time.time() - start > keywords.constants.CLIENT_REQUEST_TIMEOUT:
+                raise TimeoutError("Waiting for server to be unreachable but it never was!")
+            try:
+                resp = self._session.get("{}/pools".format(self.url))
+                log_r(resp)
+                resp.raise_for_status()
+            except ConnectionError:
+                # This is expected
+                break
+
+            time.sleep(1)
 
     def stop(self):
         """Stops a running Couchbase Server via 'service couchbase-server stop'"""
+
         command = "sudo service couchbase-server stop"
-        self.remote_executor.must_execute(command)
+        #self.remote_executor.must_execute(command)
+        self._verify_stopped()

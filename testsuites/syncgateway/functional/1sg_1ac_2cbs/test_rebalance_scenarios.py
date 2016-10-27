@@ -1,13 +1,14 @@
 import os
+import time
+import uuid
 
 import pytest
 import concurrent.futures
-from concurrent.futures import ThreadPoolExecutor
-
 
 from libraries.testkit.cluster import Cluster
 from libraries.NetworkUtils import NetworkUtils
 
+from keywords.exceptions import TimeoutError
 from keywords.ClusterKeywords import ClusterKeywords
 from keywords.Logging import Logging
 from keywords.utils import log_info
@@ -100,7 +101,7 @@ def test_distributed_index_rebalance_sanity(setup_1sg_1ac_2cbs_test):
     client.create_user(admin_sg_one, sg_db, sg_user_name, sg_user_password, channels=channels)
     session = client.create_session(admin_sg_one, sg_db, sg_user_name)
 
-    with ThreadPoolExecutor(5) as executor:
+    with concurrent.futures.ThreadPoolExecutor(5) as executor:
 
         # Add docs to sg
         log_info("Adding docs to sync_gateway")
@@ -154,12 +155,10 @@ def test_server_goes_down_sanity(setup_1sg_1ac_2cbs_test):
 
     admin_sg = cluster_config["sync_gateways"][0]["admin"]
     sg_url = cluster_config["sync_gateways"][0]["public"]
-    cbs_one_url = cluster_config["couchbase_servers"][0]
     cbs_two_url = cluster_config["couchbase_servers"][1]
 
     sg_db = "db"
     num_docs = 100
-    num_updates = 100
     sg_user_name = "seth"
     sg_user_password = "password"
     channels = ["ABC", "CBS"]
@@ -174,12 +173,27 @@ def test_server_goes_down_sanity(setup_1sg_1ac_2cbs_test):
     cb_server.stop()
 
     # Try to add 100 docs in a loop until all succeed, if the never do, fail with timeout
-    # TODO: loop with doc puts
-    docs, errors = client.add_docs(url=sg_url, db=sg_db, number=num_docs, id_prefix="server_down", auth=session, allow_errors=True)
-    # TODO: GET
-    # TODO: _changes
+    errors = num_docs
+    timeout = 15
+    start = time.time()
 
-    # Start server again to return topology to expected state
+    while errors != 0:
+        # Fail tests if all docs do not succeed before timeout
+        if (time.time() - start) > timeout:
+            # Bring server back up before failing the test
+            cb_server.start()
+            raise TimeoutError("Failed to successfully put docs before timeout")
+
+        docs, errors = client.add_docs(url=sg_url, db=sg_db, number=num_docs, id_prefix=str(uuid.uuid4()), auth=session, allow_errors=True)
+        errors = len(errors)
+        log_info("Seeing: {} errors".format(errors))
+
+        time.sleep(1)
+
+    # TODO: Verify GET (bulk) of docs
+    # TODO: Verify _changes (basic) feed
+
+    # Test succeeded without timeout, bring server back into topology
     cb_server.start()
 
     # Make sure all docs were not added before server was

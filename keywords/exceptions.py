@@ -32,3 +32,7 @@ class RemoteCommandError(Error):
 
 class RestError(Error):
     pass
+
+
+class TimeoutError(Error):
+    pass
