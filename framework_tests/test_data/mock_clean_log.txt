@@ -1,0 +1,25 @@
+016-01-26T19:02:51.595-08:00 	BulkDocs: Doc "large-revisions_3" --> 503 Database server is over capacity (MCResponse status=TMPFAIL, opcode=GET, opaque=0, msg: Temporary failure)
+2016-01-26T19:02:51.595-08:00 	BulkDocs: Doc "large-revisions_4" --> 503 Database server is over capacity (MCResponse status=TMPFAIL, opcode=GET, opaque=0, msg: Temporary failure)
+2016-01-26T19:02:51.596-08:00 	BulkDocs: Doc "large-revisions_5" --> 503 Database server is over capacity (MCResponse status=TMPFAIL, opcode=GET, opaque=0, msg: Temporary failure)
+
+2016-01-26T19:02:51.612-08:00 	BulkDocs: Doc "large-revisions_6" --> 503 Database server is over capacity (MCResponse status=TMPFAIL, opcode=GET, opaque=0, msg: Temporary failure)
+
+2016-01-26T19:02:51.612-08:00 	BulkDocs: Doc "large-revisions_7" --> 503 Database server is over capacity (MCResponse status=TMPFAIL, opcode=GET, opaque=0, msg: Temporary failure)
+
+2016-01-26T19:02:51.630-08:00 HTTP:  #4463: POST /db/_revs_diff
+
+2016/01/26 19:02:51 planner: awakes, op: kick, msg: cfg changed, key: nodeDefs-wanted
+2016/01/26 19:02:51 planner: once, reason: cfg changed, key: nodeDefs-wanted
+2016/01/26 19:02:51 janitor: awakes, op: kick, msg: cfg changed, key: planPIndexes
+
+
+2016/01/26 19:02:52 feed_dcp: rollback, name: db62de079156a819683146fc40a0faa0fd_3a19757fa31d97c9: vbucketId: 14, rollbackSeq: 0, partition: 14, opaqueValue: {"seqStart":0,"seqEnd":0,"snapStart":164,"snapEnd":164,"failOverLog":[[95557080896240,0]]}, lastSeq: 164
+2016-01-26T19:02:52.028-08:00 WARNING: DCP Rollback request SyncGatewayPIndex - rolling back DCP feed for: vbucketId: 14, rollbackSeq: 0 -- base.(*SyncGatewayPIndex).Rollback() at sgw_pindex.go:338
+
+016-01-26T19:02:51.595-08:00 	BulkDocs: Doc "large-revisions_3" --> 503 Database server is over capacity (MCResponse status=TMPFAIL, opcode=GET, opaque=0, msg: Temporary failure)
+2016-01-26T19:02:51.595-08:00 	BulkDocs: Doc "large-revisions_4" --> 503 Database server is over capacity (MCResponse status=TMPFAIL, opcode=GET, opaque=0, msg: Temporary failure)
+2016-01-26T19:02:51.596-08:00 	BulkDocs: Doc "large-revisions_5" --> 503 Database server is over capacity (MCResponse status=TMPFAIL, opcode=GET, opaque=0, msg: Temporary failure)
+
+2016-01-26T19:02:51.612-08:00 	BulkDocs: Doc "large-revisions_6" --> 503 Database server is over capacity (MCResponse status=TMPFAIL, opcode=GET, opaque=0, msg: Temporary failure)
+
+2016-01-26T19:02:51.612-08:00 	BulkDocs: Doc "large-revisions_7" --> 503 Database server is over capacity (MCResponse status=TMPFAIL, opcode=GET, opaque=0, msg: Temporary failure)

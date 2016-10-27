@@ -1,0 +1,43 @@
+016-01-26T19:02:51.595-08:00 	BulkDocs: Doc "large-revisions_3" --> 503 Database server is over capacity (MCResponse status=TMPFAIL, opcode=GET, opaque=0, msg: Temporary failure)
+2016-01-26T19:02:51.595-08:00 	BulkDocs: Doc "large-revisions_4" --> 503 Database server is over capacity (MCResponse status=TMPFAIL, opcode=GET, opaque=0, msg: Temporary failure)
+2016-01-26T19:02:51.596-08:00 	BulkDocs: Doc "large-revisions_5" --> 503 Database server is over capacity (MCResponse status=TMPFAIL, opcode=GET, opaque=0, msg: Temporary failure)
+
+2016-01-26T19:02:51.612-08:00 	BulkDocs: Doc "large-revisions_6" --> 503 Database server is over capacity (MCResponse status=TMPFAIL, opcode=GET, opaque=0, msg: Temporary failure)
+
+2016-01-26T19:02:51.612-08:00 	BulkDocs: Doc "large-revisions_7" --> 503 Database server is over capacity (MCResponse status=TMPFAIL, opcode=GET, opaque=0, msg: Temporary failure)
+
+2016-01-26T19:02:51.630-08:00 HTTP:  #4463: POST /db/_revs_diff
+
+2016/01/26 19:02:51 planner: awakes, op: kick, msg: cfg changed, key: nodeDefs-wanted
+2016/01/26 19:02:51 planner: once, reason: cfg changed, key: nodeDefs-wanted
+2016/01/26 19:02:51 janitor: awakes, op: kick, msg: cfg changed, key: planPIndexes
+
+
+2016/01/26 19:02:52 feed_dcp: rollback, name: db62de079156a819683146fc40a0faa0fd_3a19757fa31d97c9: vbucketId: 14, rollbackSeq: 0, partition: 14, opaqueValue: {"seqStart":0,"seqEnd":0,"snapStart":164,"snapEnd":164,"failOverLog":[[95557080896240,0]]}, lastSeq: 164
+2016-01-26T19:02:52.028-08:00 WARNING: DCP Rollback request SyncGatewayPIndex - rolling back DCP feed for: vbucketId: 14, rollbackSeq: 0 -- base.(*SyncGatewayPIndex).Rollback() at sgw_pindex.go:338
+
+panic: Update attempted to set clock to earlier sequence.  Vb: 32, currentSequence: 1181, newSequence: 1
+
+goroutine 37877 [running]:
+github.com/couchbase/sync_gateway/base.(*SequenceClockImpl).UpdateWithClock(
+0xc8209ac0c0, 0x6847938, 0xc835ec6c00)
+	/Users/sethrosetter/Code/sync_gateway/src/github.com/couchbase/sync_gateway/base/sequence_clock.go:277 +0x2e0
+github.com/couchbase/sync_gateway/db.(*kvChannelIndex).writeClockCas(0xc8202980c0, 0x6847938, 0xc835ec6c00, 0x0, 0x0)
+	/Users/sethrosetter/Code/sync_gateway/src/github.com/couchbase/sync_gateway/db/kv_channel_index.go:341 +0x66
+github.com/couchbase/sync_gateway/db.(*kvChannelIndex).AddSet(0xc8202980c0, 0xc835546000, 0x1, 0x7d0, 0x0, 0x0)
+	/Users/sethrosetter/Code/sync_gateway/src/github.com/couchbase/sync_gateway/db/kv_channel_index.go:86 +0x3f6
+github.com/couchbase/sync_gateway/db.(*kvChangeIndexWriter).addSetToChannelIndex(0xc8202b8480, 0x4979788, 0x1, 0xc835546000, 0x1, 0x7d0, 0x0, 0x0)
+	/Users/sethrosetter/Code/sync_gateway/src/github.com/couchbase/sync_gateway/db/kv_change_index_writer.go:372 +0xf7
+github.com/couchbase/sync_gateway/db.(*kvChangeIndexWriter).indexEntries.func2(0xc830e05f00, 0xc8202b8480, 0x4979788, 0x1, 0xc835546000, 0x1, 0x7d0, 0x0)
+	/Users/sethrosetter/Code/sync_gateway/src/github.com/couchbase/sync_gateway/db/kv_change_index_writer.go:344 +0xce
+created by github.com/couchbase/sync_gateway/db.(*kvChangeIndexWriter).indexEntries
+	/Users/sethrosetter/Code/sync_gateway/src/github.com/couchbase/sync_gateway/db/kv_change_index_writer.go:351 +0x465
+
+
+016-01-26T19:02:51.595-08:00 	BulkDocs: Doc "large-revisions_3" --> 503 Database server is over capacity (MCResponse status=TMPFAIL, opcode=GET, opaque=0, msg: Temporary failure)
+2016-01-26T19:02:51.595-08:00 	BulkDocs: Doc "large-revisions_4" --> 503 Database server is over capacity (MCResponse status=TMPFAIL, opcode=GET, opaque=0, msg: Temporary failure)
+2016-01-26T19:02:51.596-08:00 	BulkDocs: Doc "large-revisions_5" --> 503 Database server is over capacity (MCResponse status=TMPFAIL, opcode=GET, opaque=0, msg: Temporary failure)
+
+2016-01-26T19:02:51.612-08:00 	BulkDocs: Doc "large-revisions_6" --> 503 Database server is over capacity (MCResponse status=TMPFAIL, opcode=GET, opaque=0, msg: Temporary failure)
+
+2016-01-26T19:02:51.612-08:00 	BulkDocs: Doc "large-revisions_7" --> 503 Database server is over capacity (MCResponse status=TMPFAIL, opcode=GET, opaque=0, msg: Temporary failure)
