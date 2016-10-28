@@ -16,7 +16,7 @@ NUM_RETRIES = 25
 
 def main():
 
-    usage = """usage: python generate_ansible_inventory_from_aws.py
+    usage = """usage: python generate_pools_json_from_aws.py
         --stackname=<aws_cloudformation_stack_name>
         --targetfile=<ansible_inventory_target_file_path>
         """
