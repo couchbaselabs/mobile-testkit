@@ -13,7 +13,7 @@ import socket
 # The pool.json file can then be used to generate cluster configs under resources/cluster_configs
 
 DEFAULT_REGION = "us-east-1"
-NUM_RETRIES = 25
+NUM_RETRIES = 50
 
 
 def main():
@@ -123,6 +123,7 @@ def wait_until_stack_create_complete(stackname):
             region.describe_stacks(stackname)
         except BotoServerError as bse:
             print("Exception describing stack: {}, exception: {}. Retrying.".format(stackname, bse))
+            continue
 
         stack_events = region.describe_stack_events(stackname)
 
