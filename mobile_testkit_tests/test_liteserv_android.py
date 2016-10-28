@@ -9,29 +9,12 @@ from keywords.constants import RESULTS_DIR
 from keywords.constants import BINARY_DIR
 from keywords.LiteServFactory import LiteServFactory
 from keywords.MobileRestClient import MobileRestClient
+from keywords.utils import log_info
 
 
-@pytest.fixture(scope="function")
-def setup_liteserv_android_sqlite(request):
-
-    android_version = request.config.getoption("--android-version")
-    android_host = request.config.getoption("--android-host")
-
-    liteserv = LiteServFactory.create("android",
-                                      version_build=android_version,
-                                      host=android_host,
-                                      port=59840,
-                                      storage_engine="SQLite")
-    liteserv.download()
-    liteserv.install()
-
-    yield liteserv
-
-    liteserv.remove()
-
-
-@pytest.fixture(scope="function")
-def setup_liteserv_android_sqlcipher(request):
+@pytest.fixture(scope="function",
+                params=["SQLite", "SQLCipher", "ForestDB", "ForestDB+Encryption"])
+def liteserv_with_storage_engine_from_fixture(request):
 
     android_version = request.config.getoption("--android-version")
     android_host = request.config.getoption("--android-host")
@@ -40,46 +23,7 @@ def setup_liteserv_android_sqlcipher(request):
                                       version_build=android_version,
                                       host=android_host,
                                       port=59840,
-                                      storage_engine="SQLCipher")
-    liteserv.download()
-    liteserv.install()
-
-    yield liteserv
-
-    liteserv.remove()
-
-
-@pytest.fixture(scope="function")
-def setup_liteserv_android_forestdb(request):
-
-    android_version = request.config.getoption("--android-version")
-    android_host = request.config.getoption("--android-host")
-
-    liteserv = LiteServFactory.create("android",
-                                      version_build=android_version,
-                                      host=android_host,
-                                      port=59840,
-                                      storage_engine="ForestDB")
-
-    liteserv.download()
-    liteserv.install()
-
-    yield liteserv
-
-    liteserv.remove()
-
-
-@pytest.fixture(scope="function")
-def setup_liteserv_android_forestdb_encryption(request):
-
-    android_version = request.config.getoption("--android-version")
-    android_host = request.config.getoption("--android-host")
-
-    liteserv = LiteServFactory.create("android",
-                                      version_build=android_version,
-                                      host=android_host,
-                                      port=59840,
-                                      storage_engine="ForestDB+Encryption")
+                                      storage_engine=request.param)
     liteserv.download()
     liteserv.install()
 
@@ -142,8 +86,8 @@ def test_android_install_and_remove(request):
     assert "com.couchbase.liteservandroid" not in output
 
 
-def test_android_full_life_cycle(request, setup_liteserv_android_sqlite):
-    liteserv = setup_liteserv_android_sqlite
+def test_android_full_life_cycle(request, liteserv_with_storage_engine_from_fixture):
+    liteserv = liteserv_with_storage_engine_from_fixture
 
     test_name = request.node.name
 
@@ -160,8 +104,8 @@ def test_android_full_life_cycle(request, setup_liteserv_android_sqlite):
     liteserv.stop()
 
 
-def test_android_sqlite(request, setup_liteserv_android_sqlite):
-    liteserv = setup_liteserv_android_sqlite
+def test_android_storage_engine(request, liteserv_with_storage_engine_from_fixture):
+    liteserv = liteserv_with_storage_engine_from_fixture
 
     test_name = request.node.name
 
@@ -183,90 +127,22 @@ def test_android_sqlite(request, setup_liteserv_android_sqlite):
                 line = line.strip()
                 liteserv_output.append(line)
 
-    assert len(liteserv_output) == 4
-    assert liteserv_output[0].endswith("storageType=SQLite")
-    assert liteserv_output[1].endswith("dbpassword=")
-
-
-def test_android_sqlcipher(request, setup_liteserv_android_sqlcipher):
-    liteserv = setup_liteserv_android_sqlcipher
-
-    test_name = request.node.name
-
-    logfile = "{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(liteserv).__name__, test_name, datetime.datetime.now())
-    ls_url = liteserv.start(logfile)
-
-    client = MobileRestClient()
-    client.create_database(ls_url, "ls_db")
-
-    liteserv.stop()
-
-    # Look in adb logcat to see if output match platform / storage engine expectation
-    # We can't look at the database files directly to my knowledge without a rooted device
-    liteserv_output = []
-    with open(logfile, "r") as f:
-        lines = f.readlines()
-        for line in lines:
-            if "LiteServ" in line:
-                line = line.strip()
-                liteserv_output.append(line)
-
-    assert len(liteserv_output) == 4
-    assert liteserv_output[0].endswith("storageType=SQLite")
-    assert liteserv_output[1].endswith("dbpassword=ls_db:pass,ls_db1:pass,ls_db2:pass")
-
-
-def test_android_forestdb(request, setup_liteserv_android_forestdb):
-    liteserv = setup_liteserv_android_forestdb
-
-    test_name = request.node.name
-
-    logfile = "{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(liteserv).__name__, test_name, datetime.datetime.now())
-    ls_url = liteserv.start(logfile)
-
-    client = MobileRestClient()
-    client.create_database(ls_url, "ls_db")
-
-    liteserv.stop()
-
-    # Look in adb logcat to see if output match platform / storage engine expectation
-    # We can't look at the database files directly to my knowledge without a rooted device
-    liteserv_output = []
-    with open(logfile, "r") as f:
-        lines = f.readlines()
-        for line in lines:
-            if "LiteServ" in line:
-                line = line.strip()
-                liteserv_output.append(line)
-
-    assert len(liteserv_output) == 4
-    assert liteserv_output[0].endswith("storageType=ForestDB")
-    assert liteserv_output[1].endswith("dbpassword=")
-
-
-def test_android_forestdb_enc(request, setup_liteserv_android_forestdb_encryption):
-    liteserv = setup_liteserv_android_forestdb_encryption
-
-    test_name = request.node.name
-
-    logfile = "{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(liteserv).__name__, test_name, datetime.datetime.now())
-    ls_url = liteserv.start(logfile)
-
-    client = MobileRestClient()
-    client.create_database(ls_url, "ls_db")
-
-    liteserv.stop()
-
-    # Look in adb logcat to see if output match platform / storage engine expectation
-    # We can't look at the database files directly to my knowledge without a rooted device
-    liteserv_output = []
-    with open(logfile, "r") as f:
-        lines = f.readlines()
-        for line in lines:
-            if "LiteServ" in line:
-                line = line.strip()
-                liteserv_output.append(line)
-
-    assert len(liteserv_output) == 4
-    assert liteserv_output[0].endswith("storageType=ForestDB")
-    assert liteserv_output[1].endswith("dbpassword=ls_db:pass,ls_db1:pass,ls_db2:pass")
+    log_info(liteserv_output)
+    if liteserv.storage_engine == "SQLite":
+        assert len(liteserv_output) == 4
+        assert liteserv_output[0].endswith("storageType=SQLite")
+        assert liteserv_output[1].endswith("dbpassword=")
+    elif liteserv.storage_engine == "SQLCipher":
+        assert len(liteserv_output) == 4
+        assert liteserv_output[0].endswith("storageType=SQLite")
+        assert liteserv_output[1].endswith("dbpassword=ls_db:pass,ls_db1:pass,ls_db2:pass")
+    elif liteserv.storage_engine == "ForestDB":
+        assert len(liteserv_output) == 4
+        assert liteserv_output[0].endswith("storageType=ForestDB")
+        assert liteserv_output[1].endswith("dbpassword=")
+    elif liteserv.storage_engine == "ForestDB+Encryption":
+        assert len(liteserv_output) == 4
+        assert liteserv_output[0].endswith("storageType=ForestDB")
+        assert liteserv_output[1].endswith("dbpassword=ls_db:pass,ls_db1:pass,ls_db2:pass")
+    else:
+        pytest.xfail("Invalid storage engine")
