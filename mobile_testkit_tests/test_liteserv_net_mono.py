@@ -8,10 +8,12 @@ from keywords.constants import RESULTS_DIR
 from keywords.constants import BINARY_DIR
 from keywords.LiteServFactory import LiteServFactory
 from keywords.MobileRestClient import MobileRestClient
+from keywords.utils import log_info
 
 
-@pytest.fixture(scope="function")
-def setup_liteserv_net_mono_logging(request):
+@pytest.fixture(scope="function",
+                params=["SQLite", "SQLCipher", "ForestDB", "ForestDB+Encryption"])
+def liteserv_with_storage_engine_from_fixture(request):
 
     net_version = request.config.getoption("--net-version")
 
@@ -19,104 +21,12 @@ def setup_liteserv_net_mono_logging(request):
                                       version_build=net_version,
                                       host="localhost",
                                       port=59840,
-                                      storage_engine="SQLite")
+                                      storage_engine=request.param)
     liteserv.download()
     liteserv.install()
 
     yield liteserv
 
-    liteserv.remove()
-
-
-@pytest.fixture(scope="function")
-def setup_liteserv_net_mono_sqlite(request):
-
-    net_version = request.config.getoption("--net-version")
-
-    liteserv = LiteServFactory.create("net-mono",
-                                      version_build=net_version,
-                                      host="localhost",
-                                      port=59840,
-                                      storage_engine="SQLite")
-    liteserv.download()
-    liteserv.install()
-
-    test_name = request.node.name
-    logfile = "{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(liteserv).__name__, test_name, datetime.datetime.now())
-    ls_url = liteserv.start(logfile)
-
-    yield ls_url
-
-    liteserv.stop()
-    liteserv.remove()
-
-
-@pytest.fixture(scope="function")
-def setup_liteserv_net_mono_sqlcipher(request):
-
-    net_version = request.config.getoption("--net-version")
-
-    liteserv = LiteServFactory.create("net-mono",
-                                      version_build=net_version,
-                                      host="localhost",
-                                      port=59840,
-                                      storage_engine="SQLCipher")
-    liteserv.download()
-    liteserv.install()
-
-    test_name = request.node.name
-    logfile = "{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(liteserv).__name__, test_name, datetime.datetime.now())
-    ls_url = liteserv.start(logfile)
-
-    yield ls_url
-
-    liteserv.stop()
-    liteserv.remove()
-
-
-@pytest.fixture(scope="function")
-def setup_liteserv_net_mono_forestdb(request):
-
-    net_version = request.config.getoption("--net-version")
-
-    liteserv = LiteServFactory.create("net-mono",
-                                      version_build=net_version,
-                                      host="localhost",
-                                      port=59840,
-                                      storage_engine="ForestDB")
-    liteserv.download()
-    liteserv.install()
-
-    test_name = request.node.name
-    logfile = "{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(liteserv).__name__, test_name, datetime.datetime.now())
-    ls_url = liteserv.start(logfile)
-
-    yield ls_url
-
-    liteserv.stop()
-    liteserv.remove()
-
-
-@pytest.fixture(scope="function")
-def setup_liteserv_net_mono_forestdb_encryption(request):
-
-    net_version = request.config.getoption("--net-version")
-
-    liteserv = LiteServFactory.create("net-mono",
-                                      version_build=net_version,
-                                      host="localhost",
-                                      port=59840,
-                                      storage_engine="ForestDB+Encryption")
-    liteserv.download()
-    liteserv.install()
-
-    test_name = request.node.name
-    logfile = "{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(liteserv).__name__, test_name, datetime.datetime.now())
-    ls_url = liteserv.start(logfile)
-
-    yield ls_url
-
-    liteserv.stop()
     liteserv.remove()
 
 
@@ -150,9 +60,9 @@ def test_net_mono_remove():
     pass
 
 
-def test_net_mono_logging(request, setup_liteserv_net_mono_logging):
+def test_net_mono_logging(request, liteserv_with_storage_engine_from_fixture):
 
-    liteserv = setup_liteserv_net_mono_logging
+    liteserv = liteserv_with_storage_engine_from_fixture
 
     test_name = request.node.name
     logfile = "{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(liteserv).__name__, test_name, datetime.datetime.now())
@@ -164,8 +74,13 @@ def test_net_mono_logging(request, setup_liteserv_net_mono_logging):
         assert "Starting Manager version: .NET OS X" in contents
 
 
-def test_net_mono_full_life_cycle(setup_liteserv_net_mono_sqlite):
-    ls_url = setup_liteserv_net_mono_sqlite
+def test_net_mono_full_life_cycle(request, liteserv_with_storage_engine_from_fixture):
+
+    liteserv = liteserv_with_storage_engine_from_fixture
+
+    test_name = request.node.name
+    logfile = "{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(liteserv).__name__, test_name, datetime.datetime.now())
+    ls_url = liteserv.start(logfile)
 
     client = MobileRestClient()
     client.create_database(ls_url, "ls_db")
@@ -174,76 +89,74 @@ def test_net_mono_full_life_cycle(setup_liteserv_net_mono_sqlite):
 
     client.delete_databases(ls_url)
 
-
-def test_net_mono_sqlite(setup_liteserv_net_mono_sqlite):
-    ls_url = setup_liteserv_net_mono_sqlite
-
-    client = MobileRestClient()
-    client.create_database(ls_url, "ls_db")
-
-    db_files = os.listdir("results/dbs/net-mono/ls_db.cblite2")
-    assert "db.sqlite3" in db_files
-    assert "db.sqlite3-shm" in db_files
-    assert "db.sqlite3-wal" in db_files
-
-    att_files = os.listdir("results/dbs/net-mono/ls_db.cblite2/attachments")
-    assert att_files == []
-
-    client.delete_databases(ls_url)
-
-    assert not os.path.isdir("results/dbs/net-mono/ls_db.cblite2/")
+    liteserv.stop()
 
 
-def test_net_mono_sqlcipher(setup_liteserv_net_mono_sqlcipher):
-    ls_url = setup_liteserv_net_mono_sqlcipher
+def test_net_mono_storage_engine(request, liteserv_with_storage_engine_from_fixture):
+
+    liteserv = liteserv_with_storage_engine_from_fixture
+
+    test_name = request.node.name
+    logfile = "{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(liteserv).__name__, test_name, datetime.datetime.now())
+    ls_url = liteserv.start(logfile)
 
     client = MobileRestClient()
     client.create_database(ls_url, "ls_db")
 
-    db_files = os.listdir("results/dbs/net-mono/ls_db.cblite2")
-    assert "db.sqlite3" in db_files
-    assert "db.sqlite3-shm" in db_files
-    assert "db.sqlite3-wal" in db_files
+    storage_engine = liteserv.storage_engine
+    log_info("Testing storage_engine: {}".format(storage_engine))
 
-    att_files = os.listdir("results/dbs/net-mono/ls_db.cblite2/attachments")
-    assert att_files == ["_encryption"]
+    if storage_engine == "SQLite":
 
-    client.delete_databases(ls_url)
+        db_files = os.listdir("results/dbs/net-mono/ls_db.cblite2")
+        assert "db.sqlite3" in db_files
+        assert "db.sqlite3-shm" in db_files
+        assert "db.sqlite3-wal" in db_files
 
-    assert not os.path.isdir("results/dbs/net-mono/ls_db.cblite2/")
+        att_files = os.listdir("results/dbs/net-mono/ls_db.cblite2/attachments")
+        assert att_files == []
 
+        client.delete_databases(ls_url)
+        assert not os.path.isdir("results/dbs/net-mono/ls_db.cblite2/")
 
-def test_net_mono_forestdb(setup_liteserv_net_mono_forestdb):
-    ls_url = setup_liteserv_net_mono_forestdb
+    elif storage_engine == "SQLCipher":
 
-    client = MobileRestClient()
-    client.create_database(ls_url, "ls_db")
+        db_files = os.listdir("results/dbs/net-mono/ls_db.cblite2")
+        assert "db.sqlite3" in db_files
+        assert "db.sqlite3-shm" in db_files
+        assert "db.sqlite3-wal" in db_files
 
-    db_files = os.listdir("results/dbs/net-mono/ls_db.cblite2")
-    assert "db.forest.0" in db_files
-    assert "db.forest.meta" in db_files
+        att_files = os.listdir("results/dbs/net-mono/ls_db.cblite2/attachments")
+        assert att_files == ["_encryption"]
 
-    att_files = os.listdir("results/dbs/net-mono/ls_db.cblite2/attachments")
-    assert att_files == []
+        client.delete_databases(ls_url)
+        assert not os.path.isdir("results/dbs/net-mono/ls_db.cblite2/")
 
-    client.delete_databases(ls_url)
+    elif storage_engine == "ForestDB":
 
-    assert not os.path.isdir("results/dbs/net-mono/ls_db.cblite2/")
+        db_files = os.listdir("results/dbs/net-mono/ls_db.cblite2")
+        assert "db.forest.0" in db_files
+        assert "db.forest.meta" in db_files
 
+        att_files = os.listdir("results/dbs/net-mono/ls_db.cblite2/attachments")
+        assert att_files == []
 
-def test_net_mono_forestdb_enc(setup_liteserv_net_mono_forestdb_encryption):
-    ls_url = setup_liteserv_net_mono_forestdb_encryption
+        client.delete_databases(ls_url)
+        assert not os.path.isdir("results/dbs/net-mono/ls_db.cblite2/")
 
-    client = MobileRestClient()
-    client.create_database(ls_url, "ls_db")
+    elif storage_engine == "ForestDB+Encryption":
 
-    db_files = os.listdir("results/dbs/net-mono/ls_db.cblite2")
-    assert "db.forest.0" in db_files
-    assert "db.forest.meta" in db_files
+        db_files = os.listdir("results/dbs/net-mono/ls_db.cblite2")
+        assert "db.forest.0" in db_files
+        assert "db.forest.meta" in db_files
 
-    att_files = os.listdir("results/dbs/net-mono/ls_db.cblite2/attachments")
-    assert att_files == ["_encryption"]
+        att_files = os.listdir("results/dbs/net-mono/ls_db.cblite2/attachments")
+        assert att_files == ["_encryption"]
 
-    client.delete_databases(ls_url)
+        client.delete_databases(ls_url)
+        assert not os.path.isdir("results/dbs/net-mono/ls_db.cblite2/")
 
-    assert not os.path.isdir("results/dbs/net-mono/ls_db.cblite2/")
+    else:
+        pytest.xfail("Invalid Storage Engine")
+
+    liteserv.stop()
