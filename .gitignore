@@ -67,7 +67,7 @@ resources/pool.json
 !resources/cluster_configs/1sg_1cbs.sample
 debug.txt
 
-framework_tests/*.txt
+mobile_testkit_tests/*.txt
 
 deps/*
 !deps/binaries/README.md

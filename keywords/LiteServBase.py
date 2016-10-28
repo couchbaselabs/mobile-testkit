@@ -10,6 +10,10 @@ from keywords.utils import log_info
 
 
 class LiteServBase(object):
+    """Base class that each LiteServ platform need to inherit from.
+    Look at LiteServMacOSX.py as an example of a plaform implementation
+    of this. This class provides a few common functions as well as
+    specifies the API that must be implemented in the subclass."""
 
     def __init__(self, version_build, host, port, storage_engine):
         self.version_build = version_build

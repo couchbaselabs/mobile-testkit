@@ -1,4 +1,4 @@
-Running the framework unit tests
+Running the mobile testkit tests
 
 To run all the tests the following dependencies need to be satisfied
 
