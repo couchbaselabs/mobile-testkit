@@ -30,8 +30,9 @@ def setup_liteserv_ios_no_launch(request):
     liteserv.remove()
 
 
-@pytest.fixture(scope="function")
-def setup_liteserv_ios_sqlite(request):
+@pytest.fixture(scope="function",
+                params=["SQLite", "SQLCipher", "ForestDB", "ForestDB+Encryption"])
+def liteserv_with_storage_engine_from_fixture(request):
 
     ios_version = request.config.getoption("--ios-version")
     ios_host = request.config.getoption("--ios-host")
@@ -40,93 +41,12 @@ def setup_liteserv_ios_sqlite(request):
                                       version_build=ios_version,
                                       host=ios_host,
                                       port=59840,
-                                      storage_engine="SQLite")
+                                      storage_engine=request.param)
     liteserv.download()
     liteserv.install()
 
-    test_name = request.node.name
+    yield liteserv
 
-    logfile = "{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(liteserv).__name__, test_name, datetime.datetime.now())
-    ls_url = liteserv.start(logfile)
-
-    yield ls_url
-
-    liteserv.stop()
-    liteserv.remove()
-
-
-@pytest.fixture(scope="function")
-def setup_liteserv_ios_sqlcipher(request):
-
-    ios_version = request.config.getoption("--ios-version")
-    ios_host = request.config.getoption("--ios-host")
-
-    liteserv = LiteServFactory.create("ios",
-                                      version_build=ios_version,
-                                      host=ios_host,
-                                      port=59840,
-                                      storage_engine="SQLCipher")
-    liteserv.download()
-    liteserv.install()
-
-    test_name = request.node.name
-
-    logfile = "{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(liteserv).__name__, test_name, datetime.datetime.now())
-    ls_url = liteserv.start(logfile)
-
-    yield ls_url
-
-    liteserv.stop()
-    liteserv.remove()
-
-
-@pytest.fixture(scope="function")
-def setup_liteserv_ios_forestdb(request):
-
-    ios_version = request.config.getoption("--ios-version")
-    ios_host = request.config.getoption("--ios-host")
-
-    liteserv = LiteServFactory.create("ios",
-                                      version_build=ios_version,
-                                      host=ios_host,
-                                      port=59840,
-                                      storage_engine="ForestDB")
-    liteserv.download()
-    liteserv.install()
-
-    test_name = request.node.name
-
-    logfile = "{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(liteserv).__name__, test_name, datetime.datetime.now())
-    ls_url = liteserv.start(logfile)
-
-    yield ls_url
-
-    liteserv.stop()
-    liteserv.remove()
-
-
-@pytest.fixture(scope="function")
-def setup_liteserv_ios_forestdb_encryption(request):
-
-    ios_version = request.config.getoption("--ios-version")
-    ios_host = request.config.getoption("--ios-host")
-
-    liteserv = LiteServFactory.create("ios",
-                                      version_build=ios_version,
-                                      host=ios_host,
-                                      port=59840,
-                                      storage_engine="ForestDB+Encryption")
-    liteserv.download()
-    liteserv.install()
-
-    test_name = request.node.name
-
-    logfile = "{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(liteserv).__name__, test_name, datetime.datetime.now())
-    ls_url = liteserv.start(logfile)
-
-    yield ls_url
-
-    liteserv.stop()
     liteserv.remove()
 
 
@@ -175,8 +95,12 @@ def test_ios_logging(request, setup_liteserv_ios_logging):
 
 
 @pytest.mark.skip(reason="Need to wait until build is setup")
-def test_ios_full_life_cycle(setup_liteserv_ios_sqlite):
-    ls_url = setup_liteserv_ios_sqlite
+def test_ios_full_life_cycle(request, liteserv_with_storage_engine_from_fixture):
+    liteserv = liteserv_with_storage_engine_from_fixture
+
+    test_name = request.node.name
+    logfile = "{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(liteserv).__name__, test_name, datetime.datetime.now())
+    ls_url = liteserv.start(logfile)
 
     client = MobileRestClient()
     client.create_database(ls_url, "ls_db")
@@ -184,43 +108,18 @@ def test_ios_full_life_cycle(setup_liteserv_ios_sqlite):
     assert len(docs) == 10
 
     client.delete_databases(ls_url)
+    liteserv.stop()
 
 
 @pytest.mark.skip(reason="Need to wait until build is setup")
-def test_ios_sqlite(setup_liteserv_ios_sqlite):
-    ls_url = setup_liteserv_ios_sqlite
+def test_ios_storage_engines(request, liteserv_with_storage_engine_from_fixture):
+    liteserv = liteserv_with_storage_engine_from_fixture
 
-    client = MobileRestClient()
-    client.create_database(ls_url, "ls_db")
-
-    # TODO: find a way to verify this
-
-
-@pytest.mark.skip(reason="Need to wait until build is setup")
-def test_ios_sqlcipher(setup_liteserv_ios_sqlcipher):
-    ls_url = setup_liteserv_ios_sqlcipher
-
-    client = MobileRestClient()
-    client.create_database(ls_url, "ls_db")
+    test_name = request.node.name
+    logfile = "{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(liteserv).__name__, test_name, datetime.datetime.now())
+    ls_url = liteserv.start(logfile)
 
     # TODO: find a way to verify this
 
+    liteserv.stop()
 
-@pytest.mark.skip(reason="Need to wait until build is setup")
-def test_ios_forestdb(setup_liteserv_ios_forestdb):
-    ls_url = setup_liteserv_ios_forestdb
-
-    client = MobileRestClient()
-    client.create_database(ls_url, "ls_db")
-
-    # TODO: find a way to verify this
-
-
-@pytest.mark.skip(reason="Need to wait until build is setup")
-def test_ios_forestdb_enc(setup_liteserv_ios_forestdb_encryption):
-    ls_url = setup_liteserv_ios_forestdb_encryption
-
-    client = MobileRestClient()
-    client.create_database(ls_url, "ls_db")
-
-    # TODO: find a way to verify this
