@@ -42,9 +42,7 @@ def test_net_msft_remove():
     pass
 
 
-# Ansible provisioning fails from time to time
-# TODO: Reenable when updating from 2.1.1.0
-@pytest.mark.flakey
+@pytest.mark.skip(reason="https://github.com/couchbaselabs/mobile-testkit/issues/774")
 def test_net_msft_logging(request, liteserv_with_storage_engine_from_fixture):
 
     liteserv = liteserv_with_storage_engine_from_fixture
@@ -59,9 +57,7 @@ def test_net_msft_logging(request, liteserv_with_storage_engine_from_fixture):
         assert "Starting Manager version: .NET Microsoft Windows" in contents
 
 
-# Ansible provisioning fails from time to time
-# TODO: Reenable when updating from 2.1.1.0
-@pytest.mark.flakey
+@pytest.mark.skip(reason="https://github.com/couchbaselabs/mobile-testkit/issues/774")
 def test_net_msft_full_life_cycle(request, liteserv_with_storage_engine_from_fixture):
 
     liteserv = liteserv_with_storage_engine_from_fixture
@@ -80,9 +76,7 @@ def test_net_msft_full_life_cycle(request, liteserv_with_storage_engine_from_fix
     liteserv.stop()
 
 
-# Ansible provisioning fails from time to time
-# TODO: Reenable when updating from 2.1.1.0
-@pytest.mark.flakey
+@pytest.mark.skip(reason="https://github.com/couchbaselabs/mobile-testkit/issues/774")
 def test_net_msft_storage_engine(request, liteserv_with_storage_engine_from_fixture):
 
     liteserv = liteserv_with_storage_engine_from_fixture
