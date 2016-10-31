@@ -1,7 +1,7 @@
-- name: Windows - Copy directory to Windows
+- name: Windows - Install dependencies for LiteServ Windows
   hosts: windows
   vars:
-    directory_path:
+    binary_path:
 
   tasks:
     - name: Install nssm (https://nssm.cc/)
@@ -10,14 +10,10 @@
     - name: Install VS2015 C++ Runtime
       win_chocolatey: name=vcredist2015
 
-    - name: Remove Service Wrapper
+    - name: Install LiteServ service
       win_nssm:
         name: LiteServ
-        application: C:\Users\{{ ansible_user }}\Desktop\LiteServ\{{ directory_path }}\LiteServ.exe
-        state: absent
+        application: C:\Users\{{ ansible_user }}\Desktop\LiteServ\{{ binary_path }}
+        start_mode: manual
+        state: present
 
-    - name: Remove LiteServ on machine (if exists)
-      win_file: path=C:\Users\{{ ansible_user }}\Desktop\LiteServ state=absent
-
-    - name: Copy Directory
-      win_copy: src={{ directory_path }}  dest=C:\Users\{{ ansible_user }}\Desktop\LiteServ\

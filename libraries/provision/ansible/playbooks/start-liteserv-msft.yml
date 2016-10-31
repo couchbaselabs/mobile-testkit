@@ -5,7 +5,7 @@
     launch_args:
 
   tasks:
-    - debug: msg="Starting {{ binary_path }}"
+    - debug: msg="Starting with args {{ launch_args }}"
     - name: Start LiteServ
       win_nssm:
         name: LiteServ

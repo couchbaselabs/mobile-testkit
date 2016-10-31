@@ -8,7 +8,7 @@ def test_error_string_not_list():
     Make sure scanner throws exception for found keyword
     """
 
-    log_file_path = "framework_tests/test_data/mock_panic_log.txt"
+    log_file_path = "mobile_testkit_tests/test_data/mock_panic_log.txt"
 
     with pytest.raises(ValueError) as e:
         scan_logs.scan_for_errors('panic', log_file_path)
@@ -22,7 +22,7 @@ def test_panic_in_log():
     Make sure scanner throws exception for found keyword
     """
 
-    log_file_path = "framework_tests/test_data/mock_panic_log.txt"
+    log_file_path = "mobile_testkit_tests/test_data/mock_panic_log.txt"
 
     with pytest.raises(AssertionError) as e:
         scan_logs.scan_for_errors(['panic'], log_file_path)
@@ -36,7 +36,7 @@ def test_warning_in_log():
     Make sure scanner throws exception for found keyword
     """
 
-    log_file_path = "framework_tests/test_data/mock_panic_log.txt"
+    log_file_path = "mobile_testkit_tests/test_data/mock_panic_log.txt"
 
     with pytest.raises(AssertionError) as e:
         scan_logs.scan_for_errors(['warning'], log_file_path)
@@ -50,7 +50,7 @@ def test_cap_warning_in_log():
     Make sure scanner throws exception for found keyword
     """
 
-    log_file_path = "framework_tests/test_data/mock_panic_log.txt"
+    log_file_path = "mobile_testkit_tests/test_data/mock_panic_log.txt"
 
     with pytest.raises(AssertionError) as e:
         scan_logs.scan_for_errors(['warning'], log_file_path)
@@ -64,7 +64,7 @@ def test_cap_panic_in_log():
     Make sure scanner throws exception for found keyword
     """
 
-    log_file_path = "framework_tests/test_data/mock_panic_log.txt"
+    log_file_path = "mobile_testkit_tests/test_data/mock_panic_log.txt"
 
     with pytest.raises(AssertionError) as e:
         scan_logs.scan_for_errors(['Panic'], log_file_path)
@@ -78,7 +78,7 @@ def test_clean_log():
     Make sure scanner throws exception for found keyword
     """
 
-    log_file_path = "framework_tests/test_data/mock_clean_log.txt"
+    log_file_path = "mobile_testkit_tests/test_data/mock_clean_log.txt"
 
     scan_logs.scan_for_errors(['panic'], log_file_path)
 

@@ -49,9 +49,9 @@ results/dbs/*
 !results/dbs/macosx/
 results/dbs/macosx/*
 !results/dbs/macosx/README.md
-!results/dbs/net/
-results/dbs/net/*
-!results/dbs/net/README.md
+!results/dbs/net-mono/
+results/dbs/net-mono/*
+!results/dbs/net-mono/README.md
 
 !results/logs
 results/logs/*
@@ -59,9 +59,15 @@ results/logs/*
 
 resources/cluster_configs/*
 !resources/cluster_configs/README.md
+
+resources/liteserv_configs/*
+!resources/liteserv_configs/README.md
+
 resources/pool.json
 !resources/cluster_configs/1sg_1cbs.sample
 debug.txt
+
+mobile_testkit_tests/*.txt
 
 deps/*
 !deps/binaries/README.md

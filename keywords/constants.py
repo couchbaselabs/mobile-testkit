@@ -3,6 +3,7 @@ from enum import Enum
 BINARY_DIR = "deps/binaries"
 LATEST_BUILDS = "http://latestbuilds.hq.couchbase.com"
 RESULTS_DIR = "results"
+TEST_DIR = "framework_tests"
 CLUSTER_CONFIGS_DIR = "resources/cluster_configs"
 SYNC_GATEWAY_CONFIGS = "resources/sync_gateway_configs"
 DATA_DIR = "resources/data"

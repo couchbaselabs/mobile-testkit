@@ -9,7 +9,7 @@ from keywords.utils import log_info
 from keywords.constants import SYNC_GATEWAY_CONFIGS
 
 from keywords.constants import RESULTS_DIR
-from keywords.LiteServ import LiteServ
+from keywords.LiteServFactory import LiteServFactory
 from keywords.MobileRestClient import MobileRestClient
 from keywords.ClusterKeywords import ClusterKeywords
 from keywords.SyncGateway import SyncGateway
@@ -39,32 +39,25 @@ def setup_client_syncgateway_suite(request):
 
     liteserv_platform = request.config.getoption("--liteserv-platform")
     liteserv_version = request.config.getoption("--liteserv-version")
+    liteserv_host = request.config.getoption("--liteserv-host")
+    liteserv_port = request.config.getoption("--liteserv-port")
     liteserv_storage_engine = request.config.getoption("--liteserv-storage-engine")
 
     sync_gateway_version = request.config.getoption("--sync-gateway-version")
 
-    ls = LiteServ()
+    liteserv = LiteServFactory.create(platform=liteserv_platform,
+                                      version_build=liteserv_version,
+                                      host=liteserv_host,
+                                      port=liteserv_port,
+                                      storage_engine=liteserv_storage_engine)
 
-    log_info("Downloading LiteServ One ...")
+    log_info("Downloading LiteServ ...")
 
-    # Download LiteServ One
-    ls.download_liteserv(
-        platform=liteserv_platform,
-        version=liteserv_version,
-        storage_engine=liteserv_storage_engine
-    )
-
-    ls_cluster_target = None
-    if liteserv_platform == "net-win":
-        ls_cluster_target = "resources/cluster_configs/windows"
+    # Download LiteServ
+    liteserv.download()
 
     # Install LiteServ
-    ls.install_liteserv(
-        platform=liteserv_platform,
-        version=liteserv_version,
-        storage_engine=liteserv_storage_engine,
-        cluster_config=ls_cluster_target
-    )
+    liteserv.install()
 
     cluster_helper = ClusterKeywords()
     cluster_helper.set_cluster_config("1sg")
@@ -82,55 +75,25 @@ def setup_client_syncgateway_suite(request):
 
     # Wait at the yeild until tests referencing this suite setup have run,
     # Then execute the teardown
-    yield
+    yield liteserv
 
     log_info("Tearing down suite ...")
     cluster_helper.unset_cluster_config()
 
+    liteserv.remove()
+
 
 # Passed to each testcase, run for each test_* method in client_sg folder
 @pytest.fixture(scope="function")
-def setup_client_syncgateway_test(request):
-
+def setup_client_syncgateway_test(request, setup_client_syncgateway_suite):
     """Test setup fixture for client sync_gateway tests"""
 
     log_info("Setting up client sync_gateway test ...")
 
-    liteserv_platform = request.config.getoption("--liteserv-platform")
-    liteserv_version = request.config.getoption("--liteserv-version")
-    liteserv_host = request.config.getoption("--liteserv-host")
-    liteserv_port = request.config.getoption("--liteserv-port")
-    liteserv_storage_engine = request.config.getoption("--liteserv-storage-engine")
-
-    ls = LiteServ()
-    client = MobileRestClient()
-
+    liteserv = setup_client_syncgateway_suite
     test_name = request.node.name
 
-    # Verify LiteServ is not running
-    ls.verify_liteserv_not_running(host=liteserv_host, port=liteserv_port)
-
-    ls_cluster_target = None
-    if liteserv_platform == "net-win":
-        ls_cluster_target = "resources/cluster_configs/windows"
-
-    print("Starting LiteServ ...")
-    if liteserv_platform != "net-win":
-        # logging is file
-        ls_logging = open("{}/logs/{}-ls1-{}-{}.txt".format(RESULTS_DIR, datetime.datetime.now(), liteserv_platform, test_name), "w")
-    else:
-        # logging is name
-        ls_logging = "{}/logs/{}-ls1-{}-{}.txt".format(RESULTS_DIR, datetime.datetime.now(), liteserv_platform, test_name)
-
-    ls_url, ls_handle = ls.start_liteserv(
-        platform=liteserv_platform,
-        version=liteserv_version,
-        host=liteserv_host,
-        port=liteserv_port,
-        storage_engine=liteserv_storage_engine,
-        logfile=ls_logging,
-        cluster_config=ls_cluster_target
-    )
+    ls_url = liteserv.start("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(liteserv).__name__, test_name, datetime.datetime.now()))
 
     cluster_helper = ClusterKeywords()
     sg_helper = SyncGateway()
@@ -152,19 +115,10 @@ def setup_client_syncgateway_test(request):
     log_info("Tearing down test")
 
     # Teardown test
+    client = MobileRestClient()
     client.delete_databases(ls_url)
-    ls.shutdown_liteserv(
-        host=liteserv_host,
-        platform=liteserv_platform,
-        version=liteserv_version,
-        storage_engine=liteserv_storage_engine,
-        process_handle=ls_handle,
-        logfile=ls_logging,
-        cluster_config=ls_cluster_target
-    )
 
-    # Verify LiteServ is killed
-    ls.verify_liteserv_not_running(host=liteserv_host, port=liteserv_port)
+    liteserv.stop()
 
     sg_helper.stop_sync_gateway(cluster_config=os.environ["CLUSTER_CONFIG"], url=sg_url)
 

@@ -1,0 +1,25 @@
+- name: Windows - Download LiteServ Package
+  hosts: windows
+  vars:
+    download_url:
+    package_name:
+
+  tasks:
+  - debug: msg="download_url {{ download_url }}, package_name {{ package_name }}"
+
+  - name: Delete any exiting packages
+    win_file: path=C:\Users\{{ ansible_user }}\Desktop\LiteServ state=absent
+
+  - name: Create LiteServ directory
+    win_file: path=C:\Users\{{ ansible_user }}\Desktop\LiteServ state=directory
+
+  - name: Download LiteServ Windows .zip
+    win_get_url:
+      url: "{{ download_url }}"
+      dest: C:\Users\{{ ansible_user }}\Desktop\LiteServ\{{ package_name }}.zip
+
+  - name: Unzip package and remove .zip
+    win_unzip:
+      src: C:\Users\{{ ansible_user }}\Desktop\LiteServ\{{ package_name }}.zip
+      dest: C:\Users\{{ ansible_user }}\Desktop\LiteServ\{{ package_name }}
+      rm: true
