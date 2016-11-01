@@ -74,7 +74,7 @@ if __name__ == "__main__":
 
     parser = OptionParser(usage=usage)
 
-    default_sync_gateway_config = os.path.abspath("resources/sync_gateway_configs/sync_gateway_default.json")
+    default_sync_gateway_config = os.path.abspath("resources/sync_gateway_configs/sync_gateway_default_di.json")
 
     parser.add_option("", "--server-version",
                       action="store", type="string", dest="server_version", default=None,
@@ -90,7 +90,7 @@ if __name__ == "__main__":
                       dest="sync_gateway_config_file",
                       default=default_sync_gateway_config,
                       help="path to your sync_gateway_config file, uses" +
-                           " 'resources/sync_gateway_configs/sync_gateway_default.json' by default")
+                           " 'resources/sync_gateway_configs/sync_gateway_default_di.json' by default")
 
     parser.add_option("", "--sync-gateway-commit",
                       action="store", type="string", dest="source_commit", default=None,
