@@ -4,8 +4,8 @@ import json
 
 import pytest
 
-from testkit.admin import Admin
-from testkit.cluster import Cluster
+from libraries.testkit.admin import Admin
+from libraries.testkit.cluster import Cluster
 
 from keywords.utils import log_info
 from keywords.Logging import Logging
@@ -106,7 +106,7 @@ def init_shadow_cluster(cluster, config_path_shadower, config_path_non_shadower)
     return sc
 
 
-@pytest.mark.sanity
+@pytest.mark.topospecific
 @pytest.mark.syncgateway
 @pytest.mark.bucketshadow
 @pytest.mark.usefixtures("setup_2sg_1cbs_suite")
@@ -171,6 +171,7 @@ def test_bucket_shadow_low_revs_limit_repeated_deletes(setup_2sg_1cbs_test):
     assert len(errors) == 0
 
 
+@pytest.mark.topospecific
 @pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.bucketshadow
@@ -236,6 +237,7 @@ def test_bucket_shadow_low_revs_limit(setup_2sg_1cbs_test):
     assert len(errors) == 0
 
 
+@pytest.mark.topospecific
 @pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.bucketshadow

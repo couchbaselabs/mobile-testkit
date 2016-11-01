@@ -68,6 +68,7 @@ def setup_2sg_1cb_1lbs_test(request):
         logging_helper.fetch_and_analyze_logs(cluster_config=os.environ["CLUSTER_CONFIG"], test_name=test_name)
 
 
+@pytest.mark.topospecific
 @pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.nginx

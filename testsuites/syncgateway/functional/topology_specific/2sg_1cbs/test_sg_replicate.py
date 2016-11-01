@@ -1,12 +1,12 @@
-from testkit.cluster import Cluster
-from testkit.admin import Admin
-from testkit.syncgateway import wait_until_doc_sync
-from testkit.syncgateway import wait_until_active_tasks_empty
-from testkit.syncgateway import wait_until_active_tasks_non_empty
-from testkit.syncgateway import wait_until_doc_in_changes_feed
-from testkit.syncgateway import wait_until_docs_sync
-from testkit.syncgateway import assert_does_not_have_doc
-from testkit.syncgateway import assert_has_doc
+from libraries.testkit.cluster import Cluster
+from libraries.testkit.admin import Admin
+from libraries.testkit.syncgateway import wait_until_doc_sync
+from libraries.testkit.syncgateway import wait_until_active_tasks_empty
+from libraries.testkit.syncgateway import wait_until_active_tasks_non_empty
+from libraries.testkit.syncgateway import wait_until_doc_in_changes_feed
+from libraries.testkit.syncgateway import wait_until_docs_sync
+from libraries.testkit.syncgateway import assert_does_not_have_doc
+from libraries.testkit.syncgateway import assert_has_doc
 from requests import HTTPError
 
 import pytest
@@ -51,6 +51,7 @@ def setup_2sg_1cbs_test(request):
         logging_helper.fetch_and_analyze_logs(cluster_config=cluster_config, test_name=test_name)
 
 
+@pytest.mark.topospecific
 @pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.sgreplicate
@@ -129,6 +130,7 @@ def test_sg_replicate_basic_test(setup_2sg_1cbs_test):
     assert_has_doc(sg1_user, doc_id_sg2)
 
 
+@pytest.mark.topospecific
 @pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.sgreplicate
@@ -180,6 +182,7 @@ def test_sg_replicate_basic_test_channels(setup_2sg_1cbs_test):
     assert_has_doc(sg2_user, doc_id_sg1a)
 
 
+@pytest.mark.topospecific
 @pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.sgreplicate
@@ -288,6 +291,7 @@ def test_sg_replicate_continuous_replication(setup_2sg_1cbs_test):
 #     wait_until_active_tasks_empty(sg1)
 
 
+@pytest.mark.topospecific
 @pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.sgreplicate
@@ -327,6 +331,7 @@ def test_sg_replicate_non_existent_db(setup_2sg_1cbs_test):
     assert got_exception is True, 'Expected an exception trying to create a replication against non-existent db'
 
 
+@pytest.mark.topospecific
 @pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.sgreplicate
@@ -389,6 +394,7 @@ def test_sg_replicate_push_async(setup_2sg_1cbs_test, num_docs):
     wait_until_active_tasks_empty(sg1)
 
 
+@pytest.mark.topospecific
 @pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.sgreplicate
@@ -434,6 +440,7 @@ def test_stop_replication_via_replication_id(setup_2sg_1cbs_test):
     assert len(active_tasks) == 0
 
 
+@pytest.mark.topospecific
 @pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.sgreplicate

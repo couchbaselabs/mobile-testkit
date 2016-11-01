@@ -5,9 +5,9 @@ import pytest
 
 import concurrent.futures
 
-from testkit.admin import Admin
-from testkit.verify import verify_changes
-from testkit.cluster import Cluster
+from libraries.testkit.admin import Admin
+from libraries.testkit.verify import verify_changes
+from libraries.testkit.cluster import Cluster
 
 from keywords.utils import log_info
 from keywords.ClusterKeywords import ClusterKeywords
@@ -65,6 +65,7 @@ def setup_1sg_2ac_1cbs_test(request):
         logging_helper.fetch_and_analyze_logs(cluster_config=os.environ["CLUSTER_CONFIG"], test_name=test_name)
 
 
+@pytest.mark.topospecific
 @pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.usefixtures("setup_1sg_2ac_1cbs_suite")
@@ -118,6 +119,7 @@ def test_dcp_reshard_sync_gateway_goes_down(setup_1sg_2ac_1cbs_test, sg_conf):
     assert len(errors) == 1 and errors[0][0].hostname == "ac1"
 
 
+@pytest.mark.topospecific
 @pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.usefixtures("setup_1sg_2ac_1cbs_suite")
@@ -176,6 +178,7 @@ def test_dcp_reshard_sync_gateway_comes_up(setup_1sg_2ac_1cbs_test, sg_conf):
     assert len(errors) == 0
 
 
+@pytest.mark.topospecific
 @pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.usefixtures("setup_1sg_2ac_1cbs_suite")
@@ -245,6 +248,7 @@ def test_dcp_reshard_single_sg_accel_goes_down_and_up(setup_1sg_2ac_1cbs_test, s
     assert len(errors) == 0
 
 
+@pytest.mark.topospecific
 @pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.usefixtures("setup_1sg_2ac_1cbs_suite")
