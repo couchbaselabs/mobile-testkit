@@ -2,13 +2,13 @@ import time
 
 import concurrent.futures
 
-from testkit.admin import Admin
-from testkit.cluster import Cluster
-from testkit.verify import verify_changes
-from testkit.verify import verify_same_docs
-from testkit.verify import verify_docs_removed
+from libraries.testkit.admin import Admin
+from libraries.testkit.cluster import Cluster
+from libraries.testkit.verify import verify_changes
+from libraries.testkit.verify import verify_same_docs
+from libraries.testkit.verify import verify_docs_removed
 
-import testkit.settings
+import libraries.testkit.settings
 
 from keywords.utils import log_info
 

@@ -1,8 +1,8 @@
 import time
 
-from testkit.admin import Admin
-from testkit.cluster import Cluster
-from testkit.verify import verify_changes
+from libraries.testkit.admin import Admin
+from libraries.testkit.cluster import Cluster
+from libraries.testkit.verify import verify_changes
 
 from keywords.utils import log_info
 

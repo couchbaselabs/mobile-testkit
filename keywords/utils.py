@@ -1,6 +1,8 @@
 import logging
 import json
 
+from keywords.constants import SYNC_GATEWAY_CONFIGS
+
 
 # TODO: Use python logging hooks instead of wrappers - https://github.com/couchbaselabs/mobile-testkit/issues/686
 def log_info(message, is_verify=False):
@@ -99,3 +101,8 @@ def dump_file_contents_to_logs(filename):
         log_info("Contents of {}: {}".format(filename, open(filename).read()))
     except Exception as e:
         log_info("Error reading {}: {}".format(filename, e))
+
+
+# Build a full sync_gateway_config path from a prefix and a mode ("cc" or "di")
+def sg_config_for_mode(config_prefix, mode):
+    return "{}/{}_{}.json".format(SYNC_GATEWAY_CONFIGS, config_prefix, mode)

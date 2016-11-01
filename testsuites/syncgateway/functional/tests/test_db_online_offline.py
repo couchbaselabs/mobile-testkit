@@ -2,12 +2,12 @@ import time
 import concurrent.futures
 import uuid
 
-from testkit.admin import Admin
-from testkit.cluster import Cluster
-from testkit.user import User
-from testkit.verify import verify_changes
+from libraries.testkit.admin import Admin
+from libraries.testkit.cluster import Cluster
+from libraries.testkit.user import User
+from libraries.testkit.verify import verify_changes
 
-import testkit.settings
+import libraries.testkit.settings
 
 from requests.exceptions import HTTPError
 

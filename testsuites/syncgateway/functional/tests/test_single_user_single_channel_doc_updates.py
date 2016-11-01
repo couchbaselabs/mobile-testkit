@@ -1,8 +1,8 @@
 import time
-from testkit.admin import Admin
-from testkit.cluster import Cluster
-from testkit.verify import verify_changes
-import testkit.settings
+from libraries.testkit.admin import Admin
+from libraries.testkit.cluster import Cluster
+from libraries.testkit.verify import verify_changes
+import libraries.testkit.settings
 import logging
 log = logging.getLogger(testkit.settings.LOGGER)
 

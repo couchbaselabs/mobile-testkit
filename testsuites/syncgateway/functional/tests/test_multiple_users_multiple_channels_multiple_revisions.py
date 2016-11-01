@@ -1,9 +1,9 @@
 import time
 
-from testkit.admin import Admin
-from testkit.cluster import Cluster
+from libraries.testkit.admin import Admin
+from libraries.testkit.cluster import Cluster
 
-from testkit.parallelize import in_parallel
+from libraries.testkit.parallelize import in_parallel
 
 from keywords.utils import log_info
 from keywords.utils import log_error
