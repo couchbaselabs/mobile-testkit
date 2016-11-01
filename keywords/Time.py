@@ -1,6 +1,7 @@
 import time
 import datetime
-from utils import log_info
+
+from keywords.utils import log_info
 
 
 class Time:

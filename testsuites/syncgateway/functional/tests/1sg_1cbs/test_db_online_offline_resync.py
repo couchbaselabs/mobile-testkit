@@ -1,14 +1,14 @@
-from testkit.verify import verify_changes
-from testkit.cluster import Cluster
+from libraries.testkit.verify import verify_changes
+from libraries.testkit.cluster import Cluster
 
 import time
 import pytest
 import os
 
-from testkit.admin import Admin
+from libraries.testkit.admin import Admin
 from multiprocessing.pool import ThreadPool
 from requests.exceptions import HTTPError
-from testkit.parallelize import in_parallel
+from libraries.testkit.parallelize import in_parallel
 
 from keywords.utils import log_info
 from keywords.utils import log_error

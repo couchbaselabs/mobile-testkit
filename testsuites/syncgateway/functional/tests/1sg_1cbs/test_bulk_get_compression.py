@@ -4,10 +4,10 @@ import subprocess
 import json
 import os
 
-import testkit.settings
-from testkit.cluster import Cluster
-from testkit.data import Data
-from testkit.admin import Admin
+import libraries.testkit.settings
+from libraries.testkit.cluster import Cluster
+from libraries.testkit.data import Data
+from libraries.testkit.admin import Admin
 
 from keywords.utils import log_info
 from keywords.constants import SYNC_GATEWAY_CONFIGS
@@ -151,7 +151,7 @@ def test_bulk_get_compression(setup_1sg_1cbs_test, sg_conf, num_docs, accept_enc
 
     doc_body = Data.load("mock_users_20k.json")
 
-    with concurrent.futures.ThreadPoolExecutor(max_workers=testkit.settings.MAX_REQUEST_WORKERS) as executor:
+    with concurrent.futures.ThreadPoolExecutor(max_workers=libraries.testkit.settings.MAX_REQUEST_WORKERS) as executor:
         futures = [executor.submit(user.add_doc, doc_id="test-{}".format(i), content=doc_body) for i in range(num_docs)]
         for future in concurrent.futures.as_completed(futures):
             try:

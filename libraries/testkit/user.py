@@ -8,9 +8,9 @@ import time
 
 from requests.exceptions import HTTPError
 
-from testkit.debug import log_request
-from testkit.debug import log_response
-from testkit import settings
+from libraries.testkit.debug import log_request
+from libraries.testkit.debug import log_response
+from libraries.testkit import settings
 import logging
 log = logging.getLogger(settings.LOGGER)
 

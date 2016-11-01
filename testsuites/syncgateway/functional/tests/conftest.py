@@ -5,8 +5,10 @@ import pytest
 from keywords.constants import CLUSTER_CONFIGS_DIR
 from keywords.constants import SYNC_GATEWAY_CONFIGS
 from keywords.utils import log_info
+from keywords.utils import sg_config_for_mode
 from keywords.ClusterKeywords import ClusterKeywords
 from keywords.Logging import Logging
+from keywords.SyncGateway import validate_sync_gateway_mode
 
 from libraries.NetworkUtils import NetworkUtils
 

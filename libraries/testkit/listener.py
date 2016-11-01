@@ -1,8 +1,8 @@
 import subprocess
 
-from testkit.syncgateway import SyncGateway
+from libraries.testkit.syncgateway import SyncGateway
 
-from testkit import settings
+from libraries.testkit import settings
 import logging
 log = logging.getLogger(settings.LOGGER)
 

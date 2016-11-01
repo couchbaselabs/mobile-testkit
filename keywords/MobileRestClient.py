@@ -9,19 +9,19 @@ from requests.exceptions import HTTPError
 import concurrent.futures
 from concurrent.futures import ThreadPoolExecutor
 
-from CouchbaseServer import CouchbaseServer
-from Document import get_attachment
+from keywords.CouchbaseServer import CouchbaseServer
+from keywords.Document import get_attachment
 
 from libraries.data import doc_generators
 
-from constants import AuthType
-from constants import ServerType
-from constants import Platform
-from constants import CLIENT_REQUEST_TIMEOUT
-from constants import REGISTERED_CLIENT_DBS
+from keywords.constants import AuthType
+from keywords.constants import ServerType
+from keywords.constants import Platform
+from keywords.constants import CLIENT_REQUEST_TIMEOUT
+from keywords.constants import REGISTERED_CLIENT_DBS
 
-from utils import log_r
-from utils import log_info
+from keywords.utils import log_r
+from keywords.utils import log_info
 
 from exceptions import TimeoutException
 

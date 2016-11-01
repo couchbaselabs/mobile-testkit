@@ -292,7 +292,7 @@ def online_to_offline_changes_feed_controlled_close_continuous(cluster_conf, sg_
     docs_in_changes = dict()
     doc_add_errors = list()
 
-    with concurrent.futures.ThreadPoolExecutor(max_workers=testkit.settings.MAX_REQUEST_WORKERS) as executor:
+    with concurrent.futures.ThreadPoolExecutor(max_workers=libraries.testkit.settings.MAX_REQUEST_WORKERS) as executor:
         futures = dict()
         futures[executor.submit(seth.start_continuous_changes_tracking, termination_doc_id=None)] = "continuous"
         futures[executor.submit(doc_pusher.add_docs, num_docs)] = "docs_push"
@@ -356,7 +356,7 @@ def online_to_offline_continous_changes_feed_controlled_close_sanity_mulitple_us
 
     feed_close_results = list()
 
-    with concurrent.futures.ThreadPoolExecutor(max_workers=testkit.settings.MAX_REQUEST_WORKERS) as executor:
+    with concurrent.futures.ThreadPoolExecutor(max_workers=libraries.testkit.settings.MAX_REQUEST_WORKERS) as executor:
         # start continuous tracking with no timeout, will block until connection is closed by db going offline
         futures = {executor.submit(user.start_continuous_changes_tracking, termination_doc_id=None): user.name for user in users}
 
@@ -408,7 +408,7 @@ def online_to_offline_changes_feed_controlled_close_longpoll_sanity(cluster_conf
 
     docs_in_changes = dict()
 
-    with concurrent.futures.ThreadPoolExecutor(max_workers=testkit.settings.MAX_REQUEST_WORKERS) as executor:
+    with concurrent.futures.ThreadPoolExecutor(max_workers=libraries.testkit.settings.MAX_REQUEST_WORKERS) as executor:
         futures = dict()
         # start longpoll tracking with no timeout, will block until longpoll is closed by db going offline
         futures[executor.submit(seth.start_longpoll_changes_tracking, termination_doc_id=None, timeout=0, loop=False)] = "polling"
@@ -459,7 +459,7 @@ def online_to_offline_longpoll_changes_feed_controlled_close_sanity_mulitple_use
 
     feed_close_results = list()
 
-    with concurrent.futures.ThreadPoolExecutor(max_workers=testkit.settings.MAX_REQUEST_WORKERS) as executor:
+    with concurrent.futures.ThreadPoolExecutor(max_workers=libraries.testkit.settings.MAX_REQUEST_WORKERS) as executor:
         # start longpoll tracking with no timeout, will block until longpoll is closed by db going offline
         futures = {executor.submit(user.start_longpoll_changes_tracking, termination_doc_id=None, timeout=0, loop=False): user.name for user in users}
 
@@ -517,7 +517,7 @@ def online_to_offline_changes_feed_controlled_close_longpoll(cluster_conf, sg_co
     docs_in_changes = dict()
     doc_add_errors = list()
 
-    with concurrent.futures.ThreadPoolExecutor(max_workers=testkit.settings.MAX_REQUEST_WORKERS) as executor:
+    with concurrent.futures.ThreadPoolExecutor(max_workers=libraries.testkit.settings.MAX_REQUEST_WORKERS) as executor:
         futures = dict()
         futures[executor.submit(seth.start_longpoll_changes_tracking, termination_doc_id=None)] = "polling"
         futures[executor.submit(doc_pusher.add_docs, num_docs)] = "docs_push"

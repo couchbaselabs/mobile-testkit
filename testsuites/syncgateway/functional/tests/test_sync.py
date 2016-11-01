@@ -32,7 +32,7 @@ def issue_1524(cluster_conf, sg_conf, num_docs):
 
     longpoll_docs = {}
 
-    with concurrent.futures.ThreadPoolExecutor(max_workers=testkit.settings.MAX_REQUEST_WORKERS) as executor:
+    with concurrent.futures.ThreadPoolExecutor(max_workers=libraries.testkit.settings.MAX_REQUEST_WORKERS) as executor:
         futures = dict()
         futures[executor.submit(user_no_channels.start_longpoll_changes_tracking, termination_doc_id="terminator")] = "polling"
         log_info("Starting longpoll feed")

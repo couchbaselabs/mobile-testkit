@@ -2,10 +2,10 @@ import requests
 import json
 import concurrent.futures
 
-from testkit.user import User
-from testkit import settings
-from testkit.debug import log_request
-from testkit.debug import log_response
+from libraries.testkit.user import User
+from libraries.testkit import settings
+from libraries.testkit.debug import log_request
+from libraries.testkit.debug import log_response
 
 import logging
 log = logging.getLogger(settings.LOGGER)

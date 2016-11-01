@@ -5,15 +5,21 @@ import json
 import requests
 from requests import Session
 
-from utils import version_is_binary
-from utils import log_r
-from utils import version_and_build
-from utils import hostname_for_url
-from utils import log_info
+from keywords.utils import version_is_binary
+from keywords.utils import log_r
+from keywords.utils import version_and_build
+from keywords.utils import hostname_for_url
+from keywords.utils import log_info
 
 from exceptions import ProvisioningError
 
 from libraries.provision.ansible_runner import AnsibleRunner
+
+
+def validate_sync_gateway_mode(mode):
+    """Verifies that the sync_gateway mode is either channel cache ('cc') or distributed index ('di')"""
+    if mode != "cc" and mode != "di":
+        raise ValueError("Sync Gateway mode must be 'cc' (channel cache) or 'di' (distributed index)")
 
 
 def get_sync_gateway_version(host):

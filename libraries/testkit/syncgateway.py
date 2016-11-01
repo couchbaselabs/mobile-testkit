@@ -2,15 +2,15 @@ import os
 import requests
 import json
 import time
-import testkit.settings
-from testkit.debug import log_request
-from testkit.debug import log_response
-from testkit.admin import Admin
-from provision.ansible_runner import AnsibleRunner
+import libraries.testkit.settings
+from libraries.testkit.debug import log_request
+from libraries.testkit.debug import log_response
+from libraries.testkit.admin import Admin
+from libraries.provision.ansible_runner import AnsibleRunner
 from requests import HTTPError
 
 import logging
-log = logging.getLogger(testkit.settings.LOGGER)
+log = logging.getLogger(libraries.testkit.settings.LOGGER)
 
 
 class SyncGateway:

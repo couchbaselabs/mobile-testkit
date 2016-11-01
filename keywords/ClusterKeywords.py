@@ -9,9 +9,9 @@ from keywords.utils import log_r
 from keywords.utils import version_is_binary
 from keywords.utils import version_and_build
 
-from CouchbaseServer import verify_server_version
-from SyncGateway import verify_sync_gateway_version
-from SyncGateway import verify_sg_accel_version
+from keywords.CouchbaseServer import verify_server_version
+from keywords.SyncGateway import verify_sync_gateway_version
+from keywords.SyncGateway import verify_sg_accel_version
 from libraries.testkit.cluster import Cluster
 
 from constants import CLUSTER_CONFIGS_DIR

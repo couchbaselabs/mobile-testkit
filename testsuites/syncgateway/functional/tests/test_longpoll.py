@@ -29,7 +29,7 @@ def longpoll_changes_parametrized(cluster_conf, sg_conf, num_docs, num_revisions
 
     docs_in_changes = dict()
 
-    with concurrent.futures.ThreadPoolExecutor(max_workers=testkit.settings.MAX_REQUEST_WORKERS) as executor:
+    with concurrent.futures.ThreadPoolExecutor(max_workers=libraries.testkit.settings.MAX_REQUEST_WORKERS) as executor:
 
         futures = dict()
         futures[executor.submit(seth.start_longpoll_changes_tracking, termination_doc_id="killpolling")] = "polling"
@@ -77,7 +77,7 @@ def longpoll_changes_sanity(cluster_conf, sg_conf, num_docs, num_revisions):
 
     docs_in_changes = dict()
 
-    with concurrent.futures.ThreadPoolExecutor(max_workers=testkit.settings.MAX_REQUEST_WORKERS) as executor:
+    with concurrent.futures.ThreadPoolExecutor(max_workers=libraries.testkit.settings.MAX_REQUEST_WORKERS) as executor:
 
         futures = dict()
         futures[executor.submit(seth.start_longpoll_changes_tracking, termination_doc_id="killpolling")] = "polling"

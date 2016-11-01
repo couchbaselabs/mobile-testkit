@@ -1,7 +1,7 @@
 import json
 from jinja2 import Template
 
-from testkit import settings
+from libraries.testkit import settings
 
 import logging
 log = logging.getLogger(settings.LOGGER)

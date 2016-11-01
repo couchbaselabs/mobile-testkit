@@ -4,12 +4,12 @@ import time
 
 from requests.exceptions import ConnectionError
 
-from testkit.syncgateway import SyncGateway
-from testkit.sgaccel import SgAccel
-from testkit.server import Server
-from testkit.admin import Admin
-from testkit.config import Config
-from provision.ansible_runner import AnsibleRunner
+from libraries.testkit.syncgateway import SyncGateway
+from libraries.testkit.sgaccel import SgAccel
+from libraries.testkit.server import Server
+from libraries.testkit.admin import Admin
+from libraries.testkit.config import Config
+from libraries.provision.ansible_runner import AnsibleRunner
 
 import keywords.CouchbaseServer
 from keywords import utils

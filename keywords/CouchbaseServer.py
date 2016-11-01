@@ -7,10 +7,10 @@ from couchbase.exceptions import ProtocolError
 from couchbase.exceptions import TemporaryFailError
 from couchbase.exceptions import NotFoundError
 
-from constants import CLIENT_REQUEST_TIMEOUT
-from utils import log_r
-from utils import log_info
-from utils import log_debug
+from keywords.constants import CLIENT_REQUEST_TIMEOUT
+from keywords.utils import log_r
+from keywords.utils import log_info
+from keywords.utils import log_debug
 
 
 def get_server_version(host):

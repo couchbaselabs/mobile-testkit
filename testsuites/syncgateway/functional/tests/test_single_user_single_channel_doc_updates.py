@@ -4,7 +4,7 @@ from libraries.testkit.cluster import Cluster
 from libraries.testkit.verify import verify_changes
 import libraries.testkit.settings
 import logging
-log = logging.getLogger(testkit.settings.LOGGER)
+log = logging.getLogger(libraries.testkit.settings.LOGGER)
 
 
 # Scenario-2:
