@@ -20,22 +20,34 @@ from libraries.NetworkUtils import NetworkUtils
 # side effects due to the session scope
 @pytest.fixture(scope="session")
 def params_from_base_suite_setup(request):
-    log_info("Setting up 'setup_1sg_1ac_1cbs_suite' ...")
+    log_info("Setting up 'params_from_base_suite_setup' ...")
 
     server_version = request.config.getoption("--server-version")
     sync_gateway_version = request.config.getoption("--sync-gateway-version")
     mode = request.config.getoption("--mode")
+    skip_provisioning = request.config.getoption("--skip-provisioning")
+
+    log_info("server_version: {}".format(server_version))
+    log_info("sync_gateway_version: {}".format(sync_gateway_version))
+    log_info("mode: {}".format(mode))
+    log_info("skip_provisioning: {}".format(skip_provisioning))
+
+    # Make sure mode for sync_gateway is supported ('cc' or 'di')
+    validate_sync_gateway_mode(mode)
 
     # use base_cc cluster config if mode is "cc" or base_di cluster config if more is "di"
     cluster_config = "{}/base_{}".format(CLUSTER_CONFIGS_DIR, mode)
+    sg_config = sg_config_for_mode("sync_gateway_default_functional_tests", mode)
 
-    cluster_helper = ClusterKeywords()
-    cluster_helper.provision_cluster(
-        cluster_config=cluster_config,
-        server_version=server_version,
-        sync_gateway_version=sync_gateway_version,
-        sync_gateway_config="{}/sync_gateway_default_functional_tests_di.json".format(SYNC_GATEWAY_CONFIGS)
-    )
+    # Skip provisioning if user specifies '--skip-provisoning'
+    if not skip_provisioning:
+        cluster_helper = ClusterKeywords()
+        cluster_helper.provision_cluster(
+            cluster_config=cluster_config,
+            server_version=server_version,
+            sync_gateway_version=sync_gateway_version,
+            sync_gateway_config=sg_config
+        )
 
     yield {"cluster_config": cluster_config, "mode": mode}
 

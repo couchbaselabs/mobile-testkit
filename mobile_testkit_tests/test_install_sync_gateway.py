@@ -1,5 +1,29 @@
 import os
+import pytest
+
 from libraries.provision.install_sync_gateway import get_buckets_from_sync_gateway_config
+
+from keywords.SyncGateway import validate_sync_gateway_mode
+
+
+def test_verify_mode_correct():
+    validate_sync_gateway_mode("cc")
+    validate_sync_gateway_mode("di")
+
+
+def test_verify_mode_none_or_invalid():
+
+    expected_error_message = "Sync Gateway mode must be 'cc' (channel cache) or 'di' (distributed index)"
+
+    with pytest.raises(ValueError) as ve:
+        validate_sync_gateway_mode(None)
+    ve_message = str(ve.value)
+    assert ve_message == expected_error_message
+
+    with pytest.raises(ValueError) as ve:
+        validate_sync_gateway_mode("ccc")
+    ve_message = str(ve.value)
+    assert ve_message == expected_error_message
 
 
 def test_get_buckets_from_sync_gateway_config_template_vars():
