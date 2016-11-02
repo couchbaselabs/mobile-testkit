@@ -39,21 +39,7 @@ from testsuites.syncgateway.functional.shared.test_users_channels import single_
 
 
 
-@pytest.mark.sanity
-@pytest.mark.syncgateway
-@pytest.mark.usefixtures("setup_1sg_1cbs_suite")
-@pytest.mark.parametrize("sg_conf,num_users,num_channels,num_docs,num_revisions", [
-    ("{}/sync_gateway_default_functional_tests_cc.json".format(SYNC_GATEWAY_CONFIGS), 10, 3, 10, 10),
-])
-def test_mulitple_users_mulitiple_channels_mulitple_revisions_cc(setup_1sg_1cbs_test, sg_conf, num_users, num_channels, num_docs, num_revisions):
-    mulitple_users_mulitiple_channels_mulitple_revisions(
-        cluster_conf=setup_1sg_1cbs_test["cluster_config"],
-        sg_conf=sg_conf,
-        num_users=num_users,
-        num_channels=num_channels,
-        num_docs=num_docs,
-        num_revisions=num_revisions
-    )
+
 
 
 @pytest.mark.sanity

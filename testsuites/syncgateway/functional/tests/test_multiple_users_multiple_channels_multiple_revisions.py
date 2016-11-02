@@ -1,5 +1,7 @@
 import time
 
+import pytest
+
 from libraries.testkit.admin import Admin
 from libraries.testkit.cluster import Cluster
 
@@ -7,13 +9,24 @@ from libraries.testkit.parallelize import in_parallel
 
 from keywords.utils import log_info
 from keywords.utils import log_error
+from keywords.SyncGateway import sync_gateway_config_path_for_mode
 
 
 # Scenario-2:
 # Single User Single Channel: Create Unique docs and update docs verify all num docs present in changes feed.
 # Verify all revisions in changes feed
 # https://docs.google.com/spreadsheets/d/1nlba3SsWagDrnAep3rDZHXHIDmRH_FFDeTaYJms_55k/edit#gid=598127796
-def mulitple_users_mulitiple_channels_mulitple_revisions(cluster_conf, sg_conf, num_users, num_channels, num_docs, num_revisions):
+@pytest.mark.sanity
+@pytest.mark.syncgateway
+@pytest.mark.parametrize("sg_conf_name, num_users, num_channels, num_docs, num_revisions", [
+    ("sync_gateway_default_functional_tests", 10, 3, 10, 10),
+])
+def test_mulitple_users_mulitiple_channels_mulitple_revisions(params_from_base_test_setup, sg_conf_name, num_users, num_channels, num_docs, num_revisions):
+
+    cluster_conf = params_from_base_test_setup["cluster_config"]
+    mode = params_from_base_test_setup["mode"]
+
+    sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
 
     log_info("Running 'mulitple_users_mulitiple_channels_mulitple_revisions'")
     log_info("cluster_conf: {}".format(cluster_conf))
