@@ -1,11 +1,25 @@
+import pytest
+
 from libraries.testkit.admin import Admin
 from libraries.testkit.cluster import Cluster
 from libraries.testkit.verify import verify_changes
 
+from keywords.SyncGateway import sync_gateway_config_path_for_mode
 from keywords.utils import log_info
 
 
-def roles_sanity(cluster_conf, sg_conf):
+@pytest.mark.sanity
+@pytest.mark.syncgateway
+@pytest.mark.role
+@pytest.mark.parametrize("sg_conf_name", [
+    "sync_gateway_default_functional_tests",
+])
+def test_roles_sanity(params_from_base_test_setup, sg_conf_name):
+
+    cluster_conf = params_from_base_test_setup["cluster_config"]
+    mode = params_from_base_test_setup["mode"]
+
+    sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
 
     log_info("Running 'roles_sanity'")
     log_info("cluster_conf: {}".format(cluster_conf))

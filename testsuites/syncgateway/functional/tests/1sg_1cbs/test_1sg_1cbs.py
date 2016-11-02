@@ -41,21 +41,6 @@ from testsuites.syncgateway.functional.shared.test_users_channels import single_
 
 
 
-
-@pytest.mark.sanity
-@pytest.mark.syncgateway
-@pytest.mark.role
-@pytest.mark.usefixtures("setup_1sg_1cbs_suite")
-@pytest.mark.parametrize("sg_conf", [
-    ("{}/sync_gateway_default_functional_tests_cc.json".format(SYNC_GATEWAY_CONFIGS)),
-])
-def test_roles_sanity_cc(setup_1sg_1cbs_test, sg_conf):
-    roles_sanity(
-        cluster_conf=setup_1sg_1cbs_test["cluster_config"],
-        sg_conf=sg_conf
-    )
-
-
 @pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.usefixtures("setup_1sg_1cbs_suite")
