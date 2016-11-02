@@ -1,14 +1,26 @@
+import time
+
+import pytest
 
 from libraries.testkit.admin import Admin
 from libraries.testkit.cluster import Cluster
 from libraries.testkit.verify import verify_changes
 
+from keywords.SyncGateway import sync_gateway_config_path_for_mode
 from keywords.utils import log_info
 
-import time
 
+@pytest.mark.sanity
+@pytest.mark.syncgateway
+@pytest.mark.parametrize("sg_conf_name, num_users, num_docs_per_user", [
+    ("multiple_dbs_unique_data_unique_index", 10, 500),
+])
+def test_multiple_db_unique_data_bucket_unique_index_bucket(params_from_base_test_setup, sg_conf_name, num_users, num_docs_per_user):
 
-def multiple_db_unique_data_bucket_unique_index_bucket(cluster_conf, sg_conf, num_users, num_docs_per_user):
+    cluster_conf = params_from_base_test_setup["cluster_config"]
+    mode = params_from_base_test_setup["mode"]
+
+    sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
 
     log_info("Running 'multiple_db_unique_data_bucket_unique_index_bucket'")
     log_info("Using cluster_conf: {}".format(cluster_conf))
@@ -56,7 +68,17 @@ def multiple_db_unique_data_bucket_unique_index_bucket(cluster_conf, sg_conf, nu
 
 
 # Kind of an edge case in that most users would not point multiple dbs at the same server bucket
-def multiple_db_single_data_bucket_single_index_bucket(cluster_conf, sg_conf, num_users, num_docs_per_user):
+@pytest.mark.sanity
+@pytest.mark.syncgateway
+@pytest.mark.parametrize("sg_conf_name, num_users, num_docs_per_user", [
+    ("multiple_dbs_shared_data_shared_index", 10, 500),
+])
+def test_multiple_db_single_data_bucket_single_index_bucket(params_from_base_test_setup, sg_conf_name, num_users, num_docs_per_user):
+
+    cluster_conf = params_from_base_test_setup["cluster_config"]
+    mode = params_from_base_test_setup["mode"]
+
+    sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
 
     log_info("Running 'multiple_db_unique_data_bucket_unique_index_bucket'")
     log_info("Using cluster_conf: {}".format(cluster_conf))

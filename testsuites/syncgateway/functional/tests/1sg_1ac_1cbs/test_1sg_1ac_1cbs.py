@@ -37,42 +37,6 @@ from testsuites.syncgateway.functional.test_users_channels import single_user_si
 
 
 
-
-
-
-
-
-
-@pytest.mark.sanity
-@pytest.mark.syncgateway
-@pytest.mark.usefixtures("setup_1sg_1ac_1cbs_suite")
-@pytest.mark.parametrize("sg_conf,num_users,num_docs_per_user", [
-    ("{}/multiple_dbs_unique_data_unique_index_di.json".format(SYNC_GATEWAY_CONFIGS), 10, 500),
-])
-def test_multiple_db_unique_data_bucket_unique_index_bucket_di(setup_1sg_1ac_1cbs_test, sg_conf, num_users, num_docs_per_user):
-    multiple_db_unique_data_bucket_unique_index_bucket(
-        cluster_conf=setup_1sg_1ac_1cbs_test["cluster_config"],
-        sg_conf=sg_conf,
-        num_users=num_users,
-        num_docs_per_user=num_docs_per_user
-    )
-
-
-@pytest.mark.sanity
-@pytest.mark.syncgateway
-@pytest.mark.usefixtures("setup_1sg_1ac_1cbs_suite")
-@pytest.mark.parametrize("sg_conf,num_users,num_docs_per_user", [
-    ("{}/multiple_dbs_shared_data_shared_index_di.json".format(SYNC_GATEWAY_CONFIGS), 10, 500),
-])
-def test_multiple_db_single_data_bucket_single_index_bucket_di(setup_1sg_1ac_1cbs_test, sg_conf, num_users, num_docs_per_user):
-    multiple_db_single_data_bucket_single_index_bucket(
-        cluster_conf=setup_1sg_1ac_1cbs_test["cluster_config"],
-        sg_conf=sg_conf,
-        num_users=num_users,
-        num_docs_per_user=num_docs_per_user
-    )
-
-
 @pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.usefixtures("setup_1sg_1ac_1cbs_suite")
