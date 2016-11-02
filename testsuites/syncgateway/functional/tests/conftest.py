@@ -50,7 +50,7 @@ def params_from_base_suite_setup(request):
 
     yield {"cluster_config": cluster_config, "mode": mode}
 
-    log_info("Tearing down 'setup_1sg_1ac_1cbs_suite' ...")
+    log_info("Tearing down 'params_from_base_suite_setup' ...")
 
 
 # This is called before each test and will yield the dictionary to each test that references the method

@@ -38,37 +38,9 @@ from testsuites.syncgateway.functional.test_users_channels import single_user_si
 
 
 
-@pytest.mark.sanity
-@pytest.mark.syncgateway
-@pytest.mark.changes
-@pytest.mark.usefixtures("setup_1sg_1ac_1cbs_suite")
-@pytest.mark.parametrize("sg_conf,num_docs,num_revs", [
-    ("{}/sync_gateway_default_functional_tests_di.json".format(SYNC_GATEWAY_CONFIGS), 5000, 1),
-    ("{}/sync_gateway_default_functional_tests_di.json".format(SYNC_GATEWAY_CONFIGS), 50, 100)
-])
-def test_longpoll_changes_parametrized_di(setup_1sg_1ac_1cbs_test, sg_conf, num_docs, num_revs):
-    longpoll_changes_parametrized(
-        cluster_conf=setup_1sg_1ac_1cbs_test["cluster_config"],
-        sg_conf=sg_conf,
-        num_docs=num_docs,
-        num_revisions=num_revs
-    )
 
 
-@pytest.mark.sanity
-@pytest.mark.syncgateway
-@pytest.mark.changes
-@pytest.mark.usefixtures("setup_1sg_1ac_1cbs_suite")
-@pytest.mark.parametrize("sg_conf,num_docs,num_revs", [
-    ("{}/sync_gateway_default_functional_tests_di.json".format(SYNC_GATEWAY_CONFIGS), 10, 10),
-])
-def test_longpoll_changes_sanity_di(setup_1sg_1ac_1cbs_test, sg_conf, num_docs, num_revs):
-    longpoll_changes_sanity(
-        cluster_conf=setup_1sg_1ac_1cbs_test["cluster_config"],
-        sg_conf=sg_conf,
-        num_docs=num_docs,
-        num_revisions=num_revs
-    )
+
 
 
 @pytest.mark.sanity

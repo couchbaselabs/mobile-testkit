@@ -1,4 +1,5 @@
 import time
+import pytest
 
 import concurrent.futures
 
@@ -8,10 +9,23 @@ from libraries.testkit.cluster import Cluster
 from libraries.testkit.verify import verify_changes
 from libraries.testkit.verify import verify_same_docs
 
+from keywords.SyncGateway import sync_gateway_config_path_for_mode
 from keywords.utils import log_info
 
 
-def longpoll_changes_parametrized(cluster_conf, sg_conf, num_docs, num_revisions):
+@pytest.mark.sanity
+@pytest.mark.syncgateway
+@pytest.mark.changes
+@pytest.mark.parametrize("sg_conf_name, num_docs, num_revisions", [
+    ("sync_gateway_default_functional_tests", 5000, 1),
+    ("sync_gateway_default_functional_tests", 50, 100)
+])
+def test_longpoll_changes_parametrized(params_from_base_test_setup, sg_conf_name, num_docs, num_revisions):
+
+    cluster_conf = params_from_base_test_setup["cluster_config"]
+    mode = params_from_base_test_setup["mode"]
+
+    sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
 
     log_info("Running: 'longpoll_changes_parametrized': {}".format(cluster_conf))
     log_info("cluster_conf: {}".format(cluster_conf))
@@ -59,7 +73,18 @@ def longpoll_changes_parametrized(cluster_conf, sg_conf, num_docs, num_revisions
     assert len(errors) == 0
 
 
-def longpoll_changes_sanity(cluster_conf, sg_conf, num_docs, num_revisions):
+@pytest.mark.sanity
+@pytest.mark.syncgateway
+@pytest.mark.changes
+@pytest.mark.parametrize("sg_conf_name, num_docs, num_revisions", [
+    ("sync_gateway_default_functional_tests", 10, 10),
+])
+def test_longpoll_changes_sanity(params_from_base_test_setup, sg_conf_name, num_docs, num_revisions):
+
+    cluster_conf = params_from_base_test_setup["cluster_config"]
+    mode = params_from_base_test_setup["mode"]
+
+    sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
 
     log_info("Running: 'longpoll_changes_sanity': {}".format(cluster_conf))
     log_info("cluster_conf: {}".format(cluster_conf))
