@@ -43,22 +43,6 @@ from testsuites.syncgateway.functional.test_users_channels import single_user_si
 @pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.usefixtures("setup_1sg_1ac_1cbs_suite")
-@pytest.mark.parametrize("sg_conf,num_users,num_docs,num_revisions", [
-    ("{}/sync_gateway_default_functional_tests_di.json".format(SYNC_GATEWAY_CONFIGS), 10, 500, 1),
-])
-def test_seq_di(setup_1sg_1ac_1cbs_test, sg_conf, num_users, num_docs, num_revisions):
-    seq(
-        cluster_conf=setup_1sg_1ac_1cbs_test["cluster_config"],
-        sg_conf=sg_conf,
-        num_users=num_users,
-        num_docs=num_docs,
-        num_revisions=num_revisions
-    )
-
-
-@pytest.mark.sanity
-@pytest.mark.syncgateway
-@pytest.mark.usefixtures("setup_1sg_1ac_1cbs_suite")
 @pytest.mark.parametrize("sg_conf,num_docs,num_revisions", [
     ("{}/sync_gateway_default_functional_tests_di.json".format(SYNC_GATEWAY_CONFIGS), 100, 100),
 ])
