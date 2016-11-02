@@ -9,22 +9,24 @@ from libraries.testkit.verify import verify_changes
 from libraries.testkit.verify import verify_same_docs
 
 from keywords.utils import log_info
-from keywords.utils import sg_config_for_mode
-from keywords.constants import SYNC_GATEWAY_CONFIGS
+from keywords.SyncGateway import sync_gateway_config_path_for_mode
 
 
+@pytest.mark.sanity
+@pytest.mark.syncgateway
+@pytest.mark.changes
 @pytest.mark.parametrize("sg_conf_name, num_users, num_docs, num_revisions", [
-    ("sync_gateway_default_functional_tests".format(SYNC_GATEWAY_CONFIGS), 1, 5000, 1),
-    ("sync_gateway_default_functional_tests".format(SYNC_GATEWAY_CONFIGS), 50, 5000, 1),
-    ("sync_gateway_default_functional_tests".format(SYNC_GATEWAY_CONFIGS), 50, 10, 10),
-    ("sync_gateway_default_functional_tests_revslimit50".format(SYNC_GATEWAY_CONFIGS), 50, 50, 1000)
+    ("sync_gateway_default_functional_tests", 1, 5000, 1),
+    ("sync_gateway_default_functional_tests", 50, 5000, 1),
+    ("sync_gateway_default_functional_tests", 50, 10, 10),
+    ("sync_gateway_default_functional_tests_revslimit50", 50, 50, 1000)
 ])
 def test_continuous_changes_parametrized(params_from_base_test_setup, sg_conf_name, num_users, num_docs, num_revisions):
 
     cluster_conf = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
 
-    sg_conf = sg_config_for_mode(sg_conf_name, mode)
+    sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
 
     log_info("Running 'continuous_changes_parametrized'")
     log_info("cluster_conf: {}".format(cluster_conf))
@@ -73,7 +75,18 @@ def test_continuous_changes_parametrized(params_from_base_test_setup, sg_conf_na
     assert len(errors) == 0
 
 
-def continuous_changes_sanity(cluster_conf, sg_conf, num_docs, num_revisions):
+@pytest.mark.sanity
+@pytest.mark.syncgateway
+@pytest.mark.changes
+@pytest.mark.parametrize("sg_conf_name, num_docs, num_revisions", [
+    ("sync_gateway_default_functional_tests", 10, 10)
+])
+def test_continuous_changes_sanity(params_from_base_test_setup, sg_conf_name, num_docs, num_revisions):
+
+    cluster_conf = params_from_base_test_setup["cluster_config"]
+    mode = params_from_base_test_setup["mode"]
+
+    sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
 
     log_info("Running 'continuous_changes_sanity'")
     log_info("cluster_conf: {}".format(cluster_conf))

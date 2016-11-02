@@ -2,6 +2,8 @@ import time
 import concurrent.futures
 import uuid
 
+import pytest
+
 from libraries.testkit.admin import Admin
 from libraries.testkit.cluster import Cluster
 from libraries.testkit.user import User
@@ -14,6 +16,7 @@ from requests.exceptions import HTTPError
 from multiprocessing.pool import ThreadPool
 
 from keywords.utils import log_info
+from keywords.SyncGateway import sync_gateway_config_path_for_mode
 
 NUM_ENDPOINTS = 13
 
@@ -191,7 +194,18 @@ def rest_scan(sync_gateway, db, online, num_docs, user_name, channels):
 
 
 # Scenario 1
-def online_default_rest(cluster_conf, sg_conf, num_docs):
+@pytest.mark.sanity
+@pytest.mark.syncgateway
+@pytest.mark.onlineoffline
+@pytest.mark.parametrize("sg_conf_name, num_docs", [
+    ("bucket_online_offline/bucket_online_offline_default", 100)
+])
+def test_online_default_rest(params_from_base_test_setup, sg_conf_name, num_docs):
+
+    cluster_conf = params_from_base_test_setup["cluster_config"]
+    mode = params_from_base_test_setup["mode"]
+
+    sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
 
     log_info("Using cluster_conf: {}".format(cluster_conf))
     log_info("Using sg_conf: {}".format(sg_conf))
@@ -217,7 +231,18 @@ def online_default_rest(cluster_conf, sg_conf, num_docs):
 
 
 # Scenario 2
-def offline_false_config_rest(cluster_conf, sg_conf, num_docs):
+@pytest.mark.sanity
+@pytest.mark.syncgateway
+@pytest.mark.onlineoffline
+@pytest.mark.parametrize("sg_conf_name, num_docs", [
+    ("bucket_online_offline/bucket_online_offline_offline_false", 100)
+])
+def test_offline_false_config_rest(params_from_base_test_setup, sg_conf_name, num_docs):
+
+    cluster_conf = params_from_base_test_setup["cluster_config"]
+    mode = params_from_base_test_setup["mode"]
+
+    sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
 
     log_info("Using cluster_conf: {}".format(cluster_conf))
     log_info("Using sg_conf: {}".format(sg_conf))
@@ -244,7 +269,18 @@ def offline_false_config_rest(cluster_conf, sg_conf, num_docs):
 
 
 # Scenario 3
-def online_to_offline_check_503(cluster_conf, sg_conf, num_docs):
+@pytest.mark.sanity
+@pytest.mark.syncgateway
+@pytest.mark.onlineoffline
+@pytest.mark.parametrize("sg_conf_name, num_docs", [
+    ("bucket_online_offline/bucket_online_offline_default", 100)
+])
+def test_online_to_offline_check_503(params_from_base_test_setup, sg_conf_name, num_docs):
+
+    cluster_conf = params_from_base_test_setup["cluster_config"]
+    mode = params_from_base_test_setup["mode"]
+
+    sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
 
     log_info("Using cluster_conf: {}".format(cluster_conf))
     log_info("Using sg_conf: {}".format(sg_conf))
@@ -277,7 +313,19 @@ def online_to_offline_check_503(cluster_conf, sg_conf, num_docs):
 
 
 # Scenario 5 - continuous
-def online_to_offline_changes_feed_controlled_close_continuous(cluster_conf, sg_conf, num_docs):
+# NOTE: Was disabled for di
+@pytest.mark.sanity
+@pytest.mark.syncgateway
+@pytest.mark.onlineoffline
+@pytest.mark.parametrize("sg_conf_name, num_docs", [
+    ("bucket_online_offline/bucket_online_offline_default", 5000)
+])
+def test_online_to_offline_changes_feed_controlled_close_continuous(params_from_base_test_setup, sg_conf_name, num_docs):
+
+    cluster_conf = params_from_base_test_setup["cluster_config"]
+    mode = params_from_base_test_setup["mode"]
+
+    sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
 
     log_info("Using cluster_conf: {}".format(cluster_conf))
     log_info("Using sg_conf: {}".format(sg_conf))
@@ -341,7 +389,19 @@ def online_to_offline_changes_feed_controlled_close_continuous(cluster_conf, sg_
 
 
 # Scenario 6 - longpoll
-def online_to_offline_continous_changes_feed_controlled_close_sanity_mulitple_users(cluster_conf, sg_conf, num_docs, num_users):
+@pytest.mark.sanity
+@pytest.mark.syncgateway
+@pytest.mark.onlineoffline
+@pytest.mark.changes
+@pytest.mark.parametrize("sg_conf_name, num_docs, num_users", [
+    ("bucket_online_offline/bucket_online_offline_default", 5000, 40)
+])
+def test_online_to_offline_continous_changes_feed_controlled_close_sanity_mulitple_users(params_from_base_test_setup, sg_conf_name, num_docs, num_users):
+
+    cluster_conf = params_from_base_test_setup["cluster_config"]
+    mode = params_from_base_test_setup["mode"]
+
+    sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
 
     log_info("Using cluster_conf: {}".format(cluster_conf))
     log_info("Using sg_conf: {}".format(sg_conf))
@@ -394,7 +454,19 @@ def online_to_offline_continous_changes_feed_controlled_close_sanity_mulitple_us
 
 
 # Scenario 6 - longpoll
-def online_to_offline_changes_feed_controlled_close_longpoll_sanity(cluster_conf, sg_conf, num_docs):
+@pytest.mark.sanity
+@pytest.mark.syncgateway
+@pytest.mark.onlineoffline
+@pytest.mark.changes
+@pytest.mark.parametrize("sg_conf_name, num_docs", [
+    ("bucket_online_offline/bucket_online_offline_default", 5000)
+])
+def test_online_to_offline_changes_feed_controlled_close_longpoll_sanity(params_from_base_test_setup, sg_conf_name, num_docs):
+
+    cluster_conf = params_from_base_test_setup["cluster_config"]
+    mode = params_from_base_test_setup["mode"]
+
+    sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
 
     log_info("Using cluster_conf: {}".format(cluster_conf))
     log_info("Using sg_conf: {}".format(sg_conf))
@@ -444,7 +516,19 @@ def online_to_offline_changes_feed_controlled_close_longpoll_sanity(cluster_conf
 
 
 # Scenario 6 - longpoll
-def online_to_offline_longpoll_changes_feed_controlled_close_sanity_mulitple_users(cluster_conf, sg_conf, num_docs, num_users):
+@pytest.mark.sanity
+@pytest.mark.syncgateway
+@pytest.mark.onlineoffline
+@pytest.mark.changes
+@pytest.mark.parametrize("sg_conf_name, num_docs, num_users", [
+    ("bucket_online_offline/bucket_online_offline_default", 5000, 40)
+])
+def test_online_to_offline_longpoll_changes_feed_controlled_close_sanity_mulitple_users(params_from_base_test_setup, sg_conf_name, num_docs, num_users):
+
+    cluster_conf = params_from_base_test_setup["cluster_config"]
+    mode = params_from_base_test_setup["mode"]
+
+    sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
 
     log_info("Using cluster_conf: {}".format(cluster_conf))
     log_info("Using sg_conf: {}".format(sg_conf))
@@ -501,7 +585,20 @@ def online_to_offline_longpoll_changes_feed_controlled_close_sanity_mulitple_use
 
 
 # Scenario 6 - longpoll
-def online_to_offline_changes_feed_controlled_close_longpoll(cluster_conf, sg_conf, num_docs):
+# NOTE: Was disabled for di
+@pytest.mark.sanity
+@pytest.mark.syncgateway
+@pytest.mark.onlineoffline
+@pytest.mark.changes
+@pytest.mark.parametrize("sg_conf_name, num_docs", [
+    ("bucket_online_offline/bucket_online_offline_default", 5000)
+])
+def test_online_to_offline_changes_feed_controlled_close_longpoll(params_from_base_test_setup, sg_conf_name, num_docs):
+
+    cluster_conf = params_from_base_test_setup["cluster_config"]
+    mode = params_from_base_test_setup["mode"]
+
+    sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
 
     log_info("Using cluster_conf: {}".format(cluster_conf))
     log_info("Using sg_conf: {}".format(sg_conf))
@@ -584,7 +681,19 @@ def online_to_offline_changes_feed_controlled_close_longpoll(cluster_conf, sg_co
 
 
 # Scenario 6
-def offline_true_config_bring_online(cluster_conf, sg_conf, num_docs):
+# NOTE: Was disabled for di
+@pytest.mark.sanity
+@pytest.mark.syncgateway
+@pytest.mark.onlineoffline
+@pytest.mark.parametrize("sg_conf_name, num_docs", [
+    ("bucket_online_offline/bucket_online_offline_offline_true", 100)
+])
+def test_offline_true_config_bring_online(params_from_base_test_setup, sg_conf_name, num_docs):
+
+    cluster_conf = params_from_base_test_setup["cluster_config"]
+    mode = params_from_base_test_setup["mode"]
+
+    sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
 
     log_info("Using cluster_conf: {}".format(cluster_conf))
     log_info("Using sg_conf: {}".format(sg_conf))
@@ -618,7 +727,19 @@ def offline_true_config_bring_online(cluster_conf, sg_conf, num_docs):
 
 
 # Scenario 14
-def db_offline_tap_loss_sanity(cluster_conf, sg_conf, num_docs):
+@pytest.mark.sanity
+@pytest.mark.syncgateway
+@pytest.mark.onlineoffline
+@pytest.mark.parametrize("sg_conf_name, num_docs", [
+    ("bucket_online_offline/bucket_online_offline_default_dcp", 100),
+    ("bucket_online_offline/bucket_online_offline_default", 100)
+])
+def test_db_offline_tap_loss_sanity(params_from_base_test_setup, sg_conf_name, num_docs):
+
+    cluster_conf = params_from_base_test_setup["cluster_config"]
+    mode = params_from_base_test_setup["mode"]
+
+    sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
 
     log_info("Using cluster_conf: {}".format(cluster_conf))
     log_info("Using sg_conf: {}".format(sg_conf))
@@ -648,7 +769,19 @@ def db_offline_tap_loss_sanity(cluster_conf, sg_conf, num_docs):
 
 
 # Scenario 11
-def db_delayed_online(cluster_conf, sg_conf, num_docs):
+# NOTE: Was disabled for di
+@pytest.mark.sanity
+@pytest.mark.syncgateway
+@pytest.mark.onlineoffline
+@pytest.mark.parametrize("sg_conf_name, num_docs", [
+    ("bucket_online_offline/bucket_online_offline_default", 100)
+])
+def test_db_delayed_online(params_from_base_test_setup, sg_conf_name, num_docs):
+
+    cluster_conf = params_from_base_test_setup["cluster_config"]
+    mode = params_from_base_test_setup["mode"]
+
+    sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
 
     log_info("Using cluster_conf: {}".format(cluster_conf))
     log_info("Using sg_conf: {}".format(sg_conf))
@@ -687,7 +820,18 @@ def db_delayed_online(cluster_conf, sg_conf, num_docs):
     assert len(errors) == 0
 
 
-def multiple_dbs_unique_buckets_lose_tap(cluster_conf, sg_conf, num_docs):
+@pytest.mark.sanity
+@pytest.mark.syncgateway
+@pytest.mark.onlineoffline
+@pytest.mark.parametrize("sg_conf_name, num_docs", [
+    ("bucket_online_offline/bucket_online_offline_multiple_dbs_unique_buckets", 100)
+])
+def test_multiple_dbs_unique_buckets_lose_tap(params_from_base_test_setup, sg_conf_name, num_docs):
+
+    cluster_conf = params_from_base_test_setup["cluster_config"]
+    mode = params_from_base_test_setup["mode"]
+
+    sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
 
     log_info("Using cluster_conf: {}".format(cluster_conf))
     log_info("Using sg_conf: {}".format(sg_conf))
