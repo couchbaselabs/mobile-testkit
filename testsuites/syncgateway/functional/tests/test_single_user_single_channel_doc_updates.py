@@ -1,8 +1,14 @@
 import time
+
+import pytest
+
 from libraries.testkit.admin import Admin
 from libraries.testkit.cluster import Cluster
 from libraries.testkit.verify import verify_changes
 import libraries.testkit.settings
+
+from keywords.SyncGateway import sync_gateway_config_path_for_mode
+
 import logging
 log = logging.getLogger(libraries.testkit.settings.LOGGER)
 
@@ -11,7 +17,17 @@ log = logging.getLogger(libraries.testkit.settings.LOGGER)
 # Single User Single Channel: Create Unique docs and update docs verify all num docs present in changes feed.
 # Verify all revisions in changes feed
 # https://docs.google.com/spreadsheets/d/1nlba3SsWagDrnAep3rDZHXHIDmRH_FFDeTaYJms_55k/edit#gid=598127796
-def single_user_single_channel_doc_updates(cluster_conf, sg_conf, num_docs, num_revisions):
+@pytest.mark.sanity
+@pytest.mark.syncgateway
+@pytest.mark.parametrize("sg_conf_name, num_docs, num_revisions", [
+    ("sync_gateway_default_functional_tests", 100, 100),
+])
+def test_single_user_single_channel_doc_updates(params_from_base_test_setup, sg_conf_name, num_docs, num_revisions):
+
+    cluster_conf = params_from_base_test_setup["cluster_config"]
+    mode = params_from_base_test_setup["mode"]
+
+    sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
 
     log.info("Running 'single_user_single_channel_doc_updates'")
     log.info("cluster_conf: {}".format(cluster_conf))
