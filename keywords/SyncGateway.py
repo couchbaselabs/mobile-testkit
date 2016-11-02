@@ -5,6 +5,7 @@ import json
 import requests
 from requests import Session
 
+from keywords.constants import SYNC_GATEWAY_CONFIGS
 from keywords.utils import version_is_binary
 from keywords.utils import log_r
 from keywords.utils import version_and_build
@@ -20,6 +21,24 @@ def validate_sync_gateway_mode(mode):
     """Verifies that the sync_gateway mode is either channel cache ('cc') or distributed index ('di')"""
     if mode != "cc" and mode != "di":
         raise ValueError("Sync Gateway mode must be 'cc' (channel cache) or 'di' (distributed index)")
+
+
+def sync_gateway_config_path_for_mode(config_prefix, mode):
+    """Construct a sync_gateway config path depending on a mode
+    1. Check that mode is valid ("cc" or "di")
+    2. Construct the config path relative to the root of the repository
+    3. Make sure the config exists
+    """
+
+    validate_sync_gateway_mode(mode)
+
+    # Construct expected config path
+    config = "{}/{}_{}.json".format(SYNC_GATEWAY_CONFIGS, config_prefix, mode)
+
+    if not os.path.isfile(config):
+        raise ValueError("Could not file config: {}".format(config))
+
+    return config
 
 
 def get_sync_gateway_version(host):

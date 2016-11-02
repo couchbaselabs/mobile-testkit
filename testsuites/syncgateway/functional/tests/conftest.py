@@ -3,12 +3,11 @@ import os
 import pytest
 
 from keywords.constants import CLUSTER_CONFIGS_DIR
-from keywords.constants import SYNC_GATEWAY_CONFIGS
 from keywords.utils import log_info
-from keywords.utils import sg_config_for_mode
 from keywords.ClusterKeywords import ClusterKeywords
 from keywords.Logging import Logging
 from keywords.SyncGateway import validate_sync_gateway_mode
+from keywords.SyncGateway import sync_gateway_config_path_for_mode
 
 from libraries.NetworkUtils import NetworkUtils
 
@@ -37,7 +36,7 @@ def params_from_base_suite_setup(request):
 
     # use base_cc cluster config if mode is "cc" or base_di cluster config if more is "di"
     cluster_config = "{}/base_{}".format(CLUSTER_CONFIGS_DIR, mode)
-    sg_config = sg_config_for_mode("sync_gateway_default_functional_tests", mode)
+    sg_config = sync_gateway_config_path_for_mode("sync_gateway_default_functional_tests", mode)
 
     # Skip provisioning if user specifies '--skip-provisoning'
     if not skip_provisioning:
@@ -52,7 +51,6 @@ def params_from_base_suite_setup(request):
     yield {"cluster_config": cluster_config, "mode": mode}
 
     log_info("Tearing down 'setup_1sg_1ac_1cbs_suite' ...")
-    cluster_helper.unset_cluster_config()
 
 
 # This is called before each test and will yield the dictionary to each test that references the method
@@ -79,4 +77,4 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     # if the test failed pull logs
     if request.node.rep_call.failed:
         logging_helper = Logging()
-        logging_helper.fetch_and_analyze_logs(cluster_config=os.environ["CLUSTER_CONFIG"], test_name=test_name)
+        logging_helper.fetch_and_analyze_logs(cluster_config=cluster_config, test_name=test_name)
