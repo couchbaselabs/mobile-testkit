@@ -1,13 +1,26 @@
 import time
 
+import pytest
+
 from libraries.testkit.admin import Admin
 from libraries.testkit.cluster import Cluster
 from libraries.testkit.verify import verify_changes
 
+from keywords.SyncGateway import sync_gateway_config_path_for_mode
 from keywords.utils import log_info
 
 
-def multiple_users_multiple_channels(cluster_conf, sg_conf):
+@pytest.mark.sanity
+@pytest.mark.syncgateway
+@pytest.mark.parametrize("sg_conf_name", [
+    "sync_gateway_default_functional_tests",
+])
+def test_multiple_users_multiple_channels(params_from_base_test_setup, sg_conf_name):
+
+    cluster_conf = params_from_base_test_setup["cluster_config"]
+    mode = params_from_base_test_setup["mode"]
+
+    sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
 
     log_info("Running 'multiple_users_multiple_channels'")
     log_info("cluster_conf: {}".format(cluster_conf))
@@ -60,7 +73,17 @@ def multiple_users_multiple_channels(cluster_conf, sg_conf):
     assert len(errors) == 0
 
 
-def muliple_users_single_channel(cluster_conf, sg_conf):
+@pytest.mark.sanity
+@pytest.mark.syncgateway
+@pytest.mark.parametrize("sg_conf_name", [
+    "sync_gateway_default_functional_tests",
+])
+def test_muliple_users_single_channel(params_from_base_test_setup, sg_conf_name):
+
+    cluster_conf = params_from_base_test_setup["cluster_config"]
+    mode = params_from_base_test_setup["mode"]
+
+    sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
 
     log_info("Running 'muliple_users_single_channel'")
     log_info("cluster_conf: {}".format(cluster_conf))
@@ -103,7 +126,17 @@ def muliple_users_single_channel(cluster_conf, sg_conf):
     assert len(errors) == 0
 
 
-def single_user_multiple_channels(cluster_conf, sg_conf):
+@pytest.mark.sanity
+@pytest.mark.syncgateway
+@pytest.mark.parametrize("sg_conf_name", [
+    "sync_gateway_default_functional_tests",
+])
+def test_single_user_multiple_channels(params_from_base_test_setup, sg_conf_name):
+
+    cluster_conf = params_from_base_test_setup["cluster_config"]
+    mode = params_from_base_test_setup["mode"]
+
+    sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
 
     log_info("Running 'single_user_multiple_channels'")
     log_info("cluster_conf: {}".format(cluster_conf))
@@ -140,7 +173,17 @@ def single_user_multiple_channels(cluster_conf, sg_conf):
     log_info("TIME:{}s".format(end - start))
 
 
-def single_user_single_channel(cluster_conf, sg_conf):
+@pytest.mark.sanity
+@pytest.mark.syncgateway
+@pytest.mark.parametrize("sg_conf_name", [
+    "sync_gateway_default_functional_tests",
+])
+def test_single_user_single_channel(params_from_base_test_setup, sg_conf_name):
+
+    cluster_conf = params_from_base_test_setup["cluster_config"]
+    mode = params_from_base_test_setup["mode"]
+
+    sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
 
     log_info("Running 'single_user_single_channel'")
     log_info("cluster_conf: {}".format(cluster_conf))
