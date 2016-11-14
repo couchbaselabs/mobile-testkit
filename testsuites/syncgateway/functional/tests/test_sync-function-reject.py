@@ -6,51 +6,19 @@ from requests.exceptions import HTTPError
 
 from keywords.utils import log_info
 from keywords.ClusterKeywords import ClusterKeywords
-from keywords.Logging import Logging
-from keywords.constants import SYNC_GATEWAY_CONFIGS
 from keywords.MobileRestClient import MobileRestClient
+from keywords.SyncGateway import sync_gateway_config_path_for_mode
 from keywords.CouchbaseServer import CouchbaseServer
 from keywords.Document import Document
-
-
-@pytest.fixture(scope="function")
-def setup_1sg_1cbs_test(request):
-
-    test_name = request.node.name
-    log_info("Setting up test '{}'".format(test_name))
-
-    sg_config = "{}/reject_all_cc.json".format(SYNC_GATEWAY_CONFIGS)
-
-    cluster_helper = ClusterKeywords()
-
-    cluster_helper.reset_cluster(
-        cluster_config=os.environ["CLUSTER_CONFIG"],
-        sync_gateway_config=sg_config
-    )
-
-    topology = cluster_helper.get_cluster_topology(os.environ["CLUSTER_CONFIG"])
-
-    yield {
-        "cbs_url": topology["couchbase_servers"][0],
-        "sg_url": topology["sync_gateways"][0]["public"],
-        "sg_url_admin": topology["sync_gateways"][0]["admin"],
-        "sg_db": "db",
-        "bucket": "data-bucket"
-    }
-
-    log_info("Tearing down test '{}'".format(test_name))
-
-    # if the test failed pull logs
-    if request.node.rep_call.failed:
-        logging_helper = Logging()
-        logging_helper.fetch_and_analyze_logs(cluster_config=os.environ["CLUSTER_CONFIG"], test_name=test_name)
 
 
 @pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.attachments
-@pytest.mark.usefixtures("setup_1sg_1cbs_suite")
-def test_attachments_on_docs_rejected_by_sync_function(setup_1sg_1cbs_test):
+@pytest.mark.parametrize("sg_conf_name", [
+    "reject_all"
+])
+def test_attachments_on_docs_rejected_by_sync_function(params_from_base_test_setup, sg_conf_name):
     """
     1. Start sync_gateway with sync function that rejects all writes:
     function(doc, oldDoc) {
@@ -61,13 +29,23 @@ def test_attachments_on_docs_rejected_by_sync_function(setup_1sg_1cbs_test):
     4. Assert att doc does not exist
     """
 
-    cbs_url = setup_1sg_1cbs_test["cbs_url"]
-    sg_url = setup_1sg_1cbs_test["sg_url"]
-    sg_url_admin = setup_1sg_1cbs_test["sg_url_admin"]
-    sg_db = setup_1sg_1cbs_test["sg_db"]
-    bucket = setup_1sg_1cbs_test["bucket"]
+    cluster_config = params_from_base_test_setup["cluster_config"]
+    mode = params_from_base_test_setup["mode"]
 
-    log_info("Running 'test_attachment_revpos_when_ancestor_unavailable'")
+    sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
+
+    cluster_helper = ClusterKeywords()
+    cluster_helper.reset_cluster(cluster_config, sg_conf)
+
+    topology = cluster_helper.get_cluster_topology(cluster_config)
+
+    cbs_url = topology["couchbase_servers"][0]
+    sg_url = topology["sync_gateways"][0]["public"]
+    sg_url_admin = topology["sync_gateways"][0]["admin"]
+    sg_db = "db"
+    bucket = "data-bucket"
+
+    log_info("Running 'test_attachments_on_docs_rejected_by_sync_function'")
     log_info("Using cbs_url: {}".format(cbs_url))
     log_info("Using sg_url: {}".format(sg_url))
     log_info("Using sg_url_admin: {}".format(sg_url_admin))

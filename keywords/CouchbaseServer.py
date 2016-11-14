@@ -245,6 +245,7 @@ class CouchbaseServer:
         found_ids = []
         b.n1ql_query("CREATE PRIMARY INDEX ON `{}`".format(bucket)).execute()
         for row in b.n1ql_query("SELECT meta(`{}`) FROM `{}`".format(bucket, bucket)):
+            log_info(row)
             if row["$1"]["id"].startswith(prefix):
                 found_ids.append(row["$1"]["id"])
 
