@@ -44,7 +44,6 @@ def rest_scan(sync_gateway, db, online, num_docs, user_name, channels):
 
     # Missing Authentication
     # TODO: POST /{db}/_facebook_token
-    # TODO: POST /{db}/_persona_assertion
 
     admin = Admin(sync_gateway=sync_gateway)
 
