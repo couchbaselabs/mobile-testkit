@@ -1,58 +1,23 @@
-import os
-
 import pytest
 
 from requests.exceptions import HTTPError
 
 from keywords.utils import log_info
 from keywords.ClusterKeywords import ClusterKeywords
-from keywords.Logging import Logging
-from keywords.constants import SYNC_GATEWAY_CONFIGS
 from keywords.MobileRestClient import MobileRestClient
 from keywords.SyncGateway import SyncGateway
+from keywords.SyncGateway import sync_gateway_config_path_for_mode
 from keywords.CouchbaseServer import CouchbaseServer
 from keywords.Document import Document
-
-
-@pytest.fixture(scope="function")
-def setup_1sg_1cbs_test(request):
-
-    test_name = request.node.name
-    log_info("Setting up test '{}'".format(test_name))
-
-    sg_config = "{}/sync_gateway_default_cc.json".format(SYNC_GATEWAY_CONFIGS)
-
-    cluster_helper = ClusterKeywords()
-    cluster_helper.reset_cluster(
-        cluster_config=os.environ["CLUSTER_CONFIG"],
-        sync_gateway_config=sg_config
-    )
-
-    topology = cluster_helper.get_cluster_topology(os.environ["CLUSTER_CONFIG"])
-
-    yield {
-        "cluster_config": os.environ["CLUSTER_CONFIG"],
-        "cbs_url": topology["couchbase_servers"][0],
-        "sg_url": topology["sync_gateways"][0]["public"],
-        "sg_url_admin": topology["sync_gateways"][0]["admin"],
-        "sg_db": "db",
-        "bucket": "data-bucket",
-        "sg_config": sg_config
-    }
-
-    log_info("Tearing down test '{}'".format(test_name))
-
-    # if the test failed pull logs
-    if request.node.rep_call.failed:
-        logging_helper = Logging()
-        logging_helper.fetch_and_analyze_logs(cluster_config=os.environ["CLUSTER_CONFIG"], test_name=test_name)
 
 
 @pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.attachments
-@pytest.mark.usefixtures("setup_1sg_1cbs_suite")
-def test_attachment_revpos_when_ancestor_unavailable(setup_1sg_1cbs_test):
+@pytest.mark.parametrize("sg_conf_name", [
+    "sync_gateway_default"
+])
+def test_attachment_revpos_when_ancestor_unavailable(params_from_base_test_setup, sg_conf_name):
     """
     Creates a document with an attachment, then updates that document so that
     the body of the revision that originally pushed the document is no
@@ -69,13 +34,21 @@ def test_attachment_revpos_when_ancestor_unavailable(setup_1sg_1cbs_test):
     If so, we can validate any revpos values equal to or earlier than the common ancestor against the active revision
     """
 
-    cluster_config = setup_1sg_1cbs_test["cluster_config"]
-    cbs_url = setup_1sg_1cbs_test["cbs_url"]
-    sg_url = setup_1sg_1cbs_test["sg_url"]
-    sg_url_admin = setup_1sg_1cbs_test["sg_url_admin"]
-    sg_db = setup_1sg_1cbs_test["sg_db"]
-    bucket = setup_1sg_1cbs_test["bucket"]
-    sg_config = setup_1sg_1cbs_test["sg_config"]
+    cluster_config = params_from_base_test_setup["cluster_config"]
+    mode = params_from_base_test_setup["mode"]
+
+    sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
+
+    cluster_helper = ClusterKeywords()
+    cluster_helper.reset_cluster(cluster_config, sg_conf)
+
+    topology = cluster_helper.get_cluster_topology(cluster_config)
+
+    cbs_url = topology["couchbase_servers"][0]
+    sg_url = topology["sync_gateways"][0]["public"]
+    sg_url_admin = topology["sync_gateways"][0]["admin"]
+    sg_db = "db"
+    bucket = "data-bucket"
 
     log_info("Running 'test_attachment_revpos_when_ancestor_unavailable'")
     log_info("Using cbs_url: {}".format(cbs_url))
@@ -100,7 +73,7 @@ def test_attachment_revpos_when_ancestor_unavailable(setup_1sg_1cbs_test):
     # Clear cached rev doc bodys from server and cycle sync_gateway
     sg_util.stop_sync_gateway(cluster_config=cluster_config, url=sg_url)
     cb_util.delete_couchbase_server_cached_rev_bodies(url=cbs_url, bucket=bucket)
-    sg_util.start_sync_gateway(cluster_config=cluster_config, url=sg_url, config=sg_config)
+    sg_util.start_sync_gateway(cluster_config=cluster_config, url=sg_url, config=sg_conf)
 
     client.add_conflict(
         url=sg_url, db=sg_db,
@@ -114,8 +87,10 @@ def test_attachment_revpos_when_ancestor_unavailable(setup_1sg_1cbs_test):
 @pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.attachments
-@pytest.mark.usefixtures("setup_1sg_1cbs_suite")
-def test_attachment_revpos_when_ancestor_unavailable_active_revision_doesnt_share_ancestor(setup_1sg_1cbs_test):
+@pytest.mark.parametrize("sg_conf_name", [
+    "sync_gateway_default"
+])
+def test_attachment_revpos_when_ancestor_unavailable_active_revision_doesnt_share_ancestor(params_from_base_test_setup, sg_conf_name):
     """
     Creates a document with an attachment, then updates that document so that
     the body of the revision that originally pushed the document is no
@@ -130,11 +105,21 @@ def test_attachment_revpos_when_ancestor_unavailable_active_revision_doesnt_shar
        of the attachment is later than the common ancestor (rev-1)
     """
 
-    cbs_url = setup_1sg_1cbs_test["cbs_url"]
-    sg_url = setup_1sg_1cbs_test["sg_url"]
-    sg_url_admin = setup_1sg_1cbs_test["sg_url_admin"]
-    sg_db = setup_1sg_1cbs_test["sg_db"]
-    bucket = setup_1sg_1cbs_test["bucket"]
+    cluster_config = params_from_base_test_setup["cluster_config"]
+    mode = params_from_base_test_setup["mode"]
+
+    sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
+
+    cluster_helper = ClusterKeywords()
+    cluster_helper.reset_cluster(cluster_config, sg_conf)
+
+    topology = cluster_helper.get_cluster_topology(cluster_config)
+
+    cbs_url = topology["couchbase_servers"][0]
+    sg_url = topology["sync_gateways"][0]["public"]
+    sg_url_admin = topology["sync_gateways"][0]["admin"]
+    sg_db = "db"
+    bucket = "data-bucket"
 
     log_info("Running 'test_attachment_revpos_when_ancestor_unavailable_active_revision_doesnt_share_ancestor'")
     log_info("Using cbs_url: {}".format(cbs_url))
