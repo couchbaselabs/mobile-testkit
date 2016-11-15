@@ -3,7 +3,6 @@ from libraries.testkit.cluster import Cluster
 
 import time
 import pytest
-import os
 
 from libraries.testkit.admin import Admin
 from multiprocessing.pool import ThreadPool
@@ -12,37 +11,21 @@ from libraries.testkit.parallelize import in_parallel
 
 from keywords.utils import log_info
 from keywords.utils import log_error
-from keywords.Logging import Logging
-
-
-# This is called before each test and will yield the cluster_config to each test in the file
-# After each test_* function, execution will continue from the yield a pull logs on failure
-@pytest.fixture(scope="function")
-def setup_1sg_1cbs_test(request):
-
-    test_name = request.node.name
-    log_info("Setting up test '{}'".format(test_name))
-
-    yield {"cluster_config": os.environ["CLUSTER_CONFIG"]}
-
-    log_info("Tearing down test '{}'".format(test_name))
-
-    # if the test failed pull logs
-    if request.node.rep_call.failed:
-        logging_helper = Logging()
-        logging_helper.fetch_and_analyze_logs(cluster_config=os.environ["CLUSTER_CONFIG"], test_name=test_name)
+from keywords.SyncGateway import sync_gateway_config_path_for_mode
 
 
 @pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.onlineoffline
-@pytest.mark.usefixtures("setup_1sg_1cbs_suite")
-@pytest.mark.parametrize("num_users, num_docs, num_revisions", [
-    (5, 100, 10),
+@pytest.mark.parametrize("sg_conf_name, num_users, num_docs, num_revisions", [
+    ("bucket_online_offline/db_online_offline_access_all", 5, 100, 10),
 ])
-def test_bucket_online_offline_resync_sanity(setup_1sg_1cbs_test, num_users, num_docs, num_revisions):
+def test_bucket_online_offline_resync_sanity(params_from_base_test_setup, sg_conf_name, num_users, num_docs, num_revisions):
 
-    cluster_conf = setup_1sg_1cbs_test["cluster_config"]
+    cluster_conf = params_from_base_test_setup["cluster_config"]
+    test_mode = params_from_base_test_setup["mode"]
+
+    sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, test_mode)
 
     log_info("Running 'test_bucket_online_offline_resync_sanity'")
     log_info("Using cluster_conf: {}".format(cluster_conf))
@@ -53,7 +36,7 @@ def test_bucket_online_offline_resync_sanity(setup_1sg_1cbs_test, num_users, num
     start = time.time()
 
     cluster = Cluster(config=cluster_conf)
-    mode = cluster.reset("resources/sync_gateway_configs/bucket_online_offline/db_online_offline_access_all_cc.json")
+    mode = cluster.reset(sg_conf)
 
     init_completed = time.time()
     log_info("Initialization completed. Time taken:{}s".format(init_completed - start))
@@ -124,7 +107,8 @@ def test_bucket_online_offline_resync_sanity(setup_1sg_1cbs_test, num_users, num
     status = admin.take_db_offline(db="db")
     assert status == 200
 
-    restart_status = cluster.sync_gateways[0].restart("resources/sync_gateway_configs/bucket_online_offline/db_online_offline_access_restricted_cc.json")
+    sg_restart_config = sync_gateway_config_path_for_mode("bucket_online_offline/db_online_offline_access_restricted", test_mode)
+    restart_status = cluster.sync_gateways[0].restart(sg_restart_config)
     assert restart_status == 0
 
     time.sleep(10)
@@ -164,15 +148,17 @@ def test_bucket_online_offline_resync_sanity(setup_1sg_1cbs_test, num_users, num
 @pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.onlineoffline
-@pytest.mark.usefixtures("setup_1sg_1cbs_suite")
-@pytest.mark.parametrize("num_users, num_docs, num_revisions", [
-    (5, 100, 10),
+@pytest.mark.parametrize("sg_conf_name, num_users, num_docs, num_revisions", [
+    ("bucket_online_offline/db_online_offline_access_all", 5, 100, 10),
 ])
-def test_bucket_online_offline_resync_with_online(setup_1sg_1cbs_test, num_users, num_docs, num_revisions):
+def test_bucket_online_offline_resync_with_online(params_from_base_test_setup, sg_conf_name, num_users, num_docs, num_revisions):
     log_info("Starting test...")
     start = time.time()
 
-    cluster_conf = setup_1sg_1cbs_test["cluster_config"]
+    cluster_conf = params_from_base_test_setup["cluster_config"]
+    test_mode = params_from_base_test_setup["mode"]
+
+    sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, test_mode)
 
     log_info("Running 'test_bucket_online_offline_resync_with_online'")
     log_info("Using cluster_conf: {}".format(cluster_conf))
@@ -181,7 +167,7 @@ def test_bucket_online_offline_resync_with_online(setup_1sg_1cbs_test, num_users
     log_info("Using num_revisions: {}".format(num_revisions))
 
     cluster = Cluster(config=cluster_conf)
-    mode = cluster.reset("resources/sync_gateway_configs/bucket_online_offline/db_online_offline_access_all_cc.json")
+    mode = cluster.reset(sg_conf)
 
     init_completed = time.time()
     log_info("Initialization completed. Time taken:{}s".format(init_completed - start))
@@ -256,7 +242,8 @@ def test_bucket_online_offline_resync_with_online(setup_1sg_1cbs_test, num_users
     status = admin.take_db_offline(db="db")
     assert status == 200
 
-    restart_status = cluster.sync_gateways[0].restart("resources/sync_gateway_configs/bucket_online_offline/db_online_offline_access_restricted_cc.json")
+    sg_restart_config = sync_gateway_config_path_for_mode("bucket_online_offline/db_online_offline_access_restricted", test_mode)
+    restart_status = cluster.sync_gateways[0].restart(sg_restart_config)
     assert restart_status == 0
 
     log_info("Sleeping....")
@@ -345,14 +332,16 @@ def test_bucket_online_offline_resync_with_online(setup_1sg_1cbs_test, num_users
 @pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.onlineoffline
-@pytest.mark.usefixtures("setup_1sg_1cbs_suite")
-@pytest.mark.parametrize("num_users, num_docs, num_revisions", [
-    (5, 100, 10),
+@pytest.mark.parametrize("sg_conf_name, num_users, num_docs, num_revisions", [
+    ("bucket_online_offline/db_online_offline_access_all", 5, 100, 10),
 ])
-def test_bucket_online_offline_resync_with_offline(setup_1sg_1cbs_test, num_users, num_docs, num_revisions):
+def test_bucket_online_offline_resync_with_offline(params_from_base_test_setup, sg_conf_name, num_users, num_docs, num_revisions):
     start = time.time()
 
-    cluster_conf = setup_1sg_1cbs_test["cluster_config"]
+    cluster_conf = params_from_base_test_setup["cluster_config"]
+    test_mode = params_from_base_test_setup["mode"]
+
+    sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, test_mode)
 
     log_info("Running 'test_bucket_online_offline_resync_with_online'")
     log_info("Using cluster_conf: {}".format(cluster_conf))
@@ -361,7 +350,7 @@ def test_bucket_online_offline_resync_with_offline(setup_1sg_1cbs_test, num_user
     log_info("Using num_revisions: {}".format(num_revisions))
 
     cluster = Cluster(config=cluster_conf)
-    mode = cluster.reset("resources/sync_gateway_configs/bucket_online_offline/db_online_offline_access_all_cc.json")
+    mode = cluster.reset(sg_conf)
 
     init_completed = time.time()
     log_info("Initialization completed. Time taken:{}s".format(init_completed - start))
@@ -436,7 +425,8 @@ def test_bucket_online_offline_resync_with_offline(setup_1sg_1cbs_test, num_user
     status = admin.take_db_offline(db="db")
     assert status == 200
 
-    restart_status = cluster.sync_gateways[0].restart("resources/sync_gateway_configs/bucket_online_offline/db_online_offline_access_restricted_cc.json")
+    sg_restart_config = sync_gateway_config_path_for_mode("bucket_online_offline/db_online_offline_access_restricted", test_mode)
+    restart_status = cluster.sync_gateways[0].restart(sg_restart_config)
     assert restart_status == 0
 
     log_info("Sleeping....")
