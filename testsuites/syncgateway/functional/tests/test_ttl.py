@@ -9,6 +9,7 @@ from keywords.constants import SYNC_GATEWAY_CONFIGS
 from keywords.ClusterKeywords import ClusterKeywords
 from keywords.MobileRestClient import MobileRestClient
 from keywords.Document import Document
+from keywords.SyncGateway import sync_gateway_config_path_for_mode
 from keywords.Logging import Logging
 from keywords.Time import Time
 
@@ -47,41 +48,13 @@ Test suite for Sync Gateway's expiry feature.
 """
 
 
-# This is called before each test and will yield the cluster_config to each test in the file
-# After each test_* function, execution will continue from the yield a pull logs on failure
-@pytest.fixture(scope="function")
-def setup_1sg_1cbs_test(request):
-
-    test_name = request.node.name
-    log_info("Setting up test '{}'".format(test_name))
-
-    cluster_helper = ClusterKeywords()
-
-    cluster_helper.reset_cluster(
-        cluster_config=os.environ["CLUSTER_CONFIG"],
-        sync_gateway_config="{}/sync_gateway_default_functional_tests_cc.json".format(SYNC_GATEWAY_CONFIGS)
-    )
-    topology = cluster_helper.get_cluster_topology(os.environ["CLUSTER_CONFIG"])
-
-    yield {
-        "cbs_url": topology["couchbase_servers"][0],
-        "sg_url": topology["sync_gateways"][0]["public"],
-        "sg_url_admin": topology["sync_gateways"][0]["admin"]
-    }
-
-    log_info("Tearing down test '{}'".format(test_name))
-
-    # if the test failed pull logs
-    if request.node.rep_call.failed:
-        logging_helper = Logging()
-        logging_helper.fetch_and_analyze_logs(cluster_config=os.environ["CLUSTER_CONFIG"], test_name=test_name)
-
-
 @pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.ttl
-@pytest.mark.usefixtures("setup_1sg_1cbs_suite")
-def test_numeric_expiry_as_ttl(setup_1sg_1cbs_test):
+@pytest.mark.parametrize("sg_conf_name", [
+    "sync_gateway_default_functional_tests"
+])
+def test_numeric_expiry_as_ttl(params_from_base_test_setup, sg_conf_name):
     """
     1. PUT /db/doc1 via SG with property "_exp":3
        PUT /db/doc2 via SG with property "_exp":10
@@ -90,9 +63,21 @@ def test_numeric_expiry_as_ttl(setup_1sg_1cbs_test):
        Get /db/doc2.  Assert response is 200
     """
 
-    cbs_url = setup_1sg_1cbs_test["cbs_url"]
-    sg_url = setup_1sg_1cbs_test["sg_url"]
-    sg_url_admin = setup_1sg_1cbs_test["sg_url_admin"]
+    cluster_config = params_from_base_test_setup["cluster_config"]
+    mode = params_from_base_test_setup["mode"]
+    sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
+
+    cluster_helper = ClusterKeywords()
+    topology = cluster_helper.get_cluster_topology(cluster_config)
+
+    cluster_helper.reset_cluster(
+        cluster_config=cluster_config,
+        sync_gateway_config=sg_conf
+    )
+
+    cbs_url = topology["couchbase_servers"][0]
+    sg_url = topology["sync_gateways"][0]["public"]
+    sg_url_admin = topology["sync_gateways"][0]["admin"]
 
     log_info("Running 'test_numeric_expiry_as_ttl'")
     log_info("cbs_url: {}".format(cbs_url))
@@ -132,8 +117,10 @@ def test_numeric_expiry_as_ttl(setup_1sg_1cbs_test):
 @pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.ttl
-@pytest.mark.usefixtures("setup_1sg_1cbs_suite")
-def test_string_expiry_as_ttl(setup_1sg_1cbs_test):
+@pytest.mark.parametrize("sg_conf_name", [
+    "sync_gateway_default_functional_tests"
+])
+def test_string_expiry_as_ttl(params_from_base_test_setup, sg_conf_name):
     """
     1. PUT /db/doc1 via SG with property "_exp":"3"
        PUT /db/doc2 via SG with property "_exp":"10"
@@ -142,9 +129,21 @@ def test_string_expiry_as_ttl(setup_1sg_1cbs_test):
        Get /db/doc2.  Assert response is 200
     """
 
-    cbs_url = setup_1sg_1cbs_test["cbs_url"]
-    sg_url = setup_1sg_1cbs_test["sg_url"]
-    sg_url_admin = setup_1sg_1cbs_test["sg_url_admin"]
+    cluster_config = params_from_base_test_setup["cluster_config"]
+    mode = params_from_base_test_setup["mode"]
+    sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
+
+    cluster_helper = ClusterKeywords()
+    topology = cluster_helper.get_cluster_topology(cluster_config)
+
+    cluster_helper.reset_cluster(
+        cluster_config=cluster_config,
+        sync_gateway_config=sg_conf
+    )
+
+    cbs_url = topology["couchbase_servers"][0]
+    sg_url = topology["sync_gateways"][0]["public"]
+    sg_url_admin = topology["sync_gateways"][0]["admin"]
 
     log_info("Running 'test_string_expiry_as_ttl'")
     log_info("cbs_url: {}".format(cbs_url))
@@ -185,8 +184,10 @@ def test_string_expiry_as_ttl(setup_1sg_1cbs_test):
 @pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.ttl
-@pytest.mark.usefixtures("setup_1sg_1cbs_suite")
-def test_numeric_expiry_as_unix_date(setup_1sg_1cbs_test):
+@pytest.mark.parametrize("sg_conf_name", [
+    "sync_gateway_default_functional_tests"
+])
+def test_numeric_expiry_as_unix_date(params_from_base_test_setup, sg_conf_name):
     """
     1. Calculate (server time + 3 seconds) as unix time (i.e. Epoch time, e.g. 1466465122)
     2. PUT /db/doc1 via SG with property "_exp":[unix time]
@@ -196,9 +197,21 @@ def test_numeric_expiry_as_unix_date(setup_1sg_1cbs_test):
        Get /db/doc2.  Assert response is 200
     """
 
-    cbs_url = setup_1sg_1cbs_test["cbs_url"]
-    sg_url = setup_1sg_1cbs_test["sg_url"]
-    sg_url_admin = setup_1sg_1cbs_test["sg_url_admin"]
+    cluster_config = params_from_base_test_setup["cluster_config"]
+    mode = params_from_base_test_setup["mode"]
+    sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
+
+    cluster_helper = ClusterKeywords()
+    topology = cluster_helper.get_cluster_topology(cluster_config)
+
+    cluster_helper.reset_cluster(
+        cluster_config=cluster_config,
+        sync_gateway_config=sg_conf
+    )
+
+    cbs_url = topology["couchbase_servers"][0]
+    sg_url = topology["sync_gateways"][0]["public"]
+    sg_url_admin = topology["sync_gateways"][0]["admin"]
 
     log_info("Running 'test_numeric_expiry_as_unix_date'")
     log_info("cbs_url: {}".format(cbs_url))
@@ -242,8 +255,10 @@ def test_numeric_expiry_as_unix_date(setup_1sg_1cbs_test):
 @pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.ttl
-@pytest.mark.usefixtures("setup_1sg_1cbs_suite")
-def test_string_expiry_as_unix_date(setup_1sg_1cbs_test):
+@pytest.mark.parametrize("sg_conf_name", [
+    "sync_gateway_default_functional_tests"
+])
+def test_string_expiry_as_unix_date(params_from_base_test_setup, sg_conf_name):
     """
     1. Calculate (server time + 3 seconds) as unix time (i.e. Epoch time, e.g. 1466465122)
     2. PUT /db/doc1 via SG with property "_exp":"[unix time]"
@@ -253,9 +268,21 @@ def test_string_expiry_as_unix_date(setup_1sg_1cbs_test):
        Get /db/doc2.  Assert response is 200
     """
 
-    cbs_url = setup_1sg_1cbs_test["cbs_url"]
-    sg_url = setup_1sg_1cbs_test["sg_url"]
-    sg_url_admin = setup_1sg_1cbs_test["sg_url_admin"]
+    cluster_config = params_from_base_test_setup["cluster_config"]
+    mode = params_from_base_test_setup["mode"]
+    sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
+
+    cluster_helper = ClusterKeywords()
+    topology = cluster_helper.get_cluster_topology(cluster_config)
+
+    cluster_helper.reset_cluster(
+        cluster_config=cluster_config,
+        sync_gateway_config=sg_conf
+    )
+
+    cbs_url = topology["couchbase_servers"][0]
+    sg_url = topology["sync_gateways"][0]["public"]
+    sg_url_admin = topology["sync_gateways"][0]["admin"]
 
     log_info("Running 'test_string_expiry_as_unix_date'")
     log_info("cbs_url: {}".format(cbs_url))
@@ -303,8 +330,10 @@ def test_string_expiry_as_unix_date(setup_1sg_1cbs_test):
 @pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.ttl
-@pytest.mark.usefixtures("setup_1sg_1cbs_suite")
-def test_string_expiry_as_iso_8601_date(setup_1sg_1cbs_test):
+@pytest.mark.parametrize("sg_conf_name", [
+    "sync_gateway_default_functional_tests"
+])
+def test_string_expiry_as_iso_8601_date(params_from_base_test_setup, sg_conf_name):
     """
     1. Calculate (server time + 3 seconds) as ISO-8601 date (e.g. 2016-01-01T00:00:00.000+00:00)
     2. PUT /db/doc1 via SG with property "_exp":"[date]"
@@ -314,9 +343,21 @@ def test_string_expiry_as_iso_8601_date(setup_1sg_1cbs_test):
        Get /db/doc2.  Assert response is 20
     """
 
-    cbs_url = setup_1sg_1cbs_test["cbs_url"]
-    sg_url = setup_1sg_1cbs_test["sg_url"]
-    sg_url_admin = setup_1sg_1cbs_test["sg_url_admin"]
+    cluster_config = params_from_base_test_setup["cluster_config"]
+    mode = params_from_base_test_setup["mode"]
+    sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
+
+    cluster_helper = ClusterKeywords()
+    topology = cluster_helper.get_cluster_topology(cluster_config)
+
+    cluster_helper.reset_cluster(
+        cluster_config=cluster_config,
+        sync_gateway_config=sg_conf
+    )
+
+    cbs_url = topology["couchbase_servers"][0]
+    sg_url = topology["sync_gateways"][0]["public"]
+    sg_url_admin = topology["sync_gateways"][0]["admin"]
 
     log_info("Running 'test_string_expiry_as_ISO_8601_Date'")
     log_info("cbs_url: {}".format(cbs_url))
@@ -360,17 +401,31 @@ def test_string_expiry_as_iso_8601_date(setup_1sg_1cbs_test):
 @pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.ttl
-@pytest.mark.usefixtures("setup_1sg_1cbs_suite")
-def test_removing_expiry(setup_1sg_1cbs_test):
+@pytest.mark.parametrize("sg_conf_name", [
+    "sync_gateway_default_functional_tests"
+])
+def test_removing_expiry(params_from_base_test_setup, sg_conf_name):
     """
     1. PUT /db/doc1 via SG with property "_exp":3
     2. Update /db/doc1 with a new revision with no expiry value
     3. After 10 updates, update /db/doc1 with a revision with no expiry
     """
 
-    cbs_url = setup_1sg_1cbs_test["cbs_url"]
-    sg_url = setup_1sg_1cbs_test["sg_url"]
-    sg_url_admin = setup_1sg_1cbs_test["sg_url_admin"]
+    cluster_config = params_from_base_test_setup["cluster_config"]
+    mode = params_from_base_test_setup["mode"]
+    sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
+
+    cluster_helper = ClusterKeywords()
+    topology = cluster_helper.get_cluster_topology(cluster_config)
+
+    cluster_helper.reset_cluster(
+        cluster_config=cluster_config,
+        sync_gateway_config=sg_conf
+    )
+
+    cbs_url = topology["couchbase_servers"][0]
+    sg_url = topology["sync_gateways"][0]["public"]
+    sg_url_admin = topology["sync_gateways"][0]["admin"]
 
     log_info("Running 'test_removing_expiry'")
     log_info("cbs_url: {}".format(cbs_url))
@@ -412,8 +467,10 @@ def test_removing_expiry(setup_1sg_1cbs_test):
 @pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.ttl
-@pytest.mark.usefixtures("setup_1sg_1cbs_suite")
-def test_rolling_ttl_expires(setup_1sg_1cbs_test):
+@pytest.mark.parametrize("sg_conf_name", [
+    "sync_gateway_default_functional_tests"
+])
+def test_rolling_ttl_expires(params_from_base_test_setup, sg_conf_name):
     """
     1. PUT /db/doc1 via SG with property "_exp":3
     2. Update /db/doc1 10 times with a new revision (also with "_exp":3)
@@ -421,9 +478,21 @@ def test_rolling_ttl_expires(setup_1sg_1cbs_test):
     4. Get /db/doc1.  Assert response is 200
     """
 
-    cbs_url = setup_1sg_1cbs_test["cbs_url"]
-    sg_url = setup_1sg_1cbs_test["sg_url"]
-    sg_url_admin = setup_1sg_1cbs_test["sg_url_admin"]
+    cluster_config = params_from_base_test_setup["cluster_config"]
+    mode = params_from_base_test_setup["mode"]
+    sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
+
+    cluster_helper = ClusterKeywords()
+    topology = cluster_helper.get_cluster_topology(cluster_config)
+
+    cluster_helper.reset_cluster(
+        cluster_config=cluster_config,
+        sync_gateway_config=sg_conf
+    )
+
+    cbs_url = topology["couchbase_servers"][0]
+    sg_url = topology["sync_gateways"][0]["public"]
+    sg_url_admin = topology["sync_gateways"][0]["admin"]
 
     log_info("Running 'test_rolling_ttl_expires'")
     log_info("cbs_url: {}".format(cbs_url))
@@ -465,8 +534,10 @@ def test_rolling_ttl_expires(setup_1sg_1cbs_test):
 @pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.ttl
-@pytest.mark.usefixtures("setup_1sg_1cbs_suite")
-def test_rolling_ttl_remove_expirary(setup_1sg_1cbs_test):
+@pytest.mark.parametrize("sg_conf_name", [
+    "sync_gateway_default_functional_tests"
+])
+def test_rolling_ttl_remove_expirary(params_from_base_test_setup, sg_conf_name):
     """
     1. PUT /db/doc1 via SG with property "_exp":3
     2. Once per second for 10 seconds, update /db/doc1 with a new revision (also with "_exp":3)
@@ -474,9 +545,21 @@ def test_rolling_ttl_remove_expirary(setup_1sg_1cbs_test):
     3. Get /db/doc1.  Assert response is 200
     """
 
-    cbs_url = setup_1sg_1cbs_test["cbs_url"]
-    sg_url = setup_1sg_1cbs_test["sg_url"]
-    sg_url_admin = setup_1sg_1cbs_test["sg_url_admin"]
+    cluster_config = params_from_base_test_setup["cluster_config"]
+    mode = params_from_base_test_setup["mode"]
+    sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
+
+    cluster_helper = ClusterKeywords()
+    topology = cluster_helper.get_cluster_topology(cluster_config)
+
+    cluster_helper.reset_cluster(
+        cluster_config=cluster_config,
+        sync_gateway_config=sg_conf
+    )
+
+    cbs_url = topology["couchbase_servers"][0]
+    sg_url = topology["sync_gateways"][0]["public"]
+    sg_url_admin = topology["sync_gateways"][0]["admin"]
 
     log_info("Running 'test_rolling_ttl_remove_expirary'")
     log_info("cbs_url: {}".format(cbs_url))
@@ -519,17 +602,31 @@ def test_rolling_ttl_remove_expirary(setup_1sg_1cbs_test):
 @pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.ttl
-@pytest.mark.usefixtures("setup_1sg_1cbs_suite")
-def test_setting_expiry_in_bulk_docs(setup_1sg_1cbs_test):
+@pytest.mark.parametrize("sg_conf_name", [
+    "sync_gateway_default_functional_tests"
+])
+def test_setting_expiry_in_bulk_docs(params_from_base_test_setup, sg_conf_name):
     """
     1. PUT /db/_bulk_docs with 10 documents.  Set the "_exp":3 on 5 of these documents
     2. Wait five seconds
     3. POST /db/_bulk_get for the 10 documents.  Validate that only the 5 non-expiring documents are returned
     """
 
-    cbs_url = setup_1sg_1cbs_test["cbs_url"]
-    sg_url = setup_1sg_1cbs_test["sg_url"]
-    sg_url_admin = setup_1sg_1cbs_test["sg_url_admin"]
+    cluster_config = params_from_base_test_setup["cluster_config"]
+    mode = params_from_base_test_setup["mode"]
+    sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
+
+    cluster_helper = ClusterKeywords()
+    topology = cluster_helper.get_cluster_topology(cluster_config)
+
+    cluster_helper.reset_cluster(
+        cluster_config=cluster_config,
+        sync_gateway_config=sg_conf
+    )
+
+    cbs_url = topology["couchbase_servers"][0]
+    sg_url = topology["sync_gateways"][0]["public"]
+    sg_url_admin = topology["sync_gateways"][0]["admin"]
 
     log_info("Running 'test_setting_expiry_in_bulk_docs'")
     log_info("cbs_url: {}".format(cbs_url))
