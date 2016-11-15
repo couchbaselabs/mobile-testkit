@@ -1,0 +1,40 @@
+{
+    "interface":":4984",
+    "adminInterface": "0.0.0.0:4985",
+    "maxIncomingConnections": 0,
+    "maxCouchbaseConnections": 16,
+    "maxFileDescriptors": 90000,
+    "slowServerCallWarningThreshold": 500,
+    "compressResponses": false,
+    "log": ["CRUD+", "Cache+", "HTTP+", "Changes+"],
+    "verbose":"true",
+    "cluster_config": {
+        "server":"http://{{ couchbase_server_primary_node }}:8091",
+        "data_dir":".",
+        "bucket":"data-bucket"
+    },
+    "databases":{
+        "db":{
+            "feed_type":"DCPSHARD",
+            "feed_params":{
+                "num_shards":64
+            },
+            "offline":false,
+            "server":"http://{{ couchbase_server_primary_node }}:8091",
+            "bucket":"data-bucket",
+            "sync": `function(doc){
+                  channel(doc.channels);
+                }`,
+            "users": {"GUEST": {"disabled": false, "admin_channels": ["*"] }},
+            "event_handlers": {
+               "document_changed":[{"handler":"webhook","max_processes" : 500,"wait_for_process" : "600000","url":"http://{{ webhook_ip }}:8080","timeout":60}],
+               "db_state_changed":[{"handler":"webhook","max_processes" : 500,"wait_for_process" : "600000","url":"http://{{ webhook_ip }}:8080","timeout":60}]
+            },
+            "channel_index":{
+                "server":"http://{{ couchbase_server_primary_node }}:8091",
+                "bucket":"index-bucket",
+                "writer":{{ is_index_writer }}
+            }
+        }
+    }
+}

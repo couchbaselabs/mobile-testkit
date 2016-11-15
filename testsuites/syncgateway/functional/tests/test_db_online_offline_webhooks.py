@@ -8,40 +8,24 @@ from libraries.testkit.web_server import WebServer
 from libraries.testkit.parallelize import in_parallel
 
 from keywords.utils import log_info
-from keywords.Logging import Logging
-
-
-# This is called before each test and will yield the cluster_config to each test in the file
-# After each test_* function, execution will continue from the yield a pull logs on failure
-@pytest.fixture(scope="function")
-def setup_1sg_1cbs_test(request):
-
-    test_name = request.node.name
-    log_info("Setting up test '{}'".format(test_name))
-
-    yield {"cluster_config": os.environ["CLUSTER_CONFIG"]}
-
-    log_info("Tearing down test '{}'".format(test_name))
-
-    # if the test failed pull logs
-    if request.node.rep_call.failed:
-        logging_helper = Logging()
-        logging_helper.fetch_and_analyze_logs(cluster_config=os.environ["CLUSTER_CONFIG"], test_name=test_name)
+from keywords.SyncGateway import sync_gateway_config_path_for_mode
 
 
 @pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.onlineoffline
 @pytest.mark.webhooks
-@pytest.mark.usefixtures("setup_1sg_1cbs_suite")
-@pytest.mark.parametrize("num_users, num_channels, num_docs, num_revisions", [
-    (5, 1, 1, 2),
+@pytest.mark.parametrize("sg_conf_name, num_users, num_channels, num_docs, num_revisions", [
+    ("sync_gateway_webhook", 5, 1, 1, 2),
 ])
-def test_webhooks(setup_1sg_1cbs_test, num_users, num_channels, num_docs, num_revisions):
+def test_webhooks(params_from_base_test_setup, sg_conf_name, num_users, num_channels, num_docs, num_revisions):
 
     start = time.time()
 
-    cluster_conf = setup_1sg_1cbs_test["cluster_config"]
+    cluster_conf = params_from_base_test_setup["cluster_config"]
+    mode = params_from_base_test_setup["mode"]
+
+    sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
 
     log_info("Running 'test_webhooks'")
     log_info("Using cluster_conf: {}".format(cluster_conf))
@@ -51,7 +35,7 @@ def test_webhooks(setup_1sg_1cbs_test, num_users, num_channels, num_docs, num_re
     log_info("Using num_revisions: {}".format(num_revisions))
 
     cluster = Cluster(config=cluster_conf)
-    mode = cluster.reset(sg_config_path="resources/sync_gateway_configs/sync_gateway_webhook_cc.json")
+    mode = cluster.reset(sg_conf)
 
     init_completed = time.time()
     log_info("Initialization completed. Time taken:{}s".format(init_completed - start))
@@ -94,15 +78,17 @@ def test_webhooks(setup_1sg_1cbs_test, num_users, num_channels, num_docs, num_re
 @pytest.mark.syncgateway
 @pytest.mark.onlineoffline
 @pytest.mark.webhooks
-@pytest.mark.usefixtures("setup_1sg_1cbs_suite")
-@pytest.mark.parametrize("num_users, num_channels, num_docs, num_revisions", [
-    (5, 1, 1, 2),
+@pytest.mark.parametrize("sg_conf_name, num_users, num_channels, num_docs, num_revisions", [
+    ("sync_gateway_webhook", 5, 1, 1, 2),
 ])
-def test_db_online_offline_webhooks_offline(setup_1sg_1cbs_test, num_users, num_channels, num_docs, num_revisions):
+def test_db_online_offline_webhooks_offline(params_from_base_test_setup, sg_conf_name, num_users, num_channels, num_docs, num_revisions):
 
     start = time.time()
 
-    cluster_conf = setup_1sg_1cbs_test["cluster_config"]
+    cluster_conf = params_from_base_test_setup["cluster_config"]
+    mode = params_from_base_test_setup["mode"]
+
+    sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
 
     log_info("Running 'test_db_online_offline_webhooks_offline'")
     log_info("Using cluster_conf: {}".format(cluster_conf))
@@ -112,7 +98,7 @@ def test_db_online_offline_webhooks_offline(setup_1sg_1cbs_test, num_users, num_
     log_info("Using num_revisions: {}".format(num_revisions))
 
     cluster = Cluster(config=cluster_conf)
-    mode = cluster.reset(sg_config_path="resources/sync_gateway_configs/sync_gateway_webhook_cc.json")
+    mode = cluster.reset(sg_conf)
 
     init_completed = time.time()
     log_info("Initialization completed. Time taken:{}s".format(init_completed - start))
@@ -175,15 +161,17 @@ def test_db_online_offline_webhooks_offline(setup_1sg_1cbs_test, num_users, num_
 @pytest.mark.syncgateway
 @pytest.mark.onlineoffline
 @pytest.mark.webhooks
-@pytest.mark.usefixtures("setup_1sg_1cbs_suite")
-@pytest.mark.parametrize("num_users, num_channels, num_docs, num_revisions", [
-    (5, 1, 1, 2),
+@pytest.mark.parametrize("sg_conf_name, num_users, num_channels, num_docs, num_revisions", [
+    ("sync_gateway_webhook", 5, 1, 1, 2),
 ])
-def test_db_online_offline_webhooks_offline_two(setup_1sg_1cbs_test, num_users, num_channels, num_docs, num_revisions):
+def test_db_online_offline_webhooks_offline_two(params_from_base_test_setup, sg_conf_name, num_users, num_channels, num_docs, num_revisions):
 
     start = time.time()
 
-    cluster_conf = setup_1sg_1cbs_test["cluster_config"]
+    cluster_conf = params_from_base_test_setup["cluster_config"]
+    mode = params_from_base_test_setup["mode"]
+
+    sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
 
     log_info("Running 'test_db_online_offline_webhooks_offline_two'")
     log_info("Using cluster_conf: {}".format(cluster_conf))
@@ -193,7 +181,7 @@ def test_db_online_offline_webhooks_offline_two(setup_1sg_1cbs_test, num_users, 
     log_info("Using num_revisions: {}".format(num_revisions))
 
     cluster = Cluster(config=cluster_conf)
-    mode = cluster.reset(sg_config_path="resources/sync_gateway_configs/sync_gateway_webhook_cc.json")
+    mode = cluster.reset(sg_conf)
 
     init_completed = time.time()
     log_info("Initialization completed. Time taken:{}s".format(init_completed - start))
