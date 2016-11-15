@@ -9,14 +9,22 @@ from libraries.testkit.cluster import Cluster
 from libraries.testkit.data import Data
 from libraries.testkit.admin import Admin
 
+from keywords.SyncGateway import sync_gateway_config_path_for_mode
 from keywords.utils import log_info
-from keywords.constants import SYNC_GATEWAY_CONFIGS
 from keywords.Logging import Logging
 
 
 uncompressed_size = 6320500
+uncompressed_lower_limit = uncompressed_size - (uncompressed_size / 10)
+uncompressed_upper_limit = uncompressed_size + (uncompressed_size / 10)
+
 part_encoded_size = 2244500
+part_encoded_lower_limit = part_encoded_size - (part_encoded_size / 10)
+part_encoded_upper_limit = part_encoded_size + (part_encoded_size / 10)
+
 whole_response_compressed_size = 75500
+whole_response_compressed_lower_limit = whole_response_compressed_size - (whole_response_compressed_size / 10)
+whole_response_compressed_upper_limit = whole_response_compressed_size + (whole_response_compressed_size / 10)
 
 
 # This is called before each test and will yield the cluster_config to each test in the file
@@ -80,35 +88,64 @@ def issue_request(target, user_agent, accept_encoding, x_accept_part_encoding, p
 
 def verify_response_size(user_agent, accept_encoding, x_accept_part_encoding, response_size):
 
+    log_info("user_agent: {}, accept_encoding: {}, x_accept_part_encoding: {}, response_size: {}".format(user_agent,
+                                                                                                         accept_encoding,
+                                                                                                         x_accept_part_encoding,
+                                                                                                         response_size))
+
+    
+
     if user_agent is None or user_agent == "CouchbaseLite/1.1":
 
         if accept_encoding is None and x_accept_part_encoding is None:
+
             # Response size should not be compressed
-            assert (uncompressed_size - 500) < response_size < (uncompressed_size + 500)
+            log_info("{} < {} < {}".format(uncompressed_lower_limit, response_size, uncompressed_upper_limit))
+            assert uncompressed_lower_limit < response_size < uncompressed_upper_limit
+
         elif accept_encoding == "gzip" and x_accept_part_encoding is None:
+
             # Response size should not be compressed
-            assert (uncompressed_size - 500) < response_size < (uncompressed_size + 500)
+            log_info("{} < {} < {}".format(uncompressed_lower_limit, response_size, uncompressed_upper_limit))
+            assert uncompressed_lower_limit < response_size < uncompressed_upper_limit
+
         elif accept_encoding is None and x_accept_part_encoding == "gzip":
+
             # Response size should be part compressed
-            assert (part_encoded_size - 500) < response_size < (part_encoded_size + 500)
+            log_info("{} < {} < {}".format(part_encoded_lower_limit, response_size, part_encoded_upper_limit))
+            assert part_encoded_lower_limit < response_size < part_encoded_upper_limit
+
         elif accept_encoding == "gzip" and x_accept_part_encoding == "gzip":
+
             # Response size should be part compressed
-            assert (part_encoded_size - 500) < response_size < (part_encoded_size + 500)
+            log_info("{} < {} < {}".format(part_encoded_lower_limit, response_size, part_encoded_upper_limit))
+            assert part_encoded_lower_limit < response_size < part_encoded_upper_limit
 
     elif user_agent == "CouchbaseLite/1.2":
 
         if accept_encoding is None and x_accept_part_encoding is None:
+
             # Response size should not be compressed
-            assert (uncompressed_size - 500) < response_size < (uncompressed_size + 500)
+            log_info("{} < {} < {}".format(uncompressed_lower_limit, response_size, uncompressed_upper_limit))
+            assert uncompressed_lower_limit < response_size < uncompressed_upper_limit
+
         elif accept_encoding == "gzip" and x_accept_part_encoding is None:
+
             # Response size should be fully compressed
-            assert (whole_response_compressed_size - 500) < response_size < (whole_response_compressed_size + 500)
+            log_info("{} < {} < {}".format(whole_response_compressed_lower_limit, response_size, whole_response_compressed_upper_limit))
+            assert whole_response_compressed_lower_limit < response_size < whole_response_compressed_upper_limit
+
         elif accept_encoding is None and x_accept_part_encoding == "gzip":
+
             # Response size should be part compressed
-            assert (part_encoded_size - 500) < response_size < (part_encoded_size + 500)
+            log_info("{} < {} < {}".format(part_encoded_lower_limit, response_size, part_encoded_upper_limit))
+            assert part_encoded_lower_limit < response_size < part_encoded_upper_limit
+
         elif accept_encoding == "gzip" and x_accept_part_encoding == "gzip":
+
             # Response size should be fully compressed
-            assert (whole_response_compressed_size - 500) < response_size < (whole_response_compressed_size + 500)
+            log_info("{} < {} < {}".format(whole_response_compressed_lower_limit, response_size, whole_response_compressed_upper_limit))
+            assert whole_response_compressed_lower_limit < response_size < whole_response_compressed_upper_limit
 
     else:
         raise ValueError("Unsupported user agent")
@@ -116,24 +153,26 @@ def verify_response_size(user_agent, accept_encoding, x_accept_part_encoding, re
 
 @pytest.mark.sanity
 @pytest.mark.syncgateway
-@pytest.mark.usefixtures("setup_1sg_1cbs_suite")
-@pytest.mark.parametrize("sg_conf, num_docs, accept_encoding, x_accept_part_encoding, user_agent", [
-    ("{}/sync_gateway_gzip_cc.json".format(SYNC_GATEWAY_CONFIGS), 300, None, None, None),
-    ("{}/sync_gateway_gzip_cc.json".format(SYNC_GATEWAY_CONFIGS), 300, None, None, "CouchbaseLite/1.1"),
-    ("{}/sync_gateway_gzip_cc.json".format(SYNC_GATEWAY_CONFIGS), 300, "gzip", None, None),
-    ("{}/sync_gateway_gzip_cc.json".format(SYNC_GATEWAY_CONFIGS), 300, "gzip", None, "CouchbaseLite/1.1"),
-    ("{}/sync_gateway_gzip_cc.json".format(SYNC_GATEWAY_CONFIGS), 300, None, "gzip", None),
-    ("{}/sync_gateway_gzip_cc.json".format(SYNC_GATEWAY_CONFIGS), 300, None, "gzip", "CouchbaseLite/1.1"),
-    ("{}/sync_gateway_gzip_cc.json".format(SYNC_GATEWAY_CONFIGS), 300, "gzip", "gzip", None),
-    ("{}/sync_gateway_gzip_cc.json".format(SYNC_GATEWAY_CONFIGS), 300, "gzip", "gzip", "CouchbaseLite/1.1"),
-    ("{}/sync_gateway_gzip_cc.json".format(SYNC_GATEWAY_CONFIGS), 300, None, None, "CouchbaseLite/1.2"),
-    ("{}/sync_gateway_gzip_cc.json".format(SYNC_GATEWAY_CONFIGS), 300, "gzip", None, "CouchbaseLite/1.2"),
-    ("{}/sync_gateway_gzip_cc.json".format(SYNC_GATEWAY_CONFIGS), 300, None, "gzip", "CouchbaseLite/1.2"),
-    ("{}/sync_gateway_gzip_cc.json".format(SYNC_GATEWAY_CONFIGS), 300, "gzip", "gzip", "CouchbaseLite/1.2")
+@pytest.mark.parametrize("sg_conf_name, num_docs, accept_encoding, x_accept_part_encoding, user_agent", [
+    ("sync_gateway_gzip", 300, None, None, None),
+    ("sync_gateway_gzip", 300, None, None, "CouchbaseLite/1.1"),
+    ("sync_gateway_gzip", 300, "gzip", None, None),
+    ("sync_gateway_gzip", 300, "gzip", None, "CouchbaseLite/1.1"),
+    ("sync_gateway_gzip", 300, None, "gzip", None),
+    ("sync_gateway_gzip", 300, None, "gzip", "CouchbaseLite/1.1"),
+    ("sync_gateway_gzip", 300, "gzip", "gzip", None),
+    ("sync_gateway_gzip", 300, "gzip", "gzip", "CouchbaseLite/1.1"),
+    ("sync_gateway_gzip", 300, None, None, "CouchbaseLite/1.2"),
+    ("sync_gateway_gzip", 300, "gzip", None, "CouchbaseLite/1.2"),
+    ("sync_gateway_gzip", 300, None, "gzip", "CouchbaseLite/1.2"),
+    ("sync_gateway_gzip", 300, "gzip", "gzip", "CouchbaseLite/1.2")
 ])
-def test_bulk_get_compression(setup_1sg_1cbs_test, sg_conf, num_docs, accept_encoding, x_accept_part_encoding, user_agent):
+def test_bulk_get_compression(params_from_base_test_setup, sg_conf_name, num_docs, accept_encoding, x_accept_part_encoding, user_agent):
 
-    cluster_config = setup_1sg_1cbs_test["cluster_config"]
+    cluster_config = params_from_base_test_setup["cluster_config"]
+    mode = params_from_base_test_setup["mode"]
+
+    sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
 
     log_info("Running 'test_bulk_get_compression'")
     log_info("Using cluster_config: {}".format(cluster_config))
