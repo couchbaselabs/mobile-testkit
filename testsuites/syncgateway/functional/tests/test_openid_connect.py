@@ -8,42 +8,13 @@ import pytest
 import requests
 from requests import HTTPError
 
-from keywords.Logging import Logging
 from keywords.ClusterKeywords import ClusterKeywords
-from keywords.constants import SYNC_GATEWAY_CONFIGS
+from keywords.SyncGateway import sync_gateway_config_path_for_mode
 from keywords.utils import log_r
 from keywords.utils import log_info
 
 
 DEFAULT_PROVIDER = "test"
-
-
-# This is called before each test and will yield the cluster_config to each test in the file
-# After each test_* function, execution will continue from the yield a pull logs on failure
-@pytest.fixture(scope="function")
-def setup_1sg_1cbs_test(request):
-
-    test_name = request.node.name
-    log_info("Setting up test '{}'".format(test_name))
-
-    cluster_helper = ClusterKeywords()
-
-    topology = cluster_helper.get_cluster_topology(os.environ["CLUSTER_CONFIG"])
-
-    yield {
-        "cluster_config": os.environ["CLUSTER_CONFIG"],
-        "cbs_url": topology["couchbase_servers"][0],
-        "sg_url": topology["sync_gateways"][0]["public"],
-        "sg_url_admin": topology["sync_gateways"][0]["admin"],
-        "sg_db": "db"
-    }
-
-    log_info("Tearing down test '{}'".format(test_name))
-
-    # if the test failed pull logs
-    if request.node.rep_call.failed:
-        logging_helper = Logging()
-        logging_helper.fetch_and_analyze_logs(cluster_config=os.environ["CLUSTER_CONFIG"], test_name=test_name)
 
 
 class FormActionHTMLParser(HTMLParser):
@@ -142,20 +113,24 @@ def discover_authenticate_endpoint(sg_url, sg_db, provider):
 @pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.oidc
-@pytest.mark.usefixtures("setup_1sg_1cbs_suite")
-@pytest.mark.parametrize("sg_conf, is_admin_port, expect_signed_id_token", [
-    ("{}/sync_gateway_openid_connect_cc.json".format(SYNC_GATEWAY_CONFIGS), False, True),
-    ("{}/sync_gateway_openid_connect_cc.json".format(SYNC_GATEWAY_CONFIGS), True, True),
-    ("{}/sync_gateway_openid_connect_unsigned_cc.json".format(SYNC_GATEWAY_CONFIGS), False, False)
+@pytest.mark.parametrize("sg_conf_name, is_admin_port, expect_signed_id_token", [
+    ("sync_gateway_openid_connect", False, True),
+    ("sync_gateway_openid_connect", True, True),
+    ("sync_gateway_openid_connect_unsigned", False, False)
 ])
-def test_openidconnect_basic_test(setup_1sg_1cbs_test, sg_conf, is_admin_port, expect_signed_id_token):
+def test_openidconnect_basic_test(params_from_base_test_setup, sg_conf_name, is_admin_port, expect_signed_id_token):
     """Tests the basic OpenIDConnect login flow against the non-admin port when is_admin_port=False
     Tests the basic OpenIDConnect login flow against the admin port when is_admin_port=True
     """
 
-    cluster_config = setup_1sg_1cbs_test["cluster_config"]
-    sg_url = setup_1sg_1cbs_test["sg_url"]
-    sg_db = setup_1sg_1cbs_test["sg_db"]
+    cluster_config = params_from_base_test_setup["cluster_config"]
+    mode = params_from_base_test_setup["mode"]
+    sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
+
+    cluster_helper = ClusterKeywords()
+    topology = cluster_helper.get_cluster_topology(cluster_config)
+    sg_url = topology["sync_gateways"][0]["public"]
+    sg_db = "db"
 
     log_info("Running 'test_openidconnect_basic_test'")
     log_info("Using cluster_config: {}".format(cluster_config))
@@ -258,16 +233,20 @@ def test_openidconnect_basic_test(setup_1sg_1cbs_test, sg_conf, is_admin_port, e
 @pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.oidc
-@pytest.mark.usefixtures("setup_1sg_1cbs_suite")
-@pytest.mark.parametrize("sg_conf", [
-    ("{}/sync_gateway_openid_connect_cc.json".format(SYNC_GATEWAY_CONFIGS))
+@pytest.mark.parametrize("sg_conf_name", [
+    "sync_gateway_openid_connect"
 ])
-def test_openidconnect_notauthenticated(setup_1sg_1cbs_test, sg_conf):
+def test_openidconnect_notauthenticated(params_from_base_test_setup, sg_conf_name):
     """Simulate a failed authentication and make sure no session is created"""
 
-    cluster_config = setup_1sg_1cbs_test["cluster_config"]
-    sg_url = setup_1sg_1cbs_test["sg_url"]
-    sg_db = setup_1sg_1cbs_test["sg_db"]
+    cluster_config = params_from_base_test_setup["cluster_config"]
+    mode = params_from_base_test_setup["mode"]
+    sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
+
+    cluster_helper = ClusterKeywords()
+    topology = cluster_helper.get_cluster_topology(cluster_config)
+    sg_url = topology["sync_gateways"][0]["public"]
+    sg_db = "db"
 
     log_info("Running 'test_openidconnect_notauthenticated'")
     log_info("Using cluster_config: {}".format(cluster_config))
@@ -303,19 +282,23 @@ def test_openidconnect_notauthenticated(setup_1sg_1cbs_test, sg_conf):
 @pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.oidc
-@pytest.mark.usefixtures("setup_1sg_1cbs_suite")
-@pytest.mark.parametrize("sg_conf", [
-    ("{}/sync_gateway_openid_connect_cc.json".format(SYNC_GATEWAY_CONFIGS))
+@pytest.mark.parametrize("sg_conf_name", [
+    "sync_gateway_openid_connect"
 ])
-def test_openidconnect_oidc_challenge_invalid_provider_name(setup_1sg_1cbs_test, sg_conf):
+def test_openidconnect_oidc_challenge_invalid_provider_name(params_from_base_test_setup, sg_conf_name):
     """
     If oidc_challenge is called with an invalid provider name, it should not return
     an Www-Authenticate header
     """
 
-    cluster_config = setup_1sg_1cbs_test["cluster_config"]
-    sg_url = setup_1sg_1cbs_test["sg_url"]
-    sg_db = setup_1sg_1cbs_test["sg_db"]
+    cluster_config = params_from_base_test_setup["cluster_config"]
+    mode = params_from_base_test_setup["mode"]
+    sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
+
+    cluster_helper = ClusterKeywords()
+    topology = cluster_helper.get_cluster_topology(cluster_config)
+    sg_url = topology["sync_gateways"][0]["public"]
+    sg_db = "db"
 
     log_info("Running 'test_openidconnect_oidc_challenge_invalid_provider_name'")
     log_info("Using cluster_config: {}".format(cluster_config))
@@ -339,16 +322,20 @@ def test_openidconnect_oidc_challenge_invalid_provider_name(setup_1sg_1cbs_test,
 @pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.oidc
-@pytest.mark.usefixtures("setup_1sg_1cbs_suite")
-@pytest.mark.parametrize("sg_conf", [
-    ("{}/sync_gateway_openid_connect_cc.json".format(SYNC_GATEWAY_CONFIGS))
+@pytest.mark.parametrize("sg_conf_name", [
+    "sync_gateway_openid_connect"
 ])
-def test_openidconnect_no_session(setup_1sg_1cbs_test, sg_conf):
+def test_openidconnect_no_session(params_from_base_test_setup, sg_conf_name):
     """Authenticate with a test openid provider that is configured to NOT add a Set-Cookie header"""
 
-    cluster_config = setup_1sg_1cbs_test["cluster_config"]
-    sg_url = setup_1sg_1cbs_test["sg_url"]
-    sg_db = setup_1sg_1cbs_test["sg_db"]
+    cluster_config = params_from_base_test_setup["cluster_config"]
+    mode = params_from_base_test_setup["mode"]
+    sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
+
+    cluster_helper = ClusterKeywords()
+    topology = cluster_helper.get_cluster_topology(cluster_config)
+    sg_url = topology["sync_gateways"][0]["public"]
+    sg_db = "db"
 
     log_info("Running 'test_openidconnect_no_session'")
     log_info("Using cluster_config: {}".format(cluster_config))
@@ -378,18 +365,22 @@ def test_openidconnect_no_session(setup_1sg_1cbs_test, sg_conf):
 @pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.oidc
-@pytest.mark.usefixtures("setup_1sg_1cbs_suite")
-@pytest.mark.parametrize("sg_conf", [
-    ("{}/sync_gateway_openid_connect_cc.json".format(SYNC_GATEWAY_CONFIGS))
+@pytest.mark.parametrize("sg_conf_name", [
+    "sync_gateway_openid_connect"
 ])
-def test_openidconnect_expired_token(setup_1sg_1cbs_test, sg_conf):
+def test_openidconnect_expired_token(params_from_base_test_setup, sg_conf_name):
     """Authenticate and create an ID token that only lasts for 5 seconds, wait 10 seconds
        and make sure the token is rejected
     """
 
-    cluster_config = setup_1sg_1cbs_test["cluster_config"]
-    sg_url = setup_1sg_1cbs_test["sg_url"]
-    sg_db = setup_1sg_1cbs_test["sg_db"]
+    cluster_config = params_from_base_test_setup["cluster_config"]
+    mode = params_from_base_test_setup["mode"]
+    sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
+
+    cluster_helper = ClusterKeywords()
+    topology = cluster_helper.get_cluster_topology(cluster_config)
+    sg_url = topology["sync_gateways"][0]["public"]
+    sg_db = "db"
 
     log_info("Running 'test_openidconnect_expired_token'")
     log_info("Using cluster_config: {}".format(cluster_config))
@@ -444,17 +435,21 @@ def test_openidconnect_expired_token(setup_1sg_1cbs_test, sg_conf):
 @pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.oidc
-@pytest.mark.usefixtures("setup_1sg_1cbs_suite")
-@pytest.mark.parametrize("sg_conf", [
-    ("{}/sync_gateway_openid_connect_cc.json".format(SYNC_GATEWAY_CONFIGS))
+@pytest.mark.parametrize("sg_conf_name", [
+    "sync_gateway_openid_connect"
 ])
-def test_openidconnect_negative_token_expiry(setup_1sg_1cbs_test, sg_conf):
+def test_openidconnect_negative_token_expiry(params_from_base_test_setup, sg_conf_name):
     """Create a token with a negative expiry time and expect that authentication
     is not possible"""
 
-    cluster_config = setup_1sg_1cbs_test["cluster_config"]
-    sg_url = setup_1sg_1cbs_test["sg_url"]
-    sg_db = setup_1sg_1cbs_test["sg_db"]
+    cluster_config = params_from_base_test_setup["cluster_config"]
+    mode = params_from_base_test_setup["mode"]
+    sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
+
+    cluster_helper = ClusterKeywords()
+    topology = cluster_helper.get_cluster_topology(cluster_config)
+    sg_url = topology["sync_gateways"][0]["public"]
+    sg_db = "db"
 
     log_info("Running 'test_openidconnect_negative_token_expiry'")
     log_info("Using cluster_config: {}".format(cluster_config))
@@ -494,18 +489,22 @@ def test_openidconnect_negative_token_expiry(setup_1sg_1cbs_test, sg_conf):
 @pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.oidc
-@pytest.mark.usefixtures("setup_1sg_1cbs_suite")
-@pytest.mark.parametrize("sg_conf", [
-    ("{}/sync_gateway_openid_connect_cc.json".format(SYNC_GATEWAY_CONFIGS))
+@pytest.mark.parametrize("sg_conf_name", [
+    "sync_gateway_openid_connect"
 ])
-def test_openidconnect_garbage_token(setup_1sg_1cbs_test, sg_conf):
+def test_openidconnect_garbage_token(params_from_base_test_setup, sg_conf_name):
     """Send a garbage/invalid token and make sure it cannot be used"""
 
     # WARNING!!!! SHOULD THERE BE A RESET?
 
-    cluster_config = setup_1sg_1cbs_test["cluster_config"]
-    sg_url = setup_1sg_1cbs_test["sg_url"]
-    sg_db = setup_1sg_1cbs_test["sg_db"]
+    cluster_config = params_from_base_test_setup["cluster_config"]
+    mode = params_from_base_test_setup["mode"]
+    sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
+
+    cluster_helper = ClusterKeywords()
+    topology = cluster_helper.get_cluster_topology(cluster_config)
+    sg_url = topology["sync_gateways"][0]["public"]
+    sg_db = "db"
 
     log_info("Running 'test_openidconnect_garbage_token'")
     log_info("Using cluster_config: {}".format(cluster_config))
@@ -572,17 +571,21 @@ def test_openidconnect_garbage_token(setup_1sg_1cbs_test, sg_conf):
 @pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.oidc
-@pytest.mark.usefixtures("setup_1sg_1cbs_suite")
-@pytest.mark.parametrize("sg_conf", [
-    ("{}/sync_gateway_openid_connect_cc.json".format(SYNC_GATEWAY_CONFIGS))
+@pytest.mark.parametrize("sg_conf_name", [
+    "sync_gateway_openid_connect"
 ])
-def test_openidconnect_invalid_scope(setup_1sg_1cbs_test, sg_conf):
+def test_openidconnect_invalid_scope(params_from_base_test_setup, sg_conf_name):
     """Try to discover the authenticate endpoint URL with a test provider that has an
     invalid scope, and expect an error"""
 
-    cluster_config = setup_1sg_1cbs_test["cluster_config"]
-    sg_url = setup_1sg_1cbs_test["sg_url"]
-    sg_db = setup_1sg_1cbs_test["sg_db"]
+    cluster_config = params_from_base_test_setup["cluster_config"]
+    mode = params_from_base_test_setup["mode"]
+    sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
+
+    cluster_helper = ClusterKeywords()
+    topology = cluster_helper.get_cluster_topology(cluster_config)
+    sg_url = topology["sync_gateways"][0]["public"]
+    sg_db = "db"
 
     log_info("Running 'test_openidconnect_invalid_scope'")
     log_info("Using cluster_config: {}".format(cluster_config))
@@ -608,17 +611,21 @@ def test_openidconnect_invalid_scope(setup_1sg_1cbs_test, sg_conf):
 @pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.oidc
-@pytest.mark.usefixtures("setup_1sg_1cbs_suite")
-@pytest.mark.parametrize("sg_conf", [
-    ("{}/sync_gateway_openid_connect_cc.json".format(SYNC_GATEWAY_CONFIGS))
+@pytest.mark.parametrize("sg_conf_name", [
+    "sync_gateway_openid_connect"
 ])
-def test_openidconnect_small_scope(setup_1sg_1cbs_test, sg_conf):
+def test_openidconnect_small_scope(params_from_base_test_setup, sg_conf_name):
     """Use the smallest OpenIDConnect scope possible, and make sure
     certain claims like "email" are not present in the JWT returned"""
 
-    cluster_config = setup_1sg_1cbs_test["cluster_config"]
-    sg_url = setup_1sg_1cbs_test["sg_url"]
-    sg_db = setup_1sg_1cbs_test["sg_db"]
+    cluster_config = params_from_base_test_setup["cluster_config"]
+    mode = params_from_base_test_setup["mode"]
+    sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
+
+    cluster_helper = ClusterKeywords()
+    topology = cluster_helper.get_cluster_topology(cluster_config)
+    sg_url = topology["sync_gateways"][0]["public"]
+    sg_db = "db"
 
     log_info("Running 'test_openidconnect_small_scope'")
     log_info("Using cluster_config: {}".format(cluster_config))
@@ -665,17 +672,21 @@ def test_openidconnect_small_scope(setup_1sg_1cbs_test, sg_conf):
 @pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.oidc
-@pytest.mark.usefixtures("setup_1sg_1cbs_suite")
-@pytest.mark.parametrize("sg_conf", [
-    ("{}/sync_gateway_openid_connect_cc.json".format(SYNC_GATEWAY_CONFIGS))
+@pytest.mark.parametrize("sg_conf_name", [
+    "sync_gateway_openid_connect"
 ])
-def test_openidconnect_large_scope(setup_1sg_1cbs_test, sg_conf):
+def test_openidconnect_large_scope(params_from_base_test_setup, sg_conf_name):
     """Authenticate against a test provider config that only has a larger scope than the default,
     and make sure things like the nickname are returned in the jwt token returned back"""
 
-    cluster_config = setup_1sg_1cbs_test["cluster_config"]
-    sg_url = setup_1sg_1cbs_test["sg_url"]
-    sg_db = setup_1sg_1cbs_test["sg_db"]
+    cluster_config = params_from_base_test_setup["cluster_config"]
+    mode = params_from_base_test_setup["mode"]
+    sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
+
+    cluster_helper = ClusterKeywords()
+    topology = cluster_helper.get_cluster_topology(cluster_config)
+    sg_url = topology["sync_gateways"][0]["public"]
+    sg_db = "db"
 
     log_info("Running 'test_openidconnect_large_scope'")
     log_info("Using cluster_config: {}".format(cluster_config))
@@ -724,17 +735,21 @@ def test_openidconnect_large_scope(setup_1sg_1cbs_test, sg_conf):
 @pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.oidc
-@pytest.mark.usefixtures("setup_1sg_1cbs_suite")
-@pytest.mark.parametrize("sg_conf", [
-    ("{}/sync_gateway_openid_connect_cc.json".format(SYNC_GATEWAY_CONFIGS))
+@pytest.mark.parametrize("sg_conf_name", [
+    "sync_gateway_openid_connect"
 ])
-def test_openidconnect_public_session_endpoint(setup_1sg_1cbs_test, sg_conf):
+def test_openidconnect_public_session_endpoint(params_from_base_test_setup, sg_conf_name):
     """Create a new session from the OpenID Connect token returned by hitting
     the public _session endpoint and make sure the response contains the Set-Cookie header."""
 
-    cluster_config = setup_1sg_1cbs_test["cluster_config"]
-    sg_url = setup_1sg_1cbs_test["sg_url"]
-    sg_db = setup_1sg_1cbs_test["sg_db"]
+    cluster_config = params_from_base_test_setup["cluster_config"]
+    mode = params_from_base_test_setup["mode"]
+    sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
+
+    cluster_helper = ClusterKeywords()
+    topology = cluster_helper.get_cluster_topology(cluster_config)
+    sg_url = topology["sync_gateways"][0]["public"]
+    sg_db = "db"
 
     log_info("Running 'test_openidconnect_public_session_endpoint'")
     log_info("Using cluster_config: {}".format(cluster_config))
