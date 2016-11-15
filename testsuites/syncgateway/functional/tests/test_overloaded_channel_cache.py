@@ -11,40 +11,23 @@ import concurrent.futures
 import requests
 
 from keywords.utils import log_info
-from keywords.constants import SYNC_GATEWAY_CONFIGS
-from keywords.Logging import Logging
-
-
-# This is called before each test and will yield the cluster_config to each test in the file
-# After each test_* function, execution will continue from the yield a pull logs on failure
-@pytest.fixture(scope="function")
-def setup_1sg_1cbs_test(request):
-
-    test_name = request.node.name
-    log_info("Setting up test '{}'".format(test_name))
-
-    yield {"cluster_config": os.environ["CLUSTER_CONFIG"]}
-
-    log_info("Tearing down test '{}'".format(test_name))
-
-    # if the test failed pull logs
-    if request.node.rep_call.failed:
-        logging_helper = Logging()
-        logging_helper.fetch_and_analyze_logs(cluster_config=os.environ["CLUSTER_CONFIG"], test_name=test_name)
+from keywords.SyncGateway import sync_gateway_config_path_for_mode
 
 
 @pytest.mark.sanity
 @pytest.mark.syncgateway
-@pytest.mark.usefixtures("setup_1sg_1cbs_suite")
-@pytest.mark.parametrize("sg_conf, num_docs, user_channels, filter, limit", [
-    ("{}/sync_gateway_channel_cache_cc.json".format(SYNC_GATEWAY_CONFIGS), 5000, "*", True, 50),
-    ("{}/sync_gateway_channel_cache_cc.json".format(SYNC_GATEWAY_CONFIGS), 1000, "*", True, 50),
-    ("{}/sync_gateway_channel_cache_cc.json".format(SYNC_GATEWAY_CONFIGS), 1000, "ABC", False, 50),
-    ("{}/sync_gateway_channel_cache_cc.json".format(SYNC_GATEWAY_CONFIGS), 1000, "ABC", True, 50),
+@pytest.mark.parametrize("sg_conf_name, num_docs, user_channels, filter, limit", [
+    ("sync_gateway_channel_cache", 5000, "*", True, 50),
+    ("sync_gateway_channel_cache", 1000, "*", True, 50),
+    ("sync_gateway_channel_cache", 1000, "ABC", False, 50),
+    ("sync_gateway_channel_cache", 1000, "ABC", True, 50),
 ])
-def test_overloaded_channel_cache(setup_1sg_1cbs_test, sg_conf, num_docs, user_channels, filter, limit):
+def test_overloaded_channel_cache(params_from_base_test_setup, sg_conf_name, num_docs, user_channels, filter, limit):
 
-    cluster_conf = setup_1sg_1cbs_test["cluster_config"]
+    cluster_conf = params_from_base_test_setup["cluster_config"]
+    mode = params_from_base_test_setup["mode"]
+
+    sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
 
     log_info("Running 'test_overloaded_channel_cache'")
     log_info("Using cluster_conf: {}".format(cluster_conf))
