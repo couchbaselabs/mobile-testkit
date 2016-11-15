@@ -10,6 +10,8 @@ from install_couchbase_server import CouchbaseServerConfig
 from install_sync_gateway import SyncGatewayConfig
 from install_nginx import install_nginx
 
+from libraries.provision.install_deps import install_deps
+
 from keywords.utils import log_info
 
 
@@ -98,6 +100,10 @@ if __name__ == "__main__":
                       action="store", type="string", dest="build_flags", default="",
                       help="build flags to pass when building sync gateway (ex. -race)")
 
+    parser.add_option("", "--install-deps",
+                      action="store_true", dest="install_deps_flag", default=False,
+                      help="Install dependent 3rd party packages")
+
     arg_parameters = sys.argv[1:]
 
     (opts, args) = parser.parse_args(arg_parameters)
@@ -122,6 +128,9 @@ if __name__ == "__main__":
             sys.exit(1)
         sync_gateway_version = version_build[0]
         sync_gateway_build = version_build[1]
+
+    if opts.install_deps_flag:
+        install_deps(cluster_conf)
 
     sync_gateway_conf = SyncGatewayConfig(
         version_number=sync_gateway_version,

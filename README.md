@@ -548,15 +548,10 @@ python libraries/utilities/generate_clusters_from_pool.py
 export CLUSTER_CONFIG=resources/cluster_configs/2sg_3cbs_2lgs
 ```
 
-- Install dependencies
-```
-python libraries/provision/install_deps.py
-```
-
-- Provision cluster
+- Provision cluster and install dependencies
 
 ```
-python libraries/provision/provision_cluster.py --server-version 4.1.1 --sync-gateway-version 1.3.0-274
+python libraries/provision/provision_cluster.py --install-deps --server-version 4.1.1 --sync-gateway-version 1.3.0-274 
 ```
 
 - Run tests
