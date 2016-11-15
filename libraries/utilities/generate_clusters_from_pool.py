@@ -236,7 +236,7 @@ def generate_clusters_from_pool(pool_file):
 
 if __name__ == "__main__":
     usage = """
-    usage: python generate_cluster_from_pool.py"
+    usage: python generate_clusters_from_pool.py"
     """
 
     parser = OptionParser(usage=usage)

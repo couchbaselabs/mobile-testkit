@@ -5,18 +5,20 @@ import json
 import time
 from boto import cloudformation
 from boto import ec2
+from boto.exception import BotoServerError
+
 import socket
 
 # This generates a pool.json file from the current AWS EC2 inventory.
 # The pool.json file can then be used to generate cluster configs under resources/cluster_configs
 
 DEFAULT_REGION = "us-east-1"
-NUM_RETRIES = 25
+NUM_RETRIES = 50
 
 
 def main():
 
-    usage = """usage: python generate_ansible_inventory_from_aws.py
+    usage = """usage: python generate_pools_json_from_aws.py
         --stackname=<aws_cloudformation_stack_name>
         --targetfile=<ansible_inventory_target_file_path>
         """
@@ -116,6 +118,13 @@ def wait_until_stack_create_complete(stackname):
     for x in xrange(NUM_RETRIES):
         print("Waiting for {} to finish launching.  Attempt: {}".format(stackname, x))
         region = cloudformation.connect_to_region(DEFAULT_REGION)
+
+        try:
+            region.describe_stacks(stackname)
+        except BotoServerError as bse:
+            print("Exception describing stack: {}, exception: {}. Retrying.".format(stackname, bse))
+            continue
+
         stack_events = region.describe_stack_events(stackname)
 
         for stack_event in stack_events:
