@@ -63,8 +63,13 @@
   - name: SYNC GATEWAY & SG ACCEL | Download bootstrap script
     get_url: url=https://raw.githubusercontent.com/couchbase/sync_gateway/master/bootstrap.sh dest=/home/centos/ mode=0751
 
-  - name: SYNC GATEWAY & SG ACCEL | Run bootstrap script (bootstrap.sh takes a branch and a commit as params, this will be fixed to only take a commit at some point)
+  - name: SYNC GATEWAY | Run bootstrap.sh script
+    shell: ./bootstrap.sh -p sg -c {{ commit }} chdir=/home/centos/
+    when: "'sync_gateways' in group_names"
+
+  - name: SG ACCEL | Run bootstrap.sh script
     shell: ./bootstrap.sh -p sg-accel -c {{ commit }} chdir=/home/centos/
+    when: "'sg_accels' in group_names"
 
   - name: SYNC GATEWAY & SG ACCEL | Build
     shell: ./build.sh {{ build_flags }} chdir=/home/centos/
