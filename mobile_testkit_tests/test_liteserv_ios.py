@@ -117,9 +117,8 @@ def test_ios_storage_engines(request, liteserv_with_storage_engine_from_fixture)
 
     test_name = request.node.name
     logfile = "{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(liteserv).__name__, test_name, datetime.datetime.now())
-    ls_url = liteserv.start(logfile)
+    liteserv.start(logfile)
 
     # TODO: find a way to verify this
 
     liteserv.stop()
-

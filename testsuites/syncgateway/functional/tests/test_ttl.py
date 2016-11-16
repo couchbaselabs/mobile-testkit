@@ -1,16 +1,13 @@
 import pytest
-import os
 import time
 
 from requests.exceptions import HTTPError
 
 from keywords.utils import log_info
-from keywords.constants import SYNC_GATEWAY_CONFIGS
 from keywords.ClusterKeywords import ClusterKeywords
 from keywords.MobileRestClient import MobileRestClient
 from keywords.Document import Document
 from keywords.SyncGateway import sync_gateway_config_path_for_mode
-from keywords.Logging import Logging
 from keywords.Time import Time
 
 """

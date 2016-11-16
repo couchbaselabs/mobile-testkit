@@ -224,4 +224,3 @@ def test_writing_attachment_to_couchbase_server(params_from_base_test_setup, sg_
     server_att_docs = cb_util.get_server_docs_with_prefix(url=cbs_url, bucket=bucket, prefix="_sync:att:")
     num_att_docs = len(server_att_docs)
     assert num_att_docs == 1
-

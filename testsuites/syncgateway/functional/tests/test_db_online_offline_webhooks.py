@@ -1,6 +1,5 @@
 import time
 import pytest
-import os
 
 from libraries.testkit.admin import Admin
 from libraries.testkit.cluster import Cluster

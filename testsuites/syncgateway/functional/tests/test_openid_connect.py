@@ -1,5 +1,4 @@
 import time
-import os
 from urlparse import urlparse
 from HTMLParser import HTMLParser
 
@@ -498,8 +497,6 @@ def test_openidconnect_garbage_token(params_from_base_test_setup, sg_conf_name):
     # WARNING!!!! SHOULD THERE BE A RESET?
 
     cluster_config = params_from_base_test_setup["cluster_config"]
-    mode = params_from_base_test_setup["mode"]
-    sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
 
     cluster_helper = ClusterKeywords()
     topology = cluster_helper.get_cluster_topology(cluster_config)

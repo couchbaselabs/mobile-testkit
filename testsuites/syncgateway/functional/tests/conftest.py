@@ -1,5 +1,3 @@
-import os
-
 import pytest
 
 from keywords.constants import CLUSTER_CONFIGS_DIR

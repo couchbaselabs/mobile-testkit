@@ -81,4 +81,3 @@ def test_clean_log():
     log_file_path = "mobile_testkit_tests/test_data/mock_clean_log.txt"
 
     scan_logs.scan_for_errors(['panic'], log_file_path)
-

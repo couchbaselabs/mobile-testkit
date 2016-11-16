@@ -93,8 +93,6 @@ def verify_response_size(user_agent, accept_encoding, x_accept_part_encoding, re
                                                                                                          x_accept_part_encoding,
                                                                                                          response_size))
 
-    
-
     if user_agent is None or user_agent == "CouchbaseLite/1.1":
 
         if accept_encoding is None and x_accept_part_encoding is None:

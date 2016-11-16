@@ -1,11 +1,7 @@
 import datetime
-import os
-import shutil
-
 import pytest
 
 from keywords.constants import RESULTS_DIR
-from keywords.constants import BINARY_DIR
 from keywords.LiteServFactory import LiteServFactory
 from keywords.MobileRestClient import MobileRestClient
 from keywords.utils import log_info
