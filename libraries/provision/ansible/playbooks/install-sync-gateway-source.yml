@@ -60,6 +60,9 @@
   - name: SYNC GATEWAY & SG ACCEL | Create .git user name to use bootstrap.sh script
     shell: git config --global user.name "Foo"
 
+  - name: SYNC GATEWAY & SG ACCEL | disable git color UI config
+    shell: git config --global color.ui false
+
   - name: SYNC GATEWAY & SG ACCEL | Download bootstrap script
     get_url: url=https://raw.githubusercontent.com/couchbase/sync_gateway/master/bootstrap.sh dest=/home/centos/ mode=0751
 
