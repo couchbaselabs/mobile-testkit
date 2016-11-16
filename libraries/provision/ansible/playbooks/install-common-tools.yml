@@ -93,5 +93,5 @@
   - name: DEPS | install repo tool
     get_url: url=https://storage.googleapis.com/git-repo-downloads/repo dest=/usr/bin/repo mode=0751
 
-  - name: DEPS | disable git color UI config
-    shell: git config --global color.ui false
+
+  
