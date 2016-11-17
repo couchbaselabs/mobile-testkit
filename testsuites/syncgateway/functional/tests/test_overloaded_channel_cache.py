@@ -26,6 +26,9 @@ def test_overloaded_channel_cache(params_from_base_test_setup, sg_conf_name, num
     cluster_conf = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
 
+    if mode == "di":
+        pytest.skip("Unsupported feature in distributed index")
+
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
 
     log_info("Running 'test_overloaded_channel_cache'")
