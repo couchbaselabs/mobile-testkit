@@ -26,12 +26,13 @@ class User:
         self.channels = list(channels)
         self.target = target
 
-        self._headers = {'Content-Type': 'application/json'}
+        self._session = requests.Session()
+        self._session.headers["Content-Type"] = "application/json"
 
         if self.name is not None:
             auth = base64.b64encode("{0}:{1}".format(self.name, self.password).encode())
             self._auth = auth.decode("UTF-8")
-            self._headers["Authorization"] = "Basic {}".format(self._auth)
+            self._session.headers["Authorization"] = "Basic {}".format(self._auth)
 
     def __str__(self):
         return "USER: name={0} password={1} db={2} channels={3} cache={4}".format(self.name, self.password, self.db, self.channels, len(self.cache))
@@ -39,7 +40,7 @@ class User:
     # GET /{db}/{doc}
     # GET /{db}/{local-doc-id}
     def get_doc(self, doc_id):
-        resp = requests.get("{0}/{1}/{2}".format(self.target.url, self.db, doc_id), headers=self._headers)
+        resp = self._session.get("{0}/{1}/{2}".format(self.target.url, self.db, doc_id))
         log.debug("GET {}".format(resp.url))
         resp.raise_for_status()
         return resp.json()
@@ -49,7 +50,7 @@ class User:
         docs_array = [{"id": doc_id} for doc_id in doc_ids]
         body = {"docs": docs_array}
 
-        resp = requests.post("{0}/{1}/_bulk_get".format(self.target.url, self.db), headers=self._headers, data=json.dumps(body))
+        resp = self._session.post("{0}/{1}/_bulk_get".format(self.target.url, self.db), data=json.dumps(body))
         log.debug("POST {}".format(resp.url))
         resp.raise_for_status()
 
@@ -64,10 +65,10 @@ class User:
 
     # GET /{db}/_all_docs
     def get_all_docs(self):
-        resp = requests.get("{0}/{1}/_all_docs".format(
+        resp = self._session.get("{0}/{1}/_all_docs".format(
             self.target.url,
             self.db,
-        ), headers=self._headers)
+        ))
         log.debug("GET {}".format(resp.url))
         resp.raise_for_status()
         return resp.json()
@@ -84,12 +85,12 @@ class User:
             rev_to_delete = doc_rev
 
         # delete that revision
-        resp = requests.delete("{0}/{1}/{2}?rev={3}".format(
+        resp = self._session.delete("{0}/{1}/{2}?rev={3}".format(
             self.target.url,
             self.db,
             doc_id,
             rev_to_delete,
-        ), headers=self._headers)
+        ))
 
         resp.raise_for_status()
         return resp.json()
@@ -111,7 +112,7 @@ class User:
 
         if doc_id is None:
             # Use a POST and let sync_gateway generate an id
-            resp = requests.post("{0}/{1}/".format(self.target.url, self.db), headers=self._headers, data=body, timeout=settings.HTTP_REQ_TIMEOUT)
+            resp = self._session.post("{0}/{1}/".format(self.target.url, self.db), data=body, timeout=settings.HTTP_REQ_TIMEOUT)
             log.debug("{0} POST {1}".format(self.name, resp.url))
         else:
             # If the doc id is specified, use PUT with doc_id in url
@@ -121,9 +122,9 @@ class User:
                 # This was using invalid construction of HTTP adapter and currently is not used anywhere.
                 # Retry behavior will be the same as regular behavior. This is a legacy API so just adding this
                 # to do execute the same behavior whether or not retries is specifiec
-                resp = requests.put(doc_url, headers=self._headers, data=body, timeout=settings.HTTP_REQ_TIMEOUT)
+                resp = self._session.put(doc_url, data=body, timeout=settings.HTTP_REQ_TIMEOUT)
             else:
-                resp = requests.put(doc_url, headers=self._headers, data=body, timeout=settings.HTTP_REQ_TIMEOUT)
+                resp = self._session.put(doc_url, data=body, timeout=settings.HTTP_REQ_TIMEOUT)
 
             log.debug("{0} PUT {1}".format(self.name, resp.url))
 
@@ -162,9 +163,9 @@ class User:
             # This was using invalid construction of HTTP adapter and currently is not used anywhere.
             # Retry behavior will be the same as regular behavior. This is a legacy API so just adding this
             # to do execute the same behavior whether or not retries is specifiec
-            resp = requests.post("{0}/{1}/_bulk_docs".format(self.target.url, self.db), headers=self._headers, data=data, timeout=settings.HTTP_REQ_TIMEOUT)
+            resp = self._session.post("{0}/{1}/_bulk_docs".format(self.target.url, self.db), data=data, timeout=settings.HTTP_REQ_TIMEOUT)
         else:
-            resp = requests.post("{0}/{1}/_bulk_docs".format(self.target.url, self.db), headers=self._headers, data=data, timeout=settings.HTTP_REQ_TIMEOUT)
+            resp = self._session.post("{0}/{1}/_bulk_docs".format(self.target.url, self.db), data=data, timeout=settings.HTTP_REQ_TIMEOUT)
 
         log.debug("{0} POST {1}".format(self.name, resp.url))
         resp.raise_for_status()
@@ -230,7 +231,7 @@ class User:
 
     def add_design_doc(self, doc_id, content):
         data = json.dumps(content)
-        r = requests.put("{0}/{1}/_design/{2}".format(self.target.url, self.db, doc_id), headers=self._headers, data=data)
+        r = self._session.put("{0}/{1}/_design/{2}".format(self.target.url, self.db, doc_id), data=data)
         log_request(r)
         log_response(r)
         r.raise_for_status()
@@ -244,7 +245,7 @@ class User:
         for i in range(num_revision):
 
             doc_url = self.target.url + '/' + self.db + '/' + doc_id
-            resp = requests.get(doc_url, headers=self._headers, timeout=settings.HTTP_REQ_TIMEOUT)
+            resp = self._session.get(doc_url, timeout=settings.HTTP_REQ_TIMEOUT)
             log.debug("{0} GET {1}".format(self.name, resp.url))
 
             if resp.status_code == 200:
@@ -262,9 +263,9 @@ class User:
                     # This was using invalid construction of HTTP adapter and currently is not used anywhere.
                     # Retry behavior will be the same as regular behavior. This is a legacy API so just adding this
                     # to do execute the same behavior whether or not retries is specifiec
-                    put_resp = requests.put(doc_url, headers=self._headers, data=body, timeout=settings.HTTP_REQ_TIMEOUT)
+                    put_resp = self._session.put(doc_url, data=body, timeout=settings.HTTP_REQ_TIMEOUT)
                 else:
-                    put_resp = requests.put(doc_url, headers=self._headers, data=body, timeout=settings.HTTP_REQ_TIMEOUT)
+                    put_resp = self._session.put(doc_url, data=body, timeout=settings.HTTP_REQ_TIMEOUT)
 
                 log.debug("{0} PUT {1}".format(self.name, resp.url))
 
@@ -406,7 +407,7 @@ class User:
 
         data = json.dumps(params)
 
-        r = requests.post("{}/{}/_changes".format(self.target.url, self.db), headers=self._headers, data=data, timeout=settings.HTTP_REQ_TIMEOUT)
+        r = self._session.post("{}/{}/_changes".format(self.target.url, self.db), data=data, timeout=settings.HTTP_REQ_TIMEOUT)
         log.debug("{0} POST {1}".format(self.name, r.url))
         r.raise_for_status()
 
@@ -447,7 +448,7 @@ class User:
 
                 data = json.dumps(params)
 
-                r = requests.post("{}/{}/_changes".format(self.target.url, self.db), headers=self._headers, data=data)
+                r = self._session.post("{}/{}/_changes".format(self.target.url, self.db), data=data)
                 log.debug("{0} {1} {2}\n{3}\n{4}".format(
                     self.name,
                     r.request.method,
@@ -523,7 +524,7 @@ class User:
 
         data = json.dumps(params)
 
-        r = requests.post(url="{0}/{1}/_changes".format(self.target.url, self.db), headers=self._headers, data=data, stream=True)
+        r = self._session.post(url="{0}/{1}/_changes".format(self.target.url, self.db), data=data, stream=True)
         log.debug("{0} POST {1}".format(self.name, r.url))
 
         # Wait for continuous changes

@@ -1,9 +1,7 @@
 import json
 import os
-import platform
 import sys
 import socket
-import netifaces
 
 from keywords.utils import log_info
 from keywords.utils import log_warn
