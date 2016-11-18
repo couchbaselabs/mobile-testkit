@@ -81,6 +81,9 @@ class LiteServMacOSX(LiteServBase):
         4. Return the url of the running LiteServ
         """
 
+        if self.ssl_enabled:
+            raise NotImplementedError("Implement ssl on Mac")
+
         self._verify_not_running()
 
         binary_path = "{}/couchbase-lite-macosx-enterprise_{}/LiteServ".format(BINARY_DIR, self.version_build)

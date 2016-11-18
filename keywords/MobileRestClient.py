@@ -90,6 +90,10 @@ class MobileRestClient:
         self._session = Session()
         self._session.headers = headers
 
+        # Do not fail for self signed certificates.
+        # Not a real world best practice!! For testing only.
+        self._session.verify = False
+
     def merge(self, *doc_lists):
         """
         Keyword to merge multiple lists of document dictionarys into one list

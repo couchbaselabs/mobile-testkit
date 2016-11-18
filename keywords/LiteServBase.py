@@ -15,10 +15,18 @@ class LiteServBase(object):
     of this. This class provides a few common functions as well as
     specifies the API that must be implemented in the subclass."""
 
-    def __init__(self, version_build, host, port, storage_engine):
+    def __init__(self, version_build, host, port, storage_engine, ssl_enabled):
         self.version_build = version_build
         self.host = host
         self.port = port
+        self.ssl_enabled = ssl_enabled
+
+        if self.ssl_enabled:
+            scheme = "https"
+        else:
+            scheme = "http"
+
+        self.url = "{}://{}:{}".format(scheme, self.host, self.port)
         self.storage_engine = storage_engine
 
         # Used for commandline programs such as net-mono and macosx
@@ -29,6 +37,10 @@ class LiteServBase(object):
 
         self.session = Session()
         self.session.headers['Content-Type'] = 'application/json'
+
+        # Do not fail for self signed certificates.
+        # Not a real world best practice!! For testing only.
+        self.session.verify = False
 
     def download(self):
         raise NotImplementedError()
@@ -44,7 +56,7 @@ class LiteServBase(object):
         Verifys that the endpoint does not return a 200 from a running service
         """
         try:
-            resp = self.session.get("http://{}:{}/".format(self.host, self.port))
+            resp = self.session.get(self.url)
         except ConnectionError:
             # Expecting connection error if LiteServ is not running on the port
             return
@@ -53,11 +65,11 @@ class LiteServBase(object):
         raise LiteServError("There should be no service running on the port")
 
     def _wait_until_reachable(self):
-        url = "http://{}:{}".format(self.host, self.port)
+
         count = 0
         while count < MAX_RETRIES:
             try:
-                resp = self.session.get(url)
+                resp = self.session.get(self.url)
                 # If request does not throw, exit retry loop
                 break
             except ConnectionError:

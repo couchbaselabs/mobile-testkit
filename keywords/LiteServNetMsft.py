@@ -14,10 +14,10 @@ from libraries.provision.ansible_runner import AnsibleRunner
 
 class LiteServNetMsft(LiteServBase):
 
-    def __init__(self, version_build, host, port, storage_engine):
+    def __init__(self, version_build, host, port, storage_engine, enable_ssl):
 
         # Initialize baseclass properies
-        super(LiteServNetMsft, self).__init__(version_build, host, port, storage_engine)
+        super(LiteServNetMsft, self).__init__(version_build, host, port, storage_engine, enable_ssl)
 
         if "LITESERV_MSFT_HOST_USER" not in os.environ:
             raise LiteServError("Make sure you define 'LITESERV_MSFT_HOST_USER' as the windows user for the host you are targeting")
@@ -99,13 +99,16 @@ class LiteServNetMsft(LiteServBase):
         """
 
         self._verify_not_running()
-
         self.logfile = logfile_name
 
         process_args = [
             "--port", str(self.port),
             "--dir", "."
         ]
+
+        if self.ssl_enabled:
+            log_info("Enabling ssl ...")
+            process_args.append("--ssl")
 
         if self.storage_engine == "ForestDB" or self.storage_engine == "ForestDB+Encryption":
             process_args.append("--storage")
@@ -144,7 +147,7 @@ class LiteServNetMsft(LiteServBase):
 
         self._verify_launched()
 
-        return "http://{}:{}".format(self.host, self.port)
+        return self.url
 
     def _verify_launched(self):
         """Poll on expected http://<host>:<port> until it is reachable

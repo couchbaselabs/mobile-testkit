@@ -1,5 +1,6 @@
 
 def pytest_addoption(parser):
+    parser.addoption("--enable-ssl", action="store_true", help="enable ssl for p2p replication")
     parser.addoption("--liteserv-one-platform", action="store", help="liteserv-one-platform: the platform to assign to the first liteserv")
     parser.addoption("--liteserv-one-version", action="store", help="liteserv-one-version: the version to download / install for the first liteserv")
     parser.addoption("--liteserv-one-host", action="store", help="liteserv-one-host: the host to start to the first liteserv on")

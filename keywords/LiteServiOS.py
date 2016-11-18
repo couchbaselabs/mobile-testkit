@@ -79,6 +79,9 @@ class LiteServiOS(LiteServBase):
         4. Return the url of the running LiteServ
         """
 
+        if self.ssl_enabled:
+            raise NotImplementedError("Implement ssl on iOS")
+
         if self.storage_engine != "SQLite":
             raise NotImplementedError("Need to make sure to support other storage types")
 

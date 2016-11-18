@@ -124,6 +124,18 @@ class LiteServAndroid(LiteServBase):
         if self.storage_engine == "SQLCipher" or self.storage_engine == "ForestDB+Encryption":
             encryption_enabled = True
 
+        # Define base launch args
+        launch_args = [
+            "adb", "shell", "am", "start", "-n", activity_name,
+            "--es", "username", "none",
+            "--es", "password", "none",
+            "--ei", "listen_port", str(self.port)
+        ]
+
+        if self.ssl_enabled:
+            log_info("Enabling ssl ...")
+            launch_args.extend(["--es", "ssl", "true"])
+
         if encryption_enabled:
             log_info("Encryption enabled ...")
 
@@ -137,39 +149,40 @@ class LiteServAndroid(LiteServBase):
             log_info("Running with db_flags: {}".format(db_flags))
 
             if self.storage_engine == "SQLCipher":
-                output = subprocess.check_output([
-                    "adb", "shell", "am", "start", "-n", activity_name,
-                    "--es", "username", "none",
-                    "--es", "password", "none",
-                    "--ei", "listen_port", str(self.port),
+
+                launch_args.extend([
                     "--es", "storage", "SQLite",
                     "--es", "dbpassword", db_flags
                 ])
+
+                log_info(launch_args)
+                output = subprocess.check_output(launch_args)
                 log_info(output)
+
             elif self.storage_engine == "ForestDB+Encryption":
-                output = subprocess.check_output([
-                    "adb", "shell", "am", "start", "-n", activity_name,
-                    "--es", "username", "none",
-                    "--es", "password", "none",
-                    "--ei", "listen_port", str(self.port),
+
+                launch_args.extend([
                     "--es", "storage", "ForestDB",
                     "--es", "dbpassword", db_flags
                 ])
+
+                log_info(launch_args)
+                output = subprocess.check_output(launch_args)
                 log_info(output)
         else:
             log_info("No encryption ...")
-            output = subprocess.check_output([
-                "adb", "shell", "am", "start", "-n", activity_name,
-                "--es", "username", "none",
-                "--es", "password", "none",
+
+            launch_args.extend([
                 "--ei", "listen_port", str(self.port),
                 "--es", "storage", self.storage_engine,
             ])
+
+            log_info(launch_args)
+            output = subprocess.check_output(launch_args)
             log_info(output)
 
         self._verify_launched()
-
-        return "http://{}:{}".format(self.host, self.port)
+        return self.url
 
     def _verify_launched(self):
         """ Poll on expected http://<host>:<port> until it is reachable

@@ -82,6 +82,9 @@ class LiteServNetMono(LiteServBase):
         4. eturn the url of the running LiteServ
         """
 
+        if self.ssl_enabled:
+            raise NotImplementedError("Implement ssl on mono")
+
         self._verify_not_running()
 
         # The package structure for LiteServ is different pre 1.4. Handle for this case

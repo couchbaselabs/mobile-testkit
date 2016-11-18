@@ -38,23 +38,29 @@ class LiteServFactory:
             raise ValueError("Unsupported 'storage_engine': {}".format(storage_engine))
 
     @staticmethod
-    def create(platform, version_build, host, port, storage_engine):
+    def validate_enable_ssl(enable_ssl):
+        if enable_ssl not in [False, True]:
+            raise ValueError("Unsupported 'enable_ssl': {}".format(enable_ssl))
+
+    @staticmethod
+    def create(platform, version_build, host, port, storage_engine, enable_ssl):
 
         LiteServFactory.validate_platform(platform)
         LiteServFactory.validate_version_build(version_build)
         LiteServFactory.validate_host(host)
         LiteServFactory.validate_port(port)
         LiteServFactory.validate_storage_engine(storage_engine)
+        LiteServFactory.validate_enable_ssl(enable_ssl)
 
         if platform == "android":
-            return LiteServAndroid(version_build, host, port, storage_engine)
+            return LiteServAndroid(version_build, host, port, storage_engine, enable_ssl)
         elif platform == "ios":
-            return LiteServiOS(version_build, host, port, storage_engine)
+            return LiteServiOS(version_build, host, port, storage_engine, enable_ssl)
         elif platform == "macosx":
-            return LiteServMacOSX(version_build, host, port, storage_engine)
+            return LiteServMacOSX(version_build, host, port, storage_engine, enable_ssl)
         elif platform == "net-mono":
-            return LiteServNetMono(version_build, host, port, storage_engine)
+            return LiteServNetMono(version_build, host, port, storage_engine, enable_ssl)
         elif platform == "net-msft":
-            return LiteServNetMsft(version_build, host, port, storage_engine)
+            return LiteServNetMsft(version_build, host, port, storage_engine, enable_ssl)
         else:
             raise NotImplementedError("Unsupported version of LiteServ")
