@@ -18,6 +18,8 @@ def setup_p2p_suite(request):
 
     log_info("Setting up P2P suite ...")
 
+    enable_ssl = request.config.getoption("--enable-ssl")
+
     liteserv_one_platform = request.config.getoption("--liteserv-one-platform")
     liteserv_one_version = request.config.getoption("--liteserv-one-version")
     liteserv_one_host = request.config.getoption("--liteserv-one-host")
@@ -34,13 +36,15 @@ def setup_p2p_suite(request):
                                           version_build=liteserv_one_version,
                                           host=liteserv_one_host,
                                           port=liteserv_one_port,
-                                          storage_engine=liteserv_one_storage_engine)
+                                          storage_engine=liteserv_one_storage_engine,
+                                          enable_ssl=enable_ssl)
 
     liteserv_two = LiteServFactory.create(platform=liteserv_two_platform,
                                           version_build=liteserv_two_version,
                                           host=liteserv_two_host,
                                           port=liteserv_two_port,
-                                          storage_engine=liteserv_two_storage_engine)
+                                          storage_engine=liteserv_two_storage_engine,
+                                          enable_ssl=enable_ssl)
 
     liteserv_one.download()
     liteserv_one.install()
@@ -53,7 +57,6 @@ def setup_p2p_suite(request):
     log_info("Tearing down suite ...")
 
     liteserv_one.remove()
-
     liteserv_two.remove()
 
 
@@ -272,3 +275,66 @@ def test_peer_2_peer_sanity_push(setup_p2p_test):
 
     client.verify_docs_present(url=ls_url_two, db=ls_db2, expected_docs=ls_db1_docs)
     client.verify_docs_in_changes(url=ls_url_two, db=ls_db2, expected_docs=ls_db1_docs)
+
+
+@pytest.mark.sanity
+@pytest.mark.listener
+@pytest.mark.replication
+@pytest.mark.p2p
+@pytest.mark.changes
+def test_peer_2_peer_sanity_push_local_to_remote_remote_to_local(setup_p2p_test):
+    """
+    1. Create ls_db1 database on LiteServ One
+    2. Create ls_db2 database on LiteServ Two
+    3. Create continuous push replication LiteServ 1 ls_db1 -> LiteServ 2 ls_db2
+    4. Add 5000 docs to LiteServ 1 ls_db1
+    5. Verify all docs replicate to LiteServ 2 ls_db2
+    6. Verify all docs show up in changes for LiteServ 2 ls_db2
+    """
+
+    ls_url_one = setup_p2p_test["ls_url_one"]
+    ls_url_two = setup_p2p_test["ls_url_two"]
+
+    num_docs_per_db = 5000
+
+    log_info("ls_url_one: {}".format(ls_url_one))
+    log_info("ls_url_two: {}".format(ls_url_two))
+
+    client = MobileRestClient()
+
+    log_info("Creating databases")
+    ls_db1 = client.create_database(url=ls_url_one, name="ls_db1")
+    ls_db2 = client.create_database(url=ls_url_two, name="ls_db2")
+
+    # Setup continuous push replication on LiteServ 1 from LiteServ 1 ls_db1 to LiteServ 2 ls_db2
+    push_repl_one = client.start_replication(
+        url=ls_url_one,
+        continuous=True,
+        from_db=ls_db1,
+        to_url=ls_url_two, to_db=ls_db2,
+    )
+
+    # Setup continuous push replication on LiteServ 2 from LiteServ 2 ls_db2 to LiteServ 1 ls_db1
+    push_repl_two = client.start_replication(
+        url=ls_url_two,
+        continuous=True,
+        from_db=ls_db2,
+        to_url=ls_url_one, to_db=ls_db1,
+    )
+
+    client.wait_for_replication_status_idle(url=ls_url_one, replication_id=push_repl_one)
+    client.wait_for_replication_status_idle(url=ls_url_one, replication_id=push_repl_two)
+
+    ls_db1_docs = client.add_docs(url=ls_url_one, db=ls_db1, number=num_docs_per_db, id_prefix="test_ls_db1")
+    assert len(ls_db1_docs) == num_docs_per_db
+
+    ls_db2_docs = client.add_docs(url=ls_url_two, db=ls_db2, number=num_docs_per_db, id_prefix="test_ls_db2")
+    assert len(ls_db2_docs) == num_docs_per_db
+
+    all_docs = ls_db1_docs + ls_db2_docs
+
+    client.verify_docs_present(url=ls_url_one, db=ls_db1, expected_docs=all_docs)
+    client.verify_docs_in_changes(url=ls_url_one, db=ls_db1, expected_docs=all_docs)
+
+    client.verify_docs_present(url=ls_url_two, db=ls_db2, expected_docs=all_docs)
+    client.verify_docs_in_changes(url=ls_url_two, db=ls_db2, expected_docs=all_docs)
