@@ -25,6 +25,9 @@ def test_bucket_online_offline_resync_sanity(params_from_base_test_setup, sg_con
     cluster_conf = params_from_base_test_setup["cluster_config"]
     test_mode = params_from_base_test_setup["mode"]
 
+    if test_mode == "di":
+        pytest.skip("Unsupported feature in distributed index")
+
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, test_mode)
 
     log_info("Running 'test_bucket_online_offline_resync_sanity'")
@@ -157,6 +160,9 @@ def test_bucket_online_offline_resync_with_online(params_from_base_test_setup, s
 
     cluster_conf = params_from_base_test_setup["cluster_config"]
     test_mode = params_from_base_test_setup["mode"]
+
+    if test_mode == "di":
+        pytest.skip("Unsupported feature in distributed index")
 
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, test_mode)
 
@@ -340,6 +346,9 @@ def test_bucket_online_offline_resync_with_offline(params_from_base_test_setup, 
 
     cluster_conf = params_from_base_test_setup["cluster_config"]
     test_mode = params_from_base_test_setup["mode"]
+
+    if test_mode == "di":
+        pytest.skip("Unsupported feature in distributed index")
 
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, test_mode)
 
