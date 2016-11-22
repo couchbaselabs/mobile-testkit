@@ -44,6 +44,10 @@ class Logging:
 
     def fetch_and_analyze_logs(self, cluster_config, test_name):
 
+        # Replace '/' with '-' to avoid strange partial naming of file
+        # when copying the file from /tmp/ to results/logs
+        test_name = test_name.replace("/", "-")
+
         zip_file_path = fetch_sync_gateway_logs(
             cluster_config=cluster_config,
             prefix=test_name

@@ -5,9 +5,9 @@ import time
 import sys
 from optparse import OptionParser
 
-from testkit.cluster import Cluster
+from libraries.testkit.cluster import Cluster
 
-from provision.ansible_runner import AnsibleRunner
+from libraries.provision.ansible_runner import AnsibleRunner
 
 import generate_gateload_configs
 

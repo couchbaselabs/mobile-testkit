@@ -1,6 +1,6 @@
 import os
 
-from provision.ansible_runner import AnsibleRunner
+from libraries.provision.ansible_runner import AnsibleRunner
 
 from keywords.utils import log_info
 

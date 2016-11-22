@@ -1,8 +1,8 @@
-from LiteServAndroid import LiteServAndroid
-from LiteServiOS import LiteServiOS
-from LiteServMacOSX import LiteServMacOSX
-from LiteServNetMono import LiteServNetMono
-from LiteServNetMsft import LiteServNetMsft
+from keywords.LiteServAndroid import LiteServAndroid
+from keywords.LiteServiOS import LiteServiOS
+from keywords.LiteServMacOSX import LiteServMacOSX
+from keywords.LiteServNetMono import LiteServNetMono
+from keywords.LiteServNetMsft import LiteServNetMsft
 
 
 class LiteServFactory:

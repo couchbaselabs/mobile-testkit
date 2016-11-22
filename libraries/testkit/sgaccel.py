@@ -1,12 +1,12 @@
 import os
 import requests
 
-import testkit.settings
+import libraries.testkit.settings
 import logging
 
-from provision.ansible_runner import AnsibleRunner
+from libraries.provision.ansible_runner import AnsibleRunner
 
-log = logging.getLogger(testkit.settings.LOGGER)
+log = logging.getLogger(libraries.testkit.settings.LOGGER)
 
 
 class SgAccel:

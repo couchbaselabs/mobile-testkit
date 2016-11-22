@@ -1,8 +1,8 @@
 import concurrent
 import concurrent.futures
-from testkit.listener import Listener
+from libraries.testkit.listener import Listener
 
-from testkit import settings
+from libraries.testkit import settings
 
 import logging
 log = logging.getLogger(settings.LOGGER)

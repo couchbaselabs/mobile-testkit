@@ -1,9 +1,7 @@
 import json
 import os
-import platform
 import sys
 import socket
-import netifaces
 
 from keywords.utils import log_info
 from keywords.utils import log_warn
@@ -158,19 +156,15 @@ def write_config(config, pool_file):
         # TODO: make the webhook receiver it's own endpoint, or come up w/ better design.
         try:
             f.write("[webhook_ip]\n")
-            if platform.system() == "Darwin":
-                # HACK: http://stackoverflow.com/questions/166506/finding-local-ip-addresses-using-pythons-stdlib
-                # Connect to Google's public DNS server and get the socketname tuple (<local_ip_address>, <port>)
-                # The 'local_ip_address' is the ip of the machine on the LAN. This will be used to run mock server
-                # for the web hook tests. It will be exposed on the LAN so that other machines on the LAN can connect to it
-                s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-                s.connect(("8.8.8.8", 80))
-                local_ip = s.getsockname()[0]
-                s.close()
-            elif platform.system() == "Linux":
-                local_ip = netifaces.ifaddresses("eth1")[2][0]["addr"]
-            else:
-                local_ip = netifaces.ifaddresses("eth0")[2][0]["addr"]
+            # HACK: http://stackoverflow.com/questions/166506/finding-local-ip-addresses-using-pythons-stdlib
+            # Connect to Google's public DNS server and get the socketname tuple (<local_ip_address>, <port>)
+            # The 'local_ip_address' is the ip of the machine on the LAN. This will be used to run mock server
+            # for the web hook tests. It will be exposed on the LAN so that other machines on the LAN can connect to it
+            s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            s.connect(("8.8.8.8", 80))
+            local_ip = s.getsockname()[0]
+            s.close()
+
             log_info("webhook ip: {}".format(local_ip))
             f.write("tf1 ansible_host={}".format(local_ip))
         except Exception as e:
@@ -211,8 +205,8 @@ def generate_clusters_from_pool(pool_file):
         ClusterDef("1sg", num_sgs=1, num_acs=0, num_cbs=0, num_lgs=0, num_lbs=0),
         ClusterDef("2sgs", num_sgs=2, num_acs=0, num_cbs=0, num_lgs=0, num_lbs=0),
         ClusterDef("1cbs", num_sgs=0, num_acs=0, num_cbs=1, num_lgs=0, num_lbs=0),
-        ClusterDef("1sg_1cbs", num_sgs=1, num_acs=0, num_cbs=1, num_lgs=0, num_lbs=0),
-        ClusterDef("1sg_1ac_1cbs", num_sgs=1, num_acs=1, num_cbs=1, num_lgs=0, num_lbs=0),
+        ClusterDef("base_cc", num_sgs=1, num_acs=0, num_cbs=1, num_lgs=0, num_lbs=0),
+        ClusterDef("base_di", num_sgs=1, num_acs=1, num_cbs=1, num_lgs=0, num_lbs=0),
         ClusterDef("1sg_1ac_1cbs_1lgs", num_sgs=1, num_acs=1, num_cbs=1, num_lgs=1, num_lbs=0),
         ClusterDef("1sg_2ac_1cbs", num_sgs=1, num_acs=2, num_cbs=1, num_lgs=0, num_lbs=0),
         ClusterDef("2sg_1cbs", num_sgs=2, num_acs=0, num_cbs=1, num_lgs=0, num_lbs=0),

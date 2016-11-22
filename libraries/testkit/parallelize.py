@@ -1,5 +1,5 @@
 import concurrent.futures
-from testkit import settings
+from libraries.testkit import settings
 import copy_reg
 import types
 from threading import Thread

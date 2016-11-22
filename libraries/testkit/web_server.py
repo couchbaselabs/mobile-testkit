@@ -3,7 +3,7 @@ import time
 import json
 from BaseHTTPServer import HTTPServer
 import threading
-from testkit import settings
+from libraries.testkit import settings
 import logging
 log = logging.getLogger(settings.LOGGER)
 

@@ -5,7 +5,7 @@ import time
 import requests
 
 from couchbase.bucket import Bucket
-from provision.ansible_runner import AnsibleRunner
+from libraries.provision.ansible_runner import AnsibleRunner
 
 from keywords.utils import log_info
 from keywords.utils import log_error
