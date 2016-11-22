@@ -8,7 +8,7 @@ import os
 import paramiko
 import traceback
 
-from provision.ansible_runner import AnsibleRunner
+from libraries.provision.ansible_runner import AnsibleRunner
 from keywords.exceptions import ProvisioningError
 
 from libraries.utilities.provisioning_config_parser import hosts_for_tag

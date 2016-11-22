@@ -5,7 +5,7 @@ from optparse import OptionParser
 
 from keywords.utils import log_info
 
-from provision.ansible_runner import AnsibleRunner
+from libraries.provision.ansible_runner import AnsibleRunner
 
 
 def fetch_machine_stats(cluster_config, folder_name):

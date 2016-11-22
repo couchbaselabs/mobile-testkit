@@ -4,7 +4,7 @@ from optparse import OptionParser
 
 from keywords.utils import log_info
 
-from testkit.cluster import Cluster
+from libraries.testkit.cluster import Cluster
 
 if __name__ == "__main__":
     usage = """usage: reset_cluster.py

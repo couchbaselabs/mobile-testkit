@@ -1,10 +1,10 @@
 import os
 import time
 
-from testkit.android import parallel_install
+from libraries.testkit.android import parallel_install
 
-from testkit import settings
-from testkit.user import User
+from libraries.testkit import settings
+from libraries.testkit.user import User
 from keywords.utils import log_info
 
 import logging
