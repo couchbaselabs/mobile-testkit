@@ -966,8 +966,10 @@ def test_replication_with_multiple_client_dbs_and_single_sync_gateway_db(setup_c
     )
 
     ls_db_one_docs, errors = client.add_docs(url=ls_url, db=ls_db1, number=num_docs, id_prefix=ls_db1)
-    ls_db_two_docs, errors = client.add_docs(url=ls_url, db=ls_db2, number=num_docs, id_prefix=ls_db2)
     assert len(ls_db_one_docs) == 1000
+    assert len(errors) == 0
+
+    ls_db_two_docs, errors = client.add_docs(url=ls_url, db=ls_db2, number=num_docs, id_prefix=ls_db2)
     assert len(ls_db_two_docs) == 1000
     assert len(errors) == 0
 
