@@ -362,49 +362,8 @@ ssh-add ~/.ssh/sample_key
 ### sync_gateway Test Excecution
 ================================
 
-**Running Functional Tests**
+[Running Functional Tests](testsuites/syncgateway/functional/tests/README.md) 
 
-Run the whole suite 
-
-```
-pytest  -s --server-version=4.5.0 \
-        --sync-gateway-version=1.3.1-16 \
-        testsuites/syncgateway/functional/
-```
-
-Run a single suite  
-
-```
-pytest  -s --server-version=4.5.0 \
-        --sync-gateway-version=1.3.1-16 \
-        testsuites/syncgateway/functional/1sg_1cbs/test_openid_connect.py
-```
-
-Run a single test   
-
-```
-pytest  -s --server-version=4.5.0 \
-        -k "test_openidconnect_basic_test" \
-        --sync-gateway-version=1.3.1-16 \
-        testsuites/syncgateway/functional/
-```
-
--k can match patterns as well (run all tests prefixed with 'test_openidconnect')
-
-```
-pytest  -s --server-version=4.5.0 \
-        -k "test_openidconnect*" \
-        --sync-gateway-version=1.3.1-16 \
-        testsuites/syncgateway/functional/
-```
-
-Running tests (using a source commit)
-
-```
-pytest  -s --server-version=4.5.0 \
-        --sync-gateway-version=8c3ee28ae746b1e4a5a98e5df3b890d2f6a559e0 \
-        testsuites/syncgateway/functional/
-```
 
 
 ### Spin Up Machines on Vagrant
