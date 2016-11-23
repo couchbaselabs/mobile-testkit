@@ -2,6 +2,7 @@ import time
 import json
 import requests
 from requests.exceptions import ConnectionError
+from requests.exceptions import HTTPError
 from requests import Session
 
 from couchbase.bucket import Bucket
@@ -18,13 +19,7 @@ from keywords.exceptions import TimeoutError
 from keywords.utils import log_r
 from keywords.utils import log_info
 from keywords.utils import log_debug
-
-
-def stream_output(stdio_file_pointer, abort_if_panic=False):
-    for line in stdio_file_pointer:
-        print(line)
-        # if abort_if_panic and "panic" in line:
-        #     raise Exception("Detected panic: {}".format(line))
+from keywords.utils import log_error
 
 
 def get_server_version(host):
@@ -308,7 +303,7 @@ class CouchbaseServer:
                     done_rebalacing = False
 
             if done_rebalacing:
-                break;
+                break
 
             time.sleep(1)
 
@@ -435,8 +430,13 @@ class CouchbaseServer:
                 log_r(resp)
                 resp.raise_for_status()
             except ConnectionError:
-                # This is expected
+                # This is expected and used to determine if a server node has gone offline
                 break
+
+            except HTTPError as e:
+                # 500 errors may happen as a result of the node going down
+                log_error(e)
+                continue
 
             time.sleep(1)
 
@@ -444,5 +444,5 @@ class CouchbaseServer:
         """Stops a running Couchbase Server via 'service couchbase-server stop'"""
 
         command = "sudo service couchbase-server stop"
-        #self.remote_executor.must_execute(command)
+        self.remote_executor.must_execute(command)
         self._verify_stopped()
