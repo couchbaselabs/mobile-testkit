@@ -55,6 +55,7 @@ def test_distributed_index_rebalance_sanity(params_from_base_test_setup):
 
     client = MobileRestClient()
     cb_server = CouchbaseServer(cbs_one_url)
+    server_to_remove = CouchbaseServer(cbs_one_url)
 
     client.create_user(admin_sg_one, sg_db, sg_user_name, sg_user_password, channels=channels)
     session = client.create_session(admin_sg_one, sg_db, sg_user_name)
@@ -71,7 +72,8 @@ def test_distributed_index_rebalance_sanity(params_from_base_test_setup):
         log_info("Updating docs on sync_gateway")
         update_docs_task = executor.submit(client.update_docs, sg_one_url, sg_db, docs, num_updates, auth=session)
 
-        rebalance_task = executor.submit(cb_server.rebalance_out, server_to_remove=cbs_two_url)
+        # Run rebalance in background
+        rebalance_task = executor.submit(cb_server.rebalance_out, server_to_remove)
         assert rebalance_task.result(), "Rebalance out unsuccessful for {}!".format(cbs_two_url)
 
         updated_docs = update_docs_task.result()
@@ -84,7 +86,7 @@ def test_distributed_index_rebalance_sanity(params_from_base_test_setup):
     client.verify_docs_in_changes(sg_one_url, sg_db, updated_docs, auth=session)
 
     # Rebalance Server back in to the pool
-    assert cb_server.rebalance_in(server_to_add=cbs_two_url), "Could not rebalance node back in .."
+    cb_server.rebalance_in(server_to_remove)
 
     # Verify all sgs and accels are still running
     cluster = Cluster()
@@ -121,12 +123,16 @@ def test_server_goes_down_sanity(params_from_base_test_setup):
 
     admin_sg = topology["sync_gateways"][0]["admin"]
     sg_url = topology["sync_gateways"][0]["public"]
-    cbs_two_url = topology["couchbase_servers"][1]
+    coucbase_servers = topology["couchbase_servers"]
+
+    cbs_one_url = coucbase_servers[0]
+    cbs_two_url = coucbase_servers[1]
 
     log_info("Running: 'test_server_goes_down_sanity'")
     log_info("cluster_config: {}".format(cluster_config))
     log_info("admin_sg: {}".format(admin_sg))
     log_info("sg_url: {}".format(sg_url))
+    log_info("cbs_one_url: {}".format(cbs_one_url))
     log_info("cbs_two_url: {}".format(cbs_two_url))
 
     sg_db = "db"
@@ -136,13 +142,19 @@ def test_server_goes_down_sanity(params_from_base_test_setup):
     channels = ["ABC", "CBS"]
 
     client = MobileRestClient()
-    cb_server = CouchbaseServer(cbs_two_url)
+    main_server = CouchbaseServer(cbs_one_url)
+    flakey_server = CouchbaseServer(cbs_two_url)
 
     client.create_user(admin_sg, sg_db, sg_user_name, sg_user_password, channels=channels)
     session = client.create_session(admin_sg, sg_db, sg_user_name)
 
     # Stop second server
-    cb_server.stop()
+    # TODO: Make async
+    flakey_server.stop()
+
+    # Wait 30 seconds for auto failover to trigger
+    log_info("Waiting 30 seconds to allow auto failover to kick in ...")
+    time.sleep(30)
 
     # Try to add 100 docs in a loop until all succeed, if the never do, fail with timeout
     errors = num_docs
@@ -153,7 +165,8 @@ def test_server_goes_down_sanity(params_from_base_test_setup):
         # Fail tests if all docs do not succeed before timeout
         if (time.time() - start) > timeout:
             # Bring server back up before failing the test
-            cb_server.start()
+            flakey_server.start()
+            main_server.rebalance_in(flakey_server)
             raise TimeoutError("Failed to successfully put docs before timeout")
 
         docs, errors = client.add_docs(url=sg_url, db=sg_db, number=num_docs, id_prefix=str(uuid.uuid4()), auth=session, allow_errors=True)
@@ -166,7 +179,9 @@ def test_server_goes_down_sanity(params_from_base_test_setup):
     # TODO: Verify _changes (basic) feed
 
     # Test succeeded without timeout, bring server back into topology
-    cb_server.start()
+    flakey_server.start()
+    main_server.recover(flakey_server)
+    main_server.rebalance_in(coucbase_servers, flakey_server)
 
     # Make sure all docs were not added before server was
     log_info("test_server_goes_down_sanity complete!")

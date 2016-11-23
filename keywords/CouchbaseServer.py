@@ -62,8 +62,6 @@ class CouchbaseServer:
     """ Installs Couchbase Server on machine host"""
 
     def __init__(self, url):
-        self._headers = {"Content-Type": "application/json"}
-        self._auth = ("Administrator", "password")
         self.url = url
 
         # Strip http prefix and port to store host
@@ -73,11 +71,12 @@ class CouchbaseServer:
         self.remote_executor = RemoteExecutor(self.host)
 
         self._session = Session()
+        self._session.auth = ("Administrator", "password")
 
     def delete_buckets(self):
         count = 0
         while count < 3:
-            resp = self._session.get("{}/pools/default/buckets".format(self.url), auth=self._auth, headers=self._headers)
+            resp = self._session.get("{}/pools/default/buckets".format(self.url))
             log_r(resp)
             resp.raise_for_status()
 
@@ -94,7 +93,7 @@ class CouchbaseServer:
             delete_num = 0
             # Delete existing buckets
             for bucket_name in existing_bucket_names:
-                resp = requests.delete("{0}/pools/default/buckets/{1}".format(self.url, bucket_name), auth=self._auth, headers=self._headers)
+                resp = self._session.delete("{0}/pools/default/buckets/{1}".format(self.url, bucket_name))
                 log_r(resp)
                 if resp.status_code == 200:
                     delete_num += 1
@@ -122,8 +121,13 @@ class CouchbaseServer:
                 raise Exception("Verify Docs Present: TIMEOUT")
 
             # Verfy the server is in a "healthy", not "warmup" state
-            resp = self._session.get("{}/pools/nodes".format(self.url), auth=self._auth, headers=self._headers)
-            log_r(resp)
+            try:
+                resp = self._session.get("{}/pools/nodes".format(self.url))
+                log_r(resp)
+            except ConnectionError:
+                # If bringing a server online, there may be some connnection issues. Continue and try again.
+                time.sleep(1)
+                continue
 
             resp_obj = resp.json()
 
@@ -146,7 +150,7 @@ class CouchbaseServer:
         """
         Call the Couchbase REST API to get the total memory available on the machine
         """
-        resp = requests.get("{}/pools/default".format(self.url), auth=self._auth)
+        resp = self._session.get("{}/pools/default".format(self.url))
         resp.raise_for_status()
         resp_json = resp.json()
 
@@ -200,7 +204,7 @@ class CouchbaseServer:
             "flushEnabled": "1"
         }
 
-        resp = requests.post("{}/pools/default/buckets".format(self.url), auth=self._auth, data=data)
+        resp = self._session.post("{}/pools/default/buckets".format(self.url), data=data)
         log_r(resp)
         resp.raise_for_status()
 
@@ -234,10 +238,8 @@ class CouchbaseServer:
         Deletes docs that follow the below format
         _sync:rev:att_doc:34:1-e7fa9a5e6bb25f7a40f36297247ca93e
         """
-        client_host = self.replace("http://", "")
-        client_host = client_host.replace(":8091", "")
 
-        b = Bucket("couchbase://{}/{}".format(client_host, bucket))
+        b = Bucket("couchbase://{}/{}".format(self.host, bucket))
 
         cached_rev_doc_ids = []
         b.n1ql_query("CREATE PRIMARY INDEX ON `{}`".format(bucket)).execute()
@@ -287,7 +289,7 @@ class CouchbaseServer:
             if time.time() - start > keywords.constants.REBALANCE_TIMEOUT:
                 raise Exception("wait_for_rebalance_complete: TIMEOUT")
 
-            resp = requests.get("{}/pools/default/tasks".format(url), auth=self._auth)
+            resp = self._session.get("{}/pools/default/tasks".format(url))
             log_r(resp)
             resp.raise_for_status()
 
@@ -307,16 +309,17 @@ class CouchbaseServer:
 
             time.sleep(1)
 
-    def _add_node(self, server_to_add):
+    def add_node(self, server_to_add):
         """
         Add the server_to_add to a Couchbase Server cluster
-        admin_server format:    http://localhost:8091
-        server_to_add format:   http://localhost:8091
         """
+
+        if not isinstance(server_to_add, CouchbaseServer):
+            raise TypeError("'server_to_add' must be a 'CouchbaseServer'")
 
         log_info("Adding server node {} to cluster ...".format(server_to_add))
         data = "hostname={}&user=Administrator&password=password&services=kv".format(
-            self.host
+            server_to_add.host
         )
 
         # HACK: Retries added to handle the following scenario.
@@ -330,10 +333,10 @@ class CouchbaseServer:
             if time.time() - start > keywords.constants.CLIENT_REQUEST_TIMEOUT:
                 raise Exception("wait_for_rebalance_complete: TIMEOUT")
 
-            resp = requests.post(
+            # Override session headers for this one off request
+            resp = self._session.post(
                 "{}/controller/addNode".format(self.url),
                 headers={"Content-Type": "application/x-www-form-urlencoded"},
-                auth=self._auth,
                 data=data
             )
 
@@ -351,24 +354,21 @@ class CouchbaseServer:
         """
         Issues a call to the admin_serve to remove a server from a pool.
         Then wait for rebalance to complete.
-        admin_server format:        http://localhost:8091
-        server_to_remove format:    http://localhost:8091
         """
+        if not isinstance(server_to_remove, CouchbaseServer):
+            raise TypeError("'server_to_remove' must be a 'CouchbaseServer'")
 
-        server_to_remove_stripped = server_to_remove.replace("http://", "")
-        server_to_remove_stripped = server_to_remove_stripped.replace(":8091", "")
-
-        log_info("Starting rebalance out: {}".format(server_to_remove))
+        log_info("Starting rebalance out: {}".format(server_to_remove.host))
         data = "ejectedNodes=ns_1@{}&knownNodes=ns_1@{},ns_1@{}".format(
-            server_to_remove_stripped,
+            server_to_remove.host,
             self.host,
-            server_to_remove_stripped
+            server_to_remove.host
         )
 
-        resp = requests.post(
+        # Override session headers for this one off request
+        resp = self._session.post(
             "{}/controller/rebalance".format(self.url),
             headers={"Content-Type": "application/x-www-form-urlencoded"},
-            auth=self._auth,
             data=data
         )
         log_r(resp)
@@ -378,30 +378,36 @@ class CouchbaseServer:
 
         return True
 
-    def rebalance_in(self, server_to_add):
+    def rebalance_in(self, cluster_servers, server_to_add):
         """
         Adds a server from a pool and waits for rebalance to complete.
-        admin_server format:    http://localhost:8091
-        server_to_add format:   http://localhost:8091
+        cluster_servers should be a list of endpoints running Couchbase server.
+            ex. ["http:192.168.33.10:8091", "http:192.168.33.11:8091", ...]
         """
 
-        server_to_add_stripped = server_to_add.replace("http://", "")
-        server_to_add_stripped = server_to_add_stripped.replace(":8091", "")
+        if not isinstance(server_to_add, CouchbaseServer):
+            raise TypeError("'server_to_add' must be a 'CouchbaseServer'")
 
-        # Add node
-        self._add_node(server_to_add)
+        # Add all servers except server_to_add to known nodes
+        known_nodes = "knownNodes="
+        for server in cluster_servers:
+            server = server.replace("http://", "")
+            server = server.replace(":8091", "")
+
+            if server_to_add.host != server:
+                known_nodes += "ns_1@{},".format(server)
+
+        # Add server_to_add to known nodes
+        data = "{}ns_1@{}".format(known_nodes, server_to_add.host)
 
         # Rebalance nodes
-        log_info("Starting rebalance in: {}".format(server_to_add))
-        data = "knownNodes=ns_1@{},ns_1@{}".format(
-            self.host,
-            server_to_add_stripped
-        )
+        log_info("Starting rebalance in for {}".format(server_to_add))
+        log_info("Known nodes: {}".format(data))
 
-        resp = requests.post(
+        # Override session headers for this one off request
+        resp = self._session.post(
             "{}/controller/rebalance".format(self.url),
             headers={"Content-Type": "application/x-www-form-urlencoded"},
-            auth=self._auth,
             data=data
         )
         log_r(resp)
@@ -410,6 +416,25 @@ class CouchbaseServer:
         self._wait_for_rebalance_complete(self.url)
 
         return True
+
+    def recover(self, server_to_recover):
+
+        if not isinstance(server_to_recover, CouchbaseServer):
+            raise TypeError("'server_to_add' must be a 'CouchbaseServer'")
+
+        log_info("Setting recover mode to 'delta' for server {}".format(server_to_recover.host))
+        data = "otpNode=ns_1@{}&recoveryType=delta".format(server_to_recover.host)
+        # Override session headers for this one off request
+        resp = self._session.post(
+            "{}/controller/setRecoveryType".format(self.url),
+            headers={"Content-Type": "application/x-www-form-urlencoded"},
+            data=data
+        )
+
+        log_r(resp)
+        resp.raise_for_status()
+
+        # TODO reset Quota
 
     def start(self):
         """Starts a running Couchbase Server via 'service couchbase-server start'"""
