@@ -350,7 +350,7 @@ class CouchbaseServer:
                 log_info("{}: Could not add {} to cluster. Retrying ...".format(resp.status_code, server_to_add))
                 time.sleep(1)
 
-    def rebalance_out(self, server_to_remove):
+    def rebalance_out(self, cluster_servers, server_to_remove):
         """
         Issues a call to the admin_serve to remove a server from a pool.
         Then wait for rebalance to complete.
@@ -358,13 +358,18 @@ class CouchbaseServer:
         if not isinstance(server_to_remove, CouchbaseServer):
             raise TypeError("'server_to_remove' must be a 'CouchbaseServer'")
 
-        log_info("Starting rebalance out: {}".format(server_to_remove.host))
-        data = "ejectedNodes=ns_1@{}&knownNodes=ns_1@{},ns_1@{}".format(
-            server_to_remove.host,
-            self.host,
-            server_to_remove.host
-        )
+        # Add all servers except server_to_add to known nodes
+        known_nodes = "knownNodes="
+        for server in cluster_servers:
+            server = server.replace("http://", "")
+            server = server.replace(":8091", "")
+            known_nodes += "ns_1@{},".format(server)
 
+        # Add server_to_add to known nodes
+        ejected_node = "ejectedNodes=ns_1@{}".format(server_to_remove.host)
+        data = "{}&{}".format(ejected_node, known_nodes)
+
+        log_info("Starting rebalance out: {} with nodes {}".format(server_to_remove.host, data))
         # Override session headers for this one off request
         resp = self._session.post(
             "{}/controller/rebalance".format(self.url),

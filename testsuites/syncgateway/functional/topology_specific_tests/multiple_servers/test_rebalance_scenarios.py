@@ -36,8 +36,10 @@ def test_distributed_index_rebalance_sanity(params_from_base_test_setup):
 
     admin_sg_one = topology["sync_gateways"][0]["admin"]
     sg_one_url = topology["sync_gateways"][0]["public"]
-    cbs_one_url = topology["couchbase_servers"][0]
-    cbs_two_url = topology["couchbase_servers"][1]
+
+    cluster_servers = topology["couchbase_servers"]
+    cbs_one_url = cluster_servers[0]
+    cbs_two_url = cluster_servers[1]
 
     log_info("Running: 'test_distributed_index_rebalance_sanity'")
     log_info("cluster_config: {}".format(cluster_config))
@@ -55,7 +57,7 @@ def test_distributed_index_rebalance_sanity(params_from_base_test_setup):
 
     client = MobileRestClient()
     cb_server = CouchbaseServer(cbs_one_url)
-    server_to_remove = CouchbaseServer(cbs_one_url)
+    server_to_remove = CouchbaseServer(cbs_two_url)
 
     client.create_user(admin_sg_one, sg_db, sg_user_name, sg_user_password, channels=channels)
     session = client.create_session(admin_sg_one, sg_db, sg_user_name)
@@ -73,8 +75,7 @@ def test_distributed_index_rebalance_sanity(params_from_base_test_setup):
         update_docs_task = executor.submit(client.update_docs, sg_one_url, sg_db, docs, num_updates, auth=session)
 
         # Run rebalance in background
-        rebalance_task = executor.submit(cb_server.rebalance_out, server_to_remove)
-        assert rebalance_task.result(), "Rebalance out unsuccessful for {}!".format(cbs_two_url)
+        cb_server.rebalance_out(cluster_servers, server_to_remove)
 
         updated_docs = update_docs_task.result()
         log_info(updated_docs)
@@ -86,10 +87,11 @@ def test_distributed_index_rebalance_sanity(params_from_base_test_setup):
     client.verify_docs_in_changes(sg_one_url, sg_db, updated_docs, auth=session)
 
     # Rebalance Server back in to the pool
-    cb_server.rebalance_in(server_to_remove)
+    cb_server.add_node(server_to_remove)
+    cb_server.rebalance_in(cluster_servers, server_to_remove)
 
     # Verify all sgs and accels are still running
-    cluster = Cluster()
+    cluster = Cluster(cluster_config)
     errors = cluster.verify_alive(mode)
     assert len(errors) == 0
 
