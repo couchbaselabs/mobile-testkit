@@ -151,16 +151,13 @@ def test_server_goes_down_sanity(params_from_base_test_setup):
     session = client.create_session(admin_sg, sg_db, sg_user_name)
 
     # Stop second server
-    # TODO: Make async
     flakey_server.stop()
-
-    # Wait 30 seconds for auto failover to trigger
-    log_info("Waiting 30 seconds to allow auto failover to kick in ...")
-    time.sleep(30)
 
     # Try to add 100 docs in a loop until all succeed, if the never do, fail with timeout
     errors = num_docs
-    timeout = 15
+
+    # Wait 30 seconds for auto failover to trigger + 15 seconds to add docs
+    timeout = 45
     start = time.time()
 
     while errors != 0:
@@ -168,7 +165,7 @@ def test_server_goes_down_sanity(params_from_base_test_setup):
         if (time.time() - start) > timeout:
             # Bring server back up before failing the test
             flakey_server.start()
-            main_server.rebalance_in(flakey_server)
+            main_server.rebalance_in(coucbase_servers, flakey_server)
             raise TimeoutError("Failed to successfully put docs before timeout")
 
         docs, errors = client.add_docs(url=sg_url, db=sg_db, number=num_docs, id_prefix=str(uuid.uuid4()), auth=session, allow_errors=True)
