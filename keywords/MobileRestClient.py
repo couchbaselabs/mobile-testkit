@@ -1032,6 +1032,8 @@ class MobileRestClient:
 
     def add_docs(self, url, db, number, id_prefix=None, auth=None, channels=None, generator=None):
         """
+        if id_prefix == None, generate a uuid for each doc
+
         Add a 'number' of docs with a prefix 'id_prefix' using the provided generator from libraries.data.doc_generators.
         ex. id_prefix=testdoc with a number of 3 would create 'testdoc_0', 'testdoc_1', and 'testdoc_2'
         """
@@ -1040,11 +1042,6 @@ class MobileRestClient:
 
         if channels is not None:
             types.verify_is_list(channels)
-
-        if id_prefix is None:
-            use_uuid_doc_ids = True
-        else:
-            use_uuid_doc_ids = False
 
         log_info("PUT {} docs to {}/{}/ with prefix {}".format(number, url, db, id_prefix))
 
@@ -1058,12 +1055,12 @@ class MobileRestClient:
             if channels is not None:
                 doc_body["channels"] = channels
 
-            if use_uuid_doc_ids:
+            data = json.dumps(doc_body)
+
+            if id_prefix is None:
                 doc_id = str(uuid.uuid4())
             else:
                 doc_id = "{}_{}".format(id_prefix, i)
-
-            data = json.dumps(doc_body)
 
             if auth_type == AuthType.session:
                 resp = self._session.put("{}/{}/{}".format(url, db, doc_id), data=data, cookies=dict(SyncGatewaySession=auth[1]))
@@ -1449,6 +1446,7 @@ class MobileRestClient:
                     all_docs_returned = False
 
             logging.debug("Missing Docs = {}".format(missing_docs))
+            log_info("Num found docs: {}".format(len(resp_obj["rows"]) - len(missing_docs)))
             log_info("Num missing docs: {}".format(len(missing_docs)))
             # Issue the request again, docs my still be replicating
             if not all_docs_returned:

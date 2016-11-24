@@ -160,6 +160,9 @@ def test_server_goes_down_sanity(params_from_base_test_setup):
     timeout = 45
     start = time.time()
 
+    # TODO - handle the case where partial docs are added during the moment of failover
+    added_docs = {}
+
     while errors != 0:
         # Fail tests if all docs do not succeed before timeout
         if (time.time() - start) > timeout:
@@ -168,14 +171,16 @@ def test_server_goes_down_sanity(params_from_base_test_setup):
             main_server.rebalance_in(coucbase_servers, flakey_server)
             raise TimeoutError("Failed to successfully put docs before timeout")
 
-        docs, errors = client.add_docs(url=sg_url, db=sg_db, number=num_docs, id_prefix=str(uuid.uuid4()), auth=session, allow_errors=True)
+        docs, errors = client.add_docs(url=sg_url, db=sg_db, number=num_docs, id_prefix=None, auth=session, allow_errors=True)
+
         errors = len(errors)
         log_info("Seeing: {} errors".format(errors))
 
         time.sleep(1)
 
-    # TODO: Verify GET (bulk) of docs
-    # TODO: Verify _changes (basic) feed
+    assert len(docs) == 100
+    client.verify_docs_present(url=sg_url, db=sg_db, expected_docs=docs, auth=session)
+    client.verify_docs_in_changes(url=sg_url, db=sg_db, expected_docs=docs, auth=session)
 
     # Test succeeded without timeout, bring server back into topology
     flakey_server.start()
