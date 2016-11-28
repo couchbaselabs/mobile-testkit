@@ -1365,6 +1365,48 @@ class MobileRestClient:
 
             break
 
+    def get_changes(self, url, db, since, auth, timeout=60):
+        """
+        Issues a longpoll changes request with a provided since and authentication.
+        The timeout is in seconds.
+        Returns a python dictionary of the changes response in the format:
+
+        {u'last_seq': u'2', u'results': [{u'changes': [], u'id': u'_user/adam', u'seq': 2}]}
+        """
+
+        # Convert to ms for the sync_gateway REST api
+        timeout *= 1000
+
+        auth_type = get_auth_type(auth)
+        server_type = self.get_server_type(url)
+
+        if server_type == ServerType.listener:
+            resp = self._session.get("{}/{}/_changes?feed=longpoll&since={}".format(url, db, since))
+
+        elif server_type == ServerType.syncgateway:
+            body = {
+                "feed": "longpoll",
+                "since": since,
+                "timeout": timeout
+            }
+
+            log_info("Using POST data: {}".format(body))
+
+            if auth_type == AuthType.session:
+                resp = self._session.post("{}/{}/_changes".format(url, db), data=json.dumps(body), cookies=dict(SyncGatewaySession=auth[1]))
+            elif auth_type == AuthType.http_basic:
+                resp = self._session.post("{}/{}/_changes".format(url, db), data=json.dumps(body), auth=auth)
+            else:
+                resp = self._session.post("{}/{}/_changes".format(url, db), data=json.dumps(body))
+
+        log_r(resp)
+        resp.raise_for_status()
+        resp_obj = resp.json()
+
+        log_info("Found {} changes".format(len(resp_obj["results"])))
+
+        return resp_obj
+
     def verify_docs_in_changes(self, url, db, expected_docs, auth=None):
         """
         Verifies the expected docs are present in the database _changes feed using longpoll in a loop with
@@ -1374,8 +1416,6 @@ class MobileRestClient:
         expected_docs should be a dict {id: {rev: ""}} or
         a list of {id: {rev: ""}}. If the expected docs are a list, they will be converted to a single map.
         """
-
-        auth_type = get_auth_type(auth)
 
         if isinstance(expected_docs, list):
             # Create single dictionary for comparison, will also blow up for duplicate docs with the same id
@@ -1388,7 +1428,6 @@ class MobileRestClient:
 
         log_info("Verify {}/{} has {} docs in changes".format(url, db, len(expected_doc_map)), is_verify=True)
 
-        server_type = self.get_server_type(url)
         sequence_number_map = {}
 
         start = time.time()
@@ -1400,25 +1439,7 @@ class MobileRestClient:
             if time.time() - start > CLIENT_REQUEST_TIMEOUT:
                 raise TimeoutException("Verify Docs In Changes: TIMEOUT")
 
-            if server_type == ServerType.listener:
-                resp = self._session.get("{}/{}/_changes?feed=longpoll&since={}".format(url, db, last_seq))
-
-            elif server_type == ServerType.syncgateway:
-                body = {
-                    "feed": "longpoll",
-                    "since": last_seq
-                }
-
-                if auth_type == AuthType.session:
-                    resp = self._session.post("{}/{}/_changes".format(url, db), data=json.dumps(body), cookies=dict(SyncGatewaySession=auth[1]))
-                elif auth_type == AuthType.http_basic:
-                    resp = self._session.post("{}/{}/_changes".format(url, db), data=json.dumps(body), auth=auth)
-                else:
-                    resp = self._session.post("{}/{}/_changes".format(url, db), data=json.dumps(body))
-
-            log_r(resp)
-            resp.raise_for_status()
-            resp_obj = resp.json()
+            resp_obj = self.get_changes(url=url, db=db, since=last_seq, auth=auth)
 
             missing_expected_docs = []
             for resp_doc in resp_obj["results"]:
