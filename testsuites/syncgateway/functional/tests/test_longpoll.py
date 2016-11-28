@@ -231,16 +231,51 @@ def test_longpoll_awaken_doc_add(params_from_base_test_setup, sg_conf_name):
         assert len(andy_changes["results"]) == 1
         assert andy_changes["results"][0]["id"] == "andy_doc_0"
 
+        # Start another longpoll changes request
+        adam_changes_task = ex.submit(client.get_changes, url=sg_url, db=sg_db, since=adam_changes["last_seq"], auth=adam_auth)
+        traun_changes_task = ex.submit(client.get_changes, url=sg_url, db=sg_db, since=traun_changes["last_seq"], auth=traun_auth)
+        andy_changes_task = ex.submit(client.get_changes, url=sg_url, db=sg_db, since=andy_changes["last_seq"], auth=andy_auth)
 
+        # make sure longpoll goes to a wait state
+        log_info("Sleeping (2 sec) to allow longpoll to enter waiting state ...")
+        time.sleep(2)
 
+        # Check to see that doc updates wake up changes feed
+        adam_update_docs_task = ex.submit(client.update_docs, url=sg_url, db=sg_db, docs=adam_docs, number_updates=100, auth=adam_auth)
+        traun_update_docs_task = ex.submit(client.update_docs, url=sg_url, db=sg_db, docs=traun_docs, number_updates=100, auth=traun_auth)
+        andy_update_docs_task = ex.submit(client.update_docs, url=sg_url, db=sg_db, docs=andy_docs, number_updates=100, auth=andy_auth)
 
-    # Verify that all changes show up eventually
-    # client.verify_docs_in_changes(url=sg_url, db=sg_db, expected_docs=adam_docs, auth=adam_auth)
-    # client.verify_docs_in_changes(url=sg_url, db=sg_db, expected_docs=traun_docs, auth=traun_auth)
-    # client.verify_docs_in_changes(url=sg_url, db=sg_db, expected_docs=andy_docs, auth=andy_auth)
+        # Wait for docs updates to complete
+        adam_updated_docs = adam_update_docs_task.result()
+        assert len(adam_updated_docs) == 1
+        assert adam_updated_docs[0]["rev"].startswith("101-")
 
-    import pdb
-    pdb.set_trace()
+        traun_updated_docs = traun_update_docs_task.result()
+        assert len(traun_updated_docs) == 1
+        assert traun_updated_docs[0]["rev"].startswith("101-")
+
+        andy_updated_docs = andy_update_docs_task.result()
+        assert len(andy_updated_docs) == 1
+        assert andy_updated_docs[0]["rev"].startswith("101-")
+
+        # Assert that the changes feed woke up and that the doc updates was propagated
+        adam_changes = adam_changes_task.result()
+        assert len(adam_changes["results"]) == 1
+        assert adam_changes["results"][0]["id"] == "adam_doc_0"
+        rev_from_change = int(adam_changes["results"][0]["changes"][0]["rev"].split("-")[0])
+        assert 1 < rev_from_change <= 101
+
+        traun_changes = traun_changes_task.result()
+        assert len(traun_changes["results"]) == 1
+        assert traun_changes["results"][0]["id"] == "traun_doc_0"
+        rev_from_change = int(traun_changes["results"][0]["changes"][0]["rev"].split("-")[0])
+        assert 1 < rev_from_change <= 101
+
+        andy_changes = andy_changes_task.result()
+        assert len(andy_changes["results"]) == 1
+        assert andy_changes["results"][0]["id"] == "andy_doc_0"
+        rev_from_change = int(andy_changes["results"][0]["changes"][0]["rev"].split("-")[0])
+        assert 1 < rev_from_change <= 101
 
     # Verify all sync_gateways are running
     errors = cluster.verify_alive(mode)
