@@ -904,7 +904,7 @@ class MobileRestClient:
         logging.debug("url: {} db: {} updated: {}".format(url, db, updated_docs))
         return updated_docs
 
-    def update_doc(self, url, db, doc_id, number_updates=1, attachment_name=None, expiry=None, delay=None, auth=None):
+    def update_doc(self, url, db, doc_id, number_updates=1, attachment_name=None, expiry=None, delay=None, auth=None, channels=None):
         """
         Updates a doc on a db a number of times.
             1. GETs the doc
@@ -936,6 +936,9 @@ class MobileRestClient:
 
             if expiry is not None:
                 doc["_exp"] = expiry
+
+            if channels is not None:
+                doc["channels"] = channels
 
             if auth_type == AuthType.session:
                 resp = self._session.put("{}/{}/{}".format(url, db, doc_id), data=json.dumps(doc), cookies=dict(SyncGatewaySession=auth[1]))
@@ -1390,7 +1393,7 @@ class MobileRestClient:
 
             break
 
-    def get_changes(self, url, db, since, auth, timeout=60):
+    def get_changes(self, url, db, since, auth, feed="longpoll", timeout=60):
         """
         Issues a longpoll changes request with a provided since and authentication.
         The timeout is in seconds.
@@ -1406,11 +1409,11 @@ class MobileRestClient:
         server_type = self.get_server_type(url)
 
         if server_type == ServerType.listener:
-            resp = self._session.get("{}/{}/_changes?feed=longpoll&since={}".format(url, db, since))
+            resp = self._session.get("{}/{}/_changes?feed={}&since={}".format(url, db, feed, since))
 
         elif server_type == ServerType.syncgateway:
             body = {
-                "feed": "longpoll",
+                "feed": feed,
                 "since": since,
                 "timeout": timeout
             }
@@ -1431,6 +1434,31 @@ class MobileRestClient:
         log_info("Found {} changes".format(len(resp_obj["results"])))
 
         return resp_obj
+
+    def verify_doc_id_in_changes(self, url, db, expected_doc_id, auth=None):
+        """ Verifies 'expected_doc_id' shows up in the changes feed starting with a since of 0
+        if the doc is not found before CLIENT_REQUEST_TIMEOUT, an exception is raised. If it is found,
+        return the last sequence that includes the doc
+        """
+
+        start = time.time()
+
+        last_seq = 0
+        while True:
+
+            if time.time() - start > CLIENT_REQUEST_TIMEOUT:
+                raise TimeoutException("Verify Docs In Changes: TIMEOUT")
+
+            resp_obj = self.get_changes(url=url, db=db, since=last_seq, auth=auth)
+            doc_ids_in_changes = [change["id"] for change in resp_obj["results"]]
+
+            if expected_doc_id in doc_ids_in_changes:
+                last_seq = resp_obj["last_seq"]
+                log_info("{} found at last_seq: {}".format(expected_doc_id, last_seq))
+                return last_seq
+            else:
+                log_info("'{}' not found retrying ...".format(expected_doc_id))
+                time.sleep(1)
 
     def verify_docs_in_changes(self, url, db, expected_docs, auth=None):
         """
