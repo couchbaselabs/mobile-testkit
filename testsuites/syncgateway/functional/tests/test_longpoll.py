@@ -14,9 +14,10 @@ from keywords.ClusterKeywords import ClusterKeywords
 from keywords.SyncGateway import sync_gateway_config_path_for_mode
 from keywords.utils import log_info
 from keywords.MobileRestClient import MobileRestClient
-from keywords.ChangesTracker import ChangesTracker
+
 
 UserInfo = collections.namedtuple("UserInfo", ["name", "password", "channels"])
+
 
 @pytest.mark.sanity
 @pytest.mark.syncgateway
@@ -144,20 +145,16 @@ def test_longpoll_changes_sanity(params_from_base_test_setup, sg_conf_name, num_
 @pytest.mark.parametrize("sg_conf_name", [
     "sync_gateway_default_functional_tests",
 ])
-def test_longpoll_awaken_doc_add(params_from_base_test_setup, sg_conf_name):
+def test_longpoll_awaken_doc_add_update(params_from_base_test_setup, sg_conf_name):
 
     cluster_conf = params_from_base_test_setup["cluster_config"]
-
     mode = params_from_base_test_setup["mode"]
-    sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
+    cluster_topology = params_from_base_test_setup["cluster_topology"]
 
-    cluster_utils = ClusterKeywords()
-    cluster_topology = cluster_utils.get_cluster_topology(cluster_conf)
+    sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
     sg_admin_url = cluster_topology["sync_gateways"][0]["admin"]
     sg_url = cluster_topology["sync_gateways"][0]["public"]
 
-    log_info("Running: 'test_longpoll_awaken_doc_add': {}".format(cluster_conf))
-    log_info("cluster_conf: {}".format(cluster_conf))
     log_info("sg_conf: {}".format(sg_conf))
     log_info("sg_admin_url: {}".format(sg_admin_url))
     log_info("sg_url: {}".format(sg_url))
@@ -282,3 +279,106 @@ def test_longpoll_awaken_doc_add(params_from_base_test_setup, sg_conf_name):
     assert len(errors) == 0
 
 
+@pytest.mark.sanity
+@pytest.mark.syncgateway
+@pytest.mark.changes
+@pytest.mark.parametrize("sg_conf_name", [
+    "sync_gateway_default_functional_tests",
+])
+def test_longpoll_awaken_channels(params_from_base_test_setup, sg_conf_name):
+
+    cluster_conf = params_from_base_test_setup["cluster_config"]
+    cluster_topology = params_from_base_test_setup["cluster_topology"]
+    mode = params_from_base_test_setup["mode"]
+
+    sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
+    sg_admin_url = cluster_topology["sync_gateways"][0]["admin"]
+    sg_url = cluster_topology["sync_gateways"][0]["public"]
+
+    log_info("sg_conf: {}".format(sg_conf))
+    log_info("sg_admin_url: {}".format(sg_admin_url))
+    log_info("sg_url: {}".format(sg_url))
+
+    cluster = Cluster(config=cluster_conf)
+    mode = cluster.reset(sg_config_path=sg_conf)
+
+    adam_user_info = UserInfo("adam", "Adampass1", ["NBC", "ABC"])
+    traun_user_info = UserInfo("traun", "Traunpass1", [])
+    andy_user_info = UserInfo("andy", "Andypass1", [])
+    sg_db = "db"
+
+    client = MobileRestClient()
+
+    adam_auth = client.create_user(url=sg_admin_url, db=sg_db,
+                                   name=adam_user_info.name, password=adam_user_info.password, channels=adam_user_info.channels)
+
+    traun_auth = client.create_user(url=sg_admin_url, db=sg_db,
+                                    name=traun_user_info.name, password=traun_user_info.password, channels=traun_user_info.channels)
+
+    andy_auth = client.create_user(url=sg_admin_url, db=sg_db,
+                                   name=andy_user_info.name, password=andy_user_info.password, channels=andy_user_info.channels)
+
+    # Get starting sequence of docs, use the last seq to progress past any _user docs. This is not needed for
+    # Traun and Andy since they have not channels associated with them
+    adam_changes = client.get_changes(url=sg_url, db=sg_db, since=0, timeout=2, auth=adam_auth)
+
+    # TODO: Channel Access via Sync function
+    # TODO: Channel Removal via Sync function
+    with concurrent.futures.ProcessPoolExecutor() as ex:
+
+        # Start changes feed for 3 users
+        adam_changes_task = ex.submit(client.get_changes, url=sg_url, db=sg_db, since=adam_changes["last_seq"], timeout=10, auth=adam_auth)
+        traun_changes_task = ex.submit(client.get_changes, url=sg_url, db=sg_db, since=0, timeout=10, auth=traun_auth)
+        andy_changes_task = ex.submit(client.get_changes, url=sg_url, db=sg_db, since=0, timeout=10, auth=andy_auth)
+
+        # Wait for changes feed to notice there are no changes and enter wait. 2 seconds should be more than enough
+        time.sleep(2)
+
+        # Add add a doc for adam with "NBC" channels
+        # Add one doc, this should wake up the changes feed
+        adam_add_docs_task = ex.submit(client.add_docs, url=sg_url, db=sg_db,
+                                       number=1, id_prefix="adam_doc",
+                                       auth=adam_auth, channels=adam_user_info.channels)
+
+        # Wait for docs adds to complete
+        adam_docs = adam_add_docs_task.result()
+        assert len(adam_docs) == 1
+
+        # Assert that the changes feed woke up and that the doc change was propagated
+        adam_changes = adam_changes_task.result()
+        assert len(adam_changes["results"]) == 1
+        assert adam_changes["results"][0]["id"] == "adam_doc_0"
+
+        # Verify that the changes feed is still listening for Traun and Andy
+        assert not traun_changes_task.done()
+        assert not andy_changes_task.done()
+
+        # Update the traun and andy to have one of adam's channels
+        update_traun_user_task = ex.submit(client.update_user, url=sg_admin_url, db=sg_db,
+                                           name=traun_user_info.name, password=traun_user_info.password, channels=["NBC"])
+        traun_auth_updated = update_traun_user_task.result()
+
+        update_andy_user_task = ex.submit(client.update_user, url=sg_admin_url, db=sg_db,
+                                          name=andy_user_info.name, password=andy_user_info.password, channels=["ABC"])
+        andy_auth_updated = update_andy_user_task.result()
+
+        # Make sure changes feed wakes up and contains at least one change
+        traun_changes = traun_changes_task.result()
+        assert 1 <= len(traun_changes["results"]) <= 2
+        changed_doc_ids = [change["id"] for change in traun_changes["results"]]
+        log_info("Changed doc_ids: {}".format(changed_doc_ids))
+        assert "adam_doc_0" in changed_doc_ids or "_user/traun" in changed_doc_ids
+
+        andy_changes = andy_changes_task.result()
+        assert 1 <= len(andy_changes["results"]) <= 2
+        changed_doc_ids = [change["id"] for change in andy_changes["results"]]
+        log_info("Changed doc_ids: {}".format(changed_doc_ids))
+        assert "adam_doc_0" in changed_doc_ids or "_user/andy" in changed_doc_ids
+
+    # Make sure that adams doc shows up in changes due to the fact that the changes feed may be woken up with a _user doc above
+    client.verify_docs_in_changes(url=sg_url, db=sg_db, expected_docs=adam_docs, auth=traun_auth_updated)
+    client.verify_docs_in_changes(url=sg_url, db=sg_db, expected_docs=adam_docs, auth=andy_auth_updated)
+
+    # Verify all sync_gateways are running
+    errors = cluster.verify_alive(mode)
+    assert len(errors) == 0

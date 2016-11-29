@@ -261,7 +261,14 @@ class MobileRestClient:
             log_r(resp)
             resp.raise_for_status()
 
-    def create_user(self, url, db, name, password, channels=[]):
+    def create_user(self, url, db, name, password, channels=None):
+        """ Creates a user with channels on the sync_gateway Admin REST API.
+        Returns a name password tuple that can be used for session creation or basic authentication
+        """
+
+        if channels is None:
+            channels = []
+
         data = {
             "name": name,
             "password": password,
@@ -270,7 +277,25 @@ class MobileRestClient:
         resp = self._session.post("{}/{}/_user/".format(url, db), data=json.dumps(data))
         log_r(resp)
         resp.raise_for_status()
-        return (name, password)
+        return name, password
+
+    def update_user(self, url, db, name, password, channels=None):
+        """ Updates a user via the admin REST api
+        Returns a name password tuple that can be used for session creation or basic authentication
+        """
+
+        if channels is None:
+            channels = []
+
+        data = {
+            "name": name,
+            "password": password,
+            "admin_channels": channels
+        }
+        resp = self._session.put("{}/{}/_user/{}".format(url, db, name), data=json.dumps(data))
+        log_r(resp)
+        resp.raise_for_status()
+        return name, password
 
     def create_database(self, url, name, server=None):
         """
@@ -1466,7 +1491,7 @@ class MobileRestClient:
                 break
 
             # update last sequence and continue
-            last_seq = int(resp_obj["last_seq"])
+            last_seq = resp_obj["last_seq"]
             logging.info("last_seq: {}".format(last_seq))
 
             time.sleep(1)

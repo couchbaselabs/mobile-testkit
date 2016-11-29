@@ -67,7 +67,15 @@ def params_from_base_suite_setup(request):
             sync_gateway_config=sg_config
         )
 
-    yield {"cluster_config": cluster_config, "mode": mode}
+    # Load topology as a dictionary
+    cluster_utils = ClusterKeywords()
+    cluster_topology = cluster_utils.get_cluster_topology(cluster_config)
+
+    yield {
+        "cluster_config": cluster_config,
+        "cluster_topology": cluster_topology,
+        "mode": mode
+    }
 
     log_info("Tearing down 'params_from_base_suite_setup' ...")
 
@@ -79,13 +87,20 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     # Code before the yeild will execute before each test starts
 
     cluster_config = params_from_base_suite_setup["cluster_config"]
+    cluster_topology = params_from_base_suite_setup["cluster_topology"]
     mode = params_from_base_suite_setup["mode"]
 
     test_name = request.node.name
-    log_info("Setting up test '{}'".format(test_name))
+    log_info("Running test '{}'".format(test_name))
+    log_info("cluster_config: {}".format(cluster_config))
+    log_info("cluster_topology: {}".format(cluster_topology))
 
     # This dictionary is passed to each test
-    yield {"cluster_config": cluster_config, "mode": mode}
+    yield {
+        "cluster_config": cluster_config,
+        "cluster_topology": cluster_topology,
+        "mode": mode
+    }
 
     # Code after the yeild will execute when each test finishes
     log_info("Tearing down test '{}'".format(test_name))
