@@ -157,6 +157,7 @@ def test_server_goes_down_sanity(params_from_base_test_setup):
     errors = num_docs
 
     # Wait 30 seconds for auto failover to trigger + 15 seconds to add docs
+    # TODO - Look into REST api call to initiate failover immediately
     timeout = 45
     start = time.time()
 
@@ -171,7 +172,7 @@ def test_server_goes_down_sanity(params_from_base_test_setup):
             main_server.rebalance_in(coucbase_servers, flakey_server)
             raise TimeoutError("Failed to successfully put docs before timeout")
 
-        docs, errors = client.add_docs(url=sg_url, db=sg_db, number=num_docs, id_prefix=None, auth=session, allow_errors=True)
+        docs, errors = client.add_docs(url=sg_url, db=sg_db, number=num_docs, id_prefix=None, auth=session, allow_errors=True, channels=channels)
 
         errors = len(errors)
         log_info("Seeing: {} errors".format(errors))
