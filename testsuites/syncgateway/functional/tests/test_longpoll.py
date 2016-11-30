@@ -15,6 +15,7 @@ from keywords.ClusterKeywords import ClusterKeywords
 from keywords.SyncGateway import sync_gateway_config_path_for_mode
 from keywords.utils import log_info
 from keywords.MobileRestClient import MobileRestClient
+from keywords.Document import Document
 
 
 UserInfo = collections.namedtuple("UserInfo", ["name", "password", "channels"])
@@ -320,15 +321,15 @@ def test_longpoll_awaken_channels(params_from_base_test_setup, sg_conf_name):
     andy_auth = client.create_user(url=sg_admin_url, db=sg_db,
                                    name=andy_user_info.name, password=andy_user_info.password, channels=andy_user_info.channels)
 
+    ############################################################
+    # changes feed wakes with Channel Access via Admin API
+    ############################################################
+
     # Get starting sequence of docs, use the last seq to progress past any _user docs.
     adam_changes = client.get_changes(url=sg_url, db=sg_db, since=0, timeout=2, auth=adam_auth)
     traun_changes = client.get_changes(url=sg_url, db=sg_db, since=0, timeout=2, auth=traun_auth)
     andy_changes = client.get_changes(url=sg_url, db=sg_db, since=0, timeout=2, auth=andy_auth)
 
-    import pdb
-    pdb.set_trace()
-
-    # changes feed wakes with Channel Access via Admin API
     with concurrent.futures.ProcessPoolExecutor() as ex:
 
         # Start changes feed for 3 users
@@ -390,16 +391,16 @@ def test_longpoll_awaken_channels(params_from_base_test_setup, sg_conf_name):
     client.verify_docs_in_changes(url=sg_url, db=sg_db, expected_docs=adam_docs, auth=traun_auth)
     client.verify_docs_in_changes(url=sg_url, db=sg_db, expected_docs=adam_docs, auth=andy_auth)
 
+    ############################################################
+    # changes feed wakes with Channel Removal via Sync function
+    ############################################################
+
     # Get latest last_seq for next test section
     # Get starting sequence of docs, use the last seq to progress past any _user docs.
     adam_changes = client.get_changes(url=sg_url, db=sg_db, since=0, timeout=2, auth=adam_auth)
     traun_changes = client.get_changes(url=sg_url, db=sg_db, since=0, timeout=2, auth=traun_auth)
     andy_changes = client.get_changes(url=sg_url, db=sg_db, since=0, timeout=2, auth=andy_auth)
 
-    import pdb
-    pdb.set_trace()
-
-    # changes feed wakes with Channel Removal via Sync function
     with concurrent.futures.ProcessPoolExecutor() as ex:
 
         # Start changes feed for 3 users from latest last_sequence
@@ -417,37 +418,79 @@ def test_longpoll_awaken_channels(params_from_base_test_setup, sg_conf_name):
         assert not andy_changes_task.done()
 
         # Remove the channels property from the doc
-        updated_doc = client.update_doc(url=sg_url, db=sg_db, doc_id=doc_id, auth=traun_auth, channels=[])
-
-        time.sleep(5)
+        _ = client.update_doc(url=sg_url, db=sg_db, doc_id=doc_id, auth=traun_auth, channels=[])
 
         # All three changes feeds should wake up and return one result
         adam_changes = adam_changes_task.result()
         assert len(adam_changes["results"]) == 1
-        # Todo: Check 'removed' property
+        assert adam_changes["results"][0]["removed"] == ["ABC", "NBC"]
 
         traun_changes = traun_changes_task.result()
         assert len(traun_changes["results"]) == 1
-        # Todo: Check 'removed' property
+        assert traun_changes["results"][0]["removed"] == ["NBC"]
 
         andy_changes = andy_changes_task.result()
         assert len(andy_changes["results"]) == 1
-        # Todo: Check 'removed' property
+        assert andy_changes["results"][0]["removed"] == ["ABC"]
 
     # Verify that users no longer can access the doc
     for user_auth in [adam_auth, traun_auth, andy_auth]:
         with pytest.raises(requests.exceptions.HTTPError) as excinfo:
             client.get_doc(url=sg_url, db=sg_db, doc_id=doc_id, auth=user_auth)
-        assert "HTTPError: 403 Client Error: Forbidden for url:" in excinfo.value
+        assert "403 Client Error: Forbidden for url:" in excinfo.value.message
 
-    client.get_doc(url=sg_url, db=sg_db, doc_id=doc_id, auth=traun_auth)
+    ############################################################
+    # changes feed wakes with Channel Grant via Sync function
+    ############################################################
 
+    # Get latest last_seq for next test section
+    # Get starting sequence of docs, use the last seq to progress past any _user docs.
+    adam_changes = client.get_changes(url=sg_url, db=sg_db, since=0, timeout=2, auth=adam_auth)
+    traun_changes = client.get_changes(url=sg_url, db=sg_db, since=0, timeout=2, auth=traun_auth)
+    andy_changes = client.get_changes(url=sg_url, db=sg_db, since=0, timeout=2, auth=andy_auth)
 
+    admin_auth = client.create_user(url=sg_admin_url, db=sg_db, name="admin", password="password", channels=["admin"])
 
-    # TODO: Channel Access via Sync function
+    channel_grant_doc_id = "channel_grant_with_doc_intially"
 
+    # Add another doc with no channels
+    doc_util = Document()
+    channel_grant_doc_body = doc_util.create_doc(id=channel_grant_doc_id, channels=["admin"])
+    _ = client.add_doc(url=sg_url, db=sg_db, doc=channel_grant_doc_body, auth=admin_auth)
 
+    with concurrent.futures.ProcessPoolExecutor() as ex:
+        # Start changes feed for 3 users from latest last_sequence
+        adam_changes_task = ex.submit(client.get_changes, url=sg_url, db=sg_db, since=adam_changes["last_seq"], timeout=10, auth=adam_auth)
+        traun_changes_task = ex.submit(client.get_changes, url=sg_url, db=sg_db, since=traun_changes["last_seq"], timeout=10, auth=traun_auth)
+        andy_changes_task = ex.submit(client.get_changes, url=sg_url, db=sg_db, since=andy_changes["last_seq"], timeout=10, auth=andy_auth)
 
+        # Wait for changes feed to notice there are no changes and enter wait. 2 seconds should be more than enough
+        time.sleep(2)
+
+        # Make sure the changes future is still running and has not exited due to any new changes, the feed should be caught up
+        # and waiting
+        assert not adam_changes_task.done()
+        assert not traun_changes_task.done()
+        assert not andy_changes_task.done()
+
+        # update the grant doc to have channel for all users
+        _ = ex.submit(client.update_doc(url=sg_url, db=sg_db, doc_id=channel_grant_doc_id, auth=admin_auth, channels=["admin", "ABC", "NBC"]))
+
+        # Verify that access grant wakes up changes feed for adam, traun, and Andy
+        adam_changes = adam_changes_task.result()
+        assert len(adam_changes["results"]) == 1
+        assert adam_changes["results"][0]["id"] == "channel_grant_with_doc_intially"
+        assert adam_changes["results"][0]["changes"][0]["rev"].startswith("2-")
+
+        traun_changes = traun_changes_task.result()
+        assert len(traun_changes["results"]) == 1
+        assert traun_changes["results"][0]["id"] == "channel_grant_with_doc_intially"
+        assert traun_changes["results"][0]["changes"][0]["rev"].startswith("2-")
+
+        andy_changes = andy_changes_task.result()
+        assert len(andy_changes["results"]) == 1
+        assert andy_changes["results"][0]["id"] == "channel_grant_with_doc_intially"
+        assert andy_changes["results"][0]["changes"][0]["rev"].startswith("2-")
 
     # Verify all sync_gateways are running
     errors = cluster.verify_alive(mode)
