@@ -490,8 +490,6 @@ def test_longpoll_awaken_channels(params_from_base_test_setup, sg_conf_name):
         assert andy_changes["results"][0]["id"] == "channel_grant_with_doc_intially"
         assert andy_changes["results"][0]["changes"][0]["rev"].startswith("2-")
 
-
-    # TODO: access() in sync_function
     # Verify all sync_gateways are running
     errors = cluster.verify_alive(mode)
     assert len(errors) == 0
@@ -528,7 +526,6 @@ def test_longpoll_awaken_roles(params_from_base_test_setup, sg_conf_name):
     traun_user_info = UserInfo(name="traun", password="Traunpass1", channels=[], roles=[])
     andy_user_info = UserInfo(name="andy", password="Andypass1", channels=[], roles=[])
     sg_db = "db"
-    doc_id = "adam_doc_0"
 
     client = MobileRestClient()
 
@@ -571,7 +568,6 @@ def test_longpoll_awaken_roles(params_from_base_test_setup, sg_conf_name):
         assert not traun_changes_task.done()
         assert not andy_changes_task.done()
 
-        # TODO:
         adam_auth = client.update_user(url=sg_admin_url, db=sg_db,
                                        name=adam_user_info.name, password=adam_user_info.password, roles=[admin_role])
 
@@ -616,7 +612,7 @@ def test_longpoll_awaken_roles(params_from_base_test_setup, sg_conf_name):
     abc_pusher_info = UserInfo(name="abc_pusher", password="pass", channels=[abc_channel], roles=[])
 
     abc_pusher_auth = client.create_user(url=sg_admin_url, db=sg_db, name=abc_pusher_info.name,
-                                    password=abc_pusher_info.password, channels=abc_pusher_info.channels)
+                                         password=abc_pusher_info.password, channels=abc_pusher_info.channels)
 
     # Add doc with ABC channel
     adb_doc = client.add_docs(url=sg_url, db=sg_db, number=1, id_prefix="abc_doc", auth=abc_pusher_auth, channels=[abc_channel])
@@ -657,9 +653,128 @@ def test_longpoll_awaken_roles(params_from_base_test_setup, sg_conf_name):
         assert len(andy_changes["results"]) == 1
         assert andy_changes["results"][0]["id"] == "abc_doc_0"
 
+    # Verify all sync_gateways are running
+    errors = cluster.verify_alive(mode)
+    assert len(errors) == 0
 
-    # TODO: Role grant to user via Sync
+
+@pytest.mark.sanity
+@pytest.mark.syncgateway
+@pytest.mark.changes
+@pytest.mark.parametrize("sg_conf_name", [
+    "custom_sync/wake_changes",
+])
+def test_longpoll_awaken_via_sync(params_from_base_test_setup, sg_conf_name):
+    """
+    Test that longpoll changes feed wakes up on access() and role() in sync_function
+
+    The contrived sync_function below is used:
+        function(doc, oldDoc){
+            if(doc._id == "access_doc_0") {
+                console.log("granting_access!");
+                access(["adam", "traun", "andy"], "NATGEO");
+            }
+            if(doc._id == "roles_doc_0") {
+                console.log("adding role to users!");
+                role(["adam", "traun", "andy"], "role:doc_access");
+            }
+            channel(doc, doc.channels);
+        }
+
+    This test performs 2 validations
+        1. waiting longpoll changes wakes up when access() is granted via sync function
+        2. waiting longpoll changes wakes up when role() is granted via sync function
+    """
+
+    cluster_conf = params_from_base_test_setup["cluster_config"]
+    cluster_topology = params_from_base_test_setup["cluster_topology"]
+    mode = params_from_base_test_setup["mode"]
+
+    sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
+    sg_admin_url = cluster_topology["sync_gateways"][0]["admin"]
+    sg_url = cluster_topology["sync_gateways"][0]["public"]
+
+    log_info("sg_conf: {}".format(sg_conf))
+    log_info("sg_admin_url: {}".format(sg_admin_url))
+    log_info("sg_url: {}".format(sg_url))
+
+    sg_db = "db"
+
+    cluster = Cluster(config=cluster_conf)
+    mode = cluster.reset(sg_config_path=sg_conf)
+
+    client = MobileRestClient()
+
+    channel_pusher_info = UserInfo(name="channel_pusher", password="pass", channels=["NATGEO"], roles=[])
+
+    adam_user_info = UserInfo(name="adam", password="Adampass1", channels=[], roles=[])
+    traun_user_info = UserInfo(name="traun", password="Traunpass1", channels=[], roles=[])
+    andy_user_info = UserInfo(name="andy", password="Andypass1", channels=[], roles=[])
+
+    channel_pusher_auth = client.create_user(url=sg_admin_url,
+                                             db=sg_db,
+                                             name=channel_pusher_info.name,
+                                             password=channel_pusher_info.password,
+                                             channels=channel_pusher_info.channels)
+
+    adam_auth = client.create_user(url=sg_admin_url, db=sg_db, name=adam_user_info.name, password=adam_user_info.password)
+    traun_auth = client.create_user(url=sg_admin_url, db=sg_db, name=traun_user_info.name, password=traun_user_info.password)
+    andy_auth = client.create_user(url=sg_admin_url, db=sg_db, name=andy_user_info.name, password=andy_user_info.password)
+
+    ################################################################################
+    # waiting longpoll changes wakes up when access() is granted via sync function
+    ################################################################################
+
+    channel_pusher_natgeo_doc = client.add_docs(url=sg_url, db=sg_db,
+                                                number=1, id_prefix="natgeo", channels=["NATGEO"], auth=channel_pusher_auth)
+
+    # Get starting sequence of docs, use the last seq to progress past any _user docs.
+    adam_changes = client.get_changes(url=sg_url, db=sg_db, since=0, timeout=2, auth=adam_auth)
+    traun_changes = client.get_changes(url=sg_url, db=sg_db, since=0, timeout=2, auth=traun_auth)
+    andy_changes = client.get_changes(url=sg_url, db=sg_db, since=0, timeout=2, auth=andy_auth)
+
+    import pdb
+    pdb.set_trace()
+
+    with concurrent.futures.ProcessPoolExecutor() as ex:
+        # Start changes feed for 3 users from latest last_seq
+        adam_changes_task = ex.submit(client.get_changes, url=sg_url, db=sg_db, since=adam_changes["last_seq"], timeout=10, auth=adam_auth)
+        traun_changes_task = ex.submit(client.get_changes, url=sg_url, db=sg_db, since=traun_changes["last_seq"], timeout=10, auth=traun_auth)
+        andy_changes_task = ex.submit(client.get_changes, url=sg_url, db=sg_db, since=andy_changes["last_seq"], timeout=10, auth=andy_auth)
+
+        # Wait for changes feed to notice there are no changes and enter wait. 2 seconds should be more than enough
+        time.sleep(2)
+
+        # Make sure the changes future is still running and has not exited due to any new changes, the feed should be caught up
+        # and waiting
+        assert not adam_changes_task.done()
+        assert not traun_changes_task.done()
+        assert not andy_changes_task.done()
+
+        # Grant adam, traun and andy access to the "NATGEO" channel
+        channel_pusher_access_doc = client.add_docs(url=sg_url, db=sg_db,
+                                                    number=1, id_prefix="access_doc",
+                                                    channels=[], auth=channel_pusher_auth)
+
+        # Changes feed should wake up with the natgeo_0 doc
+        adam_changes = adam_changes_task.result()
+        assert len(adam_changes["results"]) == 1
+        assert adam_changes["results"][0]["id"] == "natgeo_0"
+
+        traun_changes = traun_changes_task.result()
+        assert len(traun_changes["results"]) == 1
+        assert traun_changes["results"][0]["id"] == "natgeo_0"
+
+        andy_changes = andy_changes_task.result()
+        assert len(andy_changes["results"]) == 1
+        assert andy_changes["results"][0]["id"] == "natgeo_0"
+
+    ################################################################################
+    # waiting longpoll changes wakes up when role() is granted via sync function
+    ################################################################################
 
     # Verify all sync_gateways are running
     errors = cluster.verify_alive(mode)
     assert len(errors) == 0
+
+
