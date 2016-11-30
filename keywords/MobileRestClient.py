@@ -74,6 +74,10 @@ def get_auth_type(auth):
     logging.debug("Using auth type: {}".format(auth_type))
     return auth_type
 
+def verify_is_list(obj):
+    if type(obj) != list:
+        raise TypeError("Channels must be a 'list'")
+
 
 class MobileRestClient:
     """
@@ -261,7 +265,41 @@ class MobileRestClient:
             log_r(resp)
             resp.raise_for_status()
 
-    def create_user(self, url, db, name, password, channels=None):
+    def create_role(self, url, db, name, channels=None):
+        """ Creates a role with name and channels for the specified 'db' """
+
+        if channels is None:
+            channels = []
+
+        verify_is_list(channels)
+
+        data = {
+            "name": name,
+            "admin_channels": channels
+        }
+
+        resp = self._session.post("{}/{}/_role/".format(url, db), data=json.dumps(data))
+        log_r(resp)
+        resp.raise_for_status()
+
+    def update_role(self, url, db, name, channels=None):
+        """ Updates a role with name and channels for the specified 'db' """
+
+        if channels is None:
+            channels = []
+
+        verify_is_list(channels)
+
+        data = {
+            "name": name,
+            "admin_channels": channels
+        }
+
+        resp = self._session.put("{}/{}/_role/{}".format(url, db, name), data=json.dumps(data))
+        log_r(resp)
+        resp.raise_for_status()
+
+    def create_user(self, url, db, name, password, channels=None, roles=None):
         """ Creates a user with channels on the sync_gateway Admin REST API.
         Returns a name password tuple that can be used for session creation or basic authentication
         """
@@ -269,17 +307,24 @@ class MobileRestClient:
         if channels is None:
             channels = []
 
+        if roles is None:
+            roles = []
+
+        verify_is_list(channels)
+        verify_is_list(roles)
+
         data = {
             "name": name,
             "password": password,
-            "admin_channels": channels
+            "admin_channels": channels,
+            "admin_roles": roles
         }
         resp = self._session.post("{}/{}/_user/".format(url, db), data=json.dumps(data))
         log_r(resp)
         resp.raise_for_status()
         return name, password
 
-    def update_user(self, url, db, name, password, channels=None):
+    def update_user(self, url, db, name, password, channels=None, roles=None):
         """ Updates a user via the admin REST api
         Returns a name password tuple that can be used for session creation or basic authentication
         """
@@ -287,10 +332,17 @@ class MobileRestClient:
         if channels is None:
             channels = []
 
+        if roles is None:
+            roles = []
+
+        verify_is_list(channels)
+        verify_is_list(roles)
+
         data = {
             "name": name,
             "password": password,
-            "admin_channels": channels
+            "admin_channels": channels,
+            "admin_roles": roles
         }
         resp = self._session.put("{}/{}/_user/{}".format(url, db, name), data=json.dumps(data))
         log_r(resp)
@@ -972,6 +1024,9 @@ class MobileRestClient:
         """
         added_docs = []
         auth_type = get_auth_type(auth)
+
+        if channels is not None:
+            verify_is_list(channels)
 
         log_info("PUT {} docs to {}/{}/ with prefix {}".format(number, url, db, id_prefix))
 

@@ -18,7 +18,7 @@ from keywords.MobileRestClient import MobileRestClient
 from keywords.Document import Document
 
 
-UserInfo = collections.namedtuple("UserInfo", ["name", "password", "channels"])
+UserInfo = collections.namedtuple("UserInfo", ["name", "password", "channels", "roles"])
 
 
 @pytest.mark.sanity
@@ -164,9 +164,9 @@ def test_longpoll_awaken_doc_add_update(params_from_base_test_setup, sg_conf_nam
     cluster = Cluster(config=cluster_conf)
     mode = cluster.reset(sg_config_path=sg_conf)
 
-    adam_user_info = UserInfo("adam", "Adampass1", ["NBC"])
-    traun_user_info = UserInfo("traun", "Traunpass1", ["CBS"])
-    andy_user_info = UserInfo("andy", "Andypass1", ["MTV"])
+    adam_user_info = UserInfo(name="adam", password="Adampass1", channels=["NBC"], roles=[])
+    traun_user_info = UserInfo(name="traun", password="Traunpass1", channels=["CBS"], roles=[])
+    andy_user_info = UserInfo(name="andy", password="Andypass1", channels=["MTV"], roles=[])
     sg_db = "db"
 
     client = MobileRestClient()
@@ -304,9 +304,9 @@ def test_longpoll_awaken_channels(params_from_base_test_setup, sg_conf_name):
     cluster = Cluster(config=cluster_conf)
     mode = cluster.reset(sg_config_path=sg_conf)
 
-    adam_user_info = UserInfo("adam", "Adampass1", ["NBC", "ABC"])
-    traun_user_info = UserInfo("traun", "Traunpass1", [])
-    andy_user_info = UserInfo("andy", "Andypass1", [])
+    adam_user_info = UserInfo(name="adam", password="Adampass1", channels=["NBC", "ABC"], roles=[])
+    traun_user_info = UserInfo(name="traun", password="Traunpass1", channels=[], roles=[])
+    andy_user_info = UserInfo(name="andy", password="Andypass1", channels=[], roles=[])
     sg_db = "db"
     doc_id = "adam_doc_0"
 
@@ -396,14 +396,13 @@ def test_longpoll_awaken_channels(params_from_base_test_setup, sg_conf_name):
     ############################################################
 
     # Get latest last_seq for next test section
-    # Get starting sequence of docs, use the last seq to progress past any _user docs.
     adam_changes = client.get_changes(url=sg_url, db=sg_db, since=0, timeout=2, auth=adam_auth)
     traun_changes = client.get_changes(url=sg_url, db=sg_db, since=0, timeout=2, auth=traun_auth)
     andy_changes = client.get_changes(url=sg_url, db=sg_db, since=0, timeout=2, auth=andy_auth)
 
     with concurrent.futures.ProcessPoolExecutor() as ex:
 
-        # Start changes feed for 3 users from latest last_sequence
+        # Start changes feed for 3 users from latest last_seq
         adam_changes_task = ex.submit(client.get_changes, url=sg_url, db=sg_db, since=adam_changes["last_seq"], timeout=10, auth=adam_auth)
         traun_changes_task = ex.submit(client.get_changes, url=sg_url, db=sg_db, since=traun_changes["last_seq"], timeout=10, auth=traun_auth)
         andy_changes_task = ex.submit(client.get_changes, url=sg_url, db=sg_db, since=andy_changes["last_seq"], timeout=10, auth=andy_auth)
@@ -444,7 +443,6 @@ def test_longpoll_awaken_channels(params_from_base_test_setup, sg_conf_name):
     ############################################################
 
     # Get latest last_seq for next test section
-    # Get starting sequence of docs, use the last seq to progress past any _user docs.
     adam_changes = client.get_changes(url=sg_url, db=sg_db, since=0, timeout=2, auth=adam_auth)
     traun_changes = client.get_changes(url=sg_url, db=sg_db, since=0, timeout=2, auth=traun_auth)
     andy_changes = client.get_changes(url=sg_url, db=sg_db, since=0, timeout=2, auth=andy_auth)
@@ -459,7 +457,7 @@ def test_longpoll_awaken_channels(params_from_base_test_setup, sg_conf_name):
     _ = client.add_doc(url=sg_url, db=sg_db, doc=channel_grant_doc_body, auth=admin_auth)
 
     with concurrent.futures.ProcessPoolExecutor() as ex:
-        # Start changes feed for 3 users from latest last_sequence
+        # Start changes feed for 3 users from latest last_seq
         adam_changes_task = ex.submit(client.get_changes, url=sg_url, db=sg_db, since=adam_changes["last_seq"], timeout=10, auth=adam_auth)
         traun_changes_task = ex.submit(client.get_changes, url=sg_url, db=sg_db, since=traun_changes["last_seq"], timeout=10, auth=traun_auth)
         andy_changes_task = ex.submit(client.get_changes, url=sg_url, db=sg_db, since=andy_changes["last_seq"], timeout=10, auth=andy_auth)
@@ -491,6 +489,176 @@ def test_longpoll_awaken_channels(params_from_base_test_setup, sg_conf_name):
         assert len(andy_changes["results"]) == 1
         assert andy_changes["results"][0]["id"] == "channel_grant_with_doc_intially"
         assert andy_changes["results"][0]["changes"][0]["rev"].startswith("2-")
+
+
+    # TODO: access() in sync_function
+    # Verify all sync_gateways are running
+    errors = cluster.verify_alive(mode)
+    assert len(errors) == 0
+
+
+@pytest.mark.sanity
+@pytest.mark.syncgateway
+@pytest.mark.changes
+@pytest.mark.parametrize("sg_conf_name", [
+    "sync_gateway_default_functional_tests",
+])
+def test_longpoll_awaken_roles(params_from_base_test_setup, sg_conf_name):
+
+    cluster_conf = params_from_base_test_setup["cluster_config"]
+    cluster_topology = params_from_base_test_setup["cluster_topology"]
+    mode = params_from_base_test_setup["mode"]
+
+    sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
+    sg_admin_url = cluster_topology["sync_gateways"][0]["admin"]
+    sg_url = cluster_topology["sync_gateways"][0]["public"]
+
+    log_info("sg_conf: {}".format(sg_conf))
+    log_info("sg_admin_url: {}".format(sg_admin_url))
+    log_info("sg_url: {}".format(sg_url))
+
+    cluster = Cluster(config=cluster_conf)
+    mode = cluster.reset(sg_config_path=sg_conf)
+
+    admin_role = "admin_role"
+    admin_channel = "admin_channel"
+
+    admin_user_info = UserInfo(name="admin", password="pass", channels=[], roles=[admin_role])
+    adam_user_info = UserInfo(name="adam", password="Adampass1", channels=[], roles=[])
+    traun_user_info = UserInfo(name="traun", password="Traunpass1", channels=[], roles=[])
+    andy_user_info = UserInfo(name="andy", password="Andypass1", channels=[], roles=[])
+    sg_db = "db"
+    doc_id = "adam_doc_0"
+
+    client = MobileRestClient()
+
+    # Create a role on sync_gateway
+    client.create_role(url=sg_admin_url, db=sg_db, name=admin_role, channels=[admin_channel])
+
+    # Create users with no channels or roles
+    admin_auth = client.create_user(url=sg_admin_url, db=sg_db,
+                                    name=admin_user_info.name, password=admin_user_info.password, roles=[admin_role])
+
+    adam_auth = client.create_user(url=sg_admin_url, db=sg_db,
+                                   name=adam_user_info.name, password=adam_user_info.password)
+
+    traun_auth = client.create_user(url=sg_admin_url, db=sg_db,
+                                    name=traun_user_info.name, password=traun_user_info.password)
+
+    andy_auth = client.create_user(url=sg_admin_url, db=sg_db,
+                                   name=andy_user_info.name, password=andy_user_info.password)
+
+    ################################
+    # change feed wakes for role add
+    ################################
+
+    # Add doc with channel associated with the admin role
+    admin_doc = client.add_docs(url=sg_url, db=sg_db, number=1, id_prefix="admin_doc", auth=admin_auth, channels=[admin_channel])
+    client.verify_docs_in_changes(url=sg_url, db=sg_db, expected_docs=admin_doc, auth=admin_auth)
+
+    with concurrent.futures.ProcessPoolExecutor() as ex:
+        # Start changes feed for 3 users from latest last_seq
+        adam_changes_task = ex.submit(client.get_changes, url=sg_url, db=sg_db, since=0, timeout=10, auth=adam_auth)
+        traun_changes_task = ex.submit(client.get_changes, url=sg_url, db=sg_db, since=0, timeout=10, auth=traun_auth)
+        andy_changes_task = ex.submit(client.get_changes, url=sg_url, db=sg_db, since=0, timeout=10, auth=andy_auth)
+
+        # Wait for changes feed to notice there are no changes and enter wait. 2 seconds should be more than enough
+        time.sleep(2)
+
+        # Make sure the changes future is still running and has not exited due to any new changes, the feed should be caught up
+        # and waiting
+        assert not adam_changes_task.done()
+        assert not traun_changes_task.done()
+        assert not andy_changes_task.done()
+
+        # TODO:
+        adam_auth = client.update_user(url=sg_admin_url, db=sg_db,
+                                       name=adam_user_info.name, password=adam_user_info.password, roles=[admin_role])
+
+        traun_auth = client.update_user(url=sg_admin_url, db=sg_db,
+                                        name=traun_user_info.name, password=traun_user_info.password, roles=[admin_role])
+
+        andy_auth = client.update_user(url=sg_admin_url, db=sg_db,
+                                       name=andy_user_info.name, password=andy_user_info.password, roles=[admin_role])
+
+        adam_changes = adam_changes_task.result()
+        assert 1 <= len(adam_changes["results"]) <= 2
+        doc_ids_in_changes = [change["id"] for change in adam_changes["results"]]
+        assert "_user/adam" in doc_ids_in_changes or "admin_doc_0" in doc_ids_in_changes
+
+        traun_changes = traun_changes_task.result()
+        assert 1 <= len(traun_changes["results"]) <= 2
+        doc_ids_in_changes = [change["id"] for change in traun_changes["results"]]
+        assert "_user/traun" in doc_ids_in_changes or "admin_doc_0" in doc_ids_in_changes
+
+        andy_changes = andy_changes_task.result()
+        assert 1 <= len(andy_changes["results"]) <= 2
+        doc_ids_in_changes = [change["id"] for change in andy_changes["results"]]
+        assert "_user/andy" in doc_ids_in_changes or "admin_doc_0" in doc_ids_in_changes
+
+    # Check that the user docs all show up in changes feed
+    client.verify_doc_id_in_changes(url=sg_url, db=sg_db, expected_doc_id="_user/adam", auth=adam_auth)
+    client.verify_doc_id_in_changes(url=sg_url, db=sg_db, expected_doc_id="_user/traun", auth=traun_auth)
+    client.verify_doc_id_in_changes(url=sg_url, db=sg_db, expected_doc_id="_user/andy", auth=andy_auth)
+
+    # Check that the admin doc made it to all the changes feeds
+    client.verify_docs_in_changes(url=sg_url, db=sg_db, expected_docs=admin_doc, auth=adam_auth)
+    client.verify_docs_in_changes(url=sg_url, db=sg_db, expected_docs=admin_doc, auth=traun_auth)
+    client.verify_docs_in_changes(url=sg_url, db=sg_db, expected_docs=admin_doc, auth=andy_auth)
+
+    # At this point, each user should have a changes feed that is caught up for the next section
+
+    ###########################################
+    # change feed wakes for channel add to role
+    ###########################################
+
+    abc_channel = "ABC"
+    abc_pusher_info = UserInfo(name="abc_pusher", password="pass", channels=[abc_channel], roles=[])
+
+    abc_pusher_auth = client.create_user(url=sg_admin_url, db=sg_db, name=abc_pusher_info.name,
+                                    password=abc_pusher_info.password, channels=abc_pusher_info.channels)
+
+    # Add doc with ABC channel
+    adb_doc = client.add_docs(url=sg_url, db=sg_db, number=1, id_prefix="abc_doc", auth=abc_pusher_auth, channels=[abc_channel])
+
+    # Get latest last_seq for next test section
+    adam_changes = client.get_changes(url=sg_url, db=sg_db, since=0, timeout=2, auth=adam_auth)
+    traun_changes = client.get_changes(url=sg_url, db=sg_db, since=0, timeout=2, auth=traun_auth)
+    andy_changes = client.get_changes(url=sg_url, db=sg_db, since=0, timeout=2, auth=andy_auth)
+
+    with concurrent.futures.ProcessPoolExecutor() as ex:
+        # Start changes feed for 3 users from latest last_seq
+        adam_changes_task = ex.submit(client.get_changes, url=sg_url, db=sg_db, since=adam_changes["last_seq"], timeout=10, auth=adam_auth)
+        traun_changes_task = ex.submit(client.get_changes, url=sg_url, db=sg_db, since=traun_changes["last_seq"], timeout=10, auth=traun_auth)
+        andy_changes_task = ex.submit(client.get_changes, url=sg_url, db=sg_db, since=andy_changes["last_seq"], timeout=10, auth=andy_auth)
+
+        # Wait for changes feed to notice there are no changes and enter wait. 2 seconds should be more than enough
+        time.sleep(2)
+
+        # Make sure the changes future is still running and has not exited due to any new changes, the feed should be caught up
+        # and waiting
+        assert not adam_changes_task.done()
+        assert not traun_changes_task.done()
+        assert not andy_changes_task.done()
+
+        # Update admin role to include ABC channel
+        # Since adam, traun, and andy are assigned to that role, they should wake up and get the 'abc_pusher_0' doc
+        client.update_role(url=sg_admin_url, db=sg_db, name=admin_role, channels=[admin_channel, abc_channel])
+
+        adam_changes = adam_changes_task.result()
+        assert len(adam_changes["results"]) == 1
+        assert adam_changes["results"][0]["id"] == "abc_doc_0"
+
+        traun_changes = traun_changes_task.result()
+        assert len(traun_changes["results"]) == 1
+        assert traun_changes["results"][0]["id"] == "abc_doc_0"
+
+        andy_changes = adam_changes_task.result()
+        assert len(andy_changes["results"]) == 1
+        assert andy_changes["results"][0]["id"] == "abc_doc_0"
+
+
+    # TODO: Role grant to user via Sync
 
     # Verify all sync_gateways are running
     errors = cluster.verify_alive(mode)
