@@ -124,7 +124,7 @@ def test_load_balance_sanity(params_from_base_test_setup):
 
     with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
         log_info("Starting ...")
-        executor.submit(ct.start)
+        ct_task = executor.submit(ct.start)
         log_info("Adding docs ...")
         docs, errors = client.add_docs(lb_url, sg_db, num_docs, "test_doc", channels=channels, auth=session)
         assert len(docs) == num_docs
@@ -137,6 +137,8 @@ def test_load_balance_sanity(params_from_base_test_setup):
             log_info("Stopping ...")
             log_info("Found all docs ...")
             executor.submit(ct.stop)
+            ct_task.result()
         else:
             executor.submit(ct.stop)
+            ct_task.result()
             raise Exception("Could not find all changes in feed before timeout!!")

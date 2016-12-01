@@ -9,6 +9,7 @@ from keywords.MobileRestClient import get_auth_type
 from keywords.constants import AuthType
 from keywords.utils import log_r
 from keywords.utils import log_info
+import keywords.exceptions
 
 
 class ChangesTracker:
@@ -33,7 +34,18 @@ class ChangesTracker:
                     # doc has already been seen in the changes feed,
                     # append new changes to revs accociated with that id
                     revs_list = self.processed_changes[doc["id"]]
-                    revs_list = revs_list.extend(doc["changes"])
+
+                    # If the document is already in processed changes, make sure
+                    # that the revision does already exist. If we see one, raise an exception
+                    # because we are seeing the same revision being sent twice
+                    # Checking against this scenario - https://github.com/couchbase/sync_gateway/issues/2186
+                    changes_revs = [change["rev"] for change in doc["changes"]]
+                    revs_list_revs = [rev["rev"] for rev in revs_list]
+                    for change in changes_revs:
+                        if change in revs_list_revs:
+                            raise keywords.exceptions.ChangesError("Duplicates in changes feed!")
+
+                    revs_list.extend(doc["changes"])
                     self.processed_changes[doc["id"]] = revs_list
                 else:
                     # Stored the doc with the list of rev changes
