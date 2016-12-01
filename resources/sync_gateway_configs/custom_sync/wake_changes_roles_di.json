@@ -28,13 +28,9 @@
             },
             "sync":
             `function(doc, oldDoc){
-                if(doc._id == "access_doc_0") {
+                if(doc._id == "role_doc_0") {
                     console.log("granting_access!");
-                    access(["adam", "traun", "andy"], "NATGEO");
-                }
-                if(doc._id == "roles_doc_0") {
-                    console.log("adding role to users!");
-                    role(["adam", "traun", "andy"], "role:doc_access");
+                    role(["adam", "traun", "andy"], "role:techno");
                 }
                 channel(doc, doc.channels);
             }`

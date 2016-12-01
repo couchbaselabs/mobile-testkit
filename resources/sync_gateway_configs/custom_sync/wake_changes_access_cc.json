@@ -18,10 +18,6 @@
                     console.log("granting_access!");
                     access(["adam", "traun", "andy"], "NATGEO");
                 }
-                if(doc._id == "roles_doc_0") {
-                    console.log("adding role to users!");
-                    role(["adam", "traun", "andy"], "role:doc_access");
-                }
                 channel(doc, doc.channels);
             }`
         }
