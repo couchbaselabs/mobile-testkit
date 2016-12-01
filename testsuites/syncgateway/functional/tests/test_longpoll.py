@@ -190,32 +190,38 @@ def test_longpoll_awaken_doc_add_update(params_from_base_test_setup, sg_conf_nam
         traun_changes_task = ex.submit(client.get_changes, url=sg_url, db=sg_db, since=traun_changes["last_seq"], timeout=30, auth=traun_auth)
         andy_changes_task = ex.submit(client.get_changes, url=sg_url, db=sg_db, since=andy_changes["last_seq"], timeout=30, auth=andy_auth)
 
-        # make sure longpoll goes to a wait state
-        log_info("Sleeping (2 sec) to allow longpoll to enter waiting state ...")
+        # Wait for changes feed to notice there are no changes and enter wait. 2 seconds should be more than enough
         time.sleep(2)
 
-        # Add one doc, this should wake up the changes feed
-        adam_add_docs_task = ex.submit(client.add_docs, url=sg_url, db=sg_db,
-                                       number=1, id_prefix="adam_doc",
-                                       auth=adam_auth, channels=adam_user_info.channels)
+        # Make sure the changes future is still running and has not exited due to any new changes, the feed should be caught up
+        # and waiting
+        assert not adam_changes_task.done()
+        assert not traun_changes_task.done()
+        assert not andy_changes_task.done()
 
-        traun_add_docs_task = ex.submit(client.add_docs, url=sg_url, db=sg_db,
+        # Add 3 docs with adam auth, one with adam channels, one with traun channels, one with andy auth
+        # Tests the changes feed wakes up for user created docs and non user created docs
+        adam_add_doc_task_1 = ex.submit(client.add_docs, url=sg_url, db=sg_db,
+                                        number=1, id_prefix="adam_doc",
+                                        auth=adam_auth, channels=adam_user_info.channels)
+
+        adam_add_doc_task_2 = ex.submit(client.add_docs, url=sg_url, db=sg_db,
                                         number=1, id_prefix="traun_doc",
-                                        auth=traun_auth, channels=traun_user_info.channels)
+                                        auth=adam_auth, channels=traun_user_info.channels)
 
-        andy_add_docs_task = ex.submit(client.add_docs, url=sg_url, db=sg_db,
-                                       number=1, id_prefix="andy_doc",
-                                       auth=andy_auth, channels=andy_user_info.channels)
+        adam_add_doc_task_3 = ex.submit(client.add_docs, url=sg_url, db=sg_db,
+                                        number=1, id_prefix="andy_doc",
+                                        auth=adam_auth, channels=andy_user_info.channels)
 
         # Wait for docs adds to complete
-        adam_docs = adam_add_docs_task.result()
-        assert len(adam_docs) == 1
+        adam_doc_1 = adam_add_doc_task_1.result()
+        assert len(adam_doc_1) == 1
 
-        traun_docs = traun_add_docs_task.result()
-        assert len(traun_docs) == 1
+        adam_doc_2 = adam_add_doc_task_2.result()
+        assert len(adam_doc_2) == 1
 
-        andy_docs = andy_add_docs_task.result()
-        assert len(andy_docs) == 1
+        adam_doc_3 = adam_add_doc_task_3.result()
+        assert len(adam_doc_3) == 1
 
         # Assert that the changes feed woke up and that the doc change was propagated
         adam_changes = adam_changes_task.result()
@@ -235,14 +241,19 @@ def test_longpoll_awaken_doc_add_update(params_from_base_test_setup, sg_conf_nam
         traun_changes_task = ex.submit(client.get_changes, url=sg_url, db=sg_db, since=traun_changes["last_seq"], auth=traun_auth)
         andy_changes_task = ex.submit(client.get_changes, url=sg_url, db=sg_db, since=andy_changes["last_seq"], auth=andy_auth)
 
-        # make sure longpoll goes to a wait state
-        log_info("Sleeping (2 sec) to allow longpoll to enter waiting state ...")
+        # Wait for changes feed to notice there are no changes and enter wait. 2 seconds should be more than enough
         time.sleep(2)
 
-        # Check to see that doc updates wake up changes feed
-        adam_update_docs_task = ex.submit(client.update_docs, url=sg_url, db=sg_db, docs=adam_docs, number_updates=1, auth=adam_auth)
-        traun_update_docs_task = ex.submit(client.update_docs, url=sg_url, db=sg_db, docs=traun_docs, number_updates=1, auth=traun_auth)
-        andy_update_docs_task = ex.submit(client.update_docs, url=sg_url, db=sg_db, docs=andy_docs, number_updates=1, auth=andy_auth)
+        # Make sure the changes future is still running and has not exited due to any new changes, the feed should be caught up
+        # and waiting
+        assert not adam_changes_task.done()
+        assert not traun_changes_task.done()
+        assert not andy_changes_task.done()
+
+        # Check to see that doc updates to own user doc wake up changes feed
+        adam_update_docs_task = ex.submit(client.update_docs, url=sg_url, db=sg_db, docs=adam_doc_1, number_updates=1, auth=adam_auth)
+        traun_update_docs_task = ex.submit(client.update_docs, url=sg_url, db=sg_db, docs=adam_doc_2, number_updates=1, auth=traun_auth)
+        andy_update_docs_task = ex.submit(client.update_docs, url=sg_url, db=sg_db, docs=adam_doc_3, number_updates=1, auth=andy_auth)
 
         # Wait for docs updates to complete
         adam_updated_docs = adam_update_docs_task.result()
@@ -273,6 +284,89 @@ def test_longpoll_awaken_doc_add_update(params_from_base_test_setup, sg_conf_nam
         andy_changes = andy_changes_task.result()
         assert len(andy_changes["results"]) == 1
         assert andy_changes["results"][0]["id"] == "andy_doc_0"
+        rev_from_change = int(andy_changes["results"][0]["changes"][0]["rev"].split("-")[0])
+        assert rev_from_change == 2
+
+        # Start another longpoll changes request from the last_seq
+        adam_changes_task = ex.submit(client.get_changes, url=sg_url, db=sg_db, since=adam_changes["last_seq"], auth=adam_auth)
+        traun_changes_task = ex.submit(client.get_changes, url=sg_url, db=sg_db, since=traun_changes["last_seq"], auth=traun_auth)
+        andy_changes_task = ex.submit(client.get_changes, url=sg_url, db=sg_db, since=andy_changes["last_seq"], auth=andy_auth)
+
+        # Wait for changes feed to notice there are no changes and enter wait. 2 seconds should be more than enough
+        time.sleep(2)
+
+        # Make sure the changes future is still running and has not exited due to any new changes, the feed should be caught up
+        # and waiting
+        assert not adam_changes_task.done()
+        assert not traun_changes_task.done()
+        assert not andy_changes_task.done()
+
+        # Add doc with access to all channels
+        adam_add_doc_task_4 = ex.submit(client.add_docs, url=sg_url, db=sg_db,
+                                        number=1, id_prefix="all_doc",
+                                        auth=adam_auth,
+                                        channels=adam_user_info.channels + traun_user_info.channels + andy_user_info.channels)
+
+        all_doc = adam_add_doc_task_4.result()
+        assert len(all_doc) == 1
+
+        # Assert that the changes feed woke up and that the doc add was propagated to all users
+        adam_changes = adam_changes_task.result()
+        assert len(adam_changes["results"]) == 1
+        assert adam_changes["results"][0]["id"] == "all_doc_0"
+        rev_from_change = int(adam_changes["results"][0]["changes"][0]["rev"].split("-")[0])
+        assert rev_from_change == 1
+
+        traun_changes = traun_changes_task.result()
+        assert len(traun_changes["results"]) == 1
+        assert traun_changes["results"][0]["id"] == "all_doc_0"
+        rev_from_change = int(traun_changes["results"][0]["changes"][0]["rev"].split("-")[0])
+        assert rev_from_change == 1
+
+        andy_changes = andy_changes_task.result()
+        assert len(andy_changes["results"]) == 1
+        assert andy_changes["results"][0]["id"] == "all_doc_0"
+        rev_from_change = int(andy_changes["results"][0]["changes"][0]["rev"].split("-")[0])
+        assert rev_from_change == 1
+
+        # Start another longpoll changes request from the last_seq
+        adam_changes_task = ex.submit(client.get_changes, url=sg_url, db=sg_db, since=adam_changes["last_seq"], auth=adam_auth)
+        traun_changes_task = ex.submit(client.get_changes, url=sg_url, db=sg_db, since=traun_changes["last_seq"], auth=traun_auth)
+        andy_changes_task = ex.submit(client.get_changes, url=sg_url, db=sg_db, since=andy_changes["last_seq"], auth=andy_auth)
+
+        # Wait for changes feed to notice there are no changes and enter wait. 2 seconds should be more than enough
+        time.sleep(2)
+
+        # Make sure the changes future is still running and has not exited due to any new changes, the feed should be caught up
+        # and waiting
+        assert not adam_changes_task.done()
+        assert not traun_changes_task.done()
+        assert not andy_changes_task.done()
+
+        # Update doc with access to all channels
+        adam_update_docs_task_2 = ex.submit(client.update_docs, url=sg_url, db=sg_db, docs=all_doc, number_updates=1, auth=adam_auth)
+
+        # Wait for docs updates to complete
+        all_doc_updated = adam_update_docs_task_2.result()
+        assert len(all_doc_updated) == 1
+        assert all_doc_updated[0]["rev"].startswith("2-")
+
+        # Assert that the changes feed woke up and that the doc update was propagated to all users
+        adam_changes = adam_changes_task.result()
+        assert len(adam_changes["results"]) == 1
+        assert adam_changes["results"][0]["id"] == "all_doc_0"
+        rev_from_change = int(adam_changes["results"][0]["changes"][0]["rev"].split("-")[0])
+        assert rev_from_change == 2
+
+        traun_changes = traun_changes_task.result()
+        assert len(traun_changes["results"]) == 1
+        assert traun_changes["results"][0]["id"] == "all_doc_0"
+        rev_from_change = int(traun_changes["results"][0]["changes"][0]["rev"].split("-")[0])
+        assert rev_from_change == 2
+
+        andy_changes = andy_changes_task.result()
+        assert len(andy_changes["results"]) == 1
+        assert andy_changes["results"][0]["id"] == "all_doc_0"
         rev_from_change = int(andy_changes["results"][0]["changes"][0]["rev"].split("-")[0])
         assert rev_from_change == 2
 
@@ -339,6 +433,12 @@ def test_longpoll_awaken_channels(params_from_base_test_setup, sg_conf_name):
 
         # Wait for changes feed to notice there are no changes and enter wait. 2 seconds should be more than enough
         time.sleep(2)
+
+        # Make sure the changes future is still running and has not exited due to any new changes, the feed should be caught up
+        # and waiting
+        assert not adam_changes_task.done()
+        assert not traun_changes_task.done()
+        assert not andy_changes_task.done()
 
         # Add add a doc for adam with "NBC" and "ABC" channels
         # Add one doc, this should wake up the changes feed
