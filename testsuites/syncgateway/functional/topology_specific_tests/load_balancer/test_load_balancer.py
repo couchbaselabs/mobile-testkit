@@ -3,59 +3,72 @@ import os
 
 import pytest
 
+import keywords.constants
 from keywords.utils import log_info
 from keywords.MobileRestClient import MobileRestClient
 from keywords.ChangesTracker import ChangesTracker
 from keywords.ClusterKeywords import ClusterKeywords
 from keywords.Logging import Logging
 from keywords.constants import SYNC_GATEWAY_CONFIGS
+from keywords.SyncGateway import validate_sync_gateway_mode
+from keywords.SyncGateway import sync_gateway_config_path_for_mode
 
 from libraries.NetworkUtils import NetworkUtils
 
 
-# This will be called once for the first test in this file.
-# After all the tests have completed in the directory
-# the function will execute everything after the yield
+# This will be called once for the at the beggining of the execution in the 'tests/load_balancer' directory
+# and will be torn down, (code after the yeild) after each .py file in this directory
 @pytest.fixture(scope="module")
-def setup_2sg_1cbs_1lbs_suite(request):
-    log_info("Setting up 'setup_2sg_1cbs_1lbs_suite' ...")
+def params_from_base_suite_setup(request):
+    log_info("Setting up 'params_from_base_suite_setup' ...")
 
     server_version = request.config.getoption("--server-version")
     sync_gateway_version = request.config.getoption("--sync-gateway-version")
+    mode = request.config.getoption("--mode")
+    skip_provisioning = request.config.getoption("--skip-provisioning")
 
-    # Set the CLUSTER_CONFIG environment variable to 2sg_1cbs_1lbs
-    cluster_helper = ClusterKeywords()
-    cluster_helper.set_cluster_config("2sg_1cbs_1lbs")
+    log_info("server_version: {}".format(server_version))
+    log_info("sync_gateway_version: {}".format(sync_gateway_version))
+    log_info("mode: {}".format(mode))
+    log_info("skip_provisioning: {}".format(skip_provisioning))
 
-    cluster_helper.provision_cluster(
-        cluster_config=os.environ["CLUSTER_CONFIG"],
-        server_version=server_version,
-        sync_gateway_version=sync_gateway_version,
-        sync_gateway_config="{}/sync_gateway_default_functional_tests_cc.json".format(SYNC_GATEWAY_CONFIGS)
-    )
+    # Make sure mode for sync_gateway is supported ('cc' or 'di')
+    validate_sync_gateway_mode(mode)
 
-    yield
+    # use load_balancer_cc cluster config if mode is "cc" or load_balancer_di cluster config if mode is "di"
+    cluster_config = "{}/load_balancer_{}".format(keywords.constants.CLUSTER_CONFIGS_DIR, mode)
+    sg_config = sync_gateway_config_path_for_mode("sync_gateway_default_functional_tests", mode)
 
-    cluster_helper.unset_cluster_config()
+    # Skip provisioning if user specifies '--skip-provisoning'
+    if not skip_provisioning:
+        cluster_helper = ClusterKeywords()
+        cluster_helper.provision_cluster(
+            cluster_config=cluster_config,
+            server_version=server_version,
+            sync_gateway_version=sync_gateway_version,
+            sync_gateway_config=sg_config
+        )
 
-    log_info("Tearing down 'setup_2sg_1cbs_1lbs_suite' ...")
+    yield {"cluster_config": cluster_config, "mode": mode}
+
+    log_info("Tearing down 'params_from_base_suite_setup' ...")
 
 
 # This is called before each test and will yield the cluster_config to each test in the file
 # After each test_* function, execution will continue from the yield a pull logs on failure
 @pytest.fixture(scope="function")
-def setup_2sg_1cb_1lbs_test(request):
+def params_from_base_test_setup(request, params_from_base_suite_setup):
 
     test_name = request.node.name
     log_info("Setting up test '{}'".format(test_name))
 
-    cluster_util = ClusterKeywords()
-    cluster_util.reset_cluster(
-        cluster_config=os.environ["CLUSTER_CONFIG"],
-        sync_gateway_config="{}/sync_gateway_default_functional_tests_cc.json".format(SYNC_GATEWAY_CONFIGS)
-    )
+    cluster_config = params_from_base_suite_setup["cluster_config"]
+    mode = params_from_base_suite_setup["mode"]
 
-    yield {"cluster_config": os.environ["CLUSTER_CONFIG"]}
+    yield {
+        "cluster_config": cluster_config,
+        "mode": mode
+    }
 
     log_info("Tearing down test '{}'".format(test_name))
 
@@ -65,7 +78,7 @@ def setup_2sg_1cb_1lbs_test(request):
     # if the test failed pull logs
     if request.node.rep_call.failed:
         logging_helper = Logging()
-        logging_helper.fetch_and_analyze_logs(cluster_config=os.environ["CLUSTER_CONFIG"], test_name=test_name)
+        logging_helper.fetch_and_analyze_logs(cluster_config=cluster_config, test_name=test_name)
 
 
 @pytest.mark.topospecific
@@ -73,14 +86,21 @@ def setup_2sg_1cb_1lbs_test(request):
 @pytest.mark.syncgateway
 @pytest.mark.nginx
 @pytest.mark.changes
-@pytest.mark.usefixtures("setup_2sg_1cbs_1lbs_suite")
-def test_load_balance_sanity(setup_2sg_1cb_1lbs_test):
+def test_load_balance_sanity(params_from_base_test_setup):
+
+    cluster_config = params_from_base_test_setup["cluster_config"]
+    mode = params_from_base_test_setup["mode"]
+
+    sg_conf_name = "sync_gateway_default_functional_tests"
+    sg_conf_path = sync_gateway_config_path_for_mode(sg_conf_name, mode)
 
     cluster_util = ClusterKeywords()
+    cluster_util.reset_cluster(
+        cluster_config=cluster_config,
+        sync_gateway_config=sg_conf_path
+    )
 
-    cluster_config = setup_2sg_1cb_1lbs_test["cluster_config"]
     topology = cluster_util.get_cluster_topology(cluster_config)
-
     admin_sg_one = topology["sync_gateways"][0]["admin"]
     lb_url = topology["load_balancers"][0]
 

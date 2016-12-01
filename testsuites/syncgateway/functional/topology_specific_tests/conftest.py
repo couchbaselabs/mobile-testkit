@@ -1,7 +1,14 @@
-
-
 # Add custom arguments for executing tests in this directory
 def pytest_addoption(parser):
+
+    parser.addoption("--mode",
+                     action="store",
+                     help="Sync Gateway mode to run the test in, 'cc' for channel cache or 'di' for distributed index")
+
+    parser.addoption("--skip-provisioning",
+                     action="store_true",
+                     help="Skip cluster provisioning at setup",
+                     default=False)
 
     parser.addoption("--server-version",
                      action="store",
