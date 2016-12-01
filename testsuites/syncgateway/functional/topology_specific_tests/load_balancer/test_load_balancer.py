@@ -16,7 +16,7 @@ from keywords.SyncGateway import sync_gateway_config_path_for_mode
 from libraries.NetworkUtils import NetworkUtils
 
 
-# This will be called once for the at the beggining of the execution in the 'tests/load_balancer' directory
+# This will be called once at the beggining of the execution in the 'tests/load_balancer' directory
 # and will be torn down, (code after the yeild) after each .py file in this directory
 @pytest.fixture(scope="module")
 def params_from_base_suite_setup(request):

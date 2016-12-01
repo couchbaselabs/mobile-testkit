@@ -10,11 +10,9 @@ from keywords.SyncGateway import sync_gateway_config_path_for_mode
 from libraries.NetworkUtils import NetworkUtils
 
 
-# This will be called once for the at the beggining of the execution in the 'tests/' directory
-# and will be torn down, (code after the yeild) when all the test session has completed.
-# IMPORTANT: Tests in 'tests/' should be executed in their own test run and should not be
-# run in the same test run with 'topology_specific_tests/'. Doing so will make have unintended
-# side effects due to the session scope
+# This will be called once for the at the beggining of the execution of each .py file
+# in the 'topology_specific_tests/multiple_servers' directory.
+# It will be torn down (code after the yeild) when all of the tests have executed in that file
 @pytest.fixture(scope="module")
 def params_from_base_suite_setup(request):
     log_info("Setting up 'params_from_base_suite_setup' ...")

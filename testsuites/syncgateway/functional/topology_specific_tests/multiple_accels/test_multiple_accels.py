@@ -13,47 +13,72 @@ from keywords.utils import log_info
 from keywords.ClusterKeywords import ClusterKeywords
 from keywords.constants import SYNC_GATEWAY_CONFIGS
 from keywords.Logging import Logging
+from keywords.SyncGateway import validate_sync_gateway_mode
+from keywords.SyncGateway import sync_gateway_config_path_for_mode
+import keywords.constants
+
 from libraries.NetworkUtils import NetworkUtils
 
 
-# This will be called once for the first test in the directory.
-# After all the tests have completed in the directory
-# the function will execute everything after the yield
+# This will be called once at the beggining of the execution of each .py file
+# in the 'topology_specific_tests/multiple_accels' directory.
+# It will be torn down (code after the yeild) when all of the tests have executed in that file
 @pytest.fixture(scope="module")
-def setup_1sg_2ac_1cbs_suite(request):
-    log_info("Setting up 'setup_1sg_2ac_1cbs_suite' ...")
+def params_from_base_suite_setup(request):
+    log_info("Setting up 'params_from_base_suite_setup' ...")
 
     server_version = request.config.getoption("--server-version")
     sync_gateway_version = request.config.getoption("--sync-gateway-version")
+    mode = request.config.getoption("--mode")
+    skip_provisioning = request.config.getoption("--skip-provisioning")
 
-    # Set the CLUSTER_CONFIG environment variable to 1sg_2ac_1cbs
-    cluster_helper = ClusterKeywords()
-    cluster_helper.set_cluster_config("1sg_2ac_1cbs")
+    log_info("server_version: {}".format(server_version))
+    log_info("sync_gateway_version: {}".format(sync_gateway_version))
+    log_info("mode: {}".format(mode))
+    log_info("skip_provisioning: {}".format(skip_provisioning))
 
-    cluster_helper.provision_cluster(
-        cluster_config=os.environ["CLUSTER_CONFIG"],
-        server_version=server_version,
-        sync_gateway_version=sync_gateway_version,
-        sync_gateway_config="{}/sync_gateway_default_functional_tests_di.json".format(SYNC_GATEWAY_CONFIGS)
-    )
+    # Make sure mode for sync_gateway is supported ('cc' or 'di')
+    validate_sync_gateway_mode(mode)
 
-    yield
+    # Skip these tests unless you are running in 'di' mode
+    if mode != "di":
+        pytest.skip("These tests should only run in with sg_accels")
 
-    cluster_helper.unset_cluster_config()
+    # use multiple_sg_accels_di
+    cluster_config = "{}/multiple_sg_accels_di".format(keywords.constants.CLUSTER_CONFIGS_DIR, mode)
+    sg_config = "{}/sync_gateway_default_functional_tests_di.json".format(SYNC_GATEWAY_CONFIGS)
 
-    log_info("Tearing down 'setup_1sg_2ac_1cbs_suite' ...")
+    # Skip provisioning if user specifies '--skip-provisoning'
+    if not skip_provisioning:
+        cluster_helper = ClusterKeywords()
+        cluster_helper.provision_cluster(
+            cluster_config=cluster_config,
+            server_version=server_version,
+            sync_gateway_version=sync_gateway_version,
+            sync_gateway_config=sg_config
+        )
+
+    yield {"cluster_config": cluster_config, "mode": mode}
+
+    log_info("Tearing down 'params_from_base_suite_setup' ...")
 
 
-# This is called before each test and will yield the cluster_config to each test in the file
-# After each test_* function, execution will continue from the yield a pull logs on failure
+# This is called before each test and will yield the dictionary to each test that references the method
+# as a parameter to the test method
 @pytest.fixture(scope="function")
-def setup_1sg_2ac_1cbs_test(request):
+def params_from_base_test_setup(request, params_from_base_suite_setup):
+    # Code before the yeild will execute before each test starts
+
+    cluster_config = params_from_base_suite_setup["cluster_config"]
+    mode = params_from_base_suite_setup["mode"]
 
     test_name = request.node.name
     log_info("Setting up test '{}'".format(test_name))
 
-    yield {"cluster_config": os.environ["CLUSTER_CONFIG"]}
+    # This dictionary is passed to each test
+    yield {"cluster_config": cluster_config, "mode": mode}
 
+    # Code after the yeild will execute when each test finishes
     log_info("Tearing down test '{}'".format(test_name))
 
     network_utils = NetworkUtils()
@@ -62,22 +87,22 @@ def setup_1sg_2ac_1cbs_test(request):
     # if the test failed pull logs
     if request.node.rep_call.failed:
         logging_helper = Logging()
-        logging_helper.fetch_and_analyze_logs(cluster_config=os.environ["CLUSTER_CONFIG"], test_name=test_name)
+        logging_helper.fetch_and_analyze_logs(cluster_config=cluster_config, test_name=test_name)
 
 
 @pytest.mark.topospecific
 @pytest.mark.sanity
 @pytest.mark.syncgateway
-@pytest.mark.usefixtures("setup_1sg_2ac_1cbs_suite")
 @pytest.mark.parametrize("sg_conf", [
-    ("{}/sync_gateway_default_functional_tests_di.json".format(SYNC_GATEWAY_CONFIGS)),
+    "{}/sync_gateway_default_functional_tests_di.json".format(SYNC_GATEWAY_CONFIGS)
 ])
-def test_dcp_reshard_sync_gateway_goes_down(setup_1sg_2ac_1cbs_test, sg_conf):
+def test_dcp_reshard_sync_gateway_goes_down(params_from_base_test_setup, sg_conf):
 
-    cluster_conf = setup_1sg_2ac_1cbs_test["cluster_config"]
+    cluster_conf = params_from_base_test_setup["cluster_config"]
 
     log_info("Running 'test_dcp_reshard_sync_gateway_goes_down'")
     log_info("cluster_conf: {}".format(cluster_conf))
+
     log_info("sg_conf: {}".format(sg_conf))
 
     cluster = Cluster(config=cluster_conf)
@@ -122,13 +147,12 @@ def test_dcp_reshard_sync_gateway_goes_down(setup_1sg_2ac_1cbs_test, sg_conf):
 @pytest.mark.topospecific
 @pytest.mark.sanity
 @pytest.mark.syncgateway
-@pytest.mark.usefixtures("setup_1sg_2ac_1cbs_suite")
 @pytest.mark.parametrize("sg_conf", [
-    ("{}/sync_gateway_default_functional_tests_di.json".format(SYNC_GATEWAY_CONFIGS)),
+    "{}/sync_gateway_default_functional_tests_di.json".format(SYNC_GATEWAY_CONFIGS)
 ])
-def test_dcp_reshard_sync_gateway_comes_up(setup_1sg_2ac_1cbs_test, sg_conf):
+def test_dcp_reshard_sync_gateway_comes_up(params_from_base_test_setup, sg_conf):
 
-    cluster_conf = setup_1sg_2ac_1cbs_test["cluster_config"]
+    cluster_conf = params_from_base_test_setup["cluster_config"]
 
     log_info("Running 'test_dcp_reshard_sync_gateway_goes_down'")
     log_info("cluster_conf: {}".format(cluster_conf))
@@ -181,16 +205,16 @@ def test_dcp_reshard_sync_gateway_comes_up(setup_1sg_2ac_1cbs_test, sg_conf):
 @pytest.mark.topospecific
 @pytest.mark.sanity
 @pytest.mark.syncgateway
-@pytest.mark.usefixtures("setup_1sg_2ac_1cbs_suite")
 @pytest.mark.parametrize("sg_conf", [
-    ("{}/sync_gateway_default_functional_tests_di.json".format(SYNC_GATEWAY_CONFIGS)),
+    "{}/sync_gateway_default_functional_tests_di.json".format(SYNC_GATEWAY_CONFIGS),
 ])
-def test_dcp_reshard_single_sg_accel_goes_down_and_up(setup_1sg_2ac_1cbs_test, sg_conf):
+def test_dcp_reshard_single_sg_accel_goes_down_and_up(params_from_base_test_setup, sg_conf):
 
-    cluster_conf = setup_1sg_2ac_1cbs_test["cluster_config"]
+    cluster_conf = params_from_base_test_setup["cluster_config"]
 
     log_info("Running 'test_dcp_reshard_single_sg_accel_goes_down_and_up'")
     log_info("cluster_conf: {}".format(cluster_conf))
+
     log_info("sg_conf: {}".format(sg_conf))
 
     cluster = Cluster(config=cluster_conf)
@@ -251,17 +275,16 @@ def test_dcp_reshard_single_sg_accel_goes_down_and_up(setup_1sg_2ac_1cbs_test, s
 @pytest.mark.topospecific
 @pytest.mark.sanity
 @pytest.mark.syncgateway
-@pytest.mark.usefixtures("setup_1sg_2ac_1cbs_suite")
 @pytest.mark.parametrize("sg_conf", [
     ("{}/performance/sync_gateway_default_performance.json".format(SYNC_GATEWAY_CONFIGS)),
 ])
-def test_pindex_distribution(setup_1sg_2ac_1cbs_test, sg_conf):
+def test_pindex_distribution(params_from_base_test_setup, sg_conf):
 
     # the test itself doesn't have to do anything beyond calling cluster.reset() with the
     # right configuration, since the validation of the cbgt pindex distribution is in the
     # cluster.reset() method itself.
 
-    cluster_conf = setup_1sg_2ac_1cbs_test["cluster_config"]
+    cluster_conf = params_from_base_test_setup["cluster_config"]
 
     log_info("Running 'test_pindex_distribution'")
     log_info("cluster_conf: {}".format(cluster_conf))
