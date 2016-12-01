@@ -181,9 +181,9 @@ def test_longpoll_awaken_doc_add_update(params_from_base_test_setup, sg_conf_nam
                                    name=andy_user_info.name, password=andy_user_info.password, channels=andy_user_info.channels)
 
     # Get starting sequence of docs, use the last seq to progress past any user docs
-    adam_changes = client.get_changes(url=sg_url, db=sg_db, since=0, timeout=30, auth=adam_auth)
-    traun_changes = client.get_changes(url=sg_url, db=sg_db, since=0, timeout=30, auth=traun_auth)
-    andy_changes = client.get_changes(url=sg_url, db=sg_db, since=0, timeout=30, auth=andy_auth)
+    adam_changes = client.get_changes(url=sg_url, db=sg_db, since=0, feed="normal", auth=adam_auth)
+    traun_changes = client.get_changes(url=sg_url, db=sg_db, since=0, feed="normal", auth=traun_auth)
+    andy_changes = client.get_changes(url=sg_url, db=sg_db, since=0, feed="normal", auth=andy_auth)
 
     with concurrent.futures.ProcessPoolExecutor() as ex:
         adam_changes_task = ex.submit(client.get_changes, url=sg_url, db=sg_db, since=adam_changes["last_seq"], timeout=30, auth=adam_auth)
@@ -420,9 +420,9 @@ def test_longpoll_awaken_channels(params_from_base_test_setup, sg_conf_name):
     ############################################################
 
     # Get starting sequence of docs, use the last seq to progress past any _user docs.
-    adam_changes = client.get_changes(url=sg_url, db=sg_db, since=0, timeout=2, auth=adam_auth)
-    traun_changes = client.get_changes(url=sg_url, db=sg_db, since=0, timeout=2, auth=traun_auth)
-    andy_changes = client.get_changes(url=sg_url, db=sg_db, since=0, timeout=2, auth=andy_auth)
+    adam_changes = client.get_changes(url=sg_url, db=sg_db, since=0, feed="normal", auth=adam_auth)
+    traun_changes = client.get_changes(url=sg_url, db=sg_db, since=0, feed="normal", auth=traun_auth)
+    andy_changes = client.get_changes(url=sg_url, db=sg_db, since=0, feed="normal", auth=andy_auth)
 
     with concurrent.futures.ProcessPoolExecutor() as ex:
 
@@ -468,18 +468,15 @@ def test_longpoll_awaken_channels(params_from_base_test_setup, sg_conf_name):
                                           name=andy_user_info.name, password=andy_user_info.password, channels=["ABC"])
         andy_auth = update_andy_user_task.result()
 
-        # Make sure changes feed wakes up and contains at least one change
+        # Make sure changes feed wakes up and contains at least one change, 2 may be possible if the _user doc is included
+        # Make sure the first change is 'adam_doc'
         traun_changes = traun_changes_task.result()
         assert 1 <= len(traun_changes["results"]) <= 2
-        changed_doc_ids = [change["id"] for change in traun_changes["results"]]
-        log_info("Changed doc_ids: {}".format(changed_doc_ids))
-        assert "adam_doc_0" in changed_doc_ids or "_user/traun" in changed_doc_ids
+        assert traun_changes["results"][0]["id"] == "adam_doc_0"
 
         andy_changes = andy_changes_task.result()
         assert 1 <= len(andy_changes["results"]) <= 2
-        changed_doc_ids = [change["id"] for change in andy_changes["results"]]
-        log_info("Changed doc_ids: {}".format(changed_doc_ids))
-        assert "adam_doc_0" in changed_doc_ids or "_user/andy" in changed_doc_ids
+        assert andy_changes["results"][0]["id"] == "adam_doc_0"
 
     # Block until user docs are seen
     client.verify_doc_id_in_changes(url=sg_url, db=sg_db, expected_doc_id="_user/adam", auth=adam_auth)
@@ -496,9 +493,9 @@ def test_longpoll_awaken_channels(params_from_base_test_setup, sg_conf_name):
     ############################################################
 
     # Get latest last_seq for next test section
-    adam_changes = client.get_changes(url=sg_url, db=sg_db, since=0, timeout=2, auth=adam_auth)
-    traun_changes = client.get_changes(url=sg_url, db=sg_db, since=0, timeout=2, auth=traun_auth)
-    andy_changes = client.get_changes(url=sg_url, db=sg_db, since=0, timeout=2, auth=andy_auth)
+    adam_changes = client.get_changes(url=sg_url, db=sg_db, since=0, feed="normal", auth=adam_auth)
+    traun_changes = client.get_changes(url=sg_url, db=sg_db, since=0, feed="normal", auth=traun_auth)
+    andy_changes = client.get_changes(url=sg_url, db=sg_db, since=0, feed="normal", auth=andy_auth)
 
     with concurrent.futures.ProcessPoolExecutor() as ex:
 
@@ -543,9 +540,9 @@ def test_longpoll_awaken_channels(params_from_base_test_setup, sg_conf_name):
     ############################################################
 
     # Get latest last_seq for next test section
-    adam_changes = client.get_changes(url=sg_url, db=sg_db, since=0, timeout=2, auth=adam_auth)
-    traun_changes = client.get_changes(url=sg_url, db=sg_db, since=0, timeout=2, auth=traun_auth)
-    andy_changes = client.get_changes(url=sg_url, db=sg_db, since=0, timeout=2, auth=andy_auth)
+    adam_changes = client.get_changes(url=sg_url, db=sg_db, since=0, feed="normal", auth=adam_auth)
+    traun_changes = client.get_changes(url=sg_url, db=sg_db, since=0, feed="normal", auth=traun_auth)
+    andy_changes = client.get_changes(url=sg_url, db=sg_db, since=0, feed="normal", auth=andy_auth)
 
     admin_auth = client.create_user(url=sg_admin_url, db=sg_db, name="admin", password="password", channels=["admin"])
 
@@ -649,15 +646,20 @@ def test_longpoll_awaken_roles(params_from_base_test_setup, sg_conf_name):
     # change feed wakes for role add
     ################################
 
+    # Get starting sequence of docs, use the last seq to progress past any _user docs.
+    adam_changes = client.get_changes(url=sg_url, db=sg_db, since=0, feed="normal", auth=adam_auth)
+    traun_changes = client.get_changes(url=sg_url, db=sg_db, since=0, feed="normal", auth=traun_auth)
+    andy_changes = client.get_changes(url=sg_url, db=sg_db, since=0, feed="normal", auth=andy_auth)
+
     # Add doc with channel associated with the admin role
     admin_doc = client.add_docs(url=sg_url, db=sg_db, number=1, id_prefix="admin_doc", auth=admin_auth, channels=[admin_channel])
     client.verify_docs_in_changes(url=sg_url, db=sg_db, expected_docs=admin_doc, auth=admin_auth)
 
     with concurrent.futures.ProcessPoolExecutor() as ex:
         # Start changes feed for 3 users from latest last_seq
-        adam_changes_task = ex.submit(client.get_changes, url=sg_url, db=sg_db, since=0, timeout=10, auth=adam_auth)
-        traun_changes_task = ex.submit(client.get_changes, url=sg_url, db=sg_db, since=0, timeout=10, auth=traun_auth)
-        andy_changes_task = ex.submit(client.get_changes, url=sg_url, db=sg_db, since=0, timeout=10, auth=andy_auth)
+        adam_changes_task = ex.submit(client.get_changes, url=sg_url, db=sg_db, since=adam_changes["last_seq"], timeout=10, auth=adam_auth)
+        traun_changes_task = ex.submit(client.get_changes, url=sg_url, db=sg_db, since=traun_changes["last_seq"], timeout=10, auth=traun_auth)
+        andy_changes_task = ex.submit(client.get_changes, url=sg_url, db=sg_db, since=andy_changes["last_seq"], timeout=10, auth=andy_auth)
 
         # Wait for changes feed to notice there are no changes and enter wait. 2 seconds should be more than enough
         time.sleep(2)
@@ -679,18 +681,15 @@ def test_longpoll_awaken_roles(params_from_base_test_setup, sg_conf_name):
 
         adam_changes = adam_changes_task.result()
         assert 1 <= len(adam_changes["results"]) <= 2
-        doc_ids_in_changes = [change["id"] for change in adam_changes["results"]]
-        assert "_user/adam" in doc_ids_in_changes or "admin_doc_0" in doc_ids_in_changes
+        assert adam_changes["results"][0]["id"] == "admin_doc_0"
 
         traun_changes = traun_changes_task.result()
         assert 1 <= len(traun_changes["results"]) <= 2
-        doc_ids_in_changes = [change["id"] for change in traun_changes["results"]]
-        assert "_user/traun" in doc_ids_in_changes or "admin_doc_0" in doc_ids_in_changes
+        assert traun_changes["results"][0]["id"] == "admin_doc_0"
 
         andy_changes = andy_changes_task.result()
         assert 1 <= len(andy_changes["results"]) <= 2
-        doc_ids_in_changes = [change["id"] for change in andy_changes["results"]]
-        assert "_user/andy" in doc_ids_in_changes or "admin_doc_0" in doc_ids_in_changes
+        assert andy_changes["results"][0]["id"] == "admin_doc_0"
 
     # Check that the user docs all show up in changes feed
     client.verify_doc_id_in_changes(url=sg_url, db=sg_db, expected_doc_id="_user/adam", auth=adam_auth)
@@ -718,9 +717,9 @@ def test_longpoll_awaken_roles(params_from_base_test_setup, sg_conf_name):
     adb_doc = client.add_docs(url=sg_url, db=sg_db, number=1, id_prefix="abc_doc", auth=abc_pusher_auth, channels=[abc_channel])
 
     # Get latest last_seq for next test section
-    adam_changes = client.get_changes(url=sg_url, db=sg_db, since=0, timeout=2, auth=adam_auth)
-    traun_changes = client.get_changes(url=sg_url, db=sg_db, since=0, timeout=2, auth=traun_auth)
-    andy_changes = client.get_changes(url=sg_url, db=sg_db, since=0, timeout=2, auth=andy_auth)
+    adam_changes = client.get_changes(url=sg_url, db=sg_db, since=0, feed="normal", auth=adam_auth)
+    traun_changes = client.get_changes(url=sg_url, db=sg_db, since=0, feed="normal", auth=traun_auth)
+    andy_changes = client.get_changes(url=sg_url, db=sg_db, since=0, feed="normal", auth=andy_auth)
 
     with concurrent.futures.ProcessPoolExecutor() as ex:
         # Start changes feed for 3 users from latest last_seq
@@ -762,7 +761,7 @@ def test_longpoll_awaken_roles(params_from_base_test_setup, sg_conf_name):
 @pytest.mark.syncgateway
 @pytest.mark.changes
 @pytest.mark.parametrize("sg_conf_name", [
-    "custom_sync/wake_changes",
+    "custom_sync/wake_changes_access",
 ])
 def test_longpoll_awaken_via_sync_access(params_from_base_test_setup, sg_conf_name):
     """
@@ -816,9 +815,9 @@ def test_longpoll_awaken_via_sync_access(params_from_base_test_setup, sg_conf_na
     _ = client.add_docs(url=sg_url, db=sg_db, number=1, id_prefix="natgeo", channels=["NATGEO"], auth=channel_pusher_auth)
 
     # Get starting sequence of docs, use the last seq to progress past any _user docs.
-    adam_changes = client.get_changes(url=sg_url, db=sg_db, since=0, timeout=2, auth=adam_auth)
-    traun_changes = client.get_changes(url=sg_url, db=sg_db, since=0, timeout=2, auth=traun_auth)
-    andy_changes = client.get_changes(url=sg_url, db=sg_db, since=0, timeout=2, auth=andy_auth)
+    adam_changes = client.get_changes(url=sg_url, db=sg_db, since=0, feed="normal", auth=adam_auth)
+    traun_changes = client.get_changes(url=sg_url, db=sg_db, since=0, feed="normal", auth=traun_auth)
+    andy_changes = client.get_changes(url=sg_url, db=sg_db, since=0, feed="normal", auth=andy_auth)
 
     with concurrent.futures.ProcessPoolExecutor() as ex:
         # Start changes feed for 3 users from latest last_seq
@@ -853,7 +852,7 @@ def test_longpoll_awaken_via_sync_access(params_from_base_test_setup, sg_conf_na
         assert len(andy_changes["results"]) == 1
         assert andy_changes["results"][0]["id"] == "natgeo_0"
 
-    # Assert that the changes are caught up and shoule recieve no new changes from last_seq
+    # Assert that the changes are caught up and should recieve no new changes from last_seq
     # Test for https://github.com/couchbase/sync_gateway/issues/2186
     adam_changes = client.get_changes(url=sg_url, db=sg_db, since=adam_changes["last_seq"], auth=adam_auth, timeout=1)
     assert len(adam_changes["results"]) == 0
@@ -931,9 +930,9 @@ def test_longpoll_awaken_via_sync_role(params_from_base_test_setup, sg_conf_name
     _ = client.add_docs(url=sg_url, db=sg_db, number=1, id_prefix="techno_doc", channels=[techno_channel], auth=admin_auth)
 
     # Get starting sequence of docs, use the last seq to progress past any _user docs.
-    adam_changes = client.get_changes(url=sg_url, db=sg_db, since=0, timeout=2, auth=adam_auth)
-    traun_changes = client.get_changes(url=sg_url, db=sg_db, since=0, timeout=2, auth=traun_auth)
-    andy_changes = client.get_changes(url=sg_url, db=sg_db, since=0, timeout=2, auth=andy_auth)
+    adam_changes = client.get_changes(url=sg_url, db=sg_db, since=0, feed="normal", auth=adam_auth)
+    traun_changes = client.get_changes(url=sg_url, db=sg_db, since=0, feed="normal", auth=traun_auth)
+    andy_changes = client.get_changes(url=sg_url, db=sg_db, since=0, feed="normal", auth=andy_auth)
 
     with concurrent.futures.ProcessPoolExecutor() as ex:
         # Start changes feed for 3 users from latest last_seq
@@ -969,7 +968,7 @@ def test_longpoll_awaken_via_sync_role(params_from_base_test_setup, sg_conf_name
         assert andy_changes["results"][0]["id"] == "techno_doc_0"
         assert andy_changes["results"][0]["changes"][0]["rev"].startswith("1-")
 
-    # Assert that the changes are caught up and shoule recieve no new changes from last_seq
+    # Assert that the changes are caught up and should recieve no new changes from last_seq
     # Test for https://github.com/couchbase/sync_gateway/issues/2186
     adam_changes = client.get_changes(url=sg_url, db=sg_db, since=adam_changes["last_seq"], auth=adam_auth, timeout=1)
     assert len(adam_changes["results"]) == 0
