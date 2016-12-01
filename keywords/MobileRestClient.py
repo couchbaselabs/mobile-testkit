@@ -74,6 +74,10 @@ def get_auth_type(auth):
     logging.debug("Using auth type: {}".format(auth_type))
     return auth_type
 
+def verify_is_list(obj):
+    if type(obj) != list:
+        raise TypeError("Channels must be a 'list'")
+
 
 class MobileRestClient:
     """
@@ -261,16 +265,89 @@ class MobileRestClient:
             log_r(resp)
             resp.raise_for_status()
 
-    def create_user(self, url, db, name, password, channels=[]):
+    def create_role(self, url, db, name, channels=None):
+        """ Creates a role with name and channels for the specified 'db' """
+
+        if channels is None:
+            channels = []
+
+        verify_is_list(channels)
+
+        data = {
+            "name": name,
+            "admin_channels": channels
+        }
+
+        resp = self._session.post("{}/{}/_role/".format(url, db), data=json.dumps(data))
+        log_r(resp)
+        resp.raise_for_status()
+
+    def update_role(self, url, db, name, channels=None):
+        """ Updates a role with name and channels for the specified 'db' """
+
+        if channels is None:
+            channels = []
+
+        verify_is_list(channels)
+
+        data = {
+            "name": name,
+            "admin_channels": channels
+        }
+
+        resp = self._session.put("{}/{}/_role/{}".format(url, db, name), data=json.dumps(data))
+        log_r(resp)
+        resp.raise_for_status()
+
+    def create_user(self, url, db, name, password, channels=None, roles=None):
+        """ Creates a user with channels on the sync_gateway Admin REST API.
+        Returns a name password tuple that can be used for session creation or basic authentication
+        """
+
+        if channels is None:
+            channels = []
+
+        if roles is None:
+            roles = []
+
+        verify_is_list(channels)
+        verify_is_list(roles)
+
         data = {
             "name": name,
             "password": password,
-            "admin_channels": channels
+            "admin_channels": channels,
+            "admin_roles": roles
         }
         resp = self._session.post("{}/{}/_user/".format(url, db), data=json.dumps(data))
         log_r(resp)
         resp.raise_for_status()
-        return (name, password)
+        return name, password
+
+    def update_user(self, url, db, name, password, channels=None, roles=None):
+        """ Updates a user via the admin REST api
+        Returns a name password tuple that can be used for session creation or basic authentication
+        """
+
+        if channels is None:
+            channels = []
+
+        if roles is None:
+            roles = []
+
+        verify_is_list(channels)
+        verify_is_list(roles)
+
+        data = {
+            "name": name,
+            "password": password,
+            "admin_channels": channels,
+            "admin_roles": roles
+        }
+        resp = self._session.put("{}/{}/_user/{}".format(url, db, name), data=json.dumps(data))
+        log_r(resp)
+        resp.raise_for_status()
+        return name, password
 
     def create_database(self, url, name, server=None):
         """
@@ -879,7 +956,7 @@ class MobileRestClient:
         logging.debug("url: {} db: {} updated: {}".format(url, db, updated_docs))
         return updated_docs
 
-    def update_doc(self, url, db, doc_id, number_updates=1, attachment_name=None, expiry=None, delay=None, auth=None):
+    def update_doc(self, url, db, doc_id, number_updates=1, attachment_name=None, expiry=None, delay=None, auth=None, channels=None):
         """
         Updates a doc on a db a number of times.
             1. GETs the doc
@@ -911,6 +988,9 @@ class MobileRestClient:
 
             if expiry is not None:
                 doc["_exp"] = expiry
+
+            if channels is not None:
+                doc["channels"] = channels
 
             if auth_type == AuthType.session:
                 resp = self._session.put("{}/{}/{}".format(url, db, doc_id), data=json.dumps(doc), cookies=dict(SyncGatewaySession=auth[1]))
@@ -944,6 +1024,9 @@ class MobileRestClient:
         """
         added_docs = []
         auth_type = get_auth_type(auth)
+
+        if channels is not None:
+            verify_is_list(channels)
 
         log_info("PUT {} docs to {}/{}/ with prefix {}".format(number, url, db, id_prefix))
 
@@ -1365,6 +1448,73 @@ class MobileRestClient:
 
             break
 
+    def get_changes(self, url, db, since, auth, feed="longpoll", timeout=60):
+        """
+        Issues a longpoll changes request with a provided since and authentication.
+        The timeout is in seconds.
+        Returns a python dictionary of the changes response in the format:
+
+        {u'last_seq': u'2', u'results': [{u'changes': [], u'id': u'_user/adam', u'seq': 2}]}
+        """
+
+        # Convert to ms for the sync_gateway REST api
+        timeout *= 1000
+
+        auth_type = get_auth_type(auth)
+        server_type = self.get_server_type(url)
+
+        if server_type == ServerType.listener:
+            resp = self._session.get("{}/{}/_changes?feed={}&since={}".format(url, db, feed, since))
+
+        elif server_type == ServerType.syncgateway:
+            body = {
+                "feed": feed,
+                "since": since,
+                "timeout": timeout
+            }
+
+            log_info("Using POST data: {}".format(body))
+
+            if auth_type == AuthType.session:
+                resp = self._session.post("{}/{}/_changes".format(url, db), data=json.dumps(body), cookies=dict(SyncGatewaySession=auth[1]))
+            elif auth_type == AuthType.http_basic:
+                resp = self._session.post("{}/{}/_changes".format(url, db), data=json.dumps(body), auth=auth)
+            else:
+                resp = self._session.post("{}/{}/_changes".format(url, db), data=json.dumps(body))
+
+        log_r(resp)
+        resp.raise_for_status()
+        resp_obj = resp.json()
+
+        log_info("Found {} changes".format(len(resp_obj["results"])))
+
+        return resp_obj
+
+    def verify_doc_id_in_changes(self, url, db, expected_doc_id, auth=None):
+        """ Verifies 'expected_doc_id' shows up in the changes feed starting with a since of 0
+        if the doc is not found before CLIENT_REQUEST_TIMEOUT, an exception is raised. If it is found,
+        return the last sequence that includes the doc
+        """
+
+        start = time.time()
+
+        last_seq = 0
+        while True:
+
+            if time.time() - start > CLIENT_REQUEST_TIMEOUT:
+                raise TimeoutException("Verify Docs In Changes: TIMEOUT")
+
+            resp_obj = self.get_changes(url=url, db=db, since=last_seq, auth=auth)
+            doc_ids_in_changes = [change["id"] for change in resp_obj["results"]]
+
+            if expected_doc_id in doc_ids_in_changes:
+                last_seq = resp_obj["last_seq"]
+                log_info("{} found at last_seq: {}".format(expected_doc_id, last_seq))
+                return last_seq
+            else:
+                log_info("'{}' not found retrying ...".format(expected_doc_id))
+                time.sleep(1)
+
     def verify_docs_in_changes(self, url, db, expected_docs, auth=None):
         """
         Verifies the expected docs are present in the database _changes feed using longpoll in a loop with
@@ -1374,8 +1524,6 @@ class MobileRestClient:
         expected_docs should be a dict {id: {rev: ""}} or
         a list of {id: {rev: ""}}. If the expected docs are a list, they will be converted to a single map.
         """
-
-        auth_type = get_auth_type(auth)
 
         if isinstance(expected_docs, list):
             # Create single dictionary for comparison, will also blow up for duplicate docs with the same id
@@ -1388,7 +1536,6 @@ class MobileRestClient:
 
         log_info("Verify {}/{} has {} docs in changes".format(url, db, len(expected_doc_map)), is_verify=True)
 
-        server_type = self.get_server_type(url)
         sequence_number_map = {}
 
         start = time.time()
@@ -1400,25 +1547,7 @@ class MobileRestClient:
             if time.time() - start > CLIENT_REQUEST_TIMEOUT:
                 raise TimeoutException("Verify Docs In Changes: TIMEOUT")
 
-            if server_type == ServerType.listener:
-                resp = self._session.get("{}/{}/_changes?feed=longpoll&since={}".format(url, db, last_seq))
-
-            elif server_type == ServerType.syncgateway:
-                body = {
-                    "feed": "longpoll",
-                    "since": last_seq
-                }
-
-                if auth_type == AuthType.session:
-                    resp = self._session.post("{}/{}/_changes".format(url, db), data=json.dumps(body), cookies=dict(SyncGatewaySession=auth[1]))
-                elif auth_type == AuthType.http_basic:
-                    resp = self._session.post("{}/{}/_changes".format(url, db), data=json.dumps(body), auth=auth)
-                else:
-                    resp = self._session.post("{}/{}/_changes".format(url, db), data=json.dumps(body))
-
-            log_r(resp)
-            resp.raise_for_status()
-            resp_obj = resp.json()
+            resp_obj = self.get_changes(url=url, db=db, since=last_seq, auth=auth)
 
             missing_expected_docs = []
             for resp_doc in resp_obj["results"]:
@@ -1445,7 +1574,7 @@ class MobileRestClient:
                 break
 
             # update last sequence and continue
-            last_seq = int(resp_obj["last_seq"])
+            last_seq = resp_obj["last_seq"]
             logging.info("last_seq: {}".format(last_seq))
 
             time.sleep(1)

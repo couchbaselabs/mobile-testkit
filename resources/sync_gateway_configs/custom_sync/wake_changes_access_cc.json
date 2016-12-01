@@ -1,0 +1,26 @@
+{
+    "interface":":4984",
+    "adminInterface": "0.0.0.0:4985",
+    "maxIncomingConnections": 0,
+    "maxCouchbaseConnections": 16,
+    "maxFileDescriptors": 90000,
+    "slowServerCallWarningThreshold": 500,
+    "compressResponses": false,
+    "log": ["CRUD+", "Cache+", "HTTP+", "Changes+"],
+    "verbose":"true",
+    "databases":{
+        "db":{
+            "server":"http://{{ couchbase_server_primary_node }}:8091",
+            "bucket":"data-bucket",
+            "sync":
+            `function(doc, oldDoc){
+                if(doc._id == "access_doc_0") {
+                    console.log("granting_access!");
+                    access(["adam", "traun", "andy"], "NATGEO");
+                }
+                channel(doc, doc.channels);
+            }`
+        }
+    }
+}
+
