@@ -48,10 +48,11 @@ class LiteServNetMono(LiteServBase):
         # Remove .zip
         os.remove("{}/{}".format(BINARY_DIR, downloaded_package_zip_name))
 
-        # Remove x64 and x86 HACK - To get around https://github.com/couchbase/couchbase-lite-net/issues/672
-        # Need to remove once the issue is resolved
-        shutil.rmtree("{}/{}/x64".format(BINARY_DIR, extracted_directory_name))
-        shutil.rmtree("{}/{}/x86".format(BINARY_DIR, extracted_directory_name))
+        # HACK - To get around https://github.com/couchbase/couchbase-lite-net/issues/672
+        # This is fixed 1.4+ but need to keep it around to allow running against older versions of LiteServ
+        if version.startswith("1.2") or version.startswith("1.3"):
+            shutil.rmtree("{}/{}/x64".format(BINARY_DIR, extracted_directory_name))
+            shutil.rmtree("{}/{}/x86".format(BINARY_DIR, extracted_directory_name))
 
     def install(self):
         """
@@ -78,7 +79,11 @@ class LiteServNetMono(LiteServBase):
 
         self._verify_not_running()
 
-        binary_path = "{}/couchbase-lite-net-mono-{}-liteserv/LiteServ.exe".format(BINARY_DIR, self.version_build)
+        # The package structure for LiteServ is different pre 1.4. Handle for this case
+        if self.version_build.startswith("1.2") or self.version_build.startswith("1.3"):
+            binary_path = "{}/couchbase-lite-net-mono-{}-liteserv/LiteServ.exe".format(BINARY_DIR, self.version_build)
+        else:
+            binary_path = "{}/couchbase-lite-net-mono-{}-liteserv/net45/LiteServ.exe".format(BINARY_DIR, self.version_build)
 
         process_args = [
             "mono",
