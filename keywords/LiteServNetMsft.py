@@ -56,6 +56,7 @@ class LiteServNetMsft(LiteServBase):
         download_url = "{}/couchbase-lite-net/{}/{}/LiteServ.zip".format(LATEST_BUILDS, version, build)
         package_name = "couchbase-lite-net-msft-{}-liteserv".format(self.version_build)
 
+        # Download LiteServ via Ansible on remote machine
         status = self.ansible_runner.run_ansible_playbook("download-liteserv-msft.yml", extra_vars={
             "download_url": download_url,
             "package_name": package_name
@@ -116,11 +117,16 @@ class LiteServNetMsft(LiteServBase):
                 db_flags.append("{}=pass".format(db_name))
             process_args.extend(db_flags)
 
-        binary_path = "couchbase-lite-net-msft-{}-liteserv/LiteServ.exe".format(self.version_build)
+        # The package structure for LiteServ is different pre 1.4. Handle for this case
+        if self.version_build.startswith("1.2") or self.version_build.startswith("1.3"):
+            binary_path = "couchbase-lite-net-msft-{}-liteserv/LiteServ.exe".format(self.version_build)
+        else:
+            binary_path = "couchbase-lite-net-msft-{}-liteserv/net45/LiteServ.exe".format(self.version_build)
 
         joined_args = " ".join(process_args)
         log_info("Starting LiteServ {} with: {}".format(binary_path, joined_args))
 
+        # Start LiteServ via Ansible on remote machine
         status = self.ansible_runner.run_ansible_playbook(
             "start-liteserv-msft.yml",
             extra_vars={
