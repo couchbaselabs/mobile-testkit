@@ -74,6 +74,7 @@ def get_auth_type(auth):
     logging.debug("Using auth type: {}".format(auth_type))
     return auth_type
 
+
 def verify_is_list(obj):
     if type(obj) != list:
         raise TypeError("Channels must be a 'list'")

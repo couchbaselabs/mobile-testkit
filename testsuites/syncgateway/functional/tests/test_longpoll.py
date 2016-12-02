@@ -11,7 +11,6 @@ from libraries.testkit.cluster import Cluster
 from libraries.testkit.verify import verify_changes
 from libraries.testkit.verify import verify_same_docs
 
-from keywords.ClusterKeywords import ClusterKeywords
 from keywords.SyncGateway import sync_gateway_config_path_for_mode
 from keywords.utils import log_info
 from keywords.MobileRestClient import MobileRestClient
@@ -472,11 +471,11 @@ def test_longpoll_awaken_channels(params_from_base_test_setup, sg_conf_name):
         # Make sure the first change is 'adam_doc'
         traun_changes = traun_changes_task.result()
         assert 1 <= len(traun_changes["results"]) <= 2
-        assert traun_changes["results"][0]["id"] == "adam_doc_0"
+        assert traun_changes["results"][0]["id"] == "adam_doc_0" or traun_changes["results"][0]["id"] == "_user/traun"
 
         andy_changes = andy_changes_task.result()
         assert 1 <= len(andy_changes["results"]) <= 2
-        assert andy_changes["results"][0]["id"] == "adam_doc_0"
+        assert andy_changes["results"][0]["id"] == "adam_doc_0" or andy_changes["results"][0]["id"] == "_user/andy"
 
     # Block until user docs are seen
     client.verify_doc_id_in_changes(url=sg_url, db=sg_db, expected_doc_id="_user/adam", auth=adam_auth)
@@ -514,7 +513,7 @@ def test_longpoll_awaken_channels(params_from_base_test_setup, sg_conf_name):
         assert not andy_changes_task.done()
 
         # Remove the channels property from the doc
-        _ = client.update_doc(url=sg_url, db=sg_db, doc_id=doc_id, auth=traun_auth, channels=[])
+        client.update_doc(url=sg_url, db=sg_db, doc_id=doc_id, auth=traun_auth, channels=[])
 
         # All three changes feeds should wake up and return one result
         adam_changes = adam_changes_task.result()
@@ -551,7 +550,7 @@ def test_longpoll_awaken_channels(params_from_base_test_setup, sg_conf_name):
     # Add another doc with no channels
     doc_util = Document()
     channel_grant_doc_body = doc_util.create_doc(id=channel_grant_doc_id, channels=["admin"])
-    _ = client.add_doc(url=sg_url, db=sg_db, doc=channel_grant_doc_body, auth=admin_auth)
+    client.add_doc(url=sg_url, db=sg_db, doc=channel_grant_doc_body, auth=admin_auth)
 
     with concurrent.futures.ProcessPoolExecutor() as ex:
         # Start changes feed for 3 users from latest last_seq
@@ -569,7 +568,9 @@ def test_longpoll_awaken_channels(params_from_base_test_setup, sg_conf_name):
         assert not andy_changes_task.done()
 
         # update the grant doc to have channel for all users
-        _ = ex.submit(client.update_doc(url=sg_url, db=sg_db, doc_id=channel_grant_doc_id, auth=admin_auth, channels=["admin", "ABC", "NBC"]))
+        update_task = ex.submit(client.update_doc, url=sg_url, db=sg_db, doc_id=channel_grant_doc_id, auth=admin_auth, channels=["admin", "ABC", "NBC"])
+        updated_doc = update_task.result()
+        assert updated_doc["rev"].startswith("2-")
 
         # Verify that access grant wakes up changes feed for adam, traun, and Andy
         adam_changes = adam_changes_task.result()
@@ -681,15 +682,15 @@ def test_longpoll_awaken_roles(params_from_base_test_setup, sg_conf_name):
 
         adam_changes = adam_changes_task.result()
         assert 1 <= len(adam_changes["results"]) <= 2
-        assert adam_changes["results"][0]["id"] == "admin_doc_0"
+        assert adam_changes["results"][0]["id"] == "admin_doc_0" or adam_changes["results"][0]["id"] == "_user/adam"
 
         traun_changes = traun_changes_task.result()
         assert 1 <= len(traun_changes["results"]) <= 2
-        assert traun_changes["results"][0]["id"] == "admin_doc_0"
+        assert traun_changes["results"][0]["id"] == "admin_doc_0" or traun_changes["results"][0]["id"] == "_user/traun"
 
         andy_changes = andy_changes_task.result()
         assert 1 <= len(andy_changes["results"]) <= 2
-        assert andy_changes["results"][0]["id"] == "admin_doc_0"
+        assert andy_changes["results"][0]["id"] == "admin_doc_0" or andy_changes["results"][0]["id"] == "_user/andy"
 
     # Check that the user docs all show up in changes feed
     client.verify_doc_id_in_changes(url=sg_url, db=sg_db, expected_doc_id="_user/adam", auth=adam_auth)
@@ -714,7 +715,7 @@ def test_longpoll_awaken_roles(params_from_base_test_setup, sg_conf_name):
                                          password=abc_pusher_info.password, channels=abc_pusher_info.channels)
 
     # Add doc with ABC channel
-    adb_doc = client.add_docs(url=sg_url, db=sg_db, number=1, id_prefix="abc_doc", auth=abc_pusher_auth, channels=[abc_channel])
+    client.add_docs(url=sg_url, db=sg_db, number=1, id_prefix="abc_doc", auth=abc_pusher_auth, channels=[abc_channel])
 
     # Get latest last_seq for next test section
     adam_changes = client.get_changes(url=sg_url, db=sg_db, since=0, feed="normal", auth=adam_auth)
@@ -812,7 +813,7 @@ def test_longpoll_awaken_via_sync_access(params_from_base_test_setup, sg_conf_na
     traun_auth = client.create_user(url=sg_admin_url, db=sg_db, name=traun_user_info.name, password=traun_user_info.password)
     andy_auth = client.create_user(url=sg_admin_url, db=sg_db, name=andy_user_info.name, password=andy_user_info.password)
 
-    _ = client.add_docs(url=sg_url, db=sg_db, number=1, id_prefix="natgeo", channels=["NATGEO"], auth=channel_pusher_auth)
+    client.add_docs(url=sg_url, db=sg_db, number=1, id_prefix="natgeo", channels=["NATGEO"], auth=channel_pusher_auth)
 
     # Get starting sequence of docs, use the last seq to progress past any _user docs.
     adam_changes = client.get_changes(url=sg_url, db=sg_db, since=0, feed="normal", auth=adam_auth)
@@ -835,9 +836,7 @@ def test_longpoll_awaken_via_sync_access(params_from_base_test_setup, sg_conf_na
         assert not andy_changes_task.done()
 
         # Grant adam, traun and andy access to the "NATGEO" channel
-        channel_pusher_access_doc = client.add_docs(url=sg_url, db=sg_db,
-                                                    number=1, id_prefix="access_doc",
-                                                    channels=[], auth=channel_pusher_auth)
+        client.add_docs(url=sg_url, db=sg_db, number=1, id_prefix="access_doc", channels=[], auth=channel_pusher_auth)
 
         # Changes feed should wake up with the natgeo_0 doc
         adam_changes = adam_changes_task.result()
@@ -927,7 +926,7 @@ def test_longpoll_awaken_via_sync_role(params_from_base_test_setup, sg_conf_name
     andy_auth = client.create_user(url=sg_admin_url, db=sg_db,
                                    name=andy_user_info.name, password=andy_user_info.password)
 
-    _ = client.add_docs(url=sg_url, db=sg_db, number=1, id_prefix="techno_doc", channels=[techno_channel], auth=admin_auth)
+    client.add_docs(url=sg_url, db=sg_db, number=1, id_prefix="techno_doc", channels=[techno_channel], auth=admin_auth)
 
     # Get starting sequence of docs, use the last seq to progress past any _user docs.
     adam_changes = client.get_changes(url=sg_url, db=sg_db, since=0, feed="normal", auth=adam_auth)
@@ -950,7 +949,7 @@ def test_longpoll_awaken_via_sync_role(params_from_base_test_setup, sg_conf_name
         assert not andy_changes_task.done()
 
         # Grant adam, traun and andy access to the "NATGEO" channel
-        _ = client.add_docs(url=sg_url, db=sg_db, number=1, id_prefix="role_doc", channels=[], auth=admin_auth)
+        client.add_docs(url=sg_url, db=sg_db, number=1, id_prefix="role_doc", channels=[], auth=admin_auth)
 
         # Changes feed should wake up with the natgeo_0 doc
         adam_changes = adam_changes_task.result()
