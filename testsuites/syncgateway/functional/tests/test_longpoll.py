@@ -568,7 +568,9 @@ def test_longpoll_awaken_channels(params_from_base_test_setup, sg_conf_name):
         assert not andy_changes_task.done()
 
         # update the grant doc to have channel for all users
-        _ = ex.submit(client.update_doc(url=sg_url, db=sg_db, doc_id=channel_grant_doc_id, auth=admin_auth, channels=["admin", "ABC", "NBC"]))
+        update_task = ex.submit(client.update_doc, url=sg_url, db=sg_db, doc_id=channel_grant_doc_id, auth=admin_auth, channels=["admin", "ABC", "NBC"])
+        updated_doc = update_task.result()
+        assert updated_doc["rev"].startswith("2-")
 
         # Verify that access grant wakes up changes feed for adam, traun, and Andy
         adam_changes = adam_changes_task.result()
