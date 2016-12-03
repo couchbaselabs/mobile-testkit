@@ -12,3 +12,11 @@ class CollectionError(Exception):
 
 class TimeoutException(Exception):
     pass
+
+
+class Error(Exception):
+    pass
+
+
+class ChangesError(Error):
+    pass
