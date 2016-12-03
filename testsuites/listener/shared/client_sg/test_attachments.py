@@ -2,7 +2,7 @@ import pytest
 
 from keywords.utils import log_info
 from keywords.MobileRestClient import MobileRestClient
-from keywords.Document import Document
+from keywords import document
 
 
 @pytest.mark.sanity
@@ -28,10 +28,8 @@ def test_raw_attachment(setup_client_syncgateway_test):
 
     ls_user_channels = ["NBC"]
 
-    doc_helper = Document()
-
-    doc_with_att = doc_helper.create_doc(
-        id="att_doc",
+    doc_with_att = document.create_doc(
+        doc_id="att_doc",
         content={
             "sample_key": "sample_val"
         },
@@ -113,11 +111,10 @@ def test_inline_large_attachments(setup_client_syncgateway_test):
     )
 
     # doc with 2.36 PNG attachment
-    doc_generator = Document()
     attachment_docs = []
     for i in range(5):
-        doc = doc_generator.create_doc(
-            id="large_attach_{}".format(i),
+        doc = document.create_doc(
+            doc_id="large_attach_{}".format(i),
             attachment_name="golden_gate_large.jpg",
             channels=["ABC"]
         )

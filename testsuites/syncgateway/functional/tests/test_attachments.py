@@ -8,7 +8,7 @@ from keywords.MobileRestClient import MobileRestClient
 from keywords.SyncGateway import SyncGateway
 from keywords.SyncGateway import sync_gateway_config_path_for_mode
 from keywords.CouchbaseServer import CouchbaseServer
-from keywords.Document import Document
+from keywords import document
 
 
 @pytest.mark.sanity
@@ -60,12 +60,11 @@ def test_attachment_revpos_when_ancestor_unavailable(params_from_base_test_setup
     channels_list = ["ABC"]
 
     client = MobileRestClient()
-    doc_util = Document()
     sg_util = SyncGateway()
     cb_util = CouchbaseServer()
 
     user1 = client.create_user(url=sg_url_admin, db=sg_db, name="user1", password="password", channels=channels_list)
-    doc_with_att = doc_util.create_doc(id="att_doc", content={"sample_key": "sample_val"}, attachment_name="sample_text.txt", channels=channels_list)
+    doc_with_att = document.create_doc(doc_id="att_doc", content={"sample_key": "sample_val"}, attachment_name="sample_text.txt", channels=channels_list)
 
     doc_gen_1 = client.add_doc(url=sg_url, db=sg_db, doc=doc_with_att, auth=user1)
     client.update_doc(url=sg_url, db=sg_db, doc_id=doc_gen_1["id"], number_updates=10, auth=user1)
@@ -134,12 +133,11 @@ def test_attachment_revpos_when_ancestor_unavailable_active_revision_doesnt_shar
     sg_user_channels = ["NBC"]
 
     client = MobileRestClient()
-    doc_util = Document()
 
     client.create_user(url=sg_url_admin, db=sg_db, name=sg_user_name, password=sg_user_password, channels=sg_user_channels)
     sg_user_session = client.create_session(url=sg_url_admin, db=sg_db, name=sg_user_name)
 
-    doc = doc_util.create_doc(id="doc_1", content={"sample_key": "sample_val"}, channels=sg_user_channels)
+    doc = document.create_doc(doc_id="doc_1", content={"sample_key": "sample_val"}, channels=sg_user_channels)
     doc_gen_1 = client.add_doc(url=sg_url, db=sg_db, doc=doc, auth=sg_user_session)
     client.update_doc(url=sg_url, db=sg_db, doc_id=doc_gen_1["id"], attachment_name="sample_text.txt", auth=sg_user_session)
     client.update_doc(url=sg_url, db=sg_db, doc_id=doc_gen_1["id"], auth=sg_user_session)
@@ -206,7 +204,6 @@ def test_writing_attachment_to_couchbase_server(params_from_base_test_setup, sg_
     sg_user_channels = ["NBC"]
 
     client = MobileRestClient()
-    doc_util = Document()
 
     client.create_user(url=sg_url_admin, db=sg_db, name=sg_user_name, password=sg_user_password, channels=sg_user_channels)
     sg_user_session = client.create_session(url=sg_url_admin, db=sg_db, name=sg_user_name)
@@ -215,7 +212,7 @@ def test_writing_attachment_to_couchbase_server(params_from_base_test_setup, sg_
     assert len(docs) == 100
 
     # Create doc with attachment and push to sync_gateway
-    doc_with_att = doc_util.create_doc(id="att_doc", content={"sample_key": "sample_val"}, attachment_name="sample_text.txt", channels=sg_user_channels)
+    doc_with_att = document.create_doc(doc_id="att_doc", content={"sample_key": "sample_val"}, attachment_name="sample_text.txt", channels=sg_user_channels)
 
     client.add_doc(url=sg_url, db=sg_db, doc=doc_with_att, auth=sg_user_session)
     cb_util = CouchbaseServer()

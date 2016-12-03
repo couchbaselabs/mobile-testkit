@@ -14,8 +14,8 @@ from libraries.testkit.verify import verify_same_docs
 from keywords.SyncGateway import sync_gateway_config_path_for_mode
 from keywords.utils import log_info
 from keywords.MobileRestClient import MobileRestClient
-from keywords.Document import Document
 
+from keywords import document
 from keywords import userinfo
 
 @pytest.mark.sanity
@@ -546,8 +546,7 @@ def test_longpoll_awaken_channels(params_from_base_test_setup, sg_conf_name):
     channel_grant_doc_id = "channel_grant_with_doc_intially"
 
     # Add another doc with no channels
-    doc_util = Document()
-    channel_grant_doc_body = doc_util.create_doc(id=channel_grant_doc_id, channels=["admin"])
+    channel_grant_doc_body = document.create_doc(doc_id=channel_grant_doc_id, channels=["admin"])
     client.add_doc(url=sg_url, db=sg_db, doc=channel_grant_doc_body, auth=admin_auth)
 
     with concurrent.futures.ProcessPoolExecutor() as ex:

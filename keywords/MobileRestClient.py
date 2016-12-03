@@ -11,7 +11,7 @@ import concurrent.futures
 from concurrent.futures import ThreadPoolExecutor
 
 from keywords.CouchbaseServer import CouchbaseServer
-from keywords.Document import get_attachment
+from keywords.document import get_attachment
 
 from libraries.data import doc_generators
 
