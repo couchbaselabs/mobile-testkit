@@ -13,8 +13,8 @@ from keywords import userinfo
 @pytest.mark.syncgateway
 @pytest.mark.attachments
 @pytest.mark.parametrize("sg_conf_name, grant_type", [
-    ("sync_gateway_default", "CHANNEL-REST"),
-    ("sync_gateway_default", "CHANNEL-SYNC")
+    ("custom_sync/access", "CHANNEL-REST"),
+    ("custom_sync/access", "CHANNEL-SYNC")
 ])
 def test_backfill_channels_oneshot_changes(params_from_base_test_setup, sg_conf_name, grant_type):
 
