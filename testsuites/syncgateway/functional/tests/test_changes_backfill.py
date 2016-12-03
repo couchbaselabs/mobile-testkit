@@ -7,7 +7,7 @@ from keywords.MobileRestClient import MobileRestClient
 from keywords.SyncGateway import sync_gateway_config_path_for_mode
 
 from keywords import userinfo
-
+from keywords import document
 
 @pytest.mark.sanity
 @pytest.mark.syncgateway
@@ -69,14 +69,18 @@ def test_backfill_channels_oneshot_changes(params_from_base_test_setup, sg_conf_
         # Grant via update to user in Admin API
         client.update_user(url=sg_admin_url, db=sg_db,
                            name=user_b_user_info.name, channels=["A", "B"])
+
     elif grant_type == "CHANNEL-SYNC":
-        # Grant via access() in sync_function
-        raise NotImplementedError()
+        # Grant via access() in sync_function, then id 'channel_access' will trigger an access(doc.users, doc.channels)
+        access_doc = document.create_doc("channel_access", channels=["A"])
+        access_doc["users"] = ["USER_B"]
+        client.add_doc(url=sg_url, db=sg_db, doc=access_doc, auth=admin_session)
 
     user_b_changes_after_grant = client.get_changes(url=sg_url, db=sg_db,
                                                     since=user_b_changes["last_seq"], auth=user_b_session, feed="normal")
 
     # User B shoud have recieved 51 docs (a_docs + 1 _user/USER_B doc)
+    # TODO: Find out why no user doc for sync function grant?
     changes_results = user_b_changes_after_grant["results"]
     assert len(changes_results) == 51
 
