@@ -9,13 +9,15 @@ from keywords.SyncGateway import sync_gateway_config_path_for_mode
 from keywords import userinfo
 from keywords import document
 
+
 @pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.attachments
 @pytest.mark.parametrize("sg_conf_name, grant_type", [
     ("custom_sync/access", "CHANNEL-REST"),
     ("custom_sync/access", "CHANNEL-SYNC"),
-    ("custom_sync/access", "ROLE-REST")
+    ("custom_sync/access", "ROLE-REST"),
+    ("custom_sync/access", "ROLE-SYNC")
 ])
 def test_backfill_channels_oneshot_changes(params_from_base_test_setup, sg_conf_name, grant_type):
 
@@ -80,11 +82,24 @@ def test_backfill_channels_oneshot_changes(params_from_base_test_setup, sg_conf_
         client.add_doc(url=sg_url, db=sg_db, doc=access_doc, auth=admin_session)
 
     elif grant_type == "ROLE-REST":
-
         log_info("Granting user access to channel A via Admin REST role grant")
         # Create role with channel A
         client.create_role(url=sg_admin_url, db=sg_db, name="channel-A-role", channels=["A"])
         client.update_user(url=sg_admin_url, db=sg_db, name="USER_B", roles=["channel-A-role"])
+
+    elif grant_type == "ROLE-SYNC":
+        log_info("Granting user access to channel A via sync function role() grant")
+        # Create role with channel A
+        client.create_role(url=sg_admin_url, db=sg_db, name="channel-A-role", channels=["A"])
+
+        # Grant via role() in sync_function, then id 'role_access' will trigger an role(doc.users, doc.roles)
+        role_access_doc = document.create_doc("role_access")
+        role_access_doc["users"] = ["USER_B"]
+        role_access_doc["roles"] = ["role:channel-A-role"]
+        client.add_doc(sg_url, db=sg_db, doc=role_access_doc, auth=admin_session)
+
+    else:
+        pytest.fail("Unsupported grant_type!!!!")
 
     user_b_changes_after_grant = client.get_changes(url=sg_url, db=sg_db,
                                                     since=user_b_changes["last_seq"], auth=user_b_session, feed="normal")
