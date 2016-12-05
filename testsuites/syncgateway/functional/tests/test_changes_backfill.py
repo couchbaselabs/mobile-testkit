@@ -14,7 +14,8 @@ from keywords import document
 @pytest.mark.attachments
 @pytest.mark.parametrize("sg_conf_name, grant_type", [
     ("custom_sync/access", "CHANNEL-REST"),
-    ("custom_sync/access", "CHANNEL-SYNC")
+    ("custom_sync/access", "CHANNEL-SYNC"),
+    ("custom_sync/access", "ROLE-REST")
 ])
 def test_backfill_channels_oneshot_changes(params_from_base_test_setup, sg_conf_name, grant_type):
 
@@ -66,15 +67,24 @@ def test_backfill_channels_oneshot_changes(params_from_base_test_setup, sg_conf_
 
     # Grant access to channel "A"
     if grant_type == "CHANNEL-REST":
+        log_info("Granting user access to channel A via Admin REST user update")
         # Grant via update to user in Admin API
         client.update_user(url=sg_admin_url, db=sg_db,
                            name=user_b_user_info.name, channels=["A", "B"])
 
     elif grant_type == "CHANNEL-SYNC":
+        log_info("Granting user access to channel A sync function access()")
         # Grant via access() in sync_function, then id 'channel_access' will trigger an access(doc.users, doc.channels)
         access_doc = document.create_doc("channel_access", channels=["A"])
         access_doc["users"] = ["USER_B"]
         client.add_doc(url=sg_url, db=sg_db, doc=access_doc, auth=admin_session)
+
+    elif grant_type == "ROLE-REST":
+
+        log_info("Granting user access to channel A via Admin REST role grant")
+        # Create role with channel A
+        client.create_role(url=sg_admin_url, db=sg_db, name="channel-A-role", channels=["A"])
+        client.update_user(url=sg_admin_url, db=sg_db, name="USER_B", roles=["channel-A-role"])
 
     user_b_changes_after_grant = client.get_changes(url=sg_url, db=sg_db,
                                                     since=user_b_changes["last_seq"], auth=user_b_session, feed="normal")
