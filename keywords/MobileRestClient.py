@@ -1464,7 +1464,7 @@ class MobileRestClient:
 
             break
 
-    def get_changes(self, url, db, since, auth, feed="longpoll", timeout=60):
+    def get_changes(self, url, db, since, auth, feed="longpoll", timeout=60, limit=None):
         """
         Issues a longpoll changes request with a provided since and authentication.
         The timeout is in seconds.
@@ -1480,7 +1480,12 @@ class MobileRestClient:
         server_type = self.get_server_type(url)
 
         if server_type == ServerType.listener:
-            resp = self._session.get("{}/{}/_changes?feed={}&since={}".format(url, db, feed, since))
+
+            request_url = "{}/{}/_changes?feed={}&since={}".format(url, db, feed, since)
+            if limit is not None:
+                request_url += "&limit={}".format(limit)
+
+            resp = self._session.get(request_url)
 
         elif server_type == ServerType.syncgateway:
             body = {
@@ -1488,6 +1493,9 @@ class MobileRestClient:
                 "since": since,
                 "timeout": timeout
             }
+
+            if limit is not None:
+                body["limit"] = limit
 
             log_info("Using POST data: {}".format(body))
 
