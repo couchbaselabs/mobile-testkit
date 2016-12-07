@@ -947,12 +947,25 @@ class MobileRestClient:
 
         return purged_docs
 
-    def update_docs(self, url, db, docs, number_updates, delay=None, auth=None):
+    def update_docs(self, url, db, docs, number_updates, delay=None, auth=None, channels=None):
 
         updated_docs = []
 
         with ThreadPoolExecutor(max_workers=2) as executor:
-            future_to_url = [executor.submit(self.update_doc, url, db, doc["id"], number_updates, delay=delay, auth=auth) for doc in docs]
+
+            future_to_url = [
+                executor.submit(
+                    self.update_doc,
+                    url,
+                    db,
+                    doc["id"],
+                    number_updates=number_updates,
+                    delay=delay,
+                    auth=auth,
+                    channels=channels
+                ) for doc in docs
+            ]
+
             for future in concurrent.futures.as_completed(future_to_url):
                 update_doc_result = future.result()
                 updated_docs.append(update_doc_result)
@@ -994,6 +1007,7 @@ class MobileRestClient:
                 doc["_exp"] = expiry
 
             if channels is not None:
+                verify_is_list(channels)
                 doc["channels"] = channels
 
             if auth_type == AuthType.session:
