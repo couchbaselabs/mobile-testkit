@@ -627,12 +627,15 @@ def test_online_to_offline_changes_feed_controlled_close_longpoll(params_from_ba
     # Some docs should have made it to _changes
     assert len(docs_in_changes) > 0
 
-    seq_num_component = last_seq_num.split("-")
+    # Make sure some docs failed due to db being taken offline
+    assert len(doc_add_errors) > 0
 
-    # last_seq may be of the form '1' for channel cache or '1-0' for distributed index
-    # assert the last_seq_number == number _changes + 2 (_user doc starts and one and docs start at _user doc seq + 2)
     seq_num_component = last_seq_num.split("-")
-    assert len(docs_in_changes) + 2 == int(seq_num_component[0])
+    if mode == "cc":
+        # assert the last_seq_number == number _changes + 2 (_user doc starts and one and docs start at _user doc seq + 2)
+        assert len(docs_in_changes) + 2 == int(seq_num_component[0])
+    else:
+        log_info("Should not rely on last_seq with regard to doc operations in 'di' mode")
 
     # Bring db back online
     status = admin.bring_db_online("db")
