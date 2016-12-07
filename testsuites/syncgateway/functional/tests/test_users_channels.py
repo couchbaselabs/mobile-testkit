@@ -27,7 +27,7 @@ def test_multiple_users_multiple_channels(params_from_base_test_setup, sg_conf_n
     log_info("conf: {}".format(sg_conf))
 
     cluster = Cluster(config=cluster_conf)
-    mode = cluster.reset(sg_config_path=sg_conf)
+    cluster.reset(sg_config_path=sg_conf)
 
     num_docs_seth = 1000
     num_docs_adam = 2000
@@ -86,7 +86,7 @@ def test_muliple_users_single_channel(params_from_base_test_setup, sg_conf_name)
     log_info("conf: {}".format(sg_conf))
 
     cluster = Cluster(config=cluster_conf)
-    mode = cluster.reset(sg_config_path=sg_conf)
+    cluster.reset(sg_config_path=sg_conf)
 
     sgs = cluster.sync_gateways
 
@@ -135,7 +135,7 @@ def test_single_user_multiple_channels(params_from_base_test_setup, sg_conf_name
     log_info("conf: {}".format(sg_conf))
 
     cluster = Cluster(config=cluster_conf)
-    mode = cluster.reset(sg_config_path=sg_conf)
+    cluster.reset(sg_config_path=sg_conf)
 
     start = time.time()
     sgs = cluster.sync_gateways
@@ -178,7 +178,7 @@ def test_single_user_single_channel(params_from_base_test_setup, sg_conf_name):
     log_info("conf: {}".format(sg_conf))
 
     cluster = Cluster(config=cluster_conf)
-    mode = cluster.reset(sg_config_path=sg_conf)
+    cluster.reset(sg_config_path=sg_conf)
 
     sgs = cluster.sync_gateways
 
@@ -205,4 +205,3 @@ def test_single_user_single_channel(params_from_base_test_setup, sg_conf_name):
     all_doc_caches = [seth.cache, cbs_user.cache]
     all_docs = {k: v for cache in all_doc_caches for k, v in cache.items()}
     verify_changes([admin_user], expected_num_docs=num_cbs_docs + num_seth_docs, expected_num_revisions=0, expected_docs=all_docs)
-

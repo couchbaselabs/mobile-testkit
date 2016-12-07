@@ -34,15 +34,14 @@ $RUNPYLINT testsuites/listener/shared/client_client/*.py
 echo "$RUNPYLINT testsuites/listener/shared/client_sg/*.py"
 $RUNPYLINT testsuites/listener/shared/client_sg/*.py
 
-echo "$RUNPYLINT testsuites/syncgateway/*.py"
-$RUNPYLINT testsuites/syncgateway/*.py
-
-echo "$RUNPYLINT testsuites/syncgateway/functional/shared/*.py"
-$RUNPYLINT testsuites/syncgateway/functional/shared/*.py
-
 echo "$RUNPYLINT testsuites/syncgateway/performance/*.py"
 $RUNPYLINT testsuites/syncgateway/performance/*.py
 
-echo "$RUNPYLINT testsuites/syncgateway/functional/**/*.py"
-$RUNPYLINT testsuites/syncgateway/functional/**/*.py
+# testsuites/syncgateway/functional/tests/
+echo "$RUNPYLINT testsuites/syncgateway/functional/tests/*.py"
+$RUNPYLINT testsuites/syncgateway/functional/tests/*.py
+
+# testsuites/syncgateway/functional/topology_specific_tests/*
+echo "$RUNPYLINT testsuites/syncgateway/functional/topology_specific_tests/**/*.py"
+$RUNPYLINT testsuites/syncgateway/functional/topology_specific_tests/**/*.py
 

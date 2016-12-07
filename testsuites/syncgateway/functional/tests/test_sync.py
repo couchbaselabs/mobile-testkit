@@ -35,7 +35,7 @@ def test_issue_1524(params_from_base_test_setup, sg_conf_name, num_docs):
     log_info("Using num_docs: {}".format(num_docs))
 
     cluster = Cluster(config=cluster_conf)
-    mode = cluster.reset(sg_config_path=sg_conf)
+    cluster.reset(sg_config_path=sg_conf)
     admin = Admin(cluster.sync_gateways[0])
 
     user_no_channels = admin.register_user(target=cluster.sync_gateways[0], db="db", name="user_no_channels", password="password")
@@ -111,7 +111,7 @@ def test_sync_access_sanity(params_from_base_test_setup, sg_conf_name):
     log_info("Using sg_conf: {}".format(sg_conf))
 
     cluster = Cluster(config=cluster_conf)
-    mode = cluster.reset(sg_config_path=sg_conf)
+    cluster.reset(sg_config_path=sg_conf)
     admin = Admin(cluster.sync_gateways[0])
 
     seth = admin.register_user(target=cluster.sync_gateways[0], db="db", name="seth", password="password")
@@ -163,7 +163,7 @@ def test_sync_channel_sanity(params_from_base_test_setup, sg_conf_name):
     log_info("Using sg_conf: {}".format(sg_conf))
 
     cluster = Cluster(config=cluster_conf)
-    mode = cluster.reset(sg_config_path=sg_conf)
+    cluster.reset(sg_config_path=sg_conf)
     admin = Admin(cluster.sync_gateways[0])
 
     doc_pushers = []
@@ -229,7 +229,7 @@ def test_sync_role_sanity(params_from_base_test_setup, sg_conf_name):
     log_info("Using sg_conf: {}".format(sg_conf))
 
     cluster = Cluster(config=cluster_conf)
-    mode = cluster.reset(sg_config_path=sg_conf)
+    cluster.reset(sg_config_path=sg_conf)
 
     admin = Admin(cluster.sync_gateways[0])
     admin.create_role(db="db", name="tv_stations", channels=tv_channels)
@@ -297,7 +297,7 @@ def test_sync_sanity(params_from_base_test_setup, sg_conf_name):
     log_info("Using sg_conf: {}".format(sg_conf))
 
     cluster = Cluster(config=cluster_conf)
-    mode = cluster.reset(sg_config_path=sg_conf)
+    cluster.reset(sg_config_path=sg_conf)
 
     radio_stations = ["KMOW", "HWOD", "KDWB"]
     number_of_docs_per_pusher = 5000
@@ -345,7 +345,7 @@ def test_sync_sanity_backfill(params_from_base_test_setup, sg_conf_name):
     log_info("Using sg_conf: {}".format(sg_conf))
 
     cluster = Cluster(config=cluster_conf)
-    mode = cluster.reset(sg_config_path=sg_conf)
+    cluster.reset(sg_config_path=sg_conf)
 
     radio_stations = ["KMOW", "HWOD", "KDWB"]
     number_of_docs_per_pusher = 5000
@@ -394,7 +394,7 @@ def test_sync_require_roles(params_from_base_test_setup, sg_conf_name):
     log_info("Using sg_conf: {}".format(sg_conf))
 
     cluster = Cluster(config=cluster_conf)
-    mode = cluster.reset(sg_config_path=sg_conf)
+    cluster.reset(sg_config_path=sg_conf)
 
     radio_stations = ["KMOW", "HWOD", "KDWB"]
     tv_stations = ["ABC", "CBS", "NBC"]
@@ -475,4 +475,3 @@ def test_sync_require_roles(params_from_base_test_setup, sg_conf_name):
         assert not k.startswith("bad_doc")
 
     verify_changes(mogul, expected_num_docs=expected_num_radio_docs + expected_num_tv_docs, expected_num_revisions=0, expected_docs=all_docs)
-

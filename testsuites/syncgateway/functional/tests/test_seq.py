@@ -30,7 +30,7 @@ def test_seq(params_from_base_test_setup, sg_conf_name, num_users, num_docs, num
     log_info("num_revisions: {}".format(num_revisions))
 
     cluster = Cluster(config=cluster_conf)
-    mode = cluster.reset(sg_config_path=sg_conf)
+    cluster.reset(sg_config_path=sg_conf)
     admin = Admin(cluster.sync_gateways[0])
 
     # all users will share docs due to having the same channel
@@ -65,9 +65,11 @@ def test_seq(params_from_base_test_setup, sg_conf_name, num_users, num_docs, num
             log_info('Verify that the last "seq" is a plain hashed value')
             assert len(second_to_last_doc_entry_seq.split("::")) == 2
             assert len(last_doc_entry_seq.split("::")) == 1
-        else:
+        elif mode == "cc":
             assert second_to_last_doc_entry_seq > 0
             assert last_doc_entry_seq > 0
+        else:
+            raise ValueError("Unsupported 'mode' !!")
 
     all_doc_caches = [user.cache for user in users]
     all_docs = {k: v for cache in all_doc_caches for k, v in cache.items()}
