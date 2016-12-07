@@ -70,10 +70,6 @@ def test_continuous_changes_parametrized(params_from_base_test_setup, sg_conf_na
     # Expect number of docs + the termination doc
     verify_changes(abc_doc_pusher, expected_num_docs=num_docs, expected_num_revisions=num_revisions, expected_docs=abc_doc_pusher.cache)
 
-    # Verify all sync_gateways are running
-    errors = cluster.verify_alive(mode)
-    assert len(errors) == 0
-
 
 @pytest.mark.sanity
 @pytest.mark.syncgateway
@@ -129,6 +125,3 @@ def test_continuous_changes_sanity(params_from_base_test_setup, sg_conf_name, nu
     # Expect number of docs + the termination doc + _user doc
     verify_same_docs(expected_num_docs=num_docs, doc_dict_one=docs_in_changes, doc_dict_two=abc_doc_pusher.cache)
 
-    # Verify all sync_gateways are running
-    errors = cluster.verify_alive(mode)
-    assert len(errors) == 0

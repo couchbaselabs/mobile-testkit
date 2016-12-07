@@ -73,10 +73,6 @@ def test_longpoll_changes_parametrized(params_from_base_test_setup, sg_conf_name
     # Verify docs from seth continous changes is the same as abc_docs_pusher's docs
     verify_same_docs(expected_num_docs=num_docs, doc_dict_one=docs_in_changes, doc_dict_two=abc_doc_pusher.cache)
 
-    # Verify all sync_gateways are running
-    errors = cluster.verify_alive(mode)
-    assert len(errors) == 0
-
 
 @pytest.mark.sanity
 @pytest.mark.syncgateway
@@ -132,10 +128,6 @@ def test_longpoll_changes_sanity(params_from_base_test_setup, sg_conf_name, num_
 
     # Verify docs from seth continous changes is the same as abc_docs_pusher's docs
     verify_same_docs(expected_num_docs=num_docs, doc_dict_one=docs_in_changes, doc_dict_two=abc_doc_pusher.cache)
-
-    # Verify all sync_gateways are running
-    errors = cluster.verify_alive(mode)
-    assert len(errors) == 0
 
 
 @pytest.mark.sanity
@@ -367,10 +359,6 @@ def test_longpoll_awaken_doc_add_update(params_from_base_test_setup, sg_conf_nam
         rev_from_change = int(andy_changes["results"][0]["changes"][0]["rev"].split("-")[0])
         assert rev_from_change == 2
 
-    # Verify all sync_gateways are running
-    errors = cluster.verify_alive(mode)
-    assert len(errors) == 0
-
 
 @pytest.mark.sanity
 @pytest.mark.syncgateway
@@ -585,10 +573,6 @@ def test_longpoll_awaken_channels(params_from_base_test_setup, sg_conf_name):
         assert andy_changes["results"][0]["id"] == "channel_grant_with_doc_intially"
         assert andy_changes["results"][0]["changes"][0]["rev"].startswith("2-")
 
-    # Verify all sync_gateways are running
-    errors = cluster.verify_alive(mode)
-    assert len(errors) == 0
-
 
 @pytest.mark.sanity
 @pytest.mark.syncgateway
@@ -750,10 +734,6 @@ def test_longpoll_awaken_roles(params_from_base_test_setup, sg_conf_name):
         assert len(andy_changes["results"]) == 1
         assert andy_changes["results"][0]["id"] == "abc_doc_0"
 
-    # Verify all sync_gateways are running
-    errors = cluster.verify_alive(mode)
-    assert len(errors) == 0
-
 
 @pytest.mark.sanity
 @pytest.mark.syncgateway
@@ -858,10 +838,6 @@ def test_longpoll_awaken_via_sync_access(params_from_base_test_setup, sg_conf_na
 
     andy_changes = client.get_changes(url=sg_url, db=sg_db, since=andy_changes["last_seq"], auth=andy_auth, timeout=1)
     assert len(andy_changes["results"]) == 0
-
-    # Verify all sync_gateways are running
-    errors = cluster.verify_alive(mode)
-    assert len(errors) == 0
 
 
 @pytest.mark.sanity
@@ -975,6 +951,3 @@ def test_longpoll_awaken_via_sync_role(params_from_base_test_setup, sg_conf_name
     andy_changes = client.get_changes(url=sg_url, db=sg_db, since=andy_changes["last_seq"], auth=andy_auth, timeout=1)
     assert len(andy_changes["results"]) == 0
 
-    # Verify all sync_gateways are running
-    errors = cluster.verify_alive(mode)
-    assert len(errors) == 0

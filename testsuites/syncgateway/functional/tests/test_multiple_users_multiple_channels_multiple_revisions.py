@@ -108,10 +108,6 @@ def test_mulitple_users_mulitiple_channels_mulitple_revisions(params_from_base_t
     output = in_parallel(user_objects, 'check_doc_ids_in_changes_feed')
     assert True in output.values()
 
-    # Verify all sync_gateways are running
-    errors = cluster.verify_alive(mode)
-    assert len(errors) == 0
-
     end = time.time()
     log_info("Test ended.")
     log_info("Main test duration: {}".format(end - init_completed))

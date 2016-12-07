@@ -205,7 +205,3 @@ def test_bulk_get_compression(params_from_base_test_setup, sg_conf_name, num_doc
 
     # Verfiy size matches expected size
     verify_response_size(user_agent, accept_encoding, x_accept_part_encoding, response_size)
-
-    # Verify all sync_gateways are running
-    errors = cluster.verify_alive(mode)
-    assert len(errors) == 0

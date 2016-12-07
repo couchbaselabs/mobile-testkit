@@ -143,7 +143,7 @@ class Cluster:
 
         # HACK - only enable sg_accel for distributed index tests
         # revise this with https://github.com/couchbaselabs/sync-gateway-testcluster/issues/222
-        if mode == "distributed_index":
+        if mode == "di":
             # Start sg-accel
             status = ansible_runner.run_ansible_playbook(
                 "start-sg-accel.yml",
@@ -154,7 +154,7 @@ class Cluster:
             assert status == 0, "Failed to start sg_accel"
 
         # Validate CBGT
-        if mode == "distributed_index":
+        if mode == "di":
             if not self.validate_cbgt_pindex_distribution_retry():
                 self.save_cbgt_diagnostics()
                 raise Exception("Failed to validate CBGT Pindex distribution")
@@ -268,7 +268,7 @@ class Cluster:
                 log_info("sync_gateway down: {}".format(e))
                 errors.append((sg, e))
 
-        if mode == "distributed_index":
+        if mode == "di":
             for sa in self.sg_accels:
                 try:
                     info = sa.info()

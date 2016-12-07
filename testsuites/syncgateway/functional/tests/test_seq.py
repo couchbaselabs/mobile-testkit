@@ -60,7 +60,7 @@ def test_seq(params_from_base_test_setup, sg_conf_name, num_users, num_docs, num
         log_info('Second to last doc "seq": {}'.format(second_to_last_doc_entry_seq))
         log_info('Last doc "seq": {}'.format(last_doc_entry_seq))
 
-        if mode == "distributed_index":
+        if mode == "di":
             # Verify last "seq" follows the formate 12313-0, not 12313-0::1023.15
             log_info('Verify that the last "seq" is a plain hashed value')
             assert len(second_to_last_doc_entry_seq.split("::")) == 2
@@ -72,7 +72,3 @@ def test_seq(params_from_base_test_setup, sg_conf_name, num_users, num_docs, num
     all_doc_caches = [user.cache for user in users]
     all_docs = {k: v for cache in all_doc_caches for k, v in cache.items()}
     verify_changes(users, expected_num_docs=num_users * num_docs, expected_num_revisions=num_revisions, expected_docs=all_docs)
-
-    # Verify all sync_gateways are running
-    errors = cluster.verify_alive(mode)
-    assert len(errors) == 0

@@ -67,9 +67,9 @@ class Config:
     def discover_mode(self, conf_obj):
 
         if "cluster_config" in conf_obj.keys():
-            self.mode = "distributed_index"
+            self.mode = "di"
         else:
-            self.mode = "channel_cache"
+            self.mode = "cc"
 
     def discover_bucket_name_set(self, conf_obj):
 
