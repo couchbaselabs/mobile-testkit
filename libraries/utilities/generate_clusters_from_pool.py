@@ -210,7 +210,7 @@ def generate_clusters_from_pool(pool_file):
         ClusterDef("1sg_1ac_1cbs_1lgs", num_sgs=1, num_acs=1, num_cbs=1, num_lgs=1, num_lbs=0),
         ClusterDef("multiple_servers_cc", num_sgs=1, num_acs=0, num_cbs=3, num_lgs=0, num_lbs=0),
         ClusterDef("multiple_servers_di", num_sgs=1, num_acs=1, num_cbs=3, num_lgs=0, num_lbs=0),
-        ClusterDef("multiple_sg_accels_di", num_sgs=1, num_acs=2, num_cbs=1, num_lgs=0, num_lbs=0),
+        ClusterDef("multiple_sg_accels_di", num_sgs=1, num_acs=3, num_cbs=1, num_lgs=0, num_lbs=0),
         ClusterDef("multiple_sync_gateways_cc", num_sgs=2, num_acs=0, num_cbs=1, num_lgs=0, num_lbs=0),
         ClusterDef("multiple_sync_gateways_di", num_sgs=2, num_acs=1, num_cbs=1, num_lgs=0, num_lbs=0),
         ClusterDef("load_balancer_cc", num_sgs=2, num_acs=0, num_cbs=1, num_lgs=0, num_lbs=1),

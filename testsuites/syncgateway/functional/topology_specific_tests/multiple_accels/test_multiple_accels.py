@@ -13,6 +13,8 @@ from keywords.ClusterKeywords import ClusterKeywords
 from keywords.constants import SYNC_GATEWAY_CONFIGS
 from keywords.Logging import Logging
 from keywords.SyncGateway import validate_sync_gateway_mode
+from keywords.MobileRestClient import MobileRestClient
+
 import keywords.constants
 
 from libraries.NetworkUtils import NetworkUtils
@@ -294,3 +296,56 @@ def test_pindex_distribution(params_from_base_test_setup, sg_conf):
     # Verify all sync_gateways are running
     errors = cluster.verify_alive(mode)
     assert len(errors) == 0
+
+
+@pytest.mark.topospecific
+@pytest.mark.sanity
+@pytest.mark.syncgateway
+@pytest.mark.parametrize("sg_conf", [
+    "{}/sync_gateway_default_functional_tests_di.json".format(SYNC_GATEWAY_CONFIGS),
+])
+def test_take_down_bring_up_sg_accel_validate_cbgt(params_from_base_test_setup, sg_conf):
+    """
+    Scenario 1
+
+    Start with 3 sg_accels
+    Take down 2 sg_accels (block until down -- poll port if needed)
+    Doc adds with uuids (~30 sec for cbgt to reshard)
+    polling loop: wait for all docs to come back over changes feed
+    Call validate pindex with correct number of accels
+
+    Scenario 2 (Continuation)
+
+    When bringing up, you'd have to poll the cbgt_cfg until you get expected number of nodes,
+    then you could validate the pindex with 2 accels
+    """
+
+    cluster_conf = params_from_base_test_setup["cluster_config"]
+
+    log_info("Running 'test_dcp_reshard_single_sg_accel_goes_down_and_up'")
+    log_info("cluster_conf: {}".format(cluster_conf))
+
+    log_info("sg_conf: {}".format(sg_conf))
+
+    cluster = Cluster(config=cluster_conf)
+    cluster.reset(sg_config_path=sg_conf)
+
+    client = MobileRestClient()
+
+    # TODO: Update with user info
+    # doc_pusher_user_info =
+
+    log_info("Shutting down sg_accels: [{}, {}]".format(cluster.sg_accels[1], cluster.sg_accels[2]))
+    # Shutdown two accel nodes in parallel
+    with concurrent.futures.ProcessPoolExecutor() as ex:
+        sg_accel_down_task_1 = ex.submit(cluster.sg_accels[1].stop())
+        sg_accel_down_task_2 = ex.submit(cluster.sg_accels[2].stop())
+        assert sg_accel_down_task_1.result() == 0
+        assert sg_accel_down_task_2.result() == 0
+
+    log_info("Finished taking nodes down!")
+
+    #client.add_docs(url=)
+
+    import pdb
+    pdb.set_trace()
