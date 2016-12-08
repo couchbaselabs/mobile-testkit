@@ -10,6 +10,7 @@ from keywords import userinfo
 from keywords import document
 from keywords import exceptions
 
+
 @pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.changes
