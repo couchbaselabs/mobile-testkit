@@ -61,14 +61,18 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     test_name = request.node.name
     log_info("Setting up test '{}'".format(test_name))
 
+    network_utils = NetworkUtils()
+    network_utils.start_packet_capture(cluster_config)
+
     # This dictionary is passed to each test
     yield {"cluster_config": cluster_config, "mode": mode}
 
     # Code after the yeild will execute when each test finishes
     log_info("Tearing down test '{}'".format(test_name))
 
-    network_utils = NetworkUtils()
     network_utils.list_connections()
+    network_utils.stop_packet_capture(cluster_config)
+    network_utils.collect_packet_capture(cluster_config=cluster_config, test_name=test_name)
 
     # if the test failed pull logs
     if request.node.rep_call.failed:
