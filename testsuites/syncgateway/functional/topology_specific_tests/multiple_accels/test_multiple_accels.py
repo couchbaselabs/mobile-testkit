@@ -1,5 +1,4 @@
 import time
-import os
 
 import pytest
 
@@ -14,7 +13,6 @@ from keywords.ClusterKeywords import ClusterKeywords
 from keywords.constants import SYNC_GATEWAY_CONFIGS
 from keywords.Logging import Logging
 from keywords.SyncGateway import validate_sync_gateway_mode
-from keywords.SyncGateway import sync_gateway_config_path_for_mode
 import keywords.constants
 
 from libraries.NetworkUtils import NetworkUtils

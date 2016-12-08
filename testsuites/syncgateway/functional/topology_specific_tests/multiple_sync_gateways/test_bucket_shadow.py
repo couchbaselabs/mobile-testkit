@@ -1,44 +1,17 @@
 import time
-import os
 import json
 
 import pytest
 
 from libraries.testkit.admin import Admin
 from libraries.testkit.cluster import Cluster
+from keywords.SyncGateway import sync_gateway_config_path_for_mode
 
 from keywords.utils import log_info
-from keywords.Logging import Logging
-from libraries.NetworkUtils import NetworkUtils
 
 from collections import namedtuple
 
 
-# This is called before each test and will yield the cluster_config to each test in the file
-# After each test_* function, execution will continue from the yield a pull logs on failure
-@pytest.fixture(scope="function")
-def setup_2sg_1cbs_test(request):
-
-    test_name = request.node.name
-    log_info("Setting up test '{}'".format(test_name))
-
-    yield {"cluster_config": os.environ["CLUSTER_CONFIG"]}
-
-    log_info("Tearing down test '{}'".format(test_name))
-
-    network_utils = NetworkUtils()
-    network_utils.list_connections()
-
-    # if the test failed pull logs
-    if request.node.rep_call.failed:
-        logging_helper = Logging()
-        logging_helper.fetch_and_analyze_logs(cluster_config=os.environ["CLUSTER_CONFIG"], test_name=test_name)
-
-
-default_config_path_shadower = "resources/sync_gateway_configs/sync_gateway_bucketshadow_cc.json"
-default_config_path_shadower_low_revs = "resources/sync_gateway_configs/sync_gateway_bucketshadow_low_revs_cc.json"
-default_config_path_non_shadower = "resources/sync_gateway_configs/sync_gateway_default_cc.json"
-default_config_path_non_shadower_low_revs = "resources/sync_gateway_configs/sync_gateway_default_low_revs_cc.json"
 source_bucket_name = "source-bucket"
 data_bucket_name = "data-bucket"
 fake_doc_content = {"foo": "bar"}
@@ -109,8 +82,7 @@ def init_shadow_cluster(cluster, config_path_shadower, config_path_non_shadower)
 @pytest.mark.topospecific
 @pytest.mark.syncgateway
 @pytest.mark.bucketshadow
-@pytest.mark.usefixtures("setup_2sg_1cbs_suite")
-def test_bucket_shadow_low_revs_limit_repeated_deletes(setup_2sg_1cbs_test):
+def test_bucket_shadow_low_revs_limit_repeated_deletes(params_from_base_test_setup):
     """
     Validate that Sync Gateway doesn't panic (and instead creates a conflict branch
     and prints a warning) after doing the following steps:
@@ -123,7 +95,11 @@ def test_bucket_shadow_low_revs_limit_repeated_deletes(setup_2sg_1cbs_test):
     See https://github.com/couchbaselabs/sync-gateway-testcluster/issues/291#issuecomment-191521993
     """
 
-    cluster_config = setup_2sg_1cbs_test["cluster_config"]
+    cluster_config = params_from_base_test_setup["cluster_config"]
+    mode = params_from_base_test_setup["mode"]
+
+    default_config_path_shadower_low_revs = sync_gateway_config_path_for_mode("sync_gateway_bucketshadow_low_revs", mode)
+    default_config_path_non_shadower_low_revs = sync_gateway_config_path_for_mode("sync_gateway_default_low_revs", mode)
 
     log_info("Running 'test_bucket_shadow_low_revs_limit_repeated_deletes'")
     log_info("Using cluster_config: {}".format(cluster_config))
@@ -175,8 +151,7 @@ def test_bucket_shadow_low_revs_limit_repeated_deletes(setup_2sg_1cbs_test):
 @pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.bucketshadow
-@pytest.mark.usefixtures("setup_2sg_1cbs_suite")
-def test_bucket_shadow_low_revs_limit(setup_2sg_1cbs_test):
+def test_bucket_shadow_low_revs_limit(params_from_base_test_setup):
     """
     Set revs limit to 40
     Add doc and makes sure it syncs to source bucket
@@ -189,10 +164,14 @@ def test_bucket_shadow_low_revs_limit(setup_2sg_1cbs_test):
     (TODO: Update doc in shadow bucket and look for panics?)
     """
 
-    cluster_config = setup_2sg_1cbs_test["cluster_config"]
+    cluster_config = params_from_base_test_setup["cluster_config"]
+    mode = params_from_base_test_setup["mode"]
 
     log_info("Running 'test_bucket_shadow_low_revs_limit'")
     log_info("Using cluster_config: {}".format(cluster_config))
+
+    default_config_path_shadower_low_revs = sync_gateway_config_path_for_mode("sync_gateway_bucketshadow_low_revs", mode)
+    default_config_path_non_shadower_low_revs = sync_gateway_config_path_for_mode("sync_gateway_default_low_revs", mode)
 
     cluster = Cluster(config=cluster_config)
     sc = init_shadow_cluster(cluster, default_config_path_shadower_low_revs, default_config_path_non_shadower_low_revs)
@@ -241,13 +220,16 @@ def test_bucket_shadow_low_revs_limit(setup_2sg_1cbs_test):
 @pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.bucketshadow
-@pytest.mark.usefixtures("setup_2sg_1cbs_suite")
-def test_bucket_shadow_multiple_sync_gateways(setup_2sg_1cbs_test):
+def test_bucket_shadow_multiple_sync_gateways(params_from_base_test_setup):
 
-    cluster_config = setup_2sg_1cbs_test["cluster_config"]
+    cluster_config = params_from_base_test_setup["cluster_config"]
+    mode = params_from_base_test_setup["mode"]
 
     log_info("Running 'test_bucket_shadow_multiple_sync_gateways'")
     log_info("Using cluster_config: {}".format(cluster_config))
+
+    default_config_path_shadower = sync_gateway_config_path_for_mode("sync_gateway_bucketshadow", mode)
+    default_config_path_non_shadower = sync_gateway_config_path_for_mode("sync_gateway_default", mode)
 
     cluster = Cluster(config=cluster_config)
     sc = init_shadow_cluster(
