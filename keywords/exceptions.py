@@ -36,6 +36,3 @@ class RestError(Error):
 
 class TimeoutError(Error):
     pass
-
-class ChangesError(Error):
-    pass

@@ -10,7 +10,6 @@ from requests.exceptions import HTTPError
 import concurrent.futures
 from concurrent.futures import ThreadPoolExecutor
 
-from keywords.CouchbaseServer import CouchbaseServer
 from keywords.document import get_attachment
 
 from libraries.data import doc_generators

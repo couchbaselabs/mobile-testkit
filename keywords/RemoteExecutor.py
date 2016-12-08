@@ -59,4 +59,3 @@ class RemoteExecutor:
         status = self.execute(command)
         if status != 0:
             raise RemoteCommandError("command: {} failed on host: {}".format(command, self.host))
-

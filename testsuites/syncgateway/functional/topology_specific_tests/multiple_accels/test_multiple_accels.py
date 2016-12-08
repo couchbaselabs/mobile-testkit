@@ -345,7 +345,7 @@ def test_take_down_bring_up_sg_accel_validate_cbgt(params_from_base_test_setup, 
 
     log_info("Finished taking nodes down!")
 
-    #client.add_docs(url=)
+    # client.add_docs(url=)
 
     import pdb
     pdb.set_trace()

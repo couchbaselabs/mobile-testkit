@@ -7,6 +7,7 @@ from libraries.provision.ansible_runner import AnsibleRunner
 from keywords.exceptions import ProvisioningError
 from keywords.utils import log_info
 
+
 class NetworkUtils:
 
     def list_connections(self):

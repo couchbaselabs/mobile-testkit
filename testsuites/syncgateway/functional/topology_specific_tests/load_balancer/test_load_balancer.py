@@ -1,5 +1,4 @@
 import concurrent.futures
-import os
 
 import pytest
 
@@ -9,7 +8,6 @@ from keywords.MobileRestClient import MobileRestClient
 from keywords.ChangesTracker import ChangesTracker
 from keywords.ClusterKeywords import ClusterKeywords
 from keywords.Logging import Logging
-from keywords.constants import SYNC_GATEWAY_CONFIGS
 from keywords.SyncGateway import validate_sync_gateway_mode
 from keywords.SyncGateway import sync_gateway_config_path_for_mode
 
