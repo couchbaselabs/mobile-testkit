@@ -7,6 +7,7 @@ from keywords.utils import log_info
 
 from keywords import document
 
+
 @pytest.mark.sanity
 @pytest.mark.listener
 @pytest.mark.syncgateway

@@ -1,6 +1,5 @@
 import time
 import pytest
-import collections
 
 import concurrent.futures
 import requests.exceptions
@@ -17,6 +16,7 @@ from keywords.MobileRestClient import MobileRestClient
 
 from keywords import document
 from keywords import userinfo
+
 
 @pytest.mark.sanity
 @pytest.mark.syncgateway
