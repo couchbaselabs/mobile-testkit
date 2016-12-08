@@ -7,7 +7,8 @@ from keywords.ClusterKeywords import ClusterKeywords
 from keywords.MobileRestClient import MobileRestClient
 from keywords.SyncGateway import sync_gateway_config_path_for_mode
 from keywords.CouchbaseServer import CouchbaseServer
-from keywords.Document import Document
+
+from keywords import document
 
 
 @pytest.mark.sanity
@@ -56,7 +57,6 @@ def test_attachments_on_docs_rejected_by_sync_function(params_from_base_test_set
     sg_user_channels = ["NBC"]
 
     client = MobileRestClient()
-    doc_util = Document()
 
     client.create_user(url=sg_url_admin, db=sg_db, name=sg_user_name, password=sg_user_password, channels=sg_user_channels)
     sg_user_session = client.create_session(url=sg_url_admin, db=sg_db, name=sg_user_name)
@@ -67,7 +67,7 @@ def test_attachments_on_docs_rejected_by_sync_function(params_from_base_test_set
     assert he.value[0].startswith("403 Client Error: Forbidden for url:")
 
     # Create doc with attachment and push to sync_gateway
-    doc_with_att = doc_util.create_doc(id="att_doc", content={"sample_key": "sample_val"}, attachment_name="sample_text.txt", channels=sg_user_channels)
+    doc_with_att = document.create_doc(doc_id="att_doc", content={"sample_key": "sample_val"}, attachment_name="sample_text.txt", channels=sg_user_channels)
 
     # Verify all docs are getting rejected
     with pytest.raises(HTTPError) as he:

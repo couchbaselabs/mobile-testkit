@@ -6,9 +6,9 @@ from requests.exceptions import HTTPError
 from keywords.utils import log_info
 from keywords.ClusterKeywords import ClusterKeywords
 from keywords.MobileRestClient import MobileRestClient
-from keywords.Document import Document
 from keywords.SyncGateway import sync_gateway_config_path_for_mode
 from keywords.Time import Time
+from keywords import document
 
 """
 Test suite for Sync Gateway's expiry feature.
@@ -87,13 +87,12 @@ def test_numeric_expiry_as_ttl(params_from_base_test_setup, sg_conf_name):
     sg_user_channels = ["NBC", "ABC"]
 
     client = MobileRestClient()
-    doc_util = Document()
 
     client.create_user(url=sg_url_admin, db=sg_db, name=sg_user_name, password=sg_user_password, channels=sg_user_channels)
     sg_user_session = client.create_session(url=sg_url_admin, db=sg_db, name=sg_user_name)
 
-    doc_exp_3_body = doc_util.create_doc(id="exp_3", expiry=3, channels=sg_user_channels)
-    doc_exp_10_body = doc_util.create_doc(id="exp_10", expiry=10, channels=sg_user_channels)
+    doc_exp_3_body = document.create_doc(doc_id="exp_3", expiry=3, channels=sg_user_channels)
+    doc_exp_10_body = document.create_doc(doc_id="exp_10", expiry=10, channels=sg_user_channels)
 
     doc_exp_3 = client.add_doc(url=sg_url, db=sg_db, doc=doc_exp_3_body, auth=sg_user_session)
     doc_exp_10 = client.add_doc(url=sg_url, db=sg_db, doc=doc_exp_10_body, auth=sg_user_session)
@@ -157,10 +156,8 @@ def test_string_expiry_as_ttl(params_from_base_test_setup, sg_conf_name):
     client.create_user(url=sg_url_admin, db=sg_db, name=sg_user_name, password=sg_user_password, channels=sg_user_channels)
     sg_user_session = client.create_session(url=sg_url_admin, db=sg_db, name=sg_user_name)
 
-    doc_util = Document()
-
-    doc_exp_3_body = doc_util.create_doc(id="exp_3", expiry="3", channels=sg_user_channels)
-    doc_exp_10_body = doc_util.create_doc(id="exp_10", expiry="10", channels=sg_user_channels)
+    doc_exp_3_body = document.create_doc(doc_id="exp_3", expiry="3", channels=sg_user_channels)
+    doc_exp_10_body = document.create_doc(doc_id="exp_10", expiry="10", channels=sg_user_channels)
 
     doc_exp_3 = client.add_doc(url=sg_url, db=sg_db, doc=doc_exp_3_body, auth=sg_user_session)
     doc_exp_10 = client.add_doc(url=sg_url, db=sg_db, doc=doc_exp_10_body, auth=sg_user_session)
@@ -228,10 +225,8 @@ def test_numeric_expiry_as_unix_date(params_from_base_test_setup, sg_conf_name):
     time_util = Time()
     unix_time_3s_ahead = time_util.get_unix_timestamp(delta=3)
 
-    doc_util = Document()
-
-    doc_exp_3_body = doc_util.create_doc(id="exp_3", expiry=unix_time_3s_ahead, channels=sg_user_channels)
-    doc_exp_years_body = doc_util.create_doc(id="exp_years", expiry=1767225600, channels=sg_user_channels)
+    doc_exp_3_body = document.create_doc(doc_id="exp_3", expiry=unix_time_3s_ahead, channels=sg_user_channels)
+    doc_exp_years_body = document.create_doc(doc_id="exp_years", expiry=1767225600, channels=sg_user_channels)
 
     doc_exp_3 = client.add_doc(url=sg_url, db=sg_db, doc=doc_exp_3_body, auth=sg_user_session)
     doc_exp_years = client.add_doc(url=sg_url, db=sg_db, doc=doc_exp_years_body, auth=sg_user_session)
@@ -303,10 +298,8 @@ def test_string_expiry_as_unix_date(params_from_base_test_setup, sg_conf_name):
     unix_time_3s_ahead_string = str(unix_time_3s_ahead)
 
     # Using string representation for unix time
-    doc_util = Document()
-
-    doc_exp_3_body = doc_util.create_doc(id="exp_3", expiry=unix_time_3s_ahead_string, channels=sg_user_channels)
-    doc_exp_years_body = doc_util.create_doc(id="exp_years", expiry="1767225600", channels=sg_user_channels)
+    doc_exp_3_body = document.create_doc(doc_id="exp_3", expiry=unix_time_3s_ahead_string, channels=sg_user_channels)
+    doc_exp_years_body = document.create_doc(doc_id="exp_years", expiry="1767225600", channels=sg_user_channels)
 
     doc_exp_3 = client.add_doc(url=sg_url, db=sg_db, doc=doc_exp_3_body, auth=sg_user_session)
     doc_exp_years = client.add_doc(url=sg_url, db=sg_db, doc=doc_exp_years_body, auth=sg_user_session)
@@ -374,10 +367,8 @@ def test_string_expiry_as_iso_8601_date(params_from_base_test_setup, sg_conf_nam
     time_util = Time()
     iso_datetime = time_util.get_iso_datetime(delta=3)
 
-    doc_util = Document()
-
-    doc_exp_3_body = doc_util.create_doc(id="exp_3", expiry=iso_datetime, channels=sg_user_channels)
-    doc_exp_years_body = doc_util.create_doc(id="exp_years", expiry="2026-01-01T00:00:00.000+00:00", channels=sg_user_channels)
+    doc_exp_3_body = document.create_doc(doc_id="exp_3", expiry=iso_datetime, channels=sg_user_channels)
+    doc_exp_years_body = document.create_doc(doc_id="exp_years", expiry="2026-01-01T00:00:00.000+00:00", channels=sg_user_channels)
 
     doc_exp_3 = client.add_doc(url=sg_url, db=sg_db, doc=doc_exp_3_body, auth=sg_user_session)
     doc_exp_years = client.add_doc(url=sg_url, db=sg_db, doc=doc_exp_years_body, auth=sg_user_session)
@@ -439,9 +430,8 @@ def test_removing_expiry(params_from_base_test_setup, sg_conf_name):
     client.create_user(url=sg_url_admin, db=sg_db, name=sg_user_name, password=sg_user_password, channels=sg_user_channels)
     sg_user_session = client.create_session(url=sg_url_admin, db=sg_db, name=sg_user_name)
 
-    doc_util = Document()
-    doc_exp_3_body = doc_util.create_doc(id="exp_3", expiry=3, channels=sg_user_channels)
-    doc_exp_10_body = doc_util.create_doc(id="exp_10", expiry=10, channels=sg_user_channels)
+    doc_exp_3_body = document.create_doc(doc_id="exp_3", expiry=3, channels=sg_user_channels)
+    doc_exp_10_body = document.create_doc(doc_id="exp_10", expiry=10, channels=sg_user_channels)
 
     doc_exp_3 = client.add_doc(url=sg_url, db=sg_db, doc=doc_exp_3_body, auth=sg_user_session)
     doc_exp_10 = client.add_doc(url=sg_url, db=sg_db, doc=doc_exp_10_body, auth=sg_user_session)
@@ -506,9 +496,8 @@ def test_rolling_ttl_expires(params_from_base_test_setup, sg_conf_name):
     client.create_user(url=sg_url_admin, db=sg_db, name=sg_user_name, password=sg_user_password, channels=sg_user_channels)
     sg_user_session = client.create_session(url=sg_url_admin, db=sg_db, name=sg_user_name)
 
-    doc_util = Document()
-    doc_exp_3_body = doc_util.create_doc(id="exp_3", expiry=3, channels=sg_user_channels)
-    doc_exp_10_body = doc_util.create_doc(id="exp_10", expiry=10, channels=sg_user_channels)
+    doc_exp_3_body = document.create_doc(doc_id="exp_3", expiry=3, channels=sg_user_channels)
+    doc_exp_10_body = document.create_doc(doc_id="exp_10", expiry=10, channels=sg_user_channels)
 
     doc_exp_3 = client.add_doc(url=sg_url, db=sg_db, doc=doc_exp_3_body, auth=sg_user_session)
     doc_exp_10 = client.add_doc(url=sg_url, db=sg_db, doc=doc_exp_10_body, auth=sg_user_session)
@@ -573,9 +562,8 @@ def test_rolling_ttl_remove_expirary(params_from_base_test_setup, sg_conf_name):
     client.create_user(url=sg_url_admin, db=sg_db, name=sg_user_name, password=sg_user_password, channels=sg_user_channels)
     sg_user_session = client.create_session(url=sg_url_admin, db=sg_db, name=sg_user_name)
 
-    doc_util = Document()
-    doc_exp_3_body = doc_util.create_doc(id="exp_3", expiry=3, channels=sg_user_channels)
-    doc_exp_10_body = doc_util.create_doc(id="exp_10", expiry=10, channels=sg_user_channels)
+    doc_exp_3_body = document.create_doc(doc_id="exp_3", expiry=3, channels=sg_user_channels)
+    doc_exp_10_body = document.create_doc(doc_id="exp_10", expiry=10, channels=sg_user_channels)
 
     doc_exp_3 = client.add_doc(url=sg_url, db=sg_db, doc=doc_exp_3_body, auth=sg_user_session)
     doc_exp_10 = client.add_doc(url=sg_url, db=sg_db, doc=doc_exp_10_body, auth=sg_user_session)
@@ -640,9 +628,8 @@ def test_setting_expiry_in_bulk_docs(params_from_base_test_setup, sg_conf_name):
     client.create_user(url=sg_url_admin, db=sg_db, name=sg_user_name, password=sg_user_password, channels=sg_user_channels)
     sg_user_session = client.create_session(url=sg_url_admin, db=sg_db, name=sg_user_name)
 
-    doc_util = Document()
-    doc_exp_3_bodies = doc_util.create_docs(id_prefix="exp_3", number=5, expiry=3, channels=sg_user_channels)
-    doc_exp_10_bodies = doc_util.create_docs(id_prefix="exp_10", number=5, expiry=10, channels=sg_user_channels)
+    doc_exp_3_bodies = document.create_docs(doc_id_prefix="exp_3", number=5, expiry=3, channels=sg_user_channels)
+    doc_exp_10_bodies = document.create_docs(doc_id_prefix="exp_10", number=5, expiry=10, channels=sg_user_channels)
 
     bulk_bodies = doc_exp_3_bodies + doc_exp_10_bodies
 

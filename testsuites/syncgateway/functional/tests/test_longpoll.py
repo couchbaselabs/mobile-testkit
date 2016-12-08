@@ -14,11 +14,9 @@ from libraries.testkit.verify import verify_same_docs
 from keywords.SyncGateway import sync_gateway_config_path_for_mode
 from keywords.utils import log_info
 from keywords.MobileRestClient import MobileRestClient
-from keywords.Document import Document
 
-
-UserInfo = collections.namedtuple("UserInfo", ["name", "password", "channels", "roles"])
-
+from keywords import document
+from keywords import userinfo
 
 @pytest.mark.sanity
 @pytest.mark.syncgateway
@@ -163,9 +161,9 @@ def test_longpoll_awaken_doc_add_update(params_from_base_test_setup, sg_conf_nam
     cluster = Cluster(config=cluster_conf)
     mode = cluster.reset(sg_config_path=sg_conf)
 
-    adam_user_info = UserInfo(name="adam", password="Adampass1", channels=["NBC"], roles=[])
-    traun_user_info = UserInfo(name="traun", password="Traunpass1", channels=["CBS"], roles=[])
-    andy_user_info = UserInfo(name="andy", password="Andypass1", channels=["MTV"], roles=[])
+    adam_user_info = userinfo.UserInfo(name="adam", password="Adampass1", channels=["NBC"], roles=[])
+    traun_user_info = userinfo.UserInfo(name="traun", password="Traunpass1", channels=["CBS"], roles=[])
+    andy_user_info = userinfo.UserInfo(name="andy", password="Andypass1", channels=["MTV"], roles=[])
     sg_db = "db"
 
     client = MobileRestClient()
@@ -397,9 +395,9 @@ def test_longpoll_awaken_channels(params_from_base_test_setup, sg_conf_name):
     cluster = Cluster(config=cluster_conf)
     mode = cluster.reset(sg_config_path=sg_conf)
 
-    adam_user_info = UserInfo(name="adam", password="Adampass1", channels=["NBC", "ABC"], roles=[])
-    traun_user_info = UserInfo(name="traun", password="Traunpass1", channels=[], roles=[])
-    andy_user_info = UserInfo(name="andy", password="Andypass1", channels=[], roles=[])
+    adam_user_info = userinfo.UserInfo(name="adam", password="Adampass1", channels=["NBC", "ABC"], roles=[])
+    traun_user_info = userinfo.UserInfo(name="traun", password="Traunpass1", channels=[], roles=[])
+    andy_user_info = userinfo.UserInfo(name="andy", password="Andypass1", channels=[], roles=[])
     sg_db = "db"
     doc_id = "adam_doc_0"
 
@@ -548,8 +546,7 @@ def test_longpoll_awaken_channels(params_from_base_test_setup, sg_conf_name):
     channel_grant_doc_id = "channel_grant_with_doc_intially"
 
     # Add another doc with no channels
-    doc_util = Document()
-    channel_grant_doc_body = doc_util.create_doc(id=channel_grant_doc_id, channels=["admin"])
+    channel_grant_doc_body = document.create_doc(doc_id=channel_grant_doc_id, channels=["admin"])
     client.add_doc(url=sg_url, db=sg_db, doc=channel_grant_doc_body, auth=admin_auth)
 
     with concurrent.futures.ProcessPoolExecutor() as ex:
@@ -619,10 +616,10 @@ def test_longpoll_awaken_roles(params_from_base_test_setup, sg_conf_name):
     admin_role = "admin_role"
     admin_channel = "admin_channel"
 
-    admin_user_info = UserInfo(name="admin", password="pass", channels=[], roles=[admin_role])
-    adam_user_info = UserInfo(name="adam", password="Adampass1", channels=[], roles=[])
-    traun_user_info = UserInfo(name="traun", password="Traunpass1", channels=[], roles=[])
-    andy_user_info = UserInfo(name="andy", password="Andypass1", channels=[], roles=[])
+    admin_user_info = userinfo.UserInfo(name="admin", password="pass", channels=[], roles=[admin_role])
+    adam_user_info = userinfo.UserInfo(name="adam", password="Adampass1", channels=[], roles=[])
+    traun_user_info = userinfo.UserInfo(name="traun", password="Traunpass1", channels=[], roles=[])
+    andy_user_info = userinfo.UserInfo(name="andy", password="Andypass1", channels=[], roles=[])
     sg_db = "db"
 
     client = MobileRestClient()
@@ -709,7 +706,7 @@ def test_longpoll_awaken_roles(params_from_base_test_setup, sg_conf_name):
     ###########################################
 
     abc_channel = "ABC"
-    abc_pusher_info = UserInfo(name="abc_pusher", password="pass", channels=[abc_channel], roles=[])
+    abc_pusher_info = userinfo.UserInfo(name="abc_pusher", password="pass", channels=[abc_channel], roles=[])
 
     abc_pusher_auth = client.create_user(url=sg_admin_url, db=sg_db, name=abc_pusher_info.name,
                                          password=abc_pusher_info.password, channels=abc_pusher_info.channels)
@@ -797,11 +794,11 @@ def test_longpoll_awaken_via_sync_access(params_from_base_test_setup, sg_conf_na
 
     client = MobileRestClient()
 
-    channel_pusher_info = UserInfo(name="channel_pusher", password="pass", channels=["NATGEO"], roles=[])
+    channel_pusher_info = userinfo.UserInfo(name="channel_pusher", password="pass", channels=["NATGEO"], roles=[])
 
-    adam_user_info = UserInfo(name="adam", password="Adampass1", channels=[], roles=[])
-    traun_user_info = UserInfo(name="traun", password="Traunpass1", channels=[], roles=[])
-    andy_user_info = UserInfo(name="andy", password="Andypass1", channels=[], roles=[])
+    adam_user_info = userinfo.UserInfo(name="adam", password="Adampass1", channels=[], roles=[])
+    traun_user_info = userinfo.UserInfo(name="traun", password="Traunpass1", channels=[], roles=[])
+    andy_user_info = userinfo.UserInfo(name="andy", password="Andypass1", channels=[], roles=[])
 
     channel_pusher_auth = client.create_user(url=sg_admin_url,
                                              db=sg_db,
@@ -908,11 +905,11 @@ def test_longpoll_awaken_via_sync_role(params_from_base_test_setup, sg_conf_name
     client = MobileRestClient()
 
     client.create_role(url=sg_admin_url, db=sg_db, name=techno_role, channels=[techno_channel])
-    admin_user_info = UserInfo(name="admin", password="pass", channels=[], roles=[techno_role])
+    admin_user_info = userinfo.UserInfo(name="admin", password="pass", channels=[], roles=[techno_role])
 
-    adam_user_info = UserInfo(name="adam", password="Adampass1", channels=[], roles=[])
-    traun_user_info = UserInfo(name="traun", password="Traunpass1", channels=[], roles=[])
-    andy_user_info = UserInfo(name="andy", password="Andypass1", channels=[], roles=[])
+    adam_user_info = userinfo.UserInfo(name="adam", password="Adampass1", channels=[], roles=[])
+    traun_user_info = userinfo.UserInfo(name="traun", password="Traunpass1", channels=[], roles=[])
+    andy_user_info = userinfo.UserInfo(name="andy", password="Andypass1", channels=[], roles=[])
 
     admin_auth = client.create_user(url=sg_admin_url, db=sg_db,
                                     name=admin_user_info.name, password=admin_user_info.password, roles=adam_user_info.roles)

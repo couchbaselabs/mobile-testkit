@@ -6,11 +6,12 @@ import re
 
 from requests import Session
 from requests.exceptions import HTTPError
+
 import concurrent.futures
 from concurrent.futures import ThreadPoolExecutor
 
 from keywords.CouchbaseServer import CouchbaseServer
-from keywords.Document import get_attachment
+from keywords.document import get_attachment
 
 from libraries.data import doc_generators
 
@@ -22,8 +23,10 @@ from keywords.constants import REGISTERED_CLIENT_DBS
 
 from keywords.utils import log_r
 from keywords.utils import log_info
+from keywords.utils import log_debug
 
-from exceptions import TimeoutException
+import keywords.exceptions
+from keywords import types
 
 
 def parse_multipart_response(response):
@@ -73,11 +76,6 @@ def get_auth_type(auth):
 
     logging.debug("Using auth type: {}".format(auth_type))
     return auth_type
-
-
-def verify_is_list(obj):
-    if type(obj) != list:
-        raise TypeError("Channels must be a 'list'")
 
 
 class MobileRestClient:
@@ -272,7 +270,7 @@ class MobileRestClient:
         if channels is None:
             channels = []
 
-        verify_is_list(channels)
+        types.verify_is_list(channels)
 
         data = {
             "name": name,
@@ -289,7 +287,7 @@ class MobileRestClient:
         if channels is None:
             channels = []
 
-        verify_is_list(channels)
+        types.verify_is_list(channels)
 
         data = {
             "name": name,
@@ -311,8 +309,8 @@ class MobileRestClient:
         if roles is None:
             roles = []
 
-        verify_is_list(channels)
-        verify_is_list(roles)
+        types.verify_is_list(channels)
+        types.verify_is_list(roles)
 
         data = {
             "name": name,
@@ -325,9 +323,11 @@ class MobileRestClient:
         resp.raise_for_status()
         return name, password
 
-    def update_user(self, url, db, name, password, channels=None, roles=None):
+    def update_user(self, url, db, name, password=None, channels=None, roles=None):
         """ Updates a user via the admin REST api
-        Returns a name password tuple that can be used for session creation or basic authentication
+        Returns a name password tuple that can be used for session creation or basic authentication.
+
+        Important!! If you provide a password, any sessions associated with the user will be destroyed
         """
 
         if channels is None:
@@ -336,15 +336,18 @@ class MobileRestClient:
         if roles is None:
             roles = []
 
-        verify_is_list(channels)
-        verify_is_list(roles)
+        types.verify_is_list(channels)
+        types.verify_is_list(roles)
 
         data = {
             "name": name,
-            "password": password,
             "admin_channels": channels,
             "admin_roles": roles
         }
+
+        if password is not None:
+            data["password"] = password
+
         resp = self._session.put("{}/{}/_user/{}".format(url, db, name), data=json.dumps(data))
         log_r(resp)
         resp.raise_for_status()
@@ -438,7 +441,7 @@ class MobileRestClient:
         while True:
 
             if time.time() - start > CLIENT_REQUEST_TIMEOUT:
-                raise TimeoutException("Verify Docs Present: TIMEOUT")
+                raise keywords.exceptions.TimeoutException("Verify Docs Present: TIMEOUT")
 
             resp = self._session.get("{}/{}/_all_docs".format(url, db))
             log_r(resp)
@@ -883,7 +886,7 @@ class MobileRestClient:
             not_deleted = []
 
             if time.time() - start > CLIENT_REQUEST_TIMEOUT:
-                raise TimeoutException("Verify Docs Deleted: TIMEOUT")
+                raise keywords.exceptions.TimeoutException("Verify Docs Deleted: TIMEOUT")
 
             for doc in docs:
                 if auth_type == AuthType.session:
@@ -1015,10 +1018,12 @@ class MobileRestClient:
 
         return resp_obj
 
-    def add_docs(self, url, db, number, id_prefix, auth=None, channels=None, generator=None):
+    def add_docs(self, url, db, number, id_prefix=None, auth=None, channels=None, generator=None):
         """
         Add a 'number' of docs with a prefix 'id_prefix' using the provided generator from libraries.data.doc_generators.
         ex. id_prefix=testdoc with a number of 3 would create 'testdoc_0', 'testdoc_1', and 'testdoc_2'
+
+        If id_prefix is not specified, a uuid will be provided for each doc
 
         Returns list of docs with the format
         [{u'ok': True, u'rev': u'1-ccd39f3091bb9bb51524b97e69571f80', u'id': u'test_ls_db1_0'}, ... ]
@@ -1027,7 +1032,12 @@ class MobileRestClient:
         auth_type = get_auth_type(auth)
 
         if channels is not None:
-            verify_is_list(channels)
+            types.verify_is_list(channels)
+
+        if id_prefix is None:
+            use_uuid_doc_ids = True
+        else:
+            use_uuid_doc_ids = False
 
         log_info("PUT {} docs to {}/{}/ with prefix {}".format(number, url, db, id_prefix))
 
@@ -1041,14 +1051,19 @@ class MobileRestClient:
             if channels is not None:
                 doc_body["channels"] = channels
 
+            if use_uuid_doc_ids:
+                doc_id = str(uuid.uuid4())
+            else:
+                doc_id = "{}_{}".format(id_prefix, i)
+
             data = json.dumps(doc_body)
 
             if auth_type == AuthType.session:
-                resp = self._session.put("{}/{}/{}_{}".format(url, db, id_prefix, i), data=data, cookies=dict(SyncGatewaySession=auth[1]))
+                resp = self._session.put("{}/{}/{}".format(url, db, doc_id), data=data, cookies=dict(SyncGatewaySession=auth[1]))
             elif auth_type == AuthType.http_basic:
-                resp = self._session.put("{}/{}/{}_{}".format(url, db, id_prefix, i), data=data, auth=auth)
+                resp = self._session.put("{}/{}/{}".format(url, db, doc_id), data=data, auth=auth)
             else:
-                resp = self._session.put("{}/{}/{}_{}".format(url, db, id_prefix, i), data=data)
+                resp = self._session.put("{}/{}/{}".format(url, db, doc_id), data=data)
             log_r(resp, info=False)
             resp.raise_for_status()
 
@@ -1289,7 +1304,7 @@ class MobileRestClient:
         start = time.time()
         while True:
             if time.time() - start > CLIENT_REQUEST_TIMEOUT:
-                raise TimeoutException("Wait for Replication Status Idle: TIMEOUT")
+                raise keywords.exceptions.TimeoutException("Wait for Replication Status Idle: TIMEOUT")
 
             resp = self._session.get("{}/_active_tasks".format(url))
             log_r(resp)
@@ -1321,7 +1336,7 @@ class MobileRestClient:
         start = time.time()
         while True:
             if time.time() - start > CLIENT_REQUEST_TIMEOUT:
-                raise TimeoutException("Verify Docs Present: TIMEOUT")
+                raise keywords.exceptions.TimeoutException("Verify Docs Present: TIMEOUT")
 
             resp = self._session.get("{}/_active_tasks".format(url))
             log_r(resp)
@@ -1376,7 +1391,7 @@ class MobileRestClient:
         while True:
 
             if time.time() - start > timeout:
-                raise TimeoutException("Verify Docs Present: TIMEOUT")
+                raise keywords.exceptions.TimeoutException("Verify Docs Present: TIMEOUT")
 
             if server_type == ServerType.listener:
 
@@ -1449,7 +1464,7 @@ class MobileRestClient:
 
             break
 
-    def get_changes(self, url, db, since, auth, feed="longpoll", timeout=60):
+    def get_changes(self, url, db, since, auth, feed="longpoll", timeout=60, limit=None):
         """
         Issues a longpoll changes request with a provided since and authentication.
         The timeout is in seconds.
@@ -1465,7 +1480,12 @@ class MobileRestClient:
         server_type = self.get_server_type(url)
 
         if server_type == ServerType.listener:
-            resp = self._session.get("{}/{}/_changes?feed={}&since={}".format(url, db, feed, since))
+
+            request_url = "{}/{}/_changes?feed={}&since={}".format(url, db, feed, since)
+            if limit is not None:
+                request_url += "&limit={}".format(limit)
+
+            resp = self._session.get(request_url)
 
         elif server_type == ServerType.syncgateway:
             body = {
@@ -1473,6 +1493,9 @@ class MobileRestClient:
                 "since": since,
                 "timeout": timeout
             }
+
+            if limit is not None:
+                body["limit"] = limit
 
             log_info("Using POST data: {}".format(body))
 
@@ -1503,7 +1526,7 @@ class MobileRestClient:
         while True:
 
             if time.time() - start > CLIENT_REQUEST_TIMEOUT:
-                raise TimeoutException("Verify Docs In Changes: TIMEOUT")
+                raise keywords.exceptions.TimeoutException("Verify Docs In Changes: TIMEOUT")
 
             resp_obj = self.get_changes(url=url, db=db, since=last_seq, auth=auth)
             doc_ids_in_changes = [change["id"] for change in resp_obj["results"]]
@@ -1516,7 +1539,19 @@ class MobileRestClient:
                 log_info("'{}' not found retrying ...".format(expected_doc_id))
                 time.sleep(1)
 
-    def verify_docs_in_changes(self, url, db, expected_docs, auth=None):
+    def verify_is_user_doc(self, doc):
+        """
+        Verify that a doc is a _user/ doc
+        """
+
+        if not doc["id"].startswith("_user/"):
+            raise ValueError("User doc should have the prefix '_user'")
+        if doc["changes"]:
+            raise ValueError("User doc should have empty changes always")
+        if "rev" in doc:
+            raise ValueError("User doc should not have a rev")
+
+    def verify_docs_in_changes(self, url, db, expected_docs, auth=None, strict=False):
         """
         Verifies the expected docs are present in the database _changes feed using longpoll in a loop with
         Uses a GET _changes?feed=longpoll&since=last_seq for Listener
@@ -1524,6 +1559,8 @@ class MobileRestClient:
 
         expected_docs should be a dict {id: {rev: ""}} or
         a list of {id: {rev: ""}}. If the expected docs are a list, they will be converted to a single map.
+
+        If strict = True, fail if any docs other that the expected docs are found while validating
         """
 
         if isinstance(expected_docs, list):
@@ -1541,21 +1578,29 @@ class MobileRestClient:
 
         start = time.time()
         last_seq = 0
-        while True:
 
+        while True:
             logging.info(time.time() - start)
 
             if time.time() - start > CLIENT_REQUEST_TIMEOUT:
-                raise TimeoutException("Verify Docs In Changes: TIMEOUT")
+                raise keywords.exceptions.TimeoutException("Verify Docs In Changes: TIMEOUT")
 
             resp_obj = self.get_changes(url=url, db=db, since=last_seq, auth=auth)
 
             missing_expected_docs = []
             for resp_doc in resp_obj["results"]:
+
                 # Check changes results contain a doc in the expected docs
                 if resp_doc["id"] in expected_doc_map:
+
                     assert resp_doc["seq"] not in sequence_number_map, "Found duplicate sequence number: {} in sequence map!!".format(resp_doc["seq"])
                     sequence_number_map[resp_doc["seq"]] = resp_doc["id"]
+
+                    # If the doc is a user doc, there will be no rev, cross it out
+                    if resp_doc["id"].startswith("_user/"):
+                        self.verify_is_user_doc(resp_doc)
+                        del expected_doc_map[resp_doc["id"]]
+
                     # Check that the rev of the changes docs matches the expected docs rev
                     for resp_doc_change in resp_doc["changes"]:
                         if resp_doc_change["rev"] == expected_doc_map[resp_doc["id"]]:
@@ -1567,8 +1612,12 @@ class MobileRestClient:
                 else:
                     missing_expected_docs.append(resp_doc)
 
-            logging.info("Missing docs: {}".format(expected_doc_map))
-            logging.debug("Sequence number map: {}".format(sequence_number_map))
+            if strict and len(missing_expected_docs) > 0:
+                log_info("Found doc id not in the expected_docs: {}".format(missing_expected_docs))
+                raise keywords.exceptions.ChangesError("Found unexpected docs in changes feed: {}".format(missing_expected_docs))
+
+            log_info("Missing expected docs: {}".format(expected_doc_map))
+            log_debug("Sequence number map: {}".format(sequence_number_map))
 
             if len(expected_doc_map) == 0:
                 # All expected docs have been crossed out
@@ -1576,7 +1625,7 @@ class MobileRestClient:
 
             # update last sequence and continue
             last_seq = resp_obj["last_seq"]
-            logging.info("last_seq: {}".format(last_seq))
+            log_info("last_seq: {}".format(last_seq))
 
             time.sleep(1)
 

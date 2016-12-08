@@ -2,10 +2,10 @@ import pytest
 
 from keywords.SyncGateway import SyncGateway
 from keywords.MobileRestClient import MobileRestClient
-from keywords.Document import Document
 from keywords.constants import SYNC_GATEWAY_CONFIGS
 from keywords.utils import log_info
 
+from keywords import document
 
 @pytest.mark.sanity
 @pytest.mark.listener
@@ -92,12 +92,11 @@ def test_stale_revision_should_not_be_in_the_index(setup_client_syncgateway_test
     design_doc_id = client.add_design_doc(url=ls_url, db=ls_db, name=d_doc_name, doc=view)
     client.get_doc(url=ls_url, db=ls_db, doc_id=design_doc_id)
 
-    doc_helper = Document()
-    doc_body = doc_helper.create_doc(id="doc_1", content={"hi": "I should be in the view"}, channels=sg_user_channels)
+    doc_body = document.create_doc(doc_id="doc_1", content={"hi": "I should be in the view"}, channels=sg_user_channels)
 
     log_info(doc_body)
 
-    doc_body_2 = doc_helper.create_doc(id="doc_2", channels=sg_user_channels)
+    doc_body_2 = document.create_doc(doc_id="doc_2", channels=sg_user_channels)
 
     doc = client.add_doc(url=ls_url, db=ls_db, doc=doc_body)
     doc_2 = client.add_doc(url=ls_url, db=ls_db, doc=doc_body_2)
