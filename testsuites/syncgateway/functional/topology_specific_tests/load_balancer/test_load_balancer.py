@@ -126,9 +126,8 @@ def test_load_balance_sanity(params_from_base_test_setup):
         log_info("Starting ...")
         ct_task = executor.submit(ct.start)
         log_info("Adding docs ...")
-        docs, errors = client.add_docs(lb_url, sg_db, num_docs, "test_doc", channels=channels, auth=session)
+        docs = client.add_docs(lb_url, sg_db, num_docs, "test_doc", channels=channels, auth=session)
         assert len(docs) == num_docs
-        assert len(errors) == 0
 
         log_info("Adding docs done")
         wait_for_changes = executor.submit(ct.wait_until, docs)

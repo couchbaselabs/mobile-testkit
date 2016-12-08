@@ -29,9 +29,8 @@ def test_auto_prune_listener_sanity(setup_client_syncgateway_test):
     num_revs = 100
 
     ls_db = client.create_database(url=ls_url, name="ls_db")
-    docs, errors = client.add_docs(url=ls_url, db=ls_db, number=num_docs, id_prefix="ls_db_doc")
+    docs = client.add_docs(url=ls_url, db=ls_db, number=num_docs, id_prefix="ls_db_doc")
     assert len(docs) == num_docs
-    assert len(errors) == 0
 
     client.update_docs(url=ls_url, db=ls_db, docs=docs, number_updates=num_revs)
 
@@ -83,7 +82,7 @@ def test_auto_prune_with_pull(setup_client_syncgateway_test):
 
     ls_db = client.create_database(url=ls_url, name="ls_db")
 
-    sg_db_docs, errors = client.add_docs(
+    sg_db_docs = client.add_docs(
         url=sg_url,
         db=sg_db,
         number=num_docs,
@@ -92,7 +91,6 @@ def test_auto_prune_with_pull(setup_client_syncgateway_test):
         auth=sg_session
     )
     assert len(sg_db_docs) == num_docs
-    assert len(errors) == 0
 
     sg_docs_update = client.update_docs(
         url=sg_url,
@@ -168,13 +166,11 @@ def test_auto_prune_listener_keeps_conflicts_sanity(setup_client_syncgateway_tes
     ls_db = client.create_database(url=ls_url, name=ls_db)
 
     # Create docs with same prefix to create conflicts when the dbs complete 1 shot replication
-    ls_db_docs, errors = client.add_docs(url=ls_url, db=ls_db, number=num_docs, id_prefix="doc", channels=sg_user_channels)
+    ls_db_docs = client.add_docs(url=ls_url, db=ls_db, number=num_docs, id_prefix="doc", channels=sg_user_channels)
     assert len(ls_db_docs) == num_docs
-    assert len(errors) == 0
 
-    sg_db_docs, errors = client.add_docs(url=sg_url, db=sg_db, number=num_docs, id_prefix="doc", channels=sg_user_channels, auth=sg_session)
+    sg_db_docs = client.add_docs(url=sg_url, db=sg_db, number=num_docs, id_prefix="doc", channels=sg_user_channels, auth=sg_session)
     assert len(sg_db_docs) == num_docs
-    assert len(errors) == 0
 
     # Setup one shot pull replication and wait for idle.
     client.start_replication(

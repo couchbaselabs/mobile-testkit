@@ -1030,7 +1030,7 @@ class MobileRestClient:
 
         return resp_obj
 
-    def add_docs(self, url, db, number, id_prefix=None, auth=None, channels=None, generator=None):
+    def add_docs(self, url, db, number, id_prefix, auth=None, channels=None, generator=None):
         """
         if id_prefix == None, generate a uuid for each doc
 
@@ -1068,6 +1068,7 @@ class MobileRestClient:
                 resp = self._session.put("{}/{}/{}".format(url, db, doc_id), data=data, auth=auth)
             else:
                 resp = self._session.put("{}/{}/{}".format(url, db, doc_id), data=data)
+
             log_r(resp, info=False)
             resp.raise_for_status()
 
@@ -1078,7 +1079,7 @@ class MobileRestClient:
         if len(added_docs) != number:
             raise AssertionError("Client was not able to add all docs to: {}".format(url))
 
-        log_info("Added: {}".format(added_docs))
+        log_info("Added: {} docs".format(len(added_docs)))
 
         return added_docs
 

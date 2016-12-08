@@ -4,6 +4,7 @@ import uuid
 
 import pytest
 import concurrent.futures
+import requests.exceptions
 
 from libraries.testkit.cluster import Cluster
 
@@ -66,9 +67,8 @@ def test_distributed_index_rebalance_sanity(params_from_base_test_setup):
 
         # Add docs to sg
         log_info("Adding docs to sync_gateway")
-        docs, errors = client.add_docs(sg_one_url, sg_db, num_docs, "test_doc", channels=channels, auth=session)
+        docs = client.add_docs(sg_one_url, sg_db, num_docs, "test_doc", channels=channels, auth=session)
         assert len(docs) == num_docs
-        assert len(errors) == 0
 
         # Start updating docs and rebalance out one CBS node
         log_info("Updating docs on sync_gateway")
@@ -161,10 +161,8 @@ def test_server_goes_down_sanity(params_from_base_test_setup):
     timeout = 45
     start = time.time()
 
-    # TODO - handle the case where partial docs are added during the moment of failover
-    added_docs = {}
-
-    while errors != 0:
+    add_docs_failed = True
+    while add_docs_failed:
         # Fail tests if all docs do not succeed before timeout
         if (time.time() - start) > timeout:
             # Bring server back up before failing the test
@@ -172,9 +170,17 @@ def test_server_goes_down_sanity(params_from_base_test_setup):
             main_server.rebalance_in(coucbase_servers, flakey_server)
             raise TimeoutError("Failed to successfully put docs before timeout")
 
-        docs, errors = client.add_docs(url=sg_url, db=sg_db, number=num_docs, id_prefix=None, auth=session, allow_errors=True, channels=channels)
+        try:
+            docs = client.add_docs(url=sg_url, db=sg_db, number=num_docs, id_prefix=None, auth=session, channels=channels)
 
-        errors = len(errors)
+            # If the above call does not raise, we can successfully add docs again
+            add_docs_failed = False
+        except requests.exceptions.HTTPError as he:
+            log_info("Failed to add docs: {}".format(he))
+
+            # this to true so that the loop continues
+            add_docs_failed = True
+
         log_info("Seeing: {} errors".format(errors))
 
         time.sleep(1)

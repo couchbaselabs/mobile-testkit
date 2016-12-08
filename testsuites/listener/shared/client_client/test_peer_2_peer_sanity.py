@@ -165,13 +165,11 @@ def test_peer_2_peer_sanity(setup_p2p_test):
     ls_url_two_replications = client.get_replications(ls_url_two)
     assert len(ls_url_two_replications) == 2
 
-    ls_db1_docs, errors = client.add_docs(url=ls_url_one, db=ls_db1, number=num_docs_per_db, id_prefix="test_ls_db1")
+    ls_db1_docs = client.add_docs(url=ls_url_one, db=ls_db1, number=num_docs_per_db, id_prefix="test_ls_db1")
     assert len(ls_db1_docs) == num_docs_per_db
-    assert len(errors) == 0
 
-    ls_db2_docs, errors = client.add_docs(url=ls_url_two, db=ls_db2, number=num_docs_per_db, id_prefix="test_ls_db2")
+    ls_db2_docs = client.add_docs(url=ls_url_two, db=ls_db2, number=num_docs_per_db, id_prefix="test_ls_db2")
     assert len(ls_db2_docs) == num_docs_per_db
-    assert len(errors) == 0
 
     all_docs = client.merge(ls_db1_docs, ls_db2_docs)
     assert len(all_docs) == 2000
@@ -223,9 +221,8 @@ def test_peer_2_peer_sanity_pull(setup_p2p_test):
 
     client.wait_for_replication_status_idle(url=ls_url_one, replication_id=pull_repl)
 
-    ls_db2_docs, errors = client.add_docs(url=ls_url_two, db=ls_db2, number=num_docs_per_db, id_prefix="test_ls_db2")
+    ls_db2_docs = client.add_docs(url=ls_url_two, db=ls_db2, number=num_docs_per_db, id_prefix="test_ls_db2")
     assert len(ls_db2_docs) == num_docs_per_db
-    assert len(errors) == 0
 
     client.verify_docs_present(url=ls_url_one, db=ls_db1, expected_docs=ls_db2_docs)
     client.verify_docs_in_changes(url=ls_url_one, db=ls_db1, expected_docs=ls_db2_docs)
@@ -270,9 +267,8 @@ def test_peer_2_peer_sanity_push(setup_p2p_test):
 
     client.wait_for_replication_status_idle(url=ls_url_one, replication_id=push_repl)
 
-    ls_db1_docs, errors = client.add_docs(url=ls_url_one, db=ls_db1, number=num_docs_per_db, id_prefix="test_ls_db1")
+    ls_db1_docs = client.add_docs(url=ls_url_one, db=ls_db1, number=num_docs_per_db, id_prefix="test_ls_db1")
     assert len(ls_db1_docs) == num_docs_per_db
-    assert len(errors) == 0
 
     client.verify_docs_present(url=ls_url_two, db=ls_db2, expected_docs=ls_db1_docs)
     client.verify_docs_in_changes(url=ls_url_two, db=ls_db2, expected_docs=ls_db1_docs)
