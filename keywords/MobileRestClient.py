@@ -1007,7 +1007,7 @@ class MobileRestClient:
                 doc["_exp"] = expiry
 
             if channels is not None:
-                verify_is_list(channels)
+                types.verify_is_list(channels)
                 doc["channels"] = channels
 
             if auth_type == AuthType.session:

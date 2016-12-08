@@ -1,4 +1,4 @@
-import keywords.types
+from keywords import types
 
 
 class UserInfo:
@@ -7,8 +7,8 @@ class UserInfo:
         self.name = name
         self.password = password
 
-        keywords.types.verify_is_list(channels)
+        types.verify_is_list(channels)
         self.channels = channels
 
-        keywords.types.verify_is_list(roles)
+        types.verify_is_list(roles)
         self.roles = roles

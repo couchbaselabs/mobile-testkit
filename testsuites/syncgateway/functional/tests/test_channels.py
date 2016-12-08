@@ -8,6 +8,7 @@ from keywords.MobileRestClient import MobileRestClient
 from keywords.SyncGateway import sync_gateway_config_path_for_mode
 
 import keywords.exceptions
+from keywords import userinfo
 
 
 @pytest.mark.sanity
@@ -33,22 +34,33 @@ def test_remove_add_channels_to_doc(params_from_base_test_setup, sg_conf_name):
 
     client = MobileRestClient()
 
-    # TODO convert this to userinfo.UserInfo once backfill tests are merged
-    admin_user_name = "admin"
-    admin_user_pass = "pass"
-    admin_user_channels = ["A", "B"]
+    admin_user_info = userinfo.UserInfo("admin", "pass", channels=["A", "B"], roles=[])
+    a_user_info = userinfo.UserInfo("a_user", "pass", channels=["A"], roles=[])
 
-    a_user_name = "a_user"
-    a_user_pass = "pass"
-    a_user_channels = ["A"]
+    admin_user_auth = client.create_user(
+        url=sg_admin_url,
+        db=sg_db,
+        name=admin_user_info.name,
+        password=admin_user_info.password,
+        channels=admin_user_info.channels
+    )
 
-    admin_user_auth = client.create_user(url=sg_admin_url, db=sg_db,
-                                         name=admin_user_name, password=admin_user_pass, channels=admin_user_channels)
+    a_user_auth = client.create_user(
+        url=sg_admin_url,
+        db=sg_db,
+        name=a_user_info.name,
+        password=a_user_info.password,
+        channels=a_user_info.channels
+    )
 
-    a_user_auth = client.create_user(url=sg_admin_url, db=sg_db,
-                                     name=a_user_name, password=a_user_pass, channels=a_user_channels)
-
-    a_docs = client.add_docs(url=sg_url, db=sg_db, number=50, id_prefix="a_doc", auth=admin_user_auth, channels=admin_user_channels)
+    a_docs = client.add_docs(
+        url=sg_url,
+        db=sg_db,
+        number=50,
+        id_prefix="a_doc",
+        auth=admin_user_auth,
+        channels=admin_user_info.channels
+    )
 
     # Build dictionay of a_docs
     a_docs_id_rev = {doc["id"]: doc["rev"] for doc in a_docs}

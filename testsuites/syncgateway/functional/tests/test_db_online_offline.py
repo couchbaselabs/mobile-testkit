@@ -635,7 +635,8 @@ def test_online_to_offline_changes_feed_controlled_close_longpoll(params_from_ba
         # assert the last_seq_number == number _changes + 2 (_user doc starts and one and docs start at _user doc seq + 2)
         assert len(docs_in_changes) + 2 == int(seq_num_component[0])
     else:
-        log_info("Should not rely on last_seq with regard to doc operations in 'di' mode")
+        # assert the value is not an empty string
+        assert last_seq_num != ""
 
     # Bring db back online
     status = admin.bring_db_online("db")
