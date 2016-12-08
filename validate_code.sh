@@ -22,9 +22,6 @@ $RUNPYLINT libraries/testkit/*.py
 echo "$RUNPYLINT libraries/utilities/*.py"
 $RUNPYLINT libraries/utilities/*.py
 
-echo "$RUNPYLINT testsuites/*.py"
-$RUNPYLINT testsuites/*.py
-
 echo "$RUNPYLINT testsuites/android/listener/*.py"
 $RUNPYLINT testsuites/android/listener/*.py
 
