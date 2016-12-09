@@ -27,7 +27,7 @@ def test_multiple_users_multiple_channels(params_from_base_test_setup, sg_conf_n
     log_info("conf: {}".format(sg_conf))
 
     cluster = Cluster(config=cluster_conf)
-    mode = cluster.reset(sg_config_path=sg_conf)
+    cluster.reset(sg_config_path=sg_conf)
 
     num_docs_seth = 1000
     num_docs_adam = 2000
@@ -68,10 +68,6 @@ def test_multiple_users_multiple_channels(params_from_base_test_setup, sg_conf_n
     traun_expected_docs = {k: v for cache in traun_subset for k, v in cache.items()}
     verify_changes([traun], expected_num_docs=num_docs_seth + num_docs_adam + num_docs_traun, expected_num_revisions=0, expected_docs=traun_expected_docs)
 
-    # Verify all sync_gateways are running
-    errors = cluster.verify_alive(mode)
-    assert len(errors) == 0
-
 
 @pytest.mark.sanity
 @pytest.mark.syncgateway
@@ -90,7 +86,7 @@ def test_muliple_users_single_channel(params_from_base_test_setup, sg_conf_name)
     log_info("conf: {}".format(sg_conf))
 
     cluster = Cluster(config=cluster_conf)
-    mode = cluster.reset(sg_config_path=sg_conf)
+    cluster.reset(sg_config_path=sg_conf)
 
     sgs = cluster.sync_gateways
 
@@ -121,10 +117,6 @@ def test_muliple_users_single_channel(params_from_base_test_setup, sg_conf_name)
 
     verify_changes([seth, adam, traun], expected_num_docs=num_docs_seth + num_docs_adam + num_docs_traun, expected_num_revisions=0, expected_docs=all_docs)
 
-    # Verify all sync_gateways are running
-    errors = cluster.verify_alive(mode)
-    assert len(errors) == 0
-
 
 @pytest.mark.sanity
 @pytest.mark.syncgateway
@@ -143,7 +135,7 @@ def test_single_user_multiple_channels(params_from_base_test_setup, sg_conf_name
     log_info("conf: {}".format(sg_conf))
 
     cluster = Cluster(config=cluster_conf)
-    mode = cluster.reset(sg_config_path=sg_conf)
+    cluster.reset(sg_config_path=sg_conf)
 
     start = time.time()
     sgs = cluster.sync_gateways
@@ -164,10 +156,6 @@ def test_single_user_multiple_channels(params_from_base_test_setup, sg_conf_name
     time.sleep(10)
 
     verify_changes(users=[seth], expected_num_docs=5000, expected_num_revisions=0, expected_docs=seth.cache)
-
-    # Verify all sync_gateways are running
-    errors = cluster.verify_alive(mode)
-    assert len(errors) == 0
 
     end = time.time()
     log_info("TIME:{}s".format(end - start))
@@ -190,7 +178,7 @@ def test_single_user_single_channel(params_from_base_test_setup, sg_conf_name):
     log_info("conf: {}".format(sg_conf))
 
     cluster = Cluster(config=cluster_conf)
-    mode = cluster.reset(sg_config_path=sg_conf)
+    cluster.reset(sg_config_path=sg_conf)
 
     sgs = cluster.sync_gateways
 
@@ -217,7 +205,3 @@ def test_single_user_single_channel(params_from_base_test_setup, sg_conf_name):
     all_doc_caches = [seth.cache, cbs_user.cache]
     all_docs = {k: v for cache in all_doc_caches for k, v in cache.items()}
     verify_changes([admin_user], expected_num_docs=num_cbs_docs + num_seth_docs, expected_num_revisions=0, expected_docs=all_docs)
-
-    # Verify all sync_gateways are running
-    errors = cluster.verify_alive(mode)
-    assert len(errors) == 0

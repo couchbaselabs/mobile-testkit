@@ -30,7 +30,7 @@ def test_seq(params_from_base_test_setup, sg_conf_name, num_users, num_docs, num
     log_info("num_revisions: {}".format(num_revisions))
 
     cluster = Cluster(config=cluster_conf)
-    mode = cluster.reset(sg_config_path=sg_conf)
+    cluster.reset(sg_config_path=sg_conf)
     admin = Admin(cluster.sync_gateways[0])
 
     # all users will share docs due to having the same channel
@@ -60,19 +60,17 @@ def test_seq(params_from_base_test_setup, sg_conf_name, num_users, num_docs, num
         log_info('Second to last doc "seq": {}'.format(second_to_last_doc_entry_seq))
         log_info('Last doc "seq": {}'.format(last_doc_entry_seq))
 
-        if mode == "distributed_index":
+        if mode == "di":
             # Verify last "seq" follows the formate 12313-0, not 12313-0::1023.15
             log_info('Verify that the last "seq" is a plain hashed value')
             assert len(second_to_last_doc_entry_seq.split("::")) == 2
             assert len(last_doc_entry_seq.split("::")) == 1
-        else:
+        elif mode == "cc":
             assert second_to_last_doc_entry_seq > 0
             assert last_doc_entry_seq > 0
+        else:
+            raise ValueError("Unsupported 'mode' !!")
 
     all_doc_caches = [user.cache for user in users]
     all_docs = {k: v for cache in all_doc_caches for k, v in cache.items()}
     verify_changes(users, expected_num_docs=num_users * num_docs, expected_num_revisions=num_revisions, expected_docs=all_docs)
-
-    # Verify all sync_gateways are running
-    errors = cluster.verify_alive(mode)
-    assert len(errors) == 0

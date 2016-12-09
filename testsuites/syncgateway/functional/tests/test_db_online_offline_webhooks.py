@@ -34,7 +34,7 @@ def test_webhooks(params_from_base_test_setup, sg_conf_name, num_users, num_chan
     log_info("Using num_revisions: {}".format(num_revisions))
 
     cluster = Cluster(config=cluster_conf)
-    mode = cluster.reset(sg_conf)
+    cluster.reset(sg_conf)
 
     init_completed = time.time()
     log_info("Initialization completed. Time taken:{}s".format(init_completed - start))
@@ -67,10 +67,6 @@ def test_webhooks(params_from_base_test_setup, sg_conf_name, num_users, num_chan
     log_info("expected_events: {} received_events {}".format(expected_events, received_events))
     assert expected_events == received_events
 
-    # Verify all sync_gateways are running
-    errors = cluster.verify_alive(mode)
-    assert len(errors) == 0
-
 
 # implements scenarios: 18 and 19
 @pytest.mark.sanity
@@ -97,7 +93,7 @@ def test_db_online_offline_webhooks_offline(params_from_base_test_setup, sg_conf
     log_info("Using num_revisions: {}".format(num_revisions))
 
     cluster = Cluster(config=cluster_conf)
-    mode = cluster.reset(sg_conf)
+    cluster.reset(sg_conf)
 
     init_completed = time.time()
     log_info("Initialization completed. Time taken:{}s".format(init_completed - start))
@@ -150,10 +146,6 @@ def test_db_online_offline_webhooks_offline(params_from_base_test_setup, sg_conf
 
     ws.stop()
 
-    # Verify all sync_gateways are running
-    errors = cluster.verify_alive(mode)
-    assert len(errors) == 0
-
 
 # implements scenarios: 21
 @pytest.mark.sanity
@@ -180,7 +172,7 @@ def test_db_online_offline_webhooks_offline_two(params_from_base_test_setup, sg_
     log_info("Using num_revisions: {}".format(num_revisions))
 
     cluster = Cluster(config=cluster_conf)
-    mode = cluster.reset(sg_conf)
+    cluster.reset(sg_conf)
 
     init_completed = time.time()
     log_info("Initialization completed. Time taken:{}s".format(init_completed - start))
@@ -221,7 +213,3 @@ def test_db_online_offline_webhooks_offline_two(params_from_base_test_setup, sg_
     assert last_event['state'] == 'offline'
 
     ws.stop()
-
-    # Verify all sync_gateways are running
-    errors = cluster.verify_alive(mode)
-    assert len(errors) == 0

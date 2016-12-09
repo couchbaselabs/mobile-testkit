@@ -212,7 +212,7 @@ def test_online_default_rest(params_from_base_test_setup, sg_conf_name, num_docs
     log_info("Using num_docs: {}".format(num_docs))
 
     cluster = Cluster(config=cluster_conf)
-    mode = cluster.reset(sg_config_path=sg_conf)
+    cluster.reset(sg_config_path=sg_conf)
 
     # all db endpoints should function as expected
     errors = rest_scan(cluster.sync_gateways[0], db="db", online=True, num_docs=num_docs, user_name="seth", channels=["ABC"])
@@ -224,10 +224,6 @@ def test_online_default_rest(params_from_base_test_setup, sg_conf_name, num_docs
         admin = Admin(sg)
         db_info = admin.get_db_info("db")
         assert db_info["state"] == "Online"
-
-    # Verify all sync_gateways are running
-    errors = cluster.verify_alive(mode)
-    assert len(errors) == 0
 
 
 # Scenario 2
@@ -249,7 +245,7 @@ def test_offline_false_config_rest(params_from_base_test_setup, sg_conf_name, nu
     log_info("Using num_docs: {}".format(num_docs))
 
     cluster = Cluster(config=cluster_conf)
-    mode = cluster.reset(sg_config_path=sg_conf)
+    cluster.reset(sg_config_path=sg_conf)
 
     # all db endpoints should function as expected
     errors = rest_scan(cluster.sync_gateways[0], db="db", online=True, num_docs=num_docs, user_name="seth", channels=["ABC"])
@@ -262,10 +258,6 @@ def test_offline_false_config_rest(params_from_base_test_setup, sg_conf_name, nu
         admin = Admin(sg)
         db_info = admin.get_db_info("db")
         assert db_info["state"] == "Online"
-
-    # Verify all sync_gateways are running
-    errors = cluster.verify_alive(mode)
-    assert len(errors) == 0
 
 
 # Scenario 3
@@ -287,7 +279,7 @@ def test_online_to_offline_check_503(params_from_base_test_setup, sg_conf_name, 
     log_info("Using num_docs: {}".format(num_docs))
 
     cluster = Cluster(config=cluster_conf)
-    mode = cluster.reset(sg_config_path=sg_conf)
+    cluster.reset(sg_config_path=sg_conf)
     admin = Admin(cluster.sync_gateways[0])
 
     # all db endpoints should function as expected
@@ -306,10 +298,6 @@ def test_online_to_offline_check_503(params_from_base_test_setup, sg_conf_name, 
     for error_tuple in errors:
         log_info("({},{})".format(error_tuple[0], error_tuple[1]))
         assert error_tuple[1] == 503
-
-    # Verify all sync_gateways are running
-    errors = cluster.verify_alive(mode)
-    assert len(errors) == 0
 
 
 # Scenario 5 - continuous
@@ -332,7 +320,8 @@ def test_online_to_offline_changes_feed_controlled_close_continuous(params_from_
     log_info("Using num_docs: {}".format(num_docs))
 
     cluster = Cluster(config=cluster_conf)
-    mode = cluster.reset(sg_config_path=sg_conf)
+    cluster.reset(sg_config_path=sg_conf)
+
     admin = Admin(cluster.sync_gateways[0])
     seth = admin.register_user(target=cluster.sync_gateways[0], db="db", name="seth", password="password", channels=["ABC"])
     doc_pusher = admin.register_user(target=cluster.sync_gateways[0], db="db", name="doc_pusher", password="password", channels=["ABC"])
@@ -383,10 +372,6 @@ def test_online_to_offline_changes_feed_controlled_close_continuous(params_from_
     # should equal the number of docs
     assert num_docs_pushed + len(doc_add_errors) == num_docs
 
-    # Verify all sync_gateways are running
-    errors = cluster.verify_alive(mode)
-    assert len(errors) == 0
-
 
 # Scenario 6 - longpoll
 @pytest.mark.sanity
@@ -409,7 +394,7 @@ def test_online_to_offline_continous_changes_feed_controlled_close_sanity_mulitp
     log_info("Using num_users: {}".format(num_users))
 
     cluster = Cluster(config=cluster_conf)
-    mode = cluster.reset(sg_config_path=sg_conf)
+    cluster.reset(sg_config_path=sg_conf)
 
     admin = Admin(cluster.sync_gateways[0])
     users = admin.register_bulk_users(target=cluster.sync_gateways[0], db="db", name_prefix="user", password="password", number=num_users, channels=["ABC"])
@@ -448,10 +433,6 @@ def test_online_to_offline_continous_changes_feed_controlled_close_sanity_mulitp
     for feed_result in feed_close_results:
         assert len(feed_result) == 0
 
-    # Verify all sync_gateways are running
-    errors = cluster.verify_alive(mode)
-    assert len(errors) == 0
-
 
 # Scenario 6 - longpoll
 @pytest.mark.sanity
@@ -473,7 +454,7 @@ def test_online_to_offline_changes_feed_controlled_close_longpoll_sanity(params_
     log_info("Using num_docs: {}".format(num_docs))
 
     cluster = Cluster(config=cluster_conf)
-    mode = cluster.reset(sg_config_path=sg_conf)
+    cluster.reset(sg_config_path=sg_conf)
 
     admin = Admin(cluster.sync_gateways[0])
     seth = admin.register_user(target=cluster.sync_gateways[0], db="db", name="seth", password="password", channels=["ABC"])
@@ -510,10 +491,6 @@ def test_online_to_offline_changes_feed_controlled_close_longpoll_sanity(params_
     assert 1 == int(seq_num_component[0])
     assert len(docs_in_changes) == 0
 
-    # Verify all sync_gateways are running
-    errors = cluster.verify_alive(mode)
-    assert len(errors) == 0
-
 
 # Scenario 6 - longpoll
 @pytest.mark.sanity
@@ -536,7 +513,7 @@ def test_online_to_offline_longpoll_changes_feed_controlled_close_sanity_mulitpl
     log_info("Using num_users: {}".format(num_users))
 
     cluster = Cluster(config=cluster_conf)
-    mode = cluster.reset(sg_config_path=sg_conf)
+    cluster.reset(sg_config_path=sg_conf)
 
     admin = Admin(cluster.sync_gateways[0])
     users = admin.register_bulk_users(target=cluster.sync_gateways[0], db="db", name_prefix="user", password="password", number=num_users, channels=["ABC"])
@@ -579,10 +556,6 @@ def test_online_to_offline_longpoll_changes_feed_controlled_close_sanity_mulitpl
         assert len(docs_in_changes) == 0
         assert int(seq_num_component[0]) > 0
 
-    # Verify all sync_gateways are running
-    errors = cluster.verify_alive(mode)
-    assert len(errors) == 0
-
 
 # Scenario 6 - longpoll
 # NOTE: Was disabled for di
@@ -605,7 +578,7 @@ def test_online_to_offline_changes_feed_controlled_close_longpoll(params_from_ba
     log_info("Using num_docs: {}".format(num_docs))
 
     cluster = Cluster(config=cluster_conf)
-    mode = cluster.reset(sg_config_path=sg_conf)
+    cluster.reset(sg_config_path=sg_conf)
 
     admin = Admin(cluster.sync_gateways[0])
     seth = admin.register_user(target=cluster.sync_gateways[0], db="db", name="seth", password="password", channels=["ABC"])
@@ -654,12 +627,16 @@ def test_online_to_offline_changes_feed_controlled_close_longpoll(params_from_ba
     # Some docs should have made it to _changes
     assert len(docs_in_changes) > 0
 
-    seq_num_component = last_seq_num.split("-")
+    # Make sure some docs failed due to db being taken offline
+    assert len(doc_add_errors) > 0
 
-    # last_seq may be of the form '1' for channel cache or '1-0' for distributed index
-    # assert the last_seq_number == number _changes + 2 (_user doc starts and one and docs start at _user doc seq + 2)
     seq_num_component = last_seq_num.split("-")
-    assert len(docs_in_changes) + 2 == int(seq_num_component[0])
+    if mode == "cc":
+        # assert the last_seq_number == number _changes + 2 (_user doc starts and one and docs start at _user doc seq + 2)
+        assert len(docs_in_changes) + 2 == int(seq_num_component[0])
+    else:
+        # assert the value is not an empty string
+        assert last_seq_num != ""
 
     # Bring db back online
     status = admin.bring_db_online("db")
@@ -674,10 +651,6 @@ def test_online_to_offline_changes_feed_controlled_close_longpoll(params_from_ba
     # Check that the number of errors return when trying to push while db is offline + num of docs in db
     # should equal the number of docs
     assert num_docs_pushed + len(doc_add_errors) == num_docs
-
-    # Verify all sync_gateways are running
-    errors = cluster.verify_alive(mode)
-    assert len(errors) == 0
 
 
 # Scenario 6
@@ -700,7 +673,7 @@ def test_offline_true_config_bring_online(params_from_base_test_setup, sg_conf_n
     log_info("Using num_docs: {}".format(num_docs))
 
     cluster = Cluster(config=cluster_conf)
-    mode = cluster.reset(sg_config_path=sg_conf)
+    cluster.reset(sg_config_path=sg_conf)
 
     admin = Admin(cluster.sync_gateways[0])
 
@@ -719,10 +692,6 @@ def test_offline_true_config_bring_online(params_from_base_test_setup, sg_conf_n
 
     # all db endpoints should succeed
     errors = rest_scan(cluster.sync_gateways[0], db="db", online=True, num_docs=num_docs, user_name="seth", channels=["ABC"])
-    assert len(errors) == 0
-
-    # Verify all sync_gateways are running
-    errors = cluster.verify_alive(mode)
     assert len(errors) == 0
 
 
@@ -746,7 +715,7 @@ def test_db_offline_tap_loss_sanity(params_from_base_test_setup, sg_conf_name, n
     log_info("Using num_docs: {}".format(num_docs))
 
     cluster = Cluster(config=cluster_conf)
-    mode = cluster.reset(sg_config_path=sg_conf)
+    cluster.reset(sg_config_path=sg_conf)
 
     # all db rest enpoints should succeed
     errors = rest_scan(cluster.sync_gateways[0], db="db", online=True, num_docs=num_docs, user_name="seth", channels=["ABC"])
@@ -762,10 +731,6 @@ def test_db_offline_tap_loss_sanity(params_from_base_test_setup, sg_conf_name, n
     for error_tuple in errors:
         log_info("({},{})".format(error_tuple[0], error_tuple[1]))
         assert error_tuple[1] == 503
-
-    # Verify all sync_gateways are running
-    errors = cluster.verify_alive(mode)
-    assert len(errors) == 0
 
 
 # Scenario 11
@@ -788,7 +753,7 @@ def test_db_delayed_online(params_from_base_test_setup, sg_conf_name, num_docs):
     log_info("Using num_docs: {}".format(num_docs))
 
     cluster = Cluster(config=cluster_conf)
-    mode = cluster.reset(sg_config_path=sg_conf)
+    cluster.reset(sg_config_path=sg_conf)
 
     admin = Admin(cluster.sync_gateways[0])
 
@@ -815,10 +780,6 @@ def test_db_delayed_online(params_from_base_test_setup, sg_conf_name, num_docs):
     errors = rest_scan(cluster.sync_gateways[0], db="db", online=True, num_docs=num_docs, user_name="seth", channels=["ABC"])
     assert len(errors) == 0
 
-    # Verify all sync_gateways are running
-    errors = cluster.verify_alive(mode)
-    assert len(errors) == 0
-
 
 @pytest.mark.sanity
 @pytest.mark.syncgateway
@@ -838,7 +799,7 @@ def test_multiple_dbs_unique_buckets_lose_tap(params_from_base_test_setup, sg_co
     log_info("Using num_docs: {}".format(num_docs))
 
     cluster = Cluster(config=cluster_conf)
-    mode = cluster.reset(sg_config_path=sg_conf)
+    cluster.reset(sg_config_path=sg_conf)
 
     dbs = ["db1", "db2", "db3", "db4"]
 
@@ -864,10 +825,6 @@ def test_multiple_dbs_unique_buckets_lose_tap(params_from_base_test_setup, sg_co
         for error_tuple in errors:
             log_info("({},{})".format(error_tuple[0], error_tuple[1]))
             assert error_tuple[1] == 503
-
-    # Verify all sync_gateways are running
-    errors = cluster.verify_alive(mode)
-    assert len(errors) == 0
 
 
 # Reenable for 1.3

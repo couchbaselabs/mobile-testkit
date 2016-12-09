@@ -39,7 +39,7 @@ def test_longpoll_changes_parametrized(params_from_base_test_setup, sg_conf_name
     log_info("num_revisions: {}".format(num_revisions))
 
     cluster = Cluster(config=cluster_conf)
-    mode = cluster.reset(sg_config_path=sg_conf)
+    cluster.reset(sg_config_path=sg_conf)
 
     admin = Admin(cluster.sync_gateways[0])
     seth = admin.register_user(target=cluster.sync_gateways[0], db="db", name="seth", password="password", channels=["ABC", "TERMINATE"])
@@ -73,10 +73,6 @@ def test_longpoll_changes_parametrized(params_from_base_test_setup, sg_conf_name
     # Verify docs from seth continous changes is the same as abc_docs_pusher's docs
     verify_same_docs(expected_num_docs=num_docs, doc_dict_one=docs_in_changes, doc_dict_two=abc_doc_pusher.cache)
 
-    # Verify all sync_gateways are running
-    errors = cluster.verify_alive(mode)
-    assert len(errors) == 0
-
 
 @pytest.mark.sanity
 @pytest.mark.syncgateway
@@ -98,7 +94,7 @@ def test_longpoll_changes_sanity(params_from_base_test_setup, sg_conf_name, num_
     log_info("num_revisions: {}".format(num_revisions))
 
     cluster = Cluster(config=cluster_conf)
-    mode = cluster.reset(sg_config_path=sg_conf)
+    cluster.reset(sg_config_path=sg_conf)
 
     admin = Admin(cluster.sync_gateways[0])
     seth = admin.register_user(target=cluster.sync_gateways[0], db="db", name="seth", password="password", channels=["ABC", "TERMINATE"])
@@ -133,10 +129,6 @@ def test_longpoll_changes_sanity(params_from_base_test_setup, sg_conf_name, num_
     # Verify docs from seth continous changes is the same as abc_docs_pusher's docs
     verify_same_docs(expected_num_docs=num_docs, doc_dict_one=docs_in_changes, doc_dict_two=abc_doc_pusher.cache)
 
-    # Verify all sync_gateways are running
-    errors = cluster.verify_alive(mode)
-    assert len(errors) == 0
-
 
 @pytest.mark.sanity
 @pytest.mark.syncgateway
@@ -159,7 +151,7 @@ def test_longpoll_awaken_doc_add_update(params_from_base_test_setup, sg_conf_nam
     log_info("sg_url: {}".format(sg_url))
 
     cluster = Cluster(config=cluster_conf)
-    mode = cluster.reset(sg_config_path=sg_conf)
+    cluster.reset(sg_config_path=sg_conf)
 
     adam_user_info = userinfo.UserInfo(name="adam", password="Adampass1", channels=["NBC"], roles=[])
     traun_user_info = userinfo.UserInfo(name="traun", password="Traunpass1", channels=["CBS"], roles=[])
@@ -367,10 +359,6 @@ def test_longpoll_awaken_doc_add_update(params_from_base_test_setup, sg_conf_nam
         rev_from_change = int(andy_changes["results"][0]["changes"][0]["rev"].split("-")[0])
         assert rev_from_change == 2
 
-    # Verify all sync_gateways are running
-    errors = cluster.verify_alive(mode)
-    assert len(errors) == 0
-
 
 @pytest.mark.sanity
 @pytest.mark.syncgateway
@@ -393,7 +381,7 @@ def test_longpoll_awaken_channels(params_from_base_test_setup, sg_conf_name):
     log_info("sg_url: {}".format(sg_url))
 
     cluster = Cluster(config=cluster_conf)
-    mode = cluster.reset(sg_config_path=sg_conf)
+    cluster.reset(sg_config_path=sg_conf)
 
     adam_user_info = userinfo.UserInfo(name="adam", password="Adampass1", channels=["NBC", "ABC"], roles=[])
     traun_user_info = userinfo.UserInfo(name="traun", password="Traunpass1", channels=[], roles=[])
@@ -585,10 +573,6 @@ def test_longpoll_awaken_channels(params_from_base_test_setup, sg_conf_name):
         assert andy_changes["results"][0]["id"] == "channel_grant_with_doc_intially"
         assert andy_changes["results"][0]["changes"][0]["rev"].startswith("2-")
 
-    # Verify all sync_gateways are running
-    errors = cluster.verify_alive(mode)
-    assert len(errors) == 0
-
 
 @pytest.mark.sanity
 @pytest.mark.syncgateway
@@ -611,7 +595,7 @@ def test_longpoll_awaken_roles(params_from_base_test_setup, sg_conf_name):
     log_info("sg_url: {}".format(sg_url))
 
     cluster = Cluster(config=cluster_conf)
-    mode = cluster.reset(sg_config_path=sg_conf)
+    cluster.reset(sg_config_path=sg_conf)
 
     admin_role = "admin_role"
     admin_channel = "admin_channel"
@@ -750,10 +734,6 @@ def test_longpoll_awaken_roles(params_from_base_test_setup, sg_conf_name):
         assert len(andy_changes["results"]) == 1
         assert andy_changes["results"][0]["id"] == "abc_doc_0"
 
-    # Verify all sync_gateways are running
-    errors = cluster.verify_alive(mode)
-    assert len(errors) == 0
-
 
 @pytest.mark.sanity
 @pytest.mark.syncgateway
@@ -790,7 +770,7 @@ def test_longpoll_awaken_via_sync_access(params_from_base_test_setup, sg_conf_na
     sg_db = "db"
 
     cluster = Cluster(config=cluster_conf)
-    mode = cluster.reset(sg_config_path=sg_conf)
+    cluster.reset(sg_config_path=sg_conf)
 
     client = MobileRestClient()
 
@@ -859,10 +839,6 @@ def test_longpoll_awaken_via_sync_access(params_from_base_test_setup, sg_conf_na
     andy_changes = client.get_changes(url=sg_url, db=sg_db, since=andy_changes["last_seq"], auth=andy_auth, timeout=1)
     assert len(andy_changes["results"]) == 0
 
-    # Verify all sync_gateways are running
-    errors = cluster.verify_alive(mode)
-    assert len(errors) == 0
-
 
 @pytest.mark.sanity
 @pytest.mark.syncgateway
@@ -900,7 +876,7 @@ def test_longpoll_awaken_via_sync_role(params_from_base_test_setup, sg_conf_name
     techno_role = "techno"
     techno_channel = "aphex"
     cluster = Cluster(config=cluster_conf)
-    mode = cluster.reset(sg_config_path=sg_conf)
+    cluster.reset(sg_config_path=sg_conf)
 
     client = MobileRestClient()
 
@@ -974,7 +950,3 @@ def test_longpoll_awaken_via_sync_role(params_from_base_test_setup, sg_conf_name
 
     andy_changes = client.get_changes(url=sg_url, db=sg_db, since=andy_changes["last_seq"], auth=andy_auth, timeout=1)
     assert len(andy_changes["results"]) == 0
-
-    # Verify all sync_gateways are running
-    errors = cluster.verify_alive(mode)
-    assert len(errors) == 0

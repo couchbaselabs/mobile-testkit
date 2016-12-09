@@ -40,7 +40,7 @@ def test_overloaded_channel_cache(params_from_base_test_setup, sg_conf_name, num
     log_info("Using limit: {}".format(limit))
 
     cluster = Cluster(config=cluster_conf)
-    mode = cluster.reset(sg_config_path=sg_conf)
+    cluster.reset(sg_config_path=sg_conf)
 
     target_sg = cluster.sync_gateways[0]
 
@@ -107,7 +107,3 @@ def test_overloaded_channel_cache(params_from_base_test_setup, sg_conf_name, num
         else:
             # If number of view queries == 0 the key will not exist in the expvars
             assert "view_queries" not in resp_obj["syncGateway_changeCache"]
-
-    # Verify all sync_gateways are running
-    errors = cluster.verify_alive(mode)
-    assert len(errors) == 0

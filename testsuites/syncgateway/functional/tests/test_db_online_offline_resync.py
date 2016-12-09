@@ -39,7 +39,7 @@ def test_bucket_online_offline_resync_sanity(params_from_base_test_setup, sg_con
     start = time.time()
 
     cluster = Cluster(config=cluster_conf)
-    mode = cluster.reset(sg_conf)
+    cluster.reset(sg_conf)
 
     init_completed = time.time()
     log_info("Initialization completed. Time taken:{}s".format(init_completed - start))
@@ -132,10 +132,6 @@ def test_bucket_online_offline_resync_sanity(params_from_base_test_setup, sg_con
 
     verify_changes(user_x, expected_num_docs=expected_docs, expected_num_revisions=num_revisions, expected_docs=all_docs)
 
-    # Verify all sync_gateways are running
-    errors = cluster.verify_alive(mode)
-    assert len(errors) == 0
-
     end = time.time()
     log_info("Test ended.")
     log_info("Main test duration: {}".format(end - init_completed))
@@ -173,7 +169,7 @@ def test_bucket_online_offline_resync_with_online(params_from_base_test_setup, s
     log_info("Using num_revisions: {}".format(num_revisions))
 
     cluster = Cluster(config=cluster_conf)
-    mode = cluster.reset(sg_conf)
+    cluster.reset(sg_conf)
 
     init_completed = time.time()
     log_info("Initialization completed. Time taken:{}s".format(init_completed - start))
@@ -318,10 +314,6 @@ def test_bucket_online_offline_resync_with_online(params_from_base_test_setup, s
 
     verify_changes(user_x, expected_num_docs=expected_docs, expected_num_revisions=num_revisions, expected_docs=all_docs)
 
-    # Verify all sync_gateways are running
-    errors = cluster.verify_alive(mode)
-    assert len(errors) == 0
-
     end = time.time()
     log_info("Test ended.")
     log_info("Main test duration: {}".format(end - init_completed))
@@ -359,7 +351,7 @@ def test_bucket_online_offline_resync_with_offline(params_from_base_test_setup, 
     log_info("Using num_revisions: {}".format(num_revisions))
 
     cluster = Cluster(config=cluster_conf)
-    mode = cluster.reset(sg_conf)
+    cluster.reset(sg_conf)
 
     init_completed = time.time()
     log_info("Initialization completed. Time taken:{}s".format(init_completed - start))
@@ -501,10 +493,6 @@ def test_bucket_online_offline_resync_with_offline(params_from_base_test_setup, 
     all_docs = {k: v for user_cache in global_cache for k, v in user_cache.items()}
 
     verify_changes(user_x, expected_num_docs=expected_docs, expected_num_revisions=num_revisions, expected_docs=all_docs)
-
-    # Verify all sync_gateways are running
-    errors = cluster.verify_alive(mode)
-    assert len(errors) == 0
 
     end = time.time()
     log_info("Test ended.")
