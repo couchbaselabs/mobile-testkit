@@ -1556,7 +1556,7 @@ class MobileRestClient:
         if "rev" in doc:
             raise ValueError("User doc should not have a rev")
 
-    def verify_docs_in_changes(self, url, db, expected_docs, auth=None, strict=False):
+    def verify_docs_in_changes(self, url, db, expected_docs, auth=None, strict=False, polling_interval=60):
         """
         Verifies the expected docs are present in the database _changes feed using longpoll in a loop with
         Uses a GET _changes?feed=longpoll&since=last_seq for Listener
@@ -1590,7 +1590,7 @@ class MobileRestClient:
             if time.time() - start > CLIENT_REQUEST_TIMEOUT:
                 raise keywords.exceptions.TimeoutException("Verify Docs In Changes: TIMEOUT")
 
-            resp_obj = self.get_changes(url=url, db=db, since=last_seq, auth=auth)
+            resp_obj = self.get_changes(url=url, db=db, since=last_seq, auth=auth, timeout=polling_interval)
 
             missing_expected_docs = []
             for resp_doc in resp_obj["results"]:
@@ -1621,7 +1621,7 @@ class MobileRestClient:
                 log_info("Found doc id not in the expected_docs: {}".format(missing_expected_docs))
                 raise keywords.exceptions.ChangesError("Found unexpected docs in changes feed: {}".format(missing_expected_docs))
 
-            log_info("Missing expected docs: {}".format(expected_doc_map))
+            log_info("Missing expected docs: {}".format(len(expected_doc_map)))
             log_debug("Sequence number map: {}".format(sequence_number_map))
 
             if len(expected_doc_map) == 0:
