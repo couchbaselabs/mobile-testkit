@@ -384,6 +384,24 @@ Create cluster with private network
     - Generate `resources/pool.json`
     - Generate `resources/cluster_configs/`
 1. Create an ssh key. `cd ~/.ssh/ && ssh-keygen`
+1. Make sure you have PasswordAuthentication set on each vagrant instance
+```
+cd vagrant/<network-type>/ && vagrant ssh <host-name>
+$ [root@localhost vagrant]# sudo bash
+$ [root@localhost vagrant]# vi /etc/ssh/sshd_config 
+
+...
+
+# To disable tunneled clear text passwords, change to no here!
+#PasswordAuthentication yes
+#PermitEmptyPasswords no
+PasswordAuthentication yes
+
+...
+
+$ [root@localhost vagrant]# service sshd restart
+$ Redirecting to /bin/systemctl restart  sshd.service
+```
 1. Install the ssh key into the machines via 
 
 ```
