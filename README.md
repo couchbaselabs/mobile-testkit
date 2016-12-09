@@ -386,7 +386,7 @@ Create cluster with private network
 1. Create an ssh key. `cd ~/.ssh/ && ssh-keygen`
 1. Make sure you have PasswordAuthentication set on each vagrant instance
 ```
-cd vagrant/<network-type>/ && vagrant ssh <host-name>
+cd vagrant/private-network/ && vagrant ssh host1
 $ [root@localhost vagrant]# sudo bash
 $ [root@localhost vagrant]# vi /etc/ssh/sshd_config 
 
@@ -402,6 +402,8 @@ PasswordAuthentication yes
 $ [root@localhost vagrant]# service sshd restart
 $ Redirecting to /bin/systemctl restart  sshd.service
 ```
+Do the same for rests of the hosts in the `Vagrantfile`
+
 1. Install the ssh key into the machines via 
 
 ```
@@ -416,6 +418,7 @@ $ cp ansible.cfg.example ansible.cfg
 $ vi ansible.cfg  # edit to your liking
 ```
 1. Edit `ansible.cfg` and change the user to 'vagrant'
+1. Set the `CLUSTER_CONFIG` environment variable that is required by the `provision_cluster.py` script.  Eg: `$ export CLUSTER_CONFIG=resources/cluster_configs/1sg`
 1. Install the dependencies
 ```
 python libraries/provision/install_deps.py
