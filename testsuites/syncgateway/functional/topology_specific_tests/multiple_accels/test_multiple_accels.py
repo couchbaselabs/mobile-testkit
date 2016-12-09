@@ -377,12 +377,16 @@ def test_take_down_bring_up_sg_accel_validate_cbgt(params_from_base_test_setup, 
     assert cluster.validate_cbgt_pindex_distribution(num_running_sg_accels=1)
 
     log_info("Start sg_accels: [{}, {}]".format(cluster.sg_accels[1], cluster.sg_accels[2]))
-    # Shutdown two accel nodes in parallel
-    with concurrent.futures.ThreadPoolExecutor(max_workers=3) as ex:
-        sg_accel_down_task_1 = ex.submit(cluster.sg_accels[1].start, sg_conf)
-        sg_accel_down_task_2 = ex.submit(cluster.sg_accels[2].start, sg_conf)
-        assert sg_accel_down_task_1.result() == 0
-        assert sg_accel_down_task_2.result() == 0
+
+    # Start two accel nodes in parallel
+    status = cluster.sg_accels[1].start(sg_conf)
+    assert status == 0
+
+    # Poll on pIndex reshard after bring 2 accel nodes back
+    assert cluster.validate_cbgt_pindex_distribution_retry(num_running_sg_accels=2)
+
+    status = cluster.sg_accels[2].start(sg_conf)
+    assert status == 0
 
     # Poll on pIndex reshard after bring 2 accel nodes back
     assert cluster.validate_cbgt_pindex_distribution_retry(num_running_sg_accels=3)
