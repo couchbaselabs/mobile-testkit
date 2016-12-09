@@ -16,6 +16,7 @@ from keywords.SyncGateway import validate_sync_gateway_mode
 from keywords.MobileRestClient import MobileRestClient
 
 import keywords.constants
+from keywords import userinfo
 
 from libraries.NetworkUtils import NetworkUtils
 
@@ -330,22 +331,50 @@ def test_take_down_bring_up_sg_accel_validate_cbgt(params_from_base_test_setup, 
     cluster = Cluster(config=cluster_conf)
     cluster.reset(sg_config_path=sg_conf)
 
+    cluster_util = ClusterKeywords()
+    topology = cluster_util.get_cluster_topology(cluster_conf)
+
+    sg_url = topology["sync_gateways"][0]["public"]
+    sg_admin_url = topology["sync_gateways"][0]["admin"]
+    sg_db = "db"
+
     client = MobileRestClient()
 
-    # TODO: Update with user info
-    # doc_pusher_user_info =
+    doc_pusher_user_info = userinfo.UserInfo("doc_pusher", "pass", channels=["A"], roles=[])
+    doc_pusher_auth = client.create_user(
+        url=sg_admin_url,
+        db=sg_db,
+        name=doc_pusher_user_info.name,
+        password=doc_pusher_user_info.password,
+        channels=doc_pusher_user_info.channels
+    )
 
     log_info("Shutting down sg_accels: [{}, {}]".format(cluster.sg_accels[1], cluster.sg_accels[2]))
     # Shutdown two accel nodes in parallel
-    with concurrent.futures.ProcessPoolExecutor() as ex:
-        sg_accel_down_task_1 = ex.submit(cluster.sg_accels[1].stop())
-        sg_accel_down_task_2 = ex.submit(cluster.sg_accels[2].stop())
+    with concurrent.futures.ThreadPoolExecutor(max_workers=3) as ex:
+        sg_accel_down_task_1 = ex.submit(cluster.sg_accels[1].stop)
+        sg_accel_down_task_2 = ex.submit(cluster.sg_accels[2].stop)
         assert sg_accel_down_task_1.result() == 0
         assert sg_accel_down_task_2.result() == 0
 
     log_info("Finished taking nodes down!")
 
-    # client.add_docs(url=)
+    # It should take some time ~30 for cbgt to pick up failing nodes and reshard the pindexes. During
+    # this add a 1000 docs a start a longpoll changes loop to see if those docs make to to the changes feed
+    # If the reshard is successful they will show up at somepoint after. If not, the docs will fail to show up.
+    doc_pusher_docs = client.add_docs(
+        url=sg_url,
+        db=sg_db,
+        number=1000,
+        id_prefix=None,
+        auth=doc_pusher_auth,
+        channels=doc_pusher_user_info.channels
+    )
+    assert len(doc_pusher_docs) == 1000
+    client.verify_docs_in_changes(url=sg_url, db=sg_db, expected_docs=doc_pusher_docs, auth=doc_pusher_auth)
+
+    # The pindexes should be reshared at this point since all of the changes have shown up
+    assert cluster.validate_cbgt_pindex_distribution(num_running_sg_accels=1)
 
     import pdb
     pdb.set_trace()

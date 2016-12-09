@@ -14,6 +14,8 @@ from libraries.provision.ansible_runner import AnsibleRunner
 import keywords.CouchbaseServer
 from keywords import utils
 
+import keywords.exceptions
+
 from keywords.utils import log_info
 
 
@@ -156,13 +158,13 @@ class Cluster:
             pretty_print_json = json.dumps(cbgt_diagnostics, sort_keys=True, indent=4, separators=(',', ': '))
             log_info("SG {} CBGT diagnostic output: {}".format(sync_gateway_writer, pretty_print_json))
 
-    def validate_cbgt_pindex_distribution_retry(self):
+    def validate_cbgt_pindex_distribution_retry(self, num_running_sg_accels):
         """
         Validates the CBGT pindex distribution by looking for nodes that don't have
         any pindexes assigned to it
         """
         for i in xrange(10):
-            is_valid = self.validate_cbgt_pindex_distribution()
+            is_valid = self.validate_cbgt_pindex_distribution(num_running_sg_accels)
             if is_valid:
                 return True
             else:
@@ -171,7 +173,10 @@ class Cluster:
 
         return False
 
-    def validate_cbgt_pindex_distribution(self):
+    def validate_cbgt_pindex_distribution(self, num_running_sg_accels):
+
+        if num_running_sg_accels < 1:
+            raise keywords.exceptions.ClusterError("Need at least one sg_accel running to verify pindexes")
 
         # build a map of node -> num_pindexes
         node_defs_pindex_counts = {}
@@ -205,10 +210,10 @@ class Cluster:
         log_info("CBGT node to pindex counts: {}".format(node_defs_pindex_counts))
 
         # make sure number of unique node uuids is equal to the number of sync gateway writers
-        if len(node_defs_pindex_counts) != len(self.sg_accels):
+        if len(node_defs_pindex_counts) != num_running_sg_accels:
             log_info("CBGT len(unique_node_uuids) != len(self.sync_gateway_writers) ({} != {})".format(
                 len(node_defs_pindex_counts),
-                len(self.sg_accels)
+                num_running_sg_accels
             ))
             return False
 
