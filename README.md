@@ -379,7 +379,7 @@ Create cluster with private network
 
 `vagrant up`
 
-1. Run `python utilities/generate_cluster_configs_from_vagrant_hosts.py` 
+1. Run `python utilities/generate_cluster_configs_from_vagrant_hosts.py --private-network|public-network` 
     - This will discover running vagrant boxes and get their ips
     - Generate `resources/pool.json`
     - Generate `resources/cluster_configs/`
