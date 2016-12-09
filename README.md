@@ -410,6 +410,11 @@ python libraries/utilities/install_keys.py --key-name=id_rsa.pub --ssh-user=vagr
 
 use the password `vagrant`. 
 
+1. Create `ansible.cfg` 
+```
+$ cp ansible.cfg.example ansible.cfg
+$ vi ansible.cfg  # edit to your liking
+```
 1. Edit `ansible.cfg` and change the user to 'vagrant'
 1. Install the dependencies
 ```
