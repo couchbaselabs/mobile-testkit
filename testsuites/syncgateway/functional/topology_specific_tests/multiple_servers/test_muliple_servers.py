@@ -88,11 +88,6 @@ def test_distributed_index_rebalance_sanity(params_from_base_test_setup):
     cb_server.add_node(server_to_remove)
     cb_server.rebalance_in(cluster_servers, server_to_remove)
 
-    # Verify all sgs and accels are still running
-    cluster = Cluster(cluster_config)
-    errors = cluster.verify_alive(mode)
-    assert len(errors) == 0
-
 
 @pytest.mark.sanity
 @pytest.mark.syncgateway

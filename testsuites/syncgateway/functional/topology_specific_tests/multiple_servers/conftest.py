@@ -8,6 +8,7 @@ from keywords.SyncGateway import validate_sync_gateway_mode
 from keywords.SyncGateway import sync_gateway_config_path_for_mode
 
 from libraries.NetworkUtils import NetworkUtils
+from libraries.testkit import cluster
 
 
 # This will be called once for the at the beggining of the execution of each .py file
@@ -69,6 +70,11 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
 
     network_utils = NetworkUtils()
     network_utils.list_connections()
+
+    # Verify all sync_gateways and sg_accels are reachable
+    c = cluster.Cluster(cluster_config)
+    errors = c.verify_alive(mode)
+    assert len(errors) == 0
 
     # if the test failed pull logs
     if request.node.rep_call.failed:

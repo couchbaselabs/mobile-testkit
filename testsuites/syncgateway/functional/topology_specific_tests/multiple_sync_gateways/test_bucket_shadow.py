@@ -142,10 +142,6 @@ def test_bucket_shadow_low_revs_limit_repeated_deletes(params_from_base_test_set
     sc.shadower_sg.stop()
     sc.shadower_sg.start(default_config_path_shadower_low_revs)
 
-    # Check if SG's are up
-    errors = cluster.verify_alive(sc.mode)
-    assert len(errors) == 0
-
 
 @pytest.mark.topospecific
 @pytest.mark.sanity
@@ -212,8 +208,6 @@ def test_bucket_shadow_low_revs_limit(params_from_base_test_setup):
 
     # Look for panics
     time.sleep(5)  # Wait until the shadower can process
-    errors = cluster.verify_alive(sc.mode)
-    assert len(errors) == 0
 
 
 @pytest.mark.topospecific
@@ -287,8 +281,6 @@ def test_bucket_shadow_multiple_sync_gateways(params_from_base_test_setup):
 
     # Verify SG shadower comes up without panicking, given writes from non-shadower during downtime.
     time.sleep(5)  # Give tap feed a chance to initialize
-    errors = cluster.verify_alive(sc.mode)
-    assert len(errors) == 0
 
 
 def get_doc_with_content_from_source_bucket_retry(doc_id, content_dict, bucket):

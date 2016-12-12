@@ -1,18 +1,18 @@
 import pytest
 
+import keywords.constants
+
+from libraries.testkit import cluster
 from keywords.utils import log_info
-from keywords.ClusterKeywords import ClusterKeywords
 from keywords.SyncGateway import validate_sync_gateway_mode
 from keywords.SyncGateway import sync_gateway_config_path_for_mode
+from keywords.ClusterKeywords import ClusterKeywords
 from libraries.NetworkUtils import NetworkUtils
 from keywords.Logging import Logging
 
-from keywords import constants
-from libraries.testkit import cluster
 
-# This will be called once for the at the beggining of the execution of each .py file
-# in the 'topology_specific_tests/multiple_syncgateways' directory.
-# It will be torn down (code after the yeild) when all of the tests have executed in that file
+# This will be called once at the beggining of the execution in the 'tests/load_balancer' directory
+# and will be torn down, (code after the yeild) after each .py file in this directory
 @pytest.fixture(scope="module")
 def params_from_base_suite_setup(request):
     log_info("Setting up 'params_from_base_suite_setup' ...")
@@ -30,8 +30,8 @@ def params_from_base_suite_setup(request):
     # Make sure mode for sync_gateway is supported ('cc' or 'di')
     validate_sync_gateway_mode(mode)
 
-    # use base_cc cluster config if mode is "cc" or base_di cluster config if more is "di"
-    cluster_config = "{}/multiple_sync_gateways_{}".format(constants.CLUSTER_CONFIGS_DIR, mode)
+    # use load_balancer_cc cluster config if mode is "cc" or load_balancer_di cluster config if mode is "di"
+    cluster_config = "{}/load_balancer_{}".format(keywords.constants.CLUSTER_CONFIGS_DIR, mode)
     sg_config = sync_gateway_config_path_for_mode("sync_gateway_default_functional_tests", mode)
 
     # Skip provisioning if user specifies '--skip-provisoning'
@@ -49,30 +49,27 @@ def params_from_base_suite_setup(request):
     log_info("Tearing down 'params_from_base_suite_setup' ...")
 
 
-# This is called before each test and will yield the dictionary to each test that references the method
-# as a parameter to the test method
+# This is called before each test and will yield the cluster_config to each test in the file
+# After each test_* function, execution will continue from the yield a pull logs on failure
 @pytest.fixture(scope="function")
 def params_from_base_test_setup(request, params_from_base_suite_setup):
-    # Code before the yeild will execute before each test starts
-
-    cluster_config = params_from_base_suite_setup["cluster_config"]
-    mode = params_from_base_suite_setup["mode"]
 
     test_name = request.node.name
     log_info("Setting up test '{}'".format(test_name))
 
-    network_utils = NetworkUtils()
-    network_utils.start_packet_capture(cluster_config)
+    cluster_config = params_from_base_suite_setup["cluster_config"]
+    mode = params_from_base_suite_setup["mode"]
 
-    # This dictionary is passed to each test
-    yield {"cluster_config": cluster_config, "mode": mode}
+    yield {
+        "cluster_config": cluster_config,
+        "mode": mode
+    }
 
-    # Code after the yeild will execute when each test finishes
     log_info("Tearing down test '{}'".format(test_name))
 
+    # Capture testkit socket usage
+    network_utils = NetworkUtils()
     network_utils.list_connections()
-    network_utils.stop_packet_capture(cluster_config)
-    network_utils.collect_packet_capture(cluster_config=cluster_config, test_name=test_name)
 
     # Verify all sync_gateways and sg_accels are reachable
     c = cluster.Cluster(cluster_config)

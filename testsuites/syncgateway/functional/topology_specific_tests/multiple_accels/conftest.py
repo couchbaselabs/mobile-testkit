@@ -1,17 +1,17 @@
 import pytest
 
+import keywords.constants
+from libraries.testkit.cluster import Cluster
+from libraries.NetworkUtils import NetworkUtils
 from keywords.utils import log_info
 from keywords.ClusterKeywords import ClusterKeywords
+from keywords.constants import SYNC_GATEWAY_CONFIGS
 from keywords.SyncGateway import validate_sync_gateway_mode
-from keywords.SyncGateway import sync_gateway_config_path_for_mode
-from libraries.NetworkUtils import NetworkUtils
 from keywords.Logging import Logging
 
-from keywords import constants
-from libraries.testkit import cluster
 
-# This will be called once for the at the beggining of the execution of each .py file
-# in the 'topology_specific_tests/multiple_syncgateways' directory.
+# This will be called once at the beggining of the execution of each .py file
+# in the 'topology_specific_tests/multiple_accels' directory.
 # It will be torn down (code after the yeild) when all of the tests have executed in that file
 @pytest.fixture(scope="module")
 def params_from_base_suite_setup(request):
@@ -30,9 +30,13 @@ def params_from_base_suite_setup(request):
     # Make sure mode for sync_gateway is supported ('cc' or 'di')
     validate_sync_gateway_mode(mode)
 
-    # use base_cc cluster config if mode is "cc" or base_di cluster config if more is "di"
-    cluster_config = "{}/multiple_sync_gateways_{}".format(constants.CLUSTER_CONFIGS_DIR, mode)
-    sg_config = sync_gateway_config_path_for_mode("sync_gateway_default_functional_tests", mode)
+    # Skip these tests unless you are running in 'di' mode
+    if mode != "di":
+        pytest.skip("These tests should only run in with sg_accels")
+
+    # use multiple_sg_accels_di
+    cluster_config = "{}/multiple_sg_accels_di".format(keywords.constants.CLUSTER_CONFIGS_DIR, mode)
+    sg_config = "{}/sync_gateway_default_functional_tests_di.json".format(SYNC_GATEWAY_CONFIGS)
 
     # Skip provisioning if user specifies '--skip-provisoning'
     if not skip_provisioning:
@@ -61,21 +65,18 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     test_name = request.node.name
     log_info("Setting up test '{}'".format(test_name))
 
-    network_utils = NetworkUtils()
-    network_utils.start_packet_capture(cluster_config)
-
     # This dictionary is passed to each test
     yield {"cluster_config": cluster_config, "mode": mode}
 
     # Code after the yeild will execute when each test finishes
     log_info("Tearing down test '{}'".format(test_name))
 
+    # Capture testkit socket usage
+    network_utils = NetworkUtils()
     network_utils.list_connections()
-    network_utils.stop_packet_capture(cluster_config)
-    network_utils.collect_packet_capture(cluster_config=cluster_config, test_name=test_name)
 
     # Verify all sync_gateways and sg_accels are reachable
-    c = cluster.Cluster(cluster_config)
+    c = Cluster(cluster_config)
     errors = c.verify_alive(mode)
     assert len(errors) == 0
 
