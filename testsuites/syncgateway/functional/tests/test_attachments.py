@@ -192,7 +192,7 @@ def test_writing_attachment_to_couchbase_server(params_from_base_test_setup, sg_
     sg_db = "db"
     bucket = "data-bucket"
 
-    log_info("Running 'test_attachments_on_docs_rejected_by_sync_function'")
+    log_info("Running 'test_writing_attachment_to_couchbase_server'")
     log_info("Using cbs_url: {}".format(cbs_url))
     log_info("Using sg_url: {}".format(sg_url))
     log_info("Using sg_url_admin: {}".format(sg_url_admin))
