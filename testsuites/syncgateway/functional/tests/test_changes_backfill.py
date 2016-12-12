@@ -257,9 +257,6 @@ def test_backfill_channels_oneshot_limit_changes(params_from_base_test_setup, sg
         # cross off keys found from 'a_docs' dictionary
         del ids_and_revs_from_a_docs[doc["id"]]
 
-    import pdb
-    pdb.set_trace()
-
     #################
     # Changes Req #3
     #################
