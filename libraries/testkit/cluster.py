@@ -136,7 +136,7 @@ class Cluster:
 
         # Validate CBGT
         if mode == "di":
-            if not self.validate_cbgt_pindex_distribution_retry():
+            if not self.validate_cbgt_pindex_distribution_retry(len(self.sg_accels)):
                 self.save_cbgt_diagnostics()
                 raise Exception("Failed to validate CBGT Pindex distribution")
             log_info(">>> Detected valid CBGT Pindex distribution")
