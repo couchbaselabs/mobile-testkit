@@ -259,3 +259,5 @@ def test_server_goes_down_channel_rebuild_channels(params_from_base_test_setup):
 
     changes = client.get_changes(url=sg_url, db=sg_db, since=0, auth=seth_session)
     assert len(changes["results"]) == 100
+
+    # TODO: Failover and changes validation
