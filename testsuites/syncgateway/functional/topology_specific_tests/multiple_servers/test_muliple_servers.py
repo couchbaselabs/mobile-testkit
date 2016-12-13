@@ -12,6 +12,7 @@ from keywords.utils import log_info
 from keywords.MobileRestClient import MobileRestClient
 from keywords.CouchbaseServer import CouchbaseServer
 from keywords.SyncGateway import sync_gateway_config_path_for_mode
+from keywords import userinfo
 
 
 @pytest.mark.sanity
@@ -149,13 +150,15 @@ def test_server_goes_down_sanity(params_from_base_test_setup):
     # Try to add 100 docs in a loop until all succeed, if the never do, fail with timeout
     errors = num_docs
 
-    # Wait 30 seconds for auto failover to trigger + 15 seconds to add docs
-    # TODO - Look into REST api call to initiate failover immediately
+    # Wait 30 seconds for auto failover
+    # (Minimum value suggested - http://docs.couchbase.com/admin/admin/Tasks/tasks-nodeFailover.html)
+    # + 15 seconds to add docs
     timeout = 45
     start = time.time()
 
-    add_docs_failed = True
-    while add_docs_failed:
+    successful_add = False
+    while not successful_add:
+
         # Fail tests if all docs do not succeed before timeout
         if (time.time() - start) > timeout:
             # Bring server back up before failing the test
@@ -166,21 +169,17 @@ def test_server_goes_down_sanity(params_from_base_test_setup):
         try:
             docs = client.add_docs(url=sg_url, db=sg_db, number=num_docs, id_prefix=None, auth=session, channels=channels)
 
-            # If the above call does not raise, we can successfully add docs again
-            add_docs_failed = False
+            # If the above add doc does not throw, it was a successfull add.
+            successful_add = True
         except requests.exceptions.HTTPError as he:
             log_info("Failed to add docs: {}".format(he))
 
-            # this to true so that the loop continues
-            add_docs_failed = True
-
         log_info("Seeing: {} errors".format(errors))
-
         time.sleep(1)
 
     assert len(docs) == 100
     client.verify_docs_present(url=sg_url, db=sg_db, expected_docs=docs, auth=session)
-    client.verify_docs_in_changes(url=sg_url, db=sg_db, expected_docs=docs, auth=session)
+    client.verify_docs_in_changes(url=sg_url, db=sg_db, expected_docs=docs, auth=session, polling_interval=5)
 
     # Test succeeded without timeout, bring server back into topology
     flakey_server.start()
@@ -189,3 +188,74 @@ def test_server_goes_down_sanity(params_from_base_test_setup):
 
     # Make sure all docs were not added before server was
     log_info("test_server_goes_down_sanity complete!")
+
+
+@pytest.mark.sanity
+@pytest.mark.syncgateway
+@pytest.mark.changes
+@pytest.mark.rebalance
+def test_server_goes_down_channel_rebuild_channels(params_from_base_test_setup):
+    """
+    1. Start with a two node couchbase server cluster
+    2. Starting adding docs
+    3. Kill one of the server nodes and signal completion
+    4. Stop adding docs
+    5. Verify that that the expected docs are present and in the changes feed.
+    6. Start server again and add to cluster
+    """
+
+    cluster_config = params_from_base_test_setup["cluster_config"]
+    mode = params_from_base_test_setup["mode"]
+
+    cluster_helper = ClusterKeywords()
+
+    sg_conf_name = "sync_gateway_default_functional_tests"
+    sg_conf_path = sync_gateway_config_path_for_mode(sg_conf_name, mode)
+
+    cluster_helper.reset_cluster(cluster_config=cluster_config,
+                                 sync_gateway_config=sg_conf_path)
+
+    topology = cluster_helper.get_cluster_topology(cluster_config)
+
+    admin_sg = topology["sync_gateways"][0]["admin"]
+    sg_url = topology["sync_gateways"][0]["public"]
+    coucbase_servers = topology["couchbase_servers"]
+
+    cbs_one_url = coucbase_servers[0]
+    cbs_two_url = coucbase_servers[1]
+
+    log_info("Running: 'test_server_goes_down_sanity'")
+    log_info("cluster_config: {}".format(cluster_config))
+    log_info("admin_sg: {}".format(admin_sg))
+    log_info("sg_url: {}".format(sg_url))
+    log_info("cbs_one_url: {}".format(cbs_one_url))
+    log_info("cbs_two_url: {}".format(cbs_two_url))
+
+    sg_db = "db"
+    num_docs = 1000
+
+    seth_user_info = userinfo.UserInfo(
+        name="seth",
+        password="password",
+        channels=["ABC"],
+        roles=[]
+    )
+
+    client = MobileRestClient()
+    main_server = CouchbaseServer(cbs_one_url)
+    flakey_server = CouchbaseServer(cbs_two_url)
+
+    client.create_user(
+        admin_sg,
+        sg_db,
+        seth_user_info.name,
+        seth_user_info.password,
+        channels=seth_user_info.channels
+    )
+    seth_session = client.create_session(admin_sg, sg_db, seth_user_info.name)
+    docs = client.add_docs(url=sg_url, db=sg_db, number=100, auth=seth_session)
+
+    assert len(docs) == 100
+
+    changes = client.get_changes(url=sg_url, db=sg_db, since=0, auth=seth_session)
+    assert len(changes["results"]) == 100
