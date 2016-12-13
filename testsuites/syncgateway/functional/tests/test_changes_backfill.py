@@ -110,17 +110,17 @@ def test_backfill_channels_oneshot_changes(params_from_base_test_setup, sg_conf_
     changes_results = user_b_changes_after_grant["results"]
     assert 50 <= len(changes_results) <= 51
 
-    # Create a list of id rev pair of all the docs that are not "_user/" docs from changes
-    ids_and_revs_from_user_changes = [
-        {"id": change["id"], "rev": change["changes"][0]["rev"]}
+    # Create a dictionary of id rev pair of all the docs that are not "_user/" docs from changes
+    ids_and_revs_from_user_changes = {
+        change["id"]: change["changes"][0]["rev"]
         for change in changes_results if not change["id"].startswith("_user/")
-    ]
+    }
+
     assert len(ids_and_revs_from_user_changes) == 50
 
     # Create a list of id rev pair of all of the channel A docs
-    ids_and_revs_from_a_docs = [
-        {"id": doc["id"], "rev": doc["rev"]} for doc in a_docs
-    ]
+    ids_and_revs_from_a_docs = {doc["id"]: doc["rev"] for doc in a_docs}
+
     assert len(ids_and_revs_from_a_docs) == 50
 
     # Check that the changes and the a_docs are identical in id and rev
