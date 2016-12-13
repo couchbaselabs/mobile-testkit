@@ -18,7 +18,7 @@ from keywords.SyncGateway import sync_gateway_config_path_for_mode
 @pytest.mark.syncgateway
 @pytest.mark.changes
 @pytest.mark.rebalance
-def test_distributed_index_rebalance_sanity(params_from_base_test_setup):
+def test_rebalance_sanity(params_from_base_test_setup):
 
     cluster_config = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
