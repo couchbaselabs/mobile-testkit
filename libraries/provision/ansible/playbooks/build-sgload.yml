@@ -2,6 +2,13 @@
 - hosts: load_generators
   any_errors_fatal: true
   tasks:
+
+  - name: SGLOAD | Delete previous sgload if there is one
+    shell: rm -rf sgload
+    args:
+      - chdir: /opt/go/src/github.com/couchbaselabs
+    become: yes
+
   - name: SGLOAD | go get sgload
     shell: GOPATH=/opt/go go get -u -v github.com/couchbaselabs/sgload
     become: yes
