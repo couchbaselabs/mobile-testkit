@@ -4,9 +4,9 @@
   tasks:
 
   - name: SGLOAD | Delete previous sgload if there is one
-    shell: rm -rf sgload
-    args:
-      - chdir: /opt/go/src/github.com/couchbaselabs
+    file:
+      path: /opt/go/src/github.com/couchbaselabs
+      state: absent
     become: yes
 
   - name: SGLOAD | go get sgload
