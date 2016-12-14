@@ -35,7 +35,7 @@ def params_from_base_suite_setup(request):
         pytest.skip("These tests should only run in with sg_accels")
 
     # use multiple_sg_accels_di
-    cluster_config = "{}/multiple_sg_accels_di".format(keywords.constants.CLUSTER_CONFIGS_DIR, mode)
+    cluster_config = "{}/multiple_sg_accels_di".format(keywords.constants.CLUSTER_CONFIGS_DIR)
     sg_config = "{}/sync_gateway_default_functional_tests_di.json".format(SYNC_GATEWAY_CONFIGS)
 
     # Skip provisioning if user specifies '--skip-provisoning'

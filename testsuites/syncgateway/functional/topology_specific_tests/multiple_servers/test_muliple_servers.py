@@ -330,5 +330,3 @@ def test_server_goes_down_channel_rebuild_channels(params_from_base_test_setup):
     flakey_server.start()
     main_server.recover(flakey_server)
     main_server.rebalance_in(coucbase_servers, flakey_server)
-
-
