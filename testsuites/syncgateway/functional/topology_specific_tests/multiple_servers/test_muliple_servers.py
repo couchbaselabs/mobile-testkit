@@ -3,6 +3,7 @@ import time
 import pytest
 import concurrent.futures
 import requests.exceptions
+import keywords.exceptions
 
 from keywords.exceptions import TimeoutError
 from keywords.ClusterKeywords import ClusterKeywords
@@ -230,7 +231,14 @@ def test_server_goes_down_channel_rebuild_channels(params_from_base_test_setup):
     log_info("cbs_two_url: {}".format(cbs_two_url))
 
     sg_db = "db"
-    # num_docs = 1000
+    num_docs = 100
+
+    admin_user_info = userinfo.UserInfo(
+        name="admin",
+        password="password",
+        channels=["ABC"],
+        roles=[]
+    )
 
     seth_user_info = userinfo.UserInfo(
         name="seth",
@@ -240,8 +248,16 @@ def test_server_goes_down_channel_rebuild_channels(params_from_base_test_setup):
     )
 
     client = MobileRestClient()
-    # main_server = CouchbaseServer(cbs_one_url)
-    # flakey_server = CouchbaseServer(cbs_two_url)
+    main_server = CouchbaseServer(cbs_one_url)
+    flakey_server = CouchbaseServer(cbs_two_url)
+
+    admin_auth = client.create_user(
+        admin_sg,
+        sg_db,
+        admin_user_info.name,
+        admin_user_info.password,
+        channels=admin_user_info.channels
+    )
 
     client.create_user(
         admin_sg,
@@ -251,11 +267,68 @@ def test_server_goes_down_channel_rebuild_channels(params_from_base_test_setup):
         channels=seth_user_info.channels
     )
     seth_session = client.create_session(admin_sg, sg_db, seth_user_info.name)
-    docs = client.add_docs(url=sg_url, db=sg_db, number=100, auth=seth_session)
 
-    assert len(docs) == 100
+    # allow any user docs to make it to changes
+    initial_changes = client.get_changes(url=sg_url, db=sg_db, since=0, auth=seth_session)
 
-    changes = client.get_changes(url=sg_url, db=sg_db, since=0, auth=seth_session)
-    assert len(changes["results"]) == 100
+    # push docs from admin
+    docs = client.add_docs(
+        url=sg_url,
+        db=sg_db,
+        number=num_docs,
+        id_prefix=None,
+        channels=admin_user_info.channels,
+        auth=admin_auth
+    )
 
-    # TODO: Failover and changes validation
+    assert len(docs) == num_docs
+
+    client.verify_docs_in_changes(url=sg_url, db=sg_db, expected_docs=docs, auth=seth_session)
+    changes_before_failover = client.get_changes(url=sg_url, db=sg_db, since=initial_changes["last_seq"], auth=seth_session)
+    assert len(changes_before_failover["results"]) == num_docs
+
+    # Stop server via 'service stop'
+    flakey_server.stop()
+
+    start = time.time()
+    while True:
+        # Fail tests if all docs do not succeed before timeout
+        if (time.time() - start) > 60:
+            # Bring server back up before failing the test
+            flakey_server.start()
+            main_server.recover(flakey_server)
+            main_server.rebalance_in(coucbase_servers, flakey_server)
+            raise keywords.exceptions.TimeoutError("Failed to rebuild changes")
+
+        try:
+            # Poll until failover happens (~30 second)
+            client.verify_docs_in_changes(url=sg_url, db=sg_db, expected_docs=docs, auth=seth_session)
+            # changes requests succeeded, exit loop
+            break
+        except requests.exceptions.HTTPError:
+            # Changes will fail until failover of the down server happens. Wait and try again.
+            log_info("/db/_changes failed due to server down. Retrying ...")
+            time.sleep(1)
+
+    # Verify no new changes
+    changes = client.get_changes(
+        url=sg_url,
+        db=sg_db,
+        since=changes_before_failover["last_seq"],
+        auth=seth_session,
+        feed="normal"
+    )
+    assert len(changes["results"]) == 0
+
+    # Check that all changes are intact from initial changes request
+    changes = client.get_changes(url=sg_url, db=sg_db, since=initial_changes["last_seq"], auth=seth_session)
+    assert len(changes["results"]) == num_docs
+
+    coucbase_servers = topology["couchbase_servers"]
+
+    # Test succeeded without timeout, bring server back into topology
+    flakey_server.start()
+    main_server.recover(flakey_server)
+    main_server.rebalance_in(coucbase_servers, flakey_server)
+
+
