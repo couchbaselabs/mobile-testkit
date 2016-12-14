@@ -11,7 +11,7 @@ DATA_DIR = "resources/data"
 MAX_RETRIES = 5
 
 CLIENT_REQUEST_TIMEOUT = 120
-REBALANCE_TIMEOUT = 600
+REBALANCE_TIMEOUT_SECS = 600
 
 # Required to make sure that these are created with encryption
 # Use to build the command line flags for encryption

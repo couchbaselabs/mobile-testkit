@@ -286,7 +286,7 @@ class CouchbaseServer:
         start = time.time()
         while True:
 
-            if time.time() - start > keywords.constants.REBALANCE_TIMEOUT:
+            if time.time() - start > keywords.constants.REBALANCE_TIMEOUT_SECS:
                 raise Exception("wait_for_rebalance_complete: TIMEOUT")
 
             resp = self._session.get("{}/pools/default/tasks".format(url))
