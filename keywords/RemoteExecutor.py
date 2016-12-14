@@ -14,7 +14,7 @@ class RemoteExecutor:
     """Executes remote shell commands on a host.
     This assumes that the username in the __init__ constructor
     has passwordless ssh access to the host you are communicating with.
-    This usern is set as the 'remote_user' in your ansible.cfg file,
+    This username is set as the 'remote_user' in your ansible.cfg file,
     located in the root of the repository
     """
 
@@ -34,7 +34,9 @@ class RemoteExecutor:
         self.client.connect(self.host, username=self.username)
 
         log_info("Running '{}' on host {}".format(commamd, self.host))
-        stdin, stdout, stderr = self.client.exec_command(commamd)
+
+        # get_pty=True is required for sudo commands
+        stdin, stdout, stderr = self.client.exec_command(commamd, get_pty=True)
 
         # We should not be sending / recieving data on the stdin channel so close it
         stdin.close()
