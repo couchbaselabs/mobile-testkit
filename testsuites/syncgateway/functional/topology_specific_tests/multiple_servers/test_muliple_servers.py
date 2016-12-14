@@ -92,7 +92,7 @@ def test_rebalance_sanity(params_from_base_test_setup):
 @pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.changes
-@pytest.mark.rebalance
+@pytest.mark.failover
 def test_server_goes_down_sanity(params_from_base_test_setup):
     """
     1. Start with a two node couchbase server cluster
@@ -192,7 +192,7 @@ def test_server_goes_down_sanity(params_from_base_test_setup):
 @pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.changes
-@pytest.mark.rebalance
+@pytest.mark.failover
 def test_server_goes_down_channel_rebuild_channels(params_from_base_test_setup):
     """
     1. Start with a two node couchbase server cluster
