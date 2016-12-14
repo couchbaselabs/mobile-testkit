@@ -70,6 +70,10 @@ def test_dcp_reshard_sync_gateway_goes_down(params_from_base_test_setup, sg_conf
     errors = cluster.verify_alive(mode)
     assert len(errors) == 1 and errors[0][0].hostname == "ac1"
 
+    # Restart the failing node so that cluster verification does not blow up in test teardown
+    start_status = cluster.sg_accels[0].start(sg_conf)
+    assert start_status == 0
+
 
 @pytest.mark.topospecific
 @pytest.mark.sanity
