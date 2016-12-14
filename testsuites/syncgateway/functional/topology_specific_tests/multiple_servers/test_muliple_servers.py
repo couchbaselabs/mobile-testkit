@@ -193,7 +193,7 @@ def test_server_goes_down_sanity(params_from_base_test_setup):
 @pytest.mark.syncgateway
 @pytest.mark.changes
 @pytest.mark.failover
-def test_server_goes_down_channel_rebuild_channels(params_from_base_test_setup):
+def test_server_goes_down_rebuild_channels(params_from_base_test_setup):
     """
     1. Start with a two node couchbase server cluster
     2. Starting adding docs

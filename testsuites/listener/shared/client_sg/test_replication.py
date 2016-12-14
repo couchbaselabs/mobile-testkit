@@ -611,7 +611,7 @@ def test_replication_with_session_cookie(setup_client_syncgateway_test):
     assert len(replications) == 2, "2 replications (push / pull should be running)"
 
     num_docs_pushed = 100
-    
+
     # Sanity test docs
     ls_docs = client.add_docs(url=ls_url, db=ls_db, number=num_docs_pushed, id_prefix="ls_doc", channels=["ABC"])
     assert len(ls_docs) == num_docs_pushed

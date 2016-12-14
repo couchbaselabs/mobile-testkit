@@ -268,7 +268,18 @@ class CouchbaseServer:
 
         return found_ids
 
-    def _wait_for_rebalance_complete(self, url):
+    def _get_tasks(self):
+        """
+        Returns the current tasks from the server
+        """
+        resp = self._session.get("{}/pools/default/tasks".format(self.url))
+        log_r(resp)
+        resp.raise_for_status()
+        resp_obj = resp.json()
+
+        return resp_obj
+
+    def _wait_for_rebalance_complete(self):
         """
         Polls couchbase server tasks endpoint for any running rebalances.
         Exits when no rebalances are in running state
@@ -283,20 +294,34 @@ class CouchbaseServer:
         ]
         """
 
+        # Check that rebalance is in the tasks before polling for its completion
+        start = time.time()
+        found_rebalance = False
+        while not found_rebalance:
+
+            if time.time() - start > keywords.constants.CLIENT_REQUEST_TIMEOUT:
+                raise TimeoutError("Did not find rebalance task!")
+
+            tasks = self._get_tasks()
+            for task in tasks:
+                if task["type"] == "rebalance":
+                    log_info("Rebalance found in tasks!")
+                    found_rebalance = True
+
+            if not found_rebalance:
+                log_info("Did not find rebalance task. Retrying.")
+                time.sleep(1)
+
         start = time.time()
         while True:
 
             if time.time() - start > keywords.constants.REBALANCE_TIMEOUT_SECS:
                 raise Exception("wait_for_rebalance_complete: TIMEOUT")
 
-            resp = self._session.get("{}/pools/default/tasks".format(url))
-            log_r(resp)
-            resp.raise_for_status()
-
-            resp_obj = resp.json()
+            tasks = self._get_tasks()
 
             done_rebalacing = True
-            for task in resp_obj:
+            for task in tasks:
                 # loop through each task and see if any rebalance tasks are running
                 task_type = task["type"]
                 task_status = task["status"]
@@ -379,7 +404,7 @@ class CouchbaseServer:
         log_r(resp)
         resp.raise_for_status()
 
-        self._wait_for_rebalance_complete(self.url)
+        self._wait_for_rebalance_complete()
 
         return True
 
@@ -418,7 +443,7 @@ class CouchbaseServer:
         log_r(resp)
         resp.raise_for_status()
 
-        self._wait_for_rebalance_complete(self.url)
+        self._wait_for_rebalance_complete()
 
         return True
 
