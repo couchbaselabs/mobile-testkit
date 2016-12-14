@@ -18,6 +18,7 @@ from keywords import userinfo
 @pytest.mark.syncgateway
 @pytest.mark.changes
 @pytest.mark.rebalance
+@pytest.mark.skip(reason="Failing due to - https://github.com/couchbase/sync_gateway/issues/2173")
 def test_rebalance_sanity(params_from_base_test_setup):
 
     cluster_config = params_from_base_test_setup["cluster_config"]
