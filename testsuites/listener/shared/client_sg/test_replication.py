@@ -610,12 +610,14 @@ def test_replication_with_session_cookie(setup_client_syncgateway_test):
     replications = client.get_replications(ls_url)
     assert len(replications) == 2, "2 replications (push / pull should be running)"
 
+    num_docs_pushed = 100
+    
     # Sanity test docs
-    ls_docs = client.add_docs(url=ls_url, db=ls_db, number=100, id_prefix="ls_doc", channels=["ABC"])
-    assert len(ls_docs) == 100
+    ls_docs = client.add_docs(url=ls_url, db=ls_db, number=num_docs_pushed, id_prefix="ls_doc", channels=["ABC"])
+    assert len(ls_docs) == num_docs_pushed
 
-    sg_docs = client.add_docs(url=sg_url, db=sg_db, number=100, id_prefix="sg_doc", auth=session, channels=["ABC"])
-    assert len(sg_docs) == 100
+    sg_docs = client.add_docs(url=sg_url, db=sg_db, number=num_docs_pushed, id_prefix="sg_doc", auth=session, channels=["ABC"])
+    assert len(sg_docs) == num_docs_pushed
 
     all_docs = client.merge(ls_docs, sg_docs)
     log_info(all_docs)
