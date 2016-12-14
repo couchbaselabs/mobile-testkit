@@ -90,7 +90,7 @@ def test_dcp_reshard_sync_gateway_comes_up(params_from_base_test_setup, sg_conf)
     log_info("sg_conf: {}".format(sg_conf))
 
     cluster = Cluster(config=cluster_conf)
-    mode = cluster.reset(sg_config_path=sg_conf)
+    cluster.reset(sg_config_path=sg_conf)
 
     stop_status = cluster.sg_accels[0].stop()
     assert stop_status == 0, "Failed to stop sg_accel"
@@ -145,7 +145,7 @@ def test_dcp_reshard_single_sg_accel_goes_down_and_up(params_from_base_test_setu
     log_info("sg_conf: {}".format(sg_conf))
 
     cluster = Cluster(config=cluster_conf)
-    mode = cluster.reset(sg_config_path=sg_conf)
+    cluster.reset(sg_config_path=sg_conf)
 
     # Stop the second sg_accel
     stop_status = cluster.sg_accels[1].stop()

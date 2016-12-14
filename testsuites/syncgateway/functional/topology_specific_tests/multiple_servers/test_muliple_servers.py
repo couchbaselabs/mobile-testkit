@@ -4,8 +4,6 @@ import pytest
 import concurrent.futures
 import requests.exceptions
 
-from libraries.testkit.cluster import Cluster
-
 from keywords.exceptions import TimeoutError
 from keywords.ClusterKeywords import ClusterKeywords
 from keywords.utils import log_info
@@ -232,7 +230,7 @@ def test_server_goes_down_channel_rebuild_channels(params_from_base_test_setup):
     log_info("cbs_two_url: {}".format(cbs_two_url))
 
     sg_db = "db"
-    num_docs = 1000
+    # num_docs = 1000
 
     seth_user_info = userinfo.UserInfo(
         name="seth",
@@ -242,8 +240,8 @@ def test_server_goes_down_channel_rebuild_channels(params_from_base_test_setup):
     )
 
     client = MobileRestClient()
-    main_server = CouchbaseServer(cbs_one_url)
-    flakey_server = CouchbaseServer(cbs_two_url)
+    # main_server = CouchbaseServer(cbs_one_url)
+    # flakey_server = CouchbaseServer(cbs_two_url)
 
     client.create_user(
         admin_sg,

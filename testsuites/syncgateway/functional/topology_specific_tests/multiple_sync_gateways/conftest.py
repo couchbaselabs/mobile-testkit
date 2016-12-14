@@ -10,6 +10,7 @@ from keywords.Logging import Logging
 from keywords import constants
 from libraries.testkit import cluster
 
+
 # This will be called once for the at the beggining of the execution of each .py file
 # in the 'topology_specific_tests/multiple_syncgateways' directory.
 # It will be torn down (code after the yeild) when all of the tests have executed in that file
