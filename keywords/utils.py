@@ -15,6 +15,12 @@ def log_info(message, is_verify=False):
     logging.info(message)
 
 
+def log_section():
+    output = "----------------"
+    print(output)
+    logging.info(output)
+
+
 def log_debug(message):
     """Wrapper around logging.debug if we want to add hooks in the future."""
     logging.debug(message)
