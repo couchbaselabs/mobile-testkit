@@ -347,11 +347,12 @@ class CouchbaseServer:
             server_to_add.host
         )
 
-        # HACK: Retries added to handle the following scenario.
-        # 1. A node has been rebalanced out of a cluster
-        # 2. Try to rebalance the node back in immediately.
-        # The node may not be in a ready state. There in no property exposed on the
-        #   REST API to poll so a retry will have to do
+        # Retry below address the following problem:
+        #  1. Rebalance a node out
+        #  2. Try to to immediately add node back into the cluster
+        #  3. Fails because node is in state where it can't be add in yet
+        # To work around this:
+        #  1. Retry / wait until add node POST command is successful
         start = time.time()
         while True:
 
