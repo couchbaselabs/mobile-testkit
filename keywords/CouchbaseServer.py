@@ -347,7 +347,7 @@ class CouchbaseServer:
             server_to_add.host
         )
 
-        # Retry below address the following problem:
+        # HACK: Retry below addresses the following problem:
         #  1. Rebalance a node out
         #  2. Try to to immediately add node back into the cluster
         #  3. Fails because node is in state where it can't be add in yet
