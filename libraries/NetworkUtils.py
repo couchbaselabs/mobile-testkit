@@ -5,13 +5,19 @@ import os
 from libraries.provision.ansible_runner import AnsibleRunner
 
 from keywords.exceptions import ProvisioningError
+from keywords.utils import log_info
+from keywords.utils import log_section
 
 
 class NetworkUtils:
 
     def list_connections(self):
-        output = subprocess.check_output("netstat -ant | awk '{print $6}' | sort | uniq -c | sort -n", shell=True)
-        print(output)
+        log_section()
+        log_info("Socket usage on mobile-testkit client ...")
+        established_output = subprocess.check_output("netstat -ant | grep -i established | wc -l", shell=True)
+        timewait_output = subprocess.check_output("netstat -ant | grep -i time_wait | wc -l", shell=True)
+        log_info("ESTABLISHED: {}".format(established_output.strip()))
+        log_info("TIME_WAIT: {}\n".format(timewait_output.strip()))
 
     def start_packet_capture(self, cluster_config):
         ansible_runner = AnsibleRunner(config=cluster_config)

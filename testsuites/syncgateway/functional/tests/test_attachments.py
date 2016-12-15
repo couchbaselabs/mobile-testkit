@@ -61,7 +61,7 @@ def test_attachment_revpos_when_ancestor_unavailable(params_from_base_test_setup
 
     client = MobileRestClient()
     sg_util = SyncGateway()
-    cb_util = CouchbaseServer()
+    cb_server = CouchbaseServer(cbs_url)
 
     user1 = client.create_user(url=sg_url_admin, db=sg_db, name="user1", password="password", channels=channels_list)
     doc_with_att = document.create_doc(doc_id="att_doc", content={"sample_key": "sample_val"}, attachment_name="sample_text.txt", channels=channels_list)
@@ -71,7 +71,8 @@ def test_attachment_revpos_when_ancestor_unavailable(params_from_base_test_setup
 
     # Clear cached rev doc bodys from server and cycle sync_gateway
     sg_util.stop_sync_gateway(cluster_config=cluster_config, url=sg_url)
-    cb_util.delete_couchbase_server_cached_rev_bodies(url=cbs_url, bucket=bucket)
+
+    cb_server.delete_couchbase_server_cached_rev_bodies(bucket=bucket)
     sg_util.start_sync_gateway(cluster_config=cluster_config, url=sg_url, config=sg_conf)
 
     client.add_conflict(
@@ -191,7 +192,7 @@ def test_writing_attachment_to_couchbase_server(params_from_base_test_setup, sg_
     sg_db = "db"
     bucket = "data-bucket"
 
-    log_info("Running 'test_attachments_on_docs_rejected_by_sync_function'")
+    log_info("Running 'test_writing_attachment_to_couchbase_server'")
     log_info("Using cbs_url: {}".format(cbs_url))
     log_info("Using sg_url: {}".format(sg_url))
     log_info("Using sg_url_admin: {}".format(sg_url_admin))
@@ -215,9 +216,9 @@ def test_writing_attachment_to_couchbase_server(params_from_base_test_setup, sg_
     doc_with_att = document.create_doc(doc_id="att_doc", content={"sample_key": "sample_val"}, attachment_name="sample_text.txt", channels=sg_user_channels)
 
     client.add_doc(url=sg_url, db=sg_db, doc=doc_with_att, auth=sg_user_session)
-    cb_util = CouchbaseServer()
+    server = CouchbaseServer(cbs_url)
 
     # Assert that the attachment doc gets written to couchbase server
-    server_att_docs = cb_util.get_server_docs_with_prefix(url=cbs_url, bucket=bucket, prefix="_sync:att:")
+    server_att_docs = server.get_server_docs_with_prefix(bucket=bucket, prefix="_sync:att:")
     num_att_docs = len(server_att_docs)
     assert num_att_docs == 1

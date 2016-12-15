@@ -15,6 +15,7 @@ from libraries.utilities.provisioning_config_parser import hosts_for_tag
 
 from keywords.utils import log_info
 from keywords.utils import log_error
+from keywords.RemoteExecutor import RemoteExecutor
 
 from ansible import constants
 
@@ -43,45 +44,22 @@ def run_sgload_on_single_loadgenerator(lgs_hosts, sgload_arg_list, sg_host):
 
 def execute_sgload(lgs_host, sgload_arg_list, sg_host):
 
-    try:
+    # Update the arg list the the appropriate SG
+    sgload_arg_list_modified = add_sync_gateway_url(sgload_arg_list, sg_host)
 
-        # Update the arg list the the appropriate SG
-        sgload_arg_list_modified = add_sync_gateway_url(sgload_arg_list, sg_host)
+    # convert from list -> string
+    # eg, ["--createreaders", "--numreaders", "100"] -> "--createreaders --numreaders 100"
+    sgload_args_str = " ".join(sgload_arg_list_modified)
 
-        # convert from list -> string
-        # eg, ["--createreaders", "--numreaders", "100"] -> "--createreaders --numreaders 100"
-        sgload_args_str = " ".join(sgload_arg_list_modified)
+    rex = RemoteExecutor(lgs_host)
 
-        # Create SSH client
-        ssh = paramiko.SSHClient()
-        ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+    # Build sgload command to pass to ssh client
+    # eg, "sgload --createreaders --numreaders 100"
+    log_info("sgload {}".format(sgload_args_str))
+    command = "sgload {}".format(sgload_args_str)
+    rex.must_execute(command)
 
-        # Connect SSH client to remote machine
-        log_info("SSH connection to {}".format(lgs_host))
-        ssh.connect(lgs_host, username=constants.DEFAULT_REMOTE_USER)
-
-        # Build sgload command to pass to ssh client
-        # eg, "sgload --createreaders --numreaders 100"
-        log_info("sgload {}".format(sgload_args_str))
-        command = "sgload {}".format(sgload_args_str)
-
-        # Run comamnd on remote machine
-        stdin, stdout, stderr = ssh.exec_command(command)
-        stdin.close()
-
-        # Stream output to console
-        stream_output(stdout, sys.stdout)
-        stream_output(stderr, sys.stderr, abort_if_panic=True)
-
-        # Close the connection since we're done with it
-        ssh.close()
-
-        log_info("execute_sgload done.")
-
-    except Exception as e:
-        log_error("Exception calling execute_sgload: {}".format(e))
-        log_error(traceback.format_exc())
-        raise e
+    log_info("execute_sgload done.")
 
 
 def stream_output(stdio_file_pointer, dest_file_pointer, abort_if_panic=False):

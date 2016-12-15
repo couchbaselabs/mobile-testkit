@@ -66,6 +66,7 @@ def test_initial_pull_replication(setup_client_syncgateway_test, continuous):
         generator="four_k",
         auth=session
     )
+    assert len(docs) == num_docs
 
     client.create_database(url=ls_url, name=ls_db)
 
@@ -165,6 +166,7 @@ def test_initial_push_replication(setup_client_syncgateway_test, continuous):
         generator="four_k",
         channels=seth_channels
     )
+    assert len(docs) == num_docs
 
     # Start push replication
     repl_id = client.start_replication(
@@ -608,9 +610,15 @@ def test_replication_with_session_cookie(setup_client_syncgateway_test):
     replications = client.get_replications(ls_url)
     assert len(replications) == 2, "2 replications (push / pull should be running)"
 
+    num_docs_pushed = 100
+
     # Sanity test docs
-    ls_docs = client.add_docs(url=ls_url, db=ls_db, number=100, id_prefix="ls_doc", channels=["ABC"])
-    sg_docs = client.add_docs(url=sg_url, db=sg_db, number=100, id_prefix="sg_doc", auth=session, channels=["ABC"])
+    ls_docs = client.add_docs(url=ls_url, db=ls_db, number=num_docs_pushed, id_prefix="ls_doc", channels=["ABC"])
+    assert len(ls_docs) == num_docs_pushed
+
+    sg_docs = client.add_docs(url=sg_url, db=sg_db, number=num_docs_pushed, id_prefix="sg_doc", auth=session, channels=["ABC"])
+    assert len(sg_docs) == num_docs_pushed
+
     all_docs = client.merge(ls_docs, sg_docs)
     log_info(all_docs)
 
@@ -786,6 +794,7 @@ def test_client_to_sync_gateway_complex_replication_with_revs_limit(setup_client
 
     ls_db = client.create_database(url=ls_url, name=ls_db_name)
     ls_db_docs = client.add_docs(url=ls_url, db=ls_db, number=num_docs, id_prefix=ls_db, channels=sg_user_channels)
+    assert len(ls_db_docs) == num_docs
 
     # Start replication ls_db -> sg_db
     repl_one = client.start_replication(
@@ -835,6 +844,8 @@ def test_client_to_sync_gateway_complex_replication_with_revs_limit(setup_client
     client.verify_docs_deleted(url=sg_admin_url, db=sg_db, docs=ls_db_docs)
 
     ls_db_docs = client.add_docs(url=ls_url, db=ls_db, number=num_docs, id_prefix=ls_db, channels=sg_user_channels)
+    assert len(ls_db_docs) == 10
+
     expected_revs = num_revs + 20 + 2
     client.update_docs(url=ls_url, db=ls_db, docs=ls_db_docs, delay=0.1, number_updates=num_revs)
 
@@ -951,7 +962,10 @@ def test_replication_with_multiple_client_dbs_and_single_sync_gateway_db(setup_c
     )
 
     ls_db_one_docs = client.add_docs(url=ls_url, db=ls_db1, number=num_docs, id_prefix=ls_db1)
+    assert len(ls_db_one_docs) == 1000
+
     ls_db_two_docs = client.add_docs(url=ls_url, db=ls_db2, number=num_docs, id_prefix=ls_db2)
+    assert len(ls_db_two_docs) == 1000
 
     ls_db1_db2_docs = ls_db_one_docs + ls_db_two_docs
 
@@ -1010,6 +1024,7 @@ def test_verify_open_revs_with_revs_limit_push_conflict(setup_client_syncgateway
 
     ls_db = client.create_database(url=ls_url, name="ls_db")
     ls_db_docs = client.add_docs(url=ls_url, db=ls_db, number=num_docs, id_prefix="ls_db", channels=sg_user_channels)
+    assert len(ls_db_docs) == num_docs
 
     # Start replication ls_db -> sg_db
     repl_one = client.start_replication(

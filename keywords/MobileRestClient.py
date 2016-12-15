@@ -10,7 +10,6 @@ from requests.exceptions import HTTPError
 import concurrent.futures
 from concurrent.futures import ThreadPoolExecutor
 
-from keywords.CouchbaseServer import CouchbaseServer
 from keywords.document import get_attachment
 
 from libraries.data import doc_generators
@@ -20,7 +19,6 @@ from keywords.constants import ServerType
 from keywords.constants import Platform
 from keywords.constants import CLIENT_REQUEST_TIMEOUT
 from keywords.constants import REGISTERED_CLIENT_DBS
-
 from keywords.utils import log_r
 from keywords.utils import log_info
 from keywords.utils import log_debug
@@ -380,8 +378,7 @@ class MobileRestClient:
             if server != "walrus:":
                 # Create bucket to support the database
                 logging.info("Creating backing bucket for sync_gateway db '{}' on '{}'".format(name, server))
-                server = CouchbaseServer()
-                server.create_bucket(server, name)
+                raise NotImplementedError()
 
             data = {
                 "name": "{}".format(name),
@@ -1032,26 +1029,18 @@ class MobileRestClient:
 
         return resp_obj
 
-    def add_docs(self, url, db, number, id_prefix=None, auth=None, channels=None, generator=None):
+    def add_docs(self, url, db, number, id_prefix, auth=None, channels=None, generator=None):
         """
+        if id_prefix == None, generate a uuid for each doc
+
         Add a 'number' of docs with a prefix 'id_prefix' using the provided generator from libraries.data.doc_generators.
         ex. id_prefix=testdoc with a number of 3 would create 'testdoc_0', 'testdoc_1', and 'testdoc_2'
-
-        If id_prefix is not specified, a uuid will be provided for each doc
-
-        Returns list of docs with the format
-        [{u'ok': True, u'rev': u'1-ccd39f3091bb9bb51524b97e69571f80', u'id': u'test_ls_db1_0'}, ... ]
         """
         added_docs = []
         auth_type = get_auth_type(auth)
 
         if channels is not None:
             types.verify_is_list(channels)
-
-        if id_prefix is None:
-            use_uuid_doc_ids = True
-        else:
-            use_uuid_doc_ids = False
 
         log_info("PUT {} docs to {}/{}/ with prefix {}".format(number, url, db, id_prefix))
 
@@ -1065,12 +1054,12 @@ class MobileRestClient:
             if channels is not None:
                 doc_body["channels"] = channels
 
-            if use_uuid_doc_ids:
+            data = json.dumps(doc_body)
+
+            if id_prefix is None:
                 doc_id = str(uuid.uuid4())
             else:
                 doc_id = "{}_{}".format(id_prefix, i)
-
-            data = json.dumps(doc_body)
 
             if auth_type == AuthType.session:
                 resp = self._session.put("{}/{}/{}".format(url, db, doc_id), data=data, cookies=dict(SyncGatewaySession=auth[1]))
@@ -1078,6 +1067,7 @@ class MobileRestClient:
                 resp = self._session.put("{}/{}/{}".format(url, db, doc_id), data=data, auth=auth)
             else:
                 resp = self._session.put("{}/{}/{}".format(url, db, doc_id), data=data)
+
             log_r(resp, info=False)
             resp.raise_for_status()
 
@@ -1088,7 +1078,7 @@ class MobileRestClient:
         if len(added_docs) != number:
             raise AssertionError("Client was not able to add all docs to: {}".format(url))
 
-        logging.info(added_docs)
+        log_info("Added: {} docs".format(len(added_docs)))
 
         return added_docs
 
@@ -1456,6 +1446,7 @@ class MobileRestClient:
                     all_docs_returned = False
 
             logging.debug("Missing Docs = {}".format(missing_docs))
+            log_info("Num found docs: {}".format(len(resp_obj["rows"]) - len(missing_docs)))
             log_info("Num missing docs: {}".format(len(missing_docs)))
             # Issue the request again, docs my still be replicating
             if not all_docs_returned:
@@ -1565,7 +1556,7 @@ class MobileRestClient:
         if "rev" in doc:
             raise ValueError("User doc should not have a rev")
 
-    def verify_docs_in_changes(self, url, db, expected_docs, auth=None, strict=False):
+    def verify_docs_in_changes(self, url, db, expected_docs, auth=None, strict=False, polling_interval=60):
         """
         Verifies the expected docs are present in the database _changes feed using longpoll in a loop with
         Uses a GET _changes?feed=longpoll&since=last_seq for Listener
@@ -1599,7 +1590,7 @@ class MobileRestClient:
             if time.time() - start > CLIENT_REQUEST_TIMEOUT:
                 raise keywords.exceptions.TimeoutException("Verify Docs In Changes: TIMEOUT")
 
-            resp_obj = self.get_changes(url=url, db=db, since=last_seq, auth=auth)
+            resp_obj = self.get_changes(url=url, db=db, since=last_seq, auth=auth, timeout=polling_interval)
 
             missing_expected_docs = []
             for resp_doc in resp_obj["results"]:
@@ -1630,7 +1621,7 @@ class MobileRestClient:
                 log_info("Found doc id not in the expected_docs: {}".format(missing_expected_docs))
                 raise keywords.exceptions.ChangesError("Found unexpected docs in changes feed: {}".format(missing_expected_docs))
 
-            log_info("Missing expected docs: {}".format(expected_doc_map))
+            log_info("Missing expected docs: {}".format(len(expected_doc_map)))
             log_debug("Sequence number map: {}".format(sequence_number_map))
 
             if len(expected_doc_map) == 0:

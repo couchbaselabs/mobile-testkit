@@ -151,14 +151,14 @@ def create_server_buckets(cluster_config, sync_gateway_config):
     couchbase_server_url = cluster_topology["couchbase_servers"][0]
 
     # delete existing buckets
-    server_helper = CouchbaseServer()
-    server_helper.delete_buckets(couchbase_server_url)
+    cb_server = CouchbaseServer(couchbase_server_url)
+    cb_server.delete_buckets()
 
     # find bucket names from sg config
     bucket_names = get_buckets_from_sync_gateway_config(sync_gateway_config.config_path)
 
     # create couchbase server buckets
-    server_helper.create_buckets(couchbase_server_url, bucket_names)
+    cb_server.create_buckets(bucket_names)
 
 
 def get_buckets_from_sync_gateway_config(sync_gateway_config_path):

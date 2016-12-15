@@ -1,22 +1,42 @@
-class LiteServError(Exception):
-    pass
-
-
-class ProvisioningError(Exception):
-    pass
-
-
-class CollectionError(Exception):
-    pass
-
-
-class TimeoutException(Exception):
-    pass
-
-
 class Error(Exception):
     pass
 
 
+class LiteServError(Error):
+    pass
+
+
+class CBServerError(Error):
+    pass
+
+
+class ProvisioningError(Error):
+    pass
+
+
+class CollectionError(Error):
+    pass
+
+
+class TimeoutException(Error):
+    pass
+
+
 class ChangesError(Error):
+    pass
+
+
+class RemoteCommandError(Error):
+    pass
+
+
+class RestError(Error):
+    pass
+
+
+class TimeoutError(Error):
+    pass
+
+
+class ClusterError(Error):
     pass

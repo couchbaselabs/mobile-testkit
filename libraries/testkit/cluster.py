@@ -14,6 +14,8 @@ from libraries.provision.ansible_runner import AnsibleRunner
 import keywords.CouchbaseServer
 from keywords import utils
 
+import keywords.exceptions
+
 from keywords.utils import log_info
 
 
@@ -53,7 +55,7 @@ class Cluster:
         self.sync_gateway_config = None  # will be set to Config object when reset() called
 
         # for integrating keywords
-        self.server_keywords = keywords.CouchbaseServer.CouchbaseServer()
+        self.cb_server = keywords.CouchbaseServer.CouchbaseServer(self.servers[0].url)
 
     def validate_cluster(self):
 
@@ -87,47 +89,26 @@ class Cluster:
         status = ansible_runner.run_ansible_playbook("delete-sg-accel-artifacts.yml")
         assert status == 0, "Failed to delete sg_accel artifacts"
 
-        bucket_delete_create_max_retries = 3
-        bucket_delete_create_attempt_num = 0
-        while bucket_delete_create_attempt_num < bucket_delete_create_max_retries:
-            try:
-                log_info(">>> Deleting / Creating server buckets: Attempt {}".format(bucket_delete_create_attempt_num))
-                # Delete buckets
-                log_info(">>> Deleting buckets on: {}".format(self.servers[0].ip))
-                status = self.servers[0].delete_buckets()
-                assert status == 0
-                log_info(">>> Bucket deletion status: {}".format(status))
+        # Delete buckets
+        log_info(">>> Deleting buckets on: {}".format(self.cb_server.url))
+        self.cb_server.delete_buckets()
 
-                # Parse config and grab bucket names
-                config_path_full = os.path.abspath(sg_config_path)
-                config = Config(config_path_full)
-                mode = config.get_mode()
-                bucket_name_set = config.get_bucket_name_set()
+        # Parse config and grab bucket names
+        config_path_full = os.path.abspath(sg_config_path)
+        config = Config(config_path_full)
+        mode = config.get_mode()
+        bucket_name_set = config.get_bucket_name_set()
 
-                self.sync_gateway_config = config
+        self.sync_gateway_config = config
 
-                log_info(">>> Creating buckets on: {}".format(self.servers[0].ip))
-                log_info(">>> Creating buckets {}".format(bucket_name_set))
-                status = self.servers[0].create_buckets(bucket_name_set)
-                assert status == 0
-                log_info(">>> Bucket creation status: {}".format(status))
+        log_info(">>> Creating buckets on: {}".format(self.cb_server.url))
+        log_info(">>> Creating buckets {}".format(bucket_name_set))
+        self.cb_server.create_buckets(bucket_name_set)
 
-                # Wait for server to be in a warmup state to work around
-                # https://github.com/couchbase/sync_gateway/issues/1745
-                log_info(">>> Waiting for Server: {} to be in a healthy state".format(self.servers[0].url))
-                self.server_keywords.wait_for_ready_state(self.servers[0].url)
-
-                # Both steps are successful, break out of retry loop
-                break
-            except AssertionError:
-                log_info("Failed to delete / create buckets. Trying again ...")
-                bucket_delete_create_attempt_num += 1
-                # Wait 3 sec before retry
-                time.sleep(3)
-
-        # Max tries to delete / create buckets
-        if bucket_delete_create_attempt_num == bucket_delete_create_max_retries:
-            raise RuntimeError("Max tries exceeded to delete / create buckets")
+        # Wait for server to be in a warmup state to work around
+        # https://github.com/couchbase/sync_gateway/issues/1745
+        log_info(">>> Waiting for Server: {} to be in a healthy state".format(self.cb_server.url))
+        self.cb_server.wait_for_ready_state()
 
         log_info(">>> Starting sync_gateway with configuration: {}".format(config_path_full))
         utils.dump_file_contents_to_logs(config_path_full)
@@ -155,7 +136,7 @@ class Cluster:
 
         # Validate CBGT
         if mode == "di":
-            if not self.validate_cbgt_pindex_distribution_retry():
+            if not self.validate_cbgt_pindex_distribution_retry(len(self.sg_accels)):
                 self.save_cbgt_diagnostics()
                 raise Exception("Failed to validate CBGT Pindex distribution")
             log_info(">>> Detected valid CBGT Pindex distribution")
@@ -177,13 +158,13 @@ class Cluster:
             pretty_print_json = json.dumps(cbgt_diagnostics, sort_keys=True, indent=4, separators=(',', ': '))
             log_info("SG {} CBGT diagnostic output: {}".format(sync_gateway_writer, pretty_print_json))
 
-    def validate_cbgt_pindex_distribution_retry(self):
+    def validate_cbgt_pindex_distribution_retry(self, num_running_sg_accels):
         """
         Validates the CBGT pindex distribution by looking for nodes that don't have
         any pindexes assigned to it
         """
         for i in xrange(10):
-            is_valid = self.validate_cbgt_pindex_distribution()
+            is_valid = self.validate_cbgt_pindex_distribution(num_running_sg_accels)
             if is_valid:
                 return True
             else:
@@ -192,7 +173,10 @@ class Cluster:
 
         return False
 
-    def validate_cbgt_pindex_distribution(self):
+    def validate_cbgt_pindex_distribution(self, num_running_sg_accels):
+
+        if num_running_sg_accels < 1:
+            raise keywords.exceptions.ClusterError("Need at least one sg_accel running to verify pindexes")
 
         # build a map of node -> num_pindexes
         node_defs_pindex_counts = {}
@@ -226,10 +210,10 @@ class Cluster:
         log_info("CBGT node to pindex counts: {}".format(node_defs_pindex_counts))
 
         # make sure number of unique node uuids is equal to the number of sync gateway writers
-        if len(node_defs_pindex_counts) != len(self.sg_accels):
+        if len(node_defs_pindex_counts) != num_running_sg_accels:
             log_info("CBGT len(unique_node_uuids) != len(self.sync_gateway_writers) ({} != {})".format(
                 len(node_defs_pindex_counts),
-                len(self.sg_accels)
+                num_running_sg_accels
             ))
             return False
 
