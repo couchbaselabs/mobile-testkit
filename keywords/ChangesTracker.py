@@ -35,8 +35,8 @@ class ChangesTracker:
                     # append new changes to revs accociated with that id
                     revs_list = self.processed_changes[doc["id"]]
 
-                    # If the document is already in processed changes, make sure
-                    # that the revision does already exist. If we see one, raise an exception
+                    # If the document is already in 'processed_changes', make sure
+                    # that the revision doesn't already exist. If we see one, raise an exception
                     # because we are seeing the same revision being sent twice
                     # Checking against this scenario - https://github.com/couchbase/sync_gateway/issues/2186
                     changes_revs = [change["rev"] for change in doc["changes"]]
