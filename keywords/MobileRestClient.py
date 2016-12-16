@@ -1469,7 +1469,7 @@ class MobileRestClient:
 
             break
 
-    def get_changes(self, url, db, since, auth, feed="longpoll", timeout=60, limit=None):
+    def get_changes(self, url, db, since, auth, feed="longpoll", timeout=60, limit=None, skip_user_docs=False):
         """
         Issues a longpoll changes request with a provided since and authentication.
         The timeout is in seconds.
@@ -1515,8 +1515,18 @@ class MobileRestClient:
         resp.raise_for_status()
         resp_obj = resp.json()
 
-        log_info("Found {} changes".format(len(resp_obj["results"])))
+        if skip_user_docs:
+            # filter out any changes with _user/* doc id
+            log_info("Returning changes without '_user/*' docs")
+            results_without_user_docs = [
+                result for result in resp_obj["results"]
+                if not result["id"].startswith("_user/")
+            ]
+            # assign return value the th stripped list
+            resp_obj["results"] = results_without_user_docs
 
+
+        log_info("Found {} changes".format(len(resp_obj["results"])))
         return resp_obj
 
     def verify_doc_id_in_changes(self, url, db, expected_doc_id, auth=None):
