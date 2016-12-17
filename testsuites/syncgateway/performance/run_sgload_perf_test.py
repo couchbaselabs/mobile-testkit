@@ -5,8 +5,6 @@ from __future__ import print_function
 
 import sys
 import os
-import paramiko
-import traceback
 
 from libraries.provision.ansible_runner import AnsibleRunner
 from keywords.exceptions import ProvisioningError
@@ -14,10 +12,7 @@ from keywords.exceptions import ProvisioningError
 from libraries.utilities.provisioning_config_parser import hosts_for_tag
 
 from keywords.utils import log_info
-from keywords.utils import log_error
 from keywords.RemoteExecutor import RemoteExecutor
-
-from ansible import constants
 
 
 import argparse
