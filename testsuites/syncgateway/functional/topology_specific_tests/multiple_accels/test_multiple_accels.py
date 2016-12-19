@@ -15,11 +15,13 @@ from keywords.constants import SYNC_GATEWAY_CONFIGS
 from keywords.MobileRestClient import MobileRestClient
 
 from keywords import userinfo
+from keywords import document
 
 
 @pytest.mark.topospecific
 @pytest.mark.sanity
 @pytest.mark.syncgateway
+@pytest.mark.sgaccel
 @pytest.mark.parametrize("sg_conf", [
     "{}/sync_gateway_default_functional_tests_di.json".format(SYNC_GATEWAY_CONFIGS)
 ])
@@ -78,6 +80,7 @@ def test_dcp_reshard_sync_gateway_goes_down(params_from_base_test_setup, sg_conf
 @pytest.mark.topospecific
 @pytest.mark.sanity
 @pytest.mark.syncgateway
+@pytest.mark.sgaccel
 @pytest.mark.parametrize("sg_conf", [
     "{}/sync_gateway_default_functional_tests_di.json".format(SYNC_GATEWAY_CONFIGS)
 ])
@@ -132,6 +135,7 @@ def test_dcp_reshard_sync_gateway_comes_up(params_from_base_test_setup, sg_conf)
 @pytest.mark.topospecific
 @pytest.mark.sanity
 @pytest.mark.syncgateway
+@pytest.mark.sgaccel
 @pytest.mark.parametrize("sg_conf", [
     "{}/sync_gateway_default_functional_tests_di.json".format(SYNC_GATEWAY_CONFIGS),
 ])
@@ -198,6 +202,7 @@ def test_dcp_reshard_single_sg_accel_goes_down_and_up(params_from_base_test_setu
 @pytest.mark.topospecific
 @pytest.mark.sanity
 @pytest.mark.syncgateway
+@pytest.mark.sgaccel
 @pytest.mark.parametrize("sg_conf", [
     ("{}/performance/sync_gateway_default_performance.json".format(SYNC_GATEWAY_CONFIGS)),
 ])
@@ -220,6 +225,7 @@ def test_pindex_distribution(params_from_base_test_setup, sg_conf):
 @pytest.mark.topospecific
 @pytest.mark.sanity
 @pytest.mark.syncgateway
+@pytest.mark.sgaccel
 @pytest.mark.parametrize("sg_conf", [
     "{}/sync_gateway_default_functional_tests_di.json".format(SYNC_GATEWAY_CONFIGS),
 ])
@@ -308,3 +314,124 @@ def test_take_down_bring_up_sg_accel_validate_cbgt(params_from_base_test_setup, 
 
     # Poll on pIndex reshard after bring 2 accel nodes back
     assert cluster.validate_cbgt_pindex_distribution_retry(num_running_sg_accels=3)
+
+
+@pytest.mark.topospecific
+@pytest.mark.sanity
+@pytest.mark.syncgateway
+@pytest.mark.sgaccel
+@pytest.mark.parametrize("sg_conf", [
+    "{}/sync_gateway_default_functional_tests_di.json".format(SYNC_GATEWAY_CONFIGS),
+])
+def test_take_all_sgaccels_down(params_from_base_test_setup, sg_conf):
+    """
+    1. Start doc load (1000 doc)
+    2. Take all nodes down in parallel
+    3. Wait for doc adds to complete, store "docs_1"
+    4. Verify all docs added
+    5. Start doc load (1000 docs)
+    6. Bring up nodes in parallel
+    7. poll on p-index reshard
+    8. Wait for doc adds to complete, store "docs_2"
+    9. Verify all docs added
+    10. Verify "docs_1" + "docs_2" show up in _changes feed
+    """
+
+    cluster_conf = params_from_base_test_setup["cluster_config"]
+
+    log_info("Running 'test_dcp_reshard_single_sg_accel_goes_down_and_up'")
+    log_info("cluster_conf: {}".format(cluster_conf))
+
+    log_info("sg_conf: {}".format(sg_conf))
+
+    cluster = Cluster(config=cluster_conf)
+    cluster.reset(sg_config_path=sg_conf)
+
+    cluster_util = ClusterKeywords()
+    topology = cluster_util.get_cluster_topology(cluster_conf)
+
+    sg_url = topology["sync_gateways"][0]["public"]
+    sg_admin_url = topology["sync_gateways"][0]["admin"]
+    sg_db = "db"
+    num_docs = 1000
+
+    client = MobileRestClient()
+
+    doc_pusher_user_info = userinfo.UserInfo("doc_pusher", "pass", channels=["A"], roles=[])
+    doc_pusher_auth = client.create_user(
+        url=sg_admin_url,
+        db=sg_db,
+        name=doc_pusher_user_info.name,
+        password=doc_pusher_user_info.password,
+        channels=doc_pusher_user_info.channels
+    )
+
+    a_user_info = userinfo.UserInfo("a_user", "pass", channels=["A"], roles=[])
+    client.create_user(
+        url=sg_admin_url,
+        db=sg_db,
+        name=a_user_info.name,
+        password=a_user_info.password,
+        channels=a_user_info.channels
+    )
+    a_user_session = client.create_session(
+        url=sg_admin_url,
+        db=sg_db,
+        name=a_user_info.name,
+        password=a_user_info.password
+    )
+
+    # Shutdown all accel nodes in parallel
+    with concurrent.futures.ThreadPoolExecutor(max_workers=3) as ex:
+
+        # Start adding docs
+        docs_1 = document.create_docs(None, num_docs, channels=doc_pusher_user_info.channels)
+        docs_1_task = ex.submit(client.add_bulk_docs, url=sg_url, db=sg_db, docs=docs_1, auth=doc_pusher_auth)
+
+        # Take down all access nodes
+        log_info("Shutting down sg_accels: [{}, {}, {}] ...".format(
+            cluster.sg_accels[0],
+            cluster.sg_accels[1],
+            cluster.sg_accels[2]
+        ))
+        sg_accel_down_task_1 = ex.submit(cluster.sg_accels[0].stop)
+        sg_accel_down_task_2 = ex.submit(cluster.sg_accels[1].stop)
+        sg_accel_down_task_3 = ex.submit(cluster.sg_accels[2].stop)
+        assert sg_accel_down_task_1.result() == 0
+        assert sg_accel_down_task_2.result() == 0
+        assert sg_accel_down_task_3.result() == 0
+
+        # Block until bulk_docs is complete
+        doc_push_result_1 = docs_1_task.result()
+        assert len(doc_push_result_1) == num_docs
+
+        # Start loading Sync Gateway with another set of docs
+        docs_2 = document.create_docs(None, num_docs, channels=doc_pusher_user_info.channels)
+        docs_2_task = ex.submit(client.add_bulk_docs, url=sg_url, db=sg_db, docs=docs_2, auth=doc_pusher_auth)
+
+        # Bring all the sg_accel nodes back up
+        # Take down all access nodes
+        log_info("Starting sg_accels: [{}, {}, {}] ...".format(
+            cluster.sg_accels[0],
+            cluster.sg_accels[1],
+            cluster.sg_accels[2]
+        ))
+        sg_accel_up_task_1 = ex.submit(cluster.sg_accels[0].start, sg_conf)
+        sg_accel_up_task_2 = ex.submit(cluster.sg_accels[1].start, sg_conf)
+        sg_accel_up_task_3 = ex.submit(cluster.sg_accels[2].start, sg_conf)
+        assert sg_accel_up_task_1.result() == 0
+        assert sg_accel_up_task_2.result() == 0
+        assert sg_accel_up_task_3.result() == 0
+
+        # Wait for pindex to reshard correctly
+        assert cluster.validate_cbgt_pindex_distribution_retry(3)
+
+        # Block until second bulk_docs is complete
+        doc_push_result_2 = docs_2_task.result()
+        assert len(doc_push_result_2) == num_docs
+
+    # Combine the 2 push results and make sure the changes propagate to a_user
+    # a_user has access to the doc's channel.
+    log_info("Verifying all the changes show up for 'a_user' ...")
+    all_docs = doc_push_result_1 + doc_push_result_2
+    client.verify_docs_in_changes(url=sg_url, db=sg_db, expected_docs=all_docs, auth=a_user_session, polling_interval=2)
