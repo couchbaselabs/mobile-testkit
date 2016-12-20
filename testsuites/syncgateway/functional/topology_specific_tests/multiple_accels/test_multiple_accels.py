@@ -325,16 +325,23 @@ def test_take_down_bring_up_sg_accel_validate_cbgt(params_from_base_test_setup, 
 ])
 def test_take_all_sgaccels_down(params_from_base_test_setup, sg_conf):
     """
+    Scenario that takes all sync_gateway accel nodes offline during doc load.
+    After bring the nodes back online during load, the reshard of the DCP feed is verified.
+    The changes feed is verified that all docs show up.
+
     1. Start doc load (1000 doc)
     2. Take all nodes down in parallel
     3. Wait for doc adds to complete, store "docs_1"
     4. Verify all docs added
     5. Start doc load (1000 docs)
-    6. Bring up nodes in parallel
-    7. poll on p-index reshard
-    8. Wait for doc adds to complete, store "docs_2"
-    9. Verify all docs added
-    10. Verify "docs_1" + "docs_2" show up in _changes feed
+    6. Verify node are down
+    7. Wait for 5. to complete, store docs_1
+    8. Add 1000 docs while nodes are down, store docs_2
+    9. Start another doc load (1000 docs), store docs_3
+    10. Bring up nodes in parallel
+    11. poll on p-index reshard
+    12. Wait for 9. to complete
+    13. Verify "docs_1" + "docs_2" + "docs_3" show up in _changes feed
     """
 
     cluster_conf = params_from_base_test_setup["cluster_config"]
@@ -405,9 +412,14 @@ def test_take_all_sgaccels_down(params_from_base_test_setup, sg_conf):
         doc_push_result_1 = docs_1_task.result()
         assert len(doc_push_result_1) == num_docs
 
-        # Start loading Sync Gateway with another set of docs
-        docs_2 = document.create_docs(None, num_docs, channels=doc_pusher_user_info.channels)
-        docs_2_task = ex.submit(client.add_bulk_docs, url=sg_url, db=sg_db, docs=docs_2, auth=doc_pusher_auth)
+        # Load sync_gateway with another batch of docs while the sg_accel nodes are offline
+        docs_2_bodies = document.create_docs(None, num_docs, channels=doc_pusher_user_info.channels)
+        docs_push_result_2 = client.add_bulk_docs(url=sg_url, db=sg_db, docs=docs_2_bodies, auth=doc_pusher_auth)
+        assert len(docs_push_result_2) == num_docs
+
+        # Start loading Sync Gateway with another set of docs while bringing the sg_accel nodes online
+        docs_3 = document.create_docs(None, num_docs, channels=doc_pusher_user_info.channels)
+        docs_3_task = ex.submit(client.add_bulk_docs, url=sg_url, db=sg_db, docs=docs_3, auth=doc_pusher_auth)
 
         # Bring all the sg_accel nodes back up
         # Take down all access nodes
@@ -427,11 +439,11 @@ def test_take_all_sgaccels_down(params_from_base_test_setup, sg_conf):
         assert cluster.validate_cbgt_pindex_distribution_retry(3)
 
         # Block until second bulk_docs is complete
-        doc_push_result_2 = docs_2_task.result()
-        assert len(doc_push_result_2) == num_docs
+        doc_push_result_3 = docs_3_task.result()
+        assert len(doc_push_result_3) == num_docs
 
-    # Combine the 2 push results and make sure the changes propagate to a_user
+    # Combine the 3 push results and make sure the changes propagate to a_user
     # a_user has access to the doc's channel.
     log_info("Verifying all the changes show up for 'a_user' ...")
-    all_docs = doc_push_result_1 + doc_push_result_2
+    all_docs = doc_push_result_1 + docs_push_result_2 + doc_push_result_3
     client.verify_docs_in_changes(url=sg_url, db=sg_db, expected_docs=all_docs, auth=a_user_session, polling_interval=2)
