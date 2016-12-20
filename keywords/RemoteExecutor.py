@@ -1,5 +1,5 @@
-import ansible
 import paramiko
+import ansible.constants
 
 from keywords.exceptions import RemoteCommandError
 from keywords.utils import log_info
