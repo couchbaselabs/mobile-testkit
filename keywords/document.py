@@ -1,5 +1,6 @@
 import logging
 import base64
+import uuid
 
 from constants import DATA_DIR
 from keywords import types
@@ -64,7 +65,12 @@ def create_docs(doc_id_prefix, number, content=None, attachment_name=None, expir
     docs = []
 
     for i in range(number):
-        doc_id = "{}_{}".format(doc_id_prefix, i)
+
+        if doc_id_prefix is None:
+            doc_id = str(uuid.uuid4())
+        else:
+            doc_id = "{}_{}".format(doc_id_prefix, i)
+
         doc = create_doc(doc_id, content, attachment_name, expiry, channels)
         docs.append(doc)
 
