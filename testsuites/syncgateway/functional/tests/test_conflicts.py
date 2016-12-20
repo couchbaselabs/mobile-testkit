@@ -12,7 +12,6 @@ from keywords import userinfo
 from keywords import document
 
 
-
 @pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.conflicts
