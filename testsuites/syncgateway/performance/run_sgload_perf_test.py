@@ -98,6 +98,14 @@ def add_sync_gateway_url(sgload_arg_list, sg_host):
 
 if __name__ == "__main__":
 
+    # There is some complex argument parsing going on in order to be able to capture
+    # certain arguments and process them, and pass through the rest of the arguments
+    # down to sgload being invoked.
+    #
+    # The parse_known_args() call will essentially extract any arguments added via
+    # parser.add_argument(), and the rest of the arguments will get read into
+    # sgload_arg_list_main and then passed to sgload when invoked
+
     parser = argparse.ArgumentParser()
     parser.add_argument('--skip-build-sgload', action='store_true')
     args = parser.parse_known_args()
