@@ -1,10 +1,16 @@
+import time
+
 import pytest
 from keywords.SyncGateway import sync_gateway_config_path_for_mode
-from keywords.utils import log_info
 from libraries.testkit import cluster
 from keywords.MobileRestClient import MobileRestClient
+
+import keywords.exceptions
+import keywords.constants
+
 from keywords import userinfo
 from keywords import document
+
 
 
 @pytest.mark.sanity
@@ -70,8 +76,12 @@ def test_non_winning_revisions(params_from_base_test_setup, sg_conf_name):
     assert rev_gen_6_doc["rev"].startswith("6-")
 
     # Get changes until rev generation 6 document shows up
+    start = time.time()
     last_seq = 0
     while True:
+        if time.time() - start > keywords.constants.CLIENT_REQUEST_TIMEOUT:
+            raise keywords.exceptions.TimeoutError("Wait for Replication Status Idle: TIMEOUT")
+
         changes_1 = client.get_changes(url=sg_url, db=sg_db, since=last_seq, auth=seth_auth, skip_user_docs=True)
         last_seq = changes_1["last_seq"]
 
@@ -205,10 +215,15 @@ def test_winning_conflict_branch_revisions(params_from_base_test_setup, sg_conf_
 
     # Wait until doc shows up in changes feed
     last_seq = 0
+    start = time.time()
     while True:
+
+        if time.time() - start > keywords.constants.CLIENT_REQUEST_TIMEOUT:
+            raise keywords.exceptions.TimeoutError("Wait for Replication Status Idle: TIMEOUT")
+
         changes_1 = client.get_changes(url=sg_url, db=sg_db, since=last_seq, auth=seth_auth, skip_user_docs=True)
         last_seq = changes_1["last_seq"]
-        if len(changes_1["results"]) > 0:
+        if len(changes_1["results"]) > 0 and changes_1["results"][0]["changes"][0]["rev"].startswith("6-"):
             break
 
     assert len(changes_1["results"]) == 1
@@ -239,7 +254,12 @@ def test_winning_conflict_branch_revisions(params_from_base_test_setup, sg_conf_
         rev_gen += 1
 
     # Wait until doc shows up in changes feed from last_seq from where last changes loop from above left off
+    start = time.time()
     while True:
+
+        if time.time() - start > keywords.constants.CLIENT_REQUEST_TIMEOUT:
+            raise keywords.exceptions.TimeoutError("Wait for Replication Status Idle: TIMEOUT")
+
         changes_2 = client.get_changes(url=sg_url, db=sg_db, since=last_seq, auth=seth_auth)
         last_seq = changes_2["last_seq"]
         if len(changes_2["results"]) > 0:
