@@ -1525,7 +1525,6 @@ class MobileRestClient:
             # assign return value the th stripped list
             resp_obj["results"] = results_without_user_docs
 
-
         log_info("Found {} changes".format(len(resp_obj["results"])))
         return resp_obj
 
