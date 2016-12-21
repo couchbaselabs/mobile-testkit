@@ -140,7 +140,7 @@ def gen_template(config):
                 DeviceName = "/dev/sda1",
                 Ebs = ec2.EBSBlockDevice(
                     DeleteOnTermination = True,
-                    VolumeSize = 60,
+                    VolumeSize = 300,
                     VolumeType = "gp2"
                 )
             )
@@ -162,7 +162,7 @@ def gen_template(config):
                 DeviceName = "/dev/sda1",
                 Ebs = ec2.EBSBlockDevice(
                     DeleteOnTermination = True,
-                    VolumeSize = 60,
+                    VolumeSize = 100,
                     VolumeType = "gp2"
                 )
             )
