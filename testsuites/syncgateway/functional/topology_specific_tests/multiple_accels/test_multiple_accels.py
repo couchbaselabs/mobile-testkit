@@ -16,6 +16,7 @@ from keywords.MobileRestClient import MobileRestClient
 
 from keywords import userinfo
 from keywords import document
+from keywords import couchbaseserver
 
 
 @pytest.mark.topospecific
@@ -489,3 +490,46 @@ def test_missing_num_shards(params_from_base_test_setup, sg_conf):
 
     # Verify sharding is correct
     assert cluster.validate_cbgt_pindex_distribution_retry(num_running_sg_accels=3)
+
+
+@pytest.mark.topospecific
+@pytest.mark.sanity
+@pytest.mark.syncgateway
+@pytest.mark.sgaccel
+@pytest.mark.parametrize("sg_conf", [
+    "{}/sync_gateway_default_functional_tests_di.json".format(SYNC_GATEWAY_CONFIGS),
+])
+def test_detect_stale_channel_index(params_from_base_test_setup, sg_conf):
+    """
+    1. Bring up single Sync Gateway node, backed by Couchbase Server.
+    2. Configure such that the primary bucket and the channel index bucket are different (which is the norm)
+    3. Add several documents
+    4. Shutdown Sync Gateway
+    5. Flush the primary bucket, but do not touch the channel index bucket
+    6. Start Sync Gateway
+    7. Assert that sync_gateway fails to start due to stale channel index
+    """
+
+    cluster_conf = params_from_base_test_setup["cluster_config"]
+
+    log_info("Running 'test_detect_stale_channel_index'")
+    log_info("cluster_conf: {}".format(cluster_conf))
+
+    log_info("sg_conf: {}".format(sg_conf))
+
+    cluster = Cluster(config=cluster_conf)
+    cluster.reset(sg_config_path=sg_conf)
+
+    cluster_util = ClusterKeywords()
+    topology = cluster_util.get_cluster_topology(cluster_conf)
+
+    sg_url = topology["sync_gateways"][0]["public"]
+    sg_admin_url = topology["sync_gateways"][0]["admin"]
+    cb_server_url = topology["couchbase_servers"][0]
+    sg_db = "db"
+    num_docs = 1000
+
+    cb_server = couchbaseserver.CouchbaseServer(url=cb_server_url)
+    client = MobileRestClient()
+
+

@@ -6,7 +6,7 @@ from ansible_runner import AnsibleRunner
 
 from keywords.exceptions import ProvisioningError
 from keywords.ClusterKeywords import ClusterKeywords
-from keywords.CouchbaseServer import CouchbaseServer
+from keywords.couchbaseserver import CouchbaseServer
 from keywords.utils import log_info
 
 

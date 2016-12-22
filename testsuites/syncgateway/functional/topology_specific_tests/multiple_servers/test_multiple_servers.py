@@ -9,10 +9,10 @@ from keywords.exceptions import TimeoutError
 from keywords.ClusterKeywords import ClusterKeywords
 from keywords.utils import log_info
 from keywords.MobileRestClient import MobileRestClient
-from keywords.CouchbaseServer import CouchbaseServer
 from keywords.SyncGateway import sync_gateway_config_path_for_mode
-from keywords import userinfo
 
+from keywords import userinfo
+from keywords import couchbaseserver
 
 @pytest.mark.sanity
 @pytest.mark.syncgateway
@@ -56,8 +56,8 @@ def test_rebalance_sanity(params_from_base_test_setup):
     channels = ["ABC", "CBS"]
 
     client = MobileRestClient()
-    cb_server = CouchbaseServer(cbs_one_url)
-    server_to_remove = CouchbaseServer(cbs_two_url)
+    cb_server = couchbaseserver.CouchbaseServer(cbs_one_url)
+    server_to_remove = couchbaseserver.CouchbaseServer(cbs_two_url)
 
     client.create_user(admin_sg_one, sg_db, sg_user_name, sg_user_password, channels=channels)
     session = client.create_session(admin_sg_one, sg_db, sg_user_name)
@@ -138,8 +138,8 @@ def test_server_goes_down_sanity(params_from_base_test_setup):
     channels = ["ABC", "CBS"]
 
     client = MobileRestClient()
-    main_server = CouchbaseServer(cbs_one_url)
-    flakey_server = CouchbaseServer(cbs_two_url)
+    main_server = couchbaseserver.CouchbaseServer(cbs_one_url)
+    flakey_server = couchbaseserver.CouchbaseServer(cbs_two_url)
 
     client.create_user(admin_sg, sg_db, sg_user_name, sg_user_password, channels=channels)
     session = client.create_session(admin_sg, sg_db, sg_user_name)
@@ -258,8 +258,8 @@ def test_server_goes_down_rebuild_channels(params_from_base_test_setup):
     )
 
     client = MobileRestClient()
-    main_server = CouchbaseServer(cbs_one_url)
-    flakey_server = CouchbaseServer(cbs_two_url)
+    main_server = couchbaseserver.CouchbaseServer(cbs_one_url)
+    flakey_server = couchbaseserver.CouchbaseServer(cbs_two_url)
 
     admin_auth = client.create_user(
         admin_sg,

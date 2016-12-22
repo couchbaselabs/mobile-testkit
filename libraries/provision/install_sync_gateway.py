@@ -1,7 +1,7 @@
 import sys
 import os
 
-from keywords.CouchbaseServer import CouchbaseServer
+from keywords.couchbaseserver import CouchbaseServer
 from keywords.ClusterKeywords import ClusterKeywords
 from keywords.exceptions import ProvisioningError
 from keywords.utils import log_warn

@@ -9,13 +9,13 @@ from keywords.utils import log_r
 from keywords.utils import version_is_binary
 from keywords.utils import version_and_build
 
-from keywords.CouchbaseServer import verify_server_version
 from keywords.SyncGateway import verify_sync_gateway_version
 from keywords.SyncGateway import verify_sg_accel_version
 from libraries.testkit.cluster import Cluster
 
 from constants import CLUSTER_CONFIGS_DIR
 from exceptions import ProvisioningError
+from keywords import couchbaseserver
 
 
 class ClusterKeywords:
@@ -127,7 +127,7 @@ class ClusterKeywords:
 
         # Verify Server version
         for server in cluster_obj["couchbase_servers"]:
-            verify_server_version(server["ip"], expected_server_version)
+            couchbaseserver.verify_server_version(server["ip"], expected_server_version)
 
         # Verify sync_gateway versions
         for sg in cluster_obj["sync_gateways"]:
