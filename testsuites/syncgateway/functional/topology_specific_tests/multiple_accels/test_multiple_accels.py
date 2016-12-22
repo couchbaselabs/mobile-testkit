@@ -532,4 +532,20 @@ def test_detect_stale_channel_index(params_from_base_test_setup, sg_conf):
     cb_server = couchbaseserver.CouchbaseServer(url=cb_server_url)
     client = MobileRestClient()
 
+    # Create doc pusher user
+    doc_pusher_user_info = userinfo.UserInfo(name="doc_pusher", password="pass", channels=["NASA"], roles=[])
+    doc_pusher_auth = client.create_user(
+        url=sg_admin_url,
+        db=sg_db,
+        name=doc_pusher_user_info.name,
+        password=doc_pusher_user_info.password,
+        channels=doc_pusher_user_info.channels
+    )
 
+    # Add some docs to Sync Gateway to cause indexing
+    docs = document.create_docs(None, number=num_docs, channels=doc_pusher_user_info.channels)
+    pushed_docs = client.add_bulk_docs(url=sg_url, db=sg_db, docs=docs, auth=doc_pusher_auth)
+    assert len(pushed_docs) == num_docs
+
+    import pdb
+    pdb.set_trace()
