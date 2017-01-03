@@ -23,7 +23,7 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    print("Installing LiteServ: {} {} on {}:{} with storage engine: {}".format(args.platform,
+    print("Uninstalling LiteServ: {} {} on {}:{} with storage engine: {}".format(args.platform,
                                                                                args.version_build,
                                                                                args.host,
                                                                                args.port,
