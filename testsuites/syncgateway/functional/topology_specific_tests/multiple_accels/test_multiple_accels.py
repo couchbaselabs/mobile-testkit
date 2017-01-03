@@ -17,6 +17,7 @@ from keywords.MobileRestClient import MobileRestClient
 from keywords import userinfo
 from keywords import document
 from keywords import couchbaseserver
+from keywords.SyncGateway import SyncGateway
 
 
 @pytest.mark.topospecific
@@ -546,6 +547,13 @@ def test_detect_stale_channel_index(params_from_base_test_setup, sg_conf):
     docs = document.create_docs(None, number=num_docs, channels=doc_pusher_user_info.channels)
     pushed_docs = client.add_bulk_docs(url=sg_url, db=sg_db, docs=docs, auth=doc_pusher_auth)
     assert len(pushed_docs) == num_docs
+
+    # Shut down sync_gateway
+    sg_util = SyncGateway()
+    sg_util.stop_sync_gateway(cluster_config=cluster_conf, url=sg_url)
+
+    # Delete server bucket
+    cb_server.delete_bucket(name="data-bucket")
 
     import pdb
     pdb.set_trace()

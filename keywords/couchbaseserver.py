@@ -73,9 +73,19 @@ class CouchbaseServer:
         self._session = Session()
         self._session.auth = ("Administrator", "password")
 
+    def delete_bucket(self, name):
+        """ Delete a Couchbase Server bucket with the given 'name' """
+        resp = self._session.delete("{0}/pools/default/buckets/{1}".format(self.url, name))
+        log_r(resp)
+        resp.raise_for_status()
+
     def delete_buckets(self):
         count = 0
-        while count < 3:
+        while True:
+
+            if count > 3:
+                raise CBServerError("Max retries for bucket creation hit. Could not delete buckets!")
+
             resp = self._session.get("{}/pools/default/buckets".format(self.url))
             log_r(resp)
             resp.raise_for_status()
@@ -86,28 +96,30 @@ class CouchbaseServer:
             for entry in obj:
                 existing_bucket_names.append(entry["name"])
 
+            if len(existing_bucket_names) == 0:
+                # No buckets to delete. Exit loop
+                break
+
             log_info("Existing buckets: {}".format(existing_bucket_names))
             log_info("Deleting buckets: {}".format(existing_bucket_names))
 
             # HACK around Couchbase Server issue where issuing a bucket delete via REST occasionally returns 500 error
-            delete_num = 0
             # Delete existing buckets
+            num_failures = 0
             for bucket_name in existing_bucket_names:
-                resp = self._session.delete("{0}/pools/default/buckets/{1}".format(self.url, bucket_name))
-                log_r(resp)
-                if resp.status_code == 200:
-                    delete_num += 1
+                try:
+                    self.delete_bucket(bucket_name)
+                except HTTPError:
+                    num_failures += 1
+                    log_info("Failed to delete bucket. Retrying ...")
 
-            if delete_num == len(existing_bucket_names):
-                break
-            else:
-                # A 500 error may have occured, query for buckets and try to delete them again
+            # A 500 error may have occured, query for buckets and try to delete them again
+            if num_failures > 0:
                 time.sleep(5)
                 count += 1
-
-        # Check that max retries did not occur
-        if count == 3:
-            raise CBServerError("Max retries for bucket creation hit. Could not delete buckets!")
+            else:
+                # All bucket deletions were successful
+                break
 
     def wait_for_ready_state(self):
         """
