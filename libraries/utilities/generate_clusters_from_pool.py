@@ -218,6 +218,7 @@ def generate_clusters_from_pool(pool_file):
         ClusterDef("1sg_1cbs_1lgs", num_sgs=1, num_acs=0, num_cbs=1, num_lgs=1, num_lbs=0),
         ClusterDef("2sg_3cbs_2lgs", num_sgs=2, num_acs=0, num_cbs=3, num_lgs=2, num_lbs=0),
         ClusterDef("2sg_2ac_3cbs_2lgs", num_sgs=2, num_acs=2, num_cbs=3, num_lgs=2, num_lbs=0),
+        ClusterDef("2sg_2ac_3cbs_1lgs", num_sgs=2, num_acs=2, num_cbs=3, num_lgs=1, num_lbs=0),
     ]
 
     if not os.path.isfile(pool_file):
