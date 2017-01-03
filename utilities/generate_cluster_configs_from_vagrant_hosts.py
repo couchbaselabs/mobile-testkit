@@ -17,8 +17,10 @@ def generate_cluster_configs_from_vagrant(private_network, public_network, publi
     3. Uses this IP list to build a pool.json file and generate the cluster configurations
     """
 
-    if private_network and public_network and public_network_ethernet:
-        raise ProvisioningError("Invalid private_network, public_network and public_network_ethernet flags")
+    if private_network and public_network:
+        raise ProvisioningError("Invalid private_network and public_network flags")
+    elif private_network and public_network_ethernet:
+        raise ProvisioningError("Invalid private_network and public_network_ethernet flags")
 
     if not private_network and not public_network and not public_network_ethernet:
         raise ProvisioningError("Invalid private_network, public_network and public_network_ethernet flags")
