@@ -84,7 +84,7 @@
       when:  "'4.7' in couchbase_server_package_name"
 
     - name: COUCHBASE SERVER | Initialize primary node
-      shell: "{{ couchbase_server_home_path }}/bin/couchbase-cli node-init -c {{ couchbase_server_node }}:{{ couchbase_server_admin_port }} --username={{ couchbase_server_admin }} --password={{ couchbase_server_password }} --node-init-hostname={{ couchbase_server_node }}"
+      shell: "{{ couchbase_server_home_path }}/bin/couchbase-cli node-init -c {{ couchbase_server_node }}:{{ couchbase_server_admin_port }} --user={{ couchbase_server_admin }} --password={{ couchbase_server_password }} --node-init-hostname={{ couchbase_server_node }}"
       when: "{{ cb_major_version['stdout'] }} != 2"
 
     - name: COUCHBASE SERVER | Wait for node to be listening on port 8091
