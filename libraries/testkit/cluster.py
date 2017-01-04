@@ -152,7 +152,7 @@ class Cluster:
 
             adminApi = Admin(sync_gateway_writer)
             cbgt_diagnostics = adminApi.get_cbgt_diagnostics()
-            adminApi.get_cbgt_cfg()
+            adminApi.get_cbgt_config()
 
             # dump raw diagnostics
             pretty_print_json = json.dumps(cbgt_diagnostics, sort_keys=True, indent=4, separators=(',', ': '))
@@ -183,12 +183,12 @@ class Cluster:
 
         # CBGT REST Admin API endpoint
         adminApi = Admin(self.sg_accels[0])
-        cbgt_cfg = adminApi.get_cbgt_cfg()
+        cbgt_cfg = adminApi.get_cbgt_config()
 
         # loop over the planpindexes and update the count for the node where it lives
         # this will end up with a dictionary like:
         #  {'74c818f04b99b169': 32, '11886131c807a30e': 32}  (each node uuid has 32 pindexes)
-        plan_pindexes = cbgt_cfg["planPIndexes"]["planPIndexes"]
+        plan_pindexes = cbgt_cfg.p_indexes
         for data_bucket_key, data_bucket_val in plan_pindexes.iteritems():
 
             # get the nodes where this pindex lives

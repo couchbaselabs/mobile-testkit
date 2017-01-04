@@ -481,10 +481,11 @@ def test_missing_num_shards(params_from_base_test_setup, sg_conf):
 
     # CBGT REST Admin API endpoint
     admin_api = Admin(cluster.sg_accels[1])
-    cbgt_cfg = admin_api.get_cbgt_cfg()
+    cbgt_cfg = admin_api.get_cbgt_config()
 
-    # Verify that 64 shards are being used
-    assert len(cbgt_cfg["planPIndexes"]["planPIndexes"]) == 64
+    # Verify that default number of pindex shards is 64.
+    # This may change in the future in which case this test will need to be updated.
+    assert cbgt_cfg.num_shards == 64
 
     # Verify sharding is correct
-    cluster.validate_cbgt_pindex_distribution_retry(3)
+    assert cluster.validate_cbgt_pindex_distribution_retry(num_running_sg_accels=3)
