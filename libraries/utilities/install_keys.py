@@ -44,6 +44,7 @@ def install_keys(key_name, user_name):
     else:
         subprocess.call((["ssh-add", "{0}/.ssh/{1}".format(os.environ["HOME"], private_key)]))
 
+
 if __name__ == "__main__":
 
     usage = "usage: install-keys.py --key-name=<name_of_key> --ssh-user=<user>"

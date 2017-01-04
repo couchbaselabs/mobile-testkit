@@ -144,6 +144,7 @@ def create_and_instantiate_cluster(config):
         "--parameters", "ParameterKey=KeyName,ParameterValue={}".format(key)
     ])
 
+
 if __name__ == "__main__":
 
     usage = """usage: python create_and_instantiate_cloud

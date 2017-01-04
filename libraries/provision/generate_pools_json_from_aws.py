@@ -210,6 +210,7 @@ def write_to_file(cloud_formation_stack_dns_addresses, filename):
     with open(filename, 'w') as target:
         target.write(json.dumps(output_dictionary, sort_keys=True, indent=4, separators=(',', ': ')))
 
+
 if __name__ == "__main__":
 
     main()
