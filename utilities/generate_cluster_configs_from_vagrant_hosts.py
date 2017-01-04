@@ -17,6 +17,18 @@ def generate_cluster_configs_from_vagrant(private_network, public_network, publi
     3. Uses this IP list to build a pool.json file and generate the cluster configurations
     """
 
+    # Check if only one of the options is set, private_network or public_network or public_network_ethernet
+    if opts.private_network and (opts.public_network or opts.public_network_ethernet):
+        raise ProvisioningError("Invalid private_network and public_network/public_network_ethernet flags")
+    elif opts.public_network and (opts.private_network or opts.public_network_ethernet):
+        raise ProvisioningError("Invalid public_network and private_network/public_network_ethernet flags")
+    elif opts.public_network_ethernet and (opts.public_network or opts.private_network):
+        raise ProvisioningError("Invalid public_network_ethernet and public_network/private_network flags")
+
+    # Check if none of the options are set
+    if not opts.private_network and not opts.public_network and not opts.public_network_ethernet:
+        raise ProvisioningError("Invalid private_network, public_network and public_network_ethernet flags")
+
     cwd = os.getcwd()
 
     # Change directory to where the appropriate Vagrantfile lives
@@ -93,17 +105,5 @@ if __name__ == "__main__":
     arg_parameters = sys.argv[1:]
 
     (opts, args) = parser.parse_args(arg_parameters)
-
-    # Check if only one of the options is set, private_network or public_network or public_network_ethernet
-    if opts.private_network and (opts.public_network or opts.public_network_ethernet):
-        raise ProvisioningError("Invalid private_network and public_network/public_network_ethernet flags")
-    elif opts.public_network and (opts.private_network or opts.public_network_ethernet):
-        raise ProvisioningError("Invalid public_network and private_network/public_network_ethernet flags")
-    elif opts.public_network_ethernet and (opts.public_network or opts.private_network):
-        raise ProvisioningError("Invalid public_network_ethernet and public_network/private_network flags")
-
-    # Check if none of the options are set
-    if not opts.private_network and not opts.public_network and not opts.public_network_ethernet:
-        raise ProvisioningError("Invalid private_network, public_network and public_network_ethernet flags")
 
     generate_cluster_configs_from_vagrant(opts.private_network, opts.public_network, opts.public_network_ethernet)
