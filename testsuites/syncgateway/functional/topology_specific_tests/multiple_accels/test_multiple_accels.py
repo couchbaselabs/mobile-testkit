@@ -18,6 +18,7 @@ from keywords import userinfo
 from keywords import document
 from keywords import couchbaseserver
 from keywords.SyncGateway import SyncGateway
+from keywords import exceptions
 
 
 @pytest.mark.topospecific
@@ -555,5 +556,10 @@ def test_detect_stale_channel_index(params_from_base_test_setup, sg_conf):
     # Delete server bucket
     cb_server.delete_bucket(name="data-bucket")
 
-    import pdb
-    pdb.set_trace()
+    # Create server bucket
+    ram_per_bucket_mb = cb_server.get_ram_per_bucket(num_buckets=2)
+    cb_server.create_bucket(name="data-bucket", ram_quota_mb=ram_per_bucket_mb)
+
+    # Start sync_gateway and assert that a Provisioning error is raised due to detecting stale index
+    with pytest.raises(exceptions.ProvisioningError):
+        sg_util.start_sync_gateway(cluster_config=cluster_conf, url=sg_url, config=sg_conf)

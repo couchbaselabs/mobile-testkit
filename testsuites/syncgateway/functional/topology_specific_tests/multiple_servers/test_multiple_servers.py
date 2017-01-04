@@ -14,6 +14,7 @@ from keywords.SyncGateway import sync_gateway_config_path_for_mode
 from keywords import userinfo
 from keywords import couchbaseserver
 
+
 @pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.changes

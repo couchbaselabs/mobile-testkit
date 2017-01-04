@@ -20,6 +20,7 @@ from keywords.utils import log_r
 from keywords.utils import log_info
 from keywords.utils import log_debug
 from keywords.utils import log_error
+from keywords import types
 
 
 def get_server_version(host):
@@ -158,9 +159,9 @@ class CouchbaseServer:
             # All nodes are heathy if it made it to here
             break
 
-    def get_available_ram(self):
+    def _get_total_ram_mb(self):
         """
-        Call the Couchbase REST API to get the total memory available on the machine
+        Call the Couchbase REST API to get the total memory available on the machine. RAM returned is in mb
         """
         resp = self._session.get("{}/pools/default".format(self.url))
         resp.raise_for_status()
@@ -173,28 +174,49 @@ class CouchbaseServer:
             mem_total = node["systemStats"]["mem_total"]
             if mem_total > mem_total_highest:
                 mem_total_highest = mem_total
-        return mem_total_highest
+
+        total_avail_ram_mb = int(mem_total_highest / (1024 * 1024))
+        log_info("total_avail_ram_mb: {}".format(total_avail_ram_mb))
+        return total_avail_ram_mb
+
+    def _get_effective_ram_mb(self):
+        """ Return the amount of effective RAM ((total RAM * muliplier) - n1ql ram allocation)
+        Given a total amount of ram
+        """
+
+        ram_multiplier = 0.80
+        n1ql_indexer_ram_mb = 512
+        total_ram_mb = self._get_total_ram_mb()
+        effective_avail_ram_mb = int(total_ram_mb * ram_multiplier) - n1ql_indexer_ram_mb
+
+        log_info("effective_avail_ram_mb: {}".format(effective_avail_ram_mb))
+        return effective_avail_ram_mb
+
+    def get_ram_per_bucket(self, num_buckets):
+        """ Returns the amount of ram allocated to each bucket for a given number of buckets"""
+
+        effective_ram_mb = self._get_effective_ram_mb()
+        ram_per_bucket_mb = int(effective_ram_mb / num_buckets)
+        return ram_per_bucket_mb
 
     def create_buckets(self, bucket_names):
         """
         # Figure out what total ram available is
         # Divide by number of buckets
         """
+        types.verify_is_list(bucket_names)
+
         if len(bucket_names) == 0:
             return
         log_info("Creating buckets: {}".format(bucket_names))
-        ram_multiplier = 0.80
-        total_avail_ram_bytes = self.get_available_ram()
-        total_avail_ram_mb = int(total_avail_ram_bytes / (1024 * 1024))
-        n1ql_indexer_ram_mb = 512
-        effective_avail_ram_mb = int(total_avail_ram_mb * ram_multiplier) - n1ql_indexer_ram_mb
-        per_bucket_ram_mb = int(effective_avail_ram_mb / len(bucket_names))
-        log_info("total_avail_ram_mb: {} effective_avail_ram_mb: {} effective_avail_ram_mb: {}".format(total_avail_ram_mb, effective_avail_ram_mb, effective_avail_ram_mb))
+
+        # Get the amount of RAM to allocate for each server bucket
+        per_bucket_ram_mb = self.get_ram_per_bucket(len(bucket_names))
+
         for bucket_name in bucket_names:
-            log_info("Create bucket {} with per_bucket_ram_mb {}".format(bucket_name, per_bucket_ram_mb))
             self.create_bucket(bucket_name, per_bucket_ram_mb)
 
-    def create_bucket(self, name, ramQuotaMB=1024):
+    def create_bucket(self, name, ram_quota_mb=1024):
         """
         1. Create CBS bucket via REST
         2. Create client connection and poll until bucket is available
@@ -205,11 +227,11 @@ class CouchbaseServer:
         http://docs.couchbase.com/admin/admin/REST/rest-bucket-create.html
         """
 
-        log_info("Creating bucket {} with RAM {}".format(name, ramQuotaMB))
+        log_info("Creating bucket {} with RAM {}".format(name, ram_quota_mb))
 
         data = {
             "name": name,
-            "ramQuotaMB": str(ramQuotaMB),
+            "ramQuotaMB": str(ram_quota_mb),
             "authType": "sasl",
             "proxyPort": "11211",
             "bucketType": "couchbase",
