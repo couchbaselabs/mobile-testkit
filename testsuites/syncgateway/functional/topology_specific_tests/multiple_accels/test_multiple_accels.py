@@ -503,11 +503,11 @@ def test_missing_num_shards(params_from_base_test_setup, sg_conf):
 ])
 def test_detect_stale_channel_index(params_from_base_test_setup, sg_conf):
     """
-    1. Bring up single Sync Gateway node, backed by Couchbase Server.
+    1. Bring up single Sync Gateway node, backed by Couchbase Server with 3 accels indexing
     2. Configure such that the primary bucket and the channel index bucket are different (which is the norm)
-    3. Add several documents
+    3. Add 1000 documents
     4. Shutdown Sync Gateway
-    5. Flush the primary bucket, but do not touch the channel index bucket
+    5. Delete / create the primary bucket ('data-bucket'), but do not touch the channel index bucket
     6. Start Sync Gateway
     7. Assert that sync_gateway fails to start due to stale channel index
     """
