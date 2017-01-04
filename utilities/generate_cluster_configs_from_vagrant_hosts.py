@@ -25,7 +25,7 @@ def generate_cluster_configs_from_vagrant(private_network, public_network, publi
     elif public_network:
         os.chdir("vagrant/public_network")
     else:
-	os.chdir("vagrant/public_network_ethernet")
+        os.chdir("vagrant/public_network_ethernet")
 
     v = vagrant.Vagrant()
     status = v.status()
@@ -85,7 +85,7 @@ if __name__ == "__main__":
     parser.add_option("", "--public-network",
                       action="store_true", dest="public_network", default=False,
                       help="Use Vagrant public network (Bridged)")
-    
+
     parser.add_option("", "--public-network-ethernet",
                       action="store_true", dest="public_network_ethernet", default=False,
                       help="Use Vagrant public ethernet network (Bridged)")
