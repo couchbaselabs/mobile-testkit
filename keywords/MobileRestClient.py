@@ -473,15 +473,18 @@ class MobileRestClient:
                 time.sleep(1)
 
     def delete_databases(self, url):
-        resp = self._session.get("{}/_all_dbs".format(url))
-        log_r(resp)
-        resp.raise_for_status()
+        """ Delete all the databases for a given url """
 
-        db_list = resp.json()
-        for db in db_list:
+        dbs = self.get_databases(url)
+        for db in dbs:
             resp = self._session.delete("{}/{}".format(url, db))
             log_r(resp)
             resp.raise_for_status()
+
+        # verify dbs are deleted
+        dbs = self.get_databases(url)
+        if len(dbs) != 0:
+            raise keywords.exceptions.LiteServError("Failed to delete dbs!")
 
     def get_rev_generation_digest(self, rev):
         """
