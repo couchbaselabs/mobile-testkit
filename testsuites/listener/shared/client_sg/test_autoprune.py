@@ -1,16 +1,15 @@
 import pytest
-
-from keywords.constants import SYNC_GATEWAY_CONFIGS
+import time
 
 from keywords.utils import log_info
 from keywords.MobileRestClient import MobileRestClient
-from keywords.SyncGateway import SyncGateway
+from keywords.SyncGateway import sync_gateway_config_path_for_mode
+from libraries.testkit import cluster
 
 
 @pytest.mark.sanity
 @pytest.mark.listener
 @pytest.mark.autoprune
-@pytest.mark.usefixtures("setup_client_syncgateway_suite")
 def test_auto_prune_listener_sanity(setup_client_syncgateway_test):
     """Sanity test for the autoprune feature
 
@@ -42,7 +41,6 @@ def test_auto_prune_listener_sanity(setup_client_syncgateway_test):
 @pytest.mark.syncgateway
 @pytest.mark.autoprune
 @pytest.mark.replication
-@pytest.mark.usefixtures("setup_client_syncgateway_suite")
 def test_auto_prune_with_pull(setup_client_syncgateway_test):
     """Sanity test for autopruning with replication
 
@@ -54,16 +52,16 @@ def test_auto_prune_with_pull(setup_client_syncgateway_test):
     """
 
     cluster_config = setup_client_syncgateway_test["cluster_config"]
+    sg_mode = setup_client_syncgateway_test["sg_mode"]
     ls_url = setup_client_syncgateway_test["ls_url"]
     sg_url = setup_client_syncgateway_test["sg_url"]
     sg_admin_url = setup_client_syncgateway_test["sg_admin_url"]
 
     client = MobileRestClient()
-    sg_helper = SyncGateway()
-    sg_helper.start_sync_gateway(
-        cluster_config=cluster_config, url=sg_url,
-        config="{}/walrus.json".format(SYNC_GATEWAY_CONFIGS)
-    )
+
+    sg_config = sync_gateway_config_path_for_mode("listener_tests/listener_tests", sg_mode)
+    c = cluster.Cluster(config=cluster_config)
+    c.reset(sg_config_path=sg_config)
 
     log_info("Running 'test_auto_prune_listener_sanity' ...")
     log_info("ls_url: {}".format(ls_url))
@@ -119,7 +117,6 @@ def test_auto_prune_with_pull(setup_client_syncgateway_test):
 @pytest.mark.syncgateway
 @pytest.mark.autoprune
 @pytest.mark.replication
-@pytest.mark.usefixtures("setup_client_syncgateway_suite")
 def test_auto_prune_listener_keeps_conflicts_sanity(setup_client_syncgateway_test):
     """"
     1. Create db on LiteServ and add docs
@@ -131,17 +128,16 @@ def test_auto_prune_listener_keeps_conflicts_sanity(setup_client_syncgateway_tes
     """
 
     cluster_config = setup_client_syncgateway_test["cluster_config"]
+    sg_mode = setup_client_syncgateway_test["sg_mode"]
     ls_url = setup_client_syncgateway_test["ls_url"]
     sg_url = setup_client_syncgateway_test["sg_url"]
     sg_admin_url = setup_client_syncgateway_test["sg_admin_url"]
 
     client = MobileRestClient()
-    sg_helper = SyncGateway()
-    sg_helper.start_sync_gateway(
-        cluster_config=cluster_config,
-        url=sg_url,
-        config="{}/walrus.json".format(SYNC_GATEWAY_CONFIGS)
-    )
+
+    sg_config = sync_gateway_config_path_for_mode("listener_tests/listener_tests", sg_mode)
+    c = cluster.Cluster(config=cluster_config)
+    c.reset(sg_config_path=sg_config)
 
     log_info("Running 'test_auto_prune_listener_keeps_conflicts_sanity' ...")
     log_info("ls_url: {}".format(ls_url))

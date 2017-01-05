@@ -1,0 +1,17 @@
+{
+    "interface":":4984",
+    "adminInterface": "0.0.0.0:4985",
+    "log": ["CRUD+", "Cache+", "HTTP+", "Changes+"],
+    "databases":{
+        "db":{
+            "server":"http://{{ couchbase_server_primary_node }}:8091",
+            "bucket":"data-bucket",
+            "revs_limit": 100,
+            "sync":
+                `function(doc){
+                  channel(doc.channels);
+                }`
+            }
+        }
+    }
+}

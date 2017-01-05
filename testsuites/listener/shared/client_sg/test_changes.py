@@ -4,10 +4,8 @@ from concurrent.futures import as_completed
 from concurrent.futures import ThreadPoolExecutor
 
 from keywords.utils import log_info
-from keywords.constants import SYNC_GATEWAY_CONFIGS
 from keywords.MobileRestClient import MobileRestClient
 from keywords.ChangesTracker import ChangesTracker
-from keywords.SyncGateway import SyncGateway
 from keywords.constants import Platform
 
 
@@ -15,7 +13,6 @@ from keywords.constants import Platform
 @pytest.mark.listener
 @pytest.mark.syncgateway
 @pytest.mark.changes
-@pytest.mark.usefixtures("setup_client_syncgateway_suite")
 def test_longpoll_changes_termination_timeout(setup_client_syncgateway_test):
     """https://github.com/couchbase/couchbase-lite-java-core/issues/1296
     1. Create 30 longpoll _changes in a loop (with timeout parameter = 5s)
@@ -25,20 +22,10 @@ def test_longpoll_changes_termination_timeout(setup_client_syncgateway_test):
     """
 
     ls_db = "ls_db"
-    cluster_config = setup_client_syncgateway_test["cluster_config"]
-    sg_url = setup_client_syncgateway_test["sg_url"]
     ls_url = setup_client_syncgateway_test["ls_url"]
 
     log_info("Running 'test_longpoll_changes_termination' ...")
     log_info("ls_url: {}".format(ls_url))
-    log_info("sg_url: {}".format(sg_url))
-
-    sg_helper = SyncGateway()
-    sg_helper.start_sync_gateway(
-        cluster_config=cluster_config,
-        url=sg_url,
-        config="{}/walrus.json".format(SYNC_GATEWAY_CONFIGS)
-    )
 
     client = MobileRestClient()
     if client.get_server_platform(ls_url) == Platform.macosx:
@@ -72,7 +59,6 @@ def test_longpoll_changes_termination_timeout(setup_client_syncgateway_test):
 @pytest.mark.listener
 @pytest.mark.syncgateway
 @pytest.mark.changes
-@pytest.mark.usefixtures("setup_client_syncgateway_suite")
 def test_longpoll_changes_termination_heartbeat(setup_client_syncgateway_test):
     """https://github.com/couchbase/couchbase-lite-java-core/issues/1296
     Create 30 longpoll _changes in a loop (with heartbeat parameter = 5s)
@@ -84,20 +70,10 @@ def test_longpoll_changes_termination_heartbeat(setup_client_syncgateway_test):
     log_info("Running 'longpoll_changes_termination' ...")
 
     ls_db = "ls_db"
-    cluster_config = setup_client_syncgateway_test["cluster_config"]
-    sg_url = setup_client_syncgateway_test["sg_url"]
     ls_url = setup_client_syncgateway_test["ls_url"]
 
     log_info("Running 'test_longpoll_changes_termination' ...")
     log_info("ls_url: {}".format(ls_url))
-    log_info("sg_url: {}".format(sg_url))
-
-    sg_helper = SyncGateway()
-    sg_helper.start_sync_gateway(
-        cluster_config=cluster_config,
-        url=sg_url,
-        config="{}/walrus.json".format(SYNC_GATEWAY_CONFIGS)
-    )
 
     client = MobileRestClient()
     if client.get_server_platform(ls_url) == Platform.macosx:

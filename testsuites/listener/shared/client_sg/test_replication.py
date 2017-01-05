@@ -9,16 +9,16 @@ from concurrent.futures import ThreadPoolExecutor
 from requests.exceptions import HTTPError
 
 from keywords.utils import log_info
-from keywords.constants import SYNC_GATEWAY_CONFIGS
 from keywords.MobileRestClient import MobileRestClient
-from keywords.SyncGateway import SyncGateway
+from keywords.SyncGateway import sync_gateway_config_path_for_mode
+
+from libraries.testkit import cluster
 
 
 @pytest.mark.sanity
 @pytest.mark.listener
 @pytest.mark.syncgateway
 @pytest.mark.replication
-@pytest.mark.usefixtures("setup_client_syncgateway_suite")
 @pytest.mark.parametrize("continuous", [
     True,
     False
@@ -37,16 +37,14 @@ def test_initial_pull_replication(setup_client_syncgateway_test, continuous):
     num_docs = 10000
 
     cluster_config = setup_client_syncgateway_test["cluster_config"]
+    sg_mode = setup_client_syncgateway_test["sg_mode"]
     ls_url = setup_client_syncgateway_test["ls_url"]
     sg_one_admin = setup_client_syncgateway_test["sg_admin_url"]
     sg_one_public = setup_client_syncgateway_test["sg_url"]
 
-    sg_helper = SyncGateway()
-    sg_helper.start_sync_gateway(
-        cluster_config=cluster_config,
-        url=sg_one_public,
-        config="{}/walrus.json".format(SYNC_GATEWAY_CONFIGS)
-    )
+    sg_config = sync_gateway_config_path_for_mode("listener_tests/listener_tests", sg_mode)
+    c = cluster.Cluster(config=cluster_config)
+    c.reset(sg_config_path=sg_config)
 
     log_info("Running 'test_initial_pull_replication', continuous: {}".format(continuous))
     log_info("ls_url: {}".format(ls_url))
@@ -116,7 +114,6 @@ def test_initial_pull_replication(setup_client_syncgateway_test, continuous):
 @pytest.mark.listener
 @pytest.mark.syncgateway
 @pytest.mark.replication
-@pytest.mark.usefixtures("setup_client_syncgateway_suite")
 @pytest.mark.parametrize("continuous", [
     True,
     False
@@ -135,16 +132,14 @@ def test_initial_push_replication(setup_client_syncgateway_test, continuous):
     num_docs = 10000
 
     cluster_config = setup_client_syncgateway_test["cluster_config"]
+    sg_mode = setup_client_syncgateway_test["sg_mode"]
     ls_url = setup_client_syncgateway_test["ls_url"]
     sg_one_admin = setup_client_syncgateway_test["sg_admin_url"]
     sg_one_public = setup_client_syncgateway_test["sg_url"]
 
-    sg_helper = SyncGateway()
-    sg_helper.start_sync_gateway(
-        cluster_config=cluster_config,
-        url=sg_one_public,
-        config="{}/walrus.json".format(SYNC_GATEWAY_CONFIGS)
-    )
+    sg_config = sync_gateway_config_path_for_mode("listener_tests/listener_tests", sg_mode)
+    c = cluster.Cluster(config=cluster_config)
+    c.reset(sg_config_path=sg_config)
 
     log_info("Running 'test_initial_push_replication', continuous: {}".format(continuous))
     log_info("ls_url: {}".format(ls_url))
@@ -207,7 +202,6 @@ def test_initial_push_replication(setup_client_syncgateway_test, continuous):
 @pytest.mark.listener
 @pytest.mark.syncgateway
 @pytest.mark.replication
-@pytest.mark.usefixtures("setup_client_syncgateway_suite")
 def test_multiple_replications_not_created_with_same_properties(setup_client_syncgateway_test):
     """Regression test for https://github.com/couchbase/couchbase-lite-android/issues/939
     1. Create LiteServ database and launch sync_gateway with database
@@ -225,16 +219,14 @@ def test_multiple_replications_not_created_with_same_properties(setup_client_syn
     ls_db = "ls_db"
 
     cluster_config = setup_client_syncgateway_test["cluster_config"]
+    sg_mode = setup_client_syncgateway_test["sg_mode"]
     ls_url = setup_client_syncgateway_test["ls_url"]
     sg_one_admin = setup_client_syncgateway_test["sg_admin_url"]
     sg_one_public = setup_client_syncgateway_test["sg_url"]
 
-    sg_helper = SyncGateway()
-    sg_helper.start_sync_gateway(
-        cluster_config=cluster_config,
-        url=sg_one_public,
-        config="{}/walrus.json".format(SYNC_GATEWAY_CONFIGS)
-    )
+    sg_config = sync_gateway_config_path_for_mode("listener_tests/listener_tests", sg_mode)
+    c = cluster.Cluster(config=cluster_config)
+    c.reset(sg_config_path=sg_config)
 
     log_info("Running 'test_multiple_replications_not_created_with_same_properties'")
     log_info("ls_url: {}".format(ls_url))
@@ -347,7 +339,6 @@ def test_multiple_replications_not_created_with_same_properties(setup_client_syn
 @pytest.mark.listener
 @pytest.mark.syncgateway
 @pytest.mark.replication
-@pytest.mark.usefixtures("setup_client_syncgateway_suite")
 def test_multiple_replications_created_with_unique_properties(setup_client_syncgateway_test):
     """Regression test for couchbase/couchbase-lite-java-core#1386
     1. Setup SGW with a remote database name db for an example
@@ -365,16 +356,14 @@ def test_multiple_replications_created_with_unique_properties(setup_client_syncg
     ls_db = "ls_db"
 
     cluster_config = setup_client_syncgateway_test["cluster_config"]
+    sg_mode = setup_client_syncgateway_test["sg_mode"]
     ls_url = setup_client_syncgateway_test["ls_url"]
     sg_one_admin = setup_client_syncgateway_test["sg_admin_url"]
     sg_one_public = setup_client_syncgateway_test["sg_url"]
 
-    sg_helper = SyncGateway()
-    sg_helper.start_sync_gateway(
-        cluster_config=cluster_config,
-        url=sg_one_public,
-        config="{}/walrus.json".format(SYNC_GATEWAY_CONFIGS)
-    )
+    sg_config = sync_gateway_config_path_for_mode("listener_tests/listener_tests", sg_mode)
+    c = cluster.Cluster(config=cluster_config)
+    c.reset(sg_config_path=sg_config)
 
     log_info("Running 'test_multiple_replications_created_with_unique_properties'")
     log_info("ls_url: {}".format(ls_url))
@@ -538,7 +527,6 @@ def test_multiple_replications_created_with_unique_properties(setup_client_syncg
 @pytest.mark.syncgateway
 @pytest.mark.replication
 @pytest.mark.sessions
-@pytest.mark.usefixtures("setup_client_syncgateway_suite")
 def test_replication_with_session_cookie(setup_client_syncgateway_test):
     """Regression test for https://github.com/couchbase/couchbase-lite-android/issues/817
     1. SyncGateway Config with guest disabled = true and One user added (e.g. user1 / 1234)
@@ -555,16 +543,14 @@ def test_replication_with_session_cookie(setup_client_syncgateway_test):
     sg_db = "db"
 
     cluster_config = setup_client_syncgateway_test["cluster_config"]
+    sg_mode = setup_client_syncgateway_test["sg_mode"]
     ls_url = setup_client_syncgateway_test["ls_url"]
     sg_url = setup_client_syncgateway_test["sg_url"]
     sg_admin_url = setup_client_syncgateway_test["sg_admin_url"]
 
-    sg_helper = SyncGateway()
-    sg_helper.start_sync_gateway(
-        cluster_config=cluster_config,
-        url=sg_url,
-        config="{}/walrus-user.json".format(SYNC_GATEWAY_CONFIGS)
-    )
+    sg_config = sync_gateway_config_path_for_mode("listener_tests/listener_tests_user", sg_mode)
+    c = cluster.Cluster(config=cluster_config)
+    c.reset(sg_config_path=sg_config)
 
     log_info("Running 'test_replication_with_session_cookie'")
     log_info("ls_url: {}".format(ls_url))
@@ -732,7 +718,6 @@ def test_replication_with_session_cookie(setup_client_syncgateway_test):
 @pytest.mark.syncgateway
 @pytest.mark.replication
 @pytest.mark.compaction
-@pytest.mark.usefixtures("setup_client_syncgateway_suite")
 def test_client_to_sync_gateway_complex_replication_with_revs_limit(setup_client_syncgateway_test):
     """ Ported from sync_gateway tests repo
     ...  1.  Clear server buckets
@@ -767,16 +752,14 @@ def test_client_to_sync_gateway_complex_replication_with_revs_limit(setup_client
     num_revs = 100
 
     cluster_config = setup_client_syncgateway_test["cluster_config"]
+    sg_mode = setup_client_syncgateway_test["sg_mode"]
     ls_url = setup_client_syncgateway_test["ls_url"]
     sg_url = setup_client_syncgateway_test["sg_url"]
     sg_admin_url = setup_client_syncgateway_test["sg_admin_url"]
 
-    sg_helper = SyncGateway()
-    sg_helper.start_sync_gateway(
-        cluster_config=cluster_config,
-        url=sg_url,
-        config="{}/walrus-revs-limit.json".format(SYNC_GATEWAY_CONFIGS)
-    )
+    sg_config = sync_gateway_config_path_for_mode("listener_tests/listener_tests_revslimit", sg_mode)
+    c = cluster.Cluster(config=cluster_config)
+    c.reset(sg_config_path=sg_config)
 
     log_info("Running 'test_client_to_sync_gateway_complex_replication_with_revs_limit'")
     log_info("ls_url: {}".format(ls_url))
@@ -902,23 +885,20 @@ def test_client_to_sync_gateway_complex_replication_with_revs_limit(setup_client
 @pytest.mark.listener
 @pytest.mark.syncgateway
 @pytest.mark.replication
-@pytest.mark.usefixtures("setup_client_syncgateway_suite")
 def test_replication_with_multiple_client_dbs_and_single_sync_gateway_db(setup_client_syncgateway_test):
     """Test replication from multiple client dbs to one sync_gateway db"""
 
     cluster_config = setup_client_syncgateway_test["cluster_config"]
+    sg_mode = setup_client_syncgateway_test["sg_mode"]
     ls_url = setup_client_syncgateway_test["ls_url"]
     sg_url = setup_client_syncgateway_test["sg_url"]
     sg_admin_url = setup_client_syncgateway_test["sg_admin_url"]
 
     num_docs = 1000
 
-    sg_helper = SyncGateway()
-    sg_helper.start_sync_gateway(
-        cluster_config=cluster_config,
-        url=sg_url,
-        config="{}/walrus.json".format(SYNC_GATEWAY_CONFIGS)
-    )
+    sg_config = sync_gateway_config_path_for_mode("listener_tests/listener_tests", sg_mode)
+    c = cluster.Cluster(config=cluster_config)
+    c.reset(sg_config_path=sg_config)
 
     log_info("Running 'test_replication_with_multiple_client_dbs_and_single_sync_gateway_db'")
     log_info("ls_url: {}".format(ls_url))
@@ -982,7 +962,6 @@ def test_replication_with_multiple_client_dbs_and_single_sync_gateway_db(setup_c
 @pytest.mark.listener
 @pytest.mark.syncgateway
 @pytest.mark.replication
-@pytest.mark.usefixtures("setup_client_syncgateway_suite")
 def test_verify_open_revs_with_revs_limit_push_conflict(setup_client_syncgateway_test):
     """Test replication from multiple client dbs to one sync_gateway db
 
@@ -990,6 +969,7 @@ def test_verify_open_revs_with_revs_limit_push_conflict(setup_client_syncgateway
     """
 
     cluster_config = setup_client_syncgateway_test["cluster_config"]
+    sg_mode = setup_client_syncgateway_test["sg_mode"]
     ls_url = setup_client_syncgateway_test["ls_url"]
     sg_url = setup_client_syncgateway_test["sg_url"]
     sg_admin_url = setup_client_syncgateway_test["sg_admin_url"]
@@ -1000,12 +980,9 @@ def test_verify_open_revs_with_revs_limit_push_conflict(setup_client_syncgateway
     sg_db = "db"
     sg_user_name = "sg_user"
 
-    sg_helper = SyncGateway()
-    sg_helper.start_sync_gateway(
-        cluster_config=cluster_config,
-        url=sg_url,
-        config="{}/walrus.json".format(SYNC_GATEWAY_CONFIGS)
-    )
+    sg_config = sync_gateway_config_path_for_mode("listener_tests/listener_tests", sg_mode)
+    c = cluster.Cluster(config=cluster_config)
+    c.reset(sg_config_path=sg_config)
 
     log_info("Running 'test_verify_open_revs_with_revs_limit_push_conflict'")
     log_info("ls_url: {}".format(ls_url))

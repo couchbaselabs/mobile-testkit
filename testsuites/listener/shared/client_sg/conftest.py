@@ -9,11 +9,14 @@ from keywords.utils import log_info
 from keywords.constants import SYNC_GATEWAY_CONFIGS
 
 from keywords.constants import RESULTS_DIR
+from keywords.constants import CLUSTER_CONFIGS_DIR
 from keywords.LiteServFactory import LiteServFactory
 from keywords.MobileRestClient import MobileRestClient
 from keywords.ClusterKeywords import ClusterKeywords
 from keywords.SyncGateway import SyncGateway
+from keywords.SyncGateway import sync_gateway_config_path_for_mode
 from keywords.Logging import Logging
+from libraries.testkit import cluster
 
 
 # Add custom arguments for executing tests in this directory
@@ -23,7 +26,10 @@ def pytest_addoption(parser):
     parser.addoption("--liteserv-host", action="store", help="liteserv-host: the host to start liteserv on")
     parser.addoption("--liteserv-port", action="store", help="liteserv-port: the port to assign to liteserv")
     parser.addoption("--liteserv-storage-engine", action="store", help="liteserv-storage-engine: the storage engine to use with liteserv")
+    parser.addoption("--skip-provisioning", action="store_true", help="Skip cluster provisioning at setup", default=False)
     parser.addoption("--sync-gateway-version", action="store", help="sync-gateway-version: the version of sync_gateway to run tests against")
+    parser.addoption("--sync-gateway-mode", action="store", help="sync-gateway-mode: the version of sync_gateway to run tests against, channel_cache ('cc') or distributed_index ('di')")
+    parser.addoption("--server-version", action="store", help="server-version: version of Couchbase Server to install and run tests against")
 
 
 # This will get called once before the first test that
@@ -43,7 +49,11 @@ def setup_client_syncgateway_suite(request):
     liteserv_port = request.config.getoption("--liteserv-port")
     liteserv_storage_engine = request.config.getoption("--liteserv-storage-engine")
 
+    skip_provisioning = request.config.getoption("--skip-provisioning")
     sync_gateway_version = request.config.getoption("--sync-gateway-version")
+    sync_gateway_mode = request.config.getoption("--sync-gateway-mode")
+
+    server_version = request.config.getoption("--server-version")
 
     liteserv = LiteServFactory.create(platform=liteserv_platform,
                                       version_build=liteserv_version,
@@ -52,33 +62,34 @@ def setup_client_syncgateway_suite(request):
                                       storage_engine=liteserv_storage_engine)
 
     log_info("Downloading LiteServ ...")
-
     # Download LiteServ
     liteserv.download()
 
     # Install LiteServ
     liteserv.install()
 
-    cluster_helper = ClusterKeywords()
-    cluster_helper.set_cluster_config("1sg")
-    cluster_config = os.environ["CLUSTER_CONFIG"]
+    cluster_config = "{}/base_{}".format(CLUSTER_CONFIGS_DIR, sync_gateway_mode)
+    sg_config = sync_gateway_config_path_for_mode("listener_tests/listener_tests", sync_gateway_mode)
 
-    clean_cluster(cluster_config=cluster_config)
-
-    log_info("Installing sync_gateway")
-    sg_helper = SyncGateway()
-    sg_helper.install_sync_gateway(
-        cluster_config=cluster_config,
-        sync_gateway_version=sync_gateway_version,
-        sync_gateway_config="{}/walrus.json".format(SYNC_GATEWAY_CONFIGS)
-    )
+    if not skip_provisioning:
+        log_info("Installing Sync Gateway + Couchbase Server + Accels ('di' only)")
+        cluster_utils = ClusterKeywords()
+        cluster_utils.provision_cluster(
+            cluster_config=cluster_config,
+            server_version=server_version,
+            sync_gateway_version=sync_gateway_version,
+            sync_gateway_config=sg_config
+        )
 
     # Wait at the yeild until tests referencing this suite setup have run,
     # Then execute the teardown
-    yield liteserv
+    yield {
+        "liteserv": liteserv,
+        "cluster_config": cluster_config,
+        "sg_mode": sync_gateway_mode
+    }
 
     log_info("Tearing down suite ...")
-    cluster_helper.unset_cluster_config()
 
     liteserv.remove()
 
@@ -90,39 +101,36 @@ def setup_client_syncgateway_test(request, setup_client_syncgateway_suite):
 
     log_info("Setting up client sync_gateway test ...")
 
-    liteserv = setup_client_syncgateway_suite
+    liteserv = setup_client_syncgateway_suite["liteserv"]
+    cluster_config = setup_client_syncgateway_suite["cluster_config"]
     test_name = request.node.name
 
+    client = MobileRestClient()
+
+    # Start LiteServ and delete any databases
     ls_url = liteserv.start("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(liteserv).__name__, test_name, datetime.datetime.now()))
+    client.delete_databases(ls_url)
 
     cluster_helper = ClusterKeywords()
-    sg_helper = SyncGateway()
-
-    cluster_hosts = cluster_helper.get_cluster_topology(os.environ["CLUSTER_CONFIG"])
+    cluster_hosts = cluster_helper.get_cluster_topology(cluster_config=cluster_config)
 
     sg_url = cluster_hosts["sync_gateways"][0]["public"]
     sg_admin_url = cluster_hosts["sync_gateways"][0]["admin"]
-    sg_helper.stop_sync_gateway(cluster_config=os.environ["CLUSTER_CONFIG"], url=sg_url)
 
     # Yield values to test case via fixture argument
     yield {
-        "cluster_config": os.environ["CLUSTER_CONFIG"],
+        "cluster_config": cluster_config,
+        "sg_mode": setup_client_syncgateway_suite["sg_mode"],
         "ls_url": ls_url,
         "sg_url": sg_url,
         "sg_admin_url": sg_admin_url
     }
 
     log_info("Tearing down test")
-
-    # Teardown test
-    client = MobileRestClient()
     client.delete_databases(ls_url)
-
     liteserv.stop()
-
-    sg_helper.stop_sync_gateway(cluster_config=os.environ["CLUSTER_CONFIG"], url=sg_url)
 
     # if the test failed pull logs
     if request.node.rep_call.failed:
         logging_helper = Logging()
-        logging_helper.fetch_and_analyze_logs(cluster_config=os.environ["CLUSTER_CONFIG"], test_name=test_name)
+        logging_helper.fetch_and_analyze_logs(cluster_config=cluster_config, test_name=test_name)
