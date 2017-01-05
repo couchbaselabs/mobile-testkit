@@ -3,15 +3,15 @@ import pytest
 from keywords.utils import log_info
 from keywords.MobileRestClient import MobileRestClient
 from keywords import document
-from keywords.SyncGateway import SyncGateway
-from keywords.constants import SYNC_GATEWAY_CONFIGS
+
+from libraries.testkit import cluster
+from keywords.SyncGateway import sync_gateway_config_path_for_mode
 
 
 @pytest.mark.sanity
 @pytest.mark.listener
 @pytest.mark.syncgateway
 @pytest.mark.attachments
-@pytest.mark.usefixtures("setup_client_syncgateway_suite")
 def test_raw_attachment(setup_client_syncgateway_test):
     """
     1.  Add Text attachment to sync_gateway
@@ -61,7 +61,6 @@ def test_raw_attachment(setup_client_syncgateway_test):
 @pytest.mark.listener
 @pytest.mark.syncgateway
 @pytest.mark.attachments
-@pytest.mark.usefixtures("setup_client_syncgateway_suite")
 def test_inline_large_attachments(setup_client_syncgateway_test):
     """
     1.  Start LiteServ and Sync Gateway
@@ -78,9 +77,10 @@ def test_inline_large_attachments(setup_client_syncgateway_test):
 
     log_info("Running 'test_inline_large_attachments' ...")
 
+    cluster_config = setup_client_syncgateway_test["cluster_config"]
+    sg_mode = setup_client_syncgateway_test["sg_mode"]
     sg_url = setup_client_syncgateway_test["sg_url"]
     sg_url_admin = setup_client_syncgateway_test["sg_admin_url"]
-    cluster_config = setup_client_syncgateway_test["cluster_config"]
 
     ls_url = setup_client_syncgateway_test["ls_url"]
 
@@ -92,11 +92,10 @@ def test_inline_large_attachments(setup_client_syncgateway_test):
     ls_db2 = "ls_db2"
     sg_db = "db"
 
-    sg_helper = SyncGateway()
-    sg_helper.start_sync_gateway(
-        cluster_config=cluster_config, url=sg_url,
-        config="{}/walrus.json".format(SYNC_GATEWAY_CONFIGS)
-    )
+    # Reset cluster to ensure no data in system
+    sg_config = sync_gateway_config_path_for_mode("listener_tests/listener_tests", sg_mode)
+    c = cluster.Cluster(config=cluster_config)
+    c.reset(sg_config_path=sg_config)
 
     client = MobileRestClient()
     client.create_database(ls_url, ls_db1)
