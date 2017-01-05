@@ -451,3 +451,41 @@ def test_take_all_sgaccels_down(params_from_base_test_setup, sg_conf):
     log_info("Verifying all the changes show up for 'a_user' ...")
     all_docs = doc_push_result_1 + docs_push_result_2 + doc_push_result_3
     client.verify_docs_in_changes(url=sg_url, db=sg_db, expected_docs=all_docs, auth=a_user_session, polling_interval=2)
+
+
+@pytest.mark.topospecific
+@pytest.mark.sanity
+@pytest.mark.syncgateway
+@pytest.mark.sgaccel
+@pytest.mark.parametrize("sg_conf", [
+    ("{}/missing_num_shards_di.json".format(SYNC_GATEWAY_CONFIGS)),
+])
+def test_missing_num_shards(params_from_base_test_setup, sg_conf):
+    """
+    1. Launch sg_accels missing the following property in the config.
+        "feed_params":{
+            "num_shards":64
+        }
+    2. Verify there are 64 shards
+    3. Verify they are distributed evenly across the nodes
+    """
+
+    cluster_conf = params_from_base_test_setup["cluster_config"]
+
+    log_info("Running 'test_missing_num_shards'")
+    log_info("cluster_conf: {}".format(cluster_conf))
+    log_info("sg_conf: {}".format(sg_conf))
+
+    cluster = Cluster(config=cluster_conf)
+    cluster.reset(sg_config_path=sg_conf)
+
+    # CBGT REST Admin API endpoint
+    admin_api = Admin(cluster.sg_accels[1])
+    cbgt_cfg = admin_api.get_cbgt_config()
+
+    # Verify that default number of pindex shards is 64.
+    # This may change in the future in which case this test will need to be updated.
+    assert cbgt_cfg.num_shards == 64
+
+    # Verify sharding is correct
+    assert cluster.validate_cbgt_pindex_distribution_retry(num_running_sg_accels=3)

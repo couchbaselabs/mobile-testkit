@@ -6,39 +6,22 @@
     "maxFileDescriptors": 90000,
     "slowServerCallWarningThreshold": 500,
     "compressResponses": false,
-    "log": ["CRUD+", "Cache+", "HTTP+", "Changes+", "Replicate"],
+    "log": ["CRUD+", "Cache+", "HTTP+", "Changes+"],
     "cluster_config": {
         "server":"http://{{ couchbase_server_primary_node }}:8091",
         "data_dir":".",
         "bucket":"data-bucket"
     },
     "databases":{
-        "db1":{
+        "db":{
             "feed_type":"DCPSHARD",
-            "feed_params":{
-                "num_shards":64
-            },
             "server":"http://{{ couchbase_server_primary_node }}:8091",
-            "bucket":"data-bucket-1",
+            "bucket":"data-bucket",
             "channel_index":{
                 "server":"http://{{ couchbase_server_primary_node }}:8091",
-                "bucket":"index-bucket-1",
-                "writer":{{ is_index_writer }}
-            }
-        },
-        "db2":{
-            "feed_type":"DCPSHARD",
-            "feed_params":{
-                "num_shards":64
-            },
-            "server":"http://{{ couchbase_server_primary_node }}:8091",
-            "bucket":"data-bucket-2",
-            "channel_index":{
-                "server":"http://{{ couchbase_server_primary_node }}:8091",
-                "bucket":"index-bucket-2",
+                "bucket":"index-bucket",
                 "writer":{{ is_index_writer }}
             }
         }
     }
 }
-

@@ -7,7 +7,7 @@
   "slowServerCallWarningThreshold": 500,
   "compressResponses": false,
   "log": [
-    "*"
+    "CRUD+", "Cache+", "HTTP+", "Changes+", "Replicate"
   ],
   "replications": [
     {
