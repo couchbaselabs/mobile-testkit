@@ -19,7 +19,7 @@
             "bucket":"data-bucket",
             "feed_type":"DCPSHARD",
             "feed_params":{
-                "num_shards":64
+                "num_shards":16
             },
             "channel_index":{
                 "server":"http://{{ couchbase_server_primary_node }}:8091",
