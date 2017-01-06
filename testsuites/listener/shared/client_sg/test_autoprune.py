@@ -168,6 +168,9 @@ def test_auto_prune_listener_keeps_conflicts_sanity(setup_client_syncgateway_tes
     sg_db_docs = client.add_docs(url=sg_url, db=sg_db, number=num_docs, id_prefix="doc", channels=sg_user_channels, auth=sg_session)
     assert len(sg_db_docs) == num_docs
 
+    # Wait for changes to be available on Sync Gateway
+    client.verify_docs_in_changes(url=sg_url, db=sg_db, expected_docs=sg_db_docs, auth=sg_session, polling_interval=1)
+
     # Setup one shot pull replication and wait for idle.
     client.start_replication(
         url=ls_url,
