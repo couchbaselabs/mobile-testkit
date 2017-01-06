@@ -8,10 +8,9 @@
             "bucket":"data-bucket",
             "revs_limit": 100,
             "sync":
-                `function(doc){
-                  channel(doc.channels);
-                }`
-            }
+            `function(doc){
+                channel(doc.channels);
+            }`
         }
     }
 }

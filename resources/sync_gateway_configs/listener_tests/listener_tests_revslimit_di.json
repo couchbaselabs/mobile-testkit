@@ -27,9 +27,9 @@
                 "writer":{{ is_index_writer }}
             },
             "sync":
-                `function(doc){
-                  channel(doc.channels);
-                }`
+            `function(doc){
+              channel(doc.channels);
+            }`
         }
     }
 }
