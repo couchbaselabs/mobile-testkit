@@ -69,7 +69,7 @@ def test_initial_pull_replication(setup_client_syncgateway_test, continuous):
 
     # Add a poll to make sure all of the docs have propagated to sync_gateway's _changes before initiating
     # the one shot pull replication to ensure that the client is aware of all of the docs to pull
-    client.verify_docs_in_changes(url=sg_one_public, db=sg_db, expected_docs=docs, auth=session, polling_interval=1)
+    client.verify_docs_in_changes(url=sg_one_public, db=sg_db, expected_docs=docs, auth=session, polling_interval=10)
 
     client.create_database(url=ls_url, name=ls_db)
 
