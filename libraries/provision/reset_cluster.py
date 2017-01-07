@@ -8,7 +8,7 @@ from libraries.testkit.cluster import Cluster
 
 if __name__ == "__main__":
     usage = """usage: reset_cluster.py
-    --cong=<name-of-conf>
+    --conf=<name-of-conf>
     """
 
     parser = OptionParser(usage=usage)
