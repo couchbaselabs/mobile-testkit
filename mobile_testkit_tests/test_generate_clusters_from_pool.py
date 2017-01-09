@@ -13,6 +13,7 @@ import shutil
 
 from libraries.utilities.generate_clusters_from_pool import generate_clusters_from_pool
 
+
 # Fixture for clearing out the cluster configs
 @pytest.fixture(scope="function")
 def cleanup_folder():
@@ -26,6 +27,7 @@ def cleanup_folder():
         shutil.rmtree(cluster_config_dir)
 
     os.mkdir(cluster_config_dir)
+
 
 @pytest.mark.parametrize("cluster_conf, num_couchbase_servers, num_pool, num_sync_gateways, num_sg_accels, num_load_generators, num_load_balancers", [
     ("1cbs", 1, 6, 0, 0, 0, 0), ("1sg_1ac_1cbs_1lgs", 1, 6, 1, 1, 1, 0), ("2sg_1cbs_1lgs", 1, 6, 2, 0, 1, 0),
@@ -42,7 +44,7 @@ def test_generate_clusters_from_pool_ips(cleanup_folder, cluster_conf, num_couch
 
     # Verification
     # mock_pool_ips.json will generate 22 files ansible+json
-    assert len([name for name in os.listdir(cluster_config_dir)])== 30
+    assert len([name for name in os.listdir(cluster_config_dir)]) == 30
 
     # We will check 2 files for content 1cbs/1cbs.json
     config = configparser.ConfigParser()
@@ -74,6 +76,7 @@ def test_generate_clusters_from_pool_ips(cleanup_folder, cluster_conf, num_couch
     assert len(data["load_generators"]) == num_load_generators
     assert len(data["load_balancers"]) == num_load_balancers
 
+
 @pytest.mark.parametrize("cluster_conf, num_couchbase_servers, num_pool, num_sync_gateways, num_sg_accels, num_load_generators, num_load_balancers", [
     ("1cbs", 1, 6, 0, 0, 0, 0), ("1sg_1ac_1cbs_1lgs", 1, 6, 1, 1, 1, 0), ("2sg_1cbs_1lgs", 1, 6, 2, 0, 1, 0),
 ])
@@ -89,7 +92,7 @@ def test_generate_clusters_from_pool_ip_to_node(cleanup_folder, cluster_conf, nu
 
     # Verification
     # mock_pool_ip_to_node_type.json will generate 18 files ansible+json
-    assert len([name for name in os.listdir(cluster_config_dir)])== 20
+    assert len([name for name in os.listdir(cluster_config_dir)]) == 20
 
     # We will check 2 files for content 1cbs/1cbs.json
     config = configparser.ConfigParser()
