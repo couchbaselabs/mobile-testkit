@@ -44,8 +44,7 @@ def write_config(config, pool_file):
 
     # Check for number of IPs versus number of IPs in ip_to_node_type
     if ip_to_node_type and len(ip_to_node_type) != len(ips):
-        log_error("Number of IPs in resources/pool:ips and ip_to_node_type do not match. Exiting ...")
-        sys.exit(1)
+        raise Exception("Number of IPs in resources/pool:ips and ip_to_node_type do not match. Exiting ...")
 
     log_info("\nGenerating config: {}".format(config.name))
 
