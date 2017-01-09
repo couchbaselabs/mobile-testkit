@@ -340,7 +340,7 @@ def get_ips(pool_file="resources/pool.json"):
         ips = pool_dict["ips"]
         ip_to_node_type = []
 
-        if "ip_to_node_type" in pool_dict.keys():
+        if "ip_to_node_type" in pool_dict:
             ip_to_node_type = pool_dict["ip_to_node_type"]
 
     # Make sure there are no duplicate endpoints
