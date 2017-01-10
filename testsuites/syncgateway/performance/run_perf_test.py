@@ -20,7 +20,7 @@ from libraries.utilities.fetch_sync_gateway_profile import fetch_sync_gateway_pr
 from libraries.utilities.push_cbcollect_info_supportal import push_cbcollect_info_supportal
 
 
-def run_perf_test(number_pullers, number_pushers, use_gateload, gen_gateload_config,
+def run_perf_test(number_pullers, number_pushers, gen_gateload_config,
                   test_id, sync_gateway_config_path, reset_sync_gateway, doc_size, runtime_ms, rampup_interval_ms):
 
     try:
@@ -46,6 +46,7 @@ def run_perf_test(number_pullers, number_pushers, use_gateload, gen_gateload_con
     if sync_gateway_config_path is None or len(sync_gateway_config_path) == 0:
         raise Exception("Missing Sync Gateway config file path")
     cluster = Cluster(config=cluster_config)
+
     if reset_sync_gateway:
         mode = cluster.reset(sync_gateway_config_path)
         print("Running in mode: {}".format(mode))
@@ -53,55 +54,37 @@ def run_perf_test(number_pullers, number_pushers, use_gateload, gen_gateload_con
     # Copy provisioning_config to performance_results/ folder
     shutil.copy("{}".format(cluster_config), "testsuites/syncgateway/performance/results/{}".format(test_run_id))
 
-    if use_gateload:
-        print("Using Gateload")
+    if int(number_pullers) > 0 and not gen_gateload_config:
+        raise Exception("You specified --num-pullers but did not set --gen-gateload-config")
 
-        if int(number_pullers) > 0 and not gen_gateload_config:
-            raise Exception("You specified --num-pullers but did not set --gen-gateload-config")
+    # Build gateload
+    print(">>> Building gateload")
+    status = ansible_runner.run_ansible_playbook(
+        "build-gateload.yml",
+        extra_vars={},
+    )
+    assert status == 0, "Could not build gateload"
 
-        # Build gateload
-        print(">>> Building gateload")
-        status = ansible_runner.run_ansible_playbook(
-            "build-gateload.yml",
-            extra_vars={},
+    # Generate gateload config
+    print(">>> Generate gateload configs")
+    if gen_gateload_config:
+        generate_gateload_configs.main(
+            cluster_config,
+            number_pullers,
+            number_pushers,
+            test_run_id,
+            doc_size,
+            runtime_ms,
+            rampup_interval_ms
         )
-        assert status == 0, "Could not build gateload"
 
-        # Generate gateload config
-        print(">>> Generate gateload configs")
-        if gen_gateload_config:
-            generate_gateload_configs.main(
-                cluster_config,
-                number_pullers,
-                number_pushers,
-                test_run_id,
-                doc_size,
-                runtime_ms,
-                rampup_interval_ms
-            )
-
-        # Start gateload
-        print(">>> Starting gateload with {0} pullers and {1} pushers".format(number_pullers, number_pushers))
-        status = ansible_runner.run_ansible_playbook(
-            "start-gateload.yml",
-            extra_vars={},
-        )
-        assert status == 0, "Could not start gateload"
-
-    else:
-        print("Using Gatling")
-        print(">>> Starting gatling with {0} pullers and {1} pushers".format(number_pullers, number_pushers))
-
-        # Configure gatling
-        subprocess.call(["ansible-playbook", "-i", "{}".format(cluster_config), "configure-gatling.yml"])
-
-        # Run Gatling
-        subprocess.call([
-            "ansible-playbook",
-            "-i", "{}".format(cluster_config),
-            "run-gatling-theme.yml",
-            "--extra-vars", "number_of_pullers={0} number_of_pushers={1}".format(number_pullers, number_pushers)
-        ])
+    # Start gateload
+    print(">>> Starting gateload with {0} pullers and {1} pushers".format(number_pullers, number_pushers))
+    status = ansible_runner.run_ansible_playbook(
+        "start-gateload.yml",
+        extra_vars={},
+    )
+    assert status == 0, "Could not start gateload"
 
     # write expvars to file, will exit when gateload scenario is done
     print(">>> Logging expvars")
@@ -144,7 +127,6 @@ if __name__ == "__main__":
     --number-pullers=<number_pullers>
     --number-pushers<number_pushers>
     --reset-sync-gw
-    --use-gateload
     --gen-gateload-config
     --cb-collect-info
     --test-id
@@ -162,10 +144,6 @@ if __name__ == "__main__":
     parser.add_option("", "--number-pushers",
                       action="store", type="int", dest="number_pushers", default=5000,
                       help="number of pushers")
-
-    parser.add_option("", "--use-gateload",
-                      action="store_true", dest="use_gateload", default=True,
-                      help="flag to set to use gateload")
 
     parser.add_option("", "--gen-gateload-config",
                       action="store_true", dest="gen_gateload_config", default=True,
@@ -216,7 +194,6 @@ if __name__ == "__main__":
     run_perf_test(
         number_pullers=opts.number_pullers,
         number_pushers=opts.number_pushers,
-        use_gateload=opts.use_gateload,
         gen_gateload_config=opts.gen_gateload_config,
         test_id=opts.test_id,
         sync_gateway_config_path=opts.sync_gateway_config_path,
