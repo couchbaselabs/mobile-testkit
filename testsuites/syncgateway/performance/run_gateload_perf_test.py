@@ -20,7 +20,7 @@ from libraries.utilities.fetch_sync_gateway_profile import fetch_sync_gateway_pr
 from libraries.utilities.push_cbcollect_info_supportal import push_cbcollect_info_supportal
 
 
-def run_perf_test(number_pullers, number_pushers, gen_gateload_config,
+def run_gateload_perf_test(number_pullers, number_pushers, gen_gateload_config,
                   test_id, doc_size, runtime_ms, rampup_interval_ms):
 
     try:
@@ -109,10 +109,6 @@ if __name__ == "__main__":
                       action="store_true", dest="gen_gateload_config", default=True,
                       help="flag to set to generate gateload config")
 
-    parser.add_option("", "--reset-sync-gw",
-                      action="store_true", dest="reset_sync_gateway", default=False,
-                      help="reset CBS buckets, delete SG logs, restart SG")
-
     parser.add_option("", "--cb-collect-info",
                       action="store_true", dest="cb_collect_info", default=False,
                       help="calls cbcollect_info and pushes to http://supportal.couchbase.com/customer/mobileperf/")
@@ -120,12 +116,6 @@ if __name__ == "__main__":
     parser.add_option("", "--test-id",
                       action="store", dest="test_id", default=None,
                       help="test identifier to identify results of performance test")
-
-    parser.add_option("", "--sync-gateway-config-path",
-                      action="store",
-                      dest="sync_gateway_config_path",
-                      default="resources/sync_gateway_configs/performance/sync_gateway_default_performance.json",
-                      help="Path to sync gateway config file to use")
 
     parser.add_option("", "--doc-size",
                       action="store", dest="doc_size",
@@ -151,13 +141,11 @@ if __name__ == "__main__":
         sys.exit(1)
 
     # Start load generator
-    run_perf_test(
+    run_gateload_perf_test(
         number_pullers=opts.number_pullers,
         number_pushers=opts.number_pushers,
         gen_gateload_config=opts.gen_gateload_config,
         test_id=opts.test_id,
-        sync_gateway_config_path=opts.sync_gateway_config_path,
-        reset_sync_gateway=opts.reset_sync_gateway,
         doc_size=opts.doc_size,
         runtime_ms=opts.runtime_ms,
         rampup_interval_ms=opts.rampup_interval_ms,
