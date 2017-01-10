@@ -36,6 +36,7 @@ def install_gh_deploy_keys(key_path, user_name):
         # Example: scp ~/tmp/cbmobile_private_repo_read_only vagrant@$TARGET:/tmp
         subprocess.check_output([
             "scp",
+            "-o StrictHostKeyChecking=no",
             "{}".format(key_path),
             "{}@{}:/tmp".format(user_name, ip)
         ])
@@ -45,40 +46,42 @@ def install_gh_deploy_keys(key_path, user_name):
         # See http://stackoverflow.com/questions/7114990/pseudo-terminal-will-not-be-allocated-because-stdin-is-not-a-terminal
         # Example: ssh vagrant@$TARGET "sudo mkdir /root/.ssh"
         subprocess.check_output([
-            "ssh", "-tt", "{}@{}".format(
-                user_name,
-                ip,
-            ), "sudo mkdir -p /root/.ssh"
+            "ssh",
+            "-o StrictHostKeyChecking=no",
+            "-tt",
+            "{}@{}".format(user_name, ip),
+            "sudo mkdir -p /root/.ssh"
         ])
 
         # Copy from the /tmp directory to the destination (/root/.ssh/id_rsa)
         # Example: ssh vagrant@$TARGET "sudo cp /tmp/cbmobile_private_repo_read_only /root/.ssh/id_rsa"
         key_filename = os.path.basename(key_path)
         subprocess.check_output([
-            "ssh", "-tt", "{}@{}".format(
-                user_name,
-                ip,
-            ), "sudo cp /tmp/{} /root/.ssh/id_rsa".format(
-                key_filename,
-            )
+            "ssh",
+            "-o StrictHostKeyChecking=no",
+            "-tt",
+            "{}@{}".format(user_name, ip),
+            "sudo cp /tmp/{} /root/.ssh/id_rsa".format(key_filename)
         ])
 
         # Chmod the id_rsa key to avoid the permissions are too open error
         # Example: ssh vagrant@$TARGET "sudo chmod /root/.ssh/id_rsa"
         subprocess.check_output([
-            "ssh", "-tt", "{}@{}".format(
-                user_name,
-                ip,
-            ), "sudo chmod 400 /root/.ssh/id_rsa"
+            "ssh",
+            "-o StrictHostKeyChecking=no",
+            "-tt",
+            "{}@{}".format(user_name, ip),
+            "sudo chmod 400 /root/.ssh/id_rsa"
         ])
 
         # Add the github.com public key to /root/.ssh/known_hosts
         # Example: ssh vagrant@$TARGET "sudo ssh-keyscan -t rsa github.com | sudo tee /root/.ssh/known_hosts"
         subprocess.check_output([
-            "ssh", "-tt", "{}@{}".format(
-                user_name,
-                ip,
-            ), "sudo ssh-keyscan -t rsa github.com | sudo tee /root/.ssh/known_hosts"
+            "ssh",
+            "-o StrictHostKeyChecking=no",
+            "-tt",
+            "{}@{}".format(user_name, ip),
+            "sudo ssh-keyscan -t rsa github.com | sudo tee /root/.ssh/known_hosts"
         ])
 
 
@@ -114,4 +117,4 @@ if __name__ == "__main__":
 
     install_gh_deploy_keys(opts.key_path, opts.ssh_user)
 
-    print "Successful!"
+    print("Successful!")
