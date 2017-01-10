@@ -10,7 +10,7 @@
 - hosts: load_balancers
   vars:
      grafana_db: "{{ lookup('env','GRAFANA_DB') }}"
-     grafana_http_url: "{{ lookup('env','GRAFANA_HTTP_URL') }}"
+     influx_url: "{{ lookup('env','INFLUX_URL') }}"
   any_errors_fatal: true
   become: yes
   tasks:
@@ -20,7 +20,7 @@
 - hosts: load_generators
   vars:
      grafana_db: "{{ lookup('env','GRAFANA_DB') }}"
-     grafana_http_url: "{{ lookup('env','GRAFANA_HTTP_URL') }}"
+     influx_url: "{{ lookup('env','INFLUX_URL') }}"
   any_errors_fatal: true
   become: yes
   tasks:
@@ -30,7 +30,7 @@
 - hosts: sync_gateways
   vars:
      grafana_db: "{{ lookup('env','GRAFANA_DB') }}"
-     grafana_http_url: "{{ lookup('env','GRAFANA_HTTP_URL') }}"
+     influx_url: "{{ lookup('env','INFLUX_URL') }}"
   any_errors_fatal: true
   become: yes
   tasks:
@@ -43,7 +43,7 @@
 - hosts: sg_accels
   vars:
      grafana_db: "{{ lookup('env','GRAFANA_DB') }}"
-     grafana_http_url: "{{ lookup('env','GRAFANA_HTTP_URL') }}"
+     influx_url: "{{ lookup('env','INFLUX_URL') }}"
   any_errors_fatal: true
   become: yes
   tasks:
@@ -56,7 +56,7 @@
 - hosts: couchbase_servers
   vars:
      grafana_db: "{{ lookup('env','GRAFANA_DB') }}"
-     grafana_http_url: "{{ lookup('env','GRAFANA_HTTP_URL') }}"
+     influx_url: "{{ lookup('env','INFLUX_URL') }}"
   any_errors_fatal: true
   become: true
   tasks:
