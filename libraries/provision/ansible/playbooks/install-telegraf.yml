@@ -63,7 +63,7 @@
    - name: Configure telegraf for couchbase_servers
      template: src=files/telegraf-couchbase-server.conf dest=/etc/telegraf/telegraf.conf owner=root group=root mode=0644
 
-- hosts: load_generators:load_balancers:sync_gateways:couchbase_servers
+- hosts: load_generators:load_balancers:sync_gateways:couchbase_servers:sg_accels
   any_errors_fatal: true
   become: true
   tasks:

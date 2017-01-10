@@ -20,8 +20,13 @@ from libraries.utilities.fetch_sync_gateway_profile import fetch_sync_gateway_pr
 from libraries.utilities.push_cbcollect_info_supportal import push_cbcollect_info_supportal
 
 
-def run_gateload_perf_test(number_pullers, number_pushers, gen_gateload_config,
-                  test_id, doc_size, runtime_ms, rampup_interval_ms):
+def run_gateload_perf_test(number_pullers,
+                           number_pushers,
+                           gen_gateload_config,
+                           test_id,
+                           doc_size,
+                           runtime_ms,
+                           rampup_interval_ms):
 
     try:
         cluster_config = os.environ["CLUSTER_CONFIG"]
