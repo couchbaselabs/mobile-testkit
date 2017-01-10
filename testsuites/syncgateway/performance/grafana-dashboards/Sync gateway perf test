@@ -1332,7 +1332,7 @@
               "show": false
             }
           ],
-          "repeatIteration": 1484090153107,
+          "repeatIteration": 1484091255568,
           "repeatPanelId": 2
         }
       ],
@@ -1931,8 +1931,7 @@
       {
         "current": {
           "text": "jenkins-sync-gateway-perf-test-250",
-          "value": "jenkins-sync-gateway-perf-test-250",
-          "selected": false
+          "value": "jenkins-sync-gateway-perf-test-250"
         },
         "datasource": null,
         "hide": 0,
@@ -2020,6 +2019,11 @@
             "text": "jenkins-sync-gateway-perf-test-250",
             "value": "jenkins-sync-gateway-perf-test-250",
             "selected": true
+          },
+          {
+            "text": "jenkins-sync-gateway-perf-test-251",
+            "value": "jenkins-sync-gateway-perf-test-251",
+            "selected": false
           }
         ],
         "query": "influxdb",
@@ -2091,7 +2095,7 @@
         "datasource": "$perftestrundbs",
         "hide": 0,
         "includeAll": true,
-        "label": "Cocuhbase Server Hosts",
+        "label": "Couchbase Server Hosts",
         "multi": true,
         "name": "cb_host",
         "options": [
@@ -2129,7 +2133,7 @@
         "datasource": "$perftestrundbs",
         "hide": 0,
         "includeAll": true,
-        "label": "Load Generatorr Hosts",
+        "label": "Load Generator Hosts",
         "multi": true,
         "name": "lg_host",
         "options": [
@@ -2161,7 +2165,7 @@
   },
   "refresh": false,
   "schemaVersion": 12,
-  "version": 9,
+  "version": 14,
   "links": [],
   "gnetId": null
 }
