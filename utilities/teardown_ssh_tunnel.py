@@ -23,7 +23,7 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--remote-hosts-file')
-    args = parser.parse_known_args()
+    args = parser.parse_args()
 
     # TODO: Validate args
 

@@ -32,7 +32,7 @@ if __name__ == "__main__":
     parser.add_argument('--remote-hosts-user')
     parser.add_argument('--remote-hosts-file')
     parser.add_argument('--remote-host-port')
-    args = parser.parse_known_args()
+    args = parser.parse_args()
 
     # TODO: Validate args
 
