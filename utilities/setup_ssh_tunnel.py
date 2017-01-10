@@ -39,14 +39,14 @@ if __name__ == "__main__":
     # Load hosts file as array
     with open(args.remote_hosts_file) as f:
         pools = json.load(f)
-        remote_hosts = pools['ips']
-        print('Setting up ssh tunneling for {} ... '.format(remote_hosts))
+        remote_hosts_list = pools['ips']
+        print('Setting up ssh tunneling for {} ... '.format(remote_hosts_list))
 
     setup_tunnel(
         target_host=args.target_host,
         target_port=args.target_port,
         remote_hosts_user=args.remote_hosts_user,
-        remote_hosts=remote_hosts,
+        remote_hosts=remote_hosts_list,
         remote_host_port=args.remote_host_port
     )
 
