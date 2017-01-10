@@ -5,7 +5,7 @@ import json
 
 def setup_tunnel(target_host, target_port, remote_hosts_user, remote_hosts, remote_host_port):
     for remote_host in remote_hosts:
-        output = subprocess.check_output([
+        proc = subprocess.Popen([
             'ssh',
             '{}@{}'.format(remote_hosts_user, remote_host),
             '-R',
@@ -13,7 +13,7 @@ def setup_tunnel(target_host, target_port, remote_hosts_user, remote_hosts, remo
             '-N',
             '-f'
         ])
-        print(output)
+        print("Running ssh tunnel with process id: {}".format(proc.pid))
 
 
 if __name__ == "__main__":
