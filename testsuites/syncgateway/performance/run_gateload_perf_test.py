@@ -21,7 +21,7 @@ from libraries.utilities.push_cbcollect_info_supportal import push_cbcollect_inf
 
 
 def run_perf_test(number_pullers, number_pushers, gen_gateload_config,
-                  test_id, sync_gateway_config_path, reset_sync_gateway, doc_size, runtime_ms, rampup_interval_ms):
+                  test_id, doc_size, runtime_ms, rampup_interval_ms):
 
     try:
         cluster_config = os.environ["CLUSTER_CONFIG"]
@@ -41,15 +41,6 @@ def run_perf_test(number_pullers, number_pushers, gen_gateload_config,
 
     # Create test results directory
     os.makedirs("testsuites/syncgateway/performance/results/{}".format(test_run_id))
-
-    print("Resetting Sync Gateway")
-    if sync_gateway_config_path is None or len(sync_gateway_config_path) == 0:
-        raise Exception("Missing Sync Gateway config file path")
-    cluster = Cluster(config=cluster_config)
-
-    if reset_sync_gateway:
-        mode = cluster.reset(sync_gateway_config_path)
-        print("Running in mode: {}".format(mode))
 
     # Copy provisioning_config to performance_results/ folder
     shutil.copy("{}".format(cluster_config), "testsuites/syncgateway/performance/results/{}".format(test_run_id))
@@ -89,37 +80,6 @@ def run_perf_test(number_pullers, number_pushers, gen_gateload_config,
     # write expvars to file, will exit when gateload scenario is done
     print(">>> Logging expvars")
     log_expvars(cluster_config, test_run_id)
-
-    # Killing sync_gateway and sg_accel will trigger collection of
-    #    1) machine_stats
-    #    2) sync_gateway profile data
-    print(">>> Stopping Sync Gateway")
-    stop_sync_gateway_status = ansible_runner.run_ansible_playbook("stop-sync-gateway.yml")
-    assert stop_sync_gateway_status == 0, "Failed to stop sync_gateway"
-
-    print(">>> Stopping SG Accel")
-    stop_sg_accel_status = ansible_runner.run_ansible_playbook("stop-sg-accel.yml")
-    assert stop_sg_accel_status == 0, "Failed to stop sg_accel"
-
-    # HACK: refresh interval for resource stat collection is 10 seconds.
-    #  Make sure enough time has passed before collecting json
-    print(">>> Sleep for 1 minute before collecting machine stats")
-    time.sleep(61)
-
-    print(">>> Fetch machine stats")
-    fetch_machine_stats(cluster_config, test_run_id)
-
-    # Fetch profile for sync_gateway while the endpoints are still running
-    print(">>> Fetch Sync Gateway profile")
-    fetch_sync_gateway_profile(cluster_config, test_run_id)
-
-    # Copy sync_gateway logs to test results directory
-    print(">>> Fetch Sync Gateway logs")
-    fetch_sync_gateway_logs(cluster_config, test_run_id)
-
-    # Invoke cb-collect-info and push to support portal
-    print(">>> Invoke cbcollect info and push to support portal")
-    push_cbcollect_info_supportal(cluster_config)
 
 
 if __name__ == "__main__":
