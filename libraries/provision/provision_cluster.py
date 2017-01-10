@@ -13,6 +13,7 @@ from install_nginx import install_nginx
 from libraries.provision.install_deps import install_deps
 
 from keywords.utils import log_info
+from keywords.utils import version_and_build
 
 
 def provision_cluster(cluster_config, couchbase_server_config, sync_gateway_config):
@@ -122,12 +123,7 @@ if __name__ == "__main__":
     sync_gateway_build = None
 
     if opts.sync_gateway_version is not None:
-        version_build = opts.sync_gateway_version.split("-")
-        if len(version_build) != 2:
-            print("Make sure the sync_gateway version follows pattern: 1.2.3-456")
-            sys.exit(1)
-        sync_gateway_version = version_build[0]
-        sync_gateway_build = version_build[1]
+        sync_gateway_version, sync_gateway_build = version_and_build(opts.sync_gateway_version)
 
     if opts.install_deps_flag:
         install_deps(cluster_conf)

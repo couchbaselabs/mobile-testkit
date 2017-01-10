@@ -91,6 +91,36 @@ def add_sync_gateway_url(sgload_arg_list, sg_host):
     return sgload_arg_list_copy
 
 
+def run_sgload_perf_test(cluster_config, sgload_arg_list_main, skip_build_sgload):
+
+    print("Running sgload perf test against cluster: {}".format(cluster_config))
+    main_ansible_runner = AnsibleRunner(cluster_config)
+
+    # Install + configure telegraf
+    status = main_ansible_runner.run_ansible_playbook("install-telegraf.yml")
+    if status != 0:
+        raise ProvisioningError("Failed to install telegraf")
+
+    # build_sgload (ansible)
+    if not skip_build_sgload:
+        build_sgload(main_ansible_runner)
+
+    # get load generator and sg hostnames
+    lg_hosts_main = get_load_generators_hosts(cluster_config)
+    sg_hosts_main = get_sync_gateways_hosts(cluster_config)
+
+    # Get the first SG host from the list of SG hosts
+    sg_host_main = sg_hosts_main[0]
+
+    run_sgload_on_single_loadgenerator(
+        lg_hosts_main,
+        sgload_arg_list_main,
+        sg_host_main
+    )
+
+    log_info("Finished")
+
+
 if __name__ == "__main__":
 
     # There is some complex argument parsing going on in order to be able to capture
@@ -112,29 +142,8 @@ if __name__ == "__main__":
         print ("Make sure CLUSTER_CONFIG is defined and pointing to the configuration you would like to provision")
         sys.exit(1)
 
-    print("Running sgload perf test against cluster: {}".format(main_cluster_config))
-    main_ansible_runner = AnsibleRunner(main_cluster_config)
-
-    # Install + configure telegraf
-    status = main_ansible_runner.run_ansible_playbook("install-telegraf.yml")
-    if status != 0:
-        raise ProvisioningError("Failed to install telegraf")
-
-    # build_sgload (ansible)
-    if not known_args.skip_build_sgload:
-        build_sgload(main_ansible_runner)
-
-    # get load generator and sg hostnames
-    lg_hosts_main = get_load_generators_hosts(main_cluster_config)
-    sg_hosts_main = get_sync_gateways_hosts(main_cluster_config)
-
-    # Get the first SG host from the list of SG hosts
-    sg_host_main = sg_hosts_main[0]
-
-    run_sgload_on_single_loadgenerator(
-        lg_hosts_main,
+    run_sgload_perf_test(
+        main_cluster_config,
         sgload_arg_list_main,
-        sg_host_main
+        known_args.skip_build_sgload,
     )
-
-    log_info("Finished")
