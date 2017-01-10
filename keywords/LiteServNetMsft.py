@@ -52,6 +52,12 @@ class LiteServNetMsft(LiteServBase):
         2. Extracts the package and removes the zip
         """
 
+        # Skip download if packages is already downloaded
+        expected_binary = "couchbase-lite-net-msft-{}-liteserv/net45/LiteServ.exe".format(self.version_build)
+        if os.path.isfile(expected_binary):
+            log_info("Package already downloaded: {}".format(expected_binary))
+            return
+
         version, build = version_and_build(self.version_build)
         download_url = "{}/couchbase-lite-net/{}/{}/LiteServ.zip".format(LATEST_BUILDS, version, build)
         package_name = "couchbase-lite-net-msft-{}-liteserv".format(self.version_build)
@@ -70,7 +76,7 @@ class LiteServNetMsft(LiteServBase):
         Installs needed packages on Windows host and removes any existing service wrappers for LiteServ
         """
 
-        directory_path = "couchbase-lite-net-msft-{}-liteserv/LiteServ.exe".format(self.version_build)
+        directory_path = "couchbase-lite-net-msft-{}-liteserv/net45/LiteServ.exe".format(self.version_build)
         status = self.ansible_runner.run_ansible_playbook("install-liteserv-windows.yml", extra_vars={
             "directory_path": directory_path
         })
