@@ -353,12 +353,9 @@ def get_ips(pool_file="resources/pool.json"):
 def generate_clusters_from_pool(pool_file):
 
     cluster_confs = [
-        ClusterDef("1sg", num_sgs=1, num_acs=0, num_cbs=0, num_lgs=0, num_lbs=0),
-        ClusterDef("2sgs", num_sgs=2, num_acs=0, num_cbs=0, num_lgs=0, num_lbs=0),
-        ClusterDef("1cbs", num_sgs=0, num_acs=0, num_cbs=1, num_lgs=0, num_lbs=0),
+
         ClusterDef("base_cc", num_sgs=1, num_acs=0, num_cbs=1, num_lgs=0, num_lbs=0),
         ClusterDef("base_di", num_sgs=1, num_acs=1, num_cbs=1, num_lgs=0, num_lbs=0),
-        ClusterDef("1sg_1ac_1cbs_1lgs", num_sgs=1, num_acs=1, num_cbs=1, num_lgs=1, num_lbs=0),
         ClusterDef("multiple_servers_cc", num_sgs=1, num_acs=0, num_cbs=3, num_lgs=0, num_lbs=0),
         ClusterDef("multiple_servers_di", num_sgs=1, num_acs=1, num_cbs=3, num_lgs=0, num_lbs=0),
         ClusterDef("multiple_sg_accels_di", num_sgs=1, num_acs=3, num_cbs=1, num_lgs=0, num_lbs=0),
@@ -366,11 +363,27 @@ def generate_clusters_from_pool(pool_file):
         ClusterDef("multiple_sync_gateways_di", num_sgs=2, num_acs=1, num_cbs=1, num_lgs=0, num_lbs=0),
         ClusterDef("load_balancer_cc", num_sgs=2, num_acs=0, num_cbs=1, num_lgs=0, num_lbs=1),
         ClusterDef("load_balancer_di", num_sgs=2, num_acs=1, num_cbs=1, num_lgs=0, num_lbs=1),
+        ClusterDef("1sg", num_sgs=1, num_acs=0, num_cbs=0, num_lgs=0, num_lbs=0),
+        ClusterDef("2sgs", num_sgs=2, num_acs=0, num_cbs=0, num_lgs=0, num_lbs=0),
+        ClusterDef("1cbs", num_sgs=0, num_acs=0, num_cbs=1, num_lgs=0, num_lbs=0),
         ClusterDef("2sg_1cbs_1lgs", num_sgs=2, num_acs=0, num_cbs=1, num_lgs=1, num_lbs=0),
         ClusterDef("1sg_1cbs_1lgs", num_sgs=1, num_acs=0, num_cbs=1, num_lgs=1, num_lbs=0),
         ClusterDef("2sg_3cbs_2lgs", num_sgs=2, num_acs=0, num_cbs=3, num_lgs=2, num_lbs=0),
-        ClusterDef("2sg_2ac_3cbs_2lgs", num_sgs=2, num_acs=2, num_cbs=3, num_lgs=2, num_lbs=0),
+        ClusterDef("1sg_1ac_1cbs_1lgs", num_sgs=1, num_acs=1, num_cbs=1, num_lgs=1, num_lbs=0),
         ClusterDef("2sg_2ac_3cbs_1lgs", num_sgs=2, num_acs=2, num_cbs=3, num_lgs=1, num_lbs=0),
+        ClusterDef("2sg_2ac_3cbs_2lgs", num_sgs=2, num_acs=2, num_cbs=3, num_lgs=2, num_lbs=0),
+        # Perf Mini Matrix
+        ClusterDef("1sg_1ac_3cbs_1lgs", num_sgs=1, num_acs=1, num_cbs=3, num_lgs=1, num_lbs=0),
+        ClusterDef("1sg_2ac_3cbs_1lgs", num_sgs=1, num_acs=2, num_cbs=3, num_lgs=1, num_lbs=0),
+        ClusterDef("2sg_1ac_3cbs_2lgs", num_sgs=2, num_acs=1, num_cbs=3, num_lgs=2, num_lbs=0),
+        ClusterDef("2sg_2ac_3cbs_2lgs", num_sgs=2, num_acs=2, num_cbs=3, num_lgs=2, num_lbs=0),
+        ClusterDef("3sg_1ac_3cbs_3lgs", num_sgs=3, num_acs=1, num_cbs=3, num_lgs=3, num_lbs=0),
+        ClusterDef("3sg_2ac_3cbs_3lgs", num_sgs=3, num_acs=2, num_cbs=3, num_lgs=3, num_lbs=0),
+        ClusterDef("4sg_1ac_3cbs_4lgs", num_sgs=4, num_acs=1, num_cbs=3, num_lgs=4, num_lbs=0),
+        ClusterDef("4sg_2ac_3cbs_4lgs", num_sgs=4, num_acs=2, num_cbs=3, num_lgs=4, num_lbs=0),
+        ClusterDef("8sg_1ac_3cbs_8lgs", num_sgs=8, num_acs=1, num_cbs=3, num_lgs=8, num_lbs=0),
+        ClusterDef("8sg_2ac_3cbs_8lgs", num_sgs=8, num_acs=2, num_cbs=3, num_lgs=8, num_lbs=0)
+        # End Perf Mini Matrix
     ]
 
     if not os.path.isfile(pool_file):

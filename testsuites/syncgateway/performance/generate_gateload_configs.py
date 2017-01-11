@@ -70,15 +70,15 @@ def upload_gateload_config(cluster_config, gateload, sync_gateway, user_offset, 
     gateload_inventory_hostname = gateload['inventory_hostname']
 
     rendered = render_gateload_template(
-        sync_gateway,
-        user_offset,
-        number_of_pullers,
-        number_of_pushers,
-        doc_size,
-        rampup_interval_ms,
-        runtime_ms
+        sync_gateway=sync_gateway,
+        user_offset=user_offset,
+        number_of_pullers=number_of_pullers,
+        number_of_pushers=number_of_pushers,
+        doc_size=doc_size,
+        runtime_ms=runtime_ms,
+        rampup_interval_ms=rampup_interval_ms
     )
-    print rendered
+    print(rendered)
 
     # Write renderered gateload configs to test results directory
     with open("testsuites/syncgateway/performance/results/{}/{}.json".format(test_id, gateload_inventory_hostname), "w") as f:
@@ -87,7 +87,7 @@ def upload_gateload_config(cluster_config, gateload, sync_gateway, user_offset, 
     outfile = os.path.join("/tmp", gateload_inventory_hostname)
     with open(outfile, 'w') as f:
         f.write(rendered)
-    print "Wrote to file: {}".format(outfile)
+    print("Wrote to file: {}".format(outfile))
 
     # transfer file to remote host
     cmd = 'ansible {} -i {} -m copy -a "src={} dest=/home/centos/gateload_config.json" --user {}'.format(
@@ -96,9 +96,9 @@ def upload_gateload_config(cluster_config, gateload, sync_gateway, user_offset, 
         outfile,
         constants.DEFAULT_REMOTE_USER
     )
-    print "Uploading gateload config using command: {}".format(cmd)
+    print("Uploading gateload config using command: {}".format(cmd))
     result = subprocess.check_output(cmd, shell=True)
-    print "File transfer result: {}".format(result)
+    print("File transfer result: {}".format(result))
 
 
 def main(cluster_config, number_of_pullers, number_of_pushers, test_id, doc_size, runtime_ms, rampup_interval_ms):
@@ -108,7 +108,7 @@ def main(cluster_config, number_of_pullers, number_of_pushers, test_id, doc_size
     gateload_hosts = gateloads(cluster_config)
 
     if len(sync_gateway_hosts) != len(gateload_hosts):
-        print "Warning: you have {} sync gateway non index writers, but does not match up with {} load generators".format(len(sync_gateway_hosts), len(gateload_hosts))
+        print("Warning: you have {} sync gateway non index writers, but does not match up with {} load generators".format(len(sync_gateway_hosts), len(gateload_hosts)))
 
     for idx, gateload in enumerate(gateload_hosts):
 
@@ -120,16 +120,16 @@ def main(cluster_config, number_of_pullers, number_of_pushers, test_id, doc_size
         sync_gateway = sync_gateway_hosts[idx]
 
         upload_gateload_config(
-            cluster_config,
-            gateload,
-            sync_gateway,
-            user_offset,
-            number_of_pullers,
-            number_of_pushers,
-            test_id,
-            doc_size,
-            rampup_interval_ms,
-            runtime_ms
+            cluster_config=cluster_config,
+            gateload=gateload,
+            sync_gateway=sync_gateway,
+            user_offset=user_offset,
+            number_of_pullers=number_of_pullers,
+            number_of_pushers=number_of_pushers,
+            test_id=test_id,
+            doc_size=doc_size,
+            rampup_interval_ms=rampup_interval_ms,
+            runtime_ms=runtime_ms
         )
 
-    print "Finished successfully"
+    print("Finished successfully")
