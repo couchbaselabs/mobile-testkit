@@ -52,6 +52,3 @@ if __name__ == "__main__":
         remote_hosts=remote_hosts_list,
         remote_host_port=args.remote_host_port
     )
-
-
-

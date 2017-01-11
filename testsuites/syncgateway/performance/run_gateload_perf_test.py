@@ -1,23 +1,12 @@
 import os
-import subprocess
 import shutil
 import time
 import sys
 from optparse import OptionParser
-
-from libraries.testkit.cluster import Cluster
-
 from libraries.provision.ansible_runner import AnsibleRunner
-
 import generate_gateload_configs
-
 from keywords.exceptions import ProvisioningError
-
-from libraries.utilities.fetch_machine_stats import fetch_machine_stats
 from libraries.utilities.log_expvars import log_expvars
-from keywords.Logging import fetch_sync_gateway_logs
-from libraries.utilities.fetch_sync_gateway_profile import fetch_sync_gateway_profile
-from libraries.utilities.push_cbcollect_info_supportal import push_cbcollect_info_supportal
 
 
 def run_gateload_perf_test(number_pullers,
