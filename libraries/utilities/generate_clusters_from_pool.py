@@ -386,6 +386,7 @@ def generate_clusters_from_pool(pool_file):
     for cluster_conf in cluster_confs:
         write_config(cluster_conf, pool_file)
 
+
 if __name__ == "__main__":
     usage = """
     usage: python generate_clusters_from_pool.py"

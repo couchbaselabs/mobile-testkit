@@ -119,7 +119,7 @@ def test_generate_clusters_from_pool_ip_to_node(cleanup_folder, cluster_conf, nu
 
     # Check Couchbase_server IP from the the cluster config
     for i in range(num_couchbase_servers):
-        host_identifier = "cb{} ansible_host".format(i+1)
+        host_identifier = "cb{} ansible_host".format(i + 1)
         assert host_identifier in config["couchbase_servers"]
         cbs_ip = config["couchbase_servers"][host_identifier]
 
@@ -129,7 +129,7 @@ def test_generate_clusters_from_pool_ip_to_node(cleanup_folder, cluster_conf, nu
 
     # Check Sync gateway IP from the the cluster config
     for i in range(num_sync_gateways):
-        host_identifier = "sg{} ansible_host".format(i+1)
+        host_identifier = "sg{} ansible_host".format(i + 1)
         assert host_identifier in config["sync_gateways"]
         cbs_ip = config["sync_gateways"][host_identifier]
 
@@ -149,13 +149,13 @@ def test_generate_clusters_from_pool_ip_to_node(cleanup_folder, cluster_conf, nu
 
     # Check load balancers IP from the the cluster config
     for i in range(num_load_balancers):
-         host_identifier = "lb{} ansible_host".format(i + 1)
-         assert host_identifier in config["load_balancers"]
-         cbs_ip = config["load_generators"][host_identifier]
+        host_identifier = "lb{} ansible_host".format(i + 1)
+        assert host_identifier in config["load_balancers"]
+        cbs_ip = config["load_generators"][host_identifier]
 
-         # Verify that the IP from cluster config is actually a defined as
-         # a couchbase_servers in mock_pool_ip_to_node_type.json
-         assert pool_data["ip_to_node_type"][cbs_ip] == "load_balancers"
+        # Verify that the IP from cluster config is actually a defined as
+        # a couchbase_servers in mock_pool_ip_to_node_type.json
+        assert pool_data["ip_to_node_type"][cbs_ip] == "load_balancers"
 
     # Check sg accels IP from the the cluster config
     for i in range(num_sg_accels):
