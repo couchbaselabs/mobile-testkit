@@ -78,7 +78,7 @@ def test_generate_clusters_from_pool_ips(cleanup_folder, cluster_conf, num_couch
 
 
 @pytest.mark.parametrize("cluster_conf, num_couchbase_servers, num_pool, num_sync_gateways, num_sg_accels, num_load_generators, num_load_balancers", [
-    ("1cbs", 1, 6, 0, 0, 0, 0), ("1sg_1ac_1cbs_1lgs", 1, 6, 1, 1, 1, 0), ("2sg_1cbs_1lgs", 1, 6, 2, 0, 1, 0),
+    ("1cbs", 1, 13, 0, 0, 0, 0), ("1sg_1ac_1cbs_1lgs", 1, 13, 1, 1, 1, 0), ("4sg_2ac_3cbs_4lgs", 3, 13, 4, 2, 4, 0),
 ])
 def test_generate_clusters_from_pool_ip_to_node(cleanup_folder, cluster_conf, num_couchbase_servers, num_pool, num_sync_gateways, num_sg_accels, num_load_generators, num_load_balancers):
     # Function to test pool.json with IPs and IP to node type mapping
@@ -92,7 +92,7 @@ def test_generate_clusters_from_pool_ip_to_node(cleanup_folder, cluster_conf, nu
 
     # Verification
     # mock_pool_ip_to_node_type.json will generate 18 files ansible+json
-    assert len([name for name in os.listdir(cluster_config_dir)]) == 20
+    assert len([name for name in os.listdir(cluster_config_dir)]) == 32
 
     # We will check 2 files for content 1cbs/1cbs.json
     config = configparser.ConfigParser()
@@ -117,14 +117,57 @@ def test_generate_clusters_from_pool_ip_to_node(cleanup_folder, cluster_conf, nu
     assert len(lg) == num_load_generators
     assert len(lb) == num_load_balancers
 
-    # Couchbase_server IP from the 1cbs
-    cbs_ip = config["couchbase_servers"]["cb1 ansible_host"]
+    # Check Couchbase_server IP from the the cluster config
+    for i in range(num_couchbase_servers):
+        host_identifier = "cb{} ansible_host".format(i+1)
+        assert host_identifier in config["couchbase_servers"]
+        cbs_ip = config["couchbase_servers"][host_identifier]
 
-    # Verify that the IP from 1cbs is actually a defined as
-    # a couchbase_servers in mock_pool_ip_to_node_type.json
-    assert pool_data["ip_to_node_type"][cbs_ip] == "couchbase_servers"
+        # Verify that the IP from cluster config is actually a defined as
+        # a couchbase_servers in mock_pool_ip_to_node_type.json
+        assert pool_data["ip_to_node_type"][cbs_ip] == "couchbase_servers"
 
-    # Check only 1 couchbase server is configured in 1cbs.json
+    # Check Sync gateway IP from the the cluster config
+    for i in range(num_sync_gateways):
+        host_identifier = "sg{} ansible_host".format(i+1)
+        assert host_identifier in config["sync_gateways"]
+        cbs_ip = config["sync_gateways"][host_identifier]
+
+        # Verify that the IP from cluster config is actually a defined as
+        # a couchbase_servers in mock_pool_ip_to_node_type.json
+        assert pool_data["ip_to_node_type"][cbs_ip] == "sync_gateways"
+
+    # Check load generators IP from the the cluster config
+    for i in range(num_load_generators):
+        host_identifier = "lg{} ansible_host".format(i + 1)
+        assert host_identifier in config["load_generators"]
+        cbs_ip = config["load_generators"][host_identifier]
+
+        # Verify that the IP from cluster config is actually a defined as
+        # a couchbase_servers in mock_pool_ip_to_node_type.json
+        assert pool_data["ip_to_node_type"][cbs_ip] == "load_generators"
+
+    # Check load balancers IP from the the cluster config
+    for i in range(num_load_balancers):
+         host_identifier = "lb{} ansible_host".format(i + 1)
+         assert host_identifier in config["load_balancers"]
+         cbs_ip = config["load_generators"][host_identifier]
+
+         # Verify that the IP from cluster config is actually a defined as
+         # a couchbase_servers in mock_pool_ip_to_node_type.json
+         assert pool_data["ip_to_node_type"][cbs_ip] == "load_balancers"
+
+    # Check sg accels IP from the the cluster config
+    for i in range(num_sg_accels):
+        host_identifier = "ac{} ansible_host".format(i + 1)
+        assert host_identifier in config["sg_accels"]
+        cbs_ip = config["sg_accels"][host_identifier]
+
+        # Verify that the IP from cluster config is actually a defined as
+        # a couchbase_servers in mock_pool_ip_to_node_type.json
+        assert pool_data["ip_to_node_type"][cbs_ip] == "sg_accels"
+
+    # Check the number of couchbase servers configured in the cluster config json
     with open(cluster_config_dir + cluster_conf + ".json") as data_file:
         data = json.load(data_file)
 

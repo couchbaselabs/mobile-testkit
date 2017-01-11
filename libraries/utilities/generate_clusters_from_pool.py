@@ -88,7 +88,6 @@ def write_config(config, pool_file):
                     continue
                 else:
                     found = True
-                    i = j
                     break
 
             # Check if the number of cbs in the ip_to_node_type match the config
@@ -105,7 +104,7 @@ def write_config(config, pool_file):
 
                 return
 
-            ip = ips[i]
+            ip = ips[j]
             f.write("cb{} ansible_host={}\n".format(i + 1, ip))
             couchbase_servers.append({
                 "name": "cb{}".format(i + 1),
@@ -114,7 +113,8 @@ def write_config(config, pool_file):
             cbs_ips_to_remove.append(ip)
 
         for cbs_ip in cbs_ips_to_remove:
-            ips.remove(cbs_ip)
+            if cbs_ip in ips:
+                ips.remove(cbs_ip)
 
         f.write("\n")
 
@@ -133,7 +133,6 @@ def write_config(config, pool_file):
                     continue
                 else:
                     found = True
-                    i = j
                     break
 
             # Check if the number of sgs in the ip_to_node_type match the config
@@ -150,7 +149,7 @@ def write_config(config, pool_file):
 
                 return
 
-            ip = ips[i]
+            ip = ips[j]
             f.write("sg{} ansible_host={}\n".format(i + 1, ip))
             sync_gateways.append({
                 "name": "sg{}".format(i + 1),
@@ -159,7 +158,8 @@ def write_config(config, pool_file):
             sg_ips_to_remove.append(ip)
 
         for sg_ip in sg_ips_to_remove:
-            ips.remove(sg_ip)
+            if sg_ip in ips:
+                ips.remove(sg_ip)
 
         f.write("\n")
 
@@ -179,7 +179,6 @@ def write_config(config, pool_file):
                     continue
                 else:
                     found = True
-                    i = j
                     break
 
             # Check if the number of acs in the ip_to_node_type match the config
@@ -196,7 +195,7 @@ def write_config(config, pool_file):
 
                 return
 
-            ip = ips[i]
+            ip = ips[j]
             f.write("ac{} ansible_host={}\n".format(i + 1, ip))
             accels.append({
                 "name": "ac{}".format(i + 1),
@@ -205,7 +204,8 @@ def write_config(config, pool_file):
             ac_ips_to_remove.append(ip)
 
         for ac_ip in ac_ips_to_remove:
-            ips.remove(ac_ip)
+            if ac_ip in ips:
+                ips.remove(ac_ip)
 
         f.write("\n")
 
@@ -224,7 +224,6 @@ def write_config(config, pool_file):
                     continue
                 else:
                     found = True
-                    i = j
                     break
 
             # Check if the number of lgs in the ip_to_node_type match the config
@@ -241,7 +240,7 @@ def write_config(config, pool_file):
 
                 return
 
-            ip = ips[i]
+            ip = ips[j]
             f.write("lg{} ansible_host={}\n".format(i + 1, ip))
             load_generators.append({
                 "name": "lg{}".format(i + 1),
@@ -250,7 +249,8 @@ def write_config(config, pool_file):
             lg_ips_to_remove.append(ip)
 
         for lg_ip in lg_ips_to_remove:
-            ips.remove(lg_ip)
+            if lg_ip in ips:
+                ips.remove(lg_ip)
 
         f.write("\n")
 
@@ -269,7 +269,6 @@ def write_config(config, pool_file):
                     continue
                 else:
                     found = True
-                    i = j
                     break
 
             # Check if the number of lbs in the ip_to_node_type match the config
@@ -286,7 +285,7 @@ def write_config(config, pool_file):
 
                 return
 
-            ip = ips[i]
+            ip = ips[j]
             f.write("lb{} ansible_host={}\n".format(i + 1, ip))
             load_balancers.append({
                 "name": "lb{}".format(i + 1),
@@ -295,7 +294,8 @@ def write_config(config, pool_file):
             lb_ips_to_remove.append(ip)
 
         for lb_ip in lb_ips_to_remove:
-            ips.remove(lb_ip)
+            if lb_ip in ips:
+                ips.remove(lb_ip)
 
         f.write("\n")
 
@@ -371,6 +371,7 @@ def generate_clusters_from_pool(pool_file):
         ClusterDef("2sg_3cbs_2lgs", num_sgs=2, num_acs=0, num_cbs=3, num_lgs=2, num_lbs=0),
         ClusterDef("2sg_2ac_3cbs_2lgs", num_sgs=2, num_acs=2, num_cbs=3, num_lgs=2, num_lbs=0),
         ClusterDef("2sg_2ac_3cbs_1lgs", num_sgs=2, num_acs=2, num_cbs=3, num_lgs=1, num_lbs=0),
+        ClusterDef("4sg_2ac_3cbs_4lgs", num_sgs=4, num_acs=2, num_cbs=3, num_lgs=4, num_lbs=0),
     ]
 
     if not os.path.isfile(pool_file):
