@@ -392,6 +392,7 @@ def get_ips(pool_file="resources/pool.json"):
 def generate_clusters_from_pool(pool_file):
 
     cluster_confs = [
+
         ClusterDef("base_cc", num_sgs=1, num_acs=0, num_cbs=1, num_lgs=0, num_lbs=0),
         ClusterDef("base_di", num_sgs=1, num_acs=1, num_cbs=1, num_lgs=0, num_lbs=0),
         ClusterDef("multiple_servers_cc", num_sgs=1, num_acs=0, num_cbs=3, num_lgs=0, num_lbs=0),
