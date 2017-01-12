@@ -24,7 +24,7 @@ from generate_clusters_from_pool import get_ips
 
 def install_gh_deploy_keys(key_path, user_name):
 
-    ips = get_ips()
+    ips, _ = get_ips()
 
     for ip in ips:
 
