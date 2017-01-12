@@ -30,6 +30,9 @@ class ClusterDef:
 
 def write_config(config, pool_file):
     ips, ip_to_node_type = get_ips(pool_file)
+    ip_to_node_type_len = len(ip_to_node_type)
+    ip_to_node_type_defined = False
+
     resource_folder = os.path.dirname(pool_file)
 
     log_info("ips: {}".format(ips))
@@ -41,6 +44,9 @@ def write_config(config, pool_file):
             len(ips))
         )
         return
+
+    if ip_to_node_type_len > 0:
+        ip_to_node_type_defined = True
 
     # Check for number of IPs versus number of IPs in ip_to_node_type
     if ip_to_node_type and len(ip_to_node_type) != len(ips):
@@ -78,10 +84,13 @@ def write_config(config, pool_file):
         f.write("[couchbase_servers]\n")
         for i in range(config.num_cbs):
             # Check if the IP is present in the ip_to_node_type
-            ip_to_node_type_len = len(ip_to_node_type)
+
             j = 0
             found = False
-            while ip_to_node_type_len and j < len(ips) and ips[j] in ip_to_node_type:
+            while ip_to_node_type_defined and j < len(ips):
+                if ips[j] not in ip_to_node_type:
+                    raise Exception("{} not in ip_to_node_type".format(ips[j]))
+
                 if ip_to_node_type[ips[j]] != "couchbase_servers" or ips[j] in cbs_ips_to_remove:
                     # IP is not a cbs or if the cbs is already recorded
                     j += 1
@@ -91,7 +100,7 @@ def write_config(config, pool_file):
                     break
 
             # Check if the number of cbs in the ip_to_node_type match the config
-            if ip_to_node_type_len and not found:
+            if ip_to_node_type_defined and not found:
                 log_warn("WARNING: Skipping config {} since {} couchbase_servers required, but only {} provided".format(
                     config.name,
                     config.num_cbs,
@@ -104,7 +113,12 @@ def write_config(config, pool_file):
 
                 return
 
-            ip = ips[j]
+            # j is the counter for ip_to_node_type which is invalid if not defined
+            if ip_to_node_type_defined:
+                ip = ips[j]
+            else:
+                ip = ips[i]
+
             f.write("cb{} ansible_host={}\n".format(i + 1, ip))
             couchbase_servers.append({
                 "name": "cb{}".format(i + 1),
@@ -113,8 +127,7 @@ def write_config(config, pool_file):
             cbs_ips_to_remove.append(ip)
 
         for cbs_ip in cbs_ips_to_remove:
-            if cbs_ip in ips:
-                ips.remove(cbs_ip)
+            ips.remove(cbs_ip)
 
         f.write("\n")
 
@@ -123,10 +136,13 @@ def write_config(config, pool_file):
         sg_ips_to_remove = []
         for i in range(config.num_sgs):
             # Check if the IP is present in the ip_to_node_type
-            ip_to_node_type_len = len(ip_to_node_type)
             j = 0
             found = False
-            while ip_to_node_type_len and j < len(ips) and ips[j] in ip_to_node_type:
+
+            while ip_to_node_type_defined and j < len(ips):
+                if ips[j] not in ip_to_node_type:
+                    raise Exception("{} not in ip_to_node_type".format(ips[j]))
+
                 if ip_to_node_type[ips[j]] != "sync_gateways" or ips[j] in sg_ips_to_remove:
                     # IP is not a sg or if the sg is already recorded
                     j += 1
@@ -136,7 +152,7 @@ def write_config(config, pool_file):
                     break
 
             # Check if the number of sgs in the ip_to_node_type match the config
-            if ip_to_node_type_len and not found:
+            if ip_to_node_type_defined and not found:
                 log_warn("WARNING: Skipping config {} since {} sync_gateways required, but only {} provided".format(
                     config.name,
                     config.num_sgs,
@@ -149,7 +165,12 @@ def write_config(config, pool_file):
 
                 return
 
-            ip = ips[j]
+            # j is the counter for ip_to_node_type which is invalid if not defined
+            if ip_to_node_type_defined:
+                ip = ips[j]
+            else:
+                ip = ips[i]
+
             f.write("sg{} ansible_host={}\n".format(i + 1, ip))
             sync_gateways.append({
                 "name": "sg{}".format(i + 1),
@@ -158,8 +179,8 @@ def write_config(config, pool_file):
             sg_ips_to_remove.append(ip)
 
         for sg_ip in sg_ips_to_remove:
-            if sg_ip in ips:
-                ips.remove(sg_ip)
+            print "REMOVING {} and {} from {}".format(sg_ip, sg_ips_to_remove, ips)
+            ips.remove(sg_ip)
 
         f.write("\n")
 
@@ -168,11 +189,13 @@ def write_config(config, pool_file):
         f.write("[sg_accels]\n")
         for i in range(config.num_acs):
             # Check if the IP is present in the ip_to_node_type
-            ip_to_node_type_len = len(ip_to_node_type)
             j = 0
             found = False
 
-            while ip_to_node_type_len and j < len(ips) and ips[j] in ip_to_node_type:
+            while ip_to_node_type_defined and j < len(ips):
+                if ips[j] not in ip_to_node_type:
+                    raise Exception("{} not in ip_to_node_type".format(ips[j]))
+
                 if ip_to_node_type[ips[j]] != "sg_accels" or ips[j] in ac_ips_to_remove:
                     # IP is not a ac or if the ac is already recorded
                     j += 1
@@ -182,7 +205,7 @@ def write_config(config, pool_file):
                     break
 
             # Check if the number of acs in the ip_to_node_type match the config
-            if ip_to_node_type_len and not found:
+            if ip_to_node_type_defined and not found:
                 log_warn("WARNING: Skipping config {} since {} sg_accels required, but only {} provided".format(
                     config.name,
                     config.num_acs,
@@ -195,7 +218,12 @@ def write_config(config, pool_file):
 
                 return
 
-            ip = ips[j]
+            # j is the counter for ip_to_node_type which is invalid if not defined
+            if ip_to_node_type_defined:
+                ip = ips[j]
+            else:
+                ip = ips[i]
+
             f.write("ac{} ansible_host={}\n".format(i + 1, ip))
             accels.append({
                 "name": "ac{}".format(i + 1),
@@ -204,8 +232,7 @@ def write_config(config, pool_file):
             ac_ips_to_remove.append(ip)
 
         for ac_ip in ac_ips_to_remove:
-            if ac_ip in ips:
-                ips.remove(ac_ip)
+            ips.remove(ac_ip)
 
         f.write("\n")
 
@@ -214,10 +241,12 @@ def write_config(config, pool_file):
         f.write("[load_generators]\n")
         for i in range(config.num_lgs):
             # Check if the IP is present in the ip_to_node_type
-            ip_to_node_type_len = len(ip_to_node_type)
             j = 0
             found = False
-            while ip_to_node_type_len and j < len(ips) and ips[j] in ip_to_node_type:
+            while ip_to_node_type_defined and j < len(ips):
+                if ips[j] not in ip_to_node_type:
+                    raise Exception("{} not in ip_to_node_type".format(ips[j]))
+
                 if ip_to_node_type[ips[j]] != "load_generators" or ips[j] in lg_ips_to_remove:
                     # IP is not a lg or if the lg is already recorded
                     j += 1
@@ -227,7 +256,7 @@ def write_config(config, pool_file):
                     break
 
             # Check if the number of lgs in the ip_to_node_type match the config
-            if ip_to_node_type_len and not found:
+            if ip_to_node_type_defined and not found:
                 log_warn("WARNING: Skipping config {} since {} load_generators required, but only {} provided".format(
                     config.name,
                     config.num_lgs,
@@ -240,7 +269,12 @@ def write_config(config, pool_file):
 
                 return
 
-            ip = ips[j]
+            # j is the counter for ip_to_node_type which is invalid if not defined
+            if ip_to_node_type_defined:
+                ip = ips[j]
+            else:
+                ip = ips[i]
+
             f.write("lg{} ansible_host={}\n".format(i + 1, ip))
             load_generators.append({
                 "name": "lg{}".format(i + 1),
@@ -249,8 +283,7 @@ def write_config(config, pool_file):
             lg_ips_to_remove.append(ip)
 
         for lg_ip in lg_ips_to_remove:
-            if lg_ip in ips:
-                ips.remove(lg_ip)
+            ips.remove(lg_ip)
 
         f.write("\n")
 
@@ -259,10 +292,12 @@ def write_config(config, pool_file):
         f.write("[load_balancers]\n")
         for i in range(config.num_lbs):
             # Check if the IP is present in the ip_to_node_type
-            ip_to_node_type_len = len(ip_to_node_type)
             j = 0
             found = False
-            while ip_to_node_type_len and j < len(ips) and ips[j] in ip_to_node_type:
+            while ip_to_node_type_defined and j < len(ips):
+                if ips[j] not in ip_to_node_type:
+                    raise Exception("{} not in ip_to_node_type".format(ips[j]))
+
                 if ip_to_node_type[ips[j]] != "load_balancers" or ips[j] in lb_ips_to_remove:
                     # IP is not a lb or if the lb is already recorded
                     j += 1
@@ -272,7 +307,7 @@ def write_config(config, pool_file):
                     break
 
             # Check if the number of lbs in the ip_to_node_type match the config
-            if ip_to_node_type_len and not found:
+            if ip_to_node_type_defined and not found:
                 log_warn("WARNING: Skipping config {} since {} load_balancers required, but only {} provided".format(
                     config.name,
                     config.num_lbs,
@@ -285,7 +320,12 @@ def write_config(config, pool_file):
 
                 return
 
-            ip = ips[j]
+            # j is the counter for ip_to_node_type which is invalid if not defined
+            if ip_to_node_type_defined:
+                ip = ips[j]
+            else:
+                ip = ips[i]
+
             f.write("lb{} ansible_host={}\n".format(i + 1, ip))
             load_balancers.append({
                 "name": "lb{}".format(i + 1),
@@ -294,8 +334,7 @@ def write_config(config, pool_file):
             lb_ips_to_remove.append(ip)
 
         for lb_ip in lb_ips_to_remove:
-            if lb_ip in ips:
-                ips.remove(lb_ip)
+            ips.remove(lb_ip)
 
         f.write("\n")
 
