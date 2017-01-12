@@ -9,7 +9,7 @@
   "sharedCrosshair": false,
   "rows": [
     {
-      "collapse": false,
+      "collapse": true,
       "editable": true,
       "height": "250px",
       "panels": [
@@ -235,7 +235,7 @@
       "title": "Row"
     },
     {
-      "collapse": false,
+      "collapse": true,
       "editable": true,
       "height": "250px",
       "panels": [
@@ -424,7 +424,7 @@
       "title": "New row"
     },
     {
-      "collapse": false,
+      "collapse": true,
       "editable": true,
       "height": "250px",
       "panels": [
@@ -442,6 +442,7 @@
             "threshold2Color": "rgba(234, 112, 112, 0.22)"
           },
           "id": 1,
+          "interval": "5m",
           "isNew": true,
           "legend": {
             "avg": false,
@@ -499,7 +500,13 @@
                   }
                 ]
               ],
-              "tags": []
+              "tags": [
+                {
+                  "key": "host",
+                  "operator": "=~",
+                  "value": "/^$lg_host$/"
+                }
+              ]
             },
             {
               "alias": "Gateload Roundtrip - P95",
@@ -533,10 +540,22 @@
                   {
                     "params": [],
                     "type": "mean"
+                  },
+                  {
+                    "params": [
+                      "10"
+                    ],
+                    "type": "moving_average"
                   }
                 ]
               ],
-              "tags": []
+              "tags": [
+                {
+                  "key": "host",
+                  "operator": "=~",
+                  "value": "/^$lg_host$/"
+                }
+              ]
             },
             {
               "alias": "Gateload Roundtrip - P99",
@@ -570,10 +589,22 @@
                   {
                     "params": [],
                     "type": "mean"
+                  },
+                  {
+                    "params": [
+                      "10"
+                    ],
+                    "type": "moving_average"
                   }
                 ]
               ],
-              "tags": []
+              "tags": [
+                {
+                  "key": "host",
+                  "operator": "=~",
+                  "value": "/^$lg_host$/"
+                }
+              ]
             }
           ],
           "timeFrom": null,
@@ -723,7 +754,7 @@
                   "type": "fill"
                 }
               ],
-              "measurement": "gateload_stats_ops_PushToSubscriberInteractive_p99",
+              "measurement": "gateload_stats_ops_PushToSubscriberInteractive_p95",
               "policy": "default",
               "refId": "C",
               "resultFormat": "time_series",
@@ -768,7 +799,7 @@
               "format": "ns",
               "label": null,
               "logBase": 1,
-              "max": null,
+              "max": 6000000000,
               "min": 0,
               "show": true
             },
@@ -778,7 +809,7 @@
               "logBase": 1,
               "max": null,
               "min": null,
-              "show": true
+              "show": false
             }
           ]
         },
@@ -924,8 +955,129 @@
               "format": "ns",
               "label": null,
               "logBase": 1,
-              "max": null,
+              "max": 6000000000,
               "min": 0,
+              "show": true
+            },
+            {
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": false
+            }
+          ]
+        }
+      ],
+      "title": "New row"
+    },
+    {
+      "collapse": false,
+      "editable": true,
+      "height": "250px",
+      "panels": [
+        {
+          "aliasColors": {},
+          "bars": false,
+          "datasource": "$perftestrundbs",
+          "editable": true,
+          "error": false,
+          "fill": 0,
+          "grid": {
+            "threshold1": null,
+            "threshold1Color": "rgba(216, 200, 27, 0.27)",
+            "threshold2": null,
+            "threshold2Color": "rgba(234, 112, 112, 0.22)"
+          },
+          "id": 9,
+          "isNew": true,
+          "legend": {
+            "avg": false,
+            "current": false,
+            "max": false,
+            "min": false,
+            "show": true,
+            "total": false,
+            "values": false
+          },
+          "lines": true,
+          "linewidth": 2,
+          "links": [],
+          "nullPointMode": "connected",
+          "percentage": false,
+          "pointradius": 5,
+          "points": false,
+          "renderer": "flot",
+          "seriesOverrides": [],
+          "span": 12,
+          "stack": false,
+          "steppedLine": false,
+          "targets": [
+            {
+              "alias": "$tag_host - active changes feeds",
+              "dsType": "influxdb",
+              "groupBy": [
+                {
+                  "params": [
+                    "$interval"
+                  ],
+                  "type": "time"
+                },
+                {
+                  "params": [
+                    "host"
+                  ],
+                  "type": "tag"
+                },
+                {
+                  "params": [
+                    "null"
+                  ],
+                  "type": "fill"
+                }
+              ],
+              "measurement": "syncgateway_expvar",
+              "policy": "default",
+              "refId": "B",
+              "resultFormat": "time_series",
+              "select": [
+                [
+                  {
+                    "params": [
+                      "changesFeeds_active"
+                    ],
+                    "type": "field"
+                  },
+                  {
+                    "params": [],
+                    "type": "mean"
+                  }
+                ]
+              ],
+              "tags": []
+            }
+          ],
+          "timeFrom": null,
+          "timeShift": null,
+          "title": "Sync Gateway - Active Changes Feeds",
+          "tooltip": {
+            "msResolution": true,
+            "shared": true,
+            "sort": 0,
+            "value_type": "cumulative"
+          },
+          "type": "graph",
+          "xaxis": {
+            "show": true
+          },
+          "yaxes": [
+            {
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
               "show": true
             },
             {
@@ -974,7 +1126,7 @@
           "lines": true,
           "linewidth": 2,
           "links": [],
-          "minSpan": 6,
+          "minSpan": 3,
           "nullPointMode": "connected",
           "percentage": false,
           "pointradius": 5,
@@ -983,13 +1135,13 @@
           "repeat": "sg_host",
           "scopedVars": {
             "sg_host": {
-              "text": "sg1",
-              "value": "sg1",
+              "text": "sg2",
+              "value": "sg2",
               "selected": false
             }
           },
           "seriesOverrides": [],
-          "span": 6,
+          "span": 3,
           "stack": true,
           "steppedLine": false,
           "targets": [
@@ -1094,7 +1246,7 @@
           ],
           "timeFrom": null,
           "timeShift": null,
-          "title": "Sync gateway CPU",
+          "title": "Sync Gateway CPU",
           "tooltip": {
             "msResolution": true,
             "shared": true,
@@ -1108,6 +1260,1003 @@
           "yaxes": [
             {
               "format": "percent",
+              "label": null,
+              "logBase": 1,
+              "max": 100,
+              "min": 0,
+              "show": true
+            },
+            {
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": false
+            }
+          ]
+        },
+        {
+          "aliasColors": {},
+          "bars": false,
+          "datasource": "$perftestrundbs",
+          "editable": true,
+          "error": false,
+          "fill": 1,
+          "grid": {
+            "threshold1": null,
+            "threshold1Color": "rgba(216, 200, 27, 0.27)",
+            "threshold2": null,
+            "threshold2Color": "rgba(234, 112, 112, 0.22)"
+          },
+          "id": 10,
+          "interval": ">10s",
+          "isNew": true,
+          "legend": {
+            "avg": false,
+            "current": false,
+            "max": false,
+            "min": false,
+            "show": true,
+            "total": false,
+            "values": false
+          },
+          "lines": true,
+          "linewidth": 2,
+          "links": [],
+          "minSpan": 3,
+          "nullPointMode": "connected",
+          "percentage": false,
+          "pointradius": 5,
+          "points": false,
+          "renderer": "flot",
+          "repeat": null,
+          "scopedVars": {
+            "sg_host": {
+              "text": "sg5",
+              "value": "sg5",
+              "selected": false
+            }
+          },
+          "seriesOverrides": [],
+          "span": 3,
+          "stack": true,
+          "steppedLine": false,
+          "targets": [
+            {
+              "alias": "$tag_host - cpu: system",
+              "dsType": "influxdb",
+              "groupBy": [
+                {
+                  "params": [
+                    "10s"
+                  ],
+                  "type": "time"
+                },
+                {
+                  "params": [
+                    "host"
+                  ],
+                  "type": "tag"
+                },
+                {
+                  "params": [
+                    "0"
+                  ],
+                  "type": "fill"
+                }
+              ],
+              "measurement": "cpu",
+              "policy": "default",
+              "refId": "B",
+              "resultFormat": "time_series",
+              "select": [
+                [
+                  {
+                    "params": [
+                      "usage_system"
+                    ],
+                    "type": "field"
+                  },
+                  {
+                    "params": [],
+                    "type": "mean"
+                  }
+                ]
+              ],
+              "tags": [
+                {
+                  "key": "host",
+                  "operator": "=~",
+                  "value": "/^$sg_host$/"
+                }
+              ]
+            },
+            {
+              "alias": "$tag_host - cpu: user",
+              "dsType": "influxdb",
+              "groupBy": [
+                {
+                  "params": [
+                    "1m"
+                  ],
+                  "type": "time"
+                },
+                {
+                  "params": [
+                    "host"
+                  ],
+                  "type": "tag"
+                },
+                {
+                  "params": [
+                    "0"
+                  ],
+                  "type": "fill"
+                }
+              ],
+              "measurement": "cpu",
+              "policy": "default",
+              "refId": "A",
+              "resultFormat": "time_series",
+              "select": [
+                [
+                  {
+                    "params": [
+                      "usage_user"
+                    ],
+                    "type": "field"
+                  },
+                  {
+                    "params": [],
+                    "type": "mean"
+                  }
+                ]
+              ],
+              "tags": [
+                {
+                  "key": "host",
+                  "operator": "=~",
+                  "value": "/^$sg_host$/"
+                }
+              ]
+            }
+          ],
+          "timeFrom": null,
+          "timeShift": null,
+          "title": "Sync Gateway CPU",
+          "tooltip": {
+            "msResolution": true,
+            "shared": true,
+            "sort": 0,
+            "value_type": "cumulative"
+          },
+          "type": "graph",
+          "xaxis": {
+            "show": true
+          },
+          "yaxes": [
+            {
+              "format": "percent",
+              "label": null,
+              "logBase": 1,
+              "max": 100,
+              "min": 0,
+              "show": true
+            },
+            {
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": false
+            }
+          ],
+          "repeatIteration": 1484172417035,
+          "repeatPanelId": 2
+        },
+        {
+          "aliasColors": {},
+          "bars": false,
+          "datasource": "$perftestrundbs",
+          "editable": true,
+          "error": false,
+          "fill": 1,
+          "grid": {
+            "threshold1": null,
+            "threshold1Color": "rgba(216, 200, 27, 0.27)",
+            "threshold2": null,
+            "threshold2Color": "rgba(234, 112, 112, 0.22)"
+          },
+          "id": 13,
+          "interval": ">10s",
+          "isNew": true,
+          "legend": {
+            "avg": false,
+            "current": false,
+            "max": false,
+            "min": false,
+            "show": true,
+            "total": false,
+            "values": false
+          },
+          "lines": true,
+          "linewidth": 2,
+          "links": [],
+          "minSpan": 3,
+          "nullPointMode": "connected",
+          "percentage": false,
+          "pointradius": 5,
+          "points": false,
+          "renderer": "flot",
+          "repeat": null,
+          "scopedVars": {
+            "sg_host": {
+              "text": "sg7",
+              "value": "sg7",
+              "selected": false
+            }
+          },
+          "seriesOverrides": [],
+          "span": 3,
+          "stack": true,
+          "steppedLine": false,
+          "targets": [
+            {
+              "alias": "$tag_host - cpu: system",
+              "dsType": "influxdb",
+              "groupBy": [
+                {
+                  "params": [
+                    "10s"
+                  ],
+                  "type": "time"
+                },
+                {
+                  "params": [
+                    "host"
+                  ],
+                  "type": "tag"
+                },
+                {
+                  "params": [
+                    "0"
+                  ],
+                  "type": "fill"
+                }
+              ],
+              "measurement": "cpu",
+              "policy": "default",
+              "refId": "B",
+              "resultFormat": "time_series",
+              "select": [
+                [
+                  {
+                    "params": [
+                      "usage_system"
+                    ],
+                    "type": "field"
+                  },
+                  {
+                    "params": [],
+                    "type": "mean"
+                  }
+                ]
+              ],
+              "tags": [
+                {
+                  "key": "host",
+                  "operator": "=~",
+                  "value": "/^$sg_host$/"
+                }
+              ]
+            },
+            {
+              "alias": "$tag_host - cpu: user",
+              "dsType": "influxdb",
+              "groupBy": [
+                {
+                  "params": [
+                    "1m"
+                  ],
+                  "type": "time"
+                },
+                {
+                  "params": [
+                    "host"
+                  ],
+                  "type": "tag"
+                },
+                {
+                  "params": [
+                    "0"
+                  ],
+                  "type": "fill"
+                }
+              ],
+              "measurement": "cpu",
+              "policy": "default",
+              "refId": "A",
+              "resultFormat": "time_series",
+              "select": [
+                [
+                  {
+                    "params": [
+                      "usage_user"
+                    ],
+                    "type": "field"
+                  },
+                  {
+                    "params": [],
+                    "type": "mean"
+                  }
+                ]
+              ],
+              "tags": [
+                {
+                  "key": "host",
+                  "operator": "=~",
+                  "value": "/^$sg_host$/"
+                }
+              ]
+            }
+          ],
+          "timeFrom": null,
+          "timeShift": null,
+          "title": "Sync Gateway CPU",
+          "tooltip": {
+            "msResolution": true,
+            "shared": true,
+            "sort": 0,
+            "value_type": "cumulative"
+          },
+          "type": "graph",
+          "xaxis": {
+            "show": true
+          },
+          "yaxes": [
+            {
+              "format": "percent",
+              "label": null,
+              "logBase": 1,
+              "max": 100,
+              "min": 0,
+              "show": true
+            },
+            {
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": false
+            }
+          ],
+          "repeatIteration": 1484172417035,
+          "repeatPanelId": 2
+        },
+        {
+          "aliasColors": {},
+          "bars": false,
+          "datasource": "$perftestrundbs",
+          "editable": true,
+          "error": false,
+          "fill": 1,
+          "grid": {
+            "threshold1": null,
+            "threshold1Color": "rgba(216, 200, 27, 0.27)",
+            "threshold2": null,
+            "threshold2Color": "rgba(234, 112, 112, 0.22)"
+          },
+          "id": 14,
+          "interval": ">10s",
+          "isNew": true,
+          "legend": {
+            "avg": false,
+            "current": false,
+            "max": false,
+            "min": false,
+            "show": true,
+            "total": false,
+            "values": false
+          },
+          "lines": true,
+          "linewidth": 2,
+          "links": [],
+          "minSpan": 3,
+          "nullPointMode": "connected",
+          "percentage": false,
+          "pointradius": 5,
+          "points": false,
+          "renderer": "flot",
+          "repeat": null,
+          "scopedVars": {
+            "sg_host": {
+              "text": "sg9",
+              "value": "sg9",
+              "selected": false
+            }
+          },
+          "seriesOverrides": [],
+          "span": 3,
+          "stack": true,
+          "steppedLine": false,
+          "targets": [
+            {
+              "alias": "$tag_host - cpu: system",
+              "dsType": "influxdb",
+              "groupBy": [
+                {
+                  "params": [
+                    "10s"
+                  ],
+                  "type": "time"
+                },
+                {
+                  "params": [
+                    "host"
+                  ],
+                  "type": "tag"
+                },
+                {
+                  "params": [
+                    "0"
+                  ],
+                  "type": "fill"
+                }
+              ],
+              "measurement": "cpu",
+              "policy": "default",
+              "refId": "B",
+              "resultFormat": "time_series",
+              "select": [
+                [
+                  {
+                    "params": [
+                      "usage_system"
+                    ],
+                    "type": "field"
+                  },
+                  {
+                    "params": [],
+                    "type": "mean"
+                  }
+                ]
+              ],
+              "tags": [
+                {
+                  "key": "host",
+                  "operator": "=~",
+                  "value": "/^$sg_host$/"
+                }
+              ]
+            },
+            {
+              "alias": "$tag_host - cpu: user",
+              "dsType": "influxdb",
+              "groupBy": [
+                {
+                  "params": [
+                    "1m"
+                  ],
+                  "type": "time"
+                },
+                {
+                  "params": [
+                    "host"
+                  ],
+                  "type": "tag"
+                },
+                {
+                  "params": [
+                    "0"
+                  ],
+                  "type": "fill"
+                }
+              ],
+              "measurement": "cpu",
+              "policy": "default",
+              "refId": "A",
+              "resultFormat": "time_series",
+              "select": [
+                [
+                  {
+                    "params": [
+                      "usage_user"
+                    ],
+                    "type": "field"
+                  },
+                  {
+                    "params": [],
+                    "type": "mean"
+                  }
+                ]
+              ],
+              "tags": [
+                {
+                  "key": "host",
+                  "operator": "=~",
+                  "value": "/^$sg_host$/"
+                }
+              ]
+            }
+          ],
+          "timeFrom": null,
+          "timeShift": null,
+          "title": "Sync Gateway CPU",
+          "tooltip": {
+            "msResolution": true,
+            "shared": true,
+            "sort": 0,
+            "value_type": "cumulative"
+          },
+          "type": "graph",
+          "xaxis": {
+            "show": true
+          },
+          "yaxes": [
+            {
+              "format": "percent",
+              "label": null,
+              "logBase": 1,
+              "max": 100,
+              "min": 0,
+              "show": true
+            },
+            {
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": false
+            }
+          ],
+          "repeatIteration": 1484172417035,
+          "repeatPanelId": 2
+        }
+      ],
+      "title": "New row"
+    },
+    {
+      "collapse": false,
+      "editable": true,
+      "height": "250px",
+      "panels": [
+        {
+          "aliasColors": {},
+          "bars": false,
+          "datasource": "$perftestrundbs",
+          "editable": true,
+          "error": false,
+          "fill": 1,
+          "grid": {
+            "threshold1": null,
+            "threshold1Color": "rgba(216, 200, 27, 0.27)",
+            "threshold2": null,
+            "threshold2Color": "rgba(234, 112, 112, 0.22)"
+          },
+          "id": 11,
+          "interval": ">10s",
+          "isNew": true,
+          "legend": {
+            "avg": false,
+            "current": false,
+            "max": false,
+            "min": false,
+            "show": true,
+            "total": false,
+            "values": false
+          },
+          "lines": true,
+          "linewidth": 2,
+          "links": [],
+          "minSpan": 3,
+          "nullPointMode": "connected",
+          "percentage": false,
+          "pointradius": 5,
+          "points": false,
+          "renderer": "flot",
+          "repeat": "ac_host",
+          "scopedVars": {
+            "ac_host": {
+              "text": "ac1",
+              "value": "ac1",
+              "selected": false
+            }
+          },
+          "seriesOverrides": [],
+          "span": 6,
+          "stack": true,
+          "steppedLine": false,
+          "targets": [
+            {
+              "alias": "$tag_host - cpu: system",
+              "dsType": "influxdb",
+              "groupBy": [
+                {
+                  "params": [
+                    "$interval"
+                  ],
+                  "type": "time"
+                },
+                {
+                  "params": [
+                    "null"
+                  ],
+                  "type": "fill"
+                }
+              ],
+              "hide": false,
+              "policy": "default",
+              "query": "SELECT mean(\"usage_system\") FROM \"cpu\" WHERE \"host\" =~ /^$ac_host$/ AND $timeFilter GROUP BY time(10s), \"host\" fill(0)",
+              "rawQuery": true,
+              "refId": "A",
+              "resultFormat": "time_series",
+              "select": [
+                [
+                  {
+                    "params": [
+                      "value"
+                    ],
+                    "type": "field"
+                  },
+                  {
+                    "params": [],
+                    "type": "mean"
+                  }
+                ]
+              ],
+              "tags": []
+            },
+            {
+              "alias": "$tag_host - cpu: user",
+              "dsType": "influxdb",
+              "groupBy": [
+                {
+                  "params": [
+                    "$interval"
+                  ],
+                  "type": "time"
+                },
+                {
+                  "params": [
+                    "null"
+                  ],
+                  "type": "fill"
+                }
+              ],
+              "hide": false,
+              "policy": "default",
+              "query": "SELECT mean(\"usage_user\") FROM \"cpu\" WHERE \"host\" =~ /^$ac_host$/ AND $timeFilter GROUP BY time(1m), \"host\" fill(0)",
+              "rawQuery": true,
+              "refId": "B",
+              "resultFormat": "time_series",
+              "select": [
+                [
+                  {
+                    "params": [
+                      "value"
+                    ],
+                    "type": "field"
+                  },
+                  {
+                    "params": [],
+                    "type": "mean"
+                  }
+                ]
+              ],
+              "tags": []
+            }
+          ],
+          "timeFrom": null,
+          "timeShift": null,
+          "title": "Sg Accel CPU",
+          "tooltip": {
+            "msResolution": true,
+            "shared": true,
+            "sort": 0,
+            "value_type": "cumulative"
+          },
+          "type": "graph",
+          "xaxis": {
+            "show": true
+          },
+          "yaxes": [
+            {
+              "format": "percent",
+              "label": null,
+              "logBase": 1,
+              "max": 100,
+              "min": null,
+              "show": true
+            },
+            {
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": false
+            }
+          ]
+        },
+        {
+          "aliasColors": {},
+          "bars": false,
+          "datasource": "$perftestrundbs",
+          "editable": true,
+          "error": false,
+          "fill": 1,
+          "grid": {
+            "threshold1": null,
+            "threshold1Color": "rgba(216, 200, 27, 0.27)",
+            "threshold2": null,
+            "threshold2Color": "rgba(234, 112, 112, 0.22)"
+          },
+          "id": 15,
+          "interval": ">10s",
+          "isNew": true,
+          "legend": {
+            "avg": false,
+            "current": false,
+            "max": false,
+            "min": false,
+            "show": true,
+            "total": false,
+            "values": false
+          },
+          "lines": true,
+          "linewidth": 2,
+          "links": [],
+          "minSpan": 3,
+          "nullPointMode": "connected",
+          "percentage": false,
+          "pointradius": 5,
+          "points": false,
+          "renderer": "flot",
+          "repeat": null,
+          "scopedVars": {
+            "ac_host": {
+              "text": "ac5",
+              "value": "ac5",
+              "selected": false
+            }
+          },
+          "seriesOverrides": [],
+          "span": 6,
+          "stack": true,
+          "steppedLine": false,
+          "targets": [
+            {
+              "alias": "$tag_host - cpu: system",
+              "dsType": "influxdb",
+              "groupBy": [
+                {
+                  "params": [
+                    "$interval"
+                  ],
+                  "type": "time"
+                },
+                {
+                  "params": [
+                    "null"
+                  ],
+                  "type": "fill"
+                }
+              ],
+              "hide": false,
+              "policy": "default",
+              "query": "SELECT mean(\"usage_system\") FROM \"cpu\" WHERE \"host\" =~ /^$ac_host$/ AND $timeFilter GROUP BY time(10s), \"host\" fill(0)",
+              "rawQuery": true,
+              "refId": "A",
+              "resultFormat": "time_series",
+              "select": [
+                [
+                  {
+                    "params": [
+                      "value"
+                    ],
+                    "type": "field"
+                  },
+                  {
+                    "params": [],
+                    "type": "mean"
+                  }
+                ]
+              ],
+              "tags": []
+            },
+            {
+              "alias": "$tag_host - cpu: user",
+              "dsType": "influxdb",
+              "groupBy": [
+                {
+                  "params": [
+                    "$interval"
+                  ],
+                  "type": "time"
+                },
+                {
+                  "params": [
+                    "null"
+                  ],
+                  "type": "fill"
+                }
+              ],
+              "hide": false,
+              "policy": "default",
+              "query": "SELECT mean(\"usage_user\") FROM \"cpu\" WHERE \"host\" =~ /^$ac_host$/ AND $timeFilter GROUP BY time(1m), \"host\" fill(0)",
+              "rawQuery": true,
+              "refId": "B",
+              "resultFormat": "time_series",
+              "select": [
+                [
+                  {
+                    "params": [
+                      "value"
+                    ],
+                    "type": "field"
+                  },
+                  {
+                    "params": [],
+                    "type": "mean"
+                  }
+                ]
+              ],
+              "tags": []
+            }
+          ],
+          "timeFrom": null,
+          "timeShift": null,
+          "title": "Sg Accel CPU",
+          "tooltip": {
+            "msResolution": true,
+            "shared": true,
+            "sort": 0,
+            "value_type": "cumulative"
+          },
+          "type": "graph",
+          "xaxis": {
+            "show": true
+          },
+          "yaxes": [
+            {
+              "format": "percent",
+              "label": null,
+              "logBase": 1,
+              "max": 100,
+              "min": null,
+              "show": true
+            },
+            {
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": false
+            }
+          ],
+          "repeatIteration": 1484172417035,
+          "repeatPanelId": 11
+        }
+      ],
+      "title": "New row"
+    },
+    {
+      "collapse": false,
+      "editable": true,
+      "height": "250px",
+      "panels": [
+        {
+          "aliasColors": {},
+          "bars": false,
+          "datasource": "$perftestrundbs",
+          "editable": true,
+          "error": false,
+          "fill": 0,
+          "grid": {
+            "threshold1": null,
+            "threshold1Color": "rgba(216, 200, 27, 0.27)",
+            "threshold2": null,
+            "threshold2Color": "rgba(234, 112, 112, 0.22)"
+          },
+          "id": 4,
+          "interval": "",
+          "isNew": true,
+          "legend": {
+            "alignAsTable": false,
+            "avg": false,
+            "current": false,
+            "max": false,
+            "min": false,
+            "show": true,
+            "total": false,
+            "values": false
+          },
+          "lines": true,
+          "linewidth": 2,
+          "links": [],
+          "nullPointMode": "null as zero",
+          "percentage": false,
+          "pointradius": 1,
+          "points": false,
+          "renderer": "flot",
+          "seriesOverrides": [],
+          "span": 6,
+          "stack": false,
+          "steppedLine": false,
+          "targets": [
+            {
+              "alias": "$tag_host - memory : used",
+              "dsType": "influxdb",
+              "groupBy": [
+                {
+                  "params": [
+                    "30s"
+                  ],
+                  "type": "time"
+                },
+                {
+                  "params": [
+                    "host"
+                  ],
+                  "type": "tag"
+                },
+                {
+                  "params": [
+                    "null"
+                  ],
+                  "type": "fill"
+                }
+              ],
+              "measurement": "mem",
+              "policy": "default",
+              "query": "SELECT mean(\"used\") FROM \"mem\" WHERE \"host\" =~ /^$sg_host$/ AND $timeFilter GROUP BY time(30s), \"host\" fill(null)",
+              "rawQuery": true,
+              "refId": "A",
+              "resultFormat": "time_series",
+              "select": [
+                [
+                  {
+                    "params": [
+                      "used"
+                    ],
+                    "type": "field"
+                  },
+                  {
+                    "params": [],
+                    "type": "mean"
+                  }
+                ]
+              ],
+              "tags": [
+                {
+                  "key": "host",
+                  "operator": "=~",
+                  "value": "/^$sg_host$/"
+                }
+              ]
+            }
+          ],
+          "timeFrom": null,
+          "timeShift": null,
+          "title": "Sync Gateway Memory",
+          "tooltip": {
+            "msResolution": true,
+            "shared": true,
+            "sort": 0,
+            "value_type": "cumulative"
+          },
+          "type": "graph",
+          "xaxis": {
+            "show": true
+          },
+          "yaxes": [
+            {
+              "format": "bytes",
               "label": null,
               "logBase": 1,
               "max": null,
@@ -1130,15 +2279,14 @@
           "datasource": "$perftestrundbs",
           "editable": true,
           "error": false,
-          "fill": 1,
+          "fill": 0,
           "grid": {
             "threshold1": null,
             "threshold1Color": "rgba(216, 200, 27, 0.27)",
             "threshold2": null,
             "threshold2Color": "rgba(234, 112, 112, 0.22)"
           },
-          "id": 7,
-          "interval": ">10s",
+          "id": 12,
           "isNew": true,
           "legend": {
             "avg": false,
@@ -1152,106 +2300,43 @@
           "lines": true,
           "linewidth": 2,
           "links": [],
-          "minSpan": 6,
           "nullPointMode": "connected",
           "percentage": false,
           "pointradius": 5,
           "points": false,
           "renderer": "flot",
-          "repeat": null,
-          "scopedVars": {
-            "sg_host": {
-              "text": "sg2",
-              "value": "sg2",
-              "selected": false
-            }
-          },
           "seriesOverrides": [],
           "span": 6,
-          "stack": true,
+          "stack": false,
           "steppedLine": false,
           "targets": [
             {
-              "alias": "$tag_host - cpu: system",
+              "alias": "$tag_host - memory : used",
               "dsType": "influxdb",
               "groupBy": [
                 {
                   "params": [
-                    "10s"
+                    "$interval"
                   ],
                   "type": "time"
                 },
                 {
                   "params": [
-                    "host"
-                  ],
-                  "type": "tag"
-                },
-                {
-                  "params": [
-                    "0"
+                    "null"
                   ],
                   "type": "fill"
                 }
               ],
-              "measurement": "cpu",
               "policy": "default",
-              "refId": "B",
-              "resultFormat": "time_series",
-              "select": [
-                [
-                  {
-                    "params": [
-                      "usage_system"
-                    ],
-                    "type": "field"
-                  },
-                  {
-                    "params": [],
-                    "type": "mean"
-                  }
-                ]
-              ],
-              "tags": [
-                {
-                  "key": "host",
-                  "operator": "=~",
-                  "value": "/^$sg_host$/"
-                }
-              ]
-            },
-            {
-              "alias": "$tag_host - cpu: user",
-              "dsType": "influxdb",
-              "groupBy": [
-                {
-                  "params": [
-                    "1m"
-                  ],
-                  "type": "time"
-                },
-                {
-                  "params": [
-                    "host"
-                  ],
-                  "type": "tag"
-                },
-                {
-                  "params": [
-                    "0"
-                  ],
-                  "type": "fill"
-                }
-              ],
-              "measurement": "cpu",
-              "policy": "default",
+              "query": "SELECT mean(\"used\") FROM \"mem\" WHERE \"host\" =~ /^$ac_host$/ AND $timeFilter GROUP BY time(30s), \"host\" fill(null)",
+              "rawQuery": true,
               "refId": "A",
               "resultFormat": "time_series",
               "select": [
                 [
                   {
                     "params": [
-                      "usage_user"
+                      "value"
                     ],
                     "type": "field"
                   },
@@ -1261,18 +2346,12 @@
                   }
                 ]
               ],
-              "tags": [
-                {
-                  "key": "host",
-                  "operator": "=~",
-                  "value": "/^$sg_host$/"
-                }
-              ]
+              "tags": []
             }
           ],
           "timeFrom": null,
           "timeShift": null,
-          "title": "Sync gateway CPU",
+          "title": "Sg Accel Memory",
           "tooltip": {
             "msResolution": true,
             "shared": true,
@@ -1285,7 +2364,7 @@
           },
           "yaxes": [
             {
-              "format": "percent",
+              "format": "bytes",
               "label": null,
               "logBase": 1,
               "max": null,
@@ -1300,9 +2379,7 @@
               "min": null,
               "show": true
             }
-          ],
-          "repeatIteration": 1476704456838,
-          "repeatPanelId": 2
+          ]
         }
       ],
       "title": "New row"
@@ -1436,7 +2513,7 @@
       "title": "New row"
     },
     {
-      "collapse": false,
+      "collapse": true,
       "editable": true,
       "height": "250px",
       "panels": [
@@ -1614,140 +2691,11 @@
         }
       ],
       "title": "New row"
-    },
-    {
-      "collapse": false,
-      "editable": true,
-      "height": "250px",
-      "panels": [
-        {
-          "aliasColors": {},
-          "bars": false,
-          "datasource": "$perftestrundbs",
-          "editable": true,
-          "error": false,
-          "fill": 4,
-          "grid": {
-            "threshold1": null,
-            "threshold1Color": "rgba(216, 200, 27, 0.27)",
-            "threshold2": null,
-            "threshold2Color": "rgba(234, 112, 112, 0.22)"
-          },
-          "id": 4,
-          "interval": ">10s",
-          "isNew": true,
-          "legend": {
-            "alignAsTable": false,
-            "avg": false,
-            "current": false,
-            "max": false,
-            "min": false,
-            "show": true,
-            "total": false,
-            "values": false
-          },
-          "lines": true,
-          "linewidth": 2,
-          "links": [],
-          "nullPointMode": "null as zero",
-          "percentage": false,
-          "pointradius": 1,
-          "points": false,
-          "renderer": "flot",
-          "seriesOverrides": [],
-          "span": 12,
-          "stack": true,
-          "steppedLine": false,
-          "targets": [
-            {
-              "alias": "$tag_host - memory : used",
-              "dsType": "influxdb",
-              "groupBy": [
-                {
-                  "params": [
-                    "10s"
-                  ],
-                  "type": "time"
-                },
-                {
-                  "params": [
-                    "host"
-                  ],
-                  "type": "tag"
-                },
-                {
-                  "params": [
-                    "null"
-                  ],
-                  "type": "fill"
-                }
-              ],
-              "measurement": "mem",
-              "policy": "default",
-              "refId": "A",
-              "resultFormat": "time_series",
-              "select": [
-                [
-                  {
-                    "params": [
-                      "used"
-                    ],
-                    "type": "field"
-                  },
-                  {
-                    "params": [],
-                    "type": "mean"
-                  }
-                ]
-              ],
-              "tags": [
-                {
-                  "key": "host",
-                  "operator": "=~",
-                  "value": "/^$sg_host$/"
-                }
-              ]
-            }
-          ],
-          "timeFrom": null,
-          "timeShift": null,
-          "title": "Sync Gateway Memory",
-          "tooltip": {
-            "msResolution": true,
-            "shared": true,
-            "sort": 0,
-            "value_type": "cumulative"
-          },
-          "type": "graph",
-          "xaxis": {
-            "show": true
-          },
-          "yaxes": [
-            {
-              "format": "bytes",
-              "label": null,
-              "logBase": 10,
-              "max": null,
-              "min": null,
-              "show": true
-            },
-            {
-              "format": "short",
-              "label": null,
-              "logBase": 1,
-              "max": null,
-              "min": null,
-              "show": true
-            }
-          ]
-        }
-      ],
-      "title": "New row"
     }
   ],
   "time": {
-    "from": "now/d",
-    "to": "now"
+    "from": "2017-01-11T19:28:22.875Z",
+    "to": "2017-01-11T20:20:21.185Z"
   },
   "timepicker": {
     "refresh_intervals": [
@@ -1778,8 +2726,9 @@
     "list": [
       {
         "current": {
-          "text": "jenkins-sync-gateway-perf-test-41",
-          "value": "jenkins-sync-gateway-perf-test-41"
+          "text": "jenkins-sync-gateway-perf-test-257",
+          "value": "jenkins-sync-gateway-perf-test-257",
+          "selected": true
         },
         "datasource": null,
         "hide": 0,
@@ -1789,413 +2738,123 @@
         "name": "perftestrundbs",
         "options": [
           {
-            "text": "jenkins-epoch-test-2",
-            "value": "jenkins-epoch-test-2",
+            "text": "jenkins-sync-gateway-perf-test-235",
+            "value": "jenkins-sync-gateway-perf-test-235",
             "selected": false
           },
           {
-            "text": "jenkins-epoch-test-3",
-            "value": "jenkins-epoch-test-3",
+            "text": "jenkins-sync-gateway-perf-test-236",
+            "value": "jenkins-sync-gateway-perf-test-236",
             "selected": false
           },
           {
-            "text": "jenkins-epoch-test-4",
-            "value": "jenkins-epoch-test-4",
+            "text": "jenkins-sync-gateway-perf-test-237",
+            "value": "jenkins-sync-gateway-perf-test-237",
             "selected": false
           },
           {
-            "text": "jenkins-epoch-test-5",
-            "value": "jenkins-epoch-test-5",
+            "text": "jenkins-sync-gateway-perf-test-238",
+            "value": "jenkins-sync-gateway-perf-test-238",
             "selected": false
           },
           {
-            "text": "jenkins-epoch-test-6",
-            "value": "jenkins-epoch-test-6",
+            "text": "jenkins-sync-gateway-perf-test-239",
+            "value": "jenkins-sync-gateway-perf-test-239",
             "selected": false
           },
           {
-            "text": "jenkins-epoch-test-7",
-            "value": "jenkins-epoch-test-7",
+            "text": "jenkins-sync-gateway-perf-test-240",
+            "value": "jenkins-sync-gateway-perf-test-240",
             "selected": false
           },
           {
-            "text": "jenkins-epoch-test-8",
-            "value": "jenkins-epoch-test-8",
+            "text": "jenkins-sync-gateway-perf-test-241",
+            "value": "jenkins-sync-gateway-perf-test-241",
             "selected": false
           },
           {
-            "text": "jenkins-epoch-test-9",
-            "value": "jenkins-epoch-test-9",
+            "text": "jenkins-sync-gateway-perf-test-242",
+            "value": "jenkins-sync-gateway-perf-test-242",
             "selected": false
           },
           {
-            "text": "jenkins-sync-gateway-perf-test-1",
-            "value": "jenkins-sync-gateway-perf-test-1",
+            "text": "jenkins-sync-gateway-perf-test-243",
+            "value": "jenkins-sync-gateway-perf-test-243",
             "selected": false
           },
           {
-            "text": "jenkins-sync-gateway-perf-test-10",
-            "value": "jenkins-sync-gateway-perf-test-10",
+            "text": "jenkins-sync-gateway-perf-test-244",
+            "value": "jenkins-sync-gateway-perf-test-244",
             "selected": false
           },
           {
-            "text": "jenkins-sync-gateway-perf-test-11",
-            "value": "jenkins-sync-gateway-perf-test-11",
+            "text": "jenkins-sync-gateway-perf-test-245",
+            "value": "jenkins-sync-gateway-perf-test-245",
             "selected": false
           },
           {
-            "text": "jenkins-sync-gateway-perf-test-12",
-            "value": "jenkins-sync-gateway-perf-test-12",
+            "text": "jenkins-sync-gateway-perf-test-246",
+            "value": "jenkins-sync-gateway-perf-test-246",
             "selected": false
           },
           {
-            "text": "jenkins-sync-gateway-perf-test-13",
-            "value": "jenkins-sync-gateway-perf-test-13",
+            "text": "jenkins-sync-gateway-perf-test-247",
+            "value": "jenkins-sync-gateway-perf-test-247",
             "selected": false
           },
           {
-            "text": "jenkins-sync-gateway-perf-test-14",
-            "value": "jenkins-sync-gateway-perf-test-14",
+            "text": "jenkins-sync-gateway-perf-test-248",
+            "value": "jenkins-sync-gateway-perf-test-248",
             "selected": false
           },
           {
-            "text": "jenkins-sync-gateway-perf-test-15",
-            "value": "jenkins-sync-gateway-perf-test-15",
+            "text": "jenkins-sync-gateway-perf-test-249",
+            "value": "jenkins-sync-gateway-perf-test-249",
             "selected": false
           },
           {
-            "text": "jenkins-sync-gateway-perf-test-16",
-            "value": "jenkins-sync-gateway-perf-test-16",
+            "text": "jenkins-sync-gateway-perf-test-250",
+            "value": "jenkins-sync-gateway-perf-test-250",
             "selected": false
           },
           {
-            "text": "jenkins-sync-gateway-perf-test-17",
-            "value": "jenkins-sync-gateway-perf-test-17",
+            "text": "jenkins-sync-gateway-perf-test-251",
+            "value": "jenkins-sync-gateway-perf-test-251",
             "selected": false
           },
           {
-            "text": "jenkins-sync-gateway-perf-test-18",
-            "value": "jenkins-sync-gateway-perf-test-18",
+            "text": "jenkins-sync-gateway-perf-test-252",
+            "value": "jenkins-sync-gateway-perf-test-252",
             "selected": false
           },
           {
-            "text": "jenkins-sync-gateway-perf-test-19",
-            "value": "jenkins-sync-gateway-perf-test-19",
+            "text": "jenkins-sync-gateway-perf-test-253",
+            "value": "jenkins-sync-gateway-perf-test-253",
             "selected": false
           },
           {
-            "text": "jenkins-sync-gateway-perf-test-2",
-            "value": "jenkins-sync-gateway-perf-test-2",
+            "text": "jenkins-sync-gateway-perf-test-254",
+            "value": "jenkins-sync-gateway-perf-test-254",
             "selected": false
           },
           {
-            "text": "jenkins-sync-gateway-perf-test-20",
-            "value": "jenkins-sync-gateway-perf-test-20",
+            "text": "jenkins-sync-gateway-perf-test-255",
+            "value": "jenkins-sync-gateway-perf-test-255",
             "selected": false
           },
           {
-            "text": "jenkins-sync-gateway-perf-test-21",
-            "value": "jenkins-sync-gateway-perf-test-21",
+            "text": "jenkins-sync-gateway-perf-test-256",
+            "value": "jenkins-sync-gateway-perf-test-256",
             "selected": false
           },
           {
-            "text": "jenkins-sync-gateway-perf-test-22",
-            "value": "jenkins-sync-gateway-perf-test-22",
-            "selected": false
-          },
-          {
-            "text": "jenkins-sync-gateway-perf-test-23",
-            "value": "jenkins-sync-gateway-perf-test-23",
-            "selected": false
-          },
-          {
-            "text": "jenkins-sync-gateway-perf-test-24",
-            "value": "jenkins-sync-gateway-perf-test-24",
-            "selected": false
-          },
-          {
-            "text": "jenkins-sync-gateway-perf-test-25",
-            "value": "jenkins-sync-gateway-perf-test-25",
-            "selected": false
-          },
-          {
-            "text": "jenkins-sync-gateway-perf-test-26",
-            "value": "jenkins-sync-gateway-perf-test-26",
-            "selected": false
-          },
-          {
-            "text": "jenkins-sync-gateway-perf-test-27",
-            "value": "jenkins-sync-gateway-perf-test-27",
-            "selected": false
-          },
-          {
-            "text": "jenkins-sync-gateway-perf-test-28",
-            "value": "jenkins-sync-gateway-perf-test-28",
-            "selected": false
-          },
-          {
-            "text": "jenkins-sync-gateway-perf-test-29",
-            "value": "jenkins-sync-gateway-perf-test-29",
-            "selected": false
-          },
-          {
-            "text": "jenkins-sync-gateway-perf-test-3",
-            "value": "jenkins-sync-gateway-perf-test-3",
-            "selected": false
-          },
-          {
-            "text": "jenkins-sync-gateway-perf-test-30",
-            "value": "jenkins-sync-gateway-perf-test-30",
-            "selected": false
-          },
-          {
-            "text": "jenkins-sync-gateway-perf-test-31",
-            "value": "jenkins-sync-gateway-perf-test-31",
-            "selected": false
-          },
-          {
-            "text": "jenkins-sync-gateway-perf-test-32",
-            "value": "jenkins-sync-gateway-perf-test-32",
-            "selected": false
-          },
-          {
-            "text": "jenkins-sync-gateway-perf-test-33",
-            "value": "jenkins-sync-gateway-perf-test-33",
-            "selected": false
-          },
-          {
-            "text": "jenkins-sync-gateway-perf-test-34",
-            "value": "jenkins-sync-gateway-perf-test-34",
-            "selected": false
-          },
-          {
-            "text": "jenkins-sync-gateway-perf-test-35",
-            "value": "jenkins-sync-gateway-perf-test-35",
-            "selected": false
-          },
-          {
-            "text": "jenkins-sync-gateway-perf-test-36",
-            "value": "jenkins-sync-gateway-perf-test-36",
-            "selected": false
-          },
-          {
-            "text": "jenkins-sync-gateway-perf-test-37",
-            "value": "jenkins-sync-gateway-perf-test-37",
-            "selected": false
-          },
-          {
-            "text": "jenkins-sync-gateway-perf-test-38",
-            "value": "jenkins-sync-gateway-perf-test-38",
-            "selected": false
-          },
-          {
-            "text": "jenkins-sync-gateway-perf-test-39",
-            "value": "jenkins-sync-gateway-perf-test-39",
-            "selected": false
-          },
-          {
-            "text": "jenkins-sync-gateway-perf-test-4",
-            "value": "jenkins-sync-gateway-perf-test-4",
-            "selected": false
-          },
-          {
-            "text": "jenkins-sync-gateway-perf-test-40",
-            "value": "jenkins-sync-gateway-perf-test-40",
-            "selected": false
-          },
-          {
-            "text": "jenkins-sync-gateway-perf-test-41",
-            "value": "jenkins-sync-gateway-perf-test-41",
+            "text": "jenkins-sync-gateway-perf-test-257",
+            "value": "jenkins-sync-gateway-perf-test-257",
             "selected": true
           },
           {
-            "text": "jenkins-sync-gateway-perf-test-5",
-            "value": "jenkins-sync-gateway-perf-test-5",
-            "selected": false
-          },
-          {
-            "text": "jenkins-sync-gateway-perf-test-6",
-            "value": "jenkins-sync-gateway-perf-test-6",
-            "selected": false
-          },
-          {
-            "text": "jenkins-sync-gateway-perf-test-7",
-            "value": "jenkins-sync-gateway-perf-test-7",
-            "selected": false
-          },
-          {
-            "text": "jenkins-sync-gateway-perf-test-8",
-            "value": "jenkins-sync-gateway-perf-test-8",
-            "selected": false
-          },
-          {
-            "text": "jenkins-sync-gateway-perf-test-9",
-            "value": "jenkins-sync-gateway-perf-test-9",
-            "selected": false
-          },
-          {
-            "text": "jenkins-sync-gateway-perf-test-with-analytics-13",
-            "value": "jenkins-sync-gateway-perf-test-with-analytics-13",
-            "selected": false
-          },
-          {
-            "text": "jenkins-sync-gateway-perf-test-with-analytics-14",
-            "value": "jenkins-sync-gateway-perf-test-with-analytics-14",
-            "selected": false
-          },
-          {
-            "text": "jenkins-sync-gateway-perf-test-with-analytics-15",
-            "value": "jenkins-sync-gateway-perf-test-with-analytics-15",
-            "selected": false
-          },
-          {
-            "text": "jenkins-sync-gateway-perf-test-with-analytics-16",
-            "value": "jenkins-sync-gateway-perf-test-with-analytics-16",
-            "selected": false
-          },
-          {
-            "text": "jenkins-sync-gateway-perf-test-with-analytics-17",
-            "value": "jenkins-sync-gateway-perf-test-with-analytics-17",
-            "selected": false
-          },
-          {
-            "text": "jenkins-sync-gateway-perf-test-with-analytics-18",
-            "value": "jenkins-sync-gateway-perf-test-with-analytics-18",
-            "selected": false
-          },
-          {
-            "text": "jenkins-sync-gateway-perf-test-with-analytics-19",
-            "value": "jenkins-sync-gateway-perf-test-with-analytics-19",
-            "selected": false
-          },
-          {
-            "text": "jenkins-sync-gateway-perf-test-with-analytics-20",
-            "value": "jenkins-sync-gateway-perf-test-with-analytics-20",
-            "selected": false
-          },
-          {
-            "text": "jenkins-sync-gateway-perf-test-with-analytics-21",
-            "value": "jenkins-sync-gateway-perf-test-with-analytics-21",
-            "selected": false
-          },
-          {
-            "text": "jenkins-sync-gateway-perf-test-with-analytics-22",
-            "value": "jenkins-sync-gateway-perf-test-with-analytics-22",
-            "selected": false
-          },
-          {
-            "text": "jenkins-sync-gateway-perf-test-with-analytics-23",
-            "value": "jenkins-sync-gateway-perf-test-with-analytics-23",
-            "selected": false
-          },
-          {
-            "text": "jenkins-sync-gateway-perf-test-with-analytics-24",
-            "value": "jenkins-sync-gateway-perf-test-with-analytics-24",
-            "selected": false
-          },
-          {
-            "text": "jenkins-sync-gateway-perf-test-with-analytics-25",
-            "value": "jenkins-sync-gateway-perf-test-with-analytics-25",
-            "selected": false
-          },
-          {
-            "text": "jenkins-sync-gateway-perf-test-with-analytics-26",
-            "value": "jenkins-sync-gateway-perf-test-with-analytics-26",
-            "selected": false
-          },
-          {
-            "text": "jenkins-sync-gateway-perf-test-with-analytics-27",
-            "value": "jenkins-sync-gateway-perf-test-with-analytics-27",
-            "selected": false
-          },
-          {
-            "text": "jenkins-sync-gateway-perf-test-with-analytics-28",
-            "value": "jenkins-sync-gateway-perf-test-with-analytics-28",
-            "selected": false
-          },
-          {
-            "text": "jenkins-sync-gateway-perf-test-with-analytics-29",
-            "value": "jenkins-sync-gateway-perf-test-with-analytics-29",
-            "selected": false
-          },
-          {
-            "text": "jenkins-sync-gateway-perf-test-with-analytics-30",
-            "value": "jenkins-sync-gateway-perf-test-with-analytics-30",
-            "selected": false
-          },
-          {
-            "text": "jenkins-sync-gateway-perf-test-with-analytics-32",
-            "value": "jenkins-sync-gateway-perf-test-with-analytics-32",
-            "selected": false
-          },
-          {
-            "text": "jenkins-sync-gateway-perf-test-with-analytics-33",
-            "value": "jenkins-sync-gateway-perf-test-with-analytics-33",
-            "selected": false
-          },
-          {
-            "text": "jenkins-sync-gateway-perf-test-with-analytics-34",
-            "value": "jenkins-sync-gateway-perf-test-with-analytics-34",
-            "selected": false
-          },
-          {
-            "text": "jenkins-sync-gateway-perf-test-with-analytics-35",
-            "value": "jenkins-sync-gateway-perf-test-with-analytics-35",
-            "selected": false
-          },
-          {
-            "text": "jenkins-sync-gateway-perf-test-with-analytics-36",
-            "value": "jenkins-sync-gateway-perf-test-with-analytics-36",
-            "selected": false
-          },
-          {
-            "text": "jenkins-sync-gateway-perf-test-with-analytics-37",
-            "value": "jenkins-sync-gateway-perf-test-with-analytics-37",
-            "selected": false
-          },
-          {
-            "text": "jenkins-sync-gateway-perf-test-with-analytics-38",
-            "value": "jenkins-sync-gateway-perf-test-with-analytics-38",
-            "selected": false
-          },
-          {
-            "text": "jenkins-sync-gateway-perf-test-with-analytics-39",
-            "value": "jenkins-sync-gateway-perf-test-with-analytics-39",
-            "selected": false
-          },
-          {
-            "text": "jenkins-sync-gateway-perf-test-with-analytics-40",
-            "value": "jenkins-sync-gateway-perf-test-with-analytics-40",
-            "selected": false
-          },
-          {
-            "text": "jenkins-sync-gateway-perf-test-with-analytics-41",
-            "value": "jenkins-sync-gateway-perf-test-with-analytics-41",
-            "selected": false
-          },
-          {
-            "text": "jenkins-sync-gateway-perf-test-with-analytics-42",
-            "value": "jenkins-sync-gateway-perf-test-with-analytics-42",
-            "selected": false
-          },
-          {
-            "text": "jenkins-sync-gateway-perf-test-with-analytics-43",
-            "value": "jenkins-sync-gateway-perf-test-with-analytics-43",
-            "selected": false
-          },
-          {
-            "text": "jenkins-sync-gateway-perf-test-with-analytics-44",
-            "value": "jenkins-sync-gateway-perf-test-with-analytics-44",
-            "selected": false
-          },
-          {
-            "text": "jenkins-sync-gateway-perf-test-with-analytics-45",
-            "value": "jenkins-sync-gateway-perf-test-with-analytics-45",
-            "selected": false
-          },
-          {
-            "text": "jenkins-sync-gateway-perf-test-with-analytics-46",
-            "value": "jenkins-sync-gateway-perf-test-with-analytics-46",
+            "text": "jenkins-sync-gateway-perf-test-258",
+            "value": "jenkins-sync-gateway-perf-test-258",
             "selected": false
           }
         ],
@@ -2245,13 +2904,23 @@
             "selected": true
           },
           {
-            "text": "sg1",
-            "value": "sg1",
+            "text": "sg2",
+            "value": "sg2",
             "selected": false
           },
           {
-            "text": "sg2",
-            "value": "sg2",
+            "text": "sg5",
+            "value": "sg5",
+            "selected": false
+          },
+          {
+            "text": "sg7",
+            "value": "sg7",
+            "selected": false
+          },
+          {
+            "text": "sg9",
+            "value": "sg9",
             "selected": false
           }
         ],
@@ -2268,7 +2937,7 @@
         "datasource": "$perftestrundbs",
         "hide": 0,
         "includeAll": true,
-        "label": "Cocuhbase Server Hosts",
+        "label": "Couchbase Server Hosts",
         "multi": true,
         "name": "cb_host",
         "options": [
@@ -2283,13 +2952,13 @@
             "selected": false
           },
           {
-            "text": "cb2",
-            "value": "cb2",
+            "text": "cb5",
+            "value": "cb5",
             "selected": false
           },
           {
-            "text": "cb3",
-            "value": "cb3",
+            "text": "cb6",
+            "value": "cb6",
             "selected": false
           }
         ],
@@ -2306,7 +2975,7 @@
         "datasource": "$perftestrundbs",
         "hide": 0,
         "includeAll": true,
-        "label": "Load Generatorr Hosts",
+        "label": "Load Generator Hosts",
         "multi": true,
         "name": "lg_host",
         "options": [
@@ -2324,11 +2993,54 @@
             "text": "lg2",
             "value": "lg2",
             "selected": false
+          },
+          {
+            "text": "lg3",
+            "value": "lg3",
+            "selected": false
+          },
+          {
+            "text": "lg4",
+            "value": "lg4",
+            "selected": false
           }
         ],
         "query": "SHOW TAG VALUES WITH KEY = \"host\"",
         "refresh": 1,
         "regex": "(lg.*)",
+        "type": "query"
+      },
+      {
+        "current": {
+          "text": "All",
+          "value": "$__all"
+        },
+        "datasource": "$perftestrundbs",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Load Generator Hosts",
+        "multi": true,
+        "name": "ac_host",
+        "options": [
+          {
+            "text": "All",
+            "value": "$__all",
+            "selected": true
+          },
+          {
+            "text": "ac1",
+            "value": "ac1",
+            "selected": false
+          },
+          {
+            "text": "ac5",
+            "value": "ac5",
+            "selected": false
+          }
+        ],
+        "query": "SHOW TAG VALUES WITH KEY = \"host\"",
+        "refresh": 1,
+        "regex": "(ac.*)",
         "type": "query"
       }
     ]
@@ -2338,7 +3050,7 @@
   },
   "refresh": false,
   "schemaVersion": 12,
-  "version": 4,
+  "version": 23,
   "links": [],
   "gnetId": null
 }
