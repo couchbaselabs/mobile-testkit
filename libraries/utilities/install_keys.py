@@ -10,7 +10,7 @@ from generate_clusters_from_pool import get_ips
 
 def install_keys(key_name, user_name):
 
-    ips = get_ips()
+    ips, _ = get_ips()
 
     print("Are you sure you would like to copy public key '{0}' to vms: {1}".format(
         key_name, ips
