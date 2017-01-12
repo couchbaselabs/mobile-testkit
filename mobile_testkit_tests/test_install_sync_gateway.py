@@ -70,7 +70,7 @@ def test_get_buckets_from_sync_gateway_config_template_vars():
         "db":{
             "feed_type":"DCPSHARD",
             "feed_params":{
-                "num_shards":64
+                "num_shards":16
             },
             "server":"http://{{ couchbase_server_primary_node }}:8091",
             "bucket":"data-bucket",

@@ -17,7 +17,7 @@
         "db":{
             "feed_type":"DCPSHARD",
             "feed_params":{
-                "num_shards":64
+                "num_shards":16
             },
             "server":"http://{{ couchbase_server_primary_node }}:8091",
             "bucket":"data-bucket",
@@ -30,7 +30,7 @@
         "db2":{
             "feed_type":"DCPSHARD",
             "feed_params":{
-                "num_shards":64
+                "num_shards":16
             },
             "server":"http://{{ couchbase_server_primary_node }}:8091",
             "bucket":"data-bucket-2",
