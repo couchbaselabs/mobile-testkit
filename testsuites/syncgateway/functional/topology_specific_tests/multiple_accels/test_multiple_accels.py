@@ -483,9 +483,9 @@ def test_missing_num_shards(params_from_base_test_setup, sg_conf):
     admin_api = Admin(cluster.sg_accels[1])
     cbgt_cfg = admin_api.get_cbgt_config()
 
-    # Verify that default number of pindex shards is 64.
+    # Verify that default number of pindex shards is 16.
     # This may change in the future in which case this test will need to be updated.
-    assert cbgt_cfg.num_shards == 64
+    assert cbgt_cfg.num_shards == 16
 
     # Verify sharding is correct
     assert cluster.validate_cbgt_pindex_distribution_retry(num_running_sg_accels=3)
