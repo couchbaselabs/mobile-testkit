@@ -43,7 +43,7 @@ def collect_profiles(results_directory, sg_binary_path):
 
     for profile_type in profile_types:
         for format_type in format_types:
-            print "Collecting {0} profile in format {1}".format(profile_type, format_type)
+            print("Collecting {0} profile in format {1}".format(profile_type, format_type))
             out_filename = "{0}.{1}".format(profile_type, format_type)
             dest_path = os.path.join(results_directory, out_filename)
             cmd = "go tool pprof -{0} {1} {2}/{3} > {4}".format(
@@ -53,7 +53,7 @@ def collect_profiles(results_directory, sg_binary_path):
                 profile_type,
                 dest_path
             )
-            print cmd
+            print(cmd)
             run_command(cmd)
 
 
