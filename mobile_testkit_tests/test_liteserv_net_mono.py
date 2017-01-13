@@ -46,7 +46,7 @@ def test_net_mono_download(request):
     liteserv.download()
 
     assert os.path.isdir("deps/binaries/couchbase-lite-net-mono-{}-liteserv".format(net_version))
-    assert os.path.isfile("deps/binaries/couchbase-lite-net-mono-{}-liteserv/LiteServ.exe".format(net_version))
+    assert os.path.isfile("deps/binaries/couchbase-lite-net-mono-{}-liteserv/net45/LiteServ.exe".format(net_version))
     assert not os.path.isfile("deps/binaries/couchbase-lite-net-mono-{}-liteserv.zip".format(net_version))
 
 
