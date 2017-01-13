@@ -26,7 +26,7 @@ class LiteServNetMono(LiteServBase):
         """
 
         # Skip download if packages is already downloaded
-        expected_binary = "{}/couchbase-lite-net-mono-{}-liteserv/LiteServ.exe".format(BINARY_DIR, self.version_build)
+        expected_binary = "{}/couchbase-lite-net-mono-{}-liteserv/net45/LiteServ.exe".format(BINARY_DIR, self.version_build)
         if os.path.isfile(expected_binary):
             log_info("Package already downloaded: {}".format(expected_binary))
             return

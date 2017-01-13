@@ -70,7 +70,7 @@ class LiteServNetMsft(LiteServBase):
         Installs needed packages on Windows host and removes any existing service wrappers for LiteServ
         """
 
-        directory_path = "couchbase-lite-net-msft-{}-liteserv/LiteServ.exe".format(self.version_build)
+        directory_path = "couchbase-lite-net-msft-{}-liteserv/net45/LiteServ.exe".format(self.version_build)
         status = self.ansible_runner.run_ansible_playbook("install-liteserv-windows.yml", extra_vars={
             "directory_path": directory_path
         })
