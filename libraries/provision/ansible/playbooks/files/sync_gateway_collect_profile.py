@@ -8,7 +8,6 @@ import sys
 import psutil
 import time
 
-
 profile_types = [
     "profile",
     "heap",
@@ -43,7 +42,7 @@ def collect_profiles(results_directory, sg_binary_path):
 
     for profile_type in profile_types:
         for format_type in format_types:
-            print "Collecting {0} profile in format {1}".format(profile_type, format_type)
+            print("Collecting {0} profile in format {1}".format(profile_type, format_type))
             out_filename = "{0}.{1}".format(profile_type, format_type)
             dest_path = os.path.join(results_directory, out_filename)
             cmd = "go tool pprof -{0} {1} {2}/{3} > {4}".format(
@@ -53,7 +52,7 @@ def collect_profiles(results_directory, sg_binary_path):
                 profile_type,
                 dest_path
             )
-            print cmd
+            print(cmd)
             run_command(cmd)
 
 
@@ -105,6 +104,9 @@ if __name__ == "__main__":
             # this is the temp dir where collected files will be stored. will be deleted at end.
 
             results_directory = "/tmp/sync_gateway_profile_temp"
+            if os.path.exists(results_directory):
+                print("Deleting temp directory")
+                shutil.rmtree(results_directory)
             os.makedirs(results_directory)
 
             collect_profiles(results_directory, sg_binary_path)
@@ -114,6 +116,9 @@ if __name__ == "__main__":
             # delete the tmp dir since we're done with it
             shutil.rmtree(results_directory)
 
+            # package the all of the profile results
+            run_command("tar cvfz {0}.tar.gz {1}".format(final_results_directory, final_results_directory))
+
             # takes 1 min for collection
             minutes_elapsed += 1
             continue
@@ -121,8 +126,5 @@ if __name__ == "__main__":
         # wait one minute
         time.sleep(60)
         minutes_elapsed += 1
-
-    # package the all of the profile results
-    run_command("tar cvfz {0}.tar.gz {1}".format(final_results_directory, final_results_directory))
 
     shutil.rmtree(final_results_directory)

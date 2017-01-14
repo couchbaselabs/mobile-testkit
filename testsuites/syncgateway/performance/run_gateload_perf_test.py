@@ -7,6 +7,7 @@ from libraries.provision.ansible_runner import AnsibleRunner
 import generate_gateload_configs
 from keywords.exceptions import ProvisioningError
 from libraries.utilities.log_expvars import log_expvars
+from libraries.utilities.fetch_sync_gateway_profile import fetch_sync_gateway_profile
 
 
 def run_gateload_perf_test(number_pullers,
@@ -74,6 +75,9 @@ def run_gateload_perf_test(number_pullers,
     # write expvars to file, will exit when gateload scenario is done
     print(">>> Logging expvars")
     log_expvars(cluster_config, test_run_id)
+
+    print(">>> Fetch Sync Gateway profile")
+    fetch_sync_gateway_profile(cluster_config, test_run_id)
 
 
 if __name__ == "__main__":
