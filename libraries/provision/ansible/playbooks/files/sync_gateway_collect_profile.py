@@ -8,7 +8,6 @@ import sys
 import psutil
 import time
 
-
 profile_types = [
     "profile",
     "heap",
@@ -105,6 +104,9 @@ if __name__ == "__main__":
             # this is the temp dir where collected files will be stored. will be deleted at end.
 
             results_directory = "/tmp/sync_gateway_profile_temp"
+            if os.path.exists(results_directory):
+                print("Deleting temp directory")
+                shutil.rmtree(results_directory)
             os.makedirs(results_directory)
 
             collect_profiles(results_directory, sg_binary_path)
@@ -114,6 +116,9 @@ if __name__ == "__main__":
             # delete the tmp dir since we're done with it
             shutil.rmtree(results_directory)
 
+            # package the all of the profile results
+            run_command("tar cvfz {0}.tar.gz {1}".format(final_results_directory, final_results_directory))
+
             # takes 1 min for collection
             minutes_elapsed += 1
             continue
@@ -121,8 +126,5 @@ if __name__ == "__main__":
         # wait one minute
         time.sleep(60)
         minutes_elapsed += 1
-
-    # package the all of the profile results
-    run_command("tar cvfz {0}.tar.gz {1}".format(final_results_directory, final_results_directory))
 
     shutil.rmtree(final_results_directory)
