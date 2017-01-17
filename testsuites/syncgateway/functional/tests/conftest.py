@@ -104,7 +104,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         "mode": mode
     }
 
-    # Code after the yeild will execute when each test finishes
+    # Code after the yield will execute when each test finishes
     log_info("Tearing down test '{}'".format(test_name))
 
     network_utils = NetworkUtils()

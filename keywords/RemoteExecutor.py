@@ -41,8 +41,11 @@ class RemoteExecutor:
         # We should not be sending / recieving data on the stdin channel so close it
         stdin.close()
 
-        stream_output(stdout)
-        stream_output(stderr)
+        stdout_p = stdout.readlines()
+        stream_output(stdout_p)
+        stderr_p = stderr.readlines()
+        stream_output(stderr_p)
+
 
         # this will block until the command has completed and will return the error code from
         # the command. If the command does not return an exit status, then -1 is returned
@@ -51,13 +54,14 @@ class RemoteExecutor:
         log_info("Closing connection to {}".format(self.host))
         self.client.close()
 
-        return status
+        return status, stdout_p, stderr_p
 
-    def must_execute(self, command):
+    def must_execute(self, command, any_status=False):
         """This wraps self.execute(command) and throws
         an exception if the status returned is non-zero
         """
 
-        status = self.execute(command)
-        if status != 0:
+        status, stdout, stderr = self.execute(command)
+        if status != 0 and not any_status:
             raise RemoteCommandError("command: {} failed on host: {}".format(command, self.host))
+        return status, stdout, stderr
