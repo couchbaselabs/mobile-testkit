@@ -10,13 +10,7 @@ import os
 from libraries.utilities.generate_clusters_from_pool import generate_clusters_from_pool
 
 
-def generate_cluster_configs_from_vagrant(private_network, public_network, public_network_ethernet):
-    """
-    1. Gets the status for a running vagrant vm set.
-    2. Uses the host name to look up the ip allocated to each vagrant vm instance
-    3. Uses this IP list to build a pool.json file and generate the cluster configurations
-    """
-
+def check_network_options(private_network, public_network, public_network_ethernet):
     # Check if only one of the options is set, private_network or public_network or public_network_ethernet
     if private_network and (public_network or public_network_ethernet):
         raise ProvisioningError("Invalid private_network and public_network/public_network_ethernet flags")
@@ -28,6 +22,16 @@ def generate_cluster_configs_from_vagrant(private_network, public_network, publi
     # Check if none of the options are set
     if not private_network and not public_network and not public_network_ethernet:
         raise ProvisioningError("Invalid private_network, public_network and public_network_ethernet flags")
+
+
+def generate_cluster_configs_from_vagrant(private_network, public_network, public_network_ethernet):
+    """
+    1. Gets the status for a running vagrant vm set.
+    2. Uses the host name to look up the ip allocated to each vagrant vm instance
+    3. Uses this IP list to build a pool.json file and generate the cluster configurations
+    """
+
+    check_network_options(private_network, public_network, public_network_ethernet)
 
     cwd = os.getcwd()
 
