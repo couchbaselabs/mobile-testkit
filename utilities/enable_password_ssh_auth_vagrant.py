@@ -2,21 +2,12 @@ import json
 import os
 import subprocess
 from optparse import OptionParser
+from generate_cluster_configs_from_vagrant_hosts import check_network_options
 import sys
 
 
 def fix_password_auth(pool_file, private_network, public_network, public_network_ethernet):
-    # Check if only one of the options is set, private_network or public_network or public_network_ethernet
-    if private_network and (public_network or public_network_ethernet):
-        raise Exception("Invalid private_network and public_network/public_network_ethernet flags")
-    elif public_network and (private_network or public_network_ethernet):
-        raise Exception("Invalid public_network and private_network/public_network_ethernet flags")
-    elif public_network_ethernet and (public_network or private_network):
-        raise Exception("Invalid public_network_ethernet and public_network/private_network flags")
-
-    # Check if none of the options are set
-    if not private_network and not public_network and not public_network_ethernet:
-        raise Exception("Invalid private_network, public_network and public_network_ethernet flags")
+    check_network_options(private_network, public_network, public_network_ethernet)
 
     with open(pool_file) as f:
         pool_dict = json.loads(f.read())
