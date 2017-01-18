@@ -61,7 +61,6 @@ class RemoteExecutor:
         an exception if the status returned is non-zero
         """
 
-        status, stdout, stderr = self.execute(command)
+        self.execute(command)
         if status != 0:
             raise RemoteCommandError("command: {} failed on host: {}".format(command, self.host))
-        return status, stdout, stderr
