@@ -56,12 +56,12 @@ class RemoteExecutor:
 
         return status, stdout_p, stderr_p
 
-    def must_execute(self, command, any_status=False):
+    def must_execute(self, command):
         """This wraps self.execute(command) and throws
         an exception if the status returned is non-zero
         """
 
         status, stdout, stderr = self.execute(command)
-        if status != 0 and not any_status:
+        if status != 0:
             raise RemoteCommandError("command: {} failed on host: {}".format(command, self.host))
         return status, stdout, stderr
