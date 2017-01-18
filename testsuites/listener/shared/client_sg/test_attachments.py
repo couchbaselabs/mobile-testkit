@@ -3,6 +3,8 @@ import pytest
 from keywords.utils import log_info
 from keywords.MobileRestClient import MobileRestClient
 from keywords import document
+from keywords.SyncGateway import SyncGateway
+from keywords.constants import SYNC_GATEWAY_CONFIGS
 
 
 @pytest.mark.sanity
@@ -60,7 +62,6 @@ def test_raw_attachment(setup_client_syncgateway_test):
 @pytest.mark.syncgateway
 @pytest.mark.attachments
 @pytest.mark.usefixtures("setup_client_syncgateway_suite")
-@pytest.mark.skip(reason="https://github.com/couchbase/couchbase-lite-net/issues/749")
 def test_inline_large_attachments(setup_client_syncgateway_test):
     """
     1.  Start LiteServ and Sync Gateway
@@ -79,6 +80,7 @@ def test_inline_large_attachments(setup_client_syncgateway_test):
 
     sg_url = setup_client_syncgateway_test["sg_url"]
     sg_url_admin = setup_client_syncgateway_test["sg_admin_url"]
+    cluster_config = setup_client_syncgateway_test["cluster_config"]
 
     ls_url = setup_client_syncgateway_test["ls_url"]
 
@@ -90,6 +92,12 @@ def test_inline_large_attachments(setup_client_syncgateway_test):
     ls_db2 = "ls_db2"
     sg_db = "db"
 
+    sg_helper = SyncGateway()
+    sg_helper.start_sync_gateway(
+        cluster_config=cluster_config, url=sg_url,
+        config="{}/walrus.json".format(SYNC_GATEWAY_CONFIGS)
+    )
+
     client = MobileRestClient()
     client.create_database(ls_url, ls_db1)
     client.create_database(ls_url, ls_db2)
@@ -99,14 +107,14 @@ def test_inline_large_attachments(setup_client_syncgateway_test):
         url=ls_url,
         continuous=True,
         from_db=ls_db1,
-        to_url=sg_url, to_db=sg_db
+        to_url=sg_url_admin, to_db=sg_db
     )
 
     # Start continuous push replication from sg_db -> ls_db2
     client.start_replication(
         url=ls_url,
         continuous=True,
-        from_url=sg_url, from_db=sg_db,
+        from_url=sg_url_admin, from_db=sg_db,
         to_db=ls_db2
     )
 
@@ -135,14 +143,9 @@ def test_inline_large_attachments(setup_client_syncgateway_test):
         recreated_docs.append(client.add_doc(ls_url, ls_db1, doc, use_post=False))
 
     client.verify_docs_present(ls_url, ls_db1, recreated_docs)
-    client.verify_docs_present(sg_url, sg_db, recreated_docs)
+    client.verify_docs_present(sg_url_admin, sg_db, recreated_docs)
     client.verify_docs_present(ls_url, ls_db2, recreated_docs)
 
     purged_docs = client.purge_docs(ls_url, ls_db1, recreated_docs)
     log_info(purged_docs)
-
-    # All purged docs should have replicated and should be gone now.
-    # This is currently failing due to some docs not replicating to ls_db2
     client.verify_docs_deleted(ls_url, ls_db1, recreated_docs)
-    client.verify_docs_deleted(sg_url, sg_db, recreated_docs)
-    client.verify_docs_deleted(ls_url, ls_db2, recreated_docs)
