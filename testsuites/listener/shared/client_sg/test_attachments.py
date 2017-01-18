@@ -60,7 +60,6 @@ def test_raw_attachment(setup_client_syncgateway_test):
 @pytest.mark.syncgateway
 @pytest.mark.attachments
 @pytest.mark.usefixtures("setup_client_syncgateway_suite")
-@pytest.mark.skip(reason="https://github.com/couchbase/couchbase-lite-net/issues/749")
 def test_inline_large_attachments(setup_client_syncgateway_test):
     """
     1.  Start LiteServ and Sync Gateway
