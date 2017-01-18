@@ -19,6 +19,13 @@ def setup_tunnel(target_host, target_port, remote_hosts_user, remote_hosts, remo
         print("Running ssh tunnel with process id: {}".format(proc.pid))
 
 
+def get_remote_hosts_list(remote_hosts_file):
+    # Load hosts file as array
+    with open(remote_hosts_file) as f:
+        pools = json.load(f)
+        remote_hosts_list = pools['ips']
+        return remote_hosts_list
+
 if __name__ == "__main__":
 
     # There is some complex argument parsing going on in order to be able to capture
@@ -38,12 +45,9 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     # TODO: Validate args
+    remote_hosts_list = get_remote_hosts_list(args.remote_hosts_file)
 
-    # Load hosts file as array
-    with open(args.remote_hosts_file) as f:
-        pools = json.load(f)
-        remote_hosts_list = pools['ips']
-        print('Setting up ssh tunneling for {} ... '.format(remote_hosts_list))
+    print('Setting up ssh tunneling for {} ... '.format(remote_hosts_list))
 
     setup_tunnel(
         target_host=args.target_host,
