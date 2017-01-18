@@ -14,8 +14,8 @@
   },
   "databases": {
     "db": {
-      "server": "walrus:data",
-      "bucket": "default",
+      "server":"http://{{ couchbase_server_primary_node }}:8091",
+      "bucket":"data-bucket",
       "users": {"GUEST": {"disabled": false,"admin_channels": ["*"]}}
     }
   }
