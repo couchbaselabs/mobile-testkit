@@ -1,22 +1,14 @@
 import pytest
-import os
 import datetime
 
-from libraries.provision.clean_cluster import clean_cluster
-
 from keywords.utils import log_info
-
-from keywords.constants import SYNC_GATEWAY_CONFIGS
-
 from keywords.constants import RESULTS_DIR
 from keywords.constants import CLUSTER_CONFIGS_DIR
 from keywords.LiteServFactory import LiteServFactory
 from keywords.MobileRestClient import MobileRestClient
 from keywords.ClusterKeywords import ClusterKeywords
-from keywords.SyncGateway import SyncGateway
 from keywords.SyncGateway import sync_gateway_config_path_for_mode
 from keywords.Logging import Logging
-from libraries.testkit import cluster
 
 
 # Add custom arguments for executing tests in this directory

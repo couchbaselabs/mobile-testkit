@@ -1,5 +1,4 @@
 import pytest
-import time
 
 from keywords.utils import log_info
 from keywords.MobileRestClient import MobileRestClient
