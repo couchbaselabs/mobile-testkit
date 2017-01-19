@@ -191,57 +191,10 @@ Running Client + Sync Gateway tests:
 
 Make sure to set up vm cluster [Spin Up Machines on Vagrant](#spin-up-machines-on-vagrant)
 
-Running Mac OSX + sync_gateway. The test will install macosx LiteServ and start the sync_gateway
+### Listener Test Excecution (Client + SG)
+================================
 
-```
-pytest  -s \
-        --liteserv-platform=macosx \
-        --liteserv-version=1.3.1-6 \
-        --liteserv-host=localhost \
-        --liteserv-port=59840 \
-        --liteserv-storage-engine=SQLite \
-        --sync-gateway-version=1.3.1-16 \
-        testsuites/listener/shared/client_sg/
-```
-
-Running Android LiteServ + Sync Gateway. You need to provide the IP of the running Android device you are using for --liteserv-host
-
-```
-pytest  -s \
-        --liteserv-platform=android \
-        --liteserv-version=1.3.1-30 \
-        --liteserv-host=<ip-of-device> \
-        --liteserv-port=5000 \
-        --liteserv-storage-engine=SQLite \
-        --sync-gateway-version=1.3.1-16 \
-        testsuites/listener/shared/client_sg/
-```
-
-Running iOS LiteServ + Sync Gateway. You need to provide the IP of the running iOS device you are using for --liteserv-host.
-
-```
-pytest  -s \
-        --liteserv-platform=ios \
-        --liteserv-version=1.3.1-6 \
-        --liteserv-host=<ip-of-device> \
-        --liteserv-port=5000 \
-        --liteserv-storage-engine=SQLite \
-        --sync-gateway-version=1.3.1-16 \
-        testsuites/listener/shared/client_sg/
-```
-
-Running mono .NET LiteServ + Sync Gateway.
-
-```
-pytest  -s \
-        --liteserv-platform=net \
-        --liteserv-version=1.3.1-13 \
-        --liteserv-host=localhost \
-        --liteserv-port=59840 \
-        --liteserv-storage-engine=SQLite \
-        --sync-gateway-version=1.3.1-16 \
-        testsuites/listener/shared/client_sg/
-```
+[Running Tests](testsuites/listener/shared/client_sg/README.md) 
 
 
 sync_gateway Tests
