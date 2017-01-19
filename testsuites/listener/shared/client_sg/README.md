@@ -1,13 +1,23 @@
 ## Executing listener/shared/client_sg functional tests
 
 The client_sg functional test test a client LiteServ application with a Sync Gateway backed by a Couchbase Server
+
 - The client LiteServ application can be run with the following platforms
-    - Android
-    - iOS
-    - Mac OSX
-    - Mono
-    - .NET
- - Sync Gateway can be run in either channel cache ('cc') or distributed index ('di') modes
+    - android
+    - ios
+    - macosx
+    - net-mono
+    - net-msft
+
+- Using one of the following storage engines
+    - SQLite
+    - SQLCipher
+    - ForestDB
+    - ForestDB+Encryption
+
+- Sync Gateway can be run in the following modes
+    - cc = channel cache
+    - di = distributed index (SG Accel)
 
 These commands must be run from the root directory of the mobile-testkit repo.
 
