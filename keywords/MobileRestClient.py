@@ -22,6 +22,7 @@ from keywords.constants import REGISTERED_CLIENT_DBS
 from keywords.utils import log_r
 from keywords.utils import log_info
 from keywords.utils import log_debug
+from keywords.SyncGateway import validate_sync_gateway_mode
 
 import keywords.exceptions
 from keywords import types
@@ -351,11 +352,26 @@ class MobileRestClient:
         resp.raise_for_status()
         return name, password
 
-    def create_database(self, url, name, server=None):
+    def create_database(self, url, name, sync_gateway_mode=None, server_url=None, bucket_name=None, index_bucket_name=None, is_index_writer=None):
         """
         Create a Listener or Sync Gateway database via REST.
+
         IMPORTANT: If you want your database to run in encrypted mode on Mac, you must add the
         database name=password to the 'Start MacOSX LiteServ' keyword (resources/common.robot)
+
+        To create a database on sync_gateway, you need to provide
+        - sync_gateway_mode
+        - server_url
+        - bucket_name
+
+        This assumes the buckets already exist on Couchbase Server.
+
+        If you are running in distributed index mode (di, SG Accel), you need to provide
+        - index_bucket_name
+        - is_index_writer
+
+        NOTE: In order for distributed index to work, you must create a db on the sg nodes (is_index_writer=False) as
+        well as on the accel nodes (is_index_writer=False)
         """
 
         server_type = self.get_server_type(url)
@@ -363,28 +379,46 @@ class MobileRestClient:
         if server_type == ServerType.listener:
 
             if name not in REGISTERED_CLIENT_DBS:
-                # If the db name is not in registered dbs and you are running in excrypted mode (SQLCipher or ForestDB+Encryption),
-                #  the db will be created with no encryption silently. Adding the db to REGISTERED_CLIENT_DBS makes sure that
-                #  the db has a password and will be encrypted upon creation.
+                # If the db name is not in registered dbs and you are running
+                # in excrypted mode (SQLCipher or ForestDB+Encryption), the db will be created
+                # with no encryption silently. Adding the db to REGISTERED_CLIENT_DBS makes sure that
+                # the db has a password and will be encrypted upon creation.
                 raise ValueError("Make sure you have registered you db name in keywords/constants: {}".format(name))
 
             resp = self._session.put("{}/{}/".format(url, name))
+
         elif server_type == ServerType.syncgateway:
-            if server is None:
-                raise ValueError("Creating database error. You must provide a server either ('walrus:' or '{coucbase_server_url}')")
 
-            logging.info("Using server: {} for database: {}".format(server, name))
+            validate_sync_gateway_mode(sync_gateway_mode)
 
-            if server != "walrus:":
-                # Create bucket to support the database
-                logging.info("Creating backing bucket for sync_gateway db '{}' on '{}'".format(name, server))
-                raise NotImplementedError()
+            data = {}
+            if server_url is None:
+                raise keywords.exceptions.RestError("Creating database error. You must provide a couchbase server url")
+            data["server"] = server_url
 
-            data = {
-                "name": "{}".format(name),
-                "server": server,
-                "bucket": "{}".format(name)
-            }
+            if bucket_name is None:
+                raise keywords.exceptions.RestError("Creating database error. You must provide a couchbase server bucket name")
+            data["bucket"] = bucket_name
+
+            if sync_gateway_mode is None:
+                raise keywords.exceptions.RestError("You must specify either 'cc' or 'di' for sync_gateway_mode")
+
+            if sync_gateway_mode == "di" and index_bucket_name is None:
+                raise keywords.exceptions.RestError("You must an index_bucket_name if you are running in distributed index mode")
+
+            if sync_gateway_mode == "di" and is_index_writer is None:
+                raise keywords.exceptions.RestError("Make sure you provide whether you are targeting an index writer")
+
+            # Add additional information if running in distributed index mode
+            if sync_gateway_mode == "di":
+                data["feed_type"] = "DCPSHARD"
+                data["feed_params"] = {"num_shards": 16}
+                data["channel_index"] = {
+                    "server": server_url,
+                    "bucket": index_bucket_name,
+                    "writer": is_index_writer
+                }
+
             resp = self._session.put("{}/{}/".format(url, name), data=json.dumps(data))
 
         log_r(resp)
