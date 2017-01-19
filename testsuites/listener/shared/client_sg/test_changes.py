@@ -6,7 +6,6 @@ from concurrent.futures import ThreadPoolExecutor
 from keywords.utils import log_info
 from keywords.MobileRestClient import MobileRestClient
 from keywords.ChangesTracker import ChangesTracker
-from keywords.constants import Platform
 
 
 @pytest.mark.sanity
@@ -28,9 +27,6 @@ def test_longpoll_changes_termination_timeout(setup_client_syncgateway_test):
     log_info("ls_url: {}".format(ls_url))
 
     client = MobileRestClient()
-    if client.get_server_platform(ls_url) == Platform.macosx:
-        pytest.skip("https://github.com/couchbase/couchbase-lite-ios/issues/1236")
-
     client.create_database(ls_url, ls_db)
 
     ct = ChangesTracker(ls_url, ls_db)
@@ -76,9 +72,6 @@ def test_longpoll_changes_termination_heartbeat(setup_client_syncgateway_test):
     log_info("ls_url: {}".format(ls_url))
 
     client = MobileRestClient()
-    if client.get_server_platform(ls_url) == Platform.macosx:
-        pytest.skip("https://github.com/couchbase/couchbase-lite-ios/issues/1236")
-
     client.create_database(ls_url, ls_db)
 
     ct = ChangesTracker(ls_url, ls_db)
