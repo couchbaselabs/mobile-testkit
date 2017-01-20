@@ -912,9 +912,9 @@ def test_replication_with_multiple_client_dbs_and_single_sync_gateway_db(setup_c
 
     client = MobileRestClient()
 
+    sg_db = "db"
     ls_db1 = client.create_database(url=ls_url, name="ls_db1")
     ls_db2 = client.create_database(url=ls_url, name="ls_db2")
-    sg_db = client.create_database(url=sg_admin_url, name="sg_db", server="walrus:")
 
     # Setup continuous push / pull replication from ls_db1 to sg_db
     client.start_replication(
