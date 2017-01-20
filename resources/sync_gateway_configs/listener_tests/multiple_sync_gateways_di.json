@@ -10,26 +10,27 @@
     "cluster_config": {
         "server":"http://{{ couchbase_server_primary_node }}:8091",
         "data_dir":".",
-        "bucket":"data-bucket"
+        "bucket":"data-bucket-1"
     },
     "databases":{
-        "db":{
+        "sg_db1":{
             "feed_type":"DCPSHARD",
-            "feed_params":{
-                "num_shards":16
-            },
             "server":"http://{{ couchbase_server_primary_node }}:8091",
-            "bucket":"data-bucket",
+            "bucket":"data-bucket-1",
             "channel_index":{
                 "server":"http://{{ couchbase_server_primary_node }}:8091",
-                "bucket":"index-bucket",
+                "bucket":"index-bucket-1",
                 "writer":{{ is_index_writer }}
-            },
-            "users": {
-                "user_1": {
-                    "admin_channels": ["ABC"],
-                    "password": "foo"
-                }
+            }
+        },
+        "sg_db2":{
+            "feed_type":"DCPSHARD",
+            "server":"http://{{ couchbase_server_primary_node }}:8091",
+            "bucket":"data-bucket-2",
+            "channel_index":{
+                "server":"http://{{ couchbase_server_primary_node }}:8091",
+                "bucket":"index-bucket-2",
+                "writer":{{ is_index_writer }}
             }
         }
     }
