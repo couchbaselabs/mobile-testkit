@@ -72,9 +72,6 @@ def test_listener_two_sync_gateways(setup_client_syncgateway_test):
     # Delete sg_db1 on sync_gateway 2
     client.delete_database(url=sg_two_admin_url, name=sg_db_one)
 
-    import pdb
-    pdb.set_trace()
-
     # Create dbs on LiteServ
     client.create_database(ls_url, ls_db_one)
     client.create_database(ls_url, ls_db_two)
