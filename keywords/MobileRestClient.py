@@ -506,18 +506,23 @@ class MobileRestClient:
                 logging.info("Found uncompacted revisions. Retrying ...")
                 time.sleep(1)
 
+    def delete_database(self, url, name):
+        """ Delete a database with 'name' """
+
+        resp = self._session.delete("{}/{}".format(url, name))
+        log_r(resp)
+        resp.raise_for_status()
+
     def delete_databases(self, url):
         """ Delete all the databases for a given url """
 
-        dbs = self.get_databases(url)
-        for db in dbs:
-            resp = self._session.delete("{}/{}".format(url, db))
-            log_r(resp)
-            resp.raise_for_status()
+        db_names = self.get_databases(url)
+        for db_name in db_names:
+            self.delete_database(url, db_name)
 
         # verify dbs are deleted
-        dbs = self.get_databases(url)
-        if len(dbs) != 0:
+        db_names = self.get_databases(url)
+        if len(db_names) != 0:
             raise keywords.exceptions.LiteServError("Failed to delete dbs!")
 
     def get_rev_generation_digest(self, rev):
