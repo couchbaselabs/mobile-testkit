@@ -3,6 +3,10 @@
 - name: SYNC GATEWAY | Start sync gateway service
   service: name=sync_gateway state=started
 
+- name: SYNC GATEWAY | Stop sync_gateway service on Win 10
+  win_shell: net start "Couchbase Sync Gateway"
+  when: ansible_os_family == "Windows"
+
 - name: SYNC GATEWAY | Wait until sync gateway to listen on port
   wait_for: port=4985 timeout=120
 

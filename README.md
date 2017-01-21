@@ -668,7 +668,7 @@ Save as `resources/cluster_configs/windows`
 - Download and execute this in the windows target PowerShell (Run as Administrator)
 [ConfigureRemotingForAnsible.ps1](https://raw.githubusercontent.com/ansible/ansible/devel/examples/scripts/ConfigureRemotingForAnsible.ps1)
 ```
-.\ConfigureRemotingForAnsible.ps1
+.\ConfigureRemotingForAnsible.ps1 -SkipNetworkProfileCheck
 ```
 
 If you hit errors, you may have to allow unsigned script execution (Use with caution)
