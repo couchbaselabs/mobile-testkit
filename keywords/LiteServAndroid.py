@@ -4,6 +4,7 @@ from keywords.LiteServBase import LiteServBase
 from keywords.exceptions import LiteServError
 from keywords.utils import log_info
 
+
 class LiteServAndroid(LiteServBase):
 
     def install_apk(self, apk_path, apk_id):
