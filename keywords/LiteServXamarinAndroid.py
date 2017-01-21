@@ -14,6 +14,7 @@ from keywords.constants import MAX_RETRIES
 from keywords.utils import version_and_build
 from keywords.utils import log_info
 
+
 class LiteServXamarinAndroid(LiteServAndroid):
     activity_name = "com.couchbase.liteserv/com.couchbase.liteserv.MainActivity"
 
@@ -99,7 +100,7 @@ class LiteServXamarinAndroid(LiteServAndroid):
                 post_data["storage"] = "ForestDB"
 
         self._send_initial_request(post_data)
-        #self._verify_launched()
+        self._verify_launched()
 
         return ret_val
 
