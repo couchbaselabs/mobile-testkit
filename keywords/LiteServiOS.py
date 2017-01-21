@@ -1,20 +1,23 @@
 import json
 import subprocess
+import os
+import requests
 
 from keywords.LiteServBase import LiteServBase
 from keywords.constants import BINARY_DIR
+from keywords.constants import LATEST_BUILDS
 from keywords.exceptions import LiteServError
 from keywords.utils import version_and_build
 from keywords.utils import log_info
 from keywords.utils import log_r
-
+from zipfile import ZipFile
 
 class LiteServiOS(LiteServBase):
 
-    def __init__(self, version_build, host, port, storage_engine):
+#    def __init__(self, version_build, host, port, storage_engine):
 
         # Initialize baseclass properies
-        super(LiteServiOS, self).__init__(version_build, host, port, storage_engine)
+#        super(LiteServiOS, self).__init__(version_build, host, port, storage_engine)
 
     def download(self):
         """
@@ -22,7 +25,33 @@ class LiteServiOS(LiteServBase):
         2. Download the LiteServ package from latest builds to 'deps/binaries'
         3. Unzip the packages and make the binary executable
         """
-        raise NotImplementedError("iOS not a part of build yet")
+        version, build = version_and_build(self.version_build)
+
+        package_name = "LiteServ-iOS.zip"
+        app_name = "LiteServ-iOS.app"
+
+        expected_binary_path = "{}/{}/{}".format(BINARY_DIR, "LiteServ-iOS", app_name)
+        if os.path.isfile(expected_binary_path):
+            log_info("Package is already downloaded. Skipping.")
+            return
+
+        # Package not downloaded, proceed to download from latest builds
+        downloaded_package_zip_name = "{}/{}".format(BINARY_DIR, package_name)
+        url = "{}/couchbase-lite-ios/{}/ios/{}/{}".format(LATEST_BUILDS, version, self.version_build, package_name)
+
+        log_info("Downloading {} -> {}/{}".format(url, BINARY_DIR, package_name))
+        resp = requests.get(url)
+        resp.raise_for_status()
+        with open("{}/{}".format(BINARY_DIR, package_name), "wb") as f:
+            f.write(resp.content)
+
+        extracted_directory_name = downloaded_package_zip_name.replace(".zip", "")
+        with ZipFile("{}".format(downloaded_package_zip_name)) as zip_f:
+            zip_f.extractall("{}".format(extracted_directory_name))
+
+        # Remove .zip
+        os.remove("{}".format(downloaded_package_zip_name))
+
 
     def install(self):
         """Installs / launches LiteServ on iOS device
@@ -32,8 +61,8 @@ class LiteServiOS(LiteServBase):
         if self.storage_engine != "SQLite":
             raise LiteServError("https://github.com/couchbaselabs/liteserv-ios/issues/1")
 
-        package_name = "couchbase-lite-ios-liteserv-{}.app".format(self.version_build)
-        app_path = "{}/{}".format(BINARY_DIR, package_name)
+        package_name = "LiteServ-iOS.app"
+        app_path = "{}/{}/{}".format(BINARY_DIR, "LiteServ-iOS", package_name)
         log_info("Installing: {}".format(app_path))
 
         # install app / launch app to connected device
