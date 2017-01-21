@@ -1,4 +1,4 @@
-from keywords.LiteServAndroid import LiteServAndroid
+from keywords.LiteServJavaAndroid import LiteServJavaAndroid
 from keywords.LiteServXamarinAndroid import LiteServXamarinAndroid
 from keywords.LiteServiOS import LiteServiOS
 from keywords.LiteServMacOSX import LiteServMacOSX
@@ -48,7 +48,7 @@ class LiteServFactory:
         LiteServFactory.validate_storage_engine(storage_engine)
 
         if platform == "android":
-            return LiteServAndroid(version_build, host, port, storage_engine)
+            return LiteServJavaAndroid(version_build, host, port, storage_engine)
         elif platform == "xamarin-android":
             return LiteServXamarinAndroid(version_build, host, port, storage_engine)
         elif platform == "ios":

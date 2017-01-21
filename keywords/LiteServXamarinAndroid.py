@@ -1,20 +1,21 @@
-import os
 import subprocess
+import time
+import os
 from zipfile import ZipFile
+
 import requests
-import sys
-import LiteServXamarinCommon
-from keywords.LiteServBase import LiteServBase
+from requests.exceptions import ConnectionError
+from keywords.LiteServAndroid import LiteServAndroid
+from keywords.LiteServBase import LiteServError
 from keywords.constants import LATEST_BUILDS
 from keywords.constants import BINARY_DIR
 from keywords.constants import REGISTERED_CLIENT_DBS
-from keywords.exceptions import LiteServError
+from keywords.constants import MAX_RETRIES
 from keywords.utils import version_and_build
 from keywords.utils import log_info
-from keywords.constants import MAX_RETRIES
-from subprocess import CalledProcessError
 
-class LiteServXamarinAndroid(LiteServBase):
+class LiteServXamarinAndroid(LiteServAndroid):
+    activity_name = "com.couchbase.liteserv/com.couchbase.liteserv.MainActivity"
 
     def download(self):
         """
@@ -25,23 +26,25 @@ class LiteServXamarinAndroid(LiteServBase):
         version, build = version_and_build(self.version_build)
 
         package_name = "LiteServ.zip"
-
-        expected_binary_path = "{}/{}".format(BINARY_DIR, package_name)
+        downloaded_package_zip_name = "{}/{}".format(BINARY_DIR, package_name)
+        extracted_directory_name = downloaded_package_zip_name.replace(
+            ".zip", "-{}-{}".format(version, build))
+        expected_binary_path = "{}/Android/LiteServ.apk".format(
+            extracted_directory_name)
+        log_info(expected_binary_path)
         if os.path.isfile(expected_binary_path):
             log_info("Package is already downloaded. Skipping.")
             return
 
         # Package not downloaded, proceed to download from latest builds
-        downloaded_package_zip_name = "{}/{}".format(BINARY_DIR, package_name)
         url = "{}/couchbase-lite-net/{}/{}/{}".format(LATEST_BUILDS, version, build, package_name)
 
         log_info("Downloading {} -> {}/{}".format(url, BINARY_DIR, package_name))
         resp = requests.get(url)
         resp.raise_for_status()
-        with open("{}/{}".format(BINARY_DIR, package_name), "wb") as f:
-            f.write(resp.content)
+        with open("{}/{}".format(BINARY_DIR, package_name), "wb") as fout:
+            fout.write(resp.content)
 
-        extracted_directory_name = downloaded_package_zip_name.replace(".zip", "")
         with ZipFile("{}".format(downloaded_package_zip_name)) as zip_f:
             zip_f.extractall("{}".format(extracted_directory_name))
 
@@ -49,52 +52,69 @@ class LiteServXamarinAndroid(LiteServBase):
         os.remove("{}".format(downloaded_package_zip_name))
 
     def install(self):
-        """Install the apk to running Android device or emulator"""
-
+        version, build = version_and_build(self.version_build)
         apk_name = "LiteServ.apk"
-        folder_name = "LiteServ/Android"
+        folder_name = "LiteServ-{}-{}/Android".format(version, build)
         apk_path = "{}/{}/{}".format(BINARY_DIR, folder_name, apk_name)
 
-        log_info("Installing: {}".format(apk_path))
+        self.install_apk(apk_path, "com.couchbase.liteserv")
 
-        count = 0
-
-        while count != MAX_RETRIES:
-            try:
-                output = subprocess.check_output(["adb", "install", apk_path])
-
-                # Break the loop for successful install
-                break
-            except CalledProcessError as e:
-                 log_info("Apk might already be installed. Will uninstall and retry install")
-                 self.remove()
-            except:
-                raise Exception("Failed to install apk", sys.exc_info()[0])
-
-            count += 1
-
-        output = subprocess.check_output(["adb", "shell", "pm", "list", "packages"])
-
-        if count == MAX_RETRIES and "com.couchbase.liteserv" in output:
-            raise LiteServError("Failed to uninstall APK after {} retries.".format(MAX_RETRIES))
-
-        output = subprocess.check_output(["adb", "shell", "pm", "list", "packages"])
-        if "com.couchbase.liteserv" not in output:
-            raise LiteServError("Failed to install package")
-
-        log_info("LiteServ installed to {}".format(self.host))
+    def stop(self):
+        self.stop_apk("com.couchbase.liteserv")
 
     def remove(self):
-        """Removes the LiteServ application from the running device
-        """
-        output = subprocess.check_output(["adb", "uninstall", "com.couchbase.liteserv"])
-        if output.strip() != "Success":
-            log_info(output)
-            raise LiteServError("Error. Could not remove app.")
+        self.remove_apk("com.couchbase.liteserv")
 
-        output = subprocess.check_output(["adb", "shell", "pm", "list", "packages"])
-        if "com.couchbase.liteserv" in output:
-            raise LiteServError("Error uninstalling app!")
+    def launch_and_verify(self):
+        output = subprocess.check_output([
+            "adb", "shell", "am", "start", "-n", self.activity_name,
+        ])
+        log_info(output)
 
-        log_info("LiteServ removed from {}".format(self.host))
+    def start(self, logfile_name):
+        ret_val = super(LiteServXamarinAndroid, self).start(logfile_name)
+        encryption_enabled = False
+        if self.storage_engine == "SQLCipher" or self.storage_engine == "ForestDB+Encryption":
+            encryption_enabled = True
 
+        post_data = {
+            "port": self.port
+        }
+
+        if encryption_enabled:
+            log_info("Encryption enabled ...")
+
+            # Build list of dbs used in the tests and pass them to the activity
+            # to make sure the dbs are encrypted during the tests
+            db_flags = []
+            for db_name in REGISTERED_CLIENT_DBS:
+                db_flags.append("{}:pass".format(db_name))
+            db_flags = ",".join(db_flags)
+
+            log_info("Running with db_flags: {}".format(db_flags))
+            if self.storage_engine == "SQLCipher":
+                post_data["dbpassword"] = db_flags
+            elif self.storage_engine == "ForestDB+Encryption":
+                post_data["dbpassword"] = db_flags
+                post_data["storage"] = "ForestDB"
+
+        self._send_initial_request(post_data)
+        #self._verify_launched()
+
+        return ret_val
+
+    def _send_initial_request(self, post_data):
+        url = "http://{}:59840/test".format(self.host)
+        count = 0
+        while count < MAX_RETRIES:
+            try:
+                self.session.post(url, json=post_data)
+                # If request does not throw, exit retry loop
+                break
+            except ConnectionError:
+                log_info("LiteServ may not be launched (Retrying) ...")
+                time.sleep(1)
+                count += 1
+
+        if count == MAX_RETRIES:
+            raise LiteServError("Could not send initial request to LiteServ")
