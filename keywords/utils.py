@@ -1,6 +1,6 @@
 import logging
 import json
-
+import nmap
 
 # TODO: Use python logging hooks instead of wrappers - https://github.com/couchbaselabs/mobile-testkit/issues/686
 def log_info(message, is_verify=False):
@@ -117,3 +117,18 @@ def dump_file_contents_to_logs(filename):
         log_info("Contents of {}: {}".format(filename, open(filename).read()))
     except Exception as e:
         log_info("Error reading {}: {}".format(filename, e))
+
+def detect_remote_windows_os(ip_address):
+    nm = nmap.PortScanner()
+    # nm.scan(ip_address, arguments='-O') can do OS fingerprinting
+    # but needs root privileges, so we'll do a ping scan instead
+    # and look for "Microsoft Windows" in the port's output
+    # Sample port output - 445: {'product': 'Microsoft Windows 7 - 10 microsoft-ds',
+    # 'state': 'open', 'version': '', 'name': 'microsoft-ds', 'conf': '10',
+    # 'extrainfo': 'workgroup: WORKGROUP', 'reason': 'syn-ack',
+    # 'cpe': 'cpe:/o:microsoft:windows'}
+    output = nm.scan(ip_address)
+
+    for i in output['scan'][ip_address]['tcp']:
+        if "Microsoft Windows" in output['scan']['10.17.1.168']['tcp'][i]['product']:
+            return True
