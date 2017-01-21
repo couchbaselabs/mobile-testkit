@@ -1,12 +1,10 @@
 import pytest
 
 from keywords.utils import log_info
-from keywords.SyncGateway import SyncGateway
 from keywords.ClusterKeywords import ClusterKeywords
 from keywords.SyncGateway import sync_gateway_config_path_for_mode
 from keywords.MobileRestClient import MobileRestClient
 from libraries.testkit import cluster
-from keywords.CouchbaseServer import CouchbaseServer
 
 
 @pytest.mark.sanity
