@@ -10,6 +10,7 @@ from keywords.constants import REGISTERED_CLIENT_DBS
 from keywords.utils import version_and_build
 from keywords.utils import log_info
 
+
 class LiteServJavaAndroid(LiteServAndroid):
     activity_name = "com.couchbase.liteservandroid/com.couchbase.liteservandroid.MainActivity"
 
