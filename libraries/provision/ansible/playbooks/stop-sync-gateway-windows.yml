@@ -1,7 +1,0 @@
----
-- hosts: sync_gateways
-  any_errors_fatal: true
-
-  tasks:
-  - include: tasks/stop-sync-gateway.yml
-

@@ -12,8 +12,7 @@ class AnsibleRunner:
 
     def run_ansible_playbook(self, script_name, extra_vars={}, subset=constants.DEFAULT_SUBSET):
 
-        #inventory_filename = self.provisiong_config
-        inventory_filename = 'resources/cluster_configs/windows'
+        inventory_filename = self.provisiong_config
 
         playbook_filename = "{}/{}".format(PLAYBOOKS_HOME, script_name)
 

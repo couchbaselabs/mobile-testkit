@@ -7,9 +7,6 @@
   shell: /sbin/initctl stop sync_gateway
   when: ansible_distribution == "CentOS" and ansible_distribution_major_version == "6"
 
-- name: SYNC GATEWAY | Stop sync_gateway service on Win 10
-  win_shell: net stop "Couchbase Sync Gateway"
-  when: ansible_os_family == "Windows"
-
 - name: SYNC GATEWAY | Verify sync_gateway not listening on port
   wait_for: port=4985 state=stopped
+
