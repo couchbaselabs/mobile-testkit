@@ -32,3 +32,7 @@
 - name: SYNC GATEWAY | Remove sync gateway source .repo directory
   shell: rm -rf /home/centos/.repo
   ignore_errors: yes
+
+- name: SYNC GATEWAY | Remove tmp logging dir (log rotation tests)
+  shell: rm -rf /tmp/sg_logs
+  ignore_errors: yes

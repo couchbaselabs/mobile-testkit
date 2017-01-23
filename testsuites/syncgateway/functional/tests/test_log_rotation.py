@@ -158,6 +158,8 @@ def test_log_nondefault_logKeys_set(params_from_base_test_setup, sg_conf_name):
     cluster_hosts = cluster_helper.get_cluster_topology(cluster_conf)
     sg_one_url = cluster_hosts["sync_gateways"][0]["public"]
     sg_helper.stop_sync_gateway(cluster_config=cluster_conf, url=sg_one_url)
+
+    # Start sync_gateways
     sg_helper.start_sync_gateway(cluster_config=cluster_conf, url=sg_one_url, config=temp_conf)
 
 
