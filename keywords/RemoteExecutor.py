@@ -46,7 +46,6 @@ class RemoteExecutor:
         stderr_p = stderr.readlines()
         stream_output(stderr_p)
 
-
         # this will block until the command has completed and will return the error code from
         # the command. If the command does not return an exit status, then -1 is returned
         status = stdout.channel.recv_exit_status()
@@ -61,6 +60,6 @@ class RemoteExecutor:
         an exception if the status returned is non-zero
         """
 
-        self.execute(command)
+        status, _, _ = self.execute(command)
         if status != 0:
             raise RemoteCommandError("command: {} failed on host: {}".format(command, self.host))
