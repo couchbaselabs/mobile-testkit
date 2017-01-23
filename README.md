@@ -386,7 +386,7 @@ Create cluster with private network
 1. Create an ssh key. `cd ~/.ssh/ && ssh-keygen`
 1. Make sure you have PasswordAuthentication set on each vagrant instance
 ```
-cd vagrant/private-network/ && vagrant ssh host1
+cd vagrant/private_network/ && vagrant ssh host1
 $ [root@localhost vagrant]# sudo bash
 $ [root@localhost vagrant]# vi /etc/ssh/sshd_config 
 

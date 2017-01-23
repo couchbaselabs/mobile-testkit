@@ -1,0 +1,22 @@
+{
+  "logging": {
+    "default": {
+      "logFilePath": "/tmp/sg_logs/sg_log_rotation.log",
+      "logKeys": ["*"],
+      "logLevel": "debug",
+      "rotation": {
+        "maxsize": 1,
+        "maxage": 30,
+        "maxbackups": 2,
+        "localtime": true
+      }
+    }
+  },
+  "databases": {
+    "db": {
+      "server":"http://{{ couchbase_server_primary_node }}:8091",
+      "bucket":"data-bucket",
+      "users": {"GUEST": {"disabled": false,"admin_channels": ["*"]}}
+    }
+  }
+}
