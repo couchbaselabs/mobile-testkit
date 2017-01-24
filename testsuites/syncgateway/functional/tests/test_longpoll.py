@@ -169,10 +169,15 @@ def test_longpoll_awaken_doc_add_update(params_from_base_test_setup, sg_conf_nam
     andy_auth = client.create_user(url=sg_admin_url, db=sg_db,
                                    name=andy_user_info.name, password=andy_user_info.password, channels=andy_user_info.channels)
 
-    # Get starting sequence of docs, use the last seq to progress past any user docs
-    adam_changes = client.get_changes(url=sg_url, db=sg_db, since=0, feed="normal", auth=adam_auth)
-    traun_changes = client.get_changes(url=sg_url, db=sg_db, since=0, feed="normal", auth=traun_auth)
-    andy_changes = client.get_changes(url=sg_url, db=sg_db, since=0, feed="normal", auth=andy_auth)
+    # Get starting sequence of docs, use the last seq to progress past any _user docs.
+    adam_changes = client.get_changes(url=sg_url, db=sg_db, since=0, feed="longpoll", auth=adam_auth)
+    traun_changes = client.get_changes(url=sg_url, db=sg_db, since=0, feed="longpoll", auth=traun_auth)
+    andy_changes = client.get_changes(url=sg_url, db=sg_db, since=0, feed="longpoll", auth=andy_auth)
+
+    # Make sure _user docs shows up in the changes feed
+    assert len(adam_changes["results"]) == 1 and adam_changes["results"][0]["id"] == "_user/adam"
+    assert len(traun_changes["results"]) == 1 and traun_changes["results"][0]["id"] == "_user/traun"
+    assert len(andy_changes["results"]) == 1 and andy_changes["results"][0]["id"] == "_user/andy"
 
     with concurrent.futures.ProcessPoolExecutor() as ex:
         adam_changes_task = ex.submit(client.get_changes, url=sg_url, db=sg_db, since=adam_changes["last_seq"], timeout=30, auth=adam_auth)
@@ -634,9 +639,14 @@ def test_longpoll_awaken_roles(params_from_base_test_setup, sg_conf_name):
     ################################
 
     # Get starting sequence of docs, use the last seq to progress past any _user docs.
-    adam_changes = client.get_changes(url=sg_url, db=sg_db, since=0, feed="normal", auth=adam_auth)
-    traun_changes = client.get_changes(url=sg_url, db=sg_db, since=0, feed="normal", auth=traun_auth)
-    andy_changes = client.get_changes(url=sg_url, db=sg_db, since=0, feed="normal", auth=andy_auth)
+    adam_changes = client.get_changes(url=sg_url, db=sg_db, since=0, feed="longpoll", auth=adam_auth)
+    traun_changes = client.get_changes(url=sg_url, db=sg_db, since=0, feed="longpoll", auth=traun_auth)
+    andy_changes = client.get_changes(url=sg_url, db=sg_db, since=0, feed="longpoll", auth=andy_auth)
+
+    # Make sure _user docs shows up in the changes feed
+    assert len(adam_changes["results"]) == 1 and adam_changes["results"][0]["id"] == "_user/adam"
+    assert len(traun_changes["results"]) == 1 and traun_changes["results"][0]["id"] == "_user/traun"
+    assert len(andy_changes["results"]) == 1 and andy_changes["results"][0]["id"] == "_user/andy"
 
     # Add doc with channel associated with the admin role
     admin_doc = client.add_docs(url=sg_url, db=sg_db, number=1, id_prefix="admin_doc", auth=admin_auth, channels=[admin_channel])
