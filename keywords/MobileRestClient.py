@@ -404,10 +404,10 @@ class MobileRestClient:
                 raise keywords.exceptions.RestError("You must specify either 'cc' or 'di' for sync_gateway_mode")
 
             if sync_gateway_mode == "di" and index_bucket_name is None:
-                raise keywords.exceptions.RestError("You must an index_bucket_name if you are running in distributed index mode")
+                raise keywords.exceptions.RestError("You must provide an 'index_bucket_name' if you are running in distributed index mode")
 
             if sync_gateway_mode == "di" and is_index_writer is None:
-                raise keywords.exceptions.RestError("Make sure you provide whether you are targeting an index writer")
+                raise keywords.exceptions.RestError("Please make sure you set 'is_index_writer' since you are running in 'di' mode")
 
             # Add additional information if running in distributed index mode
             if sync_gateway_mode == "di":
