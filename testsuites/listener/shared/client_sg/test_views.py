@@ -1,18 +1,17 @@
 import pytest
 
-from keywords.SyncGateway import SyncGateway
 from keywords.MobileRestClient import MobileRestClient
-from keywords.constants import SYNC_GATEWAY_CONFIGS
 from keywords.utils import log_info
 
 from keywords import document
+from keywords.SyncGateway import sync_gateway_config_path_for_mode
+from libraries.testkit import cluster
 
 
 @pytest.mark.sanity
 @pytest.mark.listener
 @pytest.mark.syncgateway
 @pytest.mark.views
-@pytest.mark.usefixtures("setup_client_syncgateway_suite")
 def test_stale_revision_should_not_be_in_the_index(setup_client_syncgateway_test):
     """original ticket: https://github.com/couchbase/couchbase-lite-android/issues/855
 
@@ -30,6 +29,7 @@ def test_stale_revision_should_not_be_in_the_index(setup_client_syncgateway_test
     """
 
     cluster_config = setup_client_syncgateway_test["cluster_config"]
+    sg_mode = setup_client_syncgateway_test["sg_mode"]
     ls_url = setup_client_syncgateway_test["ls_url"]
     sg_url = setup_client_syncgateway_test["sg_url"]
     sg_admin_url = setup_client_syncgateway_test["sg_admin_url"]
@@ -41,12 +41,9 @@ def test_stale_revision_should_not_be_in_the_index(setup_client_syncgateway_test
     sg_db = "db"
     sg_user_name = "sg_user"
 
-    sg_helper = SyncGateway()
-    sg_helper.start_sync_gateway(
-        cluster_config=cluster_config,
-        url=sg_url,
-        config="{}/walrus.json".format(SYNC_GATEWAY_CONFIGS)
-    )
+    sg_config = sync_gateway_config_path_for_mode("listener_tests/listener_tests", sg_mode)
+    c = cluster.Cluster(config=cluster_config)
+    c.reset(sg_config_path=sg_config)
 
     log_info("Running 'test_stale_revision_should_not_be_in_the_index'")
     log_info("ls_url: {}".format(ls_url))

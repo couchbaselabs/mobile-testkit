@@ -161,87 +161,20 @@ npm install -g ios-deploy
 
 The Listener is exposed via a LiteServ application which will be downloaded and launched when running the test.
 
-You are able to run in 4 modes:
-- SQLite
-- ForestDB
-- SQLCipher
-- ForestDB+Encryption
-
 NOTE: For running with Android, you must be running an emulator or device. The easiest is Genymotion with NAT,
 however devices are supported as long the sync_gateway and the android device can communicate. 
 
-Running Client Client (P2P) tests:
-
-```
-pytest  -s \
-        --liteserv-one-platform=android \
-        --liteserv-one-version=1.3.1-30 \
-        --liteserv-one-host=192.168.0.19 \
-        --liteserv-one-port=5000 \
-        --liteserv-one-storage-engine=SQLite \
-        --liteserv-two-platform=net \
-        --liteserv-two-version=1.3.1-13 \
-        --liteserv-two-host=192.168.0.12 \
-        --liteserv-two-port=51000 \
-        --liteserv-two-storage-engine=SQLite \
-        testsuites/listener/shared/client_client/
-```
-
-Running Client + Sync Gateway tests:
-
 Make sure to set up vm cluster [Spin Up Machines on Vagrant](#spin-up-machines-on-vagrant)
 
-Running Mac OSX + sync_gateway. The test will install macosx LiteServ and start the sync_gateway
+### Listener Test Excecution (Client + Client (P2P))
+================================
 
-```
-pytest  -s \
-        --liteserv-platform=macosx \
-        --liteserv-version=1.3.1-6 \
-        --liteserv-host=localhost \
-        --liteserv-port=59840 \
-        --liteserv-storage-engine=SQLite \
-        --sync-gateway-version=1.3.1-16 \
-        testsuites/listener/shared/client_sg/
-```
+[Running Tests](testsuites/listener/shared/client_client/README.md) 
 
-Running Android LiteServ + Sync Gateway. You need to provide the IP of the running Android device you are using for --liteserv-host
+### Listener Test Excecution (Client + SG)
+================================
 
-```
-pytest  -s \
-        --liteserv-platform=android \
-        --liteserv-version=1.3.1-30 \
-        --liteserv-host=<ip-of-device> \
-        --liteserv-port=5000 \
-        --liteserv-storage-engine=SQLite \
-        --sync-gateway-version=1.3.1-16 \
-        testsuites/listener/shared/client_sg/
-```
-
-Running iOS LiteServ + Sync Gateway. You need to provide the IP of the running iOS device you are using for --liteserv-host.
-
-```
-pytest  -s \
-        --liteserv-platform=ios \
-        --liteserv-version=1.3.1-6 \
-        --liteserv-host=<ip-of-device> \
-        --liteserv-port=5000 \
-        --liteserv-storage-engine=SQLite \
-        --sync-gateway-version=1.3.1-16 \
-        testsuites/listener/shared/client_sg/
-```
-
-Running mono .NET LiteServ + Sync Gateway.
-
-```
-pytest  -s \
-        --liteserv-platform=net \
-        --liteserv-version=1.3.1-13 \
-        --liteserv-host=localhost \
-        --liteserv-port=59840 \
-        --liteserv-storage-engine=SQLite \
-        --sync-gateway-version=1.3.1-16 \
-        testsuites/listener/shared/client_sg/
-```
+[Running Tests](testsuites/listener/shared/client_sg/README.md) 
 
 
 sync_gateway Tests

@@ -2,33 +2,20 @@ import pytest
 import datetime
 
 from keywords.utils import log_info
-from keywords.constants import RESULTS_DIR
-from keywords.constants import CLUSTER_CONFIGS_DIR
 from keywords.LiteServFactory import LiteServFactory
-from keywords.MobileRestClient import MobileRestClient
-from keywords.ClusterKeywords import ClusterKeywords
 from keywords.SyncGateway import sync_gateway_config_path_for_mode
+from keywords.ClusterKeywords import ClusterKeywords
+from keywords.MobileRestClient import MobileRestClient
+from keywords.constants import CLUSTER_CONFIGS_DIR
+from keywords.constants import RESULTS_DIR
 from keywords.Logging import Logging
-
-
-# Add custom arguments for executing tests in this directory
-def pytest_addoption(parser):
-    parser.addoption("--liteserv-platform", action="store", help="liteserv-platform: the platform to assign to the liteserv")
-    parser.addoption("--liteserv-version", action="store", help="liteserv-version: the version to download / install for the liteserv")
-    parser.addoption("--liteserv-host", action="store", help="liteserv-host: the host to start liteserv on")
-    parser.addoption("--liteserv-port", action="store", help="liteserv-port: the port to assign to liteserv")
-    parser.addoption("--liteserv-storage-engine", action="store", help="liteserv-storage-engine: the storage engine to use with liteserv")
-    parser.addoption("--skip-provisioning", action="store_true", help="Skip cluster provisioning at setup", default=False)
-    parser.addoption("--sync-gateway-version", action="store", help="sync-gateway-version: the version of sync_gateway to run tests against")
-    parser.addoption("--sync-gateway-mode", action="store", help="sync-gateway-mode: the mode of sync_gateway to run tests against, channel_cache ('cc') or distributed_index ('di')")
-    parser.addoption("--server-version", action="store", help="server-version: version of Couchbase Server to install and run tests against")
 
 
 # This will get called once before the first test that
 # runs with this as input parameters in this file
 # This setup will be called once for all tests in the
-# testsuites/listener/shared/client_sg/ directory
-@pytest.fixture(scope="session")
+# testsuites/listener/shared/client_sg_topology_specific/multiple_sync_gateways/ directory
+@pytest.fixture(scope="module")
 def setup_client_syncgateway_suite(request):
 
     """Suite setup fixture for client sync_gateway tests"""
@@ -60,7 +47,7 @@ def setup_client_syncgateway_suite(request):
     # Install LiteServ
     liteserv.install()
 
-    cluster_config = "{}/base_{}".format(CLUSTER_CONFIGS_DIR, sync_gateway_mode)
+    cluster_config = "{}/multiple_sync_gateways_{}".format(CLUSTER_CONFIGS_DIR, sync_gateway_mode)
     sg_config = sync_gateway_config_path_for_mode("listener_tests/listener_tests", sync_gateway_mode)
 
     if not skip_provisioning:
@@ -86,7 +73,8 @@ def setup_client_syncgateway_suite(request):
     liteserv.remove()
 
 
-# Passed to each testcase, run for each test_* method in client_sg folder
+# Passed to each testcase, run for each test_* method in
+# testsuites/listener/shared/client_sg_topology_specific/multiple_sync_gateways/ directory
 @pytest.fixture(scope="function")
 def setup_client_syncgateway_test(request, setup_client_syncgateway_suite):
     """Test setup fixture for client sync_gateway tests"""
