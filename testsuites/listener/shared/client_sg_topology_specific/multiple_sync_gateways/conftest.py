@@ -14,7 +14,7 @@ from keywords.Logging import Logging
 # This will get called once before the first test that
 # runs with this as input parameters in this file
 # This setup will be called once for all tests in the
-# testsuites/listener/shared/client_sg/ directory
+# testsuites/listener/shared/client_sg_topology_specific/multiple_sync_gateways/ directory
 @pytest.fixture(scope="module")
 def setup_client_syncgateway_suite(request):
 
@@ -73,7 +73,8 @@ def setup_client_syncgateway_suite(request):
     liteserv.remove()
 
 
-# Passed to each testcase, run for each test_* method in client_sg folder
+# Passed to each testcase, run for each test_* method in
+# testsuites/listener/shared/client_sg_topology_specific/multiple_sync_gateways/ directory
 @pytest.fixture(scope="function")
 def setup_client_syncgateway_test(request, setup_client_syncgateway_suite):
     """Test setup fixture for client sync_gateway tests"""

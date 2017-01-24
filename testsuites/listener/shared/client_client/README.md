@@ -1,4 +1,4 @@
-## Executing listener/shared/client_sg functional tests
+## Executing listener/shared/client_client functional tests
 
 The client_sg functional test test a client LiteServ application with a Sync Gateway backed by a Couchbase Server
 
