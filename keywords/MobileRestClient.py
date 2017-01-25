@@ -913,7 +913,7 @@ class MobileRestClient:
 
         return resp_obj
 
-    def verify_docs_deleted(self, url, db, docs, auth=None):
+    def verify_docs_deleted(self, url, db, docs, auth=None, reason="deleted"):
 
         auth_type = get_auth_type(auth)
         server_type = self.get_server_type(url)
@@ -943,7 +943,7 @@ class MobileRestClient:
                     if server_type == ServerType.syncgateway:
                         assert "error" in resp_obj and "reason" in resp_obj, "Response should have an error and reason"
                         assert resp_obj["error"] == "not_found", "error should be 'not_found'"
-                        assert resp_obj["reason"] == "deleted", "reason should be 'not_found'"
+                        assert resp_obj["reason"] == reason, "reason should be '{}'".format(reason)
                     elif server_type == ServerType.listener and server_platform == Platform.android:
                         assert "error" in resp_obj and "status" in resp_obj, "Response should have an error and status"
                         assert resp_obj["error"] == "not_found", "error should be 'not_found'"
@@ -952,7 +952,7 @@ class MobileRestClient:
                         assert "error" in resp_obj and "status" in resp_obj and "reason" in resp_obj, "Response should have an error, status, and reason"
                         assert resp_obj["error"] == "not_found", "error should be 'not_found'"
                         assert resp_obj["status"] == 404, "status should be '404'"
-                        assert resp_obj["reason"] == "deleted", "status should be '404'"
+                        assert resp_obj["reason"] == reason, "reason should be '{}'".format(reason)
                     else:
                         raise ValueError("Unsupported server type and platform")
                 else:

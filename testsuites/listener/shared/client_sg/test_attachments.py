@@ -147,4 +147,4 @@ def test_inline_large_attachments(setup_client_syncgateway_test):
 
     purged_docs = client.purge_docs(ls_url, ls_db1, recreated_docs)
     log_info(purged_docs)
-    client.verify_docs_deleted(ls_url, ls_db1, recreated_docs)
+    client.verify_docs_deleted(ls_url, ls_db1, recreated_docs, reason="missing")
