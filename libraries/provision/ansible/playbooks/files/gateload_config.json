@@ -20,5 +20,6 @@
     "AuthType": "basic",
     "Password": "password",
     "StatsdEnabled":true,
+    "FeedType": "longpoll",
     "StatsdEndpoint":"localhost:8125"
 }
