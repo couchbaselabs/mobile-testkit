@@ -32,3 +32,7 @@
 - name: SG ACCEL | Remove sg accel source .repo directory
   shell: rm -rf /home/centos/.repo
   ignore_errors: yes
+
+- name: SG ACCEL | Remove tmp logging dir (log rotation tests)
+  shell: rm -rf /tmp/sg_logs
+  ignore_errors: yes

@@ -2,6 +2,9 @@ import json
 
 import pytest
 
+from jinja2 import Template
+
+from keywords import utils
 from keywords.ClusterKeywords import ClusterKeywords
 from keywords.RemoteExecutor import RemoteExecutor
 from keywords.SyncGateway import SyncGateway
@@ -41,13 +44,26 @@ def test_log_rotation_default_values(params_from_base_test_setup, sg_conf_name):
     cluster_hosts = cluster_helper.get_cluster_topology(cluster_conf)
     sg_one_url = cluster_hosts["sync_gateways"][0]["public"]
     sg_helper.stop_sync_gateway(cluster_config=cluster_conf, url=sg_one_url)
+
     # read sample sg_conf
-    with open(sg_conf) as defaul_conf:
-        data = json.load(defaul_conf)
+    with open(sg_conf) as default_conf:
+        if mode == "cc":
+            data = json.load(default_conf)
+        else:
+            template = Template(default_conf.read())
+            data = json.loads(template.render({
+                "couchbase_server_primary_node": utils.host_for_url(cluster_hosts["couchbase_servers"][0]),
+                "is_index_writer": False,
+            }, ))
+
+    log_info(data)
+
     # delete rotation from sample config
     del data['logging']["default"]["rotation"]
     # create temp config file in the same folder as sg_conf
     temp_conf = "/".join(sg_conf.split('/')[:-2]) + '/temp_conf.json'
+
+    log_info("TEM_CONF: {}".format(temp_conf))
 
     with open(temp_conf, 'w') as fp:
         json.dump(data, fp)

@@ -1,0 +1,33 @@
+{
+  "adminInterface": "0.0.0.0:4985",
+  "logging": {
+    "default": {
+      "logFilePath": "/tmp/sg_logs/sg_log_rotation.log",
+      "logKeys": ["*"],
+      "logLevel": "debug",
+      "rotation": {
+        "maxsize": 1,
+        "maxage": 30,
+        "maxbackups": 2,
+        "localtime": true
+      }
+    }
+  },
+  "cluster_config": {
+    "server":"http://{{ couchbase_server_primary_node }}:8091",
+    "data_dir":".",
+    "bucket":"data-bucket"
+  },
+  "databases": {
+    "db": {
+      "server":"http://{{ couchbase_server_primary_node }}:8091",
+      "bucket":"data-bucket",
+      "users": {"GUEST": {"disabled": false,"admin_channels": ["*"]}},
+      "channel_index":{
+        "server":"http://{{ couchbase_server_primary_node }}:8091",
+        "bucket":"index-bucket",
+        "writer":{{ is_index_writer }}
+      }
+    }
+  }
+}
