@@ -1,5 +1,6 @@
 import pytest
 import concurrent.futures
+import time
 
 from keywords.utils import log_info
 from libraries.testkit.cluster import Cluster
@@ -102,8 +103,27 @@ def test_backfill_channels_oneshot_changes(params_from_base_test_setup, sg_conf_
     else:
         pytest.fail("Unsupported grant_type!!!!")
 
-    user_b_changes_after_grant = client.get_changes(url=sg_url, db=sg_db,
-                                                    since=user_b_changes["last_seq"], auth=user_b_session, feed="normal")
+    # Issue one shot changes to make sure access grant is successful, the change may not propagate immediately so retry.
+    num_retries = 3
+    count = 0
+    while True:
+        if count == num_retries:
+            raise exceptions.ChangesError("Didn't get all expected changes before timing out!")
+
+        user_b_changes_after_grant = client.get_changes(
+            url=sg_url,
+            db=sg_db,
+            since=user_b_changes["last_seq"],
+            auth=user_b_session,
+            feed="normal"
+        )
+
+        if len(user_b_changes_after_grant["results"]) > 0:
+            # Found changes, break out an validate changes!
+            break
+
+        time.sleep(1)
+        count += 1
 
     # User B shoud have recieved 51 docs (a_docs + 1 _user/USER_B doc) if a REST grant or 50 changes if the grant
     # is via the sync function
@@ -230,11 +250,32 @@ def test_backfill_channels_oneshot_limit_changes(params_from_base_test_setup, sg
     log_info("Doing 3, 1 shot changes with limit and last seq!")
     # Issue 3 oneshot changes with a limit of 20
 
+    # Issue one shot changes to make sure access grant is successful, the change may not propagate immediately so retry.
+    num_retries = 3
+    count = 0
+    while True:
+        if count == num_retries:
+            raise exceptions.ChangesError("Didn't get all expected changes before timing out!")
+
+        user_b_changes_after_grant_one = client.get_changes(
+            url=sg_url,
+            db=sg_db,
+            since=user_b_changes["last_seq"],
+            auth=user_b_session,
+            feed="normal",
+            limit=20
+        )
+
+        if len(user_b_changes_after_grant_one["results"]) > 0:
+            # Found changes, break out an validate changes!
+            break
+
+        time.sleep(1)
+        count += 1
+
     #################
     # Changes Req #1
     #################
-    user_b_changes_after_grant_one = client.get_changes(url=sg_url, db=sg_db,
-                                                        since=user_b_changes["last_seq"], auth=user_b_session, feed="normal", limit=20)
 
     # User B shoud have recieved 20 docs due to limit
     assert len(user_b_changes_after_grant_one["results"]) == 20
@@ -264,12 +305,14 @@ def test_backfill_channels_oneshot_limit_changes(params_from_base_test_setup, sg
                                                           since=user_b_changes_after_grant_two["last_seq"],
                                                           auth=user_b_session, feed="normal", limit=20)
 
-    # User B shoud have recieved 20 docs due to limit
-    assert len(user_b_changes_after_grant_three["results"]) == 10
+    # User B should have recieved 10 docs due to limit or 11 docs with with a terminating _user doc
+    # The terminating user doc only happens with a grant via REST
+    assert 10 <= len(user_b_changes_after_grant_three["results"]) <= 11
 
     for doc in user_b_changes_after_grant_three["results"]:
-        # cross off keys found from 'a_docs' dictionary
-        del ids_and_revs_from_a_docs[doc["id"]]
+        # cross off non user doc keys found from 'a_docs' dictionary
+        if not doc["id"].startswith("_user/"):
+            del ids_and_revs_from_a_docs[doc["id"]]
 
     # Make sure all the docs have been crossed out
     assert len(ids_and_revs_from_a_docs) == 0
