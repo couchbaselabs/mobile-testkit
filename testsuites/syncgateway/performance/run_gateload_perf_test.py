@@ -16,7 +16,8 @@ def run_gateload_perf_test(number_pullers,
                            test_id,
                            doc_size,
                            runtime_ms,
-                           rampup_interval_ms):
+                           rampup_interval_ms,
+                           feed_type):
 
     try:
         cluster_config = os.environ["CLUSTER_CONFIG"]
@@ -55,13 +56,14 @@ def run_gateload_perf_test(number_pullers,
     print(">>> Generate gateload configs")
     if gen_gateload_config:
         generate_gateload_configs.main(
-            cluster_config,
-            number_pullers,
-            number_pushers,
-            test_run_id,
-            doc_size,
-            runtime_ms,
-            rampup_interval_ms
+            cluster_config=cluster_config,
+            number_of_pullers=number_pullers,
+            number_of_pushers=number_pushers,
+            test_id=test_run_id,
+            doc_size=doc_size,
+            runtime_ms=runtime_ms,
+            rampup_interval_ms=rampup_interval_ms,
+            feed_type=feed_type
         )
 
     # Start gateload
@@ -87,10 +89,11 @@ if __name__ == "__main__":
     --reset-sync-gw
     --gen-gateload-config
     --cb-collect-info
-    --test-id
-    --doc-size
-    --runtime-ms
-    --rampup-interval-ms
+    --test-id="test_1"
+    --doc-size=1024
+    --runtime-ms=2400000
+    --rampup-interval-ms=120000
+    --feed-type="continuous"
     """
 
     parser = OptionParser(usage=usage)
@@ -130,6 +133,11 @@ if __name__ == "__main__":
                       default="120000",
                       help="How long to ramp up for, in milliseconds")
 
+    parser.add_option("", "--feed-type",
+                      action="store", dest="feed_type",
+                      default=None,
+                      help="The type of on feed to use for changes, 'continuous' or 'longpoll'")
+
     arg_parameters = sys.argv[1:]
 
     (opts, args) = parser.parse_args(arg_parameters)
@@ -137,6 +145,11 @@ if __name__ == "__main__":
     if opts.test_id is None:
         print("You must provide a test identifier to run the test")
         sys.exit(1)
+
+    # Validate feed_type
+    valid_feed_types = ["continuous", "longpoll"]
+    if opts.feed_type not in valid_feed_types:
+        raise ProvisioningError("Make sure you provide a valid feed type!")
 
     # Start load generator
     run_gateload_perf_test(
@@ -147,4 +160,5 @@ if __name__ == "__main__":
         doc_size=opts.doc_size,
         runtime_ms=opts.runtime_ms,
         rampup_interval_ms=opts.rampup_interval_ms,
+        feed_type=opts.feed_type
     )
