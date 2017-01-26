@@ -421,12 +421,8 @@ def generate_clusters_from_pool(pool_file):
         ClusterDef("4sg_1ac_3cbs_4lgs", num_sgs=4, num_acs=1, num_cbs=3, num_lgs=4, num_lbs=0),
         ClusterDef("4sg_2ac_3cbs_4lgs", num_sgs=4, num_acs=2, num_cbs=3, num_lgs=4, num_lbs=0),
         ClusterDef("8sg_1ac_3cbs_8lgs", num_sgs=8, num_acs=1, num_cbs=3, num_lgs=8, num_lbs=0),
-        ClusterDef("8sg_2ac_3cbs_8lgs", num_sgs=8, num_acs=2, num_cbs=3, num_lgs=8, num_lbs=0),
+        ClusterDef("8sg_2ac_3cbs_8lgs", num_sgs=8, num_acs=2, num_cbs=3, num_lgs=8, num_lbs=0)
         # End Perf Mini Matrix
-
-        # Test Fest
-        ClusterDef("1sg_2ac_3cbs", num_sgs=1, num_acs=2, num_cbs=3, num_lgs=0, num_lbs=0)
-        # End Test Fest
     ]
 
     if not os.path.isfile(pool_file):
