@@ -563,3 +563,10 @@ def test_detect_stale_channel_index(params_from_base_test_setup, sg_conf):
     # Start sync_gateway and assert that a Provisioning error is raised due to detecting stale index
     with pytest.raises(exceptions.ProvisioningError):
         sg_util.start_sync_gateway(cluster_config=cluster_conf, url=sg_url, config=sg_conf)
+
+    # Delete index bucket and recreate it
+    cb_server.delete_bucket(name="index-bucket")
+    cb_server.create_bucket(name="index-bucket", ram_quota_mb=ram_per_bucket_mb)
+
+    # Start sync gateway, should succeed now
+    sg_util.start_sync_gateway(cluster_config=cluster_conf, url=sg_url, config=sg_conf)
