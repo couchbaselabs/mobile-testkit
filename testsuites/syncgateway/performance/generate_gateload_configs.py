@@ -49,7 +49,7 @@ def gateloads(cluster_config):
     return hosts_for_tag(cluster_config, tag)
 
 
-def render_gateload_template(sync_gateway, user_offset, number_of_pullers, number_of_pushers, doc_size, runtime_ms, rampup_interval_ms):
+def render_gateload_template(sync_gateway, user_offset, number_of_pullers, number_of_pushers, doc_size, runtime_ms, rampup_interval_ms, feed_type):
         # run template to produce file
         gateload_config = open("{}/files/gateload_config.json".format(PLAYBOOKS_HOME))
         template = Template(gateload_config.read())
@@ -60,12 +60,13 @@ def render_gateload_template(sync_gateway, user_offset, number_of_pullers, numbe
             number_of_pushers=number_of_pushers,
             doc_size=doc_size,
             runtime_ms=runtime_ms,
-            rampup_interval_ms=rampup_interval_ms
+            rampup_interval_ms=rampup_interval_ms,
+            feed_type=feed_type
         )
         return rendered
 
 
-def upload_gateload_config(cluster_config, gateload, sync_gateway, user_offset, number_of_pullers, number_of_pushers, test_id, doc_size, rampup_interval_ms, runtime_ms):
+def upload_gateload_config(cluster_config, gateload, sync_gateway, user_offset, number_of_pullers, number_of_pushers, test_id, doc_size, rampup_interval_ms, runtime_ms, feed_type):
 
     gateload_inventory_hostname = gateload['inventory_hostname']
 
@@ -76,7 +77,8 @@ def upload_gateload_config(cluster_config, gateload, sync_gateway, user_offset, 
         number_of_pushers=number_of_pushers,
         doc_size=doc_size,
         runtime_ms=runtime_ms,
-        rampup_interval_ms=rampup_interval_ms
+        rampup_interval_ms=rampup_interval_ms,
+        feed_type=feed_type
     )
     print(rendered)
 
@@ -101,7 +103,7 @@ def upload_gateload_config(cluster_config, gateload, sync_gateway, user_offset, 
     print("File transfer result: {}".format(result))
 
 
-def main(cluster_config, number_of_pullers, number_of_pushers, test_id, doc_size, runtime_ms, rampup_interval_ms):
+def main(cluster_config, number_of_pullers, number_of_pushers, test_id, doc_size, runtime_ms, rampup_interval_ms, feed_type):
 
     sync_gateway_hosts = hosts_for_tag(cluster_config, "sync_gateways")
 
@@ -129,7 +131,8 @@ def main(cluster_config, number_of_pullers, number_of_pushers, test_id, doc_size
             test_id=test_id,
             doc_size=doc_size,
             rampup_interval_ms=rampup_interval_ms,
-            runtime_ms=runtime_ms
+            runtime_ms=runtime_ms,
+            feed_type=feed_type
         )
 
     print("Finished successfully")
