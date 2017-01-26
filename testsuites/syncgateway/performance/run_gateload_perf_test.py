@@ -89,10 +89,11 @@ if __name__ == "__main__":
     --reset-sync-gw
     --gen-gateload-config
     --cb-collect-info
-    --test-id
-    --doc-size
-    --runtime-ms
-    --rampup-interval-ms
+    --test-id="test_1"
+    --doc-size=1024
+    --runtime-ms=2400000
+    --rampup-interval-ms=120000
+    --feed-type="continuous"
     """
 
     parser = OptionParser(usage=usage)
