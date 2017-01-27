@@ -155,50 +155,25 @@ class SyncGateway:
     def start_sync_gateway(self, cluster_config, url, config):
         target = hostname_for_url(cluster_config, url)
         log_info("Starting sync_gateway on {} ...".format(target))
-        isWindowsTarget = detect_remote_windows_os(target)
-
         ansible_runner = AnsibleRunner(cluster_config)
         config_path = os.path.abspath(config)
-        if isWindowsTarget:
-            log_info("The target {} OS seems to be windows".format(target))
-            status = ansible_runner.run_ansible_playbook(
-                "start-sync-gateway-windows.yml",
-                extra_vars={
-                    "sync_gateway_config_filepath": config_path
-                },
-                subset=target
-            )
-        else:
-            status = ansible_runner.run_ansible_playbook(
-                "start-sync-gateway.yml",
-                extra_vars={
-                    "sync_gateway_config_filepath": config_path
-                },
-                subset=target
-            )
-
+        status = ansible_runner.run_ansible_playbook(
+            "start-sync-gateway.yml",
+            extra_vars={
+                "sync_gateway_config_filepath": config_path
+            },
+            subset=target
+        )
         if status != 0:
             raise ProvisioningError("Could not start sync_gateway")
 
     def stop_sync_gateway(self, cluster_config, url):
         target = hostname_for_url(cluster_config, url)
         log_info("Shutting down sync_gateway on {} ...".format(target))
-        isWindowsTarget = detect_remote_windows_os(target)
-
         ansible_runner = AnsibleRunner(cluster_config)
-
-
-        if isWindowsTarget:
-            log_info("The target {} OS seems to be windows".format(target))
-            status = ansible_runner.run_ansible_playbook(
-                "stop-sync-gateway-windows.yml",
-                subset=target
-            )
-        else:
-            status = ansible_runner.run_ansible_playbook(
-                "stop-sync-gateway.yml",
-                subset=target
-            )
-
+        status = ansible_runner.run_ansible_playbook(
+            "stop-sync-gateway.yml",
+            subset=target
+        )
         if status != 0:
             raise ProvisioningError("Could not stop sync_gateway")

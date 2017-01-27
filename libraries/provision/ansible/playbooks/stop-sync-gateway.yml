@@ -1,9 +1,10 @@
 ---
 - hosts: sync_gateways
   any_errors_fatal: true
-  become: yes
 
   tasks:
-  - include: tasks/stop-sync-gateway.yml
+    - include: tasks/stop-sync-gateway.yml
+      when: ansible_distribution == "CentOS"
 
-
+    - include: tasks/stop-sync-gateway-windows.yml
+      when: ansible_os_family == "Windows"

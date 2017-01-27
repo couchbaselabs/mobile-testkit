@@ -1,0 +1,5 @@
+# Stop service
+- name: SYNC GATEWAY | Stop sync_gateway service on Windows
+  win_service:
+    name: "Couchbase Sync Gateway"
+    state: stopped

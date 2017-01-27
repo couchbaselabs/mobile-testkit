@@ -1,6 +1,8 @@
 from ansible_python_runner import Runner
 from ansible import constants
 import logging
+import os
+from keywords.utils import log_info
 
 PLAYBOOKS_HOME = "libraries/provision/ansible/playbooks"
 
@@ -12,8 +14,12 @@ class AnsibleRunner:
 
     def run_ansible_playbook(self, script_name, extra_vars={}, subset=constants.DEFAULT_SUBSET):
 
-        #inventory_filename = self.provisiong_config
-        inventory_filename = 'resources/cluster_configs/windows'
+        inventory_filename = self.provisiong_config
+
+        # Check if there is a windows inventory file
+        #if os.path.exists("libraries/provision/ansible/playbooks/inventory/windows"):
+        #    inventory_filename = "libraries/provision/ansible/playbooks/inventory/windows"
+
 
         playbook_filename = "{}/{}".format(PLAYBOOKS_HOME, script_name)
 
