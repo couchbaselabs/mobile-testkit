@@ -5,56 +5,56 @@ import sys
 from optparse import OptionParser
 from subprocess import CalledProcessError
 
-from generate_clusters_from_pool import get_ips
+from generate_clusters_from_pool import get_hosts
+import paramiko
 
+def install_keys(key_path, user_name):
 
-def install_keys(key_name, user_name):
+    hosts, _ = get_hosts()
 
-    ips, _ = get_ips()
-
-    print("Are you sure you would like to copy public key '{0}' to vms: {1}".format(
-        key_name, ips
+    print("Deploying key '{0}' to vms: {1}".format(
+        key_path, hosts
     ))
 
-    validate = raw_input("Enter 'y' to continue or 'n' to exit: ")
-    if validate != "y":
-        print("Exiting...")
-        sys.exit(1)
+    key_data = open(os.path.expanduser(key_path)).read()
 
-    print("Using ssh-copy-id...")
-    for ip in ips:
-        try:
-            subprocess.check_output([
-                "ssh-copy-id", "-i", "{0}/.ssh/{1}".format(os.environ["HOME"], key_name),
-                "{0}@{1}".format(user_name, ip)
-            ])
-        except CalledProcessError as e:
-            print("ssh-copy-id failed: {} with error: {}".format(key_name, e))
-            print("Make sure '{}' is in ~/.ssh/".format(key_name))
-            sys.exit(1)
+    for host in hosts:
 
-    split_key = key_name.split(".")
-    private_key = split_key[0]
+        print("Deploying key to {}@{}".format(user_name, host))
 
-    print("Add '{0}' to your ssh agent?".format(private_key))
-    validate = raw_input("Enter 'y' to continue or 'n' to exit: ")
-    if validate != "y":
-        print("Exiting...")
-        sys.exit(1)
-    else:
-        subprocess.call((["ssh-add", "{0}/.ssh/{1}".format(os.environ["HOME"], private_key)]))
+        deploy_key(
+            key_data,
+            host,
+            user_name,
+            "",
+        )
 
+
+def deploy_key(key, server, username, password):
+
+    if key is None or len(key) == 0:
+        raise Exception("Empty key given, check key path")
+
+    client = paramiko.SSHClient()
+    client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+    # client.connect(server, username=username, password=password)
+    # TODO: vagrant use case
+    client.connect(server, username=username)
+    client.exec_command('mkdir -p ~/.ssh/')
+    client.exec_command('echo "%s" > ~/.ssh/authorized_keys' % key)
+    client.exec_command('chmod 644 ~/.ssh/authorized_keys')
+    client.exec_command('chmod 700 ~/.ssh/')
 
 if __name__ == "__main__":
 
-    usage = "usage: install-keys.py --key-name=<name_of_key> --ssh-user=<user>"
+    usage = "usage: install-keys.py --key-path=<name_of_key> --ssh-user=<user>"
     parser = OptionParser(usage=usage)
 
     parser.add_option(
-        "", "--key-name",
+        "", "--key-path",
         action="store",
         type="string",
-        dest="key_name",
+        dest="key_path",
         help="ssh key to install to hosts",
         default=None
     )
@@ -71,12 +71,12 @@ if __name__ == "__main__":
     cmd_args = sys.argv[1:]
     (opts, args) = parser.parse_args(cmd_args)
 
-    if opts.key_name is None or opts.ssh_user is None:
-        print(">>> Please provide --key-name=<key-name> AND --ssh-user=<user>")
+    if opts.key_path is None or opts.ssh_user is None:
+        print(">>> Please provide --key-path=<key-path> AND --ssh-user=<user>")
         sys.exit(1)
 
-    if opts.key_name is not None and not opts.key_name.endswith(".pub"):
+    if opts.key_path is not None and not opts.key_path.endswith(".pub"):
         print(">>> Please provide a PUBLIC key (.pub) to install on the remote machines")
         sys.exit(1)
 
-    install_keys(opts.key_name, opts.ssh_user)
+    install_keys(opts.key_path, opts.ssh_user)
