@@ -51,12 +51,12 @@ def test_log_rotation_default_values(params_from_base_test_setup, sg_conf_name):
             data = json.load(default_conf)
         else:
             template = Template(default_conf.read())
-            data = json.loads(template.render({
-                "couchbase_server_primary_node": utils.host_for_url(cluster_hosts["couchbase_servers"][0]),
-                "is_index_writer": False,
-            }, ))
-
-    log_info(data)
+            server_url = utils.host_for_url(cluster_hosts["couchbase_servers"][0])
+            temp = template.render(
+                couchbase_server_primary_node=server_url,
+                is_index_writer="false"
+            )
+            data = json.loads(temp)
 
     # delete rotation from sample config
     del data['logging']["default"]["rotation"]
@@ -111,9 +111,11 @@ def test_log_logKeys_string(params_from_base_test_setup, sg_conf_name):
 
     cluster = Cluster(config=cluster_conf)
     cluster.reset(sg_config_path=sg_conf)
+
     # read sample sg_conf
     with open(sg_conf) as defaul_conf:
         data = json.load(defaul_conf)
+
     # set logKeys as string in config file
     data['logging']["default"]["logKeys"] = "http"
     # create temp config file in the same folder as sg_conf
@@ -156,9 +158,11 @@ def test_log_nondefault_logKeys_set(params_from_base_test_setup, sg_conf_name):
 
     cluster = Cluster(config=cluster_conf)
     cluster.reset(sg_config_path=sg_conf)
+
     # read sample sg_conf
     with open(sg_conf) as defaul_conf:
         data = json.load(defaul_conf)
+
     # "FAKE" not valid area in logging
     data['logging']["default"]["logKeys"] = ["HTTP", "FAKE"]
     # create temp config file in the same folder as sg_conf
@@ -218,6 +222,7 @@ def test_log_maxage_10_timestamp_ignored(params_from_base_test_setup, sg_conf_na
     # read sample sg_conf
     with open(sg_conf) as defaul_conf:
         data = json.load(defaul_conf)
+
     # set maxage = 10 days
     data['logging']["default"]["rotation"]["maxage"] = 10
     # create temp config file in the same folder as sg_conf
@@ -315,15 +320,14 @@ def test_log_200mb(params_from_base_test_setup, sg_conf_name):
     sg_helper.stop_sync_gateway(cluster_config=cluster_conf, url=sg_one_url)
 
     remote_executor.execute("mkdir -p /tmp/sg_logs")
-
     remote_executor.execute("sudo rm -rf /tmp/sg_logs/sg_log_rotation*")
-
     remote_executor.execute("sudo dd if=/dev/zero of=/tmp/sg_logs/sg_log_rotation.log bs=204850000 count=100")
-
     remote_executor.execute("sudo chmod 777 -R /tmp/sg_logs")
+
     # read sample sg_conf
     with open(sg_conf) as defaul_conf:
         data = json.load(defaul_conf)
+
     # set maxsize by default
     data['logging']["default"]["rotation"]["maxsize"] = 200
     # create temp config file in the same folder as sg_conf
@@ -374,12 +378,11 @@ def test_log_number_backups(params_from_base_test_setup, sg_conf_name):
     sg_helper.stop_sync_gateway(cluster_config=cluster_conf, url=sg_one_url)
 
     remote_executor.execute("mkdir -p /tmp/sg_logs")
-
     remote_executor.execute("sudo rm -rf /tmp/sg_logs/sg_log_rotation*")
     # generate log file with almost 1MB
     remote_executor.execute("sudo dd if=/dev/zero of=/tmp/sg_logs/sg_log_rotation.log bs=1030000 count=1")
-
     remote_executor.execute("sudo chmod 777 -R /tmp/sg_logs")
+
     # iterate 5 times
     for i in xrange(5):
         sg_helper.start_sync_gateway(cluster_config=cluster_conf, url=sg_one_url, config=sg_conf)
@@ -420,9 +423,11 @@ def test_log_rotation_negative(params_from_base_test_setup, sg_conf_name):
 
     cluster = Cluster(config=cluster_conf)
     cluster.reset(sg_config_path=sg_conf)
+
     # read sample sg_conf
     with open(sg_conf) as defaul_conf:
         data = json.load(defaul_conf)
+
     # set negative values for rotation section
     data['logging']["default"]["rotation"] = {
         "maxsize": -1,
@@ -530,6 +535,7 @@ def test_log_logLevel_invalid(params_from_base_test_setup, sg_conf_name):
     data['logging']["default"]["logLevel"] = "debugFake"
 
     temp_conf = "/".join(sg_conf.split('/')[:-2]) + '/temp_conf.json'
+
     # create temp config file in the same folder as sg_conf
     with open(temp_conf, 'w') as fp:
         json.dump(data, fp)

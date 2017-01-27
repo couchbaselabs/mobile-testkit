@@ -76,14 +76,12 @@ def host_for_url(url):
     and returns an host in the form 192.168.33.10
     """
 
-    import pdb
-    pdb.set_trace()
-
     host = url.replace("http://", "")
     host = host.split(":")[0]
     log_info("Extracted host () from url ()".format(host, url))
 
     return host
+
 
 # Targeted playbooks need to use the host_name (i.e. sg1)
 def hostname_for_url(cluster_config, url):
