@@ -4,7 +4,12 @@ import os
 import subprocess
 from optparse import OptionParser
 
+import keywords.exceptions
+
 import cloudformation_template
+
+BUCKET_NAME = "cbmobile-bucket"
+BUCKET_FOLDER = "mobile-testkit"
 
 
 class ClusterConfig:
@@ -61,16 +66,16 @@ class ClusterConfig:
         # Ec2 instances follow string format xx.xxxx
         # Hacky validation but better than nothing
         if not len(self.__server_type.split(".")) == 2:
-            print "Invalid Ec2 server type"
+            print("Invalid Ec2 server type")
             return False
         if not len(self.__sync_gateway_type.split(".")) == 2:
-            print "Invalid Ec2 sync_gateway type"
+            print("Invalid Ec2 sync_gateway type")
             return False
         if not len(self.__load_type.split(".")) == 2:
-            print "Invalid Ec2 load type"
+            print("Invalid Ec2 load type")
             return False
         if not len(self.__lb_type.split(".")) == 2:
-            print "Invalid Ec2 load balancer type"
+            print("Invalid Ec2 load balancer type")
             return False
         return True
 
@@ -79,26 +84,26 @@ class ClusterConfig:
         with open("resources/limits.json") as limits_config:
             limits = json.load(limits_config)
             if self.__server_number > limits["max_servers"]:
-                print "You have exceed your maximum number of servers: {}".format(limits["max_servers"])
-                print "Edit you limits.json file to override this behavior"
+                print("You have exceed your maximum number of servers: {}".format(limits["max_servers"]))
+                print("Edit you limits.json file to override this behavior")
                 return False
             if self.__sync_gateway_number > limits["max_sync_gateways"]:
-                print "You have exceed your maximum number of servers: {}".format(limits["max_sync_gateways"])
-                print "Edit you limits.json file to override this behavior"
+                print("You have exceed your maximum number of servers: {}".format(limits["max_sync_gateways"]))
+                print("Edit you limits.json file to override this behavior")
                 return False
             if self.__load_number > limits["max_loads"]:
-                print "You have exceed your maximum number of servers: {}".format(limits["max_loads"])
-                print "Edit you limits.json file to override this behavior"
+                print("You have exceed your maximum number of servers: {}".format(limits["max_loads"]))
+                print("Edit you limits.json file to override this behavior")
                 return False
             if self.__lb_number > limits["max_lbs"]:
-                print "You have exceed your maximum number of servers: {}".format(limits["max_lbs"])
-                print "Edit you limits.json file to override this behavior"
+                print("You have exceed your maximum number of servers: {}".format(limits["max_lbs"]))
+                print("Edit you limits.json file to override this behavior")
                 return False
             return True
 
     def is_valid(self):
         if not self.__name:
-            print "Make sure you provide a stackname for your cluster."
+            print("Make sure you provide a stackname for your cluster.")
             return False
         types_valid = self.__validate_types()
         numbers_within_limit = self.__validate_numbers()
@@ -107,41 +112,47 @@ class ClusterConfig:
 
 def create_and_instantiate_cluster(config):
 
-    print ">>> Creating cluster... "
+    print(">>> Creating cluster... ")
 
-    print ">>> Couchbase Server Instances: {}".format(config.server_number)
-    print ">>> Couchbase Server Type:      {}".format(config.server_type)
+    print(">>> Couchbase Server Instances: {}".format(config.server_number))
+    print(">>> Couchbase Server Type:      {}".format(config.server_type))
 
-    print ">>> Sync Gateway Instances:     {}".format(config.sync_gateway_number)
-    print ">>> Sync Gateway Type:          {}".format(config.sync_gateway_type)
+    print(">>> Sync Gateway Instances:     {}".format(config.sync_gateway_number))
+    print(">>> Sync Gateway Type:          {}".format(config.sync_gateway_type))
 
-    print ">>> Load Instances:             {}".format(config.load_number)
-    print ">>> Load Type:                  {}".format(config.load_type)
+    print(">>> Load Instances:             {}".format(config.load_number))
+    print(">>> Load Type:                  {}".format(config.load_type))
 
-    print ">>> Load Balancer Instances:    {}".format(config.lb_number)
-    print ">>> Load Balancer Type:         {}".format(config.lb_type)
+    print(">>> Load Balancer Instances:    {}".format(config.lb_number))
+    print(">>> Load Balancer Type:         {}".format(config.lb_type))
 
-    print ">>> Generating Cloudformation Template"
-    json = cloudformation_template.gen_template(config)
+    print(">>> Generating Cloudformation Template")
+    templ_json = cloudformation_template.gen_template(config)
 
-    template_file_name = "cloudformation_template.json"
+    template_file_name = "{}_cf_template.json".format(cluster_config.name)
+    with open(template_file_name, 'w') as f:
+        f.write(templ_json)
 
-    template_file = open(template_file_name, 'w')
-    template_file.write(json)
-    template_file.close()
+    print(">>> Creating {} cluster on AWS".format(config.name))
 
-    print ">>> Creating {} cluster on AWS".format(config.name)
+    if "AWS_KEY" not in os.environ:
+        raise keywords.exceptions.ProvisioningError("Cannot create cloudformation stack if you do not have AWS_KEY set")
 
-    key = os.path.expandvars("$AWS_KEY")
-    if key == "$AWS_KEY":
-        raise Exception("You must define the AWS_KEY environment variable")
+    # Upload template to s3
+    print("Uploading {} to s3".format(template_file_name))
+    output = subprocess.check_output([
+        "aws", "s3", "cp", template_file_name, "s3://{}/{}/{}".format(BUCKET_NAME, BUCKET_FOLDER, template_file_name)
+    ])
+    print(output)
 
+    # Create Stack
+    print("Creating cloudformation stack: {}".format(template_file_name))
     subprocess.call([
         "aws", "cloudformation", "create-stack",
         "--stack-name", config.name,
         "--region", "us-east-1",
-        "--template-body", "file://{}".format(template_file_name),
-        "--parameters", "ParameterKey=KeyName,ParameterValue={}".format(key)
+        "--template-url", "http://{}.s3.amazonaws.com/{}/{}".format(BUCKET_NAME, BUCKET_FOLDER, template_file_name),
+        "--parameters", "ParameterKey=KeyName,ParameterValue={}".format(os.environ["AWS_KEY"])
     ])
 
 if __name__ == "__main__":
@@ -213,7 +224,7 @@ if __name__ == "__main__":
     )
 
     if not cluster_config.is_valid():
-        print "Invalid cluster configuration. Exiting..."
+        print("Invalid cluster configuration. Exiting...")
         sys.exit(1)
 
     create_and_instantiate_cluster(cluster_config)

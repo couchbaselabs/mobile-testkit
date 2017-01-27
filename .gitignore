@@ -21,7 +21,7 @@ temp_gateload_node
 temp_cbagent_config_template.conf
 temp_cbagent_config_template.conf-e
 
-cloudformation_template.json
+*_cf_template.json
 temp_ansible_hosts
 conf/hosts.ini
 
