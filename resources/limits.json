@@ -1,6 +1,6 @@
 {
   "max_servers" : 10,
-  "max_sync_gateways" : 15,
-  "max_loads" : 10,
-  "max_lbs" : 10
+  "max_sync_gateways" : 32,
+  "max_loads" : 20,
+  "max_lbs" : 5
 }
