@@ -203,7 +203,8 @@ class CouchbaseServer:
         # Leave 20% of RAM available for the underlying OS
         ram_multiplier = 0.80
 
-        # Needed for ability to add a N1QL indexing bucket.  @adamcfraser do you remember why we need this?
+        # Needed for N1QL indexing overhead. This enables us to use N1QL in the Couchbase
+        # python SDK for direct validation in Couchbase server in some of the functional tests
         n1ql_indexer_ram_mb = 512
 
         total_ram_mb = self._get_total_ram_mb()
