@@ -203,6 +203,7 @@ def test_log_nondefault_logKeys_set(params_from_base_test_setup, sg_conf_name):
     # Remove generated conf file
     os.remove(temp_conf)
 
+
 @pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.logging
