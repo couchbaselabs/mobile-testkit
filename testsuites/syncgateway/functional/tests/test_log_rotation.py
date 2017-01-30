@@ -14,6 +14,22 @@ from keywords.utils import log_info
 from libraries.testkit.cluster import Cluster
 
 
+def load_sync_gateway_config(sync_gateway_config, mode):
+    """ Loads a syncgateway configuration for modification"""
+    with open(sync_gateway_config) as default_conf:
+        if mode == "cc":
+            data = json.load(default_conf)
+        else:
+            template = Template(default_conf.read())
+            temp = template.render(
+                is_index_writer="false"
+            )
+            data = json.loads(temp)
+
+    log_info("Loaded sync_gateway config: {}".format(data))
+    return data
+
+
 @pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.logging
@@ -46,17 +62,7 @@ def test_log_rotation_default_values(params_from_base_test_setup, sg_conf_name):
     sg_helper.stop_sync_gateway(cluster_config=cluster_conf, url=sg_one_url)
 
     # read sample sg_conf
-    with open(sg_conf) as default_conf:
-        if mode == "cc":
-            data = json.load(default_conf)
-        else:
-            template = Template(default_conf.read())
-            server_url = utils.host_for_url(cluster_hosts["couchbase_servers"][0])
-            temp = template.render(
-                couchbase_server_primary_node=server_url,
-                is_index_writer="false"
-            )
-            data = json.loads(temp)
+    data = load_sync_gateway_config(sg_conf, mode)
 
     # delete rotation from sample config
     del data['logging']["default"]["rotation"]
@@ -113,8 +119,7 @@ def test_log_logKeys_string(params_from_base_test_setup, sg_conf_name):
     cluster.reset(sg_config_path=sg_conf)
 
     # read sample sg_conf
-    with open(sg_conf) as defaul_conf:
-        data = json.load(defaul_conf)
+    data = load_sync_gateway_config(sg_conf, mode)
 
     # set logKeys as string in config file
     data['logging']["default"]["logKeys"] = "http"
@@ -160,8 +165,7 @@ def test_log_nondefault_logKeys_set(params_from_base_test_setup, sg_conf_name):
     cluster.reset(sg_config_path=sg_conf)
 
     # read sample sg_conf
-    with open(sg_conf) as defaul_conf:
-        data = json.load(defaul_conf)
+    data = load_sync_gateway_config(sg_conf, mode)
 
     # "FAKE" not valid area in logging
     data['logging']["default"]["logKeys"] = ["HTTP", "FAKE"]
@@ -213,15 +217,13 @@ def test_log_maxage_10_timestamp_ignored(params_from_base_test_setup, sg_conf_na
     sg_helper.stop_sync_gateway(cluster_config=cluster_conf, url=sg_one_url)
 
     remote_executor.execute("mkdir -p /tmp/sg_logs")
-
     remote_executor.execute("sudo rm -rf /tmp/sg_logs/sg_log_rotation*")
     # generate log file with almost 1MB
     remote_executor.execute("sudo dd if=/dev/zero of=/tmp/sg_logs/sg_log_rotation.log bs=1030000 count=1")
-
     remote_executor.execute("sudo chmod 777 -R /tmp/sg_logs")
+
     # read sample sg_conf
-    with open(sg_conf) as defaul_conf:
-        data = json.load(defaul_conf)
+    data = load_sync_gateway_config(sg_conf, mode)
 
     # set maxage = 10 days
     data['logging']["default"]["rotation"]["maxage"] = 10
@@ -265,9 +267,10 @@ def test_log_rotation_invalid_path(params_from_base_test_setup, sg_conf_name):
 
     cluster = Cluster(config=cluster_conf)
     cluster.reset(sg_config_path=sg_conf)
+
     # read sample sg_conf
-    with open(sg_conf) as defaul_conf:
-        data = json.load(defaul_conf)
+    data = load_sync_gateway_config(sg_conf, mode)
+
     # set non existing logFilePath
     data['logging']["default"]["logFilePath"] = "/12345/1231/131231.log"
     # create temp config file in the same folder as sg_conf
@@ -325,8 +328,7 @@ def test_log_200mb(params_from_base_test_setup, sg_conf_name):
     remote_executor.execute("sudo chmod 777 -R /tmp/sg_logs")
 
     # read sample sg_conf
-    with open(sg_conf) as defaul_conf:
-        data = json.load(defaul_conf)
+    data = load_sync_gateway_config(sg_conf, mode)
 
     # set maxsize by default
     data['logging']["default"]["rotation"]["maxsize"] = 200
@@ -425,8 +427,7 @@ def test_log_rotation_negative(params_from_base_test_setup, sg_conf_name):
     cluster.reset(sg_config_path=sg_conf)
 
     # read sample sg_conf
-    with open(sg_conf) as defaul_conf:
-        data = json.load(defaul_conf)
+    data = load_sync_gateway_config(sg_conf, mode)
 
     # set negative values for rotation section
     data['logging']["default"]["rotation"] = {
@@ -486,15 +487,14 @@ def test_log_maxbackups_0(params_from_base_test_setup, sg_conf_name):
     sg_helper.stop_sync_gateway(cluster_config=cluster_conf, url=sg_one_url)
 
     remote_executor.execute("mkdir -p /tmp/sg_logs")
-
     remote_executor.execute("sudo rm -rf /tmp/sg_logs/sg_log_rotation*")
     # generate log file with almost 1MB
     remote_executor.execute("sudo dd if=/dev/zero of=/tmp/sg_logs/sg_log_rotation.log bs=1030000 count=1")
-
     remote_executor.execute("sudo chmod 777 -R /tmp/sg_logs")
+
     # read sample sg_conf
-    with open(sg_conf) as defaul_conf:
-        data = json.load(defaul_conf)
+    data = load_sync_gateway_config(sg_conf, mode)
+
     # set maxbackups=0 in config file
     data['logging']["default"]["rotation"]["maxbackups"] = 0
     # create temp config file in the same folder as sg_conf
@@ -529,8 +529,8 @@ def test_log_logLevel_invalid(params_from_base_test_setup, sg_conf_name):
     cluster = Cluster(config=cluster_conf)
     cluster.reset(sg_config_path=sg_conf)
     # read sample sg_conf
-    with open(sg_conf) as defaul_conf:
-        data = json.load(defaul_conf)
+    data = load_sync_gateway_config(sg_conf, mode)
+
     # 'debugFake' invalid value for logLevel
     data['logging']["default"]["logLevel"] = "debugFake"
 
