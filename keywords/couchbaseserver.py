@@ -74,6 +74,22 @@ class CouchbaseServer:
         self._session = Session()
         self._session.auth = ("Administrator", "password")
 
+    def get_bucket_names(self):
+        """ Returns list of the bucket names for a given Couchbase Server."""
+
+        bucket_names = []
+
+        resp = self._session.get("{}/pools/default/buckets".format(self.url))
+        log_r(resp)
+        resp.raise_for_status()
+
+        obj = json.loads(resp.text)
+
+        for entry in obj:
+            bucket_names.append(entry["name"])
+
+        return bucket_names
+
     def delete_bucket(self, name):
         """ Delete a Couchbase Server bucket with the given 'name' """
         resp = self._session.delete("{0}/pools/default/buckets/{1}".format(self.url, name))
@@ -81,33 +97,28 @@ class CouchbaseServer:
         resp.raise_for_status()
 
     def delete_buckets(self):
+        """ Deletes all of the buckets on a Couchbase Server.
+        If the buckets cannot be deleted after 3 tries, an exception will be raised.
+        """
+
         count = 0
         while True:
 
             if count > 3:
                 raise CBServerError("Max retries for bucket creation hit. Could not delete buckets!")
 
-            resp = self._session.get("{}/pools/default/buckets".format(self.url))
-            log_r(resp)
-            resp.raise_for_status()
-
-            obj = json.loads(resp.text)
-
-            existing_bucket_names = []
-            for entry in obj:
-                existing_bucket_names.append(entry["name"])
-
-            if len(existing_bucket_names) == 0:
+            bucket_names = self.get_bucket_names()
+            if len(bucket_names) == 0:
                 # No buckets to delete. Exit loop
                 break
 
-            log_info("Existing buckets: {}".format(existing_bucket_names))
-            log_info("Deleting buckets: {}".format(existing_bucket_names))
+            log_info("Existing buckets: {}".format(bucket_names))
+            log_info("Deleting buckets: {}".format(bucket_names))
 
             # HACK around Couchbase Server issue where issuing a bucket delete via REST occasionally returns 500 error
             # Delete existing buckets
             num_failures = 0
-            for bucket_name in existing_bucket_names:
+            for bucket_name in bucket_names:
                 try:
                     self.delete_bucket(bucket_name)
                 except HTTPError:
@@ -121,6 +132,11 @@ class CouchbaseServer:
             else:
                 # All bucket deletions were successful
                 break
+
+        # Verify the buckets are gone
+        bucket_names = self.get_bucket_names()
+        if len(bucket_names) != 0:
+            raise CBServerError("Failed to delete all of the server buckets!")
 
     def wait_for_ready_state(self):
         """
