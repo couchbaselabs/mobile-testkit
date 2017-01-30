@@ -16,6 +16,9 @@ from keywords.MobileRestClient import MobileRestClient
 
 from keywords import userinfo
 from keywords import document
+from keywords import couchbaseserver
+from keywords.SyncGateway import SyncGateway
+from keywords import exceptions
 
 
 @pytest.mark.topospecific
@@ -489,3 +492,85 @@ def test_missing_num_shards(params_from_base_test_setup, sg_conf):
 
     # Verify sharding is correct
     assert cluster.validate_cbgt_pindex_distribution_retry(num_running_sg_accels=3)
+
+
+@pytest.mark.topospecific
+@pytest.mark.sanity
+@pytest.mark.syncgateway
+@pytest.mark.sgaccel
+@pytest.mark.parametrize("sg_conf", [
+    "{}/sync_gateway_default_functional_tests_di.json".format(SYNC_GATEWAY_CONFIGS),
+])
+def test_detect_stale_channel_index(params_from_base_test_setup, sg_conf):
+    """
+    1. Bring up single Sync Gateway node, backed by Couchbase Server with 3 accels indexing
+    2. Configure such that the primary bucket and the channel index bucket are different (which is the norm)
+    3. Add 1000 documents
+    4. Shutdown Sync Gateway
+    5. Delete / create the primary bucket ('data-bucket'), but do not touch the channel index bucket
+    6. Start Sync Gateway
+    7. Assert that sync_gateway fails to start due to stale channel index
+    """
+
+    cluster_conf = params_from_base_test_setup["cluster_config"]
+
+    log_info("Running 'test_detect_stale_channel_index'")
+    log_info("cluster_conf: {}".format(cluster_conf))
+
+    log_info("sg_conf: {}".format(sg_conf))
+
+    cluster = Cluster(config=cluster_conf)
+    cluster.reset(sg_config_path=sg_conf)
+
+    cluster_util = ClusterKeywords()
+    topology = cluster_util.get_cluster_topology(cluster_conf)
+
+    sg_url = topology["sync_gateways"][0]["public"]
+    sg_admin_url = topology["sync_gateways"][0]["admin"]
+    cb_server_url = topology["couchbase_servers"][0]
+    sg_db = "db"
+    num_docs = 1000
+
+    cb_server = couchbaseserver.CouchbaseServer(url=cb_server_url)
+    client = MobileRestClient()
+
+    # Create doc pusher user
+    doc_pusher_user_info = userinfo.UserInfo(name="doc_pusher", password="pass", channels=["NASA"], roles=[])
+    doc_pusher_auth = client.create_user(
+        url=sg_admin_url,
+        db=sg_db,
+        name=doc_pusher_user_info.name,
+        password=doc_pusher_user_info.password,
+        channels=doc_pusher_user_info.channels
+    )
+
+    # Add some docs to Sync Gateway to cause indexing
+    docs = document.create_docs(None, number=num_docs, channels=doc_pusher_user_info.channels)
+    pushed_docs = client.add_bulk_docs(url=sg_url, db=sg_db, docs=docs, auth=doc_pusher_auth)
+    assert len(pushed_docs) == num_docs
+
+    # Shut down sync_gateway
+    sg_util = SyncGateway()
+    sg_util.stop_sync_gateway(cluster_config=cluster_conf, url=sg_url)
+
+    # Delete server bucket
+    cb_server.delete_bucket(name="data-bucket")
+
+    # Create server bucket
+    ram_per_bucket_mb = cb_server.get_ram_per_bucket(num_buckets=2)
+    cb_server.create_bucket(name="data-bucket", ram_quota_mb=ram_per_bucket_mb)
+
+    # Start sync_gateway and assert that a Provisioning error is raised due to detecting stale index
+    with pytest.raises(exceptions.ProvisioningError):
+        sg_util.start_sync_gateway(cluster_config=cluster_conf, url=sg_url, config=sg_conf)
+
+    # TODO: To make this check even more accurate, could
+    # run remote ssh command "systemctl status sync_gateway.service" and look for
+    # regex pattern: Main PID: 7185 (code=exited, status=2)
+
+    # Delete index bucket and recreate it
+    cb_server.delete_bucket(name="index-bucket")
+    cb_server.create_bucket(name="index-bucket", ram_quota_mb=ram_per_bucket_mb)
+
+    # Start sync gateway, should succeed now
+    sg_util.start_sync_gateway(cluster_config=cluster_conf, url=sg_url, config=sg_conf)

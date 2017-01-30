@@ -16,7 +16,7 @@ class Server:
     """
     Old code -- slowly being deprecated
 
-    Use keywords/CouchbaseServer.py for future development
+    Use keywords/couchbaseserver.py for future development
     """
 
     def __init__(self, cluster_config, target):

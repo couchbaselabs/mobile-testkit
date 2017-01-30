@@ -11,7 +11,7 @@ from libraries.testkit.admin import Admin
 from libraries.testkit.config import Config
 from libraries.provision.ansible_runner import AnsibleRunner
 
-import keywords.CouchbaseServer
+from keywords import couchbaseserver
 from keywords import utils
 
 import keywords.exceptions
@@ -55,7 +55,7 @@ class Cluster:
         self.sync_gateway_config = None  # will be set to Config object when reset() called
 
         # for integrating keywords
-        self.cb_server = keywords.CouchbaseServer.CouchbaseServer(self.servers[0].url)
+        self.cb_server = couchbaseserver.CouchbaseServer(self.servers[0].url)
 
     def validate_cluster(self):
 

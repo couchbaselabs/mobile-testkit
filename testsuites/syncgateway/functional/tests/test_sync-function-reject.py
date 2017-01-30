@@ -6,8 +6,8 @@ from keywords.utils import log_info
 from keywords.ClusterKeywords import ClusterKeywords
 from keywords.MobileRestClient import MobileRestClient
 from keywords.SyncGateway import sync_gateway_config_path_for_mode
-from keywords.CouchbaseServer import CouchbaseServer
 
+from keywords import couchbaseserver
 from keywords import document
 
 
@@ -74,7 +74,7 @@ def test_attachments_on_docs_rejected_by_sync_function(params_from_base_test_set
         client.add_doc(url=sg_url, db=sg_db, doc=doc_with_att, auth=sg_user_session)
     assert he.value[0].startswith("403 Client Error: Forbidden for url:")
 
-    cb_server = CouchbaseServer(cbs_url)
+    cb_server = couchbaseserver.CouchbaseServer(cbs_url)
 
     server_att_docs = cb_server.get_server_docs_with_prefix(bucket=bucket, prefix="_sync:att:")
     num_att_docs = len(server_att_docs)

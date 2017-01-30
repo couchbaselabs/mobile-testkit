@@ -7,7 +7,8 @@ from keywords.ClusterKeywords import ClusterKeywords
 from keywords.MobileRestClient import MobileRestClient
 from keywords.SyncGateway import SyncGateway
 from keywords.SyncGateway import sync_gateway_config_path_for_mode
-from keywords.CouchbaseServer import CouchbaseServer
+
+from keywords import couchbaseserver
 from keywords import document
 
 
@@ -61,7 +62,7 @@ def test_attachment_revpos_when_ancestor_unavailable(params_from_base_test_setup
 
     client = MobileRestClient()
     sg_util = SyncGateway()
-    cb_server = CouchbaseServer(cbs_url)
+    cb_server = couchbaseserver.CouchbaseServer(cbs_url)
 
     user1 = client.create_user(url=sg_url_admin, db=sg_db, name="user1", password="password", channels=channels_list)
     doc_with_att = document.create_doc(doc_id="att_doc", content={"sample_key": "sample_val"}, attachment_name="sample_text.txt", channels=channels_list)
@@ -216,7 +217,7 @@ def test_writing_attachment_to_couchbase_server(params_from_base_test_setup, sg_
     doc_with_att = document.create_doc(doc_id="att_doc", content={"sample_key": "sample_val"}, attachment_name="sample_text.txt", channels=sg_user_channels)
 
     client.add_doc(url=sg_url, db=sg_db, doc=doc_with_att, auth=sg_user_session)
-    server = CouchbaseServer(cbs_url)
+    server = couchbaseserver.CouchbaseServer(cbs_url)
 
     # Assert that the attachment doc gets written to couchbase server
     server_att_docs = server.get_server_docs_with_prefix(bucket=bucket, prefix="_sync:att:")

@@ -20,6 +20,7 @@ from keywords.utils import log_r
 from keywords.utils import log_info
 from keywords.utils import log_debug
 from keywords.utils import log_error
+from keywords import types
 
 
 def get_server_version(host):
@@ -73,41 +74,69 @@ class CouchbaseServer:
         self._session = Session()
         self._session.auth = ("Administrator", "password")
 
+    def get_bucket_names(self):
+        """ Returns list of the bucket names for a given Couchbase Server."""
+
+        bucket_names = []
+
+        resp = self._session.get("{}/pools/default/buckets".format(self.url))
+        log_r(resp)
+        resp.raise_for_status()
+
+        obj = json.loads(resp.text)
+
+        for entry in obj:
+            bucket_names.append(entry["name"])
+
+        return bucket_names
+
+    def delete_bucket(self, name):
+        """ Delete a Couchbase Server bucket with the given 'name' """
+        resp = self._session.delete("{0}/pools/default/buckets/{1}".format(self.url, name))
+        log_r(resp)
+        resp.raise_for_status()
+
     def delete_buckets(self):
+        """ Deletes all of the buckets on a Couchbase Server.
+        If the buckets cannot be deleted after 3 tries, an exception will be raised.
+        """
+
         count = 0
-        while count < 3:
-            resp = self._session.get("{}/pools/default/buckets".format(self.url))
-            log_r(resp)
-            resp.raise_for_status()
+        while True:
 
-            obj = json.loads(resp.text)
+            if count > 3:
+                raise CBServerError("Max retries for bucket creation hit. Could not delete buckets!")
 
-            existing_bucket_names = []
-            for entry in obj:
-                existing_bucket_names.append(entry["name"])
+            bucket_names = self.get_bucket_names()
+            if len(bucket_names) == 0:
+                # No buckets to delete. Exit loop
+                break
 
-            log_info("Existing buckets: {}".format(existing_bucket_names))
-            log_info("Deleting buckets: {}".format(existing_bucket_names))
+            log_info("Existing buckets: {}".format(bucket_names))
+            log_info("Deleting buckets: {}".format(bucket_names))
 
             # HACK around Couchbase Server issue where issuing a bucket delete via REST occasionally returns 500 error
-            delete_num = 0
             # Delete existing buckets
-            for bucket_name in existing_bucket_names:
-                resp = self._session.delete("{0}/pools/default/buckets/{1}".format(self.url, bucket_name))
-                log_r(resp)
-                if resp.status_code == 200:
-                    delete_num += 1
+            num_failures = 0
+            for bucket_name in bucket_names:
+                try:
+                    self.delete_bucket(bucket_name)
+                except HTTPError:
+                    num_failures += 1
+                    log_info("Failed to delete bucket. Retrying ...")
 
-            if delete_num == len(existing_bucket_names):
-                break
-            else:
-                # A 500 error may have occured, query for buckets and try to delete them again
+            # A 500 error may have occured, query for buckets and try to delete them again
+            if num_failures > 0:
                 time.sleep(5)
                 count += 1
+            else:
+                # All bucket deletions were successful
+                break
 
-        # Check that max retries did not occur
-        if count == 3:
-            raise CBServerError("Max retries for bucket creation hit. Could not delete buckets!")
+        # Verify the buckets are gone
+        bucket_names = self.get_bucket_names()
+        if len(bucket_names) != 0:
+            raise CBServerError("Failed to delete all of the server buckets!")
 
     def wait_for_ready_state(self):
         """
@@ -146,9 +175,9 @@ class CouchbaseServer:
             # All nodes are heathy if it made it to here
             break
 
-    def get_available_ram(self):
+    def _get_total_ram_mb(self):
         """
-        Call the Couchbase REST API to get the total memory available on the machine
+        Call the Couchbase REST API to get the total memory available on the machine. RAM returned is in mb
         """
         resp = self._session.get("{}/pools/default".format(self.url))
         resp.raise_for_status()
@@ -161,28 +190,53 @@ class CouchbaseServer:
             mem_total = node["systemStats"]["mem_total"]
             if mem_total > mem_total_highest:
                 mem_total_highest = mem_total
-        return mem_total_highest
+
+        total_avail_ram_mb = int(mem_total_highest / (1024 * 1024))
+        log_info("total_avail_ram_mb: {}".format(total_avail_ram_mb))
+        return total_avail_ram_mb
+
+    def _get_effective_ram_mb(self):
+        """ Return the amount of effective RAM ((total RAM * muliplier) - n1ql ram allocation)
+        Given a total amount of ram
+        """
+
+        # Leave 20% of RAM available for the underlying OS
+        ram_multiplier = 0.80
+
+        # Needed for ability to add a N1QL indexing bucket.  @adamcfraser do you remember why we need this?
+        n1ql_indexer_ram_mb = 512
+
+        total_ram_mb = self._get_total_ram_mb()
+        effective_avail_ram_mb = int(total_ram_mb * ram_multiplier) - n1ql_indexer_ram_mb
+
+        log_info("effective_avail_ram_mb: {}".format(effective_avail_ram_mb))
+        return effective_avail_ram_mb
+
+    def get_ram_per_bucket(self, num_buckets):
+        """ Returns the amount of ram allocated to each bucket for a given number of buckets"""
+
+        effective_ram_mb = self._get_effective_ram_mb()
+        ram_per_bucket_mb = int(effective_ram_mb / num_buckets)
+        return ram_per_bucket_mb
 
     def create_buckets(self, bucket_names):
         """
         # Figure out what total ram available is
         # Divide by number of buckets
         """
+        types.verify_is_list(bucket_names)
+
         if len(bucket_names) == 0:
             return
         log_info("Creating buckets: {}".format(bucket_names))
-        ram_multiplier = 0.80
-        total_avail_ram_bytes = self.get_available_ram()
-        total_avail_ram_mb = int(total_avail_ram_bytes / (1024 * 1024))
-        n1ql_indexer_ram_mb = 512
-        effective_avail_ram_mb = int(total_avail_ram_mb * ram_multiplier) - n1ql_indexer_ram_mb
-        per_bucket_ram_mb = int(effective_avail_ram_mb / len(bucket_names))
-        log_info("total_avail_ram_mb: {} effective_avail_ram_mb: {} effective_avail_ram_mb: {}".format(total_avail_ram_mb, effective_avail_ram_mb, effective_avail_ram_mb))
+
+        # Get the amount of RAM to allocate for each server bucket
+        per_bucket_ram_mb = self.get_ram_per_bucket(len(bucket_names))
+
         for bucket_name in bucket_names:
-            log_info("Create bucket {} with per_bucket_ram_mb {}".format(bucket_name, per_bucket_ram_mb))
             self.create_bucket(bucket_name, per_bucket_ram_mb)
 
-    def create_bucket(self, name, ramQuotaMB=1024):
+    def create_bucket(self, name, ram_quota_mb=1024):
         """
         1. Create CBS bucket via REST
         2. Create client connection and poll until bucket is available
@@ -193,11 +247,11 @@ class CouchbaseServer:
         http://docs.couchbase.com/admin/admin/REST/rest-bucket-create.html
         """
 
-        log_info("Creating bucket {} with RAM {}".format(name, ramQuotaMB))
+        log_info("Creating bucket {} with RAM {}".format(name, ram_quota_mb))
 
         data = {
             "name": name,
-            "ramQuotaMB": str(ramQuotaMB),
+            "ramQuotaMB": str(ram_quota_mb),
             "authType": "sasl",
             "proxyPort": "11211",
             "bucketType": "couchbase",
