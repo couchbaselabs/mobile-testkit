@@ -70,6 +70,10 @@ def test_remove_add_channels_to_doc(params_from_base_test_setup, sg_conf_name):
     client.verify_doc_id_in_changes(sg_url, sg_db, expected_doc_id="_user/a_user", auth=a_user_auth)
     client.verify_docs_in_changes(sg_url, sg_db, expected_docs=a_docs, auth=a_user_auth)
 
+    # Wait for all docs to also show up on admin changes feed
+    # Reproduces https://github.com/couchbaselabs/sync-gateway-accel/issues/68
+    client.verify_docs_in_changes(sg_admin_url, sg_db, expected_docs=a_docs)
+
     # Get changes for 'a_user'
     a_user_changes = client.get_changes(url=sg_url, db=sg_db, since=0, auth=a_user_auth, feed="normal")
 
