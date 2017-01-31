@@ -22,6 +22,7 @@
         "hideki": {"password": "pass", "admin_channels": ["hideki"]},
         "pasin": {"password": "pass", "admin_channels": ["pasin"]},
         "jens": {"password": "pass", "admin_channels": ["jens"]},
+        "jim": {"password": "pass", "admin_channels": ["jim"]},
         "seth": {"password": "pass", "admin_channels": ["seth"]},
         "raghu": {"password": "pass", "admin_channels": ["raghu"]},
         "mod": {"password": "pass", "admin_roles": ["moderator"]},
