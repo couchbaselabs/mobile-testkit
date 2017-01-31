@@ -12,7 +12,7 @@ from couchbase.exceptions import NotFoundError
 
 
 import keywords.constants
-from keywords.RemoteExecutor import RemoteExecutor
+from keywords.remoteexecutor import RemoteExecutor
 from keywords.exceptions import CBServerError
 from keywords.exceptions import ProvisioningError
 from keywords.exceptions import TimeoutError
