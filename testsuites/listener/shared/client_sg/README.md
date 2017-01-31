@@ -26,13 +26,13 @@ These commands must be run from the root directory of the mobile-testkit repo.
 ```
 pytest -s \
     --liteserv-platform=macosx \
-    --liteserv-version=1.4-20 \
+    --liteserv-version=1.4-32 \
     --liteserv-host=localhost \
     --liteserv-port=5000 \
     --liteserv-storage-engine=SQLite \
-    --sync-gateway-version=1.4-16 \
+    --sync-gateway-version=1.4-55 \
     --sync-gateway-mode=cc \ 
-    --server-version=4.6.0-3572 \
+    --server-version=4.6.0-3573 \
     testsuites/listener/shared/client_sg/
 ```
 
@@ -41,13 +41,13 @@ pytest -s \
 ```
 pytest -s \
     --liteserv-platform=android \
-    --liteserv-version=1.4-20 \
+    --liteserv-version=1.4-32 \
     --liteserv-host=<android-device-ip> \
     --liteserv-port=5000 \
     --liteserv-storage-engine=SQLite \
-    --sync-gateway-version=1.4-16 \
-    --sync-gateway-mode=di \ 
-    --server-version=4.6.0-3572 \
+    --sync-gateway-version=1.4-55 \
+    --sync-gateway-mode=cc \ 
+    --server-version=4.6.0-3573 \
     testsuites/listener/shared/client_sg/
 ```
 
@@ -56,13 +56,13 @@ pytest -s \
 ```
 pytest -s \
     --liteserv-platform=net-mono \
-    --liteserv-version=1.4-20 \
+    --liteserv-version=1.4-30 \
     --liteserv-host=localhost \
     --liteserv-port=5000 \
     --liteserv-storage-engine=SQLite \
-    --sync-gateway-version=1.4-16 \
+    --sync-gateway-version=1.4-55 \
     --sync-gateway-mode=cc \ 
-    --server-version=4.6.0-3572 \
+    --server-version=4.6.0-3573 \
     -k "test_auto_prune_listener_keeps_conflicts_sanity" \
     testsuites/listener/shared/client_sg/
 ```
