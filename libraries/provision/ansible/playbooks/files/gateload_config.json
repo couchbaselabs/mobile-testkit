@@ -20,6 +20,5 @@
     "AuthType": "basic",
     "Password": "password",
     "StatsdEnabled":true,
-    "FeedType": "{{ feed_type }}",
     "StatsdEndpoint":"localhost:8125"
 }

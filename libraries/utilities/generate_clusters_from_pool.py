@@ -29,7 +29,7 @@ class ClusterDef:
 
 
 def write_config(config, pool_file):
-    ips, ip_to_node_type = get_ips(pool_file)
+    ips, ip_to_node_type = get_hosts(pool_file)
     ip_to_node_type_len = len(ip_to_node_type)
     ip_to_node_type_defined = False
 
@@ -372,7 +372,7 @@ def write_config(config, pool_file):
             f_json.write(json.dumps(cluster_dict, indent=4))
 
 
-def get_ips(pool_file="resources/pool.json"):
+def get_hosts(pool_file="resources/pool.json"):
     with open(pool_file) as f:
         pool_dict = json.loads(f.read())
         ips = pool_dict["ips"]
@@ -421,12 +421,8 @@ def generate_clusters_from_pool(pool_file):
         ClusterDef("4sg_1ac_3cbs_4lgs", num_sgs=4, num_acs=1, num_cbs=3, num_lgs=4, num_lbs=0),
         ClusterDef("4sg_2ac_3cbs_4lgs", num_sgs=4, num_acs=2, num_cbs=3, num_lgs=4, num_lbs=0),
         ClusterDef("8sg_1ac_3cbs_8lgs", num_sgs=8, num_acs=1, num_cbs=3, num_lgs=8, num_lbs=0),
-        ClusterDef("8sg_2ac_3cbs_8lgs", num_sgs=8, num_acs=2, num_cbs=3, num_lgs=8, num_lbs=0),
+        ClusterDef("8sg_2ac_3cbs_8lgs", num_sgs=8, num_acs=2, num_cbs=3, num_lgs=8, num_lbs=0)
         # End Perf Mini Matrix
-
-        # Test Fest
-        ClusterDef("1sg_2ac_3cbs", num_sgs=1, num_acs=2, num_cbs=3, num_lgs=0, num_lbs=0)
-        # End Test Fest
     ]
 
     if not os.path.isfile(pool_file):
@@ -434,7 +430,7 @@ def generate_clusters_from_pool(pool_file):
         sys.exit(1)
 
     print("Using the following machines to run functional tests ... ")
-    for host in get_ips(pool_file):
+    for host in get_hosts(pool_file):
         print(host)
 
     print("Generating 'resources/cluster_configs/'")
