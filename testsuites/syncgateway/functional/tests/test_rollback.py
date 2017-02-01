@@ -20,6 +20,17 @@ from keywords import utils
     "sync_gateway_default"
 ])
 def test_rollback_server_reset(params_from_base_test_setup, sg_conf_name):
+    """
+    Test for sync gateway resiliency under Couchbase Server rollback
+
+    Scenario
+    1. Create user (seth:pass) and session
+    2. Add 1000 docs with uuid id's
+    3. Verify the docs show up in seth's changes feed
+    4. Delete vBucket files on server
+    5. Restart server
+    6.
+    """
 
     cluster_config = params_from_base_test_setup["cluster_config"]
     topology = params_from_base_test_setup["cluster_topology"]
@@ -76,8 +87,21 @@ def test_rollback_server_reset(params_from_base_test_setup, sg_conf_name):
 
     # Delete some vBucket (5*) files to start a server rollback
     # Example vbucket files - 195.couch.1  310.couch.1  427.couch.1  543.couch.1
-    rex.must_execute("sudo rm -rf /opt/couchbase/var/lib/couchbase/data/data-bucket/5*")
-    rex.must_execute("sudo ls /opt/couchbase/var/lib/couchbase/data/data-bucket/")
+    rex.must_execute("su couchbase")
+    rex.must_execute("rm -rf /opt/couchbase/var/lib/couchbase/data/data-bucket/5*")
+    out, err = rex.must_execute("ls /opt/couchbase/var/lib/couchbase/data/data-bucket/")
+
+    # out format: [u'0.couch.1     264.couch.1  44.couch.1\t635.couch.1  820.couch.1\r\n',
+    # u'1000.couch.1  265.couch.1 ...]
+    vbucket_files = []
+    for entry in out:
+        vbucket_files.extend(entry.split())
+
+    # Verify that the vBucket files starting with 5 are all gone
+    for vbucket_file in vbucket_files:
+        assert not vbucket_file.startswith("5")
+
+    log_info("vbucket_files: {}".format(vbucket_files))
 
     # Restart the server
     rex.must_execute("sudo systemctl restart couchbase-server")
