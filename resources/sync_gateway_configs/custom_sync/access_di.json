@@ -33,7 +33,7 @@
                 } else if(doc._id == "role_access") {
                     role(doc.users, doc.roles);
                 } else {
-                    channel(doc, doc.channels);
+                    channel(doc.channels);
                 }
             }`
         }
