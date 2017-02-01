@@ -87,9 +87,14 @@ def test_rollback_server_reset(params_from_base_test_setup, sg_conf_name):
 
     # Delete some vBucket (5*) files to start a server rollback
     # Example vbucket files - 195.couch.1  310.couch.1  427.couch.1  543.couch.1
-    rex.must_execute("su couchbase")
-    rex.must_execute("rm -rf /opt/couchbase/var/lib/couchbase/data/data-bucket/5*")
-    out, err = rex.must_execute("ls /opt/couchbase/var/lib/couchbase/data/data-bucket/")
+    log_info("Deleting vBucket files with the '5' prefix")
+    out, err = rex.must_execute('sudo find /opt/couchbase/var/lib/couchbase/data/data-bucket -name "5*" -delete')
+    log_info(out)
+    log_info(err)
+    log_info("Listing vBucket files ...")
+    out, err = rex.must_execute("sudo ls /opt/couchbase/var/lib/couchbase/data/data-bucket/")
+    log_info(out)
+    log_info(err)
 
     # out format: [u'0.couch.1     264.couch.1  44.couch.1\t635.couch.1  820.couch.1\r\n',
     # u'1000.couch.1  265.couch.1 ...]
@@ -98,6 +103,7 @@ def test_rollback_server_reset(params_from_base_test_setup, sg_conf_name):
         vbucket_files.extend(entry.split())
 
     # Verify that the vBucket files starting with 5 are all gone
+    log_info("Verifing vBucket files are deleted ...")
     for vbucket_file in vbucket_files:
         assert not vbucket_file.startswith("5")
 
