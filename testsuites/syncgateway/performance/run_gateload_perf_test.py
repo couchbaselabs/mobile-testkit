@@ -66,6 +66,14 @@ def run_gateload_perf_test(number_pullers,
             feed_type=feed_type
         )
 
+
+    print(">>> Starting profile collection scripts")
+    status = ansible_runner.run_ansible_playbook(
+        "start-profile-collection.yml",
+        extra_vars={},
+    )
+    assert status == 0, "Could not start profiling collection scripts"
+
     # Start gateload
     print(">>> Starting gateload with {0} pullers and {1} pushers".format(number_pullers, number_pushers))
     status = ansible_runner.run_ansible_playbook(
