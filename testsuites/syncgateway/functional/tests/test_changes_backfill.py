@@ -523,7 +523,6 @@ def test_backfill_channel_grant_to_role(params_from_base_test_setup, sg_conf_nam
     cluster.reset(sg_conf)
 
     client = MobileRestClient()
-
     client.create_role(url=sg_admin_url, db=sg_db, name=empty_role_name, channels=[])
 
     pusher_info = userinfo.UserInfo("pusher", "pass", channels=channels_to_grant, roles=[])
@@ -562,10 +561,8 @@ def test_backfill_channel_grant_to_role(params_from_base_test_setup, sg_conf_nam
 
     pusher_changes = client.get_changes(url=sg_url, db=sg_db, since=0, auth=pusher_session)
 
-
     # Make sure _user docs shows up in the changes feed
     assert len(pusher_changes["results"]) == 1 and pusher_changes["results"][0]["id"] == "_user/pusher"
-
 
     # Add docs with the appropriate channels
     a_docs = client.add_docs(
@@ -620,7 +617,16 @@ def test_backfill_channel_grant_to_role(params_from_base_test_setup, sg_conf_nam
         client.update_role(url=sg_admin_url, db=sg_db, name=empty_role_name, channels=channels_to_grant)
     elif grant_type == "CHANNEL-SYNC":
         # Grant channel access to role via sync function
-        pass
+        access_doc = document.create_doc(doc_id="channel_grant_to_role")
+        access_doc["roles"] = ["role:{}".format(empty_role_name)]
+        access_doc["channels"] = channels_to_grant
+        client.add_doc(
+            url=sg_url,
+            db=sg_db,
+            doc=access_doc,
+            auth=pusher_session,
+            use_post=True
+        )
 
     # Issue changes request after grant
     grantee_changes_post_grant = client.get_changes(
