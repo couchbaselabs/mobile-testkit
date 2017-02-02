@@ -6,9 +6,11 @@ from keywords.utils import log_info
 
 
 def stream_output(stdio_file_stream):
+    lines = []
     for line in stdio_file_stream:
         print(line)
-
+        lines.append(line)
+    return lines
 
 class RemoteExecutor:
     """Executes remote shell commands on a host.
@@ -41,10 +43,10 @@ class RemoteExecutor:
         # We should not be sending / recieving data on the stdin channel so close it
         stdin.close()
 
-        stdout_p = stdout.readlines()
-        stream_output(stdout_p)
-        stderr_p = stderr.readlines()
-        stream_output(stderr_p)
+        # Stream output to console, and capture all of the output.
+        # TODO: this is not memory efficient and if there is a ton of output, this will blow up
+        stdout_p = stream_output(stdout)
+        stderr_p = stream_output(stderr)
 
         # this will block until the command has completed and will return the error code from
         # the command. If the command does not return an exit status, then -1 is returned
