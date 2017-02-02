@@ -55,6 +55,7 @@ def test_backfill_channels_oneshot_changes(params_from_base_test_setup, sg_conf_
     admin_user_info = userinfo.UserInfo("admin", "pass", channels=["A"], roles=[])
 
     if grant_type == "CHANNEL-TO-ROLE-REST" or grant_type == "CHANNEL-TO-ROLE-SYNC":
+        client.create_role(url=sg_admin_url, db=sg_db, name="empty_role", channels=[])
         user_b_user_info = userinfo.UserInfo("USER_B", "pass", channels=["B"], roles=["empty_role"])
     else:
         user_b_user_info = userinfo.UserInfo("USER_B", "pass", channels=["B"], roles=[])
@@ -243,6 +244,7 @@ def test_backfill_channels_oneshot_limit_changes(params_from_base_test_setup, sg
     admin_user_info = userinfo.UserInfo("admin", "pass", channels=["A"], roles=[])
 
     if grant_type == "CHANNEL-TO-ROLE-REST" or grant_type == "CHANNEL-TO-ROLE-SYNC":
+        client.create_role(url=sg_admin_url, db=sg_db, name="empty_role", channels=[])
         user_b_user_info = userinfo.UserInfo("USER_B", "pass", channels=["B"], roles=["empty_role"])
     else:
         user_b_user_info = userinfo.UserInfo("USER_B", "pass", channels=["B"], roles=[])
@@ -447,6 +449,7 @@ def test_backfill_channels_longpoll_changes_with_limit(params_from_base_test_set
     admin_user_info = userinfo.UserInfo("admin", "pass", channels=["A"], roles=[])
 
     if grant_type == "CHANNEL-TO-ROLE-REST" or grant_type == "CHANNEL-TO-ROLE-SYNC":
+        client.create_role(url=sg_admin_url, db=sg_db, name="empty_role", channels=[])
         user_b_user_info = userinfo.UserInfo("USER_B", "pass", channels=["B"], roles=["empty_role"])
     else:
         user_b_user_info = userinfo.UserInfo("USER_B", "pass", channels=["B"], roles=[])
