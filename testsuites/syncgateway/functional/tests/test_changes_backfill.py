@@ -417,7 +417,7 @@ def test_backfill_channels_oneshot_limit_changes(params_from_base_test_setup, sg
     ("custom_sync/access", "CHANNEL-TO-ROLE-REST"),
     ("custom_sync/access", "CHANNEL-TO-ROLE-SYNC")
 ])
-def test_backfill_channels_longpoll_changes_with_limit(params_from_base_test_setup, sg_conf_name, grant_type):
+def test_backfill_awaken_channels_longpoll_changes_with_limit(params_from_base_test_setup, sg_conf_name, grant_type):
     """
     Test that checks that docs are backfilled for logpoll changes with limit for a access grant (via REST or SYNC)
 
@@ -484,22 +484,34 @@ def test_backfill_channels_longpoll_changes_with_limit(params_from_base_test_set
     # Get last_seq for user_b
     user_b_changes = client.get_changes(url=sg_url, db=sg_db, since=0, auth=user_b_session, feed="normal")
 
-    with concurrent.futures.ProcessPoolExecutor() as ex:
+    with concurrent.futures.ThreadPoolExecutor(max_workers=10) as ex:
 
         # Start long poll changes feed.
-        changes_task = ex.submit(client.get_changes,
-                                 url=sg_url, db=sg_db, since=user_b_changes["last_seq"], auth=user_b_session, timeout=10, limit=20)
+        changes_task = ex.submit(
+            client.get_changes,
+            url=sg_url,
+            db=sg_db,
+            since=user_b_changes["last_seq"],
+            auth=user_b_session,
+            timeout=10,
+            limit=20
+        )
 
         # Grant access to channel "A"
         if grant_type == "CHANNEL-REST":
             log_info("Granting user access to channel A via Admin REST user update")
             # Grant via update to user in Admin API
-            client.update_user(url=sg_admin_url, db=sg_db,
-                               name=user_b_user_info.name, channels=["A", "B"])
+            client.update_user(
+                url=sg_admin_url,
+                db=sg_db,
+                name=user_b_user_info.name,
+                channels=["A", "B"]
+            )
 
         elif grant_type == "CHANNEL-SYNC":
             log_info("Granting user access to channel A sync function access()")
-            # Grant via access() in sync_function, then id 'channel_access' will trigger an access(doc.users, doc.channels)
+            # Grant via access() in sync_function,
+            # then id 'channel_access' will trigger an access(doc.users, doc.channels)
             access_doc = document.create_doc("channel_access", channels=["A"])
             access_doc["users"] = ["USER_B"]
             client.add_doc(url=sg_url, db=sg_db, doc=access_doc, auth=admin_session)
@@ -508,7 +520,12 @@ def test_backfill_channels_longpoll_changes_with_limit(params_from_base_test_set
             log_info("Granting user access to channel A via Admin REST role grant")
             # Create role with channel A
             client.create_role(url=sg_admin_url, db=sg_db, name="channel-A-role", channels=["A"])
-            client.update_user(url=sg_admin_url, db=sg_db, name="USER_B", roles=["channel-A-role"])
+            client.update_user(
+                url=sg_admin_url,
+                db=sg_db,
+                name=user_b_user_info.name,
+                roles=["channel-A-role"]
+            )
 
         elif grant_type == "ROLE-SYNC":
             log_info("Granting user access to channel A via sync function role() grant")
@@ -585,179 +602,179 @@ def test_backfill_channels_longpoll_changes_with_limit(params_from_base_test_set
     assert len(zero_results["results"]) == 0
 
 
-# @pytest.mark.sanity
-# @pytest.mark.syncgateway
-# @pytest.mark.changes
-# @pytest.mark.role
-# @pytest.mark.parametrize("sg_conf_name, grant_type, channels_to_grant", [
-#     ("custom_sync/access", "CHANNEL-REST", ["A"]),
-#     ("custom_sync/access", "CHANNEL-REST", ["A", "B", "C"]),
-#     ("custom_sync/access", "CHANNEL-SYNC", ["A"]),
-#     ("custom_sync/access", "CHANNEL-SYNC", ["A", "B", "C"])
-# ])
-# def test_backfill_channel_grant_to_role(params_from_base_test_setup, sg_conf_name, grant_type, channels_to_grant):
-#     """
-#     Test that check that docs are backfilled for a channel grant (via REST or SYNC) to existing role
-#
-#     1. Create a 'grantee' user with an empty role
-#     2. 'pusher' user adds docs with channel(s) that will later be granted to 'grantee'
-#     3. Verify that the 'pusher' sees the docs on its changes feed
-#     4. Grant the 'grantee's role access to the pushers channels (either via REST or via sync function)
-#     5. Verify that 'grantee' gets all of the docs after the grant
-#     """
+@pytest.mark.sanity
+@pytest.mark.syncgateway
+@pytest.mark.changes
+@pytest.mark.role
+@pytest.mark.parametrize("sg_conf_name, grant_type, channels_to_grant", [
+    ("custom_sync/access", "CHANNEL-REST", ["A"]),
+    ("custom_sync/access", "CHANNEL-REST", ["A", "B", "C"]),
+    ("custom_sync/access", "CHANNEL-SYNC", ["A"]),
+    ("custom_sync/access", "CHANNEL-SYNC", ["A", "B", "C"])
+])
+def test_backfill_channel_grant_to_role_longpoll(params_from_base_test_setup, sg_conf_name, grant_type, channels_to_grant):
+    """
+    Test that check that docs are backfilled for a channel grant (via REST or SYNC) to existing role
 
-    # cluster_config = params_from_base_test_setup["cluster_config"]
-    # topology = params_from_base_test_setup["cluster_topology"]
-    # mode = params_from_base_test_setup["mode"]
-    #
-    # sg_url = topology["sync_gateways"][0]["public"]
-    # sg_admin_url = topology["sync_gateways"][0]["admin"]
-    # sg_db = "db"
-    # num_docs_per_channel = 100
-    # empty_role_name = "empty_role"
-    #
-    # log_info("grant_type: {}".format(grant_type))
-    # log_info("channels to grant access to: {}".format(channels_to_grant))
-    #
-    # is_multi_channel_grant = False
-    # if len(channels_to_grant) == 3:
-    #     is_multi_channel_grant = True
-    # log_info("is_multi_channel_grant: {}".format(is_multi_channel_grant))
-    #
-    # sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
-    #
-    # cluster = Cluster(cluster_config)
-    # cluster.reset(sg_conf)
-    #
-    # client = MobileRestClient()
-    # client.create_role(url=sg_admin_url, db=sg_db, name=empty_role_name, channels=[])
-    #
-    # pusher_info = userinfo.UserInfo("pusher", "pass", channels=channels_to_grant, roles=[])
-    # grantee_info = userinfo.UserInfo("grantee", "pass", channels=[], roles=["empty_role"])
-    #
-    # # Create users
-    # client.create_user(
-    #     url=sg_admin_url,
-    #     db=sg_db,
-    #     name=pusher_info.name,
-    #     password=pusher_info.password,
-    #     channels=pusher_info.channels,
-    #     roles=pusher_info.roles
-    # )
-    # pusher_session = client.create_session(
-    #     url=sg_admin_url,
-    #     db=sg_db,
-    #     name=pusher_info.name,
-    #     password=pusher_info.password
-    # )
-    #
-    # client.create_user(
-    #     url=sg_admin_url,
-    #     db=sg_db,
-    #     name=grantee_info.name,
-    #     password=grantee_info.password,
-    #     channels=grantee_info.channels,
-    #     roles=grantee_info.roles
-    # )
-    # grantee_session = client.create_session(
-    #     url=sg_admin_url,
-    #     db=sg_db,
-    #     name=grantee_info.name,
-    #     password=grantee_info.password
-    # )
-    #
-    # pusher_changes = client.get_changes(url=sg_url, db=sg_db, since=0, auth=pusher_session)
-    #
-    # # Make sure _user docs shows up in the changes feed
-    # assert len(pusher_changes["results"]) == 1 and pusher_changes["results"][0]["id"] == "_user/pusher"
-    #
-    # # Add docs with the appropriate channels
-    # a_docs = client.add_docs(
-    #     url=sg_url,
-    #     db=sg_db,
-    #     number=num_docs_per_channel,
-    #     id_prefix=None,
-    #     auth=pusher_session,
-    #     channels=["A"]
-    # )
-    # assert len(a_docs) == 100
-    # expected_docs = a_docs
-    #
-    # if is_multi_channel_grant:
-    #     b_docs = client.add_docs(
-    #         url=sg_url,
-    #         db=sg_db,
-    #         number=num_docs_per_channel,
-    #         id_prefix=None,
-    #         auth=pusher_session,
-    #         channels=["B"]
-    #     )
-    #     assert len(b_docs) == 100
-    #     expected_docs += b_docs
-    #
-    #     c_docs = client.add_docs(
-    #         url=sg_url,
-    #         db=sg_db,
-    #         number=num_docs_per_channel,
-    #         id_prefix=None,
-    #         auth=pusher_session,
-    #         channels=["C"]
-    #     )
-    #     assert len(c_docs) == 100
-    #     expected_docs += c_docs
-    #
-    # # Wait for all docs to show up on the changes feed before access grant
-    # client.verify_docs_in_changes(
-    #     url=sg_url,
-    #     db=sg_db,
-    #     expected_docs=expected_docs,
-    #     auth=pusher_session
-    # )
-    #
-    # # Get changes for granted before grant and assert the only changes is the user doc
-    # grantee_changes_before_grant = client.get_changes(url=sg_url, db=sg_db, since=0, auth=grantee_session)
-    # assert len(grantee_changes_before_grant["results"]) == 1
-    # assert grantee_changes_before_grant["results"][0]["id"] == "_user/grantee"
-    #
-    # if grant_type == "CHANNEL-REST":
-    #     # Grant channel access to role via REST
-    #     client.update_role(url=sg_admin_url, db=sg_db, name=empty_role_name, channels=channels_to_grant)
-    # elif grant_type == "CHANNEL-SYNC":
-    #     # Grant channel access to role via sync function
-    #     access_doc = document.create_doc(doc_id="channel_grant_to_role")
-    #     access_doc["roles"] = ["role:{}".format(empty_role_name)]
-    #     access_doc["channels"] = channels_to_grant
-    #     client.add_doc(
-    #         url=sg_url,
-    #         db=sg_db,
-    #         doc=access_doc,
-    #         auth=pusher_session,
-    #         use_post=True
-    #     )
-    #
-    # # Issue changes request after grant
-    # grantee_changes_post_grant = client.get_changes(
-    #     url=sg_url,
-    #     db=sg_db,
-    #     since=grantee_changes_before_grant["last_seq"],
-    #     auth=grantee_session,
-    #     feed="longpoll"
-    # )
-    #
-    # # grantee should have all the docs now
-    # if is_multi_channel_grant:
-    #     # Check that the grantee gets all of the docs for channels ["A", "B", "C"]
-    #     assert len(grantee_changes_post_grant["results"]) == num_docs_per_channel * 3
-    # else:
-    #     # Check that the grantee gets all of the docs for channels ["A"]
-    #     assert len(grantee_changes_post_grant["results"]) == num_docs_per_channel
-    #
-    # # Issue one more changes request from the post grant last seq and make sure there are no other changes
-    # grantee_changes_post_post_grant = client.get_changes(
-    #     url=sg_url,
-    #     db=sg_db,
-    #     since=grantee_changes_post_grant["last_seq"],
-    #     auth=grantee_session,
-    #     feed="longpoll"
-    # )
-    # assert len(grantee_changes_post_post_grant["results"]) == 0
+    1. Create a 'grantee' user with an empty role
+    2. 'pusher' user adds docs with channel(s) that will later be granted to 'grantee'
+    3. Verify that the 'pusher' sees the docs on its changes feed
+    4. Grant the 'grantee's role access to the pushers channels (either via REST or via sync function)
+    5. Verify that 'grantee' gets all of the docs after the grant
+    """
+
+    cluster_config = params_from_base_test_setup["cluster_config"]
+    topology = params_from_base_test_setup["cluster_topology"]
+    mode = params_from_base_test_setup["mode"]
+
+    sg_url = topology["sync_gateways"][0]["public"]
+    sg_admin_url = topology["sync_gateways"][0]["admin"]
+    sg_db = "db"
+    num_docs_per_channel = 100
+    empty_role_name = "empty_role"
+
+    log_info("grant_type: {}".format(grant_type))
+    log_info("channels to grant access to: {}".format(channels_to_grant))
+
+    is_multi_channel_grant = False
+    if len(channels_to_grant) == 3:
+        is_multi_channel_grant = True
+    log_info("is_multi_channel_grant: {}".format(is_multi_channel_grant))
+
+    sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
+
+    cluster = Cluster(cluster_config)
+    cluster.reset(sg_conf)
+
+    client = MobileRestClient()
+    client.create_role(url=sg_admin_url, db=sg_db, name=empty_role_name, channels=[])
+
+    pusher_info = userinfo.UserInfo("pusher", "pass", channels=channels_to_grant, roles=[])
+    grantee_info = userinfo.UserInfo("grantee", "pass", channels=[], roles=["empty_role"])
+
+    # Create users
+    client.create_user(
+        url=sg_admin_url,
+        db=sg_db,
+        name=pusher_info.name,
+        password=pusher_info.password,
+        channels=pusher_info.channels,
+        roles=pusher_info.roles
+    )
+    pusher_session = client.create_session(
+        url=sg_admin_url,
+        db=sg_db,
+        name=pusher_info.name,
+        password=pusher_info.password
+    )
+
+    client.create_user(
+        url=sg_admin_url,
+        db=sg_db,
+        name=grantee_info.name,
+        password=grantee_info.password,
+        channels=grantee_info.channels,
+        roles=grantee_info.roles
+    )
+    grantee_session = client.create_session(
+        url=sg_admin_url,
+        db=sg_db,
+        name=grantee_info.name,
+        password=grantee_info.password
+    )
+
+    pusher_changes = client.get_changes(url=sg_url, db=sg_db, since=0, auth=pusher_session)
+
+    # Make sure _user docs shows up in the changes feed
+    assert len(pusher_changes["results"]) == 1 and pusher_changes["results"][0]["id"] == "_user/pusher"
+
+    # Add docs with the appropriate channels
+    a_docs = client.add_docs(
+        url=sg_url,
+        db=sg_db,
+        number=num_docs_per_channel,
+        id_prefix=None,
+        auth=pusher_session,
+        channels=["A"]
+    )
+    assert len(a_docs) == 100
+    expected_docs = a_docs
+
+    if is_multi_channel_grant:
+        b_docs = client.add_docs(
+            url=sg_url,
+            db=sg_db,
+            number=num_docs_per_channel,
+            id_prefix=None,
+            auth=pusher_session,
+            channels=["B"]
+        )
+        assert len(b_docs) == 100
+        expected_docs += b_docs
+
+        c_docs = client.add_docs(
+            url=sg_url,
+            db=sg_db,
+            number=num_docs_per_channel,
+            id_prefix=None,
+            auth=pusher_session,
+            channels=["C"]
+        )
+        assert len(c_docs) == 100
+        expected_docs += c_docs
+
+    # Wait for all docs to show up on the changes feed before access grant
+    client.verify_docs_in_changes(
+        url=sg_url,
+        db=sg_db,
+        expected_docs=expected_docs,
+        auth=pusher_session
+    )
+
+    # Get changes for granted before grant and assert the only changes is the user doc
+    grantee_changes_before_grant = client.get_changes(url=sg_url, db=sg_db, since=0, auth=grantee_session)
+    assert len(grantee_changes_before_grant["results"]) == 1
+    assert grantee_changes_before_grant["results"][0]["id"] == "_user/grantee"
+
+    if grant_type == "CHANNEL-REST":
+        # Grant channel access to role via REST
+        client.update_role(url=sg_admin_url, db=sg_db, name=empty_role_name, channels=channels_to_grant)
+    elif grant_type == "CHANNEL-SYNC":
+        # Grant channel access to role via sync function
+        access_doc = document.create_doc(doc_id="channel_grant_to_role")
+        access_doc["roles"] = ["role:{}".format(empty_role_name)]
+        access_doc["channels"] = channels_to_grant
+        client.add_doc(
+            url=sg_url,
+            db=sg_db,
+            doc=access_doc,
+            auth=pusher_session,
+            use_post=True
+        )
+
+    # Issue changes request after grant
+    grantee_changes_post_grant = client.get_changes(
+        url=sg_url,
+        db=sg_db,
+        since=grantee_changes_before_grant["last_seq"],
+        auth=grantee_session,
+        feed="longpoll"
+    )
+
+    # grantee should have all the docs now
+    if is_multi_channel_grant:
+        # Check that the grantee gets all of the docs for channels ["A", "B", "C"]
+        assert len(grantee_changes_post_grant["results"]) == num_docs_per_channel * 3
+    else:
+        # Check that the grantee gets all of the docs for channels ["A"]
+        assert len(grantee_changes_post_grant["results"]) == num_docs_per_channel
+
+    # Issue one more changes request from the post grant last seq and make sure there are no other changes
+    grantee_changes_post_post_grant = client.get_changes(
+        url=sg_url,
+        db=sg_db,
+        since=grantee_changes_post_grant["last_seq"],
+        auth=grantee_session,
+        feed="longpoll"
+    )
+    assert len(grantee_changes_post_post_grant["results"]) == 0
