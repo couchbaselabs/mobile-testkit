@@ -101,6 +101,9 @@ def test_backfill_channels_oneshot_changes(params_from_base_test_setup, sg_conf_
     user_doc = {"id": "_user/USER_B", "rev": None}
     b_docs.append(user_doc)
 
+    # Loop until admin user sees docs in changes
+    client.verify_docs_in_changes(url=sg_url, db=sg_db, expected_docs=a_docs, auth=admin_session)
+
     # Loop until user_b sees b_doc_0 doc and _user/USER_B doc
     client.verify_docs_in_changes(url=sg_url, db=sg_db, expected_docs=b_docs, auth=user_b_session, strict=True)
 
@@ -250,11 +253,22 @@ def test_backfill_channels_oneshot_limit_changes(params_from_base_test_setup, sg
         user_b_user_info = userinfo.UserInfo("USER_B", "pass", channels=["B"], roles=[])
 
     # Create users / sessions
-    client.create_user(url=sg_admin_url, db=sg_db,
-                       name=admin_user_info.name, password=admin_user_info.password, channels=admin_user_info.channels)
+    client.create_user(
+        url=sg_admin_url,
+        db=sg_db,
+        name=admin_user_info.name,
+        password=admin_user_info.password,
+        channels=admin_user_info.channels
+    )
 
-    client.create_user(url=sg_admin_url, db=sg_db,
-                       name=user_b_user_info.name, password=user_b_user_info.password, channels=user_b_user_info.channels)
+    client.create_user(
+        url=sg_admin_url,
+        db=sg_db,
+        name=user_b_user_info.name,
+        password=user_b_user_info.password,
+        channels=user_b_user_info.channels,
+        roles=user_b_user_info.roles
+    )
 
     admin_session = client.create_session(url=sg_admin_url, db=sg_db, name=admin_user_info.name, password=admin_user_info.password)
     user_b_session = client.create_session(url=sg_admin_url, db=sg_db, name=user_b_user_info.name, password=user_b_user_info.password)
@@ -265,6 +279,9 @@ def test_backfill_channels_oneshot_limit_changes(params_from_base_test_setup, sg
 
     b_docs = client.add_docs(url=sg_url, db=sg_db, number=1, id_prefix="b_doc", auth=user_b_session, channels=["B"])
     assert len(b_docs) == 1
+
+    # Loop until admin user sees docs in changes
+    client.verify_docs_in_changes(url=sg_url, db=sg_db, expected_docs=a_docs, auth=admin_session)
 
     user_doc = {"id": "_user/USER_B", "rev": None}
     b_docs.append(user_doc)
@@ -417,7 +434,7 @@ def test_backfill_channels_oneshot_limit_changes(params_from_base_test_setup, sg
     ("custom_sync/access", "CHANNEL-TO-ROLE-REST"),
     ("custom_sync/access", "CHANNEL-TO-ROLE-SYNC")
 ])
-def test_backfill_awaken_channels_longpoll_changes_with_limit(params_from_base_test_setup, sg_conf_name, grant_type):
+def test__awaken_backfill_channels_longpoll_changes_with_limit(params_from_base_test_setup, sg_conf_name, grant_type):
     """
     Test that checks that docs are backfilled for logpoll changes with limit for a access grant (via REST or SYNC)
 
@@ -455,11 +472,22 @@ def test_backfill_awaken_channels_longpoll_changes_with_limit(params_from_base_t
         user_b_user_info = userinfo.UserInfo("USER_B", "pass", channels=["B"], roles=[])
 
     # Create users / sessions
-    client.create_user(url=sg_admin_url, db=sg_db,
-                       name=admin_user_info.name, password=admin_user_info.password, channels=admin_user_info.channels)
+    client.create_user(
+        url=sg_admin_url,
+        db=sg_db,
+        name=admin_user_info.name,
+        password=admin_user_info.password,
+        channels=admin_user_info.channels,
+    )
 
-    client.create_user(url=sg_admin_url, db=sg_db,
-                       name=user_b_user_info.name, password=user_b_user_info.password, channels=user_b_user_info.channels)
+    client.create_user(
+        url=sg_admin_url,
+        db=sg_db,
+        name=user_b_user_info.name,
+        password=user_b_user_info.password,
+        channels=user_b_user_info.channels,
+        roles=user_b_user_info.roles
+    )
 
     admin_session = client.create_session(url=sg_admin_url, db=sg_db, name=admin_user_info.name, password=admin_user_info.password)
     user_b_session = client.create_session(url=sg_admin_url, db=sg_db, name=user_b_user_info.name, password=user_b_user_info.password)
