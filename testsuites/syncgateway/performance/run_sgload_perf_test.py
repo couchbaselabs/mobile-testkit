@@ -96,6 +96,13 @@ def run_sgload_perf_test(cluster_config, sgload_arg_list_main, skip_build_sgload
     print("Running sgload perf test against cluster: {}".format(cluster_config))
     main_ansible_runner = AnsibleRunner(cluster_config)
 
+    print(">>> Starting profile collection scripts")
+    status = main_ansible_runner.run_ansible_playbook(
+        "start-profile-collection.yml",
+        extra_vars={},
+    )
+    assert status == 0, "Could not start profiling collection scripts"
+
     # Install + configure telegraf
     status = main_ansible_runner.run_ansible_playbook("install-telegraf.yml")
     if status != 0:
