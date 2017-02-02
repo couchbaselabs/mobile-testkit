@@ -3,8 +3,8 @@
   any_errors_fatal: true
 
   tasks:
-    - include: tasks/stop-sync-gateway.yml
-      when: ansible_distribution == "CentOS"
+  - include: tasks/stop-sync-gateway.yml
+    when: ansible_distribution == "CentOS"
 
-    - include: tasks/stop-sync-gateway-windows.yml
-      when: ansible_os_family == "Windows"
+  - include: tasks/stop-sync-gateway-windows.yml
+    when: ansible_os_family == "Windows"

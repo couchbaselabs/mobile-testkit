@@ -1,18 +1,19 @@
 ---
 - hosts: sync_gateways
-  become: yes
   any_errors_fatal: true
   tasks:
-  - name: SYNC GATEWAY | Fetch sync_gateway logs
-    # Do not validate checksum as this is just a passive grab of the logs. Since they are continuously being appended to, the checksum may fail
-    fetch: src=/home/sync_gateway/logs/sync_gateway_access.log dest=/tmp/sg_logs/{{ inventory_hostname }}/ fail_on_missing=yes flat=yes validate_checksum=no
-    fetch: src=/home/sync_gateway/logs/sync_gateway_error.log dest=/tmp/sg_logs/{{ inventory_hostname }}/ fail_on_missing=yes flat=yes validate_checksum=no
+  - include: tasks/fetch-sync-gateway-logs.yml
+    when: ansible_distribution == "CentOS"
+
+  - include: tasks/fetch-sync-gateway-logs-windows.yml
+    when: ansible_os_family == "Windows"
 
 - hosts: sg_accels
   become: yes
   any_errors_fatal: true
   tasks:
-  - name: SG ACCEL | Fetch sg_accel logs
-    # Do not validate checksum as this is just a passive grab of the logs. Since they are continuously being appended to, the checksum may fail
-    fetch: src=/home/sg_accel/logs/sg_accel_access.log dest=/tmp/sg_logs/{{ inventory_hostname }}/ fail_on_missing=yes flat=yes validate_checksum=no
-    fetch: src=/home/sg_accel/logs/sg_accel_error.log dest=/tmp/sg_logs/{{ inventory_hostname }}/ fail_on_missing=yes flat=yes validate_checksum=no
+  - include: tasks/fetch-sg-accel-logs.yml
+    when: ansible_distribution == "CentOS"
+
+  - include: tasks/fetch-sg-accel-logs-windows.yml
+    when: ansible_os_family == "Windows"

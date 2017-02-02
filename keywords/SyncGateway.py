@@ -11,7 +11,7 @@ from keywords.utils import log_r
 from keywords.utils import version_and_build
 from keywords.utils import hostname_for_url
 from keywords.utils import log_info
-from keywords.utils import detect_remote_windows_os
+from keywords.utils import log_warn
 
 from exceptions import ProvisioningError
 
@@ -121,8 +121,9 @@ def verify_sg_accel_version(host, expected_sg_accel_version):
 
 class SyncGateway:
 
-    def __init__(self):
+    def __init__(self, url = None):
         self._session = Session()
+        self.url = url
 
     def install_sync_gateway(self, cluster_config, sync_gateway_version, sync_gateway_config):
 
@@ -154,6 +155,7 @@ class SyncGateway:
 
     def start_sync_gateway(self, cluster_config, url, config):
         target = hostname_for_url(cluster_config, url)
+
         log_info("Starting sync_gateway on {} ...".format(target))
         ansible_runner = AnsibleRunner(cluster_config)
         config_path = os.path.abspath(config)
@@ -164,8 +166,17 @@ class SyncGateway:
             },
             subset=target
         )
+
         if status != 0:
             raise ProvisioningError("Could not start sync_gateway")
+
+        running_status = self.is_sync_gateway_running(cluster_config, url)
+        if not running_status:
+            # if running_status  != 0, sync gateway is not running
+            log_warn("Status of sync_gateway service start was returned as zero but sync_gateway is not running")
+            raise ProvisioningError("Could not start sync_gateway")
+
+        return 0
 
     def stop_sync_gateway(self, cluster_config, url):
         target = hostname_for_url(cluster_config, url)
@@ -177,3 +188,27 @@ class SyncGateway:
         )
         if status != 0:
             raise ProvisioningError("Could not stop sync_gateway")
+
+        running_status = self.is_sync_gateway_running(cluster_config, url)
+        if running_status:
+            # if running_status  == 0, sync gateway is still running
+            log_warn("Status of sync_gateway service stop was returned as zero but sync_gateway is still running")
+            raise ProvisioningError("Could not stop sync_gateway")
+
+        return 0
+
+    def is_sync_gateway_running(self, cluster_config, url):
+        target = hostname_for_url(cluster_config, url)
+        log_info("Checking sync_gateway status on {} ...".format(target))
+        ansible_runner = AnsibleRunner(cluster_config)
+        status = ansible_runner.run_ansible_playbook(
+            "check-sync-gateway.yml",
+            subset=target
+        )
+
+        # Running
+        if status == 0:
+            return True
+
+        # Not running
+        return False

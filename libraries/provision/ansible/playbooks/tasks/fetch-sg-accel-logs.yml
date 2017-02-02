@@ -1,0 +1,6 @@
+# Fetch sg accel logs for CentOS
+- name: SG ACCEL | Fetch sg_accel logs
+  become: yes
+  # Do not validate checksum as this is just a passive grab of the logs. Since they are continuously being appended to, the checksum may fail
+  fetch: src=/home/sg_accel/logs/sg_accel_access.log dest=/tmp/sg_logs/{{ inventory_hostname }}/ fail_on_missing=yes flat=yes validate_checksum=no
+  fetch: src=/home/sg_accel/logs/sg_accel_error.log dest=/tmp/sg_logs/{{ inventory_hostname }}/ fail_on_missing=yes flat=yes validate_checksum=no

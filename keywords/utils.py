@@ -118,7 +118,7 @@ def dump_file_contents_to_logs(filename):
     except Exception as e:
         log_info("Error reading {}: {}".format(filename, e))
 
-def detect_remote_windows_os(ip_address):
+def detect_remote_os(ip_address):
     nm = nmap.PortScanner()
     # nm.scan(ip_address, arguments='-O') can do OS fingerprinting
     # but needs root privileges, so we'll do a ping scan instead
@@ -130,5 +130,7 @@ def detect_remote_windows_os(ip_address):
     output = nm.scan(ip_address)
 
     for i in output['scan'][ip_address]['tcp']:
-        if "Microsoft Windows" in output['scan']['10.17.1.168']['tcp'][i]['product']:
-            return True
+        if "Microsoft Windows" in output['scan'][ip_address]['tcp'][i]['product']:
+            return "Windows"
+        elif "OpenSSH" in output['scan'][ip_address]['tcp'][i]['product']:
+            return "Linux"

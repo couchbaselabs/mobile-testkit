@@ -1,6 +1,6 @@
 - debug: msg="Starting sync_gateway with config {{ sync_gateway_config_filepath }}"
 
-- name: SYNC GATEWAY | Stop sync_gateway service on Windows
+- name: SYNC GATEWAY | Start sync_gateway service on Windows
   win_service:
-    name: "Couchbase Sync Gateway"
+    name: SyncGateway
     state: started

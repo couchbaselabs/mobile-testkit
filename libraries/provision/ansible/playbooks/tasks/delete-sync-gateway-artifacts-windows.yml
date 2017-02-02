@@ -4,3 +4,9 @@
   win_file:
     path: C:\PROGRA~2\Couchbase\var\lib\couchbase\logs\sync_gateway_error.log
     state: absent
+
+- name: SYNC GATEWAY | Delete sync_gateway logs on Windows
+  become: no
+  win_file:
+    path: C:\Users\Administrator\AppData\Local\Temp\sg_logs\sg_log_rotation.log
+    state: absent

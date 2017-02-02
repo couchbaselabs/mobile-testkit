@@ -12,6 +12,8 @@ from libraries.testkit.config import Config
 from libraries.provision.ansible_runner import AnsibleRunner
 
 from keywords import couchbaseserver
+import keywords.SyncGateway
+
 from keywords import utils
 
 import keywords.exceptions
@@ -56,6 +58,8 @@ class Cluster:
 
         # for integrating keywords
         self.cb_server = couchbaseserver.CouchbaseServer(self.servers[0].url)
+        self.sg = keywords.SyncGateway.SyncGateway(self.sync_gateways[0].url)
+
 
     def validate_cluster(self):
 
@@ -71,7 +75,7 @@ class Cluster:
 
         # Stop sync_gateways
         log_info(">>> Stopping sync_gateway")
-        status = ansible_runner.run_ansible_playbook("stop-sync-gateway.yml")
+        status = self.sg.stop_sync_gateway(self._cluster_config, self.sync_gateways[0].url)
         assert status == 0, "Failed to stop sync gateway"
 
         # Stop sync_gateways
@@ -114,12 +118,7 @@ class Cluster:
         utils.dump_file_contents_to_logs(config_path_full)
 
         # Start sync-gateway
-        status = ansible_runner.run_ansible_playbook(
-            "start-sync-gateway.yml",
-            extra_vars={
-                "sync_gateway_config_filepath": config_path_full
-            }
-        )
+        status = self.sg.start_sync_gateway(self._cluster_config, self.sync_gateways[0].url, config_path_full)
         assert status == 0, "Failed to start to Sync Gateway"
 
         # HACK - only enable sg_accel for distributed index tests
