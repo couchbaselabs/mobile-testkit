@@ -11,6 +11,7 @@ from keywords.SyncGateway import sync_gateway_config_path_for_mode
 from keywords import remoteexecutor
 from keywords import userinfo
 from keywords import utils
+from keywords import document
 
 
 @pytest.mark.sanity
@@ -65,6 +66,8 @@ def test_rollback_server_reset(params_from_base_test_setup, sg_conf_name):
         password=seth_user_info.password
     )
 
+    vbucket_33_docs = document.generate_doc_ids_for_vbucket(33, number_doc_ids=50)
+
     seth_docs = client.add_docs(
         url=sg_url,
         db=sg_db,
@@ -83,40 +86,40 @@ def test_rollback_server_reset(params_from_base_test_setup, sg_conf_name):
         auth=seth_session
     )
 
-    rex = remoteexecutor.RemoteExecutor(utils.host_for_url(cb_server_url))
-
-    # Delete some vBucket (5*) files to start a server rollback
-    # Example vbucket files - 195.couch.1  310.couch.1  427.couch.1  543.couch.1
-    log_info("Deleting vBucket files with the '5' prefix")
-    rex.must_execute('sudo find /opt/couchbase/var/lib/couchbase/data/data-bucket -name "5*" -delete')
-    log_info("Listing vBucket files ...")
-    out, err = rex.must_execute("sudo ls /opt/couchbase/var/lib/couchbase/data/data-bucket/")
-
-    # out format: [u'0.couch.1     264.couch.1  44.couch.1\t635.couch.1  820.couch.1\r\n',
-    # u'1000.couch.1  265.couch.1 ...]
-    vbucket_files = []
-    for entry in out:
-        vbucket_files.extend(entry.split())
-
-    # Verify that the vBucket files starting with 5 are all gone
-    log_info("Verifing vBucket files are deleted ...")
-    for vbucket_file in vbucket_files:
-        assert not vbucket_file.startswith("5")
-
-    # Restart the server
-    rex.must_execute("sudo systemctl restart couchbase-server")
-
-    max_retries = 20
-    count = 0
-    while count != max_retries:
-        # Try to get changes, sync gateway should be able to recover and return changes
-        try:
-            client.get_changes(url=sg_url, db=sg_db, since=0, auth=seth_session, feed="normal")
-            break
-        except requests.exceptions.HTTPError as he:
-            log_info("{}".format(he.response.status_code))
-            log_info("Retrying in 1 sec ...")
-            time.sleep(1)
-            count += 1
-
-    assert count != max_retries
+    # rex = remoteexecutor.RemoteExecutor(utils.host_for_url(cb_server_url))
+    #
+    # # Delete some vBucket (5*) files to start a server rollback
+    # # Example vbucket files - 195.couch.1  310.couch.1  427.couch.1  543.couch.1
+    # log_info("Deleting vBucket files with the '5' prefix")
+    # rex.must_execute('sudo find /opt/couchbase/var/lib/couchbase/data/data-bucket -name "5*" -delete')
+    # log_info("Listing vBucket files ...")
+    # out, err = rex.must_execute("sudo ls /opt/couchbase/var/lib/couchbase/data/data-bucket/")
+    #
+    # # out format: [u'0.couch.1     264.couch.1  44.couch.1\t635.couch.1  820.couch.1\r\n',
+    # # u'1000.couch.1  265.couch.1 ...]
+    # vbucket_files = []
+    # for entry in out:
+    #     vbucket_files.extend(entry.split())
+    #
+    # # Verify that the vBucket files starting with 5 are all gone
+    # log_info("Verifing vBucket files are deleted ...")
+    # for vbucket_file in vbucket_files:
+    #     assert not vbucket_file.startswith("5")
+    #
+    # # Restart the server
+    # rex.must_execute("sudo systemctl restart couchbase-server")
+    #
+    # max_retries = 20
+    # count = 0
+    # while count != max_retries:
+    #     # Try to get changes, sync gateway should be able to recover and return changes
+    #     try:
+    #         client.get_changes(url=sg_url, db=sg_db, since=0, auth=seth_session, feed="normal")
+    #         break
+    #     except requests.exceptions.HTTPError as he:
+    #         log_info("{}".format(he.response.status_code))
+    #         log_info("Retrying in 1 sec ...")
+    #         time.sleep(1)
+    #         count += 1
+    #
+    # assert count != max_retries

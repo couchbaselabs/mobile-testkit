@@ -1,9 +1,44 @@
 import logging
 import base64
 import uuid
+import zlib
 
 from constants import DATA_DIR
 from keywords import types
+from keywords import utils
+
+import keywords.exceptions
+
+
+NUM_VBUCKETS = 1024
+
+
+def get_vbucket_number(key):
+    """ Return the vbucket number for a given key. """
+    return (((zlib.crc32(key)) >> 16) & 0x7fff) & (NUM_VBUCKETS - 1)
+
+
+def generate_doc_id_for_vbucket(vbucket_number):
+    """ Returns a random doc id that will hash to a given vbucket. """
+    if vbucket_number < 0 or vbucket_number > 1023:
+        raise keywords.exceptions.DocumentError("'vbucket_number' must be between 0-1023")
+
+    # loop over random generated doc ids until the desired vbucket is returned
+    while True:
+        doc_id = uuid.uuid4()
+        if get_vbucket_number(doc_id) == vbucket_number:
+            utils.log_info("doc_id: {} -> vBucket: {}".format(doc_id, vbucket_number))
+            return doc_id
+
+
+def generate_doc_ids_for_vbucket(vbucket_number, number_doc_ids):
+    """ Returns a list of generated doc ids that will hash to a given vBucket number """
+
+    doc_ids = []
+    for _ in range(number_doc_ids):
+        doc_ids.append(generate_doc_id_for_vbucket(vbucket_number))
+
+    return doc_ids
 
 
 def get_attachment(name):
