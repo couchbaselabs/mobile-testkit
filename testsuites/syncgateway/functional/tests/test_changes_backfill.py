@@ -434,7 +434,7 @@ def test_backfill_channels_oneshot_limit_changes(params_from_base_test_setup, sg
     ("custom_sync/access", "CHANNEL-TO-ROLE-REST"),
     ("custom_sync/access", "CHANNEL-TO-ROLE-SYNC")
 ])
-def test__awaken_backfill_channels_longpoll_changes_with_limit(params_from_base_test_setup, sg_conf_name, grant_type):
+def test_awaken_backfill_channels_longpoll_changes_with_limit(params_from_base_test_setup, sg_conf_name, grant_type):
     """
     Test that checks that docs are backfilled for logpoll changes with limit for a access grant (via REST or SYNC)
 
@@ -678,7 +678,7 @@ def test_backfill_channel_grant_to_role_longpoll(params_from_base_test_setup, sg
     client.create_role(url=sg_admin_url, db=sg_db, name=empty_role_name, channels=[])
 
     pusher_info = userinfo.UserInfo("pusher", "pass", channels=channels_to_grant, roles=[])
-    grantee_info = userinfo.UserInfo("grantee", "pass", channels=[], roles=["empty_role"])
+    grantee_info = userinfo.UserInfo("grantee", "pass", channels=[], roles=[empty_role_name])
 
     # Create users
     client.create_user(
