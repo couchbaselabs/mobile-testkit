@@ -12,6 +12,7 @@ def stream_output(stdio_file_stream):
         lines.append(line)
     return lines
 
+
 class RemoteExecutor:
     """Executes remote shell commands on a host.
     This assumes that the username in the __init__ constructor

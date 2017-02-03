@@ -66,7 +66,6 @@ def run_gateload_perf_test(number_pullers,
             feed_type=feed_type
         )
 
-
     print(">>> Starting profile collection scripts")
     status = ansible_runner.run_ansible_playbook(
         "start-profile-collection.yml",

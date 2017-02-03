@@ -25,8 +25,6 @@ def fetch_sync_gateway_profile(cluster_config, folder_name):
     print("\n")
 
 
-
-
 if __name__ == "__main__":
 
     try:
