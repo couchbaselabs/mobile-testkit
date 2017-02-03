@@ -68,6 +68,7 @@ resources/pool.json
 debug.txt
 
 mobile_testkit_tests/*.txt
+mobile_testkit_tests/test_data/cluster_configs/*
 
 deps/*
 !deps/binaries/README.md

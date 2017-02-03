@@ -20,7 +20,7 @@ pytest -s \
        --android-host=192.168.0.7 \
        --ios-version=1.3.1-6 \
        --ios-host=192.168.0.19 \
-       --macosx-version=1.3.1-6
+       --macosx-version=1.3.1-6 \
        --net-version=1.3.1-30 \
        --net-msft-host=192.168.0.16 \
        framework_tests/
