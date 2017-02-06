@@ -60,9 +60,7 @@ class Cluster:
         self.cb_server = couchbaseserver.CouchbaseServer(self.servers[0].url)
         self.sg = keywords.SyncGateway.SyncGateway(self.sync_gateways[0].url)
 
-
     def validate_cluster(self):
-
         # Validate sync gateways
         if len(self.sync_gateways) == 0:
             raise Exception("Functional tests require at least 1 index reader")

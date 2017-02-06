@@ -121,7 +121,7 @@ def verify_sg_accel_version(host, expected_sg_accel_version):
 
 class SyncGateway:
 
-    def __init__(self, url = None):
+    def __init__(self, url=None):
         self._session = Session()
         self.url = url
 

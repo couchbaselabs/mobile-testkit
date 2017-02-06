@@ -2,6 +2,7 @@ import logging
 import json
 import nmap
 
+
 # TODO: Use python logging hooks instead of wrappers - https://github.com/couchbaselabs/mobile-testkit/issues/686
 def log_info(message, is_verify=False):
     # pytest will capture stdout / stderr
@@ -117,6 +118,7 @@ def dump_file_contents_to_logs(filename):
         log_info("Contents of {}: {}".format(filename, open(filename).read()))
     except Exception as e:
         log_info("Error reading {}: {}".format(filename, e))
+
 
 def detect_remote_os(ip_address):
     nm = nmap.PortScanner()
