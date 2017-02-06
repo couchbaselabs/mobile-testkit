@@ -59,8 +59,8 @@ def render_gateload_template(sync_gateway,
         rendered = template.render(
             sync_gateway_private_ip=sync_gateway['ansible_host'],
             user_offset=user_offset,
-            number_of_pullers=gateload_params.number_of_pullers,
-            number_of_pushers=gateload_params.number_of_pushers,
+            number_of_pullers=gateload_params.number_pullers,
+            number_of_pushers=gateload_params.number_pushers,
             doc_size=gateload_params.doc_size,
             runtime_ms=gateload_params.runtime_ms,
             rampup_interval_ms=gateload_params.rampup_interval_ms,
@@ -121,7 +121,7 @@ def main(cluster_config, test_id, gateload_params):
     for idx, gateload in enumerate(gateload_hosts):
 
         # calculate the user offset
-        total_num_users = int(gateload_params.number_of_pullers) + int(gateload_params.number_of_pushers)
+        total_num_users = int(gateload_params.number_pullers) + int(gateload_params.number_pushers)
         user_offset = idx * total_num_users
 
         # assign a sync gateway to this gateload, get its ip
