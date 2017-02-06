@@ -12,6 +12,7 @@ MAX_RETRIES = 5
 
 CLIENT_REQUEST_TIMEOUT = 120
 REBALANCE_TIMEOUT_SECS = 600
+REMOTE_EXECUTOR_TIMEOUT = 30
 
 # Required to make sure that these are created with encryption
 # Use to build the command line flags for encryption
