@@ -3,6 +3,7 @@ import ansible.constants
 
 from keywords.exceptions import RemoteCommandError
 from keywords.utils import log_info
+from keywords.constants import REMOTE_EXECUTOR_TIMEOUT
 
 
 def stream_output(stdio_file_stream):
@@ -31,7 +32,7 @@ class RemoteExecutor:
         """
 
         log_info("Connecting to {}".format(self.host))
-        self.client.connect(self.host, username=self.username)
+        self.client.connect(self.host, username=self.username, banner_timeout=REMOTE_EXECUTOR_TIMEOUT)
 
         log_info("Running '{}' on host {}".format(commamd, self.host))
 
