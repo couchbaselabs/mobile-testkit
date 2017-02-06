@@ -49,36 +49,42 @@ def gateloads(cluster_config):
     return hosts_for_tag(cluster_config, tag)
 
 
-def render_gateload_template(sync_gateway, user_offset, number_of_pullers, number_of_pushers, doc_size, runtime_ms, rampup_interval_ms, feed_type):
+def render_gateload_template(sync_gateway,
+                             user_offset,
+                             gateload_params):
+
         # run template to produce file
         gateload_config = open("{}/files/gateload_config.json".format(PLAYBOOKS_HOME))
         template = Template(gateload_config.read())
         rendered = template.render(
             sync_gateway_private_ip=sync_gateway['ansible_host'],
             user_offset=user_offset,
-            number_of_pullers=number_of_pullers,
-            number_of_pushers=number_of_pushers,
-            doc_size=doc_size,
-            runtime_ms=runtime_ms,
-            rampup_interval_ms=rampup_interval_ms,
-            feed_type=feed_type
+            number_of_pullers=gateload_params.number_pullers,
+            number_of_pushers=gateload_params.number_pushers,
+            doc_size=gateload_params.doc_size,
+            runtime_ms=gateload_params.runtime_ms,
+            rampup_interval_ms=gateload_params.rampup_interval_ms,
+            feed_type=gateload_params.feed_type,
+            sleep_time_ms=gateload_params.sleep_time_ms,
+            channel_active_users=gateload_params.channel_active_users,
+            channel_concurrent_users=gateload_params.channel_concurrent_users
         )
         return rendered
 
 
-def upload_gateload_config(cluster_config, gateload, sync_gateway, user_offset, number_of_pullers, number_of_pushers, test_id, doc_size, rampup_interval_ms, runtime_ms, feed_type):
+def upload_gateload_config(cluster_config,
+                           gateload,
+                           sync_gateway,
+                           user_offset,
+                           test_id,
+                           gateload_params):
 
     gateload_inventory_hostname = gateload['inventory_hostname']
 
     rendered = render_gateload_template(
         sync_gateway=sync_gateway,
         user_offset=user_offset,
-        number_of_pullers=number_of_pullers,
-        number_of_pushers=number_of_pushers,
-        doc_size=doc_size,
-        runtime_ms=runtime_ms,
-        rampup_interval_ms=rampup_interval_ms,
-        feed_type=feed_type
+        gateload_params=gateload_params
     )
     print(rendered)
 
@@ -103,7 +109,7 @@ def upload_gateload_config(cluster_config, gateload, sync_gateway, user_offset, 
     print("File transfer result: {}".format(result))
 
 
-def main(cluster_config, number_of_pullers, number_of_pushers, test_id, doc_size, runtime_ms, rampup_interval_ms, feed_type):
+def main(cluster_config, test_id, gateload_params):
 
     sync_gateway_hosts = hosts_for_tag(cluster_config, "sync_gateways")
 
@@ -115,7 +121,7 @@ def main(cluster_config, number_of_pullers, number_of_pushers, test_id, doc_size
     for idx, gateload in enumerate(gateload_hosts):
 
         # calculate the user offset
-        total_num_users = int(number_of_pullers) + int(number_of_pushers)
+        total_num_users = int(gateload_params.number_pullers) + int(gateload_params.number_pushers)
         user_offset = idx * total_num_users
 
         # assign a sync gateway to this gateload, get its ip
@@ -126,13 +132,8 @@ def main(cluster_config, number_of_pullers, number_of_pushers, test_id, doc_size
             gateload=gateload,
             sync_gateway=sync_gateway,
             user_offset=user_offset,
-            number_of_pullers=number_of_pullers,
-            number_of_pushers=number_of_pushers,
             test_id=test_id,
-            doc_size=doc_size,
-            rampup_interval_ms=rampup_interval_ms,
-            runtime_ms=runtime_ms,
-            feed_type=feed_type
+            gateload_params=gateload_params
         )
 
     print("Finished successfully")
