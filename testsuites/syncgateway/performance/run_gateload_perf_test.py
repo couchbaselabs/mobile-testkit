@@ -157,12 +157,12 @@ if __name__ == "__main__":
     parser.add_option("", "--channel-active-users",
                       action="store", dest="channel_active_users",
                       default=None,
-                      help="Number of users active for a given channel")
+                      help="Number of users for a given channel")
 
     parser.add_option("", "--channel-concurrent-users",
                       action="store", dest="channel_concurrent_users",
                       default=None,
-                      help="?")
+                      help="The number of active users assigned to a channel")
 
     arg_parameters = sys.argv[1:]
 
