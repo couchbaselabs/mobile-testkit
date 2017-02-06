@@ -16,10 +16,6 @@ class AnsibleRunner:
 
         inventory_filename = self.provisiong_config
 
-        # Check if there is a windows inventory file
-        #if os.path.exists("libraries/provision/ansible/playbooks/inventory/windows"):
-        #    inventory_filename = "libraries/provision/ansible/playbooks/inventory/windows"
-
 
         playbook_filename = "{}/{}".format(PLAYBOOKS_HOME, script_name)
 
