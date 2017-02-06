@@ -5,6 +5,7 @@ from keywords.exceptions import RemoteCommandError
 from keywords.utils import log_info
 from keywords.constants import REMOTE_EXECUTOR_TIMEOUT
 
+
 def stream_output(stdio_file_stream):
     for line in stdio_file_stream:
         print(line)
