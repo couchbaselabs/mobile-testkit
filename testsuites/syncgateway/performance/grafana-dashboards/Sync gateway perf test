@@ -2870,8 +2870,11 @@
           "aliasColors": {},
           "bars": false,
           "datasource": "$perftestrundbs",
-          "fill": 1,
-          "id": 32,
+          "editable": true,
+          "error": false,
+          "fill": 0,
+          "grid": {},
+          "id": 34,
           "legend": {
             "avg": false,
             "current": false,
@@ -2882,20 +2885,69 @@
             "values": false
           },
           "lines": true,
-          "linewidth": 1,
+          "linewidth": 2,
           "links": [],
-          "nullPointMode": "null",
+          "nullPointMode": "connected",
           "percentage": false,
           "pointradius": 5,
           "points": false,
           "renderer": "flot",
           "seriesOverrides": [],
-          "span": 12,
+          "span": 6,
           "stack": false,
           "steppedLine": false,
           "targets": [
             {
-              "alias": "$tag_host HeapAlloc",
+              "alias": "$tag_host - HeapInUse",
+              "dsType": "influxdb",
+              "groupBy": [
+                {
+                  "params": [
+                    "$interval"
+                  ],
+                  "type": "time"
+                },
+                {
+                  "params": [
+                    "host"
+                  ],
+                  "type": "tag"
+                },
+                {
+                  "params": [
+                    "null"
+                  ],
+                  "type": "fill"
+                }
+              ],
+              "measurement": "syncgateway_expvar",
+              "policy": "default",
+              "refId": "B",
+              "resultFormat": "time_series",
+              "select": [
+                [
+                  {
+                    "params": [
+                      "memstatsHeapInuse"
+                    ],
+                    "type": "field"
+                  },
+                  {
+                    "params": [],
+                    "type": "mean"
+                  }
+                ]
+              ],
+              "tags": [
+                {
+                  "key": "host",
+                  "operator": "=~",
+                  "value": "/^$sg_host$/"
+                }
+              ]
+            },
+            {
+              "alias": "$tag_host - HeapSys",
               "dsType": "influxdb",
               "groupBy": [
                 {
@@ -2925,7 +2977,105 @@
                 [
                   {
                     "params": [
+                      "memstatsHeapSys"
+                    ],
+                    "type": "field"
+                  },
+                  {
+                    "params": [],
+                    "type": "mean"
+                  }
+                ]
+              ],
+              "tags": [
+                {
+                  "key": "host",
+                  "operator": "=~",
+                  "value": "/^$sg_host$/"
+                }
+              ]
+            },
+            {
+              "alias": "$tag_host - HeapAlloc",
+              "dsType": "influxdb",
+              "groupBy": [
+                {
+                  "params": [
+                    "$interval"
+                  ],
+                  "type": "time"
+                },
+                {
+                  "params": [
+                    "host"
+                  ],
+                  "type": "tag"
+                },
+                {
+                  "params": [
+                    "null"
+                  ],
+                  "type": "fill"
+                }
+              ],
+              "measurement": "syncgateway_expvar",
+              "policy": "default",
+              "refId": "C",
+              "resultFormat": "time_series",
+              "select": [
+                [
+                  {
+                    "params": [
                       "memstatsHeapAlloc"
+                    ],
+                    "type": "field"
+                  },
+                  {
+                    "params": [],
+                    "type": "mean"
+                  }
+                ]
+              ],
+              "tags": [
+                {
+                  "key": "host",
+                  "operator": "=~",
+                  "value": "/^$sg_host$/"
+                }
+              ]
+            },
+            {
+              "alias": "$tag_host - HeapIdle",
+              "dsType": "influxdb",
+              "groupBy": [
+                {
+                  "params": [
+                    "$interval"
+                  ],
+                  "type": "time"
+                },
+                {
+                  "params": [
+                    "host"
+                  ],
+                  "type": "tag"
+                },
+                {
+                  "params": [
+                    "null"
+                  ],
+                  "type": "fill"
+                }
+              ],
+              "measurement": "syncgateway_expvar",
+              "policy": "default",
+              "refId": "D",
+              "resultFormat": "time_series",
+              "select": [
+                [
+                  {
+                    "params": [
+                      "memstatsHeapIdle"
                     ],
                     "type": "field"
                   },
@@ -2949,9 +3099,10 @@
           "timeShift": null,
           "title": "Sync Gateway - Memstats Heap",
           "tooltip": {
+            "msResolution": true,
             "shared": true,
             "sort": 0,
-            "value_type": "individual"
+            "value_type": "cumulative"
           },
           "type": "graph",
           "xaxis": {
@@ -2962,7 +3113,7 @@
           },
           "yaxes": [
             {
-              "format": "decbytes",
+              "format": "bytes",
               "label": null,
               "logBase": 1,
               "max": null,
@@ -3023,8 +3174,8 @@
           "scopedVars": {
             "sg_host": {
               "selected": false,
-              "text": "sg2",
-              "value": "sg2"
+              "text": "sg1",
+              "value": "sg1"
             }
           },
           "seriesOverrides": [],
@@ -3175,7 +3326,7 @@
           "error": false,
           "fill": 1,
           "grid": {},
-          "id": 31,
+          "id": 33,
           "interval": ">10s",
           "legend": {
             "avg": false,
@@ -3196,13 +3347,13 @@
           "points": false,
           "renderer": "flot",
           "repeat": null,
-          "repeatIteration": 1486429857136,
+          "repeatIteration": 1486431188072,
           "repeatPanelId": 2,
           "scopedVars": {
             "sg_host": {
               "selected": false,
-              "text": "sg1",
-              "value": "sg1"
+              "text": "sg2",
+              "value": "sg2"
             }
           },
           "seriesOverrides": [],
@@ -4193,8 +4344,8 @@
         "current": {
           "selected": false,
           "tags": [],
-          "text": "jenkins-sync-gateway-perf-test-copy-ro-21",
-          "value": "jenkins-sync-gateway-perf-test-copy-ro-21"
+          "text": "jenkins-sync-gateway-perf-test-copy-ro-22",
+          "value": "jenkins-sync-gateway-perf-test-copy-ro-22"
         },
         "datasource": null,
         "hide": 0,
@@ -4326,7 +4477,7 @@
     ]
   },
   "time": {
-    "from": "now-3h",
+    "from": "now-1h",
     "to": "now"
   },
   "timepicker": {
@@ -4356,5 +4507,5 @@
   },
   "timezone": "browser",
   "title": "Sync gateway perf test",
-  "version": 38
+  "version": 39
 }
