@@ -494,11 +494,14 @@ def test_missing_num_shards(params_from_base_test_setup, sg_conf):
     assert cluster.validate_cbgt_pindex_distribution_retry(num_running_sg_accels=3)
 
 
+# Test is invalid due to https://github.com/couchbase/sync_gateway/commit/027407219f9489a755323f58c1395623d53f4103.
+# When the test was written, sync gateway should fail to start in this scenario. This behavior was removed in the
+# above commit and now sync gateway will start when in this state
 @pytest.mark.topospecific
 @pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.sgaccel
-@pytest.mark.skip(reason="NEED ISSUE")
+@pytest.mark.skip(reason="https://github.com/couchbase/sync_gateway/commit/027407219f9489a755323f58c1395623d53f4103")
 @pytest.mark.parametrize("sg_conf", [
     "{}/sync_gateway_default_functional_tests_di.json".format(SYNC_GATEWAY_CONFIGS),
 ])
