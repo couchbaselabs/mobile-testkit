@@ -2,6 +2,7 @@ import time
 
 import pytest
 import requests.exceptions
+import concurrent.futures
 
 from keywords.utils import log_info
 from libraries.testkit.cluster import Cluster
@@ -66,60 +67,77 @@ def test_rollback_server_reset(params_from_base_test_setup, sg_conf_name):
         password=seth_user_info.password
     )
 
-    vbucket_33_docs = document.generate_doc_ids_for_vbucket(33, number_doc_ids=50)
+    # create a doc that will hash to each vbucket in parallel except for vbucket 66
+    doc_id_for_every_vbucket_except_66 = []
+    with concurrent.futures.ProcessPoolExecutor() as pex:
+        futures = [pex.submit(document.generate_doc_id_for_vbucket, i)for i in range(1024) if i != 66]
+        for future in concurrent.futures.as_completed(futures):
+            doc_id = future.result()
+            doc = document.create_doc(
+                doc_id=doc_id,
+                channels=seth_user_info.channels
+            )
+            doc_id_for_every_vbucket_except_66.append(doc)
 
-    seth_docs = client.add_docs(
-        url=sg_url,
-        db=sg_db,
-        number=num_docs,
-        id_prefix=None,
-        auth=seth_session,
-        channels=seth_user_info.channels
-    )
+    vbucket_66_docs = []
+    for _ in range(5):
+        vbucket_66_docs.append(document.create_doc(
+            doc_id=document.generate_doc_id_for_vbucket(66),
+            channels=seth_user_info.channels
+        ))
 
-    assert len(seth_docs) == num_docs
+    seth_docs = client.add_bulk_docs(url=sg_url, db=sg_db, docs=doc_id_for_every_vbucket_except_66, auth=seth_session)
+    seth_66_docs = client.add_bulk_docs(url=sg_url, db=sg_db, docs=vbucket_66_docs, auth=seth_session)
 
+    assert len(seth_docs) == 1023
+    assert len(seth_66_docs) == 5
+
+    # Verify the all docs show up in seth's changes feed
     client.verify_docs_in_changes(
         url=sg_url,
         db=sg_db,
-        expected_docs=seth_docs,
+        expected_docs=seth_docs + seth_66_docs,
         auth=seth_session
     )
 
-    # rex = remoteexecutor.RemoteExecutor(utils.host_for_url(cb_server_url))
-    #
-    # # Delete some vBucket (5*) files to start a server rollback
-    # # Example vbucket files - 195.couch.1  310.couch.1  427.couch.1  543.couch.1
-    # log_info("Deleting vBucket files with the '5' prefix")
-    # rex.must_execute('sudo find /opt/couchbase/var/lib/couchbase/data/data-bucket -name "5*" -delete')
-    # log_info("Listing vBucket files ...")
-    # out, err = rex.must_execute("sudo ls /opt/couchbase/var/lib/couchbase/data/data-bucket/")
-    #
-    # # out format: [u'0.couch.1     264.couch.1  44.couch.1\t635.couch.1  820.couch.1\r\n',
-    # # u'1000.couch.1  265.couch.1 ...]
-    # vbucket_files = []
-    # for entry in out:
-    #     vbucket_files.extend(entry.split())
-    #
-    # # Verify that the vBucket files starting with 5 are all gone
-    # log_info("Verifing vBucket files are deleted ...")
-    # for vbucket_file in vbucket_files:
-    #     assert not vbucket_file.startswith("5")
-    #
-    # # Restart the server
-    # rex.must_execute("sudo systemctl restart couchbase-server")
-    #
-    # max_retries = 20
-    # count = 0
-    # while count != max_retries:
-    #     # Try to get changes, sync gateway should be able to recover and return changes
-    #     try:
-    #         client.get_changes(url=sg_url, db=sg_db, since=0, auth=seth_session, feed="normal")
-    #         break
-    #     except requests.exceptions.HTTPError as he:
-    #         log_info("{}".format(he.response.status_code))
-    #         log_info("Retrying in 1 sec ...")
-    #         time.sleep(1)
-    #         count += 1
-    #
-    # assert count != max_retries
+    rex = remoteexecutor.RemoteExecutor(utils.host_for_url(cb_server_url))
+    # Delete some vBucket file to start a server rollback
+    # Example vbucket files - 195.couch.1  310.couch.1  427.couch.1  543.couch.1
+    log_info("Deleting vBucket file '66.couch.1'")
+    rex.must_execute('sudo find /opt/couchbase/var/lib/couchbase/data/data-bucket -name "66.couch.1" -delete')
+    log_info("Listing vBucket files ...")
+    out, err = rex.must_execute("sudo ls /opt/couchbase/var/lib/couchbase/data/data-bucket/")
+
+    # out format: [u'0.couch.1     264.couch.1  44.couch.1\t635.couch.1  820.couch.1\r\n',
+    # u'1000.couch.1  265.couch.1 ...]
+    vbucket_files = []
+    for entry in out:
+        vbucket_files.extend(entry.split())
+
+    # Verify that the vBucket files starting with 5 are all gone
+    log_info("Verifing vBucket files are deleted ...")
+    assert "66.couch.1" not in vbucket_files
+
+    # Restart the server
+    rex.must_execute("sudo systemctl restart couchbase-server")
+
+    max_retries = 20
+    count = 0
+    while count != max_retries:
+        # Try to get changes, sync gateway should be able to recover and return changes
+        try:
+            changes = client.get_changes(url=sg_url, db=sg_db, since=0, auth=seth_session)
+            break
+        except requests.exceptions.HTTPError as he:
+            log_info("{}".format(he.response.status_code))
+            log_info("Retrying in 1 sec ...")
+            time.sleep(1)
+            count += 1
+
+    assert count != max_retries
+
+    # Get a list of all the changes ids that are not the user doc
+    changes_ids = [change["id"] for change in changes["results"] if not change["id"].startswith("_user")]
+    assert len(changes_ids) == 1023
+    for doc in seth_66_docs:
+        assert doc["id"] not in changes_ids

@@ -25,7 +25,7 @@ def generate_doc_id_for_vbucket(vbucket_number):
 
     # loop over random generated doc ids until the desired vbucket is returned
     while True:
-        doc_id = uuid.uuid4()
+        doc_id = str(uuid.uuid4())
         if get_vbucket_number(doc_id) == vbucket_number:
             utils.log_info("doc_id: {} -> vBucket: {}".format(doc_id, vbucket_number))
             return doc_id
