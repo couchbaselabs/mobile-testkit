@@ -372,6 +372,10 @@ def test_backfill_channels_oneshot_limit_changes(params_from_base_test_setup, sg
     # Changes Req #1
     #################
 
+    # Expect a user doc in the changes
+    if grant_type == "CHANNEL-REST" or grant_type == "ROLE-REST":
+        ids_and_revs_from_a_docs["_user/USER_B"] = None
+
     # User B shoud have recieved 20 docs due to limit
     assert len(user_b_changes_after_grant_one["results"]) == 20
 
@@ -402,12 +406,14 @@ def test_backfill_channels_oneshot_limit_changes(params_from_base_test_setup, sg
 
     # User B should have recieved 10 docs due to limit or 11 docs with with a terminating _user doc
     # The terminating user doc only happens with a grant via REST
-    assert 10 <= len(user_b_changes_after_grant_three["results"]) <= 11
+    if grant_type == "CHANNEL-REST" or grant_type == "ROLE-REST":
+        assert len(user_b_changes_after_grant_three["results"]) == 11
+    else:
+        assert len(user_b_changes_after_grant_three["results"]) == 10
 
     for doc in user_b_changes_after_grant_three["results"]:
         # cross off non user doc keys found from 'a_docs' dictionary
-        if not doc["id"].startswith("_user/"):
-            del ids_and_revs_from_a_docs[doc["id"]]
+        del ids_and_revs_from_a_docs[doc["id"]]
 
     # Make sure all the docs have been crossed out
     assert len(ids_and_revs_from_a_docs) == 0
@@ -587,6 +593,10 @@ def test_awaken_backfill_channels_longpoll_changes_with_limit(params_from_base_t
     assert len(changes["results"]) == 20
     num_requests = 1
 
+    # append _user/doc to the doc scratch pad if a REST grant
+    if grant_type == "CHANNEL-REST" or grant_type == "ROLE-REST":
+        ids_and_revs_from_a_docs["_user/USER_B"] = None
+
     # Cross the results off from the 'a_docs' dictionary
     for doc in changes["results"]:
         del ids_and_revs_from_a_docs[doc["id"]]
@@ -609,15 +619,17 @@ def test_awaken_backfill_channels_longpoll_changes_with_limit(params_from_base_t
             assert len(changes["results"]) == 20
         elif num_requests == 3:
             # This will be 10 or 11 depending on if the _user/ doc is returned
-            assert 10 <= len(changes["results"]) <= 11
+            if grant_type == "CHANNEL-REST" or grant_type == "ROLE-REST":
+                assert len(changes["results"]) == 11
+            else:
+                assert len(changes["results"]) == 10
         else:
             raise exceptions.ChangesError("Looping longpoll should only have to perform 3 requests to get all the changes!!")
 
         # Cross the results off from the 'a_docs' dictionary.
         # This will blow up in docs duplicate docs are sent to changes
         for doc in changes["results"]:
-            if doc["id"] != "_user/USER_B":
-                del ids_and_revs_from_a_docs[doc["id"]]
+            del ids_and_revs_from_a_docs[doc["id"]]
 
         last_seq = changes["last_seq"]
 
