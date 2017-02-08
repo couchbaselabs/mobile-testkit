@@ -121,17 +121,11 @@ def setup_client_syncgateway_test(request, setup_client_syncgateway_suite):
     }
 
     log_info("Tearing down test")
+    logging_helper = Logging()
 
     try:
         client.delete_databases(ls_url)
-    except HTTPError as he:
-        liteserv.stop()
-        raise HTTPError(he)
     except:
         liteserv.stop()
+        logging_helper.fetch_and_analyze_logs(cluster_config=cluster_config, test_name=test_name)
         raise Exception(sys.exc_info()[0])
-    finally:
-        # if the test failed pull logs
-        if request.node.rep_call.failed:
-            logging_helper = Logging()
-            logging_helper.fetch_and_analyze_logs(cluster_config=cluster_config, test_name=test_name)
