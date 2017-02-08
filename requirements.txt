@@ -50,4 +50,3 @@ termcolor==1.1.0
 troposphere==1.5.0
 wrapt==1.10.8
 xmltodict==0.10.2
-awacs==0.6.1
