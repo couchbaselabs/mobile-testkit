@@ -6,7 +6,9 @@
 
 from troposphere import Ref, Template, Parameter, Output, Join, GetAtt, Tags
 import troposphere.ec2 as ec2
+from troposphere import iam
 from troposphere.route53 import RecordSetType
+
 
 
 def gen_template(config):
@@ -125,6 +127,35 @@ def gen_template(config):
 
     secGrpCouchbase = createCouchbaseSecurityGroups(t)
 
+    # Create an IAM Role to give the EC2 instance permissions to
+    # push Cloudwatch Logs, which avoids the need to bake in the
+    # AWS_KEY + AWS_SECRET_KEY into an ~/.aws/credentials file or
+    # env variables
+    mobileTestKitRole = iam.Role(
+        'MobileTestKit',
+        ManagedPolicyArns=[
+            'arn:aws:iam::aws:policy/CloudWatchFullAccess'
+        ],
+        AssumeRolePolicyDocument={
+            'Version': '2012-10-17',
+            'Statement': [{
+                'Action': 'sts:AssumeRole',
+                'Principal': {'Service': 'ec2.amazonaws.com'},
+                'Effect': 'Allow',
+            }]
+        }
+    )
+    t.add_resource(mobileTestKitRole)
+
+    # The InstanceProfile instructs the EC2 instance to use
+    # the mobileTestKitRole created above.  It will be referenced
+    # in the instance.IamInstanceProfile property for all EC2 instances created
+    instanceProfile = iam.InstanceProfile(
+        'EC2InstanceProfile',
+        Roles=[Ref(mobileTestKitRole)],
+    )
+    t.add_resource(instanceProfile)
+
     # Couchbase Server Instances
     for i in xrange(num_couchbase_servers):
         name = "couchbaseserver{}".format(i)
@@ -134,6 +165,7 @@ def gen_template(config):
         instance.SecurityGroups = [Ref(secGrpCouchbase)]
         instance.KeyName = Ref(keyname_param)
         instance.Tags=Tags(Name=name, Type="couchbaseserver")
+        instance.IamInstanceProfile=Ref(instanceProfile)
 
         instance.BlockDeviceMappings = [
             ec2.BlockDeviceMapping(
@@ -157,6 +189,7 @@ def gen_template(config):
         instance.InstanceType = sync_gateway_server_type
         instance.SecurityGroups = [Ref(secGrpCouchbase)]
         instance.KeyName = Ref(keyname_param)
+        instance.IamInstanceProfile = Ref(instanceProfile)
         instance.BlockDeviceMappings = [
             ec2.BlockDeviceMapping(
                 DeviceName = "/dev/sda1",
@@ -186,6 +219,7 @@ def gen_template(config):
         instance.InstanceType = gateload_instance_type
         instance.SecurityGroups = [Ref(secGrpCouchbase)]
         instance.KeyName = Ref(keyname_param)
+        instance.IamInstanceProfile = Ref(instanceProfile)
         instance.Tags=Tags(Name=name, Type="gateload")
         instance.BlockDeviceMappings = [
             ec2.BlockDeviceMapping(
@@ -209,6 +243,7 @@ def gen_template(config):
         instance.InstanceType = lb_instance_type
         instance.SecurityGroups = [Ref(secGrpCouchbase)]
         instance.KeyName = Ref(keyname_param)
+        instance.IamInstanceProfile = Ref(instanceProfile)
         instance.Tags=Tags(Name=name, Type="loadbalancer")
         instance.BlockDeviceMappings = [
             ec2.BlockDeviceMapping(
