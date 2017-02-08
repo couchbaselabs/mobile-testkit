@@ -10,6 +10,9 @@ import argparse
 
 # Install aws credentials onto machine in /root/.aws/credentials file.
 # Currently used by awslogs, which is a cloudwatch logs forwarder.
+#
+# Don't use full aws credentials, create a keypair on the existing mobiletestkit user
+# which has full cloudwatch permissions, but nothing else
 
 def install_aws_credentials(cluster_config, aws_access_key_id, aws_secret_access_key):
 
@@ -33,7 +36,7 @@ if __name__ == "__main__":
     usage = "usage: python install_aws_credentials.py --aws-access-key-id AKIAIYOURKEY --aws-secret-access-key uaLqkyoursecret"
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("--aws-access-key-id", help="aws access key id", required=True)
+    parser.add_argument("--aws-access-key-id", help="aws access key id (use limited key, see comments in code)", required=True)
     parser.add_argument("--aws-secret-access-key", help="aws secret access key", required=True)
     args = parser.parse_args()
 
