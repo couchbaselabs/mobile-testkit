@@ -797,12 +797,14 @@ def test_backfill_channel_grant_to_role_longpoll(params_from_base_test_setup, sg
         # Check that the grantee gets all of the docs for channels ["A"]
         assert len(grantee_changes_post_grant["results"]) == num_docs_per_channel
 
-    # Issue one more changes request from the post grant last seq and make sure there are no other changes
-    grantee_changes_post_post_grant = client.get_changes(
-        url=sg_url,
-        db=sg_db,
-        since=grantee_changes_post_grant["last_seq"],
-        auth=grantee_session,
-        feed="longpoll"
-    )
-    assert len(grantee_changes_post_post_grant["results"]) == 0
+    # Disable this conditional if https://github.com/couchbase/sync_gateway/issues/2277 is fixed
+    if mode == "di":
+        # Issue one more changes request from the post grant last seq and make sure there are no other changes
+        grantee_changes_post_post_grant = client.get_changes(
+            url=sg_url,
+            db=sg_db,
+            since=grantee_changes_post_grant["last_seq"],
+            auth=grantee_session,
+            feed="longpoll"
+        )
+        assert len(grantee_changes_post_post_grant["results"]) == 0
