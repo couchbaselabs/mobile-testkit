@@ -323,7 +323,6 @@ def test_take_down_bring_up_sg_accel_validate_cbgt(params_from_base_test_setup, 
 @pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.sgaccel
-@pytest.mark.skip(reason="NEED ISSUE")
 @pytest.mark.parametrize("sg_conf", [
     "{}/sync_gateway_default_functional_tests_di.json".format(SYNC_GATEWAY_CONFIGS),
 ])
