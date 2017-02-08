@@ -124,6 +124,7 @@ def setup_client_syncgateway_test(request, setup_client_syncgateway_suite):
 
     try:
         client.delete_databases(ls_url)
+        liteserv.stop()
     except:
         liteserv.stop()
         logging_helper.fetch_and_analyze_logs(cluster_config=cluster_config, test_name=test_name)
