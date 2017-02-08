@@ -124,6 +124,9 @@ def setup_client_syncgateway_test(request, setup_client_syncgateway_suite):
 
     try:
         client.delete_databases(ls_url)
+    except HTTPError as he:
+        liteserv.stop()
+        raise HTTPError(he)
     except:
         liteserv.stop()
         raise HTTPError(sys.exc_info()[0])
