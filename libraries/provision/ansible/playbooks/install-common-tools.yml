@@ -101,6 +101,8 @@
 
   - name: DEPS | install awslogs forwarder service
     shell: python awslogs-agent-setup.py --non-interactive --region us-east-1 --configfile /home/centos/awslogs_default.conf
+    args:
+      chdir: /home/centos
 
 
 
