@@ -129,7 +129,7 @@ def setup_client_syncgateway_test(request, setup_client_syncgateway_suite):
         raise HTTPError(he)
     except:
         liteserv.stop()
-        raise HTTPError(sys.exc_info()[0])
+        raise Exception(sys.exc_info()[0])
     finally:
         # if the test failed pull logs
         if request.node.rep_call.failed:
