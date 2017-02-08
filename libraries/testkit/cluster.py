@@ -143,16 +143,6 @@ class Cluster:
         else:
             log_info(">>> Running in channel cache")
 
-
-        # Configure aws cloudwatch logs forwarder
-        status = ansible_runner.run_ansible_playbook(
-            "configure-sync-gateway-awslogs-forwarder.yml",
-            extra_vars={}
-        )
-        if status != 0:
-            raise Exception("Failed to configure sync_gateway awslogs forwarder")
-
-
         return mode
 
     def save_cbgt_diagnostics(self):
