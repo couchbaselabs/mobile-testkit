@@ -1,0 +1,21 @@
+- hosts: sync_gateways
+  any_errors_fatal: true
+  become: yes
+
+  tasks:
+  - name: SYNC GATEWAY | upload default awslogs config
+    copy: src=files/awslogs_sync_gateway.conf dest=/var/awslogs/etc/awslogs.conf
+
+  - name: SYNC GATEWAY | restart awslogs service
+    shell: service awslogs restart
+
+- hosts: sg_accels
+  any_errors_fatal: true
+  become: yes
+
+  tasks:
+  - name: SG ACCEL | upload default awslogs config
+    copy: src=files/awslogs_sg_accel.conf dest=/var/awslogs/etc/awslogs.conf
+
+  - name: SG ACCEL | restart awslogs service
+    shell: service awslogs restart

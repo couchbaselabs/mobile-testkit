@@ -93,5 +93,16 @@
   - name: DEPS | install repo tool
     get_url: url=https://storage.googleapis.com/git-repo-downloads/repo dest=/usr/bin/repo mode=0751
 
+  - name: DEPS | download awslogs fowarder
+    get_url: url=https://s3.amazonaws.com/aws-cloudwatch/downloads/latest/awslogs-agent-setup.py dest=/home/centos
+
+  - name: DEPS | upload default awslogs forwarder config
+    copy: src=files/awslogs_default.conf dest=/home/centos owner=centos group=centos
+
+  - name: DEPS | install awslogs forwarder service
+    shell: python awslogs-agent-setup.py --non-interactive --region us-east-1 --configfile /home/centos/awslogs_default.conf
+
+
+
 
   
