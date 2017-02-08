@@ -805,6 +805,6 @@ def test_backfill_channel_grant_to_role_longpoll(params_from_base_test_setup, sg
             db=sg_db,
             since=grantee_changes_post_grant["last_seq"],
             auth=grantee_session,
-            feed="longpoll"
+            feed="normal"
         )
         assert len(grantee_changes_post_post_grant["results"]) == 0
