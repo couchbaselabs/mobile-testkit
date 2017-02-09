@@ -135,6 +135,14 @@ def install_sync_gateway(cluster_config, sync_gateway_config):
         if status != 0:
             raise ProvisioningError("Failed to install sync_gateway package")
 
+    # Configure aws cloudwatch logs forwarder
+    status = ansible_runner.run_ansible_playbook(
+        "configure-sync-gateway-awslogs-forwarder.yml",
+        extra_vars={}
+    )
+    if status != 0:
+        raise ProvisioningError("Failed to configure sync_gateway awslogs forwarder")
+
 
 def create_server_buckets(cluster_config, sync_gateway_config):
 

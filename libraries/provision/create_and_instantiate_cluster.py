@@ -151,6 +151,7 @@ def create_and_instantiate_cluster(config):
         "aws", "cloudformation", "create-stack",
         "--stack-name", config.name,
         "--region", "us-east-1",
+        "--capabilities", "CAPABILITY_IAM", "CAPABILITY_NAMED_IAM",
         "--template-url", "http://{}.s3.amazonaws.com/{}/{}".format(BUCKET_NAME, BUCKET_FOLDER, template_file_name),
         "--parameters", "ParameterKey=KeyName,ParameterValue={}".format(os.environ["AWS_KEY"])
     ])
