@@ -4,11 +4,9 @@
 # cloudformation template by hand.  It also allows for DRY approaches
 # to maintaining cloudformation templates.
 
-from troposphere import Ref, Template, Parameter, Output, Join, GetAtt, Tags
+from troposphere import Ref, Template, Parameter, Tags
 import troposphere.ec2 as ec2
 from troposphere import iam
-from troposphere.route53 import RecordSetType
-
 
 
 def gen_template(config):
@@ -116,7 +114,6 @@ def gen_template(config):
 
         return secGrpCouchbase
 
-
     #
     # Parameters
     #
@@ -164,22 +161,20 @@ def gen_template(config):
         instance.InstanceType = couchbase_instance_type
         instance.SecurityGroups = [Ref(secGrpCouchbase)]
         instance.KeyName = Ref(keyname_param)
-        instance.Tags=Tags(Name=name, Type="couchbaseserver")
-        instance.IamInstanceProfile=Ref(instanceProfile)
+        instance.Tags = Tags(Name=name, Type="couchbaseserver")
+        instance.IamInstanceProfile = Ref(instanceProfile)
 
         instance.BlockDeviceMappings = [
             ec2.BlockDeviceMapping(
-                DeviceName = "/dev/sda1",
-                Ebs = ec2.EBSBlockDevice(
-                    DeleteOnTermination = True,
-                    VolumeSize = 300,
-                    VolumeType = "gp2"
+                DeviceName="/dev/sda1",
+                Ebs=ec2.EBSBlockDevice(
+                    DeleteOnTermination=True,
+                    VolumeSize=300,
+                    VolumeType="gp2"
                 )
             )
         ]
         t.add_resource(instance)
-
-
 
     # Sync Gw instances (ubuntu ami)
     for i in xrange(num_sync_gateway_servers):
@@ -192,11 +187,11 @@ def gen_template(config):
         instance.IamInstanceProfile = Ref(instanceProfile)
         instance.BlockDeviceMappings = [
             ec2.BlockDeviceMapping(
-                DeviceName = "/dev/sda1",
-                Ebs = ec2.EBSBlockDevice(
-                    DeleteOnTermination = True,
-                    VolumeSize = 100,
-                    VolumeType = "gp2"
+                DeviceName="/dev/sda1",
+                Ebs=ec2.EBSBlockDevice(
+                    DeleteOnTermination=True,
+                    VolumeSize=100,
+                    VolumeType="gp2"
                 )
             )
         ]
@@ -204,12 +199,11 @@ def gen_template(config):
         # Make syncgateway0 a cache writer, and the rest cache readers
         # See https://github.com/couchbase/sync_gateway/wiki/Distributed-channel-cache-design-notes
         if i == 0:
-            instance.Tags=Tags(Name=name, Type="syncgateway", CacheType="writer")
+            instance.Tags = Tags(Name=name, Type="syncgateway", CacheType="writer")
         else:
-            instance.Tags=Tags(Name=name, Type="syncgateway")
+            instance.Tags = Tags(Name=name, Type="syncgateway")
 
         t.add_resource(instance)
-
 
     # Gateload instances (ubuntu ami)
     for i in xrange(num_gateloads):
@@ -220,44 +214,41 @@ def gen_template(config):
         instance.SecurityGroups = [Ref(secGrpCouchbase)]
         instance.KeyName = Ref(keyname_param)
         instance.IamInstanceProfile = Ref(instanceProfile)
-        instance.Tags=Tags(Name=name, Type="gateload")
+        instance.Tags = Tags(Name=name, Type="gateload")
         instance.BlockDeviceMappings = [
             ec2.BlockDeviceMapping(
-                DeviceName = "/dev/sda1",
-                Ebs = ec2.EBSBlockDevice(
-                    DeleteOnTermination = True,
-                    VolumeSize = 20,
-                    VolumeType = "gp2"
+                DeviceName="/dev/sda1",
+                Ebs=ec2.EBSBlockDevice(
+                    DeleteOnTermination=True,
+                    VolumeSize=20,
+                    VolumeType="gp2"
                 )
             )
         ]
 
         t.add_resource(instance)
-
 
     # Load Balancer instances (ubuntu ami)
     for i in xrange(num_lbs):
         name = "loadbalancer{}".format(i)
         instance = ec2.Instance(name)
-        instance.ImageId = "ami-6d1c2007"  # centos7  
+        instance.ImageId = "ami-6d1c2007"  # centos7
         instance.InstanceType = lb_instance_type
         instance.SecurityGroups = [Ref(secGrpCouchbase)]
         instance.KeyName = Ref(keyname_param)
         instance.IamInstanceProfile = Ref(instanceProfile)
-        instance.Tags=Tags(Name=name, Type="loadbalancer")
+        instance.Tags = Tags(Name=name, Type="loadbalancer")
         instance.BlockDeviceMappings = [
             ec2.BlockDeviceMapping(
-                DeviceName = "/dev/sda1",
-                Ebs = ec2.EBSBlockDevice(
-                    DeleteOnTermination = True,
-                    VolumeSize = 20,
-                    VolumeType = "gp2"
+                DeviceName="/dev/sda1",
+                Ebs=ec2.EBSBlockDevice(
+                    DeleteOnTermination=True,
+                    VolumeSize=20,
+                    VolumeType="gp2"
                 )
             )
         ]
 
         t.add_resource(instance)
 
-
     return t.to_json()
-
