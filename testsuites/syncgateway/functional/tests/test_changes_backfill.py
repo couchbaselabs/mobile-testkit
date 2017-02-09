@@ -127,7 +127,7 @@ def test_backfill_channels_oneshot_changes(params_from_base_test_setup, sg_conf_
         log_info("Granting user access to channel A via Admin REST role grant")
         # Create role with channel A
         client.create_role(url=sg_admin_url, db=sg_db, name="channel-A-role", channels=["A"])
-        client.update_user(url=sg_admin_url, db=sg_db, name="USER_B", roles=["channel-A-role"])
+        client.update_user(url=sg_admin_url, db=sg_db, name="USER_B", channels=["B"], roles=["channel-A-role"])
 
     elif grant_type == "ROLE-SYNC":
         log_info("Granting user access to channel A via sync function role() grant")
