@@ -7,7 +7,6 @@ import sys
 from keywords.utils import log_info
 from libraries.testkit import settings
 
-
 from collections import OrderedDict
 
 from requests.exceptions import ConnectionError
