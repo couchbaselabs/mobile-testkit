@@ -9,7 +9,7 @@ from libraries.testkit import settings
 
 from collections import OrderedDict
 
-from requests.exceptions import ConnectionError
+from requests.exceptions import RequestException
 
 from provisioning_config_parser import hosts_for_tag
 
@@ -75,9 +75,10 @@ def log_expvars(cluster_config, folder_name, sleep_time=30):
                 log_info("Collecting gateload expavars {}".format(endpoint))
                 write_expvars(gateload_results, endpoint)
                 dump_results(folder_name, gateload_results, sync_gateway_results)
-            except ConnectionError as he:
+            except RequestException as re:
                 # connection to gateload expvars has been closed
-                log_info("Gateload {} no longer reachable. Writing expvars to {}".format(endpoint, folder_name))
+                log_info(re)
+                log_info("Error: {}.  Gateload {} no longer reachable. Writing expvars to {}".format(re, endpoint, folder_name))
                 dump_results(folder_name, gateload_results, sync_gateway_results)
                 gateload_is_running = False
 
@@ -87,10 +88,10 @@ def log_expvars(cluster_config, folder_name, sleep_time=30):
                 log_info("Collecting sg expavars {}".format(endpoint))
                 write_expvars(sync_gateway_results, endpoint)
                 dump_results(folder_name, gateload_results, sync_gateway_results)
-            except ConnectionError as he:
+            except RequestException as re:
                 # Should not happen unless sg crashes
-                log_info(he)
-                log_info("ERROR: sync_gateway not reachable. Dumping results to {}".format(folder_name))
+                log_info(re)
+                log_info("ERROR {}: sync_gateway not reachable. Dumping results to {}".format(re, folder_name))
                 dump_results(folder_name, gateload_results, sync_gateway_results)
 
         log_info("Elapsed: {} minutes".format((time.time() - start_time) / 60.0))
