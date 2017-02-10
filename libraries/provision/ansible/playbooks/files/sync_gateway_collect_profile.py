@@ -102,7 +102,8 @@ def collect_profile_loop(final_results_directory, profile_types, format_types, d
 
 if __name__ == "__main__":
 
-    main_final_results_directory = "/tmp/sync_gateway_profile"
+    date_time = time.strftime("%Y-%m-%d-%H-%M-%S")
+    main_final_results_directory = "/tmp/sync_gateway_profile_{}".format(date_time)
 
     if os.path.exists(main_final_results_directory):
         print("Deleting existing directory")
