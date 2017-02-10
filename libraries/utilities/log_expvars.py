@@ -3,6 +3,7 @@ import datetime
 import requests
 import json
 from keywords.utils import log_info
+from libraries.testkit import settings
 
 from collections import OrderedDict
 
@@ -25,7 +26,7 @@ def dump_results(test_folder, gateload_results, sync_gateway_results):
 
 def write_expvars(results_obj, endpoint):
 
-        resp = requests.get("http://{}".format(endpoint))
+        resp = requests.get("http://{}".format(endpoint), timeout=settings.HTTP_REQ_TIMEOUT)
         resp.raise_for_status()
         expvars = resp.json()
 
@@ -103,7 +104,7 @@ def wait_for_endpoints_alive_or_raise(endpoints, num_attempts=5):
 
             try:
                 log_info("Checking if endpoint is up: {}".format(endpoint_url))
-                resp = requests.get(endpoint_url)
+                resp = requests.get(endpoint_url, timeout=settings.HTTP_REQ_TIMEOUT)
                 resp.raise_for_status()
                 log_info("Endpoint is up")
             except Exception as e:
