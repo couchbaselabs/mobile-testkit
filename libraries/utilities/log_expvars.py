@@ -2,8 +2,11 @@ import time
 import datetime
 import requests
 import json
+import os
+import sys
 from keywords.utils import log_info
 from libraries.testkit import settings
+
 
 from collections import OrderedDict
 
@@ -37,7 +40,7 @@ def write_expvars(results_obj, endpoint):
         }
 
 
-def log_expvars(cluster_config, folder_name):
+def log_expvars(cluster_config, folder_name, sleep_time=30):
     """
     usage: log_expvars.py"
     """
@@ -70,7 +73,9 @@ def log_expvars(cluster_config, folder_name):
         # Caputure expvars for gateloads
         for endpoint in lgs_expvar_endpoints:
             try:
+                log_info("Collecting gateload expavars {}".format(endpoint))
                 write_expvars(gateload_results, endpoint)
+                dump_results(folder_name, gateload_results, sync_gateway_results)
             except ConnectionError as he:
                 # connection to gateload expvars has been closed
                 log_info("Gateload {} no longer reachable. Writing expvars to {}".format(endpoint, folder_name))
@@ -80,7 +85,9 @@ def log_expvars(cluster_config, folder_name):
         # Capture expvars for sync_gateways
         for endpoint in sgs_expvar_endpoints:
             try:
+                log_info("Collecting sg expavars {}".format(endpoint))
                 write_expvars(sync_gateway_results, endpoint)
+                dump_results(folder_name, gateload_results, sync_gateway_results)
             except ConnectionError as he:
                 # Should not happen unless sg crashes
                 log_info(he)
@@ -88,7 +95,7 @@ def log_expvars(cluster_config, folder_name):
                 dump_results(folder_name, gateload_results, sync_gateway_results)
 
         log_info("Elapsed: {} minutes".format((time.time() - start_time) / 60.0))
-        time.sleep(30)
+        time.sleep(sleep_time)
 
 
 def wait_for_endpoints_alive_or_raise(endpoints, num_attempts=5):
@@ -118,3 +125,13 @@ def wait_for_endpoints_alive_or_raise(endpoints, num_attempts=5):
         time.sleep(i * 2)
 
     raise Exception("Give up waiting for endpoints after {} attempts".format(num_attempts))
+
+if __name__ == "__main__":
+
+    try:
+        main_cluster_config = os.environ["CLUSTER_CONFIG"]
+    except KeyError:
+        print ("Make sure CLUSTER_CONFIG is defined and pointing to the configuration you would like to provision")
+        sys.exit(1)
+
+    log_expvars(main_cluster_config, ".", sleep_time=5)
