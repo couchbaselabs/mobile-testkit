@@ -65,9 +65,6 @@ def collect_profile_loop(final_results_directory, profile_types, format_types, d
 
     os.makedirs("/tmp/sync_gateway_profile/")
 
-    if not is_running("sync_gateway") and not is_running("sg_accel"):
-        raise Exception("Neither sync_gateway no sg_accel running.  Nothing to do")
-
     while is_running("sync_gateway") or is_running("sg_accel"):
 
         print("Collecting ...")
