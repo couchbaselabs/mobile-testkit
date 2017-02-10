@@ -63,7 +63,7 @@ def compress_and_copy(results_directory, final_results_directory):
 
 def collect_profile_loop(final_results_directory, profile_types, format_types, delay_secs):
 
-    os.makedirs("/tmp/sync_gateway_profile/")
+    os.makedirs(final_results_directory)
 
     while is_running("sync_gateway") or is_running("sg_accel"):
 
