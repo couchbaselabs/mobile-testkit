@@ -20,6 +20,7 @@ import keywords.exceptions
 
 from keywords.utils import log_info
 
+from keywords.SyncGateway import load_sg_accel_config
 
 class Cluster:
     """
@@ -59,6 +60,8 @@ class Cluster:
         # for integrating keywords
         self.cb_server = couchbaseserver.CouchbaseServer(self.servers[0].url)
         self.sg = keywords.SyncGateway.SyncGateway(self.sync_gateways[0].url)
+        if len(acs) > 0:
+            self.sa = keywords.SyncGateway.SGAccel(self.sg_accels[0].url)
 
     def validate_cluster(self):
         # Validate sync gateways
@@ -70,36 +73,37 @@ class Cluster:
         self.validate_cluster()
 
         ansible_runner = AnsibleRunner(self._cluster_config)
+        # Parse config and grab bucket names
+        config_path_full = os.path.abspath(sg_config_path)
+        config = Config(config_path_full)
+        mode = config.get_mode()
+        bucket_name_set = config.get_bucket_name_set()
 
         # Stop sync_gateways
         log_info(">>> Stopping sync_gateway")
         status = self.sg.stop_sync_gateway(self._cluster_config, self.sync_gateways[0].url)
         assert status == 0, "Failed to stop sync gateway"
 
-        # Stop sync_gateways
-        log_info(">>> Stopping sg_accel")
-        status = ansible_runner.run_ansible_playbook("stop-sg-accel.yml")
-        assert status == 0, "Failed to stop sg_accel"
+        if mode == "di":
+        # Stop sg_accels
+            log_info(">>> Stopping sg_accel")
+            #status = ansible_runner.run_ansible_playbook("stop-sg-accel.yml")
+            status = self.sa.stop_sg_accel(self._cluster_config, self.sg_accels[0].url)
+            assert status == 0, "Failed to stop sg_accel"
+
+            # Deleting sg_accel artifacts
+            log_info(">>> Deleting sg_accel artifacts")
+            status = ansible_runner.run_ansible_playbook("delete-sg-accel-artifacts.yml")
+            assert status == 0, "Failed to delete sg_accel artifacts"
 
         # Deleting sync_gateway artifacts
         log_info(">>> Deleting sync_gateway artifacts")
         status = ansible_runner.run_ansible_playbook("delete-sync-gateway-artifacts.yml")
         assert status == 0, "Failed to delete sync_gateway artifacts"
 
-        # Deleting sg_accel artifacts
-        log_info(">>> Deleting sg_accel artifacts")
-        status = ansible_runner.run_ansible_playbook("delete-sg-accel-artifacts.yml")
-        assert status == 0, "Failed to delete sg_accel artifacts"
-
         # Delete buckets
         log_info(">>> Deleting buckets on: {}".format(self.cb_server.url))
         self.cb_server.delete_buckets()
-
-        # Parse config and grab bucket names
-        config_path_full = os.path.abspath(sg_config_path)
-        config = Config(config_path_full)
-        mode = config.get_mode()
-        bucket_name_set = config.get_bucket_name_set()
 
         self.sync_gateway_config = config
 
@@ -121,18 +125,28 @@ class Cluster:
 
         # HACK - only enable sg_accel for distributed index tests
         # revise this with https://github.com/couchbaselabs/sync-gateway-testcluster/issues/222
-        if mode == "di":
+        #if mode == "di":
             # Start sg-accel
-            status = ansible_runner.run_ansible_playbook(
-                "start-sg-accel.yml",
-                extra_vars={
-                    "sync_gateway_config_filepath": config_path_full
-                }
-            )
-            assert status == 0, "Failed to start sg_accel"
+        #    status = ansible_runner.run_ansible_playbook(
+        #        "start-sg-accel.yml",
+        #        extra_vars={
+        #            "sync_gateway_config_filepath": config_path_full
+        #        }
+        #    )
 
         # Validate CBGT
         if mode == "di":
+            sa_config_path_data = load_sg_accel_config(config_path_full, self.cb_server.url)
+            temp_di_conf = "/".join(config_path_full.split('/')[:-2]) + '/temp_conf_di.json'
+            log_info("TEMP_DI_CONF: {}".format(temp_di_conf))
+
+            with open(temp_di_conf, 'w') as fp:
+                json.dump(sa_config_path_data, fp)
+
+            status = self.sa.start_sg_accel(self._cluster_config, self.sg_accels[0].url, temp_di_conf)
+            assert status == 0, "Failed to start sg_accel"
+            os.remove(temp_di_conf)
+
             if not self.validate_cbgt_pindex_distribution_retry(len(self.sg_accels)):
                 self.save_cbgt_diagnostics()
                 raise Exception("Failed to validate CBGT Pindex distribution")

@@ -9,6 +9,8 @@ from keywords import utils
 from keywords.ClusterKeywords import ClusterKeywords
 from keywords.RemoteExecutor import RemoteExecutor
 from keywords.SyncGateway import SyncGateway
+from keywords.SyncGateway import SGAccel
+from keywords.SyncGateway import load_sg_accel_config
 from keywords.SyncGateway import sync_gateway_config_path_for_mode
 from keywords.exceptions import ProvisioningError
 from keywords.utils import log_info
@@ -21,9 +23,10 @@ def load_sync_gateway_config(sync_gateway_config, mode, server_url):
         if mode == "cc":
             data = json.load(default_conf)
         else:
+            server_ip = utils.host_for_url(server_url)
             template = Template(default_conf.read())
             temp = template.render(
-                couchbase_server_primary_node=server_url,
+                couchbase_server_primary_node=server_ip,
                 is_index_writer="false"
             )
             data = json.loads(temp)
@@ -32,11 +35,25 @@ def load_sync_gateway_config(sync_gateway_config, mode, server_url):
     return data
 
 
+def call_method_on_object(obj, operation, cluster_conf, sg_one_url, config=None):
+    """This method calls obj.operation(cluster_conf, sg_one_url, config=None)
+       The object(obj) and the method names(operation) are passed as arguments
+    """
+    # getattr(sg_helper, 'start_sync_gateway') is equivalent to sg_helper.start_sync_gateway
+    target_method = getattr(obj, operation)
+    if config:
+        # start_sync_gateway takes three args
+        target_method(cluster_conf, sg_one_url, config)
+    else:
+        # stop_sync_gateway takes two args
+        target_method(cluster_conf, sg_one_url)
+
+
 @pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.logging
-@pytest.mark.parametrize("sg_conf_name", ["log_rotation"])
-def test_log_rotation_default_values(params_from_base_test_setup, sg_conf_name):
+@pytest.mark.parametrize("sg_conf_name, sg_type", [("log_rotation","sync_gateways"),("log_rotation","sg_accels")])
+def test_log_rotation_default_values(params_from_base_test_setup, sg_conf_name, sg_type):
     """Test to verify default values for rotation section:
     maxsize = 100 MB
     MaxAge = 0(do not limit the number of MaxAge)
@@ -44,6 +61,9 @@ def test_log_rotation_default_values(params_from_base_test_setup, sg_conf_name):
     """
     cluster_conf = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
+
+    if mode == "cc" and sg_type == "sg_accels":
+        pytest.skip("sg_accel is not applicable for cc mode")
 
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
 
@@ -53,19 +73,33 @@ def test_log_rotation_default_values(params_from_base_test_setup, sg_conf_name):
     cluster = Cluster(config=cluster_conf)
     cluster.reset(sg_config_path=sg_conf)
 
-    remote_executor = RemoteExecutor(cluster.sync_gateways[0].ip)
-
-    # Stop sync_gateways
-    log_info(">>> Stopping sync_gateway")
-    sg_helper = SyncGateway()
     cluster_helper = ClusterKeywords()
     cluster_hosts = cluster_helper.get_cluster_topology(cluster_conf)
-    sg_one_url = cluster_hosts["sync_gateways"][0]["public"]
-    sg_helper.stop_sync_gateway(cluster_config=cluster_conf, url=sg_one_url)
 
-    # read sample sg_conf
-    server_url = utils.host_for_url(cluster_hosts["couchbase_servers"][0])
-    data = load_sync_gateway_config(sg_conf, mode, server_url)
+    stop_method = None
+    start_method = None
+    server_url = cluster_hosts["couchbase_servers"][0]
+
+    if sg_type == "sync_gateways":
+        sg_one_url = cluster_hosts["sync_gateways"][0]["public"]
+        sg_helper = SyncGateway()
+        stop_method = "stop_sync_gateway"
+        start_method = "start_sync_gateway"
+        sg_ip = cluster.sync_gateways[0].ip
+        data = load_sync_gateway_config(sg_conf, mode, server_url)
+    elif sg_type == "sg_accels":
+        sg_one_url = cluster_hosts["sg_accels"][0]
+        sg_helper = SGAccel()
+        stop_method = "stop_sg_accel"
+        start_method = "start_sg_accel"
+        sg_ip = cluster.sg_accels[0].ip
+        data = load_sg_accel_config(sg_conf, server_url)
+
+    remote_executor = RemoteExecutor(sg_ip)
+
+    # Stop sync_gateways
+    log_info(">>> Stopping {}".format(sg_type))
+    call_method_on_object(sg_helper, stop_method, cluster_conf, sg_one_url)
 
     # delete rotation from sample config
     del data['logging']["default"]["rotation"]
@@ -88,7 +122,7 @@ def test_log_rotation_default_values(params_from_base_test_setup, sg_conf_name):
     remote_executor.execute("sudo chmod 777 -R /tmp/sg_logs")
     # iterate 5th times to verify that every time we get new backup file with ~100MB
     for i in xrange(5):
-        sg_helper.start_sync_gateway(cluster_config=cluster_conf, url=sg_one_url, config=temp_conf)
+        call_method_on_object(sg_helper, start_method, cluster_conf, sg_one_url, temp_conf)
         # ~1M MB will be added to log file after requests
         remote_executor.execute(
             "for ((i=1;i <= 1000;i += 1)); do curl -s http://localhost:4984/ > /dev/null; done")
@@ -97,11 +131,11 @@ def test_log_rotation_default_values(params_from_base_test_setup, sg_conf_name):
         # verify num of log files
         assert stdout[0].rstrip() == str(i + 1)
 
-        sg_helper.stop_sync_gateway(cluster_config=cluster_conf, url=sg_one_url)
+        call_method_on_object(sg_helper, stop_method, cluster_conf, sg_one_url)
         # generate log file  with size  ~99MB
         remote_executor.execute("sudo dd if=/dev/zero of=/tmp/sg_logs/sg_log_rotation.log bs=104850000 count=1")
 
-    sg_helper.start_sync_gateway(cluster_config=cluster_conf, url=sg_one_url, config=sg_conf)
+    call_method_on_object(sg_helper, start_method, cluster_conf, sg_one_url, sg_conf)
 
     # Remove generated conf file
     os.remove(temp_conf)
@@ -110,18 +144,21 @@ def test_log_rotation_default_values(params_from_base_test_setup, sg_conf_name):
 @pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.logging
-@pytest.mark.parametrize("sg_conf_name", ["log_rotation"])
-def test_log_logKeys_string(params_from_base_test_setup, sg_conf_name):
+@pytest.mark.parametrize("sg_conf_name, sg_type", [("log_rotation","sync_gateways"),("log_rotation","sg_accels")])
+def test_log_logKeys_string(params_from_base_test_setup, sg_conf_name, sg_type):
     """Negative test to verify that we are not able start SG when
     logKeys is string
     """
     cluster_conf = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
 
+    if mode == "cc" and sg_type == "sg_accels":
+        pytest.skip("sg_accel is not applicable for cc mode")
+
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
 
     log_info("Using cluster_conf: {}".format(cluster_conf))
-    log_info("Using sg_conf: {}".format(sg_conf))
+    log_info("Using {} conf: {}".format(sg_type, sg_conf))
 
     cluster = Cluster(config=cluster_conf)
     cluster.reset(sg_config_path=sg_conf)
@@ -129,9 +166,21 @@ def test_log_logKeys_string(params_from_base_test_setup, sg_conf_name):
     # read sample sg_conf
     cluster_helper = ClusterKeywords()
     cluster_hosts = cluster_helper.get_cluster_topology(cluster_conf)
-    sg_one_url = cluster_hosts["sync_gateways"][0]["public"]
-    server_url = utils.host_for_url(cluster_hosts["couchbase_servers"][0])
+    stop_method = None
+    start_method = None
 
+    if sg_type == "sync_gateways":
+        sg_one_url = cluster_hosts["sync_gateways"][0]["public"]
+        sg_helper = SyncGateway()
+        stop_method = "stop_sync_gateway"
+        start_method = "start_sync_gateway"
+    elif sg_type == "sg_accels":
+        sg_one_url = cluster_hosts["sg_accels"][0]
+        sg_helper = SGAccel()
+        stop_method = "stop_sg_accel"
+        start_method = "start_sg_accel"
+
+    server_url = cluster_hosts["couchbase_servers"][0]
     data = load_sync_gateway_config(sg_conf, mode, server_url)
 
     # set logKeys as string in config file
@@ -144,19 +193,21 @@ def test_log_logKeys_string(params_from_base_test_setup, sg_conf_name):
 
     # Stop sync_gateways
     log_info(">>> Stopping sync_gateway")
-    sg_helper = SyncGateway()
-    sg_helper.stop_sync_gateway(cluster_config=cluster_conf, url=sg_one_url)
+    call_method_on_object(sg_helper, stop_method, cluster_conf, sg_one_url)
+
     try:
-        sg_helper.start_sync_gateway(cluster_config=cluster_conf, url=sg_one_url, config=temp_conf)
+        # start_sync_gateway with temp_conf
+        call_method_on_object(sg_helper, start_method, cluster_conf, sg_one_url, temp_conf)
     except ProvisioningError:
-        sg_helper.start_sync_gateway(cluster_config=cluster_conf, url=sg_one_url, config=sg_conf)
+        # start_sync_gateway with sg_conf
+        call_method_on_object(sg_helper, start_method, cluster_conf, sg_one_url, sg_conf)
         # Remove generated conf file
         os.remove(temp_conf)
         return
 
     # Remove generated conf file
     os.remove(temp_conf)
-    pytest.fail("SG shouldn't be started!!!!")
+    pytest.fail("{} shouldn't be started!!!!".format(sg_type))
 
 
 @pytest.mark.sanity
@@ -183,7 +234,7 @@ def test_log_nondefault_logKeys_set(params_from_base_test_setup, sg_conf_name):
     cluster_helper = ClusterKeywords()
     cluster_hosts = cluster_helper.get_cluster_topology(cluster_conf)
     sg_one_url = cluster_hosts["sync_gateways"][0]["public"]
-    server_url = utils.host_for_url(cluster_hosts["couchbase_servers"][0])
+    server_url = cluster_hosts["couchbase_servers"][0]
     data = load_sync_gateway_config(sg_conf, mode, server_url)
 
     # "FAKE" not valid area in logging
@@ -233,7 +284,7 @@ def test_log_maxage_10_timestamp_ignored(params_from_base_test_setup, sg_conf_na
     cluster_helper = ClusterKeywords()
     cluster_hosts = cluster_helper.get_cluster_topology(cluster_conf)
     sg_one_url = cluster_hosts["sync_gateways"][0]["public"]
-    server_url = utils.host_for_url(cluster_hosts["couchbase_servers"][0])
+    server_url = cluster_hosts["couchbase_servers"][0]
 
     sg_helper.stop_sync_gateway(cluster_config=cluster_conf, url=sg_one_url)
 
@@ -295,7 +346,7 @@ def test_log_rotation_invalid_path(params_from_base_test_setup, sg_conf_name):
     cluster_helper = ClusterKeywords()
     cluster_hosts = cluster_helper.get_cluster_topology(cluster_conf)
     sg_one_url = cluster_hosts["sync_gateways"][0]["public"]
-    server_url = utils.host_for_url(cluster_hosts["couchbase_servers"][0])
+    server_url = cluster_hosts["couchbase_servers"][0]
 
     # read sample sg_conf
     data = load_sync_gateway_config(sg_conf, mode, server_url)
@@ -352,7 +403,7 @@ def test_log_200mb(params_from_base_test_setup, sg_conf_name):
     cluster_helper = ClusterKeywords()
     cluster_hosts = cluster_helper.get_cluster_topology(cluster_conf)
     sg_one_url = cluster_hosts["sync_gateways"][0]["public"]
-    server_url = utils.host_for_url(cluster_hosts["couchbase_servers"][0])
+    server_url = cluster_hosts["couchbase_servers"][0]
 
     sg_helper.stop_sync_gateway(cluster_config=cluster_conf, url=sg_one_url)
 
@@ -466,7 +517,7 @@ def test_log_rotation_negative(params_from_base_test_setup, sg_conf_name):
     cluster_helper = ClusterKeywords()
     cluster_hosts = cluster_helper.get_cluster_topology(cluster_conf)
     sg_one_url = cluster_hosts["sync_gateways"][0]["public"]
-    server_url = utils.host_for_url(cluster_hosts["couchbase_servers"][0])
+    server_url = cluster_hosts["couchbase_servers"][0]
 
     # read sample sg_conf
     data = load_sync_gateway_config(sg_conf, mode, server_url)
@@ -523,7 +574,7 @@ def test_log_maxbackups_0(params_from_base_test_setup, sg_conf_name):
     cluster_helper = ClusterKeywords()
     cluster_hosts = cluster_helper.get_cluster_topology(cluster_conf)
     sg_one_url = cluster_hosts["sync_gateways"][0]["public"]
-    server_url = utils.host_for_url(cluster_hosts["couchbase_servers"][0])
+    server_url = cluster_hosts["couchbase_servers"][0]
 
     remote_executor = RemoteExecutor(cluster.sync_gateways[0].ip)
 
@@ -581,7 +632,7 @@ def test_log_logLevel_invalid(params_from_base_test_setup, sg_conf_name):
     cluster_helper = ClusterKeywords()
     cluster_hosts = cluster_helper.get_cluster_topology(cluster_conf)
     sg_one_url = cluster_hosts["sync_gateways"][0]["public"]
-    server_url = utils.host_for_url(cluster_hosts["couchbase_servers"][0])
+    server_url = cluster_hosts["couchbase_servers"][0]
 
     # read sample sg_conf
     data = load_sync_gateway_config(sg_conf, mode, server_url)

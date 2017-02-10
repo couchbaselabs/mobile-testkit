@@ -79,7 +79,7 @@ def host_for_url(url):
 
     host = url.replace("http://", "")
     host = host.split(":")[0]
-    log_info("Extracted host () from url ()".format(host, url))
+    log_info("Extracted host {} from url {}".format(host, url))
 
     return host
 

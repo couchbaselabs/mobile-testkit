@@ -12,10 +12,11 @@ from keywords.utils import version_and_build
 from keywords.utils import hostname_for_url
 from keywords.utils import log_info
 from keywords.utils import log_warn
-
+from keywords.utils import host_for_url
 from exceptions import ProvisioningError
 
 from libraries.provision.ansible_runner import AnsibleRunner
+from jinja2 import Template
 
 
 def validate_sync_gateway_mode(mode):
@@ -119,6 +120,21 @@ def verify_sg_accel_version(host, expected_sg_accel_version):
             raise ProvisioningError("Unexpected sync_gateway version!! Expected: {} Actual: {}".format(expected_sg_accel_version, running_ac_version))
 
 
+def load_sg_accel_config(sync_gateway_config, server_url):
+    """ Loads a sg_accel configuration for modification"""
+    with open(sync_gateway_config) as default_conf:
+        server_ip = host_for_url(server_url)
+        template = Template(default_conf.read())
+        temp = template.render(
+            couchbase_server_primary_node=server_ip,
+            is_index_writer="true"
+        )
+        data = json.loads(temp)
+
+    log_info("Loaded sg_accel config: {}".format(data))
+    return data
+
+
 class SyncGateway:
 
     def __init__(self, url=None):
@@ -197,12 +213,82 @@ class SyncGateway:
 
         return 0
 
+
     def is_sync_gateway_running(self, cluster_config, url):
         target = hostname_for_url(cluster_config, url)
         log_info("Checking sync_gateway status on {} ...".format(target))
         ansible_runner = AnsibleRunner(cluster_config)
         status = ansible_runner.run_ansible_playbook(
             "check-sync-gateway.yml",
+            subset=target
+        )
+
+        # Running
+        if status == 0:
+            return True
+
+        # Not running
+        return False
+
+
+class SGAccel:
+
+    def __init__(self, url=None):
+            self._session = Session()
+            self.url = url
+
+    def start_sg_accel(self, cluster_config, url, config):
+        target = hostname_for_url(cluster_config, url)
+
+        log_info("Starting sg_accel on {} ...".format(target))
+        ansible_runner = AnsibleRunner(cluster_config)
+        config_path = os.path.abspath(config)
+        status = ansible_runner.run_ansible_playbook(
+            "start-sg-accel.yml",
+            extra_vars={
+                "sync_gateway_config_filepath": config_path
+            },
+            subset=target
+        )
+
+        if status != 0:
+            raise ProvisioningError("Could not start sg_accel")
+
+        running_status = self.is_sg_accel_running(cluster_config, url)
+        if not running_status:
+            # if running_status  != 0, sync gateway is not running
+            log_warn("Status of sg_accel service start was returned as zero but sg_accel is not running")
+            raise ProvisioningError("Could not start sg_accel")
+
+        return 0
+
+
+    def stop_sg_accel(self, cluster_config, url):
+        target = hostname_for_url(cluster_config, url)
+        log_info("Shutting down sg_accel on {} ...".format(target))
+        ansible_runner = AnsibleRunner(cluster_config)
+        status = ansible_runner.run_ansible_playbook(
+            "stop-sg-accel.yml",
+            subset=target
+        )
+        if status != 0:
+            raise ProvisioningError("Could not stop sg_accel")
+
+        running_status = self.is_sg_accel_running(cluster_config, url)
+        if running_status:
+            # if running_status  == 0, sync gateway is still running
+            log_warn("Status of sg_accel service stop was returned as zero but sg_accel is still running")
+            raise ProvisioningError("Could not stop sg_accel")
+
+        return 0
+
+
+    def is_sg_accel_running(self, cluster_config, url):
+        target = hostname_for_url(cluster_config, url)
+        log_info("Checking sg_accel status on {} ...".format(target))
+        ansible_runner = AnsibleRunner(cluster_config)
+        status = ansible_runner.run_ansible_playbook(
+            "check-sg-accel.yml",
             subset=target
         )
 

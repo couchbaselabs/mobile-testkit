@@ -1,9 +1,9 @@
 ---
-- hosts: sync_gateways
+- hosts: sg_accels
   any_errors_fatal: true
   tasks:
-  - include: tasks/check-sync-gateway.yml
+  - include: tasks/check-sg-accel.yml
     when: ansible_distribution == "CentOS"
 
-  - include: tasks/check-sync-gateway-windows.yml
+  - include: tasks/check-sg-accel-windows.yml
     when: ansible_os_family == "Windows"

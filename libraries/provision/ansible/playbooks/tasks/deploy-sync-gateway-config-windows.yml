@@ -1,2 +1,4 @@
 - name: SYNC GATEWAY | Copy sync gateway config to Windows host
-  win_template: src={{ sync_gateway_config_filepath }} dest='C:\PROGRA~2\Couchbase\serviceconfig.json'
+  win_template:
+    src: "{{ sync_gateway_config_filepath }}"
+    dest: 'C:\PROGRA~2\Couchbase\serviceconfig.json'
