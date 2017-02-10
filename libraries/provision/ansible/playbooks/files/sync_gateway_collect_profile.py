@@ -65,36 +65,43 @@ def collect_profile_loop(final_results_directory, profile_types, format_types, d
 
     os.makedirs(final_results_directory)
 
-    while is_running("sync_gateway") or is_running("sg_accel"):
+    while True:
 
-        print("Collecting ...")
+        try:
 
-        # this is the temp dir where collected files will be stored. will be deleted at end.
 
-        results_directory = "/tmp/sync_gateway_profile_temp"
-        if os.path.exists(results_directory):
-            print("Deleting temp directory")
+            print("Collecting ...")
+            # this is the temp dir where collected files will be stored. will be deleted at end.
+
+            results_directory = "/tmp/sync_gateway_profile_temp"
+            if os.path.exists(results_directory):
+                print("Deleting temp directory")
+                shutil.rmtree(results_directory)
+            os.makedirs(results_directory)
+
+            collect_profiles(
+                results_directory,
+                sg_binary_path,
+                profile_types,
+                format_types,
+            )
+
+            compress_and_copy(results_directory, final_results_directory)
+
+            # delete the tmp dir since we're done with it
             shutil.rmtree(results_directory)
-        os.makedirs(results_directory)
 
-        collect_profiles(
-            results_directory,
-            sg_binary_path,
-            profile_types,
-            format_types,
-        )
+            # package the all of the profile results
+            run_command("tar cvfz {0}.tar.gz {1}".format(final_results_directory, final_results_directory))
 
-        compress_and_copy(results_directory, final_results_directory)
+            print("Waiting {} before collecting next profile".format(delay_secs))
 
-        # delete the tmp dir since we're done with it
-        shutil.rmtree(results_directory)
+            time.sleep(delay_secs)
 
-        # package the all of the profile results
-        run_command("tar cvfz {0}.tar.gz {1}".format(final_results_directory, final_results_directory))
+        except:
 
-        print("Waiting {} before collecting next profile".format(delay_secs))
-
-        time.sleep(delay_secs)
+            print("Exception trying to collect profile.  Will sleep {} seconds and try again".format(delay_secs))
+            time.sleep(delay_secs)
 
 
     shutil.rmtree(final_results_directory)
