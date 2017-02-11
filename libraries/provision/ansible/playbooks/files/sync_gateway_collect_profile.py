@@ -104,13 +104,11 @@ def collect_profile_loop(final_results_directory, profile_types, format_types, d
             time.sleep(delay_secs)
 
 
-    shutil.rmtree(final_results_directory)
 
 
 if __name__ == "__main__":
 
-    date_time = time.strftime("%Y-%m-%d-%H-%M-%S")
-    main_final_results_directory = "/tmp/sync_gateway_profile_{}".format(date_time)
+    main_final_results_directory = "/tmp/sync_gateway_profile"
 
     if os.path.exists(main_final_results_directory):
         print("Deleting existing directory")
