@@ -10,7 +10,8 @@ import generate_gateload_configs
 from keywords.exceptions import ProvisioningError
 from libraries.utilities.log_expvars import log_expvars
 from libraries.utilities.fetch_sync_gateway_profile import fetch_sync_gateway_profile
-
+from keywords.utils import log_info
+from testsuites.syncgateway.performance.kill_gateload import kill_gateload
 
 GateloadParams = collections.namedtuple(
     "GateloadParams",
@@ -84,10 +85,16 @@ def run_gateload_perf_test(gen_gateload_config, test_id, gateload_params):
 
     # write expvars to file, will exit when gateload scenario is done
     print(">>> Logging expvars")
-    log_expvars(cluster_config, test_run_id)
+    try:
+        log_expvars(cluster_config, test_run_id)
+    except Exception as e:
+        log_info("Exception trying to collect expvars: {}", e)
 
     print(">>> Fetch Sync Gateway profile")
     fetch_sync_gateway_profile(cluster_config, test_run_id)
+
+    print(">>> Shutdown gateload")
+    kill_gateload()
 
 
 if __name__ == "__main__":
