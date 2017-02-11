@@ -67,7 +67,8 @@ def log_expvars(cluster_config, folder_name, sleep_time=30):
     sync_gateway_results = OrderedDict()
 
     gateload_is_running = True
-    while gateload_is_running:
+    sg_is_running = True
+    while gateload_is_running and sg_is_running:
 
         # Caputure expvars for gateloads
         for endpoint in lgs_expvar_endpoints:
@@ -93,6 +94,7 @@ def log_expvars(cluster_config, folder_name, sleep_time=30):
                 log_info(re)
                 log_info("ERROR {}: sync_gateway not reachable. Dumping results to {}".format(re, folder_name))
                 dump_results(folder_name, gateload_results, sync_gateway_results)
+                sg_is_running = False
 
         log_info("Elapsed: {} minutes".format((time.time() - start_time) / 60.0))
         time.sleep(sleep_time)
