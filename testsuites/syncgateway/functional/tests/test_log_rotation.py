@@ -52,7 +52,7 @@ def call_method_on_object(obj, operation, cluster_conf, sg_one_url, config=None)
 @pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.logging
-@pytest.mark.parametrize("sg_conf_name, sg_type", [("log_rotation","sync_gateways"),("log_rotation","sg_accels")])
+@pytest.mark.parametrize("sg_conf_name, sg_type", [("log_rotation", "sync_gateways"), ("log_rotation", "sg_accels")])
 def test_log_rotation_default_values(params_from_base_test_setup, sg_conf_name, sg_type):
     """Test to verify default values for rotation section:
     maxsize = 100 MB
@@ -144,7 +144,7 @@ def test_log_rotation_default_values(params_from_base_test_setup, sg_conf_name, 
 @pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.logging
-@pytest.mark.parametrize("sg_conf_name, sg_type", [("log_rotation","sync_gateways"),("log_rotation","sg_accels")])
+@pytest.mark.parametrize("sg_conf_name, sg_type", [("log_rotation", "sync_gateways"), ("log_rotation", "sg_accels")])
 def test_log_logKeys_string(params_from_base_test_setup, sg_conf_name, sg_type):
     """Negative test to verify that we are not able start SG when
     logKeys is string

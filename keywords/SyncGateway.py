@@ -213,7 +213,6 @@ class SyncGateway:
 
         return 0
 
-
     def is_sync_gateway_running(self, cluster_config, url):
         target = hostname_for_url(cluster_config, url)
         log_info("Checking sync_gateway status on {} ...".format(target))
@@ -262,7 +261,6 @@ class SGAccel:
 
         return 0
 
-
     def stop_sg_accel(self, cluster_config, url):
         target = hostname_for_url(cluster_config, url)
         log_info("Shutting down sg_accel on {} ...".format(target))
@@ -281,7 +279,6 @@ class SGAccel:
             raise ProvisioningError("Could not stop sg_accel")
 
         return 0
-
 
     def is_sg_accel_running(self, cluster_config, url):
         target = hostname_for_url(cluster_config, url)

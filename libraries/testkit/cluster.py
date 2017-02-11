@@ -15,12 +15,10 @@ from keywords import couchbaseserver
 import keywords.SyncGateway
 
 from keywords import utils
-
 import keywords.exceptions
-
 from keywords.utils import log_info
-
 from keywords.SyncGateway import load_sg_accel_config
+
 
 class Cluster:
     """
@@ -85,9 +83,9 @@ class Cluster:
         assert status == 0, "Failed to stop sync gateway"
 
         if mode == "di":
-        # Stop sg_accels
+            # Stop sg_accels
             log_info(">>> Stopping sg_accel")
-            #status = ansible_runner.run_ansible_playbook("stop-sg-accel.yml")
+            # status = ansible_runner.run_ansible_playbook("stop-sg-accel.yml")
             status = self.sa.stop_sg_accel(self._cluster_config, self.sg_accels[0].url)
             assert status == 0, "Failed to stop sg_accel"
 
@@ -125,8 +123,8 @@ class Cluster:
 
         # HACK - only enable sg_accel for distributed index tests
         # revise this with https://github.com/couchbaselabs/sync-gateway-testcluster/issues/222
-        #if mode == "di":
-            # Start sg-accel
+        # if mode == "di":
+        #    # Start sg-accel
         #    status = ansible_runner.run_ansible_playbook(
         #        "start-sg-accel.yml",
         #        extra_vars={
