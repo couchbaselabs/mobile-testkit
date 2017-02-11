@@ -85,10 +85,7 @@ def run_gateload_perf_test(gen_gateload_config, test_id, gateload_params):
 
     # write expvars to file, will exit when gateload scenario is done
     print(">>> Logging expvars")
-    try:
-        log_expvars(cluster_config, test_run_id)
-    except Exception as e:
-        log_info("Exception trying to collect expvars: {}", e)
+    log_expvars(cluster_config, test_run_id)
 
     print(">>> Fetch Sync Gateway profile")
     fetch_sync_gateway_profile(cluster_config, test_run_id)
