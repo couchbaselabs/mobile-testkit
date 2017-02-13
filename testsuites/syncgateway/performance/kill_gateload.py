@@ -1,7 +1,8 @@
 import os
-import subprocess
+import sys
 from libraries.provision.ansible_runner import AnsibleRunner
 from keywords.exceptions import ProvisioningError
+
 
 def kill_gateload():
     try:

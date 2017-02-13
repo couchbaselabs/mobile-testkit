@@ -4,7 +4,6 @@
 
 import os
 import shutil
-import sys
 import psutil
 import time
 import argparse
@@ -69,7 +68,6 @@ def collect_profile_loop(final_results_directory, profile_types, format_types, d
 
         try:
 
-
             print("Collecting ...")
             # this is the temp dir where collected files will be stored. will be deleted at end.
 
@@ -104,8 +102,6 @@ def collect_profile_loop(final_results_directory, profile_types, format_types, d
             time.sleep(delay_secs)
 
 
-
-
 if __name__ == "__main__":
 
     main_final_results_directory = "/tmp/sync_gateway_profile"
@@ -125,7 +121,7 @@ if __name__ == "__main__":
     parser.add_argument("--profile-type-cpu", help="Collect cpu profile", action='store_true', default=False)
     parser.add_argument("--profile-type-heap", help="Collect heap profile", action='store_true', default=False)
     parser.add_argument("--profile-type-goroutine", help="Collect goroutine profile", action='store_true', default=False)
-    parser.add_argument("--delay-secs", help="How long to delay in between collections in seconds", default=(9*60))  # mins
+    parser.add_argument("--delay-secs", help="How long to delay in between collections in seconds", default=(9 * 60))  # mins
 
     args = parser.parse_args()
 

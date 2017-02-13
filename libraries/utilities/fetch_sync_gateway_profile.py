@@ -27,7 +27,4 @@ def fetch_sync_gateway_profile(cluster_config, folder_name):
         print("\n")
 
     except Exception as e:
-
         log_info("Exception trying to collect sync gateway profile: {}", e)
-
-

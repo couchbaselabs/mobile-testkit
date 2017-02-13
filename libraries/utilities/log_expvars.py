@@ -104,7 +104,9 @@ def log_expvars(cluster_config, folder_name, sleep_time=30):
     except Exception as e:
         log_info("Exception trying to log expvars: {}".format(e))
 
+
 def wait_for_endpoints_alive_or_raise(endpoints, num_attempts=5):
+
     """
     Wait for the given endpoints to be up or throw an exception
     """
