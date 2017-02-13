@@ -46,7 +46,7 @@ pytest -s \
     --liteserv-port=5000 \
     --liteserv-storage-engine=SQLite \
     --sync-gateway-version=1.4-16 \
-    --sync-gateway-mode=cc \ 
+    --sync-gateway-mode=di \ 
     --server-version=4.6.0-3572 \
     testsuites/listener/shared/client_sg/
 ```

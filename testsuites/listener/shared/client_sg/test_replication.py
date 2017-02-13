@@ -1018,9 +1018,11 @@ def test_verify_open_revs_with_revs_limit_push_conflict(setup_client_syncgateway
 
     client.verify_docs_present(url=sg_admin_url, db=sg_db, expected_docs=ls_db_docs)
 
+    # Update docs on sync gateway
     client.update_docs(url=sg_url, db=sg_db, docs=ls_db_docs, number_updates=num_revs, auth=sg_session)
     sg_current_doc = client.get_doc(url=sg_url, db=sg_db, doc_id="ls_db_2", auth=sg_session)
 
+    # Update docs on client
     client.update_docs(url=ls_url, db=ls_db, docs=ls_db_docs, number_updates=num_revs)
     ls_current_doc = client.get_doc(url=ls_url, db=ls_db, doc_id="ls_db_2")
 
