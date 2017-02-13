@@ -10,7 +10,7 @@ import generate_gateload_configs
 from keywords.exceptions import ProvisioningError
 from libraries.utilities.log_expvars import log_expvars
 from libraries.utilities.fetch_sync_gateway_profile import fetch_sync_gateway_profile
-import kill_gateload
+from kill_gateload import kill_gateload
 
 GateloadParams = collections.namedtuple(
     "GateloadParams",
