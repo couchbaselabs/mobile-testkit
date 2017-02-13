@@ -5,8 +5,8 @@
     "maxCouchbaseConnections": 16,
     "maxFileDescriptors": 90000,
     "slowServerCallWarningThreshold": 60000,
-    "compressResponses": true,
-    "log":["HTTP"],
+    "compressResponses": false,
+    "log":[],
     "databases":{
         "db":{
             "server":"http://{{ couchbase_server_primary_node }}:8091",
