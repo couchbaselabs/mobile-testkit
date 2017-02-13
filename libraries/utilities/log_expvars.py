@@ -44,6 +44,8 @@ def log_expvars(cluster_config, folder_name, sleep_time=30):
     usage: log_expvars.py"
     """
 
+    finished_successfully = True
+
     try:
 
         # Get gateload ips from ansible inventory
@@ -80,6 +82,7 @@ def log_expvars(cluster_config, folder_name, sleep_time=30):
                     dump_results(folder_name, gateload_results, sync_gateway_results)
                 except RequestException as re:
                     # connection to gateload expvars has been closed
+                    finished_successfully = False
                     log_info(re)
                     log_info("Error: {}.  Gateload {} no longer reachable. Writing expvars to {}".format(re, endpoint, folder_name))
                     dump_results(folder_name, gateload_results, sync_gateway_results)
@@ -93,6 +96,7 @@ def log_expvars(cluster_config, folder_name, sleep_time=30):
                     dump_results(folder_name, gateload_results, sync_gateway_results)
                 except RequestException as re:
                     # Should not happen unless sg crashes
+                    finished_successfully = False
                     log_info(re)
                     log_info("ERROR {}: sync_gateway not reachable. Dumping results to {}".format(re, folder_name))
                     dump_results(folder_name, gateload_results, sync_gateway_results)
@@ -103,6 +107,9 @@ def log_expvars(cluster_config, folder_name, sleep_time=30):
 
     except Exception as e:
         log_info("Exception trying to log expvars: {}".format(e))
+        finished_successfully = False
+
+    return finished_successfully
 
 
 def wait_for_endpoints_alive_or_raise(endpoints, num_attempts=5):

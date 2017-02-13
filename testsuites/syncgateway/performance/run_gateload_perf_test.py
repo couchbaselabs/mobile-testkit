@@ -84,13 +84,16 @@ def run_gateload_perf_test(gen_gateload_config, test_id, gateload_params):
 
     # write expvars to file, will exit when gateload scenario is done
     print(">>> Logging expvars")
-    log_expvars(cluster_config, test_run_id)
+    gateload_finished_successfully = log_expvars(cluster_config, test_run_id)
 
     print(">>> Fetch Sync Gateway profile")
     fetch_sync_gateway_profile(cluster_config, test_run_id)
 
     print(">>> Shutdown gateload")
     kill_gateload()
+
+    if not gateload_finished_successfully:
+        raise Exception("It appears that gateload did not finish successfully.  Check logs for details")
 
 
 if __name__ == "__main__":
