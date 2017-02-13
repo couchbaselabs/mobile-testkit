@@ -71,7 +71,7 @@ def test_log_rotation_default_values(params_from_base_test_setup, sg_conf_name, 
     log_info("Using sg_conf: {}".format(sg_conf))
 
     cluster = Cluster(config=cluster_conf)
-    cluster.reset(sg_config_path=sg_conf)
+    #cluster.reset(sg_config_path=sg_conf)
 
     cluster_helper = ClusterKeywords()
     cluster_hosts = cluster_helper.get_cluster_topology(cluster_conf)
@@ -125,7 +125,7 @@ def test_log_rotation_default_values(params_from_base_test_setup, sg_conf_name, 
         call_method_on_object(sg_helper, start_method, cluster_conf, sg_one_url, temp_conf)
         # ~1M MB will be added to log file after requests
         remote_executor.execute(
-            "for ((i=1;i <= 1000;i += 1)); do curl -s http://localhost:4984/ > /dev/null; done")
+            "for ((i=1;i <= 1000;i += 1)); do curl -s http://localhost:4985/ > /dev/null; done")
 
         _, stdout, _ = remote_executor.execute("ls /tmp/sg_logs/ | grep sg_log_rotation | wc -l")
         # verify num of log files
@@ -307,7 +307,7 @@ def test_log_maxage_10_timestamp_ignored(params_from_base_test_setup, sg_conf_na
 
     sg_helper.start_sync_gateway(cluster_config=cluster_conf, url=sg_one_url, config=temp_conf)
     # ~1M MB will be added to log file after requests
-    remote_executor.execute("for ((i=1;i <= 1000;i += 1)); do curl -s http://localhost:4984/ > /dev/null; done")
+    remote_executor.execute("for ((i=1;i <= 1000;i += 1)); do curl -s http://localhost:4985/ > /dev/null; done")
 
     sg_helper.stop_sync_gateway(cluster_config=cluster_conf, url=sg_one_url)
     # change timestamp for log when SG stopped( we don't change file naming)
@@ -425,7 +425,7 @@ def test_log_200mb(params_from_base_test_setup, sg_conf_name):
 
     sg_helper.start_sync_gateway(cluster_config=cluster_conf, url=sg_one_url, config=temp_conf)
     # ~1M MB will be added to log file after requests
-    remote_executor.execute("for ((i=1;i <= 1000;i += 1)); do curl -s http://localhost:4984/ > /dev/null; done")
+    remote_executor.execute("for ((i=1;i <= 1000;i += 1)); do curl -s http://localhost:4985/ > /dev/null; done")
 
     status, stdout, stderr = remote_executor.execute("ls /tmp/sg_logs/ | grep sg_log_rotation | wc -l")
     # backup file should be created with 200MB
@@ -478,7 +478,7 @@ def test_log_number_backups(params_from_base_test_setup, sg_conf_name):
         sg_helper.start_sync_gateway(cluster_config=cluster_conf, url=sg_one_url, config=sg_conf)
         # ~1M MB will be added to log file after requests
         remote_executor.execute(
-            "for ((i=1;i <= 1000;i += 1)); do curl -s http://localhost:4984/ > /dev/null; done")
+            "for ((i=1;i <= 1000;i += 1)); do curl -s http://localhost:4985/ > /dev/null; done")
 
         _, stdout, _ = remote_executor.execute("ls /tmp/sg_logs/ | grep sg_log_rotation | wc -l")
         # max 3 files: 2 backups + 1 log file
@@ -602,7 +602,7 @@ def test_log_maxbackups_0(params_from_base_test_setup, sg_conf_name):
 
     sg_helper.start_sync_gateway(cluster_config=cluster_conf, url=sg_one_url, config=temp_conf)
     # ~1M MB will be added to log file after requests
-    remote_executor.execute("for ((i=1;i <= 1000;i += 1)); do curl -s http://localhost:4984/ > /dev/null; done")
+    remote_executor.execute("for ((i=1;i <= 1000;i += 1)); do curl -s http://localhost:4985/ > /dev/null; done")
 
     status, stdout, stderr = remote_executor.execute("ls /tmp/sg_logs/ | grep sg_log_rotation | wc -l")
     assert stdout[0].rstrip() == '2'
