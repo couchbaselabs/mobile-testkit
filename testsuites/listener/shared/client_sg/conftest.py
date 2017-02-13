@@ -129,7 +129,7 @@ def setup_client_syncgateway_test(request, setup_client_syncgateway_suite):
     except HTTPError as h:
         liteserv.stop()
         logging_helper.fetch_and_analyze_logs(cluster_config=cluster_config, test_name=test_name)
-        raise Exception(h)
+        raise HTTPError(h)
     except:
         logging_helper.fetch_and_analyze_logs(cluster_config=cluster_config, test_name=test_name)
         raise Exception("Something went wrong trying to delete the database", sys.exc_info()[0])
