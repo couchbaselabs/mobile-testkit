@@ -116,7 +116,9 @@ def test_log_rotation_default_values(params_from_base_test_setup, sg_conf_name, 
         json.dump(data, fp)
 
     # For this to work on windows, the cygwin should have the following line in /etc/fstab
-    # C:\tmp / tmp ntfs binary, posix = 0 0 0
+    # C:\tmp /tmp ntfs binary, posix = 0 0 0
+    # A sudo script is also needed on cygwin
+    # #!/usr/bin/bash ; "$@"
     remote_executor.execute("mkdir -p /tmp/sg_logs")
 
     remote_executor.execute("sudo rm -rf /tmp/sg_logs/sg_log_rotation*")
