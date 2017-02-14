@@ -9,7 +9,7 @@ def fetch_sync_gateway_profile(cluster_config, folder_name):
 
     max_num_attempts = 20
 
-    for attempt_number in max_num_attempts:
+    for attempt_number in range(max_num_attempts):
 
         try:
 
