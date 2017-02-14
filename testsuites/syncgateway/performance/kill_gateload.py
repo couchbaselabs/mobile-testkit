@@ -1,7 +1,6 @@
 import os
 import sys
 from libraries.provision.ansible_runner import AnsibleRunner
-from keywords.exceptions import ProvisioningError
 
 
 def kill_gateload():
@@ -16,7 +15,7 @@ def kill_gateload():
 
     status = ansible_runner.run_ansible_playbook("kill-gateload.yml")
     if status != 0:
-        raise ProvisioningError("Failed to kill gatelaod")
+        print("Killing gateload returned non-zero status: {}.  Most likely it was no longer running".format(status))
 
 
 if __name__ == "__main__":
