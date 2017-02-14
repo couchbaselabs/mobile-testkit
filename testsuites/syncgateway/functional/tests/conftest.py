@@ -32,6 +32,10 @@ def pytest_addoption(parser):
                      action="store",
                      help="sync-gateway-version: Sync Gateway version to install (ex. 1.3.1-16 or 590c1c31c7e83503eff304d8c0789bdd268d6291)")
 
+    parser.addoption("--ci",
+                     action="store_true",
+                     help="If set, will target larger cluster (3 backing servers instead of 1, 2 accels if in di mode)")
+
 
 # This will be called once for the at the beggining of the execution in the 'tests/' directory
 # and will be torn down, (code after the yeild) when all the test session has completed.
@@ -46,6 +50,7 @@ def params_from_base_suite_setup(request):
     sync_gateway_version = request.config.getoption("--sync-gateway-version")
     mode = request.config.getoption("--mode")
     skip_provisioning = request.config.getoption("--skip-provisioning")
+    ci = request.config.getoption("--ci")
 
     log_info("server_version: {}".format(server_version))
     log_info("sync_gateway_version: {}".format(sync_gateway_version))
@@ -56,7 +61,13 @@ def params_from_base_suite_setup(request):
     validate_sync_gateway_mode(mode)
 
     # use base_cc cluster config if mode is "cc" or base_di cluster config if more is "di"
-    cluster_config = "{}/base_{}".format(CLUSTER_CONFIGS_DIR, mode)
+    if ci:
+        log_info("Using 'ci_{}' config!".format(mode))
+        cluster_config = "{}/ci_{}".format(CLUSTER_CONFIGS_DIR, mode)
+    else:
+        log_info("Using 'base_{}' config!".format(mode))
+        cluster_config = "{}/base_{}".format(CLUSTER_CONFIGS_DIR, mode)
+
     sg_config = sync_gateway_config_path_for_mode("sync_gateway_default_functional_tests", mode)
 
     # Skip provisioning if user specifies '--skip-provisoning'
