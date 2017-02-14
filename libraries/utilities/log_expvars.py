@@ -82,7 +82,6 @@ def log_expvars(cluster_config, folder_name, sleep_time=30):
                     dump_results(folder_name, gateload_results, sync_gateway_results)
                 except RequestException as re:
                     # connection to gateload expvars has been closed
-                    finished_successfully = False
                     log_info(re)
                     log_info("Error: {}.  Gateload {} no longer reachable. Writing expvars to {}".format(re, endpoint, folder_name))
                     dump_results(folder_name, gateload_results, sync_gateway_results)
