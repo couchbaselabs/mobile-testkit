@@ -16,9 +16,6 @@
     "databases":{
         "db":{
             "feed_type":"DCPSHARD",
-            "feed_params":{
-                "num_shards":16
-            },
             "server":"http://127.0.0.1:8091",
             "bucket":"data-bucket",
             "users":{
@@ -30,6 +27,7 @@
                 }
             },
             "channel_index":{
+                "num_shards":16,
                 "server":"http://127.0.0.1:8091",
                 "bucket":"index-bucket",
                 "writer":true

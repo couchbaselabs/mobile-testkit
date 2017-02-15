@@ -19,9 +19,6 @@
     "databases":{
         "todolite-di":{
             "feed_type":"DCPSHARD",
-            "feed_params":{
-                "num_shards":16
-            },
             "server":"http://{{ couchbase_server_primary_node }}:8091",
             "bucket":"data-bucket",
             "users":{
@@ -33,6 +30,7 @@
                 }
             },
             "channel_index":{
+                "num_shards":16,
                 "server":"http://{{ couchbase_server_primary_node }}:8091",
                 "bucket":"index-bucket",
                 "writer":{{ is_index_writer }}

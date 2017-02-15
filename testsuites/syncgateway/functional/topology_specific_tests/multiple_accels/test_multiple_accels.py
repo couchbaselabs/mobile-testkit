@@ -466,10 +466,8 @@ def test_take_all_sgaccels_down(params_from_base_test_setup, sg_conf):
 def test_missing_num_shards(params_from_base_test_setup, sg_conf):
     """
     1. Launch sg_accels missing the following property in the config.
-        "feed_params":{
-            "num_shards":16
-        }
-    2. Verify there are 64 shards
+        "num_shards":16
+    2. Verify there are 16 shards
     3. Verify they are distributed evenly across the nodes
     """
 
