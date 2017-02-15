@@ -9,4 +9,11 @@
   - name: OS | Disable selinux
     selinux: state=disabled
 
+  - name: OS | Sysctl file to disable memory overcommit
+    copy: src=files/sysctld_disable_memory_overcommit.conf dest=/etc/sysctl.d/20-disable-memory-overcommit.conf owner=root group=root mode=0644
+    sudo: true
+
+  - name: OS | Reload sysctl from config files
+    shell: sysctl --system
+    sudo: true
 

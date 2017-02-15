@@ -18,7 +18,7 @@
     become: yes
 
   - name: SGLOAD | Sysctl file to increase available port range for outgoing socket connections
-    copy: src=files/sysctld.conf dest=/etc/sysctl.d/20-increase-port-range.conf owner=root group=root mode=0644
+    copy: src=files/sysctld_increase_port_range.conf dest=/etc/sysctl.d/20-increase-port-range.conf owner=root group=root mode=0644
     become: yes
 
   - name: SGLOAD | Shell cmd to increase available port range for outgoing socket connections

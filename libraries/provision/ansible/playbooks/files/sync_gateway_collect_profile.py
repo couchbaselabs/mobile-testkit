@@ -4,20 +4,9 @@
 
 import os
 import shutil
-import sys
 import psutil
 import time
-
-profile_types = [
-    "profile",
-    "heap",
-    "goroutine",
-]
-
-format_types = [
-    "pdf",
-    "text",
-]
+import argparse
 
 sg_pprof_url = "http://localhost:4985/_debug/pprof"
 
@@ -35,7 +24,7 @@ def run_command(command):
         raise Exception("{0} failed".format(command))
 
 
-def collect_profiles(results_directory, sg_binary_path):
+def collect_profiles(results_directory, sg_binary_path, profile_types, format_types):
 
     # make sure raw profile gz files end up in results dir
     os.environ["PPROF_TMPDIR"] = results_directory
@@ -71,36 +60,15 @@ def compress_and_copy(results_directory, final_results_directory):
     shutil.copy("{0}/{1}".format(results_directory, filename), final_results_directory)
 
 
-if __name__ == "__main__":
+def collect_profile_loop(final_results_directory, profile_types, format_types, delay_secs):
 
-    # get commit from command line args and validate
-    if len(sys.argv) <= 1:
-        raise Exception("Usage: {0} <path-sync-gw-binary>".format(sys.argv[0]))
+    os.makedirs(final_results_directory)
 
-    sg_binary_path = sys.argv[1]
+    while True:
 
-    final_results_directory = "/tmp/sync_gateway_profile"
-
-    if os.path.exists(final_results_directory):
-        print("Deleting existing directory")
-        shutil.rmtree(final_results_directory)
-
-    if os.path.exists("{0}.tar.gz".format(final_results_directory)):
-        print("Removing existing results")
-        os.remove("{0}.tar.gz".format(final_results_directory))
-
-    os.makedirs("/tmp/sync_gateway_profile/")
-
-    minutes_elapsed = 0
-    while is_running("sync_gateway") or is_running("sg_accel"):
-
-        print("Polling ...")
-
-        # only cature profile every ~9 mins
-        if minutes_elapsed % 9 == 0:
+        try:
 
             print("Collecting ...")
-
             # this is the temp dir where collected files will be stored. will be deleted at end.
 
             results_directory = "/tmp/sync_gateway_profile_temp"
@@ -109,7 +77,12 @@ if __name__ == "__main__":
                 shutil.rmtree(results_directory)
             os.makedirs(results_directory)
 
-            collect_profiles(results_directory, sg_binary_path)
+            collect_profiles(
+                results_directory,
+                sg_binary_path,
+                profile_types,
+                format_types,
+            )
 
             compress_and_copy(results_directory, final_results_directory)
 
@@ -119,12 +92,65 @@ if __name__ == "__main__":
             # package the all of the profile results
             run_command("tar cvfz {0}.tar.gz {1}".format(final_results_directory, final_results_directory))
 
-            # takes 1 min for collection
-            minutes_elapsed += 1
-            continue
+            print("Waiting {} before collecting next profile".format(delay_secs))
 
-        # wait one minute
-        time.sleep(60)
-        minutes_elapsed += 1
+            time.sleep(delay_secs)
 
-    shutil.rmtree(final_results_directory)
+        except:
+
+            print("Exception trying to collect profile.  Will sleep {} seconds and try again".format(delay_secs))
+            time.sleep(delay_secs)
+
+
+if __name__ == "__main__":
+
+    main_final_results_directory = "/tmp/sync_gateway_profile"
+
+    if os.path.exists(main_final_results_directory):
+        print("Deleting existing directory")
+        shutil.rmtree(main_final_results_directory)
+
+    if os.path.exists("{0}.tar.gz".format(main_final_results_directory)):
+        print("Removing existing results")
+        os.remove("{0}.tar.gz".format(main_final_results_directory))
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--sg-binary", help="Path to Sync Gateway binary", required=True)
+    parser.add_argument("--format-type-pdf", help="Collect pdf format", action='store_true', default=False)
+    parser.add_argument("--format-type-text", help="Collect text format", action='store_true', default=False)
+    parser.add_argument("--profile-type-cpu", help="Collect cpu profile", action='store_true', default=False)
+    parser.add_argument("--profile-type-heap", help="Collect heap profile", action='store_true', default=False)
+    parser.add_argument("--profile-type-goroutine", help="Collect goroutine profile", action='store_true', default=False)
+    parser.add_argument("--delay-secs", help="How long to delay in between collections in seconds", default=(9 * 60))  # mins
+
+    args = parser.parse_args()
+
+    sg_binary_path = args.sg_binary
+
+    format_types = []
+    profile_types = []
+
+    if args.format_type_pdf:
+        format_types.append("pdf")
+    if args.format_type_text:
+        format_types.append("text")
+
+    if len(format_types) == 0:
+        raise Exception("You must select at least one format type")
+
+    if args.profile_type_cpu:
+        profile_types.append("profile")
+    if args.profile_type_heap:
+        profile_types.append("heap")
+    if args.profile_type_goroutine:
+        profile_types.append("goroutine")
+
+    if len(profile_types) == 0:
+        raise Exception("You must select at least one profile type")
+
+    collect_profile_loop(
+        main_final_results_directory,
+        profile_types,
+        format_types,
+        int(args.delay_secs),
+    )
