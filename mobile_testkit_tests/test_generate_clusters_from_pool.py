@@ -91,7 +91,7 @@ def test_generate_clusters_from_pool_ip_to_node(cleanup_folder, cluster_conf, nu
     generate_clusters_from_pool(ip_to_node_type_pool_file)
 
     # Verification
-    # mock_pool_ip_to_node_type.json will generate 40 ansible+json
+    # mock_pool_ip_to_node_type.json will generate 42 ansible+json
     assert len([name for name in os.listdir(cluster_config_dir)]) == 42
 
     # We will check 2 files for content 1cbs/1cbs.json
