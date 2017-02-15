@@ -93,7 +93,7 @@ def run_gateload_perf_test(gen_gateload_config, test_id, gateload_params):
     kill_gateload()
 
     if not gateload_finished_successfully:
-        raise Exception("It appears that gateload did not finish successfully.  Check logs for details")
+        raise RuntimeError("It appears that gateload did not finish successfully.  Check logs for details")
 
 
 if __name__ == "__main__":
