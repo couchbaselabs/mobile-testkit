@@ -104,7 +104,7 @@ def log_expvars(cluster_config, folder_name, sleep_time=30):
             log_info("Elapsed: {} minutes".format((time.time() - start_time) / 60.0))
             time.sleep(sleep_time)
 
-    except Exception as e:
+    except RuntimeError as e:
         log_info("Exception trying to log expvars: {}".format(e))
         finished_successfully = False
 
@@ -138,7 +138,7 @@ def wait_for_endpoints_alive_or_raise(endpoints, num_attempts=5):
 
         time.sleep(i * 2)
 
-    raise Exception("Give up waiting for endpoints after {} attempts".format(num_attempts))
+    raise RuntimeError("Give up waiting for endpoints after {} attempts".format(num_attempts))
 
 if __name__ == "__main__":
 
