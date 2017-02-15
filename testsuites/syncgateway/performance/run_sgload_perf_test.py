@@ -10,6 +10,7 @@ from libraries.provision.ansible_runner import AnsibleRunner
 from keywords.exceptions import ProvisioningError
 
 from libraries.utilities.provisioning_config_parser import hosts_for_tag
+from libraries.utilities.fetch_sync_gateway_profile import fetch_sync_gateway_profile
 
 from keywords.utils import log_info
 from keywords.RemoteExecutor import RemoteExecutor
@@ -96,6 +97,13 @@ def run_sgload_perf_test(cluster_config, sgload_arg_list_main, skip_build_sgload
     print("Running sgload perf test against cluster: {}".format(cluster_config))
     main_ansible_runner = AnsibleRunner(cluster_config)
 
+    print(">>> Starting profile collection scripts")
+    status = main_ansible_runner.run_ansible_playbook(
+        "start-profile-collection.yml",
+        extra_vars={},
+    )
+    assert status == 0, "Could not start profiling collection scripts"
+
     # Install + configure telegraf
     status = main_ansible_runner.run_ansible_playbook("install-telegraf.yml")
     if status != 0:
@@ -147,3 +155,7 @@ if __name__ == "__main__":
         sgload_arg_list_main,
         known_args.skip_build_sgload,
     )
+
+    folder_name = "profile"  # TODO: not really sure what to use here..
+
+    fetch_sync_gateway_profile(main_cluster_config, folder_name)

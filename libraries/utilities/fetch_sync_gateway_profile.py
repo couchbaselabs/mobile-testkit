@@ -1,5 +1,7 @@
 import os.path
 import shutil
+import sys
+
 from libraries.provision.ansible_runner import AnsibleRunner
 
 
@@ -21,3 +23,16 @@ def fetch_sync_gateway_profile(cluster_config, folder_name):
         shutil.move("/tmp/sync_gateway_profile", "testsuites/syncgateway/performance/results/{}/".format(folder_name))
 
     print("\n")
+
+
+if __name__ == "__main__":
+
+    try:
+        cluster_config = os.environ["CLUSTER_CONFIG"]
+    except KeyError:
+        print ("Make sure CLUSTER_CONFIG is defined and pointing to the configuration you would like to provision")
+        sys.exit(1)
+
+    folder_name = "profile"  # TODO: not really sure what to use here..
+
+    fetch_sync_gateway_profile(cluster_config, folder_name)
