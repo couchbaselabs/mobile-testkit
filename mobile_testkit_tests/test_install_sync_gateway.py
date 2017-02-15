@@ -69,9 +69,6 @@ def test_get_buckets_from_sync_gateway_config_template_vars():
     "databases":{
         "db":{
             "feed_type":"DCPSHARD",
-            "feed_params":{
-                "num_shards":16
-            },
             "server":"http://{{ couchbase_server_primary_node }}:8091",
             "bucket":"data-bucket",
             "users":{
@@ -83,6 +80,7 @@ def test_get_buckets_from_sync_gateway_config_template_vars():
                 }
             },
             "channel_index":{
+                "num_shards":16,
                 "server":"http://{{ couchbase_server_primary_node }}:8091",
                 "bucket":"index-bucket",
                 "writer":{{ is_index_writer }}

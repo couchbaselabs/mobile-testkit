@@ -411,8 +411,6 @@ class MobileRestClient:
 
             # Add additional information if running in distributed index mode
             if sync_gateway_mode == "di":
-                data["feed_type"] = "DCPSHARD"
-                data["feed_params"] = {"num_shards": 16}
                 data["channel_index"] = {
                     "server": server_url,
                     "bucket": index_bucket_name,

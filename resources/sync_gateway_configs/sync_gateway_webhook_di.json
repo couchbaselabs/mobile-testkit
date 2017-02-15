@@ -16,9 +16,6 @@
     "databases":{
         "db":{
             "feed_type":"DCPSHARD",
-            "feed_params":{
-                "num_shards":16
-            },
             "offline":false,
             "server":"http://{{ couchbase_server_primary_node }}:8091",
             "bucket":"data-bucket",
@@ -31,6 +28,7 @@
                "db_state_changed":[{"handler":"webhook","max_processes" : 500,"wait_for_process" : "600000","url":"http://{{ webhook_ip }}:8080","timeout":60}]
             },
             "channel_index":{
+                "num_shards":16,
                 "server":"http://{{ couchbase_server_primary_node }}:8091",
                 "bucket":"index-bucket",
                 "writer":{{ is_index_writer }}
