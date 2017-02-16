@@ -42,8 +42,6 @@ def test_rollback_server_reset(params_from_base_test_setup, sg_conf_name):
     sg_admin_url = topology["sync_gateways"][0]["admin"]
     cb_server_url = topology["couchbase_servers"][0]
     sg_db = "db"
-    num_docs = 1000
-
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
 
     cluster = Cluster(cluster_config)
@@ -70,7 +68,7 @@ def test_rollback_server_reset(params_from_base_test_setup, sg_conf_name):
     # create a doc that will hash to each vbucket in parallel except for vbucket 66
     doc_id_for_every_vbucket_except_66 = []
     with concurrent.futures.ProcessPoolExecutor() as pex:
-        futures = [pex.submit(document.generate_doc_id_for_vbucket, i)for i in range(1024) if i != 66]
+        futures = [pex.submit(document.generate_doc_id_for_vbucket, i) for i in range(1024) if i != 66]
         for future in concurrent.futures.as_completed(futures):
             doc_id = future.result()
             doc = document.create_doc(
