@@ -282,6 +282,6 @@ def validate_cluster(sync_gateways, sg_accels, config):
 
     # If we are using a Distributed Index config, make sure that we have sg-accels
     if config.mode == "di" and len(sg_accels) == 0:
-        return False, "INVALID CONFIG: Running in Distributed Index mode but no sg_accels are defined.  Config: {}".format(config)
+        return False, "INVALID CONFIG: Running in Distributed Index mode but no sg_accels are defined."
 
     return True, ""

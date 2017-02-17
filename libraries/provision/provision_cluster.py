@@ -11,10 +11,13 @@ from install_sync_gateway import SyncGatewayConfig
 from install_nginx import install_nginx
 
 from libraries.provision.install_deps import install_deps
+from libraries.testkit.config import Config
 
 from keywords.utils import log_info
 from keywords.utils import version_and_build
 from libraries.testkit.cluster import validate_cluster
+from libraries.testkit.cluster import Cluster
+
 
 def provision_cluster(cluster_config, couchbase_server_config, sync_gateway_config):
 
@@ -30,11 +33,17 @@ def provision_cluster(cluster_config, couchbase_server_config, sync_gateway_conf
         log_info("Invalid sync_gateway provisioning configuration. Exiting ...")
         sys.exit(1)
 
-    validate_cluster(
-        cluster_config.sync_gateways, 
-        cluster_config.sg_accels,
-        sync_gateway_config,
+    cluster = Cluster(config=cluster_config)
+    config_path_full = os.path.abspath(sync_gateway_config.config_path)
+    config = Config(config_path_full)
+
+    is_valid, reason = validate_cluster(
+        cluster.sync_gateways,
+        cluster.sg_accels,
+        config,
     )
+    if not is_valid:
+        raise RuntimeError(reason)
 
     log_info(">>> Provisioning cluster...")
 
