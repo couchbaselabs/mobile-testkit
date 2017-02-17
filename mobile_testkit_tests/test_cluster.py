@@ -1,10 +1,5 @@
-
 from libraries.testkit.cluster import validate_cluster
 from libraries.testkit.config import Config
-
-import pytest
-
-from utilities import scan_logs
 
 
 def test_validate_cluster():
@@ -17,8 +12,8 @@ def test_validate_cluster():
     config.mode = "di"
 
     is_valid, _ = validate_cluster(sync_gateways, sg_accels, config)
-    assert is_valid == False
+    assert is_valid is False
 
     sg_accels.append("sga1")
     is_valid, _ = validate_cluster(sync_gateways, sg_accels, config)
-    assert is_valid == True
+    assert is_valid is True

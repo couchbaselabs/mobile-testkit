@@ -57,7 +57,6 @@ class Cluster:
         # for integrating keywords
         self.cb_server = couchbaseserver.CouchbaseServer(self.servers[0].url)
 
-
     def reset(self, sg_config_path):
 
         ansible_runner = AnsibleRunner(self._cluster_config)
@@ -141,7 +140,6 @@ class Cluster:
             log_info(">>> Running in channel cache")
 
         return mode
-
 
     def save_cbgt_diagnostics(self):
 
