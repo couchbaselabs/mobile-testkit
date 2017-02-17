@@ -106,7 +106,6 @@ def setup_client_syncgateway_test(request, setup_client_syncgateway_suite):
     cluster_helper = ClusterKeywords()
     cluster_hosts = cluster_helper.get_cluster_topology(cluster_config=cluster_config)
 
-    cb_server_url = cluster_hosts["couchbase_servers"][0]
     sg_url = cluster_hosts["sync_gateways"][0]["public"]
     sg_admin_url = cluster_hosts["sync_gateways"][0]["admin"]
 
@@ -116,8 +115,7 @@ def setup_client_syncgateway_test(request, setup_client_syncgateway_suite):
         "sg_mode": setup_client_syncgateway_suite["sg_mode"],
         "ls_url": ls_url,
         "sg_url": sg_url,
-        "sg_admin_url": sg_admin_url,
-        "cb_server_url": cb_server_url
+        "sg_admin_url": sg_admin_url
     }
 
     log_info("Tearing down test")
