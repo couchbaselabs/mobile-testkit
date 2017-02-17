@@ -5,4 +5,6 @@ remote_user = vagrant
 ; prevent socket names that may be too long with (AWS host names)
 [ssh_connection]
 control_path = %(directory)s/%%h-%%r
+
+; Increase number of concurrent ssh connections that ansible uses. 
 forks = 100
