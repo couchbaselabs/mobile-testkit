@@ -15,6 +15,9 @@ class Config:
         self.mode = None
         self.bucket_name_set = []
 
+        if not conf_path:
+            return
+
         with open(conf_path, "r") as config:
 
             data = config.read()
