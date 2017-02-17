@@ -14,7 +14,9 @@ NUM_VBUCKETS = 1024
 
 
 def get_vbucket_number(key):
-    """ Return the vbucket number for a given key. """
+    """ Return the vbucket number for a given key.
+        Taken from https://github.com/abhinavdangeti/cbTools/blob/f51f80b1eec5993a99fe49b45631e880b6835dc8/targetKeys.py#L6
+    """
     return (((zlib.crc32(key)) >> 16) & 0x7fff) & (NUM_VBUCKETS - 1)
 
 
