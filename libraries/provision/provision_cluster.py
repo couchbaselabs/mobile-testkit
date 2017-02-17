@@ -14,7 +14,7 @@ from libraries.provision.install_deps import install_deps
 
 from keywords.utils import log_info
 from keywords.utils import version_and_build
-
+from libraries.testkit.cluster import validate_cluster
 
 def provision_cluster(cluster_config, couchbase_server_config, sync_gateway_config):
 
@@ -29,6 +29,12 @@ def provision_cluster(cluster_config, couchbase_server_config, sync_gateway_conf
     if not sync_gateway_config.is_valid():
         log_info("Invalid sync_gateway provisioning configuration. Exiting ...")
         sys.exit(1)
+
+    validate_cluster(
+        cluster_config.sync_gateways, 
+        cluster_config.sg_accels,
+        sync_gateway_config,
+    )
 
     log_info(">>> Provisioning cluster...")
 
