@@ -40,3 +40,7 @@ class TimeoutError(Error):
 
 class ClusterError(Error):
     pass
+
+
+class DocumentError(Error):
+    pass

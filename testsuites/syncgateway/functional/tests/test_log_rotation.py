@@ -7,7 +7,7 @@ from jinja2 import Template
 
 from keywords import utils
 from keywords.ClusterKeywords import ClusterKeywords
-from keywords.RemoteExecutor import RemoteExecutor
+from keywords.remoteexecutor import RemoteExecutor
 from keywords.SyncGateway import SyncGateway
 from keywords.SyncGateway import sync_gateway_config_path_for_mode
 from keywords.exceptions import ProvisioningError

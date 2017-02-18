@@ -12,7 +12,7 @@ from couchbase.exceptions import NotFoundError
 
 
 import keywords.constants
-from keywords.RemoteExecutor import RemoteExecutor
+from keywords.remoteexecutor import RemoteExecutor
 from keywords.exceptions import CBServerError
 from keywords.exceptions import ProvisioningError
 from keywords.exceptions import TimeoutError
@@ -557,3 +557,36 @@ class CouchbaseServer:
         command = "sudo service couchbase-server stop"
         self.remote_executor.must_execute(command)
         self._verify_stopped()
+
+    def delete_vbucket(self, vbucket_number, bucket_name):
+        """ Deletes a vbucket file for a number and bucket"""
+
+        vbucket_filename = "{}.couch.1".format(vbucket_number)
+
+        # Delete some vBucket file to start a server rollback
+        # Example vbucket files - 195.couch.1  310.couch.1  427.couch.1  543.couch.1
+        log_info("Deleting vBucket file '66.couch.1'")
+        self.remote_executor.must_execute('sudo find /opt/couchbase/var/lib/couchbase/data/data-bucket -name "{}" -delete'.format(vbucket_filename))
+        log_info("Listing vBucket files ...")
+        out, err = self.remote_executor.must_execute("sudo ls /opt/couchbase/var/lib/couchbase/data/{}/".format(bucket_name))
+
+        # out format: [u'0.couch.1     264.couch.1  44.couch.1\t635.couch.1  820.couch.1\r\n',
+        # u'1000.couch.1  265.couch.1 ...]
+        vbucket_files = []
+        for entry in out:
+            vbucket_files.extend(entry.split())
+
+        # Verify that the vBucket files starting with 5 are all gone
+        log_info("Verifing vBucket files are deleted ...")
+
+        # Try to catch potential silent failures from the remote executor
+        if len(vbucket_files) < 1:
+            raise CBServerError("No vbucket files found on server!")
+
+        # Verify vbucket file no longer exists
+        if vbucket_filename in vbucket_files:
+            raise CBServerError("Found vbucket file: {}! This should have been removed")
+
+    def restart(self):
+        """ Restarts a couchbase server """
+        self.remote_executor.must_execute("sudo systemctl restart couchbase-server")
