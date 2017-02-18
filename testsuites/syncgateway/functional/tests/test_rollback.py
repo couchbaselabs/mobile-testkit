@@ -33,6 +33,8 @@ def test_rollback_server_reset(params_from_base_test_setup, sg_conf_name):
     6.
     """
 
+    num_vbuckets = 1024
+
     cluster_config = params_from_base_test_setup["cluster_config"]
     topology = params_from_base_test_setup["cluster_topology"]
     mode = params_from_base_test_setup["mode"]
@@ -69,7 +71,7 @@ def test_rollback_server_reset(params_from_base_test_setup, sg_conf_name):
     # create a doc that will hash to each vbucket in parallel except for vbucket 66
     doc_id_for_every_vbucket_except_66 = []
     with concurrent.futures.ProcessPoolExecutor() as pex:
-        futures = [pex.submit(document.generate_doc_id_for_vbucket, i) for i in range(1024) if i != 66]
+        futures = [pex.submit(document.generate_doc_id_for_vbucket, i) for i in range(num_vbuckets) if i != 66]
         for future in concurrent.futures.as_completed(futures):
             doc_id = future.result()
             doc = document.create_doc(
@@ -88,14 +90,17 @@ def test_rollback_server_reset(params_from_base_test_setup, sg_conf_name):
     seth_docs = client.add_bulk_docs(url=sg_url, db=sg_db, docs=doc_id_for_every_vbucket_except_66, auth=seth_session)
     seth_66_docs = client.add_bulk_docs(url=sg_url, db=sg_db, docs=vbucket_66_docs, auth=seth_session)
 
-    assert len(seth_docs) == 1023
+    assert len(seth_docs) == num_vbuckets - 1
     assert len(seth_66_docs) == 5
 
     # Verify the all docs show up in seth's changes feed
+    all_docs = seth_docs + seth_66_docs
+    assert len(all_docs) == (num_vbuckets - 1) + 5
+
     client.verify_docs_in_changes(
         url=sg_url,
         db=sg_db,
-        expected_docs=seth_docs + seth_66_docs,
+        expected_docs=all_docs,
         auth=seth_session
     )
 
@@ -122,6 +127,6 @@ def test_rollback_server_reset(params_from_base_test_setup, sg_conf_name):
 
     # Get a list of all the changes ids that are not the user doc
     changes_ids = [change["id"] for change in changes["results"] if not change["id"].startswith("_user")]
-    assert len(changes_ids) == 1023
+    assert len(changes_ids) == num_vbuckets - 1
     for doc in seth_66_docs:
         assert doc["id"] not in changes_ids
