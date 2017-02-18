@@ -9,9 +9,8 @@ from libraries.testkit.cluster import Cluster
 from keywords.MobileRestClient import MobileRestClient
 from keywords.SyncGateway import sync_gateway_config_path_for_mode
 
-from keywords import remoteexecutor
+from keywords import couchbaseserver
 from keywords import userinfo
-from keywords import utils
 from keywords import document
 
 
@@ -41,6 +40,8 @@ def test_rollback_server_reset(params_from_base_test_setup, sg_conf_name):
     sg_url = topology["sync_gateways"][0]["public"]
     sg_admin_url = topology["sync_gateways"][0]["admin"]
     cb_server_url = topology["couchbase_servers"][0]
+    cb_server = couchbaseserver.CouchbaseServer(cb_server_url)
+
     sg_db = "db"
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
 
@@ -98,32 +99,17 @@ def test_rollback_server_reset(params_from_base_test_setup, sg_conf_name):
         auth=seth_session
     )
 
-    rex = remoteexecutor.RemoteExecutor(utils.host_for_url(cb_server_url))
-    # Delete some vBucket file to start a server rollback
-    # Example vbucket files - 195.couch.1  310.couch.1  427.couch.1  543.couch.1
-    log_info("Deleting vBucket file '66.couch.1'")
-    rex.must_execute('sudo find /opt/couchbase/var/lib/couchbase/data/data-bucket -name "66.couch.1" -delete')
-    log_info("Listing vBucket files ...")
-    out, err = rex.must_execute("sudo ls /opt/couchbase/var/lib/couchbase/data/data-bucket/")
-
-    # out format: [u'0.couch.1     264.couch.1  44.couch.1\t635.couch.1  820.couch.1\r\n',
-    # u'1000.couch.1  265.couch.1 ...]
-    vbucket_files = []
-    for entry in out:
-        vbucket_files.extend(entry.split())
-
-    # Verify that the vBucket files starting with 5 are all gone
-    log_info("Verifing vBucket files are deleted ...")
-    assert "66.couch.1" not in vbucket_files
-
-    # Restart the server
-    rex.must_execute("sudo systemctl restart couchbase-server")
+    # Delete vbucket and restart server
+    cb_server.delete_vbucket(66, "data-bucket")
+    cb_server.restart()
 
     max_retries = 20
     count = 0
     while count != max_retries:
         # Try to get changes, sync gateway should be able to recover and return changes
         try:
+            # A changes since=0 should now be in a rolled back state due to the data loss from the removed vbucket
+            # Seth should only see the docs not present in vbucket 66, unlike all the docs as above.
             changes = client.get_changes(url=sg_url, db=sg_db, since=0, auth=seth_session)
             break
         except requests.exceptions.HTTPError as he:
