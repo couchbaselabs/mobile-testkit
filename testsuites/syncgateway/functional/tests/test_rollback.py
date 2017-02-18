@@ -123,6 +123,10 @@ def test_rollback_server_reset(params_from_base_test_setup, sg_conf_name):
             time.sleep(1)
             count += 1
 
+    # Make sure there are a few retries to ensure that server did go down and up
+    assert count > 1
+
+    # Make sure retries did not exceed expected max
     assert count != max_retries
 
     # Get a list of all the changes ids that are not the user doc
