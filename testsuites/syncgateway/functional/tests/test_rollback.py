@@ -45,6 +45,10 @@ def test_rollback_server_reset(params_from_base_test_setup, sg_conf_name):
     cb_server = couchbaseserver.CouchbaseServer(cb_server_url)
 
     sg_db = "db"
+
+    if mode == "cc":
+        pytest.skip("Rollback not supported in channel cache mode")
+
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
 
     cluster = Cluster(cluster_config)
