@@ -120,3 +120,30 @@ class LiteServXamarinAndroid(LiteServAndroid):
 
         if count == MAX_RETRIES:
             raise LiteServError("Could not send initial request to LiteServ")
+
+    def _verify_launched(self):
+        """ Poll on expected http://<host>:<port> until it is reachable
+        Assert that the response contains the expected version information
+        """
+        resp_obj = self._wait_until_reachable()
+        log_info(resp_obj)
+
+        # Version format - 'version': '.NET LGE Nexus 5 API23/armeabi-v7a 1.4-b044/3ba174e'
+        version_info = resp_obj["version"].split()[-1]
+
+        # 1.4-b044/3ba174e
+        resp_version_build = version_info.split("/")[0]
+
+        # 1.4-b044
+        version_build_parts = resp_version_build.split("-")
+        version = version_build_parts[0]
+
+        # Strip b and leading 0's
+        build = str(int(version_build_parts[1].replace("b", "")))
+
+        # Format as 1.4-44
+        running_version_build = "{}-{}".format(version, build)
+
+        if running_version_build != self.version_build:
+            raise LiteServError("Expected version: {} does not match running version: {}".format(
+                self.version_build, running_version_build))
