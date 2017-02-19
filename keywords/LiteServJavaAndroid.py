@@ -65,12 +65,13 @@ class LiteServJavaAndroid(LiteServAndroid):
         self.install_apk(apk_path, "com.couchbase.liteservandroid")
 
     def stop(self):
-        self.stop_apk("com.couchbase.liteservandroid")
+        self.stop_activity("com.couchbase.liteservandroid")
 
     def remove(self):
         self.remove_apk("com.couchbase.liteservandroid")
 
     def launch_and_verify(self):
+
         encryption_enabled = False
         if self.storage_engine == "SQLCipher" or self.storage_engine == "ForestDB+Encryption":
             encryption_enabled = True
