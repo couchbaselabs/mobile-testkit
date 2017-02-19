@@ -7,6 +7,15 @@ from keywords.utils import log_info
 
 class LiteServAndroid(LiteServBase):
 
+    def download(self):
+        raise NotImplementedError("Should be implemented in subclasses")
+
+    def install(self):
+        raise NotImplementedError("Should be implemented in subclasses")
+
+    def remove(self):
+        raise NotImplementedError("Should be implemented in subclasses")
+
     def install_apk(self, apk_path, apk_id):
         """Install the apk to running Android device or emulator"""
         log_info("Installing: {}".format(apk_path))
@@ -74,6 +83,9 @@ class LiteServAndroid(LiteServBase):
         self.launch_and_verify()
 
         return "http://{}:{}".format(self.host, self.port)
+
+    def stop(self):
+        raise NotImplementedError()
 
     def launch_and_verify(self):
         raise NotImplementedError()
