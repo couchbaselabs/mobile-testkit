@@ -88,7 +88,7 @@ class LiteServAndroid(LiteServBase):
             raise LiteServError("Expected version: {} does not match running version: {}".format(
                 self.version_build, resp_obj["version"]))
 
-    def stop_apk(self, apk_id):
+    def stop_activity(self, apk_id):
         """
         1. Flush and close the logfile capturing the LiteServ output
         2. Kill the LiteServ activity and clear the package data
