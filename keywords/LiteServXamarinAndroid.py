@@ -16,6 +16,7 @@ from keywords.utils import log_info
 
 
 class LiteServXamarinAndroid(LiteServAndroid):
+
     activity_name = "com.couchbase.liteserv/com.couchbase.liteserv.MainActivity"
 
     def download(self):
@@ -61,7 +62,7 @@ class LiteServXamarinAndroid(LiteServAndroid):
         self.install_apk(apk_path, "com.couchbase.liteserv")
 
     def stop(self):
-        self.stop_apk("com.couchbase.liteserv")
+        self.stop_activity("com.couchbase.liteserv")
 
     def remove(self):
         self.remove_apk("com.couchbase.liteserv")
