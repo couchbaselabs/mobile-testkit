@@ -91,14 +91,7 @@ class LiteServAndroid(LiteServBase):
         raise NotImplementedError()
 
     def _verify_launched(self):
-        """ Poll on expected http://<host>:<port> until it is reachable
-        Assert that the response contains the expected version information
-        """
-        resp_obj = self._wait_until_reachable()
-        log_info(resp_obj)
-        if resp_obj["version"] != self.version_build:
-            raise LiteServError("Expected version: {} does not match running version: {}".format(
-                self.version_build, resp_obj["version"]))
+        raise NotImplementedError("Should be implemented in subclasses")
 
     def stop_activity(self, apk_id):
         """
