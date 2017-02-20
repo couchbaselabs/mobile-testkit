@@ -17,6 +17,7 @@ from keywords import document
 @pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.changes
+@pytest.mark.skip(reason="https://github.com/couchbaselabs/mobile-testkit/issues/979")
 @pytest.mark.parametrize("sg_conf_name", [
     "sync_gateway_default"
 ])
@@ -26,11 +27,12 @@ def test_rollback_server_reset(params_from_base_test_setup, sg_conf_name):
 
     Scenario
     1. Create user (seth:pass) and session
-    2. Add 1000 docs with uuid id's
-    3. Verify the docs show up in seth's changes feed
-    4. Delete vBucket files on server
-    5. Restart server
-    6.
+    2. Add docs targeting all vbuckets except 66
+    3. Add docs to vbucket 66
+    4. Verify the docs show up in seth's changes feed
+    5. Delete vBucket 66 file on server
+    6. Restart server
+    7. User should only see docs not in vbucket 66
     """
 
     num_vbuckets = 1024
