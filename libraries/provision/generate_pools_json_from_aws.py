@@ -43,14 +43,21 @@ def main():
 
     pool_dns_addresses = get_public_dns_names_cloudformation_stack(opts.stackname)
 
-    print("pool_dns_addresses: {}".format(pool_dns_addresses))
+    private_dns_names = get_private_dns_names_cloudformation_stack(opts.stackname)
 
-    write_to_file(pool_dns_addresses, opts.targetfile)
+    print("pool public dns addresses: {}".format(pool_dns_addresses))
+    print("pool private dns addresses: {}".format(private_dns_names))
+
+    write_to_file(
+        pool_dns_addresses,
+        private_dns_names,
+        opts.targetfile,
+    )
 
     print "Generated {}".format(opts.targetfile)
 
 
-def get_public_dns_names_cloudformation_stack(stackname):
+def get_instances_for_stack(stackname):
 
     """
     Blocks until CloudFormation stack is fully up and running and all EC2 instances
@@ -74,8 +81,23 @@ def get_public_dns_names_cloudformation_stack(stackname):
     # wait until all ec2 instances are listening on port 22
     wait_until_sshd_port_listening(instances_for_stack)
 
+    return instances_for_stack
+
+
+def get_public_dns_names_cloudformation_stack(stackname):
+
+    instances_for_stack = get_instances_for_stack(stackname)
+
     # get public_dns_name for all instances
     return get_public_dns_names(instances_for_stack)
+
+
+def get_private_dns_names_cloudformation_stack(stackname):
+
+    instances_for_stack = get_instances_for_stack(stackname)
+
+    # get public_dns_name for all instances
+    return get_private_dns_names(instances_for_stack)
 
 
 def get_instance_ids_for_stack(stackname):
@@ -196,7 +218,12 @@ def get_public_dns_names(instances):
     return [instance.public_dns_name for instance in instances]
 
 
-def write_to_file(cloud_formation_stack_dns_addresses, filename):
+def get_private_dns_names(instances):
+
+    return [instance.private_dns_name for instance in instances]
+
+
+def write_to_file(public_ips, private_dns_names, filename):
     """
     {
         "ips": [
@@ -205,7 +232,10 @@ def write_to_file(cloud_formation_stack_dns_addresses, filename):
         ]
     }
     """
-    output_dictionary = {"ips": cloud_formation_stack_dns_addresses}
+    output_dictionary = {
+        "ips": public_ips,
+        "private_dns_names": private_dns_names,
+    }
 
     with open(filename, 'w') as target:
         target.write(json.dumps(output_dictionary, sort_keys=True, indent=4, separators=(',', ': ')))
