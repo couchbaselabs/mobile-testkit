@@ -82,9 +82,6 @@ class LiteServNetMono(LiteServBase):
         4. eturn the url of the running LiteServ
         """
 
-        if self.ssl_enabled:
-            raise NotImplementedError("Implement ssl on mono")
-
         self._verify_not_running()
 
         # The package structure for LiteServ is different pre 1.4. Handle for this case
@@ -99,6 +96,9 @@ class LiteServNetMono(LiteServBase):
             "--port", str(self.port),
             "--dir", "{}/dbs/net-mono/".format(RESULTS_DIR)
         ]
+
+        if self.ssl_enabled:
+            process_args.append("--ssl")
 
         if self.storage_engine == "ForestDB" or self.storage_engine == "ForestDB+Encryption":
             process_args.append("--storage")

@@ -81,9 +81,6 @@ class LiteServMacOSX(LiteServBase):
         4. Return the url of the running LiteServ
         """
 
-        if self.ssl_enabled:
-            raise NotImplementedError("Implement ssl on Mac")
-
         self._verify_not_running()
 
         binary_path = "{}/couchbase-lite-macosx-enterprise_{}/LiteServ".format(BINARY_DIR, self.version_build)
@@ -99,6 +96,9 @@ class LiteServMacOSX(LiteServBase):
             "--port", str(self.port),
             "--dir", "{}/dbs/macosx/".format(RESULTS_DIR)
         ]
+
+        if self.ssl_enabled:
+            process_args.append("--ssl")
 
         if self.storage_engine == "ForestDB" or self.storage_engine == "ForestDB+Encryption":
             process_args.append("--storage")
