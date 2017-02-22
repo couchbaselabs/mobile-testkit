@@ -1,6 +1,7 @@
 import os
 import subprocess
 from zipfile import ZipFile
+import uuid
 
 import requests
 
@@ -86,6 +87,11 @@ class LiteServMacOSX(LiteServBase):
         binary_path = "{}/couchbase-lite-macosx-enterprise_{}/LiteServ".format(BINARY_DIR, self.version_build)
         log_info("Launching: {}".format(binary_path))
 
+        db_dir_name = "{}/dbs/macosx/{}".format(RESULTS_DIR, str(uuid.uuid4()))
+        os.makedirs(db_dir_name)
+
+        log_info("Creating db at location: {}".format(db_dir_name))
+
         process_args = [
             binary_path,
             "-Log", "YES",
@@ -94,7 +100,7 @@ class LiteServMacOSX(LiteServBase):
             "-LogRouter", "YES",
             "-LogRemoteRequest", "YES",
             "--port", str(self.port),
-            "--dir", "{}/dbs/macosx/".format(RESULTS_DIR)
+            "--dir", db_dir_name
         ]
 
         if self.ssl_enabled:
@@ -125,9 +131,8 @@ class LiteServMacOSX(LiteServBase):
         # Verify Expected version is running
         self._verify_launched()
 
-        url = "http://{}:{}".format(self.host, self.port)
-        log_info("LiteServ running on: {}".format(url))
-        return url
+        log_info("LiteServ running on: {}".format(self.url))
+        return self.url
 
     def _verify_launched(self):
         """ Poll on expected http://<host>:<port> until it is reachable
