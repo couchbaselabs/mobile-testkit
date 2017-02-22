@@ -412,6 +412,7 @@ def generate_clusters_from_pool(pool_file):
         # 1 sync_gateway
         ClusterDef("1sg_1ac_3cbs_1lgs", num_sgs=1, num_acs=1, num_cbs=3, num_lgs=1, num_lbs=0),
         ClusterDef("1sg_2ac_3cbs_1lgs", num_sgs=1, num_acs=2, num_cbs=3, num_lgs=1, num_lbs=0),
+        ClusterDef("1sg_1ac_3cbs_1lgs", num_sgs=1, num_acs=1, num_cbs=3, num_lgs=1, num_lbs=0),
         # 2 sync_gateways
         ClusterDef("2sg_1cbs_1lgs", num_sgs=2, num_acs=0, num_cbs=1, num_lgs=1, num_lbs=0),
         ClusterDef("2sg_3cbs_2lgs", num_sgs=2, num_acs=0, num_cbs=3, num_lgs=2, num_lbs=0),
