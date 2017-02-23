@@ -1,5 +1,6 @@
 import os
 import re
+import uuid
 
 from keywords.LiteServBase import LiteServBase
 from keywords.constants import LATEST_BUILDS
@@ -92,9 +93,11 @@ class LiteServNetMsft(LiteServBase):
         self._verify_not_running()
         self.logfile = logfile_name
 
+        db_dir = str(uuid.uuid4())
+
         process_args = [
             "--port", str(self.port),
-            "--dir", "."
+            "--dir", db_dir
         ]
 
         if self.ssl_enabled:
@@ -120,8 +123,10 @@ class LiteServNetMsft(LiteServBase):
 
         # The package structure for LiteServ is different pre 1.4. Handle for this case
         if has_dot_net4_dot_5(self.version_build):
+            db_dir = "couchbase-lite-net-msft-{}-liteserv/{}".format(self.version_build, db_dir)
             binary_path = "couchbase-lite-net-msft-{}-liteserv/net45/LiteServ.exe".format(self.version_build)
         else:
+            db_dir = "couchbase-lite-net-msft-{}-liteserv/net45/{}".format(self.version_build, db_dir)
             binary_path = "couchbase-lite-net-msft-{}-liteserv/LiteServ.exe".format(self.version_build)
 
         joined_args = " ".join(process_args)
@@ -131,6 +136,7 @@ class LiteServNetMsft(LiteServBase):
         status = self.ansible_runner.run_ansible_playbook(
             "start-liteserv-msft.yml",
             extra_vars={
+                "db_dir": db_dir,
                 "binary_path": binary_path,
                 "launch_args": joined_args,
             }

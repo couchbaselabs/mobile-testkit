@@ -1,10 +1,16 @@
 - name: Windows - Start LiteServ
   hosts: windows
   vars:
+    db_dir:
     binary_path:
     launch_args:
 
   tasks:
+    - name: Creating {{ db_dir }}
+      win_file:
+        path: C:\Users\{{ ansible_user }}\Desktop\LiteServ\{{ db_dir }}
+        state: directory
+
     - debug: msg="Starting with args {{ launch_args }}"
     - name: Start LiteServ
       win_nssm:

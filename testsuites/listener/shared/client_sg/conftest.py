@@ -13,6 +13,7 @@ from keywords.Logging import Logging
 
 # Add custom arguments for executing tests in this directory
 def pytest_addoption(parser):
+    parser.addoption("--enable-ssl", action="store_true", help="enable ssl for p2p replication")
     parser.addoption("--liteserv-platform", action="store", help="liteserv-platform: the platform to assign to the liteserv")
     parser.addoption("--liteserv-version", action="store", help="liteserv-version: the version to download / install for the liteserv")
     parser.addoption("--liteserv-host", action="store", help="liteserv-host: the host to start liteserv on")
@@ -35,6 +36,7 @@ def setup_client_syncgateway_suite(request):
 
     log_info("Setting up client sync_gateway suite ...")
 
+    enable_ssl = request.config.getoption("--enable-ssl")
     liteserv_platform = request.config.getoption("--liteserv-platform")
     liteserv_version = request.config.getoption("--liteserv-version")
     liteserv_host = request.config.getoption("--liteserv-host")
@@ -51,7 +53,8 @@ def setup_client_syncgateway_suite(request):
                                       version_build=liteserv_version,
                                       host=liteserv_host,
                                       port=liteserv_port,
-                                      storage_engine=liteserv_storage_engine)
+                                      storage_engine=liteserv_storage_engine,
+                                      enable_ssl=enable_ssl)
 
     log_info("Downloading LiteServ ...")
     # Download LiteServ
