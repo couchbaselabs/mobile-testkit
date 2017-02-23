@@ -70,18 +70,9 @@ class LiteServNetMsft(LiteServBase):
         """
         Installs needed packages on Windows host and removes any existing service wrappers for LiteServ
         """
-        # The package structure for LiteServ is different pre 1.4. Handle for this case
-        if has_dot_net4_dot_5(self.version_build):
-            directory_path = "couchbase-lite-net-msft-{}-liteserv/net45/LiteServ.exe".format(self.version_build)
-        else:
-            directory_path = "couchbase-lite-net-msft-{}-liteserv/LiteServ.exe".format(self.version_build)
-
-        status = self.ansible_runner.run_ansible_playbook("install-liteserv-windows.yml", extra_vars={
-            "directory_path": directory_path
-        })
-
+        status = self.ansible_runner.run_ansible_playbook("install-liteserv-windows-deps.yml")
         if status != 0:
-            raise LiteServError("Failed to install Liteserv on Windows host")
+            raise LiteServError("Failed to install Liteserv deps on Windows host")
 
     def remove(self):
         log_info("Removing windows server from: {}".format(self.host))
@@ -109,6 +100,8 @@ class LiteServNetMsft(LiteServBase):
         if self.ssl_enabled:
             log_info("Enabling ssl ...")
             process_args.append("--ssl")
+            process_args.append("--sslcert=certificate.pfx")
+            process_args.append("--sslpass=cbmobile")
 
         if self.storage_engine == "ForestDB" or self.storage_engine == "ForestDB+Encryption":
             process_args.append("--storage")
@@ -180,7 +173,7 @@ class LiteServNetMsft(LiteServBase):
         Stops a .NET listener on a remote windows machine via ansible and pulls logs.
         """
 
-        binary_path = "couchbase-lite-net-msft-{}-liteserv/LiteServ.exe".format(self.version_build)
+        binary_path = "couchbase-lite-net-msft-{}-liteserv/net45/LiteServ.exe".format(self.version_build)
 
         log_full_path = "{}/{}".format(os.getcwd(), self.logfile)
 
@@ -195,4 +188,4 @@ class LiteServNetMsft(LiteServBase):
             }
         )
         if status != 0:
-            raise LiteServError("Could not start Liteserv")
+            raise LiteServError("Could not stop Liteserv")

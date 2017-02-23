@@ -159,7 +159,7 @@ class LiteServMacOSX(LiteServBase):
         3. Verify that no service is running on http://<host>:<port>
         """
 
-        log_info("Killing LiteServ: http://{}:{}".format(self.host, self.port))
+        log_info("Killing LiteServ: {}".format(self.url))
 
         self.logfile.flush()
         self.logfile.close()

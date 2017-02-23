@@ -1,7 +1,6 @@
 - name: Windows - Install dependencies for LiteServ Windows
   hosts: windows
   vars:
-    binary_path:
 
   tasks:
     - name: Install nssm (https://nssm.cc/)
@@ -9,11 +8,3 @@
 
     - name: Install VS2015 C++ Runtime
       win_chocolatey: name=vcredist2015
-
-    - name: Install LiteServ service
-      win_nssm:
-        name: LiteServ
-        application: C:\Users\{{ ansible_user }}\Desktop\LiteServ\{{ binary_path }}
-        start_mode: manual
-        state: present
-
