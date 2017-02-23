@@ -65,6 +65,7 @@ def resolve_cb_mobile_url(version):
 
     """
     released_versions = {
+        "4.6.0": "3573",
         "4.5.1": "2844",
         "4.5.0": "2601",
         "4.1.2": "6088",
