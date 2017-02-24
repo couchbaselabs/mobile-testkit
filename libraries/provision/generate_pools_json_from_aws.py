@@ -156,6 +156,9 @@ def wait_until_stack_create_complete(stackname):
             if stack_event.resource_type == "AWS::CloudFormation::Stack" and stack_event.resource_status == "CREATE_COMPLETE":
                 print("Stack {} has successfully been created".format(stackname))
                 return
+            elif stack_event.resource_type == "AWS::CloudFormation::Stack" and stack_event.resource_status == "UPDATE_COMPLETE":
+                print("Stack {} has successfully been created".format(stackname))
+                return
 
         # didn't find it, lets wait and try again
         time.sleep(5)
