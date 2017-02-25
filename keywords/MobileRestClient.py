@@ -3,6 +3,7 @@ import json
 import time
 import uuid
 import re
+import requests
 
 from requests import Session
 from requests.exceptions import HTTPError
@@ -26,6 +27,9 @@ from keywords.SyncGateway import validate_sync_gateway_mode
 
 import keywords.exceptions
 from keywords import types
+
+from requests.packages.urllib3.exceptions import InsecureRequestWarning
+requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
 
 def parse_multipart_response(response):

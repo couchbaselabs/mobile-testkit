@@ -105,6 +105,10 @@ class LiteServMacOSX(LiteServBase):
 
         if self.ssl_enabled:
             process_args.append("--ssl")
+            process_args.append("--trustedcert")
+            process_args.append("SelfSigned.cer")
+            process_args.append("--sslas")
+            process_args.append(self.host)
 
         if self.storage_engine == "ForestDB" or self.storage_engine == "ForestDB+Encryption":
             process_args.append("--storage")
