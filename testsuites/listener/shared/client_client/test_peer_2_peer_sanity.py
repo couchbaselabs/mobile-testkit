@@ -53,7 +53,6 @@ def setup_p2p_suite(request):
     log_info("Tearing down suite ...")
 
     liteserv_one.remove()
-
     liteserv_two.remove()
 
 
@@ -186,7 +185,10 @@ def test_peer_2_peer_sanity(setup_p2p_test):
 @pytest.mark.replication
 @pytest.mark.p2p
 @pytest.mark.changes
-def test_peer_2_peer_sanity_pull(setup_p2p_test):
+@pytest.mark.parametrize("num_docs_per_db, attachment_name", [
+    (5000, None), (3000, "golden_gate_large.jpg"),
+])
+def test_peer_2_peer_sanity_pull(setup_p2p_test, num_docs_per_db, attachment_name):
     """
     1. Create ls_db1 database on LiteServ One
     2. Create ls_db2 database on LiteServ Two
@@ -199,10 +201,11 @@ def test_peer_2_peer_sanity_pull(setup_p2p_test):
     ls_url_one = setup_p2p_test["ls_url_one"]
     ls_url_two = setup_p2p_test["ls_url_two"]
 
-    num_docs_per_db = 5000
-
     log_info("ls_url_one: {}".format(ls_url_one))
     log_info("ls_url_two: {}".format(ls_url_two))
+
+    if attachment_name:
+        log_info("Running test_peer_2_peer_sanity_push with attachment {}".format(attachment_name))
 
     client = MobileRestClient()
 
@@ -221,10 +224,10 @@ def test_peer_2_peer_sanity_pull(setup_p2p_test):
 
     client.wait_for_replication_status_idle(url=ls_url_one, replication_id=pull_repl)
 
-    ls_db2_docs = client.add_docs(url=ls_url_two, db=ls_db2, number=num_docs_per_db, id_prefix="test_ls_db2")
+    ls_db2_docs = client.add_docs(url=ls_url_two, db=ls_db2, number=num_docs_per_db, id_prefix="test_ls_db2", attachment_name=attachment_name)
     assert len(ls_db2_docs) == num_docs_per_db
 
-    client.verify_docs_present(url=ls_url_one, db=ls_db1, expected_docs=ls_db2_docs)
+    client.verify_docs_present(url=ls_url_one, db=ls_db1, expected_docs=ls_db2_docs, attachment_name=attachment_name)
     client.verify_docs_in_changes(url=ls_url_one, db=ls_db1, expected_docs=ls_db2_docs)
 
 
@@ -233,7 +236,10 @@ def test_peer_2_peer_sanity_pull(setup_p2p_test):
 @pytest.mark.replication
 @pytest.mark.p2p
 @pytest.mark.changes
-def test_peer_2_peer_sanity_push(setup_p2p_test):
+@pytest.mark.parametrize("num_docs_per_db, attachment_name", [
+    (5000, None), (3000, "golden_gate_large.jpg"),
+])
+def test_peer_2_peer_sanity_push(setup_p2p_test, num_docs_per_db, attachment_name):
     """
     1. Create ls_db1 database on LiteServ One
     2. Create ls_db2 database on LiteServ Two
@@ -246,10 +252,11 @@ def test_peer_2_peer_sanity_push(setup_p2p_test):
     ls_url_one = setup_p2p_test["ls_url_one"]
     ls_url_two = setup_p2p_test["ls_url_two"]
 
-    num_docs_per_db = 5000
-
     log_info("ls_url_one: {}".format(ls_url_one))
     log_info("ls_url_two: {}".format(ls_url_two))
+
+    if attachment_name:
+        log_info("Running test_peer_2_peer_sanity_push with attachment {}".format(attachment_name))
 
     client = MobileRestClient()
 
@@ -267,8 +274,8 @@ def test_peer_2_peer_sanity_push(setup_p2p_test):
 
     client.wait_for_replication_status_idle(url=ls_url_one, replication_id=push_repl)
 
-    ls_db1_docs = client.add_docs(url=ls_url_one, db=ls_db1, number=num_docs_per_db, id_prefix="test_ls_db1")
+    ls_db1_docs = client.add_docs(url=ls_url_one, db=ls_db1, number=num_docs_per_db, id_prefix="test_ls_db1", attachment_name=attachment_name)
     assert len(ls_db1_docs) == num_docs_per_db
 
-    client.verify_docs_present(url=ls_url_two, db=ls_db2, expected_docs=ls_db1_docs)
+    client.verify_docs_present(url=ls_url_two, db=ls_db2, expected_docs=ls_db1_docs, attachment_name=attachment_name)
     client.verify_docs_in_changes(url=ls_url_two, db=ls_db2, expected_docs=ls_db1_docs)

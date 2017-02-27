@@ -1069,7 +1069,7 @@ class MobileRestClient:
 
         return resp_obj
 
-    def add_docs(self, url, db, number, id_prefix, auth=None, channels=None, generator=None):
+    def add_docs(self, url, db, number, id_prefix, auth=None, channels=None, generator=None, attachment_name=None):
         """
         if id_prefix == None, generate a uuid for each doc
 
@@ -1093,6 +1093,11 @@ class MobileRestClient:
 
             if channels is not None:
                 doc_body["channels"] = channels
+
+            if attachment_name:
+                doc_body["_attachments"] = {
+                    attachment_name: {"data": get_attachment(attachment_name)}
+                }
 
             data = json.dumps(doc_body)
 
@@ -1428,7 +1433,7 @@ class MobileRestClient:
 
         return resp.json()
 
-    def verify_docs_present(self, url, db, expected_docs, auth=None, timeout=CLIENT_REQUEST_TIMEOUT):
+    def verify_docs_present(self, url, db, expected_docs, auth=None, timeout=CLIENT_REQUEST_TIMEOUT, attachment_name=None):
         """
         Verifies the expected docs are present in the database using a polling loop with
         POST _all_docs with Listener and a POST _bulk_get for sync_gateway
@@ -1494,7 +1499,9 @@ class MobileRestClient:
             # Android - {"doc":null,"id":"test_ls_db2_5","key":"test_ls_db2_5","value":{}}
 
             all_docs_returned = True
+            all_attachments_returned = True
             missing_docs = []
+            missing_attachment_docs = []
             for resp_doc in resp_obj["rows"]:
                 if "error" in resp_doc or ("value" in resp_doc and len(resp_doc["value"]) == 0):
                     # Doc not found
@@ -1509,14 +1516,31 @@ class MobileRestClient:
                     missing_docs.append(resp_doc)
                     all_docs_returned = False
 
+                if attachment_name:
+                    # Check for an attachment
+                    doc_id = resp_doc["key"]
+                    doc_data = self._session.get("{}/{}/{}".format(url, db, doc_id))
+                    if attachment_name not in doc_data.text:
+                        all_attachments_returned = False
+                        missing_attachment_docs.append(doc_id)
+
             logging.debug("Missing Docs = {}".format(missing_docs))
             log_info("Num found docs: {}".format(len(resp_obj["rows"]) - len(missing_docs)))
             log_info("Num missing docs: {}".format(len(missing_docs)))
+
             # Issue the request again, docs my still be replicating
             if not all_docs_returned:
                 logging.info("Retrying to verify all docs are present ...")
                 time.sleep(1)
                 continue
+
+            # Issue the request again, docs my still be replicating
+            if attachment_name:
+                log_info("Num missing attachment Docs = {}".format(len(missing_attachment_docs)))
+                if not all_attachments_returned:
+                    logging.info("Retrying to verify all attachments are present ...")
+                    time.sleep(1)
+                    continue
 
             resp_docs = {}
             for resp_doc in resp_obj["rows"]:
