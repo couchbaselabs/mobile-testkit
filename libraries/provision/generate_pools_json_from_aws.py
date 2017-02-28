@@ -149,9 +149,11 @@ def wait_until_state(instances, instance_ids, state):
     for x in xrange(NUM_RETRIES):
 
         print("Waiting for instances {} to be {}".format(instance_ids, state))
+        instances_not_in_state = []
         all_instances_in_state = True
         for instance in instances:
             if instance.state != state:
+                instances_not_in_state.append(instance)
                 all_instances_in_state = False
 
         # if all instances were in the given state, we're done
@@ -159,7 +161,7 @@ def wait_until_state(instances, instance_ids, state):
             return
 
         # otherwise ..
-        print("Not all instances in {} were in state {}.  Waiting and will retry.. Iteration: {}".format(instance_ids, state, x))
+        print("The following instances are not yet in state {}: {}.  Waiting will retry.. Iteration: {}".format(instances_not_in_state, state, x))
         time.sleep(5)
         instances = lookup_instances_from_ids(instance_ids)
 
