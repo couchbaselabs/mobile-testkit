@@ -186,7 +186,7 @@ def test_peer_2_peer_sanity(setup_p2p_test):
 @pytest.mark.p2p
 @pytest.mark.changes
 @pytest.mark.parametrize("num_docs_per_db, attachment_name", [
-    (5000, None), (3000, "golden_gate_large.jpg"),
+    (5000, None), (2500, "golden_gate_large.jpg"),
 ])
 def test_peer_2_peer_sanity_pull(setup_p2p_test, num_docs_per_db, attachment_name):
     """
@@ -237,7 +237,7 @@ def test_peer_2_peer_sanity_pull(setup_p2p_test, num_docs_per_db, attachment_nam
 @pytest.mark.p2p
 @pytest.mark.changes
 @pytest.mark.parametrize("num_docs_per_db, attachment_name", [
-    (5000, None), (3000, "golden_gate_large.jpg"),
+    (5000, None), (2500, "golden_gate_large.jpg"),
 ])
 def test_peer_2_peer_sanity_push(setup_p2p_test, num_docs_per_db, attachment_name):
     """
