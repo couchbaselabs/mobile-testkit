@@ -128,6 +128,7 @@ def create_and_instantiate_cluster(config):
 
     print(">>> Generating Cloudformation Template")
     templ_json = cloudformation_template.gen_template(config)
+    print(">>> Template contents {}".format(templ_json))
 
     template_file_name = "{}_cf_template.json".format(cluster_config.name)
     with open(template_file_name, 'w') as f:
@@ -139,11 +140,14 @@ def create_and_instantiate_cluster(config):
         raise keywords.exceptions.ProvisioningError("Cannot create cloudformation stack if you do not have AWS_KEY set")
 
     # Upload template to s3
+    # TODO: this should use boto rather than cli
     print("Uploading {} to s3".format(template_file_name))
     output = subprocess.check_output([
         "aws", "s3", "cp", template_file_name, "s3://{}/{}/{}".format(BUCKET_NAME, BUCKET_FOLDER, template_file_name)
     ])
     print(output)
+    if "failed" in output:
+        raise Exception("Upload to s3 failed: {}".format(output))
 
     # Create Stack
     print("Creating cloudformation stack: {}".format(template_file_name))
