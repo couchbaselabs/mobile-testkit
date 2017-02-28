@@ -13,7 +13,7 @@ import socket
 # The pool.json file can then be used to generate cluster configs under resources/cluster_configs
 
 DEFAULT_REGION = "us-east-1"
-NUM_RETRIES = 50
+NUM_RETRIES = 200
 
 
 def main():
