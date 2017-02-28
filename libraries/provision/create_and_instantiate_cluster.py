@@ -14,7 +14,7 @@ BUCKET_FOLDER = "mobile-testkit"
 
 class ClusterConfig:
 
-    def __init__(self, name, server_number, server_type, sync_gateway_number, sync_gateway_type, load_number, load_type, lb_number, lb_type):
+    def __init__(self, name, server_number, server_type, sync_gateway_number, sync_gateway_type, load_number, load_type, lb_number, lb_type, region):
 
         self.__name = name
         self.__server_number = server_number
@@ -25,6 +25,7 @@ class ClusterConfig:
         self.__load_type = load_type
         self.__lb_number = lb_number
         self.__lb_type = lb_type
+        self.__region = region
 
     @property
     def name(self):
@@ -61,6 +62,10 @@ class ClusterConfig:
     @property
     def lb_type(self):
         return self.__lb_type
+
+    @property
+    def region(self):
+        return self.__region
 
     def __validate_types(self):
         # Ec2 instances follow string format xx.xxxx
@@ -154,7 +159,7 @@ def create_and_instantiate_cluster(config):
     subprocess.call([
         "aws", "cloudformation", "create-stack",
         "--stack-name", config.name,
-        "--region", "us-east-1",
+        "--region", config.region,
         "--capabilities", "CAPABILITY_IAM", "CAPABILITY_NAMED_IAM",
         "--template-url", "http://{}.s3.amazonaws.com/{}/{}".format(BUCKET_NAME, BUCKET_FOLDER, template_file_name),
         "--parameters", "ParameterKey=KeyName,ParameterValue={}".format(os.environ["AWS_KEY"])
@@ -211,6 +216,10 @@ if __name__ == "__main__":
                       action="store", type="string", dest="lb_type", default="m3.medium",
                       help="EC2 instance type for load balancer type")
 
+    parser.add_option("", "--region",
+                      action="store", type="string", dest="region", default="us-east-1",
+                      help="The AWS region to use")
+
     arg_parameters = sys.argv[1:]
 
     (opts, args) = parser.parse_args(arg_parameters)
@@ -225,7 +234,8 @@ if __name__ == "__main__":
         opts.num_gatlings,
         opts.gatling_type,
         opts.num_lbs,
-        opts.lb_type
+        opts.lb_type,
+        opts.region
     )
 
     if not cluster_config.is_valid():
