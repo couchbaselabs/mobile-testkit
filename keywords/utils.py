@@ -118,8 +118,9 @@ def dump_file_contents_to_logs(filename):
     except Exception as e:
         log_info("Error reading {}: {}".format(filename, e))
 
+
 # Check if this version has net45
-def hasDotNet4Dot5(version):
+def has_dot_net4_dot_5(version):
     version_prefixes = [
          "1.2",
          "1.3",

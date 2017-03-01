@@ -7,7 +7,7 @@ from keywords.constants import REGISTERED_CLIENT_DBS
 from keywords.exceptions import LiteServError
 from keywords.utils import version_and_build
 from keywords.utils import log_info
-from keywords.utils import hasDotNet4Dot5
+from keywords.utils import has_dot_net4_dot_5
 
 from libraries.provision.ansible_runner import AnsibleRunner
 
@@ -71,7 +71,7 @@ class LiteServNetMsft(LiteServBase):
         Installs needed packages on Windows host and removes any existing service wrappers for LiteServ
         """
         # The package structure for LiteServ is different pre 1.4. Handle for this case
-        if hasDotNet4Dot5(self.version_build):
+        if has_dot_net4_dot_5(self.version_build):
             directory_path = "couchbase-lite-net-msft-{}-liteserv/net45/LiteServ.exe".format(self.version_build)
         else:
             directory_path = "couchbase-lite-net-msft-{}-liteserv/LiteServ.exe".format(self.version_build)
@@ -123,7 +123,7 @@ class LiteServNetMsft(LiteServBase):
             process_args.extend(db_flags)
 
         # The package structure for LiteServ is different pre 1.4. Handle for this case
-        if hasDotNet4Dot5(self.version_build):
+        if has_dot_net4_dot_5(self.version_build):
             binary_path = "couchbase-lite-net-msft-{}-liteserv/net45/LiteServ.exe".format(self.version_build)
         else:
             binary_path = "couchbase-lite-net-msft-{}-liteserv/LiteServ.exe".format(self.version_build)
