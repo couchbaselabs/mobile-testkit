@@ -134,13 +134,15 @@ def get_ansible_group_for_instance(instance):
         "syncgateway": "sync_gateways",
         "gateload": "load_generators",
         "loadbalancer": "load_balancers",
-        "loadgenerator": "load_generators",  # forwards compatibility after we rename this from "gateload" -> "loadgenerator"
+        "loadgenerator": "load_generators",  # forwards compatibility in case we rename this from "gateload" -> "loadgenerator"
+        "unknown": "unknown",
     }
 
     if 'Type' not in instance.tags:
-        raise Exception("Expected 'Type' in instance tags, but did not find.  Instance: {}.  Tags: {}".format(instance, instance.tags))
+        instance_type = "unknown"
+    else:
+        instance_type = instance.tags['Type']
 
-    instance_type = instance.tags['Type']
     if instance_type == "syncgateway":
         # Deal with special case for sg accels
         if 'CacheType' in instance.tags:
