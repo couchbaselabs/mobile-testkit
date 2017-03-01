@@ -45,18 +45,21 @@ def main():
 
     print("pool_dns_addresses: {}".format(pool_dns_addresses))
 
-    write_to_file(pool_dns_addresses, opts.targetfile)
+    ip_to_ansible_group = ip_to_ansible_group_for_cloudformation_stack(opts.stackname)
+
+    print("ip_to_ansible_group: {}".format(ip_to_ansible_group))
+
+    write_to_file(pool_dns_addresses, ip_to_ansible_group, opts.targetfile)
 
     print "Generated {}".format(opts.targetfile)
 
 
-def get_public_dns_names_cloudformation_stack(stackname):
+def get_running_instances_for_cloudformation_stack(stackname):
 
     """
     Blocks until CloudFormation stack is fully up and running and all EC2 instances
     are listening on port 22.
 
-    Returns the public DNS names of all EC2 instances in the stack
     """
 
     # wait for stack creation to finish
@@ -74,8 +77,78 @@ def get_public_dns_names_cloudformation_stack(stackname):
     # wait until all ec2 instances are listening on port 22
     wait_until_sshd_port_listening(instances_for_stack)
 
+    return instances_for_stack
+
+
+def get_public_dns_names_cloudformation_stack(stackname):
+
+    """
+    Returns the public DNS names of all EC2 instances in the stack
+    """
+
+    instances_for_stack = get_running_instances_for_cloudformation_stack(stackname)
+
     # get public_dns_name for all instances
     return get_public_dns_names(instances_for_stack)
+
+
+def ip_to_ansible_group_for_cloudformation_stack(stackname):
+
+    """
+    Generate a dictionary like:
+
+    "ip_to_node_type": {
+       "s61702cnt72.sc.couchbase.com": "couchbase_servers",
+       "s61703cnt72.sc.couchbase.com": "couchbase_servers",
+       "s61704cnt72.sc.couchbase.com": "couchbase_servers",
+       "s61705cnt72.sc.couchbase.com": "sync_gateways",
+       ....
+    }
+    """
+
+    instances_for_stack = get_running_instances_for_cloudformation_stack(stackname)
+
+    ip_to_ansible_group = {}
+    for instance in instances_for_stack:
+        ansible_group = get_ansible_group_for_instance(instance)
+        ip_to_ansible_group[instance.public_dns_name] = ansible_group
+
+    return ip_to_ansible_group
+
+
+def get_ansible_group_for_instance(instance):
+
+    """
+    Given an ec2 instance:
+
+    1. Look for the "type" tag, which will be something like "couchbaserver", which is set in cloudformation template
+    2. Translate that to the expected "node_type" that corresponds to ansible group
+
+    NOTE regarding sg_accels:  they are tagged with type=syncgateway, but they also have a CacheType="writer" tag
+    that we can use to differentiate them from sync gateways
+
+    """
+
+    instance_type_to_ansible_group = {
+        "couchbaseserver": "couchbase_servers",
+        "syncgateway": "sync_gateways",
+        "gateload": "load_generators",
+        "loadbalancer": "load_balancers",
+        "loadgenerator": "load_generators",  # forwards compatibility in case we rename this from "gateload" -> "loadgenerator"
+        "unknown": "unknown",
+    }
+
+    if 'Type' not in instance.tags:
+        instance_type = "unknown"
+    else:
+        instance_type = instance.tags['Type']
+
+    if instance_type == "syncgateway":
+        # Deal with special case for sg accels
+        if 'CacheType' in instance.tags:
+            return "sg_accels"
+
+    return instance_type_to_ansible_group[instance_type]
 
 
 def get_instance_ids_for_stack(stackname):
@@ -198,16 +271,26 @@ def get_public_dns_names(instances):
     return [instance.public_dns_name for instance in instances]
 
 
-def write_to_file(cloud_formation_stack_dns_addresses, filename):
+def write_to_file(cloud_formation_stack_dns_addresses, ip_to_ansible_group, filename):
     """
     {
+        "ip_to_node_type": {
+            "s61702cnt72.sc.couchbase.com": "couchbase_servers",
+            "s61703cnt72.sc.couchbase.com": "couchbase_servers",
+            "s61704cnt72.sc.couchbase.com": "couchbase_servers",
+            "s61705cnt72.sc.couchbase.com": "sync_gateways",
+            ....
+        }
         "ips": [
             "ec2-54-242-119-83.compute-1.amazonaws.com",
             "ec2-54-242-119-84.compute-1.amazonaws.com",
         ]
     }
     """
-    output_dictionary = {"ips": cloud_formation_stack_dns_addresses}
+    output_dictionary = {
+        "ip_to_node_type": ip_to_ansible_group,
+        "ips": cloud_formation_stack_dns_addresses,
+    }
 
     with open(filename, 'w') as target:
         target.write(json.dumps(output_dictionary, sort_keys=True, indent=4, separators=(',', ': ')))
