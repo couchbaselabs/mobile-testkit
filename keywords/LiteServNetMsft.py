@@ -69,8 +69,12 @@ class LiteServNetMsft(LiteServBase):
         """
         Installs needed packages on Windows host and removes any existing service wrappers for LiteServ
         """
+        # The package structure for LiteServ is different pre 1.4. Handle for this case
+        if self.version_build.startswith("1.2") or self.version_build.startswith("1.3") or self.version_build.startswith("1.4.0"):
+            directory_path = "couchbase-lite-net-msft-{}-liteserv/LiteServ.exe".format(self.version_build)
+        else:
+            directory_path = "couchbase-lite-net-msft-{}-liteserv/net45/LiteServ.exe".format(self.version_build)
 
-        directory_path = "couchbase-lite-net-msft-{}-liteserv/net45/LiteServ.exe".format(self.version_build)
         status = self.ansible_runner.run_ansible_playbook("install-liteserv-windows.yml", extra_vars={
             "directory_path": directory_path
         })
@@ -118,7 +122,7 @@ class LiteServNetMsft(LiteServBase):
             process_args.extend(db_flags)
 
         # The package structure for LiteServ is different pre 1.4. Handle for this case
-        if self.version_build.startswith("1.2") or self.version_build.startswith("1.3"):
+        if self.version_build.startswith("1.2") or self.version_build.startswith("1.3") or self.version_build.startswith("1.4.0"):
             binary_path = "couchbase-lite-net-msft-{}-liteserv/LiteServ.exe".format(self.version_build)
         else:
             binary_path = "couchbase-lite-net-msft-{}-liteserv/net45/LiteServ.exe".format(self.version_build)

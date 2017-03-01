@@ -26,7 +26,11 @@ class LiteServNetMono(LiteServBase):
         """
 
         # Skip download if packages is already downloaded
-        expected_binary = "{}/couchbase-lite-net-mono-{}-liteserv/net45/LiteServ.exe".format(BINARY_DIR, self.version_build)
+        if self.version_build.startswith("1.2") or self.version_build.startswith("1.3") or self.version_build.startswith("1.4.0"):
+            expected_binary = "{}/couchbase-lite-net-mono-{}-liteserv/LiteServ.exe".format(BINARY_DIR, self.version_build)
+        else:
+            expected_binary = "{}/couchbase-lite-net-mono-{}-liteserv/net45/LiteServ.exe".format(BINARY_DIR, self.version_build)
+
         if os.path.isfile(expected_binary):
             log_info("Package already downloaded: {}".format(expected_binary))
             return
@@ -80,7 +84,7 @@ class LiteServNetMono(LiteServBase):
         self._verify_not_running()
 
         # The package structure for LiteServ is different pre 1.4. Handle for this case
-        if self.version_build.startswith("1.2") or self.version_build.startswith("1.3"):
+        if self.version_build.startswith("1.2") or self.version_build.startswith("1.3") or self.version_build.startswith("1.4.0"):
             binary_path = "{}/couchbase-lite-net-mono-{}-liteserv/LiteServ.exe".format(BINARY_DIR, self.version_build)
         else:
             binary_path = "{}/couchbase-lite-net-mono-{}-liteserv/net45/LiteServ.exe".format(BINARY_DIR, self.version_build)
