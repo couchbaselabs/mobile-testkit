@@ -14,6 +14,7 @@ from keywords.constants import REGISTERED_CLIENT_DBS
 from keywords.exceptions import LiteServError
 from keywords.utils import version_and_build
 from keywords.utils import log_info
+from keywords.utils import hasDotNet4Dot5
 
 
 class LiteServNetMono(LiteServBase):
@@ -26,10 +27,10 @@ class LiteServNetMono(LiteServBase):
         """
 
         # Skip download if packages is already downloaded
-        if self.version_build.startswith("1.2") or self.version_build.startswith("1.3") or self.version_build.startswith("1.4.0"):
-            expected_binary = "{}/couchbase-lite-net-mono-{}-liteserv/LiteServ.exe".format(BINARY_DIR, self.version_build)
-        else:
+        if hasDotNet4Dot5(self.version_build):
             expected_binary = "{}/couchbase-lite-net-mono-{}-liteserv/net45/LiteServ.exe".format(BINARY_DIR, self.version_build)
+        else:
+            expected_binary = "{}/couchbase-lite-net-mono-{}-liteserv/LiteServ.exe".format(BINARY_DIR, self.version_build)
 
         if os.path.isfile(expected_binary):
             log_info("Package already downloaded: {}".format(expected_binary))
