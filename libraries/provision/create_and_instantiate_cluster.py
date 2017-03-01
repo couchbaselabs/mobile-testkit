@@ -151,8 +151,6 @@ def create_and_instantiate_cluster(config):
         "aws", "s3", "cp", template_file_name, "s3://{}/{}/{}".format(BUCKET_NAME, BUCKET_FOLDER, template_file_name)
     ])
     print(output)
-    if "failed" in output:
-        raise Exception("Upload to s3 failed: {}".format(output))
 
     # Create Stack
     print("Creating cloudformation stack: {}".format(template_file_name))
