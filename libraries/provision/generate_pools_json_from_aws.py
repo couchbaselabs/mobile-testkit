@@ -79,6 +79,7 @@ def get_running_instances_for_cloudformation_stack(stackname):
 
     return instances_for_stack
 
+
 def get_public_dns_names_cloudformation_stack(stackname):
 
     """
@@ -89,6 +90,7 @@ def get_public_dns_names_cloudformation_stack(stackname):
 
     # get public_dns_name for all instances
     return get_public_dns_names(instances_for_stack)
+
 
 def ip_to_ansible_group_for_cloudformation_stack(stackname):
 
@@ -113,6 +115,7 @@ def ip_to_ansible_group_for_cloudformation_stack(stackname):
 
     return ip_to_ansible_group
 
+
 def get_ansible_group_for_instance(instance):
 
     """
@@ -134,18 +137,17 @@ def get_ansible_group_for_instance(instance):
         "loadgenerator": "load_generators",  # forwards compatibility after we rename this from "gateload" -> "loadgenerator"
     }
 
-
-    if not 'Type' in instance.tags:
+    if 'Type' not in instance.tags:
         raise Exception("Expected 'Type' in instance tags, but did not find.  Instance: {}.  Tags: {}".format(instance, instance.tags))
 
     instance_type = instance.tags['Type']
-    cache_type = ""
     if instance_type == "syncgateway":
         # Deal with special case for sg accels
         if 'CacheType' in instance.tags:
             return "sg_accels"
 
     return instance_type_to_ansible_group[instance_type]
+
 
 def get_instance_ids_for_stack(stackname):
     """
