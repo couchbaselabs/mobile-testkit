@@ -204,9 +204,10 @@ def wait_until_stack_create_complete(stackname):
             if stack_event.stack_name != stackname:
                 print("Ignoring {} since it's stack name is {} instead of {}".format(stack_event, stack_event.stack_name, stackname))
                 continue
-            if stack_event.resource_type == "AWS::CloudFormation::Stack" and stack_event.resource_status == "CREATE_COMPLETE":
-                print("Stack {} has successfully been created".format(stackname))
-                return
+            if stack_event.resource_type == "AWS::CloudFormation::Stack":
+                if stack_event.resource_status in ["CREATE_COMPLETE", "UPDATE_COMPLETE"]:
+                    print("Stack {} has successfully been created/updated".format(stackname))
+                    return
 
         # didn't find it, lets wait and try again
         time.sleep(5)
