@@ -12,7 +12,7 @@ from keywords.exceptions import ProvisioningError
 from libraries.utilities.provisioning_config_parser import hosts_for_tag
 
 from keywords.utils import log_info
-from keywords.RemoteExecutor import RemoteExecutor
+from keywords.remoteexecutor import RemoteExecutor
 
 
 import argparse

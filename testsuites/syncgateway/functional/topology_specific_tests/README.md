@@ -26,7 +26,7 @@ These commands must be run from the root directory of the repo.
 ```
 pytest  -s \
         --mode=di \
-        --server-version=4.5.0 \
+        --server-version=4.5.1 \
         --sync-gateway-version=1.3.1-16 \
         testsuites/syncgateway/functional/topology_specific_tests/
 ```
@@ -36,7 +36,7 @@ pytest  -s \
 ```
 pytest  -s \
         --mode=cc \
-        --server-version=4.5.0 \
+        --server-version=4.5.1 \
         --sync-gateway-version=1.3.1-16 \
         testsuites/syncgateway/functional/topology_specific_tests/
 ```
@@ -46,7 +46,7 @@ pytest  -s \
 ```
 pytest  -s \
         --mode=cc \
-        --server-version=4.5.0 \
+        --server-version=4.5.1 \
         --sync-gateway-version=1.3.1-16 \
         -k "test_load_balance_sanity" \
         testsuites/syncgateway/functional/topology_specific_tests/
@@ -57,8 +57,8 @@ pytest  -s \
 ```
 pytest  -s \
         --mode=di \
-        --server-version=4.5.0 \
-        --sync-gateway-version=1.4.0-20 \
+        --server-version=4.5.1 \
+        --sync-gateway-version=1.3.1-16 \
         testsuites/syncgateway/functional/topology_specific_tests/muliple_servers/test_muliple_servers.py
 ```
 

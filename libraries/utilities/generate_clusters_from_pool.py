@@ -433,17 +433,22 @@ def generate_clusters_from_pool(pool_file):
         # 8 sync_gateways
         ClusterDef("8sg_4ac_3cbs_8lgs", num_sgs=8, num_acs=4, num_cbs=3, num_lgs=8, num_lbs=0),
         ClusterDef("8sg_4ac_6cbs_8lgs", num_sgs=8, num_acs=4, num_cbs=6, num_lgs=8, num_lbs=0),
+        ClusterDef("8sg_4ac_12cbs_8lgs", num_sgs=8, num_acs=4, num_cbs=12, num_lgs=8, num_lbs=0),
         ClusterDef("8sg_8ac_3cbs_8lgs", num_sgs=8, num_acs=8, num_cbs=3, num_lgs=8, num_lbs=0),
         ClusterDef("8sg_8ac_6cbs_8lgs", num_sgs=8, num_acs=8, num_cbs=6, num_lgs=8, num_lbs=0),
         ClusterDef("8sg_12ac_3cbs_8lgs", num_sgs=8, num_acs=12, num_cbs=3, num_lgs=8, num_lbs=0),
         # 12 sync_gateways
         ClusterDef("12sg_4ac_6cbs_12lgs", num_sgs=12, num_acs=4, num_cbs=6, num_lgs=12, num_lbs=0),
+        ClusterDef("12sg_4ac_12cbs_12lgs", num_sgs=12, num_acs=4, num_cbs=12, num_lgs=12, num_lbs=0),
         ClusterDef("12sg_8ac_6cbs_12lgs", num_sgs=12, num_acs=8, num_cbs=6, num_lgs=12, num_lbs=0),
+        ClusterDef("12sg_8ac_12cbs_12lgs", num_sgs=12, num_acs=8, num_cbs=12, num_lgs=12, num_lbs=0),
         # 16 sync_gateways
         ClusterDef("16sg_4ac_3cbs_16lgs", num_sgs=16, num_acs=4, num_cbs=3, num_lgs=16, num_lbs=0),
         ClusterDef("16sg_4ac_6cbs_16lgs", num_sgs=16, num_acs=4, num_cbs=6, num_lgs=16, num_lbs=0),
+        ClusterDef("16sg_4ac_12cbs_16lgs", num_sgs=16, num_acs=4, num_cbs=12, num_lgs=16, num_lbs=0),
         ClusterDef("16sg_8ac_3cbs_16lgs", num_sgs=16, num_acs=8, num_cbs=3, num_lgs=16, num_lbs=0),
         ClusterDef("16sg_8ac_6cbs_16lgs", num_sgs=16, num_acs=8, num_cbs=6, num_lgs=16, num_lbs=0),
+        ClusterDef("16sg_8ac_12cbs_16lgs", num_sgs=16, num_acs=8, num_cbs=12, num_lgs=16, num_lbs=0),
         # End Perf Mini Matrix
 
         # Test Fest

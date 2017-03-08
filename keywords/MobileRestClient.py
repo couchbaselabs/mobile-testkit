@@ -1233,9 +1233,21 @@ class MobileRestClient:
             }
 
             if to_auth is not None:
+                # Format session auth if it is passed in a tuple
+                # ('SyncGatewaySession', 'e831f78d0baaa96472fa90ba7cad2d27abf7692a') ->
+                #   SyncGatewaySession=e831f78d0baaa96472fa90ba7cad2d27abf7692a
+                if len(to_auth) == 2:
+                    to_auth = "{}={}".format(to_auth[0], to_auth[1])
+
                 data["target"]["headers"] = {"Cookie": to_auth}
 
             if from_auth is not None:
+                # Format session auth if it is passed in a tuple
+                # ('SyncGatewaySession', 'e831f78d0baaa96472fa90ba7cad2d27abf7692a') ->
+                #   SyncGatewaySession=e831f78d0baaa96472fa90ba7cad2d27abf7692a
+                if len(from_auth) == 2:
+                    from_auth = "{}={}".format(from_auth[0], from_auth[1])
+
                 data["source"]["headers"] = {"Cookie": from_auth}
 
         if repl_filter is not None:
@@ -1315,9 +1327,21 @@ class MobileRestClient:
             }
 
             if to_auth is not None:
+                # Format session auth if it is passed in a tuple
+                # ('SyncGatewaySession', 'e831f78d0baaa96472fa90ba7cad2d27abf7692a') ->
+                #   SyncGatewaySession=e831f78d0baaa96472fa90ba7cad2d27abf7692a
+                if len(to_auth) == 2:
+                    to_auth = "{}={}".format(to_auth[0], to_auth[1])
+
                 data["target"]["headers"] = {"Cookie": to_auth}
 
             if from_auth is not None:
+                # Format session auth if it is passed in a tuple
+                # ('SyncGatewaySession', 'e831f78d0baaa96472fa90ba7cad2d27abf7692a') ->
+                #   SyncGatewaySession=e831f78d0baaa96472fa90ba7cad2d27abf7692a
+                if len(from_auth) == 2:
+                    from_auth = "{}={}".format(from_auth[0], from_auth[1])
+
                 data["source"]["headers"] = {"Cookie": from_auth}
 
         if repl_filter is not None:
