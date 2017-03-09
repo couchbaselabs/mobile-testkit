@@ -1,5 +1,4 @@
 from libraries.testkit.cluster import validate_cluster
-from libraries.testkit.config import Config
 
 
 def test_validate_cluster():
