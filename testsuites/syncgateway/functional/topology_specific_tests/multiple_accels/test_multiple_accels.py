@@ -192,7 +192,7 @@ def test_dcp_reshard_single_sg_accel_goes_down_and_up(params_from_base_test_setu
             log_info("{} Completed:".format(tag))
 
     # TODO better way to do this
-    time.sleep(120)
+    time.sleep(300)
 
     verify_changes(traun, expected_num_docs=10000, expected_num_revisions=0, expected_docs=traun.cache)
     verify_changes(seth, expected_num_docs=10000, expected_num_revisions=0, expected_docs=seth.cache)
