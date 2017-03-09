@@ -43,7 +43,7 @@ def main():
 
 
     write_to_file(
-        pool_dns_addresses=get_public_dns_names_cloudformation_stack(opts.stackname),
+        public_dns_names=get_public_dns_names_cloudformation_stack(opts.stackname),
         private_dns_names=get_private_dns_names_cloudformation_stack(opts.stackname),
         ip_to_ansible_group=ip_to_ansible_group_for_cloudformation_stack(opts.stackname),
         filename=opts.targetfile,
