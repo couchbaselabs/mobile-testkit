@@ -9,6 +9,7 @@ from couchbase.bucket import Bucket
 from couchbase.exceptions import ProtocolError
 from couchbase.exceptions import TemporaryFailError
 from couchbase.exceptions import NotFoundError
+from couchbase.exceptions import AuthError
 
 
 import keywords.constants
@@ -278,6 +279,14 @@ class CouchbaseServer:
                 continue
             except TemporaryFailError:
                 log_info("Failure from server: Retrying ...")
+                time.sleep(1)
+                continue
+            except AuthError:
+                log_info("Auth error from server: Retrying ...")
+                time.sleep(1)
+                continue
+            except TimeoutError:
+                log_info("Timeout error from server: Retrying ...")
                 time.sleep(1)
                 continue
             except NotFoundError:
