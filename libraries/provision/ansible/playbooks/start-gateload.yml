@@ -11,52 +11,6 @@
     shell: screen -X -S gateload_expvars kill
     ignore_errors: yes
 
-- hosts: sync_gateways
-  any_errors_fatal: true
-  sudo: true
-
-  # Copy machine stat collection script to sync_gateways
-  tasks:
-  - name: copy the machine collection script
-    copy: src=files/log_machine_stats.py dest=/home/sync_gateway/ owner=sync_gateway group=sync_gateway mode=755
-  # Start collecting machine stats, no polling and a 24 hour timeout
-  - name: start stat collection
-    shell: ./log_machine_stats.py chdir=/home/sync_gateway/
-    async: 86400
-    poll: 0
-
-  # Copy profile collection script to sync_gateways
-  - name: copy the profile collection script
-    copy: src=files/sync_gateway_collect_profile.py dest=/home/sync_gateway/ owner=sync_gateway group=sync_gateway mode=755
-  # Start collecting profile, no polling and a 24 hour timeout
-  - name: start profile collection
-    shell: ./sync_gateway_collect_profile.py --sg-binary /opt/couchbase-sync-gateway/bin/sync_gateway --format-type-pdf --format-type-text --profile-type-heap --profile-type-cpu --profile-type-goroutine --heap-alloc-space --heap-inuse-space --delay-secs 540 chdir=/home/sync_gateway/
-    async: 86400
-    poll: 0
-
-- hosts: sg_accels
-  any_errors_fatal: true
-  sudo: true
-
-  # Copy machine stat collection script to sg_accels
-  tasks:
-  - name: copy the machine collection script
-    copy: src=files/log_machine_stats.py dest=/home/sg_accel/ owner=sg_accel group=sg_accel mode=755
-  # Start collecting machine stats, no polling and a 24 hour timeout
-  - name: start stat collection
-    shell: ./log_machine_stats.py chdir=/home/sg_accel/
-    async: 86400
-    poll: 0
-
-  # Copy profile collection script to sg_accels
-  - name: copy the profile collection script
-    copy: src=files/sync_gateway_collect_profile.py dest=/home/sg_accel/ owner=sg_accel group=sg_accel mode=755
-  # Start collecting profile, no polling and a 24 hour timeout
-  - name: start profile collection
-    shell: ./sync_gateway_collect_profile.py --sg-binary /opt/couchbase-sg-accel/bin/sg_accel --format-type-pdf --format-type-text --profile-type-heap --profile-type-cpu --profile-type-goroutine --heap-alloc-space --heap-inuse-space --delay-secs 540 chdir=/home/sg_accel/
-    async: 86400
-    poll: 0
-
 - hosts: load_generators
   any_errors_fatal: true
 
