@@ -1,60 +1,62 @@
 import os
-import subprocess
 import sys
 
 from optparse import OptionParser
-from subprocess import CalledProcessError
 
-from generate_clusters_from_pool import get_ips
+from generate_clusters_from_pool import get_hosts
+import paramiko
 
 
-def install_keys(key_name, user_name):
+def install_keys(public_key_path, user_name, ssh_password):
 
-    ips, _ = get_ips()
+    hosts, _ = get_hosts()
 
-    print("Are you sure you would like to copy public key '{0}' to vms: {1}".format(
-        key_name, ips
+    print("Deploying key '{0}' to vms: {1}".format(
+        public_key_path, hosts
     ))
 
-    validate = raw_input("Enter 'y' to continue or 'n' to exit: ")
-    if validate != "y":
-        print("Exiting...")
-        sys.exit(1)
+    public_key_data = open(os.path.expanduser(public_key_path)).read()
 
-    print("Using ssh-copy-id...")
-    for ip in ips:
-        try:
-            subprocess.check_output([
-                "ssh-copy-id", "-i", "{0}/.ssh/{1}".format(os.environ["HOME"], key_name),
-                "{0}@{1}".format(user_name, ip)
-            ])
-        except CalledProcessError as e:
-            print("ssh-copy-id failed: {} with error: {}".format(key_name, e))
-            print("Make sure '{}' is in ~/.ssh/".format(key_name))
-            sys.exit(1)
+    for host in hosts:
 
-    split_key = key_name.split(".")
-    private_key = split_key[0]
+        print("Deploying key to {}@{}".format(user_name, host))
 
-    print("Add '{0}' to your ssh agent?".format(private_key))
-    validate = raw_input("Enter 'y' to continue or 'n' to exit: ")
-    if validate != "y":
-        print("Exiting...")
-        sys.exit(1)
+        deploy_key(
+            public_key_data,
+            host,
+            user_name,
+            ssh_password,
+        )
+
+
+def deploy_key(public_key, server, username, password):
+
+    if public_key is None or len(public_key) == 0:
+        raise Exception("Empty key given, check key path")
+
+    client = paramiko.SSHClient()
+    client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+
+    if password == "":
+        client.connect(server, username=username)
     else:
-        subprocess.call((["ssh-add", "{0}/.ssh/{1}".format(os.environ["HOME"], private_key)]))
+        client.connect(server, username=username, password=password)
 
+    client.exec_command('mkdir -p ~/.ssh/')
+    client.exec_command('echo "%s" > ~/.ssh/authorized_keys' % public_key)
+    client.exec_command('chmod 644 ~/.ssh/authorized_keys')
+    client.exec_command('chmod 700 ~/.ssh/')
 
 if __name__ == "__main__":
 
-    usage = "usage: install-keys.py --key-name=<name_of_key> --ssh-user=<user>"
+    usage = "usage: install-keys.py --public-key-path=<path_of_public_key> --ssh-user=<user> --ssh-password=<>"
     parser = OptionParser(usage=usage)
 
     parser.add_option(
-        "", "--key-name",
+        "", "--public-key-path",
         action="store",
         type="string",
-        dest="key_name",
+        dest="public_key_path",
         help="ssh key to install to hosts",
         default=None
     )
@@ -68,15 +70,28 @@ if __name__ == "__main__":
         default=None
     )
 
+    parser.add_option(
+        "", "--ssh-password",
+        action="store",
+        type="string",
+        dest="ssh_password",
+        help="Password auth to login as ssh-user.  Ignore if you already have another public_key and can use passwordless auth",
+        default=None
+    )
+
     cmd_args = sys.argv[1:]
     (opts, args) = parser.parse_args(cmd_args)
 
-    if opts.key_name is None or opts.ssh_user is None:
-        print(">>> Please provide --key-name=<key-name> AND --ssh-user=<user>")
+    if opts.public_key_path is None or opts.ssh_user is None:
+        print(">>> Please provide --public-key-path=<public-key-path> AND --ssh-user=<user>")
         sys.exit(1)
 
-    if opts.key_name is not None and not opts.key_name.endswith(".pub"):
+    if opts.public_key_path is not None and not opts.public_key_path.endswith(".pub"):
         print(">>> Please provide a PUBLIC key (.pub) to install on the remote machines")
         sys.exit(1)
 
-    install_keys(opts.key_name, opts.ssh_user)
+    install_keys(
+        opts.public_key_path,
+        opts.ssh_user,
+        opts.ssh_password,
+    )

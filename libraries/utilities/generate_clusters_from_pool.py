@@ -29,7 +29,7 @@ class ClusterDef:
 
 
 def write_config(config, pool_file):
-    ips, ip_to_node_type = get_ips(pool_file)
+    ips, ip_to_node_type = get_hosts(pool_file)
     ip_to_node_type_len = len(ip_to_node_type)
     ip_to_node_type_defined = False
 
@@ -372,7 +372,7 @@ def write_config(config, pool_file):
             f_json.write(json.dumps(cluster_dict, indent=4))
 
 
-def get_ips(pool_file="resources/pool.json"):
+def get_hosts(pool_file="resources/pool.json"):
     with open(pool_file) as f:
         pool_dict = json.loads(f.read())
         ips = pool_dict["ips"]
@@ -461,7 +461,7 @@ def generate_clusters_from_pool(pool_file):
         sys.exit(1)
 
     print("Using the following machines to run functional tests ... ")
-    for host in get_ips(pool_file):
+    for host in get_hosts(pool_file):
         print(host)
 
     print("Generating 'resources/cluster_configs/'")
