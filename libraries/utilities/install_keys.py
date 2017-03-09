@@ -1,60 +1,62 @@
 import os
-import subprocess
 import sys
 
 from optparse import OptionParser
-from subprocess import CalledProcessError
 
 from generate_clusters_from_pool import get_hosts
 import paramiko
 
-def install_keys(key_path, user_name):
+
+def install_keys(public_key_path, user_name, ssh_password):
 
     hosts, _ = get_hosts()
 
     print("Deploying key '{0}' to vms: {1}".format(
-        key_path, hosts
+        public_key_path, hosts
     ))
 
-    key_data = open(os.path.expanduser(key_path)).read()
+    public_key_data = open(os.path.expanduser(public_key_path)).read()
 
     for host in hosts:
 
         print("Deploying key to {}@{}".format(user_name, host))
 
         deploy_key(
-            key_data,
+            public_key_data,
             host,
             user_name,
-            "",
+            ssh_password,
         )
 
 
-def deploy_key(key, server, username, password):
+def deploy_key(public_key, server, username, password):
 
-    if key is None or len(key) == 0:
+    if public_key is None or len(public_key) == 0:
         raise Exception("Empty key given, check key path")
 
     client = paramiko.SSHClient()
     client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-    # client.connect(server, username=username, password=password)
-    # TODO: vagrant use case
-    client.connect(server, username=username)
+
+    if password == "":
+        client.connect(server, username=username)
+    else:
+        client.connect(server, username=username, password=password)
+
     client.exec_command('mkdir -p ~/.ssh/')
-    client.exec_command('echo "%s" > ~/.ssh/authorized_keys' % key)
+    client.exec_command('echo "%s" > ~/.ssh/authorized_keys' % public_key)
     client.exec_command('chmod 644 ~/.ssh/authorized_keys')
     client.exec_command('chmod 700 ~/.ssh/')
 
 if __name__ == "__main__":
 
-    usage = "usage: install-keys.py --key-path=<name_of_key> --ssh-user=<user>"
+    usage = "usage: install-keys.py --public-key-path=<name_of_public_key> --ssh-user=<user>"
     parser = OptionParser(usage=usage)
 
     parser.add_option(
-        "", "--key-path",
+        "", "--public-key-path",
         action="store",
         type="string",
-        dest="key_path",
+        dest="public_key_path",
         help="ssh key to install to hosts",
         default=None
     )
@@ -68,15 +70,28 @@ if __name__ == "__main__":
         default=None
     )
 
+    parser.add_option(
+        "", "--ssh-password",
+        action="store",
+        type="string",
+        dest="ssh_password",
+        help="Password auth to login as ssh-user.  Ignore if you already have another public_key and can use passwordless auth",
+        default=None
+    )
+
     cmd_args = sys.argv[1:]
     (opts, args) = parser.parse_args(cmd_args)
 
-    if opts.key_path is None or opts.ssh_user is None:
-        print(">>> Please provide --key-path=<key-path> AND --ssh-user=<user>")
+    if opts.public_key_path is None or opts.ssh_user is None:
+        print(">>> Please provide --public-key-path=<public-key-path> AND --ssh-user=<user>")
         sys.exit(1)
 
-    if opts.key_path is not None and not opts.key_path.endswith(".pub"):
+    if opts.public_key_path is not None and not opts.public_key_path.endswith(".pub"):
         print(">>> Please provide a PUBLIC key (.pub) to install on the remote machines")
         sys.exit(1)
 
-    install_keys(opts.key_path, opts.ssh_user)
+    install_keys(
+        opts.public_key_path,
+        opts.ssh_user,
+        opts.ssh_password,
+    )
