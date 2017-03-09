@@ -15,6 +15,7 @@ from keywords import couchbaseserver
 from keywords import utils
 
 import keywords.exceptions
+from keywords.exceptions import ProvisioningError
 
 from keywords.utils import log_info
 
@@ -95,7 +96,7 @@ class Cluster:
 
         is_valid, reason = validate_cluster(self.sync_gateways, self.sg_accels, config)
         if not is_valid:
-            raise RuntimeError(reason)
+            raise ProvisioningError(reason)
 
         log_info(">>> Creating buckets on: {}".format(self.cb_server.url))
         log_info(">>> Creating buckets {}".format(bucket_name_set))

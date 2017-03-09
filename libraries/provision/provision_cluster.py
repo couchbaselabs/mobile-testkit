@@ -15,6 +15,7 @@ from libraries.testkit.config import Config
 
 from keywords.utils import log_info
 from keywords.utils import version_and_build
+from keywords.exceptions import ProvisioningError
 from libraries.testkit.cluster import validate_cluster
 from libraries.testkit.cluster import Cluster
 
@@ -43,7 +44,7 @@ def provision_cluster(cluster_config, couchbase_server_config, sync_gateway_conf
         config,
     )
     if not is_valid:
-        raise RuntimeError(reason)
+        raise ProvisioningError(reason)
 
     log_info(">>> Provisioning cluster...")
 
