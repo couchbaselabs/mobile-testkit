@@ -41,7 +41,6 @@ def main():
         print("You must specify --stackname=<stack_name>")
         sys.exit(1)
 
-
     write_to_file(
         public_dns_names=get_public_dns_names_cloudformation_stack(opts.stackname),
         private_dns_names=get_private_dns_names_cloudformation_stack(opts.stackname),
@@ -89,11 +88,13 @@ def get_public_dns_names_cloudformation_stack(stackname):
     # get public_dns_name for all instances
     return get_public_dns_names(instances_for_stack)
 
+
 def get_private_dns_names_cloudformation_stack(stackname):
 
     instances_for_stack = get_running_instances_for_cloudformation_stack(stackname)
 
     return get_private_dns_names(instances_for_stack)
+
 
 def ip_to_ansible_group_for_cloudformation_stack(stackname):
 
@@ -274,9 +275,11 @@ def get_public_dns_names(instances):
 
     return [instance.public_dns_name for instance in instances]
 
+
 def get_private_dns_names(instances):
 
     return [instance.private_dns_name for instance in instances]
+
 
 def write_to_file(public_dns_names, private_dns_names, ip_to_ansible_group, filename):
     """
