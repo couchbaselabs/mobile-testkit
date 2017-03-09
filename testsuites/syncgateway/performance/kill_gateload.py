@@ -18,5 +18,6 @@ def kill_gateload():
         print("Killing gateload returned non-zero status: {}.  Most likely it was no longer running".format(status))
 
 
+
 if __name__ == "__main__":
     kill_gateload()

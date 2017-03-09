@@ -306,6 +306,7 @@ def write_to_file(public_dns_names, private_dns_names, ip_to_ansible_group, file
     with open(filename, 'w') as target:
         target.write(json.dumps(output_dictionary, sort_keys=True, indent=4, separators=(',', ': ')))
 
+
 if __name__ == "__main__":
 
     main()
