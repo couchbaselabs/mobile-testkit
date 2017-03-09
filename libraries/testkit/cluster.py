@@ -15,6 +15,7 @@ from keywords import couchbaseserver
 from keywords import utils
 
 import keywords.exceptions
+from keywords.exceptions import ProvisioningError
 
 from keywords.utils import log_info
 
@@ -57,15 +58,7 @@ class Cluster:
         # for integrating keywords
         self.cb_server = couchbaseserver.CouchbaseServer(self.servers[0].url)
 
-    def validate_cluster(self):
-
-        # Validate sync gateways
-        if len(self.sync_gateways) == 0:
-            raise Exception("Functional tests require at least 1 index reader")
-
     def reset(self, sg_config_path):
-
-        self.validate_cluster()
 
         ansible_runner = AnsibleRunner(self._cluster_config)
 
@@ -100,6 +93,10 @@ class Cluster:
         bucket_name_set = config.get_bucket_name_set()
 
         self.sync_gateway_config = config
+
+        is_valid, reason = validate_cluster(self.sync_gateways, self.sg_accels, config)
+        if not is_valid:
+            raise ProvisioningError(reason)
 
         log_info(">>> Creating buckets on: {}".format(self.cb_server.url))
         log_info(">>> Creating buckets {}".format(bucket_name_set))
@@ -276,3 +273,16 @@ class Cluster:
             s += str(server)
         s += "\n"
         return s
+
+
+def validate_cluster(sync_gateways, sg_accels, config):
+
+    # Validate sync gateways
+    if len(sync_gateways) == 0:
+        return False, "Functional tests require at least 1 index reader"
+
+    # If we are using a Distributed Index config, make sure that we have sg-accels
+    if config.mode == "di" and len(sg_accels) == 0:
+        return False, "INVALID CONFIG: Running in Distributed Index mode but no sg_accels are defined."
+
+    return True, ""
