@@ -4,5 +4,5 @@
   service: name=sync_gateway state=started
 
 - name: SYNC GATEWAY | Wait until sync gateway to listen on port
-  wait_for: port=4985 timeout=120
+  wait_for: port=4985 timeout=30
 
