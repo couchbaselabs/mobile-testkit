@@ -8,8 +8,12 @@ def test_validate_cluster():
     """
     sync_gateways = ["sg1"]
     sg_accels = []
-    config = Config(conf_path=None)
-    config.mode = "di"
+
+    class MockConfig:
+        def __init__(self, mode):
+            self.mode = mode
+
+    config = MockConfig(mode="di")
 
     is_valid, _ = validate_cluster(sync_gateways, sg_accels, config)
     assert is_valid is False
