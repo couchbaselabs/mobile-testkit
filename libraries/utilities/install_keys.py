@@ -49,7 +49,7 @@ def deploy_key(public_key, server, username, password):
 
 if __name__ == "__main__":
 
-    usage = "usage: install-keys.py --public-key-path=<name_of_public_key> --ssh-user=<user>"
+    usage = "usage: install-keys.py --public-key-path=<path_of_public_key> --ssh-user=<user> --ssh-password=<>"
     parser = OptionParser(usage=usage)
 
     parser.add_option(
