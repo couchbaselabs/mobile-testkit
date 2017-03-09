@@ -41,15 +41,13 @@ def main():
         print("You must specify --stackname=<stack_name>")
         sys.exit(1)
 
-    pool_dns_addresses = get_public_dns_names_cloudformation_stack(opts.stackname)
 
-    print("pool_dns_addresses: {}".format(pool_dns_addresses))
-
-    ip_to_ansible_group = ip_to_ansible_group_for_cloudformation_stack(opts.stackname)
-
-    print("ip_to_ansible_group: {}".format(ip_to_ansible_group))
-
-    write_to_file(pool_dns_addresses, ip_to_ansible_group, opts.targetfile)
+    write_to_file(
+        pool_dns_addresses=get_public_dns_names_cloudformation_stack(opts.stackname),
+        private_dns_names=get_private_dns_names_cloudformation_stack(opts.stackname),
+        ip_to_ansible_group=ip_to_ansible_group_for_cloudformation_stack(opts.stackname),
+        filename=opts.targetfile,
+    )
 
     print "Generated {}".format(opts.targetfile)
 
@@ -91,6 +89,11 @@ def get_public_dns_names_cloudformation_stack(stackname):
     # get public_dns_name for all instances
     return get_public_dns_names(instances_for_stack)
 
+def get_private_dns_names_cloudformation_stack(stackname):
+
+    instances_for_stack = get_running_instances_for_cloudformation_stack(stackname)
+
+    return get_private_dns_names(instances_for_stack)
 
 def ip_to_ansible_group_for_cloudformation_stack(stackname):
 
@@ -271,8 +274,11 @@ def get_public_dns_names(instances):
 
     return [instance.public_dns_name for instance in instances]
 
+def get_private_dns_names(instances):
 
-def write_to_file(cloud_formation_stack_dns_addresses, ip_to_ansible_group, filename):
+    return [instance.private_dns_name for instance in instances]
+
+def write_to_file(public_dns_names, private_dns_names, ip_to_ansible_group, filename):
     """
     {
         "ip_to_node_type": {
@@ -290,7 +296,8 @@ def write_to_file(cloud_formation_stack_dns_addresses, ip_to_ansible_group, file
     """
     output_dictionary = {
         "ip_to_node_type": ip_to_ansible_group,
-        "ips": cloud_formation_stack_dns_addresses,
+        "private_dns_names": private_dns_names,
+        "ips": public_dns_names,
     }
 
     with open(filename, 'w') as target:
