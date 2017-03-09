@@ -48,7 +48,7 @@ def main():
         filename=opts.targetfile,
     )
 
-    print "Generated {}".format(opts.targetfile)
+    print("Generated {}".format(opts.targetfile))
 
 
 def get_running_instances_for_cloudformation_stack(stackname):
