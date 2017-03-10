@@ -163,6 +163,7 @@ def create_and_instantiate_cluster(config):
         "--parameters", "ParameterKey=KeyName,ParameterValue={}".format(os.environ["AWS_KEY"])
     ])
 
+
 if __name__ == "__main__":
 
     usage = """usage: python create_and_instantiate_cloud

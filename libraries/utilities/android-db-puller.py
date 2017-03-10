@@ -22,6 +22,7 @@ def collect(package_name, target_name):
     # Extract backup TODO
     # dd if=data.ab bs=1 skip=24 | python -c "import zlib,sys;sys.stdout.write(zlib.decompress(sys.stdin.read()))" | tar -xvf -
 
+
 if __name__ == "__main__":
 
     usage = """usage: collect.py
