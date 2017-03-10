@@ -1,0 +1,20 @@
+# Fetch sync gateway logs for CentOS
+- name: SYNC GATEWAY | Check if sync_gateway access log is present on Windows
+  win_stat:
+    path: 'C:/PROGRA~2/Couchbase/var/lib/couchbase/logs/sync_gateway_access.log'
+  register: pa
+
+- name: SYNC GATEWAY | Fetch sync_gateway access log for Windows
+  # Do not validate checksum as this is just a passive grab of the logs. Since they are continuously being appended to, the checksum may fail
+  fetch: src='C:/PROGRA~2/Couchbase/var/lib/couchbase/logs/sync_gateway_access.log' dest=/tmp/sg_logs/{{ inventory_hostname }}/ fail_on_missing=yes flat=yes validate_checksum=no
+  when: pa.stat.exists
+
+- name: SYNC GATEWAY | Check if sync_gateway error log is present on Windows
+  win_stat:
+    path: 'C:/PROGRA~2/Couchbase/var/lib/couchbase/logs/sync_gateway_error.log'
+  register: pe
+
+- name: SYNC GATEWAY | Fetch sync_gateway error log for Windows
+  # Do not validate checksum as this is just a passive grab of the logs. Since they are continuously being appended to, the checksum may fail
+  fetch: src='C:/PROGRA~2/Couchbase/var/lib/couchbase/logs/sync_gateway_error.log' dest=/tmp/sg_logs/{{ inventory_hostname }}/ fail_on_missing=yes flat=yes validate_checksum=no
+  when: pe.stat.exists
