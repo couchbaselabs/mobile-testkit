@@ -6,8 +6,7 @@ from requests.exceptions import HTTPError
 from requests import Session
 
 from couchbase.bucket import Bucket
-from couchbase.exceptions import ProtocolError
-from couchbase.exceptions import TemporaryFailError
+from couchbase.exceptions import CouchbaseError
 from couchbase.exceptions import NotFoundError
 
 
@@ -272,17 +271,13 @@ class CouchbaseServer:
             try:
                 bucket = Bucket("couchbase://{}/{}".format(self.host, name))
                 bucket.get('foo')
-            except ProtocolError:
-                log_info("Client Connection failed: Retrying ...")
-                time.sleep(1)
-                continue
-            except TemporaryFailError:
-                log_info("Failure from server: Retrying ...")
-                time.sleep(1)
-                continue
             except NotFoundError:
                 log_info("Key not found error: Bucket is ready!")
                 break
+            except CouchbaseError as e:
+                log_info("Error from server: Retrying ...", e)
+                time.sleep(1)
+                continue
 
         self.wait_for_ready_state()
 
