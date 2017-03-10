@@ -279,7 +279,6 @@ class CouchbaseServer:
                 time.sleep(1)
                 continue
 
-
         self.wait_for_ready_state()
 
         return name
