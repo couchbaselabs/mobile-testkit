@@ -217,6 +217,7 @@ def analze_perf_results(cluster_config, test_id):
     plot_machine_stats(cluster_config, fig3, "testsuites/syncgateway/performance/results/{}/perf_logs/".format(test_id))
     plt.savefig("testsuites/syncgateway/performance/results/{}/sync_gateway_machine_stats.png".format(test_id), dpi=300)
 
+
 if __name__ == "__main__":
     usage = """usage: analyze_perf_results.py
     --test-id=<test-id>

@@ -47,6 +47,7 @@ def deploy_key(public_key, server, username, password):
     client.exec_command('chmod 644 ~/.ssh/authorized_keys')
     client.exec_command('chmod 700 ~/.ssh/')
 
+
 if __name__ == "__main__":
 
     usage = "usage: install-keys.py --public-key-path=<path_of_public_key> --ssh-user=<user> --ssh-password=<>"

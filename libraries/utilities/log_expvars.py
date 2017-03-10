@@ -140,6 +140,7 @@ def wait_for_endpoints_alive_or_raise(endpoints, num_attempts=5):
 
     raise RuntimeError("Give up waiting for endpoints after {} attempts".format(num_attempts))
 
+
 if __name__ == "__main__":
 
     try:

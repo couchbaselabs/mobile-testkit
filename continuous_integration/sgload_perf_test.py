@@ -245,5 +245,6 @@ def str_to_bool(strval):
     else:
         raise Exception("Invalid boolean string value: {}.  Expecting 'true' or 'false'".format(strval))
 
+
 if __name__ == "__main__":
     main()
