@@ -1,6 +1,5 @@
 import logging
 import json
-import nmap
 
 
 # TODO: Use python logging hooks instead of wrappers - https://github.com/couchbaselabs/mobile-testkit/issues/686

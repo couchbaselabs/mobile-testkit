@@ -64,12 +64,10 @@ class Cluster:
         if len(acs) > 0:
             self.sa = keywords.SyncGateway.SGAccel(self.sg_accels[0].url)
 
-
     def validate_cluster(self):
         # Validate sync gateways
         if len(self.sync_gateways) == 0:
             raise Exception("Functional tests require at least 1 index reader")
-
 
     def reset(self, sg_config_path):
 
@@ -127,7 +125,6 @@ class Cluster:
         # Start sync-gateway
         status = self.sg.start_sync_gateway(self._cluster_config, self.sync_gateways[0].url, config_path_full)
         assert status == 0, "Failed to start to Sync Gateway"
-
 
         # Validate CBGT
         if mode == "di":
