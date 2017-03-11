@@ -102,16 +102,35 @@ def test_initial_pull_replication(setup_client_syncgateway_test, continuous):
     # Verify docs show up in client's changes feed
     client.verify_docs_in_changes(url=ls_url, db=ls_db, expected_docs=docs)
 
-    replications = client.get_replications(url=ls_url)
-
     if continuous:
-        assert len(replications) == 1, "There should only be one replication running"
-        assert replications[0]["status"] == "Idle", "Replication Status should be 'Idle'"
-        assert replications[0]["continuous"], "Running replication should be continuous"
+        count = 0
+        max_retries = 3
+        # Try in a loop to handle a delay between getting the changes and replication status turning to idle
+        while True:
+
+            replications = client.get_replications(url=ls_url)
+
+            assert len(replications) == 1, "There should only be one replication running"
+            assert replications[0]["continuous"], "Running replication should be continuous"
+
+            try:
+                assert replications[0]["status"] == "Idle", "Replication Status should be 'Idle'"
+                break
+            except AssertionError:
+                log_info("All changes have come through but replication status is not idle yet!")
+                count += 1
+
+                # Fail if count hits max retries
+                assert count != max_retries
+
+                time.sleep(1)
+
         # Only .NET has an 'error' property
         if "error" in replications[0]:
             assert len(replications[0]["error"]) == 0
+
     else:
+        replications = client.get_replications(url=ls_url)
         assert len(replications) == 0, "No replications should be running"
 
 
@@ -1018,9 +1037,11 @@ def test_verify_open_revs_with_revs_limit_push_conflict(setup_client_syncgateway
 
     client.verify_docs_present(url=sg_admin_url, db=sg_db, expected_docs=ls_db_docs)
 
+    # Update docs on sync gateway
     client.update_docs(url=sg_url, db=sg_db, docs=ls_db_docs, number_updates=num_revs, auth=sg_session)
     sg_current_doc = client.get_doc(url=sg_url, db=sg_db, doc_id="ls_db_2", auth=sg_session)
 
+    # Update docs on client
     client.update_docs(url=ls_url, db=ls_db, docs=ls_db_docs, number_updates=num_revs)
     ls_current_doc = client.get_doc(url=ls_url, db=ls_db, doc_id="ls_db_2")
 

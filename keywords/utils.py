@@ -79,7 +79,7 @@ def host_for_url(url):
 
     host = url.replace("http://", "")
     host = host.split(":")[0]
-    log_info("Extracted host {} from url {}".format(host, url))
+    log_info("Extracted host ({}) from url ({})".format(host, url))
 
     return host
 
@@ -136,3 +136,18 @@ def detect_remote_os(ip_address):
             return "Windows"
         elif "OpenSSH" in output['scan'][ip_address]['tcp'][i]['product']:
             return "Linux"
+
+
+# Check if this version has net45
+def has_dot_net4_dot_5(version):
+    version_prefixes = [
+        "1.2",
+        "1.3",
+        "1.4.0"  # For 1.4, the path is net45/LiteServ.exe, for 1.4.0, there is no net45
+    ]
+
+    for i in version_prefixes:
+        if version.startswith(i):
+            return False
+
+    return True

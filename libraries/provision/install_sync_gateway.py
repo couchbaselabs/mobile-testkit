@@ -1,5 +1,6 @@
 import sys
 import os
+import re
 
 from keywords.couchbaseserver import CouchbaseServer
 from keywords.ClusterKeywords import ClusterKeywords
@@ -34,7 +35,8 @@ class SyncGatewayConfig:
             "1.3.0",
             "1.3.1",
             "1.4.0",
-            "1.4"
+            "1.4",
+            "1.4.0.1"
         ]
 
         self.commit = commit
@@ -135,6 +137,14 @@ def install_sync_gateway(cluster_config, sync_gateway_config):
         if status != 0:
             raise ProvisioningError("Failed to install sync_gateway package")
 
+    # Configure aws cloudwatch logs forwarder
+    status = ansible_runner.run_ansible_playbook(
+        "configure-sync-gateway-awslogs-forwarder.yml",
+        extra_vars={}
+    )
+    if status != 0:
+        raise ProvisioningError("Failed to configure sync_gateway awslogs forwarder")
+
 
 def create_server_buckets(cluster_config, sync_gateway_config):
 
@@ -162,10 +172,41 @@ def create_server_buckets(cluster_config, sync_gateway_config):
 
 
 def get_buckets_from_sync_gateway_config(sync_gateway_config_path):
+    # Remove the sync function before trying to extract the bucket names
 
-    config_path_full = os.path.abspath(sync_gateway_config_path)
+    with open(sync_gateway_config_path) as fp:
+        conf_data = fp.read()
+
+    fp.close()
+    temp_config_path = ""
+    temp_config = ""
+
+    # Check if a sync function id defined between ` `
+    if re.search('`', conf_data):
+        log_info("Ignoring the sync function to extract bucket names")
+        conf = re.split('`', conf_data)
+        split_len = len(conf)
+
+        # Replace the sync function with a string "function"
+        for i in range(0, split_len, 2):
+            if i == split_len - 1:
+                temp_config += conf[i]
+            else:
+                temp_config += conf[i] + " \"function\" "
+
+        temp_config_path = "/".join(sync_gateway_config_path.split('/')[:-2]) + '/temp_conf.json'
+
+        with open(temp_config_path, 'w') as fp:
+            fp.write(temp_config)
+
+        config_path_full = os.path.abspath(temp_config_path)
+    else:
+        config_path_full = os.path.abspath(sync_gateway_config_path)
+
     config = Config(config_path_full)
     bucket_name_set = config.get_bucket_name_set()
+    if os.path.exists(temp_config_path):
+        os.remove(temp_config_path)
     return bucket_name_set
 
 

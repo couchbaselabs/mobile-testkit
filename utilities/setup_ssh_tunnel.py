@@ -26,6 +26,7 @@ def get_remote_hosts_list(remote_hosts_file):
         remote_hosts_list = pools['ips']
         return remote_hosts_list
 
+
 if __name__ == "__main__":
 
     # There is some complex argument parsing going on in order to be able to capture

@@ -15,12 +15,10 @@
     "databases":{
         "db1":{
             "feed_type":"DCPSHARD",
-            "feed_params":{
-                "num_shards":16
-            },
             "server":"http://{{ couchbase_server_primary_node }}:8091",
             "bucket":"data-bucket-1",
             "channel_index":{
+                "num_shards":16,
                 "server":"http://{{ couchbase_server_primary_node }}:8091",
                 "bucket":"index-bucket-1",
                 "writer":{{ is_index_writer }}
@@ -28,9 +26,6 @@
         },
         "db2":{
             "feed_type":"DCPSHARD",
-            "feed_params":{
-                "num_shards":16
-            },
             "server":"http://{{ couchbase_server_primary_node }}:8091",
             "bucket":"data-bucket-2",
             "channel_index":{

@@ -7,7 +7,7 @@ from jinja2 import Template
 
 from keywords import utils
 from keywords.ClusterKeywords import ClusterKeywords
-from keywords.RemoteExecutor import RemoteExecutor
+from keywords.remoteexecutor import RemoteExecutor
 from keywords.SyncGateway import SyncGateway
 from keywords.SyncGateway import SGAccel
 from keywords.SyncGateway import load_sg_accel_config

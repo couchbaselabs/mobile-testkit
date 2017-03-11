@@ -15,7 +15,10 @@ from keywords import couchbaseserver
 import keywords.SyncGateway
 
 from keywords import utils
+
 import keywords.exceptions
+from keywords.exceptions import ProvisioningError
+
 from keywords.utils import log_info
 from keywords.SyncGateway import load_sg_accel_config
 
@@ -61,14 +64,14 @@ class Cluster:
         if len(acs) > 0:
             self.sa = keywords.SyncGateway.SGAccel(self.sg_accels[0].url)
 
+
     def validate_cluster(self):
         # Validate sync gateways
         if len(self.sync_gateways) == 0:
             raise Exception("Functional tests require at least 1 index reader")
 
-    def reset(self, sg_config_path):
 
-        self.validate_cluster()
+    def reset(self, sg_config_path):
 
         ansible_runner = AnsibleRunner(self._cluster_config)
         # Parse config and grab bucket names
@@ -105,6 +108,10 @@ class Cluster:
 
         self.sync_gateway_config = config
 
+        is_valid, reason = validate_cluster(self.sync_gateways, self.sg_accels, config)
+        if not is_valid:
+            raise ProvisioningError(reason)
+
         log_info(">>> Creating buckets on: {}".format(self.cb_server.url))
         log_info(">>> Creating buckets {}".format(bucket_name_set))
         self.cb_server.create_buckets(bucket_name_set)
@@ -121,16 +128,6 @@ class Cluster:
         status = self.sg.start_sync_gateway(self._cluster_config, self.sync_gateways[0].url, config_path_full)
         assert status == 0, "Failed to start to Sync Gateway"
 
-        # HACK - only enable sg_accel for distributed index tests
-        # revise this with https://github.com/couchbaselabs/sync-gateway-testcluster/issues/222
-        # if mode == "di":
-        #    # Start sg-accel
-        #    status = ansible_runner.run_ansible_playbook(
-        #        "start-sg-accel.yml",
-        #        extra_vars={
-        #            "sync_gateway_config_filepath": config_path_full
-        #        }
-        #    )
 
         # Validate CBGT
         if mode == "di":
@@ -285,3 +282,16 @@ class Cluster:
             s += str(server)
         s += "\n"
         return s
+
+
+def validate_cluster(sync_gateways, sg_accels, config):
+
+    # Validate sync gateways
+    if len(sync_gateways) == 0:
+        return False, "Functional tests require at least 1 index reader"
+
+    # If we are using a Distributed Index config, make sure that we have sg-accels
+    if config.mode == "di" and len(sg_accels) == 0:
+        return False, "INVALID CONFIG: Running in Distributed Index mode but no sg_accels are defined."
+
+    return True, ""

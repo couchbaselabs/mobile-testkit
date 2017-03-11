@@ -3,11 +3,15 @@ import ansible.constants
 
 from keywords.exceptions import RemoteCommandError
 from keywords.utils import log_info
+from keywords.constants import REMOTE_EXECUTOR_TIMEOUT
 
 
 def stream_output(stdio_file_stream):
+    lines = []
     for line in stdio_file_stream:
         print(line)
+        lines.append(line)
+    return lines
 
 
 class RemoteExecutor:
@@ -31,7 +35,7 @@ class RemoteExecutor:
         """
 
         log_info("Connecting to {}".format(self.host))
-        self.client.connect(self.host, username=self.username)
+        self.client.connect(self.host, username=self.username, banner_timeout=REMOTE_EXECUTOR_TIMEOUT)
 
         log_info("Running '{}' on host {}".format(commamd, self.host))
 
@@ -41,10 +45,10 @@ class RemoteExecutor:
         # We should not be sending / recieving data on the stdin channel so close it
         stdin.close()
 
-        stdout_p = stdout.readlines()
-        stream_output(stdout_p)
-        stderr_p = stderr.readlines()
-        stream_output(stderr_p)
+        # Stream output to console, and capture all of the output.
+        # TODO: this is not memory efficient and if there is a ton of output, this will blow up
+        stdout_p = stream_output(stdout)
+        stderr_p = stream_output(stderr)
 
         # this will block until the command has completed and will return the error code from
         # the command. If the command does not return an exit status, then -1 is returned
@@ -60,6 +64,7 @@ class RemoteExecutor:
         an exception if the status returned is non-zero
         """
 
-        status, _, _ = self.execute(command)
+        status, stdout_p, stderr_p = self.execute(command)
         if status != 0:
             raise RemoteCommandError("command: {} failed on host: {}".format(command, self.host))
+        return stdout_p, stderr_p

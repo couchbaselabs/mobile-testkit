@@ -18,10 +18,8 @@
             "server":"http://{{ couchbase_server_primary_node }}:8091",
             "bucket":"data-bucket",
             "feed_type":"DCPSHARD",
-            "feed_params":{
-                "num_shards":16
-            },
             "channel_index":{
+                "num_shards":16,
                 "server":"http://{{ couchbase_server_primary_node }}:8091",
                 "bucket":"index-bucket",
                 "writer":{{ is_index_writer }}
@@ -32,6 +30,8 @@
                     access(doc.users, doc.channels);
                 } else if(doc._id == "role_access") {
                     role(doc.users, doc.roles);
+                } else if(doc._id == "channel_grant_to_role") {
+                    access(doc.roles, doc.channels);
                 } else {
                     channel(doc.channels);
                 }

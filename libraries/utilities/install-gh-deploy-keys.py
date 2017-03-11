@@ -19,12 +19,12 @@ import sys
 
 from optparse import OptionParser
 
-from generate_clusters_from_pool import get_ips
+from generate_clusters_from_pool import get_hosts
 
 
 def install_gh_deploy_keys(key_path, user_name):
 
-    ips, _ = get_ips()
+    ips, _ = get_hosts()
 
     for ip in ips:
 

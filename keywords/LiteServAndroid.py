@@ -58,9 +58,24 @@ class LiteServAndroid(LiteServBase):
         apk_path = "{}/{}".format(BINARY_DIR, apk_name)
         log_info("Installing: {}".format(apk_path))
 
-        output = subprocess.check_output(["adb", "install", apk_path])
-        if "INSTALL_FAILED_ALREADY_EXISTS" in output or "INSTALL_FAILED_UPDATE_INCOMPATIBLE" in output:
-            raise LiteServError("Error. APK already exists.")
+        # If and apk is installed, attempt to remove it and reinstall.
+        # If that fails, raise an exception
+        max_retries = 1
+        count = 0
+        while True:
+
+            if count > max_retries:
+                raise LiteServError(".apk install failed!")
+
+            output = subprocess.check_output(["adb", "install", apk_path])
+            if "INSTALL_FAILED_ALREADY_EXISTS" in output or "INSTALL_FAILED_UPDATE_INCOMPATIBLE" in output:
+                # Apk may be installed, remove and retry install
+                self.remove()
+                count += 1
+                continue
+            else:
+                # Install succeeded, continue
+                break
 
         output = subprocess.check_output(["adb", "shell", "pm", "list", "packages"])
         if "com.couchbase.liteservandroid" not in output:

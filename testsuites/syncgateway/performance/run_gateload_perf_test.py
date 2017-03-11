@@ -2,22 +2,33 @@ import os
 import shutil
 import time
 import sys
+import collections
+
 from optparse import OptionParser
 from libraries.provision.ansible_runner import AnsibleRunner
 import generate_gateload_configs
 from keywords.exceptions import ProvisioningError
 from libraries.utilities.log_expvars import log_expvars
 from libraries.utilities.fetch_sync_gateway_profile import fetch_sync_gateway_profile
+from kill_gateload import kill_gateload
+
+GateloadParams = collections.namedtuple(
+    "GateloadParams",
+    [
+        "number_pullers",
+        "number_pushers",
+        "doc_size",
+        "runtime_ms",
+        "rampup_interval_ms",
+        "feed_type",
+        "sleep_time_ms",
+        "channel_active_users",
+        "channel_concurrent_users"
+    ]
+)
 
 
-def run_gateload_perf_test(number_pullers,
-                           number_pushers,
-                           gen_gateload_config,
-                           test_id,
-                           doc_size,
-                           runtime_ms,
-                           rampup_interval_ms,
-                           feed_type):
+def run_gateload_perf_test(gen_gateload_config, test_id, gateload_params):
 
     try:
         cluster_config = os.environ["CLUSTER_CONFIG"]
@@ -41,7 +52,7 @@ def run_gateload_perf_test(number_pullers,
     # Copy provisioning_config to performance_results/ folder
     shutil.copy("{}".format(cluster_config), "testsuites/syncgateway/performance/results/{}".format(test_run_id))
 
-    if int(number_pullers) > 0 and not gen_gateload_config:
+    if int(gateload_params.number_pullers) > 0 and not gen_gateload_config:
         raise Exception("You specified --num-pullers but did not set --gen-gateload-config")
 
     # Build gateload
@@ -57,17 +68,21 @@ def run_gateload_perf_test(number_pullers,
     if gen_gateload_config:
         generate_gateload_configs.main(
             cluster_config=cluster_config,
-            number_of_pullers=number_pullers,
-            number_of_pushers=number_pushers,
             test_id=test_run_id,
-            doc_size=doc_size,
-            runtime_ms=runtime_ms,
-            rampup_interval_ms=rampup_interval_ms,
-            feed_type=feed_type
+            gateload_params=gateload_params
         )
 
+    print(">>> Starting profile collection scripts")
+    status = ansible_runner.run_ansible_playbook(
+        "start-profile-collection.yml",
+        extra_vars={},
+    )
+    assert status == 0, "Could not start profiling collection scripts"
+
     # Start gateload
-    print(">>> Starting gateload with {0} pullers and {1} pushers".format(number_pullers, number_pushers))
+    print(">>> Starting gateload with {0} pullers and {1} pushers".format(
+        gateload_params.number_pullers, gateload_params.number_pushers
+    ))
     status = ansible_runner.run_ansible_playbook(
         "start-gateload.yml",
         extra_vars={},
@@ -76,10 +91,16 @@ def run_gateload_perf_test(number_pullers,
 
     # write expvars to file, will exit when gateload scenario is done
     print(">>> Logging expvars")
-    log_expvars(cluster_config, test_run_id)
+    gateload_finished_successfully = log_expvars(cluster_config, test_run_id)
 
     print(">>> Fetch Sync Gateway profile")
     fetch_sync_gateway_profile(cluster_config, test_run_id)
+
+    print(">>> Shutdown gateload")
+    kill_gateload()
+
+    if not gateload_finished_successfully:
+        raise RuntimeError("It appears that gateload did not finish successfully.  Check logs for details")
 
 
 if __name__ == "__main__":
@@ -94,6 +115,9 @@ if __name__ == "__main__":
     --runtime-ms=2400000
     --rampup-interval-ms=120000
     --feed-type="continuous"
+    --sleep-time-ms=10000
+    --channel-active-users=40
+    --channel-concurrent-users=40
     """
 
     parser = OptionParser(usage=usage)
@@ -138,6 +162,21 @@ if __name__ == "__main__":
                       default=None,
                       help="The type of on feed to use for changes, 'continuous' or 'longpoll'")
 
+    parser.add_option("", "--sleep-time-ms",
+                      action="store", dest="sleep_time_ms",
+                      default=None,
+                      help="Default sleep time for pusher between ops")
+
+    parser.add_option("", "--channel-active-users",
+                      action="store", dest="channel_active_users",
+                      default=None,
+                      help="Number of users for a given channel")
+
+    parser.add_option("", "--channel-concurrent-users",
+                      action="store", dest="channel_concurrent_users",
+                      default=None,
+                      help="The number of active users assigned to a channel")
+
     arg_parameters = sys.argv[1:]
 
     (opts, args) = parser.parse_args(arg_parameters)
@@ -151,14 +190,22 @@ if __name__ == "__main__":
     if opts.feed_type not in valid_feed_types:
         raise ProvisioningError("Make sure you provide a valid feed type!")
 
-    # Start load generator
-    run_gateload_perf_test(
+    # Wrap gateload params into a named tuple
+    gateload_params_from_args = GateloadParams(
         number_pullers=opts.number_pullers,
         number_pushers=opts.number_pushers,
-        gen_gateload_config=opts.gen_gateload_config,
-        test_id=opts.test_id,
         doc_size=opts.doc_size,
         runtime_ms=opts.runtime_ms,
         rampup_interval_ms=opts.rampup_interval_ms,
-        feed_type=opts.feed_type
+        feed_type=opts.feed_type,
+        sleep_time_ms=opts.sleep_time_ms,
+        channel_active_users=opts.channel_active_users,
+        channel_concurrent_users=opts.channel_concurrent_users
+    )
+
+    # Start load generator
+    run_gateload_perf_test(
+        gen_gateload_config=opts.gen_gateload_config,
+        test_id=opts.test_id,
+        gateload_params=gateload_params_from_args
     )

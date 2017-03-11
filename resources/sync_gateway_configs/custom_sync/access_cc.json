@@ -18,6 +18,8 @@
                     access(doc.users, doc.channels);
                 } else if(doc._id == "role_access") {
                     role(doc.users, doc.roles);
+                } else if(doc._id == "channel_grant_to_role") {
+                    access(doc.roles, doc.channels);
                 } else {
                     channel(doc, doc.channels);
                 }

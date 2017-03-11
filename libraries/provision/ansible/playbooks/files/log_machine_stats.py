@@ -12,6 +12,7 @@ def is_running(process_name):
             return True
     return False
 
+
 with open("cpu_stats.json", "w") as f:
 
     obj = dict()

@@ -29,7 +29,7 @@ class ClusterDef:
 
 
 def write_config(config, pool_file):
-    ips, ip_to_node_type = get_ips(pool_file)
+    ips, ip_to_node_type = get_hosts(pool_file)
     ip_to_node_type_len = len(ip_to_node_type)
     ip_to_node_type_defined = False
 
@@ -372,7 +372,7 @@ def write_config(config, pool_file):
             f_json.write(json.dumps(cluster_dict, indent=4))
 
 
-def get_ips(pool_file="resources/pool.json"):
+def get_hosts(pool_file="resources/pool.json"):
     with open(pool_file) as f:
         pool_dict = json.loads(f.read())
         ips = pool_dict["ips"]
@@ -395,6 +395,8 @@ def generate_clusters_from_pool(pool_file):
 
         ClusterDef("base_cc", num_sgs=1, num_acs=0, num_cbs=1, num_lgs=0, num_lbs=0),
         ClusterDef("base_di", num_sgs=1, num_acs=1, num_cbs=1, num_lgs=0, num_lbs=0),
+        ClusterDef("ci_cc", num_sgs=1, num_acs=0, num_cbs=3, num_lgs=0, num_lbs=0),
+        ClusterDef("ci_di", num_sgs=1, num_acs=2, num_cbs=3, num_lgs=0, num_lbs=0),
         ClusterDef("multiple_servers_cc", num_sgs=1, num_acs=0, num_cbs=3, num_lgs=0, num_lbs=0),
         ClusterDef("multiple_servers_di", num_sgs=1, num_acs=1, num_cbs=3, num_lgs=0, num_lbs=0),
         ClusterDef("multiple_sg_accels_di", num_sgs=1, num_acs=3, num_cbs=1, num_lgs=0, num_lbs=0),
@@ -405,23 +407,48 @@ def generate_clusters_from_pool(pool_file):
         ClusterDef("1sg", num_sgs=1, num_acs=0, num_cbs=0, num_lgs=0, num_lbs=0),
         ClusterDef("2sgs", num_sgs=2, num_acs=0, num_cbs=0, num_lgs=0, num_lbs=0),
         ClusterDef("1cbs", num_sgs=0, num_acs=0, num_cbs=1, num_lgs=0, num_lbs=0),
-        ClusterDef("2sg_1cbs_1lgs", num_sgs=2, num_acs=0, num_cbs=1, num_lgs=1, num_lbs=0),
         ClusterDef("1sg_1cbs_1lgs", num_sgs=1, num_acs=0, num_cbs=1, num_lgs=1, num_lbs=0),
-        ClusterDef("2sg_3cbs_2lgs", num_sgs=2, num_acs=0, num_cbs=3, num_lgs=2, num_lbs=0),
         ClusterDef("1sg_1ac_1cbs_1lgs", num_sgs=1, num_acs=1, num_cbs=1, num_lgs=1, num_lbs=0),
-        ClusterDef("2sg_2ac_3cbs_1lgs", num_sgs=2, num_acs=2, num_cbs=3, num_lgs=1, num_lbs=0),
-        ClusterDef("2sg_2ac_3cbs_2lgs", num_sgs=2, num_acs=2, num_cbs=3, num_lgs=2, num_lbs=0),
-        # Perf Mini Matrix
+        # 1 sync_gateway
         ClusterDef("1sg_1ac_3cbs_1lgs", num_sgs=1, num_acs=1, num_cbs=3, num_lgs=1, num_lbs=0),
         ClusterDef("1sg_2ac_3cbs_1lgs", num_sgs=1, num_acs=2, num_cbs=3, num_lgs=1, num_lbs=0),
-        ClusterDef("2sg_1ac_3cbs_2lgs", num_sgs=2, num_acs=1, num_cbs=3, num_lgs=2, num_lbs=0),
+        # 2 sync_gateways
+        ClusterDef("2sg_1cbs_1lgs", num_sgs=2, num_acs=0, num_cbs=1, num_lgs=1, num_lbs=0),
+        ClusterDef("2sg_3cbs_2lgs", num_sgs=2, num_acs=0, num_cbs=3, num_lgs=2, num_lbs=0),
+        ClusterDef("2sg_6cbs_2lgs", num_sgs=2, num_acs=0, num_cbs=6, num_lgs=2, num_lbs=0),
+        ClusterDef("2sg_2ac_3cbs_1lgs", num_sgs=2, num_acs=2, num_cbs=3, num_lgs=1, num_lbs=0),
         ClusterDef("2sg_2ac_3cbs_2lgs", num_sgs=2, num_acs=2, num_cbs=3, num_lgs=2, num_lbs=0),
-        ClusterDef("3sg_1ac_3cbs_3lgs", num_sgs=3, num_acs=1, num_cbs=3, num_lgs=3, num_lbs=0),
-        ClusterDef("3sg_2ac_3cbs_3lgs", num_sgs=3, num_acs=2, num_cbs=3, num_lgs=3, num_lbs=0),
-        ClusterDef("4sg_1ac_3cbs_4lgs", num_sgs=4, num_acs=1, num_cbs=3, num_lgs=4, num_lbs=0),
+        ClusterDef("2sg_2ac_6cbs_2lgs", num_sgs=2, num_acs=2, num_cbs=6, num_lgs=2, num_lbs=0),
+        ClusterDef("2sg_4ac_3cbs_2lgs", num_sgs=2, num_acs=4, num_cbs=3, num_lgs=2, num_lbs=0),
+        ClusterDef("2sg_8ac_3cbs_2lgs", num_sgs=2, num_acs=8, num_cbs=3, num_lgs=2, num_lbs=0),
+        ClusterDef("2sg_2ac_6cbs_2lgs", num_sgs=2, num_acs=2, num_cbs=6, num_lgs=2, num_lbs=0),
+        ClusterDef("2sg_8ac_6cbs_2lgs", num_sgs=2, num_acs=8, num_cbs=6, num_lgs=2, num_lbs=0),
+        # 4 sync_gateways
         ClusterDef("4sg_2ac_3cbs_4lgs", num_sgs=4, num_acs=2, num_cbs=3, num_lgs=4, num_lbs=0),
-        ClusterDef("8sg_1ac_3cbs_8lgs", num_sgs=8, num_acs=1, num_cbs=3, num_lgs=8, num_lbs=0),
-        ClusterDef("8sg_2ac_3cbs_8lgs", num_sgs=8, num_acs=2, num_cbs=3, num_lgs=8, num_lbs=0),
+        ClusterDef("4sg_2ac_6cbs_4lgs", num_sgs=4, num_acs=2, num_cbs=6, num_lgs=4, num_lbs=0),
+        ClusterDef("4sg_4ac_3cbs_4lgs", num_sgs=4, num_acs=4, num_cbs=3, num_lgs=4, num_lbs=0),
+        ClusterDef("4sg_4ac_6cbs_4lgs", num_sgs=4, num_acs=4, num_cbs=6, num_lgs=4, num_lbs=0),
+        ClusterDef("4sg_8ac_3cbs_4lgs", num_sgs=4, num_acs=8, num_cbs=3, num_lgs=4, num_lbs=0),
+        ClusterDef("4sg_8ac_6cbs_4lgs", num_sgs=4, num_acs=8, num_cbs=6, num_lgs=4, num_lbs=0),
+        # 8 sync_gateways
+        ClusterDef("8sg_4ac_3cbs_8lgs", num_sgs=8, num_acs=4, num_cbs=3, num_lgs=8, num_lbs=0),
+        ClusterDef("8sg_4ac_6cbs_8lgs", num_sgs=8, num_acs=4, num_cbs=6, num_lgs=8, num_lbs=0),
+        ClusterDef("8sg_4ac_12cbs_8lgs", num_sgs=8, num_acs=4, num_cbs=12, num_lgs=8, num_lbs=0),
+        ClusterDef("8sg_8ac_3cbs_8lgs", num_sgs=8, num_acs=8, num_cbs=3, num_lgs=8, num_lbs=0),
+        ClusterDef("8sg_8ac_6cbs_8lgs", num_sgs=8, num_acs=8, num_cbs=6, num_lgs=8, num_lbs=0),
+        ClusterDef("8sg_12ac_3cbs_8lgs", num_sgs=8, num_acs=12, num_cbs=3, num_lgs=8, num_lbs=0),
+        # 12 sync_gateways
+        ClusterDef("12sg_4ac_6cbs_12lgs", num_sgs=12, num_acs=4, num_cbs=6, num_lgs=12, num_lbs=0),
+        ClusterDef("12sg_4ac_12cbs_12lgs", num_sgs=12, num_acs=4, num_cbs=12, num_lgs=12, num_lbs=0),
+        ClusterDef("12sg_8ac_6cbs_12lgs", num_sgs=12, num_acs=8, num_cbs=6, num_lgs=12, num_lbs=0),
+        ClusterDef("12sg_8ac_12cbs_12lgs", num_sgs=12, num_acs=8, num_cbs=12, num_lgs=12, num_lbs=0),
+        # 16 sync_gateways
+        ClusterDef("16sg_4ac_3cbs_16lgs", num_sgs=16, num_acs=4, num_cbs=3, num_lgs=16, num_lbs=0),
+        ClusterDef("16sg_4ac_6cbs_16lgs", num_sgs=16, num_acs=4, num_cbs=6, num_lgs=16, num_lbs=0),
+        ClusterDef("16sg_4ac_12cbs_16lgs", num_sgs=16, num_acs=4, num_cbs=12, num_lgs=16, num_lbs=0),
+        ClusterDef("16sg_8ac_3cbs_16lgs", num_sgs=16, num_acs=8, num_cbs=3, num_lgs=16, num_lbs=0),
+        ClusterDef("16sg_8ac_6cbs_16lgs", num_sgs=16, num_acs=8, num_cbs=6, num_lgs=16, num_lbs=0),
+        ClusterDef("16sg_8ac_12cbs_16lgs", num_sgs=16, num_acs=8, num_cbs=12, num_lgs=16, num_lbs=0),
         # End Perf Mini Matrix
 
         # Test Fest
@@ -434,7 +461,7 @@ def generate_clusters_from_pool(pool_file):
         sys.exit(1)
 
     print("Using the following machines to run functional tests ... ")
-    for host in get_ips(pool_file):
+    for host in get_hosts(pool_file):
         print(host)
 
     print("Generating 'resources/cluster_configs/'")

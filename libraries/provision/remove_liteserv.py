@@ -12,6 +12,7 @@ def remove_liteserv(platform, version_build, host, port, storage_engine):
                                       storage_engine=storage_engine)
     liteserv.remove()
 
+
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()

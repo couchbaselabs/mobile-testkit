@@ -192,7 +192,7 @@ def test_dcp_reshard_single_sg_accel_goes_down_and_up(params_from_base_test_setu
             log_info("{} Completed:".format(tag))
 
     # TODO better way to do this
-    time.sleep(120)
+    time.sleep(300)
 
     verify_changes(traun, expected_num_docs=10000, expected_num_revisions=0, expected_docs=traun.cache)
     verify_changes(seth, expected_num_docs=10000, expected_num_revisions=0, expected_docs=seth.cache)
@@ -466,10 +466,8 @@ def test_take_all_sgaccels_down(params_from_base_test_setup, sg_conf):
 def test_missing_num_shards(params_from_base_test_setup, sg_conf):
     """
     1. Launch sg_accels missing the following property in the config.
-        "feed_params":{
-            "num_shards":16
-        }
-    2. Verify there are 64 shards
+        "num_shards":16
+    2. Verify there are 16 shards
     3. Verify they are distributed evenly across the nodes
     """
 
@@ -494,10 +492,14 @@ def test_missing_num_shards(params_from_base_test_setup, sg_conf):
     assert cluster.validate_cbgt_pindex_distribution_retry(num_running_sg_accels=3)
 
 
+# Test is invalid due to https://github.com/couchbase/sync_gateway/commit/027407219f9489a755323f58c1395623d53f4103.
+# When the test was written, sync gateway should fail to start in this scenario. This behavior was removed in the
+# above commit and now sync gateway will start when in this state
 @pytest.mark.topospecific
 @pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.sgaccel
+@pytest.mark.skip(reason="https://github.com/couchbase/sync_gateway/commit/027407219f9489a755323f58c1395623d53f4103")
 @pytest.mark.parametrize("sg_conf", [
     "{}/sync_gateway_default_functional_tests_di.json".format(SYNC_GATEWAY_CONFIGS),
 ])

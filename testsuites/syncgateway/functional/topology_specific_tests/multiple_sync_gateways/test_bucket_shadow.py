@@ -98,6 +98,9 @@ def test_bucket_shadow_low_revs_limit_repeated_deletes(params_from_base_test_set
     cluster_config = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
 
+    if mode == "di":
+        pytest.skip("https://github.com/couchbase/sync_gateway/issues/2193")
+
     default_config_path_shadower_low_revs = sync_gateway_config_path_for_mode("sync_gateway_bucketshadow_low_revs", mode)
     default_config_path_non_shadower_low_revs = sync_gateway_config_path_for_mode("sync_gateway_default_low_revs", mode)
 
@@ -163,6 +166,9 @@ def test_bucket_shadow_low_revs_limit(params_from_base_test_setup):
     cluster_config = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
 
+    if mode == "di":
+        pytest.skip("https://github.com/couchbase/sync_gateway/issues/2193")
+
     log_info("Running 'test_bucket_shadow_low_revs_limit'")
     log_info("Using cluster_config: {}".format(cluster_config))
 
@@ -218,6 +224,9 @@ def test_bucket_shadow_multiple_sync_gateways(params_from_base_test_setup):
 
     cluster_config = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
+
+    if mode == "di":
+        pytest.skip("https://github.com/couchbase/sync_gateway/issues/2193")
 
     log_info("Running 'test_bucket_shadow_multiple_sync_gateways'")
     log_info("Using cluster_config: {}".format(cluster_config))

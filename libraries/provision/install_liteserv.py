@@ -17,6 +17,7 @@ def install_liteserv(platform, version_build, host, port, storage_engine):
     liteserv.start("log.txt")
     liteserv.stop()
 
+
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()

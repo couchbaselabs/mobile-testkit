@@ -244,7 +244,7 @@ In order to use Ansible, the controller needs to have it's SSH keys in all the h
 Follow the instructions in [Docker container SSH key instructions](https://github.com/couchbaselabs/mobile-testkit/wiki/Docker-Container---SSH-Keys) to setup keys in Docker
 
 ```
-python libraries/utilities/install_keys.py --key-name=sample_key.pub --ssh-user=root
+python libraries/utilities/install_keys.py --public-key-path=~/.ssh/id_rsa.pub --ssh-user=root
 ```
 - Generate the necessary cluster topologies to run the tests
 ```
@@ -340,7 +340,7 @@ Do the same for rests of the hosts in the `Vagrantfile`
 1. Install the ssh key into the machines via 
 
 ```
-python libraries/utilities/install_keys.py --key-name=id_rsa.pub --ssh-user=vagrant
+python libraries/utilities/install_keys.py --public-key-path=~/.ssh/id_rsa.pub --ssh-user=vagrant --ssh-password=vagrant
 ```
 
 use the password `vagrant`. 
