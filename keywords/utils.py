@@ -120,24 +120,6 @@ def dump_file_contents_to_logs(filename):
         log_info("Error reading {}: {}".format(filename, e))
 
 
-def detect_remote_os(ip_address):
-    nm = nmap.PortScanner()
-    # nm.scan(ip_address, arguments='-O') can do OS fingerprinting
-    # but needs root privileges, so we'll do a ping scan instead
-    # and look for "Microsoft Windows" in the port's output
-    # Sample port output - 445: {'product': 'Microsoft Windows 7 - 10 microsoft-ds',
-    # 'state': 'open', 'version': '', 'name': 'microsoft-ds', 'conf': '10',
-    # 'extrainfo': 'workgroup: WORKGROUP', 'reason': 'syn-ack',
-    # 'cpe': 'cpe:/o:microsoft:windows'}
-    output = nm.scan(ip_address)
-
-    for i in output['scan'][ip_address]['tcp']:
-        if "Microsoft Windows" in output['scan'][ip_address]['tcp'][i]['product']:
-            return "Windows"
-        elif "OpenSSH" in output['scan'][ip_address]['tcp'][i]['product']:
-            return "Linux"
-
-
 # Check if this version has net45
 def has_dot_net4_dot_5(version):
     version_prefixes = [
