@@ -1,0 +1,6 @@
+- debug: msg="Starting sg_accel with config {{ sync_gateway_config_filepath }}"
+
+- name: SG ACCEL | Start sg_accel service on Windows
+  win_service:
+    name: SGAccel
+    state: started

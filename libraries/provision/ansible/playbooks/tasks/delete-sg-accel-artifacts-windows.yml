@@ -1,0 +1,36 @@
+# Delete logs and .pindex files
+- name: SG ACCEL | Delete sg_accel logs on Windows
+  become: no
+  win_file:
+    path: "C:/PROGRA~2/Couchbase/var/lib/couchbase/logs/"
+    state: absent
+
+- name: SG ACCEL | Create sg_accel logs directory on Windows
+  become: no
+  win_file:
+    path: "C:/PROGRA~2/Couchbase/var/lib/couchbase/logs/"
+    state: directory
+
+- name: SG ACCEL | Delete sg_accel logs on Windows
+  become: no
+  win_file:
+    path: "C:/Users/Administrator/AppData/Local/Temp/sg_logs/"
+    state: absent
+
+- name: SG ACCEL | Delete sg_accel logs directory under Temp on Windows
+  become: no
+  win_file:
+    path: "C:/Users/Administrator/AppData/Local/Temp/sg_logs/"
+    state: directory
+
+- name: SG ACCEL | Delete sg_accel logs on Windows
+  become: no
+  win_file:
+    path: "C:/tmp/sg_logs/"
+    state: absent
+
+- name: SG ACCEL | Create sg_accel logs directory under c:/tmp on Windows
+  become: no
+  win_file:
+    path: "C:/tmp/sg_logs/"
+    state: directory

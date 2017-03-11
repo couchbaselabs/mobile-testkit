@@ -1,0 +1,20 @@
+# Fetch sg accel logs for CentOS
+- name: SG ACCEL | Check if sg_accel access logs are present
+  win_stat:
+    path: 'C:/PROGRA~2/Couchbase/var/lib/couchbase/logs/sg_accel_access.log'
+  register: pa
+
+- name: SG ACCEL | Fetch sg_accel access logs
+  # Do not validate checksum as this is just a passive grab of the logs. Since they are continuously being appended to, the checksum may fail
+  fetch: src='C:/PROGRA~2/Couchbase/var/lib/couchbase/logs/sg_accel_access.log' dest=/tmp/sg_logs/{{ inventory_hostname }}/ fail_on_missing=yes flat=yes validate_checksum=no
+  when: pa.stat.exists
+
+- name: SG ACCEL | Check if sg_accel error logs are present
+  win_stat:
+    path: 'C:/PROGRA~2/Couchbase/var/lib/couchbase/logs/sg_accel_error.log'
+  register: pe
+
+- name: SG ACCEL | Fetch sg_accel error logs
+  # Do not validate checksum as this is just a passive grab of the logs. Since they are continuously being appended to, the checksum may fail
+  fetch: src='C:/PROGRA~2/Couchbase/var/lib/couchbase/logs/sg_accel_error.log' dest=/tmp/sg_logs/{{ inventory_hostname }}/ fail_on_missing=yes flat=yes validate_checksum=no
+  when: pe.stat.exists

@@ -1,6 +1,9 @@
 ---
 # Deploy sync gateway configs
 - hosts: sync_gateways
-  become: yes
   tasks:
   - include: tasks/delete-sync-gateway-artifacts.yml
+    when: ansible_distribution == "CentOS"
+
+  - include: tasks/delete-sync-gateway-artifacts-windows.yml
+    when: ansible_os_family == "Windows"

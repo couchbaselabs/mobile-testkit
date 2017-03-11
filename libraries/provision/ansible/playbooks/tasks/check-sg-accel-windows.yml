@@ -1,0 +1,4 @@
+- name: SG ACCEL | check sg_accel service status on Windows
+  win_command: sc query SGAccel
+  register: output
+  failed_when: output.stdout | search("STOPPED")

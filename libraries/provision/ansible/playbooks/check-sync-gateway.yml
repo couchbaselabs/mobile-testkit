@@ -1,0 +1,9 @@
+---
+- hosts: sync_gateways
+  any_errors_fatal: true
+  tasks:
+  - include: tasks/check-sync-gateway.yml
+    when: ansible_distribution == "CentOS"
+
+  - include: tasks/check-sync-gateway-windows.yml
+    when: ansible_os_family == "Windows"

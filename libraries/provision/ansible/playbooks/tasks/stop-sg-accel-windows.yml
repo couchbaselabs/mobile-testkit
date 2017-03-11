@@ -1,0 +1,6 @@
+# Stop service
+- name: SG ACCEL | Stop sg_accel service on Windows
+  win_service:
+    name: SGAccel
+    state: stopped
+
