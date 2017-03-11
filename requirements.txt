@@ -42,7 +42,6 @@ pytest-html==1.10.0
 pytest-sugar==0.7.1
 pytest-timeout==1.0.0
 python-dateutil==2.5.1
-python-nmap==0.6.1
 python-ntlm3==1.0.2
 python-vagrant==0.5.14
 pywinrm==0.2.1
