@@ -73,9 +73,12 @@ def run_gateload_perf_test(gen_gateload_config, test_id, gateload_params):
         )
 
     print(">>> Starting profile collection scripts")
+    runtime_s = int(gateload_params.runtime_ms) // 1000
     status = ansible_runner.run_ansible_playbook(
         "start-profile-collection.yml",
-        extra_vars={},
+        extra_vars={
+            "stats_run_time": runtime_s
+        },
     )
     assert status == 0, "Could not start profiling collection scripts"
 
