@@ -185,16 +185,20 @@ class CouchbaseServer:
         # Workaround for https://github.com/couchbaselabs/mobile-testkit/issues/709
         # Later updated for https://github.com/couchbaselabs/mobile-testkit/issues/1038
         # where some node report mem_total = 0. Loop over all the nodes and find the smallest non-zero val
-        mem_total_lowest = 0
+        mem_total_lowest = None
         for node in resp_json["nodes"]:
             mem_total = node["systemStats"]["mem_total"]
             if mem_total == 0:
                 # ignore nodes that report mem_total = 0
                 continue
-            if mem_total < mem_total_lowest:
+            if mem_total_lowest is None:
+                # no previous value for mem_total_lowest, use non-zero value we got back from node
+                mem_total_lowest = mem_total
+            elif mem_total < mem_total_lowest:
+                # only use it if it's lower than previous low
                 mem_total_lowest = mem_total
 
-        if mem_total_lowest == 0:
+        if mem_total_lowest is None:
             raise ProvisioningError("All nodes reported 0MB of RAM available")
 
         total_avail_ram_mb = int(mem_total_lowest / (1024 * 1024))
