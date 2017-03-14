@@ -23,7 +23,9 @@ GateloadParams = collections.namedtuple(
         "feed_type",
         "sleep_time_ms",
         "channel_active_users",
-        "channel_concurrent_users"
+        "channel_concurrent_users",
+        "delay_profiling_secs",
+        "delay_expvar_collect_secs"
     ]
 )
 
