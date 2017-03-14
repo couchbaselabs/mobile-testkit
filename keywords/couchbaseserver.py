@@ -183,14 +183,21 @@ class CouchbaseServer:
         resp_json = resp.json()
 
         # Workaround for https://github.com/couchbaselabs/mobile-testkit/issues/709
-        # where some node report mem_total = 0. Loop over all the nodes and find highest val
-        mem_total_highest = 0
+        # Later updated for https://github.com/couchbaselabs/mobile-testkit/issues/1038
+        # where some node report mem_total = 0. Loop over all the nodes and find the smallest non-zero val
+        mem_total_lowest = 0
         for node in resp_json["nodes"]:
             mem_total = node["systemStats"]["mem_total"]
-            if mem_total > mem_total_highest:
-                mem_total_highest = mem_total
+            if mem_total == 0:
+                # ignore nodes that report mem_total = 0
+                continue
+            if mem_total < mem_total_lowest:
+                mem_total_lowest = mem_total
 
-        total_avail_ram_mb = int(mem_total_highest / (1024 * 1024))
+        if mem_total_lowest == 0:
+            raise ProvisioningError("All nodes reported 0MB of RAM available")
+
+        total_avail_ram_mb = int(mem_total_lowest / (1024 * 1024))
         log_info("total_avail_ram_mb: {}".format(total_avail_ram_mb))
         return total_avail_ram_mb
 
