@@ -1,5 +1,6 @@
 # Fetch sg accel logs for CentOS
 - name: SG ACCEL | Check if sg_accel access log is present
+  become: yes
   stat:
     path: '/home/sg_accel/logs/sg_accel_access.log'
   register: pa
@@ -11,6 +12,7 @@
   when: pa.stat.exists
 
 - name: SG ACCEL | Check if sg_accel error log is present
+  become: yes
   stat:
     path: '/home/sg_accel/logs/sg_accel_error.log'
   register: pe
