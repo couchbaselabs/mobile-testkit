@@ -174,19 +174,12 @@ class CouchbaseServer:
             # All nodes are heathy if it made it to here
             break
 
-    def _get_total_ram_mb(self):
-        """
-        Call the Couchbase REST API to get the total memory available on the machine. RAM returned is in mb
-        """
-        resp = self._session.get("{}/pools/default".format(self.url))
-        resp.raise_for_status()
-        resp_json = resp.json()
-
+    def _get_mem_total_lowest(self, server_info):
         # Workaround for https://github.com/couchbaselabs/mobile-testkit/issues/709
         # Later updated for https://github.com/couchbaselabs/mobile-testkit/issues/1038
         # where some node report mem_total = 0. Loop over all the nodes and find the smallest non-zero val
         mem_total_lowest = None
-        for node in resp_json["nodes"]:
+        for node in server_info["nodes"]:
             mem_total = node["systemStats"]["mem_total"]
             if mem_total == 0:
                 # ignore nodes that report mem_total = 0
@@ -200,6 +193,18 @@ class CouchbaseServer:
 
         if mem_total_lowest is None:
             raise ProvisioningError("All nodes reported 0MB of RAM available")
+
+        return mem_total_lowest
+
+    def _get_total_ram_mb(self):
+        """
+        Call the Couchbase REST API to get the total memory available on the machine. RAM returned is in mb
+        """
+        resp = self._session.get("{}/pools/default".format(self.url))
+        resp.raise_for_status()
+        resp_json = resp.json()
+
+        mem_total_lowest = self._get_mem_total_lowest(resp_json)
 
         total_avail_ram_mb = int(mem_total_lowest / (1024 * 1024))
         log_info("total_avail_ram_mb: {}".format(total_avail_ram_mb))
