@@ -605,6 +605,7 @@ def test_rolling_ttl_remove_expirary(params_from_base_test_setup, sg_conf_name):
 @pytest.mark.ttl
 @pytest.mark.session
 @pytest.mark.channel
+@pytest.mark.bulkops
 @pytest.mark.parametrize("sg_conf_name", [
     "sync_gateway_default_functional_tests"
 ])

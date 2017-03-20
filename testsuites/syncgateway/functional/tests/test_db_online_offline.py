@@ -200,6 +200,7 @@ def rest_scan(sync_gateway, db, online, num_docs, user_name, channels):
 @pytest.mark.basicauth
 @pytest.mark.role
 @pytest.mark.channel
+@pytest.mark.bulkops
 @pytest.mark.parametrize("sg_conf_name, num_docs", [
     ("bucket_online_offline/bucket_online_offline_default", 100)
 ])
@@ -236,6 +237,7 @@ def test_online_default_rest(params_from_base_test_setup, sg_conf_name, num_docs
 @pytest.mark.basicauth
 @pytest.mark.role
 @pytest.mark.channel
+@pytest.mark.bulkops
 @pytest.mark.parametrize("sg_conf_name, num_docs", [
     ("bucket_online_offline/bucket_online_offline_offline_false", 100)
 ])
@@ -273,6 +275,7 @@ def test_offline_false_config_rest(params_from_base_test_setup, sg_conf_name, nu
 @pytest.mark.basicauth
 @pytest.mark.role
 @pytest.mark.channel
+@pytest.mark.bulkops
 @pytest.mark.parametrize("sg_conf_name, num_docs", [
     ("bucket_online_offline/bucket_online_offline_default", 100)
 ])
@@ -675,6 +678,7 @@ def test_online_to_offline_changes_feed_controlled_close_longpoll(params_from_ba
 @pytest.mark.basicauth
 @pytest.mark.role
 @pytest.mark.channel
+@pytest.mark.bulkops
 @pytest.mark.parametrize("sg_conf_name, num_docs", [
     ("bucket_online_offline/bucket_online_offline_offline_true", 100)
 ])
@@ -719,6 +723,7 @@ def test_offline_true_config_bring_online(params_from_base_test_setup, sg_conf_n
 @pytest.mark.basicauth
 @pytest.mark.role
 @pytest.mark.channel
+@pytest.mark.bulkops
 @pytest.mark.parametrize("sg_conf_name, num_docs", [
     ("bucket_online_offline/bucket_online_offline_default_dcp", 100),
     ("bucket_online_offline/bucket_online_offline_default", 100)
@@ -761,6 +766,7 @@ def test_db_offline_tap_loss_sanity(params_from_base_test_setup, sg_conf_name, n
 @pytest.mark.basicauth
 @pytest.mark.role
 @pytest.mark.channel
+@pytest.mark.bulkops
 @pytest.mark.parametrize("sg_conf_name, num_docs", [
     ("bucket_online_offline/bucket_online_offline_default", 100)
 ])
@@ -810,6 +816,7 @@ def test_db_delayed_online(params_from_base_test_setup, sg_conf_name, num_docs):
 @pytest.mark.basicauth
 @pytest.mark.role
 @pytest.mark.channel
+@pytest.mark.bulkops
 @pytest.mark.parametrize("sg_conf_name, num_docs", [
     ("bucket_online_offline/bucket_online_offline_multiple_dbs_unique_buckets", 100)
 ])
