@@ -15,6 +15,7 @@ from keywords.SyncGateway import sync_gateway_config_path_for_mode
 @pytest.mark.onlineoffline
 @pytest.mark.webhooks
 @pytest.mark.basicauth
+@pytest.mark.channel
 @pytest.mark.parametrize("sg_conf_name, num_users, num_channels, num_docs, num_revisions", [
     ("sync_gateway_webhook", 5, 1, 1, 2),
 ])

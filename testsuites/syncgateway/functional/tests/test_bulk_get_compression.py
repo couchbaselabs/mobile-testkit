@@ -151,6 +151,8 @@ def verify_response_size(user_agent, accept_encoding, x_accept_part_encoding, re
 
 @pytest.mark.sanity
 @pytest.mark.syncgateway
+@pytest.mark.channel
+@pytest.mark.basicauth
 @pytest.mark.parametrize("sg_conf_name, num_docs, accept_encoding, x_accept_part_encoding, user_agent", [
     ("sync_gateway_gzip", 300, None, None, None),
     ("sync_gateway_gzip", 300, None, None, "CouchbaseLite/1.1"),

@@ -17,6 +17,7 @@ from keywords import document
 @pytest.mark.conflicts
 @pytest.mark.changes
 @pytest.mark.basicauth
+@pytest.mark.channel
 @pytest.mark.parametrize("sg_conf_name", [
     "sync_gateway_default_functional_tests"
 ])
@@ -160,6 +161,7 @@ def test_non_winning_revisions(params_from_base_test_setup, sg_conf_name):
 @pytest.mark.conflicts
 @pytest.mark.changes
 @pytest.mark.basicauth
+@pytest.mark.channel
 @pytest.mark.parametrize("sg_conf_name", [
     "sync_gateway_default_functional_tests"
 ])

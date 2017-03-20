@@ -82,6 +82,8 @@ def init_shadow_cluster(cluster, config_path_shadower, config_path_non_shadower)
 @pytest.mark.topospecific
 @pytest.mark.syncgateway
 @pytest.mark.bucketshadow
+@pytest.mark.channel
+@pytest.mark.basicauth
 def test_bucket_shadow_low_revs_limit_repeated_deletes(params_from_base_test_setup):
     """
     Validate that Sync Gateway doesn't panic (and instead creates a conflict branch
@@ -150,6 +152,8 @@ def test_bucket_shadow_low_revs_limit_repeated_deletes(params_from_base_test_set
 @pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.bucketshadow
+@pytest.mark.channel
+@pytest.mark.basicauth
 def test_bucket_shadow_low_revs_limit(params_from_base_test_setup):
     """
     Set revs limit to 40
@@ -220,6 +224,8 @@ def test_bucket_shadow_low_revs_limit(params_from_base_test_setup):
 @pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.bucketshadow
+@pytest.mark.channel
+@pytest.mark.basicauth
 def test_bucket_shadow_multiple_sync_gateways(params_from_base_test_setup):
 
     cluster_config = params_from_base_test_setup["cluster_config"]

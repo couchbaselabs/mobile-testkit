@@ -15,6 +15,7 @@ from keywords.SyncGateway import sync_gateway_config_path_for_mode
 @pytest.mark.nginx
 @pytest.mark.changes
 @pytest.mark.session
+@pytest.mark.channel
 def test_load_balance_sanity(params_from_base_test_setup):
 
     cluster_config = params_from_base_test_setup["cluster_config"]

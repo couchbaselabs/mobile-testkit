@@ -25,6 +25,8 @@ DB2 = "db2"
 @pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.sgreplicate
+@pytest.mark.channel
+@pytest.mark.basicauth
 def test_sg_replicate_basic_test(params_from_base_test_setup):
 
     cluster_config = params_from_base_test_setup["cluster_config"]
@@ -107,6 +109,8 @@ def test_sg_replicate_basic_test(params_from_base_test_setup):
 @pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.sgreplicate
+@pytest.mark.channel
+@pytest.mark.basicauth
 def test_sg_replicate_basic_test_channels(params_from_base_test_setup):
 
     cluster_config = params_from_base_test_setup["cluster_config"]
@@ -161,6 +165,8 @@ def test_sg_replicate_basic_test_channels(params_from_base_test_setup):
 @pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.sgreplicate
+@pytest.mark.channel
+@pytest.mark.basicauth
 def test_sg_replicate_continuous_replication(params_from_base_test_setup):
 
     cluster_config = params_from_base_test_setup["cluster_config"]
@@ -315,6 +321,8 @@ def test_sg_replicate_non_existent_db(params_from_base_test_setup):
 @pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.sgreplicate
+@pytest.mark.channel
+@pytest.mark.basicauth
 @pytest.mark.parametrize("num_docs", [
     100,
     250
@@ -380,6 +388,8 @@ def test_sg_replicate_push_async(params_from_base_test_setup, num_docs):
 @pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.sgreplicate
+@pytest.mark.channel
+@pytest.mark.basicauth
 def test_stop_replication_via_replication_id(params_from_base_test_setup):
 
     cluster_config = params_from_base_test_setup["cluster_config"]
