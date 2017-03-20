@@ -21,6 +21,7 @@ from keywords import couchbaseserver
 @pytest.mark.rebalance
 @pytest.mark.session
 @pytest.mark.channel
+@pytest.mark.bulkops
 @pytest.mark.skip(reason="Failing due to - https://github.com/couchbase/sync_gateway/issues/2173")
 def test_rebalance_sanity(params_from_base_test_setup):
 
@@ -99,6 +100,7 @@ def test_rebalance_sanity(params_from_base_test_setup):
 @pytest.mark.failover
 @pytest.mark.session
 @pytest.mark.channel
+@pytest.mark.bulkops
 @pytest.mark.skip(reason="Failing due to - https://github.com/couchbase/sync_gateway/issues/2197")
 def test_server_goes_down_sanity(params_from_base_test_setup):
     """
