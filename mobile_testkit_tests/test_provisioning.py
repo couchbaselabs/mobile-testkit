@@ -1,5 +1,4 @@
 import json
-import pytest
 
 from keywords.couchbaseserver import CouchbaseServer
 
