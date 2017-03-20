@@ -19,6 +19,7 @@ from keywords import exceptions
 @pytest.mark.access
 @pytest.mark.role
 @pytest.mark.channel
+@pytest.mark.backfill
 @pytest.mark.parametrize("sg_conf_name, grant_type", [
     ("custom_sync/access", "CHANNEL-REST"),
     ("custom_sync/access", "CHANNEL-SYNC"),
@@ -215,6 +216,7 @@ def test_backfill_channels_oneshot_changes(params_from_base_test_setup, sg_conf_
 @pytest.mark.access
 @pytest.mark.role
 @pytest.mark.channel
+@pytest.mark.backfill
 @pytest.mark.parametrize("sg_conf_name, grant_type", [
     ("custom_sync/access", "CHANNEL-REST"),
     ("custom_sync/access", "CHANNEL-SYNC"),
@@ -444,6 +446,7 @@ def test_backfill_channels_oneshot_limit_changes(params_from_base_test_setup, sg
 @pytest.mark.access
 @pytest.mark.role
 @pytest.mark.channel
+@pytest.mark.backfill
 @pytest.mark.parametrize("sg_conf_name, grant_type", [
     ("custom_sync/access", "CHANNEL-REST"),
     ("custom_sync/access", "CHANNEL-SYNC"),
@@ -661,6 +664,7 @@ def test_awaken_backfill_channels_longpoll_changes_with_limit(params_from_base_t
 @pytest.mark.role
 @pytest.mark.channel
 @pytest.mark.session
+@pytest.mark.backfill
 @pytest.mark.parametrize("sg_conf_name, grant_type, channels_to_grant", [
     ("custom_sync/access", "CHANNEL-REST", ["A"]),
     ("custom_sync/access", "CHANNEL-REST", ["A", "B", "C"]),
