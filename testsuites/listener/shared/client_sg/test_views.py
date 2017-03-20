@@ -12,6 +12,7 @@ from libraries.testkit import cluster
 @pytest.mark.listener
 @pytest.mark.syncgateway
 @pytest.mark.views
+@pytest.mark.session
 def test_stale_revision_should_not_be_in_the_index(setup_client_syncgateway_test):
     """original ticket: https://github.com/couchbase/couchbase-lite-android/issues/855
 

@@ -88,6 +88,7 @@ def test_attachment_revpos_when_ancestor_unavailable(params_from_base_test_setup
 @pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.attachments
+@pytest.mark.session
 @pytest.mark.parametrize("sg_conf_name", [
     "sync_gateway_default"
 ])
@@ -163,6 +164,7 @@ def test_attachment_revpos_when_ancestor_unavailable_active_revision_doesnt_shar
 @pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.attachments
+@pytest.mark.session
 @pytest.mark.parametrize("sg_conf_name", [
     "sync_gateway_default"
 ])
