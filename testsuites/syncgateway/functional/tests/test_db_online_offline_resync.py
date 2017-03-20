@@ -17,6 +17,7 @@ from keywords.SyncGateway import sync_gateway_config_path_for_mode
 @pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.onlineoffline
+@pytest.mark.basicauth
 @pytest.mark.parametrize("sg_conf_name, num_users, num_docs, num_revisions", [
     ("bucket_online_offline/db_online_offline_access_all", 5, 100, 10),
 ])

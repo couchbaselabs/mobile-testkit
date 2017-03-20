@@ -15,6 +15,7 @@ from keywords import document
 @pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.attachments
+@pytest.mark.basicauth
 @pytest.mark.parametrize("sg_conf_name", [
     "sync_gateway_default"
 ])

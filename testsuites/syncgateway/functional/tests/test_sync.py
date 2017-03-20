@@ -19,6 +19,7 @@ from keywords.SyncGateway import sync_gateway_config_path_for_mode
 @pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.sync
+@pytest.mark.basicauth
 @pytest.mark.parametrize("sg_conf_name, num_docs", [
     ("custom_sync/grant_access_one", 10),
 ])
@@ -94,6 +95,7 @@ def test_issue_1524(params_from_base_test_setup, sg_conf_name, num_docs):
 @pytest.mark.syncgateway
 @pytest.mark.sync
 @pytest.mark.access
+@pytest.mark.basicauth
 @pytest.mark.parametrize("sg_conf_name", [
     "custom_sync/sync_gateway_custom_sync_access_sanity"
 ])
@@ -145,6 +147,7 @@ def test_sync_access_sanity(params_from_base_test_setup, sg_conf_name):
 @pytest.mark.syncgateway
 @pytest.mark.sync
 @pytest.mark.channel
+@pytest.mark.basicauth
 @pytest.mark.parametrize("sg_conf_name", [
     "custom_sync/sync_gateway_custom_sync_channel_sanity"
 ])
@@ -211,6 +214,7 @@ def test_sync_channel_sanity(params_from_base_test_setup, sg_conf_name):
 @pytest.mark.syncgateway
 @pytest.mark.sync
 @pytest.mark.role
+@pytest.mark.basicauth
 @pytest.mark.parametrize("sg_conf_name", [
     "custom_sync/sync_gateway_custom_sync_role_sanity"
 ])
@@ -282,6 +286,7 @@ def test_sync_role_sanity(params_from_base_test_setup, sg_conf_name):
 @pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.sync
+@pytest.mark.basicauth
 @pytest.mark.parametrize("sg_conf_name", [
     "custom_sync/sync_gateway_custom_sync_one"
 ])
@@ -330,6 +335,7 @@ def test_sync_sanity(params_from_base_test_setup, sg_conf_name):
 @pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.sync
+@pytest.mark.basicauth
 @pytest.mark.parametrize("sg_conf_name", [
     "custom_sync/sync_gateway_custom_sync_one"
 ])
@@ -379,6 +385,7 @@ def test_sync_sanity_backfill(params_from_base_test_setup, sg_conf_name):
 @pytest.mark.syncgateway
 @pytest.mark.sync
 @pytest.mark.role
+@pytest.mark.basicauth
 @pytest.mark.parametrize("sg_conf_name", [
     "custom_sync/sync_gateway_custom_sync_require_roles"
 ])

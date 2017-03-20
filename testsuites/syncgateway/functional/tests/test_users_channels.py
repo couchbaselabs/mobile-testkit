@@ -12,6 +12,7 @@ from keywords.utils import log_info
 
 @pytest.mark.sanity
 @pytest.mark.syncgateway
+@pytest.mark.basicauth
 @pytest.mark.parametrize("sg_conf_name", [
     "sync_gateway_default_functional_tests",
 ])
@@ -71,6 +72,7 @@ def test_multiple_users_multiple_channels(params_from_base_test_setup, sg_conf_n
 
 @pytest.mark.sanity
 @pytest.mark.syncgateway
+@pytest.mark.basicauth
 @pytest.mark.parametrize("sg_conf_name", [
     "sync_gateway_default_functional_tests",
 ])
@@ -120,6 +122,7 @@ def test_muliple_users_single_channel(params_from_base_test_setup, sg_conf_name)
 
 @pytest.mark.sanity
 @pytest.mark.syncgateway
+@pytest.mark.basicauth
 @pytest.mark.parametrize("sg_conf_name", [
     "sync_gateway_default_functional_tests",
 ])
@@ -163,6 +166,7 @@ def test_single_user_multiple_channels(params_from_base_test_setup, sg_conf_name
 
 @pytest.mark.sanity
 @pytest.mark.syncgateway
+@pytest.mark.basicauth
 @pytest.mark.parametrize("sg_conf_name", [
     "sync_gateway_default_functional_tests",
 ])

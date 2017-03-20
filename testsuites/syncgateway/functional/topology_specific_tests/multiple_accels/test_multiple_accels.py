@@ -25,6 +25,7 @@ from keywords import exceptions
 @pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.sgaccel
+@pytest.mark.basicauth
 @pytest.mark.parametrize("sg_conf", [
     "{}/sync_gateway_default_functional_tests_di.json".format(SYNC_GATEWAY_CONFIGS)
 ])
@@ -84,6 +85,7 @@ def test_dcp_reshard_sync_gateway_goes_down(params_from_base_test_setup, sg_conf
 @pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.sgaccel
+@pytest.mark.basicauth
 @pytest.mark.parametrize("sg_conf", [
     "{}/sync_gateway_default_functional_tests_di.json".format(SYNC_GATEWAY_CONFIGS)
 ])
@@ -139,6 +141,7 @@ def test_dcp_reshard_sync_gateway_comes_up(params_from_base_test_setup, sg_conf)
 @pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.sgaccel
+@pytest.mark.basicauth
 @pytest.mark.parametrize("sg_conf", [
     "{}/sync_gateway_default_functional_tests_di.json".format(SYNC_GATEWAY_CONFIGS),
 ])
@@ -229,6 +232,7 @@ def test_pindex_distribution(params_from_base_test_setup, sg_conf):
 @pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.sgaccel
+@pytest.mark.basicauth
 @pytest.mark.parametrize("sg_conf", [
     "{}/sync_gateway_default_functional_tests_di.json".format(SYNC_GATEWAY_CONFIGS),
 ])
@@ -324,6 +328,7 @@ def test_take_down_bring_up_sg_accel_validate_cbgt(params_from_base_test_setup, 
 @pytest.mark.syncgateway
 @pytest.mark.sgaccel
 @pytest.mark.session
+@pytest.mark.basicauth
 @pytest.mark.parametrize("sg_conf", [
     "{}/sync_gateway_default_functional_tests_di.json".format(SYNC_GATEWAY_CONFIGS),
 ])
@@ -500,6 +505,7 @@ def test_missing_num_shards(params_from_base_test_setup, sg_conf):
 @pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.sgaccel
+@pytest.mark.basicauth
 @pytest.mark.skip(reason="https://github.com/couchbase/sync_gateway/commit/027407219f9489a755323f58c1395623d53f4103")
 @pytest.mark.parametrize("sg_conf", [
     "{}/sync_gateway_default_functional_tests_di.json".format(SYNC_GATEWAY_CONFIGS),

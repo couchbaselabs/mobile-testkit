@@ -14,6 +14,7 @@ from keywords import userinfo
 @pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.changes
+@pytest.mark.basicauth
 @pytest.mark.parametrize("sg_conf_name", [
     "sync_gateway_default"
 ])
