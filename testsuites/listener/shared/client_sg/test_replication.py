@@ -19,6 +19,7 @@ from libraries.testkit import cluster
 @pytest.mark.listener
 @pytest.mark.syncgateway
 @pytest.mark.replication
+@pytest.mark.session
 @pytest.mark.parametrize("continuous", [
     True,
     False
@@ -550,7 +551,7 @@ def test_multiple_replications_created_with_unique_properties(setup_client_syncg
 @pytest.mark.listener
 @pytest.mark.syncgateway
 @pytest.mark.replication
-@pytest.mark.sessions
+@pytest.mark.session
 def test_replication_with_session_cookie(setup_client_syncgateway_test):
     """Regression test for https://github.com/couchbase/couchbase-lite-android/issues/817
     1. SyncGateway Config with guest disabled = true and One user added (e.g. user1 / 1234)
@@ -742,6 +743,7 @@ def test_replication_with_session_cookie(setup_client_syncgateway_test):
 @pytest.mark.syncgateway
 @pytest.mark.replication
 @pytest.mark.compaction
+@pytest.mark.session
 def test_client_to_sync_gateway_complex_replication_with_revs_limit(setup_client_syncgateway_test):
     """ Ported from sync_gateway tests repo
     ...  1.  Clear server buckets
@@ -986,6 +988,7 @@ def test_replication_with_multiple_client_dbs_and_single_sync_gateway_db(setup_c
 @pytest.mark.listener
 @pytest.mark.syncgateway
 @pytest.mark.replication
+@pytest.mark.session
 def test_verify_open_revs_with_revs_limit_push_conflict(setup_client_syncgateway_test):
     """Test replication from multiple client dbs to one sync_gateway db
 

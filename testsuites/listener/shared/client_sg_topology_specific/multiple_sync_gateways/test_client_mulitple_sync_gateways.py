@@ -11,6 +11,7 @@ from libraries.testkit import cluster
 @pytest.mark.listener
 @pytest.mark.syncgateway
 @pytest.mark.replication
+@pytest.mark.bulkops
 def test_listener_two_sync_gateways(setup_client_syncgateway_test):
     """
     Port of https://github.com/couchbaselabs/sync-gateway-tests/blob/master/tests/cbl-replication-mismatch-2-gateways.js

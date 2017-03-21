@@ -14,6 +14,8 @@ from keywords import document
 @pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.attachments
+@pytest.mark.session
+@pytest.mark.channel
 @pytest.mark.parametrize("sg_conf_name", [
     "reject_all"
 ])

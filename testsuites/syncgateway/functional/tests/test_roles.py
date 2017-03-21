@@ -11,6 +11,10 @@ from keywords.utils import log_info
 @pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.role
+@pytest.mark.basicauth
+@pytest.mark.channel
+@pytest.mark.bulkops
+@pytest.mark.changes
 @pytest.mark.parametrize("sg_conf_name", [
     "sync_gateway_default_functional_tests",
 ])
