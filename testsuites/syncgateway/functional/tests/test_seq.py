@@ -15,6 +15,7 @@ from keywords.utils import log_info
 @pytest.mark.basicauth
 @pytest.mark.channel
 @pytest.mark.bulkops
+@pytest.mark.changes
 @pytest.mark.parametrize("sg_conf_name, num_users, num_docs, num_revisions", [
     ("sync_gateway_default_functional_tests", 10, 500, 1),
 ])

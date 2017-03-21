@@ -27,6 +27,7 @@ DB2 = "db2"
 @pytest.mark.sgreplicate
 @pytest.mark.channel
 @pytest.mark.basicauth
+@pytest.mark.changes
 def test_sg_replicate_basic_test(params_from_base_test_setup):
 
     cluster_config = params_from_base_test_setup["cluster_config"]
@@ -111,6 +112,7 @@ def test_sg_replicate_basic_test(params_from_base_test_setup):
 @pytest.mark.sgreplicate
 @pytest.mark.channel
 @pytest.mark.basicauth
+@pytest.mark.changes
 def test_sg_replicate_basic_test_channels(params_from_base_test_setup):
 
     cluster_config = params_from_base_test_setup["cluster_config"]
@@ -323,6 +325,7 @@ def test_sg_replicate_non_existent_db(params_from_base_test_setup):
 @pytest.mark.sgreplicate
 @pytest.mark.channel
 @pytest.mark.basicauth
+@pytest.mark.changes
 @pytest.mark.parametrize("num_docs", [
     100,
     250

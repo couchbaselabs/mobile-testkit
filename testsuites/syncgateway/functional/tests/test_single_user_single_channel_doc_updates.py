@@ -21,6 +21,7 @@ log = logging.getLogger(libraries.testkit.settings.LOGGER)
 @pytest.mark.syncgateway
 @pytest.mark.basicauth
 @pytest.mark.channel
+@pytest.mark.changes
 @pytest.mark.parametrize("sg_conf_name, num_docs, num_revisions", [
     ("sync_gateway_default_functional_tests", 100, 100),
 ])

@@ -15,6 +15,7 @@ from keywords.utils import log_info
 @pytest.mark.basicauth
 @pytest.mark.channel
 @pytest.mark.bulkops
+@pytest.mark.changes
 @pytest.mark.parametrize("sg_conf_name, num_users, num_docs_per_user", [
     ("multiple_dbs_unique_data_unique_index", 10, 500),
 ])
@@ -72,6 +73,7 @@ def test_multiple_db_unique_data_bucket_unique_index_bucket(params_from_base_tes
 @pytest.mark.basicauth
 @pytest.mark.channel
 @pytest.mark.bulkops
+@pytest.mark.changes
 @pytest.mark.parametrize("sg_conf_name, num_users, num_docs_per_user", [
     ("multiple_dbs_shared_data_shared_index", 10, 500),
 ])

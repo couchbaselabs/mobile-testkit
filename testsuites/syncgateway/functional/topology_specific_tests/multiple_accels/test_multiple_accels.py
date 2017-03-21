@@ -28,6 +28,7 @@ from keywords import exceptions
 @pytest.mark.basicauth
 @pytest.mark.channel
 @pytest.mark.bulkops
+@pytest.mark.changes
 @pytest.mark.parametrize("sg_conf", [
     "{}/sync_gateway_default_functional_tests_di.json".format(SYNC_GATEWAY_CONFIGS)
 ])
@@ -89,6 +90,7 @@ def test_dcp_reshard_sync_gateway_goes_down(params_from_base_test_setup, sg_conf
 @pytest.mark.sgaccel
 @pytest.mark.basicauth
 @pytest.mark.channel
+@pytest.mark.changes
 @pytest.mark.parametrize("sg_conf", [
     "{}/sync_gateway_default_functional_tests_di.json".format(SYNC_GATEWAY_CONFIGS)
 ])
@@ -147,6 +149,7 @@ def test_dcp_reshard_sync_gateway_comes_up(params_from_base_test_setup, sg_conf)
 @pytest.mark.basicauth
 @pytest.mark.channel
 @pytest.mark.bulkops
+@pytest.mark.changes
 @pytest.mark.parametrize("sg_conf", [
     "{}/sync_gateway_default_functional_tests_di.json".format(SYNC_GATEWAY_CONFIGS),
 ])
@@ -239,6 +242,7 @@ def test_pindex_distribution(params_from_base_test_setup, sg_conf):
 @pytest.mark.sgaccel
 @pytest.mark.basicauth
 @pytest.mark.channel
+@pytest.mark.changes
 @pytest.mark.parametrize("sg_conf", [
     "{}/sync_gateway_default_functional_tests_di.json".format(SYNC_GATEWAY_CONFIGS),
 ])
@@ -337,6 +341,7 @@ def test_take_down_bring_up_sg_accel_validate_cbgt(params_from_base_test_setup, 
 @pytest.mark.basicauth
 @pytest.mark.channel
 @pytest.mark.bulkops
+@pytest.mark.changes
 @pytest.mark.parametrize("sg_conf", [
     "{}/sync_gateway_default_functional_tests_di.json".format(SYNC_GATEWAY_CONFIGS),
 ])
