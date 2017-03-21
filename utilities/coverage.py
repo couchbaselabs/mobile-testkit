@@ -32,14 +32,16 @@ def print_sg_coverage():
         # Get number of tests testsuites/syncgateway/functional/tests/
         # directory with marker attribute
         output_tests = subprocess.check_output(
-            'pytest -m {} testsuites/syncgateway/functional/tests/ --collect-only | grep Function | wc -l'.format(marker), shell=True
+            'pytest -m {} testsuites/syncgateway/functional/tests/ --collect-only | grep Function | wc -l'.format(marker),
+            shell=True
         )
         test_number = int(output_tests.strip())
 
         # Get number of tests in testsuites/syncgateway/functional/topology_specific_tests/
         # directory with marker attribute
         output_topospecific_tests = subprocess.check_output(
-            'pytest -m {} testsuites/syncgateway/functional/topology_specific_tests/ --collect-only | grep Function | wc -l'.format(marker), shell=True
+            'pytest -m {} testsuites/syncgateway/functional/topology_specific_tests/ --collect-only | grep Function | wc -l'.format(marker),
+            shell=True
         )
         topospecific_test_number = int(output_topospecific_tests.strip())
 
