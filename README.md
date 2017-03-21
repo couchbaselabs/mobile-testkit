@@ -14,7 +14,7 @@ Table of Contents
 * [Repo Dependencies](#repo-dependencies)
 * [Development Environment](#development-environment)
 * [Listener Tests](#listener-tests)
-* [sync_gateway Tests](#sync_gateway-tests)
+* [sync_gateway Tests](#sync_gateway-test-excecution)
 * [sync_gateway Performance Tests](#sync_gateway-peftests)
 * [Debugging](#debugging)
 * [Monitoring](#monitoring)
