@@ -1,3 +1,14 @@
+## Pytest flags
+
+| Flag | Description |
+| ------------- | ------------- |
+| `-s`  | Stream to stdio -- without this pytest will absorb all stdio output and is diffucult to debug  |
+| `--skip-provisioning`  | Skips provisioning -- will only empty buckets and restart Sync Gateways |
+| `--mode`  |  Channel cache mode ('cc') or using sg_accel in distributed index ('di') mode.  Determines which `CLUSTER_CONFIG` values are used during provisioning |
+| `-k`  |  Run a specific test rather than the entire sweet.  Supports substrings / regex? |
+| `--sync-gateway-version`  |  Sync Gateway version *or* commit hash |
+| `--server-version`  |  Couchbase Server version |
+
 ## Executing sync_gateway functional tests
 
 You can run any of the sync_gateway tests in the 'test/' directory in channel cache mode ('cc') or using sg_accel in distributed index ('di') mode.
