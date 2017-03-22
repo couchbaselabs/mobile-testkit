@@ -6,7 +6,7 @@ from keywords.utils import log_info
 from keywords.constants import RESULTS_DIR
 from keywords.LiteServFactory import LiteServFactory
 from keywords.MobileRestClient import MobileRestClient
-# from keywords.document import create_docs
+from keywords.document import create_docs
 import time
 
 
@@ -245,7 +245,7 @@ def test_peer_2_peer_sanity_pull(setup_p2p_test, num_docs_per_db, seeded_db):
 @pytest.mark.parametrize("num_docs_per_db, seeded_db", [
     (5000, False), (10000, True),
 ])
-def test_peer_2_peer_sanity_push_ee(setup_p2p_test, num_docs_per_db, seeded_db):
+def test_peer_2_peer_sanity_push(setup_p2p_test, num_docs_per_db, seeded_db):
     """
     1. Create ls_db1 database on LiteServ One
     2. Create ls_db2 database on LiteServ Two
@@ -390,9 +390,8 @@ def test_peer_2_peer_sanity_pull_one_shot(setup_p2p_test):
     ls_db1 = client.create_database(url=ls_url_one, name="ls_db1")
     ls_db2 = client.create_database(url=ls_url_two, name="ls_db2")
 
-    ls_db2_docs = client.add_docs(url=ls_url_two, db=ls_db2, number=num_docs_per_db, id_prefix="test_ls_db2")
-    # bulk_docs = create_docs("test_ls_db2", num_docs_per_db)
-    # ls_db2_docs = client.add_bulk_docs(url=ls_url_two, db=ls_db2, docs=bulk_docs)
+    bulk_docs = create_docs("test_ls_db2", num_docs_per_db)
+    ls_db2_docs = client.add_bulk_docs(url=ls_url_two, db=ls_db2, docs=bulk_docs)
 
     # Setup one shot pull replication from LiteServ 2 ls_db2 to LiteServ 1 ls_db1
     log_info("Setting up a one-shot pull replication from ls_db2 to ls_db1")
@@ -439,9 +438,8 @@ def test_peer_2_peer_sanity_push_one_shot(setup_p2p_test):
     ls_db1 = client.create_database(url=ls_url_one, name="ls_db1")
     ls_db2 = client.create_database(url=ls_url_two, name="ls_db2")
 
-    ls_db1_docs = client.add_docs(url=ls_url_one, db=ls_db1, number=num_docs_per_db, id_prefix="test_ls_db1")
-    # bulk_docs = create_docs("test_ls_db1", num_docs_per_db)
-    # ls_db1_docs = client.add_bulk_docs(ls_url_one, ls_db1, bulk_docs)
+    bulk_docs = create_docs("test_ls_db1", num_docs_per_db)
+    ls_db1_docs = client.add_bulk_docs(ls_url_one, ls_db1, bulk_docs)
 
     # Setup one shot push replication from LiteServ 1 ls_db1 to LiteServ 2 ls_db2
     log_info("Setting up a one-shot push replication from ls_db1 to ls_db2")
@@ -492,13 +490,11 @@ def test_peer_2_peer_sanity_push_pull_one_shot(setup_p2p_test):
     ls_db1 = client.create_database(url=ls_url_one, name="ls_db1")
     ls_db2 = client.create_database(url=ls_url_two, name="ls_db2")
 
-    ls_db1_docs = client.add_docs(url=ls_url_one, db=ls_db1, number=num_docs_per_db, id_prefix="test_ls_db1")
-    # bulk_docs = create_docs("test_ls_db1", num_docs_per_db)
-    # ls_db1_docs = client.add_bulk_docs(ls_url_one, ls_db1, bulk_docs)
+    bulk_docs = create_docs("test_ls_db1", num_docs_per_db)
+    ls_db1_docs = client.add_bulk_docs(ls_url_one, ls_db1, bulk_docs)
 
-    ls_db2_docs = client.add_docs(url=ls_url_two, db=ls_db2, number=num_docs_per_db, id_prefix="test_ls_db2")
-    # bulk_docs = create_docs("test_ls_db2", num_docs_per_db)
-    # ls_db2_docs = client.add_bulk_docs(ls_url_two, ls_db2, bulk_docs)
+    bulk_docs = create_docs("test_ls_db2", num_docs_per_db)
+    ls_db2_docs = client.add_bulk_docs(ls_url_two, ls_db2, bulk_docs)
 
     # Setup one shot push replication from LiteServ 1 ls_db1 to LiteServ 2 ls_db2
     log_info("Setting up a one-shot push replication from ls_db1 to ls_db2")
@@ -562,10 +558,9 @@ def test_peer_2_peer_sanity_push_one_shot_continuous(setup_p2p_test):
     ls_db1 = client.create_database(url=ls_url_one, name="ls_db1")
     ls_db2 = client.create_database(url=ls_url_two, name="ls_db2")
 
-    ls_db1_docs = client.add_docs(url=ls_url_one, db=ls_db1, number=num_docs_per_db, id_prefix="test_ls_db1_oneshot")
+    bulk_docs = create_docs("test_ls_db1", num_docs_per_db)
+    ls_db1_docs = client.add_bulk_docs(ls_url_one, ls_db1, bulk_docs)
     assert len(ls_db1_docs) == num_docs_per_db
-    # bulk_docs = create_docs("test_ls_db1", num_docs_per_db)
-    # ls_db1_docs = client.add_bulk_docs(ls_url_one, ls_db1, bulk_docs)
 
     # Setup one shot push replication from LiteServ 1 ls_db1 to LiteServ 2 ls_db2
     log_info("Setting up a one-shot push replication from ls_db1 to ls_db2")
