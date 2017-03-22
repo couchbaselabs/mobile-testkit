@@ -558,7 +558,7 @@ def test_peer_2_peer_sanity_push_one_shot_continuous(setup_p2p_test):
     ls_db1 = client.create_database(url=ls_url_one, name="ls_db1")
     ls_db2 = client.create_database(url=ls_url_two, name="ls_db2")
 
-    bulk_docs = create_docs("test_ls_db1", num_docs_per_db)
+    bulk_docs = create_docs("test_ls_db1_oneshot", num_docs_per_db)
     ls_db1_docs = client.add_bulk_docs(ls_url_one, ls_db1, bulk_docs)
     assert len(ls_db1_docs) == num_docs_per_db
 
