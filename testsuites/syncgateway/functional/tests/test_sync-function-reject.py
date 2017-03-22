@@ -9,6 +9,7 @@ from keywords.SyncGateway import sync_gateway_config_path_for_mode
 
 from keywords import couchbaseserver
 from keywords import document
+from keywords import attachment
 
 
 @pytest.mark.sanity
@@ -69,7 +70,8 @@ def test_attachments_on_docs_rejected_by_sync_function(params_from_base_test_set
     assert he.value[0].startswith("403 Client Error: Forbidden for url:")
 
     # Create doc with attachment and push to sync_gateway
-    doc_with_att = document.create_doc(doc_id="att_doc", content={"sample_key": "sample_val"}, attachment_name="sample_text.txt", channels=sg_user_channels)
+    att = attachment.load_from_data_dir("sample_text.txt")
+    doc_with_att = document.create_doc(doc_id="att_doc", content={"sample_key": "sample_val"}, attachment=att, channels=sg_user_channels)
 
     # Verify all docs are getting rejected
     with pytest.raises(HTTPError) as he:

@@ -10,8 +10,7 @@ from requests.exceptions import HTTPError
 import concurrent.futures
 from concurrent.futures import ThreadPoolExecutor
 
-from keywords.document import get_attachment
-
+from keywords import attachment
 from libraries.data import doc_generators
 
 from keywords.constants import AuthType
@@ -839,8 +838,9 @@ class MobileRestClient:
         }
 
         if attachment_name is not None:
+            att = attachment.load_from_data_dir(attachment_name)
             doc["_attachments"] = {
-                attachment_name: {"data": get_attachment(attachment_name)}
+                att.name: {"data": att.data}
             }
 
         parent_revision_digests = []
@@ -1054,8 +1054,9 @@ class MobileRestClient:
             doc["_rev"] = current_rev
 
             if attachment_name is not None:
+                att = attachment.load_from_data_dir(attachment_name)
                 doc["_attachments"] = {
-                    attachment_name: {"data": get_attachment(attachment_name)}
+                    att.name: {"data": att.data}
                 }
 
             if expiry is not None:
@@ -1733,15 +1734,25 @@ class MobileRestClient:
         log_r(resp)
         resp.raise_for_status()
 
-        resp_obj = resp.json()
+        # Only return a response if adding to the listener
+        # Sync Gateway does not return a response
+        if self.get_server_type(url) == ServerType.listener:
+            resp_obj = resp.json()
+            return resp_obj["id"]
 
-        return resp_obj["id"]
-
-    def get_view(self, url, db, design_doc_id, view_name):
+    def get_view(self, url, db, design_doc_name, view_name, auth=None):
         """
         Keyword that returns a view query for a design doc with a view name
         """
-        resp = self._session.get("{}/{}/{}/_view/{}".format(url, db, design_doc_id, view_name))
+
+        auth_type = get_auth_type(auth)
+        if auth_type == AuthType.session:
+            resp = self._session.get("{}/{}/_design/{}/_view/{}".format(url, db, design_doc_name, view_name), cookies=dict(SyncGatewaySession=auth[1]))
+        elif auth_type == AuthType.http_basic:
+            resp = self._session.get("{}/{}/_design/{}/_view/{}".format(url, db, design_doc_name, view_name), auth=auth)
+        else:
+            resp = self._session.get("{}/{}/_design/{}/_view/{}".format(url, db, design_doc_name, view_name))
+
         log_r(resp)
         resp.raise_for_status()
         return resp.json()

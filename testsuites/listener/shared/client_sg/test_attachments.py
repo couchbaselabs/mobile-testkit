@@ -3,6 +3,7 @@ import pytest
 from keywords.utils import log_info
 from keywords.MobileRestClient import MobileRestClient
 from keywords import document
+from keywords import attachment
 
 from libraries.testkit import cluster
 from keywords.SyncGateway import sync_gateway_config_path_for_mode
@@ -30,12 +31,13 @@ def test_raw_attachment(setup_client_syncgateway_test):
 
     ls_user_channels = ["NBC"]
 
+    att = attachment.load_from_data_dir("sample_text.txt")
     doc_with_att = document.create_doc(
         doc_id="att_doc",
         content={
             "sample_key": "sample_val"
         },
-        attachment_name="sample_text.txt",
+        attachment=att,
         channels=ls_user_channels
     )
 
@@ -120,9 +122,10 @@ def test_inline_large_attachments(setup_client_syncgateway_test):
     # doc with 2.36 PNG attachment
     attachment_docs = []
     for i in range(5):
+        att = attachment.load_from_data_dir("golden_gate_large.jpg")
         doc = document.create_doc(
             doc_id="large_attach_{}".format(i),
-            attachment_name="golden_gate_large.jpg",
+            attachment=att,
             channels=["ABC"]
         )
         attachment_docs.append(doc)
