@@ -263,6 +263,15 @@ class MobileRestClient:
             log_r(resp)
             resp.raise_for_status()
 
+    def get_roles(self, url, db):
+        """ Gets a list of roles for a db """
+
+        resp = self._session.get("{}/{}/_role/".format(url, db))
+        log_r(resp)
+        resp.raise_for_status()
+
+        return resp.json()
+
     def create_role(self, url, db, name, channels=None):
         """ Creates a role with name and channels for the specified 'db' """
 
@@ -296,6 +305,15 @@ class MobileRestClient:
         resp = self._session.put("{}/{}/_role/{}".format(url, db, name), data=json.dumps(data))
         log_r(resp)
         resp.raise_for_status()
+
+    def get_users(self, url, db):
+        """ Gets a list of users for a db """
+
+        resp = self._session.get("{}/{}/_user/".format(url, db))
+        log_r(resp)
+        resp.raise_for_status()
+
+        return resp.json()
 
     def create_user(self, url, db, name, password, channels=None, roles=None):
         """ Creates a user with channels on the sync_gateway Admin REST API.
