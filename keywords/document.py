@@ -41,7 +41,7 @@ def generate_doc_ids_for_vbucket(vbucket_number, number_doc_ids):
     return doc_ids
 
 
-def create_doc(doc_id, content=None, attachment=None, expiry=None, channels=None):
+def create_doc(doc_id, content=None, attachments=None, expiry=None, channels=None):
     """
     Keyword that creates a document body as a list for use with Add Doc keyword
     return result format:
@@ -51,11 +51,15 @@ def create_doc(doc_id, content=None, attachment=None, expiry=None, channels=None
     if channels is None:
         channels = []
 
+    if attachments is None:
+        attachments = []
+
     types.verify_is_list(channels)
+    types.verify_is_list(attachments)
 
     doc = {}
 
-    if id is not None:
+    if doc_id is not None:
         doc["_id"] = doc_id
 
     if expiry is not None:
@@ -66,17 +70,16 @@ def create_doc(doc_id, content=None, attachment=None, expiry=None, channels=None
 
     doc["channels"] = channels
 
-    if attachment is not None:
-        doc["_attachments"] = {
-            attachment.name: {"data": attachment.data}
-        }
+    if attachments:
+        # Loop through list of attachment and attach them to the doc
+        doc["_attachments"] = {att.name: {"data": att.data} for att in attachments}
 
     logging.debug(doc)
 
     return doc
 
 
-def create_docs(doc_id_prefix, number, content=None, attachment_generator=None, expiry=None, channels=None):
+def create_docs(doc_id_prefix, number, content=None, attachments_generator=None, expiry=None, channels=None):
     """
     Keyword that creates a list of document bodies as a list for use with Add Bulk Docs keyword
     return result format:
@@ -91,8 +94,8 @@ def create_docs(doc_id_prefix, number, content=None, attachment_generator=None, 
 
     types.verify_is_list(channels)
 
-    if attachment_generator is not None:
-        types.verify_is_callable(attachment_generator)
+    if attachments_generator is not None:
+        types.verify_is_callable(attachments_generator)
 
     docs = []
 
@@ -104,8 +107,11 @@ def create_docs(doc_id_prefix, number, content=None, attachment_generator=None, 
             doc_id = "{}_{}".format(doc_id_prefix, i)
 
         # Call attachment generator if it has been defined
-        attachment = attachment_generator()
-        doc = create_doc(doc_id=doc_id, content=content, attachment=attachment, expiry=expiry, channels=channels)
+        attachments = None
+        if attachments_generator is not None:
+            attachments = attachments_generator()
+
+        doc = create_doc(doc_id=doc_id, content=content, attachments=attachments, expiry=expiry, channels=channels)
         docs.append(doc)
 
     return docs

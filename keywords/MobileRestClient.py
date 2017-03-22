@@ -838,9 +838,9 @@ class MobileRestClient:
         }
 
         if attachment_name is not None:
-            att = attachment.load_from_data_dir(attachment_name)
+            atts = attachment.load_from_data_dir([attachment_name])
             doc["_attachments"] = {
-                att.name: {"data": att.data}
+                atts[0].name: {"data": atts[0].data}
             }
 
         parent_revision_digests = []
@@ -1054,9 +1054,9 @@ class MobileRestClient:
             doc["_rev"] = current_rev
 
             if attachment_name is not None:
-                att = attachment.load_from_data_dir(attachment_name)
+                atts = attachment.load_from_data_dir([attachment_name])
                 doc["_attachments"] = {
-                    att.name: {"data": att.data}
+                    atts[0].name: {"data": atts[0].data}
                 }
 
             if expiry is not None:

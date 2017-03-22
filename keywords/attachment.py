@@ -7,6 +7,7 @@ from PIL import Image
 
 from keywords.constants import DATA_DIR
 from keywords.utils import log_info
+from keywords import types
 
 
 def generate_png_100_100():
@@ -34,7 +35,7 @@ def generate_png(width, height):
     img.save(image_temp_path)
 
     # Load and store image data
-    att = load_from_data_dir(image_temp_name)
+    att = load_from_data_dir([image_temp_name])
     log_info("Creating Attachment: {}".format(image_temp_name))
 
     # Remove temporary image
@@ -45,13 +46,18 @@ def generate_png(width, height):
     return att
 
 
-def load_from_data_dir(name):
+def load_from_data_dir(names):
 
-    file_path = "{}/{}".format(DATA_DIR, name)
-    log_info("Loading attachment from file: {}".format(file_path))
-    with open(file_path) as f:
-        data = base64.standard_b64encode(f.read())
-    return Attachment(name, data)
+    types.verify_is_list(names)
+
+    atts = []
+    for name in names:
+        file_path = "{}/{}".format(DATA_DIR, name)
+        log_info("Loading attachment from file: {}".format(file_path))
+        with open(file_path) as f:
+            data = base64.standard_b64encode(f.read())
+            atts.append(Attachment(name, data))
+    return atts
 
 
 class Attachment:

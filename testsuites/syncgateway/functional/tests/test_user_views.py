@@ -98,16 +98,36 @@ def test_user_views_sanity(params_from_base_test_setup, sg_conf_name):
     end = time.time() - start
     log_info("Time to create docs: {}s".format(end))
 
-    download_docs = client.add_bulk_docs(url=sg_public_url, db=sg_db, docs=download_doc_bodies, auth=seth_session)
+    download_docs = client.add_bulk_docs(
+        url=sg_public_url,
+        db=sg_db,
+        docs=download_doc_bodies,
+        auth=seth_session
+    )
     assert len(download_docs) == number_docs_per_channel
 
-    upload_docs = client.add_bulk_docs(url=sg_public_url, db=sg_db, docs=upload_doc_bodies, auth=raghu_session)
+    upload_docs = client.add_bulk_docs(
+        url=sg_public_url,
+        db=sg_db,
+        docs=upload_doc_bodies,
+        auth=raghu_session
+    )
     assert len(upload_docs) == number_docs_per_channel
 
-    create_docs = client.add_bulk_docs(url=sg_public_url, db=sg_db, docs=create_doc_bodies, auth=seth_session)
+    create_docs = client.add_bulk_docs(
+        url=sg_public_url,
+        db=sg_db,
+        docs=create_doc_bodies,
+        auth=seth_session
+    )
     assert len(create_docs) == number_docs_per_channel
 
-    edit_docs = client.add_bulk_docs(url=sg_public_url, db=sg_db, docs=edit_doc_bodies, auth=raghu_session)
+    edit_docs = client.add_bulk_docs(
+        url=sg_public_url,
+        db=sg_db,
+        docs=edit_doc_bodies,
+        auth=raghu_session
+    )
     assert len(edit_docs) == number_docs_per_channel
 
     design_doc = {

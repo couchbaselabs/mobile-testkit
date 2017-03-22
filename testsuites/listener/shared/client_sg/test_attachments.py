@@ -31,13 +31,13 @@ def test_raw_attachment(setup_client_syncgateway_test):
 
     ls_user_channels = ["NBC"]
 
-    att = attachment.load_from_data_dir("sample_text.txt")
+    atts = attachment.load_from_data_dir(["sample_text.txt"])
     doc_with_att = document.create_doc(
         doc_id="att_doc",
         content={
             "sample_key": "sample_val"
         },
-        attachment=att,
+        attachments=atts,
         channels=ls_user_channels
     )
 
@@ -122,10 +122,10 @@ def test_inline_large_attachments(setup_client_syncgateway_test):
     # doc with 2.36 PNG attachment
     attachment_docs = []
     for i in range(5):
-        att = attachment.load_from_data_dir("golden_gate_large.jpg")
+        atts = attachment.load_from_data_dir(["golden_gate_large.jpg"])
         doc = document.create_doc(
             doc_id="large_attach_{}".format(i),
-            attachment=att,
+            attachments=atts,
             channels=["ABC"]
         )
         attachment_docs.append(doc)
