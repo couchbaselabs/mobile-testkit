@@ -134,6 +134,9 @@ def test_user_views_sanity(params_from_base_test_setup, sg_conf_name):
         "views": {
             "filtered": {
                 "map": 'function(doc, meta) {emit(doc.name, null);}'
+            },
+            "filtered_more": {
+                "map": 'function(doc, meta) { if (doc.channel == "Create" || doc.channel == "Edit") {emit(doc.name, null);}}'
             }
         }
     }
@@ -144,9 +147,55 @@ def test_user_views_sanity(params_from_base_test_setup, sg_conf_name):
     pdb.set_trace()
 
     # Need to retry until this returns results, with max retry value
-    filtered = client.get_view(url=sg_public_url, db=sg_db, design_doc_name="test_views", view_name="filtered", auth=seth_session)
-    log_info(filtered)
+    seth_filtered = client.get_view(
+        url=sg_public_url,
+        db=sg_db,
+        design_doc_name="test_views",
+        view_name="filtered",
+        auth=seth_session
+    )
+    log_info(seth_filtered)
 
-    import pdb
-    pdb.set_trace()
+    # "seth" should see docs for channels ["Create", "Download"]
+    seth_rows = seth_filtered["rows"]
+    validate_rows(
+        rows=seth_rows,
+        num_expected_rows=2 * number_docs_per_channel,
+        expected_id_prefixes=["create_doc", "download_doc"],
+        number_of_prefixed_docs=number_docs_per_channel
+    )
 
+    # Need to retry until this returns results, with max retry value
+    raghu_filtered = client.get_view(
+        url=sg_public_url,
+        db=sg_db,
+        design_doc_name="test_views",
+        view_name="filtered",
+        auth=raghu_session
+    )
+    log_info(raghu_filtered)
+
+    # "raghu" should see docs for channels ["Upload", "Edit"]
+    raghu_rows = raghu_filtered["rows"]
+    validate_rows(
+        rows=raghu_rows,
+        num_expected_rows=2 * number_docs_per_channel,
+        expected_id_prefixes=["upload_doc", "edit_doc"],
+        number_of_prefixed_docs=number_docs_per_channel
+    )
+
+
+def validate_rows(rows, num_expected_rows, expected_id_prefixes, number_of_prefixed_docs):
+    log_info("Validating rows has length: {}".format(num_expected_rows))
+    assert len(rows) == num_expected_rows
+
+    log_info("Validating rows has doc_prefixes: {}".format(expected_id_prefixes))
+    ids = [row["id"] for row in rows]
+    total_expected_doc_ids = []
+    for expected_id_prefix in expected_id_prefixes:
+        total_expected_doc_ids += ["{}_{}".format(expected_id_prefix, i) for i in range(number_of_prefixed_docs)]
+
+    for expected_id in total_expected_doc_ids:
+        assert expected_id in ids
+        ids.remove(expected_id)
+    assert len(ids) == 0
