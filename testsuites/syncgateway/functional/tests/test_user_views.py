@@ -4,7 +4,7 @@ import time
 
 from keywords import document
 from keywords import attachment
-
+from keywords import couchbaseserver
 
 from keywords.SyncGateway import sync_gateway_config_path_for_mode
 from keywords.utils import log_info
@@ -41,6 +41,8 @@ def test_user_views_sanity(params_from_base_test_setup, sg_conf_name):
     number_docs_per_channel = 100
 
     topology = params_from_base_test_setup["cluster_topology"]
+    cbs_url = topology["couchbase_servers"][0]
+    bucket = "data-bucket"
     sg_admin_url = topology["sync_gateways"][0]["admin"]
     sg_public_url = topology["sync_gateways"][0]["public"]
 
@@ -130,7 +132,15 @@ def test_user_views_sanity(params_from_base_test_setup, sg_conf_name):
     )
     assert len(edit_docs) == number_docs_per_channel
 
-    #TODO: Verify correct number of attachments on server
+    # Assert that the attachment docs gets written to couchbase server
+    server = couchbaseserver.CouchbaseServer(cbs_url)
+    server_att_docs = server.get_server_docs_with_prefix(bucket=bucket, prefix="_sync:att:")
+    expected_num_attachments = (number_docs_per_channel * 2) + \
+        number_docs_per_channel + \
+        (number_docs_per_channel * 2) + \
+        number_docs_per_channel
+    assert len(server_att_docs) == expected_num_attachments
+
     design_doc = {
         "views": {
             "filtered": {

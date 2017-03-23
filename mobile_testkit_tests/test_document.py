@@ -6,6 +6,7 @@ ATTACHMENT_ONE = attachment.generate_png_100_100()
 ATTACHMENT_TWO = attachment.generate_png_100_100()
 ATTACHMENTS = ATTACHMENT_ONE + ATTACHMENT_TWO
 
+
 @pytest.mark.parametrize("doc_id, content, attachments, expiry, channels, expected_doc", [
     (None, None, None, None, None, {
         "channels": []
