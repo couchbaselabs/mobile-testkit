@@ -225,6 +225,8 @@ def test_peer_2_peer_sanity_pull(setup_p2p_test, num_docs_per_db, seeded_db):
         to_db=ls_db1
     )
 
+    client.wait_for_replication_status_idle(url=ls_url_one, replication_id=pull_repl)
+
     ls_db2_docs = client.add_docs(url=ls_url_two, db=ls_db2, number=num_docs_per_db, id_prefix="test_ls_db2")
     assert len(ls_db2_docs) == num_docs_per_db
 
