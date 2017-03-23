@@ -2,5 +2,6 @@
 ignore = E501
 exclude =
     venv,
+    libraries/provision/cloudformation_template.py,
     libraries/provision/ec2.py,
     libraries/utilities/monkeyrunner.py

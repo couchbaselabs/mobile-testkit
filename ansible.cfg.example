@@ -1,13 +1,7 @@
 [defaults]
 remote_user = vagrant
 
-; Get rid of "Are you sure you want to continue connecting (yes/no)?" warnings
-host_key_checking = False
-
 ; http://docs.ansible.com/ansible/intro_configuration.html#control-path
 ; prevent socket names that may be too long with (AWS host names)
 [ssh_connection]
 control_path = %(directory)s/%%h-%%r
-
-; Increase number of concurrent ssh connections that ansible uses.
-forks = 100
