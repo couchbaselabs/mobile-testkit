@@ -19,6 +19,7 @@ from keywords.MobileRestClient import MobileRestClient
 @pytest.mark.channel
 @pytest.mark.changes
 @pytest.mark.session
+@pytest.mark.attachments
 @pytest.mark.parametrize("sg_conf_name", [
     "user_views/user_views",
 ])
@@ -64,7 +65,6 @@ def test_user_views_sanity(params_from_base_test_setup, sg_conf_name):
 
     # "seth" has "Scientist" role and ["Create"] channel
     # "raghu" has "Researcher" role and ["Edit"] channel
-
     seth_session = client.create_session(url=sg_admin_url, db=sg_db, name="seth", password="pass")
     raghu_session = client.create_session(url=sg_admin_url, db=sg_db, name="raghu", password="pass")
 
@@ -130,13 +130,15 @@ def test_user_views_sanity(params_from_base_test_setup, sg_conf_name):
     )
     assert len(edit_docs) == number_docs_per_channel
 
+    #TODO: Verify correct number of attachments on server
+
     design_doc = {
         "views": {
             "filtered": {
-                "map": 'function(doc, meta) {emit(doc.name, null);}'
+                "map": 'function(doc, meta) {emit(meta._id, doc.channels);}'
             },
             "filtered_more": {
-                "map": 'function(doc, meta) { if (doc.channel == "Create" || doc.channel == "Edit") {emit(doc.name, null);}}'
+                "map": 'function(doc, meta) { if (doc.channels.indexOf("Create") != -1 || doc.channels.indexOf("Edit") != -1) {emit(meta._id, doc.channels);}}'
             }
         }
     }
@@ -147,6 +149,7 @@ def test_user_views_sanity(params_from_base_test_setup, sg_conf_name):
     pdb.set_trace()
 
     # Need to retry until this returns results, with max retry value
+    # "seth" should see docs for channels ["Create", "Download"]
     seth_filtered = client.get_view(
         url=sg_public_url,
         db=sg_db,
@@ -154,18 +157,31 @@ def test_user_views_sanity(params_from_base_test_setup, sg_conf_name):
         view_name="filtered",
         auth=seth_session
     )
-    log_info(seth_filtered)
-
-    # "seth" should see docs for channels ["Create", "Download"]
-    seth_rows = seth_filtered["rows"]
+    seth_filtered_rows = seth_filtered["rows"]
     validate_rows(
-        rows=seth_rows,
+        rows=seth_filtered_rows,
         num_expected_rows=2 * number_docs_per_channel,
         expected_id_prefixes=["create_doc", "download_doc"],
         number_of_prefixed_docs=number_docs_per_channel
     )
 
-    # Need to retry until this returns results, with max retry value
+    # "seth" should only see docs with "Create" channel through this view
+    seth_filtered_more = client.get_view(
+        url=sg_public_url,
+        db=sg_db,
+        design_doc_name="test_views",
+        view_name="filtered_more",
+        auth=seth_session
+    )
+    seth_filtered_more_rows = seth_filtered_more["rows"]
+    validate_rows(
+        rows=seth_filtered_more_rows,
+        num_expected_rows=number_docs_per_channel,
+        expected_id_prefixes=["create_doc"],
+        number_of_prefixed_docs=number_docs_per_channel
+    )
+
+    # "raghu" should see docs for channels ["Upload", "Edit"]
     raghu_filtered = client.get_view(
         url=sg_public_url,
         db=sg_db,
@@ -173,14 +189,27 @@ def test_user_views_sanity(params_from_base_test_setup, sg_conf_name):
         view_name="filtered",
         auth=raghu_session
     )
-    log_info(raghu_filtered)
-
-    # "raghu" should see docs for channels ["Upload", "Edit"]
     raghu_rows = raghu_filtered["rows"]
     validate_rows(
         rows=raghu_rows,
         num_expected_rows=2 * number_docs_per_channel,
         expected_id_prefixes=["upload_doc", "edit_doc"],
+        number_of_prefixed_docs=number_docs_per_channel
+    )
+
+    # "raghu" should only see docs with "Edit" channel through this view
+    raghu_filtered_more = client.get_view(
+        url=sg_public_url,
+        db=sg_db,
+        design_doc_name="test_views",
+        view_name="filtered_more",
+        auth=raghu_session
+    )
+    raghu_filtered_more_rows = raghu_filtered_more["rows"]
+    validate_rows(
+        rows=raghu_filtered_more_rows,
+        num_expected_rows=number_docs_per_channel,
+        expected_id_prefixes=["edit_doc"],
         number_of_prefixed_docs=number_docs_per_channel
     )
 
