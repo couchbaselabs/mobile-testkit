@@ -4,7 +4,7 @@ from keywords import attachment
 
 ATTACHMENT_ONE = attachment.generate_png_100_100()
 ATTACHMENT_TWO = attachment.generate_png_100_100()
-
+ATTACHMENTS = ATTACHMENT_ONE + ATTACHMENT_TWO
 
 @pytest.mark.parametrize("doc_id, content, attachments, expiry, channels, expected_doc", [
     (None, None, None, None, None, {
@@ -19,11 +19,11 @@ ATTACHMENT_TWO = attachment.generate_png_100_100()
         "content": {"foo": "bar"},
         "channels": []
     }),
-    ("test_id", None, [ATTACHMENT_ONE, ATTACHMENT_TWO], None, None, {
+    ("test_id", None, ATTACHMENTS, None, None, {
         "_id": "test_id",
         "_attachments": {
-            ATTACHMENT_ONE.name: {"data": ATTACHMENT_ONE.data},
-            ATTACHMENT_TWO.name: {"data": ATTACHMENT_TWO.data}
+            ATTACHMENTS[0].name: {"data": ATTACHMENTS[0].data},
+            ATTACHMENTS[1].name: {"data": ATTACHMENTS[1].data}
         },
         "channels": []
     }),
@@ -44,7 +44,7 @@ def test_document(doc_id, content, attachments, expiry, channels, expected_doc):
 
 def test_document_attachment_not_list():
     with pytest.raises(TypeError):
-        document.create_doc(None, None, ATTACHMENT_ONE, None, None)
+        document.create_doc(None, None, ATTACHMENTS[0], None, None)
 
 
 def test_document_channels_not_list():

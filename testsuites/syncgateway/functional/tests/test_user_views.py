@@ -131,7 +131,6 @@ def test_user_views_sanity(params_from_base_test_setup, sg_conf_name):
     assert len(edit_docs) == number_docs_per_channel
 
     #TODO: Verify correct number of attachments on server
-
     design_doc = {
         "views": {
             "filtered": {
@@ -148,7 +147,7 @@ def test_user_views_sanity(params_from_base_test_setup, sg_conf_name):
     import pdb
     pdb.set_trace()
 
-    # Need to retry until this returns results, with max retry value
+    # TODO: Need to retry until this returns results, with max retry value
     # "seth" should see docs for channels ["Create", "Download"]
     seth_filtered = client.get_view(
         url=sg_public_url,

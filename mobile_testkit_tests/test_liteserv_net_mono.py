@@ -30,6 +30,7 @@ def liteserv_with_storage_engine_from_fixture(request):
     liteserv.remove()
 
 
+@pytest.mark.requiredeps
 def test_net_mono_download(request):
 
     shutil.rmtree("{}/".format(BINARY_DIR))
@@ -50,16 +51,19 @@ def test_net_mono_download(request):
     assert not os.path.isfile("deps/binaries/couchbase-lite-net-mono-{}-liteserv.zip".format(net_version))
 
 
+@pytest.mark.requiredeps
 def test_net_mono_install():
     # No install step for net-mono since it is a commandline utility
     pass
 
 
+@pytest.mark.requiredeps
 def test_net_mono_remove():
     # No install step for net-mono since it is a commandline utility
     pass
 
 
+@pytest.mark.requiredeps
 def test_net_mono_logging(request, liteserv_with_storage_engine_from_fixture):
 
     liteserv = liteserv_with_storage_engine_from_fixture
@@ -74,6 +78,7 @@ def test_net_mono_logging(request, liteserv_with_storage_engine_from_fixture):
         assert "Starting Manager version: .NET OS X" in contents
 
 
+@pytest.mark.requiredeps
 def test_net_mono_full_life_cycle(request, liteserv_with_storage_engine_from_fixture):
 
     liteserv = liteserv_with_storage_engine_from_fixture
@@ -92,6 +97,7 @@ def test_net_mono_full_life_cycle(request, liteserv_with_storage_engine_from_fix
     liteserv.stop()
 
 
+@pytest.mark.requiredeps
 def test_net_mono_storage_engine(request, liteserv_with_storage_engine_from_fixture):
 
     liteserv = liteserv_with_storage_engine_from_fixture
