@@ -144,10 +144,6 @@ def test_user_views_sanity(params_from_base_test_setup, sg_conf_name):
 
     client.add_design_doc(url=sg_admin_url, db=sg_db, name="test_views", doc=json.dumps(design_doc))
 
-    import pdb
-    pdb.set_trace()
-
-    # TODO: Need to retry until this returns results, with max retry value
     # "seth" should see docs for channels ["Create", "Download"]
     seth_filtered = client.get_view(
         url=sg_public_url,
