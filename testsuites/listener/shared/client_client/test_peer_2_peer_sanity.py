@@ -7,7 +7,6 @@ from keywords.constants import RESULTS_DIR
 from keywords.LiteServFactory import LiteServFactory
 from keywords.MobileRestClient import MobileRestClient
 from keywords.document import create_docs
-import time
 
 
 # This will get called once before the first test and waits at the yeild
