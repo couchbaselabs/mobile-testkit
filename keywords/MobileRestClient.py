@@ -1746,12 +1746,20 @@ class MobileRestClient:
         """
 
         auth_type = get_auth_type(auth)
+        server_type = self.get_server_type(url)
+
+        url = "{}/{}/_design/{}/_view/{}".format(url, db, design_doc_name, view_name)
+        params = {}
+
+        if server_type == ServerType.syncgateway:
+            params["stale"] = False
+
         if auth_type == AuthType.session:
-            resp = self._session.get("{}/{}/_design/{}/_view/{}".format(url, db, design_doc_name, view_name), cookies=dict(SyncGatewaySession=auth[1]))
+            resp = self._session.get(url, params=params, cookies=dict(SyncGatewaySession=auth[1]))
         elif auth_type == AuthType.http_basic:
-            resp = self._session.get("{}/{}/_design/{}/_view/{}".format(url, db, design_doc_name, view_name), auth=auth)
+            resp = self._session.get(url, params=params, auth=auth)
         else:
-            resp = self._session.get("{}/{}/_design/{}/_view/{}".format(url, db, design_doc_name, view_name))
+            resp = self._session.get(url, params=params)
 
         log_r(resp)
         resp.raise_for_status()
