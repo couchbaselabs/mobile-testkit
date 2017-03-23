@@ -73,7 +73,7 @@ def test_user_views_sanity(params_from_base_test_setup, sg_conf_name):
     download_doc_bodies = document.create_docs(
         doc_id_prefix="download_doc",
         number=number_docs_per_channel,
-        attachments_generator=attachment.generate_png_100_100,
+        attachments_generator=attachment.generate_2_png_100_100,
         channels=["Download"]
     )
     upload_doc_bodies = document.create_docs(
@@ -85,7 +85,7 @@ def test_user_views_sanity(params_from_base_test_setup, sg_conf_name):
     create_doc_bodies = document.create_docs(
         doc_id_prefix="create_doc",
         number=number_docs_per_channel,
-        attachments_generator=attachment.generate_png_100_100,
+        attachments_generator=attachment.generate_2_png_100_100,
         channels=["Create"]
     )
     edit_doc_bodies = document.create_docs(
