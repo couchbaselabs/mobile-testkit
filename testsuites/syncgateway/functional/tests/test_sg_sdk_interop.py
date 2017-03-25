@@ -46,9 +46,10 @@ def test_sdk_interop_unique_docs(params_from_base_test_setup, sg_conf_name):
     bucket = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name))
 
     # Create docs and add them via sdk
-    sdk_docs = document.create_docs('sdk', number_docs, content={'foo': 'bar', 'updates': 1}, channels=['sdk'])
-    for doc in sdk_docs:
-        bucket.upsert(doc['_id'], doc)
+    sdk_doc_bodies = document.create_docs('sdk', number_docs, content={'foo': 'bar', 'updates': 1}, channels=['sdk'])
+    sdk_docs = {doc['_id']: doc for doc in sdk_doc_bodies}
+    sdk_doc_ids = [doc for doc in sdk_docs]
+    bucket.upsert_multi(sdk_docs)
 
     # Create sg user
     sg_client = MobileRestClient()
@@ -58,6 +59,7 @@ def test_sdk_interop_unique_docs(params_from_base_test_setup, sg_conf_name):
     # Create / add docs to sync gateway
     sg_docs = document.create_docs('sg', number_docs, content={'foo': 'bar', 'updates': 1}, channels=['sg'])
     sg_docs_resp = sg_client.add_bulk_docs(url=sg_url, db=sg_db, docs=sg_docs, auth=seth_session)
+
     assert len(sg_docs_resp) == number_docs
 
     # Since seth has channels from 'sg' and 'sdk', verify that the sdk docs and sg docs show up in
@@ -65,21 +67,41 @@ def test_sdk_interop_unique_docs(params_from_base_test_setup, sg_conf_name):
 
     # TODO: validation
     # sg_client.verify_docs_in_changes(url=sg_url, db=sg_db, expected_docs=sdk_docs + sg_docs, auth=seth_session)
+    for i in range(number_updates):
 
-    sdk_doc_ids = [doc["_id"] for doc in sdk_docs]
-    for _ in range(number_updates):
-        for sdk_doc_id in sdk_doc_ids:
-            doc = bucket.get(sdk_doc_id)
-            doc_body = doc.value
-            update_count = doc_body['content']['updates']
-            update_count += 1
-            doc_body['content']['updates'] = update_count
-            bucket.upsert(sdk_doc_id, doc_body)
+        # Get docs and extract doc_id (key) and doc_body (value.value)
+        sdk_docs_resp = bucket.get_multi(sdk_doc_ids)
+        docs = {k: v.value for k, v in sdk_docs_resp.items()}
 
-    updated_sg_docs = sg_client.update_docs(
-        url=sg_url,
-        db=sg_db,
-        docs=sg_docs_resp,
-        number_updates=number_updates,
-        auth=seth_session
-    )
+        # update the updates property for every doc
+        for _, v in docs.items():
+            v['content']['updates'] += 1
+
+        # Push the updated batch to Couchbase Server
+        bucket.upsert_multi(docs)
+
+        # Get docs from Sync Gateway
+        sg_docs_to_update_resp = sg_client.get_bulk_docs(url=sg_url, db=sg_db, docs=sg_docs_resp, auth=seth_session)
+        sg_docs_to_update = sg_docs_to_update_resp['rows']
+        for sg_doc in sg_docs_to_update:
+            sg_doc['content']['updates'] += 1
+
+        # Bulk add the updates to Sync Gateway
+        sg_docs_resp = sg_client.add_bulk_docs(url=sg_url, db=sg_db, docs=sg_docs_to_update, auth=seth_session)
+
+    # Get docs from Sync Gateway
+    sg_docs_to_update_resp = sg_client.get_bulk_docs(url=sg_url, db=sg_db, docs=sg_docs_resp, auth=seth_session)
+    sg_docs_to_update = sg_docs_to_update_resp['rows']
+
+    import pdb
+    pdb.set_trace()
+
+    # Bulk add the updates to Sync Gateway
+    deleted_docs = sg_client.delete_bulk_docs(url=sg_url, db=sg_db, docs=sg_docs_to_update, auth=seth_session)
+    deleted_docs = sg_client.get_bulk_docs(url=sg_url, db=sg_db, docs=deleted_docs, auth=seth_session)
+
+    import pdb
+    pdb.set_trace()
+
+    # Verify deleted
+
