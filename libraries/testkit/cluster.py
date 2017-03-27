@@ -46,18 +46,20 @@ class Cluster:
         cbs = [{"name": cbs["name"], "ip": cbs["ip"]} for cbs in cluster["couchbase_servers"]]
         sgs = [{"name": sg["name"], "ip": sg["ip"]} for sg in cluster["sync_gateways"]]
         acs = [{"name": ac["name"], "ip": ac["ip"]} for ac in cluster["sg_accels"]]
-        ssl = cluster["ssl_enabled"]
+
+        if "ssl_enabled" in cluster:
+            self.ssl = cluster["ssl_enabled"]
+
 
         log_info("cbs: {}".format(cbs))
         log_info("sgs: {}".format(sgs))
         log_info("acs: {}".format(acs))
-        log_info("ssl: {}".format(ssl))
+        log_info("ssl: {}".format(self.ssl))
 
         self.sync_gateways = [SyncGateway(cluster_config=self._cluster_config, target=sg) for sg in sgs]
         self.sg_accels = [SgAccel(cluster_config=self._cluster_config, target=ac) for ac in acs]
         self.servers = [Server(cluster_config=self._cluster_config, target=cb) for cb in cbs]
         self.sync_gateway_config = None  # will be set to Config object when reset() called
-        self.ssl = ssl
 
         # for integrating keywords
         self.cb_server = couchbaseserver.CouchbaseServer(self.servers[0].url)
