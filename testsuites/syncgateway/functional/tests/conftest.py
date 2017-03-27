@@ -120,6 +120,29 @@ def params_from_base_suite_setup(request):
         with open(cluster_config, 'w') as f:
             config.write(f)
         f.close()
+    else:
+        log_info("Running tests with ssl disabled")
+        # Write ssl_enabled = False in the cluster_config.json
+        cluster_config_json = "{}.json".format(cluster_config)
+        with open(cluster_config_json, "rw") as f:
+            cluster = json.loads(f.read())
+        f.close()
+
+        if "ssl_enabled" in cluster:
+            cluster["ssl_enabled"] = False
+            with open(cluster_config_json, "w") as f:
+                json.dump(cluster, f, indent=4)
+            f.close()
+
+        # Write [ssl] ssl_enabled = False in the cluster_config
+        config = CustomConfigParser()
+        config.read(cluster_config)
+        if config.has_section("ssl"):
+            config.set('ssl', 'ssl_enabled', 'False')
+
+            with open(cluster_config, 'w') as f:
+                config.write(f)
+            f.close()
 
     sg_config = sync_gateway_config_path_for_mode("sync_gateway_default_functional_tests", mode)
 
