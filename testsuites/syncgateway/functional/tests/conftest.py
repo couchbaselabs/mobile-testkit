@@ -1,4 +1,6 @@
 import pytest
+import json
+import ConfigParser
 
 from keywords.constants import CLUSTER_CONFIGS_DIR
 from keywords.utils import log_info
@@ -11,6 +13,29 @@ from libraries.testkit import cluster
 
 from libraries.NetworkUtils import NetworkUtils
 
+
+class CustomConfigParser(ConfigParser.RawConfigParser):
+    """Virtually identical to the original method, but delimit keys and values with '=' instead of ' = '
+       Python 3 has a space_around_delimiters=False option for write, it does not work for python 2.x
+    """
+
+    def write(self, fp):
+        DEFAULTSECT = "DEFAULT"
+        """Write an .ini-format representation of the configuration state."""
+        if self._defaults:
+            fp.write("[%s]\n" % DEFAULTSECT)
+            for (key, value) in self._defaults.items():
+                fp.write("%s=%s\n" % (key, str(value).replace('\n', '\n\t')))
+            fp.write("\n")
+        for section in self._sections:
+            fp.write("[%s]\n" % section)
+            for (key, value) in self._sections[section].items():
+                if key == "__name__":
+                    continue
+                if (value is not None) or (self._optcre == self.OPTCRE):
+                    key = "=".join((key, str(value).replace('\n', '\n\t')))
+                fp.write("%s\n" % (key))
+            fp.write("\n")
 
 # Add custom arguments for executing tests in this directory
 def pytest_addoption(parser):
@@ -36,6 +61,9 @@ def pytest_addoption(parser):
                      action="store_true",
                      help="If set, will target larger cluster (3 backing servers instead of 1, 2 accels if in di mode)")
 
+    parser.addoption("--server-ssl",
+                     action="store_true",
+                     help="If set, will enable SSL communication between server and Sync Gateway")
 
 # This will be called once for the at the beggining of the execution in the 'tests/' directory
 # and will be torn down, (code after the yeild) when all the test session has completed.
@@ -51,6 +79,7 @@ def params_from_base_suite_setup(request):
     mode = request.config.getoption("--mode")
     skip_provisioning = request.config.getoption("--skip-provisioning")
     ci = request.config.getoption("--ci")
+    ssl = request.config.getoption("--server-ssl")
 
     log_info("server_version: {}".format(server_version))
     log_info("sync_gateway_version: {}".format(sync_gateway_version))
@@ -67,6 +96,30 @@ def params_from_base_suite_setup(request):
     else:
         log_info("Using 'base_{}' config!".format(mode))
         cluster_config = "{}/base_{}".format(CLUSTER_CONFIGS_DIR, mode)
+
+    if ssl:
+        log_info("Running tests with ssl enabled")
+        # Write ssl_enabled = True in the cluster_config.json
+        cluster_config_json = "{}.json".format(cluster_config)
+        with open(cluster_config_json, "rw") as f:
+            cluster = json.loads(f.read())
+        f.close()
+
+        cluster["ssl_enabled"] = True
+        with open(cluster_config_json, "w") as f:
+            json.dump(cluster, f, indent=4)
+        f.close()
+
+        # Write [ssl] ssl_enabled = True in the cluster_config
+        config = CustomConfigParser()
+        config.read(cluster_config)
+        if not config.has_section("ssl"):
+            config.add_section("ssl")
+        config.set('ssl', 'ssl_enabled', 'True')
+
+        with open(cluster_config, 'w') as f:
+            config.write(f)
+        f.close()
 
     sg_config = sync_gateway_config_path_for_mode("sync_gateway_default_functional_tests", mode)
 

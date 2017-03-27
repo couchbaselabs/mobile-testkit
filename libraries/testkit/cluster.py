@@ -31,6 +31,7 @@ class Cluster:
     def __init__(self, config):
 
         self._cluster_config = config
+        self.ssl = False
 
         if not os.path.isfile(self._cluster_config):
             log_info("Cluster config not found in 'resources/cluster_configs/'")
@@ -45,15 +46,18 @@ class Cluster:
         cbs = [{"name": cbs["name"], "ip": cbs["ip"]} for cbs in cluster["couchbase_servers"]]
         sgs = [{"name": sg["name"], "ip": sg["ip"]} for sg in cluster["sync_gateways"]]
         acs = [{"name": ac["name"], "ip": ac["ip"]} for ac in cluster["sg_accels"]]
+        ssl = cluster["ssl_enabled"]
 
         log_info("cbs: {}".format(cbs))
         log_info("sgs: {}".format(sgs))
         log_info("acs: {}".format(acs))
+        log_info("ssl: {}".format(ssl))
 
         self.sync_gateways = [SyncGateway(cluster_config=self._cluster_config, target=sg) for sg in sgs]
         self.sg_accels = [SgAccel(cluster_config=self._cluster_config, target=ac) for ac in acs]
         self.servers = [Server(cluster_config=self._cluster_config, target=cb) for cb in cbs]
         self.sync_gateway_config = None  # will be set to Config object when reset() called
+        self.ssl = ssl
 
         # for integrating keywords
         self.cb_server = couchbaseserver.CouchbaseServer(self.servers[0].url)
@@ -110,11 +114,21 @@ class Cluster:
         log_info(">>> Starting sync_gateway with configuration: {}".format(config_path_full))
         utils.dump_file_contents_to_logs(config_path_full)
 
+        cluster = Cluster(config=self._cluster_config)
+        server_port = 8091
+        scheme = "http"
+
+        if cluster.ssl:
+            server_port = 18091
+            scheme = "https"
+
         # Start sync-gateway
         status = ansible_runner.run_ansible_playbook(
             "start-sync-gateway.yml",
             extra_vars={
-                "sync_gateway_config_filepath": config_path_full
+                "sync_gateway_config_filepath": config_path_full,
+                "server_port": server_port,
+                "scheme": scheme
             }
         )
         assert status == 0, "Failed to start to Sync Gateway"
