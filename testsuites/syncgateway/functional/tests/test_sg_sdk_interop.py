@@ -59,14 +59,17 @@ def test_sdk_interop_unique_docs(params_from_base_test_setup, sg_conf_name):
     # Create / add docs to sync gateway
     sg_docs = document.create_docs('sg', number_docs, content={'foo': 'bar', 'updates': 1}, channels=['sg'])
     sg_docs_resp = sg_client.add_bulk_docs(url=sg_url, db=sg_db, docs=sg_docs, auth=seth_session)
+    sg_doc_ids = [doc["_id"] for doc in sg_docs]
 
     assert len(sg_docs_resp) == number_docs
 
     # Since seth has channels from 'sg' and 'sdk', verify that the sdk docs and sg docs show up in
     # seth's changes feed
 
-    # TODO: validation
-    # sg_client.verify_docs_in_changes(url=sg_url, db=sg_db, expected_docs=sdk_docs + sg_docs, auth=seth_session)
+    # TODO: SDK: Verify docs (sg + sdk) are present
+    # TODO: SG: Verify docs (sg + sdk) are there via _all_docs
+    # TODO: SG: Verify docs (sg + sdk) are there via _changes
+
     for i in range(number_updates):
 
         # Get docs and extract doc_id (key) and doc_body (value.value)
@@ -93,12 +96,30 @@ def test_sdk_interop_unique_docs(params_from_base_test_setup, sg_conf_name):
     sg_docs_to_update_resp = sg_client.get_bulk_docs(url=sg_url, db=sg_db, docs=sg_docs_resp, auth=seth_session)
     sg_docs_to_update = sg_docs_to_update_resp['rows']
 
-    import pdb
-    pdb.set_trace()
+    # TODO: SDK: Verify doc updates (sg + sdk) are present using the doc['content']['updates'] property
+    # TODO: SG: Verify doc updates (sg + sdk) are there via _all_docs using the doc['content']['updates'] property and rev prefix
+    # TODO: SG: Verify doc updates (sg + sdk) are there via _changes using the doc['content']['updates'] property and rev prefix
 
     # Bulk add the updates to Sync Gateway
     deleted_docs = sg_client.delete_bulk_docs(url=sg_url, db=sg_db, docs=sg_docs_to_update, auth=seth_session)
-    deleted_docs = sg_client.get_bulk_docs(url=sg_url, db=sg_db, docs=deleted_docs, auth=seth_session)
+    try_get_deleted_docs = sg_client.get_bulk_docs(url=sg_url, db=sg_db, docs=deleted_docs, auth=seth_session)
+    try_get_deleted_rows = try_get_deleted_docs['rows']
+    # TODO: assert len(try_get_deleted_rows) == number_docs * 2
+
+    all_doc_ids = sdk_doc_ids + sg_doc_ids
+    assert len(all_doc_ids) == 2 * number_docs
+
+    for row in try_get_deleted_rows:
+        assert row['id'] in all_doc_ids
+        assert row['status'] == 404
+        assert row['error'] == 'not_found'
+        assert row['reason'] == 'deleted'
+
+        # Cross off the doc_id
+        all_doc_ids.remove(row['id'])
+
+    # Assert that all of the docs are flagged as deleted
+    assert len(all_doc_ids) == 0
 
     import pdb
     pdb.set_trace()
