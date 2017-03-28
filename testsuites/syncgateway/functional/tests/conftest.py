@@ -123,6 +123,7 @@ def params_from_base_suite_setup(request):
     else:
         log_info("Running tests with ssl disabled")
         # Write ssl_enabled = False in the cluster_config.json
+        # if ssl_enabled is present
         cluster_config_json = "{}.json".format(cluster_config)
         with open(cluster_config_json, "rw") as f:
             cluster = json.loads(f.read())
@@ -135,6 +136,7 @@ def params_from_base_suite_setup(request):
             f.close()
 
         # Write [ssl] ssl_enabled = False in the cluster_config
+        # if ssl is present
         config = CustomConfigParser()
         config.read(cluster_config)
         if config.has_section("ssl"):
