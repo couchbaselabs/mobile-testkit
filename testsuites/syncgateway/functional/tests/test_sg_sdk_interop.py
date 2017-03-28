@@ -22,6 +22,24 @@ from keywords.MobileRestClient import MobileRestClient
 ])
 def test_sdk_interop_unique_docs(params_from_base_test_setup, sg_conf_name):
 
+    """
+    Scenario:
+    - Bulk create 'number_docs' docs from SDK with prefix 'sdk' and channels ['sdk']
+    - Bulk create 'number_docs' docs from SG with prefix 'sg' and channels ['sg']
+    - TODO: SDK: Verify docs (sg + sdk) are present
+    - TODO: SG: Verify docs (sg + sdk) are there via _all_docs
+    - TODO: SG: Verify docs (sg + sdk) are there via _changes 
+    - Bulk update each doc 'number_updates' from SDK for 'sdk' docs
+    - Bulk update each doc 'number_updates' from SG for 'sg' docs
+    - TODO: SDK: Verify doc updates (sg + sdk) are present using the doc['content']['updates'] property
+    - TODO: SG: Verify doc updates (sg + sdk) are there via _all_docs using the doc['content']['updates'] property and rev prefix
+    - TODO: SG: Verify doc updates (sg + sdk) are there via _changes using the doc['content']['updates'] property and rev prefix
+    - Bulk delete 'sdk' docs from SDK
+    - Bulk delete 'sg' docs from SG
+    - Verify SDK sees all docs (sg + sdk) as deleted
+    - Verify SG sees all docs (sg + sdk) as deleted
+    """
+
     cluster_conf = params_from_base_test_setup['cluster_config']
     cluster_topology = params_from_base_test_setup['cluster_topology']
     mode = params_from_base_test_setup['mode']
@@ -32,7 +50,7 @@ def test_sdk_interop_unique_docs(params_from_base_test_setup, sg_conf_name):
 
     bucket_name = 'data-bucket'
     cbs_url = cluster_topology['couchbase_servers'][0]
-    sg_db = "db"
+    sg_db = 'db'
     number_docs = 1000
     number_updates = 10
 
@@ -61,7 +79,7 @@ def test_sdk_interop_unique_docs(params_from_base_test_setup, sg_conf_name):
     # Create / add docs to sync gateway
     sg_docs = document.create_docs('sg', number_docs, content={'foo': 'bar', 'updates': 1}, channels=['sg'])
     sg_docs_resp = sg_client.add_bulk_docs(url=sg_url, db=sg_db, docs=sg_docs, auth=seth_session)
-    sg_doc_ids = [doc["_id"] for doc in sg_docs]
+    sg_doc_ids = [doc['_id'] for doc in sg_docs]
 
     assert len(sg_docs_resp) == number_docs
 
@@ -161,3 +179,78 @@ def test_sdk_interop_unique_docs(params_from_base_test_setup, sg_conf_name):
 
     # Assert that all of the docs are flagged as deleted
     assert len(all_doc_ids) == 0
+
+
+@pytest.mark.sanity
+@pytest.mark.syncgateway
+@pytest.mark.sdk
+@pytest.mark.changes
+@pytest.mark.session
+@pytest.mark.parametrize('sg_conf_name', [
+    'sync_gateway_default_functional_tests'
+])
+def test_sdk_interop_shared_docs(params_from_base_test_setup, sg_conf_name):
+    """
+    Scenario:
+    - Bulk create 'number_docs' docs from SDK with prefix 'doc_set_one' and channels ['shared']
+    - Bulk create 'number_docs' docs from SG with prefix 'doc_set_two' and channels ['shared']
+    - TODO: SDK: Verify docs (sg + sdk) are present
+    - TODO: SG: Verify docs (sg + sdk) are there via _all_docs
+    - TODO: SG: Verify docs (sg + sdk) are there via _changes 
+    - Start concurrent updates:
+        loop until sg map and sdk map are 
+        - Maintain map of each doc id to number of updates for sg
+        - Maintain map of each doc id to number of updates for sdk
+        - Pick random doc from sg map
+        - Try to update doc from SG
+        - If successful and num_doc_updates == number_updates_per_client, mark doc as finished in sg tracking map
+        - Pick random doc from sdk map
+        - Try to update doc from SDK
+        - If successful and num_doc_updates == number_updates_per_client, mark doc as finished in sdk tracking map
+    - TODO: SDK: Verify doc updates (sg + sdk) are present using the doc['content']['updates'] property
+    - TODO: SG: Verify doc updates (sg + sdk) are there via _all_docs using the doc['content']['updates'] property and rev prefix
+    - TODO: SG: Verify doc updates (sg + sdk) are there via _changes using the doc['content']['updates'] property and rev prefix
+    - Start concurrent deletes:
+        loop until len(all_doc_ids_to_delete) == 0
+            - List of all_doc_ids_to_delete
+            - Pick random doc and try to delete from sdk
+            - If successful, remove from list
+            - Pick random doc and try to delete from sg
+            - If successful, remove from list
+    - Verify SDK sees all docs (sg + sdk) as deleted
+    - Verify SG sees all docs (sg + sdk) as deleted
+    """
+
+    cluster_conf = params_from_base_test_setup['cluster_config']
+    cluster_topology = params_from_base_test_setup['cluster_topology']
+    mode = params_from_base_test_setup['mode']
+
+    sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
+    sg_admin_url = cluster_topology['sync_gateways'][0]['admin']
+    sg_url = cluster_topology['sync_gateways'][0]['public']
+
+    bucket_name = 'data-bucket'
+    cbs_url = cluster_topology['couchbase_servers'][0]
+    sg_db = 'db'
+    number_docs = 1000
+    number_updates_per_client = 10
+
+    log_info('sg_conf: {}'.format(sg_conf))
+    log_info('sg_admin_url: {}'.format(sg_admin_url))
+    log_info('sg_url: {}'.format(sg_url))
+
+    cluster = Cluster(config=cluster_conf)
+    cluster.reset(sg_config_path=sg_conf)
+
+    # Connect to server via SDK
+    cbs_ip = host_for_url(cbs_url)
+    sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name))
+
+    sg_client = MobileRestClient()
+
+    # Create docs and add them via sdk
+    sdk_doc_bodies = document.create_docs('sdk', number_docs, content={'foo': 'bar', 'updates': 1}, channels=['sdk'])
+    sdk_docs = {doc['_id']: doc for doc in sdk_doc_bodies}
+    sdk_doc_ids = [doc for doc in sdk_docs]
+    sdk_client.upsert_multi(sdk_docs)
+
