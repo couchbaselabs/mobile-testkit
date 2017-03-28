@@ -1,6 +1,8 @@
 import pytest
+from requests.exceptions import HTTPError
 
 from couchbase.bucket import Bucket
+from couchbase.exceptions import NotFoundError
 
 from keywords.SyncGateway import sync_gateway_config_path_for_mode
 from keywords.utils import log_info
@@ -31,7 +33,7 @@ def test_sdk_interop_unique_docs(params_from_base_test_setup, sg_conf_name):
     bucket_name = 'data-bucket'
     cbs_url = cluster_topology['couchbase_servers'][0]
     sg_db = "db"
-    number_docs = 10
+    number_docs = 1000
     number_updates = 10
 
     log_info('sg_conf: {}'.format(sg_conf))
@@ -84,7 +86,7 @@ def test_sdk_interop_unique_docs(params_from_base_test_setup, sg_conf_name):
         bucket.upsert_multi(docs)
 
         # Get docs from Sync Gateway
-        sg_docs_to_update_resp = sg_client.get_bulk_docs(url=sg_url, db=sg_db, docs=sg_docs_resp, auth=seth_session)
+        sg_docs_to_update_resp = sg_client.get_bulk_docs(url=sg_url, db=sg_db, doc_ids=sg_doc_ids, auth=seth_session)
         sg_docs_to_update = sg_docs_to_update_resp['rows']
         for sg_doc in sg_docs_to_update:
             sg_doc['content']['updates'] += 1
@@ -93,23 +95,52 @@ def test_sdk_interop_unique_docs(params_from_base_test_setup, sg_conf_name):
         sg_docs_resp = sg_client.add_bulk_docs(url=sg_url, db=sg_db, docs=sg_docs_to_update, auth=seth_session)
 
     # Get docs from Sync Gateway
-    sg_docs_to_update_resp = sg_client.get_bulk_docs(url=sg_url, db=sg_db, docs=sg_docs_resp, auth=seth_session)
+    sg_docs_to_update_resp = sg_client.get_bulk_docs(url=sg_url, db=sg_db, doc_ids=sg_doc_ids, auth=seth_session)
     sg_docs_to_update = sg_docs_to_update_resp['rows']
 
     # TODO: SDK: Verify doc updates (sg + sdk) are present using the doc['content']['updates'] property
     # TODO: SG: Verify doc updates (sg + sdk) are there via _all_docs using the doc['content']['updates'] property and rev prefix
     # TODO: SG: Verify doc updates (sg + sdk) are there via _changes using the doc['content']['updates'] property and rev prefix
 
-    # Bulk add the updates to Sync Gateway
-    deleted_docs = sg_client.delete_bulk_docs(url=sg_url, db=sg_db, docs=sg_docs_to_update, auth=seth_session)
-    try_get_deleted_docs = sg_client.get_bulk_docs(url=sg_url, db=sg_db, docs=deleted_docs, auth=seth_session)
-    try_get_deleted_rows = try_get_deleted_docs['rows']
+    # Delete the sync gateway docs
+    sg_client.delete_bulk_docs(url=sg_url, db=sg_db, docs=sg_docs_to_update, auth=seth_session)
     # TODO: assert len(try_get_deleted_rows) == number_docs * 2
 
+    # Delete the sdk docs
+    bucket.remove_multi(sdk_doc_ids)
+
+    # Verify all docs are deleted on the sync_gateway side
     all_doc_ids = sdk_doc_ids + sg_doc_ids
     assert len(all_doc_ids) == 2 * number_docs
 
-    for row in try_get_deleted_rows:
+    # Check GET /db/doc_id
+    for doc_id in all_doc_ids:
+        with pytest.raises(HTTPError) as he:
+            sg_client.get_doc(url=sg_url, db=sg_db, doc_id=doc_id, auth=seth_session)
+
+        log_info(he.value.message)
+
+        # u'404 Client Error: Not Found for url: http://192.168.33.11:4984/db/sg_0?conflicts=true&revs=true'
+        assert he.value.message.startswith('404 Client Error: Not Found for url:')
+
+        # Parse out the doc id
+        # sg_0?conflicts=true&revs=true
+        parts = he.value.message.split('/')[-1]
+        doc_id_from_parts = parts.split('?')[0]
+
+        # Remove the doc id from the list
+        all_doc_ids.remove(doc_id_from_parts)
+
+    # Assert that all of the docs are flagged as deleted
+    # TODO: assert len(all_doc_ids) == 0
+
+    # Check /db/_bulk_get
+    all_doc_ids = sdk_doc_ids + sg_doc_ids
+    try_get_bulk_docs = sg_client.get_bulk_docs(url=sg_url, db=sg_db, doc_ids=all_doc_ids, auth=seth_session)
+
+    # TODO: assert len(try_get_bulk_docs["rows"]) == number_docs * 2
+
+    for row in try_get_bulk_docs['rows']:
         assert row['id'] in all_doc_ids
         assert row['status'] == 404
         assert row['error'] == 'not_found'
@@ -118,11 +149,15 @@ def test_sdk_interop_unique_docs(params_from_base_test_setup, sg_conf_name):
         # Cross off the doc_id
         all_doc_ids.remove(row['id'])
 
+    # Verify all docs are deleted on the sdk side
+    all_doc_ids = sdk_doc_ids + sg_doc_ids
+
+    # Verify all docs are deleted on sdk, deleted docs should rase and exception
+    for doc_id in all_doc_ids:
+        with pytest.raises(NotFoundError) as nfe:
+            bucket.get(doc_id)
+        log_info(nfe.value)
+        all_doc_ids.remove(nfe.value.key)
+
     # Assert that all of the docs are flagged as deleted
     assert len(all_doc_ids) == 0
-
-    import pdb
-    pdb.set_trace()
-
-    # Verify deleted
-
