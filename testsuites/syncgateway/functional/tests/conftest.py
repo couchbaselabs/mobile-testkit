@@ -1,6 +1,5 @@
 import pytest
 import json
-import ConfigParser
 
 from keywords.constants import CLUSTER_CONFIGS_DIR
 from keywords.utils import log_info
@@ -10,32 +9,11 @@ from keywords.SyncGateway import validate_sync_gateway_mode
 from keywords.SyncGateway import sync_gateway_config_path_for_mode
 
 from libraries.testkit import cluster
-
 from libraries.NetworkUtils import NetworkUtils
 
+from utilities.enable_disable_ssl_cluster import enable_ssl_in_cluster_config
+from utilities.enable_disable_ssl_cluster import disable_ssl_in_cluster_config
 
-class CustomConfigParser(ConfigParser.RawConfigParser):
-    """Virtually identical to the original method, but delimit keys and values with '=' instead of ' = '
-       Python 3 has a space_around_delimiters=False option for write, it does not work for python 2.x
-    """
-
-    def write(self, fp):
-        DEFAULTSECT = "DEFAULT"
-        """Write an .ini-format representation of the configuration state."""
-        if self._defaults:
-            fp.write("[%s]\n" % DEFAULTSECT)
-            for (key, value) in self._defaults.items():
-                fp.write("%s=%s\n" % (key, str(value).replace('\n', '\n\t')))
-            fp.write("\n")
-        for section in self._sections:
-            fp.write("[%s]\n" % section)
-            for (key, value) in self._sections[section].items():
-                if key == "__name__":
-                    continue
-                if (value is not None) or (self._optcre == self.OPTCRE):
-                    key = "=".join((key, str(value).replace('\n', '\n\t')))
-                fp.write("%s\n" % (key))
-            fp.write("\n")
 
 # Add custom arguments for executing tests in this directory
 def pytest_addoption(parser):
@@ -99,52 +77,12 @@ def params_from_base_suite_setup(request):
 
     if ssl:
         log_info("Running tests with ssl enabled")
-        # Write ssl_enabled = True in the cluster_config.json
-        cluster_config_json = "{}.json".format(cluster_config)
-        with open(cluster_config_json, "rw") as f:
-            cluster = json.loads(f.read())
-        f.close()
-
-        cluster["ssl_enabled"] = True
-        with open(cluster_config_json, "w") as f:
-            json.dump(cluster, f, indent=4)
-        f.close()
-
-        # Write [ssl] ssl_enabled = True in the cluster_config
-        config = CustomConfigParser()
-        config.read(cluster_config)
-        if not config.has_section("ssl"):
-            config.add_section("ssl")
-        config.set('ssl', 'ssl_enabled', 'True')
-
-        with open(cluster_config, 'w') as f:
-            config.write(f)
-        f.close()
+        # Enable ssl in cluster configs
+        enable_ssl_in_cluster_config(cluster_config)
     else:
         log_info("Running tests with ssl disabled")
-        # Write ssl_enabled = False in the cluster_config.json
-        # if ssl_enabled is present
-        cluster_config_json = "{}.json".format(cluster_config)
-        with open(cluster_config_json, "rw") as f:
-            cluster = json.loads(f.read())
-        f.close()
-
-        if "ssl_enabled" in cluster:
-            cluster["ssl_enabled"] = False
-            with open(cluster_config_json, "w") as f:
-                json.dump(cluster, f, indent=4)
-            f.close()
-
-        # Write [ssl] ssl_enabled = False in the cluster_config
-        # if ssl is present
-        config = CustomConfigParser()
-        config.read(cluster_config)
-        if config.has_section("ssl"):
-            config.set('ssl', 'ssl_enabled', 'False')
-
-            with open(cluster_config, 'w') as f:
-                config.write(f)
-            f.close()
+        # Disable ssl in cluster configs
+        disable_ssl_in_cluster_config(cluster_config)
 
     sg_config = sync_gateway_config_path_for_mode("sync_gateway_default_functional_tests", mode)
 

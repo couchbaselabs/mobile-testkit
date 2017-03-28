@@ -69,8 +69,16 @@ class ClusterKeywords:
             sg_urls.append({"public": public, "admin": admin})
 
         ac_urls = ["http://{}:4985".format(sga["ip"]) for sga in cluster["sg_accels"]]
-        cbs_urls = ["http://{}:8091".format(cb["ip"]) for cb in cluster["couchbase_servers"]]
         lbs_urls = ["http://{}".format(lb["ip"]) for lb in cluster["load_balancers"]]
+
+        server_port = 8091
+        scheme = "http"
+
+        if cluster["ssl_enabled"]:
+            server_port = 18091
+            scheme = "https"
+
+        cbs_urls = ["{}://{}:{}".format(scheme, cb["ip"], server_port) for cb in cluster["couchbase_servers"]]
 
         # Format into urls that robot keywords can consume easily
         formatted_cluster = {
