@@ -4,6 +4,8 @@ import requests
 from requests.exceptions import ConnectionError
 from requests.exceptions import HTTPError
 from requests import Session
+from requests.packages.urllib3.exceptions import InsecureRequestWarning
+requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
 from couchbase.bucket import Bucket
 from couchbase.exceptions import CouchbaseError
@@ -22,8 +24,15 @@ from keywords.utils import log_error
 from keywords import types
 
 
-def get_server_version(host):
-    resp = requests.get("http://Administrator:password@{}:8091/pools".format(host))
+def get_server_version(host, ssl=False):
+    scheme = "http"
+    server_port = 8091
+
+    if ssl:
+        scheme = "https"
+        server_port = 18091
+
+    resp = requests.get("{}://Administrator:password@{}:{}/pools".format(scheme, host, server_port), verify=False)
     log_r(resp)
     resp.raise_for_status()
     resp_obj = resp.json()
@@ -36,8 +45,8 @@ def get_server_version(host):
     return "{}-{}".format(running_server_version_parts[0], running_server_version_parts[1])
 
 
-def verify_server_version(host, expected_server_version):
-    running_server_version = get_server_version(host)
+def verify_server_version(host, expected_server_version, ssl=False):
+    running_server_version = get_server_version(host, ssl=ssl)
     expected_server_version_parts = expected_server_version.split("-")
 
     # Check both version parts if expected version contains a build
@@ -63,7 +72,6 @@ class CouchbaseServer:
 
     def __init__(self, url):
         self.url = url
-
         # Strip http prefix and port to store host
         if "https" in self.url:
             host = self.url.replace("https://", "")
@@ -83,7 +91,7 @@ class CouchbaseServer:
 
         bucket_names = []
 
-        resp = self._session.get("{}/pools/default/buckets".format(self.url))
+        resp = self._session.get("{}/pools/default/buckets".format(self.url), verify=False)
         log_r(resp)
         resp.raise_for_status()
 
@@ -96,7 +104,7 @@ class CouchbaseServer:
 
     def delete_bucket(self, name):
         """ Delete a Couchbase Server bucket with the given 'name' """
-        resp = self._session.delete("{0}/pools/default/buckets/{1}".format(self.url, name))
+        resp = self._session.delete("{0}/pools/default/buckets/{1}".format(self.url, name), verify=False)
         log_r(resp)
         resp.raise_for_status()
 
@@ -155,7 +163,7 @@ class CouchbaseServer:
 
             # Verfy the server is in a "healthy", not "warmup" state
             try:
-                resp = self._session.get("{}/pools/nodes".format(self.url))
+                resp = self._session.get("{}/pools/nodes".format(self.url), verify=False)
                 log_r(resp)
             except ConnectionError:
                 # If bringing a server online, there may be some connnection issues. Continue and try again.
@@ -205,7 +213,7 @@ class CouchbaseServer:
         """
         Call the Couchbase REST API to get the total memory available on the machine. RAM returned is in mb
         """
-        resp = self._session.get("{}/pools/default".format(self.url))
+        resp = self._session.get("{}/pools/default".format(self.url), verify=False)
         resp.raise_for_status()
         resp_json = resp.json()
 
@@ -279,7 +287,7 @@ class CouchbaseServer:
             "flushEnabled": "1"
         }
 
-        resp = self._session.post("{}/pools/default/buckets".format(self.url), data=data)
+        resp = self._session.post("{}/pools/default/buckets".format(self.url), data=data, verify=False)
         log_r(resp)
         resp.raise_for_status()
 
@@ -343,7 +351,7 @@ class CouchbaseServer:
         """
         Returns the current tasks from the server
         """
-        resp = self._session.get("{}/pools/default/tasks".format(self.url))
+        resp = self._session.get("{}/pools/default/tasks".format(self.url), verify=False)
         log_r(resp)
         resp.raise_for_status()
         resp_obj = resp.json()
@@ -434,7 +442,8 @@ class CouchbaseServer:
             resp = self._session.post(
                 "{}/controller/addNode".format(self.url),
                 headers={"Content-Type": "application/x-www-form-urlencoded"},
-                data=data
+                data=data,
+                verify=False
             )
 
             log_r(resp)
@@ -458,8 +467,12 @@ class CouchbaseServer:
         # Add all servers except server_to_add to known nodes
         known_nodes = "knownNodes="
         for server in cluster_servers:
-            server = server.replace("http://", "")
-            server = server.replace(":8091", "")
+            if "https" in server:
+                server = server.replace("https://", "")
+                server = server.replace(":18091", "")
+            else:
+                server = server.replace("http://", "")
+                server = server.replace(":8091", "")
             known_nodes += "ns_1@{},".format(server)
 
         # Add server_to_add to known nodes
@@ -471,7 +484,8 @@ class CouchbaseServer:
         resp = self._session.post(
             "{}/controller/rebalance".format(self.url),
             headers={"Content-Type": "application/x-www-form-urlencoded"},
-            data=data
+            data=data,
+            verify=False
         )
         log_r(resp)
         resp.raise_for_status()
@@ -493,8 +507,12 @@ class CouchbaseServer:
         # Add all servers except server_to_add to known nodes
         known_nodes = "knownNodes="
         for server in cluster_servers:
-            server = server.replace("http://", "")
-            server = server.replace(":8091", "")
+            if "https" in server:
+                server = server.replace("https://", "")
+                server = server.replace(":18091", "")
+            else:
+                server = server.replace("http://", "")
+                server = server.replace(":8091", "")
 
             if server_to_add.host != server:
                 known_nodes += "ns_1@{},".format(server)
@@ -510,7 +528,8 @@ class CouchbaseServer:
         resp = self._session.post(
             "{}/controller/rebalance".format(self.url),
             headers={"Content-Type": "application/x-www-form-urlencoded"},
-            data=data
+            data=data,
+            verify=False
         )
         log_r(resp)
         resp.raise_for_status()
@@ -530,7 +549,8 @@ class CouchbaseServer:
         resp = self._session.post(
             "{}/controller/setRecoveryType".format(self.url),
             headers={"Content-Type": "application/x-www-form-urlencoded"},
-            data=data
+            data=data,
+            verify=False
         )
 
         log_r(resp)
@@ -553,7 +573,7 @@ class CouchbaseServer:
             if time.time() - start > keywords.constants.CLIENT_REQUEST_TIMEOUT:
                 raise TimeoutError("Waiting for server to be unreachable but it never was!")
             try:
-                resp = self._session.get("{}/pools".format(self.url))
+                resp = self._session.get("{}/pools".format(self.url), verify=False)
                 log_r(resp)
                 resp.raise_for_status()
             except ConnectionError:

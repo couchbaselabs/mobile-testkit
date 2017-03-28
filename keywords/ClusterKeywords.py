@@ -133,9 +133,13 @@ class ClusterKeywords:
         with open("{}.json".format(cluster_config)) as f:
             cluster_obj = json.loads(f.read())
 
+        ssl = False
+        if cluster_obj["ssl_enabled"]:
+            ssl = True
+
         # Verify Server version
         for server in cluster_obj["couchbase_servers"]:
-            couchbaseserver.verify_server_version(server["ip"], expected_server_version)
+            couchbaseserver.verify_server_version(server["ip"], expected_server_version, ssl=ssl)
 
         # Verify sync_gateway versions
         for sg in cluster_obj["sync_gateways"]:

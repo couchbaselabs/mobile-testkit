@@ -22,7 +22,18 @@ class Server:
     def __init__(self, cluster_config, target):
         self.ansible_runner = AnsibleRunner(cluster_config)
         self.ip = target["ip"]
-        self.url = "http://{}:8091".format(target["ip"])
+
+        with open("{}.json".format(cluster_config)) as f:
+            cluster = json.loads(f.read())
+
+        server_port = 8091
+        scheme = "http"
+
+        if cluster["ssl_enabled"]:
+            server_port = 18091
+            scheme = "https"
+
+        self.url = "{}://{}:{}".format(scheme, target["ip"], server_port)
         self.hostname = target["name"]
 
         auth = base64.b64encode("{0}:{1}".format("Administrator", "password").encode())
@@ -33,7 +44,7 @@ class Server:
         count = 0
         status = 0
         while count < 3:
-            resp = requests.get("{}/pools/default/buckets".format(self.url), headers=self._headers)
+            resp = requests.get("{}/pools/default/buckets".format(self.url), headers=self._headers, verify=False)
             resp.raise_for_status()
             obj = json.loads(resp.text)
 
@@ -48,7 +59,7 @@ class Server:
             delete_num = 0
             # Delete existing buckets
             for bucket_name in existing_bucket_names:
-                resp = requests.delete("{0}/pools/default/buckets/{1}".format(self.url, bucket_name), headers=self._headers)
+                resp = requests.delete("{0}/pools/default/buckets/{1}".format(self.url, bucket_name), headers=self._headers, verify=False)
                 if resp.status_code == 200:
                     delete_num += 1
 
@@ -71,7 +82,7 @@ class Server:
         status = 0
         while count < 3:
             log_info(">>> Deleting buckets: {}".format(name))
-            resp = requests.delete("{0}/pools/default/buckets/{1}".format(self.url, name), headers=self._headers)
+            resp = requests.delete("{0}/pools/default/buckets/{1}".format(self.url, name), headers=self._headers, verify=False)
             if resp.status_code == 200 or resp.status_code == 404:
                 break
             else:
