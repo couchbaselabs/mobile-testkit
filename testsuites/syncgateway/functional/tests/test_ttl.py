@@ -657,7 +657,8 @@ def test_setting_expiry_in_bulk_docs(params_from_base_test_setup, sg_conf_name):
     # Allow exp_3 docs to expire
     time.sleep(5)
 
-    bulk_get_docs = client.get_bulk_docs(url=sg_url, db=sg_db, docs=bulk_docs, auth=sg_user_session)
+    bulk_docs_ids = [doc["id"] for doc in bulk_docs]
+    bulk_get_docs = client.get_bulk_docs(url=sg_url, db=sg_db, doc_ids=bulk_docs_ids, auth=sg_user_session)
 
     expected_ids = ["exp_10_0", "exp_10_1", "exp_10_2", "exp_10_3", "exp_10_4"]
     expected_missing_ids = ["exp_3_0", "exp_3_1", "exp_3_2", "exp_3_3", "exp_3_4"]

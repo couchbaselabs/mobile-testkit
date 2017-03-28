@@ -1220,19 +1220,25 @@ class MobileRestClient:
         resp_obj = resp.json()
         return resp_obj
 
-    def get_bulk_docs(self, url, db, docs, auth=None):
+    def get_bulk_docs(self, url, db, doc_ids, auth=None):
         """
         Keyword that issues POST _bulk_get docs with the specified 'docs' array.
         doc need to be in the format (python list of {id: "", rev: ""} dictionaries):
         [
-            {u'rev': u'1-efda114d144b5220fa77c4e51f3e70a8', u'id': u'exp_3_0'},
-            {u'rev': u'1-efda114d144b5220fa77c4e51f3e70a8', u'id': u'exp_3_1'}, ...
+            'exp_3_0',
+            'exp_3_1', ...
+            ...
+            'exp_3_100'
         ]
         """
 
-        # extract ids from docs and format for _bulk_get request
-        ids = [{"id": doc["id"]} for doc in docs]
-        request_body = {"docs": ids}
+        # Format the list of ids to the expected format for bulk_get
+        # ex. [
+        #   {'id', 'doc_id_one'},
+        #   {'id', 'doc_id_two'}, ...
+        # ]
+        doc_ids_formatted = [{"id": doc_id} for doc_id in doc_ids]
+        request_body = {"docs": doc_ids_formatted}
 
         auth_type = get_auth_type(auth)
 
