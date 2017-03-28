@@ -4,7 +4,7 @@
   "facebook": { "register": true },
   "databases": {
     "todolite": {
-      "server":"http://{{ couchbase_server_primary_node }}:8091",
+      "server":"{{ scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
       "bucket":"data-bucket",
       "users": {
         "GUEST": {"disabled": true}

@@ -8,28 +8,28 @@
     "compressResponses": false,
     "log": ["CRUD+", "Cache+", "HTTP+", "Changes+", "Replicate"],
     "cluster_config": {
-        "server":"http://{{ couchbase_server_primary_node }}:8091",
+        "server":"{{ scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
         "data_dir":".",
         "bucket":"data-bucket"
     },
     "databases":{
         "db1":{
             "feed_type":"DCPSHARD",
-            "server":"http://{{ couchbase_server_primary_node }}:8091",
+            "server":"{{ scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
             "bucket":"data-bucket-1",
             "channel_index":{
                 "num_shards":16,
-                "server":"http://{{ couchbase_server_primary_node }}:8091",
+                "server":"{{ scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
                 "bucket":"index-bucket-1",
                 "writer":{{ is_index_writer }}
             }
         },
         "db2":{
             "feed_type":"DCPSHARD",
-            "server":"http://{{ couchbase_server_primary_node }}:8091",
+            "server":"{{ scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
             "bucket":"data-bucket-2",
             "channel_index":{
-                "server":"http://{{ couchbase_server_primary_node }}:8091",
+                "server":"{{ scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
                 "bucket":"index-bucket-2",
                 "writer":{{ is_index_writer }}
             }

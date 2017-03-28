@@ -4,7 +4,7 @@
   "log": ["*"],
   "databases": {
     "todo": {
-      "server":"http://{{ couchbase_server_primary_node }}:8091",
+      "server":"{{ scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
       "bucket": "data-bucket",
       "users": {
         "traun": {"password": "pass", "admin_channels": ["traun"]},

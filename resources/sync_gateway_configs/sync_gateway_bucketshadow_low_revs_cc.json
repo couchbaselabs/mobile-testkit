@@ -9,11 +9,11 @@
     "log": ["*"],
     "databases":{
         "db":{
-            "server":"http://{{ couchbase_server_primary_node }}:8091",
+            "server":"{{ scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
             "bucket":"data-bucket",
 	    "revs_limit":5,
 	    "shadow": {
-		"server": "http://{{ couchbase_server_primary_node }}:8091",
+		"server": "{{ scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
 		"bucket": "source-bucket"
 	    }
         }

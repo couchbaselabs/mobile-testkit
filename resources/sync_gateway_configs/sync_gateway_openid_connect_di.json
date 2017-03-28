@@ -5,7 +5,7 @@
   "compressResponses": false,
   "AdminInterface": "0.0.0.0:4985",
   "cluster_config": {
-    "server":"http://{{ couchbase_server_primary_node }}:8091",
+    "server":"{{ scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
     "data_dir":".",
     "bucket":"data-bucket"
   },
@@ -76,7 +76,7 @@
         }
       },
       "feed_type": "DCPSHARD",
-      "server": "http://{{ couchbase_server_primary_node }}:8091",
+      "server": "{{ scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
       "bucket": "data-bucket",
       "users": {
         "GUEST": {
@@ -88,7 +88,7 @@
       },
       "channel_index": {
         "num_shards": 64,
-        "server": "http://{{ couchbase_server_primary_node }}:8091",
+        "server": "{{ scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
         "bucket": "index-bucket",
         "writer": {{ is_index_writer }}
       }

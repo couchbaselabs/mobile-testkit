@@ -10,11 +10,11 @@
     "verbose":"true",
     "databases": {
         "db":{
-            "server":"http://{{ couchbase_server_primary_node }}:8091",
+            "server":"{{ scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
             "bucket":"data-bucket"
         },
         "db2":{
-            "server":"http://{{ couchbase_server_primary_node }}:8091",
+            "server":"{{ scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
             "bucket":"data-bucket"
         }
     }
