@@ -65,10 +65,13 @@ class CouchbaseServer:
         self.url = url
 
         # Strip http prefix and port to store host
-        host = self.url.replace("http://", "")
-        host = self.url.replace("https://", "")
-        host = host.replace(":8091", "")
-        host = host.replace(":18091", "")
+        if "https" in self.url:
+            host = self.url.replace("https://", "")
+            host = host.replace(":18091", "")
+        else:
+            host = self.url.replace("http://", "")
+            host = host.replace(":8091", "")
+
         self.host = host
         self.remote_executor = RemoteExecutor(self.host)
 
