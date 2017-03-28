@@ -1,5 +1,4 @@
 import pytest
-import json
 
 from keywords.constants import CLUSTER_CONFIGS_DIR
 from keywords.utils import log_info
@@ -42,6 +41,7 @@ def pytest_addoption(parser):
     parser.addoption("--server-ssl",
                      action="store_true",
                      help="If set, will enable SSL communication between server and Sync Gateway")
+
 
 # This will be called once for the at the beggining of the execution in the 'tests/' directory
 # and will be torn down, (code after the yeild) when all the test session has completed.

@@ -5,7 +5,6 @@ from requests.exceptions import ConnectionError
 from requests.exceptions import HTTPError
 from requests import Session
 from requests.packages.urllib3.exceptions import InsecureRequestWarning
-requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
 from couchbase.bucket import Bucket
 from couchbase.exceptions import CouchbaseError
@@ -22,6 +21,8 @@ from keywords.utils import log_info
 from keywords.utils import log_debug
 from keywords.utils import log_error
 from keywords import types
+
+requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
 
 def get_server_version(host, ssl=False):

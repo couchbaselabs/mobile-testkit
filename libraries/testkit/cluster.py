@@ -50,7 +50,6 @@ class Cluster:
         if "ssl_enabled" in cluster:
             self.ssl = cluster["ssl_enabled"]
 
-
         log_info("cbs: {}".format(cbs))
         log_info("sgs: {}".format(sgs))
         log_info("acs: {}".format(acs))
