@@ -36,7 +36,7 @@ def pytest_addoption(parser):
                      action="store_true",
                      help="If set, will target larger cluster (3 backing servers instead of 1, 2 accels if in di mode)")
 
-    parser.addoption("--races",
+    parser.addoption("--race",
                      action="store_true",
                      help="Enable -races for Sync Gateway build. IMPORTANT - This will only work with source builds at the moment")
 
@@ -55,7 +55,7 @@ def params_from_base_suite_setup(request):
     mode = request.config.getoption("--mode")
     skip_provisioning = request.config.getoption("--skip-provisioning")
     ci = request.config.getoption("--ci")
-    races_enabled = request.config.getoption("--races")
+    race_enabled = request.config.getoption("--race")
 
     log_info("server_version: {}".format(server_version))
     log_info("sync_gateway_version: {}".format(sync_gateway_version))
@@ -83,7 +83,7 @@ def params_from_base_suite_setup(request):
             server_version=server_version,
             sync_gateway_version=sync_gateway_version,
             sync_gateway_config=sg_config,
-            races_enabled=races_enabled
+            race_enabled=race_enabled
         )
 
     # Load topology as a dictionary

@@ -21,7 +21,7 @@ def params_from_base_suite_setup(request):
     sync_gateway_version = request.config.getoption("--sync-gateway-version")
     mode = request.config.getoption("--mode")
     skip_provisioning = request.config.getoption("--skip-provisioning")
-    races_enabled = request.config.getoption("--races")
+    race_enabled = request.config.getoption("--race")
 
     log_info("server_version: {}".format(server_version))
     log_info("sync_gateway_version: {}".format(sync_gateway_version))
@@ -47,7 +47,7 @@ def params_from_base_suite_setup(request):
             server_version=server_version,
             sync_gateway_version=sync_gateway_version,
             sync_gateway_config=sg_config,
-            races_enabled=races_enabled
+            race_enabled=race_enabled
         )
 
     yield {"cluster_config": cluster_config, "mode": mode}

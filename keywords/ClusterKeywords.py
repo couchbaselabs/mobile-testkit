@@ -153,7 +153,7 @@ class ClusterKeywords:
         cluster = Cluster(config=cluster_config)
         cluster.reset(sync_gateway_config)
 
-    def provision_cluster(self, cluster_config, server_version, sync_gateway_version, sync_gateway_config, races_enabled=False):
+    def provision_cluster(self, cluster_config, server_version, sync_gateway_version, sync_gateway_config, race_enabled=False):
 
         if server_version is None or sync_gateway_version is None or sync_gateway_version is None:
             raise ProvisioningError("Please make sure you have server_version, sync_gateway_version, and sync_gateway_config are set")
@@ -167,8 +167,8 @@ class ClusterKeywords:
 
         if version_is_binary(sync_gateway_version):
 
-            if races_enabled:
-                raise ProvisioningError("Races should only be enabled for source builds")
+            if race_enabled:
+                raise ProvisioningError("Race should only be enabled for source builds")
 
             version, build = version_and_build(sync_gateway_version)
             sg_config = SyncGatewayConfig(
@@ -182,8 +182,8 @@ class ClusterKeywords:
         else:
 
             build_flags = ""
-            if races_enabled:
-                build_flags = "-races"
+            if race_enabled:
+                build_flags = "-race"
 
             sg_config = SyncGatewayConfig(
                 commit=sync_gateway_version,
