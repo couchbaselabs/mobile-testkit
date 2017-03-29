@@ -69,3 +69,13 @@ def disable_ssl_in_cluster_config(cluster_config):
 
         with open(cluster_config, 'w') as f:
             config.write(f)
+
+
+def is_ssl_enabled(cluster_config):
+    with open(cluster_config, "r") as f:
+        cluster = json.loads(f.read())
+
+    if "ssl_enabled" in cluster:
+        return True
+
+    return False

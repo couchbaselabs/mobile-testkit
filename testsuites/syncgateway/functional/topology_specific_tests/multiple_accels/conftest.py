@@ -9,6 +9,9 @@ from keywords.constants import SYNC_GATEWAY_CONFIGS
 from keywords.SyncGateway import validate_sync_gateway_mode
 from keywords.Logging import Logging
 
+from utilities.enable_disable_ssl_cluster import enable_ssl_in_cluster_config
+from utilities.enable_disable_ssl_cluster import disable_ssl_in_cluster_config
+
 
 # This will be called once at the beggining of the execution of each .py file
 # in the 'topology_specific_tests/multiple_accels' directory.
@@ -21,6 +24,7 @@ def params_from_base_suite_setup(request):
     sync_gateway_version = request.config.getoption("--sync-gateway-version")
     mode = request.config.getoption("--mode")
     skip_provisioning = request.config.getoption("--skip-provisioning")
+    ssl = request.config.getoption("--server-ssl")
 
     log_info("server_version: {}".format(server_version))
     log_info("sync_gateway_version: {}".format(sync_gateway_version))
@@ -37,6 +41,15 @@ def params_from_base_suite_setup(request):
     # use multiple_sg_accels_di
     cluster_config = "{}/multiple_sg_accels_di".format(keywords.constants.CLUSTER_CONFIGS_DIR)
     sg_config = "{}/sync_gateway_default_functional_tests_di.json".format(SYNC_GATEWAY_CONFIGS)
+
+    if ssl:
+        log_info("Running tests with ssl enabled")
+        # Enable ssl in cluster configs
+        enable_ssl_in_cluster_config(cluster_config)
+    else:
+        log_info("Running tests with ssl disabled")
+        # Disable ssl in cluster configs
+        disable_ssl_in_cluster_config(cluster_config)
 
     # Skip provisioning if user specifies '--skip-provisoning'
     if not skip_provisioning:

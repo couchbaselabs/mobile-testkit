@@ -8,6 +8,7 @@ from libraries.testkit.debug import log_response
 from libraries.testkit.admin import Admin
 from libraries.provision.ansible_runner import AnsibleRunner
 from requests import HTTPError
+from utilities.enable_disable_ssl_cluster import is_ssl_enabled
 
 import logging
 log = logging.getLogger(libraries.testkit.settings.LOGGER)
@@ -22,6 +23,10 @@ class SyncGateway:
         self.hostname = target["name"]
         self._headers = {'Content-Type': 'application/json'}
         self.admin = Admin(self)
+
+        self.cluster_config = cluster_config
+        self.server_port = 8091
+        self.scheme = "http"
 
     def info(self):
         r = requests.get(self.url)
@@ -38,13 +43,18 @@ class SyncGateway:
     def start(self, config):
 
         conf_path = os.path.abspath(config)
-
         log.info(">>> Starting sync_gateway with configuration: {}".format(conf_path))
+
+        if is_ssl_enabled(self.cluster_config):
+            self.server_port = 18091
+            self.scheme = "https"
 
         status = self.ansible_runner.run_ansible_playbook(
             "start-sync-gateway.yml",
             extra_vars={
-                "sync_gateway_config_filepath": conf_path
+                "sync_gateway_config_filepath": conf_path,
+                "server_port": self.server_port,
+                "scheme": self.scheme
             },
             subset=self.hostname
         )
