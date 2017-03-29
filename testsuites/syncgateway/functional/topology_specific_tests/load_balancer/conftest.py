@@ -57,6 +57,9 @@ def params_from_base_suite_setup(request):
 @pytest.fixture(scope="function")
 def params_from_base_test_setup(request, params_from_base_suite_setup):
 
+    # pytest command line parameters
+    collect_logs = request.config.getoption("--collect-logs")
+
     test_name = request.node.name
     log_info("Setting up test '{}'".format(test_name))
 
@@ -80,6 +83,6 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     assert len(errors) == 0
 
     # if the test failed pull logs
-    if request.node.rep_call.failed:
+    if collect_logs or request.node.rep_call.failed:
         logging_helper = Logging()
         logging_helper.fetch_and_analyze_logs(cluster_config=cluster_config, test_name=test_name)
