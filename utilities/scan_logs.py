@@ -8,7 +8,7 @@ def scan_for_errors(error_strings, log_file_path):
     We use this to look for errors, so we expect that no words will be found
     If any of the words are found, we raise an exception.
 
-    'error_strings' should be a list. Example ['panic', 'error']
+    'error_strings' should be a list. Example ['panic', 'error', 'data race']
     """
 
     if type(error_strings) != list:

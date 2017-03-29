@@ -81,3 +81,24 @@ def test_clean_log():
     log_file_path = "mobile_testkit_tests/test_data/mock_clean_log.txt"
 
     scan_logs.scan_for_errors(['panic'], log_file_path)
+    scan_logs.scan_for_errors(['data race'], log_file_path)
+
+
+def test_data_race_log():
+    """
+    Make sure scanner throws exception for found keyword
+    """
+
+    log_file_path = "mobile_testkit_tests/test_data/mock_data_race_log.txt"
+
+    with pytest.raises(AssertionError) as e:
+        scan_logs.scan_for_errors(['data race'], log_file_path)
+
+    error_message = str(e.value)
+    assert error_message.startswith("data race found!!")
+
+    with pytest.raises(AssertionError) as e:
+        scan_logs.scan_for_errors(['DATA RACE'], log_file_path)
+
+    error_message = str(e.value)
+    assert error_message.startswith("DATA RACE found!!")
