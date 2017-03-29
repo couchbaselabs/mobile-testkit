@@ -40,6 +40,10 @@ def pytest_addoption(parser):
                      action="store_true",
                      help="Enable -races for Sync Gateway build. IMPORTANT - This will only work with source builds at the moment")
 
+    parser.addoption("--collect-logs",
+                     action="store_true",
+                     help="Collect logs for every test. If this flag is not set, collection will only happen for test failures.")
+
 
 # This will be called once for the at the beggining of the execution in the 'tests/' directory
 # and will be torn down, (code after the yeild) when all the test session has completed.
@@ -50,6 +54,7 @@ def pytest_addoption(parser):
 def params_from_base_suite_setup(request):
     log_info("Setting up 'params_from_base_suite_setup' ...")
 
+    # pytest command line parameters
     server_version = request.config.getoption("--server-version")
     sync_gateway_version = request.config.getoption("--sync-gateway-version")
     mode = request.config.getoption("--mode")
@@ -105,6 +110,9 @@ def params_from_base_suite_setup(request):
 def params_from_base_test_setup(request, params_from_base_suite_setup):
     # Code before the yeild will execute before each test starts
 
+    # pytest command line parameters
+    collect_logs = request.config.getoption("--collect-logs")
+
     cluster_config = params_from_base_suite_setup["cluster_config"]
     cluster_topology = params_from_base_suite_setup["cluster_topology"]
     mode = params_from_base_suite_setup["mode"]
@@ -132,7 +140,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     errors = c.verify_alive(mode)
 
     # if the test failed or a node is down, pull logs
-    if request.node.rep_call.failed or len(errors) != 0:
+    if collect_logs or request.node.rep_call.failed or len(errors) != 0:
         logging_helper = Logging()
         logging_helper.fetch_and_analyze_logs(cluster_config=cluster_config, test_name=test_name)
 

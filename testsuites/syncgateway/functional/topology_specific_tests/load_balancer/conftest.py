@@ -17,6 +17,7 @@ from keywords.Logging import Logging
 def params_from_base_suite_setup(request):
     log_info("Setting up 'params_from_base_suite_setup' ...")
 
+    # pytest command line parameters
     server_version = request.config.getoption("--server-version")
     sync_gateway_version = request.config.getoption("--sync-gateway-version")
     mode = request.config.getoption("--mode")
@@ -80,9 +81,10 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     # Verify all sync_gateways and sg_accels are reachable
     c = cluster.Cluster(cluster_config)
     errors = c.verify_alive(mode)
-    assert len(errors) == 0
 
     # if the test failed pull logs
-    if collect_logs or request.node.rep_call.failed:
+    if collect_logs or request.node.rep_call.failed or len(errors) == 0:
         logging_helper = Logging()
         logging_helper.fetch_and_analyze_logs(cluster_config=cluster_config, test_name=test_name)
+
+    assert len(errors) == 0
