@@ -65,10 +65,16 @@ class SyncGateway:
 
         log.info(">>> Restarting sync_gateway with configuration: {}".format(conf_path))
 
+        if is_ssl_enabled(self.cluster_config):
+            self.server_port = 18091
+            self.scheme = "https"
+            
         status = self.ansible_runner.run_ansible_playbook(
             "reset-sync-gateway.yml",
             extra_vars={
                 "sync_gateway_config_filepath": conf_path,
+                "server_port": self.server_port,
+                "scheme": self.scheme
             },
             subset=self.hostname
         )
