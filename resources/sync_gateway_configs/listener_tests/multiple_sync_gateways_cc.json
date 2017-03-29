@@ -4,11 +4,11 @@
     "log": ["CRUD+", "Cache+", "HTTP+", "Changes+"],
     "databases":{
         "sg_db1":{
-            "server":"http://{{ couchbase_server_primary_node }}:8091",
+            "server":"{{ scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
             "bucket":"data-bucket-1"
         },
         "sg_db2":{
-            "server":"http://{{ couchbase_server_primary_node }}:8091",
+            "server":"{{ scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
             "bucket":"data-bucket-2"
         }
     }

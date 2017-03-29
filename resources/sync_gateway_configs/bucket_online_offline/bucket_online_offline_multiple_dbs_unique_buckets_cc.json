@@ -10,21 +10,21 @@
     "verbose":"true",
     "databases":{
         "db1":{
-            "server":"http://{{ couchbase_server_primary_node }}:8091",
+            "server":"{{ scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
             "bucket":"data-bucket-1"
         },
         "db2":{
             "offline":false,
-            "server":"http://{{ couchbase_server_primary_node }}:8091",
+            "server":"{{ scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
             "bucket":"data-bucket-2"
         },
         "db3":{
             "offline":false,
-            "server":"http://{{ couchbase_server_primary_node }}:8091",
+            "server":"{{ scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
             "bucket":"data-bucket-3"
         },
         "db4":{
-            "server":"http://{{ couchbase_server_primary_node }}:8091",
+            "server":"{{ scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
             "bucket":"data-bucket-4"
         }
     }

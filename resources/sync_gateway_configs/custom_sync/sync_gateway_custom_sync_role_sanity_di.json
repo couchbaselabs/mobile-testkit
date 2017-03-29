@@ -9,14 +9,14 @@
     "log": ["CRUD+", "Cache+", "HTTP+", "Changes+"],
     "verbose":"true",
     "cluster_config": {
-        "server":"http://{{ couchbase_server_primary_node }}:8091",
+        "server":"{{ scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
         "data_dir":".",
         "bucket":"data-bucket"
     },
     "databases":{
         "db":{
             "feed_type":"DCPSHARD",
-            "server":"http://{{ couchbase_server_primary_node }}:8091",
+            "server":"{{ scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
             "bucket":"data-bucket",
             "users":{
                 "GUEST":{
@@ -28,7 +28,7 @@
             },
             "channel_index":{
                 "num_shards":16,
-                "server":"http://{{ couchbase_server_primary_node }}:8091",
+                "server":"{{ scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
                 "bucket":"index-bucket",
                 "writer":{{ is_index_writer }}
             },
