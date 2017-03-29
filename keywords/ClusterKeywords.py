@@ -153,7 +153,7 @@ class ClusterKeywords:
         cluster = Cluster(config=cluster_config)
         cluster.reset(sync_gateway_config)
 
-    def provision_cluster(self, cluster_config, server_version, sync_gateway_version, sync_gateway_config):
+    def provision_cluster(self, cluster_config, server_version, sync_gateway_version, sync_gateway_config, races_enabled=False):
 
         if server_version is None or sync_gateway_version is None or sync_gateway_version is None:
             raise ProvisioningError("Please make sure you have server_version, sync_gateway_version, and sync_gateway_config are set")
@@ -166,10 +166,33 @@ class ClusterKeywords:
         cbs_config = CouchbaseServerConfig(server_version)
 
         if version_is_binary(sync_gateway_version):
+
+            if races_enabled:
+                raise ProvisioningError("Races should only be enabled for source builds")
+
             version, build = version_and_build(sync_gateway_version)
-            sg_config = SyncGatewayConfig(None, version, build, sync_gateway_config, "", False)
+            sg_config = SyncGatewayConfig(
+                commit=None,
+                version_number=version,
+                build_number=build,
+                config_path=sync_gateway_config,
+                build_flags="",
+                skip_bucketcreation=False
+            )
         else:
-            sg_config = SyncGatewayConfig(sync_gateway_version, None, None, sync_gateway_config, "", False)
+
+            build_flags = ""
+            if races_enabled:
+                build_flags = "-races"
+
+            sg_config = SyncGatewayConfig(
+                commit=sync_gateway_version,
+                version_number=None,
+                build_number=None,
+                config_path=sync_gateway_config,
+                build_flags=build_flags,
+                skip_bucketcreation=False
+            )
 
         provision_cluster(cluster_config, cbs_config, sg_config)
 
