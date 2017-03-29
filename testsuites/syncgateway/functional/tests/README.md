@@ -7,6 +7,7 @@
 | `--mode`  |  Channel cache mode ('cc') or using sg_accel in distributed index ('di') mode.  Determines which `CLUSTER_CONFIG` values are used during provisioning |
 | `-k`  |  Run a specific test rather than the entire sweet.  Supports substrings / regex? |
 | `--sync-gateway-version`  |  Sync Gateway version *or* commit hash |
+| `--race`  | If a Sync Gateway commit hash is provided and this flag is set, Sync Gateway will be built with -races |
 | `--server-version`  |  Couchbase Server version |
 
 ## Executing sync_gateway functional tests
@@ -32,6 +33,27 @@ pytest  -s \
         --mode=cc \
         --server-version=4.5.0 \
         --sync-gateway-version=1.3.1-16 \
+        testsuites/syncgateway/functional/tests/
+```
+
+### Run all the tests in channel cache mode with a source build
+
+```
+pytest  -s \
+        --mode=cc \
+        --server-version=4.5.0 \
+        --sync-gateway-version=5bb66efa523a2440642729ba5faebfef96fd2696 \
+        testsuites/syncgateway/functional/tests/
+```
+
+### Run all the tests in channel cache mode with a source build with -race
+
+```
+pytest  -s \
+        --mode=cc \
+        --server-version=4.5.0 \
+        --sync-gateway-version=5bb66efa523a2440642729ba5faebfef96fd2696 \
+        --race \
         testsuites/syncgateway/functional/tests/
 ```
 
