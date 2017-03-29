@@ -23,5 +23,5 @@ def pytest_addoption(parser):
                      help="Enable -races for Sync Gateway build. IMPORTANT - This will only work with source builds at the moment")
 
     parser.addoption("--collect-logs",
-                    action="store_true",
-                    help="Collect logs for every test. If this flag is not set, collection will only happen for test failures.")
+                     action="store_true",
+                     help="Collect logs for every test. If this flag is not set, collection will only happen for test failures.")
