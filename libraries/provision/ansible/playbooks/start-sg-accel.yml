@@ -8,6 +8,8 @@
     sync_gateway_node: "{{ hostvars[groups.sync_gateways[0]].ansible_host }}"
     webhook_ip: "{{ hostvars[groups.webhook_ip[0]].ansible_host }}"
     is_index_writer: "true"
+    scheme:
+    server_port:
   tasks:
   - include: tasks/deploy-sg-accel-config.yml
     when: ansible_distribution == "CentOS"

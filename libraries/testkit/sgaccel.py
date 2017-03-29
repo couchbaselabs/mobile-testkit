@@ -5,7 +5,7 @@ import libraries.testkit.settings
 import logging
 
 from libraries.provision.ansible_runner import AnsibleRunner
-
+from utilities.enable_disable_ssl_cluster import is_ssl_enabled
 log = logging.getLogger(libraries.testkit.settings.LOGGER)
 
 
@@ -16,6 +16,9 @@ class SgAccel:
         self.ip = target["ip"]
         self.url = "http://{}:4985".format(target["ip"])
         self.hostname = target["name"]
+        self.cluster_config = cluster_config
+        self.server_port = 8091
+        self.scheme = "http"
 
     def info(self):
         r = requests.get(self.url)
@@ -34,10 +37,16 @@ class SgAccel:
 
         log.info(">>> Starting sg_accel with configuration: {}".format(conf_path))
 
+        if is_ssl_enabled(self.cluster_config):
+            self.server_port = 18091
+            self.scheme = "https"
+
         status = self.ansible_runner.run_ansible_playbook(
             "start-sg-accel.yml",
             extra_vars={
-                "sync_gateway_config_filepath": conf_path
+                "sync_gateway_config_filepath": conf_path,
+                "server_port": self.server_port,
+                "scheme": self.scheme
             },
             subset=self.hostname
         )
