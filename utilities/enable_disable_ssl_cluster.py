@@ -1,5 +1,6 @@
 import json
 import ConfigParser
+from keywords.utils import log_info
 
 
 class CustomConfigParser(ConfigParser.RawConfigParser):
@@ -72,7 +73,10 @@ def disable_ssl_in_cluster_config(cluster_config):
 
 
 def is_ssl_enabled(cluster_config):
-    with open(cluster_config, "r") as f:
+    if ".json" not in cluster_config:
+        cluster_config = "{}.json".format(cluster_config)
+
+    with open(cluster_config) as f:
         cluster = json.loads(f.read())
 
     if "ssl_enabled" in cluster:
