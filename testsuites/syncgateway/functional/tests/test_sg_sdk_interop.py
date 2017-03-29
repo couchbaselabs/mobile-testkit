@@ -1,3 +1,5 @@
+import random
+
 import pytest
 from requests.exceptions import HTTPError
 
@@ -198,7 +200,7 @@ def test_sdk_interop_shared_docs(params_from_base_test_setup, sg_conf_name):
     - TODO: SG: Verify docs (sg + sdk) are there via _all_docs
     - TODO: SG: Verify docs (sg + sdk) are there via _changes 
     - Start concurrent updates:
-        loop until sg map and sdk map are 
+        loop until sg map and sdk map are len 0
         - Maintain map of each doc id to number of updates for sg
         - Maintain map of each doc id to number of updates for sdk
         - Pick random doc from sg map
@@ -232,8 +234,8 @@ def test_sdk_interop_shared_docs(params_from_base_test_setup, sg_conf_name):
     bucket_name = 'data-bucket'
     cbs_url = cluster_topology['couchbase_servers'][0]
     sg_db = 'db'
-    number_docs = 1000
-    number_updates_per_client = 10
+    number_docs = 10
+    number_updates_per_client = 5
 
     log_info('sg_conf: {}'.format(sg_conf))
     log_info('sg_admin_url: {}'.format(sg_admin_url))
@@ -242,15 +244,77 @@ def test_sdk_interop_shared_docs(params_from_base_test_setup, sg_conf_name):
     cluster = Cluster(config=cluster_conf)
     cluster.reset(sg_config_path=sg_conf)
 
-    # Connect to server via SDK
-    cbs_ip = host_for_url(cbs_url)
-    sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name))
+    # # Connect to server via SDK
+    # cbs_ip = host_for_url(cbs_url)
+    # sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name))
+    #
+    # # Create docs and add them via sdk
+    # sdk_doc_bodies = document.create_docs('doc_set_one', number_docs / 2, content={'foo': 'bar', 'updates': 1}, channels=['shared'])
+    # sdk_docs = {doc['_id']: doc for doc in sdk_doc_bodies}
+    # doc_set_one_ids = [doc for doc in sdk_docs]
+    # sdk_docs_resp = sdk_client.upsert_multi(sdk_docs)
+    # assert len(sdk_docs_resp) == number_docs / 2
 
+    # Create sg user
     sg_client = MobileRestClient()
+    sg_client.create_user(url=sg_admin_url, db=sg_db, name='seth', password='pass', channels=['shared'])
+    seth_session = sg_client.create_session(url=sg_admin_url, db=sg_db, name='seth', password='pass')
 
-    # Create docs and add them via sdk
-    sdk_doc_bodies = document.create_docs('sdk', number_docs, content={'foo': 'bar', 'updates': 1}, channels=['sdk'])
-    sdk_docs = {doc['_id']: doc for doc in sdk_doc_bodies}
-    sdk_doc_ids = [doc for doc in sdk_docs]
-    sdk_client.upsert_multi(sdk_docs)
+    # Inject custom properties into doc template
+    def update_prop():
+        return {'updates': 0}
+
+    # Create / add docs to sync gateway
+    # TODO: REMOVEEEEEEEEEEE
+    sg_docs = document.create_docs('doc_set_one', number_docs / 2, channels=['shared'], prop_generator=update_prop)
+    sg_docs_resp = sg_client.add_bulk_docs(url=sg_url, db=sg_db, docs=sg_docs, auth=seth_session)
+    doc_set_one_ids = [doc['_id'] for doc in sg_docs]
+    assert len(sg_docs_resp) == number_docs / 2
+    # TODO: REMOVEEEEEEEEEEEE ^^^^^^^^^^^^
+
+    # Create / add docs to sync gateway
+    sg_docs = document.create_docs('doc_set_two', number_docs / 2, channels=['shared'], prop_generator=update_prop)
+    sg_docs_resp = sg_client.add_bulk_docs(url=sg_url, db=sg_db, docs=sg_docs, auth=seth_session)
+    doc_set_two_ids = [doc['_id'] for doc in sg_docs]
+    assert len(sg_docs_resp) == number_docs / 2
+
+    import pdb
+    pdb.set_trace()
+
+    # TODO: SDK: Verify docs (sg + sdk) are present
+    # TODO: SG: Verify docs (sg + sdk) are there via _all_docs
+    # TODO: SG: Verify docs (sg + sdk) are there via _changes
+    all_doc_ids = doc_set_one_ids + doc_set_two_ids
+
+    # Build a dictionary of all the doc ids with default number of updates (1 for created)
+    sg_docs_update_status = {doc_id: 1 for doc_id in all_doc_ids}
+    sdk_docs_update_status = {doc_id: 1 for doc_id in all_doc_ids}
+    assert len(sg_docs_update_status) == number_docs
+    assert len(sdk_docs_update_status) == number_docs
+
+    # Loop until each client has had a chance to update each doc 'sg_docs_update_status'
+    while len(sg_docs_update_status) > 0 or len(sdk_docs_update_status) > 0:
+        sg_random_doc_id = random.choice(list(sg_docs_update_status))
+        sg_random_doc = sg_client.get_doc(url=sg_url, db=sg_db, doc_id=sg_random_doc_id, auth=seth_session)
+        # Todo: Update
+        # Todo: Delete key if updated 'number_updates_per_client' times
+        sg_updated_doc = sg_client.update_doc(url=sg_url, db=sg_db, doc_id=sg_random_doc_id, auth=seth_session)
+        log_info(sg_docs_update_status)
+
+
+        del sg_docs_update_status[sg_random_doc_id]
+
+        # TODO: Change to SDK
+        # sdk_random_doc_id = random.choice(list(sdk_docs_update_status))
+        sdk_random_doc_id = random.choice(list(sdk_docs_update_status))
+        sdk_random_doc = sg_client.get_doc(url=sg_url, db=sg_db, doc_id=sdk_random_doc_id, auth=seth_session)
+        # TODO: REMOVEEEEEEEEEEEE ^^^^^^^^^^^^
+
+        log_info('SDK: Updated {}'.format(sdk_random_doc_id))
+
+        log_info(sdk_docs_update_status)
+        del sdk_docs_update_status[sdk_random_doc_id]
+
+    import pdb
+    pdb.set_trace()
 
