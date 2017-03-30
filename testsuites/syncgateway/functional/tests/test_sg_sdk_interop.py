@@ -235,7 +235,7 @@ def test_sdk_interop_shared_docs(params_from_base_test_setup, sg_conf_name):
     cbs_url = cluster_topology['couchbase_servers'][0]
     sg_db = 'db'
     number_docs = 10
-    number_updates_per_client = 5
+    number_updates_per_client = 100
 
     log_info('sg_conf: {}'.format(sg_conf))
     log_info('sg_admin_url: {}'.format(sg_admin_url))
@@ -278,42 +278,39 @@ def test_sdk_interop_shared_docs(params_from_base_test_setup, sg_conf_name):
     doc_set_two_ids = [doc['_id'] for doc in sg_docs]
     assert len(sg_docs_resp) == number_docs / 2
 
-    import pdb
-    pdb.set_trace()
-
     # TODO: SDK: Verify docs (sg + sdk) are present
     # TODO: SG: Verify docs (sg + sdk) are there via _all_docs
     # TODO: SG: Verify docs (sg + sdk) are there via _changes
     all_doc_ids = doc_set_one_ids + doc_set_two_ids
 
     # Build a dictionary of all the doc ids with default number of updates (1 for created)
-    sg_docs_update_status = {doc_id: 1 for doc_id in all_doc_ids}
-    sdk_docs_update_status = {doc_id: 1 for doc_id in all_doc_ids}
-    assert len(sg_docs_update_status) == number_docs
-    assert len(sdk_docs_update_status) == number_docs
+    sg_docs_to_update = all_doc_ids
+    sdk_docs_to_update = all_doc_ids
+    assert len(sg_docs_to_update) == number_docs
+    assert len(sdk_docs_to_update) == number_docs
 
     # Loop until each client has had a chance to update each doc 'sg_docs_update_status'
-    while len(sg_docs_update_status) > 0 or len(sdk_docs_update_status) > 0:
-        sg_random_doc_id = random.choice(list(sg_docs_update_status))
-        sg_random_doc = sg_client.get_doc(url=sg_url, db=sg_db, doc_id=sg_random_doc_id, auth=seth_session)
-        # Todo: Update
-        # Todo: Delete key if updated 'number_updates_per_client' times
-        sg_updated_doc = sg_client.update_doc(url=sg_url, db=sg_db, doc_id=sg_random_doc_id, auth=seth_session)
-        log_info(sg_docs_update_status)
+    while True:
+        # Get random doc id from 'sg_docs_to_update'
+        sg_random_doc_id = random.choice(list(sg_docs_to_update))
+        sg_client.update_doc(url=sg_url, db=sg_db, doc_id=sg_random_doc_id, auth=seth_session)
+        updated_sg_doc = sg_client.get_doc(url=sg_url, db=sg_db, doc_id=sg_random_doc_id, auth=seth_session)
+        if updated_sg_doc['updates'] == number_updates_per_client:
+            sg_docs_to_update.remove(sg_random_doc_id)
 
+        # Get random doc id from 'sdk_docs_to_update'
+        sdk_random_doc_id = random.choice(list(sdk_docs_to_update))
+        sg_client.update_doc(url=sg_url, db=sg_db, doc_id=sdk_random_doc_id, auth=seth_session)
+        updated_sdk_doc = sg_client.get_doc(url=sg_url, db=sg_db, doc_id=sdk_random_doc_id, auth=seth_session)
+        if updated_sdk_doc['updates'] == number_updates_per_client:
+            sdk_docs_to_update.remove(sdk_random_doc_id)
 
-        del sg_docs_update_status[sg_random_doc_id]
-
-        # TODO: Change to SDK
-        # sdk_random_doc_id = random.choice(list(sdk_docs_update_status))
-        sdk_random_doc_id = random.choice(list(sdk_docs_update_status))
-        sdk_random_doc = sg_client.get_doc(url=sg_url, db=sg_db, doc_id=sdk_random_doc_id, auth=seth_session)
-        # TODO: REMOVEEEEEEEEEEEE ^^^^^^^^^^^^
-
-        log_info('SDK: Updated {}'.format(sdk_random_doc_id))
-
-        log_info(sdk_docs_update_status)
-        del sdk_docs_update_status[sdk_random_doc_id]
+        # If all doc have been removed from each list, then all docs have been updated
+        # the expected number of times by Sync Gateway and SDK
+        if len(sg_docs_to_update) == 0 and len(sdk_docs_to_update) == 0:
+            log_info('All docs have been updated {} times by Sync Gateway'.format(number_updates_per_client))
+            log_info('All docs have been updated {} times by SDK'.format(number_updates_per_client))
+            break
 
     import pdb
     pdb.set_trace()
