@@ -236,7 +236,7 @@ def test_sdk_interop_shared_docs(params_from_base_test_setup, sg_conf_name):
     cbs_url = cluster_topology['couchbase_servers'][0]
     sg_db = 'db'
     number_docs = 10
-    number_updates_per_client = 20
+    number_updates_per_client = 50
 
     log_info('sg_conf: {}'.format(sg_conf))
     log_info('sg_admin_url: {}'.format(sg_admin_url))
@@ -337,21 +337,19 @@ def test_sdk_interop_shared_docs(params_from_base_test_setup, sg_conf_name):
             log_info('All docs have been updated {} times by SDK'.format(number_updates_per_client))
             break
 
-    import pdb
-    pdb.set_trace()
-
 
 def update_doc(client, url, db, docs_to_update, prop_to_update, number_updates, auth=None):
     """
+    1. Check if document has already been updated 'number_updates'
     1. Get random doc id from 'docs_to_update'
     2. Update the doc
     3. Check to see if it has been updated 'number_updates'
     4. If it has been updated the correct number of times, delete it from the the list
     """
 
-    def property_updater(doc):
-        doc[prop_to_update] += 1
-        return doc
+    # Short circuit if all the docs have been updated
+    if len(docs_to_update) == 0:
+        return
 
     # Get a random doc from the remaining documents to update
     random_doc_id = random.choice(list(docs_to_update))
@@ -360,6 +358,10 @@ def update_doc(client, url, db, docs_to_update, prop_to_update, number_updates, 
     # Short circuit update if you have already reached max number of updates
     if doc[prop_to_update] == number_updates:
         return doc
+
+    def property_updater(doc_body):
+        doc_body[prop_to_update] += 1
+        return doc_body
 
     client.update_doc(url=url, db=db, doc_id=random_doc_id, property_updater=property_updater, auth=auth)
     updated_doc = client.get_doc(url=url, db=db, doc_id=random_doc_id, auth=auth)
