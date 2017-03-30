@@ -1,16 +1,11 @@
 import pytest
 
 from keywords.constants import CLUSTER_CONFIGS_DIR
-from keywords.constants import RESULTS_DIR
 from keywords.utils import log_info
 from keywords.ClusterKeywords import ClusterKeywords
 from keywords.Logging import Logging
 from keywords.SyncGateway import validate_sync_gateway_mode
 from keywords.SyncGateway import sync_gateway_config_path_for_mode
-
-
-from utilities.scan_logs import scan_logs
-
 from libraries.testkit import cluster
 
 from libraries.NetworkUtils import NetworkUtils
@@ -106,7 +101,6 @@ def params_from_base_suite_setup(request):
     }
 
     log_info("Tearing down 'params_from_base_suite_setup' ...")
-
 
 
 # This is called before each test and will yield the dictionary to each test that references the method
