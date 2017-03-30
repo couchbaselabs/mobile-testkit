@@ -1020,7 +1020,7 @@ class MobileRestClient:
 
         return purged_docs
 
-    def update_docs(self, url, db, docs, number_updates, delay=None, auth=None, channels=None):
+    def update_docs(self, url, db, docs, number_updates, delay=None, auth=None, channels=None, property_updater=None):
 
         updated_docs = []
 
@@ -1035,7 +1035,8 @@ class MobileRestClient:
                     number_updates=number_updates,
                     delay=delay,
                     auth=auth,
-                    channels=channels
+                    channels=channels,
+                    property_updater=property_updater
                 ) for doc in docs
             ]
 
@@ -1046,7 +1047,7 @@ class MobileRestClient:
         logging.debug("url: {} db: {} updated: {}".format(url, db, updated_docs))
         return updated_docs
 
-    def update_doc(self, url, db, doc_id, number_updates=1, attachment_name=None, expiry=None, delay=None, auth=None, channels=None):
+    def update_doc(self, url, db, doc_id, number_updates=1, attachment_name=None, expiry=None, delay=None, auth=None, channels=None, property_updater=None):
         """
         Updates a doc on a db a number of times.
             1. GETs the doc
@@ -1083,6 +1084,10 @@ class MobileRestClient:
             if channels is not None:
                 types.verify_is_list(channels)
                 doc["channels"] = channels
+
+            if property_updater is not None:
+                types.verify_is_callable(property_updater)
+                doc = property_updater(doc)
 
             if auth_type == AuthType.session:
                 resp = self._session.put("{}/{}/{}".format(url, db, doc_id), data=json.dumps(doc), cookies=dict(SyncGatewaySession=auth[1]))

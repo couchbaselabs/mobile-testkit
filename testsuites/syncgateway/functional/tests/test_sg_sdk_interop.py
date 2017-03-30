@@ -2,6 +2,7 @@ import random
 
 import pytest
 from requests.exceptions import HTTPError
+from concurrent.futures import ProcessPoolExecutor
 
 from couchbase.bucket import Bucket
 from couchbase.exceptions import NotFoundError
@@ -235,7 +236,7 @@ def test_sdk_interop_shared_docs(params_from_base_test_setup, sg_conf_name):
     cbs_url = cluster_topology['couchbase_servers'][0]
     sg_db = 'db'
     number_docs = 10
-    number_updates_per_client = 100
+    number_updates_per_client = 20
 
     log_info('sg_conf: {}'.format(sg_conf))
     log_info('sg_admin_url: {}'.format(sg_admin_url))
@@ -255,26 +256,33 @@ def test_sdk_interop_shared_docs(params_from_base_test_setup, sg_conf_name):
     # sdk_docs_resp = sdk_client.upsert_multi(sdk_docs)
     # assert len(sdk_docs_resp) == number_docs / 2
 
+    update_tracking_property_one = 'sg_one_updates'
+    update_tracking_property_two = 'sg_two_updates'
+
     # Create sg user
-    sg_client = MobileRestClient()
-    sg_client.create_user(url=sg_admin_url, db=sg_db, name='seth', password='pass', channels=['shared'])
-    seth_session = sg_client.create_session(url=sg_admin_url, db=sg_db, name='seth', password='pass')
+    sg_client_one = MobileRestClient()
+    sg_client_two = MobileRestClient()
+
+    sg_client_one.create_user(url=sg_admin_url, db=sg_db, name='seth', password='pass', channels=['shared'])
+    seth_session = sg_client_one.create_session(url=sg_admin_url, db=sg_db, name='seth', password='pass')
 
     # Inject custom properties into doc template
-    def update_prop():
-        return {'updates': 0}
+    def update_props():
+        return {
+            'updates': 0,
+            update_tracking_property_one: 0,
+            update_tracking_property_two: 0
+        }
 
     # Create / add docs to sync gateway
-    # TODO: REMOVEEEEEEEEEEE
-    sg_docs = document.create_docs('doc_set_one', number_docs / 2, channels=['shared'], prop_generator=update_prop)
-    sg_docs_resp = sg_client.add_bulk_docs(url=sg_url, db=sg_db, docs=sg_docs, auth=seth_session)
+    sg_docs = document.create_docs('doc_set_one', number_docs / 2, channels=['shared'], prop_generator=update_props)
+    sg_docs_resp = sg_client_one.add_bulk_docs(url=sg_url, db=sg_db, docs=sg_docs, auth=seth_session)
     doc_set_one_ids = [doc['_id'] for doc in sg_docs]
     assert len(sg_docs_resp) == number_docs / 2
-    # TODO: REMOVEEEEEEEEEEEE ^^^^^^^^^^^^
 
     # Create / add docs to sync gateway
-    sg_docs = document.create_docs('doc_set_two', number_docs / 2, channels=['shared'], prop_generator=update_prop)
-    sg_docs_resp = sg_client.add_bulk_docs(url=sg_url, db=sg_db, docs=sg_docs, auth=seth_session)
+    sg_docs = document.create_docs('doc_set_two', number_docs / 2, channels=['shared'], prop_generator=update_props)
+    sg_docs_resp = sg_client_two.add_bulk_docs(url=sg_url, db=sg_db, docs=sg_docs, auth=seth_session)
     doc_set_two_ids = [doc['_id'] for doc in sg_docs]
     assert len(sg_docs_resp) == number_docs / 2
 
@@ -284,30 +292,47 @@ def test_sdk_interop_shared_docs(params_from_base_test_setup, sg_conf_name):
     all_doc_ids = doc_set_one_ids + doc_set_two_ids
 
     # Build a dictionary of all the doc ids with default number of updates (1 for created)
-    sg_docs_to_update = all_doc_ids
-    sdk_docs_to_update = all_doc_ids
-    assert len(sg_docs_to_update) == number_docs
-    assert len(sdk_docs_to_update) == number_docs
+    docs_to_update = all_doc_ids
+    assert len(docs_to_update) == number_docs
 
     # Loop until each client has had a chance to update each doc 'sg_docs_update_status'
     while True:
-        # Get random doc id from 'sg_docs_to_update'
-        sg_random_doc_id = random.choice(list(sg_docs_to_update))
-        sg_client.update_doc(url=sg_url, db=sg_db, doc_id=sg_random_doc_id, auth=seth_session)
-        updated_sg_doc = sg_client.get_doc(url=sg_url, db=sg_db, doc_id=sg_random_doc_id, auth=seth_session)
-        if updated_sg_doc['updates'] == number_updates_per_client:
-            sg_docs_to_update.remove(sg_random_doc_id)
 
-        # Get random doc id from 'sdk_docs_to_update'
-        sdk_random_doc_id = random.choice(list(sdk_docs_to_update))
-        sg_client.update_doc(url=sg_url, db=sg_db, doc_id=sdk_random_doc_id, auth=seth_session)
-        updated_sdk_doc = sg_client.get_doc(url=sg_url, db=sg_db, doc_id=sdk_random_doc_id, auth=seth_session)
-        if updated_sdk_doc['updates'] == number_updates_per_client:
-            sdk_docs_to_update.remove(sdk_random_doc_id)
+        # Update docs with client one
+        client_one_updated_doc = update_doc(
+            client=sg_client_one,
+            url=sg_url,
+            db=sg_db,
+            docs_to_update=docs_to_update,
+            prop_to_update=update_tracking_property_one,
+            number_updates=number_updates_per_client,
+            auth=seth_session
+        )
+
+        # Remove the doc if both of the update properties have been updated the expected number of times
+        if client_one_updated_doc[update_tracking_property_one] == number_updates_per_client \
+                and client_one_updated_doc[update_tracking_property_two] == number_updates_per_client:
+            docs_to_update.remove(client_one_updated_doc['_id'])
+
+        # Update docs with client two
+        client_two_updated_doc = update_doc(
+            client=sg_client_two,
+            url=sg_url,
+            db=sg_db,
+            docs_to_update=docs_to_update,
+            prop_to_update=update_tracking_property_two,
+            number_updates=number_updates_per_client,
+            auth=seth_session
+        )
+
+        # Remove the doc if both of the update properties have been updated the expected number of times
+        if client_two_updated_doc[update_tracking_property_one] == number_updates_per_client \
+                and client_two_updated_doc[update_tracking_property_two] == number_updates_per_client:
+            docs_to_update.remove(client_one_updated_doc['_id'])
 
         # If all doc have been removed from each list, then all docs have been updated
         # the expected number of times by Sync Gateway and SDK
-        if len(sg_docs_to_update) == 0 and len(sdk_docs_to_update) == 0:
+        if len(docs_to_update) == 0:
             log_info('All docs have been updated {} times by Sync Gateway'.format(number_updates_per_client))
             log_info('All docs have been updated {} times by SDK'.format(number_updates_per_client))
             break
@@ -315,3 +340,27 @@ def test_sdk_interop_shared_docs(params_from_base_test_setup, sg_conf_name):
     import pdb
     pdb.set_trace()
 
+
+def update_doc(client, url, db, docs_to_update, prop_to_update, number_updates, auth=None):
+    """
+    1. Get random doc id from 'docs_to_update'
+    2. Update the doc
+    3. Check to see if it has been updated 'number_updates'
+    4. If it has been updated the correct number of times, delete it from the the list
+    """
+
+    def property_updater(doc):
+        doc[prop_to_update] += 1
+        return doc
+
+    # Get a random doc from the remaining documents to update
+    random_doc_id = random.choice(list(docs_to_update))
+    doc = client.get_doc(url=url, db=db, doc_id=random_doc_id, auth=auth)
+
+    # Short circuit update if you have already reached max number of updates
+    if doc[prop_to_update] == number_updates:
+        return doc
+
+    client.update_doc(url=url, db=db, doc_id=random_doc_id, property_updater=property_updater, auth=auth)
+    updated_doc = client.get_doc(url=url, db=db, doc_id=random_doc_id, auth=auth)
+    return updated_doc
