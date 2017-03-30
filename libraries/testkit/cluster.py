@@ -113,7 +113,6 @@ class Cluster:
         self.cb_server.wait_for_ready_state()
 
         log_info(">>> Starting sync_gateway with configuration: {}".format(config_path_full))
-        utils.dump_file_contents_to_logs(config_path_full)
 
         cluster = Cluster(config=self._cluster_config)
         server_port = 8091
