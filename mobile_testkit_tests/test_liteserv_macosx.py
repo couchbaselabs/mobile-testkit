@@ -31,6 +31,7 @@ def liteserv_with_storage_engine_from_fixture(request):
     liteserv.remove()
 
 
+@pytest.mark.requiredeps
 def test_macosx_download(request):
 
     shutil.rmtree("{}/".format(BINARY_DIR))
@@ -51,16 +52,19 @@ def test_macosx_download(request):
     assert not os.path.isfile("deps/binaries/couchbase-lite-macosx-enterprise_{}.zip".format(macosx_version))
 
 
+@pytest.mark.requiredeps
 def test_macosx_install():
     # No install step for macosx
     pass
 
 
+@pytest.mark.requiredeps
 def test_macosx_remove():
     # No install step for macosx
     pass
 
 
+@pytest.mark.requiredeps
 def test_macosx_logging(request, liteserv_with_storage_engine_from_fixture):
 
     macosx_version = request.config.getoption("--macosx-version")
@@ -79,6 +83,7 @@ def test_macosx_logging(request, liteserv_with_storage_engine_from_fixture):
         assert "LiteServ {} (build {}) is listening at".format(version, build) in contents
 
 
+@pytest.mark.requiredeps
 def test_macosx_full_life_cycle(request, liteserv_with_storage_engine_from_fixture):
 
     liteserv = liteserv_with_storage_engine_from_fixture
@@ -97,6 +102,7 @@ def test_macosx_full_life_cycle(request, liteserv_with_storage_engine_from_fixtu
     liteserv.stop()
 
 
+@pytest.mark.requiredeps
 def test_macosx_storage_engines(request, liteserv_with_storage_engine_from_fixture):
 
     liteserv = liteserv_with_storage_engine_from_fixture

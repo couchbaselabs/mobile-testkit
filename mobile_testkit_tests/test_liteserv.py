@@ -7,6 +7,7 @@ from keywords.constants import RESULTS_DIR
 from keywords.exceptions import LiteServError
 
 
+@pytest.mark.requiredeps
 def test_invalid_platform():
 
     with pytest.raises(ValueError) as ve:
@@ -19,6 +20,7 @@ def test_invalid_platform():
     assert ve_message == "Unsupported 'platform': ias"
 
 
+@pytest.mark.requiredeps
 def test_invalid_storage_engine():
 
     with pytest.raises(ValueError) as ve:
@@ -31,6 +33,7 @@ def test_invalid_storage_engine():
     assert ve_message == "Unsupported 'storage_engine': SQLit"
 
 
+@pytest.mark.requiredeps
 def test_running_liteserv(request):
     liteserv = LiteServFactory.create("macosx",
                                       version_build="1.3.1-6",

@@ -1,9 +1,7 @@
 import logging
-import base64
 import uuid
 import zlib
 
-from constants import DATA_DIR
 from keywords import types
 from keywords import utils
 
@@ -43,13 +41,7 @@ def generate_doc_ids_for_vbucket(vbucket_number, number_doc_ids):
     return doc_ids
 
 
-def get_attachment(name):
-    with open("{}/{}".format(DATA_DIR, name)) as f:
-        result = base64.standard_b64encode(f.read())
-    return result
-
-
-def create_doc(doc_id, content=None, attachment_name=None, expiry=None, channels=None):
+def create_doc(doc_id, content=None, attachments=None, expiry=None, channels=None):
     """
     Keyword that creates a document body as a list for use with Add Doc keyword
     return result format:
@@ -59,11 +51,15 @@ def create_doc(doc_id, content=None, attachment_name=None, expiry=None, channels
     if channels is None:
         channels = []
 
+    if attachments is None:
+        attachments = []
+
     types.verify_is_list(channels)
+    types.verify_is_list(attachments)
 
     doc = {}
 
-    if id is not None:
+    if doc_id is not None:
         doc["_id"] = doc_id
 
     if expiry is not None:
@@ -74,17 +70,16 @@ def create_doc(doc_id, content=None, attachment_name=None, expiry=None, channels
 
     doc["channels"] = channels
 
-    if attachment_name is not None:
-        doc["_attachments"] = {
-            attachment_name: {"data": get_attachment(attachment_name)}
-        }
+    if attachments:
+        # Loop through list of attachment and attach them to the doc
+        doc["_attachments"] = {att.name: {"data": att.data} for att in attachments}
 
     logging.debug(doc)
 
     return doc
 
 
-def create_docs(doc_id_prefix, number, content=None, attachment_name=None, expiry=None, channels=None):
+def create_docs(doc_id_prefix, number, content=None, attachments_generator=None, expiry=None, channels=None):
     """
     Keyword that creates a list of document bodies as a list for use with Add Bulk Docs keyword
     return result format:
@@ -99,6 +94,9 @@ def create_docs(doc_id_prefix, number, content=None, attachment_name=None, expir
 
     types.verify_is_list(channels)
 
+    if attachments_generator is not None:
+        types.verify_is_callable(attachments_generator)
+
     docs = []
 
     for i in range(number):
@@ -108,7 +106,12 @@ def create_docs(doc_id_prefix, number, content=None, attachment_name=None, expir
         else:
             doc_id = "{}_{}".format(doc_id_prefix, i)
 
-        doc = create_doc(doc_id, content, attachment_name, expiry, channels)
+        # Call attachment generator if it has been defined
+        attachments = None
+        if attachments_generator is not None:
+            attachments = attachments_generator()
+
+        doc = create_doc(doc_id=doc_id, content=content, attachments=attachments, expiry=expiry, channels=channels)
         docs.append(doc)
 
     return docs
