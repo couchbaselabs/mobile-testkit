@@ -1,6 +1,5 @@
 import json
 import ConfigParser
-from keywords.utils import log_info
 
 
 class CustomConfigParser(ConfigParser.RawConfigParser):
