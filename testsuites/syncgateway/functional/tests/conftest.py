@@ -105,8 +105,6 @@ def params_from_base_suite_setup(request):
         "mode": mode
     }
 
-    # Scan logs for 'panic' and 'data races'
-    scan_logs(RESULTS_DIR)
     log_info("Tearing down 'params_from_base_suite_setup' ...")
 
 
