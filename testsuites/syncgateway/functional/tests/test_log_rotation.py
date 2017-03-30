@@ -75,7 +75,7 @@ def test_log_rotation_default_values(params_from_base_test_setup, sg_conf_name):
     log_info("TEMP_CONF: {}".format(temp_conf))
 
     with open(temp_conf, 'w') as fp:
-        json.dump(data, fp, indent=4)
+        json.dump(data, fp)
 
     remote_executor.execute("mkdir -p /tmp/sg_logs")
 
@@ -137,7 +137,7 @@ def test_log_logKeys_string(params_from_base_test_setup, sg_conf_name):
     temp_conf = "/".join(sg_conf.split('/')[:-2]) + '/temp_conf.json'
 
     with open(temp_conf, 'w') as fp:
-        json.dump(data, fp, indent=4)
+        json.dump(data, fp)
 
     # Stop sync_gateways
     log_info(">>> Stopping sync_gateway")
@@ -188,7 +188,7 @@ def test_log_nondefault_logKeys_set(params_from_base_test_setup, sg_conf_name):
     temp_conf = "/".join(sg_conf.split('/')[:-2]) + '/temp_conf.json'
 
     with open(temp_conf, 'w') as fp:
-        json.dump(data, fp, indent=4)
+        json.dump(data, fp)
 
     # Stop sync_gateways
     log_info(">>> Stopping sync_gateway")
@@ -247,7 +247,7 @@ def test_log_maxage_10_timestamp_ignored(params_from_base_test_setup, sg_conf_na
     temp_conf = "/".join(sg_conf.split('/')[:-2]) + '/temp_conf.json'
 
     with open(temp_conf, 'w') as fp:
-        json.dump(data, fp, indent=4)
+        json.dump(data, fp)
 
     sg_helper.start_sync_gateway(cluster_config=cluster_conf, url=sg_one_url, config=temp_conf)
     # ~1M MB will be added to log file after requests
@@ -300,7 +300,7 @@ def test_log_rotation_invalid_path(params_from_base_test_setup, sg_conf_name):
     temp_conf = "/".join(sg_conf.split('/')[:-2]) + '/temp_conf.json'
 
     with open(temp_conf, 'w') as fp:
-        json.dump(data, fp, indent=4)
+        json.dump(data, fp)
 
     # Stop sync_gateways
     log_info(">>> Stopping sync_gateway")
@@ -363,7 +363,7 @@ def test_log_200mb(params_from_base_test_setup, sg_conf_name):
     temp_conf = "/".join(sg_conf.split('/')[:-2]) + '/temp_conf.json'
 
     with open(temp_conf, 'w') as fp:
-        json.dump(data, fp, indent=4)
+        json.dump(data, fp)
 
     sg_helper.start_sync_gateway(cluster_config=cluster_conf, url=sg_one_url, config=temp_conf)
     # ~1M MB will be added to log file after requests
@@ -474,7 +474,7 @@ def test_log_rotation_negative(params_from_base_test_setup, sg_conf_name):
     temp_conf = "/".join(sg_conf.split('/')[:-2]) + '/temp_conf.json'
 
     with open(temp_conf, 'w') as fp:
-        json.dump(data, fp, indent=4)
+        json.dump(data, fp)
 
     # Stop sync_gateways
     log_info(">>> Stopping sync_gateway")
@@ -538,7 +538,7 @@ def test_log_maxbackups_0(params_from_base_test_setup, sg_conf_name):
     temp_conf = "/".join(sg_conf.split('/')[:-2]) + '/temp_conf.json'
 
     with open(temp_conf, 'w') as fp:
-        json.dump(data, fp, indent=4)
+        json.dump(data, fp)
 
     sg_helper.start_sync_gateway(cluster_config=cluster_conf, url=sg_one_url, config=temp_conf)
     # ~1M MB will be added to log file after requests
@@ -583,7 +583,7 @@ def test_log_logLevel_invalid(params_from_base_test_setup, sg_conf_name):
 
     # create temp config file in the same folder as sg_conf
     with open(temp_conf, 'w') as fp:
-        json.dump(data, fp, indent=4)
+        json.dump(data, fp)
 
     # Stop sync_gateways
     log_info(">>> Stopping sync_gateway")
