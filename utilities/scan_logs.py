@@ -29,7 +29,6 @@ def unzip_log_files(directory):
         log_info('Unzipping: {}'.format(zip_file))
         with zipfile.ZipFile(zip_file) as zf:
             zf.extractall(zip_file_extract_dir)
-            os.remove(zip_file)
 
 
 def scan_logfiles(directory):
