@@ -5,7 +5,6 @@ import pytest
 
 from jinja2 import Template
 
-from keywords import utils
 from keywords.ClusterKeywords import ClusterKeywords
 from keywords.remoteexecutor import RemoteExecutor
 from keywords.SyncGateway import SyncGateway
@@ -18,7 +17,7 @@ from libraries.testkit.cluster import Cluster
 def load_sync_gateway_config(sync_gateway_config, mode, server_url):
     """ Loads a syncgateway configuration for modification"""
     scheme, server_ip, server_port = server_url.split(":")
-    server_ip = server_ip.replace("//","")
+    server_ip = server_ip.replace("//", "")
 
     with open(sync_gateway_config) as default_conf:
         template = Template(default_conf.read())

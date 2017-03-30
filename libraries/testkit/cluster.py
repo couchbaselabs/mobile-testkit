@@ -12,7 +12,6 @@ from libraries.testkit.config import Config
 from libraries.provision.ansible_runner import AnsibleRunner
 
 from keywords import couchbaseserver
-from keywords import utils
 
 import keywords.exceptions
 from keywords.exceptions import ProvisioningError
