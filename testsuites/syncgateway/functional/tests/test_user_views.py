@@ -48,6 +48,14 @@ def test_user_views_sanity(params_from_base_test_setup, sg_conf_name):
 
     client = MobileRestClient()
 
+    # These are defined in the sg config
+
+    # Scientist role has channels ["Download"]
+    # Researcher role has channels ["Upload"]
+
+    # "seth" has "Scientist" role and ["Create"] channel
+    # "raghu" has "Researcher" role and ["Edit"] channel
+
     # Issue GET /_user to exercise principal views
     users = client.get_users(url=sg_admin_url, db=sg_db)
 
@@ -60,13 +68,38 @@ def test_user_views_sanity(params_from_base_test_setup, sg_conf_name):
     # These are defined in the config
     assert len(roles) == 2 and "Scientist" in roles and "Researcher" in roles
 
-    # These are defined in the sg config
+    # Verify channels on each role
+    scientist_role = client.get_role(url=sg_admin_url, db=sg_db, name="Scientist")
+    researcher_role = client.get_role(url=sg_admin_url, db=sg_db, name="Researcher")
 
-    # Scientist role has channels ["Download"]
-    # Researcher role has channels ["Upload"]
+    assert len(scientist_role["all_channels"]) == 2
+    assert "Download" in scientist_role["all_channels"]
+    assert "!" in scientist_role["all_channels"]
 
-    # "seth" has "Scientist" role and ["Create"] channel
-    # "raghu" has "Researcher" role and ["Edit"] channel
+    assert scientist_role["name"] == "Scientist"
+    assert len(scientist_role["admin_channels"]) == 1 and "Download" in scientist_role["admin_channels"]
+
+    assert len(researcher_role["all_channels"]) == 2
+    assert "Upload" in researcher_role["all_channels"]
+    assert "!" in researcher_role["all_channels"]
+
+    assert researcher_role["name"] == "Researcher"
+    assert len(researcher_role["admin_channels"]) == 1 and "Upload" in researcher_role["admin_channels"]
+
+    # Verify roles are assigned to the user
+    seth_user = client.get_user(url=sg_admin_url, db=sg_db, name="seth")
+    raghu_user = client.get_user(url=sg_admin_url, db=sg_db, name="raghu")
+
+    assert len(seth_user["all_channels"]) == 3
+    assert "!" in seth_user["all_channels"] and "Create" in seth_user["all_channels"] and "Download" in seth_user["all_channels"]
+    assert seth_user["admin_roles"] == ["Scientist"]
+    assert seth_user["roles"] == ["Scientist"]
+
+    assert len(raghu_user["all_channels"]) == 3
+    assert "!" in raghu_user["all_channels"] and "Edit" in raghu_user["all_channels"] and "Upload" in raghu_user["all_channels"]
+    assert raghu_user["admin_roles"] == ["Researcher"]
+    assert raghu_user["roles"] == ["Researcher"]
+
     seth_session = client.create_session(url=sg_admin_url, db=sg_db, name="seth", password="pass")
     raghu_session = client.create_session(url=sg_admin_url, db=sg_db, name="raghu", password="pass")
 

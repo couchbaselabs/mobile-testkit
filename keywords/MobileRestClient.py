@@ -262,6 +262,15 @@ class MobileRestClient:
             log_r(resp)
             resp.raise_for_status()
 
+    def get_role(self, url, db, name):
+        """ Gets a roles for a db """
+
+        resp = self._session.get("{}/{}/_role/{}".format(url, db, name))
+        log_r(resp)
+        resp.raise_for_status()
+
+        return resp.json()
+
     def get_roles(self, url, db):
         """ Gets a list of roles for a db """
 
@@ -304,6 +313,15 @@ class MobileRestClient:
         resp = self._session.put("{}/{}/_role/{}".format(url, db, name), data=json.dumps(data))
         log_r(resp)
         resp.raise_for_status()
+
+    def get_user(self, url, db, name):
+        """ Gets a user for a db """
+
+        resp = self._session.get("{}/{}/_user/{}".format(url, db, name))
+        log_r(resp)
+        resp.raise_for_status()
+
+        return resp.json()
 
     def get_users(self, url, db):
         """ Gets a list of users for a db """
