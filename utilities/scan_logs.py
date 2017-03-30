@@ -1,10 +1,8 @@
 import argparse
 import os
 import zipfile
-import glob
 
 from keywords.utils import log_info
-from keywords.utils import log_error
 from keywords.exceptions import LogScanningError
 
 
@@ -31,10 +29,12 @@ def unzip_log_files(directory):
             zf.extractall(zip_file_extract_dir)
 
 
-def scan_logfiles(directory):
-    """ Scan directory recursively for .log files and scan them for error key words.
+def scan_logs(directory):
+    """ Unzips .zip files and scans directory recursively for .log files and scan them for error key words.
     Raise an exception if any of the error keywords are found.
     """
+    # Unzip logs
+    unzip_log_files(directory)
 
     log_file_paths = get_file_paths_with_extension(directory, '.log')
 
@@ -78,8 +78,5 @@ if __name__ == '__main__':
     parser.add_argument('--path-to-log-dir', help='Directory containing the log files', required=True)
     args = parser.parse_args()
 
-    # Unzip files
-    unzip_log_files(args.path_to_log_dir)
-
     # Scan all log files in the directory for 'panic' and 'data races'
-    scan_logfiles(args.path_to_log_dir)
+    scan_logs(args.path_to_log_dir)

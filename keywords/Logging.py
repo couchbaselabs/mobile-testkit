@@ -4,6 +4,7 @@ import os.path
 import shutil
 import time
 
+from utilities import scan_logs
 from keywords.utils import log_info
 from keywords.exceptions import CollectionError
 from keywords.constants import RESULTS_DIR
