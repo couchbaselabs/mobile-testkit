@@ -1,28 +1,29 @@
 import argparse
 import os
 import zipfile
+import glob
 
 from keywords.utils import log_info
 from keywords.utils import log_error
 from keywords.exceptions import LogScanningError
 
 
-def gather_logs(directory):
-    """ 
-    1. Look for .zip files and unzip
-    2. Scan for sync gateway / accel logs
-    """
-
-    log_info('Looking in {} for sync_gateway / accel logs ...'.format(directory))
+def get_file_paths_with_extension(directory, extension):
+    """ Walk a directory recursively and return absolute file paths
+    of file matching a certain extension. """
 
     # Walk directory to get list of files
-    file_names = []
-    for root, dirs, files in os.walk(directory, topdown=True):
-        for f in files:
-            file_names.append(os.path.join(root, f))
+    file_paths = []
+    for root, dirs, file_names in os.walk(directory, topdown=True):
+        for f in file_names:
+            file_paths.append(os.path.join(root, f))
+    return [file_path for file_path in file_paths if file_path.endswith(extension)]
 
-    # Extract / remove any .zip files
-    zip_files = [file_name for file_name in file_names if file_name.endswith('.zip')]
+
+def unzip_log_files(directory):
+    """ Scan directory recursively for .zip files and unzip them to a folder with the same name """
+
+    zip_files = get_file_paths_with_extension(directory, '.zip')
     for zip_file in zip_files:
         zip_file_extract_dir = zip_file.replace('.zip', '')
         log_info('Unzipping: {}'.format(zip_file))
@@ -30,27 +31,24 @@ def gather_logs(directory):
             zf.extractall(zip_file_extract_dir)
             os.remove(zip_file)
 
-    # Walk directory again to get list of files now that everything has been extracted
-    file_names = []
-    for root, dirs, files in os.walk(directory, topdown=True):
-        for f in files:
-            file_names.append(os.path.join(root, f))
 
-    # Get log files we would like to scan
-    log_files = [file_name for file_name in file_names if file_name.endswith('.log')]
+def scan_logfiles(directory):
+    """ Scan directory recursively for .log files and scan them for error key words.
+    Raise an exception if any of the error keywords are found.
+    """
 
-    # Scan the logs for panics and data races
-    log_info('Scanning logs {} logs ...'.format(len(log_files)))
-    issues_found = False
-    for log_file in log_files:
+    log_file_paths = get_file_paths_with_extension(directory, '.log')
+
+    found_errors = False
+    for logfile_path in log_file_paths:
         try:
-            scan_for_errors(log_file, ['panic', 'data race'])
-        except LogScanningError as lse:
-            log_info(lse.message)
-            issues_found = True
+            scan_for_errors(logfile_path, ['panic', 'data race'])
+        except LogScanningError:
+            log_info('Error found for: {}'.format(logfile_path))
+            found_errors = True
 
-    if issues_found:
-        raise LogScanningError('ERROR!!! Found panics or data races!!')
+    if found_errors:
+        raise LogScanningError('Found errors in the sync gateway / sg accel logs!!')
 
 
 def scan_for_errors(log_file_path, error_strings):
@@ -72,7 +70,6 @@ def scan_for_errors(log_file_path, error_strings):
                 # convert the word to lowercase and the line to all lower case
                 # which handles the case where 'warning' will catch 'WARNING' and 'Warning', etc
                 if word.lower() in line.lower():
-                    log_error(line)
                     raise LogScanningError('{} found!! Please review: {} '.format(word, log_file_path))
 
 
@@ -82,4 +79,8 @@ if __name__ == '__main__':
     parser.add_argument('--path-to-log-dir', help='Directory containing the log files', required=True)
     args = parser.parse_args()
 
-    gather_logs(args.path_to_log_dir)
+    # Unzip files
+    unzip_log_files(args.path_to_log_dir)
+
+    # Scan all log files in the directory for 'panic' and 'data races'
+    scan_logfiles(args.path_to_log_dir)
