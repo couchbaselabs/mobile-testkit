@@ -77,6 +77,13 @@ class LiteServJavaAndroid(LiteServAndroid):
         if self.storage_engine == "SQLCipher" or self.storage_engine == "ForestDB+Encryption":
             encryption_enabled = True
 
+        launch_args = [
+            "adb", "shell", "am", "start", "-n", self.activity_name,
+            "--es", "username", "none",
+            "--es", "password", "none",
+            "--ei", "listen_port", str(self.port)
+        ]
+
         if encryption_enabled:
             log_info("Encryption enabled ...")
 
@@ -90,34 +97,31 @@ class LiteServJavaAndroid(LiteServAndroid):
             log_info("Running with db_flags: {}".format(db_flags))
 
             if self.storage_engine == "SQLCipher":
-                output = subprocess.check_output([
-                    "adb", "shell", "am", "start", "-n", self.activity_name,
-                    "--es", "username", "none",
-                    "--es", "password", "none",
-                    "--ei", "listen_port", str(self.port),
+
+                launch_args.extend([
                     "--es", "storage", "SQLite",
                     "--es", "dbpassword", db_flags
                 ])
+                output = subprocess.check_output(launch_args)
                 log_info(output)
+
             elif self.storage_engine == "ForestDB+Encryption":
-                output = subprocess.check_output([
-                    "adb", "shell", "am", "start", "-n", self.activity_name,
-                    "--es", "username", "none",
-                    "--es", "password", "none",
-                    "--ei", "listen_port", str(self.port),
+
+                launch_args.extend([
                     "--es", "storage", "ForestDB",
                     "--es", "dbpassword", db_flags
                 ])
+                output = subprocess.check_output(launch_args)
                 log_info(output)
+
         else:
+
             log_info("No encryption ...")
-            output = subprocess.check_output([
-                "adb", "shell", "am", "start", "-n", self.activity_name,
-                "--es", "username", "none",
-                "--es", "password", "none",
-                "--ei", "listen_port", str(self.port),
-                "--es", "storage", self.storage_engine,
+            launch_args.extend([
+                "--es", "storage", self.storage_engine
             ])
+
+            output = subprocess.check_output(launch_args)
             log_info(output)
 
             self._verify_launched()
