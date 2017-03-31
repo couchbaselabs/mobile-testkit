@@ -140,7 +140,7 @@ class LiteServNetMsft(LiteServBase):
             }
         )
         if status != 0:
-            raise LiteServError("Could not start Liteserv")
+            raise LiteServError("Could not stop Liteserv")
 
         self._verify_launched()
 
