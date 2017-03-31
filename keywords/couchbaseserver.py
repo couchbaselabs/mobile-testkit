@@ -86,13 +86,14 @@ class CouchbaseServer:
 
         self._session = Session()
         self._session.auth = ("Administrator", "password")
+        self._session.verify = False
 
     def get_bucket_names(self):
         """ Returns list of the bucket names for a given Couchbase Server."""
 
         bucket_names = []
 
-        resp = self._session.get("{}/pools/default/buckets".format(self.url), verify=False)
+        resp = self._session.get("{}/pools/default/buckets".format(self.url))
         log_r(resp)
         resp.raise_for_status()
 
@@ -105,7 +106,7 @@ class CouchbaseServer:
 
     def delete_bucket(self, name):
         """ Delete a Couchbase Server bucket with the given 'name' """
-        resp = self._session.delete("{0}/pools/default/buckets/{1}".format(self.url, name), verify=False)
+        resp = self._session.delete("{0}/pools/default/buckets/{1}".format(self.url, name))
         log_r(resp)
         resp.raise_for_status()
 
@@ -164,7 +165,7 @@ class CouchbaseServer:
 
             # Verfy the server is in a "healthy", not "warmup" state
             try:
-                resp = self._session.get("{}/pools/nodes".format(self.url), verify=False)
+                resp = self._session.get("{}/pools/nodes".format(self.url))
                 log_r(resp)
             except ConnectionError:
                 # If bringing a server online, there may be some connnection issues. Continue and try again.
@@ -214,7 +215,7 @@ class CouchbaseServer:
         """
         Call the Couchbase REST API to get the total memory available on the machine. RAM returned is in mb
         """
-        resp = self._session.get("{}/pools/default".format(self.url), verify=False)
+        resp = self._session.get("{}/pools/default".format(self.url))
         resp.raise_for_status()
         resp_json = resp.json()
 
@@ -288,7 +289,7 @@ class CouchbaseServer:
             "flushEnabled": "1"
         }
 
-        resp = self._session.post("{}/pools/default/buckets".format(self.url), data=data, verify=False)
+        resp = self._session.post("{}/pools/default/buckets".format(self.url), data=data)
         log_r(resp)
         resp.raise_for_status()
 
@@ -352,7 +353,7 @@ class CouchbaseServer:
         """
         Returns the current tasks from the server
         """
-        resp = self._session.get("{}/pools/default/tasks".format(self.url), verify=False)
+        resp = self._session.get("{}/pools/default/tasks".format(self.url))
         log_r(resp)
         resp.raise_for_status()
         resp_obj = resp.json()
@@ -443,8 +444,7 @@ class CouchbaseServer:
             resp = self._session.post(
                 "{}/controller/addNode".format(self.url),
                 headers={"Content-Type": "application/x-www-form-urlencoded"},
-                data=data,
-                verify=False
+                data=data
             )
 
             log_r(resp)
@@ -485,8 +485,7 @@ class CouchbaseServer:
         resp = self._session.post(
             "{}/controller/rebalance".format(self.url),
             headers={"Content-Type": "application/x-www-form-urlencoded"},
-            data=data,
-            verify=False
+            data=data
         )
         log_r(resp)
         resp.raise_for_status()
@@ -529,8 +528,7 @@ class CouchbaseServer:
         resp = self._session.post(
             "{}/controller/rebalance".format(self.url),
             headers={"Content-Type": "application/x-www-form-urlencoded"},
-            data=data,
-            verify=False
+            data=data
         )
         log_r(resp)
         resp.raise_for_status()
@@ -550,8 +548,7 @@ class CouchbaseServer:
         resp = self._session.post(
             "{}/controller/setRecoveryType".format(self.url),
             headers={"Content-Type": "application/x-www-form-urlencoded"},
-            data=data,
-            verify=False
+            data=data
         )
 
         log_r(resp)
@@ -574,7 +571,7 @@ class CouchbaseServer:
             if time.time() - start > keywords.constants.CLIENT_REQUEST_TIMEOUT:
                 raise TimeoutError("Waiting for server to be unreachable but it never was!")
             try:
-                resp = self._session.get("{}/pools".format(self.url), verify=False)
+                resp = self._session.get("{}/pools".format(self.url))
                 log_r(resp)
                 resp.raise_for_status()
             except ConnectionError:
