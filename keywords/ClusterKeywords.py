@@ -74,7 +74,7 @@ class ClusterKeywords:
         server_port = 8091
         scheme = "http"
 
-        if cluster["ssl_enabled"]:
+        if cluster["cbs_ssl_enabled"]:
             server_port = 18091
             scheme = "https"
 
@@ -133,13 +133,13 @@ class ClusterKeywords:
         with open("{}.json".format(cluster_config)) as f:
             cluster_obj = json.loads(f.read())
 
-        ssl = False
-        if cluster_obj["ssl_enabled"]:
-            ssl = True
+        cbs_ssl = False
+        if cluster_obj["cbs_ssl_enabled"]:
+            cbs_ssl = True
 
         # Verify Server version
         for server in cluster_obj["couchbase_servers"]:
-            couchbaseserver.verify_server_version(server["ip"], expected_server_version, ssl=ssl)
+            couchbaseserver.verify_server_version(server["ip"], expected_server_version, cbs_ssl=cbs_ssl)
 
         # Verify sync_gateway versions
         for sg in cluster_obj["sync_gateways"]:

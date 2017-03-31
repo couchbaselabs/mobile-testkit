@@ -66,7 +66,7 @@ def params_from_base_suite_setup(request):
     skip_provisioning = request.config.getoption("--skip-provisioning")
     ci = request.config.getoption("--ci")
     race_enabled = request.config.getoption("--race")
-    ssl = request.config.getoption("--server-ssl")
+    cbs_ssl = request.config.getoption("--server-ssl")
 
     log_info("server_version: {}".format(server_version))
     log_info("sync_gateway_version: {}".format(sync_gateway_version))
@@ -84,12 +84,12 @@ def params_from_base_suite_setup(request):
         log_info("Using 'base_{}' config!".format(mode))
         cluster_config = "{}/base_{}".format(CLUSTER_CONFIGS_DIR, mode)
 
-    if ssl:
-        log_info("Running tests with ssl enabled")
+    if cbs_ssl:
+        log_info("Running tests with cbs <-> sg ssl enabled")
         # Enable ssl in cluster configs
         enable_ssl_in_cluster_config(cluster_config)
     else:
-        log_info("Running tests with ssl disabled")
+        log_info("Running tests with cbs <-> sg ssl disabled")
         # Disable ssl in cluster configs
         disable_ssl_in_cluster_config(cluster_config)
 

@@ -25,11 +25,11 @@ from keywords import types
 requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
 
-def get_server_version(host, ssl=False):
+def get_server_version(host, cbs_ssl=False):
     scheme = "http"
     server_port = 8091
 
-    if ssl:
+    if cbs_ssl:
         scheme = "https"
         server_port = 18091
 
@@ -46,8 +46,8 @@ def get_server_version(host, ssl=False):
     return "{}-{}".format(running_server_version_parts[0], running_server_version_parts[1])
 
 
-def verify_server_version(host, expected_server_version, ssl=False):
-    running_server_version = get_server_version(host, ssl=ssl)
+def verify_server_version(host, expected_server_version, cbs_ssl=False):
+    running_server_version = get_server_version(host, cbs_ssl=cbs_ssl)
     expected_server_version_parts = expected_server_version.split("-")
 
     # Check both version parts if expected version contains a build

@@ -31,16 +31,16 @@ def enable_ssl_in_cluster_config(cluster_config):
     with open(cluster_config_json, "rw") as f:
         cluster = json.loads(f.read())
 
-    cluster["ssl_enabled"] = True
+    cluster["cbs_ssl_enabled"] = True
     with open(cluster_config_json, "w") as f:
         json.dump(cluster, f, indent=4)
 
-    # Write [ssl] ssl_enabled = True in the cluster_config
+    # Write [cbs_ssl] cbs_ssl_enabled = True in the cluster_config
     config = CustomConfigParser()
     config.read(cluster_config)
-    if not config.has_section("ssl"):
-        config.add_section("ssl")
-    config.set('ssl', 'ssl_enabled', 'True')
+    if not config.has_section("cbs_ssl"):
+        config.add_section("cbs_ssl")
+    config.set('cbs_ssl', 'cbs_ssl_enabled', 'True')
 
     with open(cluster_config, 'w') as f:
         config.write(f)
@@ -54,18 +54,18 @@ def disable_ssl_in_cluster_config(cluster_config):
         cluster = json.loads(f.read())
     f.close()
 
-    if "ssl_enabled" in cluster:
-        cluster["ssl_enabled"] = False
+    if "cbs_ssl_enabled" in cluster:
+        cluster["cbs_ssl_enabled"] = False
         with open(cluster_config_json, "w") as f:
             json.dump(cluster, f, indent=4)
         f.close()
 
-    # Write [ssl] ssl_enabled = False in the cluster_config
-    # if ssl is present
+    # Write [cbs_ssl] cbs_ssl_enabled = False in the cluster_config
+    # if cbs_ssl is present
     config = CustomConfigParser()
     config.read(cluster_config)
-    if config.has_section("ssl"):
-        config.set('ssl', 'ssl_enabled', 'False')
+    if config.has_section("cbs_ssl"):
+        config.set('cbs_ssl', 'cbs_ssl_enabled', 'False')
 
         with open(cluster_config, 'w') as f:
             config.write(f)
@@ -78,7 +78,7 @@ def is_ssl_enabled(cluster_config):
     with open(cluster_config) as f:
         cluster = json.loads(f.read())
 
-    if cluster["ssl_enabled"]:
+    if "cbs_ssl_enabled" in cluster and cluster["cbs_ssl_enabled"]:
         return True
 
     return False

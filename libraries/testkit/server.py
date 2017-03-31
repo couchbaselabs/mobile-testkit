@@ -29,7 +29,7 @@ class Server:
         server_port = 8091
         scheme = "http"
 
-        if cluster["ssl_enabled"]:
+        if cluster["cbs_ssl_enabled"]:
             server_port = 18091
             scheme = "https"
 

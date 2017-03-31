@@ -30,7 +30,7 @@ class Cluster:
     def __init__(self, config):
 
         self._cluster_config = config
-        self.ssl = False
+        self.cbs_ssl = False
 
         if not os.path.isfile(self._cluster_config):
             log_info("Cluster config not found in 'resources/cluster_configs/'")
@@ -46,13 +46,13 @@ class Cluster:
         sgs = [{"name": sg["name"], "ip": sg["ip"]} for sg in cluster["sync_gateways"]]
         acs = [{"name": ac["name"], "ip": ac["ip"]} for ac in cluster["sg_accels"]]
 
-        if "ssl_enabled" in cluster:
-            self.ssl = cluster["ssl_enabled"]
+        if "cbs_ssl_enabled" in cluster:
+            self.cbs_ssl = cluster["cbs_ssl_enabled"]
 
         log_info("cbs: {}".format(cbs))
         log_info("sgs: {}".format(sgs))
         log_info("acs: {}".format(acs))
-        log_info("ssl: {}".format(self.ssl))
+        log_info("ssl: {}".format(self.cbs_ssl))
 
         self.sync_gateways = [SyncGateway(cluster_config=self._cluster_config, target=sg) for sg in sgs]
         self.sg_accels = [SgAccel(cluster_config=self._cluster_config, target=ac) for ac in acs]
@@ -117,7 +117,7 @@ class Cluster:
         server_port = 8091
         scheme = "http"
 
-        if cluster.ssl:
+        if cluster.cbs_ssl:
             server_port = 18091
             scheme = "https"
 
