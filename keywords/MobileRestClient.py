@@ -1773,7 +1773,7 @@ class MobileRestClient:
         params = {}
 
         if server_type == ServerType.syncgateway:
-            params["stale"] = False
+            params["stale"] = "false"
 
         if auth_type == AuthType.session:
             resp = self._session.get(url, params=params, cookies=dict(SyncGatewaySession=auth[1]))
