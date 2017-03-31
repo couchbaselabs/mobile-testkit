@@ -18,6 +18,14 @@ def pytest_addoption(parser):
                      action="store",
                      help="sync-gateway-version: Sync Gateway version to install (ex. 1.3.1-16 or 590c1c31c7e83503eff304d8c0789bdd268d6291)")
 
+    parser.addoption("--race",
+                     action="store_true",
+                     help="Enable -races for Sync Gateway build. IMPORTANT - This will only work with source builds at the moment")
+
+    parser.addoption("--collect-logs",
+                     action="store_true",
+                     help="Collect logs for every test. If this flag is not set, collection will only happen for test failures.")
+
     parser.addoption("--server-ssl",
                      action="store_true",
                      help="If set, will enable SSL communication between server and Sync Gateway")

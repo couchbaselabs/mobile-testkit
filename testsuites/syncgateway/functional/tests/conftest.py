@@ -38,6 +38,14 @@ def pytest_addoption(parser):
                      action="store_true",
                      help="If set, will target larger cluster (3 backing servers instead of 1, 2 accels if in di mode)")
 
+    parser.addoption("--race",
+                     action="store_true",
+                     help="Enable -races for Sync Gateway build. IMPORTANT - This will only work with source builds at the moment")
+
+    parser.addoption("--collect-logs",
+                     action="store_true",
+                     help="Collect logs for every test. If this flag is not set, collection will only happen for test failures.")
+
     parser.addoption("--server-ssl",
                      action="store_true",
                      help="If set, will enable SSL communication between server and Sync Gateway")
@@ -57,6 +65,7 @@ def params_from_base_suite_setup(request):
     mode = request.config.getoption("--mode")
     skip_provisioning = request.config.getoption("--skip-provisioning")
     ci = request.config.getoption("--ci")
+    race_enabled = request.config.getoption("--race")
     ssl = request.config.getoption("--server-ssl")
 
     log_info("server_version: {}".format(server_version))

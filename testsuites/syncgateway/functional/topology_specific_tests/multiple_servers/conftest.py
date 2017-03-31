@@ -25,6 +25,7 @@ def params_from_base_suite_setup(request):
     sync_gateway_version = request.config.getoption("--sync-gateway-version")
     mode = request.config.getoption("--mode")
     skip_provisioning = request.config.getoption("--skip-provisioning")
+    race_enabled = request.config.getoption("--race")
     ssl = request.config.getoption("--server-ssl")
 
     log_info("server_version: {}".format(server_version))
