@@ -236,7 +236,7 @@ def test_sdk_interop_shared_docs(params_from_base_test_setup, sg_conf_name):
     cbs_url = cluster_topology['couchbase_servers'][0]
     sg_db = 'db'
     number_docs = 10
-    number_updates_per_client = 50
+    number_updates_per_client = 2
 
     log_info('sg_conf: {}'.format(sg_conf))
     log_info('sg_admin_url: {}'.format(sg_admin_url))
@@ -310,9 +310,10 @@ def test_sdk_interop_shared_docs(params_from_base_test_setup, sg_conf_name):
         )
 
         # Remove the doc if both of the update properties have been updated the expected number of times
-        if client_one_updated_doc[update_tracking_property_one] == number_updates_per_client \
-                and client_one_updated_doc[update_tracking_property_two] == number_updates_per_client:
-            docs_to_update.remove(client_one_updated_doc['_id'])
+        if client_one_updated_doc is not None:
+            if client_one_updated_doc[update_tracking_property_one] == number_updates_per_client \
+                    and client_one_updated_doc[update_tracking_property_two] == number_updates_per_client:
+                docs_to_update.remove(client_one_updated_doc['_id'])
 
         # Update docs with client two
         client_two_updated_doc = update_doc(
@@ -326,9 +327,10 @@ def test_sdk_interop_shared_docs(params_from_base_test_setup, sg_conf_name):
         )
 
         # Remove the doc if both of the update properties have been updated the expected number of times
-        if client_two_updated_doc[update_tracking_property_one] == number_updates_per_client \
-                and client_two_updated_doc[update_tracking_property_two] == number_updates_per_client:
-            docs_to_update.remove(client_one_updated_doc['_id'])
+        if client_two_updated_doc is not None:
+            if client_two_updated_doc[update_tracking_property_one] == number_updates_per_client \
+                    and client_two_updated_doc[update_tracking_property_two] == number_updates_per_client:
+                docs_to_update.remove(client_two_updated_doc['_id'])
 
         # If all doc have been removed from each list, then all docs have been updated
         # the expected number of times by Sync Gateway and SDK
@@ -347,9 +349,11 @@ def update_doc(client, url, db, docs_to_update, prop_to_update, number_updates, 
     4. If it has been updated the correct number of times, delete it from the the list
     """
 
+    log_info("Client: {}".format(id(client)))
+
     # Short circuit if all the docs have been updated
     if len(docs_to_update) == 0:
-        return
+        return None
 
     # Get a random doc from the remaining documents to update
     random_doc_id = random.choice(list(docs_to_update))
