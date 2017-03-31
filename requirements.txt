@@ -47,7 +47,7 @@ python-ntlm3==1.0.2
 python-vagrant==0.5.14
 pywinrm==0.2.1
 PyYAML==3.12
-requests==2.9.1
+requests==2.13.0
 requests-ntlm==0.3.0
 rsa==3.3
 s3transfer==0.0.1
