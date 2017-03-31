@@ -78,7 +78,7 @@ def is_ssl_enabled(cluster_config):
     with open(cluster_config) as f:
         cluster = json.loads(f.read())
 
-    if "ssl_enabled" in cluster:
+    if cluster["ssl_enabled"]:
         return True
 
     return False
