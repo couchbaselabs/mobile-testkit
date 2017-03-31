@@ -12,12 +12,8 @@ from keywords.utils import log_info
 from keywords.utils import log_r
 from zipfile import ZipFile
 
+
 class LiteServiOS(LiteServBase):
-
-#    def __init__(self, version_build, host, port, storage_engine):
-
-        # Initialize baseclass properies
-#        super(LiteServiOS, self).__init__(version_build, host, port, storage_engine)
 
     def download(self):
         """
@@ -51,7 +47,6 @@ class LiteServiOS(LiteServBase):
 
         # Remove .zip
         os.remove("{}".format(downloaded_package_zip_name))
-
 
     def install(self):
         """Installs / launches LiteServ on iOS device
