@@ -32,7 +32,7 @@ pytest -s \
     --liteserv-storage-engine=SQLite \
     --sync-gateway-version=1.4-55 \
     --sync-gateway-mode=cc \ 
-    --server-version=4.6.0-3573 \
+    --server-version=4.6.1 \
     testsuites/listener/shared/client_sg/
 ```
 
@@ -47,7 +47,7 @@ pytest -s \
     --liteserv-storage-engine=SQLite \
     --sync-gateway-version=1.4-55 \
     --sync-gateway-mode=cc \ 
-    --server-version=4.6.0-3573 \
+    --server-version=4.6.1 \
     testsuites/listener/shared/client_sg/
 ```
 
@@ -62,7 +62,7 @@ pytest -s \
     --liteserv-storage-engine=SQLite \
     --sync-gateway-version=1.4-55 \
     --sync-gateway-mode=cc \ 
-    --server-version=4.6.0-3573 \
+    --server-version=4.6.1 \
     -k "test_auto_prune_listener_keeps_conflicts_sanity" \
     testsuites/listener/shared/client_sg/
 ```

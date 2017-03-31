@@ -25,15 +25,17 @@ class LiteServJavaAndroid(LiteServAndroid):
 
         if version == "1.2.1":
             package_name = "couchbase-lite-android-liteserv-SQLite-{}-debug.apk".format(
-                self.version_build)
+                self.version_build
+            )
         else:
             if self.storage_engine == "SQLite":
                 package_name = "couchbase-lite-android-liteserv-SQLite-{}-debug.apk".format(
-                    self.version_build)
+                    self.version_build
+                )
             else:
-                package_name = "couchbase-lite-android-liteserv-SQLCipher-\
-                ForestDB-Encryption-{}-debug.apk".format(
-                    self.version_build)
+                package_name = "couchbase-lite-android-liteserv-SQLCipher-ForestDB-Encryption-{}-debug.apk".format(
+                    self.version_build
+                )
 
         expected_binary_path = "{}/{}".format(BINARY_DIR, package_name)
         if os.path.isfile(expected_binary_path):
@@ -57,10 +59,12 @@ class LiteServJavaAndroid(LiteServAndroid):
     def install(self):
         if self.storage_engine == "SQLite":
             apk_name = "couchbase-lite-android-liteserv-SQLite-{}-debug.apk".format(
-                self.version_build)
+                self.version_build
+            )
         else:
-            apk_name = "couchbase-lite-android-liteserv-SQLCipher-\
-            ForestDB-Encryption-{}-debug.apk".format(self.version_build)
+            apk_name = "couchbase-lite-android-liteserv-SQLCipher-ForestDB-Encryption-{}-debug.apk".format(
+                self.version_build
+            )
 
         apk_path = "{}/{}".format(BINARY_DIR, apk_name)
         self.install_apk(apk_path, "com.couchbase.liteservandroid")
