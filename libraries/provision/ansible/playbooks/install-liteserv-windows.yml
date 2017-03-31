@@ -1,7 +1,7 @@
 - name: Windows - Install dependencies for LiteServ Windows
   hosts: windows
   vars:
-    binary_path:
+    directory_path:
 
   tasks:
     - name: Install nssm (https://nssm.cc/)
@@ -13,7 +13,7 @@
     - name: Install LiteServ service
       win_nssm:
         name: LiteServ
-        application: C:\Users\{{ ansible_user }}\Desktop\LiteServ\{{ binary_path }}
+        application: C:\Users\{{ ansible_user }}\Desktop\LiteServ\{{ directory_path }}
         start_mode: manual
         state: present
 
