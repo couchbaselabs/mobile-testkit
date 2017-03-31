@@ -44,3 +44,7 @@ class ClusterError(Error):
 
 class DocumentError(Error):
     pass
+
+
+class LogScanningError(Error):
+    pass

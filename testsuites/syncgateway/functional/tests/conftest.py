@@ -6,7 +6,6 @@ from keywords.ClusterKeywords import ClusterKeywords
 from keywords.Logging import Logging
 from keywords.SyncGateway import validate_sync_gateway_mode
 from keywords.SyncGateway import sync_gateway_config_path_for_mode
-
 from libraries.testkit import cluster
 from libraries.NetworkUtils import NetworkUtils
 
@@ -60,6 +59,7 @@ def pytest_addoption(parser):
 def params_from_base_suite_setup(request):
     log_info("Setting up 'params_from_base_suite_setup' ...")
 
+    # pytest command line parameters
     server_version = request.config.getoption("--server-version")
     sync_gateway_version = request.config.getoption("--sync-gateway-version")
     mode = request.config.getoption("--mode")
@@ -102,7 +102,8 @@ def params_from_base_suite_setup(request):
             cluster_config=cluster_config,
             server_version=server_version,
             sync_gateway_version=sync_gateway_version,
-            sync_gateway_config=sg_config
+            sync_gateway_config=sg_config,
+            race_enabled=race_enabled
         )
 
     # Load topology as a dictionary
@@ -123,6 +124,9 @@ def params_from_base_suite_setup(request):
 @pytest.fixture(scope="function")
 def params_from_base_test_setup(request, params_from_base_suite_setup):
     # Code before the yeild will execute before each test starts
+
+    # pytest command line parameters
+    collect_logs = request.config.getoption("--collect-logs")
 
     cluster_config = params_from_base_suite_setup["cluster_config"]
     cluster_topology = params_from_base_suite_setup["cluster_topology"]
@@ -151,7 +155,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     errors = c.verify_alive(mode)
 
     # if the test failed or a node is down, pull logs
-    if request.node.rep_call.failed or len(errors) != 0:
+    if collect_logs or request.node.rep_call.failed or len(errors) != 0:
         logging_helper = Logging()
         logging_helper.fetch_and_analyze_logs(cluster_config=cluster_config, test_name=test_name)
 

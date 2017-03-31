@@ -50,6 +50,7 @@ def liteserv_with_storage_engine_from_fixture(request):
     liteserv.remove()
 
 
+@pytest.mark.requiredeps
 @pytest.mark.skip(reason="Need to wait until build is setup")
 def test_ios_download(request):
 
@@ -68,6 +69,7 @@ def test_ios_download(request):
     liteserv.download()
 
 
+@pytest.mark.requiredeps
 @pytest.mark.skip(reason="Need to wait until build is setup")
 def test_ios_install_uninstall(setup_liteserv_ios_no_launch):
     liteserv = setup_liteserv_ios_no_launch
@@ -75,6 +77,7 @@ def test_ios_install_uninstall(setup_liteserv_ios_no_launch):
     liteserv.install()
 
 
+@pytest.mark.requiredeps
 @pytest.mark.skip(reason="Need to wait until build is setup")
 def test_ios_logging(request, setup_liteserv_ios_logging):
 
@@ -94,6 +97,7 @@ def test_ios_logging(request, setup_liteserv_ios_logging):
         assert "LiteServ {} (build {}) is listening at".format(version, build) in contents
 
 
+@pytest.mark.requiredeps
 @pytest.mark.skip(reason="Need to wait until build is setup")
 def test_ios_full_life_cycle(request, liteserv_with_storage_engine_from_fixture):
     liteserv = liteserv_with_storage_engine_from_fixture
@@ -111,6 +115,7 @@ def test_ios_full_life_cycle(request, liteserv_with_storage_engine_from_fixture)
     liteserv.stop()
 
 
+@pytest.mark.requiredeps
 @pytest.mark.skip(reason="Need to wait until build is setup")
 def test_ios_storage_engines(request, liteserv_with_storage_engine_from_fixture):
     liteserv = liteserv_with_storage_engine_from_fixture

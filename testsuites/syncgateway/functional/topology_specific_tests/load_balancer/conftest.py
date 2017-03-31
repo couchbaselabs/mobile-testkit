@@ -20,6 +20,7 @@ from utilities.enable_disable_ssl_cluster import disable_ssl_in_cluster_config
 def params_from_base_suite_setup(request):
     log_info("Setting up 'params_from_base_suite_setup' ...")
 
+    # pytest command line parameters
     server_version = request.config.getoption("--server-version")
     sync_gateway_version = request.config.getoption("--sync-gateway-version")
     mode = request.config.getoption("--mode")
@@ -31,6 +32,7 @@ def params_from_base_suite_setup(request):
     log_info("sync_gateway_version: {}".format(sync_gateway_version))
     log_info("mode: {}".format(mode))
     log_info("skip_provisioning: {}".format(skip_provisioning))
+    log_info("race_enabled: {}".format(race_enabled))
 
     # Make sure mode for sync_gateway is supported ('cc' or 'di')
     validate_sync_gateway_mode(mode)
@@ -55,7 +57,8 @@ def params_from_base_suite_setup(request):
             cluster_config=cluster_config,
             server_version=server_version,
             sync_gateway_version=sync_gateway_version,
-            sync_gateway_config=sg_config
+            sync_gateway_config=sg_config,
+            race_enabled=race_enabled
         )
 
     yield {"cluster_config": cluster_config, "mode": mode}
@@ -67,6 +70,9 @@ def params_from_base_suite_setup(request):
 # After each test_* function, execution will continue from the yield a pull logs on failure
 @pytest.fixture(scope="function")
 def params_from_base_test_setup(request, params_from_base_suite_setup):
+
+    # pytest command line parameters
+    collect_logs = request.config.getoption("--collect-logs")
 
     test_name = request.node.name
     log_info("Setting up test '{}'".format(test_name))
@@ -88,9 +94,10 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     # Verify all sync_gateways and sg_accels are reachable
     c = cluster.Cluster(cluster_config)
     errors = c.verify_alive(mode)
-    assert len(errors) == 0
 
     # if the test failed pull logs
-    if request.node.rep_call.failed:
+    if collect_logs or request.node.rep_call.failed or len(errors) != 0:
         logging_helper = Logging()
         logging_helper.fetch_and_analyze_logs(cluster_config=cluster_config, test_name=test_name)
+
+    assert len(errors) == 0

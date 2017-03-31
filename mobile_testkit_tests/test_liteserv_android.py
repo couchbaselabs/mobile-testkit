@@ -32,6 +32,7 @@ def liteserv_with_storage_engine_from_fixture(request):
     liteserv.remove()
 
 
+@pytest.mark.requiredeps
 def test_android_download(request):
 
     android_version = request.config.getoption("--android-version")
@@ -63,6 +64,7 @@ def test_android_download(request):
     assert os.path.isfile("deps/binaries/couchbase-lite-android-liteserv-SQLCipher-ForestDB-Encryption-{}-debug.apk".format(android_version))
 
 
+@pytest.mark.requiredeps
 def test_android_install_and_remove(request):
 
     android_version = request.config.getoption("--android-version")
@@ -86,6 +88,7 @@ def test_android_install_and_remove(request):
     assert "com.couchbase.liteservandroid" not in output
 
 
+@pytest.mark.requiredeps
 def test_android_full_life_cycle(request, liteserv_with_storage_engine_from_fixture):
     liteserv = liteserv_with_storage_engine_from_fixture
 
@@ -104,6 +107,7 @@ def test_android_full_life_cycle(request, liteserv_with_storage_engine_from_fixt
     liteserv.stop()
 
 
+@pytest.mark.requiredeps
 def test_android_storage_engine(request, liteserv_with_storage_engine_from_fixture):
     liteserv = liteserv_with_storage_engine_from_fixture
 
