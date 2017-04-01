@@ -295,52 +295,29 @@ def test_sdk_interop_shared_docs(params_from_base_test_setup, sg_conf_name):
     docs_to_update = all_doc_ids
     assert len(docs_to_update) == number_docs
 
-    # Loop until each client has had a chance to update each doc 'sg_docs_update_status'
-    while True:
+    update_docs(
+        client=sg_client_one,
+        url=sg_url,
+        db=sg_db,
+        docs_to_update=docs_to_update,
+        prop_to_update=update_tracking_property_one,
+        number_updates=number_updates_per_client,
+        auth=seth_session
+    )
 
-        # Update docs with client one
-        client_one_updated_doc = update_doc(
-            client=sg_client_one,
-            url=sg_url,
-            db=sg_db,
-            docs_to_update=docs_to_update,
-            prop_to_update=update_tracking_property_one,
-            number_updates=number_updates_per_client,
-            auth=seth_session
-        )
-
-        # Remove the doc if both of the update properties have been updated the expected number of times
-        if client_one_updated_doc is not None:
-            if client_one_updated_doc[update_tracking_property_one] == number_updates_per_client \
-                    and client_one_updated_doc[update_tracking_property_two] == number_updates_per_client:
-                docs_to_update.remove(client_one_updated_doc['_id'])
-
-        # Update docs with client two
-        client_two_updated_doc = update_doc(
-            client=sg_client_two,
-            url=sg_url,
-            db=sg_db,
-            docs_to_update=docs_to_update,
-            prop_to_update=update_tracking_property_two,
-            number_updates=number_updates_per_client,
-            auth=seth_session
-        )
-
-        # Remove the doc if both of the update properties have been updated the expected number of times
-        if client_two_updated_doc is not None:
-            if client_two_updated_doc[update_tracking_property_one] == number_updates_per_client \
-                    and client_two_updated_doc[update_tracking_property_two] == number_updates_per_client:
-                docs_to_update.remove(client_two_updated_doc['_id'])
-
-        # If all doc have been removed from each list, then all docs have been updated
-        # the expected number of times by Sync Gateway and SDK
-        if len(docs_to_update) == 0:
-            log_info('All docs have been updated {} times by Sync Gateway'.format(number_updates_per_client))
-            log_info('All docs have been updated {} times by SDK'.format(number_updates_per_client))
-            break
+    # Update docs with client two
+    update_docs(
+        client=sg_client_two,
+        url=sg_url,
+        db=sg_db,
+        docs_to_update=docs_to_update,
+        prop_to_update=update_tracking_property_two,
+        number_updates=number_updates_per_client,
+        auth=seth_session
+    )
 
 
-def update_doc(client, url, db, docs_to_update, prop_to_update, number_updates, auth=None):
+def update_docs(client, url, db, docs_to_update, prop_to_update, number_updates, auth=None):
     """
     1. Check if document has already been updated 'number_updates'
     1. Get random doc id from 'docs_to_update'
@@ -351,22 +328,24 @@ def update_doc(client, url, db, docs_to_update, prop_to_update, number_updates, 
 
     log_info("Client: {}".format(id(client)))
 
-    # Short circuit if all the docs have been updated
-    if len(docs_to_update) == 0:
-        return None
+    # Store copy of list to avoid mutating 'docs_to_update'
+    local_docs_to_update = list(docs_to_update)
 
-    # Get a random doc from the remaining documents to update
-    random_doc_id = random.choice(list(docs_to_update))
-    doc = client.get_doc(url=url, db=db, doc_id=random_doc_id, auth=auth)
+    # 'docs_to_update' is a list of doc ids that the client should update a number of times
+    # Once the doc has been updated the correct number of times, it will be removed from the list.
+    # Loop until all docs have been removed
+    while len(local_docs_to_update) > 0:
+        random_doc_id = random.choice(list(local_docs_to_update))
+        doc = client.get_doc(url=url, db=db, doc_id=random_doc_id, auth=auth)
 
-    # Short circuit update if you have already reached max number of updates
-    if doc[prop_to_update] == number_updates:
-        return doc
+        # Create property updater to modify custom property
+        def property_updater(doc_body):
+            doc_body[prop_to_update] += 1
+            return doc_body
 
-    def property_updater(doc_body):
-        doc_body[prop_to_update] += 1
-        return doc_body
-
-    client.update_doc(url=url, db=db, doc_id=random_doc_id, property_updater=property_updater, auth=auth)
-    updated_doc = client.get_doc(url=url, db=db, doc_id=random_doc_id, auth=auth)
-    return updated_doc
+        # Remove doc from the list if the doc has been updated enough times
+        if doc[prop_to_update] == number_updates:
+            local_docs_to_update.remove(doc["_id"])
+        else:
+            # Update the doc
+            client.update_doc(url=url, db=db, doc_id=random_doc_id, property_updater=property_updater, auth=auth)
