@@ -3,6 +3,8 @@ import random
 import pytest
 from requests.exceptions import HTTPError
 from concurrent.futures import ProcessPoolExecutor
+from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import wait
 
 from couchbase.bucket import Bucket
 from couchbase.exceptions import NotFoundError
@@ -54,7 +56,7 @@ def test_sdk_interop_unique_docs(params_from_base_test_setup, sg_conf_name):
     bucket_name = 'data-bucket'
     cbs_url = cluster_topology['couchbase_servers'][0]
     sg_db = 'db'
-    number_docs = 1000
+    number_docs = 10
     number_updates = 10
 
     log_info('sg_conf: {}'.format(sg_conf))
@@ -236,7 +238,7 @@ def test_sdk_interop_shared_docs(params_from_base_test_setup, sg_conf_name):
     cbs_url = cluster_topology['couchbase_servers'][0]
     sg_db = 'db'
     number_docs = 10
-    number_updates_per_client = 2
+    number_updates_per_client = 1000
 
     log_info('sg_conf: {}'.format(sg_conf))
     log_info('sg_admin_url: {}'.format(sg_admin_url))
@@ -295,26 +297,36 @@ def test_sdk_interop_shared_docs(params_from_base_test_setup, sg_conf_name):
     docs_to_update = all_doc_ids
     assert len(docs_to_update) == number_docs
 
-    update_docs(
-        client=sg_client_one,
-        url=sg_url,
-        db=sg_db,
-        docs_to_update=docs_to_update,
-        prop_to_update=update_tracking_property_one,
-        number_updates=number_updates_per_client,
-        auth=seth_session
-    )
+    with ProcessPoolExecutor() as pex:
+        update_task_one = pex.submit(
+            update_docs,
+            client=sg_client_one,
+            url=sg_url,
+            db=sg_db,
+            docs_to_update=docs_to_update,
+            prop_to_update=update_tracking_property_one,
+            number_updates=number_updates_per_client,
+            auth=seth_session
+        )
 
-    # Update docs with client two
-    update_docs(
-        client=sg_client_two,
-        url=sg_url,
-        db=sg_db,
-        docs_to_update=docs_to_update,
-        prop_to_update=update_tracking_property_two,
-        number_updates=number_updates_per_client,
-        auth=seth_session
-    )
+        update_task_two = pex.submit(
+            update_docs,
+            client=sg_client_two,
+            url=sg_url,
+            db=sg_db,
+            docs_to_update=docs_to_update,
+            prop_to_update=update_tracking_property_two,
+            number_updates=number_updates_per_client,
+            auth=seth_session
+        )
+
+        # Make sure to block on the result to catch any exceptions that may have been thrown
+        # during execution of the future
+        update_task_one.result()
+        update_task_two.result()
+
+    # TODO: Verify doc properties readable from either client and are expected.
+    # TODO: Verify everything shows up in changes
 
 
 def update_docs(client, url, db, docs_to_update, prop_to_update, number_updates, auth=None):
@@ -348,4 +360,19 @@ def update_docs(client, url, db, docs_to_update, prop_to_update, number_updates,
             local_docs_to_update.remove(doc["_id"])
         else:
             # Update the doc
-            client.update_doc(url=url, db=db, doc_id=random_doc_id, property_updater=property_updater, auth=auth)
+            try:
+                client.update_doc(url=url, db=db, doc_id=random_doc_id, property_updater=property_updater, auth=auth)
+            except HTTPError as e:
+                # This is possible if hitting a conflict. Check that it is. If it is not, we want to raise
+                if not is_conflict(e):
+                    raise
+                else:
+                    log_info('Hit a conflict! Will retry later ...')
+
+
+def is_conflict(httperror):
+    if httperror.response.status_code == 409 \
+            and httperror.message.startswith('409 Client Error: Conflict for url:'):
+        return True
+    else:
+        return False
