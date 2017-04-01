@@ -115,7 +115,7 @@ def install_sync_gateway(cluster_config, sync_gateway_config):
     server_port = 8091
     scheme = "http"
 
-    if cluster.ssl:
+    if cluster.cbs_ssl:
         server_port = 18091
         scheme = "https"
 
