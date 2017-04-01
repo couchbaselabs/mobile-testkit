@@ -5,7 +5,7 @@ import libraries.testkit.settings
 import logging
 
 from libraries.provision.ansible_runner import AnsibleRunner
-from utilities.enable_disable_ssl_cluster import is_ssl_enabled
+from utilities.enable_disable_ssl_cluster import is_cbs_ssl_enabled
 log = logging.getLogger(libraries.testkit.settings.LOGGER)
 
 
@@ -37,7 +37,7 @@ class SgAccel:
 
         log.info(">>> Starting sg_accel with configuration: {}".format(conf_path))
 
-        if is_ssl_enabled(self.cluster_config):
+        if is_cbs_ssl_enabled(self.cluster_config):
             self.server_port = 18091
             self.scheme = "https"
 

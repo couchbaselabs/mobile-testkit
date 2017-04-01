@@ -10,8 +10,8 @@ from keywords.ClusterKeywords import ClusterKeywords
 from libraries.NetworkUtils import NetworkUtils
 from keywords.Logging import Logging
 
-from utilities.enable_disable_ssl_cluster import enable_ssl_in_cluster_config
-from utilities.enable_disable_ssl_cluster import disable_ssl_in_cluster_config
+from utilities.enable_disable_ssl_cluster import enable_cbs_ssl_in_cluster_config
+from utilities.enable_disable_ssl_cluster import disable_cbs_ssl_in_cluster_config
 
 
 # This will be called once at the beggining of the execution in the 'tests/load_balancer' directory
@@ -44,11 +44,11 @@ def params_from_base_suite_setup(request):
     if cbs_ssl:
         log_info("Running tests with cbs <-> sg ssl enabled")
         # Enable ssl in cluster configs
-        enable_ssl_in_cluster_config(cluster_config)
+        enable_cbs_ssl_in_cluster_config(cluster_config)
     else:
         log_info("Running tests with cbs <-> sg ssl disabled")
         # Disable ssl in cluster configs
-        disable_ssl_in_cluster_config(cluster_config)
+        disable_cbs_ssl_in_cluster_config(cluster_config)
 
     # Skip provisioning if user specifies '--skip-provisoning'
     if not skip_provisioning:

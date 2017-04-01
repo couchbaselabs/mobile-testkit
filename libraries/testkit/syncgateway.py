@@ -8,7 +8,7 @@ from libraries.testkit.debug import log_response
 from libraries.testkit.admin import Admin
 from libraries.provision.ansible_runner import AnsibleRunner
 from requests import HTTPError
-from utilities.enable_disable_ssl_cluster import is_ssl_enabled
+from utilities.enable_disable_ssl_cluster import is_cbs_ssl_enabled
 
 import logging
 log = logging.getLogger(libraries.testkit.settings.LOGGER)
@@ -45,7 +45,7 @@ class SyncGateway:
         conf_path = os.path.abspath(config)
         log.info(">>> Starting sync_gateway with configuration: {}".format(conf_path))
 
-        if is_ssl_enabled(self.cluster_config):
+        if is_cbs_ssl_enabled(self.cluster_config):
             self.server_port = 18091
             self.scheme = "https"
 
@@ -65,7 +65,7 @@ class SyncGateway:
 
         log.info(">>> Restarting sync_gateway with configuration: {}".format(conf_path))
 
-        if is_ssl_enabled(self.cluster_config):
+        if is_cbs_ssl_enabled(self.cluster_config):
             self.server_port = 18091
             self.scheme = "https"
 

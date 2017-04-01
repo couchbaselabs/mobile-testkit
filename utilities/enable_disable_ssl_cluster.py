@@ -25,7 +25,7 @@ class CustomConfigParser(ConfigParser.RawConfigParser):
             fp.write("\n")
 
 
-def enable_ssl_in_cluster_config(cluster_config):
+def enable_cbs_ssl_in_cluster_config(cluster_config):
     # Write ssl_enabled = True in the cluster_config.json
     cluster_config_json = "{}.json".format(cluster_config)
     with open(cluster_config_json, "rw") as f:
@@ -46,7 +46,7 @@ def enable_ssl_in_cluster_config(cluster_config):
         config.write(f)
 
 
-def disable_ssl_in_cluster_config(cluster_config):
+def disable_cbs_ssl_in_cluster_config(cluster_config):
     # Write ssl_enabled = False in the cluster_config.json
     # if ssl_enabled is present
     cluster_config_json = "{}.json".format(cluster_config)
@@ -71,7 +71,7 @@ def disable_ssl_in_cluster_config(cluster_config):
             config.write(f)
 
 
-def is_ssl_enabled(cluster_config):
+def is_cbs_ssl_enabled(cluster_config):
     if ".json" not in cluster_config:
         cluster_config = "{}.json".format(cluster_config)
 

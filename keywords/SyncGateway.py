@@ -15,7 +15,7 @@ from keywords.utils import log_info
 from exceptions import ProvisioningError
 
 from libraries.provision.ansible_runner import AnsibleRunner
-from utilities.enable_disable_ssl_cluster import is_ssl_enabled
+from utilities.enable_disable_ssl_cluster import is_cbs_ssl_enabled
 
 
 def validate_sync_gateway_mode(mode):
@@ -160,7 +160,7 @@ class SyncGateway:
         ansible_runner = AnsibleRunner(cluster_config)
         config_path = os.path.abspath(config)
 
-        if is_ssl_enabled(cluster_config):
+        if is_cbs_ssl_enabled(cluster_config):
             self.server_port = 18091
             self.scheme = "https"
 
