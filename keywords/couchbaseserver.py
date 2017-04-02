@@ -274,9 +274,23 @@ class CouchbaseServer:
             "flushEnabled": "1"
         }
 
-        resp = self._session.post("{}/pools/default/buckets".format(self.url), data=data)
-        log_r(resp)
-        resp.raise_for_status()
+        # Create client an retry until KeyNotFound error is thrown
+        start = time.time()
+        while True:
+            if time.time() - start > keywords.constants.CLIENT_REQUEST_TIMEOUT:
+                raise Exception("TIMEOUT while trying to create server buckets.")
+            try:
+                resp = self._session.post("{}/pools/default/buckets".format(self.url), data=data)
+                log_r(resp)
+                resp.raise_for_status()
+                break
+            except HTTPError as h:
+                log_info("Error from server: Retrying ...", h)
+                time.sleep(1)
+                continue
+            except:
+                log_info("Error creating bucket")
+                raise
 
         # Create client an retry until KeyNotFound error is thrown
         start = time.time()
