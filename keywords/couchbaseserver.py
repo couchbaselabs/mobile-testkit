@@ -281,6 +281,8 @@ class CouchbaseServer:
                 raise Exception("TIMEOUT while trying to create server buckets.")
             try:
                 resp = self._session.post("{}/pools/default/buckets".format(self.url), data=data)
+                log_info("resp: {}".format(resp))
+                log_info("resp.text: {}".format(resp.text))
                 log_r(resp)
                 resp.raise_for_status()
                 break
