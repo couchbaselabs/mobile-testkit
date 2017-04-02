@@ -280,8 +280,7 @@ class CouchbaseServer:
             log_r(resp)
             resp.raise_for_status()
         except:
-            log_info("resp code: {}".format(resp))
-            log_info("resp text: {}".format(resp.text))
+            log_info("resp code: {}; resp text: {}".format(resp, resp.text))
             raise
 
         # Create client an retry until KeyNotFound error is thrown
