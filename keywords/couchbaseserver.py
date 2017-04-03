@@ -309,7 +309,7 @@ class CouchbaseServer:
                 log_info("Key not found error: Bucket is ready!")
                 break
             except CouchbaseError as e:
-                log_info("Error from server: Retrying ...", e)
+                log_info("Error from server: {}, Retrying ...", format(e))
                 time.sleep(1)
                 continue
 
