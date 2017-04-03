@@ -11,6 +11,8 @@ from keywords.utils import log_r
 from keywords.utils import version_and_build
 from keywords.utils import hostname_for_url
 from keywords.utils import log_info
+from keywords.couchbaseserver import get_server_version
+from keywords.ClusterKeywords import ClusterKeywords
 
 from exceptions import ProvisioningError
 
@@ -156,6 +158,32 @@ class SyncGateway:
         log_info("Starting sync_gateway on {} ...".format(target))
         ansible_runner = AnsibleRunner(cluster_config)
         config_path = os.path.abspath(config)
+
+        # get the couchbase server url
+        cluster_helper = ClusterKeywords()
+        cluster_topology = cluster_helper.get_cluster_topology(cluster_config)
+        couchbase_server_host = cluster_topology["couchbase_servers"][0]
+        password = 'password'
+        json_config = ""
+
+        if "https" in couchbase_server_host:
+            couchbase_server_host = couchbase_server_host.strip(":18091")
+            couchbase_server_host = couchbase_server_host.strip("https://")
+        else:
+            couchbase_server_host = couchbase_server_host.strip(":8091")
+            couchbase_server_host = couchbase_server_host.strip("http://")
+
+        server_version = get_server_version(couchbase_server_host)
+        server_major_version = server_version.split(".")[0]
+
+        if server_major_version >= 5:
+            with open(config_path) as c:
+                json_config = json.loads(c.read())
+                json_config["password"] = password
+
+        with open(config_path, 'w') as w:
+            json.dump(json_config, w, indent=4)
+
         status = ansible_runner.run_ansible_playbook(
             "start-sync-gateway.yml",
             extra_vars={
