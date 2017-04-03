@@ -265,6 +265,7 @@ class CouchbaseServer:
 
         rbac_url = "{}/settings/rbac/users/builtin/{}".format(self.url, bucketname)
 
+        resp = ""
         try:
             resp = requests.put(rbac_url, data=data_user_params, auth=('Administrator', 'password'))
         except:
