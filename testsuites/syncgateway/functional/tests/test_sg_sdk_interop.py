@@ -389,8 +389,8 @@ def test_sdk_interop_shared_docs(params_from_base_test_setup, sg_conf_name):
         assert doc_body[sdk_one_tracking_prop] == number_updates_per_client
         assert doc_body[sdk_two_tracking_prop] == number_updates_per_client
 
-    import pdb
-    pdb.set_trace()
+    # TODO: Move concurrent SDK updates to same block as SG updates and make sure both
+    #  clients are updating the same document
 
 
 def update_sg_docs(client, url, db, docs_to_update, prop_to_update, number_updates, auth=None):
