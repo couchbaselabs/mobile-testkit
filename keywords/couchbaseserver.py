@@ -252,6 +252,25 @@ class CouchbaseServer:
         for bucket_name in bucket_names:
             self.create_bucket(bucket_name, per_bucket_ram_mb)
 
+    def create_internal_rbac_bucket_user(self, bucketname):
+        # Create user and assign role
+        roles = "cluster_admin,bucket_admin[{}]".format(bucketname)
+        password = 'password'
+
+        data_user_params = {
+            "name": bucketname,
+            "roles": roles,
+            "password": password
+        }
+
+        rbac_url = "{}/settings/rbac/users/builtin/{}".format(self.url, bucketname)
+
+        try:
+            resp = requests.put(rbac_url, data=data_user_params, auth=('Administrator', 'password'))
+        except:
+            log_info("resp code: {}; resp text: {}".format(resp, resp.text))
+            raise
+
     def create_bucket(self, name, ram_quota_mb=1024):
         """
         1. Create CBS bucket via REST
@@ -296,6 +315,9 @@ class CouchbaseServer:
             log_info("resp code: {}; resp text: {}".format(resp, resp.text))
             raise
 
+        if server_major_version >= 5:
+            self.create_internal_rbac_bucket_user(name)
+
         # Create client an retry until KeyNotFound error is thrown
         start = time.time()
         while True:
@@ -303,13 +325,16 @@ class CouchbaseServer:
             if time.time() - start > keywords.constants.CLIENT_REQUEST_TIMEOUT:
                 raise Exception("TIMEOUT while trying to create server buckets.")
             try:
-                bucket = Bucket("couchbase://{}/{}".format(self.host, name))
+                if server_major_version >= 5:
+                    bucket = Bucket("couchbase://{}/{}".format(self.host, name), password='password')
+                else:
+                    bucket = Bucket("couchbase://{}/{}".format(self.host, name))
                 bucket.get('foo')
             except NotFoundError:
                 log_info("Key not found error: Bucket is ready!")
                 break
             except CouchbaseError as e:
-                log_info("Error from server: {}, Retrying ...", format(e))
+                log_info("Error from server: {}, Retrying ...". format(e))
                 time.sleep(1)
                 continue
 
