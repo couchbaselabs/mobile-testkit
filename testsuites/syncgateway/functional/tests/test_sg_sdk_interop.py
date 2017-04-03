@@ -247,26 +247,20 @@ def test_sdk_interop_shared_docs(params_from_base_test_setup, sg_conf_name):
     cluster = Cluster(config=cluster_conf)
     cluster.reset(sg_config_path=sg_conf)
 
-    sg_one_tracking_prop = 'sg_one_updates'
-    sg_two_tracking_prop = 'sg_two_updates'
-    sdk_one_tracking_prop = 'sdk_one_updates'
-    sdk_two_tracking_prop = 'sdk_two_updates'
+    sg_tracking_prop = 'sg_one_updates'
+    sdk_tracking_prop = 'sdk_one_updates'
 
     # Create sg user
-    sg_client_one = MobileRestClient()
-    sg_client_two = MobileRestClient()
-
-    sg_client_one.create_user(url=sg_admin_url, db=sg_db, name='seth', password='pass', channels=['shared'])
-    seth_session = sg_client_one.create_session(url=sg_admin_url, db=sg_db, name='seth', password='pass')
+    sg_client = MobileRestClient()
+    sg_client.create_user(url=sg_admin_url, db=sg_db, name='seth', password='pass', channels=['shared'])
+    seth_session = sg_client.create_session(url=sg_admin_url, db=sg_db, name='seth', password='pass')
 
     # Inject custom properties into doc template
     def update_props():
         return {
             'updates': 0,
-            sg_one_tracking_prop: 0,
-            sg_two_tracking_prop: 0,
-            sdk_one_tracking_prop: 0,
-            sdk_two_tracking_prop: 0
+            sg_tracking_prop: 0,
+            sdk_tracking_prop: 0
         }
 
     # Create / add docs to sync gateway
@@ -276,7 +270,7 @@ def test_sdk_interop_shared_docs(params_from_base_test_setup, sg_conf_name):
         channels=['shared'],
         prop_generator=update_props
     )
-    sg_docs_resp = sg_client_one.add_bulk_docs(
+    sg_docs_resp = sg_client.add_bulk_docs(
         url=sg_url,
         db=sg_db,
         docs=sg_docs,
@@ -285,21 +279,22 @@ def test_sdk_interop_shared_docs(params_from_base_test_setup, sg_conf_name):
     doc_set_one_ids = [doc['_id'] for doc in sg_docs]
     assert len(sg_docs_resp) == number_docs_per_client
 
-    # Create / add docs to sync gateway
-    sg_docs = document.create_docs(
+    # Connect to server via SDK
+    cbs_ip = host_for_url(cbs_url)
+    sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name))
+
+    # Create / add docs via sdk
+    sdk_doc_bodies = document.create_docs(
         'doc_set_two',
         number_docs_per_client,
         channels=['shared'],
         prop_generator=update_props
     )
-    sg_docs_resp = sg_client_two.add_bulk_docs(
-        url=sg_url,
-        db=sg_db,
-        docs=sg_docs,
-        auth=seth_session
-    )
-    doc_set_two_ids = [doc['_id'] for doc in sg_docs]
-    assert len(sg_docs_resp) == number_docs_per_client
+
+    sdk_docs = {doc['_id']: doc for doc in sdk_doc_bodies}
+    doc_set_two_ids = [sdk_doc['_id'] for sdk_doc in sdk_doc_bodies]
+    sdk_docs_resp = sdk_client.upsert_multi(sdk_docs)
+    assert len(sdk_docs_resp) == number_docs_per_client
 
     # TODO: SDK: Verify docs (sg + sdk) are present
     # TODO: SG: Verify docs (sg + sdk) are there via _all_docs
@@ -309,88 +304,61 @@ def test_sdk_interop_shared_docs(params_from_base_test_setup, sg_conf_name):
     docs_to_update = doc_set_one_ids + doc_set_two_ids
     assert len(docs_to_update) == number_docs_per_client * 2
 
-    with ProcessPoolExecutor() as pex:
-        update_task_one = pex.submit(
-            update_sg_docs,
-            client=sg_client_one,
-            url=sg_url,
-            db=sg_db,
-            docs_to_update=docs_to_update,
-            prop_to_update=sg_one_tracking_prop,
-            number_updates=number_updates_per_client,
-            auth=seth_session
-        )
-
-        update_task_two = pex.submit(
-            update_sg_docs,
-            client=sg_client_two,
-            url=sg_url,
-            db=sg_db,
-            docs_to_update=docs_to_update,
-            prop_to_update=sg_two_tracking_prop,
-            number_updates=number_updates_per_client,
-            auth=seth_session
-        )
-
-        # Make sure to block on the result to catch any exceptions that may have been thrown
-        # during execution of the future
-        update_task_one.result()
-        update_task_two.result()
-
-    # TODO: Verify doc properties readable from either client and are expected.
-    # TODO: Verify everything shows up in changes
-
-    # Connect to server via SDK
-    cbs_ip = host_for_url(cbs_url)
-    sdk_client_one = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name))
-    sdk_client_two = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name))
-
-    docs_to_update = doc_set_one_ids + doc_set_two_ids
-    assert len(docs_to_update) == number_docs_per_client * 2
-
+    # Update the same documents concurrently from a sync gateway client and and sdk client
     with ThreadPoolExecutor(max_workers=5) as tpe:
-        sdk_update_task_one = tpe.submit(
-            update_sdk_docs,
-            sdk_client_one,
+        update_from_sg_task = tpe.submit(
+            update_sg_docs,
+            client=sg_client,
+            url=sg_url,
+            db=sg_db,
             docs_to_update=docs_to_update,
-            prop_to_update=sdk_one_tracking_prop,
-            number_updates=number_docs_per_client
+            prop_to_update=sg_tracking_prop,
+            number_updates=number_updates_per_client,
+            auth=seth_session
         )
 
-        sdk_update_task_two = tpe.submit(
+        update_from_sdk_task = tpe.submit(
             update_sdk_docs,
-            sdk_client_two,
+            client=sdk_client,
             docs_to_update=docs_to_update,
-            prop_to_update=sdk_two_tracking_prop,
+            prop_to_update=sdk_tracking_prop,
             number_updates=number_docs_per_client
         )
 
         # Make sure to block on the result to catch any exceptions that may have been thrown
         # during execution of the future
-        sdk_update_task_one.result()
-        sdk_update_task_two.result()
+        update_from_sg_task.result()
+        update_from_sdk_task.result()
 
     # Get all of the docs and verify that all updates we applied
     log_info('Verifying that all docs have the expected number of updates.')
     for doc_id in docs_to_update:
-        doc_result = sdk_client_one.get(doc_id)
+
+        # Get doc from SDK
+        doc_result = sdk_client.get(doc_id)
         doc_body = doc_result.value
 
-        log_info('doc: {} -> {}:{}, {}:{}, {}:{}, {}:{}'.format(
+        log_info('doc: {} -> {}:{}, {}:{}'.format(
             doc_id,
-            sg_one_tracking_prop, doc_body[sg_one_tracking_prop],
-            sg_two_tracking_prop, doc_body[sg_two_tracking_prop],
-            sdk_one_tracking_prop, doc_body[sdk_one_tracking_prop],
-            sdk_two_tracking_prop, doc_body[sdk_two_tracking_prop],
+            sg_tracking_prop, doc_body[sg_tracking_prop],
+            sdk_tracking_prop, doc_body[sdk_tracking_prop],
         ))
 
-        assert doc_body[sg_one_tracking_prop] == number_updates_per_client
-        assert doc_body[sg_two_tracking_prop] == number_updates_per_client
-        assert doc_body[sdk_one_tracking_prop] == number_updates_per_client
-        assert doc_body[sdk_two_tracking_prop] == number_updates_per_client
+        assert doc_body['updates'] == number_updates_per_client * 2
+        assert doc_body[sg_tracking_prop] == number_updates_per_client
+        assert doc_body[sdk_tracking_prop] == number_updates_per_client
 
-    # TODO: Move concurrent SDK updates to same block as SG updates and make sure both
-    #  clients are updating the same document
+        # Get doc from Sync Gateway
+        doc = sg_client.get_doc(url=sg_url, db=sg_db, doc_id=doc_id, auth=seth_session)
+
+        assert doc['updates'] == number_updates_per_client * 2
+        assert doc[sg_tracking_prop] == number_updates_per_client
+        assert doc[sdk_tracking_prop] == number_updates_per_client
+        assert doc['_rev'].startswith('21')
+        assert len(doc['_revisions']['ids']) == (number_updates_per_client*2)+1
+
+    # TODO: Verify sync gateway changes feed
+    # TODO: Concurrent deletes of the shared docs
 
 
 def update_sg_docs(client, url, db, docs_to_update, prop_to_update, number_updates, auth=None):
@@ -459,4 +427,5 @@ def update_sdk_docs(client, docs_to_update, prop_to_update, number_updates):
             local_docs_to_update.remove(random_doc_id)
         else:
             doc_body[prop_to_update] += 1
+            doc_body['updates'] += 1
             client.upsert(random_doc_id, doc_body)
