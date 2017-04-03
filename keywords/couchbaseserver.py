@@ -265,14 +265,27 @@ class CouchbaseServer:
 
         log_info("Creating bucket {} with RAM {}".format(name, ram_quota_mb))
 
-        data = {
-            "name": name,
-            "ramQuotaMB": str(ram_quota_mb),
-            "authType": "sasl",
-            "proxyPort": "11211",
-            "bucketType": "couchbase",
-            "flushEnabled": "1"
-        }
+        server_version = get_server_version(self.host)
+        server_major_version = server_version.split(".")[0]
+
+        if server_major_version <= 4:
+            data = {
+                "name": name,
+                "ramQuotaMB": str(ram_quota_mb),
+                "authType": "sasl",
+                "proxyPort": "11211",
+                "bucketType": "couchbase",
+                "flushEnabled": "1"
+            }
+        else:
+            # proxyport should not be passed for 5.0.0 onwards for bucket creation
+            data = {
+                "name": name,
+                "ramQuotaMB": str(ram_quota_mb),
+                "authType": "sasl",
+                "bucketType": "couchbase",
+                "flushEnabled": "1"
+            }
 
         resp = ""
         try:
