@@ -347,8 +347,13 @@ class CouchbaseServer:
         Deletes docs that follow the below format
         _sync:rev:att_doc:34:1-e7fa9a5e6bb25f7a40f36297247ca93e
         """
+        server_version = get_server_version(self.host)
+        server_major_version = server_version.split(".")[0]
 
-        b = Bucket("couchbase://{}/{}".format(self.host, bucket))
+        if server_major_version >= 5:
+            b = Bucket("couchbase://{}/{}".format(self.host, bucket), password='password')
+        else:
+            b = Bucket("couchbase://{}/{}".format(self.host, bucket))
 
         cached_rev_doc_ids = []
         b.n1ql_query("CREATE PRIMARY INDEX ON `{}`".format(bucket)).execute()
