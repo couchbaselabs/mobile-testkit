@@ -2,9 +2,7 @@ import random
 
 import pytest
 from requests.exceptions import HTTPError
-from concurrent.futures import ProcessPoolExecutor
 from concurrent.futures import ThreadPoolExecutor
-from concurrent.futures import wait
 
 from couchbase.bucket import Bucket
 from couchbase.exceptions import NotFoundError
@@ -136,44 +134,8 @@ def test_sdk_interop_unique_docs(params_from_base_test_setup, sg_conf_name):
     all_doc_ids = sdk_doc_ids + sg_doc_ids
     assert len(all_doc_ids) == 2 * number_docs
 
-    # Check GET /db/doc_id
-    for doc_id in all_doc_ids:
-        with pytest.raises(HTTPError) as he:
-            sg_client.get_doc(url=sg_url, db=sg_db, doc_id=doc_id, auth=seth_session)
-
-        log_info(he.value.message)
-
-        # u'404 Client Error: Not Found for url: http://192.168.33.11:4984/db/sg_0?conflicts=true&revs=true'
-        assert he.value.message.startswith('404 Client Error: Not Found for url:')
-
-        # Parse out the doc id
-        # sg_0?conflicts=true&revs=true
-        parts = he.value.message.split('/')[-1]
-        doc_id_from_parts = parts.split('?')[0]
-
-        # Remove the doc id from the list
-        all_doc_ids.remove(doc_id_from_parts)
-
-    # Assert that all of the docs are flagged as deleted
-    # TODO: assert len(all_doc_ids) == 0
-
-    # Check /db/_bulk_get
-    all_doc_ids = sdk_doc_ids + sg_doc_ids
-    try_get_bulk_docs = sg_client.get_bulk_docs(url=sg_url, db=sg_db, doc_ids=all_doc_ids, auth=seth_session)
-
-    # TODO: assert len(try_get_bulk_docs["rows"]) == number_docs * 2
-
-    for row in try_get_bulk_docs['rows']:
-        assert row['id'] in all_doc_ids
-        assert row['status'] == 404
-        assert row['error'] == 'not_found'
-        assert row['reason'] == 'deleted'
-
-        # Cross off the doc_id
-        all_doc_ids.remove(row['id'])
-
-    # Verify all docs are deleted on the sdk side
-    all_doc_ids = sdk_doc_ids + sg_doc_ids
+    # Check deletes via GET /db/doc_id and bulk_get
+    verify_sg_deletes(client=sg_client, url=sg_url, db=sg_url, docs_to_verify_deleted=all_doc_ids)
 
     # Verify all docs are deleted on sdk, deleted docs should rase and exception
     for doc_id in all_doc_ids:
@@ -198,23 +160,19 @@ def test_sdk_interop_shared_docs(params_from_base_test_setup, sg_conf_name):
     """
     Scenario:
     - Bulk create 'number_docs' docs from SDK with prefix 'doc_set_one' and channels ['shared']
+      with 'sg_one_updates' and 'sdk_one_updates' counter properties
     - Bulk create 'number_docs' docs from SG with prefix 'doc_set_two' and channels ['shared']
+      with 'sg_one_updates' and 'sdk_one_updates' counter properties
     - TODO: SDK: Verify docs (sg + sdk) are present
     - TODO: SG: Verify docs (sg + sdk) are there via _all_docs
     - TODO: SG: Verify docs (sg + sdk) are there via _changes 
     - Start concurrent updates:
-        loop until sg map and sdk map are len 0
-        - Maintain map of each doc id to number of updates for sg
-        - Maintain map of each doc id to number of updates for sdk
-        - Pick random doc from sg map
-        - Try to update doc from SG
-        - If successful and num_doc_updates == number_updates_per_client, mark doc as finished in sg tracking map
-        - Pick random doc from sdk map
-        - Try to update doc from SDK
-        - If successful and num_doc_updates == number_updates_per_client, mark doc as finished in sdk tracking map
-    - TODO: SDK: Verify doc updates (sg + sdk) are present using the doc['content']['updates'] property
-    - TODO: SG: Verify doc updates (sg + sdk) are there via _all_docs using the doc['content']['updates'] property and rev prefix
-    - TODO: SG: Verify doc updates (sg + sdk) are there via _changes using the doc['content']['updates'] property and rev prefix
+        - Start update from sg / sdk to a shared set of docs. Sync Gateway and SDK will try to update
+          random docs from the shared set and update the corresponding counter property as well as the 
+          'updates' properties
+    - TODO: SDK: Verify doc updates (sg + sdk) are present using the counter properties
+    - TODO: SG: Verify doc updates (sg + sdk) are there via _all_docs using the counter properties and rev prefix
+    - TODO: SG: Verify doc updates (sg + sdk) are there via _changes using the counter properties and rev prefix
     - Start concurrent deletes:
         loop until len(all_doc_ids_to_delete) == 0
             - List of all_doc_ids_to_delete
@@ -301,8 +259,8 @@ def test_sdk_interop_shared_docs(params_from_base_test_setup, sg_conf_name):
     # TODO: SG: Verify docs (sg + sdk) are there via _changes
 
     # Build a dictionary of all the doc ids with default number of updates (1 for created)
-    docs_to_update = doc_set_one_ids + doc_set_two_ids
-    assert len(docs_to_update) == number_docs_per_client * 2
+    all_doc_ids = doc_set_one_ids + doc_set_two_ids
+    assert len(all_doc_ids) == number_docs_per_client * 2
 
     # Update the same documents concurrently from a sync gateway client and and sdk client
     with ThreadPoolExecutor(max_workers=5) as tpe:
@@ -311,7 +269,7 @@ def test_sdk_interop_shared_docs(params_from_base_test_setup, sg_conf_name):
             client=sg_client,
             url=sg_url,
             db=sg_db,
-            docs_to_update=docs_to_update,
+            docs_to_update=all_doc_ids,
             prop_to_update=sg_tracking_prop,
             number_updates=number_updates_per_client,
             auth=seth_session
@@ -320,7 +278,7 @@ def test_sdk_interop_shared_docs(params_from_base_test_setup, sg_conf_name):
         update_from_sdk_task = tpe.submit(
             update_sdk_docs,
             client=sdk_client,
-            docs_to_update=docs_to_update,
+            docs_to_update=all_doc_ids,
             prop_to_update=sdk_tracking_prop,
             number_updates=number_docs_per_client
         )
@@ -332,7 +290,7 @@ def test_sdk_interop_shared_docs(params_from_base_test_setup, sg_conf_name):
 
     # Get all of the docs and verify that all updates we applied
     log_info('Verifying that all docs have the expected number of updates.')
-    for doc_id in docs_to_update:
+    for doc_id in all_doc_ids:
 
         # Get doc from SDK
         doc_result = sdk_client.get(doc_id)
@@ -358,7 +316,55 @@ def test_sdk_interop_shared_docs(params_from_base_test_setup, sg_conf_name):
         assert len(doc['_revisions']['ids']) == (number_updates_per_client*2)+1
 
     # TODO: Verify sync gateway changes feed
-    # TODO: Concurrent deletes of the shared docs
+
+    # Try concurrent deletes from either side
+    with ThreadPoolExecutor(max_workers=5) as tpe:
+
+        sdk_delete_task = tpe.submit(
+            delete_sdk_docs,
+            client=sdk_client,
+            docs_to_delete=all_doc_ids
+        )
+
+        sg_delete_task = tpe.submit(
+            delete_sg_docs,
+            client=sg_client,
+            url=sg_url,
+            db=sg_db,
+            docs_to_delete=all_doc_ids,
+            auth=seth_session
+        )
+
+        # Make sure to block on the result to catch any exceptions that may have been thrown
+        # during execution of the future
+        sdk_delete_task.result()
+        sg_delete_task.result()
+
+    assert len(all_doc_ids) == number_docs_per_client
+    verify_sg_deletes(client=sg_client, url=sg_url, db=sg_db, docs_to_verify_deleted=all_doc_ids, auth=seth_session)
+
+
+def delete_sg_docs(client, url, db, docs_to_delete, auth):
+
+    # Create a copy of all doc ids
+    docs_to_remove = list(docs_to_delete)
+    while len(docs_to_remove) > 0:
+        random_doc_id = random.choice(docs_to_remove)
+        log_info('Attempting to delete from SG: {}'.format(random_doc_id))
+        doc_to_delete = client.get_doc(url=url, db=db, doc_id=random_doc_id, auth=auth)
+        deleted_doc = client.delete_doc(url=url, db=db, doc_id=random_doc_id, rev=doc_to_delete['_rev'], auth=auth)
+        docs_to_remove.remove(random_doc_id)
+
+
+def delete_sdk_docs(client, docs_to_delete):
+
+    # Create a copy of all doc ids
+    docs_to_remove = list(docs_to_delete)
+    while len(docs_to_remove) > 0:
+        random_doc_id = random.choice(docs_to_remove)
+        log_info('Attempting to delete from SDK: {}'.format(random_doc_id))
+        deleted_doc = client.remove(random_doc_id)
+        docs_to_remove.remove(random_doc_id)
 
 
 def update_sg_docs(client, url, db, docs_to_update, prop_to_update, number_updates, auth=None):
@@ -379,7 +385,7 @@ def update_sg_docs(client, url, db, docs_to_update, prop_to_update, number_updat
     # Once the doc has been updated the correct number of times, it will be removed from the list.
     # Loop until all docs have been removed
     while len(local_docs_to_update) > 0:
-        random_doc_id = random.choice(list(local_docs_to_update))
+        random_doc_id = random.choice(local_docs_to_update)
         doc = client.get_doc(url=url, db=db, doc_id=random_doc_id, auth=auth)
 
         # Create property updater to modify custom property
@@ -417,7 +423,7 @@ def update_sdk_docs(client, docs_to_update, prop_to_update, number_updates):
     local_docs_to_update = list(docs_to_update)
 
     while len(local_docs_to_update) > 0:
-        random_doc_id = random.choice(list(local_docs_to_update))
+        random_doc_id = random.choice(local_docs_to_update)
         log_info(random_doc_id)
 
         doc = client.get(random_doc_id)
@@ -429,3 +435,47 @@ def update_sdk_docs(client, docs_to_update, prop_to_update, number_updates):
             doc_body[prop_to_update] += 1
             doc_body['updates'] += 1
             client.upsert(random_doc_id, doc_body)
+
+
+def verify_sg_deletes(client, url, db, docs_to_verify_deleted, auth):
+
+    docs_to_verify_scratchpad = list(docs_to_verify_deleted)
+
+    # Verify deletes via individual GETs
+    for doc_id in docs_to_verify_deleted:
+        with pytest.raises(HTTPError) as he:
+            client.get_doc(url=url, db=db, doc_id=doc_id, auth=auth)
+
+        log_info(he.value.message)
+
+        # u'404 Client Error: Not Found for url: http://192.168.33.11:4984/db/sg_0?conflicts=true&revs=true'
+        assert he.value.message.startswith('404 Client Error: Not Found for url:')
+
+        # Parse out the doc id
+        # sg_0?conflicts=true&revs=true
+        parts = he.value.message.split('/')[-1]
+        doc_id_from_parts = parts.split('?')[0]
+
+        # Remove the doc id from the list
+        docs_to_verify_scratchpad.remove(doc_id_from_parts)
+
+    assert len(docs_to_verify_scratchpad) == 0
+
+    # Create a new verify list
+    docs_to_verify_scratchpad = list(docs_to_verify_deleted)
+
+    # Verify deletes via bulk_get
+    try_get_bulk_docs = client.get_bulk_docs(url=url, db=db, doc_ids=docs_to_verify_deleted, auth=auth)
+    assert len(try_get_bulk_docs["rows"]) == len(docs_to_verify_deleted)
+
+    for row in try_get_bulk_docs['rows']:
+        assert row['id'] in docs_to_verify_deleted
+        assert row['status'] == 404
+        assert row['error'] == 'not_found'
+        assert row['reason'] == 'deleted'
+
+        # Cross off the doc_id
+        docs_to_verify_scratchpad.remove(row['id'])
+
+    # Verify that all docs have been removed
+    assert len(docs_to_verify_scratchpad) == 0
