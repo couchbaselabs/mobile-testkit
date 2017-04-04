@@ -135,7 +135,7 @@ def test_sdk_interop_unique_docs(params_from_base_test_setup, sg_conf_name):
     assert len(all_doc_ids) == 2 * number_docs
 
     # Check deletes via GET /db/doc_id and bulk_get
-    verify_sg_deletes(client=sg_client, url=sg_url, db=sg_url, docs_to_verify_deleted=all_doc_ids)
+    verify_sg_deletes(client=sg_client, url=sg_url, db=sg_db, docs_to_verify_deleted=all_doc_ids, auth=seth_session)
 
     # Verify all docs are deleted on sdk, deleted docs should rase and exception
     for doc_id in all_doc_ids:
@@ -468,6 +468,7 @@ def verify_sg_deletes(client, url, db, docs_to_verify_deleted, auth):
     try_get_bulk_docs = client.get_bulk_docs(url=url, db=db, doc_ids=docs_to_verify_deleted, auth=auth)
     assert len(try_get_bulk_docs["rows"]) == len(docs_to_verify_deleted)
 
+    # TODO: Verify with Adam, should this be reason=deleted or reason=missing?
     for row in try_get_bulk_docs['rows']:
         assert row['id'] in docs_to_verify_deleted
         assert row['status'] == 404
