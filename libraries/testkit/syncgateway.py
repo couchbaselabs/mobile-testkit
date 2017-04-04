@@ -8,7 +8,6 @@ from libraries.testkit.debug import log_response
 from libraries.testkit.admin import Admin
 from libraries.provision.ansible_runner import AnsibleRunner
 from requests import HTTPError
-from keywords.SyncGateway import add_db_password_to_sg_config
 
 import logging
 log = logging.getLogger(libraries.testkit.settings.LOGGER)
@@ -44,7 +43,6 @@ class SyncGateway:
 
     def start(self, config):
         conf_path = os.path.abspath(config)
-        add_db_password_to_sg_config(self.cluster_config, conf_path)
 
         log.info(">>> Starting sync_gateway with configuration: {}".format(conf_path))
 
@@ -59,7 +57,6 @@ class SyncGateway:
 
     def restart(self, config):
         conf_path = os.path.abspath(config)
-        add_db_password_to_sg_config(self.cluster_config, conf_path)
         log.info(">>> Restarting sync_gateway with configuration: {}".format(conf_path))
 
         status = self.ansible_runner.run_ansible_playbook(

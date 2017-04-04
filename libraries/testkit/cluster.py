@@ -11,9 +11,6 @@ from libraries.testkit.admin import Admin
 from libraries.testkit.config import Config
 from libraries.provision.ansible_runner import AnsibleRunner
 
-from keywords.SyncGateway import add_db_password_to_sg_config
-from keywords.SyncGateway import remove_db_password_to_sg_config
-
 from keywords import couchbaseserver
 from keywords import utils
 
@@ -87,7 +84,6 @@ class Cluster:
 
         # Parse config and grab bucket names
         config_path_full = os.path.abspath(sg_config_path)
-        remove_db_password_to_sg_config(sg_config_path)
 
         # Delete buckets
         log_info(">>> Deleting buckets on: {}".format(self.cb_server.url))
@@ -111,8 +107,6 @@ class Cluster:
         # https://github.com/couchbase/sync_gateway/issues/1745
         log_info(">>> Waiting for Server: {} to be in a healthy state".format(self.cb_server.url))
         self.cb_server.wait_for_ready_state()
-
-        add_db_password_to_sg_config(self._cluster_config, config_path_full)
 
         log_info(">>> Starting sync_gateway with configuration: {}".format(config_path_full))
         utils.dump_file_contents_to_logs(config_path_full)

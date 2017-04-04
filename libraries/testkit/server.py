@@ -91,12 +91,11 @@ class Server:
 
     def create_buckets(self, names):
         # Create buckets
-        if self.server_major_version >= 5:
-            if type(names) is list:
-                for name in names:
-                    create_internal_rbac_bucket_user(self.url, name)
-            else:
-                create_internal_rbac_bucket_user(self.url, names)
+        if type(names) is list:
+            for name in names:
+                create_internal_rbac_bucket_user(self.url, name)
+        else:
+            create_internal_rbac_bucket_user(self.url, names)
 
         status = self.ansible_runner.run_ansible_playbook(
             "create-server-buckets.yml",
@@ -107,11 +106,7 @@ class Server:
         return status
 
     def get_bucket(self, bucket_name):
-        if self.server_major_version >= 5:
-            bucket = Bucket("couchbase://{}/{}".format(self.ip, bucket_name), password='password')
-        else:
-            bucket = Bucket("couchbase://{}/{}".format(self.ip, bucket_name))
-
+        bucket = Bucket("couchbase://{}/{}".format(self.ip, bucket_name), password='password')
         return bucket
 
     def __repr__(self):

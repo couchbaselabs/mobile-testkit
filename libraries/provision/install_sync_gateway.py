@@ -6,7 +6,6 @@ from keywords.couchbaseserver import CouchbaseServer
 from keywords.ClusterKeywords import ClusterKeywords
 from keywords.exceptions import ProvisioningError
 from keywords.utils import log_warn
-from keywords.SyncGateway import add_db_password_to_sg_config
 
 from libraries.testkit.config import Config
 
@@ -113,10 +112,6 @@ def install_sync_gateway(cluster_config, sync_gateway_config):
 
     # Install Sync Gateway via Source or Package
     if sync_gateway_config.commit is not None:
-        # Add password filed for dbs in SG config
-        # Required for spock with rbac
-        add_db_password_to_sg_config(cluster_config, config_path)
-
         # Install from source
         status = ansible_runner.run_ansible_playbook(
             "install-sync-gateway-source.yml",
@@ -130,10 +125,6 @@ def install_sync_gateway(cluster_config, sync_gateway_config):
             raise ProvisioningError("Failed to install sync_gateway source")
 
     else:
-        # Add password filed for dbs in SG config
-        # Required for spock with rbac
-        add_db_password_to_sg_config(cluster_config, config_path)
-
         # Install from Package
         sync_gateway_base_url, sync_gateway_package_name, sg_accel_package_name = sync_gateway_config.sync_gateway_base_url_and_package()
         status = ansible_runner.run_ansible_playbook(

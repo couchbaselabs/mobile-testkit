@@ -30,7 +30,7 @@ def get_server_version(host):
         resp.raise_for_status()
         resp_obj = resp.json()
     except:
-        log_info("resp code: {}; resp text: {}".format(resp, resp.text))
+        log_info("resp code: {}; resp text: {}".format(resp, resp.json()))
         raise
 
     # Actual version is the following format 4.1.1-5914-enterprise
@@ -301,6 +301,7 @@ class CouchbaseServer:
                 "name": name,
                 "ramQuotaMB": str(ram_quota_mb),
                 "authType": "sasl",
+                "saslPassword": "password",
                 "proxyPort": "11211",
                 "bucketType": "couchbase",
                 "flushEnabled": "1"
@@ -324,8 +325,7 @@ class CouchbaseServer:
             log_info("resp code: {}; resp text: {}".format(resp, resp.text))
             raise
 
-        if server_major_version >= 5:
-            create_internal_rbac_bucket_user(self.url, name)
+        create_internal_rbac_bucket_user(self.url, name)
 
         # Create client an retry until KeyNotFound error is thrown
         start = time.time()
@@ -334,10 +334,7 @@ class CouchbaseServer:
             if time.time() - start > keywords.constants.CLIENT_REQUEST_TIMEOUT:
                 raise Exception("TIMEOUT while trying to create server buckets.")
             try:
-                if server_major_version >= 5:
-                    bucket = Bucket("couchbase://{}/{}".format(self.host, name), password='password')
-                else:
-                    bucket = Bucket("couchbase://{}/{}".format(self.host, name))
+                bucket = Bucket("couchbase://{}/{}".format(self.host, name), password='password')
                 bucket.get('foo')
             except NotFoundError:
                 log_info("Key not found error: Bucket is ready!")
@@ -356,13 +353,7 @@ class CouchbaseServer:
         Deletes docs that follow the below format
         _sync:rev:att_doc:34:1-e7fa9a5e6bb25f7a40f36297247ca93e
         """
-        server_version = get_server_version(self.host)
-        server_major_version = int(server_version.split(".")[0])
-
-        if server_major_version >= 5:
-            b = Bucket("couchbase://{}/{}".format(self.host, bucket), password='password')
-        else:
-            b = Bucket("couchbase://{}/{}".format(self.host, bucket))
+        b = Bucket("couchbase://{}/{}".format(self.host, bucket), password='password')
 
         cached_rev_doc_ids = []
         b.n1ql_query("CREATE PRIMARY INDEX ON `{}`".format(bucket)).execute()
@@ -380,7 +371,7 @@ class CouchbaseServer:
         Returns server doc ids matching a prefix (ex. '_sync:rev:')
         """
 
-        b = Bucket("couchbase://{}/{}".format(self.host, bucket))
+        b = Bucket("couchbase://{}/{}".format(self.host, bucket), password='password')
 
         found_ids = []
         b.n1ql_query("CREATE PRIMARY INDEX ON `{}`".format(bucket)).execute()

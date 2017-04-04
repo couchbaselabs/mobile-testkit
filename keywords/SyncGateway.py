@@ -11,8 +11,6 @@ from keywords.utils import log_r
 from keywords.utils import version_and_build
 from keywords.utils import hostname_for_url
 from keywords.utils import log_info
-from keywords.couchbaseserver import get_server_version
-
 
 from exceptions import ProvisioningError
 
@@ -104,43 +102,6 @@ def get_sg_accel_version(host):
     return running_version_formatted
 
 
-def add_db_password_to_sg_config(cluster_config, conf_path):
-    password = 'password'
-
-    with open(cluster_config + ".json") as c:
-        cluster = json.loads(c.read())
-
-    couchbase_server_host = cluster["couchbase_servers"][0]["ip"]
-    server_version = get_server_version(couchbase_server_host)
-    server_major_version = int(server_version.split(".")[0])
-
-    if server_major_version >= 5:
-        with open(conf_path) as c:
-            json_config = json.loads(c.read())
-
-        log_info("Adding password config to sync gateway config: {}".format(conf_path))
-        for db in json_config['databases']:
-            json_config['databases'][db]["password"] = password
-
-        with open(conf_path, 'w') as w:
-            json.dump(json_config, w, indent=4)
-    else:
-        remove_db_password_to_sg_config(conf_path)
-
-
-def remove_db_password_to_sg_config(conf_path):
-    with open(conf_path) as c:
-        json_config = json.loads(c.read())
-
-    for db in json_config['databases']:
-        if "password" in json_config['databases'][db]:
-            log_info("Removing password config from sync gateway config: {}".format(conf_path))
-            del json_config['databases'][db]["password"]
-
-    with open(conf_path, 'w') as w:
-        json.dump(json_config, w, indent=4)
-
-
 def verify_sg_accel_version(host, expected_sg_accel_version):
     running_ac_version = get_sg_accel_version(host)
 
@@ -195,8 +156,6 @@ class SyncGateway:
         log_info("Starting sync_gateway on {} ...".format(target))
         ansible_runner = AnsibleRunner(cluster_config)
         config_path = os.path.abspath(config)
-
-        add_db_password_to_sg_config(cluster_config, config_path)
 
         status = ansible_runner.run_ansible_playbook(
             "start-sync-gateway.yml",
