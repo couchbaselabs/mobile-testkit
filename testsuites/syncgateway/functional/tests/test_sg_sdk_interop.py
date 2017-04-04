@@ -10,6 +10,8 @@ from couchbase.exceptions import NotFoundError
 from keywords.SyncGateway import sync_gateway_config_path_for_mode
 from keywords.utils import log_info
 from keywords.utils import host_for_url
+from keywords.constants import DATA_DIR
+from keywords import attachment
 from keywords import document
 from libraries.testkit.cluster import Cluster
 from keywords.MobileRestClient import MobileRestClient
@@ -17,7 +19,101 @@ from keywords.MobileRestClient import MobileRestClient
 
 @pytest.mark.sanity
 @pytest.mark.syncgateway
-@pytest.mark.sdk
+@pytest.mark.xattrs
+@pytest.mark.changes
+@pytest.mark.session
+@pytest.mark.parametrize('sg_conf_name', [
+    'sync_gateway_default_functional_tests'
+])
+def test_sdk_does_not_see_sync_meta(params_from_base_test_setup, sg_conf_name):
+    """
+    Scenario:
+    - Bulk create 1000 docs via sync gateway
+    - Perform GET or docs from SDK
+    - Assert that SDK does not see any sync meta data
+    """
+
+    cluster_conf = params_from_base_test_setup['cluster_config']
+    cluster_topology = params_from_base_test_setup['cluster_topology']
+    mode = params_from_base_test_setup['mode']
+
+    sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
+    sg_admin_url = cluster_topology['sync_gateways'][0]['admin']
+    sg_url = cluster_topology['sync_gateways'][0]['public']
+
+    bucket_name = 'data-bucket'
+    cbs_url = cluster_topology['couchbase_servers'][0]
+    sg_db = 'db'
+    number_of_sg_docs = 1000
+    channels = ['NASA']
+
+    log_info('sg_conf: {}'.format(sg_conf))
+    log_info('sg_admin_url: {}'.format(sg_admin_url))
+    log_info('sg_url: {}'.format(sg_url))
+
+    cluster = Cluster(config=cluster_conf)
+    cluster.reset(sg_config_path=sg_conf)
+
+    # Create sg user
+    sg_client = MobileRestClient()
+    sg_client.create_user(url=sg_admin_url, db=sg_db, name='seth', password='pass', channels=['shared'])
+    seth_session = sg_client.create_session(url=sg_admin_url, db=sg_db, name='seth', password='pass')
+
+    # Connect to server via SDK
+    cbs_ip = host_for_url(cbs_url)
+    sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name))
+
+    # Add 'number_of_sg_docs' to Sync Gateway
+    sg_doc_bodies = document.create_docs(
+        doc_id_prefix='sg_docs',
+        number=number_of_sg_docs,
+        attachments_generator=attachment.generate_2_png_100_100,
+        channels=channels
+    )
+    sg_bulk_resp = sg_client.add_bulk_docs(url=sg_url, db=sg_db, docs=sg_doc_bodies, auth=seth_session)
+    assert len(sg_bulk_resp) == number_of_sg_docs
+
+    doc_ids = ['sg_docs_{}'.format(i) for i in range(number_of_sg_docs)]
+
+    # Get all of the docs via the SDK
+    docs_from_sg = sdk_client.get_multi(doc_ids)
+    assert len(docs_from_sg) == number_of_sg_docs
+
+    attachment_name_ids = []
+    for doc_key, doc_val in docs_from_sg.items():
+        # Scratch doc off in list of all doc ids
+        doc_ids.remove(doc_key)
+
+        # Get the document body
+        doc_body = doc_val.value
+
+        # Build tuple of the filename and server doc id of the attachments
+        for att_key, att_val in doc_body['_attachments'].items():
+            attachment_name_ids.append((att_key, '_sync:att:{}'.format(att_val['digest'])))
+
+        # Make sure 'sync' property is not present in the document
+        assert '_sync' not in doc_body
+
+    assert len(doc_ids) == 0
+
+    # Verify attachments stored locally have the same data as those written to the server
+    for att_file_name, att_doc_id in attachment_name_ids:
+
+        att_doc = sdk_client.get(att_doc_id, no_format=True)
+        att_bytes = att_doc.value
+
+        local_file_path = '{}/{}'.format(DATA_DIR, att_file_name)
+        log_info('Checking that the generated attachment is the same that is store on server: {}'.format(
+            local_file_path
+        ))
+        with open(local_file_path, 'rb') as local_file:
+            local_bytes = local_file.read()
+            assert att_bytes == local_bytes
+
+
+@pytest.mark.sanity
+@pytest.mark.syncgateway
+@pytest.mark.xattrs
 @pytest.mark.changes
 @pytest.mark.session
 @pytest.mark.parametrize('sg_conf_name', [
@@ -150,7 +246,7 @@ def test_sdk_interop_unique_docs(params_from_base_test_setup, sg_conf_name):
 
 @pytest.mark.sanity
 @pytest.mark.syncgateway
-@pytest.mark.sdk
+@pytest.mark.xattrs
 @pytest.mark.changes
 @pytest.mark.session
 @pytest.mark.parametrize('sg_conf_name', [
@@ -213,6 +309,10 @@ def test_sdk_interop_shared_docs(params_from_base_test_setup, sg_conf_name):
     sg_client.create_user(url=sg_admin_url, db=sg_db, name='seth', password='pass', channels=['shared'])
     seth_session = sg_client.create_session(url=sg_admin_url, db=sg_db, name='seth', password='pass')
 
+    # Connect to server via SDK
+    cbs_ip = host_for_url(cbs_url)
+    sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name))
+
     # Inject custom properties into doc template
     def update_props():
         return {
@@ -236,10 +336,6 @@ def test_sdk_interop_shared_docs(params_from_base_test_setup, sg_conf_name):
     )
     doc_set_one_ids = [doc['_id'] for doc in sg_docs]
     assert len(sg_docs_resp) == number_docs_per_client
-
-    # Connect to server via SDK
-    cbs_ip = host_for_url(cbs_url)
-    sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name))
 
     # Create / add docs via sdk
     sdk_doc_bodies = document.create_docs(
