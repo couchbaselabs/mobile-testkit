@@ -263,6 +263,8 @@ class CouchbaseServer:
             "password": password
         }
 
+        log_info("Creating RBAC user {} with password {} and roles {}".format(bucketname, password, roles))
+
         rbac_url = "{}/settings/rbac/users/builtin/{}".format(self.url, bucketname)
 
         resp = ""
@@ -286,7 +288,7 @@ class CouchbaseServer:
         log_info("Creating bucket {} with RAM {}".format(name, ram_quota_mb))
 
         server_version = get_server_version(self.host)
-        server_major_version = server_version.split(".")[0]
+        server_major_version = int(server_version.split(".")[0])
 
         if server_major_version <= 4:
             data = {
@@ -349,7 +351,7 @@ class CouchbaseServer:
         _sync:rev:att_doc:34:1-e7fa9a5e6bb25f7a40f36297247ca93e
         """
         server_version = get_server_version(self.host)
-        server_major_version = server_version.split(".")[0]
+        server_major_version = int(server_version.split(".")[0])
 
         if server_major_version >= 5:
             b = Bucket("couchbase://{}/{}".format(self.host, bucket), password='password')

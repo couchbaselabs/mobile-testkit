@@ -1,13 +1,12 @@
 import sys
 import os
 import re
-import json
 
 from keywords.couchbaseserver import CouchbaseServer
-from keywords.couchbaseserver import get_server_version
 from keywords.ClusterKeywords import ClusterKeywords
 from keywords.exceptions import ProvisioningError
 from keywords.utils import log_warn
+from keywords.SyncGateway import add_db_password_to_sg_config
 
 from libraries.testkit.config import Config
 
@@ -114,30 +113,9 @@ def install_sync_gateway(cluster_config, sync_gateway_config):
 
     # Install Sync Gateway via Source or Package
     if sync_gateway_config.commit is not None:
-        # get the couchbase server url
-        cluster_helper = ClusterKeywords()
-        cluster_topology = cluster_helper.get_cluster_topology(cluster_config)
-        couchbase_server_host = cluster_topology["couchbase_servers"][0]
-        password = 'password'
-
-        if "https" in couchbase_server_host:
-            couchbase_server_host = couchbase_server_host.strip(":18091")
-            couchbase_server_host = couchbase_server_host.strip("https://")
-        else:
-            couchbase_server_host = couchbase_server_host.strip(":8091")
-            couchbase_server_host = couchbase_server_host.strip("http://")
-
-        server_version = get_server_version(couchbase_server_host)
-        server_major_version = server_version.split(".")[0]
-        json_config = ""
-
-        if server_major_version >= 5:
-            with open(config_path) as c:
-                json_config = json.loads(c.read())
-                json_config["password"] = password
-
-        with open(config_path, 'w') as w:
-            json.dump(json_config, w, indent=4)
+        # Add password filed for dbs in SG config
+        # Required for spock with rbac
+        add_db_password_to_sg_config(cluster_config, config_path)
 
         # Install from source
         status = ansible_runner.run_ansible_playbook(
@@ -152,30 +130,9 @@ def install_sync_gateway(cluster_config, sync_gateway_config):
             raise ProvisioningError("Failed to install sync_gateway source")
 
     else:
-        # get the couchbase server url
-        cluster_helper = ClusterKeywords()
-        cluster_topology = cluster_helper.get_cluster_topology(cluster_config)
-        couchbase_server_host = cluster_topology["couchbase_servers"][0]
-        password = 'password'
-        json_config = ""
-
-        if "https" in couchbase_server_host:
-            couchbase_server_host = couchbase_server_host.strip(":18091")
-            couchbase_server_host = couchbase_server_host.strip("https://")
-        else:
-            couchbase_server_host = couchbase_server_host.strip(":8091")
-            couchbase_server_host = couchbase_server_host.strip("http://")
-
-        server_version = get_server_version(couchbase_server_host)
-        server_major_version = server_version.split(".")[0]
-
-        if server_major_version >= 5:
-            with open(config_path) as c:
-                json_config = json.loads(c.read())
-                json_config["password"] = password
-
-        with open(config_path, 'w') as w:
-            json.dump(json_config, w, indent=4)
+        # Add password filed for dbs in SG config
+        # Required for spock with rbac
+        add_db_password_to_sg_config(cluster_config, config_path)
 
         # Install from Package
         sync_gateway_base_url, sync_gateway_package_name, sg_accel_package_name = sync_gateway_config.sync_gateway_base_url_and_package()

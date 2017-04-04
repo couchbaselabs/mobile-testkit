@@ -104,6 +104,40 @@ def get_sg_accel_version(host):
     return running_version_formatted
 
 
+def add_db_password_to_sg_config(cluster_config, conf_path):
+    password = 'password'
+
+    with open(cluster_config + ".json") as c:
+        cluster = json.loads(c.read())
+
+    couchbase_server_host = cluster["couchbase_servers"][0]["ip"]
+    server_version = get_server_version(couchbase_server_host)
+    server_major_version = int(server_version.split(".")[0])
+
+    if server_major_version >= 5:
+        with open(conf_path) as c:
+            json_config = json.loads(c.read())
+
+        for db in json_config['databases']:
+            json_config['databases'][db]["password"] = password
+
+        with open(conf_path, 'w') as w:
+            json.dump(json_config, w, indent=4)
+    else:
+        remove_db_password_to_sg_config(conf_path)
+
+
+def remove_db_password_to_sg_config(conf_path):
+    with open(conf_path) as c:
+        json_config = json.loads(c.read())
+
+    for db in json_config['databases']:
+        if "password" in json_config['databases'][db]:
+            del json_config['databases'][db]["password"]
+
+    with open(conf_path, 'w') as w:
+        json.dump(json_config, w, indent=4)
+
 def verify_sg_accel_version(host, expected_sg_accel_version):
     running_ac_version = get_sg_accel_version(host)
 
@@ -160,21 +194,7 @@ class SyncGateway:
         config_path = os.path.abspath(config)
         password = 'password'
 
-        # get the couchbase server IP
-        with open(cluster_config + ".json") as c:
-            cluster = json.loads(c.read())
-
-        couchbase_server_host = cluster["couchbase_servers"][0]["ip"]
-        server_version = get_server_version(couchbase_server_host)
-        server_major_version = server_version.split(".")[0]
-
-        if server_major_version >= 5:
-            with open(config_path) as c:
-                json_config = json.loads(c.read())
-                json_config["password"] = password
-
-        with open(config_path, 'w') as w:
-            json.dump(json_config, w, indent=4)
+        add_db_password_to_sg_config(cluster_config, config_path)
 
         status = ansible_runner.run_ansible_playbook(
             "start-sync-gateway.yml",

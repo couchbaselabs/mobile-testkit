@@ -8,6 +8,7 @@ from libraries.testkit.debug import log_response
 from libraries.testkit.admin import Admin
 from libraries.provision.ansible_runner import AnsibleRunner
 from requests import HTTPError
+from keywords.SyncGateway import add_db_password_to_sg_config
 
 import logging
 log = logging.getLogger(libraries.testkit.settings.LOGGER)
@@ -22,6 +23,12 @@ class SyncGateway:
         self.hostname = target["name"]
         self._headers = {'Content-Type': 'application/json'}
         self.admin = Admin(self)
+        self.cluster_config = cluster_config
+
+        with open(self.cluster_config + ".json") as c:
+            cluster = json.loads(c.read())
+
+        self.cbs_ip = cluster["couchbase_servers"][0]["ip"]
 
     def info(self):
         r = requests.get(self.url)
@@ -36,8 +43,8 @@ class SyncGateway:
         return status
 
     def start(self, config):
-
         conf_path = os.path.abspath(config)
+        add_db_password_to_sg_config(self.cluster_config, conf_path)
 
         log.info(">>> Starting sync_gateway with configuration: {}".format(conf_path))
 
@@ -52,7 +59,7 @@ class SyncGateway:
 
     def restart(self, config):
         conf_path = os.path.abspath(config)
-
+        add_db_password_to_sg_config(self.cluster_config, conf_path)
         log.info(">>> Restarting sync_gateway with configuration: {}".format(conf_path))
 
         status = self.ansible_runner.run_ansible_playbook(
