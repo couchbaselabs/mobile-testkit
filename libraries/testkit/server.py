@@ -9,7 +9,8 @@ from libraries.provision.ansible_runner import AnsibleRunner
 
 from keywords.utils import log_info
 from keywords.utils import log_error
-
+from keywords.couchbaseserver import get_server_version
+from keywords.couchbaseserver import create_internal_rbac_bucket_user
 
 class Server:
 
@@ -28,6 +29,8 @@ class Server:
         auth = base64.b64encode("{0}:{1}".format("Administrator", "password").encode())
         auth = auth.decode("UTF-8")
         self._headers = {'Content-Type': 'application/json', "Authorization": "Basic {}".format(auth)}
+        self.server_version = get_server_version(self.ip)
+        self.server_major_version = int(self.server_version.split(".")[0])
 
     def delete_buckets(self):
         count = 0
@@ -87,6 +90,13 @@ class Server:
 
     def create_buckets(self, names):
         # Create buckets
+        if self.server_major_version >= 5:
+            if type(names) is list:
+                for name in names:
+                    create_internal_rbac_bucket_user(name)
+            else:
+                create_internal_rbac_bucket_user(names)
+
         status = self.ansible_runner.run_ansible_playbook(
             "create-server-buckets.yml",
             extra_vars={
@@ -96,8 +106,12 @@ class Server:
         return status
 
     def get_bucket(self, bucket_name):
-        connection_str = "couchbase://{}/{}".format(self.ip, bucket_name)
-        return Bucket(connection_str)
+        if self.server_major_version >= 5:
+            bucket = Bucket("couchbase://{}/{}".format(self.ip, bucket_name), password='password')
+        else:
+            bucket = Bucket("couchbase://{}/{}".format(self.ip, bucket_name))
+
+        return bucket
 
     def __repr__(self):
         return "Server: {}:{}\n".format(self.hostname, self.ip)

@@ -58,6 +58,29 @@ def verify_server_version(host, expected_server_version):
         raise ProvisioningError("Unsupported version format")
 
 
+def create_internal_rbac_bucket_user(self, bucketname):
+    # Create user and assign role
+    roles = "cluster_admin,bucket_admin[{}]".format(bucketname)
+    password = 'password'
+
+    data_user_params = {
+        "name": bucketname,
+        "roles": roles,
+        "password": password
+    }
+
+    log_info("Creating RBAC user {} with password {} and roles {}".format(bucketname, password, roles))
+
+    rbac_url = "{}/settings/rbac/users/builtin/{}".format(self.url, bucketname)
+
+    resp = ""
+    try:
+        resp = requests.put(rbac_url, data=data_user_params, auth=('Administrator', 'password'))
+    except:
+        log_info("resp code: {}; resp text: {}".format(resp, resp.text))
+        raise
+
+
 class CouchbaseServer:
     """ Installs Couchbase Server on machine host"""
 
@@ -252,28 +275,6 @@ class CouchbaseServer:
         for bucket_name in bucket_names:
             self.create_bucket(bucket_name, per_bucket_ram_mb)
 
-    def create_internal_rbac_bucket_user(self, bucketname):
-        # Create user and assign role
-        roles = "cluster_admin,bucket_admin[{}]".format(bucketname)
-        password = 'password'
-
-        data_user_params = {
-            "name": bucketname,
-            "roles": roles,
-            "password": password
-        }
-
-        log_info("Creating RBAC user {} with password {} and roles {}".format(bucketname, password, roles))
-
-        rbac_url = "{}/settings/rbac/users/builtin/{}".format(self.url, bucketname)
-
-        resp = ""
-        try:
-            resp = requests.put(rbac_url, data=data_user_params, auth=('Administrator', 'password'))
-        except:
-            log_info("resp code: {}; resp text: {}".format(resp, resp.text))
-            raise
-
     def create_bucket(self, name, ram_quota_mb=1024):
         """
         1. Create CBS bucket via REST
@@ -319,7 +320,7 @@ class CouchbaseServer:
             raise
 
         if server_major_version >= 5:
-            self.create_internal_rbac_bucket_user(name)
+            create_internal_rbac_bucket_user(name)
 
         # Create client an retry until KeyNotFound error is thrown
         start = time.time()
