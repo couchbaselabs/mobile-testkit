@@ -58,7 +58,7 @@ def verify_server_version(host, expected_server_version):
         raise ProvisioningError("Unsupported version format")
 
 
-def create_internal_rbac_bucket_user(self, bucketname):
+def create_internal_rbac_bucket_user(bucketname):
     # Create user and assign role
     roles = "cluster_admin,bucket_admin[{}]".format(bucketname)
     password = 'password'
