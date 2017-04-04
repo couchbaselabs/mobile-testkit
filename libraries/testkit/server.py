@@ -30,8 +30,6 @@ class Server:
         auth = base64.b64encode("{0}:{1}".format("Administrator", "password").encode())
         auth = auth.decode("UTF-8")
         self._headers = {'Content-Type': 'application/json', "Authorization": "Basic {}".format(auth)}
-        self.server_version = get_server_version(self.ip)
-        self.server_major_version = int(self.server_version.split(".")[0])
 
     def delete_buckets(self):
         count = 0
