@@ -94,9 +94,9 @@ class Server:
         if self.server_major_version >= 5:
             if type(names) is list:
                 for name in names:
-                    create_internal_rbac_bucket_user(name)
+                    create_internal_rbac_bucket_user(self.url, name)
             else:
-                create_internal_rbac_bucket_user(names)
+                create_internal_rbac_bucket_user(self.url, names)
 
         status = self.ansible_runner.run_ansible_playbook(
             "create-server-buckets.yml",

@@ -58,7 +58,7 @@ def verify_server_version(host, expected_server_version):
         raise ProvisioningError("Unsupported version format")
 
 
-def create_internal_rbac_bucket_user(bucketname):
+def create_internal_rbac_bucket_user(url, bucketname):
     # Create user and assign role
     roles = "cluster_admin,bucket_admin[{}]".format(bucketname)
     password = 'password'
@@ -71,7 +71,7 @@ def create_internal_rbac_bucket_user(bucketname):
 
     log_info("Creating RBAC user {} with password {} and roles {}".format(bucketname, password, roles))
 
-    rbac_url = "{}/settings/rbac/users/builtin/{}".format(self.url, bucketname)
+    rbac_url = "{}/settings/rbac/users/builtin/{}".format(url, bucketname)
 
     resp = ""
     try:
@@ -320,7 +320,7 @@ class CouchbaseServer:
             raise
 
         if server_major_version >= 5:
-            create_internal_rbac_bucket_user(name)
+            create_internal_rbac_bucket_user(self.url, name)
 
         # Create client an retry until KeyNotFound error is thrown
         start = time.time()
