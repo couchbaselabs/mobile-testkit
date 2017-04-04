@@ -28,7 +28,6 @@ def get_server_version(host):
     resp.raise_for_status()
     resp_obj = resp.json()
 
-
     # Actual version is the following format 4.1.1-5914-enterprise
     running_server_version = resp_obj["implementationVersion"]
     running_server_version_parts = running_server_version.split("-")
