@@ -12,6 +12,7 @@ from keywords.utils import log_error
 from keywords.couchbaseserver import get_server_version
 from keywords.couchbaseserver import create_internal_rbac_bucket_user
 
+
 class Server:
 
     """

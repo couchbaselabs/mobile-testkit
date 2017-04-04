@@ -138,6 +138,7 @@ def remove_db_password_to_sg_config(conf_path):
     with open(conf_path, 'w') as w:
         json.dump(json_config, w, indent=4)
 
+
 def verify_sg_accel_version(host, expected_sg_accel_version):
     running_ac_version = get_sg_accel_version(host)
 
@@ -192,7 +193,6 @@ class SyncGateway:
         log_info("Starting sync_gateway on {} ...".format(target))
         ansible_runner = AnsibleRunner(cluster_config)
         config_path = os.path.abspath(config)
-        password = 'password'
 
         add_db_password_to_sg_config(cluster_config, config_path)
 
