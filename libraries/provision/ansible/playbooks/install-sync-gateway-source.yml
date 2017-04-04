@@ -54,6 +54,9 @@
     build_flags:
 
   tasks:
+
+  - debug: msg=Building Sync Gateway commit {{ commit }} with build flags {{ build_flags }}
+
   - name: SYNC GATEWAY & SG ACCEL | Create .git email to use bootstrap.sh script
     shell: git config --global user.email "foo@couchbase.com"
 
