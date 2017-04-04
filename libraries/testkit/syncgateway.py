@@ -22,12 +22,6 @@ class SyncGateway:
         self.hostname = target["name"]
         self._headers = {'Content-Type': 'application/json'}
         self.admin = Admin(self)
-        self.cluster_config = cluster_config
-
-        with open(self.cluster_config + ".json") as c:
-            cluster = json.loads(c.read())
-
-        self.cbs_ip = cluster["couchbase_servers"][0]["ip"]
 
     def info(self):
         r = requests.get(self.url)

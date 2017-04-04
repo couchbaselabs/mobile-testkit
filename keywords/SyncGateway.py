@@ -156,7 +156,6 @@ class SyncGateway:
         log_info("Starting sync_gateway on {} ...".format(target))
         ansible_runner = AnsibleRunner(cluster_config)
         config_path = os.path.abspath(config)
-
         status = ansible_runner.run_ansible_playbook(
             "start-sync-gateway.yml",
             extra_vars={

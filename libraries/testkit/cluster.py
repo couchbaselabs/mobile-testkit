@@ -82,13 +82,12 @@ class Cluster:
         status = ansible_runner.run_ansible_playbook("delete-sg-accel-artifacts.yml")
         assert status == 0, "Failed to delete sg_accel artifacts"
 
-        # Parse config and grab bucket names
-        config_path_full = os.path.abspath(sg_config_path)
-
         # Delete buckets
         log_info(">>> Deleting buckets on: {}".format(self.cb_server.url))
         self.cb_server.delete_buckets()
 
+        # Parse config and grab bucket names
+        config_path_full = os.path.abspath(sg_config_path)
         config = Config(config_path_full)
         mode = config.get_mode()
         bucket_name_set = config.get_bucket_name_set()
