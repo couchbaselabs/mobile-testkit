@@ -8,13 +8,15 @@
     "compressResponses": false,
     "log": ["CRUD+", "Cache+", "HTTP+", "Changes+", "Replicate"],
     "databases":{
-        "db1":{
+        "db1":
             "server":"http://{{ couchbase_server_primary_node }}:8091",
-            "bucket":"data-bucket-1"
+            "bucket":"data-bucket-1",
+            "password": "password",
         },
         "db2":{
             "server":"http://{{ couchbase_server_primary_node }}:8091",
-            "bucket":"data-bucket-2"
+            "bucket":"data-bucket-2",
+            "password": "password"
         }
     }
 }

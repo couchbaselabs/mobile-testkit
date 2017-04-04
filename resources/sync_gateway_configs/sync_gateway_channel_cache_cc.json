@@ -6,6 +6,7 @@
         "db": {
             "server":"http://{{ couchbase_server_primary_node }}:8091",
             "bucket":"data-bucket",
+            "password": "password",
             "cache": {
                 "channel_cache_max_length": 5000,
                 "channel_cache_min_length": 5000,

@@ -6,6 +6,7 @@
     "db": {
       "server": "http://{{ couchbase_server_primary_node }}:8091",
       "bucket": "data-bucket",
+      "password": "password",
       "users": {
         "user_1": {
           "admin_channels": [

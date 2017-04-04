@@ -13,6 +13,7 @@
             "offline":true,
             "server":"http://{{ couchbase_server_primary_node }}:8091",
             "bucket":"data-bucket",
+            "password": "password",
             "users": { "seth": { "password": "password", "admin_channels": ["*", "ABC"] } }
         }
     }
