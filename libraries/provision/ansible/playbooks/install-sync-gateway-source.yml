@@ -80,6 +80,9 @@
   - name: SYNC GATEWAY & SG ACCEL | Build
     shell: ./build.sh {{ build_flags }} chdir=/home/centos/
 
+  - name: SYNC GATEWAY & SG ACCEL | Unit Tests
+    shell: ./test.sh chdir=/home/centos/
+
 - hosts: sync_gateways
   any_errors_fatal: true
   become: yes
