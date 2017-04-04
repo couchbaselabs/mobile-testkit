@@ -23,15 +23,11 @@ from keywords import types
 
 
 def get_server_version(host):
-    resp = ""
-    try:
-        resp = requests.get("http://Administrator:password@{}:8091/pools".format(host))
-        log_r(resp)
-        resp.raise_for_status()
-        resp_obj = resp.json()
-    except:
-        log_info("resp code: {}; resp text: {}".format(resp, resp.json()))
-        raise
+    resp = requests.get("http://Administrator:password@{}:8091/pools".format(host))
+    log_r(resp)
+    resp.raise_for_status()
+    resp_obj = resp.json()
+
 
     # Actual version is the following format 4.1.1-5914-enterprise
     running_server_version = resp_obj["implementationVersion"]
