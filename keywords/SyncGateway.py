@@ -118,6 +118,7 @@ def add_db_password_to_sg_config(cluster_config, conf_path):
         with open(conf_path) as c:
             json_config = json.loads(c.read())
 
+        log_info("Adding password config to sync gateway config: {}".format(conf_path))
         for db in json_config['databases']:
             json_config['databases'][db]["password"] = password
 
@@ -133,6 +134,7 @@ def remove_db_password_to_sg_config(conf_path):
 
     for db in json_config['databases']:
         if "password" in json_config['databases'][db]:
+            log_info("Removing password config from sync gateway config: {}".format(conf_path))
             del json_config['databases'][db]["password"]
 
     with open(conf_path, 'w') as w:
