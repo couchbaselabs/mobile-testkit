@@ -59,7 +59,8 @@ def verify_server_version(host, expected_server_version):
 
 
 def create_internal_rbac_bucket_user(url, bucketname):
-    # Create user and assign role
+    # Create user with username=bucketname and assign role
+    # bucket_admin and cluster_admin
     roles = "cluster_admin,bucket_admin[{}]".format(bucketname)
     password = 'password'
 
@@ -77,7 +78,7 @@ def create_internal_rbac_bucket_user(url, bucketname):
     try:
         resp = requests.put(rbac_url, data=data_user_params, auth=('Administrator', 'password'))
     except:
-        log_info("resp code: {}; resp text: {}".format(resp, resp.text))
+        log_info("resp code: {}; resp text: {}".format(resp, resp.json()))
         raise
 
 
@@ -292,6 +293,7 @@ class CouchbaseServer:
         server_major_version = int(server_version.split(".")[0])
 
         if server_major_version <= 4:
+            # Create a bucket with password for server_major_version < 5
             data = {
                 "name": name,
                 "ramQuotaMB": str(ram_quota_mb),
@@ -302,7 +304,7 @@ class CouchbaseServer:
                 "flushEnabled": "1"
             }
         else:
-            # proxyport should not be passed for 5.0.0 onwards for bucket creation
+            # proxyPort should not be passed for 5.0.0 onwards for bucket creation
             data = {
                 "name": name,
                 "ramQuotaMB": str(ram_quota_mb),
@@ -317,9 +319,10 @@ class CouchbaseServer:
             log_r(resp)
             resp.raise_for_status()
         except:
-            log_info("resp code: {}; resp text: {}".format(resp, resp.text))
+            log_info("resp code: {}; resp text: {}".format(resp, resp.json()))
             raise
 
+        # Create a user with username=bucketname
         create_internal_rbac_bucket_user(self.url, name)
 
         # Create client an retry until KeyNotFound error is thrown

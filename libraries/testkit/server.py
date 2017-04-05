@@ -87,13 +87,14 @@ class Server:
         return status
 
     def create_buckets(self, names):
-        # Create buckets
+        # Create a user with username=bucketname
         if type(names) is list:
             for name in names:
                 create_internal_rbac_bucket_user(self.url, name)
         else:
             create_internal_rbac_bucket_user(self.url, names)
 
+        # Create buckets
         status = self.ansible_runner.run_ansible_playbook(
             "create-server-buckets.yml",
             extra_vars={
