@@ -103,8 +103,8 @@ class Server:
         return status
 
     def get_bucket(self, bucket_name):
-        bucket = Bucket("couchbase://{}/{}".format(self.ip, bucket_name), password='password')
-        return bucket
+        connection_str = "couchbase://{}/{}".format(self.ip, bucket_name)
+        return Bucket(connection_str, password='password')
 
     def __repr__(self):
         return "Server: {}:{}\n".format(self.hostname, self.ip)

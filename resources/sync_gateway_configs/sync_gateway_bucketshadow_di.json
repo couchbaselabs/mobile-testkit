@@ -30,6 +30,7 @@
       "shadow": {
         "server": "http://{{ couchbase_server_primary_node }}:8091",
         "bucket": "source-bucket",
+        "username": "source-bucket",
         "password": "password",
       }
     }
