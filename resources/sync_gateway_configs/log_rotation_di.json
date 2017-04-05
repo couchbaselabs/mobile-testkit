@@ -23,6 +23,7 @@
     "db": {
       "server":"http://{{ couchbase_server_primary_node }}:8091",
       "bucket":"data-bucket",
+      "password": "password",
       "users": {"GUEST": {"disabled": false,"admin_channels": ["*"]}},
       "channel_index":{
         "server":"http://{{ couchbase_server_primary_node }}:8091",
