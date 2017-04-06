@@ -1895,3 +1895,11 @@ class MobileRestClient:
         logging.debug("Expected Doc Ids: {}".format(expected_missing_doc_ids))
         if missing_doc_ids != expected_missing_doc_ids:
             raise AssertionError("Found doc ids should be the same as expected doc ids")
+
+    def get_expvars(self, url):
+        """ Gets expvars for the url """
+        resp = self._session.get("{}/_expvar".format(url))
+        log_r(resp)
+        resp.raise_for_status()
+
+        return resp.json()
