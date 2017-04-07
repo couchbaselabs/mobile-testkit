@@ -11,8 +11,8 @@
         "db":{
             "server":"http://{{ couchbase_server_primary_node }}:8091",
             "bucket":"data-bucket",
-	    "revs_limit":5	    
+            "password": "password",
+	        "revs_limit":5
         }
     }
 }
-

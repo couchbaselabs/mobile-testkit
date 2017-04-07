@@ -11,11 +11,13 @@
     "databases": {
         "db":{
             "server":"http://{{ couchbase_server_primary_node }}:8091",
-            "bucket":"data-bucket"
+            "bucket":"data-bucket",
+            "password": "password"
         },
         "db2":{
             "server":"http://{{ couchbase_server_primary_node }}:8091",
-            "bucket":"data-bucket"
+            "bucket":"data-bucket",
+            "password": "password"
         }
     }
 }

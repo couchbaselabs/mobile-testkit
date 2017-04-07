@@ -12,6 +12,7 @@
         "db":{
             "server":"http://{{ couchbase_server_primary_node }}:8091",
             "bucket":"data-bucket",
+            "password": "password",
             "sync":
             `function(doc, oldDoc){
                 if(doc._id == "role_doc_0") {

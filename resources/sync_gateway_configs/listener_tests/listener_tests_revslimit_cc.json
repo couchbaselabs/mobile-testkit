@@ -6,6 +6,7 @@
         "db":{
             "server":"http://{{ couchbase_server_primary_node }}:8091",
             "bucket":"data-bucket",
+            "password": "password",
             "revs_limit": 100,
             "sync":
             `function(doc){

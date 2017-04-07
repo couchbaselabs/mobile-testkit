@@ -10,7 +10,8 @@
     "cluster_config": {
         "server":"http://{{ couchbase_server_primary_node }}:8091",
         "data_dir":".",
-        "bucket":"data-bucket"
+        "bucket":"data-bucket",
+        "password": "password"
     },
     "databases":{
         "db":{
@@ -18,10 +19,13 @@
             "feed_type":"DCPSHARD",
             "server":"http://{{ couchbase_server_primary_node }}:8091",
             "bucket":"data-bucket",
+            "password": "password",
             "channel_index":{
                 "num_shards":32,
                 "server":"http://{{ couchbase_server_primary_node }}:8091",
                 "bucket":"index-bucket",
+                "username":"index-bucket",
+                "password": "password",
                 "writer":{{ is_index_writer }}
             }
         }

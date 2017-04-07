@@ -7,3 +7,4 @@
   file:
     path: /tmp/sg_logs
     state: directory
+    mode: 0777

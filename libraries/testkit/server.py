@@ -9,6 +9,9 @@ from libraries.provision.ansible_runner import AnsibleRunner
 
 from keywords.utils import log_info
 from keywords.utils import log_error
+from keywords.couchbaseserver import create_internal_rbac_bucket_user
+from keywords.couchbaseserver import delete_internal_rbac_bucket_user
+from keywords.couchbaseserver import get_server_version
 
 
 class Server:
@@ -32,6 +35,9 @@ class Server:
     def delete_buckets(self):
         count = 0
         status = 0
+        server_version = get_server_version(self.ip)
+        server_major_version = int(server_version.split(".")[0])
+
         while count < 3:
             resp = requests.get("{}/pools/default/buckets".format(self.url), headers=self._headers)
             resp.raise_for_status()
@@ -51,6 +57,8 @@ class Server:
                 resp = requests.delete("{0}/pools/default/buckets/{1}".format(self.url, bucket_name), headers=self._headers)
                 if resp.status_code == 200:
                     delete_num += 1
+                    if server_major_version >= 5:
+                        delete_internal_rbac_bucket_user(self.url, bucket_name)
 
             if delete_num == len(existing_bucket_names):
                 break
@@ -69,10 +77,16 @@ class Server:
         # HACK around Couchbase Server issue where issuing a bucket delete via REST occasionally returns 500 error
         count = 0
         status = 0
+        server_version = get_server_version(self.ip)
+        server_major_version = int(server_version.split(".")[0])
+
         while count < 3:
             log_info(">>> Deleting buckets: {}".format(name))
             resp = requests.delete("{0}/pools/default/buckets/{1}".format(self.url, name), headers=self._headers)
             if resp.status_code == 200 or resp.status_code == 404:
+                if server_major_version >= 5:
+                    delete_internal_rbac_bucket_user(self.url, name)
+
                 break
             else:
                 # A 500 error may have occured
@@ -86,6 +100,17 @@ class Server:
         return status
 
     def create_buckets(self, names):
+        # Create a user with username=bucketname
+        server_version = get_server_version(self.ip)
+        server_major_version = int(server_version.split(".")[0])
+
+        if server_major_version >= 5:
+            if type(names) is list:
+                for name in names:
+                    create_internal_rbac_bucket_user(self.url, name)
+            else:
+                create_internal_rbac_bucket_user(self.url, names)
+
         # Create buckets
         status = self.ansible_runner.run_ansible_playbook(
             "create-server-buckets.yml",
@@ -97,7 +122,7 @@ class Server:
 
     def get_bucket(self, bucket_name):
         connection_str = "couchbase://{}/{}".format(self.ip, bucket_name)
-        return Bucket(connection_str)
+        return Bucket(connection_str, password='password')
 
     def __repr__(self):
         return "Server: {}:{}\n".format(self.hostname, self.ip)

@@ -11,13 +11,15 @@
     "cluster_config": {
         "server":"http://127.0.0.1:8091",
         "data_dir":".",
-        "bucket":"cbgt-bucket"
+        "bucket":"cbgt-bucket",
+        "password": "password"
     },
     "databases":{
         "db":{
             "feed_type":"DCPSHARD",
             "server":"http://127.0.0.1:8091",
             "bucket":"data-bucket",
+            "password": "password",
             "users":{
                 "GUEST":{
                     "disabled":false,
@@ -30,6 +32,8 @@
                 "num_shards":16,
                 "server":"http://127.0.0.1:8091",
                 "bucket":"index-bucket",
+                "username":"index-bucket",
+                "password": "password",
                 "writer":true
             }
         }

@@ -12,6 +12,7 @@
   "cluster_config": {
     "server": "http://{{ couchbase_server_primary_node }}:8091",
     "bucket": "data-bucket",
+    "password": "password",
     "data_dir": "."
   },
   "databases": {
@@ -25,9 +26,12 @@
       "channel_index": {
         "server": "http://{{ couchbase_server_primary_node }}:8091",
         "bucket":"index-bucket",
+        "username":"index-bucket",
+        "password": "password",
         "writer":{{ is_index_writer }}
       },
       "bucket": "data-bucket",
+      "password": "password",
       "roles": {
         "Scientist": {
           "admin_channels": [
