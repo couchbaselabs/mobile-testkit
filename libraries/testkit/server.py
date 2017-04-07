@@ -10,6 +10,7 @@ from libraries.provision.ansible_runner import AnsibleRunner
 from keywords.utils import log_info
 from keywords.utils import log_error
 from keywords.couchbaseserver import create_internal_rbac_bucket_user
+from keywords.couchbaseserver import get_server_version
 
 
 class Server:
@@ -88,11 +89,15 @@ class Server:
 
     def create_buckets(self, names):
         # Create a user with username=bucketname
-        if type(names) is list:
-            for name in names:
-                create_internal_rbac_bucket_user(self.url, name)
-        else:
-            create_internal_rbac_bucket_user(self.url, names)
+        server_version = get_server_version(self.ip)
+        server_major_version = int(server_version.split(".")[0])
+
+        if server_major_version >= 5:
+            if type(names) is list:
+                for name in names:
+                    create_internal_rbac_bucket_user(self.url, name)
+            else:
+                create_internal_rbac_bucket_user(self.url, names)
 
         # Create buckets
         status = self.ansible_runner.run_ansible_playbook(
