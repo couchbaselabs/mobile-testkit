@@ -119,9 +119,6 @@ class CouchbaseServer:
         self._session = Session()
         self._session.auth = ("Administrator", "password")
 
-        self.server_version = get_server_version(self.host)
-        self.server_major_version = int(self.server_version.split(".")[0])
-
     def get_bucket_names(self):
         """ Returns list of the bucket names for a given Couchbase Server."""
 
@@ -140,11 +137,14 @@ class CouchbaseServer:
 
     def delete_bucket(self, name):
         """ Delete a Couchbase Server bucket with the given 'name' """
+        server_version = get_server_version(self.host)
+        server_major_version = int(server_version.split(".")[0])
+
         resp = self._session.delete("{0}/pools/default/buckets/{1}".format(self.url, name))
         log_r(resp)
         resp.raise_for_status()
-        if self.server_major_version >= 5:
-            delete_internal_rbac_bucket_user(name)
+        if server_major_version >= 5:
+            delete_internal_rbac_bucket_user(self.url, name)
 
     def delete_buckets(self):
         """ Deletes all of the buckets on a Couchbase Server.
@@ -316,7 +316,8 @@ class CouchbaseServer:
 
         log_info("Creating bucket {} with RAM {}".format(name, ram_quota_mb))
 
-
+        server_version = get_server_version(self.host)
+        server_major_version = int(server_version.split(".")[0])
 
         data = {
             "name": name,
@@ -326,7 +327,7 @@ class CouchbaseServer:
             "flushEnabled": "1"
         }
 
-        if self.server_major_version <= 4:
+        if server_major_version <= 4:
             # Create a bucket with password for server_major_version < 5
             # proxyPort should not be passed for 5.0.0 onwards for bucket creation
             data["saslPassword"] = "password"
@@ -342,7 +343,7 @@ class CouchbaseServer:
             raise
 
         # Create a user with username=bucketname
-        if self.server_major_version >= 5:
+        if server_major_version >= 5:
             create_internal_rbac_bucket_user(self.url, name)
 
         # Create client an retry until KeyNotFound error is thrown
