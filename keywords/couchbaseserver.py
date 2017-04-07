@@ -77,6 +77,28 @@ def create_internal_rbac_bucket_user(url, bucketname):
     resp = ""
     try:
         resp = requests.put(rbac_url, data=data_user_params, auth=('Administrator', 'password'))
+        log_r(resp)
+        resp.raise_for_status()
+    except HTTPError as h:
+        log_info("resp code: {}; resp text: {}; error: {}".format(resp, resp.json(), h))
+        raise
+
+
+def delete_internal_rbac_bucket_user(url, bucketname):
+    # Delete user with username=bucketname
+    data_user_params = {
+        "name": bucketname
+    }
+
+    log_info("Deleting RBAC user {}".format(bucketname))
+
+    rbac_url = "{}/settings/rbac/users/{}".format(url, bucketname)
+
+    resp = ""
+    try:
+        resp = requests.delete(rbac_url, data=data_user_params, auth=('Administrator', 'password'))
+        log_r(resp)
+        resp.raise_for_status()
     except HTTPError as h:
         log_info("resp code: {}; resp text: {}; error: {}".format(resp, resp.json(), h))
         raise
@@ -118,6 +140,7 @@ class CouchbaseServer:
         resp = self._session.delete("{0}/pools/default/buckets/{1}".format(self.url, name))
         log_r(resp)
         resp.raise_for_status()
+        delete_internal_rbac_bucket_user(name)
 
     def delete_buckets(self):
         """ Deletes all of the buckets on a Couchbase Server.
