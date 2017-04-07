@@ -80,7 +80,7 @@ def create_internal_rbac_bucket_user(url, bucketname):
         log_r(resp)
         resp.raise_for_status()
     except HTTPError as h:
-        log_info("resp code: {}; resp text: {}; error: {}".format(resp, resp.json(), h))
+        log_info("resp code: {}; error: {}".format(resp, h))
         raise
 
 
@@ -100,7 +100,7 @@ def delete_internal_rbac_bucket_user(url, bucketname):
         log_r(resp)
         resp.raise_for_status()
     except HTTPError as h:
-        log_info("resp code: {}; resp text: {}; error: {}".format(resp, resp.json(), h))
+        log_info("resp code: {}; error: {}".format(resp, h))
         raise
 
 
@@ -118,6 +118,9 @@ class CouchbaseServer:
 
         self._session = Session()
         self._session.auth = ("Administrator", "password")
+
+        self.server_version = get_server_version(self.host)
+        self.server_major_version = int(self.server_version.split(".")[0])
 
     def get_bucket_names(self):
         """ Returns list of the bucket names for a given Couchbase Server."""
@@ -140,7 +143,8 @@ class CouchbaseServer:
         resp = self._session.delete("{0}/pools/default/buckets/{1}".format(self.url, name))
         log_r(resp)
         resp.raise_for_status()
-        delete_internal_rbac_bucket_user(name)
+        if self.server_major_version >= 5:
+            delete_internal_rbac_bucket_user(name)
 
     def delete_buckets(self):
         """ Deletes all of the buckets on a Couchbase Server.
@@ -312,8 +316,7 @@ class CouchbaseServer:
 
         log_info("Creating bucket {} with RAM {}".format(name, ram_quota_mb))
 
-        server_version = get_server_version(self.host)
-        server_major_version = int(server_version.split(".")[0])
+
 
         data = {
             "name": name,
@@ -323,7 +326,7 @@ class CouchbaseServer:
             "flushEnabled": "1"
         }
 
-        if server_major_version <= 4:
+        if self.server_major_version <= 4:
             # Create a bucket with password for server_major_version < 5
             # proxyPort should not be passed for 5.0.0 onwards for bucket creation
             data["saslPassword"] = "password"
@@ -339,7 +342,8 @@ class CouchbaseServer:
             raise
 
         # Create a user with username=bucketname
-        create_internal_rbac_bucket_user(self.url, name)
+        if self.server_major_version >= 5:
+            create_internal_rbac_bucket_user(self.url, name)
 
         # Create client an retry until KeyNotFound error is thrown
         start = time.time()
