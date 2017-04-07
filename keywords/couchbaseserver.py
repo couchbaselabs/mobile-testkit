@@ -77,8 +77,8 @@ def create_internal_rbac_bucket_user(url, bucketname):
     resp = ""
     try:
         resp = requests.put(rbac_url, data=data_user_params, auth=('Administrator', 'password'))
-    except:
-        log_info("resp code: {}; resp text: {}".format(resp, resp.json()))
+    except HTTPError as h:
+        log_info("resp code: {}; resp text: {}; error: {}".format(resp, resp.json(), h))
         raise
 
 
@@ -292,34 +292,27 @@ class CouchbaseServer:
         server_version = get_server_version(self.host)
         server_major_version = int(server_version.split(".")[0])
 
+        data = {
+            "name": name,
+            "ramQuotaMB": str(ram_quota_mb),
+            "authType": "sasl",
+            "bucketType": "couchbase",
+            "flushEnabled": "1"
+        }
+
         if server_major_version <= 4:
             # Create a bucket with password for server_major_version < 5
-            data = {
-                "name": name,
-                "ramQuotaMB": str(ram_quota_mb),
-                "authType": "sasl",
-                "saslPassword": "password",
-                "proxyPort": "11211",
-                "bucketType": "couchbase",
-                "flushEnabled": "1"
-            }
-        else:
             # proxyPort should not be passed for 5.0.0 onwards for bucket creation
-            data = {
-                "name": name,
-                "ramQuotaMB": str(ram_quota_mb),
-                "authType": "sasl",
-                "bucketType": "couchbase",
-                "flushEnabled": "1"
-            }
+            data["saslPassword"] = "password"
+            data["proxyPort"] = "11211"
 
         resp = ""
         try:
             resp = self._session.post("{}/pools/default/buckets".format(self.url), data=data)
             log_r(resp)
             resp.raise_for_status()
-        except:
-            log_info("resp code: {}; resp text: {}".format(resp, resp.json()))
+        except HTTPError as h:
+            log_info("resp code: {}; resp text: {}; error: {}".format(resp, resp.json(), h))
             raise
 
         # Create a user with username=bucketname
