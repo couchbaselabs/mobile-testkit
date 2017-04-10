@@ -8,7 +8,7 @@ export ANSIBLE_CONFIG=${currentdir}/ansible.cfg
 pool_file="resources/pool.json"
 touch ${pool_file}
 
-pool='{"ips":["host1","host2"]}'
+pool='{"ips":["host1","host2","host3","host4","host5"]}'
 echo ${pool} > ${pool_file}
 
 # Generate cluster configs

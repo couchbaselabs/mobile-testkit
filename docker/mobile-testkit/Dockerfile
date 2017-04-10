@@ -1,4 +1,3 @@
-
 FROM centos:7
 
 # Update Yum and install epel

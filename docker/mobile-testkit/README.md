@@ -1,14 +1,23 @@
 ## Download images with sshd and systemd install for your target cluster
 ```
-docker pull alvaroaleman/centos7-systemd-sshd
+$ docker pull alvaroaleman/centos7-systemd-sshd
 ```
 
 # Create a network with the number of hosts you require
 ```
-./create_hosts cbl 5
+$ ./create_hosts cbl 5
+```
+
+## Build docker image
+```
+$ docker build -t mobile-testkit .
 ```
 
 ## Run docker image
+
+```
+$ docker run --rm -it --network cbl mobile-testkit
+```
 
 ```
 $ MOBILE_TEST_KIT_CMD="python libraries/provision/create_and_instantiate_cluster.py \    
