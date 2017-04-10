@@ -7,4 +7,3 @@
 - name: SG ACCEL | Wait until sg_accel to listen on port
   become: yes
   wait_for: port=4985 timeout=30
-
