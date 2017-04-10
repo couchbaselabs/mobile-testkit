@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
 
-# set python env
-currentdir=`pwd`
-export PYTHONPATH=${PYTHONPATH}:${currentdir}/
-export ANSIBLE_CONFIG=${currentdir}/ansible.cfg
+# Create an ansible config from template
+mv ansible.cfg.example ansible.cfg
+
+# Change default 'vagrant' user to 'root' for docker
+sed -i 's/remote_user = vagrant/remote_user = root/' ansible.cfg
 
 pool_file="resources/pool.json"
 touch ${pool_file}
