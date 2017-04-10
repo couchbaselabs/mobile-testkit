@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using Couchbase.Lite;
+using Couchbase.Lite.Auth;
 
 namespace Travel.NET
 {
@@ -8,6 +9,8 @@ namespace Travel.NET
 	{
 		public static void Main(string[] args)
 		{
+			var syncGatewayUrl = new Uri("http://localhost:4984/db/");
+
 			Manager manager = Manager.SharedInstance;
 			Database airlineDb = manager.GetDatabase("airline");
 			Database routeDb = manager.GetDatabase("route");
@@ -15,17 +18,30 @@ namespace Travel.NET
 			Database landmarkDb = manager.GetDatabase("landmark");
 			Database hotelDb = manager.GetDatabase("hotel");
 
-			var properties = new Dictionary<string, object> {
-				{ "title", "Couchbase Mobile"},
-				{ "sdk", "C#" }
-			};
+			Replication airlinePuller = airlineDb.CreatePullReplication(syncGatewayUrl);
+			var airlineAuth = AuthenticatorFactory.CreateBasicAuthenticator("airline", "pass");
+			airlinePuller.Authenticator = airlineAuth;
+			airlinePuller.Continuous = true;
 
-			Document document = database.CreateDocument();
+			Replication routePuller = routeDb.CreatePullReplication(syncGatewayUrl);
+			var routeAuth = AuthenticatorFactory.CreateBasicAuthenticator("route", "pass");
+			routePuller.Authenticator = routeAuth;
+			routePuller.Continuous = true;
 
-			document.PutProperties(properties);
+			Replication airportPuller = airportDb.CreatePullReplication(syncGatewayUrl);
+			var airportAuth = AuthenticatorFactory.CreateBasicAuthenticator("airport", "pass");
+			airportPuller.Authenticator = airportAuth;
+			airportPuller.Continuous = true;
 
-			Console.WriteLine($"Document ID :: {document.Id}");
-			Console.WriteLine($"Learning {document.GetProperty("title")} with {document.GetProperty("sdk")}");
+			Replication landmarkPuller = landmarkDb.CreatePullReplication(syncGatewayUrl);
+			var landmarkAuth = AuthenticatorFactory.CreateBasicAuthenticator("landmark", "pass");
+			landmarkPuller.Authenticator = landmarkAuth;
+			landmarkPuller.Continuous = true;
+
+			Replication hotelPuller = hotelDb.CreatePullReplication(syncGatewayUrl);
+			var hotelAuth = AuthenticatorFactory.CreateBasicAuthenticator("hotel", "pass");
+			hotelPuller.Authenticator = hotelAuth;
+			hotelPuller.Continuous = true;
 
 			string line = Console.ReadLine();
 		}
