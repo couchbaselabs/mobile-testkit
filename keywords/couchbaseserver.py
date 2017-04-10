@@ -92,7 +92,7 @@ def delete_internal_rbac_bucket_user(url, bucketname):
 
     log_info("Deleting RBAC user {}".format(bucketname))
 
-    rbac_url = "{}/settings/rbac/users/{}".format(url, bucketname)
+    rbac_url = "{}/settings/rbac/users/builtin/{}".format(url, bucketname)
 
     resp = ""
     try:
