@@ -97,12 +97,19 @@ class ClusterKeywords:
         with open("{}.json".format(cluster_config)) as f:
             cluster_obj = json.loads(f.read())
 
+        server_port = 8091
+        server_scheme = "http"
+
+        if cluster_obj["cbs_ssl_enabled"]:
+            server_port = 18091
+            server_scheme = "https"
+
         running_services = []
         for host in cluster_obj["hosts"]:
 
             # Couchbase Server
             try:
-                resp = requests.get("http://Administrator:password@{}:8091/pools".format(host["ip"]))
+                resp = requests.get("{}://Administrator:password@{}:{}/pools".format(server_scheme, host["ip"], server_port))
                 log_r(resp)
                 running_services.append(resp.url)
             except ConnectionError as he:
