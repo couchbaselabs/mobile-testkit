@@ -72,13 +72,13 @@ class ClusterKeywords:
         lbs_urls = ["http://{}".format(lb["ip"]) for lb in cluster["load_balancers"]]
 
         server_port = 8091
-        scheme = "http"
+        server_scheme = "http"
 
         if cluster["cbs_ssl_enabled"]:
             server_port = 18091
-            scheme = "https"
+            server_scheme = "https"
 
-        cbs_urls = ["{}://{}:{}".format(scheme, cb["ip"], server_port) for cb in cluster["couchbase_servers"]]
+        cbs_urls = ["{}://{}:{}".format(server_scheme, cb["ip"], server_port) for cb in cluster["couchbase_servers"]]
 
         # Format into urls that robot keywords can consume easily
         formatted_cluster = {

@@ -113,11 +113,11 @@ def install_sync_gateway(cluster_config, sync_gateway_config):
 
     cluster = Cluster(config=cluster_config)
     server_port = 8091
-    scheme = "http"
+    server_scheme = "http"
 
     if cluster.cbs_ssl:
         server_port = 18091
-        scheme = "https"
+        server_scheme = "https"
 
     # Install Sync Gateway via Source or Package
     if sync_gateway_config.commit is not None:
@@ -129,7 +129,7 @@ def install_sync_gateway(cluster_config, sync_gateway_config):
                 "commit": sync_gateway_config.commit,
                 "build_flags": sync_gateway_config.build_flags,
                 "server_port": server_port,
-                "scheme": scheme
+                "server_scheme": server_scheme
             }
         )
         if status != 0:
@@ -146,7 +146,7 @@ def install_sync_gateway(cluster_config, sync_gateway_config):
                 "couchbase_sg_accel_package": sg_accel_package_name,
                 "sync_gateway_config_filepath": config_path,
                 "server_port": server_port,
-                "scheme": scheme
+                "server_scheme": server_scheme
             }
         )
         if status != 0:

@@ -30,13 +30,13 @@ class Server:
             cluster = json.loads(f.read())
 
         server_port = 8091
-        scheme = "http"
+        server_scheme = "http"
 
         if cluster["cbs_ssl_enabled"]:
             server_port = 18091
-            scheme = "https"
+            server_scheme = "https"
 
-        self.url = "{}://{}:{}".format(scheme, target["ip"], server_port)
+        self.url = "{}://{}:{}".format(server_scheme, target["ip"], server_port)
         self.hostname = target["name"]
 
         auth = base64.b64encode("{0}:{1}".format("Administrator", "password").encode())

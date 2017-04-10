@@ -26,14 +26,14 @@ requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
 
 def get_server_version(host, cbs_ssl=False):
-    scheme = "http"
+    server_scheme = "http"
     server_port = 8091
 
     if cbs_ssl:
-        scheme = "https"
+        server_scheme = "https"
         server_port = 18091
 
-    resp = requests.get("{}://Administrator:password@{}:{}/pools".format(scheme, host, server_port), verify=False)
+    resp = requests.get("{}://Administrator:password@{}:{}/pools".format(server_scheme, host, server_port), verify=False)
     log_r(resp)
     resp.raise_for_status()
     resp_obj = resp.json()

@@ -16,7 +16,7 @@ from libraries.testkit.cluster import Cluster
 
 def load_sync_gateway_config(sync_gateway_config, mode, server_url):
     """ Loads a syncgateway configuration for modification"""
-    scheme, server_ip, server_port = server_url.split(":")
+    server_scheme, server_ip, server_port = server_url.split(":")
     server_ip = server_ip.replace("//", "")
 
     with open(sync_gateway_config) as default_conf:
@@ -24,7 +24,7 @@ def load_sync_gateway_config(sync_gateway_config, mode, server_url):
         temp = template.render(
             couchbase_server_primary_node=server_ip,
             is_index_writer="false",
-            scheme=scheme,
+            server_scheme=server_scheme,
             server_port=server_port
         )
         data = json.loads(temp)

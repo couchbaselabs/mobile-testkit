@@ -18,7 +18,7 @@ class SgAccel:
         self.hostname = target["name"]
         self.cluster_config = cluster_config
         self.server_port = 8091
-        self.scheme = "http"
+        self.server_scheme = "http"
 
     def info(self):
         r = requests.get(self.url)
@@ -39,14 +39,14 @@ class SgAccel:
 
         if is_cbs_ssl_enabled(self.cluster_config):
             self.server_port = 18091
-            self.scheme = "https"
+            self.server_scheme = "https"
 
         status = self.ansible_runner.run_ansible_playbook(
             "start-sg-accel.yml",
             extra_vars={
                 "sync_gateway_config_filepath": conf_path,
                 "server_port": self.server_port,
-                "scheme": self.scheme
+                "server_scheme": self.server_scheme
             },
             subset=self.hostname
         )

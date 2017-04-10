@@ -115,11 +115,11 @@ class Cluster:
 
         cluster = Cluster(config=self._cluster_config)
         server_port = 8091
-        scheme = "http"
+        server_scheme = "http"
 
         if cluster.cbs_ssl:
             server_port = 18091
-            scheme = "https"
+            server_scheme = "https"
 
         # Start sync-gateway
         status = ansible_runner.run_ansible_playbook(
@@ -127,7 +127,7 @@ class Cluster:
             extra_vars={
                 "sync_gateway_config_filepath": config_path_full,
                 "server_port": server_port,
-                "scheme": scheme
+                "server_scheme": server_scheme
             }
         )
         assert status == 0, "Failed to start to Sync Gateway"
@@ -141,7 +141,7 @@ class Cluster:
                 extra_vars={
                     "sync_gateway_config_filepath": config_path_full,
                     "server_port": server_port,
-                    "scheme": scheme
+                    "server_scheme": server_scheme
                 }
             )
             assert status == 0, "Failed to start sg_accel"
