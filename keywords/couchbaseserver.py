@@ -119,10 +119,13 @@ class CouchbaseServer:
 
     def __init__(self, url):
         self.url = url
+        self.cbs_ssl = False
+
         # Strip http prefix and port to store host
         if "https" in self.url:
             host = self.url.replace("https://", "")
             host = host.replace(":18091", "")
+            self.cbs_ssl = True
         else:
             host = self.url.replace("http://", "")
             host = host.replace(":8091", "")
@@ -152,7 +155,7 @@ class CouchbaseServer:
 
     def delete_bucket(self, name):
         """ Delete a Couchbase Server bucket with the given 'name' """
-        server_version = get_server_version(self.host)
+        server_version = get_server_version(self.host, self.cbs_ssl)
         server_major_version = int(server_version.split(".")[0])
 
         resp = self._session.delete("{0}/pools/default/buckets/{1}".format(self.url, name))
@@ -331,7 +334,7 @@ class CouchbaseServer:
 
         log_info("Creating bucket {} with RAM {}".format(name, ram_quota_mb))
 
-        server_version = get_server_version(self.host)
+        server_version = get_server_version(self.host, self.cbs_ssl)
         server_major_version = int(server_version.split(".")[0])
 
         data = {
