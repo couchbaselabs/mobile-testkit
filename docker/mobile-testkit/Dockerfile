@@ -1,5 +1,5 @@
 
-FROM williamyeh/ansible:centos7
+FROM centos:7
 
 # Update Yum and install epel
 RUN yum update -y && \
@@ -9,9 +9,7 @@ RUN yum update -y && \
 # Install dependencies
 RUN yum install -y \
   git \
-  libev \
   libevent \
-  libffi-devel \
   openssl-devel \
   python-devel \
   python-pip \
@@ -25,10 +23,9 @@ RUN cd /tmp/ && \
     cd libcouchbase-2.5.6_centos7_x86_64 && \
     rpm -ivh libcouchbase-devel-2.5.6-1.el7.centos.x86_64.rpm \
              libcouchbase2-core-2.5.6-1.el7.centos.x86_64.rpm \
-	     libcouchbase2-bin-2.5.6-1.el7.centos.x86_64.rpm \
-	     libcouchbase2-libevent-2.5.6-1.el7.centos.x86_64.rpm && \
-    rm -f *.rpm	     
-
+             libcouchbase2-bin-2.5.6-1.el7.centos.x86_64.rpm \
+             libcouchbase2-libevent-2.5.6-1.el7.centos.x86_64.rpm && \
+    rm -f *.rpm
 
 WORKDIR /opt
 
@@ -36,9 +33,11 @@ WORKDIR /opt
 RUN git clone https://github.com/couchbaselabs/mobile-testkit.git
 
 WORKDIR /opt/mobile-testkit
+RUN git checkout feature/hello-docker
 
-# Pip install requirements
+# Install dependencies
 RUN pip install -r requirements.txt
 
-
-
+# set python env
+ENV PYTHONPATH=$PYTHONPATH:.
+ENV ANSIBLE_CONFIG=ansible.cfg

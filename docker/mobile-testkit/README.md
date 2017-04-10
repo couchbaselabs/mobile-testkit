@@ -1,3 +1,12 @@
+## Download images with sshd and systemd install for your target cluster
+```
+docker pull alvaroaleman/centos7-systemd-sshd
+```
+
+# Create a network with the number of hosts you require
+```
+./create_hosts cbl 5
+```
 
 ## Run docker image
 
