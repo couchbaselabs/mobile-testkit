@@ -10,8 +10,9 @@
     "verbose":"true",
     "databases":{
         "db":{
-            "server":"{{ scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
+            "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
             "bucket":"data-bucket",
+            "password": "password",
             "users":{
                 "GUEST":{
                     "disabled":true,

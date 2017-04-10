@@ -140,7 +140,7 @@ class LiteServNetMsft(LiteServBase):
             }
         )
         if status != 0:
-            raise LiteServError("Could not start Liteserv")
+            raise LiteServError("Could not stop Liteserv")
 
         self._verify_launched()
 
@@ -177,7 +177,11 @@ class LiteServNetMsft(LiteServBase):
         Stops a .NET listener on a remote windows machine via ansible and pulls logs.
         """
 
-        binary_path = "couchbase-lite-net-msft-{}-liteserv/LiteServ.exe".format(self.version_build)
+        # The package structure for LiteServ is different pre 1.4. Handle for this case
+        if has_dot_net4_dot_5(self.version_build):
+            binary_path = "couchbase-lite-net-msft-{}-liteserv/net45/LiteServ.exe".format(self.version_build)
+        else:
+            binary_path = "couchbase-lite-net-msft-{}-liteserv/LiteServ.exe".format(self.version_build)
 
         log_full_path = "{}/{}".format(os.getcwd(), self.logfile)
 

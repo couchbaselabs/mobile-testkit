@@ -41,7 +41,6 @@ class SyncGateway:
         return status
 
     def start(self, config):
-
         conf_path = os.path.abspath(config)
         log.info(">>> Starting sync_gateway with configuration: {}".format(conf_path))
 
@@ -62,7 +61,6 @@ class SyncGateway:
 
     def restart(self, config):
         conf_path = os.path.abspath(config)
-
         log.info(">>> Restarting sync_gateway with configuration: {}".format(conf_path))
 
         if is_cbs_ssl_enabled(self.cluster_config):

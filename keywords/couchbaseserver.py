@@ -68,6 +68,52 @@ def verify_server_version(host, expected_server_version, cbs_ssl=False):
         raise ProvisioningError("Unsupported version format")
 
 
+def create_internal_rbac_bucket_user(url, bucketname):
+    # Create user with username=bucketname and assign role
+    # bucket_admin and cluster_admin
+    roles = "cluster_admin,bucket_admin[{}]".format(bucketname)
+    password = 'password'
+
+    data_user_params = {
+        "name": bucketname,
+        "roles": roles,
+        "password": password
+    }
+
+    log_info("Creating RBAC user {} with password {} and roles {}".format(bucketname, password, roles))
+
+    rbac_url = "{}/settings/rbac/users/builtin/{}".format(url, bucketname)
+
+    resp = ""
+    try:
+        resp = requests.put(rbac_url, data=data_user_params, auth=('Administrator', 'password'))
+        log_r(resp)
+        resp.raise_for_status()
+    except HTTPError as h:
+        log_info("resp code: {}; error: {}".format(resp, h))
+        raise
+
+
+def delete_internal_rbac_bucket_user(url, bucketname):
+    # Delete user with username=bucketname
+    data_user_params = {
+        "name": bucketname
+    }
+
+    log_info("Deleting RBAC user {}".format(bucketname))
+
+    rbac_url = "{}/settings/rbac/users/{}".format(url, bucketname)
+
+    resp = ""
+    try:
+        resp = requests.delete(rbac_url, data=data_user_params, auth=('Administrator', 'password'))
+        log_r(resp)
+        resp.raise_for_status()
+    except HTTPError as h:
+        log_info("resp code: {}; error: {}".format(resp, h))
+        raise
+
+
 class CouchbaseServer:
     """ Installs Couchbase Server on machine host"""
 
@@ -106,9 +152,14 @@ class CouchbaseServer:
 
     def delete_bucket(self, name):
         """ Delete a Couchbase Server bucket with the given 'name' """
+        server_version = get_server_version(self.host)
+        server_major_version = int(server_version.split(".")[0])
+
         resp = self._session.delete("{0}/pools/default/buckets/{1}".format(self.url, name))
         log_r(resp)
         resp.raise_for_status()
+        if server_major_version >= 5:
+            delete_internal_rbac_bucket_user(self.url, name)
 
     def delete_buckets(self):
         """ Deletes all of the buckets on a Couchbase Server.
@@ -280,18 +331,35 @@ class CouchbaseServer:
 
         log_info("Creating bucket {} with RAM {}".format(name, ram_quota_mb))
 
+        server_version = get_server_version(self.host)
+        server_major_version = int(server_version.split(".")[0])
+
         data = {
             "name": name,
             "ramQuotaMB": str(ram_quota_mb),
             "authType": "sasl",
-            "proxyPort": "11211",
             "bucketType": "couchbase",
             "flushEnabled": "1"
         }
 
-        resp = self._session.post("{}/pools/default/buckets".format(self.url), data=data)
-        log_r(resp)
-        resp.raise_for_status()
+        if server_major_version <= 4:
+            # Create a bucket with password for server_major_version < 5
+            # proxyPort should not be passed for 5.0.0 onwards for bucket creation
+            data["saslPassword"] = "password"
+            data["proxyPort"] = "11211"
+
+        resp = ""
+        try:
+            resp = self._session.post("{}/pools/default/buckets".format(self.url), data=data)
+            log_r(resp)
+            resp.raise_for_status()
+        except HTTPError as h:
+            log_info("resp code: {}; resp text: {}; error: {}".format(resp, resp.json(), h))
+            raise
+
+        # Create a user with username=bucketname
+        if server_major_version >= 5:
+            create_internal_rbac_bucket_user(self.url, name)
 
         # Create client an retry until KeyNotFound error is thrown
         start = time.time()
@@ -300,13 +368,13 @@ class CouchbaseServer:
             if time.time() - start > keywords.constants.CLIENT_REQUEST_TIMEOUT:
                 raise Exception("TIMEOUT while trying to create server buckets.")
             try:
-                bucket = Bucket("couchbase://{}/{}".format(self.host, name))
+                bucket = Bucket("couchbase://{}/{}".format(self.host, name), password='password')
                 bucket.get('foo')
             except NotFoundError:
                 log_info("Key not found error: Bucket is ready!")
                 break
             except CouchbaseError as e:
-                log_info("Error from server: Retrying ...", e)
+                log_info("Error from server: {}, Retrying ...". format(e))
                 time.sleep(1)
                 continue
 
@@ -319,8 +387,7 @@ class CouchbaseServer:
         Deletes docs that follow the below format
         _sync:rev:att_doc:34:1-e7fa9a5e6bb25f7a40f36297247ca93e
         """
-
-        b = Bucket("couchbase://{}/{}".format(self.host, bucket))
+        b = Bucket("couchbase://{}/{}".format(self.host, bucket), password='password')
 
         cached_rev_doc_ids = []
         b.n1ql_query("CREATE PRIMARY INDEX ON `{}`".format(bucket)).execute()
@@ -338,7 +405,7 @@ class CouchbaseServer:
         Returns server doc ids matching a prefix (ex. '_sync:rev:')
         """
 
-        b = Bucket("couchbase://{}/{}".format(self.host, bucket))
+        b = Bucket("couchbase://{}/{}".format(self.host, bucket), password='password')
 
         found_ids = []
         b.n1ql_query("CREATE PRIMARY INDEX ON `{}`".format(bucket)).execute()

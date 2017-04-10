@@ -5,9 +5,10 @@
   "compressResponses": false,
   "AdminInterface": "0.0.0.0:4985",
   "cluster_config": {
-    "server":"{{ scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
+    "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
     "data_dir":".",
-    "bucket":"data-bucket"
+    "bucket":"data-bucket",
+    "password": "password"
   },
   "databases": {
     "db": {
@@ -76,8 +77,9 @@
         }
       },
       "feed_type": "DCPSHARD",
-      "server": "{{ scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
+      "server": "{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
       "bucket": "data-bucket",
+      "password": "password",
       "users": {
         "GUEST": {
           "disabled": true,
@@ -88,8 +90,10 @@
       },
       "channel_index": {
         "num_shards": 64,
-        "server": "{{ scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
+        "server": "{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
         "bucket": "index-bucket",
+        "username":"index-bucket",
+        "password": "password",
         "writer": {{ is_index_writer }}
       }
     }

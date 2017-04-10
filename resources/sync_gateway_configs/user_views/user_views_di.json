@@ -10,8 +10,9 @@
     "*"
   ],
   "cluster_config": {
-    "server": "http://{{ couchbase_server_primary_node }}:8091",
+    "server": "{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
     "bucket": "data-bucket",
+    "password": "password",
     "data_dir": "."
   },
   "databases": {
@@ -21,13 +22,16 @@
           "enabled":true
         }
       },
-      "server": "http://{{ couchbase_server_primary_node }}:8091",
+      "server": "{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
       "channel_index": {
-        "server": "http://{{ couchbase_server_primary_node }}:8091",
+        "server": "{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
         "bucket":"index-bucket",
+        "username":"index-bucket",
+        "password": "password",
         "writer":{{ is_index_writer }}
       },
       "bucket": "data-bucket",
+      "password": "password",
       "roles": {
         "Scientist": {
           "admin_channels": [
