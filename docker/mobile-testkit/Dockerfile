@@ -40,3 +40,6 @@ RUN pip install -r requirements.txt
 # set python env
 ENV PYTHONPATH=$PYTHONPATH:.
 ENV ANSIBLE_CONFIG=ansible.cfg
+
+# Remove later, working on end to end automation
+CMD ["/bin/bash"]

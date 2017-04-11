@@ -1,5 +1,8 @@
 import argparse
 import docker
+import tarfile
+import os
+import io
 
 from keywords.exceptions import DockerError
 
@@ -42,9 +45,13 @@ def remove_containers(docker_client):
 
 def create_cluster(clean, network_name, number_of_nodes, public_key_path):
 
-    print('Pulling sethrosetter/centos7-systemd-sshd image ...')
     docker_client = docker.from_env()
+
+    print('Pulling sethrosetter/centos7-systemd-sshd image ...')
     docker_client.images.pull('sethrosetter/centos7-systemd-sshd')
+
+    print('Pulling couchbase/mobile-testkit image ...')
+    docker_client.images.pull('couchbase/mobile-testkit')
 
     if clean:
         print('Cleaning environment')
@@ -57,21 +64,55 @@ def create_cluster(clean, network_name, number_of_nodes, public_key_path):
 
     # Loop through nodes, start them on the network that was just created
     print('Starting {} containers on network {} ...'.format(number_of_nodes, network_name))
-    for i in range(number_of_nodes):
 
-        container_name = '{}_{}'.format(network_name, i)
+    # Create tarfile of public key to upload to all the containers.
+    # The tar file will be automatically extracted on the target after copy.
+    # HACK: Our public key that we pass will automatically be untared as authorized_users in
+    # the container
+    tarfile_name = 'pub_key.tar'
+    with tarfile.open(tarfile_name, 'w') as tar_file:
+        tar_file.add(public_key_path, arcname='authorized_users')
+
+    # Open tarfile as stream
+    tarfile_stream = open(tarfile_name, "rb")
+
+    container_names = ['{}_{}'.format(network_name, i) for i in range(number_of_nodes)]
+    for container_name in container_names:
+
         print('Starting container: {} on network: {}'.format(container_name, network_name))
 
         container = docker_client.containers.run(
             'sethrosetter/centos7-systemd-sshd',
             detach=True,
             name=container_name,
-            networks=[network_name],
             volumes={
                 '/sys/fs/cgroup': {'bind': '/sys/fs/cgroup', 'mode': 'ro'}
             }
         )
         network.connect(container)
+
+        # Deploy key to docker containers
+        # HACK: Currently the docker python client only supports copying tar files from host to client
+        print('Deploying key: {} to {}:/root/.ssh/authorized_users'.format(public_key_path, container_name))
+        docker_client.api.put_archive(
+            container=container.id,
+            path='/root/.ssh',
+            data=tarfile_stream
+        )
+
+    # Remove .tar.gz
+    tarfile_stream.close()
+    os.remove(tarfile_name)
+
+    # Start testkit container
+    print("Starting container: 'mobile-testkit' on network: {}".format(network_name))
+    testkit_container = docker_client.containers.run(
+        'couchbase/mobile-testkit',
+        detach=True,
+        name='mobile-testkit'
+    )
+    network.connect(testkit_container)
+
 
 
 if __name__ == '__main__':
