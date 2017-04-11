@@ -15,6 +15,8 @@ from keywords.remoteexecutor import RemoteExecutor
 from keywords.exceptions import CBServerError
 from keywords.exceptions import ProvisioningError
 from keywords.exceptions import TimeoutError
+from keywords.exceptions import RBACUserCreationError
+from keywords.exceptions import RBACUserDeletionError
 from keywords.utils import log_r
 from keywords.utils import log_info
 from keywords.utils import log_debug
@@ -81,7 +83,7 @@ def create_internal_rbac_bucket_user(url, bucketname):
         resp.raise_for_status()
     except HTTPError as h:
         log_info("resp code: {}; error: {}".format(resp, h))
-        raise
+        raise RBACUserCreationError(h)
 
 
 def delete_internal_rbac_bucket_user(url, bucketname):
@@ -101,7 +103,7 @@ def delete_internal_rbac_bucket_user(url, bucketname):
         resp.raise_for_status()
     except HTTPError as h:
         log_info("resp code: {}; error: {}".format(resp, h))
-        raise
+        raise RBACUserDeletionError(h)
 
 
 class CouchbaseServer:
