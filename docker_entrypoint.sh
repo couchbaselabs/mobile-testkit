@@ -9,7 +9,7 @@ sed -i 's/remote_user = vagrant/remote_user = root/' ansible.cfg
 pool_file="resources/pool.json"
 touch ${pool_file}
 
-pool='{"ips":["host1","host2","host3","host4","host5"]}'
+pool='{"ips":["host0","host1","host2","host3","host4"]}'
 echo ${pool} > ${pool_file}
 
 # Generate cluster configs

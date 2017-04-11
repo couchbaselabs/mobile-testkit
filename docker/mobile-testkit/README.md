@@ -5,12 +5,12 @@ https://github.com/alvaroaleman/docker-centos7-systemd-sshd/blob/master/Dockerfi
 sshd and systemd are currently required to run the sync gateway functional tests
 
 ```
-$ docker pull alvaroaleman/centos7-systemd-sshd
+$ sethrosetter/centos7-systemd-sshd
 ```
 
 # Create a network with the number of hosts you require
 ```
-$ ./create_hosts cbl 5
+$ ./create_hosts cbl 5 ~/.ssh/id_rsa.pub
 ```
 
 ## Build docker image
