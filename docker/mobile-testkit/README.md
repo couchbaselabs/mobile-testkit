@@ -1,4 +1,9 @@
 ## Download images with sshd and systemd install for your target cluster
+
+https://github.com/alvaroaleman/docker-centos7-systemd-sshd/blob/master/Dockerfile
+
+sshd and systemd are currently required to run the sync gateway functional tests
+
 ```
 $ docker pull alvaroaleman/centos7-systemd-sshd
 ```
