@@ -48,3 +48,11 @@ class DocumentError(Error):
 
 class LogScanningError(Error):
     pass
+
+
+class RBACUserCreationError(Error):
+    pass
+
+
+class RBACUserDeletionError(Error):
+    pass
