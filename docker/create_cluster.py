@@ -1,9 +1,8 @@
 import argparse
-import os
-import tarfile
+import subprocess
+import json
 
 import docker
-import dockerpty
 
 from keywords.exceptions import DockerError
 
@@ -65,18 +64,6 @@ def create_cluster(clean, network_name, number_of_nodes, public_key_path):
 
     # Loop through nodes, start them on the network that was just created
     print('Starting {} containers on network {} ...'.format(number_of_nodes, network_name))
-
-    # Create tarfile of public key to upload to all the containers.
-    # The tar file will be automatically extracted on the target after copy.
-    # HACK: Our public key that we pass will automatically be untared as authorized_users in
-    # the container
-    tarfile_name = 'pub_key.tar'
-    with tarfile.open(tarfile_name, 'w') as tar_file:
-        tar_file.add(public_key_path, arcname='authorized_users')
-
-    # Open tarfile as stream
-    tarfile_stream = open(tarfile_name, "rb")
-
     container_names = ['{}_{}'.format(network_name, i) for i in range(number_of_nodes)]
     for container_name in container_names:
 
@@ -92,18 +79,21 @@ def create_cluster(clean, network_name, number_of_nodes, public_key_path):
         )
         network.connect(container)
 
-        # Deploy key to docker containers
-        # HACK: Currently the docker python client only supports copying tar files from host to client
+        # Deploy public key to cluster containers
+        # HACK: Using subprocess here since docker-py does not support copy
+        # TODO: Use .tar with client.put_achive
         print('Deploying key: {} to {}:/root/.ssh/authorized_users'.format(public_key_path, container_name))
-        docker_client.api.put_archive(
-            container=container.id,
-            path='/root/.ssh',
-            data=tarfile_stream
-        )
+        subprocess.check_call([
+            'docker',
+            'cp',
+            public_key_path,
+            '{}:/root/.ssh/authorized_keys'.format(container_name)
+        ])
 
-    # Remove .tar.gz
-    tarfile_stream.close()
-    os.remove(tarfile_name)
+    # Write cluster hosts to pool.json
+    with open('/tmp/pool.json', 'w') as f:
+        hosts = {'ips': container_names}
+        f.write(json.dumps(hosts))
 
     # Start testkit container
     container_name = 'mobile-testkit'
@@ -112,39 +102,24 @@ def create_cluster(clean, network_name, number_of_nodes, public_key_path):
         'couchbase/mobile-testkit',
         name=container_name,
         detach=True,
-        tty=True
+        tty=True,
+        volumes={
+            '/tmp/': {'bind': '/tmp/', 'mode': 'ro'}
+        }
     )
     network.connect(container)
 
-    import pdb
-    pdb.set_trace()
-
-    tarfile_name = 'priv_key.tar'
+    # Deploy private key to mobile-testkit container
+    # HACK: Using subprocess here since docker-py does not support copy
+    # TODO: Use .tar with client.put_achive
     private_key_path = public_key_path.replace('.pub', '')
-    private_key_name = os.path.split(private_key_path)[-1]
-    with tarfile.open(tarfile_name, 'w') as tar_file:
-        tar_file.add(private_key_path, arcname=private_key_name)
-
-    # Open tarfile as stream
-    tarfile_stream = open(tarfile_name, "rb")
-
     print('Deploying private key: {} to {}:/root/.ssh/'.format(private_key_path, container_name))
-    docker_client.api.put_archive(
-        container=container.id,
-        path='/root/.ssh',
-        data=tarfile_stream
-    )
-
-    # Remove .tar.gz
-    tarfile_stream.close()
-    os.remove(tarfile_name)
-
-    import pdb
-    pdb.set_trace()
-
-    # Drop into mobile-testkit shell
-    # print("Starting /bin/bash for 'mobile-testkit'")
-    # dockerpty.PseudoTerminal(docker_client, container).start()
+    subprocess.check_call([
+        'docker',
+        'cp',
+        private_key_path,
+        '{}:/root/.ssh/'.format(container_name)
+    ])
 
 
 if __name__ == '__main__':
