@@ -37,6 +37,9 @@ RUN git checkout feature/hello-docker
 # Install dependencies
 RUN pip install -r requirements.txt
 
+# Create .ssh directory for key installation
+RUN mkdir -p /root/.ssh
+
 # set python env
 ENV PYTHONPATH=$PYTHONPATH:.
 ENV ANSIBLE_CONFIG=ansible.cfg

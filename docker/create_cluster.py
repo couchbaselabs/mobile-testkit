@@ -1,8 +1,9 @@
 import argparse
-import docker
-import tarfile
 import os
-import io
+import tarfile
+
+import docker
+import dockerpty
 
 from keywords.exceptions import DockerError
 
@@ -105,14 +106,45 @@ def create_cluster(clean, network_name, number_of_nodes, public_key_path):
     os.remove(tarfile_name)
 
     # Start testkit container
+    container_name = 'mobile-testkit'
     print("Starting container: 'mobile-testkit' on network: {}".format(network_name))
-    testkit_container = docker_client.containers.run(
+    container = docker_client.containers.run(
         'couchbase/mobile-testkit',
+        name=container_name,
         detach=True,
-        name='mobile-testkit'
+        tty=True
     )
-    network.connect(testkit_container)
+    network.connect(container)
 
+    import pdb
+    pdb.set_trace()
+
+    tarfile_name = 'priv_key.tar'
+    private_key_path = public_key_path.replace('.pub', '')
+    private_key_name = os.path.split(private_key_path)[-1]
+    with tarfile.open(tarfile_name, 'w') as tar_file:
+        tar_file.add(private_key_path, arcname=private_key_name)
+
+    # Open tarfile as stream
+    tarfile_stream = open(tarfile_name, "rb")
+
+    print('Deploying private key: {} to {}:/root/.ssh/'.format(private_key_path, container_name))
+    docker_client.api.put_archive(
+        container=container.id,
+        path='/root/.ssh',
+        data=tarfile_stream
+    )
+
+    # Remove .tar.gz
+    tarfile_stream.close()
+    os.remove(tarfile_name)
+
+    import pdb
+    pdb.set_trace()
+
+    # Drop into mobile-testkit shell
+    # print("Starting /bin/bash for 'mobile-testkit'")
+    # dockerpty.PseudoTerminal(docker_client, container).start()
 
 
 if __name__ == '__main__':
