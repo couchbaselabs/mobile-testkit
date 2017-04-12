@@ -8,7 +8,7 @@ from keywords.exceptions import ProvisioningError
 from keywords.utils import log_warn
 
 from libraries.testkit.config import Config
-from libraries.testkit.cluster import Cluster
+from utilities.enable_disable_ssl_cluster import is_cbs_ssl_enabled
 
 from keywords.utils import log_info
 
@@ -111,11 +111,10 @@ def install_sync_gateway(cluster_config, sync_gateway_config):
     if not sync_gateway_config.skip_bucketcreation:
         create_server_buckets(cluster_config, sync_gateway_config)
 
-    cluster = Cluster(config=cluster_config)
     server_port = 8091
     server_scheme = "http"
 
-    if cluster.cbs_ssl:
+    if is_cbs_ssl_enabled(cluster_config):
         server_port = 18091
         server_scheme = "https"
 
