@@ -11,3 +11,6 @@ mv /tmp/pool.json resources/pool.json
 
 # Generate cluster configs
 python libraries/utilities/generate_clusters_from_pool.py
+
+# Run single test
+pytest pytest -s --mode=cc --server-version=4.6.1 --sync-gateway-version=1.4.0.2-3 -k "test_attachment_revpos_when_ancestor_unavailable" testsuites/syncgateway/functional/tests
