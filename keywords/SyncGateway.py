@@ -12,7 +12,7 @@ from keywords.utils import version_and_build
 from keywords.utils import hostname_for_url
 from keywords.utils import log_info
 
-from exceptions import ProvisioningError
+from keywords.exceptions import ProvisioningError
 
 from libraries.provision.ansible_runner import AnsibleRunner
 
