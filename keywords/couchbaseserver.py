@@ -135,7 +135,9 @@ class CouchbaseServer:
 
         self._session = Session()
         self._session.auth = ("Administrator", "password")
-        self._session.verify = False
+
+        if self.cbs_ssl:
+            self._session.verify = False
 
     def get_bucket_names(self):
         """ Returns list of the bucket names for a given Couchbase Server."""

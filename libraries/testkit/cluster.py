@@ -46,8 +46,7 @@ class Cluster:
         sgs = [{"name": sg["name"], "ip": sg["ip"]} for sg in cluster["sync_gateways"]]
         acs = [{"name": ac["name"], "ip": ac["ip"]} for ac in cluster["sg_accels"]]
 
-        if "cbs_ssl_enabled" in cluster:
-            self.cbs_ssl = cluster["cbs_ssl_enabled"]
+        self.cbs_ssl = cluster["cbs_ssl_enabled"]
 
         log_info("cbs: {}".format(cbs))
         log_info("sgs: {}".format(sgs))
@@ -113,11 +112,10 @@ class Cluster:
 
         log_info(">>> Starting sync_gateway with configuration: {}".format(config_path_full))
 
-        cluster = Cluster(config=self._cluster_config)
         server_port = 8091
         server_scheme = "http"
 
-        if cluster.cbs_ssl:
+        if self.cbs_ssl:
             server_port = 18091
             server_scheme = "https"
 

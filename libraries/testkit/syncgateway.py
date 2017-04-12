@@ -28,6 +28,10 @@ class SyncGateway:
         self.server_port = 8091
         self.server_scheme = "http"
 
+        if is_cbs_ssl_enabled(self.cluster_config):
+            self.server_port = 18091
+            self.server_scheme = "https"
+
     def info(self):
         r = requests.get(self.url)
         r.raise_for_status()
@@ -44,10 +48,6 @@ class SyncGateway:
         conf_path = os.path.abspath(config)
         log.info(">>> Starting sync_gateway with configuration: {}".format(conf_path))
 
-        if is_cbs_ssl_enabled(self.cluster_config):
-            self.server_port = 18091
-            self.server_scheme = "https"
-
         status = self.ansible_runner.run_ansible_playbook(
             "start-sync-gateway.yml",
             extra_vars={
@@ -62,10 +62,6 @@ class SyncGateway:
     def restart(self, config):
         conf_path = os.path.abspath(config)
         log.info(">>> Restarting sync_gateway with configuration: {}".format(conf_path))
-
-        if is_cbs_ssl_enabled(self.cluster_config):
-            self.server_port = 18091
-            self.server_scheme = "https"
 
         status = self.ansible_runner.run_ansible_playbook(
             "reset-sync-gateway.yml",
