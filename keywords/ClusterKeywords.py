@@ -13,8 +13,8 @@ from keywords.SyncGateway import verify_sync_gateway_version
 from keywords.SyncGateway import verify_sg_accel_version
 from libraries.testkit.cluster import Cluster
 
-from constants import CLUSTER_CONFIGS_DIR
-from exceptions import ProvisioningError
+from keywords.constants import CLUSTER_CONFIGS_DIR
+from keywords.exceptions import ProvisioningError
 from keywords import couchbaseserver
 
 
