@@ -69,10 +69,12 @@ def create_cluster(clean, network_name, number_of_nodes, public_key_path):
 
         print('Starting container: {} on network: {}'.format(container_name, network_name))
 
+        # Priveledged is required for some ansible playbooks
         container = docker_client.containers.run(
             'sethrosetter/centos7-systemd-sshd',
             detach=True,
             name=container_name,
+            privileged=True,
             volumes={
                 '/sys/fs/cgroup': {'bind': '/sys/fs/cgroup', 'mode': 'ro'}
             }

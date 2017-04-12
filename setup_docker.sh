@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 
+# In case the docker image is not built with the latest testkit checkout
+git pull
+
 # Create an ansible config from template
 mv ansible.cfg.example ansible.cfg
 
