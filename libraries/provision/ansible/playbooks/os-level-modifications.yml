@@ -1,22 +1,20 @@
 ---
 # https://github.com/couchbase/sync_gateway/issues/1193#issuecomment-150395613
 - hosts: pool
+  any_errors_fatal: true
   become: yes
+
 
   tasks:
   - name: OS | Disable scatter / gather for eth0 (see http://bit.ly/1R25bbE)
     shell: ethtool -K eth0 sg off
-    ignore_errors: yes
 
   - name: OS | Disable selinux
     selinux: state=disabled
-    ignore_errors: yes
 
   - name: OS | Sysctl file to disable memory overcommit
     copy: src=files/sysctld_disable_memory_overcommit.conf dest=/etc/sysctl.d/20-disable-memory-overcommit.conf owner=root group=root mode=0644
-    ignore_errors: yes
 
   - name: OS | Reload sysctl from config files
     shell: sysctl --system
-    ignore_errors: yes
 
