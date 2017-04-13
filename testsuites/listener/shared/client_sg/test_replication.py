@@ -1099,7 +1099,7 @@ def test_replication_with_session_cookie_short_ttl(setup_client_syncgateway_test
     client.create_database(url=ls_url, name=ls_db)
 
     # Get session header for user_1
-    cookie_name, session_id = client.create_session(url=sg_admin_url, db=sg_db, name="user_1", password="foo", ttl=1)
+    cookie_name, session_id = client.create_session(url=sg_admin_url, db=sg_db, name="user_1", password="foo", ttl=3)
 
     # session_header: SyncGatewaySession=a483be3248f740d810c09eb2c1b1f9198141bb15; Path=/db; Expires=Fri, 14 Apr 2017 03:54:46 GMT
     session_header = "{}={}".format(cookie_name, session_id)
@@ -1147,7 +1147,7 @@ def test_replication_with_session_cookie_short_ttl(setup_client_syncgateway_test
         assert len(sg_docs) == num_docs_pushed
 
         num_docs_pushed -= 1
-        time.sleep(2)
+        time.sleep(5)
 
     all_docs = client.merge(ls_docs, sg_docs)
     log_info(all_docs)
