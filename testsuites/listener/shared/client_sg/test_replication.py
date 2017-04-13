@@ -1058,3 +1058,99 @@ def test_verify_open_revs_with_revs_limit_push_conflict(setup_client_syncgateway
 
     expected_sg_revs = [ls_current_doc["_rev"], sg_current_doc["_rev"]]
     client.verify_open_revs(url=sg_admin_url, db=sg_db, doc_id=sg_current_doc["_id"], expected_open_revs=expected_sg_revs)
+
+
+@pytest.mark.sanity
+@pytest.mark.listener
+@pytest.mark.syncgateway
+@pytest.mark.replication
+@pytest.mark.session
+def test_replication_with_session_cookie_short_ttl(setup_client_syncgateway_test):
+    """Regression test for https://issues.couchbase.com/browse/CBSE-3606
+    1. SyncGateway Config with guest disabled = true and One user added (e.g. user1 / 1234)
+    2. Create a new session on SGW for the user1 by using POST /_session.
+       Capture the SyncGatewaySession cookie from the set-cookie in the response header.
+    3. Start continuous push and pull replicator on the LiteServ with SyncGatewaySession cookie.
+       Make sure that both replicators start correctly
+    4. Delete the session from SGW by sending DELETE /_sessions/ to SGW
+    5. Cancel both push and pull replicator on the LiteServ
+    6. Repeat step 1 and 2
+    """
+
+    ls_db = "ls_db"
+    sg_db = "db"
+
+    cluster_config = setup_client_syncgateway_test["cluster_config"]
+    sg_mode = setup_client_syncgateway_test["sg_mode"]
+    ls_url = setup_client_syncgateway_test["ls_url"]
+    sg_url = setup_client_syncgateway_test["sg_url"]
+    sg_admin_url = setup_client_syncgateway_test["sg_admin_url"]
+
+    sg_config = sync_gateway_config_path_for_mode("listener_tests/listener_tests_user", sg_mode)
+    c = cluster.Cluster(config=cluster_config)
+    c.reset(sg_config_path=sg_config)
+
+    log_info("Running 'test_replication_with_session_cookie_short_ttl'")
+    log_info("ls_url: {}".format(ls_url))
+    log_info("sg_admin_url: {}".format(sg_admin_url))
+    log_info("sg_url: {}".format(sg_url))
+
+    client = MobileRestClient()
+    client.create_database(url=ls_url, name=ls_db)
+
+    # Get session header for user_1
+    cookie_name, session_id = client.create_session(url=sg_admin_url, db=sg_db, name="user_1", password="foo", ttl=1)
+
+    # session_header: SyncGatewaySession = a483be3248f740d810c09eb2c1b1f9198141bb15; Path=/db; Expires=Fri, 14 Apr 2017 03:54:46 GMT
+    session_header = "{}={}; Path=/{}".format(cookie_name, session_id, sg_db)
+
+    log_info("session_header: {}".format(session_header))
+    session = (cookie_name, session_id)
+
+    # Start authenticated push replication
+    repl_one = client.start_replication(
+        url=ls_url,
+        continuous=True,
+        from_db=ls_db,
+        to_url=sg_url,
+        to_db=sg_db,
+        to_auth=session_header
+    )
+
+    # Start authenticated pull replication
+    repl_two = client.start_replication(
+        url=ls_url,
+        continuous=True,
+        from_url=sg_url,
+        from_db=sg_db,
+        from_auth=session_header,
+        to_db=ls_db,
+    )
+
+    # Wait for 2 replications to be 'Idle', On .NET they may not be immediately available via _active_tasks
+    client.wait_for_replication_status_idle(ls_url, repl_one)
+    client.wait_for_replication_status_idle(ls_url, repl_two)
+
+    replications = client.get_replications(ls_url)
+    assert len(replications) == 2, "2 replications (push / pull should be running)"
+
+    num_docs_pushed = 10
+
+    while num_docs_pushed > 0:
+        # Sanity test docs
+        ls_prefix = "ls_doc_" + str(num_docs_pushed)
+        ls_docs = client.add_docs(url=ls_url, db=ls_db, number=num_docs_pushed, id_prefix=ls_prefix, channels=["ABC"])
+        assert len(ls_docs) == num_docs_pushed
+
+        sg_prefix = "sg_doc_" + str(num_docs_pushed)
+        sg_docs = client.add_docs(url=sg_url, db=sg_db, number=num_docs_pushed, id_prefix=sg_prefix, auth=session, channels=["ABC"])
+        assert len(sg_docs) == num_docs_pushed
+
+        num_docs_pushed -= 1
+        time.sleep(2)
+
+    all_docs = client.merge(ls_docs, sg_docs)
+    log_info(all_docs)
+
+    client.verify_docs_present(url=sg_admin_url, db=sg_db, expected_docs=all_docs)
+    client.verify_docs_present(url=ls_url, db=ls_db, expected_docs=all_docs)
