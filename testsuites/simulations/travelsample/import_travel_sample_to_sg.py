@@ -42,21 +42,20 @@ def main():
 
     assert num_all_docs == 31591
 
+    for doc_id in doc_ids:
 
-    # for doc_id in doc_ids:
-    #
-    #     # Get doc from SDK
-    #     doc = cb.get(doc_id)
-    #     doc_id = doc.key
-    #     doc_body = doc.value
-    #
-    #     # Add doc to Sync Gateway
-    #     req_body = doc_body
-    #     req_body['_id'] = doc_id
-    #     resp = requests.post('{}/db/'.format(sg_url), data=json.dumps(req_body))
-    #     resp.raise_for_status()
-    #
-    #     print(doc_id)
+        # Get doc from SDK
+        doc = cb.get(doc_id)
+        doc_id = doc.key
+        doc_body = doc.value
+
+        # Add doc to Sync Gateway
+        req_body = doc_body
+        req_body['_id'] = doc_id
+        resp = requests.post('{}/db/'.format(sg_url), data=json.dumps(req_body), auth=('admin', 'pass'))
+        resp.raise_for_status()
+
+        print(doc_id)
 
 
 if __name__ == '__main__':
