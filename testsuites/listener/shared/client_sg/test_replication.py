@@ -1070,11 +1070,11 @@ def test_replication_with_session_cookie_short_ttl(setup_client_syncgateway_test
     1. SyncGateway Config with guest disabled = true and One user added (e.g. user1 / 1234)
     2. Create a new session on SGW for the user1 by using POST /_session.
        Capture the SyncGatewaySession cookie from the set-cookie in the response header.
-    3. Start continuous push and pull replicator on the LiteServ with SyncGatewaySession cookie.
-       Make sure that both replicators start correctly
-    4. Delete the session from SGW by sending DELETE /_sessions/ to SGW
-    5. Cancel both push and pull replicator on the LiteServ
-    6. Repeat step 1 and 2
+    3. Start continuous push replicator on the LiteServ with SyncGatewaySession cookie.
+       Make sure that the replicators start correctly
+    4. Cancel both push and pull replicator on the LiteServ
+    5. Delete the session from SGW by sending DELETE /_sessions/ to SGW
+    6. Repeat steps 2 through 6
     """
 
     ls_db = "ls_db"
@@ -1099,13 +1099,12 @@ def test_replication_with_session_cookie_short_ttl(setup_client_syncgateway_test
     client.create_database(url=ls_url, name=ls_db)
 
     # Get session header for user_1
-    cookie_name, session_id = client.create_session(url=sg_admin_url, db=sg_db, name="user_1", password="foo", ttl=3)
+    cookie_name, session_id = client.create_session(url=sg_admin_url, db=sg_db, name="user_1", password="foo", ttl=10)
 
     # session_header: SyncGatewaySession=a483be3248f740d810c09eb2c1b1f9198141bb15; Path=/db; Expires=Fri, 14 Apr 2017 03:54:46 GMT
     session_header = "{}={}".format(cookie_name, session_id)
 
     log_info("session_header: {}".format(session_header))
-    session = (cookie_name, session_id)
 
     # Start authenticated push replication
     repl_one = client.start_replication(
@@ -1117,40 +1116,108 @@ def test_replication_with_session_cookie_short_ttl(setup_client_syncgateway_test
         to_auth=session_header
     )
 
-    # Start authenticated pull replication
-    repl_two = client.start_replication(
-        url=ls_url,
-        continuous=True,
-        from_url=sg_url,
-        from_db=sg_db,
-        from_auth=session_header,
-        to_db=ls_db,
-    )
-
-    # Wait for 2 replications to be 'Idle', On .NET they may not be immediately available via _active_tasks
+    # Wait for 1 replications to be 'Idle', On .NET they may not be immediately available via _active_tasks
     client.wait_for_replication_status_idle(ls_url, repl_one)
-    client.wait_for_replication_status_idle(ls_url, repl_two)
 
     replications = client.get_replications(ls_url)
-    assert len(replications) == 2, "2 replications (push / pull should be running)"
+    assert len(replications) == 1, "1 replications (push should be running)"
 
-    num_docs_pushed = 10
+    num_docs_pushed = 1
+    attempts = 3
 
-    while num_docs_pushed > 0:
+    # Add 3 docs and sleep in between
+    while attempts > 0:
         # Sanity test docs
-        ls_prefix = "ls_doc_" + str(num_docs_pushed)
+        ls_prefix = "ls_doc_" + str(attempts)
         ls_docs = client.add_docs(url=ls_url, db=ls_db, number=num_docs_pushed, id_prefix=ls_prefix, channels=["ABC"])
         assert len(ls_docs) == num_docs_pushed
 
-        sg_prefix = "sg_doc_" + str(num_docs_pushed)
-        sg_docs = client.add_docs(url=sg_url, db=sg_db, number=num_docs_pushed, id_prefix=sg_prefix, auth=session, channels=["ABC"])
-        assert len(sg_docs) == num_docs_pushed
-
-        num_docs_pushed -= 1
+        attempts -= 1
+        # Sleep for 5 seconds after every add so as to expire the ttl
         time.sleep(5)
 
-    all_docs = client.merge(ls_docs, sg_docs)
+    all_docs = client.merge(ls_docs)
     log_info(all_docs)
 
     client.verify_docs_present(url=sg_admin_url, db=sg_db, expected_docs=all_docs)
     client.verify_docs_present(url=ls_url, db=ls_db, expected_docs=all_docs)
+
+    # Cancel the replications
+    # Stop repl_one
+    client.stop_replication(
+        url=ls_url,
+        continuous=True,
+        from_db=ls_db,
+        to_url=sg_url,
+        to_db=sg_db,
+        to_auth=session_header
+    )
+
+    client.wait_for_no_replications(ls_url)
+    replications = client.get_replications(ls_url)
+    assert len(replications) == 0, "All replications should be stopped"
+
+    # Delete the session
+    client.delete_session(url=sg_admin_url, db=sg_db, user_name="user_1", session_id=session_id)
+
+    # Get session header for user_1
+    cookie_name, session_id = client.create_session(url=sg_admin_url, db=sg_db, name="user_1", password="foo", ttl=10)
+
+    # session_header: SyncGatewaySession=a483be3248f740d810c09eb2c1b1f9198141bb15; Path=/db; Expires=Fri, 14 Apr 2017 03:54:46 GMT
+    session_header = "{}={}".format(cookie_name, session_id)
+
+    log_info("session_header: {}".format(session_header))
+
+    # Start authenticated push replication
+    repl_one = client.start_replication(
+        url=ls_url,
+        continuous=True,
+        from_db=ls_db,
+        to_url=sg_url,
+        to_db=sg_db,
+        to_auth=session_header
+    )
+
+    # Wait for 1 replications to be 'Idle', On .NET they may not be immediately available via _active_tasks
+    client.wait_for_replication_status_idle(ls_url, repl_one)
+
+    replications = client.get_replications(ls_url)
+    assert len(replications) == 1, "1 replications (push should be running)"
+
+    num_docs_pushed = 1
+    attempts = 3
+
+    # Add 3 docs and sleep in between
+    while attempts > 0:
+        # Sanity test docs
+        ls_prefix = "ls_doc_" + str(attempts)
+        ls_docs = client.add_docs(url=ls_url, db=ls_db, number=num_docs_pushed, id_prefix=ls_prefix, channels=["ABC"])
+        assert len(ls_docs) == num_docs_pushed
+
+        attempts -= 1
+        # Sleep for 5 seconds after every add so as to expire the ttl
+        time.sleep(5)
+
+    all_docs = client.merge(ls_docs)
+    log_info(all_docs)
+
+    client.verify_docs_present(url=sg_admin_url, db=sg_db, expected_docs=all_docs)
+    client.verify_docs_present(url=ls_url, db=ls_db, expected_docs=all_docs)
+
+    # Cancel the replications
+    # Stop repl_one
+    client.stop_replication(
+        url=ls_url,
+        continuous=True,
+        from_db=ls_db,
+        to_url=sg_url,
+        to_db=sg_db,
+        to_auth=session_header
+    )
+
+    client.wait_for_no_replications(ls_url)
+    replications = client.get_replications(ls_url)
+    assert len(replications) == 0, "All replications should be stopped"
+
+    # Delete the session
+    client.delete_session(url=sg_admin_url, db=sg_db, user_name="user_1", session_id=session_id)
