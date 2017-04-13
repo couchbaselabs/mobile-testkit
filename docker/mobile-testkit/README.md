@@ -1,45 +1,15 @@
-## Download images with sshd and systemd install for your target cluster
+### Running tests with docker image
 
-https://github.com/alvaroaleman/docker-centos7-systemd-sshd/blob/master/Dockerfile
-
-sshd and systemd are currently required to run the sync gateway functional tests
+IMPORTANT: This will copy your public / and private key to allow ssh access from mobile-testkit container to other clusters in the container.
 
 ```
-$ sethrosetter/centos7-systemd-sshd
+python docker/create_cluster.py --network-name cbl --number-of-nodes 5 --path-to-public-key ~/.ssh/id_rsa.pub --clean
 ```
 
-# Create a network with the number of hosts you require
+TODO: Automate this
 ```
-$ ./create_hosts cbl 5 ~/.ssh/id_rsa.pub
-```
-
-## Build docker image
-```
-$ docker build -t mobile-testkit .
-```
-
-## Run docker image
-
-```
-$ docker run --rm -it --network cbl mobile-testkit
-```
-
-```
-$ MOBILE_TEST_KIT_CMD="python libraries/provision/create_and_instantiate_cluster.py \    
---stackname=TestMTKDocker \     
---num-servers=1 \    
---server-type=m3.medium \
---num-sync-gateways=1 \
---sync-gateway-type=m3.medium \
---num-gatlings=1 \
---gatling-type=m3.medium \ 
---num-lbs=0 \     
---lb-type=m3.medium"
-
-$ docker run \
-  -e AWS_KEY=your_key \
-  -e AWS_ACCESS_KEY_ID=... \
-  -e AWS_SECRET_ACCESS_KEY=".." couchbase/mobile-testkit $MOBILE_TEST_KIT_CMD
+docker exec -it mobile-testkit /bin/bash
+./run_sg_tests.sh
 ```
 
 
