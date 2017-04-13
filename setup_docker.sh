@@ -10,7 +10,7 @@ mv ansible.cfg.example ansible.cfg
 sed -i 's/remote_user = vagrant/remote_user = root/' ansible.cfg
 
 # Copy mounted pool.json location where testkit can see it
-mv /tmp/pool.json resources/pool.json
+cp /tmp/pool.json resources/pool.json
 
 # Generate cluster configs
 python libraries/utilities/generate_clusters_from_pool.py

@@ -106,7 +106,7 @@ def create_cluster(clean, network_name, number_of_nodes, public_key_path):
         detach=True,
         tty=True,
         volumes={
-            '/tmp/pool.json': {'bind': '/tmp/', 'mode': 'ro'}
+            '/tmp/pool.json': {'bind': '/tmp/pool.json', 'mode': 'ro'}
         }
     )
     network.connect(container)
