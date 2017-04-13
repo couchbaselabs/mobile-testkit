@@ -1101,8 +1101,8 @@ def test_replication_with_session_cookie_short_ttl(setup_client_syncgateway_test
     # Get session header for user_1
     cookie_name, session_id = client.create_session(url=sg_admin_url, db=sg_db, name="user_1", password="foo", ttl=1)
 
-    # session_header: SyncGatewaySession = a483be3248f740d810c09eb2c1b1f9198141bb15; Path=/db; Expires=Fri, 14 Apr 2017 03:54:46 GMT
-    session_header = "{}={}; Path=/{}".format(cookie_name, session_id, sg_db)
+    # session_header: SyncGatewaySession=a483be3248f740d810c09eb2c1b1f9198141bb15; Path=/db; Expires=Fri, 14 Apr 2017 03:54:46 GMT
+    session_header = "{}={}".format(cookie_name, session_id)
 
     log_info("session_header: {}".format(session_header))
     session = (cookie_name, session_id)
