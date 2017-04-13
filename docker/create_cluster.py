@@ -33,9 +33,11 @@ def remove_containers(docker_client):
 
     containers = docker_client.containers.list(all=True)
     for container in containers:
+
+        # HACK: Calling stop and remove via docker-py will timeout frequently
         print('Stopping / removing container: {}'.format(container.name))
-        container.stop()
-        container.remove()
+        subprocess.check_call(['docker', 'stop', container.name])
+        subprocess.check_call(['docker', 'rm', container.name])
 
     # Verify that all containers have been removed
     containers = docker_client.containers.list(all=True)
@@ -64,7 +66,7 @@ def create_cluster(clean, network_name, number_of_nodes, public_key_path):
 
     # Loop through nodes, start them on the network that was just created
     print('Starting {} containers on network {} ...'.format(number_of_nodes, network_name))
-    container_names = ['{}_{}'.format(network_name, i) for i in range(number_of_nodes)]
+    container_names = ['{}.{}'.format(network_name, i) for i in range(number_of_nodes)]
     for container_name in container_names:
 
         print('Starting container: {} on network: {}'.format(container_name, network_name))
