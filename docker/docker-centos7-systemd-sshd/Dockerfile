@@ -1,8 +1,11 @@
-FROM alvaroaleman/centos7-systemd-sshd
+FROM centos/systemd
 
-# Update packages and install initscripts to workaround Couchbase Server installation
-# issue where it expects /etc/init.d/functions to exist
-RUN yum update -y systemd systemd-libs; yum install -y initscripts;
+MAINTAINER "Seth Rosetter" <seth.rosetter@gmail.com>
 
-# Remove key added by parent layer
-RUN rm -f /root/.ssh/authorized_keys
+RUN yum -y install openssh-server; systemctl enable sshd.service
+
+RUN mkdir -p /root/.ssh/
+
+EXPOSE 22
+
+CMD ["/usr/sbin/init"]
