@@ -309,7 +309,7 @@ python docker/create_cluster.py --network-name cbl --number-of-nodes 5 --path-to
 TODO: Automate this
 ```
 docker exec -it mobile-testkit /bin/bash
-./setup_docker.sh
+./run_sg_tests.sh
 ```
 
 
