@@ -8,6 +8,7 @@ from keywords.exceptions import ProvisioningError
 from keywords.utils import log_warn
 
 from libraries.testkit.config import Config
+from utilities.enable_disable_ssl_cluster import is_cbs_ssl_enabled
 
 from keywords.utils import log_info
 
@@ -110,6 +111,13 @@ def install_sync_gateway(cluster_config, sync_gateway_config):
     if not sync_gateway_config.skip_bucketcreation:
         create_server_buckets(cluster_config, sync_gateway_config)
 
+    server_port = 8091
+    server_scheme = "http"
+
+    if is_cbs_ssl_enabled(cluster_config):
+        server_port = 18091
+        server_scheme = "https"
+
     # Install Sync Gateway via Source or Package
     if sync_gateway_config.commit is not None:
         # Install from source
@@ -118,7 +126,9 @@ def install_sync_gateway(cluster_config, sync_gateway_config):
             extra_vars={
                 "sync_gateway_config_filepath": config_path,
                 "commit": sync_gateway_config.commit,
-                "build_flags": sync_gateway_config.build_flags
+                "build_flags": sync_gateway_config.build_flags,
+                "server_port": server_port,
+                "server_scheme": server_scheme
             }
         )
         if status != 0:
@@ -133,7 +143,9 @@ def install_sync_gateway(cluster_config, sync_gateway_config):
                 "couchbase_sync_gateway_package_base_url": sync_gateway_base_url,
                 "couchbase_sync_gateway_package": sync_gateway_package_name,
                 "couchbase_sg_accel_package": sg_accel_package_name,
-                "sync_gateway_config_filepath": config_path
+                "sync_gateway_config_filepath": config_path,
+                "server_port": server_port,
+                "server_scheme": server_scheme
             }
         )
         if status != 0:

@@ -4,6 +4,7 @@ import requests
 from requests.exceptions import ConnectionError
 from requests.exceptions import HTTPError
 from requests import Session
+from requests.packages.urllib3.exceptions import InsecureRequestWarning
 
 from couchbase.bucket import Bucket
 from couchbase.exceptions import CouchbaseError
@@ -23,9 +24,18 @@ from keywords.utils import log_debug
 from keywords.utils import log_error
 from keywords import types
 
+requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
-def get_server_version(host):
-    resp = requests.get("http://Administrator:password@{}:8091/pools".format(host))
+
+def get_server_version(host, cbs_ssl=False):
+    server_scheme = "http"
+    server_port = 8091
+
+    if cbs_ssl:
+        server_scheme = "https"
+        server_port = 18091
+
+    resp = requests.get("{}://Administrator:password@{}:{}/pools".format(server_scheme, host, server_port), verify=False)
     log_r(resp)
     resp.raise_for_status()
     resp_obj = resp.json()
@@ -38,8 +48,8 @@ def get_server_version(host):
     return "{}-{}".format(running_server_version_parts[0], running_server_version_parts[1])
 
 
-def verify_server_version(host, expected_server_version):
-    running_server_version = get_server_version(host)
+def verify_server_version(host, expected_server_version, cbs_ssl=False):
+    running_server_version = get_server_version(host, cbs_ssl=cbs_ssl)
     expected_server_version_parts = expected_server_version.split("-")
 
     # Check both version parts if expected version contains a build
@@ -111,15 +121,25 @@ class CouchbaseServer:
 
     def __init__(self, url):
         self.url = url
+        self.cbs_ssl = False
 
         # Strip http prefix and port to store host
-        host = self.url.replace("http://", "")
-        host = host.replace(":8091", "")
+        if "https" in self.url:
+            host = self.url.replace("https://", "")
+            host = host.replace(":18091", "")
+            self.cbs_ssl = True
+        else:
+            host = self.url.replace("http://", "")
+            host = host.replace(":8091", "")
+
         self.host = host
         self.remote_executor = RemoteExecutor(self.host)
 
         self._session = Session()
         self._session.auth = ("Administrator", "password")
+
+        if self.cbs_ssl:
+            self._session.verify = False
 
     def get_bucket_names(self):
         """ Returns list of the bucket names for a given Couchbase Server."""
@@ -139,7 +159,7 @@ class CouchbaseServer:
 
     def delete_bucket(self, name):
         """ Delete a Couchbase Server bucket with the given 'name' """
-        server_version = get_server_version(self.host)
+        server_version = get_server_version(self.host, self.cbs_ssl)
         server_major_version = int(server_version.split(".")[0])
 
         resp = self._session.delete("{0}/pools/default/buckets/{1}".format(self.url, name))
@@ -318,7 +338,7 @@ class CouchbaseServer:
 
         log_info("Creating bucket {} with RAM {}".format(name, ram_quota_mb))
 
-        server_version = get_server_version(self.host)
+        server_version = get_server_version(self.host, self.cbs_ssl)
         server_major_version = int(server_version.split(".")[0])
 
         data = {
@@ -522,8 +542,12 @@ class CouchbaseServer:
         # Add all servers except server_to_add to known nodes
         known_nodes = "knownNodes="
         for server in cluster_servers:
-            server = server.replace("http://", "")
-            server = server.replace(":8091", "")
+            if "https" in server:
+                server = server.replace("https://", "")
+                server = server.replace(":18091", "")
+            else:
+                server = server.replace("http://", "")
+                server = server.replace(":8091", "")
             known_nodes += "ns_1@{},".format(server)
 
         # Add server_to_add to known nodes
@@ -557,8 +581,12 @@ class CouchbaseServer:
         # Add all servers except server_to_add to known nodes
         known_nodes = "knownNodes="
         for server in cluster_servers:
-            server = server.replace("http://", "")
-            server = server.replace(":8091", "")
+            if "https" in server:
+                server = server.replace("https://", "")
+                server = server.replace(":18091", "")
+            else:
+                server = server.replace("http://", "")
+                server = server.replace(":8091", "")
 
             if server_to_add.host != server:
                 known_nodes += "ns_1@{},".format(server)

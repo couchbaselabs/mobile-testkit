@@ -25,3 +25,7 @@ def pytest_addoption(parser):
     parser.addoption("--collect-logs",
                      action="store_true",
                      help="Collect logs for every test. If this flag is not set, collection will only happen for test failures.")
+
+    parser.addoption("--server-ssl",
+                     action="store_true",
+                     help="If set, will enable SSL communication between server and Sync Gateway")

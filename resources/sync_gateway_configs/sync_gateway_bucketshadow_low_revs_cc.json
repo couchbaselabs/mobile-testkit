@@ -7,15 +7,15 @@
     "slowServerCallWarningThreshold": 500,
     "compressResponses": false,
     "log": ["*"],
-    "databases": {
-        "db": {
-            "server": "http://{{ couchbase_server_primary_node }}:8091",
-            "bucket": "data-bucket",
+    "databases":{
+        "db":{
+            "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
+            "bucket":"data-bucket",
             "password": "password",
-            "revs_limit": 5,
-            "shadow": {
-                "server": "http://{{ couchbase_server_primary_node }}:8091",
-                "bucket": "source-bucket",
+    	    "revs_limit":5,
+    	    "shadow": {
+		        "server": "{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
+		        "bucket": "source-bucket",
                 "username": "source-bucket",
                 "password": "password"
             }

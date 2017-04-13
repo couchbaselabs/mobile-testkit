@@ -11,7 +11,7 @@
     "databases":{
         "db":{
             "offline":false,
-            "server":"http://{{ couchbase_server_primary_node }}:8091",
+            "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
             "bucket":"data-bucket",
             "password": "password",
             "sync": `function(doc){

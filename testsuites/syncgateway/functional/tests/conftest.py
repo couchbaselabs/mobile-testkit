@@ -7,8 +7,10 @@ from keywords.Logging import Logging
 from keywords.SyncGateway import validate_sync_gateway_mode
 from keywords.SyncGateway import sync_gateway_config_path_for_mode
 from libraries.testkit import cluster
-
 from libraries.NetworkUtils import NetworkUtils
+
+from utilities.enable_disable_ssl_cluster import enable_cbs_ssl_in_cluster_config
+from utilities.enable_disable_ssl_cluster import disable_cbs_ssl_in_cluster_config
 
 
 # Add custom arguments for executing tests in this directory
@@ -43,6 +45,10 @@ def pytest_addoption(parser):
                      action="store_true",
                      help="Collect logs for every test. If this flag is not set, collection will only happen for test failures.")
 
+    parser.addoption("--server-ssl",
+                     action="store_true",
+                     help="If set, will enable SSL communication between server and Sync Gateway")
+
 
 # This will be called once for the at the beggining of the execution in the 'tests/' directory
 # and will be torn down, (code after the yeild) when all the test session has completed.
@@ -60,6 +66,7 @@ def params_from_base_suite_setup(request):
     skip_provisioning = request.config.getoption("--skip-provisioning")
     ci = request.config.getoption("--ci")
     race_enabled = request.config.getoption("--race")
+    cbs_ssl = request.config.getoption("--server-ssl")
 
     log_info("server_version: {}".format(server_version))
     log_info("sync_gateway_version: {}".format(sync_gateway_version))
@@ -77,6 +84,15 @@ def params_from_base_suite_setup(request):
     else:
         log_info("Using 'base_{}' config!".format(mode))
         cluster_config = "{}/base_{}".format(CLUSTER_CONFIGS_DIR, mode)
+
+    if cbs_ssl:
+        log_info("Running tests with cbs <-> sg ssl enabled")
+        # Enable ssl in cluster configs
+        enable_cbs_ssl_in_cluster_config(cluster_config)
+    else:
+        log_info("Running tests with cbs <-> sg ssl disabled")
+        # Disable ssl in cluster configs
+        disable_cbs_ssl_in_cluster_config(cluster_config)
 
     sg_config = sync_gateway_config_path_for_mode("sync_gateway_default_functional_tests", mode)
 

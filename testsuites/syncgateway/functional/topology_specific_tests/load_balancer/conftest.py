@@ -10,6 +10,9 @@ from keywords.ClusterKeywords import ClusterKeywords
 from libraries.NetworkUtils import NetworkUtils
 from keywords.Logging import Logging
 
+from utilities.enable_disable_ssl_cluster import enable_cbs_ssl_in_cluster_config
+from utilities.enable_disable_ssl_cluster import disable_cbs_ssl_in_cluster_config
+
 
 # This will be called once at the beggining of the execution in the 'tests/load_balancer' directory
 # and will be torn down, (code after the yeild) after each .py file in this directory
@@ -23,6 +26,7 @@ def params_from_base_suite_setup(request):
     mode = request.config.getoption("--mode")
     skip_provisioning = request.config.getoption("--skip-provisioning")
     race_enabled = request.config.getoption("--race")
+    cbs_ssl = request.config.getoption("--server-ssl")
 
     log_info("server_version: {}".format(server_version))
     log_info("sync_gateway_version: {}".format(sync_gateway_version))
@@ -36,6 +40,15 @@ def params_from_base_suite_setup(request):
     # use load_balancer_cc cluster config if mode is "cc" or load_balancer_di cluster config if mode is "di"
     cluster_config = "{}/load_balancer_{}".format(keywords.constants.CLUSTER_CONFIGS_DIR, mode)
     sg_config = sync_gateway_config_path_for_mode("sync_gateway_default_functional_tests", mode)
+
+    if cbs_ssl:
+        log_info("Running tests with cbs <-> sg ssl enabled")
+        # Enable ssl in cluster configs
+        enable_cbs_ssl_in_cluster_config(cluster_config)
+    else:
+        log_info("Running tests with cbs <-> sg ssl disabled")
+        # Disable ssl in cluster configs
+        disable_cbs_ssl_in_cluster_config(cluster_config)
 
     # Skip provisioning if user specifies '--skip-provisoning'
     if not skip_provisioning:

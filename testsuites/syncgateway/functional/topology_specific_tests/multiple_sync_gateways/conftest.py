@@ -10,6 +10,9 @@ from keywords.Logging import Logging
 from keywords import constants
 from libraries.testkit import cluster
 
+from utilities.enable_disable_ssl_cluster import enable_cbs_ssl_in_cluster_config
+from utilities.enable_disable_ssl_cluster import disable_cbs_ssl_in_cluster_config
+
 
 # This will be called once for the at the beggining of the execution of each .py file
 # in the 'topology_specific_tests/multiple_syncgateways' directory.
@@ -24,6 +27,7 @@ def params_from_base_suite_setup(request):
     mode = request.config.getoption("--mode")
     skip_provisioning = request.config.getoption("--skip-provisioning")
     race_enabled = request.config.getoption("--race")
+    cbs_ssl = request.config.getoption("--server-ssl")
 
     log_info("server_version: {}".format(server_version))
     log_info("sync_gateway_version: {}".format(sync_gateway_version))
@@ -37,6 +41,15 @@ def params_from_base_suite_setup(request):
     # use base_cc cluster config if mode is "cc" or base_di cluster config if more is "di"
     cluster_config = "{}/multiple_sync_gateways_{}".format(constants.CLUSTER_CONFIGS_DIR, mode)
     sg_config = sync_gateway_config_path_for_mode("sync_gateway_default_functional_tests", mode)
+
+    if cbs_ssl:
+        log_info("Running tests with cbs <-> sg ssl enabled")
+        # Enable ssl in cluster configs
+        enable_cbs_ssl_in_cluster_config(cluster_config)
+    else:
+        log_info("Running tests with cbs <-> sg ssl disabled")
+        # Disable ssl in cluster configs
+        disable_cbs_ssl_in_cluster_config(cluster_config)
 
     # Skip provisioning if user specifies '--skip-provisoning'
     if not skip_provisioning:

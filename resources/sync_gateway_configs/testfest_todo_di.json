@@ -3,18 +3,18 @@
   "adminInterface": "0.0.0.0:4985",
   "log": ["*"],
   "cluster_config": {
-    "server":"http://{{ couchbase_server_primary_node }}:8091",
+    "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
     "data_dir":".",
     "bucket":"data-bucket",
     "password": "password"
   },
   "databases": {
     "todo": {
-      "server":"http://{{ couchbase_server_primary_node }}:8091",
+      "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
       "bucket": "data-bucket",
       "password": "password",
       "channel_index":{
-        "server":"http://{{ couchbase_server_primary_node }}:8091",
+        "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
         "bucket":"index-bucket",
         "username":"index-bucket",
         "password": "password",
