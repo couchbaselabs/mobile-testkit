@@ -39,12 +39,19 @@ namespace Travel.NET
             string line = Console.ReadLine();
 
             // See how many docs are in each database
+            int totalDocs = 0;
             foreach (var dbObj in dbObjs)
             {
                 Query query = dbObj.Database.CreateAllDocumentsQuery();
                 QueryEnumerator queryRows = query.Run();
                 int docCount = queryRows.Count;
                 Console.WriteLine($"{dbObj.UserName}: {docCount}");
+                totalDocs += docCount;
+            }
+
+            if (totalDocs != 31591)
+            {
+                throw new Exception("Unexpected number of docs!");
             }
 
             line = Console.ReadLine();
