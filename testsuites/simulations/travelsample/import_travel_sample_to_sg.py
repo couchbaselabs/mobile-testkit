@@ -11,8 +11,6 @@ def main():
     sg_url = 'http://localhost:4984'
 
     cb = Bucket('couchbase://localhost/{}'.format(bucket_name), password='password')
-    doc = cb.get('airline_10')
-    print(doc)
 
     doc_ids = []
     for row in cb.n1ql_query("SELECT meta(`{}`) FROM `{}`".format(bucket_name, bucket_name)):
