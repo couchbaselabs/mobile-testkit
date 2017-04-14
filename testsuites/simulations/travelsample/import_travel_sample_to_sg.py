@@ -2,13 +2,11 @@ import requests
 import json
 
 from couchbase.bucket import Bucket
-from keywords.MobileRestClient import MobileRestClient
 
 
 def main():
 
     bucket_name = 'travel-sample'
-    sg_bucket_name = 'sg-travel-sample'
 
     sg_url = 'http://localhost:4984'
 
@@ -18,8 +16,8 @@ def main():
 
     doc_ids = []
     for row in cb.n1ql_query("SELECT meta(`{}`) FROM `{}`".format(bucket_name, bucket_name)):
-        doc_id = row['$1']['id']
-        doc_ids.append(doc_id)
+        row_doc_id = row['$1']['id']
+        doc_ids.append(row_doc_id)
 
     airline_doc_ids = [doc_id for doc_id in doc_ids if doc_id.startswith('airline')]
     route_doc_ids = [doc_id for doc_id in doc_ids if doc_id.startswith('route')]
@@ -33,11 +31,7 @@ def main():
     print('Number "landmark" docs: {}'.format(len(landmark_doc_ids)))
     print('Number "hotel" docs: {}'.format(len(hotel_doc_ids)))
 
-    num_all_docs = len(airline_doc_ids) + \
-                   len(route_doc_ids) + \
-                   len(airport_doc_ids) + \
-                   len(landmark_doc_ids) + \
-                   len(hotel_doc_ids)
+    num_all_docs = len(airline_doc_ids) + len(route_doc_ids) + len(airport_doc_ids) + len(landmark_doc_ids) + len(hotel_doc_ids)
     print('Nunmber of docs: {}'.format(num_all_docs))
 
     assert num_all_docs == 31591
