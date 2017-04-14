@@ -56,3 +56,7 @@ class RBACUserCreationError(Error):
 
 class RBACUserDeletionError(Error):
     pass
+
+
+class DockerError(Error):
+    pass
