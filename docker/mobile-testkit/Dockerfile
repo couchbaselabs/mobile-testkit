@@ -37,7 +37,7 @@ WORKDIR /opt/mobile-testkit
 RUN pip install -r requirements.txt
 
 # Create ansible config for sample
-RUN mv ansible.cfg.example ansible.cfg
+RUN cp ansible.cfg.example ansible.cfg
 
 # Set the correct default user
 RUN sed -i 's/remote_user = vagrant/remote_user = root/' ansible.cfg
@@ -46,8 +46,8 @@ RUN sed -i 's/remote_user = vagrant/remote_user = root/' ansible.cfg
 RUN mkdir -p /root/.ssh
 
 # set python env
-ENV PYTHONPATH=$PYTHONPATH:.
-ENV ANSIBLE_CONFIG=ansible.cfg
+ENV PYTHONPATH=/opt
+ENV ANSIBLE_CONFIG=/opt/ansible.cfg
 
 # Remove later, working on end to end automation
 CMD ["/bin/bash"]
