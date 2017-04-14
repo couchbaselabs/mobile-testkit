@@ -1072,6 +1072,7 @@ def test_replication_with_session_cookie_short_ttl(setup_client_syncgateway_test
        Capture the SyncGatewaySession cookie from the set-cookie in the response header.
     3. Start continuous push replicator on the LiteServ with SyncGatewaySession cookie.
        Make sure that the replicators start correctly
+       Let the replicator run for more than 10% of the session expiry time specified when the session was created in step 2
     4. Cancel both push and pull replicator on the LiteServ
     5. Delete the session from SGW by sending DELETE /_sessions/ to SGW
     6. Repeat steps 2 through 6
