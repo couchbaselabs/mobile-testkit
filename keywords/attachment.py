@@ -1,7 +1,6 @@
 import base64
 import random
 import uuid
-import os
 
 from PIL import Image
 

@@ -127,7 +127,7 @@ def test_sdk_interop_unique_docs(params_from_base_test_setup, sg_conf_name):
     - Bulk create 'number_docs' docs from SG with prefix 'sg' and channels ['sg']
     - TODO: SDK: Verify docs (sg + sdk) are present
     - TODO: SG: Verify docs (sg + sdk) are there via _all_docs
-    - TODO: SG: Verify docs (sg + sdk) are there via _changes 
+    - TODO: SG: Verify docs (sg + sdk) are there via _changes
     - Bulk update each doc 'number_updates' from SDK for 'sdk' docs
     - Bulk update each doc 'number_updates' from SG for 'sg' docs
     - TODO: SDK: Verify doc updates (sg + sdk) are present using the doc['content']['updates'] property
@@ -261,10 +261,10 @@ def test_sdk_interop_shared_docs(params_from_base_test_setup, sg_conf_name):
       with 'sg_one_updates' and 'sdk_one_updates' counter properties
     - TODO: SDK: Verify docs (sg + sdk) are present
     - TODO: SG: Verify docs (sg + sdk) are there via _all_docs
-    - TODO: SG: Verify docs (sg + sdk) are there via _changes 
+    - TODO: SG: Verify docs (sg + sdk) are there via _changes
     - Start concurrent updates:
         - Start update from sg / sdk to a shared set of docs. Sync Gateway and SDK will try to update
-          random docs from the shared set and update the corresponding counter property as well as the 
+          random docs from the shared set and update the corresponding counter property as well as the
           'updates' properties
     - TODO: SDK: Verify doc updates (sg + sdk) are present using the counter properties
     - TODO: SG: Verify doc updates (sg + sdk) are there via _all_docs using the counter properties and rev prefix
@@ -409,7 +409,7 @@ def test_sdk_interop_shared_docs(params_from_base_test_setup, sg_conf_name):
         assert doc[sg_tracking_prop] == number_updates_per_client
         assert doc[sdk_tracking_prop] == number_updates_per_client
         assert doc['_rev'].startswith('21')
-        assert len(doc['_revisions']['ids']) == (number_updates_per_client*2)+1
+        assert len(doc['_revisions']['ids']) == (number_updates_per_client * 2) + 1
 
     # TODO: Verify sync gateway changes feed
 
@@ -449,6 +449,7 @@ def delete_sg_docs(client, url, db, docs_to_delete, auth):
         log_info('Attempting to delete from SG: {}'.format(random_doc_id))
         doc_to_delete = client.get_doc(url=url, db=db, doc_id=random_doc_id, auth=auth)
         deleted_doc = client.delete_doc(url=url, db=db, doc_id=random_doc_id, rev=doc_to_delete['_rev'], auth=auth)
+        # Todo: Add assertion
         docs_to_remove.remove(random_doc_id)
 
 
@@ -460,6 +461,7 @@ def delete_sdk_docs(client, docs_to_delete):
         random_doc_id = random.choice(docs_to_remove)
         log_info('Attempting to delete from SDK: {}'.format(random_doc_id))
         deleted_doc = client.remove(random_doc_id)
+        # Todo: Add assertion
         docs_to_remove.remove(random_doc_id)
 
 
