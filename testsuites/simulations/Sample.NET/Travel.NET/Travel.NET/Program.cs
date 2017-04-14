@@ -17,39 +17,37 @@ namespace Travel.NET
             Database landmarkDb = manager.GetDatabase("landmark");
             Database hotelDb = manager.GetDatabase("hotel");
 
-            Replication airlinePuller = airlineDb.CreatePullReplication(syncGatewayUrl);
-            var airlineAuth = AuthenticatorFactory.CreateBasicAuthenticator("airline", "pass");
-            airlinePuller.Authenticator = airlineAuth;
-            airlinePuller.Continuous = true;
-            airlinePuller.Start();
+            var dbObjs = new[] {
+                new {Database = airlineDb, UserName = "airline", Password = "pass"},
+                new {Database = routeDb, UserName = "route", Password = "pass"},
+                new {Database = airportDb, UserName = "airport", Password = "pass"},
+                new {Database = landmarkDb, UserName = "landmark", Password = "pass"},
+                new {Database = hotelDb, UserName = "hotel", Password = "pass"},
+            };
 
-            Replication routePuller = routeDb.CreatePullReplication(syncGatewayUrl);
-            var routeAuth = AuthenticatorFactory.CreateBasicAuthenticator("route", "pass");
-            routePuller.Authenticator = routeAuth;
-            routePuller.Continuous = true;
-            routePuller.Start();
+            // Start pull replications for each database
+            foreach (var dbObj in dbObjs)
+            {
+                Replication replication = dbObj.Database.CreatePullReplication(syncGatewayUrl);
+                IAuthenticator replicationAuth = AuthenticatorFactory.CreateBasicAuthenticator(dbObj.UserName, dbObj.Password);
+                replication.Authenticator = replicationAuth;
+                replication.Continuous = true;
+                replication.Start();
+            }
 
-            Replication airportPuller = airportDb.CreatePullReplication(syncGatewayUrl);
-            var airportAuth = AuthenticatorFactory.CreateBasicAuthenticator("airport", "pass");
-            airportPuller.Authenticator = airportAuth;
-            airportPuller.Continuous = true;
-            airportPuller.Start();
-
-            Replication landmarkPuller = landmarkDb.CreatePullReplication(syncGatewayUrl);
-            var landmarkAuth = AuthenticatorFactory.CreateBasicAuthenticator("landmark", "pass");
-            landmarkPuller.Authenticator = landmarkAuth;
-            landmarkPuller.Continuous = true;
-            landmarkPuller.Start();
-
-            Replication hotelPuller = hotelDb.CreatePullReplication(syncGatewayUrl);
-            var hotelAuth = AuthenticatorFactory.CreateBasicAuthenticator("hotel", "pass");
-            hotelPuller.Authenticator = hotelAuth;
-            hotelPuller.Continuous = true;
-            hotelPuller.Start();
-
-            // TODO: Verify number of docs for each db
-
+            // Wait for replication to stop
             string line = Console.ReadLine();
+
+            // See how many docs are in each database
+            foreach (var dbObj in dbObjs)
+            {
+                Query query = dbObj.Database.CreateAllDocumentsQuery();
+                QueryEnumerator queryRows = query.Run();
+                int docCount = queryRows.Count;
+                Console.WriteLine($"{dbObj.UserName}: {docCount}");
+            }
+
+            line = Console.ReadLine();
         }
     }
 }
