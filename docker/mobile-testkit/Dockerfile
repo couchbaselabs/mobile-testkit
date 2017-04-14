@@ -36,6 +36,12 @@ WORKDIR /opt/mobile-testkit
 # Install dependencies
 RUN pip install -r requirements.txt
 
+# Create ansible config for sample
+RUN mv ansible.cfg.example ansible.cfg
+
+# Set the correct default user
+RUN sed -i 's/remote_user = vagrant/remote_user = root/' ansible.cfg
+
 # Create .ssh directory for key installation
 RUN mkdir -p /root/.ssh
 
