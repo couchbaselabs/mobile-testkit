@@ -32,7 +32,6 @@ WORKDIR /opt
 RUN git clone https://github.com/couchbaselabs/mobile-testkit.git
 
 WORKDIR /opt/mobile-testkit
-RUN git checkout feature/hello-docker
 
 # Install dependencies
 RUN pip install -r requirements.txt

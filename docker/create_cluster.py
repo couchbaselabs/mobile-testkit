@@ -72,6 +72,8 @@ def create_cluster(clean, network_name, number_of_nodes, public_key_path):
         print('Starting container: {} on network: {}'.format(container_name, network_name))
 
         # Priviledged is required for some ansible playbooks
+        # The volume binding is needed for systemd
+        # https://hub.docker.com/r/centos/systemd/
         container = docker_client.containers.run(
             'sethrosetter/centos7-systemd-sshd',
             detach=True,
