@@ -1130,7 +1130,7 @@ def test_replication_with_session_cookie_short_ttl(setup_client_syncgateway_test
     # Add 3 docs and sleep in between
     while attempts > 0:
         # Sanity test docs
-        ls_prefix = "ls_doc_" + str(attempts)
+        ls_prefix = "ls_doc1_" + str(attempts)
         ls_docs = client.add_docs(url=ls_url, db=ls_db, number=num_docs_pushed, id_prefix=ls_prefix, channels=["ABC"])
         assert len(ls_docs) == num_docs_pushed
 
@@ -1194,7 +1194,7 @@ def test_replication_with_session_cookie_short_ttl(setup_client_syncgateway_test
     # Add 3 docs and sleep in between
     while attempts > 0:
         # Sanity test docs
-        ls_prefix = "ls_doc_" + str(attempts)
+        ls_prefix = "ls_doc2_" + str(attempts)
         ls_docs = client.add_docs(url=ls_url, db=ls_db, number=num_docs_pushed, id_prefix=ls_prefix, channels=["ABC"])
         assert len(ls_docs) == num_docs_pushed
 
