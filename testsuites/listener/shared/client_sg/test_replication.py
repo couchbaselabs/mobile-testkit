@@ -1104,6 +1104,7 @@ def test_replication_with_session_cookie_short_ttl(setup_client_syncgateway_test
 
     # session_header: SyncGatewaySession=a483be3248f740d810c09eb2c1b1f9198141bb15; Path=/db; Expires=Fri, 14 Apr 2017 03:54:46 GMT
     session_header = "{}={}".format(cookie_name, session_id)
+    assert session_header.startswith("SyncGatewaySession")
 
     log_info("session_header: {}".format(session_header))
 
@@ -1137,11 +1138,10 @@ def test_replication_with_session_cookie_short_ttl(setup_client_syncgateway_test
         # Sleep for 5 seconds after every add so as to expire the ttl
         time.sleep(5)
 
-    all_docs = client.merge(ls_docs)
-    log_info(all_docs)
+    log_info(ls_docs)
 
-    client.verify_docs_present(url=sg_admin_url, db=sg_db, expected_docs=all_docs)
-    client.verify_docs_present(url=ls_url, db=ls_db, expected_docs=all_docs)
+    client.verify_docs_present(url=sg_admin_url, db=sg_db, expected_docs=ls_docs)
+    client.verify_docs_present(url=ls_url, db=ls_db, expected_docs=ls_docs)
 
     # Cancel the replications
     # Stop repl_one
@@ -1166,10 +1166,13 @@ def test_replication_with_session_cookie_short_ttl(setup_client_syncgateway_test
 
     # session_header: SyncGatewaySession=a483be3248f740d810c09eb2c1b1f9198141bb15; Path=/db; Expires=Fri, 14 Apr 2017 03:54:46 GMT
     session_header = "{}={}".format(cookie_name, session_id)
+    assert session_header.startswith("SyncGatewaySession")
 
     log_info("session_header: {}".format(session_header))
 
     # Start authenticated push replication
+    # The bug was that the CBL replication here will use the previous
+    # session's cookie and get a 401 error
     repl_one = client.start_replication(
         url=ls_url,
         continuous=True,
@@ -1199,11 +1202,10 @@ def test_replication_with_session_cookie_short_ttl(setup_client_syncgateway_test
         # Sleep for 5 seconds after every add so as to expire the ttl
         time.sleep(5)
 
-    all_docs = client.merge(ls_docs)
-    log_info(all_docs)
+    log_info(ls_docs)
 
-    client.verify_docs_present(url=sg_admin_url, db=sg_db, expected_docs=all_docs)
-    client.verify_docs_present(url=ls_url, db=ls_db, expected_docs=all_docs)
+    client.verify_docs_present(url=sg_admin_url, db=sg_db, expected_docs=ls_docs)
+    client.verify_docs_present(url=ls_url, db=ls_db, expected_docs=ls_docs)
 
     # Cancel the replications
     # Stop repl_one
