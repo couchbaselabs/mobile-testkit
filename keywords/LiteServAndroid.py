@@ -1,13 +1,15 @@
 import os
 import subprocess
-
+import glob
 import requests
+from subprocess import CalledProcessError
 
 from keywords.LiteServBase import LiteServBase
 from keywords.constants import LATEST_BUILDS
 from keywords.constants import BINARY_DIR
 from keywords.constants import REGISTERED_CLIENT_DBS
 from keywords.exceptions import LiteServError
+from keywords.exceptions import ProvisioningError
 from keywords.utils import version_and_build
 from keywords.utils import log_info
 from requests.exceptions import HTTPError
@@ -38,7 +40,7 @@ class LiteServAndroid(LiteServBase):
 
         retries = 5
         resp = ""
-        
+
         while True:
             if retries == 0:
                 break
@@ -68,6 +70,7 @@ class LiteServAndroid(LiteServBase):
 
     def install(self):
         """Install the apk to running Android device or emulator"""
+        version, build = version_and_build(self.version_build)
 
         if self.storage_engine == "SQLite":
             apk_name = "couchbase-lite-android-liteserv-SQLite-{}-debug.apk".format(self.version_build)
@@ -75,26 +78,45 @@ class LiteServAndroid(LiteServBase):
             apk_name = "couchbase-lite-android-liteserv-SQLCipher-ForestDB-Encryption-{}-debug.apk".format(self.version_build)
 
         apk_path = "{}/{}".format(BINARY_DIR, apk_name)
-        log_info("Installing: {}".format(apk_path))
+        apks = []
+
+        if not os.path.isfile(apk_path):
+            log_info("{} does not exist", apk_path)
+            apks = glob.glob('./couchbase-lite-android-liteserv*{}.*'.format(version))
+
+            if len(apks) == 0:
+                raise ProvisioningError("No couchbase-lite-android-liteserv files found")
+
+            log_info("Found apks {}".format(apks))
 
         # If and apk is installed, attempt to remove it and reinstall.
         # If that fails, raise an exception
         max_retries = 1
         count = 0
+        num_apks = len(apks)
+
         while True:
 
-            if count > max_retries:
+            if count > max_retries or num_apks == 0:
                 raise LiteServError(".apk install failed!")
 
-            output = subprocess.check_output(["adb", "install", apk_path])
-            if "INSTALL_FAILED_ALREADY_EXISTS" in output or "INSTALL_FAILED_UPDATE_INCOMPATIBLE" in output:
-                # Apk may be installed, remove and retry install
-                self.remove()
-                count += 1
-                continue
-            else:
-                # Install succeeded, continue
-                break
+            apk_path = apks[num_apks]
+            log_info("Installing: {}".format(apk_path))
+
+            try:
+                output = subprocess.check_output(["adb", "install", apk_path])
+
+                if "INSTALL_FAILED_ALREADY_EXISTS" in output or "INSTALL_FAILED_UPDATE_INCOMPATIBLE" in output:
+                    # Apk may be installed, remove and retry install
+                    self.remove()
+                    count += 1
+                    continue
+                else:
+                    # Install succeeded, continue
+                    break
+            except CalledProcessError as c:
+                log_info("Error installing {}: {}".format(apk_path, c))
+                num_apks -= 1
 
         output = subprocess.check_output(["adb", "shell", "pm", "list", "packages"])
         if "com.couchbase.liteservandroid" not in output:
