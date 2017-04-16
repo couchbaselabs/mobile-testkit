@@ -219,10 +219,13 @@ class LiteServAndroid(LiteServBase):
         Assert that the response contains the expected version information
         """
         version, build = version_and_build(self.version_build)
+
         resp_obj = self._wait_until_reachable()
         log_info(resp_obj)
-        if resp_obj["version"] != self.version_build or resp_obj["version"] != version:
-            raise LiteServError("Expected version: {} does not match running version: {}".format(self.version_build, resp_obj["version"]))
+        if resp_obj["version"] != self.version_build:
+            # Some release builds don't show build numbers like 1.4.0 instead of 1.4.0-9
+            if resp_obj["version"] != version:
+                raise LiteServError("Expected version: {} does not match running version: {}".format(self.version_build, resp_obj["version"]))
 
     def stop(self):
         """
