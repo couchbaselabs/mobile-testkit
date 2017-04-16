@@ -10,6 +10,7 @@ from keywords.constants import REGISTERED_CLIENT_DBS
 from keywords.exceptions import LiteServError
 from keywords.utils import version_and_build
 from keywords.utils import log_info
+from requests.exceptions import HTTPError
 
 
 class LiteServAndroid(LiteServBase):
@@ -42,8 +43,16 @@ class LiteServAndroid(LiteServBase):
             url = "{}/couchbase-lite-android/{}/{}/{}".format(LATEST_BUILDS, version, self.version_build, package_name)
 
         log_info("Downloading {} -> {}/{}".format(url, BINARY_DIR, package_name))
-        resp = requests.get(url)
-        resp.raise_for_status()
+        while True:
+            try:
+                resp = requests.get(url)
+                resp.raise_for_status()
+                break
+            except HTTPError as h:
+                log_info("Error downloading {}: {}".format(package_name, h))
+                package_name = package_name.replace("-{}".format(build), "")
+                log_info("Retring download with package_name {}".format(package_name))
+
         with open("{}/{}".format(BINARY_DIR, package_name), "wb") as f:
             f.write(resp.content)
 
