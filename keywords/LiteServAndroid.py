@@ -81,11 +81,13 @@ class LiteServAndroid(LiteServBase):
         apks = []
 
         if not os.path.isfile(apk_path):
-            log_info("{} does not exist", apk_path)
-            apks = glob.glob('./couchbase-lite-android-liteserv*{}.*'.format(version))
+            log_info("{} does not exist".format(apk_path))
+            
+            # Equivalent to ls *1.4.0*.apk
+            apks = glob.glob('{}/*{}*.apk'.format(BINARY_DIR, version))
 
             if len(apks) == 0:
-                raise ProvisioningError("No couchbase-lite-android-liteserv files found")
+                raise ProvisioningError("No couchbase-lite-android-liteserv files found in {}".format(BINARY_DIR))
 
             log_info("Found apks {}".format(apks))
 
@@ -93,11 +95,11 @@ class LiteServAndroid(LiteServBase):
         # If that fails, raise an exception
         max_retries = 1
         count = 0
-        num_apks = len(apks)
+        num_apks = len(apks) - 1
 
         while True:
 
-            if count > max_retries or num_apks == 0:
+            if count > max_retries or num_apks < 0:
                 raise LiteServError(".apk install failed!")
 
             apk_path = apks[num_apks]
