@@ -82,7 +82,7 @@ class LiteServAndroid(LiteServBase):
 
         if not os.path.isfile(apk_path):
             log_info("{} does not exist".format(apk_path))
-            
+
             # Equivalent to ls *1.4.0*.apk
             apks = glob.glob('{}/*{}*.apk'.format(BINARY_DIR, version))
 
@@ -218,9 +218,10 @@ class LiteServAndroid(LiteServBase):
         """ Poll on expected http://<host>:<port> until it is reachable
         Assert that the response contains the expected version information
         """
+        version, build = version_and_build(self.version_build)
         resp_obj = self._wait_until_reachable()
         log_info(resp_obj)
-        if resp_obj["version"] != self.version_build:
+        if resp_obj["version"] != self.version_build or resp_obj["version"] != version:
             raise LiteServError("Expected version: {} does not match running version: {}".format(self.version_build, resp_obj["version"]))
 
     def stop(self):
