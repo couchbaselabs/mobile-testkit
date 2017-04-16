@@ -36,15 +36,24 @@ class LiteServAndroid(LiteServBase):
             log_info("Package is already downloaded. Skipping.")
             return
 
-        # Package not downloaded, proceed to download from latest builds
-        if version == "1.2.1":
-            url = "{}/couchbase-lite-android/release/{}/{}/{}".format(LATEST_BUILDS, version, self.version_build, package_name)
-        else:
-            url = "{}/couchbase-lite-android/{}/{}/{}".format(LATEST_BUILDS, version, self.version_build, package_name)
-
-        log_info("Downloading {} -> {}/{}".format(url, BINARY_DIR, package_name))
+        retries = 5
+        resp = ""
+        
         while True:
+            if retries == 0:
+                break
+
             try:
+                # Package not downloaded, proceed to download from latest builds
+                if version == "1.2.1":
+                    url = "{}/couchbase-lite-android/release/{}/{}/{}".format(LATEST_BUILDS, version,
+                                                                              self.version_build, package_name)
+                else:
+                    url = "{}/couchbase-lite-android/{}/{}/{}".format(LATEST_BUILDS, version, self.version_build,
+                                                                      package_name)
+
+                log_info("Downloading {} -> {}/{}".format(url, BINARY_DIR, package_name))
+
                 resp = requests.get(url)
                 resp.raise_for_status()
                 break
@@ -52,6 +61,7 @@ class LiteServAndroid(LiteServBase):
                 log_info("Error downloading {}: {}".format(package_name, h))
                 package_name = package_name.replace("-{}".format(build), "")
                 log_info("Retring download with package_name {}".format(package_name))
+                retries -= 1
 
         with open("{}/{}".format(BINARY_DIR, package_name), "wb") as f:
             f.write(resp.content)
