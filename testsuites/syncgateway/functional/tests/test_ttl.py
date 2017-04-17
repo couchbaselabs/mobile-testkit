@@ -7,7 +7,7 @@ from keywords.utils import log_info
 from keywords.ClusterKeywords import ClusterKeywords
 from keywords.MobileRestClient import MobileRestClient
 from keywords.SyncGateway import sync_gateway_config_path_for_mode
-from keywords.Time import Time
+from keywords.timeutils import Time
 from keywords import document
 
 """
