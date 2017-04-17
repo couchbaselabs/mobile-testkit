@@ -844,21 +844,30 @@ def test_multiple_dbs_unique_buckets_lose_tap(params_from_base_test_setup, sg_co
 
     # all db rest endpoints should succeed
     for db in dbs:
+        log_info("Doing rest scan on db: {}".format(db))
         errors = rest_scan(cluster.sync_gateways[0], db=db, online=True, num_docs=num_docs, user_name="seth", channels=["ABC"])
         assert len(errors) == 0
 
+    log_info("Deleting data-bucket-1 and data-bucket-3")
     cluster.servers[0].delete_bucket("data-bucket-1")
     cluster.servers[0].delete_bucket("data-bucket-3")
 
     # Check that db2 and db4 are still Online
+    log_info("Check that db2 and db4 are still Online")
     for db in ["db2", "db4"]:
         errors = rest_scan(cluster.sync_gateways[0], db=db, online=True, num_docs=num_docs, user_name="adam", channels=["CBS"])
         assert len(errors) == 0
 
     # Check that db1 and db3 go offline
+    log_info("Check that db1 and db3 go offline")
     for db in ["db1", "db3"]:
         errors = rest_scan(cluster.sync_gateways[0], db=db, online=False, num_docs=num_docs, user_name="seth", channels=["ABC"])
-        assert len(errors) == NUM_ENDPOINTS + (num_docs * 2)
+        num_expected_errors = NUM_ENDPOINTS + (num_docs * 2)
+        if len(errors) != num_expected_errors:
+            log_info("Expected {} errors, but got {}".format(num_expected_errors, len(errors)))
+            for err in errors:
+                log_info("{}".format(err))
+        assert len(errors) == num_expected_errors
         for error_tuple in errors:
             log_info("({},{})".format(error_tuple[0], error_tuple[1]))
             assert error_tuple[1] == 503
