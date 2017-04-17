@@ -23,7 +23,8 @@ RUN wget http://packages.couchbase.com/releases/couchbase-release/couchbase-rele
         gcc \
         gcc-c++ \
         python-devel \
-        python-pip
+        python-pip \
+        sudo
 
 RUN pip install --upgrade pip
 
