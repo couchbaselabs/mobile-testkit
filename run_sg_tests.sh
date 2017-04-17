@@ -3,8 +3,8 @@
 # Exit on failure
 set -e
 
-# Copy mounted pool.json location where testkit can see it
-cp /tmp/pool.json resources/pool.json
+# In case the docker image is not built with the latest testkit checkout
+git pull
 
 # Generate cluster configs
 python libraries/utilities/generate_clusters_from_pool.py

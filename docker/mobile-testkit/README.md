@@ -3,15 +3,15 @@
 IMPORTANT: This will copy your public / and private key to allow ssh access from mobile-testkit container to other clusters in the container.
 
 ```
-python docker/create_cluster.py --network-name cbl --number-of-nodes 5 --path-to-public-key ~/.ssh/id_rsa.pub --clean
+$ python docker/create_cluster.py --network-name cbl --number-of-nodes 5 --path-to-public-key ~/.ssh/id_rsa.pub --clean
 ```
 
-TODO: Automate this
+Mount local dev environment for iterative development with docker backend. This way you can make changes in your /{user}/mobile-testkit repo and execute within the context of the container.
 ```
-docker exec -it mobile-testkit /bin/bash
-./run_sg_tests.sh
+$ docker run --rm -it --network=cbl --name=mobile-testkit -v /{user}/mobile-testkit:/opt/mobile-testkit -v /tmp/pool.json:/opt/mobile-testkit/resources/pool.json -v ~/.ssh/id_rsa:/root/.ssh/id_rsa test  /bin/bash
+$ python libraries/utilities/generate_clusters_from_pool.py
+$ pytest -s --mode=cc --server-version=4.6.1 --sync-gateway-version=1.4.0.2-3 testsuites/syncgateway/functional/tests
 ```
-
 
 ## Capturing network traffic
 
