@@ -631,9 +631,9 @@ class CouchbaseServer:
         # TODO reset Quota
 
     def start(self):
-        """Starts a running Couchbase Server via 'systemctl start couchbase-server'"""
+        """Starts a running Couchbase Server via 'service couchbase-server start'"""
 
-        command = "systemctl start couchbase-server"
+        command = "service couchbase-server start"
         self.remote_executor.must_execute(command)
         self.wait_for_ready_state()
 
@@ -660,9 +660,9 @@ class CouchbaseServer:
             time.sleep(1)
 
     def stop(self):
-        """Stops a running Couchbase Server via 'systemctl stop couchbase-server'"""
+        """Stops a running Couchbase Server via 'service couchbase-server stop'"""
 
-        command = "systemctl stop couchbase-server"
+        command = "service couchbase-server stop"
         self.remote_executor.must_execute(command)
         self._verify_stopped()
 
@@ -674,9 +674,9 @@ class CouchbaseServer:
         # Delete some vBucket file to start a server rollback
         # Example vbucket files - 195.couch.1  310.couch.1  427.couch.1  543.couch.1
         log_info("Deleting vBucket file '66.couch.1'")
-        self.remote_executor.must_execute('find /opt/couchbase/var/lib/couchbase/data/data-bucket -name "{}" -delete'.format(vbucket_filename))
+        self.remote_executor.must_execute('sudo find /opt/couchbase/var/lib/couchbase/data/data-bucket -name "{}" -delete'.format(vbucket_filename))
         log_info("Listing vBucket files ...")
-        out, err = self.remote_executor.must_execute("ls /opt/couchbase/var/lib/couchbase/data/{}/".format(bucket_name))
+        out, err = self.remote_executor.must_execute("sudo ls /opt/couchbase/var/lib/couchbase/data/{}/".format(bucket_name))
 
         # out format: [u'0.couch.1     264.couch.1  44.couch.1\t635.couch.1  820.couch.1\r\n',
         # u'1000.couch.1  265.couch.1 ...]
