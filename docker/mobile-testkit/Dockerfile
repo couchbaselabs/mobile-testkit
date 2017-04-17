@@ -11,7 +11,8 @@ RUN yum install -y \
     libevent \
     openssl-devel \
     unzip \
-    wget
+    wget \
+    httpie
 
 # Install prerequisites for the Couchbase Server python SDK
 # https://developer.couchbase.com/documentation/server/current/sdk/python/start-using-sdk.html
