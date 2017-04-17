@@ -633,7 +633,7 @@ class CouchbaseServer:
     def start(self):
         """Starts a running Couchbase Server via 'service couchbase-server start'"""
 
-        command = "service couchbase-server start"
+        command = "sudo service couchbase-server start"
         self.remote_executor.must_execute(command)
         self.wait_for_ready_state()
 
@@ -662,7 +662,7 @@ class CouchbaseServer:
     def stop(self):
         """Stops a running Couchbase Server via 'service couchbase-server stop'"""
 
-        command = "service couchbase-server stop"
+        command = "sudo service couchbase-server stop"
         self.remote_executor.must_execute(command)
         self._verify_stopped()
 
