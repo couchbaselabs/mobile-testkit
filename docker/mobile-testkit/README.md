@@ -1,6 +1,6 @@
 ### Running tests with docker image
 
-IMPORTANT: This will copy your public / and private key to allow ssh access from mobile-testkit container to other clusters in the container.
+IMPORTANT: This will copy your public key to allow ssh access from mobile-testkit container to other clusters in the container.
 
 ```
 $ python docker/create_cluster.py --network-name cbl --number-of-nodes 5 --path-to-public-key ~/.ssh/id_rsa.pub --clean
