@@ -46,8 +46,8 @@ RUN sed -i 's/remote_user = vagrant/remote_user = root/' ansible.cfg
 RUN mkdir -p /root/.ssh
 
 # set python env
-ENV PYTHONPATH=/opt
-ENV ANSIBLE_CONFIG=/opt/ansible.cfg
+ENV PYTHONPATH=/opt/mobile-testkit/
+ENV ANSIBLE_CONFIG=/opt/ansible.cfg/
 
 # Remove later, working on end to end automation
 CMD ["/bin/bash"]
