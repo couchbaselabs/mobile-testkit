@@ -1,0 +1,12 @@
+// Place your settings in this file to overwrite default and user settings.
+{
+    "files.exclude": {
+        "__pycache__/": true,
+        ".cache": true,
+        ".idea": true
+    },
+    "python.pythonPath": "${workspaceRoot}/venv/bin/python2.7",
+    "python.unitTest.pyTestEnabled": true,
+    "python.linting.flake8Enabled": true,
+    "python.linting.flake8Path": "${workspaceRoot}/venv/bin/flake8"
+}

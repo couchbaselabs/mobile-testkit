@@ -1,20 +1,62 @@
 import random
 
 import pytest
-from requests.exceptions import HTTPError
 from concurrent.futures import ThreadPoolExecutor
-
 from couchbase.bucket import Bucket
 from couchbase.exceptions import NotFoundError
+from requests.exceptions import HTTPError
 
-from keywords.SyncGateway import sync_gateway_config_path_for_mode
-from keywords.utils import log_info
-from keywords.utils import host_for_url
+from keywords import attachment, document
 from keywords.constants import DATA_DIR
-from keywords import attachment
-from keywords import document
-from libraries.testkit.cluster import Cluster
 from keywords.MobileRestClient import MobileRestClient
+from keywords.SyncGateway import sync_gateway_config_path_for_mode
+from keywords.utils import host_for_url, log_info
+from libraries.testkit.cluster import Cluster
+
+
+@pytest.mark.sanity
+@pytest.mark.syncgateway
+@pytest.mark.xattrs
+@pytest.mark.changes
+@pytest.mark.session
+@pytest.mark.parametrize('sg_conf_name', [
+    'sync_gateway_default_functional_tests'
+])
+def test_purge(params_from_base_test_setup, sg_conf_name):
+    """
+    Scenario:
+    - Bulk create 1000 docs via Sync Gateway
+    - Bulk create 1000 docs via SDK
+    - Get all of the docs via Sync Gateway
+    - Get all of the docs via SDK
+    - SDK delete Sync Gateway docs
+    - Sync Gateway delete SDK docs
+    - Sync Gateway purge all docs
+    - Verify SDK can't see the docs
+    - Verify SG can't see the docs
+    - Verify on Couchbase Server that the docs + XATTRS are gone
+    """
+
+    cluster_conf = params_from_base_test_setup['cluster_config']
+    cluster_topology = params_from_base_test_setup['cluster_topology']
+    mode = params_from_base_test_setup['mode']
+
+    sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
+    sg_admin_url = cluster_topology['sync_gateways'][0]['admin']
+    sg_url = cluster_topology['sync_gateways'][0]['public']
+
+    bucket_name = 'data-bucket'
+    cbs_url = cluster_topology['couchbase_servers'][0]
+    sg_db = 'db'
+    number_of_sg_docs = 1000
+    channels = ['NASA']
+
+    log_info('sg_conf: {}'.format(sg_conf))
+    log_info('sg_admin_url: {}'.format(sg_admin_url))
+    log_info('sg_url: {}'.format(sg_url))
+
+    cluster = Cluster(config=cluster_conf)
+    cluster.reset(sg_config_path=sg_conf)
 
 
 @pytest.mark.sanity
