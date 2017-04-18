@@ -49,10 +49,13 @@ namespace Travel.NET
                 totalDocs += docCount;
             }
 
+            // TODO: breakdown per db
             if (totalDocs != 31591)
             {
                 throw new Exception("Unexpected number of docs!");
             }
+
+            // TODO: Add / updates / push / SDK validation
 
             line = Console.ReadLine();
         }

@@ -29,12 +29,11 @@ def test_purge(params_from_base_test_setup, sg_conf_name):
     - Bulk create 1000 docs via SDK
     - Get all of the docs via Sync Gateway
     - Get all of the docs via SDK
-    - SDK delete Sync Gateway docs
-    - Sync Gateway delete SDK docs
+    - Sync Gateway delete 1/2 the docs
     - Sync Gateway purge all docs
     - Verify SDK can't see the docs
     - Verify SG can't see the docs
-    - Verify on Couchbase Server that the docs + XATTRS are gone
+    - Verify XATTRS are gone using SDK client with full bucket permissions via subdoc?
     """
 
     cluster_conf = params_from_base_test_setup['cluster_config']
@@ -71,7 +70,7 @@ def test_sdk_does_not_see_sync_meta(params_from_base_test_setup, sg_conf_name):
     """
     Scenario:
     - Bulk create 1000 docs via sync gateway
-    - Perform GET or docs from SDK
+    - Perform GET of docs from SDK
     - Assert that SDK does not see any sync meta data
     """
 
@@ -161,16 +160,17 @@ def test_sdk_does_not_see_sync_meta(params_from_base_test_setup, sg_conf_name):
 @pytest.mark.parametrize('sg_conf_name', [
     'sync_gateway_default_functional_tests'
 ])
-def test_sdk_interop_unique_docs(params_from_base_test_setup, sg_conf_name):
+def test_sg_sdk_interop_unique_docs(params_from_base_test_setup, sg_conf_name):
 
     """
     Scenario:
-    - Bulk create 'number_docs' docs from SDK with prefix 'sdk' and channels ['sdk']
-    - Bulk create 'number_docs' docs from SG with prefix 'sg' and channels ['sg']
+    - Bulk create 'number_docs' docs from SDK with id prefix 'sdk' and channels ['sdk']
+    - Bulk create 'number_docs' docs from SG with id prefix 'sg' and channels ['sg']
     - TODO: SDK: Verify docs (sg + sdk) are present
     - TODO: SG: Verify docs (sg + sdk) are there via _all_docs
     - TODO: SG: Verify docs (sg + sdk) are there via _changes
     - Bulk update each doc 'number_updates' from SDK for 'sdk' docs
+    - TODO: SDK should verify it does not see _sync
     - Bulk update each doc 'number_updates' from SG for 'sg' docs
     - TODO: SDK: Verify doc updates (sg + sdk) are present using the doc['content']['updates'] property
     - TODO: SG: Verify doc updates (sg + sdk) are there via _all_docs using the doc['content']['updates'] property and rev prefix
@@ -294,7 +294,7 @@ def test_sdk_interop_unique_docs(params_from_base_test_setup, sg_conf_name):
 @pytest.mark.parametrize('sg_conf_name', [
     'sync_gateway_default_functional_tests'
 ])
-def test_sdk_interop_shared_docs(params_from_base_test_setup, sg_conf_name):
+def test_sg_sdk_interop_shared_docs(params_from_base_test_setup, sg_conf_name):
     """
     Scenario:
     - Bulk create 'number_docs' docs from SDK with prefix 'doc_set_one' and channels ['shared']
@@ -572,6 +572,7 @@ def update_sdk_docs(client, docs_to_update, prop_to_update, number_updates):
         if doc_body[prop_to_update] == number_updates:
             local_docs_to_update.remove(random_doc_id)
         else:
+            # TODO: Make sure it is a CAS safe write
             doc_body[prop_to_update] += 1
             doc_body['updates'] += 1
             client.upsert(random_doc_id, doc_body)
