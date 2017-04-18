@@ -10,6 +10,8 @@ from keywords.exceptions import DockerError
 def remove_networks(docker_client):
     """ Removes all user defined docker networks """
 
+    # TODO: only remove network name that was passed
+
     networks = docker_client.networks.list()
 
     # Filter out docker defined networks
@@ -32,6 +34,7 @@ def remove_containers(docker_client):
     """ Stops / removes all containers """
 
     containers = docker_client.containers.list(all=True)
+    # TODO: filter by network name prefix, so it only removes containers in current network
     for container in containers:
 
         # HACK: Calling stop and remove via docker-py will timeout frequently
