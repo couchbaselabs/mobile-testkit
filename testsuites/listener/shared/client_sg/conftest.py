@@ -116,7 +116,6 @@ def setup_client_syncgateway_test(request, setup_client_syncgateway_suite):
 
     # Yield values to test case via fixture argument
     yield {
-        "liteserv": liteserv,
         "cluster_config": cluster_config,
         "sg_mode": setup_client_syncgateway_suite["sg_mode"],
         "ls_url": ls_url,
