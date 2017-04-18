@@ -73,7 +73,7 @@ def test_longpoll_changes_termination_heartbeat(setup_client_syncgateway_test):
 
     if liteserv_type == "LiteServMacOSX" and liteserv_version.startswith("1.3.1"):
         pytest.skip("test_longpoll_changes_termination_timeout fails on macosx with 1.3.1 CBL")
-        
+
     log_info("Running 'longpoll_changes_termination' ...")
 
     ls_db = "ls_db"
