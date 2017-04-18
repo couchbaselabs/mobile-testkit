@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 import argparse
 import subprocess
 import json
@@ -7,44 +9,40 @@ import docker
 from keywords.exceptions import DockerError
 
 
-def remove_networks(docker_client):
+def remove_networks(docker_client, network_name):
     """ Removes all user defined docker networks """
-
-    # TODO: only remove network name that was passed
 
     networks = docker_client.networks.list()
 
     # Filter out docker defined networks
-    predefined_networks = ['bridge', 'none', 'host']
-    user_defined_networks = [network for network in networks if network.name not in predefined_networks]
-
-    for user_defined_network in user_defined_networks:
-        print('Removing network: {}'.format(user_defined_network.name))
-        user_defined_network.remove()
+    user_defined_network = [network for network in networks if network.name == network_name]
+    if len(user_defined_network) == 1:
+        print('Removing network {}'.format(user_defined_network[0].name))
+        user_defined_network[0].remove()
 
     # Verify that all user defined networks are removed
     networks = docker_client.networks.list()
-    user_defined_networks = [network for network in networks if network.name not in predefined_networks]
-
-    if len(user_defined_networks) != 0:
+    user_defined_network = [network for network in networks if network.name == network_name]
+    if len(user_defined_network) != 0:
         raise DockerError('Failed to remove all networks!')
 
 
-def remove_containers(docker_client):
+def remove_containers(docker_client, network_name):
     """ Stops / removes all containers """
 
     containers = docker_client.containers.list(all=True)
-    # TODO: filter by network name prefix, so it only removes containers in current network
     for container in containers:
 
-        # HACK: Calling stop and remove via docker-py will timeout frequently
-        print('Stopping / removing container: {}'.format(container.name))
-        subprocess.check_call(['docker', 'stop', container.name])
-        subprocess.check_call(['docker', 'rm', container.name])
+        # Only remove the container if it starts with the network prefix
+        if container.name.startswith(network_name):
+            print('Stopping / removing containers with prefix {}: {}'.format(network_name, container.name))
+            subprocess.check_call(['docker', 'stop', container.name])
+            subprocess.check_call(['docker', 'rm', container.name])
 
     # Verify that all containers have been removed
     containers = docker_client.containers.list(all=True)
-    if len(containers) != 0:
+    containers_to_verify_removed = [container for container in containers if container.name.startswith(network_name)]
+    if len(containers_to_verify_removed) != 0:
         raise DockerError('Failed to remove all containers!')
 
 
@@ -60,8 +58,8 @@ def create_cluster(clean, network_name, number_of_nodes, public_key_path):
 
     if clean:
         print('Cleaning environment')
-        remove_containers(docker_client)
-        remove_networks(docker_client)
+        remove_containers(docker_client, network_name)
+        remove_networks(docker_client, network_name)
 
     # Create docker network with name
     print('Creating bridged network: {} ...'.format(network_name))
@@ -70,6 +68,8 @@ def create_cluster(clean, network_name, number_of_nodes, public_key_path):
     # Loop through nodes, start them on the network that was just created
     print('Starting {} containers on network {} ...'.format(number_of_nodes, network_name))
     container_names = ['{}.{}'.format(network_name, i) for i in range(number_of_nodes)]
+
+    is_first = True
     for container_name in container_names:
 
         print('Starting container: {} on network: {}'.format(container_name, network_name))
@@ -77,15 +77,30 @@ def create_cluster(clean, network_name, number_of_nodes, public_key_path):
         # Priviledged is required for some ansible playbooks
         # The volume binding is needed for systemd
         # https://hub.docker.com/r/centos/systemd/
-        container = docker_client.containers.run(
-            'sethrosetter/centos7-systemd-sshd',
-            detach=True,
-            name=container_name,
-            privileged=True,
-            volumes={
-                '/sys/fs/cgroup': {'bind': '/sys/fs/cgroup', 'mode': 'ro'}
-            }
-        )
+        if is_first:
+            # Hack, Currently the first container will always be a Couchbase Server. We want to bind
+            # it to localhost so that we can debug using the Admin UI
+            container = docker_client.containers.run(
+                'sethrosetter/centos7-systemd-sshd',
+                detach=True,
+                name=container_name,
+                privileged=True,
+                volumes={
+                    '/sys/fs/cgroup': {'bind': '/sys/fs/cgroup', 'mode': 'ro'}
+                },
+                ports={'8091/tcp': 18091}
+            )
+            is_first = False
+        else:
+            container = docker_client.containers.run(
+                'sethrosetter/centos7-systemd-sshd',
+                detach=True,
+                name=container_name,
+                privileged=True,
+                volumes={
+                    '/sys/fs/cgroup': {'bind': '/sys/fs/cgroup', 'mode': 'ro'}
+                }
+            )
         network.connect(container)
 
         # Deploy public key to cluster containers
