@@ -10,6 +10,8 @@ from keywords.exceptions import DockerError
 def remove_networks(docker_client):
     """ Removes all user defined docker networks """
 
+    # TODO: only remove network name that was passed
+
     networks = docker_client.networks.list()
 
     # Filter out docker defined networks
@@ -32,6 +34,7 @@ def remove_containers(docker_client):
     """ Stops / removes all containers """
 
     containers = docker_client.containers.list(all=True)
+    # TODO: filter by network name prefix, so it only removes containers in current network
     for container in containers:
 
         # HACK: Calling stop and remove via docker-py will timeout frequently
@@ -100,32 +103,6 @@ def create_cluster(clean, network_name, number_of_nodes, public_key_path):
     with open('/tmp/pool.json', 'w') as f:
         hosts = {'ips': container_names}
         f.write(json.dumps(hosts))
-
-    # Start testkit container
-    container_name = 'mobile-testkit'
-    print("Starting container: 'mobile-testkit' on network: {}".format(network_name))
-    container = docker_client.containers.run(
-        'couchbase/mobile-testkit',
-        name=container_name,
-        detach=True,
-        tty=True,
-        volumes={
-            '/tmp/pool.json': {'bind': '/tmp/pool.json', 'mode': 'ro'}
-        }
-    )
-    network.connect(container)
-
-    # Deploy private key to mobile-testkit container
-    # HACK: Using subprocess here since docker-py does not support copy
-    # TODO: Use .tar with client.put_achive
-    private_key_path = public_key_path.replace('.pub', '')
-    print('Deploying private key: {} to {}:/root/.ssh/'.format(private_key_path, container_name))
-    subprocess.check_call([
-        'docker',
-        'cp',
-        private_key_path,
-        '{}:/root/.ssh/'.format(container_name)
-    ])
 
 
 if __name__ == '__main__':

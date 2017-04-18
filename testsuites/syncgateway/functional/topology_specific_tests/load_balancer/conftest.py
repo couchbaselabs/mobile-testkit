@@ -8,7 +8,7 @@ from keywords.SyncGateway import validate_sync_gateway_mode
 from keywords.SyncGateway import sync_gateway_config_path_for_mode
 from keywords.ClusterKeywords import ClusterKeywords
 from libraries.NetworkUtils import NetworkUtils
-from keywords.Logging import Logging
+from keywords.tklogging import Logging
 
 from utilities.enable_disable_ssl_cluster import enable_cbs_ssl_in_cluster_config
 from utilities.enable_disable_ssl_cluster import disable_cbs_ssl_in_cluster_config

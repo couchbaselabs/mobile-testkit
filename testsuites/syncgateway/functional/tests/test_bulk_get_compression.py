@@ -11,7 +11,7 @@ from libraries.testkit.admin import Admin
 
 from keywords.SyncGateway import sync_gateway_config_path_for_mode
 from keywords.utils import log_info
-from keywords.Logging import Logging
+from keywords.tklogging import Logging
 
 
 uncompressed_size = 6320500

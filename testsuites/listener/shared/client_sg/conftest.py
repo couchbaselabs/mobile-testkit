@@ -8,7 +8,7 @@ from keywords.LiteServFactory import LiteServFactory
 from keywords.MobileRestClient import MobileRestClient
 from keywords.ClusterKeywords import ClusterKeywords
 from keywords.SyncGateway import sync_gateway_config_path_for_mode
-from keywords.Logging import Logging
+from keywords.tklogging import Logging
 
 
 # Add custom arguments for executing tests in this directory

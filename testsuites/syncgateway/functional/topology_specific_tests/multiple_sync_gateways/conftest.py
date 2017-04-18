@@ -5,7 +5,7 @@ from keywords.ClusterKeywords import ClusterKeywords
 from keywords.SyncGateway import validate_sync_gateway_mode
 from keywords.SyncGateway import sync_gateway_config_path_for_mode
 from libraries.NetworkUtils import NetworkUtils
-from keywords.Logging import Logging
+from keywords.tklogging import Logging
 
 from keywords import constants
 from libraries.testkit import cluster
