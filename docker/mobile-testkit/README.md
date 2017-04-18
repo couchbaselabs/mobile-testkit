@@ -1,7 +1,7 @@
 ### Running tests with docker image
 
 IMPORTANT: This will copy your public key to allow ssh access from mobile-testkit container to other clusters in the container.
-IMPORTANT: If you have been developing on you host machine, you may need to do a clean checkout or a `git clean -ffdx` to make sure that the mounted volume does not pick up stale paths
+IMPORTANT: If you have been developing on you host machine, you may need `clean.sh` to make sure that the mounted volume does not pick up stale state (.pyc files, test run caches, etc)
 
 In order to pull dependencies needed by `docker/create_cluster.py`, re-run `source setup.sh`:
 
@@ -18,7 +18,7 @@ $ python docker/create_cluster.py --network-name cbl --number-of-nodes 5 --path-
 Mount local dev environment for iterative development with docker backend. This way you can make changes in your /{user}/mobile-testkit repo and execute within the context of the container.
 
 ```
-$ docker run --privileged --rm -it --network=cbl --name=mobile-testkit -v $(pwd):/opt/mobile-testkit -v /tmp/pool.json:/opt/mobile-testkit/resources/pool.json -v ~/.ssh/id_rsa:/root/.ssh/id_rsa test  /bin/bash
+$ docker run --privileged --rm -it --network=cbl --name=mobile-testkit -v $(pwd):/opt/mobile-testkit -v /tmp/pool.json:/opt/mobile-testkit/resources/pool.json -v ~/.ssh/id_rsa:/root/.ssh/id_rsa couchbase/mobile-testkit  /bin/bash
 ```
 
 And then inside the docker container:

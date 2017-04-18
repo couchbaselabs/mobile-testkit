@@ -3,7 +3,8 @@
     "files.exclude": {
         "__pycache__/": true,
         ".cache": true,
-        ".idea": true
+        ".idea": true,
+        "**/*.pyc": true
     },
     "python.pythonPath": "${workspaceRoot}/venv/bin/python2.7",
     "python.unitTest.pyTestEnabled": true,
