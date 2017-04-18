@@ -100,7 +100,7 @@ def setup_client_syncgateway_test(request, setup_client_syncgateway_suite):
     if request.config.getoption("--liteserv-platform") == "macosx" and \
             str(request.config.getoption("--liteserv-version")).startswith("1.3.1") and \
             str(test_name).startswith("test_longpoll_changes_termination"):
-        pytest.skip("test_longpoll_changes_termination test are known to fail on macosx with 1.3.1 CBL")
+        pytest.skip("test_longpoll_changes_termination tests are known to fail on macosx with 1.3.1 CBL")
 
     client = MobileRestClient()
 
