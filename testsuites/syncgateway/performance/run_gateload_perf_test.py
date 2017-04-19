@@ -23,9 +23,7 @@ GateloadParams = collections.namedtuple(
         "feed_type",
         "sleep_time_ms",
         "channel_active_users",
-        "channel_concurrent_users",
-        "delay_profiling_secs",
-        "delay_expvar_collect_secs"
+        "channel_concurrent_users"
     ]
 )
 
@@ -80,7 +78,7 @@ def run_gateload_perf_test(gen_gateload_config, test_id, gateload_params):
         "start-profile-collection.yml",
         extra_vars={
             "stats_run_time": runtime_s,
-            "delay_profiling_secs": int(gateload_params.delay_profiling_secs)
+            "delay_profiling_secs": int(run_gateload_perf_test.delay_profiling_secs)
         },
     )
     assert status == 0, "Could not start profiling collection scripts"
@@ -92,7 +90,7 @@ def run_gateload_perf_test(gen_gateload_config, test_id, gateload_params):
     status = ansible_runner.run_ansible_playbook(
         "start-gateload.yml",
         extra_vars={
-            "delay_expvar_collect_secs": int(gateload_params.delay_expvar_collect_secs)
+            "delay_expvar_collect_secs": int(run_gateload_perf_test.delay_expvar_collect_secs)
         },
     )
     assert status == 0, "Could not start gateload"
@@ -218,14 +216,14 @@ if __name__ == "__main__":
         feed_type=opts.feed_type,
         sleep_time_ms=opts.sleep_time_ms,
         channel_active_users=opts.channel_active_users,
-        channel_concurrent_users=opts.channel_concurrent_users,
-        delay_profiling_secs=opts.delay_profiling_secs,
-        delay_expvar_collect_secs=opts.delay_expvar_collect_secs
+        channel_concurrent_users=opts.channel_concurrent_users
     )
 
     # Start load generator
     run_gateload_perf_test(
         gen_gateload_config=opts.gen_gateload_config,
         test_id=opts.test_id,
-        gateload_params=gateload_params_from_args
+        gateload_params=gateload_params_from_args,
+        delay_profiling_secs=opts.delay_profiling_secs,
+        delay_expvar_collect_secs=opts.delay_expvar_collect_secs
     )
