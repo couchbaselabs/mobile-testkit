@@ -1,20 +1,15 @@
-import sys
 import os
 import re
-
-from keywords.couchbaseserver import CouchbaseServer
-from keywords.ClusterKeywords import ClusterKeywords
-from keywords.exceptions import ProvisioningError
-from keywords.utils import log_warn
-
-from libraries.testkit.config import Config
-from utilities.enable_disable_ssl_cluster import is_cbs_ssl_enabled
-
-from keywords.utils import log_info
-
+import sys
 from optparse import OptionParser
 
-from ansible_runner import AnsibleRunner
+from keywords.ClusterKeywords import ClusterKeywords
+from keywords.couchbaseserver import CouchbaseServer
+from keywords.exceptions import ProvisioningError
+from keywords.utils import log_info, log_warn
+from libraries.provision.ansible_runner import AnsibleRunner
+from libraries.testkit.config import Config
+from utilities.cluster_config_utils import is_cbs_ssl_enabled
 
 
 class SyncGatewayConfig:
