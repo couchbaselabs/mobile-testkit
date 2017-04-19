@@ -95,6 +95,8 @@ def test_purge(params_from_base_test_setup, sg_conf_name):
     sdk_doc_ids = [doc for doc in sdk_docs]
     sdk_client.upsert_multi(sdk_docs)
 
+    # TODO: Why does pytest not like bucket creation retry?
+
     pytest.set_trace()
 
 @pytest.mark.sanity
