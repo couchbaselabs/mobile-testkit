@@ -18,6 +18,7 @@
                         channel([doc.channels,"channel_x"]);
                     } }`,
             "offline":true,
+            "feed_type":"DCP",
             "users": {"GUEST": {"disabled": false, "admin_channels": ["*"] }}
         }
     }

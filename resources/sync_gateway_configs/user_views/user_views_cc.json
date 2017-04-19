@@ -11,6 +11,7 @@
   ],
   "databases": {
     "db": {
+      "feed_type":"DCP",
       "unsupported": {
         "user_views": {
           "enabled":true

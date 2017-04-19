@@ -11,12 +11,14 @@
         "db1":{
             "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
             "bucket":"data-bucket-1",
-            "password": "password"
+            "password": "password",
+            "feed_type":"DCP",
         },
         "db2":{
             "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
             "bucket":"data-bucket-2",
-            "password": "password"
+            "password": "password",
+            "feed_type":"DCP",
         }
     }
 }

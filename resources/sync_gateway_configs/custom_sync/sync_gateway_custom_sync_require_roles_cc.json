@@ -21,6 +21,7 @@
                     ]
                 }
             },
+            "feed_type":"DCP",
             "sync":
             `function(doc, oldDoc){
                 if (doc.channels.indexOf("KMOW") > -1 || doc.channels.indexOf("HWOD") > -1 || doc.channels.indexOf("KDWB") > -1) {
