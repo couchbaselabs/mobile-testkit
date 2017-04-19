@@ -7,6 +7,7 @@ from couchbase.exceptions import NotFoundError
 from requests.exceptions import HTTPError
 
 from keywords import attachment, document
+from keywords.userinfo import UserInfo
 from keywords.constants import DATA_DIR
 from keywords.MobileRestClient import MobileRestClient
 from keywords.SyncGateway import sync_gateway_config_path_for_mode
@@ -47,7 +48,7 @@ def test_purge(params_from_base_test_setup, sg_conf_name):
     bucket_name = 'data-bucket'
     cbs_url = cluster_topology['couchbase_servers'][0]
     sg_db = 'db'
-    number_of_sg_docs = 1000
+    number_docs_per_client = 1000
     channels = ['NASA']
 
     log_info('sg_conf: {}'.format(sg_conf))
@@ -57,6 +58,44 @@ def test_purge(params_from_base_test_setup, sg_conf_name):
     cluster = Cluster(config=cluster_conf)
     cluster.reset(sg_config_path=sg_conf)
 
+    sg_client = MobileRestClient()
+    seth_user_info = UserInfo(name='seth', password='pass', channels=['NASA'], roles=[])
+    sg_client.create_user(
+        url=sg_admin_url,
+        db=sg_db,
+        name=seth_user_info.name,
+        password=seth_user_info.password,
+        channels=seth_user_info.channels
+    )
+
+    seth_auth = sg_client.create_session(
+        url=sg_admin_url,
+        db=sg_db,
+        name=seth_user_info.name,
+        password=seth_user_info.password
+    )
+
+    # Create 'number_docs_per_client' docs from Sync Gateway
+    seth_docs = document.create_docs('sg', number=number_docs_per_client, channels=seth_user_info.channels)
+    bulk_docs_resp = sg_client.add_bulk_docs(
+        url=sg_url,
+        db=sg_db,
+        docs=seth_docs,
+        auth=seth_auth
+    )
+    assert len(bulk_docs_resp) == number_docs_per_client
+
+    # Connect to server via SDK
+    cbs_ip = host_for_url(cbs_url)
+    sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password')
+
+    # Create 'number_docs_per_client' docs from SDK
+    sdk_doc_bodies = document.create_docs('sdk', number_docs_per_client, channels=['sdk'])
+    sdk_docs = {doc['_id']: doc for doc in sdk_doc_bodies}
+    sdk_doc_ids = [doc for doc in sdk_docs]
+    sdk_client.upsert_multi(sdk_docs)
+
+    pytest.set_trace()
 
 @pytest.mark.sanity
 @pytest.mark.syncgateway
