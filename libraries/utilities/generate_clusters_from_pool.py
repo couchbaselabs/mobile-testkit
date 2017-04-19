@@ -356,8 +356,9 @@ def write_config(config, pool_file):
         except Exception as e:
             log_error("Failed to find local_ip, webhook tests will fail.  Error: {}".format(e))
 
-        f.write("\n\n[cbs_ssl]\n")
+        f.write("\n\n[environment]\n")
         f.write("cbs_ssl_enabled=False\n")
+        f.write("xattrs_enabled=False\n")
 
         log_info("Generating {}.json".format(config.name))
 
@@ -369,7 +370,10 @@ def write_config(config, pool_file):
             "sg_accels": accels,
             "load_generators": load_generators,
             "load_balancers": load_balancers,
-            "cbs_ssl_enabled": False,
+            "environment": {
+                "cbs_ssl_enabled": False,
+                "xattrs_enabled": False
+            }
         }
 
         with open(cluster_json_file, "w") as f_json:
