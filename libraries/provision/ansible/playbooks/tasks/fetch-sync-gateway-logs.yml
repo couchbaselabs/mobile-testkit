@@ -1,5 +1,6 @@
 # Fetch sync gateway logs for CentOS
 - name: SYNC GATEWAY | Check if sync_gateway access log is present
+  become: yes
   stat:
     path: '/home/sync_gateway/logs/sync_gateway_access.log'
   register: pa
@@ -11,6 +12,7 @@
   when: pa.stat.exists
 
 - name: SYNC GATEWAY | Check if sync_gateway error log is present
+  become: yes
   stat:
     path: '/home/sync_gateway/logs/sync_gateway_error.log'
   register: pe

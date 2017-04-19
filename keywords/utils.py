@@ -76,7 +76,11 @@ def host_for_url(url):
     and returns an host in the form 192.168.33.10
     """
 
-    host = url.replace("http://", "")
+    if "https" in url:
+        host = url.replace("https://", "")
+    else:
+        host = url.replace("http://", "")
+
     host = host.split(":")[0]
     log_info("Extracted host ({}) from url ({})".format(host, url))
 

@@ -12,6 +12,7 @@ from libraries.testkit import cluster
 @pytest.mark.listener
 @pytest.mark.syncgateway
 @pytest.mark.views
+@pytest.mark.session
 def test_stale_revision_should_not_be_in_the_index(setup_client_syncgateway_test):
     """original ticket: https://github.com/couchbase/couchbase-lite-android/issues/855
 
@@ -99,10 +100,10 @@ def test_stale_revision_should_not_be_in_the_index(setup_client_syncgateway_test
     doc = client.add_doc(url=ls_url, db=ls_db, doc=doc_body)
     doc_2 = client.add_doc(url=ls_url, db=ls_db, doc=doc_body_2)
 
-    content_view_rows = client.get_view(url=ls_url, db=ls_db, design_doc_id=design_doc_id, view_name="content_view")
+    content_view_rows = client.get_view(url=ls_url, db=ls_db, design_doc_name=d_doc_name, view_name="content_view")
     client.verify_view_row_num(view_response=content_view_rows, expected_num_rows=1)
 
-    update_view_rows = client.get_view(url=ls_url, db=ls_db, design_doc_id=design_doc_id, view_name="update_view")
+    update_view_rows = client.get_view(url=ls_url, db=ls_db, design_doc_name=d_doc_name, view_name="update_view")
     client.verify_view_row_num(view_response=update_view_rows, expected_num_rows=2)
 
     expected_docs_list = [doc, doc_2]
@@ -112,7 +113,7 @@ def test_stale_revision_should_not_be_in_the_index(setup_client_syncgateway_test
 
     client.verify_docs_present(url=ls_url, db=ls_db, expected_docs=updated_doc)
 
-    content_view_rows_2 = client.get_view(url=ls_url, db=ls_db, design_doc_id=design_doc_id, view_name="content_view")
+    content_view_rows_2 = client.get_view(url=ls_url, db=ls_db, design_doc_name=d_doc_name, view_name="content_view")
     client.verify_view_row_num(view_response=content_view_rows_2, expected_num_rows=1)
 
     client.verify_view_contains_keys(view_response=content_view_rows_2, keys=doc["id"])

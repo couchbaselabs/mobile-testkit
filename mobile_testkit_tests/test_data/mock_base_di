@@ -1,0 +1,24 @@
+[pool]
+ma1 ansible_host=192.168.33.20
+ma2 ansible_host=192.168.33.21
+ma3 ansible_host=192.168.33.22
+
+[couchbase_servers]
+cb1 ansible_host=192.168.33.20
+
+[sync_gateways]
+sg1 ansible_host=192.168.33.21
+
+[sg_accels]
+ac1 ansible_host=192.168.33.22
+
+[load_generators]
+
+[load_balancers]
+
+[webhook_ip]
+tf1 ansible_host=10.17.0.22
+
+[cbs_ssl]
+cbs_ssl_enabled=False
+

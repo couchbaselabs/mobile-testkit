@@ -3,13 +3,14 @@ import pytest
 from keywords.constants import CLUSTER_CONFIGS_DIR
 from keywords.utils import log_info
 from keywords.ClusterKeywords import ClusterKeywords
-from keywords.Logging import Logging
+from keywords.tklogging import Logging
 from keywords.SyncGateway import validate_sync_gateway_mode
 from keywords.SyncGateway import sync_gateway_config_path_for_mode
-
 from libraries.testkit import cluster
-
 from libraries.NetworkUtils import NetworkUtils
+
+from utilities.enable_disable_ssl_cluster import enable_cbs_ssl_in_cluster_config
+from utilities.enable_disable_ssl_cluster import disable_cbs_ssl_in_cluster_config
 
 
 # Add custom arguments for executing tests in this directory
@@ -36,6 +37,18 @@ def pytest_addoption(parser):
                      action="store_true",
                      help="If set, will target larger cluster (3 backing servers instead of 1, 2 accels if in di mode)")
 
+    parser.addoption("--race",
+                     action="store_true",
+                     help="Enable -races for Sync Gateway build. IMPORTANT - This will only work with source builds at the moment")
+
+    parser.addoption("--collect-logs",
+                     action="store_true",
+                     help="Collect logs for every test. If this flag is not set, collection will only happen for test failures.")
+
+    parser.addoption("--server-ssl",
+                     action="store_true",
+                     help="If set, will enable SSL communication between server and Sync Gateway")
+
 
 # This will be called once for the at the beggining of the execution in the 'tests/' directory
 # and will be torn down, (code after the yeild) when all the test session has completed.
@@ -46,16 +59,20 @@ def pytest_addoption(parser):
 def params_from_base_suite_setup(request):
     log_info("Setting up 'params_from_base_suite_setup' ...")
 
+    # pytest command line parameters
     server_version = request.config.getoption("--server-version")
     sync_gateway_version = request.config.getoption("--sync-gateway-version")
     mode = request.config.getoption("--mode")
     skip_provisioning = request.config.getoption("--skip-provisioning")
     ci = request.config.getoption("--ci")
+    race_enabled = request.config.getoption("--race")
+    cbs_ssl = request.config.getoption("--server-ssl")
 
     log_info("server_version: {}".format(server_version))
     log_info("sync_gateway_version: {}".format(sync_gateway_version))
     log_info("mode: {}".format(mode))
     log_info("skip_provisioning: {}".format(skip_provisioning))
+    log_info("race_enabled: {}".format(race_enabled))
 
     # Make sure mode for sync_gateway is supported ('cc' or 'di')
     validate_sync_gateway_mode(mode)
@@ -68,6 +85,15 @@ def params_from_base_suite_setup(request):
         log_info("Using 'base_{}' config!".format(mode))
         cluster_config = "{}/base_{}".format(CLUSTER_CONFIGS_DIR, mode)
 
+    if cbs_ssl:
+        log_info("Running tests with cbs <-> sg ssl enabled")
+        # Enable ssl in cluster configs
+        enable_cbs_ssl_in_cluster_config(cluster_config)
+    else:
+        log_info("Running tests with cbs <-> sg ssl disabled")
+        # Disable ssl in cluster configs
+        disable_cbs_ssl_in_cluster_config(cluster_config)
+
     sg_config = sync_gateway_config_path_for_mode("sync_gateway_default_functional_tests", mode)
 
     # Skip provisioning if user specifies '--skip-provisoning'
@@ -77,7 +103,8 @@ def params_from_base_suite_setup(request):
             cluster_config=cluster_config,
             server_version=server_version,
             sync_gateway_version=sync_gateway_version,
-            sync_gateway_config=sg_config
+            sync_gateway_config=sg_config,
+            race_enabled=race_enabled
         )
 
     # Load topology as a dictionary
@@ -98,6 +125,9 @@ def params_from_base_suite_setup(request):
 @pytest.fixture(scope="function")
 def params_from_base_test_setup(request, params_from_base_suite_setup):
     # Code before the yeild will execute before each test starts
+
+    # pytest command line parameters
+    collect_logs = request.config.getoption("--collect-logs")
 
     cluster_config = params_from_base_suite_setup["cluster_config"]
     cluster_topology = params_from_base_suite_setup["cluster_topology"]
@@ -126,7 +156,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     errors = c.verify_alive(mode)
 
     # if the test failed or a node is down, pull logs
-    if request.node.rep_call.failed or len(errors) != 0:
+    if collect_logs or request.node.rep_call.failed or len(errors) != 0:
         logging_helper = Logging()
         logging_helper.fetch_and_analyze_logs(cluster_config=cluster_config, test_name=test_name)
 

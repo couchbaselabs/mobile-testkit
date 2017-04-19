@@ -17,6 +17,10 @@ from keywords import document
 @pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.changes
+@pytest.mark.session
+@pytest.mark.channel
+@pytest.mark.rollback
+@pytest.mark.bulkops
 @pytest.mark.skip(reason="https://github.com/couchbaselabs/mobile-testkit/issues/979")
 @pytest.mark.parametrize("sg_conf_name", [
     "sync_gateway_default"
