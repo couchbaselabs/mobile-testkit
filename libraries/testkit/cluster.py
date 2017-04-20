@@ -64,6 +64,10 @@ class Cluster:
 
         ansible_runner = AnsibleRunner(self._cluster_config)
 
+        log_info(">>> Reseting cluster ...")
+        log_info(">>> CBS SSL enabled: {}".format(self.cbs_ssl))
+        log_info(">>> Using xattrs: {}".format(self.xattrs))
+
         # Stop sync_gateways
         log_info(">>> Stopping sync_gateway")
         status = ansible_runner.run_ansible_playbook("stop-sync-gateway.yml")
@@ -119,13 +123,19 @@ class Cluster:
             server_scheme = "https"
 
         # Start sync-gateway
+        playbook_vars = {
+            "sync_gateway_config_filepath": config_path_full,
+            "server_port": server_port,
+            "server_scheme": server_scheme
+        }
+
+        # Add configuration to run with xattrs
+        if self.xattrs:
+            playbook_vars["xattrs"] = '"unsupported": {"enable_extended_attributes": true},'
+
         status = ansible_runner.run_ansible_playbook(
             "start-sync-gateway.yml",
-            extra_vars={
-                "sync_gateway_config_filepath": config_path_full,
-                "server_port": server_port,
-                "server_scheme": server_scheme
-            }
+            extra_vars=playbook_vars
         )
         assert status == 0, "Failed to start to Sync Gateway"
 

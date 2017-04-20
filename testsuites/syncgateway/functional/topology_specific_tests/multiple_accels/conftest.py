@@ -31,6 +31,8 @@ def params_from_base_suite_setup(request):
     log_info("mode: {}".format(mode))
     log_info("skip_provisioning: {}".format(skip_provisioning))
     log_info("race_enabled: {}".format(race_enabled))
+    log_info("cbs_ssl: {}".format(cbs_ssl))
+    log_info("xattrs_enabled: {}".format(xattrs_enabled))
 
     # Make sure mode for sync_gateway is supported ('cc' or 'di')
     validate_sync_gateway_mode(mode)
@@ -46,11 +48,18 @@ def params_from_base_suite_setup(request):
     if cbs_ssl:
         log_info("Running tests with cbs <-> sg ssl enabled")
         # Enable ssl in cluster configs
-        enable_cbs_ssl_in_cluster_config(cluster_config)
+        persist_cluster_config_environment_prop(cluster_config, 'cbs_ssl_enabled', True)
     else:
         log_info("Running tests with cbs <-> sg ssl disabled")
         # Disable ssl in cluster configs
-        disable_cbs_ssl_in_cluster_config(cluster_config)
+        persist_cluster_config_environment_prop(cluster_config, 'cbs_ssl_enabled', False)
+
+    if use_xattrs:
+        log_info("Running test with xattrs for sync meta storage")
+        persist_cluster_config_environment_prop(cluster_config, 'xattrs_enabled', True)
+    else:
+        log_info("Using document storage for sync meta data")
+        persist_cluster_config_environment_prop(cluster_config, 'xattrs_enabled', False)
 
     # Skip provisioning if user specifies '--skip-provisoning'
     if not skip_provisioning:
