@@ -207,7 +207,7 @@ def test_peer_2_peer_sanity_pull(setup_p2p_test, num_docs_per_db, seeded_db, att
     log_info("ls_url_two: {}".format(ls_url_two))
 
     if attachments_generator:
-        log_info("Running test_peer_2_peer_sanity_push with attachment {}".format(attachments_generator))
+        log_info("Running test_peer_2_peer_sanity_pull with attachment {}".format(attachments_generator))
 
     client = MobileRestClient()
 
@@ -328,7 +328,7 @@ def test_peer_2_peer_sanity_push_pull(setup_p2p_test, num_docs_per_db, seeded_db
     log_info("ls_url_two: {}".format(ls_url_two))
 
     if attachments_generator:
-        log_info("Running test_peer_2_peer_sanity_push with attachment {}".format(attachments_generator))
+        log_info("Running test_peer_2_peer_sanity_push_pull with attachment {}".format(attachments_generator))
 
     client = MobileRestClient()
 
@@ -366,7 +366,7 @@ def test_peer_2_peer_sanity_push_pull(setup_p2p_test, num_docs_per_db, seeded_db
 
     ls_db1_docs = client.add_docs(url=ls_url_one, db=ls_db1, number=num_docs_per_db, id_prefix="test_ls_db1", attachments_generator=attachments_generator)
     assert len(ls_db1_docs) == num_docs_per_db
-    ls_db2_docs = client.add_docs(url=ls_url_two, db=ls_db2, number=num_docs_per_db, id_prefix="test_ls_db2")
+    ls_db2_docs = client.add_docs(url=ls_url_two, db=ls_db2, number=num_docs_per_db, id_prefix="test_ls_db2", attachments_generator=attachments_generator)
     assert len(ls_db2_docs) == num_docs_per_db
 
     total_docs = ls_db1_docs + ls_db2_docs
