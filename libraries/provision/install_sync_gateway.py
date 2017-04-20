@@ -9,7 +9,7 @@ from keywords.exceptions import ProvisioningError
 from keywords.utils import log_info, log_warn
 from libraries.provision.ansible_runner import AnsibleRunner
 from libraries.testkit.config import Config
-from utilities.cluster_config_utils import is_cbs_ssl_enabled
+from utilities.cluster_config_utils import is_cbs_ssl_enabled, is_xattrs_enabled
 
 
 class SyncGatewayConfig:
@@ -133,16 +133,21 @@ def install_sync_gateway(cluster_config, sync_gateway_config):
     else:
         # Install from Package
         sync_gateway_base_url, sync_gateway_package_name, sg_accel_package_name = sync_gateway_config.sync_gateway_base_url_and_package()
+        playbook_vars = {
+            "couchbase_sync_gateway_package_base_url": sync_gateway_base_url,
+            "couchbase_sync_gateway_package": sync_gateway_package_name,
+            "couchbase_sg_accel_package": sg_accel_package_name,
+            "sync_gateway_config_filepath": config_path,
+            "server_port": server_port,
+            "server_scheme": server_scheme
+        }
+
+        if is_xattrs_enabled(cluster_config):
+            playbook_vars["xattrs"] = '"unsupported": {"enable_extended_attributes": true},'
+
         status = ansible_runner.run_ansible_playbook(
             "install-sync-gateway-package.yml",
-            extra_vars={
-                "couchbase_sync_gateway_package_base_url": sync_gateway_base_url,
-                "couchbase_sync_gateway_package": sync_gateway_package_name,
-                "couchbase_sg_accel_package": sg_accel_package_name,
-                "sync_gateway_config_filepath": config_path,
-                "server_port": server_port,
-                "server_scheme": server_scheme
-            }
+            extra_vars=playbook_vars
         )
         if status != 0:
             raise ProvisioningError("Failed to install sync_gateway package")
