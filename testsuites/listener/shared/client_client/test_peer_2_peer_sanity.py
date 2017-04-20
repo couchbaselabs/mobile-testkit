@@ -233,7 +233,7 @@ def test_peer_2_peer_sanity_pull(setup_p2p_test, num_docs_per_db, seeded_db, att
     ls_db2_docs = client.add_docs(url=ls_url_two, db=ls_db2, number=num_docs_per_db, id_prefix="test_ls_db2", attachments_generator=attachments_generator)
     assert len(ls_db2_docs) == num_docs_per_db
 
-    client.verify_docs_present(url=ls_url_one, db=ls_db1, expected_docs=ls_db2_docs, attachments=True)
+    client.verify_docs_present(url=ls_url_one, db=ls_db1, expected_docs=ls_db2_docs, attachments=attachments_generator)
     client.verify_docs_in_changes(url=ls_url_one, db=ls_db1, expected_docs=ls_db2_docs)
 
     total_ls_db2_docs = ls_db2_docs
@@ -299,7 +299,7 @@ def test_peer_2_peer_sanity_push(setup_p2p_test, num_docs_per_db, seeded_db, att
     if seeded_db:
         total_ls_db1_docs += ls_db1_docs_seed
 
-    client.verify_docs_present(url=ls_url_two, db=ls_db2, expected_docs=total_ls_db1_docs, attachments=True)
+    client.verify_docs_present(url=ls_url_two, db=ls_db2, expected_docs=total_ls_db1_docs, attachments=attachments_generator)
     client.verify_docs_in_changes(url=ls_url_two, db=ls_db2, expected_docs=total_ls_db1_docs)
 
 
@@ -374,7 +374,7 @@ def test_peer_2_peer_sanity_push_pull(setup_p2p_test, num_docs_per_db, seeded_db
         total_docs += ls_db1_docs_seed
         total_docs += ls_db2_docs_seed
 
-    client.verify_docs_present(url=ls_url_two, db=ls_db2, expected_docs=total_docs, attachments=True)
+    client.verify_docs_present(url=ls_url_two, db=ls_db2, expected_docs=total_docs, attachments=attachments_generator)
     client.verify_docs_in_changes(url=ls_url_two, db=ls_db2, expected_docs=total_docs)
 
 
