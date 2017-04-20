@@ -25,6 +25,7 @@ def params_from_base_suite_setup(request):
     skip_provisioning = request.config.getoption("--skip-provisioning")
     race_enabled = request.config.getoption("--race")
     cbs_ssl = request.config.getoption("--server-ssl")
+    xattrs_enabled = request.config.getoption("--xattrs")
 
     log_info("server_version: {}".format(server_version))
     log_info("sync_gateway_version: {}".format(sync_gateway_version))
@@ -54,7 +55,7 @@ def params_from_base_suite_setup(request):
         # Disable ssl in cluster configs
         persist_cluster_config_environment_prop(cluster_config, 'cbs_ssl_enabled', False)
 
-    if use_xattrs:
+    if xattrs_enabled:
         log_info("Running test with xattrs for sync meta storage")
         persist_cluster_config_environment_prop(cluster_config, 'xattrs_enabled', True)
     else:
