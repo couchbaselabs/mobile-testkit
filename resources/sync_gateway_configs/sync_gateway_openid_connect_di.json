@@ -11,6 +11,7 @@
     "password": "password"
   },
   "databases": {
+    {{ xattrs }}
     "db": {
       "oidc": {
         "default_provider": "test",

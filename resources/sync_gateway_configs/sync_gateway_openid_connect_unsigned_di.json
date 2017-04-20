@@ -12,6 +12,7 @@
    },
    "databases":{
       "db":{
+         {{ xattrs }}
          "oidc":{
             "default_provider":"test",
             "providers":{
