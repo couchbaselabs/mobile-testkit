@@ -71,7 +71,7 @@ class ClusterKeywords:
         server_port = 8091
         server_scheme = "http"
 
-        if cluster["cbs_ssl_enabled"]:
+        if cluster["environment"]["cbs_ssl_enabled"]:
             server_port = 18091
             server_scheme = "https"
 
@@ -138,7 +138,7 @@ class ClusterKeywords:
             cluster_obj = json.loads(f.read())
 
         cbs_ssl = False
-        if cluster_obj["cbs_ssl_enabled"]:
+        if cluster_obj["environment"]["cbs_ssl_enabled"]:
             cbs_ssl = True
 
         # Verify Server version

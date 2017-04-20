@@ -32,7 +32,7 @@ class Server:
         server_port = 8091
         server_scheme = "http"
 
-        if cluster["cbs_ssl_enabled"]:
+        if cluster["environment"]["cbs_ssl_enabled"]:
             server_port = 18091
             server_scheme = "https"
 

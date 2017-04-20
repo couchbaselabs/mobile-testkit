@@ -1,22 +1,21 @@
-import os
 import json
+import os
 import time
 
 from requests.exceptions import ConnectionError
 
-from libraries.testkit.syncgateway import SyncGateway
-from libraries.testkit.sgaccel import SgAccel
-from libraries.testkit.server import Server
+import keywords.exceptions
+from keywords import couchbaseserver
+from keywords.exceptions import ProvisioningError
+from keywords.utils import log_info
+from libraries.provision.ansible_runner import AnsibleRunner
 from libraries.testkit.admin import Admin
 from libraries.testkit.config import Config
-from libraries.provision.ansible_runner import AnsibleRunner
-
-from keywords import couchbaseserver
-
-import keywords.exceptions
-from keywords.exceptions import ProvisioningError
-
-from keywords.utils import log_info
+from libraries.testkit.server import Server
+from libraries.testkit.sgaccel import SgAccel
+from libraries.testkit.syncgateway import SyncGateway
+from utilities.cluster_config_utils import (is_cbs_ssl_enabled,
+                                            is_xattrs_enabled)
 
 
 class Cluster:
@@ -30,8 +29,7 @@ class Cluster:
     def __init__(self, config):
 
         self._cluster_config = config
-        self.cbs_ssl = False
-
+    
         if not os.path.isfile(self._cluster_config):
             log_info("Cluster config not found in 'resources/cluster_configs/'")
             raise IOError("Cluster config not found in 'resources/cluster_configs/'")
@@ -46,7 +44,8 @@ class Cluster:
         sgs = [{"name": sg["name"], "ip": sg["ip"]} for sg in cluster["sync_gateways"]]
         acs = [{"name": ac["name"], "ip": ac["ip"]} for ac in cluster["sg_accels"]]
 
-        self.cbs_ssl = cluster["cbs_ssl_enabled"]
+        self.cbs_ssl = cluster["environment"]["cbs_ssl_enabled"]
+        self.xattrs = cluster["environment"]["xattrs_enabled"]
 
         log_info("cbs: {}".format(cbs))
         log_info("sgs: {}".format(sgs))
