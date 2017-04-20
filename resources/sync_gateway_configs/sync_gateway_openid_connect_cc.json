@@ -6,6 +6,7 @@
    "AdminInterface":"0.0.0.0:4985",
    "databases":{
       "db":{
+          {{ xattrs }}
          "oidc":{
             "default_provider":"test",
             "providers":{

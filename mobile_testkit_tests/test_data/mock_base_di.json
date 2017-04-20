@@ -12,6 +12,10 @@
             "name": "sg1"
         }
     ], 
+    "environment": {
+        "cbs_ssl_enabled": false, 
+        "xattrs_enabled": false
+    }, 
     "hosts": [
         {
             "ip": "192.168.33.20", 
@@ -32,6 +36,5 @@
             "ip": "192.168.33.22", 
             "name": "ac1"
         }
-    ], 
-    "cbs_ssl_enabled": false
+    ]
 }

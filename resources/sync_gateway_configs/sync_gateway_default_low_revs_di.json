@@ -15,6 +15,7 @@
   },
   "databases":{
     "db":{
+    {{ xattrs }}
     "feed_type":"DCPSHARD",
     "channel_index":{
       "num_shards":16,

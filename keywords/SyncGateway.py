@@ -15,7 +15,7 @@ from keywords.utils import log_info
 from keywords.exceptions import ProvisioningError
 
 from libraries.provision.ansible_runner import AnsibleRunner
-from utilities.enable_disable_ssl_cluster import is_cbs_ssl_enabled
+from utilities.cluster_config_utils import is_cbs_ssl_enabled
 
 
 def validate_sync_gateway_mode(mode):

@@ -28,6 +28,8 @@ requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
 
 def get_server_version(host, cbs_ssl=False):
+    """ Get the version of a running Couchbase server on host 'host' """
+
     server_scheme = "http"
     server_port = 8091
 
@@ -355,7 +357,7 @@ class CouchbaseServer:
             data["saslPassword"] = "password"
             data["proxyPort"] = "11211"
 
-        resp = ""
+        resp = None
         try:
             resp = self._session.post("{}/pools/default/buckets".format(self.url), data=data)
             log_r(resp)

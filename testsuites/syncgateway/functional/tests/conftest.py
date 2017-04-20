@@ -1,16 +1,17 @@
+""" Setup for Sync Gateway functional tests """
+
 import pytest
 
-from keywords.constants import CLUSTER_CONFIGS_DIR
-from keywords.utils import log_info
 from keywords.ClusterKeywords import ClusterKeywords
+from keywords.constants import CLUSTER_CONFIGS_DIR
+from keywords.SyncGateway import (sync_gateway_config_path_for_mode,
+                                  validate_sync_gateway_mode)
 from keywords.tklogging import Logging
-from keywords.SyncGateway import validate_sync_gateway_mode
-from keywords.SyncGateway import sync_gateway_config_path_for_mode
-from libraries.testkit import cluster
+from keywords.utils import log_info
 from libraries.NetworkUtils import NetworkUtils
+from libraries.testkit import cluster
 
-from utilities.enable_disable_ssl_cluster import enable_cbs_ssl_in_cluster_config
-from utilities.enable_disable_ssl_cluster import disable_cbs_ssl_in_cluster_config
+from utilities.cluster_config_utils import persist_cluster_config_environment_prop
 
 
 # Add custom arguments for executing tests in this directory
@@ -41,6 +42,10 @@ def pytest_addoption(parser):
                      action="store_true",
                      help="Enable -races for Sync Gateway build. IMPORTANT - This will only work with source builds at the moment")
 
+    parser.addoption("--xattrs",
+                     action="store_true",
+                     help="Use xattrs for sync meta storage. Only works with Sync Gateway 2.0+ and Couchbase Server 5.0+")
+
     parser.addoption("--collect-logs",
                      action="store_true",
                      help="Collect logs for every test. If this flag is not set, collection will only happen for test failures.")
@@ -67,12 +72,14 @@ def params_from_base_suite_setup(request):
     ci = request.config.getoption("--ci")
     race_enabled = request.config.getoption("--race")
     cbs_ssl = request.config.getoption("--server-ssl")
+    xattrs_enabled = request.config.getoption("--xattrs")
 
     log_info("server_version: {}".format(server_version))
     log_info("sync_gateway_version: {}".format(sync_gateway_version))
     log_info("mode: {}".format(mode))
     log_info("skip_provisioning: {}".format(skip_provisioning))
     log_info("race_enabled: {}".format(race_enabled))
+    log_info("xattrs_enabled: {}".format(xattrs_enabled))
 
     # Make sure mode for sync_gateway is supported ('cc' or 'di')
     validate_sync_gateway_mode(mode)
@@ -88,11 +95,18 @@ def params_from_base_suite_setup(request):
     if cbs_ssl:
         log_info("Running tests with cbs <-> sg ssl enabled")
         # Enable ssl in cluster configs
-        enable_cbs_ssl_in_cluster_config(cluster_config)
+        persist_cluster_config_environment_prop(cluster_config, 'cbs_ssl_enabled', True)
     else:
         log_info("Running tests with cbs <-> sg ssl disabled")
         # Disable ssl in cluster configs
-        disable_cbs_ssl_in_cluster_config(cluster_config)
+        persist_cluster_config_environment_prop(cluster_config, 'cbs_ssl_enabled', False)
+
+    if xattrs_enabled:
+        log_info("Running test with xattrs for sync meta storage")
+        persist_cluster_config_environment_prop(cluster_config, 'xattrs_enabled', True)
+    else:
+        log_info("Using document storage for sync meta data")
+        persist_cluster_config_environment_prop(cluster_config, 'xattrs_enabled', False)
 
     sg_config = sync_gateway_config_path_for_mode("sync_gateway_default_functional_tests", mode)
 

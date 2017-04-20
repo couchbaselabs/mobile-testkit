@@ -1,16 +1,17 @@
-import os
-import requests
 import json
-import time
-import libraries.testkit.settings
-from libraries.testkit.debug import log_request
-from libraries.testkit.debug import log_response
-from libraries.testkit.admin import Admin
-from libraries.provision.ansible_runner import AnsibleRunner
-from requests import HTTPError
-from utilities.enable_disable_ssl_cluster import is_cbs_ssl_enabled
-
 import logging
+import os
+import time
+
+import requests
+from requests import HTTPError
+
+import libraries.testkit.settings
+from libraries.provision.ansible_runner import AnsibleRunner
+from libraries.testkit.admin import Admin
+from libraries.testkit.debug import log_request, log_response
+from utilities.cluster_config_utils import is_cbs_ssl_enabled
+
 log = logging.getLogger(libraries.testkit.settings.LOGGER)
 
 

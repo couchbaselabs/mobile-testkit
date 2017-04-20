@@ -1,22 +1,19 @@
-import os
 import json
+import os
 import time
 
 from requests.exceptions import ConnectionError
 
-from libraries.testkit.syncgateway import SyncGateway
-from libraries.testkit.sgaccel import SgAccel
-from libraries.testkit.server import Server
+import keywords.exceptions
+from keywords import couchbaseserver
+from keywords.exceptions import ProvisioningError
+from keywords.utils import log_info
+from libraries.provision.ansible_runner import AnsibleRunner
 from libraries.testkit.admin import Admin
 from libraries.testkit.config import Config
-from libraries.provision.ansible_runner import AnsibleRunner
-
-from keywords import couchbaseserver
-
-import keywords.exceptions
-from keywords.exceptions import ProvisioningError
-
-from keywords.utils import log_info
+from libraries.testkit.server import Server
+from libraries.testkit.sgaccel import SgAccel
+from libraries.testkit.syncgateway import SyncGateway
 
 
 class Cluster:
@@ -30,7 +27,6 @@ class Cluster:
     def __init__(self, config):
 
         self._cluster_config = config
-        self.cbs_ssl = False
 
         if not os.path.isfile(self._cluster_config):
             log_info("Cluster config not found in 'resources/cluster_configs/'")
@@ -46,7 +42,8 @@ class Cluster:
         sgs = [{"name": sg["name"], "ip": sg["ip"]} for sg in cluster["sync_gateways"]]
         acs = [{"name": ac["name"], "ip": ac["ip"]} for ac in cluster["sg_accels"]]
 
-        self.cbs_ssl = cluster["cbs_ssl_enabled"]
+        self.cbs_ssl = cluster["environment"]["cbs_ssl_enabled"]
+        self.xattrs = cluster["environment"]["xattrs_enabled"]
 
         log_info("cbs: {}".format(cbs))
         log_info("sgs: {}".format(sgs))
@@ -64,6 +61,10 @@ class Cluster:
     def reset(self, sg_config_path):
 
         ansible_runner = AnsibleRunner(self._cluster_config)
+
+        log_info(">>> Reseting cluster ...")
+        log_info(">>> CBS SSL enabled: {}".format(self.cbs_ssl))
+        log_info(">>> Using xattrs: {}".format(self.xattrs))
 
         # Stop sync_gateways
         log_info(">>> Stopping sync_gateway")
@@ -120,13 +121,19 @@ class Cluster:
             server_scheme = "https"
 
         # Start sync-gateway
+        playbook_vars = {
+            "sync_gateway_config_filepath": config_path_full,
+            "server_port": server_port,
+            "server_scheme": server_scheme
+        }
+
+        # Add configuration to run with xattrs
+        if self.xattrs:
+            playbook_vars["xattrs"] = '"unsupported": {"enable_extended_attributes": true},'
+
         status = ansible_runner.run_ansible_playbook(
             "start-sync-gateway.yml",
-            extra_vars={
-                "sync_gateway_config_filepath": config_path_full,
-                "server_port": server_port,
-                "server_scheme": server_scheme
-            }
+            extra_vars=playbook_vars
         )
         assert status == 0, "Failed to start to Sync Gateway"
 
