@@ -777,82 +777,6 @@ class MobileRestClient:
 
         return resp_obj
 
-    def add_docs(self, url, db, number, id_prefix, auth=None, channels=None, generator=None, attachments_generator=None):
-        """
-        if id_prefix == None, generate a uuid for each doc
-
-        Add a 'number' of docs with a prefix 'id_prefix' using the provided generator from libraries.data.doc_generators.
-        ex. id_prefix=testdoc with a number of 3 would create 'testdoc_0', 'testdoc_1', and 'testdoc_2'
-        """
-        added_docs = []
-
-        if channels is not None:
-            types.verify_is_list(channels)
-
-        log_info("PUT {} docs to {}/{}/ with prefix {}".format(number, url, db, id_prefix))
-
-        for i in xrange(number):
-
-            if generator == "four_k":
-                doc_body = doc_generators.four_k()
-            else:
-                doc_body = doc_generators.simple()
-
-            if channels is not None:
-                doc_body["channels"] = channels
-
-            if attachments_generator:
-                types.verify_is_callable(attachments_generator)
-                attachments = attachments_generator()
-                doc_body["_attachments"] = {att.name: {"data": att.data} for att in attachments}
-
-            if id_prefix is None:
-                doc_id = str(uuid.uuid4())
-            else:
-                doc_id = "{}_{}".format(id_prefix, i)
-
-            doc_body["_id"] = doc_id
-
-            doc_obj = self.add_doc(url, db, doc_body, auth=auth)
-            added_docs.append(doc_obj)
-
-        # check that the docs returned in the responses equals the expected number
-        if len(added_docs) != number:
-            raise AssertionError("Client was not able to add all docs to: {}".format(url))
-
-        log_info("Added: {} docs".format(len(added_docs)))
-
-        return added_docs
-
-    def add_bulk_docs(self, url, db, docs, auth=None):
-        """
-        Keyword that issues POST _bulk docs with the specified 'docs'.
-        Use the Document.create_docs() to create the docs.
-        """
-        auth_type = get_auth_type(auth)
-        server_type = self.get_server_type(url)
-
-        # transform 'docs' into a format expected by _bulk_docs
-        if server_type == ServerType.listener:
-            request_body = {"docs": docs, "new_edits": True}
-        else:
-            request_body = {"docs": docs}
-
-        if auth_type == AuthType.session:
-            resp = self._session.post("{}/{}/_bulk_docs".format(url, db),
-                                      data=json.dumps(request_body),
-                                      cookies=dict(SyncGatewaySession=auth[1]))
-        elif auth_type == AuthType.http_basic:
-            resp = self._session.post("{}/{}/_bulk_docs".format(url, db), data=json.dumps(request_body), auth=auth)
-        else:
-            resp = self._session.post("{}/{}/_bulk_docs".format(url, db), data=json.dumps(request_body))
-
-        log_r(resp)
-        resp.raise_for_status()
-
-        resp_obj = resp.json()
-        return resp_obj
-
     def get_attachment(self, url, db, doc_id, attachment_name, auth=None):
         """
         Keyword to get a raw attachment with name 'attachment_name' for the specified 'doc_id'.
@@ -1180,6 +1104,82 @@ class MobileRestClient:
                 logging.debug("Sleeping: {}s ...".format(delay))
                 time.sleep(delay)
 
+        return resp_obj
+
+    def add_docs(self, url, db, number, id_prefix, auth=None, channels=None, generator=None, attachments_generator=None):
+        """
+        if id_prefix == None, generate a uuid for each doc
+
+        Add a 'number' of docs with a prefix 'id_prefix' using the provided generator from libraries.data.doc_generators.
+        ex. id_prefix=testdoc with a number of 3 would create 'testdoc_0', 'testdoc_1', and 'testdoc_2'
+        """
+        added_docs = []
+
+        if channels is not None:
+            types.verify_is_list(channels)
+
+        log_info("PUT {} docs to {}/{}/ with prefix {}".format(number, url, db, id_prefix))
+
+        for i in xrange(number):
+
+            if generator == "four_k":
+                doc_body = doc_generators.four_k()
+            else:
+                doc_body = doc_generators.simple()
+
+            if channels is not None:
+                doc_body["channels"] = channels
+
+            if attachments_generator:
+                types.verify_is_callable(attachments_generator)
+                attachments = attachments_generator()
+                doc_body["_attachments"] = {att.name: {"data": att.data} for att in attachments}
+
+            if id_prefix is None:
+                doc_id = str(uuid.uuid4())
+            else:
+                doc_id = "{}_{}".format(id_prefix, i)
+
+            doc_body["_id"] = doc_id
+
+            doc_obj = self.add_doc(url, db, doc_body, auth=auth)
+            added_docs.append(doc_obj)
+
+        # check that the docs returned in the responses equals the expected number
+        if len(added_docs) != number:
+            raise AssertionError("Client was not able to add all docs to: {}".format(url))
+
+        log_info("Added: {} docs".format(len(added_docs)))
+
+        return added_docs
+
+    def add_bulk_docs(self, url, db, docs, auth=None):
+        """
+        Keyword that issues POST _bulk docs with the specified 'docs'.
+        Use the Document.create_docs() to create the docs.
+        """
+        auth_type = get_auth_type(auth)
+        server_type = self.get_server_type(url)
+
+        # transform 'docs' into a format expected by _bulk_docs
+        if server_type == ServerType.listener:
+            request_body = {"docs": docs, "new_edits": True}
+        else:
+            request_body = {"docs": docs}
+
+        if auth_type == AuthType.session:
+            resp = self._session.post("{}/{}/_bulk_docs".format(url, db),
+                                      data=json.dumps(request_body),
+                                      cookies=dict(SyncGatewaySession=auth[1]))
+        elif auth_type == AuthType.http_basic:
+            resp = self._session.post("{}/{}/_bulk_docs".format(url, db), data=json.dumps(request_body), auth=auth)
+        else:
+            resp = self._session.post("{}/{}/_bulk_docs".format(url, db), data=json.dumps(request_body))
+
+        log_r(resp)
+        resp.raise_for_status()
+
+        resp_obj = resp.json()
         return resp_obj
 
     def get_bulk_docs(self, url, db, docs, auth=None):
