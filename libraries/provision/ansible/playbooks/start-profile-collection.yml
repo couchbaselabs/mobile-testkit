@@ -1,45 +1,50 @@
 - hosts: sync_gateways
   any_errors_fatal: true
-  sudo: true
+  become: yes
+  vars:
+    stats_run_time:
+    delay_profiling_secs:
 
   # Copy machine stat collection script to sync_gateways
   tasks:
-  - name: copy the machine collection script
+  - name: SYNC GATEWAY | copy the machine collection script
     copy: src=files/log_machine_stats.py dest=/home/sync_gateway/ owner=sync_gateway group=sync_gateway mode=755
   # Start collecting machine stats, no polling and a 24 hour timeout
-  - name: start stat collection
+  - name: SYNC GATEWAY | start stat collection for {{ stats_run_time | int }} seconds
     shell: ./log_machine_stats.py chdir=/home/sync_gateway/
-    async: 86400
+    async: "{{ stats_run_time | int }}"
     poll: 0
 
   # Copy profile collection script to sync_gateways
-  - name: copy the profile collection script
+  - name: SYNC GATEWAY | copy the profile collection script
     copy: src=files/sync_gateway_collect_profile.py dest=/home/sync_gateway/ owner=sync_gateway group=sync_gateway mode=755
   # Start collecting profile, no polling and a 24 hour timeout
-  - name: start profile collection
-    shell: ./sync_gateway_collect_profile.py --sg-binary /opt/couchbase-sync-gateway/bin/sync_gateway --format-type-pdf --format-type-text --profile-type-heap --profile-type-cpu --profile-type-goroutine --heap-alloc-space --heap-inuse-space --delay-secs 540 chdir=/home/sync_gateway/
-    async: 86400
+  - name: SYNC GATEWAY | start profile collection for {{ stats_run_time | int }} seconds
+    shell: ./sync_gateway_collect_profile.py --sg-binary /opt/couchbase-sync-gateway/bin/sync_gateway --format-type-pdf --format-type-text --profile-type-heap --profile-type-cpu --profile-type-goroutine --heap-alloc-space --heap-inuse-space --delay-secs {{ delay_profiling_secs | int }} chdir=/home/sync_gateway/
+    async: "{{ stats_run_time | int }}"
     poll: 0
 
 - hosts: sg_accels
   any_errors_fatal: true
-  sudo: true
+  become: yes
+  vars:
+    stats_run_time:
 
   # Copy machine stat collection script to sg_accels
   tasks:
-  - name: copy the machine collection script
+  - name: SG ACCEL | copy the machine collection script
     copy: src=files/log_machine_stats.py dest=/home/sg_accel/ owner=sg_accel group=sg_accel mode=755
   # Start collecting machine stats, no polling and a 24 hour timeout
-  - name: start stat collection
+  - name: SG ACCEL | start stat collection for {{ stats_run_time | int }} seconds
     shell: ./log_machine_stats.py chdir=/home/sg_accel/
-    async: 86400
+    async: "{{ stats_run_time | int }}"
     poll: 0
 
   # Copy profile collection script to sg_accels
-  - name: copy the profile collection script
+  - name: SG ACCEL | copy the profile collection script
     copy: src=files/sync_gateway_collect_profile.py dest=/home/sg_accel/ owner=sg_accel group=sg_accel mode=755
   # Start collecting profile, no polling and a 24 hour timeout
-  - name: start profile collection
-    shell: ./sync_gateway_collect_profile.py --sg-binary /opt/couchbase-sg-accel/bin/sg_accel --format-type-pdf --format-type-text --profile-type-heap --profile-type-cpu --profile-type-goroutine --heap-alloc-space --heap-inuse-space --delay-secs 540 chdir=/home/sg_accel/
-    async: 86400
+  - name: SG ACCEL | start profile collection for {{ stats_run_time | int }} seconds
+    shell: ./sync_gateway_collect_profile.py --sg-binary /opt/couchbase-sg-accel/bin/sg_accel --format-type-pdf --format-type-text --profile-type-heap --profile-type-cpu --profile-type-goroutine --heap-alloc-space --heap-inuse-space --delay-secs {{ delay_profiling_secs | int }} chdir=/home/sg_accel/
+    async: "{{ stats_run_time | int }}"
     poll: 0

@@ -6,9 +6,83 @@ from keywords.utils import log_info
 from libraries.testkit.cluster import Cluster
 from keywords.MobileRestClient import MobileRestClient
 from keywords.SyncGateway import sync_gateway_config_path_for_mode
+from keywords.SyncGateway import SyncGateway
 
 import keywords.exceptions
 from keywords import userinfo
+from keywords import document
+
+
+@pytest.mark.sanity
+@pytest.mark.sanity
+@pytest.mark.syncgateway
+@pytest.mark.changes
+@pytest.mark.session
+@pytest.mark.channel
+@pytest.mark.parametrize('sg_conf_name', [
+    'sync_gateway_default'
+])
+def test_channels_view_after_restart(params_from_base_test_setup, sg_conf_name):
+    """
+    - Add 10000 docs to Sync Gateway
+    - Restart Sync Gateway (to flush channel cache)
+    - Make a changes request
+    - Verify view expvar (expvar["syncGateway_changeCache"]["view_queries"]) > 0
+    """
+
+    cluster_config = params_from_base_test_setup['cluster_config']
+    topology = params_from_base_test_setup['cluster_topology']
+    mode = params_from_base_test_setup['mode']
+
+    sg_url = topology['sync_gateways'][0]['public']
+    sg_admin_url = topology['sync_gateways'][0]['admin']
+    sg_db = 'db'
+    num_docs = 10000
+
+    sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
+
+    cluster = Cluster(cluster_config)
+    cluster.reset(sg_conf)
+
+    client = MobileRestClient()
+
+    seth_user_info = userinfo.UserInfo('seth', 'pass', channels=['NASA'], roles=[])
+
+    client.create_user(
+        url=sg_admin_url,
+        db=sg_db,
+        name=seth_user_info.name,
+        password=seth_user_info.password,
+        channels=seth_user_info.channels
+    )
+
+    seth_session = client.create_session(
+        url=sg_admin_url,
+        db=sg_db,
+        name=seth_user_info.name,
+        password=seth_user_info.password
+    )
+
+    # Add docs to Sync Gateway
+    doc_bodies = document.create_docs(doc_id_prefix='seth_doc', number=num_docs, channels=seth_user_info.channels)
+    bulk_docs_resp = client.add_bulk_docs(url=sg_url, db=sg_db, docs=doc_bodies, auth=seth_session)
+    assert len(bulk_docs_resp) == num_docs
+
+    client.verify_docs_in_changes(url=sg_url, db=sg_db, expected_docs=bulk_docs_resp, auth=seth_session)
+
+    # Reset sync gateway to clear channel cache
+    sg = SyncGateway()
+    sg.stop_sync_gateway(cluster_config=cluster_config, url=sg_url)
+    sg.start_sync_gateway(cluster_config=cluster_config, url=sg_url, config=sg_conf)
+
+    # Repopulate channel cache with view call
+    client.verify_docs_in_changes(url=sg_url, db=sg_db, expected_docs=bulk_docs_resp, auth=seth_session)
+
+    # Get Sync Gateway Expvars
+    expvars = client.get_expvars(url=sg_admin_url)
+
+    # Reset
+    assert expvars['syncGateway_changeCache']['view_queries'] == 1
 
 
 @pytest.mark.sanity

@@ -1020,7 +1020,7 @@ class MobileRestClient:
 
         return purged_docs
 
-    def update_docs(self, url, db, docs, number_updates, delay=None, auth=None, channels=None):
+    def update_docs(self, url, db, docs, number_updates, delay=None, auth=None, channels=None, property_updater=None):
 
         updated_docs = []
 
@@ -1035,7 +1035,8 @@ class MobileRestClient:
                     number_updates=number_updates,
                     delay=delay,
                     auth=auth,
-                    channels=channels
+                    channels=channels,
+                    property_updater=property_updater
                 ) for doc in docs
             ]
 
@@ -1046,7 +1047,7 @@ class MobileRestClient:
         logging.debug("url: {} db: {} updated: {}".format(url, db, updated_docs))
         return updated_docs
 
-    def update_doc(self, url, db, doc_id, number_updates=1, attachment_name=None, expiry=None, delay=None, auth=None, channels=None):
+    def update_doc(self, url, db, doc_id, number_updates=1, attachment_name=None, expiry=None, delay=None, auth=None, channels=None, property_updater=None):
         """
         Updates a doc on a db a number of times.
             1. GETs the doc
@@ -1083,6 +1084,10 @@ class MobileRestClient:
             if channels is not None:
                 types.verify_is_list(channels)
                 doc["channels"] = channels
+
+            if property_updater is not None:
+                types.verify_is_callable(property_updater)
+                doc = property_updater(doc)
 
             if auth_type == AuthType.session:
                 resp = self._session.put("{}/{}/{}".format(url, db, doc_id), data=json.dumps(doc), cookies=dict(SyncGatewaySession=auth[1]))
@@ -1188,19 +1193,57 @@ class MobileRestClient:
         resp_obj = resp.json()
         return resp_obj
 
-    def get_bulk_docs(self, url, db, docs, auth=None):
+    def delete_bulk_docs(self, url, db, docs, auth=None):
+        """
+        Keyword that issues POST _bulk docs with the specified 'docs'.
+        Use the Document.create_docs() to create the docs.
+        """
+        auth_type = get_auth_type(auth)
+        server_type = self.get_server_type(url)
+
+        for doc in docs:
+            doc['_deleted'] = True
+
+        # transform 'docs' into a format expected by _bulk_docs
+        if server_type == ServerType.listener:
+            request_body = {"docs": docs, "new_edits": True}
+        else:
+            request_body = {"docs": docs}
+
+        if auth_type == AuthType.session:
+            resp = self._session.post("{}/{}/_bulk_docs".format(url, db),
+                                      data=json.dumps(request_body),
+                                      cookies=dict(SyncGatewaySession=auth[1]))
+        elif auth_type == AuthType.http_basic:
+            resp = self._session.post("{}/{}/_bulk_docs".format(url, db), data=json.dumps(request_body), auth=auth)
+        else:
+            resp = self._session.post("{}/{}/_bulk_docs".format(url, db), data=json.dumps(request_body))
+
+        log_r(resp)
+        resp.raise_for_status()
+
+        resp_obj = resp.json()
+        return resp_obj
+
+    def get_bulk_docs(self, url, db, doc_ids, auth=None):
         """
         Keyword that issues POST _bulk_get docs with the specified 'docs' array.
         doc need to be in the format (python list of {id: "", rev: ""} dictionaries):
         [
-            {u'rev': u'1-efda114d144b5220fa77c4e51f3e70a8', u'id': u'exp_3_0'},
-            {u'rev': u'1-efda114d144b5220fa77c4e51f3e70a8', u'id': u'exp_3_1'}, ...
+            'exp_3_0',
+            'exp_3_1', ...
+            ...
+            'exp_3_100'
         ]
         """
 
-        # extract ids from docs and format for _bulk_get request
-        ids = [{"id": doc["id"]} for doc in docs]
-        request_body = {"docs": ids}
+        # Format the list of ids to the expected format for bulk_get
+        # ex. [
+        #   {'id', 'doc_id_one'},
+        #   {'id', 'doc_id_two'}, ...
+        # ]
+        doc_ids_formatted = [{"id": doc_id} for doc_id in doc_ids]
+        request_body = {"docs": doc_ids_formatted}
 
         auth_type = get_auth_type(auth)
 
@@ -1852,3 +1895,11 @@ class MobileRestClient:
         logging.debug("Expected Doc Ids: {}".format(expected_missing_doc_ids))
         if missing_doc_ids != expected_missing_doc_ids:
             raise AssertionError("Found doc ids should be the same as expected doc ids")
+
+    def get_expvars(self, url):
+        """ Gets expvars for the url """
+        resp = self._session.get("{}/_expvar".format(url))
+        log_r(resp)
+        resp.raise_for_status()
+
+        return resp.json()
