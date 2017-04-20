@@ -99,6 +99,7 @@ def test_purge(params_from_base_test_setup, sg_conf_name):
 
     pytest.set_trace()
 
+
 @pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.xattrs
@@ -143,7 +144,7 @@ def test_sdk_does_not_see_sync_meta(params_from_base_test_setup, sg_conf_name):
 
     # Connect to server via SDK
     cbs_ip = host_for_url(cbs_url)
-    sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name))
+    sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password')
 
     # Add 'number_of_sg_docs' to Sync Gateway
     sg_doc_bodies = document.create_docs(
@@ -245,7 +246,7 @@ def test_sg_sdk_interop_unique_docs(params_from_base_test_setup, sg_conf_name):
 
     # Connect to server via SDK
     cbs_ip = host_for_url(cbs_url)
-    bucket = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name))
+    bucket = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password')
 
     # Create docs and add them via sdk
     sdk_doc_bodies = document.create_docs('sdk', number_docs, content={'foo': 'bar', 'updates': 1}, channels=['sdk'])
@@ -394,7 +395,7 @@ def test_sg_sdk_interop_shared_docs(params_from_base_test_setup, sg_conf_name):
 
     # Connect to server via SDK
     cbs_ip = host_for_url(cbs_url)
-    sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name))
+    sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password')
 
     # Inject custom properties into doc template
     def update_props():

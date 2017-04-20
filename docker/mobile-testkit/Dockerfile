@@ -12,7 +12,8 @@ RUN yum install -y \
     openssl-devel \
     unzip \
     wget \
-    httpie
+    httpie \
+    net-tools
 
 # Install prerequisites for the Couchbase Server python SDK
 # https://developer.couchbase.com/documentation/server/current/sdk/python/start-using-sdk.html
