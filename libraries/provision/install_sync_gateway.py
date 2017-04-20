@@ -6,6 +6,7 @@ from keywords.couchbaseserver import CouchbaseServer
 from keywords.ClusterKeywords import ClusterKeywords
 from keywords.exceptions import ProvisioningError
 from keywords.utils import log_warn
+from keywords.tklogging import Logging
 
 from libraries.testkit.config import Config
 from utilities.enable_disable_ssl_cluster import is_cbs_ssl_enabled
@@ -96,7 +97,7 @@ class SyncGatewayConfig:
         return True
 
 
-def install_sync_gateway(cluster_config, sync_gateway_config):
+def install_sync_gateway(cluster_config, sync_gateway_config, test_name="install_sync_gateway"):
     log_info(sync_gateway_config)
 
     if not sync_gateway_config.is_valid():
@@ -133,6 +134,8 @@ def install_sync_gateway(cluster_config, sync_gateway_config):
             }
         )
         if status != 0:
+            logging_helper = Logging()
+            logging_helper.fetch_and_analyze_logs(cluster_config=cluster_config, test_name=test_name)
             raise ProvisioningError("Failed to install sync_gateway source")
 
     else:
@@ -150,6 +153,8 @@ def install_sync_gateway(cluster_config, sync_gateway_config):
             }
         )
         if status != 0:
+            logging_helper = Logging()
+            logging_helper.fetch_and_analyze_logs(cluster_config=cluster_config, test_name=test_name)
             raise ProvisioningError("Failed to install sync_gateway package")
 
     # Configure aws cloudwatch logs forwarder
