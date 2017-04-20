@@ -33,5 +33,3 @@ def pytest_addoption(parser):
     parser.addoption("--xattrs",
                      action="store_true",
                      help="Use xattrs for sync meta storage. Only works with Sync Gateway 2.0+ and Couchbase Server 5.0+")
-
-

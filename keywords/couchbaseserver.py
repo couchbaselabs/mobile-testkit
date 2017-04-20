@@ -29,7 +29,7 @@ requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
 def get_server_version(host, cbs_ssl=False):
     """ Get the version of a running Couchbase server on host 'host' """
-    
+
     server_scheme = "http"
     server_port = 8091
 

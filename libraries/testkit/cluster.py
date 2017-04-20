@@ -14,8 +14,6 @@ from libraries.testkit.config import Config
 from libraries.testkit.server import Server
 from libraries.testkit.sgaccel import SgAccel
 from libraries.testkit.syncgateway import SyncGateway
-from utilities.cluster_config_utils import (is_cbs_ssl_enabled,
-                                            is_xattrs_enabled)
 
 
 class Cluster:
@@ -29,7 +27,7 @@ class Cluster:
     def __init__(self, config):
 
         self._cluster_config = config
-    
+
         if not os.path.isfile(self._cluster_config):
             log_info("Cluster config not found in 'resources/cluster_configs/'")
             raise IOError("Cluster config not found in 'resources/cluster_configs/'")

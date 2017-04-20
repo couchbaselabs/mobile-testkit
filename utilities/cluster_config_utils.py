@@ -2,6 +2,7 @@ import ConfigParser
 import json
 from keywords.exceptions import ProvisioningError
 
+
 class CustomConfigParser(ConfigParser.RawConfigParser):
     """Virtually identical to the original method, but delimit keys and values with '=' instead of ' = '
        Python 3 has a space_around_delimiters=False option for write, it does not work for python 2.x
