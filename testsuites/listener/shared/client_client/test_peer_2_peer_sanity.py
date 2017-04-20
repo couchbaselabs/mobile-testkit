@@ -250,7 +250,7 @@ def test_peer_2_peer_sanity_pull(setup_p2p_test, num_docs_per_db, seeded_db, att
 @pytest.mark.p2p
 @pytest.mark.changes
 @pytest.mark.parametrize("num_docs_per_db, seeded_db, attachments_generator", [
-    (5000, False), (50, False, attachment.generate_png_100_100), (10000, True, None),
+    (5000, False, None), (50, False, attachment.generate_png_100_100), (10000, True, None),
 ])
 def test_peer_2_peer_sanity_push(setup_p2p_test, num_docs_per_db, seeded_db, attachments_generator):
     """
@@ -309,7 +309,7 @@ def test_peer_2_peer_sanity_push(setup_p2p_test, num_docs_per_db, seeded_db, att
 @pytest.mark.p2p
 @pytest.mark.changes
 @pytest.mark.parametrize("num_docs_per_db, seeded_db, attachments_generator", [
-    (5000, False), (50, False, attachment.generate_png_100_100), (10000, True, None),
+    (5000, False, None), (50, False, attachment.generate_png_100_100), (10000, True, None),
 ])
 def test_peer_2_peer_sanity_push_pull(setup_p2p_test, num_docs_per_db, seeded_db, attachments_generator):
     """
