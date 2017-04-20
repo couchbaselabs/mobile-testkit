@@ -95,7 +95,20 @@ def test_purge(params_from_base_test_setup, sg_conf_name):
     sdk_doc_ids = [doc for doc in sdk_docs]
     sdk_client.upsert_multi(sdk_docs)
 
-    # TODO: Why does pytest not like bucket creation retry?
+    sg_doc_ids = ['sg_{}'.format(i) for i in range(number_docs_per_client)]
+    sdk_doc_ids = ['sdk_{}'.format(i) for i in range(number_docs_per_client)]
+    all_doc_ids = sg_doc_ids + sdk_doc_ids
+
+    # Get all of the docs via Sync Gateway
+    docs, errors = sg_client.get_bulk_docs(url=sg_url, db=sg_db, doc_ids=all_doc_ids, auth=seth_auth)
+    assert len(docs) == number_docs_per_client * 2
+
+    # Get all of the docs via SDK
+    # Sync Gateway delete 1/2 the docs
+    # Sync Gateway purge all docs
+    # Verify SDK can't see the docs
+    # Verify SG can't see the docs
+    # Verify XATTRS are gone using SDK client with full bucket permissions via subdoc?
 
     pytest.set_trace()
 

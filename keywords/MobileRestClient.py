@@ -23,7 +23,7 @@ from keywords.utils import log_info
 from keywords.utils import log_debug
 from keywords.SyncGateway import validate_sync_gateway_mode
 
-import keywords.exceptions
+from keywords.exceptions import RestError, TimeoutException, LiteServError
 from keywords import types
 
 
@@ -428,21 +428,21 @@ class MobileRestClient:
 
             data = {}
             if server_url is None:
-                raise keywords.exceptions.RestError("Creating database error. You must provide a couchbase server url")
+                raise RestError("Creating database error. You must provide a couchbase server url")
             data["server"] = server_url
 
             if bucket_name is None:
-                raise keywords.exceptions.RestError("Creating database error. You must provide a couchbase server bucket name")
+                raise RestError("Creating database error. You must provide a couchbase server bucket name")
             data["bucket"] = bucket_name
 
             if sync_gateway_mode is None:
-                raise keywords.exceptions.RestError("You must specify either 'cc' or 'di' for sync_gateway_mode")
+                raise RestError("You must specify either 'cc' or 'di' for sync_gateway_mode")
 
             if sync_gateway_mode == "di" and index_bucket_name is None:
-                raise keywords.exceptions.RestError("You must provide an 'index_bucket_name' if you are running in distributed index mode")
+                raise RestError("You must provide an 'index_bucket_name' if you are running in distributed index mode")
 
             if sync_gateway_mode == "di" and is_index_writer is None:
-                raise keywords.exceptions.RestError("Please make sure you set 'is_index_writer' since you are running in 'di' mode")
+                raise RestError("Please make sure you set 'is_index_writer' since you are running in 'di' mode")
 
             # Add additional information if running in distributed index mode
             if sync_gateway_mode == "di":
@@ -505,7 +505,7 @@ class MobileRestClient:
         while True:
 
             if time.time() - start > CLIENT_REQUEST_TIMEOUT:
-                raise keywords.exceptions.TimeoutException("Verify Docs Present: TIMEOUT")
+                raise TimeoutException("Verify Docs Present: TIMEOUT")
 
             resp = self._session.get("{}/{}/_all_docs".format(url, db))
             log_r(resp)
@@ -556,7 +556,7 @@ class MobileRestClient:
         # verify dbs are deleted
         db_names = self.get_databases(url)
         if len(db_names) != 0:
-            raise keywords.exceptions.LiteServError("Failed to delete dbs!")
+            raise LiteServError("Failed to delete dbs!")
 
     def get_rev_generation_digest(self, rev):
         """
@@ -959,7 +959,7 @@ class MobileRestClient:
             not_deleted = []
 
             if time.time() - start > CLIENT_REQUEST_TIMEOUT:
-                raise keywords.exceptions.TimeoutException("Verify Docs Deleted: TIMEOUT")
+                raise TimeoutException("Verify Docs Deleted: TIMEOUT")
 
             for doc in docs:
                 if auth_type == AuthType.session:
@@ -1225,7 +1225,7 @@ class MobileRestClient:
         resp_obj = resp.json()
         return resp_obj
 
-    def get_bulk_docs(self, url, db, doc_ids, auth=None):
+    def get_bulk_docs(self, url, db, doc_ids, auth=None, validate=True):
         """
         Keyword that issues POST _bulk_get docs with the specified 'docs' array.
         doc need to be in the format (python list of {id: "", rev: ""} dictionaries):
@@ -1260,7 +1260,18 @@ class MobileRestClient:
         resp_obj = parse_multipart_response(resp.text)
         logging.debug(resp_obj)
 
-        return resp_obj
+        docs = []
+        errors = []
+        for row in resp_obj["rows"]:
+            if "error" in row:
+                errors.append(row)
+            else:
+                docs.append(row)
+
+        if len(errors) > 0 and validate:
+            raise RestError("_bulk_get recieved errors in the response!")
+
+        return docs, errors
 
     def start_replication(self,
                           url,
