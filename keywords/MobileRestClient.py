@@ -6,6 +6,7 @@ import re
 
 from requests import Session
 from requests.exceptions import HTTPError
+from requests import ConnectionError
 
 import concurrent.futures
 from concurrent.futures import ThreadPoolExecutor
@@ -1143,7 +1144,13 @@ class MobileRestClient:
             elif auth_type == AuthType.http_basic:
                 resp = self._session.put("{}/{}/{}".format(url, db, doc_id), data=data, auth=auth)
             else:
-                resp = self._session.put("{}/{}/{}".format(url, db, doc_id), data=data)
+                start_time = time.time()
+                try:
+                    resp = self._session.put("{}/{}/{}".format(url, db, doc_id), data=data)
+                except ConnectionError as ce:
+                    elapsed_time = time.time() - start_time
+                    print("ERROR: [%s] %s (Elapsed Time: %s sec)" % (ce.request.method , ce.request.url ,elapsed_time))
+                    raise ce
 
             log_r(resp, info=False)
             resp.raise_for_status()
