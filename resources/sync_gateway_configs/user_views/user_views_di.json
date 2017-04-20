@@ -1,0 +1,70 @@
+{
+  "interface": ":4984",
+  "adminInterface": "0.0.0.0:4985",
+  "maxIncomingConnections": 0,
+  "maxCouchbaseConnections": 16,
+  "maxFileDescriptors": 90000,
+  "slowServerCallWarningThreshold": 500,
+  "compressResponses": false,
+  "log": [
+    "*"
+  ],
+  "cluster_config": {
+    "server": "{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
+    "bucket": "data-bucket",
+    "password": "password",
+    "data_dir": "."
+  },
+  "databases": {
+    "db": {
+      "unsupported": {
+        "user_views": {
+          "enabled":true
+        }
+      },
+      "server": "{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
+      "channel_index": {
+        "server": "{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
+        "bucket":"index-bucket",
+        "username":"index-bucket",
+        "password": "password",
+        "writer":{{ is_index_writer }}
+      },
+      "bucket": "data-bucket",
+      "password": "password",
+      "roles": {
+        "Scientist": {
+          "admin_channels": [
+            "Download"
+          ]
+        },
+        "Researcher": {
+          "admin_channels": [
+            "Upload"
+          ]
+        }
+      },
+      "users": {
+        "seth": {
+          "password": "pass",
+          "admin_channels": [
+            "Create"
+          ],
+          "admin_roles": [
+            "Scientist"
+          ]
+        },
+        "raghu": {
+          "password": "pass",
+          "admin_channels": [
+            "Edit"
+          ],
+          "admin_roles": [
+            "Researcher"
+          ]
+        }
+      }
+    }
+  }
+}
+

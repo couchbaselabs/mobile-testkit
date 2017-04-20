@@ -10,8 +10,7 @@ from requests.exceptions import HTTPError
 import concurrent.futures
 from concurrent.futures import ThreadPoolExecutor
 
-from keywords.document import get_attachment
-
+from keywords import attachment
 from libraries.data import doc_generators
 
 from keywords.constants import AuthType
@@ -263,6 +262,24 @@ class MobileRestClient:
             log_r(resp)
             resp.raise_for_status()
 
+    def get_role(self, url, db, name):
+        """ Gets a roles for a db """
+
+        resp = self._session.get("{}/{}/_role/{}".format(url, db, name))
+        log_r(resp)
+        resp.raise_for_status()
+
+        return resp.json()
+
+    def get_roles(self, url, db):
+        """ Gets a list of roles for a db """
+
+        resp = self._session.get("{}/{}/_role/".format(url, db))
+        log_r(resp)
+        resp.raise_for_status()
+
+        return resp.json()
+
     def create_role(self, url, db, name, channels=None):
         """ Creates a role with name and channels for the specified 'db' """
 
@@ -296,6 +313,24 @@ class MobileRestClient:
         resp = self._session.put("{}/{}/_role/{}".format(url, db, name), data=json.dumps(data))
         log_r(resp)
         resp.raise_for_status()
+
+    def get_user(self, url, db, name):
+        """ Gets a user for a db """
+
+        resp = self._session.get("{}/{}/_user/{}".format(url, db, name))
+        log_r(resp)
+        resp.raise_for_status()
+
+        return resp.json()
+
+    def get_users(self, url, db):
+        """ Gets a list of users for a db """
+
+        resp = self._session.get("{}/{}/_user/".format(url, db))
+        log_r(resp)
+        resp.raise_for_status()
+
+        return resp.json()
 
     def create_user(self, url, db, name, password, channels=None, roles=None):
         """ Creates a user with channels on the sync_gateway Admin REST API.
@@ -821,8 +856,9 @@ class MobileRestClient:
         }
 
         if attachment_name is not None:
+            atts = attachment.load_from_data_dir([attachment_name])
             doc["_attachments"] = {
-                attachment_name: {"data": get_attachment(attachment_name)}
+                atts[0].name: {"data": atts[0].data}
             }
 
         parent_revision_digests = []
@@ -1036,8 +1072,9 @@ class MobileRestClient:
             doc["_rev"] = current_rev
 
             if attachment_name is not None:
+                atts = attachment.load_from_data_dir([attachment_name])
                 doc["_attachments"] = {
-                    attachment_name: {"data": get_attachment(attachment_name)}
+                    atts[0].name: {"data": atts[0].data}
                 }
 
             if expiry is not None:
@@ -1132,11 +1169,14 @@ class MobileRestClient:
         Keyword that issues POST _bulk docs with the specified 'docs'.
         Use the Document.create_docs() to create the docs.
         """
+        auth_type = get_auth_type(auth)
+        server_type = self.get_server_type(url)
 
         # transform 'docs' into a format expected by _bulk_docs
-        request_body = {"docs": docs}
-
-        auth_type = get_auth_type(auth)
+        if server_type == ServerType.listener:
+            request_body = {"docs": docs, "new_edits": True}
+        else:
+            request_body = {"docs": docs}
 
         if auth_type == AuthType.session:
             resp = self._session.post("{}/{}/_bulk_docs".format(url, db),
@@ -1739,15 +1779,33 @@ class MobileRestClient:
         log_r(resp)
         resp.raise_for_status()
 
-        resp_obj = resp.json()
+        # Only return a response if adding to the listener
+        # Sync Gateway does not return a response
+        if self.get_server_type(url) == ServerType.listener:
+            resp_obj = resp.json()
+            return resp_obj["id"]
 
-        return resp_obj["id"]
-
-    def get_view(self, url, db, design_doc_id, view_name):
+    def get_view(self, url, db, design_doc_name, view_name, auth=None):
         """
         Keyword that returns a view query for a design doc with a view name
         """
-        resp = self._session.get("{}/{}/{}/_view/{}".format(url, db, design_doc_id, view_name))
+
+        auth_type = get_auth_type(auth)
+        server_type = self.get_server_type(url)
+
+        url = "{}/{}/_design/{}/_view/{}".format(url, db, design_doc_name, view_name)
+        params = {}
+
+        if server_type == ServerType.syncgateway:
+            params["stale"] = "false"
+
+        if auth_type == AuthType.session:
+            resp = self._session.get(url, params=params, cookies=dict(SyncGatewaySession=auth[1]))
+        elif auth_type == AuthType.http_basic:
+            resp = self._session.get(url, params=params, auth=auth)
+        else:
+            resp = self._session.get(url, params=params)
+
         log_r(resp)
         resp.raise_for_status()
         return resp.json()

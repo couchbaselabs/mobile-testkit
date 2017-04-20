@@ -1,0 +1,40 @@
+016-01-26T19:02:51.595-08:00 	BulkDocs: Doc "large-revisions_3" --> 503 Database server is over capacity (MCResponse status=TMPFAIL, opcode=GET, opaque=0, msg: Temporary failure)
+2016-01-26T19:02:51.595-08:00 	BulkDocs: Doc "large-revisions_4" --> 503 Database server is over capacity (MCResponse status=TMPFAIL, opcode=GET, opaque=0, msg: Temporary failure)
+2016-01-26T19:02:51.596-08:00 	BulkDocs: Doc "large-revisions_5" --> 503 Database server is over capacity (MCResponse status=TMPFAIL, opcode=GET, opaque=0, msg: Temporary failure)
+
+2016-01-26T19:02:51.612-08:00 	BulkDocs: Doc "large-revisions_6" --> 503 Database server is over capacity (MCResponse status=TMPFAIL, opcode=GET, opaque=0, msg: Temporary failure)
+
+2016-01-26T19:02:51.612-08:00 	BulkDocs: Doc "large-revisions_7" --> 503 Database server is over capacity (MCResponse status=TMPFAIL, opcode=GET, opaque=0, msg: Temporary failure)
+
+2016-01-26T19:02:51.630-08:00 HTTP:  #4463: POST /db/_revs_diff
+
+2016/01/26 19:02:51 planner: awakes, op: kick, msg: cfg changed, key: nodeDefs-wanted
+2016/01/26 19:02:51 planner: once, reason: cfg changed, key: nodeDefs-wanted
+2016/01/26 19:02:51 janitor: awakes, op: kick, msg: cfg changed, key: planPIndexes
+
+
+WARNING: DATA RACE
+Write at 0x00c423212378 by goroutine 1763:
+  github.com/couchbase/sync_gateway/base.(*SyncSequenceClock).SetMaxSequence()
+      /home/centos/godeps/src/github.com/couchbase/sync_gateway/base/sequence_clock.go:365 +0x159
+  github.com/couchbase/sync_gateway/db.(*Database).vectorChangesFeed.func1()
+      /home/centos/godeps/src/github.com/couchbase/sync_gateway/db/index_changes.go:736 +0x26e
+
+Previous read at 0x00c423212378 by goroutine 1764:
+  github.com/couchbase/sync_gateway/db.ClockMatches()
+      /home/centos/godeps/src/github.com/couchbase/sync_gateway/db/sequence_hasher.go:451 +0x91
+  github.com/couchbase/sync_gateway/db.(*storedClocks).Contains()
+      /home/centos/godeps/src/github.com/couchbase/sync_gateway/db/sequence_hasher.go:415 +0xb4
+  github.com/couchbase/sync_gateway/db.(*sequenceHasher).GetHash()
+      /home/centos/godeps/src/github.com/couchbase/sync_gateway/db/sequence_hasher.go:147 +0x23e
+  github.com/couchbase/sync_gateway/db.(*Database).vectorChangesFeed.func1()
+      /home/centos/godeps/src/github.com/couchbase/sync_gateway/db/index_changes.go:743 +0x41b
+
+
+016-01-26T19:02:51.595-08:00 	BulkDocs: Doc "large-revisions_3" --> 503 Database server is over capacity (MCResponse status=TMPFAIL, opcode=GET, opaque=0, msg: Temporary failure)
+2016-01-26T19:02:51.595-08:00 	BulkDocs: Doc "large-revisions_4" --> 503 Database server is over capacity (MCResponse status=TMPFAIL, opcode=GET, opaque=0, msg: Temporary failure)
+2016-01-26T19:02:51.596-08:00 	BulkDocs: Doc "large-revisions_5" --> 503 Database server is over capacity (MCResponse status=TMPFAIL, opcode=GET, opaque=0, msg: Temporary failure)
+
+2016-01-26T19:02:51.612-08:00 	BulkDocs: Doc "large-revisions_6" --> 503 Database server is over capacity (MCResponse status=TMPFAIL, opcode=GET, opaque=0, msg: Temporary failure)
+
+2016-01-26T19:02:51.612-08:00 	BulkDocs: Doc "large-revisions_7" --> 503 Database server is over capacity (MCResponse status=TMPFAIL, opcode=GET, opaque=0, msg: Temporary failure)

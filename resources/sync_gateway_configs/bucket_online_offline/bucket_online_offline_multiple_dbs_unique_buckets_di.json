@@ -8,50 +8,63 @@
     "compressResponses": false,
     "log": ["CRUD+", "Cache+", "HTTP+", "Changes+"],
     "cluster_config": {
-        "server":"http://{{ couchbase_server_primary_node }}:8091",
+        "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
         "data_dir":".",
-        "bucket":"data-bucket"
+        "bucket":"data-bucket",
+        "password": "password"
     },
     "databases":{
         "db1":{
             "feed_type":"DCPSHARD",
-            "server":"http://{{ couchbase_server_primary_node }}:8091",
+            "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
             "bucket":"data-bucket-1",
+            "password": "password",
             "channel_index":{
-                "server":"http://{{ couchbase_server_primary_node }}:8091",
+                "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
                 "bucket":"index-bucket-1",
+                "username":"index-bucket-1",
+                "password": "password",
                 "writer":{{ is_index_writer }}
             }
         },
         "db2":{
             "offline":false,
             "feed_type":"DCPSHARD",
-            "server":"http://{{ couchbase_server_primary_node }}:8091",
+            "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
             "bucket":"data-bucket-2",
+            "password": "password",
             "channel_index":{
-                "server":"http://{{ couchbase_server_primary_node }}:8091",
+                "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
                 "bucket":"index-bucket-2",
+                "username":"index-bucket-2",
+                "password": "password",
                 "writer":{{ is_index_writer }}
             }
         },
         "db3":{
             "offline":false,
             "feed_type":"DCPSHARD",
-            "server":"http://{{ couchbase_server_primary_node }}:8091",
+            "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
             "bucket":"data-bucket-3",
+            "password": "password",
             "channel_index":{
-                "server":"http://{{ couchbase_server_primary_node }}:8091",
+                "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
                 "bucket":"index-bucket-3",
+                "username":"index-bucket-3",
+                "password": "password",
                 "writer":{{ is_index_writer }}
             }
         },
         "db4":{
             "feed_type":"DCPSHARD",
-            "server":"http://{{ couchbase_server_primary_node }}:8091",
+            "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
             "bucket":"data-bucket-4",
+            "password": "password",
             "channel_index":{
-                "server":"http://{{ couchbase_server_primary_node }}:8091",
+                "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
                 "bucket":"index-bucket-4",
+                "username":"index-bucket-4",
+                "password": "password",
                 "writer":{{ is_index_writer }}
             }
         }

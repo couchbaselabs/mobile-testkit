@@ -1,7 +1,6 @@
 ---
 # Deploy sync gateway configs
 - hosts: sync_gateways
-  become: yes
   vars:
     sync_gateway_config_filepath:
     couchbase_server_primary_node: "{{ hostvars[groups.couchbase_servers[0]].ansible_host }}"
@@ -9,15 +8,24 @@
     sync_gateway_node: "{{ hostvars[groups.sync_gateways[0]].ansible_host }}"
     webhook_ip: "{{ hostvars[groups.webhook_ip[0]].ansible_host }}"
     is_index_writer: "false"
+    server_scheme:
+    server_port:
   tasks:
   - include: tasks/deploy-sync-gateway-config.yml
+    when: ansible_distribution == "CentOS"
+
+  - include: tasks/deploy-sync-gateway-config-windows.yml
+    when: ansible_os_family == "Windows"
 
 - hosts: sync_gateways
   any_errors_fatal: true
-  become: yes
 
   vars:
     sync_gateway_config_filepath:
     couchbase_server_primary_node: "{{ hostvars[groups.couchbase_servers[0]].ansible_host }}"
   tasks:
   - include: tasks/start-sync-gateway.yml
+    when: ansible_distribution == "CentOS"
+
+  - include: tasks/start-sync-gateway-windows.yml
+    when: ansible_os_family == "Windows"

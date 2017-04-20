@@ -8,7 +8,7 @@ from keywords.LiteServFactory import LiteServFactory
 from keywords.MobileRestClient import MobileRestClient
 from keywords.ClusterKeywords import ClusterKeywords
 from keywords.SyncGateway import sync_gateway_config_path_for_mode
-from keywords.Logging import Logging
+from keywords.tklogging import Logging
 
 
 # Add custom arguments for executing tests in this directory
@@ -96,6 +96,11 @@ def setup_client_syncgateway_test(request, setup_client_syncgateway_suite):
     liteserv = setup_client_syncgateway_suite["liteserv"]
     cluster_config = setup_client_syncgateway_suite["cluster_config"]
     test_name = request.node.name
+
+    if request.config.getoption("--liteserv-platform") == "macosx" and \
+            str(request.config.getoption("--liteserv-version")).startswith("1.3.1") and \
+            str(test_name).startswith("test_longpoll_changes_termination"):
+        pytest.skip("test_longpoll_changes_termination tests are known to fail on macosx with 1.3.1 CBL")
 
     client = MobileRestClient()
 

@@ -197,6 +197,11 @@ def rest_scan(sync_gateway, db, online, num_docs, user_name, channels):
 @pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.onlineoffline
+@pytest.mark.basicauth
+@pytest.mark.role
+@pytest.mark.channel
+@pytest.mark.bulkops
+@pytest.mark.changes
 @pytest.mark.parametrize("sg_conf_name, num_docs", [
     ("bucket_online_offline/bucket_online_offline_default", 100)
 ])
@@ -230,6 +235,11 @@ def test_online_default_rest(params_from_base_test_setup, sg_conf_name, num_docs
 @pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.onlineoffline
+@pytest.mark.basicauth
+@pytest.mark.role
+@pytest.mark.channel
+@pytest.mark.bulkops
+@pytest.mark.changes
 @pytest.mark.parametrize("sg_conf_name, num_docs", [
     ("bucket_online_offline/bucket_online_offline_offline_false", 100)
 ])
@@ -264,6 +274,11 @@ def test_offline_false_config_rest(params_from_base_test_setup, sg_conf_name, nu
 @pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.onlineoffline
+@pytest.mark.basicauth
+@pytest.mark.role
+@pytest.mark.channel
+@pytest.mark.bulkops
+@pytest.mark.changes
 @pytest.mark.parametrize("sg_conf_name, num_docs", [
     ("bucket_online_offline/bucket_online_offline_default", 100)
 ])
@@ -305,6 +320,7 @@ def test_online_to_offline_check_503(params_from_base_test_setup, sg_conf_name, 
 @pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.onlineoffline
+@pytest.mark.basicauth
 @pytest.mark.parametrize("sg_conf_name, num_docs", [
     ("bucket_online_offline/bucket_online_offline_default", 5000)
 ])
@@ -378,6 +394,7 @@ def test_online_to_offline_changes_feed_controlled_close_continuous(params_from_
 @pytest.mark.syncgateway
 @pytest.mark.onlineoffline
 @pytest.mark.changes
+@pytest.mark.basicauth
 @pytest.mark.parametrize("sg_conf_name, num_docs, num_users", [
     ("bucket_online_offline/bucket_online_offline_default", 5000, 40)
 ])
@@ -439,6 +456,7 @@ def test_online_to_offline_continous_changes_feed_controlled_close_sanity_mulitp
 @pytest.mark.syncgateway
 @pytest.mark.onlineoffline
 @pytest.mark.changes
+@pytest.mark.basicauth
 @pytest.mark.parametrize("sg_conf_name, num_docs", [
     ("bucket_online_offline/bucket_online_offline_default", 5000)
 ])
@@ -497,6 +515,7 @@ def test_online_to_offline_changes_feed_controlled_close_longpoll_sanity(params_
 @pytest.mark.syncgateway
 @pytest.mark.onlineoffline
 @pytest.mark.changes
+@pytest.mark.basicauth
 @pytest.mark.parametrize("sg_conf_name, num_docs, num_users", [
     ("bucket_online_offline/bucket_online_offline_default", 5000, 40)
 ])
@@ -563,6 +582,7 @@ def test_online_to_offline_longpoll_changes_feed_controlled_close_sanity_mulitpl
 @pytest.mark.syncgateway
 @pytest.mark.onlineoffline
 @pytest.mark.changes
+@pytest.mark.basicauth
 @pytest.mark.parametrize("sg_conf_name, num_docs", [
     ("bucket_online_offline/bucket_online_offline_default", 5000)
 ])
@@ -658,6 +678,11 @@ def test_online_to_offline_changes_feed_controlled_close_longpoll(params_from_ba
 @pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.onlineoffline
+@pytest.mark.basicauth
+@pytest.mark.role
+@pytest.mark.channel
+@pytest.mark.bulkops
+@pytest.mark.changes
 @pytest.mark.parametrize("sg_conf_name, num_docs", [
     ("bucket_online_offline/bucket_online_offline_offline_true", 100)
 ])
@@ -699,6 +724,11 @@ def test_offline_true_config_bring_online(params_from_base_test_setup, sg_conf_n
 @pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.onlineoffline
+@pytest.mark.basicauth
+@pytest.mark.role
+@pytest.mark.channel
+@pytest.mark.bulkops
+@pytest.mark.changes
 @pytest.mark.parametrize("sg_conf_name, num_docs", [
     ("bucket_online_offline/bucket_online_offline_default_dcp", 100),
     ("bucket_online_offline/bucket_online_offline_default", 100)
@@ -738,6 +768,11 @@ def test_db_offline_tap_loss_sanity(params_from_base_test_setup, sg_conf_name, n
 @pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.onlineoffline
+@pytest.mark.basicauth
+@pytest.mark.role
+@pytest.mark.channel
+@pytest.mark.bulkops
+@pytest.mark.changes
 @pytest.mark.parametrize("sg_conf_name, num_docs", [
     ("bucket_online_offline/bucket_online_offline_default", 100)
 ])
@@ -784,6 +819,11 @@ def test_db_delayed_online(params_from_base_test_setup, sg_conf_name, num_docs):
 @pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.onlineoffline
+@pytest.mark.basicauth
+@pytest.mark.role
+@pytest.mark.channel
+@pytest.mark.bulkops
+@pytest.mark.changes
 @pytest.mark.parametrize("sg_conf_name, num_docs", [
     ("bucket_online_offline/bucket_online_offline_multiple_dbs_unique_buckets", 100)
 ])

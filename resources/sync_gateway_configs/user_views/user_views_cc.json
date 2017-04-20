@@ -1,0 +1,57 @@
+{
+  "interface": ":4984",
+  "adminInterface": "0.0.0.0:4985",
+  "maxIncomingConnections": 0,
+  "maxCouchbaseConnections": 16,
+  "maxFileDescriptors": 90000,
+  "slowServerCallWarningThreshold": 500,
+  "compressResponses": false,
+  "log": [
+    "*"
+  ],
+  "databases": {
+    "db": {
+      "unsupported": {
+        "user_views": {
+          "enabled":true
+        }
+      },
+      "server": "{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
+      "bucket": "data-bucket",
+      "password": "password",
+      "roles": {
+        "Scientist": {
+          "admin_channels": [
+            "Download"
+          ]
+        },
+        "Researcher": {
+          "admin_channels": [
+            "Upload"
+          ]
+        }
+      },
+      "users": {
+        "seth": {
+          "password": "pass",
+          "admin_channels": [
+            "Create"
+          ],
+          "admin_roles": [
+            "Scientist"
+          ]
+        },
+        "raghu": {
+          "password": "pass",
+          "admin_channels": [
+            "Edit"
+          ],
+          "admin_roles": [
+            "Researcher"
+          ]
+        }
+      }
+    }
+  }
+}
+

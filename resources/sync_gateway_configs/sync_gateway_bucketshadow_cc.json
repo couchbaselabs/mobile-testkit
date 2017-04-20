@@ -9,12 +9,15 @@
     "log": ["*"],
     "databases":{
         "db":{
-            "server":"http://{{ couchbase_server_primary_node }}:8091",
+            "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
             "bucket":"data-bucket",
-	    "shadow": {
-		"server": "http://{{ couchbase_server_primary_node }}:8091",
-		"bucket": "source-bucket"
-	    }
+            "password": "password",
+        	    "shadow": {
+		          "server": "{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
+		          "bucket": "source-bucket",
+                  "username": "source-bucket",
+                  "password": "password"
+	      }
         }
     }
 }

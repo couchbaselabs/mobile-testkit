@@ -44,3 +44,19 @@ class ClusterError(Error):
 
 class DocumentError(Error):
     pass
+
+
+class LogScanningError(Error):
+    pass
+
+
+class RBACUserCreationError(Error):
+    pass
+
+
+class RBACUserDeletionError(Error):
+    pass
+
+
+class DockerError(Error):
+    pass

@@ -7,7 +7,7 @@ from keywords.utils import log_info
 from keywords.ClusterKeywords import ClusterKeywords
 from keywords.MobileRestClient import MobileRestClient
 from keywords.SyncGateway import sync_gateway_config_path_for_mode
-from keywords.Time import Time
+from keywords.timeutils import Time
 from keywords import document
 
 """
@@ -48,6 +48,8 @@ Test suite for Sync Gateway's expiry feature.
 @pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.ttl
+@pytest.mark.session
+@pytest.mark.channel
 @pytest.mark.parametrize("sg_conf_name", [
     "sync_gateway_default_functional_tests"
 ])
@@ -113,6 +115,8 @@ def test_numeric_expiry_as_ttl(params_from_base_test_setup, sg_conf_name):
 @pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.ttl
+@pytest.mark.session
+@pytest.mark.channel
 @pytest.mark.parametrize("sg_conf_name", [
     "sync_gateway_default_functional_tests"
 ])
@@ -178,6 +182,8 @@ def test_string_expiry_as_ttl(params_from_base_test_setup, sg_conf_name):
 @pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.ttl
+@pytest.mark.session
+@pytest.mark.channel
 @pytest.mark.parametrize("sg_conf_name", [
     "sync_gateway_default_functional_tests"
 ])
@@ -247,6 +253,8 @@ def test_numeric_expiry_as_unix_date(params_from_base_test_setup, sg_conf_name):
 @pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.ttl
+@pytest.mark.session
+@pytest.mark.channel
 @pytest.mark.parametrize("sg_conf_name", [
     "sync_gateway_default_functional_tests"
 ])
@@ -320,6 +328,8 @@ def test_string_expiry_as_unix_date(params_from_base_test_setup, sg_conf_name):
 @pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.ttl
+@pytest.mark.session
+@pytest.mark.channel
 @pytest.mark.parametrize("sg_conf_name", [
     "sync_gateway_default_functional_tests"
 ])
@@ -389,6 +399,8 @@ def test_string_expiry_as_iso_8601_date(params_from_base_test_setup, sg_conf_nam
 @pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.ttl
+@pytest.mark.session
+@pytest.mark.channel
 @pytest.mark.parametrize("sg_conf_name", [
     "sync_gateway_default_functional_tests"
 ])
@@ -454,6 +466,8 @@ def test_removing_expiry(params_from_base_test_setup, sg_conf_name):
 @pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.ttl
+@pytest.mark.session
+@pytest.mark.channel
 @pytest.mark.parametrize("sg_conf_name", [
     "sync_gateway_default_functional_tests"
 ])
@@ -520,6 +534,8 @@ def test_rolling_ttl_expires(params_from_base_test_setup, sg_conf_name):
 @pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.ttl
+@pytest.mark.session
+@pytest.mark.channel
 @pytest.mark.parametrize("sg_conf_name", [
     "sync_gateway_default_functional_tests"
 ])
@@ -587,6 +603,9 @@ def test_rolling_ttl_remove_expirary(params_from_base_test_setup, sg_conf_name):
 @pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.ttl
+@pytest.mark.session
+@pytest.mark.channel
+@pytest.mark.bulkops
 @pytest.mark.parametrize("sg_conf_name", [
     "sync_gateway_default_functional_tests"
 ])

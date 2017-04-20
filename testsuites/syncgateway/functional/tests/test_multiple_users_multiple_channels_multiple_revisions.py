@@ -18,6 +18,9 @@ from keywords.SyncGateway import sync_gateway_config_path_for_mode
 # https://docs.google.com/spreadsheets/d/1nlba3SsWagDrnAep3rDZHXHIDmRH_FFDeTaYJms_55k/edit#gid=598127796
 @pytest.mark.sanity
 @pytest.mark.syncgateway
+@pytest.mark.basicauth
+@pytest.mark.channel
+@pytest.mark.changes
 @pytest.mark.parametrize("sg_conf_name, num_users, num_channels, num_docs, num_revisions", [
     ("sync_gateway_default_functional_tests", 10, 3, 10, 10),
 ])

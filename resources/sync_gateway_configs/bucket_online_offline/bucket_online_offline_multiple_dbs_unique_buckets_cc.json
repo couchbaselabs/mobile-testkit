@@ -10,22 +10,26 @@
     "verbose":"true",
     "databases":{
         "db1":{
-            "server":"http://{{ couchbase_server_primary_node }}:8091",
-            "bucket":"data-bucket-1"
+            "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
+            "bucket":"data-bucket-1",
+            "password": "password"
         },
         "db2":{
             "offline":false,
-            "server":"http://{{ couchbase_server_primary_node }}:8091",
-            "bucket":"data-bucket-2"
+            "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
+            "bucket":"data-bucket-2",
+            "password": "password"
         },
         "db3":{
             "offline":false,
-            "server":"http://{{ couchbase_server_primary_node }}:8091",
-            "bucket":"data-bucket-3"
+            "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
+            "bucket":"data-bucket-3",
+            "password": "password"
         },
         "db4":{
-            "server":"http://{{ couchbase_server_primary_node }}:8091",
-            "bucket":"data-bucket-4"
+            "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
+            "bucket":"data-bucket-4",
+            "password": "password"
         }
     }
 }

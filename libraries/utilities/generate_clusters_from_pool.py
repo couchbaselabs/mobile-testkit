@@ -29,7 +29,7 @@ class ClusterDef:
 
 
 def write_config(config, pool_file):
-    ips, ip_to_node_type = get_ips(pool_file)
+    ips, ip_to_node_type = get_hosts(pool_file)
     ip_to_node_type_len = len(ip_to_node_type)
     ip_to_node_type_defined = False
 
@@ -356,6 +356,9 @@ def write_config(config, pool_file):
         except Exception as e:
             log_error("Failed to find local_ip, webhook tests will fail.  Error: {}".format(e))
 
+        f.write("\n\n[cbs_ssl]\n")
+        f.write("cbs_ssl_enabled=False\n")
+
         log_info("Generating {}.json".format(config.name))
 
         # Write json file consumable by testkit.cluster class
@@ -365,14 +368,15 @@ def write_config(config, pool_file):
             "sync_gateways": sync_gateways,
             "sg_accels": accels,
             "load_generators": load_generators,
-            "load_balancers": load_balancers
+            "load_balancers": load_balancers,
+            "cbs_ssl_enabled": False,
         }
 
         with open(cluster_json_file, "w") as f_json:
             f_json.write(json.dumps(cluster_dict, indent=4))
 
 
-def get_ips(pool_file="resources/pool.json"):
+def get_hosts(pool_file="resources/pool.json"):
     with open(pool_file) as f:
         pool_dict = json.loads(f.read())
         ips = pool_dict["ips"]
@@ -461,7 +465,7 @@ def generate_clusters_from_pool(pool_file):
         sys.exit(1)
 
     print("Using the following machines to run functional tests ... ")
-    for host in get_ips(pool_file):
+    for host in get_hosts(pool_file):
         print(host)
 
     print("Generating 'resources/cluster_configs/'")

@@ -74,10 +74,10 @@ def log_expvars(cluster_config, folder_name, sleep_time=30):
         sg_is_running = True
         while gateload_is_running and sg_is_running:
 
-            # Caputure expvars for gateloads
+            # Capture expvars for gateloads
             for endpoint in lgs_expvar_endpoints:
                 try:
-                    log_info("Collecting gateload expavars {}".format(endpoint))
+                    log_info("Collecting gateload expvars {}".format(endpoint))
                     write_expvars(gateload_results, endpoint)
                     dump_results(folder_name, gateload_results, sync_gateway_results)
                 except RequestException as re:
@@ -90,7 +90,7 @@ def log_expvars(cluster_config, folder_name, sleep_time=30):
             # Capture expvars for sync_gateways
             for endpoint in sgs_expvar_endpoints:
                 try:
-                    log_info("Collecting sg expavars {}".format(endpoint))
+                    log_info("Collecting sg expvars {}".format(endpoint))
                     write_expvars(sync_gateway_results, endpoint)
                     dump_results(folder_name, gateload_results, sync_gateway_results)
                 except RequestException as re:
@@ -101,6 +101,7 @@ def log_expvars(cluster_config, folder_name, sleep_time=30):
                     dump_results(folder_name, gateload_results, sync_gateway_results)
                     sg_is_running = False
 
+            dump_results(folder_name, gateload_results, sync_gateway_results)
             log_info("Elapsed: {} minutes".format((time.time() - start_time) / 60.0))
             time.sleep(sleep_time)
 
@@ -139,6 +140,7 @@ def wait_for_endpoints_alive_or_raise(endpoints, num_attempts=5):
         time.sleep(i * 2)
 
     raise RuntimeError("Give up waiting for endpoints after {} attempts".format(num_attempts))
+
 
 if __name__ == "__main__":
 

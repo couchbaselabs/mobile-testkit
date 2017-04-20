@@ -9,10 +9,10 @@
     "log": ["CRUD+", "Cache+", "HTTP+", "Changes+"],
     "databases":{
         "db":{
-            "server":"http://{{ couchbase_server_primary_node }}:8091",
+            "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
             "bucket":"data-bucket",
-	    "revs_limit":5	    
+            "password": "password",
+	        "revs_limit":5
         }
     }
 }
-

@@ -21,6 +21,8 @@ from keywords import userinfo
 @pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.changes
+@pytest.mark.basicauth
+@pytest.mark.channel
 @pytest.mark.parametrize("sg_conf_name, num_docs, num_revisions", [
     ("sync_gateway_default_functional_tests", 5000, 1),
     ("sync_gateway_default_functional_tests", 50, 100)
@@ -77,6 +79,8 @@ def test_longpoll_changes_parametrized(params_from_base_test_setup, sg_conf_name
 @pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.changes
+@pytest.mark.basicauth
+@pytest.mark.channel
 @pytest.mark.parametrize("sg_conf_name, num_docs, num_revisions", [
     ("sync_gateway_default_functional_tests", 10, 10),
 ])
@@ -133,6 +137,8 @@ def test_longpoll_changes_sanity(params_from_base_test_setup, sg_conf_name, num_
 @pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.changes
+@pytest.mark.basicauth
+@pytest.mark.channel
 @pytest.mark.parametrize("sg_conf_name", [
     "sync_gateway_default_functional_tests",
 ])
@@ -368,6 +374,9 @@ def test_longpoll_awaken_doc_add_update(params_from_base_test_setup, sg_conf_nam
 @pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.changes
+@pytest.mark.basicauth
+@pytest.mark.access
+@pytest.mark.channel
 @pytest.mark.parametrize("sg_conf_name", [
     "sync_gateway_default_functional_tests",
 ])
@@ -593,6 +602,10 @@ def test_longpoll_awaken_channels(params_from_base_test_setup, sg_conf_name):
 @pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.changes
+@pytest.mark.basicauth
+@pytest.mark.access
+@pytest.mark.role
+@pytest.mark.channel
 @pytest.mark.parametrize("sg_conf_name", [
     "sync_gateway_default_functional_tests",
 ])
@@ -765,6 +778,9 @@ def test_longpoll_awaken_roles(params_from_base_test_setup, sg_conf_name):
 @pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.changes
+@pytest.mark.basicauth
+@pytest.mark.access
+@pytest.mark.channel
 @pytest.mark.parametrize("sg_conf_name", [
     "custom_sync/wake_changes_access",
 ])
@@ -881,6 +897,10 @@ def test_longpoll_awaken_via_sync_access(params_from_base_test_setup, sg_conf_na
 @pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.changes
+@pytest.mark.basicauth
+@pytest.mark.role
+@pytest.mark.access
+@pytest.mark.channel
 @pytest.mark.parametrize("sg_conf_name", [
     "custom_sync/wake_changes_roles",
 ])

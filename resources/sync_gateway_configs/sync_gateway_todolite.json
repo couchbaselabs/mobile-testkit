@@ -12,15 +12,17 @@
         "register" : true
     },
     "cluster_config": {
-        "server":"http://{{ couchbase_server_primary_node }}:8091",
+        "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
         "data_dir":".",
-        "bucket":"data-bucket"
+        "bucket":"data-bucket",
+        "password": "password"
     },
     "databases":{
         "todolite-di":{
             "feed_type":"DCPSHARD",
-            "server":"http://{{ couchbase_server_primary_node }}:8091",
+            "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
             "bucket":"data-bucket",
+            "password": "password",
             "users":{
                 "GUEST":{
                     "disabled":true,
@@ -31,8 +33,10 @@
             },
             "channel_index":{
                 "num_shards":16,
-                "server":"http://{{ couchbase_server_primary_node }}:8091",
+                "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
                 "bucket":"index-bucket",
+                "username":"index-bucket",
+                "password": "password",
                 "writer":{{ is_index_writer }}
             },
 	    "sync":  	`
@@ -76,8 +80,9 @@
         },
       	"todolite-cc":{
             "feed_type":"TAP",
-            "server":"http://{{ couchbase_server_primary_node }}:8091",
+            "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
             "bucket":"cbgt-bucket",
+            "password": "password",
             "users":{
                 "GUEST":{
                     "disabled":true,

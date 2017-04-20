@@ -12,9 +12,9 @@ from libraries.testkit.config import Config
 from libraries.provision.ansible_runner import AnsibleRunner
 
 from keywords import couchbaseserver
-from keywords import utils
 
 import keywords.exceptions
+from keywords.exceptions import ProvisioningError
 
 from keywords.utils import log_info
 
@@ -30,6 +30,7 @@ class Cluster:
     def __init__(self, config):
 
         self._cluster_config = config
+        self.cbs_ssl = False
 
         if not os.path.isfile(self._cluster_config):
             log_info("Cluster config not found in 'resources/cluster_configs/'")
@@ -45,9 +46,12 @@ class Cluster:
         sgs = [{"name": sg["name"], "ip": sg["ip"]} for sg in cluster["sync_gateways"]]
         acs = [{"name": ac["name"], "ip": ac["ip"]} for ac in cluster["sg_accels"]]
 
+        self.cbs_ssl = cluster["cbs_ssl_enabled"]
+
         log_info("cbs: {}".format(cbs))
         log_info("sgs: {}".format(sgs))
         log_info("acs: {}".format(acs))
+        log_info("ssl: {}".format(self.cbs_ssl))
 
         self.sync_gateways = [SyncGateway(cluster_config=self._cluster_config, target=sg) for sg in sgs]
         self.sg_accels = [SgAccel(cluster_config=self._cluster_config, target=ac) for ac in acs]
@@ -57,15 +61,7 @@ class Cluster:
         # for integrating keywords
         self.cb_server = couchbaseserver.CouchbaseServer(self.servers[0].url)
 
-    def validate_cluster(self):
-
-        # Validate sync gateways
-        if len(self.sync_gateways) == 0:
-            raise Exception("Functional tests require at least 1 index reader")
-
     def reset(self, sg_config_path):
-
-        self.validate_cluster()
 
         ansible_runner = AnsibleRunner(self._cluster_config)
 
@@ -101,6 +97,10 @@ class Cluster:
 
         self.sync_gateway_config = config
 
+        is_valid, reason = validate_cluster(self.sync_gateways, self.sg_accels, config)
+        if not is_valid:
+            raise ProvisioningError(reason)
+
         log_info(">>> Creating buckets on: {}".format(self.cb_server.url))
         log_info(">>> Creating buckets {}".format(bucket_name_set))
         self.cb_server.create_buckets(bucket_name_set)
@@ -111,13 +111,21 @@ class Cluster:
         self.cb_server.wait_for_ready_state()
 
         log_info(">>> Starting sync_gateway with configuration: {}".format(config_path_full))
-        utils.dump_file_contents_to_logs(config_path_full)
+
+        server_port = 8091
+        server_scheme = "http"
+
+        if self.cbs_ssl:
+            server_port = 18091
+            server_scheme = "https"
 
         # Start sync-gateway
         status = ansible_runner.run_ansible_playbook(
             "start-sync-gateway.yml",
             extra_vars={
-                "sync_gateway_config_filepath": config_path_full
+                "sync_gateway_config_filepath": config_path_full,
+                "server_port": server_port,
+                "server_scheme": server_scheme
             }
         )
         assert status == 0, "Failed to start to Sync Gateway"
@@ -129,7 +137,9 @@ class Cluster:
             status = ansible_runner.run_ansible_playbook(
                 "start-sg-accel.yml",
                 extra_vars={
-                    "sync_gateway_config_filepath": config_path_full
+                    "sync_gateway_config_filepath": config_path_full,
+                    "server_port": server_port,
+                    "server_scheme": server_scheme
                 }
             )
             assert status == 0, "Failed to start sg_accel"
@@ -276,3 +286,16 @@ class Cluster:
             s += str(server)
         s += "\n"
         return s
+
+
+def validate_cluster(sync_gateways, sg_accels, config):
+
+    # Validate sync gateways
+    if len(sync_gateways) == 0:
+        return False, "Functional tests require at least 1 index reader"
+
+    # If we are using a Distributed Index config, make sure that we have sg-accels
+    if config.mode == "di" and len(sg_accels) == 0:
+        return False, "INVALID CONFIG: Running in Distributed Index mode but no sg_accels are defined."
+
+    return True, ""

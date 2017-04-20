@@ -15,6 +15,10 @@ from keywords.SyncGateway import sync_gateway_config_path_for_mode
 
 @pytest.mark.sanity
 @pytest.mark.syncgateway
+@pytest.mark.basicauth
+@pytest.mark.channel
+@pytest.mark.bulkops
+@pytest.mark.changes
 @pytest.mark.parametrize("sg_conf_name, num_docs, user_channels, filter, limit", [
     ("sync_gateway_channel_cache", 5000, "*", True, 50),
     ("sync_gateway_channel_cache", 1000, "*", True, 50),

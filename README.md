@@ -244,7 +244,7 @@ In order to use Ansible, the controller needs to have it's SSH keys in all the h
 Follow the instructions in [Docker container SSH key instructions](https://github.com/couchbaselabs/mobile-testkit/wiki/Docker-Container---SSH-Keys) to setup keys in Docker
 
 ```
-python libraries/utilities/install_keys.py --key-name=sample_key.pub --ssh-user=root
+python libraries/utilities/install_keys.py --public-key-path=~/.ssh/id_rsa.pub --ssh-user=root
 ```
 - Generate the necessary cluster topologies to run the tests
 ```
@@ -298,6 +298,20 @@ ssh-add ~/.ssh/sample_key
 [Running Functional Tests](testsuites/syncgateway/functional/tests/README.md) 
 
 
+### Spin Up Machines on Docker
+
+IMPORTANT: This will copy your public / and private key to allow ssh access from mobile-testkit container to other clusters in the container.
+
+```
+python docker/create_cluster.py --network-name cbl --number-of-nodes 5 --path-to-public-key ~/.ssh/id_rsa.pub --clean
+```
+
+TODO: Automate this
+```
+docker exec -it mobile-testkit /bin/bash
+./run_sg_tests.sh
+```
+
 
 ### Spin Up Machines on Vagrant
 ===============================
@@ -340,7 +354,7 @@ Do the same for rests of the hosts in the `Vagrantfile`
 1. Install the ssh key into the machines via 
 
 ```
-python libraries/utilities/install_keys.py --key-name=id_rsa.pub --ssh-user=vagrant
+python libraries/utilities/install_keys.py --public-key-path=~/.ssh/id_rsa.pub --ssh-user=vagrant --ssh-password=vagrant
 ```
 
 use the password `vagrant`. 
@@ -601,7 +615,7 @@ Save as `resources/cluster_configs/windows`
 - Download and execute this in the windows target PowerShell (Run as Administrator)
 [ConfigureRemotingForAnsible.ps1](https://raw.githubusercontent.com/ansible/ansible/devel/examples/scripts/ConfigureRemotingForAnsible.ps1)
 ```
-.\ConfigureRemotingForAnsible.ps1
+.\ConfigureRemotingForAnsible.ps1 -SkipNetworkProfileCheck
 ```
 
 If you hit errors, you may have to allow unsigned script execution (Use with caution)

@@ -40,6 +40,7 @@ def test_auto_prune_listener_sanity(setup_client_syncgateway_test):
 @pytest.mark.syncgateway
 @pytest.mark.autoprune
 @pytest.mark.replication
+@pytest.mark.session
 def test_auto_prune_with_pull(setup_client_syncgateway_test):
     """Sanity test for autopruning with replication
 
@@ -116,6 +117,7 @@ def test_auto_prune_with_pull(setup_client_syncgateway_test):
 @pytest.mark.syncgateway
 @pytest.mark.autoprune
 @pytest.mark.replication
+@pytest.mark.session
 def test_auto_prune_listener_keeps_conflicts_sanity(setup_client_syncgateway_test):
     """"
     1. Create db on LiteServ and add docs

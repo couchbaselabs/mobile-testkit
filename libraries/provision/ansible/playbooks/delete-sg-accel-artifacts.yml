@@ -1,6 +1,9 @@
 ---
 # Deploy sync gateway configs
 - hosts: sg_accels
-  become: yes
   tasks:
   - include: tasks/delete-sg-accel-artifacts.yml
+    when: ansible_distribution == "CentOS"
+
+  - include: tasks/delete-sg-accel-artifacts-windows.yml
+    when: ansible_os_family == "Windows"
