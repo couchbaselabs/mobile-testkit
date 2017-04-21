@@ -3,6 +3,8 @@ from __future__ import print_function
 import argparse
 import subprocess
 import json
+import os
+import shutil
 
 import docker
 
@@ -74,6 +76,13 @@ def create_cluster(clean, network_name, number_of_nodes, public_key_path):
 
         print('Starting container: {} on network: {}'.format(container_name, network_name))
 
+        # Delete / Create tmp mount dir
+        tmp_dir = '/tmp/{}'.format(container_name)
+
+        if os.path.isdir(tmp_dir):
+            shutil.rmtree(tmp_dir)
+        os.mkdir(tmp_dir)
+
         # Priviledged is required for some ansible playbooks
         # The volume binding is needed for systemd
         # https://hub.docker.com/r/centos/systemd/
@@ -86,7 +95,8 @@ def create_cluster(clean, network_name, number_of_nodes, public_key_path):
                 name=container_name,
                 privileged=True,
                 volumes={
-                    '/sys/fs/cgroup': {'bind': '/sys/fs/cgroup', 'mode': 'ro'}
+                    '/sys/fs/cgroup': {'bind': '/sys/fs/cgroup', 'mode': 'ro'},
+                    tmp_dir: {'bind': '/home'}
                 },
                 ports={'8091/tcp': 18091}
             )
@@ -98,7 +108,8 @@ def create_cluster(clean, network_name, number_of_nodes, public_key_path):
                 name=container_name,
                 privileged=True,
                 volumes={
-                    '/sys/fs/cgroup': {'bind': '/sys/fs/cgroup', 'mode': 'ro'}
+                    '/sys/fs/cgroup': {'bind': '/sys/fs/cgroup', 'mode': 'ro'},
+                    tmp_dir: {'bind': '/home'}
                 }
             )
         network.connect(container)

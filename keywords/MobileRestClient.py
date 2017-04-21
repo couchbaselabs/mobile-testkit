@@ -23,7 +23,7 @@ from keywords.utils import log_info
 from keywords.utils import log_debug
 from keywords.SyncGateway import validate_sync_gateway_mode
 
-from keywords.exceptions import RestError, TimeoutException, LiteServError
+from keywords.exceptions import RestError, TimeoutException, LiteServError, ChangesError
 from keywords import types
 
 
@@ -1466,7 +1466,7 @@ class MobileRestClient:
         start = time.time()
         while True:
             if time.time() - start > CLIENT_REQUEST_TIMEOUT:
-                raise keywords.exceptions.TimeoutException("Wait for Replication Status Idle: TIMEOUT")
+                raise TimeoutException("Wait for Replication Status Idle: TIMEOUT")
 
             resp = self._session.get("{}/_active_tasks".format(url))
             log_r(resp)
@@ -1498,7 +1498,7 @@ class MobileRestClient:
         start = time.time()
         while True:
             if time.time() - start > CLIENT_REQUEST_TIMEOUT:
-                raise keywords.exceptions.TimeoutException("Verify Docs Present: TIMEOUT")
+                raise TimeoutException("Verify Docs Present: TIMEOUT")
 
             resp = self._session.get("{}/_active_tasks".format(url))
             log_r(resp)
@@ -1553,7 +1553,7 @@ class MobileRestClient:
         while True:
 
             if time.time() - start > timeout:
-                raise keywords.exceptions.TimeoutException("Verify Docs Present: TIMEOUT")
+                raise TimeoutException("Verify Docs Present: TIMEOUT")
 
             if server_type == ServerType.listener:
 
@@ -1698,7 +1698,7 @@ class MobileRestClient:
         while True:
 
             if time.time() - start > CLIENT_REQUEST_TIMEOUT:
-                raise keywords.exceptions.TimeoutException("Verify Docs In Changes: TIMEOUT")
+                raise TimeoutException("Verify Docs In Changes: TIMEOUT")
 
             resp_obj = self.get_changes(url=url, db=db, since=last_seq, auth=auth)
             doc_ids_in_changes = [change["id"] for change in resp_obj["results"]]
@@ -1755,7 +1755,7 @@ class MobileRestClient:
             logging.info(time.time() - start)
 
             if time.time() - start > CLIENT_REQUEST_TIMEOUT:
-                raise keywords.exceptions.TimeoutException("Verify Docs In Changes: TIMEOUT")
+                raise TimeoutException("Verify Docs In Changes: TIMEOUT")
 
             resp_obj = self.get_changes(url=url, db=db, since=last_seq, auth=auth, timeout=polling_interval)
 
@@ -1786,7 +1786,7 @@ class MobileRestClient:
 
             if strict and len(missing_expected_docs) > 0:
                 log_info("Found doc id not in the expected_docs: {}".format(missing_expected_docs))
-                raise keywords.exceptions.ChangesError("Found unexpected docs in changes feed: {}".format(missing_expected_docs))
+                raise ChangesError("Found unexpected docs in changes feed: {}".format(missing_expected_docs))
 
             log_info("Missing expected docs: {}".format(len(expected_doc_map)))
             log_debug("Sequence number map: {}".format(sequence_number_map))

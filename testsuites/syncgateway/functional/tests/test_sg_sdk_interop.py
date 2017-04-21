@@ -100,10 +100,13 @@ def test_purge(params_from_base_test_setup, sg_conf_name):
     all_doc_ids = sg_doc_ids + sdk_doc_ids
 
     # Get all of the docs via Sync Gateway
-    docs, errors = sg_client.get_bulk_docs(url=sg_url, db=sg_db, doc_ids=all_doc_ids, auth=seth_auth)
-    assert len(docs) == number_docs_per_client * 2
+    # TODO reenable: docs, errors = sg_client.get_bulk_docs(url=sg_url, db=sg_db, doc_ids=all_doc_ids, auth=seth_auth)
+    # TODO reenable: assert len(docs) == number_docs_per_client * 2
+    # TODO reenable: assert len(errors) == 0
 
     # Get all of the docs via SDK
+    docs = sdk_client.get_multi(all_doc_ids)
+
     # Sync Gateway delete 1/2 the docs
     # Sync Gateway purge all docs
     # Verify SDK can't see the docs
