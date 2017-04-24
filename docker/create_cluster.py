@@ -133,17 +133,17 @@ def create_cluster(clean, network_name, number_of_nodes, public_key_path):
 
 if __name__ == '__main__':
 
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--clean', help='Remove all user defined networks / container', action='store_true')
-    parser.add_argument('--network-name', help='Name of docker network', required=True)
-    parser.add_argument('--number-of-nodes', help='Number of nodes to create in the network', required=True)
-    parser.add_argument('--path-to-public-key', help='Number of nodes to create in the network', required=True)
-    args = parser.parse_args()
+    PARSER = argparse.ArgumentParser()
+    PARSER.add_argument('--clean', help='Remove all user defined networks / container', action='store_true')
+    PARSER.add_argument('--network-name', help='Name of docker network', required=True)
+    PARSER.add_argument('--number-of-nodes', help='Number of nodes to create in the network', required=True)
+    PARSER.add_argument('--path-to-public-key', help='Number of nodes to create in the network', required=True)
+    ARGS = PARSER.parse_args()
 
     # Scan all log files in the directory for 'panic' and 'data races'
     create_cluster(
-        clean=args.clean,
-        network_name=args.network_name,
-        number_of_nodes=int(args.number_of_nodes),
-        public_key_path=args.path_to_public_key
+        clean=ARGS.clean,
+        network_name=ARGS.network_name,
+        number_of_nodes=int(ARGS.number_of_nodes),
+        public_key_path=ARGS.path_to_public_key
     )
