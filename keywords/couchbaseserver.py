@@ -219,7 +219,7 @@ class CouchbaseServer:
 
         resp = ""
         try:
-            resp = requests.put(rbac_url, data=data_user_params, auth=('Administrator', 'password'))
+            resp = self._session.put(rbac_url, data=data_user_params, auth=('Administrator', 'password'))
             log_r(resp)
             resp.raise_for_status()
         except HTTPError as h:
@@ -239,7 +239,7 @@ class CouchbaseServer:
 
         resp = ""
         try:
-            resp = requests.delete(rbac_url, data=data_user_params, auth=('Administrator', 'password'))
+            resp = self._session.delete(rbac_url, data=data_user_params, auth=('Administrator', 'password'))
             log_r(resp)
             resp.raise_for_status()
         except HTTPError as h:
@@ -355,7 +355,7 @@ class CouchbaseServer:
             data["saslPassword"] = "password"
             data["proxyPort"] = "11211"
 
-        resp = ""
+        resp = None
         try:
             resp = self._session.post("{}/pools/default/buckets".format(self.url), data=data)
             log_r(resp)
