@@ -6,12 +6,11 @@ from requests.exceptions import ConnectionError
 
 from libraries.testkit.syncgateway import SyncGateway
 from libraries.testkit.sgaccel import SgAccel
-from libraries.testkit.server import Server
 from libraries.testkit.admin import Admin
 from libraries.testkit.config import Config
 from libraries.provision.ansible_runner import AnsibleRunner
 
-from keywords import couchbaseserver
+from keywords.couchbaseserver import CouchbaseServer
 
 import keywords.exceptions
 from keywords.exceptions import ProvisioningError
@@ -42,11 +41,14 @@ class Cluster:
         with open("{}.json".format(config)) as f:
             cluster = json.loads(f.read())
 
-        cbs = [{"name": cbs["name"], "ip": cbs["ip"]} for cbs in cluster["couchbase_servers"]]
         sgs = [{"name": sg["name"], "ip": sg["ip"]} for sg in cluster["sync_gateways"]]
         acs = [{"name": ac["name"], "ip": ac["ip"]} for ac in cluster["sg_accels"]]
 
         self.cbs_ssl = cluster["cbs_ssl_enabled"]
+        if self.cbs_ssl:
+            cbs_urls = ["https://{}:18091".format(cbs["ip"]) for cbs in cluster["couchbase_servers"]]
+        else:
+            cbs_urls = ["http://{}:8091".format(cbs["ip"]) for cbs in cluster["couchbase_servers"]]
 
         log_info("cbs: {}".format(cbs))
         log_info("sgs: {}".format(sgs))
@@ -55,11 +57,9 @@ class Cluster:
 
         self.sync_gateways = [SyncGateway(cluster_config=self._cluster_config, target=sg) for sg in sgs]
         self.sg_accels = [SgAccel(cluster_config=self._cluster_config, target=ac) for ac in acs]
-        self.servers = [Server(cluster_config=self._cluster_config, target=cb) for cb in cbs]
+        self.servers = [CouchbaseServer(url=cb_url) for cb_url in cbs_urls]
         self.sync_gateway_config = None  # will be set to Config object when reset() called
 
-        # for integrating keywords
-        self.cb_server = couchbaseserver.CouchbaseServer(self.servers[0].url)
 
     def reset(self, sg_config_path):
 
@@ -86,8 +86,8 @@ class Cluster:
         assert status == 0, "Failed to delete sg_accel artifacts"
 
         # Delete buckets
-        log_info(">>> Deleting buckets on: {}".format(self.cb_server.url))
-        self.cb_server.delete_buckets()
+        log_info(">>> Deleting buckets on: {}".format(self.servers[0].url))
+        self.servers[0].delete_buckets()
 
         # Parse config and grab bucket names
         config_path_full = os.path.abspath(sg_config_path)
@@ -101,14 +101,14 @@ class Cluster:
         if not is_valid:
             raise ProvisioningError(reason)
 
-        log_info(">>> Creating buckets on: {}".format(self.cb_server.url))
+        log_info(">>> Creating buckets on: {}".format(self.servers[0].url))
         log_info(">>> Creating buckets {}".format(bucket_name_set))
-        self.cb_server.create_buckets(bucket_name_set)
+        self.servers[0].create_buckets(bucket_name_set)
 
         # Wait for server to be in a warmup state to work around
         # https://github.com/couchbase/sync_gateway/issues/1745
-        log_info(">>> Waiting for Server: {} to be in a healthy state".format(self.cb_server.url))
-        self.cb_server.wait_for_ready_state()
+        log_info(">>> Waiting for Server: {} to be in a healthy state".format(self.servers[0].url))
+        self.servers[0].wait_for_ready_state()
 
         log_info(">>> Starting sync_gateway with configuration: {}".format(config_path_full))
 
