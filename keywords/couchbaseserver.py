@@ -84,7 +84,7 @@ def create_internal_rbac_bucket_user(url, bucketname):
 
     log_info("Creating RBAC user {} with password {} and roles {}".format(bucketname, password, roles))
 
-    rbac_url = "{}/settings/rbac/users/builtin/{}".format(url, bucketname)
+    rbac_url = "{}/settings/rbac/users/local/{}".format(url, bucketname)
 
     resp = ""
     try:
@@ -104,7 +104,7 @@ def delete_internal_rbac_bucket_user(url, bucketname):
 
     log_info("Deleting RBAC user {}".format(bucketname))
 
-    rbac_url = "{}/settings/rbac/users/builtin/{}".format(url, bucketname)
+    rbac_url = "{}/settings/rbac/users/local/{}".format(url, bucketname)
 
     resp = ""
     try:
