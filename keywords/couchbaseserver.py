@@ -702,3 +702,8 @@ class CouchbaseServer:
     def restart(self):
         """ Restarts a couchbase server """
         self.remote_executor.must_execute("sudo systemctl restart couchbase-server")
+
+    def get_sdk_bucket(self, bucket_name):
+        """ Gets an SDK bucket object """
+        connection_str = "couchbase://{}/{}".format(self.host, bucket_name)
+        return Bucket(connection_str, password='password')
