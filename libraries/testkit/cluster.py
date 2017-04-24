@@ -60,7 +60,6 @@ class Cluster:
         self.servers = [CouchbaseServer(url=cb_url) for cb_url in cbs_urls]
         self.sync_gateway_config = None  # will be set to Config object when reset() called
 
-
     def reset(self, sg_config_path):
 
         ansible_runner = AnsibleRunner(self._cluster_config)

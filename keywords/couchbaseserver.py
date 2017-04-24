@@ -28,6 +28,10 @@ requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
 
 def get_server_version(host, cbs_ssl=False):
+    """ Gets the server vistion on in the format '4.1.1-5487'
+    for a running Couchbase Server
+    """
+
     server_scheme = "http"
     server_port = 8091
 
@@ -49,6 +53,8 @@ def get_server_version(host, cbs_ssl=False):
 
 
 def verify_server_version(host, expected_server_version, cbs_ssl=False):
+    """ Verifys that the version of a running Couchbase Server is the 'expected_server_version' """
+
     running_server_version = get_server_version(host, cbs_ssl=cbs_ssl)
     expected_server_version_parts = expected_server_version.split("-")
 
@@ -226,7 +232,6 @@ class CouchbaseServer:
             log_info("resp code: {}; error: {}".format(resp, h))
             raise RBACUserCreationError(h)
 
-
     def _delete_internal_rbac_bucket_user(self, bucketname):
         # Delete user with username=bucketname
         data_user_params = {
@@ -245,7 +250,6 @@ class CouchbaseServer:
         except HTTPError as h:
             log_info("resp code: {}; error: {}".format(resp, h))
             raise RBACUserDeletionError(h)
-
 
     def _get_mem_total_lowest(self, server_info):
         # Workaround for https://github.com/couchbaselabs/mobile-testkit/issues/709
