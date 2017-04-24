@@ -84,11 +84,11 @@ def create_internal_rbac_bucket_user(url, bucketname):
 
     log_info("Creating RBAC user {} with password {} and roles {}".format(bucketname, password, roles))
 
-    rbac_url = "{}/settings/rbac/users/builtin/{}".format(url, bucketname)
+    rbac_url = "{}/settings/rbac/users/local/{}".format(url, bucketname)
 
     resp = ""
     try:
-        resp = requests.put(rbac_url, data=data_user_params, auth=('Administrator', 'password'))
+        resp = requests.put(rbac_url, data=data_user_params, auth=('Administrator', 'password'), verify=False)
         log_r(resp)
         resp.raise_for_status()
     except HTTPError as h:
@@ -104,11 +104,11 @@ def delete_internal_rbac_bucket_user(url, bucketname):
 
     log_info("Deleting RBAC user {}".format(bucketname))
 
-    rbac_url = "{}/settings/rbac/users/builtin/{}".format(url, bucketname)
+    rbac_url = "{}/settings/rbac/users/local/{}".format(url, bucketname)
 
     resp = ""
     try:
-        resp = requests.delete(rbac_url, data=data_user_params, auth=('Administrator', 'password'))
+        resp = requests.delete(rbac_url, data=data_user_params, auth=('Administrator', 'password'), verify=False)
         log_r(resp)
         resp.raise_for_status()
     except HTTPError as h:
