@@ -61,7 +61,8 @@ def test_overloaded_channel_cache(params_from_base_test_setup, sg_conf_name, num
 
     start = time.time()
 
-    with concurrent.futures.ThreadPoolExecutor(max_workers=100) as executor:
+    # This uses a ProcessPoolExecutor due to https://github.com/couchbaselabs/mobile-testkit/issues/1142
+    with concurrent.futures.ProcessPoolExecutor(max_workers=100) as executor:
 
         changes_requests = []
         errors = []
