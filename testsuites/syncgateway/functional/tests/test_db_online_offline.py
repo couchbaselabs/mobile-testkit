@@ -752,8 +752,7 @@ def test_db_offline_tap_loss_sanity(params_from_base_test_setup, sg_conf_name, n
     assert len(errors) == 0
 
     # Delete bucket to sever TAP feed
-    status = cluster.servers[0].delete_bucket("data-bucket")
-    assert status == 0
+    cluster.servers[0].delete_bucket("data-bucket")
 
     # Check that bucket is in offline state
     errors = rest_scan(cluster.sync_gateways[0], db="db", online=False, num_docs=num_docs, user_name="seth", channels=["ABC"])
@@ -848,10 +847,8 @@ def test_multiple_dbs_unique_buckets_lose_tap(params_from_base_test_setup, sg_co
         errors = rest_scan(cluster.sync_gateways[0], db=db, online=True, num_docs=num_docs, user_name="seth", channels=["ABC"])
         assert len(errors) == 0
 
-    status = cluster.servers[0].delete_bucket("data-bucket-1")
-    assert status == 0
-    status = cluster.servers[0].delete_bucket("data-bucket-3")
-    assert status == 0
+    cluster.servers[0].delete_bucket("data-bucket-1")
+    cluster.servers[0].delete_bucket("data-bucket-3")
 
     # Check that db2 and db4 are still Online
     for db in ["db2", "db4"]:
