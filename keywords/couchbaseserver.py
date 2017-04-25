@@ -163,8 +163,23 @@ class CouchbaseServer:
                 # All bucket deletions were successful
                 break
 
+        # Delete may prevent the buckets endpoint from being reachible
+        # for a small amount of time. Retry a set number of times to handle this
+        max_retries = 5
+        count = 0
+        while True:
+            if count == max_retries:
+                raise ProvisioningError("Failed to GET buckets from Couchbase Server")
+
+            try:
+                bucket_names = self.get_bucket_names()
+                break
+            except ConnectionError:
+                log_info("Error getting buckets from server. Retrying ...")
+                time.sleep(1)
+                count += 1
+
         # Verify the buckets are gone
-        bucket_names = self.get_bucket_names()
         if len(bucket_names) != 0:
             raise CBServerError("Failed to delete all of the server buckets!")
 
