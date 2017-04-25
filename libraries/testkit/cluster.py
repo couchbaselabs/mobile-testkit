@@ -4,25 +4,13 @@ import time
 
 from requests.exceptions import ConnectionError
 
-<<<<<<< HEAD
-=======
-from libraries.testkit.syncgateway import SyncGateway
-from libraries.testkit.sgaccel import SgAccel
-from libraries.testkit.admin import Admin
-from libraries.testkit.config import Config
-from libraries.provision.ansible_runner import AnsibleRunner
-
-from keywords.couchbaseserver import CouchbaseServer
-
->>>>>>> master
 import keywords.exceptions
-from keywords import couchbaseserver
+from keywords.couchbaseserver import CouchbaseServer
 from keywords.exceptions import ProvisioningError
 from keywords.utils import log_info
 from libraries.provision.ansible_runner import AnsibleRunner
 from libraries.testkit.admin import Admin
 from libraries.testkit.config import Config
-from libraries.testkit.server import Server
 from libraries.testkit.sgaccel import SgAccel
 from libraries.testkit.syncgateway import SyncGateway
 
