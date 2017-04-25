@@ -104,15 +104,29 @@ class CouchbaseServer:
 
         bucket_names = []
 
-        resp = self._session.get("{}/pools/default/buckets".format(self.url))
-        log_r(resp)
-        resp.raise_for_status()
+        error_count = 0
+        max_retries = 5
+
+        # Retry to avoid intermittent Connection issues when getting buckets
+        while True:
+            if error_count == max_retries:
+                raise CBServerError("Error! Could not get buckets after retries.")
+            try:
+                resp = self._session.get("{}/pools/default/buckets".format(self.url))
+                log_r(resp)
+                resp.raise_for_status()
+                break
+            except ConnectionError:
+                log_info("Hit a ConnectionError while trying to get buckets. Retrying ...")
+                error_count += 1
+                time.sleep(1)
 
         obj = json.loads(resp.text)
 
         for entry in obj:
             bucket_names.append(entry["name"])
 
+        log_info("Found buckets: {}".format(bucket_names))
         return bucket_names
 
     def delete_bucket(self, name):
@@ -132,12 +146,15 @@ class CouchbaseServer:
         """
 
         count = 0
+        max_retries = 3
         while True:
 
-            if count > 3:
+            if count == max_retries:
                 raise CBServerError("Max retries for bucket creation hit. Could not delete buckets!")
 
+            # Get a list of the bucket names
             bucket_names = self.get_bucket_names()
+
             if len(bucket_names) == 0:
                 # No buckets to delete. Exit loop
                 break
@@ -151,9 +168,12 @@ class CouchbaseServer:
             for bucket_name in bucket_names:
                 try:
                     self.delete_bucket(bucket_name)
-                except HTTPError:
+                except HTTPError as e:
                     num_failures += 1
-                    log_info("Failed to delete bucket. Retrying ...")
+                    log_info("Failed to delete bucket: {}. Retrying ...".format(e))
+                except ConnectionError as ce:
+                    num_failures += 1
+                    log_info("Failed to delete bucket: {} Retrying ...".format(ce))
 
             # A 500 error may have occured, query for buckets and try to delete them again
             if num_failures > 0:
@@ -163,23 +183,8 @@ class CouchbaseServer:
                 # All bucket deletions were successful
                 break
 
-        # Delete may prevent the buckets endpoint from being reachible
-        # for a small amount of time. Retry a set number of times to handle this
-        max_retries = 5
-        count = 0
-        while True:
-            if count == max_retries:
-                raise ProvisioningError("Failed to GET buckets from Couchbase Server")
-
-            try:
-                bucket_names = self.get_bucket_names()
-                break
-            except ConnectionError:
-                log_info("Error getting buckets from server. Retrying ...")
-                time.sleep(1)
-                count += 1
-
         # Verify the buckets are gone
+        bucket_names = self.get_bucket_names()
         if len(bucket_names) != 0:
             raise CBServerError("Failed to delete all of the server buckets!")
 
