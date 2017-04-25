@@ -32,12 +32,12 @@ def test_overloaded_channel_cache(params_from_base_test_setup, sg_conf_name, num
     It works by doing the following:
 
     - Set channel cache size in Sync Gateway config to a small number, eg, 750.  This means that only 750 docs fit in the channel cache
-    - Add a large number of docs, eg, 1000.  
+    - Add a large number of docs, eg, 1000.
     - Issue a _changes request that will return all 1000 docs
 
     Expected behavior / Verification:
 
-    - Since 1000 docs requested from changes feed, but only 750 docs fit in channel cache, then it will need to do a view query 
+    - Since 1000 docs requested from changes feed, but only 750 docs fit in channel cache, then it will need to do a view query
       to get the remaining 250 changes
     - Verify that the changes feed returns all 1000 expected docs
     - Check the expvar statistics to verify that view queries were made
@@ -122,9 +122,6 @@ def test_overloaded_channel_cache(params_from_base_test_setup, sg_conf_name, num
         resp.raise_for_status()
         resp_obj = resp.json()
 
-
         # Since Sync Gateway will need to issue view queries to handle _changes requests that don't
         # fit in the channel cache, we expect there to be several view queries
         assert resp_obj["syncGateway_changeCache"]["view_queries"] > 0
-
-        
