@@ -51,7 +51,7 @@ def get_server_version(host, cbs_ssl=False):
 
 
 def verify_server_version(host, expected_server_version, cbs_ssl=False):
-    """ Verifys that the version of a running Couchbase Server is the 'expected_server_version' """
+    """ Verifies that the version of a running Couchbase Server is the 'expected_server_version' """
 
     running_server_version = get_server_version(host, cbs_ssl=cbs_ssl)
     expected_server_version_parts = expected_server_version.split("-")
