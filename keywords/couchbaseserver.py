@@ -28,9 +28,7 @@ requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
 
 def get_server_version(host, cbs_ssl=False):
-    """ Gets the server vistion on in the format '4.1.1-5487'
-    for a running Couchbase Server
-    """
+    """ Gets the server version in the format '4.1.1-5487' for a running Couchbase Server"""
 
     server_scheme = "http"
     server_port = 8091
@@ -223,7 +221,7 @@ class CouchbaseServer:
 
         rbac_url = "{}/settings/rbac/users/local/{}".format(self.url, bucketname)
 
-        resp = ""
+        resp = None
         try:
             resp = self._session.put(rbac_url, data=data_user_params, auth=('Administrator', 'password'))
             log_r(resp)
@@ -242,7 +240,7 @@ class CouchbaseServer:
 
         rbac_url = "{}/settings/rbac/users/local/{}".format(self.url, bucketname)
 
-        resp = ""
+        resp = None
         try:
             resp = self._session.delete(rbac_url, data=data_user_params, auth=('Administrator', 'password'))
             log_r(resp)
