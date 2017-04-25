@@ -1142,7 +1142,7 @@ class MobileRestClient:
 
             doc_body["_id"] = doc_id
 
-            doc_obj = self.add_doc(url, db, doc_body, auth=auth)
+            doc_obj = self.add_doc(url, db, doc_body, auth=auth, use_post=False)
             added_docs.append(doc_obj)
 
         # check that the docs returned in the responses equals the expected number
