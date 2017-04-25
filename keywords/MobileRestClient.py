@@ -1835,7 +1835,7 @@ class MobileRestClient:
         while True:
 
             if count == max_retries:
-                raise RestError("Could not get view after retries!")
+                raise keywords.exceptions.RestError("Could not get view after retries!")
 
             try:
                 if auth_type == AuthType.session:
