@@ -1775,15 +1775,40 @@ class MobileRestClient:
         if server_type == ServerType.syncgateway:
             params["stale"] = "false"
 
-        if auth_type == AuthType.session:
-            resp = self._session.get(url, params=params, cookies=dict(SyncGatewaySession=auth[1]))
-        elif auth_type == AuthType.http_basic:
-            resp = self._session.get(url, params=params, auth=auth)
-        else:
-            resp = self._session.get(url, params=params)
+        max_retries = 5
+        count = 0
+        while True:
 
-        log_r(resp)
-        resp.raise_for_status()
+            if count == max_retries:
+                raise keywords.exceptions.RestError("Could not get view after retries!")
+
+            try:
+                if auth_type == AuthType.session:
+                    resp = self._session.get(url, params=params, cookies=dict(SyncGatewaySession=auth[1]))
+                    log_r(resp)
+                    resp.raise_for_status()
+                    break
+                elif auth_type == AuthType.http_basic:
+                    resp = self._session.get(url, params=params, auth=auth)
+                    log_r(resp)
+                    resp.raise_for_status()
+                    break
+                else:
+                    resp = self._session.get(url, params=params)
+                    log_r(resp)
+                    resp.raise_for_status()
+                    break
+            except HTTPError as he:
+                # It is possible that the view is not inialized.
+                # The server will return 500 in this case, handle this with a few retries.
+                log_info("Failed to get view: {}".format(he))
+                if he.response.status_code == 500:
+                    time.sleep(1)
+                    count += 1
+                else:
+                    # Reraise the exception is it is not what we are expecting
+                    raise
+
         return resp.json()
 
     def verify_view_row_num(self, view_response, expected_num_rows):
