@@ -1815,7 +1815,6 @@ class MobileRestClient:
             resp_obj = resp.json()
             return resp_obj["id"]
 
-
     def get_view(self, url, db, design_doc_name, view_name, auth=None):
         """
         Keyword that returns a view query for a design doc with a view name
@@ -1835,7 +1834,7 @@ class MobileRestClient:
         while True:
 
             if count == max_retries:
-                raise keywords.exceptions.RestError("Could not get view after retries!")
+                raise RestError("Could not get view after retries!")
 
             try:
                 if auth_type == AuthType.session:

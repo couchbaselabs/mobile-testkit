@@ -100,12 +100,31 @@ def test_purge(params_from_base_test_setup, sg_conf_name):
     all_doc_ids = sg_doc_ids + sdk_doc_ids
 
     # Get all of the docs via Sync Gateway
-    # TODO reenable: docs, errors = sg_client.get_bulk_docs(url=sg_url, db=sg_db, doc_ids=all_doc_ids, auth=seth_auth)
+    # TODO reanable: docs, errors = sg_client.get_bulk_docs(url=sg_url, db=sg_db, doc_ids=all_doc_ids, auth=seth_auth)
+    docs, errors = sg_client.get_bulk_docs(url=sg_url, db=sg_db, doc_ids=all_doc_ids, auth=seth_auth, validate=False)
     # TODO reenable: assert len(docs) == number_docs_per_client * 2
     # TODO reenable: assert len(errors) == 0
 
+    import pdb
+    pdb.set_trace()
+
     # Get all of the docs via SDK
     docs = sdk_client.get_multi(all_doc_ids)
+    assert len(docs) == number_docs_per_client * 2
+
+    # Check that all of the doc ids are present in the SDK response
+    doc_id_scatch_pad = list(all_doc_ids)
+    assert len(doc_id_scatch_pad) == number_docs_per_client * 2
+    for doc in docs:
+        doc_id_scatch_pad.remove(doc)
+    assert len(doc_id_scatch_pad) == 0
+
+    # Randomly get half of the total doc ids
+    random_docs_for_sg_to_delete = [random.choice(all_doc_ids) for _ in range(number_docs_per_client)]
+
+    # Use Sync Gateway to delete these chosen documents
+    for random_doc in random_docs_for_sg_to_delete:
+        sg_client.delete_doc(url=sg_url, db=sg_db, doc_id=random_doc, rev=None, auth=seth_auth)
 
     # Sync Gateway delete 1/2 the docs
     # Sync Gateway purge all docs
