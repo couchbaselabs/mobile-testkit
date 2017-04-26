@@ -28,6 +28,8 @@ requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
 
 def get_server_version(host, cbs_ssl=False):
+    """ Gets the server version in the format '4.1.1-5487' for a running Couchbase Server"""
+
     server_scheme = "http"
     server_port = 8091
 
@@ -49,6 +51,8 @@ def get_server_version(host, cbs_ssl=False):
 
 
 def verify_server_version(host, expected_server_version, cbs_ssl=False):
+    """ Verifies that the version of a running Couchbase Server is the 'expected_server_version' """
+
     running_server_version = get_server_version(host, cbs_ssl=cbs_ssl)
     expected_server_version_parts = expected_server_version.split("-")
 
@@ -68,52 +72,6 @@ def verify_server_version(host, expected_server_version, cbs_ssl=False):
             raise ProvisioningError("Unexpected server version!! Expected: {} Actual: {}".format(expected_server_version, running_server_version_parts[0]))
     else:
         raise ProvisioningError("Unsupported version format")
-
-
-def create_internal_rbac_bucket_user(url, bucketname):
-    # Create user with username=bucketname and assign role
-    # bucket_admin and cluster_admin
-    roles = "cluster_admin,bucket_admin[{}]".format(bucketname)
-    password = 'password'
-
-    data_user_params = {
-        "name": bucketname,
-        "roles": roles,
-        "password": password
-    }
-
-    log_info("Creating RBAC user {} with password {} and roles {}".format(bucketname, password, roles))
-
-    rbac_url = "{}/settings/rbac/users/builtin/{}".format(url, bucketname)
-
-    resp = ""
-    try:
-        resp = requests.put(rbac_url, data=data_user_params, auth=('Administrator', 'password'))
-        log_r(resp)
-        resp.raise_for_status()
-    except HTTPError as h:
-        log_info("resp code: {}; error: {}".format(resp, h))
-        raise RBACUserCreationError(h)
-
-
-def delete_internal_rbac_bucket_user(url, bucketname):
-    # Delete user with username=bucketname
-    data_user_params = {
-        "name": bucketname
-    }
-
-    log_info("Deleting RBAC user {}".format(bucketname))
-
-    rbac_url = "{}/settings/rbac/users/builtin/{}".format(url, bucketname)
-
-    resp = ""
-    try:
-        resp = requests.delete(rbac_url, data=data_user_params, auth=('Administrator', 'password'))
-        log_r(resp)
-        resp.raise_for_status()
-    except HTTPError as h:
-        log_info("resp code: {}; error: {}".format(resp, h))
-        raise RBACUserDeletionError(h)
 
 
 class CouchbaseServer:
@@ -166,7 +124,7 @@ class CouchbaseServer:
         log_r(resp)
         resp.raise_for_status()
         if server_major_version >= 5:
-            delete_internal_rbac_bucket_user(self.url, name)
+            self._delete_internal_rbac_bucket_user(name)
 
     def delete_buckets(self):
         """ Deletes all of the buckets on a Couchbase Server.
@@ -246,6 +204,50 @@ class CouchbaseServer:
             log_debug(resp_obj)
             # All nodes are heathy if it made it to here
             break
+
+    def _create_internal_rbac_bucket_user(self, bucketname):
+        # Create user with username=bucketname and assign role
+        # bucket_admin and cluster_admin
+        roles = "cluster_admin,bucket_admin[{}]".format(bucketname)
+        password = 'password'
+
+        data_user_params = {
+            "name": bucketname,
+            "roles": roles,
+            "password": password
+        }
+
+        log_info("Creating RBAC user {} with password {} and roles {}".format(bucketname, password, roles))
+
+        rbac_url = "{}/settings/rbac/users/local/{}".format(self.url, bucketname)
+
+        resp = None
+        try:
+            resp = self._session.put(rbac_url, data=data_user_params, auth=('Administrator', 'password'))
+            log_r(resp)
+            resp.raise_for_status()
+        except HTTPError as h:
+            log_info("resp code: {}; error: {}".format(resp, h))
+            raise RBACUserCreationError(h)
+
+    def _delete_internal_rbac_bucket_user(self, bucketname):
+        # Delete user with username=bucketname
+        data_user_params = {
+            "name": bucketname
+        }
+
+        log_info("Deleting RBAC user {}".format(bucketname))
+
+        rbac_url = "{}/settings/rbac/users/local/{}".format(self.url, bucketname)
+
+        resp = None
+        try:
+            resp = self._session.delete(rbac_url, data=data_user_params, auth=('Administrator', 'password'))
+            log_r(resp)
+            resp.raise_for_status()
+        except HTTPError as h:
+            log_info("resp code: {}; error: {}".format(resp, h))
+            raise RBACUserDeletionError(h)
 
     def _get_mem_total_lowest(self, server_info):
         # Workaround for https://github.com/couchbaselabs/mobile-testkit/issues/709
@@ -355,7 +357,7 @@ class CouchbaseServer:
             data["saslPassword"] = "password"
             data["proxyPort"] = "11211"
 
-        resp = ""
+        resp = None
         try:
             resp = self._session.post("{}/pools/default/buckets".format(self.url), data=data)
             log_r(resp)
@@ -366,7 +368,7 @@ class CouchbaseServer:
 
         # Create a user with username=bucketname
         if server_major_version >= 5:
-            create_internal_rbac_bucket_user(self.url, name)
+            self._create_internal_rbac_bucket_user(name)
 
         # Create client an retry until KeyNotFound error is thrown
         start = time.time()
@@ -698,3 +700,8 @@ class CouchbaseServer:
     def restart(self):
         """ Restarts a couchbase server """
         self.remote_executor.must_execute("sudo systemctl restart couchbase-server")
+
+    def get_sdk_bucket(self, bucket_name):
+        """ Gets an SDK bucket object """
+        connection_str = "couchbase://{}/{}".format(self.host, bucket_name)
+        return Bucket(connection_str, password='password')
