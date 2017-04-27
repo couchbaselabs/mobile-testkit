@@ -11,6 +11,7 @@ from libraries.provision.ansible_runner import AnsibleRunner
 from libraries.testkit.admin import Admin
 from libraries.testkit.debug import log_request, log_response
 from utilities.cluster_config_utils import is_cbs_ssl_enabled
+from utilities.cluster_config_utils import is_xattrs_enabled
 
 log = logging.getLogger(libraries.testkit.settings.LOGGER)
 
@@ -49,13 +50,20 @@ class SyncGateway:
         conf_path = os.path.abspath(config)
         log.info(">>> Starting sync_gateway with configuration: {}".format(conf_path))
 
+        playbook_vars = {
+            "sync_gateway_config_filepath": conf_path,
+            "server_port": self.server_port,
+            "server_scheme": self.server_scheme
+        }
+
+        if is_xattrs_enabled(self.cluster_config):
+            playbook_vars["xattrs"] = '"unsupported": {"enable_extended_attributes": true},'
+        else:
+            playbook_vars["xattrs"] = ""
+
         status = self.ansible_runner.run_ansible_playbook(
             "start-sync-gateway.yml",
-            extra_vars={
-                "sync_gateway_config_filepath": conf_path,
-                "server_port": self.server_port,
-                "server_scheme": self.server_scheme
-            },
+            extra_vars=playbook_vars,
             subset=self.hostname
         )
         return status
@@ -64,13 +72,20 @@ class SyncGateway:
         conf_path = os.path.abspath(config)
         log.info(">>> Restarting sync_gateway with configuration: {}".format(conf_path))
 
+        playbook_vars = {
+            "sync_gateway_config_filepath": conf_path,
+            "server_port": self.server_port,
+            "server_scheme": self.server_scheme
+        }
+
+        if is_xattrs_enabled(self.cluster_config):
+            playbook_vars["xattrs"] = '"unsupported": {"enable_extended_attributes": true},'
+        else:
+            playbook_vars["xattrs"] = ""
+
         status = self.ansible_runner.run_ansible_playbook(
             "reset-sync-gateway.yml",
-            extra_vars={
-                "sync_gateway_config_filepath": conf_path,
-                "server_port": self.server_port,
-                "server_scheme": self.server_scheme
-            },
+            extra_vars=playbook_vars,
             subset=self.hostname
         )
         return status

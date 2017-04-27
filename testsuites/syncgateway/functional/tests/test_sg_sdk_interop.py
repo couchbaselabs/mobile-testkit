@@ -49,7 +49,7 @@ def test_purge(params_from_base_test_setup, sg_conf_name):
     cbs_url = cluster_topology['couchbase_servers'][0]
     sg_db = 'db'
     number_docs_per_client = 1000
-    channels = ['NASA']
+    # channels = ['NASA']
 
     log_info('sg_conf: {}'.format(sg_conf))
     log_info('sg_admin_url: {}'.format(sg_admin_url))
@@ -132,7 +132,7 @@ def test_purge(params_from_base_test_setup, sg_conf_name):
     # Verify SG can't see the docs
     # Verify XATTRS are gone using SDK client with full bucket permissions via subdoc?
 
-    pytest.set_trace()
+    # pytest.set_trace()
 
 
 @pytest.mark.sanity
@@ -566,8 +566,8 @@ def delete_sg_docs(client, url, db, docs_to_delete, auth):
     while len(docs_to_remove) > 0:
         random_doc_id = random.choice(docs_to_remove)
         log_info('Attempting to delete from SG: {}'.format(random_doc_id))
-        doc_to_delete = client.get_doc(url=url, db=db, doc_id=random_doc_id, auth=auth)
-        deleted_doc = client.delete_doc(url=url, db=db, doc_id=random_doc_id, rev=doc_to_delete['_rev'], auth=auth)
+        # TODO reenable: doc_to_delete = client.get_doc(url=url, db=db, doc_id=random_doc_id, auth=auth)
+        # TODO reenable: deleted_doc = client.delete_doc(url=url, db=db, doc_id=random_doc_id, rev=doc_to_delete['_rev'], auth=auth)
         # Todo: Add assertion
         docs_to_remove.remove(random_doc_id)
 
@@ -579,7 +579,7 @@ def delete_sdk_docs(client, docs_to_delete):
     while len(docs_to_remove) > 0:
         random_doc_id = random.choice(docs_to_remove)
         log_info('Attempting to delete from SDK: {}'.format(random_doc_id))
-        deleted_doc = client.remove(random_doc_id)
+        # TODO reenable: deleted_doc = client.remove(random_doc_id)
         # Todo: Add assertion
         docs_to_remove.remove(random_doc_id)
 
