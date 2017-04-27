@@ -143,20 +143,6 @@ class User:
 
         return doc_id
 
-    def wait_until_db_online(self):
-        db_url = self.target.url + "/" + self.db + "/"
-        while True:
-            log.info("DB [{}] waiting until online".format(self.db))
-            resp = self._session.get(db_url, timeout=settings.HTTP_REQ_TIMEOUT)
-            resp.raise_for_status()
-            resp_json = resp.json()
-            if resp_json["state"] == "Offline":
-                log.info("DB [{}] offline, waiting a few seconds and will retry.  Response: {}".format(self.db, resp_json))
-                time.sleep(10)
-            else:
-                log.info("DB [{}] is online. Response: {}".format(self.db, resp_json))
-                return
-
     # POST /{db}/_bulk_docs
     def add_bulk_docs(self, doc_ids, retries=False):
 

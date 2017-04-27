@@ -114,11 +114,6 @@ def test_bucket_shadow_low_revs_limit_repeated_deletes(params_from_base_test_set
                              default_config_path_shadower_low_revs,
                              default_config_path_non_shadower_low_revs)
 
-    # Wait until shadower db is online, since deleting the bucket as part of provisioning might take it offline for a bit
-    log_info("wait_until_db_online")
-    sc.alice_shadower.wait_until_db_online()
-    log_info("/wait_until_db_online")
-
     # Write doc into shadower SG
     doc_id = sc.alice_shadower.add_doc()
 
@@ -187,18 +182,11 @@ def test_bucket_shadow_low_revs_limit(params_from_base_test_setup):
     cluster = Cluster(config=cluster_config)
     sc = init_shadow_cluster(cluster, default_config_path_shadower_low_revs, default_config_path_non_shadower_low_revs)
 
-    # Wait until shadower db is online, since deleting the bucket as part of provisioning might take it offline for a bit
-    log_info("wait_until_db_online")
-    sc.alice_shadower.wait_until_db_online()
-    log_info("/wait_until_db_online")
-
     # Write doc into shadower SG
     doc_id = sc.alice_shadower.add_doc()
-    log_info("Wrote doc {} into {}".format(doc_id, sc.alice_shadower))
 
     # Update the doc just so we have a rev_id
-    resp = sc.alice_shadower.update_doc(doc_id, content=fake_doc_content, num_revision=1)
-    log_info("Wrote new rev {} into {}".format(resp, sc.alice_shadower))
+    sc.alice_shadower.update_doc(doc_id, content=fake_doc_content, num_revision=1)
 
     # Make sure it makes it to source bucket
     get_doc_with_content_from_source_bucket_retry(doc_id, fake_doc_content, sc.source_bucket)
