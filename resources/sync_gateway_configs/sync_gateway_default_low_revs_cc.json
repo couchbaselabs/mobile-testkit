@@ -13,7 +13,7 @@
             "bucket":"data-bucket",
             "password": "password",
 	        "revs_limit":5,
-            "feed_type":"DCP"
+            "feed_type":"tap"
         }
     }
 }
