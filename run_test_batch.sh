@@ -5,6 +5,20 @@ import os
 
 DEFAULT_SUITE="testsuites/syncgateway/functional/tests/"
 TOPOLOGY_SPECIFIC_SUITE="testsuites/syncgateway/functional/topology_specific_tests/"
+SERVER_VERSION="4.5.1"
+SYNC_GATEWAY_COMMIT="674d1a9482c61d606d77831cecd312ce1f77ed43"
+
+
+
+# Passing
+
+# Base CC section: https://gist.github.com/tleyden/83b67617f6c6fd891cda641d9d21b0b6
+
+
+# Known to be failing
+#    {"mode": "cc", "suite":TOPOLOGY_SPECIFIC_SUITE, "testname":"test_bucket_shadow_low_revs_limit_repeated_deletes"},
+#    {"mode": "cc", "suite":TOPOLOGY_SPECIFIC_SUITE, "testname":"test_bucket_shadow_low_revs_limit"},
+#    {"mode": "cc", "suite":TOPOLOGY_SPECIFIC_SUITE, "testname":"test_bucket_shadow_multiple_sync_gateways"},
 
 tests = [
 
@@ -40,6 +54,8 @@ tests = [
 
 ]
 
+provisioned_test_suite = ""
+
 for test in tests:
     suite = test["suite"] 
     testname = test["testname"]
@@ -51,10 +67,27 @@ for test in tests:
         "pytest", 
         "-s",
         "--mode={}".format(mode),
-        "--skip-provisioning",
+    ]
+
+    if suite == provisioned_test_suite:
+        print "Skipping provisioning"
+        cmd_args += [ "--skip-provisioning" ]
+    else:
+        print "------------------------------------------------- Provisioning test: suite: {}, testname: {}".format(suite, testname)
+        # force provisioning and record this as the provisioned_test_suite
+        cmd_args += [
+            "--server-version={}".format(SERVER_VERSION),
+            "--sync-gateway-version={}".format(SYNC_GATEWAY_COMMIT),
+         ]
+
+        provisioned_test_suite = suite
+
+    cmd_args += [
         "-k",
         testname,
-        suite]
+        suite
+    ]
     
     cmd = " ".join(cmd_args)
+    print("{}".format(cmd))
     os.system(cmd)
