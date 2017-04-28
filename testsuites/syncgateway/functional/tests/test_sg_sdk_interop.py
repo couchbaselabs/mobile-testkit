@@ -20,10 +20,11 @@ from libraries.testkit.cluster import Cluster
 @pytest.mark.xattrs
 @pytest.mark.changes
 @pytest.mark.session
-@pytest.mark.parametrize('sg_conf_name', [
-    'sync_gateway_default_functional_tests'
+@pytest.mark.parametrize('sg_conf_name, use_multiple_channels', [
+    ('sync_gateway_default_functional_tests', False),
+    ('sync_gateway_default_functional_tests', True)
 ])
-def test_purge(params_from_base_test_setup, sg_conf_name):
+def test_purge(params_from_base_test_setup, sg_conf_name, use_multiple_channels):
     """
     Scenario:
     - Bulk create 1000 docs via Sync Gateway
@@ -48,8 +49,14 @@ def test_purge(params_from_base_test_setup, sg_conf_name):
     bucket_name = 'data-bucket'
     cbs_url = cluster_topology['couchbase_servers'][0]
     sg_db = 'db'
-    number_docs_per_client = 1000
-    # channels = ['NASA']
+    number_docs_per_client = 10
+
+    if use_multiple_channels:
+        log_info('Using multiple channels')
+        channels = ['shared_channel_{}'.format(i) for i in range(1000)]
+    else:
+        log_info('Using a single channel')
+        channels = ['NASA']
 
     log_info('sg_conf: {}'.format(sg_conf))
     log_info('sg_admin_url: {}'.format(sg_admin_url))
@@ -59,7 +66,7 @@ def test_purge(params_from_base_test_setup, sg_conf_name):
     cluster.reset(sg_config_path=sg_conf)
 
     sg_client = MobileRestClient()
-    seth_user_info = UserInfo(name='seth', password='pass', channels=['NASA'], roles=[])
+    seth_user_info = UserInfo(name='seth', password='pass', channels=channels, roles=[])
     sg_client.create_user(
         url=sg_admin_url,
         db=sg_db,
@@ -90,7 +97,7 @@ def test_purge(params_from_base_test_setup, sg_conf_name):
     sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password')
 
     # Create 'number_docs_per_client' docs from SDK
-    sdk_doc_bodies = document.create_docs('sdk', number_docs_per_client, channels=['sdk'])
+    sdk_doc_bodies = document.create_docs('sdk', number_docs_per_client, channels=seth_user_info.channels)
     sdk_docs = {doc['_id']: doc for doc in sdk_doc_bodies}
     sdk_doc_ids = [doc for doc in sdk_docs]
     sdk_client.upsert_multi(sdk_docs)
@@ -99,14 +106,13 @@ def test_purge(params_from_base_test_setup, sg_conf_name):
     sdk_doc_ids = ['sdk_{}'.format(i) for i in range(number_docs_per_client)]
     all_doc_ids = sg_doc_ids + sdk_doc_ids
 
-    # Get all of the docs via Sync Gateway
-    # TODO reanable: docs, errors = sg_client.get_bulk_docs(url=sg_url, db=sg_db, doc_ids=all_doc_ids, auth=seth_auth)
-    docs, errors = sg_client.get_bulk_docs(url=sg_url, db=sg_db, doc_ids=all_doc_ids, auth=seth_auth, validate=False)
-    # TODO reenable: assert len(docs) == number_docs_per_client * 2
-    # TODO reenable: assert len(errors) == 0
-
     import pdb
     pdb.set_trace()
+
+    # Get all of the docs via Sync Gateway
+    docs, errors = sg_client.get_bulk_docs(url=sg_url, db=sg_db, doc_ids=all_doc_ids, auth=seth_auth)
+    assert len(docs) == number_docs_per_client * 2
+    assert len(errors) == 0
 
     # Get all of the docs via SDK
     docs = sdk_client.get_multi(all_doc_ids)
@@ -131,8 +137,16 @@ def test_purge(params_from_base_test_setup, sg_conf_name):
     # Verify SDK can't see the docs
     # Verify SG can't see the docs
     # Verify XATTRS are gone using SDK client with full bucket permissions via subdoc?
+    
+    docs, errors = sg_client.get_bulk_docs(url=sg_url, db=sg_db, doc_ids=all_doc_ids, auth=seth_auth, validate=False)
+    assert len(docs) == number_docs_per_client
+    assert len(errors) == number_docs_per_client
+    for error in errors:
+        import pdb
+        pdb.set_trace()
 
-    # pytest.set_trace()
+    import pdb
+    pdb.set_trace()
 
 
 @pytest.mark.sanity

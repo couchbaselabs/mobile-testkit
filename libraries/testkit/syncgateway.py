@@ -57,7 +57,7 @@ class SyncGateway:
         }
 
         if is_xattrs_enabled(self.cluster_config):
-            playbook_vars["xattrs"] = '"unsupported": {"enable_extended_attributes": true},'
+            playbook_vars["xattrs"] = '"import_docs": "continuous", "unsupported": {"enable_extended_attributes": true},'
         else:
             playbook_vars["xattrs"] = ""
 
