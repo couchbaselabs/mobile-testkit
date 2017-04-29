@@ -67,17 +67,12 @@ def setup_client_syncgateway_suite(request):
     if not skip_provisioning:
         log_info("Installing Sync Gateway + Couchbase Server + Accels ('di' only)")
         cluster_utils = ClusterKeywords()
-        try:
-            cluster_utils.provision_cluster(
-                cluster_config=cluster_config,
-                server_version=server_version,
-                sync_gateway_version=sync_gateway_version,
-                sync_gateway_config=sg_config
-            )
-        except ProvisioningError:
-            logging_helper = Logging()
-            logging_helper.fetch_and_analyze_logs(cluster_config=cluster_config, test_name=request.node.name)
-            raise
+        cluster_utils.provision_cluster(
+            cluster_config=cluster_config,
+            server_version=server_version,
+            sync_gateway_version=sync_gateway_version,
+            sync_gateway_config=sg_config
+        )
 
     # Wait at the yeild until tests referencing this suite setup have run,
     # Then execute the teardown
