@@ -11,7 +11,6 @@
         "db":{
             "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
             "bucket":"data-bucket",
-            "username":"data-bucket",
             "password": "password",
     	    "revs_limit":5,
     	    "shadow": {
