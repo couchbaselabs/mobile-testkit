@@ -90,6 +90,8 @@ class LiteServAndroid(LiteServBase):
                 raise ProvisioningError("No couchbase-lite-android-liteserv files found in {}".format(BINARY_DIR))
 
             log_info("Found apks {}".format(apks))
+        else:
+            apks.append(apk_path)
 
         # If and apk is installed, attempt to remove it and reinstall.
         # If that fails, raise an exception
@@ -100,6 +102,7 @@ class LiteServAndroid(LiteServBase):
         while True:
 
             if count > max_retries or num_apks < 0:
+                log_info(num_apks)
                 raise LiteServError(".apk install failed!")
 
             apk_path = apks[num_apks]
@@ -253,3 +256,4 @@ class LiteServAndroid(LiteServBase):
         self.logfile.close()
         self.process.kill()
         self.process.wait()
+        
