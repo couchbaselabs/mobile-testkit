@@ -1763,7 +1763,7 @@ class MobileRestClient:
 
     def get_design_doc_rev(self, url, db, name):
         """
-        Keyword that adds a Design Doc to the database
+        Keyword that gets a Design Doc revision
         """
         resp = self._session.get("{}/{}/_design/{}".format(url, db, name))
         log_r(resp)
