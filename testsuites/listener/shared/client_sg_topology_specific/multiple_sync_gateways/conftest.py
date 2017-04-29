@@ -9,7 +9,6 @@ from keywords.MobileRestClient import MobileRestClient
 from keywords.constants import CLUSTER_CONFIGS_DIR
 from keywords.constants import RESULTS_DIR
 from keywords.tklogging import Logging
-from keywords.exceptions import ProvisioningError
 
 
 # This will get called once before the first test that
@@ -60,7 +59,6 @@ def setup_client_syncgateway_suite(request):
             sync_gateway_version=sync_gateway_version,
             sync_gateway_config=sg_config
         )
-
 
     # Wait at the yeild until tests referencing this suite setup have run,
     # Then execute the teardown
