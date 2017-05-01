@@ -11,16 +11,30 @@ import docker
 from keywords.exceptions import DockerError
 
 
-def remove_networks(docker_client, network_name):
+def remove_conflicting_network(docker_client, network_name):
     """ Removes all user defined docker networks """
 
     networks = docker_client.networks.list()
 
-    # Filter out docker defined networks
-    user_defined_network = [network for network in networks if network.name == network_name]
-    if len(user_defined_network) == 1:
-        print('Removing network {}'.format(user_defined_network[0].name))
-        user_defined_network[0].remove()
+    # If a network exists with the name of the one you requested to create
+    # remove the network and create a new one
+    user_defined_networks = [network for network in networks if network.name == network_name]
+    for user_defined_network in user_defined_networks:
+
+        print('Removing containers for network ({})'.format(user_defined_network.name))
+
+        # Get docker containers for the network
+        network_containers = user_defined_network.containers
+        for network_container in network_containers:
+
+            # Remove the containers attached to this network
+            print('Removing container: {}'.format(network_container.name))
+            subprocess.check_call(['docker', 'stop', network_container.name])
+            subprocess.check_call(['docker', 'rm', '-f', network_container.name])
+
+        # Remove the network
+        print('Removing network {}'.format(user_defined_network.name))
+        user_defined_network.remove()
 
     # Verify that all user defined networks are removed
     networks = docker_client.networks.list()
@@ -29,39 +43,20 @@ def remove_networks(docker_client, network_name):
         raise DockerError('Failed to remove all networks!')
 
 
-def remove_containers(docker_client, network_name):
-    """ Stops / removes all containers """
-
-    containers = docker_client.containers.list(all=True)
-    for container in containers:
-
-        # Only remove the container if it starts with the network prefix
-        if container.name.startswith(network_name):
-            print('Stopping / removing containers with prefix {}: {}'.format(network_name, container.name))
-            subprocess.check_call(['docker', 'stop', container.name])
-            subprocess.check_call(['docker', 'rm', container.name])
-
-    # Verify that all containers have been removed
-    containers = docker_client.containers.list(all=True)
-    containers_to_verify_removed = [container for container in containers if container.name.startswith(network_name)]
-    if len(containers_to_verify_removed) != 0:
-        raise DockerError('Failed to remove all containers!')
-
-
-def create_cluster(clean, network_name, number_of_nodes, public_key_path):
+def create_cluster(pull, clean, network_name, number_of_nodes, public_key_path):
 
     docker_client = docker.from_env()
 
-    print('Pulling sethrosetter/centos7-systemd-sshd image ...')
-    docker_client.images.pull('sethrosetter/centos7-systemd-sshd')
+    if pull:
+        print('Pulling sethrosetter/centos7-systemd-sshd image ...')
+        docker_client.images.pull('sethrosetter/centos7-systemd-sshd')
 
-    print('Pulling couchbase/mobile-testkit image ...')
-    docker_client.images.pull('couchbase/mobile-testkit')
+        print('Pulling couchbase/mobile-testkit image ...')
+        docker_client.images.pull('couchbase/mobile-testkit')
 
     if clean:
         print('Cleaning environment')
-        remove_containers(docker_client, network_name)
-        remove_networks(docker_client, network_name)
+        remove_conflicting_network(docker_client, network_name)
 
     # Create docker network with name
     print('Creating bridged network: {} ...'.format(network_name))
@@ -134,6 +129,7 @@ def create_cluster(clean, network_name, number_of_nodes, public_key_path):
 if __name__ == '__main__':
 
     PARSER = argparse.ArgumentParser()
+    PARSER.add_argument('--pull', help='Specify whether to pull the latest docker containers', action='store_true')
     PARSER.add_argument('--clean', help='Remove all user defined networks / container', action='store_true')
     PARSER.add_argument('--network-name', help='Name of docker network', required=True)
     PARSER.add_argument('--number-of-nodes', help='Number of nodes to create in the network', required=True)
@@ -142,6 +138,7 @@ if __name__ == '__main__':
 
     # Scan all log files in the directory for 'panic' and 'data races'
     create_cluster(
+        pull=ARGS.pull,
         clean=ARGS.clean,
         network_name=ARGS.network_name,
         number_of_nodes=int(ARGS.number_of_nodes),

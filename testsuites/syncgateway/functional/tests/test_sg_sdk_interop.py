@@ -114,6 +114,9 @@ def test_purge(params_from_base_test_setup, sg_conf_name, use_multiple_channels)
     assert len(docs) == number_docs_per_client * 2
     assert len(errors) == 0
 
+    import pdb
+    pdb.set_trace()
+
     # Get all of the docs via SDK
     docs = sdk_client.get_multi(all_doc_ids)
     assert len(docs) == number_docs_per_client * 2
@@ -125,25 +128,52 @@ def test_purge(params_from_base_test_setup, sg_conf_name, use_multiple_channels)
         doc_id_scatch_pad.remove(doc)
     assert len(doc_id_scatch_pad) == 0
 
-    # Randomly get half of the total doc ids
-    random_docs_for_sg_to_delete = [random.choice(all_doc_ids) for _ in range(number_docs_per_client)]
+    # Use Sync Gateway to delete half of the documents choosen randomly
+    deletion_count = 0
+    doc_id_choice_pool = list(all_doc_ids)
+    deleted_doc_ids = []
+    while deletion_count < number_docs_per_client:
 
-    # Use Sync Gateway to delete these chosen documents
-    for random_doc in random_docs_for_sg_to_delete:
-        sg_client.delete_doc(url=sg_url, db=sg_db, doc_id=random_doc, rev=None, auth=seth_auth)
+        # Get a random doc_id from available doc ids
+        random_doc_id = random.choice(doc_id_choice_pool)
 
-    # Sync Gateway delete 1/2 the docs
+        # Get the current revision of the doc and delete it
+        doc = sg_client.get_doc(url=sg_url, db=sg_db, doc_id=random_doc_id, auth=seth_auth)
+        sg_client.delete_doc(url=sg_url, db=sg_db, doc_id=random_doc_id, rev=doc['_rev'], auth=seth_auth)
+
+        # Remove deleted doc from pool of choices
+        doc_id_choice_pool.remove(random_doc_id)
+        deleted_doc_ids.append(random_doc_id)
+        deletion_count += 1
+
+    assert len(doc_id_choice_pool) == number_docs_per_client
+    assert len(deleted_doc_ids) == number_docs_per_client
+
+    import pdb
+    pdb.set_trace()
+    
     # Sync Gateway purge all docs
-    # Verify SDK can't see the docs
+    # sg_client.purge_docs(url=sg_url, db=sg_db, docs=docs)
+    
     # Verify SG can't see the docs
     # Verify XATTRS are gone using SDK client with full bucket permissions via subdoc?
-    
+
+    # Verify SDK can't see the docs
+
     docs, errors = sg_client.get_bulk_docs(url=sg_url, db=sg_db, doc_ids=all_doc_ids, auth=seth_auth, validate=False)
     assert len(docs) == number_docs_per_client
     assert len(errors) == number_docs_per_client
+
+    deleted_doc_ids_copy = list(deleted_doc_ids)
     for error in errors:
-        import pdb
-        pdb.set_trace()
+        # TODO: Are these the expected errors?
+        assert error['status'] == 403
+        assert error['reason'] == 'forbidden'
+        assert error['error'] == 'forbidden'
+        assert error['id'] in deleted_doc_ids
+        deleted_doc_ids_copy.remove(error['id'])
+
+    assert len(deleted_doc_ids) == 0
 
     import pdb
     pdb.set_trace()
