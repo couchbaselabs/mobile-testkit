@@ -108,9 +108,6 @@ def test_purge(params_from_base_test_setup, sg_conf_name, use_multiple_channels)
     sdk_doc_ids = ['sdk_{}'.format(i) for i in range(number_docs_per_client)]
     all_doc_ids = sg_doc_ids + sdk_doc_ids
 
-    import pdb
-    pdb.set_trace()
-
     # Get all of the docs via Sync Gateway
     sg_docs, errors = sg_client.get_bulk_docs(url=sg_url, db=sg_db, doc_ids=all_doc_ids, auth=seth_auth)
     assert len(sg_docs) == number_docs_per_client * 2
@@ -337,7 +334,7 @@ def test_sg_sdk_interop_unique_docs(params_from_base_test_setup, sg_conf_name):
     bucket_name = 'data-bucket'
     cbs_url = cluster_topology['couchbase_servers'][0]
     sg_db = 'db'
-    number_docs = 10
+    number_docs_per_client = 10
     number_updates = 10
 
     log_info('sg_conf: {}'.format(sg_conf))
@@ -349,13 +346,13 @@ def test_sg_sdk_interop_unique_docs(params_from_base_test_setup, sg_conf_name):
 
     # Connect to server via SDK
     cbs_ip = host_for_url(cbs_url)
-    bucket = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password')
+    sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password')
 
     # Create docs and add them via sdk
-    sdk_doc_bodies = document.create_docs('sdk', number_docs, content={'foo': 'bar', 'updates': 1}, channels=['sdk'])
+    sdk_doc_bodies = document.create_docs('sdk', number_docs_per_client, content={'foo': 'bar', 'updates': 1}, channels=['sdk'])
     sdk_docs = {doc['_id']: doc for doc in sdk_doc_bodies}
     sdk_doc_ids = [doc for doc in sdk_docs]
-    bucket.upsert_multi(sdk_docs)
+    sdk_client.upsert_multi(sdk_docs)
 
     # Create sg user
     sg_client = MobileRestClient()
@@ -363,23 +360,46 @@ def test_sg_sdk_interop_unique_docs(params_from_base_test_setup, sg_conf_name):
     seth_session = sg_client.create_session(url=sg_admin_url, db=sg_db, name='seth', password='pass')
 
     # Create / add docs to sync gateway
-    sg_docs = document.create_docs('sg', number_docs, content={'foo': 'bar', 'updates': 1}, channels=['sg'])
+    sg_docs = document.create_docs('sg', number_docs_per_client, content={'foo': 'bar', 'updates': 1}, channels=['sg'])
+    log_info('Adding bulk_docs')
     sg_docs_resp = sg_client.add_bulk_docs(url=sg_url, db=sg_db, docs=sg_docs, auth=seth_session)
     sg_doc_ids = [doc['_id'] for doc in sg_docs]
+    assert len(sg_docs_resp) == number_docs_per_client
 
-    assert len(sg_docs_resp) == number_docs
+    all_doc_ids = sdk_doc_ids + sg_doc_ids
 
-    # Since seth has channels from 'sg' and 'sdk', verify that the sdk docs and sg docs show up in
-    # seth's changes feed
+    # Verify docs all docs are present via SG _bulk_get
+    all_docs_via_sg, errors = sg_client.get_bulk_docs(url=sg_url, db=sg_db, doc_ids=all_doc_ids, auth=seth_session)
+    assert len(all_docs_via_sg) == number_docs_per_client * 2
+    assert len(errors) == 0
 
-    # TODO: SDK: Verify docs (sg + sdk) are present
-    # TODO: SG: Verify docs (sg + sdk) are there via _all_docs
-    # TODO: SG: Verify docs (sg + sdk) are there via _changes
+    # Verify docs all docs are present via SG _all_docs
+    all_docs_resp = sg_client.get_all_docs(url=sg_url, db=sg_db, auth=seth_session)
+    assert len(all_docs_resp["rows"]) == number_docs_per_client * 2
+    all_docs_scratch_pad = list(all_doc_ids)
+    assert len(all_docs_scratch_pad) == number_docs_per_client * 2
+    for doc in all_docs_resp["rows"]:
+        all_docs_scratch_pad.remove(doc["id"])
+    assert len(all_docs_scratch_pad) == 0
+
+    # Verify docs all docs are present via SDK get_multi
+    all_sdk_docs_scratch_pad = list(all_doc_ids)
+    assert len(all_sdk_docs_scratch_pad) == number_docs_per_client * 2
+    all_docs_via_sdk = sdk_client.get_multi(all_doc_ids)
+    for doc_id in all_docs_via_sdk:
+        all_sdk_docs_scratch_pad.remove(doc_id)
+    assert len(all_sdk_docs_scratch_pad) == 0
+
+    # SG: Verify docs (sg + sdk) are there via _changes
+    # Format docs for changes verification
+    all_docs_via_sg_formatted = [{"id": doc["_id"], "rev": doc["_rev"]} for doc in all_docs_via_sg]
+    assert len(all_docs_via_sg_formatted) == number_docs_per_client * 2
+    sg_client.verify_docs_in_changes(url=sg_url, db=sg_db, expected_docs=all_docs_via_sg_formatted, auth=seth_session)
 
     for i in range(number_updates):
 
         # Get docs and extract doc_id (key) and doc_body (value.value)
-        sdk_docs_resp = bucket.get_multi(sdk_doc_ids)
+        sdk_docs_resp = sdk_client.get_multi(sdk_doc_ids)
         docs = {k: v.value for k, v in sdk_docs_resp.items()}
 
         # update the updates property for every doc
@@ -387,11 +407,14 @@ def test_sg_sdk_interop_unique_docs(params_from_base_test_setup, sg_conf_name):
             v['content']['updates'] += 1
 
         # Push the updated batch to Couchbase Server
-        bucket.upsert_multi(docs)
+        sdk_client.upsert_multi(docs)
 
         # Get docs from Sync Gateway
-        sg_docs_to_update_resp = sg_client.get_bulk_docs(url=sg_url, db=sg_db, doc_ids=sg_doc_ids, auth=seth_session)
-        sg_docs_to_update = sg_docs_to_update_resp['rows']
+        sg_docs_to_update, errors = sg_client.get_bulk_docs(url=sg_url, db=sg_db, doc_ids=sg_doc_ids, auth=seth_session)
+        assert len(sg_docs_to_update) == number_docs_per_client
+        assert len(errors) == 0
+
+        # Update the docs
         for sg_doc in sg_docs_to_update:
             sg_doc['content']['updates'] += 1
 
@@ -399,8 +422,7 @@ def test_sg_sdk_interop_unique_docs(params_from_base_test_setup, sg_conf_name):
         sg_docs_resp = sg_client.add_bulk_docs(url=sg_url, db=sg_db, docs=sg_docs_to_update, auth=seth_session)
 
     # Get docs from Sync Gateway
-    sg_docs_to_update_resp = sg_client.get_bulk_docs(url=sg_url, db=sg_db, doc_ids=sg_doc_ids, auth=seth_session)
-    sg_docs_to_update = sg_docs_to_update_resp['rows']
+    sg_docs_to_update = sg_client.get_bulk_docs(url=sg_url, db=sg_db, doc_ids=sg_doc_ids, auth=seth_session)
 
     # TODO: SDK: Verify doc updates (sg + sdk) are present using the doc['content']['updates'] property
     # TODO: SG: Verify doc updates (sg + sdk) are there via _all_docs using the doc['content']['updates'] property and rev prefix
@@ -411,11 +433,11 @@ def test_sg_sdk_interop_unique_docs(params_from_base_test_setup, sg_conf_name):
     # TODO: assert len(try_get_deleted_rows) == number_docs * 2
 
     # Delete the sdk docs
-    bucket.remove_multi(sdk_doc_ids)
+    sdk_client.remove_multi(sdk_doc_ids)
 
     # Verify all docs are deleted on the sync_gateway side
     all_doc_ids = sdk_doc_ids + sg_doc_ids
-    assert len(all_doc_ids) == 2 * number_docs
+    assert len(all_doc_ids) == 2 * number_docs_per_client
 
     # Check deletes via GET /db/doc_id and bulk_get
     verify_sg_deletes(client=sg_client, url=sg_url, db=sg_db, docs_to_verify_deleted=all_doc_ids, auth=seth_session)
@@ -423,7 +445,7 @@ def test_sg_sdk_interop_unique_docs(params_from_base_test_setup, sg_conf_name):
     # Verify all docs are deleted on sdk, deleted docs should rase and exception
     for doc_id in all_doc_ids:
         with pytest.raises(NotFoundError) as nfe:
-            bucket.get(doc_id)
+            sdk_client.get(doc_id)
         log_info(nfe.value)
         all_doc_ids.remove(nfe.value.key)
 

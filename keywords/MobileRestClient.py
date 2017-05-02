@@ -1246,6 +1246,22 @@ class MobileRestClient:
         resp_obj = resp.json()
         return resp_obj
 
+    def get_all_docs(self, url, db, auth=None):
+        """ Get all docs for a database via _all_docs """
+
+        auth_type = get_auth_type(auth)
+
+        if auth_type == AuthType.session:
+            resp = self._session.get("{}/{}/_all_docs".format(url, db), cookies=dict(SyncGatewaySession=auth[1]))
+        elif auth_type == AuthType.http_basic:
+            resp = self._session.get("{}/{}/_all_docs".format(url, db), auth=auth)
+        else:
+            resp = self._session.get("{}/{}/_all_docs".format(url, db))
+
+        log_r(resp)
+        resp.raise_for_status()
+        return resp.json()
+
     def get_bulk_docs(self, url, db, doc_ids, auth=None, validate=True):
         """
         Keyword that issues POST _bulk_get docs with the specified 'docs' array.
