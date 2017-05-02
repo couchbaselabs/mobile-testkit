@@ -1206,8 +1206,12 @@ class MobileRestClient:
 
         log_r(resp)
         resp.raise_for_status()
-
         resp_obj = resp.json()
+
+        for doc_resp in resp_obj:
+            if "error" in doc_resp:
+                raise RestError("Error while adding bulk docs!")
+
         return resp_obj
 
     def delete_bulk_docs(self, url, db, docs, auth=None):
