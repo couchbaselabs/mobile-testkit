@@ -742,6 +742,13 @@ class MobileRestClient:
 
         return resp_obj
 
+    def get_raw_doc(self, url, db, doc_id):
+        """ Get a document via _raw Sync Gateway endpoint """
+        resp = self._session.get("{}/{}/_raw/{}".format(url, db, doc_id))
+        log_r(resp)
+        resp.raise_for_status()
+        return resp.json()
+
     def add_doc(self, url, db, doc, auth=None, use_post=True):
         """
         Add a doc to a database. Either LiteServ or Sync Gateway
@@ -1007,11 +1014,21 @@ class MobileRestClient:
         docs format: [{u'ok': True, u'rev': u'3-56e50918afe3e9b3c29e94ad55cc6b15', u'id': u'large_attach_0'}, ...]
         """
 
+        server_type = self.get_server_type(url=url)
+
         purged_docs = []
         for doc in docs:
-            data = {
-                doc["id"]: [doc["rev"]]
-            }
+
+            log_info("Purging doc: {}".format(doc))
+            if server_type == ServerType.syncgateway:
+                data = {
+                    doc["_id"]: [doc["_rev"]]
+                }
+            else:
+                data = {
+                    doc["id"]: [doc["rev"]]
+                }
+
             resp = self._session.post("{}/{}/_purge".format(url, db), json.dumps(data))
             log_r(resp)
             resp.raise_for_status()

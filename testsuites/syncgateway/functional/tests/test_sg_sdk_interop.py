@@ -3,6 +3,7 @@ import random
 import pytest
 from concurrent.futures import ThreadPoolExecutor
 from couchbase.bucket import Bucket
+from couchbase import subdocument
 from couchbase.exceptions import NotFoundError
 from requests.exceptions import HTTPError
 
@@ -50,6 +51,7 @@ def test_purge(params_from_base_test_setup, sg_conf_name, use_multiple_channels)
     cbs_url = cluster_topology['couchbase_servers'][0]
     sg_db = 'db'
     number_docs_per_client = 10
+    number_revs_per_doc = 1
 
     if use_multiple_channels:
         log_info('Using multiple channels')
@@ -110,22 +112,40 @@ def test_purge(params_from_base_test_setup, sg_conf_name, use_multiple_channels)
     pdb.set_trace()
 
     # Get all of the docs via Sync Gateway
-    docs, errors = sg_client.get_bulk_docs(url=sg_url, db=sg_db, doc_ids=all_doc_ids, auth=seth_auth)
-    assert len(docs) == number_docs_per_client * 2
+    sg_docs, errors = sg_client.get_bulk_docs(url=sg_url, db=sg_db, doc_ids=all_doc_ids, auth=seth_auth)
+    assert len(sg_docs) == number_docs_per_client * 2
     assert len(errors) == 0
 
-    import pdb
-    pdb.set_trace()
+    # Check that all of the doc ids are present in the SG response
+    doc_id_scatch_pad = list(all_doc_ids)
+    assert len(doc_id_scatch_pad) == number_docs_per_client * 2
+    for sg_doc in sg_docs:
+        log_info('Found doc through SG: {}'.format(sg_doc['_id']))
+        doc_id_scatch_pad.remove(sg_doc['_id'])
+    assert len(doc_id_scatch_pad) == 0
 
     # Get all of the docs via SDK
-    docs = sdk_client.get_multi(all_doc_ids)
-    assert len(docs) == number_docs_per_client * 2
+    sdk_docs = sdk_client.get_multi(all_doc_ids)
+    assert len(sdk_docs) == number_docs_per_client * 2
+
+    # Verify XATTRS present via SDK and SG and that they are the same
+    for doc_id in all_doc_ids:
+        verify_xattrs(
+            sdk_client=sdk_client,
+            sg_client=sg_client,
+            sg_url=sg_admin_url,
+            sg_db=sg_db,
+            doc_id=doc_id,
+            expected_number_of_revs=number_revs_per_doc,
+            expected_number_of_channels=len(channels)
+        )
 
     # Check that all of the doc ids are present in the SDK response
     doc_id_scatch_pad = list(all_doc_ids)
     assert len(doc_id_scatch_pad) == number_docs_per_client * 2
-    for doc in docs:
-        doc_id_scatch_pad.remove(doc)
+    for sdk_doc in sdk_docs:
+        log_info('Found doc through SDK: {}'.format(sdk_doc))
+        doc_id_scatch_pad.remove(sdk_doc)
     assert len(doc_id_scatch_pad) == 0
 
     # Use Sync Gateway to delete half of the documents choosen randomly
@@ -151,29 +171,33 @@ def test_purge(params_from_base_test_setup, sg_conf_name, use_multiple_channels)
 
     import pdb
     pdb.set_trace()
-    
+
     # Sync Gateway purge all docs
-    # sg_client.purge_docs(url=sg_url, db=sg_db, docs=docs)
-    
-    # Verify SG can't see the docs
-    # Verify XATTRS are gone using SDK client with full bucket permissions via subdoc?
+    sg_client.purge_docs(url=sg_admin_url, db=sg_db, docs=sg_docs)
 
-    # Verify SDK can't see the docs
+    # Verify SG can't see the docs. Bulk get should only return errors
+    sg_docs_visible_after_purge, errors = sg_client.get_bulk_docs(url=sg_url, db=sg_db, doc_ids=all_doc_ids, auth=seth_auth, validate=False)
+    assert len(sg_docs_visible_after_purge) == 0
+    assert len(errors) == number_docs_per_client * 2
 
-    docs, errors = sg_client.get_bulk_docs(url=sg_url, db=sg_db, doc_ids=all_doc_ids, auth=seth_auth, validate=False)
-    assert len(docs) == number_docs_per_client
-    assert len(errors) == number_docs_per_client
-
-    deleted_doc_ids_copy = list(deleted_doc_ids)
+    sg_deleted_doc_scratch_pad = list(all_doc_ids)
     for error in errors:
         # TODO: Are these the expected errors?
         assert error['status'] == 403
         assert error['reason'] == 'forbidden'
         assert error['error'] == 'forbidden'
-        assert error['id'] in deleted_doc_ids
-        deleted_doc_ids_copy.remove(error['id'])
+        assert error['id'] in sg_deleted_doc_scratch_pad
+        sg_deleted_doc_scratch_pad.remove(error['id'])
 
     assert len(deleted_doc_ids) == 0
+
+    # Verify SDK can't see the docs
+    sdk_docs_visible_after_purge = sdk_client.get_multi(all_doc_ids)
+    assert len(sdk_docs_visible_after_purge) == 0
+
+    # Verify XATTRS are gone using SDK client with full bucket permissions via subdoc?
+    for doc_id in all_doc_ids:
+        verify_no_xattrs()
 
     import pdb
     pdb.set_trace()
@@ -742,3 +766,53 @@ def verify_sg_deletes(client, url, db, docs_to_verify_deleted, auth):
 
     # Verify that all docs have been removed
     assert len(docs_to_verify_scratchpad) == 0
+
+
+def verify_xattrs(sdk_client, sg_client, sg_url, sg_db, doc_id, expected_number_of_revs, expected_number_of_channels):
+    """ Verify expected values for xattr sync meta data with regard to expected inputs """
+
+    # Get SDK sync meta
+    sdk_sync_xattrs = sdk_client.lookup_in(doc_id, subdocument.get("_sync", xattr=True))
+    sdk_sync_meta = sdk_sync_xattrs.get("_sync")[1]
+
+    # Get Sync Gateway sync meta
+    raw_doc = sg_client.get_raw_doc(sg_url, db=sg_db, doc_id=doc_id)
+    sg_sync_meta = raw_doc["_sync"]
+
+    # Verfy the propery
+    for sync_meta in [sdk_sync_meta, sg_sync_meta]:
+
+        log_info("Verifying XATTR (expected num revs: {}, expected num channels: {}): {}".format(
+            expected_number_of_revs,
+            expected_number_of_channels,
+            sync_meta
+        ))
+
+        assert isinstance(sync_meta["sequence"], int)
+        assert isinstance(sync_meta["recent_sequences"], list)
+        assert len(sync_meta["recent_sequences"]) == expected_number_of_revs
+        assert isinstance(sync_meta["cas"], unicode)
+
+        assert sync_meta["rev"].startswith("{}-".format(expected_number_of_revs))
+
+        assert isinstance(sync_meta["channels"], dict)
+        assert len(sync_meta["channels"]) == expected_number_of_channels
+        assert sync_meta["channels"]["NASA"] is None
+
+        assert isinstance(sync_meta["time_saved"], unicode)
+
+        assert isinstance(sync_meta["history"]["channels"], list)
+        assert len(sync_meta["history"]["channels"]) == expected_number_of_revs
+        assert len(sync_meta["history"]["channels"][0]) == expected_number_of_channels
+
+        assert isinstance(sync_meta["history"]["revs"], list)
+        assert len(sync_meta["history"]["revs"]) == expected_number_of_revs
+
+        assert isinstance(sync_meta["history"]["parents"], list)
+        assert sync_meta["history"]["parents"] == [-1]
+
+    assert sdk_sync_meta == sg_sync_meta
+
+
+def verify_no_xattrs():
+    raise NotImplementedError()
