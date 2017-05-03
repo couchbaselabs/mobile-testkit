@@ -421,21 +421,27 @@ def test_sg_sdk_interop_unique_docs(params_from_base_test_setup, sg_conf_name):
         # Bulk add the updates to Sync Gateway
         sg_docs_resp = sg_client.add_bulk_docs(url=sg_url, db=sg_db, docs=sg_docs_to_update, auth=seth_session)
 
+    import pdb
+    pdb.set_trace()
+
     # Verify updates from SG via _bulk_get
-    all_docs_from_sg, errors = sg_client.get_bulk_docs(url=sg_url, db=sg_db, doc_ids=all_doc_ids, auth=seth_session)
-    assert len(all_docs_from_sg) == number_docs_per_client * 2
+    docs_from_sg_bulk_get, errors = sg_client.get_bulk_docs(url=sg_url, db=sg_db, doc_ids=all_doc_ids, auth=seth_session)
+    assert len(docs_from_sg_bulk_get) == number_docs_per_client * 2
     assert len(errors) == 0
-    for doc in all_docs_from_sg:
+    for doc in docs_from_sg_bulk_get:
         # If it is an SG doc the revision prefix should match the number of updates.
         # This may not be the case due to batched importing of SDK updates
         if doc['_id'].startswith('sg_'):
             assert doc['_rev'].startswith('{}-'.format(number_updates + 1))
         assert doc['content']['updates'] == number_updates + 1
 
+    import pdb
+    pdb.set_trace()
+
     # Verify updates from SG via _all_docs
-    all_docs_from_sg = sg_client.get_all_docs(url=sg_url, db=sg_db, auth=seth_session, include_docs=True)
-    assert len(all_docs_from_sg['rows']) == number_docs_per_client * 2
-    for doc in all_docs_from_sg['rows']:
+    docs_from_sg_all_docs = sg_client.get_all_docs(url=sg_url, db=sg_db, auth=seth_session, include_docs=True)
+    assert len(docs_from_sg_all_docs['rows']) == number_docs_per_client * 2
+    for doc in docs_from_sg_all_docs['rows']:
         # If it is an SG doc the revision prefix should match the number of updates.
         # This may not be the case due to batched importing of SDK updates
         if doc['id'].startswith('sg_'):
@@ -444,13 +450,20 @@ def test_sg_sdk_interop_unique_docs(params_from_base_test_setup, sg_conf_name):
 
         assert doc['id'] == doc['doc']['_id']
         assert doc['doc']['content']['updates'] == number_updates + 1
-    
-    # Verify updates from SG via _changes
-    # Verify updates from SDK via get_multi
 
-    # TODO: SDK: Verify doc updates (sg + sdk) are present using the doc['content']['updates'] property
-    # TODO: SG: Verify doc updates (sg + sdk) are there via _all_docs using the doc['content']['updates'] property and rev prefix
-    # TODO: SG: Verify doc updates (sg + sdk) are there via _changes using the doc['content']['updates'] property and rev prefix
+    import pdb
+    pdb.set_trace()
+
+    # Verify updates from SG via _changes
+    all_docs_via_sg_formatted = [{"id": doc["_id"], "rev": doc["_rev"]} for doc in docs_from_sg_bulk_get]
+    sg_client.verify_docs_in_changes(url=sg_url, db=sg_db, expected_docs=all_docs_via_sg_formatted, auth=seth_session)
+
+    # Verify updates from SDK via get_multi
+    all_docs_from_sdk = sdk_client.get_multi(all_doc_ids)
+    for doc_id, value in all_docs_via_sdk.item():
+        # Verify doc['content']['updates'] property
+        import pdb
+        pdb.set_trace()
 
     # Delete the sync gateway docs
     # sg_client.delete_bulk_docs(url=sg_url, db=sg_db, docs=sg_docs_to_delete, auth=seth_session)
