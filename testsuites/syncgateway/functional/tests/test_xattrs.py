@@ -372,26 +372,17 @@ def test_sg_sdk_interop_unique_docs(params_from_base_test_setup, sg_conf_name):
     all_docs_via_sg, errors = sg_client.get_bulk_docs(url=sg_url, db=sg_db, doc_ids=all_doc_ids, auth=seth_session)
     assert len(all_docs_via_sg) == number_docs_per_client * 2
     assert len(errors) == 0
+    verify_doc_ids_in_sg_bulk_response(all_docs_via_sg, number_docs_per_client * 2, all_doc_ids)
 
     # Verify docs all docs are present via SG _all_docs
     log_info('Verify Sync Gateway sees all docs via _all_docs ...')
     all_docs_resp = sg_client.get_all_docs(url=sg_url, db=sg_db, auth=seth_session)
-    assert len(all_docs_resp["rows"]) == number_docs_per_client * 2
-    all_docs_scratch_pad = list(all_doc_ids)
-    assert len(all_docs_scratch_pad) == number_docs_per_client * 2
-    for doc in all_docs_resp["rows"]:
-        all_docs_scratch_pad.remove(doc["id"])
-    assert len(all_docs_scratch_pad) == 0
+    verify_doc_ids_in_sg_all_docs_response(all_docs_resp, number_docs_per_client * 2, all_doc_ids)
 
     # Verify docs all docs are present via SDK get_multi
     log_info('Verify SDK sees all docs via get_multi ...')
-    all_sdk_docs_scratch_pad = list(all_doc_ids)
-    assert len(all_sdk_docs_scratch_pad) == number_docs_per_client * 2
     all_docs_via_sdk = sdk_client.get_multi(all_doc_ids)
-    for doc_id, value in all_docs_via_sdk.items():
-        assert '_sync' not in value.value
-        all_sdk_docs_scratch_pad.remove(doc_id)
-    assert len(all_sdk_docs_scratch_pad) == 0
+    verify_doc_ids_in_sdk_get_multi(all_docs_via_sdk, number_docs_per_client * 2, all_doc_ids)
 
     # SG: Verify docs (sg + sdk) are there via _changes
     # Format docs for changes verification
@@ -492,7 +483,8 @@ def test_sg_sdk_interop_unique_docs(params_from_base_test_setup, sg_conf_name):
         with pytest.raises(NotFoundError) as nfe:
             sdk_client.get(doc_id)
         log_info(nfe.value)
-        sdk_doc_delete_scratch_pad.remove(nfe.value.key)
+        if nfe is not None:
+            sdk_doc_delete_scratch_pad.remove(nfe.value.key)
 
     # Assert that all of the docs are flagged as deleted
     assert len(sdk_doc_delete_scratch_pad) == 0
@@ -513,9 +505,9 @@ def test_sg_sdk_interop_shared_docs(params_from_base_test_setup, sg_conf_name):
       with 'sg_one_updates' and 'sdk_one_updates' counter properties
     - Bulk create 'number_docs' docs from SG with prefix 'doc_set_two' and channels ['shared']
       with 'sg_one_updates' and 'sdk_one_updates' counter properties
-    - TODO: SDK: Verify docs (sg + sdk) are present
-    - TODO: SG: Verify docs (sg + sdk) are there via _all_docs
-    - TODO: SG: Verify docs (sg + sdk) are there via _changes
+    - SDK: Verify docs (sg + sdk) are present
+    - SG: Verify docs (sg + sdk) are there via _all_docs
+    - SG: Verify docs (sg + sdk) are there via _changes
     - Start concurrent updates:
         - Start update from sg / sdk to a shared set of docs. Sync Gateway and SDK will try to update
           random docs from the shared set and update the corresponding counter property as well as the
@@ -599,14 +591,34 @@ def test_sg_sdk_interop_shared_docs(params_from_base_test_setup, sg_conf_name):
         prop_generator=update_props
     )
 
+    # Add docs via SDK
     sdk_docs = {doc['_id']: doc for doc in sdk_doc_bodies}
     doc_set_two_ids = [sdk_doc['_id'] for sdk_doc in sdk_doc_bodies]
     sdk_docs_resp = sdk_client.upsert_multi(sdk_docs)
     assert len(sdk_docs_resp) == number_docs_per_client
 
-    # TODO: SDK: Verify docs (sg + sdk) are present
-    # TODO: SG: Verify docs (sg + sdk) are there via _all_docs
-    # TODO: SG: Verify docs (sg + sdk) are there via _changes
+    # Build list of all doc_ids
+    all_docs_ids = doc_set_one_ids + doc_set_two_ids
+    assert len(all_docs_ids) == number_docs_per_client * 2
+
+    # Verify docs (sg + sdk) via SG bulk_get
+    docs_from_sg_bulk_get, errors = sg_client.get_bulk_docs(url=sg_url, db=sg_db, doc_ids=all_docs_ids, auth=seth_session)
+    assert len(docs_from_sg_bulk_get) == number_docs_per_client * 2
+    assert len(errors) == 0
+    verify_doc_ids_in_sg_bulk_response(docs_from_sg_bulk_get, number_docs_per_client * 2, all_docs_ids)
+
+    # Verify docs (sg + sdk) are there via _all_docs
+    all_docs_resp = sg_client.get_all_docs(url=sg_url, db=sg_db, auth=seth_session)
+    assert len(all_docs_resp["rows"]) == number_docs_per_client * 2
+    verify_doc_ids_in_sg_all_docs_response(all_docs_resp, number_docs_per_client * 2, all_docs_ids)
+
+    # SG: Verify docs (sg + sdk) are there via _changes
+    all_docs_via_sg_formatted = [{"id": doc["_id"], "rev": doc["_rev"]} for doc in docs_from_sg_bulk_get]
+    sg_client.verify_docs_in_changes(url=sg_url, db=sg_db, expected_docs=all_docs_via_sg_formatted, auth=seth_session)
+
+    # SDK: Verify docs (sg + sdk) are present
+    all_docs_via_sdk = sdk_client.get_multi(all_docs_ids)
+    verify_doc_ids_in_sdk_get_multi(all_docs_via_sdk, number_docs_per_client * 2, all_docs_ids)
 
     # Build a dictionary of all the doc ids with default number of updates (1 for created)
     all_doc_ids = doc_set_one_ids + doc_set_two_ids
@@ -884,3 +896,52 @@ def verify_xattrs(sdk_client, sg_client, sg_url, sg_db, doc_id, expected_number_
 
 def verify_no_xattrs():
     raise NotImplementedError()
+
+
+def verify_doc_ids_in_sg_bulk_response(response, expected_number_docs, expected_ids):
+
+    log_info('Verifing SG bulk_get response has {} docs with expected ids ...'.format(expected_number_docs))
+
+    expected_ids_scratch_pad = list(expected_ids)
+    assert len(expected_ids_scratch_pad) == expected_number_docs
+    assert len(response) == expected_number_docs
+
+    # Cross off all the doc ids seen in the response from the scratch pad
+    for doc in response:
+        expected_ids_scratch_pad.remove(doc["_id"])
+
+    # Make sure all doc ids have been found
+    assert len(expected_ids_scratch_pad) == 0
+
+
+def verify_doc_ids_in_sg_all_docs_response(response, expected_number_docs, expected_ids):
+
+    log_info('Verifing SG all_docs response has {} docs with expected ids ...'.format(expected_number_docs))
+
+    expected_ids_scratch_pad = list(expected_ids)
+    assert len(expected_ids_scratch_pad) == expected_number_docs
+    assert len(response['rows']) == expected_number_docs
+
+    # Cross off all the doc ids seen in the response from the scratch pad
+    for doc in response['rows']:
+        expected_ids_scratch_pad.remove(doc['id'])
+
+    # Make sure all doc ids have been found
+    assert len(expected_ids_scratch_pad) == 0
+
+
+def verify_doc_ids_in_sdk_get_multi(response, expected_number_docs, expected_ids):
+
+    log_info('Verifing SDK get_multi response has {} docs with expected ids ...'.format(expected_number_docs))
+
+    expected_ids_scratch_pad = list(expected_ids)
+    assert len(expected_ids_scratch_pad) == expected_number_docs
+    assert len(response) == expected_number_docs
+
+    # Cross off all the doc ids seen in the response from the scratch pad
+    for doc_id, value in response.items():
+        assert '_sync' not in value.value
+        expected_ids_scratch_pad.remove(doc_id)
+
+    # Make sure all doc ids have been found
+    assert len(expected_ids_scratch_pad) == 0
