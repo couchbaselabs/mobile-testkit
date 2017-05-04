@@ -166,9 +166,6 @@ def test_purge(params_from_base_test_setup, sg_conf_name, use_multiple_channels)
     assert len(doc_id_choice_pool) == number_docs_per_client
     assert len(deleted_doc_ids) == number_docs_per_client
 
-    import pdb
-    pdb.set_trace()
-
     # Sync Gateway purge all docs
     sg_client.purge_docs(url=sg_admin_url, db=sg_db, docs=sg_docs)
 
@@ -195,9 +192,6 @@ def test_purge(params_from_base_test_setup, sg_conf_name, use_multiple_channels)
     # Verify XATTRS are gone using SDK client with full bucket permissions via subdoc?
     for doc_id in all_doc_ids:
         verify_no_xattrs()
-
-    import pdb
-    pdb.set_trace()
 
 
 @pytest.mark.sanity
