@@ -345,21 +345,25 @@ def test_sg_sdk_interop_unique_docs(params_from_base_test_setup, sg_conf_name):
     cluster.reset(sg_config_path=sg_conf)
 
     # Connect to server via SDK
+    log_info('Connecting to bucket ...')
     cbs_ip = host_for_url(cbs_url)
     sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password')
 
     # Create docs and add them via sdk
+    log_info('Adding docs via sdk ...')
     sdk_doc_bodies = document.create_docs('sdk', number_docs_per_client, content={'foo': 'bar', 'updates': 1}, channels=['sdk'])
     sdk_docs = {doc['_id']: doc for doc in sdk_doc_bodies}
     sdk_doc_ids = [doc for doc in sdk_docs]
     sdk_client.upsert_multi(sdk_docs)
 
     # Create sg user
+    log_info('Creating user / session on Sync Gateway ...')
     sg_client = MobileRestClient()
     sg_client.create_user(url=sg_admin_url, db=sg_db, name='seth', password='pass', channels=['sg', 'sdk'])
     seth_session = sg_client.create_session(url=sg_admin_url, db=sg_db, name='seth', password='pass')
 
     # Create / add docs to sync gateway
+    log_info('Adding docs Sync Gateway ...')
     sg_docs = document.create_docs('sg', number_docs_per_client, content={'foo': 'bar', 'updates': 1}, channels=['sg'])
     log_info('Adding bulk_docs')
     sg_docs_resp = sg_client.add_bulk_docs(url=sg_url, db=sg_db, docs=sg_docs, auth=seth_session)
@@ -369,11 +373,13 @@ def test_sg_sdk_interop_unique_docs(params_from_base_test_setup, sg_conf_name):
     all_doc_ids = sdk_doc_ids + sg_doc_ids
 
     # Verify docs all docs are present via SG _bulk_get
+    log_info('Verify Sync Gateway sees all docs via _bulk_get ...')
     all_docs_via_sg, errors = sg_client.get_bulk_docs(url=sg_url, db=sg_db, doc_ids=all_doc_ids, auth=seth_session)
     assert len(all_docs_via_sg) == number_docs_per_client * 2
     assert len(errors) == 0
 
     # Verify docs all docs are present via SG _all_docs
+    log_info('Verify Sync Gateway sees all docs via _all_docs ...')
     all_docs_resp = sg_client.get_all_docs(url=sg_url, db=sg_db, auth=seth_session)
     assert len(all_docs_resp["rows"]) == number_docs_per_client * 2
     all_docs_scratch_pad = list(all_doc_ids)
@@ -383,6 +389,7 @@ def test_sg_sdk_interop_unique_docs(params_from_base_test_setup, sg_conf_name):
     assert len(all_docs_scratch_pad) == 0
 
     # Verify docs all docs are present via SDK get_multi
+    log_info('Verify SDK sees all docs via get_multi ...')
     all_sdk_docs_scratch_pad = list(all_doc_ids)
     assert len(all_sdk_docs_scratch_pad) == number_docs_per_client * 2
     all_docs_via_sdk = sdk_client.get_multi(all_doc_ids)
@@ -392,10 +399,12 @@ def test_sg_sdk_interop_unique_docs(params_from_base_test_setup, sg_conf_name):
 
     # SG: Verify docs (sg + sdk) are there via _changes
     # Format docs for changes verification
+    log_info('Verify Sync Gateway sees all docs on _changes ...')
     all_docs_via_sg_formatted = [{"id": doc["_id"], "rev": doc["_rev"]} for doc in all_docs_via_sg]
     assert len(all_docs_via_sg_formatted) == number_docs_per_client * 2
     sg_client.verify_docs_in_changes(url=sg_url, db=sg_db, expected_docs=all_docs_via_sg_formatted, auth=seth_session)
 
+    log_info("Sync Gateway updates 'sg_*' docs and SDK updates 'sdk_*' docs ...")
     for i in range(number_updates):
 
         # Get docs and extract doc_id (key) and doc_body (value.value)
@@ -421,10 +430,8 @@ def test_sg_sdk_interop_unique_docs(params_from_base_test_setup, sg_conf_name):
         # Bulk add the updates to Sync Gateway
         sg_docs_resp = sg_client.add_bulk_docs(url=sg_url, db=sg_db, docs=sg_docs_to_update, auth=seth_session)
 
-    import pdb
-    pdb.set_trace()
-
     # Verify updates from SG via _bulk_get
+    log_info('Verify Sync Gateway sees all docs via _bulk_get ...')
     docs_from_sg_bulk_get, errors = sg_client.get_bulk_docs(url=sg_url, db=sg_db, doc_ids=all_doc_ids, auth=seth_session)
     assert len(docs_from_sg_bulk_get) == number_docs_per_client * 2
     assert len(errors) == 0
@@ -435,10 +442,8 @@ def test_sg_sdk_interop_unique_docs(params_from_base_test_setup, sg_conf_name):
             assert doc['_rev'].startswith('{}-'.format(number_updates + 1))
         assert doc['content']['updates'] == number_updates + 1
 
-    import pdb
-    pdb.set_trace()
-
     # Verify updates from SG via _all_docs
+    log_info('Verify Sync Gateway sees updates via _all_docs ...')
     docs_from_sg_all_docs = sg_client.get_all_docs(url=sg_url, db=sg_db, auth=seth_session, include_docs=True)
     assert len(docs_from_sg_all_docs['rows']) == number_docs_per_client * 2
     for doc in docs_from_sg_all_docs['rows']:
@@ -451,43 +456,44 @@ def test_sg_sdk_interop_unique_docs(params_from_base_test_setup, sg_conf_name):
         assert doc['id'] == doc['doc']['_id']
         assert doc['doc']['content']['updates'] == number_updates + 1
 
-    import pdb
-    pdb.set_trace()
-
     # Verify updates from SG via _changes
+    log_info('Verify Sync Gateway sees updates on _changes ...')
     all_docs_via_sg_formatted = [{"id": doc["_id"], "rev": doc["_rev"]} for doc in docs_from_sg_bulk_get]
     sg_client.verify_docs_in_changes(url=sg_url, db=sg_db, expected_docs=all_docs_via_sg_formatted, auth=seth_session)
 
     # Verify updates from SDK via get_multi
+    log_info('Verify SDK sees updates via get_multi ...')
     all_docs_from_sdk = sdk_client.get_multi(all_doc_ids)
-    for doc_id, value in all_docs_via_sdk.item():
-        # Verify doc['content']['updates'] property
-        import pdb
-        pdb.set_trace()
+    assert len(all_docs_from_sdk) == number_docs_per_client * 2
+    for doc_id, value in all_docs_from_sdk.items():
+        assert value.value['content']['updates'] == number_updates + 1
 
     # Delete the sync gateway docs
-    # sg_client.delete_bulk_docs(url=sg_url, db=sg_db, docs=sg_docs_to_delete, auth=seth_session)
+    #sg_client.delete_bulk_docs(url=sg_url, db=sg_db, docs=sg_docs_to_delete, auth=seth_session)
     # TODO: assert len(try_get_deleted_rows) == number_docs * 2
 
+    # import pdb
+    # pdb.set_trace()
+
     # Delete the sdk docs
-    sdk_client.remove_multi(sdk_doc_ids)
+    # sdk_client.remove_multi(sdk_doc_ids)
 
     # Verify all docs are deleted on the sync_gateway side
-    all_doc_ids = sdk_doc_ids + sg_doc_ids
-    assert len(all_doc_ids) == 2 * number_docs_per_client
+    #all_doc_ids = sdk_doc_ids + sg_doc_ids
+    #assert len(all_doc_ids) == 2 * number_docs_per_client
 
     # Check deletes via GET /db/doc_id and bulk_get
-    verify_sg_deletes(client=sg_client, url=sg_url, db=sg_db, docs_to_verify_deleted=all_doc_ids, auth=seth_session)
+    #verify_sg_deletes(client=sg_client, url=sg_url, db=sg_db, docs_to_verify_deleted=all_doc_ids, auth=seth_session)
 
     # Verify all docs are deleted on sdk, deleted docs should rase and exception
-    for doc_id in all_doc_ids:
-        with pytest.raises(NotFoundError) as nfe:
-            sdk_client.get(doc_id)
-        log_info(nfe.value)
-        all_doc_ids.remove(nfe.value.key)
+    # for doc_id in all_doc_ids:
+    #     with pytest.raises(NotFoundError) as nfe:
+    #         sdk_client.get(doc_id)
+    #     log_info(nfe.value)
+    #     all_doc_ids.remove(nfe.value.key)
 
     # Assert that all of the docs are flagged as deleted
-    assert len(all_doc_ids) == 0
+    #assert len(all_doc_ids) == 0
 
 
 @pytest.mark.sanity
