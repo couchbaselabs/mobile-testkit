@@ -1242,8 +1242,12 @@ class MobileRestClient:
 
         log_r(resp)
         resp.raise_for_status()
-
         resp_obj = resp.json()
+
+        for resp_doc in resp_obj:
+            if "error" in resp_doc:
+                raise RestError("Error during deleting docs in bulk")
+
         return resp_obj
 
     def get_all_docs(self, url, db, auth=None, include_docs=False):

@@ -312,11 +312,12 @@ def test_sg_sdk_interop_unique_docs(params_from_base_test_setup, sg_conf_name):
     - SG: Verify docs (sg + sdk) are there via _all_docs
     - SG: Verify docs (sg + sdk) are there via _changes
     - Bulk update each doc 'number_updates' from SDK for 'sdk' docs
-    - TODO: SDK should verify it does not see _sync
+    - SDK should verify it does not see _sync
     - Bulk update each doc 'number_updates' from SG for 'sg' docs
-    - TODO: SDK: Verify doc updates (sg + sdk) are present using the doc['content']['updates'] property
-    - TODO: SG: Verify doc updates (sg + sdk) are there via _all_docs using the doc['content']['updates'] property and rev prefix
-    - TODO: SG: Verify doc updates (sg + sdk) are there via _changes using the doc['content']['updates'] property and rev prefix
+    - SDK: Verify doc updates (sg + sdk) are present using the doc['content']['updates'] property
+    - SG: Verify doc updates (sg + sdk) are there via _all_docs using the doc['content']['updates'] property and rev prefix
+    - SG: Verify doc updates (sg + sdk) are there via _changes using the doc['content']['updates'] property and rev prefix
+    - SDK should verify it does not see _sync
     - Bulk delete 'sdk' docs from SDK
     - Bulk delete 'sg' docs from SG
     - Verify SDK sees all docs (sg + sdk) as deleted
@@ -393,7 +394,8 @@ def test_sg_sdk_interop_unique_docs(params_from_base_test_setup, sg_conf_name):
     all_sdk_docs_scratch_pad = list(all_doc_ids)
     assert len(all_sdk_docs_scratch_pad) == number_docs_per_client * 2
     all_docs_via_sdk = sdk_client.get_multi(all_doc_ids)
-    for doc_id in all_docs_via_sdk:
+    for doc_id, value in all_docs_via_sdk.items():
+        assert '_sync' not in value.value
         all_sdk_docs_scratch_pad.remove(doc_id)
     assert len(all_sdk_docs_scratch_pad) == 0
 
@@ -466,34 +468,40 @@ def test_sg_sdk_interop_unique_docs(params_from_base_test_setup, sg_conf_name):
     all_docs_from_sdk = sdk_client.get_multi(all_doc_ids)
     assert len(all_docs_from_sdk) == number_docs_per_client * 2
     for doc_id, value in all_docs_from_sdk.items():
+        assert '_sync' not in value.value
         assert value.value['content']['updates'] == number_updates + 1
 
     # Delete the sync gateway docs
-    #sg_client.delete_bulk_docs(url=sg_url, db=sg_db, docs=sg_docs_to_delete, auth=seth_session)
-    # TODO: assert len(try_get_deleted_rows) == number_docs * 2
+    log_info("Deleting 'sg_*' docs from Sync Gateway  ...")
+    sg_docs_to_delete, errors = sg_client.get_bulk_docs(url=sg_url, db=sg_db, doc_ids=sg_doc_ids, auth=seth_session)
+    assert len(sg_docs_to_delete) == number_docs_per_client
+    assert len(errors) == 0
 
-    # import pdb
-    # pdb.set_trace()
+    sg_docs_delete_resp = sg_client.delete_bulk_docs(url=sg_url, db=sg_db, docs=sg_docs_to_delete, auth=seth_session)
+    assert len(sg_docs_delete_resp) == number_docs_per_client
 
     # Delete the sdk docs
-    # sdk_client.remove_multi(sdk_doc_ids)
+    log_info("Deleting 'sdk_*' docs from SDK  ...")
+    sdk_client.remove_multi(sdk_doc_ids)
 
     # Verify all docs are deleted on the sync_gateway side
-    #all_doc_ids = sdk_doc_ids + sg_doc_ids
-    #assert len(all_doc_ids) == 2 * number_docs_per_client
+    all_doc_ids = sdk_doc_ids + sg_doc_ids
+    assert len(all_doc_ids) == 2 * number_docs_per_client
 
     # Check deletes via GET /db/doc_id and bulk_get
-    #verify_sg_deletes(client=sg_client, url=sg_url, db=sg_db, docs_to_verify_deleted=all_doc_ids, auth=seth_session)
+    verify_sg_deletes(client=sg_client, url=sg_url, db=sg_db, docs_to_verify_deleted=all_doc_ids, auth=seth_session)
 
     # Verify all docs are deleted on sdk, deleted docs should rase and exception
-    # for doc_id in all_doc_ids:
-    #     with pytest.raises(NotFoundError) as nfe:
-    #         sdk_client.get(doc_id)
-    #     log_info(nfe.value)
-    #     all_doc_ids.remove(nfe.value.key)
+    sdk_doc_delete_scratch_pad = list(all_doc_ids)
+    for doc_id in all_doc_ids:
+        nfe = None
+        with pytest.raises(NotFoundError) as nfe:
+            sdk_client.get(doc_id)
+        log_info(nfe.value)
+        sdk_doc_delete_scratch_pad.remove(nfe.value.key)
 
     # Assert that all of the docs are flagged as deleted
-    #assert len(all_doc_ids) == 0
+    assert len(sdk_doc_delete_scratch_pad) == 0
 
 
 @pytest.mark.sanity
@@ -816,18 +824,19 @@ def verify_sg_deletes(client, url, db, docs_to_verify_deleted, auth):
     docs_to_verify_scratchpad = list(docs_to_verify_deleted)
 
     # Verify deletes via bulk_get
-    try_get_bulk_docs = client.get_bulk_docs(url=url, db=db, doc_ids=docs_to_verify_deleted, auth=auth)
-    assert len(try_get_bulk_docs["rows"]) == len(docs_to_verify_deleted)
+    try_get_bulk_docs, errors = client.get_bulk_docs(url=url, db=db, doc_ids=docs_to_verify_deleted, auth=auth, validate=False)
+    assert len(try_get_bulk_docs) == 0
+    assert len(errors) == len(docs_to_verify_deleted)
 
     # TODO: Verify with Adam, should this be reason=deleted or reason=missing?
-    for row in try_get_bulk_docs['rows']:
-        assert row['id'] in docs_to_verify_deleted
-        assert row['status'] == 404
-        assert row['error'] == 'not_found'
-        assert row['reason'] == 'deleted'
+    for err in errors:
+        assert err['id'] in docs_to_verify_deleted
+        assert err['status'] == 404
+        assert err['error'] == 'not_found'
+        assert err['reason'] == 'deleted'
 
         # Cross off the doc_id
-        docs_to_verify_scratchpad.remove(row['id'])
+        docs_to_verify_scratchpad.remove(err['id'])
 
     # Verify that all docs have been removed
     assert len(docs_to_verify_scratchpad) == 0
