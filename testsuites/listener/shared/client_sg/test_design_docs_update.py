@@ -72,12 +72,12 @@ def test_design_doc_update(setup_client_syncgateway_test):
 }"""
 
     dd_rev = client.get_design_doc_rev(url=ls_url, db=ls_db, name=d_doc_name)
-    assert dd_rev
+    assert dd_rev and dd_rev.startswith("1-")
     log_info("dd_rev: {}".format(dd_rev))
 
     client.update_design_doc(url=ls_url, db=ls_db, name=d_doc_name, doc=view, rev=dd_rev)
     dd_rev_new = client.get_design_doc_rev(url=ls_url, db=ls_db, name=d_doc_name)
-    assert dd_rev_new != dd_rev
+    assert dd_rev_new != dd_rev and dd_rev_new.startswith("2-")
     log_info("dd_rev_new: {}".format(dd_rev_new))
 
     content_view_rows_2 = client.get_view(url=ls_url, db=ls_db, design_doc_name=d_doc_name, view_name="content_view")
