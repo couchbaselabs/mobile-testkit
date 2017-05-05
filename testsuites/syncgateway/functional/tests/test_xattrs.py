@@ -496,10 +496,19 @@ def test_sg_sdk_interop_unique_docs(params_from_base_test_setup, sg_conf_name):
 @pytest.mark.xattrs
 @pytest.mark.changes
 @pytest.mark.session
-@pytest.mark.parametrize('sg_conf_name', [
-    'sync_gateway_default_functional_tests'
-])
-def test_sg_sdk_interop_shared_docs(params_from_base_test_setup, sg_conf_name):
+@pytest.mark.parametrize(
+    'sg_conf_name, number_docs_per_client, number_updates_per_doc_per_client',
+    [
+        ('sync_gateway_default_functional_tests', 10, 10),
+        ('sync_gateway_default_functional_tests', 1000, 10),
+        ('sync_gateway_default_functional_tests', 10, 1000),
+        ('sync_gateway_default_functional_tests', 1, 10000)
+    ]
+)
+def test_sg_sdk_interop_shared_docs(params_from_base_test_setup,
+                                    sg_conf_name,
+                                    number_docs_per_client,
+                                    number_updates_per_doc_per_client):
     """
     Scenario:
     - Bulk create 'number_docs' docs from SDK with prefix 'doc_set_one' and channels ['shared']
@@ -538,8 +547,9 @@ def test_sg_sdk_interop_shared_docs(params_from_base_test_setup, sg_conf_name):
     bucket_name = 'data-bucket'
     cbs_url = cluster_topology['couchbase_servers'][0]
     sg_db = 'db'
-    number_docs_per_client = 10
-    number_updates_per_client = 10
+
+    log_info('Num docs per client: {}'.format(number_docs_per_client))
+    log_info('Num updates per doc per client: {}'.format(number_updates_per_doc_per_client))
 
     log_info('sg_conf: {}'.format(sg_conf))
     log_info('sg_admin_url: {}'.format(sg_admin_url))
@@ -634,7 +644,7 @@ def test_sg_sdk_interop_shared_docs(params_from_base_test_setup, sg_conf_name):
             db=sg_db,
             docs_to_update=all_doc_ids,
             prop_to_update=sg_tracking_prop,
-            number_updates=number_updates_per_client,
+            number_updates=number_updates_per_doc_per_client,
             auth=seth_session
         )
 
@@ -643,7 +653,7 @@ def test_sg_sdk_interop_shared_docs(params_from_base_test_setup, sg_conf_name):
             client=sdk_client,
             docs_to_update=all_doc_ids,
             prop_to_update=sdk_tracking_prop,
-            number_updates=number_updates_per_client
+            number_updates=number_updates_per_doc_per_client
         )
 
         # Make sure to block on the result to catch any exceptions that may have been thrown
@@ -657,7 +667,9 @@ def test_sg_sdk_interop_shared_docs(params_from_base_test_setup, sg_conf_name):
     assert len(errors) == 0
 
     # TODO: Issue _changes
-    sg_client.verify_docs_in_changes(url=sg_url, db=sg_db, expected_docs=docs_from_sg_bulk_get, auth=seth_session)
+    docs_from_sg_bulk_get_formatted = [{"id": doc["_id"], "rev": doc["_rev"]} for doc in docs_from_sg_bulk_get]
+    assert len(docs_from_sg_bulk_get_formatted) == number_docs_per_client * 2
+    sg_client.verify_docs_in_changes(url=sg_url, db=sg_db, expected_docs=docs_from_sg_bulk_get_formatted, auth=seth_session)
 
     # Get all of the docs and verify that all updates we applied
     log_info('Verifying that all docs have the expected number of updates.')
@@ -673,16 +685,16 @@ def test_sg_sdk_interop_shared_docs(params_from_base_test_setup, sg_conf_name):
             sdk_tracking_prop, doc_body[sdk_tracking_prop],
         ))
 
-        assert doc_body['updates'] == number_updates_per_client * 2
-        assert doc_body[sg_tracking_prop] == number_updates_per_client
-        assert doc_body[sdk_tracking_prop] == number_updates_per_client
+        assert doc_body['updates'] == number_updates_per_doc_per_client * 2
+        assert doc_body[sg_tracking_prop] == number_updates_per_doc_per_client
+        assert doc_body[sdk_tracking_prop] == number_updates_per_doc_per_client
 
         # Get doc from Sync Gateway
         doc = sg_client.get_doc(url=sg_url, db=sg_db, doc_id=doc_id, auth=seth_session)
 
-        assert doc['updates'] == number_updates_per_client * 2
-        assert doc[sg_tracking_prop] == number_updates_per_client
-        assert doc[sdk_tracking_prop] == number_updates_per_client
+        assert doc['updates'] == number_updates_per_doc_per_client * 2
+        assert doc[sg_tracking_prop] == number_updates_per_doc_per_client
+        assert doc[sdk_tracking_prop] == number_updates_per_doc_per_client
 
         # We cant be sure deterministically due to batched import from SDK updates
         # so make sure it has been update past initial write
@@ -713,7 +725,7 @@ def test_sg_sdk_interop_shared_docs(params_from_base_test_setup, sg_conf_name):
         sg_delete_task.result()
 
     assert len(all_doc_ids) == number_docs_per_client * 2
-    #verify_sg_deletes(client=sg_client, url=sg_url, db=sg_db, docs_to_verify_deleted=all_doc_ids, auth=seth_session)
+    verify_sg_deletes(client=sg_client, url=sg_url, db=sg_db, docs_to_verify_deleted=all_doc_ids, auth=seth_session)
     verify_sdk_deletes(sdk_client, all_doc_ids)
 
 
