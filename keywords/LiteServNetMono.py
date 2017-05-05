@@ -119,6 +119,7 @@ class LiteServNetMono(LiteServBase):
 
             try:
                 self._verify_launched()
+                break
             except LiteServError:
                 if retries > 0:
                     log_info("Could not start Liteserv, retrying...")
