@@ -1,17 +1,18 @@
 import random
+import time
 
 import pytest
 from concurrent.futures import ThreadPoolExecutor
-from couchbase.bucket import Bucket
 from couchbase import subdocument
-from couchbase.exceptions import NotFoundError
+from couchbase.bucket import Bucket
+from couchbase.exceptions import KeyExistsError, NotFoundError
 from requests.exceptions import HTTPError
 
 from keywords import attachment, document
-from keywords.userinfo import UserInfo
 from keywords.constants import DATA_DIR
 from keywords.MobileRestClient import MobileRestClient
 from keywords.SyncGateway import sync_gateway_config_path_for_mode
+from keywords.userinfo import UserInfo
 from keywords.utils import host_for_url, log_info
 from libraries.testkit.cluster import Cluster
 
@@ -642,13 +643,21 @@ def test_sg_sdk_interop_shared_docs(params_from_base_test_setup, sg_conf_name):
             client=sdk_client,
             docs_to_update=all_doc_ids,
             prop_to_update=sdk_tracking_prop,
-            number_updates=number_docs_per_client
+            number_updates=number_updates_per_client
         )
 
         # Make sure to block on the result to catch any exceptions that may have been thrown
         # during execution of the future
         update_from_sg_task.result()
         update_from_sdk_task.result()
+
+    # TODO: Issue a bulk_get to make sure all docs have auto imported
+    docs_from_sg_bulk_get, errors = sg_client.get_bulk_docs(url=sg_url, db=sg_db, doc_ids=all_doc_ids, auth=seth_session)
+    assert len(docs_from_sg_bulk_get) == number_docs_per_client * 2
+    assert len(errors) == 0
+
+    # TODO: Issue _changes
+    sg_client.verify_docs_in_changes(url=sg_url, db=sg_db, expected_docs=docs_from_sg_bulk_get, auth=seth_session)
 
     # Get all of the docs and verify that all updates we applied
     log_info('Verifying that all docs have the expected number of updates.')
@@ -674,10 +683,11 @@ def test_sg_sdk_interop_shared_docs(params_from_base_test_setup, sg_conf_name):
         assert doc['updates'] == number_updates_per_client * 2
         assert doc[sg_tracking_prop] == number_updates_per_client
         assert doc[sdk_tracking_prop] == number_updates_per_client
-        assert doc['_rev'].startswith('21')
-        assert len(doc['_revisions']['ids']) == (number_updates_per_client * 2) + 1
 
-    # TODO: Verify sync gateway changes feed
+        # We cant be sure deterministically due to batched import from SDK updates
+        # so make sure it has been update past initial write
+        assert int(doc['_rev'].split('-')[0]) > 1
+        assert len(doc['_revisions']['ids']) > 1
 
     # Try concurrent deletes from either side
     with ThreadPoolExecutor(max_workers=5) as tpe:
@@ -702,33 +712,9 @@ def test_sg_sdk_interop_shared_docs(params_from_base_test_setup, sg_conf_name):
         sdk_delete_task.result()
         sg_delete_task.result()
 
-    assert len(all_doc_ids) == number_docs_per_client
-    verify_sg_deletes(client=sg_client, url=sg_url, db=sg_db, docs_to_verify_deleted=all_doc_ids, auth=seth_session)
-
-
-def delete_sg_docs(client, url, db, docs_to_delete, auth):
-
-    # Create a copy of all doc ids
-    docs_to_remove = list(docs_to_delete)
-    while len(docs_to_remove) > 0:
-        random_doc_id = random.choice(docs_to_remove)
-        log_info('Attempting to delete from SG: {}'.format(random_doc_id))
-        # TODO reenable: doc_to_delete = client.get_doc(url=url, db=db, doc_id=random_doc_id, auth=auth)
-        # TODO reenable: deleted_doc = client.delete_doc(url=url, db=db, doc_id=random_doc_id, rev=doc_to_delete['_rev'], auth=auth)
-        # Todo: Add assertion
-        docs_to_remove.remove(random_doc_id)
-
-
-def delete_sdk_docs(client, docs_to_delete):
-
-    # Create a copy of all doc ids
-    docs_to_remove = list(docs_to_delete)
-    while len(docs_to_remove) > 0:
-        random_doc_id = random.choice(docs_to_remove)
-        log_info('Attempting to delete from SDK: {}'.format(random_doc_id))
-        # TODO reenable: deleted_doc = client.remove(random_doc_id)
-        # Todo: Add assertion
-        docs_to_remove.remove(random_doc_id)
+    assert len(all_doc_ids) == number_docs_per_client * 2
+    #verify_sg_deletes(client=sg_client, url=sg_url, db=sg_db, docs_to_verify_deleted=all_doc_ids, auth=seth_session)
+    verify_sdk_deletes(sdk_client, all_doc_ids)
 
 
 def update_sg_docs(client, url, db, docs_to_update, prop_to_update, number_updates, auth=None):
@@ -763,6 +749,7 @@ def update_sg_docs(client, url, db, docs_to_update, prop_to_update, number_updat
         else:
             # Update the doc
             try:
+                log_info('Updating: {} from SG'.format(random_doc_id))
                 client.update_doc(url=url, db=db, doc_id=random_doc_id, property_updater=property_updater, auth=auth)
             except HTTPError as e:
                 # This is possible if hitting a conflict. Check that it is. If it is not, we want to raise
@@ -770,6 +757,10 @@ def update_sg_docs(client, url, db, docs_to_update, prop_to_update, number_updat
                     raise
                 else:
                     log_info('Hit a conflict! Will retry later ...')
+
+        # SDK and sync gateway do not operate at the same speed.
+        # This will help normalize the rate
+        time.sleep(0.01)
 
 
 def is_conflict(httperror):
@@ -793,13 +784,80 @@ def update_sdk_docs(client, docs_to_update, prop_to_update, number_updates):
         doc = client.get(random_doc_id)
         doc_body = doc.value
 
+        # Make sure not meta is seen
+        assert '_sync' not in doc_body
+
         if doc_body[prop_to_update] == number_updates:
             local_docs_to_update.remove(random_doc_id)
         else:
-            # TODO: Make sure it is a CAS safe write
-            doc_body[prop_to_update] += 1
-            doc_body['updates'] += 1
-            client.upsert(random_doc_id, doc_body)
+            try:
+                # Do a CAS safe write. It is possible that the document is updated
+                # by Sync Gateway between the client.get and the client.upsert.
+                # If this happens, catch the CAS error and retry
+                doc_body[prop_to_update] += 1
+                doc_body['updates'] += 1
+                log_info('Updating: {} from SDK'.format(random_doc_id))
+                cur_cas = doc.cas
+                client.upsert(random_doc_id, doc_body, cas=cur_cas)
+            except KeyExistsError:
+                log_info('CAS mismatch from SDK. Will retry ...')
+
+        # SDK and sync gateway do not operate at the same speed.
+        # This will help normalize the rate
+        time.sleep(0.02)
+
+
+def delete_sg_docs(client, url, db, docs_to_delete, auth):
+
+    deleted_count = 0
+
+    # Create a copy of all doc ids
+    docs_to_remove = list(docs_to_delete)
+    while len(docs_to_remove) > 0:
+        random_doc_id = random.choice(docs_to_remove)
+        log_info('Attempting to delete from SG: {}'.format(random_doc_id))
+        try:
+            doc_to_delete = client.get_doc(url=url, db=db, doc_id=random_doc_id, auth=auth)
+            deleted_doc = client.delete_doc(url=url, db=db, doc_id=random_doc_id, rev=doc_to_delete['_rev'], auth=auth)
+            docs_to_remove.remove(deleted_doc['id'])
+            deleted_count += 1
+        except HTTPError as he:
+            # Doc may have been deleted by the SDK.
+            if he.response.status_code == 404:
+                log_info('Could not find doc, must have been deleted by SDK. Retrying ...')
+                docs_to_remove.remove(random_doc_id)
+            else:
+                raise he
+
+        # SDK and sync gateway do not operate at the same speed.
+        # This will help normalize the rate
+        time.sleep(0.1)
+
+    assert deleted_count > 0
+
+
+def delete_sdk_docs(client, docs_to_delete):
+
+    deleted_count = 0
+
+    # Create a copy of all doc ids
+    docs_to_remove = list(docs_to_delete)
+    while len(docs_to_remove) > 0:
+        random_doc_id = random.choice(docs_to_remove)
+        log_info('Attempting to delete from SDK: {}'.format(random_doc_id))
+        try:
+            doc = client.remove(random_doc_id)
+            print(doc.key)
+            docs_to_remove.remove(doc.key)
+            deleted_count += 1
+        except NotFoundError:
+            # Doc may have been deleted by sync gateway
+            log_info('Could not find doc, must have been deleted by SG. Retrying ...')
+            docs_to_remove.remove(random_doc_id)
+
+        # SDK and sync gateway do not operate at the same speed.
+        # This will help normalize the rate
+        time.sleep(0.2)
 
 
 def verify_sg_deletes(client, url, db, docs_to_verify_deleted, auth):
@@ -843,6 +901,23 @@ def verify_sg_deletes(client, url, db, docs_to_verify_deleted, auth):
 
         # Cross off the doc_id
         docs_to_verify_scratchpad.remove(err['id'])
+
+    # Verify that all docs have been removed
+    assert len(docs_to_verify_scratchpad) == 0
+
+
+def verify_sdk_deletes(sdk_client, docs_ids_to_verify_deleted):
+    """ Verifies that all doc ids have been deleted from the SDK """
+
+    docs_to_verify_scratchpad = list(docs_ids_to_verify_deleted)
+
+    for doc_id in docs_ids_to_verify_deleted:
+        nfe = None
+        with pytest.raises(NotFoundError) as nfe:
+            sdk_client.get(doc_id)
+        assert nfe is not None
+        assert 'The key does not exist on the server' in str(nfe)
+        docs_to_verify_scratchpad.remove(doc_id)
 
     # Verify that all docs have been removed
     assert len(docs_to_verify_scratchpad) == 0
