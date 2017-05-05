@@ -211,6 +211,6 @@ class LiteServNetMsft(LiteServBase):
                     retries -= 1
                     binary_path = "couchbase-lite-net-msft-{}-liteserv/net45/LiteServ.exe".format(self.version_build)
                 elif retries == 0:
-                    raise LiteServError("Could not start Liteserv")
+                    raise LiteServError("Could not stop Liteserv")
             else:
                 break
