@@ -1,15 +1,18 @@
 import os
 import subprocess
-
+import glob
 import requests
+from subprocess import CalledProcessError
 
 from keywords.LiteServBase import LiteServBase
 from keywords.constants import LATEST_BUILDS
 from keywords.constants import BINARY_DIR
 from keywords.constants import REGISTERED_CLIENT_DBS
 from keywords.exceptions import LiteServError
+from keywords.exceptions import ProvisioningError
 from keywords.utils import version_and_build
 from keywords.utils import log_info
+from requests.exceptions import HTTPError
 
 
 class LiteServAndroid(LiteServBase):
@@ -35,20 +38,39 @@ class LiteServAndroid(LiteServBase):
             log_info("Package is already downloaded. Skipping.")
             return
 
-        # Package not downloaded, proceed to download from latest builds
-        if version == "1.2.1":
-            url = "{}/couchbase-lite-android/release/{}/{}/{}".format(LATEST_BUILDS, version, self.version_build, package_name)
-        else:
-            url = "{}/couchbase-lite-android/{}/{}/{}".format(LATEST_BUILDS, version, self.version_build, package_name)
+        retries = 5
+        resp = ""
 
-        log_info("Downloading {} -> {}/{}".format(url, BINARY_DIR, package_name))
-        resp = requests.get(url)
-        resp.raise_for_status()
+        while True:
+            if retries == 0:
+                break
+
+            try:
+                # Package not downloaded, proceed to download from latest builds
+                if version == "1.2.1":
+                    url = "{}/couchbase-lite-android/release/{}/{}/{}".format(LATEST_BUILDS, version,
+                                                                              self.version_build, package_name)
+                else:
+                    url = "{}/couchbase-lite-android/{}/{}/{}".format(LATEST_BUILDS, version, self.version_build,
+                                                                      package_name)
+
+                log_info("Downloading {} -> {}/{}".format(url, BINARY_DIR, package_name))
+
+                resp = requests.get(url)
+                resp.raise_for_status()
+                break
+            except HTTPError as h:
+                log_info("Error downloading {}: {}".format(package_name, h))
+                package_name = package_name.replace("-{}".format(build), "")
+                log_info("Retring download with package_name {}".format(package_name))
+                retries -= 1
+
         with open("{}/{}".format(BINARY_DIR, package_name), "wb") as f:
             f.write(resp.content)
 
     def install(self):
         """Install the apk to running Android device or emulator"""
+        version, build = version_and_build(self.version_build)
 
         if self.storage_engine == "SQLite":
             apk_name = "couchbase-lite-android-liteserv-SQLite-{}-debug.apk".format(self.version_build)
@@ -56,26 +78,49 @@ class LiteServAndroid(LiteServBase):
             apk_name = "couchbase-lite-android-liteserv-SQLCipher-ForestDB-Encryption-{}-debug.apk".format(self.version_build)
 
         apk_path = "{}/{}".format(BINARY_DIR, apk_name)
-        log_info("Installing: {}".format(apk_path))
+        apks = []
+
+        if not os.path.isfile(apk_path):
+            log_info("{} does not exist".format(apk_path))
+
+            # Equivalent to ls *1.4.0*.apk
+            apks = glob.glob('{}/*{}*.apk'.format(BINARY_DIR, version))
+
+            if len(apks) == 0:
+                raise ProvisioningError("No couchbase-lite-android-liteserv files found in {}".format(BINARY_DIR))
+
+            log_info("Found apks {}".format(apks))
+        else:
+            apks.append(apk_path)
 
         # If and apk is installed, attempt to remove it and reinstall.
         # If that fails, raise an exception
         max_retries = 1
         count = 0
+        num_apks = len(apks) - 1
+
         while True:
 
-            if count > max_retries:
+            if count > max_retries or num_apks < 0:
                 raise LiteServError(".apk install failed!")
 
-            output = subprocess.check_output(["adb", "install", apk_path])
-            if "INSTALL_FAILED_ALREADY_EXISTS" in output or "INSTALL_FAILED_UPDATE_INCOMPATIBLE" in output:
-                # Apk may be installed, remove and retry install
-                self.remove()
-                count += 1
-                continue
-            else:
-                # Install succeeded, continue
-                break
+            apk_path = apks[num_apks]
+            log_info("Installing: {}".format(apk_path))
+
+            try:
+                output = subprocess.check_output(["adb", "install", apk_path])
+
+                if "INSTALL_FAILED_ALREADY_EXISTS" in output or "INSTALL_FAILED_UPDATE_INCOMPATIBLE" in output:
+                    # Apk may be installed, remove and retry install
+                    self.remove()
+                    count += 1
+                    continue
+                else:
+                    # Install succeeded, continue
+                    break
+            except CalledProcessError as c:
+                log_info("Error installing {}: {}".format(apk_path, c))
+                num_apks -= 1
 
         output = subprocess.check_output(["adb", "shell", "pm", "list", "packages"])
         if "com.couchbase.liteservandroid" not in output:
@@ -175,10 +220,14 @@ class LiteServAndroid(LiteServBase):
         """ Poll on expected http://<host>:<port> until it is reachable
         Assert that the response contains the expected version information
         """
+        version, build = version_and_build(self.version_build)
+
         resp_obj = self._wait_until_reachable()
         log_info(resp_obj)
         if resp_obj["version"] != self.version_build:
-            raise LiteServError("Expected version: {} does not match running version: {}".format(self.version_build, resp_obj["version"]))
+            # Some release builds don't show build numbers like 1.4.0 instead of 1.4.0-9
+            if resp_obj["version"] != version:
+                raise LiteServError("Expected version: {} does not match running version: {}".format(self.version_build, resp_obj["version"]))
 
     def stop(self):
         """

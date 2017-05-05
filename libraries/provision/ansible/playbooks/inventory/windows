@@ -1,0 +1,2 @@
+[sync_gateways]
+sg1 ansible_host=10.17.0.92
