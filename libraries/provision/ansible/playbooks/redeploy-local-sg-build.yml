@@ -16,12 +16,6 @@
   - name: copy the sync gateway binary
     copy: src={{ local_sg_binary }} dest=/opt/couchbase-sync-gateway/bin/
 
-  - include: tasks/start-sync-gateway.yml
-    when: ansible_distribution == "CentOS"
-
-  - include: tasks/start-sync-gateway-windows.yml
-    when: ansible_os_family == "Windows"
-
 
 - hosts: sg_accels
   any_errors_fatal: true
@@ -37,5 +31,4 @@
   - name: copy the sync gateway accel binary
     copy: src={{ local_sga_binary }} dest=/opt/sync-gateway-accel/bin/
 
-  - include: tasks/start-sg-accel.yml
-    when: ansible_distribution == "CentOS"
+
