@@ -7,6 +7,7 @@
       "server": "{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
       "bucket": "data-bucket",
       "password": "password",
+      "feed_type":"DCP",
       "users": {
         "user_1": {
           "admin_channels": [

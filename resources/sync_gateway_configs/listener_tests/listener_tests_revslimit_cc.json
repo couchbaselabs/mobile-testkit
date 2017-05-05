@@ -8,6 +8,7 @@
             "bucket":"data-bucket",
             "password": "password",
             "revs_limit": 100,
+            "feed_type":"DCP",
             "sync":
             `function(doc){
                 channel(doc.channels);

@@ -21,6 +21,7 @@
                     ]
                 }
             },
+            "feed_type":"DCP",
             "sync":
             `function(doc, oldDoc){
 
