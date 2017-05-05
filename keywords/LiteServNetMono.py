@@ -14,7 +14,6 @@ from keywords.constants import REGISTERED_CLIENT_DBS
 from keywords.exceptions import LiteServError
 from keywords.utils import version_and_build
 from keywords.utils import log_info
-from keywords.utils import has_dot_net4_dot_5
 
 
 class LiteServNetMono(LiteServBase):
@@ -27,14 +26,16 @@ class LiteServNetMono(LiteServBase):
         """
 
         # Skip download if packages is already downloaded
-        if has_dot_net4_dot_5(self.version_build):
-            expected_binary = "{}/couchbase-lite-net-mono-{}-liteserv/net45/LiteServ.exe".format(BINARY_DIR, self.version_build)
-        else:
-            expected_binary = "{}/couchbase-lite-net-mono-{}-liteserv/LiteServ.exe".format(BINARY_DIR, self.version_build)
+        retries = 2
+        expected_binary = "{}/couchbase-lite-net-mono-{}-liteserv/LiteServ.exe".format(BINARY_DIR, self.version_build)
 
-        if os.path.isfile(expected_binary):
-            log_info("Package already downloaded: {}".format(expected_binary))
-            return
+        while retries > 0:
+            if os.path.isfile(expected_binary):
+                log_info("Package already downloaded: {}".format(expected_binary))
+                return
+            else:
+                retries -= 1
+                expected_binary = "{}/couchbase-lite-net-mono-{}-liteserv/net45/LiteServ.exe".format(BINARY_DIR, self.version_build)
 
         version, build = version_and_build(self.version_build)
         download_url = "{}/couchbase-lite-net/{}/{}/LiteServ.zip".format(LATEST_BUILDS, version, build)
@@ -79,45 +80,52 @@ class LiteServNetMono(LiteServBase):
            The running LiteServ process will be stored in the self.process property.
         2. The method will poll on the endpoint to make sure LiteServ is available.
         3. The expected version will be compared with the version reported by http://<host>:<port>
-        4. eturn the url of the running LiteServ
+        4. Return the url of the running LiteServ
         """
 
         self._verify_not_running()
 
         # The package structure for LiteServ is different pre 1.4. Handle for this case
-        if has_dot_net4_dot_5(self.version_build):
-            binary_path = "{}/couchbase-lite-net-mono-{}-liteserv/net45/LiteServ.exe".format(BINARY_DIR, self.version_build)
-        else:
-            binary_path = "{}/couchbase-lite-net-mono-{}-liteserv/LiteServ.exe".format(BINARY_DIR, self.version_build)
+        retries = 2
+        binary_path = "{}/couchbase-lite-net-mono-{}-liteserv/LiteServ.exe".format(BINARY_DIR, self.version_build)
 
-        process_args = [
-            "mono",
-            binary_path,
-            "--port", str(self.port),
-            "--dir", "{}/dbs/net-mono/".format(RESULTS_DIR)
-        ]
+        while retries > 0:
+            process_args = [
+                "mono",
+                binary_path,
+                "--port", str(self.port),
+                "--dir", "{}/dbs/net-mono/".format(RESULTS_DIR)
+            ]
 
-        if self.storage_engine == "ForestDB" or self.storage_engine == "ForestDB+Encryption":
-            process_args.append("--storage")
-            process_args.append("ForestDB")
-        else:
-            process_args.append("--storage")
-            process_args.append("SQLite")
+            if self.storage_engine == "ForestDB" or self.storage_engine == "ForestDB+Encryption":
+                process_args.append("--storage")
+                process_args.append("ForestDB")
+            else:
+                process_args.append("--storage")
+                process_args.append("SQLite")
 
-        if self.storage_engine == "SQLCipher" or self.storage_engine == "ForestDB+Encryption":
-            log_info("Using Encryption ...")
-            db_flags = []
-            for db_name in REGISTERED_CLIENT_DBS:
-                db_flags.append("--dbpassword")
-                db_flags.append("{}=pass".format(db_name))
-            process_args.extend(db_flags)
+            if self.storage_engine == "SQLCipher" or self.storage_engine == "ForestDB+Encryption":
+                log_info("Using Encryption ...")
+                db_flags = []
+                for db_name in REGISTERED_CLIENT_DBS:
+                    db_flags.append("--dbpassword")
+                    db_flags.append("{}=pass".format(db_name))
+                process_args.extend(db_flags)
 
-        log_info("Launching: {} with args: {}".format(binary_path, process_args))
+            log_info("Launching: {} with args: {}".format(binary_path, process_args))
 
-        self.logfile = open(logfile_name, "w")
-        self.process = subprocess.Popen(args=process_args, stdout=self.logfile)
+            self.logfile = open(logfile_name, "w")
+            self.process = subprocess.Popen(args=process_args, stdout=self.logfile)
 
-        self._verify_launched()
+            try:
+                self._verify_launched()
+            except LiteServError:
+                if retries > 0:
+                    log_info("Could not start Liteserv, retrying...")
+                    retries -= 1
+                    binary_path = "{}/couchbase-lite-net-mono-{}-liteserv/net45/LiteServ.exe".format(BINARY_DIR, self.version_build)
+                elif retries == 0:
+                    raise
 
         return "http://{}:{}".format(self.host, self.port)
 
