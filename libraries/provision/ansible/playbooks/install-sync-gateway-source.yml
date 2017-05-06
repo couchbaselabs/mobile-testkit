@@ -78,9 +78,9 @@
     shell: ./build.sh {{ build_flags }} chdir=/home/centos/
     when: (sg_binary.stat.exists == False)
 
-  - name: SYNC GATEWAY & SG ACCEL | Unit Tests
+  - name: SYNC GATEWAY | Unit Tests
     shell: ./test.sh chdir=/home/centos/
-    when: (sg_binary.stat.exists == False) or (sgaccel_binary.stat.exists == False)
+    when: (sg_binary.stat.exists == False)
 
   # Use cached binaries if available
   - name: SYNC GATEWAY | Use Cached binary
@@ -139,9 +139,9 @@
     shell: ./build.sh {{ build_flags }} chdir=/home/centos/
     when: (sgaccel_binary.stat.exists == False)
 
-  - name: SYNC GATEWAY & SG ACCEL | Unit Tests
+  - name: SG ACCEL | Unit Tests
     shell: ./test.sh chdir=/home/centos/
-    when: (sg_binary.stat.exists == False) or (sgaccel_binary.stat.exists == False)
+    when: (sgaccel_binary.stat.exists == False)
 
   # Use cached binaries if available
   - name: SG ACCEL | Use Cached binary
