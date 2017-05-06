@@ -46,7 +46,7 @@
   - include: tasks/create-sg-accel-user.yml
 
 # Download source and build
-- hosts: sync_gateways:sg_accels
+- hosts: sync_gateways
   any_errors_fatal: true
   become: yes
   vars:
@@ -54,61 +54,120 @@
     build_flags:
 
   tasks:
-  - name: SYNC GATEWAY & SG ACCEL | Create .git email to use bootstrap.sh script
+  - name: SYNC GATEWAY | Create .git email to use bootstrap.sh script
     shell: git config --global user.email "foo@couchbase.com"
 
-  - name: SYNC GATEWAY & SG ACCEL | Create .git user name to use bootstrap.sh script
+  - name: SYNC GATEWAY | Create .git user name to use bootstrap.sh script
     shell: git config --global user.name "Foo"
 
-  - name: SYNC GATEWAY & SG ACCEL | disable git color UI config
+  - name: SYNC GATEWAY | disable git color UI config
     shell: git config --global color.ui false
 
-  - name: SYNC GATEWAY & SG ACCEL | Download bootstrap script
+  - name: SYNC GATEWAY | Download bootstrap script
     get_url: url=https://raw.githubusercontent.com/couchbase/sync_gateway/master/bootstrap.sh dest=/home/centos/ mode=0751
+
+  - stat:
+      path: /tmp/sg_{{ commit }}
+    register: sg_binary
 
   - name: SYNC GATEWAY | Run bootstrap.sh script
     shell: ./bootstrap.sh -p sg -c {{ commit }} chdir=/home/centos/
-    when: "'sync_gateways' in group_names"
+    when: (sg_binary.stat.exists == False)
 
-  - name: SG ACCEL | Run bootstrap.sh script
-    shell: ./bootstrap.sh -p sg-accel -c {{ commit }} chdir=/home/centos/
-    when: "'sg_accels' in group_names"
-
-  - name: SYNC GATEWAY & SG ACCEL | Build
+  - name: SYNC GATEWAY | Build
     shell: ./build.sh {{ build_flags }} chdir=/home/centos/
+    when: (sg_binary.stat.exists == False)
 
   - name: SYNC GATEWAY & SG ACCEL | Unit Tests
     shell: ./test.sh chdir=/home/centos/
+    when: (sg_binary.stat.exists == False) or (sgaccel_binary.stat.exists == False)
 
-- hosts: sync_gateways
-  any_errors_fatal: true
-  become: yes
+  # Use cached binaries if available
+  - name: SYNC GATEWAY | Use Cached binary
+    shell: |
+      mkdir -p /opt/couchbase-sync-gateway/bin/
+      cp /tmp/sg_{{ commit }} /opt/couchbase-sync-gateway/bin/sync_gateway
+    when: (sg_binary.stat.exists == True)
 
-  tasks:
-  # Create target directory and deploy binary
+  # Create target directory and deploy Sync Gateway binary
   - name: SYNC GATEWAY | Creates /opt/couchbase-sync-gateway
     file: path=/opt/couchbase-sync-gateway state=directory
+    when: (sg_binary.stat.exists == False)
 
   - name: SYNC GATEWAY | Creates /opt/couchbase-sync-gateway/bin
     file: path=/opt/couchbase-sync-gateway/bin state=directory
+    when: (sg_binary.stat.exists == False)
 
   - name: SYNC GATEWAY | Copy sync_gateway binary to /opt/
     shell: cp /home/centos/godeps/bin/sync_gateway /opt/couchbase-sync-gateway/bin/
+    when: (sg_binary.stat.exists == False)
+
+  # Cache binaries in /tmp
+  - name: SYNC GATEWAY | Cache binary
+    shell: cp /home/centos/godeps/bin/sync_gateway /tmp/sg_{{ commit }}
+    when: (sg_binary.stat.exists == False)
 
 - hosts: sg_accels
   any_errors_fatal: true
   become: yes
+  vars:
+    commit:
+    build_flags:
 
   tasks:
-  # Create target directory and deploy binary
+  - name: SG ACCEL | Create .git email to use bootstrap.sh script
+    shell: git config --global user.email "foo@couchbase.com"
+
+  - name: SG ACCEL | Create .git user name to use bootstrap.sh script
+    shell: git config --global user.name "Foo"
+
+  - name: SG ACCEL | disable git color UI config
+    shell: git config --global color.ui false
+
+  - name: SG ACCEL | Download bootstrap script
+    get_url: url=https://raw.githubusercontent.com/couchbase/sync_gateway/master/bootstrap.sh dest=/home/centos/ mode=0751
+
+  - stat:
+      path: /tmp/sgaccel_{{ commit }}
+    register: sgaccel_binary
+
+  - name: SG ACCEL | Run bootstrap.sh script
+    shell: ./bootstrap.sh -p sg-accel -c {{ commit }} chdir=/home/centos/
+    when: (sgaccel_binary.stat.exists == False)
+
+  - name: SG ACCEL | Build
+    shell: ./build.sh {{ build_flags }} chdir=/home/centos/
+    when: (sgaccel_binary.stat.exists == False)
+
+  - name: SYNC GATEWAY & SG ACCEL | Unit Tests
+    shell: ./test.sh chdir=/home/centos/
+    when: (sg_binary.stat.exists == False) or (sgaccel_binary.stat.exists == False)
+
+  # Use cached binaries if available
+  - name: SG ACCEL | Use Cached binary
+    shell: |
+      mkdir -p /opt/couchbase-sg-accel/bin/
+      cp /tmp/sgaccel_{{ commit }} /opt/couchbase-sg-accel/bin/sg_accel
+    when: (sgaccel_binary.stat.exists == True)
+
+  # Create target directory and deploy SG Accel binary
   - name: SG ACCEL | Creates /opt/couchbase-sg-accel
     file: path=/opt/couchbase-sg-accel state=directory
+    when: (sgaccel_binary.stat.exists == False)
 
-  - name: Creates /opt/couchbase-sg-accel/bin
+  - name: SG ACCEL | Creates /opt/couchbase-sg-accel/bin
     file: path=/opt/couchbase-sg-accel/bin state=directory
+    when: (sgaccel_binary.stat.exists == False)
 
-  - name: Copy sg_accel binary to /opt/
+  - name: SG ACCEL | Copy sg_accel binary to /opt/
     shell: cp /home/centos/godeps/bin/sync-gateway-accel /opt/couchbase-sg-accel/bin/sg_accel
+    when: (sgaccel_binary.stat.exists == False)
+
+  # Cache binaries in /tmp
+  - name: SG ACCEL | Cache binary
+    shell: cp /home/centos/godeps/bin/sync-gateway-accel /tmp/sgaccel_{{ commit }}
+    when: (sgaccel_binary.stat.exists == False)
+
 
 # Deploy sync gateway configs
 - hosts: sync_gateways
