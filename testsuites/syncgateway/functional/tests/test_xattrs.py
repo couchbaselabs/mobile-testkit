@@ -603,6 +603,7 @@ def test_sg_sdk_interop_shared_docs(params_from_base_test_setup,
     )
 
     # Add docs via SDK
+    log_info('Adding {} docs via SDK ...'.format(number_docs_per_clienttes))
     sdk_docs = {doc['_id']: doc for doc in sdk_doc_bodies}
     doc_set_two_ids = [sdk_doc['_id'] for sdk_doc in sdk_doc_bodies]
     sdk_docs_resp = sdk_client.upsert_multi(sdk_docs)
@@ -772,7 +773,7 @@ def update_sg_docs(client, url, db, docs_to_update, prop_to_update, number_updat
 
         # SDK and sync gateway do not operate at the same speed.
         # This will help normalize the rate
-        time.sleep(0.01)
+        time.sleep(0.005)
 
 
 def is_conflict(httperror):
@@ -878,9 +879,11 @@ def verify_sg_deletes(client, url, db, docs_to_verify_deleted, auth):
 
     # Verify deletes via individual GETs
     for doc_id in docs_to_verify_deleted:
+        he = None
         with pytest.raises(HTTPError) as he:
             client.get_doc(url=url, db=db, doc_id=doc_id, auth=auth)
 
+        assert he is not None
         log_info(he.value.message)
 
         # u'404 Client Error: Not Found for url: http://192.168.33.11:4984/db/sg_0?conflicts=true&revs=true'
