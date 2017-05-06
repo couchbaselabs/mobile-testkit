@@ -82,11 +82,17 @@
     shell: ./test.sh chdir=/home/centos/
     when: (sg_binary.stat.exists == False)
 
+# TODO: cache the entire godeps directory rather than just the binary,
+# TODO: so we can pull /home/centos/godeps/src/github.com/couchbase/sync_gateway/service/sync_gateway_service_install.sh
+# TODO: from the cached directory
+
   # Use cached binaries if available
   - name: SYNC GATEWAY | Use Cached binary
     shell: |
       mkdir -p /opt/couchbase-sync-gateway/bin/
-      cp /tmp/sg_{{ commit }} /opt/couchbase-sync-gateway/bin/sync_gateway
+      cp /tmp/sg_{{ commit }}/bin/sync_gateway /opt/couchbase-sync-gateway/bin/sync_gateway
+      mkdir -p /home/centos/godeps/src/github.com/couchbase/sync_gateway/service/
+      cp /tmp/sgaccel_{{ commit }}/src/github.com/couchbase/sync_gateway/service/* /home/centos/godeps/src/github.com/couchbase/sync_gateway/service/
     when: (sg_binary.stat.exists == True)
 
   # Create target directory and deploy Sync Gateway binary
@@ -104,7 +110,7 @@
 
   # Cache binaries in /tmp
   - name: SYNC GATEWAY | Cache binary
-    shell: cp /home/centos/godeps/bin/sync_gateway /tmp/sg_{{ commit }}
+    shell: cp -R /home/centos/godeps /tmp/sg_{{ commit }}
     when: (sg_binary.stat.exists == False)
 
 - hosts: sg_accels
@@ -147,7 +153,9 @@
   - name: SG ACCEL | Use Cached binary
     shell: |
       mkdir -p /opt/couchbase-sg-accel/bin/
-      cp /tmp/sgaccel_{{ commit }} /opt/couchbase-sg-accel/bin/sg_accel
+      cp /tmp/sgaccel_{{ commit }}/bin/sg_accel /opt/couchbase-sg-accel/bin/sg_accel
+      mkdir -p /home/centos/godeps/src/github.com/couchbase/sync_gateway/service/
+      cp /tmp/sgaccel_{{ commit }}/src/github.com/couchbase/sync_gateway/service/* /home/centos/godeps/src/github.com/couchbase/sync_gateway/service/
     when: (sgaccel_binary.stat.exists == True)
 
   # Create target directory and deploy SG Accel binary
@@ -165,7 +173,7 @@
 
   # Cache binaries in /tmp
   - name: SG ACCEL | Cache binary
-    shell: cp /home/centos/godeps/bin/sync-gateway-accel /tmp/sgaccel_{{ commit }}
+    shell: cp -R /home/centos/godeps /tmp/sgaccel_{{ commit }}
     when: (sgaccel_binary.stat.exists == False)
 
 
