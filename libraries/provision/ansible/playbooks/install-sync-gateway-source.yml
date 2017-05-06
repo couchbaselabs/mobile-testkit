@@ -78,9 +78,9 @@
     shell: ./build.sh {{ build_flags }} chdir=/home/centos/
     when: (sg_binary.stat.exists == False)
 
-  - name: SYNC GATEWAY | Unit Tests
-    shell: ./test.sh chdir=/home/centos/
-    when: (sg_binary.stat.exists == False)
+  #- name: SYNC GATEWAY | Unit Tests
+  #  shell: ./test.sh chdir=/home/centos/
+  #  when: (sg_binary.stat.exists == False)
 
 # TODO: cache the entire godeps directory rather than just the binary,
 # TODO: so we can pull /home/centos/godeps/src/github.com/couchbase/sync_gateway/service/sync_gateway_service_install.sh
@@ -92,7 +92,7 @@
       mkdir -p /opt/couchbase-sync-gateway/bin/
       cp /tmp/sg_{{ commit }}/bin/sync_gateway /opt/couchbase-sync-gateway/bin/sync_gateway
       mkdir -p /home/centos/godeps/src/github.com/couchbase/sync_gateway/service/
-      cp /tmp/sgaccel_{{ commit }}/src/github.com/couchbase/sync_gateway/service/* /home/centos/godeps/src/github.com/couchbase/sync_gateway/service/
+      cp /tmp/sg_{{ commit }}/src/github.com/couchbase/sync_gateway/service/sync_gateway_service_install.sh /home/centos/godeps/src/github.com/couchbase/sync_gateway/service/
     when: (sg_binary.stat.exists == True)
 
   # Create target directory and deploy Sync Gateway binary
@@ -145,9 +145,9 @@
     shell: ./build.sh {{ build_flags }} chdir=/home/centos/
     when: (sgaccel_binary.stat.exists == False)
 
-  - name: SG ACCEL | Unit Tests
-    shell: ./test.sh chdir=/home/centos/
-    when: (sgaccel_binary.stat.exists == False)
+  #- name: SG ACCEL | Unit Tests
+  #  shell: ./test.sh chdir=/home/centos/
+  #  when: (sgaccel_binary.stat.exists == False)
 
   # Use cached binaries if available
   - name: SG ACCEL | Use Cached binary
@@ -155,7 +155,7 @@
       mkdir -p /opt/couchbase-sg-accel/bin/
       cp /tmp/sgaccel_{{ commit }}/bin/sg_accel /opt/couchbase-sg-accel/bin/sg_accel
       mkdir -p /home/centos/godeps/src/github.com/couchbase/sync_gateway/service/
-      cp /tmp/sgaccel_{{ commit }}/src/github.com/couchbase/sync_gateway/service/* /home/centos/godeps/src/github.com/couchbase/sync_gateway/service/
+      cp /tmp/sgaccel_{{ commit }}/src/github.com/couchbase/sync_gateway/service/sg_accel_service_install.sh /home/centos/godeps/src/github.com/couchbase/sync_gateway/service/
     when: (sgaccel_binary.stat.exists == True)
 
   # Create target directory and deploy SG Accel binary
