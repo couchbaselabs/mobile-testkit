@@ -91,8 +91,8 @@
     shell: |
       mkdir -p /opt/couchbase-sync-gateway/bin/
       cp /tmp/sg_{{ commit }}/bin/sync_gateway /opt/couchbase-sync-gateway/bin/sync_gateway
-      mkdir -p /home/centos/godeps/src/github.com/couchbase/sync_gateway/service/
-      cp /tmp/sg_{{ commit }}/src/github.com/couchbase/sync_gateway/service/sync_gateway_service_install.sh /home/centos/godeps/src/github.com/couchbase/sync_gateway/service/
+      mkdir -p /home/centos/godeps
+      cp -R /tmp/sg_{{ commit }}/src/ /home/centos/godeps/
     when: (sg_binary.stat.exists == True)
 
   # Create target directory and deploy Sync Gateway binary
@@ -153,9 +153,9 @@
   - name: SG ACCEL | Use Cached binary
     shell: |
       mkdir -p /opt/couchbase-sg-accel/bin/
-      cp /tmp/sgaccel_{{ commit }}/bin/sg_accel /opt/couchbase-sg-accel/bin/sg_accel
-      mkdir -p /home/centos/godeps/src/github.com/couchbase/sync_gateway/service/
-      cp /tmp/sgaccel_{{ commit }}/src/github.com/couchbase/sync_gateway/service/sg_accel_service_install.sh /home/centos/godeps/src/github.com/couchbase/sync_gateway/service/
+      cp /tmp/sgaccel_{{ commit }}/bin/sync-gateway-accel /opt/couchbase-sg-accel/bin/sg_accel
+      mkdir -p /home/centos/godeps
+      cp -R /tmp/sgaccel_{{ commit }}/src/ /home/centos/godeps/
     when: (sgaccel_binary.stat.exists == True)
 
   # Create target directory and deploy SG Accel binary
@@ -222,14 +222,14 @@
   any_errors_fatal: true
   become: yes
   tasks:
-  - name: SYNC GATEWAY | Make service install script executable
+  - name: SG ACCEL | Make service install script executable
     file: path=/home/centos/godeps/src/github.com/couchbase/sync_gateway/service/sg_accel_service_install.sh mode=a+x
 
-  - name: SYNC GATEWAY | Install sg_accell service
+  - name: SG ACCEL | Install sg_accell service
     shell: ./sg_accel_service_install.sh chdir=/home/centos/godeps/src/github.com/couchbase/sync_gateway/service
 
-  - name: SYNC GATEWAY | Start the service
+  - name: SG ACCEL | Start the service
     service: name=sg_accel state=started
 
-  - name: SYNC GATEWAY | Wait until sync gateway to listen on port
+  - name: SG ACCEL | Wait until sync gateway to listen on port
     wait_for: port=4985 timeout=120
