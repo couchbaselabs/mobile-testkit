@@ -603,7 +603,7 @@ def test_sg_sdk_interop_shared_docs(params_from_base_test_setup,
     )
 
     # Add docs via SDK
-    log_info('Adding {} docs via SDK ...'.format(number_docs_per_clienttes))
+    log_info('Adding {} docs via SDK ...'.format(number_docs_per_client))
     sdk_docs = {doc['_id']: doc for doc in sdk_doc_bodies}
     doc_set_two_ids = [sdk_doc['_id'] for sdk_doc in sdk_doc_bodies]
     sdk_docs_resp = sdk_client.upsert_multi(sdk_docs)
