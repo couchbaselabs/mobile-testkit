@@ -39,5 +39,8 @@ fi
 SG_BINARY="$BINARY_DIRECTORY/sync_gateway"
 SGA_BINARY="$BINARY_DIRECTORY/sync-gateway-accel"
 
+echo "Redeploying to machine specified $CLUSTER_CONFIG"
+cat $CLUSTER_CONFIG
+
 ansible-playbook -i $CLUSTER_CONFIG libraries/provision/ansible/playbooks/redeploy-local-sg-build.yml --extra-vars "local_sg_binary=$SG_BINARY local_sga_binary=$SGA_BINARY"
 

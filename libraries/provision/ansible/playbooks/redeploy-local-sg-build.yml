@@ -29,6 +29,7 @@
     when: ansible_os_family == "Windows"
 
   - name: copy the sync gateway accel binary
-    copy: src={{ local_sga_binary }} dest=/opt/sync-gateway-accel/bin/
+    copy: src={{ local_sga_binary }} dest=/opt/couchbase-sg-accel/bin/sg_accel
+
 
 
