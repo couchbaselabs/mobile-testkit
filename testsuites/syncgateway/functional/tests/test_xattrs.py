@@ -149,7 +149,7 @@ def test_large_initial_import(params_from_base_test_setup, sg_conf_name):
     """ Regression test for https://github.com/couchbase/sync_gateway/issues/2537
     Scenario:
     - Stop Sync Gateway
-    - Bulk create 5000 docs via SDK
+    - Bulk create 30000 docs via SDK
     - Start Sync Gateway to begin import
     - Verify all docs are imported
     """
