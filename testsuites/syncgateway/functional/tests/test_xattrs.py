@@ -119,7 +119,7 @@ def test_offline_processing_of_external_updates(params_from_base_test_setup, sg_
     bulk_resp, errors = sg_client.get_bulk_docs(url=sg_url, db=sg_db, doc_ids=all_doc_ids, auth=seth_auth)
     assert len(errors) == 0
 
-    # Create a scratch pad
+    # Create a scratch pad and check off docs
     all_doc_ids_scratch_pad = list(all_doc_ids)
     for doc in bulk_resp:
         log_info(doc)
@@ -131,10 +131,100 @@ def test_offline_processing_of_external_updates(params_from_base_test_setup, sg_
             # SDK created doc. Should only have 1 rev from import
             assert doc['_rev'].startswith('1-')
         all_doc_ids_scratch_pad.remove(doc['_id'])
-
     assert len(all_doc_ids_scratch_pad) == 0
 
+    # Verify all of the docs show up in the changes feed
+    docs_to_verify_in_changes = [{'id': doc['_id'], 'rev': doc['_rev']} for doc in bulk_resp]
+    sg_client.verify_docs_in_changes(url=sg_url, db=sg_db, expected_docs=docs_to_verify_in_changes, auth=seth_auth)
 
+
+@pytest.mark.sanity
+@pytest.mark.syncgateway
+@pytest.mark.xattrs
+@pytest.mark.session
+@pytest.mark.parametrize('sg_conf_name', [
+    'sync_gateway_default_functional_tests',
+])
+def test_large_initial_import(params_from_base_test_setup, sg_conf_name):
+    """ Regression test for https://github.com/couchbase/sync_gateway/issues/2537
+    Scenario:
+    - Stop Sync Gateway
+    - Bulk create 5000 docs via SDK
+    - Start Sync Gateway to begin import
+    - Verify all docs are imported
+    """
+
+    num_docs = 30000
+    bucket_name = 'data-bucket'
+    sg_db = 'db'
+
+    cluster_conf = params_from_base_test_setup['cluster_config']
+    cluster_topology = params_from_base_test_setup['cluster_topology']
+    mode = params_from_base_test_setup['mode']
+
+    sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
+    sg_admin_url = cluster_topology['sync_gateways'][0]['admin']
+    sg_url = cluster_topology['sync_gateways'][0]['public']
+    cbs_url = cluster_topology['couchbase_servers'][0]
+
+    log_info('sg_conf: {}'.format(sg_conf))
+    log_info('sg_admin_url: {}'.format(sg_admin_url))
+    log_info('sg_url: {}'.format(sg_url))
+    log_info('cbs_url: {}'.format(cbs_url))
+
+    cluster = Cluster(config=cluster_conf)
+    cluster.reset(sg_config_path=sg_conf)
+
+    # Stop Sync Gateway
+    sg_controller = SyncGateway()
+    sg_controller.stop_sync_gateway(cluster_conf, url=sg_url)
+
+    # Connect to server via SDK
+    cbs_ip = host_for_url(cbs_url)
+    sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password')
+
+    # Generate array for each doc doc to give it a larger size
+    def prop_gen():
+        return {'sample_array': ["test_item_{}".format(i) for i in range(20)]}
+
+    # Create 'num_docs' docs from SDK
+    sdk_doc_bodies = document.create_docs('sdk', num_docs, channels=['created_via_sdk'], prop_generator=prop_gen)
+    sdk_doc_ids = [doc['_id'] for doc in sdk_doc_bodies]
+    assert len(sdk_doc_ids) == num_docs
+    sdk_docs = {doc['_id']: doc for doc in sdk_doc_bodies}
+    sdk_client.upsert_multi(sdk_docs)
+
+    # Start Sync Gateway to begin import
+    sg_controller.start_sync_gateway(cluster_conf, url=sg_url, config=sg_conf)
+
+    # Let some documents process
+    log_info('Sleeping 30s to let some docs auto import')
+    time.sleep(30)
+
+    # Any document that have not been imported with be imported on demand.
+    # Verify that all the douments have been imported
+    sg_client = MobileRestClient()
+    seth_auth = sg_client.create_user(url=sg_admin_url, db=sg_db, name='seth', password='pass', channels=['created_via_sdk'])
+
+    sdk_doc_ids_scratch_pad = list(sdk_doc_ids)
+    bulk_resp, errors = sg_client.get_bulk_docs(url=sg_url, db=sg_db, doc_ids=sdk_doc_ids, auth=seth_auth)
+    assert len(errors) == 0
+
+    for doc in bulk_resp:
+        log_info('Doc: {}'.format(doc))
+        assert doc['_rev'].startswith('1-')
+        sdk_doc_ids_scratch_pad.remove(doc['_id'])
+
+    assert len(sdk_doc_ids_scratch_pad) == 0
+
+    # Verify all of the docs show up in the changes feed
+    docs_to_verify_in_changes = [{'id': doc['_id'], 'rev': doc['_rev']} for doc in bulk_resp]
+    sg_client.verify_docs_in_changes(url=sg_url, db=sg_db, expected_docs=docs_to_verify_in_changes, auth=seth_auth)
+
+
+@pytest.mark.sanity
+@pytest.mark.syncgateway
+@pytest.mark.xattrs
 @pytest.mark.changes
 @pytest.mark.session
 @pytest.mark.parametrize('sg_conf_name, use_multiple_channels', [
