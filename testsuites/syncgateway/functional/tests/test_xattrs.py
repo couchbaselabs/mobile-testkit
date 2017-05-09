@@ -12,6 +12,7 @@ from keywords import attachment, document
 from keywords.constants import DATA_DIR
 from keywords.MobileRestClient import MobileRestClient
 from keywords.SyncGateway import sync_gateway_config_path_for_mode
+from keywords.SyncGateway import SyncGateway
 from keywords.userinfo import UserInfo
 from keywords.utils import host_for_url, log_info
 from libraries.testkit.cluster import Cluster
@@ -20,6 +21,120 @@ from libraries.testkit.cluster import Cluster
 @pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.xattrs
+@pytest.mark.session
+@pytest.mark.parametrize('sg_conf_name', [
+    'sync_gateway_default_functional_tests',
+])
+def test_offline_processing_of_external_updates(params_from_base_test_setup, sg_conf_name):
+    """
+    Scenario:
+    1. Start SG, write some docs
+    2. Stop SG
+    3. Update the same docs via SDK (to ensure the same vbucket is getting updated)
+    4. Write some new docs for SDK (just for additional testing)
+    5. Restart SG, validate that all writes from 3 and 4 have been imported (w/ correct revisions)
+    """
+
+    num_docs_per_client = 1000
+    bucket_name = 'data-bucket'
+    sg_db = 'db'
+
+    cluster_conf = params_from_base_test_setup['cluster_config']
+    cluster_topology = params_from_base_test_setup['cluster_topology']
+    mode = params_from_base_test_setup['mode']
+
+    sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
+    sg_admin_url = cluster_topology['sync_gateways'][0]['admin']
+    sg_url = cluster_topology['sync_gateways'][0]['public']
+    cbs_url = cluster_topology['couchbase_servers'][0]
+
+    log_info('sg_conf: {}'.format(sg_conf))
+    log_info('sg_admin_url: {}'.format(sg_admin_url))
+    log_info('sg_url: {}'.format(sg_url))
+    log_info('cbs_url: {}'.format(cbs_url))
+
+    cluster = Cluster(config=cluster_conf)
+    cluster.reset(sg_config_path=sg_conf)
+
+    # Create clients
+    sg_client = MobileRestClient()
+    cbs_ip = host_for_url(cbs_url)
+    sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password')
+
+    # Create user / session
+    seth_user_info = UserInfo(name='seth', password='pass', channels=['SG', 'SDK'], roles=[])
+    sg_client.create_user(
+        url=sg_admin_url,
+        db=sg_db,
+        name=seth_user_info.name,
+        password=seth_user_info.password,
+        channels=seth_user_info.channels
+    )
+
+    seth_auth = sg_client.create_session(
+        url=sg_admin_url,
+        db=sg_db,
+        name=seth_user_info.name,
+        password=seth_user_info.password
+    )
+
+    # Add docs
+    sg_docs = document.create_docs('sg', number=num_docs_per_client, channels=['SG'])
+    sg_doc_ids = [doc['_id'] for doc in sg_docs]
+    bulk_docs_resp = sg_client.add_bulk_docs(
+        url=sg_url,
+        db=sg_db,
+        docs=sg_docs,
+        auth=seth_auth
+    )
+    assert len(bulk_docs_resp) == num_docs_per_client
+
+    # Stop Sync Gateway
+    sg_controller = SyncGateway()
+    sg_controller.stop_sync_gateway(cluster_conf, url=sg_url)
+
+    # Update docs that sync gateway wrote via SDK
+    sg_docs_via_sdk_get = sdk_client.get_multi(sg_doc_ids)
+    assert len(sg_docs_via_sdk_get.keys()) == num_docs_per_client
+    for doc_id, val in sg_docs_via_sdk_get.items():
+        log_info("Updating: '{}' via SDK".format(doc_id))
+        doc_body = val.value
+        doc_body["updated_by_sdk"] = True
+        sdk_client.upsert(doc_id, doc_body)
+
+    # Add additional docs via SDK
+    log_info('Adding {} docs via SDK ...'.format(num_docs_per_client))
+    sdk_doc_bodies = document.create_docs('sdk', number=num_docs_per_client, channels=['SDK'])
+    sdk_doc_ids = [doc['_id'] for doc in sdk_doc_bodies]
+    sdk_docs = {doc['_id']: doc for doc in sdk_doc_bodies}
+    sdk_docs_resp = sdk_client.upsert_multi(sdk_docs)
+    assert len(sdk_docs_resp) == num_docs_per_client
+
+    # Start Sync Gateway
+    sg_controller.start_sync_gateway(cluster_conf, url=sg_url, config=sg_conf)
+
+    # Verify all docs are gettable via Sync Gateway
+    all_doc_ids = sg_doc_ids + sdk_doc_ids
+    assert len(all_doc_ids) == num_docs_per_client * 2
+    bulk_resp, errors = sg_client.get_bulk_docs(url=sg_url, db=sg_db, doc_ids=all_doc_ids, auth=seth_auth)
+    assert len(errors) == 0
+
+    # Create a scratch pad
+    all_doc_ids_scratch_pad = list(all_doc_ids)
+    for doc in bulk_resp:
+        log_info(doc)
+        if doc['_id'].startswith('sg_'):
+            # Rev prefix should be '2-' due to the write by Sync Gateway and the update by SDK
+            assert doc['_rev'].startswith('2-')
+            assert doc['updated_by_sdk']
+        else:
+            # SDK created doc. Should only have 1 rev from import
+            assert doc['_rev'].startswith('1-')
+        all_doc_ids_scratch_pad.remove(doc['_id'])
+
+    assert len(all_doc_ids_scratch_pad) == 0
+
+
 @pytest.mark.changes
 @pytest.mark.session
 @pytest.mark.parametrize('sg_conf_name, use_multiple_channels', [
