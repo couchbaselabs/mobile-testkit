@@ -1,14 +1,14 @@
 {
     "interface":":4984",
     "adminInterface": "0.0.0.0:4985",
-    "maxIncomingConnections": 0,
-    "maxCouchbaseConnections": 16,
-    "maxFileDescriptors": 90000,
-    "slowServerCallWarningThreshold": 500,
     "compressResponses": false,
-    "log": ["*"],
+    "log": ["*", "Import+"],
     "databases":{
         "db": {
+            "import_docs": "continuous",
+            "unsupported": {
+                "enable_extended_attributes": true
+            },
             "users": {
                 "admin": {
                     "password": "pass",
@@ -48,7 +48,7 @@
                 }
             },
             "server": "http://localhost:8091",
-            "bucket": "sg-travel-sample",
+            "bucket": "travel-sample",
             "password": "password",
             "sync": `function(doc, oldDoc){
                 channel(doc, doc.type);
