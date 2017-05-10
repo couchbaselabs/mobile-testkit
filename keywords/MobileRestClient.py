@@ -1022,7 +1022,7 @@ class MobileRestClient:
             log_info("Purging doc: {}".format(doc))
             if server_type == ServerType.syncgateway:
                 data = {
-                    doc["_id"]: [doc["_rev"]]
+                    doc["_id"]: ['*']
                 }
             else:
                 data = {

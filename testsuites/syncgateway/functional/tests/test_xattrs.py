@@ -380,20 +380,26 @@ def test_purge(params_from_base_test_setup, sg_conf_name, use_multiple_channels)
     assert len(sg_docs_visible_after_purge) == 0
     assert len(errors) == number_docs_per_client * 2
 
+    # Verify that all docs have been deleted
     sg_deleted_doc_scratch_pad = list(all_doc_ids)
     for error in errors:
-        # TODO: Are these the expected errors?
-        assert error['status'] == 403
-        assert error['reason'] == 'forbidden'
-        assert error['error'] == 'forbidden'
+        assert error['status'] == 404
+        assert error['reason'] == 'missing'
+        assert error['error'] == 'not_found'
         assert error['id'] in sg_deleted_doc_scratch_pad
         sg_deleted_doc_scratch_pad.remove(error['id'])
-
-    assert len(deleted_doc_ids) == 0
+    assert len(sg_deleted_doc_scratch_pad) == 0
 
     # Verify SDK can't see the docs
-    sdk_docs_visible_after_purge = sdk_client.get_multi(all_doc_ids)
-    assert len(sdk_docs_visible_after_purge) == 0
+    sdk_deleted_doc_scratch_pad = list(all_doc_ids)
+    for doc_id in all_doc_ids:
+        nfe = None
+        with pytest.raises(NotFoundError) as nfe:
+            sdk_client.get(doc_id)
+        log_info(nfe.value)
+        if nfe is not None:
+            sdk_deleted_doc_scratch_pad.remove(nfe.value.key)
+    assert len(sdk_deleted_doc_scratch_pad) == 0
 
     # Verify XATTRS are gone using SDK client with full bucket permissions via subdoc?
     for doc_id in all_doc_ids:
