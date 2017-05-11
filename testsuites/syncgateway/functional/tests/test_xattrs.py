@@ -873,12 +873,12 @@ def test_sg_sdk_interop_shared_docs(params_from_base_test_setup,
         update_from_sg_task.result()
         update_from_sdk_task.result()
 
-    # TODO: Issue a bulk_get to make sure all docs have auto imported
+    # Issue a bulk_get to make sure all docs have auto imported
     docs_from_sg_bulk_get, errors = sg_client.get_bulk_docs(url=sg_url, db=sg_db, doc_ids=all_doc_ids, auth=seth_session)
     assert len(docs_from_sg_bulk_get) == number_docs_per_client * 2
     assert len(errors) == 0
 
-    # TODO: Issue _changes
+    # Issue _changes
     docs_from_sg_bulk_get_formatted = [{"id": doc["_id"], "rev": doc["_rev"]} for doc in docs_from_sg_bulk_get]
     assert len(docs_from_sg_bulk_get_formatted) == number_docs_per_client * 2
     sg_client.verify_docs_in_changes(url=sg_url, db=sg_db, expected_docs=docs_from_sg_bulk_get_formatted, auth=seth_session)
@@ -937,7 +937,11 @@ def test_sg_sdk_interop_shared_docs(params_from_base_test_setup,
         sg_delete_task.result()
 
     assert len(all_doc_ids) == number_docs_per_client * 2
+
+    # Verify all docs deleted from SG context
     verify_sg_deletes(client=sg_client, url=sg_url, db=sg_db, docs_to_verify_deleted=all_doc_ids, auth=seth_session)
+
+    # Verify all docs deleted from SDK context
     verify_sdk_deletes(sdk_client, all_doc_ids)
 
 
