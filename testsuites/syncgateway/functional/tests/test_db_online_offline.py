@@ -20,6 +20,7 @@ from keywords.SyncGateway import sync_gateway_config_path_for_mode
 
 NUM_ENDPOINTS = 13
 
+
 # Scenario 1
 @pytest.mark.sanity
 @pytest.mark.syncgateway
