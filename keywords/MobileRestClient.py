@@ -1064,6 +1064,29 @@ class MobileRestClient:
         logging.debug("url: {} db: {} updated: {}".format(url, db, updated_docs))
         return updated_docs
 
+    def put_doc(self, url, db, doc_id, doc_body, rev, auth=None):
+        """
+        Updates a doc with doc id, a given revision, and doc body
+        """
+
+        auth_type = get_auth_type(auth)
+
+        params = {
+            "rev": rev
+        }
+
+        if auth_type == AuthType.session:
+            resp = self._session.put("{}/{}/{}".format(url, db, doc_id), params=params, data=json.dumps(doc_body), cookies=dict(SyncGatewaySession=auth[1]))
+        elif auth_type == AuthType.http_basic:
+            resp = self._session.put("{}/{}/{}".format(url, db, doc_id), params=params, data=json.dumps(doc_body), auth=auth)
+        else:
+            resp = self._session.put("{}/{}/{}".format(url, db, doc_id), params=params, data=json.dumps(doc_body))
+
+        log_r(resp)
+        resp.raise_for_status()
+
+        return resp.json()
+
     def update_doc(self, url, db, doc_id, number_updates=1, attachment_name=None, expiry=None, delay=None, auth=None, channels=None, property_updater=None):
         """
         Updates a doc on a db a number of times.

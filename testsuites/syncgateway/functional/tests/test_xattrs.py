@@ -23,6 +23,90 @@ from libraries.testkit.cluster import Cluster
 @pytest.mark.xattrs
 @pytest.mark.session
 @pytest.mark.parametrize('sg_conf_name', [
+    'xattrs/no_import',
+])
+def test_on_demand_import_of_external_updates(params_from_base_test_setup, sg_conf_name):
+    """
+    Scenario: On demand processing of external updates
+
+    - Start sg with XATTRs, but not import
+    - Create doc via SG, store rev (#1)
+    - Update doc via SDK
+    - Update doc via SG, using (#1), should fail with conflict
+    """
+
+    bucket_name = 'data-bucket'
+    sg_db = 'db'
+
+    cluster_conf = params_from_base_test_setup['cluster_config']
+    cluster_topology = params_from_base_test_setup['cluster_topology']
+    mode = params_from_base_test_setup['mode']
+
+    sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
+    sg_admin_url = cluster_topology['sync_gateways'][0]['admin']
+    sg_url = cluster_topology['sync_gateways'][0]['public']
+    cbs_url = cluster_topology['couchbase_servers'][0]
+
+    log_info('sg_conf: {}'.format(sg_conf))
+    log_info('sg_admin_url: {}'.format(sg_admin_url))
+    log_info('sg_url: {}'.format(sg_url))
+    log_info('cbs_url: {}'.format(cbs_url))
+
+    cluster = Cluster(config=cluster_conf)
+    cluster.reset(sg_config_path=sg_conf)
+
+    # Create clients
+    sg_client = MobileRestClient()
+    cbs_ip = host_for_url(cbs_url)
+    sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password')
+
+    # Create user / session
+    seth_user_info = UserInfo(name='seth', password='pass', channels=['NASA'], roles=[])
+    sg_client.create_user(
+        url=sg_admin_url,
+        db=sg_db,
+        name=seth_user_info.name,
+        password=seth_user_info.password,
+        channels=seth_user_info.channels
+    )
+
+    seth_auth = sg_client.create_session(
+        url=sg_admin_url,
+        db=sg_db,
+        name=seth_user_info.name,
+        password=seth_user_info.password
+    )
+
+    doc_id = 'test_doc'
+
+    doc_body = document.create_doc(doc_id, channels=seth_user_info.channels)
+    doc = sg_client.add_doc(url=sg_url, db=sg_db, doc=doc_body, auth=seth_auth)
+    doc_rev_one = doc['rev']
+
+    log_info('Created doc: {} via Sync Gateway'.format(doc))
+
+    # Update the document via SDK
+    doc_to_update = sdk_client.get(doc_id)
+    doc_body = doc_to_update.value
+    doc_body['updated_via_sdk'] = True
+    updated_doc = sdk_client.upsert(doc_id, doc_body)
+    log_info('Updated doc: {} via SDK'.format(updated_doc))
+
+    # Try to create a revision of of generation 1 from Sync Gateway.
+    # If on demand importing is working as design, it should go to the
+    # bucket and see that there has been an external update and import it. 
+    # Sync Gateway should then get a 409 conflict when trying to update the doc
+    with pytest.raises(HTTPError) as he:
+        sg_client.put_doc(url=sg_url, db=sg_db, doc_id=doc_id, rev=doc_rev_one, doc_body=doc_body, auth=seth_auth)
+    log_info(he.value)
+    assert he.value.message.startswith('409')
+
+
+@pytest.mark.sanity
+@pytest.mark.syncgateway
+@pytest.mark.xattrs
+@pytest.mark.session
+@pytest.mark.parametrize('sg_conf_name', [
     'sync_gateway_default_functional_tests',
 ])
 def test_offline_processing_of_external_updates(params_from_base_test_setup, sg_conf_name):
@@ -368,6 +452,10 @@ def test_purge(params_from_base_test_setup, sg_conf_name, use_multiple_channels)
         doc_id_choice_pool.remove(random_doc_id)
         deleted_doc_ids.append(random_doc_id)
         deletion_count += 1
+
+    # TODO: Verify xattrs still exist after delete
+    # TODO: Via SG: Use raw
+    # TODO: Via SDK: https://github.com/couchbase/sync_gateway/blob/master/base/bucket_gocb.go#L963
 
     assert len(doc_id_choice_pool) == number_docs_per_client
     assert len(deleted_doc_ids) == number_docs_per_client
@@ -1101,8 +1189,7 @@ def verify_sg_deletes(client, url, db, docs_to_verify_deleted, auth):
         assert he is not None
         log_info(he.value.message)
 
-        # u'404 Client Error: Not Found for url: http://192.168.33.11:4984/db/sg_0?conflicts=true&revs=true'
-        assert he.value.message.startswith('404 Client Error: Not Found for url:')
+        assert he.value.message.startswith('403 Client Error: Forbidden for url:')
 
         # Parse out the doc id
         # sg_0?conflicts=true&revs=true
@@ -1127,7 +1214,7 @@ def verify_sg_deletes(client, url, db, docs_to_verify_deleted, auth):
         assert err['id'] in docs_to_verify_deleted
         assert err['status'] == 404
         assert err['error'] == 'not_found'
-        assert err['reason'] == 'deleted'
+        assert err['reason'] == 'missing'
 
         # Cross off the doc_id
         docs_to_verify_scratchpad.remove(err['id'])

@@ -51,7 +51,7 @@
             "bucket": "travel-sample",
             "password": "password",
             "sync": `function(doc, oldDoc){
-                channel(doc, doc.type);
+                channel([doc.type]);
             }`
         }
     }
