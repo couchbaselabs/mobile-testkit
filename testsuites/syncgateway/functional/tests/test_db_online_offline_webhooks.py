@@ -26,6 +26,9 @@ def test_webhooks(params_from_base_test_setup, sg_conf_name, num_users, num_chan
     cluster_conf = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
 
+    if mode == "di":
+        pytest.skip("Offline tests not supported in Di mode -- see https://github.com/couchbase/sync_gateway/issues/2423#issuecomment-300841425")
+
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
 
     log_info("Running 'test_webhooks'")
@@ -84,6 +87,9 @@ def test_db_online_offline_webhooks_offline(params_from_base_test_setup, sg_conf
 
     cluster_conf = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
+
+    if mode == "di":
+        pytest.skip("Offline tests not supported in Di mode -- see https://github.com/couchbase/sync_gateway/issues/2423#issuecomment-300841425")
 
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
 
@@ -163,6 +169,9 @@ def test_db_online_offline_webhooks_offline_two(params_from_base_test_setup, sg_
 
     cluster_conf = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
+
+    if mode == "di":
+        pytest.skip("Offline tests not supported in Di mode -- see https://github.com/couchbase/sync_gateway/issues/2423#issuecomment-300841425")
 
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
 
