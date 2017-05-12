@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 import random
 import time
 
@@ -16,6 +18,10 @@ from keywords.SyncGateway import SyncGateway
 from keywords.userinfo import UserInfo
 from keywords.utils import host_for_url, log_info
 from libraries.testkit.cluster import Cluster
+
+
+SG_OP_SLEEP = 0.001
+SDK_OP_SLEEP = 0.05
 
 
 @pytest.mark.sanity
@@ -1076,7 +1082,7 @@ def update_sg_docs(client, url, db, docs_to_update, prop_to_update, number_updat
 
         # SDK and sync gateway do not operate at the same speed.
         # This will help normalize the rate
-        time.sleep(0.005)
+        time.sleep(SG_OP_SLEEP)
 
 
 def is_conflict(httperror):
@@ -1120,7 +1126,7 @@ def update_sdk_docs(client, docs_to_update, prop_to_update, number_updates):
 
         # SDK and sync gateway do not operate at the same speed.
         # This will help normalize the rate
-        time.sleep(0.02)
+        time.sleep(SDK_OP_SLEEP)
 
 
 def delete_sg_docs(client, url, db, docs_to_delete, auth):
@@ -1138,8 +1144,16 @@ def delete_sg_docs(client, url, db, docs_to_delete, auth):
             docs_to_remove.remove(deleted_doc['id'])
             deleted_count += 1
         except HTTPError as he:
-            # Doc may have been deleted by the SDK.
             if he.response.status_code == 403 and str(he).startswith('403 Client Error: Forbidden for url:'):
+                # Doc may have been deleted by the SDK and GET fails for SG
+                log_info('Could not find doc, must have been deleted by SDK. Retrying ...')
+                docs_to_remove.remove(random_doc_id)
+            elif he.response.status_code == 409 and str(he).startswith('409 Client Error: Conflict for url:'):
+                # This can happen in the following scenario:
+                # During concurrent deletes from SG and SDK,
+                #  1. SG GETs doc 'a' with rev '2'
+                #  2. SDK deletes doc 'a' with rev '2' before
+                #  3. SG tries to DELETE doc 'a' with rev '2' and GET a conflict
                 log_info('Could not find doc, must have been deleted by SDK. Retrying ...')
                 docs_to_remove.remove(random_doc_id)
             else:
@@ -1147,7 +1161,7 @@ def delete_sg_docs(client, url, db, docs_to_delete, auth):
 
         # SDK and sync gateway do not operate at the same speed.
         # This will help normalize the rate
-        time.sleep(0.1)
+        time.sleep(SG_OP_SLEEP)
 
     assert deleted_count > 0
 
@@ -1173,7 +1187,7 @@ def delete_sdk_docs(client, docs_to_delete):
 
         # SDK and sync gateway do not operate at the same speed.
         # This will help normalize the rate
-        time.sleep(0.2)
+        time.sleep(SDK_OP_SLEEP)
 
 
 def verify_sg_deletes(client, url, db, docs_to_verify_deleted, auth):
