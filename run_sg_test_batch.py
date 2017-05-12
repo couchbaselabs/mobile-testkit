@@ -1,5 +1,4 @@
 
-import subprocess
 import os
 from run_scripts.test_batch import TEST_BATCH, SYNC_GATEWAY_VERSION_OR_COMMIT, SERVER_VERSION
 import argparse
@@ -36,7 +35,7 @@ def run_tests(abort_on_fail=False):
 
         if suite == provisioned_test_suite:
             print "Skipping provisioning"
-            cmd_args += [ "--skip-provisioning" ]
+            cmd_args += ["--skip-provisioning"]
         else:
             print "--------------------------------------------- Provisioning test: suite: {}, testname: {}".format(suite, testname)
             # force provisioning and record this as the provisioned_test_suite
@@ -58,7 +57,7 @@ def run_tests(abort_on_fail=False):
         print("Command: {}".format(cmd))
         raw_exit_val = os.system(cmd)
         exit_code = os.WEXITSTATUS(raw_exit_val)
-        if abort_on_fail == True and exit_code != 0:
+        if abort_on_fail is True and exit_code != 0:
             raise Exception("Test failed, aborting")
 
 
@@ -68,4 +67,4 @@ if __name__ == "__main__":
     parser.add_argument('--abort-on-fail', help='Abort batch test run on first test failure', action='store_true')
     args = parser.parse_args()
 
-    run_tests(args.abort_on_fail) 
+    run_tests(args.abort_on_fail)
