@@ -1,0 +1,27 @@
+
+# Customize the server version and sync gateway version (or commit)
+SERVER_VERSION="4.6.1"
+SYNC_GATEWAY_VERSION_OR_COMMIT="b27279dee9d4c7a501b6e05be5c9393065f8f118"
+
+# Paths to testsuite directories
+DEFAULT_SUITE="testsuites/syncgateway/functional/tests/"
+TOPOLOGY_SPECIFIC_SUITE="testsuites/syncgateway/functional/topology_specific_tests/"
+
+# Customize the tests you need to run -- these are just examples
+TEST_BATCH = [
+
+    # Base DI
+    {"mode": "di", "suite":DEFAULT_SUITE, "testname":"test_backfill_channel_grant_to_role_longpoll[custom_sync/access-CHANNEL-REST-channels_to_grant0]"},
+    {"mode": "di", "suite":DEFAULT_SUITE, "testname":"test_db_offline_tap_loss_sanity[bucket_online_offline/bucket_online_offline_default_dcp-100]"},
+
+    # Topology specific DI
+    {"mode": "di", "suite":TOPOLOGY_SPECIFIC_SUITE, "testname":"test_server_goes_down_rebuild_channels"},
+    {"mode": "di", "suite":TOPOLOGY_SPECIFIC_SUITE, "testname":"test_dcp_reshard_sync_gateway_comes_up[resources/sync_gateway_configs/sync_gateway_default_functional_tests_di.json]"},
+
+    # Topology specific CC
+    {"mode": "cc", "suite":TOPOLOGY_SPECIFIC_SUITE, "testname":"test_server_goes_down_rebuild_channels"},
+    # Base CC
+    {"mode": "cc", "suite":DEFAULT_SUITE, "testname":"test_roles_sanity[sync_gateway_default_functional_tests]"},
+    {"mode": "cc", "suite":DEFAULT_SUITE, "testname":"test_seq[sync_gateway_default_functional_tests-10-500-1]"},
+
+]
