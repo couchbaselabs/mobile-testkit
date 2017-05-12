@@ -1,14 +1,15 @@
 from __future__ import print_function
 
-import pytest
 import random
 
+import pytest
+
+from keywords import document
 from keywords.MobileRestClient import MobileRestClient
 from keywords.SyncGateway import SyncGateway, sync_gateway_config_path_for_mode
 from keywords.userinfo import UserInfo
 from keywords.utils import log_info
 from libraries.testkit.cluster import Cluster
-from keywords import document
 
 
 @pytest.mark.sanity

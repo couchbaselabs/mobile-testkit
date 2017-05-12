@@ -48,8 +48,6 @@ namespace Travel.NET
                     Query query = testDb.Database.CreateAllDocumentsQuery();
                     QueryEnumerator queryRows = query.Run();
                     int docCount = queryRows.Count;
-                    Console.WriteLine($"{testDb.UserName}: {docCount}");
-
                     // Check that each db has the expected number of docs
                     if (docCount == testDb.ExpectedNumDocs)
                     {
@@ -143,11 +141,11 @@ namespace Travel.NET
                 if (dbsWithExpectedDocs == testDbs.Length)
                 {
                     // All docs were found! Exit the loop
-                    Console.WriteLine("Found all sdk updates!");
+                    Console.WriteLine("Found all sdk updates!\n");
                     break;
                 }
 
-                Console.WriteLine("Could not find all expected updates. Retrying ...");
+                Console.WriteLine("Could not find all expected updates. Retrying ...\n");
                 Thread.Sleep(5000);
             }
         }
@@ -189,7 +187,7 @@ namespace Travel.NET
             }
 
             // Wait for replication to stop
-            var timeout = TimeSpan.FromMinutes(15);
+            var timeout = TimeSpan.FromMinutes(20);
 
             // Poll until all dbs have the expected number of docs
             WaitForImport(testDbs, timeout);

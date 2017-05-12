@@ -799,9 +799,9 @@ def test_sg_sdk_interop_unique_docs(params_from_base_test_setup, sg_conf_name):
     'sg_conf_name, number_docs_per_client, number_updates_per_doc_per_client',
     [
         ('sync_gateway_default_functional_tests', 10, 10),
-        ('sync_gateway_default_functional_tests', 1000, 10),
-        ('sync_gateway_default_functional_tests', 10, 1000),
-        ('sync_gateway_default_functional_tests', 1, 10000)
+        ('sync_gateway_default_functional_tests', 100, 10),
+        ('sync_gateway_default_functional_tests', 10, 100),
+        ('sync_gateway_default_functional_tests', 1, 1000)
     ]
 )
 def test_sg_sdk_interop_shared_docs(params_from_base_test_setup,
@@ -1139,7 +1139,7 @@ def delete_sg_docs(client, url, db, docs_to_delete, auth):
             deleted_count += 1
         except HTTPError as he:
             # Doc may have been deleted by the SDK.
-            if he.response.status_code == 404:
+            if he.response.status_code == 403 and str(he).startswith('403 Client Error: Forbidden for url:'):
                 log_info('Could not find doc, must have been deleted by SDK. Retrying ...')
                 docs_to_remove.remove(random_doc_id)
             else:
@@ -1209,12 +1209,12 @@ def verify_sg_deletes(client, url, db, docs_to_verify_deleted, auth):
     assert len(try_get_bulk_docs) == 0
     assert len(errors) == len(docs_to_verify_deleted)
 
-    # TODO: Verify with Adam, should this be reason=deleted or reason=missing?
+    # Verify each deletion
     for err in errors:
         assert err['id'] in docs_to_verify_deleted
-        assert err['status'] == 404
-        assert err['error'] == 'not_found'
-        assert err['reason'] == 'missing'
+        assert err['status'] == 403
+        assert err['error'] == 'forbidden'
+        assert err['reason'] == 'forbidden'
 
         # Cross off the doc_id
         docs_to_verify_scratchpad.remove(err['id'])
