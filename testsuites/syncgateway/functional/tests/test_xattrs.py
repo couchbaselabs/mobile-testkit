@@ -1203,7 +1203,8 @@ def verify_sg_deletes(client, url, db, docs_to_verify_deleted, auth):
         assert he is not None
         log_info(he.value.message)
 
-        assert he.value.message.startswith('403 Client Error: Forbidden for url:')
+        assert he.value.message.startswith('404 Client Error: Not Found for url:') or \
+            he.value.message.startswith('403 Client Error: Forbidden for url:')
 
         # Parse out the doc id
         # sg_0?conflicts=true&revs=true
@@ -1225,11 +1226,16 @@ def verify_sg_deletes(client, url, db, docs_to_verify_deleted, auth):
 
     # Verify each deletion
     for err in errors:
-        assert err['id'] in docs_to_verify_deleted
-        assert err['status'] == 403
-        assert err['error'] == 'forbidden'
-        assert err['reason'] == 'forbidden'
+        status = err['status']
+        assert status in [403, 404]
+        if status == 403:
+            assert err['error'] == 'forbidden'
+            assert err['reason'] == 'forbidden'
+        else:
+            assert err['error'] == 'not_found'
+            assert err['reason'] == 'deleted'
 
+        assert err['id'] in docs_to_verify_deleted
         # Cross off the doc_id
         docs_to_verify_scratchpad.remove(err['id'])
 
