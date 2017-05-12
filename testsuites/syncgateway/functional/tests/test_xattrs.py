@@ -94,7 +94,7 @@ def test_on_demand_import_of_external_updates(params_from_base_test_setup, sg_co
 
     # Try to create a revision of of generation 1 from Sync Gateway.
     # If on demand importing is working as design, it should go to the
-    # bucket and see that there has been an external update and import it. 
+    # bucket and see that there has been an external update and import it.
     # Sync Gateway should then get a 409 conflict when trying to update the doc
     with pytest.raises(HTTPError) as he:
         sg_client.put_doc(url=sg_url, db=sg_db, doc_id=doc_id, rev=doc_rev_one, doc_body=doc_body, auth=seth_auth)
