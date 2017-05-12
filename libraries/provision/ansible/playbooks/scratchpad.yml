@@ -1,0 +1,54 @@
+---
+- hosts: sync_gateways
+  become: yes
+
+  # If binaries in /tmp/sg_commithash and /tmp/sga_commithash, copy to /opt/couchbase-sync-gateway/bin and /opt/couchbase-sg-accel/bin
+  # skip the bootstrap.sh, build.sh, and test.sh scripts
+
+  tasks:
+  - stat:
+      path: /tmp/sg_{{ commit }}
+    register: sg_binary
+
+  - debug:
+      msg: "Found cached sg binary"
+    when: sg_binary.stat.exists == True
+
+  # Use cached binaries if available
+  - name: SYNC GATEWAY | Cache binary
+    shell: |
+      mkdir -p /opt/couchbase-sync-gateway/bin/
+      cp /tmp/sg_{{ commit }} /opt/couchbase-sync-gateway/bin/sync_gateway
+    when: (sg_binary.stat.exists == True)
+
+  - name: SYNC GATEWAY | Run foo.sh script
+    shell: ./foo.sh -p sg -c {{ commit }} chdir=/home/centos/
+    when: ("'sync_gateways' in group_names") and (sg_binary.stat.exists == False)
+
+  - name: SYNC GATEWAY | Cache sync_gateway binary in /tmp
+    shell: cp /home/centos/godeps/bin/sync_gateway /tmp/sg_{{ commit }}
+    when: ("'sync_gateways' in group_names") and (sg_binary.stat.exists == False)
+
+  - name: SYNC GATEWAY | Copy cached sync_gateway binary to /opt/
+    shell: cp /tmp/sg_{{ commit }} /opt/couchbase-sync-gateway/binDIS/
+    when: sg_binary.stat.exists == True
+
+
+- hosts: sg_accels
+  become: yes
+
+  # If binaries in /tmp/sg_commithash and /tmp/sga_commithash, copy to /opt/couchbase-sync-gateway/bin and /opt/couchbase-sg-accel/bin
+  # skip the bootstrap.sh, build.sh, and test.sh scripts
+
+  tasks:
+  - stat:
+      path: /tmp/sgaccel_{{ commit }}
+    register: sgaccel_binary
+
+  - debug:
+      msg: "Found cached sgaccel binary"
+    when: sgaccel_binary.stat.exists == True
+
+  - name: SYNC GATEWAY ACCEL | Copy cached sgaccel binary to /opt/
+    shell: cp /tmp/sgaccel_{{ commit }} /opt/couchbase-sg-accel/binDIS/
+    when: sgaccel_binary.stat.exists == True
