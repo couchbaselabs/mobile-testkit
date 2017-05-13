@@ -2,7 +2,7 @@
     "interface":":4984",
     "adminInterface": "0.0.0.0:4985",
     "compressResponses": false,
-    "log": ["*", "Import+"],
+    "log": ["*", "Import+", "DCP"],
     "databases":{
         "db": {
             "import_docs": "continuous",

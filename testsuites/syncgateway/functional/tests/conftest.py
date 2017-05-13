@@ -74,6 +74,9 @@ def params_from_base_suite_setup(request):
     cbs_ssl = request.config.getoption("--server-ssl")
     xattrs_enabled = request.config.getoption("--xattrs")
 
+    # if xattrs_enabled:
+    #     check_xattr_support(server_version, sync_gateway_version)
+
     log_info("server_version: {}".format(server_version))
     log_info("sync_gateway_version: {}".format(sync_gateway_version))
     log_info("mode: {}".format(mode))

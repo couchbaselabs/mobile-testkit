@@ -2,6 +2,9 @@ import logging
 import json
 
 
+from keywords.exceptions import FeatureSupportedError
+
+
 # TODO: Use python logging hooks instead of wrappers - https://github.com/couchbaselabs/mobile-testkit/issues/686
 def log_info(message, is_verify=False):
     # pytest will capture stdout / stderr
@@ -136,3 +139,55 @@ def has_dot_net4_dot_5(version):
             return False
 
     return True
+
+
+def compare_versions(version_one, version_two):
+    """ Checks two version and returns the following:
+
+    Version should be of the following formats 1.4.2 or 1.4.1
+
+    if version_one == version two, return 0
+    if version_one < version_two, return -1,
+    if version_one > version_two, return 1
+    """
+
+    # Strip build number if present, 1.4.1-345 -> 1.4.1
+    version_one = version_one.split('-')[0]
+    version_two = version_two.split('-')[0]
+
+    # Convert versions into int array [1, 4, 0]
+    version_one_parts = [int(version_parts) for version_parts in version_one.split('.')]
+    version_one_len = len(version_one_parts)
+
+    version_two_parts = [int(version_parts) for version_parts in version_two.split('.')]
+    version_two_len = len(version_two_parts)
+
+    # If the versions have different lengths, pad the shorter version with 0's
+    # Version one: [1, 4], Version two, [1, 4, 0] ->
+    # Version one: [1, 4, 0], Version two, [1, 4, 0]
+    if version_one_len < version_two_len:
+        diff = version_two_len - version_one_len
+        for _ in range(diff):
+            version_one_parts.append(0)
+    elif version_one_len > version_two_len:
+        diff = version_one_len - version_two_len
+        for _ in range(diff):
+            version_two_parts.append(0)
+
+    # Iterate over each element to determine comparison
+    version_length = len(version_one_parts)
+    for i in range(version_length):
+        if version_one_parts[i] < version_two_parts[i]:
+            return -1
+        elif version_one_parts[i] > version_two_parts[i]:
+            return 1
+
+    # All components are equal
+    return 0
+
+
+def check_xattr_support(server_version, sync_gateway_version):
+    if server_version < '5.0.0':
+        raise FeatureSupportedError('Make sure you are using Coucbhase Server 5.0+ for xattrs')
+    if sync_gateway_version < '4.1.2':
+        raise FeatureSupportedError('Make sure you are using Coucbhase Sync Gateway 1.4.2+ for xattrs')
