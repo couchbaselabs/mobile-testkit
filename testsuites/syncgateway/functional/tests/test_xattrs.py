@@ -1173,7 +1173,11 @@ def delete_sg_docs(client, url, db, docs_to_delete, auth):
         # This will help normalize the rate
         time.sleep(SG_OP_SLEEP)
 
-    assert deleted_count > 0
+    # If the scenario is the one doc per client, it is possible that the SDK may delete both docs
+    # before Sync Gateway has a chance to delete one. Only assert when we have enought docs to
+    # ensure both sides get a chances to delete
+    if len(docs_to_delete) > 2:
+        assert deleted_count > 0
 
 
 def delete_sdk_docs(client, docs_to_delete):
@@ -1198,6 +1202,12 @@ def delete_sdk_docs(client, docs_to_delete):
         # SDK and sync gateway do not operate at the same speed.
         # This will help normalize the rate
         time.sleep(SDK_OP_SLEEP)
+
+    # If the scenario is the one doc per client, it is possible that the SDK may delete both docs
+    # before Sync Gateway has a chance to delete one. Only assert when we have enought docs to
+    # ensure both sides get a chances to delete
+    if len(docs_to_delete) > 2:
+        assert deleted_count > 0
 
 
 def verify_sg_deletes(client, url, db, docs_to_verify_deleted, auth):
