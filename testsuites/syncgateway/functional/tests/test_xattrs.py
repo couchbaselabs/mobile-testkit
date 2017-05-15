@@ -459,9 +459,19 @@ def test_purge(params_from_base_test_setup, sg_conf_name, use_multiple_channels)
         deleted_doc_ids.append(random_doc_id)
         deletion_count += 1
 
-    # TODO: Verify xattrs still exist after delete
-    # TODO: Via SG: Use raw
-    # TODO: Via SDK: https://github.com/couchbase/sync_gateway/blob/master/base/bucket_gocb.go#L963
+    # Verify xattrs still exist on deleted docs
+    # Expected revs will be + 1 due to the deletion revision
+    for doc_id in deleted_doc_ids:
+        verify_xattrs(
+            sdk_client,
+            sg_client,
+            sg_url=sg_admin_url,
+            sg_db=sg_db,
+            doc_id=doc_id,
+            expected_number_of_revs=number_revs_per_doc + 1,
+            expected_number_of_channels=len(channels),
+            deleted_docs=True
+        )
 
     assert len(doc_id_choice_pool) == number_docs_per_client
     assert len(deleted_doc_ids) == number_docs_per_client
@@ -1260,11 +1270,14 @@ def verify_sdk_deletes(sdk_client, docs_ids_to_verify_deleted):
     assert len(docs_to_verify_scratchpad) == 0
 
 
-def verify_xattrs(sdk_client, sg_client, sg_url, sg_db, doc_id, expected_number_of_revs, expected_number_of_channels):
+def verify_xattrs(sdk_client, sg_client, sg_url, sg_db, doc_id, expected_number_of_revs, expected_number_of_channels, deleted_docs=False):
     """ Verify expected values for xattr sync meta data with regard to expected inputs """
 
     # Get SDK sync meta
-    sdk_sync_xattrs = sdk_client.lookup_in(doc_id, subdocument.get('_sync', xattr=True))
+    if deleted_docs:
+        sdk_sync_xattrs = sdk_client.lookup_in(doc_id, subdocument.get('_sync', xattr=True, _access_deleted=True))
+    else:
+        sdk_sync_xattrs = sdk_client.lookup_in(doc_id, subdocument.get('_sync', xattr=True))
     sdk_sync_meta = sdk_sync_xattrs.get('_sync')[1]
 
     # Get Sync Gateway sync meta
@@ -1274,39 +1287,24 @@ def verify_xattrs(sdk_client, sg_client, sg_url, sg_db, doc_id, expected_number_
     # Verfy the propery
     for sync_meta in [sdk_sync_meta, sg_sync_meta]:
 
-        log_info('Verifying XATTR (expected num revs: {}, expected num channels: {}): {}'.format(
+        log_info('Verifying XATTR (expected num revs: {}, expected num channels: {})'.format(
             expected_number_of_revs,
             expected_number_of_channels,
-            sync_meta
         ))
 
         assert isinstance(sync_meta['sequence'], int)
         assert isinstance(sync_meta['recent_sequences'], list)
         assert len(sync_meta['recent_sequences']) == expected_number_of_revs
         assert isinstance(sync_meta['cas'], unicode)
-
         assert sync_meta['rev'].startswith('{}-'.format(expected_number_of_revs))
-
         assert isinstance(sync_meta['channels'], dict)
         assert len(sync_meta['channels']) == expected_number_of_channels
-        if len(sync_meta['channels']) == 1:
-            assert sync_meta['channels']['NASA'] is None
-        else:
-            assert len(sync_meta["channels"]) == 1000
-            for i in range(1000):
-                assert 'shared_channel_{}'.format(i) in sync_meta["channels"]
-
         assert isinstance(sync_meta['time_saved'], unicode)
-
         assert isinstance(sync_meta['history']['channels'], list)
         assert len(sync_meta['history']['channels']) == expected_number_of_revs
-        assert len(sync_meta['history']['channels'][0]) == expected_number_of_channels
-
         assert isinstance(sync_meta['history']['revs'], list)
         assert len(sync_meta['history']['revs']) == expected_number_of_revs
-
         assert isinstance(sync_meta['history']['parents'], list)
-        assert sync_meta['history']['parents'] == [-1]
 
     assert sdk_sync_meta == sg_sync_meta
 
@@ -1318,7 +1316,7 @@ def verify_no_xattrs(sdk_client, sg_client, sg_url, sg_db, doc_id):
     # Try to get Get SDK sync meta
     nfe = None
     with pytest.raises(NotFoundError) as nfe:
-        sdk_client.lookup_in(doc_id, subdocument.get('_sync', xattr=True))
+        sdk_client.lookup_in(doc_id, subdocument.get('_sync', xattr=True, _access_deleted=True))
     assert nfe is not None
     assert 'The key does not exist on the server' in str(nfe)
     log_info(nfe.value)
