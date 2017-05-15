@@ -10,4 +10,4 @@ git pull
 python libraries/utilities/generate_clusters_from_pool.py
 
 # Run single test
-pytest -s --pdb --mode=cc --xattrs --server-version=5.0.0-2837 --sync-gateway-version=1.4.2-364 -k "test_sg_sdk_interop_shared_docs" testsuites/syncgateway/functional/tests
+pytest -s --pdb --mode=cc --xattrs --server-version=5.0.0-2873 --sync-gateway-version=1.4.2-368 -k "test_sg_sdk_interop_shared_docs" testsuites/syncgateway/functional/tests
