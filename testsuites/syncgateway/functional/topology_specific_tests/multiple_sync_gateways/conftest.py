@@ -69,7 +69,7 @@ def params_from_base_suite_setup(request):
             race_enabled=race_enabled
         )
 
-    yield {"cluster_config": cluster_config, "mode": mode}
+    yield {"cluster_config": cluster_config, "mode": mode, "xattrs_enabled": xattrs_enabled}
 
     log_info("Tearing down 'params_from_base_suite_setup' ...")
 
@@ -85,22 +85,16 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
 
     cluster_config = params_from_base_suite_setup["cluster_config"]
     mode = params_from_base_suite_setup["mode"]
+    xattrs_enabled = params_from_base_suite_setup["xattrs_enabled"]
 
     test_name = request.node.name
     log_info("Setting up test '{}'".format(test_name))
 
-    network_utils = NetworkUtils()
-    network_utils.start_packet_capture(cluster_config)
-
     # This dictionary is passed to each test
-    yield {"cluster_config": cluster_config, "mode": mode}
+    yield {"cluster_config": cluster_config, "mode": mode, "xattrs_enabled": xattrs_enabled}
 
     # Code after the yeild will execute when each test finishes
     log_info("Tearing down test '{}'".format(test_name))
-
-    network_utils.list_connections()
-    network_utils.stop_packet_capture(cluster_config)
-    network_utils.collect_packet_capture(cluster_config=cluster_config, test_name=test_name)
 
     # Verify all sync_gateways and sg_accels are reachable
     c = cluster.Cluster(cluster_config)
