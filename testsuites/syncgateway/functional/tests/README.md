@@ -92,3 +92,16 @@ pytest  -s \
         -k "test_online_to_offline_check_503" \
         testsuites/syncgateway/functional/tests/
 ```
+
+
+## Locally redeploy Linux binaries
+
+To speed up local development, you can build Sync Gateway + Accel locally on your OSX machine and cross-compile for Linux, and then deploy the binaries to your Vagrant / AWS / Data Center VM machines using a script.
+
+Steps:
+
+1. `GOOS=linux GOARCH=amd64 ./build.sh`
+1. `export CLUSTER_CONFIG=path/to/your/cluster_config`
+1. `./redeploy_local_sg_build.sh -b path/to/your/sync_gw/linux/binaries`  
+
+An example path to your Sync Gateway linux binaries is `~/code/sync_gateway/godeps/bin/linux_amd64/` 
