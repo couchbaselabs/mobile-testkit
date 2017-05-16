@@ -6,6 +6,7 @@
         "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
         "data_dir":".",
         "bucket":"data-bucket",
+        "username":"data-bucket",
         "password": "password"
     },
     "databases":{
@@ -17,6 +18,7 @@
             "feed_type":"DCPSHARD",
             "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
             "bucket":"data-bucket",
+            "username":"data-bucket",
             "password": "password",
             "cache": {
                 "channel_cache_max_length": 5000,

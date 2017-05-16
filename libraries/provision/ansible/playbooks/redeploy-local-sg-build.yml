@@ -1,0 +1,35 @@
+---
+
+- hosts: sync_gateways
+  any_errors_fatal: true
+  become: yes
+  vars:
+    sync_gateway_config_filepath:
+
+  tasks:
+  - include: tasks/stop-sync-gateway.yml
+    when: ansible_distribution == "CentOS"
+
+  - include: tasks/stop-sync-gateway-windows.yml
+    when: ansible_os_family == "Windows"
+
+  - name: copy the sync gateway binary
+    copy: src={{ local_sg_binary }} dest=/opt/couchbase-sync-gateway/bin/sync_gateway
+
+
+- hosts: sg_accels
+  any_errors_fatal: true
+  become: yes
+
+  tasks:
+  - include: tasks/stop-sg-accel.yml
+    when: ansible_distribution == "CentOS"
+
+  - include: tasks/stop-sg-accel-windows.yml
+    when: ansible_os_family == "Windows"
+
+  - name: copy the sync gateway accel binary
+    copy: src={{ local_sga_binary }} dest=/opt/couchbase-sg-accel/bin/sg_accel
+
+
+

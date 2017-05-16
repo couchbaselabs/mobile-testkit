@@ -1883,6 +1883,34 @@ class MobileRestClient:
             resp_obj = resp.json()
             return resp_obj["id"]
 
+    def get_design_doc_rev(self, url, db, name):
+        """
+        Keyword that gets a Design Doc revision
+        """
+        resp = self._session.get("{}/{}/_design/{}".format(url, db, name))
+        log_r(resp)
+        resp.raise_for_status()
+
+        # Only return a response if adding to the listener
+        # Sync Gateway does not return a response
+        if self.get_server_type(url) == ServerType.listener:
+            resp_obj = resp.json()
+            return resp_obj["_rev"]
+
+    def update_design_doc(self, url, db, name, doc, rev):
+        """
+        Keyword that updates a Design Doc to the database
+        """
+        resp = self._session.put("{}/{}/_design/{}?rev={}".format(url, db, name, rev), data=doc)
+        log_r(resp)
+        resp.raise_for_status()
+
+        # Only return a response if adding to the listener
+        # Sync Gateway does not return a response
+        if self.get_server_type(url) == ServerType.listener:
+            resp_obj = resp.json()
+            return resp_obj["id"]
+
     def get_view(self, url, db, design_doc_name, view_name, auth=None):
         """
         Keyword that returns a view query for a design doc with a view name

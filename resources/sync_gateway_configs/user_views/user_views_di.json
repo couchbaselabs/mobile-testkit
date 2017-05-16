@@ -12,6 +12,7 @@
   "cluster_config": {
     "server": "{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
     "bucket": "data-bucket",
+    "username":"data-bucket",
     "password": "password",
     "data_dir": "."
   },
@@ -35,6 +36,7 @@
         "writer":{{ is_index_writer }}
       },
       "bucket": "data-bucket",
+      "username":"data-bucket",
       "password": "password",
       "roles": {
         "Scientist": {
