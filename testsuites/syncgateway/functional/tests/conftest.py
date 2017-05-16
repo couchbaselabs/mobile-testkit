@@ -150,7 +150,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     cluster_config = params_from_base_suite_setup["cluster_config"]
     cluster_topology = params_from_base_suite_setup["cluster_topology"]
     mode = params_from_base_suite_setup["mode"]
-    xattrs_enabled = params_from_base_suite_setup["mode"]
+    xattrs_enabled = params_from_base_suite_setup["xattrs_enabled"]
 
     test_name = request.node.name
     log_info("Running test '{}'".format(test_name))
