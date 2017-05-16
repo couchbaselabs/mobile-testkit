@@ -43,7 +43,9 @@ class Config:
             #
             # TODO: find a better way to handle this
             data = template.render(
-                is_index_writer="false"
+                is_index_writer="false",
+                autoimport="",
+                xattrs=""
             )
 
             # strip out sync functions `function ... }`

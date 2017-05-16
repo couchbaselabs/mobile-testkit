@@ -4,7 +4,10 @@
   "log": ["*"],
   "databases": {
     "todo": {
-      {{ xattrs }}
+      {{ autoimport }}
+      "unsupported": {
+        {{ xattrs }}
+      },
       "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
       "bucket": "data-bucket",
       "password": "password",

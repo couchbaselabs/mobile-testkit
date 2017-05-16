@@ -4,13 +4,19 @@
     "log": ["CRUD+", "Cache+", "HTTP+", "Changes+"],
     "databases":{
         "sg_db1":{
-            {{ xattrs }}
+            {{ autoimport }}
+            "unsupported": {
+                {{ xattrs }}
+            },
             "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
             "bucket":"data-bucket-1",
             "password": "password"
         },
         "sg_db2":{
-            {{ xattrs }}
+            {{ autoimport }}
+            "unsupported": {
+                {{ xattrs }}
+            },
             "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
             "bucket":"data-bucket-2",
             "password": "password"

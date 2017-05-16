@@ -143,9 +143,8 @@ def install_sync_gateway(cluster_config, sync_gateway_config):
         }
 
         if is_xattrs_enabled(cluster_config):
-            playbook_vars["xattrs"] = '"unsupported": {"enable_extended_attributes": true},'
-        else:
-            playbook_vars["xattrs"] = ""
+            playbook_vars["autoimport"] = '"import_docs": "continuous",'
+            playbook_vars["xattrs"] = '"enable_extended_attributes": true'
 
         status = ansible_runner.run_ansible_playbook(
             "install-sync-gateway-package.yml",

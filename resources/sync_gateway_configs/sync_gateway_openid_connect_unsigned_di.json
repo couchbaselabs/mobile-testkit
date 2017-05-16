@@ -12,7 +12,6 @@
    },
    "databases":{
       "db":{
-         {{ xattrs }}
          "oidc":{
             "default_provider":"test",
             "providers":{
@@ -64,7 +63,11 @@
                }
             }
          },
+         {{ autoimport }}
          "unsupported":{
+            {% if xattrs %}
+                {{ "%s,"|format(xattrs) }}
+            {% endif %}
             "oidc_test_provider":{
                "enabled":true,
                "unsigned_id_token":true

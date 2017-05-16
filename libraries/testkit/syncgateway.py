@@ -57,9 +57,8 @@ class SyncGateway:
         }
 
         if is_xattrs_enabled(self.cluster_config):
-            playbook_vars["xattrs"] = '"import_docs": "continuous", "unsupported": {"enable_extended_attributes": true},'
-        else:
-            playbook_vars["xattrs"] = ""
+            playbook_vars["autoimport"] = '"import_docs": "continuous",'
+            playbook_vars["xattrs"] = '"enable_extended_attributes": true'
 
         status = self.ansible_runner.run_ansible_playbook(
             "start-sync-gateway.yml",
@@ -79,9 +78,8 @@ class SyncGateway:
         }
 
         if is_xattrs_enabled(self.cluster_config):
-            playbook_vars["xattrs"] = '"unsupported": {"enable_extended_attributes": true},'
-        else:
-            playbook_vars["xattrs"] = ""
+            playbook_vars["autoimport"] = '"import_docs": "continuous",'
+            playbook_vars["xattrs"] = '"enable_extended_attributes": true'
 
         status = self.ansible_runner.run_ansible_playbook(
             "reset-sync-gateway.yml",

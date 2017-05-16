@@ -129,7 +129,8 @@ class Cluster:
 
         # Add configuration to run with xattrs
         if self.xattrs:
-            playbook_vars["xattrs"] = '"import_docs": "continuous", "unsupported": {"enable_extended_attributes": true},'
+            playbook_vars["autoimport"] = '"import_docs": "continuous",'
+            playbook_vars["xattrs"] = '"enable_extended_attributes": true'
 
         status = ansible_runner.run_ansible_playbook(
             "start-sync-gateway.yml",

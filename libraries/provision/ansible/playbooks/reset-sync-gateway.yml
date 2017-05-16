@@ -22,6 +22,7 @@
     is_index_writer: "false"
     server_scheme:
     server_port:
+    autoimport:
     xattrs:
   tasks:
   - include: tasks/deploy-sync-gateway-config.yml
@@ -38,6 +39,7 @@
     is_index_writer: "true"
     server_scheme:
     server_port:
+    autoimport:
     xattrs:
   tasks:
   - include: tasks/deploy-sync-gateway-config.yml

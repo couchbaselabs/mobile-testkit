@@ -11,7 +11,6 @@
     "password": "password"
   },
   "databases": {
-    {{ xattrs }}
     "db": {
       "oidc": {
         "default_provider": "test",
@@ -72,7 +71,11 @@
           }
         }
       },
+      {{ autoimport }}
       "unsupported": {
+        {% if xattrs %}
+          {{ "%s,"|format(xattrs) }}
+        {% endif %}
         "oidc_test_provider": {
           "enabled": true
         }
