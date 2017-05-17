@@ -174,6 +174,9 @@ class SyncGateway:
         if is_xattrs_enabled(cluster_config):
             playbook_vars["autoimport"] = '"import_docs": "continuous",'
             playbook_vars["xattrs"] = '"enable_extended_attributes": true'
+        else:
+            playbook_vars["autoimport"] = ""
+            playbook_vars["xattrs"] = ""
 
         status = ansible_runner.run_ansible_playbook(
             "start-sync-gateway.yml",
