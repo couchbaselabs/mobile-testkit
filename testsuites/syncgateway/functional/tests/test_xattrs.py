@@ -5,7 +5,6 @@ import time
 
 import pytest
 from concurrent.futures import ThreadPoolExecutor
-from couchbase import subdocument
 from couchbase.bucket import Bucket
 from couchbase.exceptions import KeyExistsError, NotFoundError
 from requests.exceptions import HTTPError
@@ -423,9 +422,8 @@ def test_purge(params_from_base_test_setup, sg_conf_name, use_multiple_channels)
 
     # Verify XATTRS present via SDK and SG and that they are the same
     for doc_id in all_doc_ids:
-        verify_xattrs(
-            sdk_client=sdk_client,
-            sg_client=sg_client,
+        verify_sg_xattrs(
+            sg_client,
             sg_url=sg_admin_url,
             sg_db=sg_db,
             doc_id=doc_id,
@@ -462,8 +460,7 @@ def test_purge(params_from_base_test_setup, sg_conf_name, use_multiple_channels)
     # Verify xattrs still exist on deleted docs
     # Expected revs will be + 1 due to the deletion revision
     for doc_id in deleted_doc_ids:
-        verify_xattrs(
-            sdk_client,
+        verify_sg_xattrs(
             sg_client,
             sg_url=sg_admin_url,
             sg_db=sg_db,
@@ -507,7 +504,12 @@ def test_purge(params_from_base_test_setup, sg_conf_name, use_multiple_channels)
 
     # Verify XATTRS are gone using SDK client with full bucket permissions via subdoc?
     for doc_id in all_doc_ids:
-        verify_no_xattrs(sdk_client=sdk_client, sg_client=sg_client, sg_url=sg_url, sg_db=sg_db, doc_id=doc_id)
+        verify_no_sg_xattrs(
+            sg_client=sg_client,
+            sg_url=sg_url,
+            sg_db=sg_db,
+            doc_id=doc_id
+        )
 
 
 @pytest.mark.sanity
@@ -1280,56 +1282,36 @@ def verify_sdk_deletes(sdk_client, docs_ids_to_verify_deleted):
     assert len(docs_to_verify_scratchpad) == 0
 
 
-def verify_xattrs(sdk_client, sg_client, sg_url, sg_db, doc_id, expected_number_of_revs, expected_number_of_channels, deleted_docs=False):
-    """ Verify expected values for xattr sync meta data with regard to expected inputs """
-
-    # Get SDK sync meta
-    if deleted_docs:
-        sdk_sync_xattrs = sdk_client.lookup_in(doc_id, subdocument.get('_sync', xattr=True, _access_deleted=True))
-    else:
-        sdk_sync_xattrs = sdk_client.lookup_in(doc_id, subdocument.get('_sync', xattr=True))
-    sdk_sync_meta = sdk_sync_xattrs.get('_sync')[1]
+def verify_sg_xattrs(sg_client, sg_url, sg_db, doc_id, expected_number_of_revs, expected_number_of_channels, deleted_docs=False):
+    """ Verify expected values for xattr sync meta data via Sync Gateway _raw """
 
     # Get Sync Gateway sync meta
     raw_doc = sg_client.get_raw_doc(sg_url, db=sg_db, doc_id=doc_id)
     sg_sync_meta = raw_doc['_sync']
 
-    # Verfy the propery
-    for sync_meta in [sdk_sync_meta, sg_sync_meta]:
+    log_info('Verifying XATTR (expected num revs: {}, expected num channels: {})'.format(
+        expected_number_of_revs,
+        expected_number_of_channels,
+    ))
 
-        log_info('Verifying XATTR (expected num revs: {}, expected num channels: {})'.format(
-            expected_number_of_revs,
-            expected_number_of_channels,
-        ))
-
-        assert isinstance(sync_meta['sequence'], int)
-        assert isinstance(sync_meta['recent_sequences'], list)
-        assert len(sync_meta['recent_sequences']) == expected_number_of_revs
-        assert isinstance(sync_meta['cas'], unicode)
-        assert sync_meta['rev'].startswith('{}-'.format(expected_number_of_revs))
-        assert isinstance(sync_meta['channels'], dict)
-        assert len(sync_meta['channels']) == expected_number_of_channels
-        assert isinstance(sync_meta['time_saved'], unicode)
-        assert isinstance(sync_meta['history']['channels'], list)
-        assert len(sync_meta['history']['channels']) == expected_number_of_revs
-        assert isinstance(sync_meta['history']['revs'], list)
-        assert len(sync_meta['history']['revs']) == expected_number_of_revs
-        assert isinstance(sync_meta['history']['parents'], list)
-
-    assert sdk_sync_meta == sg_sync_meta
+    assert isinstance(sg_sync_meta['sequence'], int)
+    assert isinstance(sg_sync_meta['recent_sequences'], list)
+    assert len(sg_sync_meta['recent_sequences']) == expected_number_of_revs
+    assert isinstance(sg_sync_meta['cas'], unicode)
+    assert sg_sync_meta['rev'].startswith('{}-'.format(expected_number_of_revs))
+    assert isinstance(sg_sync_meta['channels'], dict)
+    assert len(sg_sync_meta['channels']) == expected_number_of_channels
+    assert isinstance(sg_sync_meta['time_saved'], unicode)
+    assert isinstance(sg_sync_meta['history']['channels'], list)
+    assert len(sg_sync_meta['history']['channels']) == expected_number_of_revs
+    assert isinstance(sg_sync_meta['history']['revs'], list)
+    assert len(sg_sync_meta['history']['revs']) == expected_number_of_revs
+    assert isinstance(sg_sync_meta['history']['parents'], list)
 
 
-def verify_no_xattrs(sdk_client, sg_client, sg_url, sg_db, doc_id):
+def verify_no_sg_xattrs(sg_client, sg_url, sg_db, doc_id):
     """ Verify that _sync no longer exists in the the xattrs.
     This should be the case once a document is purged. """
-
-    # Try to get Get SDK sync meta
-    nfe = None
-    with pytest.raises(NotFoundError) as nfe:
-        sdk_client.lookup_in(doc_id, subdocument.get('_sync', xattr=True, _access_deleted=True))
-    assert nfe is not None
-    assert 'The key does not exist on the server' in str(nfe)
-    log_info(nfe.value)
 
     # Try to get Sync Gateway sync meta
     he = None
@@ -1337,7 +1319,7 @@ def verify_no_xattrs(sdk_client, sg_client, sg_url, sg_db, doc_id):
         sg_client.get_raw_doc(sg_url, db=sg_db, doc_id=doc_id)
     assert he is not None
     assert 'HTTPError: 404 Client Error: Not Found for url:' in str(he)
-    log_info(nfe.value)
+    log_info(he.value)
 
 
 def verify_doc_ids_in_sg_bulk_response(response, expected_number_docs, expected_ids):
