@@ -576,6 +576,7 @@ def test_log_logLevel_invalid(params_from_base_test_setup, sg_conf_name):
     """
     cluster_conf = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
+    xattrs_enabled = params_from_base_test_setup["xattrs_enabled"]
 
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
 
@@ -590,7 +591,7 @@ def test_log_logLevel_invalid(params_from_base_test_setup, sg_conf_name):
     sg_one_url = cluster_hosts["sync_gateways"][0]["public"]
 
     # read sample sg_conf
-    data = load_sync_gateway_config(sg_conf, mode, cluster_hosts["couchbase_servers"][0])
+    data = load_sync_gateway_config(sg_conf, mode, cluster_hosts["couchbase_servers"][0], xattrs_enabled)
 
     # 'debugFake' invalid value for logLevel
     data['logging']["default"]["logLevel"] = "debugFake"
