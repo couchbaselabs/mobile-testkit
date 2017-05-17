@@ -2,7 +2,6 @@ from __future__ import print_function
 
 import uuid
 from datetime import datetime
-import time
 
 from couchbase.bucket import Bucket
 
@@ -11,47 +10,37 @@ SDK_CLIENT = Bucket('couchbase://localhost/{}'.format(BUCKET_NAME), password='pa
 USERS = ['user1', 'user2']
 
 
-def load_lists():
-    # Create a list for each user. List doc format below
-    # sample key = 'user1.4280DE40-A452-4B09-B0D4-D756B0339521'
-    # sample value = { 'name': 'User 1 List', 'owner': 'user1', 'type', 'task-list' }
-    for user in USERS:
-        list_doc_key = '{}.{}'.format(user, uuid.uuid4())
-        list_doc_val = {
-            'name': '{} SDK: {}'.format(user, time.time()),
-            'owner': user,
-            'type': 'task-list'
+def seed_lists():
+    add_list('user1', 'My Top 5 golang builtin', ['panic', 'append', 'copy', 'make', 'close'])
+    add_list('user1', 'Smiths singles', ['Ask', 'Panic', 'How Soon is Now', 'Sheila Take a Bow'])
+    add_list('user1', 'What To Do When Demo Laptop Crashes', ['Switch to backup', 'Realize there is no backup', 'Panic'])
+    add_list('user2', 'Things the Guide Says Not To Do', ['Forget your towel', 'Panic'])
+    add_list('user2', 'Sync Gateway 1.5 Closedown', ['Code Complete', 'QE Complete', 'Release DP'])
+
+
+def add_list(user, name, tasks):
+
+    # Create list
+    list_id = '{}.{}'.format(user, uuid.uuid4())
+    list_body = {'name': name, 'owner': user, 'type': 'task-list'}
+    print('Upserting list: {}'.format(list_id))
+    SDK_CLIENT.upsert(list_id, list_body)
+
+    # Create tasks for list
+    for task_name in tasks:
+        task_id = str(uuid.uuid4())
+        task_body = {
+            'complete': False,
+            'createdAt': str(datetime.now()),
+            'task': task_name,
+            'taskList': {
+                'id': list_id,
+                'owner': user
+            },
+            'type': 'task'
         }
-
-        print('Creating list doc with key: {}, value: {}'.format(list_doc_key, list_doc_val))
-        SDK_CLIENT.upsert(list_doc_key, list_doc_val)
-
-        # Create a couple tasks for each user list
-        # sample key = 'a7062d1c-339c-42e2-8aad-276528a3da3e'
-        # sample value = {
-        #    'complete': false,
-        #    'createdAt': 1494982643250,
-        #    'task': 'test task',
-        #    'taskList': {
-        #         'id': 'user2.94f1cd96-f771-48d2-85f1-1855cff0b614',
-        #         'owner': 'user2'
-        #     },
-        #     'type': 'task'
-        # }
-        for i in range(5):
-            list_task_key = str(uuid.uuid4())
-            list_task_value = {
-                'complete': False,
-                'createdAt': str(datetime.utcnow()),
-                'task': '{} Task {} from SDK'.format(user, i),
-                'taskList': {
-                    'id': list_doc_key,
-                    'owner': user
-                },
-                'type': 'task'
-            }
-            SDK_CLIENT.upsert(list_task_key, list_task_value)
+        SDK_CLIENT.upsert(task_id, task_body)
 
 
 if __name__ == "__main__":
-    load_lists()
+    seed_lists()
