@@ -21,7 +21,7 @@ def seed_lists():
 def add_list(user, name, tasks):
 
     # Create list
-    list_id = '{}.{}'.format(user, uuid.uuid4())
+    list_id = user + '.' + name.replace(' ', '')
     list_body = {'name': name, 'owner': user, 'type': 'task-list'}
     print('Upserting list: {}'.format(list_id))
     SDK_CLIENT.upsert(list_id, list_body)
