@@ -658,13 +658,22 @@ def test_setting_expiry_in_bulk_docs(params_from_base_test_setup, sg_conf_name):
     time.sleep(5)
 
     bulk_docs_ids = [doc["id"] for doc in bulk_docs]
-    bulk_get_docs = client.get_bulk_docs(url=sg_url, db=sg_db, doc_ids=bulk_docs_ids, auth=sg_user_session)
 
     expected_ids = ["exp_10_0", "exp_10_1", "exp_10_2", "exp_10_3", "exp_10_4"]
     expected_missing_ids = ["exp_3_0", "exp_3_1", "exp_3_2", "exp_3_3", "exp_3_4"]
 
+    bulk_get_docs, errors = client.get_bulk_docs(url=sg_url, db=sg_db, doc_ids=bulk_docs_ids, auth=sg_user_session, validate=False)
+    assert len(bulk_get_docs) == len(expected_ids)
+    assert len(errors) == len(expected_missing_ids)
+
+    bulk_get_doc_ids = [doc["_id"] for doc in bulk_get_docs]
+    error_ids = [doc["id"] for doc in errors]
+
+    assert bulk_get_doc_ids == expected_ids
+    assert error_ids == expected_missing_ids
+
     client.verify_doc_ids_found_in_response(response=bulk_get_docs, expected_doc_ids=expected_ids)
-    client.verify_doc_ids_not_found_in_response(response=bulk_get_docs, expected_missing_doc_ids=expected_missing_ids)
+    client.verify_doc_ids_not_found_in_response(response=errors, expected_missing_doc_ids=expected_missing_ids)
 
 
 # TODO:

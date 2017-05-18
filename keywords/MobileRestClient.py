@@ -1999,11 +1999,9 @@ class MobileRestClient:
             assert row["value"] in values, "Did not find expected value in view response"
 
     def verify_doc_ids_found_in_response(self, response, expected_doc_ids):
-        doc_list = response["rows"]
-        logging.debug(doc_list)
 
         found_doc_ids = []
-        for doc in doc_list:
+        for doc in response:
             if "error" not in doc:
                 # doc was found
                 found_doc_ids.append(doc["_id"])
@@ -2014,11 +2012,9 @@ class MobileRestClient:
             raise AssertionError("Found doc ids should be the same as expected doc ids")
 
     def verify_doc_ids_not_found_in_response(self, response, expected_missing_doc_ids):
-        doc_list = response["rows"]
-        logging.debug(doc_list)
 
         missing_doc_ids = []
-        for doc in doc_list:
+        for doc in response:
             if "error" in doc:
                 # missing doc was found
                 missing_doc_ids.append(doc["id"])
