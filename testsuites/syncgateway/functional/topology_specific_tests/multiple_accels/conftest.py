@@ -5,7 +5,7 @@ from keywords.ClusterKeywords import ClusterKeywords
 from keywords.constants import SYNC_GATEWAY_CONFIGS
 from keywords.SyncGateway import validate_sync_gateway_mode
 from keywords.tklogging import Logging
-from keywords.utils import log_info
+from keywords.utils import log_info, check_xattr_support
 from libraries.NetworkUtils import NetworkUtils
 from libraries.testkit.cluster import Cluster
 from utilities.cluster_config_utils import persist_cluster_config_environment_prop
@@ -34,6 +34,9 @@ def params_from_base_suite_setup(request):
     log_info("race_enabled: {}".format(race_enabled))
     log_info("cbs_ssl: {}".format(cbs_ssl))
     log_info("xattrs_enabled: {}".format(xattrs_enabled))
+
+    if xattrs_enabled:
+        check_xattr_support(server_version, sync_gateway_version)
 
     # Make sure mode for sync_gateway is supported ('cc' or 'di')
     validate_sync_gateway_mode(mode)

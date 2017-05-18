@@ -1,7 +1,6 @@
 import logging
 import json
 
-
 from keywords.exceptions import FeatureSupportedError
 
 
@@ -187,7 +186,7 @@ def compare_versions(version_one, version_two):
 
 
 def check_xattr_support(server_version, sync_gateway_version):
-    if server_version < '5.0.0':
+    if compare_versions(server_version, '5.0.0') < 0:
         raise FeatureSupportedError('Make sure you are using Coucbhase Server 5.0+ for xattrs')
-    if sync_gateway_version < '4.1.2':
-        raise FeatureSupportedError('Make sure you are using Coucbhase Sync Gateway 1.4.2+ for xattrs')
+    if compare_versions(sync_gateway_version, '1.5') < 0:
+        raise FeatureSupportedError('Make sure you are using Coucbhase Sync Gateway 1.5+ for xattrs')
