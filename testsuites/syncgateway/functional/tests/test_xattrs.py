@@ -46,6 +46,11 @@ def test_on_demand_import_of_external_updates(params_from_base_test_setup, sg_co
     cluster_conf = params_from_base_test_setup['cluster_config']
     cluster_topology = params_from_base_test_setup['cluster_topology']
     mode = params_from_base_test_setup['mode']
+    xattrs_enabled = params_from_base_test_setup['xattrs_enabled']
+
+    # This test should only run when using xattr meta storage
+    if not xattrs_enabled:
+        pytest.skip('XATTR tests require --xattrs flag')
 
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
     sg_admin_url = cluster_topology['sync_gateways'][0]['admin']
@@ -131,6 +136,11 @@ def test_offline_processing_of_external_updates(params_from_base_test_setup, sg_
     cluster_conf = params_from_base_test_setup['cluster_config']
     cluster_topology = params_from_base_test_setup['cluster_topology']
     mode = params_from_base_test_setup['mode']
+    xattrs_enabled = params_from_base_test_setup['xattrs_enabled']
+
+    # This test should only run when using xattr meta storage
+    if not xattrs_enabled:
+        pytest.skip('XATTR tests require --xattrs flag')
 
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
     sg_admin_url = cluster_topology['sync_gateways'][0]['admin']
@@ -250,6 +260,11 @@ def test_large_initial_import(params_from_base_test_setup, sg_conf_name):
     cluster_conf = params_from_base_test_setup['cluster_config']
     cluster_topology = params_from_base_test_setup['cluster_topology']
     mode = params_from_base_test_setup['mode']
+    xattrs_enabled = params_from_base_test_setup['xattrs_enabled']
+
+    # This test should only run when using xattr meta storage
+    if not xattrs_enabled:
+        pytest.skip('XATTR tests require --xattrs flag')
 
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
     sg_admin_url = cluster_topology['sync_gateways'][0]['admin']
@@ -337,6 +352,11 @@ def test_purge(params_from_base_test_setup, sg_conf_name, use_multiple_channels)
     cluster_conf = params_from_base_test_setup['cluster_config']
     cluster_topology = params_from_base_test_setup['cluster_topology']
     mode = params_from_base_test_setup['mode']
+    xattrs_enabled = params_from_base_test_setup['xattrs_enabled']
+
+    # This test should only run when using xattr meta storage
+    if not xattrs_enabled:
+        pytest.skip('XATTR tests require --xattrs flag')
 
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
     sg_admin_url = cluster_topology['sync_gateways'][0]['admin']
@@ -531,6 +551,11 @@ def test_sdk_does_not_see_sync_meta(params_from_base_test_setup, sg_conf_name):
     cluster_conf = params_from_base_test_setup['cluster_config']
     cluster_topology = params_from_base_test_setup['cluster_topology']
     mode = params_from_base_test_setup['mode']
+    xattrs_enabled = params_from_base_test_setup['xattrs_enabled']
+
+    # This test should only run when using xattr meta storage
+    if not xattrs_enabled:
+        pytest.skip('XATTR tests require --xattrs flag')
 
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
     sg_admin_url = cluster_topology['sync_gateways'][0]['admin']
@@ -639,6 +664,11 @@ def test_sg_sdk_interop_unique_docs(params_from_base_test_setup, sg_conf_name):
     cluster_conf = params_from_base_test_setup['cluster_config']
     cluster_topology = params_from_base_test_setup['cluster_topology']
     mode = params_from_base_test_setup['mode']
+    xattrs_enabled = params_from_base_test_setup['xattrs_enabled']
+
+    # This test should only run when using xattr meta storage
+    if not xattrs_enabled:
+        pytest.skip('XATTR tests require --xattrs flag')
 
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
     sg_admin_url = cluster_topology['sync_gateways'][0]['admin']
@@ -839,9 +869,8 @@ def test_sg_sdk_interop_shared_docs(params_from_base_test_setup,
         - Start update from sg / sdk to a shared set of docs. Sync Gateway and SDK will try to update
           random docs from the shared set and update the corresponding counter property as well as the
           'updates' properties
-    - TODO: SDK: Verify doc updates (sg + sdk) are present using the counter properties
-    - TODO: SG: Verify doc updates (sg + sdk) are there via _all_docs using the counter properties and rev prefix
-    - TODO: SG: Verify doc updates (sg + sdk) are there via _changes using the counter properties and rev prefix
+    - SDK: Verify doc updates (sg + sdk) are present using the counter properties
+    - SG: Verify doc updates (sg + sdk) are there via _changes using the counter properties and rev prefix
     - Start concurrent deletes:
         loop until len(all_doc_ids_to_delete) == 0
             - List of all_doc_ids_to_delete
@@ -856,6 +885,11 @@ def test_sg_sdk_interop_shared_docs(params_from_base_test_setup,
     cluster_conf = params_from_base_test_setup['cluster_config']
     cluster_topology = params_from_base_test_setup['cluster_topology']
     mode = params_from_base_test_setup['mode']
+    xattrs_enabled = params_from_base_test_setup['xattrs_enabled']
+
+    # This test should only run when using xattr meta storage
+    if not xattrs_enabled:
+        pytest.skip('XATTR tests require --xattrs flag')
 
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
     sg_admin_url = cluster_topology['sync_gateways'][0]['admin']
