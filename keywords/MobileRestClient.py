@@ -1143,6 +1143,8 @@ class MobileRestClient:
             doc_body["_id"] = doc_id
 
             doc_obj = self.add_doc(url, db, doc_body, auth=auth, use_post=False)
+            if attachments_generator:
+                doc_obj["attachments"] = doc_body["_attachments"].keys()
             added_docs.append(doc_obj)
 
         # check that the docs returned in the responses equals the expected number
@@ -1479,9 +1481,15 @@ class MobileRestClient:
         if isinstance(expected_docs, list):
             # Create single dictionary for comparison, will also blow up for duplicate docs with the same id
             expected_doc_map = {expected_doc["id"]: expected_doc["rev"] for expected_doc in expected_docs}
+
+            if attachments:
+                expected_attachment_map = {expected_doc["id"]: expected_doc["attachments"] for expected_doc in expected_docs}
         elif isinstance(expected_docs, dict):
             # When expected docs is a single doc
             expected_doc_map = {expected_docs["id"]: expected_docs["rev"]}
+
+            if attachments:
+                expected_attachment_map = {expected_docs["id"]: expected_docs["attachments"]}
         else:
             raise TypeError("Verify Docs Preset expects a list or dict of expected docs")
 
@@ -1547,7 +1555,8 @@ class MobileRestClient:
                     # Check for an attachment
                     doc_id = resp_doc["key"]
                     doc_data = self._session.get("{}/{}/{}".format(url, db, doc_id))
-                    if "_attachments" not in doc_data.json():
+
+                    if "_attachments" not in doc_data.json() and "id" in resp_doc and expected_attachment_map[resp_doc["id"]] != doc_data.json()["_attachments"].keys():
                         all_attachments_returned = False
                         missing_attachment_docs.append(doc_id)
 
