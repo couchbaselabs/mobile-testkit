@@ -1551,7 +1551,7 @@ class MobileRestClient:
                     missing_docs.append(resp_doc)
                     all_docs_returned = False
 
-                if attachments:
+                if attachments and server_type == ServerType.listener:
                     # Check for an attachment
                     doc_id = resp_doc["key"]
                     doc_data = self._session.get("{}/{}/{}".format(url, db, doc_id))
