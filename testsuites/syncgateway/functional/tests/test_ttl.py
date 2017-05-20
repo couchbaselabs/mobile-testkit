@@ -1,14 +1,17 @@
-import pytest
 import time
 
+import pytest
+from couchbase.bucket import Bucket
+from couchbase.exceptions import NotFoundError
 from requests.exceptions import HTTPError
 
-from keywords.utils import log_info
+from keywords import document
 from keywords.ClusterKeywords import ClusterKeywords
 from keywords.MobileRestClient import MobileRestClient
 from keywords.SyncGateway import sync_gateway_config_path_for_mode
 from keywords.timeutils import Time
-from keywords import document
+from keywords.utils import host_for_url, log_info
+
 
 """
 Test suite for Sync Gateway's expiry feature.
@@ -89,7 +92,10 @@ def test_numeric_expiry_as_ttl(params_from_base_test_setup, sg_conf_name):
     sg_user_name = "sg_user"
     sg_user_password = "p@ssw0rd"
     sg_user_channels = ["NBC", "ABC"]
+    bucket_name = "data-bucket"
+    cbs_ip = host_for_url(cbs_url)
 
+    sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password')
     client = MobileRestClient()
 
     client.create_user(url=sg_url_admin, db=sg_db, name=sg_user_name, password=sg_user_password, channels=sg_user_channels)
@@ -111,6 +117,8 @@ def test_numeric_expiry_as_ttl(params_from_base_test_setup, sg_conf_name):
 
     # If xattrs, check that the doc is a tombstone
     # by getting the rev and "_deleted" prop via _raw
+    # If sync gateway is using document meta data
+    # ensure doc has been purged from the server
     if xattrs_enabled:
         expired_raw_doc = client.get_raw_doc(
             url=sg_url_admin,
@@ -120,6 +128,10 @@ def test_numeric_expiry_as_ttl(params_from_base_test_setup, sg_conf_name):
 
         assert expired_raw_doc["_sync"]["rev"].startswith("2-")
         assert expired_raw_doc["_deleted"]
+    else:
+        with pytest.raises(NotFoundError) as nfe:
+            sdk_client.get(doc_exp_3["id"])
+        assert "The key does not exist on the server" in str(nfe)
 
     # doc_exp_10 should be available still
     doc_exp_10_result = client.get_doc(url=sg_url, db=sg_db, doc_id=doc_exp_10["id"], auth=sg_user_session)
@@ -170,6 +182,10 @@ def test_string_expiry_as_ttl(params_from_base_test_setup, sg_conf_name):
     sg_user_name = "sg_user"
     sg_user_password = "p@ssw0rd"
     sg_user_channels = ["NBC", "ABC"]
+    bucket_name = "data-bucket"
+    cbs_ip = host_for_url(cbs_url)
+
+    sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password')
 
     client = MobileRestClient()
 
@@ -192,6 +208,8 @@ def test_string_expiry_as_ttl(params_from_base_test_setup, sg_conf_name):
 
     # If xattrs, check that the doc is a tombstone
     # by getting the rev and "_deleted" prop via _raw
+    # If sync gateway is using document meta data
+    # ensure doc has been purged from the server
     if xattrs_enabled:
         expired_raw_doc = client.get_raw_doc(
             url=sg_url_admin,
@@ -201,6 +219,10 @@ def test_string_expiry_as_ttl(params_from_base_test_setup, sg_conf_name):
 
         assert expired_raw_doc["_sync"]["rev"].startswith("2-")
         assert expired_raw_doc["_deleted"]
+    else:
+        with pytest.raises(NotFoundError) as nfe:
+            sdk_client.get(doc_exp_3["id"])
+        assert "The key does not exist on the server" in str(nfe)
 
     # doc_exp_10 should be available still
     doc_exp_10_result = client.get_doc(url=sg_url, db=sg_db, doc_id=doc_exp_10["id"], auth=sg_user_session)
@@ -252,6 +274,10 @@ def test_numeric_expiry_as_unix_date(params_from_base_test_setup, sg_conf_name):
     sg_user_name = "sg_user"
     sg_user_password = "p@ssw0rd"
     sg_user_channels = ["NBC", "ABC"]
+    bucket_name = "data-bucket"
+    cbs_ip = host_for_url(cbs_url)
+
+    sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password')
 
     client = MobileRestClient()
 
@@ -277,6 +303,8 @@ def test_numeric_expiry_as_unix_date(params_from_base_test_setup, sg_conf_name):
 
     # If xattrs, check that the doc is a tombstone
     # by getting the rev and "_deleted" prop via _raw
+    # If sync gateway is using document meta data
+    # ensure doc has been purged from the server
     if xattrs_enabled:
         expired_raw_doc = client.get_raw_doc(
             url=sg_url_admin,
@@ -286,6 +314,10 @@ def test_numeric_expiry_as_unix_date(params_from_base_test_setup, sg_conf_name):
 
         assert expired_raw_doc["_sync"]["rev"].startswith("2-")
         assert expired_raw_doc["_deleted"]
+    else:
+        with pytest.raises(NotFoundError) as nfe:
+            sdk_client.get(doc_exp_3["id"])
+        assert "The key does not exist on the server" in str(nfe)
 
     # doc_exp_years should be available still
     doc_exp_years_result = client.get_doc(url=sg_url, db=sg_db, doc_id=doc_exp_years["id"], auth=sg_user_session)
@@ -337,6 +369,10 @@ def test_string_expiry_as_unix_date(params_from_base_test_setup, sg_conf_name):
     sg_user_name = "sg_user"
     sg_user_password = "p@ssw0rd"
     sg_user_channels = ["NBC", "ABC"]
+    bucket_name = "data-bucket"
+    cbs_ip = host_for_url(cbs_url)
+
+    sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password')
 
     client = MobileRestClient()
 
@@ -366,6 +402,8 @@ def test_string_expiry_as_unix_date(params_from_base_test_setup, sg_conf_name):
 
     # If xattrs, check that the doc is a tombstone
     # by getting the rev and "_deleted" prop via _raw
+    # If sync gateway is using document meta data
+    # ensure doc has been purged from the server
     if xattrs_enabled:
         expired_raw_doc = client.get_raw_doc(
             url=sg_url_admin,
@@ -375,6 +413,10 @@ def test_string_expiry_as_unix_date(params_from_base_test_setup, sg_conf_name):
 
         assert expired_raw_doc["_sync"]["rev"].startswith("2-")
         assert expired_raw_doc["_deleted"]
+    else:
+        with pytest.raises(NotFoundError) as nfe:
+            sdk_client.get(doc_exp_3["id"])
+        assert "The key does not exist on the server" in str(nfe)
 
     # doc_exp_years should be available still
     doc_exp_years_result = client.get_doc(url=sg_url, db=sg_db, doc_id=doc_exp_years["id"], auth=sg_user_session)
@@ -426,6 +468,10 @@ def test_string_expiry_as_iso_8601_date(params_from_base_test_setup, sg_conf_nam
     sg_user_name = "sg_user"
     sg_user_password = "p@ssw0rd"
     sg_user_channels = ["NBC", "ABC"]
+    bucket_name = "data-bucket"
+    cbs_ip = host_for_url(cbs_url)
+
+    sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password')
 
     client = MobileRestClient()
 
@@ -451,6 +497,8 @@ def test_string_expiry_as_iso_8601_date(params_from_base_test_setup, sg_conf_nam
 
     # If xattrs, check that the doc is a tombstone
     # by getting the rev and "_deleted" prop via _raw
+    # If sync gateway is using document meta data
+    # ensure doc has been purged from the server
     if xattrs_enabled:
         expired_raw_doc = client.get_raw_doc(
             url=sg_url_admin,
@@ -460,6 +508,10 @@ def test_string_expiry_as_iso_8601_date(params_from_base_test_setup, sg_conf_nam
 
         assert expired_raw_doc["_sync"]["rev"].startswith("2-")
         assert expired_raw_doc["_deleted"]
+    else:
+        with pytest.raises(NotFoundError) as nfe:
+            sdk_client.get(doc_exp_3["id"])
+        assert "The key does not exist on the server" in str(nfe)
 
     # doc_exp_years should be available still
     doc_exp_years_result = client.get_doc(url=sg_url, db=sg_db, doc_id=doc_exp_years["id"], auth=sg_user_session)
@@ -577,6 +629,10 @@ def test_rolling_ttl_expires(params_from_base_test_setup, sg_conf_name):
     sg_user_name = "sg_user"
     sg_user_password = "p@ssw0rd"
     sg_user_channels = ["NBC", "ABC"]
+    bucket_name = "data-bucket"
+    cbs_ip = host_for_url(cbs_url)
+
+    sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password')
 
     client = MobileRestClient()
 
@@ -601,6 +657,8 @@ def test_rolling_ttl_expires(params_from_base_test_setup, sg_conf_name):
 
     # If xattrs, check that the doc is a tombstone
     # by getting the rev and "_deleted" prop via _raw
+    # If sync gateway is using document meta data
+    # ensure doc has been purged from the server
     if xattrs_enabled:
         expired_raw_doc = client.get_raw_doc(
             url=sg_url_admin,
@@ -610,6 +668,10 @@ def test_rolling_ttl_expires(params_from_base_test_setup, sg_conf_name):
 
         assert expired_raw_doc["_sync"]["rev"].startswith("2-")
         assert expired_raw_doc["_deleted"]
+    else:
+        with pytest.raises(NotFoundError) as nfe:
+            sdk_client.get(doc_exp_3["id"])
+        assert "The key does not exist on the server" in str(nfe)
 
     # doc_exp_10 should be available still
     doc_exp_10_result = client.get_doc(url=sg_url, db=sg_db, doc_id=doc_exp_10["id"], auth=sg_user_session)
@@ -659,6 +721,10 @@ def test_rolling_ttl_remove_expirary(params_from_base_test_setup, sg_conf_name):
     sg_user_name = "sg_user"
     sg_user_password = "p@ssw0rd"
     sg_user_channels = ["NBC", "ABC"]
+    bucket_name = "data-bucket"
+    cbs_ip = host_for_url(cbs_url)
+
+    sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password')
 
     client = MobileRestClient()
 
@@ -688,6 +754,8 @@ def test_rolling_ttl_remove_expirary(params_from_base_test_setup, sg_conf_name):
 
     # If xattrs, check that the doc is a tombstone
     # by getting the rev and "_deleted" prop via _raw
+    # If sync gateway is using document meta data
+    # ensure doc has been purged from the server
     if xattrs_enabled:
         expired_raw_doc = client.get_raw_doc(
             url=sg_url_admin,
@@ -697,6 +765,10 @@ def test_rolling_ttl_remove_expirary(params_from_base_test_setup, sg_conf_name):
 
         assert expired_raw_doc["_sync"]["rev"].startswith("2-")
         assert expired_raw_doc["_deleted"]
+    else:
+        with pytest.raises(NotFoundError) as nfe:
+            sdk_client.get(doc_exp_10["id"])
+        assert "The key does not exist on the server" in str(nfe)
 
 
 @pytest.mark.sanity
@@ -742,6 +814,10 @@ def test_setting_expiry_in_bulk_docs(params_from_base_test_setup, sg_conf_name):
     sg_user_name = "sg_user"
     sg_user_password = "p@ssw0rd"
     sg_user_channels = ["NBC", "ABC"]
+    bucket_name = "data-bucket"
+    cbs_ip = host_for_url(cbs_url)
+
+    sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password')
 
     client = MobileRestClient()
 
@@ -778,6 +854,8 @@ def test_setting_expiry_in_bulk_docs(params_from_base_test_setup, sg_conf_name):
 
     # If xattrs, check that the doc is a tombstone
     # by getting the rev and "_deleted" prop via _raw
+    # If sync gateway is using document meta data
+    # ensure doc has been purged from the server
     for expired_doc in error_ids:
         if xattrs_enabled:
             expired_raw_doc = client.get_raw_doc(
@@ -788,6 +866,10 @@ def test_setting_expiry_in_bulk_docs(params_from_base_test_setup, sg_conf_name):
 
             assert expired_raw_doc["_sync"]["rev"].startswith("2-")
             assert expired_raw_doc["_deleted"]
+        else:
+            with pytest.raises(NotFoundError) as nfe:
+                sdk_client.get(expired_doc)
+            assert "The key does not exist on the server" in str(nfe)
 
 
 # TODO:
