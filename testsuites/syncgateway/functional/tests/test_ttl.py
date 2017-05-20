@@ -64,6 +64,8 @@ def test_numeric_expiry_as_ttl(params_from_base_test_setup, sg_conf_name):
 
     cluster_config = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
+    xattrs_enabled = params_from_base_test_setup['xattrs_enabled']
+
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
 
     cluster_helper = ClusterKeywords()
@@ -107,6 +109,18 @@ def test_numeric_expiry_as_ttl(params_from_base_test_setup, sg_conf_name):
         client.get_doc(url=sg_url, db=sg_db, doc_id=doc_exp_3["id"], auth=sg_user_session)
     assert he.value[0].startswith("404 Client Error: Not Found for url:")
 
+    # If xattrs, check that the doc is a tombstone
+    # by getting the rev and "_deleted" prop via _raw
+    if xattrs_enabled:
+        expired_raw_doc = client.get_raw_doc(
+            url=sg_url_admin,
+            db=sg_db,
+            doc_id=doc_exp_3["id"],
+        )
+
+        assert expired_raw_doc["_sync"]["rev"].startswith("2-")
+        assert expired_raw_doc["_deleted"]
+
     # doc_exp_10 should be available still
     doc_exp_10_result = client.get_doc(url=sg_url, db=sg_db, doc_id=doc_exp_10["id"], auth=sg_user_session)
     assert doc_exp_10_result["_id"] == "exp_10"
@@ -131,6 +145,8 @@ def test_string_expiry_as_ttl(params_from_base_test_setup, sg_conf_name):
 
     cluster_config = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
+    xattrs_enabled = params_from_base_test_setup['xattrs_enabled']
+
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
 
     cluster_helper = ClusterKeywords()
@@ -174,6 +190,18 @@ def test_string_expiry_as_ttl(params_from_base_test_setup, sg_conf_name):
         client.get_doc(url=sg_url, db=sg_db, doc_id=doc_exp_3["id"], auth=sg_user_session)
     assert he.value[0].startswith("404 Client Error: Not Found for url:")
 
+    # If xattrs, check that the doc is a tombstone
+    # by getting the rev and "_deleted" prop via _raw
+    if xattrs_enabled:
+        expired_raw_doc = client.get_raw_doc(
+            url=sg_url_admin,
+            db=sg_db,
+            doc_id=doc_exp_3["id"],
+        )
+
+        assert expired_raw_doc["_sync"]["rev"].startswith("2-")
+        assert expired_raw_doc["_deleted"]
+
     # doc_exp_10 should be available still
     doc_exp_10_result = client.get_doc(url=sg_url, db=sg_db, doc_id=doc_exp_10["id"], auth=sg_user_session)
     assert doc_exp_10_result["_id"] == "exp_10"
@@ -199,6 +227,8 @@ def test_numeric_expiry_as_unix_date(params_from_base_test_setup, sg_conf_name):
 
     cluster_config = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
+    xattrs_enabled = params_from_base_test_setup['xattrs_enabled']
+
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
 
     cluster_helper = ClusterKeywords()
@@ -245,6 +275,18 @@ def test_numeric_expiry_as_unix_date(params_from_base_test_setup, sg_conf_name):
         client.get_doc(url=sg_url, db=sg_db, doc_id=doc_exp_3["id"], auth=sg_user_session)
     assert he.value[0].startswith("404 Client Error: Not Found for url:")
 
+    # If xattrs, check that the doc is a tombstone
+    # by getting the rev and "_deleted" prop via _raw
+    if xattrs_enabled:
+        expired_raw_doc = client.get_raw_doc(
+            url=sg_url_admin,
+            db=sg_db,
+            doc_id=doc_exp_3["id"],
+        )
+
+        assert expired_raw_doc["_sync"]["rev"].startswith("2-")
+        assert expired_raw_doc["_deleted"]
+
     # doc_exp_years should be available still
     doc_exp_years_result = client.get_doc(url=sg_url, db=sg_db, doc_id=doc_exp_years["id"], auth=sg_user_session)
     assert doc_exp_years_result["_id"] == "exp_years"
@@ -270,6 +312,8 @@ def test_string_expiry_as_unix_date(params_from_base_test_setup, sg_conf_name):
 
     cluster_config = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
+    xattrs_enabled = params_from_base_test_setup['xattrs_enabled']
+
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
 
     cluster_helper = ClusterKeywords()
@@ -320,6 +364,18 @@ def test_string_expiry_as_unix_date(params_from_base_test_setup, sg_conf_name):
         client.get_doc(url=sg_url, db=sg_db, doc_id=doc_exp_3["id"], auth=sg_user_session)
     assert he.value[0].startswith("404 Client Error: Not Found for url:")
 
+    # If xattrs, check that the doc is a tombstone
+    # by getting the rev and "_deleted" prop via _raw
+    if xattrs_enabled:
+        expired_raw_doc = client.get_raw_doc(
+            url=sg_url_admin,
+            db=sg_db,
+            doc_id=doc_exp_3["id"],
+        )
+
+        assert expired_raw_doc["_sync"]["rev"].startswith("2-")
+        assert expired_raw_doc["_deleted"]
+
     # doc_exp_years should be available still
     doc_exp_years_result = client.get_doc(url=sg_url, db=sg_db, doc_id=doc_exp_years["id"], auth=sg_user_session)
     assert doc_exp_years_result["_id"] == "exp_years"
@@ -345,6 +401,8 @@ def test_string_expiry_as_iso_8601_date(params_from_base_test_setup, sg_conf_nam
 
     cluster_config = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
+    xattrs_enabled = params_from_base_test_setup['xattrs_enabled']
+
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
 
     cluster_helper = ClusterKeywords()
@@ -391,6 +449,18 @@ def test_string_expiry_as_iso_8601_date(params_from_base_test_setup, sg_conf_nam
         client.get_doc(url=sg_url, db=sg_db, doc_id=doc_exp_3["id"], auth=sg_user_session)
     assert he.value[0].startswith("404 Client Error: Not Found for url:")
 
+    # If xattrs, check that the doc is a tombstone
+    # by getting the rev and "_deleted" prop via _raw
+    if xattrs_enabled:
+        expired_raw_doc = client.get_raw_doc(
+            url=sg_url_admin,
+            db=sg_db,
+            doc_id=doc_exp_3["id"],
+        )
+
+        assert expired_raw_doc["_sync"]["rev"].startswith("2-")
+        assert expired_raw_doc["_deleted"]
+
     # doc_exp_years should be available still
     doc_exp_years_result = client.get_doc(url=sg_url, db=sg_db, doc_id=doc_exp_years["id"], auth=sg_user_session)
     assert doc_exp_years_result["_id"] == "exp_years"
@@ -413,6 +483,7 @@ def test_removing_expiry(params_from_base_test_setup, sg_conf_name):
 
     cluster_config = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
+
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
 
     cluster_helper = ClusterKeywords()
@@ -481,6 +552,8 @@ def test_rolling_ttl_expires(params_from_base_test_setup, sg_conf_name):
 
     cluster_config = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
+    xattrs_enabled = params_from_base_test_setup['xattrs_enabled']
+
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
 
     cluster_helper = ClusterKeywords()
@@ -526,6 +599,18 @@ def test_rolling_ttl_expires(params_from_base_test_setup, sg_conf_name):
         client.get_doc(url=sg_url, db=sg_db, doc_id=doc_exp_3["id"], auth=sg_user_session)
     assert he.value[0].startswith("404 Client Error: Not Found for url:")
 
+    # If xattrs, check that the doc is a tombstone
+    # by getting the rev and "_deleted" prop via _raw
+    if xattrs_enabled:
+        expired_raw_doc = client.get_raw_doc(
+            url=sg_url_admin,
+            db=sg_db,
+            doc_id=doc_exp_3["id"],
+        )
+
+        assert expired_raw_doc["_sync"]["rev"].startswith("2-")
+        assert expired_raw_doc["_deleted"]
+
     # doc_exp_10 should be available still
     doc_exp_10_result = client.get_doc(url=sg_url, db=sg_db, doc_id=doc_exp_10["id"], auth=sg_user_session)
     assert doc_exp_10_result["_id"] == "exp_10"
@@ -549,6 +634,8 @@ def test_rolling_ttl_remove_expirary(params_from_base_test_setup, sg_conf_name):
 
     cluster_config = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
+    xattrs_enabled = params_from_base_test_setup['xattrs_enabled']
+
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
 
     cluster_helper = ClusterKeywords()
@@ -599,6 +686,18 @@ def test_rolling_ttl_remove_expirary(params_from_base_test_setup, sg_conf_name):
         client.get_doc(url=sg_url, db=sg_db, doc_id=doc_exp_10["id"], auth=sg_user_session)
     assert he.value[0].startswith("404 Client Error: Not Found for url:")
 
+    # If xattrs, check that the doc is a tombstone
+    # by getting the rev and "_deleted" prop via _raw
+    if xattrs_enabled:
+        expired_raw_doc = client.get_raw_doc(
+            url=sg_url_admin,
+            db=sg_db,
+            doc_id=doc_exp_10["id"],
+        )
+
+        assert expired_raw_doc["_sync"]["rev"].startswith("2-")
+        assert expired_raw_doc["_deleted"]
+
 
 @pytest.mark.sanity
 @pytest.mark.syncgateway
@@ -618,6 +717,8 @@ def test_setting_expiry_in_bulk_docs(params_from_base_test_setup, sg_conf_name):
 
     cluster_config = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
+    xattrs_enabled = params_from_base_test_setup['xattrs_enabled']
+
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
 
     cluster_helper = ClusterKeywords()
@@ -674,6 +775,19 @@ def test_setting_expiry_in_bulk_docs(params_from_base_test_setup, sg_conf_name):
 
     client.verify_doc_ids_found_in_response(response=bulk_get_docs, expected_doc_ids=expected_ids)
     client.verify_doc_ids_not_found_in_response(response=errors, expected_missing_doc_ids=expected_missing_ids)
+
+    # If xattrs, check that the doc is a tombstone
+    # by getting the rev and "_deleted" prop via _raw
+    for expired_doc in error_ids:
+        if xattrs_enabled:
+            expired_raw_doc = client.get_raw_doc(
+                url=sg_url_admin,
+                db=sg_db,
+                doc_id=expired_doc,
+            )
+
+            assert expired_raw_doc["_sync"]["rev"].startswith("2-")
+            assert expired_raw_doc["_deleted"]
 
 
 # TODO:
