@@ -1555,8 +1555,9 @@ class MobileRestClient:
                     # Check for an attachment
                     doc_id = resp_doc["key"]
                     doc_data = self._session.get("{}/{}/{}".format(url, db, doc_id))
+                    doc_json = doc_data.json()
 
-                    if "_attachments" not in doc_data.json() and "id" in resp_doc and expected_attachment_map[resp_doc["id"]] != doc_data.json()["_attachments"].keys():
+                    if "_attachments" not in doc_json and "id" in resp_doc and expected_attachment_map[resp_doc["id"]] != doc_json["_attachments"].keys():
                         all_attachments_returned = False
                         missing_attachment_docs.append(doc_id)
 
