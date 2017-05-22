@@ -27,6 +27,22 @@ from keywords.SyncGateway import sync_gateway_config_path_for_mode
 ])
 def test_overloaded_channel_cache(params_from_base_test_setup, sg_conf_name, num_docs, user_channels, filter, limit):
 
+    """
+    The purpose of this test is to verify that channel cache backfill via view queries is working properly.
+    It works by doing the following:
+
+    - Set channel cache size in Sync Gateway config to a small number, eg, 750.  This means that only 750 docs fit in the channel cache
+    - Add a large number of docs, eg, 1000.
+    - Issue a _changes request that will return all 1000 docs
+
+    Expected behavior / Verification:
+
+    - Since 1000 docs requested from changes feed, but only 750 docs fit in channel cache, then it will need to do a view query
+      to get the remaining 250 changes
+    - Verify that the changes feed returns all 1000 expected docs
+    - Check the expvar statistics to verify that view queries were made
+    """
+
     cluster_conf = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
 
@@ -61,7 +77,8 @@ def test_overloaded_channel_cache(params_from_base_test_setup, sg_conf_name, num
 
     start = time.time()
 
-    with concurrent.futures.ThreadPoolExecutor(max_workers=100) as executor:
+    # This uses a ProcessPoolExecutor due to https://github.com/couchbaselabs/mobile-testkit/issues/1142
+    with concurrent.futures.ProcessPoolExecutor(max_workers=100) as executor:
 
         changes_requests = []
         errors = []
@@ -105,9 +122,6 @@ def test_overloaded_channel_cache(params_from_base_test_setup, sg_conf_name, num
         resp.raise_for_status()
         resp_obj = resp.json()
 
-        if user_channels == "*" and num_docs == 5000:
-            # "*" channel includes _user docs so the verify_changes will result in 10 view queries
-            assert resp_obj["syncGateway_changeCache"]["view_queries"] == 10
-        else:
-            # If number of view queries == 0 the key will not exist in the expvars
-            assert "view_queries" not in resp_obj["syncGateway_changeCache"]
+        # Since Sync Gateway will need to issue view queries to handle _changes requests that don't
+        # fit in the channel cache, we expect there to be several view queries
+        assert resp_obj["syncGateway_changeCache"]["view_queries"] > 0
