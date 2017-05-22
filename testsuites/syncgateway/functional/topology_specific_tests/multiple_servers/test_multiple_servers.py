@@ -1,18 +1,16 @@
 import time
 
-import pytest
 import concurrent.futures
+import pytest
 import requests.exceptions
-import keywords.exceptions
 
-from keywords.exceptions import TimeoutError
+import keywords.exceptions
+from keywords import couchbaseserver, userinfo
 from keywords.ClusterKeywords import ClusterKeywords
-from keywords.utils import log_info
+from keywords.exceptions import TimeoutError
 from keywords.MobileRestClient import MobileRestClient
 from keywords.SyncGateway import sync_gateway_config_path_for_mode
-
-from keywords import userinfo
-from keywords import couchbaseserver
+from keywords.utils import log_info
 
 
 @pytest.mark.sanity
@@ -22,7 +20,6 @@ from keywords import couchbaseserver
 @pytest.mark.session
 @pytest.mark.channel
 @pytest.mark.bulkops
-@pytest.mark.skip(reason="Failing due to - https://github.com/couchbase/sync_gateway/issues/2173")
 def test_rebalance_sanity(params_from_base_test_setup):
 
     cluster_config = params_from_base_test_setup["cluster_config"]
