@@ -9,6 +9,7 @@ from keywords.SyncGateway import sync_gateway_config_path_for_mode
 from keywords.ClusterKeywords import ClusterKeywords
 from libraries.NetworkUtils import NetworkUtils
 from keywords.tklogging import Logging
+from keywords.exceptions import ProvisioningError
 
 from utilities.enable_disable_ssl_cluster import enable_cbs_ssl_in_cluster_config
 from utilities.enable_disable_ssl_cluster import disable_cbs_ssl_in_cluster_config
@@ -53,13 +54,17 @@ def params_from_base_suite_setup(request):
     # Skip provisioning if user specifies '--skip-provisoning'
     if not skip_provisioning:
         cluster_helper = ClusterKeywords()
-        cluster_helper.provision_cluster(
-            cluster_config=cluster_config,
-            server_version=server_version,
-            sync_gateway_version=sync_gateway_version,
-            sync_gateway_config=sg_config,
-            race_enabled=race_enabled
-        )
+        try:
+            cluster_helper.provision_cluster(
+                cluster_config=cluster_config,
+                server_version=server_version,
+                sync_gateway_version=sync_gateway_version,
+                sync_gateway_config=sg_config,
+                race_enabled=race_enabled
+            )
+        except ProvisioningError:
+            logging_helper = Logging()
+            logging_helper.fetch_and_analyze_logs(cluster_config=cluster_config, test_name=request.node.name)
 
     yield {"cluster_config": cluster_config, "mode": mode}
 
