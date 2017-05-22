@@ -69,6 +69,7 @@ def params_from_base_suite_setup(request):
         except ProvisioningError:
             logging_helper = Logging()
             logging_helper.fetch_and_analyze_logs(cluster_config=cluster_config, test_name=request.node.name)
+            raise
 
     yield {"cluster_config": cluster_config, "mode": mode}
 
