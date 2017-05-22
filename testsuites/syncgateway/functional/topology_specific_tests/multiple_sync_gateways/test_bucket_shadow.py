@@ -62,8 +62,8 @@ def init_shadow_cluster(cluster, config_path_shadower, config_path_non_shadower)
         channels=["ABC", "NBC", "CBS"],
     )
 
-    source_bucket = cluster.servers[0].get_bucket(source_bucket_name)
-    data_bucket = cluster.servers[0].get_bucket(data_bucket_name)
+    source_bucket = cluster.servers[0].get_sdk_bucket(source_bucket_name)
+    data_bucket = cluster.servers[0].get_sdk_bucket(data_bucket_name)
 
     sc = ShadowCluster(
         bob_non_shadower=bob_non_shadower,

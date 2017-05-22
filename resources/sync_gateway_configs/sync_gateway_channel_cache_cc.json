@@ -1,15 +1,17 @@
 {
     "interface":":4984",
     "adminInterface": "0.0.0.0:4985",
-    "log": ["CRUD+", "Cache+", "HTTP+", "Changes+"],
+    "compressResponses": false,
+    "log": ["*"],
     "databases":{
         "db": {
             "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
             "bucket":"data-bucket",
+            "username":"data-bucket",
             "password": "password",
             "cache": {
-                "channel_cache_max_length": 5000,
-                "channel_cache_min_length": 5000,
+                "channel_cache_max_length": 750,
+                "channel_cache_min_length": 750,
                 "channel_cache_expiry": 90
             }
         }
