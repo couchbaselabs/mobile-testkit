@@ -12,6 +12,7 @@ from couchbase.exceptions import NotFoundError
 
 
 import keywords.constants
+from keywords.constants import CLIENT_REQUEST_TIMEOUT
 from keywords.remoteexecutor import RemoteExecutor
 from keywords.exceptions import CBServerError
 from keywords.exceptions import ProvisioningError
@@ -417,9 +418,9 @@ class CouchbaseServer:
         _sync:rev:att_doc:34:1-e7fa9a5e6bb25f7a40f36297247ca93e
         """
         b = Bucket("couchbase://{}/{}".format(self.host, bucket), password='password')
+        self._create_primary_index_retry(b, bucket)
 
         cached_rev_doc_ids = []
-        b.n1ql_query("CREATE PRIMARY INDEX ON `{}`".format(bucket)).execute()
         for row in b.n1ql_query("SELECT meta(`{}`) FROM `{}`".format(bucket, bucket)):
             if row["$1"]["id"].startswith("_sync:rev"):
                 cached_rev_doc_ids.append(row["$1"]["id"])
@@ -429,15 +430,45 @@ class CouchbaseServer:
             log_debug("Removing: {}".format(doc_id))
             b.remove(doc_id)
 
+    def _create_primary_index_retry(self, bucket, bucket_name):
+        """ Currently index deletion is asynchronous.
+        There can be a race where the SDK still thinks that a primary index exists
+        even though the bucket has been recreated.
+
+        This will poll until there are no primary indices before attempting to create one
+        """
+
+        start = time.time()
+
+        while True:
+
+            # If the indexes have not been cleaned up by now, raise an exception
+            if time.time() - start > CLIENT_REQUEST_TIMEOUT:
+                raise ProvisioningError("Indexes were never deleted!!")
+
+            index_query = bucket.n1ql_query("SELECT * FROM system:indexes")
+            indexes = [row for row in index_query]
+            if len(indexes) == 0:
+                # If there are no indexes, continue
+                log_info("Indexes were removed, Creating new primary index ...")
+                break
+            else:
+                # There is a pre-existing index that has not been
+                # removed by bucket deletion. Wait until it is gone
+                log_info("Indexes were not removed, Waiting for indexes to get cleaned up ...")
+                time.sleep(1)
+
+        bucket.n1ql_query("CREATE PRIMARY INDEX ON `{}`".format(bucket_name)).execute()
+
     def get_server_docs_with_prefix(self, bucket, prefix):
         """
         Returns server doc ids matching a prefix (ex. '_sync:rev:')
         """
 
         b = Bucket("couchbase://{}/{}".format(self.host, bucket), password='password')
+        self._create_primary_index_retry(b, bucket)
 
         found_ids = []
-        b.n1ql_query("CREATE PRIMARY INDEX ON `{}`".format(bucket)).execute()
         for row in b.n1ql_query("SELECT meta(`{}`) FROM `{}`".format(bucket, bucket)):
             log_info(row)
             if row["$1"]["id"].startswith(prefix):
