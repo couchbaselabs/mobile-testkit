@@ -4,6 +4,7 @@ import pytest
 
 from keywords.ClusterKeywords import ClusterKeywords
 from keywords.constants import CLUSTER_CONFIGS_DIR
+from keywords.exceptions import ProvisioningError
 from keywords.SyncGateway import (sync_gateway_config_path_for_mode,
                                   validate_sync_gateway_mode)
 from keywords.tklogging import Logging
@@ -11,8 +12,6 @@ from keywords.utils import check_xattr_support, log_info
 from libraries.NetworkUtils import NetworkUtils
 from libraries.testkit import cluster
 from utilities.cluster_config_utils import persist_cluster_config_environment_prop
-
-from keywords.exceptions import ProvisioningError
 
 
 # Add custom arguments for executing tests in this directory
