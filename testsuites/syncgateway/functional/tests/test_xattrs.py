@@ -102,7 +102,7 @@ def test_on_demand_import_of_external_updates(params_from_base_test_setup, sg_co
     updated_doc = sdk_client.upsert(doc_id, doc_body)
     log_info('Updated doc: {} via SDK'.format(updated_doc))
 
-    # Try to create a revision of of generation 1 from Sync Gateway.
+    # Try to create a revision of generation 1 from Sync Gateway.
     # If on demand importing is working as designed, it should go to the
     # bucket and see that there has been an external update and import it.
     # Sync Gateway should then get a 409 conflict when trying to update the doc
