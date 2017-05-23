@@ -114,24 +114,15 @@ def test_numeric_expiry_as_ttl(params_from_base_test_setup, sg_conf_name):
     with pytest.raises(HTTPError) as he:
         client.get_doc(url=sg_url, db=sg_db, doc_id=doc_exp_3["id"], auth=sg_user_session)
     assert he.value[0].startswith("404 Client Error: Not Found for url:")
-
-    # If xattrs, check that the doc is a tombstone
-    # by getting the rev and "_deleted" prop via _raw
-    # If sync gateway is using document meta data
-    # ensure doc has been purged from the server
-    if xattrs_enabled:
-        expired_raw_doc = client.get_raw_doc(
-            url=sg_url_admin,
-            db=sg_db,
-            doc_id=doc_exp_3["id"],
-        )
-
-        assert expired_raw_doc["_sync"]["rev"].startswith("2-")
-        assert expired_raw_doc["_deleted"]
-    else:
-        with pytest.raises(NotFoundError) as nfe:
-            sdk_client.get(doc_exp_3["id"])
-        assert "The key does not exist on the server" in str(nfe)
+    
+    verify_doc_deletion_on_server(
+        doc_id=doc_exp_3["id"],
+        sdk_client=sdk_client,
+        sg_client=client,
+        sg_admin_url=sg_url_admin,
+        sg_db=sg_db,
+        xattrs_enabled=xattrs_enabled
+    )
 
     # doc_exp_10 should be available still
     doc_exp_10_result = client.get_doc(url=sg_url, db=sg_db, doc_id=doc_exp_10["id"], auth=sg_user_session)
@@ -206,23 +197,14 @@ def test_string_expiry_as_ttl(params_from_base_test_setup, sg_conf_name):
         client.get_doc(url=sg_url, db=sg_db, doc_id=doc_exp_3["id"], auth=sg_user_session)
     assert he.value[0].startswith("404 Client Error: Not Found for url:")
 
-    # If xattrs, check that the doc is a tombstone
-    # by getting the rev and "_deleted" prop via _raw
-    # If sync gateway is using document meta data
-    # ensure doc has been purged from the server
-    if xattrs_enabled:
-        expired_raw_doc = client.get_raw_doc(
-            url=sg_url_admin,
-            db=sg_db,
-            doc_id=doc_exp_3["id"],
-        )
-
-        assert expired_raw_doc["_sync"]["rev"].startswith("2-")
-        assert expired_raw_doc["_deleted"]
-    else:
-        with pytest.raises(NotFoundError) as nfe:
-            sdk_client.get(doc_exp_3["id"])
-        assert "The key does not exist on the server" in str(nfe)
+    verify_doc_deletion_on_server(
+        doc_id=doc_exp_3["id"],
+        sdk_client=sdk_client,
+        sg_client=client,
+        sg_admin_url=sg_url_admin,
+        sg_db=sg_db,
+        xattrs_enabled=xattrs_enabled
+    )
 
     # doc_exp_10 should be available still
     doc_exp_10_result = client.get_doc(url=sg_url, db=sg_db, doc_id=doc_exp_10["id"], auth=sg_user_session)
@@ -301,23 +283,14 @@ def test_numeric_expiry_as_unix_date(params_from_base_test_setup, sg_conf_name):
         client.get_doc(url=sg_url, db=sg_db, doc_id=doc_exp_3["id"], auth=sg_user_session)
     assert he.value[0].startswith("404 Client Error: Not Found for url:")
 
-    # If xattrs, check that the doc is a tombstone
-    # by getting the rev and "_deleted" prop via _raw
-    # If sync gateway is using document meta data
-    # ensure doc has been purged from the server
-    if xattrs_enabled:
-        expired_raw_doc = client.get_raw_doc(
-            url=sg_url_admin,
-            db=sg_db,
-            doc_id=doc_exp_3["id"],
-        )
-
-        assert expired_raw_doc["_sync"]["rev"].startswith("2-")
-        assert expired_raw_doc["_deleted"]
-    else:
-        with pytest.raises(NotFoundError) as nfe:
-            sdk_client.get(doc_exp_3["id"])
-        assert "The key does not exist on the server" in str(nfe)
+    verify_doc_deletion_on_server(
+        doc_id=doc_exp_3["id"],
+        sdk_client=sdk_client,
+        sg_client=client,
+        sg_admin_url=sg_url_admin,
+        sg_db=sg_db,
+        xattrs_enabled=xattrs_enabled
+    )
 
     # doc_exp_years should be available still
     doc_exp_years_result = client.get_doc(url=sg_url, db=sg_db, doc_id=doc_exp_years["id"], auth=sg_user_session)
@@ -400,23 +373,14 @@ def test_string_expiry_as_unix_date(params_from_base_test_setup, sg_conf_name):
         client.get_doc(url=sg_url, db=sg_db, doc_id=doc_exp_3["id"], auth=sg_user_session)
     assert he.value[0].startswith("404 Client Error: Not Found for url:")
 
-    # If xattrs, check that the doc is a tombstone
-    # by getting the rev and "_deleted" prop via _raw
-    # If sync gateway is using document meta data
-    # ensure doc has been purged from the server
-    if xattrs_enabled:
-        expired_raw_doc = client.get_raw_doc(
-            url=sg_url_admin,
-            db=sg_db,
-            doc_id=doc_exp_3["id"],
-        )
-
-        assert expired_raw_doc["_sync"]["rev"].startswith("2-")
-        assert expired_raw_doc["_deleted"]
-    else:
-        with pytest.raises(NotFoundError) as nfe:
-            sdk_client.get(doc_exp_3["id"])
-        assert "The key does not exist on the server" in str(nfe)
+    verify_doc_deletion_on_server(
+        doc_id=doc_exp_3["id"],
+        sdk_client=sdk_client,
+        sg_client=client,
+        sg_admin_url=sg_url_admin,
+        sg_db=sg_db,
+        xattrs_enabled=xattrs_enabled
+    )
 
     # doc_exp_years should be available still
     doc_exp_years_result = client.get_doc(url=sg_url, db=sg_db, doc_id=doc_exp_years["id"], auth=sg_user_session)
@@ -495,23 +459,14 @@ def test_string_expiry_as_iso_8601_date(params_from_base_test_setup, sg_conf_nam
         client.get_doc(url=sg_url, db=sg_db, doc_id=doc_exp_3["id"], auth=sg_user_session)
     assert he.value[0].startswith("404 Client Error: Not Found for url:")
 
-    # If xattrs, check that the doc is a tombstone
-    # by getting the rev and "_deleted" prop via _raw
-    # If sync gateway is using document meta data
-    # ensure doc has been purged from the server
-    if xattrs_enabled:
-        expired_raw_doc = client.get_raw_doc(
-            url=sg_url_admin,
-            db=sg_db,
-            doc_id=doc_exp_3["id"],
-        )
-
-        assert expired_raw_doc["_sync"]["rev"].startswith("2-")
-        assert expired_raw_doc["_deleted"]
-    else:
-        with pytest.raises(NotFoundError) as nfe:
-            sdk_client.get(doc_exp_3["id"])
-        assert "The key does not exist on the server" in str(nfe)
+    verify_doc_deletion_on_server(
+        doc_id=doc_exp_3["id"],
+        sdk_client=sdk_client,
+        sg_client=client,
+        sg_admin_url=sg_url_admin,
+        sg_db=sg_db,
+        xattrs_enabled=xattrs_enabled
+    )
 
     # doc_exp_years should be available still
     doc_exp_years_result = client.get_doc(url=sg_url, db=sg_db, doc_id=doc_exp_years["id"], auth=sg_user_session)
@@ -655,23 +610,14 @@ def test_rolling_ttl_expires(params_from_base_test_setup, sg_conf_name):
         client.get_doc(url=sg_url, db=sg_db, doc_id=doc_exp_3["id"], auth=sg_user_session)
     assert he.value[0].startswith("404 Client Error: Not Found for url:")
 
-    # If xattrs, check that the doc is a tombstone
-    # by getting the rev and "_deleted" prop via _raw
-    # If sync gateway is using document meta data
-    # ensure doc has been purged from the server
-    if xattrs_enabled:
-        expired_raw_doc = client.get_raw_doc(
-            url=sg_url_admin,
-            db=sg_db,
-            doc_id=doc_exp_3["id"],
-        )
-
-        assert expired_raw_doc["_sync"]["rev"].startswith("2-")
-        assert expired_raw_doc["_deleted"]
-    else:
-        with pytest.raises(NotFoundError) as nfe:
-            sdk_client.get(doc_exp_3["id"])
-        assert "The key does not exist on the server" in str(nfe)
+    verify_doc_deletion_on_server(
+        doc_id=doc_exp_3["id"],
+        sdk_client=sdk_client,
+        sg_client=client,
+        sg_admin_url=sg_url_admin,
+        sg_db=sg_db,
+        xattrs_enabled=xattrs_enabled
+    )
 
     # doc_exp_10 should be available still
     doc_exp_10_result = client.get_doc(url=sg_url, db=sg_db, doc_id=doc_exp_10["id"], auth=sg_user_session)
@@ -752,23 +698,14 @@ def test_rolling_ttl_remove_expirary(params_from_base_test_setup, sg_conf_name):
         client.get_doc(url=sg_url, db=sg_db, doc_id=doc_exp_10["id"], auth=sg_user_session)
     assert he.value[0].startswith("404 Client Error: Not Found for url:")
 
-    # If xattrs, check that the doc is a tombstone
-    # by getting the rev and "_deleted" prop via _raw
-    # If sync gateway is using document meta data
-    # ensure doc has been purged from the server
-    if xattrs_enabled:
-        expired_raw_doc = client.get_raw_doc(
-            url=sg_url_admin,
-            db=sg_db,
-            doc_id=doc_exp_10["id"],
-        )
-
-        assert expired_raw_doc["_sync"]["rev"].startswith("2-")
-        assert expired_raw_doc["_deleted"]
-    else:
-        with pytest.raises(NotFoundError) as nfe:
-            sdk_client.get(doc_exp_10["id"])
-        assert "The key does not exist on the server" in str(nfe)
+    verify_doc_deletion_on_server(
+        doc_id=doc_exp_10["id"],
+        sdk_client=sdk_client,
+        sg_client=client,
+        sg_admin_url=sg_url_admin,
+        sg_db=sg_db,
+        xattrs_enabled=xattrs_enabled
+    )
 
 
 @pytest.mark.sanity
@@ -852,24 +789,15 @@ def test_setting_expiry_in_bulk_docs(params_from_base_test_setup, sg_conf_name):
     client.verify_doc_ids_found_in_response(response=bulk_get_docs, expected_doc_ids=expected_ids)
     client.verify_doc_ids_not_found_in_response(response=errors, expected_missing_doc_ids=expected_missing_ids)
 
-    # If xattrs, check that the doc is a tombstone
-    # by getting the rev and "_deleted" prop via _raw
-    # If sync gateway is using document meta data
-    # ensure doc has been purged from the server
     for expired_doc in error_ids:
-        if xattrs_enabled:
-            expired_raw_doc = client.get_raw_doc(
-                url=sg_url_admin,
-                db=sg_db,
-                doc_id=expired_doc,
-            )
-
-            assert expired_raw_doc["_sync"]["rev"].startswith("2-")
-            assert expired_raw_doc["_deleted"]
-        else:
-            with pytest.raises(NotFoundError) as nfe:
-                sdk_client.get(expired_doc)
-            assert "The key does not exist on the server" in str(nfe)
+        verify_doc_deletion_on_server(
+            doc_id=expired_doc,
+            sdk_client=sdk_client,
+            sg_client=client,
+            sg_admin_url=sg_url_admin,
+            sg_db=sg_db,
+            xattrs_enabled=xattrs_enabled
+        )
 
 
 # TODO:
@@ -889,3 +817,22 @@ def test_setting_expiry_in_bulk_docs(params_from_base_test_setup, sg_conf_name):
 # Validating put with unix past timestamp (Optional)
 #    [Tags]  sanity  syncgateway  ttl
 #    [Documentation]
+
+def verify_doc_deletion_on_server(doc_id, sdk_client, sg_client, sg_admin_url, sg_db, xattrs_enabled=False):
+    # If xattrs, check that the doc is a tombstone
+    # by getting the rev and "_deleted" prop via _raw
+    # If sync gateway is using document meta data
+    # ensure doc has been purged from the server
+    if xattrs_enabled:
+        expired_raw_doc = sg_client.get_raw_doc(
+            url=sg_admin_url,
+            db=sg_db,
+            doc_id=doc_id,
+        )
+        assert expired_raw_doc["_sync"]["rev"].startswith("2-")
+        assert expired_raw_doc["_deleted"]
+    else:
+        with pytest.raises(NotFoundError) as nfe:
+            sdk_client.get(doc_id)
+        assert "The key does not exist on the server" in str(nfe)
+
