@@ -103,7 +103,7 @@ def test_on_demand_import_of_external_updates(params_from_base_test_setup, sg_co
     log_info('Updated doc: {} via SDK'.format(updated_doc))
 
     # Try to create a revision of of generation 1 from Sync Gateway.
-    # If on demand importing is working as design, it should go to the
+    # If on demand importing is working as designed, it should go to the
     # bucket and see that there has been an external update and import it.
     # Sync Gateway should then get a 409 conflict when trying to update the doc
     with pytest.raises(HTTPError) as he:
@@ -342,7 +342,7 @@ def test_purge(params_from_base_test_setup, sg_conf_name, use_multiple_channels)
     - Bulk create 1000 docs via SDK
     - Get all of the docs via Sync Gateway
     - Get all of the docs via SDK
-    - Sync Gateway delete 1/2 the docs
+    - Sync Gateway delete 1/2 the docs, This will exercise purge on deleted and non-deleted docs
     - Sync Gateway purge all docs
     - Verify SDK can't see the docs
     - Verify SG can't see the docs
@@ -1140,6 +1140,12 @@ def is_conflict(httperror):
 
 
 def update_sdk_docs(client, docs_to_update, prop_to_update, number_updates):
+    """ This will update a set of docs (docs_to_update)
+    by updating a property (prop_to_update) using CAS safe writes.
+    It will continue to update the set of docs until all docs have
+    been updated a number of times (number_updates).
+    """
+
     log_info("Client: {}".format(id(client)))
 
     # Store copy of list to avoid mutating 'docs_to_update'
@@ -1176,6 +1182,10 @@ def update_sdk_docs(client, docs_to_update, prop_to_update, number_updates):
 
 
 def delete_sg_docs(client, url, db, docs_to_delete, auth):
+    """ This will attempt to delete a document via Sync Gateway. This method is meant to be
+    run concurrently with delete_sdk_docs so the deletions have to handle external deletions
+    as well.
+    """
 
     deleted_count = 0
 
@@ -1217,6 +1227,9 @@ def delete_sg_docs(client, url, db, docs_to_delete, auth):
 
 
 def delete_sdk_docs(client, docs_to_delete):
+    """ This will attempt to delete a document via Couchbase Server Python SDK. This method is meant to be
+    run concurrently with delete_sg_docs so the deletions have to handle external deletions by Sync Gateway.
+    """
 
     deleted_count = 0
 
@@ -1247,6 +1260,10 @@ def delete_sdk_docs(client, docs_to_delete):
 
 
 def verify_sg_deletes(client, url, db, docs_to_verify_deleted, auth):
+    """ Verify that documents have been deleted via Sync Gateway GET's.
+    - Verify the expected result is returned via GET doc
+    - Verify the expected result is returned via GET _bulk_get
+    """
 
     docs_to_verify_scratchpad = list(docs_to_verify_deleted)
 
@@ -1357,6 +1374,7 @@ def verify_no_sg_xattrs(sg_client, sg_url, sg_db, doc_id):
 
 
 def verify_doc_ids_in_sg_bulk_response(response, expected_number_docs, expected_ids):
+    """ Verify 'expected_ids' are present in Sync Gateway _build_get request """
 
     log_info('Verifing SG bulk_get response has {} docs with expected ids ...'.format(expected_number_docs))
 
@@ -1373,6 +1391,7 @@ def verify_doc_ids_in_sg_bulk_response(response, expected_number_docs, expected_
 
 
 def verify_doc_ids_in_sg_all_docs_response(response, expected_number_docs, expected_ids):
+    """ Verify 'expected_ids' are present in Sync Gateway _all_docs request """
 
     log_info('Verifing SG all_docs response has {} docs with expected ids ...'.format(expected_number_docs))
 
@@ -1389,6 +1408,7 @@ def verify_doc_ids_in_sg_all_docs_response(response, expected_number_docs, expec
 
 
 def verify_doc_ids_in_sdk_get_multi(response, expected_number_docs, expected_ids):
+    """ Verify 'expected_ids' are present in Python SDK get_multi() call """
 
     log_info('Verifing SDK get_multi response has {} docs with expected ids ...'.format(expected_number_docs))
 
