@@ -16,7 +16,10 @@ from keywords.exceptions import FeatureSupportedError
     ('1.4.2', '1.4.1', 1),
     ('2.0.0', '1.4.1', 1),
     ('1.4.1', '2.0.0', -1),
-    ('1.4.0', '1.4', 0)
+    ('1.4.0', '1.4', 0),
+    ('1.4.0.1', '1.4', 1),
+    ('1.4.0.0', '1.4', 0),
+    ('1.4.0', '1.4.0.0', 0),
 ])
 def test_compare_version(version_one, version_two, expected_output):
     assert utils.compare_versions(version_one, version_two) == expected_output

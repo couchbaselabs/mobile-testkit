@@ -154,32 +154,31 @@ def compare_versions(version_one, version_two):
     version_one = version_one.split('-')[0]
     version_two = version_two.split('-')[0]
 
-    # Convert versions into int array [1, 4, 0]
-    version_one_parts = [int(version_parts) for version_parts in version_one.split('.')]
-    version_one_len = len(version_one_parts)
+    # Strip '.' and convert to integers
+    version_one_number_string = version_one.replace('.', '')
+    version_two_number_string = version_two.replace('.', '')
 
-    version_two_parts = [int(version_parts) for version_parts in version_two.split('.')]
-    version_two_len = len(version_two_parts)
+    version_one_number_string_len = len(version_one_number_string)
+    version_two_number_string_len = len(version_two_number_string)
 
-    # If the versions have different lengths, pad the shorter version with 0's
-    # Version one: [1, 4], Version two, [1, 4, 0] ->
-    # Version one: [1, 4, 0], Version two, [1, 4, 0]
-    if version_one_len < version_two_len:
-        diff = version_two_len - version_one_len
-        for _ in range(diff):
-            version_one_parts.append(0)
-    elif version_one_len > version_two_len:
-        diff = version_one_len - version_two_len
-        for _ in range(diff):
-            version_two_parts.append(0)
+    # Handle the case where 1.4 and 1.4.0 should be equal
+    # by padding 0s on the right of the shorter number
+    difference = abs(version_one_number_string_len - version_two_number_string_len)
+    if difference != 0 and version_one_number_string_len < version_two_number_string_len:
+        for _ in range(difference):
+            version_one_number_string += "0"
+    if difference != 0 and version_one_number_string_len > version_two_number_string_len:
+        for _ in range(difference):
+            version_two_number_string += "0"
 
-    # Iterate over each element to determine comparison
-    version_length = len(version_one_parts)
-    for i in range(version_length):
-        if version_one_parts[i] < version_two_parts[i]:
-            return -1
-        elif version_one_parts[i] > version_two_parts[i]:
-            return 1
+    version_one_number = int(version_one_number_string)
+    version_two_number = int(version_two_number_string)
+
+    if version_one_number < version_two_number:
+        return -1
+
+    if version_one_number > version_two_number:
+        return 1
 
     # All components are equal
     return 0
