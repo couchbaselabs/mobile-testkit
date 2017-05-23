@@ -7,7 +7,6 @@ from keywords.constants import REGISTERED_CLIENT_DBS
 from keywords.exceptions import LiteServError
 from keywords.utils import version_and_build
 from keywords.utils import log_info
-from keywords.utils import has_dot_net4_dot_5
 
 from libraries.provision.ansible_runner import AnsibleRunner
 
@@ -71,17 +70,23 @@ class LiteServNetMsft(LiteServBase):
         Installs needed packages on Windows host and removes any existing service wrappers for LiteServ
         """
         # The package structure for LiteServ is different pre 1.4. Handle for this case
-        if has_dot_net4_dot_5(self.version_build):
-            directory_path = "couchbase-lite-net-msft-{}-liteserv/net45/LiteServ.exe".format(self.version_build)
-        else:
-            directory_path = "couchbase-lite-net-msft-{}-liteserv/LiteServ.exe".format(self.version_build)
+        retries = 2
+        directory_path = "couchbase-lite-net-msft-{}-liteserv/LiteServ.exe".format(self.version_build)
 
-        status = self.ansible_runner.run_ansible_playbook("install-liteserv-windows.yml", extra_vars={
-            "directory_path": directory_path
-        })
+        while retries > 0:
+            status = self.ansible_runner.run_ansible_playbook("install-liteserv-windows.yml", extra_vars={
+                "directory_path": directory_path
+            })
 
-        if status != 0:
-            raise LiteServError("Failed to install Liteserv on Windows host")
+            if status != 0:
+                if retries > 0:
+                    log_info("Failed to install Liteserv on Windows host, retrying...")
+                    retries -= 1
+                    directory_path = "couchbase-lite-net-msft-{}-liteserv/net45/LiteServ.exe".format(self.version_build)
+                elif retries == 0:
+                    raise LiteServError("Failed to install Liteserv on Windows host")
+            else:
+                break
 
     def remove(self):
         log_info("Removing windows server from: {}".format(self.host))
@@ -123,24 +128,30 @@ class LiteServNetMsft(LiteServBase):
             process_args.extend(db_flags)
 
         # The package structure for LiteServ is different pre 1.4. Handle for this case
-        if has_dot_net4_dot_5(self.version_build):
-            binary_path = "couchbase-lite-net-msft-{}-liteserv/net45/LiteServ.exe".format(self.version_build)
-        else:
-            binary_path = "couchbase-lite-net-msft-{}-liteserv/LiteServ.exe".format(self.version_build)
+        retries = 2
+        binary_path = "couchbase-lite-net-msft-{}-liteserv/LiteServ.exe".format(self.version_build)
 
-        joined_args = " ".join(process_args)
-        log_info("Starting LiteServ {} with: {}".format(binary_path, joined_args))
+        while retries > 0:
+            joined_args = " ".join(process_args)
+            log_info("Starting LiteServ {} with: {}".format(binary_path, joined_args))
 
-        # Start LiteServ via Ansible on remote machine
-        status = self.ansible_runner.run_ansible_playbook(
-            "start-liteserv-msft.yml",
-            extra_vars={
-                "binary_path": binary_path,
-                "launch_args": joined_args,
-            }
-        )
-        if status != 0:
-            raise LiteServError("Could not stop Liteserv")
+            # Start LiteServ via Ansible on remote machine
+            status = self.ansible_runner.run_ansible_playbook(
+                "start-liteserv-msft.yml",
+                extra_vars={
+                    "binary_path": binary_path,
+                    "launch_args": joined_args,
+                }
+            )
+            if status != 0:
+                if retries > 0:
+                    log_info("Could not start Liteserv, retrying...")
+                    retries -= 1
+                    binary_path = "couchbase-lite-net-msft-{}-liteserv/net45/LiteServ.exe".format(self.version_build)
+                elif retries == 0:
+                    raise LiteServError("Could not start Liteserv")
+            else:
+                break
 
         self._verify_launched()
 
@@ -178,22 +189,28 @@ class LiteServNetMsft(LiteServBase):
         """
 
         # The package structure for LiteServ is different pre 1.4. Handle for this case
-        if has_dot_net4_dot_5(self.version_build):
-            binary_path = "couchbase-lite-net-msft-{}-liteserv/net45/LiteServ.exe".format(self.version_build)
-        else:
-            binary_path = "couchbase-lite-net-msft-{}-liteserv/LiteServ.exe".format(self.version_build)
+        retries = 2
+        binary_path = "couchbase-lite-net-msft-{}-liteserv/LiteServ.exe".format(self.version_build)
 
-        log_full_path = "{}/{}".format(os.getcwd(), self.logfile)
+        while retries > 0:
+            log_full_path = "{}/{}".format(os.getcwd(), self.logfile)
 
-        log_info("Stoping {} on windows maching ...".format(binary_path))
-        log_info("Pulling logs to {} ...".format(log_full_path))
+            log_info("Stopping {} on windows matching ...".format(binary_path))
+            log_info("Pulling logs to {} ...".format(log_full_path))
 
-        status = self.ansible_runner.run_ansible_playbook(
-            "stop-liteserv-windows.yml",
-            extra_vars={
-                "binary_path": binary_path,
-                "log_full_path": log_full_path
-            }
-        )
-        if status != 0:
-            raise LiteServError("Could not start Liteserv")
+            status = self.ansible_runner.run_ansible_playbook(
+                "stop-liteserv-windows.yml",
+                extra_vars={
+                    "binary_path": binary_path,
+                    "log_full_path": log_full_path
+                }
+            )
+            if status != 0:
+                if retries > 0:
+                    log_info("Could not stop Liteserv, retrying...")
+                    retries -= 1
+                    binary_path = "couchbase-lite-net-msft-{}-liteserv/net45/LiteServ.exe".format(self.version_build)
+                elif retries == 0:
+                    raise LiteServError("Could not stop Liteserv")
+            else:
+                break

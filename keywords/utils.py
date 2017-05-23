@@ -121,18 +121,3 @@ def dump_file_contents_to_logs(filename):
         log_info("Contents of {}: {}".format(filename, open(filename).read()))
     except Exception as e:
         log_info("Error reading {}: {}".format(filename, e))
-
-
-# Check if this version has net45
-def has_dot_net4_dot_5(version):
-    version_prefixes = [
-        "1.2",
-        "1.3",
-        "1.4.0"  # For 1.4, the path is net45/LiteServ.exe, for 1.4.0, there is no net45
-    ]
-
-    for i in version_prefixes:
-        if version.startswith(i):
-            return False
-
-    return True
