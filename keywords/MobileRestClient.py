@@ -1038,6 +1038,10 @@ class MobileRestClient:
         return purged_docs
 
     def update_docs(self, url, db, docs, number_updates, delay=None, auth=None, channels=None, property_updater=None):
+        """ Updates docs (using doc["id"]) a number of times. It will wait a number of seconds (delay)
+        between each update. The 'property_updater' can specify a custom property to update on each
+        iteration. 
+        """
 
         updated_docs = []
 
@@ -1239,8 +1243,8 @@ class MobileRestClient:
 
     def delete_bulk_docs(self, url, db, docs, auth=None):
         """
-        Keyword that issues POST _bulk docs with the specified 'docs'.
-        Use the Document.create_docs() to create the docs.
+        Issues a bulk delete by setting the _deleted flag to true.
+        This will create a tombstone.
         """
         auth_type = get_auth_type(auth)
         server_type = self.get_server_type(url)
@@ -1296,7 +1300,7 @@ class MobileRestClient:
     def get_bulk_docs(self, url, db, doc_ids, auth=None, validate=True):
         """
         Keyword that issues POST _bulk_get docs with the specified 'docs' array.
-        doc need to be in the format (python list of {id: "", rev: ""} dictionaries):
+        docs need to be in the following format:
         [
             'exp_3_0',
             'exp_3_1', ...
@@ -1999,6 +2003,17 @@ class MobileRestClient:
             assert row["value"] in values, "Did not find expected value in view response"
 
     def verify_doc_ids_found_in_response(self, response, expected_doc_ids):
+        """ Verifies that list of doc ids are in the response.
+         'response' expected format:
+        [
+            {u'channels': [u'NBC', u'ABC'], u'_rev': u'1-efda114d144b5220fa77c4e51f3e70a8', u'_id': u'exp_10_0'},
+            {u'channels': [u'NBC', u'ABC'], u'_rev': u'1-efda114d144b5220fa77c4e51f3e70a8', u'_id': u'exp_10_1'},
+            {u'channels': [u'NBC', u'ABC'], u'_rev': u'1-efda114d144b5220fa77c4e51f3e70a8', u'_id': u'exp_10_2'} ...
+        ]
+        """
+
+        import pdb
+        pdb.set_trace()
 
         found_doc_ids = []
         for doc in response:
@@ -2012,6 +2027,14 @@ class MobileRestClient:
             raise AssertionError("Found doc ids should be the same as expected doc ids")
 
     def verify_doc_ids_not_found_in_response(self, response, expected_missing_doc_ids):
+        """ Verifies that list of doc ids are not present on sync gateway.
+         'response' expected format:
+        [
+            {u'channels': [u'NBC', u'ABC'], u'_rev': u'1-efda114d144b5220fa77c4e51f3e70a8', u'_id': u'exp_10_0'},
+            {u'channels': [u'NBC', u'ABC'], u'_rev': u'1-efda114d144b5220fa77c4e51f3e70a8', u'_id': u'exp_10_1'},
+            {u'channels': [u'NBC', u'ABC'], u'_rev': u'1-efda114d144b5220fa77c4e51f3e70a8', u'_id': u'exp_10_2'} ...
+        ]
+        """
 
         missing_doc_ids = []
         for doc in response:
