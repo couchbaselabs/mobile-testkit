@@ -1,7 +1,7 @@
 ### Running tests with docker image
 
 IMPORTANT: This will copy your public key to allow ssh access from mobile-testkit container to other clusters in the container.
-IMPORTANT: If you have been developing on you host machine, you may need `clean.sh` to make sure that the mounted volume does not pick up stale state (.pyc files, test run caches, etc)
+IMPORTANT: If you have been developing on your host machine, you may need `clean.sh` to make sure that the mounted volume does not pick up stale state (.pyc files, test run caches, etc)
 
 In order to pull dependencies needed by `docker/create_cluster.py`, re-run `source setup.sh`:
 
