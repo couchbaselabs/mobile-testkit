@@ -5,10 +5,13 @@ from keywords.ClusterKeywords import ClusterKeywords
 from keywords.SyncGateway import (sync_gateway_config_path_for_mode,
                                   validate_sync_gateway_mode)
 from keywords.tklogging import Logging
+
 from keywords.utils import log_info, check_xattr_support
 from libraries.NetworkUtils import NetworkUtils
 from libraries.testkit import cluster
 from utilities.cluster_config_utils import persist_cluster_config_environment_prop
+
+from keywords.exceptions import ProvisioningError
 
 
 # This will be called once at the beggining of the execution in the 'tests/load_balancer' directory
@@ -63,13 +66,18 @@ def params_from_base_suite_setup(request):
     # Skip provisioning if user specifies '--skip-provisoning'
     if not skip_provisioning:
         cluster_helper = ClusterKeywords()
-        cluster_helper.provision_cluster(
-            cluster_config=cluster_config,
-            server_version=server_version,
-            sync_gateway_version=sync_gateway_version,
-            sync_gateway_config=sg_config,
-            race_enabled=race_enabled
-        )
+        try:
+            cluster_helper.provision_cluster(
+                cluster_config=cluster_config,
+                server_version=server_version,
+                sync_gateway_version=sync_gateway_version,
+                sync_gateway_config=sg_config,
+                race_enabled=race_enabled
+            )
+        except ProvisioningError:
+            logging_helper = Logging()
+            logging_helper.fetch_and_analyze_logs(cluster_config=cluster_config, test_name=request.node.name)
+            raise
 
     yield {"cluster_config": cluster_config, "mode": mode}
 
