@@ -20,6 +20,14 @@ from keywords.SyncGateway import sync_gateway_config_path_for_mode
     ("sync_gateway_webhook", 5, 1, 1, 2),
 ])
 def test_webhooks(params_from_base_test_setup, sg_conf_name, num_users, num_channels, num_docs, num_revisions):
+    """
+    Scenario:
+    - Start a webserver on machine running the test to recieved webhook events
+    - Create users
+    - Add docs to Sync Gateway
+    - Update docs on Sync Gateway
+    - Verify the webserver recieved all expected webhook events
+    """
 
     start = time.time()
 

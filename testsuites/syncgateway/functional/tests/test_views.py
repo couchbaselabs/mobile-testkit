@@ -77,12 +77,12 @@ def test_view_backfill_for_deletes(params_from_base_test_setup, sg_conf_name, va
 
     # Delete half of the docs randomly
     deleted_docs = []
-    for i in range(num_docs / 2):
+    for _ in range(num_docs / 2):
         random_doc = random.choice(bulk_resp)
         deleted_doc = sg_client.delete_doc(url=sg_url, db=sg_db, doc_id=random_doc['id'], rev=random_doc['rev'], auth=seth_auth)
         deleted_docs.append(deleted_doc)
         bulk_resp.remove(random_doc)
-        print('Number of docs deleted: {}'.format(len(deleted_docs)))
+    log_info('Number of docs deleted: {}'.format(len(deleted_docs)))
 
     # This test will check changes before and after SG restart if
     # validate_changes_before_restart == True
@@ -101,7 +101,7 @@ def test_view_backfill_for_deletes(params_from_base_test_setup, sg_conf_name, va
         deleted_docs_in_changes = [change['id'] for change in changes['results'] if 'deleted' in change and change['deleted']]
         assert len(deleted_docs_in_changes) == num_docs / 2
 
-        # All deleted docs should show up in th changes feed
+        # All deleted docs should show up in the changes feed
         assert deleted_doc_ids == deleted_docs_in_changes
 
     # Restart Sync Gateway
