@@ -2012,9 +2012,6 @@ class MobileRestClient:
         ]
         """
 
-        import pdb
-        pdb.set_trace()
-
         found_doc_ids = []
         for doc in response:
             if "error" not in doc:
