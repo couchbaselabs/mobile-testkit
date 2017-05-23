@@ -9,7 +9,7 @@ DOC_TYPES = ['airline', 'route', 'airport', 'landmark', 'hotel']
 
 
 def check_lite_updates():
-
+    # Number of docs in the travel sample
     expected_number_of_lite_updated_docs = 31591
     lite_updated_doc_count = 0
     for doc_type in DOC_TYPES:

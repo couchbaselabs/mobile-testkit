@@ -18,7 +18,9 @@ from keywords.userinfo import UserInfo
 from keywords.utils import host_for_url, log_info
 from libraries.testkit.cluster import Cluster
 
-
+# Since sdk is quicker to update docs we need to have it sleep longer
+# between ops to avoid ops heavily weighted to SDK. These gives us more balanced
+# concurrency for each client.
 SG_OP_SLEEP = 0.001
 SDK_OP_SLEEP = 0.05
 
