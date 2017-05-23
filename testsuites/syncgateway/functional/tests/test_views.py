@@ -84,14 +84,14 @@ def test_view_backfill_for_deletes(params_from_base_test_setup, sg_conf_name, va
         bulk_resp.remove(random_doc)
     log_info('Number of docs deleted: {}'.format(len(deleted_docs)))
 
+    all_docs = bulk_resp + deleted_docs
+
     # This test will check changes before and after SG restart if
     # validate_changes_before_restart == True
     # If it is not set to True, only build the changes after restart
     if validate_changes_before_restart:
         # Verify deletions and inital docs show up in changes feed
-        all_docs = bulk_resp + deleted_docs
         sg_client.verify_docs_in_changes(url=sg_url, db=sg_db, expected_docs=all_docs, auth=seth_auth)
-
         changes = sg_client.get_changes(url=sg_url, db=sg_db, since=0, auth=seth_auth)
         # All docs should show up + _user doc
         assert len(changes['results']) == num_docs + 1
