@@ -114,7 +114,7 @@ def test_numeric_expiry_as_ttl(params_from_base_test_setup, sg_conf_name):
     with pytest.raises(HTTPError) as he:
         client.get_doc(url=sg_url, db=sg_db, doc_id=doc_exp_3["id"], auth=sg_user_session)
     assert he.value[0].startswith("404 Client Error: Not Found for url:")
-    
+
     verify_doc_deletion_on_server(
         doc_id=doc_exp_3["id"],
         sdk_client=sdk_client,
@@ -835,4 +835,3 @@ def verify_doc_deletion_on_server(doc_id, sdk_client, sg_client, sg_admin_url, s
         with pytest.raises(NotFoundError) as nfe:
             sdk_client.get(doc_id)
         assert "The key does not exist on the server" in str(nfe)
-

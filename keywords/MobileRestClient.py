@@ -1040,7 +1040,7 @@ class MobileRestClient:
     def update_docs(self, url, db, docs, number_updates, delay=None, auth=None, channels=None, property_updater=None):
         """ Updates docs (using doc["id"]) a number of times. It will wait a number of seconds (delay)
         between each update. The 'property_updater' can specify a custom property to update on each
-        iteration. 
+        iteration.
         """
 
         updated_docs = []
