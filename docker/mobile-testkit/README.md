@@ -9,21 +9,6 @@ In order to pull dependencies needed by `docker/create_cluster.py`, re-run `sour
 $ source setup.sh
 ```
 
-Create docker container slaves:
-
-Specifying `--pull` will go and grab the latest docker image builds. 
-
-Specifying `--clean` will do the following:
-1. Look for any networks running with the name you passed.
-2. Delete containers on that network.
-3. Delete the network
-
-If the name is not currently in use on your docker host, a new network will be created without affecting existing networks and containers
-
-```
-$ python docker/create_cluster.py --network-name cbl --number-of-nodes 5 --path-to-public-key ~/.ssh/id_rsa.pub --pull --clean
-```
-
 Mount local dev environment for iterative development with docker backend. This way you can make changes in your /{user}/mobile-testkit repo and execute within the context of the container.
 
 ```
