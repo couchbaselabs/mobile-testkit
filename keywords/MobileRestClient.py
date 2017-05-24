@@ -23,7 +23,7 @@ from keywords.utils import log_info
 from keywords.utils import log_debug
 from keywords.SyncGateway import validate_sync_gateway_mode
 
-import keywords.exceptions
+from keywords.exceptions import RestError, TimeoutException, LiteServError, ChangesError
 from keywords import types
 
 
@@ -428,21 +428,21 @@ class MobileRestClient:
 
             data = {}
             if server_url is None:
-                raise keywords.exceptions.RestError("Creating database error. You must provide a couchbase server url")
+                raise RestError("Creating database error. You must provide a couchbase server url")
             data["server"] = server_url
 
             if bucket_name is None:
-                raise keywords.exceptions.RestError("Creating database error. You must provide a couchbase server bucket name")
+                raise RestError("Creating database error. You must provide a couchbase server bucket name")
             data["bucket"] = bucket_name
 
             if sync_gateway_mode is None:
-                raise keywords.exceptions.RestError("You must specify either 'cc' or 'di' for sync_gateway_mode")
+                raise RestError("You must specify either 'cc' or 'di' for sync_gateway_mode")
 
             if sync_gateway_mode == "di" and index_bucket_name is None:
-                raise keywords.exceptions.RestError("You must provide an 'index_bucket_name' if you are running in distributed index mode")
+                raise RestError("You must provide an 'index_bucket_name' if you are running in distributed index mode")
 
             if sync_gateway_mode == "di" and is_index_writer is None:
-                raise keywords.exceptions.RestError("Please make sure you set 'is_index_writer' since you are running in 'di' mode")
+                raise RestError("Please make sure you set 'is_index_writer' since you are running in 'di' mode")
 
             # Add additional information if running in distributed index mode
             if sync_gateway_mode == "di":
@@ -505,7 +505,7 @@ class MobileRestClient:
         while True:
 
             if time.time() - start > CLIENT_REQUEST_TIMEOUT:
-                raise keywords.exceptions.TimeoutException("Verify Docs Present: TIMEOUT")
+                raise TimeoutException("Verify Docs Present: TIMEOUT")
 
             resp = self._session.get("{}/{}/_all_docs".format(url, db))
             log_r(resp)
@@ -556,7 +556,7 @@ class MobileRestClient:
         # verify dbs are deleted
         db_names = self.get_databases(url)
         if len(db_names) != 0:
-            raise keywords.exceptions.LiteServError("Failed to delete dbs!")
+            raise LiteServError("Failed to delete dbs!")
 
     def get_rev_generation_digest(self, rev):
         """
@@ -741,6 +741,13 @@ class MobileRestClient:
                 del resp_obj["_attachments"][k]["length"]
 
         return resp_obj
+
+    def get_raw_doc(self, url, db, doc_id):
+        """ Get a document via _raw Sync Gateway endpoint """
+        resp = self._session.get("{}/{}/_raw/{}".format(url, db, doc_id))
+        log_r(resp)
+        resp.raise_for_status()
+        return resp.json()
 
     def add_doc(self, url, db, doc, auth=None, use_post=True):
         """
@@ -959,7 +966,7 @@ class MobileRestClient:
             not_deleted = []
 
             if time.time() - start > CLIENT_REQUEST_TIMEOUT:
-                raise keywords.exceptions.TimeoutException("Verify Docs Deleted: TIMEOUT")
+                raise TimeoutException("Verify Docs Deleted: TIMEOUT")
 
             for doc in docs:
                 if auth_type == AuthType.session:
@@ -1007,11 +1014,21 @@ class MobileRestClient:
         docs format: [{u'ok': True, u'rev': u'3-56e50918afe3e9b3c29e94ad55cc6b15', u'id': u'large_attach_0'}, ...]
         """
 
+        server_type = self.get_server_type(url=url)
+
         purged_docs = []
         for doc in docs:
-            data = {
-                doc["id"]: [doc["rev"]]
-            }
+
+            log_info("Purging doc: {}".format(doc))
+            if server_type == ServerType.syncgateway:
+                data = {
+                    doc["_id"]: ['*']
+                }
+            else:
+                data = {
+                    doc["id"]: [doc["rev"]]
+                }
+
             resp = self._session.post("{}/{}/_purge".format(url, db), json.dumps(data))
             log_r(resp)
             resp.raise_for_status()
@@ -1020,7 +1037,11 @@ class MobileRestClient:
 
         return purged_docs
 
-    def update_docs(self, url, db, docs, number_updates, delay=None, auth=None, channels=None):
+    def update_docs(self, url, db, docs, number_updates, delay=None, auth=None, channels=None, property_updater=None):
+        """ Updates docs (using doc["id"]) a number of times. It will wait a number of seconds (delay)
+        between each update. The 'property_updater' can specify a custom property to update on each
+        iteration.
+        """
 
         updated_docs = []
 
@@ -1035,7 +1056,8 @@ class MobileRestClient:
                     number_updates=number_updates,
                     delay=delay,
                     auth=auth,
-                    channels=channels
+                    channels=channels,
+                    property_updater=property_updater
                 ) for doc in docs
             ]
 
@@ -1046,7 +1068,30 @@ class MobileRestClient:
         logging.debug("url: {} db: {} updated: {}".format(url, db, updated_docs))
         return updated_docs
 
-    def update_doc(self, url, db, doc_id, number_updates=1, attachment_name=None, expiry=None, delay=None, auth=None, channels=None):
+    def put_doc(self, url, db, doc_id, doc_body, rev, auth=None):
+        """
+        Updates a doc with doc id, a given revision, and doc body
+        """
+
+        auth_type = get_auth_type(auth)
+
+        params = {
+            "rev": rev
+        }
+
+        if auth_type == AuthType.session:
+            resp = self._session.put("{}/{}/{}".format(url, db, doc_id), params=params, data=json.dumps(doc_body), cookies=dict(SyncGatewaySession=auth[1]))
+        elif auth_type == AuthType.http_basic:
+            resp = self._session.put("{}/{}/{}".format(url, db, doc_id), params=params, data=json.dumps(doc_body), auth=auth)
+        else:
+            resp = self._session.put("{}/{}/{}".format(url, db, doc_id), params=params, data=json.dumps(doc_body))
+
+        log_r(resp)
+        resp.raise_for_status()
+
+        return resp.json()
+
+    def update_doc(self, url, db, doc_id, number_updates=1, attachment_name=None, expiry=None, delay=None, auth=None, channels=None, property_updater=None):
         """
         Updates a doc on a db a number of times.
             1. GETs the doc
@@ -1083,6 +1128,10 @@ class MobileRestClient:
             if channels is not None:
                 types.verify_is_list(channels)
                 doc["channels"] = channels
+
+            if property_updater is not None:
+                types.verify_is_callable(property_updater)
+                doc = property_updater(doc)
 
             if auth_type == AuthType.session:
                 resp = self._session.put("{}/{}/{}".format(url, db, doc_id), data=json.dumps(doc), cookies=dict(SyncGatewaySession=auth[1]))
@@ -1180,23 +1229,89 @@ class MobileRestClient:
 
         log_r(resp)
         resp.raise_for_status()
-
         resp_obj = resp.json()
+
+        for doc_resp in resp_obj:
+            if "error" in doc_resp:
+                raise RestError("Error while adding bulk docs!")
+
         return resp_obj
 
-    def get_bulk_docs(self, url, db, docs, auth=None):
+    def delete_bulk_docs(self, url, db, docs, auth=None):
+        """
+        Issues a bulk delete by setting the _deleted flag to true.
+        This will create a tombstone.
+        """
+        auth_type = get_auth_type(auth)
+        server_type = self.get_server_type(url)
+
+        for doc in docs:
+            doc['_deleted'] = True
+
+        # transform 'docs' into a format expected by _bulk_docs
+        if server_type == ServerType.listener:
+            request_body = {"docs": docs, "new_edits": True}
+        else:
+            request_body = {"docs": docs}
+
+        if auth_type == AuthType.session:
+            resp = self._session.post("{}/{}/_bulk_docs".format(url, db),
+                                      data=json.dumps(request_body),
+                                      cookies=dict(SyncGatewaySession=auth[1]))
+        elif auth_type == AuthType.http_basic:
+            resp = self._session.post("{}/{}/_bulk_docs".format(url, db), data=json.dumps(request_body), auth=auth)
+        else:
+            resp = self._session.post("{}/{}/_bulk_docs".format(url, db), data=json.dumps(request_body))
+
+        log_r(resp)
+        resp.raise_for_status()
+        resp_obj = resp.json()
+
+        for resp_doc in resp_obj:
+            if "error" in resp_doc:
+                raise RestError("Error during deleting docs in bulk")
+
+        return resp_obj
+
+    def get_all_docs(self, url, db, auth=None, include_docs=False):
+        """ Get all docs for a database via _all_docs """
+
+        auth_type = get_auth_type(auth)
+
+        params = {}
+        if include_docs:
+            params["include_docs"] = "true"
+
+        if auth_type == AuthType.session:
+            resp = self._session.get("{}/{}/_all_docs".format(url, db), params=params, cookies=dict(SyncGatewaySession=auth[1]))
+        elif auth_type == AuthType.http_basic:
+            resp = self._session.get("{}/{}/_all_docs".format(url, db), params=params, auth=auth)
+        else:
+            resp = self._session.get("{}/{}/_all_docs".format(url, db), params=params)
+
+        log_r(resp)
+        resp.raise_for_status()
+        return resp.json()
+
+    def get_bulk_docs(self, url, db, doc_ids, auth=None, validate=True):
         """
         Keyword that issues POST _bulk_get docs with the specified 'docs' array.
-        doc need to be in the format (python list of {id: "", rev: ""} dictionaries):
+        docs need to be in the following format:
         [
-            {u'rev': u'1-efda114d144b5220fa77c4e51f3e70a8', u'id': u'exp_3_0'},
-            {u'rev': u'1-efda114d144b5220fa77c4e51f3e70a8', u'id': u'exp_3_1'}, ...
+            'exp_3_0',
+            'exp_3_1', ...
+            ...
+            'exp_3_100'
         ]
         """
 
-        # extract ids from docs and format for _bulk_get request
-        ids = [{"id": doc["id"]} for doc in docs]
-        request_body = {"docs": ids}
+        # Format the list of ids to the expected format for bulk_get
+        # ex. [
+        #   {'id', 'doc_id_one'},
+        #   {'id', 'doc_id_two'}, ...
+        # ]
+        doc_ids_formatted = [{"id": doc_id} for doc_id in doc_ids]
+        request_body = {"docs": doc_ids_formatted}
 
         auth_type = get_auth_type(auth)
 
@@ -1213,7 +1328,18 @@ class MobileRestClient:
         resp_obj = parse_multipart_response(resp.text)
         logging.debug(resp_obj)
 
-        return resp_obj
+        docs = []
+        errors = []
+        for row in resp_obj["rows"]:
+            if "error" in row:
+                errors.append(row)
+            else:
+                docs.append(row)
+
+        if len(errors) > 0 and validate:
+            raise RestError("_bulk_get recieved errors in the response!")
+
+        return docs, errors
 
     def start_replication(self,
                           url,
@@ -1408,7 +1534,7 @@ class MobileRestClient:
         start = time.time()
         while True:
             if time.time() - start > CLIENT_REQUEST_TIMEOUT:
-                raise keywords.exceptions.TimeoutException("Wait for Replication Status Idle: TIMEOUT")
+                raise TimeoutException("Wait for Replication Status Idle: TIMEOUT")
 
             resp = self._session.get("{}/_active_tasks".format(url))
             log_r(resp)
@@ -1440,7 +1566,7 @@ class MobileRestClient:
         start = time.time()
         while True:
             if time.time() - start > CLIENT_REQUEST_TIMEOUT:
-                raise keywords.exceptions.TimeoutException("Verify Docs Present: TIMEOUT")
+                raise TimeoutException("Verify Docs Present: TIMEOUT")
 
             resp = self._session.get("{}/_active_tasks".format(url))
             log_r(resp)
@@ -1499,7 +1625,7 @@ class MobileRestClient:
         while True:
 
             if time.time() - start > timeout:
-                raise keywords.exceptions.TimeoutException("Verify Docs Present: TIMEOUT")
+                raise TimeoutException("Verify Docs Present: TIMEOUT")
 
             if server_type == ServerType.listener:
 
@@ -1665,7 +1791,7 @@ class MobileRestClient:
         while True:
 
             if time.time() - start > CLIENT_REQUEST_TIMEOUT:
-                raise keywords.exceptions.TimeoutException("Verify Docs In Changes: TIMEOUT")
+                raise TimeoutException("Verify Docs In Changes: TIMEOUT")
 
             resp_obj = self.get_changes(url=url, db=db, since=last_seq, auth=auth)
             doc_ids_in_changes = [change["id"] for change in resp_obj["results"]]
@@ -1722,7 +1848,7 @@ class MobileRestClient:
             logging.info(time.time() - start)
 
             if time.time() - start > CLIENT_REQUEST_TIMEOUT:
-                raise keywords.exceptions.TimeoutException("Verify Docs In Changes: TIMEOUT")
+                raise TimeoutException("Verify Docs In Changes: TIMEOUT")
 
             resp_obj = self.get_changes(url=url, db=db, since=last_seq, auth=auth, timeout=polling_interval)
 
@@ -1753,7 +1879,7 @@ class MobileRestClient:
 
             if strict and len(missing_expected_docs) > 0:
                 log_info("Found doc id not in the expected_docs: {}".format(missing_expected_docs))
-                raise keywords.exceptions.ChangesError("Found unexpected docs in changes feed: {}".format(missing_expected_docs))
+                raise ChangesError("Found unexpected docs in changes feed: {}".format(missing_expected_docs))
 
             log_info("Missing expected docs: {}".format(len(expected_doc_map)))
             log_debug("Sequence number map: {}".format(sequence_number_map))
@@ -1829,7 +1955,7 @@ class MobileRestClient:
         while True:
 
             if count == max_retries:
-                raise keywords.exceptions.RestError("Could not get view after retries!")
+                raise RestError("Could not get view after retries!")
 
             try:
                 if auth_type == AuthType.session:
@@ -1898,11 +2024,17 @@ class MobileRestClient:
             assert row["value"] in values, "Did not find expected value in view response"
 
     def verify_doc_ids_found_in_response(self, response, expected_doc_ids):
-        doc_list = response["rows"]
-        logging.debug(doc_list)
+        """ Verifies that list of doc ids are in the response.
+         'response' expected format:
+        [
+            {u'channels': [u'NBC', u'ABC'], u'_rev': u'1-efda114d144b5220fa77c4e51f3e70a8', u'_id': u'exp_10_0'},
+            {u'channels': [u'NBC', u'ABC'], u'_rev': u'1-efda114d144b5220fa77c4e51f3e70a8', u'_id': u'exp_10_1'},
+            {u'channels': [u'NBC', u'ABC'], u'_rev': u'1-efda114d144b5220fa77c4e51f3e70a8', u'_id': u'exp_10_2'} ...
+        ]
+        """
 
         found_doc_ids = []
-        for doc in doc_list:
+        for doc in response:
             if "error" not in doc:
                 # doc was found
                 found_doc_ids.append(doc["_id"])
@@ -1913,11 +2045,17 @@ class MobileRestClient:
             raise AssertionError("Found doc ids should be the same as expected doc ids")
 
     def verify_doc_ids_not_found_in_response(self, response, expected_missing_doc_ids):
-        doc_list = response["rows"]
-        logging.debug(doc_list)
+        """ Verifies that list of doc ids are not present on sync gateway.
+         'response' expected format:
+        [
+            {u'channels': [u'NBC', u'ABC'], u'_rev': u'1-efda114d144b5220fa77c4e51f3e70a8', u'_id': u'exp_10_0'},
+            {u'channels': [u'NBC', u'ABC'], u'_rev': u'1-efda114d144b5220fa77c4e51f3e70a8', u'_id': u'exp_10_1'},
+            {u'channels': [u'NBC', u'ABC'], u'_rev': u'1-efda114d144b5220fa77c4e51f3e70a8', u'_id': u'exp_10_2'} ...
+        ]
+        """
 
         missing_doc_ids = []
-        for doc in doc_list:
+        for doc in response:
             if "error" in doc:
                 # missing doc was found
                 missing_doc_ids.append(doc["id"])
@@ -1926,3 +2064,11 @@ class MobileRestClient:
         logging.debug("Expected Doc Ids: {}".format(expected_missing_doc_ids))
         if missing_doc_ids != expected_missing_doc_ids:
             raise AssertionError("Found doc ids should be the same as expected doc ids")
+
+    def get_expvars(self, url):
+        """ Gets expvars for the url """
+        resp = self._session.get("{}/_expvar".format(url))
+        log_r(resp)
+        resp.raise_for_status()
+
+        return resp.json()

@@ -29,3 +29,7 @@ def pytest_addoption(parser):
     parser.addoption("--server-ssl",
                      action="store_true",
                      help="If set, will enable SSL communication between server and Sync Gateway")
+
+    parser.addoption("--xattrs",
+                     action="store_true",
+                     help="Use xattrs for sync meta storage. Only works with Sync Gateway 2.0+ and Couchbase Server 5.0+")

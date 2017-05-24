@@ -60,3 +60,7 @@ class RBACUserDeletionError(Error):
 
 class DockerError(Error):
     pass
+
+
+class FeatureSupportedError(Error):
+    pass

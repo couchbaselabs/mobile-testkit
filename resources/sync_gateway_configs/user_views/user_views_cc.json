@@ -11,7 +11,11 @@
   ],
   "databases": {
     "db": {
+      {{ autoimport }}
       "unsupported": {
+        {% if xattrs %}
+            {{ "%s,"|format(xattrs) }}
+        {% endif %}
         "user_views": {
           "enabled":true
         }

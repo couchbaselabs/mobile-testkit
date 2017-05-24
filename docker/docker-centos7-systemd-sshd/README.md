@@ -16,3 +16,9 @@ $ docker run -d --privileged --name centos-7-systemd-sshd -v /sys/fs/cgroup:/sys
 $ docker cp ~/.ssh/id_rsa.pub centos-7-systemd-sshd:/root/.ssh/authorized_keys
 $ ssh root@localhost -p 6666
 ```
+
+## Monitoring network traffic on the container
+```
+# Use whatever port you wish to be monitoring
+$ ngrep -W byline -d eth1 port 4984 or port 4985
+```

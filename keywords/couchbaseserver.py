@@ -416,10 +416,11 @@ class CouchbaseServer:
         Deletes docs that follow the below format
         _sync:rev:att_doc:34:1-e7fa9a5e6bb25f7a40f36297247ca93e
         """
-        b = Bucket("couchbase://{}/{}".format(self.host, bucket), password='password')
 
+        b = Bucket("couchbase://{}/{}".format(self.host, bucket), password='password')
+        b_manager = b.bucket_manager()
+        b_manager.n1ql_index_create_primary(ignore_exists=True)
         cached_rev_doc_ids = []
-        b.n1ql_query("CREATE PRIMARY INDEX ON `{}`".format(bucket)).execute()
         for row in b.n1ql_query("SELECT meta(`{}`) FROM `{}`".format(bucket, bucket)):
             if row["$1"]["id"].startswith("_sync:rev"):
                 cached_rev_doc_ids.append(row["$1"]["id"])
@@ -435,9 +436,9 @@ class CouchbaseServer:
         """
 
         b = Bucket("couchbase://{}/{}".format(self.host, bucket), password='password')
-
+        b_manager = b.bucket_manager()
+        b_manager.n1ql_index_create_primary(ignore_exists=True)
         found_ids = []
-        b.n1ql_query("CREATE PRIMARY INDEX ON `{}`".format(bucket)).execute()
         for row in b.n1ql_query("SELECT meta(`{}`) FROM `{}`".format(bucket, bucket)):
             log_info(row)
             if row["$1"]["id"].startswith(prefix):

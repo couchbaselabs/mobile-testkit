@@ -10,12 +10,20 @@
     "verbose":"true",
     "databases":{
         "db1":{
+            {{ autoimport }}
+            "unsupported": {
+                {{ xattrs }}
+            },
             "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
             "bucket":"data-bucket-1",
             "username":"data-bucket-1",
             "password": "password"
         },
         "db2":{
+            {{ autoimport }}
+            "unsupported": {
+                {{ xattrs }}
+            },
             "offline":false,
             "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
             "bucket":"data-bucket-2",
@@ -23,6 +31,10 @@
             "password": "password"
         },
         "db3":{
+            {{ autoimport }}
+            "unsupported": {
+                {{ xattrs }}
+            },
             "offline":false,
             "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
             "bucket":"data-bucket-3",
@@ -30,6 +42,10 @@
             "password": "password"
         },
         "db4":{
+            {{ autoimport }}
+            "unsupported": {
+                {{ xattrs }}
+            },
             "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
             "bucket":"data-bucket-4",
             "username":"data-bucket-4",

@@ -16,6 +16,10 @@
     },
     "databases":{
         "db":{
+            {{ autoimport }}
+            "unsupported": {
+                {{ xattrs }}
+            },
             "feed_type":"DCPSHARD",
             "channel_index":{
                 "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",

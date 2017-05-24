@@ -1,20 +1,15 @@
-import sys
 import os
 import re
-
-from keywords.couchbaseserver import CouchbaseServer
-from keywords.ClusterKeywords import ClusterKeywords
-from keywords.exceptions import ProvisioningError
-from keywords.utils import log_warn
-
-from libraries.testkit.config import Config
-from utilities.enable_disable_ssl_cluster import is_cbs_ssl_enabled
-
-from keywords.utils import log_info
-
+import sys
 from optparse import OptionParser
 
-from ansible_runner import AnsibleRunner
+from keywords.ClusterKeywords import ClusterKeywords
+from keywords.couchbaseserver import CouchbaseServer
+from keywords.exceptions import ProvisioningError
+from keywords.utils import log_info, log_warn
+from libraries.provision.ansible_runner import AnsibleRunner
+from libraries.testkit.config import Config
+from utilities.cluster_config_utils import is_cbs_ssl_enabled, is_xattrs_enabled
 
 
 class SyncGatewayConfig:
@@ -139,16 +134,24 @@ def install_sync_gateway(cluster_config, sync_gateway_config):
     else:
         # Install from Package
         sync_gateway_base_url, sync_gateway_package_name, sg_accel_package_name = sync_gateway_config.sync_gateway_base_url_and_package()
+        playbook_vars = {
+            "couchbase_sync_gateway_package_base_url": sync_gateway_base_url,
+            "couchbase_sync_gateway_package": sync_gateway_package_name,
+            "couchbase_sg_accel_package": sg_accel_package_name,
+            "sync_gateway_config_filepath": config_path,
+            "server_port": server_port,
+            "server_scheme": server_scheme,
+            "autoimport": "",
+            "xattrs": ""
+        }
+
+        if is_xattrs_enabled(cluster_config):
+            playbook_vars["autoimport"] = '"import_docs": "continuous",'
+            playbook_vars["xattrs"] = '"enable_extended_attributes": true'
+
         status = ansible_runner.run_ansible_playbook(
             "install-sync-gateway-package.yml",
-            extra_vars={
-                "couchbase_sync_gateway_package_base_url": sync_gateway_base_url,
-                "couchbase_sync_gateway_package": sync_gateway_package_name,
-                "couchbase_sg_accel_package": sg_accel_package_name,
-                "sync_gateway_config_filepath": config_path,
-                "server_port": server_port,
-                "server_scheme": server_scheme
-            }
+            extra_vars=playbook_vars
         )
         if status != 0:
             raise ProvisioningError("Failed to install sync_gateway package")

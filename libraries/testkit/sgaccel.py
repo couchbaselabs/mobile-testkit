@@ -1,11 +1,12 @@
+import logging
 import os
+
 import requests
 
 import libraries.testkit.settings
-import logging
-
 from libraries.provision.ansible_runner import AnsibleRunner
-from utilities.enable_disable_ssl_cluster import is_cbs_ssl_enabled
+from utilities.cluster_config_utils import is_cbs_ssl_enabled
+
 log = logging.getLogger(libraries.testkit.settings.LOGGER)
 
 

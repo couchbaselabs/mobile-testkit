@@ -8,10 +8,9 @@ import logging
 log = logging.getLogger(settings.LOGGER)
 
 
-server_received_data = []
-
-
 class HttpHandler(BaseHTTPRequestHandler):
+
+    server_recieved_data = []
 
     def do_GET(self):
         log.info('Received GET request')
@@ -26,8 +25,8 @@ class HttpHandler(BaseHTTPRequestHandler):
         content_len = int(self.headers.getheader('content-length', 0))
         post_body = self.rfile.read(content_len)
         data = json.loads(post_body)
+        HttpHandler.server_recieved_data.append(data)
         log.info("Received {} data in Post request".format(data))
-        server_received_data.append(data)
         log.info("Appended POST data payload to server_received_data")
         self.send_response(200)
         self.send_header("Content-type", "text/html")
@@ -49,7 +48,8 @@ class WebServer(object):
             raise ValueError("Caught exception could not launch webserver thread", e)
 
     def stop(self):
+        HttpHandler.server_recieved_data = []
         self.server.shutdown()
 
     def get_data(self):
-        return server_received_data
+        return HttpHandler.server_recieved_data

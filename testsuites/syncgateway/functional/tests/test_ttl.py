@@ -1,14 +1,17 @@
-import pytest
 import time
 
+import pytest
+from couchbase.bucket import Bucket
+from couchbase.exceptions import NotFoundError
 from requests.exceptions import HTTPError
 
-from keywords.utils import log_info
+from keywords import document
 from keywords.ClusterKeywords import ClusterKeywords
 from keywords.MobileRestClient import MobileRestClient
 from keywords.SyncGateway import sync_gateway_config_path_for_mode
 from keywords.timeutils import Time
-from keywords import document
+from keywords.utils import host_for_url, log_info
+
 
 """
 Test suite for Sync Gateway's expiry feature.
@@ -64,6 +67,8 @@ def test_numeric_expiry_as_ttl(params_from_base_test_setup, sg_conf_name):
 
     cluster_config = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
+    xattrs_enabled = params_from_base_test_setup['xattrs_enabled']
+
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
 
     cluster_helper = ClusterKeywords()
@@ -87,7 +92,10 @@ def test_numeric_expiry_as_ttl(params_from_base_test_setup, sg_conf_name):
     sg_user_name = "sg_user"
     sg_user_password = "p@ssw0rd"
     sg_user_channels = ["NBC", "ABC"]
+    bucket_name = "data-bucket"
+    cbs_ip = host_for_url(cbs_url)
 
+    sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password')
     client = MobileRestClient()
 
     client.create_user(url=sg_url_admin, db=sg_db, name=sg_user_name, password=sg_user_password, channels=sg_user_channels)
@@ -106,6 +114,15 @@ def test_numeric_expiry_as_ttl(params_from_base_test_setup, sg_conf_name):
     with pytest.raises(HTTPError) as he:
         client.get_doc(url=sg_url, db=sg_db, doc_id=doc_exp_3["id"], auth=sg_user_session)
     assert he.value[0].startswith("404 Client Error: Not Found for url:")
+
+    verify_doc_deletion_on_server(
+        doc_id=doc_exp_3["id"],
+        sdk_client=sdk_client,
+        sg_client=client,
+        sg_admin_url=sg_url_admin,
+        sg_db=sg_db,
+        xattrs_enabled=xattrs_enabled
+    )
 
     # doc_exp_10 should be available still
     doc_exp_10_result = client.get_doc(url=sg_url, db=sg_db, doc_id=doc_exp_10["id"], auth=sg_user_session)
@@ -131,6 +148,8 @@ def test_string_expiry_as_ttl(params_from_base_test_setup, sg_conf_name):
 
     cluster_config = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
+    xattrs_enabled = params_from_base_test_setup['xattrs_enabled']
+
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
 
     cluster_helper = ClusterKeywords()
@@ -154,6 +173,10 @@ def test_string_expiry_as_ttl(params_from_base_test_setup, sg_conf_name):
     sg_user_name = "sg_user"
     sg_user_password = "p@ssw0rd"
     sg_user_channels = ["NBC", "ABC"]
+    bucket_name = "data-bucket"
+    cbs_ip = host_for_url(cbs_url)
+
+    sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password')
 
     client = MobileRestClient()
 
@@ -173,6 +196,15 @@ def test_string_expiry_as_ttl(params_from_base_test_setup, sg_conf_name):
     with pytest.raises(HTTPError) as he:
         client.get_doc(url=sg_url, db=sg_db, doc_id=doc_exp_3["id"], auth=sg_user_session)
     assert he.value[0].startswith("404 Client Error: Not Found for url:")
+
+    verify_doc_deletion_on_server(
+        doc_id=doc_exp_3["id"],
+        sdk_client=sdk_client,
+        sg_client=client,
+        sg_admin_url=sg_url_admin,
+        sg_db=sg_db,
+        xattrs_enabled=xattrs_enabled
+    )
 
     # doc_exp_10 should be available still
     doc_exp_10_result = client.get_doc(url=sg_url, db=sg_db, doc_id=doc_exp_10["id"], auth=sg_user_session)
@@ -199,6 +231,8 @@ def test_numeric_expiry_as_unix_date(params_from_base_test_setup, sg_conf_name):
 
     cluster_config = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
+    xattrs_enabled = params_from_base_test_setup['xattrs_enabled']
+
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
 
     cluster_helper = ClusterKeywords()
@@ -222,6 +256,10 @@ def test_numeric_expiry_as_unix_date(params_from_base_test_setup, sg_conf_name):
     sg_user_name = "sg_user"
     sg_user_password = "p@ssw0rd"
     sg_user_channels = ["NBC", "ABC"]
+    bucket_name = "data-bucket"
+    cbs_ip = host_for_url(cbs_url)
+
+    sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password')
 
     client = MobileRestClient()
 
@@ -244,6 +282,15 @@ def test_numeric_expiry_as_unix_date(params_from_base_test_setup, sg_conf_name):
     with pytest.raises(HTTPError) as he:
         client.get_doc(url=sg_url, db=sg_db, doc_id=doc_exp_3["id"], auth=sg_user_session)
     assert he.value[0].startswith("404 Client Error: Not Found for url:")
+
+    verify_doc_deletion_on_server(
+        doc_id=doc_exp_3["id"],
+        sdk_client=sdk_client,
+        sg_client=client,
+        sg_admin_url=sg_url_admin,
+        sg_db=sg_db,
+        xattrs_enabled=xattrs_enabled
+    )
 
     # doc_exp_years should be available still
     doc_exp_years_result = client.get_doc(url=sg_url, db=sg_db, doc_id=doc_exp_years["id"], auth=sg_user_session)
@@ -270,6 +317,8 @@ def test_string_expiry_as_unix_date(params_from_base_test_setup, sg_conf_name):
 
     cluster_config = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
+    xattrs_enabled = params_from_base_test_setup['xattrs_enabled']
+
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
 
     cluster_helper = ClusterKeywords()
@@ -293,6 +342,10 @@ def test_string_expiry_as_unix_date(params_from_base_test_setup, sg_conf_name):
     sg_user_name = "sg_user"
     sg_user_password = "p@ssw0rd"
     sg_user_channels = ["NBC", "ABC"]
+    bucket_name = "data-bucket"
+    cbs_ip = host_for_url(cbs_url)
+
+    sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password')
 
     client = MobileRestClient()
 
@@ -320,6 +373,15 @@ def test_string_expiry_as_unix_date(params_from_base_test_setup, sg_conf_name):
         client.get_doc(url=sg_url, db=sg_db, doc_id=doc_exp_3["id"], auth=sg_user_session)
     assert he.value[0].startswith("404 Client Error: Not Found for url:")
 
+    verify_doc_deletion_on_server(
+        doc_id=doc_exp_3["id"],
+        sdk_client=sdk_client,
+        sg_client=client,
+        sg_admin_url=sg_url_admin,
+        sg_db=sg_db,
+        xattrs_enabled=xattrs_enabled
+    )
+
     # doc_exp_years should be available still
     doc_exp_years_result = client.get_doc(url=sg_url, db=sg_db, doc_id=doc_exp_years["id"], auth=sg_user_session)
     assert doc_exp_years_result["_id"] == "exp_years"
@@ -345,6 +407,8 @@ def test_string_expiry_as_iso_8601_date(params_from_base_test_setup, sg_conf_nam
 
     cluster_config = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
+    xattrs_enabled = params_from_base_test_setup['xattrs_enabled']
+
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
 
     cluster_helper = ClusterKeywords()
@@ -368,6 +432,10 @@ def test_string_expiry_as_iso_8601_date(params_from_base_test_setup, sg_conf_nam
     sg_user_name = "sg_user"
     sg_user_password = "p@ssw0rd"
     sg_user_channels = ["NBC", "ABC"]
+    bucket_name = "data-bucket"
+    cbs_ip = host_for_url(cbs_url)
+
+    sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password')
 
     client = MobileRestClient()
 
@@ -391,6 +459,15 @@ def test_string_expiry_as_iso_8601_date(params_from_base_test_setup, sg_conf_nam
         client.get_doc(url=sg_url, db=sg_db, doc_id=doc_exp_3["id"], auth=sg_user_session)
     assert he.value[0].startswith("404 Client Error: Not Found for url:")
 
+    verify_doc_deletion_on_server(
+        doc_id=doc_exp_3["id"],
+        sdk_client=sdk_client,
+        sg_client=client,
+        sg_admin_url=sg_url_admin,
+        sg_db=sg_db,
+        xattrs_enabled=xattrs_enabled
+    )
+
     # doc_exp_years should be available still
     doc_exp_years_result = client.get_doc(url=sg_url, db=sg_db, doc_id=doc_exp_years["id"], auth=sg_user_session)
     assert doc_exp_years_result["_id"] == "exp_years"
@@ -413,6 +490,7 @@ def test_removing_expiry(params_from_base_test_setup, sg_conf_name):
 
     cluster_config = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
+
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
 
     cluster_helper = ClusterKeywords()
@@ -481,6 +559,8 @@ def test_rolling_ttl_expires(params_from_base_test_setup, sg_conf_name):
 
     cluster_config = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
+    xattrs_enabled = params_from_base_test_setup['xattrs_enabled']
+
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
 
     cluster_helper = ClusterKeywords()
@@ -504,6 +584,10 @@ def test_rolling_ttl_expires(params_from_base_test_setup, sg_conf_name):
     sg_user_name = "sg_user"
     sg_user_password = "p@ssw0rd"
     sg_user_channels = ["NBC", "ABC"]
+    bucket_name = "data-bucket"
+    cbs_ip = host_for_url(cbs_url)
+
+    sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password')
 
     client = MobileRestClient()
 
@@ -525,6 +609,15 @@ def test_rolling_ttl_expires(params_from_base_test_setup, sg_conf_name):
     with pytest.raises(HTTPError) as he:
         client.get_doc(url=sg_url, db=sg_db, doc_id=doc_exp_3["id"], auth=sg_user_session)
     assert he.value[0].startswith("404 Client Error: Not Found for url:")
+
+    verify_doc_deletion_on_server(
+        doc_id=doc_exp_3["id"],
+        sdk_client=sdk_client,
+        sg_client=client,
+        sg_admin_url=sg_url_admin,
+        sg_db=sg_db,
+        xattrs_enabled=xattrs_enabled
+    )
 
     # doc_exp_10 should be available still
     doc_exp_10_result = client.get_doc(url=sg_url, db=sg_db, doc_id=doc_exp_10["id"], auth=sg_user_session)
@@ -549,6 +642,8 @@ def test_rolling_ttl_remove_expirary(params_from_base_test_setup, sg_conf_name):
 
     cluster_config = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
+    xattrs_enabled = params_from_base_test_setup['xattrs_enabled']
+
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
 
     cluster_helper = ClusterKeywords()
@@ -572,6 +667,10 @@ def test_rolling_ttl_remove_expirary(params_from_base_test_setup, sg_conf_name):
     sg_user_name = "sg_user"
     sg_user_password = "p@ssw0rd"
     sg_user_channels = ["NBC", "ABC"]
+    bucket_name = "data-bucket"
+    cbs_ip = host_for_url(cbs_url)
+
+    sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password')
 
     client = MobileRestClient()
 
@@ -599,6 +698,15 @@ def test_rolling_ttl_remove_expirary(params_from_base_test_setup, sg_conf_name):
         client.get_doc(url=sg_url, db=sg_db, doc_id=doc_exp_10["id"], auth=sg_user_session)
     assert he.value[0].startswith("404 Client Error: Not Found for url:")
 
+    verify_doc_deletion_on_server(
+        doc_id=doc_exp_10["id"],
+        sdk_client=sdk_client,
+        sg_client=client,
+        sg_admin_url=sg_url_admin,
+        sg_db=sg_db,
+        xattrs_enabled=xattrs_enabled
+    )
+
 
 @pytest.mark.sanity
 @pytest.mark.syncgateway
@@ -618,6 +726,8 @@ def test_setting_expiry_in_bulk_docs(params_from_base_test_setup, sg_conf_name):
 
     cluster_config = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
+    xattrs_enabled = params_from_base_test_setup['xattrs_enabled']
+
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
 
     cluster_helper = ClusterKeywords()
@@ -641,6 +751,10 @@ def test_setting_expiry_in_bulk_docs(params_from_base_test_setup, sg_conf_name):
     sg_user_name = "sg_user"
     sg_user_password = "p@ssw0rd"
     sg_user_channels = ["NBC", "ABC"]
+    bucket_name = "data-bucket"
+    cbs_ip = host_for_url(cbs_url)
+
+    sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password')
 
     client = MobileRestClient()
 
@@ -657,13 +771,33 @@ def test_setting_expiry_in_bulk_docs(params_from_base_test_setup, sg_conf_name):
     # Allow exp_3 docs to expire
     time.sleep(5)
 
-    bulk_get_docs = client.get_bulk_docs(url=sg_url, db=sg_db, docs=bulk_docs, auth=sg_user_session)
+    bulk_docs_ids = [doc["id"] for doc in bulk_docs]
 
     expected_ids = ["exp_10_0", "exp_10_1", "exp_10_2", "exp_10_3", "exp_10_4"]
     expected_missing_ids = ["exp_3_0", "exp_3_1", "exp_3_2", "exp_3_3", "exp_3_4"]
 
+    bulk_get_docs, errors = client.get_bulk_docs(url=sg_url, db=sg_db, doc_ids=bulk_docs_ids, auth=sg_user_session, validate=False)
+    assert len(bulk_get_docs) == len(expected_ids)
+    assert len(errors) == len(expected_missing_ids)
+
+    bulk_get_doc_ids = [doc["_id"] for doc in bulk_get_docs]
+    error_ids = [doc["id"] for doc in errors]
+
+    assert bulk_get_doc_ids == expected_ids
+    assert error_ids == expected_missing_ids
+
     client.verify_doc_ids_found_in_response(response=bulk_get_docs, expected_doc_ids=expected_ids)
-    client.verify_doc_ids_not_found_in_response(response=bulk_get_docs, expected_missing_doc_ids=expected_missing_ids)
+    client.verify_doc_ids_not_found_in_response(response=errors, expected_missing_doc_ids=expected_missing_ids)
+
+    for expired_doc in error_ids:
+        verify_doc_deletion_on_server(
+            doc_id=expired_doc,
+            sdk_client=sdk_client,
+            sg_client=client,
+            sg_admin_url=sg_url_admin,
+            sg_db=sg_db,
+            xattrs_enabled=xattrs_enabled
+        )
 
 
 # TODO:
@@ -683,3 +817,21 @@ def test_setting_expiry_in_bulk_docs(params_from_base_test_setup, sg_conf_name):
 # Validating put with unix past timestamp (Optional)
 #    [Tags]  sanity  syncgateway  ttl
 #    [Documentation]
+
+def verify_doc_deletion_on_server(doc_id, sdk_client, sg_client, sg_admin_url, sg_db, xattrs_enabled=False):
+    # If xattrs, check that the doc is a tombstone
+    # by getting the rev and "_deleted" prop via _raw
+    # If sync gateway is using document meta data
+    # ensure doc has been purged from the server
+    if xattrs_enabled:
+        expired_raw_doc = sg_client.get_raw_doc(
+            url=sg_admin_url,
+            db=sg_db,
+            doc_id=doc_id,
+        )
+        assert expired_raw_doc["_sync"]["rev"].startswith("2-")
+        assert expired_raw_doc["_deleted"]
+    else:
+        with pytest.raises(NotFoundError) as nfe:
+            sdk_client.get(doc_id)
+        assert "The key does not exist on the server" in str(nfe)
