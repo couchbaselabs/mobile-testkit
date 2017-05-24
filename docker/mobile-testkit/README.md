@@ -9,10 +9,19 @@ In order to pull dependencies needed by `docker/create_cluster.py`, re-run `sour
 $ source setup.sh
 ```
 
+### Running tests
+
+(cc / no xattrs)
+```
+docker run --rm --name test --privileged --network cbl -v $(pwd)/resources/pool.json:/opt/mobile-testkit/resources/pool.json -v ~/.ssh/id_rsa:/root/.ssh/id_rsa testkit-dev ./entrypoint.sh master cc "" 4.6.2 1.5.0-377 ""
+```
+
+### Local Development with mobile-testkit
+
 Mount local dev environment for iterative development with docker backend. This way you can make changes in your /{user}/mobile-testkit repo and execute within the context of the container.
 
 ```
-$ docker run --privileged --rm -it --network=cbl --name=mobile-testkit -v $(pwd):/opt/mobile-testkit -v /tmp/pool.json:/opt/mobile-testkit/resources/pool.json -v ~/.ssh/id_rsa:/root/.ssh/id_rsa couchbase/mobile-testkit  /bin/bash
+$ docker run --privileged --rm -it --network=cbl --name mobile-testkit -v $(pwd):/opt/mobile-testkit -v $(pwd)/resources/pool.json:/opt/mobile-testkit/resources/pool.json -v ~/.ssh/id_rsa:/root/.ssh/id_rsa couchbase/mobile-testkit /bin/bash
 ```
 
 And then inside the docker container:

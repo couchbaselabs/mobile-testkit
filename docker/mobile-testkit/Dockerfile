@@ -52,5 +52,6 @@ RUN mkdir -p /root/.ssh
 ENV PYTHONPATH=/opt/mobile-testkit/
 ENV ANSIBLE_CONFIG=/opt/ansible.cfg/
 
-# Remove later, working on end to end automation
+# Cop test runner script to repo
+COPY ./entrypoint.sh /opt/mobile-testkit
 CMD ["/bin/bash"]

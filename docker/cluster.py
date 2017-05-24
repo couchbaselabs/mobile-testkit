@@ -108,7 +108,8 @@ def create_cluster(network_name, number_of_nodes, public_key_path, dev, pull):
             port_map_file.write(json.dumps(port_map_list, indent=4))
 
     # Write cluster hosts to pool.json
-    with open('/tmp/pool.json', 'w') as f:
+    with open('resources/pool.json', 'w') as f:
+        log_info("Writing 'resources/pool.json' ...")
         hosts = {'ips': container_names}
         f.write(json.dumps(hosts))
 
