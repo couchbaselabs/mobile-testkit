@@ -92,12 +92,8 @@ def create_cluster(network_name, number_of_nodes, public_key_path, dev, pull):
     log_info('Starting {} containers on network {} ...'.format(number_of_nodes, network_name))
     container_names = ['{}.{}'.format(network_name, i) for i in range(number_of_nodes)]
 
-    # Create file to write port mapping to
-    if dev:
-        port_mapping_file = open('ports.json', 'w')
-        
-
     current_port = 30000
+    port_map_list = []
     for container_name in container_names:
 
         log_info('Starting container: {} on network: {}'.format(container_name, network_name))
@@ -112,7 +108,7 @@ def create_cluster(network_name, number_of_nodes, public_key_path, dev, pull):
             # Setup local development enhancements
             volume_map = create_and_bind_tmp_dirs(container_name, volume_map)
             port_map, current_port = setup_port_mapping(current_port)
-            write_port_mapping(port_map)
+            port_map_list.append({container_name: port_map})
 
         # Priviledged is required for some ansible playbooks
         container = docker_client.containers.run(
@@ -136,6 +132,11 @@ def create_cluster(network_name, number_of_nodes, public_key_path, dev, pull):
             public_key_path,
             '{}:/root/.ssh/authorized_keys'.format(container_name)
         ])
+
+    # Write port map list if dev
+    if dev:
+        with open('portmaps.json', 'w') as port_map_file:
+            port_map_file.write(json.dumps(port_map_list, indent=4))
 
     # Write cluster hosts to pool.json
     with open('/tmp/pool.json', 'w') as f:
