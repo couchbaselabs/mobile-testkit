@@ -5,6 +5,7 @@ import shutil
 import subprocess
 
 import docker
+from docker.errors import NotFound
 from keywords.exceptions import DockerError
 from keywords.utils import log_info
 
@@ -39,38 +40,6 @@ def create_and_bind_tmp_dirs(container_name, volume_map):
     volume_map[tmp_dir_cbs] = {'bind': '/opt/couchbase/var/lib/couchbase/'}
 
     return volume_map
-
-
-# def remove_conflicting_network(docker_client, network_name):
-#     """ Removes all user defined docker networks """
-
-#     networks = docker_client.networks.list()
-
-#     # If a network exists with the name of the one you requested to create
-#     # remove the network and create a new one
-#     user_defined_networks = [network for network in networks if network.name == network_name]
-#     for user_defined_network in user_defined_networks:
-
-#         log_info('Removing containers for network ({})'.format(user_defined_network.name))
-
-#         # Get docker containers for the network
-#         network_containers = user_defined_network.containers
-#         for network_container in network_containers:
-
-#             # Remove the containers attached to this network
-#             log_info('Removing container: {}'.format(network_container.name))
-#             subprocess.check_call(['docker', 'stop', network_container.name])
-#             subprocess.check_call(['docker', 'rm', '-f', network_container.name])
-
-#         # Remove the network
-#         log_info('Removing network {}'.format(user_defined_network.name))
-#         user_defined_network.remove()
-
-#     # Verify that all user defined networks are removed
-#     networks = docker_client.networks.list()
-#     user_defined_network = [network for network in networks if network.name == network_name]
-#     if len(user_defined_network) != 0:
-#         raise DockerError('Failed to remove all networks!')
 
 
 def create_cluster(network_name, number_of_nodes, public_key_path, dev, pull):
@@ -144,21 +113,87 @@ def create_cluster(network_name, number_of_nodes, public_key_path, dev, pull):
         f.write(json.dumps(hosts))
 
 
+def destroy_cluster(network_name):
+    """ Removes all user defined docker networks """
+
+    docker_client = docker.from_env()
+
+    # Get networks in docker host
+    networks = docker_client.networks.list()
+
+    # Filter network to match network name
+    network_to_destroy = [network for network in networks if network.name == network_name]
+    if len(network_to_destroy) > 1:
+        raise DockerError('Error removing network. Multiple defined: {}'.format(network_name))
+    if len(network_to_destroy) == 0:
+        raise DockerError('Error removing network. Network not defined: {}'.format(network_name))
+    network_to_destroy = network_to_destroy[0]
+
+    # Get docker containers for the network
+    network_containers = network_to_destroy.containers
+    for network_container in network_containers:
+
+        # Remove the containers attached to this network
+        log_info('Removing container: {}'.format(network_container.name))
+        subprocess.check_call(['docker', 'stop', network_container.name])
+        subprocess.check_call(['docker', 'rm', '-f', network_container.name])
+
+    # Verify that containers have been removed
+    try:
+        network_containers = network_to_destroy.containers
+        # if the above call succeeds, it means there are still containers attached
+        # to the network, raise an exception
+        raise DockerError('During network cleanup, Docker containers still remain!')
+    except NotFound:
+        # A not found exception was raise so all the containers are gone. Proceed.
+        log_info('All containers removed from the network!')
+
+    # Remove the network
+    log_info('Removing network {}'.format(network_to_destroy.name))
+    network_to_destroy.remove()
+
+    # Verify that all user defined networks are removed
+    networks = docker_client.networks.list()
+    user_defined_network = [network for network in networks if network.name == network_name]
+    if len(user_defined_network) != 0:
+        raise DockerError('Failed to remove all networks!')
+
+
 if __name__ == '__main__':
 
     PARSER = argparse.ArgumentParser()
+    PARSER.add_argument('--create', help='Create a docker network + cluster', action='store_true')
+    PARSER.add_argument('--destroy', help='Remove a docker network + cluster', action='store_true')
     PARSER.add_argument('--network-name', help='Name of docker network', required=True)
-    PARSER.add_argument('--number-of-nodes', help='Number of nodes to create in the network', required=True)
-    PARSER.add_argument('--path-to-public-key', help='Number of nodes to create in the network', required=True)
+    PARSER.add_argument('--number-of-nodes', help='Number of nodes to create in the network')
+    PARSER.add_argument('--path-to-public-key', help='Number of nodes to create in the network')
     PARSER.add_argument('--dev', help='Using a dev environment, set up binding to log dirs and port binding for Couchbase Server', action='store_true')
     PARSER.add_argument('--pull', help='Specify whether to pull the latest docker containers', action='store_true')
     ARGS = PARSER.parse_args()
 
+    if not ARGS.create and not ARGS.destroy:
+        raise DockerError("You need to specify either '--create' or '--destroy'")
+
+    if ARGS.create and ARGS.destroy:
+        raise DockerError("You can't specify '--create' and '--destroy'. Please pick one.")
+
     # Scan all log files in the directory for 'panic' and 'data races'
-    create_cluster(
-        network_name=ARGS.network_name,
-        number_of_nodes=int(ARGS.number_of_nodes),
-        public_key_path=ARGS.path_to_public_key,
-        dev=ARGS.dev,
-        pull=ARGS.pull
-    )
+    if ARGS.create:
+
+        if ARGS.number_of_nodes is None:
+            raise DockerError("You need to specify '--number-of-nodes'")
+
+        if ARGS.path_to_public_key is None:
+            raise DockerError("You need to specify '--path-to-public-key'")
+
+        create_cluster(
+            network_name=ARGS.network_name,
+            number_of_nodes=int(ARGS.number_of_nodes),
+            public_key_path=ARGS.path_to_public_key,
+            dev=ARGS.dev,
+            pull=ARGS.pull
+        )
+    else:
+        destroy_cluster(
+            network_name=ARGS.network_name
+        )
