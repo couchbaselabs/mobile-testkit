@@ -31,4 +31,4 @@ pip install -r requirements.txt
 python libraries/utilities/generate_clusters_from_pool.py
 
 # Run single test
-pytest -s --mode=$2 $3 --server-version=$4 --sync-gateway-version=$5 $6 testsuites/syncgateway/functional/tests --collect-only
+pytest -s --mode=$2 $3 --server-version=$4 --sync-gateway-version=$5 $6 testsuites/syncgateway/functional/tests
