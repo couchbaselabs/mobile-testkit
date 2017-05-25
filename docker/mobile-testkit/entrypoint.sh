@@ -6,8 +6,9 @@
 # $5 = Couchbase Server version
 # $6 = Sync Gateway version
 # $7 = test filter -k "test_pattern"
+# $8 = Suite to run (ex. testsuites/syncgateway/functional/tests)
 
-if [ $# -ne 7 ]
+if [ $# -ne 8 ]
   then
     echo "Did not find all expected args. Please look in the script to see what is required."
     echo "Exiting ..."
@@ -31,5 +32,5 @@ pip install -r requirements.txt
 # Generate cluster configs
 python libraries/utilities/generate_clusters_from_pool.py
 
-# Run single test
-pytest $2 --mode=$3 $4 --server-version=$5 --sync-gateway-version=$6 $7 testsuites/syncgateway/functional/tests
+# Run tests (--ci)
+pytest --ci $2 --mode=$3 $4 --server-version=$5 --sync-gateway-version=$6 $7 $8
