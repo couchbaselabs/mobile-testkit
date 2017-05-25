@@ -7,7 +7,7 @@
 # $6 = Sync Gateway version
 # $7 = test filter -k "test_pattern"
 
-if [ $# -ne 6 ]
+if [ $# -ne 7 ]
   then
     echo "Did not find all expected args. Please look in the script to see what is required."
     echo "Exiting ..."
