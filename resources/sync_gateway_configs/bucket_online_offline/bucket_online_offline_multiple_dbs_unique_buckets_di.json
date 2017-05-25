@@ -72,7 +72,6 @@
             }
         },
         "db4":{
-            {{ autoimport }}
             "unsupported": {
                 {{ xattrs }}
             },

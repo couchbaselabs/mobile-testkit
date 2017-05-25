@@ -17,7 +17,6 @@
     },
     "databases": {
         "db":{
-            {{ autoimport }}
             "unsupported": {
                 {{ xattrs }}
             },
@@ -35,7 +34,6 @@
             }
         },
         "db2":{
-            {{ autoimport }}
             "unsupported": {
                 {{ xattrs }}
             },
