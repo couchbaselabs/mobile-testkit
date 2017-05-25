@@ -6,6 +6,7 @@ from requests.exceptions import HTTPError
 from requests import Session
 from requests.packages.urllib3.exceptions import InsecureRequestWarning
 
+import couchbase
 from couchbase.bucket import Bucket
 from couchbase.exceptions import CouchbaseError
 from couchbase.exceptions import NotFoundError
@@ -24,6 +25,8 @@ from keywords.utils import log_debug
 from keywords.utils import log_error
 from keywords import types
 
+
+couchbase.enable_logging()
 requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
 
