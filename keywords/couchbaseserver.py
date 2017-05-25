@@ -1,3 +1,7 @@
+import logging
+import sys
+import os
+
 import time
 import json
 import requests
@@ -26,6 +30,8 @@ from keywords.utils import log_error
 from keywords import types
 
 
+os.environ['LCB_LOGLEVEL'] = 5
+logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
 couchbase.enable_logging()
 requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
