@@ -16,7 +16,6 @@
     },
     "databases":{
         "sg_db1":{
-            {{ autoimport }}
             "unsupported": {
                 {{ xattrs }}
             },
@@ -34,7 +33,6 @@
             }
         },
         "sg_db2":{
-            {{ autoimport }}
             "unsupported": {
                 {{ xattrs }}
             },

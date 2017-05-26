@@ -10,7 +10,6 @@ from couchbase.bucket import Bucket
 from couchbase.exceptions import CouchbaseError
 from couchbase.exceptions import NotFoundError
 
-
 import keywords.constants
 from keywords.remoteexecutor import RemoteExecutor
 from keywords.exceptions import CBServerError
@@ -23,6 +22,7 @@ from keywords.utils import log_info
 from keywords.utils import log_debug
 from keywords.utils import log_error
 from keywords import types
+
 
 requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 

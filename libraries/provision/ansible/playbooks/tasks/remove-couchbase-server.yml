@@ -31,3 +31,4 @@
 
 - name: COUCHBASE SERVER | Remove all couchbase server residue
   file: path=/opt/couchbase state=absent
+  ignore_errors: yes

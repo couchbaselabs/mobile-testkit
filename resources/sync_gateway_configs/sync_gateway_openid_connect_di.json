@@ -72,7 +72,6 @@
           }
         }
       },
-      {{ autoimport }}
       "unsupported": {
         {% if xattrs %}
           {{ "%s,"|format(xattrs) }}

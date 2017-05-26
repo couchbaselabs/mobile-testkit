@@ -16,7 +16,6 @@
     },
     "databases":{
         "db1":{
-            {{ autoimport }}
             "unsupported": {
                 {{ xattrs }}
             },
@@ -34,7 +33,6 @@
             }
         },
         "db2":{
-            {{ autoimport }}
             "unsupported": {
                 {{ xattrs }}
             },
@@ -53,7 +51,6 @@
             }
         },
         "db3":{
-            {{ autoimport }}
             "unsupported": {
                 {{ xattrs }}
             },
@@ -72,7 +69,6 @@
             }
         },
         "db4":{
-            {{ autoimport }}
             "unsupported": {
                 {{ xattrs }}
             },

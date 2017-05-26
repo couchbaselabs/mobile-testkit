@@ -445,6 +445,7 @@ def test_purge(params_from_base_test_setup, sg_conf_name, use_multiple_channels)
     # Verify XATTRS present via SDK and SG and that they are the same
     for doc_id in all_doc_ids:
         verify_sg_xattrs(
+            mode,
             sg_client,
             sg_url=sg_admin_url,
             sg_db=sg_db,
@@ -483,6 +484,7 @@ def test_purge(params_from_base_test_setup, sg_conf_name, use_multiple_channels)
     # Expected revs will be + 1 due to the deletion revision
     for doc_id in deleted_doc_ids:
         verify_sg_xattrs(
+            mode,
             sg_client,
             sg_url=sg_admin_url,
             sg_db=sg_db,
@@ -1335,7 +1337,7 @@ def verify_sdk_deletes(sdk_client, docs_ids_to_verify_deleted):
     assert len(docs_to_verify_scratchpad) == 0
 
 
-def verify_sg_xattrs(sg_client, sg_url, sg_db, doc_id, expected_number_of_revs, expected_number_of_channels, deleted_docs=False):
+def verify_sg_xattrs(mode, sg_client, sg_url, sg_db, doc_id, expected_number_of_revs, expected_number_of_channels, deleted_docs=False):
     """ Verify expected values for xattr sync meta data via Sync Gateway _raw """
 
     # Get Sync Gateway sync meta
@@ -1347,9 +1349,13 @@ def verify_sg_xattrs(sg_client, sg_url, sg_db, doc_id, expected_number_of_revs, 
         expected_number_of_channels,
     ))
 
-    assert isinstance(sg_sync_meta['sequence'], int)
-    assert isinstance(sg_sync_meta['recent_sequences'], list)
-    assert len(sg_sync_meta['recent_sequences']) == expected_number_of_revs
+    # Distributed index mode uses server's internal vbucket sequence
+    # It does not expose this to the '_sync' meta
+    if mode != 'di':
+        assert isinstance(sg_sync_meta['sequence'], int)
+        assert isinstance(sg_sync_meta['recent_sequences'], list)
+        assert len(sg_sync_meta['recent_sequences']) == expected_number_of_revs
+
     assert isinstance(sg_sync_meta['cas'], unicode)
     assert sg_sync_meta['rev'].startswith('{}-'.format(expected_number_of_revs))
     assert isinstance(sg_sync_meta['channels'], dict)

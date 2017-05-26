@@ -79,3 +79,5 @@ ansible.cfg
 
 .vagrant/
 /run_scripts/test_batch.py
+
+portmaps.json

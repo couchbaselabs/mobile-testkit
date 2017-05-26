@@ -6,8 +6,7 @@
     "maxFileDescriptors": 90000,
     "slowServerCallWarningThreshold": 500,
     "compressResponses": false,
-    "log": ["CRUD+", "Cache+", "HTTP+", "Changes+"],
-    "verbose":"true",
+    "log": ["*"],
     "cluster_config": {
         "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
         "data_dir":".",
@@ -18,42 +17,18 @@
     "databases":{
         "db":{
             "unsupported": {
-                {{ xattrs }}
+                "enable_extended_attributes": true
             },
-            "feed_type":"DCPSHARD",
             "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
             "bucket":"data-bucket",
-            "username":"data-bucket",
             "password": "password",
-            "users":{
-                "GUEST":{
-                    "disabled":true,
-                    "admin_channels":[
-                        "*"
-                    ]
-                }
-            },
             "channel_index":{
-                "num_shards":16,
                 "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
                 "bucket":"index-bucket",
                 "username":"index-bucket",
                 "password": "password",
                 "writer":{{ is_index_writer }}
-            },
-            "sync":
-            `function(doc, oldDoc){
-
-                if (oldDoc == null && doc.channels) {
-                    // When docs are created, send them to one channel
-                    channel("tv_station_channel");
-                } else if (oldDoc != null && doc.channels) {
-                    // When docs are updated, send them to their original channel
-                    channel(doc.channels);
-                } else {
-                    throw({forbidden: "No channel!"});
-                }
-            }`
+            }
         }
     }
 }
