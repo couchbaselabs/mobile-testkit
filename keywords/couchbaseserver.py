@@ -1,7 +1,3 @@
-import logging
-import sys
-import os
-
 import time
 import json
 import requests
@@ -10,11 +6,9 @@ from requests.exceptions import HTTPError
 from requests import Session
 from requests.packages.urllib3.exceptions import InsecureRequestWarning
 
-import couchbase
 from couchbase.bucket import Bucket
 from couchbase.exceptions import CouchbaseError
 from couchbase.exceptions import NotFoundError
-
 
 import keywords.constants
 from keywords.remoteexecutor import RemoteExecutor
@@ -30,9 +24,6 @@ from keywords.utils import log_error
 from keywords import types
 
 
-os.environ['LCB_LOGLEVEL'] = '5'
-logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
-couchbase.enable_logging()
 requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
 
