@@ -6,7 +6,7 @@ from keywords.SyncGateway import (sync_gateway_config_path_for_mode,
                                   validate_sync_gateway_mode)
 from keywords.tklogging import Logging
 
-from keywords.utils import log_info, check_xattr_support
+from keywords.utils import log_info, check_xattr_support, version_is_binary
 from keywords.exceptions import ProvisioningError
 
 from libraries.NetworkUtils import NetworkUtils
@@ -30,7 +30,7 @@ def params_from_base_suite_setup(request):
     cbs_ssl = request.config.getoption("--server-ssl")
     xattrs_enabled = request.config.getoption("--xattrs")
 
-    if xattrs_enabled:
+    if xattrs_enabled and version_is_binary(sync_gateway_version):
         check_xattr_support(server_version, sync_gateway_version)
 
     log_info("server_version: {}".format(server_version))

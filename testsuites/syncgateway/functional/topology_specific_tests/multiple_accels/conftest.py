@@ -6,7 +6,7 @@ from keywords.constants import SYNC_GATEWAY_CONFIGS
 from keywords.exceptions import ProvisioningError
 from keywords.SyncGateway import validate_sync_gateway_mode
 from keywords.tklogging import Logging
-from keywords.utils import check_xattr_support, log_info
+from keywords.utils import check_xattr_support, log_info, version_is_binary
 from libraries.NetworkUtils import NetworkUtils
 from libraries.testkit.cluster import Cluster
 from utilities.cluster_config_utils import persist_cluster_config_environment_prop
@@ -36,7 +36,7 @@ def params_from_base_suite_setup(request):
     log_info("cbs_ssl: {}".format(cbs_ssl))
     log_info("xattrs_enabled: {}".format(xattrs_enabled))
 
-    if xattrs_enabled:
+    if xattrs_enabled and version_is_binary(sync_gateway_version):
         check_xattr_support(server_version, sync_gateway_version)
 
     # Make sure mode for sync_gateway is supported ('cc' or 'di')
