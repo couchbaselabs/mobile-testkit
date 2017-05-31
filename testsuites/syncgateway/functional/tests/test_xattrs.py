@@ -36,10 +36,12 @@ def test_olddoc_nil(params_from_base_test_setup, sg_conf_name):
     """ Regression test for - https://github.com/couchbase/sync_gateway/issues/2565
 
     Using the custom sync function:
-        function(doc, oldDoc){
-            if (oldDoc) {
-                channel(oldDoc.channels);
+        function(doc, oldDoc) {
+            if (oldDoc != null) {
+                throw({forbidden: "Old doc should be null!"})
             } else {
+                console.log("oldDoc is null");
+                console.log(doc.channels);
                 channel(doc.channels);
             }
         }
