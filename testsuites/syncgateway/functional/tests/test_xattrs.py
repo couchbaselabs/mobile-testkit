@@ -34,7 +34,7 @@ SDK_OP_SLEEP = 0.05
 ])
 def test_olddoc_nil(params_from_base_test_setup, sg_conf_name):
     """ Regression test for - https://github.com/couchbase/sync_gateway/issues/2565
-    
+
     Using the custom sync function:
         function(doc, oldDoc){
             if (oldDoc) {
@@ -43,7 +43,7 @@ def test_olddoc_nil(params_from_base_test_setup, sg_conf_name):
                 channel(doc.channels);
             }
         }
-    
+
     1. Create user with channel 'ABC' (user1)
     2. Create user with channel 'CBS' (user2)
     3. Write doc with channel 'ABC'
@@ -143,10 +143,6 @@ def test_olddoc_nil(params_from_base_test_setup, sg_conf_name):
     user_two_bulk_get_docs, errors = sg_client.get_bulk_docs(url=sg_url, db=sg_db, doc_ids=abc_doc_ids, auth=user_two_auth)
     assert len(user_two_bulk_get_docs) == num_docs
     assert len(errors) == 0
-
-
-    import pdb
-    pdb.set_trace()
 
 
 @pytest.mark.sanity
