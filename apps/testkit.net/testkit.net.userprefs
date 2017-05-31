@@ -1,0 +1,4 @@
+﻿<Properties StartupConfiguration="{2A900BF0-979A-4722-B672-6A0D28489FCB}|Default" NuGet.AddPackagesDialog.IncludePrerelease="True">
+  <MonoDevelop.Ide.ItemProperties.Testkit.Net PreferredExecutionTarget="MonoDevelop.Default" />
+  <MultiItemStartupConfigurations />
+</Properties>

@@ -81,3 +81,8 @@ ansible.cfg
 /run_scripts/test_batch.py
 
 portmaps.json
+
+apps/testkit.net/Testkit.Net/bin/*
+apps/testkit.net/Testkit.Net/obj/*
+apps/testkit.net/Testkit.Net.Shared/bin/*
+apps/testkit.net/Testkit.Net.Shared/obj/*
