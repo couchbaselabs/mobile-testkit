@@ -1,0 +1,35 @@
+{
+    "interface":":4984",
+    "adminInterface": "0.0.0.0:4985",
+    "maxIncomingConnections": 0,
+    "maxCouchbaseConnections": 16,
+    "maxFileDescriptors": 90000,
+    "slowServerCallWarningThreshold": 500,
+    "compressResponses": false,
+    "log": ["*"],
+    "cluster_config": {
+        "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
+        "data_dir":".",
+        "bucket":"data-bucket",
+        "username":"data-bucket",
+        "password": "password"
+    },
+    "databases":{
+        "db":{
+            "unsupported": {
+                "enable_extended_attributes": true
+            },
+            "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
+            "bucket":"data-bucket",
+            "password": "password",
+            "channel_index":{
+                "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
+                "bucket":"index-bucket",
+                "username":"index-bucket",
+                "password": "password",
+                "writer":{{ is_index_writer }}
+            }
+        }
+    }
+}
+
