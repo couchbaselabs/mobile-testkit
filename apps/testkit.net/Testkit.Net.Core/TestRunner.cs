@@ -8,6 +8,9 @@ namespace Testkit.Net.Core
 {
     public static class TestRunner
     {
+
+        // Taken from: https://github.com/xunit/samples.xunit/blob/master/TestRunner/Program.cs
+
         // We use consoleLock because messages can arrive in parallel, so we want to make sure we get
         // consistent console output.
         private static object consoleLock = new object();
@@ -20,17 +23,20 @@ namespace Testkit.Net.Core
 
         public static int RunTest(string name)
         {
-            var testAssembly = typeof(TestRunner).GetTypeInfo().Assembly;
-            using (var runner = AssemblyRunner.WithoutAppDomain(testAssembly.FullName))
+
+            var testAssembly = "bin/Debug/netcoreapp1.1/Testkit.Net.Core.dll";
+            using (var runner = AssemblyRunner.WithoutAppDomain(testAssembly))
             {
+
+                var testName = "Testkit.Net.Core.Longevity";
+
                 runner.OnDiscoveryComplete = OnDiscoveryComplete;
                 runner.OnExecutionComplete = OnExecutionComplete;
                 runner.OnTestFailed = OnTestFailed;
                 runner.OnTestSkipped = OnTestSkipped;
 
                 Console.WriteLine("Discovering...");
-                //runner.Start(name);
-                runner.Start("Testkit.Net.Core.Longevity");
+                runner.Start(testName);
 
                 finished.WaitOne();
                 finished.Dispose();

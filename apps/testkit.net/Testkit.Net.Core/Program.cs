@@ -1,5 +1,4 @@
-﻿using System;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 
 namespace Testkit.Net.Core
 {
@@ -7,8 +6,8 @@ namespace Testkit.Net.Core
     {
         static void Main(string[] args)
         {
-            //var server = new Server(50000);
-            //Task.WaitAll(server.Run());
+            var server = new Server(50000);
+            Task.WaitAll(server.Run());
         }
     }
 }
