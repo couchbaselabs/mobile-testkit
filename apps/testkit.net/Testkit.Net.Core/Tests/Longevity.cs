@@ -11,7 +11,7 @@ namespace Testkit.Net.Core
         [Fact]
         public void Success()
         {
-            Assert.StartsWith("Hello", "Hello, world!");
+            Assert.StartsWith("Hellaso", "Hello, world!");
         }
     }
 }

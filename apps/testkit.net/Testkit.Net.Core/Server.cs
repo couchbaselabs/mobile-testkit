@@ -21,8 +21,18 @@ namespace Testkit.Net.Core
         public Server(int port)
         {
             _listener = new HttpListener(IPAddress.Parse("127.0.0.1"), port);
-            _listener.Start();
-            Console.WriteLine($"Testkit app listening on port: {port}");
+
+            try
+            {
+                _listener.Start();
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+            }
+
+            Console.WriteLine($"Testkit app listening on http://127.0.0.1:{port}");
+            Console.WriteLine($"Make a request to http://127.0.0.1:{port}/kill to exit application.");
         }
 
         public async Task Run()
@@ -33,6 +43,11 @@ namespace Testkit.Net.Core
                 // The GetContext method blocks while waiting for a request. 
                 HttpListenerContext context = await _listener.GetContextAsync();
                 HttpListenerRequest request = context.Request;
+
+                if (request.Url.AbsolutePath.Replace("/", "") == "kill")
+                {
+                    break;
+                }
 
                 if (request.HttpMethod != "POST")
                 {
@@ -47,20 +62,23 @@ namespace Testkit.Net.Core
                 var ts = JsonConvert.DeserializeObject<TestSpec>(requestBody);
 
                 // Run test(s)
-                int testResult = TestRunner.RunTest(ts.Test);
-                string testStatus = testResult == 0 ? "PASS" : "FAIL";
-
-                // Send response status
                 HttpListenerResponse response = context.Response;
-                // Construct a response.
-                await response.WriteContentAsync($"Ran test {ts.Test}: Result: {testStatus}");
+                if (ts.Test != null && Suites.Names.Contains(ts.Test))
+                {
+                    int testResult = TestRunner.RunTest(ts.Test);
+                    string testStatus = testResult == 0 ? "PASS" : "FAIL";
+                    await response.WriteContentAsync($"Ran test {ts.Test}: Result: {testStatus}");
+                }
+                else
+                {
+                    response.InternalServerError();
+                }
+                response.Close();
             }
 
-        }
-
-        public void Stop()
-        {
+            Console.WriteLine("Stopping Listener ...");
             _listener.Close();
+
         }
     }
 }

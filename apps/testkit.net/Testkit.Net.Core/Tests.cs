@@ -1,10 +1,11 @@
 ﻿using System;
-namespace Testkit.Net.Shared
+using System.Collections.Generic;
+
+namespace Testkit.Net.Core
 {
-    public static class Core
+    public static class Suites
     {
-        public static string[] Names = new string[]
-        {
+        public static List<string> Names = new List<string>() {
             "Longevity"
         };
     }
