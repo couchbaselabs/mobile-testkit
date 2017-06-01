@@ -13,7 +13,6 @@ from keywords.utils import version_and_build
 from keywords.utils import log_info
 from keywords.utils import log_r
 from zipfile import ZipFile
-
 from requests.exceptions import ConnectionError
 
 
@@ -48,6 +47,9 @@ class LiteServiOS(LiteServBase):
         extracted_directory_name = downloaded_package_zip_name.replace(".zip", "")
         with ZipFile("{}".format(downloaded_package_zip_name)) as zip_f:
             zip_f.extractall("{}".format(extracted_directory_name))
+
+        # Remove .zip
+        os.remove("{}".format(downloaded_package_zip_name))
 
         # Remove .zip
         os.remove("{}".format(downloaded_package_zip_name))
