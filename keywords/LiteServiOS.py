@@ -1,8 +1,10 @@
 import json
 import subprocess
 import os
-import requests
 import time
+from zipfile import ZipFile
+import requests
+from requests.exceptions import ConnectionError
 
 from keywords.LiteServBase import LiteServBase
 from keywords.constants import BINARY_DIR
@@ -12,8 +14,6 @@ from keywords.exceptions import LiteServError
 from keywords.utils import version_and_build
 from keywords.utils import log_info
 from keywords.utils import log_r
-from zipfile import ZipFile
-from requests.exceptions import ConnectionError
 
 
 class LiteServiOS(LiteServBase):
@@ -51,9 +51,6 @@ class LiteServiOS(LiteServBase):
         # Remove .zip
         os.remove("{}".format(downloaded_package_zip_name))
 
-        # Remove .zip
-        os.remove("{}".format(downloaded_package_zip_name))
-
     def install_device(self):
         """Installs / launches LiteServ on iOS device
         Warning: Only works with a single device at the moment
@@ -81,7 +78,7 @@ class LiteServiOS(LiteServBase):
 
         self.stop()
 
-    def install(self, device="iPhone-7"):
+    def install(self, device="iPhone-7", logfile_name=None):
         """Installs / launches LiteServ on iOS simulator
         Default is iPhone-7
         """
@@ -95,7 +92,7 @@ class LiteServiOS(LiteServBase):
 
         # install app / launch app to connected device
         output = subprocess.check_output([
-            "ios-sim", "launch", "--devicetypeid", device, "--log", "results/logs/LiteServ-iOS.log", "--exit", app_path
+            "ios-sim", "launch", "--devicetypeid", device, "--log", logfile_name, "--exit", app_path
         ])
         log_info(output)
         bundle_id = "com.couchbase.LiteServ-iOS"
@@ -105,7 +102,7 @@ class LiteServiOS(LiteServBase):
 
         self.stop()
 
-    def remove(self):
+    def remove_device(self):
         """
         Remove the iOS app from the connected device
         """
@@ -119,6 +116,22 @@ class LiteServiOS(LiteServBase):
 
         # Check that removal is successful
         output = subprocess.check_output(["ios-deploy", "--list_bundle_id"])
+        log_info(output)
+
+        if bundle_id in output:
+            raise LiteServError("LiteServ-iOS is still present after uninstall")
+
+    def remove(self):
+        """
+        Remove the iOS app from the simulator
+        """
+        log_info("Removing LiteServ-iOS")
+        bundle_id = "com.couchbase.LiteServ-iOS"
+
+        self.stop()
+        output = subprocess.check_output([
+            "xcrun", "simctl", "uninstall", "booted", bundle_id
+        ])
         log_info(output)
 
         if bundle_id in output:
