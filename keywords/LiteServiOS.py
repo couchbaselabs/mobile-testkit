@@ -2,15 +2,19 @@ import json
 import subprocess
 import os
 import requests
+import time
 
 from keywords.LiteServBase import LiteServBase
 from keywords.constants import BINARY_DIR
 from keywords.constants import LATEST_BUILDS
+from keywords.constants import MAX_RETRIES
 from keywords.exceptions import LiteServError
 from keywords.utils import version_and_build
 from keywords.utils import log_info
 from keywords.utils import log_r
 from zipfile import ZipFile
+
+from requests.exceptions import ConnectionError
 
 
 class LiteServiOS(LiteServBase):
@@ -48,7 +52,7 @@ class LiteServiOS(LiteServBase):
         # Remove .zip
         os.remove("{}".format(downloaded_package_zip_name))
 
-    def install(self):
+    def install_device(self):
         """Installs / launches LiteServ on iOS device
         Warning: Only works with a single device at the moment
         """
@@ -69,6 +73,30 @@ class LiteServiOS(LiteServBase):
         bundle_id = "com.couchbase.LiteServ-iOS"
         output = subprocess.check_output(["ios-deploy", "--list_bundle_id"])
         log_info(output)
+
+        if bundle_id not in output:
+            raise LiteServError("Could not install LiteServ-iOS")
+
+        self.stop()
+
+    def install(self, device="iPhone-7"):
+        """Installs / launches LiteServ on iOS simulator
+        Default is iPhone-7
+        """
+
+        if self.storage_engine != "SQLite":
+            raise LiteServError("https://github.com/couchbaselabs/liteserv-ios/issues/1")
+
+        package_name = "LiteServ-iOS.app"
+        app_path = "{}/{}/{}".format(BINARY_DIR, "LiteServ-iOS", package_name)
+        log_info("Installing: {}".format(app_path))
+
+        # install app / launch app to connected device
+        output = subprocess.check_output([
+            "ios-sim", "launch", "--devicetypeid", device, "--log", "results/logs/LiteServ-iOS.log", "--exit", app_path
+        ])
+        log_info(output)
+        bundle_id = "com.couchbase.LiteServ-iOS"
 
         if bundle_id not in output:
             raise LiteServError("Could not install LiteServ-iOS")
@@ -155,8 +183,20 @@ class LiteServiOS(LiteServBase):
 
         liteserv_admin_url = "http://{}:59850".format(self.host)
         log_info("Stopping LiteServ: {}".format(liteserv_admin_url))
-        resp = self.session.put("{}/stop".format(liteserv_admin_url))
-        log_r(resp)
-        resp.raise_for_status()
+
+        count = 0
+        while count < MAX_RETRIES:
+            if count == MAX_RETRIES:
+                raise LiteServError("Could not connect to LiteServ")
+
+            try:
+                resp = self.session.put("{}/stop".format(liteserv_admin_url))
+                log_r(resp)
+                resp.raise_for_status()
+                break
+            except ConnectionError:
+                log_info("LiteServ may not be launched (Retrying) ...")
+                time.sleep(1)
+                count += 1
 
         self._verify_not_running()
