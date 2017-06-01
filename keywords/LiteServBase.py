@@ -33,7 +33,7 @@ class LiteServBase(object):
     def download(self):
         raise NotImplementedError()
 
-    def install(self):
+    def install(self, logfile_name):
         raise NotImplementedError()
 
     def start(self, logfile_name):

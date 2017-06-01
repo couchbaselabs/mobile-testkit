@@ -1,11 +1,10 @@
 import json
 import subprocess
 import os
-import re
 import time
 from zipfile import ZipFile
-from shutil import copyfile
 import requests
+from requests.exceptions import ConnectionError
 
 from keywords.LiteServBase import LiteServBase
 from keywords.constants import BINARY_DIR
