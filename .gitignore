@@ -82,7 +82,5 @@ ansible.cfg
 
 portmaps.json
 
-apps/testkit.net/Testkit.Net/bin/*
-apps/testkit.net/Testkit.Net/obj/*
-apps/testkit.net/Testkit.Net.Shared/bin/*
-apps/testkit.net/Testkit.Net.Shared/obj/*
+apps/testkit.net/Testkit.Net.Core/bin/*
+apps/testkit.net/Testkit.Net.Core/obj/*

@@ -1,4 +1,18 @@
-﻿<Properties StartupConfiguration="{2A900BF0-979A-4722-B672-6A0D28489FCB}|Default" NuGet.AddPackagesDialog.IncludePrerelease="True">
-  <MonoDevelop.Ide.ItemProperties.Testkit.Net PreferredExecutionTarget="MonoDevelop.Default" />
+﻿<Properties StartupConfiguration="{4C7292AF-4656-4680-9C14-2F50ABE87F02}|Default" NuGet.AddPackagesDialog.IncludePrerelease="True">
+  <MonoDevelop.Ide.ItemProperties.Testkit.Net.Desktop PreferredExecutionTarget="MonoDevelop.Default" />
+  <MonoDevelop.Ide.Workbench ActiveDocument="Testkit.Net.Core/Program.cs">
+    <Files>
+      <File FileName="Testkit.Net.Core/Longevity.cs" Line="1" Column="1" />
+      <File FileName="Testkit.Net.Core/Server.cs" Line="39" Column="93" />
+      <File FileName="Testkit.Net.Core/Program.cs" Line="15" Column="1" />
+      <File FileName="Testkit.Net.Core/TestRunner.cs" Line="33" Column="47" />
+    </Files>
+  </MonoDevelop.Ide.Workbench>
+  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
+  <MonoDevelop.Ide.DebuggingService.Breakpoints>
+    <BreakpointStore />
+  </MonoDevelop.Ide.DebuggingService.Breakpoints>
+  <MonoDevelop.Ide.DebuggingService.PinnedWatches />
   <MultiItemStartupConfigurations />
+  <MonoDevelop.Ide.ItemProperties.Testkit.Net.Core PreferredExecutionTarget="MonoDevelop.Default" />
 </Properties>
