@@ -100,10 +100,7 @@ def run_sgload_perf_test(cluster_config, sgload_arg_list_main, skip_build_sgload
     print(">>> Starting profile collection scripts")
     status = main_ansible_runner.run_ansible_playbook(
         "start-profile-collection.yml",
-        extra_vars={
-            "stats_run_time": 3600,
-            "delay_profiling_secs": 60
-        },
+        extra_vars={},
     )
     assert status == 0, "Could not start profiling collection scripts"
 

@@ -1,4 +1,5 @@
-from keywords.LiteServAndroid import LiteServAndroid
+from keywords.LiteServJavaAndroid import LiteServJavaAndroid
+from keywords.LiteServXamarinAndroid import LiteServXamarinAndroid
 from keywords.LiteServiOS import LiteServiOS
 from keywords.LiteServMacOSX import LiteServMacOSX
 from keywords.LiteServNetMono import LiteServNetMono
@@ -17,7 +18,7 @@ class LiteServFactory:
 
     @staticmethod
     def validate_platform(platform):
-        valid_platforms = ["android", "ios", "macosx", "net-mono", "net-msft"]
+        valid_platforms = ["android", "xamarin-android", "ios", "macosx", "net-mono", "net-msft"]
         if platform not in valid_platforms:
             raise ValueError("Unsupported 'platform': {}".format(platform))
 
@@ -47,7 +48,9 @@ class LiteServFactory:
         LiteServFactory.validate_storage_engine(storage_engine)
 
         if platform == "android":
-            return LiteServAndroid(version_build, host, port, storage_engine)
+            return LiteServJavaAndroid(version_build, host, port, storage_engine)
+        elif platform == "xamarin-android":
+            return LiteServXamarinAndroid(version_build, host, port, storage_engine)
         elif platform == "ios":
             return LiteServiOS(version_build, host, port, storage_engine)
         elif platform == "macosx":

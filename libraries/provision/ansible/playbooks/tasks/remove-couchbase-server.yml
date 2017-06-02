@@ -12,10 +12,6 @@
   shell: rpm -e couchbase-server
   ignore_errors: yes
 
-- name: COUCHBASE SERVER | Uninstall couchbase server community
-  shell: rpm -e couchbase-server-community
-  ignore_errors: yes
-
 # Kill any processes that may be hanging around
 - name: COUCHBASE SERVER | Kill epmd
   shell: pkill epmd
@@ -31,4 +27,3 @@
 
 - name: COUCHBASE SERVER | Remove all couchbase server residue
   file: path=/opt/couchbase state=absent
-  ignore_errors: yes

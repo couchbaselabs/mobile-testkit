@@ -5,11 +5,9 @@
   "compressResponses": false,
   "AdminInterface": "0.0.0.0:4985",
   "cluster_config": {
-    "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
+    "server":"http://{{ couchbase_server_primary_node }}:8091",
     "data_dir":".",
-    "bucket":"data-bucket",
-    "username":"data-bucket",
-    "password": "password"
+    "bucket":"data-bucket"
   },
   "databases": {
     "db": {
@@ -73,18 +71,13 @@
         }
       },
       "unsupported": {
-        {% if xattrs %}
-          {{ "%s,"|format(xattrs) }}
-        {% endif %}
         "oidc_test_provider": {
           "enabled": true
         }
       },
       "feed_type": "DCPSHARD",
-      "server": "{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
+      "server": "http://{{ couchbase_server_primary_node }}:8091",
       "bucket": "data-bucket",
-      "username":"data-bucket",
-      "password": "password",
       "users": {
         "GUEST": {
           "disabled": true,
@@ -95,10 +88,8 @@
       },
       "channel_index": {
         "num_shards": 64,
-        "server": "{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
+        "server": "http://{{ couchbase_server_primary_node }}:8091",
         "bucket": "index-bucket",
-        "username":"index-bucket",
-        "password": "password",
         "writer": {{ is_index_writer }}
       }
     }

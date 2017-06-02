@@ -19,6 +19,7 @@ def test_longpoll_changes_termination_timeout(setup_client_syncgateway_test):
     3. Wait 5.1s
     4. Create another request GET /db/ on listener and make sure the listener responds
     """
+
     ls_db = "ls_db"
     ls_url = setup_client_syncgateway_test["ls_url"]
 
@@ -61,6 +62,7 @@ def test_longpoll_changes_termination_heartbeat(setup_client_syncgateway_test):
     Wait 5.1s
     Create another request GET /db/ on listener and make sure the listener responds
     """
+
     log_info("Running 'longpoll_changes_termination' ...")
 
     ls_db = "ls_db"

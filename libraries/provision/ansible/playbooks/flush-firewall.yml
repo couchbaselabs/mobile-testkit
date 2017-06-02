@@ -1,8 +1,8 @@
 # Flush the firewall rules, some maybe in place if it is a new vm
 - hosts: pool
+  any_errors_fatal: true
   become: yes
 
   tasks:
   - name: OS | Flush Firewall
     command: iptables --flush
-    ignore_errors: True

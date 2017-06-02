@@ -11,19 +11,13 @@
   ],
   "databases": {
     "db": {
-      {{ autoimport }}
       "unsupported": {
-        {% if xattrs %}
-            {{ "%s,"|format(xattrs) }}
-        {% endif %}
         "user_views": {
           "enabled":true
         }
       },
-      "server": "{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
+      "server": "http://{{ couchbase_server_primary_node }}:8091",
       "bucket": "data-bucket",
-      "username":"data-bucket",
-      "password": "password",
       "roles": {
         "Scientist": {
           "admin_channels": [

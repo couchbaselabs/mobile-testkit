@@ -265,7 +265,7 @@ def test_winning_conflict_branch_revisions(params_from_base_test_setup, sg_conf_
 
         changes_2 = client.get_changes(url=sg_url, db=sg_db, since=last_seq, auth=seth_auth)
         last_seq = changes_2["last_seq"]
-        if changes_2["results"][0]["changes"][0]["rev"] == "7-foo" and len(changes_2["results"]) > 0:
+        if len(changes_2["results"]) > 0:
             break
 
     # Verify that the the "7-foo" rev is return on the changes feed

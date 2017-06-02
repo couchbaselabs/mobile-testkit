@@ -1,13 +1,16 @@
-import json
 import time
-from collections import namedtuple
+import json
 
 import pytest
 
-from keywords.SyncGateway import sync_gateway_config_path_for_mode
-from keywords.utils import log_info
 from libraries.testkit.admin import Admin
 from libraries.testkit.cluster import Cluster
+from keywords.SyncGateway import sync_gateway_config_path_for_mode
+
+from keywords.utils import log_info
+
+from collections import namedtuple
+
 
 source_bucket_name = "source-bucket"
 data_bucket_name = "data-bucket"
@@ -59,8 +62,8 @@ def init_shadow_cluster(cluster, config_path_shadower, config_path_non_shadower)
         channels=["ABC", "NBC", "CBS"],
     )
 
-    source_bucket = cluster.servers[0].get_sdk_bucket(source_bucket_name)
-    data_bucket = cluster.servers[0].get_sdk_bucket(data_bucket_name)
+    source_bucket = cluster.servers[0].get_bucket(source_bucket_name)
+    data_bucket = cluster.servers[0].get_bucket(data_bucket_name)
 
     sc = ShadowCluster(
         bob_non_shadower=bob_non_shadower,
@@ -96,9 +99,8 @@ def test_bucket_shadow_low_revs_limit_repeated_deletes(params_from_base_test_set
 
     cluster_config = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
-    xattrs_enabled = params_from_base_test_setup["xattrs_enabled"]
 
-    if mode == "di" or xattrs_enabled:
+    if mode == "di":
         pytest.skip("https://github.com/couchbase/sync_gateway/issues/2193")
 
     default_config_path_shadower_low_revs = sync_gateway_config_path_for_mode("sync_gateway_bucketshadow_low_revs", mode)
@@ -167,9 +169,8 @@ def test_bucket_shadow_low_revs_limit(params_from_base_test_setup):
 
     cluster_config = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
-    xattrs_enabled = params_from_base_test_setup["xattrs_enabled"]
 
-    if mode == "di" or xattrs_enabled:
+    if mode == "di":
         pytest.skip("https://github.com/couchbase/sync_gateway/issues/2193")
 
     log_info("Running 'test_bucket_shadow_low_revs_limit'")
@@ -229,9 +230,8 @@ def test_bucket_shadow_multiple_sync_gateways(params_from_base_test_setup):
 
     cluster_config = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
-    xattrs_enabled = params_from_base_test_setup["xattrs_enabled"]
 
-    if mode == "di" or xattrs_enabled:
+    if mode == "di":
         pytest.skip("https://github.com/couchbase/sync_gateway/issues/2193")
 
     log_info("Running 'test_bucket_shadow_multiple_sync_gateways'")

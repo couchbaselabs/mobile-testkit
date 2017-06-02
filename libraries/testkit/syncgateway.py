@@ -1,18 +1,15 @@
-import json
-import logging
 import os
-import time
-
 import requests
+import json
+import time
+import libraries.testkit.settings
+from libraries.testkit.debug import log_request
+from libraries.testkit.debug import log_response
+from libraries.testkit.admin import Admin
+from libraries.provision.ansible_runner import AnsibleRunner
 from requests import HTTPError
 
-import libraries.testkit.settings
-from libraries.provision.ansible_runner import AnsibleRunner
-from libraries.testkit.admin import Admin
-from libraries.testkit.debug import log_request, log_response
-from utilities.cluster_config_utils import is_cbs_ssl_enabled
-from utilities.cluster_config_utils import is_xattrs_enabled
-
+import logging
 log = logging.getLogger(libraries.testkit.settings.LOGGER)
 
 
@@ -25,14 +22,6 @@ class SyncGateway:
         self.hostname = target["name"]
         self._headers = {'Content-Type': 'application/json'}
         self.admin = Admin(self)
-
-        self.cluster_config = cluster_config
-        self.server_port = 8091
-        self.server_scheme = "http"
-
-        if is_cbs_ssl_enabled(self.cluster_config):
-            self.server_port = 18091
-            self.server_scheme = "https"
 
     def info(self):
         r = requests.get(self.url)
@@ -47,47 +36,30 @@ class SyncGateway:
         return status
 
     def start(self, config):
+
         conf_path = os.path.abspath(config)
+
         log.info(">>> Starting sync_gateway with configuration: {}".format(conf_path))
-
-        playbook_vars = {
-            "sync_gateway_config_filepath": conf_path,
-            "server_port": self.server_port,
-            "server_scheme": self.server_scheme,
-            "autoimport": "",
-            "xattrs": ""
-        }
-
-        if is_xattrs_enabled(self.cluster_config):
-            playbook_vars["autoimport"] = '"import_docs": "continuous",'
-            playbook_vars["xattrs"] = '"enable_extended_attributes": true'
 
         status = self.ansible_runner.run_ansible_playbook(
             "start-sync-gateway.yml",
-            extra_vars=playbook_vars,
+            extra_vars={
+                "sync_gateway_config_filepath": conf_path
+            },
             subset=self.hostname
         )
         return status
 
     def restart(self, config):
         conf_path = os.path.abspath(config)
+
         log.info(">>> Restarting sync_gateway with configuration: {}".format(conf_path))
-
-        playbook_vars = {
-            "sync_gateway_config_filepath": conf_path,
-            "server_port": self.server_port,
-            "server_scheme": self.server_scheme,
-            "autoimport": "",
-            "xattrs": ""
-        }
-
-        if is_xattrs_enabled(self.cluster_config):
-            playbook_vars["autoimport"] = '"import_docs": "continuous",'
-            playbook_vars["xattrs"] = '"enable_extended_attributes": true'
 
         status = self.ansible_runner.run_ansible_playbook(
             "reset-sync-gateway.yml",
-            extra_vars=playbook_vars,
+            extra_vars={
+                "sync_gateway_config_filepath": conf_path,
+            },
             subset=self.hostname
         )
         return status

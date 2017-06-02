@@ -4,14 +4,8 @@
   "log": ["*"],
   "databases": {
     "todo": {
-      {{ autoimport }}
-      "unsupported": {
-        {{ xattrs }}
-      },
-      "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
+      "server":"http://{{ couchbase_server_primary_node }}:8091",
       "bucket": "data-bucket",
-      "username":"data-bucket",
-      "password": "password",
       "users": {
         "traun": {"password": "pass", "admin_channels": ["traun"]},
         "james": {"password": "pass", "admin_channels": ["james"]},

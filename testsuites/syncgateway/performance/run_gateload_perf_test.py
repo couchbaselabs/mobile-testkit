@@ -28,7 +28,7 @@ GateloadParams = collections.namedtuple(
 )
 
 
-def run_gateload_perf_test(gen_gateload_config, test_id, gateload_params, delay_profiling_secs, delay_expvar_collect_secs):
+def run_gateload_perf_test(gen_gateload_config, test_id, gateload_params):
 
     try:
         cluster_config = os.environ["CLUSTER_CONFIG"]
@@ -73,13 +73,9 @@ def run_gateload_perf_test(gen_gateload_config, test_id, gateload_params, delay_
         )
 
     print(">>> Starting profile collection scripts")
-    runtime_s = int(gateload_params.runtime_ms) // 1000
     status = ansible_runner.run_ansible_playbook(
         "start-profile-collection.yml",
-        extra_vars={
-            "stats_run_time": runtime_s,
-            "delay_profiling_secs": int(delay_profiling_secs)
-        },
+        extra_vars={},
     )
     assert status == 0, "Could not start profiling collection scripts"
 
@@ -89,9 +85,7 @@ def run_gateload_perf_test(gen_gateload_config, test_id, gateload_params, delay_
     ))
     status = ansible_runner.run_ansible_playbook(
         "start-gateload.yml",
-        extra_vars={
-            "delay_expvar_collect_secs": int(delay_expvar_collect_secs)
-        },
+        extra_vars={},
     )
     assert status == 0, "Could not start gateload"
 
@@ -183,16 +177,6 @@ if __name__ == "__main__":
                       default=None,
                       help="The number of active users assigned to a channel")
 
-    parser.add_option("", "--delay-profiling-secs",
-                      action="store", dest="delay_profiling_secs",
-                      default=None,
-                      help="The delay time between profiling")
-
-    parser.add_option("", "--delay-expvar-collect-secs",
-                      action="store", dest="delay_expvar_collect_secs",
-                      default=None,
-                      help="The delay time between expvar collection")
-
     arg_parameters = sys.argv[1:]
 
     (opts, args) = parser.parse_args(arg_parameters)
@@ -223,7 +207,5 @@ if __name__ == "__main__":
     run_gateload_perf_test(
         gen_gateload_config=opts.gen_gateload_config,
         test_id=opts.test_id,
-        gateload_params=gateload_params_from_args,
-        delay_profiling_secs=opts.delay_profiling_secs,
-        delay_expvar_collect_secs=opts.delay_expvar_collect_secs
+        gateload_params=gateload_params_from_args
     )

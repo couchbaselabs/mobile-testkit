@@ -4,19 +4,17 @@ import requests
 from requests.exceptions import ConnectionError
 from requests.exceptions import HTTPError
 from requests import Session
-from requests.packages.urllib3.exceptions import InsecureRequestWarning
 
 from couchbase.bucket import Bucket
 from couchbase.exceptions import CouchbaseError
 from couchbase.exceptions import NotFoundError
+
 
 import keywords.constants
 from keywords.remoteexecutor import RemoteExecutor
 from keywords.exceptions import CBServerError
 from keywords.exceptions import ProvisioningError
 from keywords.exceptions import TimeoutError
-from keywords.exceptions import RBACUserCreationError
-from keywords.exceptions import RBACUserDeletionError
 from keywords.utils import log_r
 from keywords.utils import log_info
 from keywords.utils import log_debug
@@ -24,20 +22,8 @@ from keywords.utils import log_error
 from keywords import types
 
 
-requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
-
-
-def get_server_version(host, cbs_ssl=False):
-    """ Gets the server version in the format '4.1.1-5487' for a running Couchbase Server"""
-
-    server_scheme = "http"
-    server_port = 8091
-
-    if cbs_ssl:
-        server_scheme = "https"
-        server_port = 18091
-
-    resp = requests.get("{}://Administrator:password@{}:{}/pools".format(server_scheme, host, server_port), verify=False)
+def get_server_version(host):
+    resp = requests.get("http://Administrator:password@{}:8091/pools".format(host))
     log_r(resp)
     resp.raise_for_status()
     resp_obj = resp.json()
@@ -50,10 +36,8 @@ def get_server_version(host, cbs_ssl=False):
     return "{}-{}".format(running_server_version_parts[0], running_server_version_parts[1])
 
 
-def verify_server_version(host, expected_server_version, cbs_ssl=False):
-    """ Verifies that the version of a running Couchbase Server is the 'expected_server_version' """
-
-    running_server_version = get_server_version(host, cbs_ssl=cbs_ssl)
+def verify_server_version(host, expected_server_version):
+    running_server_version = get_server_version(host)
     expected_server_version_parts = expected_server_version.split("-")
 
     # Check both version parts if expected version contains a build
@@ -79,66 +63,37 @@ class CouchbaseServer:
 
     def __init__(self, url):
         self.url = url
-        self.cbs_ssl = False
 
         # Strip http prefix and port to store host
-        if "https" in self.url:
-            host = self.url.replace("https://", "")
-            host = host.replace(":18091", "")
-            self.cbs_ssl = True
-        else:
-            host = self.url.replace("http://", "")
-            host = host.replace(":8091", "")
-
+        host = self.url.replace("http://", "")
+        host = host.replace(":8091", "")
         self.host = host
         self.remote_executor = RemoteExecutor(self.host)
 
         self._session = Session()
         self._session.auth = ("Administrator", "password")
 
-        if self.cbs_ssl:
-            self._session.verify = False
-
     def get_bucket_names(self):
         """ Returns list of the bucket names for a given Couchbase Server."""
 
         bucket_names = []
 
-        error_count = 0
-        max_retries = 5
-
-        # Retry to avoid intermittent Connection issues when getting buckets
-        while True:
-            if error_count == max_retries:
-                raise CBServerError("Error! Could not get buckets after retries.")
-            try:
-                resp = self._session.get("{}/pools/default/buckets".format(self.url))
-                log_r(resp)
-                resp.raise_for_status()
-                break
-            except ConnectionError:
-                log_info("Hit a ConnectionError while trying to get buckets. Retrying ...")
-                error_count += 1
-                time.sleep(1)
+        resp = self._session.get("{}/pools/default/buckets".format(self.url))
+        log_r(resp)
+        resp.raise_for_status()
 
         obj = json.loads(resp.text)
 
         for entry in obj:
             bucket_names.append(entry["name"])
 
-        log_info("Found buckets: {}".format(bucket_names))
         return bucket_names
 
     def delete_bucket(self, name):
         """ Delete a Couchbase Server bucket with the given 'name' """
-        server_version = get_server_version(self.host, self.cbs_ssl)
-        server_major_version = int(server_version.split(".")[0])
-
         resp = self._session.delete("{0}/pools/default/buckets/{1}".format(self.url, name))
         log_r(resp)
         resp.raise_for_status()
-        if server_major_version >= 5:
-            self._delete_internal_rbac_bucket_user(name)
 
     def delete_buckets(self):
         """ Deletes all of the buckets on a Couchbase Server.
@@ -146,15 +101,12 @@ class CouchbaseServer:
         """
 
         count = 0
-        max_retries = 3
         while True:
 
-            if count == max_retries:
+            if count > 3:
                 raise CBServerError("Max retries for bucket creation hit. Could not delete buckets!")
 
-            # Get a list of the bucket names
             bucket_names = self.get_bucket_names()
-
             if len(bucket_names) == 0:
                 # No buckets to delete. Exit loop
                 break
@@ -168,12 +120,9 @@ class CouchbaseServer:
             for bucket_name in bucket_names:
                 try:
                     self.delete_bucket(bucket_name)
-                except HTTPError as e:
+                except HTTPError:
                     num_failures += 1
-                    log_info("Failed to delete bucket: {}. Retrying ...".format(e))
-                except ConnectionError as ce:
-                    num_failures += 1
-                    log_info("Failed to delete bucket: {} Retrying ...".format(ce))
+                    log_info("Failed to delete bucket. Retrying ...")
 
             # A 500 error may have occured, query for buckets and try to delete them again
             if num_failures > 0:
@@ -224,50 +173,6 @@ class CouchbaseServer:
             log_debug(resp_obj)
             # All nodes are heathy if it made it to here
             break
-
-    def _create_internal_rbac_bucket_user(self, bucketname):
-        # Create user with username=bucketname and assign role
-        # bucket_admin and cluster_admin
-        roles = "cluster_admin,bucket_admin[{}]".format(bucketname)
-        password = 'password'
-
-        data_user_params = {
-            "name": bucketname,
-            "roles": roles,
-            "password": password
-        }
-
-        log_info("Creating RBAC user {} with password {} and roles {}".format(bucketname, password, roles))
-
-        rbac_url = "{}/settings/rbac/users/local/{}".format(self.url, bucketname)
-
-        resp = None
-        try:
-            resp = self._session.put(rbac_url, data=data_user_params, auth=('Administrator', 'password'))
-            log_r(resp)
-            resp.raise_for_status()
-        except HTTPError as h:
-            log_info("resp code: {}; error: {}".format(resp, h))
-            raise RBACUserCreationError(h)
-
-    def _delete_internal_rbac_bucket_user(self, bucketname):
-        # Delete user with username=bucketname
-        data_user_params = {
-            "name": bucketname
-        }
-
-        log_info("Deleting RBAC user {}".format(bucketname))
-
-        rbac_url = "{}/settings/rbac/users/local/{}".format(self.url, bucketname)
-
-        resp = None
-        try:
-            resp = self._session.delete(rbac_url, data=data_user_params, auth=('Administrator', 'password'))
-            log_r(resp)
-            resp.raise_for_status()
-        except HTTPError as h:
-            log_info("resp code: {}; error: {}".format(resp, h))
-            raise RBACUserDeletionError(h)
 
     def _get_mem_total_lowest(self, server_info):
         # Workaround for https://github.com/couchbaselabs/mobile-testkit/issues/709
@@ -360,35 +265,18 @@ class CouchbaseServer:
 
         log_info("Creating bucket {} with RAM {}".format(name, ram_quota_mb))
 
-        server_version = get_server_version(self.host, self.cbs_ssl)
-        server_major_version = int(server_version.split(".")[0])
-
         data = {
             "name": name,
             "ramQuotaMB": str(ram_quota_mb),
             "authType": "sasl",
+            "proxyPort": "11211",
             "bucketType": "couchbase",
             "flushEnabled": "1"
         }
 
-        if server_major_version <= 4:
-            # Create a bucket with password for server_major_version < 5
-            # proxyPort should not be passed for 5.0.0 onwards for bucket creation
-            data["saslPassword"] = "password"
-            data["proxyPort"] = "11211"
-
-        resp = None
-        try:
-            resp = self._session.post("{}/pools/default/buckets".format(self.url), data=data)
-            log_r(resp)
-            resp.raise_for_status()
-        except HTTPError as h:
-            log_info("resp code: {}; resp text: {}; error: {}".format(resp, resp.json(), h))
-            raise
-
-        # Create a user with username=bucketname
-        if server_major_version >= 5:
-            self._create_internal_rbac_bucket_user(name)
+        resp = self._session.post("{}/pools/default/buckets".format(self.url), data=data)
+        log_r(resp)
+        resp.raise_for_status()
 
         # Create client an retry until KeyNotFound error is thrown
         start = time.time()
@@ -397,13 +285,13 @@ class CouchbaseServer:
             if time.time() - start > keywords.constants.CLIENT_REQUEST_TIMEOUT:
                 raise Exception("TIMEOUT while trying to create server buckets.")
             try:
-                bucket = Bucket("couchbase://{}/{}".format(self.host, name), password='password')
+                bucket = Bucket("couchbase://{}/{}".format(self.host, name))
                 bucket.get('foo')
             except NotFoundError:
                 log_info("Key not found error: Bucket is ready!")
                 break
             except CouchbaseError as e:
-                log_info("Error from server: {}, Retrying ...". format(e))
+                log_info("Error from server: Retrying ...", e)
                 time.sleep(1)
                 continue
 
@@ -417,10 +305,10 @@ class CouchbaseServer:
         _sync:rev:att_doc:34:1-e7fa9a5e6bb25f7a40f36297247ca93e
         """
 
-        b = Bucket("couchbase://{}/{}".format(self.host, bucket), password='password')
-        b_manager = b.bucket_manager()
-        b_manager.n1ql_index_create_primary(ignore_exists=True)
+        b = Bucket("couchbase://{}/{}".format(self.host, bucket))
+
         cached_rev_doc_ids = []
+        b.n1ql_query("CREATE PRIMARY INDEX ON `{}`".format(bucket)).execute()
         for row in b.n1ql_query("SELECT meta(`{}`) FROM `{}`".format(bucket, bucket)):
             if row["$1"]["id"].startswith("_sync:rev"):
                 cached_rev_doc_ids.append(row["$1"]["id"])
@@ -435,10 +323,10 @@ class CouchbaseServer:
         Returns server doc ids matching a prefix (ex. '_sync:rev:')
         """
 
-        b = Bucket("couchbase://{}/{}".format(self.host, bucket), password='password')
-        b_manager = b.bucket_manager()
-        b_manager.n1ql_index_create_primary(ignore_exists=True)
+        b = Bucket("couchbase://{}/{}".format(self.host, bucket))
+
         found_ids = []
+        b.n1ql_query("CREATE PRIMARY INDEX ON `{}`".format(bucket)).execute()
         for row in b.n1ql_query("SELECT meta(`{}`) FROM `{}`".format(bucket, bucket)):
             log_info(row)
             if row["$1"]["id"].startswith(prefix):
@@ -565,12 +453,8 @@ class CouchbaseServer:
         # Add all servers except server_to_add to known nodes
         known_nodes = "knownNodes="
         for server in cluster_servers:
-            if "https" in server:
-                server = server.replace("https://", "")
-                server = server.replace(":18091", "")
-            else:
-                server = server.replace("http://", "")
-                server = server.replace(":8091", "")
+            server = server.replace("http://", "")
+            server = server.replace(":8091", "")
             known_nodes += "ns_1@{},".format(server)
 
         # Add server_to_add to known nodes
@@ -604,12 +488,8 @@ class CouchbaseServer:
         # Add all servers except server_to_add to known nodes
         known_nodes = "knownNodes="
         for server in cluster_servers:
-            if "https" in server:
-                server = server.replace("https://", "")
-                server = server.replace(":18091", "")
-            else:
-                server = server.replace("http://", "")
-                server = server.replace(":8091", "")
+            server = server.replace("http://", "")
+            server = server.replace(":8091", "")
 
             if server_to_add.host != server:
                 known_nodes += "ns_1@{},".format(server)
@@ -721,8 +601,3 @@ class CouchbaseServer:
     def restart(self):
         """ Restarts a couchbase server """
         self.remote_executor.must_execute("sudo systemctl restart couchbase-server")
-
-    def get_sdk_bucket(self, bucket_name):
-        """ Gets an SDK bucket object """
-        connection_str = "couchbase://{}/{}".format(self.host, bucket_name)
-        return Bucket(connection_str, password='password')

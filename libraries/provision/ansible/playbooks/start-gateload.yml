@@ -2,9 +2,6 @@
 - hosts: load_generators
   any_errors_fatal: true
 
-  vars:
-    delay_expvar_collect_secs:
-
   # Kill gateload
   tasks:
   - name: kill previous gateload screen
@@ -32,7 +29,7 @@
   - name: copy the expvar collection script
     copy: src=files/collect_expvars.sh dest=/home/centos/collect_expvars.sh owner=centos group=centos mode=0755
   - name: collect expvar json in screen
-    shell: screen -d -m -S gateload_expvars ./collect_expvars.sh {{ delay_expvar_collect_secs | int }}
+    shell: screen -d -m -S gateload_expvars ./collect_expvars.sh
     args:
       chdir: /home/centos/
 

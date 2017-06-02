@@ -8,7 +8,7 @@ from keywords.ClusterKeywords import ClusterKeywords
 from keywords.MobileRestClient import MobileRestClient
 from keywords.constants import CLUSTER_CONFIGS_DIR
 from keywords.constants import RESULTS_DIR
-from keywords.tklogging import Logging
+from keywords.Logging import Logging
 
 
 # This will get called once before the first test that

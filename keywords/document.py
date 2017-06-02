@@ -41,11 +41,7 @@ def generate_doc_ids_for_vbucket(vbucket_number, number_doc_ids):
     return doc_ids
 
 
-def update_prop_generator():
-    return {"updates": 0}
-
-
-def create_doc(doc_id, content=None, attachments=None, expiry=None, channels=None, prop_generator=None):
+def create_doc(doc_id, content=None, attachments=None, expiry=None, channels=None):
     """
     Keyword that creates a document body as a list for use with Add Doc keyword
     return result format:
@@ -80,16 +76,10 @@ def create_doc(doc_id, content=None, attachments=None, expiry=None, channels=Non
 
     logging.debug(doc)
 
-    if prop_generator is not None:
-        types.verify_is_callable(prop_generator)
-        props = prop_generator()
-        for k, v in props.items():
-            doc[k] = v
-
     return doc
 
 
-def create_docs(doc_id_prefix, number, content=None, attachments_generator=None, expiry=None, channels=None, prop_generator=None):
+def create_docs(doc_id_prefix, number, content=None, attachments_generator=None, expiry=None, channels=None):
     """
     Keyword that creates a list of document bodies as a list for use with Add Bulk Docs keyword
     return result format:
@@ -121,7 +111,7 @@ def create_docs(doc_id_prefix, number, content=None, attachments_generator=None,
         if attachments_generator is not None:
             attachments = attachments_generator()
 
-        doc = create_doc(doc_id=doc_id, content=content, attachments=attachments, expiry=expiry, channels=channels, prop_generator=prop_generator)
+        doc = create_doc(doc_id=doc_id, content=content, attachments=attachments, expiry=expiry, channels=channels)
         docs.append(doc)
 
     return docs

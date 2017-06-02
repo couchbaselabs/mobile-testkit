@@ -48,19 +48,3 @@ class DocumentError(Error):
 
 class LogScanningError(Error):
     pass
-
-
-class RBACUserCreationError(Error):
-    pass
-
-
-class RBACUserDeletionError(Error):
-    pass
-
-
-class DockerError(Error):
-    pass
-
-
-class FeatureSupportedError(Error):
-    pass

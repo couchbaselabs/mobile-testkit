@@ -20,10 +20,6 @@
     sync_gateway_node: "{{ hostvars[groups.sync_gateways[0]].ansible_host }}"
     webhook_ip: "{{ hostvars[groups.webhook_ip[0]].ansible_ssh_host }}"
     is_index_writer: "false"
-    server_scheme:
-    server_port:
-    autoimport:
-    xattrs:
   tasks:
   - include: tasks/deploy-sync-gateway-config.yml
 
@@ -37,10 +33,6 @@
     sync_gateway_node: "{{ hostvars[groups.sync_gateways[0]].ansible_host }}"
     webhook_ip: "{{ hostvars[groups.webhook_ip[0]].ansible_host }}"
     is_index_writer: "true"
-    server_scheme:
-    server_port:
-    autoimport:
-    xattrs:
   tasks:
   - include: tasks/deploy-sync-gateway-config.yml
 

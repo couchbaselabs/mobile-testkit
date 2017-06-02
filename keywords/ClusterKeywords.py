@@ -1,17 +1,21 @@
-import json
-import os
-
 import requests
+import os
+import json
+
 from requests.exceptions import ConnectionError
 
-from keywords import couchbaseserver
-from keywords.constants import CLUSTER_CONFIGS_DIR
-from keywords.exceptions import ProvisioningError
-from keywords.SyncGateway import (verify_sg_accel_version,
-                                  verify_sync_gateway_version)
-from keywords.utils import (log_info, log_r, version_and_build,
-                            version_is_binary)
+from keywords.utils import log_info
+from keywords.utils import log_r
+from keywords.utils import version_is_binary
+from keywords.utils import version_and_build
+
+from keywords.SyncGateway import verify_sync_gateway_version
+from keywords.SyncGateway import verify_sg_accel_version
 from libraries.testkit.cluster import Cluster
+
+from constants import CLUSTER_CONFIGS_DIR
+from exceptions import ProvisioningError
+from keywords import couchbaseserver
 
 
 class ClusterKeywords:
@@ -65,16 +69,8 @@ class ClusterKeywords:
             sg_urls.append({"public": public, "admin": admin})
 
         ac_urls = ["http://{}:4985".format(sga["ip"]) for sga in cluster["sg_accels"]]
+        cbs_urls = ["http://{}:8091".format(cb["ip"]) for cb in cluster["couchbase_servers"]]
         lbs_urls = ["http://{}".format(lb["ip"]) for lb in cluster["load_balancers"]]
-
-        server_port = 8091
-        server_scheme = "http"
-
-        if cluster["environment"]["cbs_ssl_enabled"]:
-            server_port = 18091
-            server_scheme = "https"
-
-        cbs_urls = ["{}://{}:{}".format(server_scheme, cb["ip"], server_port) for cb in cluster["couchbase_servers"]]
 
         # Format into urls that robot keywords can consume easily
         formatted_cluster = {
@@ -93,19 +89,12 @@ class ClusterKeywords:
         with open("{}.json".format(cluster_config)) as f:
             cluster_obj = json.loads(f.read())
 
-        server_port = 8091
-        server_scheme = "http"
-
-        if cluster_obj["cbs_ssl_enabled"]:
-            server_port = 18091
-            server_scheme = "https"
-
         running_services = []
         for host in cluster_obj["hosts"]:
 
             # Couchbase Server
             try:
-                resp = requests.get("{}://Administrator:password@{}:{}/pools".format(server_scheme, host["ip"], server_port))
+                resp = requests.get("http://Administrator:password@{}:8091/pools".format(host["ip"]))
                 log_r(resp)
                 running_services.append(resp.url)
             except ConnectionError as he:
@@ -136,13 +125,9 @@ class ClusterKeywords:
         with open("{}.json".format(cluster_config)) as f:
             cluster_obj = json.loads(f.read())
 
-        cbs_ssl = False
-        if cluster_obj["environment"]["cbs_ssl_enabled"]:
-            cbs_ssl = True
-
         # Verify Server version
         for server in cluster_obj["couchbase_servers"]:
-            couchbaseserver.verify_server_version(server["ip"], expected_server_version, cbs_ssl=cbs_ssl)
+            couchbaseserver.verify_server_version(server["ip"], expected_server_version)
 
         # Verify sync_gateway versions
         for sg in cluster_obj["sync_gateways"]:

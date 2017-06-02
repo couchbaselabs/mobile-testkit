@@ -10,15 +10,9 @@
     "verbose":"true",
     "databases":{
         "db":{
-            {{ autoimport }}
-            "unsupported": {
-                {{ xattrs }}
-            },
             "offline":false,
-            "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
-            "bucket":"data-bucket",
-            "username":"data-bucket",
-            "password": "password"
+            "server":"http://{{ couchbase_server_primary_node }}:8091",
+            "bucket":"data-bucket"
         }
     }
 }

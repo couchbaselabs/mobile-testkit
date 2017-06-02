@@ -298,20 +298,6 @@ ssh-add ~/.ssh/sample_key
 [Running Functional Tests](testsuites/syncgateway/functional/tests/README.md) 
 
 
-### Spin Up Machines on Docker
-
-IMPORTANT: This will copy your public / and private key to allow ssh access from mobile-testkit container to other clusters in the container.
-
-```
-python docker/create_cluster.py --network-name cbl --number-of-nodes 5 --path-to-public-key ~/.ssh/id_rsa.pub --clean
-```
-
-TODO: Automate this
-```
-docker exec -it mobile-testkit /bin/bash
-./run_sg_tests.sh
-```
-
 
 ### Spin Up Machines on Vagrant
 ===============================

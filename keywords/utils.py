@@ -1,8 +1,6 @@
 import logging
 import json
 
-from keywords.exceptions import FeatureSupportedError
-
 
 # TODO: Use python logging hooks instead of wrappers - https://github.com/couchbaselabs/mobile-testkit/issues/686
 def log_info(message, is_verify=False):
@@ -78,11 +76,7 @@ def host_for_url(url):
     and returns an host in the form 192.168.33.10
     """
 
-    if "https" in url:
-        host = url.replace("https://", "")
-    else:
-        host = url.replace("http://", "")
-
+    host = url.replace("http://", "")
     host = host.split(":")[0]
     log_info("Extracted host ({}) from url ({})".format(host, url))
 
@@ -138,54 +132,3 @@ def has_dot_net4_dot_5(version):
             return False
 
     return True
-
-
-def compare_versions(version_one, version_two):
-    """ Checks two version and returns the following:
-
-    Version should be of the following formats 1.4.2 or 1.4.1
-
-    if version_one == version two, return 0
-    if version_one < version_two, return -1,
-    if version_one > version_two, return 1
-    """
-
-    # Strip build number if present, 1.4.1-345 -> 1.4.1
-    version_one = version_one.split('-')[0]
-    version_two = version_two.split('-')[0]
-
-    # Strip '.' and convert to integers
-    version_one_number_string = version_one.replace('.', '')
-    version_two_number_string = version_two.replace('.', '')
-
-    version_one_number_string_len = len(version_one_number_string)
-    version_two_number_string_len = len(version_two_number_string)
-
-    # Handle the case where 1.4 and 1.4.0 should be equal
-    # by padding 0s on the right of the shorter number
-    difference = abs(version_one_number_string_len - version_two_number_string_len)
-    if difference != 0 and version_one_number_string_len < version_two_number_string_len:
-        for _ in range(difference):
-            version_one_number_string += "0"
-    if difference != 0 and version_one_number_string_len > version_two_number_string_len:
-        for _ in range(difference):
-            version_two_number_string += "0"
-
-    version_one_number = int(version_one_number_string)
-    version_two_number = int(version_two_number_string)
-
-    if version_one_number < version_two_number:
-        return -1
-
-    if version_one_number > version_two_number:
-        return 1
-
-    # All components are equal
-    return 0
-
-
-def check_xattr_support(server_version, sync_gateway_version):
-    if compare_versions(server_version, '5.0.0') < 0:
-        raise FeatureSupportedError('Make sure you are using Coucbhase Server 5.0+ for xattrs')
-    if compare_versions(sync_gateway_version, '1.5') < 0:
-        raise FeatureSupportedError('Make sure you are using Coucbhase Sync Gateway 1.5+ for xattrs')

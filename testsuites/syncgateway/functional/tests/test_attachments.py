@@ -29,7 +29,7 @@ def test_attachment_revpos_when_ancestor_unavailable(params_from_base_test_setup
     active revision, and validate that it's uploaded successfully.
     Example:
        1. Document is created with attachment at rev-1
-       2. Document is updated (strip digests and length, only put revpos & stub) multiple times on the server, goes to rev-10
+       2. Document is updated (strip digests and length, only put revpos & stub) multiple times on the server, goes to rev-4
        3. Client attempts to add a new (conflicting) revision 2, with parent rev-1.
        4. If the body of rev-1 is no longer available on the server (temporary backup of revision has expired, and is no longer stored
          in the in-memory rev cache), we were throwing an error to client

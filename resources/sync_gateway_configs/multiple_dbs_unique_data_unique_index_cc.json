@@ -10,24 +10,12 @@
     "verbose":"true",
     "databases": {
         "db":{
-            {{ autoimport }}
-            "unsupported": {
-                {{ xattrs }}
-            },
-            "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
-            "bucket":"data-bucket",
-            "username":"data-bucket",
-            "password": "password"
+            "server":"http://{{ couchbase_server_primary_node }}:8091",
+            "bucket":"data-bucket"
         },
         "db2":{
-            {{ autoimport }}
-            "unsupported": {
-                {{ xattrs }}
-            },
-            "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
-            "bucket":"data-bucket-2",
-            "username":"data-bucket-2",
-            "password": "password"
+            "server":"http://{{ couchbase_server_primary_node }}:8091",
+            "bucket":"data-bucket-2"
         }
     }
 }

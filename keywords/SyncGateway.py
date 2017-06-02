@@ -12,11 +12,9 @@ from keywords.utils import version_and_build
 from keywords.utils import hostname_for_url
 from keywords.utils import log_info
 
-from keywords.exceptions import ProvisioningError
+from exceptions import ProvisioningError
 
 from libraries.provision.ansible_runner import AnsibleRunner
-from utilities.cluster_config_utils import is_cbs_ssl_enabled
-from utilities.cluster_config_utils import is_xattrs_enabled
 
 
 def validate_sync_gateway_mode(mode):
@@ -124,8 +122,6 @@ class SyncGateway:
 
     def __init__(self):
         self._session = Session()
-        self.server_port = 8091
-        self.server_scheme = "http"
 
     def install_sync_gateway(self, cluster_config, sync_gateway_version, sync_gateway_config):
 
@@ -160,26 +156,11 @@ class SyncGateway:
         log_info("Starting sync_gateway on {} ...".format(target))
         ansible_runner = AnsibleRunner(cluster_config)
         config_path = os.path.abspath(config)
-
-        if is_cbs_ssl_enabled(cluster_config):
-            self.server_port = 18091
-            self.server_scheme = "https"
-
-        playbook_vars = {
-            "sync_gateway_config_filepath": config_path,
-            "server_port": self.server_port,
-            "server_scheme": self.server_scheme,
-            "autoimport": "",
-            "xattrs": ""
-        }
-
-        if is_xattrs_enabled(cluster_config):
-            playbook_vars["autoimport"] = '"import_docs": "continuous",'
-            playbook_vars["xattrs"] = '"enable_extended_attributes": true'
-
         status = ansible_runner.run_ansible_playbook(
             "start-sync-gateway.yml",
-            extra_vars=playbook_vars,
+            extra_vars={
+                "sync_gateway_config_filepath": config_path
+            },
             subset=target
         )
         if status != 0:
