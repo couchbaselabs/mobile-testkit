@@ -48,7 +48,7 @@ class Cluster:
         else:
             cbs_urls = ["http://{}:8091".format(cbs["ip"]) for cbs in cluster["couchbase_servers"]]
 
-        log_info("cbs: {}".format(cbs))
+        log_info("cbs: {}".format(cbs_urls))
         log_info("sgs: {}".format(sgs))
         log_info("acs: {}".format(acs))
         log_info("ssl: {}".format(self.cbs_ssl))

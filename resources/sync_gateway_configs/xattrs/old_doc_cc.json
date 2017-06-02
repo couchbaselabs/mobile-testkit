@@ -1,0 +1,28 @@
+{
+    "interface":":4984",
+    "adminInterface": "0.0.0.0:4985",
+    "log": ["*"],
+    "databases":{
+        "db":{
+            "import_docs": "continuous",
+            "unsupported": {
+                "enable_extended_attributes": true
+            },
+            "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
+            "bucket":"data-bucket",
+            "password": "password",
+            "sync": `
+            function(doc, oldDoc) {
+                if (oldDoc != null) {
+                    throw({forbidden: "Old doc should be null!"})
+                } else {
+                    console.log("oldDoc is null");
+                    console.log(doc.channels);
+                    channel(doc.channels);
+                }
+            }
+            `
+        }
+    }
+}
+

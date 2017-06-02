@@ -30,7 +30,129 @@ SDK_OP_SLEEP = 0.05
 @pytest.mark.xattrs
 @pytest.mark.session
 @pytest.mark.parametrize('sg_conf_name', [
-    'xattrs/no_import',
+    'xattrs/old_doc'
+])
+def test_olddoc_nil(params_from_base_test_setup, sg_conf_name):
+    """ Regression test for - https://github.com/couchbase/sync_gateway/issues/2565
+
+    Using the custom sync function:
+        function(doc, oldDoc) {
+            if (oldDoc != null) {
+                throw({forbidden: "Old doc should be null!"})
+            } else {
+                console.log("oldDoc is null");
+                console.log(doc.channels);
+                channel(doc.channels);
+            }
+        }
+
+    1. Create user with channel 'ABC' (user1)
+    2. Create user with channel 'CBS' (user2)
+    3. Write doc with channel 'ABC'
+    4. Verify that user1 can see the doc and user2 cannot
+    5. SDK updates the doc channel to 'CBS'
+    6. This should result in a new rev but with oldDoc == nil (due to SDK mutation)
+    7. Assert that user2 can see the doc and user1 cannot
+    """
+
+    bucket_name = 'data-bucket'
+    sg_db = 'db'
+    num_docs = 1000
+
+    cluster_conf = params_from_base_test_setup['cluster_config']
+    cluster_topology = params_from_base_test_setup['cluster_topology']
+    mode = params_from_base_test_setup['mode']
+    xattrs_enabled = params_from_base_test_setup['xattrs_enabled']
+
+    # This test should only run when using xattr meta storage
+    if not xattrs_enabled:
+        pytest.skip('XATTR tests require --xattrs flag')
+
+    sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
+    sg_admin_url = cluster_topology['sync_gateways'][0]['admin']
+    sg_url = cluster_topology['sync_gateways'][0]['public']
+    cbs_url = cluster_topology['couchbase_servers'][0]
+
+    log_info('sg_conf: {}'.format(sg_conf))
+    log_info('sg_admin_url: {}'.format(sg_admin_url))
+    log_info('sg_url: {}'.format(sg_url))
+    log_info('cbs_url: {}'.format(cbs_url))
+
+    cluster = Cluster(config=cluster_conf)
+    cluster.reset(sg_config_path=sg_conf)
+
+    # Create clients
+    sg_client = MobileRestClient()
+    cbs_ip = host_for_url(cbs_url)
+    sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password')
+
+    # Create user / session
+    user_one_info = UserInfo(name='user1', password='pass', channels=['ABC'], roles=[])
+    user_two_info = UserInfo(name='user2', password='pass', channels=['CBS'], roles=[])
+
+    for user in [user_one_info, user_two_info]:
+        sg_client.create_user(
+            url=sg_admin_url,
+            db=sg_db,
+            name=user.name,
+            password=user.password,
+            channels=user.channels
+        )
+
+    user_one_auth = sg_client.create_session(
+        url=sg_admin_url,
+        db=sg_db,
+        name=user_one_info.name,
+        password=user_one_info.password
+    )
+
+    user_two_auth = sg_client.create_session(
+        url=sg_admin_url,
+        db=sg_db,
+        name=user_two_info.name,
+        password=user_two_info.password
+    )
+
+    abc_docs = document.create_docs(doc_id_prefix="abc_docs", number=num_docs, channels=user_one_info.channels)
+    abc_doc_ids = [doc['_id'] for doc in abc_docs]
+
+    user_one_docs = sg_client.add_bulk_docs(url=sg_url, db=sg_db, docs=abc_docs, auth=user_one_auth)
+    assert len(user_one_docs) == num_docs
+
+    # Issue bulk_get from user_one and assert that user_one, can see all of the docs
+    user_one_bulk_get_docs, errors = sg_client.get_bulk_docs(url=sg_url, db=sg_db, doc_ids=abc_doc_ids, auth=user_one_auth)
+    assert len(user_one_bulk_get_docs) == num_docs
+    assert len(errors) == 0
+
+    # Issue bulk_get from user_two and assert that user_two cannot see any of the docs
+    user_two_bulk_get_docs, errors = sg_client.get_bulk_docs(url=sg_url, db=sg_db, doc_ids=abc_doc_ids, auth=user_two_auth, validate=False)
+    assert len(user_two_bulk_get_docs) == 0
+    assert len(errors) == num_docs
+
+    # Update the channels of each doc to 'NBC'
+    for abc_doc_id in abc_doc_ids:
+        doc = sdk_client.get(abc_doc_id)
+        doc_body = doc.value
+        doc_body['channels'] = user_two_info.channels
+        sdk_client.upsert(abc_doc_id, doc_body)
+
+    # Issue bulk_get from user_one and assert that user_one can't see any docs
+    user_one_bulk_get_docs, errors = sg_client.get_bulk_docs(url=sg_url, db=sg_db, doc_ids=abc_doc_ids, auth=user_one_auth, validate=False)
+    assert len(user_one_bulk_get_docs) == 0
+    assert len(errors) == num_docs
+
+    # Issue bulk_get from user_two and assert that user_two can see all docs
+    user_two_bulk_get_docs, errors = sg_client.get_bulk_docs(url=sg_url, db=sg_db, doc_ids=abc_doc_ids, auth=user_two_auth)
+    assert len(user_two_bulk_get_docs) == num_docs
+    assert len(errors) == 0
+
+
+@pytest.mark.sanity
+@pytest.mark.syncgateway
+@pytest.mark.xattrs
+@pytest.mark.session
+@pytest.mark.parametrize('sg_conf_name', [
+    'xattrs/no_import'
 ])
 def test_on_demand_import_of_external_updates(params_from_base_test_setup, sg_conf_name):
     """
