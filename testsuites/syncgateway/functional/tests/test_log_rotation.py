@@ -336,6 +336,7 @@ def test_log_rotation_invalid_path(params_from_base_test_setup, sg_conf_name):
 @pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.logging
+@pytest.mark.skip(reason="This causes paramiko to timeout intermittently. Need to revisit.")
 @pytest.mark.parametrize("sg_conf_name", ["log_rotation"])
 def test_log_200mb(params_from_base_test_setup, sg_conf_name):
     """Test to check maxsize with value 200MB( 100Mb by default)
