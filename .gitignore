@@ -84,3 +84,6 @@ portmaps.json
 
 apps/testkit.net/Testkit.Net.Core/bin/*
 apps/testkit.net/Testkit.Net.Core/obj/*
+
+apps/testkit.net/Testkit.Net.Tests/bin/*
+apps/testkit.net/Testkit.Net.Tests/obj/*
