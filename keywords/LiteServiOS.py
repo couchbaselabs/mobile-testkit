@@ -1,6 +1,7 @@
 import json
 import subprocess
 import os
+import re
 import time
 from zipfile import ZipFile
 import requests
@@ -85,7 +86,7 @@ class LiteServiOS(LiteServBase):
             "ios-deploy", "--justlaunch", "--bundle", app_path
         ])
         log_info(output)
-
+        
         bundle_id = "com.couchbase.LiteServ-iOS"
         output = subprocess.check_output(["ios-deploy", "--list_bundle_id"])
         log_info(output)
