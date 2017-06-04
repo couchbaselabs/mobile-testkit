@@ -58,8 +58,7 @@ def setup_client_syncgateway_suite(request):
     liteserv.download()
 
     # Install LiteServ
-    test_name = request.node.name
-    liteserv.install(logfile_name="{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(liteserv).__name__, test_name, datetime.datetime.now()))
+    liteserv.install()
 
     cluster_config = "{}/base_{}".format(CLUSTER_CONFIGS_DIR, sync_gateway_mode)
     sg_config = sync_gateway_config_path_for_mode("listener_tests/listener_tests", sync_gateway_mode)
