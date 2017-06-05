@@ -9,6 +9,7 @@ from keywords.MobileRestClient import MobileRestClient
 from keywords.ClusterKeywords import ClusterKeywords
 from keywords.SyncGateway import sync_gateway_config_path_for_mode
 from keywords.tklogging import Logging
+from keywords.exceptions import ProvisioningError
 
 
 # Add custom arguments for executing tests in this directory
@@ -66,12 +67,16 @@ def setup_client_syncgateway_suite(request):
     if not skip_provisioning:
         log_info("Installing Sync Gateway + Couchbase Server + Accels ('di' only)")
         cluster_utils = ClusterKeywords()
-        cluster_utils.provision_cluster(
-            cluster_config=cluster_config,
-            server_version=server_version,
-            sync_gateway_version=sync_gateway_version,
-            sync_gateway_config=sg_config
-        )
+        try:
+            cluster_utils.provision_cluster(
+                cluster_config=cluster_config,
+                server_version=server_version,
+                sync_gateway_version=sync_gateway_version,
+                sync_gateway_config=sg_config
+            )
+        except ProvisioningError:
+            logging_helper = Logging()
+            logging_helper.fetch_and_analyze_logs(cluster_config=cluster_config, test_name=request.node.name)
 
     # Wait at the yeild until tests referencing this suite setup have run,
     # Then execute the teardown
