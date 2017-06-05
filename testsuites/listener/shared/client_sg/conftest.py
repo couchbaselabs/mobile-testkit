@@ -77,6 +77,7 @@ def setup_client_syncgateway_suite(request):
         except ProvisioningError:
             logging_helper = Logging()
             logging_helper.fetch_and_analyze_logs(cluster_config=cluster_config, test_name=request.node.name)
+            raise
 
     # Wait at the yeild until tests referencing this suite setup have run,
     # Then execute the teardown
