@@ -23,7 +23,7 @@ RUN git checkout feature/longevity-app
 
 # Build the test app
 ENV DOTNET_CLI_TELEMETRY_OPTOUT=1
-RUN dotnet restore -s "https://www.nuget.org/api/v2;http://mobile.nuget.couchbase.com/nuget/Internal/"
+RUN dotnet restore -s http://mobile.nuget.couchbase.com/nuget/Internal/ -s https://api.nuget.org/v3/index.json
 RUN dotnet build
 
 # Start the longevity test
