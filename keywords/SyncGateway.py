@@ -66,6 +66,28 @@ def get_sync_gateway_version(host):
     return running_version_formatted, running_vendor_version
 
 
+def verify_sync_gateway_product_info(host):
+    """ Get the product information from host and verify for Sync Gateway:
+    - vendor name in GET / request
+    - Server header in response
+    """
+
+    resp = requests.get("http://{}:4984".format(host))
+    log_r(resp)
+    resp.raise_for_status()
+    resp_obj = resp.json()
+
+    server_header = resp.headers["server"]
+    log_info("'server' header: {}".format(server_header))
+    if not server_header.startswith("Couchbase Sync Gateway"):
+        raise ProvisioningError("Wrong product info. Expected 'Couchbase Sync Gateway'")
+
+    vendor_name = resp_obj["vendor"]["name"]
+    log_info("vendor name: {}".format(vendor_name))
+    if vendor_name != "Couchbase Sync Gateway":
+        raise ProvisioningError("Wrong vendor name. Expected 'Couchbase Sync Gateway'")
+
+
 def verify_sync_gateway_version(host, expected_sync_gateway_version):
     running_sg_version, running_sg_vendor_version = get_sync_gateway_version(host)
 
@@ -102,6 +124,28 @@ def get_sg_accel_version(host):
 
     # Returns the version as 338493 commit format or 1.2.1-4 version format
     return running_version_formatted
+
+
+def verify_sg_accel_product_info(host):
+    """ Get the product information from host and verify for SG Accel:
+    - vendor name in GET / request
+    - Server header in response
+    """
+
+    resp = requests.get("http://{}:4985".format(host))
+    log_r(resp)
+    resp.raise_for_status()
+    resp_obj = resp.json()
+
+    server_header = resp.headers["server"]
+    log_info("'server' header: {}".format(server_header))
+    if not server_header.startswith("Couchbase SG Accel"):
+        raise ProvisioningError("Wrong product info. Expected 'Couchbase SG Accel'")
+
+    vendor_name = resp_obj["vendor"]["name"]
+    log_info("vendor name: {}".format(vendor_name))
+    if vendor_name != "Couchbase SG Accel":
+        raise ProvisioningError("Wrong vendor name. Expected 'Couchbase SG Accel'")
 
 
 def verify_sg_accel_version(host, expected_sg_accel_version):

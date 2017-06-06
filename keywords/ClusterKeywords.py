@@ -8,9 +8,11 @@ from keywords import couchbaseserver
 from keywords.constants import CLUSTER_CONFIGS_DIR
 from keywords.exceptions import ProvisioningError
 from keywords.SyncGateway import (verify_sg_accel_version,
-                                  verify_sync_gateway_version)
+                                  verify_sync_gateway_version,
+                                  verify_sg_accel_product_info,
+                                  verify_sync_gateway_product_info)
 from keywords.utils import (log_info, log_r, version_and_build,
-                            version_is_binary)
+                            version_is_binary, compare_versions)
 from libraries.testkit.cluster import Cluster
 
 
@@ -146,10 +148,14 @@ class ClusterKeywords:
 
         # Verify sync_gateway versions
         for sg in cluster_obj["sync_gateways"]:
+            verify_sync_gateway_product_info(sg["ip"])
             verify_sync_gateway_version(sg["ip"], expected_sync_gateway_version)
 
         # Verify sg_accel versions, use the same expected version for sync_gateway for now
         for ac in cluster_obj["sg_accels"]:
+            if compare_versions(expected_sync_gateway_version, "1.5.0") >= 0:
+                # Only verify the correct product naming after 1.5 since it was fixed in 1.5
+                verify_sg_accel_product_info(ac["ip"])
             verify_sg_accel_version(ac["ip"], expected_sync_gateway_version)
 
     def reset_cluster(self, cluster_config, sync_gateway_config):
