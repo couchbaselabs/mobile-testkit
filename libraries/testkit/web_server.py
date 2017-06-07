@@ -19,13 +19,10 @@ class HttpHandler(BaseHTTPRequestHandler):
         return
 
     def do_POST(self):
-        log_info('Received POST request')
         content_len = int(self.headers.getheader('content-length', 0))
         post_body = self.rfile.read(content_len)
         data = json.loads(post_body)
         HttpHandler.server_recieved_data.append(data)
-        log_info("Received {} data in Post request".format(data))
-        log_info("Appended POST data payload to server_received_data")
         self.send_response(200)
         self.send_header("Content-type", "text/html")
         self.end_headers()
