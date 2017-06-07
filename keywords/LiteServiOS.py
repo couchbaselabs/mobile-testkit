@@ -306,6 +306,8 @@ class LiteServiOS(LiteServBase):
             home = os.environ['HOME']
             ios_log_file = "{}/Library/Logs/CoreSimulator/{}/system.log".format(home, self.device_id)
             copyfile(ios_log_file, self.logfile_name)
+            # Empty the simulator logs so that the next test run
+            # will only have logs for that run
             open(ios_log_file, 'w').close()
 
         self._verify_not_running()
