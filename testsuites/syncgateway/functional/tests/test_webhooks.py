@@ -1,13 +1,19 @@
 import time
-import pytest
 
+import pytest
+from couchbase.bucket import Bucket
+
+from keywords import document
+from keywords.MobileRestClient import MobileRestClient
+from keywords.SyncGateway import sync_gateway_config_path_for_mode
+from keywords.userinfo import UserInfo
+from keywords.utils import host_for_url, log_info
 from libraries.testkit.admin import Admin
 from libraries.testkit.cluster import Cluster
-from libraries.testkit.web_server import WebServer
 from libraries.testkit.parallelize import in_parallel
-
-from keywords.utils import log_info
-from keywords.SyncGateway import sync_gateway_config_path_for_mode
+from libraries.testkit.web_server import WebServer
+from keywords.exceptions import TimeoutError
+from keywords.constants import CLIENT_REQUEST_TIMEOUT
 
 
 @pytest.mark.sanity
@@ -17,7 +23,7 @@ from keywords.SyncGateway import sync_gateway_config_path_for_mode
 @pytest.mark.basicauth
 @pytest.mark.channel
 @pytest.mark.parametrize("sg_conf_name, num_users, num_channels, num_docs, num_revisions", [
-    ("sync_gateway_webhook", 5, 1, 1, 2),
+    ("webhooks/webhook_offline", 5, 1, 1, 2),
 ])
 def test_webhooks(params_from_base_test_setup, sg_conf_name, num_users, num_channels, num_docs, num_revisions):
     """
@@ -77,3 +83,365 @@ def test_webhooks(params_from_base_test_setup, sg_conf_name, num_users, num_chan
     assert expected_events == received_events
 
     ws.stop()
+
+
+@pytest.mark.sanity
+@pytest.mark.syncgateway
+@pytest.mark.xattrs
+@pytest.mark.session
+@pytest.mark.webhooks
+@pytest.mark.parametrize('sg_conf_name, filtered', [
+    ('webhooks/webhook', False),
+    ('webhooks/webhook_filter', True)
+])
+def test_webhooks_crud(params_from_base_test_setup, sg_conf_name, filtered):
+    """ Tests for webhook notification on import
+
+    xattr mode
+    1. Start sync gateway with autoimport
+
+    1. Write 'num_docs_per_client' docs via SDK
+    1. Write 'num_docs_per_client' docs via SG
+    1. Verify 'num_docs_per_client' * 2 webhook events (id, rev, body)
+
+    1. Update SG docs once each via SDK
+    1. Update SDK docs once each via SG
+    1. Verify 'num_docs_per_client' * 2 webhook events (id, rev, body)
+
+    1. Delete SG docs via SDK
+    1. Delete SDK docs via SG
+    1. Verify 'num_docs_per_client' * 2 webhook events (id, rev, body)
+
+    to verify no dups, wait 10s after recieveing expected webhooks
+
+    docmeta mode
+    1. Write 'num_docs_per_client' docs via SG
+    1. Verify 'num_docs_per_client' webhook events (id, rev, body)
+
+    1. Update SG docs once each via SG
+    1. Verify 'num_docs_per_client' webhook events (id, rev, body)
+
+    1. Delete SG docs via SG
+    1. Verify 'num_docs_per_client' webhook events (id, rev, body)
+
+    if filtered, the scenario will add a filtered propery to every other doc.
+    The webhook validation will only look for the filtered docs
+
+    """
+    xattrs_enabled = params_from_base_test_setup['xattrs_enabled']
+
+    log_info('Webhooks filtered?: {}'.format(filtered))
+
+    cluster_conf = params_from_base_test_setup['cluster_config']
+    cluster_topology = params_from_base_test_setup['cluster_topology']
+    mode = params_from_base_test_setup['mode']
+    sg_admin_url = cluster_topology['sync_gateways'][0]['admin']
+    sg_url = cluster_topology['sync_gateways'][0]['public']
+    cbs_url = cluster_topology['couchbase_servers'][0]
+
+    sg_db = 'db'
+    bucket_name = 'data-bucket'
+    num_docs_per_client = 100
+
+    sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
+
+    cluster = Cluster(config=cluster_conf)
+    cluster.reset(sg_conf)
+
+    # Start webhook server on test runner
+    webhook_server = WebServer()
+    webhook_server.start()
+
+    sg_client = MobileRestClient()
+    cbs_ip = host_for_url(cbs_url)
+    sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password')
+
+    sg_info = UserInfo('sg_user', 'pass', channels=['shared'], roles=[])
+    sdk_info = UserInfo('sdk_user', 'pass', channels=['shared'], roles=[])
+    sg_client.create_user(
+        url=sg_admin_url,
+        db=sg_db,
+        name=sg_info.name,
+        password=sg_info.password,
+        channels=sg_info.channels
+    )
+    sg_auth = sg_client.create_session(
+        url=sg_admin_url,
+        db=sg_db,
+        name=sg_info.name,
+        password=sg_info.password
+    )
+
+    # Create sg docs
+    doc_content = {'aphex': 'twin'}
+    sg_docs = document.create_docs(
+        doc_id_prefix='sg_user_doc',
+        number=num_docs_per_client,
+        content=doc_content,
+        channels=sg_info.channels
+    )
+
+    # Add filtered property to every other doc
+    count = 0
+    for sg_doc in sg_docs:
+        if count % 2 == 0:
+            sg_doc['filtered'] = True
+        count += 1
+
+    sg_doc_ids = [doc['_id'] for doc in sg_docs]
+    sg_filtered_doc_ids = [doc['_id'] for doc in sg_docs if 'filtered' in doc]
+    assert len(sg_doc_ids) == num_docs_per_client
+    assert len(sg_filtered_doc_ids) == num_docs_per_client / 2
+
+    # Create sdk docs
+    sdk_docs = {
+        'sdk_user_doc_{}'.format(i): {
+            'channels': sdk_info.channels,
+            'content': doc_content
+        }
+        for i in range(num_docs_per_client)
+    }
+
+    # Add filtered property to every other doc
+    count = 0
+    for _, doc_val in sdk_docs.items():
+        if count % 2 == 0:
+            doc_val['filtered'] = True
+        count += 1
+
+    sdk_doc_ids = [doc for doc in sdk_docs]
+    sdk_filtered_doc_ids = [k for k, v in sdk_docs.items() if 'filtered' in v]
+    assert len(sdk_doc_ids) == num_docs_per_client
+    assert len(sdk_filtered_doc_ids) == num_docs_per_client / 2
+
+    all_docs = sg_doc_ids + sdk_doc_ids
+    all_filtered_docs = sg_filtered_doc_ids + sdk_filtered_doc_ids
+    assert len(all_docs) == num_docs_per_client * 2
+
+    # If xattr mode, add sg + sdk docs
+    # If non xattr mode, add sg docs
+    add_docs(
+        sg_client=sg_client,
+        sg_url=sg_url,
+        sg_db=sg_db,
+        sg_docs=sg_docs,
+        sg_auth=sg_auth,
+        sdk_client=sdk_client,
+        sdk_docs=sdk_docs,
+        num_docs_per_client=num_docs_per_client,
+        xattrs=xattrs_enabled
+    )
+
+    # Wait for added docs to trigger webhooks
+    if xattrs_enabled and filtered:
+        poll_for_webhook_data(webhook_server, all_filtered_docs, 1, doc_content)
+    elif xattrs_enabled and not filtered:
+        poll_for_webhook_data(webhook_server, all_docs, 1, doc_content)
+    elif not xattrs_enabled and filtered:
+        poll_for_webhook_data(webhook_server, sg_filtered_doc_ids, 1, doc_content)
+    else:
+        poll_for_webhook_data(webhook_server, sg_doc_ids, 1, doc_content)
+    webhook_server.clear_data()
+
+    # Update sdk docs from sg
+    updated_doc_content = {'brian': 'eno'}
+    update_docs(
+        sg_client=sg_client,
+        sg_url=sg_url,
+        sg_db=sg_db,
+        sg_doc_ids=sg_doc_ids,
+        sg_auth=sg_auth,
+        sdk_client=sdk_client,
+        sdk_doc_ids=sdk_doc_ids,
+        updated_doc_content=updated_doc_content,
+        xattrs=xattrs_enabled
+    )
+
+    # Wait for updates to trigger webhooks
+    if xattrs_enabled and filtered:
+        poll_for_webhook_data(webhook_server, all_filtered_docs, 2, updated_doc_content)
+    elif xattrs_enabled and not filtered:
+        poll_for_webhook_data(webhook_server, all_docs, 2, updated_doc_content)
+    elif not xattrs_enabled and filtered:
+        poll_for_webhook_data(webhook_server, sg_filtered_doc_ids, 2, updated_doc_content)
+    else:
+        poll_for_webhook_data(webhook_server, sg_doc_ids, 2, updated_doc_content)
+    webhook_server.clear_data()
+
+    delete_docs(
+        sg_client=sg_client,
+        sg_url=sg_url,
+        sg_db=sg_db,
+        sg_doc_ids=sg_doc_ids,
+        sg_auth=sg_auth,
+        sdk_client=sdk_client,
+        sdk_doc_ids=sdk_doc_ids,
+        xattrs=xattrs_enabled
+    )
+
+    # Wait for deletes to trigger webhook events, filter includes all deleted docs
+    if xattrs_enabled:
+        poll_for_webhook_data(webhook_server, all_docs, 3, updated_doc_content, deleted=True)
+    else:
+        poll_for_webhook_data(webhook_server, sg_doc_ids, 3, updated_doc_content, deleted=True)
+    webhook_server.clear_data()
+
+    # Stop webhook server
+    webhook_server.stop()
+
+
+def add_docs(sg_client, sg_url, sg_db, sg_docs, sg_auth, sdk_client, sdk_docs, num_docs_per_client, xattrs):
+    """ Add docs
+    if in xattr mode:
+        - add num_docs_per_client docs from sg
+        - add num_docs_per_client docs from sdk
+    else:
+        - add num_docs_per_client docs from sg
+    """
+
+    # Create sync gateway docs
+    log_info('Adding sg docs ...')
+    sg_user_docs = sg_client.add_bulk_docs(
+        url=sg_url,
+        db=sg_db,
+        docs=sg_docs,
+        auth=sg_auth
+    )
+    assert len(sg_user_docs) == num_docs_per_client
+
+    if xattrs:
+        log_info('Adding sdk docs ...')
+        sdk_client.upsert_multi(sdk_docs)
+
+
+def update_docs(sg_client, sg_url, sg_db, sg_doc_ids, sg_auth, sdk_client, sdk_doc_ids, updated_doc_content, xattrs):
+    """ Update docs
+    if in xattr mode:
+        - sync gateway will update the sdk docs
+        - sdk will update the sync gateway docs
+    else:
+        - sync gateway will update the sync gateway docs
+    """
+
+    sg_doc_ids_to_update = sg_doc_ids
+    if xattrs:
+        sg_doc_ids_to_update = sdk_doc_ids
+
+    for doc_id in sg_doc_ids_to_update:
+        doc = sg_client.get_doc(
+            url=sg_url,
+            db=sg_db,
+            doc_id=doc_id,
+            auth=sg_auth
+        )
+        doc['content'] = updated_doc_content
+        sg_client.put_doc(
+            url=sg_url,
+            db=sg_db,
+            doc_id=doc_id,
+            rev=doc['_rev'],
+            doc_body=doc,
+            auth=sg_auth
+        )
+
+    # Update sg docs from sdk in xattr mode
+    if xattrs:
+        for sg_user_doc_id in sg_doc_ids:
+            doc = sdk_client.get(sg_user_doc_id)
+
+            doc_body = doc.value
+            doc_body['content'] = updated_doc_content
+
+            sdk_client.upsert(sg_user_doc_id, doc_body)
+
+
+def delete_docs(sg_client, sg_url, sg_db, sg_doc_ids, sg_auth, sdk_client, sdk_doc_ids, xattrs):
+    """ Delete docs
+    if in xattr mode:
+        - sync gateway will delete the sdk docs
+        - sdk will delete the sync gateway docs
+    else:
+        - sync gateway will delete the sync gateway docs
+    """
+
+    sg_doc_ids_to_delete = sg_doc_ids
+    if xattrs:
+        sg_doc_ids_to_delete = sdk_doc_ids
+
+    # Delete docs from Sync Gateway
+    for doc_id in sg_doc_ids_to_delete:
+        doc = sg_client.get_doc(
+            url=sg_url,
+            db=sg_db,
+            doc_id=doc_id,
+            auth=sg_auth
+        )
+        sg_client.delete_doc(
+            url=sg_url,
+            db=sg_db,
+            doc_id=doc_id,
+            rev=doc['_rev'],
+            auth=sg_auth
+        )
+
+    if xattrs:
+        # Delete all sg docs from sdk
+        sdk_client.remove_multi(sg_doc_ids)
+
+
+def poll_for_webhook_data(webhook_server, expected_doc_ids, expected_num_revs, expected_content, deleted=False):
+
+    # TODO: Verify doc body
+
+    start = time.time()
+    while True:
+
+        if time.time() - start > CLIENT_REQUEST_TIMEOUT:
+            raise TimeoutError('Timed out waiting for webhook events!!')
+
+        # Get web hook sent data and build a dictionary
+        expected_docs_scratch_pad = list(expected_doc_ids)
+
+        log_info('Getting posted webhook data ...')
+
+        data = webhook_server.get_data()
+        posted_webhook_events = {item['_id']: item for item in data}
+        posted_webhook_events_len = len(posted_webhook_events)
+
+        # If more webhook data is sent then we are expecting, blow up
+        assert posted_webhook_events_len <= len(expected_doc_ids)
+
+        all_docs_revs_found = True
+
+        if posted_webhook_events_len < len(expected_doc_ids):
+            # We have not seen the expected number of docs yet.
+            # Wait a sec and try again
+            log_info('Still waiting for webhook events. Expecting: {}, We have only seen: {}'.format(
+                len(expected_doc_ids),
+                posted_webhook_events_len
+            ))
+            all_docs_revs_found = False
+
+        else:
+            for doc_id, doc in posted_webhook_events.items():
+
+                if deleted:
+                    assert doc['_deleted']
+                    assert 'content' not in doc
+                else:
+                    assert doc['content'] == expected_content
+
+                if doc_id in expected_docs_scratch_pad and doc['_rev'].startswith("{}-".format(expected_num_revs)):
+                    expected_docs_scratch_pad.remove(doc_id)
+                else:
+                    log_info('Unexpected posted webhook notification: {}'.format(doc))
+
+            if len(expected_docs_scratch_pad) != 0:
+                log_info('Missing expected revisions. Retrying ...')
+                all_docs_revs_found = False
+
+        if all_docs_revs_found:
+            log_info('Found all webhook events')
+            break
+
+        time.sleep(1)

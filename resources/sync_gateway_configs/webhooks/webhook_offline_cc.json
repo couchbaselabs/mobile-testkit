@@ -24,8 +24,21 @@
                 }`,
             "users": {"GUEST": {"disabled": false, "admin_channels": ["*"] }},
             "event_handlers": {
-               "document_changed":[{"handler":"webhook","max_processes" : 500,"wait_for_process" : "600000","url":"http://{{ webhook_ip }}:8080","timeout":60}],
-               "db_state_changed":[{"handler":"webhook","max_processes" : 500,"wait_for_process" : "600000","url":"http://{{ webhook_ip }}:8080","timeout":60}] }
+               "document_changed":[{
+                    "handler": "webhook",
+                    "max_processes": 500,
+                    "wait_for_process": "600000",
+                    "url": "http://{{ webhook_ip }}:8080",
+                    "timeout": 60
+                }],
+               "db_state_changed":[{
+                   "handler":"webhook",
+                   "max_processes": 500,
+                   "wait_for_process": "600000",
+                   "url":"http://{{ webhook_ip }}:8080",
+                   "timeout":60
+                }]
+            }
         }
     }
 }

@@ -16,7 +16,7 @@ from keywords.SyncGateway import sync_gateway_config_path_for_mode
 @pytest.mark.onlineoffline
 @pytest.mark.webhooks
 @pytest.mark.parametrize("sg_conf_name, num_users, num_channels, num_docs, num_revisions", [
-    ("sync_gateway_webhook", 5, 1, 1, 2),
+    ("webhooks/webhook_offline", 5, 1, 1, 2),
 ])
 def test_db_online_offline_webhooks_offline(params_from_base_test_setup, sg_conf_name, num_users, num_channels, num_docs, num_revisions):
 
@@ -98,7 +98,7 @@ def test_db_online_offline_webhooks_offline(params_from_base_test_setup, sg_conf
 @pytest.mark.onlineoffline
 @pytest.mark.webhooks
 @pytest.mark.parametrize("sg_conf_name, num_users, num_channels, num_docs, num_revisions", [
-    ("sync_gateway_webhook", 5, 1, 1, 2),
+    ("webhooks/webhook_offline", 5, 1, 1, 2),
 ])
 def test_db_online_offline_webhooks_offline_two(params_from_base_test_setup, sg_conf_name, num_users, num_channels, num_docs, num_revisions):
 
