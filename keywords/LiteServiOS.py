@@ -5,12 +5,10 @@ import re
 import time
 from zipfile import ZipFile
 import requests
-from requests.exceptions import ConnectionError
 
 from keywords.LiteServBase import LiteServBase
 from keywords.constants import BINARY_DIR
 from keywords.constants import LATEST_BUILDS
-from keywords.constants import MAX_RETRIES
 from keywords.exceptions import LiteServError
 from keywords.utils import version_and_build
 from keywords.utils import log_info
