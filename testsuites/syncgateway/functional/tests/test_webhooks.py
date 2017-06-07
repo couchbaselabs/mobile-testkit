@@ -90,10 +90,11 @@ def test_webhooks(params_from_base_test_setup, sg_conf_name, num_users, num_chan
 @pytest.mark.xattrs
 @pytest.mark.session
 @pytest.mark.webhooks
-@pytest.mark.parametrize('sg_conf_name', [
-    'webhooks/webhook'
+@pytest.mark.parametrize('sg_conf_name, filtered', [
+    ('webhooks/webhook', False),
+    ('webhooks/webhook_filter', True)
 ])
-def test_webhooks_crud(params_from_base_test_setup, sg_conf_name):
+def test_webhooks_crud(params_from_base_test_setup, sg_conf_name, filtered):
     """ Tests for webhook notification on import
 
     xattr mode
@@ -122,8 +123,14 @@ def test_webhooks_crud(params_from_base_test_setup, sg_conf_name):
 
     1. Delete SG docs via SG
     1. Verify 'num_docs_per_client' webhook events (id, rev, body)
+
+    if filtered, the scenario will add a filtered propery to every other doc.
+    The webhook validation will only look for the filtered docs
+
     """
     xattrs_enabled = params_from_base_test_setup['xattrs_enabled']
+
+    log_info('Webhooks filtered?: {}'.format(filtered))
 
     cluster_conf = params_from_base_test_setup['cluster_config']
     cluster_topology = params_from_base_test_setup['cluster_topology']
@@ -173,8 +180,18 @@ def test_webhooks_crud(params_from_base_test_setup, sg_conf_name):
         content=doc_content,
         channels=sg_info.channels
     )
+
+    # Add filtered property to every other doc
+    count = 0
+    for sg_doc in sg_docs:
+        if count % 2 == 0:
+            sg_doc['filtered'] = True
+        count += 1
+
     sg_doc_ids = [doc['_id'] for doc in sg_docs]
+    sg_filtered_doc_ids = [doc['_id'] for doc in sg_docs if 'filtered' in doc]
     assert len(sg_doc_ids) == num_docs_per_client
+    assert len(sg_filtered_doc_ids) == num_docs_per_client / 2
 
     # Create sdk docs
     sdk_docs = {
@@ -184,10 +201,21 @@ def test_webhooks_crud(params_from_base_test_setup, sg_conf_name):
         }
         for i in range(num_docs_per_client)
     }
+
+    # Add filtered property to every other doc
+    count = 0
+    for _, doc_val in sdk_docs.items():
+        if count % 2 == 0:
+            doc_val['filtered'] = True
+        count += 1
+
     sdk_doc_ids = [doc for doc in sdk_docs]
+    sdk_filtered_doc_ids = [k for k, v in sdk_docs.items() if 'filtered' in v]
     assert len(sdk_doc_ids) == num_docs_per_client
+    assert len(sdk_filtered_doc_ids) == num_docs_per_client / 2
 
     all_docs = sg_doc_ids + sdk_doc_ids
+    all_filtered_docs = sg_filtered_doc_ids + sdk_filtered_doc_ids
     assert len(all_docs) == num_docs_per_client * 2
 
     # If xattr mode, add sg + sdk docs
@@ -205,18 +233,18 @@ def test_webhooks_crud(params_from_base_test_setup, sg_conf_name):
     )
 
     # Wait for added docs to trigger webhooks
-    if xattrs_enabled:
+    if xattrs_enabled and filtered:
+        poll_for_webhook_data(webhook_server, all_filtered_docs, 1, doc_content)
+    elif xattrs_enabled and not filtered:
         poll_for_webhook_data(webhook_server, all_docs, 1, doc_content)
+    elif not xattrs_enabled and filtered:
+        poll_for_webhook_data(webhook_server, sg_filtered_doc_ids, 1, doc_content)
     else:
         poll_for_webhook_data(webhook_server, sg_doc_ids, 1, doc_content)
     webhook_server.clear_data()
 
     # Update sdk docs from sg
     updated_doc_content = {'brian': 'eno'}
-    updated_doc_body = {
-        'channels': sg_info.channels,
-        'content': updated_doc_content
-    }
     update_docs(
         sg_client=sg_client,
         sg_url=sg_url,
@@ -225,15 +253,18 @@ def test_webhooks_crud(params_from_base_test_setup, sg_conf_name):
         sg_auth=sg_auth,
         sdk_client=sdk_client,
         sdk_doc_ids=sdk_doc_ids,
-        updated_doc_body=updated_doc_body,
+        updated_doc_content=updated_doc_content,
         xattrs=xattrs_enabled
     )
 
-    if xattrs_enabled:
-        # Poll to make sure sg + sdk updates come through
+    # Wait for updates to trigger webhooks
+    if xattrs_enabled and filtered:
+        poll_for_webhook_data(webhook_server, all_filtered_docs, 2, updated_doc_content)
+    elif xattrs_enabled and not filtered:
         poll_for_webhook_data(webhook_server, all_docs, 2, updated_doc_content)
+    elif not xattrs_enabled and filtered:
+        poll_for_webhook_data(webhook_server, sg_filtered_doc_ids, 2, updated_doc_content)
     else:
-        # Poll to make sure sg updates come through
         poll_for_webhook_data(webhook_server, sg_doc_ids, 2, updated_doc_content)
     webhook_server.clear_data()
 
@@ -248,20 +279,19 @@ def test_webhooks_crud(params_from_base_test_setup, sg_conf_name):
         xattrs=xattrs_enabled
     )
 
-    # Wait for sg deletes of sdk docs to trigger webhook events
+    # Wait for deletes to trigger webhook events, filter includes all deleted docs
     if xattrs_enabled:
-        # Poll to make sure sg + sdk deletes come through
         poll_for_webhook_data(webhook_server, all_docs, 3, updated_doc_content, deleted=True)
     else:
         poll_for_webhook_data(webhook_server, sg_doc_ids, 3, updated_doc_content, deleted=True)
-
     webhook_server.clear_data()
+
+    # Stop webhook server
     webhook_server.stop()
 
 
 def add_docs(sg_client, sg_url, sg_db, sg_docs, sg_auth, sdk_client, sdk_docs, num_docs_per_client, xattrs):
     """ Add docs
-    
     if in xattr mode:
         - add num_docs_per_client docs from sg
         - add num_docs_per_client docs from sdk
@@ -284,9 +314,8 @@ def add_docs(sg_client, sg_url, sg_db, sg_docs, sg_auth, sdk_client, sdk_docs, n
         sdk_client.upsert_multi(sdk_docs)
 
 
-def update_docs(sg_client, sg_url, sg_db, sg_doc_ids, sg_auth, sdk_client, sdk_doc_ids, updated_doc_body, xattrs):
+def update_docs(sg_client, sg_url, sg_db, sg_doc_ids, sg_auth, sdk_client, sdk_doc_ids, updated_doc_content, xattrs):
     """ Update docs
-
     if in xattr mode:
         - sync gateway will update the sdk docs
         - sdk will update the sync gateway docs
@@ -305,25 +334,29 @@ def update_docs(sg_client, sg_url, sg_db, sg_doc_ids, sg_auth, sdk_client, sdk_d
             doc_id=doc_id,
             auth=sg_auth
         )
+        doc['content'] = updated_doc_content
         sg_client.put_doc(
             url=sg_url,
             db=sg_db,
             doc_id=doc_id,
             rev=doc['_rev'],
-            doc_body=updated_doc_body,
+            doc_body=doc,
             auth=sg_auth
         )
 
     # Update sg docs from sdk in xattr mode
     if xattrs:
         for sg_user_doc_id in sg_doc_ids:
-            sdk_client.get(sg_user_doc_id)
-            sdk_client.upsert(sg_user_doc_id, updated_doc_body)
+            doc = sdk_client.get(sg_user_doc_id)
+
+            doc_body = doc.value
+            doc_body['content'] = updated_doc_content
+
+            sdk_client.upsert(sg_user_doc_id, doc_body)
 
 
 def delete_docs(sg_client, sg_url, sg_db, sg_doc_ids, sg_auth, sdk_client, sdk_doc_ids, xattrs):
     """ Delete docs
-
     if in xattr mode:
         - sync gateway will delete the sdk docs
         - sdk will delete the sync gateway docs

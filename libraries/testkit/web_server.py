@@ -22,6 +22,7 @@ class HttpHandler(BaseHTTPRequestHandler):
         content_len = int(self.headers.getheader('content-length', 0))
         post_body = self.rfile.read(content_len)
         data = json.loads(post_body)
+        log_info("Webhook doc received: {}".format(data["_id"]))
         HttpHandler.server_recieved_data.append(data)
         self.send_response(200)
         self.send_header("Content-type", "text/html")

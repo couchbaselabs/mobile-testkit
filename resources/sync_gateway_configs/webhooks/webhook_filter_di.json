@@ -1,0 +1,46 @@
+{
+    "interface":":4984",
+    "adminInterface": "0.0.0.0:4985",
+    "log": ["CRUD+", "Cache+", "HTTP+", "Changes+"],
+    "cluster_config": {
+        "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
+        "data_dir":".",
+        "bucket":"data-bucket",
+        "username":"data-bucket",
+        "password": "password"
+    },
+    "databases":{
+        "db":{
+            "unsupported": {
+                {{ xattrs }}
+            },
+            "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
+            "bucket":"data-bucket",
+            "username":"data-bucket",
+            "password": "password",
+            "event_handlers": {
+               "document_changed":[{
+                    "handler": "webhook",
+                    "url": "http://{{ webhook_ip }}:8080",
+                    "filter": `function(doc) {
+                        if (doc.filtered || doc._deleted) {
+                            return true;
+                        }
+                        return false;
+                    }`
+                }],
+               "db_state_changed":[{
+                   "handler":"webhook",
+                   "url":"http://{{ webhook_ip }}:8080",
+                }]
+            },
+            "channel_index":{
+                "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
+                "bucket":"index-bucket",
+                "username":"index-bucket",
+                "password": "password",
+                "writer":{{ is_index_writer }}
+            }
+        }
+    }
+}
