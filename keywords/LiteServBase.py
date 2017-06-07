@@ -52,8 +52,11 @@ class LiteServBase(object):
         log_r(resp)
         raise LiteServError("There should be no service running on the port")
 
-    def _wait_until_reachable(self):
-        url = "http://{}:{}".format(self.host, self.port)
+    def _wait_until_reachable(self, port=None):
+        if not port:
+            port = self.port
+
+        url = "http://{}:{}".format(self.host, port)
         count = 0
         while count < MAX_RETRIES:
             try:
