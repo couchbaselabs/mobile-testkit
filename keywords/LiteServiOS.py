@@ -227,6 +227,7 @@ class LiteServiOS(LiteServBase):
 
         # Without --exit, ios-sim blocks
         # With --exit, --log has no effect
+        # subprocess.Popen didn't launch the app
         output = subprocess.check_output([
             "ios-sim", "--devicetypeid", device, "launch", app_path, "--exit"
         ])
