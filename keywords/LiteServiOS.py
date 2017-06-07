@@ -155,6 +155,9 @@ class LiteServiOS(LiteServBase):
                 self.device_id = self.device_id.strip('(')
                 self.device_id = self.device_id.strip(')')
 
+        if not self.device_id:
+            raise LiteServError("Could not get the device ID of the running simulator")
+
     def remove_device(self):
         """
         Remove the iOS app from the connected device
