@@ -1,13 +1,18 @@
 import time
-import pytest
 
+import pytest
+from couchbase.bucket import Bucket
+
+from keywords import document
+from keywords.MobileRestClient import MobileRestClient
+from keywords.SyncGateway import sync_gateway_config_path_for_mode
+from keywords.userinfo import UserInfo
+from keywords.utils import host_for_url, log_info
 from libraries.testkit.admin import Admin
 from libraries.testkit.cluster import Cluster
-from libraries.testkit.web_server import WebServer
 from libraries.testkit.parallelize import in_parallel
-
-from keywords.utils import log_info
-from keywords.SyncGateway import sync_gateway_config_path_for_mode
+from libraries.testkit.web_server import WebServer
+from keywords.exceptions import TimeoutError
 
 
 @pytest.mark.sanity
@@ -17,7 +22,7 @@ from keywords.SyncGateway import sync_gateway_config_path_for_mode
 @pytest.mark.basicauth
 @pytest.mark.channel
 @pytest.mark.parametrize("sg_conf_name, num_users, num_channels, num_docs, num_revisions", [
-    ("sync_gateway_webhook", 5, 1, 1, 2),
+    ("webhooks/webhook_offline", 5, 1, 1, 2),
 ])
 def test_webhooks(params_from_base_test_setup, sg_conf_name, num_users, num_channels, num_docs, num_revisions):
     """
@@ -77,3 +82,198 @@ def test_webhooks(params_from_base_test_setup, sg_conf_name, num_users, num_chan
     assert expected_events == received_events
 
     ws.stop()
+
+
+@pytest.mark.sanity
+@pytest.mark.syncgateway
+@pytest.mark.xattrs
+@pytest.mark.session
+@pytest.mark.webhooks
+@pytest.mark.parametrize('sg_conf_name', [
+    'webhooks/webhook'
+])
+def test_webhooks_crud(params_from_base_test_setup, sg_conf_name):
+    """ Tests for webhook notification on import
+
+    The following run in non-filter / filter scenarios
+    1. Start sync gateway with autoimport
+    1. Write 100 docs via SDK
+    1. Verify 100 webhook events (id, rev, body)
+    1. Write 100 docs via SG
+    1. Verify 100 webhook events (id, rev, body)
+    1. Update SG docs once each via SDK
+    1. Verify 100 webhook events (id, rev, body)
+    1. Update SDK docs once each via SG
+    1. Verify 100 webhook events (id, rev, body)
+    1. Delete SG docs via SDK
+    1. Verify 100 webhook events (id, rev, body)
+    1. Delete SDK docs via SG
+    1. Verify 100 webhook events (id, rev, body)
+
+    to verify no dups, wait 10s after recieveing expected webhooks
+    """
+    xattrs_enabled = params_from_base_test_setup['xattrs_enabled']
+
+    cluster_conf = params_from_base_test_setup['cluster_config']
+    cluster_topology = params_from_base_test_setup['cluster_topology']
+    mode = params_from_base_test_setup['mode']
+    sg_admin_url = cluster_topology['sync_gateways'][0]['admin']
+    sg_url = cluster_topology['sync_gateways'][0]['public']
+    cbs_url = cluster_topology['couchbase_servers'][0]
+
+    sg_db = 'db'
+    bucket_name = 'data-bucket'
+    num_docs_per_client = 100
+
+    sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
+
+    cluster = Cluster(config=cluster_conf)
+    cluster.reset(sg_conf)
+
+    # Start webhook server on test runner
+    webhook_server = WebServer()
+    webhook_server.start()
+
+    sg_client = MobileRestClient()
+    cbs_ip = host_for_url(cbs_url)
+    sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password')
+
+    sg_info = UserInfo('sg_user', 'pass', channels=['shared'], roles=[])
+    sdk_info = UserInfo('sdk_user', 'pass', channels=['shared'], roles=[])
+    sg_client.create_user(
+        url=sg_admin_url,
+        db=sg_db,
+        name=sg_info.name,
+        password=sg_info.password,
+        channels=sg_info.channels
+    )
+    sg_user_auth = sg_client.create_session(
+        url=sg_admin_url,
+        db=sg_db,
+        name=sg_info.name,
+        password=sg_info.password
+    )
+
+    doc_body = {'aphex': 'twin'}
+    seth_docs = document.create_docs(
+        doc_id_prefix='sg_user_doc',
+        number=num_docs_per_client,
+        content=doc_body,
+        channels=sg_info.channels
+    )
+    sg_user_doc_ids = [doc['_id'] for doc in seth_docs]
+
+    # Add sg docs
+    sg_user_docs = sg_client.add_bulk_docs(
+        url=sg_url,
+        db=sg_db,
+        docs=seth_docs,
+        auth=sg_user_auth
+    )
+    assert len(sg_user_docs) == num_docs_per_client
+
+    # Wait for sg doc writes to trigger webhook events
+    poll_for_webhook_data(webhook_server, sg_user_doc_ids, 1)
+    webhook_server.clear_data()
+
+    # Add sdk docs
+    sdk_user_docs = {
+        'sdk_user_doc_{}'.format(i): {
+            'channels': sdk_info.channels,
+            'content': doc_body
+        }
+        for i in range(num_docs_per_client)
+    }
+    sdk_user_doc_ids = [doc for doc in sdk_user_docs]
+    assert len(sdk_user_doc_ids) == num_docs_per_client
+    sdk_client.upsert_multi(sdk_user_docs)
+
+    # Wait for sdk doc imports to trigger webhook events
+    poll_for_webhook_data(webhook_server, sdk_user_doc_ids, 1)
+    webhook_server.clear_data()
+
+    # Update sdk docs from sg
+    updated_doc_body = {
+        'channels': sg_info.channels,
+        'content': {'brian': 'eno'}
+    }
+    for sdk_user_doc_id in sdk_user_doc_ids:
+        doc = sg_client.get_doc(
+            url=sg_url,
+            db=sg_db,
+            doc_id=sdk_user_doc_id,
+            auth=sg_user_auth
+        )
+        sg_client.put_doc(
+            url=sg_url,
+            db=sg_db,
+            doc_id=sdk_user_doc_id,
+            rev=doc['_rev'],
+            doc_body=updated_doc_body,
+            auth=sg_user_auth
+        )
+
+    # Poll to make sure sg updates of sdk docs come through
+    poll_for_webhook_data(webhook_server, sdk_user_doc_ids, 2)
+    webhook_server.clear_data()
+
+    # Update all sg docs from sdk
+    for sg_user_doc_id in sg_user_doc_ids:
+        sdk_client.get(sg_user_doc_id)
+        sdk_client.upsert(sg_user_doc_id, updated_doc_body)
+
+    # Wait for sdk update to sg doc imports to trigger webhook events
+    poll_for_webhook_data(webhook_server, sg_user_doc_ids, 2)
+
+    # TODO: sg deleted
+    # TODO: sdk deletes
+    webhook_server.stop()
+
+
+def poll_for_webhook_data(webhook_server, expected_doc_ids, expected_num_revs):
+
+    # TODO: Verify doc body
+
+    count = 0
+    max_num_retries = 10
+
+    while True:
+
+        if count >= max_num_retries:
+            raise TimeoutError('Timed out waiting for webhook events!!')
+
+        # Get web hook sent data and build a dictionary
+        expected_docs_scratch_pad = list(expected_doc_ids)
+        data = webhook_server.get_data()
+        posted_webhook_events = {item['_id']: item for item in data}
+        posted_webhook_events_len = len(posted_webhook_events)
+
+        # If more webhook data is sent then we are expecting, blow up
+        assert posted_webhook_events_len <= len(expected_doc_ids)
+
+        all_docs_revs_found = True
+
+        if posted_webhook_events_len < len(expected_doc_ids):
+            # We have not seen the expected number of docs yet.
+            # Wait a sec and try again
+            log_info('Still waiting for webhook events. Expecting: {}, We have only seen: {}'.format(
+                posted_webhook_events_len,
+                len(posted_webhook_events)
+            ))
+            all_docs_revs_found = False
+
+        else:
+            for doc_id, doc in posted_webhook_events.items():
+                if doc_id in expected_docs_scratch_pad and doc['_rev'].startswith("{}-".format(expected_num_revs)):
+                    expected_docs_scratch_pad.remove(doc_id)
+
+            if len(expected_docs_scratch_pad) != 0:
+                log_info('Missing expected revisions. Retrying ...')
+                all_docs_revs_found = False
+
+        if all_docs_revs_found:
+            log_info('Found all webhook events')
+            break
+
+        count += 1
+        time.sleep(1)

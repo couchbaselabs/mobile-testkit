@@ -47,8 +47,8 @@ from libraries.provision.install_sync_gateway import get_buckets_from_sync_gatew
     ("sync_gateway_sg_replicate_continuous_di.json", ['index-bucket-2', 'data-bucket-1', 'index-bucket-1', 'data-bucket', 'data-bucket-2']),
     ("sync_gateway_sg_replicate_di.json", ['index-bucket-2', 'data-bucket-1', 'index-bucket-1', 'data-bucket', 'data-bucket-2']),
     ("sync_gateway_todolite.json", ['data-bucket', 'cbgt-bucket', 'index-bucket']),
-    ("sync_gateway_webhook_cc.json", ['data-bucket']),
-    ("sync_gateway_webhook_di.json", ['data-bucket', 'index-bucket']),
+    ("webhooks/webhook_offline_cc.json", ['data-bucket']),
+    ("webhooks/webhook_offline_di.json", ['data-bucket', 'index-bucket']),
     ("testfest_todo_di.json", ['data-bucket', 'index-bucket']),
     ("todolite.json", ['data-bucket']),
 ])
