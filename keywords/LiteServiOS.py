@@ -4,6 +4,7 @@ import os
 import re
 import time
 from zipfile import ZipFile
+from shutil import copyfile
 import requests
 
 from keywords.LiteServBase import LiteServBase
@@ -18,6 +19,12 @@ from keywords.constants import CLIENT_REQUEST_TIMEOUT
 
 
 class LiteServiOS(LiteServBase):
+
+    def __init__(self, version_build, host, port, storage_engine):
+        super(LiteServiOS, self).__init__(version_build, host, port, storage_engine)
+        self.liteserv_admin_url = "http://{}:59850".format(self.host)
+        self.logfile_name = None
+        self.device_id = None
 
     def download(self):
         """
@@ -137,6 +144,17 @@ class LiteServiOS(LiteServBase):
                 time.sleep(1)
                 continue
 
+        # Get the device ID
+        list_output = subprocess.Popen(["xcrun", "simctl", "list"], stdout=subprocess.PIPE)
+        output = subprocess.check_output(('grep', 'Booted'), stdin=list_output.stdout)
+
+        for line in output.splitlines():
+            if "Phone" in line:
+                self.device_id = re.sub(' +', ' ', line).strip()
+                self.device_id = self.device_id.split(" ")[4]
+                self.device_id = self.device_id.strip('(')
+                self.device_id = self.device_id.strip(')')
+
     def remove_device(self):
         """
         Remove the iOS app from the connected device
@@ -167,27 +185,15 @@ class LiteServiOS(LiteServBase):
 
         self.stop()
 
-        # Get the device ID
-        device_id = None
-        list_output = subprocess.Popen(["xcrun", "simctl", "list"], stdout=subprocess.PIPE)
-        output = subprocess.check_output(('grep', 'Booted'), stdin=list_output.stdout)
-
-        for line in output.splitlines():
-            if "Phone" in line:
-                device_id = re.sub(' +', ' ', line).strip()
-                device_id = device_id.split(" ")[4]
-                device_id = device_id.strip('(')
-                device_id = device_id.strip(')')
-
         # Stop the simulator
-        log_info("device_id: {}".format(device_id))
+        log_info("device_id: {}".format(self.device_id))
         output = subprocess.check_output([
             "killall", "Simulator"
         ])
 
         # Erase the simulator
         output = subprocess.check_output([
-            "xcrun", "simctl", "erase", device_id
+            "xcrun", "simctl", "erase", self.device_id
         ])
 
         if bundle_id in output:
@@ -205,6 +211,7 @@ class LiteServiOS(LiteServBase):
         data = {}
         encryption_enabled = False
         device = "iPhone-7-Plus"
+        self.logfile_name = logfile_name
 
         package_name = "LiteServ-iOS.app"
         app_dir = "LiteServ-iOS"
@@ -215,8 +222,10 @@ class LiteServiOS(LiteServBase):
 
         app_path = "{}/{}/{}".format(BINARY_DIR, app_dir, package_name)
 
+        # Without --exit, ios-sim blocks
+        # With --exit, --log has no effect
         output = subprocess.check_output([
-            "ios-sim", "--devicetypeid", device, "--log", logfile_name, "launch", app_path, "--exit"
+            "ios-sim", "--devicetypeid", device, "launch", app_path, "--exit"
         ])
         log_info(output)
 
@@ -247,9 +256,8 @@ class LiteServiOS(LiteServBase):
             data["dbpasswords"] = db_flags
 
         self._wait_until_reachable(port=59850)
-        liteserv_admin_url = "http://{}:59850".format(self.host)
-        log_info("Starting LiteServ: {}".format(liteserv_admin_url))
-        resp = self.session.put("{}/start".format(liteserv_admin_url), data=json.dumps(data))
+        log_info("Starting LiteServ: {}".format(self.liteserv_admin_url))
+        resp = self.session.put("{}/start".format(self.liteserv_admin_url), data=json.dumps(data))
         log_r(resp)
         resp.raise_for_status()
         self._verify_launched()
@@ -282,12 +290,16 @@ class LiteServiOS(LiteServBase):
         """
 
         log_info("Stopping LiteServ: http://{}:{}".format(self.host, self.port))
+        log_info("Stopping LiteServ: {}".format(self.liteserv_admin_url))
 
-        liteserv_admin_url = "http://{}:59850".format(self.host)
-        log_info("Stopping LiteServ: {}".format(liteserv_admin_url))
-
-        resp = self.session.put("{}/stop".format(liteserv_admin_url))
+        resp = self.session.put("{}/stop".format(self.liteserv_admin_url))
         log_r(resp)
         resp.raise_for_status()
+
+        # Using --exit in ios-sim means, --log has no effect
+        # Have to separately copy the simulator logs
+        if self.logfile_name and self.device_id:
+            home = os.environ['HOME']
+            copyfile("{}/Library/Logs/CoreSimulator/{}/system.log".format(home, self.device_id), self.logfile_name)
 
         self._verify_not_running()
