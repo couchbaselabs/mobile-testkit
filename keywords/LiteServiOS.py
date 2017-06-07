@@ -113,6 +113,13 @@ class LiteServiOS(LiteServBase):
         log_info(output)
 
         # Wait for the device to boot up
+        # We check the status of the simulator using the command
+        # xcrun simctl spawn booted launchctl print system | grep com.apple.springboard.services
+        # If the simulator is still coming up, the output will say
+        # 0x1d407    M   D   com.apple.springboard.services
+        # If the simulator has booted up completely, it will say
+        # 0x1e007    M   A   com.apple.springboard.services
+        # We check if the third field is A
         start = time.time()
         while True:
             if time.time() - start > CLIENT_REQUEST_TIMEOUT:
@@ -137,10 +144,6 @@ class LiteServiOS(LiteServBase):
         Remove the iOS app from the connected device
         """
         bundle_id = "com.couchbase.LiteServ-iOS"
-        if self.storage_engine == "SQLCipher":
-            bundle_id = "com.couchbase.LiteServ-iOS-SQLCipher"
-
-        log_info("Removing {}".format(bundle_id))
 
         output = subprocess.check_output([
             "ios-deploy", "--uninstall_only", "--bundle_id", bundle_id
