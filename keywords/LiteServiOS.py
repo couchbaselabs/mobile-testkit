@@ -21,6 +21,10 @@ from keywords.constants import CLIENT_REQUEST_TIMEOUT
 class LiteServiOS(LiteServBase):
 
     def __init__(self, version_build, host, port, storage_engine):
+
+        if storage_engine == "ForestDB" or "ForestDB+Encryption":
+            raise LiteServError("ForestDB not supported with the current LiteServ iOS app")
+
         super(LiteServiOS, self).__init__(version_build, host, port, storage_engine)
         self.liteserv_admin_url = "http://{}:59850".format(self.host)
         self.logfile_name = None
