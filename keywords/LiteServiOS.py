@@ -300,6 +300,8 @@ class LiteServiOS(LiteServBase):
         # Have to separately copy the simulator logs
         if self.logfile_name and self.device_id:
             home = os.environ['HOME']
-            copyfile("{}/Library/Logs/CoreSimulator/{}/system.log".format(home, self.device_id), self.logfile_name)
+            ios_log_file = "{}/Library/Logs/CoreSimulator/{}/system.log".format(home, self.device_id)
+            copyfile(ios_log_file, self.logfile_name)
+            open(ios_log_file, 'w').close()
 
         self._verify_not_running()
