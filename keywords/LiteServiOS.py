@@ -288,19 +288,8 @@ class LiteServiOS(LiteServBase):
         liteserv_admin_url = "http://{}:59850".format(self.host)
         log_info("Stopping LiteServ: {}".format(liteserv_admin_url))
 
-        count = 0
-        while count < MAX_RETRIES:
-            if count == MAX_RETRIES:
-                raise LiteServError("Could not connect to LiteServ")
-
-            try:
-                resp = self.session.put("{}/stop".format(liteserv_admin_url))
-                log_r(resp)
-                resp.raise_for_status()
-                break
-            except ConnectionError:
-                log_info("LiteServ may not be launched (Retrying) ...")
-                time.sleep(1)
-                count += 1
+        resp = self.session.put("{}/stop".format(liteserv_admin_url))
+        log_r(resp)
+        resp.raise_for_status()
 
         self._verify_not_running()
