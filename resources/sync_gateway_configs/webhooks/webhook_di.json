@@ -21,11 +21,11 @@
             "event_handlers": {
                "document_changed":[{
                     "handler": "webhook",
-                    "url": "http://{{ webhook_ip }}:8080",
+                    "url": "http://{{ webhook_ip }}:8080"
                 }],
                "db_state_changed":[{
                    "handler":"webhook",
-                   "url":"http://{{ webhook_ip }}:8080",
+                   "url":"http://{{ webhook_ip }}:8080"
                 }]
             },
             "channel_index":{
