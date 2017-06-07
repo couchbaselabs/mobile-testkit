@@ -13,6 +13,7 @@ from libraries.testkit.cluster import Cluster
 from libraries.testkit.parallelize import in_parallel
 from libraries.testkit.web_server import WebServer
 from keywords.exceptions import TimeoutError
+from keywords.constants import CLIENT_REQUEST_TIMEOUT
 
 
 @pytest.mark.sanity
@@ -154,14 +155,15 @@ def test_webhooks_crud(params_from_base_test_setup, sg_conf_name):
         password=sg_info.password
     )
 
-    doc_body = {'aphex': 'twin'}
+    doc_content = {'aphex': 'twin'}
     seth_docs = document.create_docs(
         doc_id_prefix='sg_user_doc',
         number=num_docs_per_client,
-        content=doc_body,
+        content=doc_content,
         channels=sg_info.channels
     )
     sg_user_doc_ids = [doc['_id'] for doc in seth_docs]
+    assert len(sg_user_doc_ids) == num_docs_per_client
 
     # Add sg docs
     sg_user_docs = sg_client.add_bulk_docs(
@@ -173,14 +175,14 @@ def test_webhooks_crud(params_from_base_test_setup, sg_conf_name):
     assert len(sg_user_docs) == num_docs_per_client
 
     # Wait for sg doc writes to trigger webhook events
-    poll_for_webhook_data(webhook_server, sg_user_doc_ids, 1)
+    poll_for_webhook_data(webhook_server, sg_user_doc_ids, 1, doc_content)
     webhook_server.clear_data()
 
     # Add sdk docs
     sdk_user_docs = {
         'sdk_user_doc_{}'.format(i): {
             'channels': sdk_info.channels,
-            'content': doc_body
+            'content': doc_content
         }
         for i in range(num_docs_per_client)
     }
@@ -189,13 +191,15 @@ def test_webhooks_crud(params_from_base_test_setup, sg_conf_name):
     sdk_client.upsert_multi(sdk_user_docs)
 
     # Wait for sdk doc imports to trigger webhook events
-    poll_for_webhook_data(webhook_server, sdk_user_doc_ids, 1)
+    poll_for_webhook_data(webhook_server, sdk_user_doc_ids, 1, doc_content)
     webhook_server.clear_data()
+
+    updated_doc_content = {'brian': 'eno'}
 
     # Update sdk docs from sg
     updated_doc_body = {
         'channels': sg_info.channels,
-        'content': {'brian': 'eno'}
+        'content': updated_doc_content
     }
     for sdk_user_doc_id in sdk_user_doc_ids:
         doc = sg_client.get_doc(
@@ -214,7 +218,7 @@ def test_webhooks_crud(params_from_base_test_setup, sg_conf_name):
         )
 
     # Poll to make sure sg updates of sdk docs come through
-    poll_for_webhook_data(webhook_server, sdk_user_doc_ids, 2)
+    poll_for_webhook_data(webhook_server, sdk_user_doc_ids, 2, updated_doc_content)
     webhook_server.clear_data()
 
     # Update all sg docs from sdk
@@ -223,27 +227,55 @@ def test_webhooks_crud(params_from_base_test_setup, sg_conf_name):
         sdk_client.upsert(sg_user_doc_id, updated_doc_body)
 
     # Wait for sdk update to sg doc imports to trigger webhook events
-    poll_for_webhook_data(webhook_server, sg_user_doc_ids, 2)
+    poll_for_webhook_data(webhook_server, sg_user_doc_ids, 2, updated_doc_content)
+    webhook_server.clear_data()
 
-    # TODO: sg deleted
-    # TODO: sdk deletes
+    # Delete all sdk docs from Sync Gateway
+    for sdk_user_doc_id in sdk_user_doc_ids:
+        doc = sg_client.get_doc(
+            url=sg_url,
+            db=sg_db,
+            doc_id=sdk_user_doc_id,
+            auth=sg_user_auth
+        )
+        sg_client.delete_doc(
+            url=sg_url,
+            db=sg_db,
+            doc_id=sdk_user_doc_id,
+            rev=doc['_rev'],
+            auth=sg_user_auth
+        )
+
+    # Wait for sg deletes of sdk docs to trigger webhook events
+    poll_for_webhook_data(webhook_server, sdk_user_doc_ids, 3, updated_doc_content, deleted=True)
+    webhook_server.clear_data()
+
+    # Delete all sg docs from sdk
+    for sg_user_doc_id in sg_user_doc_ids:
+        sdk_client.remove(sg_user_doc_id)
+
+    # Wait for sdk deletes of sg docs to trigger webhook events
+    poll_for_webhook_data(webhook_server, sg_user_doc_ids, 3, updated_doc_content, deleted=True)
+    webhook_server.clear_data()
+
     webhook_server.stop()
 
 
-def poll_for_webhook_data(webhook_server, expected_doc_ids, expected_num_revs):
+def poll_for_webhook_data(webhook_server, expected_doc_ids, expected_num_revs, expected_content, deleted=False):
 
     # TODO: Verify doc body
 
-    count = 0
-    max_num_retries = 10
-
+    start = time.time()
     while True:
 
-        if count >= max_num_retries:
+        if time.time() - start > CLIENT_REQUEST_TIMEOUT:
             raise TimeoutError('Timed out waiting for webhook events!!')
 
         # Get web hook sent data and build a dictionary
         expected_docs_scratch_pad = list(expected_doc_ids)
+
+        log_info('Getting posted webhook data ...')
+
         data = webhook_server.get_data()
         posted_webhook_events = {item['_id']: item for item in data}
         posted_webhook_events_len = len(posted_webhook_events)
@@ -258,14 +290,23 @@ def poll_for_webhook_data(webhook_server, expected_doc_ids, expected_num_revs):
             # Wait a sec and try again
             log_info('Still waiting for webhook events. Expecting: {}, We have only seen: {}'.format(
                 posted_webhook_events_len,
-                len(posted_webhook_events)
+                len(expected_doc_ids)
             ))
             all_docs_revs_found = False
 
         else:
             for doc_id, doc in posted_webhook_events.items():
+
+                if deleted:
+                    assert doc['_deleted']
+                    assert 'content' not in doc
+                else:
+                    assert doc['content'] == expected_content
+
                 if doc_id in expected_docs_scratch_pad and doc['_rev'].startswith("{}-".format(expected_num_revs)):
                     expected_docs_scratch_pad.remove(doc_id)
+                else:
+                    log_info('Unexpected posted webhook notification: {}'.format(doc))
 
             if len(expected_docs_scratch_pad) != 0:
                 log_info('Missing expected revisions. Retrying ...')
@@ -275,5 +316,4 @@ def poll_for_webhook_data(webhook_server, expected_doc_ids, expected_num_revs):
             log_info('Found all webhook events')
             break
 
-        count += 1
         time.sleep(1)
