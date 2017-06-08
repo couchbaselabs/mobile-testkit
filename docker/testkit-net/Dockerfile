@@ -17,6 +17,8 @@ ENV DOTNET_CLI_TELEMETRY_OPTOUT=1
 RUN dotnet restore -s http://mobile.nuget.couchbase.com/nuget/Internal/ -s https://api.nuget.org/v3/index.json
 RUN dotnet build
 
+ENV SYNC_GATEWAY_URL="blip://localhost:4984""
+
 # Start the longevity test
 WORKDIR /opt/mobile-testkit/apps/testkit.net/Testkit.Net.Core
 CMD ["dotnet", "run"]

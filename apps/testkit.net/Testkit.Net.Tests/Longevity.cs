@@ -22,10 +22,13 @@ namespace Testkit.Net.Tests
             NetDestkop.Activate();
 
             _db = new Database("in-for-the-long-haul");
+            string sgUrl = Environment.GetEnvironmentVariable("SYNC_GATEWAY_URL");
+
+            Console.WriteLine($"Replicating with Sync Gateway {sgUrl}");
             var replicatorConfig = new ReplicatorConfiguration
             {
                 Database = _db,
-                Target = new ReplicatorTarget(new Uri("blip://localhost:4984/db")),
+                Target = new ReplicatorTarget(new Uri($"{sgUrl}/db")),
                 Continuous = true,
                 ReplicatorType = ReplicatorType.PushAndPull
             };
