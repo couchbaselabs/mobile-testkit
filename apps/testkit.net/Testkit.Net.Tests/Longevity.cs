@@ -14,22 +14,18 @@ namespace Testkit.Net.Tests
     public class Longevity
     {
         private readonly Database _db;
-        private readonly Database _dbTwo;
         private readonly Replicator _replicator;
-        private readonly double _scenarioRuntimeMinutes = 180;
+        private readonly double _scenarioRuntimeMinutes = 1;
 
         public Longevity()
         {
             NetDestkop.Activate();
 
             _db = new Database("in-for-the-long-haul");
-            _dbTwo = new Database("in-for-the-long-haul-2");
-
             var replicatorConfig = new ReplicatorConfiguration
             {
                 Database = _db,
                 Target = new ReplicatorTarget(new Uri("blip://localhost:4984/db")),
-                //Target = new ReplicatorTarget(_dbTwo),
                 Continuous = true,
                 ReplicatorType = ReplicatorType.PushAndPull
             };
@@ -46,12 +42,9 @@ namespace Testkit.Net.Tests
         [Fact]
         public void Run()
         {
-            // Start timing
-            var stopWatch = new Stopwatch();
-            stopWatch.Start();
-
             // Create docs
-            var numDocs = 1000;
+            var numDocs = 100000;
+            Console.WriteLine($"Saving: {numDocs} docs");
             _db.InBatch(() =>
             {
                 for (int i = 0; i < numDocs; i++)
@@ -62,6 +55,9 @@ namespace Testkit.Net.Tests
                 }
             });
 
+            // Update docs
+            var stopWatch = new Stopwatch();
+            stopWatch.Start();
             var r = new Random();
             while (true)
             {
@@ -82,14 +78,20 @@ namespace Testkit.Net.Tests
                 _db.Save(doc);
 
                 // Sleep between each update
-                Task.Delay(500).Wait();
+                Task.Delay(100).Wait();
+            }
+
+            // Delete docs
+            Console.WriteLine($"Deleting: {numDocs} docs");
+            for (int i = 0; i < numDocs; i++)
+            {
+                var doc = _db.GetDocument($"doc_{i}");
+                _db.Delete(doc);
             }
 
             stopWatch.Stop();
-
             _replicator.Stop();
             _db.Delete();
-            _dbTwo.Delete();
         }
     }
 }
