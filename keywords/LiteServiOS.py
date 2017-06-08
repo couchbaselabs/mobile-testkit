@@ -86,7 +86,6 @@ class LiteServiOS(LiteServBase):
             "ios-deploy", "--justlaunch", "--bundle", app_path
         ])
         log_info(output)
-        
         bundle_id = "com.couchbase.LiteServ-iOS"
         output = subprocess.check_output(["ios-deploy", "--list_bundle_id"])
         log_info(output)
@@ -233,7 +232,7 @@ class LiteServiOS(LiteServBase):
         # With --exit, --log has no effect
         # subprocess.Popen didn't launch the app
         output = subprocess.check_output([
-            "ios-sim", "--devicetypeid", device, "--log", logfile_name, "launch", app_path, "--exit"
+            "ios-sim", "--devicetypeid", device, "launch", app_path, "--exit"
         ])
         log_info(output)
 
