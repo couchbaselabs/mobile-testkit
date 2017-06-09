@@ -13,9 +13,6 @@ RUN git clone https://github.com/couchbaselabs/mobile-testkit.git
 WORKDIR /opt/mobile-testkit/apps/testkit.net/
 RUN git pull
 
-# Set Sync Gateway url for lite to replicate with
-ENV SYNC_GATEWAY_URL="blip://localhost:4984"
-
 # Build the test app
 ENV DOTNET_CLI_TELEMETRY_OPTOUT=1
 RUN dotnet restore -s http://mobile.nuget.couchbase.com/nuget/Internal/ -s https://api.nuget.org/v3/index.json
