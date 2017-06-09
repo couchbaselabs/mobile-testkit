@@ -25,7 +25,7 @@ namespace Testkit.Net.Tests
 
             _db = new Database("in-for-the-long-haul");
 
-            Console.WriteLine($"Running Scenario for: {_scenarioRuntimeMinutes}");
+            Console.WriteLine($"Running Scenario for {_scenarioRuntimeMinutes}min ...");
             Console.WriteLine($"Replicating with Sync Gateway: {syncGatewayUrl}");
             var replicatorConfig = new ReplicatorConfiguration
             {
@@ -67,7 +67,7 @@ namespace Testkit.Net.Tests
             while (true)
             {
                 double totalMin = stopWatch.Elapsed.TotalMinutes;
-                Console.WriteLine($"Scenario runtime: {totalMin} min");
+
 
                 if (totalMin > _scenarioRuntimeMinutes)
                 {
@@ -79,6 +79,9 @@ namespace Testkit.Net.Tests
                 // Update a random doc
                 int rInt = r.Next(0, numDocs);
                 Document doc = _db.GetDocument($"doc_{rInt}");
+
+                Console.WriteLine($"Updating doc: {doc.Id}");
+
                 doc["random"].Value = Guid.NewGuid().ToString();
                 _db.Save(doc);
 
