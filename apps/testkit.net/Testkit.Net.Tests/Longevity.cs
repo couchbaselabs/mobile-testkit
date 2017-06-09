@@ -15,20 +15,22 @@ namespace Testkit.Net.Tests
     {
         private readonly Database _db;
         private readonly Replicator _replicator;
-        private readonly double _scenarioRuntimeMinutes = 1;
+        private readonly double _scenarioRuntimeMinutes;
 
-        public Longevity()
+        public Longevity(string syncGatewayUrl, double scenarioRuntimeMinutes)
         {
+            _scenarioRuntimeMinutes = scenarioRuntimeMinutes;
+
             NetDestkop.Activate();
 
             _db = new Database("in-for-the-long-haul");
-            string sgUrl = Environment.GetEnvironmentVariable("SYNC_GATEWAY_URL");
 
-            Console.WriteLine($"Replicating with Sync Gateway {sgUrl}");
+            Console.WriteLine($"Running Scenario for: {_scenarioRuntimeMinutes}");
+            Console.WriteLine($"Replicating with Sync Gateway: {syncGatewayUrl}");
             var replicatorConfig = new ReplicatorConfiguration
             {
                 Database = _db,
-                Target = new ReplicatorTarget(new Uri($"{sgUrl}/db")),
+                Target = new ReplicatorTarget(new Uri($"{syncGatewayUrl}")),
                 Continuous = true,
                 ReplicatorType = ReplicatorType.PushAndPull
             };
