@@ -11,6 +11,7 @@ WORKDIR /opt
 # Git clone mobile-testkit
 RUN git clone https://github.com/couchbaselabs/mobile-testkit.git
 WORKDIR /opt/mobile-testkit/apps/testkit.net/
+RUN git checkout feature/longevity-app
 RUN git pull
 
 # Build the test app
