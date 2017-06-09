@@ -9,5 +9,5 @@ docker build -t testkit-net .
 --runtime-min is the number of minutes to run the scenarios for
 
 ```
-docker run testkit-net dotnet run --replication-endpoint "blip://localhost:4984/db" --runtime-min 380
+docker run --name testkit-net testkit-net dotnet run --replication-endpoint "blip://localhost:4984/db" --runtime-min 380
 ```
