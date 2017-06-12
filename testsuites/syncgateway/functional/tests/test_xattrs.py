@@ -974,7 +974,7 @@ def test_sg_sdk_interop_unique_docs(params_from_base_test_setup, sg_conf_name):
     ('sync_gateway_default_functional_tests', 'purge')
 ])
 def test_document_resurrection(params_from_base_test_setup, sg_conf_name, deletion_type):
-    """ 
+    """
     Scenario:
 
     Delete / Create through SDK, with a delay
@@ -1037,11 +1037,16 @@ def test_document_resurrection(params_from_base_test_setup, sg_conf_name, deleti
     all_doc_ids = sg_doc_ids + sdk_doc_ids
     assert len(all_doc_ids) == num_docs_per_client * 2
 
-    # Add docs
-    # sg_bulk_docs_resp = sg_client.add_bulk_docs(url=sg_url, db=sg_db, docs=sg_doc_bodies, auth=sg_user_auth)
+    # Add docs from SG
+    sg_bulk_docs_resp = sg_client.add_bulk_docs(url=sg_url, db=sg_db, docs=sg_doc_bodies, auth=sg_user_auth)
+    assert len(sg_bulk_docs_resp) == num_docs_per_client
 
+    # Add docs from sdk
     log_info('Creating SDK docs')
     sdk_client.upsert_multi(sdk_docs)
+
+    # TODO: Remove once https://github.com/couchbase/sync_gateway/issues/2627 is fixed
+    time.sleep(2)
 
     log_info('Deleting SDK docs')
     sdk_client.remove_multi(sdk_doc_ids)
@@ -1057,11 +1062,38 @@ def test_document_resurrection(params_from_base_test_setup, sg_conf_name, deleti
     assert len(docs) == num_docs_per_client
     assert len(errors) == num_docs_per_client
 
-    # log_info('Recreating SDK docs')
-    # sdk_client.upsert_multi(sdk_docs)
+    # TODO: Verify docs
 
-    import pdb
-    pdb.set_trace()
+    log_info('Recreating SDK docs')
+    sdk_client.upsert_multi(sdk_docs)
+
+    # Get all docs via Sync Gateway
+    docs, errors = sg_client.get_bulk_docs(
+        url=sg_url,
+        db=sg_db,
+        doc_ids=all_doc_ids,
+        auth=sg_user_auth,
+        validate=False
+    )
+    assert len(docs) == num_docs_per_client * 2
+    assert len(errors) == 0
+
+    # TODO verify docs
+
+    # SG delete all docs
+    for doc_id in all_doc_ids:
+        doc = sg_client.get_doc(url=sg_url, db=sg_db, doc_id=doc_id, auth=sg_user_auth)
+        deleted = sg_client.delete_doc(url=sg_url, db=sg_db, doc_id=doc_id, rev=doc['_rev'], auth=sg_user_auth)
+        log_info(deleted)
+
+    # TODO: verify that SDK can't see tombstones
+
+    # Recreate all docs
+    for doc_id in sg_doc_ids:
+        sg_bulk_docs_resp = sg_client.add_bulk_docs(url=sg_url, db=sg_db, docs=sg_doc_bodies, auth=sg_user_auth)
+        assert len(sg_bulk_docs_resp) == num_docs_per_client
+
+    # TODO: Test purge
 
 
 @pytest.mark.sanity
