@@ -1,6 +1,4 @@
 [%hardbreaks]
-
-= Mobile-testkit 
 :toc: left
 :toclevels: 3
 
