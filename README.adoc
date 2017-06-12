@@ -305,8 +305,8 @@ docker exec -it mobile-testkit /bin/bash
 
 NOTE: This has only been tested on Mac OSX
 
-. Install VirtualBox - https://www.virtualbox.org/wiki/Downloads
-. Install Vagrant - https://www.vagrantup.com/downloads.html
+. https://www.virtualbox.org/wiki/Downloads[Install VirtualBox]
+. https://www.vagrantup.com/downloads.html[Install Vagrant]
 . `cd` into `vagrant/private_network` (or `vagrant/public_network` if you need VM's exposed to LAN, for example when testing against actual mobile devices)
 
 Create cluster with private network
@@ -415,7 +415,7 @@ Make sure you have installed expvarmon
 go get github.com/divan/expvarmon
 ```
 
-To monitor the Gateload expvars for [load_generators] nodes in the cluster_config 
+To monitor the Gateload expvars for `[load_generators]` nodes in the cluster_config 
 ```
 python libraries/utilities/monitor_gateload.py
 ```
@@ -488,7 +488,7 @@ python testsuites/syncgateway/performance/run_perf_test.py --number-pullers 1000
 
 The scenarios can run on Android stock emulators/Genymotion emulators and devices.
 
-If you're running Android stock emulators you should make sure they are using HAXM. Follow the instructions here to install (https://software.intel.com/en-us/android/articles/installation-instructions-for-intel-hardware-accelerated-execution-manager-mac-os-x).
+If you're running Android stock emulators you should make sure they are using HAXM. Follow the instructions here to install https://software.intel.com/en-us/android/articles/installation-instructions-for-intel-hardware-accelerated-execution-manager-mac-os-x[HAXM].
 
 Ensure the RAM allocated to your combined running emulators is less than the total allocated to HAXM. You can configure the RAM for your emulator images in the Android Virtual Device Manager and in HAXM by reinstalling via the .dmg in the android sdk folder.
  
@@ -598,7 +598,7 @@ Save as `resources/cluster_configs/windows`
 NOTE: Do not publish or check this inventory file in. If you do, anyone could potentially access your machine.
 
 - Download and execute this in the windows target PowerShell (Run as Administrator)
-[ConfigureRemotingForAnsible.ps1](https://raw.githubusercontent.com/ansible/ansible/devel/examples/scripts/ConfigureRemotingForAnsible.ps1)
+https://raw.githubusercontent.com/ansible/ansible/devel/examples/scripts/ConfigureRemotingForAnsible.ps1[ConfigureRemotingForAnsible.ps1]
 ```
 .\ConfigureRemotingForAnsible.ps1 -SkipNetworkProfileCheck
 ```
