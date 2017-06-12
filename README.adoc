@@ -417,7 +417,7 @@ To monitor the Gateload expvars for `[load_generators]` nodes in the cluster_con
 python libraries/utilities/monitor_gateload.py
 ```
 
-To monitor the sync_gateway expvars for [sync_gateways] nodes in the cluster_config 
+To monitor the sync_gateway expvars for `[sync_gateways]` nodes in the cluster_config 
 ```
 python libraries/utilities/monitor_sync_gateway.py
 ```
