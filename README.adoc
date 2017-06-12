@@ -122,7 +122,7 @@ Now PyCharm should recognize the custom libraries and provide intellisense.
 The listener tests are a series of tests utilizing Couchbase Lite Listener and Sync Gateway or P2P. They are meant to be cross platform and should be able to run for
 for all the platforms that expose the Listener (Mac OSX, .NET, Android, iOS)
 
-### Dependencies
+=== Dependencies
 
 Android SDK. Download [Android Studio](http://developer.android.com/sdk/index.html) to install
 
@@ -154,16 +154,13 @@ however devices are supported as long the sync_gateway and the android device ca
 
 Make sure to set up vm cluster [Spin Up Machines on Vagrant](#spin-up-machines-on-vagrant)
 
-### Listener Test Excecution (Client + Client (P2P))
-================================
+=== Listener Test Excecution (Client + Client (P2P))
 
 [Running Tests](testsuites/listener/shared/client_client/README.md) 
 
-### Listener Test Excecution (Client + SG)
-================================
+=== Listener Test Excecution (Client + SG)
 
 [Running Tests](testsuites/listener/shared/client_sg/README.md) 
-
 
 == Sync Gateway Tests
 
@@ -185,7 +182,7 @@ Then you will need an AWS keypair. [This guide](http://docs.aws.amazon.com/AWSEC
     $ touch .boto
     $ vi .boto
     ```
-    #### IMPORTANT: Do not check in the information below
+    NOTE: Do not check in the information below
 
 - Add your AWS credentials (Below are a fake example).
     ```
@@ -283,7 +280,7 @@ ssh-add ~/.ssh/sample_key
 [Running Functional Tests](testsuites/syncgateway/functional/tests/README.md) 
 
 
-### Spin Up Machines on Docker
+=== Spin Up Machines on Docker
 
 IMPORTANT: This will copy your public / and private key to allow ssh access from mobile-testkit container to other clusters in the container.
 
@@ -510,7 +507,7 @@ emulator-5554          device product:sdk_google_phone_x86 model:Android_SDK_bui
 
 Most of the port forwarding will be set up via instantiation of the Listener. However, you do need to complete some additional steps.
 
-**Note:** Instantiating a Listener in `test_listener_rest.py` will automatically forward the port the listener is running on to one on localhost. However, that port forwarding will not be bound on the local IP of your computer. This can be useful when combining actual devices and emulators. The following section describes how to make the emulators reachable from devices.
+NOTE: Instantiating a Listener in `test_listener_rest.py` will automatically forward the port the listener is running on to one on localhost. However, that port forwarding will not be bound on the local IP of your computer. This can be useful when combining actual devices and emulators. The following section describes how to make the emulators reachable from devices.
 
 Once you have emulators and possibly port forwarding setup, set the `P2P_APP` environment variable to the `.apk` of the application to be tested.
 
@@ -520,7 +517,7 @@ $ export P2P_APP=/path/to/apk
 
 If the test fails with a hostname unreachable error then it's probably because port forwarding needs to be configured (read section below).
 
-### Port forwarding (setup once)
+=== Port forwarding (setup once)
 
 Add the following lines to the file `/etc/sysctl.conf`
 ```
