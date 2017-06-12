@@ -5,6 +5,8 @@ import time
 
 import pytest
 from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ProcessPoolExecutor
+from concurrent.futures import as_completed
 from couchbase.bucket import Bucket
 from couchbase.exceptions import KeyExistsError, NotFoundError
 from requests.exceptions import HTTPError
@@ -1094,6 +1096,106 @@ def test_document_resurrection(params_from_base_test_setup, sg_conf_name, deleti
         assert len(sg_bulk_docs_resp) == num_docs_per_client
 
     # TODO: Test purge
+
+
+@pytest.mark.sanity
+@pytest.mark.syncgateway
+@pytest.mark.xattrs
+@pytest.mark.changes
+@pytest.mark.session
+@pytest.mark.parametrize('sg_conf_name, number_users, number_docs_per_user', [
+    ('xattrs/no_import', 1, 1),
+    ('xattrs/no_import', 100, 10),
+    ('xattrs/no_import', 10, 10000),
+    ('xattrs/no_import', 100, 1000),
+])
+def test_on_demand_doc_processing(params_from_base_test_setup, sg_conf_name, number_users, number_docs_per_user):
+    """
+    1. Start Sync Gateway with autoimport disabled, this will force on-demand processing
+    1. Create 100 users (user_0, user_1, ...) on Sync Gateway each with their own channel (user_0_chan, user_1_chan, ...)
+    1. Load 'number_doc_per_user' with channels specified to each user from SDK
+    1. Make sure the docs are imported via GET /db/doc and POST _bulk_get
+    """
+    
+    cluster_conf = params_from_base_test_setup['cluster_config']
+    cluster_topology = params_from_base_test_setup['cluster_topology']
+    mode = params_from_base_test_setup['mode']
+    xattrs_enabled = params_from_base_test_setup['xattrs_enabled']
+
+    cbs_url = cluster_topology['couchbase_servers'][0]
+    sg_admin_url = cluster_topology['sync_gateways'][0]['admin']
+    sg_url = cluster_topology['sync_gateways'][0]['public']
+
+    bucket_name = 'data-bucket'
+    sg_db = 'db'
+    cbs_host = host_for_url(cbs_url)
+
+    # This test should only run when using xattr meta storage
+    if not xattrs_enabled:
+        pytest.skip('XATTR tests require --xattrs flag')
+
+    # Reset cluster
+    sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
+    cluster = Cluster(config=cluster_conf)
+    cluster.reset(sg_config_path=sg_conf)
+
+    log_info("Number of users: {}".format(number_users))
+    log_info("Number of docs per user: {}".format(number_docs_per_user))
+ 
+    # Initialize clients
+    sg_client = MobileRestClient()
+    sdk_client = Bucket('couchbase://{}/{}'.format(cbs_host, bucket_name), password='password')
+    sdk_client.timeout = 90
+
+    # Create Sync Gateway user
+    auth_dict = {}
+    docs_to_add = {}
+    all_doc_ids = []
+    user_names = ['user_{}'.format(i) for i in range(number_users)]
+
+    for user_name in user_names:
+        user_channels = ['{}_chan'.format(user_name)]
+        sg_client.create_user(url=sg_admin_url, db=sg_db, name=user_name, password='pass', channels=user_channels)
+        auth_dict[user_name] = sg_client.create_session(url=sg_admin_url, db=sg_db, name=user_name, password='pass')
+        docs = document.create_docs('{}_doc'.format(user_name), number=number_docs_per_user, channels=user_channels)
+        for doc in docs:
+            docs_to_add[doc['_id']] = doc
+
+    assert len(docs_to_add) == number_users * number_docs_per_user
+
+    # Add the docs via
+    log_info('Adding docs via SDK ...')
+    sdk_client.upsert_multi(docs_to_add)
+
+    all_doc_ids = docs_to_add.keys()
+    assert len(docs_to_add) == number_users * number_docs_per_user
+
+    # issue _bulk_get
+    with ProcessPoolExecutor() as ppe:
+
+        user_gets = {}
+
+        # Start issuing bulk_gets concurrently
+        for user_name in user_names:
+            user_doc_ids = ['{}_doc_{}'.format(user_name, i) for i in range(number_docs_per_user)]
+            future = ppe.submit(
+                sg_client.get_bulk_docs,
+                url=sg_url,
+                db=sg_db,
+                doc_ids=user_doc_ids,
+                auth=auth_dict[user_name]
+            )
+            user_gets[future] = user_name
+
+        for future in as_completed(user_gets):
+            docs, errors = future.result()
+            log_info(future.result())
+            assert len(docs) == number_docs_per_user
+            assert len(errors) == 0
+            log_info('Docs found for user ({}): {}'.format(user_name, len(docs)))
+
+    import pdb
+    pdb.set_trace()
 
 
 @pytest.mark.sanity
