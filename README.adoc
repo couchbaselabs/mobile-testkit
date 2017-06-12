@@ -165,7 +165,7 @@ link:testsuites/listener/shared/client_sg/README.md[Running Tests]
 
 == Sync Gateway Tests
 
-=== Dependencies
+=== Sync Gateway Test Dependencies
 
 The sync_gateway tests require targeting different cluster topologies of sync_gateway(s) + Couchbase Server(s). Don't worry! We will set this up for you. There are two options for these cluster nodes. You can use EC2 AWS instances or vms.
 
@@ -177,32 +177,33 @@ You will need an access key and secret access key. http://docs.aws.amazon.com/AW
 
 Then you will need an AWS keypair. http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-key-pairs.html#how-to-generate-your-own-key-and-import-it-to-aws[The EC2 keypairs guide] explains how to import your own Key Pair to Amazon EC2. Mobile-testkit creates a key-pair in the us-east region so the key pair must be set on this region too.
 
-. Add boto configuration
-    
-    ```
-    $ cd ~/ 
-    $ touch .boto
-    $ vi .boto
-    ```
-    NOTE: Do not check in the information below
+* Add boto configuration
 
-. Add your AWS credentials (Below are a fake example).
+```
+$ cd ~/ 
+$ touch .boto
+$ vi .boto
+```
 
-    ```
-    [Credentials]
-    aws_access_key_id = CDABGHEFCDABGHEFCDAB
-    aws_secret_access_key = ABGHEFCDABGHEFCDABGHEFCDABGHEFCDABGHEFCDAB
-    ```
+NOTE: Do not check in the information below
 
-. Add AWS env variables
+* Add your AWS credentials (Below are a fake example).
 
-    ```
-    $ export AWS_ACCESS_KEY_ID=CDABGHEFCDABGHEFCDAB
-    $ export AWS_SECRET_ACCESS_KEY=ABGHEFCDABGHEFCDABGHEFCDABGHEFCDABGHEFCDAB
-    $ export AWS_KEY=<your-aws-keypair-name>
-    ```
+```
+[Credentials]
+aws_access_key_id = CDABGHEFCDABGHEFCDAB
+aws_secret_access_key = ABGHEFCDABGHEFCDABGHEFCDABGHEFCDABGHEFCDAB
+```
 
-You probably want to persist these in your `~/.bash_profile`.
+* Add AWS env variables
+
+```
+$ export AWS_ACCESS_KEY_ID=CDABGHEFCDABGHEFCDAB
+$ export AWS_SECRET_ACCESS_KEY=ABGHEFCDABGHEFCDABGHEFCDABGHEFCDABGHEFCDAB
+$ export AWS_KEY=<your-aws-keypair-name>
+```
+
+You probably want to persist these in your `.bash_profile` 
 
 The sync_gateway tests use https://www.ansible.com/[Ansible] to provision the clusters.  
 
@@ -221,15 +222,15 @@ This is the list of machines that is used to generate the resources/cluster_conf
 
 ==== Create a pool.json of endpoints you would like to target (IPs or AWS ec2 endpoints)
 
-- Rename resources/pool.json.example -> resources/pool.json. Update the fake ips with your endpoints or EC2 endpoints.
-- If you do not have IP endpoints and would like to use Vagrant (easiest), see <<Spin up Machines on Vagrant>>
-- If you do not have IP endpoints and would like to use AWS, see <<Spin up Machines on AWS>>
-- Make sure you have at least 4 unique endpoints
-- If you are using vms and do not have key access for ssh, you can use the key installer script (Not required for AWS). This will target 'resources/pool.json' and attempt to deploy a public key of your choice to the machines.
+* Rename `resources/pool.json.example` to `resources/pool.json`. Update the fake ips with your endpoints or EC2 endpoints.
+* If you do not have IP endpoints and would like to use Vagrant, see <<Spin Up Machines on Vagrant>>
+* If you do not have IP endpoints and would like to use AWS, see <<Spin Up Machines on AWS>>
+* Make sure you have at least 4 unique endpoints
+* If you are using vms and do not have key access for ssh, you can use the key installer script (Not required for AWS). This will target 'resources/pool.json' and attempt to deploy a public key of your choice to the machines.
 
 In order to use Ansible, the controller needs to have it's SSH keys in all the hosts that it's connecting to.  
 
-Follow the instructions in [Docker container SSH key instructions](https://github.com/couchbaselabs/mobile-testkit/wiki/Docker-Container---SSH-Keys) to setup keys in Docker
+Follow the instructions in https://github.com/couchbaselabs/mobile-testkit/wiki/Docker-Container---SSH-Keys[Docker container SSH key instructions] to setup keys in Docker
 
 ```
 python libraries/utilities/install_keys.py --public-key-path=~/.ssh/id_rsa.pub --ssh-user=root
@@ -260,7 +261,7 @@ $ python libraries/provision/provision_cluster.py \
 - OR Install sync_gateway source:
 
 Since building Sync Gateway from source requires access to the private sync-gateway-accel repo, you will need to
-be in possession of the appropriate [SSH key](http://cbmobile-sharedkeys.s3.amazonaws.com/cbmobile_private_repo_read_only).
+be in possession of the appropriate http://cbmobile-sharedkeys.s3.amazonaws.com/cbmobile_private_repo_read_only[SSH key].
 See `install-gh-deploy-keys.py` for more info.
 
 ```
@@ -316,8 +317,9 @@ Create cluster with private network
     - This will discover running vagrant boxes and get their ips
     - Generate `resources/pool.json`
     - Generate `resources/cluster_configs/`
-. Create an ssh key. `cd ~/.ssh/ && ssh-keygen`
+. Create an ssh key. `cd <home-dir>/.ssh/ && ssh-keygen`
 . Make sure you have PasswordAuthentication set on each vagrant instance
+
 ```
 cd vagrant/private_network/ && vagrant ssh host1
 $ [root@localhost vagrant]# sudo bash
@@ -335,6 +337,7 @@ PasswordAuthentication yes
 $ [root@localhost vagrant]# service sshd restart
 $ Redirecting to /bin/systemctl restart  sshd.service
 ```
+
 Do the same for rests of the hosts in the `Vagrantfile`
 
 1. Install the ssh key into the machines via 
@@ -365,7 +368,7 @@ Enjoy! You now have a Couchbase Server + Sync Gateway cluster running on your ma
 
 === Spin Up Machines on AWS
 
-1. Create and AWS CloudFormation Stack. Make sure you have set up AWS credentials described in [sync_gateway Test Dependencies](#sync_gateway-Test-Dependencies)
+1. Create and AWS CloudFormation Stack. Make sure you have set up AWS credentials described in <<Sync Gateway Test Dependencies>>
 
 ```
 $ python libraries/provision/create_and_instantiate_cluster.py \
@@ -405,7 +408,7 @@ pytest --pdb
 
 == Monitoring
 
-**Monitoring Clusters**
+=== Monitoring Clusters
 
 Make sure you have installed expvarmon 
 ```
@@ -422,7 +425,7 @@ To monitor the sync_gateway expvars for [sync_gateways] nodes in the cluster_con
 python libraries/utilities/monitor_sync_gateway.py
 ```
 
-**Collecting Sync Gateway logs**
+=== Collecting Sync Gateway logs
 
 ```
 $ python libraries/utilities/fetch_sg_logs.py
@@ -438,9 +441,9 @@ pytest libraries/provision/test_install_sync_gateway.py
 
 == sync_gateway Perf Tests
 
-**Running Performance Tests**
+=== Running Performance Tests
 
-- [Spin up a AWS CloudFormation stack](#Spin=Up-Machines-on-AWS)
+- <<Spin Up Machines on AWS>>
 
 - Generate a pool.json
 
