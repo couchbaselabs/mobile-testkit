@@ -1,4 +1,6 @@
 [%hardbreaks]
+
+= Mobile-testkit 
 :toc: left
 :toclevels: 3
 
@@ -9,10 +11,7 @@ $ git clone https://github.com/couchbaselabs/mobile-testkit.git
 $ cd mobile-testkit/
 ```
 
-
-
 == Repo Structure
-
 
 The repo structure is the following:
 
