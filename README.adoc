@@ -29,7 +29,7 @@ The repo structure is the following:
 
 == Repo Dependencies
 
-## Setup Controller on OSX
+=== Setup Controller on OSX
 
 The "controller" is the machine that runs the tests and communicates with the system under test, which is typically:
 
