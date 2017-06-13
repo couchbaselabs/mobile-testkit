@@ -3,10 +3,14 @@ using System.Threading.Tasks;
 
 using Couchbase.Lite;
 using Couchbase.Lite.Support;
+using Couchbase.Lite.Logging;
 
 using Xunit;
 using Couchbase.Lite.Sync;
 using System.Diagnostics;
+using System.Collections.Generic;
+using System.Reflection;
+using System.Linq;
 
 namespace Testkit.Net.Tests
 {
@@ -22,6 +26,16 @@ namespace Testkit.Net.Tests
             _scenarioRuntimeMinutes = scenarioRuntimeMinutes;
 
             NetDestkop.Activate();
+            Log.SetLiteCoreLogLevels(new Dictionary<string, Log.LogLevel>
+            {
+                ["Sync"] = Log.LogLevel.Verbose,
+                ["DB"] = Log.LogLevel.Verbose,
+                ["SQL"] = Log.LogLevel.Verbose,
+            });
+
+            var nativeClass = Type.GetType("LiteCore.Interop.NativePrivate, Couchbase.Lite");
+            var method = nativeClass.GetTypeInfo().DeclaredMethods.Where((arg) => arg.Name == "c4log_warnOnErrors").First();
+            method.Invoke(null, new object[] { true });
 
             _db = new Database("in-for-the-long-haul");
 
