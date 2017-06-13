@@ -103,7 +103,10 @@ def test_view_backfill_for_deletes(params_from_base_test_setup, sg_conf_name, va
         assert len(deleted_docs_in_changes) == num_docs / 2
 
         # All deleted docs should show up in the changes feed
-        assert deleted_doc_ids == deleted_docs_in_changes
+        for doc_id in deleted_docs_in_changes:
+            assert doc_id in deleted_doc_ids
+            deleted_doc_ids.remove(doc_id)
+        assert len(deleted_doc_ids) == 0
 
     # Restart Sync Gateway
     sg_controller = SyncGateway()
