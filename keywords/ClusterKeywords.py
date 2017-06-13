@@ -14,6 +14,8 @@ from keywords.SyncGateway import (verify_sg_accel_version,
 from keywords.utils import (log_info, log_r, version_and_build,
                             version_is_binary, compare_versions)
 from libraries.testkit.cluster import Cluster
+from utilities.cluster_config_utils import is_load_balancer_defined
+from utilities.cluster_config_utils import get_load_balancer_ip
 
 
 class ClusterKeywords:
@@ -47,13 +49,16 @@ class ClusterKeywords:
         log_info("Unsetting CLUSTER_CONFIG")
         del os.environ["CLUSTER_CONFIG"]
 
-    def get_cluster_topology(self, cluster_config):
+    def get_cluster_topology(self, cluster_config, lb_enable=False):
         """
         Returns a dictionary of cluster endpoints that will be consumable
           ${sg1} = cluster["sync_gateways"][0]["public"]
           ${sg1_admin} = cluster["sync_gateways"][0]["admin"]
           ${ac1} = cluster["sg_accels"][0]
           ${cbs} = cluster["couchbase_servers"][0]
+
+          Setting lb_enable to True will restore the existing behavior
+          install_nginx sets it to True to get the SG_IPs for the nginx.conf
         """
 
         with open("{}.json".format(cluster_config)) as f:
@@ -61,10 +66,24 @@ class ClusterKeywords:
 
         sg_urls = []
 
-        for sg in cluster["sync_gateways"]:
-            public = "http://{}:4984".format(sg["ip"])
-            admin = "http://{}:4985".format(sg["ip"])
-            sg_urls.append({"public": public, "admin": admin})
+        # Get load balancer IP
+        lb_ip = None
+        if is_load_balancer_defined(cluster_config) and not lb_enable:
+            # If load balancer is defined,
+            # Switch all SG URLs to that of load balancer
+            lb_ip = get_load_balancer_ip(cluster_config)
+
+            for sg in cluster["sync_gateways"]:
+                public = "http://{}:4984".format(lb_ip)
+                admin = "http://{}:4985".format(lb_ip)
+                sg_urls.append({"public": public, "admin": admin})
+
+            log_info("Using load balancer IP as the SG IP: {}".format(sg_urls))
+        else:
+            for sg in cluster["sync_gateways"]:
+                public = "http://{}:4984".format(sg["ip"])
+                admin = "http://{}:4985".format(sg["ip"])
+                sg_urls.append({"public": public, "admin": admin})
 
         ac_urls = ["http://{}:4985".format(sga["ip"]) for sga in cluster["sg_accels"]]
         lbs_urls = ["http://{}".format(lb["ip"]) for lb in cluster["load_balancers"]]

@@ -87,3 +87,23 @@ def is_xattrs_enabled(cluster_config):
 
     cluster = load_cluster_config_json(cluster_config)
     return cluster["environment"]["xattrs_enabled"]
+
+
+def is_load_balancer_defined(cluster_config):
+    """ Loads cluster config to see if load balancers are defined """
+    cluster = load_cluster_config_json(cluster_config)
+
+    num_lbs = len(cluster["load_balancers"])
+
+    if num_lbs < 1:
+        return False
+
+    return True
+
+
+def get_load_balancer_ip(cluster_config):
+    """ Loads cluster config to fetch load balancer ip """
+    cluster = load_cluster_config_json(cluster_config)
+
+    lb_ip = cluster["load_balancers"][0]["ip"]
+    return lb_ip

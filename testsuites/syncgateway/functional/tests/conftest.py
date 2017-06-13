@@ -12,6 +12,8 @@ from keywords.utils import check_xattr_support, log_info, version_is_binary
 from libraries.NetworkUtils import NetworkUtils
 from libraries.testkit import cluster
 from utilities.cluster_config_utils import persist_cluster_config_environment_prop
+from utilities.cluster_config_utils import is_load_balancer_defined
+from utilities.cluster_config_utils import get_load_balancer_ip
 
 
 # Add custom arguments for executing tests in this directory
@@ -54,6 +56,10 @@ def pytest_addoption(parser):
                      action="store_true",
                      help="If set, will enable SSL communication between server and Sync Gateway")
 
+    parser.addoption("--sg-lb",
+                     action="store_true",
+                     help="If set, will enable load balancer for Sync Gateway")
+
 
 # This will be called once for the at the beggining of the execution in the 'tests/' directory
 # and will be torn down, (code after the yeild) when all the test session has completed.
@@ -73,6 +79,7 @@ def params_from_base_suite_setup(request):
     race_enabled = request.config.getoption("--race")
     cbs_ssl = request.config.getoption("--server-ssl")
     xattrs_enabled = request.config.getoption("--xattrs")
+    sg_lb = request.config.getoption("--sg-lb")
 
     if xattrs_enabled and version_is_binary(sync_gateway_version):
         check_xattr_support(server_version, sync_gateway_version)
@@ -83,6 +90,7 @@ def params_from_base_suite_setup(request):
     log_info("skip_provisioning: {}".format(skip_provisioning))
     log_info("race_enabled: {}".format(race_enabled))
     log_info("xattrs_enabled: {}".format(xattrs_enabled))
+    log_info("sg_lb: {}".format(sg_lb))
 
     # Make sure mode for sync_gateway is supported ('cc' or 'di')
     validate_sync_gateway_mode(mode)
@@ -94,6 +102,14 @@ def params_from_base_suite_setup(request):
     else:
         log_info("Using 'base_{}' config!".format(mode))
         cluster_config = "{}/base_{}".format(CLUSTER_CONFIGS_DIR, mode)
+
+    # Get load balancer IP
+    lb_ip = None
+    if not is_load_balancer_defined(cluster_config):
+        raise ProvisioningError("At least one load balancer has to be defined in {}".format(cluster_config))
+    else:
+        lb_ip = get_load_balancer_ip(cluster_config)
+        log_info("Load balancer IP: {}".format(lb_ip))
 
     if cbs_ssl:
         log_info("Running tests with cbs <-> sg ssl enabled")
