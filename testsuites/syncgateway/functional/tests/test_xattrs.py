@@ -1145,7 +1145,7 @@ def test_on_demand_doc_processing(params_from_base_test_setup, sg_conf_name, num
     # Initialize clients
     sg_client = MobileRestClient()
     sdk_client = Bucket('couchbase://{}/{}'.format(cbs_host, bucket_name), password='password')
-    sdk_client.timeout = 90
+    sdk_client.timeout = 600
 
     # Create Sync Gateway user
     auth_dict = {}
@@ -1189,7 +1189,6 @@ def test_on_demand_doc_processing(params_from_base_test_setup, sg_conf_name, num
 
         for future in as_completed(user_gets):
             docs, errors = future.result()
-            log_info(future.result())
             assert len(docs) == number_docs_per_user
             assert len(errors) == 0
             log_info('Docs found for user ({}): {}'.format(user_name, len(docs)))
