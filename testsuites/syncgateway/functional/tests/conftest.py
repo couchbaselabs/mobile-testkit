@@ -12,7 +12,6 @@ from keywords.utils import check_xattr_support, log_info, version_is_binary
 from libraries.NetworkUtils import NetworkUtils
 from libraries.testkit import cluster
 from utilities.cluster_config_utils import persist_cluster_config_environment_prop
-from utilities.cluster_config_utils import is_load_balancer_defined
 from utilities.cluster_config_utils import get_load_balancer_ip
 
 
@@ -95,21 +94,25 @@ def params_from_base_suite_setup(request):
     # Make sure mode for sync_gateway is supported ('cc' or 'di')
     validate_sync_gateway_mode(mode)
 
-    # use base_cc cluster config if mode is "cc" or base_di cluster config if more is "di"
+    # use base_(lb_)cc cluster config if mode is "cc" or base_(lb_)di cluster config if more is "di"
     if ci:
-        log_info("Using 'ci_{}' config!".format(mode))
         cluster_config = "{}/ci_{}".format(CLUSTER_CONFIGS_DIR, mode)
+        if sg_lb:
+            cluster_config = "{}/ci_lb_{}".format(CLUSTER_CONFIGS_DIR, mode)
     else:
-        log_info("Using 'base_{}' config!".format(mode))
         cluster_config = "{}/base_{}".format(CLUSTER_CONFIGS_DIR, mode)
+        if sg_lb:
+            cluster_config = "{}/base_lb_{}".format(CLUSTER_CONFIGS_DIR, mode)
 
-    # Get load balancer IP
-    lb_ip = None
-    if not is_load_balancer_defined(cluster_config):
-        raise ProvisioningError("At least one load balancer has to be defined in {}".format(cluster_config))
+    log_info("Using '{}' config!".format(cluster_config))
+
+    # Add load balancer prop and check if load balancer IP is available
+    if sg_lb:
+        persist_cluster_config_environment_prop(cluster_config, 'sg_lb_enabled', True)
+        log_info("Running tests with load balancer enabled: {}".format(get_load_balancer_ip(cluster_config)))
     else:
-        lb_ip = get_load_balancer_ip(cluster_config)
-        log_info("Load balancer IP: {}".format(lb_ip))
+        log_info("Running tests with load balancer disabled")
+        persist_cluster_config_environment_prop(cluster_config, 'sg_lb_enabled', False)
 
     if cbs_ssl:
         log_info("Running tests with cbs <-> sg ssl enabled")

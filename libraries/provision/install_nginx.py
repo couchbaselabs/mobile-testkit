@@ -21,7 +21,8 @@ def install_nginx(cluster_config):
     """
 
     cluster = ClusterKeywords()
-    topology = cluster.get_cluster_topology(cluster_config, lb_enable=True)
+    # Set lb_enable to False to get the actual SG IPs for nginx.conf
+    topology = cluster.get_cluster_topology(cluster_config, lb_enable=False)
 
     # Get sync_gateway enpoints from cluster_config
     #  and build a string of upstream server definitions

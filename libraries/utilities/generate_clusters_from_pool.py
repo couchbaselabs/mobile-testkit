@@ -359,6 +359,7 @@ def write_config(config, pool_file):
         f.write("\n\n[environment]\n")
         f.write("cbs_ssl_enabled=False\n")
         f.write("xattrs_enabled=False\n")
+        f.write("sg_lb_enabled=False\n")
 
         log_info("Generating {}.json".format(config.name))
 
@@ -372,7 +373,8 @@ def write_config(config, pool_file):
             "load_balancers": load_balancers,
             "environment": {
                 "cbs_ssl_enabled": False,
-                "xattrs_enabled": False
+                "xattrs_enabled": False,
+                "sg_lb_enabled": False
             }
         }
 
@@ -401,10 +403,14 @@ def generate_clusters_from_pool(pool_file):
 
     cluster_confs = [
 
-        ClusterDef("base_cc", num_sgs=1, num_acs=0, num_cbs=1, num_lgs=0, num_lbs=0),
+        ClusterDef("base_cc", num_sgs=3, num_acs=0, num_cbs=1, num_lgs=0, num_lbs=1),
         ClusterDef("base_di", num_sgs=1, num_acs=1, num_cbs=1, num_lgs=0, num_lbs=0),
         ClusterDef("ci_cc", num_sgs=1, num_acs=0, num_cbs=3, num_lgs=0, num_lbs=0),
         ClusterDef("ci_di", num_sgs=1, num_acs=2, num_cbs=3, num_lgs=0, num_lbs=0),
+        ClusterDef("base_lb_cc", num_sgs=3, num_acs=0, num_cbs=1, num_lgs=0, num_lbs=1),
+        ClusterDef("base_lb_di", num_sgs=3, num_acs=1, num_cbs=1, num_lgs=0, num_lbs=1),
+        ClusterDef("ci_lb_cc", num_sgs=3, num_acs=0, num_cbs=3, num_lgs=0, num_lbs=1),
+        ClusterDef("ci_lb_di", num_sgs=3, num_acs=3, num_cbs=3, num_lgs=0, num_lbs=1),
         ClusterDef("multiple_servers_cc", num_sgs=1, num_acs=0, num_cbs=3, num_lgs=0, num_lbs=0),
         ClusterDef("multiple_servers_di", num_sgs=1, num_acs=1, num_cbs=3, num_lgs=0, num_lbs=0),
         ClusterDef("multiple_sg_accels_di", num_sgs=1, num_acs=3, num_cbs=1, num_lgs=0, num_lbs=0),

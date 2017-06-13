@@ -13,7 +13,7 @@ from libraries.testkit.admin import Admin
 from libraries.testkit.config import Config
 from libraries.testkit.sgaccel import SgAccel
 from libraries.testkit.syncgateway import SyncGateway
-from utilities.cluster_config_utils import is_load_balancer_defined
+from utilities.cluster_config_utils import is_load_balancer_enabled
 from utilities.cluster_config_utils import get_load_balancer_ip
 
 
@@ -41,7 +41,7 @@ class Cluster:
 
         # Get load balancer IP
         lb_ip = None
-        if is_load_balancer_defined(self._cluster_config):
+        if is_load_balancer_enabled(self._cluster_config):
             # If load balancer is defined,
             # Switch all SG URLs to that of load balancer
             lb_ip = get_load_balancer_ip(self._cluster_config)
