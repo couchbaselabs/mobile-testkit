@@ -4,9 +4,11 @@ import random
 import time
 
 import pytest
+import concurrent.futures
 from concurrent.futures import ThreadPoolExecutor
 from concurrent.futures import ProcessPoolExecutor
 from concurrent.futures import as_completed
+
 from couchbase.bucket import Bucket
 from couchbase.exceptions import KeyExistsError, NotFoundError
 from requests.exceptions import HTTPError
@@ -1103,20 +1105,20 @@ def test_document_resurrection(params_from_base_test_setup, sg_conf_name, deleti
 @pytest.mark.xattrs
 @pytest.mark.changes
 @pytest.mark.session
-@pytest.mark.parametrize('sg_conf_name, number_users, number_docs_per_user', [
-    ('xattrs/no_import', 1, 1),
-    ('xattrs/no_import', 100, 10),
-    ('xattrs/no_import', 10, 10000),
-    ('xattrs/no_import', 100, 1000),
+@pytest.mark.parametrize('sg_conf_name, number_users, number_docs_per_user, number_of_updates_per_user', [
+    ('xattrs/no_import', 1, 1, 10),
+    ('xattrs/no_import', 100, 10, 10),
+    ('xattrs/no_import', 10, 1000, 10),
+    ('xattrs/no_import', 100, 10000, 2),
 ])
-def test_on_demand_doc_processing(params_from_base_test_setup, sg_conf_name, number_users, number_docs_per_user):
+def test_on_demand_doc_processing(params_from_base_test_setup, sg_conf_name, number_users, number_docs_per_user, number_of_updates_per_user):
     """
     1. Start Sync Gateway with autoimport disabled, this will force on-demand processing
     1. Create 100 users (user_0, user_1, ...) on Sync Gateway each with their own channel (user_0_chan, user_1_chan, ...)
     1. Load 'number_doc_per_user' with channels specified to each user from SDK
     1. Make sure the docs are imported via GET /db/doc and POST _bulk_get
     """
-    
+
     cluster_conf = params_from_base_test_setup['cluster_config']
     cluster_topology = params_from_base_test_setup['cluster_topology']
     mode = params_from_base_test_setup['mode']
@@ -1141,7 +1143,8 @@ def test_on_demand_doc_processing(params_from_base_test_setup, sg_conf_name, num
 
     log_info("Number of users: {}".format(number_users))
     log_info("Number of docs per user: {}".format(number_docs_per_user))
- 
+    log_info("Number of update per user: {}".format(number_of_updates_per_user))
+
     # Initialize clients
     sg_client = MobileRestClient()
     sdk_client = Bucket('couchbase://{}/{}'.format(cbs_host, bucket_name), password='password')
@@ -1150,14 +1153,18 @@ def test_on_demand_doc_processing(params_from_base_test_setup, sg_conf_name, num
     # Create Sync Gateway user
     auth_dict = {}
     docs_to_add = {}
-    all_doc_ids = []
     user_names = ['user_{}'.format(i) for i in range(number_users)]
+
+    def update_props():
+        return {
+            'updates': 0
+        }
 
     for user_name in user_names:
         user_channels = ['{}_chan'.format(user_name)]
         sg_client.create_user(url=sg_admin_url, db=sg_db, name=user_name, password='pass', channels=user_channels)
         auth_dict[user_name] = sg_client.create_session(url=sg_admin_url, db=sg_db, name=user_name, password='pass')
-        docs = document.create_docs('{}_doc'.format(user_name), number=number_docs_per_user, channels=user_channels)
+        docs = document.create_docs('{}_doc'.format(user_name), number=number_docs_per_user, channels=user_channels, prop_generator=update_props)
         for doc in docs:
             docs_to_add[doc['_id']] = doc
 
@@ -1167,13 +1174,13 @@ def test_on_demand_doc_processing(params_from_base_test_setup, sg_conf_name, num
     log_info('Adding docs via SDK ...')
     sdk_client.upsert_multi(docs_to_add)
 
-    all_doc_ids = docs_to_add.keys()
     assert len(docs_to_add) == number_users * number_docs_per_user
 
     # issue _bulk_get
     with ProcessPoolExecutor() as ppe:
 
         user_gets = {}
+        user_writes = {}
 
         # Start issuing bulk_gets concurrently
         for user_name in user_names:
@@ -1187,12 +1194,39 @@ def test_on_demand_doc_processing(params_from_base_test_setup, sg_conf_name, num
             )
             user_gets[future] = user_name
 
-        for future in as_completed(user_gets):
+        # Wait for all futures complete
+        for future in concurrent.futures.as_completed(user_gets):
+            user = user_gets[future]
             docs, errors = future.result()
             assert len(docs) == number_docs_per_user
             assert len(errors) == 0
-            log_info('Docs found for user ({}): {}'.format(user_name, len(docs)))
+            log_info('Docs found for user ({}): {}'.format(user, len(docs)))
 
+        # Start concurrent updates from Sync Gateway side
+        for user_name in user_names:
+            log_info('Starting concurrent updates!')
+            user_doc_ids = ['{}_doc_{}'.format(user_name, i) for i in range(number_docs_per_user)]
+            assert len(user_doc_ids) == number_docs_per_user
+            # Start updating from sync gateway for completed user
+            write_future = ppe.submit(
+                update_sg_docs,
+                client=sg_client,
+                url=sg_url,
+                db=sg_db,
+                docs_to_update=user_doc_ids,
+                prop_to_update='updates',
+                number_updates=number_of_updates_per_user,
+                auth=auth_dict[user_name]
+            )
+            user_writes[write_future] = user
+
+        for future in concurrent.futures.as_completed(user_writes):
+            user = user_writes[future]
+            # This will bubble up exceptions
+            future.result()
+            log_info('Update complete for user: {}'.format(user))
+
+    # Verify updates on SDK
     import pdb
     pdb.set_trace()
 
