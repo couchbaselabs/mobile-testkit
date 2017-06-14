@@ -4,11 +4,13 @@
 # $3 = mode 'cc' or 'di'
 # $4 = xattrs flag (--xattrs)
 # $5 = Couchbase Server version
-# $6 = Sync Gateway version
-# $7 = test filter -k "test_pattern"
-# $8 = Suite to run (ex. testsuites/syncgateway/functional/tests)
+# $6 = sg lb flag (--sg-lb)
+# $7 = Sync Gateway version
+# $8 = test filter -k "test_pattern"
+# $9 = Suite to run (ex. testsuites/syncgateway/functional/tests)
 
-if [ $# -ne 8 ]
+
+if [ $# -ne 9 ]
   then
     echo "Did not find all expected args. Please look in the script to see what is required."
     echo "Exiting ..."
@@ -33,4 +35,4 @@ pip install -r requirements.txt
 python libraries/utilities/generate_clusters_from_pool.py
 
 # Run tests (--ci)
-pytest --ci $2 --mode=$3 $4 --server-version=$5 --sync-gateway-version=$6 $7 $8
+pytest --ci $2 --mode=$3 $4 --server-version=$5 $6 --sync-gateway-version=$7 $8 $9
