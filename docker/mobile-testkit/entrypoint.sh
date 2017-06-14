@@ -4,7 +4,7 @@
 # $3 = mode 'cc' or 'di'
 # $4 = xattrs flag (--xattrs)
 # $5 = Couchbase Server version
-# $6 = sg lb flag
+# $6 = sg lb flag (--sg-lb)
 # $7 = Sync Gateway version
 # $8 = test filter -k "test_pattern"
 # $9 = Suite to run (ex. testsuites/syncgateway/functional/tests)
