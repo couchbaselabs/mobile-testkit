@@ -12,7 +12,6 @@
 if [ $# -ne 9 ]
   then
     echo "Did not find all expected args. Please look in the script to see what is required."
-    echo $#
     echo "Exiting ..."
     exit 1
 fi
