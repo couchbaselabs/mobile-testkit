@@ -11,7 +11,6 @@ from keywords.exceptions import ProvisioningError
 
 from libraries.testkit import cluster
 from utilities.cluster_config_utils import persist_cluster_config_environment_prop
-from utilities.cluster_config_utils import get_load_balancer_ip
 
 
 # This will be called once for the at the beggining of the execution of each .py file
@@ -47,10 +46,6 @@ def params_from_base_suite_setup(request):
     # use base_cc cluster config if mode is "cc" or base_di cluster config if more is "di"
     cluster_config = "{}/multiple_sync_gateways_{}".format(constants.CLUSTER_CONFIGS_DIR, mode)
     sg_config = sync_gateway_config_path_for_mode("sync_gateway_default_functional_tests", mode)
-
-    # Disable load balancer
-    log_info("Running tests with load balancer disabled")
-    persist_cluster_config_environment_prop(cluster_config, 'sg_lb_enabled', False)
 
     if cbs_ssl:
         log_info("Running tests with cbs <-> sg ssl enabled")
