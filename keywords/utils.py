@@ -107,6 +107,7 @@ def hostname_for_url(cluster_config, url):
     endpoints = cluster["sg_accels"]
     endpoints.extend(cluster["sync_gateways"])
     endpoints.extend(cluster["couchbase_servers"])
+    endpoints.extend(cluster["load_balancers"])
 
     logging.debug(endpoints)
 
