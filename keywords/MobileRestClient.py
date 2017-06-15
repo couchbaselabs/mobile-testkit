@@ -1019,7 +1019,7 @@ class MobileRestClient:
         purged_docs = []
         for doc in docs:
 
-            log_info("Purging doc: {}".format(doc))
+            log_info("Purging doc: {}".format(doc["id"]))
             if server_type == ServerType.syncgateway:
                 data = {
                     doc["_id"]: ['*']

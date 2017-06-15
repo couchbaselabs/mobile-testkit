@@ -228,7 +228,7 @@ class CouchbaseServer:
     def _create_internal_rbac_bucket_user(self, bucketname):
         # Create user with username=bucketname and assign role
         # bucket_admin and cluster_admin
-        roles = "cluster_admin,bucket_admin[{}]".format(bucketname)
+        roles = "ro_admin,bucket_full_access[{}]".format(bucketname)
         password = 'password'
 
         data_user_params = {
