@@ -244,6 +244,8 @@ def test_webhooks_crud(params_from_base_test_setup, sg_conf_name, filtered):
     webhook_server.clear_data()
 
     # Update sdk docs from sg
+    # If xattr mode, update sdk docs from sg, update sg docs from SDK
+    # If non xattr mode, update sg docs from sg
     updated_doc_content = {'brian': 'eno'}
     update_docs(
         sg_client=sg_client,
