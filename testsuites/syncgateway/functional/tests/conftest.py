@@ -181,8 +181,11 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     test_name = request.node.name
 
     if sg_lb:
-        if "online" in test_name or "offline" in test_name:
-            pytest.skip("Skipping online/offline tests with load balancer")
+        # These tests target one SG node
+        skip_tests = ['online', 'offline', 'log_rotation', 'openidconnect']
+        for test in skip_tests:
+            if test in test_name:
+                pytest.skip("Skipping online/offline tests with load balancer")
 
     log_info("Running test '{}'".format(test_name))
     log_info("cluster_config: {}".format(cluster_config))
