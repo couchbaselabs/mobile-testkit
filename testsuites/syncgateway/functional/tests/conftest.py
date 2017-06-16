@@ -156,7 +156,8 @@ def params_from_base_suite_setup(request):
         "cluster_config": cluster_config,
         "cluster_topology": cluster_topology,
         "mode": mode,
-        "xattrs_enabled": xattrs_enabled
+        "xattrs_enabled": xattrs_enabled,
+        "sg_lb": sg_lb
     }
 
     log_info("Tearing down 'params_from_base_suite_setup' ...")
@@ -175,8 +176,14 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     cluster_topology = params_from_base_suite_setup["cluster_topology"]
     mode = params_from_base_suite_setup["mode"]
     xattrs_enabled = params_from_base_suite_setup["xattrs_enabled"]
+    sg_lb = params_from_base_suite_setup["sg_lb"]
 
     test_name = request.node.name
+
+    if sg_lb:
+        if "online" in test_name or "offline" in test_name:
+            pytest.skip("Skipping online/offline tests with load balancer")
+
     log_info("Running test '{}'".format(test_name))
     log_info("cluster_config: {}".format(cluster_config))
     log_info("cluster_topology: {}".format(cluster_topology))
