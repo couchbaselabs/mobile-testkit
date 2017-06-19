@@ -380,8 +380,13 @@ $ python libraries/provision/create_and_instantiate_cluster.py \
     --lb-type="m3.medium" 
 ```
 
-Wait until the resources are up, then create the `pool.json` file by hand according to instructions above.
+1. Generate `pool.json` file
 
+Replace **YourCloudFormationStack** with the actual cloudformation stack name used.
+
+```
+python libraries/provision/generate_pools_json_from_aws.py --stackname YourCloudFormationStack --targetfile resources/pool.json
+```
 
 == Debugging
 
