@@ -33,7 +33,6 @@ def test_channels_view_after_restart(params_from_base_test_setup, sg_conf_name):
     cluster_config = params_from_base_test_setup['cluster_config']
     topology = params_from_base_test_setup['cluster_topology']
     mode = params_from_base_test_setup['mode']
-    sg_lb = params_from_base_test_setup['sg_lb']
 
     sg_url = topology['sync_gateways'][0]['public']
     sg_admin_url = topology['sync_gateways'][0]['admin']
@@ -83,7 +82,7 @@ def test_channels_view_after_restart(params_from_base_test_setup, sg_conf_name):
     expvars = client.get_expvars(url=sg_admin_url)
 
     # Only check the view querys if in channel cache mode
-    if mode == 'cc' and not sg_lb:
+    if mode == 'cc':
         log_info('Looking for view queries == 1 in expvars')
         assert expvars['syncGateway_changeCache']['view_queries'] == 1
 

@@ -198,8 +198,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         "cluster_config": cluster_config,
         "cluster_topology": cluster_topology,
         "mode": mode,
-        "xattrs_enabled": xattrs_enabled,
-        "sg_lb": sg_lb
+        "xattrs_enabled": xattrs_enabled
     }
 
     # Code after the yield will execute when each test finishes
