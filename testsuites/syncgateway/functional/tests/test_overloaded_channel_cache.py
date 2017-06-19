@@ -109,7 +109,7 @@ def test_overloaded_channel_cache(params_from_base_test_setup, sg_conf_name, num
             end = time.time()
             time_for_users_to_get_all_changes = end - start
             log_info("Time for users to get all changes: {}".format(time_for_users_to_get_all_changes))
-            assert time_for_users_to_get_all_changes < 120, "Time to get all changes was greater than a minute: {}s".format(
+            assert time_for_users_to_get_all_changes < 240, "Time to get all changes was greater than 2 minutes: {}s".format(
                 time_for_users_to_get_all_changes
             )
 

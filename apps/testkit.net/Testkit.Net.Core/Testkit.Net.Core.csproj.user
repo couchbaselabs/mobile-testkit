@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup Condition=" '$(RunConfiguration)' == 'Default' ">
+    <StartAction>Project</StartAction>
+    <StartArguments>--replication-endpoint "blip://localhost:4984/db" --runtime-min 380</StartArguments>
+    <EnvironmentVariables>
+      <Variable name="LiteCoreLogSync" value="Verbose" xmlns="" />
+      <Variable name="LiteCoreLogDb" value="Verbose" xmlns="" />
+      <Variable name="LiteCoreLogSQL" value="Verbose" xmlns="" />
+    </EnvironmentVariables>
+  </PropertyGroup>
+</Project>
