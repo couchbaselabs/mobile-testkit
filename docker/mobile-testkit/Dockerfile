@@ -47,7 +47,7 @@ RUN sed -i 's/remote_user = vagrant/remote_user = root/' ansible.cfg
 
 # set python env
 ENV PYTHONPATH=/opt/mobile-testkit/
-ENV ANSIBLE_CONFIG=/opt/ansible.cfg/
+ENV ANSIBLE_CONFIG=/opt/mobile-testkit/ansible.cfg
 
 # Cop test runner script to repo
 COPY ./entrypoint.sh /opt/mobile-testkit
