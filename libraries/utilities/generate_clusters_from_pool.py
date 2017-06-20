@@ -483,7 +483,7 @@ def generate_clusters_from_pool(pool_file, use_docker):
 if __name__ == "__main__":
     usage = """
     usage:
-    python generate_clusters_from_pool.py or 
+    python generate_clusters_from_pool.py or
     python generate_clusters_from_pool.py --use-docker
     """
 
