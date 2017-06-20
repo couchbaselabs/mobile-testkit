@@ -23,7 +23,7 @@
             "bucket":"data-bucket",
             "username":"data-bucket",
             "password": "password",
-             "users":{
+            "users":{
                 "GUEST":{
                     "disabled":true,
                     "admin_channels":[
