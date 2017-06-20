@@ -106,13 +106,14 @@ def test_get_buckets_from_sync_gateway_config_no_buckets():
           "databases":{
             "db":{
               "server":"walrus:",
-              "foo": {
-                  "disabled":false,
-                  "admin_channels": [
-                  "*"
-                  ],
-                  "password": "bar"
-              }
+              "users":{
+                "foo": {
+                    "disabled":false,
+                    "admin_channels": [
+                    "*"
+                    ],
+                    "password": "bar"
+                }
               },
               "allow_empty_password":true
             }
