@@ -71,6 +71,9 @@ class ClusterKeywords:
         if is_load_balancer_enabled(cluster_config) and lb_enable:
             # If load balancer is defined,
             # Switch all SG URLs to that of load balancer
+            # lb_enable can be used to override the behavior of adding lb IPs
+            # even if load balancer is enabled
+            # install_nginx sets it to False to get the SG_IPs for the nginx.conf
             lb_ip = get_load_balancer_ip(cluster_config)
 
             for sg in cluster["sync_gateways"]:
