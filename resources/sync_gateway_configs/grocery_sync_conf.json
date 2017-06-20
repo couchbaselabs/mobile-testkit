@@ -6,7 +6,11 @@
 			"sync": `
 function(doc){
 	channel(doc.channels);
-}`
+}`,
+			"users": {
+			    "GUEST": {"disabled": false, "admin_channels": ["*"]}
+			}
+
 		}
 
 	}

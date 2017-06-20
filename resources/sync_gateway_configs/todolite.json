@@ -12,6 +12,9 @@
       "bucket":"data-bucket",
       "username":"data-bucket",
       "password": "password",
+      "users": {
+        "GUEST": {"disabled": true}
+      },
       "sync": `
 function(doc, oldDoc) {
   // NOTE this function is the same across the iOS, Android, and PhoneGap versions.

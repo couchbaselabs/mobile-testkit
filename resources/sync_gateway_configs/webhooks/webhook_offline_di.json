@@ -28,6 +28,7 @@
             "sync": `function(doc){
                   channel(doc.channels);
                 }`,
+            "users": {"GUEST": {"disabled": false, "admin_channels": ["*"] }},
             "event_handlers": {
                "document_changed":[{
                    "handler": "webhook",
