@@ -40,7 +40,7 @@ def test_generate_clusters_from_pool_ips(cleanup_folder, cluster_conf, num_couch
     cluster_config_dir = test_data + "/cluster_configs/"
 
     # Run tests with mock_pool_ips.json for backward compatibility
-    generate_clusters_from_pool(ips_pool_file)
+    generate_clusters_from_pool(ips_pool_file, False)
 
     # Verification
     # mock_pool_ips.json will generate 38 files ansible+json
@@ -88,7 +88,7 @@ def test_generate_clusters_from_pool_ip_to_node(cleanup_folder, cluster_conf, nu
     cluster_config_dir = test_data + "/cluster_configs/"
 
     # Run tests with mock_pool_ips.json for backward compatibility
-    generate_clusters_from_pool(ip_to_node_type_pool_file)
+    generate_clusters_from_pool(ip_to_node_type_pool_file, False)
 
     # Verification
     # mock_pool_ip_to_node_type.json will generate 42 ansible+json
