@@ -28,7 +28,12 @@ class ClusterDef:
         )
 
 
-def write_config(config, pool_file):
+def write_config(config, pool_file, use_docker):
+
+    connection_string = ""
+    if use_docker:
+        connection_string = "ansible_connection=docker"
+
     ips, ip_to_node_type = get_hosts(pool_file)
     ip_to_node_type_len = len(ip_to_node_type)
     ip_to_node_type_defined = False
@@ -41,8 +46,7 @@ def write_config(config, pool_file):
         log_warn("WARNING: Skipping config {} since {} machines required, but only {} provided".format(
             config.name,
             config.num_machines_required(),
-            len(ips))
-        )
+            len(ips)))
         return
 
     if ip_to_node_type_len > 0:
@@ -69,7 +73,7 @@ def write_config(config, pool_file):
         f.write("[pool]\n")
         count = 1
         for ip in ips:
-            f.write("ma{} ansible_host={}\n".format(count, ip))
+            f.write("ma{} ansible_host={} {}\n".format(count, ip, connection_string))
             hosts.append({
                 "name": "host{}".format(count),
                 "ip": ip
@@ -119,7 +123,7 @@ def write_config(config, pool_file):
             else:
                 ip = ips[i]
 
-            f.write("cb{} ansible_host={}\n".format(i + 1, ip))
+            f.write("cb{} ansible_host={} {}\n".format(i + 1, ip, connection_string))
             couchbase_servers.append({
                 "name": "cb{}".format(i + 1),
                 "ip": ip
@@ -156,8 +160,7 @@ def write_config(config, pool_file):
                 log_warn("WARNING: Skipping config {} since {} sync_gateways required, but only {} provided".format(
                     config.name,
                     config.num_sgs,
-                    len(sg_ips_to_remove))
-                )
+                    len(sg_ips_to_remove)))
 
                 # Sometimes the config file is partially generated, correct cbs but invalid sg etc.
                 log_warn("WARNING: Removing the partially generated config {}".format(config.name))
@@ -171,7 +174,7 @@ def write_config(config, pool_file):
             else:
                 ip = ips[i]
 
-            f.write("sg{} ansible_host={}\n".format(i + 1, ip))
+            f.write("sg{} ansible_host={} {}\n".format(i + 1, ip, connection_string))
             sync_gateways.append({
                 "name": "sg{}".format(i + 1),
                 "ip": ip
@@ -224,7 +227,7 @@ def write_config(config, pool_file):
             else:
                 ip = ips[i]
 
-            f.write("ac{} ansible_host={}\n".format(i + 1, ip))
+            f.write("ac{} ansible_host={} {}\n".format(i + 1, ip, connection_string))
             accels.append({
                 "name": "ac{}".format(i + 1),
                 "ip": ip
@@ -275,7 +278,7 @@ def write_config(config, pool_file):
             else:
                 ip = ips[i]
 
-            f.write("lg{} ansible_host={}\n".format(i + 1, ip))
+            f.write("lg{} ansible_host={} {}\n".format(i + 1, ip, connection_string))
             load_generators.append({
                 "name": "lg{}".format(i + 1),
                 "ip": ip
@@ -326,7 +329,7 @@ def write_config(config, pool_file):
             else:
                 ip = ips[i]
 
-            f.write("lb{} ansible_host={}\n".format(i + 1, ip))
+            f.write("lb{} ansible_host={} {}\n".format(i + 1, ip, connection_string))
             load_balancers.append({
                 "name": "lb{}".format(i + 1),
                 "ip": ip
@@ -352,7 +355,7 @@ def write_config(config, pool_file):
             s.close()
 
             log_info("webhook ip: {}".format(local_ip))
-            f.write("tf1 ansible_host={}".format(local_ip))
+            f.write("tf1 ansible_host={} {}".format(local_ip, connection_string))
         except Exception as e:
             log_error("Failed to find local_ip, webhook tests will fail.  Error: {}".format(e))
 
@@ -397,7 +400,7 @@ def get_hosts(pool_file="resources/pool.json"):
     return ips, ip_to_node_type
 
 
-def generate_clusters_from_pool(pool_file):
+def generate_clusters_from_pool(pool_file, use_docker):
 
     cluster_confs = [
 
@@ -472,14 +475,16 @@ def generate_clusters_from_pool(pool_file):
     for host in get_hosts(pool_file):
         print(host)
 
-    print("Generating 'resources/cluster_configs/'")
+    print("Generating 'resources/cluster_configs/'. Using docker: {}".format(use_docker))
     for cluster_conf in cluster_confs:
-        write_config(cluster_conf, pool_file)
+        write_config(cluster_conf, pool_file, use_docker)
 
 
 if __name__ == "__main__":
     usage = """
-    usage: python generate_clusters_from_pool.py"
+    usage:
+    python generate_clusters_from_pool.py or 
+    python generate_clusters_from_pool.py --use-docker
     """
 
     parser = OptionParser(usage=usage)
@@ -488,8 +493,10 @@ if __name__ == "__main__":
                       action="store", type="string", dest="pool_file", default="resources/pool.json",
                       help="path to pool.json file")
 
+    parser.add_option("-d", "--use-docker", action="store_true", dest="use_docker", default=False, help="Use docker connection with ansible")
+
     arg_parameters = sys.argv[1:]
 
     (opts, args) = parser.parse_args(arg_parameters)
 
-    generate_clusters_from_pool(opts.pool_file)
+    generate_clusters_from_pool(opts.pool_file, opts.use_docker)

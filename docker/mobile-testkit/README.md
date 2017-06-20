@@ -29,7 +29,7 @@ And then inside the docker container:
 ```
 # cp ansible.cfg.example ansible.cfg
 # sed -i 's/remote_user = vagrant/remote_user = root/' ansible.cfg
-# python libraries/utilities/generate_clusters_from_pool.py
+# python libraries/utilities/generate_clusters_from_pool.py --use-docker
 # pytest -s --mode=cc --server-version=4.6.1 --sync-gateway-version=1.4.0.2-3 testsuites/syncgateway/functional/tests
 ```
 

@@ -92,16 +92,6 @@ def create_cluster(network_name, number_of_nodes, public_key_path, dev, pull):
         # Connect running container to the network
         network.connect(container)
 
-        # Deploy public key to cluster containers
-        # HACK: Using subprocess here since docker-py does not support copy
-        log_info('Deploying key: {} to {}:/root/.ssh/authorized_users'.format(public_key_path, container_name))
-        subprocess.check_call([
-            'docker',
-            'cp',
-            public_key_path,
-            '{}:/root/.ssh/authorized_keys'.format(container_name)
-        ])
-
     # Write port map list if dev
     if dev:
         with open('portmaps.json', 'w') as port_map_file:

@@ -45,9 +45,6 @@ RUN cp ansible.cfg.example ansible.cfg
 # Set the correct default user
 RUN sed -i 's/remote_user = vagrant/remote_user = root/' ansible.cfg
 
-# Create .ssh directory for key installation
-RUN mkdir -p /root/.ssh
-
 # set python env
 ENV PYTHONPATH=/opt/mobile-testkit/
 ENV ANSIBLE_CONFIG=/opt/ansible.cfg/
