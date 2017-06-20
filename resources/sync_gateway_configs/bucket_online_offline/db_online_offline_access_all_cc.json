@@ -21,8 +21,7 @@
             "sync": `function(doc){
                   channel(doc.channels);
                 }`,
-            "offline":false,
-            "users": {"GUEST": {"disabled": false, "admin_channels": ["*"] }}
+            "offline":false
         }
     }
 }
