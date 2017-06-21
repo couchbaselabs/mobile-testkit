@@ -125,13 +125,10 @@ def test_document_resurrection(params_from_base_test_setup, sg_conf_name, deleti
         sdk_docs = {doc['_id']: doc for doc in sdk_doc_bodies}
         sdk_doc_ids = [doc['_id'] for doc in sdk_doc_bodies]
 
-        all_doc_ids = sg_doc_ids + sdk_doc_ids
-        assert len(all_doc_ids) == num_docs_per_client * 2
-
         log_info('Creating SDK docs')
         sdk_client.upsert_multi(sdk_docs)
 
-        all_doc_ids += sdk_doc_ids
+        all_doc_ids = sg_doc_ids + sdk_doc_ids
         assert len(all_doc_ids) == num_docs_per_client * 2
 
     if deletion_type == 'tombstone':
@@ -206,8 +203,6 @@ def test_document_resurrection(params_from_base_test_setup, sg_conf_name, deleti
     doc_ids_to_get = sg_doc_ids
     if xattrs_enabled:
         doc_ids_to_get = sg_doc_ids + sdk_doc_ids
-
-    # Get all docs via Sync Gateway 
     docs, errors = sg_client.get_bulk_docs(
         url=sg_url,
         db=sg_db,
@@ -218,25 +213,36 @@ def test_document_resurrection(params_from_base_test_setup, sg_conf_name, deleti
     if xattrs_enabled:
         assert len(docs) == num_docs_per_client * 2
         assert len(errors) == 0
-        all_docs_from_sdk = sdk_client.get_multi(doc_ids_to_get)
-
-        import pdb
-        pdb.set_trace()
-
     else:
         assert len(docs) == num_docs_per_client
         assert len(errors) == 0
 
+    if xattrs_enabled:
+        # Get SDK docs and makes sure all docs were recreated
+        all_docs_from_sdk = sdk_client.get_multi(doc_ids_to_get)
+        assert len(all_docs_from_sdk) == num_docs_per_client * 2
+        log_info('Found: {} recreated docs via SDK'.format(len(all_docs_from_sdk)))
+
+        # Make sure we are able to get recreated docs via SDK
+        doc_ids_to_get_scratch = list(doc_ids_to_get)
+        assert len(doc_ids_to_get_scratch) == num_docs_per_client * 2
+        for doc_id in all_docs_from_sdk:
+            doc_ids_to_get_scratch.remove(doc_id)
+        assert len(doc_ids_to_get_scratch) == 0
+
+    # Make sure we are able to get recreated docs via SDK
+    doc_ids_to_get_scratch = list(doc_ids_to_get)
+    assert len(doc_ids_to_get_scratch) == num_docs_per_client * 2
     for doc in docs:
         # Check that the doc has a rev generation of 3 (Create, Delete (Tombstone), Recreate)
         if deletion_type == 'purge':
             assert doc['_rev'].startswith('1-')
         else:
             assert doc['_rev'].startswith('3-')
-        doc_ids_to_get.remove(doc['_id'])
+        doc_ids_to_get_scratch.remove(doc['_id'])
 
     # Make sure all docs were found
-    assert len(doc_ids_to_get) == 0
+    assert len(doc_ids_to_get_scratch) == 0
 
 
 def verify_sg_deletes(sg_client, sg_url, sg_db, expected_deleted_ids, sg_auth):
