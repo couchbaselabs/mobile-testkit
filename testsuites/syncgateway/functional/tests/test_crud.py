@@ -25,47 +25,47 @@ from libraries.testkit.cluster import Cluster
 ])
 def test_document_resurrection(params_from_base_test_setup, sg_conf_name, deletion_type):
     """
-    Scenario:
+    Scenarios:
 
     Doc meta mode / tombstone
-    1. Create docs (set A) via Sync Gateway
-    1. Delete docs (set A) via Sync Gateway
-    1. Verify docs (set A) are deleted via Sync Gateway
-    1. Create docs (set A) via Sync Gateway
-    1. Verify revs (set A) are generation 3 via Sync Gateway
+    - Create docs (set A) via Sync Gateway
+    - Delete docs (set A) via Sync Gateway
+    - Verify docs (set A) are deleted via Sync Gateway
+    - Create docs (set A) via Sync Gateway
+    - Verify revs (set A) are generation 3 via Sync Gateway
 
     Doc meta mode / purge
-    1. Create docs (set A) via Sync Gateway
-    1. Purge docs (set A) via Sync Gateway
-    1. Verify docs (set A) are deleted via Sync Gateway
-    1. Create docs (set A) via Sync Gateway
-    1. Verify revs (set A) are generation 1 via Sync Gateway
+    - Create docs (set A) via Sync Gateway
+    - Purge docs (set A) via Sync Gateway
+    - Verify docs (set A) are deleted via Sync Gateway
+    - Create docs (set A) via Sync Gateway
+    - Verify revs (set A) are generation 1 via Sync Gateway
 
     XATTRs / tombstone
-    1. Create docs (set A) via Sync Gateway
-    1. Create docs (set B) via SDK
-    1. Delete SDK docs (set B) via Sync Gateway
-    1. Delete SG docs (set A) via SDK
-    1. Verify docs (set B) are deleted via Sync Gateway
-    1. Verify docs (set B) are deleted via SDK
-    1. Verify docs (set A) are deleted via Sync Gateway
-    1. Verify docs (set A) are deleted via SDK
-    1. Create docs (set A) via Sync Gateway
-    1. Create docs (set B) via SDK
-    1. Verify revs (set A, B) are generation 3 via Sync Gateway
+    - Create docs (set A) via Sync Gateway
+    - Create docs (set B) via SDK
+    - Delete SDK docs (set B) via Sync Gateway
+    - Delete SG docs (set A) via SDK
+    - Verify docs (set B) are deleted via Sync Gateway
+    - Verify docs (set B) are deleted via SDK
+    - Verify docs (set A) are deleted via Sync Gateway
+    - Verify docs (set A) are deleted via SDK
+    - Create docs (set A) via Sync Gateway
+    - Create docs (set B) via SDK
+    - Verify revs (set A, B) are generation 3 via Sync Gateway
 
-     XATTRs / purge
-    1. Create docs (set A) via Sync Gateway
-    1. Create docs (set B) via SDK
-    1. Purge SDK docs (set B) via Sync Gateway
-    1. Delete SG docs (set A) via SDK
-    1. Verify docs (set B) are deleted via Sync Gateway
-    1. Verify docs (set B) are deleted via SDK
-    1. Verify docs (set A) are deleted via Sync Gateway
-    1. Verify docs (set A) are deleted via SDK
-    1. Create docs (set A) via Sync Gateway
-    1. Create docs (set B) via SDK
-    1. Verify revs (set A, B) are generation 1 via Sync Gateway
+    XATTRs / purge
+    - Create docs (set A) via Sync Gateway
+    - Create docs (set B) via SDK
+    - Purge SDK docs (set B) via Sync Gateway
+    - Delete SG docs (set A) via SDK
+    - Verify docs (set B) are deleted via Sync Gateway
+    - Verify docs (set B) are deleted via SDK
+    - Verify docs (set A) are deleted via Sync Gateway
+    - Verify docs (set A) are deleted via SDK
+    - Create docs (set A) via Sync Gateway
+    - Create docs (set B) via SDK
+    - Verify revs (set A, B) are generation 1 via Sync Gateway
 
     """
     cluster_conf = params_from_base_test_setup['cluster_config']
