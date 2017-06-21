@@ -22,8 +22,7 @@
                     if (doc.channels[0] == "channel-0") {
                         channel([doc.channels,"channel_x"]);
                     } }`,
-            "offline":false,
-            "users": {"GUEST": {"disabled": false, "admin_channels": ["*"] }}
+            "offline":false
         }
     }
 }

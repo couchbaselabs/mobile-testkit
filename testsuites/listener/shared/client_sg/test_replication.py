@@ -554,7 +554,7 @@ def test_multiple_replications_created_with_unique_properties(setup_client_syncg
 @pytest.mark.session
 def test_replication_with_session_cookie(setup_client_syncgateway_test):
     """Regression test for https://github.com/couchbase/couchbase-lite-android/issues/817
-    1. SyncGateway Config with guest disabled = true and One user added (e.g. user1 / 1234)
+    1. SyncGateway Config with One user added (e.g. user1 / 1234)
     2. Create a new session on SGW for the user1 by using POST /_session.
        Capture the SyncGatewaySession cookie from the set-cookie in the response header.
     3. Start continuous push and pull replicator on the LiteServ with SyncGatewaySession cookie.
@@ -1067,7 +1067,7 @@ def test_verify_open_revs_with_revs_limit_push_conflict(setup_client_syncgateway
 @pytest.mark.session
 def test_replication_with_session_cookie_short_ttl(setup_client_syncgateway_test):
     """Regression test for https://github.com/couchbaselabs/mobile-testkit/issues/1110
-    1. SyncGateway Config with guest disabled = true and One user added (e.g. user1 / 1234)
+    1. SyncGateway Config with One user added (e.g. user1 / 1234)
     2. Create a new session on SGW for the user1 by using POST /_session.
        Capture the SyncGatewaySession cookie from the set-cookie in the response header.
     3. Start continuous push replicator on the LiteServ with SyncGatewaySession cookie.
