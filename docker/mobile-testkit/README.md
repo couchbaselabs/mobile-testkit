@@ -13,15 +13,17 @@ $ source setup.sh
 
 (cc / no xattrs)
 ```
-docker run --rm --privileged --name mobile-testkit --network=cbl -v $(pwd)/resources/pool.json:/opt/mobile-testkit/resources/pool.json -v $(pwd)/results/:/opt/mobile-testkit/results/ -v ~/.ssh/id_rsa:/root/.ssh/id_rsa couchbase/mobile-testkit ./entrypoint.sh feature/docker-jenkins-2 '' cc '' 4.6.2 1.4.1-3 '' testsuites/syncgateway/functional/tests
+docker run --rm --privileged --network=cbl --name mobile-testkit -v $(pwd):/opt/mobile-testkit -v $(pwd)/resources/pool.json:/opt/mobile-testkit/resources/pool.json -v /var/run/docker.sock:/var/run/docker.sock -v /usr/bin/docker:/usr/bin/docker couchbase/mobile-testkit /bin/bash ./entrypoint.sh master '' cc '' 4.6.2 1.4.1-3 '' testsuites/syncgateway/functional/tests
 ```
 
 ### Local Development with mobile-testkit
 
 Mount local dev environment for iterative development with docker backend. This way you can make changes in your /{user}/mobile-testkit repo and execute within the context of the container.
 
+Using 'docker in docker'
+
 ```
-$ docker run --privileged -it --network=cbl --name mobile-testkit -v $(pwd):/opt/mobile-testkit -v $(pwd)/resources/pool.json:/opt/mobile-testkit/resources/pool.json -v ~/.ssh/id_rsa:/root/.ssh/id_rsa couchbase/mobile-testkit /bin/bash
+$ docker run --privileged -it --network=cbl --name mobile-testkit -v $(pwd):/opt/mobile-testkit -v $(pwd)/resources/pool.json:/opt/mobile-testkit/resources/pool.json -v /var/run/docker.sock:/var/run/docker.sock -v /usr/bin/docker:/usr/bin/docker couchbase/mobile-testkit /bin/bash
 ```
 
 And then inside the docker container:
@@ -29,7 +31,7 @@ And then inside the docker container:
 ```
 # cp ansible.cfg.example ansible.cfg
 # sed -i 's/remote_user = vagrant/remote_user = root/' ansible.cfg
-# python libraries/utilities/generate_clusters_from_pool.py
+# python libraries/utilities/generate_clusters_from_pool.py --use-docker
 # pytest -s --mode=cc --server-version=4.6.1 --sync-gateway-version=1.4.0.2-3 testsuites/syncgateway/functional/tests
 ```
 

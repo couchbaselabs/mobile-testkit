@@ -136,7 +136,7 @@ def test_dcp_reshard_sync_gateway_comes_up(params_from_base_test_setup, sg_conf)
             log_info("{} Completed:".format(tag))
 
     # TODO better way to do this
-    time.sleep(60)
+    time.sleep(120)
 
     verify_changes(traun, expected_num_docs=6000, expected_num_revisions=0, expected_docs=traun.cache)
     verify_changes(seth, expected_num_docs=4000, expected_num_revisions=0, expected_docs=seth.cache)
