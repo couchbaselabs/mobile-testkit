@@ -1,7 +1,5 @@
 from __future__ import print_function
 
-import time
-
 import pytest
 from requests.exceptions import HTTPError
 from couchbase.exceptions import NotFoundError

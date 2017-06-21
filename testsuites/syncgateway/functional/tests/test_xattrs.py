@@ -4,10 +4,7 @@ import random
 import time
 
 import pytest
-import concurrent.futures
 from concurrent.futures import ThreadPoolExecutor
-from concurrent.futures import ProcessPoolExecutor
-from concurrent.futures import as_completed
 
 from couchbase.bucket import Bucket
 from couchbase.exceptions import KeyExistsError, NotFoundError
