@@ -47,8 +47,8 @@ def create_cluster(network_name, number_of_nodes, public_key_path, dev, pull):
     docker_client = docker.from_env()
 
     if pull:
-        log_info('Pulling sethrosetter/centos7-systemd-sshd image ...')
-        docker_client.images.pull('sethrosetter/centos7-systemd-sshd')
+        log_info('Pulling sethrosetter/centos7-systemd image ...')
+        docker_client.images.pull('sethrosetter/centos7-systemd')
 
         log_info('Pulling couchbase/mobile-testkit image ...')
         docker_client.images.pull('couchbase/mobile-testkit')
@@ -81,7 +81,7 @@ def create_cluster(network_name, number_of_nodes, public_key_path, dev, pull):
 
         # Priviledged is required for some ansible playbooks
         container = docker_client.containers.run(
-            'sethrosetter/centos7-systemd-sshd',
+            'sethrosetter/centos7-systemd',
             detach=True,
             name=container_name,
             privileged=True,
