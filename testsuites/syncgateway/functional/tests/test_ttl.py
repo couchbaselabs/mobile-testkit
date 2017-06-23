@@ -652,7 +652,8 @@ def test_rolling_ttl_expires(params_from_base_test_setup, sg_conf_name):
         sg_client=client,
         sg_admin_url=sg_url_admin,
         sg_db=sg_db,
-        xattrs_enabled=xattrs_enabled
+        xattrs_enabled=xattrs_enabled,
+        expected_rev=12
     )
 
     # doc_exp_10 should be available still
@@ -860,7 +861,7 @@ def test_setting_expiry_in_bulk_docs(params_from_base_test_setup, sg_conf_name):
 #    [Tags]  sanity  syncgateway  ttl
 #    [Documentation]
 
-def verify_doc_deletion_on_server(doc_id, sdk_client, sg_client, sg_admin_url, sg_db, xattrs_enabled=False):
+def verify_doc_deletion_on_server(doc_id, sdk_client, sg_client, sg_admin_url, sg_db, xattrs_enabled=False, expected_rev=2):
     # If xattrs, check that the doc is a tombstone
     # by getting the rev and "_deleted" prop via _raw
     # If sync gateway is using document meta data
@@ -871,7 +872,7 @@ def verify_doc_deletion_on_server(doc_id, sdk_client, sg_client, sg_admin_url, s
             db=sg_db,
             doc_id=doc_id,
         )
-        assert expired_raw_doc["_sync"]["rev"].startswith("2-")
+        assert expired_raw_doc["_sync"]["rev"].startswith("{}-".format(expected_rev))
         assert expired_raw_doc["_deleted"]
     else:
         with pytest.raises(NotFoundError) as nfe:
