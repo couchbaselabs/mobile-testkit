@@ -11,6 +11,7 @@ using System.Diagnostics;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Linq;
+using Microsoft.Extensions.Logging;
 
 namespace Testkit.Net.Tests
 {
@@ -26,11 +27,11 @@ namespace Testkit.Net.Tests
             _scenarioRuntimeMinutes = scenarioRuntimeMinutes;
 
             NetDestkop.Activate();
-            Log.SetLiteCoreLogLevels(new Dictionary<string, Log.LogLevel>
+            Log.SetLiteCoreLogLevels(new Dictionary<string, LogLevel>
             {
-                ["Sync"] = Log.LogLevel.Verbose,
-                ["DB"] = Log.LogLevel.Verbose,
-                ["SQL"] = Log.LogLevel.Verbose,
+                ["Sync"] = LogLevel.Debug,
+                ["DB"] = LogLevel.Debug,
+                ["SQL"] = LogLevel.Debug,
             });
 
             var nativeClass = Type.GetType("LiteCore.Interop.NativePrivate, Couchbase.Lite");
