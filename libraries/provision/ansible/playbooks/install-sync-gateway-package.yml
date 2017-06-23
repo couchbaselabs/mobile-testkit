@@ -1,16 +1,24 @@
 ---
 # Remove sync_gateway
 - hosts: sync_gateways:sg_accels
-  become: yes
 
   tasks:
   - include: tasks/remove-sync-gateway.yml
+    when: ansible_distribution == "CentOS"
+
+  - include: tasks/remove-sync-gateway-windows.yml
+    when: ansible_os_family == "Windows"
+
   - include: tasks/remove-sg-accel.yml
+    when: ansible_distribution == "CentOS"
+
   - include: tasks/clean-users.yml
+    when: ansible_distribution == "CentOS"
 
   # Check no sync_gateways or accels running
   - name: SYNC GATEWAY | verify no service on 4985
     wait_for: port=4985 delay=1 state=stopped
+    when: ansible_distribution == "CentOS"
 
 # Flush server buckets
 - hosts: couchbase_servers
@@ -35,16 +43,16 @@
 # Create sync_gateway user
 - hosts: sync_gateways
   any_errors_fatal: true
-  become: yes
   tasks:
   - include: tasks/create-sync-gateway-user.yml
+    when: ansible_distribution == "CentOS"
 
 # Create sg_accel user
 - hosts: sg_accels
   any_errors_fatal: true
-  become: yes
   tasks:
   - include: tasks/create-sg-accel-user.yml
+    when: ansible_distribution == "CentOS"
 
 # Download sync_gateway package
 - hosts: sync_gateways
@@ -57,9 +65,15 @@
     couchbase_server_primary_node: "{{ hostvars[groups.couchbase_servers[0]].ansible_host }}"
 
   tasks:
-  - debug: msg="Downloading sync_gateway v. {{ couchbase_sync_gateway_package_url }}"
-  - name: SYNC GATEWAY |  Download sync_gateway rpm
+  - name: SYNC GATEWAY |  Download sync_gateway rpm {{ couchbase_sync_gateway_package_url }}
     get_url: url={{ couchbase_sync_gateway_package_url }} dest=/tmp/{{ couchbase_sync_gateway_package }}
+    when: ansible_distribution == "CentOS"
+
+  - name: SYNC GATEWAY |  Download sync_gateway exe
+    {{ couchbase_sync_gateway_package | regex_replace('rpm', 'exe') }}
+    couchbase_sync_gateway_package_url: "{{ couchbase_sync_gateway_package_base_url }}/{{ couchbase_sync_gateway_package }}"
+    win_get_url: url={{ couchbase_sync_gateway_package_url }} dest=C:\Users\Administrator\AppData\Local\Temp\{{ couchbase_sync_gateway_package }}
+    when: ansible_os_family == "Windows"
 
 # Download sg accel package
 - hosts: sg_accels
@@ -72,14 +86,19 @@
     couchbase_server_primary_node: "{{ hostvars[groups.couchbase_servers[0]].ansible_host }}"
 
   tasks:
-  - debug: msg="Downloading sg_accel v. {{ couchbase_sg_accel_package_url }}"
-  - name: SYNC GATEWAY | Download sg_accel rpm
+  - name: SYNC GATEWAY | Download sg_accel rpm {{ couchbase_sg_accel_package_url }}
     get_url: url={{ couchbase_sg_accel_package_url }} dest=/tmp/{{ couchbase_sg_accel_package }}
+    when: ansible_distribution == "CentOS"
+
+  - name: SYNC GATEWAY | Download sg_accel exe
+    {{ couchbase_sg_accel_package | regex_replace('rpm', 'exe') }}
+    couchbase_sg_accel_package_url: "{{ couchbase_sync_gateway_package_base_url }}/{{ couchbase_sg_accel_package }}"
+    win_get_url: url={{ couchbase_sg_accel_package_url }} dest=/tmp/{{ couchbase_sg_accel_package }}
+    when: ansible_os_family == "Windows"
 
 # Deploy non writer sync_gateway configs
 - hosts: sync_gateways
   any_errors_fatal: true
-  become: yes
   vars:
     sync_gateway_config_filepath:
     couchbase_server_primary_node: "{{ hostvars[groups.couchbase_servers[0]].ansible_host }}"
@@ -91,7 +110,6 @@
 
 # Deploy sg_accel index writer configs
 - hosts: sg_accels
-  become: yes
   vars:
     sync_gateway_config_filepath:
     couchbase_server_primary_node: "{{ hostvars[groups.couchbase_servers[0]].ansible_host }}"
@@ -109,9 +127,11 @@
   # Install and start service
   - name: SYNC GATEWAY | Install sync_gateway rpm
     shell: rpm -i /tmp/{{ couchbase_sync_gateway_package }}
+    when: ansible_distribution == "CentOS"
 
   - name: SYNC GATEWAY | wait until sync gateway to listen on port
     wait_for: port=4985 timeout=120
+    when: ansible_distribution == "CentOS"
 
 # Install and launch sg_accel service
 - hosts: sg_accels
@@ -121,9 +141,12 @@
   # Install and start service
   - name: SYNC GATEWAY | Install sg_accel rpm
     shell: rpm -i /tmp/{{ couchbase_sg_accel_package }}
+    when: ansible_distribution == "CentOS"
 
   - name: SYNC GATEWAY | Start the service
     service: name=sg_accel state=started
+    when: ansible_distribution == "CentOS"
 
   - name: SYNC GATEWAY | wait for sg_accel to listen on port
     wait_for: port=4985 delay=2 timeout=120
+    when: ansible_distribution == "CentOS"

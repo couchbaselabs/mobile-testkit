@@ -1,0 +1,21 @@
+# Stop sync_gateway service
+- name: SG ACCEL | Stop sync_gateway_accel service
+  win_service: name=SyncGateway state=stopped
+  ignore_errors: yes
+
+# Remove sync_gateway package
+- name: SG ACCEL | Uninstall sync_gateway_accel exe
+  win_package:
+    name: Couchbase Sync Gateway
+    state: absent
+
+# Delete sync_gateway binary
+- name: SG ACCEL | Delete sync_gateway install directory
+  file: path=C:\PROGRA~2\Couchbase 
+  state: absent
+  ignore_errors: yes
+
+- name: SG ACCEL | Remove tmp logging dir (log rotation tests)
+  file: path=C:\Users\Administrator\AppData\Local\Temp\sg_logs
+  state: absent
+  ignore_errors: yes

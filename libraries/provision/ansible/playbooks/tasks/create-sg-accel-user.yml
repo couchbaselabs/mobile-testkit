@@ -1,9 +1,11 @@
 # Add sg_accel user
 - name: SG ACCEL | Create sg_accel user
+  become: yes
   user: name=sg_accel createhome=yes
 
 # Add tmp logging dir (Log Rotation testing)
 - name: SG ACCEL  | Create /tmp/sg_logs
+  become: yes
   file:
     path: /tmp/sg_logs
     state: directory
