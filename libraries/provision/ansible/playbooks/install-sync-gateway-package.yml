@@ -2,6 +2,11 @@
 # Remove sync_gateway
 - hosts: sync_gateways:sg_accels
 
+  vars:
+    couchbase_sync_gateway_package_base_url:
+    couchbase_sync_gateway_package:
+    couchbase_sync_gateway_package_url: "{{ couchbase_sync_gateway_package_base_url }}/{{ couchbase_sync_gateway_package }}"
+
   tasks:
   - include: tasks/remove-sync-gateway.yml
     when: ansible_distribution == "CentOS"
@@ -70,11 +75,9 @@
     when: ansible_distribution == "CentOS"
 
   - name: SYNC GATEWAY |  Download sync_gateway exe
-    {{ couchbase_sync_gateway_package | regex_replace('rpm', 'exe') }}
-    couchbase_sync_gateway_package_url: "{{ couchbase_sync_gateway_package_base_url }}/{{ couchbase_sync_gateway_package }}"
-    win_get_url: url={{ couchbase_sync_gateway_package_url }} dest=C:\Users\Administrator\AppData\Local\Temp\{{ couchbase_sync_gateway_package }}
+    win_get_url: url={{ couchbase_sync_gateway_package_url | regex_replace('(.*)rpm$', '\\1exe') }} dest="C:\Users\Administrator\AppData\Local\Temp\{{ couchbase_sync_gateway_package | regex_replace('(.*)rpm$', '\\1exe') }}"
     when: ansible_os_family == "Windows"
-
+  
 # Download sg accel package
 - hosts: sg_accels
   any_errors_fatal: true
@@ -86,14 +89,12 @@
     couchbase_server_primary_node: "{{ hostvars[groups.couchbase_servers[0]].ansible_host }}"
 
   tasks:
-  - name: SYNC GATEWAY | Download sg_accel rpm {{ couchbase_sg_accel_package_url }}
+  - name: SG Accel | Download sg_accel rpm {{ couchbase_sg_accel_package_url }}
     get_url: url={{ couchbase_sg_accel_package_url }} dest=/tmp/{{ couchbase_sg_accel_package }}
     when: ansible_distribution == "CentOS"
 
-  - name: SYNC GATEWAY | Download sg_accel exe
-    {{ couchbase_sg_accel_package | regex_replace('rpm', 'exe') }}
-    couchbase_sg_accel_package_url: "{{ couchbase_sync_gateway_package_base_url }}/{{ couchbase_sg_accel_package }}"
-    win_get_url: url={{ couchbase_sg_accel_package_url }} dest=/tmp/{{ couchbase_sg_accel_package }}
+  - name: SG Accel | Download sg_accel exe
+    win_get_url: url={{ couchbase_sg_accel_package_url | regex_replace('(.*)rpm$', '\\1exe') }} dest=/tmp/{{ couchbase_sg_accel_package | regex_replace('(.*)rpm$', '\\1exe') }}
     when: ansible_os_family == "Windows"
 
 # Deploy non writer sync_gateway configs
@@ -107,6 +108,10 @@
     is_index_writer: "false"
   tasks:
   - include: tasks/deploy-sync-gateway-config.yml
+    when: ansible_distribution == "CentOS"
+
+  - include: tasks/deploy-sync-gateway-config-windows.yml
+    when: ansible_os_family == "Windows"
 
 # Deploy sg_accel index writer configs
 - hosts: sg_accels
@@ -118,6 +123,10 @@
     is_index_writer: "true"
   tasks:
   - include: tasks/deploy-sg-accel-config.yml
+    when: ansible_distribution == "CentOS"
+
+  - include: tasks/deploy-sg-accel-config-windows.yml
+    when: ansible_os_family == "Windows"
 
 # Install and launch sync_gateway service
 - hosts: sync_gateways

@@ -1,21 +1,28 @@
 # Stop sync_gateway service
 - name: SYNC GATEWAY | Stop sync_gateway service
-  win_service: name=SyncGateway state=stopped
+  win_service: 
+    name: SyncGateway 
+    state: stopped
   ignore_errors: yes
 
 # Remove sync_gateway package
 - name: SYNC GATEWAY | Uninstall sync_gateway exe
   win_package:
     name: Couchbase Sync Gateway
+    path: "{{ couchbase_sync_gateway_package_url | regex_replace('rpm', 'exe') }}"
+    # product_id for 1.4.1 {D1AC3E57-6427-4847-8D70-A56B0370F3A8}
+    product_id: {D1AC3E57-6427-4847-8D70-A56B0370F3A8}
     state: absent
 
 # Delete sync_gateway binary
 - name: SYNC GATEWAY | Delete sync_gateway install directory
-  file: path=C:\PROGRA~2\Couchbase 
-  state: absent
+  win_file: 
+    path: C:\PROGRA~2\Couchbase 
+    state: absent
   ignore_errors: yes
 
 - name: SYNC GATEWAY | Remove tmp logging dir (log rotation tests)
-  file: path=C:\Users\Administrator\AppData\Local\Temp\sg_logs
-  state: absent
+  win_file: 
+    path: C:\Users\Administrator\AppData\Local\Temp\sg_logs
+    state: absent
   ignore_errors: yes
