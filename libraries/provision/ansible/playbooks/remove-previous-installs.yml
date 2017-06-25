@@ -9,19 +9,30 @@
 
   # Remove sync_gateway
   - include: tasks/remove-sync-gateway.yml
+    when: ansible_distribution == "CentOS"
 
   # Remove sync_gateway
+  - include: tasks/remove-sync-gateway-windows.yml
+    when: ansible_os_family == "Windows"
+
+  # Remove sg_accel
   - include: tasks/remove-sg-accel.yml
+    when: ansible_distribution == "CentOS"
+
+  - include: tasks/remove-sg-accel-windows.yml
+    when: ansible_os_family == "Windows"
 
   # Remove nginx
   - include: tasks/remove-nginx.yml
 
   # Delete sync_gateway and sg_accel uses
   - include: tasks/clean-users.yml
+    when: ansible_distribution == "CentOS"
 
   # Check no sync_gateways or accels running
   - name: ALL | verify no sg_accel or sgs are running on 4985
     wait_for: port=4985 delay=1 state=stopped
+    when: ansible_distribution == "CentOS"
 
   # Check no servers are running
   - name: ALL | verify no servers not listening on port 8081
