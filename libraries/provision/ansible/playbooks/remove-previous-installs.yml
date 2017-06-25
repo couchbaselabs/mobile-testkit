@@ -1,7 +1,6 @@
 ---
 - hosts: pool
   any_errors_fatal: true
-  become: yes
 
   tasks:
   # Remove Couchbase Server
