@@ -94,7 +94,27 @@
     when: ansible_distribution == "CentOS"
 
   - name: SG Accel | Download sg_accel exe
-    win_get_url: url={{ couchbase_sg_accel_package_url | regex_replace('(.*)rpm$', '\\1exe') }} dest=/tmp/{{ couchbase_sg_accel_package | regex_replace('(.*)rpm$', '\\1exe') }}
+    win_get_url: url={{ couchbase_sg_accel_package_url | regex_replace('(.*)rpm$', '\\1exe') }} dest="C:\Users\Administrator\AppData\Local\Temp\{{ couchbase_sg_accel_package | regex_replace('(.*)rpm$', '\\1exe') }}"
+    when: ansible_os_family == "Windows"
+
+# Install sync_gateway service
+- hosts: sync_gateways
+  any_errors_fatal: true
+  tasks:
+  - include: tasks/install-sg.yml
+    when: ansible_distribution == "CentOS"
+
+  - include: tasks/install-sg-windows.yml
+    when: ansible_os_family == "Windows"
+
+# Install sg_accel service
+- hosts: sg_accels
+  any_errors_fatal: true
+  tasks:
+  - include: tasks/install-sg-accel.yml
+    when: ansible_distribution == "CentOS"
+
+  - include: tasks/install-sg-accel-windows.yml
     when: ansible_os_family == "Windows"
 
 # Deploy non writer sync_gateway configs
@@ -127,35 +147,23 @@
 
   - include: tasks/deploy-sg-accel-config-windows.yml
     when: ansible_os_family == "Windows"
-
-# Install and launch sync_gateway service
+    
+# Launch sync_gateway service
 - hosts: sync_gateways
   any_errors_fatal: true
-  become: yes
   tasks:
-  # Install and start service
-  - name: SYNC GATEWAY | Install sync_gateway rpm
-    shell: rpm -i /tmp/{{ couchbase_sync_gateway_package }}
+  - include: tasks/start-sync-gateway.yml
     when: ansible_distribution == "CentOS"
 
-  - name: SYNC GATEWAY | wait until sync gateway to listen on port
-    wait_for: port=4985 timeout=120
-    when: ansible_distribution == "CentOS"
+  - include: tasks/start-sync-gateway-windows.yml
+    when: ansible_os_family == "Windows"
 
-# Install and launch sg_accel service
+# Launch sg_accel service
 - hosts: sg_accels
   any_errors_fatal: true
-  become: yes
   tasks:
-  # Install and start service
-  - name: SYNC GATEWAY | Install sg_accel rpm
-    shell: rpm -i /tmp/{{ couchbase_sg_accel_package }}
+  - include: tasks/start-sg-accel.yml
     when: ansible_distribution == "CentOS"
 
-  - name: SYNC GATEWAY | Start the service
-    service: name=sg_accel state=started
-    when: ansible_distribution == "CentOS"
-
-  - name: SYNC GATEWAY | wait for sg_accel to listen on port
-    wait_for: port=4985 delay=2 timeout=120
-    when: ansible_distribution == "CentOS"
+  - include: tasks/start-sg-accel-windows.yml
+    when: ansible_os_family == "Windows"

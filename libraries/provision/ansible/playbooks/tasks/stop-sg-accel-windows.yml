@@ -3,4 +3,4 @@
   win_service:
     name: SGAccel
     state: stopped
-
+    

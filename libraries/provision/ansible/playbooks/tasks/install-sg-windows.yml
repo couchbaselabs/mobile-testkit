@@ -1,0 +1,5 @@
+# Install and launch sync_gateway service
+- name: SYNC GATEWAY | Install sync_gateway exe
+  win_shell: C:\Users\Administrator\AppData\Local\Temp\{{ couchbase_sync_gateway_package | regex_replace('rpm', 'exe') }} /S /v /qn
+
+- include: stop-sync-gateway-windows.yml

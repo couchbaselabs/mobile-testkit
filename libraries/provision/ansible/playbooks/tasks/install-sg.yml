@@ -1,0 +1,6 @@
+# Install and launch sync_gateway service
+- name: SYNC GATEWAY | Install sync_gateway rpm
+  become: yes
+  shell: rpm -i /tmp/{{ couchbase_sync_gateway_package }}
+
+- include: stop-sync-gateway.yml
