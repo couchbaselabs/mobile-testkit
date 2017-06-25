@@ -1,5 +1,6 @@
 # Stop service
 - name: SG ACCEL | Stop sg_accel service on Windows
+  ignore_errors: yes
   win_service:
     name: SGAccel
     state: stopped

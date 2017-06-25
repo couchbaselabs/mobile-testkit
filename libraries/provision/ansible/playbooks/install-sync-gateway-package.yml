@@ -8,8 +8,23 @@
     couchbase_sync_gateway_package_url: "{{ couchbase_sync_gateway_package_base_url }}/{{ couchbase_sync_gateway_package }}"
 
   tasks:
+  - include: tasks/stop-sync-gateway.yml
+    when: ansible_distribution == "CentOS"
+
+  - include: tasks/stop-sync-gateway-windows.yml
+    when: ansible_os_family == "Windows"
+
+  - include: tasks/stop-sg-accel.yml
+    when: ansible_distribution == "CentOS"
+
+  - include: tasks/stop-sg-accel-windows.yml
+    when: ansible_os_family == "Windows"
+
   - include: tasks/remove-sync-gateway.yml
     when: ansible_distribution == "CentOS"
+
+  - include: tasks/remove-sg-accel-windows.yml
+    when: ansible_os_family == "Windows"
 
   - include: tasks/remove-sync-gateway-windows.yml
     when: ansible_os_family == "Windows"
@@ -74,8 +89,8 @@
     get_url: url={{ couchbase_sync_gateway_package_url }} dest=/tmp/{{ couchbase_sync_gateway_package }}
     when: ansible_distribution == "CentOS"
 
-  - name: SYNC GATEWAY |  Download sync_gateway exe
-    win_get_url: url={{ couchbase_sync_gateway_package_url | regex_replace('(.*)rpm$', '\\1exe') }} dest="C:\Users\Administrator\AppData\Local\Temp\{{ couchbase_sync_gateway_package | regex_replace('(.*)rpm$', '\\1exe') }}"
+  - name: SYNC GATEWAY |  Download sync_gateway exe {{ couchbase_sync_gateway_package_url | regex_replace('rpm', 'exe') }}
+    win_get_url: url={{ couchbase_sync_gateway_package_url | regex_replace('rpm', 'exe') }} dest="C:\Users\Administrator\AppData\Local\Temp\{{ couchbase_sync_gateway_package | regex_replace('(.*)rpm$', '\\1exe') }}"
     when: ansible_os_family == "Windows"
   
 # Download sg accel package
@@ -93,8 +108,8 @@
     get_url: url={{ couchbase_sg_accel_package_url }} dest=/tmp/{{ couchbase_sg_accel_package }}
     when: ansible_distribution == "CentOS"
 
-  - name: SG Accel | Download sg_accel exe
-    win_get_url: url={{ couchbase_sg_accel_package_url | regex_replace('(.*)rpm$', '\\1exe') }} dest="C:\Users\Administrator\AppData\Local\Temp\{{ couchbase_sg_accel_package | regex_replace('(.*)rpm$', '\\1exe') }}"
+  - name: SG Accel | Download sg_accel exe {{ couchbase_sg_accel_package_url | regex_replace('rpm', 'exe') }}
+    win_get_url: url={{ couchbase_sg_accel_package_url | regex_replace('rpm', 'exe') }} dest="C:\Users\Administrator\AppData\Local\Temp\{{ couchbase_sg_accel_package | regex_replace('(.*)rpm$', '\\1exe') }}"
     when: ansible_os_family == "Windows"
 
 # Install sync_gateway service

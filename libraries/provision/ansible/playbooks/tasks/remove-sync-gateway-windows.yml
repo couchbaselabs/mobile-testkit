@@ -1,18 +1,6 @@
-# Stop sync_gateway service
-- name: SYNC GATEWAY | Stop sync_gateway service
-  win_service: 
-    name: SyncGateway 
-    state: stopped
-  ignore_errors: yes
-
 # Remove sync_gateway package
 - name: SYNC GATEWAY | Uninstall sync_gateway exe
-  win_package:
-    name: Couchbase Sync Gateway
-    path: "{{ couchbase_sync_gateway_package_url | regex_replace('rpm', 'exe') }}"
-    # product_id for 1.4.1 {D1AC3E57-6427-4847-8D70-A56B0370F3A8}
-    product_id: {D1AC3E57-6427-4847-8D70-A56B0370F3A8}
-    state: absent
+  win_command: wmic product where name='Couchbase Sync Gateway' call uninstall
 
 # Delete sync_gateway binary
 - name: SYNC GATEWAY | Delete sync_gateway install directory
