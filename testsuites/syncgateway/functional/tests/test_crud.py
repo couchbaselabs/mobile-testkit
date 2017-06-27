@@ -164,27 +164,39 @@ def test_document_resurrection(params_from_base_test_setup, sg_conf_name, deleti
 
     # Verify deletes via Sync Gateway
     deleted_docs_to_verify = sg_doc_ids
+    assert len(deleted_docs_to_verify) == num_docs_per_client
+
+    # If running is xattr mode, make sure to verify SG + SDK docs
     if xattrs_enabled:
         deleted_docs_to_verify = sg_doc_ids + sdk_doc_ids
         assert len(deleted_docs_to_verify) == num_docs_per_client * 2
+
     if xattrs_enabled and deletion_type == 'tombstone':
+
         # Verify SDK + SG docs are deleted from Sync Gateway
         verify_sg_deletes(sg_client, sg_url, sg_db, deleted_docs_to_verify, sg_user_auth)
+
         # Verify SDK + SG docs are deleted from SDK
         verify_sdk_deletes(sdk_client, deleted_docs_to_verify)
+
     elif xattrs_enabled and deletion_type == 'purge':
+
         # Verify SDK + SG docs are purged from Sync Gateway
         verify_sg_purges(sg_client, sg_url, sg_db, deleted_docs_to_verify, sg_user_auth)
+
         # Verify SDK + SG docs are deleted from SDK
         verify_sdk_deletes(sdk_client, deleted_docs_to_verify)
+
     elif not xattrs_enabled and deletion_type == 'tombstone':
+
         # Doc meta: Verify SG docs are all deleted via SG
-        # XATTRs: Verify SDK + SG docs are all deleted via SG
         verify_sg_deletes(sg_client, sg_url, sg_db, deleted_docs_to_verify, sg_user_auth)
+
     elif not xattrs_enabled and deletion_type == 'purge':
+
         # Doc meta: Verify SG docs are all deleted via SG
-        # XATTRs: Verify SDK + SG docs are all deleted via SG
         verify_sg_purges(sg_client, sg_url, sg_db, deleted_docs_to_verify, sg_user_auth)
+
     else:
         raise ValueError('Invalid test parameters')
 
@@ -216,6 +228,7 @@ def test_document_resurrection(params_from_base_test_setup, sg_conf_name, deleti
         assert len(errors) == 0
 
     if xattrs_enabled:
+
         # Get SDK docs and makes sure all docs were recreated
         all_docs_from_sdk = sdk_client.get_multi(doc_ids_to_get)
         assert len(all_docs_from_sdk) == num_docs_per_client * 2
@@ -230,7 +243,13 @@ def test_document_resurrection(params_from_base_test_setup, sg_conf_name, deleti
 
     # Make sure we are able to get recreated docs via SDK
     doc_ids_to_get_scratch = list(doc_ids_to_get)
-    assert len(doc_ids_to_get_scratch) == num_docs_per_client * 2
+    if xattrs_enabled:
+        # SG + SDK docs
+        assert len(doc_ids_to_get_scratch) == num_docs_per_client * 2
+    else:
+        # SG docs
+        assert len(doc_ids_to_get_scratch) == num_docs_per_client
+
     for doc in docs:
         # Check that the doc has a rev generation of 3 (Create, Delete (Tombstone), Recreate)
         if deletion_type == 'purge':
@@ -250,7 +269,6 @@ def verify_sg_deletes(sg_client, sg_url, sg_db, expected_deleted_ids, sg_auth):
             sg_client.get_doc(url=sg_url, db=sg_db, doc_id=doc_id, auth=sg_auth)
         assert he is not None
         log_info(he.value.message)
-        # TODO Verify this with adam
         assert he.value.message.startswith('403 Client Error: Forbidden for url:')
 
 
@@ -261,7 +279,6 @@ def verify_sg_purges(sg_client, sg_url, sg_db, expected_deleted_ids, sg_auth):
             sg_client.get_doc(url=sg_url, db=sg_db, doc_id=doc_id, auth=sg_auth)
         assert he is not None
         log_info(he.value.message)
-        # TODO Verify this with adam
         assert he.value.message.startswith('404 Client Error: Not Found for url:')
 
 
