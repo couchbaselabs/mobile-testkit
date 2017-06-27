@@ -4,3 +4,11 @@
   win_service:
     name: SGAccel
     state: started
+
+- name: SG ACCEL | Wait until sg_accel to listen on port
+  wait_for:
+    host={{ ansible_host }}
+    port=4985 
+    timeout=30
+  delegate_to: localhost
+  
