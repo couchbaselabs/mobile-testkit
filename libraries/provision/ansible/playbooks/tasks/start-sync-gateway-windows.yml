@@ -5,7 +5,8 @@
     name: SyncGateway
     state: started
 
-- debug: var=ansible_host
+# There is no win_wait_for
+# This workaround delegates port check to localhost
 - name: SYNC GATEWAY | Wait until sync gateway to listen on port
   wait_for:
     host={{ ansible_host }}
