@@ -416,7 +416,7 @@ def get_hosts(pool_file="resources/pool.json"):
     return ips, ip_to_node_type
 
 
-def generate_clusters_from_pool(pool_file, use_docker, sg_windows, sg_accel_windows):
+def generate_clusters_from_pool(pool_file, use_docker, sg_windows=False, sg_accel_windows=False):
 
     cluster_confs = [
 
