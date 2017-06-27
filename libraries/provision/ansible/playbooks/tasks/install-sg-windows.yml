@@ -1,4 +1,4 @@
-# Install and launch sync_gateway service
+# Install and stop sync_gateway service
 - name: SYNC GATEWAY | Install sync_gateway exe {{ couchbase_sync_gateway_package | regex_replace('rpm', 'exe') }}
   win_shell: C:\Users\Administrator\AppData\Local\Temp\{{ couchbase_sync_gateway_package | regex_replace('rpm', 'exe') }} /S /v /qn
 

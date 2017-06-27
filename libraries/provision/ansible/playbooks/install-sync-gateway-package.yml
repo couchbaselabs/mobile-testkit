@@ -112,7 +112,7 @@
     win_get_url: url={{ couchbase_sg_accel_package_url | regex_replace('rpm', 'exe') }} dest="C:\Users\Administrator\AppData\Local\Temp\{{ couchbase_sg_accel_package | regex_replace('(.*)rpm$', '\\1exe') }}"
     when: ansible_os_family == "Windows"
 
-# Install sync_gateway service
+# Install sync_gateway
 - hosts: sync_gateways
   any_errors_fatal: true
   tasks:
@@ -122,7 +122,7 @@
   - include: tasks/install-sg-windows.yml
     when: ansible_os_family == "Windows"
 
-# Install sg_accel service
+# Install sg_accel
 - hosts: sg_accels
   any_errors_fatal: true
   tasks:

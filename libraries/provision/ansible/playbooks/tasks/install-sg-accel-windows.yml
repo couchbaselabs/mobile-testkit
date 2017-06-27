@@ -1,4 +1,4 @@
-# Install and launch sg_accel service
+# Install and stop sg_accel service
 - name: SG ACCEL | Install sg_accel exe {{ couchbase_sg_accel_package | regex_replace('rpm', 'exe') }}
   win_shell: C:\Users\Administrator\AppData\Local\Temp\{{ couchbase_sg_accel_package | regex_replace('rpm', 'exe') }} /S /v /qn
 

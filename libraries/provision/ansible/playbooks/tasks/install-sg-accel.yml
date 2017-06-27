@@ -1,4 +1,4 @@
-# Install and launch sg_accel service
+# Install and stop sg_accel service
 - name: SG ACCEL | Install sg_accel rpm
   become: yes
   shell: rpm -i /tmp/{{ couchbase_sg_accel_package }}
