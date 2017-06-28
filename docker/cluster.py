@@ -48,10 +48,10 @@ def create_cluster(network_name, number_of_nodes, public_key_path, dev, pull):
 
     if pull:
         log_info('Pulling sethrosetter/centos7-systemd image ...')
-        docker_client.images.pull('sethrosetter/centos7-systemd')
+        docker_client.images.pull('sethrosetter/centos7-systemd', tag='latest')
 
         log_info('Pulling couchbase/mobile-testkit image ...')
-        docker_client.images.pull('couchbase/mobile-testkit')
+        docker_client.images.pull('couchbase/mobile-testkit', tag='latest')
 
     # Create docker network with name
     log_info('Creating bridged network: {} ...'.format(network_name))
