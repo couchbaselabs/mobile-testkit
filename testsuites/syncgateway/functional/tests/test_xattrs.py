@@ -5,6 +5,7 @@ import time
 
 import pytest
 from concurrent.futures import ThreadPoolExecutor
+
 from couchbase.bucket import Bucket
 from couchbase.exceptions import KeyExistsError, NotFoundError
 from requests.exceptions import HTTPError
