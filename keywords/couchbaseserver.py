@@ -196,15 +196,18 @@ class CouchbaseServer:
         start = time.time()
         while True:
 
-            if time.time() - start > keywords.constants.CLIENT_REQUEST_TIMEOUT:
-                raise Exception("Verify Docs Present: TIMEOUT")
+            elapsed = time.time()
+            if elapsed - start > keywords.constants.CLIENT_REQUEST_TIMEOUT:
+                raise Exception("Timeout: Server not in ready state! {}s".format(elapsed))
 
             # Verfy the server is in a "healthy", not "warmup" state
             try:
+                log_info("Going to: {}".format(self.url))
                 resp = self._session.get("{}/pools/nodes".format(self.url))
                 log_r(resp)
-            except ConnectionError:
+            except ConnectionError as e:
                 # If bringing a server online, there may be some connnection issues. Continue and try again.
+                log_info(e)
                 time.sleep(1)
                 continue
 
