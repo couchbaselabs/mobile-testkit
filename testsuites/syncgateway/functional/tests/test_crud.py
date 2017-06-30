@@ -251,11 +251,27 @@ def test_document_resurrection(params_from_base_test_setup, sg_conf_name, deleti
         assert len(doc_ids_to_get_scratch) == num_docs_per_client
 
     for doc in docs:
-        # Check that the doc has a rev generation of 3 (Create, Delete (Tombstone), Recreate)
-        if deletion_type == 'purge':
-            assert doc['_rev'].startswith('1-')
+        # Verify expected document revisions
+        if xattrs_enabled:
+            if deletion_type == 'purge':
+                # SG purges SG docs and recreates them, expecting 1- rev
+                # SDK removes SDK docs and recreates them, expecting 1- rev
+                assert doc['_rev'].startswith('1-')
+            else:
+                # SG tombstones SG docs and recreates them, expecting 3- rev
+                # SDK removes SDK docs and recreates them, expecting 1- rev
+                if doc['_id'].startswith('sg_'):
+                    assert doc['_rev'].startswith('3-')
+                else:
+                    assert doc['_rev'].startswith('1-')
         else:
-            assert doc['_rev'].startswith('3-')
+            if deletion_type == 'purge':
+                # SG purges SG docs and recreates them, expecting 1- rev
+                assert doc['_rev'].startswith('1-')
+            else:
+                # SG tombstones SG docs and recreates them, expecting 3- rev
+                assert doc['_rev'].startswith('3-')
+
         doc_ids_to_get_scratch.remove(doc['_id'])
 
     # Make sure all docs were found
