@@ -202,12 +202,10 @@ class CouchbaseServer:
 
             # Verfy the server is in a "healthy", not "warmup" state
             try:
-                log_info("Going to: {}".format(self.url))
                 resp = self._session.get("{}/pools/nodes".format(self.url))
                 log_r(resp)
-            except ConnectionError as e:
+            except ConnectionError:
                 # If bringing a server online, there may be some connnection issues. Continue and try again.
-                log_info(e)
                 time.sleep(1)
                 continue
 
