@@ -28,7 +28,7 @@ And then inside the docker container:
 # pytest -s --mode=cc --server-version=4.6.1 --sync-gateway-version=1.4.0.2-3 testsuites/syncgateway/functional/tests
 ```
 
-### Running tests
+### Running entire test suite listed in entrypoint.sh (used for jenkins)
 
 (cc / no xattrs)
 ```
