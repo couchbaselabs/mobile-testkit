@@ -4,7 +4,7 @@ This will create a network 'cbl' and create 7 containers in the 'cbl' network.
 All containers will be able to communicate with others in the network.
 
 ```
-python docker/cluster.py --create --network-name cbl --number-of-nodes 7 --path-to-public-key ~/.ssh/id_rsa.pub --pull
+python docker/cluster.py --create --network-name cbl --number-of-nodes 7 --pull
 ```
 
 ### Local dev
@@ -15,7 +15,7 @@ It will set up the following:
 - Port mapping will be setup to allow inspection of running services via local host. The mapping will be written to `portmaps.json` for reference 
 
 ```
-python docker/cluster.py --create --network-name cbl --number-of-nodes 7 --path-to-public-key ~/.ssh/id_rsa.pub --pull --dev
+python docker/cluster.py --create --network-name cbl --number-of-nodes 7 --pull --dev
 ```
 
 ## Destroying a cluster
