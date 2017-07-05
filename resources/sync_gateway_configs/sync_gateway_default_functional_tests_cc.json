@@ -6,7 +6,7 @@
     "maxFileDescriptors": 90000,
     "slowServerCallWarningThreshold": 500,
     "compressResponses": false,
-    "log": ["CRUD+", "Cache+", "HTTP+", "Changes+", "Import+"],
+    "log": ["CRUD+", "Cache+", "HTTP+", "Changes+", "Import+", "gocb"],
     "databases":{
         "db":{
             {{ autoimport }}
