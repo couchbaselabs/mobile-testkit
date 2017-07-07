@@ -92,3 +92,11 @@ def test_system_test(params_from_base_test_setup):
 
     end = time.time()
     log_info("Views creation took {} seconds".format(end - start))
+
+    # Load 100,000 docs via SG REST API 
+    #   - Write 1,000 1K docs with attachments to Server and continually update to 1,000,000 1K docs 
+    #   with attachments using 180 users concurrently
+    # Start timer
+    # Doc ramp up time to go to a million doc
+    # Doc batch size - bulk add x number of docs at a time
+    # Doc sleep time - sleep between bulk adds
