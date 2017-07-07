@@ -11,6 +11,6 @@ RUN yum -y update && \
         unzip \
         net-tools \
         less \
-        http 
+        httpie 
 
 CMD ["/usr/sbin/init"]
