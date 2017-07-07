@@ -56,3 +56,17 @@ If not up to date on dockerhub, rebuild locally:
 $ cd docker/mobile-testkit
 $ docker build -t mobile-testkit-dev .
 ```
+
+## Rebuilding (cross-compiling) Sync Gateway on OSX and redeploying to docker container
+
+On OSX:
+
+```
+$ ./build.sh && rm -f sync_gateway && GOOS=linux GOARCH=amd64 go build -v github.com/couchbase/sync_gateway && cp sync_gateway /tmp/cbl.1-sg/sync_gateway/
+```
+
+In Sync Gateway docker container:
+
+```
+$ cd /home/sync_gateway && systemctl stop sync_gateway && rm -f /opt/couchbase-sync-gateway/bin/sync_gateway && cp sync_gateway /opt/couchbase-sync-gateway/bin/sync_gateway && systemctl restart sync_gateway
+```
