@@ -1,4 +1,3 @@
-import json
 from couchbase.bucket import Bucket
 from requests import Session
 from requests.exceptions import HTTPError
@@ -13,7 +12,7 @@ from keywords.utils import log_info
 
 def test_system_test(params_from_base_test_setup):
     server_seed_docs = int(params_from_base_test_setup["server_seed_docs"])
-    max_docs = int(params_from_base_test_setup["max_docs"])
+    # max_docs = int(params_from_base_test_setup["max_docs"])
     cluster_config = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
 
@@ -28,7 +27,7 @@ def test_system_test(params_from_base_test_setup):
 
     # Stop SG before loading the server
     sg_url = topology["sync_gateways"][0]["public"]
-    sg_url_admin = topology["sync_gateways"][0]["admin"]
+    # sg_url_admin = topology["sync_gateways"][0]["admin"]
     sg_util = SyncGateway()
     sg_util.stop_sync_gateway(cluster_config=cluster_config, url=sg_url)
 
@@ -93,8 +92,8 @@ def test_system_test(params_from_base_test_setup):
     end = time.time()
     log_info("Views creation took {} seconds".format(end - start))
 
-    # Load 100,000 docs via SG REST API 
-    #   - Write 1,000 1K docs with attachments to Server and continually update to 1,000,000 1K docs 
+    # Load 100,000 docs via SG REST API
+    #   - Write 1,000 1K docs with attachments to Server and continually update to 1,000,000 1K docs
     #   with attachments using 180 users concurrently
     # Start timer
     # Doc ramp up time to go to a million doc
