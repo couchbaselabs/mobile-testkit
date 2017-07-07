@@ -30,6 +30,7 @@ def params_from_base_suite_setup(request):
     xattrs_enabled = request.config.getoption("--xattrs")
     sg_lb = request.config.getoption("--sg-lb")
     sg_ce = request.config.getoption("--sg-ce")
+    use_sequoia = request.config.getoption("--sequoia")
 
     log_info("server_version: {}".format(server_version))
     log_info("sync_gateway_version: {}".format(sync_gateway_version))
@@ -83,11 +84,15 @@ def params_from_base_suite_setup(request):
         log_info("Using document storage for sync meta data")
         persist_cluster_config_environment_prop(cluster_config, 'xattrs_enabled', False)
 
-    # Skip provisioning if user specifies '--skip-provisoning'
-    if not skip_provisioning:
-        cluster_helper = ClusterKeywords()
+    # Skip provisioning if user specifies '--skip-provisoning' or '--sequoia'
+    should_provision = True
+    if skip_provisioning or use_sequoia:
+        should_provision = False
+
+    cluster_utils = ClusterKeywords()
+    if should_provision:
         try:
-            cluster_helper.provision_cluster(
+            cluster_utils.provision_cluster(
                 cluster_config=cluster_config,
                 server_version=server_version,
                 sync_gateway_version=sync_gateway_version,
@@ -99,6 +104,13 @@ def params_from_base_suite_setup(request):
             logging_helper = Logging()
             logging_helper.fetch_and_analyze_logs(cluster_config=cluster_config, test_name=request.node.name)
             raise
+
+    # Hit this intalled running services to verify the correct versions are installed
+    cluster_utils.verify_cluster_versions(
+        cluster_config,
+        expected_server_version=server_version,
+        expected_sync_gateway_version=sync_gateway_version
+    )
 
     yield {"cluster_config": cluster_config, "mode": mode}
 

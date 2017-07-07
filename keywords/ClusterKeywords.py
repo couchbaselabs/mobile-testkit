@@ -237,7 +237,4 @@ class ClusterKeywords:
                 skip_bucketcreation=False
             )
 
-        provision_cluster(cluster_config, cbs_config, sg_config, sg_ce)
-
-        # verify running services are the expected versions
-        self.verify_cluster_versions(cluster_config, server_version, sync_gateway_version)
+        provision_cluster(cluster_config, cbs_config, sg_config)
