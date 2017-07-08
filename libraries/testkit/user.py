@@ -27,8 +27,6 @@ class User:
         self.target = target
 
         self._session = requests.Session()
-        adapter = requests.adapters.HTTPAdapter(pool_connections=100, pool_maxsize=100)
-        self._session.mount('http://', adapter)
         self._session.headers["Content-Type"] = "application/json"
 
         if self.name is not None:
