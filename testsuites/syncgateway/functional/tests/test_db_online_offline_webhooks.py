@@ -5,6 +5,7 @@ from libraries.testkit.admin import Admin
 from libraries.testkit.cluster import Cluster
 from libraries.testkit.web_server import WebServer
 from libraries.testkit.parallelize import in_parallel
+from libraries.provision.ansible_runner import AnsibleRunner
 
 from keywords.utils import log_info
 from keywords.SyncGateway import sync_gateway_config_path_for_mode
@@ -66,7 +67,17 @@ def test_db_online_offline_webhooks_offline(params_from_base_test_setup, sg_conf
     in_parallel(user_objects, 'update_docs', num_revisions)
     time.sleep(10)
 
-    admin.take_db_offline("db")
+    # Take db offline
+    ansible_runner = AnsibleRunner(cluster_conf)
+    status = ansible_runner.run_ansible_playbook(
+        "sync-gateway-db-offline.yml",
+        extra_vars={
+            "db": "db"
+        }
+    )
+
+    assert status == 0
+
     time.sleep(5)
     db_info = admin.get_db_info("db")
     log_info("Expecting db state {} found db state {}".format("Offline", db_info['state']))
@@ -78,7 +89,16 @@ def test_db_online_offline_webhooks_offline(params_from_base_test_setup, sg_conf
     last_event = webhook_events[-1]
     assert last_event['state'] == 'offline'
 
-    admin.bring_db_online("db")
+    # Bring db online
+    status = ansible_runner.run_ansible_playbook(
+        "sync-gateway-db-online.yml",
+        extra_vars={
+            "db": "db"
+        }
+    )
+
+    assert status == 0
+
     time.sleep(5)
     db_info = admin.get_db_info("db")
     log_info("Expecting db state {} found db state {}".format("Online", db_info['state']))
