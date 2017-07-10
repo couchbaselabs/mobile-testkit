@@ -57,6 +57,14 @@ def pytest_addoption(parser):
                      action="store",
                      help="max-doc-size: Max number of docs to run the test with")
 
+    parser.addoption("--create-batch-size",
+                     action="store",
+                     help="create-batch-size: Number of docs to add in bulk on each POST creation")
+
+    parser.addoption("--create-delay",
+                     action="store",
+                     help="create-delay: Delay between each bulk POST operation")
+
 
 # This will be called once for the at the beggining of the execution in the 'tests/' directory
 # and will be torn down, (code after the yeild) when all the test session has completed.
@@ -76,6 +84,8 @@ def params_from_base_suite_setup(request):
     xattrs_enabled = request.config.getoption("--xattrs")
     server_seed_docs = request.config.getoption("--server-seed-docs")
     max_docs = request.config.getoption("--max-docs")
+    create_batch_size = request.config.getoption("--create-batch-size")
+    create_delay = request.config.getoption("--create-delay")
 
     if xattrs_enabled and version_is_binary(sync_gateway_version):
         check_xattr_support(server_version, sync_gateway_version)
@@ -84,6 +94,7 @@ def params_from_base_suite_setup(request):
     log_info("sync_gateway_version: {}".format(sync_gateway_version))
     log_info("mode: {}".format(mode))
     log_info("skip_provisioning: {}".format(skip_provisioning))
+    log_info("cbs_ssl: {}".format(cbs_ssl))
     log_info("xattrs_enabled: {}".format(xattrs_enabled))
 
     # Make sure mode for sync_gateway is supported ('cc' or 'di')
@@ -136,7 +147,9 @@ def params_from_base_suite_setup(request):
         "mode": mode,
         "xattrs_enabled": xattrs_enabled,
         "server_seed_docs": server_seed_docs,
-        "max_docs": max_docs
+        "max_docs": max_docs,
+        "create_batch_size": create_batch_size,
+        "create_delay": create_delay
     }
 
     log_info("Tearing down 'params_from_base_suite_setup' ...")
@@ -172,7 +185,9 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         "mode": mode,
         "xattrs_enabled": xattrs_enabled,
         "server_seed_docs": server_seed_docs,
-        "max_docs": max_docs
+        "max_docs": max_docs,
+        "create_batch_size": params_from_base_suite_setup["create_batch_size"],
+        "create_delay": params_from_base_suite_setup["create_delay"]
     }
 
     # Code after the yield will execute when each test finishes

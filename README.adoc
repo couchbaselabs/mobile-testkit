@@ -228,7 +228,31 @@ $ export AWS_KEY=<your-aws-keypair-name>
 
 You probably want to persist these in your `.bash_profile` 
 
-The sync_gateway tests use https://www.ansible.com/[Ansible] to provision the clusters.  
+The sync_gateway tests use https://www.ansible.com/[Ansible] or https://github.com/couchbaselabs/sequoia[Sequoia] to provision the clusters.  
+
+==== Using Sequoia to provision
+
+Download and build
+```
+$ go get https://github.com/couchbaselabs/sequoia
+$ go build
+```
+
+Edit the providers/docker/options.yml file to specify the versions you would like to use
+
+Setup the Sync Gateway + Couchbase Server cluster
+```
+$ ./sequoia -test tests/mobile/test_sg.yml -scope tests/mobile/1sg_1cbs.yml --expose_ports --skip_teardown --skip_test --network cbl
+```
+
+Copy the hosts.json from sequoia/containers/mobile-testkit/hosts.json to root of mobile-testkit repo
+
+Mount testkit 
+```
+$ docker run --privileged -it --network=cbl --name mobile-testkit -v $(pwd):/opt/mobile-testkit -v /var/run/docker.sock:/var/run/docker.sock -v /usr/bin/docker:/usr/bin/docker couchbase/mobile-testkit /bin/bash
+[mobile-teskit] $ python libraries/utilities/generate_config_from_sequoia.py --host-file hosts.json --topology base_cc
+[mobile-teskit] $ pytest -s --skip-provisioning --xattrs --mode=cc --server-version=5.0.0-3217 --sync-gateway-version=1.5.0-465 testsuites/syncgateway/functional/tests/
+```
 
 ==== Setup Global Ansible Config
 
