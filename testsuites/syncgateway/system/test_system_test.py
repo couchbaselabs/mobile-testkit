@@ -4,8 +4,14 @@ from couchbase.bucket import Bucket
 from requests import Session
 from requests.exceptions import HTTPError
 
+from concurrent.futures import ProcessPoolExecutor
+from concurrent.futures import as_completed
+
 from keywords.SyncGateway import sync_gateway_config_path_for_mode
 from keywords import couchbaseserver
+from keywords import document
+from libraries.testkit.cluster import Cluster
+from keywords.MobileRestClient import MobileRestClient
 from keywords.ClusterKeywords import ClusterKeywords
 from keywords.SyncGateway import SyncGateway
 from keywords.utils import log_info
@@ -40,12 +46,36 @@ def test_system_test(params_from_base_test_setup):
     max_docs = int(params_from_base_test_setup["max_docs"])
     create_batch_size = int(params_from_base_test_setup["create_batch_size"])
     create_delay = float(params_from_base_test_setup["create_delay"])
+    num_users = int(params_from_base_test_setup["num_users"])
 
     log_info("Running System Test #1")
     log_info("> server_seed_docs  = {}".format(server_seed_docs))
     log_info("> max_docs          = {}".format(max_docs))
     log_info("> create_batch_size = {}".format(create_batch_size))
     log_info("> create_delay      = {}".format(create_delay))
+    log_info("> num_users         = {}".format(num_users))
+
+    # Validate
+
+    # Number of docs should be equally divisible by number of users
+    if max_docs % num_users != 0:
+        raise ValueError('max_docs must be devisible by number_of_users')
+
+    # Number of docs per user (max_docs / num_users) should be equally
+    # divisible by the batch size for easier computation
+    docs_per_user = max_docs / num_users
+    if docs_per_user % create_batch_size != 0:
+        raise ValueError('docs_per_user ({}) must be devisible by create_batch_size ({})'.format(
+            docs_per_user,
+            create_batch_size
+        ))
+
+    sg_conf_name = "sync_gateway_default"
+    sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
+
+    # Reset cluster state
+    c = Cluster(config=cluster_config)
+    c.reset(sg_config_path=sg_conf)
 
     cluster_helper = ClusterKeywords()
     topology = cluster_helper.get_cluster_topology(cluster_config)
@@ -63,18 +93,34 @@ def test_system_test(params_from_base_test_setup):
 
     log_info("Seeding {} with {} docs".format(cbs_ip, server_seed_docs))
     sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password', timeout=300)
+    sg_client = MobileRestClient()
 
     # Stop SG before loading the server
     sg_url = topology["sync_gateways"][0]["public"]
-    # sg_url_admin = topology["sync_gateways"][0]["admin"]
-    sg_util = SyncGateway()
-    sg_util.stop_sync_gateway(cluster_config=cluster_config, url=sg_url)
+    sg_admin_url = topology["sync_gateways"][0]["admin"]
+    sg_db = "db"
+    #sg_util = SyncGateway()
+    #sg_util.stop_sync_gateway(cluster_config=cluster_config, url=sg_url)
 
     # Scenario Actions
-    delete_views(cbs_session, cbs_admin_url, bucket_name)
-    load_bucket(sdk_client, server_seed_docs)
-    start_sync_gateway(cluster_config, sg_util, sg_url, mode)
-    wait_for_view_creation(cbs_session, cbs_admin_url, bucket_name)
+    # delete_views(cbs_session, cbs_admin_url, bucket_name)
+    # load_bucket(sdk_client, server_seed_docs)
+    # start_sync_gateway(cluster_config, sg_util, sg_url, mode)
+    # wait_for_view_creation(cbs_session, cbs_admin_url, bucket_name)
+
+    # Start concurrent creation of docs (max docs / num users)
+    # Each user will add batch_size number of docs via bulk docs and sleep for 'create_delay'
+    # Once a user has added number of expected docs (max docs / num users number), it will terminate.
+    create_docs(
+        sg_client=sg_client,
+        sg_admin_url=sg_admin_url,
+        sg_url=sg_url,
+        sg_db=sg_db,
+        num_users=num_users,
+        number_docs_per_user=docs_per_user,
+        batch_size=create_batch_size,
+        create_delay=create_delay
+    )
 
     # Load 100,000 docs via SG REST API
     #   - Write 1,000 1K docs with attachments to Server and continually update to 1,000,000 1K docs
@@ -83,6 +129,103 @@ def test_system_test(params_from_base_test_setup):
     # Doc ramp up time to go to a million doc
     # Doc batch size - bulk add x number of docs at a time
     # Doc sleep time - sleep between bulk adds
+
+
+def add_user_docs(client, sg_url, sg_db, user_name, user_auth, number_docs_per_user, batch_size, create_delay):
+
+    docs_pushed = 0
+    batch_count = 0
+
+    while docs_pushed < number_docs_per_user:
+
+        # Create batch of docs
+        docs = document.create_docs(
+            doc_id_prefix="{}_{}".format(user_name, batch_count),
+            number=batch_size,
+            content={"foo": "bar"},
+            channels=[user_name]
+        )
+
+        # Add batch of docs
+        client.add_bulk_docs(sg_url, sg_db, docs, auth=user_auth)
+
+        docs_pushed += batch_size
+        batch_count += 1
+        # Sleep 'create_delay' second before adding another batch
+        time.sleep(create_delay)
+
+
+def create_users_add_docs_task(user_number,
+                               sg_client,
+                               sg_admin_url,
+                               sg_url,
+                               sg_db,
+                               number_docs_per_user,
+                               batch_size,
+                               create_delay):
+
+    user_name = 'st_user_{}'.format(user_number)
+    user_pass = 'password'
+
+    # Create user
+    sg_client.create_user(
+        url=sg_admin_url,
+        db=sg_db,
+        name=user_name,
+        password=user_pass,
+        channels=[user_name]
+    )
+
+    # Create session
+    user_auth = sg_client.create_session(
+        url=sg_admin_url,
+        db=sg_db,
+        name=user_name, password=user_pass
+    )
+
+    # Start bulk doc creation
+    add_user_docs(
+        client=sg_client,
+        sg_url=sg_url,
+        sg_db=sg_db,
+        user_name=user_name,
+        user_auth=user_auth,
+        number_docs_per_user=number_docs_per_user,
+        batch_size=batch_size,
+        create_delay=create_delay
+    )
+
+    return user_name
+
+
+def create_docs(sg_client, sg_admin_url, sg_url, sg_db, num_users, number_docs_per_user, batch_size, create_delay):
+    start = time.time()
+
+    log_info("Starting {} users to add {} docs per user".format(num_users, number_docs_per_user))
+
+    # Start each user concurrently.
+    with ProcessPoolExecutor() as pe:
+
+        futures = [pe.submit(
+            create_users_add_docs_task,
+            user_number=i,
+            sg_client=sg_client,
+            sg_admin_url=sg_admin_url,
+            sg_url=sg_url,
+            sg_db=sg_db,
+            number_docs_per_user=number_docs_per_user,
+            batch_size=batch_size,
+            create_delay=create_delay
+        ) for i in range(num_users)]
+
+        for future in as_completed(futures):
+            completed_user = future.result()
+            log_info("User ({}) done adding docs.".format(completed_user))
+
+    end = time.time() - start
+    log_info("Doc creation of {} docs per user and delay: {}s took -> {}s".format(
+        number_docs_per_user, create_delay, end
+    ))
 
 
 def delete_views(cbs_session, cbs_admin_url, bucket_name):
@@ -111,8 +254,6 @@ def load_bucket(sdk_client, server_seed_docs):
 
 def start_sync_gateway(cluster_config, sg_util, sg_url, mode):
     # Start SG
-    sg_conf_name = "sync_gateway_default"
-    sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
     sg_util.start_sync_gateway(cluster_config=cluster_config, url=sg_url, config=sg_conf)
     # It takes a couple of seconds for the view indexing to begin
     time.sleep(5)

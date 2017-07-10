@@ -65,6 +65,10 @@ def pytest_addoption(parser):
                      action="store",
                      help="create-delay: Delay between each bulk POST operation")
 
+    parser.addoption("--num-users",
+                     action="store",
+                     help="num-users: Number of users to run the simulation with")
+
 
 # This will be called once for the at the beggining of the execution in the 'tests/' directory
 # and will be torn down, (code after the yeild) when all the test session has completed.
@@ -86,6 +90,7 @@ def params_from_base_suite_setup(request):
     max_docs = request.config.getoption("--max-docs")
     create_batch_size = request.config.getoption("--create-batch-size")
     create_delay = request.config.getoption("--create-delay")
+    num_users = request.config.getoption("--num-users")
 
     if xattrs_enabled and version_is_binary(sync_gateway_version):
         check_xattr_support(server_version, sync_gateway_version)
@@ -149,7 +154,8 @@ def params_from_base_suite_setup(request):
         "server_seed_docs": server_seed_docs,
         "max_docs": max_docs,
         "create_batch_size": create_batch_size,
-        "create_delay": create_delay
+        "create_delay": create_delay,
+        "num_users": num_users
     }
 
     log_info("Tearing down 'params_from_base_suite_setup' ...")
@@ -187,7 +193,8 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         "server_seed_docs": server_seed_docs,
         "max_docs": max_docs,
         "create_batch_size": params_from_base_suite_setup["create_batch_size"],
-        "create_delay": params_from_base_suite_setup["create_delay"]
+        "create_delay": params_from_base_suite_setup["create_delay"],
+        "num_users": params_from_base_suite_setup["num_users"]
     }
 
     # Code after the yield will execute when each test finishes
