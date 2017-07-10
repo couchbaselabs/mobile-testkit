@@ -19,6 +19,8 @@ function retry()
                         exit 1;
                         }
                 ((n++))
+                echo "Pausing before repeating test"
+                sleep 20  # workaround for https://github.com/couchbaselabs/mobile-testkit/issues/1305
 
         done
 }
