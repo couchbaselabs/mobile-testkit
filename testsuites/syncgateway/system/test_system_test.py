@@ -4,6 +4,9 @@ from couchbase.bucket import Bucket
 from requests import Session
 from requests.exceptions import HTTPError
 
+import time
+import random
+
 from concurrent.futures import ProcessPoolExecutor
 from concurrent.futures import as_completed
 
@@ -83,6 +86,9 @@ def test_system_test(params_from_base_test_setup):
             create_batch_size
         ))
 
+    if num_users < update_batch_size or update_batch_size < 1:
+        raise ValueError("'update_batch_size' should be greater than one or less than or equal to the number of users")
+
     sg_conf_name = 'sync_gateway_default'
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
 
@@ -149,27 +155,32 @@ def test_system_test(params_from_base_test_setup):
 
 def add_user_docs(client, sg_url, sg_db, user_name, user_auth, number_docs_per_user, batch_size, create_delay):
 
+    doc_ids = []
     docs_pushed = 0
     batch_count = 0
-
+    
     while docs_pushed < number_docs_per_user:
 
         # Create batch of docs
         docs = document.create_docs(
             doc_id_prefix='{}_{}'.format(user_name, batch_count),
             number=batch_size,
-            content={'foo': 'bar'},
+            prop_generator=document.doc_1k,
             channels=[user_name]
         )
 
         # Add batch of docs
         log_info('User ({}) adding {} docs.'.format(user_name, number_docs_per_user))
-        client.add_bulk_docs(sg_url, sg_db, docs, auth=user_auth)
+        docs = client.add_bulk_docs(sg_url, sg_db, docs, auth=user_auth)
+        batch_doc_ids = [doc['id'] for doc in docs]
+        doc_ids.extend(batch_doc_ids)
 
         docs_pushed += batch_size
         batch_count += 1
         # Sleep 'create_delay' second before adding another batch
         time.sleep(create_delay)
+
+    return doc_ids
 
 
 def create_users_add_docs_task(user_number,
@@ -202,7 +213,7 @@ def create_users_add_docs_task(user_number,
     )
 
     # Start bulk doc creation
-    add_user_docs(
+    doc_ids = add_user_docs(
         client=sg_client,
         sg_url=sg_url,
         sg_db=sg_db,
@@ -213,7 +224,7 @@ def create_users_add_docs_task(user_number,
         create_delay=create_delay
     )
 
-    return user_name, user_auth
+    return user_name, user_auth, doc_ids
 
 
 def create_docs(sg_admin_url, sg_url, sg_db, num_users, number_docs_per_user, batch_size, create_delay):
@@ -223,7 +234,7 @@ def create_docs(sg_admin_url, sg_url, sg_db, num_users, number_docs_per_user, ba
     log_info('Starting {} users to add {} docs per user'.format(num_users, number_docs_per_user))
 
     # Start each user concurrently.
-    with ProcessPoolExecutor() as pe:
+    with ProcessPoolExecutor(max_workers=num_users) as pe:
 
         futures = [pe.submit(
             create_users_add_docs_task,
@@ -237,16 +248,69 @@ def create_docs(sg_admin_url, sg_url, sg_db, num_users, number_docs_per_user, ba
         ) for i in range(num_users)]
 
         for future in as_completed(futures):
-            username, auth = future.result()
+            username, auth, doc_ids = future.result()
             log_info('User ({}) done adding docs.'.format(username))
 
             # Add user to global dictionary
-            SG_USERS[username] = auth
+            SG_USERS[username] = {
+                'auth': auth,
+                'doc_ids': doc_ids,
+                'updates': 0
+            }
 
     end = time.time() - start
     log_info('Doc creation of {} docs per user and delay: {}s took -> {}s'.format(
         number_docs_per_user, create_delay, end
     ))
+
+
+def update_docs_task(user_index, sg_url, sg_db):
+
+    user_name = 'st_user_{}'.format(user_index)
+
+    # Get a random value to determin the update method
+    # ~ 90% ops bulk, 10% ops single
+    rand = random.random()
+    if rand <= 0.90:
+        update_method = 'bulk_docs'
+    else:
+        update_method = 'put'
+
+    sg_client = MobileRestClient()
+
+    # Get a random user
+    random_user_auth = SG_USERS[user_name]['auth']
+    random_user_doc_ids = SG_USERS[user_name]['doc_ids']
+
+    log_info('Updating {} docs, method ({}) number of updates: {} ({})'.format(
+        len(random_user_doc_ids),
+        update_method,
+        SG_USERS[user_name]['updates'],
+        user_name
+    ))
+
+    # Update the user's docs
+    if update_method == 'bulk_docs':
+        # Get docs for that user
+        user_docs, errors = sg_client.get_bulk_docs(url=sg_url, db=sg_db, doc_ids=random_user_doc_ids, auth=random_user_auth)
+        assert len(errors) == 0
+
+        # Update the 'updates' property
+        for doc in user_docs:
+            doc['updates'] += 1
+
+        # Add the docs via build_docs
+        sg_client.add_bulk_docs(url=sg_url, db=sg_db, docs=user_docs, auth=random_user_auth)
+
+    else:
+
+        # Do a single GET / PUT for each of the user docs
+        for doc_id in random_user_doc_ids:
+            doc = sg_client.get_doc(url=sg_url, db=sg_db, doc_id=doc_id, auth=random_user_auth)
+            doc['updates'] += 1
+            sg_client.put_doc(url=sg_url, db=sg_db, doc_id=doc_id, doc_body=doc, rev=doc['_rev'], auth=random_user_auth)
+
+    return user_name
 
 
 def update_docs(sg_admin_url, sg_url, sg_db, num_users, update_runtime_sec, batch_size, update_delay):
@@ -259,6 +323,8 @@ def update_docs(sg_admin_url, sg_url, sg_db, num_users, update_runtime_sec, batc
 
     start = time.time()
     continue_updating = True
+    current_user_index = 0
+
     while continue_updating:
 
         elapsed_sec = time.time() - start
@@ -267,6 +333,22 @@ def update_docs(sg_admin_url, sg_url, sg_db, num_users, update_runtime_sec, batc
             log_info('Runtime limit reached. Exiting ...')
             break
 
+        with ProcessPoolExecutor(max_workers=batch_size) as pe:
+
+            futures = [pe.submit(
+                update_docs_task,
+                current_user_index + i,
+                sg_url,
+                sg_db
+            ) for i in range(batch_size)]
+
+            for future in as_completed(futures):
+                # Increment updates
+                user = future.result()
+                SG_USERS[user]['updates'] += 1
+                log_info('Completed updates ({})'.format(user))
+
+        current_user_index = (current_user_index + batch_size) % num_users
         time.sleep(update_delay)
 
 
