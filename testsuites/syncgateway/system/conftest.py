@@ -56,6 +56,10 @@ def pytest_addoption(parser):
     parser.addoption("--max-docs",
                      action="store",
                      help="max-doc-size: Max number of docs to run the test with")
+    
+    parser.addoption("--num-users",
+                     action="store",
+                     help="num-users: Number of users to run the simulation with")
 
     parser.addoption("--create-batch-size",
                      action="store",
@@ -65,9 +69,21 @@ def pytest_addoption(parser):
                      action="store",
                      help="create-delay: Delay between each bulk POST operation")
 
-    parser.addoption("--num-users",
+    parser.addoption("--update-runtime-sec",
                      action="store",
-                     help="num-users: Number of users to run the simulation with")
+                     help="--update-runtime-sec: Number of seconds to continue updates for")
+
+    parser.addoption("--update-batch-size",
+                     action="store",
+                     help="update-batch-size: Number of docs to add in bulk on each POST update")
+
+    parser.addoption("--update-delay",
+                     action="store",
+                     help="update-delay: Delay between each bulk POST operation for updates")
+
+    parser.addoption("--ci",
+                     action="store_true",
+                     help="ci: Use by default in Jenkins (multiple servers)")
 
 
 # This will be called once for the at the beggining of the execution in the 'tests/' directory
@@ -85,12 +101,16 @@ def params_from_base_suite_setup(request):
     mode = request.config.getoption("--mode")
     skip_provisioning = request.config.getoption("--skip-provisioning")
     cbs_ssl = request.config.getoption("--server-ssl")
+    ci = request.config.getoption("--ci")
     xattrs_enabled = request.config.getoption("--xattrs")
     server_seed_docs = request.config.getoption("--server-seed-docs")
     max_docs = request.config.getoption("--max-docs")
+    num_users = request.config.getoption("--num-users")
     create_batch_size = request.config.getoption("--create-batch-size")
     create_delay = request.config.getoption("--create-delay")
-    num_users = request.config.getoption("--num-users")
+    update_runtime_sec = request.config.getoption("--update-runtime-sec")
+    update_batch_size = request.config.getoption("--update-batch-size")
+    update_delay = request.config.getoption("--update-delay")
 
     if xattrs_enabled and version_is_binary(sync_gateway_version):
         check_xattr_support(server_version, sync_gateway_version)
@@ -107,7 +127,10 @@ def params_from_base_suite_setup(request):
 
     # use base_cc cluster config if mode is "cc" or base_di cluster config if more is "di"
     log_info("Using 'base_{}' config!".format(mode))
-    cluster_config = "{}/base_{}".format(CLUSTER_CONFIGS_DIR, mode)
+    if ci:
+        cluster_config = "{}/ci_{}".format(CLUSTER_CONFIGS_DIR, mode)
+    else:
+        cluster_config = "{}/base_{}".format(CLUSTER_CONFIGS_DIR, mode)
 
     if cbs_ssl:
         log_info("Running tests with cbs <-> sg ssl enabled")
@@ -153,9 +176,12 @@ def params_from_base_suite_setup(request):
         "xattrs_enabled": xattrs_enabled,
         "server_seed_docs": server_seed_docs,
         "max_docs": max_docs,
+        "num_users": num_users,
         "create_batch_size": create_batch_size,
         "create_delay": create_delay,
-        "num_users": num_users
+        "update_runtime_sec": update_runtime_sec,
+        "update_batch_size": update_batch_size,
+        "update_delay": update_delay
     }
 
     log_info("Tearing down 'params_from_base_suite_setup' ...")
@@ -174,8 +200,6 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     cluster_topology = params_from_base_suite_setup["cluster_topology"]
     mode = params_from_base_suite_setup["mode"]
     xattrs_enabled = params_from_base_suite_setup["xattrs_enabled"]
-    server_seed_docs = params_from_base_suite_setup["server_seed_docs"]
-    max_docs = params_from_base_suite_setup["max_docs"]
 
     test_name = request.node.name
     log_info("Running test '{}'".format(test_name))
@@ -190,11 +214,14 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         "cluster_topology": cluster_topology,
         "mode": mode,
         "xattrs_enabled": xattrs_enabled,
-        "server_seed_docs": server_seed_docs,
-        "max_docs": max_docs,
+        "server_seed_docs": params_from_base_suite_setup["server_seed_docs"],
+        "max_docs": params_from_base_suite_setup["max_docs"],
+        "num_users": params_from_base_suite_setup["num_users"],
         "create_batch_size": params_from_base_suite_setup["create_batch_size"],
         "create_delay": params_from_base_suite_setup["create_delay"],
-        "num_users": params_from_base_suite_setup["num_users"]
+        "update_runtime_sec": params_from_base_suite_setup["update_runtime_sec"],
+        "update_batch_size": params_from_base_suite_setup["update_batch_size"],
+        "update_delay": params_from_base_suite_setup["update_delay"]
     }
 
     # Code after the yield will execute when each test finishes

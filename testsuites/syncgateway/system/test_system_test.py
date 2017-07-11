@@ -17,6 +17,9 @@ from keywords.SyncGateway import SyncGateway
 from keywords.utils import log_info
 
 
+SG_USERS = {}
+
+
 # Set the default value to 404 - view not created yet
 SG_VIEWS = {
     'sync_gateway_access': ["access"],
@@ -38,22 +41,32 @@ SG_VIEWS = {
 
 def test_system_test(params_from_base_test_setup):
  
-    cluster_config = params_from_base_test_setup["cluster_config"]
-    mode = params_from_base_test_setup["mode"]
+    cluster_config = params_from_base_test_setup['cluster_config']
+    mode = params_from_base_test_setup['mode']
 
     # Scenario parameters
-    server_seed_docs = int(params_from_base_test_setup["server_seed_docs"])
-    max_docs = int(params_from_base_test_setup["max_docs"])
-    create_batch_size = int(params_from_base_test_setup["create_batch_size"])
-    create_delay = float(params_from_base_test_setup["create_delay"])
-    num_users = int(params_from_base_test_setup["num_users"])
+    server_seed_docs = int(params_from_base_test_setup['server_seed_docs'])
+    max_docs = int(params_from_base_test_setup['max_docs'])
+    num_users = int(params_from_base_test_setup['num_users'])
 
-    log_info("Running System Test #1")
-    log_info("> server_seed_docs  = {}".format(server_seed_docs))
-    log_info("> max_docs          = {}".format(max_docs))
-    log_info("> create_batch_size = {}".format(create_batch_size))
-    log_info("> create_delay      = {}".format(create_delay))
-    log_info("> num_users         = {}".format(num_users))
+    # Create paramters
+    create_batch_size = int(params_from_base_test_setup['create_batch_size'])
+    create_delay = float(params_from_base_test_setup['create_delay'])
+
+    # Update parameters
+    update_runtime_sec = int(params_from_base_test_setup['update_runtime_sec'])
+    update_batch_size = int(params_from_base_test_setup['update_batch_size'])
+    update_delay = float(params_from_base_test_setup['update_delay'])
+
+    log_info('Running System Test #1')
+    log_info('> server_seed_docs   = {}'.format(server_seed_docs))
+    log_info('> max_docs           = {}'.format(max_docs))
+    log_info('> create_batch_size  = {}'.format(create_batch_size))
+    log_info('> create_delay       = {}'.format(create_delay))
+    log_info('> update_batch_size  = {}'.format(update_batch_size))
+    log_info('> update_delay       = {}'.format(update_delay))
+    log_info('> update_runtime_sec = {}'.format(update_runtime_sec))
+    log_info('> num_users          = {}'.format(num_users))
 
     # Validate
 
@@ -70,7 +83,7 @@ def test_system_test(params_from_base_test_setup):
             create_batch_size
         ))
 
-    sg_conf_name = "sync_gateway_default"
+    sg_conf_name = 'sync_gateway_default'
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
 
     # Reset cluster state
@@ -80,25 +93,25 @@ def test_system_test(params_from_base_test_setup):
     cluster_helper = ClusterKeywords()
     topology = cluster_helper.get_cluster_topology(cluster_config)
 
-    cbs_url = topology["couchbase_servers"][0]
-    cbs_admin_url = cbs_url.replace("8091", "8092")
+    cbs_url = topology['couchbase_servers'][0]
+    cbs_admin_url = cbs_url.replace('8091', '8092')
     cb_server = couchbaseserver.CouchbaseServer(cbs_url)
     bucket_name = cb_server.get_bucket_names()[0]
     cbs_ip = cb_server.host
 
-    headers = {"Content-Type": "application/json"}
+    headers = {'Content-Type': 'application/json'}
     cbs_session = Session()
     cbs_session.headers = headers
     cbs_session.auth = ('Administrator', 'password')
 
-    log_info("Seeding {} with {} docs".format(cbs_ip, server_seed_docs))
+    log_info('Seeding {} with {} docs'.format(cbs_ip, server_seed_docs))
     sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password', timeout=300)
     sg_client = MobileRestClient()
 
     # Stop SG before loading the server
-    sg_url = topology["sync_gateways"][0]["public"]
-    sg_admin_url = topology["sync_gateways"][0]["admin"]
-    sg_db = "db"
+    sg_url = topology['sync_gateways'][0]['public']
+    sg_admin_url = topology['sync_gateways'][0]['admin']
+    sg_db = 'db'
     #sg_util = SyncGateway()
     #sg_util.stop_sync_gateway(cluster_config=cluster_config, url=sg_url)
 
@@ -110,9 +123,8 @@ def test_system_test(params_from_base_test_setup):
 
     # Start concurrent creation of docs (max docs / num users)
     # Each user will add batch_size number of docs via bulk docs and sleep for 'create_delay'
-    # Once a user has added number of expected docs (max docs / num users number), it will terminate.
+    # Once a user has added number of expected docs 'docs_per_user', it will terminate.
     create_docs(
-        sg_client=sg_client,
         sg_admin_url=sg_admin_url,
         sg_url=sg_url,
         sg_db=sg_db,
@@ -122,13 +134,17 @@ def test_system_test(params_from_base_test_setup):
         create_delay=create_delay
     )
 
-    # Load 100,000 docs via SG REST API
-    #   - Write 1,000 1K docs with attachments to Server and continually update to 1,000,000 1K docs
-    #   with attachments using 180 users concurrently
-    # Start timer
-    # Doc ramp up time to go to a million doc
-    # Doc batch size - bulk add x number of docs at a time
-    # Doc sleep time - sleep between bulk adds
+    # Start concurrent updates of update
+    # Update batch size is the number of users that will concurrently update all of their docs
+    update_docs(
+        sg_admin_url=sg_admin_url,
+        sg_url=sg_url,
+        sg_db=sg_db,
+        num_users=num_users,
+        update_runtime_sec=update_runtime_sec,
+        batch_size=update_batch_size,
+        update_delay=update_delay
+    )
 
 
 def add_user_docs(client, sg_url, sg_db, user_name, user_auth, number_docs_per_user, batch_size, create_delay):
@@ -140,13 +156,14 @@ def add_user_docs(client, sg_url, sg_db, user_name, user_auth, number_docs_per_u
 
         # Create batch of docs
         docs = document.create_docs(
-            doc_id_prefix="{}_{}".format(user_name, batch_count),
+            doc_id_prefix='{}_{}'.format(user_name, batch_count),
             number=batch_size,
-            content={"foo": "bar"},
+            content={'foo': 'bar'},
             channels=[user_name]
         )
 
         # Add batch of docs
+        log_info('User ({}) adding {} docs.'.format(user_name, number_docs_per_user))
         client.add_bulk_docs(sg_url, sg_db, docs, auth=user_auth)
 
         docs_pushed += batch_size
@@ -156,13 +173,14 @@ def add_user_docs(client, sg_url, sg_db, user_name, user_auth, number_docs_per_u
 
 
 def create_users_add_docs_task(user_number,
-                               sg_client,
                                sg_admin_url,
                                sg_url,
                                sg_db,
                                number_docs_per_user,
                                batch_size,
                                create_delay):
+
+    sg_client = MobileRestClient()
 
     user_name = 'st_user_{}'.format(user_number)
     user_pass = 'password'
@@ -195,13 +213,14 @@ def create_users_add_docs_task(user_number,
         create_delay=create_delay
     )
 
-    return user_name
+    return user_name, user_auth
 
 
-def create_docs(sg_client, sg_admin_url, sg_url, sg_db, num_users, number_docs_per_user, batch_size, create_delay):
+def create_docs(sg_admin_url, sg_url, sg_db, num_users, number_docs_per_user, batch_size, create_delay):
+    """ Concurrent creation of docs """
+
     start = time.time()
-
-    log_info("Starting {} users to add {} docs per user".format(num_users, number_docs_per_user))
+    log_info('Starting {} users to add {} docs per user'.format(num_users, number_docs_per_user))
 
     # Start each user concurrently.
     with ProcessPoolExecutor() as pe:
@@ -209,7 +228,6 @@ def create_docs(sg_client, sg_admin_url, sg_url, sg_db, num_users, number_docs_p
         futures = [pe.submit(
             create_users_add_docs_task,
             user_number=i,
-            sg_client=sg_client,
             sg_admin_url=sg_admin_url,
             sg_url=sg_url,
             sg_db=sg_db,
@@ -219,13 +237,37 @@ def create_docs(sg_client, sg_admin_url, sg_url, sg_db, num_users, number_docs_p
         ) for i in range(num_users)]
 
         for future in as_completed(futures):
-            completed_user = future.result()
-            log_info("User ({}) done adding docs.".format(completed_user))
+            username, auth = future.result()
+            log_info('User ({}) done adding docs.'.format(username))
+
+            # Add user to global dictionary
+            SG_USERS[username] = auth
 
     end = time.time() - start
-    log_info("Doc creation of {} docs per user and delay: {}s took -> {}s".format(
+    log_info('Doc creation of {} docs per user and delay: {}s took -> {}s'.format(
         number_docs_per_user, create_delay, end
     ))
+
+
+def update_docs(sg_admin_url, sg_url, sg_db, num_users, update_runtime_sec, batch_size, update_delay):
+
+    log_info('Starting updates with batch size (concurrent users updating): {} and delay: {}s'.format(
+        batch_size,
+        update_delay
+    ))
+    log_info('Continue to update for {}s'.format(update_runtime_sec))
+
+    start = time.time()
+    continue_updating = True
+    while continue_updating:
+
+        elapsed_sec = time.time() - start
+        log_info('Updaing for: {}s'.format(elapsed_sec))
+        if elapsed_sec > update_runtime_sec:
+            log_info('Runtime limit reached. Exiting ...')
+            break
+
+        time.sleep(update_delay)
 
 
 def delete_views(cbs_session, cbs_admin_url, bucket_name):
@@ -235,13 +277,13 @@ def delete_views(cbs_session, cbs_admin_url, bucket_name):
     # Delete the SG views before seeding the server
     # We want to see how long does it take for SG views to get created
     for view in SG_VIEWS:
-        log_info("Deleting view: {}".format(view))
+        log_info('Deleting view: {}'.format(view))
         try:
-            resp = cbs_session.delete("{}/{}/_design/{}".format(cbs_admin_url, bucket_name, view))
+            resp = cbs_session.delete('{}/{}/_design/{}'.format(cbs_admin_url, bucket_name, view))
             resp.raise_for_status()
         except HTTPError:
             if resp.status_code == 404:
-                log_info("View already deleted: {}".format(view))
+                log_info('View already deleted: {}'.format(view))
             else:
                 raise
 
@@ -265,8 +307,8 @@ def wait_for_view_creation(cbs_session, cbs_admin_url, bucket_name):
     start = time.time()
     for view in SG_VIEWS:
         for index in SG_VIEWS[view]:
-            log_info("Waiting for view {}/{} to be finished".format(view, index))
-            resp = cbs_session.get("{}/{}/_design/{}/_view/{}?stale=false".format(cbs_admin_url, bucket_name, view, index))
+            log_info('Waiting for view {}/{} to be finished'.format(view, index))
+            resp = cbs_session.get('{}/{}/_design/{}/_view/{}?stale=false'.format(cbs_admin_url, bucket_name, view, index))
             resp.raise_for_status()
     end = time.time()
-    log_info("Views creation took {} seconds".format(end - start))
+    log_info('Views creation took {} seconds'.format(end - start))
