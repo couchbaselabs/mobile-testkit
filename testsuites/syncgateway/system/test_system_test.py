@@ -20,9 +20,6 @@ from keywords.SyncGateway import SyncGateway
 from keywords.utils import log_info
 
 
-SG_USERS = {}
-
-
 # Set the default value to 404 - view not created yet
 SG_VIEWS = {
     'sync_gateway_access': ["access"],
@@ -130,7 +127,7 @@ def test_system_test(params_from_base_test_setup):
     # Start concurrent creation of docs (max docs / num users)
     # Each user will add batch_size number of docs via bulk docs and sleep for 'create_delay'
     # Once a user has added number of expected docs 'docs_per_user', it will terminate.
-    create_docs(
+    users = create_docs(
         sg_admin_url=sg_admin_url,
         sg_url=sg_url,
         sg_db=sg_db,
@@ -139,6 +136,7 @@ def test_system_test(params_from_base_test_setup):
         batch_size=create_batch_size,
         create_delay=create_delay
     )
+    assert len(users) == num_users
 
     # Start concurrent updates of update
     # Update batch size is the number of users that will concurrently update all of their docs
@@ -146,11 +144,23 @@ def test_system_test(params_from_base_test_setup):
         sg_admin_url=sg_admin_url,
         sg_url=sg_url,
         sg_db=sg_db,
-        num_users=num_users,
+        users=users,
         update_runtime_sec=update_runtime_sec,
         batch_size=update_batch_size,
         update_delay=update_delay
     )
+
+
+def start_normal_changes_worker():
+    pass
+
+
+def start_longpoll_changes_worker():
+    pass
+
+
+def start_continuous_changes_worker():
+    pass
 
 
 def add_user_docs(client, sg_url, sg_db, user_name, user_auth, number_docs_per_user, batch_size, create_delay):
@@ -230,12 +240,14 @@ def create_users_add_docs_task(user_number,
 def create_docs(sg_admin_url, sg_url, sg_db, num_users, number_docs_per_user, batch_size, create_delay):
     """ Concurrent creation of docs """
 
+    users = {}
+
     start = time.time()
     log_info('Starting {} users to add {} docs per user'.format(num_users, number_docs_per_user))
 
-    # Start each user concurrently.
     with ProcessPoolExecutor(max_workers=num_users) as pe:
 
+        # Start concurrent create block
         futures = [pe.submit(
             create_users_add_docs_task,
             user_number=i,
@@ -247,12 +259,14 @@ def create_docs(sg_admin_url, sg_url, sg_db, num_users, number_docs_per_user, ba
             create_delay=create_delay
         ) for i in range(num_users)]
 
+        # Block until all futures are completed or return
+        # exception in future.result()
         for future in as_completed(futures):
             username, auth, doc_ids = future.result()
             log_info('User ({}) done adding docs.'.format(username))
 
             # Add user to global dictionary
-            SG_USERS[username] = {
+            users[username] = {
                 'auth': auth,
                 'doc_ids': doc_ids,
                 'updates': 0
@@ -263,8 +277,10 @@ def create_docs(sg_admin_url, sg_url, sg_db, num_users, number_docs_per_user, ba
         number_docs_per_user, create_delay, end
     ))
 
+    return users
 
-def update_docs_task(user_index, sg_url, sg_db):
+
+def update_docs_task(users, user_index, sg_url, sg_db):
 
     user_name = 'st_user_{}'.format(user_index)
 
@@ -279,13 +295,13 @@ def update_docs_task(user_index, sg_url, sg_db):
     sg_client = MobileRestClient()
 
     # Get a random user
-    random_user_auth = SG_USERS[user_name]['auth']
-    random_user_doc_ids = SG_USERS[user_name]['doc_ids']
+    random_user_auth = users[user_name]['auth']
+    random_user_doc_ids = users[user_name]['doc_ids']
 
     log_info('Updating {} docs, method ({}) number of updates: {} ({})'.format(
         len(random_user_doc_ids),
         update_method,
-        SG_USERS[user_name]['updates'],
+        users[user_name]['updates'],
         user_name
     ))
 
@@ -313,7 +329,7 @@ def update_docs_task(user_index, sg_url, sg_db):
     return user_name
 
 
-def update_docs(sg_admin_url, sg_url, sg_db, num_users, update_runtime_sec, batch_size, update_delay):
+def update_docs(sg_admin_url, sg_url, sg_db, users, update_runtime_sec, batch_size, update_delay):
 
     log_info('Starting updates with batch size (concurrent users updating): {} and delay: {}s'.format(
         batch_size,
@@ -321,6 +337,7 @@ def update_docs(sg_admin_url, sg_url, sg_db, num_users, update_runtime_sec, batc
     ))
     log_info('Continue to update for {}s'.format(update_runtime_sec))
 
+    num_users = len(users)
     start = time.time()
     continue_updating = True
     current_user_index = 0
@@ -335,17 +352,21 @@ def update_docs(sg_admin_url, sg_url, sg_db, num_users, update_runtime_sec, batc
 
         with ProcessPoolExecutor(max_workers=batch_size) as pe:
 
+            # Start concurrent update block
             futures = [pe.submit(
                 update_docs_task,
+                users,
                 current_user_index + i,
                 sg_url,
                 sg_db
             ) for i in range(batch_size)]
-
+            
+            # Block until all futures are completed or return
+            # exception in future.result()
             for future in as_completed(futures):
                 # Increment updates
                 user = future.result()
-                SG_USERS[user]['updates'] += 1
+                users[user]['updates'] += 1
                 log_info('Completed updates ({})'.format(user))
 
         current_user_index = (current_user_index + batch_size) % num_users
