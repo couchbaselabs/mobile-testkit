@@ -1,0 +1,64 @@
+=== Spin Up Machines on Vagrant
+
+NOTE: This has only been tested on Mac OSX
+
+. https://www.virtualbox.org/wiki/Downloads[Install VirtualBox]
+. https://www.vagrantup.com/downloads.html[Install Vagrant]
+. `cd` into `vagrant/private_network` (or `vagrant/public_network` if you need VM's exposed to LAN, for example when testing against actual mobile devices)
+
+Create cluster with private network
+
+`vagrant up`
+
+. Run `python utilities/generate_cluster_configs_from_vagrant_hosts.py --private-network|public-network` 
+    - This will discover running vagrant boxes and get their ips
+    - Generate `resources/pool.json`
+    - Generate `resources/cluster_configs/`
+. Create an ssh key. `cd <home-dir>/.ssh/ && ssh-keygen`
+. Make sure you have PasswordAuthentication set on each vagrant instance
+
+```
+cd vagrant/private_network/ && vagrant ssh host1
+$ [root@localhost vagrant]# sudo bash
+$ [root@localhost vagrant]# vi /etc/ssh/sshd_config 
+
+...
+
+# To disable tunneled clear text passwords, change to no here!
+#PasswordAuthentication yes
+#PermitEmptyPasswords no
+PasswordAuthentication yes
+
+...
+
+$ [root@localhost vagrant]# service sshd restart
+$ Redirecting to /bin/systemctl restart  sshd.service
+```
+
+Do the same for rests of the hosts in the `Vagrantfile`
+
+1. Install the ssh key into the machines via 
+
+```
+python libraries/utilities/install_keys.py --public-key-path=~/.ssh/id_rsa.pub --ssh-user=vagrant --ssh-password=vagrant
+```
+
+use the password `vagrant`. 
+
+. Create `ansible.cfg` 
+```
+$ cp ansible.cfg.example ansible.cfg
+$ vi ansible.cfg  # edit to your liking
+```
+. Edit `ansible.cfg` and change the user to 'vagrant'
+. Set the `CLUSTER_CONFIG` environment variable that is required by the `provision_cluster.py` script.  Eg: `$ export CLUSTER_CONFIG=resources/cluster_configs/1sg`
+. Install the dependencies
+```
+python libraries/provision/install_deps.py
+```
+. Provision the cluster
+```
+python libraries/provision/provision_cluster.py --server-version=4.5.0 --sync-gateway-version=1.3.1-16
+```
+
+Enjoy! You now have a Couchbase Server + Sync Gateway cluster running on your machine!

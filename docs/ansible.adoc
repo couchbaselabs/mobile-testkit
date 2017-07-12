@@ -1,0 +1,110 @@
+==== Setup Global Ansible Config
+
+```
+$ cp ansible.cfg.example ansible.cfg
+$ vi ansible.cfg  # edit to your liking
+```
+
+Make sure to use your ssh user ("root" is default). If you are using AWS, you may have to change this to "centos"
+
+==== Create pool.json file
+
+This is the list of machines that is used to generate the resources/cluster_configs which are used by the functional tests.
+
+==== Create a pool.json of endpoints you would like to target (IPs or AWS ec2 endpoints)
+
+* Rename `resources/pool.json.example` to `resources/pool.json`. Update the fake ips with your endpoints or EC2 endpoints.
+* If you do not have IP endpoints and would like to use Vagrant, see <<Spin Up Machines on Vagrant>>
+* If you do not have IP endpoints and would like to use AWS, see <<Spin Up Machines on AWS>>
+* Make sure you have at least 4 unique endpoints
+* If you are using vms and do not have key access for ssh, you can use the key installer script (Not required for AWS). This will target 'resources/pool.json' and attempt to deploy a public key of your choice to the machines.
+
+In order to use Ansible, the controller needs to have it's SSH keys in all the hosts that it's connecting to.  
+
+Follow the instructions in https://github.com/couchbaselabs/mobile-testkit/wiki/Docker-Container---SSH-Keys[Docker container SSH key instructions] to setup keys in Docker
+
+```
+python libraries/utilities/install_keys.py --public-key-path=~/.ssh/id_rsa.pub --ssh-user=root
+```
+- Generate the necessary cluster topologies to run the tests
+```
+python libraries/utilities/generate_clusters_from_pool.py
+```
+This targets the 'resources/pool.json' you supplied above and generates cluster definitions required for provisioning and running the tests. The generated configurations can be found in 'resources/cluster_configs/'.
+
+- Provision the cluster with --install-deps flag (only once)
+
+- Set the `CLUSTER_CONFIG` environment variable that is required by the `provision_cluster.py` script.  Eg: `$ export CLUSTER_CONFIG=resources/cluster_configs/2sg_1cbs`
+
+- Install the dependencies:
+```
+python libraries/provision/install_deps.py
+```
+
+- Install sync_gateway package:
+
+```
+$ python libraries/provision/provision_cluster.py \
+    --server-version=4.1.1 \
+    --sync-gateway-version=1.2.0-79
+```
+
+- OR Install sync_gateway source:
+
+Since building Sync Gateway from source requires access to the private sync-gateway-accel repo, you will need to
+be in possession of the appropriate http://cbmobile-sharedkeys.s3.amazonaws.com/cbmobile_private_repo_read_only[SSH key].
+See `install-gh-deploy-keys.py` for more info.
+
+```
+$ python libraries/utilities/install-gh-deploy-keys.py
+    --key-path=/path/to/cbmobile_private_repo_read_only_key
+    --ssh-user=vagrant
+$ python libraries/provision/provision_cluster.py \
+    --server-version=4.1.1 \
+    --sync-gateway-commit=062bc26a8b65e63b3a80ba0f11506e49681d4c8c (requires full commit hash)
+```
+
+If you experience ssh errors, you may need to verify that the key has been added to your ssh agent
+
+```
+eval "$(ssh-agent -s)"
+ssh-add ~/.ssh/sample_key
+```
+
+== Windows Setup for Ansible
+
+- Follow instructions here - http://docs.ansible.com/ansible/intro_windows.html
+
+- Create an inventory similar to - 
+```
+[windows]
+win1 ansible_host=111.22.333.444
+
+[windows:vars]
+# Use your RDP / local windows user credentials for ansible_user / ansible_password
+ansible_user=FakeUser
+ansible_password=FakePassword
+ansible_port=5986
+ansible_connection=winrm
+# The following is necessary for Python 2.7.9+ when using default WinRM self-signed certificates:
+ansible_winrm_server_cert_validation=ignore
+```
+Save as `resources/cluster_configs/windows`
+
+NOTE: Do not publish or check this inventory file in. If you do, anyone could potentially access your machine.
+
+- Download and execute this in the windows target PowerShell (Run as Administrator)
+https://raw.githubusercontent.com/ansible/ansible/devel/examples/scripts/ConfigureRemotingForAnsible.ps1[ConfigureRemotingForAnsible.ps1]
+```
+.\ConfigureRemotingForAnsible.ps1 -SkipNetworkProfileCheck
+```
+
+If you hit errors, you may have to allow unsigned script execution (Use with caution)
+```
+Set-ExecutionPolicy Unrestricted
+```
+
+Test by:
+```
+ansible windows -i resources/cluster_configs/windows -m win_ping
+```
