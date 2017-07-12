@@ -53,6 +53,10 @@ def test_system_test(params_from_base_test_setup):
     create_batch_size = int(params_from_base_test_setup['create_batch_size'])
     create_delay = float(params_from_base_test_setup['create_delay'])
 
+    # Changes parameters
+    changes_delay = 5
+    changes_terminator_doc_id = 'terminator'
+
     # Update parameters
     update_runtime_sec = int(params_from_base_test_setup['update_runtime_sec'])
     update_batch_size = int(params_from_base_test_setup['update_batch_size'])
@@ -127,6 +131,9 @@ def test_system_test(params_from_base_test_setup):
     # Start concurrent creation of docs (max docs / num users)
     # Each user will add batch_size number of docs via bulk docs and sleep for 'create_delay'
     # Once a user has added number of expected docs 'docs_per_user', it will terminate.
+    log_info('------------------------------------------')
+    log_info('START concurrent user / doc creation')
+    log_info('------------------------------------------')
     users = create_docs(
         sg_admin_url=sg_admin_url,
         sg_url=sg_url,
@@ -137,22 +144,82 @@ def test_system_test(params_from_base_test_setup):
         create_delay=create_delay
     )
     assert len(users) == num_users
+    log_info('------------------------------------------')
+    log_info('END concurrent user / doc creation')
+    log_info('------------------------------------------')
 
-    # Start concurrent updates of update
-    # Update batch size is the number of users that will concurrently update all of their docs
-    update_docs(
-        sg_admin_url=sg_admin_url,
-        sg_url=sg_url,
-        sg_db=sg_db,
-        users=users,
-        update_runtime_sec=update_runtime_sec,
-        batch_size=update_batch_size,
-        update_delay=update_delay
-    )
+    # Start changes processing
+    with ProcessPoolExecutor(max_workers=3) as pex:
+        unique_changes_workers_task = pex.submit(
+            start_unique_channel_changes_processing,
+            sg_url,
+            sg_db,
+            users,
+            changes_delay,
+            changes_terminator_doc_id
+        )
+        # start_channel_filter_changes_processing(users)
+        # start_shared_channel_changes_processing(users)
+
+        log_info('------------------------------------------')
+        log_info('START concurrent updates')
+        log_info('------------------------------------------')
+        # Start concurrent updates of update
+        # Update batch size is the number of users that will concurrently update all of their docs
+        users = update_docs(
+            sg_admin_url=sg_admin_url,
+            sg_url=sg_url,
+            sg_db=sg_db,
+            users=users,
+            update_runtime_sec=update_runtime_sec,
+            batch_size=update_batch_size,
+            update_delay=update_delay
+        )
+
+        for k, v in users.items():
+            log_info('User ({}) updated docs {} times!'.format(k, v['updates']))
+
+        log_info('------------------------------------------')
+        log_info('END concurrent updates')
+        log_info('------------------------------------------')
+
+        # Wait for changes to complete
+        terminate_changes(sg_url, sg_db, users, changes_terminator_doc_id)
+
+        # Block on changes completion
+        unique_changes_workers_task.result()
 
 
-def start_normal_changes_worker():
-    pass
+def terminate_changes(sg_url, sg_db, users, terminator_doc_id):
+    sg_client = MobileRestClient()
+
+    # TODO: Parallelize
+    for k, v in users.items():
+        log_info('Sending changes termination doc for user: {}'.format(k))
+        doc = {'_id': terminator_doc_id, 'channels': [k]}
+        sg_client.add_doc(url=sg_url, db=sg_db, doc=doc, auth=v['auth'])
+
+
+def start_normal_changes_worker(sg_url, sg_db, user_name, user_auth, changes_delay, terminator_doc_id):
+    sg_client = MobileRestClient()
+    since = 0
+    found_terminator = False
+    while True:
+
+        if found_terminator:
+            log_info('Found terminator ({})'.format(user_name))
+            return
+
+        log_info('_changes for ({}) since: {}'.format(user_name, since))
+        changes = sg_client.get_changes(url=sg_url, db=sg_db, since=since, auth=user_auth, feed="normal")
+
+        # A termination doc was processed, exit on the next loop
+        for change in changes['results']:
+            if change['id'] == terminator_doc_id:
+                found_terminator = True
+
+        since = changes['last_seq']
+        time.sleep(changes_delay)
 
 
 def start_longpoll_changes_worker():
@@ -161,6 +228,26 @@ def start_longpoll_changes_worker():
 
 def start_continuous_changes_worker():
     pass
+
+
+def start_unique_channel_changes_processing(sg_url, sg_db, users, changes_delay, terminator_doc_id):
+
+    with ProcessPoolExecutor(max_workers=len(users)) as changes_pex:
+        changes_tasks = [
+            changes_pex.submit(
+                start_normal_changes_worker,
+                sg_url,
+                sg_db,
+                user_key,
+                user_value['auth'],
+                changes_delay,
+                terminator_doc_id
+            )
+            for user_key, user_value in users.items()
+        ]
+        
+        for changes_task in as_completed(changes_tasks):
+            log_info(changes_task.result())
 
 
 def add_user_docs(client, sg_url, sg_db, user_name, user_auth, number_docs_per_user, batch_size, create_delay):
@@ -348,7 +435,7 @@ def update_docs(sg_admin_url, sg_url, sg_db, users, update_runtime_sec, batch_si
         log_info('Updaing for: {}s'.format(elapsed_sec))
         if elapsed_sec > update_runtime_sec:
             log_info('Runtime limit reached. Exiting ...')
-            break
+            return users
 
         with ProcessPoolExecutor(max_workers=batch_size) as pe:
 
