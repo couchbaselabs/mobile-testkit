@@ -24,10 +24,96 @@ The repo structure is the following:
  * syncgateway
 
 == Mobile Testkit Dependencies
-link:docs/dependencies.md[Instructions]
+
+=== Setup Controller on OSX
+
+The "controller" is the machine that runs the tests and communicates with the system under test, which is typically:
+
+* Your developer workstation
+* A virtual machine / docker container
+
+The instructions below are for setting up directly on OSX.  If you prefer to run this under Docker, see the https://github.com/couchbaselabs/mobile-testkit/wiki/Running-under-Docker[Running
+under Docker] wiki page.
+
+=== Install Python via brew
+
+If you are on OSX El Capitan, you must install python via brew rather than using the system python due to https://github.com/pypa/pip/issues/3165[Pip issue 3165].
+
+```
+$ brew install python
+```
+
+After you install it, you should see that the python installed via brew is the default python:
+
+```
+$ which python
+/usr/local/bin/python
+$ python --version
+Python 2.7.10
+```
+
+=== Install libcouchbase
+
+On MacOSX
+```
+$ brew install libcouchbase
+```
+
+On CentOS7
+```
+$ yum install gcc libffi-devel python-devel openssl-devel
+```
+
+```
+$ yum install -y libev libevent
+$ wget http://packages.couchbase.com/clients/c/libcouchbase-2.5.6_centos7_x86_64.tar && \
+    tar xvf libcouchbase-2.5.6_centos7_x86_64.tar && \
+    cd libcouchbase-2.5.6_centos7_x86_64 && \
+    rpm -ivh libcouchbase-devel-2.5.6-1.el7.centos.x86_64.rpm \
+             libcouchbase2-core-2.5.6-1.el7.centos.x86_64.rpm \
+	     libcouchbase2-bin-2.5.6-1.el7.centos.x86_64.rpm \
+	     libcouchbase2-libevent-2.5.6-1.el7.centos.x86_64.rpm && \
+    rm -f *.rpm	     
+```
+
+If you run into this error when running `source setup.sh`:
+
+```
+  src/pycbc.h:29:31: fatal error: libcouchbase/cbft.h: No such file or directory
+     #include <libcouchbase/cbft.h>
+```
+
+The update your libcouchbase version via:
+
+```
+wget http://packages.couchbase.com/releases/couchbase-release/couchbase-release-1.0-2-x86_64.rpm
+sudo rpm -iv couchbase-release-1.0-2-x86_64.rpm
+sudo yum install libcouchbase-devel libcouchbase2-bin gcc gcc-c++
+```
+
+
+=== Set up virtualenv install python dependencies
+
+```
+$ [sudo] pip install virtualenv
+```
+
+```
+$ cd mobile-testkit/
+```
+
+Setup PATH, PYTHONPATH, and ANSIBLE_CONFIG
+```
+source setup.sh
+```
+
+If you plan on doing development, it may be helpful to add the PYTHONPATH env variables to your .bashrc file so that you do not have to run this setup everytime you open a new shell.
+
 
 == Development Environment
-link:docs/devenv.md[Instructions]
+
+=== VSCode
+https://code.visualstudio.com/download
 
 == Running Mobile-Testkit Framework Unit Tests
 
@@ -44,16 +130,272 @@ The sync_gateway tests require targeting different cluster topologies of sync_ga
 The sync_gateway tests use https://www.ansible.com/[Ansible] to provision the clusters.  
 
 === Using Sequoia for Provisioning 
-link:docs/sequoia.adoc[Instructions]
+Download and build
+```
+$ go get https://github.com/couchbaselabs/sequoia
+$ go build
+```
+
+Edit the providers/docker/options.yml file to specify the versions you would like to use
+
+1. Setup the Sync Gateway + Couchbase Server cluster
+```
+$ ./sequoia -test tests/mobile/test_sg.yml -scope tests/mobile/1sg_1cbs.yml --expose_ports --skip_teardown --skip_test --network cbl
+```
+
+2. Copy the hosts.json from sequoia/containers/mobile-testkit/hosts.json to root of mobile-testkit repo
+
+3. Mount testkit. Make sure to do this from the same director as the root directory of your development repository. This will mirror your local repo in the container and allow changes you make on the host to mirror in the container context 
+```
+$ docker run --privileged -it --network=cbl --name mobile-testkit -v $(pwd):/opt/mobile-testkit -v /var/run/docker.sock:/var/run/docker.sock -v /usr/bin/docker:/usr/bin/docker couchbase/mobile-testkit /bin/bash
+[mobile-teskit] $ python libraries/utilities/generate_config_from_sequoia.py --host-file hosts.json --topology base_cc
+```
+
+4. Run tests (Functional or System)
+```
+[mobile-teskit] $ pytest -s --skip-provisioning --xattrs --mode=cc --server-version=5.0.0-3217 --sync-gateway-version=1.5.0-465 testsuites/syncgateway/functional/tests/
+```
 
 === Using AWS for Provisioning
-link:docs/aws.adoc[Instructions]
+
+==== AWS Environment requirements
+
+You will need an access key and secret access key. http://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSGettingStartedGuide/AWSCredentials.html[The AWSCredentials guide] explains how to get them from your AWS account.
+
+Then you will need an AWS keypair. http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-key-pairs.html#how-to-generate-your-own-key-and-import-it-to-aws[The EC2 keypairs guide] explains how to import your own Key Pair to Amazon EC2. Mobile-testkit creates a key-pair in the us-east region so the key pair must be set on this region too.
+
+* Add boto configuration
+
+```
+$ cd ~/ 
+$ touch .boto
+$ vi .boto
+```
+
+NOTE: Do not check in the information below
+
+* Add your AWS credentials (Below are a fake example).
+
+```
+[Credentials]
+aws_access_key_id = CDABGHEFCDABGHEFCDAB
+aws_secret_access_key = ABGHEFCDABGHEFCDABGHEFCDABGHEFCDABGHEFCDAB
+```
+
+* Add AWS env variables
+
+```
+$ export AWS_ACCESS_KEY_ID=CDABGHEFCDABGHEFCDAB
+$ export AWS_SECRET_ACCESS_KEY=ABGHEFCDABGHEFCDABGHEFCDABGHEFCDABGHEFCDAB
+$ export AWS_KEY=<your-aws-keypair-name>
+```
+
+You probably want to persist these in your `.bash_profile` 
+
+==== Spin Up Machines on AWS
+
+1. Create and AWS CloudFormation Stack. Make sure you have set up AWS credentials described in <<Sync Gateway Test Dependencies>>
+
+```
+$ python libraries/provision/create_and_instantiate_cluster.py \
+    --stackname="YourCloudFormationStack" \
+    --num-servers=1 \
+    --server-type="m3.large" \
+    --num-sync-gateways=2 \
+    --sync-gateway-type="m3.medium" \
+    --num-gatlings=1 \
+    --gatling-type="m3.medium" \
+    --num-lbs=0 \
+    --lb-type="m3.medium" 
+```
+
+1. Generate `pool.json` file
+
+Replace **YourCloudFormationStack** with the actual cloudformation stack name used.
+
+```
+python libraries/provision/generate_pools_json_from_aws.py --stackname YourCloudFormationStack --targetfile resources/pool.json
+```
 
 === Using Vagrant for Provisioning
-link:docs/vagrant.adoc[Instructions]
+
+==== Spin Up Machines on Vagrant
+
+NOTE: This has only been tested on Mac OSX
+
+. https://www.virtualbox.org/wiki/Downloads[Install VirtualBox]
+. https://www.vagrantup.com/downloads.html[Install Vagrant]
+. `cd` into `vagrant/private_network` (or `vagrant/public_network` if you need VM's exposed to LAN, for example when testing against actual mobile devices)
+
+Create cluster with private network
+
+`vagrant up`
+
+. Run `python utilities/generate_cluster_configs_from_vagrant_hosts.py --private-network|public-network` 
+    - This will discover running vagrant boxes and get their ips
+    - Generate `resources/pool.json`
+    - Generate `resources/cluster_configs/`
+. Create an ssh key. `cd <home-dir>/.ssh/ && ssh-keygen`
+. Make sure you have PasswordAuthentication set on each vagrant instance
+
+```
+cd vagrant/private_network/ && vagrant ssh host1
+$ [root@localhost vagrant]# sudo bash
+$ [root@localhost vagrant]# vi /etc/ssh/sshd_config 
+
+...
+
+# To disable tunneled clear text passwords, change to no here!
+#PasswordAuthentication yes
+#PermitEmptyPasswords no
+PasswordAuthentication yes
+
+...
+
+$ [root@localhost vagrant]# service sshd restart
+$ Redirecting to /bin/systemctl restart  sshd.service
+```
+
+Do the same for rests of the hosts in the `Vagrantfile`
+
+1. Install the ssh key into the machines via 
+
+```
+python libraries/utilities/install_keys.py --public-key-path=~/.ssh/id_rsa.pub --ssh-user=vagrant --ssh-password=vagrant
+```
+
+use the password `vagrant`. 
+
+. Create `ansible.cfg` 
+```
+$ cp ansible.cfg.example ansible.cfg
+$ vi ansible.cfg  # edit to your liking
+```
+. Edit `ansible.cfg` and change the user to 'vagrant'
+. Set the `CLUSTER_CONFIG` environment variable that is required by the `provision_cluster.py` script.  Eg: `$ export CLUSTER_CONFIG=resources/cluster_configs/1sg`
+. Install the dependencies
+```
+python libraries/provision/install_deps.py
+```
+. Provision the cluster
+```
+python libraries/provision/provision_cluster.py --server-version=4.5.0 --sync-gateway-version=1.3.1-16
+```
+
+Enjoy! You now have a Couchbase Server + Sync Gateway cluster running on your machine!
 
 === Ansible Setup
-link:docs/ansible.adoc[Instructions]
+
+==== Setup Global Ansible Config
+
+```
+$ cp ansible.cfg.example ansible.cfg
+$ vi ansible.cfg  # edit to your liking
+```
+
+Make sure to use your ssh user ("root" is default). If you are using AWS, you may have to change this to "centos"
+
+==== Create pool.json file
+
+This is the list of machines that is used to generate the resources/cluster_configs which are used by the functional tests.
+
+==== Create a pool.json of endpoints you would like to target (IPs or AWS ec2 endpoints)
+
+* Rename `resources/pool.json.example` to `resources/pool.json`. Update the fake ips with your endpoints or EC2 endpoints.
+* If you do not have IP endpoints and would like to use Vagrant, see <<Spin Up Machines on Vagrant>>
+* If you do not have IP endpoints and would like to use AWS, see <<Spin Up Machines on AWS>>
+* Make sure you have at least 4 unique endpoints
+* If you are using vms and do not have key access for ssh, you can use the key installer script (Not required for AWS). This will target 'resources/pool.json' and attempt to deploy a public key of your choice to the machines.
+
+In order to use Ansible, the controller needs to have it's SSH keys in all the hosts that it's connecting to.  
+
+Follow the instructions in https://github.com/couchbaselabs/mobile-testkit/wiki/Docker-Container---SSH-Keys[Docker container SSH key instructions] to setup keys in Docker
+
+```
+python libraries/utilities/install_keys.py --public-key-path=~/.ssh/id_rsa.pub --ssh-user=root
+```
+- Generate the necessary cluster topologies to run the tests
+```
+python libraries/utilities/generate_clusters_from_pool.py
+```
+This targets the 'resources/pool.json' you supplied above and generates cluster definitions required for provisioning and running the tests. The generated configurations can be found in 'resources/cluster_configs/'.
+
+- Provision the cluster with --install-deps flag (only once)
+
+- Set the `CLUSTER_CONFIG` environment variable that is required by the `provision_cluster.py` script.  Eg: `$ export CLUSTER_CONFIG=resources/cluster_configs/2sg_1cbs`
+
+- Install the dependencies:
+```
+python libraries/provision/install_deps.py
+```
+
+- Install sync_gateway package:
+
+```
+$ python libraries/provision/provision_cluster.py \
+    --server-version=4.1.1 \
+    --sync-gateway-version=1.2.0-79
+```
+
+- OR Install sync_gateway source:
+
+Since building Sync Gateway from source requires access to the private sync-gateway-accel repo, you will need to
+be in possession of the appropriate http://cbmobile-sharedkeys.s3.amazonaws.com/cbmobile_private_repo_read_only[SSH key].
+See `install-gh-deploy-keys.py` for more info.
+
+```
+$ python libraries/utilities/install-gh-deploy-keys.py
+    --key-path=/path/to/cbmobile_private_repo_read_only_key
+    --ssh-user=vagrant
+$ python libraries/provision/provision_cluster.py \
+    --server-version=4.1.1 \
+    --sync-gateway-commit=062bc26a8b65e63b3a80ba0f11506e49681d4c8c (requires full commit hash)
+```
+
+If you experience ssh errors, you may need to verify that the key has been added to your ssh agent
+
+```
+eval "$(ssh-agent -s)"
+ssh-add ~/.ssh/sample_key
+```
+
+==== Windows Setup for Ansible
+
+- Follow instructions here - http://docs.ansible.com/ansible/intro_windows.html
+
+- Create an inventory similar to - 
+```
+[windows]
+win1 ansible_host=111.22.333.444
+
+[windows:vars]
+# Use your RDP / local windows user credentials for ansible_user / ansible_password
+ansible_user=FakeUser
+ansible_password=FakePassword
+ansible_port=5986
+ansible_connection=winrm
+# The following is necessary for Python 2.7.9+ when using default WinRM self-signed certificates:
+ansible_winrm_server_cert_validation=ignore
+```
+Save as `resources/cluster_configs/windows`
+
+NOTE: Do not publish or check this inventory file in. If you do, anyone could potentially access your machine.
+
+- Download and execute this in the windows target PowerShell (Run as Administrator)
+https://raw.githubusercontent.com/ansible/ansible/devel/examples/scripts/ConfigureRemotingForAnsible.ps1[ConfigureRemotingForAnsible.ps1]
+```
+.\ConfigureRemotingForAnsible.ps1 -SkipNetworkProfileCheck
+```
+
+If you hit errors, you may have to allow unsigned script execution (Use with caution)
+```
+Set-ExecutionPolicy Unrestricted
+```
+
+Test by:
+```
+ansible windows -i resources/cluster_configs/windows -m win_ping
+```
 
 === Functional Tests
 
@@ -125,7 +467,102 @@ link:testsuites/listener/shared/client_client/README.md[Running Tests]
 link:testsuites/listener/shared/client_sg/README.md[Running Tests]
 
 === Android Emulator Setup
-link:docs/androidsetup.adoc[Instructions]
+==== Setting up Google Emulators
+
+* Open Android Studio
+* Create new "dummy" project
+* Click on AVD manager (purple icon)
+* Create Virtual Device
+* Click "Download" next to Marshmallow x86_64
+* Hit Next/Finish to create it
+
+The scenarios can run on Android stock emulators/Genymotion emulators and devices.
+
+If you're running Android stock emulators you should make sure they are using HAXM. Follow the instructions here to install https://software.intel.com/en-us/android/articles/installation-instructions-for-intel-hardware-accelerated-execution-manager-mac-os-x[HAXM].
+
+Ensure the RAM allocated to your combined running emulators is less than the total allocated to HAXM. You can configure the RAM for your emulator images in the Android Virtual Device Manager and in HAXM by reinstalling via the .dmg in the android sdk folder.
+ 
+To run the tests make sure you have lauched the correct number of emulators. You can launch them using the following command. 
+```
+emulator -scale 0.25 @Nexus_5_API_23 &
+emulator -scale 0.25 @Nexus_5_API_23 &
+emulator -scale 0.25 @Nexus_5_API_23 &
+emulator -scale 0.25 @Nexus_5_API_23 &
+emulator -scale 0.25 @Nexus_5_API_23 &
+```
+Verify that the names listed below match the device definitions for the test you are trying to run
+```
+adb devices -l
+```
+```
+List of devices attached
+emulator-5562          device product:sdk_google_phone_x86 model:Android_SDK_built_for_x86 device:generic_x86
+emulator-5560          device product:sdk_google_phone_x86 model:Android_SDK_built_for_x86 device:generic_x86
+emulator-5558          device product:sdk_google_phone_x86 model:Android_SDK_built_for_x86 device:generic_x86
+emulator-5556          device product:sdk_google_phone_x86 model:Android_SDK_built_for_x86 device:generic_x86
+emulator-5554          device product:sdk_google_phone_x86 model:Android_SDK_built_for_x86 device:generic_x86
+```
+
+Most of the port forwarding will be set up via instantiation of the Listener. However, you do need to complete some additional steps.
+
+NOTE: Instantiating a Listener in `test_listener_rest.py` will automatically forward the port the listener is running on to one on localhost. However, that port forwarding will not be bound on the local IP of your computer. This can be useful when combining actual devices and emulators. The following section describes how to make the emulators reachable from devices.
+
+Once you have emulators and possibly port forwarding setup, set the `P2P_APP` environment variable to the `.apk` of the application to be tested.
+
+```
+$ export P2P_APP=/path/to/apk
+```
+
+If the test fails with a hostname unreachable error then it's probably because port forwarding needs to be configured (read section below).
+
+==== Port forwarding (setup once)
+
+Add the following lines to the file `/etc/sysctl.conf`
+```
+net.inet.ip.forwarding=1
+net.inet6.ip6.forwarding=1
+```
+
+Specifying the 'local_port' when instantiating a Listener will forward the port on localhost only.
+ 
+ We need to bind the port on the `en0` interface to be reachable on the Wi-Fi. On Mac, this can be done with `pfctl`. Create a new anchor file under `/etc/pf.anchors/com.p2p`:
+
+```
+rdr pass on lo0 inet proto tcp from any to any port 10000 -> 127.0.0.1 port 10000
+rdr pass on en0 inet proto tcp from any to any port 10000 -> 127.0.0.1 port 10000
+
+rdr pass on lo0 inet proto tcp from any to any port 11000 -> 127.0.0.1 port 11000
+rdr pass on en0 inet proto tcp from any to any port 11000 -> 127.0.0.1 port 11000
+...
+
+```
+Parse and test your anchor file to make sure there a no errors:
+```
+sudo pfctl -vnf /etc/pf.anchors/com.p2p
+```
+
+The file at `/etc/pf.conf` is the main configuration file that `pf` loads at boot. Make sure to add both lines below to `/etc/pf.conf`:
+
+```
+scrub-anchor "com.apple/*"
+nat-anchor "com.apple/*"
+rdr-anchor "com.apple/*"
+rdr-anchor "com.p2p"      # Port forwading for p2p replications 
+dummynet-anchor "com.apple/*"
+anchor "com.apple/*"
+load anchor "com.apple" from "/etc/pf.anchors/com.apple"
+load anchor "com.p2p" from "/etc/pf.anchors/com.p2p"     # Port forwarding for p2p replications
+```
+
+The `lo0` are for local requests, and the `en0` entries are for external requests (coming from an actual device or another emulator targeting your host).
+
+Next, load and enable `pf` by running the following:
+
+```
+$ sudo pfctl -ef /etc/pf.conf
+```
+
+Now, all the databases are reachable on the internal network via host:forwarded_port (ex. http://192.168.0.21:10000/db), where 192.168.0.21 is your host computer's ip and 10000 is the 'local_port' passed when instantiating the Listener.
 
 == Debugging
 
@@ -149,5 +586,18 @@ pytest --pdb
 
 == Monitoring
 
-=== Monitoring Clusters
-link:docs/Monitoring[Monitoring Tool]
+=== expvarmon
+Make sure you have installed expvarmon 
+```
+go get github.com/divan/expvarmon
+```
+
+To monitor the Gateload expvars for `[load_generators]` nodes in the cluster_config 
+```
+python libraries/utilities/monitor_gateload.py
+```
+
+To monitor the sync_gateway expvars for `[sync_gateways]` nodes in the cluster_config 
+```
+python libraries/utilities/monitor_sync_gateway.py
+```
