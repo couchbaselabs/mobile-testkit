@@ -1,4 +1,4 @@
-FROM microsoft/dotnet
+FROM microsoft/dotnet:2.0-sdk
 
 MAINTAINER "Seth Rosetter" <seth.rosetter@gmail.com>
 
