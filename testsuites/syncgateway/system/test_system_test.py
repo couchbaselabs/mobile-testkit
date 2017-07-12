@@ -65,12 +65,12 @@ def test_system_test(params_from_base_test_setup):
     log_info('Running System Test #1')
     log_info('> server_seed_docs   = {}'.format(server_seed_docs))
     log_info('> max_docs           = {}'.format(max_docs))
+    log_info('> num_users          = {}'.format(num_users))
     log_info('> create_batch_size  = {}'.format(create_batch_size))
     log_info('> create_delay       = {}'.format(create_delay))
     log_info('> update_batch_size  = {}'.format(update_batch_size))
     log_info('> update_delay       = {}'.format(update_delay))
     log_info('> update_runtime_sec = {}'.format(update_runtime_sec))
-    log_info('> num_users          = {}'.format(num_users))
 
     # Validate
 
@@ -150,6 +150,7 @@ def test_system_test(params_from_base_test_setup):
 
     # Start changes processing
     with ProcessPoolExecutor(max_workers=3) as pex:
+        
         unique_changes_workers_task = pex.submit(
             start_unique_channel_changes_processing,
             sg_url,
@@ -176,28 +177,30 @@ def test_system_test(params_from_base_test_setup):
             update_delay=update_delay
         )
 
+        all_user_channels = []
         for k, v in users.items():
             log_info('User ({}) updated docs {} times!'.format(k, v['updates']))
+            all_user_channels.append(k)
 
         log_info('------------------------------------------')
         log_info('END concurrent updates')
         log_info('------------------------------------------')
 
-        # Wait for changes to complete
-        terminate_changes(sg_url, sg_db, users, changes_terminator_doc_id)
+        # Broadcast termination doc to all users
+        terminate_changes(sg_url, sg_db, users, changes_terminator_doc_id, all_user_channels)
 
         # Block on changes completion
         unique_changes_workers_task.result()
 
 
-def terminate_changes(sg_url, sg_db, users, terminator_doc_id):
+def terminate_changes(sg_url, sg_db, users, terminator_doc_id, all_user_channels):
     sg_client = MobileRestClient()
 
-    # TODO: Parallelize
-    for k, v in users.items():
-        log_info('Sending changes termination doc for user: {}'.format(k))
-        doc = {'_id': terminator_doc_id, 'channels': [k]}
-        sg_client.add_doc(url=sg_url, db=sg_db, doc=doc, auth=v['auth'])
+    random_user_id = random.choice(users.keys())
+    random_user = users[random_user_id]
+    log_info('Sending changes termination doc for all users')
+    doc = {'_id': terminator_doc_id, 'channels': all_user_channels}
+    sg_client.add_doc(url=sg_url, db=sg_db, doc=doc, auth=random_user['auth'])
 
 
 def start_normal_changes_worker(sg_url, sg_db, user_name, user_auth, changes_delay, terminator_doc_id):
@@ -426,10 +429,9 @@ def update_docs(sg_admin_url, sg_url, sg_db, users, update_runtime_sec, batch_si
 
     num_users = len(users)
     start = time.time()
-    continue_updating = True
     current_user_index = 0
 
-    while continue_updating:
+    while True:
 
         elapsed_sec = time.time() - start
         log_info('Updaing for: {}s'.format(elapsed_sec))
