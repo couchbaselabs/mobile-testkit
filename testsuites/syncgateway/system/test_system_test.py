@@ -190,7 +190,11 @@ def test_system_test(params_from_base_test_setup):
         terminate_changes(sg_url, sg_db, users, changes_terminator_doc_id, all_user_channels)
 
         # Block on changes completion
-        unique_changes_workers_task.result()
+        users = unique_changes_workers_task.result()
+        for user_name, value in users.items():
+            num_user_docs = len(value['doc_ids'])
+            num_user_changes = len(value['unique_channel_changes'])
+            log_info('-> {} added: {} docs and {} changes'.format(user_name, num_user_docs, num_user_changes))
 
 
 def terminate_changes(sg_url, sg_db, users, terminator_doc_id, all_user_channels):
@@ -206,12 +210,14 @@ def terminate_changes(sg_url, sg_db, users, terminator_doc_id, all_user_channels
 def start_normal_changes_worker(sg_url, sg_db, user_name, user_auth, changes_delay, terminator_doc_id):
     sg_client = MobileRestClient()
     since = 0
+    latest_changes = {}
     found_terminator = False
+
     while True:
 
         if found_terminator:
             log_info('Found terminator ({})'.format(user_name))
-            return
+            return user_name, latest_changes
 
         log_info('_changes for ({}) since: {}'.format(user_name, since))
         changes = sg_client.get_changes(url=sg_url, db=sg_db, since=since, auth=user_auth, feed="normal")
@@ -220,6 +226,12 @@ def start_normal_changes_worker(sg_url, sg_db, user_name, user_auth, changes_del
         for change in changes['results']:
             if change['id'] == terminator_doc_id:
                 found_terminator = True
+            else:
+                # Add latest rev to to latest_changes map
+                if len(change['changes']) >= 1:
+                    latest_changes[change['id']] = change['changes'][0]['rev']
+                else:
+                    latest_changes[change['id']] = ''
 
         since = changes['last_seq']
         time.sleep(changes_delay)
@@ -250,7 +262,10 @@ def start_unique_channel_changes_processing(sg_url, sg_db, users, changes_delay,
         ]
         
         for changes_task in as_completed(changes_tasks):
-            log_info(changes_task.result())
+            user_name, latest_change = changes_task.result()
+            users[user_name]['unique_channel_changes'] = latest_change
+
+    return users
 
 
 def add_user_docs(client, sg_url, sg_db, user_name, user_auth, number_docs_per_user, batch_size, create_delay):

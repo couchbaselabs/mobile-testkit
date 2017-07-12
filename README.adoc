@@ -403,7 +403,7 @@ link:testsuites/syncgateway/functional/tests/README.md[Running Functional Tests]
 
 === System Tests
 
-link:testsuites/syncgateway/system/README.md[Running System Tests]
+link:testsuites/syncgateway/system/README.adoc[Running System Tests]
 
 === Performance Tests
 link:testsuites/syncgateway/performance/README.md[Running Performance Tests]
