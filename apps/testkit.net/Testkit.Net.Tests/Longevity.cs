@@ -21,10 +21,12 @@ namespace Testkit.Net.Tests
         private readonly Database _db;
         private readonly Replicator _replicator;
         private readonly double _scenarioRuntimeMinutes;
+        private readonly int _maxDocs;
 
-        public Longevity(string syncGatewayUrl, double scenarioRuntimeMinutes)
+        public Longevity(string syncGatewayUrl, double scenarioRuntimeMinutes, int maxDocs)
         {
             _scenarioRuntimeMinutes = scenarioRuntimeMinutes;
+            _maxDocs = maxDocs;
 
             NetDestkop.Activate();
             Log.SetLiteCoreLogLevels(new Dictionary<string, LogLevel>
@@ -42,20 +44,19 @@ namespace Testkit.Net.Tests
 
             Console.WriteLine($"Running Scenario for {_scenarioRuntimeMinutes}min ...");
             Console.WriteLine($"Replicating with Sync Gateway: {syncGatewayUrl}");
-            var replicatorConfig = new ReplicatorConfiguration
+            var replicatorConfig = new ReplicatorConfiguration(_db, new Uri($"{syncGatewayUrl}"))
             {
-                Database = _db,
-                Target = new ReplicatorTarget(new Uri($"{syncGatewayUrl}")),
                 Continuous = true,
                 ReplicatorType = ReplicatorType.PushAndPull
             };
+
             _replicator = new Replicator(replicatorConfig);
             _replicator.StatusChanged += (sender, args) =>
-            {
-                Console.WriteLine($"Replication Activity: {args.Status.Activity}");
-                Console.WriteLine($"Replication Completed: {args.Status.Progress.Completed}");
-                Console.WriteLine($"Replication Total: {args.Status.Progress.Total}");
-            };
+                {
+                    Console.WriteLine($"Replication Activity: {args.Status.Activity}");
+                    Console.WriteLine($"Replication Completed: {args.Status.Progress.Completed}");
+                    Console.WriteLine($"Replication Total: {args.Status.Progress.Total}");
+                };
             _replicator.Start();
         }
 
@@ -63,7 +64,8 @@ namespace Testkit.Net.Tests
         public void Run()
         {
             // Create docs
-            var numDocs = 100000;
+            var numDocs = _maxDocs;
+
             Console.WriteLine($"Saving: {numDocs} docs");
             _db.InBatch(() =>
             {

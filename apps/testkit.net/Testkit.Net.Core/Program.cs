@@ -20,17 +20,26 @@ namespace Testkit.Net.Core
                 "The number of minutes to run the scenario for",
                 CommandOptionType.SingleValue
             );
+            CommandOption maxNumberDocs = commandLineApplication.Option(
+               "-m | --max-docs <MaxNumberOfDocsToCreate>",
+               "Then number of docs the client should create",
+               CommandOptionType.SingleValue
+           );
 
             commandLineApplication.HelpOption("-? | -h | --help");
             commandLineApplication.OnExecute(() =>
             {
-                if (!syncGatewayUrl.HasValue() || !runtimeMinutes.HasValue())
+                if (!syncGatewayUrl.HasValue() || !runtimeMinutes.HasValue() || !maxNumberDocs.HasValue())
                 {
                     commandLineApplication.ShowHelp();
                     return 1;
                 }
 
-                var scenario = new Longevity(syncGatewayUrl.Value(), Convert.ToDouble(runtimeMinutes.Value()));
+                var scenario = new Longevity(
+                    syncGatewayUrl.Value(),
+                    Convert.ToDouble(runtimeMinutes.Value()),
+                    Convert.ToInt32(maxNumberDocs.Value())
+                );
                 scenario.Run();
                 return 0;
             });
