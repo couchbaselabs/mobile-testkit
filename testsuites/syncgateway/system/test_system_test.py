@@ -191,10 +191,18 @@ def test_system_test(params_from_base_test_setup):
 
         # Block on changes completion
         users = unique_changes_workers_task.result()
-        for user_name, value in users.items():
-            num_user_docs = len(value['doc_ids'])
-            num_user_changes = len(value['unique_channel_changes'])
-            log_info('-> {} added: {} docs and {} changes'.format(user_name, num_user_docs, num_user_changes))
+
+        # Print the summary of the system test
+        print_summary(users)
+
+
+def print_summary(users):
+    for user_name, value in users.items():
+        num_user_docs = len(value['doc_ids'])
+        log_info('-> {} added: {} docs'.format(user_name, num_user_docs))
+        for changes_type in ['unique_channel_changes_normal', 'unique_channel_changes_longpoll']:
+            num_user_changes = len(value[changes_type])
+            log_info('  - Saw {} changes ({})'.format(num_user_changes, changes_type))
 
 
 def terminate_changes(sg_url, sg_db, users, terminator_doc_id, all_user_channels):
@@ -207,7 +215,7 @@ def terminate_changes(sg_url, sg_db, users, terminator_doc_id, all_user_channels
     sg_client.add_doc(url=sg_url, db=sg_db, doc=doc, auth=random_user['auth'])
 
 
-def start_normal_changes_worker(sg_url, sg_db, user_name, user_auth, changes_delay, terminator_doc_id):
+def start_polling_changes_worker(sg_url, sg_db, user_name, user_auth, changes_delay, terminator_doc_id, feed):
     sg_client = MobileRestClient()
     since = 0
     latest_changes = {}
@@ -220,7 +228,7 @@ def start_normal_changes_worker(sg_url, sg_db, user_name, user_auth, changes_del
             return user_name, latest_changes
 
         log_info('_changes for ({}) since: {}'.format(user_name, since))
-        changes = sg_client.get_changes(url=sg_url, db=sg_db, since=since, auth=user_auth, feed="normal")
+        changes = sg_client.get_changes(url=sg_url, db=sg_db, since=since, auth=user_auth, feed=feed)
 
         # A termination doc was processed, exit on the next loop
         for change in changes['results']:
@@ -248,22 +256,46 @@ def start_continuous_changes_worker():
 def start_unique_channel_changes_processing(sg_url, sg_db, users, changes_delay, terminator_doc_id):
 
     with ProcessPoolExecutor(max_workers=len(users)) as changes_pex:
-        changes_tasks = [
+
+        # Start a looping normal changes feed for each user
+        normal_changes_tasks = [
             changes_pex.submit(
-                start_normal_changes_worker,
+                start_polling_changes_worker,
                 sg_url,
                 sg_db,
                 user_key,
                 user_value['auth'],
                 changes_delay,
-                terminator_doc_id
+                terminator_doc_id,
+                "normal"
+            )
+            for user_key, user_value in users.items()
+        ]
+
+        # Start a looping longpoll changes feed for each user
+        longpoll_changes_tasks = [
+            changes_pex.submit(
+                start_polling_changes_worker,
+                sg_url,
+                sg_db,
+                user_key,
+                user_value['auth'],
+                changes_delay,
+                terminator_doc_id,
+                "longpoll"
             )
             for user_key, user_value in users.items()
         ]
         
-        for changes_task in as_completed(changes_tasks):
+        # Block on termination of "normal" changes feeds
+        for changes_task in as_completed(normal_changes_tasks):
             user_name, latest_change = changes_task.result()
-            users[user_name]['unique_channel_changes'] = latest_change
+            users[user_name]['unique_channel_changes_normal'] = latest_change
+
+        # Block on termination of "longpoll" changes feeds
+        for changes_task in as_completed(longpoll_changes_tasks):
+            user_name, latest_change = changes_task.result()
+            users[user_name]['unique_channel_changes_longpoll'] = latest_change
 
     return users
 
