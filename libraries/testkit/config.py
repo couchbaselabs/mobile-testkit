@@ -21,6 +21,10 @@ class Config:
 
             # Render the jinja2 template, which will strip out any
             # templated variables in {{ ... }}
+
+            # strip out sync functions `function ... }`
+            data = convert_to_valid_json(data)
+
             template = Template(data)
 
             # In order to render the template and produce _valid json_, we need to
@@ -47,9 +51,6 @@ class Config:
                 autoimport="",
                 xattrs=""
             )
-
-            # strip out sync functions `function ... }`
-            data = convert_to_valid_json(data)
 
             # Find all bucket names in config's databases: {}
             conf_obj = json.loads(data)
