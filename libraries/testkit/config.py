@@ -38,6 +38,8 @@ class Config:
                     else:
                         temp_config += conf[i] + " \"syncfunction\" "
 
+                data = temp_config
+
             template = Template(data)
 
             # In order to render the template and produce _valid json_, we need to
