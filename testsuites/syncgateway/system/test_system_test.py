@@ -33,7 +33,8 @@ SG_VIEWS = {
 }
 
 
-USER_TYPES = ['shared_channel_user', 'single_channel_user', 'filter_channel_user']
+USER_TYPES = ['shared_channel_user', 'unique_channel_user', 'filtered_channel_user']
+USER_PASSWORD = 'password'
 
 
 def test_system_test(params_from_base_test_setup):
@@ -170,7 +171,7 @@ def test_system_test(params_from_base_test_setup):
     # Start changes processing
     with ProcessPoolExecutor(max_workers=3) as pex:
         
-        unique_changes_workers_task = pex.submit(
+        changes_workers_task = pex.submit(
             start_changes_processing,
             sg_url,
             sg_db,
@@ -206,10 +207,15 @@ def test_system_test(params_from_base_test_setup):
         log_info('------------------------------------------')
 
         # Broadcast termination doc to all users
-        terminate_changes(sg_url, sg_db, users, changes_terminator_doc_id, all_user_channels)
+        terminator_channel = 'terminator'
+        send_changes_termination_doc(sg_url, sg_db, users, changes_terminator_doc_id, terminator_channel)
+
+        # Overwrite each users channels with 'terminator' so their changes feed will backfill the
+        # changes feed termination doc
+        grant_users_access(users, [terminator_channel], sg_admin_url, sg_db)
 
         # Block on changes completion
-        users = unique_changes_workers_task.result()
+        users = changes_workers_task.result()
 
         # Print the summary of the system test
         print_summary(users)
@@ -228,13 +234,21 @@ def print_summary(users):
         ))
 
 
-def terminate_changes(sg_url, sg_db, users, terminator_doc_id, all_user_channels):
+def grant_users_access(users, channels, sg_admin_url, sg_db):
+
+    sg_client = MobileRestClient()
+
+    for username in users:
+        sg_client.update_user(url=sg_admin_url, db=sg_db, name=username, password=USER_PASSWORD, channels=channels)
+
+
+def send_changes_termination_doc(sg_url, sg_db, users, terminator_doc_id, terminator_channel):
     sg_client = MobileRestClient()
 
     random_user_id = random.choice(users.keys())
     random_user = users[random_user_id]
     log_info('Sending changes termination doc for all users')
-    doc = {'_id': terminator_doc_id, 'channels': all_user_channels}
+    doc = {'_id': terminator_doc_id, 'channels': [terminator_channel]}
     sg_client.add_doc(url=sg_url, db=sg_db, doc=doc, auth=random_user['auth'])
 
 
@@ -375,7 +389,7 @@ def create_user_names(num_users):
     return user_names
 
 
-def add_user_docs(client, sg_url, sg_db, user_name, user_auth, number_docs_per_user, batch_size, create_delay):
+def add_user_docs(client, sg_url, sg_db, user_name, user_auth, channels, number_docs_per_user, batch_size, create_delay):
 
     doc_ids = []
     docs_pushed = 0
@@ -388,7 +402,7 @@ def add_user_docs(client, sg_url, sg_db, user_name, user_auth, number_docs_per_u
             doc_id_prefix='{}-{}'.format(user_name, batch_count),
             number=batch_size,
             prop_generator=document.doc_1k,
-            channels=[user_name]
+            channels=channels
         )
 
         # Add batch of docs
@@ -414,16 +428,27 @@ def create_users_add_docs_task(user_name,
                                create_delay):
 
     sg_client = MobileRestClient()
-    user_pass = 'password'
 
     # Create user
-    channels = [user_name]
+    if user_name.startswith('unique'):
+        # Doc channel should be unique for each users
+        channels = [user_name]
+    elif user_name.startswith('shared'):
+        # Doc channel should be shared for each doc with this user type
+        channels = ['shared']
+    elif user_name.startswith('filtered'):
+        # Doc channels should be shared for each doc with this user type
+        # However, when issueing a change request, the user will provide
+        # A filter for one of these channels
+        channels = ['even', 'odd']
+    else:
+        raise ValueError('Unexpected user type: {}'.format(user_name))
 
     sg_client.create_user(
         url=sg_admin_url,
         db=sg_db,
         name=user_name,
-        password=user_pass,
+        password=USER_PASSWORD,
         channels=channels
     )
 
@@ -431,7 +456,7 @@ def create_users_add_docs_task(user_name,
     user_auth = sg_client.create_session(
         url=sg_admin_url,
         db=sg_db,
-        name=user_name, password=user_pass
+        name=user_name, password=USER_PASSWORD
     )
 
     # Start bulk doc creation
@@ -441,6 +466,7 @@ def create_users_add_docs_task(user_name,
         sg_db=sg_db,
         user_name=user_name,
         user_auth=user_auth,
+        channels=channels,
         number_docs_per_user=number_docs_per_user,
         batch_size=batch_size,
         create_delay=create_delay
