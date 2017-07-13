@@ -1,9 +1,7 @@
 
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2012
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Testkit.Net.Core", "Testkit.Net.Core\Testkit.Net.Core.csproj", "{4C7292AF-4656-4680-9C14-2F50ABE87F02}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Testkit.Net.Tests", "Testkit.Net.Tests\Testkit.Net.Tests.csproj", "{C1820F1F-3E21-46CF-B706-050E4A2FA602}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Testkit.Net.Desktop", "Testkit.Net.Desktop\Testkit.Net.Desktop.csproj", "{4C7292AF-4656-4680-9C14-2F50ABE87F02}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -27,9 +25,5 @@ Global
 		{4C7292AF-4656-4680-9C14-2F50ABE87F02}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4C7292AF-4656-4680-9C14-2F50ABE87F02}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{4C7292AF-4656-4680-9C14-2F50ABE87F02}.Release|Any CPU.Build.0 = Release|Any CPU
-		{C1820F1F-3E21-46CF-B706-050E4A2FA602}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{C1820F1F-3E21-46CF-B706-050E4A2FA602}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{C1820F1F-3E21-46CF-B706-050E4A2FA602}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{C1820F1F-3E21-46CF-B706-050E4A2FA602}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

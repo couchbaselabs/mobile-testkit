@@ -1,9 +1,7 @@
 ﻿using System;
-using System.Threading.Tasks;
-using Testkit.Net.Tests;
 using Microsoft.Extensions.CommandLineUtils;
 
-namespace Testkit.Net.Core
+namespace Testkit.Net.Desktop
 {
     class Program
     {
@@ -45,9 +43,13 @@ namespace Testkit.Net.Core
             });
             commandLineApplication.Execute(args);
 
-            //var server = new Server(50000);
-            //Task.WaitAll(server.Run());
-
+            // TODO
+            // Start a HTTP server to listen for test suites to exectue
+            // Partial implementation removed to keep repo clean. To resurrect this work,
+            // Checkout ba7ec515f69f56eef5cddd49028ef2297ebd107b
+            // https://github.com/couchbaselabs/mobile-testkit/blob/master/apps/testkit.net/Testkit.Net.Core/Server.cs
+            // https://github.com/couchbaselabs/mobile-testkit/blob/master/apps/testkit.net/Testkit.Net.Core/TestRunner.cs
+            // https://github.com/couchbaselabs/mobile-testkit/blob/master/apps/testkit.net/Testkit.Net.Core/Tests.cs
         }
     }
 }

@@ -13,7 +13,7 @@ using System.Reflection;
 using System.Linq;
 using Microsoft.Extensions.Logging;
 
-namespace Testkit.Net.Tests
+namespace Testkit.Net.Desktop
 {
 
     public class Longevity
@@ -64,12 +64,10 @@ namespace Testkit.Net.Tests
         public void Run()
         {
             // Create docs
-            var numDocs = _maxDocs;
-
-            Console.WriteLine($"Saving: {numDocs} docs");
+            Console.WriteLine($"Saving: {_maxDocs} docs");
             _db.InBatch(() =>
             {
-                for (int i = 0; i < numDocs; i++)
+                for (int i = 0; i < _maxDocs; i++)
                 {
                     var doc = new Document($"doc_{i}");
                     doc["random"].Value = Guid.NewGuid().ToString();
@@ -94,7 +92,7 @@ namespace Testkit.Net.Tests
                 }
 
                 // Update a random doc
-                int rInt = r.Next(0, numDocs);
+                int rInt = r.Next(0, _maxDocs);
                 Document doc = _db.GetDocument($"doc_{rInt}");
 
                 Console.WriteLine($"Updating doc: {doc.Id}");
@@ -107,8 +105,8 @@ namespace Testkit.Net.Tests
             }
 
             // Delete docs
-            Console.WriteLine($"Deleting: {numDocs} docs");
-            for (int i = 0; i < numDocs; i++)
+            Console.WriteLine($"Deleting: {_maxDocs} docs");
+            for (int i = 0; i < _maxDocs; i++)
             {
                 var doc = _db.GetDocument($"doc_{i}");
                 _db.Delete(doc);
