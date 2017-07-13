@@ -161,6 +161,14 @@ class Cluster:
 
         return mode
 
+    def restart_services(self):
+        ansible_runner = AnsibleRunner(self._cluster_config)
+        status = ansible_runner.run_ansible_playbook(
+            "restart-services.yml",
+            extra_vars={}
+        )
+        assert status == 0, "Failed to restart services"
+
     def save_cbgt_diagnostics(self):
 
         # CBGT REST Admin API endpoint
