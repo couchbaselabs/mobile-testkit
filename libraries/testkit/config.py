@@ -27,7 +27,7 @@ class Config:
             # Check if a sync function id defined between ` `
             temp_config = ""
             if re.search('`', data):
-                log_info("Ignoring the sync function to extract bucket names")
+                log_info("Ignoring the sync function to render template")
                 conf = re.split('`', data)
                 split_len = len(conf)
 
