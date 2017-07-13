@@ -19,5 +19,5 @@ RUN dotnet restore -s http://mobile.nuget.couchbase.com/nuget/Internal/ -s https
 RUN dotnet build
 
 # Start the longevity test
-WORKDIR /opt/mobile-testkit/apps/testkit.net/Testkit.Net.Core
+WORKDIR /opt/mobile-testkit/apps/testkit.net/Testkit.Net.Desktop
 CMD ["dotnet", "run"]
