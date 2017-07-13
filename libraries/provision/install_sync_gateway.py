@@ -201,7 +201,7 @@ def get_buckets_from_sync_gateway_config(sync_gateway_config_path):
     temp_config_path = ""
     temp_config = ""
 
-    # Check if a sync function is defined between ` `
+    # Check if a sync function id defined between ` `
     if re.search('`', conf_data):
         log_info("Ignoring the sync function to extract bucket names")
         conf = re.split('`', conf_data)

@@ -24,7 +24,7 @@ class Config:
             # Render the jinja2 template, which will strip out any
             # templated variables in {{ ... }}
             # Sync function has to be ignored for rendering
-            # Check if a sync function id defined between ` `
+            # Check if a sync function is defined between ` `
             temp_config = ""
             if re.search('`', data):
                 log_info("Ignoring the sync function to render template")
