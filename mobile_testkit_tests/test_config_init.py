@@ -5,7 +5,7 @@ from libraries.testkit.config import Config
 
 
 @pytest.mark.parametrize("sync_gateway_config, buckets, mode", [
-    ("testfest_todo_di.json", ['data-bucket', 'index-bucket'], "di"),
+    ("testfest_todo_cc.json", ['data-bucket'], "cc"),
     ("default.json", [], "cc"),
     ("dist_index_config_local.json", ['data-bucket', 'cbgt-bucket', 'index-bucket'], "di"),
     ("grocery_sync_conf.json", [], "cc"),
