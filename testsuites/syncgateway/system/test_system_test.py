@@ -6,6 +6,7 @@ from requests.exceptions import HTTPError
 
 import time
 import random
+import json
 
 from concurrent.futures import ProcessPoolExecutor
 from concurrent.futures import as_completed
@@ -200,7 +201,7 @@ def print_summary(users):
     for user_name, value in users.items():
         num_user_docs = len(value['doc_ids'])
         log_info('-> {} added: {} docs'.format(user_name, num_user_docs))
-        for changes_type in ['unique_channel_changes_normal', 'unique_channel_changes_longpoll']:
+        for changes_type in ['unique_channel_changes_normal', 'unique_channel_changes_longpoll', 'unique_channel_changes_continuous']:
             num_user_changes = len(value[changes_type])
             log_info('  - Saw {} changes ({})'.format(num_user_changes, changes_type))
 
@@ -224,10 +225,10 @@ def start_polling_changes_worker(sg_url, sg_db, user_name, user_auth, changes_de
     while True:
 
         if found_terminator:
-            log_info('Found terminator ({})'.format(user_name))
+            log_info('Found terminator ({}, {})'.format(user_name, feed))
             return user_name, latest_changes
 
-        log_info('_changes for ({}) since: {}'.format(user_name, since))
+        log_info('_changes ({}) for ({}) since: {}'.format(feed, user_name, since))
         changes = sg_client.get_changes(url=sg_url, db=sg_db, since=since, auth=user_auth, feed=feed)
 
         # A termination doc was processed, exit on the next loop
@@ -245,17 +246,41 @@ def start_polling_changes_worker(sg_url, sg_db, user_name, user_auth, changes_de
         time.sleep(changes_delay)
 
 
-def start_longpoll_changes_worker():
-    pass
+def start_continuous_changes_worker(sg_url, sg_db, user_name, user_auth, terminator_doc_id):
 
+    sg_client = MobileRestClient()
 
-def start_continuous_changes_worker():
-    pass
+    latest_changes = {}
+
+    log_info('_changes (continuous) for ({}) since: 0'.format(user_name))
+    stream = sg_client.stream_continuous_changes(sg_url, sg_db, since=0, auth=user_auth)
+    for line in stream.iter_lines():
+
+        # filter out keep-alive new lines
+        if line:
+            decoded_line = line.decode('utf-8')
+            change = json.loads(decoded_line)
+
+            log_info(change)
+
+            if change['id'] == terminator_doc_id:
+                log_info('Found terminator ({}, continuous)'.format(user_name))
+                return user_name, latest_changes
+                break
+
+            else:
+                if len(change['changes']) >= 1:
+                    latest_changes[change['id']] = change['changes'][0]['rev']
+                else:
+                    latest_changes[change['id']] = ''
 
 
 def start_unique_channel_changes_processing(sg_url, sg_db, users, changes_delay, terminator_doc_id):
 
-    with ProcessPoolExecutor(max_workers=len(users)) as changes_pex:
+    # Make sure there are enough workers for 3 changes feed types for each user
+    workers = len(users) * 3
+
+    with ProcessPoolExecutor(max_workers=workers) as changes_pex:
 
         # Start a looping normal changes feed for each user
         normal_changes_tasks = [
@@ -287,6 +312,19 @@ def start_unique_channel_changes_processing(sg_url, sg_db, users, changes_delay,
             for user_key, user_value in users.items()
         ]
         
+        # Start continuous changes feed for each user
+        continuous_changes_tasks = [
+            changes_pex.submit(
+                start_continuous_changes_worker,
+                sg_url,
+                sg_db,
+                user_key,
+                user_value['auth'],
+                terminator_doc_id,
+            )
+            for user_key, user_value in users.items()
+        ]
+
         # Block on termination of "normal" changes feeds
         for changes_task in as_completed(normal_changes_tasks):
             user_name, latest_change = changes_task.result()
@@ -296,6 +334,11 @@ def start_unique_channel_changes_processing(sg_url, sg_db, users, changes_delay,
         for changes_task in as_completed(longpoll_changes_tasks):
             user_name, latest_change = changes_task.result()
             users[user_name]['unique_channel_changes_longpoll'] = latest_change
+
+        # Block on termination of "continuous" changes feeds
+        for changes_task in as_completed(continuous_changes_tasks):
+            user_name, latest_change = changes_task.result()
+            users[user_name]['unique_channel_changes_continuous'] = latest_change
 
     return users
 

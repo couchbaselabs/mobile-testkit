@@ -1723,6 +1723,25 @@ class MobileRestClient:
 
             break
 
+    def stream_continuous_changes(self, url, db, since, auth):
+        """
+        Issues a continuous changes feed request and returns the stream
+        """
+        auth_type = get_auth_type(auth)
+        body = {
+            "feed": "continuous",
+            "since": since
+        }
+
+        if auth_type == AuthType.session:
+            resp = self._session.post("{}/{}/_changes".format(url, db), data=json.dumps(body), cookies=dict(SyncGatewaySession=auth[1]), stream=True)
+        elif auth_type == AuthType.http_basic:
+            resp = self._session.post("{}/{}/_changes".format(url, db), data=json.dumps(body), auth=auth, stream=True)
+        else:
+            resp = self._session.post("{}/{}/_changes".format(url, db), data=json.dumps(body), stream=True)
+
+        return resp
+
     def get_changes(self, url, db, since, auth, feed="longpoll", timeout=60, limit=None, skip_user_docs=False):
         """
         Issues a longpoll changes request with a provided since and authentication.
