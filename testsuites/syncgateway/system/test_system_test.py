@@ -3,14 +3,14 @@ import random
 import time
 
 from concurrent.futures import ProcessPoolExecutor, as_completed
-from couchbase.bucket import Bucket
+# from couchbase.bucket import Bucket
 from requests import Session
 from requests.exceptions import HTTPError
 
 from keywords import couchbaseserver, document
 from keywords.ClusterKeywords import ClusterKeywords
 from keywords.MobileRestClient import MobileRestClient
-from keywords.SyncGateway import SyncGateway, sync_gateway_config_path_for_mode
+from keywords.SyncGateway import sync_gateway_config_path_for_mode
 from keywords.utils import log_info
 from libraries.testkit.cluster import Cluster
 
@@ -111,9 +111,9 @@ def test_system_test(params_from_base_test_setup):
     topology = cluster_helper.get_cluster_topology(cluster_config)
 
     cbs_url = topology['couchbase_servers'][0]
-    cbs_admin_url = cbs_url.replace('8091', '8092')
+    # cbs_admin_url = cbs_url.replace('8091', '8092')
     cb_server = couchbaseserver.CouchbaseServer(cbs_url)
-    bucket_name = cb_server.get_bucket_names()[0]
+    # bucket_name = cb_server.get_bucket_names()[0]
     cbs_ip = cb_server.host
 
     headers = {'Content-Type': 'application/json'}
@@ -122,15 +122,15 @@ def test_system_test(params_from_base_test_setup):
     cbs_session.auth = ('Administrator', 'password')
 
     log_info('Seeding {} with {} docs'.format(cbs_ip, server_seed_docs))
-    sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password', timeout=300)
-    sg_client = MobileRestClient()
+    # sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password', timeout=300)
+    # sg_client = MobileRestClient()
 
     # Stop SG before loading the server
     sg_url = topology['sync_gateways'][0]['public']
     sg_admin_url = topology['sync_gateways'][0]['admin']
     sg_db = 'db'
-    #sg_util = SyncGateway()
-    #sg_util.stop_sync_gateway(cluster_config=cluster_config, url=sg_url)
+    # sg_util = SyncGateway()
+    # sg_util.stop_sync_gateway(cluster_config=cluster_config, url=sg_url)
 
     # Scenario Actions
     # delete_views(cbs_session, cbs_admin_url, bucket_name)
@@ -171,7 +171,7 @@ def test_system_test(params_from_base_test_setup):
     with ProcessPoolExecutor(max_workers=3) as pex:
         
         unique_changes_workers_task = pex.submit(
-            start_unique_channel_changes_processing,
+            start_changes_processing,
             sg_url,
             sg_db,
             users,
@@ -221,15 +221,11 @@ def print_summary(users):
     for user_name, value in users.items():
         num_user_docs = len(value['doc_ids'])
         log_info('-> {} added: {} docs'.format(user_name, num_user_docs))
-        
-        changes_types = [
-            'unique_channel_changes_normal',
-            'unique_channel_changes_longpoll',
-            'unique_channel_changes_continuous'
-        ]
-        for changes_type in changes_types:
-            num_user_changes = len(value[changes_type])
-            log_info('  - Saw {} changes ({})'.format(num_user_changes, changes_type))
+        log_info('  - CHANGES {} (normal), {} (longpoll), {} (continous)'.format(
+            len(value['normal']),
+            len(value['longpoll']),
+            len(value['continuous'])
+        ))
 
 
 def terminate_changes(sg_url, sg_db, users, terminator_doc_id, all_user_channels):
@@ -298,7 +294,7 @@ def start_continuous_changes_worker(sg_url, sg_db, user_name, user_auth, termina
                     latest_changes[change['id']] = ''
 
 
-def start_unique_channel_changes_processing(sg_url, sg_db, users, changes_delay, terminator_doc_id):
+def start_changes_processing(sg_url, sg_db, users, changes_delay, terminator_doc_id):
 
     # Make sure there are enough workers for 3 changes feed types for each user
     workers = len(users) * 3
@@ -351,17 +347,17 @@ def start_unique_channel_changes_processing(sg_url, sg_db, users, changes_delay,
         # Block on termination of "normal" changes feeds
         for changes_task in as_completed(normal_changes_tasks):
             user_name, latest_change = changes_task.result()
-            users[user_name]['unique_channel_changes_normal'] = latest_change
+            users[user_name]['normal'] = latest_change
 
         # Block on termination of "longpoll" changes feeds
         for changes_task in as_completed(longpoll_changes_tasks):
             user_name, latest_change = changes_task.result()
-            users[user_name]['unique_channel_changes_longpoll'] = latest_change
+            users[user_name]['longpoll'] = latest_change
 
         # Block on termination of "continuous" changes feeds
         for changes_task in as_completed(continuous_changes_tasks):
             user_name, latest_change = changes_task.result()
-            users[user_name]['unique_channel_changes_continuous'] = latest_change
+            users[user_name]['continuous'] = latest_change
 
     return users
 
