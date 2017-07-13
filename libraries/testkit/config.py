@@ -1,7 +1,9 @@
 import json
+import re
 from jinja2 import Template
 
 from libraries.testkit import settings
+from keywords.utils import log_info
 
 import logging
 log = logging.getLogger(settings.LOGGER)
@@ -21,9 +23,20 @@ class Config:
 
             # Render the jinja2 template, which will strip out any
             # templated variables in {{ ... }}
+            # Sync function has to be ignored for rendering
+            # Check if a sync function id defined between ` `
+            temp_config = ""
+            if re.search('`', data):
+                log_info("Ignoring the sync function to extract bucket names")
+                conf = re.split('`', data)
+                split_len = len(conf)
 
-            # strip out sync functions `function ... }`
-            data = convert_to_valid_json(data)
+                # Replace the sync function with a string "function"
+                for i in range(0, split_len, 2):
+                    if i == split_len - 1:
+                        temp_config += conf[i]
+                    else:
+                        temp_config += conf[i] + " \"syncfunction\" "
 
             template = Template(data)
 
@@ -51,6 +64,9 @@ class Config:
                 autoimport="",
                 xattrs=""
             )
+
+            # strip out sync functions `function ... }`
+            data = convert_to_valid_json(data)
 
             # Find all bucket names in config's databases: {}
             conf_obj = json.loads(data)
