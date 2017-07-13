@@ -1,25 +1,18 @@
+import json
+import random
 import time
 
+from concurrent.futures import ProcessPoolExecutor, as_completed
 from couchbase.bucket import Bucket
 from requests import Session
 from requests.exceptions import HTTPError
 
-import time
-import random
-import json
-
-from concurrent.futures import ProcessPoolExecutor
-from concurrent.futures import as_completed
-
-from keywords.SyncGateway import sync_gateway_config_path_for_mode
-from keywords import couchbaseserver
-from keywords import document
-from libraries.testkit.cluster import Cluster
-from keywords.MobileRestClient import MobileRestClient
+from keywords import couchbaseserver, document
 from keywords.ClusterKeywords import ClusterKeywords
-from keywords.SyncGateway import SyncGateway
+from keywords.MobileRestClient import MobileRestClient
+from keywords.SyncGateway import SyncGateway, sync_gateway_config_path_for_mode
 from keywords.utils import log_info
-
+from libraries.testkit.cluster import Cluster
 
 # Set the default value to 404 - view not created yet
 SG_VIEWS = {
@@ -38,6 +31,9 @@ SG_VIEWS = {
         "tombstones"
     ]
 }
+
+
+USER_TYPES = ['shared_channel_user', 'single_channel_user', 'filter_channel_user']
 
 
 def test_system_test(params_from_base_test_setup):
@@ -88,8 +84,21 @@ def test_system_test(params_from_base_test_setup):
             create_batch_size
         ))
 
-    if num_users < update_batch_size or update_batch_size < 1:
-        raise ValueError("'update_batch_size' should be greater than one or less than or equal to the number of users")
+    # We want an even distributed of users per type
+    if num_users % len(USER_TYPES) != 0:
+        raise ValueError("'num_users' should be a multiple of 3")
+
+    # Make sure that the 'update_batch_size' is complatible with
+    # then number of users per type
+    num_users_per_type = num_users / len(USER_TYPES)
+    if update_batch_size > num_users_per_type:
+        raise ValueError("'batch_size' cannot be larger than number of users per type")
+
+    if num_users_per_type % update_batch_size != 0:
+        raise ValueError("'update_batch_size' ({}) should be a multiple of number_users_per_type ({})".format(
+            update_batch_size,
+            num_users_per_type
+        ))
 
     sg_conf_name = 'sync_gateway_default'
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
@@ -132,8 +141,17 @@ def test_system_test(params_from_base_test_setup):
     # Start concurrent creation of docs (max docs / num users)
     # Each user will add batch_size number of docs via bulk docs and sleep for 'create_delay'
     # Once a user has added number of expected docs 'docs_per_user', it will terminate.
+
     log_info('------------------------------------------')
-    log_info('START concurrent user / doc creation')
+    log_info('TODO: START concurrent user creation')
+    log_info('------------------------------------------')
+
+    log_info('------------------------------------------')
+    log_info('TODO: START concurrent user creation')
+    log_info('------------------------------------------')
+
+    log_info('------------------------------------------')
+    log_info('START concurrent doc creation')
     log_info('------------------------------------------')
     users = create_docs(
         sg_admin_url=sg_admin_url,
@@ -198,10 +216,18 @@ def test_system_test(params_from_base_test_setup):
 
 
 def print_summary(users):
+    """ Pretty print user results for simulation """
+
     for user_name, value in users.items():
         num_user_docs = len(value['doc_ids'])
         log_info('-> {} added: {} docs'.format(user_name, num_user_docs))
-        for changes_type in ['unique_channel_changes_normal', 'unique_channel_changes_longpoll', 'unique_channel_changes_continuous']:
+        
+        changes_types = [
+            'unique_channel_changes_normal',
+            'unique_channel_changes_longpoll',
+            'unique_channel_changes_continuous'
+        ]
+        for changes_type in changes_types:
             num_user_changes = len(value[changes_type])
             log_info('  - Saw {} changes ({})'.format(num_user_changes, changes_type))
 
@@ -261,12 +287,9 @@ def start_continuous_changes_worker(sg_url, sg_db, user_name, user_auth, termina
             decoded_line = line.decode('utf-8')
             change = json.loads(decoded_line)
 
-            log_info(change)
-
             if change['id'] == terminator_doc_id:
                 log_info('Found terminator ({}, continuous)'.format(user_name))
                 return user_name, latest_changes
-                break
 
             else:
                 if len(change['changes']) >= 1:
@@ -343,6 +366,19 @@ def start_unique_channel_changes_processing(sg_url, sg_db, users, changes_delay,
     return users
 
 
+def create_user_names(num_users):
+    """ Takes a number of users and returns a list of usernames """
+
+    num_per_type = num_users / 3
+    user_names = []
+
+    for user_type in USER_TYPES:
+        for i in range(num_per_type):
+            user_names.append('{}_{}'.format(user_type, i))
+
+    return user_names
+
+
 def add_user_docs(client, sg_url, sg_db, user_name, user_auth, number_docs_per_user, batch_size, create_delay):
 
     doc_ids = []
@@ -353,7 +389,7 @@ def add_user_docs(client, sg_url, sg_db, user_name, user_auth, number_docs_per_u
 
         # Create batch of docs
         docs = document.create_docs(
-            doc_id_prefix='{}_{}'.format(user_name, batch_count),
+            doc_id_prefix='{}-{}'.format(user_name, batch_count),
             number=batch_size,
             prop_generator=document.doc_1k,
             channels=[user_name]
@@ -373,7 +409,7 @@ def add_user_docs(client, sg_url, sg_db, user_name, user_auth, number_docs_per_u
     return doc_ids
 
 
-def create_users_add_docs_task(user_number,
+def create_users_add_docs_task(user_name,
                                sg_admin_url,
                                sg_url,
                                sg_db,
@@ -382,17 +418,17 @@ def create_users_add_docs_task(user_number,
                                create_delay):
 
     sg_client = MobileRestClient()
-
-    user_name = 'st_user_{}'.format(user_number)
     user_pass = 'password'
 
     # Create user
+    channels = [user_name]
+
     sg_client.create_user(
         url=sg_admin_url,
         db=sg_db,
         name=user_name,
         password=user_pass,
-        channels=[user_name]
+        channels=channels
     )
 
     # Create session
@@ -425,19 +461,21 @@ def create_docs(sg_admin_url, sg_url, sg_db, num_users, number_docs_per_user, ba
     start = time.time()
     log_info('Starting {} users to add {} docs per user'.format(num_users, number_docs_per_user))
 
+    user_names = create_user_names(num_users)
+
     with ProcessPoolExecutor(max_workers=num_users) as pe:
 
         # Start concurrent create block
         futures = [pe.submit(
             create_users_add_docs_task,
-            user_number=i,
+            user_name=user_name,
             sg_admin_url=sg_admin_url,
             sg_url=sg_url,
             sg_db=sg_db,
             number_docs_per_user=number_docs_per_user,
             batch_size=batch_size,
             create_delay=create_delay
-        ) for i in range(num_users)]
+        ) for user_name in user_names]
 
         # Block until all futures are completed or return
         # exception in future.result()
@@ -460,9 +498,11 @@ def create_docs(sg_admin_url, sg_url, sg_db, num_users, number_docs_per_user, ba
     return users
 
 
-def update_docs_task(users, user_index, sg_url, sg_db):
+def update_docs_task(users, user_type, user_index, sg_url, sg_db):
 
-    user_name = 'st_user_{}'.format(user_index)
+    user_name = '{}_{}'.format(user_type, user_index)
+
+    print('USERRR: {}'.format(user_name))
 
     # Get a random value to determin the update method
     # ~ 90% ops bulk, 10% ops single
@@ -475,11 +515,11 @@ def update_docs_task(users, user_index, sg_url, sg_db):
     sg_client = MobileRestClient()
 
     # Get a random user
-    random_user_auth = users[user_name]['auth']
-    random_user_doc_ids = users[user_name]['doc_ids']
+    current_user_auth = users[user_name]['auth']
+    current_user_doc_ids = users[user_name]['doc_ids']
 
     log_info('Updating {} docs, method ({}) number of updates: {} ({})'.format(
-        len(random_user_doc_ids),
+        len(current_user_doc_ids),
         update_method,
         users[user_name]['updates'],
         user_name
@@ -488,7 +528,7 @@ def update_docs_task(users, user_index, sg_url, sg_db):
     # Update the user's docs
     if update_method == 'bulk_docs':
         # Get docs for that user
-        user_docs, errors = sg_client.get_bulk_docs(url=sg_url, db=sg_db, doc_ids=random_user_doc_ids, auth=random_user_auth)
+        user_docs, errors = sg_client.get_bulk_docs(url=sg_url, db=sg_db, doc_ids=current_user_doc_ids, auth=current_user_auth)
         assert len(errors) == 0
 
         # Update the 'updates' property
@@ -496,15 +536,15 @@ def update_docs_task(users, user_index, sg_url, sg_db):
             doc['updates'] += 1
 
         # Add the docs via build_docs
-        sg_client.add_bulk_docs(url=sg_url, db=sg_db, docs=user_docs, auth=random_user_auth)
+        sg_client.add_bulk_docs(url=sg_url, db=sg_db, docs=user_docs, auth=current_user_auth)
 
     else:
 
         # Do a single GET / PUT for each of the user docs
-        for doc_id in random_user_doc_ids:
-            doc = sg_client.get_doc(url=sg_url, db=sg_db, doc_id=doc_id, auth=random_user_auth)
+        for doc_id in current_user_doc_ids:
+            doc = sg_client.get_doc(url=sg_url, db=sg_db, doc_id=doc_id, auth=current_user_auth)
             doc['updates'] += 1
-            sg_client.put_doc(url=sg_url, db=sg_db, doc_id=doc_id, doc_body=doc, rev=doc['_rev'], auth=random_user_auth)
+            sg_client.put_doc(url=sg_url, db=sg_db, doc_id=doc_id, doc_body=doc, rev=doc['_rev'], auth=current_user_auth)
 
     return user_name
 
@@ -517,7 +557,7 @@ def update_docs(sg_admin_url, sg_url, sg_db, users, update_runtime_sec, batch_si
     ))
     log_info('Continue to update for {}s'.format(update_runtime_sec))
 
-    num_users = len(users)
+    num_users_per_type = len(users) / len(USER_TYPES)
     start = time.time()
     current_user_index = 0
 
@@ -531,14 +571,19 @@ def update_docs(sg_admin_url, sg_url, sg_db, users, update_runtime_sec, batch_si
 
         with ProcessPoolExecutor(max_workers=batch_size) as pe:
 
-            # Start concurrent update block
-            futures = [pe.submit(
-                update_docs_task,
-                users,
-                current_user_index + i,
-                sg_url,
-                sg_db
-            ) for i in range(batch_size)]
+            # Pick out batch size users from each user type
+            # and update all of the users docs.
+            # For example if batch_size == num_users_per_type,
+            # All users would update the docs
+            for user_type in USER_TYPES:
+                futures = [pe.submit(
+                    update_docs_task,
+                    users,
+                    user_type,
+                    current_user_index + i,
+                    sg_url,
+                    sg_db
+                ) for i in range(batch_size)]
             
             # Block until all futures are completed or return
             # exception in future.result()
@@ -548,7 +593,7 @@ def update_docs(sg_admin_url, sg_url, sg_db, users, update_runtime_sec, batch_si
                 users[user]['updates'] += 1
                 log_info('Completed updates ({})'.format(user))
 
-        current_user_index = (current_user_index + batch_size) % num_users
+        current_user_index = (current_user_index + batch_size) % num_users_per_type
         time.sleep(update_delay)
 
 
