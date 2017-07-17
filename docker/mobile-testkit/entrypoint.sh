@@ -1,16 +1,9 @@
 #!/usr/bin/env bash
 # $1 = mobile-testkit branch to check out
-# $2 = stream test output flag (-s)
-# $3 = mode 'cc' or 'di'
-# $4 = xattrs flag (--xattrs)
-# $5 = Couchbase Server version
-# $6 = sg lb flag (--sg-lb)
-# $7 = Sync Gateway version
-# $8 = test filter -k "test_pattern"
-# $9 = Suite to run (ex. testsuites/syncgateway/functional/tests)
+# $2 = topology to use (ex. base_cc, ci_cc, base_di, ci_di)
+# $3 = test command (ex. pytest  -s --mode=di --server-version=4.6.2 --sync-gateway-version=1.4.1-3 testsuites/syncgateway/functional/tests/)
 
-
-if [ $# -ne 9 ]
+if [ $# -ne 3 ]
   then
     echo "Did not find all expected args. Please look in the script to see what is required."
     echo "Exiting ..."
@@ -32,7 +25,7 @@ git checkout $1
 pip install -r requirements.txt
 
 # Generate cluster configs
-python libraries/utilities/generate_clusters_from_pool.py
+python libraries/utilities/generate_config_from_sequoia.py --host-file=hosts.json --topology=$2
 
-# Run tests (--ci)
-pytest --ci $2 --mode=$3 $4 --server-version=$5 $6 --sync-gateway-version=$7 $8 $9
+# pytest command
+$3
