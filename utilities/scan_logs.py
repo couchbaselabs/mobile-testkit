@@ -1,6 +1,7 @@
 import argparse
 import os
 import zipfile
+import re
 
 from keywords.utils import log_info
 from keywords.exceptions import LogScanningError
@@ -68,7 +69,8 @@ def scan_for_errors(log_file_path, error_strings):
             for word in error_strings:
                 # convert the word to lowercase and the line to all lower case
                 # which handles the case where 'warning' will catch 'WARNING' and 'Warning', etc
-                if word.lower() in line.lower():
+                # if word.lower() in line.lower():
+                if re.search(word.lower(), line.lower()):
                     raise LogScanningError('{} found!! Please review: {} '.format(word, log_file_path))
 
 

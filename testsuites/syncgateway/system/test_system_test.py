@@ -8,6 +8,8 @@ from keywords import couchbaseserver
 from keywords.ClusterKeywords import ClusterKeywords
 from keywords.SyncGateway import SyncGateway
 from keywords.utils import log_info
+from utilities.scan_logs import scan_for_errors
+from keywords.exceptions import LogScanningError
 
 
 def test_system_test(params_from_base_test_setup):
@@ -99,3 +101,17 @@ def test_system_test(params_from_base_test_setup):
     # Doc ramp up time to go to a million doc
     # Doc batch size - bulk add x number of docs at a time
     # Doc sleep time - sleep between bulk adds
+
+    # Scan logs
+    # SG logs for panic, data race
+    # System logs for OOM
+    sg_oom_log = ['Out of memory: Kill process \\d+ \\(sync_gateway\\)']
+    try:
+        scan_for_errors('/var/log/messages', sg_oom_log)
+    except LogScanningError:
+        # Do not error out here
+        # Continue with the rest of the log scanning
+        log_info("Sync Gateway killed - OOM")
+
+    sg_error_log = ['panic', 'data race']
+    scan_for_errors('/home/sync_gateway/logs/sync_gateway_error.log', sg_error_log)
