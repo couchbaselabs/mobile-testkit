@@ -9,13 +9,6 @@ In order to pull dependencies needed by `docker/create_cluster.py`, re-run `sour
 $ source setup.sh
 ```
 
-### Running tests
-
-(cc / no xattrs)
-```
-docker run --rm --privileged --network=cbl --name mobile-testkit -v $(pwd):/opt/mobile-testkit -v $(pwd)/resources/pool.json:/opt/mobile-testkit/resources/pool.json -v /var/run/docker.sock:/var/run/docker.sock -v /usr/bin/docker:/usr/bin/docker couchbase/mobile-testkit /bin/bash ./entrypoint.sh master '' cc '' 4.6.2 1.4.1-3 '' testsuites/syncgateway/functional/tests
-```
-
 ### Local Development with mobile-testkit
 
 Mount local dev environment for iterative development with docker backend. This way you can make changes in your /{user}/mobile-testkit repo and execute within the context of the container.
@@ -33,6 +26,13 @@ And then inside the docker container:
 # sed -i 's/remote_user = vagrant/remote_user = root/' ansible.cfg
 # python libraries/utilities/generate_clusters_from_pool.py --use-docker
 # pytest -s --mode=cc --server-version=4.6.1 --sync-gateway-version=1.4.0.2-3 testsuites/syncgateway/functional/tests
+```
+
+### Running entire test suite listed in entrypoint.sh (used for jenkins)
+
+(cc / no xattrs)
+```
+docker run --rm --privileged --network=cbl --name mobile-testkit -v $(pwd):/opt/mobile-testkit -v $(pwd)/resources/pool.json:/opt/mobile-testkit/resources/pool.json -v /var/run/docker.sock:/var/run/docker.sock -v /usr/bin/docker:/usr/bin/docker couchbase/mobile-testkit /bin/bash ./entrypoint.sh master '' cc '' 4.6.2 1.4.1-3 '' testsuites/syncgateway/functional/tests
 ```
 
 ## Capturing network traffic
@@ -55,4 +55,18 @@ If not up to date on dockerhub, rebuild locally:
 ```
 $ cd docker/mobile-testkit
 $ docker build -t mobile-testkit-dev .
+```
+
+## Rebuilding (cross-compiling) Sync Gateway on OSX and redeploying to docker container
+
+On OSX:
+
+```
+$ ./build.sh && rm -f sync_gateway && GOOS=linux GOARCH=amd64 go build -v github.com/couchbase/sync_gateway && cp sync_gateway /tmp/cbl.1-sg/sync_gateway/
+```
+
+In Sync Gateway docker container:
+
+```
+$ cd /home/sync_gateway && systemctl stop sync_gateway && rm -f /opt/couchbase-sync-gateway/bin/sync_gateway && cp sync_gateway /opt/couchbase-sync-gateway/bin/sync_gateway && systemctl restart sync_gateway
 ```

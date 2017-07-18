@@ -244,6 +244,8 @@ def test_webhooks_crud(params_from_base_test_setup, sg_conf_name, filtered):
     webhook_server.clear_data()
 
     # Update sdk docs from sg
+    # If xattr mode, update sdk docs from sg, update sg docs from SDK
+    # If non xattr mode, update sg docs from sg
     updated_doc_content = {'brian': 'eno'}
     update_docs(
         sg_client=sg_client,
@@ -391,12 +393,11 @@ def delete_docs(sg_client, sg_url, sg_db, sg_doc_ids, sg_auth, sdk_client, sdk_d
 
 def poll_for_webhook_data(webhook_server, expected_doc_ids, expected_num_revs, expected_content, deleted=False):
 
-    # TODO: Verify doc body
-
     start = time.time()
     while True:
 
         if time.time() - start > CLIENT_REQUEST_TIMEOUT:
+            webhook_server.stop()
             raise TimeoutError('Timed out waiting for webhook events!!')
 
         # Get web hook sent data and build a dictionary

@@ -42,20 +42,32 @@ def create_and_bind_tmp_dirs(container_name, volume_map):
     return volume_map
 
 
-def create_cluster(network_name, number_of_nodes, public_key_path, dev, pull):
+def create_cluster(network_name, number_of_nodes, dev, pull):
 
     docker_client = docker.from_env()
 
     if pull:
-        log_info('Pulling sethrosetter/centos7-systemd-sshd image ...')
-        docker_client.images.pull('sethrosetter/centos7-systemd-sshd')
+        log_info('Pulling sethrosetter/centos7-systemd image ...')
+        docker_client.images.pull('sethrosetter/centos7-systemd', tag='latest')
 
         log_info('Pulling couchbase/mobile-testkit image ...')
-        docker_client.images.pull('couchbase/mobile-testkit')
+        docker_client.images.pull('couchbase/mobile-testkit', tag='latest')
 
     # Create docker network with name
-    log_info('Creating bridged network: {} ...'.format(network_name))
-    network = docker_client.networks.create(network_name)
+    log_info('Checking if network ({}) exists ...'.format(network_name))
+    conflicting_networks = [net for net in docker_client.networks.list() if net.name == 'cbl']
+
+    # If there is a network defined with the name of one you are trying to create
+    # Dev mode: reuse the existing network
+    # Strict mode: raise an exception
+    if len(conflicting_networks) > 0:
+        if not dev:
+            raise DockerError('ERROR!! Network already defined')
+        log_info('Using already defined network: {}'.format(network_name))
+        network = conflicting_networks[0]
+    else:
+        log_info('Creating bridged network: {} ...'.format(network_name))
+        network = docker_client.networks.create(network_name)
 
     # Loop through nodes, start them on the network that was just created
     log_info('Starting {} containers on network {} ...'.format(number_of_nodes, network_name))
@@ -81,7 +93,7 @@ def create_cluster(network_name, number_of_nodes, public_key_path, dev, pull):
 
         # Priviledged is required for some ansible playbooks
         container = docker_client.containers.run(
-            'sethrosetter/centos7-systemd-sshd',
+            'sethrosetter/centos7-systemd',
             detach=True,
             name=container_name,
             privileged=True,
@@ -157,7 +169,6 @@ if __name__ == '__main__':
     PARSER.add_argument('--destroy', help='Remove a docker network + cluster', action='store_true')
     PARSER.add_argument('--network-name', help='Name of docker network', required=True)
     PARSER.add_argument('--number-of-nodes', help='Number of nodes to create in the network')
-    PARSER.add_argument('--path-to-public-key', help='Number of nodes to create in the network')
     PARSER.add_argument('--dev', help='Using a dev environment, set up binding to log dirs and port binding for Couchbase Server', action='store_true')
     PARSER.add_argument('--pull', help='Specify whether to pull the latest docker containers', action='store_true')
     ARGS = PARSER.parse_args()
@@ -174,13 +185,9 @@ if __name__ == '__main__':
         if ARGS.number_of_nodes is None:
             raise DockerError("You need to specify '--number-of-nodes'")
 
-        if ARGS.path_to_public_key is None:
-            raise DockerError("You need to specify '--path-to-public-key'")
-
         create_cluster(
             network_name=ARGS.network_name,
             number_of_nodes=int(ARGS.number_of_nodes),
-            public_key_path=ARGS.path_to_public_key,
             dev=ARGS.dev,
             pull=ARGS.pull
         )

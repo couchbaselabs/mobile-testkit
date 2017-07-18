@@ -2,7 +2,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
 		<OutputType>Exe</OutputType>
-		<TargetFramework>netcoreapp1.1</TargetFramework>
+		<TargetFramework>netcoreapp2.0</TargetFramework>
 	</PropertyGroup>
 	<ItemGroup>
 		<PackageReference Include="microsoft.testplatform.testhost" Version="15.0.0" />
@@ -12,11 +12,12 @@
 		<PackageReference Include="NETStandard.HttpListener" Version="1.0.2" />
 		<PackageReference Include="xunit.runner.visualstudio" Version="2.3.0-beta2-build1317" />
 		<PackageReference Include="Microsoft.Extensions.CommandLineUtils" Version="1.1.1" />
+		<PackageReference Include="Couchbase.Lite" Version="2.0.0-b0220" />
+		<PackageReference Include="Couchbase.Lite.Support.NetDesktop" Version="2.0.0-b0220" />
 	</ItemGroup>
 	<ItemGroup>
-		<Folder Include="Tests\" />
-	</ItemGroup>
-	<ItemGroup>
-	  <ProjectReference Include="..\Testkit.Net.Tests\Testkit.Net.Tests.csproj" />
+	  <Compile Remove="TestRunner.cs" />
+	  <Compile Remove="Tests.cs" />
+	  <Compile Remove="Server.cs" />
 	</ItemGroup>
 </Project>
