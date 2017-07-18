@@ -67,10 +67,10 @@ class SyncGatewayConfig:
             # http://latestbuilds.hq.couchbase.com/couchbase-sync-gateway/1.2.0/1.2.0-6/couchbase-sync-gateway-enterprise_1.2.0-6_x86_64.rpm
             base_url = "http://latestbuilds.hq.couchbase.com/couchbase-sync-gateway/{0}/{1}-{2}".format(self._version_number, self._version_number, self._build_number)
 
+            sg_type = "enterprise"
+
             if sg_ce:
                 sg_type = "community"
-            else:
-                sg_type = "enterprise"
 
             sg_package_name = "couchbase-sync-gateway-{0}_{1}-{2}_x86_64.rpm".format(sg_type, self._version_number, self._build_number)
             accel_package_name = "couchbase-sg-accel-{0}_{1}-{2}_x86_64.rpm".format(sg_type, self._version_number, self._build_number)
