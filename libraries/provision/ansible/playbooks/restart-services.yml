@@ -1,0 +1,50 @@
+
+- hosts: couchbase_servers
+  any_errors_fatal: true
+  become: yes
+
+  tasks:
+  - name: Restart Couchbase Server service
+    service: name=couchbase-server state=restarted
+  - name: Wait for listening on port 8091
+    wait_for: port=8091 timeout=60
+  - name: Wait for listenting on port 11210
+    wait_for: port=11210 timeout=60
+  - name: Add artificial delay to workaround sync gateway startup issue (https://github.com/couchbase/sync_gateway/issues/2716)
+    pause:
+      seconds: 30
+
+
+- hosts: sync_gateways
+  any_errors_fatal: true
+
+  vars:
+    sync_gateway_config_filepath:
+    couchbase_server_primary_node: "{{ hostvars[groups.couchbase_servers[0]].ansible_host }}"
+    
+  tasks:
+  - name: Restart sync gateway service
+    become: yes
+    service: name=sync_gateway state=restarted
+    when: ansible_distribution == "CentOS"
+
+  - include: tasks/start-sync-gateway-windows.yml
+    when: ansible_os_family == "Windows"
+
+
+    
+- hosts: sg_accels
+  any_errors_fatal: true
+
+  vars:
+    sync_gateway_config_filepath:
+    couchbase_server_primary_node: "{{ hostvars[groups.couchbase_servers[0]].ansible_host }}"
+
+  tasks:
+  - name: Restart sg accel service
+    become: yes
+    service: name=sg_accel state=restarted
+    when: ansible_distribution == "CentOS"
+
+  - include: tasks/start-sg-accel-windows.yml
+    when: ansible_os_family == "Windows"
