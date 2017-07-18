@@ -113,5 +113,5 @@ def test_system_test(params_from_base_test_setup):
         # Continue with the rest of the log scanning
         log_info("Sync Gateway killed - OOM")
 
-    sg_error_log = ['panic', 'data race']
+    sg_error_log = ['panic', 'data race', 'SIGSEGV', 'nil pointer dereference']
     scan_for_errors('/home/sync_gateway/logs/sync_gateway_error.log', sg_error_log)
