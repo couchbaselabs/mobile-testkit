@@ -38,7 +38,7 @@ USER_PASSWORD = 'password'
 
 
 def test_system_test(params_from_base_test_setup):
- 
+
     cluster_config = params_from_base_test_setup['cluster_config']
     mode = params_from_base_test_setup['mode']
 
@@ -170,7 +170,7 @@ def test_system_test(params_from_base_test_setup):
 
     # Start changes processing
     with ProcessPoolExecutor(max_workers=3) as pex:
-        
+
         changes_workers_task = pex.submit(
             start_changes_processing,
             sg_url,
@@ -321,7 +321,7 @@ def start_continuous_changes_worker(sg_url, sg_db, user_name, user_auth, termina
         filter_type=filter_type,
         filter_channels=filter_channels
     )
-    
+
     for line in stream.iter_lines():
 
         # filter out keep-alive new lines
@@ -656,7 +656,7 @@ def update_docs(sg_admin_url, sg_url, sg_db, users, update_runtime_sec, batch_si
                     sg_url,
                     sg_db
                 ) for i in range(batch_size)]
-            
+
             # Block until all futures are completed or return
             # exception in future.result()
             for future in as_completed(futures):

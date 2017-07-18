@@ -60,7 +60,7 @@ def pytest_addoption(parser):
     parser.addoption("--max-docs",
                      action="store",
                      help="max-doc-size: Max number of docs to run the test with")
-    
+
     parser.addoption("--num-users",
                      action="store",
                      help="num-users: Number of users to run the simulation with")

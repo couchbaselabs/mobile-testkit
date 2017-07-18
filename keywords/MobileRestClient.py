@@ -1742,7 +1742,7 @@ class MobileRestClient:
                 types.verify_is_list(filter_channels)
                 body["filter"] = "sync_gateway/bychannel"
                 body["channels"] = ",".join(filter_channels)
-                
+
             elif filter_type == "_doc_ids":
                 if filter_doc_ids is None:
                     raise RestError("channel filter need 'filter_channels' set")
@@ -1808,7 +1808,7 @@ class MobileRestClient:
                     types.verify_is_list(filter_channels)
                     body["filter"] = "sync_gateway/bychannel"
                     body["channels"] = ",".join(filter_channels)
-                    
+
                 elif filter_type == "_doc_ids":
                     if filter_doc_ids is None:
                         raise RestError("channel filter need 'filter_channels' set")
