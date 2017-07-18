@@ -144,15 +144,7 @@ def test_system_test(params_from_base_test_setup):
     # Once a user has added number of expected docs 'docs_per_user', it will terminate.
 
     log_info('------------------------------------------')
-    log_info('TODO: START concurrent user creation')
-    log_info('------------------------------------------')
-
-    log_info('------------------------------------------')
-    log_info('TODO: START concurrent user creation')
-    log_info('------------------------------------------')
-
-    log_info('------------------------------------------')
-    log_info('START concurrent doc creation')
+    log_info('START concurrent user / doc creation')
     log_info('------------------------------------------')
     users = create_docs(
         sg_admin_url=sg_admin_url,
