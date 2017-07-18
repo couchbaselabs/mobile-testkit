@@ -3,14 +3,14 @@ import random
 import time
 
 from concurrent.futures import ProcessPoolExecutor, as_completed
-# from couchbase.bucket import Bucket
+from couchbase.bucket import Bucket
 from requests import Session
 from requests.exceptions import HTTPError
 
 from keywords import couchbaseserver, document
 from keywords.ClusterKeywords import ClusterKeywords
 from keywords.MobileRestClient import MobileRestClient
-from keywords.SyncGateway import sync_gateway_config_path_for_mode
+from keywords.SyncGateway import sync_gateway_config_path_for_mode, SyncGateway
 from keywords.utils import log_info
 from libraries.testkit.cluster import Cluster
 
@@ -112,9 +112,10 @@ def test_system_test(params_from_base_test_setup):
     topology = cluster_helper.get_cluster_topology(cluster_config)
 
     cbs_url = topology['couchbase_servers'][0]
-    # cbs_admin_url = cbs_url.replace('8091', '8092')
+    cbs_admin_url = cbs_url.replace('8091', '8092')
     cb_server = couchbaseserver.CouchbaseServer(cbs_url)
-    # bucket_name = cb_server.get_bucket_names()[0]
+    bucket_name = "data-bucket"
+
     cbs_ip = cb_server.host
 
     headers = {'Content-Type': 'application/json'}
@@ -123,21 +124,20 @@ def test_system_test(params_from_base_test_setup):
     cbs_session.auth = ('Administrator', 'password')
 
     log_info('Seeding {} with {} docs'.format(cbs_ip, server_seed_docs))
-    # sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password', timeout=300)
-    # sg_client = MobileRestClient()
+    sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password', timeout=300)
 
     # Stop SG before loading the server
     sg_url = topology['sync_gateways'][0]['public']
     sg_admin_url = topology['sync_gateways'][0]['admin']
     sg_db = 'db'
-    # sg_util = SyncGateway()
-    # sg_util.stop_sync_gateway(cluster_config=cluster_config, url=sg_url)
+    sg_util = SyncGateway()
+    sg_util.stop_sync_gateway(cluster_config=cluster_config, url=sg_url)
 
     # Scenario Actions
-    # delete_views(cbs_session, cbs_admin_url, bucket_name)
-    # load_bucket(sdk_client, server_seed_docs)
-    # start_sync_gateway(cluster_config, sg_util, sg_url, mode)
-    # wait_for_view_creation(cbs_session, cbs_admin_url, bucket_name)
+    delete_views(cbs_session, cbs_admin_url, bucket_name)
+    load_bucket(sdk_client, server_seed_docs)
+    start_sync_gateway(cluster_config, sg_util, sg_url, sg_conf)
+    wait_for_view_creation(cbs_session, cbs_admin_url, bucket_name)
 
     # Start concurrent creation of docs (max docs / num users)
     # Each user will add batch_size number of docs via bulk docs and sleep for 'create_delay'
@@ -386,7 +386,7 @@ def start_changes_processing(sg_url, sg_db, users, changes_delay, terminator_doc
                     filtered
                 )
             )
-        
+
             # Start continuous changes feed for each user
             continuous_changes_tasks.append(
                 changes_pex.submit(
@@ -447,7 +447,7 @@ def add_user_docs(client, sg_url, sg_db, user_name, user_auth, channels, number_
             channels = ['even']
         else:
             channels = ['odd']
-    
+
     while docs_pushed < number_docs_per_user:
 
         # Create batch of docs
@@ -693,7 +693,7 @@ def load_bucket(sdk_client, server_seed_docs):
     sdk_client.upsert_multi(docs)
 
 
-def start_sync_gateway(cluster_config, sg_util, sg_url, mode):
+def start_sync_gateway(cluster_config, sg_util, sg_url, sg_conf):
     # Start SG
     sg_util.start_sync_gateway(cluster_config=cluster_config, url=sg_url, config=sg_conf)
     # It takes a couple of seconds for the view indexing to begin
