@@ -19,6 +19,12 @@ Using 'docker in docker'
 $ docker run --privileged -it --network=cbl --name mobile-testkit -v $(pwd):/opt/mobile-testkit -v $(pwd)/resources/pool.json:/opt/mobile-testkit/resources/pool.json -v /var/run/docker.sock:/var/run/docker.sock -v /usr/bin/docker:/usr/bin/docker couchbase/mobile-testkit /bin/bash
 ```
 
+If you are running on a Centos7 host and you see an error about not being able to find `/usr/lib64/libltdl.so.7`, try the following workaround of running the same command with an extra volume mount for that particular `.so` object:
+
+```
+docker run ... -v /usr/lib64/libltdl.so.7:/usr/lib64/libltdl.so.7 ...
+```
+
 And then inside the docker container:
 
 ```
