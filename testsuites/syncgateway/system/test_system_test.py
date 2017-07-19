@@ -442,7 +442,7 @@ def start_changes_processing(sg_url, sg_db, users, changes_delay, terminator_doc
 def create_user_names(num_users):
     """ Takes a number of users and returns a list of usernames """
 
-    num_per_type = num_users / 3
+    num_per_type = num_users / len(USER_TYPES)
     user_names = []
 
     for user_type in USER_TYPES:
