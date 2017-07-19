@@ -1,7 +1,6 @@
 ---
 # Remove sync_gateway
 - hosts: sync_gateways
-  become: yes
 
   vars:
     couchbase_sync_gateway_package_base_url:
@@ -9,18 +8,12 @@
     couchbase_sync_gateway_package_url: "{{ couchbase_sync_gateway_package_base_url }}/{{ couchbase_sync_gateway_package }}"
 
   tasks:
-  - include: tasks/stop-sync-gateway.yml
-  - include: tasks/remove-sync-gateway.yml
-  - include: tasks/clean-users.yml
-
-  # Check no sync_gateways or accels running
-  - name: SYNC GATEWAY | verify no service on 4985
-    wait_for: port=4985 delay=1 state=stopped
+  - include: tasks/stop-sync-gateway-windows.yml
+  - include: tasks/remove-sync-gateway-windows.yml
 
 # Flush server buckets
 - hosts: couchbase_servers
   any_errors_fatal: true
-  become: yes
   vars:
     # Primary node
     couchbase_server_primary_node: "{{ hostvars[groups.couchbase_servers[0]].ansible_host }}"
@@ -38,17 +31,9 @@
     couchbase_server_cluster_ram: "{{ ((ansible_memtotal_mb|int)*0.8)|int - 512 }}"
     couchbase_server_bucket_ram: "{{ ((couchbase_server_cluster_ram|int)*0.5)|int }}"
 
-# Create sync_gateway user
-- hosts: sync_gateways
-  any_errors_fatal: true
-  become: yes
-  tasks:
-  - include: tasks/create-sync-gateway-user.yml
-
 # Download sync_gateway package
 - hosts: sync_gateways
   any_errors_fatal: true
-  become: yes
 
   vars:
     couchbase_sync_gateway_package_base_url:
@@ -57,20 +42,18 @@
     couchbase_server_primary_node: "{{ hostvars[groups.couchbase_servers[0]].ansible_host }}"
 
   tasks:
-  - name: SYNC GATEWAY |  Download sync_gateway rpm {{ couchbase_sync_gateway_package_url }}
-    get_url: url={{ couchbase_sync_gateway_package_url }} dest=/tmp/{{ couchbase_sync_gateway_package }}
-
+  - name: SYNC GATEWAY |  Download sync_gateway exe {{ couchbase_sync_gateway_package_url }}
+    win_get_url: url={{ couchbase_sync_gateway_package_url }} dest="C:\Users\Administrator\AppData\Local\Temp\{{ couchbase_sync_gateway_package }}"
+  
 # Install sync_gateway
 - hosts: sync_gateways
   any_errors_fatal: true
-  become: yes
   tasks:
-  - include: tasks/install-sg.yml
+  - include: tasks/install-sg-windows.yml
 
 # Deploy non writer sync_gateway configs
 - hosts: sync_gateways
   any_errors_fatal: true
-  become: yes
   vars:
     sync_gateway_config_filepath:
     couchbase_server_primary_node: "{{ hostvars[groups.couchbase_servers[0]].ansible_host }}"
@@ -78,11 +61,10 @@
     sync_gateway_node: "{{ hostvars[groups.sync_gateways[0]].ansible_host }}"
     is_index_writer: "false"
   tasks:
-  - include: tasks/deploy-sync-gateway-config.yml
-
+  - include: tasks/deploy-sync-gateway-config-windows.yml
+ 
 # Launch sync_gateway service
 - hosts: sync_gateways
   any_errors_fatal: true
-  become: yes
   tasks:
-  - include: tasks/start-sync-gateway.yml
+  - include: tasks/start-sync-gateway-windows.yml

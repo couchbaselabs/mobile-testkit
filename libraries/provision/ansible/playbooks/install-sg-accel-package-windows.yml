@@ -1,0 +1,49 @@
+---
+# Remove sg_accel
+- hosts: sg_accels
+
+  vars:
+    couchbase_sync_gateway_package_base_url:
+    couchbase_sync_gateway_package:
+    couchbase_sync_gateway_package_url: "{{ couchbase_sync_gateway_package_base_url }}/{{ couchbase_sync_gateway_package }}"
+
+  tasks:
+  - include: tasks/stop-sg-accel-windows.yml
+  - include: tasks/remove-sg-accel-windows.yml
+
+# Download sg accel package
+- hosts: sg_accels
+  any_errors_fatal: true
+
+  vars:
+    couchbase_sync_gateway_package_base_url:
+    couchbase_sg_accel_package:
+    couchbase_sg_accel_package_url: "{{ couchbase_sync_gateway_package_base_url }}/{{ couchbase_sg_accel_package }}"
+    couchbase_server_primary_node: "{{ hostvars[groups.couchbase_servers[0]].ansible_host }}"
+
+  tasks:
+  - name: SG Accel | Download sg_accel exe {{ couchbase_sg_accel_package_url }}
+    win_get_url: url={{ couchbase_sg_accel_package_url }} dest="C:\Users\Administrator\AppData\Local\Temp\{{ couchbase_sg_accel_package }}"
+
+# Install sg_accel
+- hosts: sg_accels
+  any_errors_fatal: true
+  tasks:
+  - include: tasks/install-sg-accel-windows.yml
+
+# Deploy sg_accel index writer configs
+- hosts: sg_accels
+  vars:
+    sync_gateway_config_filepath:
+    couchbase_server_primary_node: "{{ hostvars[groups.couchbase_servers[0]].ansible_host }}"
+    # hack until mobile-testkit/issues/406 allows any sync gateway to be referenced
+    sync_gateway_node: "{{ hostvars[groups.sync_gateways[0]].ansible_host }}"
+    is_index_writer: "true"
+  tasks:
+  - include: tasks/deploy-sg-accel-config-windows.yml
+    
+# Launch sg_accel service
+- hosts: sg_accels
+  any_errors_fatal: true
+  tasks:
+  - include: tasks/start-sg-accel-windows.yml

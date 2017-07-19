@@ -4,6 +4,7 @@
 
   tasks:
   - include: tasks/stop-sync-gateway.yml
+    become: yes
     when: ansible_distribution == "CentOS"
 
   - include: tasks/stop-sync-gateway-windows.yml

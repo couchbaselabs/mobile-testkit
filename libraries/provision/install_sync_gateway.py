@@ -56,7 +56,13 @@ class SyncGatewayConfig:
         output += "  skip bucketcreation: {}\n".format(self.skip_bucketcreation)
         return output
 
-    def sync_gateway_base_url_and_package(self):
+    def sync_gateway_base_url_and_package(self, sg_platform="centos", sa_platform="centos"):
+        platform_extension = {
+            "centos": "rpm",
+            "ubuntu": "deb",
+            "windows": "exe"
+        }
+
         if self._version_number == "1.1.0" or self._build_number == "1.1.1":
             log_info("Version unsupported in provisioning.")
             raise ProvisioningError("Unsupport version of sync_gateway")
@@ -66,8 +72,8 @@ class SyncGatewayConfig:
         else:
             # http://latestbuilds.hq.couchbase.com/couchbase-sync-gateway/1.2.0/1.2.0-6/couchbase-sync-gateway-enterprise_1.2.0-6_x86_64.rpm
             base_url = "http://latestbuilds.hq.couchbase.com/couchbase-sync-gateway/{0}/{1}-{2}".format(self._version_number, self._version_number, self._build_number)
-            sg_package_name = "couchbase-sync-gateway-enterprise_{0}-{1}_x86_64.rpm".format(self._version_number, self._build_number)
-            accel_package_name = "couchbase-sg-accel-enterprise_{0}-{1}_x86_64.rpm".format(self._version_number, self._build_number)
+            sg_package_name = "couchbase-sync-gateway-enterprise_{0}-{1}_x86_64.{2}".format(self._version_number, self._build_number, platform_extension[sg_platform])
+            accel_package_name = "couchbase-sg-accel-enterprise_{0}-{1}_x86_64.{2}".format(self._version_number, self._build_number, platform_extension[sa_platform])
         return base_url, sg_package_name, accel_package_name
 
     def is_valid(self):
@@ -93,7 +99,7 @@ class SyncGatewayConfig:
         return True
 
 
-def install_sync_gateway(cluster_config, sync_gateway_config):
+def install_sync_gateway(cluster_config, sync_gateway_config, sg_platform="centos", sa_platform="centos"):
     log_info(sync_gateway_config)
 
     if not sync_gateway_config.is_valid():
@@ -144,18 +150,37 @@ def install_sync_gateway(cluster_config, sync_gateway_config):
 
     else:
         # Install from Package
-        sync_gateway_base_url, sync_gateway_package_name, sg_accel_package_name = sync_gateway_config.sync_gateway_base_url_and_package()
+        sync_gateway_base_url, sync_gateway_package_name, sg_accel_package_name = sync_gateway_config.sync_gateway_base_url_and_package(sg_platform, sa_platform)
 
         playbook_vars["couchbase_sync_gateway_package_base_url"] = sync_gateway_base_url
         playbook_vars["couchbase_sync_gateway_package"] = sync_gateway_package_name
         playbook_vars["couchbase_sg_accel_package"] = sg_accel_package_name
 
-        status = ansible_runner.run_ansible_playbook(
-            "install-sync-gateway-package.yml",
-            extra_vars=playbook_vars
-        )
+        if sg_platform == "windows":
+            status = ansible_runner.run_ansible_playbook(
+                "install-sync-gateway-package-windows.yml",
+                extra_vars=playbook_vars
+            )
+        else:
+            status = ansible_runner.run_ansible_playbook(
+                "install-sync-gateway-package.yml",
+                extra_vars=playbook_vars
+            )
         if status != 0:
             raise ProvisioningError("Failed to install sync_gateway package")
+
+        if sa_platform == "windows":
+            status = ansible_runner.run_ansible_playbook(
+                "install-sg-accel-package-windows.yml",
+                extra_vars=playbook_vars
+            )
+        else:
+            status = ansible_runner.run_ansible_playbook(
+                "install-sg-accel-package.yml",
+                extra_vars=playbook_vars
+            )
+        if status != 0:
+            raise ProvisioningError("Failed to install sg_accel package")
 
     # Configure aws cloudwatch logs forwarder
     status = ansible_runner.run_ansible_playbook(

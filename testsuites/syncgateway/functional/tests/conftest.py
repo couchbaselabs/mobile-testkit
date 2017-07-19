@@ -159,7 +159,9 @@ def params_from_base_suite_setup(request):
                 server_version=server_version,
                 sync_gateway_version=sync_gateway_version,
                 sync_gateway_config=sg_config,
-                race_enabled=race_enabled
+                race_enabled=race_enabled,
+                sg_platform=sg_platform,
+                sa_platform=sa_platform
             )
         except ProvisioningError:
             logging_helper = Logging()

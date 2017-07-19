@@ -4,6 +4,7 @@
 
   tasks:
   - include: tasks/stop-sg-accel.yml
+    become: yes
     when: ansible_distribution == "CentOS"
 
   - include: tasks/stop-sg-accel-windows.yml

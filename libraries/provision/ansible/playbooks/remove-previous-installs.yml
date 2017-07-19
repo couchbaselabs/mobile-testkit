@@ -8,6 +8,7 @@
 
   # Remove sync_gateway
   - include: tasks/remove-sync-gateway.yml
+    become: yes
     when: ansible_distribution == "CentOS"
 
   # Remove sync_gateway
@@ -16,6 +17,7 @@
 
   # Remove sg_accel
   - include: tasks/remove-sg-accel.yml
+    become: yes
     when: ansible_distribution == "CentOS"
 
   - include: tasks/remove-sg-accel-windows.yml
@@ -26,11 +28,13 @@
 
   # Delete sync_gateway and sg_accel uses
   - include: tasks/clean-users.yml
+    become: yes
     when: ansible_distribution == "CentOS"
 
   # Check no sync_gateways or accels running
   - name: ALL | verify no sg_accel or sgs are running on 4985
     wait_for: port=4985 delay=1 state=stopped
+    become: yes
     when: ansible_distribution == "CentOS"
 
   # Check no servers are running
