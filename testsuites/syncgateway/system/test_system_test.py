@@ -597,8 +597,6 @@ def update_docs_task(users, user_type, user_index, sg_url, sg_db):
 
     user_name = '{}_{}'.format(user_type, user_index)
 
-    print('USERRR: {}'.format(user_name))
-
     # Get a random value to determin the update method
     # ~ 90% ops bulk, 10% ops single
     rand = random.random()
