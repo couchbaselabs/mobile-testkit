@@ -27,6 +27,7 @@ def params_from_base_suite_setup(request):
     race_enabled = request.config.getoption("--race")
     cbs_ssl = request.config.getoption("--server-ssl")
     xattrs_enabled = request.config.getoption("--xattrs")
+    sg_ce = request.config.getoption("--sg-ce")
 
     log_info("server_version: {}".format(server_version))
     log_info("sync_gateway_version: {}".format(sync_gateway_version))
@@ -35,6 +36,7 @@ def params_from_base_suite_setup(request):
     log_info("race_enabled: {}".format(race_enabled))
     log_info("cbs_ssl: {}".format(cbs_ssl))
     log_info("xattrs_enabled: {}".format(xattrs_enabled))
+    log_info("sg_ce: {}".format(sg_ce))
 
     if xattrs_enabled and version_is_binary(sync_gateway_version):
         check_xattr_support(server_version, sync_gateway_version)
@@ -75,7 +77,8 @@ def params_from_base_suite_setup(request):
                 server_version=server_version,
                 sync_gateway_version=sync_gateway_version,
                 sync_gateway_config=sg_config,
-                race_enabled=race_enabled
+                race_enabled=race_enabled,
+                sg_ce=sg_ce
             )
         except ProvisioningError:
             logging_helper = Logging()
