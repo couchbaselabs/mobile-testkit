@@ -1,11 +1,8 @@
 #!/bin/sh
 
-
-#ENVIRONMENT="dev"
-#DB_PATH="/data/db"
 function usage()
 {
-    echo "./simple_args_parsing.sh"
+    echo "./androidjava.sh"
     echo "\t-h --help"
     echo "\t-t | --runtime-min=20"
     echo "\t-m | --max-docs=3"
@@ -14,8 +11,6 @@ function usage()
 }
 
 while [ "$1" != "" ]; do
-    #PARAM=`echo $1 | awk -F= '{print $1}'`
-    #VALUE=`echo $1 | awk -F= '{print $2}'`
     case $1 in
         -h | --help)
             usage
@@ -31,7 +26,7 @@ while [ "$1" != "" ]; do
             REPLICATION_ENDPOINT=$2
             ;;
         *)
-            echo "ERROR: unknown parameter \"$PARAM\""
+            echo "ERROR: unknown parameter $1"
             usage
             exit 1
             ;;
@@ -40,8 +35,15 @@ while [ "$1" != "" ]; do
     shift
 done
 
-adb shell am start -n com.couchbase.androidclient/com.couchbase.androidclient.MainActivity -a android.intent.action.VIEW --es syncGatewayURL $REPLICATION_ENDPOINT --ei numOfDocs $MAXDOCS --ei scenarioRunTimeMinutes $RUNTIME
+if [ ! "$RUNTIME" ] || [ ! "$MAXDOCS" ] || [ ! "$REPLICATION_ENDPOINT" ]
+then
+    usage
+    exit 1
+fi
 
 echo "RUN TIME is $RUNTIME";
 echo "MAX DOCS is $MAXDOCS";
 echo "REPLICATION END POINT IS $REPLICATION_ENDPOINT";
+
+#adb shell am start -n com.couchbase.androidclient/com.couchbase.androidclient.MainActivity -a android.intent.action.VIEW --es syncGatewayURL $REPLICATION_ENDPOINT --ei numOfDocs $MAXDOCS --ei scenarioRunTimeMinutes $RUNTIME
+

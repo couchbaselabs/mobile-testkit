@@ -138,6 +138,7 @@ Now PyCharm should recognize the custom libraries and provide intellisense.
 - Run the app
 - If any changes made to the Android code, make sure you run the following
 -- Lint the code : Analyze -> Inspect code
+--- https://developer.android.com/studio/write/lint.html
 -- Code styles and format code : Code -> Reformat Code
 
 == Listener Tests
