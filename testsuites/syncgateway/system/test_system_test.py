@@ -265,7 +265,7 @@ def start_polling_changes_worker(sg_url, sg_db, user_name, user_auth, changes_de
     if channels_filtered:
         filter_type = 'sync_gateway/bychannel'
         filter_channels = ['even', 'terminator']
-    
+
     elif doc_ids_filtered:
         filter_type = '_doc_ids'
         filter_doc_ids = ['terminator']

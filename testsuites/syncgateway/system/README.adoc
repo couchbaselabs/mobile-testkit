@@ -3,19 +3,19 @@ link:../../../docs/sequoia.adoc[Instructions]
 
 Run Tests
 ```
-pytest -s \
+pytest -s  \
     --sequoia \
     --xattrs \
     --mode=cc \
     --server-version=5.0.0-3217 \
-    --sync-gateway-version=1.5.0-465 \
-    --server-seed-docs=100 \
-    --max-docs=120 \
-    --num-users=12 \
+    --sync-gateway-version=1.5.0-471 \
+    --server-seed-docs=10000 \
+    --max-docs=40 \
+    --num-users=4 \
     --create-batch-size=10 \
     --create-delay=0.1 \
     --update-runtime-sec=1 \
-    --update-batch-size=4 \
+    --update-batch-size=1 \
     --update-delay=1 \
     testsuites/syncgateway/system/
 ```
