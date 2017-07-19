@@ -33,7 +33,7 @@ SG_VIEWS = {
 }
 
 
-USER_TYPES = ['shared_channel_user', 'unique_channel_user', 'filtered_channel_user']
+USER_TYPES = ['shared_channel_user', 'unique_channel_user', 'filtered_channel_user', 'filtered_doc_ids_user']
 USER_PASSWORD = 'password'
 
 
@@ -87,7 +87,7 @@ def test_system_test(params_from_base_test_setup):
 
     # We want an even distributed of users per type
     if num_users % len(USER_TYPES) != 0:
-        raise ValueError("'num_users' should be a multiple of 3")
+        raise ValueError("'num_users' should be a multiple of 4")
 
     # Make sure that the 'update_batch_size' is complatible with
     # then number of users per type
@@ -219,11 +219,18 @@ def print_summary(users):
     for user_name, value in users.items():
         num_user_docs = len(value['doc_ids'])
         log_info('-> {} added: {} docs'.format(user_name, num_user_docs))
-        log_info('  - CHANGES {} (normal), {} (longpoll), {} (continous)'.format(
-            len(value['normal']),
-            len(value['longpoll']),
-            len(value['continuous'])
-        ))
+
+        # _doc_ids filter only works with normal changes feed
+        if not user_name.startswith('filtered_doc_ids'):
+            log_info('  - CHANGES {} (normal), {} (longpoll), {} (continous)'.format(
+                len(value['normal']),
+                len(value['longpoll']),
+                len(value['continuous'])
+            ))
+        else:
+            log_info('  - CHANGES {} (normal)'.format(
+                len(value['normal'])
+            ))
 
 
 def grant_users_access(users, channels, sg_admin_url, sg_db):
@@ -244,19 +251,24 @@ def send_changes_termination_doc(sg_url, sg_db, users, terminator_doc_id, termin
     sg_client.add_doc(url=sg_url, db=sg_db, doc=doc, auth=random_user['auth'])
 
 
-def start_polling_changes_worker(sg_url, sg_db, user_name, user_auth, changes_delay, terminator_doc_id, feed, filtered):
+def start_polling_changes_worker(sg_url, sg_db, user_name, user_auth, changes_delay, terminator_doc_id, feed, channels_filtered, doc_ids_filtered):
     sg_client = MobileRestClient()
     since = 0
     latest_changes = {}
     found_terminator = False
 
     # Pass a channel filter to changes request if filtered is true
-    if filtered:
+    filter_type = None
+    filter_channels = None
+    filter_doc_ids = None
+
+    if channels_filtered:
         filter_type = 'sync_gateway/bychannel'
         filter_channels = ['even', 'terminator']
-    else:
-        filter_type = None
-        filter_channels = None
+    
+    elif doc_ids_filtered:
+        filter_type = '_doc_ids'
+        filter_doc_ids = ['terminator']
 
     while True:
 
@@ -273,7 +285,8 @@ def start_polling_changes_worker(sg_url, sg_db, user_name, user_auth, changes_de
             auth=user_auth,
             feed=feed,
             filter_type=filter_type,
-            filter_channels=filter_channels
+            filter_channels=filter_channels,
+            filter_doc_ids=filter_doc_ids
         )
 
         # A termination doc was processed, exit on the next loop
@@ -291,18 +304,19 @@ def start_polling_changes_worker(sg_url, sg_db, user_name, user_auth, changes_de
         time.sleep(changes_delay)
 
 
-def start_continuous_changes_worker(sg_url, sg_db, user_name, user_auth, terminator_doc_id, filtered):
+def start_continuous_changes_worker(sg_url, sg_db, user_name, user_auth, terminator_doc_id, channels_filtered):
 
     sg_client = MobileRestClient()
 
     latest_changes = {}
 
-    if filtered:
+    # Pass a channel filter to changes request if filtered is true
+    filter_type = None
+    filter_channels = None
+
+    if channels_filtered:
         filter_type = 'sync_gateway/bychannel'
         filter_channels = ['even', 'terminator']
-    else:
-        filter_type = None
-        filter_channels = None
 
     log_info('_changes (continuous) for ({}) since: 0'.format(user_name))
     stream = sg_client.stream_continuous_changes(
@@ -339,16 +353,27 @@ def start_changes_processing(sg_url, sg_db, users, changes_delay, terminator_doc
 
     with ProcessPoolExecutor(max_workers=workers) as changes_pex:
 
-        # Start a looping normal changes feed for user
+        # Start 3 changes feed types for each user:
+        #  - looping normal
+        #  - looping longpoll
+        #  - continuous
+        # For 'filtered_channel_user' users:
+        #  - Apply a syncgateway/bychannel filter to the changes feed
+        # For 'filtered_doc_ids_user' users:
+        #  - Apply a _doc_ids filter to the normal changes feed (limitation of the filter type)
+
         normal_changes_tasks = []
         longpoll_changes_tasks = []
         continuous_changes_tasks = []
 
         for user_key, user_val in users.items():
 
-            filtered = False
-            if user_key.startswith('filtered'):
-                filtered = True
+            channels_filtered = False
+            doc_ids_filtered = False
+            if user_key.startswith('filtered_channel'):
+                channels_filtered = True
+            elif user_key.startswith('filtered_doc_ids'):
+                doc_ids_filtered = True
 
             normal_changes_tasks.append(
                 changes_pex.submit(
@@ -360,37 +385,41 @@ def start_changes_processing(sg_url, sg_db, users, changes_delay, terminator_doc
                     changes_delay,
                     terminator_doc_id,
                     "normal",
-                    filtered
+                    channels_filtered,
+                    doc_ids_filtered
                 )
             )
 
             # Start a looping longpoll changes feed for user
-            longpoll_changes_tasks.append(
-                changes_pex.submit(
-                    start_polling_changes_worker,
-                    sg_url,
-                    sg_db,
-                    user_key,
-                    user_val['auth'],
-                    changes_delay,
-                    terminator_doc_id,
-                    "longpoll",
-                    filtered
+            if not doc_ids_filtered:
+                longpoll_changes_tasks.append(
+                    changes_pex.submit(
+                        start_polling_changes_worker,
+                        sg_url,
+                        sg_db,
+                        user_key,
+                        user_val['auth'],
+                        changes_delay,
+                        terminator_doc_id,
+                        "longpoll",
+                        channels_filtered,
+                        False
+                    )
                 )
-            )
 
             # Start continuous changes feed for each user
-            continuous_changes_tasks.append(
-                changes_pex.submit(
-                    start_continuous_changes_worker,
-                    sg_url,
-                    sg_db,
-                    user_key,
-                    user_val['auth'],
-                    terminator_doc_id,
-                    filtered
+            if not doc_ids_filtered:
+                continuous_changes_tasks.append(
+                    changes_pex.submit(
+                        start_continuous_changes_worker,
+                        sg_url,
+                        sg_db,
+                        user_key,
+                        user_val['auth'],
+                        terminator_doc_id,
+                        channels_filtered
+                    )
                 )
-            )
 
         # Block on termination of "normal" changes feeds
         for changes_task in as_completed(normal_changes_tasks):
@@ -430,8 +459,8 @@ def add_user_docs(client, sg_url, sg_db, user_name, user_auth, channels, number_
     batch_count = 0
 
     # Even filtered users should add docs with ['even'] channel
-    # Odd filtered users should add docs with ['even'] channel
-    if user_name.startswith('filtered'):
+    # Odd filtered users should add docs with ['odd'] channel
+    if user_name.startswith('filtered_channel_user'):
         # The split below will result in the following format ['filtered', 'channel', 'user', '2']
         user_name_parts = user_name.split('_')
         user_index = int(user_name_parts[3])
@@ -481,8 +510,10 @@ def create_users_add_docs_task(user_name,
     elif user_name.startswith('shared'):
         # Doc channel should be shared for each doc with this user type
         channels = ['shared']
-    elif user_name.startswith('filtered'):
+    elif user_name.startswith('filtered_channel'):
         channels = ['even', 'odd']
+    elif user_name.startswith('filtered_doc_ids'):
+        channels = ['terminator']
     else:
         raise ValueError('Unexpected user type: {}'.format(user_name))
 

@@ -1723,7 +1723,7 @@ class MobileRestClient:
 
             break
 
-    def stream_continuous_changes(self, url, db, since, auth, filter_type=None, filter_channels=None, filter_doc_ids=None):
+    def stream_continuous_changes(self, url, db, since, auth, filter_type=None, filter_channels=None):
         """
         Issues a continuous changes feed request and returns the stream
         """
@@ -1743,16 +1743,8 @@ class MobileRestClient:
                 body["filter"] = "sync_gateway/bychannel"
                 body["channels"] = ",".join(filter_channels)
 
-            elif filter_type == "_doc_ids":
-                if filter_doc_ids is None:
-                    raise RestError("channel filter need 'filter_channels' set")
-
-                types.verify_is_list(filter_doc_ids)
-                body["filter"] = "_doc_ids"
-                body["doc_ids"] = filter_doc_ids
-
             else:
-                raise RestError("Unsupported _changes filter_type: {}. Use 'sync_gateway/bychannel' or '_doc_ids'.".format(
+                raise RestError("Unsupported _changes filter_type: {}. Use 'sync_gateway/bychannel'.".format(
                     filter_type
                 ))
 
@@ -1810,6 +1802,10 @@ class MobileRestClient:
                     body["channels"] = ",".join(filter_channels)
 
                 elif filter_type == "_doc_ids":
+
+                    if feed != "normal":
+                        raise RestError("'_doc_ids' filter only works with feed=normal")
+
                     if filter_doc_ids is None:
                         raise RestError("channel filter need 'filter_channels' set")
 
