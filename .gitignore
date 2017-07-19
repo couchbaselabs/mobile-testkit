@@ -85,3 +85,6 @@ portmaps.json
 apps/testkit.net/testkit.net.userprefs
 apps/testkit.net/Testkit.Net.Desktop/bin/*
 apps/testkit.net/Testkit.Net.Desktop/obj/*
+apps/Testkit.java/Testkit.java.android/Tests/AndroidClient2/build
+apps/Testkit.java/Testkit.java.android/Tests/AndroidClient2/app/build
+apps/Testkit.java/Testkit.java.android/Tests/AndroidClient2/app/*.apk
