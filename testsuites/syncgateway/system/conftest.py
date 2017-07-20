@@ -206,4 +206,4 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
 
     if status != 0:
         logging_helper.fetch_and_analyze_logs(cluster_config=cluster_config, test_name=test_name)
-        raise LogScanningError("Out of memory errors found in the logs")
+        raise LogScanningError("Errors found in the logs")
