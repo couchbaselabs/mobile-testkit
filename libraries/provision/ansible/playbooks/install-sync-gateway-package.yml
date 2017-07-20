@@ -9,7 +9,6 @@
     couchbase_sync_gateway_package_url: "{{ couchbase_sync_gateway_package_base_url }}/{{ couchbase_sync_gateway_package }}"
 
   tasks:
-  - include: tasks/stop-sync-gateway.yml
   - include: tasks/remove-sync-gateway.yml
   - include: tasks/clean-users.yml
 

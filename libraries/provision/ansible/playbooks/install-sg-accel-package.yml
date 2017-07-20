@@ -9,7 +9,6 @@
     couchbase_sync_gateway_package_url: "{{ couchbase_sync_gateway_package_base_url }}/{{ couchbase_sync_gateway_package }}"
 
   tasks:
-  - include: tasks/stop-sg-accel.yml
   - include: tasks/remove-sg-accel.yml
   - include: tasks/clean-users.yml
 
