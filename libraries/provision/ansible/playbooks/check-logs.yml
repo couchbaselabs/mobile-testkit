@@ -1,0 +1,14 @@
+---
+- hosts: sync_gateways:sg_accels
+  any_errors_fatal: true
+  vars:
+    error_string:
+    secondary_error_string:
+    log_file:
+
+  tasks:
+  - name: "Check {{ log_file }} for {{ error_string }} and {{ secondary_error_string }}"
+    become: yes
+    shell: "grep {{ error_string }} {{ log_file }}"
+    register: output
+    failed_when: "'{{ secondary_error_string }}' in output.stdout"

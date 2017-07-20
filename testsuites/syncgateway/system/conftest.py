@@ -13,7 +13,7 @@ from libraries.NetworkUtils import NetworkUtils
 from libraries.testkit import cluster
 from utilities.cluster_config_utils import persist_cluster_config_environment_prop
 from keywords.exceptions import LogScanningError
-from keywords.remoteexecutor import RemoteExecutor
+from libraries.provision.ansible_runner import AnsibleRunner
 
 
 # Add custom arguments for executing tests in this directory
@@ -182,7 +182,6 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
 
     # Verify all sync_gateways and sg_accels are reachable
     c = cluster.Cluster(cluster_config)
-    remote_executor = RemoteExecutor(c.sync_gateways[0].ip)
     errors = c.verify_alive(mode)
 
     # if the test failed or a node is down, pull logs
@@ -196,22 +195,35 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     # SG logs for panic, data race
     # System logs for OOM
     sys_log_file = "/var/log/messages"
-    status, stdout, stderr = remote_executor.execute("sudo grep 'Out of memory: Kill process' {} | grep sync_gateway".format(sys_log_file))
-    if status == 1:
-        log_info("No Out of memory errors found in {}".format(sys_log_file))
-    elif status == 0:
-        log_info("status: {}, stdout: {}, stderr: {}".format(status, stdout, stderr))
-        logging_helper.fetch_and_analyze_logs(cluster_config=cluster_config, test_name=test_name)
-        raise LogScanningError('Out of memory errors found!! Please review: {} '.format(sys_log_file))
+
+    playbook_vars = {
+        "error_string": "Out of memory: Kill process",
+        "secondary_error_string": "sync_gateway",
+        "log_file": sys_log_file
+    }
+
+    ansible_runner = AnsibleRunner(cluster_config)
+    status = ansible_runner.run_ansible_playbook(
+        "check-logs.yml",
+        extra_vars=playbook_vars
+    )
+
+    if status != 0:
+        raise LogScanningError("Failed to check for errors in logs")
 
     sg_error_log = ['panic', 'data race', 'SIGSEGV', 'nil pointer dereference']
     sg_log_file = "/home/sync_gateway/logs/sync_gateway_error.log"
     for error in sg_error_log:
-        status, stdout, stderr = remote_executor.execute('sudo grep "{}" {} | grep sync_gateway'.format(error, sg_log_file))
+        playbook_vars = {
+            "error_string": error,
+            "secondary_error_string": error,
+            "log_file": sg_log_file
+        }
 
-        if status == 1:
-            log_info("No {} errors found in {}".format(error, sg_log_file))
-        elif stdout:
-            log_info("status: {}, stdout: {}, stderr: {}".format(status, stdout, stderr))
-            logging_helper.fetch_and_analyze_logs(cluster_config=cluster_config, test_name=test_name)
-            raise LogScanningError('{} errors found!! Please review: {} '.format(error, sg_log_file))
+        status = ansible_runner.run_ansible_playbook(
+            "check-logs.yml",
+            extra_vars=playbook_vars
+        )
+
+        if status != 0:
+            raise LogScanningError("Failed to check for errors in logs")
