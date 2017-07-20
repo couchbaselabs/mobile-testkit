@@ -1,6 +1,7 @@
 """ Setup for Sync Gateway functional tests """
 
 import pytest
+import os
 
 from keywords.ClusterKeywords import ClusterKeywords
 from keywords.constants import CLUSTER_CONFIGS_DIR
@@ -194,38 +195,15 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     # Scan logs
     # SG logs for panic, data race
     # System logs for OOM
-    sys_log_file = "/var/log/messages"
-
-    playbook_vars = {
-        "error_string": "Out of memory: Kill process",
-        "secondary_error_string": "sync_gateway",
-        "log_file": sys_log_file
-    }
-
     ansible_runner = AnsibleRunner(cluster_config)
+    script_name = "{}/utilities/check_logs.sh".format(os.getcwd())
     status = ansible_runner.run_ansible_playbook(
         "check-logs.yml",
-        extra_vars=playbook_vars
+        extra_vars={
+            "script_name": script_name
+        }
     )
 
     if status != 0:
         logging_helper.fetch_and_analyze_logs(cluster_config=cluster_config, test_name=test_name)
         raise LogScanningError("Out of memory errors found in the logs")
-
-    sg_error_log = ['panic', 'data race', 'SIGSEGV', 'nil pointer dereference']
-    sg_log_file = "/home/sync_gateway/logs/sync_gateway_error.log"
-    for error in sg_error_log:
-        playbook_vars = {
-            "error_string": error,
-            "secondary_error_string": error,
-            "log_file": sg_log_file
-        }
-
-        status = ansible_runner.run_ansible_playbook(
-            "check-logs.yml",
-            extra_vars=playbook_vars
-        )
-
-        if status != 0:
-            logging_helper.fetch_and_analyze_logs(cluster_config=cluster_config, test_name=test_name)
-            raise LogScanningError("{} errors found in the logs".format(error))
