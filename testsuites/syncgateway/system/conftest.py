@@ -209,7 +209,8 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     )
 
     if status != 0:
-        raise LogScanningError("Failed to check for errors in logs")
+        logging_helper.fetch_and_analyze_logs(cluster_config=cluster_config, test_name=test_name)
+        raise LogScanningError("Out of memory errors found in the logs")
 
     sg_error_log = ['panic', 'data race', 'SIGSEGV', 'nil pointer dereference']
     sg_log_file = "/home/sync_gateway/logs/sync_gateway_error.log"
@@ -226,4 +227,5 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         )
 
         if status != 0:
-            raise LogScanningError("Failed to check for errors in logs")
+            logging_helper.fetch_and_analyze_logs(cluster_config=cluster_config, test_name=test_name)
+            raise LogScanningError("{} errors found in the logs".format(error))
