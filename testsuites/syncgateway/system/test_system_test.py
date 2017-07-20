@@ -1,7 +1,8 @@
+import time
+
 from couchbase.bucket import Bucket
 from requests import Session
 from requests.exceptions import HTTPError
-import time
 
 from keywords.SyncGateway import sync_gateway_config_path_for_mode
 from keywords import couchbaseserver
