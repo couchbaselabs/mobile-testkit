@@ -45,5 +45,5 @@ echo "RUN TIME is $RUNTIME";
 echo "MAX DOCS is $MAXDOCS";
 echo "REPLICATION END POINT IS $REPLICATION_ENDPOINT";
 
-#adb shell am start -n com.couchbase.androidclient/com.couchbase.androidclient.MainActivity -a android.intent.action.VIEW --es syncGatewayURL $REPLICATION_ENDPOINT --ei numOfDocs $MAXDOCS --ei scenarioRunTimeMinutes $RUNTIME
+adb shell am start -n com.couchbase.androidclient/com.couchbase.androidclient.MainActivity -a android.intent.action.VIEW --es syncGatewayURL $REPLICATION_ENDPOINT --ei numOfDocs $MAXDOCS --ei scenarioRunTimeMinutes $RUNTIME
 
