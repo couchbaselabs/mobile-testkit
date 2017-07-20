@@ -186,8 +186,8 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     errors = c.verify_alive(mode)
 
     # if the test failed or a node is down, pull logs
+    logging_helper = Logging()
     if collect_logs or request.node.rep_call.failed or len(errors) != 0:
-        logging_helper = Logging()
         logging_helper.fetch_and_analyze_logs(cluster_config=cluster_config, test_name=test_name)
 
     assert len(errors) == 0
@@ -201,6 +201,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         log_info("No Out of memory errors found in {}".format(sys_log_file))
     elif status == 0:
         log_info("status: {}, stdout: {}, stderr: {}".format(status, stdout, stderr))
+        logging_helper.fetch_and_analyze_logs(cluster_config=cluster_config, test_name=test_name)
         raise LogScanningError('Out of memory errors found!! Please review: {} '.format(sys_log_file))
 
     sg_error_log = ['panic', 'data race', 'SIGSEGV', 'nil pointer dereference']
@@ -212,4 +213,5 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
             log_info("No {} errors found in {}".format(error, sg_log_file))
         elif stdout:
             log_info("status: {}, stdout: {}, stderr: {}".format(status, stdout, stderr))
+            logging_helper.fetch_and_analyze_logs(cluster_config=cluster_config, test_name=test_name)
             raise LogScanningError('{} errors found!! Please review: {} '.format(error, sg_log_file))
