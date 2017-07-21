@@ -27,5 +27,5 @@ def test_ce_ee_package(sg_ce, sg_type):
     sync_gateway_base_url, sync_gateway_package_name, sg_accel_package_name = sg_config.sync_gateway_base_url_and_package(sg_ce)
 
     assert sync_gateway_package_name == "couchbase-sync-gateway-{}_1.5.0-477_x86_64.rpm".format(sg_type)
-    assert sg_accel_package_name == "couchbase-sg-accel-{}_1.5.0-477_x86_64.rpm".format(sg_type)
+    assert sg_accel_package_name == "couchbase-sg-accel-enterprise_1.5.0-477_x86_64.rpm".format(sg_type)
     assert sync_gateway_base_url == "http://latestbuilds.hq.couchbase.com/couchbase-sync-gateway/1.5.0/1.5.0-477"

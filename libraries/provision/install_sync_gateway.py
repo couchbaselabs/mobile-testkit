@@ -73,7 +73,7 @@ class SyncGatewayConfig:
                 sg_type = "community"
 
             sg_package_name = "couchbase-sync-gateway-{0}_{1}-{2}_x86_64.rpm".format(sg_type, self._version_number, self._build_number)
-            accel_package_name = "couchbase-sg-accel-{0}_{1}-{2}_x86_64.rpm".format(sg_type, self._version_number, self._build_number)
+            accel_package_name = "couchbase-sg-accel-enterprise_{0}-{1}_x86_64.rpm".format(self._version_number, self._build_number)
         return base_url, sg_package_name, accel_package_name
 
     def is_valid(self):
