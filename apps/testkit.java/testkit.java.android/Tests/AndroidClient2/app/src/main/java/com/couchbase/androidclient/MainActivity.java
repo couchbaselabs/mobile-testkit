@@ -22,20 +22,23 @@ public class MainActivity extends AppCompatActivity {
   private Database database;
   private Document doc;
   private Replicator replicator;
-  private int numOfDocs = 4;
-  private long scenarioRunTimeMinutes = 1;
-  private String syncGatewayURL = "blip://192.168.33.11:4984/db/";
+  private int numOfDocs;
+  private long scenarioRunTimeMinutes;
+  private String syncGatewayURL;
 
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
 
-    numOfDocs = getIntent().getIntExtra("numOfDocs", 4);
-    scenarioRunTimeMinutes = getIntent().getLongExtra("scenarioRunTimeMinutes", 1);
+    numOfDocs = getIntent().getIntExtra("numOfDocs",0);
+    scenarioRunTimeMinutes = getIntent().getLongExtra("scenarioRunTimeMinutes",0);
     syncGatewayURL = getIntent().getStringExtra("syncGatewayURL");
 
-    if (syncGatewayURL == null)
-      syncGatewayURL = "blip://192.168.33.11:4984/db/";
+    if (syncGatewayURL == null || numOfDocs == 0 || scenarioRunTimeMinutes == 0) {
+      Log.e("app", "Did not enter the values for one of them : syncGatewayURL, numOfDocs, scenarioRunTimeMinutes ");
+      finish();
+      return;
+    }
 
     setContentView(R.layout.activity_main);
     DatabaseConfiguration config = new DatabaseConfiguration(this);
@@ -67,7 +70,10 @@ public class MainActivity extends AppCompatActivity {
 
   @Override
   protected void onStart() {
+    int k = 0;
+    long startTime, stopTime, minutesCounted = 0;
     super.onStart();
+
     //Create docs in batch
     database.inBatch(new TimerTask() {
       @Override
@@ -81,10 +87,8 @@ public class MainActivity extends AppCompatActivity {
         }
       }
     });
-
-    int k = 0;
-    long startTime, stopTime, minutesCounted = 0;
     startTime = System.currentTimeMillis();
+
     //update random doc
     Random rand = new Random();
     while (minutesCounted < scenarioRunTimeMinutes) {
@@ -103,19 +107,15 @@ public class MainActivity extends AppCompatActivity {
     }
 
     //Deleting docs
-
     Log.i("TEST", "before count -> %d", database.getCount());
     Log.i("app", "Deleting docs");
     for (int i = 0; i < numOfDocs - 2; i++) {
       doc = database.getDocument("doc___" + i);
       database.delete(doc);
     }
-
     Log.i("TEST", "after count -> %d", database.getCount());
-
-
-    //replicator.stop();
-    //database.delete();
+    replicator.stop();
+    database.delete();
 
   }
 }
