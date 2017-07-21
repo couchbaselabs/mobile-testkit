@@ -3,14 +3,14 @@ import random
 import time
 
 from concurrent.futures import ProcessPoolExecutor, as_completed
-from couchbase.bucket import Bucket
+# from couchbase.bucket import Bucket
 from requests import Session
 from requests.exceptions import HTTPError
 
 from keywords import couchbaseserver, document
 from keywords.ClusterKeywords import ClusterKeywords
 from keywords.MobileRestClient import MobileRestClient
-from keywords.SyncGateway import sync_gateway_config_path_for_mode, SyncGateway
+from keywords.SyncGateway import sync_gateway_config_path_for_mode
 from keywords.utils import log_info
 from libraries.testkit.cluster import Cluster
 
@@ -112,9 +112,9 @@ def test_system_test(params_from_base_test_setup):
     topology = cluster_helper.get_cluster_topology(cluster_config)
 
     cbs_url = topology['couchbase_servers'][0]
-    cbs_admin_url = cbs_url.replace('8091', '8092')
+    # cbs_admin_url = cbs_url.replace('8091', '8092')
     cb_server = couchbaseserver.CouchbaseServer(cbs_url)
-    bucket_name = "data-bucket"
+    # bucket_name = "data-bucket"
 
     cbs_ip = cb_server.host
 
@@ -124,20 +124,20 @@ def test_system_test(params_from_base_test_setup):
     cbs_session.auth = ('Administrator', 'password')
 
     log_info('Seeding {} with {} docs'.format(cbs_ip, server_seed_docs))
-    sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password', timeout=300)
+    # sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password', timeout=300)
 
     # Stop SG before loading the server
-    sg_url = topology['sync_gateways'][0]['public']
+    lb_url = topology['load_balancers'][0]
     sg_admin_url = topology['sync_gateways'][0]['admin']
     sg_db = 'db'
-    sg_util = SyncGateway()
-    sg_util.stop_sync_gateway(cluster_config=cluster_config, url=sg_url)
+    # sg_util = SyncGateway()
+    # sg_util.stop_sync_gateway(cluster_config=cluster_config, url=sg_url)
 
-    # Scenario Actions
-    delete_views(cbs_session, cbs_admin_url, bucket_name)
-    load_bucket(sdk_client, server_seed_docs)
-    start_sync_gateway(cluster_config, sg_util, sg_url, sg_conf)
-    wait_for_view_creation(cbs_session, cbs_admin_url, bucket_name)
+    # # Scenario Actions
+    # delete_views(cbs_session, cbs_admin_url, bucket_name)
+    # load_bucket(sdk_client, server_seed_docs)
+    # start_sync_gateway(cluster_config, sg_util, sg_url, sg_conf)
+    # wait_for_view_creation(cbs_session, cbs_admin_url, bucket_name)
 
     # Start concurrent creation of docs (max docs / num users)
     # Each user will add batch_size number of docs via bulk docs and sleep for 'create_delay'
@@ -148,7 +148,7 @@ def test_system_test(params_from_base_test_setup):
     log_info('------------------------------------------')
     users = create_docs(
         sg_admin_url=sg_admin_url,
-        sg_url=sg_url,
+        sg_url=lb_url,
         sg_db=sg_db,
         num_users=num_users,
         number_docs_per_user=docs_per_user,
@@ -165,7 +165,7 @@ def test_system_test(params_from_base_test_setup):
 
         changes_workers_task = pex.submit(
             start_changes_processing,
-            sg_url,
+            lb_url,
             sg_db,
             users,
             changes_delay,
@@ -181,7 +181,7 @@ def test_system_test(params_from_base_test_setup):
         # Update batch size is the number of users that will concurrently update all of their docs
         users = update_docs(
             sg_admin_url=sg_admin_url,
-            sg_url=sg_url,
+            sg_url=lb_url,
             sg_db=sg_db,
             users=users,
             update_runtime_sec=update_runtime_sec,
@@ -200,7 +200,7 @@ def test_system_test(params_from_base_test_setup):
 
         # Broadcast termination doc to all users
         terminator_channel = 'terminator'
-        send_changes_termination_doc(sg_url, sg_db, users, changes_terminator_doc_id, terminator_channel)
+        send_changes_termination_doc(lb_url, sg_db, users, changes_terminator_doc_id, terminator_channel)
 
         # Overwrite each users channels with 'terminator' so their changes feed will backfill the
         # changes feed termination doc

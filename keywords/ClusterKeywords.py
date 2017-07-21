@@ -89,7 +89,7 @@ class ClusterKeywords:
                 sg_urls.append({"public": public, "admin": admin})
 
         ac_urls = ["http://{}:4985".format(sga["ip"]) for sga in cluster["sg_accels"]]
-        lbs_urls = ["http://{}".format(lb["ip"]) for lb in cluster["load_balancers"]]
+        lbs_urls = ["http://{}:4984".format(lb["ip"]) for lb in cluster["load_balancers"]]
 
         server_port = 8091
         server_scheme = "http"

@@ -85,10 +85,6 @@ def pytest_addoption(parser):
                      action="store",
                      help="update-delay: Delay between each bulk POST operation for updates")
 
-    parser.addoption("--ci",
-                     action="store_true",
-                     help="ci: Use by default in Jenkins (multiple servers)")
-
 
 # This will be called once for the at the beggining of the execution in the 'tests/' directory
 # and will be torn down, (code after the yeild) when all the test session has completed.
@@ -106,7 +102,6 @@ def params_from_base_suite_setup(request):
     use_sequoia = request.config.getoption("--sequoia")
     skip_provisioning = request.config.getoption("--skip-provisioning")
     cbs_ssl = request.config.getoption("--server-ssl")
-    ci = request.config.getoption("--ci")
     xattrs_enabled = request.config.getoption("--xattrs")
     server_seed_docs = request.config.getoption("--server-seed-docs")
     max_docs = request.config.getoption("--max-docs")
@@ -131,11 +126,8 @@ def params_from_base_suite_setup(request):
     validate_sync_gateway_mode(mode)
 
     # use base_cc cluster config if mode is "cc" or base_di cluster config if more is "di"
-    log_info("Using 'base_{}' config!".format(mode))
-    if ci:
-        cluster_config = "{}/ci_{}".format(CLUSTER_CONFIGS_DIR, mode)
-    else:
-        cluster_config = "{}/base_{}".format(CLUSTER_CONFIGS_DIR, mode)
+    log_info("Using 'lb_{}' config!".format(mode))
+    cluster_config = "{}/lb_{}".format(CLUSTER_CONFIGS_DIR, mode)
 
     if cbs_ssl:
         log_info("Running tests with cbs <-> sg ssl enabled")
