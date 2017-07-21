@@ -113,6 +113,10 @@ def params_from_base_suite_setup(request):
     log_info("xattrs_enabled: {}".format(xattrs_enabled))
     log_info("sg_ce: {}".format(sg_ce))
 
+    # sg-ce is invalid for di mode
+    if mode == "di" and sg_ce:
+        pytest.skip("SGAccel is only available as an enterprise edition")
+
     # Make sure mode for sync_gateway is supported ('cc' or 'di')
     validate_sync_gateway_mode(mode)
 

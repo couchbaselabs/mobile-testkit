@@ -38,6 +38,10 @@ def params_from_base_suite_setup(request):
     log_info("xattrs_enabled: {}".format(xattrs_enabled))
     log_info("sg_ce: {}".format(sg_ce))
 
+    # sg-ce is invalid for di mode
+    if mode == "di" and sg_ce:
+        pytest.skip("SGAccel is only available as an enterprise edition")
+
     if xattrs_enabled and version_is_binary(sync_gateway_version):
         check_xattr_support(server_version, sync_gateway_version)
 
