@@ -55,7 +55,8 @@ def create_cluster(network_name, number_of_nodes, dev, pull):
 
     # Create docker network with name
     log_info('Checking if network ({}) exists ...'.format(network_name))
-    conflicting_networks = [net for net in docker_client.networks.list() if net.name == 'cbl']
+
+    conflicting_networks = [net for net in docker_client.networks.list() if net.name == network_name]
 
     # If there is a network defined with the name of one you are trying to create
     # Dev mode: reuse the existing network
