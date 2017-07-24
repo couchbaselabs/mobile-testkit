@@ -3,7 +3,7 @@ import pytest
 import keywords.constants
 from keywords.ClusterKeywords import ClusterKeywords
 from keywords.constants import SYNC_GATEWAY_CONFIGS
-from keywords.exceptions import ProvisioningError
+from keywords.exceptions import ProvisioningError, FeatureSupportedError
 from keywords.SyncGateway import validate_sync_gateway_mode
 from keywords.tklogging import Logging
 from keywords.utils import check_xattr_support, log_info, version_is_binary
@@ -40,7 +40,7 @@ def params_from_base_suite_setup(request):
 
     # sg-ce is invalid for di mode
     if mode == "di" and sg_ce:
-        pytest.skip("SGAccel is only available as an enterprise edition")
+        raise FeatureSupportedError("SGAccel is only available as an enterprise edition")
 
     if xattrs_enabled and version_is_binary(sync_gateway_version):
         check_xattr_support(server_version, sync_gateway_version)

@@ -4,7 +4,7 @@ import pytest
 
 from keywords.ClusterKeywords import ClusterKeywords
 from keywords.constants import CLUSTER_CONFIGS_DIR
-from keywords.exceptions import ProvisioningError
+from keywords.exceptions import ProvisioningError, FeatureSupportedError
 from keywords.SyncGateway import (sync_gateway_config_path_for_mode,
                                   validate_sync_gateway_mode)
 from keywords.tklogging import Logging
@@ -115,7 +115,7 @@ def params_from_base_suite_setup(request):
 
     # sg-ce is invalid for di mode
     if mode == "di" and sg_ce:
-        pytest.skip("SGAccel is only available as an enterprise edition")
+        raise FeatureSupportedError("SGAccel is only available as an enterprise edition")
 
     # Make sure mode for sync_gateway is supported ('cc' or 'di')
     validate_sync_gateway_mode(mode)
