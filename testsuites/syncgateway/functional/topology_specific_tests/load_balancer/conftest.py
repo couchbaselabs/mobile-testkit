@@ -2,7 +2,7 @@ import pytest
 
 import keywords.constants
 from keywords.ClusterKeywords import ClusterKeywords
-from keywords.exceptions import ProvisioningError
+from keywords.exceptions import ProvisioningError, FeatureSupportedError
 from keywords.SyncGateway import (sync_gateway_config_path_for_mode,
                                   validate_sync_gateway_mode)
 from keywords.tklogging import Logging
@@ -28,6 +28,7 @@ def params_from_base_suite_setup(request):
     cbs_ssl = request.config.getoption("--server-ssl")
     xattrs_enabled = request.config.getoption("--xattrs")
     sg_lb = request.config.getoption("--sg-lb")
+    sg_ce = request.config.getoption("--sg-ce")
 
     if xattrs_enabled and version_is_binary(sync_gateway_version):
         check_xattr_support(server_version, sync_gateway_version)
@@ -40,6 +41,11 @@ def params_from_base_suite_setup(request):
     log_info("cbs_ssl: {}".format(cbs_ssl))
     log_info("xattrs_enabled: {}".format(xattrs_enabled))
     log_info("sg_lb: {}".format(sg_lb))
+    log_info("sg_ce: {}".format(sg_ce))
+
+    # sg-ce is invalid for di mode
+    if mode == "di" and sg_ce:
+        raise FeatureSupportedError("SGAccel is only available as an enterprise edition")
 
     # Make sure mode for sync_gateway is supported ('cc' or 'di')
     validate_sync_gateway_mode(mode)
@@ -81,7 +87,8 @@ def params_from_base_suite_setup(request):
                 server_version=server_version,
                 sync_gateway_version=sync_gateway_version,
                 sync_gateway_config=sg_config,
-                race_enabled=race_enabled
+                race_enabled=race_enabled,
+                sg_ce=sg_ce
             )
         except ProvisioningError:
             logging_helper = Logging()

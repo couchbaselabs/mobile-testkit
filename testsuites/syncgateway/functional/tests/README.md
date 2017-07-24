@@ -10,6 +10,7 @@
 | `--race`  | If a Sync Gateway commit hash is provided and this flag is set, Sync Gateway will be built with -races |
 | `--server-version`  |  Couchbase Server version |
 | `--collect-logs`  |  Collect logs regardless of pass or fail state of test. Default is to collect logs only on failure |
+| `--sg-ce`  | Installs community version of Sync Gateway |
 
 ## Executing sync_gateway functional tests
 

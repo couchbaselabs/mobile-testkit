@@ -3,7 +3,7 @@ import pytest
 import keywords.constants
 from keywords.ClusterKeywords import ClusterKeywords
 from keywords.constants import SYNC_GATEWAY_CONFIGS
-from keywords.exceptions import ProvisioningError
+from keywords.exceptions import ProvisioningError, FeatureSupportedError
 from keywords.SyncGateway import validate_sync_gateway_mode
 from keywords.tklogging import Logging
 from keywords.utils import check_xattr_support, log_info, version_is_binary
@@ -29,6 +29,7 @@ def params_from_base_suite_setup(request):
     cbs_ssl = request.config.getoption("--server-ssl")
     xattrs_enabled = request.config.getoption("--xattrs")
     sg_lb = request.config.getoption("--sg-lb")
+    sg_ce = request.config.getoption("--sg-ce")
 
     log_info("server_version: {}".format(server_version))
     log_info("sync_gateway_version: {}".format(sync_gateway_version))
@@ -38,6 +39,11 @@ def params_from_base_suite_setup(request):
     log_info("cbs_ssl: {}".format(cbs_ssl))
     log_info("xattrs_enabled: {}".format(xattrs_enabled))
     log_info("sg_lb: {}".format(sg_lb))
+    log_info("sg_ce: {}".format(sg_ce))
+
+    # sg-ce is invalid for di mode
+    if mode == "di" and sg_ce:
+        raise FeatureSupportedError("SGAccel is only available as an enterprise edition")
 
     if xattrs_enabled and version_is_binary(sync_gateway_version):
         check_xattr_support(server_version, sync_gateway_version)
@@ -86,7 +92,8 @@ def params_from_base_suite_setup(request):
                 server_version=server_version,
                 sync_gateway_version=sync_gateway_version,
                 sync_gateway_config=sg_config,
-                race_enabled=race_enabled
+                race_enabled=race_enabled,
+                sg_ce=sg_ce
             )
         except ProvisioningError:
             logging_helper = Logging()

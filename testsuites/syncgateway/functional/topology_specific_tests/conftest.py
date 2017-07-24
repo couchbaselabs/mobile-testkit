@@ -37,3 +37,7 @@ def pytest_addoption(parser):
     parser.addoption("--sg-lb",
                      action="store_true",
                      help="If set, will enable load balancer for Sync Gateway")
+
+    parser.addoption("--sg-ce",
+                     action="store_true",
+                     help="If set, will install CE version of Sync Gateway")

@@ -20,7 +20,7 @@ from libraries.testkit.cluster import validate_cluster
 from libraries.testkit.cluster import Cluster
 
 
-def provision_cluster(cluster_config, couchbase_server_config, sync_gateway_config):
+def provision_cluster(cluster_config, couchbase_server_config, sync_gateway_config, sg_ce=False):
 
     log_info("\n>>> Cluster info:\n")
 
@@ -68,7 +68,8 @@ def provision_cluster(cluster_config, couchbase_server_config, sync_gateway_conf
     log_info("Installing Sync Gateway")
     install_sync_gateway.install_sync_gateway(
         cluster_config=cluster_config,
-        sync_gateway_config=sync_gateway_config
+        sync_gateway_config=sync_gateway_config,
+        sg_ce=sg_ce
     )
 
     # Install nginx
