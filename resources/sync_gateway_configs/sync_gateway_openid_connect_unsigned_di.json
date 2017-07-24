@@ -77,14 +77,6 @@
          "bucket":"data-bucket",
          "username":"data-bucket",
          "password": "password",
-         "users":{
-            "GUEST":{
-               "disabled":true,
-               "admin_channels":[
-                  "*"
-               ]
-            }
-         },
          "channel_index":{
             "num_shards":16,
             "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",

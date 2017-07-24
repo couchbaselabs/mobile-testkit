@@ -5,12 +5,13 @@ import time
 
 import pytest
 from concurrent.futures import ThreadPoolExecutor
+
 from couchbase.bucket import Bucket
 from couchbase.exceptions import KeyExistsError, NotFoundError
 from requests.exceptions import HTTPError
 
 from keywords import attachment, document
-from keywords.constants import DATA_DIR
+from keywords.constants import DATA_DIR, SDK_TIMEOUT
 from keywords.MobileRestClient import MobileRestClient
 from keywords.SyncGateway import sync_gateway_config_path_for_mode
 from keywords.SyncGateway import SyncGateway
@@ -84,7 +85,7 @@ def test_olddoc_nil(params_from_base_test_setup, sg_conf_name):
     # Create clients
     sg_client = MobileRestClient()
     cbs_ip = host_for_url(cbs_url)
-    sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password')
+    sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password', timeout=SDK_TIMEOUT)
 
     # Create user / session
     user_one_info = UserInfo(name='user1', password='pass', channels=['ABC'], roles=[])
@@ -192,7 +193,7 @@ def test_on_demand_import_of_external_updates(params_from_base_test_setup, sg_co
     # Create clients
     sg_client = MobileRestClient()
     cbs_ip = host_for_url(cbs_url)
-    sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password')
+    sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password', timeout=SDK_TIMEOUT)
 
     # Create user / session
     seth_user_info = UserInfo(name='seth', password='pass', channels=['NASA'], roles=[])
@@ -282,7 +283,7 @@ def test_offline_processing_of_external_updates(params_from_base_test_setup, sg_
     # Create clients
     sg_client = MobileRestClient()
     cbs_ip = host_for_url(cbs_url)
-    sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password')
+    sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password', timeout=SDK_TIMEOUT)
 
     # Create user / session
     seth_user_info = UserInfo(name='seth', password='pass', channels=['SG', 'SDK'], roles=[])
@@ -409,7 +410,7 @@ def test_large_initial_import(params_from_base_test_setup, sg_conf_name):
 
     # Connect to server via SDK
     cbs_ip = host_for_url(cbs_url)
-    sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password')
+    sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password', timeout=SDK_TIMEOUT)
 
     # Generate array for each doc doc to give it a larger size
     def prop_gen():
@@ -535,7 +536,7 @@ def test_purge(params_from_base_test_setup, sg_conf_name, use_multiple_channels)
 
     # Connect to server via SDK
     cbs_ip = host_for_url(cbs_url)
-    sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password')
+    sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password', timeout=SDK_TIMEOUT)
 
     # Create 'number_docs_per_client' docs from SDK
     sdk_doc_bodies = document.create_docs('sdk', number_docs_per_client, channels=seth_user_info.channels)
@@ -707,7 +708,7 @@ def test_sdk_does_not_see_sync_meta(params_from_base_test_setup, sg_conf_name):
 
     # Connect to server via SDK
     cbs_ip = host_for_url(cbs_url)
-    sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password')
+    sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password', timeout=SDK_TIMEOUT)
 
     # Add 'number_of_sg_docs' to Sync Gateway
     sg_doc_bodies = document.create_docs(
@@ -816,7 +817,7 @@ def test_sg_sdk_interop_unique_docs(params_from_base_test_setup, sg_conf_name):
     # Connect to server via SDK
     log_info('Connecting to bucket ...')
     cbs_ip = host_for_url(cbs_url)
-    sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password')
+    sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password', timeout=SDK_TIMEOUT)
 
     # Create docs and add them via sdk
     log_info('Adding docs via sdk ...')
@@ -1045,7 +1046,7 @@ def test_sg_sdk_interop_shared_docs(params_from_base_test_setup,
 
     # Connect to server via SDK
     cbs_ip = host_for_url(cbs_url)
-    sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password')
+    sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password', timeout=SDK_TIMEOUT)
 
     # Inject custom properties into doc template
     def update_props():

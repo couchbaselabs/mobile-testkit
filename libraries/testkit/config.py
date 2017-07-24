@@ -1,7 +1,9 @@
 import json
+import re
 from jinja2 import Template
 
 from libraries.testkit import settings
+from keywords.utils import log_info
 
 import logging
 log = logging.getLogger(settings.LOGGER)
@@ -21,6 +23,23 @@ class Config:
 
             # Render the jinja2 template, which will strip out any
             # templated variables in {{ ... }}
+            # Sync function has to be ignored for rendering
+            # Check if a sync function is defined between ` `
+            temp_config = ""
+            if re.search('`', data):
+                log_info("Ignoring the sync function to render template")
+                conf = re.split('`', data)
+                split_len = len(conf)
+
+                # Replace the sync function with a string "function"
+                for i in range(0, split_len, 2):
+                    if i == split_len - 1:
+                        temp_config += conf[i]
+                    else:
+                        temp_config += conf[i] + " \"syncfunction\" "
+
+                data = temp_config
+
             template = Template(data)
 
             # In order to render the template and produce _valid json_, we need to

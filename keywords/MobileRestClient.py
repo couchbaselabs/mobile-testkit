@@ -1011,7 +1011,8 @@ class MobileRestClient:
         """
         Purges the each doc in the provided 'docs' given the 'id' and 'rev'
 
-        docs format: [{u'ok': True, u'rev': u'3-56e50918afe3e9b3c29e94ad55cc6b15', u'id': u'large_attach_0'}, ...]
+        docs format (lite): [{u'ok': True, u'rev': u'3-56e50918afe3e9b3c29e94ad55cc6b15', u'id': u'large_attach_0'}, ...]
+        docs format (Sync Gateway): [{u'ok': True, u'_rev': u'3-56e50918afe3e9b3c29e94ad55cc6b15', u'_id': u'large_attach_0'}, ...]
         """
 
         server_type = self.get_server_type(url=url)
@@ -1019,12 +1020,13 @@ class MobileRestClient:
         purged_docs = []
         for doc in docs:
 
-            log_info("Purging doc: {}".format(doc))
             if server_type == ServerType.syncgateway:
+                log_info("Purging doc: {}".format(doc["_id"]))
                 data = {
                     doc["_id"]: ['*']
                 }
             else:
+                log_info("Purging doc: {}".format(doc["id"]))
                 data = {
                     doc["id"]: [doc["rev"]]
                 }

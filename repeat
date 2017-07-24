@@ -1,0 +1,30 @@
+ #!/usr/bin/env bash 
+
+# Keep retrying as long the command succeeds
+# Usage example
+#   repeat 10 pytest -s --xattrs --mode=di --skip-provisioning --server-version=5.0.0-3193 --sync-gateway-version=1.5.0-455 -k "test_webhooks_crud[webhooks/webhook-False]"  testsuites/syncgateway/functional/tests/
+
+
+function retry()
+{
+        local n=0
+        local try=$1
+        local cmd="${@: 2}"
+        [[ $# -le 1 ]] && {
+        echo "Usage $0 <retry_number> <Command>"; }
+
+        until [[ $n -ge $try ]]
+        do
+                $cmd || {
+                        exit 1;
+                        }
+                ((n++))
+                echo "Pausing before repeating test"
+                sleep 20  # workaround for https://github.com/couchbaselabs/mobile-testkit/issues/1305
+
+        done
+}
+
+retry $*
+
+

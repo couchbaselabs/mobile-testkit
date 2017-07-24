@@ -21,14 +21,6 @@
             "bucket":"data-bucket",
             "username":"data-bucket",
             "password": "password",
-            "users":{
-                "GUEST":{
-                    "disabled":false,
-                    "admin_channels":[
-                        "*"
-                    ]
-                }
-            },
             "channel_index":{
                 "num_shards":16,
                 "server":"http://127.0.0.1:8091",

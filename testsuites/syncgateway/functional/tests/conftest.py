@@ -8,11 +8,34 @@ from keywords.exceptions import ProvisioningError
 from keywords.SyncGateway import (sync_gateway_config_path_for_mode,
                                   validate_sync_gateway_mode)
 from keywords.tklogging import Logging
-from keywords.utils import check_xattr_support, log_info, version_is_binary
+from keywords.utils import check_xattr_support, log_info, version_is_binary, compare_versions
 from libraries.NetworkUtils import NetworkUtils
 from libraries.testkit import cluster
 from utilities.cluster_config_utils import persist_cluster_config_environment_prop
 from utilities.cluster_config_utils import get_load_balancer_ip
+
+UNSUPPORTED_1_5_0_CC = {
+    "test_db_offline_tap_loss_sanity[bucket_online_offline/bucket_online_offline_default_dcp-100]": {
+        "reason": "Loss of DCP not longer puts the bucket in the offline state"
+    },
+    "test_db_offline_tap_loss_sanity[bucket_online_offline/bucket_online_offline_default-100]": {
+        "reason": "Loss of DCP not longer puts the bucket in the offline state"
+    },
+    "test_multiple_dbs_unique_buckets_lose_tap[bucket_online_offline/bucket_online_offline_multiple_dbs_unique_buckets-100]": {
+        "reason": "Loss of DCP not longer puts the bucket in the offline state"
+    },
+    "test_db_online_offline_webhooks_offline_two[webhooks/webhook_offline-5-1-1-2]": {
+        "reason": "Loss of DCP not longer puts the bucket in the offline state"
+    }
+}
+
+
+def skip_if_unsupported(sync_gateway_version, mode, test_name):
+
+    # sync_gateway_version >= 1.5.0 and channel cache
+    if compare_versions(sync_gateway_version, "1.5.0") >= 0 and mode == 'cc':
+        if test_name in UNSUPPORTED_1_5_0_CC:
+            pytest.skip(UNSUPPORTED_1_5_0_CC[test_name]["reason"])
 
 
 # Add custom arguments for executing tests in this directory
@@ -153,6 +176,7 @@ def params_from_base_suite_setup(request):
     cluster_topology = cluster_utils.get_cluster_topology(cluster_config)
 
     yield {
+        "sync_gateway_version": sync_gateway_version,
         "cluster_config": cluster_config,
         "cluster_topology": cluster_topology,
         "mode": mode,
@@ -186,6 +210,15 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         for test in skip_tests:
             if test in test_name:
                 pytest.skip("Skipping online/offline tests with load balancer")
+
+    # Certain test are diabled for certain modes
+    # Given the run conditions, check if the test needs to be skipped
+    skip_if_unsupported(
+        sync_gateway_version=params_from_base_suite_setup["sync_gateway_version"],
+        mode=mode,
+        test_name=test_name
+    )
+
 
     log_info("Running test '{}'".format(test_name))
     log_info("cluster_config: {}".format(cluster_config))

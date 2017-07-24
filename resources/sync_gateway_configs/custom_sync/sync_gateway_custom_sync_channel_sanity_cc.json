@@ -18,14 +18,6 @@
             "bucket":"data-bucket",
             "username":"data-bucket",
             "password": "password",
-            "users":{
-                "GUEST":{
-                    "disabled":true,
-                    "admin_channels":[
-                        "*"
-                    ]
-                }
-            },
             "sync":
             `function(doc, oldDoc){
 

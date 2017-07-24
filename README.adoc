@@ -77,6 +77,22 @@ $ wget http://packages.couchbase.com/clients/c/libcouchbase-2.5.6_centos7_x86_64
     rm -f *.rpm	     
 ```
 
+If you run into this error when running `source setup.sh`:
+
+```
+  src/pycbc.h:29:31: fatal error: libcouchbase/cbft.h: No such file or directory
+     #include <libcouchbase/cbft.h>
+```
+
+The update your libcouchbase version via:
+
+```
+wget http://packages.couchbase.com/releases/couchbase-release/couchbase-release-1.0-2-x86_64.rpm
+sudo rpm -iv couchbase-release-1.0-2-x86_64.rpm
+sudo yum install libcouchbase-devel libcouchbase2-bin gcc gcc-c++
+```
+
+
 === Set up virtualenv install python dependencies
 
 ```
@@ -380,8 +396,13 @@ $ python libraries/provision/create_and_instantiate_cluster.py \
     --lb-type="m3.medium" 
 ```
 
-Wait until the resources are up, then create the `pool.json` file by hand according to instructions above.
+1. Generate `pool.json` file
 
+Replace **YourCloudFormationStack** with the actual cloudformation stack name used.
+
+```
+python libraries/provision/generate_pools_json_from_aws.py --stackname YourCloudFormationStack --targetfile resources/pool.json
+```
 
 == Debugging
 

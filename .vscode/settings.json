@@ -11,5 +11,6 @@
     "python.linting.flake8Enabled": true,
     "python.linting.flake8Path": "${workspaceRoot}/venv/bin/flake8",
     "explorer.openEditors.visible": 0,
-    "files.autoSave": "on"
+    "files.autoSave": "onFocusChange",
+    "editor.renderWhitespace": "all"
 }

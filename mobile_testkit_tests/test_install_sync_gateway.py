@@ -71,14 +71,6 @@ def test_get_buckets_from_sync_gateway_config_template_vars():
             "feed_type":"DCPSHARD",
             "server":"http://{{ couchbase_server_primary_node }}:8091",
             "bucket":"data-bucket",
-            "users":{
-                "GUEST":{
-                    "disabled":true,
-                    "admin_channels":[
-                        "*"
-                    ]
-                }
-            },
             "channel_index":{
                 "num_shards":16,
                 "server":"http://{{ couchbase_server_primary_node }}:8091",
@@ -115,19 +107,13 @@ def test_get_buckets_from_sync_gateway_config_no_buckets():
             "db":{
               "server":"walrus:",
               "users":{
-                "GUEST":{
-                  "disabled":true,
-                  "admin_channels":[
+                "foo": {
+                    "disabled":false,
+                    "admin_channels": [
                     "*"
-                  ]
-                },
-              "foo": {
-                  "disabled":false,
-                  "admin_channels": [
-                  "*"
-                  ],
-                  "password": "bar"
-              }
+                    ],
+                    "password": "bar"
+                }
               },
               "allow_empty_password":true
             }
