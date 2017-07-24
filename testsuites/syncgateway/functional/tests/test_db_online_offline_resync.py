@@ -307,7 +307,6 @@ def test_bucket_online_offline_resync_with_online(params_from_base_test_setup, s
                     }
                 )
 
-                assert status == 0
                 log_info("online issued !!!!!online request status: {}".format(status))
             except HTTPError as e:
                 log_info("status = {} exception = {}".format(status, e.response.status_code))
@@ -525,7 +524,6 @@ def test_bucket_online_offline_resync_with_offline(params_from_base_test_setup, 
         }
     )
 
-    assert status == 0
     log_info("online request issued !!!!! response status: {}".format(status))
 
     time.sleep(5)
