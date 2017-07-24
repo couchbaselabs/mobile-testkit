@@ -206,7 +206,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
 
     if sg_lb:
         # These tests target one SG node
-        skip_tests = ['log_rotation', 'openidconnect']
+        skip_tests = ['resync', 'log_rotation', 'openidconnect']
         for test in skip_tests:
             if test in test_name:
                 pytest.skip("Skipping online/offline tests with load balancer")
