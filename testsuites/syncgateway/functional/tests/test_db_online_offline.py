@@ -13,9 +13,6 @@ from libraries.provision.ansible_runner import AnsibleRunner
 import libraries.testkit.settings
 
 from requests.exceptions import HTTPError
-
-from multiprocessing.pool import ThreadPool
-
 from keywords.utils import log_info
 from keywords.SyncGateway import sync_gateway_config_path_for_mode
 
@@ -590,8 +587,6 @@ def test_offline_true_config_bring_online(params_from_base_test_setup, sg_conf_n
 
     cluster = Cluster(config=cluster_conf)
     cluster.reset(sg_config_path=sg_conf)
-
-    admin = Admin(cluster.sync_gateways[0])
 
     # all db endpoints should fail with 503
     errors = rest_scan(cluster.sync_gateways[0], db="db", online=False, num_docs=num_docs, user_name="seth", channels=["ABC"])

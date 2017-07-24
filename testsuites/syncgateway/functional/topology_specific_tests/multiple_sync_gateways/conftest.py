@@ -11,6 +11,7 @@ from keywords.exceptions import ProvisioningError, FeatureSupportedError
 
 from libraries.testkit import cluster
 from utilities.cluster_config_utils import persist_cluster_config_environment_prop
+from utilities.cluster_config_utils import get_load_balancer_ip
 
 
 # This will be called once for the at the beggining of the execution of each .py file

@@ -78,15 +78,13 @@ def pytest_addoption(parser):
                      action="store_true",
                      help="If set, will enable SSL communication between server and Sync Gateway")
 
-<<<<<<< HEAD
     parser.addoption("--sg-lb",
                      action="store_true",
                      help="If set, will enable load balancer for Sync Gateway")
-=======
+
     parser.addoption("--sg-ce",
                      action="store_true",
                      help="If set, will install CE version of Sync Gateway")
->>>>>>> master
 
 
 # This will be called once for the at the beggining of the execution in the 'tests/' directory
