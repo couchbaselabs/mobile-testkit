@@ -407,6 +407,7 @@ def poll_for_webhook_data(webhook_server, expected_doc_ids, expected_num_revs, e
 
         data = webhook_server.get_data()
         posted_webhook_events = {item['_id']: item for item in data}
+        posted_webhook_events_ids = [item['_id'] for item in data]
         posted_webhook_events_len = len(posted_webhook_events)
 
         # If more webhook data is sent then we are expecting, blow up
@@ -417,9 +418,11 @@ def poll_for_webhook_data(webhook_server, expected_doc_ids, expected_num_revs, e
         if posted_webhook_events_len < len(expected_doc_ids):
             # We have not seen the expected number of docs yet.
             # Wait a sec and try again
-            log_info('Still waiting for webhook events. Expecting: {}, We have only seen: {}'.format(
+            delta = set(expected_doc_ids) - set(posted_webhook_events_ids)
+            log_info('Still waiting for webhook events. Expecting: {}, We have only seen: {}.  Missing: {}'.format(
                 len(expected_doc_ids),
-                posted_webhook_events_len
+                posted_webhook_events_len,
+                delta,
             ))
             all_docs_revs_found = False
 

@@ -56,7 +56,7 @@ class SyncGatewayConfig:
         output += "  skip bucketcreation: {}\n".format(self.skip_bucketcreation)
         return output
 
-    def sync_gateway_base_url_and_package(self, sg_platform="centos", sa_platform="centos"):
+    def sync_gateway_base_url_and_package(self, sg_ce=False, sg_platform="centos", sa_platform="centos"):
         platform_extension = {
             "centos": "rpm",
             "ubuntu": "deb",
@@ -72,8 +72,15 @@ class SyncGatewayConfig:
         else:
             # http://latestbuilds.hq.couchbase.com/couchbase-sync-gateway/1.2.0/1.2.0-6/couchbase-sync-gateway-enterprise_1.2.0-6_x86_64.rpm
             base_url = "http://latestbuilds.hq.couchbase.com/couchbase-sync-gateway/{0}/{1}-{2}".format(self._version_number, self._version_number, self._build_number)
-            sg_package_name = "couchbase-sync-gateway-enterprise_{0}-{1}_x86_64.{2}".format(self._version_number, self._build_number, platform_extension[sg_platform])
+
+            sg_type = "enterprise"
+
+            if sg_ce:
+                sg_type = "community"
+
+            sg_package_name = "couchbase-sync-gateway-{0}_{1}-{2}_x86_64.{3}".format(sg_type, self._version_number, self._build_number, platform_extension[sg_platform])
             accel_package_name = "couchbase-sg-accel-enterprise_{0}-{1}_x86_64.{2}".format(self._version_number, self._build_number, platform_extension[sa_platform])
+
         return base_url, sg_package_name, accel_package_name
 
     def is_valid(self):
@@ -99,7 +106,8 @@ class SyncGatewayConfig:
         return True
 
 
-def install_sync_gateway(cluster_config, sync_gateway_config, sg_platform="centos", sa_platform="centos"):
+def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False, sg_platform="centos", sa_platform="centos"):
+
     log_info(sync_gateway_config)
 
     if not sync_gateway_config.is_valid():
@@ -150,7 +158,7 @@ def install_sync_gateway(cluster_config, sync_gateway_config, sg_platform="cento
 
     else:
         # Install from Package
-        sync_gateway_base_url, sync_gateway_package_name, sg_accel_package_name = sync_gateway_config.sync_gateway_base_url_and_package(sg_platform, sa_platform)
+        sync_gateway_base_url, sync_gateway_package_name, sg_accel_package_name = sync_gateway_config.sync_gateway_base_url_and_package(sg_ce=sg_ce, sg_platform=sg_platform, sa_platform=sa_platform)
 
         playbook_vars["couchbase_sync_gateway_package_base_url"] = sync_gateway_base_url
         playbook_vars["couchbase_sync_gateway_package"] = sync_gateway_package_name

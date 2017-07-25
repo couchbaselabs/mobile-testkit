@@ -20,7 +20,7 @@ from libraries.testkit.cluster import validate_cluster
 from libraries.testkit.cluster import Cluster
 
 
-def provision_cluster(cluster_config, couchbase_server_config, sync_gateway_config, sg_platform="centos", sa_platform="centos"):
+def provision_cluster(cluster_config, couchbase_server_config, sync_gateway_config, sg_ce=False, sg_platform="centos", sa_platform="centos"):
 
     log_info("\n>>> Cluster info:\n")
 
@@ -70,7 +70,8 @@ def provision_cluster(cluster_config, couchbase_server_config, sync_gateway_conf
         cluster_config=cluster_config,
         sync_gateway_config=sync_gateway_config,
         sg_platform=sg_platform,
-        sa_platform=sa_platform
+        sa_platform=sa_platform,
+        sg_ce=sg_ce
     )
 
     # Install nginx

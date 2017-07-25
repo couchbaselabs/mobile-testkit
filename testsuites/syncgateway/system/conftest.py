@@ -1,6 +1,7 @@
 """ Setup for Sync Gateway functional tests """
 
 import pytest
+import os
 
 from keywords.ClusterKeywords import ClusterKeywords
 from keywords.constants import CLUSTER_CONFIGS_DIR
@@ -12,6 +13,8 @@ from keywords.utils import check_xattr_support, log_info, version_is_binary
 from libraries.NetworkUtils import NetworkUtils
 from libraries.testkit import cluster
 from utilities.cluster_config_utils import persist_cluster_config_environment_prop
+from keywords.exceptions import LogScanningError
+from libraries.provision.ansible_runner import AnsibleRunner
 
 
 # Add custom arguments for executing tests in this directory
@@ -183,8 +186,24 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     errors = c.verify_alive(mode)
 
     # if the test failed or a node is down, pull logs
+    logging_helper = Logging()
     if collect_logs or request.node.rep_call.failed or len(errors) != 0:
-        logging_helper = Logging()
         logging_helper.fetch_and_analyze_logs(cluster_config=cluster_config, test_name=test_name)
 
     assert len(errors) == 0
+
+    # Scan logs
+    # SG logs for panic, data race
+    # System logs for OOM
+    ansible_runner = AnsibleRunner(cluster_config)
+    script_name = "{}/utilities/check_logs.sh".format(os.getcwd())
+    status = ansible_runner.run_ansible_playbook(
+        "check-logs.yml",
+        extra_vars={
+            "script_name": script_name
+        }
+    )
+
+    if status != 0:
+        logging_helper.fetch_and_analyze_logs(cluster_config=cluster_config, test_name=test_name)
+        raise LogScanningError("Errors found in the logs")

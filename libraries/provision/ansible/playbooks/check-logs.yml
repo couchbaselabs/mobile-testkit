@@ -1,0 +1,10 @@
+---
+- hosts: sync_gateways:sg_accels
+  any_errors_fatal: true
+  vars:
+    script_name:
+
+  tasks:
+  - name: Copy and run "{{ script_name }}"
+    become: yes
+    script: "{{ script_name }}"

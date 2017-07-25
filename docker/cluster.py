@@ -55,7 +55,8 @@ def create_cluster(network_name, number_of_nodes, dev, pull):
 
     # Create docker network with name
     log_info('Checking if network ({}) exists ...'.format(network_name))
-    conflicting_networks = [net for net in docker_client.networks.list() if net.name == 'cbl']
+
+    conflicting_networks = [net for net in docker_client.networks.list() if net.name == network_name]
 
     # If there is a network defined with the name of one you are trying to create
     # Dev mode: reuse the existing network
@@ -73,6 +74,10 @@ def create_cluster(network_name, number_of_nodes, dev, pull):
     log_info('Starting {} containers on network {} ...'.format(number_of_nodes, network_name))
     container_names = ['{}.{}'.format(network_name, i) for i in range(number_of_nodes)]
 
+    # TODO: discover the highest local port being used, and start from there, otherwise will give error:
+    # 500 Server Error: Internal Server Error ("driver failed programming external connectivity on endpoint
+    # tleyden1.0 (83c5dcdb0b12332dad5e69a904c330587d70f9a7e0d85dd69f6e724b3e287963): Bind for 0.0.0.0:30000
+    # failed: port is already allocated")
     current_port = 30000
     port_map_list = []
     for container_name in container_names:

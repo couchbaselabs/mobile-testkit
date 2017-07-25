@@ -131,6 +131,16 @@ You may use what ever environment you would like, however https://www.jetbrains.
 
 Now PyCharm should recognize the custom libraries and provide intellisense.
 
+=== Android
+- Open Andrond Studio 
+- Open the code of mobile-testkit/app/testkit.java/Testkit.java.Android/Tests/AndroidClient2
+- Build the app
+- Run the app
+- If any changes made to the Android code, make sure you run the following
+-- Lint the code : Analyze -> Inspect code
+--- https://developer.android.com/studio/write/lint.html
+-- Code styles and format code : Code -> Reformat Code
+
 == Listener Tests
 
 The listener tests are a series of tests utilizing Couchbase Lite Listener and Sync Gateway or P2P. They are meant to be cross platform and should be able to run for
