@@ -196,7 +196,6 @@ def test_online_to_offline_changes_feed_controlled_close_continuous(params_from_
         futures[executor.submit(seth.start_continuous_changes_tracking, termination_doc_id=None)] = "continuous"
         futures[executor.submit(doc_pusher.add_docs, num_docs)] = "docs_push"
         time.sleep(5)
-        # futures[executor.submit(admin.take_db_offline, "db")] = "db_offline_task"
         futures[executor.submit(ansible_runner.run_ansible_playbook, "sync-gateway-db-offline.yml", extra_vars={"db": "db"})] = "db_offline_task"
 
         for future in concurrent.futures.as_completed(futures):
@@ -281,7 +280,6 @@ def test_online_to_offline_continous_changes_feed_controlled_close_sanity_mulitp
         futures = {executor.submit(user.start_continuous_changes_tracking, termination_doc_id=None): user.name for user in users}
 
         time.sleep(5)
-        # futures[executor.submit(admin.take_db_offline, "db")] = "db_offline_task"
         futures[executor.submit(ansible_runner.run_ansible_playbook, "sync-gateway-db-offline.yml", extra_vars={"db": "db"})] = "db_offline_task"
 
         for future in concurrent.futures.as_completed(futures):
@@ -347,7 +345,6 @@ def test_online_to_offline_changes_feed_controlled_close_longpoll_sanity(params_
         # start longpoll tracking with no timeout, will block until longpoll is closed by db going offline
         futures[executor.submit(seth.start_longpoll_changes_tracking, termination_doc_id=None, timeout=0, loop=False)] = "polling"
         time.sleep(5)
-        # futures[executor.submit(admin.take_db_offline, "db")] = "db_offline_task"
         futures[executor.submit(ansible_runner.run_ansible_playbook, "sync-gateway-db-offline.yml", extra_vars={"db": "db"})] = "db_offline_task"
 
         for future in concurrent.futures.as_completed(futures):
@@ -412,7 +409,6 @@ def test_online_to_offline_longpoll_changes_feed_controlled_close_sanity_mulitpl
         futures = {executor.submit(user.start_longpoll_changes_tracking, termination_doc_id=None, timeout=0, loop=False): user.name for user in users}
 
         time.sleep(5)
-        # futures[executor.submit(admin.take_db_offline, "db")] = "db_offline_task"
         futures[executor.submit(ansible_runner.run_ansible_playbook, "sync-gateway-db-offline.yml", extra_vars={"db": "db"})] = "db_offline_task"
 
         for future in concurrent.futures.as_completed(futures):
@@ -692,7 +688,6 @@ def test_db_delayed_online(params_from_base_test_setup, sg_conf_name, num_docs):
     admin = Admin(cluster.sync_gateways[0])
 
     time.sleep(2)
-    # status = admin.take_db_offline("db")
     ansible_runner = AnsibleRunner(cluster_conf)
     status = ansible_runner.run_ansible_playbook(
         "sync-gateway-db-offline.yml",
@@ -711,8 +706,6 @@ def test_db_delayed_online(params_from_base_test_setup, sg_conf_name, num_docs):
     db_info = admin.get_db_info("db")
     assert db_info["state"] == "Offline"
 
-    # async_result = pool.apply_async(admin.bring_db_online, ("db", 15,))
-    # status = async_result.get(timeout=15)
     ansible_runner = AnsibleRunner(cluster_conf)
     status = ansible_runner.run_ansible_playbook(
         "sync-gateway-db-online.yml",
