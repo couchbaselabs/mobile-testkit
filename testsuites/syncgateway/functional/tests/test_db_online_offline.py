@@ -15,6 +15,7 @@ import libraries.testkit.settings
 from requests.exceptions import HTTPError
 from keywords.utils import log_info
 from keywords.SyncGateway import sync_gateway_config_path_for_mode
+from keywords.MobileRestClient import MobileRestClient
 
 NUM_ENDPOINTS = 13
 
@@ -137,14 +138,8 @@ def test_online_to_offline_check_503(params_from_base_test_setup, sg_conf_name, 
     assert len(errors) == 0
 
     # Take bucket offline
-    ansible_runner = AnsibleRunner(cluster_conf)
-    status = ansible_runner.run_ansible_playbook(
-        "sync-gateway-db-offline.yml",
-        extra_vars={
-            "db": "db"
-        }
-    )
-
+    sg_client = MobileRestClient()
+    status = sg_client.take_db_offline(cluster_conf=cluster_conf, db="db")
     assert status == 0
 
     # all db endpoints should return 503
@@ -222,14 +217,8 @@ def test_online_to_offline_changes_feed_controlled_close_continuous(params_from_
     assert len(docs_in_changes) > 0
 
     # Bring db back online
-    ansible_runner = AnsibleRunner(cluster_conf)
-    status = ansible_runner.run_ansible_playbook(
-        "sync-gateway-db-online.yml",
-        extra_vars={
-            "db": "db"
-        }
-    )
-
+    sg_client = MobileRestClient()
+    status = sg_client.bring_db_online(cluster_conf=cluster_conf, db="db")
     assert status == 0
 
     # Get all docs that have been pushed
@@ -532,14 +521,8 @@ def test_online_to_offline_changes_feed_controlled_close_longpoll(params_from_ba
 
     # Bring db back online
     # Take bucket offline
-    ansible_runner = AnsibleRunner(cluster_conf)
-    status = ansible_runner.run_ansible_playbook(
-        "sync-gateway-db-online.yml",
-        extra_vars={
-            "db": "db"
-        }
-    )
-
+    sg_client = MobileRestClient()
+    status = sg_client.bring_db_online(cluster_conf=cluster_conf, db="db")
     assert status == 0
 
     #
@@ -594,15 +577,9 @@ def test_offline_true_config_bring_online(params_from_base_test_setup, sg_conf_n
 
     # Scenario 9
     # POST /db/_online
-    # Take bucket offline
-    ansible_runner = AnsibleRunner(cluster_conf)
-    status = ansible_runner.run_ansible_playbook(
-        "sync-gateway-db-online.yml",
-        extra_vars={
-            "db": "db"
-        }
-    )
-
+    # Take bucket online
+    sg_client = MobileRestClient()
+    status = sg_client.bring_db_online(cluster_conf=cluster_conf, db="db")
     assert status == 0
 
     # all db endpoints should succeed
@@ -688,33 +665,17 @@ def test_db_delayed_online(params_from_base_test_setup, sg_conf_name, num_docs):
     admin = Admin(cluster.sync_gateways[0])
 
     time.sleep(2)
-    ansible_runner = AnsibleRunner(cluster_conf)
-    status = ansible_runner.run_ansible_playbook(
-        "sync-gateway-db-offline.yml",
-        extra_vars={
-            "db": "db"
-        }
-    )
-
+    sg_client = MobileRestClient()
+    status = sg_client.take_db_offline(cluster_conf=cluster_conf, db="db")
     assert status == 0
 
     log_info("offline request response status: {}".format(status))
     time.sleep(10)
 
-    # pool = ThreadPool(processes=1)
-
     db_info = admin.get_db_info("db")
     assert db_info["state"] == "Offline"
 
-    ansible_runner = AnsibleRunner(cluster_conf)
-    status = ansible_runner.run_ansible_playbook(
-        "sync-gateway-db-online.yml",
-        extra_vars={
-            "db": "db",
-            "delay": 15
-        }
-    )
-
+    status = sg_client.bring_db_online(cluster_conf=cluster_conf, db="db", delay=15)
     assert status == 0
     log_info("online request response status: {}".format(status))
 
