@@ -130,7 +130,6 @@ def test_online_to_offline_check_503(params_from_base_test_setup, sg_conf_name, 
 
     cluster = Cluster(config=cluster_conf)
     cluster.reset(sg_config_path=sg_conf)
-    # admin = Admin(cluster.sync_gateways[0])
 
     # all db endpoints should function as expected
     errors = rest_scan(cluster.sync_gateways[0], db="db", online=True, num_docs=num_docs, user_name="seth", channels=["ABC"])
