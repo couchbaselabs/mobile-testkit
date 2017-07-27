@@ -4,7 +4,7 @@ from couchbase.bucket import Bucket
 
 BUCKET_NAME = 'travel-sample'
 SDK_CLIENT = Bucket('couchbase://localhost/{}'.format(BUCKET_NAME), password='password')
-SDK_CLIENT.timeout = 15
+SDK_CLIENT.timeout = 120
 DOC_TYPES = ['airline', 'route', 'airport', 'landmark', 'hotel']
 
 

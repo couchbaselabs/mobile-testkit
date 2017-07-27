@@ -130,9 +130,15 @@ The sync_gateway tests require targeting different cluster topologies of sync_ga
 The sync_gateway tests use https://www.ansible.com/[Ansible] to provision the clusters.  
 
 === Using Sequoia for Provisioning 
-Download and build
+
+Prerequistites
+- Go installed
+- Docker installed
+
+Download and build Sequoia
 ```
-$ go get https://github.com/couchbaselabs/sequoia
+$ go get -v github.com/couchbaselabs/sequoia
+$ cd $GOPATH/src/github.com/couchbaselabs/sequoia
 $ go build
 ```
 
@@ -140,7 +146,7 @@ Edit the providers/docker/options.yml file to specify the versions you would lik
 
 1. Setup the Sync Gateway + Couchbase Server cluster
 ```
-$ ./sequoia -test tests/mobile/test_sg.yml -scope tests/mobile/1sg_1cbs.yml --expose_ports --skip_teardown --skip_test --network cbl
+$ ./sequoia -test tests/mobile/test_sg.yml -scope tests/mobile/scope_1sg_1cbs.yml --expose_ports --skip_teardown --skip_test --network cbl
 ```
 
 2. Copy the hosts.json from sequoia/containers/mobile-testkit/hosts.json to root of mobile-testkit repo

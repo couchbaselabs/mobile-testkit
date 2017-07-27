@@ -31,6 +31,20 @@ def verify_topology(topology, host_json):
         verify_services(host_json, num_servers=3, num_sync_gateways=3, num_accels=0, num_lbs=1)
     elif topology == 'lb_di':
         verify_services(host_json, num_servers=3, num_sync_gateways=3, num_accels=3, num_lbs=1)
+    elif topology == 'load_balancer_cc':
+        verify_services(host_json, num_servers=1, num_sync_gateways=2, num_accels=0, num_lbs=1)
+    elif topology == 'load_balancer_di':
+        verify_services(host_json, num_servers=1, num_sync_gateways=2, num_accels=1, num_lbs=1)
+    elif topology == 'multiple_sg_accels_di':
+        verify_services(host_json, num_servers=1, num_sync_gateways=1, num_accels=3, num_lbs=0)
+    elif topology == 'multiple_servers_cc':
+        verify_services(host_json, num_servers=3, num_sync_gateways=1, num_accels=0, num_lbs=0)
+    elif topology == 'multiple_servers_di':
+        verify_services(host_json, num_servers=3, num_sync_gateways=1, num_accels=1, num_lbs=0)
+    elif topology == 'multiple_sync_gateways_cc':
+        verify_services(host_json, num_servers=1, num_sync_gateways=2, num_accels=0, num_lbs=0)
+    elif topology == 'multiple_sync_gateways_di':
+        verify_services(host_json, num_servers=1, num_sync_gateways=2, num_accels=1, num_lbs=0)
     else:
         raise ValueError('Make sure you topology is one of the above!')
 
