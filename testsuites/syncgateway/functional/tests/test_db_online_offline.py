@@ -8,7 +8,6 @@ from libraries.testkit.admin import Admin
 from libraries.testkit.cluster import Cluster
 from libraries.testkit.user import User
 from libraries.testkit.verify import verify_changes
-from libraries.provision.ansible_runner import AnsibleRunner
 
 import libraries.testkit.settings
 
@@ -179,9 +178,9 @@ def test_online_to_offline_changes_feed_controlled_close_continuous(params_from_
     cluster.reset(sg_config_path=sg_conf)
 
     admin = Admin(cluster.sync_gateways[0])
+    sg_client = MobileRestClient()
     seth = admin.register_user(target=cluster.sync_gateways[0], db="db", name="seth", password="password", channels=["ABC"])
     doc_pusher = admin.register_user(target=cluster.sync_gateways[0], db="db", name="doc_pusher", password="password", channels=["ABC"])
-    ansible_runner = AnsibleRunner(cluster_conf)
 
     docs_in_changes = dict()
     doc_add_errors = list()
@@ -191,7 +190,7 @@ def test_online_to_offline_changes_feed_controlled_close_continuous(params_from_
         futures[executor.submit(seth.start_continuous_changes_tracking, termination_doc_id=None)] = "continuous"
         futures[executor.submit(doc_pusher.add_docs, num_docs)] = "docs_push"
         time.sleep(5)
-        futures[executor.submit(ansible_runner.run_ansible_playbook, "sync-gateway-db-offline.yml", extra_vars={"db": "db"})] = "db_offline_task"
+        futures[executor.submit(sg_client.take_db_offline, cluster_conf, "db")] = "db_offline_task"
 
         for future in concurrent.futures.as_completed(futures):
             task_name = futures[future]
@@ -217,7 +216,6 @@ def test_online_to_offline_changes_feed_controlled_close_continuous(params_from_
     assert len(docs_in_changes) > 0
 
     # Bring db back online
-    sg_client = MobileRestClient()
     status = sg_client.bring_db_online(cluster_conf=cluster_conf, db="db")
     assert status == 0
 
@@ -260,8 +258,8 @@ def test_online_to_offline_continous_changes_feed_controlled_close_sanity_mulitp
     cluster.reset(sg_config_path=sg_conf)
 
     admin = Admin(cluster.sync_gateways[0])
+    sg_client = MobileRestClient()
     users = admin.register_bulk_users(target=cluster.sync_gateways[0], db="db", name_prefix="user", password="password", number=num_users, channels=["ABC"])
-    ansible_runner = AnsibleRunner(cluster_conf)
     feed_close_results = list()
 
     with concurrent.futures.ThreadPoolExecutor(max_workers=libraries.testkit.settings.MAX_REQUEST_WORKERS) as executor:
@@ -269,7 +267,7 @@ def test_online_to_offline_continous_changes_feed_controlled_close_sanity_mulitp
         futures = {executor.submit(user.start_continuous_changes_tracking, termination_doc_id=None): user.name for user in users}
 
         time.sleep(5)
-        futures[executor.submit(ansible_runner.run_ansible_playbook, "sync-gateway-db-offline.yml", extra_vars={"db": "db"})] = "db_offline_task"
+        futures[executor.submit(sg_client.take_db_offline, cluster_conf, "db")] = "db_offline_task"
 
         for future in concurrent.futures.as_completed(futures):
             task_name = futures[future]
@@ -325,8 +323,8 @@ def test_online_to_offline_changes_feed_controlled_close_longpoll_sanity(params_
     cluster.reset(sg_config_path=sg_conf)
 
     admin = Admin(cluster.sync_gateways[0])
+    sg_client = MobileRestClient()
     seth = admin.register_user(target=cluster.sync_gateways[0], db="db", name="seth", password="password", channels=["ABC"])
-    ansible_runner = AnsibleRunner(cluster_conf)
     docs_in_changes = dict()
 
     with concurrent.futures.ThreadPoolExecutor(max_workers=libraries.testkit.settings.MAX_REQUEST_WORKERS) as executor:
@@ -334,7 +332,7 @@ def test_online_to_offline_changes_feed_controlled_close_longpoll_sanity(params_
         # start longpoll tracking with no timeout, will block until longpoll is closed by db going offline
         futures[executor.submit(seth.start_longpoll_changes_tracking, termination_doc_id=None, timeout=0, loop=False)] = "polling"
         time.sleep(5)
-        futures[executor.submit(ansible_runner.run_ansible_playbook, "sync-gateway-db-offline.yml", extra_vars={"db": "db"})] = "db_offline_task"
+        futures[executor.submit(sg_client.take_db_offline, cluster_conf, "db")] = "db_offline_task"
 
         for future in concurrent.futures.as_completed(futures):
             task_name = futures[future]
@@ -389,8 +387,9 @@ def test_online_to_offline_longpoll_changes_feed_controlled_close_sanity_mulitpl
     cluster.reset(sg_config_path=sg_conf)
 
     admin = Admin(cluster.sync_gateways[0])
+    sg_client = MobileRestClient()
     users = admin.register_bulk_users(target=cluster.sync_gateways[0], db="db", name_prefix="user", password="password", number=num_users, channels=["ABC"])
-    ansible_runner = AnsibleRunner(cluster_conf)
+
     feed_close_results = list()
 
     with concurrent.futures.ThreadPoolExecutor(max_workers=libraries.testkit.settings.MAX_REQUEST_WORKERS) as executor:
@@ -398,7 +397,7 @@ def test_online_to_offline_longpoll_changes_feed_controlled_close_sanity_mulitpl
         futures = {executor.submit(user.start_longpoll_changes_tracking, termination_doc_id=None, timeout=0, loop=False): user.name for user in users}
 
         time.sleep(5)
-        futures[executor.submit(ansible_runner.run_ansible_playbook, "sync-gateway-db-offline.yml", extra_vars={"db": "db"})] = "db_offline_task"
+        futures[executor.submit(sg_client.take_db_offline, cluster_conf, "db")] = "db_offline_task"
 
         for future in concurrent.futures.as_completed(futures):
             task_name = futures[future]
@@ -461,7 +460,7 @@ def test_online_to_offline_changes_feed_controlled_close_longpoll(params_from_ba
     admin = Admin(cluster.sync_gateways[0])
     seth = admin.register_user(target=cluster.sync_gateways[0], db="db", name="seth", password="password", channels=["ABC"])
     doc_pusher = admin.register_user(target=cluster.sync_gateways[0], db="db", name="doc_pusher", password="password", channels=["ABC"])
-    ansible_runner = AnsibleRunner(cluster_conf)
+    sg_client = MobileRestClient()
 
     docs_in_changes = dict()
     doc_add_errors = list()
@@ -471,8 +470,7 @@ def test_online_to_offline_changes_feed_controlled_close_longpoll(params_from_ba
         futures[executor.submit(seth.start_longpoll_changes_tracking, termination_doc_id=None)] = "polling"
         futures[executor.submit(doc_pusher.add_docs, num_docs)] = "docs_push"
         time.sleep(5)
-        # futures[executor.submit(admin.take_db_offline, "db")] = "db_offline_task"
-        futures[executor.submit(ansible_runner.run_ansible_playbook, "sync-gateway-db-offline.yml", extra_vars={"db": "db"})] = "db_offline_task"
+        futures[executor.submit(sg_client.take_db_offline, cluster_conf, "db")] = "db_offline_task"
 
         for future in concurrent.futures.as_completed(futures):
             task_name = futures[future]
@@ -520,7 +518,6 @@ def test_online_to_offline_changes_feed_controlled_close_longpoll(params_from_ba
         assert last_seq_num != ""
 
     # Bring db back online
-    # Take bucket offline
     sg_client = MobileRestClient()
     status = sg_client.bring_db_online(cluster_conf=cluster_conf, db="db")
     assert status == 0

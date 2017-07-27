@@ -5,10 +5,10 @@ from libraries.testkit.admin import Admin
 from libraries.testkit.cluster import Cluster
 from libraries.testkit.web_server import WebServer
 from libraries.testkit.parallelize import in_parallel
-from libraries.provision.ansible_runner import AnsibleRunner
 
 from keywords.utils import log_info
 from keywords.SyncGateway import sync_gateway_config_path_for_mode
+from keywords.MobileRestClient import MobileRestClient
 
 
 # implements scenarios: 18 and 19
@@ -68,14 +68,8 @@ def test_db_online_offline_webhooks_offline(params_from_base_test_setup, sg_conf
     time.sleep(10)
 
     # Take db offline
-    ansible_runner = AnsibleRunner(cluster_conf)
-    status = ansible_runner.run_ansible_playbook(
-        "sync-gateway-db-offline.yml",
-        extra_vars={
-            "db": "db"
-        }
-    )
-
+    sg_client = MobileRestClient()
+    status = sg_client.take_db_offline(cluster_conf=cluster_conf, db="db")
     assert status == 0
 
     time.sleep(5)
@@ -90,13 +84,7 @@ def test_db_online_offline_webhooks_offline(params_from_base_test_setup, sg_conf
     assert last_event['state'] == 'offline'
 
     # Bring db online
-    status = ansible_runner.run_ansible_playbook(
-        "sync-gateway-db-online.yml",
-        extra_vars={
-            "db": "db"
-        }
-    )
-
+    status = sg_client.bring_db_online(cluster_conf=cluster_conf, db="db")
     assert status == 0
 
     time.sleep(5)
