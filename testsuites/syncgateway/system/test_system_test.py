@@ -53,6 +53,7 @@ def test_system_test(params_from_base_test_setup):
 
     # Changes parameters
     changes_delay = 5
+    changes_limit = 1000
     changes_terminator_doc_id = 'terminator'
 
     # Update parameters
@@ -61,14 +62,17 @@ def test_system_test(params_from_base_test_setup):
     update_delay = float(params_from_base_test_setup['update_delay'])
 
     log_info('Running System Test #1')
-    log_info('> server_seed_docs   = {}'.format(server_seed_docs))
-    log_info('> max_docs           = {}'.format(max_docs))
-    log_info('> num_users          = {}'.format(num_users))
-    log_info('> create_batch_size  = {}'.format(create_batch_size))
-    log_info('> create_delay       = {}'.format(create_delay))
-    log_info('> update_batch_size  = {}'.format(update_batch_size))
-    log_info('> update_delay       = {}'.format(update_delay))
-    log_info('> update_runtime_sec = {}'.format(update_runtime_sec))
+    log_info('> server_seed_docs          = {}'.format(server_seed_docs))
+    log_info('> max_docs                  = {}'.format(max_docs))
+    log_info('> num_users                 = {}'.format(num_users))
+    log_info('> create_batch_size         = {}'.format(create_batch_size))
+    log_info('> create_delay              = {}'.format(create_delay))
+    log_info('> update_batch_size         = {}'.format(update_batch_size))
+    log_info('> update_delay              = {}'.format(update_delay))
+    log_info('> update_runtime_sec        = {}'.format(update_runtime_sec))
+    log_info('> changes_delay             = {}'.format(changes_delay))
+    log_info('> changes_limit             = {}'.format(changes_limit))
+    log_info('> changes_terminator_doc_id = {}'.format(changes_terminator_doc_id))
 
     # Validate
 
@@ -169,6 +173,7 @@ def test_system_test(params_from_base_test_setup):
             sg_db,
             users,
             changes_delay,
+            changes_limit,
             changes_terminator_doc_id
         )
         # start_channel_filter_changes_processing(users)
@@ -251,7 +256,7 @@ def send_changes_termination_doc(sg_url, sg_db, users, terminator_doc_id, termin
     sg_client.add_doc(url=sg_url, db=sg_db, doc=doc, auth=random_user['auth'])
 
 
-def start_polling_changes_worker(sg_url, sg_db, user_name, user_auth, changes_delay, terminator_doc_id, feed, channels_filtered, doc_ids_filtered):
+def start_polling_changes_worker(sg_url, sg_db, user_name, user_auth, changes_delay, changes_limit, terminator_doc_id, feed, channels_filtered, doc_ids_filtered):
     sg_client = MobileRestClient()
     since = 0
     latest_changes = {}
@@ -284,6 +289,7 @@ def start_polling_changes_worker(sg_url, sg_db, user_name, user_auth, changes_de
             since=since,
             auth=user_auth,
             feed=feed,
+            limit=changes_limit,
             filter_type=filter_type,
             filter_channels=filter_channels,
             filter_doc_ids=filter_doc_ids
@@ -346,7 +352,7 @@ def start_continuous_changes_worker(sg_url, sg_db, user_name, user_auth, termina
                     latest_changes[change['id']] = ''
 
 
-def start_changes_processing(sg_url, sg_db, users, changes_delay, terminator_doc_id):
+def start_changes_processing(sg_url, sg_db, users, changes_delay, changes_limit, terminator_doc_id):
 
     # Make sure there are enough workers for 3 changes feed types for each user
     workers = len(users) * 3
@@ -383,6 +389,7 @@ def start_changes_processing(sg_url, sg_db, users, changes_delay, terminator_doc
                     user_key,
                     user_val['auth'],
                     changes_delay,
+                    changes_limit,
                     terminator_doc_id,
                     "normal",
                     channels_filtered,
@@ -400,6 +407,7 @@ def start_changes_processing(sg_url, sg_db, users, changes_delay, terminator_doc
                         user_key,
                         user_val['auth'],
                         changes_delay,
+                        changes_limit,
                         terminator_doc_id,
                         "longpoll",
                         channels_filtered,
