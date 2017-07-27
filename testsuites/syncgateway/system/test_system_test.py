@@ -53,7 +53,7 @@ def test_system_test(params_from_base_test_setup):
 
     # Changes parameters
     changes_delay = 5
-    changes_limit = 1000
+    changes_limit = 200
     changes_terminator_doc_id = 'terminator'
 
     # Update parameters
