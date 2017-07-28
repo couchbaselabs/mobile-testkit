@@ -76,6 +76,10 @@ def test_system_test(params_from_base_test_setup):
 
     # Validate
 
+    # Server docs should be a multiple of 1000 for batching purposes
+    if server_seed_docs % 1000 != 0:
+        raise ValueError('server_seed_docs must be divisible by 1000')
+
     # Number of docs should be equally divisible by number of users
     if max_docs % num_users != 0:
         raise ValueError('max_docs must be divisible by number_of_users')
@@ -717,8 +721,13 @@ def delete_views(cbs_session, cbs_admin_url, bucket_name):
 
 def load_bucket(sdk_client, server_seed_docs):
     # Seed the server with server_seed_docs number of docs
-    docs = {'doc_{}'.format(i): {'foo': 'bar'} for i in range(server_seed_docs)}
-    sdk_client.upsert_multi(docs)
+    num_batches = server_seed_docs / 1000
+    count = 0
+    for batch_num in range(num_batches):
+        docs = {'doc_{}_{}'.format(batch_num, i): {'foo': 'bar'} for i in range(1000)}
+        sdk_client.upsert_multi(docs)
+        count += 1000
+        log_info('Created {} total docs ...'.format(count))
 
 
 def wait_for_view_creation(cbs_session, cbs_admin_url, bucket_name):
