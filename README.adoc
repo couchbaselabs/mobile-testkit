@@ -149,7 +149,7 @@ Edit the providers/docker/options.yml file to specify the versions you would lik
 $ ./sequoia -test tests/mobile/test_sg.yml -scope tests/mobile/scope_1sg_1cbs.yml --expose_ports --skip_teardown --skip_test --network cbl
 ```
 
-2. Copy the hosts.json from sequoia/containers/mobile-testkit/hosts.json to root of mobile-testkit repo
+2. Copy the hosts.json from $SEQUOIA_REPO_ROOT/hosts.json to root of mobile-testkit repo
 
 3. Mount testkit. Make sure to do this from the same director as the root directory of your development repository. This will mirror your local repo in the container and allow changes you make on the host to mirror in the container context 
 ```

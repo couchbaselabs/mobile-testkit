@@ -8,7 +8,7 @@ pytest -s  \
     --xattrs \
     --mode=cc \
     --server-version=5.0.0-3217 \
-    --sync-gateway-version=1.5.0-471 \
+    --sync-gateway-version=1.5.0-494 \
     --server-seed-docs=10000 \
     --max-docs=40 \
     --num-users=4 \

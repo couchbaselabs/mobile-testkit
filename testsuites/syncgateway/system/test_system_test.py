@@ -3,7 +3,7 @@ import random
 import time
 
 from concurrent.futures import ProcessPoolExecutor, as_completed
-# from couchbase.bucket import Bucket
+from couchbase.bucket import Bucket
 from requests import Session
 from requests.exceptions import HTTPError
 
@@ -78,7 +78,7 @@ def test_system_test(params_from_base_test_setup):
 
     # Number of docs should be equally divisible by number of users
     if max_docs % num_users != 0:
-        raise ValueError('max_docs must be devisible by number_of_users')
+        raise ValueError('max_docs must be divisible by number_of_users')
 
     # Number of docs per user (max_docs / num_users) should be equally
     # divisible by the batch size for easier computation
@@ -116,9 +116,9 @@ def test_system_test(params_from_base_test_setup):
     topology = cluster_helper.get_cluster_topology(cluster_config)
 
     cbs_url = topology['couchbase_servers'][0]
-    # cbs_admin_url = cbs_url.replace('8091', '8092')
+    cbs_admin_url = cbs_url.replace('8091', '8092')
     cb_server = couchbaseserver.CouchbaseServer(cbs_url)
-    # bucket_name = "data-bucket"
+    bucket_name = "data-bucket"
 
     cbs_ip = cb_server.host
 
@@ -128,25 +128,23 @@ def test_system_test(params_from_base_test_setup):
     cbs_session.auth = ('Administrator', 'password')
 
     log_info('Seeding {} with {} docs'.format(cbs_ip, server_seed_docs))
-    # sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password', timeout=300)
+    sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password', timeout=300)
 
     # Stop SG before loading the server
     lb_url = topology['load_balancers'][0]
     sg_admin_url = topology['sync_gateways'][0]['admin']
     sg_db = 'db'
-    # sg_util = SyncGateway()
-    # sg_util.stop_sync_gateway(cluster_config=cluster_config, url=sg_url)
+    cluster_helper.stop_sync_gateways(cluster_config=cluster_config)
 
     # # Scenario Actions
-    # delete_views(cbs_session, cbs_admin_url, bucket_name)
-    # load_bucket(sdk_client, server_seed_docs)
-    # start_sync_gateway(cluster_config, sg_util, sg_url, sg_conf)
-    # wait_for_view_creation(cbs_session, cbs_admin_url, bucket_name)
+    delete_views(cbs_session, cbs_admin_url, bucket_name)
+    load_bucket(sdk_client, server_seed_docs)
+    cluster_helper.start_sync_gateways(cluster_config, sg_conf)
+    wait_for_view_creation(cbs_session, cbs_admin_url, bucket_name)
 
     # Start concurrent creation of docs (max docs / num users)
     # Each user will add batch_size number of docs via bulk docs and sleep for 'create_delay'
     # Once a user has added number of expected docs 'docs_per_user', it will terminate.
-
     log_info('------------------------------------------')
     log_info('START concurrent user / doc creation')
     log_info('------------------------------------------')
@@ -156,7 +154,7 @@ def test_system_test(params_from_base_test_setup):
         sg_db=sg_db,
         num_users=num_users,
         number_docs_per_user=docs_per_user,
-        batch_size=create_batch_size,
+        create_batch_size=create_batch_size,
         create_delay=create_delay
     )
     assert len(users) == num_users
@@ -165,8 +163,9 @@ def test_system_test(params_from_base_test_setup):
     log_info('------------------------------------------')
 
     # Start changes processing
-    with ProcessPoolExecutor(max_workers=3) as pex:
+    with ProcessPoolExecutor(max_workers=1) as pex:
 
+        # Start changes feeds in background process
         changes_workers_task = pex.submit(
             start_changes_processing,
             lb_url,
@@ -176,8 +175,6 @@ def test_system_test(params_from_base_test_setup):
             changes_limit,
             changes_terminator_doc_id
         )
-        # start_channel_filter_changes_processing(users)
-        # start_shared_channel_changes_processing(users)
 
         log_info('------------------------------------------')
         log_info('START concurrent updates')
@@ -207,8 +204,7 @@ def test_system_test(params_from_base_test_setup):
         terminator_channel = 'terminator'
         send_changes_termination_doc(lb_url, sg_db, users, changes_terminator_doc_id, terminator_channel)
 
-        # Overwrite each users channels with 'terminator' so their changes feed will backfill the
-        # changes feed termination doc
+        # Overwrite each users channels with 'terminator' so their changes feed will backfill with the termination doc
         grant_users_access(users, [terminator_channel], sg_admin_url, sg_db)
 
         # Block on changes completion
@@ -216,6 +212,8 @@ def test_system_test(params_from_base_test_setup):
 
         # Print the summary of the system test
         print_summary(users)
+
+        # TODO: Validated expected changes
 
 
 def print_summary(users):
@@ -381,6 +379,7 @@ def start_changes_processing(sg_url, sg_db, users, changes_delay, changes_limit,
             elif user_key.startswith('filtered_doc_ids'):
                 doc_ids_filtered = True
 
+            # Start a looping normal changes feed for user
             normal_changes_tasks.append(
                 changes_pex.submit(
                     start_polling_changes_worker,
@@ -444,7 +443,7 @@ def start_changes_processing(sg_url, sg_db, users, changes_delay, changes_limit,
             user_name, latest_change = changes_task.result()
             users[user_name]['continuous'] = latest_change
 
-    return users
+    return        
 
 
 def create_user_names(num_users):
@@ -556,7 +555,7 @@ def create_users_add_docs_task(user_name,
     return user_name, user_auth, doc_ids
 
 
-def create_docs(sg_admin_url, sg_url, sg_db, num_users, number_docs_per_user, batch_size, create_delay):
+def create_docs(sg_admin_url, sg_url, sg_db, num_users, number_docs_per_user, create_batch_size, create_delay):
     """ Concurrent creation of docs """
 
     users = {}
@@ -566,7 +565,7 @@ def create_docs(sg_admin_url, sg_url, sg_db, num_users, number_docs_per_user, ba
 
     user_names = create_user_names(num_users)
 
-    with ProcessPoolExecutor(max_workers=num_users) as pe:
+    with ProcessPoolExecutor(max_workers=10) as pe:
 
         # Start concurrent create block
         futures = [pe.submit(
@@ -576,7 +575,7 @@ def create_docs(sg_admin_url, sg_url, sg_db, num_users, number_docs_per_user, ba
             sg_url=sg_url,
             sg_db=sg_db,
             number_docs_per_user=number_docs_per_user,
-            batch_size=batch_size,
+            batch_size=create_batch_size,
             create_delay=create_delay
         ) for user_name in user_names]
 
@@ -720,13 +719,6 @@ def load_bucket(sdk_client, server_seed_docs):
     # Seed the server with server_seed_docs number of docs
     docs = {'doc_{}'.format(i): {'foo': 'bar'} for i in range(server_seed_docs)}
     sdk_client.upsert_multi(docs)
-
-
-def start_sync_gateway(cluster_config, sg_util, sg_url, sg_conf):
-    # Start SG
-    sg_util.start_sync_gateway(cluster_config=cluster_config, url=sg_url, config=sg_conf)
-    # It takes a couple of seconds for the view indexing to begin
-    time.sleep(5)
 
 
 def wait_for_view_creation(cbs_session, cbs_admin_url, bucket_name):

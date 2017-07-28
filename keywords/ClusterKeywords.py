@@ -14,8 +14,8 @@ from keywords.SyncGateway import (verify_sg_accel_version,
 from keywords.utils import (log_info, log_r, version_and_build,
                             version_is_binary, compare_versions)
 from libraries.testkit.cluster import Cluster
-from utilities.cluster_config_utils import is_load_balancer_enabled
-from utilities.cluster_config_utils import get_load_balancer_ip
+from libraries.provision.ansible_runner import AnsibleRunner
+from utilities.cluster_config_utils import is_cbs_ssl_enabled, is_xattrs_enabled, is_load_balancer_enabled, get_load_balancer_ip
 
 
 class ClusterKeywords:
@@ -238,3 +238,43 @@ class ClusterKeywords:
             )
 
         provision_cluster(cluster_config, cbs_config, sg_config)
+
+    def stop_sync_gateways(self, cluster_config):
+        log_info("Shutting down sync_gateways")
+        ansible_runner = AnsibleRunner(cluster_config)
+        status = ansible_runner.run_ansible_playbook(
+            "stop-sync-gateway.yml"
+        )
+        if status != 0:
+            raise ProvisioningError("Could not stop sync_gateways")
+
+    def start_sync_gateways(self, cluster_config, config):
+        log_info("Starting sync_gateways")
+        ansible_runner = AnsibleRunner(cluster_config)
+        config_path = os.path.abspath(config)
+
+        if is_cbs_ssl_enabled(cluster_config):
+            server_port = 18091
+            server_scheme = "https"
+        else:
+            server_port = 8091
+            server_scheme = "http"
+
+        playbook_vars = {
+            "sync_gateway_config_filepath": config_path,
+            "server_port": server_port,
+            "server_scheme": server_scheme,
+            "autoimport": "",
+            "xattrs": ""
+        }
+
+        if is_xattrs_enabled(cluster_config):
+            playbook_vars["autoimport"] = '"import_docs": "continuous",'
+            playbook_vars["xattrs"] = '"enable_extended_attributes": true'
+
+        status = ansible_runner.run_ansible_playbook(
+            "start-sync-gateway.yml",
+            extra_vars=playbook_vars,
+        )
+        if status != 0:
+            raise ProvisioningError("Could not start sync_gateways")
