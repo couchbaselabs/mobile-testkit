@@ -443,7 +443,7 @@ def start_changes_processing(sg_url, sg_db, users, changes_delay, changes_limit,
             user_name, latest_change = changes_task.result()
             users[user_name]['continuous'] = latest_change
 
-    return        
+    return users
 
 
 def create_user_names(num_users):
