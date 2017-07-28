@@ -52,7 +52,7 @@ def test_system_test(params_from_base_test_setup):
     create_delay = float(params_from_base_test_setup['create_delay'])
 
     # Changes parameters
-    changes_delay = 5
+    changes_delay = 0.1
     changes_limit = 200
     changes_terminator_doc_id = 'terminator'
 
