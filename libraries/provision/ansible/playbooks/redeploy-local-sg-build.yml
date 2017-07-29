@@ -8,7 +8,7 @@
 
   tasks:
   - include: tasks/stop-sync-gateway.yml
-    when: ansible_distribution == "CentOS"
+    when: ansible_distribution == "CentOS" or ansible_distribution == "RedHat"
 
   - include: tasks/stop-sync-gateway-windows.yml
     when: ansible_os_family == "Windows"
@@ -23,7 +23,7 @@
 
   tasks:
   - include: tasks/stop-sg-accel.yml
-    when: ansible_distribution == "CentOS"
+    when: ansible_distribution == "CentOS" or ansible_distribution == "RedHat"
 
   - include: tasks/stop-sg-accel-windows.yml
     when: ansible_os_family == "Windows"
