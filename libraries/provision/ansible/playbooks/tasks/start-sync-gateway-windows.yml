@@ -12,4 +12,4 @@
     host={{ ansible_host }}
     port=4985
     timeout=60  
-    delegate_to: localhost
+  delegate_to: localhost
