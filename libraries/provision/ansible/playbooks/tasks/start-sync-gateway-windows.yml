@@ -4,3 +4,12 @@
   win_service:
     name: SyncGateway
     state: started
+
+# There is no win_wait_for
+# This workaround delegates port check to localhost
+- name: SYNC GATEWAY | Wait until sync gateway to listen on port
+  wait_for:
+    host={{ ansible_host }}
+    port=4985
+    timeout=60  
+    delegate_to: localhost
