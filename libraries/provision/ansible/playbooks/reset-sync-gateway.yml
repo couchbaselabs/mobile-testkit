@@ -2,17 +2,25 @@
 # Kill sync_gateway
 - hosts: sync_gateways
   any_errors_fatal: true
-  become: yes
 
   tasks:
   - include: tasks/stop-sync-gateway.yml
+    become: yes
+    when: ansible_distribution == "CentOS"
+
+  - include: tasks/stop-sync-gateway-windows.yml
+    when: ansible_os_family == "Windows"
 
   # Delete logs and .pindex files
   - include: tasks/delete-sync-gateway-artifacts.yml
+    become: yes
+    when: ansible_distribution == "CentOS"
+
+  - include: tasks/delete-sync-gateway-artifacts-windows.yml
+    when: ansible_os_family == "Windows"
 
 # Deploy sync gateway configs
 - hosts: sync_gateways
-  become: yes
   vars:
     sync_gateway_config_filepath:
     couchbase_server_primary_node: "{{ hostvars[groups.couchbase_servers[0]].ansible_host }}"
@@ -26,10 +34,14 @@
     xattrs:
   tasks:
   - include: tasks/deploy-sync-gateway-config.yml
+    become: yes
+    when: ansible_distribution == "CentOS"
+
+  - include: tasks/deploy-sync-gateway-config-windows.yml
+    when: ansible_os_family == "Windows"
 
 # Deploy sync gateway configs (index writers)
 - hosts: sg_accels
-  become: yes
   vars:
     sync_gateway_config_filepath:
     couchbase_server_primary_node: "{{ hostvars[groups.couchbase_servers[0]].ansible_host }}"
@@ -43,14 +55,23 @@
     xattrs:
   tasks:
   - include: tasks/deploy-sync-gateway-config.yml
+    become: yes
+    when: ansible_distribution == "CentOS"
+
+  - include: tasks/deploy-sync-gateway-config-windows.yml
+    when: ansible_os_family == "Windows"
 
 # Start sync_gateway
 - hosts: sync_gateways
   any_errors_fatal: true
-  become: yes
 
   vars:
     sync_gateway_config_filepath:
     couchbase_server_primary_node: "{{ hostvars[groups.couchbase_servers[0]].ansible_host }}"
   tasks:
   - include: tasks/start-sync-gateway.yml
+    become: yes
+    when: ansible_distribution == "CentOS"
+
+  - include: tasks/start-sync-gateway-windows.yml
+    when: ansible_os_family == "Windows"
