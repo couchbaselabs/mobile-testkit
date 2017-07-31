@@ -93,7 +93,7 @@ def generate_config_from_sequoia(host_file, topology):
             f.write('{} ansible_host={} ansible_connection=docker\n'.format(load_balancer['name'], load_balancer['ip']))
 
         f.write('\n[webhook_ip]\n')
-        # TODO
+        # TODO: Use host ip of the node that is running testkit.
 
         f.write('\n[environment]\n')
         f.write('cbs_ssl_enabled={}\n'.format(host_json['environment']['cbs_ssl_enabled']))

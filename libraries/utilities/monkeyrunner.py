@@ -43,7 +43,7 @@ def reset_and_launch_app(target_device, apk_path, activity, reinstall, is_litese
 
 def parse_args():
     """
-    Parse command line args and return a tuple
+    Parse command line args and return a tuple. Monkeyrunner info - https://developer.android.com/studio/test/monkeyrunner/index.html
     """
     parser = OptionParser()
     parser.add_option('', '--target', help="Device name from 'adb devices -l'", dest="target")
