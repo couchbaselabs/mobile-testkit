@@ -12,6 +12,7 @@ from concurrent.futures import ThreadPoolExecutor
 
 from keywords import attachment
 from libraries.data import doc_generators
+from libraries.provision.ansible_runner import AnsibleRunner
 
 from keywords.constants import AuthType
 from keywords.constants import ServerType
@@ -2074,3 +2075,28 @@ class MobileRestClient:
         resp.raise_for_status()
 
         return resp.json()
+
+    def take_db_offline(self, cluster_conf, db):
+        # Take bucket offline
+        ansible_runner = AnsibleRunner(cluster_conf)
+        status = ansible_runner.run_ansible_playbook(
+            "sync-gateway-db-offline.yml",
+            extra_vars={
+                "db": db
+            }
+        )
+
+        return status
+
+    def bring_db_online(self, cluster_conf, db, delay=0):
+        # Bring db online
+        ansible_runner = AnsibleRunner(cluster_conf)
+        status = ansible_runner.run_ansible_playbook(
+            "sync-gateway-db-online.yml",
+            extra_vars={
+                "db": db,
+                "delay": delay
+            }
+        )
+
+        return status

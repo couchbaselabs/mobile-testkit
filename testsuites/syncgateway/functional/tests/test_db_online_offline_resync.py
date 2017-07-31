@@ -1,5 +1,6 @@
 from libraries.testkit.verify import verify_changes
 from libraries.testkit.cluster import Cluster
+from keywords.MobileRestClient import MobileRestClient
 
 import time
 import pytest
@@ -110,8 +111,9 @@ def test_bucket_online_offline_resync_sanity(params_from_base_test_setup, sg_con
     assert True in output.values()
 
     # Take "db" offline
-    status = admin.take_db_offline(db="db")
-    assert status == 200
+    sg_client = MobileRestClient()
+    status = sg_client.take_db_offline(cluster_conf=cluster_conf, db="db")
+    assert status == 0
 
     sg_restart_config = sync_gateway_config_path_for_mode("bucket_online_offline/db_online_offline_access_restricted", test_mode)
     restart_status = cluster.sync_gateways[0].restart(sg_restart_config)
@@ -123,8 +125,9 @@ def test_bucket_online_offline_resync_sanity(params_from_base_test_setup, sg_con
     log_info("expecting num_changes {} == num_docs {} * num_users {}".format(num_changes, num_docs, num_users))
     assert num_changes['payload']['changes'] == num_docs * num_users
 
-    status = admin.bring_db_online(db="db")
-    assert status == 200
+    # Take "db" online
+    status = sg_client.bring_db_online(cluster_conf=cluster_conf, db="db")
+    assert status == 0
 
     time.sleep(5)
     global_cache = list()
@@ -244,8 +247,9 @@ def test_bucket_online_offline_resync_with_online(params_from_base_test_setup, s
     assert True in output.values()
 
     # Take "db" offline
-    status = admin.take_db_offline(db="db")
-    assert status == 200
+    sg_client = MobileRestClient()
+    status = sg_client.take_db_offline(cluster_conf=cluster_conf, db="db")
+    assert status == 0
 
     sg_restart_config = sync_gateway_config_path_for_mode("bucket_online_offline/db_online_offline_access_restricted", test_mode)
     restart_status = cluster.sync_gateways[0].restart(sg_restart_config)
@@ -278,7 +282,7 @@ def test_bucket_online_offline_resync_with_online(params_from_base_test_setup, s
             resync_occured = True
             log_info("Resync occured")
             try:
-                status = admin.bring_db_online(db="db")
+                status = sg_client.bring_db_online(cluster_conf=cluster_conf, db="db")
                 log_info("online issued !!!!!online request status: {}".format(status))
             except HTTPError as e:
                 log_info("status = {} exception = {}".format(status, e.response.status_code))
@@ -294,7 +298,8 @@ def test_bucket_online_offline_resync_with_online(params_from_base_test_setup, s
 
     time.sleep(10)
 
-    status = admin.bring_db_online(db="db")
+    status = sg_client.bring_db_online(cluster_conf=cluster_conf, db="db")
+    assert status == 0
     log_info("online request issued !!!!! response status: {}".format(status))
 
     time.sleep(5)
@@ -426,8 +431,9 @@ def test_bucket_online_offline_resync_with_offline(params_from_base_test_setup, 
     assert True in output.values()
 
     # Take "db" offline
-    status = admin.take_db_offline(db="db")
-    assert status == 200
+    sg_client = MobileRestClient()
+    status = sg_client.take_db_offline(cluster_conf=cluster_conf, db="db")
+    assert status == 0
 
     sg_restart_config = sync_gateway_config_path_for_mode("bucket_online_offline/db_online_offline_access_restricted", test_mode)
     restart_status = cluster.sync_gateways[0].restart(sg_restart_config)
@@ -474,7 +480,8 @@ def test_bucket_online_offline_resync_with_offline(params_from_base_test_setup, 
 
     time.sleep(10)
 
-    status = admin.bring_db_online(db="db")
+    status = sg_client.bring_db_online(cluster_conf=cluster_conf, db="db")
+
     log_info("online request issued !!!!! response status: {}".format(status))
 
     time.sleep(5)

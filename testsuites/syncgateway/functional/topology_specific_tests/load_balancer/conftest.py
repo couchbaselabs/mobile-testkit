@@ -10,6 +10,7 @@ from keywords.utils import check_xattr_support, log_info, version_is_binary
 from libraries.NetworkUtils import NetworkUtils
 from libraries.testkit import cluster
 from utilities.cluster_config_utils import persist_cluster_config_environment_prop
+from utilities.cluster_config_utils import get_load_balancer_ip
 
 
 # This will be called once at the beggining of the execution in the 'tests/load_balancer' directory
@@ -26,6 +27,7 @@ def params_from_base_suite_setup(request):
     race_enabled = request.config.getoption("--race")
     cbs_ssl = request.config.getoption("--server-ssl")
     xattrs_enabled = request.config.getoption("--xattrs")
+    sg_lb = request.config.getoption("--sg-lb")
     sg_ce = request.config.getoption("--sg-ce")
 
     if xattrs_enabled and version_is_binary(sync_gateway_version):
@@ -38,6 +40,7 @@ def params_from_base_suite_setup(request):
     log_info("race_enabled: {}".format(race_enabled))
     log_info("cbs_ssl: {}".format(cbs_ssl))
     log_info("xattrs_enabled: {}".format(xattrs_enabled))
+    log_info("sg_lb: {}".format(sg_lb))
     log_info("sg_ce: {}".format(sg_ce))
 
     # sg-ce is invalid for di mode
@@ -50,6 +53,14 @@ def params_from_base_suite_setup(request):
     # use load_balancer_cc cluster config if mode is "cc" or load_balancer_di cluster config if mode is "di"
     cluster_config = "{}/load_balancer_{}".format(keywords.constants.CLUSTER_CONFIGS_DIR, mode)
     sg_config = sync_gateway_config_path_for_mode("sync_gateway_default_functional_tests", mode)
+
+    # Add load balancer prop and check if load balancer IP is available
+    if sg_lb:
+        persist_cluster_config_environment_prop(cluster_config, 'sg_lb_enabled', True)
+        log_info("Running tests with load balancer enabled: {}".format(get_load_balancer_ip(cluster_config)))
+    else:
+        log_info("Running tests with load balancer disabled")
+        persist_cluster_config_environment_prop(cluster_config, 'sg_lb_enabled', False)
 
     if cbs_ssl:
         log_info("Running tests with cbs <-> sg ssl enabled")

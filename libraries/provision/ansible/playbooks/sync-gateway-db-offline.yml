@@ -1,0 +1,14 @@
+- hosts: sync_gateways
+  any_errors_fatal: true
+
+  vars:
+    db:
+
+  tasks:
+  - uri:
+      url: http://localhost:4985/{{ db }}/_offline
+      status_code: 200, 201
+      timeout: 30
+      method: POST
+      headers:
+        Content-Type: "application/json"

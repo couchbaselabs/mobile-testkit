@@ -12,6 +12,7 @@ from keywords.utils import check_xattr_support, log_info, version_is_binary, com
 from libraries.NetworkUtils import NetworkUtils
 from libraries.testkit import cluster
 from utilities.cluster_config_utils import persist_cluster_config_environment_prop
+from utilities.cluster_config_utils import get_load_balancer_ip
 
 UNSUPPORTED_1_5_0_CC = {
     "test_db_offline_tap_loss_sanity[bucket_online_offline/bucket_online_offline_default_dcp-100]": {
@@ -77,6 +78,10 @@ def pytest_addoption(parser):
                      action="store_true",
                      help="If set, will enable SSL communication between server and Sync Gateway")
 
+    parser.addoption("--sg-lb",
+                     action="store_true",
+                     help="If set, will enable load balancer for Sync Gateway")
+
     parser.addoption("--sg-ce",
                      action="store_true",
                      help="If set, will install CE version of Sync Gateway")
@@ -100,6 +105,7 @@ def params_from_base_suite_setup(request):
     race_enabled = request.config.getoption("--race")
     cbs_ssl = request.config.getoption("--server-ssl")
     xattrs_enabled = request.config.getoption("--xattrs")
+    sg_lb = request.config.getoption("--sg-lb")
     sg_ce = request.config.getoption("--sg-ce")
 
     if xattrs_enabled and version_is_binary(sync_gateway_version):
@@ -111,6 +117,7 @@ def params_from_base_suite_setup(request):
     log_info("skip_provisioning: {}".format(skip_provisioning))
     log_info("race_enabled: {}".format(race_enabled))
     log_info("xattrs_enabled: {}".format(xattrs_enabled))
+    log_info("sg_lb: {}".format(sg_lb))
     log_info("sg_ce: {}".format(sg_ce))
 
     # sg-ce is invalid for di mode
@@ -120,13 +127,25 @@ def params_from_base_suite_setup(request):
     # Make sure mode for sync_gateway is supported ('cc' or 'di')
     validate_sync_gateway_mode(mode)
 
-    # use base_cc cluster config if mode is "cc" or base_di cluster config if more is "di"
+    # use base_(lb_)cc cluster config if mode is "cc" or base_(lb_)di cluster config if mode is "di"
     if ci:
-        log_info("Using 'ci_{}' config!".format(mode))
         cluster_config = "{}/ci_{}".format(CLUSTER_CONFIGS_DIR, mode)
+        if sg_lb:
+            cluster_config = "{}/ci_lb_{}".format(CLUSTER_CONFIGS_DIR, mode)
     else:
-        log_info("Using 'base_{}' config!".format(mode))
         cluster_config = "{}/base_{}".format(CLUSTER_CONFIGS_DIR, mode)
+        if sg_lb:
+            cluster_config = "{}/base_lb_{}".format(CLUSTER_CONFIGS_DIR, mode)
+
+    log_info("Using '{}' config!".format(cluster_config))
+
+    # Add load balancer prop and check if load balancer IP is available
+    if sg_lb:
+        persist_cluster_config_environment_prop(cluster_config, 'sg_lb_enabled', True)
+        log_info("Running tests with load balancer enabled: {}".format(get_load_balancer_ip(cluster_config)))
+    else:
+        log_info("Running tests with load balancer disabled")
+        persist_cluster_config_environment_prop(cluster_config, 'sg_lb_enabled', False)
 
     if cbs_ssl:
         log_info("Running tests with cbs <-> sg ssl enabled")
@@ -172,7 +191,8 @@ def params_from_base_suite_setup(request):
         "cluster_config": cluster_config,
         "cluster_topology": cluster_topology,
         "mode": mode,
-        "xattrs_enabled": xattrs_enabled
+        "xattrs_enabled": xattrs_enabled,
+        "sg_lb": sg_lb
     }
 
     log_info("Tearing down 'params_from_base_suite_setup' ...")
@@ -191,8 +211,16 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     cluster_topology = params_from_base_suite_setup["cluster_topology"]
     mode = params_from_base_suite_setup["mode"]
     xattrs_enabled = params_from_base_suite_setup["xattrs_enabled"]
+    sg_lb = params_from_base_suite_setup["sg_lb"]
 
     test_name = request.node.name
+
+    if sg_lb:
+        # These tests target one SG node
+        skip_tests = ['resync', 'log_rotation', 'openidconnect']
+        for test in skip_tests:
+            if test in test_name:
+                pytest.skip("Skipping online/offline tests with load balancer")
 
     # Certain test are diabled for certain modes
     # Given the run conditions, check if the test needs to be skipped

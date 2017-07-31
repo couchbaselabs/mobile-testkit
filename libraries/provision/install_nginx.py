@@ -21,7 +21,8 @@ def install_nginx(cluster_config):
     """
 
     cluster = ClusterKeywords()
-    topology = cluster.get_cluster_topology(cluster_config)
+    # Set lb_enable to False to get the actual SG IPs for nginx.conf
+    topology = cluster.get_cluster_topology(cluster_config, lb_enable=False)
 
     # Get sync_gateway enpoints from cluster_config
     #  and build a string of upstream server definitions
@@ -30,19 +31,24 @@ def install_nginx(cluster_config):
     #   server 192.168.33.12:4984;
     #  }
     upstream_definition = ""
+    upstream_definition_admin = ""
+
     for sg in topology["sync_gateways"]:
         # string http:// to adhere to expected format for nginx.conf
         ip_port = sg["public"].replace("http://", "")
+        ip_port_admin = sg["admin"].replace("http://", "")
         upstream_definition += "server {};\n".format(ip_port)
+        upstream_definition_admin += "server {};\n".format(ip_port_admin)
 
-    log_info("Upstream definition: ")
-    log_info(upstream_definition)
+    log_info("Upstream definition: {}".format(upstream_definition))
+    log_info("Upstream definition admin: {}".format(upstream_definition_admin))
 
     ansible_runner = AnsibleRunner(cluster_config)
     status = ansible_runner.run_ansible_playbook(
         "install-nginx.yml",
         extra_vars={
-            "upstream_sync_gatways": upstream_definition
+            "upstream_sync_gatways": upstream_definition,
+            "upstream_sync_gatways_admin": upstream_definition_admin
         }
     )
 
