@@ -4,6 +4,7 @@
   become: yes
   vars:
     upstream_sync_gatways:
+    upstream_sync_gatways_admin:
 
   tasks:
   - name: NGINX | Install nginx
