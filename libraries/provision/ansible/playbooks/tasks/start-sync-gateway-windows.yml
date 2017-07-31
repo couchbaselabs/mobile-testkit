@@ -10,6 +10,6 @@
 - name: SYNC GATEWAY | Wait until sync gateway to listen on port
   wait_for:
     host={{ ansible_host }}
-    port=4985
-    timeout=60  
+    port=4984
+    timeout=120  
   delegate_to: localhost
