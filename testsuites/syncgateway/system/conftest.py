@@ -125,9 +125,12 @@ def params_from_base_suite_setup(request):
     # Make sure mode for sync_gateway is supported ('cc' or 'di')
     validate_sync_gateway_mode(mode)
 
-    # use base_cc cluster config if mode is "cc" or base_di cluster config if more is "di"
-    log_info("Using 'lb_{}' config!".format(mode))
-    cluster_config = "{}/lb_{}".format(CLUSTER_CONFIGS_DIR, mode)
+    # use ci_lb_cc cluster config if mode is "cc" or ci_lb_di cluster config if more is "di"
+    log_info("Using 'ci_lb_{}' config!".format(mode))
+    cluster_config = "{}/ci_lb_{}".format(CLUSTER_CONFIGS_DIR, mode)
+
+    # Only works with load balancer configs
+    persist_cluster_config_environment_prop(cluster_config, 'sg_lb_enabled', True)
 
     if cbs_ssl:
         log_info("Running tests with cbs <-> sg ssl enabled")

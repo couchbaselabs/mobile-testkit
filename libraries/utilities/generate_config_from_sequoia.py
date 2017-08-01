@@ -27,9 +27,9 @@ def verify_topology(topology, host_json):
         verify_services(host_json, num_servers=3, num_sync_gateways=1, num_accels=0, num_lbs=0)
     elif topology == 'ci_di':
         verify_services(host_json, num_servers=3, num_sync_gateways=1, num_accels=3, num_lbs=0)
-    elif topology == 'lb_cc':
+    elif topology == 'ci_lb_cc':
         verify_services(host_json, num_servers=3, num_sync_gateways=3, num_accels=0, num_lbs=1)
-    elif topology == 'lb_di':
+    elif topology == 'ci_lb_di':
         verify_services(host_json, num_servers=3, num_sync_gateways=3, num_accels=3, num_lbs=1)
     elif topology == 'load_balancer_cc':
         verify_services(host_json, num_servers=1, num_sync_gateways=2, num_accels=0, num_lbs=1)
@@ -98,6 +98,7 @@ def generate_config_from_sequoia(host_file, topology):
         f.write('\n[environment]\n')
         f.write('cbs_ssl_enabled={}\n'.format(host_json['environment']['cbs_ssl_enabled']))
         f.write('xattrs_enabled={}\n'.format(host_json['environment']['xattrs_enabled']))
+        f.write('sg_lb_enabled={}\n'.format(host_json['environment']['sg_lb_enabled']))
 
 
 if __name__ == "__main__":
