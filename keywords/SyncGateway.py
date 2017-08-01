@@ -257,6 +257,7 @@ class SyncGateway:
                 subset=target
             )
         else:
+            log_info("Shutting down all sync_gateways on ...")
             status = ansible_runner.run_ansible_playbook(
                 "stop-sync-gateway.yml",
             )
