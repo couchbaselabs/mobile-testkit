@@ -110,8 +110,8 @@ def test_view_backfill_for_deletes(params_from_base_test_setup, sg_conf_name, va
 
     # Restart Sync Gateway
     sg_controller = SyncGateway()
-    sg_controller.stop_sync_gateway(url=sg_url, cluster_config=cluster_conf)
-    sg_controller.start_sync_gateway(url=sg_url, cluster_config=cluster_conf, config=sg_conf)
+    sg_controller.stop_sync_gateways(url=sg_url, cluster_config=cluster_conf)
+    sg_controller.start_sync_gateways(url=sg_url, cluster_config=cluster_conf, config=sg_conf)
 
     # Verify deletions and inital docs show up in changes feed
     sg_client.verify_docs_in_changes(url=sg_url, db=sg_db, expected_docs=all_docs, auth=seth_auth)
