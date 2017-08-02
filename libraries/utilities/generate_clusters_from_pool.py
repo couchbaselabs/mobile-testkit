@@ -365,16 +365,16 @@ def write_config(config, pool_file, use_docker, sg_windows, sg_accel_windows):
 
         if sg_windows:
             f.write("\n\n[sync_gateways:vars]\n")
-            f.write("ansible_user=Administrator\n")
-            f.write("ansible_password=Membase123\n")
+            f.write("ansible_user=FakeUser\n")
+            f.write("ansible_password=FakePassword\n")
             f.write("ansible_port=5986\n")
             f.write("ansible_connection=winrm\n")
             f.write("ansible_winrm_server_cert_validation=ignore\n")
 
         if sg_accel_windows:
             f.write("\n\n[sg_accels:vars]\n")
-            f.write("ansible_user=Administrator\n")
-            f.write("ansible_password=Membase123\n")
+            f.write("ansible_user=FakeUser\n")
+            f.write("ansible_password=FakePassword\n")
             f.write("ansible_port=5986\n")
             f.write("ansible_connection=winrm\n")
             f.write("ansible_winrm_server_cert_validation=ignore\n")
