@@ -142,11 +142,11 @@ def test_system_test(params_from_base_test_setup):
     sg_helper = SyncGateway()
     sg_helper.stop_sync_gateways(cluster_config=cluster_config)
 
-    # # Scenario Actions
+    # Scenario Actions
     delete_views(cbs_session, cbs_admin_url, bucket_name)
     load_bucket(sdk_client, server_seed_docs)
     sg_helper.start_sync_gateways(cluster_config, config=sg_conf)
-    # wait_for_view_creation(cbs_session, cbs_admin_url, bucket_name)
+    wait_for_view_creation(cbs_session, cbs_admin_url, bucket_name)
 
     # Start concurrent creation of docs (max docs / num users)
     # Each user will add batch_size number of docs via bulk docs and sleep for 'create_delay'
