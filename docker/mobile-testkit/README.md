@@ -46,7 +46,7 @@ And then inside the docker container:
 
 (cc / no xattrs)
 ```
-docker run --rm --privileged --network=cbl --name mobile-testkit -v hosts.json:/opt/mobile-testkit/hosts.json -v /var/run/docker.sock:/var/run/docker.sock -v /usr/bin/docker:/usr/bin/docker mobile-testkit-local ./entrypoint.sh feature/sequoia-integration base_cc 'pytest -s --sequoia --server-version=4.6.2 --sync-gateway-version=1.4.1-3 testsuites/functional/tests/'
+docker run --rm --privileged --network=cbl --name mobile-testkit -v hosts.json:/opt/mobile-testkit/hosts.json -v /var/run/docker.sock:/var/run/docker.sock -v /usr/bin/docker:/usr/bin/docker mobile-testkit-local ./entrypoint.sh master base_cc 'pytest -s --sequoia --server-version=4.6.2 --sync-gateway-version=1.4.1-3 testsuites/functional/tests/'
 ```
 
 ## Capturing network traffic

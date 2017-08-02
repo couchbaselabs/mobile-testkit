@@ -237,4 +237,4 @@ class ClusterKeywords:
                 skip_bucketcreation=False
             )
 
-        provision_cluster(cluster_config, cbs_config, sg_config)
+        provision_cluster(cluster_config, cbs_config, sg_config, sg_ce)
