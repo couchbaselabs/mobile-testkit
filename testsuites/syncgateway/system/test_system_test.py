@@ -10,7 +10,7 @@ from requests.exceptions import HTTPError
 from keywords import couchbaseserver, document
 from keywords.ClusterKeywords import ClusterKeywords
 from keywords.MobileRestClient import MobileRestClient
-from keywords.SyncGateway import sync_gateway_config_path_for_mode
+from keywords.SyncGateway import sync_gateway_config_path_for_mode, SyncGateway
 from keywords.utils import log_info
 from libraries.testkit.cluster import Cluster
 
@@ -135,15 +135,17 @@ def test_system_test(params_from_base_test_setup):
     sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password', timeout=300)
 
     # Stop SG before loading the server
-    lb_url = topology['load_balancers'][0]
+    lb_url = topology['sync_gateways'][0]['public']
     sg_admin_url = topology['sync_gateways'][0]['admin']
     sg_db = 'db'
-    cluster_helper.stop_sync_gateways(cluster_config=cluster_config)
+
+    sg_helper = SyncGateway()
+    sg_helper.stop_sync_gateways(cluster_config=cluster_config)
 
     # # Scenario Actions
     delete_views(cbs_session, cbs_admin_url, bucket_name)
     load_bucket(sdk_client, server_seed_docs)
-    cluster_helper.start_sync_gateways(cluster_config, sg_conf)
+    sg_helper.start_sync_gateways(cluster_config, config=sg_conf)
     # wait_for_view_creation(cbs_session, cbs_admin_url, bucket_name)
 
     # Start concurrent creation of docs (max docs / num users)
