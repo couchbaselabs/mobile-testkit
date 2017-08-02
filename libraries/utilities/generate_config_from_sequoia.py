@@ -6,7 +6,7 @@ from keywords.utils import log_info
 from keywords.constants import CLUSTER_CONFIGS_DIR
 
 
-def verify_services(host_json, num_servers, num_sync_gateways, num_accels, num_lbs):
+def verify_hosts(host_json, num_servers, num_sync_gateways, num_accels, num_lbs):
     if len(host_json['couchbase_servers']) != num_servers:
         raise ValueError('Make sure you have the correct number of servers')
     if len(host_json['sync_gateways']) != num_sync_gateways:
@@ -20,31 +20,31 @@ def verify_services(host_json, num_servers, num_sync_gateways, num_accels, num_l
 def verify_topology(topology, host_json):
 
     if topology == 'base_cc':
-        verify_services(host_json, num_servers=1, num_sync_gateways=1, num_accels=0, num_lbs=0)
+        verify_hosts(host_json, num_servers=1, num_sync_gateways=1, num_accels=0, num_lbs=0)
     elif topology == 'base_di':
-        verify_services(host_json, num_servers=1, num_sync_gateways=1, num_accels=1, num_lbs=0)
+        verify_hosts(host_json, num_servers=1, num_sync_gateways=1, num_accels=1, num_lbs=0)
     elif topology == 'ci_cc':
-        verify_services(host_json, num_servers=3, num_sync_gateways=1, num_accels=0, num_lbs=0)
+        verify_hosts(host_json, num_servers=3, num_sync_gateways=1, num_accels=0, num_lbs=0)
     elif topology == 'ci_di':
-        verify_services(host_json, num_servers=3, num_sync_gateways=1, num_accels=3, num_lbs=0)
+        verify_hosts(host_json, num_servers=3, num_sync_gateways=1, num_accels=3, num_lbs=0)
     elif topology == 'ci_lb_cc':
-        verify_services(host_json, num_servers=3, num_sync_gateways=3, num_accels=0, num_lbs=1)
+        verify_hosts(host_json, num_servers=3, num_sync_gateways=3, num_accels=0, num_lbs=1)
     elif topology == 'ci_lb_di':
-        verify_services(host_json, num_servers=3, num_sync_gateways=3, num_accels=3, num_lbs=1)
+        verify_hosts(host_json, num_servers=3, num_sync_gateways=3, num_accels=3, num_lbs=1)
     elif topology == 'load_balancer_cc':
-        verify_services(host_json, num_servers=1, num_sync_gateways=2, num_accels=0, num_lbs=1)
+        verify_hosts(host_json, num_servers=1, num_sync_gateways=2, num_accels=0, num_lbs=1)
     elif topology == 'load_balancer_di':
-        verify_services(host_json, num_servers=1, num_sync_gateways=2, num_accels=1, num_lbs=1)
+        verify_hosts(host_json, num_servers=1, num_sync_gateways=2, num_accels=1, num_lbs=1)
     elif topology == 'multiple_sg_accels_di':
-        verify_services(host_json, num_servers=1, num_sync_gateways=1, num_accels=3, num_lbs=0)
+        verify_hosts(host_json, num_servers=1, num_sync_gateways=1, num_accels=3, num_lbs=0)
     elif topology == 'multiple_servers_cc':
-        verify_services(host_json, num_servers=3, num_sync_gateways=1, num_accels=0, num_lbs=0)
+        verify_hosts(host_json, num_servers=3, num_sync_gateways=1, num_accels=0, num_lbs=0)
     elif topology == 'multiple_servers_di':
-        verify_services(host_json, num_servers=3, num_sync_gateways=1, num_accels=1, num_lbs=0)
+        verify_hosts(host_json, num_servers=3, num_sync_gateways=1, num_accels=1, num_lbs=0)
     elif topology == 'multiple_sync_gateways_cc':
-        verify_services(host_json, num_servers=1, num_sync_gateways=2, num_accels=0, num_lbs=0)
+        verify_hosts(host_json, num_servers=1, num_sync_gateways=2, num_accels=0, num_lbs=0)
     elif topology == 'multiple_sync_gateways_di':
-        verify_services(host_json, num_servers=1, num_sync_gateways=2, num_accels=1, num_lbs=0)
+        verify_hosts(host_json, num_servers=1, num_sync_gateways=2, num_accels=1, num_lbs=0)
     else:
         raise ValueError('Make sure you topology is one of the above!')
 
