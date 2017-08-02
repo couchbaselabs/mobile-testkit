@@ -6,7 +6,7 @@ from keywords.SyncGateway import (sync_gateway_config_path_for_mode,
                                   validate_sync_gateway_mode)
 from keywords.tklogging import Logging
 
-from keywords.utils import log_info, check_xattr_support, version_is_binary
+from keywords.utils import log_info, check_xattr_support, version_is_binary, compare_versions
 from keywords.exceptions import ProvisioningError, FeatureSupportedError
 
 from libraries.NetworkUtils import NetworkUtils
@@ -110,7 +110,12 @@ def params_from_base_suite_setup(request):
         expected_sync_gateway_version=sync_gateway_version
     )
 
-    yield {"cluster_config": cluster_config, "mode": mode}
+    yield {
+        "cluster_config": cluster_config,
+        "mode": mode,
+        "sync_gateway_version": sync_gateway_version,
+        "server_version": server_version
+    }
 
     log_info("Tearing down 'params_from_base_suite_setup' ...")
 
@@ -129,6 +134,11 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
 
     test_name = request.node.name
     log_info("Setting up test '{}'".format(test_name))
+
+    if compare_versions(params_from_base_suite_setup["sync_gateway_version"], "1.5") < -1:
+        # Sync Gateway is less than 1.5
+        if test_name.startswith("test_rebalance_sanity") or test_name.startswith("test_server_goes_down_sanity"):
+            pytest.skip("The tests require Sync Gateway 1.5+ to run")
 
     # This dictionary is passed to each test
     yield {"cluster_config": cluster_config, "mode": mode}
