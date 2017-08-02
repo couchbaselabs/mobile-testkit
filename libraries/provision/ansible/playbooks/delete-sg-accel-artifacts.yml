@@ -3,7 +3,7 @@
 - hosts: sg_accels
   tasks:
   - include: tasks/delete-sg-accel-artifacts.yml
-    when: ansible_distribution == "CentOS"
+    when: ansible_distribution == "CentOS" or ansible_distribution == "RedHat"
 
   - include: tasks/delete-sg-accel-artifacts-windows.yml
     when: ansible_os_family == "Windows"

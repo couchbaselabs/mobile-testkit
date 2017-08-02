@@ -3,7 +3,7 @@
   any_errors_fatal: true
   tasks:
   - include: tasks/fetch-sync-gateway-logs.yml
-    when: ansible_distribution == "CentOS"
+    when: ansible_distribution == "CentOS" or ansible_distribution == "RedHat"
 
   - include: tasks/fetch-sync-gateway-logs-windows.yml
     when: ansible_os_family == "Windows"
@@ -13,7 +13,7 @@
   any_errors_fatal: true
   tasks:
   - include: tasks/fetch-sg-accel-logs.yml
-    when: ansible_distribution == "CentOS"
+    when: ansible_distribution == "CentOS" or ansible_distribution == "RedHat"
 
   - include: tasks/fetch-sg-accel-logs-windows.yml
     when: ansible_os_family == "Windows"
