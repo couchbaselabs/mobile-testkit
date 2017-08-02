@@ -41,3 +41,7 @@ def pytest_addoption(parser):
     parser.addoption("--sg-ce",
                      action="store_true",
                      help="If set, will install CE version of Sync Gateway")
+
+    parser.addoption("--sequoia",
+                     action="store_true",
+                     help="If set, the tests will use a cluster provisioned by sequoia")

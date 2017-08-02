@@ -29,6 +29,10 @@ RUN wget http://packages.couchbase.com/releases/couchbase-release/couchbase-rele
 
 RUN pip install --upgrade pip
 
+# Install docker binary for docker in docker
+RUN curl -fsSLO https://get.docker.com/builds/Linux/x86_64/docker-17.05.0-ce.tgz && \
+    tar --strip-components=1 -xvzf docker-17.05.0-ce.tgz -C /usr/local/bin
+
 WORKDIR /opt
 
 # Git clone mobile-testkit

@@ -1723,7 +1723,41 @@ class MobileRestClient:
 
             break
 
-    def get_changes(self, url, db, since, auth, feed="longpoll", timeout=60, limit=None, skip_user_docs=False):
+    def stream_continuous_changes(self, url, db, since, auth, filter_type=None, filter_channels=None):
+        """
+        Issues a continuous changes feed request and returns the stream
+        """
+        auth_type = get_auth_type(auth)
+        body = {
+            "feed": "continuous",
+            "since": since
+        }
+
+        if filter_type is not None:
+
+            if filter_type == "sync_gateway/bychannel":
+                if filter_channels is None:
+                    raise RestError("channel filter need 'filter_channels' set")
+
+                types.verify_is_list(filter_channels)
+                body["filter"] = "sync_gateway/bychannel"
+                body["channels"] = ",".join(filter_channels)
+
+            else:
+                raise RestError("Unsupported _changes filter_type: {}. Use 'sync_gateway/bychannel'.".format(
+                    filter_type
+                ))
+
+        if auth_type == AuthType.session:
+            resp = self._session.post("{}/{}/_changes".format(url, db), data=json.dumps(body), cookies=dict(SyncGatewaySession=auth[1]), stream=True)
+        elif auth_type == AuthType.http_basic:
+            resp = self._session.post("{}/{}/_changes".format(url, db), data=json.dumps(body), auth=auth, stream=True)
+        else:
+            resp = self._session.post("{}/{}/_changes".format(url, db), data=json.dumps(body), stream=True)
+
+        return resp
+
+    def get_changes(self, url, db, since, auth, feed="longpoll", timeout=60, limit=None, skip_user_docs=False, filter_type=None, filter_channels=None, filter_doc_ids=None):
         """
         Issues a longpoll changes request with a provided since and authentication.
         The timeout is in seconds.
@@ -1747,6 +1781,7 @@ class MobileRestClient:
             resp = self._session.get(request_url)
 
         elif server_type == ServerType.syncgateway:
+
             body = {
                 "feed": feed,
                 "since": since,
@@ -1755,6 +1790,33 @@ class MobileRestClient:
 
             if limit is not None:
                 body["limit"] = limit
+
+            if filter_type is not None:
+
+                if filter_type == "sync_gateway/bychannel":
+                    if filter_channels is None:
+                        raise RestError("channel filter need 'filter_channels' set")
+
+                    types.verify_is_list(filter_channels)
+                    body["filter"] = "sync_gateway/bychannel"
+                    body["channels"] = ",".join(filter_channels)
+
+                elif filter_type == "_doc_ids":
+
+                    if feed != "normal":
+                        raise RestError("'_doc_ids' filter only works with feed=normal")
+
+                    if filter_doc_ids is None:
+                        raise RestError("channel filter need 'filter_channels' set")
+
+                    types.verify_is_list(filter_doc_ids)
+                    body["filter"] = "_doc_ids"
+                    body["doc_ids"] = filter_doc_ids
+
+                else:
+                    raise RestError("Unsupported _changes filter_type: {}. Use 'sync_gateway/bychannel' or '_doc_ids'.".format(
+                        filter_type
+                    ))
 
             log_info("Using POST data: {}".format(body))
 
