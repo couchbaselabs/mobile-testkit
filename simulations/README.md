@@ -4,7 +4,7 @@
 2. Create travel-sample bucket / bucket user on Couchbase Server
 3. Start Sync Gateway targeting Couchbase Server
 ```
-./sync_gateway testsuites/simulations/Travel.NET/sync.json 2>&1 | tee sgoutput.log
+./sync_gateway Travel.NET/sync.json 2>&1 | tee sgoutput.log
 ```
 
 4. Make sure to clear any Lite local databases that may exist
@@ -26,3 +26,7 @@ rm -rf ~/.local/share/*.cblite2
 ### Running Todo simulation
 
 Currently the Todo directory is a collection of scripts for interaction with a live https://github.com/couchbaselabs/mobile-training-todo setup
+
+### Android Listener Simulation
+
+The simulation shows how to start multiple emulators / devices and start replications between all of them. This should be automated in the future.
