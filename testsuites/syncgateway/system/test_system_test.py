@@ -58,7 +58,7 @@ def test_system_test(params_from_base_test_setup):
 
     # Changes parameters
     changes_delay = float(params_from_base_test_setup['changes_delay'])
-    changes_limit = float(params_from_base_test_setup['changes_limit'])
+    changes_limit = int(params_from_base_test_setup['changes_limit'])
 
     changes_terminator_doc_id = 'terminator'
 
