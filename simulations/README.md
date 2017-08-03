@@ -26,3 +26,7 @@ rm -rf ~/.local/share/*.cblite2
 ### Running Todo simulation
 
 Currently the Todo directory is a collection of scripts for interaction with a live https://github.com/couchbaselabs/mobile-training-todo setup
+
+### Android Listener Simulation
+
+The simulation shows how to start multiple emulators / devices and start replications between all of them. This should be automated in the future.
