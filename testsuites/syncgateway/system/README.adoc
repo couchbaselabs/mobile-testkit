@@ -17,5 +17,7 @@ pytest -s  \
     --update-runtime-sec=1 \
     --update-batch-size=1 \
     --update-delay=1 \
+    --changes-delay=0.1 \
+    --changes-limit=200 \
     testsuites/syncgateway/system/
 ```
