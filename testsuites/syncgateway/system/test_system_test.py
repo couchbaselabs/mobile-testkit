@@ -51,15 +51,16 @@ def test_system_test(params_from_base_test_setup):
     create_batch_size = int(params_from_base_test_setup['create_batch_size'])
     create_delay = float(params_from_base_test_setup['create_delay'])
 
-    # Changes parameters
-    changes_delay = 0.1
-    changes_limit = 200
-    changes_terminator_doc_id = 'terminator'
-
     # Update parameters
     update_runtime_sec = int(params_from_base_test_setup['update_runtime_sec'])
     update_batch_size = int(params_from_base_test_setup['update_batch_size'])
     update_delay = float(params_from_base_test_setup['update_delay'])
+
+    # Changes parameters
+    changes_delay = float(params_from_base_test_setup['changes_delay'])
+    changes_limit = float(params_from_base_test_setup['changes_limit'])
+
+    changes_terminator_doc_id = 'terminator'
 
     log_info('Running System Test #1')
     log_info('> server_seed_docs          = {}'.format(server_seed_docs))

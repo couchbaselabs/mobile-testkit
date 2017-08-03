@@ -85,6 +85,14 @@ def pytest_addoption(parser):
                      action="store",
                      help="update-delay: Delay between each bulk POST operation for updates")
 
+    parser.addoption("--changes-delay",
+                     action="store",
+                     help="changes-delay: Delay between each _changes request")
+
+    parser.addoption("--changes-limit",
+                     action="store",
+                     help="changes-limit: Amount of docs to return per changes request")
+
 
 # This will be called once for the at the beggining of the execution in the 'tests/' directory
 # and will be torn down, (code after the yeild) when all the test session has completed.
@@ -111,6 +119,8 @@ def params_from_base_suite_setup(request):
     update_runtime_sec = request.config.getoption("--update-runtime-sec")
     update_batch_size = request.config.getoption("--update-batch-size")
     update_delay = request.config.getoption("--update-delay")
+    changes_delay = request.config.getoption("--changes-delay")
+    changes_limit = request.config.getoption("--changes-limit")
 
     if xattrs_enabled and version_is_binary(sync_gateway_version):
         check_xattr_support(server_version, sync_gateway_version)
@@ -191,7 +201,9 @@ def params_from_base_suite_setup(request):
         "create_delay": create_delay,
         "update_runtime_sec": update_runtime_sec,
         "update_batch_size": update_batch_size,
-        "update_delay": update_delay
+        "update_delay": update_delay,
+        "changes_delay": changes_delay,
+        "changes_limit": changes_limit
     }
 
     log_info("Tearing down 'params_from_base_suite_setup' ...")
@@ -231,7 +243,9 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         "create_delay": params_from_base_suite_setup["create_delay"],
         "update_runtime_sec": params_from_base_suite_setup["update_runtime_sec"],
         "update_batch_size": params_from_base_suite_setup["update_batch_size"],
-        "update_delay": params_from_base_suite_setup["update_delay"]
+        "update_delay": params_from_base_suite_setup["update_delay"],
+        "changes_delay": params_from_base_suite_setup["changes_delay"],
+        "changes_limit": params_from_base_suite_setup["changes_limit"]
     }
 
     # Code after the yield will execute when each test finishes
