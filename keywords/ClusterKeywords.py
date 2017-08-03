@@ -14,8 +14,7 @@ from keywords.SyncGateway import (verify_sg_accel_version,
 from keywords.utils import (log_info, log_r, version_and_build,
                             version_is_binary, compare_versions)
 from libraries.testkit.cluster import Cluster
-from libraries.provision.ansible_runner import AnsibleRunner
-from utilities.cluster_config_utils import is_cbs_ssl_enabled, is_xattrs_enabled, is_load_balancer_enabled, get_load_balancer_ip
+from utilities.cluster_config_utils import is_load_balancer_enabled, get_load_balancer_ip
 
 
 class ClusterKeywords:
