@@ -575,7 +575,7 @@ def test_detect_stale_channel_index(params_from_base_test_setup, sg_conf):
 
     # Shut down sync_gateway
     sg_util = SyncGateway()
-    sg_util.stop_sync_gateway(cluster_config=cluster_conf, url=sg_url)
+    sg_util.stop_sync_gateways(cluster_config=cluster_conf, url=sg_url)
 
     # Delete server bucket
     cb_server.delete_bucket(name="data-bucket")
@@ -586,7 +586,7 @@ def test_detect_stale_channel_index(params_from_base_test_setup, sg_conf):
 
     # Start sync_gateway and assert that a Provisioning error is raised due to detecting stale index
     with pytest.raises(exceptions.ProvisioningError):
-        sg_util.start_sync_gateway(cluster_config=cluster_conf, url=sg_url, config=sg_conf)
+        sg_util.start_sync_gateways(cluster_config=cluster_conf, url=sg_url, config=sg_conf)
 
     # TODO: To make this check even more accurate, could
     # run remote ssh command "systemctl status sync_gateway.service" and look for
@@ -597,4 +597,4 @@ def test_detect_stale_channel_index(params_from_base_test_setup, sg_conf):
     cb_server.create_bucket(name="index-bucket", ram_quota_mb=ram_per_bucket_mb)
 
     # Start sync gateway, should succeed now
-    sg_util.start_sync_gateway(cluster_config=cluster_conf, url=sg_url, config=sg_conf)
+    sg_util.start_sync_gateways(cluster_config=cluster_conf, url=sg_url, config=sg_conf)

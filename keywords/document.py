@@ -11,6 +11,40 @@ import keywords.exceptions
 NUM_VBUCKETS = 1024
 
 
+def doc_1k():
+    return {
+        "index": 0,
+        "guid": "6e9c8f41-b1c5-40d9-a70b-778552404153",
+        "isActive": False,
+        "balance": "$1,767.72",
+        "picture": "http://placehold.it/32x32",
+        "age": 32,
+        "eyeColor": "green",
+        "name": "Karin Eaton",
+        "gender": "female",
+        "company": "SLOFAST",
+        "email": "karineaton@slofast.com",
+        "phone": "+1 (877) 584-3316",
+        "address": "304 Alabama Avenue, Sterling, Massachusetts, 5318",
+        "about": "Adipisicing fugiat exercitation mollit occaecat adipisicing commodo sit. Consequat ad adipisicing fugiat anim magna amet culpa adipisicing exercitation. Enim dolore id irure ut. Eiusmod sunt in nulla ex cupidatat do.\r\n",
+        "registered": "2017-07-01T02:40:54 +07:00",
+        "latitude": 8.045901,
+        "longitude": -163.655113,
+        "tags": [
+            "quis"
+        ],
+        "friends": [
+            {
+                "id": 0,
+                "name": "Cantrell Meyer"
+            }
+        ],
+        "greeting": "Hello, Karin Eaton! You have 9 unread messages.",
+        "favoriteFruit": "strawberry",
+        "updates": 0
+    }
+
+
 def get_vbucket_number(key):
     """ Return the vbucket number for a given key.
         Taken from https://github.com/abhinavdangeti/cbTools/blob/f51f80b1eec5993a99fe49b45631e880b6835dc8/targetKeys.py#L6

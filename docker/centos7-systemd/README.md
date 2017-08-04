@@ -3,7 +3,7 @@
 systemd is currently required to run the sync gateway functional tests
 
 ```
-$ docker pull sethrosetter/centos7-systemd
+$ docker pull couchbase/centos7-systemd
 ```
 
 ## Monitoring network traffic on the container

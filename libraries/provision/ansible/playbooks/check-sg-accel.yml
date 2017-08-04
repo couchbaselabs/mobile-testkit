@@ -3,7 +3,7 @@
   any_errors_fatal: true
   tasks:
   - include: tasks/check-sg-accel.yml
-    when: ansible_distribution == "CentOS"
+    when: ansible_distribution == "CentOS" or ansible_distribution == "RedHat"
 
   - include: tasks/check-sg-accel-windows.yml
     when: ansible_os_family == "Windows"

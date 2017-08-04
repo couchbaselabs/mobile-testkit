@@ -14,8 +14,7 @@ from keywords.SyncGateway import (verify_sg_accel_version,
 from keywords.utils import (log_info, log_r, version_and_build,
                             version_is_binary, compare_versions)
 from libraries.testkit.cluster import Cluster
-from utilities.cluster_config_utils import is_load_balancer_enabled
-from utilities.cluster_config_utils import get_load_balancer_ip
+from utilities.cluster_config_utils import is_load_balancer_enabled, get_load_balancer_ip
 
 
 class ClusterKeywords:
@@ -238,6 +237,3 @@ class ClusterKeywords:
             )
 
         provision_cluster(cluster_config, cbs_config, sg_config, sg_ce)
-
-        # verify running services are the expected versions
-        self.verify_cluster_versions(cluster_config, server_version, sync_gateway_version)

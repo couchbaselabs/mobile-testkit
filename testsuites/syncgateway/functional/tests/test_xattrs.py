@@ -315,7 +315,7 @@ def test_offline_processing_of_external_updates(params_from_base_test_setup, sg_
 
     # Stop Sync Gateway
     sg_controller = SyncGateway()
-    sg_controller.stop_sync_gateway(cluster_conf, url=sg_url)
+    sg_controller.stop_sync_gateways(cluster_conf, url=sg_url)
 
     # Update docs that sync gateway wrote via SDK
     sg_docs_via_sdk_get = sdk_client.get_multi(sg_doc_ids)
@@ -335,7 +335,7 @@ def test_offline_processing_of_external_updates(params_from_base_test_setup, sg_
     assert len(sdk_docs_resp) == num_docs_per_client
 
     # Start Sync Gateway
-    sg_controller.start_sync_gateway(cluster_conf, url=sg_url, config=sg_conf)
+    sg_controller.start_sync_gateways(cluster_conf, url=sg_url, config=sg_conf)
 
     # Verify all docs are gettable via Sync Gateway
     all_doc_ids = sg_doc_ids + sdk_doc_ids
@@ -406,7 +406,7 @@ def test_large_initial_import(params_from_base_test_setup, sg_conf_name):
 
     # Stop Sync Gateway
     sg_controller = SyncGateway()
-    sg_controller.stop_sync_gateway(cluster_conf, url=sg_url)
+    sg_controller.stop_sync_gateways(cluster_conf, url=sg_url)
 
     # Connect to server via SDK
     cbs_ip = host_for_url(cbs_url)
@@ -424,7 +424,7 @@ def test_large_initial_import(params_from_base_test_setup, sg_conf_name):
     sdk_client.upsert_multi(sdk_docs)
 
     # Start Sync Gateway to begin import
-    sg_controller.start_sync_gateway(cluster_conf, url=sg_url, config=sg_conf)
+    sg_controller.start_sync_gateways(cluster_conf, url=sg_url, config=sg_conf)
 
     # Let some documents process
     log_info('Sleeping 30s to let some docs auto import')
