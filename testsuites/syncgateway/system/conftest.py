@@ -118,6 +118,7 @@ def params_from_base_suite_setup(request):
     create_delay = request.config.getoption("--create-delay")
     update_runtime_sec = request.config.getoption("--update-runtime-sec")
     update_batch_size = request.config.getoption("--update-batch-size")
+    update_docs_percentage = request.config.getoption("--update-docs-percentage")
     update_delay = request.config.getoption("--update-delay")
     changes_delay = request.config.getoption("--changes-delay")
     changes_limit = request.config.getoption("--changes-limit")
@@ -201,6 +202,7 @@ def params_from_base_suite_setup(request):
         "create_delay": create_delay,
         "update_runtime_sec": update_runtime_sec,
         "update_batch_size": update_batch_size,
+        "update_docs_percentage": update_docs_percentage,
         "update_delay": update_delay,
         "changes_delay": changes_delay,
         "changes_limit": changes_limit
@@ -243,6 +245,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         "create_delay": params_from_base_suite_setup["create_delay"],
         "update_runtime_sec": params_from_base_suite_setup["update_runtime_sec"],
         "update_batch_size": params_from_base_suite_setup["update_batch_size"],
+        "update_docs_percentage": params_from_base_suite_setup["update_docs_percentage"],
         "update_delay": params_from_base_suite_setup["update_delay"],
         "changes_delay": params_from_base_suite_setup["changes_delay"],
         "changes_limit": params_from_base_suite_setup["changes_limit"]
