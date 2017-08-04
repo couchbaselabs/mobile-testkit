@@ -54,6 +54,7 @@ def test_system_test(params_from_base_test_setup):
     # Update parameters
     update_runtime_sec = int(params_from_base_test_setup['update_runtime_sec'])
     update_batch_size = int(params_from_base_test_setup['update_batch_size'])
+    update_docs_percentage = float(params_from_base_test_setup['update_docs_percentage'])
     update_delay = float(params_from_base_test_setup['update_delay'])
 
     # Changes parameters
@@ -62,13 +63,19 @@ def test_system_test(params_from_base_test_setup):
 
     changes_terminator_doc_id = 'terminator'
 
+    docs_per_user = max_docs / num_users
+    docs_per_user_per_update = int(update_docs_percentage * docs_per_user)
+
     log_info('Running System Test #1')
     log_info('> server_seed_docs          = {}'.format(server_seed_docs))
     log_info('> max_docs                  = {}'.format(max_docs))
     log_info('> num_users                 = {}'.format(num_users))
+    log_info('> docs_per_user             = {}'.format(docs_per_user))
     log_info('> create_batch_size         = {}'.format(create_batch_size))
     log_info('> create_delay              = {}'.format(create_delay))
     log_info('> update_batch_size         = {}'.format(update_batch_size))
+    log_info('> update_docs_percentage    = {}'.format(update_docs_percentage))
+    log_info('> docs_per_user_per_update  = {}'.format(docs_per_user_per_update))
     log_info('> update_delay              = {}'.format(update_delay))
     log_info('> update_runtime_sec        = {}'.format(update_runtime_sec))
     log_info('> changes_delay             = {}'.format(changes_delay))
@@ -76,7 +83,6 @@ def test_system_test(params_from_base_test_setup):
     log_info('> changes_terminator_doc_id = {}'.format(changes_terminator_doc_id))
 
     # Validate
-
     # Server docs should be a multiple of 1000 for batching purposes
     if server_seed_docs % 1000 != 0:
         raise ValueError('server_seed_docs must be divisible by 1000')
@@ -87,7 +93,6 @@ def test_system_test(params_from_base_test_setup):
 
     # Number of docs per user (max_docs / num_users) should be equally
     # divisible by the batch size for easier computation
-    docs_per_user = max_docs / num_users
     if docs_per_user % create_batch_size != 0:
         raise ValueError('docs_per_user ({}) must be devisible by create_batch_size ({})'.format(
             docs_per_user,
@@ -189,12 +194,12 @@ def test_system_test(params_from_base_test_setup):
         # Start concurrent updates of update
         # Update batch size is the number of users that will concurrently update all of their docs
         users = update_docs(
-            sg_admin_url=sg_admin_url,
             sg_url=lb_url,
             sg_db=sg_db,
             users=users,
             update_runtime_sec=update_runtime_sec,
             batch_size=update_batch_size,
+            docs_per_user_per_update=docs_per_user_per_update,
             update_delay=update_delay
         )
 
@@ -244,9 +249,7 @@ def print_summary(users):
 
 
 def grant_users_access(users, channels, sg_admin_url, sg_db):
-
     sg_client = MobileRestClient()
-
     for username in users:
         sg_client.update_user(url=sg_admin_url, db=sg_db, name=username, password=USER_PASSWORD, channels=channels)
 
@@ -607,7 +610,7 @@ def create_docs(sg_admin_url, sg_url, sg_db, num_users, number_docs_per_user, cr
     return users
 
 
-def update_docs_task(users, user_type, user_index, sg_url, sg_db):
+def update_docs_task(users, user_type, user_index, sg_url, sg_db, docs_per_user_per_update):
 
     user_name = '{}_{}'.format(user_type, user_index)
 
@@ -623,10 +626,17 @@ def update_docs_task(users, user_type, user_index, sg_url, sg_db):
 
     # Get a random user
     current_user_auth = users[user_name]['auth']
-    current_user_doc_ids = users[user_name]['doc_ids']
+    current_user_doc_ids = list(users[user_name]['doc_ids'])
+
+    # Get a random subset of docs to update
+    user_docs_subset_to_update = []
+    for _ in range(docs_per_user_per_update):
+        random_doc_id = random.choice(current_user_doc_ids)
+        user_docs_subset_to_update.append(random_doc_id)
+        current_user_doc_ids.remove(random_doc_id)
 
     log_info('Updating {} docs, method ({}) number of updates: {} ({})'.format(
-        len(current_user_doc_ids),
+        len(user_docs_subset_to_update),
         update_method,
         users[user_name]['updates'],
         user_name
@@ -635,7 +645,7 @@ def update_docs_task(users, user_type, user_index, sg_url, sg_db):
     # Update the user's docs
     if update_method == 'bulk_docs':
         # Get docs for that user
-        user_docs, errors = sg_client.get_bulk_docs(url=sg_url, db=sg_db, doc_ids=current_user_doc_ids, auth=current_user_auth)
+        user_docs, errors = sg_client.get_bulk_docs(url=sg_url, db=sg_db, doc_ids=user_docs_subset_to_update, auth=current_user_auth)
         assert len(errors) == 0
 
         # Update the 'updates' property
@@ -656,8 +666,9 @@ def update_docs_task(users, user_type, user_index, sg_url, sg_db):
     return user_name
 
 
-def update_docs(sg_admin_url, sg_url, sg_db, users, update_runtime_sec, batch_size, update_delay):
+def update_docs(sg_url, sg_db, users, update_runtime_sec, batch_size, docs_per_user_per_update, update_delay):
 
+    log_info('Updating {} doc/user per update'.format(docs_per_user_per_update))
     log_info('Starting updates with batch size (concurrent users updating): {} and delay: {}s'.format(
         batch_size,
         update_delay
@@ -689,7 +700,8 @@ def update_docs(sg_admin_url, sg_url, sg_db, users, update_runtime_sec, batch_si
                     user_type,
                     current_user_index + i,
                     sg_url,
-                    sg_db
+                    sg_db,
+                    docs_per_user_per_update
                 ) for i in range(batch_size)]
 
             # Block until all futures are completed or return
