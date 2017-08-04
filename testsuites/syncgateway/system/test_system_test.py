@@ -64,7 +64,7 @@ def test_system_test(params_from_base_test_setup):
     changes_terminator_doc_id = 'terminator'
 
     docs_per_user = max_docs / num_users
-    docs_per_user_per_update = update_docs_percentage * docs_per_user
+    docs_per_user_per_update = int(update_docs_percentage * docs_per_user)
 
     log_info('Running System Test #1')
     log_info('> server_seed_docs          = {}'.format(server_seed_docs))
