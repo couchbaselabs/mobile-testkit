@@ -71,7 +71,7 @@ def test_log_rotation_default_values(params_from_base_test_setup, sg_conf_name):
     cluster_helper = ClusterKeywords()
     cluster_hosts = cluster_helper.get_cluster_topology(cluster_conf)
     sg_one_url = cluster_hosts["sync_gateways"][0]["public"]
-    sg_helper.stop_sync_gateway(cluster_config=cluster_conf, url=sg_one_url)
+    sg_helper.stop_sync_gateways(cluster_config=cluster_conf, url=sg_one_url)
 
     # read sample sg_conf
     data = load_sync_gateway_config(sg_conf, mode, cluster_hosts["couchbase_servers"][0], xattrs_enabled)
