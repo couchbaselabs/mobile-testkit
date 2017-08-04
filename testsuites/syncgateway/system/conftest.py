@@ -81,6 +81,10 @@ def pytest_addoption(parser):
                      action="store",
                      help="update-batch-size: Number of docs to add in bulk on each POST update")
 
+    parser.addoption("--update-docs-percentage",
+                     action="store",
+                     help="update-docs-percentage: Percentage of user docs to update on each batch")
+
     parser.addoption("--update-delay",
                      action="store",
                      help="update-delay: Delay between each bulk POST operation for updates")
