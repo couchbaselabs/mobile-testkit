@@ -218,6 +218,9 @@ def test_system_test(params_from_base_test_setup):
         terminator_channel = 'terminator'
         send_changes_termination_doc(lb_url, sg_db, users, changes_terminator_doc_id, terminator_channel)
 
+        # Overwrite each users channels with 'terminator' so their changes feed will backfill with the termination doc
+        grant_users_access(users, [terminator_channel], sg_admin_url, sg_db)
+
         # Block on changes completion
         users = changes_workers_task.result()
 
@@ -247,13 +250,19 @@ def print_summary(users):
             ))
 
 
+def grant_users_access(users, channels, sg_admin_url, sg_db):
+    sg_client = MobileRestClient()
+    for username in users:
+        sg_client.update_user(url=sg_admin_url, db=sg_db, name=username, password=USER_PASSWORD, channels=channels)
+
+
 def send_changes_termination_doc(sg_url, sg_db, users, terminator_doc_id, terminator_channel):
     sg_client = MobileRestClient()
 
     random_user_id = random.choice(users.keys())
     random_user = users[random_user_id]
     log_info('Sending changes termination doc for all users')
-    doc = {'_id': terminator_doc_id, 'channels': "!"}
+    doc = {'_id': terminator_doc_id, 'channels': [terminator_channel]}
     sg_client.add_doc(url=sg_url, db=sg_db, doc=doc, auth=random_user['auth'])
 
 
