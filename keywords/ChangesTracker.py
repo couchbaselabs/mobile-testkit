@@ -44,7 +44,6 @@ class ChangesTracker:
                     for change in changes_revs:
                         if change in revs_list_revs:
                             raise keywords.exceptions.ChangesError("Duplicates in changes feed!")
-
                     revs_list.extend(doc["changes"])
                     self.processed_changes[doc["id"]] = revs_list
                 else:
@@ -65,9 +64,11 @@ class ChangesTracker:
         current_seq_num = 0
 
         log_info("[Changes Tracker] Changes Tracker Starting ...")
-
+        start = time.time()
         while not self.cancel:
-
+            if time.time() - start > timeout:
+                logging.error("[Changes Tracker] wait_until: TIMEOUT")
+                break
             data = {
                 "feed": "longpoll",
                 "style": "all_docs",
@@ -82,14 +83,16 @@ class ChangesTracker:
 
             if auth_type == AuthType.session:
                 try:
-                    resp = requests.post("{}/_changes".format(self.endpoint), data=json.dumps(data), cookies=dict(SyncGatewaySession=self.auth[1]), timeout=request_timeout)
+                    resp = requests.post("{}/_changes".format(self.endpoint), data=json.dumps(
+                        data), cookies=dict(SyncGatewaySession=self.auth[1]), timeout=request_timeout)
                 except Timeout as to:
                     log_info("Request timed out. Exiting longpoll loop ...")
                     logging.debug(to)
                     break
             elif auth_type == AuthType.http_basic:
                 try:
-                    resp = requests.post("{}/_changes".format(self.endpoint), data=json.dumps(data), auth=self.auth, timeout=request_timeout)
+                    resp = requests.post("{}/_changes".format(self.endpoint), data=json.dumps(
+                        data), auth=self.auth, timeout=request_timeout)
                 except Timeout as to:
                     log_info("Request timed out. Exiting longpoll loop ...")
                     logging.debug(to)
@@ -118,14 +121,13 @@ class ChangesTracker:
         log_info("[Changes Tracker] Closing _changes feed ...")
         self.cancel = True
 
-    def wait_until(self, expected_docs, timeout=30):
+    def wait_until(self, expected_docs, timeout=30, rev_prefix_gen=False):
         """
         Poll self.processed_changes to see if all expected docs have been recieved
         via the changes feed. This will return false if the polling exceeds the timeout
 
         expected docs format: [{"id": "doc_id1" "rev": "rev1", "ok", "true"}, ...]
         """
-
         start = time.time()
         while True:
             if time.time() - start > timeout:
@@ -141,10 +143,16 @@ class ChangesTracker:
                 else:
                     rev_found = False
                     for rev in self.processed_changes[doc["id"]]:
-                        if rev["rev"] == doc["rev"]:
-                            # Found rev in changes feed, continue with the next dox
-                            logging.debug("FOUND id: {}, rev: {}".format(doc["id"], doc["rev"]))
-                            rev_found = True
+                        if rev_prefix_gen:
+                            if rev["rev"].startswith(doc["rev"]):
+                                # Found rev in changes feed, continue with the next doc
+                                logging.debug("FOUND id: {}, rev: {}".format(doc["id"], doc["rev"]))
+                                rev_found = True
+                        else:
+                            if rev["rev"] == doc["rev"]:
+                                # Found rev in changes feed, continue with the next docs
+                                logging.debug("FOUND id: {}, rev: {}".format(doc["id"], doc["rev"]))
+                                rev_found = True
 
                     if not rev_found:
                         missing_docs.append(doc)
