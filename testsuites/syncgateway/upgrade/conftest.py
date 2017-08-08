@@ -72,30 +72,23 @@ def params_from_base_suite_setup(request):
     log_info("Setting up 'params_from_base_suite_setup' ...")
 
     # pytest command line parameters
-    server_version = request.config.getoption("--server-version")
-    sync_gateway_version = request.config.getoption("--sync-gateway-version")
+    server_initial_version = request.config.getoption("--server-initial-version")
+    sync_gateway_initial_version = request.config.getoption("--sync-gateway-initial-version")
+    server_upgraded_version = request.config.getoption("--server-upgraded-version")
+    sync_gateway_upgraded_version = request.config.getoption("--sync-gateway-upgraded-version")
     mode = request.config.getoption("--mode")
     use_sequoia = request.config.getoption("--sequoia")
     skip_provisioning = request.config.getoption("--skip-provisioning")
     cbs_ssl = request.config.getoption("--server-ssl")
     xattrs_enabled = request.config.getoption("--xattrs")
-    server_seed_docs = request.config.getoption("--server-seed-docs")
-    max_docs = request.config.getoption("--max-docs")
-    num_users = request.config.getoption("--num-users")
-    create_batch_size = request.config.getoption("--create-batch-size")
-    create_delay = request.config.getoption("--create-delay")
-    update_runtime_sec = request.config.getoption("--update-runtime-sec")
-    update_batch_size = request.config.getoption("--update-batch-size")
-    update_docs_percentage = request.config.getoption("--update-docs-percentage")
-    update_delay = request.config.getoption("--update-delay")
-    changes_delay = request.config.getoption("--changes-delay")
-    changes_limit = request.config.getoption("--changes-limit")
 
-    if xattrs_enabled and version_is_binary(sync_gateway_version):
-        check_xattr_support(server_version, sync_gateway_version)
+    if xattrs_enabled and version_is_binary(sync_gateway_initial_version):
+        check_xattr_support(server_upgraded_version, sync_gateway_upgraded_version)
 
-    log_info("server_version: {}".format(server_version))
-    log_info("sync_gateway_version: {}".format(sync_gateway_version))
+    log_info("server_initial_version: {}".format(server_initial_version))
+    log_info("sync_gateway_initial_version: {}".format(sync_gateway_initial_version))
+    log_info("server_upgraded_version: {}".format(server_upgraded_version))
+    log_info("sync_gateway_upgraded_version: {}".format(sync_gateway_upgraded_version))
     log_info("mode: {}".format(mode))
     log_info("skip_provisioning: {}".format(skip_provisioning))
     log_info("cbs_ssl: {}".format(cbs_ssl))
@@ -139,8 +132,8 @@ def params_from_base_suite_setup(request):
         try:
             cluster_utils.provision_cluster(
                 cluster_config=cluster_config,
-                server_version=server_version,
-                sync_gateway_version=sync_gateway_version,
+                server_version=server_initial_version,
+                sync_gateway_version=sync_gateway_initial_version,
                 sync_gateway_config=sg_config
             )
         except ProvisioningError:
@@ -151,8 +144,8 @@ def params_from_base_suite_setup(request):
     # Hit this intalled running services to verify the correct versions are installed
     cluster_utils.verify_cluster_versions(
         cluster_config,
-        expected_server_version=server_version,
-        expected_sync_gateway_version=sync_gateway_version
+        expected_server_version=server_initial_version,
+        expected_sync_gateway_version=sync_gateway_initial_version
     )
 
     # Load topology as a dictionary
@@ -163,17 +156,10 @@ def params_from_base_suite_setup(request):
         "cluster_topology": cluster_topology,
         "mode": mode,
         "xattrs_enabled": xattrs_enabled,
-        "server_seed_docs": server_seed_docs,
-        "max_docs": max_docs,
-        "num_users": num_users,
-        "create_batch_size": create_batch_size,
-        "create_delay": create_delay,
-        "update_runtime_sec": update_runtime_sec,
-        "update_batch_size": update_batch_size,
-        "update_docs_percentage": update_docs_percentage,
-        "update_delay": update_delay,
-        "changes_delay": changes_delay,
-        "changes_limit": changes_limit
+        "server_initial_version": server_initial_version,
+        "sync_gateway_initial_version": sync_gateway_initial_version,
+        "server_upgraded_version": server_upgraded_version,
+        "sync_gateway_upgraded_version": sync_gateway_upgraded_version
     }
 
     log_info("Tearing down 'params_from_base_suite_setup' ...")
@@ -192,6 +178,10 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     cluster_topology = params_from_base_suite_setup["cluster_topology"]
     mode = params_from_base_suite_setup["mode"]
     xattrs_enabled = params_from_base_suite_setup["xattrs_enabled"]
+    server_initial_version = params_from_base_suite_setup["server_initial_version"]
+    sync_gateway_initial_version = params_from_base_suite_setup["sync_gateway_initial_version"]
+    server_upgraded_version = params_from_base_suite_setup["server_upgraded_version"]
+    sync_gateway_upgraded_version = params_from_base_suite_setup["sync_gateway_upgraded_version"]
 
     test_name = request.node.name
     log_info("Running test '{}'".format(test_name))
@@ -206,17 +196,10 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         "cluster_topology": cluster_topology,
         "mode": mode,
         "xattrs_enabled": xattrs_enabled,
-        "server_seed_docs": params_from_base_suite_setup["server_seed_docs"],
-        "max_docs": params_from_base_suite_setup["max_docs"],
-        "num_users": params_from_base_suite_setup["num_users"],
-        "create_batch_size": params_from_base_suite_setup["create_batch_size"],
-        "create_delay": params_from_base_suite_setup["create_delay"],
-        "update_runtime_sec": params_from_base_suite_setup["update_runtime_sec"],
-        "update_batch_size": params_from_base_suite_setup["update_batch_size"],
-        "update_docs_percentage": params_from_base_suite_setup["update_docs_percentage"],
-        "update_delay": params_from_base_suite_setup["update_delay"],
-        "changes_delay": params_from_base_suite_setup["changes_delay"],
-        "changes_limit": params_from_base_suite_setup["changes_limit"]
+        "server_initial_version": server_initial_version,
+        "sync_gateway_initial_version": sync_gateway_initial_version,
+        "server_upgraded_version": server_upgraded_version,
+        "sync_gateway_upgraded_version": sync_gateway_upgraded_version
     }
 
     # Code after the yield will execute when each test finishes
