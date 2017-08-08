@@ -1248,8 +1248,7 @@ def test_sg_feed_changed_with_xattrs_importEnabled(params_from_base_test_setup,
     - Verify docs via ChangesTracker with expected revision
     - update SG docs via SDK
     - Verify docs via ChangesTracker with rev generation 3-
-   
-    """
+   """
     cluster_conf = params_from_base_test_setup['cluster_config']
     cluster_topology = params_from_base_test_setup['cluster_topology']
     mode = params_from_base_test_setup['mode']
@@ -1338,7 +1337,7 @@ def test_sg_feed_changed_with_xattrs_importEnabled(params_from_base_test_setup,
 
     with ThreadPoolExecutor(max_workers=5) as upsdk_tpe:
         log_info("Updating docs via SDK...")
-        
+
         # Update docs via SDK
         sdk_docs = sdk_client.get_multi(doc_set_ids1)
         assert len(sdk_docs.keys()) == number_docs_per_client

@@ -130,8 +130,8 @@ class ChangesTracker:
         expected docs format: [{"id": "doc_id1" "rev": "rev1", "ok", "true"}, ...]
 
         rev_prefix_gen : if you want to verify only the prefix of revision like 1-, 2-, 3-
-            It is useful if you want to verify changes when updated by SDK as SDK does not know the actual 
-            revision, but with scenario it can know what prefix in the revision it is expecting  
+            It is useful if you want to verify changes when updated by SDK as SDK does not know the actual
+            revision, but with scenario it can know what prefix in the revision it is expecting
         """
         start = time.time()
         while True:
