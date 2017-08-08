@@ -66,8 +66,9 @@ class ChangesTracker:
         log_info("[Changes Tracker] Changes Tracker Starting ...")
         start = time.time()
         while not self.cancel:
+            # This if condition will run this method until the timeout and break and come out of this method.
             if time.time() - start > timeout:
-                logging.error("[Changes Tracker] wait_until: TIMEOUT")
+                logging.info("[Changes Tracker] : TIMEOUT")
                 break
             data = {
                 "feed": "longpoll",
@@ -127,6 +128,10 @@ class ChangesTracker:
         via the changes feed. This will return false if the polling exceeds the timeout
 
         expected docs format: [{"id": "doc_id1" "rev": "rev1", "ok", "true"}, ...]
+
+        rev_prefix_gen : if you want to verify only the prefix of revision like 1-, 2-, 3-
+            It is useful if you want to verify changes when updated by SDK as SDK does not know the actual 
+            revision, but with scenario it can know what prefix in the revision it is expecting  
         """
         start = time.time()
         while True:

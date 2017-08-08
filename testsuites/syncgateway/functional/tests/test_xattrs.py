@@ -9,6 +9,7 @@ from concurrent.futures import ThreadPoolExecutor
 from couchbase.bucket import Bucket
 from couchbase.exceptions import KeyExistsError, NotFoundError
 from requests.exceptions import HTTPError
+from keywords.exceptions import ChangesError
 
 from keywords import attachment, document
 from keywords.constants import DATA_DIR, SDK_TIMEOUT
@@ -1221,7 +1222,10 @@ def test_sg_sdk_interop_shared_docs(params_from_base_test_setup,
 @pytest.mark.parametrize(
     'sg_conf_name, number_docs_per_client, number_updates_per_doc_per_client',
     [
-        ('sync_gateway_default_functional_tests', 10, 10)
+        ('sync_gateway_default_functional_tests', 10, 10),
+        ('sync_gateway_default_functional_tests', 100, 10),
+        ('sync_gateway_default_functional_tests', 10, 100),
+        ('sync_gateway_default_functional_tests', 1, 1000)
     ]
 )
 def test_sg_feed_changed_with_xattrs_importEnabled(params_from_base_test_setup,
@@ -1236,16 +1240,16 @@ def test_sg_feed_changed_with_xattrs_importEnabled(params_from_base_test_setup,
     - Verify docs via ChangesTracker with rev generation 1-
     - update docs via SDK
     - Verify docs via ChangesTracker with rev generation 2-
-    - update SG docs via SDK
-    - Verify docs via ChangesTracker with rev generation 3-
+    - update SDK docs via SG
+    - Verify docs via ChangesTracker with expected revision
     - Create docs via SG
     - Verify docs via ChangesTracker with expected revision
     - update docs via SG
     - Verify docs via ChangesTracker with expected revision
-    - update SDK docs via SG
-    - Verify docs via ChangesTracker with expected revision
+    - update SG docs via SDK
+    - Verify docs via ChangesTracker with rev generation 3-
+   
     """
-    # Question ? Do we have json file with import enabled? Can we pass the sg_conf_name while running the test
     cluster_conf = params_from_base_test_setup['cluster_config']
     cluster_topology = params_from_base_test_setup['cluster_topology']
     mode = params_from_base_test_setup['mode']
@@ -1262,6 +1266,7 @@ def test_sg_feed_changed_with_xattrs_importEnabled(params_from_base_test_setup,
     bucket_name = 'data-bucket'
     cbs_url = cluster_topology['couchbase_servers'][0]
     sg_db = 'db'
+    changesTracktimeout = 60
 
     cluster = Cluster(config=cluster_conf)
     cluster.reset(sg_config_path=sg_conf)
@@ -1307,7 +1312,7 @@ def test_sg_feed_changed_with_xattrs_importEnabled(params_from_base_test_setup,
         prop_generator=update_props
     )
 
-    with ThreadPoolExecutor(max_workers=5) as tpe:
+    with ThreadPoolExecutor(max_workers=5) as crsdk_tpe:
 
         # Add docs via SDK
         log_info('Started adding {} docs via SDK ...'.format(number_docs_per_client))
@@ -1320,44 +1325,50 @@ def test_sg_feed_changed_with_xattrs_importEnabled(params_from_base_test_setup,
         all_docs_via_sg_formatted = [
             {"id": doc, "rev": "1-"} for doc in doc_set_ids1]
 
-        ct_task = tpe.submit(changestrack.start(timeout=10))
+        ct_task = crsdk_tpe.submit(changestrack.start(timeout=10))
         log_info("ct_task value {}".format(ct_task))
-        wait_for_changes = tpe.submit(
+        wait_for_changes = crsdk_tpe.submit(
             changestrack.wait_until, all_docs_via_sg_formatted, rev_prefix_gen=True)
 
         if wait_for_changes.result():
             log_info("Found all docs ...")
         else:
-            raise Exception(
+            raise NotFoundError(
                 "Could not find all changes in feed for adding docs via SDK before timeout!!")
 
-    with ThreadPoolExecutor(max_workers=5) as tpe:
+    with ThreadPoolExecutor(max_workers=5) as upsdk_tpe:
         log_info("Updating docs via SDK...")
-
+        
         # Update docs via SDK
         sdk_docs = sdk_client.get_multi(doc_set_ids1)
         assert len(sdk_docs.keys()) == number_docs_per_client
         for doc_id, val in sdk_docs.items():
-            log_info("Updating: '{}' via SDK".format(doc_id))
             doc_body = val.value
             doc_body["updated_by_sdk"] = True
             sdk_client.upsert(doc_id, doc_body)
-        time.sleep(10)
-        ct_task = tpe.submit(changestrack.start(timeout=15))
+        # Retry to get changes until expected changes appeared
+        start = time.time()
+        while True:
+            if time.time() - start > changesTracktimeout:
+                break
+            try:
+                ct_task = upsdk_tpe.submit(changestrack.start(timeout=15))
+            except ChangesError:
+                continue
         all_docs_via_sg_formatted = [
             {"id": doc, "rev": "2-"} for doc in doc_set_ids1]
 
-        wait_for_changes = tpe.submit(
+        wait_for_changes = upsdk_tpe.submit(
             changestrack.wait_until, all_docs_via_sg_formatted, rev_prefix_gen=True)
 
         if wait_for_changes.result():
             log_info("Found all docs after SDK update ...")
         else:
-            raise Exception(
+            raise NotFoundError(
                 "Could not find all changes in feed for SDK updated SDK docs before timeout!!")
 
     # update docs by sync-gateway
-    with ThreadPoolExecutor(max_workers=5) as executor:
+    with ThreadPoolExecutor(max_workers=5) as upsdksg_tpe:
         log_info("Starting updating SDK docs by sync-gateway...")
         user_docs, errors = sg_client.get_bulk_docs(url=sg_url, db=sg_db, doc_ids=sdk_docs, auth=autosdkuser_session)
         assert len(errors) == 0
@@ -1366,23 +1377,30 @@ def test_sg_feed_changed_with_xattrs_importEnabled(params_from_base_test_setup,
         for doc in user_docs:
             doc['updated_by_sg'] = True
 
-        # Add the docs via build_docs
+        # Add the bulk docs via sync-gateway
         sg_docs_update_resp = sg_client.add_bulk_docs(url=sg_url, db=sg_db, docs=user_docs, auth=autosdkuser_session)
-        time.sleep(10)
-        executor.submit(changestrack.start(timeout=10))
-        wait_for_changes = executor.submit(
+        # Retry to get changes until expected changes appeared
+        start = time.time()
+        while True:
+            if time.time() - start > changesTracktimeout:
+                break
+            try:
+                ct_task = upsdksg_tpe.submit(changestrack.start(timeout=15))
+            except ChangesError:
+                continue
+        wait_for_changes = upsdksg_tpe.submit(
             changestrack.wait_until, sg_docs_update_resp)
 
         if wait_for_changes.result():
             log_info("Stopping ...")
             log_info("Found all docs for update docs via sg ...")
-            executor.submit(changestrack.stop)
+            upsdksg_tpe.submit(changestrack.stop)
         else:
-            executor.submit(changestrack.stop)
-            raise Exception(
+            upsdksg_tpe.submit(changestrack.stop)
+            raise NotFoundError(
                 "Could not find all changes in feed for SG updated SDK docs via sg before timeout!!")
 
-    with ThreadPoolExecutor(max_workers=5) as executor:
+    with ThreadPoolExecutor(max_workers=5) as crsg_tpe:
         log_info("Starting adding docs via sync-gateway...")
 
         # Create / add docs to sync gateway
@@ -1401,21 +1419,26 @@ def test_sg_feed_changed_with_xattrs_importEnabled(params_from_base_test_setup,
         assert len(sg_docs_resp) == number_docs_per_client
         sg_docs = [doc['id'] for doc in sg_docs_resp]
         assert len(sg_docs) == number_docs_per_client
-        # have sleep time to wait until all docs are added and got changes
-        time.sleep(10)
-        executor.submit(changestrack_sg.start(timeout=10))
-
-        wait_for_changes = executor.submit(
+        # Retry to get changes until expected changes appeared
+        start = time.time()
+        while True:
+            if time.time() - start > changesTracktimeout:
+                break
+            try:
+                ct_task = crsg_tpe.submit(changestrack_sg.start(timeout=15))
+            except ChangesError:
+                continue
+        wait_for_changes = crsg_tpe.submit(
             changestrack_sg.wait_until, sg_docs_resp)
 
         if wait_for_changes.result():
             log_info("Found all docs ...")
         else:
-            raise Exception(
+            raise NotFoundError(
                 "Could not find all changes in feed for sg created docs before timeout!!")
 
     # update docs by sync-gateway
-    with ThreadPoolExecutor(max_workers=5) as executor:
+    with ThreadPoolExecutor(max_workers=5) as upsg_tpe:
         log_info("Starting updating sg docs by sync-gateway...")
         user_docs, errors = sg_client.get_bulk_docs(url=sg_url, db=sg_db, doc_ids=sg_docs, auth=autosguser_session)
         assert len(errors) == 0
@@ -1426,19 +1449,26 @@ def test_sg_feed_changed_with_xattrs_importEnabled(params_from_base_test_setup,
 
         # Add the docs via build_docs
         sg_docs_update_resp = sg_client.add_bulk_docs(url=sg_url, db=sg_db, docs=user_docs, auth=autosguser_session)
-        time.sleep(5)
-        executor.submit(changestrack_sg.start(timeout=10))
-        wait_for_changes = executor.submit(
+        # Retry to get changes until expected changes appeared
+        start = time.time()
+        while True:
+            if time.time() - start > changesTracktimeout:
+                break
+            try:
+                ct_task = upsg_tpe.submit(changestrack_sg.start(timeout=15))
+            except ChangesError:
+                continue
+        wait_for_changes = upsg_tpe.submit(
             changestrack_sg.wait_until, sg_docs_update_resp)
 
         if wait_for_changes.result():
             log_info("Found all sg docs for update docs via sg ...")
         else:
-            raise Exception(
+            raise NotFoundError(
                 "Could not find all changes in feed for update sg docs via sg before timeout!!")
 
     # Update sg docs via SDK
-    with ThreadPoolExecutor(max_workers=5) as tpe:
+    with ThreadPoolExecutor(max_workers=5) as upsgsdk_tpe:
         log_info("Updating sg docs via SDK...")
 
         sdk_docs = sdk_client.get_multi(sg_docs)
@@ -1447,20 +1477,27 @@ def test_sg_feed_changed_with_xattrs_importEnabled(params_from_base_test_setup,
             doc_body = val.value
             doc_body["updated_by_sdk"] = True
             sdk_client.upsert(doc_id, doc_body)
-        time.sleep(10)
-        ct_task = tpe.submit(changestrack_sg.start(timeout=15))
+        # Retry to get changes until expected changes appeared
+        start = time.time()
+        while True:
+            if time.time() - start > changesTracktimeout:
+                break
+            try:
+                ct_task = upsgsdk_tpe.submit(changestrack_sg.start(timeout=15))
+            except ChangesError:
+                continue
         all_docs_via_sg_formatted = [
             {"id": doc, "rev": "3-"} for doc in sg_docs]
 
-        wait_for_changes = tpe.submit(changestrack_sg.wait_until, all_docs_via_sg_formatted, rev_prefix_gen=True)
+        wait_for_changes = upsgsdk_tpe.submit(changestrack_sg.wait_until, all_docs_via_sg_formatted, rev_prefix_gen=True)
 
         if wait_for_changes.result():
             log_info("Stopping sg changes track...")
             log_info("Found all sg docs after SDK update ...")
-            tpe.submit(changestrack_sg.stop)
+            upsgsdk_tpe.submit(changestrack_sg.stop)
         else:
-            tpe.submit(changestrack_sg.stop)
-            raise Exception(
+            upsgsdk_tpe.submit(changestrack_sg.stop)
+            raise NotFoundError(
                 "Could not find all changes in feed for SDK updated sg docs before timeout!!")
 
 
