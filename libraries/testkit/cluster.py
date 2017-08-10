@@ -84,7 +84,7 @@ class Cluster:
         status = ansible_runner.run_ansible_playbook("stop-sync-gateway.yml")
         assert status == 0, "Failed to stop sync gateway"
 
-        # Stop sync_gateways
+        # Stop sync_gateway accels
         log_info(">>> Stopping sg_accel")
         status = ansible_runner.run_ansible_playbook("stop-sg-accel.yml")
         assert status == 0, "Failed to stop sg_accel"

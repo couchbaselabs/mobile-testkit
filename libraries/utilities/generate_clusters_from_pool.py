@@ -402,7 +402,7 @@ def get_hosts(pool_file="resources/pool.json"):
     return ips, ip_to_node_type
 
 
-def generate_clusters_from_pool(pool_file, use_docker):
+def generate_clusters_from_pool(pool_file, use_docker=False):
 
     cluster_confs = [
 
