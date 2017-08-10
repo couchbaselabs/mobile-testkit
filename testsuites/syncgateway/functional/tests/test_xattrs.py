@@ -1352,6 +1352,7 @@ def test_sg_feed_changed_with_xattrs_importEnabled(params_from_base_test_setup,
                 break
             try:
                 ct_task = upsdk_tpe.submit(changestrack.start(timeout=15))
+                break
             except ChangesError:
                 continue
         all_docs_via_sg_formatted = [
@@ -1385,6 +1386,7 @@ def test_sg_feed_changed_with_xattrs_importEnabled(params_from_base_test_setup,
                 break
             try:
                 ct_task = upsdksg_tpe.submit(changestrack.start(timeout=15))
+                break
             except ChangesError:
                 continue
         wait_for_changes = upsdksg_tpe.submit(
@@ -1425,6 +1427,7 @@ def test_sg_feed_changed_with_xattrs_importEnabled(params_from_base_test_setup,
                 break
             try:
                 ct_task = crsg_tpe.submit(changestrack_sg.start(timeout=15))
+                break
             except ChangesError:
                 continue
         wait_for_changes = crsg_tpe.submit(
@@ -1446,7 +1449,7 @@ def test_sg_feed_changed_with_xattrs_importEnabled(params_from_base_test_setup,
         for doc in user_docs:
             doc['updated_by_sg'] = "edits_1"
 
-        # Add the docs via build_docs
+        # Add the docs via bulk_docs
         sg_docs_update_resp = sg_client.add_bulk_docs(url=sg_url, db=sg_db, docs=user_docs, auth=autosguser_session)
         # Retry to get changes until expected changes appeared
         start = time.time()
@@ -1455,6 +1458,7 @@ def test_sg_feed_changed_with_xattrs_importEnabled(params_from_base_test_setup,
                 break
             try:
                 ct_task = upsg_tpe.submit(changestrack_sg.start(timeout=15))
+                break
             except ChangesError:
                 continue
         wait_for_changes = upsg_tpe.submit(
@@ -1483,6 +1487,7 @@ def test_sg_feed_changed_with_xattrs_importEnabled(params_from_base_test_setup,
                 break
             try:
                 ct_task = upsgsdk_tpe.submit(changestrack_sg.start(timeout=15))
+                break
             except ChangesError:
                 continue
         all_docs_via_sg_formatted = [
