@@ -31,7 +31,7 @@
       "bucket":"data-bucket",
       "password": "password",
       "username":"data-bucket",
-      "revs_limit":5
+      "revs_limit":20
     }
   }
 }
