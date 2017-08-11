@@ -1847,3 +1847,194 @@ def verify_doc_ids_in_sdk_get_multi(response, expected_number_docs, expected_ids
 
     # Make sure all doc ids have been found
     assert len(expected_ids_scratch_pad) == 0
+
+
+@pytest.mark.sanity
+@pytest.mark.syncgateway
+@pytest.mark.xattrs
+@pytest.mark.changes
+@pytest.mark.session
+@pytest.mark.parametrize(
+    'sg_conf_name, number_docs_per_client, number_updates_per_doc_per_client',
+    [
+        ('sync_gateway_default_functional_tests', 10, 10),
+        ('sync_gateway_default_functional_tests', 100, 10),
+        ('sync_gateway_default_functional_tests', 10, 100),
+        ('sync_gateway_default_functional_tests', 1, 1000)
+    ]
+)
+def test_sg_sdk_interop_shared_updates_from_sg(params_from_base_test_setup,
+                                               sg_conf_name,
+                                               number_docs_per_client,
+                                               number_updates_per_doc_per_client):
+    """
+    Scenario:
+    - Create docs via SG and get the revision number 1-rev
+    - Update docs via SDK and get the revision number 2-rev
+    - Update docs via SG with new_edits=false by giving parent revision 1-rev
+        and get the revision number 2-rev1
+    - update docs via SDK again and get the revision number 3-rev
+    - Verify with _all_changes by enabling include docs and verify 2 branched revisions appear in changes feed
+    - Verify no errors occur while updating docs via SG
+    - Delete docs via SDK
+    - Delete docs via SG
+    - Verify no errors while deletion
+    - Verify changes feed that branched revision are removed
+    - Verify changes feed that keys "deleted" is true and keys "removed"
+    """
+
+    cluster_conf = params_from_base_test_setup['cluster_config']
+    cluster_topology = params_from_base_test_setup['cluster_topology']
+    mode = params_from_base_test_setup['mode']
+    xattrs_enabled = params_from_base_test_setup['xattrs_enabled']
+
+    # This test should only run when using xattr meta storage
+    if not xattrs_enabled:
+        pytest.skip('XATTR tests require --xattrs flag')
+
+    sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
+    sg_admin_url = cluster_topology['sync_gateways'][0]['admin']
+    sg_url = cluster_topology['sync_gateways'][0]['public']
+
+    bucket_name = 'data-bucket'
+    cbs_url = cluster_topology['couchbase_servers'][0]
+    sg_db = 'db'
+
+    log_info('Num docs per client: {}'.format(number_docs_per_client))
+    log_info('Num updates per doc per client: {}'.format(number_updates_per_doc_per_client))
+
+    log_info('sg_conf: {}'.format(sg_conf))
+    log_info('sg_admin_url: {}'.format(sg_admin_url))
+    log_info('sg_url: {}'.format(sg_url))
+
+    cluster = Cluster(config=cluster_conf)
+    cluster.reset(sg_config_path=sg_conf)
+
+    sg_tracking_prop = 'sg_one_updates'
+    sdk_tracking_prop = 'sdk_one_updates'
+
+    # Create sg user
+    sg_client = MobileRestClient()
+    sg_client.create_user(url=sg_admin_url, db=sg_db, name='autotest', password='pass', channels=['shared'])
+    autouser_session = sg_client.create_session(url=sg_admin_url, db=sg_db, name='autotest', password='pass')
+
+    # Connect to server via SDK
+    cbs_ip = host_for_url(cbs_url)
+    sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password', timeout=SDK_TIMEOUT)
+
+    # Inject custom properties into doc template
+    def update_props():
+        return {
+            'updates': 0,
+            sg_tracking_prop: 0,
+            sdk_tracking_prop: 0
+        }
+
+    # Create / add docs to sync gateway
+    sg_docs = document.create_docs(
+        'sg_doc',
+        number_docs_per_client,
+        channels=['shared'],
+        prop_generator=update_props
+    )
+    sg_docs_resp = sg_client.add_bulk_docs(
+        url=sg_url,
+        db=sg_db,
+        docs=sg_docs,
+        auth=autouser_session
+    )
+
+    sg_doc_ids = [doc['_id'] for doc in sg_docs]
+    assert len(sg_docs_resp) == number_docs_per_client
+
+    sg_create_docs, errors = sg_client.get_bulk_docs(url=sg_url, db=sg_db, doc_ids=sg_doc_ids,
+                                                     auth=autouser_session)
+    assert len(errors) == 0
+    sg_create_doc = sg_create_docs[0]["_rev"]
+    log_info("Sg created  doc revision :{}".format(sg_create_doc))
+
+    # Update docs via SDK
+    sdk_docs = sdk_client.get_multi(sg_doc_ids)
+    assert len(sdk_docs.keys()) == number_docs_per_client
+    for doc_id, val in sdk_docs.items():
+        doc_body = val.value
+        doc_body["updated_by_sdk"] = True
+        sdk_client.upsert(doc_id, doc_body)
+
+    sdk_first_update_docs, errors = sg_client.get_bulk_docs(url=sg_url, db=sg_db, doc_ids=sg_doc_ids,
+                                                            auth=autouser_session)
+    assert len(errors) == 0
+    sdk_first_update_doc = sdk_first_update_docs[0]["_rev"]
+    log_info("Sdk first update doc {}".format(sdk_first_update_doc))
+    # Update the 'updates' property
+    for doc in sg_create_docs:
+        # update  docs via sync-gateway
+        sg_client.add_conflict(
+            url=sg_url,
+            db=sg_db,
+            doc_id=doc["_id"],
+            parent_revisions=doc["_rev"],
+            new_revision="2-bar",
+            auth=autouser_session
+        )
+
+    sg_update_docs, errors = sg_client.get_bulk_docs(url=sg_url, db=sg_db, doc_ids=sg_doc_ids,
+                                                     auth=autouser_session)
+    assert len(errors) == 0
+    sg_update_doc = sg_update_docs[0]["_rev"]
+    log_info("sg update doc revision is : {}".format(sg_update_doc))
+    # Update docs via SDK
+    sdk_docs = sdk_client.get_multi(sg_doc_ids)
+    assert len(sdk_docs.keys()) == number_docs_per_client
+    for doc_id, val in sdk_docs.items():
+        doc_body = val.value
+        doc_body["updated_by_sdk2"] = True
+        sdk_client.upsert(doc_id, doc_body)
+
+    sdk_update_docs2, errors = sg_client.get_bulk_docs(url=sg_url, db=sg_db, doc_ids=sg_doc_ids,
+                                                       auth=autouser_session)
+    assert len(errors) == 0
+    sdk_update_doc2 = sdk_update_docs2[0]["_rev"]
+    log_info("sdk 2nd update doc revision is : {}".format(sdk_update_doc2))
+    time.sleep(1)  # Need some delay to have _changes to update with latest branched revisions
+    # Get branched revision tree via _changes with include docs
+    docs_changes = sg_client.get_changes_style_all_docs(url=sg_url, db=sg_db, auth=autouser_session, include_docs=True)
+    doc_changes_in_changes = [change["changes"] for change in docs_changes["results"]]
+
+    for docs in doc_changes_in_changes[1:]:
+        revs = [doc['rev'] for doc in docs]
+        if sdk_first_update_doc in revs and sdk_update_doc2 in revs:
+            assert True
+        else:
+            log_info("conflict revision does not exist {}".format(revs))
+            assert False
+        if sg_create_doc not in revs and sg_update_doc not in revs:
+                assert True
+        else:
+            log_info("Non conflict revision exist {} ".format(revs))
+            assert False
+
+    # Do SDK deleted and SG delete after branched revision created and check changes feed removed branched revisions
+    sdk_client.remove_multi(sg_doc_ids)
+    sdk_deleted_docs, errors = sg_client.get_bulk_docs(url=sg_url, db=sg_db, doc_ids=sg_doc_ids,
+                                                       auth=autouser_session)
+    assert len(errors) == 0
+    sdk_deleted_doc = sdk_deleted_docs[0]["_rev"]
+    log_info("sdk deleted doc revision :{}".format(sdk_deleted_doc))
+    sg_client.delete_docs(url=sg_url, db=sg_db, docs=sg_docs_resp, auth=autouser_session)
+    time.sleep(1)  # Need some delay to have _changes to update with latest branched revisions
+    docs_changes1 = sg_client.get_changes_style_all_docs(url=sg_url, db=sg_db, auth=autouser_session, include_docs=True)
+    doc_changes_in_changes = [change["changes"] for change in docs_changes1["results"]]
+    deleted_doc_revisions = [change["doc"]["_deleted"] for change in docs_changes1["results"][1:]]
+    removedchannel_doc_revisions = [change["removed"] for change in docs_changes1["results"][1:]]
+    assert len(deleted_doc_revisions) == number_docs_per_client
+    assert len(removedchannel_doc_revisions) == number_docs_per_client
+    for docs in doc_changes_in_changes[1:]:
+        revs = [doc['rev'] for doc in docs]
+        assert len(revs) == 2
+        if sdk_first_update_doc not in revs and sdk_update_doc2 not in revs and sg_create_doc not in revs and sg_update_doc not in revs:
+                assert True
+        else:
+                log_info(
+                    "Deleted branched revisions still appear here {}".format(revs))
+                assert False
