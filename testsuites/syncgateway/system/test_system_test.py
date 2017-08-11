@@ -220,12 +220,14 @@ def test_system_test(params_from_base_test_setup):
         grant_users_access(users, [terminator_channel], sg_admin_url, sg_db)
 
         # Block on changes completion
-        if changes_workers_task.running():
-            changes_workers_task.cancel()
+        try:
             users = changes_workers_task.result()
+        except:
+            if changes_workers_task.running():
+                changes_workers_task.cancel()
 
-            # Print the summary of the system test
-            print_summary(users)
+        # Print the summary of the system test
+        print_summary(users)
 
         # TODO: Validated expected changes
 
