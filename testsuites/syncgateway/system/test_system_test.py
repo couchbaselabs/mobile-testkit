@@ -222,34 +222,33 @@ def test_system_test(params_from_base_test_setup):
         # Block on changes completion
         try:
             users = changes_workers_task.result()
+            # Print the summary of the system test
+            print_summary(users)
         except:
             if changes_workers_task.running():
                 changes_workers_task.cancel()
-
-        # Print the summary of the system test
-        print_summary(users)
 
         # TODO: Validated expected changes
 
 
 def print_summary(users):
     """ Pretty print user results for simulation """
+    log_info(users)
+    # for user_name, value in users.items():
+    #     num_user_docs = len(value['doc_ids'])
+    #     log_info('-> {} added: {} docs'.format(user_name, num_user_docs))
 
-    for user_name, value in users.items():
-        num_user_docs = len(value['doc_ids'])
-        log_info('-> {} added: {} docs'.format(user_name, num_user_docs))
-
-        # _doc_ids filter only works with normal changes feed
-        if not user_name.startswith('filtered_doc_ids'):
-            log_info('  - CHANGES {} (normal), {} (longpoll), {} (continous)'.format(
-                len(value['normal']),
-                len(value['longpoll']),
-                len(value['continuous'])
-            ))
-        else:
-            log_info('  - CHANGES {} (normal)'.format(
-                len(value['normal'])
-            ))
+    #     # _doc_ids filter only works with normal changes feed
+    #     if not user_name.startswith('filtered_doc_ids'):
+    #         log_info('  - CHANGES {} (normal), {} (longpoll), {} (continous)'.format(
+    #             len(value['normal']),
+    #             len(value['longpoll']),
+    #             len(value['continuous'])
+    #         ))
+    #     else:
+    #         log_info('  - CHANGES {} (normal)'.format(
+    #             len(value['normal'])
+    #         ))
 
 
 def grant_users_access(users, channels, sg_admin_url, sg_db):
