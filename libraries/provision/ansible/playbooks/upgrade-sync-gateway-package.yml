@@ -1,0 +1,34 @@
+---
+# Stop sync_gateway
+- hosts: sync_gateways
+  become: yes
+
+  tasks:
+  - include: tasks/stop-sync-gateway.yml
+
+# Download sync_gateway package
+- hosts: sync_gateways
+  any_errors_fatal: true
+
+  vars:
+    couchbase_sync_gateway_package_base_url:
+    couchbase_sync_gateway_package:
+    couchbase_sync_gateway_package_url: "{{ couchbase_sync_gateway_package_base_url }}/{{ couchbase_sync_gateway_package }}"
+    couchbase_server_primary_node: "{{ hostvars[groups.couchbase_servers[0]].ansible_host }}"
+
+  tasks:
+  - debug: msg="Downloading sync_gateway v. {{ couchbase_sync_gateway_package_url }}"
+  - name: SYNC GATEWAY |  Download sync_gateway rpm
+    get_url: url={{ couchbase_sync_gateway_package_url }} dest=/tmp/{{ couchbase_sync_gateway_package }}
+
+# Install and launch sync_gateway service
+- hosts: sync_gateways
+  any_errors_fatal: true
+  become: yes
+  tasks:
+  # Install and start service
+  - name: SYNC GATEWAY | Install sync_gateway rpm
+    shell: rpm -U /tmp/{{ couchbase_sync_gateway_package }}
+
+  - name: SYNC GATEWAY | wait until sync gateway to listen on port
+    wait_for: port=4985 timeout=120
