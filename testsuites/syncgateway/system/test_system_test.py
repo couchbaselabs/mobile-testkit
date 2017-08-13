@@ -175,12 +175,12 @@ def test_system_test(params_from_base_test_setup):
     log_info('------------------------------------------')
 
     # Start changes processing
-    with ProcessPoolExecutor(max_workers=3) as pex:
+    with ProcessPoolExecutor(max_workers=1) as pex:
         # Start termination task
         # with ProcessPoolExecutor(max_workers=2) as termex:
             # Start terminator background process
         terminator_task = pex.submit(
-            terminate,
+            start_terminator,
             lb_url,
             sg_db,
             users,
@@ -240,6 +240,19 @@ def test_system_test(params_from_base_test_setup):
                 changes_workers_task.cancel()
 
         # TODO: Validated expected changes
+
+
+def start_terminator(lb_url, sg_db, users, update_runtime_sec, changes_terminator_doc_id, sg_admin_url):
+    with ProcessPoolExecutor(max_workers=1) as term_ex:
+        term_ex.submit(
+            terminate,
+            lb_url,
+            sg_db,
+            users,
+            update_runtime_sec,
+            changes_terminator_doc_id,
+            sg_admin_url
+        )
 
 
 def terminate(lb_url, sg_db, users, update_runtime_sec, changes_terminator_doc_id, sg_admin_url):
