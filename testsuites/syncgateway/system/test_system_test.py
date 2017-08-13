@@ -265,7 +265,21 @@ def print_summary(users):
     log_info('------------------------------------------')
     log_info('Summary')
     log_info('------------------------------------------')
-    log_info(users)
+    for user_name, value in users.items():
+        num_user_docs = len(value['doc_ids'])
+        log_info('-> {} added: {} docs'.format(user_name, num_user_docs))
+
+        # _doc_ids filter only works with normal changes feed
+        if not user_name.startswith('filtered_doc_ids'):
+            log_info('  - CHANGES {} (normal), {} (longpoll), {} (continous)'.format(
+                len(value['normal']),
+                len(value['longpoll']),
+                len(value['continuous'])
+            ))
+        else:
+            log_info('  - CHANGES {} (normal)'.format(
+                len(value['normal'])
+            ))
 
 
 def grant_users_access(users, channels, sg_admin_url, sg_db):
