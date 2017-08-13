@@ -175,7 +175,7 @@ def test_system_test(params_from_base_test_setup):
     log_info('------------------------------------------')
 
     # Start termination task
-    with ProcessPoolExecutor(max_workers=1) as termex:
+    with ProcessPoolExecutor(max_workers=2) as termex:
         # Start terminator background process
         terminator_task = termex.submit(
             terminate,
