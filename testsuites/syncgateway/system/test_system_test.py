@@ -260,6 +260,7 @@ def terminate(lb_url, sg_db, users, update_runtime_sec, changes_terminator_doc_i
             send_changes_termination_doc(lb_url, sg_db, users, changes_terminator_doc_id, terminator_channel)
             # Overwrite each users channels with 'terminator' so their changes feed will backfill with the termination doc
             grant_users_access(users, [terminator_channel], sg_admin_url, sg_db)
+            return
         else:
             time.sleep(5)
 
