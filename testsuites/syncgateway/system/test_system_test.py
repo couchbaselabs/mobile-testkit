@@ -700,16 +700,16 @@ def update_docs(sg_url, sg_db, users, update_runtime_sec, batch_size, docs_per_u
     log_info('Continue to update for {}s'.format(update_runtime_sec))
 
     num_users_per_type = len(users) / len(USER_TYPES)
-    # start = time.time()
     current_user_index = 0
+    sg_client = MobileRestClient()
+    random_user_id = random.choice(users.keys())
+    random_user = users[random_user_id]
 
     while True:
-        for user_type in USER_TYPES:
-            for i in range(batch_size):
-                user_name = '{}_{}'.format(user_type, current_user_index + i)
-                current_user_doc_ids = list(users[user_name]['doc_ids'])
-                if terminator_doc_id in current_user_doc_ids:
-                    return users
+        all_docs = sg_client.get_all_docs(url=sg_url, db=sg_db, auth=random_user['auth'])
+        for doc in all_docs['rows']:
+            if doc['id'] == terminator_doc_id:
+                return users
 
         with ProcessPoolExecutor(max_workers=batch_size) as pe:
 
