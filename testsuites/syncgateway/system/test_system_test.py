@@ -174,13 +174,10 @@ def test_system_test(params_from_base_test_setup):
     log_info('END concurrent user / doc creation')
     log_info('------------------------------------------')
 
-    # Start changes processing
-    with ProcessPoolExecutor(max_workers=num_users) as pex:
-        # Start termination task
-        # with ProcessPoolExecutor(max_workers=2) as termex:
-            # Start terminator background process
-        terminator_task = pex.submit(
-            start_terminator,
+    # Start termination task
+    with ProcessPoolExecutor(max_workers=10) as term_ex:
+        terminator_task = term_ex.submit(
+            terminate,
             lb_url,
             sg_db,
             users,
@@ -189,6 +186,8 @@ def test_system_test(params_from_base_test_setup):
             sg_admin_url
         )
 
+    # Start changes processing
+    with ProcessPoolExecutor(max_workers=num_users) as pex:
         # Start changes feeds in background process
         changes_workers_task = pex.submit(
             start_changes_processing,
