@@ -239,20 +239,21 @@ def test_system_test(params_from_base_test_setup):
 
 def start_terminator(lb_url, sg_db, users, update_runtime_sec, changes_terminator_doc_id, sg_admin_url):
     with ProcessPoolExecutor(max_workers=2) as term_ex:
-        term_future = term_ex.submit(
-            terminate,
-            lb_url,
-            sg_db,
-            users,
-            update_runtime_sec,
-            changes_terminator_doc_id,
-            sg_admin_url
-        )
+        for result in term_ex.map(
+                terminate,
+                lb_url,
+                sg_db,
+                users,
+                update_runtime_sec,
+                changes_terminator_doc_id,
+                sg_admin_url
+        ):
+            print result
 
         # Block on termination task
-        log_info("Waiting for the terminator_task to complete")
-        for tfuture in as_completed(term_future):
-            tfuture.result()
+        # log_info("Waiting for the terminator_task to complete")
+        # for tfuture in as_completed(term_future):
+        #     tfuture.result()
 
 
 def terminate(lb_url, sg_db, users, update_runtime_sec, changes_terminator_doc_id, sg_admin_url):
