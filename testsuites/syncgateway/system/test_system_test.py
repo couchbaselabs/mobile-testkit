@@ -188,6 +188,19 @@ def test_system_test(params_from_base_test_setup):
             changes_terminator_doc_id
         )
 
+        # Start termination task
+        with ProcessPoolExecutor(max_workers=1) as termex:
+            # Start terminator background process
+            terminator_task = termex.submit(
+                terminate,
+                lb_url,
+                sg_db,
+                users,
+                update_runtime_sec,
+                changes_terminator_doc_id,
+                sg_admin_url
+            )
+
         log_info('------------------------------------------')
         log_info('START concurrent updates')
         log_info('------------------------------------------')
@@ -200,7 +213,8 @@ def test_system_test(params_from_base_test_setup):
             update_runtime_sec=update_runtime_sec,
             batch_size=update_batch_size,
             docs_per_user_per_update=docs_per_user_per_update,
-            update_delay=update_delay
+            update_delay=update_delay,
+            terminator_doc_id=changes_terminator_doc_id
         )
 
         all_user_channels = []
@@ -213,11 +227,14 @@ def test_system_test(params_from_base_test_setup):
         log_info('------------------------------------------')
 
         # Broadcast termination doc to all users
-        terminator_channel = 'terminator'
-        send_changes_termination_doc(lb_url, sg_db, users, changes_terminator_doc_id, terminator_channel)
+        # terminator_channel = 'terminator'
+        # send_changes_termination_doc(lb_url, sg_db, users, changes_terminator_doc_id, terminator_channel)
 
         # Overwrite each users channels with 'terminator' so their changes feed will backfill with the termination doc
-        grant_users_access(users, [terminator_channel], sg_admin_url, sg_db)
+        # grant_users_access(users, [terminator_channel], sg_admin_url, sg_db)
+
+        # Block on terminiation task
+        terminator_task.result()
 
         # Block on changes completion
         try:
@@ -231,24 +248,28 @@ def test_system_test(params_from_base_test_setup):
         # TODO: Validated expected changes
 
 
+def terminate(lb_url, sg_db, users, update_runtime_sec, changes_terminator_doc_id, sg_admin_url):
+    start = time.time()
+
+    while True:
+        elapsed_sec = time.time() - start
+        if elapsed_sec > update_runtime_sec:
+            log_info('Terminator: Runtime limit reached. Exiting ...')
+            # Broadcast termination doc to all users
+            terminator_channel = 'terminator'
+            send_changes_termination_doc(lb_url, sg_db, users, changes_terminator_doc_id, terminator_channel)
+            # Overwrite each users channels with 'terminator' so their changes feed will backfill with the termination doc
+            grant_users_access(users, [terminator_channel], sg_admin_url, sg_db)
+        else:
+            time.sleep(5)
+
+
 def print_summary(users):
     """ Pretty print user results for simulation """
+    log_info('------------------------------------------')
+    log_info('Summary')
+    log_info('------------------------------------------')
     log_info(users)
-    # for user_name, value in users.items():
-    #     num_user_docs = len(value['doc_ids'])
-    #     log_info('-> {} added: {} docs'.format(user_name, num_user_docs))
-
-    #     # _doc_ids filter only works with normal changes feed
-    #     if not user_name.startswith('filtered_doc_ids'):
-    #         log_info('  - CHANGES {} (normal), {} (longpoll), {} (continous)'.format(
-    #             len(value['normal']),
-    #             len(value['longpoll']),
-    #             len(value['continuous'])
-    #         ))
-    #     else:
-    #         log_info('  - CHANGES {} (normal)'.format(
-    #             len(value['normal'])
-    #         ))
 
 
 def grant_users_access(users, channels, sg_admin_url, sg_db):
@@ -613,7 +634,7 @@ def create_docs(sg_admin_url, sg_url, sg_db, num_users, number_docs_per_user, cr
     return users
 
 
-def update_docs_task(users, user_type, user_index, sg_url, sg_db, docs_per_user_per_update):
+def update_docs_task(users, user_type, user_index, sg_url, sg_db, docs_per_user_per_update, terminator_doc_id):
 
     user_name = '{}_{}'.format(user_type, user_index)
 
@@ -630,6 +651,10 @@ def update_docs_task(users, user_type, user_index, sg_url, sg_db, docs_per_user_
     # Get a random user
     current_user_auth = users[user_name]['auth']
     current_user_doc_ids = list(users[user_name]['doc_ids'])
+
+    if terminator_doc_id in current_user_doc_ids:
+        log_info('Found terminator ({})'.format(user_name))
+        return user_name
 
     # Get a random subset of docs to update
     user_docs_subset_to_update = []
@@ -669,7 +694,7 @@ def update_docs_task(users, user_type, user_index, sg_url, sg_db, docs_per_user_
     return user_name
 
 
-def update_docs(sg_url, sg_db, users, update_runtime_sec, batch_size, docs_per_user_per_update, update_delay):
+def update_docs(sg_url, sg_db, users, update_runtime_sec, batch_size, docs_per_user_per_update, update_delay, terminator_doc_id):
 
     log_info('Updating {} doc/user per update'.format(docs_per_user_per_update))
     log_info('Starting updates with batch size (concurrent users updating): {} and delay: {}s'.format(
@@ -679,16 +704,21 @@ def update_docs(sg_url, sg_db, users, update_runtime_sec, batch_size, docs_per_u
     log_info('Continue to update for {}s'.format(update_runtime_sec))
 
     num_users_per_type = len(users) / len(USER_TYPES)
-    start = time.time()
+    # start = time.time()
     current_user_index = 0
 
     while True:
-
-        elapsed_sec = time.time() - start
-        log_info('Updaing for: {}s'.format(elapsed_sec))
-        if elapsed_sec > update_runtime_sec:
-            log_info('Runtime limit reached. Exiting ...')
-            return users
+        # elapsed_sec = time.time() - start
+        # log_info('Updaing for: {}s'.format(elapsed_sec))
+        # if elapsed_sec > update_runtime_sec:
+        #     log_info('Runtime limit reached. Exiting ...')
+        #     return users
+        for user_type in USER_TYPES:
+            for i in range(batch_size):
+                user_name = '{}_{}'.format(user_type, current_user_index + i)
+                current_user_doc_ids = list(users[user_name]['doc_ids'])
+                if terminator_doc_id in current_user_doc_ids:
+                    return users
 
         with ProcessPoolExecutor(max_workers=batch_size) as pe:
 
@@ -704,7 +734,8 @@ def update_docs(sg_url, sg_db, users, update_runtime_sec, batch_size, docs_per_u
                     current_user_index + i,
                     sg_url,
                     sg_db,
-                    docs_per_user_per_update
+                    docs_per_user_per_update,
+                    terminator_doc_id
                 ) for i in range(batch_size)]
 
             # Block until all futures are completed or return
