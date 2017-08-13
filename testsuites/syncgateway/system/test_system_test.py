@@ -177,17 +177,17 @@ def test_system_test(params_from_base_test_setup):
     # Start changes processing
     with ProcessPoolExecutor(max_workers=1) as pex:
         # Start termination task
-        with ProcessPoolExecutor(max_workers=2) as termex:
+        # with ProcessPoolExecutor(max_workers=2) as termex:
             # Start terminator background process
-            terminator_task = termex.submit(
-                terminate,
-                lb_url,
-                sg_db,
-                users,
-                update_runtime_sec,
-                changes_terminator_doc_id,
-                sg_admin_url
-            )
+        terminator_task = pex.submit(
+            terminate,
+            lb_url,
+            sg_db,
+            users,
+            update_runtime_sec,
+            changes_terminator_doc_id,
+            sg_admin_url
+        )
 
         # Start changes feeds in background process
         changes_workers_task = pex.submit(
