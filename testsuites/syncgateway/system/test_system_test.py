@@ -174,6 +174,19 @@ def test_system_test(params_from_base_test_setup):
     log_info('END concurrent user / doc creation')
     log_info('------------------------------------------')
 
+    # Start termination task
+    with ProcessPoolExecutor(max_workers=1) as termex:
+        # Start terminator background process
+        terminator_task = termex.submit(
+            terminate,
+            lb_url,
+            sg_db,
+            users,
+            update_runtime_sec,
+            changes_terminator_doc_id,
+            sg_admin_url
+        )
+
     # Start changes processing
     with ProcessPoolExecutor(max_workers=1) as pex:
 
@@ -187,19 +200,6 @@ def test_system_test(params_from_base_test_setup):
             changes_limit,
             changes_terminator_doc_id
         )
-
-        # Start termination task
-        with ProcessPoolExecutor(max_workers=1) as termex:
-            # Start terminator background process
-            terminator_task = termex.submit(
-                terminate,
-                lb_url,
-                sg_db,
-                users,
-                update_runtime_sec,
-                changes_terminator_doc_id,
-                sg_admin_url
-            )
 
         log_info('------------------------------------------')
         log_info('START concurrent updates')
@@ -226,7 +226,7 @@ def test_system_test(params_from_base_test_setup):
         log_info('END concurrent updates')
         log_info('------------------------------------------')
 
-        # Block on terminiation task
+        # Block on termination task
         log_info("Waiting for the terminator_task to complete")
         terminator_task.result()
 
@@ -245,7 +245,7 @@ def test_system_test(params_from_base_test_setup):
 
 def terminate(lb_url, sg_db, users, update_runtime_sec, changes_terminator_doc_id, sg_admin_url):
     start = time.time()
-
+    log_info('Starting Terminator at : {}'.format(start))
     while True:
         elapsed_sec = time.time() - start
         if elapsed_sec > update_runtime_sec:
@@ -734,7 +734,7 @@ def update_docs(sg_url, sg_db, users, update_runtime_sec, batch_size, docs_per_u
             # For example if batch_size == num_users_per_type,
             # All users would update the docs
             for user_type in USER_TYPES:
-                futures = [pe.submit(
+                update_futures = [pe.submit(
                     update_docs_task,
                     users,
                     user_type,
@@ -745,9 +745,9 @@ def update_docs(sg_url, sg_db, users, update_runtime_sec, batch_size, docs_per_u
                     terminator_doc_id
                 ) for i in range(batch_size)]
 
-            # Block until all futures are completed or return
+            # Block until all update_futures are completed or return
             # exception in future.result()
-            for future in as_completed(futures):
+            for future in as_completed(update_futures):
                 # Increment updates
                 user = future.result()
                 users[user]['updates'] += 1
