@@ -226,18 +226,13 @@ def test_system_test(params_from_base_test_setup):
         log_info('END concurrent updates')
         log_info('------------------------------------------')
 
-        # Broadcast termination doc to all users
-        # terminator_channel = 'terminator'
-        # send_changes_termination_doc(lb_url, sg_db, users, changes_terminator_doc_id, terminator_channel)
-
-        # Overwrite each users channels with 'terminator' so their changes feed will backfill with the termination doc
-        # grant_users_access(users, [terminator_channel], sg_admin_url, sg_db)
-
         # Block on terminiation task
+        log_info("Waiting for the terminator_task to complete")
         terminator_task.result()
 
         # Block on changes completion
         try:
+            log_info("Waiting for the changes_workers_task to complete")
             users = changes_workers_task.result()
             # Print the summary of the system test
             print_summary(users)
@@ -709,11 +704,6 @@ def update_docs(sg_url, sg_db, users, update_runtime_sec, batch_size, docs_per_u
     current_user_index = 0
 
     while True:
-        # elapsed_sec = time.time() - start
-        # log_info('Updaing for: {}s'.format(elapsed_sec))
-        # if elapsed_sec > update_runtime_sec:
-        #     log_info('Runtime limit reached. Exiting ...')
-        #     return users
         for user_type in USER_TYPES:
             for i in range(batch_size):
                 user_name = '{}_{}'.format(user_type, current_user_index + i)
