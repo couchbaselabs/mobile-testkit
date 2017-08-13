@@ -175,7 +175,7 @@ def test_system_test(params_from_base_test_setup):
     log_info('------------------------------------------')
 
     # Start changes processing
-    with ProcessPoolExecutor(max_workers=3) as pex:
+    with ProcessPoolExecutor(max_workers=num_users) as pex:
         # Start termination task
         # with ProcessPoolExecutor(max_workers=2) as termex:
             # Start terminator background process
