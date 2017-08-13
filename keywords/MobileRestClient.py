@@ -1292,9 +1292,7 @@ class MobileRestClient:
         else:
             resp = self._session.get("{}/{}/_all_docs".format(url, db), params=params)
 
-        if logr:
-            log_r(resp)
-
+        log_r(resp, info=logr)
         resp.raise_for_status()
         return resp.json()
 
