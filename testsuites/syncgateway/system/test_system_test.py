@@ -174,23 +174,9 @@ def test_system_test(params_from_base_test_setup):
     log_info('END concurrent user / doc creation')
     log_info('------------------------------------------')
 
-    # Start termination task
-    # with ProcessPoolExecutor(max_workers=10) as term_ex:
-    #     terminator_task = term_ex.map(
-    #         terminate,
-    #         lb_url,
-    #         sg_db,
-    #         users,
-    #         update_runtime_sec,
-    #         changes_terminator_doc_id,
-    #         sg_admin_url
-    #     )
-
     # Start changes processing
     with ProcessPoolExecutor(max_workers=num_users) as pex:
-        # Start changes feeds in background process
-        terminator_task = pex.submit(
-            start_terminator,
+        terminator_task = start_terminator(
             lb_url,
             sg_db,
             users,
@@ -199,6 +185,7 @@ def test_system_test(params_from_base_test_setup):
             sg_admin_url
         )
 
+        # Start changes feeds in background process
         changes_workers_task = pex.submit(
             start_changes_processing,
             lb_url,
@@ -252,21 +239,17 @@ def test_system_test(params_from_base_test_setup):
 
 def start_terminator(lb_url, sg_db, users, update_runtime_sec, changes_terminator_doc_id, sg_admin_url):
     with ProcessPoolExecutor(max_workers=2) as term_ex:
-        for result in term_ex.map(
-                terminate,
-                lb_url,
-                sg_db,
-                users,
-                update_runtime_sec,
-                changes_terminator_doc_id,
-                sg_admin_url
-        ):
-            print result
+        term_task = term_ex.submit(
+            terminate,
+            lb_url,
+            sg_db,
+            users,
+            update_runtime_sec,
+            changes_terminator_doc_id,
+            sg_admin_url
+        )
 
-        # Block on termination task
-        # log_info("Waiting for the terminator_task to complete")
-        # for tfuture in as_completed(term_future):
-        #     tfuture.result()
+        return term_task
 
 
 def terminate(lb_url, sg_db, users, update_runtime_sec, changes_terminator_doc_id, sg_admin_url):
