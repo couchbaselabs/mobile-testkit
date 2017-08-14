@@ -175,8 +175,21 @@ def test_system_test(params_from_base_test_setup):
     log_info('------------------------------------------')
 
     # Start termination task
-    with ProcessPoolExecutor(max_workers=10) as term_ex:
-        terminator_task = term_ex.submit(
+    # with ProcessPoolExecutor(max_workers=10) as term_ex:
+    #     terminator_task = term_ex.map(
+    #         terminate,
+    #         lb_url,
+    #         sg_db,
+    #         users,
+    #         update_runtime_sec,
+    #         changes_terminator_doc_id,
+    #         sg_admin_url
+    #     )
+
+    # Start changes processing
+    with ProcessPoolExecutor(max_workers=num_users) as pex:
+        # Start changes feeds in background process
+        terminator_task = pex.submit(
             start_terminator,
             lb_url,
             sg_db,
@@ -186,9 +199,6 @@ def test_system_test(params_from_base_test_setup):
             sg_admin_url
         )
 
-    # Start changes processing
-    with ProcessPoolExecutor(max_workers=num_users) as pex:
-        # Start changes feeds in background process
         changes_workers_task = pex.submit(
             start_changes_processing,
             lb_url,
@@ -223,6 +233,9 @@ def test_system_test(params_from_base_test_setup):
         log_info('------------------------------------------')
         log_info('END concurrent updates')
         log_info('------------------------------------------')
+
+        # Block on terminator completion
+        terminator_task.result()
 
         # Block on changes completion
         try:
