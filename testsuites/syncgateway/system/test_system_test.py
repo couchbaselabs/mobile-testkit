@@ -221,20 +221,20 @@ def test_system_test(params_from_base_test_setup):
         log_info('END concurrent updates')
         log_info('------------------------------------------')
 
-    # Block on terminator completion
-    terminator_task.result()
+        # Block on terminator completion
+        terminator_task.result()
 
-    # Block on changes completion
-    try:
-        log_info("Waiting for the changes_workers_task to complete")
-        users = changes_workers_task.result()
-        # Print the summary of the system test
-        print_summary(users)
-    except:
-        if changes_workers_task.running():
-            changes_workers_task.cancel()
+        # Block on changes completion
+        try:
+            log_info("Waiting for the changes_workers_task to complete")
+            users = changes_workers_task.result()
+            # Print the summary of the system test
+            print_summary(users)
+        except:
+            if changes_workers_task.running():
+                changes_workers_task.cancel()
 
-    # TODO: Validated expected changes
+        # TODO: Validated expected changes
 
 
 def start_terminator(lb_url, sg_db, users, update_runtime_sec, changes_terminator_doc_id, sg_admin_url):
