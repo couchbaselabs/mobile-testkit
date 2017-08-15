@@ -6,9 +6,7 @@
     "databases":{
         "db": {
             "import_docs": "continuous",
-            "unsupported": {
-                "enable_extended_attributes": true
-            },
+            "enable_shared_bucket_access": true,
             "users": {
                 "admin": {
                     "password": "pass",

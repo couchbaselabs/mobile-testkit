@@ -11,9 +11,7 @@
     "databases": {
         "db":{
             {{ autoimport }}
-            "unsupported": {
-                {{ xattrs }}
-            },
+            {{ xattrs }}
             "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
             "bucket":"data-bucket",
             "username":"data-bucket",
@@ -21,9 +19,7 @@
         },
         "db2":{
             {{ autoimport }}
-            "unsupported": {
-                {{ xattrs }}
-            },
+            {{ xattrs }}
             "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
             "bucket":"data-bucket-2",
             "username":"data-bucket-2",

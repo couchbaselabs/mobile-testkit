@@ -12,13 +12,9 @@
   "databases": {
     "db": {
       {{ autoimport }}
-      "unsupported": {
-        {% if xattrs %}
-            {{ "%s,"|format(xattrs) }}
-        {% endif %}
-        "user_views": {
-          "enabled":true
-        }
+      {{ xattrs }}
+      "user_views": {
+        "enabled":true
       },
       "server": "{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
       "bucket": "data-bucket",
