@@ -112,6 +112,9 @@ class SyncGatewayConfig:
 
         return True
 
+    def get_sg_version_build(self):
+        return self._version_number, self._build_number
+
 
 def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False,
                          sg_platform="centos", sg_installer_type="msi",
@@ -241,6 +244,7 @@ def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False,
         playbook_vars["couchbase_sync_gateway_package_base_url"] = sync_gateway_base_url
         playbook_vars["couchbase_sync_gateway_package"] = sync_gateway_package_name
         playbook_vars["couchbase_sg_accel_package"] = sg_accel_package_name
+        playbook_vars["couchbase_server_version"] = sync_gateway_config.get_sg_version_build()
 
         if is_ipv6(cluster_config):
             playbook_vars["couchbase_server_primary_node"] = "[{}]".format(couchbase_server_primary_node)
