@@ -99,6 +99,9 @@ class SyncGatewayConfig:
 
         return True
 
+    def get_sg_version_build(self):
+        return self._version_number, self._build_number
+
 
 def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False):
     log_info(sync_gateway_config)
@@ -152,10 +155,11 @@ def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False):
     else:
         # Install from Package
         sync_gateway_base_url, sync_gateway_package_name, sg_accel_package_name = sync_gateway_config.sync_gateway_base_url_and_package(sg_ce)
-
+        log_info("sync_gateway_base_url {}-----".format(sync_gateway_config.get_sg_version_build()))
         playbook_vars["couchbase_sync_gateway_package_base_url"] = sync_gateway_base_url
         playbook_vars["couchbase_sync_gateway_package"] = sync_gateway_package_name
         playbook_vars["couchbase_sg_accel_package"] = sg_accel_package_name
+        playbook_vars["couchbase_server_version"] = sync_gateway_config.get_sg_version_build()
 
         status = ansible_runner.run_ansible_playbook(
             "install-sync-gateway-package.yml",
