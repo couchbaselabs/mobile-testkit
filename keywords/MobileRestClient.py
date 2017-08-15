@@ -1207,7 +1207,7 @@ class MobileRestClient:
 
         return added_docs
 
-    def add_bulk_docs(self, url, db, docs, auth=None, ):
+    def add_bulk_docs(self, url, db, docs, auth=None):
         """
         Keyword that issues POST _bulk docs with the specified 'docs'.
         Use the Document.create_docs() to create the docs.

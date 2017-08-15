@@ -1951,6 +1951,7 @@ def test_sg_sdk_interop_shared_updates_from_sg(params_from_base_test_setup,
                                                      auth=autouser_session)
     assert len(errors) == 0
     sg_create_doc = sg_create_docs[0]["_rev"]
+    assert(sg_create_doc.startswith("1-"))
     log_info("Sg created  doc revision :{}".format(sg_create_doc))
 
     # Update docs via SDK
@@ -1966,6 +1967,7 @@ def test_sg_sdk_interop_shared_updates_from_sg(params_from_base_test_setup,
     assert len(errors) == 0
     sdk_first_update_doc = sdk_first_update_docs[0]["_rev"]
     log_info("Sdk first update doc {}".format(sdk_first_update_doc))
+    assert(sdk_first_update_doc.startswith("2-"))
     # Update the 'updates' property
     for doc in sg_create_docs:
         # update  docs via sync-gateway
@@ -1983,6 +1985,7 @@ def test_sg_sdk_interop_shared_updates_from_sg(params_from_base_test_setup,
     assert len(errors) == 0
     sg_update_doc = sg_update_docs[0]["_rev"]
     log_info("sg update doc revision is : {}".format(sg_update_doc))
+    assert(sg_update_doc.startswith("2-"))
     # Update docs via SDK
     sdk_docs = sdk_client.get_multi(sg_doc_ids)
     assert len(sdk_docs.keys()) == number_docs_per_client
@@ -1996,12 +1999,15 @@ def test_sg_sdk_interop_shared_updates_from_sg(params_from_base_test_setup,
     assert len(errors) == 0
     sdk_update_doc2 = sdk_update_docs2[0]["_rev"]
     log_info("sdk 2nd update doc revision is : {}".format(sdk_update_doc2))
+    assert(sdk_update_doc2.startswith("3-"))
     time.sleep(1)  # Need some delay to have _changes to update with latest branched revisions
     # Get branched revision tree via _changes with include docs
     docs_changes = sg_client.get_changes_style_all_docs(url=sg_url, db=sg_db, auth=autouser_session, include_docs=True)
     doc_changes_in_changes = [change["changes"] for change in docs_changes["results"]]
 
-    for docs in doc_changes_in_changes[1:]:
+    # Iterate through all docs and verify branched revisions appear in changes feed, verify previous revisions
+    # which created before branched revisions does not show up in changes feed
+    for docs in doc_changes_in_changes[1:]:  # skip first item in list as first item has user information, but not doc information
         revs = [doc['rev'] for doc in docs]
         if sdk_first_update_doc in revs and sdk_update_doc2 in revs:
             assert True
@@ -2016,11 +2022,13 @@ def test_sg_sdk_interop_shared_updates_from_sg(params_from_base_test_setup,
 
     # Do SDK deleted and SG delete after branched revision created and check changes feed removed branched revisions
     sdk_client.remove_multi(sg_doc_ids)
+    time.sleep(1)  # Need some delay to have _changes to update with latest branched revisions
     sdk_deleted_docs, errors = sg_client.get_bulk_docs(url=sg_url, db=sg_db, doc_ids=sg_doc_ids,
                                                        auth=autouser_session)
     assert len(errors) == 0
     sdk_deleted_doc = sdk_deleted_docs[0]["_rev"]
     log_info("sdk deleted doc revision :{}".format(sdk_deleted_doc))
+    assert(sdk_deleted_doc.startswith("2-"))
     sg_client.delete_docs(url=sg_url, db=sg_db, docs=sg_docs_resp, auth=autouser_session)
     time.sleep(1)  # Need some delay to have _changes to update with latest branched revisions
     docs_changes1 = sg_client.get_changes_style_all_docs(url=sg_url, db=sg_db, auth=autouser_session, include_docs=True)
@@ -2029,6 +2037,9 @@ def test_sg_sdk_interop_shared_updates_from_sg(params_from_base_test_setup,
     removedchannel_doc_revisions = [change["removed"] for change in docs_changes1["results"][1:]]
     assert len(deleted_doc_revisions) == number_docs_per_client
     assert len(removedchannel_doc_revisions) == number_docs_per_client
+
+    # Verify in changes feed that new branched revisions are created after deletion of branced revisions which created
+    # by sg update and sdk update.
     for docs in doc_changes_in_changes[1:]:
         revs = [doc['rev'] for doc in docs]
         assert len(revs) == 2
