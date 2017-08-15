@@ -574,7 +574,7 @@ class CouchbaseServer:
                 server = server.replace(":8091", "")
             known_nodes += "ns_1@{},".format(server)
 
-        # Add server_to_add to known nodes
+        # Add server_to_remove to ejected_node
         ejected_node = "ejectedNodes=ns_1@{}".format(server_to_remove.host)
         data = "{}&{}".format(ejected_node, known_nodes)
 

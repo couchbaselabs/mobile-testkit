@@ -110,8 +110,8 @@ def params_from_base_suite_setup(request):
     validate_sync_gateway_mode(mode)
 
     # use ci_lb_cc cluster config if mode is "cc" or ci_lb_di cluster config if more is "di"
-    log_info("Using 'ci_lb_{}' config!".format(mode))
-    cluster_config = "{}/ci_lb_{}".format(CLUSTER_CONFIGS_DIR, mode)
+    log_info("Using 'base_lb_{}' config!".format(mode))
+    cluster_config = "{}/base_lb_{}".format(CLUSTER_CONFIGS_DIR, mode)
 
     # Only works with load balancer configs
     persist_cluster_config_environment_prop(cluster_config, 'sg_lb_enabled', True)
