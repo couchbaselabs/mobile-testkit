@@ -61,6 +61,14 @@ def pytest_addoption(parser):
                      action="store_true",
                      help="If set, will enable SSL communication between server and Sync Gateway")
 
+    parser.addoption("--liteserv-host",
+                     action="store",
+                     help="liteserv-host: the host to start liteserv on")
+
+    parser.addoption("--liteserv-port",
+                     action="store",
+                     help="liteserv-port: the port to assign to liteserv")
+
 
 # This will be called once for the at the beggining of the execution in the 'tests/' directory
 # and will be torn down, (code after the yeild) when all the test session has completed.
@@ -81,6 +89,8 @@ def params_from_base_suite_setup(request):
     skip_provisioning = request.config.getoption("--skip-provisioning")
     cbs_ssl = request.config.getoption("--server-ssl")
     xattrs_enabled = request.config.getoption("--xattrs")
+    liteserv_host = request.config.getoption("--liteserv-host")
+    liteserv_port = request.config.getoption("--liteserv-port")
 
     if xattrs_enabled and version_is_binary(sync_gateway_initial_version):
         check_xattr_support(server_upgraded_version, sync_gateway_upgraded_version)
@@ -93,6 +103,8 @@ def params_from_base_suite_setup(request):
     log_info("skip_provisioning: {}".format(skip_provisioning))
     log_info("cbs_ssl: {}".format(cbs_ssl))
     log_info("xattrs_enabled: {}".format(xattrs_enabled))
+    log_info("liteserv_host: {}".format(liteserv_host))
+    log_info("liteserv_port: {}".format(liteserv_port))
 
     # Make sure mode for sync_gateway is supported ('cc' or 'di')
     validate_sync_gateway_mode(mode)
@@ -159,7 +171,9 @@ def params_from_base_suite_setup(request):
         "server_initial_version": server_initial_version,
         "sync_gateway_initial_version": sync_gateway_initial_version,
         "server_upgraded_version": server_upgraded_version,
-        "sync_gateway_upgraded_version": sync_gateway_upgraded_version
+        "sync_gateway_upgraded_version": sync_gateway_upgraded_version,
+        "liteserv_host": liteserv_host,
+        "liteserv_port": liteserv_port
     }
 
     log_info("Tearing down 'params_from_base_suite_setup' ...")
@@ -182,6 +196,8 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     sync_gateway_initial_version = params_from_base_suite_setup["sync_gateway_initial_version"]
     server_upgraded_version = params_from_base_suite_setup["server_upgraded_version"]
     sync_gateway_upgraded_version = params_from_base_suite_setup["sync_gateway_upgraded_version"]
+    liteserv_host = params_from_base_suite_setup["liteserv_host"]
+    liteserv_port = params_from_base_suite_setup["liteserv_port"]
 
     test_name = request.node.name
     log_info("Running test '{}'".format(test_name))
@@ -199,7 +215,9 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         "server_initial_version": server_initial_version,
         "sync_gateway_initial_version": sync_gateway_initial_version,
         "server_upgraded_version": server_upgraded_version,
-        "sync_gateway_upgraded_version": sync_gateway_upgraded_version
+        "sync_gateway_upgraded_version": sync_gateway_upgraded_version,
+        "liteserv_host": liteserv_host,
+        "liteserv_port": liteserv_port
     }
 
     # Code after the yield will execute when each test finishes
