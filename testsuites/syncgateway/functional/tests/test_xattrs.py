@@ -1028,8 +1028,6 @@ def test_sg_sdk_interop_shared_docs(params_from_base_test_setup,
     cbs_url = cluster_topology['couchbase_servers'][0]
     sg_db = 'db'
 
-    
-
     log_info('Num docs per client: {}'.format(number_docs_per_client))
     log_info('Num updates per doc per client: {}'.format(number_updates_per_doc_per_client))
 
@@ -1224,10 +1222,10 @@ def test_sg_sdk_interop_shared_docs(params_from_base_test_setup,
 @pytest.mark.parametrize(
     'sg_conf_name, number_docs_per_client, number_updates_per_doc_per_client',
     [
-        ('sync_gateway_default_functional_tests', 10, 10)
-        #('sync_gateway_default_functional_tests', 100, 10),
-        #('sync_gateway_default_functional_tests', 10, 100),
-        #('sync_gateway_default_functional_tests', 1, 1000)
+        ('sync_gateway_default_functional_tests', 10, 10),
+        ('sync_gateway_default_functional_tests', 100, 10),
+        ('sync_gateway_default_functional_tests', 10, 100),
+        ('sync_gateway_default_functional_tests', 1, 1000)
     ]
 )
 def test_sg_feed_changed_with_xattrs_importEnabled(params_from_base_test_setup,
@@ -1271,7 +1269,6 @@ def test_sg_feed_changed_with_xattrs_importEnabled(params_from_base_test_setup,
 
     cluster = Cluster(config=cluster_conf)
     cluster.reset(sg_config_path=sg_conf)
-
 
     sg_client = MobileRestClient()
     sg_client.create_user(url=sg_admin_url, db=sg_db, name='autosdkuser', password='pass', channels=['shared'])
