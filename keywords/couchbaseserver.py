@@ -1,28 +1,19 @@
 import time
 import json
 import requests
-from requests.exceptions import ConnectionError
-from requests.exceptions import HTTPError
+from requests.exceptions import ConnectionError, HTTPError
 from requests import Session
 from requests.packages.urllib3.exceptions import InsecureRequestWarning
+from libraries.provision.ansible_runner import AnsibleRunner
 
 from couchbase.bucket import Bucket
-from couchbase.exceptions import CouchbaseError
-from couchbase.exceptions import NotFoundError
+from couchbase.exceptions import CouchbaseError, NotFoundError
 
 import keywords.constants
 from keywords.remoteexecutor import RemoteExecutor
-from keywords.exceptions import CBServerError
-from keywords.exceptions import ProvisioningError
-from keywords.exceptions import TimeoutError
-from keywords.exceptions import RBACUserCreationError
-from keywords.exceptions import RBACUserDeletionError
-from keywords.utils import log_r
-from keywords.utils import log_info
-from keywords.utils import log_debug
-from keywords.utils import log_error
+from keywords.exceptions import CBServerError, ProvisioningError, TimeoutError, RBACUserCreationError, RBACUserDeletionError
+from keywords.utils import log_r, log_info, log_debug, log_error, version_and_build, hostname_for_url
 from keywords import types
-
 
 requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
@@ -549,10 +540,10 @@ class CouchbaseServer:
 
             # If status of the POST is not 200, retry the request after a second
             if resp.status_code == 200:
-                log_info("{} added to cluster successfully".format(server_to_add))
+                log_info("{} added to cluster successfully".format(server_to_add.host))
                 break
             else:
-                log_info("{}: Could not add {} to cluster. Retrying ...".format(resp.status_code, server_to_add))
+                log_info("{}: Could not add {} to cluster. Retrying ...".format(resp.status_code, server_to_add.host))
                 time.sleep(1)
 
     def rebalance_out(self, cluster_servers, server_to_remove):
@@ -727,3 +718,79 @@ class CouchbaseServer:
         """ Gets an SDK bucket object """
         connection_str = "couchbase://{}/{}".format(self.host, bucket_name)
         return Bucket(connection_str, password='password')
+
+    def get_package_name(self, version, build_number):
+        """
+        Given:
+
+        version - the version without any build number information, eg 4.5.0
+        build_number - the build number associated with this major version release, eg, 2601 (or None)
+
+        Return the filename portion of the package download URL
+
+        """
+
+        if version.startswith("3.1"):
+            return "couchbase-server-enterprise_centos6_x86_64_{}-{}-rel.rpm".format(version, build_number)
+        else:
+            return "couchbase-server-enterprise-{}-{}-centos7.x86_64.rpm".format(version, build_number)
+
+    def resolve_cb_nas_url(self, version, build_number):
+        """
+        Resolve a download URL for couchbase server on the internal VPN download site
+
+        Given:
+
+        version - the version without any build number information, eg 4.5.0
+        build_number - the build number associated with this major version release, eg, 2601 (or None)
+
+        Return the base_url of the package download URL (everything except the filename)
+
+        """
+
+        cbnas_base_url = "http://cbnas01.sc.couchbase.com/builds/latestbuilds/couchbase-server"
+
+        if version.startswith("3.1"):
+            base_url = "http://latestbuilds.hq.couchbase.com/"
+        elif version.startswith("4.0") or version.startswith("4.1"):
+            base_url = "{}/sherlock/{}".format(cbnas_base_url, build_number)
+        elif version.startswith("4.5") or version.startswith("4.6"):
+            base_url = "{}/watson/{}".format(cbnas_base_url, build_number)
+        elif version.startswith("4.7") or version.startswith("5.0"):
+            base_url = "{}/spock/{}".format(cbnas_base_url, build_number)
+        else:
+            raise Exception("Unexpected couchbase server version: {}".format(version))
+
+        package_name = self.get_package_name(version, build_number)
+        return base_url, package_name
+
+    def upgrade_server(self, cluster_config, server_version_build, target=None):
+        ansible_runner = AnsibleRunner(cluster_config)
+
+        log_info(">>> Upgrading Couchbase Server")
+        # Install Server
+        server_verion, server_build = version_and_build(server_version_build)
+        server_baseurl, server_package_name = self.resolve_cb_nas_url(server_verion, server_build)
+        if target is not None:
+            target = hostname_for_url(cluster_config, target)
+            log_info("Upgrading Couchbase server on {} ...".format(target))
+            status = ansible_runner.run_ansible_playbook(
+                "upgrade-couchbase-server-package.yml",
+                subset=target,
+                extra_vars={
+                    "couchbase_server_package_base_url": server_baseurl,
+                    "couchbase_server_package_name": server_package_name
+                }
+            )
+        else:
+            log_info("Upgrading Couchbase server on all nodes")
+            status = ansible_runner.run_ansible_playbook(
+                "upgrade-couchbase-server-package.yml",
+                extra_vars={
+                    "couchbase_server_package_base_url": server_baseurl,
+                    "couchbase_server_package_name": server_package_name
+                }
+            )
+
+        if status != 0:
+            raise ProvisioningError("Failed to install Couchbase Server")

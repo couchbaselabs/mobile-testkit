@@ -33,11 +33,11 @@ def pytest_addoption(parser):
                      help="Skip cluster provisioning at setup",
                      default=False)
 
-    parser.addoption("--server-initial-version",
+    parser.addoption("--server-version",
                      action="store",
                      help="server-version: Couchbase Server version to install (ex. 4.5.0 or 4.5.0-2601)")
 
-    parser.addoption("--sync-gateway-initial-version",
+    parser.addoption("--sync-gateway-version",
                      action="store",
                      help="sync-gateway-version: Sync Gateway version to install (ex. 1.3.1-16 or 590c1c31c7e83503eff304d8c0789bdd268d6291)")
 
@@ -80,8 +80,8 @@ def params_from_base_suite_setup(request):
     log_info("Setting up 'params_from_base_suite_setup' ...")
 
     # pytest command line parameters
-    server_initial_version = request.config.getoption("--server-initial-version")
-    sync_gateway_initial_version = request.config.getoption("--sync-gateway-initial-version")
+    server_version = request.config.getoption("--server-version")
+    sync_gateway_version = request.config.getoption("--sync-gateway-version")
     server_upgraded_version = request.config.getoption("--server-upgraded-version")
     sync_gateway_upgraded_version = request.config.getoption("--sync-gateway-upgraded-version")
     mode = request.config.getoption("--mode")
@@ -92,11 +92,11 @@ def params_from_base_suite_setup(request):
     liteserv_host = request.config.getoption("--liteserv-host")
     liteserv_port = request.config.getoption("--liteserv-port")
 
-    if xattrs_enabled and version_is_binary(sync_gateway_initial_version):
+    if xattrs_enabled and version_is_binary(sync_gateway_version):
         check_xattr_support(server_upgraded_version, sync_gateway_upgraded_version)
 
-    log_info("server_initial_version: {}".format(server_initial_version))
-    log_info("sync_gateway_initial_version: {}".format(sync_gateway_initial_version))
+    log_info("server_version: {}".format(server_version))
+    log_info("sync_gateway_version: {}".format(sync_gateway_version))
     log_info("server_upgraded_version: {}".format(server_upgraded_version))
     log_info("sync_gateway_upgraded_version: {}".format(sync_gateway_upgraded_version))
     log_info("mode: {}".format(mode))
@@ -144,8 +144,8 @@ def params_from_base_suite_setup(request):
         try:
             cluster_utils.provision_cluster(
                 cluster_config=cluster_config,
-                server_version=server_initial_version,
-                sync_gateway_version=sync_gateway_initial_version,
+                server_version=server_version,
+                sync_gateway_version=sync_gateway_version,
                 sync_gateway_config=sg_config
             )
         except ProvisioningError:
@@ -156,8 +156,8 @@ def params_from_base_suite_setup(request):
     # Hit this intalled running services to verify the correct versions are installed
     cluster_utils.verify_cluster_versions(
         cluster_config,
-        expected_server_version=server_initial_version,
-        expected_sync_gateway_version=sync_gateway_initial_version
+        expected_server_version=server_version,
+        expected_sync_gateway_version=sync_gateway_version
     )
 
     # Load topology as a dictionary
@@ -168,8 +168,8 @@ def params_from_base_suite_setup(request):
         "cluster_topology": cluster_topology,
         "mode": mode,
         "xattrs_enabled": xattrs_enabled,
-        "server_initial_version": server_initial_version,
-        "sync_gateway_initial_version": sync_gateway_initial_version,
+        "server_version": server_version,
+        "sync_gateway_version": sync_gateway_version,
         "server_upgraded_version": server_upgraded_version,
         "sync_gateway_upgraded_version": sync_gateway_upgraded_version,
         "liteserv_host": liteserv_host,
@@ -192,8 +192,8 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     cluster_topology = params_from_base_suite_setup["cluster_topology"]
     mode = params_from_base_suite_setup["mode"]
     xattrs_enabled = params_from_base_suite_setup["xattrs_enabled"]
-    server_initial_version = params_from_base_suite_setup["server_initial_version"]
-    sync_gateway_initial_version = params_from_base_suite_setup["sync_gateway_initial_version"]
+    server_version = params_from_base_suite_setup["server_version"]
+    sync_gateway_version = params_from_base_suite_setup["sync_gateway_version"]
     server_upgraded_version = params_from_base_suite_setup["server_upgraded_version"]
     sync_gateway_upgraded_version = params_from_base_suite_setup["sync_gateway_upgraded_version"]
     liteserv_host = params_from_base_suite_setup["liteserv_host"]
@@ -212,8 +212,8 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         "cluster_topology": cluster_topology,
         "mode": mode,
         "xattrs_enabled": xattrs_enabled,
-        "server_initial_version": server_initial_version,
-        "sync_gateway_initial_version": sync_gateway_initial_version,
+        "server_version": server_version,
+        "sync_gateway_version": sync_gateway_version,
         "server_upgraded_version": server_upgraded_version,
         "sync_gateway_upgraded_version": sync_gateway_upgraded_version,
         "liteserv_host": liteserv_host,
