@@ -84,7 +84,7 @@ class Cluster:
         status = ansible_runner.run_ansible_playbook("stop-sync-gateway.yml")
         assert status == 0, "Failed to stop sync gateway"
 
-        # Stop sync_gateways
+        # Stop sync_gateway accels
         log_info(">>> Stopping sg_accel")
         status = ansible_runner.run_ansible_playbook("stop-sg-accel.yml")
         assert status == 0, "Failed to stop sg_accel"
@@ -145,7 +145,7 @@ class Cluster:
         # Add configuration to run with xattrs
         if self.xattrs:
             playbook_vars["autoimport"] = '"import_docs": "continuous",'
-            playbook_vars["xattrs"] = '"enable_extended_attributes": true'
+            playbook_vars["xattrs"] = '"enable_shared_bucket_access": true,'
 
         status = ansible_runner.run_ansible_playbook(
             "start-sync-gateway.yml",

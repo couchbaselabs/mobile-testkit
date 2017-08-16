@@ -72,10 +72,8 @@
           }
         }
       },
+      {{ xattrs }}
       "unsupported": {
-        {% if xattrs %}
-          {{ "%s,"|format(xattrs) }}
-        {% endif %}
         "oidc_test_provider": {
           "enabled": true
         }

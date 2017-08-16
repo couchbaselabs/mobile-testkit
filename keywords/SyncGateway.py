@@ -224,7 +224,7 @@ class SyncGateway:
 
         if is_xattrs_enabled(cluster_config):
             playbook_vars["autoimport"] = '"import_docs": "continuous",'
-            playbook_vars["xattrs"] = '"enable_extended_attributes": true'
+            playbook_vars["xattrs"] = '"enable_shared_bucket_access": true,'
 
         if url is not None:
             target = hostname_for_url(cluster_config, url)

@@ -80,9 +80,10 @@ def test_webhooks(params_from_base_test_setup, sg_conf_name, num_users, num_chan
     expected_events = (num_users * num_docs * num_revisions) + (num_users * num_docs)
     received_events = len(ws.get_data())
     log_info("expected_events: {} received_events {}".format(expected_events, received_events))
-    assert expected_events == received_events
-
+    # Stop ws before asserting
+    # Else successive tests will fail to start ws
     ws.stop()
+    assert expected_events == received_events
 
 
 @pytest.mark.sanity
