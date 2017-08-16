@@ -511,7 +511,7 @@ class CouchbaseServer:
             if done_rebalacing:
                 break
 
-            time.sleep(1)
+            time.sleep(5)
 
     def add_node(self, server_to_add):
         """
@@ -521,7 +521,7 @@ class CouchbaseServer:
         if not isinstance(server_to_add, CouchbaseServer):
             raise TypeError("'server_to_add' must be a 'CouchbaseServer'")
 
-        log_info("Adding server node {} to cluster ...".format(server_to_add))
+        log_info("Adding server node {} to cluster ...".format(server_to_add.host))
         data = "hostname={}&user=Administrator&password=password&services=kv".format(
             server_to_add.host
         )

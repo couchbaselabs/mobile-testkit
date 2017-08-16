@@ -33,7 +33,7 @@ def test_upgrade(params_from_base_test_setup):
         log_info("Rebalance out server: {}".format(server.host))
         primary_server.rebalance_out(server_urls, server)
         log_info("Upgrade the server: {}".format(server.host))
-        time.sleep(10)
+        primary_server.add_node(server)
         log_info("Rebalance in server: {}".format(server.host))
         primary_server.rebalance_in(server_urls, server)
 
