@@ -16,9 +16,7 @@
     },
     "databases":{
         "db1":{
-            "unsupported": {
-                {{ xattrs }}
-            },
+            {{ xattrs }}
             "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
             "bucket":"data-bucket-1",
             "username":"data-bucket-1",
@@ -32,9 +30,7 @@
             }
         },
         "db2":{
-            "unsupported": {
-                {{ xattrs }}
-            },
+            {{ xattrs }}
             "offline":false,
             "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
             "bucket":"data-bucket-2",
@@ -49,9 +45,7 @@
             }
         },
         "db3":{
-            "unsupported": {
-                {{ xattrs }}
-            },
+            {{ xattrs }}
             "offline":false,
             "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
             "bucket":"data-bucket-3",
@@ -66,9 +60,7 @@
             }
         },
         "db4":{
-            "unsupported": {
-                {{ xattrs }}
-            },
+            {{ xattrs }}
             "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
             "bucket":"data-bucket-4",
             "username":"data-bucket-4",
