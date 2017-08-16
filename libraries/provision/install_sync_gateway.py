@@ -125,7 +125,7 @@ def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False):
     if is_cbs_ssl_enabled(cluster_config):
         server_port = 18091
         server_scheme = "https"
-        
+
     # Shared vars
     playbook_vars = {
         "sync_gateway_config_filepath": config_path,
@@ -143,7 +143,7 @@ def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False):
         )
         if status != 0:
             raise ProvisioningError("Failed to install sync_gateway source")
-    
+
     if is_xattrs_enabled(cluster_config):
         playbook_vars["autoimport"] = '"import_docs": "continuous",'
         playbook_vars["xattrs"] = '"enable_extended_attributes": true'
@@ -167,7 +167,7 @@ def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False):
         playbook_vars["couchbase_sync_gateway_package_base_url"] = sync_gateway_base_url
         playbook_vars["couchbase_sync_gateway_package"] = sync_gateway_package_name
         playbook_vars["couchbase_sg_accel_package"] = sg_accel_package_name
-        
+
         status = ansible_runner.run_ansible_playbook(
             "install-sync-gateway-package.yml",
             extra_vars=playbook_vars

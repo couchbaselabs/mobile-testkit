@@ -74,11 +74,11 @@ class Cluster:
     def reset(self, sg_config_path):
 
         ansible_runner = AnsibleRunner(self._cluster_config)
-        
+
         log_info(">>> Reseting cluster ...")
         log_info(">>> CBS SSL enabled: {}".format(self.cbs_ssl))
         log_info(">>> Using xattrs: {}".format(self.xattrs))
-      
+
         # Stop sync_gateways
         log_info(">>> Stopping sync_gateway")
         status = ansible_runner.run_ansible_playbook("stop-sync-gateway.yml")

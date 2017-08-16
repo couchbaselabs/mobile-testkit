@@ -91,13 +91,13 @@ def params_from_base_suite_setup(request):
         persist_cluster_config_environment_prop(cluster_config, 'server_version', "")
     else:
         log_info("Running test with server version {}".format(server_version))
-        persist_cluster_config_environment_prop(cluster_config, 'server_version', server_version)    
-        
+        persist_cluster_config_environment_prop(cluster_config, 'server_version', server_version)
+
     try:
         sync_gateway_version
     except NameError:
         log_info("Sync gateway version is not provided")
-        persist_cluster_config_environment_prop(cluster_config, 'sync_gateway_version', "")    
+        persist_cluster_config_environment_prop(cluster_config, 'sync_gateway_version', "")
     else:
         log_info("Running test with sync_gateway version {}".format(sync_gateway_version))
         persist_cluster_config_environment_prop(cluster_config, 'sync_gateway_version', sync_gateway_version)

@@ -210,7 +210,7 @@ class SyncGateway:
 
         ansible_runner = AnsibleRunner(cluster_config)
         config_path = os.path.abspath(config)
-        
+
         if is_cbs_ssl_enabled(cluster_config):
             self.server_port = 18091
             self.server_scheme = "https"
@@ -222,11 +222,11 @@ class SyncGateway:
             "autoimport": "",
             "xattrs": ""
         }
-       
+
         if is_xattrs_enabled(cluster_config):
             playbook_vars["autoimport"] = '"import_docs": "continuous",'
             playbook_vars["xattrs"] = '"enable_extended_attributes": true'
-        
+
         if is_cbs_ssl_enabled(cluster_config) and get_sg_version(cluster_config) >= "1.5.0":
             playbook_vars["server_scheme"] = "couchbases"
             # playbook_vars["server_port"] = "11210"
