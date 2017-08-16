@@ -1,9 +1,11 @@
+import time
+
 from keywords.couchbaseserver import CouchbaseServer
 from libraries.testkit.cluster import Cluster
 from keywords.utils import log_info
 
 
-def test_system_test(params_from_base_test_setup):
+def test_upgrade(params_from_base_test_setup):
     # The initial versions of SG and CBS has already been provisioned at this point
     # We have to upgrade them to the upgraded versions
     cluster_config = params_from_base_test_setup['cluster_config']
@@ -15,25 +17,34 @@ def test_system_test(params_from_base_test_setup):
     # TODO Add data to liteserv
 
     # Upgrade CBS
-    admin_server_url = None
-    server_urls = []
     cluster = Cluster(config=cluster_config)
+    if len(cluster.servers) < 3:
+        raise Exception("Please provide at least 3 servers")
+
+    primary_server = cluster.servers[0]
+    secondary_server = cluster.servers[1]
+    servers = cluster.servers[1:]
+    server_urls = []
     for server in cluster.servers:
         server_urls.append(server.url)
 
-    admin_server_url = server_urls.remove(0)
-
-    for server in cluster.servers:
-        if admin_server_url == server.host:
-            temp_admin_server = 
+    # Upgrade all servers except the primary server
+    for server in servers:
         log_info("Rebalance out server: {}".format(server.host))
-        log_info("Admin server: {}".format(admin_server_url))
-        # server.rebalance_out(server_urls, server)
+        primary_server.rebalance_out(server_urls, server)
         log_info("Upgrade the server: {}".format(server.host))
+        time.sleep(10)
         log_info("Rebalance in server: {}".format(server.host))
-        # server.rebalance_in(server_urls, server)
+        primary_server.rebalance_in(server_urls, server)
 
-    log_info("server_urls: {}".format(server_urls))
+    # Upgrade the primary server
+    # log_info("Rebalance out server: {}".format(primary_server.host))
+    # secondary_server.rebalance_out(server_urls, primary_server)
+    # log_info("Upgrade the server: {}".format(primary_server.host))
+    # log_info("Rebalance in server: {}".format(primary_server.host))
+    # secondary_server.rebalance_in(server_urls, primary_server)
+    
+    
     # TODO Upgrade SG
 
     # TODO Verify data

@@ -619,7 +619,7 @@ class CouchbaseServer:
         data = "{}ns_1@{}".format(known_nodes, server_to_add.host)
 
         # Rebalance nodes
-        log_info("Starting rebalance in for {}".format(server_to_add))
+        log_info("Starting rebalance in for {}".format(server_to_add.host))
         log_info("Known nodes: {}".format(data))
 
         # Override session headers for this one off request
