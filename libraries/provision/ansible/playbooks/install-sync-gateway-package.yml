@@ -18,7 +18,6 @@
   vars:
     # Primary node
     couchbase_server_primary_node: "{{ hostvars[groups.couchbase_servers[0]].ansible_host }}"
-    couchbase_server_config_url: "{{couchbase_server_primary_node}}:{{server_port}}"
     # Current node
     couchbase_server_node: "{{ hostvars[inventory_hostname]['ansible_host'] }}"
 
@@ -55,8 +54,7 @@
     couchbase_sync_gateway_package:
     couchbase_sync_gateway_package_url: "{{ couchbase_sync_gateway_package_base_url }}/{{ couchbase_sync_gateway_package }}"
     couchbase_server_primary_node: "{{ hostvars[groups.couchbase_servers[0]].ansible_host }}"
-    couchbase_server_config_url: "{{couchbase_server_primary_node}}:{{server_port}}"
-
+    
   tasks:
   - debug: msg="Downloading sync_gateway v. {{ couchbase_sync_gateway_package_url }}"
   - name: SYNC GATEWAY |  Download sync_gateway rpm
@@ -71,8 +69,6 @@
     couchbase_sg_accel_package:
     couchbase_sg_accel_package_url: "{{ couchbase_sync_gateway_package_base_url }}/{{ couchbase_sg_accel_package }}"
     couchbase_server_primary_node: "{{ hostvars[groups.couchbase_servers[0]].ansible_host }}"
-    couchbase_server_config_url: "{{couchbase_server_primary_node}}:{{server_port}}"
-
   tasks:
   - debug: msg="Downloading sg_accel v. {{ couchbase_sg_accel_package_url }}"
   - name: SYNC GATEWAY | Download sg_accel rpm
@@ -85,15 +81,11 @@
   vars:
     sync_gateway_config_filepath:
     couchbase_server_primary_node: "{{ hostvars[groups.couchbase_servers[0]].ansible_host }}"
-    couchbase_server_config_url: "{{couchbase_server_primary_node}}:{{server_port}}"
     # hack until mobile-testkit/issues/406 allows any sync gateway to be referenced
     sync_gateway_node: "{{ hostvars[groups.sync_gateways[0]].ansible_host }}"
     is_index_writer: "false"
   tasks:
   - include: tasks/deploy-sync-gateway-config.yml
-  - name: couchbases-enabled
-     couchbase_server_config_url: "{{couchbase_server_primary_node}}"
-     when: "{{couchbase_server_version}}" >= 1.5.0
 
 # Deploy sg_accel index writer configs
 - hosts: sg_accels
@@ -101,7 +93,6 @@
   vars:
     sync_gateway_config_filepath:
     couchbase_server_primary_node: "{{ hostvars[groups.couchbase_servers[0]].ansible_host }}"
-    couchbase_server_config_url: "{{couchbase_server_primary_node}}:{{server_port}}"
     # hack until mobile-testkit/issues/406 allows any sync gateway to be referenced
     sync_gateway_node: "{{ hostvars[groups.sync_gateways[0]].ansible_host }}"
     is_index_writer: "true"

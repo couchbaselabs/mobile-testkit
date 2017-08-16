@@ -9,7 +9,7 @@ from keywords.exceptions import ProvisioningError
 from keywords.utils import log_info, log_warn
 from libraries.provision.ansible_runner import AnsibleRunner
 from libraries.testkit.config import Config
-from utilities.cluster_config_utils import is_cbs_ssl_enabled, is_xattrs_enabled
+from utilities.cluster_config_utils import is_cbs_ssl_enabled, is_xattrs_enabled, get_sg_version
 
 
 class SyncGatewayConfig:
@@ -125,7 +125,7 @@ def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False):
     if is_cbs_ssl_enabled(cluster_config):
         server_port = 18091
         server_scheme = "https"
-
+        
     # Shared vars
     playbook_vars = {
         "sync_gateway_config_filepath": config_path,
@@ -135,6 +135,15 @@ def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False):
         "xattrs": ""
     }
 
+    if is_cbs_ssl_enabled(cluster_config) and get_sg_version(cluster_config) >= "1.5.0":
+        playbook_vars["server_scheme"] = "couchbases"
+        # playbook_vars["server_port"] = "11210"
+        status = ansible_runner.run_ansible_playbook(
+            "block-http-ports.yml"
+        )
+        if status != 0:
+            raise ProvisioningError("Failed to install sync_gateway source")
+    
     if is_xattrs_enabled(cluster_config):
         playbook_vars["autoimport"] = '"import_docs": "continuous",'
         playbook_vars["xattrs"] = '"enable_extended_attributes": true'
@@ -155,12 +164,10 @@ def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False):
     else:
         # Install from Package
         sync_gateway_base_url, sync_gateway_package_name, sg_accel_package_name = sync_gateway_config.sync_gateway_base_url_and_package(sg_ce)
-        log_info("sync_gateway_base_url {}-----".format(sync_gateway_config.get_sg_version_build()))
         playbook_vars["couchbase_sync_gateway_package_base_url"] = sync_gateway_base_url
         playbook_vars["couchbase_sync_gateway_package"] = sync_gateway_package_name
         playbook_vars["couchbase_sg_accel_package"] = sg_accel_package_name
-        playbook_vars["couchbase_server_version"] = sync_gateway_config.get_sg_version_build()
-
+        
         status = ansible_runner.run_ansible_playbook(
             "install-sync-gateway-package.yml",
             extra_vars=playbook_vars
