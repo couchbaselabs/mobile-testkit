@@ -10,7 +10,9 @@
             "bucket": "default",
             "password": "password",
             "enable_shared_bucket_access": true,
-            "replicator_2": true,
+            "unsupported": {
+                "replicator_2": true
+            },
             "users": {
                 "GUEST": {
                     "disabled": false,
