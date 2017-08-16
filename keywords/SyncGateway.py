@@ -366,6 +366,15 @@ class SyncGateway(object):
         except KeyError:
             log_info("revs_limit not found in {}, Ignoring".format(cluster_config))
 
+        if is_cbs_ssl_enabled(cluster_config) and get_sg_version(cluster_config) >= "1.5.0":
+            playbook_vars["server_scheme"] = "couchbases"
+            # playbook_vars["server_port"] = "11210"
+            status = ansible_runner.run_ansible_playbook(
+                "block-http-ports.yml"
+            )
+            if status != 0:
+                raise ProvisioningError("Failed to install sync_gateway source")
+
         if url is not None:
             target = hostname_for_url(cluster_config, url)
             log_info("Starting {} sync_gateway.".format(target))

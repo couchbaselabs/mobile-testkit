@@ -98,11 +98,11 @@ class Cluster:
     def reset(self, sg_config_path):
 
         ansible_runner = AnsibleRunner(self._cluster_config)
-
+        
         log_info(">>> Reseting cluster ...")
         log_info(">>> CBS SSL enabled: {}".format(self.cbs_ssl))
         log_info(">>> Using xattrs: {}".format(self.xattrs))
-
+      
         # Stop sync_gateways
         log_info(">>> Stopping sync_gateway")
         status = ansible_runner.run_ansible_playbook("stop-sync-gateway.yml")
@@ -223,6 +223,15 @@ class Cluster:
                 bucket_names[0])
             playbook_vars["password"] = '"password": "password",'
 
+        if self.cbs_ssl and get_sg_version(self._cluster_config) >= "1.5.0":
+            playbook_vars["server_scheme"] = "couchbases"
+            # playbook_vars["server_port"] = "11210"
+            log_info("running ansible script to block http ports")
+            status = ansible_runner.run_ansible_playbook(
+                "block-http-ports.yml"
+            )
+            if status != 0:
+                raise ProvisioningError("Failed to install sync_gateway source")
         # Add configuration to run with xattrs
         if self.xattrs:
             playbook_vars["autoimport"] = '"import_docs": "continuous",'
