@@ -257,9 +257,68 @@ class SyncGateway:
                 subset=target
             )
         else:
-            log_info("Shutting down all sync_gateways on ...")
+            log_info("Shutting down all sync_gateways")
             status = ansible_runner.run_ansible_playbook(
                 "stop-sync-gateway.yml",
             )
         if status != 0:
             raise ProvisioningError("Could not stop sync_gateway")
+
+    def upgrade_sync_gateways(self, cluster_config, sg_conf, sync_gateway_version, url=None):
+        """ Upgrade sync gateways in a cluster. If url is passed, upgrade
+            the sync gateway at that url
+        """
+        ansible_runner = AnsibleRunner(cluster_config)
+        server_port = 8091
+        server_scheme = "http"
+
+        if is_cbs_ssl_enabled(cluster_config):
+            server_port = 18091
+            server_scheme = "https"
+
+        from libraries.provision.install_sync_gateway import SyncGatewayConfig
+        version, build = version_and_build(sync_gateway_version)
+        sg_config = SyncGatewayConfig(
+            commit=None,
+            version_number=version,
+            build_number=build,
+            config_path=sg_conf,
+            build_flags="",
+            skip_bucketcreation=False
+        )
+
+        # Shared vars
+        playbook_vars = {
+            "sync_gateway_config_filepath": sg_conf,
+            "server_port": server_port,
+            "server_scheme": server_scheme,
+            "autoimport": "",
+            "xattrs": ""
+        }
+
+        if is_xattrs_enabled(cluster_config):
+            playbook_vars["autoimport"] = '"import_docs": "continuous",'
+            playbook_vars["xattrs"] = '"enable_shared_bucket_access": true,'
+
+        sync_gateway_base_url, sync_gateway_package_name, sg_accel_package_name = sg_config.sync_gateway_base_url_and_package()
+
+        playbook_vars["couchbase_sync_gateway_package_base_url"] = sync_gateway_base_url
+        playbook_vars["couchbase_sync_gateway_package"] = sync_gateway_package_name
+        playbook_vars["couchbase_sg_accel_package"] = sg_accel_package_name
+
+        if url is not None:
+            target = hostname_for_url(cluster_config, url)
+            log_info("Upgrading sync_gateway on {} ...".format(target))
+            status = ansible_runner.run_ansible_playbook(
+                "upgrade-sync-gateway-package.yml",
+                subset=target,
+                extra_vars=playbook_vars
+            )
+        else:
+            log_info("Upgrading all sync_gateways")
+            status = ansible_runner.run_ansible_playbook(
+                "upgrade-sync-gateway-package.yml",
+                extra_vars=playbook_vars
+            )
+        if status != 0:
+            raise Exception("Could not stop sync_gateway")

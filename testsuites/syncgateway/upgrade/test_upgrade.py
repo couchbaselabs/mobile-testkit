@@ -1,6 +1,13 @@
 from keywords.couchbaseserver import CouchbaseServer, verify_server_version
 from libraries.testkit.cluster import Cluster
-from keywords.utils import log_info
+from keywords.utils import log_info, host_for_url
+from keywords.SyncGateway import (verify_sg_accel_version,
+                                  verify_sync_gateway_version,
+                                  verify_sg_accel_product_info,
+                                  verify_sync_gateway_product_info,
+                                  SyncGateway)
+
+from keywords.ClusterKeywords import ClusterKeywords
 
 
 def test_upgrade(params_from_base_test_setup):
@@ -15,20 +22,21 @@ def test_upgrade(params_from_base_test_setup):
     sync_gateway_version = params_from_base_test_setup['sync_gateway_version']
     server_upgraded_version = params_from_base_test_setup['server_upgraded_version']
     sync_gateway_upgraded_version = params_from_base_test_setup['sync_gateway_upgraded_version']
-
+    sg_conf = "sync_gateway_default_functional_tests_{}".format(mode)
     # TODO Add data to liteserv
 
     # Upgrade CBS
-    cluster = Cluster(config=cluster_config)
+    cluster = Cluster(config=cluster_config, lb_enable=False)
     if len(cluster.servers) < 3:
         raise Exception("Please provide at least 3 servers")
+
+    server_urls = []
+    for server in cluster.servers:
+        server_urls.append(server.url)
 
     primary_server = cluster.servers[0]
     secondary_server = cluster.servers[1]
     servers = cluster.servers[1:]
-    server_urls = []
-    for server in cluster.servers:
-        server_urls.append(server.url)
 
     log_info('------------------------------------------')
     log_info('START server cluster upgrade')
@@ -67,6 +75,21 @@ def test_upgrade(params_from_base_test_setup):
     log_info('------------------------------------------')
     log_info('START Sync Gateway cluster upgrade')
     log_info('------------------------------------------')
-    # TODO Upgrade SG
+    cluster_util = ClusterKeywords()
+    topology = cluster_util.get_cluster_topology(cluster_config, lb_enable=False)
+    sync_gateways = topology["sync_gateways"]
+    for sg in sync_gateways:
+        sg_ip = host_for_url(sg["admin"])
+        sg_obj = SyncGateway()
+        verify_sync_gateway_product_info(sg_ip)
+        verify_sync_gateway_version(sg_ip, sync_gateway_version)
+        log_info("Upgrading sync gateway: {}".format(sg_ip))
+        sg_obj.upgrade_sync_gateways(cluster_config, sg_conf, sync_gateway_upgraded_version, sg_ip)
+        verify_sync_gateway_product_info(sg_ip)
+        verify_sync_gateway_version(sg_ip, sync_gateway_upgraded_version)
+
+    log_info('------------------------------------------')
+    log_info('END Sync Gateway cluster upgrade')
+    log_info('------------------------------------------')
 
     # TODO Verify data

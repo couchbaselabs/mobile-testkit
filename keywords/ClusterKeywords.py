@@ -56,7 +56,7 @@ class ClusterKeywords:
           ${ac1} = cluster["sg_accels"][0]
           ${cbs} = cluster["couchbase_servers"][0]
 
-          Setting lb_enable to True will return SG IPs instead of lb IPs
+          Setting lb_enable to True will return LB IPs instead of lb IPs
           install_nginx sets it to False to get the SG_IPs for the nginx.conf
         """
 
