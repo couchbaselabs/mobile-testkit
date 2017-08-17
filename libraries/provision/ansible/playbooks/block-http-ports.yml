@@ -10,7 +10,7 @@
     shell: iptables -I INPUT -p udp --dport 8091 -j DROP
 
   - name: BLOCKPORTS | install iptables-services
-    shell: yum install iptables-services
+    shell: yum -y install iptables-services
 
   - name: BLOCKPORTS | save iptables after dropping
     shell: service iptables save
