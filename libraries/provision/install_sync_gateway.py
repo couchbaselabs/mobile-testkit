@@ -137,7 +137,7 @@ def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False):
 
     if is_cbs_ssl_enabled(cluster_config) and get_sg_version(cluster_config) >= "1.5.0":
         playbook_vars["server_scheme"] = "couchbases"
-        # playbook_vars["server_port"] = "11210"
+        playbook_vars["server_port"] = "11207"
         status = ansible_runner.run_ansible_playbook(
             "block-http-ports.yml"
         )
