@@ -44,13 +44,14 @@ def test_upgrade(params_from_base_test_setup):
         verify_server_version(server.host, server_upgraded_version)
 
     # Upgrade the primary server
+    primary_server_services = "kv,index,n1ql"
     verify_server_version(primary_server.host, server_version)
     log_info("Rebalance out server: {}".format(primary_server.host))
     secondary_server.rebalance_out(server_urls, primary_server)
     log_info("Upgrading the server: {}".format(primary_server.host))
     secondary_server.upgrade_server(cluster_config, server_upgraded_version, target=primary_server.host)
     log_info("Adding the node back to the cluster: {}".format(primary_server.host))
-    secondary_server.add_node(primary_server)
+    secondary_server.add_node(primary_server, services=primary_server_services)
     log_info("Rebalance in server: {}".format(primary_server.host))
     secondary_server.rebalance_in(server_urls, primary_server)
     verify_server_version(primary_server.host, server_upgraded_version)

@@ -504,7 +504,7 @@ class CouchbaseServer:
 
             time.sleep(5)
 
-    def add_node(self, server_to_add):
+    def add_node(self, server_to_add, services="kv"):
         """
         Add the server_to_add to a Couchbase Server cluster
         """
@@ -513,8 +513,8 @@ class CouchbaseServer:
             raise TypeError("'server_to_add' must be a 'CouchbaseServer'")
 
         log_info("Adding server node {} to cluster ...".format(server_to_add.host))
-        data = "hostname={}&user=Administrator&password=password&services=kv".format(
-            server_to_add.host
+        data = "hostname={}&user=Administrator&password=password&services={}".format(
+            server_to_add.host, services
         )
 
         # HACK: Retry below addresses the following problem:
@@ -543,7 +543,7 @@ class CouchbaseServer:
                 log_info("{} added to cluster successfully".format(server_to_add.host))
                 break
             else:
-                log_info("{}: Could not add {} to cluster. Retrying ...".format(resp.status_code, server_to_add.host))
+                log_info("{}: {}: Could not add {} to cluster. Retrying ...".format(resp.status_code, resp.json(), server_to_add.host))
                 time.sleep(1)
 
     def rebalance_out(self, cluster_servers, server_to_remove):
