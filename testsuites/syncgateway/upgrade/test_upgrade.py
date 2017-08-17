@@ -30,6 +30,9 @@ def test_upgrade(params_from_base_test_setup):
     for server in cluster.servers:
         server_urls.append(server.url)
 
+    log_info('------------------------------------------')
+    log_info('START server cluster upgrade')
+    log_info('------------------------------------------')
     # Upgrade all servers except the primary server
     for server in servers:
         verify_server_version(server.host, server_version)
@@ -57,7 +60,13 @@ def test_upgrade(params_from_base_test_setup):
     verify_server_version(primary_server.host, server_upgraded_version)
 
     log_info("Upgraded all the server nodes in the cluster")
+    log_info('------------------------------------------')
+    log_info('END server cluster upgrade')
+    log_info('------------------------------------------')
 
+    log_info('------------------------------------------')
+    log_info('START Sync Gateway cluster upgrade')
+    log_info('------------------------------------------')
     # TODO Upgrade SG
 
     # TODO Verify data
