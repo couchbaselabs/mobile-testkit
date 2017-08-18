@@ -1925,7 +1925,7 @@ def verify_doc_ids_in_sdk_get_multi(response, expected_number_docs, expected_ids
 @pytest.mark.parametrize(
     'sg_conf_name, number_docs_per_client, number_updates_per_doc_per_client',
     [
-        ('sync_gateway_default_functional_tests', 10, 10)
+        ('sync_gateway_default_functional_tests', 10, 10),
         ('sync_gateway_default_functional_tests', 100, 10),
         ('sync_gateway_default_functional_tests_no_port', 100, 10),
         ('sync_gateway_default_functional_tests_couchbase_port', 100, 10),
