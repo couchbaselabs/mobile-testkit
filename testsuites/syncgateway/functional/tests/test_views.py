@@ -19,6 +19,8 @@ from libraries.testkit.cluster import Cluster
 @pytest.mark.parametrize('sg_conf_name, validate_changes_before_restart', [
     ('sync_gateway_default_functional_tests', False),
     ('sync_gateway_default_functional_tests', True),
+    ('sync_gateway_default_functional_tests_no_port', False),
+    ('sync_gateway_default_functional_tests_no_port', True)
 ])
 def test_view_backfill_for_deletes(params_from_base_test_setup, sg_conf_name, validate_changes_before_restart):
     """
@@ -35,6 +37,10 @@ def test_view_backfill_for_deletes(params_from_base_test_setup, sg_conf_name, va
     cluster_conf = params_from_base_test_setup['cluster_config']
     cluster_topology = params_from_base_test_setup['cluster_topology']
     mode = params_from_base_test_setup['mode']
+    ssl_enabled = params_from_base_test_setup["ssl_enabled"]
+
+    if "sync_gateway_default_functional_tests_no_port" in sg_conf_name and not ssl_enabled:
+        pytest.skip('ssl disabled so cannot run without port')
 
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
     sg_admin_url = cluster_topology['sync_gateways'][0]['admin']

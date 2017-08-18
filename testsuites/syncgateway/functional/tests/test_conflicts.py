@@ -19,7 +19,9 @@ from keywords import document
 @pytest.mark.basicauth
 @pytest.mark.channel
 @pytest.mark.parametrize("sg_conf_name", [
-    "sync_gateway_default_functional_tests"
+    "sync_gateway_default_functional_tests",
+    "sync_gateway_default_functional_tests_no_port",
+    "sync_gateway_default_functional_tests_couchbase_port"
 ])
 def test_non_winning_revisions(params_from_base_test_setup, sg_conf_name):
     """ Add non-winning revisions to the revision tree and ensure
@@ -39,10 +41,13 @@ def test_non_winning_revisions(params_from_base_test_setup, sg_conf_name):
     - changes, assert rev starts with "3-foo" from "last_seq_3"
     - changes, assert rev starts with "3-foo" from 0
     """
-
+    
+    # This test should only run when using xattr meta storage
+    
     cluster_config = params_from_base_test_setup["cluster_config"]
     topology = params_from_base_test_setup["cluster_topology"]
     mode = params_from_base_test_setup["mode"]
+    ssl_enabled = params_from_base_test_setup["ssl_enabled"]
 
     sg_url = topology["sync_gateways"][0]["public"]
     sg_admin_url = topology["sync_gateways"][0]["admin"]
@@ -50,6 +55,14 @@ def test_non_winning_revisions(params_from_base_test_setup, sg_conf_name):
 
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
 
+    # Skip the test if ssl disabled as it cannot run without port using http protocol
+    if "sync_gateway_default_functional_tests_no_port" in sg_conf_name and not ssl_enabled:
+        pytest.skip('ssl disabled so cannot run without port')
+
+    # Skip the test if ssl enabled as it cannot run without port using couchbases protocol
+    if "sync_gateway_default_functional_tests_couchbase_port" in sg_conf_name and ssl_enabled:
+        pytest.skip('ssl enabled so cannot run with couchbase protocol')
+    
     c = cluster.Cluster(cluster_config)
     c.reset(sg_conf)
 

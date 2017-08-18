@@ -19,7 +19,10 @@ from libraries.testkit.cluster import Cluster
 @pytest.mark.session
 @pytest.mark.parametrize('sg_conf_name, deletion_type', [
     ('sync_gateway_default_functional_tests', 'tombstone'),
-    ('sync_gateway_default_functional_tests', 'purge')
+    ('sync_gateway_default_functional_tests', 'purge'),
+    ('sync_gateway_default_functional_tests_no_port', 'tombstone'),
+    ('sync_gateway_default_functional_tests_no_port', 'purge'),
+    ('sync_gateway_default_functional_tests_couchbase_port', 'purge')
 ])
 def test_document_resurrection(params_from_base_test_setup, sg_conf_name, deletion_type):
     """
@@ -70,6 +73,15 @@ def test_document_resurrection(params_from_base_test_setup, sg_conf_name, deleti
     cluster_topology = params_from_base_test_setup['cluster_topology']
     mode = params_from_base_test_setup['mode']
     xattrs_enabled = params_from_base_test_setup['xattrs_enabled']
+    ssl_enabled = params_from_base_test_setup["ssl_enabled"]
+
+    # Skip the test if ssl disabled as it cannot run without port using http protocol
+    if "sync_gateway_default_functional_tests_no_port" in sg_conf_name and not ssl_enabled:
+        pytest.skip('ssl disabled so cannot run without port')
+
+    # Skip the test if ssl enabled as it cannot run without port using couchbases protocol
+    if "sync_gateway_default_functional_tests_couchbase_port" in sg_conf_name and ssl_enabled:
+        pytest.skip('ssl enabled so cannot run with couchbase protocol')    
 
     cbs_url = cluster_topology['couchbase_servers'][0]
     sg_admin_url = cluster_topology['sync_gateways'][0]['admin']

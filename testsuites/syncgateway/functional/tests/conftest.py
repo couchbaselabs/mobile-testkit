@@ -226,7 +226,8 @@ def params_from_base_suite_setup(request):
         "cluster_topology": cluster_topology,
         "mode": mode,
         "xattrs_enabled": xattrs_enabled,
-        "sg_lb": sg_lb
+        "sg_lb": sg_lb,
+        "ssl_enabled": cbs_ssl
     }
 
     log_info("Tearing down 'params_from_base_suite_setup' ...")
@@ -246,6 +247,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     mode = params_from_base_suite_setup["mode"]
     xattrs_enabled = params_from_base_suite_setup["xattrs_enabled"]
     sg_lb = params_from_base_suite_setup["sg_lb"]
+    cbs_ssl = params_from_base_suite_setup["ssl_enabled"]
 
     test_name = request.node.name
 
@@ -275,7 +277,8 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         "cluster_config": cluster_config,
         "cluster_topology": cluster_topology,
         "mode": mode,
-        "xattrs_enabled": xattrs_enabled
+        "xattrs_enabled": xattrs_enabled,
+        "ssl_enabled": cbs_ssl
     }
 
     # Code after the yield will execute when each test finishes

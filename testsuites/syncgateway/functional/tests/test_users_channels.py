@@ -17,11 +17,22 @@ from keywords.utils import log_info
 @pytest.mark.changes
 @pytest.mark.parametrize("sg_conf_name", [
     "sync_gateway_default_functional_tests",
+    "sync_gateway_default_functional_tests_no_port",
+    "sync_gateway_default_functional_tests_couchbase_port"
 ])
 def test_multiple_users_multiple_channels(params_from_base_test_setup, sg_conf_name):
 
     cluster_conf = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
+    ssl_enabled = params_from_base_test_setup["ssl_enabled"]
+
+    # Skip the test if ssl disabled as it cannot run without port using http protocol
+    if "sync_gateway_default_functional_tests_no_port" in sg_conf_name and not ssl_enabled:
+        pytest.skip('ssl disabled so cannot run without port')
+
+    # Skip the test if ssl enabled as it cannot run without port using couchbases protocol
+    if "sync_gateway_default_functional_tests_couchbase_port" in sg_conf_name and ssl_enabled:
+        pytest.skip('ssl enabled so cannot run with couchbase protocol')
 
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
 
@@ -80,11 +91,22 @@ def test_multiple_users_multiple_channels(params_from_base_test_setup, sg_conf_n
 @pytest.mark.changes
 @pytest.mark.parametrize("sg_conf_name", [
     "sync_gateway_default_functional_tests",
+    "sync_gateway_default_functional_tests_no_port",
+    "sync_gateway_default_functional_tests_couchbase_port"
 ])
 def test_muliple_users_single_channel(params_from_base_test_setup, sg_conf_name):
 
     cluster_conf = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
+    ssl_enabled = params_from_base_test_setup["ssl_enabled"]
+
+    # Skip the test if ssl disabled as it cannot run without port using http protocol
+    if "sync_gateway_default_functional_tests_no_port" in sg_conf_name and not ssl_enabled:
+        pytest.skip('ssl disabled so cannot run without port')
+
+    # Skip the test if ssl enabled as it cannot run without port using couchbases protocol
+    if "sync_gateway_default_functional_tests_couchbase_port" in sg_conf_name and ssl_enabled:
+        pytest.skip('ssl enabled so cannot run with couchbase protocol')
 
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
 
@@ -133,11 +155,22 @@ def test_muliple_users_single_channel(params_from_base_test_setup, sg_conf_name)
 @pytest.mark.changes
 @pytest.mark.parametrize("sg_conf_name", [
     "sync_gateway_default_functional_tests",
+    "sync_gateway_default_functional_tests_no_port",
+    "sync_gateway_default_functional_tests_couchbase_port"
 ])
 def test_single_user_multiple_channels(params_from_base_test_setup, sg_conf_name):
 
     cluster_conf = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
+    ssl_enabled = params_from_base_test_setup["ssl_enabled"]
+
+    # Skip the test if ssl disabled as it cannot run without port using http protocol
+    if "sync_gateway_default_functional_tests_no_port" in sg_conf_name and not ssl_enabled:
+        pytest.skip('ssl disabled so cannot run without port')
+
+    # Skip the test if ssl enabled as it cannot run without port using couchbases protocol
+    if "sync_gateway_default_functional_tests_couchbase_port" in sg_conf_name and ssl_enabled:
+        pytest.skip('ssl enabled so cannot run with couchbase protocol')
 
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
 
@@ -179,11 +212,22 @@ def test_single_user_multiple_channels(params_from_base_test_setup, sg_conf_name
 @pytest.mark.changes
 @pytest.mark.parametrize("sg_conf_name", [
     "sync_gateway_default_functional_tests",
+    "sync_gateway_default_functional_tests_no_port",
+    "sync_gateway_default_functional_tests_couchbase_port"
 ])
 def test_single_user_single_channel(params_from_base_test_setup, sg_conf_name):
 
     cluster_conf = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
+    ssl_enabled = params_from_base_test_setup["ssl_enabled"]
+
+    # Skip the test if ssl disabled as it cannot run without port using http protocol
+    if "sync_gateway_default_functional_tests_no_port" in sg_conf_name and not ssl_enabled:
+        pytest.skip('ssl disabled so cannot run without port')
+
+    # Skip the test if ssl enabled as it cannot run without port using couchbases protocol
+    if "sync_gateway_default_functional_tests_couchbase_port" in sg_conf_name and ssl_enabled:
+        pytest.skip('ssl enabled so cannot run with couchbase protocol')
 
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
 
