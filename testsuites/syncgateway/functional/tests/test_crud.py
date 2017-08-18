@@ -81,7 +81,7 @@ def test_document_resurrection(params_from_base_test_setup, sg_conf_name, deleti
 
     # Skip the test if ssl enabled as it cannot run without port using couchbases protocol
     if "sync_gateway_default_functional_tests_couchbase_port" in sg_conf_name and ssl_enabled:
-        pytest.skip('ssl enabled so cannot run with couchbase protocol')    
+        pytest.skip('ssl enabled so cannot run with couchbase protocol')
 
     cbs_url = cluster_topology['couchbase_servers'][0]
     sg_admin_url = cluster_topology['sync_gateways'][0]['admin']

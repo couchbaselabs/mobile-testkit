@@ -41,9 +41,9 @@ def test_non_winning_revisions(params_from_base_test_setup, sg_conf_name):
     - changes, assert rev starts with "3-foo" from "last_seq_3"
     - changes, assert rev starts with "3-foo" from 0
     """
-    
+
     # This test should only run when using xattr meta storage
-    
+
     cluster_config = params_from_base_test_setup["cluster_config"]
     topology = params_from_base_test_setup["cluster_topology"]
     mode = params_from_base_test_setup["mode"]
@@ -62,7 +62,7 @@ def test_non_winning_revisions(params_from_base_test_setup, sg_conf_name):
     # Skip the test if ssl enabled as it cannot run without port using couchbases protocol
     if "sync_gateway_default_functional_tests_couchbase_port" in sg_conf_name and ssl_enabled:
         pytest.skip('ssl enabled so cannot run with couchbase protocol')
-    
+
     c = cluster.Cluster(cluster_config)
     c.reset(sg_conf)
 

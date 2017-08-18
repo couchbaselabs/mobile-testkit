@@ -720,7 +720,7 @@ def test_sdk_does_not_see_sync_meta(params_from_base_test_setup, sg_conf_name):
     # Skip the test if ssl enabled as it cannot run without port using couchbases protocol
     if "sync_gateway_default_functional_tests_couchbase_port" in sg_conf_name and ssl_enabled:
         pytest.skip('ssl enabled so cannot run with couchbase protocol')
-        
+
     # This test should only run when using xattr meta storage
     if not xattrs_enabled:
         pytest.skip('XATTR tests require --xattrs flag')
@@ -1926,12 +1926,12 @@ def verify_doc_ids_in_sdk_get_multi(response, expected_number_docs, expected_ids
     'sg_conf_name, number_docs_per_client, number_updates_per_doc_per_client',
     [
         ('sync_gateway_default_functional_tests', 10, 10)
-        #('sync_gateway_default_functional_tests', 100, 10),
-        #('sync_gateway_default_functional_tests_no_port', 100, 10),
-        #('sync_gateway_default_functional_tests_couchbase_port', 100, 10),
-        #('sync_gateway_default_functional_tests', 10, 100),
-        #('sync_gateway_default_functional_tests_no_port', 10, 100),
-        #('sync_gateway_default_functional_tests', 1, 1000)
+        ('sync_gateway_default_functional_tests', 100, 10),
+        ('sync_gateway_default_functional_tests_no_port', 100, 10),
+        ('sync_gateway_default_functional_tests_couchbase_port', 100, 10),
+        ('sync_gateway_default_functional_tests', 10, 100),
+        ('sync_gateway_default_functional_tests_no_port', 10, 100),
+        ('sync_gateway_default_functional_tests', 1, 1000)
     ]
 )
 def test_sg_sdk_interop_shared_updates_from_sg(params_from_base_test_setup,

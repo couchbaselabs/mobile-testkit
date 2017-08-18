@@ -43,7 +43,7 @@ def test_longpoll_changes_parametrized(params_from_base_test_setup, sg_conf_name
 
     # Skip the test if ssl enabled as it cannot run without port using couchbases protocol
     if "sync_gateway_default_functional_tests_couchbase_port" in sg_conf_name and ssl_enabled:
-        pytest.skip('ssl enabled so cannot run with couchbase protocol')    
+        pytest.skip('ssl enabled so cannot run with couchbase protocol')
 
     log_info("Running: 'longpoll_changes_parametrized': {}".format(cluster_conf))
     log_info("cluster_conf: {}".format(cluster_conf))
@@ -110,7 +110,7 @@ def test_longpoll_changes_sanity(params_from_base_test_setup, sg_conf_name, num_
 
     # Skip the test if ssl enabled as it cannot run without port using couchbases protocol
     if "sync_gateway_default_functional_tests_couchbase_port" in sg_conf_name and ssl_enabled:
-        pytest.skip('ssl enabled so cannot run with couchbase protocol')    
+        pytest.skip('ssl enabled so cannot run with couchbase protocol')
 
     log_info("Running: 'longpoll_changes_sanity': {}".format(cluster_conf))
     log_info("cluster_conf: {}".format(cluster_conf))
@@ -182,7 +182,7 @@ def test_longpoll_awaken_doc_add_update(params_from_base_test_setup, sg_conf_nam
 
     # Skip the test if ssl enabled as it cannot run without port using couchbases protocol
     if "sync_gateway_default_functional_tests_couchbase_port" in sg_conf_name and ssl_enabled:
-        pytest.skip('ssl enabled so cannot run with couchbase protocol')    
+        pytest.skip('ssl enabled so cannot run with couchbase protocol')
 
     log_info("sg_conf: {}".format(sg_conf))
     log_info("sg_admin_url: {}".format(sg_admin_url))
@@ -431,7 +431,7 @@ def test_longpoll_awaken_channels(params_from_base_test_setup, sg_conf_name):
 
     # Skip the test if ssl enabled as it cannot run without port using couchbases protocol
     if "sync_gateway_default_functional_tests_couchbase_port" in sg_conf_name and ssl_enabled:
-        pytest.skip('ssl enabled so cannot run with couchbase protocol')    
+        pytest.skip('ssl enabled so cannot run with couchbase protocol')
 
     log_info("sg_conf: {}".format(sg_conf))
     log_info("sg_admin_url: {}".format(sg_admin_url))
@@ -671,7 +671,7 @@ def test_longpoll_awaken_roles(params_from_base_test_setup, sg_conf_name):
 
     # Skip the test if ssl enabled as it cannot run without port using couchbases protocol
     if "sync_gateway_default_functional_tests_couchbase_port" in sg_conf_name and ssl_enabled:
-        pytest.skip('ssl enabled so cannot run with couchbase protocol')    
+        pytest.skip('ssl enabled so cannot run with couchbase protocol')
 
     log_info("sg_conf: {}".format(sg_conf))
     log_info("sg_admin_url: {}".format(sg_admin_url))

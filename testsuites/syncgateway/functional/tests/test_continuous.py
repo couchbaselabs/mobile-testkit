@@ -32,14 +32,14 @@ def test_continuous_changes_parametrized(params_from_base_test_setup, sg_conf_na
     ssl_enabled = params_from_base_test_setup["ssl_enabled"]
 
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
-    
+
     # Skip the test if ssl disabled as it cannot run without port using http protocol
     if "sync_gateway_default_functional_tests_no_port" in sg_conf_name and not ssl_enabled:
         pytest.skip('ssl disabled so cannot run without port')
 
     # Skip the test if ssl enabled as it cannot run without port using couchbases protocol
     if "sync_gateway_default_functional_tests_couchbase_port" in sg_conf_name and ssl_enabled:
-        pytest.skip('ssl enabled so cannot run with couchbase protocol')    
+        pytest.skip('ssl enabled so cannot run with couchbase protocol')
 
     log_info("Running 'continuous_changes_parametrized'")
     log_info("cluster_conf: {}".format(cluster_conf))
@@ -108,7 +108,7 @@ def test_continuous_changes_sanity(params_from_base_test_setup, sg_conf_name, nu
 
     # Skip the test if ssl enabled as it cannot run without port using couchbases protocol
     if "sync_gateway_default_functional_tests_couchbase_port" in sg_conf_name and ssl_enabled:
-        pytest.skip('ssl enabled so cannot run with couchbase protocol')    
+        pytest.skip('ssl enabled so cannot run with couchbase protocol')
 
     log_info("Running 'continuous_changes_sanity'")
     log_info("cluster_conf: {}".format(cluster_conf))
