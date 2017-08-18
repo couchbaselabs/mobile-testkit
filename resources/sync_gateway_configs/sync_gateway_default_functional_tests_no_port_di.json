@@ -8,7 +8,7 @@
     "compressResponses": false,
     "log": ["CRUD+", "Cache+", "HTTP+", "Changes+"],
     "cluster_config": {
-        "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
+        "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}",
         "data_dir":".",
         "bucket":"data-bucket",
         "username":"data-bucket",
@@ -17,13 +17,13 @@
     "databases":{
         "db":{
             {{ xattrs }}
-            "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
+            "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}",
             "bucket":"data-bucket",
             "username":"data-bucket",
             "password": "password",
             "channel_index":{
                 "num_shards":16,
-                "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
+                "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}",
                 "bucket":"index-bucket",
                 "username": "index-bucket",
                 "password": "password",
