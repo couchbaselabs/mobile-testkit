@@ -323,6 +323,7 @@ def params_from_base_suite_setup(request):
         "sg_lb": sg_lb,
         "no_conflicts_enabled": no_conflicts_enabled,
         "sg_platform": sg_platform
+        "ssl_enabled": cbs_ssl
     }
 
     log_info("Tearing down 'params_from_base_suite_setup' ...")
@@ -352,6 +353,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     no_conflicts_enabled = params_from_base_suite_setup["no_conflicts_enabled"]
     sync_gateway_version = params_from_base_suite_setup["sync_gateway_version"]
     sg_platform = params_from_base_suite_setup["sg_platform"]
+    cbs_ssl = params_from_base_suite_setup["ssl_enabled"]
 
     test_name = request.node.name
 
@@ -385,9 +387,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         "cluster_topology": cluster_topology,
         "mode": mode,
         "xattrs_enabled": xattrs_enabled,
-        "no_conflicts_enabled": no_conflicts_enabled,
-        "sync_gateway_version": sync_gateway_version,
-        "sg_platform": sg_platform
+        "ssl_enabled": cbs_ssl
     }
 
     # Code after the yield will execute when each test finishes

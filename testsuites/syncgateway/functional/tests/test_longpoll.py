@@ -24,14 +24,25 @@ from keywords import userinfo
 @pytest.mark.channel
 @pytest.mark.parametrize("sg_conf_name, num_docs, num_revisions", [
     ("sync_gateway_default_functional_tests", 5000, 1),
-    ("sync_gateway_default_functional_tests", 50, 100)
+    ("sync_gateway_default_functional_tests", 50, 100),
+    ("sync_gateway_default_functional_tests_no_port", 5000, 1),
+    ("sync_gateway_default_functional_tests_no_port", 50, 100),
+    ("sync_gateway_default_functional_tests_couchbase_port", 50, 100),
 ])
 def test_longpoll_changes_parametrized(params_from_base_test_setup, sg_conf_name, num_docs, num_revisions):
 
     cluster_conf = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
-
+    ssl_enabled = params_from_base_test_setup["ssl_enabled"]
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
+
+    # Skip the test if ssl disabled as it cannot run without port using http protocol
+    if "sync_gateway_default_functional_tests_no_port" in sg_conf_name and not ssl_enabled:
+        pytest.skip('ssl disabled so cannot run without port')
+
+    # Skip the test if ssl enabled as it cannot run without port using couchbases protocol
+    if "sync_gateway_default_functional_tests_couchbase_port" in sg_conf_name and ssl_enabled:
+        pytest.skip('ssl enabled so cannot run with couchbase protocol')    
 
     log_info("Running: 'longpoll_changes_parametrized': {}".format(cluster_conf))
     log_info("cluster_conf: {}".format(cluster_conf))
@@ -82,13 +93,23 @@ def test_longpoll_changes_parametrized(params_from_base_test_setup, sg_conf_name
 @pytest.mark.channel
 @pytest.mark.parametrize("sg_conf_name, num_docs, num_revisions", [
     ("sync_gateway_default_functional_tests", 10, 10),
+    ("sync_gateway_default_functional_tests_no_port", 10, 10),
+    ("sync_gateway_default_functional_tests_couchbase_port", 10, 10)
 ])
 def test_longpoll_changes_sanity(params_from_base_test_setup, sg_conf_name, num_docs, num_revisions):
 
     cluster_conf = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
+    ssl_enabled = params_from_base_test_setup["ssl_enabled"]
 
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
+    # Skip the test if ssl disabled as it cannot run without port using http protocol
+    if "sync_gateway_default_functional_tests_no_port" in sg_conf_name and not ssl_enabled:
+        pytest.skip('ssl disabled so cannot run without port')
+
+    # Skip the test if ssl enabled as it cannot run without port using couchbases protocol
+    if "sync_gateway_default_functional_tests_couchbase_port" in sg_conf_name and ssl_enabled:
+        pytest.skip('ssl enabled so cannot run with couchbase protocol')    
 
     log_info("Running: 'longpoll_changes_sanity': {}".format(cluster_conf))
     log_info("cluster_conf: {}".format(cluster_conf))
@@ -139,6 +160,8 @@ def test_longpoll_changes_sanity(params_from_base_test_setup, sg_conf_name, num_
 @pytest.mark.channel
 @pytest.mark.parametrize("sg_conf_name", [
     "sync_gateway_default_functional_tests",
+    "sync_gateway_default_functional_tests_no_port",
+    "sync_gateway_default_functional_tests_couchbase_port"
 ])
 def test_longpoll_awaken_doc_add_update(params_from_base_test_setup, sg_conf_name):
 
@@ -149,6 +172,15 @@ def test_longpoll_awaken_doc_add_update(params_from_base_test_setup, sg_conf_nam
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
     sg_admin_url = cluster_topology["sync_gateways"][0]["admin"]
     sg_url = cluster_topology["sync_gateways"][0]["public"]
+    ssl_enabled = params_from_base_test_setup["ssl_enabled"]
+
+    # Skip the test if ssl disabled as it cannot run without port using http protocol
+    if "sync_gateway_default_functional_tests_no_port" in sg_conf_name and not ssl_enabled:
+        pytest.skip('ssl disabled so cannot run witout port')
+
+    # Skip the test if ssl enabled as it cannot run without port using couchbases protocol
+    if "sync_gateway_default_functional_tests_couchbase_port" in sg_conf_name and ssl_enabled:
+        pytest.skip('ssl enabled so cannot run with couchbase protocol')    
 
     log_info("sg_conf: {}".format(sg_conf))
     log_info("sg_admin_url: {}".format(sg_admin_url))
@@ -376,6 +408,8 @@ def test_longpoll_awaken_doc_add_update(params_from_base_test_setup, sg_conf_nam
 @pytest.mark.channel
 @pytest.mark.parametrize("sg_conf_name", [
     "sync_gateway_default_functional_tests",
+    "sync_gateway_default_functional_tests_no_port",
+    "sync_gateway_default_functional_tests_couchbase_port"
 ])
 def test_longpoll_awaken_channels(params_from_base_test_setup, sg_conf_name):
 
@@ -386,6 +420,15 @@ def test_longpoll_awaken_channels(params_from_base_test_setup, sg_conf_name):
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
     sg_admin_url = cluster_topology["sync_gateways"][0]["admin"]
     sg_url = cluster_topology["sync_gateways"][0]["public"]
+    ssl_enabled = params_from_base_test_setup["ssl_enabled"]
+
+    # Skip the test if ssl disabled as it cannot run without port using http protocol
+    if "sync_gateway_default_functional_tests_no_port" in sg_conf_name and not ssl_enabled:
+        pytest.skip('ssl disabled so cannot run witout port')
+
+    # Skip the test if ssl enabled as it cannot run without port using couchbases protocol
+    if "sync_gateway_default_functional_tests_couchbase_port" in sg_conf_name and ssl_enabled:
+        pytest.skip('ssl enabled so cannot run with couchbase protocol')    
 
     log_info("sg_conf: {}".format(sg_conf))
     log_info("sg_admin_url: {}".format(sg_admin_url))
@@ -604,6 +647,8 @@ def test_longpoll_awaken_channels(params_from_base_test_setup, sg_conf_name):
 @pytest.mark.channel
 @pytest.mark.parametrize("sg_conf_name", [
     "sync_gateway_default_functional_tests",
+    "sync_gateway_default_functional_tests_no_port",
+    "sync_gateway_default_functional_tests_couchbase_port"
 ])
 def test_longpoll_awaken_roles(params_from_base_test_setup, sg_conf_name):
 
@@ -614,6 +659,15 @@ def test_longpoll_awaken_roles(params_from_base_test_setup, sg_conf_name):
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
     sg_admin_url = cluster_topology["sync_gateways"][0]["admin"]
     sg_url = cluster_topology["sync_gateways"][0]["public"]
+    ssl_enabled = params_from_base_test_setup["ssl_enabled"]
+
+    # Skip the test if ssl disabled as it cannot run without port using http protocol
+    if "sync_gateway_default_functional_tests_no_port" in sg_conf_name and not ssl_enabled:
+        pytest.skip('ssl disabled so cannot run witout port')
+
+    # Skip the test if ssl enabled as it cannot run without port using couchbases protocol
+    if "sync_gateway_default_functional_tests_couchbase_port" in sg_conf_name and ssl_enabled:
+        pytest.skip('ssl enabled so cannot run with couchbase protocol')    
 
     log_info("sg_conf: {}".format(sg_conf))
     log_info("sg_admin_url: {}".format(sg_admin_url))

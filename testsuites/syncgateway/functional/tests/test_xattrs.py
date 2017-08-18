@@ -401,6 +401,8 @@ def test_on_demand_import_of_external_updates(params_from_base_test_setup, sg_co
 @pytest.mark.session
 @pytest.mark.parametrize('sg_conf_name', [
     'sync_gateway_default_functional_tests',
+    'sync_gateway_default_functional_tests_no_port',
+    "sync_gateway_default_functional_tests_couchbase_port"
 ])
 def test_offline_processing_of_external_updates(params_from_base_test_setup, sg_conf_name):
     """
@@ -420,6 +422,15 @@ def test_offline_processing_of_external_updates(params_from_base_test_setup, sg_
     cluster_topology = params_from_base_test_setup['cluster_topology']
     mode = params_from_base_test_setup['mode']
     xattrs_enabled = params_from_base_test_setup['xattrs_enabled']
+    ssl_enabled = params_from_base_test_setup["ssl_enabled"]
+
+    # Skip the test if ssl disabled as it cannot run without port using http protocol
+    if "sync_gateway_default_functional_tests_no_port" in sg_conf_name and not ssl_enabled:
+        pytest.skip('ssl disabled so cannot run without port')
+
+    # Skip the test if ssl enabled as it cannot run without port using couchbases protocol
+    if "sync_gateway_default_functional_tests_couchbase_port" in sg_conf_name and ssl_enabled:
+        pytest.skip('ssl enabled so cannot run with couchbase protocol')
 
     # This test should only run when using xattr meta storage
     if not xattrs_enabled:
@@ -528,6 +539,8 @@ def test_offline_processing_of_external_updates(params_from_base_test_setup, sg_
 @pytest.mark.session
 @pytest.mark.parametrize('sg_conf_name', [
     'sync_gateway_default_functional_tests',
+    'sync_gateway_default_functional_tests_no_port',
+    "sync_gateway_default_functional_tests_couchbase_port"
 ])
 def test_large_initial_import(params_from_base_test_setup, sg_conf_name):
     """ Regression test for https://github.com/couchbase/sync_gateway/issues/2537
@@ -546,6 +559,15 @@ def test_large_initial_import(params_from_base_test_setup, sg_conf_name):
     cluster_topology = params_from_base_test_setup['cluster_topology']
     mode = params_from_base_test_setup['mode']
     xattrs_enabled = params_from_base_test_setup['xattrs_enabled']
+    ssl_enabled = params_from_base_test_setup["ssl_enabled"]
+
+    # Skip the test if ssl disabled as it cannot run without port using http protocol
+    if "sync_gateway_default_functional_tests_no_port" in sg_conf_name and not ssl_enabled:
+        pytest.skip('ssl disabled so cannot run without port')
+
+    # Skip the test if ssl enabled as it cannot run without port using couchbases protocol
+    if "sync_gateway_default_functional_tests_couchbase_port" in sg_conf_name and ssl_enabled:
+        pytest.skip('ssl enabled so cannot run with couchbase protocol')
 
     # This test should only run when using xattr meta storage
     if not xattrs_enabled:
@@ -621,7 +643,9 @@ def test_large_initial_import(params_from_base_test_setup, sg_conf_name):
 @pytest.mark.session
 @pytest.mark.parametrize('sg_conf_name, use_multiple_channels', [
     ('sync_gateway_default_functional_tests', False),
-    ('sync_gateway_default_functional_tests', True)
+    ('sync_gateway_default_functional_tests', True),
+    ('sync_gateway_default_functional_tests_no_port', False),
+    ('sync_gateway_default_functional_tests_no_port', True)
 ])
 def test_purge(params_from_base_test_setup, sg_conf_name, use_multiple_channels):
     """
@@ -641,6 +665,10 @@ def test_purge(params_from_base_test_setup, sg_conf_name, use_multiple_channels)
     cluster_topology = params_from_base_test_setup['cluster_topology']
     mode = params_from_base_test_setup['mode']
     xattrs_enabled = params_from_base_test_setup['xattrs_enabled']
+    ssl_enabled = params_from_base_test_setup["ssl_enabled"]
+
+    if "sync_gateway_default_functional_tests_no_port" in sg_conf_name and not ssl_enabled:
+        pytest.skip('ssl disabled so cannot run without port')
 
     # This test should only run when using xattr meta storage
     if not xattrs_enabled:
@@ -830,7 +858,9 @@ def test_purge(params_from_base_test_setup, sg_conf_name, use_multiple_channels)
 @pytest.mark.changes
 @pytest.mark.session
 @pytest.mark.parametrize('sg_conf_name', [
-    'sync_gateway_default_functional_tests'
+    'sync_gateway_default_functional_tests',
+    'sync_gateway_default_functional_tests_no_port',
+    'sync_gateway_default_functional_tests_couchbase_port'
 ])
 def test_sdk_does_not_see_sync_meta(params_from_base_test_setup, sg_conf_name):
     """
@@ -844,7 +874,16 @@ def test_sdk_does_not_see_sync_meta(params_from_base_test_setup, sg_conf_name):
     cluster_topology = params_from_base_test_setup['cluster_topology']
     mode = params_from_base_test_setup['mode']
     xattrs_enabled = params_from_base_test_setup['xattrs_enabled']
+    ssl_enabled = params_from_base_test_setup["ssl_enabled"]
 
+    # Skip the test if ssl disabled as it cannot run without port using http protocol
+    if "sync_gateway_default_functional_tests_no_port" in sg_conf_name and not ssl_enabled:
+        pytest.skip('ssl disabled so cannot run without port')
+
+    # Skip the test if ssl enabled as it cannot run without port using couchbases protocol
+    if "sync_gateway_default_functional_tests_couchbase_port" in sg_conf_name and ssl_enabled:
+        pytest.skip('ssl enabled so cannot run with couchbase protocol')
+        
     # This test should only run when using xattr meta storage
     if not xattrs_enabled:
         pytest.skip('XATTR tests require --xattrs flag')
@@ -931,7 +970,9 @@ def test_sdk_does_not_see_sync_meta(params_from_base_test_setup, sg_conf_name):
 @pytest.mark.changes
 @pytest.mark.session
 @pytest.mark.parametrize('sg_conf_name', [
-    'sync_gateway_default_functional_tests'
+    'sync_gateway_default_functional_tests',
+    'sync_gateway_default_functional_tests_no_port',
+    'sync_gateway_default_functional_tests_couchbase_port'
 ])
 def test_sg_sdk_interop_unique_docs(params_from_base_test_setup, sg_conf_name):
 
@@ -959,6 +1000,15 @@ def test_sg_sdk_interop_unique_docs(params_from_base_test_setup, sg_conf_name):
     cluster_topology = params_from_base_test_setup['cluster_topology']
     mode = params_from_base_test_setup['mode']
     xattrs_enabled = params_from_base_test_setup['xattrs_enabled']
+    ssl_enabled = params_from_base_test_setup["ssl_enabled"]
+
+    # Skip the test if ssl disabled as it cannot run without port using http protocol
+    if "sync_gateway_default_functional_tests_no_port" in sg_conf_name and not ssl_enabled:
+        pytest.skip('ssl disabled so cannot run without port')
+
+    # Skip the test if ssl enabled as it cannot run without port using couchbases protocol
+    if "sync_gateway_default_functional_tests_couchbase_port" in sg_conf_name and ssl_enabled:
+        pytest.skip('ssl enabled so cannot run with couchbase protocol')
 
     # This test should only run when using xattr meta storage
     if not xattrs_enabled:
@@ -1144,7 +1194,9 @@ def test_sg_sdk_interop_unique_docs(params_from_base_test_setup, sg_conf_name):
     [
         ('sync_gateway_default_functional_tests', 10, 10),
         ('sync_gateway_default_functional_tests', 100, 10),
+        ('sync_gateway_default_functional_tests_no_port', 100, 10),
         ('sync_gateway_default_functional_tests', 10, 100),
+        ('sync_gateway_default_functional_tests_no_port', 10, 100),
         ('sync_gateway_default_functional_tests', 1, 1000)
     ]
 )
@@ -1182,6 +1234,10 @@ def test_sg_sdk_interop_shared_docs(params_from_base_test_setup,
     cluster_topology = params_from_base_test_setup['cluster_topology']
     mode = params_from_base_test_setup['mode']
     xattrs_enabled = params_from_base_test_setup['xattrs_enabled']
+    ssl_enabled = params_from_base_test_setup["ssl_enabled"]
+
+    if "sync_gateway_default_functional_tests_no_port" in sg_conf_name and not ssl_enabled:
+        pytest.skip('ssl disabled so cannot run without port')
 
     # This test should only run when using xattr meta storage
     if not xattrs_enabled:
@@ -1393,7 +1449,10 @@ def test_sg_sdk_interop_shared_docs(params_from_base_test_setup,
     [
         ('sync_gateway_default_functional_tests', 10, 10),
         ('sync_gateway_default_functional_tests', 100, 10),
+        ('sync_gateway_default_functional_tests_no_port', 100, 10),
+        ('sync_gateway_default_functional_tests_couchbase_port', 100, 10),
         ('sync_gateway_default_functional_tests', 10, 100),
+        ('sync_gateway_default_functional_tests_no_port', 10, 100),
         ('sync_gateway_default_functional_tests', 1, 1000)
     ]
 )
@@ -1422,6 +1481,15 @@ def test_sg_feed_changed_with_xattrs_importEnabled(params_from_base_test_setup,
     cluster_topology = params_from_base_test_setup['cluster_topology']
     mode = params_from_base_test_setup['mode']
     xattrs_enabled = params_from_base_test_setup['xattrs_enabled']
+    ssl_enabled = params_from_base_test_setup["ssl_enabled"]
+
+    # Skip the test if ssl disabled as it cannot run without port using http protocol
+    if "sync_gateway_default_functional_tests_no_port" in sg_conf_name and not ssl_enabled:
+        pytest.skip('ssl disabled so cannot run without port')
+
+    # Skip the test if ssl enabled as it cannot run without port using couchbases protocol
+    if "sync_gateway_default_functional_tests_couchbase_port" in sg_conf_name and ssl_enabled:
+        pytest.skip('ssl enabled so cannot run with couchbase protocol')
 
     # This test should only run when using xattr meta storage
     if not xattrs_enabled:
@@ -2027,10 +2095,13 @@ def verify_doc_ids_in_sdk_get_multi(response, expected_number_docs, expected_ids
 @pytest.mark.parametrize(
     'sg_conf_name, number_docs_per_client, number_updates_per_doc_per_client',
     [
-        ('sync_gateway_default_functional_tests', 10, 10),
-        ('sync_gateway_default_functional_tests', 100, 10),
-        ('sync_gateway_default_functional_tests', 10, 100),
-        ('sync_gateway_default_functional_tests', 1, 1000)
+        ('sync_gateway_default_functional_tests', 10, 10)
+        #('sync_gateway_default_functional_tests', 100, 10),
+        #('sync_gateway_default_functional_tests_no_port', 100, 10),
+        #('sync_gateway_default_functional_tests_couchbase_port', 100, 10),
+        #('sync_gateway_default_functional_tests', 10, 100),
+        #('sync_gateway_default_functional_tests_no_port', 10, 100),
+        #('sync_gateway_default_functional_tests', 1, 1000)
     ]
 )
 def test_sg_sdk_interop_shared_updates_from_sg(params_from_base_test_setup,
@@ -2058,6 +2129,15 @@ def test_sg_sdk_interop_shared_updates_from_sg(params_from_base_test_setup,
     mode = params_from_base_test_setup['mode']
     xattrs_enabled = params_from_base_test_setup['xattrs_enabled']
     no_conflicts_enabled = params_from_base_test_setup["no_conflicts_enabled"]
+    ssl_enabled = params_from_base_test_setup["ssl_enabled"]
+
+    # Skip the test if ssl disabled as it cannot run without port using http protocol
+    if "sync_gateway_default_functional_tests_no_port" in sg_conf_name and not ssl_enabled:
+        pytest.skip('ssl disabled so cannot run without port')
+
+    # Skip the test if ssl enabled as it cannot run without port using couchbases protocol
+    if "sync_gateway_default_functional_tests_couchbase_port" in sg_conf_name and ssl_enabled:
+        pytest.skip('ssl enabled so cannot run with couchbase protocol')
 
     # This test should only run when using xattr meta storage
     if not xattrs_enabled:
@@ -2198,7 +2278,7 @@ def test_sg_sdk_interop_shared_updates_from_sg(params_from_base_test_setup,
 
     # Do SDK deleted and SG delete after branched revision created and check changes feed removed branched revisions
     sdk_client.remove_multi(sg_doc_ids)
-    time.sleep(1)  # Need some delay to have _changes to update with latest branched revisions
+    # time.sleep(1)  # Need some delay to have _changes to update with latest branched revisions
     sdk_deleted_docs, errors = sg_client.get_bulk_docs(url=sg_url, db=sg_db, doc_ids=sg_doc_ids,
                                                        auth=autouser_session)
     assert len(errors) == 0
@@ -2206,7 +2286,7 @@ def test_sg_sdk_interop_shared_updates_from_sg(params_from_base_test_setup,
     log_info("sdk deleted doc revision :{}".format(sdk_deleted_doc))
     assert(sdk_deleted_doc.startswith("2-"))
     sg_client.delete_docs(url=sg_url, db=sg_db, docs=sg_docs_resp, auth=autouser_session)
-    time.sleep(1)  # Need some delay to have _changes to update with latest branched revisions
+    # time.sleep(1)  # Need some delay to have _changes to update with latest branched revisions
     docs_changes1 = sg_client.get_changes_style_all_docs(url=sg_url, db=sg_db, auth=autouser_session, include_docs=True)
     doc_changes_in_changes = [change["changes"] for change in docs_changes1["results"]]
     deleted_doc_revisions = [change["doc"]["_deleted"] for change in docs_changes1["results"][1:]]
