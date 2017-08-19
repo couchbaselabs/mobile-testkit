@@ -2,7 +2,7 @@ import json
 import random
 import time
 
-from concurrent.futures import ThreadPoolExecutor, as_completed
+from concurrent.futures import ProcessPoolExecutor, as_completed
 from couchbase.bucket import Bucket
 from requests import Session
 from requests.exceptions import HTTPError
@@ -173,7 +173,7 @@ def test_system_test(params_from_base_test_setup):
     log_info('------------------------------------------')
 
     # Start changes processing
-    with ThreadPoolExecutor(max_workers=((len(users) * 3) + update_batch_size + 3)) as pex:
+    with ProcessPoolExecutor(max_workers=((len(users) * 3) + update_batch_size + 3)) as pex:
         terminator_task = pex.submit(
             terminate,
             lb_url,
@@ -237,7 +237,7 @@ def test_system_test(params_from_base_test_setup):
 
 
 def start_terminator(lb_url, sg_db, users, update_runtime_sec, changes_terminator_doc_id, sg_admin_url):
-    with ThreadPoolExecutor(max_workers=1) as term_ex:
+    with ProcessPoolExecutor(max_workers=1) as term_ex:
         term_task = term_ex.submit(
             terminate,
             lb_url,
@@ -407,7 +407,7 @@ def start_changes_processing(sg_url, sg_db, users, changes_delay, changes_limit,
     # Make sure there are enough workers for 3 changes feed types for each user
     workers = len(users) * 3
 
-    with ThreadPoolExecutor(max_workers=workers) as changes_pex:
+    with ProcessPoolExecutor(max_workers=workers) as changes_pex:
 
         # Start 3 changes feed types for each user:
         #  - looping normal
@@ -617,7 +617,7 @@ def create_docs(sg_admin_url, sg_url, sg_db, num_users, number_docs_per_user, cr
 
     user_names = create_user_names(num_users)
 
-    with ThreadPoolExecutor(max_workers=4) as pe:
+    with ProcessPoolExecutor(max_workers=num_users) as pe:
 
         # Start concurrent create block
         futures = [pe.submit(
@@ -735,7 +735,7 @@ def update_docs(sg_url, sg_db, users, update_runtime_sec, batch_size, docs_per_u
 
         all_docs = None
 
-        with ThreadPoolExecutor(max_workers=batch_size) as pe:
+        with ProcessPoolExecutor(max_workers=batch_size) as pe:
 
             # Pick out batch size users from each user type
             # and update all of the users docs.
