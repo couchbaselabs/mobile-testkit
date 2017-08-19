@@ -242,7 +242,7 @@ def terminate(lb_url, sg_db, users, update_runtime_sec, changes_terminator_doc_i
     while True:
         elapsed_sec = time.time() - start
         if elapsed_sec > update_runtime_sec:
-            log_info('Terminator: Runtime limit reached. Exiting ...')
+            log_info('Terminator: Runtime limit reached {}. Exiting ...'.format(elapsed_sec))
             # Broadcast termination doc to all users
             terminator_channel = 'terminator'
             send_changes_termination_doc(lb_url, sg_db, users, changes_terminator_doc_id, terminator_channel)
