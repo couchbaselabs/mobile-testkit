@@ -720,9 +720,10 @@ def update_docs(sg_url, sg_db, users, update_runtime_sec, batch_size, docs_per_u
 
         try:
             sg_client.get_doc(url=sg_url, db=sg_db, doc_id=terminator_doc_id, auth=random_user['auth'])
+            log_info("update_docs: Termination doc found, returning...")
             return users
         except HTTPError:
-            log_info("Termination doc not found, continuing with the updates")
+            log_info("update_docs: Termination doc not found, continuing with the updates")
 
         with ThreadPoolExecutor(max_workers=batch_size) as pe:
 
