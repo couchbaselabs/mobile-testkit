@@ -236,21 +236,6 @@ def test_system_test(params_from_base_test_setup):
         # TODO: Validated expected changes
 
 
-def start_terminator(lb_url, sg_db, users, update_runtime_sec, changes_terminator_doc_id, sg_admin_url):
-    with ProcessPoolExecutor(max_workers=1) as term_ex:
-        term_task = term_ex.submit(
-            terminate,
-            lb_url,
-            sg_db,
-            users,
-            update_runtime_sec,
-            changes_terminator_doc_id,
-            sg_admin_url
-        )
-
-        return term_task
-
-
 def terminate(lb_url, sg_db, users, update_runtime_sec, changes_terminator_doc_id, sg_admin_url):
     start = time.time()
     log_info('Starting Terminator at : {}'.format(start))
