@@ -2162,3 +2162,24 @@ class MobileRestClient:
         )
 
         return status
+
+    def get_changes_style_all_docs(self, url, db, auth=None, include_docs=False):
+        """ Get all changes with include docs enabled and style all_docs """
+        auth_type = get_auth_type(auth)
+
+        params = {}
+        if include_docs:
+            params["include_docs"] = "true"
+            params["style"] = "all_docs"
+
+        if auth_type == AuthType.session:
+            resp = self._session.get("{}/{}/_changes".format(url, db), params=params, cookies=dict(SyncGatewaySession=auth[1]))
+        elif auth_type == AuthType.http_basic:
+            resp = self._session.get("{}/{}/_changes".format(url, db), params=params, auth=auth)
+        else:
+            resp = self._session.get("{}/{}/_changes".format(url, db), params=params)
+
+        log_r(resp)
+        resp.raise_for_status()
+        resp_obj = resp.json()
+        return resp_obj

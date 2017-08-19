@@ -16,9 +16,7 @@
     },
     "databases":{
         "db":{
-            "unsupported": {
-                {{ xattrs }}
-            },
+            {{ xattrs }}
             "channel_index":{
                 "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
                 "bucket":"index-bucket",

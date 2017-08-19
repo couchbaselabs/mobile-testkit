@@ -9,8 +9,8 @@
             "server": "http://localhost:8091",
             "bucket": "default",
             "password": "password",
+            "enable_shared_bucket_access": true,
             "unsupported": {
-                "enable_extended_attributes": true,
                 "replicator_2": true
             },
             "users": {
