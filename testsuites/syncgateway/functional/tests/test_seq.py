@@ -8,6 +8,7 @@ from libraries.testkit.verify import verify_changes
 
 from keywords.SyncGateway import sync_gateway_config_path_for_mode
 from keywords.utils import log_info
+from utilities.cluster_config_utils import get_sg_version
 
 
 @pytest.mark.sanity
@@ -28,11 +29,11 @@ def test_seq(params_from_base_test_setup, sg_conf_name, num_users, num_docs, num
     ssl_enabled = params_from_base_test_setup["ssl_enabled"]
 
     # Skip the test if ssl disabled as it cannot run without port using http protocol
-    if "sync_gateway_default_functional_tests_no_port" in sg_conf_name and not ssl_enabled:
+    if "sync_gateway_default_functional_tests_no_port" in sg_conf_name and not ssl_enabled and get_sg_version(cluster_conf) < "1.5.0":
         pytest.skip('ssl disabled so cannot run without port')
 
     # Skip the test if ssl enabled as it cannot run without port using couchbases protocol
-    if "sync_gateway_default_functional_tests_couchbase_port" in sg_conf_name and ssl_enabled:
+    if "sync_gateway_default_functional_tests_couchbase_port" in sg_conf_name and ssl_enabled and get_sg_version(cluster_conf) < "1.5.0":
         pytest.skip('ssl enabled so cannot run with couchbase protocol')
 
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)

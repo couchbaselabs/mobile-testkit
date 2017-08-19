@@ -4,6 +4,8 @@ import pytest
 from keywords.SyncGateway import sync_gateway_config_path_for_mode
 from libraries.testkit import cluster
 from keywords.MobileRestClient import MobileRestClient
+from utilities.cluster_config_utils import get_sg_version
+
 
 import keywords.exceptions
 import keywords.constants
@@ -56,11 +58,11 @@ def test_non_winning_revisions(params_from_base_test_setup, sg_conf_name):
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
 
     # Skip the test if ssl disabled as it cannot run without port using http protocol
-    if "sync_gateway_default_functional_tests_no_port" in sg_conf_name and not ssl_enabled:
+    if "sync_gateway_default_functional_tests_no_port" in sg_conf_name and not ssl_enabled and get_sg_version(cluster_config) < "1.5.0":
         pytest.skip('ssl disabled so cannot run without port')
 
     # Skip the test if ssl enabled as it cannot run without port using couchbases protocol
-    if "sync_gateway_default_functional_tests_couchbase_port" in sg_conf_name and ssl_enabled:
+    if "sync_gateway_default_functional_tests_couchbase_port" in sg_conf_name and ssl_enabled and get_sg_version(cluster_config) < "1.5.0":
         pytest.skip('ssl enabled so cannot run with couchbase protocol')
 
     c = cluster.Cluster(cluster_config)
