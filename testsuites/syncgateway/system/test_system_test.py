@@ -173,8 +173,9 @@ def test_system_test(params_from_base_test_setup):
     log_info('------------------------------------------')
 
     # Start changes processing
-    with ThreadPoolExecutor(max_workers=1) as pex:
-        terminator_task = start_terminator(
+    with ThreadPoolExecutor(max_workers=((len(users) * 3) + update_batch_size + 3)) as pex:
+        terminator_task = pex.submit(
+            terminate,
             lb_url,
             sg_db,
             users,
