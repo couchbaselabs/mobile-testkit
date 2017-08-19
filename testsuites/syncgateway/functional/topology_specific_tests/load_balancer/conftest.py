@@ -95,7 +95,7 @@ def params_from_base_suite_setup(request):
         persist_cluster_config_environment_prop(cluster_config, 'sync_gateway_version', "")
     else:
         log_info("Running test with sync_gateway version {}".format(sync_gateway_version))
-        persist_cluster_config_environment_prop(cluster_config, 'sync_gateway_version', sync_gateway_version)    
+        persist_cluster_config_environment_prop(cluster_config, 'sync_gateway_version', sync_gateway_version)
 
     # Skip provisioning if user specifies '--skip-provisoning' or '--sequoia'
     should_provision = True
