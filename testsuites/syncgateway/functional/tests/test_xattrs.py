@@ -2080,7 +2080,7 @@ def test_sg_sdk_interop_shared_updates_from_sg(params_from_base_test_setup,
     sdk_update_doc2 = sdk_update_docs2[0]["_rev"]
     log_info("sdk 2nd update doc revision is : {}".format(sdk_update_doc2))
     assert(sdk_update_doc2.startswith("3-"))
-    time.sleep(1)  # Need some delay to have _changes to update with latest branched revisions
+    time.sleep(2)  # Need some delay to have _changes to update with latest branched revisions
     # Get branched revision tree via _changes with include docs
     docs_changes = sg_client.get_changes_style_all_docs(url=sg_url, db=sg_db, auth=autouser_session, include_docs=True)
     doc_changes_in_changes = [change["changes"] for change in docs_changes["results"]]
@@ -2102,7 +2102,7 @@ def test_sg_sdk_interop_shared_updates_from_sg(params_from_base_test_setup,
 
     # Do SDK deleted and SG delete after branched revision created and check changes feed removed branched revisions
     sdk_client.remove_multi(sg_doc_ids)
-    # time.sleep(1)  # Need some delay to have _changes to update with latest branched revisions
+    time.sleep(1)  # Need some delay to have _changes to update with latest branched revisions
     sdk_deleted_docs, errors = sg_client.get_bulk_docs(url=sg_url, db=sg_db, doc_ids=sg_doc_ids,
                                                        auth=autouser_session)
     assert len(errors) == 0
@@ -2110,7 +2110,7 @@ def test_sg_sdk_interop_shared_updates_from_sg(params_from_base_test_setup,
     log_info("sdk deleted doc revision :{}".format(sdk_deleted_doc))
     assert(sdk_deleted_doc.startswith("2-"))
     sg_client.delete_docs(url=sg_url, db=sg_db, docs=sg_docs_resp, auth=autouser_session)
-    # time.sleep(1)  # Need some delay to have _changes to update with latest branched revisions
+    time.sleep(1)  # Need some delay to have _changes to update with latest branched revisions
     docs_changes1 = sg_client.get_changes_style_all_docs(url=sg_url, db=sg_db, auth=autouser_session, include_docs=True)
     doc_changes_in_changes = [change["changes"] for change in docs_changes1["results"]]
     deleted_doc_revisions = [change["doc"]["_deleted"] for change in docs_changes1["results"][1:]]
