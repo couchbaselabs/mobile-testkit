@@ -254,6 +254,7 @@ def terminate(lb_url, sg_db, users, update_runtime_sec, changes_terminator_doc_i
 
             # Send shutdown signal to all tasks
             try:
+                log_info("Force stopping the threads")
                 for executor in EXECUTORS_LIST:
                     executor._thread.clear()
 
