@@ -185,15 +185,15 @@ def test_system_test(params_from_base_test_setup):
         )
 
         # Start changes feeds in background process
-        changes_workers_task = pex.submit(
-            start_changes_processing,
-            lb_url,
-            sg_db,
-            users,
-            changes_delay,
-            changes_limit,
-            changes_terminator_doc_id
-        )
+        # changes_workers_task = pex.submit(
+        #     start_changes_processing,
+        #     lb_url,
+        #     sg_db,
+        #     users,
+        #     changes_delay,
+        #     changes_limit,
+        #     changes_terminator_doc_id
+        # )
 
         log_info('------------------------------------------')
         log_info('START concurrent updates')
@@ -224,14 +224,14 @@ def test_system_test(params_from_base_test_setup):
         terminator_task.result()
 
         # Block on changes completion
-        try:
-            log_info("Waiting for the changes_workers_task to complete")
-            users = changes_workers_task.result()
-            # Print the summary of the system test
-            print_summary(users)
-        except:
-            if changes_workers_task.running():
-                changes_workers_task.cancel()
+        # try:
+        #     log_info("Waiting for the changes_workers_task to complete")
+        #     users = changes_workers_task.result()
+        #     # Print the summary of the system test
+        #     print_summary(users)
+        # except:
+        #     if changes_workers_task.running():
+        #         changes_workers_task.cancel()
 
         # TODO: Validated expected changes
 
