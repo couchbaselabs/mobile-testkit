@@ -2,7 +2,7 @@ import json
 import random
 import time
 
-from concurrent.futures import ThreadPoolExecutor, as_completed, thread
+from concurrent.futures import ThreadPoolExecutor, as_completed, thread, TimeoutError
 from couchbase.bucket import Bucket
 from requests import Session
 from requests.exceptions import HTTPError
@@ -763,7 +763,12 @@ def update_docs(sg_url, sg_db, users, update_runtime_sec, batch_size, docs_per_u
             # exception in future.result()
             for future in as_completed(update_futures):
                 # Increment updates
-                user = future.result()
+                try:
+                    user = future.result(timeout=update_runtime_sec)
+                except TimeoutError:
+                    # Updates might still be running when we force kill
+                    pass
+
                 users[user]['updates'] += 1
                 log_info('Completed updates ({})'.format(user))
 
