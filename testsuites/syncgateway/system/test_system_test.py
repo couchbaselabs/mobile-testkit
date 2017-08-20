@@ -2,7 +2,7 @@ import json
 import random
 import time
 
-from concurrent.futures import ThreadPoolExecutor, as_completed
+from concurrent.futures import ThreadPoolExecutor, as_completed, thread
 from couchbase.bucket import Bucket
 from requests import Session
 from requests.exceptions import HTTPError
@@ -33,7 +33,7 @@ SG_VIEWS = {
 USER_TYPES = ['shared_channel_user', 'unique_channel_user', 'filtered_channel_user', 'filtered_doc_ids_user']
 USER_PASSWORD = 'password'
 
-TASKS_LIST = []
+EXECUTORS_LIST = []
 
 
 def test_system_test(params_from_base_test_setup):
@@ -196,7 +196,7 @@ def test_system_test(params_from_base_test_setup):
         #     changes_terminator_doc_id
         # )
 
-        # TASKS_LIST.append(changes_workers_task)
+        # EXECUTORS_LIST.append(pex)
 
         log_info('------------------------------------------')
         log_info('START concurrent updates')
@@ -231,7 +231,7 @@ def test_system_test(params_from_base_test_setup):
         #     log_info("Waiting for the changes_workers_task to complete")
         #     users = changes_workers_task.result()
         #     # Print the summary of the system test
-        #     print_summary(users)
+        print_summary(users)
         # except:
         #     if changes_workers_task.running():
         #         changes_workers_task.shutdown(wait=False)
@@ -252,10 +252,14 @@ def terminate(lb_url, sg_db, users, update_runtime_sec, changes_terminator_doc_i
             # Overwrite each users channels with 'terminator' so their changes feed will backfill with the termination doc
             grant_users_access(users, [terminator_channel], sg_admin_url, sg_db)
 
-            # Send shuwdown signal to all tasks
-            for task in TASKS_LIST:
-                task.shutdown(wait=False)
-                time.sleep(600)
+            # Send shutdown signal to all tasks
+            try:
+                for executor in EXECUTORS_LIST:
+                    executor._thread.clear()
+
+                thread._threads_queues.clear()
+            except:
+                pass
 
             return
         else:
@@ -752,7 +756,7 @@ def update_docs(sg_url, sg_db, users, update_runtime_sec, batch_size, docs_per_u
                     terminator_doc_id
                 ) for i in range(batch_size)]
 
-            TASKS_LIST.extend(update_futures)
+            EXECUTORS_LIST.extend(pe)
 
             # Block until all update_futures are completed or return
             # exception in future.result()
