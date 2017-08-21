@@ -764,7 +764,7 @@ def update_docs(sg_url, sg_db, users, update_runtime_sec, batch_size, docs_per_u
             for future in as_completed(update_futures):
                 # Increment updates
                 try:
-                    user = future.result(timeout=update_runtime_sec)
+                    user = future.result()
                 except TimeoutError:
                     # Updates might still be running when we force kill
                     pass
