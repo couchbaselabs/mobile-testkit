@@ -33,8 +33,6 @@ SG_VIEWS = {
 USER_TYPES = ['shared_channel_user', 'unique_channel_user', 'filtered_channel_user', 'filtered_doc_ids_user']
 USER_PASSWORD = 'password'
 
-EXECUTORS_LIST = []
-
 
 def test_system_test(params_from_base_test_setup):
 
@@ -196,8 +194,6 @@ def test_system_test(params_from_base_test_setup):
         #     changes_terminator_doc_id
         # )
 
-        # EXECUTORS_LIST.append(changes_workers_task)
-
         log_info('------------------------------------------')
         log_info('START concurrent updates')
         log_info('------------------------------------------')
@@ -251,17 +247,6 @@ def terminate(lb_url, sg_db, users, update_runtime_sec, changes_terminator_doc_i
             send_changes_termination_doc(lb_url, sg_db, users, changes_terminator_doc_id, terminator_channel)
             # Overwrite each users channels with 'terminator' so their changes feed will backfill with the termination doc
             grant_users_access(users, [terminator_channel], sg_admin_url, sg_db)
-
-            # Send shutdown signal to all tasks
-            try:
-                log_info("Shutting down the threads")
-                for executor in EXECUTORS_LIST:
-                    executor.shutdown()
-
-                thread._threads_queues.clear()
-            except:
-                pass
-
             return
         else:
             time.sleep(5)
@@ -756,8 +741,6 @@ def update_docs(sg_url, sg_db, users, update_runtime_sec, batch_size, docs_per_u
                     docs_per_user_per_update,
                     terminator_doc_id
                 ) for i in range(batch_size)]
-
-            EXECUTORS_LIST.extend(update_futures)
 
             # Block until all update_futures are completed or return
             # exception in future.result()
