@@ -9,7 +9,7 @@
     "log": ["CRUD+", "Cache+", "HTTP+", "Changes+"],
     "verbose":"true",
     "cluster_config": {
-        "server":"couchbase://{{ couchbase_server_primary_node }}",
+        "server":"couchbase://{{ couchbase_server_primary_node }}:11210",
         "data_dir":".",
         "bucket":"data-bucket",
         "username":"data-bucket",
@@ -18,13 +18,13 @@
     "databases":{
         "db":{
             {{ xattrs }}
-            "server":"couchbase://{{ couchbase_server_primary_node }}",
+            "server":"couchbase://{{ couchbase_server_primary_node }}:11210",
             "bucket":"data-bucket",
             "username":"data-bucket",
             "password": "password",
             "channel_index":{
                 "num_shards":16,
-                "server":"couchbase://{{ couchbase_server_primary_node }}",
+                "server":"couchbase://{{ couchbase_server_primary_node }}:11210",
                 "bucket":"index-bucket",
                 "username":"index-bucket",
                 "password": "password",
