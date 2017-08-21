@@ -1944,6 +1944,7 @@ def verify_doc_ids_in_sdk_get_multi(response, expected_number_docs, expected_ids
         ('sync_gateway_default_functional_tests', 100, 10),
         ('sync_gateway_default_functional_tests_no_port', 100, 10),
         ('sync_gateway_default_functional_tests_couchbase_port', 100, 10),
+        ('sync_gateway_default_functional_tests_couchbase_port_11210', 100, 10),
         ('sync_gateway_default_functional_tests', 10, 100),
         ('sync_gateway_default_functional_tests_no_port', 10, 100),
         ('sync_gateway_default_functional_tests', 1, 1000)

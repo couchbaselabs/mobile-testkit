@@ -23,7 +23,8 @@ from keywords import document
 @pytest.mark.parametrize("sg_conf_name", [
     "sync_gateway_default_functional_tests",
     "sync_gateway_default_functional_tests_no_port",
-    "sync_gateway_default_functional_tests_couchbase_port"
+    "sync_gateway_default_functional_tests_couchbase_port",
+    "sync_gateway_default_functional_tests_couchbase_port_11210"
 ])
 def test_non_winning_revisions(params_from_base_test_setup, sg_conf_name):
     """ Add non-winning revisions to the revision tree and ensure
