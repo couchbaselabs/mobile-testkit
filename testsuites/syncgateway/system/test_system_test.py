@@ -196,7 +196,7 @@ def test_system_test(params_from_base_test_setup):
         #     changes_terminator_doc_id
         # )
 
-        # EXECUTORS_LIST.append(pex)
+        # EXECUTORS_LIST.append(changes_workers_task)
 
         log_info('------------------------------------------')
         log_info('START concurrent updates')
@@ -233,8 +233,8 @@ def test_system_test(params_from_base_test_setup):
         #     # Print the summary of the system test
         print_summary(users)
         # except:
-        #     if changes_workers_task.running():
-        #         changes_workers_task.shutdown(wait=False)
+        #     pex._threads.clear()
+        #     thread._threads_queues.clear()
 
         # TODO: Validated expected changes
 
@@ -254,9 +254,9 @@ def terminate(lb_url, sg_db, users, update_runtime_sec, changes_terminator_doc_i
 
             # Send shutdown signal to all tasks
             try:
-                log_info("Force stopping the threads")
+                log_info("Shutting down the threads")
                 for executor in EXECUTORS_LIST:
-                    executor._thread.clear()
+                    executor.shutdown()
 
                 thread._threads_queues.clear()
             except:
@@ -757,7 +757,7 @@ def update_docs(sg_url, sg_db, users, update_runtime_sec, batch_size, docs_per_u
                     terminator_doc_id
                 ) for i in range(batch_size)]
 
-            EXECUTORS_LIST.extend(pe)
+            EXECUTORS_LIST.extend(update_futures)
 
             # Block until all update_futures are completed or return
             # exception in future.result()
