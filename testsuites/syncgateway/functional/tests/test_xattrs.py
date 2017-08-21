@@ -270,11 +270,13 @@ def test_offline_processing_of_external_updates(params_from_base_test_setup, sg_
     ssl_enabled = params_from_base_test_setup["ssl_enabled"]
 
     # Skip the test if ssl disabled as it cannot run without port using http protocol
-    if "sync_gateway_default_functional_tests_no_port" in sg_conf_name and not ssl_enabled and get_sg_version(cluster_conf) < "1.5.0":
+    if ("sync_gateway_default_functional_tests_no_port" in sg_conf_name or "sync_gateway_default_functional_tests_couchbase_port" in sg_conf_name) and get_sg_version(cluster_conf) < "1.5.0":
+        pytest.skip('couchbase/couchbases ports do not support for versions below 1.5')
+    if "sync_gateway_default_functional_tests_no_port" in sg_conf_name and not ssl_enabled:
         pytest.skip('ssl disabled so cannot run without port')
 
     # Skip the test if ssl enabled as it cannot run without port using couchbases protocol
-    if "sync_gateway_default_functional_tests_couchbase_port" in sg_conf_name and ssl_enabled and get_sg_version(cluster_conf) < "1.5.0":
+    if "sync_gateway_default_functional_tests_couchbase_port" in sg_conf_name and ssl_enabled:
         pytest.skip('ssl enabled so cannot run with couchbase protocol')
 
     # This test should only run when using xattr meta storage
@@ -405,11 +407,13 @@ def test_large_initial_import(params_from_base_test_setup, sg_conf_name):
     ssl_enabled = params_from_base_test_setup["ssl_enabled"]
 
     # Skip the test if ssl disabled as it cannot run without port using http protocol
-    if "sync_gateway_default_functional_tests_no_port" in sg_conf_name and not ssl_enabled and get_sg_version(cluster_conf) < "1.5.0":
+    if ("sync_gateway_default_functional_tests_no_port" in sg_conf_name or "sync_gateway_default_functional_tests_couchbase_port" in sg_conf_name) and get_sg_version(cluster_conf) < "1.5.0":
+        pytest.skip('couchbase/couchbases ports do not support for versions below 1.5')
+    if "sync_gateway_default_functional_tests_no_port" in sg_conf_name and not ssl_enabled:
         pytest.skip('ssl disabled so cannot run without port')
 
     # Skip the test if ssl enabled as it cannot run without port using couchbases protocol
-    if "sync_gateway_default_functional_tests_couchbase_port" in sg_conf_name and ssl_enabled and get_sg_version(cluster_conf) < "1.5.0":
+    if "sync_gateway_default_functional_tests_couchbase_port" in sg_conf_name and ssl_enabled:
         pytest.skip('ssl enabled so cannot run with couchbase protocol')
 
     # This test should only run when using xattr meta storage
@@ -507,7 +511,9 @@ def test_purge(params_from_base_test_setup, sg_conf_name, use_multiple_channels)
     xattrs_enabled = params_from_base_test_setup['xattrs_enabled']
     ssl_enabled = params_from_base_test_setup["ssl_enabled"]
 
-    if "sync_gateway_default_functional_tests_no_port" in sg_conf_name and not ssl_enabled and get_sg_version(cluster_conf) < "1.5.0":
+    if ("sync_gateway_default_functional_tests_no_port" in sg_conf_name or "sync_gateway_default_functional_tests_couchbase_port" in sg_conf_name) and get_sg_version(cluster_conf) < "1.5.0":
+        pytest.skip('couchbase/couchbases ports do not support for versions below 1.5')
+    if "sync_gateway_default_functional_tests_no_port" in sg_conf_name and not ssl_enabled:
         pytest.skip('ssl disabled so cannot run without port')
 
     # This test should only run when using xattr meta storage
@@ -715,11 +721,13 @@ def test_sdk_does_not_see_sync_meta(params_from_base_test_setup, sg_conf_name):
     ssl_enabled = params_from_base_test_setup["ssl_enabled"]
 
     # Skip the test if ssl disabled as it cannot run without port using http protocol
-    if "sync_gateway_default_functional_tests_no_port" in sg_conf_name and not ssl_enabled and get_sg_version(cluster_conf) < "1.5.0":
+    if ("sync_gateway_default_functional_tests_no_port" in sg_conf_name or "sync_gateway_default_functional_tests_couchbase_port" in sg_conf_name) and get_sg_version(cluster_conf) < "1.5.0":
+        pytest.skip('couchbase/couchbases ports do not support for versions below 1.5')
+    if "sync_gateway_default_functional_tests_no_port" in sg_conf_name and not ssl_enabled:
         pytest.skip('ssl disabled so cannot run without port')
 
     # Skip the test if ssl enabled as it cannot run without port using couchbases protocol
-    if "sync_gateway_default_functional_tests_couchbase_port" in sg_conf_name and ssl_enabled and get_sg_version(cluster_conf) < "1.5.0":
+    if "sync_gateway_default_functional_tests_couchbase_port" in sg_conf_name and ssl_enabled:
         pytest.skip('ssl enabled so cannot run with couchbase protocol')
 
     # This test should only run when using xattr meta storage
@@ -839,11 +847,13 @@ def test_sg_sdk_interop_unique_docs(params_from_base_test_setup, sg_conf_name):
     ssl_enabled = params_from_base_test_setup["ssl_enabled"]
 
     # Skip the test if ssl disabled as it cannot run without port using http protocol
-    if "sync_gateway_default_functional_tests_no_port" in sg_conf_name and not ssl_enabled and get_sg_version(cluster_conf) < "1.5.0":
+    if ("sync_gateway_default_functional_tests_no_port" in sg_conf_name or "sync_gateway_default_functional_tests_couchbase_port" in sg_conf_name) and get_sg_version(cluster_conf) < "1.5.0":
+        pytest.skip('couchbase/couchbases ports do not support for versions below 1.5')
+    if "sync_gateway_default_functional_tests_no_port" in sg_conf_name and not ssl_enabled:
         pytest.skip('ssl disabled so cannot run without port')
 
     # Skip the test if ssl enabled as it cannot run without port using couchbases protocol
-    if "sync_gateway_default_functional_tests_couchbase_port" in sg_conf_name and ssl_enabled and get_sg_version(cluster_conf) < "1.5.0":
+    if "sync_gateway_default_functional_tests_couchbase_port" in sg_conf_name and ssl_enabled:
         pytest.skip('ssl enabled so cannot run with couchbase protocol')
 
     # This test should only run when using xattr meta storage
@@ -1070,7 +1080,9 @@ def test_sg_sdk_interop_shared_docs(params_from_base_test_setup,
     xattrs_enabled = params_from_base_test_setup['xattrs_enabled']
     ssl_enabled = params_from_base_test_setup["ssl_enabled"]
 
-    if "sync_gateway_default_functional_tests_no_port" in sg_conf_name and not ssl_enabled and get_sg_version(cluster_conf) < "1.5.0":
+    if ("sync_gateway_default_functional_tests_no_port" in sg_conf_name or "sync_gateway_default_functional_tests_couchbase_port" in sg_conf_name) and get_sg_version(cluster_conf) < "1.5.0":
+        pytest.skip('couchbase/couchbases ports do not support for versions below 1.5')
+    if "sync_gateway_default_functional_tests_no_port" in sg_conf_name and not ssl_enabled:
         pytest.skip('ssl disabled so cannot run without port')
 
     # This test should only run when using xattr meta storage
@@ -1316,11 +1328,13 @@ def test_sg_feed_changed_with_xattrs_importEnabled(params_from_base_test_setup,
     ssl_enabled = params_from_base_test_setup["ssl_enabled"]
 
     # Skip the test if ssl disabled as it cannot run without port using http protocol
-    if "sync_gateway_default_functional_tests_no_port" in sg_conf_name and not ssl_enabled and get_sg_version(cluster_conf) < "1.5.0":
+    if ("sync_gateway_default_functional_tests_no_port" in sg_conf_name or "sync_gateway_default_functional_tests_couchbase_port" in sg_conf_name) and get_sg_version(cluster_conf) < "1.5.0":
+        pytest.skip('couchbase/couchbases ports do not support for versions below 1.5')
+    if "sync_gateway_default_functional_tests_no_port" in sg_conf_name and not ssl_enabled:
         pytest.skip('ssl disabled so cannot run without port')
 
     # Skip the test if ssl enabled as it cannot run without port using couchbases protocol
-    if "sync_gateway_default_functional_tests_couchbase_port" in sg_conf_name and ssl_enabled and get_sg_version(cluster_conf) < "1.5.0":
+    if "sync_gateway_default_functional_tests_couchbase_port" in sg_conf_name and ssl_enabled:
         pytest.skip('ssl enabled so cannot run with couchbase protocol')
 
     # This test should only run when using xattr meta storage
@@ -1960,13 +1974,15 @@ def test_sg_sdk_interop_shared_updates_from_sg(params_from_base_test_setup,
     mode = params_from_base_test_setup['mode']
     xattrs_enabled = params_from_base_test_setup['xattrs_enabled']
     ssl_enabled = params_from_base_test_setup["ssl_enabled"]
-
+    log_info("sg version is this -------{}".format(get_sg_version(cluster_conf)))
     # Skip the test if ssl disabled as it cannot run without port using http protocol
-    if "sync_gateway_default_functional_tests_no_port" in sg_conf_name and not ssl_enabled and get_sg_version(cluster_conf) < "1.5.0":
+    if ("sync_gateway_default_functional_tests_no_port" in sg_conf_name or "sync_gateway_default_functional_tests_couchbase_port" in sg_conf_name) and get_sg_version(cluster_conf) < "1.5.0":
+        pytest.skip('couchbase/couchbases ports do not support for versions below 1.5')
+    if "sync_gateway_default_functional_tests_no_port" in sg_conf_name and not ssl_enabled:
         pytest.skip('ssl disabled so cannot run without port')
 
     # Skip the test if ssl enabled as it cannot run without port using couchbases protocol
-    if "sync_gateway_default_functional_tests_couchbase_port" in sg_conf_name and ssl_enabled and get_sg_version(cluster_conf) < "1.5.0":
+    if "sync_gateway_default_functional_tests_couchbase_port" in sg_conf_name and ssl_enabled:
         pytest.skip('ssl enabled so cannot run with couchbase protocol')
 
     # This test should only run when using xattr meta storage
