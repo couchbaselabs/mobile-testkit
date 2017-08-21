@@ -6,8 +6,10 @@ from keywords.SyncGateway import (verify_sg_accel_version,
                                   verify_sg_accel_product_info,
                                   verify_sync_gateway_product_info,
                                   SyncGateway)
-
 from keywords.ClusterKeywords import ClusterKeywords
+from keywords.LiteServFactory import LiteServFactory
+from keywords.MobileRestClient import MobileRestClient
+from keywords import document
 
 
 def test_upgrade(params_from_base_test_setup):
@@ -18,12 +20,58 @@ def test_upgrade(params_from_base_test_setup):
     xattrs_enabled = params_from_base_test_setup['xattrs_enabled']
     liteserv_host = params_from_base_test_setup["liteserv_host"]
     liteserv_port = params_from_base_test_setup["liteserv_port"]
+    liteserv_platform = params_from_base_test_setup["liteserv_platform"]
+    liteserv_version = params_from_base_test_setup["liteserv_version"]
+    liteserv_storage_engine = params_from_base_test_setup["liteserv_storage_engine"]
+    ls_url = params_from_base_test_setup["ls_url"]
     server_version = params_from_base_test_setup['server_version']
     sync_gateway_version = params_from_base_test_setup['sync_gateway_version']
     server_upgraded_version = params_from_base_test_setup['server_upgraded_version']
     sync_gateway_upgraded_version = params_from_base_test_setup['sync_gateway_upgraded_version']
+    sg_url = params_from_base_test_setup['sg_url']
+    sg_admin_url = params_from_base_test_setup['sg_admin_url']
     sg_conf = "sync_gateway_default_functional_tests_{}".format(mode)
-    # TODO Add data to liteserv
+
+    # Add data to liteserv
+    client = MobileRestClient()
+    log_info("ls_url: {}".format(ls_url))
+    ls_db = client.create_database(ls_url, name="ls_db")
+    sg_db = "db"
+    num_docs = 10000
+
+    # Start continuous push pull replication ls_db_one <-> sg_db_one
+    repl_one = client.start_replication(
+        url=ls_url, continuous=True,
+        from_db=ls_db,
+        to_url=sg_admin_url, to_db=sg_db
+    )
+    repl_two = client.start_replication(
+        url=ls_url, continuous=True,
+        from_url=sg_admin_url, from_db=sg_db,
+        to_db=ls_db
+    )
+
+    client.wait_for_replication_status_idle(ls_url, repl_one)
+    client.wait_for_replication_status_idle(ls_url, repl_two)
+    replications = client.get_replications(ls_url)
+    log_info(replications)
+    assert len(replications) == 2, "Number of replications, Expected: {} Actual: {}".format(
+        2,
+        len(replications)
+    )
+
+    # Create batch of docs
+    docs = document.create_docs(
+        doc_id_prefix='upgrade-doc',
+        number=num_docs,
+        prop_generator=document.doc_1k
+    )  # TODO Use Kodiak dataset
+
+    doc = client.add_doc(
+        url=ls_url,
+        db=ls_db,
+        doc=docs
+    )
 
     # Upgrade CBS
     cluster = Cluster(config=cluster_config)

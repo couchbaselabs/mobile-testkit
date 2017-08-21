@@ -2,6 +2,7 @@
 
 import pytest
 import os
+import datetime
 
 from keywords.ClusterKeywords import ClusterKeywords
 from keywords.constants import CLUSTER_CONFIGS_DIR
@@ -15,6 +16,9 @@ from libraries.testkit import cluster
 from utilities.cluster_config_utils import persist_cluster_config_environment_prop
 from keywords.exceptions import LogScanningError
 from libraries.provision.ansible_runner import AnsibleRunner
+from keywords.LiteServFactory import LiteServFactory
+from keywords.MobileRestClient import MobileRestClient
+from keywords.constants import RESULTS_DIR
 
 
 # Add custom arguments for executing tests in this directory
@@ -69,6 +73,18 @@ def pytest_addoption(parser):
                      action="store",
                      help="liteserv-port: the port to assign to liteserv")
 
+    parser.addoption("--liteserv-version",
+                     action="store",
+                     help="liteserv-version: the version of liteserv to use")
+
+    parser.addoption("--liteserv-platform",
+                     action="store",
+                     help="liteserv-platform: the platform on which to run liteserv")
+
+    parser.addoption("--liteserv-storage-engine",
+                     action="store",
+                     help="liteserv-storage-engine: the storage-engine to use with liteserv")
+
 
 # This will be called once for the at the beggining of the execution in the 'tests/' directory
 # and will be torn down, (code after the yeild) when all the test session has completed.
@@ -91,6 +107,9 @@ def params_from_base_suite_setup(request):
     xattrs_enabled = request.config.getoption("--xattrs")
     liteserv_host = request.config.getoption("--liteserv-host")
     liteserv_port = request.config.getoption("--liteserv-port")
+    liteserv_version = request.config.getoption("--liteserv-version")
+    liteserv_platform = request.config.getoption("--liteserv-platform")
+    liteserv_storage_engine = request.config.getoption("--liteserv-storage-engine")
 
     if xattrs_enabled and version_is_binary(sync_gateway_version):
         check_xattr_support(server_upgraded_version, sync_gateway_upgraded_version)
@@ -105,6 +124,9 @@ def params_from_base_suite_setup(request):
     log_info("xattrs_enabled: {}".format(xattrs_enabled))
     log_info("liteserv_host: {}".format(liteserv_host))
     log_info("liteserv_port: {}".format(liteserv_port))
+    log_info("liteserv_version: {}".format(liteserv_version))
+    log_info("liteserv_platform: {}".format(liteserv_platform))
+    log_info("liteserv_storage_engine: {}".format(liteserv_storage_engine))
 
     # Make sure mode for sync_gateway is supported ('cc' or 'di')
     validate_sync_gateway_mode(mode)
@@ -133,6 +155,19 @@ def params_from_base_suite_setup(request):
         persist_cluster_config_environment_prop(cluster_config, 'xattrs_enabled', False)
 
     sg_config = sync_gateway_config_path_for_mode("sync_gateway_default_functional_tests", mode)
+
+    liteserv = LiteServFactory.create(platform=liteserv_platform,
+                                      version_build=liteserv_version,
+                                      host=liteserv_host,
+                                      port=liteserv_port,
+                                      storage_engine=liteserv_storage_engine)
+
+    log_info("Downloading LiteServ ...")
+    # Download LiteServ
+    liteserv.download()
+
+    # Install LiteServ
+    liteserv.install()
 
     # Skip provisioning if user specifies '--skip-provisoning' or '--sequoia'
     should_provision = True
@@ -173,7 +208,11 @@ def params_from_base_suite_setup(request):
         "server_upgraded_version": server_upgraded_version,
         "sync_gateway_upgraded_version": sync_gateway_upgraded_version,
         "liteserv_host": liteserv_host,
-        "liteserv_port": liteserv_port
+        "liteserv_port": liteserv_port,
+        "liteserv_version": liteserv_version,
+        "liteserv_platform": liteserv_platform,
+        "liteserv_storage_engine": liteserv_storage_engine,
+        "liteserv": liteserv
     }
 
     log_info("Tearing down 'params_from_base_suite_setup' ...")
@@ -198,6 +237,10 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     sync_gateway_upgraded_version = params_from_base_suite_setup["sync_gateway_upgraded_version"]
     liteserv_host = params_from_base_suite_setup["liteserv_host"]
     liteserv_port = params_from_base_suite_setup["liteserv_port"]
+    liteserv_version = params_from_base_suite_setup["liteserv_version"]
+    liteserv_platform = params_from_base_suite_setup["liteserv_platform"]
+    liteserv_storage_engine = params_from_base_suite_setup["liteserv_storage_engine"]
+    liteserv = params_from_base_suite_setup["liteserv"]
 
     test_name = request.node.name
     log_info("Running test '{}'".format(test_name))
@@ -205,6 +248,17 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     log_info("cluster_topology: {}".format(cluster_topology))
     log_info("mode: {}".format(mode))
     log_info("xattrs_enabled: {}".format(xattrs_enabled))
+
+    client = MobileRestClient()
+
+    # Start LiteServ and delete any databases
+    ls_url = liteserv.start("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(liteserv).__name__, test_name, datetime.datetime.now()))
+    client.delete_databases(ls_url)
+
+    cluster_helper = ClusterKeywords()
+    cluster_hosts = cluster_helper.get_cluster_topology(cluster_config=cluster_config)
+    sg_url = cluster_hosts["sync_gateways"][0]["public"]
+    sg_admin_url = cluster_hosts["sync_gateways"][0]["admin"]
 
     # This dictionary is passed to each test
     yield {
@@ -217,8 +271,17 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         "server_upgraded_version": server_upgraded_version,
         "sync_gateway_upgraded_version": sync_gateway_upgraded_version,
         "liteserv_host": liteserv_host,
-        "liteserv_port": liteserv_port
+        "liteserv_port": liteserv_port,
+        "liteserv_version": liteserv_version,
+        "liteserv_platform": liteserv_platform,
+        "liteserv_storage_engine": liteserv_storage_engine,
+        "ls_url": ls_url,
+        "sg_url": sg_url,
+        "sg_admin_url": sg_admin_url
     }
+
+    client.delete_databases(ls_url)
+    liteserv.stop()
 
     # Code after the yield will execute when each test finishes
     log_info("Tearing down test '{}'".format(test_name))
