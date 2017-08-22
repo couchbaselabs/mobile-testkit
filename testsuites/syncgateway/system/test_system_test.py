@@ -648,6 +648,7 @@ def update_docs_task(users, user_type, user_index, sg_url, sg_db, docs_per_user_
     else:
         update_method = 'put'
 
+    update_method = 'bulk_docs'
     sg_client = MobileRestClient()
 
     # Get a random user
