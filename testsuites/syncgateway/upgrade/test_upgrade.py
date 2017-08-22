@@ -37,41 +37,25 @@ def test_upgrade(params_from_base_test_setup):
     log_info("ls_url: {}".format(ls_url))
     ls_db = client.create_database(ls_url, name="ls_db")
     sg_db = "db"
-    num_docs = 10000
+    num_docs = 1
 
     # Start continuous push pull replication ls_db_one <-> sg_db_one
+    log_info("Starting replication from liteserv to sync gateway")
     repl_one = client.start_replication(
         url=ls_url, continuous=True,
         from_db=ls_db,
         to_url=sg_admin_url, to_db=sg_db
     )
-    repl_two = client.start_replication(
+    client.wait_for_replication_status_idle(ls_url, repl_one)
+
+    log_info("Starting replication from sync gateway to liteserv")
+    client.start_replication(
         url=ls_url, continuous=True,
         from_url=sg_admin_url, from_db=sg_db,
         to_db=ls_db
     )
 
-    client.wait_for_replication_status_idle(ls_url, repl_one)
-    client.wait_for_replication_status_idle(ls_url, repl_two)
-    replications = client.get_replications(ls_url)
-    log_info(replications)
-    assert len(replications) == 2, "Number of replications, Expected: {} Actual: {}".format(
-        2,
-        len(replications)
-    )
-
-    # Create batch of docs
-    docs = document.create_docs(
-        doc_id_prefix='upgrade-doc',
-        number=num_docs,
-        prop_generator=document.doc_1k
-    )  # TODO Use Kodiak dataset
-
-    doc = client.add_doc(
-        url=ls_url,
-        db=ls_db,
-        doc=docs
-    )
+    client.add_docs(url=ls_url, db=ls_db, number=num_docs, id_prefix="ls_db_upgrade_doc")
 
     # Upgrade CBS
     cluster = Cluster(config=cluster_config)
