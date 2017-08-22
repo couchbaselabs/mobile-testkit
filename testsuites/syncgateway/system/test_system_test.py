@@ -173,15 +173,15 @@ def test_system_test(params_from_base_test_setup):
 
     # Start changes processing
     with ProcessPoolExecutor(max_workers=((len(users) * 3) + update_batch_size + 3)) as pex:
-        terminator_task = pex.submit(
-            terminate,
-            lb_url,
-            sg_db,
-            users,
-            update_runtime_sec,
-            changes_terminator_doc_id,
-            sg_admin_url
-        )
+        # terminator_task = pex.submit(
+        #     terminate,
+        #     lb_url,
+        #     sg_db,
+        #     users,
+        #     update_runtime_sec,
+        #     changes_terminator_doc_id,
+        #     sg_admin_url
+        # )
 
         # Start changes feeds in background process
         # changes_workers_task = pex.submit(
@@ -219,8 +219,18 @@ def test_system_test(params_from_base_test_setup):
         log_info('END concurrent updates')
         log_info('------------------------------------------')
 
+        # Broadcast termination doc to all users
+        terminator_channel = 'terminator'
+        send_changes_termination_doc(lb_url, sg_db, users, changes_terminator_doc_id, terminator_channel)
+
+        # Overwrite each users channels with 'terminator' so their changes feed will backfill with the termination doc
+        grant_users_access(users, [terminator_channel], sg_admin_url, sg_db)
+
+        # Block on changes completion
+        # users = changes_workers_task.result()
+
         # Block on terminator completion
-        terminator_task.result()
+        # terminator_task.result()
 
         # Block on changes completion
         # try:
@@ -708,9 +718,10 @@ def update_docs(sg_url, sg_db, users, update_runtime_sec, batch_size, docs_per_u
 
     num_users_per_type = len(users) / len(USER_TYPES)
     current_user_index = 0
-    sg_client = MobileRestClient()
-    random_user_id = random.choice(users.keys())
-    random_user = users[random_user_id]
+    start = time.time()
+    # sg_client = MobileRestClient()
+    # random_user_id = random.choice(users.keys())
+    # random_user = users[random_user_id]
 
     while True:
         # all_docs = sg_client.get_all_docs(url=sg_url, db=sg_db, auth=random_user['auth'], logr=False)
@@ -718,12 +729,18 @@ def update_docs(sg_url, sg_db, users, update_runtime_sec, batch_size, docs_per_u
         #     if doc['id'] == terminator_doc_id:
         #         return users
 
-        try:
-            sg_client.get_doc(url=sg_url, db=sg_db, doc_id=terminator_doc_id, auth=random_user['auth'])
-            log_info("update_docs: Termination doc found, returning...")
+        # try:
+        #     sg_client.get_doc(url=sg_url, db=sg_db, doc_id=terminator_doc_id, auth=random_user['auth'])
+        #     log_info("update_docs: Termination doc found, returning...")
+        #     return users
+        # except HTTPError:
+        #     log_info("update_docs: Termination doc not found, continuing with the updates")
+
+        elapsed_sec = time.time() - start
+        log_info('Updating for: {}s'.format(elapsed_sec))
+        if elapsed_sec > update_runtime_sec:
+            log_info('Runtime limit reached. Exiting ...')
             return users
-        except HTTPError:
-            log_info("update_docs: Termination doc not found, continuing with the updates")
 
         with ProcessPoolExecutor(max_workers=batch_size) as pe:
 
