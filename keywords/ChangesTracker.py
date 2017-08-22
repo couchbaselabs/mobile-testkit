@@ -27,7 +27,7 @@ class ChangesTracker:
         { "doc_id": [ {"rev": "rev1"}, {"rev", "rev2"}, ...] }
         """
 
-        log_info("[Changes Tracker] New changes: {}".format(len(results)))
+        # log_info("[Changes Tracker] New changes: {}".format(len(results)))
         for doc in results:
             if len(doc["changes"]) > 0:
                 if doc["id"] in self.processed_changes:
@@ -49,7 +49,7 @@ class ChangesTracker:
                 else:
                     # Stored the doc with the list of rev changes
                     self.processed_changes[doc["id"]] = doc["changes"]
-        log_info("[Changes Tracker] Total processed changes: {}".format(len(self.processed_changes)))
+        # log_info("[Changes Tracker] Total processed changes: {}".format(len(self.processed_changes)))
 
     def start(self, timeout=1000, heartbeat=None, request_timeout=None):
         """
@@ -160,12 +160,12 @@ class ChangesTracker:
                         if rev_prefix_gen:
                             if rev["rev"].startswith(doc["rev"]):
                                 # Found rev in changes feed, continue with the next doc
-                                logging.debug("FOUND id: {}, rev: {}".format(doc["id"], doc["rev"]))
+                                # logging.debug("FOUND id: {}, rev: {}".format(doc["id"], doc["rev"]))
                                 rev_found = True
                         else:
                             if rev["rev"] == doc["rev"]:
                                 # Found rev in changes feed, continue with the next docs
-                                logging.debug("FOUND id: {}, rev: {}".format(doc["id"], doc["rev"]))
+                                # logging.debug("FOUND id: {}, rev: {}".format(doc["id"], doc["rev"]))
                                 rev_found = True
 
                     if not rev_found:
@@ -176,6 +176,6 @@ class ChangesTracker:
 
                 return True
 
-            log_info("[Changes Tracker] Docs missing from changes feed: {}".format(len(missing_docs)))
+            # log_info("[Changes Tracker] Docs missing from changes feed: {}".format(len(missing_docs)))
 
             time.sleep(2)
