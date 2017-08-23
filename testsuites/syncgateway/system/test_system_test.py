@@ -173,15 +173,6 @@ def test_system_test(params_from_base_test_setup):
 
     # Start changes processing
     with ProcessPoolExecutor(max_workers=((len(users) * 3) + update_batch_size + 3)) as pex:
-        # terminator_task = pex.submit(
-        #     terminate,
-        #     lb_url,
-        #     sg_db,
-        #     users,
-        #     update_runtime_sec,
-        #     changes_terminator_doc_id,
-        #     sg_admin_url
-        # )
 
         # Start changes feeds in background process
         changes_workers_task = pex.submit(
@@ -232,15 +223,8 @@ def test_system_test(params_from_base_test_setup):
         # Block on terminator completion
         # terminator_task.result()
 
-        # Block on changes completion
-        # try:
-        #     log_info("Waiting for the changes_workers_task to complete")
-        #     users = changes_workers_task.result()
-        #     # Print the summary of the system test
+        # Print the summary of the system test
         print_summary(users)
-        # except:
-        #     pex._threads.clear()
-        #     thread._threads_queues.clear()
 
         # TODO: Validated expected changes
 
@@ -665,10 +649,6 @@ def update_docs_task(users, user_type, user_index, sg_url, sg_db, docs_per_user_
     current_user_auth = users[user_name]['auth']
     current_user_doc_ids = list(users[user_name]['doc_ids'])
 
-    # if terminator_doc_id in current_user_doc_ids:
-    #     log_info('Found terminator ({})'.format(user_name))
-    #     return user_name
-
     # Get a random subset of docs to update
     user_docs_subset_to_update = []
     for _ in range(docs_per_user_per_update):
@@ -699,7 +679,7 @@ def update_docs_task(users, user_type, user_index, sg_url, sg_db, docs_per_user_
     else:
 
         # Do a single GET / PUT for each of the user docs
-        for doc_id in current_user_doc_ids:
+        for doc_id in user_docs_subset_to_update:
             doc = sg_client.get_doc(url=sg_url, db=sg_db, doc_id=doc_id, auth=current_user_auth)
             doc['updates'] += 1
             sg_client.put_doc(url=sg_url, db=sg_db, doc_id=doc_id, doc_body=doc, rev=doc['_rev'], auth=current_user_auth)
@@ -724,17 +704,6 @@ def update_docs(sg_url, sg_db, users, update_runtime_sec, batch_size, docs_per_u
     # random_user = users[random_user_id]
 
     while True:
-        # all_docs = sg_client.get_all_docs(url=sg_url, db=sg_db, auth=random_user['auth'], logr=False)
-        # for doc in all_docs['rows']:
-        #     if doc['id'] == terminator_doc_id:
-        #         return users
-
-        # try:
-        #     sg_client.get_doc(url=sg_url, db=sg_db, doc_id=terminator_doc_id, auth=random_user['auth'])
-        #     log_info("update_docs: Termination doc found, returning...")
-        #     return users
-        # except HTTPError:
-        #     log_info("update_docs: Termination doc not found, continuing with the updates")
 
         elapsed_sec = time.time() - start
         log_info('Updating for: {}s'.format(elapsed_sec))
