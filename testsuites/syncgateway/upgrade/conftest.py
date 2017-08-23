@@ -147,13 +147,6 @@ def params_from_base_suite_setup(request):
         # Disable ssl in cluster configs
         persist_cluster_config_environment_prop(cluster_config, 'cbs_ssl_enabled', False)
 
-    if xattrs_enabled:
-        log_info("Running test with xattrs for sync meta storage")
-        persist_cluster_config_environment_prop(cluster_config, 'xattrs_enabled', True)
-    else:
-        log_info("Using document storage for sync meta data")
-        persist_cluster_config_environment_prop(cluster_config, 'xattrs_enabled', False)
-
     sg_config = sync_gateway_config_path_for_mode("sync_gateway_default_functional_tests", mode)
 
     liteserv = LiteServFactory.create(platform=liteserv_platform,
@@ -260,6 +253,13 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     sg_url = cluster_hosts["sync_gateways"][0]["public"]
     sg_admin_url = cluster_hosts["sync_gateways"][0]["admin"]
 
+    if xattrs_enabled:
+        log_info("Running upgrade with xattrs for sync meta storage")
+        persist_cluster_config_environment_prop(cluster_config, 'xattrs_enabled', True)
+    else:
+        log_info("Using document storage for sync meta data")
+        persist_cluster_config_environment_prop(cluster_config, 'xattrs_enabled', False)
+
     # This dictionary is passed to each test
     yield {
         "cluster_config": cluster_config,
@@ -280,8 +280,8 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         "sg_admin_url": sg_admin_url
     }
 
-    client.delete_databases(ls_url)
-    liteserv.stop()
+    # client.delete_databases(ls_url)
+    # liteserv.stop()
 
     # Code after the yield will execute when each test finishes
     log_info("Tearing down test '{}'".format(test_name))

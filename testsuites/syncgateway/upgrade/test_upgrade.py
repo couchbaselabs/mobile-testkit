@@ -10,6 +10,7 @@ from keywords.ClusterKeywords import ClusterKeywords
 from keywords.LiteServFactory import LiteServFactory
 from keywords.MobileRestClient import MobileRestClient
 from keywords import document
+from keywords import attachment
 
 
 def test_upgrade(params_from_base_test_setup):
@@ -37,25 +38,33 @@ def test_upgrade(params_from_base_test_setup):
     log_info("ls_url: {}".format(ls_url))
     ls_db = client.create_database(ls_url, name="ls_db")
     sg_db = "db"
-    num_docs = 1
+    num_docs = 10
+
+    # Create user and session on SG
+    sg_user_channels = ["sg_user_channel"]
+    sg_db = "db"
+    sg_user_name = "sg_user"
+    client.create_user(url=sg_admin_url, db=sg_db, name=sg_user_name, password="password", channels=sg_user_channels)
+    sg_session = client.create_session(url=sg_admin_url, db=sg_db, name=sg_user_name)
 
     # Start continuous push pull replication ls_db_one <-> sg_db_one
     log_info("Starting replication from liteserv to sync gateway")
     repl_one = client.start_replication(
         url=ls_url, continuous=True,
         from_db=ls_db,
-        to_url=sg_admin_url, to_db=sg_db
+        to_url=sg_url, to_db=sg_db, to_auth=sg_session
     )
     client.wait_for_replication_status_idle(ls_url, repl_one)
 
     log_info("Starting replication from sync gateway to liteserv")
     client.start_replication(
         url=ls_url, continuous=True,
-        from_url=sg_admin_url, from_db=sg_db,
+        from_url=sg_url, from_db=sg_db, from_auth=sg_session,
         to_db=ls_db
     )
 
-    client.add_docs(url=ls_url, db=ls_db, number=num_docs, id_prefix="ls_db_upgrade_doc")
+    # Add docs to liteserv
+    added_docs = client.add_docs(url=ls_url, db=ls_db, number=num_docs, id_prefix="ls_db_upgrade_doc", attachments_generator=attachment.generate_png_10_10)
 
     # Upgrade CBS
     cluster = Cluster(config=cluster_config)
@@ -132,3 +141,4 @@ def test_upgrade(params_from_base_test_setup):
     log_info('------------------------------------------')
 
     # TODO Verify data
+    client.verify_docs_present(url=ls_url, db=ls_db, expected_docs=added_docs, attachments=True)
