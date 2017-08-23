@@ -184,15 +184,15 @@ def test_system_test(params_from_base_test_setup):
         # )
 
         # Start changes feeds in background process
-        # changes_workers_task = pex.submit(
-        #     start_changes_processing,
-        #     lb_url,
-        #     sg_db,
-        #     users,
-        #     changes_delay,
-        #     changes_limit,
-        #     changes_terminator_doc_id
-        # )
+        changes_workers_task = pex.submit(
+            start_changes_processing,
+            lb_url,
+            sg_db,
+            users,
+            changes_delay,
+            changes_limit,
+            changes_terminator_doc_id
+        )
 
         log_info('------------------------------------------')
         log_info('START concurrent updates')
@@ -227,7 +227,7 @@ def test_system_test(params_from_base_test_setup):
         grant_users_access(users, [terminator_channel], sg_admin_url, sg_db)
 
         # Block on changes completion
-        # users = changes_workers_task.result()
+        users = changes_workers_task.result()
 
         # Block on terminator completion
         # terminator_task.result()
@@ -658,16 +658,16 @@ def update_docs_task(users, user_type, user_index, sg_url, sg_db, docs_per_user_
     else:
         update_method = 'put'
 
-    update_method = 'bulk_docs'
+    # update_method = 'bulk_docs'
     sg_client = MobileRestClient()
 
     # Get a random user
     current_user_auth = users[user_name]['auth']
     current_user_doc_ids = list(users[user_name]['doc_ids'])
 
-    if terminator_doc_id in current_user_doc_ids:
-        log_info('Found terminator ({})'.format(user_name))
-        return user_name
+    # if terminator_doc_id in current_user_doc_ids:
+    #     log_info('Found terminator ({})'.format(user_name))
+    #     return user_name
 
     # Get a random subset of docs to update
     user_docs_subset_to_update = []
