@@ -681,7 +681,7 @@ def update_docs(sg_url, sg_db, users, update_runtime_sec, batch_size, docs_per_u
     while True:
 
         elapsed_sec = time.time() - start
-        log_info('Updating for: {}s'.format(elapsed_sec))
+        log_info('Updated for: {}s'.format(elapsed_sec))
         if elapsed_sec > update_runtime_sec:
             log_info('Runtime limit reached. Exiting ...')
             return users
