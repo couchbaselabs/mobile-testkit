@@ -2,7 +2,7 @@ import json
 import random
 import time
 
-from concurrent.futures import ProcessPoolExecutor, as_completed, TimeoutError
+from concurrent.futures import ProcessPoolExecutor, as_completed
 from couchbase.bucket import Bucket
 from requests import Session
 from requests.exceptions import HTTPError
@@ -197,8 +197,7 @@ def test_system_test(params_from_base_test_setup):
             update_runtime_sec=update_runtime_sec,
             batch_size=update_batch_size,
             docs_per_user_per_update=docs_per_user_per_update,
-            update_delay=update_delay,
-            terminator_doc_id=changes_terminator_doc_id
+            update_delay=update_delay
         )
 
         all_user_channels = []
