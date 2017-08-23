@@ -2,7 +2,7 @@ import json
 import random
 import time
 
-from concurrent.futures import ProcessPoolExecutor, as_completed, thread, TimeoutError
+from concurrent.futures import ProcessPoolExecutor, as_completed, TimeoutError
 from couchbase.bucket import Bucket
 from requests import Session
 from requests.exceptions import HTTPError
@@ -220,30 +220,10 @@ def test_system_test(params_from_base_test_setup):
         # Block on changes completion
         users = changes_workers_task.result()
 
-        # Block on terminator completion
-        # terminator_task.result()
-
         # Print the summary of the system test
         print_summary(users)
 
         # TODO: Validated expected changes
-
-
-def terminate(lb_url, sg_db, users, update_runtime_sec, changes_terminator_doc_id, sg_admin_url):
-    start = time.time()
-    log_info('Starting Terminator at : {}'.format(start))
-    while True:
-        elapsed_sec = time.time() - start
-        if elapsed_sec > update_runtime_sec:
-            log_info('Terminator: Runtime limit reached {}. Exiting ...'.format(elapsed_sec))
-            # Broadcast termination doc to all users
-            terminator_channel = 'terminator'
-            send_changes_termination_doc(lb_url, sg_db, users, changes_terminator_doc_id, terminator_channel)
-            # Overwrite each users channels with 'terminator' so their changes feed will backfill with the termination doc
-            grant_users_access(users, [terminator_channel], sg_admin_url, sg_db)
-            return
-        else:
-            time.sleep(5)
 
 
 def print_summary(users):
@@ -630,7 +610,7 @@ def create_docs(sg_admin_url, sg_url, sg_db, num_users, number_docs_per_user, cr
     return users
 
 
-def update_docs_task(users, user_type, user_index, sg_url, sg_db, docs_per_user_per_update, terminator_doc_id):
+def update_docs_task(users, user_type, user_index, sg_url, sg_db, docs_per_user_per_update):
 
     user_name = '{}_{}'.format(user_type, user_index)
 
@@ -642,7 +622,6 @@ def update_docs_task(users, user_type, user_index, sg_url, sg_db, docs_per_user_
     else:
         update_method = 'put'
 
-    # update_method = 'bulk_docs'
     sg_client = MobileRestClient()
 
     # Get a random user
@@ -687,7 +666,7 @@ def update_docs_task(users, user_type, user_index, sg_url, sg_db, docs_per_user_
     return user_name
 
 
-def update_docs(sg_url, sg_db, users, update_runtime_sec, batch_size, docs_per_user_per_update, update_delay, terminator_doc_id):
+def update_docs(sg_url, sg_db, users, update_runtime_sec, batch_size, docs_per_user_per_update, update_delay):
 
     log_info('Updating {} doc/user per update'.format(docs_per_user_per_update))
     log_info('Starting updates with batch size (concurrent users updating): {} and delay: {}s'.format(
@@ -699,9 +678,6 @@ def update_docs(sg_url, sg_db, users, update_runtime_sec, batch_size, docs_per_u
     num_users_per_type = len(users) / len(USER_TYPES)
     current_user_index = 0
     start = time.time()
-    # sg_client = MobileRestClient()
-    # random_user_id = random.choice(users.keys())
-    # random_user = users[random_user_id]
 
     while True:
 
@@ -725,20 +701,14 @@ def update_docs(sg_url, sg_db, users, update_runtime_sec, batch_size, docs_per_u
                     current_user_index + i,
                     sg_url,
                     sg_db,
-                    docs_per_user_per_update,
-                    terminator_doc_id
+                    docs_per_user_per_update
                 ) for i in range(batch_size)]
 
             # Block until all update_futures are completed or return
             # exception in future.result()
             for future in as_completed(update_futures):
                 # Increment updates
-                try:
-                    user = future.result()
-                except TimeoutError:
-                    # Updates might still be running when we force kill
-                    pass
-
+                user = future.result()
                 users[user]['updates'] += 1
                 log_info('Completed updates ({})'.format(user))
 
