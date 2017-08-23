@@ -21,6 +21,19 @@
   - name: SYNC GATEWAY |  Download sync_gateway rpm
     get_url: url={{ couchbase_sync_gateway_package_url }} dest=/tmp/{{ couchbase_sync_gateway_package }}
 
+# Deploy non writer sync_gateway configs
+- hosts: sync_gateways
+  any_errors_fatal: true
+  become: yes
+  vars:
+    sync_gateway_config_filepath:
+    couchbase_server_primary_node: "{{ hostvars[groups.couchbase_servers[0]].ansible_host }}"
+    # hack until mobile-testkit/issues/406 allows any sync gateway to be referenced
+    sync_gateway_node: "{{ hostvars[groups.sync_gateways[0]].ansible_host }}"
+    is_index_writer: "false"
+  tasks:
+  - include: tasks/deploy-sync-gateway-config.yml
+
 # Install and launch sync_gateway service
 - hosts: sync_gateways
   any_errors_fatal: true

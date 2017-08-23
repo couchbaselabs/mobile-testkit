@@ -280,8 +280,8 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         "sg_admin_url": sg_admin_url
     }
 
-    # client.delete_databases(ls_url)
-    # liteserv.stop()
+    client.delete_databases(ls_url)
+    liteserv.stop()
 
     # Code after the yield will execute when each test finishes
     log_info("Tearing down test '{}'".format(test_name))

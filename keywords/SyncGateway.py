@@ -264,7 +264,7 @@ class SyncGateway:
         if status != 0:
             raise ProvisioningError("Could not stop sync_gateway")
 
-    def upgrade_sync_gateways(self, cluster_config, sg_conf, sync_gateway_version, url=None):
+    def upgrade_sync_gateways(self, cluster_config, sg_conf, sync_gateway_version, url=None, import_enable=False):
         """ Upgrade sync gateways in a cluster. If url is passed, upgrade
             the sync gateway at that url
         """
@@ -297,8 +297,11 @@ class SyncGateway:
         }
 
         if is_xattrs_enabled(cluster_config):
-            playbook_vars["autoimport"] = '"import_docs": "continuous",'
             playbook_vars["xattrs"] = '"enable_shared_bucket_access": true,'
+
+        if is_xattrs_enabled(cluster_config) and import_enable:
+            log_info("Enabling continuous import for SG")
+            playbook_vars["autoimport"] = '"import_docs": "continuous",'
 
         sync_gateway_base_url, sync_gateway_package_name, sg_accel_package_name = sg_config.sync_gateway_base_url_and_package()
 
@@ -322,3 +325,4 @@ class SyncGateway:
             )
         if status != 0:
             raise Exception("Could not stop sync_gateway")
+    

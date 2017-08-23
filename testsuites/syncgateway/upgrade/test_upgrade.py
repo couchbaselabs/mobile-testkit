@@ -66,6 +66,40 @@ def test_upgrade(params_from_base_test_setup):
     # Add docs to liteserv
     added_docs = client.add_docs(url=ls_url, db=ls_db, number=num_docs, id_prefix="ls_db_upgrade_doc", attachments_generator=attachment.generate_png_10_10)
 
+    log_info('------------------------------------------')
+    log_info('START Sync Gateway cluster upgrade')
+    log_info('------------------------------------------')
+    cluster_util = ClusterKeywords()
+    topology = cluster_util.get_cluster_topology(cluster_config, lb_enable=False)
+    sync_gateways = topology["sync_gateways"]
+    import_enable = True
+    for sg in sync_gateways:
+        sg_ip = host_for_url(sg["admin"])
+        sg_obj = SyncGateway()
+        verify_sync_gateway_product_info(sg_ip)
+        log_info("Checking for sunc gateway version: {}".format(sync_gateway_version))
+        verify_sync_gateway_version(sg_ip, sync_gateway_version)
+        log_info("Upgrading sync gateway: {}".format(sg_ip))
+        sg_obj.upgrade_sync_gateways(
+            cluster_config=cluster_config,
+            sg_conf=sg_conf,
+            sync_gateway_version=sync_gateway_upgraded_version,
+            url=sg_ip,
+            import_enable=import_enable
+        )
+        # Enable import on only 1 node in cc mode
+        if mode == "cc":
+            import_enable = False
+
+        verify_sync_gateway_product_info(sg_ip)
+        log_info("Checking for sunc gateway version: {}".format(sync_gateway_upgraded_version))
+        verify_sync_gateway_version(sg_ip, sync_gateway_upgraded_version)
+
+    log_info("Upgraded all the sync gateway nodes in the cluster")
+    log_info('------------------------------------------')
+    log_info('END Sync Gateway cluster upgrade')
+    log_info('------------------------------------------')
+    
     # Upgrade CBS
     cluster = Cluster(config=cluster_config)
     if len(cluster.servers) < 3:
@@ -111,33 +145,9 @@ def test_upgrade(params_from_base_test_setup):
     secondary_server.rebalance_in(server_urls, primary_server)
     log_info("Checking for the server version: {}".format(server_upgraded_version))
     verify_server_version(primary_server.host, server_upgraded_version)
-
     log_info("Upgraded all the server nodes in the cluster")
     log_info('------------------------------------------')
     log_info('END server cluster upgrade')
-    log_info('------------------------------------------')
-
-    log_info('------------------------------------------')
-    log_info('START Sync Gateway cluster upgrade')
-    log_info('------------------------------------------')
-    cluster_util = ClusterKeywords()
-    topology = cluster_util.get_cluster_topology(cluster_config, lb_enable=False)
-    sync_gateways = topology["sync_gateways"]
-    for sg in sync_gateways:
-        sg_ip = host_for_url(sg["admin"])
-        sg_obj = SyncGateway()
-        verify_sync_gateway_product_info(sg_ip)
-        log_info("Checking for sunc gateway version: {}".format(sync_gateway_version))
-        verify_sync_gateway_version(sg_ip, sync_gateway_version)
-        log_info("Upgrading sync gateway: {}".format(sg_ip))
-        sg_obj.upgrade_sync_gateways(cluster_config, sg_conf, sync_gateway_upgraded_version, sg_ip)
-        verify_sync_gateway_product_info(sg_ip)
-        log_info("Checking for sunc gateway version: {}".format(sync_gateway_upgraded_version))
-        verify_sync_gateway_version(sg_ip, sync_gateway_upgraded_version)
-
-    log_info("Upgraded all the sync gateway nodes in the cluster")
-    log_info('------------------------------------------')
-    log_info('END Sync Gateway cluster upgrade')
     log_info('------------------------------------------')
 
     # TODO Verify data
