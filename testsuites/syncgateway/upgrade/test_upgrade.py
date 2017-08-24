@@ -1,3 +1,5 @@
+import os
+
 from keywords.couchbaseserver import CouchbaseServer, verify_server_version
 from libraries.testkit.cluster import Cluster
 from keywords.utils import log_info, host_for_url
@@ -31,7 +33,7 @@ def test_upgrade(params_from_base_test_setup):
     sync_gateway_upgraded_version = params_from_base_test_setup['sync_gateway_upgraded_version']
     sg_url = params_from_base_test_setup['sg_url']
     sg_admin_url = params_from_base_test_setup['sg_admin_url']
-    sg_conf = "sync_gateway_default_functional_tests_{}".format(mode)
+    sg_conf = "{}/resources/sync_gateway_configs/sync_gateway_default_functional_tests_{}.json".format(os.getcwd(), mode)
 
     # Add data to liteserv
     client = MobileRestClient()
@@ -66,13 +68,18 @@ def test_upgrade(params_from_base_test_setup):
     # Add docs to liteserv
     added_docs = client.add_docs(url=ls_url, db=ls_db, number=num_docs, id_prefix="ls_db_upgrade_doc", attachments_generator=attachment.generate_png_10_10)
 
+    # Supported upgrade process
+    # 1. Upgrade SGs first docmeta -> docmeta - CBS 5.0.0 does not support TAP.
+    # 2. Upgrade the CBS cluster.
+    # 3. Enable import/xattrs on SGs
+
+    # Upgrade SG docmeta -> docmeta
     log_info('------------------------------------------')
     log_info('START Sync Gateway cluster upgrade')
     log_info('------------------------------------------')
     cluster_util = ClusterKeywords()
     topology = cluster_util.get_cluster_topology(cluster_config, lb_enable=False)
     sync_gateways = topology["sync_gateways"]
-    import_enable = True
     for sg in sync_gateways:
         sg_ip = host_for_url(sg["admin"])
         sg_obj = SyncGateway()
@@ -84,8 +91,7 @@ def test_upgrade(params_from_base_test_setup):
             cluster_config=cluster_config,
             sg_conf=sg_conf,
             sync_gateway_version=sync_gateway_upgraded_version,
-            url=sg_ip,
-            import_enable=import_enable
+            url=sg_ip
         )
         # Enable import on only 1 node in cc mode
         if mode == "cc":
@@ -99,7 +105,7 @@ def test_upgrade(params_from_base_test_setup):
     log_info('------------------------------------------')
     log_info('END Sync Gateway cluster upgrade')
     log_info('------------------------------------------')
-    
+
     # Upgrade CBS
     cluster = Cluster(config=cluster_config)
     if len(cluster.servers) < 3:
@@ -149,6 +155,6 @@ def test_upgrade(params_from_base_test_setup):
     log_info('------------------------------------------')
     log_info('END server cluster upgrade')
     log_info('------------------------------------------')
-
+    
     # TODO Verify data
     client.verify_docs_present(url=ls_url, db=ls_db, expected_docs=added_docs, attachments=True)
