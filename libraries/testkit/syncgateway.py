@@ -65,7 +65,7 @@ class SyncGateway:
 
         if is_cbs_ssl_enabled(self.cluster_config) and get_sg_version(self.cluster_config) >= "1.5.0":
             playbook_vars["server_scheme"] = "couchbases"
-            playbook_vars["server_port"] = "11207"
+            playbook_vars["server_port"] = 11207
             status = self.ansible_runner.run_ansible_playbook(
                 "block-http-ports.yml"
             )
@@ -97,7 +97,7 @@ class SyncGateway:
 
         if is_cbs_ssl_enabled(self.cluster_config) and get_sg_version(self.cluster_config) >= "1.5.0":
             playbook_vars["server_scheme"] = "couchbases"
-            playbook_vars["server_port"] = "11207"
+            playbook_vars["server_port"] = 11207
             status = self.ansible_runner.run_ansible_playbook(
                 "block-http-ports.yml"
             )

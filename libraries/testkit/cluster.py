@@ -143,7 +143,7 @@ class Cluster:
         }
         if self.cbs_ssl and get_sg_version(self._cluster_config) >= "1.5.0":
             playbook_vars["server_scheme"] = "couchbases"
-            playbook_vars["server_port"] = "11207"
+            playbook_vars["server_port"] = 11207
             log_info("running ansible script to block http ports")
             status = ansible_runner.run_ansible_playbook(
                 "block-http-ports.yml"

@@ -10,9 +10,10 @@ from keywords.remoteexecutor import RemoteExecutor
 from keywords.SyncGateway import SyncGateway, sync_gateway_config_path_for_mode
 from keywords.utils import log_info
 from libraries.testkit.cluster import Cluster
+from utilities.cluster_config_utils import is_cbs_ssl_enabled, get_sg_version
 
 
-def load_sync_gateway_config(sync_gateway_config, mode, server_url, xattrs_enabled):
+def load_sync_gateway_config(sync_gateway_config, mode, server_url, xattrs_enabled, cluster_conf):
     """ Loads a syncgateway configuration for modification"""
     server_scheme, server_ip, server_port = server_url.split(":")
     server_ip = server_ip.replace("//", "")
@@ -26,6 +27,10 @@ def load_sync_gateway_config(sync_gateway_config, mode, server_url, xattrs_enabl
         else:
             autoimport_prop = ""
             xattrs_prop = ""
+
+        if is_cbs_ssl_enabled(cluster_conf) and get_sg_version(cluster_conf) >= "1.5.0":
+            server_scheme = "couchbases"
+            server_port = 11207
 
         temp = template.render(
             couchbase_server_primary_node=server_ip,
@@ -74,8 +79,7 @@ def test_log_rotation_default_values(params_from_base_test_setup, sg_conf_name):
     sg_helper.stop_sync_gateways(cluster_config=cluster_conf, url=sg_one_url)
 
     # read sample sg_conf
-    data = load_sync_gateway_config(sg_conf, mode, cluster_hosts["couchbase_servers"][0], xattrs_enabled)
-
+    data = load_sync_gateway_config(sg_conf, mode, cluster_hosts["couchbase_servers"][0], xattrs_enabled, cluster_conf)
     # delete rotation from sample config
     del data['logging']["default"]["rotation"]
     # create temp config file in the same folder as sg_conf
@@ -139,7 +143,7 @@ def test_log_logKeys_string(params_from_base_test_setup, sg_conf_name):
     cluster_hosts = cluster_helper.get_cluster_topology(cluster_conf)
     sg_one_url = cluster_hosts["sync_gateways"][0]["public"]
 
-    data = load_sync_gateway_config(sg_conf, mode, cluster_hosts["couchbase_servers"][0], xattrs_enabled)
+    data = load_sync_gateway_config(sg_conf, mode, cluster_hosts["couchbase_servers"][0], xattrs_enabled, cluster_conf)
 
     # set logKeys as string in config file
     data['logging']["default"]["logKeys"] = "http"
@@ -191,7 +195,7 @@ def test_log_nondefault_logKeys_set(params_from_base_test_setup, sg_conf_name):
     cluster_helper = ClusterKeywords()
     cluster_hosts = cluster_helper.get_cluster_topology(cluster_conf)
     sg_one_url = cluster_hosts["sync_gateways"][0]["public"]
-    data = load_sync_gateway_config(sg_conf, mode, cluster_hosts["couchbase_servers"][0], xattrs_enabled)
+    data = load_sync_gateway_config(sg_conf, mode, cluster_hosts["couchbase_servers"][0], xattrs_enabled, cluster_conf)
 
     # "FAKE" not valid area in logging
     data['logging']["default"]["logKeys"] = ["HTTP", "FAKE"]
@@ -251,7 +255,7 @@ def test_log_maxage_10_timestamp_ignored(params_from_base_test_setup, sg_conf_na
     remote_executor.execute("sudo chmod 777 -R /tmp/sg_logs")
 
     # read sample sg_conf
-    data = load_sync_gateway_config(sg_conf, mode, cluster_hosts["couchbase_servers"][0], xattrs_enabled)
+    data = load_sync_gateway_config(sg_conf, mode, cluster_hosts["couchbase_servers"][0], xattrs_enabled, cluster_conf)
 
     # set maxage = 10 days
     data['logging']["default"]["rotation"]["maxage"] = 10
@@ -305,7 +309,7 @@ def test_log_rotation_invalid_path(params_from_base_test_setup, sg_conf_name):
     sg_one_url = cluster_hosts["sync_gateways"][0]["public"]
 
     # read sample sg_conf
-    data = load_sync_gateway_config(sg_conf, mode, cluster_hosts["couchbase_servers"][0], xattrs_enabled)
+    data = load_sync_gateway_config(sg_conf, mode, cluster_hosts["couchbase_servers"][0], xattrs_enabled, cluster_conf)
 
     # set non existing logFilePath
     data['logging']["default"]["logFilePath"] = "/12345/1231/131231.log"
@@ -370,7 +374,7 @@ def test_log_200mb(params_from_base_test_setup, sg_conf_name):
     remote_executor.execute("sudo chmod 777 -R /tmp/sg_logs")
 
     # read sample sg_conf
-    data = load_sync_gateway_config(sg_conf, mode, cluster_hosts["couchbase_servers"][0], xattrs_enabled)
+    data = load_sync_gateway_config(sg_conf, mode, cluster_hosts["couchbase_servers"][0], xattrs_enabled, cluster_conf)
 
     # set maxsize by default
     data['logging']["default"]["rotation"]["maxsize"] = 200
@@ -477,7 +481,7 @@ def test_log_rotation_negative(params_from_base_test_setup, sg_conf_name):
     sg_one_url = cluster_hosts["sync_gateways"][0]["public"]
 
     # read sample sg_conf
-    data = load_sync_gateway_config(sg_conf, mode, cluster_hosts["couchbase_servers"][0], xattrs_enabled)
+    data = load_sync_gateway_config(sg_conf, mode, cluster_hosts["couchbase_servers"][0], xattrs_enabled, cluster_conf)
 
     # set negative values for rotation section
     data['logging']["default"]["rotation"] = {
@@ -547,7 +551,7 @@ def test_log_maxbackups_0(params_from_base_test_setup, sg_conf_name):
     remote_executor.execute("sudo chmod 777 -R /tmp/sg_logs")
 
     # read sample sg_conf
-    data = load_sync_gateway_config(sg_conf, mode, cluster_hosts["couchbase_servers"][0], xattrs_enabled)
+    data = load_sync_gateway_config(sg_conf, mode, cluster_hosts["couchbase_servers"][0], xattrs_enabled, cluster_conf)
 
     # set maxbackups=0 in config file
     data['logging']["default"]["rotation"]["maxbackups"] = 0
@@ -592,7 +596,7 @@ def test_log_logLevel_invalid(params_from_base_test_setup, sg_conf_name):
     sg_one_url = cluster_hosts["sync_gateways"][0]["public"]
 
     # read sample sg_conf
-    data = load_sync_gateway_config(sg_conf, mode, cluster_hosts["couchbase_servers"][0], xattrs_enabled)
+    data = load_sync_gateway_config(sg_conf, mode, cluster_hosts["couchbase_servers"][0], xattrs_enabled, cluster_conf)
 
     # 'debugFake' invalid value for logLevel
     data['logging']["default"]["logLevel"] = "debugFake"
