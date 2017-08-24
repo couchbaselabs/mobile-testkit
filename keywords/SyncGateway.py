@@ -323,3 +323,47 @@ class SyncGateway:
             )
         if status != 0:
             raise Exception("Could not stop sync_gateway")
+
+    def enable_import_xattrs(self, cluster_config, sg_conf, url, enable_import=False):
+        """Deploy an SG config with xattrs enabled
+            Will also enable import if enable_import is set to True"""
+        ansible_runner = AnsibleRunner(cluster_config)
+        server_port = 8091
+        server_scheme = "http"
+
+        if is_cbs_ssl_enabled(cluster_config):
+            server_port = 18091
+            server_scheme = "https"
+
+        # Shared vars
+        playbook_vars = {
+            "sync_gateway_config_filepath": sg_conf,
+            "server_port": server_port,
+            "server_scheme": server_scheme,
+            "autoimport": "",
+            "xattrs": ""
+        }
+
+        if is_xattrs_enabled(cluster_config):
+            playbook_vars["xattrs"] = '"enable_shared_bucket_access": true,'
+
+        if is_xattrs_enabled(cluster_config) and enable_import:
+            playbook_vars["autoimport"] = '"import_docs": "continuous",'
+
+        # Deploy config
+        if url is not None:
+            target = hostname_for_url(cluster_config, url)
+            log_info("Deploying sync_gateway config on {} ...".format(target))
+            status = ansible_runner.run_ansible_playbook(
+                "deploy-sync-gateway-config.yml",
+                subset=target,
+                extra_vars=playbook_vars
+            )
+        else:
+            log_info("Deploying config on all sync_gateways")
+            status = ansible_runner.run_ansible_playbook(
+                "deploy-sync-gateway-config.yml",
+                extra_vars=playbook_vars
+            )
+        if status != 0:
+            raise Exception("Could not deploy config to sync_gateway")

@@ -9,10 +9,11 @@ from keywords.SyncGateway import (verify_sg_accel_version,
                                   verify_sync_gateway_product_info,
                                   SyncGateway)
 from keywords.ClusterKeywords import ClusterKeywords
-from keywords.LiteServFactory import LiteServFactory
 from keywords.MobileRestClient import MobileRestClient
 from keywords import document
 from keywords import attachment
+from couchbase.bucket import Bucket
+from keywords.constants import SDK_TIMEOUT
 
 
 def test_upgrade(params_from_base_test_setup):
@@ -21,11 +22,6 @@ def test_upgrade(params_from_base_test_setup):
     cluster_config = params_from_base_test_setup['cluster_config']
     mode = params_from_base_test_setup['mode']
     xattrs_enabled = params_from_base_test_setup['xattrs_enabled']
-    liteserv_host = params_from_base_test_setup["liteserv_host"]
-    liteserv_port = params_from_base_test_setup["liteserv_port"]
-    liteserv_platform = params_from_base_test_setup["liteserv_platform"]
-    liteserv_version = params_from_base_test_setup["liteserv_version"]
-    liteserv_storage_engine = params_from_base_test_setup["liteserv_storage_engine"]
     ls_url = params_from_base_test_setup["ls_url"]
     server_version = params_from_base_test_setup['server_version']
     sync_gateway_version = params_from_base_test_setup['sync_gateway_version']
@@ -80,6 +76,8 @@ def test_upgrade(params_from_base_test_setup):
     cluster_util = ClusterKeywords()
     topology = cluster_util.get_cluster_topology(cluster_config, lb_enable=False)
     sync_gateways = topology["sync_gateways"]
+    sg_accels = topology["sg_accels"]
+
     for sg in sync_gateways:
         sg_ip = host_for_url(sg["admin"])
         sg_obj = SyncGateway()
@@ -93,9 +91,6 @@ def test_upgrade(params_from_base_test_setup):
             sync_gateway_version=sync_gateway_upgraded_version,
             url=sg_ip
         )
-        # Enable import on only 1 node in cc mode
-        if mode == "cc":
-            import_enable = False
 
         verify_sync_gateway_product_info(sg_ip)
         log_info("Checking for sunc gateway version: {}".format(sync_gateway_upgraded_version))
@@ -156,5 +151,52 @@ def test_upgrade(params_from_base_test_setup):
     log_info('END server cluster upgrade')
     log_info('------------------------------------------')
     
+    if xattrs_enabled:
+        # Enable xattrs on all SG/SGAccel nodes
+        # cc - Start 1 SG with import enabled, all with XATTRs enabled
+        # di - All SGs/SGAccels with xattrs enabled - this will also enable import on SGAccel
+        #    - Do not enable import in SG.
+        # Enable xattrs on all nodes
+        enable_import = True
+        for sg in sync_gateways:
+            sg_ip = host_for_url(sg["admin"])
+            sg_obj = SyncGateway()
+            sg_obj.enable_import_xattrs(
+                cluster_config=cluster_config,
+                sg_conf=sg_conf,
+                url=sg_ip,
+                enable_import=enable_import
+            )
+            enable_import = False
+        
+        if mode == "di":
+            for ac in sg_accels:
+                ac_ip = host_for_url(sg["admin"])
+                ac_obj = SyncGateway()
+                ac_obj.enable_import_xattrs(
+                    cluster_config=cluster_config,
+                    sg_conf=sg_conf,
+                    url=ac_ip,
+                    enable_import=False
+                )
+
     # TODO Verify data
+    # Verifies doc body and attachments
     client.verify_docs_present(url=ls_url, db=ls_db, expected_docs=added_docs, attachments=True)
+
+    if xattrs_enabled:
+        # Verify through SDK that there is no _sync property in the doc body
+        bucket_name = 'data-bucket'
+        doc_ids = ['ls_db_upgrade_doc_{}'.format(i) for i in range(num_docs)]
+        sdk_client = Bucket('couchbase://{}/{}'.format(primary_server.host, bucket_name), password='password', timeout=SDK_TIMEOUT)
+        docs_from_sdk = sdk_client.get_multi(doc_ids)
+        log_info("docs_from_sdk: {}".format(docs_from_sdk))
+
+        for i in docs_from_sdk:
+            if "_sync" in docs_from_sdk[i].value:
+                raise Exception("sync section found in docs after upgrade")
+
+    # TODO Verify metadata
+    # Verify channels
+    # Verify revs
+    # No sync data in docbody with xattrs/import enabled
