@@ -289,17 +289,7 @@ class SyncGateway:
         sg_conf = os.path.abspath(sg_config.config_path)
 
         # Shared vars
-        playbook_vars = {
-            "sync_gateway_config_filepath": sg_conf,
-            "server_port": server_port,
-            "server_scheme": server_scheme,
-            "autoimport": "",
-            "xattrs": ""
-        }
-
-        if is_xattrs_enabled(cluster_config):
-            playbook_vars["xattrs"] = '"enable_shared_bucket_access": true,'
-            playbook_vars["autoimport"] = '"import_docs": "continuous",'
+        playbook_vars = {}
 
         sync_gateway_base_url, sync_gateway_package_name, sg_accel_package_name = sg_config.sync_gateway_base_url_and_package()
 

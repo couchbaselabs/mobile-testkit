@@ -1,11 +1,4 @@
 ---
-# Stop sync_gateway
-- hosts: sync_gateways
-  become: yes
-
-  tasks:
-  - include: tasks/stop-sync-gateway.yml
-
 # Download sync_gateway package
 - hosts: sync_gateways
   any_errors_fatal: true
@@ -21,14 +14,48 @@
   - name: SYNC GATEWAY |  Download sync_gateway rpm
     get_url: url={{ couchbase_sync_gateway_package_url }} dest=/tmp/{{ couchbase_sync_gateway_package }}
 
+# Download sg accel package
+- hosts: sg_accels
+  any_errors_fatal: true
+
+  vars:
+    couchbase_sync_gateway_package_base_url:
+    couchbase_sg_accel_package:
+    couchbase_sg_accel_package_url: "{{ couchbase_sync_gateway_package_base_url }}/{{ couchbase_sg_accel_package }}"
+    couchbase_server_primary_node: "{{ hostvars[groups.couchbase_servers[0]].ansible_host }}"
+
+  tasks:
+  - debug: msg="Downloading sg_accel v. {{ couchbase_sg_accel_package_url }}"
+  - name: SYNC GATEWAY | Download sg_accel rpm
+    get_url: url={{ couchbase_sg_accel_package_url }} dest=/tmp/{{ couchbase_sg_accel_package }}
+
 # Install and launch sync_gateway service
 - hosts: sync_gateways
   any_errors_fatal: true
   become: yes
   tasks:
+  - include: tasks/stop-sync-gateway.yml
+
   # Install and start service
   - name: SYNC GATEWAY | Install sync_gateway rpm
     shell: rpm -U /tmp/{{ couchbase_sync_gateway_package }}
 
   - name: SYNC GATEWAY | wait until sync gateway to listen on port
     wait_for: port=4985 timeout=120
+
+# Install and launch sg_accel service
+- hosts: sg_accels
+  any_errors_fatal: true
+  become: yes
+  tasks:
+  - include: tasks/stop-sg-accel.yml
+
+  # Install and start service
+  - name: SYNC GATEWAY | Install sg_accel rpm
+    shell: rpm -i /tmp/{{ couchbase_sg_accel_package }}
+
+  - name: SYNC GATEWAY | Start the service
+    service: name=sg_accel state=started
+
+  - name: SYNC GATEWAY | wait for sg_accel to listen on port
+    wait_for: port=4985 delay=2 timeout=120

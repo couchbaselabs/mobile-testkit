@@ -70,36 +70,27 @@ def test_upgrade(params_from_base_test_setup):
     # 3. Enable import/xattrs on SGs
 
     # Upgrade SG docmeta -> docmeta
-    log_info('------------------------------------------')
-    log_info('START Sync Gateway cluster upgrade')
-    log_info('------------------------------------------')
     cluster_util = ClusterKeywords()
     topology = cluster_util.get_cluster_topology(cluster_config, lb_enable=False)
     sync_gateways = topology["sync_gateways"]
     sg_accels = topology["sg_accels"]
 
-    for sg in sync_gateways:
-        sg_ip = host_for_url(sg["admin"])
-        sg_obj = SyncGateway()
-        verify_sync_gateway_product_info(sg_ip)
-        log_info("Checking for sunc gateway version: {}".format(sync_gateway_version))
-        verify_sync_gateway_version(sg_ip, sync_gateway_version)
-        log_info("Upgrading sync gateway: {}".format(sg_ip))
-        sg_obj.upgrade_sync_gateways(
-            cluster_config=cluster_config,
-            sg_conf=sg_conf,
-            sync_gateway_version=sync_gateway_upgraded_version,
-            url=sg_ip
+    upgrade_sync_gateway(
+        sync_gateways,
+        sync_gateway_version,
+        sync_gateway_upgraded_version,
+        sg_conf,
+        cluster_config
+    )
+
+    if mode == "di":
+        upgrade_sg_accel(
+            sg_accels,
+            sync_gateway_version,
+            sync_gateway_upgraded_version,
+            sg_conf,
+            cluster_config
         )
-
-        verify_sync_gateway_product_info(sg_ip)
-        log_info("Checking for sunc gateway version: {}".format(sync_gateway_upgraded_version))
-        verify_sync_gateway_version(sg_ip, sync_gateway_upgraded_version)
-
-    log_info("Upgraded all the sync gateway nodes in the cluster")
-    log_info('------------------------------------------')
-    log_info('END Sync Gateway cluster upgrade')
-    log_info('------------------------------------------')
 
     # Upgrade CBS
     cluster = Cluster(config=cluster_config)
@@ -114,6 +105,67 @@ def test_upgrade(params_from_base_test_setup):
     secondary_server = cluster.servers[1]
     servers = cluster.servers[1:]
 
+    upgrade_server_cluster(
+        servers,
+        primary_server,
+        secondary_server,
+        server_version,
+        server_upgraded_version,
+        server_urls,
+        cluster_config
+    )
+
+    if xattrs_enabled:
+        # Enable xattrs on all SG/SGAccel nodes
+        # cc - Start 1 SG with import enabled, all with XATTRs enabled
+        # di - All SGs/SGAccels with xattrs enabled - this will also enable import on SGAccel
+        #    - Do not enable import in SG.
+        # Enable xattrs on all nodes
+        enable_import = True
+        for sg in sync_gateways:
+            sg_ip = host_for_url(sg["admin"])
+            sg_obj = SyncGateway()
+            sg_obj.enable_import_xattrs(
+                cluster_config=cluster_config,
+                sg_conf=sg_conf,
+                url=sg_ip,
+                enable_import=enable_import
+            )
+            enable_import = False
+
+        if mode == "di":
+            for ac in sg_accels:
+                ac_ip = host_for_url(sg["admin"])
+                ac_obj = SyncGateway()
+                ac_obj.enable_import_xattrs(
+                    cluster_config=cluster_config,
+                    sg_conf=sg_conf,
+                    url=ac_ip,
+                    enable_import=False
+                )
+
+    # TODO Verify data
+    # Verifies doc body and attachments
+    client.verify_docs_present(url=ls_url, db=ls_db, expected_docs=added_docs, attachments=True)
+
+    if xattrs_enabled:
+        # Verify through SDK that there is no _sync property in the doc body
+        bucket_name = 'data-bucket'
+        doc_ids = ['ls_db_upgrade_doc_{}'.format(i) for i in range(num_docs)]
+        sdk_client = Bucket('couchbase://{}/{}'.format(primary_server.host, bucket_name), password='password', timeout=SDK_TIMEOUT)
+        docs_from_sdk = sdk_client.get_multi(doc_ids)
+
+        for i in docs_from_sdk:
+            if "_sync" in docs_from_sdk[i].value:
+                raise Exception("sync section found in docs after upgrade")
+
+    # TODO Verify metadata
+    # Verify channels
+    # Verify revs
+    # No sync data in docbody with xattrs/import enabled
+
+
+def upgrade_server_cluster(servers, primary_server, secondary_server, server_version, server_upgraded_version, server_urls, cluster_config):
     log_info('------------------------------------------')
     log_info('START server cluster upgrade')
     log_info('------------------------------------------')
@@ -150,53 +202,61 @@ def test_upgrade(params_from_base_test_setup):
     log_info('------------------------------------------')
     log_info('END server cluster upgrade')
     log_info('------------------------------------------')
-    
-    if xattrs_enabled:
-        # Enable xattrs on all SG/SGAccel nodes
-        # cc - Start 1 SG with import enabled, all with XATTRs enabled
-        # di - All SGs/SGAccels with xattrs enabled - this will also enable import on SGAccel
-        #    - Do not enable import in SG.
-        # Enable xattrs on all nodes
-        enable_import = True
-        for sg in sync_gateways:
-            sg_ip = host_for_url(sg["admin"])
-            sg_obj = SyncGateway()
-            sg_obj.enable_import_xattrs(
-                cluster_config=cluster_config,
-                sg_conf=sg_conf,
-                url=sg_ip,
-                enable_import=enable_import
-            )
-            enable_import = False
-        
-        if mode == "di":
-            for ac in sg_accels:
-                ac_ip = host_for_url(sg["admin"])
-                ac_obj = SyncGateway()
-                ac_obj.enable_import_xattrs(
-                    cluster_config=cluster_config,
-                    sg_conf=sg_conf,
-                    url=ac_ip,
-                    enable_import=False
-                )
 
-    # TODO Verify data
-    # Verifies doc body and attachments
-    client.verify_docs_present(url=ls_url, db=ls_db, expected_docs=added_docs, attachments=True)
 
-    if xattrs_enabled:
-        # Verify through SDK that there is no _sync property in the doc body
-        bucket_name = 'data-bucket'
-        doc_ids = ['ls_db_upgrade_doc_{}'.format(i) for i in range(num_docs)]
-        sdk_client = Bucket('couchbase://{}/{}'.format(primary_server.host, bucket_name), password='password', timeout=SDK_TIMEOUT)
-        docs_from_sdk = sdk_client.get_multi(doc_ids)
-        log_info("docs_from_sdk: {}".format(docs_from_sdk))
+def upgrade_sync_gateway(sync_gateways, sync_gateway_version, sync_gateway_upgraded_version, sg_conf, cluster_config):
+    log_info('------------------------------------------')
+    log_info('START Sync Gateway cluster upgrade')
+    log_info('------------------------------------------')
 
-        for i in docs_from_sdk:
-            if "_sync" in docs_from_sdk[i].value:
-                raise Exception("sync section found in docs after upgrade")
+    for sg in sync_gateways:
+        sg_ip = host_for_url(sg["admin"])
+        sg_obj = SyncGateway()
+        verify_sync_gateway_product_info(sg_ip)
+        log_info("Checking for sunc gateway version: {}".format(sync_gateway_version))
+        verify_sync_gateway_version(sg_ip, sync_gateway_version)
+        log_info("Upgrading sync gateway: {}".format(sg_ip))
+        sg_obj.upgrade_sync_gateways(
+            cluster_config=cluster_config,
+            sg_conf=sg_conf,
+            sync_gateway_version=sync_gateway_upgraded_version,
+            url=sg_ip
+        )
 
-    # TODO Verify metadata
-    # Verify channels
-    # Verify revs
-    # No sync data in docbody with xattrs/import enabled
+        verify_sync_gateway_product_info(sg_ip)
+        log_info("Checking for sunc gateway version: {}".format(sync_gateway_upgraded_version))
+        verify_sync_gateway_version(sg_ip, sync_gateway_upgraded_version)
+
+    log_info("Upgraded all the sync gateway nodes in the cluster")
+    log_info('------------------------------------------')
+    log_info('END Sync Gateway cluster upgrade')
+    log_info('------------------------------------------')
+
+
+def upgrade_sg_accel(sg_accels, sync_gateway_version, sync_gateway_upgraded_version, sg_conf, cluster_config):
+    log_info('------------------------------------------')
+    log_info('START SG Accel cluster upgrade')
+    log_info('------------------------------------------')
+
+    for ac in sg_accels:
+        ac_ip = host_for_url(ac["admin"])
+        ac_obj = SyncGateway()
+        verify_sg_accel_product_info(ac_ip)
+        log_info("Checking for sg_accel version: {}".format(sync_gateway_version))
+        verify_sg_accel_version(ac_ip, sync_gateway_version)
+        log_info("Upgrading sg_accel: {}".format(ac_ip))
+        ac_obj.upgrade_sync_gateways(
+            cluster_config=cluster_config,
+            sg_conf=sg_conf,
+            sync_gateway_version=sync_gateway_upgraded_version,
+            url=ac_ip
+        )
+
+        verify_sg_accel_product_info(ac_ip)
+        log_info("Checking for sunc gateway version: {}".format(sync_gateway_upgraded_version))
+        verify_sg_accel_version(ac_ip, sync_gateway_upgraded_version)
+
+    log_info("Upgraded all the sg accel nodes in the cluster")
+    log_info('------------------------------------------')
+    log_info('END SG Accel cluster upgrade')
+    log_info('------------------------------------------')
