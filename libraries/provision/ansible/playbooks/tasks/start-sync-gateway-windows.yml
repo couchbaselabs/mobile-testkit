@@ -11,5 +11,5 @@
   wait_for:
     host={{ ansible_host }}
     port=4984
-    timeout=120  
+    timeout=300
   delegate_to: localhost
