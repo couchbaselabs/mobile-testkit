@@ -14,7 +14,7 @@ from libraries.testkit.config import Config
 from libraries.testkit.sgaccel import SgAccel
 from libraries.testkit.syncgateway import SyncGateway
 from utilities.cluster_config_utils import is_load_balancer_enabled
-from utilities.cluster_config_utils import get_load_balancer_ip
+from utilities.cluster_config_utils import get_load_balancer_ip, get_cbs_servers
 
 
 class Cluster:
@@ -128,6 +128,13 @@ class Cluster:
 
         server_port = 8091
         server_scheme = "http"
+        couchbase_server_primary_node = ""
+        cbs_servers = get_cbs_servers(self._cluster_config)
+        for i in range(len(cbs_servers)):
+            couchbase_server_primary_node = couchbase_server_primary_node + cbs_servers[i]
+            if(i + 1 < len(cbs_servers)):
+                couchbase_server_primary_node = couchbase_server_primary_node + ","
+        log_info("couchbase_server primary node are in cluster{}".format(couchbase_server_primary_node))
 
         if self.cbs_ssl:
             server_port = 18091
@@ -139,7 +146,8 @@ class Cluster:
             "server_port": server_port,
             "server_scheme": server_scheme,
             "autoimport": "",
-            "xattrs": ""
+            "xattrs": "",
+            "couchbase_server_primary_node": couchbase_server_primary_node
         }
 
         # Add configuration to run with xattrs

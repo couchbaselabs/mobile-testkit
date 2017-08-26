@@ -82,6 +82,13 @@ def is_cbs_ssl_enabled(cluster_config):
     return cluster["environment"]["cbs_ssl_enabled"]
 
 
+def get_cbs_servers(cluster_config):
+    """ Loads cluster config to see if cbs ssl is enabled """
+    cluster = load_cluster_config_json(cluster_config)
+    cbs_ips = [cb["ip"] for cb in cluster["couchbase_servers"]]
+    return cbs_ips
+
+
 def is_xattrs_enabled(cluster_config):
     """ Loads cluster config to see if cbs ssl is enabled """
 

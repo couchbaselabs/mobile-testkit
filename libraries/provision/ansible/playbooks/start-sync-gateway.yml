@@ -4,7 +4,7 @@
 
   vars:
     sync_gateway_config_filepath:
-    couchbase_server_primary_node: "{{ hostvars[groups.couchbase_servers[0]].ansible_host }}"
+    # couchbase_server_primary_node: "{{ hostvars[groups.couchbase_servers[0]].ansible_host }}"
     # hack until mobile-testkit/issues/406 allows any sync gateway to be referenced
     sync_gateway_node: "{{ hostvars[groups.sync_gateways[0]].ansible_host }}"
     webhook_ip: "{{ hostvars[groups.webhook_ip[0]].ansible_host }}"
@@ -12,6 +12,7 @@
     autoimport:
     xattrs:
     server_scheme:
+    couchbase_server_primary_node:
     server_port:
 
   tasks:
@@ -26,7 +27,8 @@
 
   vars:
     sync_gateway_config_filepath:
-    couchbase_server_primary_node: "{{ hostvars[groups.couchbase_servers[0]].ansible_host }}"
+    # couchbase_server_primary_node: "{{ hostvars[groups.couchbase_servers[0]].ansible_host }}"
+    couchbase_server_primary_node:
     
   tasks:
   - include: tasks/start-sync-gateway.yml

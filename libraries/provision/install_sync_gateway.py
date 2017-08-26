@@ -9,7 +9,7 @@ from keywords.exceptions import ProvisioningError
 from keywords.utils import log_info, log_warn
 from libraries.provision.ansible_runner import AnsibleRunner
 from libraries.testkit.config import Config
-from utilities.cluster_config_utils import is_cbs_ssl_enabled, is_xattrs_enabled
+from utilities.cluster_config_utils import is_cbs_ssl_enabled, is_xattrs_enabled, get_cbs_servers
 
 
 class SyncGatewayConfig:
@@ -111,6 +111,12 @@ def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False):
 
     ansible_runner = AnsibleRunner(cluster_config)
     config_path = os.path.abspath(sync_gateway_config.config_path)
+    couchbase_server_primary_node = ""
+    cbs_servers = get_cbs_servers(cluster_config)
+    for i in range(len(cbs_servers)):
+        couchbase_server_primary_node = couchbase_server_primary_node + cbs_servers[i]
+        if(i + 1 < len(cbs_servers)):
+            couchbase_server_primary_node = couchbase_server_primary_node + ","
 
     # Create buckets unless the user explicitly asked to skip this step
     if not sync_gateway_config.skip_bucketcreation:
@@ -129,7 +135,8 @@ def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False):
         "server_port": server_port,
         "server_scheme": server_scheme,
         "autoimport": "",
-        "xattrs": ""
+        "xattrs": "",
+        "couchbase_server_primary_node": couchbase_server_primary_node
     }
 
     if is_xattrs_enabled(cluster_config):
@@ -156,7 +163,6 @@ def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False):
         playbook_vars["couchbase_sync_gateway_package_base_url"] = sync_gateway_base_url
         playbook_vars["couchbase_sync_gateway_package"] = sync_gateway_package_name
         playbook_vars["couchbase_sg_accel_package"] = sg_accel_package_name
-
         status = ansible_runner.run_ansible_playbook(
             "install-sync-gateway-package.yml",
             extra_vars=playbook_vars
