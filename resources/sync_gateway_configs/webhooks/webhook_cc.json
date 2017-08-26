@@ -1,13 +1,11 @@
 {
     "interface":":4984",
     "adminInterface": "0.0.0.0:4985",
-    "log": ["CRUD+", "Cache+", "HTTP+", "Changes+", "Events+", "Import+", "DCP+"],
+    "log": ["CRUD+", "Cache+", "HTTP+", "Changes+", "Events+", "Import+"],
     "databases":{
         "db":{
             {{ autoimport }}
-            "unsupported": {
-                {{ xattrs }}
-            },
+            {{ xattrs }}
             "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
             "bucket":"data-bucket",
             "username":"data-bucket",

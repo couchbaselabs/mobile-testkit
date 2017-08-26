@@ -199,9 +199,14 @@ class SyncGateway:
         for ac in cluster_obj["sg_accels"]:
             verify_sg_accel_version(ac["ip"], sync_gateway_version)
 
-    def start_sync_gateway(self, cluster_config, url, config):
-        target = hostname_for_url(cluster_config, url)
-        log_info("Starting sync_gateway on {} ...".format(target))
+    def start_sync_gateways(self, cluster_config, url=None, config=None):
+        """ Start sync gateways in a cluster. If url is passed,
+        start the sync gateway at that url
+        """
+
+        if config is None:
+            raise ProvisioningError("Starting a Sync Gateway requires a config")
+
         ansible_runner = AnsibleRunner(cluster_config)
         config_path = os.path.abspath(config)
 
@@ -219,23 +224,42 @@ class SyncGateway:
 
         if is_xattrs_enabled(cluster_config):
             playbook_vars["autoimport"] = '"import_docs": "continuous",'
-            playbook_vars["xattrs"] = '"enable_extended_attributes": true'
+            playbook_vars["xattrs"] = '"enable_shared_bucket_access": true,'
 
-        status = ansible_runner.run_ansible_playbook(
-            "start-sync-gateway.yml",
-            extra_vars=playbook_vars,
-            subset=target
-        )
+        if url is not None:
+            target = hostname_for_url(cluster_config, url)
+            log_info("Starting {} sync_gateway.".format(target))
+            status = ansible_runner.run_ansible_playbook(
+                "start-sync-gateway.yml",
+                extra_vars=playbook_vars,
+                subset=target
+            )
+        else:
+            log_info("Starting all sync_gateways.")
+            status = ansible_runner.run_ansible_playbook(
+                "start-sync-gateway.yml",
+                extra_vars=playbook_vars
+            )
         if status != 0:
             raise ProvisioningError("Could not start sync_gateway")
 
-    def stop_sync_gateway(self, cluster_config, url):
-        target = hostname_for_url(cluster_config, url)
-        log_info("Shutting down sync_gateway on {} ...".format(target))
+    def stop_sync_gateways(self, cluster_config, url=None):
+        """ Stop sync gateways in a cluster. If url is passed, shut down
+        shut down the sync gateway at that url
+        """
         ansible_runner = AnsibleRunner(cluster_config)
-        status = ansible_runner.run_ansible_playbook(
-            "stop-sync-gateway.yml",
-            subset=target
-        )
+
+        if url is not None:
+            target = hostname_for_url(cluster_config, url)
+            log_info("Shutting down sync_gateway on {} ...".format(target))
+            status = ansible_runner.run_ansible_playbook(
+                "stop-sync-gateway.yml",
+                subset=target
+            )
+        else:
+            log_info("Shutting down all sync_gateways on ...")
+            status = ansible_runner.run_ansible_playbook(
+                "stop-sync-gateway.yml",
+            )
         if status != 0:
             raise ProvisioningError("Could not stop sync_gateway")

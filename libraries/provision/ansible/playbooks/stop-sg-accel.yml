@@ -5,7 +5,7 @@
   tasks:
   - include: tasks/stop-sg-accel.yml
     become: yes
-    when: ansible_distribution == "CentOS"
+    when: ansible_distribution == "CentOS" or ansible_distribution == "RedHat"
 
   - include: tasks/stop-sg-accel-windows.yml
     when: ansible_os_family == "Windows"

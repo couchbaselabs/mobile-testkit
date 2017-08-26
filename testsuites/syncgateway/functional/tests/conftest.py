@@ -12,6 +12,7 @@ from keywords.utils import check_xattr_support, log_info, version_is_binary, com
 from libraries.NetworkUtils import NetworkUtils
 from libraries.testkit import cluster
 from utilities.cluster_config_utils import persist_cluster_config_environment_prop
+from utilities.cluster_config_utils import get_load_balancer_ip
 
 UNSUPPORTED_1_5_0_CC = {
     "test_db_offline_tap_loss_sanity[bucket_online_offline/bucket_online_offline_default_dcp-100]": {
@@ -87,9 +88,17 @@ def pytest_addoption(parser):
                      help="Sync Gateway Accelerator Platform binary to install (ex. centos or windows)",
                      default="centos")
 
+    parser.addoption("--sg-lb",
+                     action="store_true",
+                     help="If set, will enable load balancer for Sync Gateway")
+
     parser.addoption("--sg-ce",
                      action="store_true",
                      help="If set, will install CE version of Sync Gateway")
+
+    parser.addoption("--sequoia",
+                     action="store_true",
+                     help="If set, the tests will use a cluster provisioned by sequoia")
 
 
 # This will be called once for the at the beggining of the execution in the 'tests/' directory
@@ -112,7 +121,9 @@ def params_from_base_suite_setup(request):
     xattrs_enabled = request.config.getoption("--xattrs")
     sg_platform = request.config.getoption("--sg-platform")
     sa_platform = request.config.getoption("--sa-platform")
+    sg_lb = request.config.getoption("--sg-lb")
     sg_ce = request.config.getoption("--sg-ce")
+    use_sequoia = request.config.getoption("--sequoia")
 
     if xattrs_enabled and version_is_binary(sync_gateway_version):
         check_xattr_support(server_version, sync_gateway_version)
@@ -125,6 +136,7 @@ def params_from_base_suite_setup(request):
     log_info("xattrs_enabled: {}".format(xattrs_enabled))
     log_info("sg_platform: {}".format(sg_platform))
     log_info("sa_platform: {}".format(sa_platform))
+    log_info("sg_lb: {}".format(sg_lb))
     log_info("sg_ce: {}".format(sg_ce))
 
     # sg-ce is invalid for di mode
@@ -134,13 +146,25 @@ def params_from_base_suite_setup(request):
     # Make sure mode for sync_gateway is supported ('cc' or 'di')
     validate_sync_gateway_mode(mode)
 
-    # use base_cc cluster config if mode is "cc" or base_di cluster config if more is "di"
+    # use base_(lb_)cc cluster config if mode is "cc" or base_(lb_)di cluster config if mode is "di"
     if ci:
-        log_info("Using 'ci_{}' config!".format(mode))
         cluster_config = "{}/ci_{}".format(CLUSTER_CONFIGS_DIR, mode)
+        if sg_lb:
+            cluster_config = "{}/ci_lb_{}".format(CLUSTER_CONFIGS_DIR, mode)
     else:
-        log_info("Using 'base_{}' config!".format(mode))
         cluster_config = "{}/base_{}".format(CLUSTER_CONFIGS_DIR, mode)
+        if sg_lb:
+            cluster_config = "{}/base_lb_{}".format(CLUSTER_CONFIGS_DIR, mode)
+
+    log_info("Using '{}' config!".format(cluster_config))
+
+    # Add load balancer prop and check if load balancer IP is available
+    if sg_lb:
+        persist_cluster_config_environment_prop(cluster_config, 'sg_lb_enabled', True)
+        log_info("Running tests with load balancer enabled: {}".format(get_load_balancer_ip(cluster_config)))
+    else:
+        log_info("Running tests with load balancer disabled")
+        persist_cluster_config_environment_prop(cluster_config, 'sg_lb_enabled', False)
 
     if cbs_ssl:
         log_info("Running tests with cbs <-> sg ssl enabled")
@@ -160,11 +184,15 @@ def params_from_base_suite_setup(request):
 
     sg_config = sync_gateway_config_path_for_mode("sync_gateway_default_functional_tests", mode)
 
-    # Skip provisioning if user specifies '--skip-provisoning'
-    if not skip_provisioning:
-        cluster_helper = ClusterKeywords()
+    # Skip provisioning if user specifies '--skip-provisoning' or '--sequoia'
+    should_provision = True
+    if skip_provisioning or use_sequoia:
+        should_provision = False
+
+    cluster_utils = ClusterKeywords()
+    if should_provision:
         try:
-            cluster_helper.provision_cluster(
+            cluster_utils.provision_cluster(
                 cluster_config=cluster_config,
                 server_version=server_version,
                 sync_gateway_version=sync_gateway_version,
@@ -179,6 +207,13 @@ def params_from_base_suite_setup(request):
             logging_helper.fetch_and_analyze_logs(cluster_config=cluster_config, test_name=request.node.name)
             raise
 
+    # Hit this intalled running services to verify the correct versions are installed
+    cluster_utils.verify_cluster_versions(
+        cluster_config,
+        expected_server_version=server_version,
+        expected_sync_gateway_version=sync_gateway_version
+    )
+
     # Load topology as a dictionary
     cluster_utils = ClusterKeywords()
     cluster_topology = cluster_utils.get_cluster_topology(cluster_config)
@@ -188,7 +223,8 @@ def params_from_base_suite_setup(request):
         "cluster_config": cluster_config,
         "cluster_topology": cluster_topology,
         "mode": mode,
-        "xattrs_enabled": xattrs_enabled
+        "xattrs_enabled": xattrs_enabled,
+        "sg_lb": sg_lb
     }
 
     log_info("Tearing down 'params_from_base_suite_setup' ...")
@@ -207,8 +243,16 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     cluster_topology = params_from_base_suite_setup["cluster_topology"]
     mode = params_from_base_suite_setup["mode"]
     xattrs_enabled = params_from_base_suite_setup["xattrs_enabled"]
+    sg_lb = params_from_base_suite_setup["sg_lb"]
 
     test_name = request.node.name
+
+    if sg_lb:
+        # These tests target one SG node
+        skip_tests = ['resync', 'log_rotation', 'openidconnect']
+        for test in skip_tests:
+            if test in test_name:
+                pytest.skip("Skipping online/offline tests with load balancer")
 
     # Certain test are diabled for certain modes
     # Given the run conditions, check if the test needs to be skipped

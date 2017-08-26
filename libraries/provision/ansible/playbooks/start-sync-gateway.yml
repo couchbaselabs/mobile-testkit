@@ -16,7 +16,7 @@
 
   tasks:
   - include: tasks/deploy-sync-gateway-config.yml
-    when: ansible_distribution == "CentOS"
+    when: ansible_distribution == "CentOS" or ansible_distribution == "RedHat"
 
   - include: tasks/deploy-sync-gateway-config-windows.yml
     when: ansible_os_family == "Windows"
@@ -30,7 +30,7 @@
     
   tasks:
   - include: tasks/start-sync-gateway.yml
-    when: ansible_distribution == "CentOS"
+    when: ansible_distribution == "CentOS" or ansible_distribution == "RedHat"
 
   - include: tasks/start-sync-gateway-windows.yml
     when: ansible_os_family == "Windows"

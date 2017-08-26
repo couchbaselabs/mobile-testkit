@@ -36,6 +36,7 @@ class SyncGatewayConfig:
             "1.4.0.1",
             "1.4.0.2",
             "1.4.1",
+            "1.4.1.1",
             "1.4.2",
             "1.5.0"
         ]
@@ -141,7 +142,7 @@ def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False, sg_pl
 
     if is_xattrs_enabled(cluster_config):
         playbook_vars["autoimport"] = '"import_docs": "continuous",'
-        playbook_vars["xattrs"] = '"enable_extended_attributes": true'
+        playbook_vars["xattrs"] = '"enable_shared_bucket_access": true,'
 
     # Install Sync Gateway via Source or Package
     if sync_gateway_config.commit is not None:

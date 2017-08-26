@@ -13,6 +13,8 @@ from libraries.testkit.admin import Admin
 from libraries.testkit.config import Config
 from libraries.testkit.sgaccel import SgAccel
 from libraries.testkit.syncgateway import SyncGateway
+from utilities.cluster_config_utils import is_load_balancer_enabled
+from utilities.cluster_config_utils import get_load_balancer_ip
 
 
 class Cluster:
@@ -37,7 +39,18 @@ class Cluster:
         with open("{}.json".format(config)) as f:
             cluster = json.loads(f.read())
 
-        sgs = [{"name": sg["name"], "ip": sg["ip"]} for sg in cluster["sync_gateways"]]
+        # Get load balancer IP
+        lb_ip = None
+        if is_load_balancer_enabled(self._cluster_config):
+            # If load balancer is defined,
+            # Switch all SG URLs to that of load balancer
+            lb_ip = get_load_balancer_ip(self._cluster_config)
+
+            sgs = [{"name": sg["name"], "ip": lb_ip} for sg in cluster["sync_gateways"]]
+            log_info("Using load balancer IP as the SG IP: {}".format(sgs))
+        else:
+            sgs = [{"name": sg["name"], "ip": sg["ip"]} for sg in cluster["sync_gateways"]]
+
         acs = [{"name": ac["name"], "ip": ac["ip"]} for ac in cluster["sg_accels"]]
 
         self.cbs_ssl = cluster["environment"]["cbs_ssl_enabled"]
@@ -71,7 +84,7 @@ class Cluster:
         status = ansible_runner.run_ansible_playbook("stop-sync-gateway.yml")
         assert status == 0, "Failed to stop sync gateway"
 
-        # Stop sync_gateways
+        # Stop sync_gateway accels
         log_info(">>> Stopping sg_accel")
         status = ansible_runner.run_ansible_playbook("stop-sg-accel.yml")
         assert status == 0, "Failed to stop sg_accel"
@@ -132,7 +145,7 @@ class Cluster:
         # Add configuration to run with xattrs
         if self.xattrs:
             playbook_vars["autoimport"] = '"import_docs": "continuous",'
-            playbook_vars["xattrs"] = '"enable_extended_attributes": true'
+            playbook_vars["xattrs"] = '"enable_shared_bucket_access": true,'
 
         status = ansible_runner.run_ansible_playbook(
             "start-sync-gateway.yml",

@@ -72,8 +72,8 @@ def test_channels_view_after_restart(params_from_base_test_setup, sg_conf_name):
 
     # Reset sync gateway to clear channel cache
     sg = SyncGateway()
-    sg.stop_sync_gateway(cluster_config=cluster_config, url=sg_url)
-    sg.start_sync_gateway(cluster_config=cluster_config, url=sg_url, config=sg_conf)
+    sg.stop_sync_gateways(cluster_config=cluster_config, url=sg_url)
+    sg.start_sync_gateways(cluster_config=cluster_config, url=sg_url, config=sg_conf)
 
     # Repopulate channel cache with view call
     client.verify_docs_in_changes(url=sg_url, db=sg_db, expected_docs=bulk_docs_resp, auth=seth_session)

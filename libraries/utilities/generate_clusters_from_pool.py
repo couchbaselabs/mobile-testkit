@@ -362,6 +362,7 @@ def write_config(config, pool_file, use_docker, sg_windows, sg_accel_windows):
         f.write("\n\n[environment]\n")
         f.write("cbs_ssl_enabled=False\n")
         f.write("xattrs_enabled=False\n")
+        f.write("sg_lb_enabled=False\n")
 
         if sg_windows:
             f.write("\n\n[sync_gateways:vars]\n")
@@ -391,7 +392,8 @@ def write_config(config, pool_file, use_docker, sg_windows, sg_accel_windows):
             "load_balancers": load_balancers,
             "environment": {
                 "cbs_ssl_enabled": False,
-                "xattrs_enabled": False
+                "xattrs_enabled": False,
+                "sg_lb_enabled": False
             }
         }
 
@@ -416,7 +418,7 @@ def get_hosts(pool_file="resources/pool.json"):
     return ips, ip_to_node_type
 
 
-def generate_clusters_from_pool(pool_file, use_docker, sg_windows=False, sg_accel_windows=False):
+def generate_clusters_from_pool(pool_file, use_docker=False, sg_windows=False, sg_accel_windows=False):
 
     cluster_confs = [
 
@@ -424,6 +426,10 @@ def generate_clusters_from_pool(pool_file, use_docker, sg_windows=False, sg_acce
         ClusterDef("base_di", num_sgs=1, num_acs=1, num_cbs=1, num_lgs=0, num_lbs=0),
         ClusterDef("ci_cc", num_sgs=1, num_acs=0, num_cbs=3, num_lgs=0, num_lbs=0),
         ClusterDef("ci_di", num_sgs=1, num_acs=2, num_cbs=3, num_lgs=0, num_lbs=0),
+        ClusterDef("base_lb_cc", num_sgs=3, num_acs=0, num_cbs=1, num_lgs=0, num_lbs=1),
+        ClusterDef("base_lb_di", num_sgs=3, num_acs=1, num_cbs=1, num_lgs=0, num_lbs=1),
+        ClusterDef("ci_lb_cc", num_sgs=3, num_acs=0, num_cbs=3, num_lgs=0, num_lbs=1),
+        ClusterDef("ci_lb_di", num_sgs=3, num_acs=3, num_cbs=3, num_lgs=0, num_lbs=1),
         ClusterDef("multiple_servers_cc", num_sgs=1, num_acs=0, num_cbs=3, num_lgs=0, num_lbs=0),
         ClusterDef("multiple_servers_di", num_sgs=1, num_acs=1, num_cbs=3, num_lgs=0, num_lbs=0),
         ClusterDef("multiple_sg_accels_di", num_sgs=1, num_acs=3, num_cbs=1, num_lgs=0, num_lbs=0),

@@ -80,9 +80,10 @@ def test_webhooks(params_from_base_test_setup, sg_conf_name, num_users, num_chan
     expected_events = (num_users * num_docs * num_revisions) + (num_users * num_docs)
     received_events = len(ws.get_data())
     log_info("expected_events: {} received_events {}".format(expected_events, received_events))
-    assert expected_events == received_events
-
+    # Stop ws before asserting
+    # Else successive tests will fail to start ws
     ws.stop()
+    assert expected_events == received_events
 
 
 @pytest.mark.sanity
@@ -406,6 +407,11 @@ def poll_for_webhook_data(webhook_server, expected_doc_ids, expected_num_revs, e
         log_info('Getting posted webhook data ...')
 
         data = webhook_server.get_data()
+        # Remove unwanted data from the response
+        for item in data:
+            if "_id" not in item:
+                data.remove(item)
+
         posted_webhook_events = {item['_id']: item for item in data}
         posted_webhook_events_ids = [item['_id'] for item in data]
         posted_webhook_events_len = len(posted_webhook_events)
@@ -448,4 +454,4 @@ def poll_for_webhook_data(webhook_server, expected_doc_ids, expected_num_revs, e
             log_info('Found all webhook events')
             break
 
-        time.sleep(1)
+        time.sleep(5)

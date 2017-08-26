@@ -22,7 +22,7 @@ def load_sync_gateway_config(sync_gateway_config, mode, server_url, xattrs_enabl
 
         if xattrs_enabled:
             autoimport_prop = '"import_docs": "continuous",'
-            xattrs_prop = '"enable_extended_attributes": true'
+            xattrs_prop = '"enable_shared_bucket_access": true,'
         else:
             autoimport_prop = ""
             xattrs_prop = ""
@@ -71,7 +71,7 @@ def test_log_rotation_default_values(params_from_base_test_setup, sg_conf_name):
     cluster_helper = ClusterKeywords()
     cluster_hosts = cluster_helper.get_cluster_topology(cluster_conf)
     sg_one_url = cluster_hosts["sync_gateways"][0]["public"]
-    sg_helper.stop_sync_gateway(cluster_config=cluster_conf, url=sg_one_url)
+    sg_helper.stop_sync_gateways(cluster_config=cluster_conf, url=sg_one_url)
 
     # read sample sg_conf
     data = load_sync_gateway_config(sg_conf, mode, cluster_hosts["couchbase_servers"][0], xattrs_enabled)
@@ -95,7 +95,7 @@ def test_log_rotation_default_values(params_from_base_test_setup, sg_conf_name):
     remote_executor.execute("sudo chmod 777 -R /tmp/sg_logs")
     # iterate 5th times to verify that every time we get new backup file with ~100MB
     for i in xrange(5):
-        sg_helper.start_sync_gateway(cluster_config=cluster_conf, url=sg_one_url, config=temp_conf)
+        sg_helper.start_sync_gateways(cluster_config=cluster_conf, url=sg_one_url, config=temp_conf)
         # ~1M MB will be added to log file after requests
         remote_executor.execute(
             "for ((i=1;i <= 1000;i += 1)); do curl -s http://localhost:4984/ > /dev/null; done")
@@ -104,11 +104,11 @@ def test_log_rotation_default_values(params_from_base_test_setup, sg_conf_name):
         # verify num of log files
         assert stdout[0].rstrip() == str(i + 1)
 
-        sg_helper.stop_sync_gateway(cluster_config=cluster_conf, url=sg_one_url)
+        sg_helper.stop_sync_gateways(cluster_config=cluster_conf, url=sg_one_url)
         # generate log file  with size  ~99MB
         remote_executor.execute("sudo dd if=/dev/zero of=/tmp/sg_logs/sg_log_rotation.log bs=104850000 count=1")
 
-    sg_helper.start_sync_gateway(cluster_config=cluster_conf, url=sg_one_url, config=sg_conf)
+    sg_helper.start_sync_gateways(cluster_config=cluster_conf, url=sg_one_url, config=sg_conf)
 
     # Remove generated conf file
     os.remove(temp_conf)
@@ -152,11 +152,11 @@ def test_log_logKeys_string(params_from_base_test_setup, sg_conf_name):
     # Stop sync_gateways
     log_info(">>> Stopping sync_gateway")
     sg_helper = SyncGateway()
-    sg_helper.stop_sync_gateway(cluster_config=cluster_conf, url=sg_one_url)
+    sg_helper.stop_sync_gateways(cluster_config=cluster_conf, url=sg_one_url)
     try:
-        sg_helper.start_sync_gateway(cluster_config=cluster_conf, url=sg_one_url, config=temp_conf)
+        sg_helper.start_sync_gateways(cluster_config=cluster_conf, url=sg_one_url, config=temp_conf)
     except ProvisioningError:
-        sg_helper.start_sync_gateway(cluster_config=cluster_conf, url=sg_one_url, config=sg_conf)
+        sg_helper.start_sync_gateways(cluster_config=cluster_conf, url=sg_one_url, config=sg_conf)
         # Remove generated conf file
         os.remove(temp_conf)
         return
@@ -204,10 +204,10 @@ def test_log_nondefault_logKeys_set(params_from_base_test_setup, sg_conf_name):
     # Stop sync_gateways
     log_info(">>> Stopping sync_gateway")
     sg_helper = SyncGateway()
-    sg_helper.stop_sync_gateway(cluster_config=cluster_conf, url=sg_one_url)
+    sg_helper.stop_sync_gateways(cluster_config=cluster_conf, url=sg_one_url)
 
     # Start sync_gateways
-    sg_helper.start_sync_gateway(cluster_config=cluster_conf, url=sg_one_url, config=temp_conf)
+    sg_helper.start_sync_gateways(cluster_config=cluster_conf, url=sg_one_url, config=temp_conf)
 
     # Remove generated conf file
     os.remove(temp_conf)
@@ -242,7 +242,7 @@ def test_log_maxage_10_timestamp_ignored(params_from_base_test_setup, sg_conf_na
     cluster_hosts = cluster_helper.get_cluster_topology(cluster_conf)
     sg_one_url = cluster_hosts["sync_gateways"][0]["public"]
 
-    sg_helper.stop_sync_gateway(cluster_config=cluster_conf, url=sg_one_url)
+    sg_helper.stop_sync_gateways(cluster_config=cluster_conf, url=sg_one_url)
 
     remote_executor.execute("mkdir -p /tmp/sg_logs")
     remote_executor.execute("sudo rm -rf /tmp/sg_logs/sg_log_rotation*")
@@ -261,15 +261,15 @@ def test_log_maxage_10_timestamp_ignored(params_from_base_test_setup, sg_conf_na
     with open(temp_conf, 'w') as fp:
         json.dump(data, fp)
 
-    sg_helper.start_sync_gateway(cluster_config=cluster_conf, url=sg_one_url, config=temp_conf)
+    sg_helper.start_sync_gateways(cluster_config=cluster_conf, url=sg_one_url, config=temp_conf)
     # ~1M MB will be added to log file after requests
     remote_executor.execute("for ((i=1;i <= 1000;i += 1)); do curl -s http://localhost:4984/ > /dev/null; done")
 
-    sg_helper.stop_sync_gateway(cluster_config=cluster_conf, url=sg_one_url)
+    sg_helper.stop_sync_gateways(cluster_config=cluster_conf, url=sg_one_url)
     # change timestamp for log when SG stopped( we don't change file naming)
     remote_executor.execute("sudo touch -d \"10 days ago\" /tmp/sg_logs/sg_log_rotation*")
 
-    sg_helper.start_sync_gateway(cluster_config=cluster_conf, url=sg_one_url, config=temp_conf)
+    sg_helper.start_sync_gateways(cluster_config=cluster_conf, url=sg_one_url, config=temp_conf)
 
     _, stdout, _ = remote_executor.execute("ls /tmp/sg_logs/ | grep sg_log_rotation | wc -l")
     # verify that new log file was not created
@@ -319,11 +319,11 @@ def test_log_rotation_invalid_path(params_from_base_test_setup, sg_conf_name):
     log_info(">>> Stopping sync_gateway")
     sg_helper = SyncGateway()
 
-    sg_helper.stop_sync_gateway(cluster_config=cluster_conf, url=sg_one_url)
+    sg_helper.stop_sync_gateways(cluster_config=cluster_conf, url=sg_one_url)
     try:
-        sg_helper.start_sync_gateway(cluster_config=cluster_conf, url=sg_one_url, config=temp_conf)
+        sg_helper.start_sync_gateways(cluster_config=cluster_conf, url=sg_one_url, config=temp_conf)
     except ProvisioningError:
-        sg_helper.start_sync_gateway(cluster_config=cluster_conf, url=sg_one_url, config=sg_conf)
+        sg_helper.start_sync_gateways(cluster_config=cluster_conf, url=sg_one_url, config=sg_conf)
         # Remove generated conf file
         os.remove(temp_conf)
         return
@@ -362,7 +362,7 @@ def test_log_200mb(params_from_base_test_setup, sg_conf_name):
     cluster_hosts = cluster_helper.get_cluster_topology(cluster_conf)
     sg_one_url = cluster_hosts["sync_gateways"][0]["public"]
 
-    sg_helper.stop_sync_gateway(cluster_config=cluster_conf, url=sg_one_url)
+    sg_helper.stop_sync_gateways(cluster_config=cluster_conf, url=sg_one_url)
 
     remote_executor.execute("mkdir -p /tmp/sg_logs")
     remote_executor.execute("sudo rm -rf /tmp/sg_logs/sg_log_rotation*")
@@ -380,7 +380,7 @@ def test_log_200mb(params_from_base_test_setup, sg_conf_name):
     with open(temp_conf, 'w') as fp:
         json.dump(data, fp)
 
-    sg_helper.start_sync_gateway(cluster_config=cluster_conf, url=sg_one_url, config=temp_conf)
+    sg_helper.start_sync_gateways(cluster_config=cluster_conf, url=sg_one_url, config=temp_conf)
     # ~1M MB will be added to log file after requests
     remote_executor.execute("for ((i=1;i <= 1000;i += 1)); do curl -s http://localhost:4984/ > /dev/null; done")
 
@@ -422,7 +422,7 @@ def test_log_number_backups(params_from_base_test_setup, sg_conf_name):
     cluster_helper = ClusterKeywords()
     cluster_hosts = cluster_helper.get_cluster_topology(cluster_conf)
     sg_one_url = cluster_hosts["sync_gateways"][0]["public"]
-    sg_helper.stop_sync_gateway(cluster_config=cluster_conf, url=sg_one_url)
+    sg_helper.stop_sync_gateways(cluster_config=cluster_conf, url=sg_one_url)
 
     remote_executor.execute("mkdir -p /tmp/sg_logs")
     remote_executor.execute("sudo rm -rf /tmp/sg_logs/sg_log_rotation*")
@@ -432,7 +432,7 @@ def test_log_number_backups(params_from_base_test_setup, sg_conf_name):
 
     # iterate 5 times
     for i in xrange(5):
-        sg_helper.start_sync_gateway(cluster_config=cluster_conf, url=sg_one_url, config=sg_conf)
+        sg_helper.start_sync_gateways(cluster_config=cluster_conf, url=sg_one_url, config=sg_conf)
         # ~1M MB will be added to log file after requests
         remote_executor.execute(
             "for ((i=1;i <= 1000;i += 1)); do curl -s http://localhost:4984/ > /dev/null; done")
@@ -441,11 +441,11 @@ def test_log_number_backups(params_from_base_test_setup, sg_conf_name):
         # max 3 files: 2 backups + 1 log file
         assert stdout[0].rstrip() == str(min(3, i + 2))
 
-        sg_helper.stop_sync_gateway(cluster_config=cluster_conf, url=sg_one_url)
+        sg_helper.stop_sync_gateways(cluster_config=cluster_conf, url=sg_one_url)
         # generate log file with almost 1MB
         remote_executor.execute("sudo dd if=/dev/zero of=/tmp/sg_logs/sg_log_rotation.log bs=1030000 count=1")
 
-    sg_helper.start_sync_gateway(cluster_config=cluster_conf, url=sg_one_url, config=sg_conf)
+    sg_helper.start_sync_gateways(cluster_config=cluster_conf, url=sg_one_url, config=sg_conf)
 
 
 # https://github.com/couchbase/sync_gateway/issues/2222
@@ -495,11 +495,11 @@ def test_log_rotation_negative(params_from_base_test_setup, sg_conf_name):
     # Stop sync_gateways
     log_info(">>> Stopping sync_gateway")
     sg_helper = SyncGateway()
-    sg_helper.stop_sync_gateway(cluster_config=cluster_conf, url=sg_one_url)
+    sg_helper.stop_sync_gateways(cluster_config=cluster_conf, url=sg_one_url)
     try:
-        sg_helper.start_sync_gateway(cluster_config=cluster_conf, url=sg_one_url, config=temp_conf)
+        sg_helper.start_sync_gateways(cluster_config=cluster_conf, url=sg_one_url, config=temp_conf)
     except ProvisioningError:
-        sg_helper.start_sync_gateway(cluster_config=cluster_conf, url=sg_one_url, config=sg_conf)
+        sg_helper.start_sync_gateways(cluster_config=cluster_conf, url=sg_one_url, config=sg_conf)
         # Remove generated conf file
         os.remove(temp_conf)
         return
@@ -538,7 +538,7 @@ def test_log_maxbackups_0(params_from_base_test_setup, sg_conf_name):
     # Stop sync_gateways
     log_info(">>> Stopping sync_gateway")
     sg_helper = SyncGateway()
-    sg_helper.stop_sync_gateway(cluster_config=cluster_conf, url=sg_one_url)
+    sg_helper.stop_sync_gateways(cluster_config=cluster_conf, url=sg_one_url)
 
     remote_executor.execute("mkdir -p /tmp/sg_logs")
     remote_executor.execute("sudo rm -rf /tmp/sg_logs/sg_log_rotation*")
@@ -557,7 +557,7 @@ def test_log_maxbackups_0(params_from_base_test_setup, sg_conf_name):
     with open(temp_conf, 'w') as fp:
         json.dump(data, fp)
 
-    sg_helper.start_sync_gateway(cluster_config=cluster_conf, url=sg_one_url, config=temp_conf)
+    sg_helper.start_sync_gateways(cluster_config=cluster_conf, url=sg_one_url, config=temp_conf)
     # ~1M MB will be added to log file after requests
     remote_executor.execute("for ((i=1;i <= 1000;i += 1)); do curl -s http://localhost:4984/ > /dev/null; done")
 
@@ -606,11 +606,11 @@ def test_log_logLevel_invalid(params_from_base_test_setup, sg_conf_name):
     # Stop sync_gateways
     log_info(">>> Stopping sync_gateway")
     sg_helper = SyncGateway()
-    sg_helper.stop_sync_gateway(cluster_config=cluster_conf, url=sg_one_url)
+    sg_helper.stop_sync_gateways(cluster_config=cluster_conf, url=sg_one_url)
     try:
-        sg_helper.start_sync_gateway(cluster_config=cluster_conf, url=sg_one_url, config=temp_conf)
+        sg_helper.start_sync_gateways(cluster_config=cluster_conf, url=sg_one_url, config=temp_conf)
     except ProvisioningError:
-        sg_helper.start_sync_gateway(cluster_config=cluster_conf, url=sg_one_url, config=sg_conf)
+        sg_helper.start_sync_gateways(cluster_config=cluster_conf, url=sg_one_url, config=sg_conf)
         # Remove generated conf file
         os.remove(temp_conf)
         return
