@@ -51,7 +51,7 @@ class ChangesTracker:
                     self.processed_changes[doc["id"]] = doc["changes"]
         log_info("[Changes Tracker] Total processed changes: {}".format(len(self.processed_changes)))
 
-    def start(self, timeout=1000, heartbeat=None, request_timeout=10000):
+    def start(self, timeout=1000, heartbeat=None, request_timeout=None):
         """
         Start a longpoll changes feed and and store the results in self.processed changes
         """
