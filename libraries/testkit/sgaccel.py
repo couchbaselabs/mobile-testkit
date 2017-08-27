@@ -5,7 +5,7 @@ import requests
 
 import libraries.testkit.settings
 from libraries.provision.ansible_runner import AnsibleRunner
-from utilities.cluster_config_utils import is_cbs_ssl_enabled
+from utilities.cluster_config_utils import is_cbs_ssl_enabled, get_cbs_servers
 
 log = logging.getLogger(libraries.testkit.settings.LOGGER)
 
@@ -41,13 +41,21 @@ class SgAccel:
         conf_path = os.path.abspath(config)
 
         log.info(">>> Starting sg_accel with configuration: {}".format(conf_path))
+        couchbase_server_primary_node = ""
+        cbs_servers = get_cbs_servers(self.cluster_config)
+        for i in range(len(cbs_servers)):
+            couchbase_server_primary_node = couchbase_server_primary_node + cbs_servers[i]
+            if(i + 1 < len(cbs_servers)):
+                couchbase_server_primary_node = couchbase_server_primary_node + ","
+        log.info("couchbase_server primary node are in cluster{}".format(couchbase_server_primary_node))
 
         status = self.ansible_runner.run_ansible_playbook(
             "start-sg-accel.yml",
             extra_vars={
                 "sync_gateway_config_filepath": conf_path,
                 "server_port": self.server_port,
-                "server_scheme": self.server_scheme
+                "server_scheme": self.server_scheme,
+                "couchbase_server_primary_node": couchbase_server_primary_node
             },
             subset=self.hostname
         )
