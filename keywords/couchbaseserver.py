@@ -398,7 +398,10 @@ class CouchbaseServer:
             if time.time() - start > keywords.constants.CLIENT_REQUEST_TIMEOUT:
                 raise Exception("TIMEOUT while trying to create server buckets.")
             try:
-                bucket = Bucket("couchbase://{}/{}".format(self.host, name), password='password')
+                if self.cbs_ssl:
+                    bucket = Bucket("couchbases://{}/{}?ssl=no_verify".format(self.host, name), password='password')
+                else:
+                    bucket = Bucket("couchbase://{}/{}".format(self.host, name), password='password')
                 bucket.get('foo')
             except NotFoundError:
                 log_info("Key not found error: Bucket is ready!")
@@ -417,8 +420,10 @@ class CouchbaseServer:
         Deletes docs that follow the below format
         _sync:rev:att_doc:34:1-e7fa9a5e6bb25f7a40f36297247ca93e
         """
-
-        b = Bucket("couchbase://{}/{}".format(self.host, bucket), password='password')
+        if self.cbs_ssl:
+            b = Bucket("couchbases://{}/{}?ssl=no_verify".format(self.host, bucket), password='password')
+        else:
+            b = Bucket("couchbase://{}/{}".format(self.host, bucket), password='password')
         b_manager = b.bucket_manager()
         b_manager.n1ql_index_create_primary(ignore_exists=True)
         cached_rev_doc_ids = []
@@ -436,7 +441,10 @@ class CouchbaseServer:
         Returns server doc ids matching a prefix (ex. '_sync:rev:')
         """
 
-        b = Bucket("couchbase://{}/{}".format(self.host, bucket), password='password')
+        if self.cbs_ssl:
+            b = Bucket("couchbases://{}/{}?ssl=no_verify".format(self.host, bucket), password='password')
+        else:
+            b = Bucket("couchbase://{}/{}".format(self.host, bucket), password='password')
         b_manager = b.bucket_manager()
         b_manager.n1ql_index_create_primary(ignore_exists=True)
         found_ids = []
@@ -725,5 +733,8 @@ class CouchbaseServer:
 
     def get_sdk_bucket(self, bucket_name):
         """ Gets an SDK bucket object """
-        connection_str = "couchbase://{}/{}".format(self.host, bucket_name)
+        if self.cbs_ssl:
+            connection_str = "couchbases://{}/{}?ssl=no_verify".format(self.host, bucket_name)
+        else:
+            connection_str = "couchbase://{}/{}".format(self.host, bucket_name)
         return Bucket(connection_str, password='password')

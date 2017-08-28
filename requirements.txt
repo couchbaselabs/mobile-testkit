@@ -10,7 +10,7 @@ botocore==1.4.5
 cffi==1.10.0
 colorama==0.3.3
 configparser==3.5.0
-couchbase==2.2.4
+couchbase==2.2.6
 cryptography==1.8.1
 docker==2.2.1
 docker-pycreds==0.2.1

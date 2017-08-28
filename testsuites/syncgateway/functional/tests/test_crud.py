@@ -103,7 +103,10 @@ def test_document_resurrection(params_from_base_test_setup, sg_conf_name, deleti
 
     # Initialize clients
     sg_client = MobileRestClient()
-    sdk_client = Bucket('couchbase://{}/{}'.format(cbs_host, bucket_name), password='password')
+    if ssl_enabled:
+        sdk_client = Bucket('couchbases://{}/{}?ssl=no_verify'.format(cbs_host, bucket_name), password='password')
+    else:
+        sdk_client = Bucket('couchbase://{}/{}'.format(cbs_host, bucket_name), password='password')
 
     # Create Sync Gateway user
     sg_user_channels = ['NASA', 'NATGEO']
@@ -298,6 +301,7 @@ def verify_sg_deletes(sg_client, sg_url, sg_db, expected_deleted_ids, sg_auth):
         he = None
         with pytest.raises(HTTPError) as he:
             sg_client.get_doc(url=sg_url, db=sg_db, doc_id=doc_id, auth=sg_auth)
+        log_info("HTTP error message is {}".format(he.value.message))
         assert he is not None
         log_info(he.value.message)
         assert he.value.message.startswith('403 Client Error: Forbidden for url:')

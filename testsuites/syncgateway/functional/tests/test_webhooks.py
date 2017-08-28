@@ -139,6 +139,7 @@ def test_webhooks_crud(params_from_base_test_setup, sg_conf_name, filtered):
     sg_admin_url = cluster_topology['sync_gateways'][0]['admin']
     sg_url = cluster_topology['sync_gateways'][0]['public']
     cbs_url = cluster_topology['couchbase_servers'][0]
+    ssl_enabled = params_from_base_test_setup["ssl_enabled"]
 
     sg_db = 'db'
     bucket_name = 'data-bucket'
@@ -155,7 +156,10 @@ def test_webhooks_crud(params_from_base_test_setup, sg_conf_name, filtered):
 
     sg_client = MobileRestClient()
     cbs_ip = host_for_url(cbs_url)
-    sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password')
+    if ssl_enabled:
+        sdk_client = Bucket('couchbases://{}/{}?ssl=no_verify'.format(cbs_ip, bucket_name), password='password')
+    else:
+        sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password')
 
     sg_info = UserInfo('sg_user', 'pass', channels=['shared'], roles=[])
     sdk_info = UserInfo('sdk_user', 'pass', channels=['shared'], roles=[])

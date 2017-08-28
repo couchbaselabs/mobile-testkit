@@ -109,7 +109,10 @@ def test_numeric_expiry_as_ttl(params_from_base_test_setup, sg_conf_name):
     bucket_name = "data-bucket"
     cbs_ip = host_for_url(cbs_url)
 
-    sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password')
+    if ssl_enabled:
+        sdk_client = Bucket('couchbases://{}/{}?ssl=no_verify'.format(cbs_ip, bucket_name), password='password')
+    else:
+        sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password')
     client = MobileRestClient()
 
     client.create_user(url=sg_url_admin, db=sg_db, name=sg_user_name, password=sg_user_password, channels=sg_user_channels)
@@ -209,7 +212,10 @@ def test_string_expiry_as_ttl(params_from_base_test_setup, sg_conf_name):
     bucket_name = "data-bucket"
     cbs_ip = host_for_url(cbs_url)
 
-    sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password')
+    if ssl_enabled:
+        sdk_client = Bucket('couchbases://{}/{}?ssl=no_verify'.format(cbs_ip, bucket_name), password='password')
+    else:
+        sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password')
 
     client = MobileRestClient()
 
@@ -311,7 +317,10 @@ def test_numeric_expiry_as_unix_date(params_from_base_test_setup, sg_conf_name):
     bucket_name = "data-bucket"
     cbs_ip = host_for_url(cbs_url)
 
-    sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password')
+    if ssl_enabled:
+        sdk_client = Bucket('couchbases://{}/{}?ssl=no_verify'.format(cbs_ip, bucket_name), password='password')
+    else:
+        sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password')
 
     client = MobileRestClient()
 
@@ -416,7 +425,10 @@ def test_string_expiry_as_unix_date(params_from_base_test_setup, sg_conf_name):
     bucket_name = "data-bucket"
     cbs_ip = host_for_url(cbs_url)
 
-    sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password')
+    if ssl_enabled:
+        sdk_client = Bucket('couchbases://{}/{}?ssl=no_verify'.format(cbs_ip, bucket_name), password='password')
+    else:
+        sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password')
 
     client = MobileRestClient()
 
@@ -525,7 +537,10 @@ def test_string_expiry_as_iso_8601_date(params_from_base_test_setup, sg_conf_nam
     bucket_name = "data-bucket"
     cbs_ip = host_for_url(cbs_url)
 
-    sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password')
+    if ssl_enabled:
+        sdk_client = Bucket('couchbases://{}/{}?ssl=no_verify'.format(cbs_ip, bucket_name), password='password')
+    else:
+        sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password')
 
     client = MobileRestClient()
 
@@ -709,7 +724,10 @@ def test_rolling_ttl_expires(params_from_base_test_setup, sg_conf_name):
     bucket_name = "data-bucket"
     cbs_ip = host_for_url(cbs_url)
 
-    sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password')
+    if ssl_enabled:
+        sdk_client = Bucket('couchbases://{}/{}?ssl=no_verify'.format(cbs_ip, bucket_name), password='password')
+    else:
+        sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password')
 
     client = MobileRestClient()
 
@@ -812,7 +830,10 @@ def test_rolling_ttl_remove_expirary(params_from_base_test_setup, sg_conf_name):
     bucket_name = "data-bucket"
     cbs_ip = host_for_url(cbs_url)
 
-    sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password')
+    if ssl_enabled:
+        sdk_client = Bucket('couchbases://{}/{}?ssl=no_verify'.format(cbs_ip, bucket_name), password='password')
+    else:
+        sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password')
 
     client = MobileRestClient()
 
@@ -915,7 +936,10 @@ def test_setting_expiry_in_bulk_docs(params_from_base_test_setup, sg_conf_name):
     bucket_name = "data-bucket"
     cbs_ip = host_for_url(cbs_url)
 
-    sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password')
+    if ssl_enabled:
+        sdk_client = Bucket('couchbases://{}/{}?ssl=no_verify'.format(cbs_ip, bucket_name), password='password')
+    else:
+        sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password')
 
     client = MobileRestClient()
 
