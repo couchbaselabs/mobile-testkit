@@ -2,6 +2,7 @@ import logging
 import json
 
 from keywords.exceptions import FeatureSupportedError
+from utilities.cluster_config_utils import get_cbs_servers
 
 
 # TODO: Use python logging hooks instead of wrappers - https://github.com/couchbaselabs/mobile-testkit/issues/686
@@ -190,3 +191,13 @@ def check_xattr_support(server_version, sync_gateway_version):
         raise FeatureSupportedError('Make sure you are using Coucbhase Server 5.0+ for xattrs')
     if compare_versions(sync_gateway_version, '1.5') < 0:
         raise FeatureSupportedError('Make sure you are using Coucbhase Sync Gateway 1.5+ for xattrs')
+
+
+def add_cbs_to_sg_config_server_field(cluster_config):
+    couchbase_server_primary_node = ""
+    cbs_servers = get_cbs_servers(cluster_config)
+    for i in range(len(cbs_servers)):
+            couchbase_server_primary_node = couchbase_server_primary_node + cbs_servers[i]
+            if(i + 1 < len(cbs_servers)):
+                couchbase_server_primary_node = couchbase_server_primary_node + ","
+    return couchbase_server_primary_node

@@ -11,7 +11,8 @@ from libraries.provision.ansible_runner import AnsibleRunner
 from libraries.testkit.admin import Admin
 from libraries.testkit.debug import log_request, log_response
 from utilities.cluster_config_utils import is_cbs_ssl_enabled
-from utilities.cluster_config_utils import is_xattrs_enabled, get_cbs_servers
+from utilities.cluster_config_utils import is_xattrs_enabled
+from keywords.utils import add_cbs_to_sg_config_server_field
 
 log = logging.getLogger(libraries.testkit.settings.LOGGER)
 
@@ -33,12 +34,8 @@ class SyncGateway:
         if is_cbs_ssl_enabled(self.cluster_config):
             self.server_port = 18091
             self.server_scheme = "https"
-        self.couchbase_server_primary_node = ""
-        cbs_servers = get_cbs_servers(self.cluster_config)
-        for i in range(len(cbs_servers)):
-            self.couchbase_server_primary_node = self.couchbase_server_primary_node + cbs_servers[i]
-            if(i + 1 < len(cbs_servers)):
-                self.couchbase_server_primary_node = self.couchbase_server_primary_node + ","
+
+        self.couchbase_server_primary_node = add_cbs_to_sg_config_server_field(self.cluster_config)
 
     def info(self):
         r = requests.get(self.url)

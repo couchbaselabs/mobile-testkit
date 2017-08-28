@@ -8,9 +8,8 @@ from keywords.ClusterKeywords import ClusterKeywords
 from keywords.exceptions import ProvisioningError
 from keywords.remoteexecutor import RemoteExecutor
 from keywords.SyncGateway import SyncGateway, sync_gateway_config_path_for_mode
-from keywords.utils import log_info
+from keywords.utils import log_info, add_cbs_to_sg_config_server_field
 from libraries.testkit.cluster import Cluster
-from utilities.cluster_config_utils import get_cbs_servers
 
 
 def load_sync_gateway_config(sync_gateway_config, mode, server_url, xattrs_enabled, cluster_config):
@@ -27,13 +26,7 @@ def load_sync_gateway_config(sync_gateway_config, mode, server_url, xattrs_enabl
         else:
             autoimport_prop = ""
             xattrs_prop = ""
-        couchbase_server_primary_node = ""
-        cbs_servers = get_cbs_servers(cluster_config)
-        for i in range(len(cbs_servers)):
-            couchbase_server_primary_node = couchbase_server_primary_node + cbs_servers[i]
-            if(i + 1 < len(cbs_servers)):
-                couchbase_server_primary_node = couchbase_server_primary_node + ","
-
+        couchbase_server_primary_node = add_cbs_to_sg_config_server_field(cluster_config)
         temp = template.render(
             couchbase_server_primary_node=couchbase_server_primary_node,
             is_index_writer="false",

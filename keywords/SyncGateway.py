@@ -6,7 +6,7 @@ import requests
 from requests import Session
 
 from keywords.constants import SYNC_GATEWAY_CONFIGS
-from keywords.utils import version_is_binary
+from keywords.utils import version_is_binary, add_cbs_to_sg_config_server_field
 from keywords.utils import log_r
 from keywords.utils import version_and_build
 from keywords.utils import hostname_for_url
@@ -15,7 +15,7 @@ from keywords.utils import log_info
 from keywords.exceptions import ProvisioningError
 
 from libraries.provision.ansible_runner import AnsibleRunner
-from utilities.cluster_config_utils import is_cbs_ssl_enabled, get_cbs_servers
+from utilities.cluster_config_utils import is_cbs_ssl_enabled
 from utilities.cluster_config_utils import is_xattrs_enabled
 
 
@@ -209,13 +209,7 @@ class SyncGateway:
 
         ansible_runner = AnsibleRunner(cluster_config)
         config_path = os.path.abspath(config)
-        couchbase_server_primary_node = ""
-        cbs_servers = get_cbs_servers(cluster_config)
-        for i in range(len(cbs_servers)):
-            couchbase_server_primary_node = couchbase_server_primary_node + cbs_servers[i]
-            if(i + 1 < len(cbs_servers)):
-                couchbase_server_primary_node = couchbase_server_primary_node + ","
-
+        couchbase_server_primary_node = add_cbs_to_sg_config_server_field(cluster_config)
         if is_cbs_ssl_enabled(cluster_config):
             self.server_port = 18091
             self.server_scheme = "https"
