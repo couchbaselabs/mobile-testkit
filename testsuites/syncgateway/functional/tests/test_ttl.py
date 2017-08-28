@@ -111,10 +111,15 @@ def test_numeric_expiry_as_ttl(params_from_base_test_setup, sg_conf_name):
     bucket_name = "data-bucket"
     cbs_ip = host_for_url(cbs_url)
 
-    if cluster.ipv6:
-        sdk_client = Bucket('couchbase://{}/{}?ipv6=allow'.format(cbs_ip, bucket_name), password='password')
+    if ssl_enabled and cluster.ipv6:
+        connection_url = "couchbases://{}/{}?ssl=no_verify&ipv6=allow".format(cbs_ip, bucket_name)
+    elif ssl_enabled and not cluster.ipv6:
+        connection_url = "couchbases://{}/{}?ssl=no_verify".format(cbs_ip, bucket_name)
+    elif not ssl_enabled and cluster.ipv6:
+        connection_url = "couchbase://{}/{}?ipv6=allow".format(cbs_ip, bucket_name)
     else:
-        sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password')
+        connection_url = 'couchbase://{}/{}'.format(cbs_ip, bucket_name)
+    sdk_client = Bucket(connection_url, password='password')
     client = MobileRestClient()
 
     client.create_user(url=sg_url_admin, db=sg_db, name=sg_user_name, password=sg_user_password, channels=sg_user_channels)
@@ -214,11 +219,15 @@ def test_string_expiry_as_ttl(params_from_base_test_setup, sg_conf_name):
     bucket_name = "data-bucket"
     cbs_ip = host_for_url(cbs_url)
 
-    if cluster.ipv6:
-        sdk_client = Bucket('couchbase://{}/{}?ipv6=allow'.format(cbs_ip, bucket_name), password='password')
+    if ssl_enabled and cluster.ipv6:
+        connection_url = "couchbases://{}/{}?ssl=no_verify&ipv6=allow".format(cbs_ip, bucket_name)
+    elif ssl_enabled and not cluster.ipv6:
+        connection_url = "couchbases://{}/{}?ssl=no_verify".format(cbs_ip, bucket_name)
+    elif not ssl_enabled and cluster.ipv6:
+        connection_url = "couchbase://{}/{}?ipv6=allow".format(cbs_ip, bucket_name)
     else:
-        sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password')
-
+        connection_url = 'couchbase://{}/{}'.format(cbs_ip, bucket_name)
+    sdk_client = Bucket(connection_url, password='password')
     client = MobileRestClient()
 
     client.create_user(url=sg_url_admin, db=sg_db, name=sg_user_name, password=sg_user_password, channels=sg_user_channels)
@@ -319,11 +328,15 @@ def test_numeric_expiry_as_unix_date(params_from_base_test_setup, sg_conf_name):
     bucket_name = "data-bucket"
     cbs_ip = host_for_url(cbs_url)
 
-    if cluster.ipv6:
-        sdk_client = Bucket('couchbase://{}/{}?ipv6=allow'.format(cbs_ip, bucket_name), password='password')
+    if ssl_enabled and cluster.ipv6:
+        connection_url = "couchbases://{}/{}?ssl=no_verify&ipv6=allow".format(cbs_ip, bucket_name)
+    elif ssl_enabled and not cluster.ipv6:
+        connection_url = "couchbases://{}/{}?ssl=no_verify".format(cbs_ip, bucket_name)
+    elif not ssl_enabled and cluster.ipv6:
+        connection_url = "couchbase://{}/{}?ipv6=allow".format(cbs_ip, bucket_name)
     else:
-        sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password')
-
+        connection_url = 'couchbase://{}/{}'.format(cbs_ip, bucket_name)
+    sdk_client = Bucket(connection_url, password='password')
     client = MobileRestClient()
 
     client.create_user(url=sg_url_admin, db=sg_db, name=sg_user_name, password=sg_user_password, channels=sg_user_channels)
@@ -427,11 +440,15 @@ def test_string_expiry_as_unix_date(params_from_base_test_setup, sg_conf_name):
     bucket_name = "data-bucket"
     cbs_ip = host_for_url(cbs_url)
 
-    if cluster.ipv6:
-        sdk_client = Bucket('couchbase://{}/{}?ipv6=allow'.format(cbs_ip, bucket_name), password='password')
+    if ssl_enabled and cluster.ipv6:
+        connection_url = "couchbases://{}/{}?ssl=no_verify&ipv6=allow".format(cbs_ip, bucket_name)
+    elif ssl_enabled and not cluster.ipv6:
+        connection_url = "couchbases://{}/{}?ssl=no_verify".format(cbs_ip, bucket_name)
+    elif not ssl_enabled and cluster.ipv6:
+        connection_url = "couchbase://{}/{}?ipv6=allow".format(cbs_ip, bucket_name)
     else:
-        sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password')
-
+        connection_url = 'couchbase://{}/{}'.format(cbs_ip, bucket_name)
+    sdk_client = Bucket(connection_url, password='password')
     client = MobileRestClient()
 
     client.create_user(url=sg_url_admin, db=sg_db, name=sg_user_name, password=sg_user_password, channels=sg_user_channels)
@@ -539,11 +556,15 @@ def test_string_expiry_as_iso_8601_date(params_from_base_test_setup, sg_conf_nam
     bucket_name = "data-bucket"
     cbs_ip = host_for_url(cbs_url)
 
-    if cluster.ipv6:
-        sdk_client = Bucket('couchbase://{}/{}?ipv6=allow'.format(cbs_ip, bucket_name), password='password')
+    if ssl_enabled and cluster.ipv6:
+        connection_url = "couchbases://{}/{}?ssl=no_verify&ipv6=allow".format(cbs_ip, bucket_name)
+    elif ssl_enabled and not cluster.ipv6:
+        connection_url = "couchbases://{}/{}?ssl=no_verify".format(cbs_ip, bucket_name)
+    elif not ssl_enabled and cluster.ipv6:
+        connection_url = "couchbase://{}/{}?ipv6=allow".format(cbs_ip, bucket_name)
     else:
-        sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password')
-
+        connection_url = 'couchbase://{}/{}'.format(cbs_ip, bucket_name)
+    sdk_client = Bucket(connection_url, password='password')
     client = MobileRestClient()
 
     client.create_user(url=sg_url_admin, db=sg_db, name=sg_user_name, password=sg_user_password, channels=sg_user_channels)
@@ -725,11 +746,15 @@ def test_rolling_ttl_expires(params_from_base_test_setup, sg_conf_name):
     bucket_name = "data-bucket"
     cbs_ip = host_for_url(cbs_url)
 
-    if cluster.ipv6:
-        sdk_client = Bucket('couchbase://{}/{}?ipv6=allow'.format(cbs_ip, bucket_name), password='password')
+    if ssl_enabled and cluster.ipv6:
+        connection_url = "couchbases://{}/{}?ssl=no_verify&ipv6=allow".format(cbs_ip, bucket_name)
+    elif ssl_enabled and not cluster.ipv6:
+        connection_url = "couchbases://{}/{}?ssl=no_verify".format(cbs_ip, bucket_name)
+    elif not ssl_enabled and cluster.ipv6:
+        connection_url = "couchbase://{}/{}?ipv6=allow".format(cbs_ip, bucket_name)
     else:
-        sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password')
-
+        connection_url = 'couchbase://{}/{}'.format(cbs_ip, bucket_name)
+    sdk_client = Bucket(connection_url, password='password')
     client = MobileRestClient()
 
     client.create_user(url=sg_url_admin, db=sg_db, name=sg_user_name, password=sg_user_password, channels=sg_user_channels)
@@ -831,11 +856,15 @@ def test_rolling_ttl_remove_expirary(params_from_base_test_setup, sg_conf_name):
     bucket_name = "data-bucket"
     cbs_ip = host_for_url(cbs_url)
 
-    if cluster.ipv6:
-        sdk_client = Bucket('couchbase://{}/{}?ipv6=allow'.format(cbs_ip, bucket_name), password='password')
+    if ssl_enabled and cluster.ipv6:
+        connection_url = "couchbases://{}/{}?ssl=no_verify&ipv6=allow".format(cbs_ip, bucket_name)
+    elif ssl_enabled and not cluster.ipv6:
+        connection_url = "couchbases://{}/{}?ssl=no_verify".format(cbs_ip, bucket_name)
+    elif not ssl_enabled and cluster.ipv6:
+        connection_url = "couchbase://{}/{}?ipv6=allow".format(cbs_ip, bucket_name)
     else:
-        sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password')
-
+        connection_url = 'couchbase://{}/{}'.format(cbs_ip, bucket_name)
+    sdk_client = Bucket(connection_url, password='password')
     client = MobileRestClient()
 
     client.create_user(url=sg_url_admin, db=sg_db, name=sg_user_name, password=sg_user_password, channels=sg_user_channels)
@@ -937,11 +966,15 @@ def test_setting_expiry_in_bulk_docs(params_from_base_test_setup, sg_conf_name):
     bucket_name = "data-bucket"
     cbs_ip = host_for_url(cbs_url)
 
-    if cluster.ipv6:
-        sdk_client = Bucket('couchbase://{}/{}?ipv6=allow'.format(cbs_ip, bucket_name), password='password')
+    if ssl_enabled and cluster.ipv6:
+        connection_url = "couchbases://{}/{}?ssl=no_verify&ipv6=allow".format(cbs_ip, bucket_name)
+    elif ssl_enabled and not cluster.ipv6:
+        connection_url = "couchbases://{}/{}?ssl=no_verify".format(cbs_ip, bucket_name)
+    elif not ssl_enabled and cluster.ipv6:
+        connection_url = "couchbase://{}/{}?ipv6=allow".format(cbs_ip, bucket_name)
     else:
-        sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password')
-
+        connection_url = 'couchbase://{}/{}'.format(cbs_ip, bucket_name)
+    sdk_client = Bucket(connection_url, password='password')
     client = MobileRestClient()
 
     client.create_user(url=sg_url_admin, db=sg_db, name=sg_user_name, password=sg_user_password, channels=sg_user_channels)

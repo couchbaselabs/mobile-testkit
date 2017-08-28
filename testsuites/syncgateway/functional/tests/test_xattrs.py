@@ -78,6 +78,7 @@ def test_olddoc_nil(params_from_base_test_setup, sg_conf_name):
     sg_admin_url = cluster_topology['sync_gateways'][0]['admin']
     sg_url = cluster_topology['sync_gateways'][0]['public']
     cbs_url = cluster_topology['couchbase_servers'][0]
+    ssl_enabled = params_from_base_test_setup["ssl_enabled"]
 
     log_info('sg_conf: {}'.format(sg_conf))
     log_info('sg_admin_url: {}'.format(sg_admin_url))
@@ -90,11 +91,15 @@ def test_olddoc_nil(params_from_base_test_setup, sg_conf_name):
     # Create clients
     sg_client = MobileRestClient()
     cbs_ip = host_for_url(cbs_url)
-    if cluster.ipv6:
-        sdk_client = Bucket('couchbase://{}/{}?ipv6=allow'.format(cbs_ip, bucket_name), password='password', timeout=SDK_TIMEOUT)
+    if ssl_enabled and cluster.ipv6:
+        connection_url = "couchbases://{}/{}?ssl=no_verify&ipv6=allow".format(cbs_ip, bucket_name)
+    elif ssl_enabled and not cluster.ipv6:
+        connection_url = "couchbases://{}/{}?ssl=no_verify".format(cbs_ip, bucket_name)
+    elif not ssl_enabled and cluster.ipv6:
+        connection_url = "couchbase://{}/{}?ipv6=allow".format(cbs_ip, bucket_name)
     else:
-        sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password', timeout=SDK_TIMEOUT)
-
+        connection_url = 'couchbase://{}/{}'.format(cbs_ip, bucket_name)
+    sdk_client = Bucket(connection_url, password='password')
     # Create user / session
     user_one_info = UserInfo(name='user1', password='pass', channels=['ABC'], roles=[])
     user_two_info = UserInfo(name='user2', password='pass', channels=['CBS'], roles=[])
@@ -330,6 +335,7 @@ def test_on_demand_import_of_external_updates(params_from_base_test_setup, sg_co
     sg_admin_url = cluster_topology['sync_gateways'][0]['admin']
     sg_url = cluster_topology['sync_gateways'][0]['public']
     cbs_url = cluster_topology['couchbase_servers'][0]
+    ssl_enabled = params_from_base_test_setup["ssl_enabled"]
 
     log_info('sg_conf: {}'.format(sg_conf))
     log_info('sg_admin_url: {}'.format(sg_admin_url))
@@ -342,12 +348,15 @@ def test_on_demand_import_of_external_updates(params_from_base_test_setup, sg_co
     # Create clients
     sg_client = MobileRestClient()
     cbs_ip = host_for_url(cbs_url)
-    # TODO : Add support for ssl enabled once ssl enabled support is merged to master
-    if cluster.ipv6:
-        sdk_client = Bucket('couchbase://{}/{}?ipv6=allow'.format(cbs_ip, bucket_name), password='password', timeout=SDK_TIMEOUT)
+    if ssl_enabled and cluster.ipv6:
+        connection_url = "couchbases://{}/{}?ssl=no_verify&ipv6=allow".format(cbs_ip, bucket_name)
+    elif ssl_enabled and not cluster.ipv6:
+        connection_url = "couchbases://{}/{}?ssl=no_verify".format(cbs_ip, bucket_name)
+    elif not ssl_enabled and cluster.ipv6:
+        connection_url = "couchbase://{}/{}?ipv6=allow".format(cbs_ip, bucket_name)
     else:
-        sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password', timeout=SDK_TIMEOUT)
-
+        connection_url = 'couchbase://{}/{}'.format(cbs_ip, bucket_name)
+    sdk_client = Bucket(connection_url, password='password')
     # Create user / session
     seth_user_info = UserInfo(name='seth', password='pass', channels=['NASA'], roles=[])
     sg_client.create_user(
@@ -454,11 +463,15 @@ def test_offline_processing_of_external_updates(params_from_base_test_setup, sg_
     # Create clients
     sg_client = MobileRestClient()
     cbs_ip = host_for_url(cbs_url)
-    if cluster.ipv6:
-        sdk_client = Bucket('couchbase://{}/{}?ipv6=allow'.format(cbs_ip, bucket_name), password='password', timeout=SDK_TIMEOUT)
+    if ssl_enabled and cluster.ipv6:
+        connection_url = "couchbases://{}/{}?ssl=no_verify&ipv6=allow".format(cbs_ip, bucket_name)
+    elif ssl_enabled and not cluster.ipv6:
+        connection_url = "couchbases://{}/{}?ssl=no_verify".format(cbs_ip, bucket_name)
+    elif not ssl_enabled and cluster.ipv6:
+        connection_url = "couchbase://{}/{}?ipv6=allow".format(cbs_ip, bucket_name)
     else:
-        sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password', timeout=SDK_TIMEOUT)
-
+        connection_url = 'couchbase://{}/{}'.format(cbs_ip, bucket_name)
+    sdk_client = Bucket(connection_url, password='password')
     # Create user / session
     seth_user_info = UserInfo(name='seth', password='pass', channels=['SG', 'SDK'], roles=[])
     sg_client.create_user(
@@ -596,11 +609,15 @@ def test_large_initial_import(params_from_base_test_setup, sg_conf_name):
 
     # Connect to server via SDK
     cbs_ip = host_for_url(cbs_url)
-    if cluster.ipv6:
-        sdk_client = Bucket('couchbase://{}/{}?ipv6=allow'.format(cbs_ip, bucket_name), password='password', timeout=SDK_TIMEOUT)
+    if ssl_enabled and cluster.ipv6:
+        connection_url = "couchbases://{}/{}?ssl=no_verify&ipv6=allow".format(cbs_ip, bucket_name)
+    elif ssl_enabled and not cluster.ipv6:
+        connection_url = "couchbases://{}/{}?ssl=no_verify".format(cbs_ip, bucket_name)
+    elif not ssl_enabled and cluster.ipv6:
+        connection_url = "couchbase://{}/{}?ipv6=allow".format(cbs_ip, bucket_name)
     else:
-        sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password', timeout=SDK_TIMEOUT)
-
+        connection_url = 'couchbase://{}/{}'.format(cbs_ip, bucket_name)
+    sdk_client = Bucket(connection_url, password='password')
     # Generate array for each doc doc to give it a larger size
     def prop_gen():
         return {'sample_array': ["test_item_{}".format(i) for i in range(20)]}
@@ -733,11 +750,15 @@ def test_purge(params_from_base_test_setup, sg_conf_name, use_multiple_channels)
 
     # Connect to server via SDK
     cbs_ip = host_for_url(cbs_url)
-    if cluster.ipv6:
-        sdk_client = Bucket('couchbase://{}/{}?ipv6=allow'.format(cbs_ip, bucket_name), password='password', timeout=SDK_TIMEOUT)
+    if ssl_enabled and cluster.ipv6:
+        connection_url = "couchbases://{}/{}?ssl=no_verify&ipv6=allow".format(cbs_ip, bucket_name)
+    elif ssl_enabled and not cluster.ipv6:
+        connection_url = "couchbases://{}/{}?ssl=no_verify".format(cbs_ip, bucket_name)
+    elif not ssl_enabled and cluster.ipv6:
+        connection_url = "couchbase://{}/{}?ipv6=allow".format(cbs_ip, bucket_name)
     else:
-        sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password', timeout=SDK_TIMEOUT)
-
+        connection_url = 'couchbase://{}/{}'.format(cbs_ip, bucket_name)
+    sdk_client = Bucket(connection_url, password='password')
     # Create 'number_docs_per_client' docs from SDK
     sdk_doc_bodies = document.create_docs('sdk', number_docs_per_client, channels=seth_user_info.channels)
     sdk_docs = {doc['_id']: doc for doc in sdk_doc_bodies}
@@ -920,11 +941,15 @@ def test_sdk_does_not_see_sync_meta(params_from_base_test_setup, sg_conf_name):
 
     # Connect to server via SDK
     cbs_ip = host_for_url(cbs_url)
-    if cluster.ipv6:
-        sdk_client = Bucket('couchbase://{}/{}?ipv6=allow'.format(cbs_ip, bucket_name), password='password', timeout=SDK_TIMEOUT)
+    if ssl_enabled and cluster.ipv6:
+        connection_url = "couchbases://{}/{}?ssl=no_verify&ipv6=allow".format(cbs_ip, bucket_name)
+    elif ssl_enabled and not cluster.ipv6:
+        connection_url = "couchbases://{}/{}?ssl=no_verify".format(cbs_ip, bucket_name)
+    elif not ssl_enabled and cluster.ipv6:
+        connection_url = "couchbase://{}/{}?ipv6=allow".format(cbs_ip, bucket_name)
     else:
-        sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password', timeout=SDK_TIMEOUT)
-
+        connection_url = 'couchbase://{}/{}'.format(cbs_ip, bucket_name)
+    sdk_client = Bucket(connection_url, password='password')
     # Add 'number_of_sg_docs' to Sync Gateway
     sg_doc_bodies = document.create_docs(
         doc_id_prefix='sg_docs',
@@ -1044,10 +1069,15 @@ def test_sg_sdk_interop_unique_docs(params_from_base_test_setup, sg_conf_name):
     # Connect to server via SDK
     log_info('Connecting to bucket ...')
     cbs_ip = host_for_url(cbs_url)
-    if cluster.ipv6:
-        sdk_client = Bucket('couchbase://{}/{}?ipv6=allow'.format(cbs_ip, bucket_name), password='password', timeout=SDK_TIMEOUT)
+    if ssl_enabled and cluster.ipv6:
+        connection_url = "couchbases://{}/{}?ssl=no_verify&ipv6=allow".format(cbs_ip, bucket_name)
+    elif ssl_enabled and not cluster.ipv6:
+        connection_url = "couchbases://{}/{}?ssl=no_verify".format(cbs_ip, bucket_name)
+    elif not ssl_enabled and cluster.ipv6:
+        connection_url = "couchbase://{}/{}?ipv6=allow".format(cbs_ip, bucket_name)
     else:
-        sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password', timeout=SDK_TIMEOUT)
+        connection_url = 'couchbase://{}/{}'.format(cbs_ip, bucket_name)
+    sdk_client = Bucket(connection_url, password='password')
 
     # Create docs and add them via sdk
     log_info('Adding docs via sdk ...')
@@ -1283,10 +1313,15 @@ def test_sg_sdk_interop_shared_docs(params_from_base_test_setup,
 
     # Connect to server via SDK
     cbs_ip = host_for_url(cbs_url)
-    if cluster.ipv6:
-        sdk_client = Bucket('couchbase://{}/{}?ipv6=allow'.format(cbs_ip, bucket_name), password='password', timeout=SDK_TIMEOUT)
+    if ssl_enabled and cluster.ipv6:
+        connection_url = "couchbases://{}/{}?ssl=no_verify&ipv6=allow".format(cbs_ip, bucket_name)
+    elif ssl_enabled and not cluster.ipv6:
+        connection_url = "couchbases://{}/{}?ssl=no_verify".format(cbs_ip, bucket_name)
+    elif not ssl_enabled and cluster.ipv6:
+        connection_url = "couchbase://{}/{}?ipv6=allow".format(cbs_ip, bucket_name)
     else:
-        sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password', timeout=SDK_TIMEOUT)
+        connection_url = 'couchbase://{}/{}'.format(cbs_ip, bucket_name)
+    sdk_client = Bucket(connection_url, password='password')
 
     # Inject custom properties into doc template
     def update_props():
@@ -1544,10 +1579,15 @@ def test_sg_feed_changed_with_xattrs_importEnabled(params_from_base_test_setup,
     cbs_ip = host_for_url(cbs_url)
 
     # Connect to server via SDK
-    if cluster.ipv6:
-        sdk_client = Bucket('couchbase://{}/{}?ipv6=allow'.format(cbs_ip, bucket_name), password='password', timeout=SDK_TIMEOUT)
+    if ssl_enabled and cluster.ipv6:
+        connection_url = "couchbases://{}/{}?ssl=no_verify&ipv6=allow".format(cbs_ip, bucket_name)
+    elif ssl_enabled and not cluster.ipv6:
+        connection_url = "couchbases://{}/{}?ssl=no_verify".format(cbs_ip, bucket_name)
+    elif not ssl_enabled and cluster.ipv6:
+        connection_url = "couchbase://{}/{}?ipv6=allow".format(cbs_ip, bucket_name)
     else:
-        sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password', timeout=SDK_TIMEOUT)
+        connection_url = 'couchbase://{}/{}'.format(cbs_ip, bucket_name)
+    sdk_client = Bucket(connection_url, password='password')
 
     # Inject custom properties into doc template
     def update_props():
@@ -2190,10 +2230,15 @@ def test_sg_sdk_interop_shared_updates_from_sg(params_from_base_test_setup,
 
     # Connect to server via SDK
     cbs_ip = host_for_url(cbs_url)
-    if cluster.ipv6:
-        sdk_client = Bucket('couchbase://{}/{}?ipv6=allow'.format(cbs_ip, bucket_name), password='password', timeout=SDK_TIMEOUT)
+    if ssl_enabled and cluster.ipv6:
+        connection_url = "couchbases://{}/{}?ssl=no_verify&ipv6=allow".format(cbs_ip, bucket_name)
+    elif ssl_enabled and not cluster.ipv6:
+        connection_url = "couchbases://{}/{}?ssl=no_verify".format(cbs_ip, bucket_name)
+    elif not ssl_enabled and cluster.ipv6:
+        connection_url = "couchbase://{}/{}?ipv6=allow".format(cbs_ip, bucket_name)
     else:
-        sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password', timeout=SDK_TIMEOUT)
+        connection_url = 'couchbase://{}/{}'.format(cbs_ip, bucket_name)
+    sdk_client = Bucket(connection_url, password='password')
 
     # Inject custom properties into doc template
     def update_props():
