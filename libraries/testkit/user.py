@@ -536,18 +536,17 @@ class User:
                 doc = json.loads(line)
 
                 # We are not interested in _user/ docs
-                if doc["id"].startswith("_user/"):
+                if doc["id"].startswith("_user/") or "doc" not in doc:
                     continue
 
                 # Close connection if termination doc is recieved in _changes
-                if "doc" in doc:
-                    if termination_doc_id is not None and doc["doc"]["_id"] == termination_doc_id:
-                        r.close()
-                        return docs
+                if termination_doc_id is not None and doc["doc"]["_id"] == termination_doc_id:
+                    r.close()
+                    return docs
 
-                    log.debug("{} DOC FROM CONTINUOUS _changes: {}: {}".format(self.name, doc["doc"]["_id"], doc["doc"]["_rev"]))
-                    # Store doc
-                    docs[doc["doc"]["_id"]] = doc["doc"]["_rev"]
+                log.debug("{} DOC FROM CONTINUOUS _changes: {}: {}".format(self.name, doc["doc"]["_id"], doc["doc"]["_rev"]))
+                # Store doc
+                docs[doc["doc"]["_id"]] = doc["doc"]["_rev"]
 
         # if connection is closed from server
         return docs
