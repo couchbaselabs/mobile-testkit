@@ -17,3 +17,17 @@
       body_format: json
       headers:
         Content-Type: "application/json"
+    when: ansible_distribution == "CentOS" or ansible_distribution == "RedHat"
+
+  - win_uri:
+      url: http://localhost:4985/{{ db }}/_online
+      status_code: 200, 201
+      timeout: 30
+      method: POST
+      body: 
+        mainlevel:
+          delay: "{{ delay }}"
+      body_format: json
+      headers:
+        Content-Type: "application/json"
+    when: ansible_os_family == "Windows"
