@@ -374,7 +374,7 @@ class SyncGateway(object):
             )
             if status != 0:
                 raise ProvisioningError("Failed to install sync_gateway source")
-        
+
         if url is not None:
             target = hostname_for_url(cluster_config, url)
             log_info("Starting {} sync_gateway.".format(target))
