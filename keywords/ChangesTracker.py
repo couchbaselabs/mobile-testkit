@@ -122,7 +122,7 @@ class ChangesTracker:
         log_info("[Changes Tracker] Closing _changes feed ...")
         self.cancel = True
 
-    def wait_until(self, expected_docs, timeout=60, rev_prefix_gen=False):
+    def wait_until(self, expected_docs, timeout=30, rev_prefix_gen=False):
         """
         Poll self.processed_changes to see if all expected docs have been recieved
         via the changes feed. This will return false if the polling exceeds the timeout
