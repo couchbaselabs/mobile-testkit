@@ -1,4 +1,6 @@
 import os
+import random
+import time
 
 from keywords.couchbaseserver import CouchbaseServer, verify_server_version
 from libraries.testkit.cluster import Cluster
@@ -14,6 +16,8 @@ from keywords import document
 from keywords import attachment
 from couchbase.bucket import Bucket
 from keywords.constants import SDK_TIMEOUT
+from concurrent.futures import ProcessPoolExecutor, as_completed
+from requests.exceptions import HTTPError
 
 
 def test_upgrade(params_from_base_test_setup):
@@ -35,15 +39,21 @@ def test_upgrade(params_from_base_test_setup):
     client = MobileRestClient()
     log_info("ls_url: {}".format(ls_url))
     ls_db = client.create_database(ls_url, name="ls_db")
-    sg_db = "db"
     num_docs = 10
 
     # Create user and session on SG
     sg_user_channels = ["sg_user_channel"]
     sg_db = "db"
     sg_user_name = "sg_user"
-    client.create_user(url=sg_admin_url, db=sg_db, name=sg_user_name, password="password", channels=sg_user_channels)
-    sg_session = client.create_session(url=sg_admin_url, db=sg_db, name=sg_user_name)
+    sg_user_password = "password"
+    client.create_user(
+        url=sg_admin_url,
+        db=sg_db,
+        name=sg_user_name,
+        password=sg_user_password,
+        channels=sg_user_channels
+    )
+    sg_session = client.create_session(url=sg_admin_url, db=sg_db, name=sg_user_name, password=sg_user_password)
 
     # Start continuous push pull replication ls_db_one <-> sg_db_one
     log_info("Starting replication from liteserv to sync gateway")
@@ -62,107 +72,161 @@ def test_upgrade(params_from_base_test_setup):
     )
 
     # Add docs to liteserv
-    added_docs = client.add_docs(url=ls_url, db=ls_db, number=num_docs, id_prefix="ls_db_upgrade_doc", attachments_generator=attachment.generate_png_10_10)
+    added_docs = client.add_docs(url=ls_url, db=ls_db, channels=sg_user_channels, number=num_docs, id_prefix="ls_db_upgrade_doc", attachments_generator=attachment.generate_png_10_10)
 
-    # Supported upgrade process
-    # 1. Upgrade SGs first docmeta -> docmeta - CBS 5.0.0 does not support TAP.
-    # 2. Upgrade the CBS cluster.
-    # 3. Enable import/xattrs on SGs
+    # start updating docs
+    terminator_doc_id = 'terminator'
+    with ProcessPoolExecutor(max_workers=1) as up:
+        # Start updates in background process
+        updates_future = up.submit(
+            update_docs,
+            client,
+            ls_url,
+            ls_db,
+            added_docs,
+            sg_session,
+            terminator_doc_id
+        )
 
-    # Upgrade SG docmeta -> docmeta
-    cluster_util = ClusterKeywords()
-    topology = cluster_util.get_cluster_topology(cluster_config, lb_enable=False)
-    sync_gateways = topology["sync_gateways"]
-    sg_accels = topology["sg_accels"]
+        log_info("added_docs after updates: {}".format(added_docs))
+        # Supported upgrade process
+        # 1. Upgrade SGs first docmeta -> docmeta - CBS 5.0.0 does not support TAP.
+        # 2. Upgrade the CBS cluster.
+        # 3. Enable import/xattrs on SGs
 
-    upgrade_sync_gateway(
-        sync_gateways,
-        sync_gateway_version,
-        sync_gateway_upgraded_version,
-        sg_conf,
-        cluster_config
-    )
+        # Upgrade SG docmeta -> docmeta
+        cluster_util = ClusterKeywords()
+        topology = cluster_util.get_cluster_topology(cluster_config, lb_enable=False)
+        sync_gateways = topology["sync_gateways"]
+        sg_accels = topology["sg_accels"]
 
-    if mode == "di":
-        upgrade_sg_accel(
-            sg_accels,
+        upgrade_sync_gateway(
+            sync_gateways,
             sync_gateway_version,
             sync_gateway_upgraded_version,
             sg_conf,
             cluster_config
         )
 
-    # Upgrade CBS
-    cluster = Cluster(config=cluster_config)
-    if len(cluster.servers) < 3:
-        raise Exception("Please provide at least 3 servers")
-
-    server_urls = []
-    for server in cluster.servers:
-        server_urls.append(server.url)
-
-    primary_server = cluster.servers[0]
-    secondary_server = cluster.servers[1]
-    servers = cluster.servers[1:]
-
-    upgrade_server_cluster(
-        servers,
-        primary_server,
-        secondary_server,
-        server_version,
-        server_upgraded_version,
-        server_urls,
-        cluster_config
-    )
-
-    if xattrs_enabled:
-        # Enable xattrs on all SG/SGAccel nodes
-        # cc - Start 1 SG with import enabled, all with XATTRs enabled
-        # di - All SGs/SGAccels with xattrs enabled - this will also enable import on SGAccel
-        #    - Do not enable import in SG.
-        # Enable xattrs on all nodes
-        enable_import = True
-        for sg in sync_gateways:
-            sg_ip = host_for_url(sg["admin"])
-            sg_obj = SyncGateway()
-            sg_obj.enable_import_xattrs(
-                cluster_config=cluster_config,
-                sg_conf=sg_conf,
-                url=sg_ip,
-                enable_import=enable_import
-            )
-            enable_import = False
-
         if mode == "di":
-            for ac in sg_accels:
-                ac_ip = host_for_url(sg["admin"])
-                ac_obj = SyncGateway()
-                ac_obj.enable_import_xattrs(
+            upgrade_sg_accel(
+                sg_accels,
+                sync_gateway_version,
+                sync_gateway_upgraded_version,
+                sg_conf,
+                cluster_config
+            )
+
+        # Upgrade CBS
+        cluster = Cluster(config=cluster_config)
+        if len(cluster.servers) < 3:
+            raise Exception("Please provide at least 3 servers")
+
+        server_urls = []
+        for server in cluster.servers:
+            server_urls.append(server.url)
+
+        primary_server = cluster.servers[0]
+        secondary_server = cluster.servers[1]
+        servers = cluster.servers[1:]
+
+        upgrade_server_cluster(
+            servers,
+            primary_server,
+            secondary_server,
+            server_version,
+            server_upgraded_version,
+            server_urls,
+            cluster_config
+        )
+
+        if xattrs_enabled:
+            # Enable xattrs on all SG/SGAccel nodes
+            # cc - Start 1 SG with import enabled, all with XATTRs enabled
+            # di - All SGs/SGAccels with xattrs enabled - this will also enable import on SGAccel
+            #    - Do not enable import in SG.
+            # Enable xattrs on all nodes
+            enable_import = True
+            for sg in sync_gateways:
+                sg_ip = host_for_url(sg["admin"])
+                sg_obj = SyncGateway()
+                sg_obj.enable_import_xattrs(
                     cluster_config=cluster_config,
                     sg_conf=sg_conf,
-                    url=ac_ip,
-                    enable_import=False
+                    url=sg_ip,
+                    enable_import=enable_import
                 )
+                enable_import = False
 
-    # TODO Verify data
-    # Verifies doc body and attachments
-    client.verify_docs_present(url=ls_url, db=ls_db, expected_docs=added_docs, attachments=True)
+            if mode == "di":
+                for ac in sg_accels:
+                    ac_ip = host_for_url(sg["admin"])
+                    ac_obj = SyncGateway()
+                    ac_obj.enable_import_xattrs(
+                        cluster_config=cluster_config,
+                        sg_conf=sg_conf,
+                        url=ac_ip,
+                        enable_import=False
+                    )
 
-    if xattrs_enabled:
-        # Verify through SDK that there is no _sync property in the doc body
-        bucket_name = 'data-bucket'
-        doc_ids = ['ls_db_upgrade_doc_{}'.format(i) for i in range(num_docs)]
-        sdk_client = Bucket('couchbase://{}/{}'.format(primary_server.host, bucket_name), password='password', timeout=SDK_TIMEOUT)
-        docs_from_sdk = sdk_client.get_multi(doc_ids)
+        send_changes_termination_doc(sg_url, sg_db, sg_session, terminator_doc_id, sg_user_channels)
+        added_docs = updates_future.result()
+        log_info("added_docs before updates: {}".format(added_docs))
 
-        for i in docs_from_sdk:
-            if "_sync" in docs_from_sdk[i].value:
-                raise Exception("sync section found in docs after upgrade")
+        # Verifies doc body and attachments
+        client.verify_docs_present(url=ls_url, db=ls_db, expected_docs=added_docs, attachments=True)
 
-    # TODO Verify metadata
-    # Verify channels
-    # Verify revs
-    # No sync data in docbody with xattrs/import enabled
+        if xattrs_enabled:
+            # Verify through SDK that there is no _sync property in the doc body
+            bucket_name = 'data-bucket'
+            doc_ids = ['ls_db_upgrade_doc_{}'.format(i) for i in range(num_docs)]
+            sdk_client = Bucket('couchbase://{}/{}'.format(primary_server.host, bucket_name), password='password', timeout=SDK_TIMEOUT)
+            docs_from_sdk = sdk_client.get_multi(doc_ids)
+
+            for i in docs_from_sdk:
+                if "_sync" in docs_from_sdk[i].value:
+                    raise Exception("sync section found in docs after upgrade")
+
+
+def send_changes_termination_doc(sg_url, sg_db, auth, terminator_doc_id, terminator_channel):
+    sg_client = MobileRestClient()
+    log_info('Sending changes termination doc for all users')
+    doc = {'_id': terminator_doc_id, 'channels': terminator_channel}
+    sg_client.add_doc(url=sg_url, db=sg_db, doc=doc, auth=auth)
+
+
+def update_docs(client, ls_url, ls_db, added_docs, auth, terminator_doc_id):
+    current_user_doc_ids = []
+    for doc in added_docs:
+        current_user_doc_ids.append(doc["id"])
+
+    docs_per_update = 3
+
+    while True:
+        try:
+            client.get_doc(url=ls_url, db=ls_db, doc_id=terminator_doc_id, auth=auth)
+            log_info("Found termination doc")
+            return added_docs
+        except HTTPError:
+            log_info("Termination doc not found")
+
+        user_docs_subset_to_update = []
+        for _ in range(docs_per_update):
+            random_doc_id = random.choice(current_user_doc_ids)
+            user_docs_subset_to_update.append(random_doc_id)
+
+        for doc_id in user_docs_subset_to_update:
+            log_info("Updating doc_id: {}".format(doc_id))
+            doc = client.get_doc(url=ls_url, db=ls_db, doc_id=doc_id, auth=auth)
+            doc['updates'] += 1
+            client.put_doc(url=ls_url, db=ls_db, doc_id=doc_id, doc_body=doc, rev=doc['_rev'], auth=auth)
+            new_doc = client.get_doc(url=ls_url, db=ls_db, doc_id=doc_id, auth=auth)
+            for doc in added_docs:
+                if doc["id"] == doc_id:
+                    doc["rev"] = new_doc['_rev']
+                    break
+
+        time.sleep(2)
 
 
 def upgrade_server_cluster(servers, primary_server, secondary_server, server_version, server_upgraded_version, server_urls, cluster_config):
