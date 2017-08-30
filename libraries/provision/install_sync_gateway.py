@@ -81,8 +81,6 @@ class SyncGatewayConfig:
         if self._version_number is not None and self._build_number is not None:
             if self.commit is not None:
                 raise ProvisioningError("Commit should be empty when provisioning with a binary")
-            if self._version_number not in self._valid_versions:
-                raise ProvisioningError("Could not find version in valid versions")
         elif self.commit is not None:
             if self._version_number is not None:
                 raise ProvisioningError("Do not specify a version number when provisioning via a commit.")
@@ -102,9 +100,6 @@ class SyncGatewayConfig:
 
 def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False):
     log_info(sync_gateway_config)
-
-    if not sync_gateway_config.is_valid():
-        raise ProvisioningError("Invalid sync_gateway provisioning configuration. Exiting ...")
 
     if sync_gateway_config.build_flags != "":
         log_warn("\n\n!!! WARNING: You are building with flags: {} !!!\n\n".format(sync_gateway_config.build_flags))
