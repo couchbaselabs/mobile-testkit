@@ -67,7 +67,7 @@ class ChangesTracker:
         if timeout > 1000:
             loop_timeout = (timeout // 1000) * 10
         else:
-            loop_timeout = timeout
+            loop_timeout = 60
 
         log_info("[Changes Tracker] Changes Tracker Starting for {} ...".format(loop_timeout))
 
