@@ -103,9 +103,6 @@ class SyncGatewayConfig:
 def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False):
     log_info(sync_gateway_config)
 
-    if not sync_gateway_config.is_valid():
-        raise ProvisioningError("Invalid sync_gateway provisioning configuration. Exiting ...")
-
     if sync_gateway_config.build_flags != "":
         log_warn("\n\n!!! WARNING: You are building with flags: {} !!!\n\n".format(sync_gateway_config.build_flags))
 
