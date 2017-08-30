@@ -37,7 +37,7 @@ def skip_if_unsupported(sync_gateway_version, mode, test_name):
         if test_name in UNSUPPORTED_1_5_0_CC:
             pytest.skip(UNSUPPORTED_1_5_0_CC[test_name]["reason"])
 
-    if compare_versions(sync_gateway_version, "1.3.0") <= 0:
+    if compare_versions(sync_gateway_version, "1.4.0") <= 0:
         if "log_rotation" in test_name or "test_backfill" in test_name or "test_awaken_backfill" in test_name:
             pytest.skip("{} test was added for sync gateway 1.4".format(test_name))
 
