@@ -1330,10 +1330,8 @@ def test_sg_feed_changed_with_xattrs_importEnabled(params_from_base_test_setup,
             changestrack.wait_until, all_docs_via_sg_formatted, rev_prefix_gen=True)
 
         if wait_for_changes.result():
-            crsdk_tpe.submit(changestrack.stop)
             log_info("Found all docs ...")
         else:
-            crsdk_tpe.submit(changestrack.stop)
             raise NotFoundError(
                 "Could not find all changes in feed for adding docs via SDK before timeout!!")
 
@@ -1364,10 +1362,8 @@ def test_sg_feed_changed_with_xattrs_importEnabled(params_from_base_test_setup,
             changestrack.wait_until, all_docs_via_sg_formatted, rev_prefix_gen=True)
 
         if wait_for_changes.result():
-            upsdk_tpe.submit(changestrack.stop)
             log_info("Found all docs after SDK update ...")
         else:
-            upsdk_tpe.submit(changestrack.stop)
             raise NotFoundError(
                 "Could not find all changes in feed for SDK updated SDK docs before timeout!!")
 
@@ -1430,7 +1426,7 @@ def test_sg_feed_changed_with_xattrs_importEnabled(params_from_base_test_setup,
             if time.time() - start > changesTracktimeout:
                 break
             try:
-                ct_task = crsg_tpe.submit(changestrack_sg.start(timeout=15))
+                ct_task = crsg_tpe.submit(changestrack_sg.start(timeout=15000))
                 break
             except ChangesError:
                 continue
@@ -1438,10 +1434,8 @@ def test_sg_feed_changed_with_xattrs_importEnabled(params_from_base_test_setup,
             changestrack_sg.wait_until, sg_docs_resp)
 
         if wait_for_changes.result():
-            crsg_tpe.submit(changestrack.stop)
             log_info("Found all docs ...")
         else:
-            crsg_tpe.submit(changestrack.stop)
             raise NotFoundError(
                 "Could not find all changes in feed for sg created docs before timeout!!")
 
@@ -1463,7 +1457,7 @@ def test_sg_feed_changed_with_xattrs_importEnabled(params_from_base_test_setup,
             if time.time() - start > changesTracktimeout:
                 break
             try:
-                ct_task = upsg_tpe.submit(changestrack_sg.start(timeout=15))
+                ct_task = upsg_tpe.submit(changestrack_sg.start(timeout=15000))
                 break
             except ChangesError:
                 continue
@@ -1471,10 +1465,8 @@ def test_sg_feed_changed_with_xattrs_importEnabled(params_from_base_test_setup,
             changestrack_sg.wait_until, sg_docs_update_resp)
 
         if wait_for_changes.result():
-            upsg_tpe.submit(changestrack.stop)
             log_info("Found all sg docs for update docs via sg ...")
         else:
-            upsg_tpe.submit(changestrack.stop)
             raise NotFoundError(
                 "Could not find all changes in feed for update sg docs via sg before timeout!!")
 
@@ -1494,7 +1486,7 @@ def test_sg_feed_changed_with_xattrs_importEnabled(params_from_base_test_setup,
             if time.time() - start > changesTracktimeout:
                 break
             try:
-                ct_task = upsgsdk_tpe.submit(changestrack_sg.start(timeout=15))
+                ct_task = upsgsdk_tpe.submit(changestrack_sg.start(timeout=15000))
                 break
             except ChangesError:
                 continue
