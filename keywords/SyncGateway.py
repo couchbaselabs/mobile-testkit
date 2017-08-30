@@ -373,7 +373,7 @@ class SyncGateway(object):
                 "block-http-ports.yml"
             )
             if status != 0:
-                raise ProvisioningError("Failed to install sync_gateway source")
+                raise ProvisioningError("Failed to block CBS http port")
 
         if url is not None:
             target = hostname_for_url(cluster_config, url)
