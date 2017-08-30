@@ -194,6 +194,11 @@ def check_xattr_support(server_version, sync_gateway_version):
 
 
 def add_cbs_to_sg_config_server_field(cluster_config):
+    """ This method get all CBS servers ips from cluster config and
+       it as server in sync gateway config file . Each ip is seperated
+       by comma
+       Format of server file in sync-gateway config if there are 3 couchbase servers
+       server: "http://xxx.xxx.xx.xx,xx1.xx1.x1.x1,xx2,xx2,x2,x2:8091 """
     couchbase_server_primary_node = ""
     cbs_servers = get_cbs_servers(cluster_config)
     for i in range(len(cbs_servers)):
