@@ -14,7 +14,7 @@ from libraries.testkit.config import Config
 from libraries.testkit.sgaccel import SgAccel
 from libraries.testkit.syncgateway import SyncGateway
 from utilities.cluster_config_utils import is_load_balancer_enabled
-from utilities.cluster_config_utils import get_load_balancer_ip
+from utilities.cluster_config_utils import get_load_balancer_ip, get_sg_version
 
 
 class Cluster:
@@ -141,7 +141,15 @@ class Cluster:
             "autoimport": "",
             "xattrs": ""
         }
-
+        if self.cbs_ssl and get_sg_version(self._cluster_config) >= "1.5.0":
+            playbook_vars["server_scheme"] = "couchbases"
+            playbook_vars["server_port"] = "11207"
+            log_info("running ansible script to block http ports")
+            status = ansible_runner.run_ansible_playbook(
+                "block-http-ports.yml"
+            )
+            if status != 0:
+                raise ProvisioningError("Failed to install sync_gateway source")
         # Add configuration to run with xattrs
         if self.xattrs:
             playbook_vars["autoimport"] = '"import_docs": "continuous",'

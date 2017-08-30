@@ -17,6 +17,7 @@ from keywords.exceptions import ProvisioningError
 from libraries.provision.ansible_runner import AnsibleRunner
 from utilities.cluster_config_utils import is_cbs_ssl_enabled
 from utilities.cluster_config_utils import is_xattrs_enabled
+from utilities.cluster_config_utils import get_sg_version
 
 
 def validate_sync_gateway_mode(mode):
@@ -225,6 +226,15 @@ class SyncGateway:
         if is_xattrs_enabled(cluster_config):
             playbook_vars["autoimport"] = '"import_docs": "continuous",'
             playbook_vars["xattrs"] = '"enable_shared_bucket_access": true,'
+
+        if is_cbs_ssl_enabled(cluster_config) and get_sg_version(cluster_config) >= "1.5.0":
+            playbook_vars["server_scheme"] = "couchbases"
+            playbook_vars["server_port"] = "11207"
+            status = ansible_runner.run_ansible_playbook(
+                "block-http-ports.yml"
+            )
+            if status != 0:
+                raise ProvisioningError("Failed to install sync_gateway source")
 
         if url is not None:
             target = hostname_for_url(cluster_config, url)

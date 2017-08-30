@@ -11,7 +11,8 @@ from libraries.provision.ansible_runner import AnsibleRunner
 from libraries.testkit.admin import Admin
 from libraries.testkit.debug import log_request, log_response
 from utilities.cluster_config_utils import is_cbs_ssl_enabled
-from utilities.cluster_config_utils import is_xattrs_enabled
+from utilities.cluster_config_utils import is_xattrs_enabled, get_sg_version
+from keywords.exceptions import ProvisioningError
 
 log = logging.getLogger(libraries.testkit.settings.LOGGER)
 
@@ -62,6 +63,15 @@ class SyncGateway:
             playbook_vars["autoimport"] = '"import_docs": "continuous",'
             playbook_vars["xattrs"] = '"enable_shared_bucket_access": true,'
 
+        if is_cbs_ssl_enabled(self.cluster_config) and get_sg_version(self.cluster_config) >= "1.5.0":
+            playbook_vars["server_scheme"] = "couchbases"
+            playbook_vars["server_port"] = "11207"
+            status = self.ansible_runner.run_ansible_playbook(
+                "block-http-ports.yml"
+            )
+            if status != 0:
+                raise ProvisioningError("Failed to install sync_gateway source")
+
         status = self.ansible_runner.run_ansible_playbook(
             "start-sync-gateway.yml",
             extra_vars=playbook_vars,
@@ -84,6 +94,15 @@ class SyncGateway:
         if is_xattrs_enabled(self.cluster_config):
             playbook_vars["autoimport"] = '"import_docs": "continuous",'
             playbook_vars["xattrs"] = '"enable_shared_bucket_access": true,'
+
+        if is_cbs_ssl_enabled(self.cluster_config) and get_sg_version(self.cluster_config) >= "1.5.0":
+            playbook_vars["server_scheme"] = "couchbases"
+            playbook_vars["server_port"] = "11207"
+            status = self.ansible_runner.run_ansible_playbook(
+                "block-http-ports.yml"
+            )
+            if status != 0:
+                raise ProvisioningError("Failed to install sync_gateway source")
 
         status = self.ansible_runner.run_ansible_playbook(
             "reset-sync-gateway.yml",

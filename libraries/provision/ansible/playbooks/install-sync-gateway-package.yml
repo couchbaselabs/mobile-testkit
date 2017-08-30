@@ -18,7 +18,6 @@
   vars:
     # Primary node
     couchbase_server_primary_node: "{{ hostvars[groups.couchbase_servers[0]].ansible_host }}"
-
     # Current node
     couchbase_server_node: "{{ hostvars[inventory_hostname]['ansible_host'] }}"
 
@@ -55,7 +54,7 @@
     couchbase_sync_gateway_package:
     couchbase_sync_gateway_package_url: "{{ couchbase_sync_gateway_package_base_url }}/{{ couchbase_sync_gateway_package }}"
     couchbase_server_primary_node: "{{ hostvars[groups.couchbase_servers[0]].ansible_host }}"
-
+    
   tasks:
   - debug: msg="Downloading sync_gateway v. {{ couchbase_sync_gateway_package_url }}"
   - name: SYNC GATEWAY |  Download sync_gateway rpm
@@ -70,7 +69,6 @@
     couchbase_sg_accel_package:
     couchbase_sg_accel_package_url: "{{ couchbase_sync_gateway_package_base_url }}/{{ couchbase_sg_accel_package }}"
     couchbase_server_primary_node: "{{ hostvars[groups.couchbase_servers[0]].ansible_host }}"
-
   tasks:
   - debug: msg="Downloading sg_accel v. {{ couchbase_sg_accel_package_url }}"
   - name: SYNC GATEWAY | Download sg_accel rpm

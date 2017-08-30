@@ -41,7 +41,7 @@ def persist_cluster_config_environment_prop(cluster_config, property_name, value
     for cluster_config.json
     """
 
-    valid_props = ["cbs_ssl_enabled", "xattrs_enabled", "sg_lb_enabled"]
+    valid_props = ["cbs_ssl_enabled", "xattrs_enabled", "sg_lb_enabled", "server_version", "sync_gateway_version"]
     if property_name not in valid_props:
         raise ProvisioningError("Make sure the property you are trying to change is one of: {}".format(valid_props))
 
@@ -105,3 +105,9 @@ def get_load_balancer_ip(cluster_config):
 
     lb_ip = cluster["load_balancers"][0]["ip"]
     return lb_ip
+
+
+def get_sg_version(cluster_config):
+    """ Loads cluster config to get sync gateway version"""
+    cluster = load_cluster_config_json(cluster_config)
+    return cluster["environment"]["sync_gateway_version"]
