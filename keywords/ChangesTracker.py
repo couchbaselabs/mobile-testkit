@@ -65,7 +65,7 @@ class ChangesTracker:
 
         start = time.time()
         if timeout > 1000:
-            loop_timeout = timeout // 1000
+            loop_timeout = (timeout // 1000) * 10
         else:
             loop_timeout = timeout
 
