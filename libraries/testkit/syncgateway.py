@@ -70,7 +70,7 @@ class SyncGateway:
                 "block-http-ports.yml"
             )
             if status != 0:
-                raise ProvisioningError("Failed to install sync_gateway source")
+                raise ProvisioningError("Failed to block CBS http port")
 
         status = self.ansible_runner.run_ansible_playbook(
             "start-sync-gateway.yml",
@@ -102,7 +102,7 @@ class SyncGateway:
                 "block-http-ports.yml"
             )
             if status != 0:
-                raise ProvisioningError("Failed to install sync_gateway source")
+                raise ProvisioningError("Failed to block CBS http port")
 
         status = self.ansible_runner.run_ansible_playbook(
             "reset-sync-gateway.yml",

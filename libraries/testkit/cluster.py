@@ -149,7 +149,7 @@ class Cluster:
                 "block-http-ports.yml"
             )
             if status != 0:
-                raise ProvisioningError("Failed to install sync_gateway source")
+                raise ProvisioningError("Failed to block CBS http port")
         # Add configuration to run with xattrs
         if self.xattrs:
             playbook_vars["autoimport"] = '"import_docs": "continuous",'

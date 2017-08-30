@@ -55,7 +55,7 @@ class SgAccel:
                 "block-http-ports.yml"
             )
             if status != 0:
-                raise ProvisioningError("Failed to install sync_gateway source")
+                raise ProvisioningError("Failed to block CBS http port")
         status = self.ansible_runner.run_ansible_playbook(
             "start-sg-accel.yml",
             extra_vars=playbook_vars,

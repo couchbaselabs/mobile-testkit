@@ -142,7 +142,7 @@ def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False):
             "block-http-ports.yml"
         )
         if status != 0:
-            raise ProvisioningError("Failed to install sync_gateway source")
+            raise ProvisioningError("Failed to block CBS http port")
 
     if is_xattrs_enabled(cluster_config):
         playbook_vars["autoimport"] = '"import_docs": "continuous",'
