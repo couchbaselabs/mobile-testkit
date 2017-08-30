@@ -3,6 +3,9 @@
   any_errors_fatal: true
   become: yes
   tasks:
+  - name: BLOCKPORTS | flush iptables before blocking
+    shell: iptables -F
+
   - name: BLOCKPORTS | drop tcp 8091
     shell: iptables -I INPUT -p tcp --dport 8091 -j DROP
 
@@ -17,9 +20,3 @@
 
   - name: BLOCKPORTS | restart iptables after dropping
     shell: service iptables restart
-
-  - name: BLOCKPORTS | list rules of iptables
-    shell: iptables --list-rules
-    register: output
-
-  - debug: var=output.stdout_lines  
