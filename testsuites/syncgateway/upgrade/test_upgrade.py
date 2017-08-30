@@ -21,8 +21,9 @@ from requests.exceptions import HTTPError
 
 
 def test_upgrade(params_from_base_test_setup):
-    # The initial versions of SG and CBS has already been provisioned at this point
-    # We have to upgrade them to the upgraded versions
+    """ The initial versions of SG and CBS has already been provisioned at this point
+        We have to upgrade them to the upgraded versions
+    """
     cluster_config = params_from_base_test_setup['cluster_config']
     mode = params_from_base_test_setup['mode']
     xattrs_enabled = params_from_base_test_setup['xattrs_enabled']
@@ -88,7 +89,6 @@ def test_upgrade(params_from_base_test_setup):
             terminator_doc_id
         )
 
-        log_info("added_docs after updates: {}".format(added_docs))
         # Supported upgrade process
         # 1. Upgrade SGs first docmeta -> docmeta - CBS 5.0.0 does not support TAP.
         # 2. Upgrade the CBS cluster.
@@ -170,8 +170,13 @@ def test_upgrade(params_from_base_test_setup):
                     )
 
         send_changes_termination_doc(sg_url, sg_db, sg_session, terminator_doc_id, sg_user_channels)
-        added_docs = updates_future.result()
-        log_info("added_docs before updates: {}".format(added_docs))
+        updated_doc_revs = updates_future.result()
+        # Gather the new revs for verification
+        for doc in added_docs:
+            if doc["id"] in updated_doc_revs:
+                doc["rev"] = updated_doc_revs[doc["id"]]
+
+        log_info("added_docs after updates: {}".format(added_docs))
 
         # Verifies doc body and attachments
         client.verify_docs_present(url=ls_url, db=ls_db, expected_docs=added_docs, attachments=True)
@@ -201,12 +206,13 @@ def update_docs(client, ls_url, ls_db, added_docs, auth, terminator_doc_id):
         current_user_doc_ids.append(doc["id"])
 
     docs_per_update = 3
+    doc_revs = {}
 
     while True:
         try:
             client.get_doc(url=ls_url, db=ls_db, doc_id=terminator_doc_id, auth=auth)
             log_info("Found termination doc")
-            return added_docs
+            return doc_revs
         except HTTPError:
             log_info("Termination doc not found")
 
@@ -221,10 +227,7 @@ def update_docs(client, ls_url, ls_db, added_docs, auth, terminator_doc_id):
             doc['updates'] += 1
             client.put_doc(url=ls_url, db=ls_db, doc_id=doc_id, doc_body=doc, rev=doc['_rev'], auth=auth)
             new_doc = client.get_doc(url=ls_url, db=ls_db, doc_id=doc_id, auth=auth)
-            for doc in added_docs:
-                if doc["id"] == doc_id:
-                    doc["rev"] = new_doc['_rev']
-                    break
+            doc_revs[doc_id] = new_doc['_rev']
 
         time.sleep(2)
 
