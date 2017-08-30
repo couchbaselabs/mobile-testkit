@@ -81,7 +81,6 @@ class SyncGatewayConfig:
         if self._version_number is not None and self._build_number is not None:
             if self.commit is not None:
                 raise ProvisioningError("Commit should be empty when provisioning with a binary")
-
         elif self.commit is not None:
             if self._version_number is not None:
                 raise ProvisioningError("Do not specify a version number when provisioning via a commit.")
