@@ -17,7 +17,7 @@
   any_errors_fatal: true
   vars:
     # Primary node
-    couchbase_server_primary_node: ""
+    couchbase_server_primary_node:
     # Current node
     couchbase_server_node: "{{ hostvars[inventory_hostname]['ansible_host'] }}"
 
@@ -53,7 +53,7 @@
     couchbase_sync_gateway_package_base_url:
     couchbase_sync_gateway_package:
     couchbase_sync_gateway_package_url: "{{ couchbase_sync_gateway_package_base_url }}/{{ couchbase_sync_gateway_package }}"
-    couchbase_server_primary_node: ""
+    couchbase_server_primary_node:
   tasks:
   - debug: msg="Downloading sync_gateway v. {{ couchbase_sync_gateway_package_url }}"
   - name: SYNC GATEWAY |  Download sync_gateway rpm
@@ -67,7 +67,7 @@
     couchbase_sync_gateway_package_base_url:
     couchbase_sg_accel_package:
     couchbase_sg_accel_package_url: "{{ couchbase_sync_gateway_package_base_url }}/{{ couchbase_sg_accel_package }}"
-    couchbase_server_primary_node: ""
+    couchbase_server_primary_node:
   tasks:
   - debug: msg="Downloading sg_accel v. {{ couchbase_sg_accel_package_url }}"
   - name: SYNC GATEWAY | Download sg_accel rpm
@@ -79,7 +79,7 @@
   become: yes
   vars:
     sync_gateway_config_filepath:
-    couchbase_server_primary_node: ""
+    couchbase_server_primary_node:
     # hack until mobile-testkit/issues/406 allows any sync gateway to be referenced
     sync_gateway_node: "{{ hostvars[groups.sync_gateways[0]].ansible_host }}"
     is_index_writer: "false"
@@ -91,7 +91,7 @@
   become: yes
   vars:
     sync_gateway_config_filepath:
-    couchbase_server_primary_node: ""
+    couchbase_server_primary_node:
     # hack until mobile-testkit/issues/406 allows any sync gateway to be referenced
     sync_gateway_node: "{{ hostvars[groups.sync_gateways[0]].ansible_host }}"
     is_index_writer: "true"
