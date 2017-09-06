@@ -1,7 +1,4 @@
-import time
-
 import pytest
-import requests.exceptions
 import concurrent.futures
 
 from keywords.utils import log_info
@@ -21,7 +18,6 @@ from keywords import document
 @pytest.mark.channel
 @pytest.mark.rollback
 @pytest.mark.bulkops
-@pytest.mark.skip(reason="https://github.com/couchbaselabs/mobile-testkit/issues/979")
 @pytest.mark.parametrize("sg_conf_name", [
     "sync_gateway_default"
 ])
@@ -117,30 +113,20 @@ def test_rollback_server_reset(params_from_base_test_setup, sg_conf_name):
     # Delete vbucket and restart server
     cb_server.delete_vbucket(66, "data-bucket")
     cb_server.restart()
-
-    max_retries = 20
+    max_retries = 50
     count = 0
     while count != max_retries:
         # Try to get changes, sync gateway should be able to recover and return changes
-        try:
-            # A changes since=0 should now be in a rolled back state due to the data loss from the removed vbucket
-            # Seth should only see the docs not present in vbucket 66, unlike all the docs as above.
-            changes = client.get_changes(url=sg_url, db=sg_db, since=0, auth=seth_session)
+        # A changes since=0 should now be in a rolled back state due to the data loss from the removed vbucket
+        # Seth should only see the docs not present in vbucket 66, unlike all the docs as above.
+        changes = client.get_changes(url=sg_url, db=sg_db, since=0, auth=seth_session)
+        changes_ids = [change["id"] for change in changes["results"] if not change["id"].startswith("_user")]
+        log_info("length of Changes ids are {} and vbuckets {}".format(len(changes_ids), num_vbuckets))
+        if len(changes_ids) == (num_vbuckets - 1):
             break
-        except requests.exceptions.HTTPError as he:
-            log_info("{}".format(he.response.status_code))
-            log_info("Retrying in 1 sec ...")
-            time.sleep(1)
-            count += 1
+        count += 1
 
     # Make sure there are a few retries to ensure that server did go down and up
-    assert count > 1
-
+    assert count > 0
     # Make sure retries did not exceed expected max
     assert count != max_retries
-
-    # Get a list of all the changes ids that are not the user doc
-    changes_ids = [change["id"] for change in changes["results"] if not change["id"].startswith("_user")]
-    assert len(changes_ids) == num_vbuckets - 1
-    for doc in seth_66_docs:
-        assert doc["id"] not in changes_ids
