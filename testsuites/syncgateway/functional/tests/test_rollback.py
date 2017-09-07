@@ -9,6 +9,7 @@ from keywords.SyncGateway import sync_gateway_config_path_for_mode
 from keywords import couchbaseserver
 from keywords import userinfo
 from keywords import document
+import time
 
 
 @pytest.mark.sanity
@@ -124,9 +125,12 @@ def test_rollback_server_reset(params_from_base_test_setup, sg_conf_name):
         log_info("length of Changes ids are {} and vbuckets {}".format(len(changes_ids), num_vbuckets))
         if len(changes_ids) == (num_vbuckets - 1):
             break
+        time.sleep(1)
         count += 1
 
     # Make sure there are a few retries to ensure that server did go down and up
     assert count > 0
-    # Make sure retries did not exceed expected max
-    assert count != max_retries
+    # Verify that seth 66 doc does not appear in changes as vbucket 66 got deleted
+    vbucket_66_docids = [doc1["id"] for doc1 in seth_66_docs]
+    for doc_66 in vbucket_66_docids:
+        assert doc_66 not in changes_ids, "doc {} in vbucket 66 shows up in changes ".format(doc_66)
