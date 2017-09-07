@@ -14,6 +14,7 @@ from keywords.SyncGateway import (verify_sg_accel_version,
 from keywords.utils import (log_info, log_r, version_and_build,
                             version_is_binary, compare_versions)
 from libraries.testkit.cluster import Cluster
+from utilities.cluster_config_utils import is_load_balancer_enabled, get_load_balancer_ip
 
 
 class ClusterKeywords:
@@ -47,13 +48,16 @@ class ClusterKeywords:
         log_info("Unsetting CLUSTER_CONFIG")
         del os.environ["CLUSTER_CONFIG"]
 
-    def get_cluster_topology(self, cluster_config):
+    def get_cluster_topology(self, cluster_config, lb_enable=True):
         """
         Returns a dictionary of cluster endpoints that will be consumable
           ${sg1} = cluster["sync_gateways"][0]["public"]
           ${sg1_admin} = cluster["sync_gateways"][0]["admin"]
           ${ac1} = cluster["sg_accels"][0]
           ${cbs} = cluster["couchbase_servers"][0]
+
+          Setting lb_enable to True will return SG IPs instead of lb IPs
+          install_nginx sets it to False to get the SG_IPs for the nginx.conf
         """
 
         with open("{}.json".format(cluster_config)) as f:
@@ -61,10 +65,27 @@ class ClusterKeywords:
 
         sg_urls = []
 
-        for sg in cluster["sync_gateways"]:
-            public = "http://{}:4984".format(sg["ip"])
-            admin = "http://{}:4985".format(sg["ip"])
-            sg_urls.append({"public": public, "admin": admin})
+        # Get load balancer IP
+        lb_ip = None
+        if is_load_balancer_enabled(cluster_config) and lb_enable:
+            # If load balancer is defined,
+            # Switch all SG URLs to that of load balancer
+            # lb_enable can be used to override the behavior of adding lb IPs
+            # even if load balancer is enabled
+            # install_nginx sets it to False to get the SG_IPs for the nginx.conf
+            lb_ip = get_load_balancer_ip(cluster_config)
+
+            for sg in cluster["sync_gateways"]:
+                public = "http://{}:4984".format(lb_ip)
+                admin = "http://{}:4985".format(lb_ip)
+                sg_urls.append({"public": public, "admin": admin})
+
+            log_info("Using load balancer IP as the SG IP: {}".format(sg_urls))
+        else:
+            for sg in cluster["sync_gateways"]:
+                public = "http://{}:4984".format(sg["ip"])
+                admin = "http://{}:4985".format(sg["ip"])
+                sg_urls.append({"public": public, "admin": admin})
 
         ac_urls = ["http://{}:4985".format(sga["ip"]) for sga in cluster["sg_accels"]]
         lbs_urls = ["http://{}".format(lb["ip"]) for lb in cluster["load_balancers"]]
@@ -174,7 +195,7 @@ class ClusterKeywords:
         cluster = Cluster(config=cluster_config)
         cluster.reset(sync_gateway_config)
 
-    def provision_cluster(self, cluster_config, server_version, sync_gateway_version, sync_gateway_config, race_enabled=False):
+    def provision_cluster(self, cluster_config, server_version, sync_gateway_version, sync_gateway_config, race_enabled=False, sg_ce=False):
 
         if server_version is None or sync_gateway_version is None or sync_gateway_version is None:
             raise ProvisioningError("Please make sure you have server_version, sync_gateway_version, and sync_gateway_config are set")
@@ -215,7 +236,4 @@ class ClusterKeywords:
                 skip_bucketcreation=False
             )
 
-        provision_cluster(cluster_config, cbs_config, sg_config)
-
-        # verify running services are the expected versions
-        self.verify_cluster_versions(cluster_config, server_version, sync_gateway_version)
+        provision_cluster(cluster_config, cbs_config, sg_config, sg_ce)

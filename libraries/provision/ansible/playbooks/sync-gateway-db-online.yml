@@ -1,0 +1,19 @@
+- hosts: sync_gateways
+  any_errors_fatal: true
+
+  vars:
+    db:
+    delay:
+
+  tasks:
+  - uri:
+      url: http://localhost:4985/{{ db }}/_online
+      status_code: 200, 201
+      timeout: 30
+      method: POST
+      body: 
+        mainlevel:
+          delay: "{{ delay }}"
+      body_format: json
+      headers:
+        Content-Type: "application/json"

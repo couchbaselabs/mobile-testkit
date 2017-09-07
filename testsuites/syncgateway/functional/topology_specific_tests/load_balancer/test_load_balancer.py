@@ -32,7 +32,7 @@ def test_load_balance_sanity(params_from_base_test_setup):
 
     topology = cluster_util.get_cluster_topology(cluster_config)
     admin_sg_one = topology["sync_gateways"][0]["admin"]
-    lb_url = topology["load_balancers"][0]
+    lb_url = "{}:4984".format(topology["load_balancers"][0])
 
     sg_db = "db"
     num_docs = 1000

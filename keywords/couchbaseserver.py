@@ -196,8 +196,9 @@ class CouchbaseServer:
         start = time.time()
         while True:
 
-            if time.time() - start > keywords.constants.CLIENT_REQUEST_TIMEOUT:
-                raise Exception("Verify Docs Present: TIMEOUT")
+            elapsed = time.time()
+            if elapsed - start > keywords.constants.CLIENT_REQUEST_TIMEOUT:
+                raise Exception("Timeout: Server not in ready state! {}s".format(elapsed))
 
             # Verfy the server is in a "healthy", not "warmup" state
             try:
@@ -228,7 +229,7 @@ class CouchbaseServer:
     def _create_internal_rbac_bucket_user(self, bucketname):
         # Create user with username=bucketname and assign role
         # bucket_admin and cluster_admin
-        roles = "cluster_admin,bucket_admin[{}]".format(bucketname)
+        roles = "ro_admin,bucket_full_access[{}]".format(bucketname)
         password = 'password'
 
         data_user_params = {

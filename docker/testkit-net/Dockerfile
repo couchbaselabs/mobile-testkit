@@ -1,4 +1,4 @@
-FROM microsoft/dotnet
+FROM microsoft/dotnet:2.0-sdk
 
 MAINTAINER "Seth Rosetter" <seth.rosetter@gmail.com>
 
@@ -19,5 +19,5 @@ RUN dotnet restore -s http://mobile.nuget.couchbase.com/nuget/Internal/ -s https
 RUN dotnet build
 
 # Start the longevity test
-WORKDIR /opt/mobile-testkit/apps/testkit.net/Testkit.Net.Core
+WORKDIR /opt/mobile-testkit/apps/testkit.net/Testkit.Net.Desktop
 CMD ["dotnet", "run"]

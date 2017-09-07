@@ -3,7 +3,7 @@
 - hosts: sync_gateways
   tasks:
   - include: tasks/delete-sync-gateway-artifacts.yml
-    when: ansible_distribution == "CentOS"
+    when: ansible_distribution == "CentOS" or ansible_distribution == "RedHat"
 
   - include: tasks/delete-sync-gateway-artifacts-windows.yml
     when: ansible_os_family == "Windows"

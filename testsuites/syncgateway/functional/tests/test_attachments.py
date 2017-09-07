@@ -75,10 +75,10 @@ def test_attachment_revpos_when_ancestor_unavailable(params_from_base_test_setup
     client.update_doc(url=sg_url, db=sg_db, doc_id=doc_gen_1["id"], number_updates=10, auth=user1)
 
     # Clear cached rev doc bodys from server and cycle sync_gateway
-    sg_util.stop_sync_gateway(cluster_config=cluster_config, url=sg_url)
+    sg_util.stop_sync_gateways(cluster_config=cluster_config, url=sg_url)
 
     cb_server.delete_couchbase_server_cached_rev_bodies(bucket=bucket)
-    sg_util.start_sync_gateway(cluster_config=cluster_config, url=sg_url, config=sg_conf)
+    sg_util.start_sync_gateways(cluster_config=cluster_config, url=sg_url, config=sg_conf)
 
     client.add_conflict(
         url=sg_url, db=sg_db,

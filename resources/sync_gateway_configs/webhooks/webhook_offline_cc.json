@@ -6,14 +6,12 @@
     "maxFileDescriptors": 90000,
     "slowServerCallWarningThreshold": 500,
     "compressResponses": false,
-    "log": ["CRUD+", "Cache+", "HTTP+", "Changes+"],
+    "log": ["CRUD+", "Cache+", "HTTP+", "Changes+", "Import+"],
     "verbose":"true",
     "databases":{
         "db":{
             {{ autoimport }}
-            "unsupported": {
-                {{ xattrs }}
-            },
+            {{ xattrs }}
             "offline":false,
             "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
             "bucket":"data-bucket",

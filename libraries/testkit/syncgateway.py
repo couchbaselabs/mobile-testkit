@@ -60,7 +60,7 @@ class SyncGateway:
 
         if is_xattrs_enabled(self.cluster_config):
             playbook_vars["autoimport"] = '"import_docs": "continuous",'
-            playbook_vars["xattrs"] = '"enable_extended_attributes": true'
+            playbook_vars["xattrs"] = '"enable_shared_bucket_access": true,'
 
         status = self.ansible_runner.run_ansible_playbook(
             "start-sync-gateway.yml",
@@ -83,7 +83,7 @@ class SyncGateway:
 
         if is_xattrs_enabled(self.cluster_config):
             playbook_vars["autoimport"] = '"import_docs": "continuous",'
-            playbook_vars["xattrs"] = '"enable_extended_attributes": true'
+            playbook_vars["xattrs"] = '"enable_shared_bucket_access": true,'
 
         status = self.ansible_runner.run_ansible_playbook(
             "reset-sync-gateway.yml",

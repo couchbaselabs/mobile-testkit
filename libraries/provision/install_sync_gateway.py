@@ -30,11 +30,13 @@ class SyncGatewayConfig:
             "1.2.1",
             "1.3.0",
             "1.3.1",
+            "1.3.1.2",
             "1.4.0",
             "1.4",
             "1.4.0.1",
             "1.4.0.2",
             "1.4.1",
+            "1.4.1.1",
             "1.4.2",
             "1.5.0"
         ]
@@ -55,7 +57,7 @@ class SyncGatewayConfig:
         output += "  skip bucketcreation: {}\n".format(self.skip_bucketcreation)
         return output
 
-    def sync_gateway_base_url_and_package(self):
+    def sync_gateway_base_url_and_package(self, sg_ce=False):
         if self._version_number == "1.1.0" or self._build_number == "1.1.1":
             log_info("Version unsupported in provisioning.")
             raise ProvisioningError("Unsupport version of sync_gateway")
@@ -65,7 +67,13 @@ class SyncGatewayConfig:
         else:
             # http://latestbuilds.hq.couchbase.com/couchbase-sync-gateway/1.2.0/1.2.0-6/couchbase-sync-gateway-enterprise_1.2.0-6_x86_64.rpm
             base_url = "http://latestbuilds.hq.couchbase.com/couchbase-sync-gateway/{0}/{1}-{2}".format(self._version_number, self._version_number, self._build_number)
-            sg_package_name = "couchbase-sync-gateway-enterprise_{0}-{1}_x86_64.rpm".format(self._version_number, self._build_number)
+
+            sg_type = "enterprise"
+
+            if sg_ce:
+                sg_type = "community"
+
+            sg_package_name = "couchbase-sync-gateway-{0}_{1}-{2}_x86_64.rpm".format(sg_type, self._version_number, self._build_number)
             accel_package_name = "couchbase-sg-accel-enterprise_{0}-{1}_x86_64.rpm".format(self._version_number, self._build_number)
         return base_url, sg_package_name, accel_package_name
 
@@ -73,8 +81,6 @@ class SyncGatewayConfig:
         if self._version_number is not None and self._build_number is not None:
             if self.commit is not None:
                 raise ProvisioningError("Commit should be empty when provisioning with a binary")
-            if self._version_number not in self._valid_versions:
-                raise ProvisioningError("Could not find version in valid versions")
         elif self.commit is not None:
             if self._version_number is not None:
                 raise ProvisioningError("Do not specify a version number when provisioning via a commit.")
@@ -92,11 +98,8 @@ class SyncGatewayConfig:
         return True
 
 
-def install_sync_gateway(cluster_config, sync_gateway_config):
+def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False):
     log_info(sync_gateway_config)
-
-    if not sync_gateway_config.is_valid():
-        raise ProvisioningError("Invalid sync_gateway provisioning configuration. Exiting ...")
 
     if sync_gateway_config.build_flags != "":
         log_warn("\n\n!!! WARNING: You are building with flags: {} !!!\n\n".format(sync_gateway_config.build_flags))
@@ -126,7 +129,7 @@ def install_sync_gateway(cluster_config, sync_gateway_config):
 
     if is_xattrs_enabled(cluster_config):
         playbook_vars["autoimport"] = '"import_docs": "continuous",'
-        playbook_vars["xattrs"] = '"enable_extended_attributes": true'
+        playbook_vars["xattrs"] = '"enable_shared_bucket_access": true,'
 
     # Install Sync Gateway via Source or Package
     if sync_gateway_config.commit is not None:
@@ -143,7 +146,7 @@ def install_sync_gateway(cluster_config, sync_gateway_config):
 
     else:
         # Install from Package
-        sync_gateway_base_url, sync_gateway_package_name, sg_accel_package_name = sync_gateway_config.sync_gateway_base_url_and_package()
+        sync_gateway_base_url, sync_gateway_package_name, sg_accel_package_name = sync_gateway_config.sync_gateway_base_url_and_package(sg_ce)
 
         playbook_vars["couchbase_sync_gateway_package_base_url"] = sync_gateway_base_url
         playbook_vars["couchbase_sync_gateway_package"] = sync_gateway_package_name
