@@ -203,6 +203,7 @@ def test_on_demand_doc_processing(params_from_base_test_setup, sg_conf_name, num
 
     # Initialize clients
     sg_client = MobileRestClient()
+    # TODO : Add support for ssl enabled once ssl enabled support is merged to master
     sdk_client = Bucket('couchbase://{}/{}'.format(cbs_host, bucket_name), password='password')
     sdk_client.timeout = 600
 
@@ -285,7 +286,7 @@ def test_on_demand_doc_processing(params_from_base_test_setup, sg_conf_name, num
         all_docs_total = sg_client.get_all_docs(url=sg_url, db=sg_db, auth=auth_dict[user_name])
         all_docs_per_user = all_docs_total["rows"]
         assert len(all_docs_per_user) == number_docs_per_user, "All documents are not returned for the user {}".format(auth_dict[user_name])
-    
+
 
 @pytest.mark.sanity
 @pytest.mark.syncgateway
@@ -335,6 +336,7 @@ def test_on_demand_import_of_external_updates(params_from_base_test_setup, sg_co
     # Create clients
     sg_client = MobileRestClient()
     cbs_ip = host_for_url(cbs_url)
+    # TODO : Add support for ssl enabled once ssl enabled support is merged to master
     sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password', timeout=SDK_TIMEOUT)
 
     # Create user / session
@@ -377,12 +379,11 @@ def test_on_demand_import_of_external_updates(params_from_base_test_setup, sg_co
         sg_client.put_doc(url=sg_url, db=sg_db, doc_id=doc_id, rev=doc_rev_one, doc_body=doc_body, auth=seth_auth)
     log_info(he.value)
     assert he.value.message.startswith('409')
-    
+
     # Following update_doc method will get the doc with on demand processing and update the doc based on rev got from get doc
     sg_updated_doc = sg_client.update_doc(url=sg_url, db=sg_db, doc_id=doc_id, auth=seth_auth)
     sg_updated_rev = sg_updated_doc["rev"]
     assert sg_updated_rev.startswith("3-")
-
 
 
 @pytest.mark.sanity
