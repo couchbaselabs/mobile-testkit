@@ -161,7 +161,7 @@ def test_olddoc_nil(params_from_base_test_setup, sg_conf_name):
     ('xattrs/no_import', 1, 1, 10),
     ('xattrs/no_import', 100, 10, 10),
     ('xattrs/no_import', 10, 1000, 10),
-    ('xattrs/no_import', 100, 10000, 2),
+    ('xattrs/no_import', 100, 1000, 2)
 ])
 def test_on_demand_doc_processing(params_from_base_test_setup, sg_conf_name, number_users, number_docs_per_user, number_of_updates_per_user):
     """
@@ -187,6 +187,10 @@ def test_on_demand_doc_processing(params_from_base_test_setup, sg_conf_name, num
     # This test should only run when using xattr meta storage
     if not xattrs_enabled:
         pytest.skip('XATTR tests require --xattrs flag')
+
+    # This test should only run when mode is CC
+    if mode == "DI":
+        pytest.skip('This test does not run in DI mode')
 
     # Reset cluster
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
@@ -277,11 +281,11 @@ def test_on_demand_doc_processing(params_from_base_test_setup, sg_conf_name, num
             # This will bubble up exceptions
             future.result()
             log_info('Update complete for user: {}'.format(user))
-
-    # Verify updates on SDK
-    import pdb
-    pdb.set_trace()
-
+    for user_name in user_names:
+        all_docs_total = sg_client.get_all_docs(url=sg_url, db=sg_db, auth=auth_dict[user_name])
+        all_docs_per_user = all_docs_total["rows"]
+        assert len(all_docs_per_user) == number_docs_per_user, "All documents are not returned for the user {}".format(auth_dict[user_name])
+    
 
 @pytest.mark.sanity
 @pytest.mark.syncgateway
@@ -311,6 +315,9 @@ def test_on_demand_import_of_external_updates(params_from_base_test_setup, sg_co
     # This test should only run when using xattr meta storage
     if not xattrs_enabled:
         pytest.skip('XATTR tests require --xattrs flag')
+
+    if mode == "DI":
+        pytest.skip('This test does not run in DI mode')
 
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
     sg_admin_url = cluster_topology['sync_gateways'][0]['admin']
@@ -370,6 +377,12 @@ def test_on_demand_import_of_external_updates(params_from_base_test_setup, sg_co
         sg_client.put_doc(url=sg_url, db=sg_db, doc_id=doc_id, rev=doc_rev_one, doc_body=doc_body, auth=seth_auth)
     log_info(he.value)
     assert he.value.message.startswith('409')
+    
+    # Following update_doc method will get the doc with on demand processing and update the doc based on rev got from get doc
+    sg_updated_doc = sg_client.update_doc(url=sg_url, db=sg_db, doc_id=doc_id, auth=seth_auth)
+    sg_updated_rev = sg_updated_doc["rev"]
+    assert sg_updated_rev.startswith("3-")
+
 
 
 @pytest.mark.sanity
