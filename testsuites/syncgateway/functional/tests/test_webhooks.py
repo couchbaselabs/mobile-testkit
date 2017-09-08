@@ -407,6 +407,11 @@ def poll_for_webhook_data(webhook_server, expected_doc_ids, expected_num_revs, e
         log_info('Getting posted webhook data ...')
 
         data = webhook_server.get_data()
+        # Remove unwanted data from the response
+        for item in data:
+            if "_id" not in item:
+                data.remove(item)
+
         posted_webhook_events = {item['_id']: item for item in data}
         posted_webhook_events_ids = [item['_id'] for item in data]
         posted_webhook_events_len = len(posted_webhook_events)
@@ -449,4 +454,4 @@ def poll_for_webhook_data(webhook_server, expected_doc_ids, expected_num_revs, e
             log_info('Found all webhook events')
             break
 
-        time.sleep(1)
+        time.sleep(5)

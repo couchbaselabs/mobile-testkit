@@ -536,7 +536,7 @@ class User:
                 doc = json.loads(line)
 
                 # We are not interested in _user/ docs
-                if doc["id"].startswith("_user/"):
+                if doc["id"].startswith("_user/") or "doc" not in doc:
                     continue
 
                 # Close connection if termination doc is recieved in _changes
