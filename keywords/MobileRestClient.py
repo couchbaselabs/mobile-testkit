@@ -1176,6 +1176,8 @@ class MobileRestClient:
 
             if generator == "four_k":
                 doc_body = doc_generators.four_k()
+            elif generator == "simple_user":
+                doc_body = doc_generators.simple_user()
             else:
                 doc_body = doc_generators.simple()
 

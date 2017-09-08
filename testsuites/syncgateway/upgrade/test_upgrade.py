@@ -73,7 +73,7 @@ def test_upgrade(params_from_base_test_setup):
     )
 
     # Add docs to liteserv
-    added_docs = client.add_docs(url=ls_url, db=ls_db, channels=sg_user_channels, number=num_docs, id_prefix="ls_db_upgrade_doc", attachments_generator=attachment.generate_png_10_10)
+    added_docs = client.add_docs(url=ls_url, db=ls_db, channels=sg_user_channels, generator="simple_user", number=num_docs, id_prefix="ls_db_upgrade_doc", attachments_generator=attachment.generate_png_10_10)
 
     # start updating docs
     terminator_doc_id = 'terminator'
@@ -181,6 +181,9 @@ def test_upgrade(params_from_base_test_setup):
         # Verifies doc body and attachments
         client.verify_docs_present(url=ls_url, db=ls_db, expected_docs=added_docs, attachments=True)
 
+        # TODO Verify revision history off all docs based on the latest revision
+        # parents, channels?
+
         if xattrs_enabled:
             # Verify through SDK that there is no _sync property in the doc body
             bucket_name = 'data-bucket'
@@ -201,6 +204,7 @@ def send_changes_termination_doc(sg_url, sg_db, auth, terminator_doc_id, termina
 
 
 def update_docs(client, ls_url, ls_db, added_docs, auth, terminator_doc_id):
+    return []
     current_user_doc_ids = []
     for doc in added_docs:
         current_user_doc_ids.append(doc["id"])
