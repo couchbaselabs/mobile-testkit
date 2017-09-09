@@ -82,7 +82,8 @@ class SyncGateway:
             "server_port": self.server_port,
             "server_scheme": self.server_scheme,
             "autoimport": "",
-            "xattrs": ""
+            "xattrs": "",
+            "couchbase_server_primary_node": self.couchbase_server_primary_node
         }
 
         if is_xattrs_enabled(self.cluster_config):
