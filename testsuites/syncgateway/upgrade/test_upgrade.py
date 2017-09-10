@@ -172,17 +172,12 @@ def test_upgrade(params_from_base_test_setup):
         send_changes_termination_doc(sg_url, sg_db, sg_session, terminator_doc_id, sg_user_channels)
         updated_doc_revs = updates_future.result()
         # Gather the new revs for verification
-        for doc in added_docs:
-            if doc["id"] in updated_doc_revs:
-                doc["rev"] = updated_doc_revs[doc["id"]]
+        for i in range(len(added_docs)):
+            if added_docs[i]["id"] in updated_doc_revs:
+                added_docs[i]["rev"] = updated_doc_revs[added_docs[i]["id"]]
 
-        log_info("added_docs after updates: {}".format(added_docs))
-
-        # Verifies doc body and attachments
-        client.verify_docs_present(url=ls_url, db=ls_db, expected_docs=added_docs, attachments=True)
-
-        # TODO Verify revision history off all docs based on the latest revision
-        # parents, channels?
+        # Verify rev, doc bdy and revision history of all docs
+        verify_sg_docs_revision_history(url=sg_admin_url, db=sg_db, added_docs=added_docs)
 
         if xattrs_enabled:
             # Verify through SDK that there is no _sync property in the doc body
@@ -196,6 +191,48 @@ def test_upgrade(params_from_base_test_setup):
                     raise Exception("sync section found in docs after upgrade")
 
 
+def verify_sg_docs_revision_history(url, db, added_docs):
+    sg_client = MobileRestClient()
+    expected_doc_map = {added_doc["id"]: added_doc["rev"] for added_doc in added_docs}
+    doc_ids = expected_doc_map.keys()
+
+    docs = sg_client.get_bulk_docs(url, db, doc_ids, rev_history="true")
+    assert len(docs[0]) == len(doc_ids)
+
+    for doc in docs:
+        for doc_dict in doc:
+            rev = doc_dict["_rev"]
+            rev_gen = int(rev.split("-")[0])
+            id = doc_dict["_id"]
+            # Verify meta data
+            assert rev == expected_doc_map[id]
+            assert len(doc_dict["_revisions"]["ids"]) == rev_gen
+            assert doc_dict["channels"][0] == "sg_user_channel"
+            # Verify doc body
+            assert "guid" in doc_dict
+            assert "index" in doc_dict
+            assert "latitude" in doc_dict
+            assert "email" in doc_dict
+            assert "picture" in doc_dict
+            assert len(doc_dict["tags"]) == 3
+            assert "date_time_added" in doc_dict
+            assert "company" in doc_dict
+            assert "eyeColor" in doc_dict
+            assert "phone" in doc_dict
+            assert "updates" in doc_dict
+            assert "address" in doc_dict
+            assert len(doc_dict["friends"]) == 2
+            assert "isActive" in doc_dict
+            assert "about" in doc_dict
+            assert "name" in doc_dict
+            assert "age" in doc_dict
+            assert "registered" in doc_dict
+            assert "longitude" in doc_dict
+            assert "_attachments" in doc_dict
+            assert "range" in doc_dict
+            assert "balance" in doc_dict
+
+
 def send_changes_termination_doc(sg_url, sg_db, auth, terminator_doc_id, terminator_channel):
     sg_client = MobileRestClient()
     log_info('Sending changes termination doc for all users')
@@ -204,7 +241,6 @@ def send_changes_termination_doc(sg_url, sg_db, auth, terminator_doc_id, termina
 
 
 def update_docs(client, ls_url, ls_db, added_docs, auth, terminator_doc_id):
-    return []
     current_user_doc_ids = []
     for doc in added_docs:
         current_user_doc_ids.append(doc["id"])
