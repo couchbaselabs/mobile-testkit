@@ -351,7 +351,7 @@ def upgrade_sync_gateway(sync_gateways, sync_gateway_version, sync_gateway_upgra
         )
 
         verify_sync_gateway_product_info(sg_ip)
-        log_info("Checking for sunc gateway version: {}".format(sync_gateway_upgraded_version))
+        log_info("Checking for sync gateway version: {}".format(sync_gateway_upgraded_version))
         verify_sync_gateway_version(sg_ip, sync_gateway_upgraded_version)
 
     log_info("Upgraded all the sync gateway nodes in the cluster")
