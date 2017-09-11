@@ -22,12 +22,10 @@ if [ $? -ne 0 ]; then
 fi
 
 currentdir=`pwd`
-ID=`id`
-echo $PATH
-ls -l /usr/local/bin/virtualenv
-VIRTUAL_ENV=$(which virtualenv)
+export PATH=$PATH:/usr/local/bin
+
 # Setup virtual env
-$VIRTUAL_ENV -p python venv
+virtualenv -p python venv
 source venv/bin/activate
 
 # Install python dependencies
