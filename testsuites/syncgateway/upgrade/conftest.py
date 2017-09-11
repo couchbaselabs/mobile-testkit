@@ -90,6 +90,10 @@ def pytest_addoption(parser):
                      action="store",
                      help="liteserv-storage-engine: the storage-engine to use with liteserv")
 
+    parser.addoption("--num-docs",
+                     action="store",
+                     help="num-docs: Number of docs to load")
+
 
 # This will be called once for the at the beggining of the execution in the 'tests/' directory
 # and will be torn down, (code after the yeild) when all the test session has completed.
@@ -117,6 +121,7 @@ def params_from_base_suite_setup(request):
     liteserv_version = request.config.getoption("--liteserv-version")
     liteserv_platform = request.config.getoption("--liteserv-platform")
     liteserv_storage_engine = request.config.getoption("--liteserv-storage-engine")
+    num_docs = request.config.getoption("--num-docs")
 
     if xattrs_enabled and version_is_binary(sync_gateway_version):
         check_xattr_support(server_upgraded_version, sync_gateway_upgraded_version)
@@ -134,6 +139,7 @@ def params_from_base_suite_setup(request):
     log_info("liteserv_version: {}".format(liteserv_version))
     log_info("liteserv_platform: {}".format(liteserv_platform))
     log_info("liteserv_storage_engine: {}".format(liteserv_storage_engine))
+    log_info("num_docs: {}".format(num_docs))
 
     # Make sure mode for sync_gateway is supported ('cc' or 'di')
     validate_sync_gateway_mode(mode)
@@ -213,7 +219,8 @@ def params_from_base_suite_setup(request):
         "liteserv_version": liteserv_version,
         "liteserv_platform": liteserv_platform,
         "liteserv_storage_engine": liteserv_storage_engine,
-        "liteserv": liteserv
+        "liteserv": liteserv,
+        "num_docs": num_docs
     }
 
     log_info("Tearing down 'params_from_base_suite_setup' ...")
@@ -242,6 +249,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     liteserv_platform = params_from_base_suite_setup["liteserv_platform"]
     liteserv_storage_engine = params_from_base_suite_setup["liteserv_storage_engine"]
     liteserv = params_from_base_suite_setup["liteserv"]
+    num_docs = params_from_base_suite_setup["num_docs"]
 
     test_name = request.node.name
     log_info("Running test '{}'".format(test_name))
@@ -285,7 +293,8 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         "liteserv_storage_engine": liteserv_storage_engine,
         "ls_url": ls_url,
         "sg_url": sg_url,
-        "sg_admin_url": sg_admin_url
+        "sg_admin_url": sg_admin_url,
+        "num_docs": num_docs
     }
 
     client.delete_databases(ls_url)

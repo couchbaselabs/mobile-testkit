@@ -33,13 +33,13 @@ def test_upgrade(params_from_base_test_setup):
     sync_gateway_upgraded_version = params_from_base_test_setup['sync_gateway_upgraded_version']
     sg_url = params_from_base_test_setup['sg_url']
     sg_admin_url = params_from_base_test_setup['sg_admin_url']
+    num_docs = params_from_base_test_setup['num_docs']
     sg_conf = "{}/resources/sync_gateway_configs/sync_gateway_default_functional_tests_{}.json".format(os.getcwd(), mode)
 
     # Add data to liteserv
     client = MobileRestClient()
     log_info("ls_url: {}".format(ls_url))
     ls_db = client.create_database(ls_url, name="ls_db")
-    num_docs = 10
 
     # Create user and session on SG
     sg_user_channels = ["sg_user_channel"]
