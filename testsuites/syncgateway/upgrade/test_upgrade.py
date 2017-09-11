@@ -171,6 +171,22 @@ def test_upgrade(params_from_base_test_setup):
 
         send_changes_termination_doc(sg_url, sg_db, sg_session, terminator_doc_id, sg_user_channels)
         updated_doc_revs = updates_future.result()
+
+        log_info("Stopping replication from liteserv to sync gateway")
+        # Stop repl_one
+        client.stop_replication(
+            url=ls_url, continuous=True,
+            from_db=ls_db,
+            to_url=sg_url, to_db=sg_db, to_auth=sg_session
+        )
+
+        log_info("Stopping replication from sync gateway to liteserv")
+        # Stop repl_two
+        client.stop_replication(
+            url=ls_url, continuous=True,
+            from_url=sg_url, from_db=sg_db, from_auth=sg_session,
+            to_db=ls_db
+        )
         # Gather the new revs for verification
         for i in range(len(added_docs)):
             if added_docs[i]["id"] in updated_doc_revs:
