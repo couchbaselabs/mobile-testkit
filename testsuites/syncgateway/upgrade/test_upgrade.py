@@ -219,14 +219,14 @@ def verify_sg_docs_revision_history(url, db, added_docs):
         for doc_dict in doc:
             rev = doc_dict["_rev"]
             rev_gen = int(rev.split("-")[0])
-            id = doc_dict["_id"]
+            doc_id = doc_dict["_id"]
             # Verify meta data
-            log_info("Verifying that doc {} has rev {}".format(id, expected_doc_map[id]))
-            assert rev == expected_doc_map[id]
-            log_info("Doc {} has {} revisions".format(id, len(doc_dict["_revisions"]["ids"])))
+            log_info("Verifying that doc {} has rev {}".format(doc_id, expected_doc_map[doc_id]))
+            assert rev == expected_doc_map[doc_id]
+            log_info("Doc {} has {} revisions instead of {}".format(doc_id, len(doc_dict["_revisions"]["ids"]), rev_gen))
             # assert len(doc_dict["_revisions"]["ids"]) == rev_gen
             assert len(doc_dict["_revisions"]["ids"]) > 1
-            log_info("Verifying that doc {} is associated with sg_user_channel channel".format(id))
+            log_info("Verifying that doc {} is associated with sg_user_channel channel".format(doc_id))
             assert doc_dict["channels"][0] == "sg_user_channel"
             # Verify doc body
             assert "guid" in doc_dict
