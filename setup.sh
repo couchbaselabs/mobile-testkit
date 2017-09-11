@@ -23,8 +23,9 @@ fi
 
 currentdir=`pwd`
 
+VIRTUAL_ENV=$(which virtualenv)
 # Setup virtual env
-virtualenv -p python venv
+$VIRTUAL_ENV -p python venv
 source venv/bin/activate
 
 # Install python dependencies
