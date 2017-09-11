@@ -269,12 +269,6 @@ class SyncGateway:
             the sync gateway at that url
         """
         ansible_runner = AnsibleRunner(cluster_config)
-        server_port = 8091
-        server_scheme = "http"
-
-        if is_cbs_ssl_enabled(cluster_config):
-            server_port = 18091
-            server_scheme = "https"
 
         from libraries.provision.install_sync_gateway import SyncGatewayConfig
         version, build = version_and_build(sync_gateway_version)

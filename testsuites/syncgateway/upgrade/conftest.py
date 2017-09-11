@@ -28,14 +28,19 @@ def pytest_addoption(parser):
                      action="store",
                      help="Sync Gateway mode to run the test in, 'cc' for channel cache or 'di' for distributed index")
 
-    parser.addoption("--sequoia",
+    parser.addoption("--ci",
                      action="store_true",
-                     help="Pass this if the cluster has been provisioned via sequoia")
+                     help="If set, will target larger cluster (3 backing servers instead of 1, 2 accels if in di mode)")
 
     parser.addoption("--skip-provisioning",
                      action="store_true",
                      help="Skip cluster provisioning at setup",
                      default=False)
+
+    parser.addoption("--cluster-config",
+                     action="store",
+                     help="Provide a custom cluster config",
+                     default="ci_lb")
 
     parser.addoption("--server-version",
                      action="store",
@@ -101,7 +106,9 @@ def params_from_base_suite_setup(request):
     server_upgraded_version = request.config.getoption("--server-upgraded-version")
     sync_gateway_upgraded_version = request.config.getoption("--sync-gateway-upgraded-version")
     mode = request.config.getoption("--mode")
-    use_sequoia = request.config.getoption("--sequoia")
+    ci = request.config.getoption("--ci")
+    cluster_config = request.config.getoption("--cluster-config")
+    # use_sequoia = request.config.getoption("--sequoia")
     skip_provisioning = request.config.getoption("--skip-provisioning")
     cbs_ssl = request.config.getoption("--server-ssl")
     xattrs_enabled = request.config.getoption("--xattrs")
@@ -132,8 +139,9 @@ def params_from_base_suite_setup(request):
     validate_sync_gateway_mode(mode)
 
     # use ci_lb_cc cluster config if mode is "cc" or ci_lb_di cluster config if more is "di"
-    log_info("Using 'base_lb_{}' config!".format(mode))
-    cluster_config = "{}/base_lb_{}".format(CLUSTER_CONFIGS_DIR, mode)
+    # use base_(lb_)cc cluster config if mode is "cc" or base_(lb_)di cluster config if mode is "di"
+    cluster_config = "{}/{}_{}".format(CLUSTER_CONFIGS_DIR, cluster_config, mode)
+    log_info("Using '{}' config!".format(cluster_config))
 
     # Only works with load balancer configs
     persist_cluster_config_environment_prop(cluster_config, 'sg_lb_enabled', True)
@@ -164,7 +172,7 @@ def params_from_base_suite_setup(request):
 
     # Skip provisioning if user specifies '--skip-provisoning' or '--sequoia'
     should_provision = True
-    if skip_provisioning or use_sequoia:
+    if skip_provisioning: # or use_sequoia:
         should_provision = False
 
     cluster_utils = ClusterKeywords()

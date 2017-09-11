@@ -44,7 +44,7 @@ def test_generate_clusters_from_pool_ips(cleanup_folder, cluster_conf, num_couch
 
     # Verification
     # mock_pool_ips.json will generate 38 files ansible+json
-    assert len([name for name in os.listdir(cluster_config_dir)]) == 44
+    assert len([name for name in os.listdir(cluster_config_dir)]) == 46
 
     # We will check 2 files for content 1cbs/1cbs.json
     config = configparser.ConfigParser()

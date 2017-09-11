@@ -2,7 +2,7 @@ import os
 import random
 import time
 
-from keywords.couchbaseserver import CouchbaseServer, verify_server_version
+from keywords.couchbaseserver import verify_server_version
 from libraries.testkit.cluster import Cluster
 from keywords.utils import log_info, host_for_url
 from keywords.SyncGateway import (verify_sg_accel_version,
@@ -12,11 +12,10 @@ from keywords.SyncGateway import (verify_sg_accel_version,
                                   SyncGateway)
 from keywords.ClusterKeywords import ClusterKeywords
 from keywords.MobileRestClient import MobileRestClient
-from keywords import document
 from keywords import attachment
 from couchbase.bucket import Bucket
 from keywords.constants import SDK_TIMEOUT
-from concurrent.futures import ProcessPoolExecutor, as_completed
+from concurrent.futures import ProcessPoolExecutor
 from requests.exceptions import HTTPError
 
 
@@ -140,6 +139,7 @@ def test_upgrade(params_from_base_test_setup):
             cluster_config
         )
 
+        time.sleep(20)
         if xattrs_enabled:
             # Enable xattrs on all SG/SGAccel nodes
             # cc - Start 1 SG with import enabled, all with XATTRs enabled
@@ -205,8 +205,12 @@ def verify_sg_docs_revision_history(url, db, added_docs):
             rev_gen = int(rev.split("-")[0])
             id = doc_dict["_id"]
             # Verify meta data
+            log_info("Verifying that doc {} has rev {}".format(id, expected_doc_map[id]))
             assert rev == expected_doc_map[id]
+            log_info("Verifying that doc {} has {} revisions".format(id, rev_gen))
+            log_info(doc_dict)
             assert len(doc_dict["_revisions"]["ids"]) == rev_gen
+            log_info("Verifying that doc {} is associated with sg_user_channel channel".format(id))
             assert doc_dict["channels"][0] == "sg_user_channel"
             # Verify doc body
             assert "guid" in doc_dict
