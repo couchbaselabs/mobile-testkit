@@ -110,7 +110,6 @@ def params_from_base_suite_setup(request):
     server_upgraded_version = request.config.getoption("--server-upgraded-version")
     sync_gateway_upgraded_version = request.config.getoption("--sync-gateway-upgraded-version")
     mode = request.config.getoption("--mode")
-    ci = request.config.getoption("--ci")
     cluster_config = request.config.getoption("--cluster-config")
     # use_sequoia = request.config.getoption("--sequoia")
     skip_provisioning = request.config.getoption("--skip-provisioning")
@@ -178,7 +177,7 @@ def params_from_base_suite_setup(request):
 
     # Skip provisioning if user specifies '--skip-provisoning' or '--sequoia'
     should_provision = True
-    if skip_provisioning: # or use_sequoia:
+    if skip_provisioning:
         should_provision = False
 
     cluster_utils = ClusterKeywords()
