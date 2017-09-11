@@ -72,7 +72,7 @@ def test_upgrade(params_from_base_test_setup):
     )
 
     # Add docs to liteserv
-    added_docs = client.add_docs(url=ls_url, db=ls_db, channels=sg_user_channels, generator="simple_user", number=num_docs, id_prefix="ls_db_upgrade_doc", attachments_generator=attachment.generate_png_10_10)
+    added_docs = client.add_docs(url=ls_url, db=ls_db, channels=sg_user_channels, generator="simple_user", number=num_docs, id_prefix="ls_db_upgrade_doc", attachments_generator=attachment.generate_png_1_1)
 
     # start updating docs
     terminator_doc_id = 'terminator'
