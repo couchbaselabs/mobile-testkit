@@ -33,7 +33,7 @@ def test_upgrade(params_from_base_test_setup):
     sync_gateway_upgraded_version = params_from_base_test_setup['sync_gateway_upgraded_version']
     sg_url = params_from_base_test_setup['sg_url']
     sg_admin_url = params_from_base_test_setup['sg_admin_url']
-    num_docs = params_from_base_test_setup['num_docs']
+    num_docs = int(params_from_base_test_setup['num_docs'])
     sg_conf = "{}/resources/sync_gateway_configs/sync_gateway_default_functional_tests_{}.json".format(os.getcwd(), mode)
 
     # Add data to liteserv
@@ -223,8 +223,7 @@ def verify_sg_docs_revision_history(url, db, added_docs):
             # Verify meta data
             log_info("Verifying that doc {} has rev {}".format(id, expected_doc_map[id]))
             assert rev == expected_doc_map[id]
-            log_info("Verifying that doc {} has {} revisions".format(id, rev_gen))
-            log_info(doc_dict)
+            log_info("Doc {} has {} revisions".format(id, len(doc_dict["_revisions"]["ids"])))
             # assert len(doc_dict["_revisions"]["ids"]) == rev_gen
             assert len(doc_dict["_revisions"]["ids"]) > 1
             log_info("Verifying that doc {} is associated with sg_user_channel channel".format(id))
