@@ -22,7 +22,9 @@ if [ $? -ne 0 ]; then
 fi
 
 currentdir=`pwd`
-
+ID=`id`
+echo $PATH
+ls -l /usr/local/bin/virtualenv
 VIRTUAL_ENV=$(which virtualenv)
 # Setup virtual env
 $VIRTUAL_ENV -p python venv
