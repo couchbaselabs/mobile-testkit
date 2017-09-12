@@ -167,7 +167,7 @@ def test_upgrade(params_from_base_test_setup):
             for sg in sync_gateways:
                 sg_ip = host_for_url(sg["admin"])
                 sg_obj = SyncGateway()
-                sg_obj.enable_import_xattrs( # check import on SG in di mode
+                sg_obj.enable_import_xattrs(
                     cluster_config=cluster_config,
                     sg_conf=sg_conf,
                     url=sg_ip,
