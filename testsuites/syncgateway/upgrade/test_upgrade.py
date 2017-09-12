@@ -359,8 +359,9 @@ def upgrade_sync_gateway(sync_gateways, sync_gateway_version, sync_gateway_upgra
     for sg in sync_gateways:
         sg_ip = host_for_url(sg["admin"])
         sg_obj = SyncGateway()
+        log_info("Checking for sync gateway product info before upgrade")
         verify_sync_gateway_product_info(sg_ip)
-        log_info("Checking for sunc gateway version: {}".format(sync_gateway_version))
+        log_info("Checking for sync gateway version: {}".format(sync_gateway_version))
         verify_sync_gateway_version(sg_ip, sync_gateway_version)
         log_info("Upgrading sync gateway: {}".format(sg_ip))
         sg_obj.upgrade_sync_gateways(
@@ -370,6 +371,7 @@ def upgrade_sync_gateway(sync_gateways, sync_gateway_version, sync_gateway_upgra
             url=sg_ip
         )
 
+        log_info("Checking for sync gateway product info after upgrade")
         verify_sync_gateway_product_info(sg_ip)
         log_info("Checking for sync gateway version: {}".format(sync_gateway_upgraded_version))
         verify_sync_gateway_version(sg_ip, sync_gateway_upgraded_version)

@@ -329,6 +329,8 @@ class SyncGateway:
         if status != 0:
             raise Exception("Could not stop sync_gateway")
 
+        log_info("Completed upgrading {}".format(url))
+
     def enable_import_xattrs(self, cluster_config, sg_conf, url, enable_import=False):
         """Deploy an SG config with xattrs enabled
             Will also enable import if enable_import is set to True"""
