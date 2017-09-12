@@ -76,7 +76,7 @@ def test_upgrade(params_from_base_test_setup):
 
     # start updating docs
     terminator_doc_id = 'terminator'
-    with ProcessPoolExecutor(max_workers=2) as up:
+    with ProcessPoolExecutor(max_workers=10) as up:
         # Start updates in background process
         updates_future = up.submit(
             update_docs,
@@ -139,24 +139,42 @@ def test_upgrade(params_from_base_test_setup):
             cluster_config
         )
 
-        time.sleep(20)
+        # Restart SGs after the server upgrade
+        for sg in sync_gateways:
+            sg_ip = host_for_url(sg["admin"])
+            sg_obj = SyncGateway()
+            log_info("Restarting {}".format(sg_ip))
+            sg_obj.restart_sync_gateways(cluster_config=cluster_config, url=sg_ip)
+
+        if mode == "di":
+            for ac in sg_accels:
+                ac_ip = host_for_url(ac["admin"])
+                ac_obj = SyncGateway()
+                log_info("Restarting {}".format(ac_ip))
+                ac_obj.restart_sync_gateways(cluster_config=cluster_config, url=ac_ip)
+        # Check RBAC user
         if xattrs_enabled:
             # Enable xattrs on all SG/SGAccel nodes
             # cc - Start 1 SG with import enabled, all with XATTRs enabled
             # di - All SGs/SGAccels with xattrs enabled - this will also enable import on SGAccel
             #    - Do not enable import in SG.
             # Enable xattrs on all nodes
-            enable_import = True
+            if mode == "cc":
+                enable_import = True
+            elif mode == "di":
+                enable_import = False
+
             for sg in sync_gateways:
                 sg_ip = host_for_url(sg["admin"])
                 sg_obj = SyncGateway()
-                sg_obj.enable_import_xattrs(
+                sg_obj.enable_import_xattrs( # check import on SG in di mode
                     cluster_config=cluster_config,
                     sg_conf=sg_conf,
                     url=sg_ip,
                     enable_import=enable_import
                 )
                 enable_import = False
+                # Check Import showing up on all nodes
 
             if mode == "di":
                 for ac in sg_accels:
@@ -223,12 +241,12 @@ def verify_sg_docs_revision_history(url, db, added_docs):
             # Verify meta data
             log_info("Verifying that doc {} has rev {}".format(doc_id, expected_doc_map[doc_id]))
             assert rev == expected_doc_map[doc_id]
-            log_info("Doc {} has {} revisions instead of {}".format(doc_id, len(doc_dict["_revisions"]["ids"]), rev_gen))
-            # assert len(doc_dict["_revisions"]["ids"]) == rev_gen
-            assert len(doc_dict["_revisions"]["ids"]) > 1
+            log_info("Doc {}: Expected number of revs: {}, Actual revs: {}".format(doc_id, rev_gen, len(doc_dict["_revisions"]["ids"])))
+            assert len(doc_dict["_revisions"]["ids"]) == rev_gen
             log_info("Verifying that doc {} is associated with sg_user_channel channel".format(doc_id))
             assert doc_dict["channels"][0] == "sg_user_channel"
             # Verify doc body
+            log_info("Verifying doc body for {}".format(doc_id))
             assert "guid" in doc_dict
             assert "index" in doc_dict
             assert "latitude" in doc_dict
@@ -251,6 +269,7 @@ def verify_sg_docs_revision_history(url, db, added_docs):
             assert "_attachments" in doc_dict
             assert "range" in doc_dict
             assert "balance" in doc_dict
+            log_info("Verified doc body for {}".format(doc_id))
 
 
 def send_changes_termination_doc(sg_url, sg_db, auth, terminator_doc_id, terminator_channel):
@@ -288,8 +307,9 @@ def update_docs(client, ls_url, ls_db, added_docs, auth, terminator_doc_id):
             client.put_doc(url=ls_url, db=ls_db, doc_id=doc_id, doc_body=doc, rev=doc['_rev'], auth=auth)
             new_doc = client.get_doc(url=ls_url, db=ls_db, doc_id=doc_id, auth=auth)
             doc_revs[doc_id] = new_doc['_rev']
+            time.sleep(2)
 
-        time.sleep(2)
+        time.sleep(5)
 
 
 def upgrade_server_cluster(servers, primary_server, secondary_server, server_version, server_upgraded_version, server_urls, cluster_config):

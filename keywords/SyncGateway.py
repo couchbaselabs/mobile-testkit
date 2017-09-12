@@ -264,6 +264,27 @@ class SyncGateway:
         if status != 0:
             raise ProvisioningError("Could not stop sync_gateway")
 
+    def restart_sync_gateways(self, cluster_config, url=None):
+        """ Restart sync gateways in a cluster. If url is passed, restart
+         the sync gateway at that url
+        """
+        ansible_runner = AnsibleRunner(cluster_config)
+
+        if url is not None:
+            target = hostname_for_url(cluster_config, url)
+            log_info("Restarting sync_gateway on {} ...".format(target))
+            status = ansible_runner.run_ansible_playbook(
+                "restart-sync-gateway.yml",
+                subset=target
+            )
+        else:
+            log_info("Restarting all sync_gateways")
+            status = ansible_runner.run_ansible_playbook(
+                "restart-sync-gateway.yml",
+            )
+        if status != 0:
+            raise ProvisioningError("Could not restart sync_gateway")
+
     def upgrade_sync_gateways(self, cluster_config, sg_conf, sync_gateway_version, url=None):
         """ Upgrade sync gateways in a cluster. If url is passed, upgrade
             the sync gateway at that url
