@@ -320,16 +320,16 @@ class SyncGateway:
                 subset=target,
                 extra_vars=playbook_vars
             )
+            log_info("Completed upgrading {}".format(url))
         else:
             log_info("Upgrading all sync_gateways")
             status = ansible_runner.run_ansible_playbook(
                 "upgrade-sync-gateway-package.yml",
                 extra_vars=playbook_vars
             )
+            log_info("Completed upgrading all sync_gateways")
         if status != 0:
             raise Exception("Could not stop sync_gateway")
-
-        log_info("Completed upgrading {}".format(url))
 
     def enable_import_xattrs(self, cluster_config, sg_conf, url, enable_import=False):
         """Deploy an SG config with xattrs enabled
