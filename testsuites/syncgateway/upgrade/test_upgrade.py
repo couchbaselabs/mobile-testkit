@@ -357,11 +357,11 @@ def upgrade_sync_gateway(sync_gateways, sync_gateway_version, sync_gateway_upgra
     log_info('------------------------------------------')
 
     sg_obj = SyncGateway()
-    # sync_gateways.appen("abc")
+    sync_gateways.append("abc")
 
     for sg in sync_gateways:
-        # if sg == "abc":
-        #     break
+        if sg == "abc":
+            break
         sg_ip = host_for_url(sg["admin"])
         log_info("Checking for sync gateway product info before upgrade")
         verify_sync_gateway_product_info(sg_ip)
