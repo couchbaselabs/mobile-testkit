@@ -140,16 +140,16 @@ def test_upgrade(params_from_base_test_setup):
         )
 
         # Restart SGs after the server upgrade
+        sg_obj = SyncGateway()
         for sg in sync_gateways:
             sg_ip = host_for_url(sg["admin"])
-            sg_obj = SyncGateway()
             log_info("Restarting {}".format(sg_ip))
             sg_obj.restart_sync_gateways(cluster_config=cluster_config, url=sg_ip)
 
         if mode == "di":
+            ac_obj = SyncGateway()
             for ac in sg_accels:
                 ac_ip = host_for_url(ac["admin"])
-                ac_obj = SyncGateway()
                 log_info("Restarting {}".format(ac_ip))
                 ac_obj.restart_sync_gateways(cluster_config=cluster_config, url=ac_ip)
         # Check RBAC user
@@ -164,9 +164,9 @@ def test_upgrade(params_from_base_test_setup):
             elif mode == "di":
                 enable_import = False
 
+            sg_obj = SyncGateway()
             for sg in sync_gateways:
                 sg_ip = host_for_url(sg["admin"])
-                sg_obj = SyncGateway()
                 sg_obj.enable_import_xattrs(
                     cluster_config=cluster_config,
                     sg_conf=sg_conf,
@@ -177,9 +177,9 @@ def test_upgrade(params_from_base_test_setup):
                 # Check Import showing up on all nodes
 
             if mode == "di":
+                ac_obj = SyncGateway()
                 for ac in sg_accels:
                     ac_ip = host_for_url(sg["admin"])
-                    ac_obj = SyncGateway()
                     ac_obj.enable_import_xattrs(
                         cluster_config=cluster_config,
                         sg_conf=sg_conf,
@@ -356,9 +356,10 @@ def upgrade_sync_gateway(sync_gateways, sync_gateway_version, sync_gateway_upgra
     log_info('START Sync Gateway cluster upgrade')
     log_info('------------------------------------------')
 
+    sg_obj = SyncGateway()
+
     for sg in sync_gateways:
         sg_ip = host_for_url(sg["admin"])
-        sg_obj = SyncGateway()
         log_info("Checking for sync gateway product info before upgrade")
         verify_sync_gateway_product_info(sg_ip)
         log_info("Checking for sync gateway version: {}".format(sync_gateway_version))
