@@ -1317,7 +1317,6 @@ class MobileRestClient:
         # ]
         doc_ids_formatted = [{"id": doc_id} for doc_id in doc_ids]
         request_body = {"docs": doc_ids_formatted}
-        log_info("request_body: {}".format(request_body))
         auth_type = get_auth_type(auth)
 
         if auth_type == AuthType.session:
