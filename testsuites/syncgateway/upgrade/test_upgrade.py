@@ -76,7 +76,7 @@ def test_upgrade(params_from_base_test_setup):
 
     # start updating docs
     terminator_doc_id = 'terminator'
-    with ProcessPoolExecutor(max_workers=2) as up:
+    with ProcessPoolExecutor() as up:
         # Start updates in background process
         updates_future = up.submit(
             update_docs,
