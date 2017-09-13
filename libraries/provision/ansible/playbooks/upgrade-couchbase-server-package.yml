@@ -30,6 +30,8 @@
     # Download and install
     - name: COUCHBASE SERVER | Download couchbase server
       get_url: url={{ couchbase_server_package_url }} dest=/tmp/{{ couchbase_server_package_name }}
+    - name: Uninstall Couchbase Server
+      shell: rpm -e couchbase-server
     - name: Upgrade Couchbase Server
       yum: name=/tmp/{{ couchbase_server_package_name }} state=latest
 
