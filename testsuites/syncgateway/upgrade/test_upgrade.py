@@ -15,7 +15,7 @@ from keywords.MobileRestClient import MobileRestClient
 from keywords import attachment
 from couchbase.bucket import Bucket
 from keywords.constants import SDK_TIMEOUT
-from concurrent.futures import ProcessPoolExecutor
+from concurrent.futures import ThreadPoolExecutor
 from requests.exceptions import HTTPError
 
 
@@ -76,7 +76,7 @@ def test_upgrade(params_from_base_test_setup):
 
     # start updating docs
     terminator_doc_id = 'terminator'
-    with ProcessPoolExecutor(max_workers=10) as up:
+    with ThreadPoolExecutor(max_workers=2) as up:
         # Start updates in background process
         updates_future = up.submit(
             update_docs,
