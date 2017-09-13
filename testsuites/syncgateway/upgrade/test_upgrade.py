@@ -357,29 +357,45 @@ def upgrade_sync_gateway(sync_gateways, sync_gateway_version, sync_gateway_upgra
     log_info('------------------------------------------')
 
     sg_obj = SyncGateway()
-    sync_gateways.append("abc")
+    # sync_gateways.append("abc")
+
+    # for sg in sync_gateways:
+    #     if sg == "abc":
+    #         break
+    #     sg_ip = host_for_url(sg["admin"])
+    #     log_info("Checking for sync gateway product info before upgrade")
+    #     verify_sync_gateway_product_info(sg_ip)
+    #     log_info("Checking for sync gateway version: {}".format(sync_gateway_version))
+    #     verify_sync_gateway_version(sg_ip, sync_gateway_version)
+    #     log_info("Upgrading sync gateway: {}".format(sg_ip))
+    #     sg_obj.upgrade_sync_gateways(
+    #         cluster_config=cluster_config,
+    #         sg_conf=sg_conf,
+    #         sync_gateway_version=sync_gateway_upgraded_version,
+    #         url=sg_ip
+    #     )
 
     for sg in sync_gateways:
-        if sg == "abc":
-            break
         sg_ip = host_for_url(sg["admin"])
         log_info("Checking for sync gateway product info before upgrade")
         verify_sync_gateway_product_info(sg_ip)
         log_info("Checking for sync gateway version: {}".format(sync_gateway_version))
         verify_sync_gateway_version(sg_ip, sync_gateway_version)
-        log_info("Upgrading sync gateway: {}".format(sg_ip))
-        sg_obj.upgrade_sync_gateways(
-            cluster_config=cluster_config,
-            sg_conf=sg_conf,
-            sync_gateway_version=sync_gateway_upgraded_version,
-            # url=sg_ip
-        )
 
+    # log_info("Upgrading sync gateway: {}".format(sg_ip))
+    sg_obj.upgrade_sync_gateways(
+        cluster_config=cluster_config,
+        sg_conf=sg_conf,
+        sync_gateway_version=sync_gateway_upgraded_version,
+        url=sg_ip
+    )
+
+    for sg in sync_gateways:
+        sg_ip = host_for_url(sg["admin"])
         log_info("Checking for sync gateway product info after upgrade")
         verify_sync_gateway_product_info(sg_ip)
         log_info("Checking for sync gateway version: {}".format(sync_gateway_upgraded_version))
         verify_sync_gateway_version(sg_ip, sync_gateway_upgraded_version)
-        time.sleep(5)
 
     log_info("Upgraded all the sync gateway nodes in the cluster")
     log_info('------------------------------------------')
