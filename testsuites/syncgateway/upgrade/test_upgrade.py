@@ -15,7 +15,7 @@ from keywords.MobileRestClient import MobileRestClient
 from keywords import attachment
 from couchbase.bucket import Bucket
 from keywords.constants import SDK_TIMEOUT
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ProcessPoolExecutor
 from requests.exceptions import HTTPError
 
 
@@ -76,7 +76,7 @@ def test_upgrade(params_from_base_test_setup):
 
     # start updating docs
     terminator_doc_id = 'terminator'
-    with ThreadPoolExecutor(max_workers=2) as up:
+    with ProcessPoolExecutor(max_workers=2) as up:
         # Start updates in background process
         updates_future = up.submit(
             update_docs,
@@ -357,11 +357,11 @@ def upgrade_sync_gateway(sync_gateways, sync_gateway_version, sync_gateway_upgra
     log_info('------------------------------------------')
 
     sg_obj = SyncGateway()
-    sync_gateways.appen("abc")
+    # sync_gateways.appen("abc")
 
     for sg in sync_gateways:
-        if sg == "abc":
-            break
+        # if sg == "abc":
+        #     break
         sg_ip = host_for_url(sg["admin"])
         log_info("Checking for sync gateway product info before upgrade")
         verify_sync_gateway_product_info(sg_ip)
