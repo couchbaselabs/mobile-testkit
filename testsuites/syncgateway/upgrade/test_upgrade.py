@@ -118,7 +118,7 @@ def test_upgrade(params_from_base_test_setup):
 
         # Upgrade CBS
         cluster = Cluster(config=cluster_config)
-        if len(cluster.servers) < 3:
+        if len(cluster.servers) < 2:
             raise Exception("Please provide at least 3 servers")
 
         server_urls = []
