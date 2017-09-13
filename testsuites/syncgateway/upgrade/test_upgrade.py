@@ -387,7 +387,7 @@ def upgrade_sync_gateway(sync_gateways, sync_gateway_version, sync_gateway_upgra
         cluster_config=cluster_config,
         sg_conf=sg_conf,
         sync_gateway_version=sync_gateway_upgraded_version,
-        url=sg_ip
+        # url=sg_ip
     )
 
     for sg in sync_gateways:
