@@ -80,6 +80,7 @@ def test_upgrade(params_from_base_test_setup):
         channels=sg_user_channels,
         num_docs=num_docs
     )
+    log_info("Added {} docs".format(len(added_docs)))
 
     # start updating docs
     terminator_doc_id = 'terminator'
