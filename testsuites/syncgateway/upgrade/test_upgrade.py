@@ -214,7 +214,9 @@ def test_upgrade(params_from_base_test_setup):
             to_db=ls_db
         )
         # Gather the new revs for verification
+        doc_ids = []
         for i in range(len(added_docs)):
+            doc_ids.append(added_docs[i]["id"])
             if added_docs[i]["id"] in updated_doc_revs:
                 added_docs[i]["rev"] = updated_doc_revs[added_docs[i]["id"]]
 
@@ -224,7 +226,6 @@ def test_upgrade(params_from_base_test_setup):
         if xattrs_enabled:
             # Verify through SDK that there is no _sync property in the doc body
             bucket_name = 'data-bucket'
-            doc_ids = ['ls_db_upgrade_doc_{}'.format(i) for i in range(num_docs)]
             sdk_client = Bucket('couchbase://{}/{}'.format(primary_server.host, bucket_name), password='password', timeout=SDK_TIMEOUT)
             docs_from_sdk = sdk_client.get_multi(doc_ids)
 
@@ -233,13 +234,13 @@ def test_upgrade(params_from_base_test_setup):
                     raise Exception("sync section found in docs after upgrade")
 
 
-def add_client_docs(client, url, db, channels, generator, num_docs, id_prefix, attachments_generator):
+def add_client_docs(client, url, db, channels, generator, ndocs, id_prefix, attachments_generator):
     docs = client.add_docs(
         url=url,
         db=db,
         channels=channels,
         generator=generator,
-        number=num_docs,
+        number=ndocs,
         id_prefix=id_prefix,
         attachments_generator=attachments_generator
     )
@@ -258,13 +259,13 @@ def add_docs_to_client_task(client, url, db, channels, num_docs):
             db=db,
             channels=channels,
             generator="simple_user",
-            num_docs=docs_per_thread,
+            ndocs=docs_per_thread,
             id_prefix="ls_db_upgrade_doc_{}".format(i),
             attachments_generator=attachment.generate_png_1_1
         ) for i in range(10)]
 
         for future in as_completed(futures):
-            docs.append(future.result())
+            docs.extend(future.result())
 
     return docs
 
