@@ -15,7 +15,7 @@ from keywords.MobileRestClient import MobileRestClient
 from keywords import attachment
 from couchbase.bucket import Bucket
 from keywords.constants import SDK_TIMEOUT
-from concurrent.futures import ProcessPoolExecutor
+from concurrent.futures import ProcessPoolExecutor, as_completed
 from requests.exceptions import HTTPError
 
 
@@ -72,7 +72,14 @@ def test_upgrade(params_from_base_test_setup):
     )
 
     # Add docs to liteserv
-    added_docs = client.add_docs(url=ls_url, db=ls_db, channels=sg_user_channels, generator="simple_user", number=num_docs, id_prefix="ls_db_upgrade_doc", attachments_generator=attachment.generate_png_1_1)
+    # added_docs = client.add_docs(url=ls_url, db=ls_db, channels=sg_user_channels, generator="simple_user", number=num_docs, id_prefix="ls_db_upgrade_doc", attachments_generator=attachment.generate_png_1_1)
+    added_docs = add_docs_to_client_task(
+        client=client,
+        url=ls_url,
+        db=ls_db,
+        channels=sg_user_channels,
+        num_docs=num_docs
+    )
 
     # start updating docs
     terminator_doc_id = 'terminator'
@@ -223,6 +230,42 @@ def test_upgrade(params_from_base_test_setup):
             for i in docs_from_sdk:
                 if "_sync" in docs_from_sdk[i].value:
                     raise Exception("sync section found in docs after upgrade")
+
+
+def add_client_docs(client, url, db, channels, generator, num_docs, id_prefix, attachments_generator):
+    docs = client.add_docs(
+        url=url,
+        db=db,
+        channels=channels,
+        generator=generator,
+        number=num_docs,
+        id_prefix=id_prefix,
+        attachments_generator=attachments_generator
+    )
+
+    return docs
+
+
+def add_docs_to_client_task(client, url, db, channels, num_docs):
+    docs = []
+    docs_per_thread = num_docs // 10
+    with ProcessPoolExecutor() as ad:
+        futures = [ad.submit(
+            add_client_docs,
+            client=client,
+            url=url,
+            db=db,
+            channels=channels,
+            generator="simple_user",
+            number=docs_per_thread,
+            id_prefix="ls_db_upgrade_doc_{}".format(i),
+            attachments_generator=attachment.generate_png_1_1
+        ) for i in range(10)]
+
+        for future in as_completed(futures):
+            docs.append(future.result())
+
+    return docs
 
 
 def verify_sg_docs_revision_history(url, db, added_docs):
