@@ -374,6 +374,7 @@ def upgrade_server_cluster(servers, primary_server, secondary_server, server_ver
         primary_server.rebalance_in(server_urls, server)
         log_info("Checking for the server version: {}".format(server_upgraded_version))
         verify_server_version(server.host, server_upgraded_version)
+        time.sleep(10)
 
     # Upgrade the primary server
     primary_server_services = "kv,index,n1ql"
@@ -415,6 +416,7 @@ def upgrade_sync_gateway(sync_gateways, sync_gateway_version, sync_gateway_upgra
             sync_gateway_version=sync_gateway_upgraded_version,
             url=sg_ip
         )
+        time.sleep(10)
 
     log_info("Upgraded all the sync gateway nodes in the cluster")
     log_info('------------------------------------------')
@@ -440,6 +442,7 @@ def upgrade_sg_accel(sg_accels, sync_gateway_version, sync_gateway_upgraded_vers
             sync_gateway_version=sync_gateway_upgraded_version,
             url=ac_ip
         )
+        time.sleep(10)
 
         verify_sg_accel_product_info(ac_ip)
         log_info("Checking for sunc gateway version: {}".format(sync_gateway_upgraded_version))
