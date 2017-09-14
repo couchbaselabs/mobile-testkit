@@ -258,7 +258,7 @@ def add_docs_to_client_task(client, url, db, channels, num_docs):
             db=db,
             channels=channels,
             generator="simple_user",
-            number=docs_per_thread,
+            num_docs=docs_per_thread,
             id_prefix="ls_db_upgrade_doc_{}".format(i),
             attachments_generator=attachment.generate_png_1_1
         ) for i in range(10)]
