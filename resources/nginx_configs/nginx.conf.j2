@@ -43,7 +43,7 @@ http {
     server {
         listen 4984;
         server_name  myservice.example.org;
-        client_max_body_size 20m;
+        client_max_body_size 200m;
         location / {
             proxy_pass              http://sync_gateway;
             proxy_next_upstream     error timeout invalid_header http_500 http_502 http_503 http_504;
@@ -60,7 +60,7 @@ http {
     server {
         listen 4985;
         server_name  myservice.example.org;
-        client_max_body_size 20m;
+        client_max_body_size 200m;
         location / {
             proxy_pass              http://sync_gateway_admin;
             proxy_next_upstream     error timeout invalid_header http_500 http_502 http_503 http_504;
