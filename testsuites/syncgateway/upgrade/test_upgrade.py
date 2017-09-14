@@ -15,7 +15,7 @@ from keywords.MobileRestClient import MobileRestClient
 from keywords import attachment
 from couchbase.bucket import Bucket
 from keywords.constants import SDK_TIMEOUT
-from concurrent.futures import ThreadPoolExecutor, as_completed
+from concurrent.futures import ProcessPoolExecutor, as_completed
 from requests.exceptions import HTTPError
 
 
@@ -84,7 +84,7 @@ def test_upgrade(params_from_base_test_setup):
 
     # start updating docs
     terminator_doc_id = 'terminator'
-    with ThreadPoolExecutor() as up:
+    with ProcessPoolExecutor() as up:
         # Start updates in background process
         updates_future = up.submit(
             update_docs,
@@ -251,7 +251,7 @@ def add_client_docs(client, url, db, channels, generator, ndocs, id_prefix, atta
 def add_docs_to_client_task(client, url, db, channels, num_docs):
     docs = []
     docs_per_thread = num_docs // 10
-    with ThreadPoolExecutor() as ad:
+    with ProcessPoolExecutor() as ad:
         futures = [ad.submit(
             add_client_docs,
             client=client,
