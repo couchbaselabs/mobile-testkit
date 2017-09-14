@@ -196,6 +196,7 @@ def test_upgrade(params_from_base_test_setup):
                     )
 
         send_changes_termination_doc(sg_url, sg_db, sg_session, terminator_doc_id, sg_user_channels)
+        log_info("Waiting for doc updates to complete")
         updated_doc_revs = updates_future.result()
 
         log_info("Stopping replication from liteserv to sync gateway")
@@ -336,7 +337,8 @@ def update_docs(client, ls_url, ls_db, added_docs, auth, terminator_doc_id):
     while True:
         try:
             client.get_doc(url=ls_url, db=ls_db, doc_id=terminator_doc_id, auth=auth)
-            log_info("Found termination doc")
+            log_info("update_docs: Found termination doc")
+            log_info("update_docs: Updated {} docs".format(len(doc_revs.keys())))
             return doc_revs
         except HTTPError:
             log_info("Termination doc not found")
