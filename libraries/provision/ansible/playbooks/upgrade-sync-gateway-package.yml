@@ -26,7 +26,7 @@
 
   tasks:
   - debug: msg="Downloading sg_accel v. {{ couchbase_sg_accel_package_url }}"
-  - name: SYNC GATEWAY | Download sg_accel rpm
+  - name: SG ACCEL | Download sg_accel rpm
     get_url: url={{ couchbase_sg_accel_package_url }} dest=/tmp/{{ couchbase_sg_accel_package }}
 
 # Install and launch sync_gateway service
