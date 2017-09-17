@@ -166,7 +166,6 @@ def test_upgrade(params_from_base_test_setup):
             # cc - Start 1 SG with import enabled, all with XATTRs enabled
             # di - All SGs/SGAccels with xattrs enabled - this will also enable import on SGAccel
             #    - Do not enable import in SG.
-            # Enable xattrs on all nodes
             if mode == "cc":
                 enable_import = True
             elif mode == "di":
@@ -252,7 +251,7 @@ def add_client_docs(client, url, db, channels, generator, ndocs, id_prefix, atta
 def add_docs_to_client_task(client, url, db, channels, num_docs):
     docs = []
     docs_per_thread = num_docs // 10
-    with ProcessPoolExecutor() as ad:
+    with ProcessPoolExecutor(max_workers=10) as ad:
         futures = [ad.submit(
             add_client_docs,
             client=client,
@@ -420,7 +419,12 @@ def upgrade_sync_gateway(sync_gateways, sync_gateway_version, sync_gateway_upgra
             sync_gateway_version=sync_gateway_upgraded_version,
             url=sg_ip
         )
+
         time.sleep(10)
+        log_info("Checking for sync gateway product info after upgrade")
+        verify_sync_gateway_product_info(sg_ip)
+        log_info("Checking for sync gateway version after upgrade: {}".format(sync_gateway_upgraded_version))
+        verify_sync_gateway_version(sg_ip, sync_gateway_upgraded_version)
 
     log_info("Upgraded all the sync gateway nodes in the cluster")
     log_info('------------------------------------------')
@@ -433,11 +437,11 @@ def upgrade_sg_accel(sg_accels, sync_gateway_version, sync_gateway_upgraded_vers
     log_info('START SG Accel cluster upgrade')
     log_info('------------------------------------------')
 
+    ac_obj = SyncGateway()
+
     for ac in sg_accels:
-        ac_ip = host_for_url(ac["admin"])
-        ac_obj = SyncGateway()
-        verify_sg_accel_product_info(ac_ip)
-        log_info("Checking for sg_accel version: {}".format(sync_gateway_version))
+        ac_ip = host_for_url(ac)
+        log_info("Checking for sg_accel version before upgrade: {}".format(sync_gateway_version))
         verify_sg_accel_version(ac_ip, sync_gateway_version)
         log_info("Upgrading sg_accel: {}".format(ac_ip))
         ac_obj.upgrade_sync_gateways(
@@ -448,8 +452,9 @@ def upgrade_sg_accel(sg_accels, sync_gateway_version, sync_gateway_upgraded_vers
         )
         time.sleep(10)
 
+        log_info("Checking for sg accel product info after upgrade")
         verify_sg_accel_product_info(ac_ip)
-        log_info("Checking for sunc gateway version: {}".format(sync_gateway_upgraded_version))
+        log_info("Checking for sg accel version after upgrade: {}".format(sync_gateway_upgraded_version))
         verify_sg_accel_version(ac_ip, sync_gateway_upgraded_version)
 
     log_info("Upgraded all the sg accel nodes in the cluster")

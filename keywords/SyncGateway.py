@@ -314,7 +314,7 @@ class SyncGateway:
 
         if url is not None:
             target = hostname_for_url(cluster_config, url)
-            log_info("Upgrading sync_gateway on {} ...".format(target))
+            log_info("Upgrading sync_gateway/sg_accel on {} ...".format(target))
             status = ansible_runner.run_ansible_playbook(
                 "upgrade-sync-gateway-package.yml",
                 subset=target,
@@ -322,14 +322,14 @@ class SyncGateway:
             )
             log_info("Completed upgrading {}".format(url))
         else:
-            log_info("Upgrading all sync_gateways")
+            log_info("Upgrading all sync_gateways/sg_accels")
             status = ansible_runner.run_ansible_playbook(
                 "upgrade-sync-gateway-package.yml",
                 extra_vars=playbook_vars
             )
-            log_info("Completed upgrading all sync_gateways")
+            log_info("Completed upgrading all sync_gateways/sg_accels")
         if status != 0:
-            raise Exception("Could not stop sync_gateway")
+            raise Exception("Could not upgrade sync_gateway/sg_accel")
 
     def enable_import_xattrs(self, cluster_config, sg_conf, url, enable_import=False):
         """Deploy an SG config with xattrs enabled
