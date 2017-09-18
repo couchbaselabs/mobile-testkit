@@ -158,7 +158,7 @@ def test_upgrade(params_from_base_test_setup):
         if mode == "di":
             ac_obj = SyncGateway()
             for ac in sg_accels:
-                ac_ip = host_for_url(ac["admin"])
+                ac_ip = host_for_url(ac)
                 log_info("Restarting sg accel {}".format(ac_ip))
                 ac_obj.restart_sync_gateways(cluster_config=cluster_config, url=ac_ip)
                 time.sleep(5)
@@ -188,7 +188,7 @@ def test_upgrade(params_from_base_test_setup):
             if mode == "di":
                 ac_obj = SyncGateway()
                 for ac in sg_accels:
-                    ac_ip = host_for_url(sg["admin"])
+                    ac_ip = host_for_url(ac)
                     ac_obj.enable_import_xattrs(
                         cluster_config=cluster_config,
                         sg_conf=sg_conf,
@@ -327,7 +327,6 @@ def send_changes_termination_doc(sg_url, sg_db, auth, terminator_doc_id, termina
 
 
 def update_docs(client, ls_url, ls_db, added_docs, auth, terminator_doc_id):
-    return []
     log_info("Starting doc updates")
     current_user_doc_ids = []
     for doc in added_docs:
