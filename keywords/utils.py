@@ -2,7 +2,7 @@ import logging
 import json
 
 from keywords.exceptions import FeatureSupportedError
-from utilities.cluster_config_utils import get_cbs_servers
+from utilities.cluster_config_utils import get_cbs_servers, get_sg_version
 
 
 # TODO: Use python logging hooks instead of wrappers - https://github.com/couchbaselabs/mobile-testkit/issues/686
@@ -200,9 +200,14 @@ def add_cbs_to_sg_config_server_field(cluster_config):
        Format of server file in sync-gateway config if there are 3 couchbase servers
        server: "http://xxx.xxx.xx.xx,xx1.xx1.x1.x1,xx2,xx2,x2,x2:8091 """
     couchbase_server_primary_node = ""
+    sg_version = get_sg_version(cluster_config)
     cbs_servers = get_cbs_servers(cluster_config)
-    for i in range(len(cbs_servers)):
+    if compare_versions(sg_version, '1.5') < 0:
+        couchbase_server_primary_node = cbs_servers[0]
+    else:
+        for i in range(len(cbs_servers)):
             couchbase_server_primary_node = couchbase_server_primary_node + cbs_servers[i]
-            if(i + 1 < len(cbs_servers)):
+            if (i + 1) < len(cbs_servers):
                 couchbase_server_primary_node = couchbase_server_primary_node + ","
+
     return couchbase_server_primary_node
