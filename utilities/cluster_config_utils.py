@@ -112,3 +112,9 @@ def get_load_balancer_ip(cluster_config):
 
     lb_ip = cluster["load_balancers"][0]["ip"]
     return lb_ip
+
+
+def get_sg_version(cluster_config):
+    """ Loads cluster config to get sync gateway version"""
+    cluster = load_cluster_config_json(cluster_config)
+    return cluster["environment"]["sync_gateway_version"]
