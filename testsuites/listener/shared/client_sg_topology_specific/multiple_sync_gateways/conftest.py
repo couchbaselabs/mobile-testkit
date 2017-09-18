@@ -50,7 +50,7 @@ def setup_client_syncgateway_suite(request):
 
     cluster_config = "{}/multiple_sync_gateways_{}".format(CLUSTER_CONFIGS_DIR, sync_gateway_mode)
 
-        try:
+    try:
         server_version
     except NameError:
         log_info("Server version is not provided")
