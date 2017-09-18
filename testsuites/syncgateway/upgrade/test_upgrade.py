@@ -151,16 +151,18 @@ def test_upgrade(params_from_base_test_setup):
         sg_obj = SyncGateway()
         for sg in sync_gateways:
             sg_ip = host_for_url(sg["admin"])
-            log_info("Restarting {}".format(sg_ip))
+            log_info("Restarting sync gateway {}".format(sg_ip))
             sg_obj.restart_sync_gateways(cluster_config=cluster_config, url=sg_ip)
+            time.sleep(5)
 
         if mode == "di":
             ac_obj = SyncGateway()
             for ac in sg_accels:
                 ac_ip = host_for_url(ac["admin"])
-                log_info("Restarting {}".format(ac_ip))
+                log_info("Restarting sg accel {}".format(ac_ip))
                 ac_obj.restart_sync_gateways(cluster_config=cluster_config, url=ac_ip)
-        # Check RBAC user
+                time.sleep(5)
+
         if xattrs_enabled:
             # Enable xattrs on all SG/SGAccel nodes
             # cc - Start 1 SG with import enabled, all with XATTRs enabled
@@ -325,6 +327,7 @@ def send_changes_termination_doc(sg_url, sg_db, auth, terminator_doc_id, termina
 
 
 def update_docs(client, ls_url, ls_db, added_docs, auth, terminator_doc_id):
+    return []
     log_info("Starting doc updates")
     current_user_doc_ids = []
     for doc in added_docs:
