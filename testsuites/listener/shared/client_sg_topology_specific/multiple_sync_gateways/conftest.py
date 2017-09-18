@@ -9,6 +9,7 @@ from keywords.MobileRestClient import MobileRestClient
 from keywords.constants import CLUSTER_CONFIGS_DIR
 from keywords.constants import RESULTS_DIR
 from keywords.tklogging import Logging
+from utilities.cluster_config_utils import persist_cluster_config_environment_prop
 
 
 # This will get called once before the first test that
@@ -48,6 +49,25 @@ def setup_client_syncgateway_suite(request):
     liteserv.install()
 
     cluster_config = "{}/multiple_sync_gateways_{}".format(CLUSTER_CONFIGS_DIR, sync_gateway_mode)
+
+        try:
+        server_version
+    except NameError:
+        log_info("Server version is not provided")
+        persist_cluster_config_environment_prop(cluster_config, 'server_version', "")
+    else:
+        log_info("Running test with server version {}".format(server_version))
+        persist_cluster_config_environment_prop(cluster_config, 'server_version', server_version)
+
+    try:
+        sync_gateway_version
+    except NameError:
+        log_info("Sync gateway version is not provided")
+        persist_cluster_config_environment_prop(cluster_config, 'sync_gateway_version', "")
+    else:
+        log_info("Running test with sync_gateway version {}".format(sync_gateway_version))
+        persist_cluster_config_environment_prop(cluster_config, 'sync_gateway_version', sync_gateway_version)
+
     sg_config = sync_gateway_config_path_for_mode("listener_tests/listener_tests", sync_gateway_mode)
 
     if not skip_provisioning:
