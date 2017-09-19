@@ -106,6 +106,8 @@ def resolve_cb_nas_url(version, build_number):
         base_url = "{}/watson/{}".format(cbnas_base_url, build_number)
     elif version.startswith("4.7") or version.startswith("5.0"):
         base_url = "{}/spock/{}".format(cbnas_base_url, build_number)
+    elif version.startswith("5.1"):
+        base_url = "{}/vulcan/{}".format(cbnas_base_url, build_number)
     else:
         raise Exception("Unexpected couchbase server version: {}".format(version))
 
