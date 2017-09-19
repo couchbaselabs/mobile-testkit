@@ -2,6 +2,7 @@ from __future__ import print_function
 
 import random
 import time
+import json
 
 import pytest
 from concurrent.futures import ThreadPoolExecutor
@@ -2262,3 +2263,135 @@ def test_mobile_opt_in(params_from_base_test_setup, sg_conf_name):
     # sg_client.update_doc(url=sg_url, db=sg_db, doc_id=doc_id8, number_updates=1, auth=test_auth_session)
     sg_get_doc9 = sg_client.get_doc(url=sg_url, db=sg_db, doc_id=doc_id9, auth=test_auth_session)
     assert sg_get_doc9['_rev'].startswith('1-') and sg_get_doc9['_id'] == doc_id9
+
+
+@pytest.mark.syncgateway
+@pytest.mark.xattrs
+@pytest.mark.parametrize('sg_conf_name', [
+    'sync_gateway_default_functional_tests'
+])
+def test_purge_and_view_compaction(params_from_base_test_setup, sg_conf_name):
+    """
+    Scenario:
+    - Generate some tombstones doc
+    - Verify meta data still exists by verifygin sg xattrs using _raw sync gateway API
+    - Execute a view query to see the tombstones -> http GET localhost:4985/default/_view/channels
+        -> should see tombstone doc
+    - Sleep for 5 mins to verify tomstone doc is available in view query and meta data
+    - Trigger purge API to force the doc to purge
+    - Verify meta data does not exists by verifying sg xattrs using _raw sync gateway API
+    - Execute a view query to see the tombstones -> http GET localhost:4985/default/_view/channels
+        -> should see tombstone doc after the purge
+    - Trigger _compact API to compact the tombstone doc
+    - Verify tomstones are not seen in view query
+    """
+
+    sg_db = 'db'
+    cluster_conf = params_from_base_test_setup['cluster_config']
+    cluster_topology = params_from_base_test_setup['cluster_topology']
+    mode = params_from_base_test_setup['mode']
+    xattrs_enabled = params_from_base_test_setup['xattrs_enabled']
+
+    # This test should only run when using xattr meta storage
+    if not xattrs_enabled:
+        pytest.skip('XATTR tests require --xattrs flag')
+
+    sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
+    sg_admin_url = cluster_topology['sync_gateways'][0]['admin']
+    sg_url = cluster_topology['sync_gateways'][0]['public']
+    cbs_url = cluster_topology['couchbase_servers'][0]
+
+    log_info('sg_conf: {}'.format(sg_conf))
+    log_info('sg_admin_url: {}'.format(sg_admin_url))
+    log_info('sg_url: {}'.format(sg_url))
+    log_info('cbs_url: {}'.format(cbs_url))
+
+    cluster = Cluster(config=cluster_conf)
+    cluster.reset(sg_config_path=sg_conf)
+    # Create clients
+    sg_client = MobileRestClient()
+    channels = ['tombstone_test']
+
+    # Create user / session
+    auto_user_info = UserInfo(name='autotest', password='pass', channels=channels, roles=[])
+    sg_client.create_user(
+        url=sg_admin_url,
+        db=sg_db,
+        name=auto_user_info.name,
+        password=auto_user_info.password,
+        channels=auto_user_info.channels
+    )
+
+    test_auth_session = sg_client.create_session(
+        url=sg_admin_url,
+        db=sg_db,
+        name=auto_user_info.name,
+        password=auto_user_info.password
+    )
+
+    def update_prop():
+        return {
+            'updates': 0,
+            'tombstone': 'true',
+        }
+
+    doc_id = 'tombstone_test_sg_doc'
+    doc_body = document.create_doc(doc_id=doc_id, channels=['tombstone_test'], prop_generator=update_prop)
+    sg_client.add_doc(url=sg_url, db=sg_db, doc=doc_body, auth=test_auth_session)
+    doc = sg_client.get_doc(url=sg_url, db=sg_db, doc_id=doc_id, auth=test_auth_session)
+    sg_client.delete_doc(url=sg_url, db=sg_db, doc_id=doc_id, rev=doc['_rev'], auth=test_auth_session)
+    number_revs_per_doc = 1
+    verify_sg_xattrs(
+        mode,
+        sg_client,
+        sg_url=sg_admin_url,
+        sg_db=sg_db,
+        doc_id=doc_id,
+        expected_number_of_revs=number_revs_per_doc + 1,
+        expected_number_of_channels=len(channels),
+        deleted_docs=True
+    )
+    start = time.time()
+    timeout = 10  # timeout for view query in channels due to race condition after compacting the docs
+    while True:
+        channel_view_query = sg_client.view_query_through_channels(url=sg_admin_url, db=sg_db)
+        channel_view_query_string = json.dumps(channel_view_query)
+        if(doc_id in channel_view_query_string or time.time() - start > timeout):
+                break
+    assert doc_id in channel_view_query_string, "doc id not exists in view query"
+    time.sleep(300)  # wait for 5 mins and see meta is still available as it is not purged yet
+    verify_sg_xattrs(
+        mode,
+        sg_client,
+        sg_url=sg_admin_url,
+        sg_db=sg_db,
+        doc_id=doc_id,
+        expected_number_of_revs=number_revs_per_doc + 1,
+        expected_number_of_channels=len(channels),
+        deleted_docs=True
+    )
+    channel_view_query_string = sg_client.view_query_through_channels(url=sg_admin_url, db=sg_db)
+    channel_view_query_string = json.dumps(channel_view_query)
+    assert doc_id in channel_view_query_string, "doc id not exists in view query"
+    docs = []
+    docs.append(doc)
+    purged_doc = sg_client.purge_docs(url=sg_admin_url, db=sg_db, docs=docs)
+    log_info("Purged doc is {}".format(purged_doc))
+    verify_no_sg_xattrs(
+        sg_client=sg_client,
+        sg_url=sg_url,
+        sg_db=sg_db,
+        doc_id=doc_id
+    )
+    channel_view_query = sg_client.view_query_through_channels(url=sg_admin_url, db=sg_db)
+    channel_view_query_string = json.dumps(channel_view_query)
+    assert doc_id in channel_view_query_string, "doc id not exists in view query"
+    sg_client.compact_database(url=sg_admin_url, db=sg_db)
+    start = time.time()
+    timeout = 10  # timeout for view query in channels due to race condition after compacting the docs
+    while True:
+        channel_view_query = sg_client.view_query_through_channels(url=sg_admin_url, db=sg_db)
+        channel_view_query_string = json.dumps(channel_view_query)
+        if(doc_id not in channel_view_query_string or time.time() - start > timeout):
+                break
+    assert doc_id not in channel_view_query_string, "doc id exists in chanel view query after compaction"
