@@ -189,7 +189,7 @@ def test_on_demand_doc_processing(params_from_base_test_setup, sg_conf_name, num
         pytest.skip('XATTR tests require --xattrs flag')
 
     # This test should only run when mode is CC
-    if mode == "DI":
+    if mode == "di":
         pytest.skip('This test does not run in DI mode')
 
     # Reset cluster
@@ -317,7 +317,7 @@ def test_on_demand_import_of_external_updates(params_from_base_test_setup, sg_co
     if not xattrs_enabled:
         pytest.skip('XATTR tests require --xattrs flag')
 
-    if mode == "DI":
+    if mode == "di":
         pytest.skip('This test does not run in DI mode')
 
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
