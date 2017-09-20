@@ -132,22 +132,15 @@ class LiteServNetMono(LiteServBase):
         # .NET OS X 10.12/x86_64 1.3.1-build0013/5d1553d
         running_version = resp_obj["vendor"]["version"]
 
-        if not (running_version.startswith(".NET OS X") or running_version.startswith(".NET Linux")):
+        if not (running_version.startswith(".NET OS X")):
             raise LiteServError("Invalid platform running: {}!".format(running_version))
 
-        log_info("Running_version: {}".format(running_version))
         # OSX - [u'.NET', u'OS', u'X', u'10.12', u'x86_64', u'1.3.1', u'build0013', u'5d1553d']
-        # Linux - ['.NET', 'Linux', '', '', '1.4.0', 'b004', '1276adf']
         running_version_parts = re.split("[ /-]", running_version)
 
-        if running_version.startswith(".NET OS X"):
-            running_version = running_version_parts[5]
-            running_build = int(running_version_parts[6].strip("build"))
-            running_version_composed = "{}-{}".format(running_version, running_build)
-        elif running_version.startswith(".NET Linux"):
-            running_version = running_version_parts[4]
-            running_build = int((running_version_parts[5].strip("b")).lstrip("0"))
-            running_version_composed = "{}-{}".format(running_version, running_build)
+        running_version = running_version_parts[5]
+        running_build = int(running_version_parts[6].strip("build"))
+        running_version_composed = "{}-{}".format(running_version, running_build)
 
         if self.version_build != running_version_composed:
             raise LiteServError("Expected version does not match actual version: Expected={}  Actual={}".format(
