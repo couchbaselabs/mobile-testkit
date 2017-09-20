@@ -37,6 +37,10 @@ def skip_if_unsupported(sync_gateway_version, mode, test_name):
         if test_name in UNSUPPORTED_1_5_0_CC:
             pytest.skip(UNSUPPORTED_1_5_0_CC[test_name]["reason"])
 
+    if compare_versions(sync_gateway_version, "1.4.0") <= 0:
+        if "log_rotation" in test_name or "test_backfill" in test_name or "test_awaken_backfill" in test_name:
+            pytest.skip("{} test was added for sync gateway 1.4".format(test_name))
+
 
 # Add custom arguments for executing tests in this directory
 def pytest_addoption(parser):
@@ -167,6 +171,24 @@ def params_from_base_suite_setup(request):
     else:
         log_info("Using document storage for sync meta data")
         persist_cluster_config_environment_prop(cluster_config, 'xattrs_enabled', False)
+
+    try:
+        server_version
+    except NameError:
+        log_info("Server version is not provided")
+        persist_cluster_config_environment_prop(cluster_config, 'server_version', "")
+    else:
+        log_info("Running test with server version {}".format(server_version))
+        persist_cluster_config_environment_prop(cluster_config, 'server_version', server_version)
+
+    try:
+        sync_gateway_version
+    except NameError:
+        log_info("Sync gateway version is not provided")
+        persist_cluster_config_environment_prop(cluster_config, 'sync_gateway_version', "")
+    else:
+        log_info("Running test with sync_gateway version {}".format(sync_gateway_version))
+        persist_cluster_config_environment_prop(cluster_config, 'sync_gateway_version', sync_gateway_version)
 
     sg_config = sync_gateway_config_path_for_mode("sync_gateway_default_functional_tests", mode)
 

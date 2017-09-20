@@ -12,6 +12,7 @@ from libraries.testkit.admin import Admin
 from libraries.testkit.debug import log_request, log_response
 from utilities.cluster_config_utils import is_cbs_ssl_enabled
 from utilities.cluster_config_utils import is_xattrs_enabled
+from keywords.utils import add_cbs_to_sg_config_server_field
 
 log = logging.getLogger(libraries.testkit.settings.LOGGER)
 
@@ -34,6 +35,8 @@ class SyncGateway:
             self.server_port = 18091
             self.server_scheme = "https"
 
+        self.couchbase_server_primary_node = add_cbs_to_sg_config_server_field(self.cluster_config)
+
     def info(self):
         r = requests.get(self.url)
         r.raise_for_status()
@@ -55,7 +58,8 @@ class SyncGateway:
             "server_port": self.server_port,
             "server_scheme": self.server_scheme,
             "autoimport": "",
-            "xattrs": ""
+            "xattrs": "",
+            "couchbase_server_primary_node": self.couchbase_server_primary_node
         }
 
         if is_xattrs_enabled(self.cluster_config):
@@ -78,7 +82,8 @@ class SyncGateway:
             "server_port": self.server_port,
             "server_scheme": self.server_scheme,
             "autoimport": "",
-            "xattrs": ""
+            "xattrs": "",
+            "couchbase_server_primary_node": self.couchbase_server_primary_node
         }
 
         if is_xattrs_enabled(self.cluster_config):

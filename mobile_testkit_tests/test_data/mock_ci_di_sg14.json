@@ -4,6 +4,14 @@
         {
             "ip": "192.168.33.20", 
             "name": "cb1"
+        },
+        {
+            "ip": "192.168.33.23", 
+            "name": "cb2"
+        },
+        {
+            "ip": "192.168.33.24", 
+            "name": "cb3"
         }
     ], 
     "sync_gateways": [
@@ -17,7 +25,7 @@
         "xattrs_enabled": false, 
         "cbs_ssl_enabled": false, 
         "server_version": "5.0.0-3519", 
-        "sync_gateway_version": "1.5.0-571"
+        "sync_gateway_version": "1.4.1-3"
     }, 
     "hosts": [
         {
@@ -31,6 +39,14 @@
         {
             "ip": "192.168.33.22", 
             "name": "host3"
+        }, 
+        {
+            "ip": "192.168.33.23", 
+            "name": "host4"
+        }, 
+        {
+            "ip": "192.168.33.24", 
+            "name": "host5"
         }
     ], 
     "load_balancers": [], 
