@@ -125,24 +125,6 @@ def params_from_base_suite_setup(request):
     if xattrs_enabled and version_is_binary(sync_gateway_version):
         check_xattr_support(server_upgraded_version, sync_gateway_upgraded_version)
 
-    try:
-        server_version
-    except NameError:
-        log_info("Server version is not provided")
-        persist_cluster_config_environment_prop(cluster_config, 'server_version', "")
-    else:
-        log_info("Running test with server version {}".format(server_version))
-        persist_cluster_config_environment_prop(cluster_config, 'server_version', server_version)
-
-    try:
-        sync_gateway_version
-    except NameError:
-        log_info("Sync gateway version is not provided")
-        persist_cluster_config_environment_prop(cluster_config, 'sync_gateway_version', "")
-    else:
-        log_info("Running test with sync_gateway version {}".format(sync_gateway_version))
-        persist_cluster_config_environment_prop(cluster_config, 'sync_gateway_version', sync_gateway_version)
-
     log_info("server_version: {}".format(server_version))
     log_info("sync_gateway_version: {}".format(sync_gateway_version))
     log_info("server_upgraded_version: {}".format(server_upgraded_version))
@@ -165,6 +147,24 @@ def params_from_base_suite_setup(request):
     # use base_(lb_)cc cluster config if mode is "cc" or base_(lb_)di cluster config if mode is "di"
     cluster_config = "{}/{}_{}".format(CLUSTER_CONFIGS_DIR, cluster_config, mode)
     log_info("Using '{}' config!".format(cluster_config))
+
+    try:
+        server_version
+    except NameError:
+        log_info("Server version is not provided")
+        persist_cluster_config_environment_prop(cluster_config, 'server_version', "")
+    else:
+        log_info("Running test with server version {}".format(server_version))
+        persist_cluster_config_environment_prop(cluster_config, 'server_version', server_version)
+
+    try:
+        sync_gateway_version
+    except NameError:
+        log_info("Sync gateway version is not provided")
+        persist_cluster_config_environment_prop(cluster_config, 'sync_gateway_version', "")
+    else:
+        log_info("Running test with sync_gateway version {}".format(sync_gateway_version))
+        persist_cluster_config_environment_prop(cluster_config, 'sync_gateway_version', sync_gateway_version)
 
     # Only works with load balancer configs
     persist_cluster_config_environment_prop(cluster_config, 'sg_lb_enabled', True)
