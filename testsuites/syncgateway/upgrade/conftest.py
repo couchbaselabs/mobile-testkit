@@ -62,10 +62,6 @@ def pytest_addoption(parser):
                      action="store_true",
                      help="Use xattrs for sync meta storage. Only works with Sync Gateway 2.0+ and Couchbase Server 5.0+")
 
-    parser.addoption("--collect-logs",
-                     action="store_true",
-                     help="Collect logs for every test. If this flag is not set, collection will only happen for test failures.")
-
     parser.addoption("--server-ssl",
                      action="store_true",
                      help="If set, will enable SSL communication between server and Sync Gateway")
@@ -250,8 +246,6 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     # Code before the yeild will execute before each test starts
 
     # pytest command line parameters
-    collect_logs = request.config.getoption("--collect-logs")
-
     cluster_config = params_from_base_suite_setup["cluster_config"]
     cluster_topology = params_from_base_suite_setup["cluster_topology"]
     mode = params_from_base_suite_setup["mode"]
