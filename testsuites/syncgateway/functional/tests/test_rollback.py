@@ -5,6 +5,7 @@ from keywords.utils import log_info
 from libraries.testkit.cluster import Cluster
 from keywords.MobileRestClient import MobileRestClient
 from keywords.SyncGateway import sync_gateway_config_path_for_mode
+from requests.exceptions import HTTPError
 
 from keywords import couchbaseserver
 from keywords import userinfo
@@ -120,16 +121,20 @@ def test_rollback_server_reset(params_from_base_test_setup, sg_conf_name):
         # Try to get changes, sync gateway should be able to recover and return changes
         # A changes since=0 should now be in a rolled back state due to the data loss from the removed vbucket
         # Seth should only see the docs not present in vbucket 66, unlike all the docs as above.
-        changes = client.get_changes(url=sg_url, db=sg_db, since=0, auth=seth_session)
-        changes_ids = [change["id"] for change in changes["results"] if not change["id"].startswith("_user")]
-        log_info("length of Changes ids are {} and vbuckets {}".format(len(changes_ids), num_vbuckets))
-        if len(changes_ids) == (num_vbuckets - 1):
-            break
+        try:
+            changes = client.get_changes(url=sg_url, db=sg_db, since=0, auth=seth_session)
+            changes_ids = [change["id"] for change in changes["results"] if not change["id"].startswith("_user")]
+            log_info("length of Changes ids are {} and vbuckets {}".format(len(changes_ids), num_vbuckets))
+            if len(changes_ids) == (num_vbuckets - 1):
+                break
+        except HTTPError:
+            if changes.status_code == 503:
+                log_info('server is still down')
+            else:
+                raise
         time.sleep(1)
         count += 1
 
-    # Make sure there are a few retries to ensure that server did go down and up
-    assert count > 0
     # Verify that seth 66 doc does not appear in changes as vbucket 66 got deleted
     vbucket_66_docids = [doc1["id"] for doc1 in seth_66_docs]
     for doc_66 in vbucket_66_docids:
