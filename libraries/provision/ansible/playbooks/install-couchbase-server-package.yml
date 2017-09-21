@@ -89,7 +89,7 @@
       when:  "not '4.0' in couchbase_server_package_name and not '4.1' in couchbase_server_package_name and not '4.5' in couchbase_server_package_name and not '4.6' in couchbase_server_package_name and not '3.0' in couchbase_server_package_name and not '3.1' in couchbase_server_package_name"
 
     - name: COUCHBASE SERVER | Initialize primary node (3.x only)
-      shell: "{{ couchbase_server_home_path }}/bin/couchbase-cli node-init --host {{ couchbase_server_node }}:{{ couchbase_server_admin_port }} --user={{ couchbase_server_admin }} --password={{ couchbase_server_password }} --node-init-hostname={{ couchbase_server_node }}"
+      shell: "{{ couchbase_server_home_path }}/bin/couchbase-cli node-init -c {{ couchbase_server_node }}:{{ couchbase_server_admin_port }} --user={{ couchbase_server_admin }} --password={{ couchbase_server_password }} --node-init-hostname={{ couchbase_server_node }}"
       when: "'3.0' in couchbase_server_package_name or '3.1' in couchbase_server_package_name"
 
     - name: COUCHBASE SERVER | Initialize primary node
