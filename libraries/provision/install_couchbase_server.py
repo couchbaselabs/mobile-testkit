@@ -74,7 +74,8 @@ def resolve_cb_mobile_url(version):
         "4.1.1": "5914",
         "4.1.0": "5005",
         "4.0.0": "4051",
-        "3.1.5": "1859"
+        "3.1.5": "1859",
+        "3.1.6": "1904"
     }
     build_number = released_versions[version]
     base_url = "http://cbmobile-packages.s3.amazonaws.com"
@@ -123,7 +124,9 @@ def get_package_name(version, build_number):
 
     """
 
-    if version.startswith("3.1"):
+    if version.startswith("3.1.6"):
+        return "couchbase-server-enterprise-{}-centos6.x86_64.rpm".format(version)
+    elif version.startswith("3.1"):
         return "couchbase-server-enterprise_centos6_x86_64_{}-{}-rel.rpm".format(version, build_number)
     else:
         return "couchbase-server-enterprise-{}-{}-centos7.x86_64.rpm".format(version, build_number)
