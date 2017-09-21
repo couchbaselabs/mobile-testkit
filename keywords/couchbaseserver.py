@@ -360,7 +360,8 @@ class CouchbaseServer:
             "ramQuotaMB": str(ram_quota_mb),
             "authType": "sasl",
             "bucketType": "couchbase",
-            "flushEnabled": "1"
+            "flushEnabled": "1",
+            "replicaNumber": 0
         }
 
         if server_major_version <= 4:
@@ -371,6 +372,7 @@ class CouchbaseServer:
 
         resp = None
         try:
+            log_info("data: {}", data)
             resp = self._session.post("{}/pools/default/buckets".format(self.url), data=data)
             log_r(resp)
             resp.raise_for_status()
