@@ -50,6 +50,7 @@
       shell: echo 'for i in /sys/kernel/mm/*transparent_hugepage/enabled; do echo never > $i; done' >> /etc/rc.local
       shell: echo 'for i in /sys/kernel/mm/*transparent_hugepage/defrag; do echo never > $i; done' >> /etc/rc.local
       shell: for i in /sys/kernel/mm/*transparent_hugepage/enabled; do echo never > $i; done
+      when: ansible_distribution == "CentOS" and ansible_distribution_major_version == "7"
 
     # Start via init scipt if running CBS 4.0.0 or 4.1.0 on CentOS 7.2 due to https://issues.couchbase.com/browse/MB-17193
     - name: COUCHBASE SERVER | Start Couchbase Service (Hack around 7.2 and CBS 4.1.0 issue)
