@@ -720,7 +720,7 @@ class CouchbaseServer:
         connection_str = "couchbase://{}/{}".format(self.host, bucket_name)
         return Bucket(connection_str, password='password')
 
-    def get_package_name(self, version, build_number):
+    def get_package_name(self, version, build_number, cbs_platform="centos7"):
         """
         Given:
 
@@ -732,11 +732,11 @@ class CouchbaseServer:
         """
 
         if version.startswith("3.1"):
-            return "couchbase-server-enterprise_centos6_x86_64_{}-{}-rel.rpm".format(version, build_number)
+            return "couchbase-server-enterprise_{}_x86_64_{}-{}-rel.rpm".format(cbs_platform, version, build_number)
         else:
-            return "couchbase-server-enterprise-{}-{}-centos7.x86_64.rpm".format(version, build_number)
+            return "couchbase-server-enterprise-{}-{}-{}.x86_64.rpm".format(version, build_number, cbs_platform)
 
-    def resolve_cb_nas_url(self, version, build_number):
+    def resolve_cb_nas_url(self, version, build_number, cbs_platform):
         """
         Resolve a download URL for couchbase server on the internal VPN download site
 
@@ -762,16 +762,16 @@ class CouchbaseServer:
         else:
             raise Exception("Unexpected couchbase server version: {}".format(version))
 
-        package_name = self.get_package_name(version, build_number)
+        package_name = self.get_package_name(version, build_number, cbs_platform)
         return base_url, package_name
 
-    def upgrade_server(self, cluster_config, server_version_build, target=None):
+    def upgrade_server(self, cluster_config, server_version_build, cbs_platform, target=None):
         ansible_runner = AnsibleRunner(cluster_config)
 
         log_info(">>> Upgrading Couchbase Server")
         # Install Server
         server_verion, server_build = version_and_build(server_version_build)
-        server_baseurl, server_package_name = self.resolve_cb_nas_url(server_verion, server_build)
+        server_baseurl, server_package_name = self.resolve_cb_nas_url(server_verion, server_build, cbs_platform)
         if target is not None:
             target = hostname_for_url(cluster_config, target)
             log_info("Upgrading Couchbase server on {} ...".format(target))

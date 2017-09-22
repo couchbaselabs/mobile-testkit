@@ -241,7 +241,8 @@ def params_from_base_suite_setup(request):
         "liteserv_platform": liteserv_platform,
         "liteserv_storage_engine": liteserv_storage_engine,
         "liteserv": liteserv,
-        "num_docs": num_docs
+        "num_docs": num_docs,
+        "cbs_platform": cbs_platform
     }
 
     log_info("Tearing down 'params_from_base_suite_setup' ...")
@@ -269,6 +270,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     liteserv_storage_engine = params_from_base_suite_setup["liteserv_storage_engine"]
     liteserv = params_from_base_suite_setup["liteserv"]
     num_docs = params_from_base_suite_setup["num_docs"]
+    cbs_platform = params_from_base_suite_setup["cbs_platform"]
 
     test_name = request.node.name
     log_info("Running test '{}'".format(test_name))
@@ -313,7 +315,8 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         "ls_url": ls_url,
         "sg_url": sg_url,
         "sg_admin_url": sg_admin_url,
-        "num_docs": num_docs
+        "num_docs": num_docs,
+        "cbs_platform": cbs_platform
     }
 
     client.delete_databases(ls_url)
