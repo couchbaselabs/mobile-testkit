@@ -195,7 +195,7 @@ class ClusterKeywords:
         cluster = Cluster(config=cluster_config)
         cluster.reset(sync_gateway_config)
 
-    def provision_cluster(self, cluster_config, server_version, sync_gateway_version, sync_gateway_config, race_enabled=False, sg_ce=False):
+    def provision_cluster(self, cluster_config, server_version, sync_gateway_version, sync_gateway_config, race_enabled=False, sg_ce=False, cbs_platform="centos7"):
 
         if server_version is None or sync_gateway_version is None or sync_gateway_version is None:
             raise ProvisioningError("Please make sure you have server_version, sync_gateway_version, and sync_gateway_config are set")
@@ -236,4 +236,4 @@ class ClusterKeywords:
                 skip_bucketcreation=False
             )
 
-        provision_cluster(cluster_config, cbs_config, sg_config, sg_ce)
+        provision_cluster(cluster_config, cbs_config, sg_config, sg_ce, cbs_platform)

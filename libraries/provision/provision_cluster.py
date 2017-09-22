@@ -20,7 +20,7 @@ from libraries.testkit.cluster import validate_cluster
 from libraries.testkit.cluster import Cluster
 
 
-def provision_cluster(cluster_config, couchbase_server_config, sync_gateway_config, sg_ce=False):
+def provision_cluster(cluster_config, couchbase_server_config, sync_gateway_config, sg_ce=False, cbs_platform="centos7"):
 
     log_info("\n>>> Cluster info:\n")
 
@@ -49,7 +49,7 @@ def provision_cluster(cluster_config, couchbase_server_config, sync_gateway_conf
     log_info(">>> Provisioning cluster...")
 
     # Get server base url and package name
-    server_baseurl, server_package_name = couchbase_server_config.get_baseurl_package()
+    server_baseurl, server_package_name = couchbase_server_config.get_baseurl_package(cbs_platform)
 
     log_info(">>> Server package: {0}/{1}".format(server_baseurl, server_package_name))
     log_info(">>> Using sync_gateway config: {}".format(sync_gateway_config.config_path))

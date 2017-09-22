@@ -6,7 +6,6 @@
   vars:
     couchbase_server_package_base_url:
     couchbase_server_package_name:
-    couchbase_server_cen6_package_name: 
     couchbase_server_package_url: "{{ couchbase_server_package_base_url }}/{{ couchbase_server_package_name }}"
 
     couchbase_server_admin: Administrator
@@ -40,19 +39,9 @@
     # Download and install
     - name: COUCHBASE SERVER | Download couchbase server
       get_url: url={{ couchbase_server_package_url }} dest=/tmp/{{ couchbase_server_package_name }}
-      when: ansible_distribution == "CentOS" and ansible_distribution_major_version == "7"
-
-    - name: COUCHBASE SERVER | Download couchbase server for centos 6
-      get_url: url={{ couchbase_server_package_url }} dest=/tmp/{{ couchbase_server_cen6_package_name }}
-      when: ansible_distribution == "CentOS" and ansible_distribution_major_version == "6"
 
     - name: Install Couchbase Server
       yum: name=/tmp/{{ couchbase_server_package_name }} state=present
-      when: ansible_distribution == "CentOS" and ansible_distribution_major_version == "7"
-
-    - name: Install Couchbase Server on centos 6
-      yum: name=/tmp/{{ couchbase_server_cen6_package_name }} state=present
-      when: ansible_distribution == "CentOS" and ansible_distribution_major_version == "6"
 
     # Change system settings for Couchbase Server
     - name: COUCHBASE SERVER | raise max file descriptors

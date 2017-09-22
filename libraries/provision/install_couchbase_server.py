@@ -32,7 +32,7 @@ class CouchbaseServerConfig:
         else:
             self.build = None
 
-    def get_baseurl_package(self):
+    def get_baseurl_package(self, cbs_platform="centos7"):
 
         if self.build is None:
             # since the user didn't specify a build number,
@@ -51,7 +51,7 @@ class CouchbaseServerConfig:
         return output
 
 
-def resolve_cb_mobile_url(version):
+def resolve_cb_mobile_url(version, cbs_platform="centos7"):
     """
     Resolve a download URL for the corresponding package to given
     version on http://cbmobile-packages.s3.amazonaws.com (an S3 bucket
@@ -80,11 +80,11 @@ def resolve_cb_mobile_url(version):
     }
     build_number = released_versions[version]
     base_url = "http://cbmobile-packages.s3.amazonaws.com"
-    package_name = get_package_name(version, build_number)
+    package_name = get_package_name(version, build_number, cbs_platform)
     return base_url, package_name
 
 
-def resolve_cb_nas_url(version, build_number):
+def resolve_cb_nas_url(version, build_number, cbs_platform="centos7"):
     """
     Resolve a download URL for couchbase server on the internal VPN download site
 
@@ -112,11 +112,11 @@ def resolve_cb_nas_url(version, build_number):
     else:
         raise Exception("Unexpected couchbase server version: {}".format(version))
 
-    package_name = get_package_name(version, build_number)
+    package_name = get_package_name(version, build_number, cbs_platform)
     return base_url, package_name
 
 
-def get_package_name(version, build_number):
+def get_package_name(version, build_number, cbs_platform="centos7"):
     """
     Given:
 
@@ -128,11 +128,11 @@ def get_package_name(version, build_number):
     """
 
     if version.startswith("3.1.6"):
-        return "couchbase-server-enterprise-{}-centos6.x86_64.rpm".format(version)
+        return "couchbase-server-enterprise-{}-{}.x86_64.rpm".format(version, cbs_platform)
     elif version.startswith("3.1"):
-        return "couchbase-server-enterprise_centos6_x86_64_{}-{}-rel.rpm".format(version, build_number)
+        return "couchbase-server-enterprise_{}_x86_64_{}-{}-rel.rpm".format(cbs_platform, version, build_number)
     else:
-        return "couchbase-server-enterprise-{}-{}-centos7.x86_64.rpm".format(version, build_number)
+        return "couchbase-server-enterprise-{}-{}-{}.x86_64.rpm".format(version, build_number, cbs_platform)
 
 
 def install_couchbase_server(cluster_config, couchbase_server_config):
@@ -145,13 +145,11 @@ def install_couchbase_server(cluster_config, couchbase_server_config):
     log_info(">>> Installing Couchbase Server")
     # Install Server
     server_baseurl, server_package_name = couchbase_server_config.get_baseurl_package()
-    cen6_server_package_name = server_package_name.replace("centos7", "centos6")
     status = ansible_runner.run_ansible_playbook(
         "install-couchbase-server-package.yml",
         extra_vars={
             "couchbase_server_package_base_url": server_baseurl,
-            "couchbase_server_package_name": server_package_name,
-            "couchbase_server_cen6_package_name": cen6_server_package_name
+            "couchbase_server_package_name": server_package_name
         }
     )
     if status != 0:

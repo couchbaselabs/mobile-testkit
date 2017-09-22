@@ -90,6 +90,11 @@ def pytest_addoption(parser):
                      action="store",
                      help="num-docs: Number of docs to load")
 
+    parser.addoption("--cbs-platform",
+                     action="store",
+                     help="cbs-platform: Couchbase server platform",
+                     default="centos7")
+
 
 # This will be called once for the at the beggining of the execution in the 'tests/' directory
 # and will be torn down, (code after the yeild) when all the test session has completed.
@@ -117,6 +122,7 @@ def params_from_base_suite_setup(request):
     liteserv_platform = request.config.getoption("--liteserv-platform")
     liteserv_storage_engine = request.config.getoption("--liteserv-storage-engine")
     num_docs = request.config.getoption("--num-docs")
+    cbs_platform = request.config.getoption("--cbs-platform")
 
     if xattrs_enabled and version_is_binary(sync_gateway_version):
         check_xattr_support(server_upgraded_version, sync_gateway_upgraded_version)
@@ -135,6 +141,7 @@ def params_from_base_suite_setup(request):
     log_info("liteserv_platform: {}".format(liteserv_platform))
     log_info("liteserv_storage_engine: {}".format(liteserv_storage_engine))
     log_info("num_docs: {}".format(num_docs))
+    log_info("cbs_platform: {}".format(cbs_platform))
 
     # Make sure mode for sync_gateway is supported ('cc' or 'di')
     validate_sync_gateway_mode(mode)
@@ -201,7 +208,8 @@ def params_from_base_suite_setup(request):
                 cluster_config=cluster_config,
                 server_version=server_version,
                 sync_gateway_version=sync_gateway_version,
-                sync_gateway_config=sg_config
+                sync_gateway_config=sg_config,
+                cbs_platform=cbs_platform
             )
         except ProvisioningError:
             logging_helper = Logging()
