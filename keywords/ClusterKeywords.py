@@ -236,4 +236,10 @@ class ClusterKeywords:
                 skip_bucketcreation=False
             )
 
-        provision_cluster(cluster_config, cbs_config, sg_config, sg_ce, cbs_platform)
+        provision_cluster(
+            cluster_config=cluster_config,
+            couchbase_server_config=cbs_config,
+            sync_gateway_config=sg_config,
+            sg_ce=sg_ce,
+            cbs_platform=cbs_platform
+        )

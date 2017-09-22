@@ -38,11 +38,11 @@ class CouchbaseServerConfig:
             # since the user didn't specify a build number,
             # this means user wants an official released version, so
             # return cbmobile-packages bucket url
-            return resolve_cb_mobile_url(self.version)
+            return resolve_cb_mobile_url(self.version, cbs_platform=cbs_platform)
         else:
             # the user specified an explicit build number, so grab the
             # build off the "cbnas" server (Couchbase VPN only)
-            return resolve_cb_nas_url(self.version, self.build)
+            return resolve_cb_nas_url(self.version, self.build, cbs_platform=cbs_platform)
 
     def __str__(self):
         output = "\n  Couchbase Server configuration\n"
