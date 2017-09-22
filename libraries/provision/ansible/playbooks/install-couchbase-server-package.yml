@@ -6,15 +6,8 @@
   vars:
     couchbase_server_package_base_url:
     couchbase_server_package_name:
-    couchbase_server_cen6_package_name:
-    
-    {% if ansible_distribution == "CentOS" and ansible_distribution_major_version == "7" %}
-      couchbase_server_package_url: "{{ couchbase_server_package_base_url }}/{{ couchbase_server_package_name }}"
-    {% endif %}
-
-    {% if ansible_distribution == "CentOS" and ansible_distribution_major_version == "6" %}
-      couchbase_server_package_url: "{{ couchbase_server_package_base_url }}/{{ couchbase_server_cen6_package_name }}"
-    {% endif %}
+    couchbase_server_cen6_package_name: 
+    couchbase_server_package_url: "{{ couchbase_server_package_base_url }}/{{ couchbase_server_package_name }}"
 
     couchbase_server_admin: Administrator
     couchbase_server_password: password
