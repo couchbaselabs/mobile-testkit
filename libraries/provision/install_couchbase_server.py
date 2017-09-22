@@ -135,7 +135,7 @@ def get_package_name(version, build_number, cbs_platform="centos7"):
         return "couchbase-server-enterprise-{}-{}-{}.x86_64.rpm".format(version, build_number, cbs_platform)
 
 
-def install_couchbase_server(cluster_config, couchbase_server_config):
+def install_couchbase_server(cluster_config, couchbase_server_config, cbs_platform="centos7"):
 
     log_info(cluster_config)
     log_info(couchbase_server_config)
@@ -144,7 +144,7 @@ def install_couchbase_server(cluster_config, couchbase_server_config):
 
     log_info(">>> Installing Couchbase Server")
     # Install Server
-    server_baseurl, server_package_name = couchbase_server_config.get_baseurl_package()
+    server_baseurl, server_package_name = couchbase_server_config.get_baseurl_package(cbs_platform)
     status = ansible_runner.run_ansible_playbook(
         "install-couchbase-server-package.yml",
         extra_vars={

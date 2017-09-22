@@ -61,7 +61,8 @@ def provision_cluster(cluster_config, couchbase_server_config, sync_gateway_conf
     log_info("Installing Couchbase Server")
     install_couchbase_server.install_couchbase_server(
         cluster_config=cluster_config,
-        couchbase_server_config=couchbase_server_config
+        couchbase_server_config=couchbase_server_config,
+        cbs_platform=cbs_platform
     )
 
     # Install sync_gateway
