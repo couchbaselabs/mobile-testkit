@@ -145,11 +145,13 @@ def install_couchbase_server(cluster_config, couchbase_server_config):
     log_info(">>> Installing Couchbase Server")
     # Install Server
     server_baseurl, server_package_name = couchbase_server_config.get_baseurl_package()
+    cen6_server_package_name = server_package_name.replace("centos7", "centos6")
     status = ansible_runner.run_ansible_playbook(
         "install-couchbase-server-package.yml",
         extra_vars={
             "couchbase_server_package_base_url": server_baseurl,
-            "couchbase_server_package_name": server_package_name
+            "couchbase_server_package_name": server_package_name,
+            "couchbase_server_cen6_package_name": cen6_server_package_name
         }
     )
     if status != 0:
