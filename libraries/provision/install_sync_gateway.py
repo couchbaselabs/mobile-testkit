@@ -6,7 +6,7 @@ from optparse import OptionParser
 from keywords.ClusterKeywords import ClusterKeywords
 from keywords.couchbaseserver import CouchbaseServer
 from keywords.exceptions import ProvisioningError
-from keywords.utils import log_info, log_warn
+from keywords.utils import log_info, log_warn, add_cbs_to_sg_config_server_field
 from libraries.provision.ansible_runner import AnsibleRunner
 from libraries.testkit.config import Config
 from utilities.cluster_config_utils import is_cbs_ssl_enabled, is_xattrs_enabled
@@ -81,8 +81,6 @@ class SyncGatewayConfig:
         if self._version_number is not None and self._build_number is not None:
             if self.commit is not None:
                 raise ProvisioningError("Commit should be empty when provisioning with a binary")
-            if self._version_number not in self._valid_versions:
-                raise ProvisioningError("Could not find version in valid versions")
         elif self.commit is not None:
             if self._version_number is not None:
                 raise ProvisioningError("Do not specify a version number when provisioning via a commit.")
@@ -103,15 +101,12 @@ class SyncGatewayConfig:
 def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False):
     log_info(sync_gateway_config)
 
-    if not sync_gateway_config.is_valid():
-        raise ProvisioningError("Invalid sync_gateway provisioning configuration. Exiting ...")
-
     if sync_gateway_config.build_flags != "":
         log_warn("\n\n!!! WARNING: You are building with flags: {} !!!\n\n".format(sync_gateway_config.build_flags))
 
     ansible_runner = AnsibleRunner(cluster_config)
     config_path = os.path.abspath(sync_gateway_config.config_path)
-
+    couchbase_server_primary_node = add_cbs_to_sg_config_server_field(cluster_config)
     # Create buckets unless the user explicitly asked to skip this step
     if not sync_gateway_config.skip_bucketcreation:
         create_server_buckets(cluster_config, sync_gateway_config)
@@ -129,7 +124,8 @@ def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False):
         "server_port": server_port,
         "server_scheme": server_scheme,
         "autoimport": "",
-        "xattrs": ""
+        "xattrs": "",
+        "couchbase_server_primary_node": couchbase_server_primary_node
     }
 
     if is_xattrs_enabled(cluster_config):
@@ -156,7 +152,6 @@ def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False):
         playbook_vars["couchbase_sync_gateway_package_base_url"] = sync_gateway_base_url
         playbook_vars["couchbase_sync_gateway_package"] = sync_gateway_package_name
         playbook_vars["couchbase_sg_accel_package"] = sg_accel_package_name
-
         status = ansible_runner.run_ansible_playbook(
             "install-sync-gateway-package.yml",
             extra_vars=playbook_vars

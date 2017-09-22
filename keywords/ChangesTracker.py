@@ -63,11 +63,17 @@ class ChangesTracker:
         auth_type = get_auth_type(self.auth)
         current_seq_num = 0
 
-        log_info("[Changes Tracker] Changes Tracker Starting ...")
         start = time.time()
+        if timeout > 1000:
+            loop_timeout = (timeout // 1000) * 10
+        else:
+            loop_timeout = 60
+
+        log_info("[Changes Tracker] Changes Tracker Starting for {} ...".format(loop_timeout))
+
         while not self.cancel:
             # This if condition will run this method until the timeout and break and come out of this method.
-            if time.time() - start > timeout:
+            if time.time() - start > loop_timeout:
                 logging.info("[Changes Tracker] : TIMEOUT")
                 break
             data = {

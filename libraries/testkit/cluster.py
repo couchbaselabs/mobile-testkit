@@ -7,7 +7,7 @@ from requests.exceptions import ConnectionError
 import keywords.exceptions
 from keywords.couchbaseserver import CouchbaseServer
 from keywords.exceptions import ProvisioningError
-from keywords.utils import log_info
+from keywords.utils import log_info, add_cbs_to_sg_config_server_field
 from libraries.provision.ansible_runner import AnsibleRunner
 from libraries.testkit.admin import Admin
 from libraries.testkit.config import Config
@@ -128,7 +128,7 @@ class Cluster:
 
         server_port = 8091
         server_scheme = "http"
-
+        couchbase_server_primary_node = add_cbs_to_sg_config_server_field(self._cluster_config)
         if self.cbs_ssl:
             server_port = 18091
             server_scheme = "https"
@@ -139,7 +139,8 @@ class Cluster:
             "server_port": server_port,
             "server_scheme": server_scheme,
             "autoimport": "",
-            "xattrs": ""
+            "xattrs": "",
+            "couchbase_server_primary_node": couchbase_server_primary_node
         }
 
         # Add configuration to run with xattrs
