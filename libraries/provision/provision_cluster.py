@@ -18,6 +18,7 @@ from keywords.utils import version_and_build
 from keywords.exceptions import ProvisioningError
 from libraries.testkit.cluster import validate_cluster
 from libraries.testkit.cluster import Cluster
+from utilities.cluster_config_utils import persist_cluster_config_environment_prop
 
 
 def provision_cluster(cluster_config, couchbase_server_config, sync_gateway_config, sg_ce=False):
@@ -35,6 +36,34 @@ def provision_cluster(cluster_config, couchbase_server_config, sync_gateway_conf
         sys.exit(1)
 
     cluster = Cluster(config=cluster_config)
+    server_ver = []
+    server_ver.append(couchbase_server_config.version)
+    server_ver.append(couchbase_server_config.build)
+    server_version = "-".join(server_ver)
+
+    sg_ver = []
+    sg_ver.append(sync_gateway_config._version_number)
+    sg_ver.append(sync_gateway_config._build_number)
+    sg_version = "-".join(sg_ver)
+
+    try:
+        server_version
+    except NameError:
+        log_info("Server version is not provided")
+        persist_cluster_config_environment_prop(cluster_config, 'server_version', "")
+    else:
+        log_info("Running test with server version {}".format(server_version))
+        persist_cluster_config_environment_prop(cluster_config, 'server_version', server_version)
+
+    try:
+        sync_gateway_version
+    except NameError:
+        log_info("Sync gateway version is not provided")
+        persist_cluster_config_environment_prop(cluster_config, 'sync_gateway_version', "")
+    else:
+        log_info("Running test with sync_gateway version {}".format(sg_version))
+        persist_cluster_config_environment_prop(cluster_config, 'sync_gateway_version', sg_version)
+
     config_path_full = os.path.abspath(sync_gateway_config.config_path)
     config = Config(config_path_full)
 
