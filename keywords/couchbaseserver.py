@@ -770,8 +770,19 @@ class CouchbaseServer:
 
         log_info(">>> Upgrading Couchbase Server")
         # Install Server
-        server_verion, server_build = version_and_build(server_version_build)
-        server_baseurl, server_package_name = self.resolve_cb_nas_url(server_verion, server_build, cbs_platform)
+        version_build = server_version_build.split("-")
+        server_verion = version_build[0]
+        if len(version_build) == 2:
+            # Build number is included
+            server_build = version_build[1]
+        else:
+            server_build = None
+
+        if server_build is None:
+            server_baseurl, server_package_name = self.resolve_cb_nas_url(server_verion, server_build, cbs_platform)
+        else:
+            server_baseurl, server_package_name = self.resolve_cb_nas_url(server_verion, server_build, cbs_platform)
+
         if target is not None:
             target = hostname_for_url(cluster_config, target)
             log_info("Upgrading Couchbase server on {} ...".format(target))
