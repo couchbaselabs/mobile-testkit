@@ -5,6 +5,7 @@ from requests.exceptions import ConnectionError, HTTPError
 from requests import Session
 from requests.packages.urllib3.exceptions import InsecureRequestWarning
 from libraries.provision.ansible_runner import AnsibleRunner
+from libraries.provision.install_couchbase_server import resolve_cb_mobile_url
 
 from couchbase.bucket import Bucket
 from couchbase.exceptions import CouchbaseError, NotFoundError
@@ -12,7 +13,7 @@ from couchbase.exceptions import CouchbaseError, NotFoundError
 import keywords.constants
 from keywords.remoteexecutor import RemoteExecutor
 from keywords.exceptions import CBServerError, ProvisioningError, TimeoutError, RBACUserCreationError, RBACUserDeletionError
-from keywords.utils import log_r, log_info, log_debug, log_error, version_and_build, hostname_for_url
+from keywords.utils import log_r, log_info, log_debug, log_error, hostname_for_url
 from keywords import types
 
 requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
@@ -759,6 +760,8 @@ class CouchbaseServer:
             base_url = "{}/watson/{}".format(cbnas_base_url, build_number)
         elif version.startswith("4.7") or version.startswith("5.0"):
             base_url = "{}/spock/{}".format(cbnas_base_url, build_number)
+        elif version.startswith("5.1"):
+            base_url = "{}/vulcan/{}".format(cbnas_base_url, build_number)
         else:
             raise Exception("Unexpected couchbase server version: {}".format(version))
 
@@ -779,7 +782,7 @@ class CouchbaseServer:
             server_build = None
 
         if server_build is None:
-            server_baseurl, server_package_name = self.resolve_cb_nas_url(server_verion, server_build, cbs_platform)
+            server_baseurl, server_package_name = resolve_cb_mobile_url(server_verion, cbs_platform)
         else:
             server_baseurl, server_package_name = self.resolve_cb_nas_url(server_verion, server_build, cbs_platform)
 
