@@ -5,7 +5,6 @@ from requests.exceptions import ConnectionError, HTTPError
 from requests import Session
 from requests.packages.urllib3.exceptions import InsecureRequestWarning
 from libraries.provision.ansible_runner import AnsibleRunner
-from libraries.provision.install_couchbase_server import resolve_cb_mobile_url
 
 from couchbase.bucket import Bucket
 from couchbase.exceptions import CouchbaseError, NotFoundError
@@ -732,7 +731,9 @@ class CouchbaseServer:
 
         """
 
-        if version.startswith("3.1"):
+        if version.startswith("3.1.6"):
+            return "couchbase-server-enterprise-{}-{}.x86_64.rpm".format(version, cbs_platform)
+        elif version.startswith("3.1"):
             return "couchbase-server-enterprise_{}_x86_64_{}-{}-rel.rpm".format(cbs_platform, version, build_number)
         else:
             return "couchbase-server-enterprise-{}-{}-{}.x86_64.rpm".format(version, build_number, cbs_platform)
@@ -768,6 +769,38 @@ class CouchbaseServer:
         package_name = self.get_package_name(version, build_number, cbs_platform)
         return base_url, package_name
 
+    def resolve_cb_mobile_url(self, version, cbs_platform="centos7"):
+        """
+        Resolve a download URL for the corresponding package to given
+        version on http://cbmobile-packages.s3.amazonaws.com (an S3 bucket
+        for couchbase mobile that mirrors released couchbase server versions)
+
+        Given:
+
+        version - the version without any build number information, eg 4.5.0
+
+        Return the base_url of the package download URL (everything except the filename)
+
+        """
+        released_versions = {
+            "4.6.3": "4136",
+            "4.6.2": "3905",
+            "4.6.1": "3652",
+            "4.6.0": "3573",
+            "4.5.1": "2844",
+            "4.5.0": "2601",
+            "4.1.2": "6088",
+            "4.1.1": "5914",
+            "4.1.0": "5005",
+            "4.0.0": "4051",
+            "3.1.5": "1859",
+            "3.1.6": "1904"
+        }
+        build_number = released_versions[version]
+        base_url = "http://cbmobile-packages.s3.amazonaws.com"
+        package_name = self.get_package_name(version, build_number, cbs_platform)
+        return base_url, package_name
+
     def upgrade_server(self, cluster_config, server_version_build, cbs_platform, target=None):
         ansible_runner = AnsibleRunner(cluster_config)
 
@@ -782,7 +815,7 @@ class CouchbaseServer:
             server_build = None
 
         if server_build is None:
-            server_baseurl, server_package_name = resolve_cb_mobile_url(server_verion, cbs_platform)
+            server_baseurl, server_package_name = self.resolve_cb_mobile_url(server_verion, cbs_platform)
         else:
             server_baseurl, server_package_name = self.resolve_cb_nas_url(server_verion, server_build, cbs_platform)
 
