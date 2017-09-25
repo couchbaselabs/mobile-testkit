@@ -331,6 +331,7 @@ def send_changes_termination_doc(sg_url, sg_db, auth, terminator_doc_id, termina
 
 
 def update_docs(client, ls_url, ls_db, added_docs, auth, terminator_doc_id):
+    return []
     log_info("Starting doc updates")
     current_user_doc_ids = []
     for doc in added_docs:
