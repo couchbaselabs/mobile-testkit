@@ -467,6 +467,8 @@ def generate_clusters_from_pool(pool_file, use_docker=False):
         ClusterDef("16sg_8ac_3cbs_16lgs", num_sgs=16, num_acs=8, num_cbs=3, num_lgs=16, num_lbs=0),
         ClusterDef("16sg_8ac_6cbs_16lgs", num_sgs=16, num_acs=8, num_cbs=6, num_lgs=16, num_lbs=0),
         ClusterDef("16sg_8ac_12cbs_16lgs", num_sgs=16, num_acs=8, num_cbs=12, num_lgs=16, num_lbs=0),
+        # All sg_accels
+        ClusterDef("16sg_16ac_16cbs_16lgs", num_sgs=16, num_acs=16, num_cbs=16, num_lgs=16, num_lbs=0),
         # End Perf Mini Matrix
 
         # Test Fest
