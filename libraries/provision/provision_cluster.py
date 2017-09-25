@@ -24,27 +24,8 @@ from utilities.cluster_config_utils import persist_cluster_config_environment_pr
 def provision_cluster(cluster_config, couchbase_server_config, sync_gateway_config, sg_ce=False):
 
     log_info("\n>>> Cluster info:\n")
-
-    with open(cluster_config, "r") as ansible_hosts:
-        log_info(ansible_hosts.read())
-
-    log_info(couchbase_server_config)
-    log_info(sync_gateway_config)
-
-    if not sync_gateway_config.is_valid():
-        log_info("Invalid sync_gateway provisioning configuration. Exiting ...")
-        sys.exit(1)
-
-    cluster = Cluster(config=cluster_config)
-    server_ver = []
-    server_ver.append(couchbase_server_config.version)
-    server_ver.append(couchbase_server_config.build)
-    server_version = "-".join(server_ver)
-
-    sg_ver = []
-    sg_ver.append(sync_gateway_config._version_number)
-    sg_ver.append(sync_gateway_config._build_number)
-    sg_version = "-".join(sg_ver)
+    server_version = "{}-{}".format(couchbase_server_config.version, couchbase_server_config.build)
+    sg_version = "{}-{}".format(sync_gateway_config._version_number, sync_gateway_config._build_number)
 
     try:
         server_version
@@ -64,6 +45,17 @@ def provision_cluster(cluster_config, couchbase_server_config, sync_gateway_conf
         log_info("Running test with sync_gateway version {}".format(sg_version))
         persist_cluster_config_environment_prop(cluster_config, 'sync_gateway_version', sg_version)
 
+    with open(cluster_config, "r") as ansible_hosts:
+        log_info(ansible_hosts.read())
+
+    log_info(couchbase_server_config)
+    log_info(sync_gateway_config)
+
+    if not sync_gateway_config.is_valid():
+        log_info("Invalid sync_gateway provisioning configuration. Exiting ...")
+        sys.exit(1)
+
+    cluster = Cluster(config=cluster_config)
     config_path_full = os.path.abspath(sync_gateway_config.config_path)
     config = Config(config_path_full)
 
