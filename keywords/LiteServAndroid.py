@@ -79,7 +79,7 @@ class LiteServAndroid(LiteServBase):
 
         output = subprocess.check_output(["adb", "shell", "pm", "list", "packages"])
         if "com.couchbase.liteservandroid" not in output:
-            raise LiteServError("Failed to install package")
+            raise LiteServError("Failed to install package: {}".format(output))
 
         log_info("LiteServ installed to {}".format(self.host))
 
