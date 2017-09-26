@@ -61,12 +61,12 @@ class SyncGatewayConfig:
         if self._version_number == "1.1.0" or self._build_number == "1.1.1":
             log_info("Version unsupported in provisioning.")
             raise ProvisioningError("Unsupport version of sync_gateway")
-            # http://latestbuilds.hq.couchbase.com/couchbase-sync-gateway/release/1.1.1/1.1.1-10/couchbase-sync-gateway-enterprise_1.1.1-10_x86_64.rpm
-            # base_url = "http://latestbuilds.hq.couchbase.com/couchbase-sync-gateway/release/{0}/{1}-{2}".format(version, version, build)
+            # http://latestbuilds.service.couchbase.com/couchbase-sync-gateway/release/1.1.1/1.1.1-10/couchbase-sync-gateway-enterprise_1.1.1-10_x86_64.rpm
+            # base_url = "http://latestbuilds.service.couchbase.com/couchbase-sync-gateway/release/{0}/{1}-{2}".format(version, version, build)
             # sg_package_name  = "couchbase-sync-gateway-enterprise_{0}-{1}_x86_64.rpm".format(version, build)
         else:
-            # http://latestbuilds.hq.couchbase.com/couchbase-sync-gateway/1.2.0/1.2.0-6/couchbase-sync-gateway-enterprise_1.2.0-6_x86_64.rpm
-            base_url = "http://latestbuilds.hq.couchbase.com/couchbase-sync-gateway/{0}/{1}-{2}".format(self._version_number, self._version_number, self._build_number)
+            # http://latestbuilds.service.couchbase.com/builds/latestbuilds/sync_gateway/1.3.1.5/2/couchbase-sync-gateway-enterprise_1.2.0-6_x86_64.rpm
+            base_url = "http://latestbuilds.service.couchbase.com/builds/latestbuilds/sync_gateway/{0}/{1}".format(self._version_number, self._build_number)
 
             sg_type = "enterprise"
 
