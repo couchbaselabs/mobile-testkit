@@ -394,7 +394,7 @@ def upgrade_server_cluster(servers, primary_server, secondary_server, server_ver
     log_info("Rebalance out server: {}".format(primary_server.host))
     secondary_server.rebalance_out(server_urls, primary_server)
     log_info("Upgrading the server: {}".format(primary_server.host))
-    secondary_server.upgrade_server(cluster_config=cluster_config, server_version_build=server_upgraded_version, target=primary_server.host, cbs_platform=cbs_platform)
+    secondary_server.upgrade_server(cluster_config=cluster_config, server_version_build=server_upgraded_version, target=primary_server.host, cbs_platform=cbs_platform, toy_build=toy_build)
     log_info("Adding the node back to the cluster: {}".format(primary_server.host))
     secondary_server.add_node(primary_server, services=primary_server_services)
     log_info("Rebalance in server: {}".format(primary_server.host))
