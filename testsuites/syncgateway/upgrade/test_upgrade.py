@@ -35,6 +35,7 @@ def test_upgrade(params_from_base_test_setup):
     sg_admin_url = params_from_base_test_setup['sg_admin_url']
     num_docs = int(params_from_base_test_setup['num_docs'])
     cbs_platform = params_from_base_test_setup['cbs_platform']
+    cbs_toy_build = params_from_base_test_setup['cbs_toy_build']
     sg_conf = "{}/resources/sync_gateway_configs/sync_gateway_default_functional_tests_{}.json".format(os.getcwd(), mode)
 
     # Add data to liteserv
@@ -146,7 +147,8 @@ def test_upgrade(params_from_base_test_setup):
             server_upgraded_version,
             server_urls,
             cluster_config,
-            cbs_platform
+            cbs_platform,
+            toy_build=cbs_toy_build
         )
 
         # Restart SGs after the server upgrade
@@ -365,7 +367,7 @@ def update_docs(client, ls_url, ls_db, added_docs, auth, terminator_doc_id):
         time.sleep(5)
 
 
-def upgrade_server_cluster(servers, primary_server, secondary_server, server_version, server_upgraded_version, server_urls, cluster_config, cbs_platform):
+def upgrade_server_cluster(servers, primary_server, secondary_server, server_version, server_upgraded_version, server_urls, cluster_config, cbs_platform, toy_build=None):
     log_info('------------------------------------------')
     log_info('START server cluster upgrade')
     log_info('------------------------------------------')
@@ -376,7 +378,7 @@ def upgrade_server_cluster(servers, primary_server, secondary_server, server_ver
         log_info("Rebalance out server: {}".format(server.host))
         primary_server.rebalance_out(server_urls, server)
         log_info("Upgrading the server: {}".format(server.host))
-        primary_server.upgrade_server(cluster_config=cluster_config, server_version_build=server_upgraded_version, target=server.host, cbs_platform=cbs_platform)
+        primary_server.upgrade_server(cluster_config=cluster_config, server_version_build=server_upgraded_version, target=server.host, cbs_platform=cbs_platform, toy_build=toy_build)
         log_info("Adding the node back to the cluster: {}".format(server.host))
         primary_server.add_node(server)
         log_info("Rebalance in server: {}".format(server.host))

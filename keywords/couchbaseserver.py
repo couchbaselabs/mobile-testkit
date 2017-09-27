@@ -801,23 +801,30 @@ class CouchbaseServer:
         package_name = self.get_package_name(version, build_number, cbs_platform)
         return base_url, package_name
 
-    def upgrade_server(self, cluster_config, server_version_build, cbs_platform, target=None):
+    def upgrade_server(self, cluster_config, server_version_build, cbs_platform, target=None, toy_build=None):
         ansible_runner = AnsibleRunner(cluster_config)
 
         log_info(">>> Upgrading Couchbase Server")
         # Install Server
-        version_build = server_version_build.split("-")
-        server_verion = version_build[0]
-        if len(version_build) == 2:
-            # Build number is included
-            server_build = version_build[1]
+        if toy_build:
+            # http://server.jenkins.couchbase.com/view/All/job/watson-toy/1770/artifact/couchbase-server-enterprise-5.0.0-9900-centos7.x86_64.rpm
+            toy_build_url_parts = toy_build.split('/')
+            toy_build_url_len = len(toy_build_url_parts)
+            server_package_name = toy_build_url_parts[-1]
+            server_baseurl = "/".join(toy_build_url_parts[0:(toy_build_url_len - 1)])
         else:
-            server_build = None
+            version_build = server_version_build.split("-")
+            server_verion = version_build[0]
+            if len(version_build) == 2:
+                # Build number is included
+                server_build = version_build[1]
+            else:
+                server_build = None
 
-        if server_build is None:
-            server_baseurl, server_package_name = self.resolve_cb_mobile_url(server_verion, cbs_platform)
-        else:
-            server_baseurl, server_package_name = self.resolve_cb_nas_url(server_verion, server_build, cbs_platform)
+            if server_build is None:
+                server_baseurl, server_package_name = self.resolve_cb_mobile_url(server_verion, cbs_platform)
+            else:
+                server_baseurl, server_package_name = self.resolve_cb_nas_url(server_verion, server_build, cbs_platform)
 
         if target is not None:
             target = hostname_for_url(cluster_config, target)
