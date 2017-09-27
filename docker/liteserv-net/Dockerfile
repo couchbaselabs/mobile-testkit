@@ -9,7 +9,7 @@ RUN apt-get update && \
     apt-get -y install wget zip unzip tzdata mono-devel
 
 # Download / unzip LiteServ
-RUN wget http://latestbuilds.hq.couchbase.com/couchbase-lite-net/1.4.0/4/LiteServ.zip && \
+RUN wget http://latestbuilds.service.couchbase.com/builds/latestbuilds/couchbase-lite-net/1.4.0/4/LiteServ.zip && \
     unzip LiteServ.zip -d LiteServ
 
 # Needed for Lite Logging
