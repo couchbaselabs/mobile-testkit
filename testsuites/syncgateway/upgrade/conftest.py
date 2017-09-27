@@ -99,6 +99,7 @@ def pytest_addoption(parser):
                      action="store",
                      help="cbs-upgrade-toybuild: Couchbase server toy build to use")
 
+
 # This will be called once for the at the beggining of the execution in the 'tests/' directory
 # and will be torn down, (code after the yeild) when all the test session has completed.
 # IMPORTANT: Tests in 'tests/' should be executed in their own test run and should not be
