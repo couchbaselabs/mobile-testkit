@@ -54,7 +54,7 @@ class LiteServiOS(LiteServBase):
 
         # Package not downloaded, proceed to download from latest builds
         downloaded_package_zip_name = "{}/{}".format(BINARY_DIR, package_name)
-        url = "{}/couchbase-lite-ios/{}/ios/{}/{}".format(LATEST_BUILDS, version, self.version_build, package_name)
+        url = "{}/couchbase-lite-ios/{}/ios/{}/{}".format(LATEST_BUILDS, version, build, package_name)
 
         log_info("Downloading {} -> {}/{}".format(url, BINARY_DIR, package_name))
         resp = requests.get(url)
