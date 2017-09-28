@@ -279,7 +279,6 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     num_docs = params_from_base_suite_setup["num_docs"]
     cbs_platform = params_from_base_suite_setup["cbs_platform"]
     cbs_toy_build = params_from_base_suite_setup["cbs_toy_build"]
-    sg_toy_build = params_from_base_suite_setup["sg_toy_build"]
 
     test_name = request.node.name
     log_info("Running test '{}'".format(test_name))
@@ -326,8 +325,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         "sg_admin_url": sg_admin_url,
         "num_docs": num_docs,
         "cbs_platform": cbs_platform,
-        "cbs_toy_build": cbs_toy_build,
-        "sg_toy_build": sg_toy_build
+        "cbs_toy_build": cbs_toy_build
     }
 
     client.delete_databases(ls_url)
