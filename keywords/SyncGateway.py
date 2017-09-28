@@ -286,7 +286,7 @@ class SyncGateway:
         if status != 0:
             raise ProvisioningError("Could not restart sync_gateway")
 
-    def upgrade_sync_gateways(self, cluster_config, sg_conf, sync_gateway_version, url=None, toy_build=None):
+    def upgrade_sync_gateways(self, cluster_config, sg_conf, sync_gateway_version, url=None):
         """ Upgrade sync gateways in a cluster. If url is passed, upgrade
             the sync gateway at that url
         """
@@ -307,13 +307,7 @@ class SyncGateway:
         # Shared vars
         playbook_vars = {}
 
-        if toy_build:
-            toy_build_url_parts = toy_build.split('/')
-            toy_build_url_len = len(toy_build_url_parts)
-            sync_gateway_package_name = toy_build_url_parts[-1]
-            sync_gateway_base_url = "/".join(toy_build_url_parts[0:(toy_build_url_len - 1)])
-        else:
-            sync_gateway_base_url, sync_gateway_package_name, sg_accel_package_name = sg_config.sync_gateway_base_url_and_package()
+        sync_gateway_base_url, sync_gateway_package_name, sg_accel_package_name = sg_config.sync_gateway_base_url_and_package()
 
         playbook_vars["couchbase_sync_gateway_package_base_url"] = sync_gateway_base_url
         playbook_vars["couchbase_sync_gateway_package"] = sync_gateway_package_name
