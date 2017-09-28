@@ -65,6 +65,7 @@ def resolve_cb_mobile_url(version, cbs_platform="centos7"):
 
     """
     released_versions = {
+        "5.0.0": "3519",
         "4.6.3": "4136",
         "4.6.2": "3905",
         "4.6.1": "3652",
@@ -97,10 +98,10 @@ def resolve_cb_nas_url(version, build_number, cbs_platform="centos7"):
 
     """
 
-    cbnas_base_url = "http://cbnas01.sc.couchbase.com/builds/latestbuilds/couchbase-server"
+    cbnas_base_url = "http://latestbuilds.service.couchbase.com/builds/latestbuilds/couchbase-server"
 
     if version.startswith("3.1"):
-        base_url = "http://latestbuilds.hq.couchbase.com/"
+        base_url = "http://latestbuilds.service.couchbase.com/"
     elif version.startswith("4.0") or version.startswith("4.1"):
         base_url = "{}/sherlock/{}".format(cbnas_base_url, build_number)
     elif version.startswith("4.5") or version.startswith("4.6"):

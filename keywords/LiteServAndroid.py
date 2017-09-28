@@ -39,7 +39,7 @@ class LiteServAndroid(LiteServBase):
         if version == "1.2.1":
             url = "{}/couchbase-lite-android/release/{}/{}/{}".format(LATEST_BUILDS, version, self.version_build, package_name)
         else:
-            url = "{}/couchbase-lite-android/{}/{}/{}".format(LATEST_BUILDS, version, self.version_build, package_name)
+            url = "{}/couchbase-lite-android/{}/{}/{}".format(LATEST_BUILDS, version, build, package_name)
 
         log_info("Downloading {} -> {}/{}".format(url, BINARY_DIR, package_name))
         resp = requests.get(url)
@@ -79,7 +79,7 @@ class LiteServAndroid(LiteServBase):
 
         output = subprocess.check_output(["adb", "shell", "pm", "list", "packages"])
         if "com.couchbase.liteservandroid" not in output:
-            raise LiteServError("Failed to install package")
+            raise LiteServError("Failed to install package: {}".format(output))
 
         log_info("LiteServ installed to {}".format(self.host))
 
