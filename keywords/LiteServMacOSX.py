@@ -36,7 +36,7 @@ class LiteServMacOSX(LiteServBase):
         if version == "1.2.0":
             package_url = "{}/couchbase-lite-ios/release/{}/macosx/{}/{}".format(LATEST_BUILDS, version, self.version_build, package_name)
         else:
-            package_url = "{}/couchbase-lite-ios/{}/macosx/{}/{}".format(LATEST_BUILDS, version, self.version_build, package_name)
+            package_url = "{}/couchbase-lite-ios/{}/macosx/{}/{}".format(LATEST_BUILDS, version, build, package_name)
 
         # Download package to deps/binaries
         log_info("Downloading: {}".format(package_url))
