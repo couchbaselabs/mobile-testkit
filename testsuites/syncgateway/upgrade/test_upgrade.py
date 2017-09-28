@@ -36,6 +36,7 @@ def test_upgrade(params_from_base_test_setup):
     num_docs = int(params_from_base_test_setup['num_docs'])
     cbs_platform = params_from_base_test_setup['cbs_platform']
     cbs_toy_build = params_from_base_test_setup['cbs_toy_build']
+    sg_toy_build = params_from_base_test_setup['sg_toy_build']
     sg_conf = "{}/resources/sync_gateway_configs/sync_gateway_default_functional_tests_{}.json".format(os.getcwd(), mode)
 
     # Add data to liteserv
@@ -114,7 +115,8 @@ def test_upgrade(params_from_base_test_setup):
             sync_gateway_version,
             sync_gateway_upgraded_version,
             sg_conf,
-            cluster_config
+            cluster_config,
+            toy_build=sg_toy_build
         )
 
         if mode == "di":
@@ -411,7 +413,7 @@ def upgrade_server_cluster(servers, primary_server, secondary_server, server_ver
     log_info('------------------------------------------')
 
 
-def upgrade_sync_gateway(sync_gateways, sync_gateway_version, sync_gateway_upgraded_version, sg_conf, cluster_config):
+def upgrade_sync_gateway(sync_gateways, sync_gateway_version, sync_gateway_upgraded_version, sg_conf, cluster_config, toy_build=None):
     log_info('------------------------------------------')
     log_info('START Sync Gateway cluster upgrade')
     log_info('------------------------------------------')
@@ -429,7 +431,8 @@ def upgrade_sync_gateway(sync_gateways, sync_gateway_version, sync_gateway_upgra
             cluster_config=cluster_config,
             sg_conf=sg_conf,
             sync_gateway_version=sync_gateway_upgraded_version,
-            url=sg_ip
+            url=sg_ip,
+            toy_build=toy_build
         )
 
         time.sleep(10)

@@ -99,6 +99,10 @@ def pytest_addoption(parser):
                      action="store",
                      help="cbs-upgrade-toybuild: Couchbase server toy build to use")
 
+    parser.addoption("--sync-gateway-upgrade-toybuild",
+                     action="store",
+                     help="sync-gateway-upgrade-toybuild: Sync Gateway toy build to use")
+
 
 # This will be called once for the at the beggining of the execution in the 'tests/' directory
 # and will be torn down, (code after the yeild) when all the test session has completed.
@@ -128,6 +132,7 @@ def params_from_base_suite_setup(request):
     num_docs = request.config.getoption("--num-docs")
     cbs_platform = request.config.getoption("--cbs-platform")
     cbs_toy_build = request.config.getoption("--cbs-upgrade-toybuild")
+    sg_toy_build = request.config.getoption("--sync-gateway-upgrade-toybuild")
 
     if xattrs_enabled and version_is_binary(sync_gateway_version):
         check_xattr_support(server_upgraded_version, sync_gateway_upgraded_version)
@@ -148,6 +153,7 @@ def params_from_base_suite_setup(request):
     log_info("num_docs: {}".format(num_docs))
     log_info("cbs_platform: {}".format(cbs_platform))
     log_info("cbs_toy_build: {}".format(cbs_toy_build))
+    log_info("sg_toy_build: {}".format(sg_toy_build))
 
     # Make sure mode for sync_gateway is supported ('cc' or 'di')
     validate_sync_gateway_mode(mode)
@@ -249,7 +255,8 @@ def params_from_base_suite_setup(request):
         "liteserv": liteserv,
         "num_docs": num_docs,
         "cbs_platform": cbs_platform,
-        "cbs_toy_build": cbs_toy_build
+        "cbs_toy_build": cbs_toy_build,
+        "sg_toy_build": sg_toy_build
     }
 
     log_info("Tearing down 'params_from_base_suite_setup' ...")
@@ -279,6 +286,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     num_docs = params_from_base_suite_setup["num_docs"]
     cbs_platform = params_from_base_suite_setup["cbs_platform"]
     cbs_toy_build = params_from_base_suite_setup["cbs_toy_build"]
+    sg_toy_build = params_from_base_suite_setup["sg_toy_build"]
 
     test_name = request.node.name
     log_info("Running test '{}'".format(test_name))
@@ -325,7 +333,8 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         "sg_admin_url": sg_admin_url,
         "num_docs": num_docs,
         "cbs_platform": cbs_platform,
-        "cbs_toy_build": cbs_toy_build
+        "cbs_toy_build": cbs_toy_build,
+        "sg_toy_build": sg_toy_build
     }
 
     client.delete_databases(ls_url)
