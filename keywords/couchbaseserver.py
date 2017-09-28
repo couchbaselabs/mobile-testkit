@@ -849,3 +849,5 @@ class CouchbaseServer:
 
         if status != 0:
             raise ProvisioningError("Failed to install Couchbase Server")
+
+        self.wait_for_ready_state()
