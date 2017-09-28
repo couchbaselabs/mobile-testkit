@@ -38,7 +38,7 @@
 
   # Install and start service
   - name: SYNC GATEWAY | Install sync_gateway rpm
-    shell: rpm -U /tmp/{{ couchbase_sync_gateway_package }}
+    shell: rpm -U --force /tmp/{{ couchbase_sync_gateway_package }}
 
   - name: SYNC GATEWAY | wait until sync gateway to listen on port
     wait_for: port=4985 timeout=120
@@ -53,7 +53,7 @@
   - include: tasks/stop-sg-accel.yml
   # Install and start service
   - name: SG ACCEL | Install sg_accel rpm
-    shell: rpm -U /tmp/{{ couchbase_sg_accel_package }}
+    shell: rpm -U --force /tmp/{{ couchbase_sg_accel_package }}
 
   - name: SG ACCEL | Start the sg_accel service
     service: name=sg_accel state=started
