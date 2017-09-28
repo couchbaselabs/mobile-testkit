@@ -5,9 +5,9 @@ import time
 from keywords.couchbaseserver import verify_server_version
 from libraries.testkit.cluster import Cluster
 from keywords.utils import log_info, host_for_url
-from keywords.SyncGateway import (verify_sg_accel_version,
-                                  verify_sync_gateway_version,
-                                  verify_sg_accel_product_info,
+#  verify_sg_accel_version,
+# verify_sync_gateway_version,
+from keywords.SyncGateway import (verify_sg_accel_product_info,
                                   verify_sync_gateway_product_info,
                                   SyncGateway)
 from keywords.ClusterKeywords import ClusterKeywords
@@ -333,6 +333,7 @@ def send_changes_termination_doc(sg_url, sg_db, auth, terminator_doc_id, termina
 
 
 def update_docs(client, ls_url, ls_db, added_docs, auth, terminator_doc_id):
+    return []
     log_info("Starting doc updates")
     current_user_doc_ids = []
     for doc in added_docs:
