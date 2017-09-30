@@ -220,6 +220,7 @@ def test_upgrade(params_from_base_test_setup):
             to_db=ls_db
         )
         # Gather the new revs for verification
+        log_info("Gathering the updated revs for verification")
         doc_ids = []
         for i in range(len(added_docs)):
             doc_ids.append(added_docs[i]["id"])
