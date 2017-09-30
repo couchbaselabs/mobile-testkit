@@ -5,9 +5,9 @@ import time
 from keywords.couchbaseserver import verify_server_version
 from libraries.testkit.cluster import Cluster
 from keywords.utils import log_info, host_for_url
-#  verify_sg_accel_version,
-# verify_sync_gateway_version,
-from keywords.SyncGateway import (verify_sg_accel_product_info,
+from keywords.SyncGateway import (verify_sg_accel_version,
+                                  verify_sync_gateway_version,
+                                  verify_sg_accel_product_info,
                                   verify_sync_gateway_product_info,
                                   SyncGateway)
 from keywords.ClusterKeywords import ClusterKeywords
@@ -420,7 +420,7 @@ def upgrade_sync_gateway(sync_gateways, sync_gateway_version, sync_gateway_upgra
         log_info("Checking for sync gateway product info before upgrade")
         verify_sync_gateway_product_info(sg_ip)
         log_info("Checking for sync gateway version: {}".format(sync_gateway_version))
-        # verify_sync_gateway_version(sg_ip, sync_gateway_version)
+        verify_sync_gateway_version(sg_ip, sync_gateway_version)
         log_info("Upgrading sync gateway: {}".format(sg_ip))
         sg_obj.upgrade_sync_gateways(
             cluster_config=cluster_config,
@@ -433,7 +433,7 @@ def upgrade_sync_gateway(sync_gateways, sync_gateway_version, sync_gateway_upgra
         log_info("Checking for sync gateway product info after upgrade")
         verify_sync_gateway_product_info(sg_ip)
         log_info("Checking for sync gateway version after upgrade: {}".format(sync_gateway_upgraded_version))
-        # verify_sync_gateway_version(sg_ip, sync_gateway_upgraded_version)
+        verify_sync_gateway_version(sg_ip, sync_gateway_upgraded_version)
 
     log_info("Upgraded all the sync gateway nodes in the cluster")
     log_info('------------------------------------------')
@@ -451,7 +451,7 @@ def upgrade_sg_accel(sg_accels, sync_gateway_version, sync_gateway_upgraded_vers
     for ac in sg_accels:
         ac_ip = host_for_url(ac)
         log_info("Checking for sg_accel version before upgrade: {}".format(sync_gateway_version))
-        # verify_sg_accel_version(ac_ip, sync_gateway_version)
+        verify_sg_accel_version(ac_ip, sync_gateway_version)
         log_info("Upgrading sg_accel: {}".format(ac_ip))
         ac_obj.upgrade_sync_gateways(
             cluster_config=cluster_config,
@@ -464,7 +464,7 @@ def upgrade_sg_accel(sg_accels, sync_gateway_version, sync_gateway_upgraded_vers
         log_info("Checking for sg accel product info after upgrade")
         verify_sg_accel_product_info(ac_ip)
         log_info("Checking for sg accel version after upgrade: {}".format(sync_gateway_upgraded_version))
-        # verify_sg_accel_version(ac_ip, sync_gateway_upgraded_version)
+        verify_sg_accel_version(ac_ip, sync_gateway_upgraded_version)
 
     log_info("Upgraded all the sg accel nodes in the cluster")
     log_info('------------------------------------------')
