@@ -344,6 +344,7 @@ def send_changes_termination_doc(sg_url, sg_db, auth, terminator_doc_id, termina
     doc_body = {}
     doc_body["channels"] = terminator_channel
     doc_body["_id"] = terminator_doc_id
+    doc_body["foo"] = "bar"
     ls_client.add_doc(ls_url, ls_db, doc_body, auth=auth, use_post=False)
 
 
