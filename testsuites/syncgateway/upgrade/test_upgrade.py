@@ -200,7 +200,15 @@ def test_upgrade(params_from_base_test_setup):
                         enable_import=False
                     )
 
-        send_changes_termination_doc(sg_url, sg_db, sg_session, terminator_doc_id, sg_user_channels)
+        send_changes_termination_doc(
+            sg_url=sg_url,
+            sg_db=sg_db,
+            auth=sg_session,
+            terminator_doc_id=terminator_doc_id,
+            terminator_channel=sg_user_channels,
+            ls_url=ls_url,
+            ls_db=ls_db
+        )
         log_info("Waiting for doc updates to complete")
         updated_doc_revs = updates_future.result()
 
@@ -326,11 +334,17 @@ def verify_sg_docs_revision_history(url, db, added_docs):
             log_info("Verified doc body for {}".format(doc_id))
 
 
-def send_changes_termination_doc(sg_url, sg_db, auth, terminator_doc_id, terminator_channel):
+def send_changes_termination_doc(sg_url, sg_db, auth, terminator_doc_id, terminator_channel, ls_url, ls_db):
     sg_client = MobileRestClient()
     log_info('Sending changes termination doc for all users')
     doc = {'_id': terminator_doc_id, 'channels': terminator_channel}
     sg_client.add_doc(url=sg_url, db=sg_db, doc=doc, auth=auth)
+
+    ls_client = MobileRestClient()
+    doc_body = {}
+    doc_body["channels"] = terminator_channel
+    doc_body["_id"] = terminator_doc_id
+    ls_client.add_doc(ls_url, ls_db, doc_body, auth=auth, use_post=False)
 
 
 def update_docs(client, ls_url, ls_db, added_docs, auth, terminator_doc_id):
