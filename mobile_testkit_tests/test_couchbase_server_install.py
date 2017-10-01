@@ -22,7 +22,7 @@ def test_enterprise():
         version="4.1.1-5914"
     )
     base_url, package_name = server_config.get_baseurl_package()
-    assert base_url == "http://cbnas01.sc.couchbase.com/builds/latestbuilds/couchbase-server/sherlock/5914"
+    assert base_url == "http://latestbuilds.service.couchbase.com/builds/latestbuilds/couchbase-server/sherlock/5914"
     assert package_name == "couchbase-server-enterprise-4.1.1-5914-centos7.x86_64.rpm"
 
 

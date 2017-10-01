@@ -28,4 +28,4 @@ def test_ce_ee_package(sg_ce, sg_type, sg_platform, sa_platform, platform_ext):
 
     assert sync_gateway_package_name == "couchbase-sync-gateway-{}_1.5.0-477_x86_64.{}".format(sg_type, platform_ext)
     assert sg_accel_package_name == "couchbase-sg-accel-enterprise_1.5.0-477_x86_64.{}".format(platform_ext)
-    assert sync_gateway_base_url == "http://latestbuilds.hq.couchbase.com/couchbase-sync-gateway/1.5.0/1.5.0-477"
+    assert sync_gateway_base_url == "http://latestbuilds.service.couchbase.com/builds/latestbuilds/sync_gateway/1.5.0/477"
