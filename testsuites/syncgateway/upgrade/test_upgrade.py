@@ -292,6 +292,7 @@ def verify_sg_docs_revision_history(url, db, added_docs):
     expected_doc_map = {added_doc["id"]: added_doc["rev"] for added_doc in added_docs}
     doc_ids = expected_doc_map.keys()
 
+    log_info("Bulk getting docs from sync gateway")
     docs = sg_client.get_bulk_docs(url, db, doc_ids, rev_history="true")
     assert len(docs[0]) == len(doc_ids)
 
