@@ -177,6 +177,17 @@ def test_upgrade(params_from_base_test_setup):
             elif mode == "di":
                 enable_import = False
 
+            if mode == "di":
+                ac_obj = SyncGateway()
+                for ac in sg_accels:
+                    ac_ip = host_for_url(ac)
+                    ac_obj.enable_import_xattrs(
+                        cluster_config=cluster_config,
+                        sg_conf=sg_conf,
+                        url=ac_ip,
+                        enable_import=False
+                    )
+
             sg_obj = SyncGateway()
             for sg in sync_gateways:
                 sg_ip = host_for_url(sg["admin"])
@@ -189,20 +200,7 @@ def test_upgrade(params_from_base_test_setup):
                 enable_import = False
                 # Check Import showing up on all nodes
 
-            if mode == "di":
-                ac_obj = SyncGateway()
-                for ac in sg_accels:
-                    ac_ip = host_for_url(ac)
-                    ac_obj.enable_import_xattrs(
-                        cluster_config=cluster_config,
-                        sg_conf=sg_conf,
-                        url=ac_ip,
-                        enable_import=False
-                    )
-
         send_changes_termination_doc(
-            sg_url=sg_url,
-            sg_db=sg_db,
             auth=sg_session,
             terminator_doc_id=terminator_doc_id,
             terminator_channel=sg_user_channels,
@@ -335,12 +333,7 @@ def verify_sg_docs_revision_history(url, db, added_docs):
             log_info("Verified doc body for {}".format(doc_id))
 
 
-def send_changes_termination_doc(sg_url, sg_db, auth, terminator_doc_id, terminator_channel, ls_url, ls_db):
-    sg_client = MobileRestClient()
-    log_info('Sending changes termination doc for all users')
-    doc = {'_id': terminator_doc_id, 'channels': terminator_channel}
-    sg_client.add_doc(url=sg_url, db=sg_db, doc=doc, auth=auth)
-
+def send_changes_termination_doc(auth, terminator_doc_id, terminator_channel, ls_url, ls_db):
     ls_client = MobileRestClient()
     doc_body = {}
     doc_body["channels"] = terminator_channel
