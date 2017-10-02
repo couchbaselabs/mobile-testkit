@@ -6,7 +6,7 @@
     "maxFileDescriptors": 90000,
     "slowServerCallWarningThreshold": 500,
     "compressResponses": false,
-    "log": ["gocb", "CRUD+", "Cache+", "HTTP+", "Changes+"],
+    "log": ["CRUD+", "Cache+", "HTTP+", "Changes+"],
     "cluster_config": {
         "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
         "data_dir":".",
