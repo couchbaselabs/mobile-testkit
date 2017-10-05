@@ -738,7 +738,7 @@ class CouchbaseServer:
         else:
             return "couchbase-server-enterprise-{}-{}-{}.x86_64.rpm".format(version, build_number, cbs_platform)
 
-    def resolve_cb_nas_url(self, version, build_number, cbs_platform):
+    def resolve_cb_nas_url(self, version, build_number, cbs_platform="centos7"):
         """
         Resolve a download URL for couchbase server on the internal VPN download site
 
@@ -751,10 +751,10 @@ class CouchbaseServer:
 
         """
 
-        cbnas_base_url = "http://cbnas01.sc.couchbase.com/builds/latestbuilds/couchbase-server"
+        cbnas_base_url = "http://latestbuilds.service.couchbase.com/builds/latestbuilds/couchbase-server"
 
         if version.startswith("3.1"):
-            base_url = "http://latestbuilds.hq.couchbase.com/"
+            base_url = "http://latestbuilds.service.couchbase.com/"
         elif version.startswith("4.0") or version.startswith("4.1"):
             base_url = "{}/sherlock/{}".format(cbnas_base_url, build_number)
         elif version.startswith("4.5") or version.startswith("4.6"):
