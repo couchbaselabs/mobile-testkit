@@ -19,6 +19,8 @@ from keywords.exceptions import ProvisioningError
 from libraries.testkit.cluster import validate_cluster
 from libraries.testkit.cluster import Cluster
 from utilities.cluster_config_utils import persist_cluster_config_environment_prop
+from keywords.couchbaseserver import CouchbaseServer
+from keywords.ClusterKeywords import ClusterKeywords
 
 
 def provision_cluster(cluster_config, couchbase_server_config, sync_gateway_config, sg_ce=False, cbs_platform="centos7"):
@@ -70,7 +72,11 @@ def provision_cluster(cluster_config, couchbase_server_config, sync_gateway_conf
     log_info(">>> Provisioning cluster...")
 
     # Get server base url and package name
-    server_baseurl, server_package_name = couchbase_server_config.get_baseurl_package(cbs_platform)
+    cluster_keywords = ClusterKeywords()
+    cluster_topology = cluster_keywords.get_cluster_topology(cluster_config)
+    server_url = cluster_topology["couchbase_servers"][0]
+    cb_server = CouchbaseServer(server_url)
+    server_baseurl, server_package_name = couchbase_server_config.get_baseurl_package(cb_server, cbs_platform)
 
     log_info(">>> Server package: {0}/{1}".format(server_baseurl, server_package_name))
     log_info(">>> Using sync_gateway config: {}".format(sync_gateway_config.config_path))
