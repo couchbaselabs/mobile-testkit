@@ -75,6 +75,7 @@ def test_deleted_docs_from_changes_active_only(params_from_base_test_setup, sg_c
             assert doc_id == d["id"]
             assert d["deleted"] == "true"
             doc_found = True
+            break
 
     log_info("Checking that the deleted doc is included in the active_only=false changes request")
     assert doc_found
