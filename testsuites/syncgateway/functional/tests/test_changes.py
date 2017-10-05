@@ -27,7 +27,7 @@ def test_deleted_docs_from_changes_active_only(params_from_base_test_setup, sg_c
     topology = params_from_base_test_setup["cluster_topology"]
     sg_admin_url = topology["sync_gateways"][0]["admin"]
     sg_db = "db"
-    num_docs = 1
+    num_docs = 10
     client = MobileRestClient()
 
     # Add doc to SG
@@ -38,9 +38,9 @@ def test_deleted_docs_from_changes_active_only(params_from_base_test_setup, sg_c
         id_prefix="test_changes"
     )
 
-    # Delete the doc
-    log_info("added_doc: {}".format(added_doc))
+    # Delete 1 doc
     doc_id = added_doc[0]["id"]
+    log_info("Deleting {}".format(doc_id))
     doc = client.get_doc(url=sg_admin_url, db=sg_db, doc_id=doc_id)
     doc_rev = doc['_rev']
     client.delete_doc(sg_admin_url, sg_db, doc_id, doc_rev)
@@ -57,8 +57,9 @@ def test_deleted_docs_from_changes_active_only(params_from_base_test_setup, sg_c
     resp = session.get(request_url)
     resp.raise_for_status()
     resp_obj = resp.json()
-    log_info("resp1: {}".format(resp_obj))
-    assert "id" not in resp_obj["results"]
+    log_info("Checking that the deleted doc is not included in the active_only=true changes request")
+    for d in resp_obj["results"]:
+        assert doc_id not in d
 
     # Changes request with active_only=false
     request_url = "{}/{}/_changes?active_only=false".format(sg_admin_url, sg_db)
@@ -66,6 +67,14 @@ def test_deleted_docs_from_changes_active_only(params_from_base_test_setup, sg_c
     resp = session.get(request_url)
     resp.raise_for_status()
     resp_obj = resp.json()
-    log_info("resp2: {}".format(resp_obj))
-    assert doc_id in resp_obj["results"]["id"]
-    assert resp_obj["results"]["deleted"] == "true"
+    doc_found = False
+    for d in resp_obj["results"]:
+        if doc_id != d["id"]:
+            continue
+        else:
+            assert doc_id == d["id"]
+            assert d["deleted"] == "true"
+            doc_found = True
+
+    log_info("Checking that the deleted doc is included in the active_only=false changes request")
+    assert doc_found
