@@ -58,7 +58,7 @@ def test_deleted_docs_from_changes_active_only(params_from_base_test_setup, sg_c
     resp.raise_for_status()
     resp_obj = resp.json()
     log_info("resp1: {}".format(resp_obj))
-    assert doc_id not in resp_obj["results"]["id"]
+    assert "id" not in resp_obj["results"]
 
     # Changes request with active_only=false
     request_url = "{}/{}/_changes?active_only=false".format(sg_admin_url, sg_db)
