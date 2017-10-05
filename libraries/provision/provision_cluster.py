@@ -144,6 +144,10 @@ if __name__ == "__main__":
                       action="store_true", dest="install_deps_flag", default=False,
                       help="Install dependent 3rd party packages")
 
+    parser.add_option("", "--cbs-platform",
+                      action="store", type="string", dest="cbs_platform", default="centos7",
+                      help="Server Platfrom to download and install. Ex: centos7/centos6")
+
     arg_parameters = sys.argv[1:]
 
     (opts, args) = parser.parse_args(arg_parameters)
@@ -179,5 +183,6 @@ if __name__ == "__main__":
     provision_cluster(
         cluster_config=cluster_conf,
         couchbase_server_config=server_config,
-        sync_gateway_config=sync_gateway_conf
+        sync_gateway_config=sync_gateway_conf,
+        cbs_platform=opts.cbs_platform
     )
