@@ -71,7 +71,7 @@ def test_deleted_docs_from_changes_active_only(params_from_base_test_setup, sg_c
             continue
         else:
             assert doc_id == d["id"]
-            assert d["deleted"] == "true"
+            assert d["deleted"]
             doc_found = True
             break
 
