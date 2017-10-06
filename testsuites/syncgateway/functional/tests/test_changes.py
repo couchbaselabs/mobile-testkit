@@ -1,5 +1,4 @@
 import pytest
-import time
 
 from keywords.MobileRestClient import MobileRestClient
 from requests import Session
@@ -48,10 +47,9 @@ def test_deleted_docs_from_changes_active_only(params_from_base_test_setup, sg_c
     # Restart SG
     sg_obj = SyncGateway()
     sg_obj.restart_sync_gateways(cluster_config)
-    time.sleep(5)
 
-    session = Session()
     # Changes request with active_only=true
+    session = Session()
     request_url = "{}/{}/_changes?active_only=true".format(sg_admin_url, sg_db)
     log_info("Issuing changes request {}".format(request_url))
     resp = session.get(request_url)
