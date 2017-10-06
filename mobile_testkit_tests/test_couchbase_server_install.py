@@ -1,5 +1,3 @@
-import pytest
-
 from libraries.provision.install_couchbase_server import CouchbaseServerConfig
 from keywords.couchbaseserver import CouchbaseServer
 
