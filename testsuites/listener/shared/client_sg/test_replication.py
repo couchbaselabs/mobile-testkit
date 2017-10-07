@@ -1224,3 +1224,106 @@ def test_replication_with_session_cookie_short_ttl(setup_client_syncgateway_test
 
     # Delete the session
     client.delete_session(url=sg_admin_url, db=sg_db, user_name="user_1", session_id=session_id)
+
+
+@pytest.mark.sanity
+@pytest.mark.listener
+@pytest.mark.syncgateway
+@pytest.mark.replication
+@pytest.mark.session
+def test_replication_attachments_survive_channel_removal(setup_client_syncgateway_test):
+    """Regression test for https://github.com/couchbase/couchbase-lite-net/issues/910
+    1. SyncGateway Config with One user added (e.g. user1 / 1234) who has access to a limited
+       set of channels (e.g. ["user_channel"]) and GUEST disabled
+    2. Start authenticated continuous pull replication
+    3. Add a document that gets assigned to the user's channel, and verify that it is pulled
+    4. Stop the pull replication started in (2)
+    5. Add a few arbitrary edits to the document created in (3), including adding at least
+       one attachment
+    6. Add an edit to the document created in (3) that removes it from the user's channel
+    7. Repeat step (2)
+    8. Add an edit to the document created in (3) that keep the attachments intact, as well
+       as adds the document back into the user's channel
+    9. Verify that the document and attachment are both present in the local DB
+    """
+
+    # Here is the general idea, tweak and remove this comment
+    ls_db = "ls_db"
+    sg_db = "db"
+
+    cluster_config = setup_client_syncgateway_test["cluster_config"]
+    sg_mode = setup_client_syncgateway_test["sg_mode"]
+    ls_url = setup_client_syncgateway_test["ls_url"]
+    sg_url = setup_client_syncgateway_test["sg_url"]
+    sg_admin_url = setup_client_syncgateway_test["sg_admin_url"]
+
+    # Create the config mentioned in step 1
+    sg_config = sync_gateway_config_path_for_mode("listener_tests/listener_tests_user", sg_mode)
+    c = cluster.Cluster(config=cluster_config)
+    c.reset(sg_config_path=sg_config)
+
+    log_info("Running 'test_replication_attachments_survive_channel_removal'")
+    log_info("ls_url: {}".format(ls_url))
+    log_info("sg_admin_url: {}".format(sg_admin_url))
+    log_info("sg_url: {}".format(sg_url))
+
+    client = MobileRestClient()
+    client.create_database(url=ls_url, name=ls_db)
+    client.create_user(sg_admin_url, sg_db, "jim", password="password", channels=["ABC"])
+    session = client.create_session(sg_admin_url, sg_db, "jim")
+
+    pull = client.start_replication(
+        url=ls_url,
+        continuous=True,
+        from_url=sg_url,
+        from_db=sg_db,
+        from_auth=session,
+        to_db=ls_db,
+    )
+
+    docs = client.add_docs(
+        url=sg_url,
+        db=sg_db,
+        number=1,
+        id_prefix="seeded_doc",
+        generator="four_k",
+        channels=["ABC"],
+        auth=session
+    )
+
+    client.wait_for_replication_status_idle(ls_url, pull)
+    client.verify_docs_present(url=ls_url, db=ls_db, expected_docs=docs, timeout=240)
+    client.stop_replication(
+        url=ls_url,
+        continuous=True,
+        from_db=sg_db,
+        from_url=sg_url,
+        to_db=ls_db
+    )
+
+    # Not sure about this part, steps 5 and 6
+
+    # Continue with step 7
+    pull = client.start_replication(
+        url=ls_url,
+        continuous=True,
+        from_url=sg_url,
+        from_db=sg_db,
+        from_auth=session,
+        to_db=ls_db,
+    )
+    client.wait_for_replication_status_idle(ls_url, pull)
+
+    # Step 8
+
+    # Step 9
+    client.verify_docs_present(url=ls_url, db=ls_db, expected_docs=docs, timeout=240)
+    att = client.get_attachment(
+        url=ls_url,
+        db=ls_db,
+        doc_id=docs[0]["_id"],
+        attachment_name="attachment"  # Or whatever you named it?
+    )
+
+    # Verify att is equal to what it is supposed to be
+    return att is not None
