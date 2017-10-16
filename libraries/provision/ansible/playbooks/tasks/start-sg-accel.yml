@@ -1,4 +1,4 @@
-- debug: msg="Starting sg_accel with config {{ sync_gateway_config_filepath }}"
+- debug: msg="Starting sg_accel"
 
 - name: SG ACCEL | Start sg_accel service
   become: yes
