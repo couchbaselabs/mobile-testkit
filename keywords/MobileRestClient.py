@@ -1105,6 +1105,10 @@ class MobileRestClient:
         auth_type = get_auth_type(auth)
         doc = self.get_doc(url, db, doc_id, auth)
         current_rev = doc["_rev"]
+        try:
+            doc["updates"]
+        except Exception:
+            doc["updates"] = 0
         current_update_number = doc["updates"] + 1
 
         log_info("Updating {}/{}/{}: {} times".format(url, db, doc_id, number_updates))

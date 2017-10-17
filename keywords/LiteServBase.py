@@ -52,6 +52,19 @@ class LiteServBase(object):
         log_r(resp)
         raise LiteServError("There should be no service running on the port")
 
+    def _verify_running(self):
+        """
+        Return true if it is running or else false
+        Verifys that the endpoint does not return a 200 from a running service
+        """
+        try:
+            self.session.get("http://{}:{}/".format(self.host, self.port))
+        except ConnectionError:
+            # Expecting connection error if LiteServ is not running on the port
+            return False
+
+        return True
+
     def _wait_until_reachable(self, port=None):
         if not port:
             port = self.port
@@ -80,4 +93,7 @@ class LiteServBase(object):
         raise NotImplementedError()
 
     def remove(self):
+        raise NotImplementedError()
+
+    def close_app(self):
         raise NotImplementedError()

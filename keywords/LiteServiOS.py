@@ -22,9 +22,6 @@ class LiteServiOS(LiteServBase):
 
     def __init__(self, version_build, host, port, storage_engine):
 
-        if storage_engine == "ForestDB" or storage_engine == "ForestDB+Encryption":
-            raise LiteServError("ForestDB not supported with the current LiteServ iOS app")
-
         super(LiteServiOS, self).__init__(version_build, host, port, storage_engine)
         self.liteserv_admin_url = "http://{}:59850".format(self.host)
         self.logfile_name = None
@@ -74,11 +71,14 @@ class LiteServiOS(LiteServBase):
         Warning: Only works with a single device at the moment
         """
 
-        if self.storage_engine != "SQLite":
-            raise LiteServError("https://github.com/couchbaselabs/liteserv-ios/issues/1")
+        if self.storage_engine == "SQLCipher":
+            package_name = "LiteServ-iOS-SQLCipher-Device.app"
+            app_dir = "LiteServ-iOS-SQLCipher"
+        else:
+            package_name = "LiteServ-iOS-Device.app"
+            app_dir = "LiteServ-iOS"
 
-        package_name = "LiteServ-iOS.app"
-        app_path = "{}/{}/{}".format(BINARY_DIR, "LiteServ-iOS", package_name)
+        app_path = "{}/{}/{}".format(BINARY_DIR, app_dir, package_name)
         log_info("Installing: {}".format(app_path))
 
         # install app / launch app to connected device
@@ -235,6 +235,73 @@ class LiteServiOS(LiteServBase):
         output = subprocess.check_output([
             "ios-sim", "--devicetypeid", device, "launch", app_path, "--exit"
         ])
+
+        log_info(output)
+
+        if self.storage_engine == "SQLite" or self.storage_engine == "SQLCipher":
+            data["storage"] = "SQLite"
+        elif self.storage_engine == "ForestDB" or self.storage_engine == "ForestDB+Encryption":
+            data["storage"] = "ForestDB"
+
+        if self.storage_engine == "ForestDB+Encryption" or self.storage_engine == "SQLCipher":
+            encryption_enabled = True
+
+        self._verify_not_running()
+
+        if self.port == 59850:
+            raise LiteServError("On iOS, port 59850 is reserved for the admin port")
+
+        data["port"] = int(self.port)
+
+        if encryption_enabled:
+            log_info("Encryption enabled ...")
+
+            db_flags = []
+            for db_name in REGISTERED_CLIENT_DBS:
+                db_flags.append("{}:pass".format(db_name))
+            db_flags = ",".join(db_flags)
+
+            log_info("Running with db_flags: {}".format(db_flags))
+            data["dbpasswords"] = db_flags
+
+        self._wait_until_reachable(port=59850)
+        log_info("Starting LiteServ: {}".format(self.liteserv_admin_url))
+        resp = self.session.put("{}/start".format(self.liteserv_admin_url), data=json.dumps(data))
+        log_r(resp)
+        resp.raise_for_status()
+        self._verify_launched()
+
+        return "http://{}:{}".format(self.host, self.port)
+
+    def start_device(self, logfile_name):
+        """
+        1. Starts a LiteServ with logging to provided logfile file object.
+           The running LiteServ process will be stored in the self.process property.
+        2. The method will poll on the endpoint to make sure LiteServ is available.
+        3. The expected version will be compared with the version reported by http://<host>:<port>
+        4. Return the url of the running LiteServ
+        """
+
+        data = {}
+        encryption_enabled = False
+        self.logfile_name = logfile_name
+
+        package_name = "LiteServ-iOS-Device.app"
+        app_dir = "LiteServ-iOS"
+
+        if self.storage_engine == "SQLCipher":
+            package_name = "LiteServ-iOS-SQLCipher-Device.app"
+            app_dir = "LiteServ-iOS-SQLCipher"
+
+        app_path = "{}/{}/{}".format(BINARY_DIR, app_dir, package_name)
+
+        # Without --exit, ios-sim blocks
+        # With --exit, --log has no effect
+        # subprocess.Popen didn't launch the app
+
+        output = subprocess.check_output([
+            "ios-deploy", "--justlaunch", "--bundle", app_path
+        ])
         log_info(output)
 
         if self.storage_engine == "SQLite" or self.storage_engine == "SQLCipher":
@@ -296,22 +363,27 @@ class LiteServiOS(LiteServBase):
         2. Kill the LiteServ process
         3. Verify that no service is running on http://<host>:<port>
         """
+        if self._verify_running:
+            log_info("Stopping LiteServ: http://{}:{}".format(self.host, self.port))
+            log_info("Stopping LiteServ: {}".format(self.liteserv_admin_url))
 
-        log_info("Stopping LiteServ: http://{}:{}".format(self.host, self.port))
-        log_info("Stopping LiteServ: {}".format(self.liteserv_admin_url))
+            resp = self.session.put("{}/stop".format(self.liteserv_admin_url))
+            log_r(resp)
+            resp.raise_for_status()
 
-        resp = self.session.put("{}/stop".format(self.liteserv_admin_url))
-        log_r(resp)
-        resp.raise_for_status()
-
-        # Using --exit in ios-sim means, --log has no effect
-        # Have to separately copy the simulator logs
-        if self.logfile_name and self.device_id:
-            home = os.environ['HOME']
-            ios_log_file = "{}/Library/Logs/CoreSimulator/{}/system.log".format(home, self.device_id)
-            copyfile(ios_log_file, self.logfile_name)
-            # Empty the simulator logs so that the next test run
-            # will only have logs for that run
-            open(ios_log_file, 'w').close()
-
+            # Using --exit in ios-sim means, --log has no effect
+            # Have to separately copy the simulator logs
+            if self.logfile_name and self.device_id:
+                home = os.environ['HOME']
+                ios_log_file = "{}/Library/Logs/CoreSimulator/{}/system.log".format(home, self.device_id)
+                copyfile(ios_log_file, self.logfile_name)
+                # Empty the simulator logs so that the next test run
+                # will only have logs for that run
+                open(ios_log_file, 'w').close()
+        else:
+            log_info("LiteServ is not running, so no need to stop")
         self._verify_not_running()
+
+    def close_app(self):
+        cur_dir = os.path.dirname(os.path.abspath(__file__))
+        subprocess.check_output(["osascript", "{}/../utilities/sim_close_app.scpt".format(cur_dir)])

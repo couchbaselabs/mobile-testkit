@@ -127,7 +127,7 @@ def test_dcp_reshard_sync_gateway_comes_up(params_from_base_test_setup, sg_conf)
         log_info(">>> Adding Seth docs")  # FOX
         futures[executor.submit(seth.add_docs, 4000)] = "seth"
 
-        # Bring up a sync_gateway
+        # Bring up a sync_gateway accel
         up_status = cluster.sg_accels[0].start(sg_conf)
         assert up_status == 0
 
