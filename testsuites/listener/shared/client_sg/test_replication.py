@@ -172,7 +172,7 @@ def test_initial_pull_replication_background_apprun(setup_client_syncgateway_tes
     sg_config = sync_gateway_config_path_for_mode("listener_tests/listener_tests", sg_mode)
     c = cluster.Cluster(config=cluster_config)
     c.reset(sg_config_path=sg_config)
-    
+
     if liteserv_platform != "ios":
         pytest.skip('This test only valid for mobile')
     log_info("ls_url: {}".format(ls_url))
@@ -353,7 +353,7 @@ def test_push_replication_with_backgroundApp(setup_client_syncgateway_test, num_
     sg_one_public = setup_client_syncgateway_test["sg_url"]
     liteserv = setup_client_syncgateway_test["liteserv"]
     liteserv_platform = setup_client_syncgateway_test["liteserv_platform"]
-    
+
     sg_config = sync_gateway_config_path_for_mode("listener_tests/listener_tests", sg_mode)
     c = cluster.Cluster(config=cluster_config)
     c.reset(sg_config_path=sg_config)
