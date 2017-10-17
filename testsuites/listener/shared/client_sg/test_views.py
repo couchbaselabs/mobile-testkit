@@ -1,5 +1,4 @@
 import pytest
-import time
 
 from keywords.MobileRestClient import MobileRestClient
 from keywords.utils import log_info
@@ -7,7 +6,6 @@ from keywords.utils import log_info
 from keywords import document
 from keywords.SyncGateway import sync_gateway_config_path_for_mode
 from libraries.testkit import cluster
-from keywords.document import create_docs
 
 
 @pytest.mark.sanity
