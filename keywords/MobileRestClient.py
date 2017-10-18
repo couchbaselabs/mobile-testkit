@@ -2051,6 +2051,13 @@ class MobileRestClient:
 
         return resp.json()
 
+    def view_query_through_channels(self, url, db):
+        resp = self._session.get("{}/{}/_view/channels".format(url, db))
+        log_r(resp)
+        resp.raise_for_status()
+
+        return resp.json()
+
     def verify_view_row_num(self, view_response, expected_num_rows):
         """
         Keyword that verifies the length of rows return from a view is the expected number of rows
