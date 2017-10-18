@@ -7,12 +7,13 @@ import keywords.exceptions
 
 from keywords.exceptions import TimeoutError
 from keywords.ClusterKeywords import ClusterKeywords
-from keywords.utils import log_info
+from keywords.utils import log_info, compare_versions
 from keywords.MobileRestClient import MobileRestClient
 from keywords.SyncGateway import sync_gateway_config_path_for_mode
 
 from keywords import userinfo
 from keywords import couchbaseserver
+from utilities.cluster_config_utils import get_sg_version
 
 
 @pytest.mark.sanity
@@ -26,6 +27,10 @@ def test_rebalance_sanity(params_from_base_test_setup):
 
     cluster_config = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
+
+    sg_version = get_sg_version(cluster_config)
+    if compare_versions(sg_version, '1.5') < 0:
+        pytest.skip("This test needs multiple URLs in the SG config, not supported by SG < 1.5")
 
     cluster_helper = ClusterKeywords()
 
@@ -112,6 +117,10 @@ def test_server_goes_down_sanity(params_from_base_test_setup):
 
     cluster_config = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
+
+    sg_version = get_sg_version(cluster_config)
+    if compare_versions(sg_version, '1.5') < 0:
+        pytest.skip("This test needs multiple URLs in the SG config, not supported by SG < 1.5")
 
     cluster_helper = ClusterKeywords()
 
@@ -223,6 +232,10 @@ def test_server_goes_down_rebuild_channels(params_from_base_test_setup):
 
     cluster_config = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
+
+    sg_version = get_sg_version(cluster_config)
+    if compare_versions(sg_version, '1.5') < 0:
+        pytest.skip("This test needs multiple URLs in the SG config, not supported by SG < 1.5")
 
     cluster_helper = ClusterKeywords()
 

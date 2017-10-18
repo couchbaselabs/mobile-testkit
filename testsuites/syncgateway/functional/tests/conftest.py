@@ -72,7 +72,7 @@ def pytest_addoption(parser):
 
     parser.addoption("--xattrs",
                      action="store_true",
-                     help="Use xattrs for sync meta storage. Only works with Sync Gateway 2.0+ and Couchbase Server 5.0+")
+                     help="Use xattrs for sync meta storage. Only works with Sync Gateway 1.5.0+ and Couchbase Server 5.0+")
 
     parser.addoption("--collect-logs",
                      action="store_true",
@@ -171,6 +171,24 @@ def params_from_base_suite_setup(request):
     else:
         log_info("Using document storage for sync meta data")
         persist_cluster_config_environment_prop(cluster_config, 'xattrs_enabled', False)
+
+    try:
+        server_version
+    except NameError:
+        log_info("Server version is not provided")
+        persist_cluster_config_environment_prop(cluster_config, 'server_version', "")
+    else:
+        log_info("Running test with server version {}".format(server_version))
+        persist_cluster_config_environment_prop(cluster_config, 'server_version', server_version)
+
+    try:
+        sync_gateway_version
+    except NameError:
+        log_info("Sync gateway version is not provided")
+        persist_cluster_config_environment_prop(cluster_config, 'sync_gateway_version', "")
+    else:
+        log_info("Running test with sync_gateway version {}".format(sync_gateway_version))
+        persist_cluster_config_environment_prop(cluster_config, 'sync_gateway_version', sync_gateway_version)
 
     sg_config = sync_gateway_config_path_for_mode("sync_gateway_default_functional_tests", mode)
 
