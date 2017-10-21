@@ -2,7 +2,7 @@
 - name: SYNC GATEWAY | Stop sync_gateway service
   become: yes
   service: name=sync_gateway state=stopped
-  when: ansible_distribution == "CentOS" and ansible_distribution_major_version == "7"
+  when: (ansible_distribution == "CentOS" and ansible_distribution_major_version == "7") or (ansible_distribution == "Amazon")
 
 - name: SYNC GATEWAY | Stop sync_gateway for CentOS 6
   become: yes

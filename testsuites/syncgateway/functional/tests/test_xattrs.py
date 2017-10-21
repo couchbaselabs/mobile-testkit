@@ -31,7 +31,6 @@ SG_OP_SLEEP = 0.001
 SDK_OP_SLEEP = 0.05
 
 
-@pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.xattrs
 @pytest.mark.session
@@ -153,7 +152,6 @@ def test_olddoc_nil(params_from_base_test_setup, sg_conf_name):
     assert len(errors) == 0
 
 
-@pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.xattrs
 @pytest.mark.changes
@@ -387,7 +385,6 @@ def test_on_demand_import_of_external_updates(params_from_base_test_setup, sg_co
     assert sg_updated_rev.startswith("3-")
 
 
-@pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.xattrs
 @pytest.mark.session
@@ -512,7 +509,6 @@ def test_offline_processing_of_external_updates(params_from_base_test_setup, sg_
     sg_client.verify_docs_in_changes(url=sg_url, db=sg_db, expected_docs=docs_to_verify_in_changes, auth=seth_auth)
 
 
-@pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.xattrs
 @pytest.mark.session
@@ -809,7 +805,6 @@ def test_purge(params_from_base_test_setup, sg_conf_name, use_multiple_channels)
         )
 
 
-@pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.xattrs
 @pytest.mark.changes
@@ -908,7 +903,6 @@ def test_sdk_does_not_see_sync_meta(params_from_base_test_setup, sg_conf_name):
             assert att_bytes == local_bytes
 
 
-@pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.xattrs
 @pytest.mark.changes
@@ -1115,7 +1109,6 @@ def test_sg_sdk_interop_unique_docs(params_from_base_test_setup, sg_conf_name):
     assert len(sdk_doc_delete_scratch_pad) == 0
 
 
-@pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.xattrs
 @pytest.mark.changes
@@ -1362,7 +1355,6 @@ def test_sg_sdk_interop_shared_docs(params_from_base_test_setup,
     verify_sdk_deletes(sdk_client, all_doc_ids)
 
 
-@pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.xattrs
 @pytest.mark.changes
@@ -1997,7 +1989,6 @@ def verify_doc_ids_in_sdk_get_multi(response, expected_number_docs, expected_ids
     assert len(expected_ids_scratch_pad) == 0
 
 
-@pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.xattrs
 @pytest.mark.changes
