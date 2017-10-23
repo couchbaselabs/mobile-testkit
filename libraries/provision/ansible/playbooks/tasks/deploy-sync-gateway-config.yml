@@ -1,10 +1,10 @@
 - name: SYNC GATEWAY | Copy sync gateway config to host
   become: yes
-  template: src={{ sync_gateway_config_filepath }} dest=/opt/sync_gateway/etc/sync_gateway.json owner=sync_gateway group=sync_gateway mode=0644 force=true
+  template: src={{ sync_gateway_config_filepath }} dest=/home/sync_gateway/syn_gateway.json owner=sync_gateway group=sync_gateway mode=0644 force=true
 
 - name: SYNC GATEWAY | Check deployed config
   become: yes
-  shell: cat /opt/sync_gateway/etc/sync_gateway.json
+  shell: cat /home/sync_gateway/syn_gateway.json
   register: out
 
 - name: SYNC GATEWAY | Print deployed config
