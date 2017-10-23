@@ -58,6 +58,48 @@ class LiteServMacOSX(LiteServBase):
         os.chmod(binary_path, 0755)
         log_info("LiteServ: {}".format(binary_path))
 
+    def download_Version(self, version_build):
+        """
+        1. Check to see if package is downloaded already. If so, return
+        2. Download the LiteServ package from latest builds to 'deps/binaries'
+        3. Unzip the packages and make the binary executable
+        """
+        self.version_build = version_build
+        package_name = "couchbase-lite-macosx-enterprise_{}.zip".format(self.version_build)
+
+        # Skip download if packages is already downloaded
+        expected_binary = "{}/couchbase-lite-macosx-enterprise_{}/LiteServ".format(BINARY_DIR, self.version_build)
+        if os.path.isfile(expected_binary):
+            log_info("Package already downloaded: {}".format(expected_binary))
+            return
+
+        version, build = version_and_build(self.version_build)
+
+        if version == "1.2.0":
+            package_url = "{}/couchbase-lite-ios/release/{}/macosx/{}/{}".format(LATEST_BUILDS, version, self.version_build, package_name)
+        else:
+            package_url = "{}/couchbase-lite-ios/{}/macosx/{}/{}".format(LATEST_BUILDS, version, build, package_name)
+
+        # Download package to deps/binaries
+        log_info("Downloading: {}".format(package_url))
+        resp = requests.get(package_url)
+        resp.raise_for_status()
+        with open("{}/{}".format(BINARY_DIR, package_name), "wb") as f:
+            f.write(resp.content)
+
+        # Unzip package
+        directory_name = package_name.replace(".zip", "")
+        with ZipFile("{}/{}".format(BINARY_DIR, package_name)) as zip_f:
+            zip_f.extractall("{}/{}".format(BINARY_DIR, directory_name))
+
+        # Remove .zip
+        os.remove("{}/{}".format(BINARY_DIR, package_name))
+
+        # Make binary executable
+        binary_path = "{}/{}/LiteServ".format(BINARY_DIR, directory_name)
+        os.chmod(binary_path, 0755)
+        log_info("LiteServ: {}".format(binary_path))
+
     def install(self):
         """
         Noop on Mac OSX. The LiteServ is a commandline binary

@@ -56,6 +56,31 @@ class LiteServAndroid(LiteServBase):
         version, build = version_and_build(self.version_build)
         
 
+        if version == "1.2.1":
+            package_name = "couchbase-lite-android-liteserv-SQLite-{}-debug.apk".format(self.version_build)
+        else:
+            if self.storage_engine == "SQLite":
+                package_name = "couchbase-lite-android-liteserv-SQLite-{}-debug.apk".format(self.version_build)
+            else:
+                package_name = "couchbase-lite-android-liteserv-SQLCipher-ForestDB-Encryption-{}-debug.apk".format(self.version_build)
+
+        expected_binary_path = "{}/{}".format(BINARY_DIR, package_name)
+        if os.path.isfile(expected_binary_path):
+            log_info("Package is already downloaded. Skipping.")
+            return
+
+        # Package not downloaded, proceed to download from latest builds
+        if version == "1.2.1":
+            url = "{}/couchbase-lite-android/release/{}/{}/{}".format(LATEST_BUILDS, version, self.version_build, package_name)
+        else:
+            url = "{}/couchbase-lite-android/{}/{}/{}".format(LATEST_BUILDS, version, build, package_name)
+
+        log_info("Downloading {} -> {}/{}".format(url, BINARY_DIR, package_name))
+        resp = requests.get(url)
+        resp.raise_for_status()
+        with open("{}/{}".format(BINARY_DIR, package_name), "wb") as f:
+            f.write(resp.content)
+            
     def install(self):
         """Install the apk to running Android device or emulator"""
 

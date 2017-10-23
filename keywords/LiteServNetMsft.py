@@ -66,6 +66,25 @@ class LiteServNetMsft(LiteServBase):
         if status != 0:
             raise LiteServError("Failed to download LiteServ package on remote machine")
 
+    def download_Version(self, version_build):
+        """
+        1. Downloads the LiteServ.zip package from latestbuild to the remote Windows host to Desktop\LiteServ\
+        2. Extracts the package and removes the zip
+        """
+        self.version_build = version_build
+        version, build = version_and_build(self.version_build)
+        download_url = "{}/couchbase-lite-net/{}/{}/LiteServ.zip".format(LATEST_BUILDS, version, build)
+        package_name = "couchbase-lite-net-msft-{}-liteserv".format(self.version_build)
+
+        # Download LiteServ via Ansible on remote machine
+        status = self.ansible_runner.run_ansible_playbook("download-liteserv-msft.yml", extra_vars={
+            "download_url": download_url,
+            "package_name": package_name
+        })
+
+        if status != 0:
+            raise LiteServError("Failed to download LiteServ package on remote machine")
+
     def install(self):
         """
         Installs needed packages on Windows host and removes any existing service wrappers for LiteServ
