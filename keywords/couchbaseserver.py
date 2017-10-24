@@ -312,7 +312,7 @@ class CouchbaseServer:
         """
 
         # Leave 20% of RAM available for the underlying OS
-        ram_multiplier = 0.60
+        ram_multiplier = 0.80
 
         # Needed for N1QL indexing overhead. This enables us to use N1QL in the Couchbase
         # python SDK for direct validation in Couchbase server in some of the functional tests

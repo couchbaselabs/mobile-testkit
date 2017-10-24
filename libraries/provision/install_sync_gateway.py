@@ -16,10 +16,10 @@ class SyncGatewayConfig:
     def __init__(self,
                  commit,
                  version_number,
+                 build_number,
                  config_path,
                  build_flags,
-                 skip_bucketcreation,
-                 build_number=None):
+                 skip_bucketcreation):
 
         self._version_number = version_number
         self._build_number = build_number
@@ -212,35 +212,6 @@ def get_buckets_from_sync_gateway_config(sync_gateway_config_path):
     if os.path.exists(temp_config_path):
         os.remove(temp_config_path)
     return bucket_name_set
-
-
-def resolve_sg_mobile_url(sg_version):
-    """
-    Resolve a download URL for the corresponding package to given
-    version on http://cbmobile-packages.s3.amazonaws.com (an S3 bucket
-    for couchbase mobile that mirrors released couchbase server versions)
-
-    Given:
-
-    version - the version without any build number information, eg 4.5.0
-
-    Return the base_url of the package download URL (everything except the filename)
-
-    """
-    released_versions = {
-        "1.2.0": "83",
-        "1.2.1": "4",
-        "1.3.0": "274",
-        "1.3.1": "16",
-        "1.4.0": "2",
-        "1.4.1": "3",
-        "1.5.0": "594"
-    }
-    build_number = released_versions[sg_version]
-    base_url = "http://cbmobile-packages.s3.amazonaws.com"
-    sg_package_name = "couchbase-sync-gateway-enterprise_{}-{}_x86_64.rpm".format(sg_version, build_number)
-    sgaccel_package_name = "couchbase-sg-accel-enterprise_{}-{}_x86_64.rpm".format(sg_version, build_number)
-    return base_url, sg_package_name, sgaccel_package_name
 
 
 if __name__ == "__main__":
