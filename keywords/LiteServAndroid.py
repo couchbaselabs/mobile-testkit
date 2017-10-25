@@ -46,6 +46,15 @@ class LiteServAndroid(LiteServBase):
         resp.raise_for_status()
         with open("{}/{}".format(BINARY_DIR, package_name), "wb") as f:
             f.write(resp.content)
+    
+    def download_Version(self, version_build):
+        """
+        1. Download specified version of apk. If so, return
+        2. Download the LiteServ .apk from latest builds to 'deps/binaries'
+        """
+        self.version_build = version_build 
+        version, build = version_and_build(self.version_build)
+        
 
     def install(self):
         """Install the apk to running Android device or emulator"""
@@ -67,7 +76,7 @@ class LiteServAndroid(LiteServBase):
             if count > max_retries:
                 raise LiteServError(".apk install failed!")
 
-            output = subprocess.check_output(["adb", "install", apk_path])
+            output = subprocess.check_output(["adb", "install", "-r", apk_path])
             if "INSTALL_FAILED_ALREADY_EXISTS" in output or "INSTALL_FAILED_UPDATE_INCOMPATIBLE" in output:
                 # Apk may be installed, remove and retry install
                 self.remove()

@@ -32,7 +32,9 @@ def test_upgrade(setup_client_syncgateway_test):
     device_enabled = setup_client_syncgateway_test["device_enabled"]
     liteserv_platform = setup_client_syncgateway_test["liteserv_platform"]
     liteserv_version = setup_client_syncgateway_test["liteserv_version"]
-
+    
+    if liteserv_platform.lower() == "android":
+        pytest.skip('upgrade lite serv app does not work on Android, so skipping the test')
     sg_config = sync_gateway_config_path_for_mode("listener_tests/listener_tests", sg_mode)
     c = cluster.Cluster(config=cluster_config)
     c.reset(sg_config_path=sg_config)
@@ -74,7 +76,6 @@ def test_upgrade(setup_client_syncgateway_test):
     )
     assert len(docs) == num_docs
     client.verify_docs_present(url=ls_url, db=ls_db, expected_docs=docs, timeout=240)
-
 
     # Now download with latest  version and verify docs still exits
     liteserv.download_Version(liteserv_version)
