@@ -70,7 +70,7 @@ def setup_client_syncgateway_suite(request):
         liteserv.install_device()
     else:
         liteserv.install()
-    
+
     cluster_config = "{}/base_{}".format(CLUSTER_CONFIGS_DIR, sync_gateway_mode)
 
     try:
@@ -124,7 +124,7 @@ def setup_client_syncgateway_suite(request):
     log_info("Tearing down suite ...")
     if not (device_enabled and liteserv_platform == "ios"):
         liteserv.remove()
-    
+
 
 # Passed to each testcase, run for each test_* method in client_sg folder
 @pytest.fixture(scope="function")
@@ -177,7 +177,7 @@ def setup_client_syncgateway_test(request, setup_client_syncgateway_suite):
 
     client.delete_databases(ls_url)
     liteserv.stop()
-    
+
     # if the test failed pull logs
     if request.node.rep_call.failed:
         logging_helper = Logging()

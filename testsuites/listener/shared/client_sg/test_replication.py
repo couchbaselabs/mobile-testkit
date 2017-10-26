@@ -175,7 +175,7 @@ def test_initial_pull_replication_background_apprun(setup_client_syncgateway_tes
     c.reset(sg_config_path=sg_config)
 
     # No command to push the app to background on device, so avoid test to run on ios device
-    if((liteserv_platform.lower() != "ios" and liteserv_platform.lower() != "android") or 
+    if((liteserv_platform.lower() != "ios" and liteserv_platform.lower() != "android") or
        (liteserv_platform.lower() == "ios" and device_enabled)):
         pytest.skip('This test only valid for mobile')
     log_info("ls_url: {}".format(ls_url))
@@ -219,7 +219,7 @@ def test_initial_pull_replication_background_apprun(setup_client_syncgateway_tes
         client.start_replication(url=ls_url, continuous=True, from_url=sg_one_admin, from_db=sg_db, to_db=ls_db)
     else:
         client.start_replication(url=ls_url, continuous=True, from_url=sg_one_admin, from_db=sg_db, to_db=ls_db)
-        time.sleep(5) # let replication go for few seconds and then make app go background
+        time.sleep(5)  # let replication go for few seconds and then make app go background
         liteserv.close_app()
 
     # Verify docs replicated to client
