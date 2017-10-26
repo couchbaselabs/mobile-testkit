@@ -16,6 +16,7 @@ from keywords.utils import log_info
 from keywords.utils import log_r
 from keywords.constants import REGISTERED_CLIENT_DBS
 from keywords.constants import CLIENT_REQUEST_TIMEOUT
+from requests.exceptions import ConnectionError
 
 
 class LiteServiOS(LiteServBase):
@@ -78,12 +79,12 @@ class LiteServiOS(LiteServBase):
             package_name = "LiteServ-iOS-Device.app"
             app_dir = "LiteServ-iOS"
 
-        app_path = "{}/{}/{}".format(BINARY_DIR, app_dir, package_name)
-        log_info("Installing: {}".format(app_path))
+        self.app_path = "{}/{}/{}".format(BINARY_DIR, app_dir, package_name)
+        log_info("Installing: {}".format(self.app_path))
 
         # install app / launch app to connected device
         output = subprocess.check_output([
-            "ios-deploy", "--justlaunch", "--bundle", app_path
+            "ios-deploy", "--justlaunch", "--bundle", self.app_path
         ])
         log_info(output)
 
@@ -100,7 +101,7 @@ class LiteServiOS(LiteServBase):
         """Installs / launches LiteServ on iOS simulator
         Default is iPhone 7 Plus
         """
-        device = "iPhone-7-Plus"
+        self.device = "iPhone-7-Plus"
         package_name = "LiteServ-iOS.app"
         app_dir = "LiteServ-iOS"
 
@@ -108,15 +109,15 @@ class LiteServiOS(LiteServBase):
             package_name = "LiteServ-iOS-SQLCipher.app"
             app_dir = "LiteServ-iOS-SQLCipher"
 
-        app_path = "{}/{}/{}".format(BINARY_DIR, app_dir, package_name)
+        self.app_path = "{}/{}/{}".format(BINARY_DIR, app_dir, package_name)
         output = subprocess.check_output([
-            "ios-sim", "--devicetypeid", device, "start"
+            "ios-sim", "--devicetypeid", self.device, "start"
         ])
 
-        log_info("Installing: {}".format(app_path))
+        log_info("Installing: {}".format(self.app_path))
         # Launch the simulator and install the app
         output = subprocess.check_output([
-            "ios-sim", "--devicetypeid", device, "install", app_path, "--exit"
+            "ios-sim", "--devicetypeid", self.device, "install", self.app_path, "--exit"
         ])
 
         log_info(output)
@@ -217,7 +218,7 @@ class LiteServiOS(LiteServBase):
 
         data = {}
         encryption_enabled = False
-        device = "iPhone-7-Plus"
+        self.device = "iPhone-7-Plus"
         self.logfile_name = logfile_name
 
         package_name = "LiteServ-iOS.app"
@@ -227,13 +228,13 @@ class LiteServiOS(LiteServBase):
             package_name = "LiteServ-iOS-SQLCipher.app"
             app_dir = "LiteServ-iOS-SQLCipher"
 
-        app_path = "{}/{}/{}".format(BINARY_DIR, app_dir, package_name)
+        self.app_path = "{}/{}/{}".format(BINARY_DIR, app_dir, package_name)
 
         # Without --exit, ios-sim blocks
         # With --exit, --log has no effect
         # subprocess.Popen didn't launch the app
         output = subprocess.check_output([
-            "ios-sim", "--devicetypeid", device, "launch", app_path, "--exit"
+            "ios-sim", "--devicetypeid", self.device, "launch", self.app_path, "--exit"
         ])
 
         log_info(output)
@@ -293,14 +294,14 @@ class LiteServiOS(LiteServBase):
             package_name = "LiteServ-iOS-SQLCipher-Device.app"
             app_dir = "LiteServ-iOS-SQLCipher"
 
-        app_path = "{}/{}/{}".format(BINARY_DIR, app_dir, package_name)
+        self.app_path = "{}/{}/{}".format(BINARY_DIR, app_dir, package_name)
 
         # Without --exit, ios-sim blocks
         # With --exit, --log has no effect
         # subprocess.Popen didn't launch the app
 
         output = subprocess.check_output([
-            "ios-deploy", "--justlaunch", "--bundle", app_path
+            "ios-deploy", "--justlaunch", "--bundle", self.app_path
         ])
         log_info(output)
 
@@ -366,11 +367,18 @@ class LiteServiOS(LiteServBase):
         if self._verify_running:
             log_info("Stopping LiteServ: http://{}:{}".format(self.host, self.port))
             log_info("Stopping LiteServ: {}".format(self.liteserv_admin_url))
+            counter = 0
+            while True:
+                try:
+                    resp = self.session.put("{}/stop".format(self.liteserv_admin_url))
+                    break
+                except ConnectionError:
+                    if (counter < 1):
+                        self.open_app()
+                        counter += 1
 
-            resp = self.session.put("{}/stop".format(self.liteserv_admin_url))
             log_r(resp)
             resp.raise_for_status()
-
             # Using --exit in ios-sim means, --log has no effect
             # Have to separately copy the simulator logs
             if self.logfile_name and self.device_id:
@@ -384,6 +392,27 @@ class LiteServiOS(LiteServBase):
             log_info("LiteServ is not running, so no need to stop")
         self._verify_not_running()
 
+    def _verify_running(self):
+        """
+        Return true if it is running or else false
+        Verifys that the endpoint does not return a 200 from a running service
+        """
+        try:
+            self.session.get("http://{}:{}/".format(self.host, self.port))
+        except ConnectionError:
+            # Expecting connection error if LiteServ is not running on the port
+            return False
+
+        return True
+
     def close_app(self):
         cur_dir = os.path.dirname(os.path.abspath(__file__))
         subprocess.check_output(["osascript", "{}/../utilities/sim_close_app.scpt".format(cur_dir)])
+
+    def open_app(self):
+        if(self.host == "localhost"):
+            output = subprocess.check_output(["ios-sim", "--devicetypeid", self.device, "launch", self.app_path, "--exit"])
+        else:
+            output = subprocess.check_output(["ios-deploy", "--justlaunch", "--bundle", self.app_path])
+        log_info("output of open app is {}".format(output))
+

@@ -24,7 +24,7 @@ def pytest_addoption(parser):
     parser.addoption("--sync-gateway-mode", action="store", help="sync-gateway-mode: the mode of sync_gateway to run tests against, channel_cache ('cc') or distributed_index ('di')")
     parser.addoption("--server-version", action="store", help="server-version: version of Couchbase Server to install and run tests against")
     parser.addoption("--xattrs", action="store_true", help="Use xattrs for sync meta storage. Sync Gateway 1.5.0+ and Couchbase Server 5.0+")
-    parser.addoption("--device", action="store_true", help="Enable device if you want to run it on device")
+    parser.addoption("--device", action="store_true", help="Enable device if you want to run it on device", default=False)
 
 
 # This will get called once before the first test that
@@ -70,7 +70,7 @@ def setup_client_syncgateway_suite(request):
         liteserv.install_device()
     else:
         liteserv.install()
-
+    
     cluster_config = "{}/base_{}".format(CLUSTER_CONFIGS_DIR, sync_gateway_mode)
 
     try:
@@ -124,7 +124,7 @@ def setup_client_syncgateway_suite(request):
     log_info("Tearing down suite ...")
     if not (device_enabled and liteserv_platform == "ios"):
         liteserv.remove()
-
+    
 
 # Passed to each testcase, run for each test_* method in client_sg folder
 @pytest.fixture(scope="function")
@@ -160,7 +160,6 @@ def setup_client_syncgateway_test(request, setup_client_syncgateway_suite):
 
     sg_url = cluster_hosts["sync_gateways"][0]["public"]
     sg_admin_url = cluster_hosts["sync_gateways"][0]["admin"]
-
     # Yield values to test case via fixture argument
     yield {
         "cluster_config": cluster_config,
@@ -170,14 +169,15 @@ def setup_client_syncgateway_test(request, setup_client_syncgateway_suite):
         "sg_admin_url": sg_admin_url,
         "xattrs_enabled": xattrs_enabled,
         "liteserv": liteserv,
-        "liteserv_platform": liteserv_platform
+        "liteserv_platform": liteserv_platform,
+        "device_enabled": device_enabled
     }
 
     log_info("Tearing down test")
 
     client.delete_databases(ls_url)
     liteserv.stop()
-
+    
     # if the test failed pull logs
     if request.node.rep_call.failed:
         logging_helper = Logging()

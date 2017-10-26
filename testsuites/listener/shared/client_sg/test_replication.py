@@ -173,7 +173,7 @@ def test_initial_pull_replication_background_apprun(setup_client_syncgateway_tes
     c.reset(sg_config_path=sg_config)
 
     # No command to push the app to background on device, so avoid test to run on ios device
-    if((liteserv_platform.lower != "ios" and liteserv_platform.lower != "android") or (liteserv_platform.lower == "ios" and device_enabled)):
+    if((liteserv_platform.lower() != "ios" and liteserv_platform.lower() != "android") or (liteserv_platform.lower() == "ios" and device_enabled)):
         pytest.skip('This test only valid for mobile')
     log_info("ls_url: {}".format(ls_url))
     log_info("sg_one_admin: {}".format(sg_one_admin))
@@ -361,7 +361,7 @@ def test_push_replication_with_backgroundApp(setup_client_syncgateway_test, num_
     c.reset(sg_config_path=sg_config)
 
     # No command to push the app to background on device, so avoid test to run on ios device
-    if((liteserv_platform.lower != "ios" and liteserv_platform.lower != "android") or (liteserv_platform.lower == "ios" and device_enabled)):
+    if((liteserv_platform.lower() != "ios" and liteserv_platform.lower() != "android") or (liteserv_platform.lower() == "ios" and device_enabled)):
         pytest.skip('This test only valid for mobile')
     log_info("ls_url: {}".format(ls_url))
     log_info("sg_one_admin: {}".format(sg_one_admin))
