@@ -148,7 +148,7 @@ def setup_client_syncgateway_test(request, setup_client_syncgateway_suite):
     client = MobileRestClient()
 
     # Start LiteServ and delete any databases
-    log_info("Listener going to start and launch,")
+    log_info("Starting LiteServ...")
     if device_enabled and liteserv_platform == "ios":
         ls_url = liteserv.start_device("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(liteserv).__name__, test_name, datetime.datetime.now()))
     else:

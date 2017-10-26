@@ -10,12 +10,13 @@ from keywords.document import create_docs
 @pytest.mark.listener
 def test_view_query_performance(setup_client_syncgateway_test):
     """
-     Run this test when new iOS version arrives to make sure CBL query is not diminishing
+    @summary
+     Run this test when new iOS version arrives to make sure CBL query performance is not diminishing
     1. Add 100000 docs to the client with content
     2. Create design doc version 1 to fetch doc._id, doc._rev for docs with content
     3. Update docs 3 times which gets revision number 4-
     4. Run a query and check for 100000 expected docs with design doc version 1
-    3. Verify the performance of the view query did not diminish.
+    3. Verify view query finished less than 5 seconds
     """
 
     log_info("Running 'test_design_doc_update'")
@@ -27,7 +28,7 @@ def test_view_query_performance(setup_client_syncgateway_test):
 
     ls_url = setup_client_syncgateway_test["ls_url"]
 
-    num_content_docs_per_db = 10000
+    num_content_docs_per_db = 100000
     d_doc_name = "dd"
     ls_db = client.create_database(ls_url, name="ls_db")
 
