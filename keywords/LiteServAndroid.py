@@ -206,3 +206,7 @@ class LiteServAndroid(LiteServBase):
         self.logfile.close()
         self.process.kill()
         self.process.wait()
+
+    def close_app(self):
+        output = subprocess.check_output(["adb", "shell", "input", "keyevent ", "3"])
+        log_info(output)

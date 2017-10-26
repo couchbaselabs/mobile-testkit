@@ -145,17 +145,15 @@ def test_initial_pull_replication(setup_client_syncgateway_test, continuous):
 @pytest.mark.parametrize("num_docs, need_attachments, replication_after_backgroundApp", [
     (1000, True, False),
     (10000, False, False),
-    (10000, False, False),
-    (100000, False, False),
     (100000, False, False),
     (100000, False, True)
 ])
 def test_initial_pull_replication_background_apprun(setup_client_syncgateway_test, num_docs, need_attachments, replication_after_backgroundApp):
     """
-    1. Prepare sync-gateway to have 10000 documents.
-    2. Create a single shot / continuous pull replicator and to pull the docs into a database.
-    3. Verify if all of the docs get pulled.
-    Referenced issue: couchbase/couchbase-lite-android#955.
+    1. Prepare LiteServ to have provided num of  documents.
+    2. Start continous pull replication to pull the docs from a sync_gateway database.
+    3. While docs are getting replcate , push the app to the background
+    4. Verify if all of the docs got pulled and replication completed when app goes background
     """
 
     sg_db = "db"
@@ -168,12 +166,14 @@ def test_initial_pull_replication_background_apprun(setup_client_syncgateway_tes
     sg_one_public = setup_client_syncgateway_test["sg_url"]
     liteserv = setup_client_syncgateway_test["liteserv"]
     liteserv_platform = setup_client_syncgateway_test["liteserv_platform"]
+    device_enabled = setup_client_syncgateway_test["device_enabled"]
 
     sg_config = sync_gateway_config_path_for_mode("listener_tests/listener_tests", sg_mode)
     c = cluster.Cluster(config=cluster_config)
     c.reset(sg_config_path=sg_config)
 
-    if liteserv_platform != "ios":
+    # No command to push the app to background on device, so avoid test to run on ios device
+    if((liteserv_platform.lower != "ios" and liteserv_platform.lower != "android") or (liteserv_platform.lower == "ios" and device_enabled)):
         pytest.skip('This test only valid for mobile')
     log_info("ls_url: {}".format(ls_url))
     log_info("sg_one_admin: {}".format(sg_one_admin))
@@ -338,8 +338,9 @@ def test_initial_push_replication(setup_client_syncgateway_test, continuous):
 def test_push_replication_with_backgroundApp(setup_client_syncgateway_test, num_docs, need_attachments, replication_after_backgroundApp):
     """
     1. Prepare LiteServ to have 10000 documents.
-    2. Create a single shot push / continuous replicator and to push the docs into a sync_gateway database.
-    3. Verify if all of the docs get pushed.
+    2. Start continous push replication to push the docs into a sync_gateway database.
+    3. While docs are getting replcate , push the app to the background
+    4. Verify if all of the docs get pushed and replication continous when app goes background
     """
 
     sg_db = "db"
@@ -353,11 +354,14 @@ def test_push_replication_with_backgroundApp(setup_client_syncgateway_test, num_
     sg_one_public = setup_client_syncgateway_test["sg_url"]
     liteserv = setup_client_syncgateway_test["liteserv"]
     liteserv_platform = setup_client_syncgateway_test["liteserv_platform"]
+    device_enabled = setup_client_syncgateway_test["device_enabled"]
 
     sg_config = sync_gateway_config_path_for_mode("listener_tests/listener_tests", sg_mode)
     c = cluster.Cluster(config=cluster_config)
     c.reset(sg_config_path=sg_config)
-    if liteserv_platform != "ios":
+
+    # No command to push the app to background on device, so avoid test to run on ios device
+    if((liteserv_platform.lower != "ios" and liteserv_platform.lower != "android") or (liteserv_platform.lower == "ios" and device_enabled)):
         pytest.skip('This test only valid for mobile')
     log_info("ls_url: {}".format(ls_url))
     log_info("sg_one_admin: {}".format(sg_one_admin))
