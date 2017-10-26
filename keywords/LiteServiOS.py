@@ -367,29 +367,25 @@ class LiteServiOS(LiteServBase):
         if self._verify_running:
             log_info("Stopping LiteServ: http://{}:{}".format(self.host, self.port))
             log_info("Stopping LiteServ: {}".format(self.liteserv_admin_url))
-            counter = 0
-            while True:
-                try:
-                    resp = self.session.put("{}/stop".format(self.liteserv_admin_url))
-                    break
-                except ConnectionError:
-                    if (counter < 1):
-                        self.open_app()
-                        counter += 1
-
+            try:
+                resp = self.session.put("{}/stop".format(self.liteserv_admin_url))
+            except ConnectionError:
+                self.open_app()
+                self._wait_until_reachable(port=59850)
+                resp = self.session.put("{}/stop".format(self.liteserv_admin_url))
             log_r(resp)
             resp.raise_for_status()
-            # Using --exit in ios-sim means, --log has no effect
-            # Have to separately copy the simulator logs
-            if self.logfile_name and self.device_id:
-                home = os.environ['HOME']
-                ios_log_file = "{}/Library/Logs/CoreSimulator/{}/system.log".format(home, self.device_id)
-                copyfile(ios_log_file, self.logfile_name)
-                # Empty the simulator logs so that the next test run
-                # will only have logs for that run
-                open(ios_log_file, 'w').close()
         else:
             log_info("LiteServ is not running, so no need to stop")
+        # Using --exit in ios-sim means, --log has no effect
+        # Have to separately copy the simulator logs
+        if self.logfile_name and self.device_id:
+            home = os.environ['HOME']
+            ios_log_file = "{}/Library/Logs/CoreSimulator/{}/system.log".format(home, self.device_id)
+            copyfile(ios_log_file, self.logfile_name)
+            # Empty the simulator logs so that the next test run
+            # will only have logs for that run
+            open(ios_log_file, 'w').close()    
         self._verify_not_running()
 
     def _verify_running(self):
