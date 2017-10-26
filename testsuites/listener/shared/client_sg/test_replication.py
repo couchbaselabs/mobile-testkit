@@ -323,7 +323,7 @@ def test_initial_push_replication(setup_client_syncgateway_test, continuous):
 @pytest.mark.replication
 @pytest.mark.session
 @pytest.mark.parametrize("num_docs, need_attachments, replication_after_backgroundApp", [
-    (1000, True, False),
+    (100, True, False),
     (10000, False, False),
     (10000, False, False)
 ])
