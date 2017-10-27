@@ -212,7 +212,7 @@ def test_initial_pull_replication_background_apprun(setup_client_syncgateway_tes
                                   polling_interval=10)
 
     client.create_database(url=ls_url, name=ls_db)
-    # Start replication after app goes background. So close app first and start replication 
+    # Start replication after app goes background. So close app first and start replication
     if replication_after_backgroundApp:
         liteserv.close_app()
         time.sleep(2)
@@ -387,7 +387,7 @@ def test_push_replication_with_backgroundApp(setup_client_syncgateway_test, num_
         bulk_docs_resp += ch_bulk_docs_resp
     assert len(bulk_docs_resp) == num_docs
 
-    # Start replication after app goes background. So close app first and start replication 
+    # Start replication after app goes background. So close app first and start replication
     if replication_after_backgroundApp:
         liteserv.close_app()
         time.sleep(2)

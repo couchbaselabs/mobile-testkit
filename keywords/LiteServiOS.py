@@ -381,7 +381,7 @@ class LiteServiOS(LiteServBase):
             copyfile(ios_log_file, self.logfile_name)
             # Empty the simulator logs so that the next test run
             # will only have logs for that run
-            open(ios_log_file, 'w').close()    
+            open(ios_log_file, 'w').close()
         self._verify_not_running()
 
     def _verify_running(self):
@@ -406,4 +406,3 @@ class LiteServiOS(LiteServBase):
             subprocess.check_output(["ios-sim", "--devicetypeid", self.device, "launch", self.app_path, "--exit"])
         else:
             subprocess.check_output(["ios-deploy", "--justlaunch", "--bundle", self.app_path])
-
