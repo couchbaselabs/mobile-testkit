@@ -327,7 +327,8 @@ def test_initial_push_replication(setup_client_syncgateway_test, continuous):
     (100, True, False),
     (10000, False, False),
     (10000, False, False),
-    (10000, False, True)
+    (10000, False, True),
+    (10000, True, True)
 ])
 def test_push_replication_with_backgroundApp(setup_client_syncgateway_test, num_docs, need_attachments,
                                              replication_after_backgroundApp):
