@@ -296,10 +296,6 @@ class LiteServiOS(LiteServBase):
 
         self.app_path = "{}/{}/{}".format(BINARY_DIR, app_dir, package_name)
 
-        # Without --exit, ios-sim blocks
-        # With --exit, --log has no effect
-        # subprocess.Popen didn't launch the app
-
         output = subprocess.check_output([
             "ios-deploy", "--justlaunch", "--bundle", self.app_path
         ])
@@ -364,7 +360,7 @@ class LiteServiOS(LiteServBase):
         2. Kill the LiteServ process
         3. Verify that no service is running on http://<host>:<port>
         """
-        if self._verify_running:
+        if self._verify_running():
             log_info("Stopping LiteServ: http://{}:{}".format(self.host, self.port))
             log_info("Stopping LiteServ: {}".format(self.liteserv_admin_url))
             try:
@@ -376,7 +372,7 @@ class LiteServiOS(LiteServBase):
             log_r(resp)
             resp.raise_for_status()
         else:
-            log_info("LiteServ is not running, so no need to stop")
+            log_info("LiteServ is not running")
         # Using --exit in ios-sim means, --log has no effect
         # Have to separately copy the simulator logs
         if self.logfile_name and self.device_id:
@@ -391,7 +387,7 @@ class LiteServiOS(LiteServBase):
     def _verify_running(self):
         """
         Return true if it is running or else false
-        Verifys that the endpoint does not return a 200 from a running service
+        Verifys that the endpoint return 200 from a running service
         """
         try:
             self.session.get("http://{}:{}/".format(self.host, self.port))
@@ -407,8 +403,7 @@ class LiteServiOS(LiteServBase):
 
     def open_app(self):
         if(self.host == "localhost"):
-            output = subprocess.check_output(["ios-sim", "--devicetypeid", self.device, "launch", self.app_path, "--exit"])
+            subprocess.check_output(["ios-sim", "--devicetypeid", self.device, "launch", self.app_path, "--exit"])
         else:
-            output = subprocess.check_output(["ios-deploy", "--justlaunch", "--bundle", self.app_path])
-        log_info("output of open app is {}".format(output))
+            subprocess.check_output(["ios-deploy", "--justlaunch", "--bundle", self.app_path])
 

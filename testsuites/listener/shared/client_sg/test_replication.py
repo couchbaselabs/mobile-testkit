@@ -183,8 +183,8 @@ def test_initial_pull_replication_background_apprun(setup_client_syncgateway_tes
     log_info("sg_one_public: {}".format(sg_one_public))
 
     client = MobileRestClient()
-    client.create_user(sg_one_admin, sg_db, "seth", password="password", channels=["ABC", "NBC"])
-    session = client.create_session(sg_one_admin, sg_db, "seth")
+    client.create_user(sg_one_admin, sg_db, "testuser", password="password", channels=["ABC", "NBC"])
+    session = client.create_session(sg_one_admin, sg_db, "testuser")
 
     # Add 'number_of_sg_docs' to Sync Gateway
     bulk_docs_resp = []
@@ -211,14 +211,15 @@ def test_initial_pull_replication_background_apprun(setup_client_syncgateway_tes
     client.verify_docs_in_changes(url=sg_one_public, db=sg_db, expected_docs=bulk_docs_resp, auth=session,
                                   polling_interval=10)
 
-    # Start oneshot pull replication with app background
     client.create_database(url=ls_url, name=ls_db)
+    # Start replication after app goes background. So close app first and start replication 
     if replication_after_backgroundApp:
         liteserv.close_app()
         time.sleep(2)
-        client.start_replication(url=ls_url, continuous=True, from_url=sg_one_admin, from_db=sg_db, to_db=ls_db)
-    else:
-        client.start_replication(url=ls_url, continuous=True, from_url=sg_one_admin, from_db=sg_db, to_db=ls_db)
+
+    client.start_replication(url=ls_url, continuous=True, from_url=sg_one_admin, from_db=sg_db, to_db=ls_db)
+    # This is for the case to start replication first and then make put app in background
+    if not replication_after_backgroundApp:
         time.sleep(5)  # let replication go for few seconds and then make app go background
         liteserv.close_app()
 
@@ -339,7 +340,7 @@ def test_push_replication_with_backgroundApp(setup_client_syncgateway_test, num_
 
     sg_db = "db"
     ls_db = "ls_db"
-    seth_channels = ["ABC", "NBC"]
+    channels = ["ABC", "NBC"]
 
     cluster_config = setup_client_syncgateway_test["cluster_config"]
     sg_mode = setup_client_syncgateway_test["sg_mode"]
@@ -357,14 +358,14 @@ def test_push_replication_with_backgroundApp(setup_client_syncgateway_test, num_
     # No command to push the app to background on device, so avoid test to run on ios device
     if((liteserv_platform.lower() != "ios" and liteserv_platform.lower() != "android") or
        (liteserv_platform.lower() == "ios" and device_enabled)):
-        pytest.skip('This test only valid for mobile')
+        pytest.skip('This test only valid for mobile and cannot run on iOS device')
     log_info("ls_url: {}".format(ls_url))
     log_info("sg_one_admin: {}".format(sg_one_admin))
     log_info("sg_one_public: {}".format(sg_one_public))
 
     client = MobileRestClient()
-    client.create_user(sg_one_admin, sg_db, "seth", password="password", channels=seth_channels)
-    session = client.create_session(sg_one_admin, sg_db, "seth")
+    client.create_user(sg_one_admin, sg_db, "testuser", password="password", channels=channels)
+    session = client.create_session(sg_one_admin, sg_db, "testuser")
 
     client.create_database(url=ls_url, name=ls_db)
     bulk_docs_resp = []
@@ -373,10 +374,10 @@ def test_push_replication_with_backgroundApp(setup_client_syncgateway_test, num_
             doc_id_prefix="seeded_doc",
             number=num_docs,
             attachments_generator=attachment.generate_2_png_100_100,
-            channels=seth_channels
+            channels=channels
         )
     else:
-        doc_bodies = document.create_docs(doc_id_prefix='seeded_doc', number=num_docs, channels=seth_channels)
+        doc_bodies = document.create_docs(doc_id_prefix='seeded_doc', number=num_docs, channels=channels)
 
     # liteserv cannot handle bulk docs more than 100000, if you run more than 100000, it will chunk the
     # docs into set of 100000 and call add bulk docs
@@ -386,14 +387,15 @@ def test_push_replication_with_backgroundApp(setup_client_syncgateway_test, num_
         bulk_docs_resp += ch_bulk_docs_resp
     assert len(bulk_docs_resp) == num_docs
 
-    # Start push replication with app background
+    # Start replication after app goes background. So close app first and start replication 
     if replication_after_backgroundApp:
         liteserv.close_app()
-        time.sleep(2)  # Start replication after couple of seconds of app goes background
-        client.start_replication(url=ls_url, continuous=True, from_db=ls_db, to_url=sg_one_admin, to_db=sg_db)
-    else:
-        client.start_replication(url=ls_url, continuous=True, from_db=ls_db, to_url=sg_one_admin, to_db=sg_db)
-        time.sleep(3)  # Have replication go for few seconds and then make the app go to background
+        time.sleep(2)
+
+    client.start_replication(url=ls_url, continuous=True, from_db=ls_db, to_url=sg_one_admin, to_db=sg_db)
+    # This is for the case to start replication first and then make put app in background
+    if not replication_after_backgroundApp:
+        time.sleep(3)  # let replication go for few seconds and then make app go background
         liteserv.close_app()
 
     # Verify docs replicated to sync_gateway
