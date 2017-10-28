@@ -12,7 +12,6 @@ from keywords import document
 from keywords import attachment
 
 
-@pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.attachments
 @pytest.mark.session

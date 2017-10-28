@@ -61,7 +61,6 @@ def test_online_default_rest(params_from_base_test_setup, sg_conf_name, num_docs
 
 
 # Scenario 2
-@pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.onlineoffline
 @pytest.mark.basicauth
@@ -103,7 +102,6 @@ def test_offline_false_config_rest(params_from_base_test_setup, sg_conf_name, nu
 
 
 # Scenario 3
-@pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.onlineoffline
 @pytest.mark.basicauth
@@ -152,7 +150,6 @@ def test_online_to_offline_check_503(params_from_base_test_setup, sg_conf_name, 
 
 # Scenario 5 - continuous
 # NOTE: Was disabled for di
-@pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.onlineoffline
 @pytest.mark.basicauth
@@ -230,7 +227,6 @@ def test_online_to_offline_changes_feed_controlled_close_continuous(params_from_
 
 
 # Scenario 6 - longpoll
-@pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.onlineoffline
 @pytest.mark.changes
@@ -296,7 +292,6 @@ def test_online_to_offline_continous_changes_feed_controlled_close_sanity_mulitp
 
 
 # Scenario 6 - longpoll
-@pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.onlineoffline
 @pytest.mark.changes
@@ -359,7 +354,6 @@ def test_online_to_offline_changes_feed_controlled_close_longpoll_sanity(params_
 
 
 # Scenario 6 - longpoll
-@pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.onlineoffline
 @pytest.mark.changes
@@ -431,7 +425,6 @@ def test_online_to_offline_longpoll_changes_feed_controlled_close_sanity_mulitpl
 
 # Scenario 6 - longpoll
 # NOTE: Was disabled for di
-@pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.onlineoffline
 @pytest.mark.changes
@@ -535,7 +528,6 @@ def test_online_to_offline_changes_feed_controlled_close_longpoll(params_from_ba
 
 # Scenario 6
 # NOTE: Was disabled for di
-@pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.onlineoffline
 @pytest.mark.basicauth
@@ -584,7 +576,6 @@ def test_offline_true_config_bring_online(params_from_base_test_setup, sg_conf_n
 
 
 # Scenario 14
-@pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.onlineoffline
 @pytest.mark.basicauth
@@ -630,7 +621,6 @@ def test_db_offline_tap_loss_sanity(params_from_base_test_setup, sg_conf_name, n
 
 # Scenario 11
 # NOTE: Was disabled for di
-@pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.onlineoffline
 @pytest.mark.basicauth
@@ -685,7 +675,6 @@ def test_db_delayed_online(params_from_base_test_setup, sg_conf_name, num_docs):
     assert len(errors) == 0
 
 
-@pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.onlineoffline
 @pytest.mark.basicauth
