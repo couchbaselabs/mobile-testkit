@@ -385,6 +385,7 @@ def test_on_demand_import_of_external_updates(params_from_base_test_setup, sg_co
     assert sg_updated_rev.startswith("3-")
 
 
+@pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.xattrs
 @pytest.mark.session
