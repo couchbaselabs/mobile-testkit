@@ -23,8 +23,6 @@ from keywords.constants import RESULTS_DIR
 
 # Add custom arguments for executing tests in this directory
 def pytest_addoption(parser):
-
-
     parser.addoption("--ci",
                      action="store_true",
                      help="If set, will target larger cluster (3 backing servers instead of 1, 2 accels if in di mode)")
