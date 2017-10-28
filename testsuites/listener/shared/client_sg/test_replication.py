@@ -145,8 +145,9 @@ def test_initial_pull_replication(setup_client_syncgateway_test, continuous):
 @pytest.mark.parametrize("num_docs, need_attachments, replication_after_backgroundApp", [
     (1000, True, False),
     (10000, False, False),
-    (100000, False, False),
-    (100000, False, True)
+    (10000, False, False),
+    (10000, False, True),
+    (1000, True, True)
 ])
 def test_initial_pull_replication_background_apprun(setup_client_syncgateway_test, num_docs, need_attachments,
                                                     replication_after_backgroundApp):
