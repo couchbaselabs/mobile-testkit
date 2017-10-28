@@ -1,4 +1,4 @@
-- debug: msg="Starting sync_gateway with config {{ sync_gateway_config_filepath }}"
+- debug: msg="Starting sync_gateway"
 
 - name: SYNC GATEWAY | Start sync gateway service
   become: yes
