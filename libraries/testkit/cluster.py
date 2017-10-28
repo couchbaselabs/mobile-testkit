@@ -303,17 +303,17 @@ class Cluster:
 
     def stop_sg_and_accel(self):
 
-        ansible_runner = AnsibleRunner(self._cluster_config)
-
         # Stop sync_gateways
         log_info(">>> Stopping sync_gateway")
-        status = ansible_runner.run_ansible_playbook("stop-sync-gateway.yml")
-        assert status == 0, "Failed to stop sync gateway"
+        for sg in self.sync_gateways:
+            status = sg.stop()
+            assert status == 0, "Failed to stop sync gateway for host {}".format(sg.hostname)
 
         # Stop sync_gateway accels
         log_info(">>> Stopping sg_accel")
-        status = ansible_runner.run_ansible_playbook("stop-sg-accel.yml")
-        assert status == 0, "Failed to stop sg_accel"
+        for sgaccel in self.sg_accels:
+            status = sgaccel.stop()
+            assert status == 0, "Failed to stop sync gateway for host {}".format(sgaccel.hostname)
 
     def __repr__(self):
         s = "\n\n"
