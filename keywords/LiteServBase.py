@@ -81,3 +81,6 @@ class LiteServBase(object):
 
     def remove(self):
         raise NotImplementedError()
+
+    def close_app(self):
+        raise NotImplementedError()
