@@ -135,7 +135,6 @@ def test_numeric_expiry_as_ttl(params_from_base_test_setup, sg_conf_name):
     assert doc_exp_10_result["_id"] == "exp_10"
 
 
-@pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.ttl
 @pytest.mark.session
@@ -223,7 +222,6 @@ def test_string_expiry_as_ttl(params_from_base_test_setup, sg_conf_name):
     assert doc_exp_10_result["_id"] == "exp_10"
 
 
-@pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.ttl
 @pytest.mark.session
@@ -315,7 +313,6 @@ def test_numeric_expiry_as_unix_date(params_from_base_test_setup, sg_conf_name):
     assert doc_exp_years_result["_id"] == "exp_years"
 
 
-@pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.ttl
 @pytest.mark.session
@@ -411,7 +408,6 @@ def test_string_expiry_as_unix_date(params_from_base_test_setup, sg_conf_name):
     assert doc_exp_years_result["_id"] == "exp_years"
 
 
-@pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.ttl
 @pytest.mark.session
@@ -503,7 +499,6 @@ def test_string_expiry_as_iso_8601_date(params_from_base_test_setup, sg_conf_nam
     assert doc_exp_years_result["_id"] == "exp_years"
 
 
-@pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.ttl
 @pytest.mark.session
@@ -571,7 +566,6 @@ def test_removing_expiry(params_from_base_test_setup, sg_conf_name):
     assert doc_exp_10_result["_id"] == "exp_10"
 
 
-@pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.ttl
 @pytest.mark.session
@@ -661,7 +655,6 @@ def test_rolling_ttl_expires(params_from_base_test_setup, sg_conf_name):
     assert doc_exp_10_result["_id"] == "exp_10"
 
 
-@pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.ttl
 @pytest.mark.session
@@ -751,7 +744,6 @@ def test_rolling_ttl_remove_expirary(params_from_base_test_setup, sg_conf_name):
     )
 
 
-@pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.ttl
 @pytest.mark.session

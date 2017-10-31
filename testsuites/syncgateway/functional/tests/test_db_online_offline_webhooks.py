@@ -101,7 +101,6 @@ def test_db_online_offline_webhooks_offline(params_from_base_test_setup, sg_conf
 
 
 # implements scenarios: 21
-@pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.onlineoffline
 @pytest.mark.webhooks

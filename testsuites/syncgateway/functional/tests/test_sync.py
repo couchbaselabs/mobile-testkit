@@ -16,7 +16,6 @@ from keywords.SyncGateway import sync_gateway_config_path_for_mode
 
 
 # https://github.com/couchbase/sync_gateway/issues/1524
-@pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.sync
 @pytest.mark.basicauth
@@ -401,7 +400,6 @@ def test_sync_sanity_backfill(params_from_base_test_setup, sg_conf_name):
     verify_changes(dj_0, expected_num_docs=number_of_docs_per_pusher, expected_num_revisions=0, expected_docs=kdwb_docs)
 
 
-@pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.sync
 @pytest.mark.role

@@ -18,7 +18,6 @@ from keywords import document
 from keywords import userinfo
 
 
-@pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.changes
 @pytest.mark.basicauth
@@ -134,7 +133,6 @@ def test_longpoll_changes_sanity(params_from_base_test_setup, sg_conf_name, num_
     verify_same_docs(expected_num_docs=num_docs, doc_dict_one=docs_in_changes, doc_dict_two=abc_doc_pusher.cache)
 
 
-@pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.changes
 @pytest.mark.basicauth
@@ -371,7 +369,6 @@ def test_longpoll_awaken_doc_add_update(params_from_base_test_setup, sg_conf_nam
         assert rev_from_change == 2
 
 
-@pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.changes
 @pytest.mark.basicauth
@@ -599,7 +596,6 @@ def test_longpoll_awaken_channels(params_from_base_test_setup, sg_conf_name):
         assert andy_changes["results"][0]["changes"][0]["rev"].startswith("2-")
 
 
-@pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.changes
 @pytest.mark.basicauth
@@ -775,7 +771,6 @@ def test_longpoll_awaken_roles(params_from_base_test_setup, sg_conf_name):
         assert andy_changes["results"][0]["id"] == "abc_doc_0"
 
 
-@pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.changes
 @pytest.mark.basicauth
@@ -894,7 +889,6 @@ def test_longpoll_awaken_via_sync_access(params_from_base_test_setup, sg_conf_na
     assert len(andy_changes["results"]) == 0
 
 
-@pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.changes
 @pytest.mark.basicauth
