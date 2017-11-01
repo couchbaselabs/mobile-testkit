@@ -60,7 +60,6 @@ class LiteServNetMono(LiteServBase):
             shutil.rmtree("{}/{}/x64".format(BINARY_DIR, extracted_directory_name))
             shutil.rmtree("{}/{}/x86".format(BINARY_DIR, extracted_directory_name))
 
-    
     def install(self):
         """
         Noop on mono .NET. The LiteServ is a commandline binary

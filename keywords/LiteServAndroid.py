@@ -47,9 +47,7 @@ class LiteServAndroid(LiteServBase):
         resp.raise_for_status()
         with open("{}/{}".format(BINARY_DIR, package_name), "wb") as f:
             f.write(resp.content)
-    
-    
-            
+
     def install(self):
         """Install the apk to running Android device or emulator"""
 

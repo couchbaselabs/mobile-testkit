@@ -67,7 +67,6 @@ class LiteServNetMsft(LiteServBase):
         if status != 0:
             raise LiteServError("Failed to download LiteServ package on remote machine")
 
-    
     def install(self):
         """
         Installs needed packages on Windows host and removes any existing service wrappers for LiteServ

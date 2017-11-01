@@ -34,7 +34,7 @@ def test_upgrade_cbl(setup_client_syncgateway_test):
     device_enabled = setup_client_syncgateway_test["device_enabled"]
     liteserv_platform = setup_client_syncgateway_test["liteserv_platform"]
     liteserv_version = setup_client_syncgateway_test["liteserv_version"]
-    
+
     if liteserv_platform.lower() == "android" and device_enabled:
         # There is a signature match issue on Android and older version does not have app for devices
         pytest.skip('upgrade lite serv app does not work on Android and there is no app for ios device created' +
@@ -50,20 +50,20 @@ def test_upgrade_cbl(setup_client_syncgateway_test):
 
     log_info("Downloading older version of LiteServ ...")
     liteserv.download(version_build="1.4.0-3")
-    
+
     # Install LiteServ
     if device_enabled and liteserv_platform == "ios":
         liteserv.stop()
         liteserv.install_device()
-        ls_url = liteserv.start_device("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(liteserv).__name__, 
+        ls_url = liteserv.start_device("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(liteserv).__name__,
                                                                      test_name, datetime.datetime.now()))
     else:
         liteserv.stop()
         liteserv.install()
         log_info("Liteserv starts now ....")
-        ls_url = liteserv.start("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(liteserv).__name__, 
+        ls_url = liteserv.start("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(liteserv).__name__,
                                                               test_name, datetime.datetime.now()))
-    
+
     client = MobileRestClient()
     client.create_user(sg_one_admin, sg_db, "test", password="password", channels=channels)
     session = client.create_session(sg_one_admin, sg_db, "test")
@@ -82,16 +82,16 @@ def test_upgrade_cbl(setup_client_syncgateway_test):
                                  to_db=sg_db)
         download_cbl_tpe.result()
         log_info("download is done")
-    
+
     liteserv.stop()
-    ls_url = liteserv.start("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(liteserv).__name__, 
+    ls_url = liteserv.start("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(liteserv).__name__,
                                                           test_name, datetime.datetime.now()))
-    
+
     client.start_replication(url=ls_url, continuous=True, from_db=ls_db, to_url=sg_one_admin,
                              to_db=sg_db)
     client.verify_docs_present(url=ls_url, db=ls_db, expected_docs=docs, timeout=240)
     client.verify_docs_present(url=sg_one_public, db=sg_db, expected_docs=docs, auth=session, timeout=600)
-    
+
 
 def download_install(liteserv, liteserv_version):
     liteserv.download(liteserv_version)

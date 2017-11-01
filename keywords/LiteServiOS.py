@@ -110,7 +110,7 @@ class LiteServiOS(LiteServBase):
         if self.storage_engine == "SQLCipher":
             package_name = "LiteServ-iOS-SQLCipher.app"
             app_dir = "LiteServ-iOS-SQLCipher"
-        
+
         self.app_path = "{}/{}/{}".format(BINARY_DIR, app_dir, package_name)
         output = subprocess.check_output([
             "ios-sim", "--devicetypeid", self.device, "start"
@@ -156,7 +156,7 @@ class LiteServiOS(LiteServBase):
         # Get the device ID
         list_output = subprocess.Popen(["xcrun", "simctl", "list"], stdout=subprocess.PIPE)
         output = subprocess.check_output(('grep', 'Booted'), stdin=list_output.stdout)
- 
+
         for line in output.splitlines():
             if "Phone" in line:
                 self.device_id = re.sub(' +', ' ', line).strip()
