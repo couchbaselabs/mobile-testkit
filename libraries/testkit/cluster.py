@@ -301,6 +301,20 @@ class Cluster:
 
         return errors
 
+    def stop_sg_and_accel(self):
+
+        # Stop sync_gateways
+        log_info(">>> Stopping sync_gateway")
+        for sg in self.sync_gateways:
+            status = sg.stop()
+            assert status == 0, "Failed to stop sync gateway for host {}".format(sg.hostname)
+
+        # Stop sync_gateway accels
+        log_info(">>> Stopping sg_accel")
+        for sgaccel in self.sg_accels:
+            status = sgaccel.stop()
+            assert status == 0, "Failed to stop sync gateway for host {}".format(sgaccel.hostname)
+
     def __repr__(self):
         s = "\n\n"
         s += "Sync Gateways\n"
