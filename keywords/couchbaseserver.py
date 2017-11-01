@@ -134,11 +134,12 @@ class CouchbaseServer:
         server_version = get_server_version(self.host, self.cbs_ssl)
         server_major_version = int(server_version.split(".")[0])
 
+        if server_major_version >= 5:
+            self._delete_internal_rbac_bucket_user(name)
+
         resp = self._session.delete("{0}/pools/default/buckets/{1}".format(self.url, name))
         log_r(resp)
         resp.raise_for_status()
-        if server_major_version >= 5:
-            self._delete_internal_rbac_bucket_user(name)
 
     def delete_buckets(self):
         """ Deletes all of the buckets on a Couchbase Server.
