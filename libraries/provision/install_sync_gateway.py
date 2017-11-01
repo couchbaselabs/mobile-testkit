@@ -23,24 +23,6 @@ class SyncGatewayConfig:
 
         self._version_number = version_number
         self._build_number = build_number
-        self._valid_versions = [
-            "1.1.0",
-            "1.1.1",
-            "1.2.0",
-            "1.2.1",
-            "1.3.0",
-            "1.3.1",
-            "1.3.1.2",
-            "1.4.0",
-            "1.4",
-            "1.4.0.1",
-            "1.4.0.2",
-            "1.4.1",
-            "1.4.1.1",
-            "1.4.2",
-            "1.5.0"
-        ]
-
         self.commit = commit
         self.build_flags = build_flags
         self.config_path = config_path

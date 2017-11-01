@@ -229,7 +229,6 @@ def test_openidconnect_basic_test(params_from_base_test_setup, sg_conf_name, is_
         id_tokens.append(id_token_refresh)
 
 
-@pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.oidc
 @pytest.mark.parametrize("sg_conf_name", [
@@ -278,7 +277,6 @@ def test_openidconnect_notauthenticated(params_from_base_test_setup, sg_conf_nam
     assert response.status_code == 401
 
 
-@pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.oidc
 @pytest.mark.parametrize("sg_conf_name", [
@@ -318,7 +316,6 @@ def test_openidconnect_oidc_challenge_invalid_provider_name(params_from_base_tes
     assert response.status_code == 400
 
 
-@pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.oidc
 @pytest.mark.parametrize("sg_conf_name", [
@@ -361,7 +358,6 @@ def test_openidconnect_no_session(params_from_base_test_setup, sg_conf_name):
     assert "Set-Cookie" not in response.headers
 
 
-@pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.oidc
 @pytest.mark.parametrize("sg_conf_name", [
@@ -431,7 +427,6 @@ def test_openidconnect_expired_token(params_from_base_test_setup, sg_conf_name):
     assert resp.status_code != 200, "Expected non-200 response"
 
 
-@pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.oidc
 @pytest.mark.parametrize("sg_conf_name", [
@@ -485,7 +480,6 @@ def test_openidconnect_negative_token_expiry(params_from_base_test_setup, sg_con
     assert response.status_code == 500
 
 
-@pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.oidc
 @pytest.mark.parametrize("sg_conf_name", [
@@ -565,7 +559,6 @@ def test_openidconnect_garbage_token(params_from_base_test_setup, sg_conf_name):
     assert resp.status_code != 200, "Expected non-200 response"
 
 
-@pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.oidc
 @pytest.mark.parametrize("sg_conf_name", [
@@ -605,7 +598,6 @@ def test_openidconnect_invalid_scope(params_from_base_test_setup, sg_conf_name):
     raise Exception("Expected HTTPError since we are using invalid scope")
 
 
-@pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.oidc
 @pytest.mark.parametrize("sg_conf_name", [
@@ -666,7 +658,6 @@ def test_openidconnect_small_scope(params_from_base_test_setup, sg_conf_name):
     assert "email" not in decoded_id_token.keys()
 
 
-@pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.oidc
 @pytest.mark.parametrize("sg_conf_name", [
@@ -729,7 +720,6 @@ def test_openidconnect_large_scope(params_from_base_test_setup, sg_conf_name):
     assert "nickname" in decoded_id_token.keys()
 
 
-@pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.oidc
 @pytest.mark.parametrize("sg_conf_name", [

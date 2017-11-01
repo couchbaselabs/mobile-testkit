@@ -1,5 +1,5 @@
-import pytest
 import datetime
+import pytest
 
 from keywords.utils import log_info, check_xattr_support, version_is_binary
 from keywords.constants import RESULTS_DIR
@@ -24,7 +24,7 @@ def pytest_addoption(parser):
     parser.addoption("--sync-gateway-mode", action="store", help="sync-gateway-mode: the mode of sync_gateway to run tests against, channel_cache ('cc') or distributed_index ('di')")
     parser.addoption("--server-version", action="store", help="server-version: version of Couchbase Server to install and run tests against")
     parser.addoption("--xattrs", action="store_true", help="Use xattrs for sync meta storage. Sync Gateway 1.5.0+ and Couchbase Server 5.0+")
-    parser.addoption("--device", action="store_true", help="Enable device if you want to run it on device", default=False)
+    parser.addoption("--device", action="store_true", help="Enable device if you want to run it on device")
 
 
 # This will get called once before the first test that
@@ -118,8 +118,7 @@ def setup_client_syncgateway_suite(request):
         "sg_mode": sync_gateway_mode,
         "xattrs_enabled": xattrs_enabled,
         "device_enabled": device_enabled,
-        "liteserv_platform": liteserv_platform,
-        "liteserv_version": liteserv_version
+        "liteserv_platform": liteserv_platform
     }
 
     log_info("Tearing down suite ...")
@@ -139,7 +138,6 @@ def setup_client_syncgateway_test(request, setup_client_syncgateway_suite):
     xattrs_enabled = setup_client_syncgateway_suite["xattrs_enabled"]
     device_enabled = setup_client_syncgateway_suite["device_enabled"]
     liteserv_platform = setup_client_syncgateway_suite["liteserv_platform"]
-    liteserv_version = setup_client_syncgateway_suite["liteserv_version"]
     test_name = request.node.name
 
     if request.config.getoption("--liteserv-platform") == "macosx" and \
@@ -150,7 +148,7 @@ def setup_client_syncgateway_test(request, setup_client_syncgateway_suite):
     client = MobileRestClient()
 
     # Start LiteServ and delete any databases
-    log_info("Starting LiteServ...")
+    log_info("Listener going to start and launch,")
     if device_enabled and liteserv_platform == "ios":
         ls_url = liteserv.start_device("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(liteserv).__name__, test_name, datetime.datetime.now()))
     else:
@@ -162,6 +160,7 @@ def setup_client_syncgateway_test(request, setup_client_syncgateway_suite):
 
     sg_url = cluster_hosts["sync_gateways"][0]["public"]
     sg_admin_url = cluster_hosts["sync_gateways"][0]["admin"]
+
     # Yield values to test case via fixture argument
     yield {
         "cluster_config": cluster_config,
@@ -171,13 +170,11 @@ def setup_client_syncgateway_test(request, setup_client_syncgateway_suite):
         "sg_admin_url": sg_admin_url,
         "xattrs_enabled": xattrs_enabled,
         "liteserv": liteserv,
-        "liteserv_platform": liteserv_platform,
-        "device_enabled": device_enabled,
-        "liteserv_version": liteserv_version
+        "liteserv_platform": liteserv_platform
     }
 
     log_info("Tearing down test")
-    
+
     client.delete_databases(ls_url)
     liteserv.stop()
 

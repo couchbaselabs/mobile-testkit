@@ -13,8 +13,6 @@ from keywords import userinfo
 from keywords import document
 
 
-@pytest.mark.sanity
-@pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.changes
 @pytest.mark.session

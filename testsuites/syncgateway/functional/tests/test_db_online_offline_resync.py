@@ -150,7 +150,6 @@ def test_bucket_online_offline_resync_sanity(params_from_base_test_setup, sg_con
 # put DB offline, run _resync, attempt to bring DB online while _resync is running,
 # expected result _online will fail with status 503, when _resync is complete,
 # attempt to bring DB _online, expected result _online will succeed, return status 200.
-@pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.onlineoffline
 @pytest.mark.parametrize("sg_conf_name, num_users, num_docs, num_revisions", [
@@ -335,7 +334,6 @@ def test_bucket_online_offline_resync_with_online(params_from_base_test_setup, s
 # #13
 # With DB running a _resync, make REST API call to get DB runtime details /db/,
 # expected result 'state' property with value 'Resyncing' is returned.
-@pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.onlineoffline
 @pytest.mark.parametrize("sg_conf_name, num_users, num_docs, num_revisions", [
