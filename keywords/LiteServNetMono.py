@@ -19,13 +19,14 @@ from keywords.utils import has_dot_net4_dot_5
 
 class LiteServNetMono(LiteServBase):
 
-    def download(self):
+    def download(self, version_build=None):
         """
         1. Check to see if package is downloaded already. If so, return
         2. Download the LiteServ package from latest builds to 'deps/binaries'
         3. Unzip the packages and make the binary executable
         """
-
+        if version_build is not None:
+            self.version_build = version_build
         # Skip download if packages is already downloaded
         if has_dot_net4_dot_5(self.version_build):
             expected_binary = "{}/couchbase-lite-net-mono-{}-liteserv/net45/LiteServ.exe".format(BINARY_DIR, self.version_build)
@@ -59,46 +60,7 @@ class LiteServNetMono(LiteServBase):
             shutil.rmtree("{}/{}/x64".format(BINARY_DIR, extracted_directory_name))
             shutil.rmtree("{}/{}/x86".format(BINARY_DIR, extracted_directory_name))
 
-    def download_Version(self, version_build):
-        """
-        1. Check to see if package is downloaded already. If so, return
-        2. Download the LiteServ package from latest builds to 'deps/binaries'
-        3. Unzip the packages and make the binary executable
-        """
-        self.version_build = version_build
-        # Skip download if packages is already downloaded
-        if has_dot_net4_dot_5(self.version_build):
-            expected_binary = "{}/couchbase-lite-net-mono-{}-liteserv/net45/LiteServ.exe".format(BINARY_DIR, self.version_build)
-        else:
-            expected_binary = "{}/couchbase-lite-net-mono-{}-liteserv/LiteServ.exe".format(BINARY_DIR, self.version_build)
-
-        if os.path.isfile(expected_binary):
-            log_info("Package already downloaded: {}".format(expected_binary))
-            return
-
-        version, build = version_and_build(self.version_build)
-        download_url = "{}/couchbase-lite-net/{}/{}/LiteServ.zip".format(LATEST_BUILDS, version, build)
-
-        downloaded_package_zip_name = "couchbase-lite-net-mono-{}-liteserv.zip".format(self.version_build)
-        log_info("Downloading {} -> {}/{}".format(download_url, BINARY_DIR, downloaded_package_zip_name))
-        resp = requests.get(download_url)
-        resp.raise_for_status()
-        with open("{}/{}".format(BINARY_DIR, downloaded_package_zip_name), "wb") as f:
-            f.write(resp.content)
-
-        extracted_directory_name = downloaded_package_zip_name.replace(".zip", "")
-        with ZipFile("{}/{}".format(BINARY_DIR, downloaded_package_zip_name)) as zip_f:
-            zip_f.extractall("{}/{}".format(BINARY_DIR, extracted_directory_name))
-
-        # Remove .zip
-        os.remove("{}/{}".format(BINARY_DIR, downloaded_package_zip_name))
-
-        # HACK - To get around https://github.com/couchbase/couchbase-lite-net/issues/672
-        # This is fixed 1.4+ but need to keep it around to allow running against older versions of LiteServ
-        if version.startswith("1.2") or version.startswith("1.3"):
-            shutil.rmtree("{}/{}/x64".format(BINARY_DIR, extracted_directory_name))
-            shutil.rmtree("{}/{}/x86".format(BINARY_DIR, extracted_directory_name))
-
+    
     def install(self):
         """
         Noop on mono .NET. The LiteServ is a commandline binary

@@ -14,12 +14,13 @@ from keywords.utils import log_info
 
 class LiteServAndroid(LiteServBase):
 
-    def download(self):
+    def download(self, version_build=None):
         """
         1. Check to see if .apk is downloaded already. If so, return
         2. Download the LiteServ .apk from latest builds to 'deps/binaries'
         """
-
+        if(version_build is not None):
+            self.version_build = version_build
         version, build = version_and_build(self.version_build)
 
         if version == "1.2.1":
@@ -47,39 +48,7 @@ class LiteServAndroid(LiteServBase):
         with open("{}/{}".format(BINARY_DIR, package_name), "wb") as f:
             f.write(resp.content)
     
-    def download_Version(self, version_build):
-        """
-        1. Download specified version of apk. If so, return
-        2. Download the LiteServ .apk from latest builds to 'deps/binaries'
-        """
-        self.version_build = version_build 
-        version, build = version_and_build(self.version_build)
-        
-
-        if version == "1.2.1":
-            package_name = "couchbase-lite-android-liteserv-SQLite-{}-debug.apk".format(self.version_build)
-        else:
-            if self.storage_engine == "SQLite":
-                package_name = "couchbase-lite-android-liteserv-SQLite-{}-debug.apk".format(self.version_build)
-            else:
-                package_name = "couchbase-lite-android-liteserv-SQLCipher-ForestDB-Encryption-{}-debug.apk".format(self.version_build)
-
-        expected_binary_path = "{}/{}".format(BINARY_DIR, package_name)
-        if os.path.isfile(expected_binary_path):
-            log_info("Package is already downloaded. Skipping.")
-            return
-
-        # Package not downloaded, proceed to download from latest builds
-        if version == "1.2.1":
-            url = "{}/couchbase-lite-android/release/{}/{}/{}".format(LATEST_BUILDS, version, self.version_build, package_name)
-        else:
-            url = "{}/couchbase-lite-android/{}/{}/{}".format(LATEST_BUILDS, version, build, package_name)
-
-        log_info("Downloading {} -> {}/{}".format(url, BINARY_DIR, package_name))
-        resp = requests.get(url)
-        resp.raise_for_status()
-        with open("{}/{}".format(BINARY_DIR, package_name), "wb") as f:
-            f.write(resp.content)
+    
             
     def install(self):
         """Install the apk to running Android device or emulator"""
@@ -101,7 +70,8 @@ class LiteServAndroid(LiteServBase):
             if count > max_retries:
                 raise LiteServError(".apk install failed!")
             try:
-                output = subprocess.check_output(["adb", "install", apk_path])
+                output = subprocess.check_output(["adb", "install", "-r", apk_path])
+                break
             except Exception as e:
                 if "INSTALL_FAILED_ALREADY_EXISTS" in e.message or "INSTALL_FAILED_UPDATE_INCOMPATIBLE" in e.message:
                     # Apk may be installed, remove and retry install

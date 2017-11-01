@@ -28,12 +28,14 @@ class LiteServiOS(LiteServBase):
         self.logfile_name = None
         self.device_id = None
 
-    def download(self):
+    def download(self, version_build=None):
         """
         1. Check to see if package is downloaded already. If so, return
         2. Download the LiteServ package from latest builds to 'deps/binaries'
         3. Unzip the packages and make the binary executable
         """
+        if version_build is not None:
+            self.version_build = version_build
         version, build = version_and_build(self.version_build)
 
         package_name = "LiteServ-iOS.zip"
@@ -66,46 +68,6 @@ class LiteServiOS(LiteServBase):
 
         # Remove .zip
         os.remove("{}".format(downloaded_package_zip_name))
-
-    def download_Version(self, version_build):
-        """
-        1. Check to see if package is downloaded already. If so, return
-        2. Download the LiteServ package from latest builds to 'deps/binaries'
-        3. Unzip the packages and make the binary executable
-        """
-        self.version_build = version_build
-        version, build = version_and_build(version_build)
-        
-        package_name = "LiteServ-iOS.zip"
-        app_name = "LiteServ-iOS.app"
-        app_dir = "LiteServ-iOS"
-
-        if self.storage_engine == "SQLCipher":
-            package_name = "LiteServ-iOS-SQLCipher.zip"
-            app_name = "LiteServ-iOS-SQLCipher.app"
-            app_dir = "LiteServ-iOS-SQLCipher"
-
-        expected_binary_path = "{}/{}/{}".format(BINARY_DIR, app_dir, app_name)
-        if os.path.isfile(expected_binary_path):
-            log_info("Package is already downloaded. Skipping.")
-            return
-
-        # Package not downloaded, proceed to download from latest builds
-        downloaded_package_zip_name = "{}/{}".format(BINARY_DIR, package_name)
-        url = "{}/couchbase-lite-ios/{}/ios/{}/{}".format(LATEST_BUILDS, version, build, package_name)
-
-        log_info("Downloading {} -> {}/{}".format(url, BINARY_DIR, package_name))
-        resp = requests.get(url)
-        resp.raise_for_status()
-        with open("{}/{}".format(BINARY_DIR, package_name), "wb") as f:
-            f.write(resp.content)
-
-        extracted_directory_name = downloaded_package_zip_name.replace(".zip", "")
-        with ZipFile("{}".format(downloaded_package_zip_name)) as zip_f:
-            zip_f.extractall("{}".format(extracted_directory_name))
-
-        # Remove .zip
-        os.remove("{}".format(downloaded_package_zip_name))    
 
     def install_device(self):
         """Installs / launches LiteServ on iOS device
@@ -148,7 +110,7 @@ class LiteServiOS(LiteServBase):
         if self.storage_engine == "SQLCipher":
             package_name = "LiteServ-iOS-SQLCipher.app"
             app_dir = "LiteServ-iOS-SQLCipher"
-
+        
         self.app_path = "{}/{}/{}".format(BINARY_DIR, app_dir, package_name)
         output = subprocess.check_output([
             "ios-sim", "--devicetypeid", self.device, "start"
