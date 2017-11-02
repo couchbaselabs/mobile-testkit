@@ -273,6 +273,14 @@ if __name__ == "__main__":
                       action="store", dest="skip_bucketcreation", default=False,
                       help="skip the bucketcreation step")
 
+    parser.add_option("", "--sa-platform",
+                      action="store", dest="sa_platform", default="centos",
+                      help="Set the SGAccel OS platform")
+
+    parser.add_option("", "--sg-platform",
+                      action="store", dest="sg_platform", default="centos",
+                      help="Set the SG OS platform")
+
     arg_parameters = sys.argv[1:]
 
     (opts, args) = parser.parse_args(arg_parameters)
@@ -305,5 +313,7 @@ if __name__ == "__main__":
 
     install_sync_gateway(
         cluster_config=cluster_conf,
-        sync_gateway_config=sync_gateway_install_config
+        sync_gateway_config=sync_gateway_install_config,
+        sa_platform=opts.sa_platform,
+        sg_platform=opts.sg_platform
     )
