@@ -23,9 +23,6 @@ from keywords.constants import RESULTS_DIR
 
 # Add custom arguments for executing tests in this directory
 def pytest_addoption(parser):
-    parser.addoption("--ci",
-                     action="store_true",
-                     help="If set, will target larger cluster (3 backing servers instead of 1, 2 accels if in di mode)")
 
     parser.addoption("--cluster-config",
                      action="store",
@@ -39,26 +36,6 @@ def pytest_addoption(parser):
     parser.addoption("--sync-gateway-upgraded-version",
                      action="store",
                      help="sync-gateway-version: Sync Gateway version to upgrade (ex. 1.3.1-16 or 590c1c31c7e83503eff304d8c0789bdd268d6291)")
-
-    parser.addoption("--liteserv-host",
-                     action="store",
-                     help="liteserv-host: the host to start liteserv on")
-
-    parser.addoption("--liteserv-port",
-                     action="store",
-                     help="liteserv-port: the port to assign to liteserv")
-
-    parser.addoption("--liteserv-version",
-                     action="store",
-                     help="liteserv-version: the version of liteserv to use")
-
-    parser.addoption("--liteserv-platform",
-                     action="store",
-                     help="liteserv-platform: the platform on which to run liteserv")
-
-    parser.addoption("--liteserv-storage-engine",
-                     action="store",
-                     help="liteserv-storage-engine: the storage-engine to use with liteserv")
 
     parser.addoption("--num-docs",
                      action="store",

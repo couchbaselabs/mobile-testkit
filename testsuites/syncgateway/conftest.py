@@ -45,3 +45,27 @@ def pytest_addoption(parser):
     parser.addoption("--sequoia",
                      action="store_true",
                      help="If set, the tests will use a cluster provisioned by sequoia")
+
+    parser.addoption("--liteserv-host",
+                     action="store",
+                     help="liteserv-host: the host to start liteserv on")
+
+    parser.addoption("--liteserv-port",
+                     action="store",
+                     help="liteserv-port: the port to assign to liteserv")
+
+    parser.addoption("--liteserv-version",
+                     action="store",
+                     help="liteserv-version: the version of liteserv to use")
+
+    parser.addoption("--liteserv-platform",
+                     action="store",
+                     help="liteserv-platform: the platform on which to run liteserv")
+
+    parser.addoption("--liteserv-storage-engine",
+                     action="store",
+                     help="liteserv-storage-engine: the storage-engine to use with liteserv")
+
+    parser.addoption("--ci",
+                     action="store_true",
+                     help="If set, will target larger cluster (3 backing servers instead of 1, 2 accels if in di mode)")
