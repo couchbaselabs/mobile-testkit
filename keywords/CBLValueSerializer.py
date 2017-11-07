@@ -24,7 +24,6 @@ class ValueSerializer:
 
     @staticmethod
     def deserialize(value):
-        log_info("deserialize value: {}".format(value))
         if not value or len(value) == 0 or value == "null":
             return None
         elif value.startswith("@"):
@@ -34,7 +33,7 @@ class ValueSerializer:
         elif value == "false":
             return False
         elif value.startswith("\"") and value.endswith("\""):
-            return value[1:]
+            return value[1:-1]
         else:
             if "." in value:
                 return float(value)

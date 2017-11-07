@@ -21,7 +21,6 @@ class Client:
                 for k, v in args:
                     query += "?" if len(query) == 0 else "&"
                     k_v = "{}={}".format(k, ValueSerializer.serialize(v))
-                    # query += urllib.urlencode(k_v)
                     query += k_v
 
             # Create connection to method endpoint.
@@ -34,6 +33,7 @@ class Client:
             responseCode = resp.status_code
             if responseCode == 200:
                 result = resp.content
+                log_info("result: {}".format(result))
                 return ValueSerializer.deserialize(result)
         except RuntimeError as e:
             raise e

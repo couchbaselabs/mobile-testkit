@@ -54,12 +54,18 @@ class TestCase:
 
         self._client.invokeMethod("database_delete", args)
 
-    def database_contains(self, database, id):
+    def database_contains(self, database, doc_id):
         args = Args()
         args.setMemoryPointer("database", database)
-        args.setString("id", id)
+        args.setString("id", doc_id)
 
         return self._client.invokeMethod("database_contains", args)
+
+    def database_docCount(self, database):
+        args = Args()
+        args.setMemoryPointer("database", database)
+
+        return self._client.invokeMethod("database_docCount", args)
 
     def database_addChangeListener(self, database):
         args = Args()
@@ -161,6 +167,44 @@ class TestCase:
         args.setString("string", string)
 
         self._client.invokeMethod("dictionary_put", args)
+
+    ###################
+    # - Replication - #
+    ###################
+
+    def configure_replication(self, source_db, target_url, replication_type="push_pull", continuous=True):
+        args = Args()
+        args.setMemoryPointer("source_db", source_db)
+        args.setString("target_url", target_url)
+        args.setString("replication_type", replication_type)
+        args.setBoolean("continuous", continuous)
+
+        return self._client.invokeMethod("configure_replication", args)
+
+    def start_replication(self, replication_obj):
+        args = Args()
+        args.setMemoryPointer("replication_obj", replication_obj)
+
+        self._client.invokeMethod("start_replication", args)
+
+    def stop_replication(self, replication_obj):
+        args = Args()
+        args.setMemoryPointer("replication_obj", replication_obj)
+
+        self._client.invokeMethod("stop_replication", args)
+
+    ##############
+    # - Query  - #
+    ##############
+
+    def run_query(self, select, frm, whr_key, whr_val):
+        args = Args()
+        args.setString("select", select)
+        args.setMemoryPointer("frm", frm)
+        args.setString("whr_key", whr_key)
+        args.setString("whr_val", whr_val)
+
+        return self._client.invokeMethod("run_query", args)
 
     ##############
     # - Memory - #
