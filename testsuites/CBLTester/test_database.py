@@ -118,5 +118,6 @@ def test_query():
     frm = source_db
     whr_key = "City"
     whr_val = "MV"
-    rows = tc.run_query(select, frm, whr_key, whr_val)
-    log_info("rows: {}".format(rows))
+    row = tc.run_query(select, frm, whr_key, whr_val)
+    log_info("row: {}".format(row))
+    assert row == "abc"
