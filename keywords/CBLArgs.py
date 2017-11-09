@@ -2,11 +2,9 @@ from keywords.utils import log_info
 
 
 class Args:
-    _args = {}
-    index = 0
-
     def __init__(self):
         self.index = 0
+        self._args = {}
 
     def setMemoryPointer(self, name, memoryPointer):
         self._args[name] = memoryPointer

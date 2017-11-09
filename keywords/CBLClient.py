@@ -33,7 +33,7 @@ class Client:
             responseCode = resp.status_code
             if responseCode == 200:
                 result = resp.content
-                log_info("result: {}".format(result))
+                log_info("Got response: {}".format(result))
                 return ValueSerializer.deserialize(result)
         except RuntimeError as e:
             raise e
