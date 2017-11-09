@@ -240,7 +240,6 @@ def params_from_base_suite_setup(request):
     c.stop_sg_and_accel()
 
 
-
 # This is called before each test and will yield the dictionary to each test that references the method
 # as a parameter to the test method
 @pytest.fixture(scope="function")
