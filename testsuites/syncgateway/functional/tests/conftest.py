@@ -235,6 +235,10 @@ def params_from_base_suite_setup(request):
 
     log_info("Tearing down 'params_from_base_suite_setup' ...")
 
+    # Stop all sync_gateway and sg_accels as test finished
+    c = cluster.Cluster(cluster_config)
+    c.stop_sg_and_accel()
+
 
 # This is called before each test and will yield the dictionary to each test that references the method
 # as a parameter to the test method
@@ -298,6 +302,3 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         logging_helper.fetch_and_analyze_logs(cluster_config=cluster_config, test_name=test_name)
 
     assert len(errors) == 0
-
-    # Stop all sync_gateway and sg_accels as test finished
-    c.stop_sg_and_accel()
