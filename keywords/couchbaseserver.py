@@ -269,7 +269,10 @@ class CouchbaseServer:
             resp.raise_for_status()
         except HTTPError as h:
             log_info("resp code: {}; error: {}".format(resp, h))
-            raise RBACUserDeletionError(h)
+            if '404 Client Error: Object Not Found for url' in h.message:
+                log_info("RBAC user does not exist, no need to delete RBAC bucket user {}".format(bucketname))
+            else:
+                raise RBACUserDeletionError(h)
 
     def _get_mem_total_lowest(self, server_info):
         # Workaround for https://github.com/couchbaselabs/mobile-testkit/issues/709
