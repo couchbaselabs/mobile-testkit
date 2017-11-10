@@ -82,6 +82,16 @@ def pytest_addoption(parser):
                      action="store_true",
                      help="If set, will enable SSL communication between server and Sync Gateway")
 
+    parser.addoption("--sg-platform",
+                     action="store",
+                     help="Sync Gateway Platform binary to install (ex. centos or windows)",
+                     default="centos")
+
+    parser.addoption("--sa-platform",
+                     action="store",
+                     help="Sync Gateway Accelerator Platform binary to install (ex. centos or windows)",
+                     default="centos")
+
     parser.addoption("--sg-lb",
                      action="store_true",
                      help="If set, will enable load balancer for Sync Gateway")
@@ -113,6 +123,8 @@ def params_from_base_suite_setup(request):
     race_enabled = request.config.getoption("--race")
     cbs_ssl = request.config.getoption("--server-ssl")
     xattrs_enabled = request.config.getoption("--xattrs")
+    sg_platform = request.config.getoption("--sg-platform")
+    sa_platform = request.config.getoption("--sa-platform")
     sg_lb = request.config.getoption("--sg-lb")
     sg_ce = request.config.getoption("--sg-ce")
     use_sequoia = request.config.getoption("--sequoia")
@@ -126,6 +138,8 @@ def params_from_base_suite_setup(request):
     log_info("skip_provisioning: {}".format(skip_provisioning))
     log_info("race_enabled: {}".format(race_enabled))
     log_info("xattrs_enabled: {}".format(xattrs_enabled))
+    log_info("sg_platform: {}".format(sg_platform))
+    log_info("sa_platform: {}".format(sa_platform))
     log_info("sg_lb: {}".format(sg_lb))
     log_info("sg_ce: {}".format(sg_ce))
 
@@ -206,6 +220,8 @@ def params_from_base_suite_setup(request):
                 sync_gateway_version=sync_gateway_version,
                 sync_gateway_config=sg_config,
                 race_enabled=race_enabled,
+                sg_platform=sg_platform,
+                sa_platform=sa_platform,
                 sg_ce=sg_ce
             )
         except ProvisioningError:

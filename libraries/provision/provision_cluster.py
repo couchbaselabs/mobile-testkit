@@ -23,7 +23,7 @@ from keywords.couchbaseserver import CouchbaseServer
 from keywords.ClusterKeywords import ClusterKeywords
 
 
-def provision_cluster(cluster_config, couchbase_server_config, sync_gateway_config, sg_ce=False, cbs_platform="centos7"):
+def provision_cluster(cluster_config, couchbase_server_config, sync_gateway_config, sg_ce=False, cbs_platform="centos7", sg_platform="centos", sa_platform="centos"):
 
     log_info("\n>>> Cluster info:\n")
     server_version = "{}-{}".format(couchbase_server_config.version, couchbase_server_config.build)
@@ -97,6 +97,8 @@ def provision_cluster(cluster_config, couchbase_server_config, sync_gateway_conf
     install_sync_gateway.install_sync_gateway(
         cluster_config=cluster_config,
         sync_gateway_config=sync_gateway_config,
+        sg_platform=sg_platform,
+        sa_platform=sa_platform,
         sg_ce=sg_ce
     )
 

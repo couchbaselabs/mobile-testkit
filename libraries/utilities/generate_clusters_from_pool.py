@@ -28,7 +28,7 @@ class ClusterDef:
         )
 
 
-def write_config(config, pool_file, use_docker):
+def write_config(config, pool_file, use_docker, sg_windows, sg_accel_windows):
 
     connection_string = ""
     if use_docker:
@@ -364,6 +364,22 @@ def write_config(config, pool_file, use_docker):
         f.write("xattrs_enabled=False\n")
         f.write("sg_lb_enabled=False\n")
 
+        if sg_windows:
+            f.write("\n\n[sync_gateways:vars]\n")
+            f.write("ansible_user=FakeUser\n")
+            f.write("ansible_password=FakePassword\n")
+            f.write("ansible_port=5986\n")
+            f.write("ansible_connection=winrm\n")
+            f.write("ansible_winrm_server_cert_validation=ignore\n")
+
+        if sg_accel_windows:
+            f.write("\n\n[sg_accels:vars]\n")
+            f.write("ansible_user=FakeUser\n")
+            f.write("ansible_password=FakePassword\n")
+            f.write("ansible_port=5986\n")
+            f.write("ansible_connection=winrm\n")
+            f.write("ansible_winrm_server_cert_validation=ignore\n")
+
         log_info("Generating {}.json".format(config.name))
 
         # Write json file consumable by testkit.cluster class
@@ -402,7 +418,7 @@ def get_hosts(pool_file="resources/pool.json"):
     return ips, ip_to_node_type
 
 
-def generate_clusters_from_pool(pool_file, use_docker=False):
+def generate_clusters_from_pool(pool_file, use_docker=False, sg_windows=False, sg_accel_windows=False):
 
     cluster_confs = [
 
@@ -488,7 +504,7 @@ def generate_clusters_from_pool(pool_file, use_docker=False):
 
     print("Generating 'resources/cluster_configs/'. Using docker: {}".format(use_docker))
     for cluster_conf in cluster_confs:
-        write_config(cluster_conf, pool_file, use_docker)
+        write_config(cluster_conf, pool_file, use_docker, sg_windows, sg_accel_windows)
 
 
 if __name__ == "__main__":
@@ -506,8 +522,12 @@ if __name__ == "__main__":
 
     parser.add_option("-d", "--use-docker", action="store_true", dest="use_docker", default=False, help="Use docker connection with ansible")
 
+    parser.add_option("--sg-windows", action="store_true", dest="sg_windows", default=False, help="Use Windows Sync Gateway")
+
+    parser.add_option("--sg-accel-windows", action="store_true", dest="sg_accel_windows", default=False, help="Use Windows Sync Gateway Accelerator")
+
     arg_parameters = sys.argv[1:]
 
     (opts, args) = parser.parse_args(arg_parameters)
 
-    generate_clusters_from_pool(opts.pool_file, opts.use_docker)
+    generate_clusters_from_pool(opts.pool_file, opts.use_docker, opts.sg_windows, opts.sg_accel_windows)

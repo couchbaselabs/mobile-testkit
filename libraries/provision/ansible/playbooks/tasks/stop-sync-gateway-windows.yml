@@ -1,5 +1,6 @@
 # Stop service
 - name: SYNC GATEWAY | Stop sync_gateway service on Windows
+  ignore_errors: yes
   win_service:
     name: SyncGateway
     state: stopped
