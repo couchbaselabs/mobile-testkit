@@ -40,7 +40,7 @@
   - include: tasks/deploy-sync-gateway-config-windows.yml
     when: ansible_os_family == "Windows"
 
-# Deploy sync gateway configs (index writers)
+# Deploy sg accel configs (index writers)
 - hosts: sg_accels
   vars:
     sync_gateway_config_filepath:
