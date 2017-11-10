@@ -11,9 +11,9 @@ DATA_DIR = "resources/data"
 MAX_RETRIES = 5
 
 CLIENT_REQUEST_TIMEOUT = 120
-REBALANCE_TIMEOUT_SECS = 600
+REBALANCE_TIMEOUT_SECS = 3600
 REMOTE_EXECUTOR_TIMEOUT = 180
-SDK_TIMEOUT = 180
+SDK_TIMEOUT = 3600
 
 # Required to make sure that these are created with encryption
 # Use to build the command line flags for encryption

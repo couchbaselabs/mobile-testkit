@@ -1,0 +1,64 @@
+---
+# Download sync_gateway package
+- hosts: sync_gateways
+  any_errors_fatal: true
+
+  vars:
+    couchbase_sync_gateway_package_base_url:
+    couchbase_sync_gateway_package:
+    couchbase_sync_gateway_package_url: "{{ couchbase_sync_gateway_package_base_url }}/{{ couchbase_sync_gateway_package }}"
+    couchbase_server_primary_node: "{{ hostvars[groups.couchbase_servers[0]].ansible_host }}"
+
+  tasks:
+  - debug: msg="Downloading sync_gateway v. {{ couchbase_sync_gateway_package_url }}"
+  - name: SYNC GATEWAY |  Download sync_gateway rpm
+    get_url: url={{ couchbase_sync_gateway_package_url }} dest=/tmp/{{ couchbase_sync_gateway_package }}
+
+# Download sg accel package
+- hosts: sg_accels
+  any_errors_fatal: true
+
+  vars:
+    couchbase_sync_gateway_package_base_url:
+    couchbase_sg_accel_package:
+    couchbase_sg_accel_package_url: "{{ couchbase_sync_gateway_package_base_url }}/{{ couchbase_sg_accel_package }}"
+    couchbase_server_primary_node: "{{ hostvars[groups.couchbase_servers[0]].ansible_host }}"
+
+  tasks:
+  - debug: msg="Downloading sg_accel v. {{ couchbase_sg_accel_package_url }}"
+  - name: SG ACCEL | Download sg_accel rpm
+    get_url: url={{ couchbase_sg_accel_package_url }} dest=/tmp/{{ couchbase_sg_accel_package }}
+
+# Install and launch sync_gateway service
+- hosts: sync_gateways
+  any_errors_fatal: true
+  become: yes
+  tasks:
+  - include: tasks/stop-sync-gateway.yml
+
+  # Install and start service
+  - name: SYNC GATEWAY | Install sync_gateway rpm
+    shell: rpm -U --force /tmp/{{ couchbase_sync_gateway_package }}
+
+  - name: SYNC GATEWAY | wait until sync gateway to listen on port
+    wait_for: port=4985 timeout=120
+
+  - debug: msg="Completed upgrading sync gateway {{ hostvars[inventory_hostname]['ansible_host'] }}"
+
+# Install and launch sg_accel service
+- hosts: sg_accels
+  any_errors_fatal: true
+  become: yes
+  tasks:
+  - include: tasks/stop-sg-accel.yml
+  # Install and start service
+  - name: SG ACCEL | Install sg_accel rpm
+    shell: rpm -U --force /tmp/{{ couchbase_sg_accel_package }}
+
+  - name: SG ACCEL | Start the sg_accel service
+    service: name=sg_accel state=started
+
+  - name: SG ACCEL | wait for sg_accel to listen on port
+    wait_for: port=4985 delay=2 timeout=120
+
+  - debug: msg="Completed upgrading sg accel {{ hostvars[inventory_hostname]['ansible_host'] }}"

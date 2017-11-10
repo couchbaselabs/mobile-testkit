@@ -414,6 +414,8 @@ def generate_clusters_from_pool(pool_file, use_docker=False):
         ClusterDef("base_lb_di", num_sgs=3, num_acs=1, num_cbs=1, num_lgs=0, num_lbs=1),
         ClusterDef("ci_lb_cc", num_sgs=3, num_acs=0, num_cbs=3, num_lgs=0, num_lbs=1),
         ClusterDef("ci_lb_di", num_sgs=3, num_acs=3, num_cbs=3, num_lgs=0, num_lbs=1),
+        ClusterDef("2each_lb_cc", num_sgs=2, num_acs=0, num_cbs=2, num_lgs=0, num_lbs=1),
+        ClusterDef("2each_lb_di", num_sgs=2, num_acs=2, num_cbs=2, num_lgs=0, num_lbs=1),
         ClusterDef("multiple_servers_cc", num_sgs=1, num_acs=0, num_cbs=3, num_lgs=0, num_lbs=0),
         ClusterDef("multiple_servers_di", num_sgs=1, num_acs=1, num_cbs=3, num_lgs=0, num_lbs=0),
         ClusterDef("multiple_sg_accels_di", num_sgs=1, num_acs=3, num_cbs=1, num_lgs=0, num_lbs=0),

@@ -56,7 +56,7 @@ class ClusterKeywords:
           ${ac1} = cluster["sg_accels"][0]
           ${cbs} = cluster["couchbase_servers"][0]
 
-          Setting lb_enable to True will return SG IPs instead of lb IPs
+          Setting lb_enable to True will return LB IPs instead of lb IPs
           install_nginx sets it to False to get the SG_IPs for the nginx.conf
         """
 
@@ -195,7 +195,7 @@ class ClusterKeywords:
         cluster = Cluster(config=cluster_config)
         cluster.reset(sync_gateway_config)
 
-    def provision_cluster(self, cluster_config, server_version, sync_gateway_version, sync_gateway_config, race_enabled=False, sg_ce=False):
+    def provision_cluster(self, cluster_config, server_version, sync_gateway_version, sync_gateway_config, race_enabled=False, sg_ce=False, cbs_platform="centos7"):
 
         if server_version is None or sync_gateway_version is None or sync_gateway_version is None:
             raise ProvisioningError("Please make sure you have server_version, sync_gateway_version, and sync_gateway_config are set")
@@ -236,4 +236,10 @@ class ClusterKeywords:
                 skip_bucketcreation=False
             )
 
-        provision_cluster(cluster_config, cbs_config, sg_config, sg_ce)
+        provision_cluster(
+            cluster_config=cluster_config,
+            couchbase_server_config=cbs_config,
+            sync_gateway_config=sg_config,
+            sg_ce=sg_ce,
+            cbs_platform=cbs_platform
+        )
