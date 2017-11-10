@@ -1,6 +1,7 @@
-import ConfigParser
-from CBLClient import Client
-from CBLArgs import Args
+import json
+
+from keywords.CBLClient import Client
+from keywords.CBLArgs import Args
 from keywords.utils import log_info
 
 
@@ -145,6 +146,15 @@ class TestCase:
         args.setString("string", string)
 
         self._client.invokeMethod("document_setString", args)
+
+    def database_addDocuments(self, database, data):
+        # data = {docid: {doc}, docid: {doc}}
+        args = Args()
+        args.setMemoryPointer("database", database)
+        #documentsData = str(json.dumps(data))
+        #args.setString("data", documentsData)
+
+        return self._client.invokeMethod("database_addDocuments", args, post_data=data)
 
     ###################
     #  - Dictionary - #

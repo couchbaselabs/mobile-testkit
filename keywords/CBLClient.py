@@ -12,7 +12,7 @@ class Client:
     def __init__(self, baseUrl):
         self._baseUrl = baseUrl
 
-    def invokeMethod(self, method, args=None):
+    def invokeMethod(self, method, args=None, post_data=None):
         try:
             # Create query string from args.
             query = ""
@@ -26,7 +26,11 @@ class Client:
             # Create connection to method endpoint.
             url = self._baseUrl + "/" + method + query
             log_info("URL: {}".format(url))
-            resp = self.session.post(url)
+            if post_data:
+                resp = self.session.post(url, data=post_data)
+            else:
+                resp = self.session.post(url)
+
             resp.raise_for_status()
 
             # Process response.

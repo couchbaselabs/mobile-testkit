@@ -121,3 +121,27 @@ def test_query():
     row = tc.run_query(select, frm, whr_key, whr_val)
     log_info("row: {}".format(row))
     #assert row == "abc"
+
+
+def test_adddocs():
+    source_db = None
+    base_url = "http://192.168.1.8:8989"
+    tc = TestCase(base_url)
+    cbl_db = "test_db"
+
+    # Create CBL database
+    source_db = tc.database_create(cbl_db)
+    log_info("Database is {}".format(source_db))
+    db_name = tc.database_getName(source_db)
+    assert db_name == "test_db"
+
+    sample_doc = {
+        "a": {
+            "c": "d"
+        },
+        "b": {
+            "e": "f"
+        }
+    }
+
+    tc.database_addDocuments(source_db, sample_doc)
