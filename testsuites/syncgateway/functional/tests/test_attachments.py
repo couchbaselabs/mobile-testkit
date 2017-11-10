@@ -13,7 +13,6 @@ from keywords import document
 from keywords import attachment
 
 
-@pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.attachments
 @pytest.mark.basicauth
@@ -89,7 +88,6 @@ def test_attachment_revpos_when_ancestor_unavailable(params_from_base_test_setup
     )
 
 
-@pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.attachments
 @pytest.mark.session

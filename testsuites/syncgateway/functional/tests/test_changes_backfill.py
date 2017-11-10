@@ -209,7 +209,6 @@ def test_backfill_channels_oneshot_changes(params_from_base_test_setup, sg_conf_
     assert len(user_b_changes["results"]) == 0
 
 
-@pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.changes
 @pytest.mark.session
@@ -439,7 +438,6 @@ def test_backfill_channels_oneshot_limit_changes(params_from_base_test_setup, sg
     assert len(user_b_changes_after_grant_four["results"]) == 0
 
 
-@pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.changes
 @pytest.mark.session
@@ -657,7 +655,6 @@ def test_awaken_backfill_channels_longpoll_changes_with_limit(params_from_base_t
     assert len(zero_results["results"]) == 0
 
 
-@pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.changes
 @pytest.mark.access

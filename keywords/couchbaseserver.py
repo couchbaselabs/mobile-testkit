@@ -125,11 +125,12 @@ class CouchbaseServer:
         server_version = get_server_version(self.host, self.cbs_ssl)
         server_major_version = int(server_version.split(".")[0])
 
+        if server_major_version >= 5:
+            self._delete_internal_rbac_bucket_user(name)
+
         resp = self._session.delete("{0}/pools/default/buckets/{1}".format(self.url, name))
         log_r(resp)
         resp.raise_for_status()
-        if server_major_version >= 5:
-            self._delete_internal_rbac_bucket_user(name)
 
     def delete_buckets(self):
         """ Deletes all of the buckets on a Couchbase Server.
@@ -259,7 +260,10 @@ class CouchbaseServer:
             resp.raise_for_status()
         except HTTPError as h:
             log_info("resp code: {}; error: {}".format(resp, h))
-            raise RBACUserDeletionError(h)
+            if '404 Client Error: Object Not Found for url' in h.message:
+                log_info("RBAC user does not exist, no need to delete RBAC bucket user {}".format(bucketname))
+            else:
+                raise RBACUserDeletionError(h)
 
     def _get_mem_total_lowest(self, server_info):
         # Workaround for https://github.com/couchbaselabs/mobile-testkit/issues/709
