@@ -20,7 +20,9 @@ from requests.exceptions import HTTPError
 
 
 def test_upgrade(params_from_base_test_setup):
-    """ The initial versions of SG and CBS has already been provisioned at this point
+    """
+    @summary
+        The initial versions of SG and CBS has already been provisioned at this point
         We have to upgrade them to the upgraded versions
     """
     cluster_config = params_from_base_test_setup['cluster_config']
@@ -57,8 +59,7 @@ def test_upgrade(params_from_base_test_setup):
     )
     sg_session = client.create_session(url=sg_admin_url, db=sg_db, name=sg_user_name, password=sg_user_password)
 
-    # Start continuous push pull replication ls_db_one <-> sg_db_one
-    log_info("Starting replication from liteserv to sync gateway")
+    log_info("Starting continuous push pull replication from liteserv to sync gateway")
     repl_one = client.start_replication(
         url=ls_url, continuous=True,
         from_db=ls_db,

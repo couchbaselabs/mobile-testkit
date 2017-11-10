@@ -135,7 +135,7 @@ class LiteServNetMono(LiteServBase):
         if not (running_version.startswith(".NET OS X")):
             raise LiteServError("Invalid platform running: {}!".format(running_version))
 
-        # OSX - [u'.NET', u'OS', u'X', u'10.12', u'x86_64', u'1.3.1', u'build0013', u'5d1553d']
+        # [u'.NET', u'OS', u'X', u'10.12', u'x86_64', u'1.3.1', u'build0013', u'5d1553d']
         running_version_parts = re.split("[ /-]", running_version)
 
         running_version = running_version_parts[5]

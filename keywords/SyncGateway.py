@@ -317,7 +317,7 @@ class SyncGateway:
             target = hostname_for_url(cluster_config, url)
             log_info("Upgrading sync_gateway/sg_accel on {} ...".format(target))
             status = ansible_runner.run_ansible_playbook(
-                "upgrade-sync-gateway-package.yml",
+                "upgrade-sg-sgaccel-package.yml",
                 subset=target,
                 extra_vars=playbook_vars
             )
@@ -325,7 +325,7 @@ class SyncGateway:
         else:
             log_info("Upgrading all sync_gateways/sg_accels")
             status = ansible_runner.run_ansible_playbook(
-                "upgrade-sync-gateway-package.yml",
+                "upgrade-sg-sgaccel-package.yml",
                 extra_vars=playbook_vars
             )
             log_info("Completed upgrading all sync_gateways/sg_accels")
@@ -334,7 +334,8 @@ class SyncGateway:
 
     def enable_import_xattrs(self, cluster_config, sg_conf, url, enable_import=False):
         """Deploy an SG config with xattrs enabled
-            Will also enable import if enable_import is set to True"""
+            Will also enable import if enable_import is set to True
+            It is used to enable xattrs and import in the SG config"""
         ansible_runner = AnsibleRunner(cluster_config)
         server_port = 8091
         server_scheme = "http"
