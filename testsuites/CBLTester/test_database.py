@@ -125,7 +125,7 @@ def test_query():
 
 def test_adddocs():
     source_db = None
-    base_url = "http://192.168.1.8:8989"
+    base_url = "http://10.17.1.59:8989"
     tc = TestCase(base_url)
     cbl_db = "test_db"
 
@@ -145,3 +145,5 @@ def test_adddocs():
     }
 
     tc.database_addDocuments(source_db, sample_doc)
+    doc_count = tc.database_docCount(source_db)
+    log_info("doc_count: {}".format(doc_count))

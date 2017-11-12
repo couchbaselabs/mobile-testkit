@@ -1,4 +1,6 @@
 import urllib
+import json
+
 from requests import Session
 from CBLValueSerializer import ValueSerializer
 from CBLArgs import Args
@@ -6,11 +8,10 @@ from keywords.utils import log_info
 
 
 class Client:
-    baseUrl = None
-    session = Session()
 
     def __init__(self, baseUrl):
         self._baseUrl = baseUrl
+        self.session = Session()
 
     def invokeMethod(self, method, args=None, post_data=None):
         try:
@@ -27,7 +28,10 @@ class Client:
             url = self._baseUrl + "/" + method + query
             log_info("URL: {}".format(url))
             if post_data:
-                resp = self.session.post(url, data=post_data)
+                headers = {"Content-Type": "application/json"}
+                self.session.headers = headers
+                log_info("post_data: {}".format(post_data))
+                resp = self.session.post(url, data=json.dumps(post_data))
             else:
                 resp = self.session.post(url)
 
