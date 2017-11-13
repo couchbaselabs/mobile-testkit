@@ -5,11 +5,11 @@ from libraries.provision.install_sync_gateway import SyncGatewayConfig
 from keywords.utils import version_and_build
 
 
-@pytest.mark.parametrize("sg_ce, sg_type", [
-    (True, "community"),
-    (False, "enterprise"),
+@pytest.mark.parametrize("sg_ce, sg_type, sg_platform, sa_platform, platform_ext", [
+    (True, "community", "centos", "centos", "rpm"),
+    (False, "enterprise", "windows", "windows", "exe"),
 ])
-def test_ce_ee_package(sg_ce, sg_type):
+def test_ce_ee_package(sg_ce, sg_type, sg_platform, sa_platform, platform_ext):
     sync_gateway_version = "1.5.0-477"
     cwd = os.getcwd()
     sync_gateway_config = cwd + "/resources/sync_gateway_configs/sync_gateway_default_cc.json"
@@ -24,8 +24,8 @@ def test_ce_ee_package(sg_ce, sg_type):
         skip_bucketcreation=False
     )
 
-    sync_gateway_base_url, sync_gateway_package_name, sg_accel_package_name = sg_config.sync_gateway_base_url_and_package(sg_ce)
+    sync_gateway_base_url, sync_gateway_package_name, sg_accel_package_name = sg_config.sync_gateway_base_url_and_package(sg_ce, sg_platform, sa_platform)
 
-    assert sync_gateway_package_name == "couchbase-sync-gateway-{}_1.5.0-477_x86_64.rpm".format(sg_type)
-    assert sg_accel_package_name == "couchbase-sg-accel-enterprise_1.5.0-477_x86_64.rpm"
+    assert sync_gateway_package_name == "couchbase-sync-gateway-{}_1.5.0-477_x86_64.{}".format(sg_type, platform_ext)
+    assert sg_accel_package_name == "couchbase-sg-accel-enterprise_1.5.0-477_x86_64.{}".format(platform_ext)
     assert sync_gateway_base_url == "http://latestbuilds.service.couchbase.com/builds/latestbuilds/sync_gateway/1.5.0/477"

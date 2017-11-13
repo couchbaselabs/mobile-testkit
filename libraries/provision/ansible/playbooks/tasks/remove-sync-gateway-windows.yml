@@ -1,0 +1,16 @@
+# Remove sync_gateway package
+- name: SYNC GATEWAY | Uninstall sync_gateway exe
+  win_command: wmic product where name='Couchbase Sync Gateway' call uninstall
+
+# Delete sync_gateway binary
+- name: SYNC GATEWAY | Delete sync_gateway install directory
+  win_file: 
+    path: C:\PROGRA~2\Couchbase 
+    state: absent
+  ignore_errors: yes
+
+- name: SYNC GATEWAY | Remove tmp logging dir (log rotation tests)
+  win_file: 
+    path: C:\Users\Administrator\AppData\Local\Temp\sg_logs
+    state: absent
+  ignore_errors: yes
