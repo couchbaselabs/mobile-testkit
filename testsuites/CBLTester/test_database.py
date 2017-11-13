@@ -137,13 +137,19 @@ def test_adddocs():
 
     sample_doc = {
         "a": {
-            "c": "d"
+            "c": "d",
+            "e": "f"
         },
         "b": {
-            "e": "f"
+            "g": "h",
+            "i": "j"
         }
     }
 
     tc.database_addDocuments(source_db, sample_doc)
     doc_count = tc.database_docCount(source_db)
+    db_path = tc.database_path(source_db)
     log_info("doc_count: {}".format(doc_count))
+    log_info("db_path: {}".format(db_path))
+    tc.database_delete(cbl_db, db_path)
+    assert doc_count == 2

@@ -26,6 +26,25 @@ class TestCase:
 
         return self._client.invokeMethod("database_create", args)
 
+    def database_delete(self, name, path):
+        args = Args()
+        args.setString("name", name)
+        args.setString("path", path)
+
+        return self._client.invokeMethod("database_delete", args)
+
+    def database_close(self, database):
+        args = Args()
+        args.setString("database", database)
+
+        return self._client.invokeMethod("database_close", args)
+
+    def database_path(self, database):
+        args = Args()
+        args.setString("database", database)
+
+        return self._client.invokeMethod("database_path", args)
+
     def database_getName(self, database):
         args = Args()
         args.setMemoryPointer("database", database)
@@ -45,13 +64,6 @@ class TestCase:
         args.setMemoryPointer("document", document)
 
         self._client.invokeMethod("database_save", args)
-
-    def database_delete(self, database, document):
-        args = Args()
-        args.setMemoryPointer("database", database)
-        args.setMemoryPointer("document", document)
-
-        self._client.invokeMethod("database_delete", args)
 
     def database_contains(self, database, doc_id):
         args = Args()
@@ -104,6 +116,18 @@ class TestCase:
 
         return self._client.invokeMethod("databaseChange_isDelete", args)
 
+    def database_addDocuments(self, database, data):
+        args = Args()
+        args.setMemoryPointer("database", database)
+
+        return self._client.invokeMethod("database_addDocuments", args, post_data=data)
+
+    def database_getDocuments(self, database):
+        args = Args()
+        args.setMemoryPointer("database", database)
+
+        return self._client.invokeMethod("database_getDocuments", args)
+
     ################
     # - Document - #
     ################
@@ -123,6 +147,13 @@ class TestCase:
             return self._client.invokeMethod("document_create", args)
         else:
             return self._client.invokeMethod("document_create")
+
+    def document_delete(self, database, document):
+        args = Args()
+        args.setMemoryPointer("database", database)
+        args.setMemoryPointer("document", document)
+
+        self._client.invokeMethod("document_delete", args)
 
     def document_getId(self, document):
         args = Args()
@@ -145,12 +176,7 @@ class TestCase:
 
         self._client.invokeMethod("document_setString", args)
 
-    def database_addDocuments(self, database, data):
-        # data = {docid: {doc}, docid: {doc}}
-        args = Args()
-        args.setMemoryPointer("database", database)
 
-        return self._client.invokeMethod("database_addDocuments", args, post_data=data)
 
     ###################
     #  - Dictionary - #

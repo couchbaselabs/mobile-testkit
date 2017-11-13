@@ -20,12 +20,33 @@ public class RequestHandler {
     
     public func handleRequest(method: String, args: Args, post_body: Dictionary<String, AnyObject>?) throws -> Any? {
         switch method {
+        ///////////
+        // Database
+        ///////////
         case "database_create":
             let arg: String? = args.get(name: "name")
             guard let name = arg else {
                 throw RequestHandlerError.InvalidArgument("name")
             }
             return try Database(name: name)
+
+        case "database_close":
+            let database: Database = (args.get(name:"database"))!
+            
+            try database.close()
+            
+        case "database_path":
+            let database: Database = (args.get(name:"database"))!
+            
+            return database.path
+
+        case "database_delete":
+            //let database: Database = (args.get(name:"database"))!
+            let name: String = (args.get(name:"name"))!
+            let path: String = (args.get(name:"path"))!
+
+            try Database.delete(name, inDirectory: path)
+
         case "database_getName":
             let database: Database = args.get(name:"database")!
             
@@ -40,11 +61,6 @@ public class RequestHandler {
             let document: Document = args.get(name:"document")!
             
             try! database.save(document)
-        case "database_delete":
-            let database: Database = (args.get(name:"database"))!
-            let document: Document = args.get(name:"document")!
-            
-            try! database.delete(document)
         case "database_contains":
             let database: Database = (args.get(name:"database"))!
             let id: String = (args.get(name: "id"))!
@@ -55,10 +71,44 @@ public class RequestHandler {
             let database: Database = (args.get(name:"database"))!
             return database.count
 
+        case "database_addDocuments":
+            let database: Database = args.get(name:"database")!
+            
+            try database.inBatch {
+                for doc_id in post_body! {
+                    let document = Document(doc_id.key, dictionary: (doc_id.value as! Dictionary<String, Any>))
+                    try! database.save(document)
+                }
+            }
+            
+        case "database_getDocuments":
+            let database: Database = args.get(name:"database")!
+            let query = Query
+                            .select(SelectResult.expression(Expression.meta().id))
+                            .from(DataSource.database(database))
+
+            
+            do {
+                for row in try query.run() {
+                    print("Row is \(row)")
+                    print("Get docID by property name \(row.string(forKey: "id")))")
+                    print("Get docID by column number \(row.string(at: 0)))")
+                }
+            }
+
+        //////////////
+        // Document //
+        //////////////
         case "document_create":
             let id: String? = (args.get(name: "id"))
             let dictionary: [String: Any]? = (args.get(name: "dictionary"))
             return Document(id, dictionary: dictionary)
+
+        case "document_delete":
+            let database: Database = (args.get(name:"database"))!
+            let document: Document = args.get(name:"document")!
+            
+            try! database.delete(document)
         case "document_getId":
             let document: Document = (args.get(name: "document"))!
             
@@ -144,14 +194,7 @@ public class RequestHandler {
                 print(error.localizedDescription)
             }
             return response.flatMap{ String($0) }.map { String($0) }.joined(separator: ",")
-        case "database_addDocuments":
-            let database: Database = args.get(name:"database")!
-            
-            for doc_id in post_body! {
-                print ("doc_id is \(doc_id.key)")
-                print ("doc is \(doc_id.value)")
-            }
-            
+
         default:
             throw RequestHandlerError.MethodNotFound(method)
         }

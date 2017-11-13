@@ -37,6 +37,8 @@ class Client:
 
             # Process response.
             responseCode = resp.status_code
+            responseJson = resp.json()
+
             if responseCode == 200:
                 result = resp.content
                 log_info("Got response: {}".format(result))
