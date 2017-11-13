@@ -10,7 +10,6 @@ from keywords.SyncGateway import sync_gateway_config_path_for_mode
 from keywords.utils import log_info
 
 
-@pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.basicauth
 @pytest.mark.channel

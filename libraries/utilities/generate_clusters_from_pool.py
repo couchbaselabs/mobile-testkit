@@ -28,7 +28,7 @@ class ClusterDef:
         )
 
 
-def write_config(config, pool_file, use_docker):
+def write_config(config, pool_file, use_docker, sg_windows, sg_accel_windows):
 
     connection_string = ""
     if use_docker:
@@ -364,6 +364,22 @@ def write_config(config, pool_file, use_docker):
         f.write("xattrs_enabled=False\n")
         f.write("sg_lb_enabled=False\n")
 
+        if sg_windows:
+            f.write("\n\n[sync_gateways:vars]\n")
+            f.write("ansible_user=FakeUser\n")
+            f.write("ansible_password=FakePassword\n")
+            f.write("ansible_port=5986\n")
+            f.write("ansible_connection=winrm\n")
+            f.write("ansible_winrm_server_cert_validation=ignore\n")
+
+        if sg_accel_windows:
+            f.write("\n\n[sg_accels:vars]\n")
+            f.write("ansible_user=FakeUser\n")
+            f.write("ansible_password=FakePassword\n")
+            f.write("ansible_port=5986\n")
+            f.write("ansible_connection=winrm\n")
+            f.write("ansible_winrm_server_cert_validation=ignore\n")
+
         log_info("Generating {}.json".format(config.name))
 
         # Write json file consumable by testkit.cluster class
@@ -402,7 +418,7 @@ def get_hosts(pool_file="resources/pool.json"):
     return ips, ip_to_node_type
 
 
-def generate_clusters_from_pool(pool_file, use_docker=False):
+def generate_clusters_from_pool(pool_file, use_docker=False, sg_windows=False, sg_accel_windows=False):
 
     cluster_confs = [
 
@@ -414,6 +430,8 @@ def generate_clusters_from_pool(pool_file, use_docker=False):
         ClusterDef("base_lb_di", num_sgs=3, num_acs=1, num_cbs=1, num_lgs=0, num_lbs=1),
         ClusterDef("ci_lb_cc", num_sgs=3, num_acs=0, num_cbs=3, num_lgs=0, num_lbs=1),
         ClusterDef("ci_lb_di", num_sgs=3, num_acs=3, num_cbs=3, num_lgs=0, num_lbs=1),
+        ClusterDef("2each_lb_cc", num_sgs=2, num_acs=0, num_cbs=2, num_lgs=0, num_lbs=1),
+        ClusterDef("2each_lb_di", num_sgs=2, num_acs=2, num_cbs=2, num_lgs=0, num_lbs=1),
         ClusterDef("multiple_servers_cc", num_sgs=1, num_acs=0, num_cbs=3, num_lgs=0, num_lbs=0),
         ClusterDef("multiple_servers_di", num_sgs=1, num_acs=1, num_cbs=3, num_lgs=0, num_lbs=0),
         ClusterDef("multiple_sg_accels_di", num_sgs=1, num_acs=3, num_cbs=1, num_lgs=0, num_lbs=0),
@@ -467,6 +485,8 @@ def generate_clusters_from_pool(pool_file, use_docker=False):
         ClusterDef("16sg_8ac_3cbs_16lgs", num_sgs=16, num_acs=8, num_cbs=3, num_lgs=16, num_lbs=0),
         ClusterDef("16sg_8ac_6cbs_16lgs", num_sgs=16, num_acs=8, num_cbs=6, num_lgs=16, num_lbs=0),
         ClusterDef("16sg_8ac_12cbs_16lgs", num_sgs=16, num_acs=8, num_cbs=12, num_lgs=16, num_lbs=0),
+        # 32 sync_gateways
+        ClusterDef("32sg_16ac_16cbs_32lgs", num_sgs=32, num_acs=16, num_cbs=16, num_lgs=32, num_lbs=0),
         # End Perf Mini Matrix
 
         # Test Fest
@@ -484,7 +504,7 @@ def generate_clusters_from_pool(pool_file, use_docker=False):
 
     print("Generating 'resources/cluster_configs/'. Using docker: {}".format(use_docker))
     for cluster_conf in cluster_confs:
-        write_config(cluster_conf, pool_file, use_docker)
+        write_config(cluster_conf, pool_file, use_docker, sg_windows, sg_accel_windows)
 
 
 if __name__ == "__main__":
@@ -502,8 +522,12 @@ if __name__ == "__main__":
 
     parser.add_option("-d", "--use-docker", action="store_true", dest="use_docker", default=False, help="Use docker connection with ansible")
 
+    parser.add_option("--sg-windows", action="store_true", dest="sg_windows", default=False, help="Use Windows Sync Gateway")
+
+    parser.add_option("--sg-accel-windows", action="store_true", dest="sg_accel_windows", default=False, help="Use Windows Sync Gateway Accelerator")
+
     arg_parameters = sys.argv[1:]
 
     (opts, args) = parser.parse_args(arg_parameters)
 
-    generate_clusters_from_pool(opts.pool_file, opts.use_docker)
+    generate_clusters_from_pool(opts.pool_file, opts.use_docker, opts.sg_windows, opts.sg_accel_windows)

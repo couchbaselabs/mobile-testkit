@@ -1,7 +1,7 @@
 from enum import Enum
 
 BINARY_DIR = "deps/binaries"
-LATEST_BUILDS = "http://latestbuilds.hq.couchbase.com"
+LATEST_BUILDS = "http://latestbuilds.service.couchbase.com/builds/latestbuilds"
 RESULTS_DIR = "results"
 TEST_DIR = "framework_tests"
 CLUSTER_CONFIGS_DIR = "resources/cluster_configs"
@@ -11,9 +11,9 @@ DATA_DIR = "resources/data"
 MAX_RETRIES = 5
 
 CLIENT_REQUEST_TIMEOUT = 120
-REBALANCE_TIMEOUT_SECS = 600
+REBALANCE_TIMEOUT_SECS = 3600
 REMOTE_EXECUTOR_TIMEOUT = 180
-SDK_TIMEOUT = 180
+SDK_TIMEOUT = 3600
 
 # Required to make sure that these are created with encryption
 # Use to build the command line flags for encryption

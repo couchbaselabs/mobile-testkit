@@ -6,16 +6,16 @@
 
 - name: SYNC GATEWAY | Stop sync_gateway for CentOS 6
   shell: /sbin/initctl stop sync_gateway
-  when: (ansible_distribution == "CentOS" and ansible_distribution_major_version == "6") or ansible_distribution == "RedHat"
+  when: (ansible_distribution == "CentOS" and ansible_distribution_major_version == "6") or ansible_distribution == "RedHat" or ansible_distribution == "Amazon" or ansible_distribution == "Ubuntu"
   ignore_errors: yes
 
 # Remove sync_gateway package
-- name: SYNC GATEWAY | Uninstall sync_gateway rpm
+- name: SYNC GATEWAY | Uninstall sync_gateway rpm  
   shell: rpm -e couchbase-sync-gateway
   ignore_errors: yes
 
 # Remove sync_gateway service
-- name: SYNC GATEWAY | Remove sync_gateway service
+- name: SYNC GATEWAY | Remove sync_gateway service 
   file: path=/usr/lib/systemd/system/sync_gateway.service state=absent
   ignore_errors: yes
 

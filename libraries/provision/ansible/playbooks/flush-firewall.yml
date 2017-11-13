@@ -1,8 +1,9 @@
 # Flush the firewall rules, some maybe in place if it is a new vm
 - hosts: pool
-  become: yes
 
   tasks:
   - name: OS | Flush Firewall
+    become: yes
     command: iptables --flush
     ignore_errors: True
+    when: ansible_distribution == "CentOS"

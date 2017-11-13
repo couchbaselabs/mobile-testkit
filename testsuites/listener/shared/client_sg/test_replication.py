@@ -3,6 +3,8 @@ import re
 import time
 import pytest
 
+from keywords import document
+from keywords import attachment
 from concurrent.futures import as_completed
 from concurrent.futures import ThreadPoolExecutor
 
@@ -139,6 +141,100 @@ def test_initial_pull_replication(setup_client_syncgateway_test, continuous):
 @pytest.mark.listener
 @pytest.mark.syncgateway
 @pytest.mark.replication
+@pytest.mark.session
+@pytest.mark.parametrize("num_docs, need_attachments, replication_after_backgroundApp", [
+    (1000, True, False),
+    (10000, False, False),
+    (10000, False, False),
+    (10000, False, True),
+    (1000, True, True)
+])
+def test_initial_pull_replication_background_apprun(setup_client_syncgateway_test, num_docs, need_attachments,
+                                                    replication_after_backgroundApp):
+    """
+    @summary
+    1. Add specified number of documents to sync-gateway.
+    2. Start continous pull replication to pull the docs from a sync_gateway database.
+    3. While docs are getting replicated , push the app to the background
+    4. Verify if all of the docs got pulled and replication completed when app goes background
+    """
+
+    sg_db = "db"
+    ls_db = "ls_db"
+
+    cluster_config = setup_client_syncgateway_test["cluster_config"]
+    sg_mode = setup_client_syncgateway_test["sg_mode"]
+    ls_url = setup_client_syncgateway_test["ls_url"]
+    sg_one_admin = setup_client_syncgateway_test["sg_admin_url"]
+    sg_one_public = setup_client_syncgateway_test["sg_url"]
+    liteserv = setup_client_syncgateway_test["liteserv"]
+    liteserv_platform = setup_client_syncgateway_test["liteserv_platform"]
+    device_enabled = setup_client_syncgateway_test["device_enabled"]
+
+    sg_config = sync_gateway_config_path_for_mode("listener_tests/listener_tests", sg_mode)
+    c = cluster.Cluster(config=cluster_config)
+    c.reset(sg_config_path=sg_config)
+
+    # No command to push the app to background on device, so avoid test to run on ios device
+    if((liteserv_platform.lower() != "ios" and liteserv_platform.lower() != "android") or
+       (liteserv_platform.lower() == "ios" and device_enabled)):
+        pytest.skip('This test only valid for mobile')
+    log_info("ls_url: {}".format(ls_url))
+    log_info("sg_one_admin: {}".format(sg_one_admin))
+    log_info("sg_one_public: {}".format(sg_one_public))
+
+    client = MobileRestClient()
+    client.create_user(sg_one_admin, sg_db, "testuser", password="password", channels=["ABC", "NBC"])
+    session = client.create_session(sg_one_admin, sg_db, "testuser")
+
+    # Add 'number_of_sg_docs' to Sync Gateway
+    bulk_docs_resp = []
+    if need_attachments:
+        sg_doc_bodies = document.create_docs(
+            doc_id_prefix="seeded_doc",
+            number=num_docs,
+            attachments_generator=attachment.generate_2_png_10_10,
+            channels=["ABC"]
+        )
+    else:
+        sg_doc_bodies = document.create_docs(doc_id_prefix='seeded_doc', number=num_docs, channels=["ABC"])
+    # if adding bulk docs with huge attachment more than 5000 fails
+    for x in xrange(0, len(sg_doc_bodies), 100000):
+        chunk_docs = sg_doc_bodies[x:x + 100000]
+        ch_bulk_docs_resp = client.add_bulk_docs(url=sg_one_public, db=sg_db, docs=chunk_docs, auth=session)
+        log_info("length of bulk docs resp{}".format(len(ch_bulk_docs_resp)))
+        bulk_docs_resp += ch_bulk_docs_resp
+    # docs = client.add_bulk_docs(url=sg_one_public, db=sg_db, docs=sg_doc_bodies, auth=session)
+    assert len(bulk_docs_resp) == num_docs
+
+    # Add a poll to make sure all of the docs have propagated to sync_gateway's _changes before initiating
+    # the one shot pull replication to ensure that the client is aware of all of the docs to pull
+    client.verify_docs_in_changes(url=sg_one_public, db=sg_db, expected_docs=bulk_docs_resp, auth=session,
+                                  polling_interval=10)
+
+    client.create_database(url=ls_url, name=ls_db)
+    # Start replication after app goes background. So close app first and start replication
+    if replication_after_backgroundApp:
+        liteserv.close_app()
+        time.sleep(2)
+
+    client.start_replication(url=ls_url, continuous=True, from_url=sg_one_admin, from_db=sg_db, to_db=ls_db)
+    # This is for the case to start replication first and then make put app in background
+    if not replication_after_backgroundApp:
+        time.sleep(5)  # let replication go for few seconds and then make app go background
+        liteserv.close_app()
+
+    # Verify docs replicated to client
+    client.verify_docs_present(url=ls_url, db=ls_db, expected_docs=bulk_docs_resp, timeout=3600)
+
+    # Verify docs show up in client's changes feed
+    client.verify_docs_in_changes(url=ls_url, db=ls_db, expected_docs=bulk_docs_resp)
+
+
+@pytest.mark.sanity
+@pytest.mark.listener
+@pytest.mark.syncgateway
+@pytest.mark.replication
 @pytest.mark.parametrize("continuous", [
     True,
     False
@@ -221,6 +317,95 @@ def test_initial_push_replication(setup_client_syncgateway_test, continuous):
             assert len(replications[0]["error"]) == 0
     else:
         assert len(replications) == 0, "No replications should be running"
+
+
+@pytest.mark.sanity
+@pytest.mark.listener
+@pytest.mark.syncgateway
+@pytest.mark.replication
+@pytest.mark.session
+@pytest.mark.parametrize("num_docs, need_attachments, replication_after_backgroundApp", [
+    (100, True, False),
+    (10000, False, False),
+    (10000, False, False),
+    (10000, False, True),
+    (10000, True, True)
+])
+def test_push_replication_with_backgroundApp(setup_client_syncgateway_test, num_docs, need_attachments,
+                                             replication_after_backgroundApp):
+    """
+    @summary
+    1. Prepare LiteServ to have specified number of documents.
+    2. Start continous push replication to push the docs into a sync_gateway database.
+    3. While docs are getting replecated , push the app to the background
+    4. Verify if all of the docs get pushed and replication continous when app goes background
+    """
+
+    sg_db = "db"
+    ls_db = "ls_db"
+    channels = ["ABC", "NBC"]
+
+    cluster_config = setup_client_syncgateway_test["cluster_config"]
+    sg_mode = setup_client_syncgateway_test["sg_mode"]
+    ls_url = setup_client_syncgateway_test["ls_url"]
+    sg_one_admin = setup_client_syncgateway_test["sg_admin_url"]
+    sg_one_public = setup_client_syncgateway_test["sg_url"]
+    liteserv = setup_client_syncgateway_test["liteserv"]
+    liteserv_platform = setup_client_syncgateway_test["liteserv_platform"]
+    device_enabled = setup_client_syncgateway_test["device_enabled"]
+
+    sg_config = sync_gateway_config_path_for_mode("listener_tests/listener_tests", sg_mode)
+    c = cluster.Cluster(config=cluster_config)
+    c.reset(sg_config_path=sg_config)
+
+    # No command to push the app to background on device, so avoid test to run on ios device
+    if((liteserv_platform.lower() != "ios" and liteserv_platform.lower() != "android") or
+       (liteserv_platform.lower() == "ios" and device_enabled)):
+        pytest.skip('This test only valid for mobile and cannot run on iOS device')
+    log_info("ls_url: {}".format(ls_url))
+    log_info("sg_one_admin: {}".format(sg_one_admin))
+    log_info("sg_one_public: {}".format(sg_one_public))
+
+    client = MobileRestClient()
+    client.create_user(sg_one_admin, sg_db, "testuser", password="password", channels=channels)
+    session = client.create_session(sg_one_admin, sg_db, "testuser")
+
+    client.create_database(url=ls_url, name=ls_db)
+    bulk_docs_resp = []
+    if need_attachments:
+        doc_bodies = document.create_docs(
+            doc_id_prefix="seeded_doc",
+            number=num_docs,
+            attachments_generator=attachment.generate_2_png_10_10,
+            channels=channels
+        )
+    else:
+        doc_bodies = document.create_docs(doc_id_prefix='seeded_doc', number=num_docs, channels=channels)
+
+    # liteserv cannot handle bulk docs more than 100000, if you run more than 100000, it will chunk the
+    # docs into set of 100000 and call add bulk docs
+    for x in xrange(0, len(doc_bodies), 100000):
+        chunk_docs = doc_bodies[x:x + 100000]
+        ch_bulk_docs_resp = client.add_bulk_docs(url=ls_url, db=ls_db, docs=chunk_docs, auth=session)
+        bulk_docs_resp += ch_bulk_docs_resp
+    assert len(bulk_docs_resp) == num_docs
+
+    # Start replication after app goes background. So close app first and start replication
+    if replication_after_backgroundApp:
+        liteserv.close_app()
+        time.sleep(2)
+
+    client.start_replication(url=ls_url, continuous=True, from_db=ls_db, to_url=sg_one_admin, to_db=sg_db)
+    # This is for the case to start replication first and then make put app in background
+    if not replication_after_backgroundApp:
+        time.sleep(3)  # let replication go for few seconds and then make app go background
+        liteserv.close_app()
+
+    # Verify docs replicated to sync_gateway
+    client.verify_docs_present(url=sg_one_public, db=sg_db, expected_docs=bulk_docs_resp, auth=session, timeout=3600)
+
+    # Verify docs show up in sync_gateway's changes feed
+    client.verify_docs_in_changes(url=sg_one_public, db=sg_db, expected_docs=bulk_docs_resp, auth=session)
 
 
 @pytest.mark.sanity
@@ -1224,3 +1409,112 @@ def test_replication_with_session_cookie_short_ttl(setup_client_syncgateway_test
 
     # Delete the session
     client.delete_session(url=sg_admin_url, db=sg_db, user_name="user_1", session_id=session_id)
+
+
+@pytest.mark.listener
+@pytest.mark.syncgateway
+@pytest.mark.replication
+def test_replication_attachments_survive_channel_removal(setup_client_syncgateway_test):
+    """
+    @summary
+    Regression test for https://github.com/couchbase/couchbase-lite-net/issues/910
+    1. SyncGateway Config with One user added (e.g. user1 / 1234) who has access to a limited
+       set of channels (e.g. ["user_channel"]) and GUEST disabled
+    2. Start authenticated continuous pull replication
+    3. Add a document that gets assigned to the user's channel, and verify that it is pulled
+    4. Stop the pull replication started in (2)
+    5. Update the document created in (3), including adding at least one attachment
+    6. Update the document created in (3) that removes it from the user's channel
+    7. Repeat step (2)
+    8. Update the document created in (3) that keep the attachments intact, as well
+       as adds the document back into the user's channel
+    9. Verify that the document and attachment are both present in the local DB
+    """
+
+    ls_db = "ls_db"
+    sg_db = "db"
+
+    cluster_config = setup_client_syncgateway_test["cluster_config"]
+    sg_mode = setup_client_syncgateway_test["sg_mode"]
+    ls_url = setup_client_syncgateway_test["ls_url"]
+    sg_url = setup_client_syncgateway_test["sg_url"]
+    sg_admin_url = setup_client_syncgateway_test["sg_admin_url"]
+
+    # Create the config mentioned in step 1
+    sg_config = sync_gateway_config_path_for_mode("listener_tests/listener_tests_user", sg_mode)
+    c = cluster.Cluster(config=cluster_config)
+    c.reset(sg_config_path=sg_config)
+
+    log_info("Running 'test_replication_attachments_survive_channel_removal'")
+    log_info("ls_url: {}".format(ls_url))
+    log_info("sg_admin_url: {}".format(sg_admin_url))
+    log_info("sg_url: {}".format(sg_url))
+
+    client = MobileRestClient()
+    client.create_database(url=ls_url, name=ls_db)
+    abc_channels = ["ABC"]
+    nbc_channels = ["NBC"]
+    num_of_docs = 10
+    client.create_user(sg_admin_url, sg_db, "autotest", password="password", channels=abc_channels)
+    session = client.create_session(sg_admin_url, sg_db, "autotest")
+    client.create_user(sg_admin_url, sg_db, "autotest2", password="password", channels=nbc_channels)
+    session1 = client.create_session(sg_admin_url, sg_db, "autotest2")
+
+    pull = client.start_replication(
+        url=ls_url,
+        continuous=True,
+        from_url=sg_url,
+        from_db=sg_db,
+        from_auth=session,
+        to_db=ls_db,
+    )
+
+    docs = client.add_docs(
+        url=sg_url,
+        db=sg_db,
+        number=num_of_docs,
+        id_prefix="seeded_doc",
+        generator="four_k",
+        channels=abc_channels,
+        auth=session
+    )
+
+    client.wait_for_replication_status_idle(ls_url, pull)
+    client.verify_docs_present(url=ls_url, db=ls_db, expected_docs=docs, timeout=240)
+    client.stop_replication(
+        url=ls_url,
+        continuous=True,
+        from_db=sg_db,
+        from_url=sg_url,
+        to_db=ls_db
+    )
+
+    # steps 5 and 6
+    for doc in docs:
+        client.update_doc(url=sg_url, db=sg_db, doc_id=doc["id"], number_updates=1, attachment_name="sample_text.txt", delay=0.1, auth=session, channels=abc_channels)
+    client.update_docs(url=sg_url, db=sg_db, docs=docs, number_updates=1, delay=0.1, auth=session, channels=nbc_channels)
+    # Continue with step 7
+    pull = client.start_replication(
+        url=ls_url,
+        continuous=True,
+        from_url=sg_url,
+        from_db=sg_db,
+        from_auth=session,
+        to_db=ls_db,
+    )
+    client.wait_for_replication_status_idle(ls_url, pull)
+
+    # Step 8
+    updated_docs = client.update_docs(url=sg_url, db=sg_db, docs=docs, number_updates=1, delay=0.1, auth=session1, channels=abc_channels)
+    # Step 9
+    client.verify_docs_present(url=ls_url, db=ls_db, expected_docs=updated_docs, timeout=240)
+    for doc in updated_docs:
+        att = client.get_attachment(
+            url=ls_url,
+            db=ls_db,
+            doc_id=doc["id"],
+            attachment_name="sample_text.txt"
+        )
+        with open('resources/data/sample_text.txt', 'r') as file:
+            expected_text = file.read()
+        assert expected_text == att

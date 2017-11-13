@@ -8,12 +8,12 @@ from keywords.ClusterKeywords import ClusterKeywords
 from keywords.exceptions import ProvisioningError
 from keywords.remoteexecutor import RemoteExecutor
 from keywords.SyncGateway import SyncGateway, sync_gateway_config_path_for_mode
-from keywords.utils import log_info
+from keywords.utils import log_info, add_cbs_to_sg_config_server_field
 from libraries.testkit.cluster import Cluster
 from utilities.cluster_config_utils import is_cbs_ssl_enabled, get_sg_version
 
 
-def load_sync_gateway_config(sync_gateway_config, mode, server_url, xattrs_enabled, cluster_conf):
+def load_sync_gateway_config(sync_gateway_config, mode, server_url, xattrs_enabled, cluster_config):
     """ Loads a syncgateway configuration for modification"""
     server_scheme, server_ip, server_port = server_url.split(":")
     server_ip = server_ip.replace("//", "")
@@ -28,12 +28,13 @@ def load_sync_gateway_config(sync_gateway_config, mode, server_url, xattrs_enabl
             autoimport_prop = ""
             xattrs_prop = ""
 
-        if is_cbs_ssl_enabled(cluster_conf) and get_sg_version(cluster_conf) >= "1.5.0":
+        if is_cbs_ssl_enabled(cluster_config) and get_sg_version(cluster_config) >= "1.5.0":
             server_scheme = "couchbases"
             server_port = 11207
 
+        couchbase_server_primary_node = add_cbs_to_sg_config_server_field(cluster_config)
         temp = template.render(
-            couchbase_server_primary_node=server_ip,
+            couchbase_server_primary_node=couchbase_server_primary_node,
             is_index_writer="false",
             server_scheme=server_scheme,
             server_port=server_port,
@@ -118,7 +119,6 @@ def test_log_rotation_default_values(params_from_base_test_setup, sg_conf_name):
     os.remove(temp_conf)
 
 
-@pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.logging
 @pytest.mark.parametrize("sg_conf_name", ["log_rotation"])
@@ -170,7 +170,6 @@ def test_log_logKeys_string(params_from_base_test_setup, sg_conf_name):
     pytest.fail("SG shouldn't be started!!!!")
 
 
-@pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.logging
 @pytest.mark.parametrize("sg_conf_name", ["log_rotation"])
@@ -217,7 +216,6 @@ def test_log_nondefault_logKeys_set(params_from_base_test_setup, sg_conf_name):
     os.remove(temp_conf)
 
 
-@pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.logging
 @pytest.mark.parametrize("sg_conf_name", ["log_rotation"])
@@ -284,7 +282,6 @@ def test_log_maxage_10_timestamp_ignored(params_from_base_test_setup, sg_conf_na
 
 
 # https://github.com/couchbase/sync_gateway/issues/2221
-@pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.logging
 @pytest.mark.parametrize("sg_conf_name", ["log_rotation"])
@@ -337,7 +334,6 @@ def test_log_rotation_invalid_path(params_from_base_test_setup, sg_conf_name):
     pytest.fail("SG shouldn't be started!!!!")
 
 
-@pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.logging
 @pytest.mark.skip(reason="This causes paramiko to timeout intermittently. Need to revisit.")
@@ -396,7 +392,6 @@ def test_log_200mb(params_from_base_test_setup, sg_conf_name):
     os.remove(temp_conf)
 
 
-@pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.logging
 @pytest.mark.parametrize("sg_conf_name", ["log_rotation"])
@@ -453,7 +448,6 @@ def test_log_number_backups(params_from_base_test_setup, sg_conf_name):
 
 
 # https://github.com/couchbase/sync_gateway/issues/2222
-@pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.logging
 @pytest.mark.parametrize("sg_conf_name", ["log_rotation"])
@@ -514,7 +508,6 @@ def test_log_rotation_negative(params_from_base_test_setup, sg_conf_name):
 
 
 # https://github.com/couchbase/sync_gateway/issues/2225
-@pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.logging
 @pytest.mark.parametrize("sg_conf_name", ["log_rotation"])
@@ -572,7 +565,6 @@ def test_log_maxbackups_0(params_from_base_test_setup, sg_conf_name):
     os.remove(temp_conf)
 
 
-@pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.logging
 @pytest.mark.parametrize("sg_conf_name", ["log_rotation"])

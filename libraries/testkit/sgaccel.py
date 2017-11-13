@@ -5,9 +5,9 @@ import requests
 
 import libraries.testkit.settings
 from libraries.provision.ansible_runner import AnsibleRunner
-from utilities.cluster_config_utils import is_cbs_ssl_enabled
-from utilities.cluster_config_utils import get_sg_version
 from keywords.exceptions import ProvisioningError
+from utilities.cluster_config_utils import is_cbs_ssl_enabled, is_xattrs_enabled,  get_sg_version
+from keywords.utils import add_cbs_to_sg_config_server_field
 
 log = logging.getLogger(libraries.testkit.settings.LOGGER)
 
@@ -43,11 +43,19 @@ class SgAccel:
         conf_path = os.path.abspath(config)
         log.info(">>> Starting sg_accel with configuration: {}".format(conf_path))
 
+        couchbase_server_primary_node = add_cbs_to_sg_config_server_field(self.cluster_config)
         playbook_vars = {
             "sync_gateway_config_filepath": conf_path,
             "server_port": self.server_port,
-            "server_scheme": self.server_scheme
+            "server_scheme": self.server_scheme,
+            "autoimport": "",
+            "xattrs": "",
+            "couchbase_server_primary_node": couchbase_server_primary_node
         }
+        if is_xattrs_enabled(self.cluster_config):
+            playbook_vars["autoimport"] = '"import_docs": "continuous",'
+            playbook_vars["xattrs"] = '"enable_shared_bucket_access": true,'
+
         if is_cbs_ssl_enabled(self.cluster_config) and get_sg_version(self.cluster_config) >= "1.5.0":
             playbook_vars["server_scheme"] = "couchbases"
             playbook_vars["server_port"] = 11207

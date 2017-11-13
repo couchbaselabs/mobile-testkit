@@ -86,7 +86,6 @@ def test_multiple_users_multiple_channels(params_from_base_test_setup, sg_conf_n
     verify_changes([traun], expected_num_docs=num_docs_seth + num_docs_adam + num_docs_traun, expected_num_revisions=0, expected_docs=traun_expected_docs)
 
 
-@pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.basicauth
 @pytest.mark.channel
@@ -152,7 +151,6 @@ def test_muliple_users_single_channel(params_from_base_test_setup, sg_conf_name)
     verify_changes([seth, adam, traun], expected_num_docs=num_docs_seth + num_docs_adam + num_docs_traun, expected_num_revisions=0, expected_docs=all_docs)
 
 
-@pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.basicauth
 @pytest.mark.channel
@@ -212,7 +210,6 @@ def test_single_user_multiple_channels(params_from_base_test_setup, sg_conf_name
     log_info("TIME:{}s".format(end - start))
 
 
-@pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.basicauth
 @pytest.mark.channel
