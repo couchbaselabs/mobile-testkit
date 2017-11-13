@@ -10,9 +10,9 @@ import libraries.testkit.settings
 from libraries.provision.ansible_runner import AnsibleRunner
 from libraries.testkit.admin import Admin
 from libraries.testkit.debug import log_request, log_response
-from utilities.cluster_config_utils import is_cbs_ssl_enabled
-from utilities.cluster_config_utils import is_xattrs_enabled
-from keywords.utils import add_cbs_to_sg_config_server_field
+from utilities.cluster_config_utils import is_cbs_ssl_enabled, is_xattrs_enabled, no_conflicts_enabled
+from utilities.cluster_config_utils import get_revs_limit
+from keywords.utils import add_cbs_to_sg_config_server_field, log_info
 
 log = logging.getLogger(libraries.testkit.settings.LOGGER)
 
@@ -59,6 +59,7 @@ class SyncGateway:
             "server_scheme": self.server_scheme,
             "autoimport": "",
             "xattrs": "",
+            "no_conflicts": "",
             "couchbase_server_primary_node": self.couchbase_server_primary_node
         }
 
@@ -66,6 +67,13 @@ class SyncGateway:
             playbook_vars["autoimport"] = '"import_docs": "continuous",'
             playbook_vars["xattrs"] = '"enable_shared_bucket_access": true,'
 
+        if no_conflicts_enabled(self.cluster_config):
+            playbook_vars["no_conflicts"] = '"unsupported": { "allow_conflicts": false },'
+        try:
+            revs_limit = get_revs_limit(self.cluster_config)
+            playbook_vars["revs_limit"] = '"revs_limit": {},'.format(revs_limit)
+        except KeyError as ex:
+            log_info("Keyerror in getting revs_limit{}".format(ex.message))
         status = self.ansible_runner.run_ansible_playbook(
             "start-sync-gateway.yml",
             extra_vars=playbook_vars,
@@ -73,7 +81,10 @@ class SyncGateway:
         )
         return status
 
-    def restart(self, config):
+    def restart(self, config, cluster_config=None):
+
+        if(cluster_config is not None):
+            self.cluster_config = cluster_config
         conf_path = os.path.abspath(config)
         log.info(">>> Restarting sync_gateway with configuration: {}".format(conf_path))
 
@@ -83,6 +94,8 @@ class SyncGateway:
             "server_scheme": self.server_scheme,
             "autoimport": "",
             "xattrs": "",
+            "no_conflicts": "",
+            "revs_limit": "",
             "couchbase_server_primary_node": self.couchbase_server_primary_node
         }
 
@@ -90,6 +103,14 @@ class SyncGateway:
             playbook_vars["autoimport"] = '"import_docs": "continuous",'
             playbook_vars["xattrs"] = '"enable_shared_bucket_access": true,'
 
+        if no_conflicts_enabled(self.cluster_config):
+            playbook_vars["no_conflicts"] = '"unsupported": { "allow_conflicts": false },'
+        try:
+            revs_limit = get_revs_limit(self.cluster_config)
+            playbook_vars["revs_limit"] = '"revs_limit": {},'.format(revs_limit)
+        except KeyError as ex:
+            log_info("Keyerror in getting revs_limit{}".format(ex.message))
+        
         status = self.ansible_runner.run_ansible_playbook(
             "reset-sync-gateway.yml",
             extra_vars=playbook_vars,

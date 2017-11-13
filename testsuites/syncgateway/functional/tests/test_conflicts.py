@@ -2,8 +2,11 @@ import time
 
 import pytest
 from keywords.SyncGateway import sync_gateway_config_path_for_mode
-from libraries.testkit import cluster
+from libraries.testkit import cluster, syncgateway
 from keywords.MobileRestClient import MobileRestClient
+from utilities.cluster_config_utils import persist_cluster_config_environment_prop
+from keywords.utils import log_info
+from shutil import copyfile
 
 import keywords.exceptions
 import keywords.constants
@@ -18,7 +21,8 @@ from keywords import document
 @pytest.mark.basicauth
 @pytest.mark.channel
 @pytest.mark.parametrize("sg_conf_name", [
-    "sync_gateway_default_functional_tests"
+    "sync_gateway_default_functional_tests",
+    "sync_gateway_allow_conflicts"
 ])
 def test_non_winning_revisions(params_from_base_test_setup, sg_conf_name):
     """ Add non-winning revisions to the revision tree and ensure
@@ -271,3 +275,55 @@ def test_winning_conflict_branch_revisions(params_from_base_test_setup, sg_conf_
     assert len(changes_2["results"]) == 1
     assert changes_2["results"][0]["id"] == "test_doc"
     assert changes_2["results"][0]["changes"][0]["rev"] == "7-foo"
+
+
+@pytest.mark.syncgateway
+@pytest.mark.conflicts
+@pytest.mark.parametrize("sg_conf_name, revs_limit", [
+    ('sync_gateway_revs_conflict_configurable', 1),
+    ('sync_gateway_revs_conflict_configurable', 19)
+    # TODO : commenting as revs_limit 0 behavior is going to change, existing behavior start sg successfully , but it will change to sg fails
+    # Enable it once behavior is changed
+    # ('sync_gateway_revs_conflict_configurable', 0)
+])
+def test_invalid_revs_limit_with_allow_conflicts(params_from_base_test_setup, sg_conf_name, revs_limit):
+    """ Verify all borders of revs limit
+    Test case in Excel sheet : https://docs.google.com/spreadsheets/d/1YwI_gCeoBebQKBybkzoAEoXSc0XLReszDA-mPFQapgk/edit#gid=0
+    Covered Test case #2
+    Steps:
+    - Create a doc
+    - Have allow_conflicts to true in sg config
+    - Put revs_limit=1 or any number lower than 20 and restart sync-gateway
+    - Verify it fails
+    - change revs_limit=20 and start sync-gateway
+    - Verify it starts withtout any error
+    """
+
+    cluster_config = params_from_base_test_setup["cluster_config"]
+    mode = params_from_base_test_setup["mode"]
+    no_conflicts_enabled = params_from_base_test_setup["no_conflicts_enabled"]
+
+    if no_conflicts_enabled:
+        pytest.skip('--no-conflicts is not enabled, so skipping the test')
+
+    sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
+    c = cluster.Cluster(cluster_config)
+    c.reset(sg_conf)
+    # Creating temporary cluster config and json files to add revs limit dynamically
+    temp_cluster_config = "resources/cluster_configs/temp_cluster_config_{}".format(mode)
+    temp_cluster_config_json = "resources/cluster_configs/temp_cluster_config_{}.json".format(mode)
+    cluster_config_json = "{}.json".format(cluster_config)
+    open(temp_cluster_config, "w+")
+    open(temp_cluster_config_json, "w+")
+    copyfile(cluster_config, temp_cluster_config)
+    copyfile(cluster_config_json, temp_cluster_config_json)
+    persist_cluster_config_environment_prop(temp_cluster_config, 'revs_limit', revs_limit, property_name_check=False)
+    status = c.sync_gateways[0].restart(config=sg_conf, cluster_config=temp_cluster_config)
+    assert status != 0, "Syncgateway started with revs limit 1 when no conflicts disabled"
+
+    # Now change the revs_limit to 20
+    revs_limit = 20
+    persist_cluster_config_environment_prop(temp_cluster_config, 'revs_limit', revs_limit, property_name_check=False)
+    status = c.sync_gateways[0].restart(config=sg_conf, cluster_config=temp_cluster_config)
+    assert status == 0, "Syncgateway did not start after revs_limit changed to 20"
+

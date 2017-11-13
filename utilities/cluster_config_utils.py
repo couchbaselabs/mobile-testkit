@@ -28,7 +28,7 @@ class CustomConfigParser(ConfigParser.RawConfigParser):
             fp.write("\n")
 
 
-def persist_cluster_config_environment_prop(cluster_config, property_name, value):
+def persist_cluster_config_environment_prop(cluster_config, property_name, value, property_name_check=True):
     """ Loads the cluster_config and sets
 
     [environment]
@@ -41,9 +41,10 @@ def persist_cluster_config_environment_prop(cluster_config, property_name, value
     for cluster_config.json
     """
 
-    valid_props = ["cbs_ssl_enabled", "xattrs_enabled", "sg_lb_enabled", "sync_gateway_version", "server_version"]
-    if property_name not in valid_props:
-        raise ProvisioningError("Make sure the property you are trying to change is one of: {}".format(valid_props))
+    if property_name_check is True:
+        valid_props = ["cbs_ssl_enabled", "xattrs_enabled", "sg_lb_enabled", "sync_gateway_version", "server_version", "no_conflicts_enabled"]
+        if property_name not in valid_props:
+            raise ProvisioningError("Make sure the property you are trying to change is one of: {}".format(valid_props))
 
     # Write property = value in the cluster_config.json
     cluster_config_json = "{}.json".format(cluster_config)
@@ -118,3 +119,18 @@ def get_sg_version(cluster_config):
     """ Loads cluster config to get sync gateway version"""
     cluster = load_cluster_config_json(cluster_config)
     return cluster["environment"]["sync_gateway_version"]
+
+
+def no_conflicts_enabled(cluster_config):
+    "Get no conflicts value from cluster config"
+    cluster = load_cluster_config_json(cluster_config)
+    try:
+        return cluster["environment"]["no_conflicts_enabled"]
+    except KeyError:
+        return False
+
+
+def get_revs_limit(cluster_config):
+    "Get revs limit"
+    cluster = load_cluster_config_json(cluster_config)
+    return cluster["environment"]["revs_limit"]

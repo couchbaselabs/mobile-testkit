@@ -45,3 +45,7 @@ def pytest_addoption(parser):
     parser.addoption("--sequoia",
                      action="store_true",
                      help="If set, the tests will use a cluster provisioned by sequoia")
+
+    parser.addoption("--no-conflicts",
+                     action="store_true",
+                     help="If set, allow_conflicts is set to false in sync-gateway config")

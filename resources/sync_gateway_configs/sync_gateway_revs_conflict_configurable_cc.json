@@ -6,27 +6,17 @@
     "maxFileDescriptors": 90000,
     "slowServerCallWarningThreshold": 500,
     "compressResponses": false,
-    "log": ["CRUD+", "Cache+", "HTTP+", "Changes+"],
-    "verbose":"true",
-    "databases": {
+    "log": ["CRUD+", "Cache+", "HTTP+", "Changes+", "Import+"],
+    "databases":{
         "db":{
             {{ autoimport }}
             {{ xattrs }}
             {{ no_conflicts }}
+            {{ revs_limit }}
             "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
             "bucket":"data-bucket",
             "username":"data-bucket",
             "password": "password"
-        },
-        "db2":{
-            {{ autoimport }}
-            {{ xattrs }}
-            {{ no_conflicts }}
-            "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
-            "bucket":"data-bucket-2",
-            "username":"data-bucket-2",
-            "password": "password"
         }
     }
 }
-
