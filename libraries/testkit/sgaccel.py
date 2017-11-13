@@ -6,7 +6,7 @@ import requests
 import libraries.testkit.settings
 from libraries.provision.ansible_runner import AnsibleRunner
 from keywords.exceptions import ProvisioningError
-from utilities.cluster_config_utils import is_cbs_ssl_enabled, is_xattrs_enabled,  get_sg_version
+from utilities.cluster_config_utils import is_cbs_ssl_enabled, is_xattrs_enabled, get_sg_version
 from keywords.utils import add_cbs_to_sg_config_server_field
 
 log = logging.getLogger(libraries.testkit.settings.LOGGER)
