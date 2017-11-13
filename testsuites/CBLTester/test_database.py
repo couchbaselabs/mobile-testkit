@@ -125,7 +125,7 @@ def test_query():
 
 def test_adddocs():
     source_db = None
-    base_url = "http://10.17.1.59:8989"
+    base_url = "http://10.17.1.4:8989"
     tc = TestCase(base_url)
     cbl_db = "test_db"
 

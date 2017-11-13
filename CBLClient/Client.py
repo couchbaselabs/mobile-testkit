@@ -29,7 +29,6 @@ class Client:
             if post_data:
                 headers = {"Content-Type": "application/json"}
                 self.session.headers = headers
-                log_info("post_data: {}".format(post_data))
                 resp = self.session.post(url, data=json.dumps(post_data))
             else:
                 resp = self.session.post(url)

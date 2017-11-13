@@ -146,12 +146,12 @@ public class RequestHandler {
             return response.flatMap{ String($0) }.map { String($0) }.joined(separator: ",")
         case "database_addDocuments":
             let database: Database = args.get(name:"database")!
-//            print("data_json \(data_json)")
             
-//            for doc_data in data_json {
-//                print("doc_data \(doc_data)")
-//                print("documentsData[doc_data] \(documentsData[doc_data])")
-//            }
+            for doc_id in post_body! {
+                print ("doc_id is \(doc_id.key)")
+                print ("doc is \(doc_id.value)")
+            }
+            
         default:
             throw RequestHandlerError.MethodNotFound(method)
         }

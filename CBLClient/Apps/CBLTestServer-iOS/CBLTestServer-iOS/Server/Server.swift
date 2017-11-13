@@ -24,9 +24,7 @@ public class Server {
         requestHandler = RequestHandler()
         server = GCDWebServer()
         server.addDefaultHandler(forMethod: "POST", request: GCDWebServerDataRequest.self) {
-        //server.addDefaultHandler(forMethod: "POST", request: GCDWebServerDataRequest.self, processBlock: {
             (request) -> GCDWebServerResponse? in
-            //request in
             
             let rawArgs = request.query
             
