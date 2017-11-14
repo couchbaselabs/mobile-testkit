@@ -1,4 +1,5 @@
 import time
+import json
 
 from keywords.MobileRestClient import MobileRestClient
 from keywords.utils import log_info
@@ -151,5 +152,12 @@ def test_adddocs():
     db_path = tc.database_path(source_db)
     log_info("doc_count: {}".format(doc_count))
     log_info("db_path: {}".format(db_path))
-    tc.database_delete(cbl_db, db_path)
     assert doc_count == 2
+
+    doc_ids = tc.database_getDocIds(source_db)
+    log_info("doc_ids: {}".format(doc_ids))
+
+    docs = tc.database_getDocuments(source_db)
+    log_info("docs: {}".format(json.dumps(docs)))
+
+    tc.database_delete(cbl_db, db_path)

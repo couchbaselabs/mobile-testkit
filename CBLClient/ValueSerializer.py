@@ -1,3 +1,5 @@
+import json
+
 from MemoryPointer import MemoryPointer
 from keywords.utils import log_info
 
@@ -24,7 +26,9 @@ class ValueSerializer:
 
     @staticmethod
     def deserialize(value):
-        if not value or len(value) == 0 or value == "null":
+        if isinstance(value, dict):
+            return value
+        elif not value or len(value) == 0 or value == "null":
             return None
         elif value.startswith("@"):
             return MemoryPointer(value)

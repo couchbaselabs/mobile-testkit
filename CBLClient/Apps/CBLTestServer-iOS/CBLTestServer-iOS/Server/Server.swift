@@ -55,7 +55,7 @@ public class Server {
                 }
 
                 // Find and invoke the method on the RequestHandler.
-                var body: String? = nil
+                var serializedValue: Any? = nil
                 if "release" == method {
                     self.memory.remove(address: rawArgs!["object"] as! String)
                 } else {
@@ -63,13 +63,17 @@ public class Server {
                     if let void = result as? NSObject, void.isEqual(RequestHandler.VOID) {
                         // Do nothing.
                     } else {
-                        body = ValueSerializer.serialize(value: result, memory: self.memory);
+                        serializedValue = ValueSerializer.serialize(value: result, memory: self.memory);
                     }
                 }
                 
-                if let text = body {
+                if let body = serializedValue {
                     // Send 200 code and body
-                    return GCDWebServerDataResponse(text: text)!
+                    if let text = body as? String {
+                        return GCDWebServerDataResponse(text: text)!
+                    } else {
+                        return GCDWebServerDataResponse(data: body as! Data, contentType: "application/json")
+                    }
                 } else {
                     // Send 200 code and close
                     return GCDWebServerResponse(statusCode: 200)

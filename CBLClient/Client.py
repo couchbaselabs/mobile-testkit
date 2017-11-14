@@ -37,12 +37,21 @@ class Client:
 
             # Process response.
             responseCode = resp.status_code
-            responseJson = resp.json()
+            content_type = None
+
+            try:
+                content_type = resp.headers["Content-Type"]
+            except:
+                pass
 
             if responseCode == 200:
                 result = resp.content
                 log_info("Got response: {}".format(result))
-                return ValueSerializer.deserialize(result)
+
+                if content_type == "application/json":
+                    return ValueSerializer.deserialize(json.loads(result))
+                else:
+                    return ValueSerializer.deserialize(result)
         except RuntimeError as e:
             raise e
         except Exception as e:

@@ -41,7 +41,6 @@ public class RequestHandler {
             return database.path
 
         case "database_delete":
-            //let database: Database = (args.get(name:"database"))!
             let name: String = (args.get(name:"name"))!
             let path: String = (args.get(name:"path"))!
 
@@ -81,20 +80,36 @@ public class RequestHandler {
                 }
             }
             
-        case "database_getDocuments":
+        case "database_getDocIds":
             let database: Database = args.get(name:"database")!
             let query = Query
                             .select(SelectResult.expression(Expression.meta().id))
                             .from(DataSource.database(database))
 
-            
+            var result: [String] = []
             do {
                 for row in try query.run() {
-                    print("Row is \(row)")
-                    print("Get docID by property name \(row.string(forKey: "id")))")
-                    print("Get docID by column number \(row.string(at: 0)))")
+                    result.append(row.string(forKey: "id")!)
                 }
             }
+
+            return String(describing: result)
+
+        case "database_getDocuments":
+            let database: Database = args.get(name:"database")!
+            let query = Query
+                .select(SelectResult.expression(Expression.meta().id))
+                .from(DataSource.database(database))
+            
+            var result: [String: Any] = [:]
+            do {
+                for row in try query.run() {
+                    let id = row.string(forKey: "id")!
+                    let doc = database.getDocument(id)?.toDictionary()
+                    result[id] = doc
+                }
+            }
+            return try JSONSerialization.data(withJSONObject: result, options: .prettyPrinted)
 
         //////////////
         // Document //

@@ -9,7 +9,7 @@
 import Foundation
 
 public class ValueSerializer {
-    public static func serialize(value: Any?, memory: Memory) -> String {
+    public static func serialize(value: Any?, memory: Memory) -> Any {
         if value == nil {
             return "null"
         } else if (value is String) {
@@ -24,6 +24,8 @@ public class ValueSerializer {
         } else if (value is Bool) {
             let bool:Bool = value as! Bool
             return (bool ? "true" : "false")
+        } else if (value is Data) {
+            return value as Any
         } else {
             return memory.add(value: value!)
         }
