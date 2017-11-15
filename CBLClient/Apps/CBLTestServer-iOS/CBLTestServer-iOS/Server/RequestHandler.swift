@@ -20,9 +20,9 @@ public class RequestHandler {
     
     public func handleRequest(method: String, args: Args, post_body: Dictionary<String, AnyObject>?) throws -> Any? {
         switch method {
-        ///////////
-        // Database
-        ///////////
+        //////////////
+        // Database //
+        //////////////
         case "database_create":
             let arg: String? = args.get(name: "name")
             guard let name = arg else {
@@ -50,16 +50,19 @@ public class RequestHandler {
             let database: Database = args.get(name:"database")!
             
             return database.name
+            
         case "database_getDocument":
             let database: Database = (args.get(name:"database"))!
             let id: String = (args.get(name: "id"))!
 
             return (database.getDocument(id))!
+            
         case "database_save":
             let database: Database = (args.get(name:"database"))!
             let document: Document = args.get(name:"document")!
             
             try! database.save(document)
+            
         case "database_contains":
             let database: Database = (args.get(name:"database"))!
             let id: String = (args.get(name: "id"))!
@@ -152,15 +155,18 @@ public class RequestHandler {
             let document: Document = args.get(name:"document")!
             
             try! database.delete(document)
+            
         case "document_getId":
             let document: Document = (args.get(name: "document"))!
             
             return document.id
+            
         case "document_getString":
             let document: Document = (args.get(name: "document"))!
             let property: String = (args.get(name: "property"))!
                 
             return document.string(forKey: property)
+            
         case "document_setString":
             let document: Document = (args.get(name: "document"))!
             let property: String = (args.get(name: "property"))!
@@ -182,6 +188,10 @@ public class RequestHandler {
             let key: String = args.get(name: "key")!
             let string: String = args.get(name: "string")!
             map.setObject(string, forKey: key as NSCopying)
+
+        /////////////////
+        // Replication //
+        /////////////////
 
         case "configure_replication":
             let source_db: Database = args.get(name: "source_db")!
@@ -211,32 +221,45 @@ public class RequestHandler {
         case "stop_replication":
             let replication_obj: Replicator = args.get(name: "replication_obj")!
             replication_obj.stop()
+        
+        ///////////
+        // Query //
+        ///////////
 
-        case "run_query":
+        case "query_expression_property":
+            let property: String = args.get(name: "property")!
+            return Expression.property(property)
+
+        case "query_datasource_database":
+            let database: Database = args.get(name: "database")!
+            return DataSource.database(database)
+
+        case "query_run":
             // Only does select FirstName from test_db where City = "MV"
-            let select: String = args.get(name: "select")!
-            let frm: Database = args.get(name: "frm")!
-            let whr_key: String = args.get(name: "whr_key")!
+            let select_prop: PropertyExpression = args.get(name: "select_prop")!
+            let from_prop: DatabaseSource = args.get(name: "from_prop")!
+            let whr_key_prop: PropertyExpression = args.get(name: "whr_key_prop")!
             let whr_val: String = args.get(name: "whr_val")!
 
             let query = Query
-                .select(SelectResult.expression(Expression.property(select)))
-                .from(DataSource.database(frm))
+                .select(SelectResult.expression(select_prop))
+                .from(from_prop)
                 .where(
-                    Expression.property(whr_key).equalTo(whr_val)
+                    whr_key_prop.equalTo(whr_val)
                     )
 
-            var response: [String] = []
+            return try query.run()
 
-            do {
-                let rows = try query.run()
-                for row in rows {
-                    response.append(row.string(forKey: select)!)
-                }
-            } catch let error {
-                print(error.localizedDescription)
-            }
-            return response.flatMap{ String($0) }.map { String($0) }.joined(separator: ",")
+        case "query_next_result":
+            let query_result_set: ResultSet = args.get(name: "query_result_set")!
+            
+            return query_result_set.next()
+
+        case "query_result_string":
+            let query_result: Result = args.get(name: "query_result")!
+            let key: String = args.get(name: "key")!
+            
+            return query_result.string(forKey: key)
 
         default:
             throw RequestHandlerError.MethodNotFound(method)

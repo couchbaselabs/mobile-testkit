@@ -110,12 +110,6 @@ class TestCase:
 
         return self._client.invokeMethod("databaseChange_getDocumentId", args)
 
-    def databaseChange_isDelete(self, change):
-        args = Args()
-        args.setMemoryPointer("change", change)
-
-        return self._client.invokeMethod("databaseChange_isDelete", args)
-
     ################
     # - Document - #
     ################
