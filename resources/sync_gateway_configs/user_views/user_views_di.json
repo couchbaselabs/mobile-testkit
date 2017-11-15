@@ -19,6 +19,7 @@
   "databases": {
     "db": {
       {{ xattrs }}
+      {{ no_conflicts }}
       "unsupported": {
         "user_views": {
           "enabled":true

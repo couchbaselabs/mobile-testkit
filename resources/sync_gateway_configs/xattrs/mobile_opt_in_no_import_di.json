@@ -16,6 +16,7 @@
     },
     "databases":{
         "db":{
+            {{ no_conflicts }}
             "enable_shared_bucket_access": true,
             "import_filter": `function(doc){ return doc.type == "mobile"}`,
             "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
