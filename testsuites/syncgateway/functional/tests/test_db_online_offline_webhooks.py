@@ -77,10 +77,11 @@ def test_db_online_offline_webhooks_offline(params_from_base_test_setup, sg_conf
     log_info("Expecting db state {} found db state {}".format("Offline", db_info['state']))
     assert db_info["state"] == "Offline"
 
-    try:
-        webhook_events = ws.get_data()
-        time.sleep(5)
-        log_info("webhook event {}".format(webhook_events))
+    webhook_events = ws.get_data()
+    time.sleep(5)
+    log_info("webhook event {}".format(webhook_events))
+
+    try:    
         last_event = webhook_events[-1]
         assert last_event['state'] == 'offline'
 
