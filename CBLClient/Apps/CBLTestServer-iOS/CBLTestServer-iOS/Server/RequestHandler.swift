@@ -69,6 +69,34 @@ public class RequestHandler {
         case "database_docCount":
             let database: Database = (args.get(name:"database"))!
             return database.count
+            
+        case "database_addChangeListener":
+            let database: Database = (args.get(name:"database"))!
+            let changeListener = MyDatabaseChangeListener()
+            database.addChangeListener(changeListener.listener)
+            return changeListener
+            
+        case "database_removeChangeListener":
+            let database: Database = (args.get(name:"database"))!
+            let changeListener: DatabaseChange = (args.get(name: "changeListener"))!
+            
+            database.removeChangeListener(changeListener)
+
+        case "databaseChangeListener_changesCount":
+            let changeListener: MyDatabaseChangeListener = (args.get(name: "changeListener"))!
+            
+            return changeListener.getChanges().count
+            
+        case "databaseChangeListener_getChange":
+            let changeListener: MyDatabaseChangeListener = (args.get(name: "changeListener"))!
+            let index: Int = (args.get(name: "index"))!
+            
+            return changeListener.getChanges()[index]
+        
+        case "databaseChange_getDocumentId":
+            let change: DatabaseChange = (args.get(name: "change"))!
+            
+            return change.documentIDs
 
         case "database_addDocuments":
             let database: Database = args.get(name:"database")!
@@ -216,3 +244,16 @@ public class RequestHandler {
         return RequestHandler.VOID;
     }
 }
+
+class MyDatabaseChangeListener  {
+    var changes: [DatabaseChange] = []
+    
+    lazy var listener: (DatabaseChange) -> Void = { (change: DatabaseChange) in
+        self.changes.append(change)
+    }
+    
+    public func getChanges() -> [DatabaseChange] {
+        return changes
+    }
+}
+
