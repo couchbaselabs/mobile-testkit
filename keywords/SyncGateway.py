@@ -223,7 +223,7 @@ class SyncGateway:
             "xattrs": "",
             "couchbase_server_primary_node": couchbase_server_primary_node
         }
-
+        
         if is_xattrs_enabled(cluster_config):
             playbook_vars["autoimport"] = '"import_docs": "continuous",'
             playbook_vars["xattrs"] = '"enable_shared_bucket_access": true,'
@@ -231,8 +231,11 @@ class SyncGateway:
         if is_cbs_ssl_enabled(cluster_config) and get_sg_version(cluster_config) >= "1.5.0":
             playbook_vars["server_scheme"] = "couchbases"
             playbook_vars["server_port"] = 11207
+            block_http_vars = {}
+            block_http_vars["port"] = 8091
             status = ansible_runner.run_ansible_playbook(
-                "block-http-ports.yml"
+                "block-http-ports.yml",
+                extra_vars=block_http_vars
             )
             if status != 0:
                 raise ProvisioningError("Failed to block CBS http port")

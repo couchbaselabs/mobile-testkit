@@ -124,8 +124,11 @@ def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False, sg_pl
     if is_cbs_ssl_enabled(cluster_config) and get_sg_version(cluster_config) >= "1.5.0":
         playbook_vars["server_scheme"] = "couchbases"
         playbook_vars["server_port"] = 11207
+        block_http_vars = {}
+        block_http_vars["port"] = 8091
         status = ansible_runner.run_ansible_playbook(
-            "block-http-ports.yml"
+            "block-http-ports.yml",
+            extra_vars=block_http_vars
         )
         if status != 0:
             raise ProvisioningError("Failed to block CBS http port")
