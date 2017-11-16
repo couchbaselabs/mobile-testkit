@@ -39,7 +39,7 @@ def provision_cluster(cluster_config, couchbase_server_config, sync_gateway_conf
         persist_cluster_config_environment_prop(cluster_config, 'server_version', server_version)
 
     try:
-        sync_gateway_version
+        sg_version
     except NameError:
         log_info("Sync gateway version is not provided")
         persist_cluster_config_environment_prop(cluster_config, 'sync_gateway_version', "")
