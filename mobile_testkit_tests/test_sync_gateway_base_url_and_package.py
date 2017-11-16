@@ -9,6 +9,7 @@ from keywords.utils import version_and_build
     (True, "community", "centos", "centos", "rpm", None),
     (False, "enterprise", "windows", "windows", "exe", "exe"),
     (False, "enterprise", "windows", "windows", "msi", "msi"),
+    (False, "enterprise", "ubuntu", "ubuntu", "deb", "deb")
 ])
 def test_ce_ee_package(sg_ce, sg_type, sg_platform, sa_platform, platform_ext, sg_installer_type):
     sync_gateway_version = "2.1.0-138"

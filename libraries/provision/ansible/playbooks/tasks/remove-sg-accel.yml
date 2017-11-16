@@ -1,18 +1,24 @@
 # Stop sync_gateway service
 - name: SG ACCEL | Stop sg_accel service
   service: name=sg_accel state=stopped
-  when: ansible_distribution == "CentOS" and ansible_distribution_major_version == "7"
+  when: ansible_distribution == "CentOS" and ansible_distribution_major_version == "7" or ansible_distribution == "Ubuntu"
   ignore_errors: yes
 
 - name: SG ACCEL | Stop sg_accel for CentOS 6
   shell: /sbin/initctl stop sg_accel
-  when: (ansible_distribution == "CentOS" and ansible_distribution_major_version == "6")  or ansible_distribution == "RedHat" or ansible_distribution == "Amazon" or ansible_distribution == "Ubuntu"
+  when: (ansible_distribution == "CentOS" and ansible_distribution_major_version == "6")  or ansible_distribution == "RedHat" or ansible_distribution == "Amazon"
   ignore_errors: yes
 
 # Remove sg_accel package
 - name: SG ACCEL | Uninstall sg_accel rpm
   shell: rpm -e couchbase-sg-accel
   ignore_errors: yes
+  when: ansible_distribution == "CentOS" or ansible_distribution == "RedHat"
+
+- name: SG ACCEL | Uninstall sg_accel deb
+  shell: dpkg -P couchbase-sg-accel
+  ignore_errors: yes
+  when: ansible_distribution == "Ubuntu"
 
 # Remove sg_accel service
 - name: SG ACCEL | Remove sg_accel service
