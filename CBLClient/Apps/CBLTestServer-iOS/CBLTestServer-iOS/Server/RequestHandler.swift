@@ -233,11 +233,51 @@ public class RequestHandler {
         case "query_datasource_database":
             let database: Database = args.get(name: "database")!
             return DataSource.database(database)
+            
+        case "query_join_datasource":
+            let datasource: DataSource = args.get(name: "datasource")!
+            return Join.join(datasource)
+        
+        case "query_left_join_datasource":
+            let datasource: DataSource = args.get(name: "datasource")!
+            return Join.leftJoin(datasource)
 
-        case "query_run":
+        case "query_left_outer_join_datasource":
+            let datasource: DataSource = args.get(name: "datasource")!
+            return Join.leftOuterJoin(datasource)
+
+        case "query_inner_join_datasource":
+            let datasource: DataSource = args.get(name: "datasource")!
+            return Join.innerJoin(datasource)
+
+        case "query_cross_join_datasource":
+            let datasource: DataSource = args.get(name: "datasource")!
+            return Join.crossJoin(datasource)
+
+        case "query_select_result_expression_create":
+            let expression: Expression = args.get(name: "expression")!
+            
+            return SelectResult.expression(expression)
+
+        case "query_select_result_all_create":
+            return SelectResult.all()
+
+        case "query_select":
+            let select_result: SelectResult = args.get(name: "select_result")!
+            
+            return Query.select(select_result)
+
+        case "query_select_distinct":
+            let select_result: SelectResult = args.get(name: "select_result")!
+            
+            return Query.selectDistinct(select_result)
+
+        case "query_create":
             // Only does select FirstName from test_db where City = "MV"
             let select_prop: PropertyExpression = args.get(name: "select_prop")!
             let from_prop: DatabaseSource = args.get(name: "from_prop")!
+            
+            //optional
             let whr_key_prop: PropertyExpression = args.get(name: "whr_key_prop")!
             let whr_val: String = args.get(name: "whr_val")!
 
@@ -247,7 +287,11 @@ public class RequestHandler {
                 .where(
                     whr_key_prop.equalTo(whr_val)
                     )
-
+            
+            return query
+            
+        case "query_run":
+            let query: Query = args.get(name: "query")!
             return try query.run()
 
         case "query_next_result":

@@ -28,12 +28,18 @@ class Query:
 
         return self._client.invokeMethod("query_datasource_database", args)
 
-    def query_run(self, select_prop, from_prop, whr_key_prop, whr_val):
+    def query_create(self, select_prop, from_prop, whr_key_prop, whr_val):
         args = Args()
         args.setString("select_prop", select_prop)
         args.setMemoryPointer("from_prop", from_prop)
         args.setString("whr_key_prop", whr_key_prop)
         args.setString("whr_val", whr_val)
+
+        return self._client.invokeMethod("query_create", args)
+
+    def query_run(self, query):
+        args = Args()
+        args.setString("query", query)
 
         return self._client.invokeMethod("query_run", args)
 

@@ -112,7 +112,8 @@ def test_query():
     whr_key_prop = qy.query_expression_property(prop="City")
     whr_val = "MV"
 
-    result_set = qy.query_run(select_prop, dbsource_prop, whr_key_prop, whr_val)
+    query = qy.query_create(select_prop, dbsource_prop, whr_key_prop, whr_val)
+    result_set = qy.query_run(query)
 
     query_result = qy.query_next_result(result_set)
     key = "FirstName"
