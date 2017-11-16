@@ -8,6 +8,7 @@ from keywords.utils import version_and_build
 @pytest.mark.parametrize("sg_ce, sg_type, sg_platform, sa_platform, platform_ext", [
     (True, "community", "centos", "centos", "rpm"),
     (False, "enterprise", "windows", "windows", "exe"),
+    (False, "enterprise", "ubuntu", "ubuntu", "deb")
 ])
 def test_ce_ee_package(sg_ce, sg_type, sg_platform, sa_platform, platform_ext):
     sync_gateway_version = "1.5.0-477"
