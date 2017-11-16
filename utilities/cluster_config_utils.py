@@ -1,6 +1,7 @@
 import ConfigParser
 import json
 from keywords.exceptions import ProvisioningError
+from shutil import copyfile
 
 
 class CustomConfigParser(ConfigParser.RawConfigParser):
@@ -134,3 +135,15 @@ def get_revs_limit(cluster_config):
     "Get revs limit"
     cluster = load_cluster_config_json(cluster_config)
     return cluster["environment"]["revs_limit"]
+
+
+def copy_to_temp_conf(cluster_config, mode):
+    # Creating temporary cluster config and json files to add revs limit dynamically
+    temp_cluster_config = "resources/cluster_configs/temp_cluster_config_{}".format(mode)
+    temp_cluster_config_json = "resources/cluster_configs/temp_cluster_config_{}.json".format(mode)
+    cluster_config_json = "{}.json".format(cluster_config)
+    open(temp_cluster_config, "w+")
+    open(temp_cluster_config_json, "w+")
+    copyfile(cluster_config, temp_cluster_config)
+    copyfile(cluster_config_json, temp_cluster_config_json)
+    return temp_cluster_config

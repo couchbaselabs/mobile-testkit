@@ -2,11 +2,10 @@ import time
 
 import pytest
 from keywords.SyncGateway import sync_gateway_config_path_for_mode
-from libraries.testkit import cluster, syncgateway
+from libraries.testkit import cluster
 from keywords.MobileRestClient import MobileRestClient
-from utilities.cluster_config_utils import persist_cluster_config_environment_prop
-from keywords.utils import log_info
-from shutil import copyfile
+from utilities.cluster_config_utils import persist_cluster_config_environment_prop, copy_to_temp_conf
+
 
 import keywords.exceptions
 import keywords.constants
@@ -309,14 +308,7 @@ def test_invalid_revs_limit_with_allow_conflicts(params_from_base_test_setup, sg
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
     c = cluster.Cluster(cluster_config)
     c.reset(sg_conf)
-    # Creating temporary cluster config and json files to add revs limit dynamically
-    temp_cluster_config = "resources/cluster_configs/temp_cluster_config_{}".format(mode)
-    temp_cluster_config_json = "resources/cluster_configs/temp_cluster_config_{}.json".format(mode)
-    cluster_config_json = "{}.json".format(cluster_config)
-    open(temp_cluster_config, "w+")
-    open(temp_cluster_config_json, "w+")
-    copyfile(cluster_config, temp_cluster_config)
-    copyfile(cluster_config_json, temp_cluster_config_json)
+    temp_cluster_config = copy_to_temp_conf(cluster_config, mode)
     persist_cluster_config_environment_prop(temp_cluster_config, 'revs_limit', revs_limit, property_name_check=False)
     status = c.sync_gateways[0].restart(config=sg_conf, cluster_config=temp_cluster_config)
     assert status != 0, "Syncgateway started with revs limit 1 when no conflicts disabled"
@@ -326,4 +318,3 @@ def test_invalid_revs_limit_with_allow_conflicts(params_from_base_test_setup, sg
     persist_cluster_config_environment_prop(temp_cluster_config, 'revs_limit', revs_limit, property_name_check=False)
     status = c.sync_gateways[0].restart(config=sg_conf, cluster_config=temp_cluster_config)
     assert status == 0, "Syncgateway did not start after revs_limit changed to 20"
-
