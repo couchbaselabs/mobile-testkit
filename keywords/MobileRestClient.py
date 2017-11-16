@@ -905,7 +905,7 @@ class MobileRestClient:
         doc["_revisions"]["ids"].extend(parent_revision_digests)
 
         params = {"new_edits": "false"}
-        
+
         if auth_type == AuthType.session:
             resp = self._session.put("{}/{}/{}".format(url, db, doc_id), params=params, data=json.dumps(doc), cookies=dict(SyncGatewaySession=auth[1]))
         elif auth_type == AuthType.http_basic:
@@ -2227,9 +2227,8 @@ class MobileRestClient:
 
     def get_revs_num_in_history(self, url, db, doc_id, auth=None):
         """
-        Get all revisions from history for specified doc 
+        Get all revisions from history for specified doc
         """
         doc = self.get_doc(url, db, doc_id, auth)
         logging.debug(doc)
         return doc["_revisions"]["ids"]
-

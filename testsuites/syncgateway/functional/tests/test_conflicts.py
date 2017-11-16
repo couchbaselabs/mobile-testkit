@@ -281,12 +281,14 @@ def test_winning_conflict_branch_revisions(params_from_base_test_setup, sg_conf_
 @pytest.mark.parametrize("sg_conf_name, revs_limit", [
     ('sync_gateway_revs_conflict_configurable', 1),
     ('sync_gateway_revs_conflict_configurable', 19)
+    ('sync_gateway_revs_conflict_configurable', 'a'),
+    ('sync_gateway_revs_conflict_configurable', -1)
     # TODO : commenting as revs_limit 0 behavior is going to change, existing behavior start sg successfully , but it will change to sg fails
     # Enable it once behavior is changed
     # ('sync_gateway_revs_conflict_configurable', 0)
 ])
 def test_invalid_revs_limit_with_allow_conflicts(params_from_base_test_setup, sg_conf_name, revs_limit):
-    """ Verify all borders of revs limit
+    """ @summary Verify all borders of revs limit
     Test case in Excel sheet : https://docs.google.com/spreadsheets/d/1YwI_gCeoBebQKBybkzoAEoXSc0XLReszDA-mPFQapgk/edit#gid=0
     Covered Test case #2
     Steps:
