@@ -48,6 +48,8 @@ def test_upgrade_cbl(setup_client_syncgateway_test):
     log_info("sg_one_public: {}".format(sg_one_public))
     test_name = "test_upgrade"
 
+    # Downloading 1.4.0-3, we are not paramatrizing here for older version as this is not going to work
+    # so hardcodig now rather than adding new parameter
     log_info("Downloading older version of LiteServ ...")
     liteserv.download(version_build="1.4.0-3")
 
