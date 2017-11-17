@@ -19,13 +19,14 @@ from keywords.utils import has_dot_net4_dot_5
 
 class LiteServNetMono(LiteServBase):
 
-    def download(self):
+    def download(self, version_build=None):
         """
         1. Check to see if package is downloaded already. If so, return
         2. Download the LiteServ package from latest builds to 'deps/binaries'
         3. Unzip the packages and make the binary executable
         """
-
+        if version_build is not None:
+            self.version_build = version_build
         # Skip download if packages is already downloaded
         if has_dot_net4_dot_5(self.version_build):
             expected_binary = "{}/couchbase-lite-net-mono-{}-liteserv/net45/LiteServ.exe".format(BINARY_DIR, self.version_build)
