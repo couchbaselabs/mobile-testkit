@@ -35,7 +35,7 @@ class LiteServBase(object):
 
     def download_oldVersion(self):
         raise NotImplementedError()
-        
+
     def install(self):
         raise NotImplementedError()
 
