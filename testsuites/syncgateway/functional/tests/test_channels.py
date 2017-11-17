@@ -24,7 +24,7 @@ def test_channels_view_after_restart(params_from_base_test_setup, sg_conf_name):
     """
     - Add 10000 docs to Sync Gateway
     - Restart Sync Gateway (to flush channel cache)
-    - Add 1 doc
+    - Add 1 doc (to initialize the channel cache)
     - Make a changes request
     - Verify view expvar (expvar["syncGateway_changeCache"]["view_queries"]) == 1
     - Make a changes request
@@ -76,12 +76,12 @@ def test_channels_view_after_restart(params_from_base_test_setup, sg_conf_name):
     sg.stop_sync_gateways(cluster_config=cluster_config, url=sg_url)
     sg.start_sync_gateways(cluster_config=cluster_config, url=sg_url, config=sg_conf)
 
-    # Add 1 to Sync Gateway
+    # Add 1 doc to Sync Gateway (to initialize the channel cache)
     doc_bodies = document.create_docs(doc_id_prefix='doc_new', number=1, channels=seth_user_info.channels)
     bulk_docs_resp_new = client.add_bulk_docs(url=sg_url, db=sg_db, docs=doc_bodies, auth=seth_session)
     assert len(bulk_docs_resp_new) == 1
 
-    # Repopulate channel cache with view call
+    # Changes request to trigger population of channel cache with view call
     bulk_docs_resp += bulk_docs_resp_new
     client.verify_docs_in_changes(url=sg_url, db=sg_db, expected_docs=bulk_docs_resp, auth=seth_session)
 
@@ -93,7 +93,7 @@ def test_channels_view_after_restart(params_from_base_test_setup, sg_conf_name):
         log_info('Looking for view queries == 1 in expvars')
         assert expvars['syncGateway_changeCache']['view_queries'] == 1
 
-    # Repopulate channel cache with view call
+    # Issue a second changes request that shouldn't trigger a view call
     client.verify_docs_in_changes(url=sg_url, db=sg_db, expected_docs=bulk_docs_resp, auth=seth_session)
 
     # Get Sync Gateway Expvars
