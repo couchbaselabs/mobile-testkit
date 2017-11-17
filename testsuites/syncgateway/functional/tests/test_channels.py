@@ -25,7 +25,9 @@ def test_channels_view_after_restart(params_from_base_test_setup, sg_conf_name):
     - Add 10000 docs to Sync Gateway
     - Restart Sync Gateway (to flush channel cache)
     - Make a changes request
-    - Verify view expvar (expvar["syncGateway_changeCache"]["view_queries"]) > 0
+    - Verify view expvar (expvar["syncGateway_changeCache"]["view_queries"]) == 1
+    - Make a changes request
+    - Verify view expvar (expvar["syncGateway_changeCache"]["view_queries"]) == 1
     """
 
     cluster_config = params_from_base_test_setup['cluster_config']
