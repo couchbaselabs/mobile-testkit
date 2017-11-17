@@ -84,6 +84,17 @@ def test_channels_view_after_restart(params_from_base_test_setup, sg_conf_name):
         log_info('Looking for view queries == 1 in expvars')
         assert expvars['syncGateway_changeCache']['view_queries'] == 1
 
+    # Repopulate channel cache with view call
+    client.verify_docs_in_changes(url=sg_url, db=sg_db, expected_docs=bulk_docs_resp, auth=seth_session)
+
+    # Get Sync Gateway Expvars
+    expvars = client.get_expvars(url=sg_admin_url)
+
+    # Only check the view querys if in channel cache mode
+    if mode == 'cc':
+        log_info('Looking for view queries == 1 in expvars')
+        assert expvars['syncGateway_changeCache']['view_queries'] == 1
+
 
 @pytest.mark.sanity
 @pytest.mark.syncgateway
