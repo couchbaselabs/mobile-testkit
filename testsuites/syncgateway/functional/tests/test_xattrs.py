@@ -1761,12 +1761,11 @@ def delete_sg_docs(client, url, db, docs_to_delete, auth):
             docs_to_remove.remove(deleted_doc['id'])
             deleted_count += 1
         except HTTPError as he:
-            if he.response.status_code == 403 and str(he).startswith('403 Client Error: Forbidden for url:'):
+            if ((he.response.status_code == 403 and str(he).startswith('403 Client Error: Forbidden for url:')) or
+                (he.response.status_code == 409 and str(he).startswith('409 Client Error: Conflict for url:')) or
+                    (he.response.status_code == 409 and str(he).startswith('404 Client Error: Not Found for url:'))):
                 # Doc may have been deleted by the SDK and GET fails for SG
-                log_info('Could not find doc, must have been deleted by SDK. Retrying ...')
-                docs_to_remove.remove(random_doc_id)
-            elif he.response.status_code == 409 and str(he).startswith('409 Client Error: Conflict for url:'):
-                # This can happen in the following scenario:
+                # Conflict for url can happen in the following scenario:
                 # During concurrent deletes from SG and SDK,
                 #  1. SG GETs doc 'a' with rev '2'
                 #  2. SDK deletes doc 'a' with rev '2' before
@@ -2219,8 +2218,8 @@ def test_purge_and_view_compaction(params_from_base_test_setup, sg_conf_name):
     xattrs_enabled = params_from_base_test_setup['xattrs_enabled']
 
     # This test should only run when using xattr meta storage
-    if not xattrs_enabled:
-        pytest.skip('XATTR tests require --xattrs flag')
+    if not xattrs_enabled or mode == "di":
+        pytest.skip('This test skipped XATTR tests require --xattrs flag or This test cannot run in DI mode')
 
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
     sg_admin_url = cluster_topology['sync_gateways'][0]['admin']
