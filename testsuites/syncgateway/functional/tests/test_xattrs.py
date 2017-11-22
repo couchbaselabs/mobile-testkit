@@ -1763,7 +1763,7 @@ def delete_sg_docs(client, url, db, docs_to_delete, auth):
         except HTTPError as he:
             if ((he.response.status_code == 403 and str(he).startswith('403 Client Error: Forbidden for url:')) or
                 (he.response.status_code == 409 and str(he).startswith('409 Client Error: Conflict for url:')) or
-                    (he.response.status_code == 409 and str(he).startswith('404 Client Error: Not Found for url:'))):
+                    (he.response.status_code == 404 and str(he).startswith('404 Client Error: Not Found for url:'))):
                 # Doc may have been deleted by the SDK and GET fails for SG
                 # Conflict for url can happen in the following scenario:
                 # During concurrent deletes from SG and SDK,
@@ -2219,7 +2219,7 @@ def test_purge_and_view_compaction(params_from_base_test_setup, sg_conf_name):
 
     # This test should only run when using xattr meta storage
     if not xattrs_enabled or mode == "di":
-        pytest.skip('This test skipped XATTR tests require --xattrs flag or This test cannot run in DI mode')
+        pytest.skip('This test is di mode or xattrs not enabled')
 
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
     sg_admin_url = cluster_topology['sync_gateways'][0]['admin']
