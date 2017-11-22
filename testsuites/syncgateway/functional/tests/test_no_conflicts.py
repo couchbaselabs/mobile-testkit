@@ -134,7 +134,8 @@ def test_no_conflicts_with_revs_limit(params_from_base_test_setup, sg_conf_name,
     # 3. Update the docs few times
     prev_revs = []
     for i in xrange(revs_limit + 5):
-        update_sg_docs = sg_client.update_docs(url=sg_url, db=sg_db, docs=sg_docs, number_updates=1, delay=None, auth=autouser_session, channels=channels)
+        update_sg_docs = sg_client.update_docs(url=sg_url, db=sg_db, docs=sg_docs, number_updates=1, delay=None,
+                                               auth=autouser_session, channels=channels)
         rev = update_sg_docs[0]['rev'].split('-')[1]
         prev_revs.append(rev)
 
@@ -224,7 +225,8 @@ def test_no_conflicts_update_revs_limit(params_from_base_test_setup, sg_conf_nam
     # 3. Update the docs few times
     prev_revs = []
     for i in xrange(total_updates):
-        update_sg_docs = sg_client.update_docs(url=sg_url, db=sg_db, docs=sg_docs, number_updates=1, delay=None, auth=autouser_session, channels=channels)
+        update_sg_docs = sg_client.update_docs(url=sg_url, db=sg_db, docs=sg_docs, number_updates=1, delay=None,
+                                               auth=autouser_session, channels=channels)
         rev = update_sg_docs[0]['rev'].split('-')[1]
         prev_revs.append(rev)
 
@@ -310,7 +312,8 @@ def test_conflicts_sg_accel_added(params_from_base_test_setup, sg_conf_name, num
     # 3. Update the docs few times and get all revisions of updates
     prev_revs = []
     for i in xrange(total_updates):
-        update_sg_docs = sg_client.update_docs(url=sg_url, db=sg_db, docs=sg_docs, number_updates=1, delay=None, auth=autouser_session, channels=channels)
+        update_sg_docs = sg_client.update_docs(url=sg_url, db=sg_db, docs=sg_docs, number_updates=1, delay=None,
+                                               auth=autouser_session, channels=channels)
         rev = update_sg_docs[0]['rev'].split('-')[1]
         prev_revs.append(rev)
 
@@ -395,7 +398,8 @@ def test_migrate_conflicts_to_noConflicts(params_from_base_test_setup, sg_conf_n
     # 3. Update the docs few times
     prev_revs = []
     for i in xrange(revs_limit):
-        update_sg_docs = sg_client.update_docs(url=sg_url, db=sg_db, docs=sg_docs, number_updates=1, delay=None, auth=autouser_session, channels=channels)
+        update_sg_docs = sg_client.update_docs(url=sg_url, db=sg_db, docs=sg_docs, number_updates=1, delay=None,
+                                               auth=autouser_session, channels=channels)
         rev = update_sg_docs[0]['rev'].split('-')[1]
         prev_revs.append(rev)
 
@@ -502,7 +506,6 @@ def test_concurrent_updates_no_conflicts(params_from_base_test_setup, sg_conf_na
     sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password', timeout=SDK_TIMEOUT)
     sg_doc_ids = [doc['id'] for doc in sg_docs]
     sdk_docs_resp = sdk_client.get_multi(sg_doc_ids)
-    log_info(">>><<< sdk docs resp {}".format(sdk_docs_resp))
 
     # Update the same documents concurrently from a sync gateway client and and sdk client
     with ThreadPoolExecutor(max_workers=9) as tpe:
@@ -517,7 +520,8 @@ def test_concurrent_updates_no_conflicts(params_from_base_test_setup, sg_conf_na
     # 3. Update the docs few times
     prev_revs = []
     for i in xrange(total_updates):
-        update_sg_docs = sg_client.update_docs(url=sg_url, db=sg_db, docs=sg_docs, number_updates=1, delay=None, auth=autouser_session, channels=channels)
+        update_sg_docs = sg_client.update_docs(url=sg_url, db=sg_db, docs=sg_docs, number_updates=1, delay=None,
+                                               auth=autouser_session, channels=channels)
         rev = update_sg_docs[0]['rev'].split('-')[1]
         prev_revs.append(rev)
 
@@ -541,11 +545,9 @@ def sg_doc_updates(sg_client, sg_url, sg_db, sg_docs, number_updates, auth, chan
 
 def sdk_bulk_update(sdk_client, sdk_docs, num_of_updates):
     for doc_id, val in sdk_docs.items():
-        log_info("now picking the doc id >><<{}".format(doc_id))
         doc_body = val.value
         doc_body["updated_by_sdk"] = 0
         for i in range(num_of_updates):
-            log_info(">><< updating doc {}-{}".format(doc_id, num_of_updates))
             doc_body["updated_by_sdk"] += 1
             try:
                 sdk_client.upsert(doc_id, doc_body)
@@ -616,7 +618,6 @@ def test_migrate_conflicts_delete_last_rev(params_from_base_test_setup, sg_conf_
     for doc in sg_docs:
         num_of_open_revs = sg_client.get_open_revs_ids(url=sg_url, db=sg_db, doc_id=doc["id"], auth=autouser_session)
     time.sleep(5)
-    log_info("All open revs are {}".format(num_of_open_revs))
 
     # 5. Enable allow_conflicts = false in SG config and 6. restart sg
     revs_limit = 2
@@ -686,7 +687,6 @@ def test_revs_cache_size(params_from_base_test_setup, sg_conf_name, num_of_docs)
     # 4. Get all docs
     for i in range(retrieved_docs):
         doc = sg_docs[i]
-        log_info(" i is {}".format(i))
         sg_client.get_doc(url=sg_url, db=sg_db, doc_id=doc["id"], auth=autouser_session)
 
     # 5. Verify there are number of hits should be same as retrieved docs
