@@ -159,8 +159,8 @@ def test_olddoc_nil(params_from_base_test_setup, sg_conf_name):
 @pytest.mark.parametrize('sg_conf_name, number_users, number_docs_per_user, number_of_updates_per_user', [
     ('xattrs/no_import', 1, 1, 10),
     ('xattrs/no_import', 100, 10, 10),
-    ('xattrs/no_import', 10, 1000, 10),
-    ('xattrs/no_import', 100, 1000, 2)
+    ('xattrs/no_import', 10, 1000, 10)
+    # ('xattrs/no_import', 100, 1000, 2)
 ])
 def test_on_demand_doc_processing(params_from_base_test_setup, sg_conf_name, number_users, number_docs_per_user, number_of_updates_per_user):
     """
