@@ -30,7 +30,7 @@ public class DatabaseRequestHandler {
         return new Database(name, null);
     }
 
-    public int docCount(Args args) {
+    public int getCount(Args args) {
         Database database = args.get("database");
         return database.getCount();
     }
@@ -45,7 +45,7 @@ public class DatabaseRequestHandler {
         database.compact();
     }
 
-    public File path(Args args) throws CouchbaseLiteException {
+    public File getPath(Args args) throws CouchbaseLiteException {
         Database database = args.get("database");
         return database.getPath();
     }
@@ -61,7 +61,7 @@ public class DatabaseRequestHandler {
         return database.getDocument(id);
     }
 
-    public void purgeDoc(Args args) throws CouchbaseLiteException {
+    public void purge(Args args) throws CouchbaseLiteException {
         Database database = args.get("database");
         Document document = args.get("document");
         database.purge(document);

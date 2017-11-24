@@ -16,18 +16,18 @@ class Document:
 
         self._client = Client(baseUrl)
 
-    def create(self, dictionary=None, id=None):
+    def create(self, doc_id=None, dictionary=None,):
         args = Args()
 
-        if id and dictionary:
-            args.setString("id", id)
+        if doc_id and dictionary:
+            args.setString("id", doc_id)
             args.setMemoryPointer("dictionary", dictionary)
             return self._client.invokeMethod("document_create", args)
         elif dictionary:
             args.setMemoryPointer("dictionary", dictionary)
             return self._client.invokeMethod("document_create", args)
-        elif id:
-            args.setString("id", id)
+        elif doc_id:
+            args.setString("id", doc_id)
             return self._client.invokeMethod("document_create", args)
         else:
             return self._client.invokeMethod("document_create")
