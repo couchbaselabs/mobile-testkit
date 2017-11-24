@@ -19,85 +19,85 @@ public class DatabaseRequestHandler {
     /* - Database - */
     /* ------------ */
 
-    public Database database_create(Args args) throws CouchbaseLiteException {
+    public Database create(Args args) throws CouchbaseLiteException {
         String name = args.get("name");
         Context context = MainActivity.getAppContext();
         DatabaseConfiguration databaseConfig = new DatabaseConfiguration(context);
         return new Database(name, databaseConfig);
     }
 
-    public Database database_create(String name) throws CouchbaseLiteException {
+    public Database create(String name) throws CouchbaseLiteException {
         return new Database(name, null);
     }
 
-    public int database_docCount(Args args) {
+    public int docCount(Args args) {
         Database database = args.get("database");
         return database.getCount();
     }
 
-    public void database_close(Args args) throws CouchbaseLiteException {
+    public void close(Args args) throws CouchbaseLiteException {
         Database database = args.get("database");
         database.close();
     }
 
-    public void database_compact(Args args) throws CouchbaseLiteException {
+    public void compact(Args args) throws CouchbaseLiteException {
         Database database = args.get("database");
         database.compact();
     }
 
-    public File database_path(Args args) throws CouchbaseLiteException {
+    public File path(Args args) throws CouchbaseLiteException {
         Database database = args.get("database");
         return database.getPath();
     }
 
-    public String database_getName(Args args) {
+    public String getName(Args args) {
         Database database = args.get("database");
         return database.getName();
     }
 
-    public Document database_getDocument(Args args) {
+    public Document getDocument(Args args) {
         Database database = args.get("database");
         String id = args.get("id");
         return database.getDocument(id);
     }
 
-    public void database_purgeDoc(Args args) throws CouchbaseLiteException {
+    public void purgeDoc(Args args) throws CouchbaseLiteException {
         Database database = args.get("database");
         Document document = args.get("document");
         database.purge(document);
     }
-    public void database_addDocuments(Args args) {
+    public void addDocuments(Args args) {
         Database database = args.get("database");
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
-    public void database_save(Args args) throws CouchbaseLiteException {
+    public void save(Args args) throws CouchbaseLiteException {
         Database database = args.get("database");
         Document document = args.get("document");
         database.save(document);
     }
 
-    public void database_delete(Args args) throws CouchbaseLiteException {
+    public void delete(Args args) throws CouchbaseLiteException {
         Database database = args.get("database");
         Document document = args.get("document");
         database.delete(document);
     }
 
-    public void database_deleteDB(Args args) throws CouchbaseLiteException {
+    public void deleteDB(Args args) throws CouchbaseLiteException {
         Database database = args.get("database");
         database.delete();
     }
 
-    public boolean database_exists(Args args){
+    public boolean exists(Args args){
         return false;
     }
-    public boolean database_contains(Args args) {
+    public boolean contains(Args args) {
         Database database = args.get("database");
         String id = args.get("id");
         return database.contains(id);
     }
 
-    public void database_addChangeListener(Args args) {
+    public void addChangeListener(Args args) {
         Database database = args.get("database");
         if (args.contain("docId")) {
             String docId = args.get("docId");
@@ -109,7 +109,7 @@ public class DatabaseRequestHandler {
         }
     }
 
-    public void database_removeChangeListener(Args args) {
+    public void removeChangeListener(Args args) {
         Database database = args.get("database");
         if (args.contain("docId")){
             String docId = args.get("docId");

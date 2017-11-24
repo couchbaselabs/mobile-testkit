@@ -16,7 +16,7 @@ class Document:
 
         self._client = Client(baseUrl)
 
-    def document_create(self, dictionary=None, id=None):
+    def create(self, dictionary=None, id=None):
         args = Args()
 
         if id and dictionary:
@@ -32,27 +32,27 @@ class Document:
         else:
             return self._client.invokeMethod("document_create")
 
-    def document_delete(self, database, document):
+    def delete(self, database, document):
         args = Args()
         args.setMemoryPointer("database", database)
         args.setMemoryPointer("document", document)
 
         self._client.invokeMethod("document_delete", args)
 
-    def document_getId(self, document):
+    def getId(self, document):
         args = Args()
         args.setMemoryPointer("document", document)
 
         return self._client.invokeMethod("document_getId", args)
 
-    def document_getString(self, document, prop):
+    def getString(self, document, prop):
         args = Args()
         args.setMemoryPointer("document", document)
         args.setString("property", prop)
 
         return self._client.invokeMethod("document_getString", args)
 
-    def document_setString(self, document, prop, string):
+    def setString(self, document, prop, string):
         args = Args()
         args.setMemoryPointer("document", document)
         args.setString("property", prop)

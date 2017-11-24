@@ -75,6 +75,7 @@ public class Server extends NanoHTTPD {
         }
 
         String handlerType = method.split("_")[0];
+        String method_to_call = method.split("_")[1];
         try {
             // Find and invoke the method on the RequestHandler.
             String body = null;
@@ -84,13 +85,13 @@ public class Server extends NanoHTTPD {
                 Object requestHandler = null;
                 Method target;
                 if (handlerType.equals("database")){
-                    target = DatabaseRequestHandler.class.getMethod(method, Args.class);
+                    target = DatabaseRequestHandler.class.getMethod(method_to_call, Args.class);
                     requestHandler = new DatabaseRequestHandler();
                 } else if (handlerType.equals("document")){
-                    target = DocumentRequestHandler.class.getMethod(method, Args.class);
+                    target = DocumentRequestHandler.class.getMethod(method_to_call, Args.class);
                     requestHandler = new DocumentRequestHandler();
                 } else if (handlerType.equals("dictionary")){
-                    target = DictionaryRequestHandler.class.getMethod(method, Args.class);
+                    target = DictionaryRequestHandler.class.getMethod(method_to_call, Args.class);
                     requestHandler = new DictionaryRequestHandler();
                 } else {
                     throw new IllegalArgumentException("Handler not implemented for this call");
