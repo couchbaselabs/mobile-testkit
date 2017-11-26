@@ -45,6 +45,10 @@ def test_non_winning_revisions(params_from_base_test_setup, sg_conf_name):
     cluster_config = params_from_base_test_setup["cluster_config"]
     topology = params_from_base_test_setup["cluster_topology"]
     mode = params_from_base_test_setup["mode"]
+    no_conflicts_enabled = params_from_base_test_setup["no_conflicts_enabled"]
+
+    if no_conflicts_enabled:
+        pytest.skip('--no-conflicts is enabled, this test needs to create conflicts, so skipping the test')
 
     sg_url = topology["sync_gateways"][0]["public"]
     sg_admin_url = topology["sync_gateways"][0]["admin"]
@@ -185,6 +189,10 @@ def test_winning_conflict_branch_revisions(params_from_base_test_setup, sg_conf_
     cluster_config = params_from_base_test_setup["cluster_config"]
     topology = params_from_base_test_setup["cluster_topology"]
     mode = params_from_base_test_setup["mode"]
+    no_conflicts_enabled = params_from_base_test_setup["no_conflicts_enabled"]
+
+    if no_conflicts_enabled:
+        pytest.skip('--no-conflicts is enabled, this test needs to create conflicts, so skipping the test')
 
     sg_url = topology["sync_gateways"][0]["public"]
     sg_admin_url = topology["sync_gateways"][0]["admin"]
@@ -305,7 +313,7 @@ def test_invalid_revs_limit_with_allow_conflicts(params_from_base_test_setup, sg
     no_conflicts_enabled = params_from_base_test_setup["no_conflicts_enabled"]
 
     if no_conflicts_enabled:
-        pytest.skip('--no-conflicts is not enabled, so skipping the test')
+        pytest.skip('--no-conflicts is enabled, this test needs to create conflicts, so skipping the test')
 
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
     clust = cluster.Cluster(cluster_config)
