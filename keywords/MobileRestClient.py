@@ -1345,7 +1345,7 @@ class MobileRestClient:
                 docs.append(row)
 
         if len(errors) > 0 and validate:
-            raise RestError("_bulk_get recieved errors in the response!")
+            raise RestError("_bulk_get recieved errors in the response: {}".format(errors))
 
         return docs, errors
 

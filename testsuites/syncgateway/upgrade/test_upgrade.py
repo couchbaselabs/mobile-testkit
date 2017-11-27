@@ -208,7 +208,7 @@ def test_upgrade(params_from_base_test_setup):
             ls_db=ls_db
         )
         log_info("Waiting for doc updates to complete")
-        updated_doc_revs = updates_future.result()
+        updated_doc_revs, deleted_docs = updates_future.result()
 
         log_info("Stopping replication from liteserv to sync gateway")
         # Stop repl_one
@@ -233,8 +233,15 @@ def test_upgrade(params_from_base_test_setup):
             if added_docs[i]["id"] in updated_doc_revs:
                 added_docs[i]["rev"] = updated_doc_revs[added_docs[i]["id"]]
 
+        # Remove deleted doc ids for the bulk_get verification
+        for i in range(len(deleted_docs)):
+            added_docs.remove(deleted_docs[i])
+
         # Verify rev, doc bdy and revision history of all docs
         verify_sg_docs_revision_history(url=sg_admin_url, db=sg_db, added_docs=added_docs)
+
+        # TODO Verify 404, "reason": "deleted" for deleted docs
+        # verify_deleted_docs(url=sg_admin_url, db=sg_db, deleted_docs=deleted_docs)
 
         if xattrs_enabled:
             # Verify through SDK that there is no _sync property in the doc body
@@ -247,6 +254,22 @@ def test_upgrade(params_from_base_test_setup):
             for i in docs_from_sdk:
                 if "_sync" in docs_from_sdk[i].value:
                     raise Exception("_sync section found in docs after upgrade")
+
+
+def verify_deleted_docs(url, db, deleted_docs):
+    sg_client = MobileRestClient()
+
+    for doc in deleted_docs:
+        try:
+            sg_client.get_doc(url, db, doc)
+        except HTTPError as he:
+            response = he.response
+            status_code = response.status_code
+
+            if status_code == 404 and response["reason"] == "deleted":
+                log_info("Doc id: {} - status {}; code {}".format(doc, response["reason"], status_code))
+            else:
+                raise
 
 
 def add_client_docs(client, url, db, channels, generator, ndocs, id_prefix, attachments_generator):
@@ -350,21 +373,42 @@ def update_docs(client, ls_url, ls_db, added_docs, auth, terminator_doc_id):
 
     docs_per_update = 3
     doc_revs = {}
+    deleted_docs = []
+
+    user_docs_to_delete = len(current_user_doc_ids) // 10
+    if user_docs_to_delete <= 0:
+        # Delete at least 1 doc
+        user_docs_to_delete = 1
+
+    user_docs_subset_to_delete = current_user_doc_ids[:user_docs_to_delete]
+    current_user_doc_ids = list(set(current_user_doc_ids) - set(user_docs_subset_to_delete))
+
+    log_info("Will delete {} docs".format(len(user_docs_subset_to_delete)))
+    log_info("user_docs_subset_to_delete: {}".format(user_docs_subset_to_delete))
+    for doc in user_docs_subset_to_delete:
+        user_docs_to_delete = client.get_doc(url=ls_url, db=ls_db, doc_id=doc, auth=auth)
+        log_info("Deleting doc_id: {}".format(doc))
+        client.delete_doc(url=ls_url, db=ls_db, doc_id=doc, rev=user_docs_to_delete['_rev'], auth=auth)
+        deleted_docs.append(doc)
+
+    return doc_revs, deleted_docs
 
     while True:
         try:
             client.get_doc(url=ls_url, db=ls_db, doc_id=terminator_doc_id, auth=auth)
             log_info("update_docs: Found termination doc")
             log_info("update_docs: Updated {} docs".format(len(doc_revs.keys())))
-            return doc_revs
+            return doc_revs, deleted_docs
         except HTTPError:
             log_info("Termination doc not found")
 
         user_docs_subset_to_update = []
+
         for _ in range(docs_per_update):
             random_doc_id = random.choice(current_user_doc_ids)
             user_docs_subset_to_update.append(random_doc_id)
 
+        log_info("Will update {} docs".format(len(user_docs_subset_to_update)))
         for doc_id in user_docs_subset_to_update:
             log_info("Updating doc_id: {}".format(doc_id))
             doc = client.get_doc(url=ls_url, db=ls_db, doc_id=doc_id, auth=auth)
