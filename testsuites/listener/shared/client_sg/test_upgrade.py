@@ -35,7 +35,7 @@ def test_upgrade_cbl(setup_client_syncgateway_test):
     liteserv_platform = setup_client_syncgateway_test["liteserv_platform"]
     liteserv_version = setup_client_syncgateway_test["liteserv_version"]
 
-    if (liteserv_platform.lower() == "android" or liteserv_platform.lower() == "net-msft") and device_enabled:
+    if liteserv_platform.lower() == "android" or liteserv_platform.lower() == "net-msft" or device_enabled:
         # There is a signature match issue on Android and older version ios does not have app for devices
         pytest.skip('upgrade lite serv app does not work on Android and there is no app for ios device created' +
                     ' for older version, so skipping the test')
