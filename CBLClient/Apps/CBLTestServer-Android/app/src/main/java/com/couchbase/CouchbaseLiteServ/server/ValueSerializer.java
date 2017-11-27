@@ -1,8 +1,11 @@
 package com.couchbase.CouchbaseLiteServ.server;
 
+import android.util.Log;
+
 public class ValueSerializer {
+
     public static String serialize(Object value, Memory memory) {
-        if (value == null) {
+        if (value == null)  {
             return "null";
         } else if (value instanceof String) {
             String string = (String) value;

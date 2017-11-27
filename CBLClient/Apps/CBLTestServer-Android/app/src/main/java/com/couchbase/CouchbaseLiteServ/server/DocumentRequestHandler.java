@@ -36,6 +36,13 @@ public class DocumentRequestHandler{
         }
     }
 
+    public Object get(Args args) {
+        Map<String, Object> map = args.get("dictionary");
+        String key = args.get("key");
+        return map.get(key);
+    }
+
+
     public int count(Args args){
         Document document = args.get("document");
         return document.count();
@@ -220,7 +227,8 @@ public class DocumentRequestHandler{
 
     public List<String> getKeys(Args args){
         Document document = args.get("document");
-        return document.getKeys();
+        List<String> keys = document.getKeys();
+        return keys;
     }
 
     public Map<String, Object> toMap(Args args){

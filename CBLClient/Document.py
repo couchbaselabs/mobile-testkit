@@ -36,26 +36,205 @@ class Document:
         args = Args()
         args.setMemoryPointer("database", database)
         args.setMemoryPointer("document", document)
-
-        self._client.invokeMethod("document_delete", args)
+        return self._client.invokeMethod("document_delete", args)
 
     def getId(self, document):
         args = Args()
         args.setMemoryPointer("document", document)
-
         return self._client.invokeMethod("document_getId", args)
 
-    def getString(self, document, prop):
+    def getString(self, document, key):
         args = Args()
         args.setMemoryPointer("document", document)
-        args.setString("property", prop)
-
+        args.setString("key", key)
         return self._client.invokeMethod("document_getString", args)
 
-    def setString(self, document, prop, string):
+    def setString(self, document, key, value):
         args = Args()
         args.setMemoryPointer("document", document)
-        args.setString("property", prop)
-        args.setString("string", string)
+        args.setString("key", key)
+        args.setString("value", value)
+        return self._client.invokeMethod("document_setString", args)
 
-        self._client.invokeMethod("document_setString", args)
+    def set(self,document, dictionary):
+        args = Args()
+        args.setMemoryPointer("document", document)
+        args.setMemoryPointer("dictionary", dictionary)
+        return self._client.invokeMethod("document_set", args)
+
+    def getKeys(self, document):
+        args = Args()
+        args.setMemoryPointer("document", document)
+        return self._client.invokeMethod("document_getKeys", args)
+
+    def contains(self, document, key):
+        args = Args()
+        args.setMemoryPointer("document", document)
+        args.setMemoryPointer("key", key)
+        return self._client.invokeMethod("document_contains", args)
+
+    def count(self, document):
+        args = Args()
+        args.setMemoryPointer("document", document)
+        return self._client.invokeMethod("document_count", args)
+
+    def get(self, document, key):
+        args = Args()
+        args.setMemoryPointer("document", document)
+        args.setMemoryPointer("key", key)
+        return self._client.invokeMethod("document_get", args)
+
+    
+    def getArray(self, document, key):
+        args = Args()
+        args.setMemoryPointer("document", document)
+        args.setString("key", key)
+        return self._client.invokeMethod("document_getArray", args)
+
+    def setArray(self, document, key, value):
+        args = Args()
+        args.setMemoryPointer("document", document)
+        args.setString("key", key)
+        args.setString("value", value)
+        return self._client.invokeMethod("document_setArray", args)
+
+    def getBlob(self, document, key):
+        args = Args()
+        args.setMemoryPointer("document", document)
+        args.setString("key", key)
+        return self._client.invokeMethod("document_getBlob", args)
+
+    def setBlob(self, document, key, value):
+        args = Args()
+        args.setMemoryPointer("document", document)
+        args.setString("key", key)
+        args.setString("value", value)
+        return self._client.invokeMethod("document_setBlob", args)
+
+    def getBoolean(self, document, key):
+        args = Args()
+        args.setMemoryPointer("document", document)
+        args.setString("key", key)
+        return self._client.invokeMethod("document_getBoolean", args)
+
+    def setBoolean(self, document, key, value):
+        args = Args()
+        args.setMemoryPointer("document", document)
+        args.setString("key", key)
+        args.setString("value", value)
+        return self._client.invokeMethod("document_setBoolean", args)
+
+    def getDate(self, document, key):
+        args = Args()
+        args.setMemoryPointer("document", document)
+        args.setString("key", key)
+        return self._client.invokeMethod("document_getDate", args)
+
+    def setDate(self, document, key, value):
+        args = Args()
+        args.setMemoryPointer("document", document)
+        args.setString("key", key)
+        args.setString("value", value)
+        return self._client.invokeMethod("document_setDate", args)
+
+    def getDictionary(self, document, key):
+        args = Args()
+        args.setMemoryPointer("document", document)
+        args.setString("key", key)
+        return self._client.invokeMethod("document_getDictionary", args)
+
+    def setDictionary(self, document, key, value):
+        args = Args()
+        args.setMemoryPointer("document", document)
+        args.setString("key", key)
+        args.setString("value", value)
+        return self._client.invokeMethod("document_setDictionary", args)
+
+    def getDouble(self, document, key):
+        args = Args()
+        args.setMemoryPointer("document", document)
+        args.setString("key", key)
+        return self._client.invokeMethod("document_getDouble", args)
+
+    def setDouble(self, document, key, value):
+        args = Args()
+        args.setMemoryPointer("document", document)
+        args.setString("key", key)
+        args.setString("value", value)
+        return self._client.invokeMethod("document_setDouble", args)
+
+    def getFloat(self, document, key):
+        args = Args()
+        args.setMemoryPointer("document", document)
+        args.setString("key", key)
+        return self._client.invokeMethod("document_getFloat", args)
+
+    def setFloat(self, document, key, value):
+        args = Args()
+        args.setMemoryPointer("document", document)
+        args.setString("key", key)
+        args.setString("value", value)
+        return self._client.invokeMethod("document_setFloat", args)
+
+    def getLong(self, document, key):
+        args = Args()
+        args.setMemoryPointer("document", document)
+        args.setString("key", key)
+        return self._client.invokeMethod("document_getLong", args)
+
+    def setLong(self, document, key, value):
+        args = Args()
+        args.setMemoryPointer("document", document)
+        args.setString("key", key)
+        args.setString("value", value)
+        return self._client.invokeMethod("document_setLong", args)
+
+    def getObject(self, document, key):
+        args = Args()
+        args.setMemoryPointer("document", document)
+        args.setString("key", key)
+        return self._client.invokeMethod("document_getObject", args)
+
+    def setObject(self, document, key, value):
+        args = Args()
+        args.setMemoryPointer("document", document)
+        args.setString("key", key)
+        args.setString("value", value)
+        return self._client.invokeMethod("document_setObject", args)
+
+    def getNumber(self, document, key):
+        args = Args()
+        args.setMemoryPointer("document", document)
+        args.setString("key", key)
+        return self._client.invokeMethod("document_getNumber", args)
+
+    def setNumber(self, document, key, value):
+        args = Args()
+        args.setMemoryPointer("document", document)
+        args.setString("key", key)
+        args.setString("value", value)
+        return self._client.invokeMethod("document_setNumber", args)
+
+    def getInt(self, document, key):
+        args = Args()
+        args.setMemoryPointer("document", document)
+        args.setString("key", key)
+        return self._client.invokeMethod("document_getInt", args)
+
+    def setInt(self, document, key, value):
+        args = Args()
+        args.setMemoryPointer("document", document)
+        args.setString("key", key)
+        args.setString("value", value)
+        return self._client.invokeMethod("document_setInt", args)
+
+    def removeKey(self, document, key):
+        args = Args()
+        args.setMemoryPointer("document", document)
+        args.setString("key", key)
+        return self._client.invokeMethod("document_removeKey", args)
+
+    def toMap(self, document):
+        args = Args()
+        args.setMemoryPointer("document", document)
+        return self._client.invokeMethod("document_toMap", args)

@@ -19,21 +19,13 @@ public class DictionaryRequestHandler{
     /* - Dictionary - */
     /* -------------- */
 
-    public Dictionary create(Args args) {
-        if (args.contain("dictionary")){
-            Map<String, Object> dictionary = args.get("dictionary");
-            return new Dictionary(dictionary);
-        }
-        else
-        {
-            return new Dictionary();
-        }
+    public Map create(Args args) {
+        return new HashMap();
     }
 
     public Object get(Args args) {
         Map<String, Object> map = args.get("dictionary");
         String key = args.get("key");
-
         return map.get(key);
     }
 
