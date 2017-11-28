@@ -234,8 +234,15 @@ def test_upgrade(params_from_base_test_setup):
                 added_docs[i]["rev"] = updated_doc_revs[added_docs[i]["id"]]
 
         # Remove deleted doc ids for the bulk_get verification
-        for i in range(len(deleted_docs)):
-            added_docs.remove(deleted_docs[i])
+        log_info("deleted_docs: {}".format(deleted_docs))
+        # Iterate over a copy so that the array can be modified while iterating
+        added_docs_copy = added_docs
+        for doc in added_docs_copy:
+            log_info("doc: {}".format(doc))
+            if doc["id"] in deleted_docs:
+                log_info("Removing {} from added_docs".format(doc))
+                added_docs.remove(doc)
+                doc_ids.remove(doc["id"])
 
         # Verify rev, doc bdy and revision history of all docs
         verify_sg_docs_revision_history(url=sg_admin_url, db=sg_db, added_docs=added_docs)
