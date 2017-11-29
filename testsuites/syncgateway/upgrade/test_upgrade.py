@@ -209,6 +209,35 @@ def test_upgrade(params_from_base_test_setup):
         )
         log_info("Waiting for doc updates to complete")
         updated_doc_revs, deleted_docs = updates_future.result()
+        log_info("deleted_docs: {}".format(deleted_docs))
+
+        # Gather the new revs for verification
+        log_info("Gathering the updated revs for verification")
+        doc_ids = []
+        for i in range(len(added_docs)):
+            doc_ids.append(added_docs[i]["id"])
+            if added_docs[i]["id"] in updated_doc_revs:
+                added_docs[i]["rev"] = updated_doc_revs[added_docs[i]["id"]]
+
+        # Remove deleted doc ids for the bulk_get verification
+        # Iterate over a copy so that the array can be modified while iterating
+        added_docs_copy = added_docs[:]
+        for doc in added_docs_copy:
+            log_info("doc: {}".format(doc))
+            if doc["id"] in deleted_docs:
+                log_info("Removing {} from added_docs".format(doc))
+                added_docs.remove(doc)
+                doc_ids.remove(doc["id"])
+
+        # Delete a doc after upgrade to make sure delete works
+        delete_doc = random.choice(added_docs)
+        delete_doc_id = delete_doc["id"]
+        user_docs_to_delete = client.get_doc(url=ls_url, db=ls_db, doc_id=delete_doc_id)
+        client.delete_doc(url=ls_url, db=ls_db, doc_id=delete_doc_id, rev=user_docs_to_delete['_rev'], auth=sg_session)
+        doc_ids.remove(delete_doc_id)
+        added_docs.remove(delete_doc)
+        deleted_docs.append(delete_doc_id)
+        time.sleep(5)
 
         log_info("Stopping replication from liteserv to sync gateway")
         # Stop repl_one
@@ -225,30 +254,12 @@ def test_upgrade(params_from_base_test_setup):
             from_url=sg_url, from_db=sg_db, from_auth=sg_session,
             to_db=ls_db
         )
-        # Gather the new revs for verification
-        log_info("Gathering the updated revs for verification")
-        doc_ids = []
-        for i in range(len(added_docs)):
-            doc_ids.append(added_docs[i]["id"])
-            if added_docs[i]["id"] in updated_doc_revs:
-                added_docs[i]["rev"] = updated_doc_revs[added_docs[i]["id"]]
-
-        # Remove deleted doc ids for the bulk_get verification
-        log_info("deleted_docs: {}".format(deleted_docs))
-        # Iterate over a copy so that the array can be modified while iterating
-        added_docs_copy = added_docs
-        for doc in added_docs_copy:
-            log_info("doc: {}".format(doc))
-            if doc["id"] in deleted_docs:
-                log_info("Removing {} from added_docs".format(doc))
-                added_docs.remove(doc)
-                doc_ids.remove(doc["id"])
 
         # Verify rev, doc bdy and revision history of all docs
         verify_sg_docs_revision_history(url=sg_admin_url, db=sg_db, added_docs=added_docs)
 
-        # TODO Verify 404, "reason": "deleted" for deleted docs
-        # verify_deleted_docs(url=sg_admin_url, db=sg_db, deleted_docs=deleted_docs)
+        # Verify http status code 404, "reason": "deleted" for deleted docs
+        verify_sg_deleted_docs(url=sg_admin_url, db=sg_db, deleted_docs=deleted_docs)
 
         if xattrs_enabled:
             # Verify through SDK that there is no _sync property in the doc body
@@ -263,20 +274,23 @@ def test_upgrade(params_from_base_test_setup):
                     raise Exception("_sync section found in docs after upgrade")
 
 
-def verify_deleted_docs(url, db, deleted_docs):
+def verify_sg_deleted_docs(url, db, deleted_docs):
     sg_client = MobileRestClient()
+    docs, errors = sg_client.get_bulk_docs(url, db, deleted_docs, rev_history="true", validate=False)
 
-    for doc in deleted_docs:
-        try:
-            sg_client.get_doc(url, db, doc)
-        except HTTPError as he:
-            response = he.response
-            status_code = response.status_code
+    log_info("Verifying that sync gateway returns a 404 deleted message for the deleted docs")
+    assert len(docs) == 0
+    assert len(errors) == len(deleted_docs)
 
-            if status_code == 404 and response["reason"] == "deleted":
-                log_info("Doc id: {} - status {}; code {}".format(doc, response["reason"], status_code))
-            else:
-                raise
+    for doc in errors:
+        status = doc["status"]
+        reason = doc["reason"]
+        doc_id = doc["id"]
+
+        log_info("doc_id: {} - status:{}, reason: {}".format(doc_id, status, reason))
+        assert status == 404
+        assert reason == "deleted"
+        assert doc_id in deleted_docs
 
 
 def add_client_docs(client, url, db, channels, generator, ndocs, id_prefix, attachments_generator):
@@ -398,8 +412,6 @@ def update_docs(client, ls_url, ls_db, added_docs, auth, terminator_doc_id):
         client.delete_doc(url=ls_url, db=ls_db, doc_id=doc, rev=user_docs_to_delete['_rev'], auth=auth)
         deleted_docs.append(doc)
 
-    return doc_revs, deleted_docs
-
     while True:
         try:
             client.get_doc(url=ls_url, db=ls_db, doc_id=terminator_doc_id, auth=auth)
@@ -415,7 +427,6 @@ def update_docs(client, ls_url, ls_db, added_docs, auth, terminator_doc_id):
             random_doc_id = random.choice(current_user_doc_ids)
             user_docs_subset_to_update.append(random_doc_id)
 
-        log_info("Will update {} docs".format(len(user_docs_subset_to_update)))
         for doc_id in user_docs_subset_to_update:
             log_info("Updating doc_id: {}".format(doc_id))
             doc = client.get_doc(url=ls_url, db=ls_db, doc_id=doc_id, auth=auth)
