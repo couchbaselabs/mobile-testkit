@@ -364,8 +364,7 @@ class CouchbaseServer:
             "ramQuotaMB": str(ram_quota_mb),
             "authType": "sasl",
             "bucketType": "couchbase",
-            "flushEnabled": "1",
-            "replicaNumber": 0
+            "flushEnabled": "1"
         }
 
         if server_major_version <= 4:
@@ -798,6 +797,7 @@ class CouchbaseServer:
 
         """
         released_versions = {
+            "5.0.0": "3519",
             "4.6.3": "4136",
             "4.6.2": "3905",
             "4.6.1": "3652",
