@@ -270,7 +270,7 @@ class SyncGateway(object):
             verify_sg_accel_version(ac["ip"], sync_gateway_version)
 
     def start_sync_gateways(self, cluster_config, url=None, config=None):
-        """ Start sync gateways in a cluster. If url is passed,
+        """Start sync gateways in a cluster. If url is passed,
         start the sync gateway at that url
         """
 
