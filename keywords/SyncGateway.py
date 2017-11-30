@@ -223,7 +223,7 @@ class SyncGateway:
             "xattrs": "",
             "couchbase_server_primary_node": couchbase_server_primary_node
         }
-        
+
         if is_xattrs_enabled(cluster_config):
             playbook_vars["autoimport"] = '"import_docs": "continuous",'
             playbook_vars["xattrs"] = '"enable_shared_bucket_access": true,'
