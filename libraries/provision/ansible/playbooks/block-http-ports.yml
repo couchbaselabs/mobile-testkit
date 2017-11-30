@@ -2,21 +2,29 @@
 - hosts: couchbase_servers
   any_errors_fatal: true
   become: yes
+  vars:
+    port :
   tasks:
-  - name: BLOCKPORTS | flush iptables before blocking
-    shell: iptables -F
+  - name: BLOCKPORTS | Verify that port is blocked in iptables
+    shell: iptables-save | grep -- "INPUT -p tcp -m tcp --dport 9889 -j DROP" | wc -l
+    register: iptables-rules
 
-  - name: BLOCKPORTS | drop tcp 8091
-    shell: iptables -I INPUT -p tcp --dport 8091 -j DROP
+  - name: BLOCKPORTS | drop tcp {{ port }}
+    shell: iptables -I INPUT -p tcp --dport {{ port }} -j DROP
+    when: iptables-rules >= 1
 
-  - name: BLOCKPORTS | drop udp 8091
-    shell: iptables -I INPUT -p udp --dport 8091 -j DROP
+  - name: BLOCKPORTS | drop udp {{ port }}
+    shell: iptables -I INPUT -p udp --dport {{ port }} -j DROP
+    when: iptables-rules >= 1
 
   - name: BLOCKPORTS | install iptables-services
     shell: yum -y install iptables-services
+    when: iptables-rules >= 1
 
   - name: BLOCKPORTS | save iptables after dropping
     shell: service iptables save
+    when: iptables-rules >= 1
 
   - name: BLOCKPORTS | restart iptables after dropping
     shell: service iptables restart
+    when: iptables-rules >= 1

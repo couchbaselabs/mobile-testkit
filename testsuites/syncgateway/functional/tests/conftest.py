@@ -37,6 +37,10 @@ def skip_if_unsupported(sync_gateway_version, mode, test_name):
         if test_name in UNSUPPORTED_1_5_0_CC:
             pytest.skip(UNSUPPORTED_1_5_0_CC[test_name]["reason"])
 
+    if compare_versions(sync_gateway_version, "1.4.0") <= 0:
+        if "log_rotation" in test_name or "test_backfill" in test_name or "test_awaken_backfill" in test_name:
+            pytest.skip("{} test was added for sync gateway 1.4".format(test_name))
+
 
 # Add custom arguments for executing tests in this directory
 def pytest_addoption(parser):
@@ -68,7 +72,7 @@ def pytest_addoption(parser):
 
     parser.addoption("--xattrs",
                      action="store_true",
-                     help="Use xattrs for sync meta storage. Only works with Sync Gateway 2.0+ and Couchbase Server 5.0+")
+                     help="Use xattrs for sync meta storage. Only works with Sync Gateway 1.5.0+ and Couchbase Server 5.0+")
 
     parser.addoption("--collect-logs",
                      action="store_true",
@@ -77,6 +81,16 @@ def pytest_addoption(parser):
     parser.addoption("--server-ssl",
                      action="store_true",
                      help="If set, will enable SSL communication between server and Sync Gateway")
+
+    parser.addoption("--sg-platform",
+                     action="store",
+                     help="Sync Gateway Platform binary to install (ex. centos or windows)",
+                     default="centos")
+
+    parser.addoption("--sa-platform",
+                     action="store",
+                     help="Sync Gateway Accelerator Platform binary to install (ex. centos or windows)",
+                     default="centos")
 
     parser.addoption("--sg-lb",
                      action="store_true",
@@ -109,6 +123,8 @@ def params_from_base_suite_setup(request):
     race_enabled = request.config.getoption("--race")
     cbs_ssl = request.config.getoption("--server-ssl")
     xattrs_enabled = request.config.getoption("--xattrs")
+    sg_platform = request.config.getoption("--sg-platform")
+    sa_platform = request.config.getoption("--sa-platform")
     sg_lb = request.config.getoption("--sg-lb")
     sg_ce = request.config.getoption("--sg-ce")
     use_sequoia = request.config.getoption("--sequoia")
@@ -122,6 +138,8 @@ def params_from_base_suite_setup(request):
     log_info("skip_provisioning: {}".format(skip_provisioning))
     log_info("race_enabled: {}".format(race_enabled))
     log_info("xattrs_enabled: {}".format(xattrs_enabled))
+    log_info("sg_platform: {}".format(sg_platform))
+    log_info("sa_platform: {}".format(sa_platform))
     log_info("sg_lb: {}".format(sg_lb))
     log_info("sg_ce: {}".format(sg_ce))
 
@@ -202,6 +220,8 @@ def params_from_base_suite_setup(request):
                 sync_gateway_version=sync_gateway_version,
                 sync_gateway_config=sg_config,
                 race_enabled=race_enabled,
+                sg_platform=sg_platform,
+                sa_platform=sa_platform,
                 sg_ce=sg_ce
             )
         except ProvisioningError:
@@ -231,6 +251,10 @@ def params_from_base_suite_setup(request):
     }
 
     log_info("Tearing down 'params_from_base_suite_setup' ...")
+
+    # Stop all sync_gateway and sg_accels as test finished
+    c = cluster.Cluster(cluster_config)
+    c.stop_sg_and_accel()
 
 
 # This is called before each test and will yield the dictionary to each test that references the method

@@ -2,8 +2,11 @@ from __future__ import print_function
 
 import random
 import time
+import json
 
 import pytest
+import concurrent.futures
+from concurrent.futures import ProcessPoolExecutor
 from concurrent.futures import ThreadPoolExecutor
 
 from couchbase.bucket import Bucket
@@ -29,7 +32,6 @@ SG_OP_SLEEP = 0.001
 SDK_OP_SLEEP = 0.05
 
 
-@pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.xattrs
 @pytest.mark.session
@@ -155,6 +157,141 @@ def test_olddoc_nil(params_from_base_test_setup, sg_conf_name):
     assert len(errors) == 0
 
 
+@pytest.mark.syncgateway
+@pytest.mark.xattrs
+@pytest.mark.changes
+@pytest.mark.session
+@pytest.mark.parametrize('sg_conf_name, number_users, number_docs_per_user, number_of_updates_per_user', [
+    ('xattrs/no_import', 1, 1, 10),
+    ('xattrs/no_import', 100, 10, 10),
+    ('xattrs/no_import', 10, 1000, 10),
+    ('xattrs/no_import', 100, 1000, 2)
+])
+def test_on_demand_doc_processing(params_from_base_test_setup, sg_conf_name, number_users, number_docs_per_user, number_of_updates_per_user):
+    """
+    1. Start Sync Gateway with autoimport disabled, this will force on-demand processing
+    1. Create 100 users (user_0, user_1, ...) on Sync Gateway each with their own channel (user_0_chan, user_1_chan, ...)
+    1. Load 'number_doc_per_user' with channels specified to each user from SDK
+    1. Make sure the docs are imported via GET /db/doc and POST _bulk_get
+    """
+
+    cluster_conf = params_from_base_test_setup['cluster_config']
+    cluster_topology = params_from_base_test_setup['cluster_topology']
+    mode = params_from_base_test_setup['mode']
+    xattrs_enabled = params_from_base_test_setup['xattrs_enabled']
+
+    cbs_url = cluster_topology['couchbase_servers'][0]
+    sg_admin_url = cluster_topology['sync_gateways'][0]['admin']
+    sg_url = cluster_topology['sync_gateways'][0]['public']
+
+    bucket_name = 'data-bucket'
+    sg_db = 'db'
+    cbs_host = host_for_url(cbs_url)
+
+    # This test should only run when using xattr meta storage
+    if not xattrs_enabled:
+        pytest.skip('XATTR tests require --xattrs flag')
+
+    # This test should only run when mode is CC
+    if mode == "di":
+        pytest.skip('This test does not run in DI mode')
+
+    # Reset cluster
+    sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
+    cluster = Cluster(config=cluster_conf)
+    cluster.reset(sg_config_path=sg_conf)
+
+    log_info("Number of users: {}".format(number_users))
+    log_info("Number of docs per user: {}".format(number_docs_per_user))
+    log_info("Number of update per user: {}".format(number_of_updates_per_user))
+
+    # Initialize clients
+    sg_client = MobileRestClient()
+    # TODO : Add support for ssl enabled once ssl enabled support is merged to master
+    sdk_client = Bucket('couchbase://{}/{}'.format(cbs_host, bucket_name), password='password')
+    sdk_client.timeout = 600
+
+    # Create Sync Gateway user
+    auth_dict = {}
+    docs_to_add = {}
+    user_names = ['user_{}'.format(i) for i in range(number_users)]
+
+    def update_props():
+        return {
+            'updates': 0
+        }
+
+    for user_name in user_names:
+        user_channels = ['{}_chan'.format(user_name)]
+        sg_client.create_user(url=sg_admin_url, db=sg_db, name=user_name, password='pass', channels=user_channels)
+        auth_dict[user_name] = sg_client.create_session(url=sg_admin_url, db=sg_db, name=user_name, password='pass')
+        docs = document.create_docs('{}_doc'.format(user_name), number=number_docs_per_user, channels=user_channels, prop_generator=update_props)
+        for doc in docs:
+            docs_to_add[doc['_id']] = doc
+
+    assert len(docs_to_add) == number_users * number_docs_per_user
+
+    # Add the docs via
+    log_info('Adding docs via SDK ...')
+    sdk_client.upsert_multi(docs_to_add)
+
+    assert len(docs_to_add) == number_users * number_docs_per_user
+
+    # issue _bulk_get
+    with ProcessPoolExecutor() as ppe:
+
+        user_gets = {}
+        user_writes = {}
+
+        # Start issuing bulk_gets concurrently
+        for user_name in user_names:
+            user_doc_ids = ['{}_doc_{}'.format(user_name, i) for i in range(number_docs_per_user)]
+            future = ppe.submit(
+                sg_client.get_bulk_docs,
+                url=sg_url,
+                db=sg_db,
+                doc_ids=user_doc_ids,
+                auth=auth_dict[user_name]
+            )
+            user_gets[future] = user_name
+
+        # Wait for all futures complete
+        for future in concurrent.futures.as_completed(user_gets):
+            user = user_gets[future]
+            docs, errors = future.result()
+            assert len(docs) == number_docs_per_user
+            assert len(errors) == 0
+            log_info('Docs found for user ({}): {}'.format(user, len(docs)))
+
+        # Start concurrent updates from Sync Gateway side
+        for user_name in user_names:
+            log_info('Starting concurrent updates!')
+            user_doc_ids = ['{}_doc_{}'.format(user_name, i) for i in range(number_docs_per_user)]
+            assert len(user_doc_ids) == number_docs_per_user
+            # Start updating from sync gateway for completed user
+            write_future = ppe.submit(
+                update_sg_docs,
+                client=sg_client,
+                url=sg_url,
+                db=sg_db,
+                docs_to_update=user_doc_ids,
+                prop_to_update='updates',
+                number_updates=number_of_updates_per_user,
+                auth=auth_dict[user_name]
+            )
+            user_writes[write_future] = user
+
+        for future in concurrent.futures.as_completed(user_writes):
+            user = user_writes[future]
+            # This will bubble up exceptions
+            future.result()
+            log_info('Update complete for user: {}'.format(user))
+    for user_name in user_names:
+        all_docs_total = sg_client.get_all_docs(url=sg_url, db=sg_db, auth=auth_dict[user_name])
+        all_docs_per_user = all_docs_total["rows"]
+        assert len(all_docs_per_user) == number_docs_per_user, "All documents are not returned for the user {}".format(auth_dict[user_name])
+
+
 @pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.xattrs
@@ -183,6 +320,9 @@ def test_on_demand_import_of_external_updates(params_from_base_test_setup, sg_co
     # This test should only run when using xattr meta storage
     if not xattrs_enabled:
         pytest.skip('XATTR tests require --xattrs flag')
+
+    if mode == "di":
+        pytest.skip('This test does not run in DI mode')
 
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
     sg_admin_url = cluster_topology['sync_gateways'][0]['admin']
@@ -246,6 +386,11 @@ def test_on_demand_import_of_external_updates(params_from_base_test_setup, sg_co
         sg_client.put_doc(url=sg_url, db=sg_db, doc_id=doc_id, rev=doc_rev_one, doc_body=doc_body, auth=seth_auth)
     log_info(he.value)
     assert he.value.message.startswith('409')
+
+    # Following update_doc method will get the doc with on demand processing and update the doc based on rev got from get doc
+    sg_updated_doc = sg_client.update_doc(url=sg_url, db=sg_db, doc_id=doc_id, auth=seth_auth)
+    sg_updated_rev = sg_updated_doc["rev"]
+    assert sg_updated_rev.startswith("3-")
 
 
 @pytest.mark.sanity
@@ -389,7 +534,6 @@ def test_offline_processing_of_external_updates(params_from_base_test_setup, sg_
     sg_client.verify_docs_in_changes(url=sg_url, db=sg_db, expected_docs=docs_to_verify_in_changes, auth=seth_auth)
 
 
-@pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.xattrs
 @pytest.mark.session
@@ -713,7 +857,6 @@ def test_purge(params_from_base_test_setup, sg_conf_name, use_multiple_channels)
         )
 
 
-@pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.xattrs
 @pytest.mark.changes
@@ -828,7 +971,6 @@ def test_sdk_does_not_see_sync_meta(params_from_base_test_setup, sg_conf_name):
             assert att_bytes == local_bytes
 
 
-@pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.xattrs
 @pytest.mark.changes
@@ -1051,7 +1193,6 @@ def test_sg_sdk_interop_unique_docs(params_from_base_test_setup, sg_conf_name):
     assert len(sdk_doc_delete_scratch_pad) == 0
 
 
-@pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.xattrs
 @pytest.mark.changes
@@ -1309,7 +1450,6 @@ def test_sg_sdk_interop_shared_docs(params_from_base_test_setup,
     verify_sdk_deletes(sdk_client, all_doc_ids)
 
 
-@pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.xattrs
 @pytest.mark.changes
@@ -1961,7 +2101,6 @@ def verify_doc_ids_in_sdk_get_multi(response, expected_number_docs, expected_ids
     assert len(expected_ids_scratch_pad) == 0
 
 
-@pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.xattrs
 @pytest.mark.changes
@@ -2179,3 +2318,135 @@ def test_sg_sdk_interop_shared_updates_from_sg(params_from_base_test_setup,
                 log_info(
                     "Deleted branched revisions still appear here {}".format(revs))
                 assert False
+
+
+@pytest.mark.syncgateway
+@pytest.mark.xattrs
+@pytest.mark.parametrize('sg_conf_name', [
+    'sync_gateway_default_functional_tests'
+])
+def test_purge_and_view_compaction(params_from_base_test_setup, sg_conf_name):
+    """
+    Scenario:
+    - Generate some tombstones doc
+    - Verify meta data still exists by verifygin sg xattrs using _raw sync gateway API
+    - Execute a view query to see the tombstones -> http GET localhost:4985/default/_view/channels
+        -> should see tombstone doc
+    - Sleep for 5 mins to verify tomstone doc is available in view query and meta data
+    - Trigger purge API to force the doc to purge
+    - Verify meta data does not exists by verifying sg xattrs using _raw sync gateway API
+    - Execute a view query to see the tombstones -> http GET localhost:4985/default/_view/channels
+        -> should see tombstone doc after the purge
+    - Trigger _compact API to compact the tombstone doc
+    - Verify tomstones are not seen in view query
+    """
+
+    sg_db = 'db'
+    cluster_conf = params_from_base_test_setup['cluster_config']
+    cluster_topology = params_from_base_test_setup['cluster_topology']
+    mode = params_from_base_test_setup['mode']
+    xattrs_enabled = params_from_base_test_setup['xattrs_enabled']
+
+    # This test should only run when using xattr meta storage
+    if not xattrs_enabled:
+        pytest.skip('XATTR tests require --xattrs flag')
+
+    sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
+    sg_admin_url = cluster_topology['sync_gateways'][0]['admin']
+    sg_url = cluster_topology['sync_gateways'][0]['public']
+    cbs_url = cluster_topology['couchbase_servers'][0]
+
+    log_info('sg_conf: {}'.format(sg_conf))
+    log_info('sg_admin_url: {}'.format(sg_admin_url))
+    log_info('sg_url: {}'.format(sg_url))
+    log_info('cbs_url: {}'.format(cbs_url))
+
+    cluster = Cluster(config=cluster_conf)
+    cluster.reset(sg_config_path=sg_conf)
+    # Create clients
+    sg_client = MobileRestClient()
+    channels = ['tombstone_test']
+
+    # Create user / session
+    auto_user_info = UserInfo(name='autotest', password='pass', channels=channels, roles=[])
+    sg_client.create_user(
+        url=sg_admin_url,
+        db=sg_db,
+        name=auto_user_info.name,
+        password=auto_user_info.password,
+        channels=auto_user_info.channels
+    )
+
+    test_auth_session = sg_client.create_session(
+        url=sg_admin_url,
+        db=sg_db,
+        name=auto_user_info.name,
+        password=auto_user_info.password
+    )
+
+    def update_prop():
+        return {
+            'updates': 0,
+            'tombstone': 'true',
+        }
+
+    doc_id = 'tombstone_test_sg_doc'
+    doc_body = document.create_doc(doc_id=doc_id, channels=['tombstone_test'], prop_generator=update_prop)
+    sg_client.add_doc(url=sg_url, db=sg_db, doc=doc_body, auth=test_auth_session)
+    doc = sg_client.get_doc(url=sg_url, db=sg_db, doc_id=doc_id, auth=test_auth_session)
+    sg_client.delete_doc(url=sg_url, db=sg_db, doc_id=doc_id, rev=doc['_rev'], auth=test_auth_session)
+    number_revs_per_doc = 1
+    verify_sg_xattrs(
+        mode,
+        sg_client,
+        sg_url=sg_admin_url,
+        sg_db=sg_db,
+        doc_id=doc_id,
+        expected_number_of_revs=number_revs_per_doc + 1,
+        expected_number_of_channels=len(channels),
+        deleted_docs=True
+    )
+    start = time.time()
+    timeout = 10  # timeout for view query in channels due to race condition after compacting the docs
+    while True:
+        channel_view_query = sg_client.view_query_through_channels(url=sg_admin_url, db=sg_db)
+        channel_view_query_string = json.dumps(channel_view_query)
+        if(doc_id in channel_view_query_string or time.time() - start > timeout):
+                break
+    assert doc_id in channel_view_query_string, "doc id not exists in view query"
+    time.sleep(300)  # wait for 5 mins and see meta is still available as it is not purged yet
+    verify_sg_xattrs(
+        mode,
+        sg_client,
+        sg_url=sg_admin_url,
+        sg_db=sg_db,
+        doc_id=doc_id,
+        expected_number_of_revs=number_revs_per_doc + 1,
+        expected_number_of_channels=len(channels),
+        deleted_docs=True
+    )
+    channel_view_query_string = sg_client.view_query_through_channels(url=sg_admin_url, db=sg_db)
+    channel_view_query_string = json.dumps(channel_view_query)
+    assert doc_id in channel_view_query_string, "doc id not exists in view query"
+    docs = []
+    docs.append(doc)
+    purged_doc = sg_client.purge_docs(url=sg_admin_url, db=sg_db, docs=docs)
+    log_info("Purged doc is {}".format(purged_doc))
+    verify_no_sg_xattrs(
+        sg_client=sg_client,
+        sg_url=sg_url,
+        sg_db=sg_db,
+        doc_id=doc_id
+    )
+    channel_view_query = sg_client.view_query_through_channels(url=sg_admin_url, db=sg_db)
+    channel_view_query_string = json.dumps(channel_view_query)
+    assert doc_id in channel_view_query_string, "doc id not exists in view query"
+    sg_client.compact_database(url=sg_admin_url, db=sg_db)
+    start = time.time()
+    timeout = 10  # timeout for view query in channels due to race condition after compacting the docs
+    while True:
+        channel_view_query = sg_client.view_query_through_channels(url=sg_admin_url, db=sg_db)
+        channel_view_query_string = json.dumps(channel_view_query)
+        if(doc_id not in channel_view_query_string or time.time() - start > timeout):
+                break
+    assert doc_id not in channel_view_query_string, "doc id exists in chanel view query after compaction"

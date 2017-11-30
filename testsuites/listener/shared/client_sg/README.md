@@ -1,7 +1,11 @@
 ## Executing listener/shared/client_sg functional tests
 
 The client_sg functional test test a client LiteServ application with a Sync Gateway backed by a Couchbase Server
-
+- Requirements
+    - Install Android Studio
+    - Install xcode
+    - brew install ios-sim
+    
 - The client LiteServ application can be run with the following platforms
     - android
     - ios

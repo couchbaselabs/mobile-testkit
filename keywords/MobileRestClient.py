@@ -1105,6 +1105,10 @@ class MobileRestClient:
         auth_type = get_auth_type(auth)
         doc = self.get_doc(url, db, doc_id, auth)
         current_rev = doc["_rev"]
+        try:
+            doc["updates"]
+        except Exception:
+            doc["updates"] = 0
         current_update_number = doc["updates"] + 1
 
         log_info("Updating {}/{}/{}: {} times".format(url, db, doc_id, number_updates))
@@ -1176,6 +1180,8 @@ class MobileRestClient:
 
             if generator == "four_k":
                 doc_body = doc_generators.four_k()
+            elif generator == "simple_user":
+                doc_body = doc_generators.simple_user()
             else:
                 doc_body = doc_generators.simple()
 
@@ -1296,7 +1302,7 @@ class MobileRestClient:
         resp.raise_for_status()
         return resp.json()
 
-    def get_bulk_docs(self, url, db, doc_ids, auth=None, validate=True):
+    def get_bulk_docs(self, url, db, doc_ids, auth=None, validate=True, rev_history="false"):
         """
         Keyword that issues POST _bulk_get docs with the specified 'docs' array.
         docs need to be in the following format:
@@ -1315,15 +1321,14 @@ class MobileRestClient:
         # ]
         doc_ids_formatted = [{"id": doc_id} for doc_id in doc_ids]
         request_body = {"docs": doc_ids_formatted}
-
         auth_type = get_auth_type(auth)
 
         if auth_type == AuthType.session:
-            resp = self._session.post("{}/{}/_bulk_get".format(url, db), data=json.dumps(request_body), cookies=dict(SyncGatewaySession=auth[1]))
+            resp = self._session.post("{}/{}/_bulk_get?revs={}".format(url, db, rev_history), data=json.dumps(request_body), cookies=dict(SyncGatewaySession=auth[1]))
         elif auth_type == AuthType.http_basic:
-            resp = self._session.post("{}/{}/_bulk_get".format(url, db), data=json.dumps(request_body), auth=auth)
+            resp = self._session.post("{}/{}/_bulk_get?revs={}".format(url, db, rev_history), data=json.dumps(request_body), auth=auth)
         else:
-            resp = self._session.post("{}/{}/_bulk_get".format(url, db), data=json.dumps(request_body))
+            resp = self._session.post("{}/{}/_bulk_get?revs={}".format(url, db, rev_history), data=json.dumps(request_body))
 
         log_r(resp)
         resp.raise_for_status()
@@ -2048,6 +2053,16 @@ class MobileRestClient:
                 else:
                     # Reraise the exception is it is not what we are expecting
                     raise
+
+        return resp.json()
+
+    def view_query_through_channels(self, url, db):
+        """
+        Gets query through channels and return all docs including tombstone docs
+        """
+        resp = self._session.get("{}/{}/_view/channels".format(url, db))
+        log_r(resp)
+        resp.raise_for_status()
 
         return resp.json()
 

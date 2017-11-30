@@ -13,7 +13,6 @@ from keywords.SyncGateway import sync_gateway_config_path_for_mode
 from utilities.cluster_config_utils import get_sg_version
 
 
-@pytest.mark.sanity
 @pytest.mark.syncgateway
 @pytest.mark.changes
 @pytest.mark.basicauth

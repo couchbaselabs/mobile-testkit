@@ -23,4 +23,6 @@ tf1 ansible_host=10.17.0.22
 cbs_ssl_enabled=False
 xattrs_enabled=False
 sg_lb_enabled=False
+sync_gateway_version=1.5.0-571
+server_version=5.0.0-3519
 

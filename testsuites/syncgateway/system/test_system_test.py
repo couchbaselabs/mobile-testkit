@@ -16,22 +16,23 @@ from libraries.testkit.cluster import Cluster
 
 # Set the default value to 404 - view not created yet
 SG_VIEWS = {
-    'sync_gateway_access': ["access"],
-    'sync_gateway_access_vbseq': ["access_vbseq"],
-    'sync_gateway_channels': ["channels"],
-    'sync_gateway_role_access': ["role_access"],
-    'sync_gateway_role_access_vbseq': ["role_access_vbseq"],
     'sync_housekeeping': [
         "all_bits",
         "all_docs",
         "import",
         "old_revs",
-        "principals",
         "sessions",
         "tombstones"
+    ],
+    'sync_gateway': [
+        "access",
+        "access_vbseq",
+        "channels",
+        "principals",
+        "role_access",
+        "role_access_vbseq"
     ]
 }
-
 
 USER_TYPES = ['shared_channel_user', 'unique_channel_user', 'filtered_channel_user', 'filtered_doc_ids_user']
 USER_PASSWORD = 'password'
@@ -175,7 +176,7 @@ def test_system_test(params_from_base_test_setup):
     log_info('------------------------------------------')
 
     # Start changes processing
-    with ProcessPoolExecutor(max_workers=1) as pex:
+    with ProcessPoolExecutor(max_workers=((len(users) * 3) + update_batch_size + 3)) as pex:
 
         # Start changes feeds in background process
         changes_workers_task = pex.submit(
@@ -230,7 +231,9 @@ def test_system_test(params_from_base_test_setup):
 
 def print_summary(users):
     """ Pretty print user results for simulation """
-
+    log_info('------------------------------------------')
+    log_info('Summary')
+    log_info('------------------------------------------')
     for user_name, value in users.items():
         num_user_docs = len(value['doc_ids'])
         log_info('-> {} added: {} docs'.format(user_name, num_user_docs))
@@ -575,7 +578,7 @@ def create_docs(sg_admin_url, sg_url, sg_db, num_users, number_docs_per_user, cr
 
     user_names = create_user_names(num_users)
 
-    with ProcessPoolExecutor(max_workers=10) as pe:
+    with ProcessPoolExecutor(max_workers=num_users) as pe:
 
         # Start concurrent create block
         futures = [pe.submit(
@@ -658,7 +661,7 @@ def update_docs_task(users, user_type, user_index, sg_url, sg_db, docs_per_user_
     else:
 
         # Do a single GET / PUT for each of the user docs
-        for doc_id in current_user_doc_ids:
+        for doc_id in user_docs_subset_to_update:
             doc = sg_client.get_doc(url=sg_url, db=sg_db, doc_id=doc_id, auth=current_user_auth)
             doc['updates'] += 1
             sg_client.put_doc(url=sg_url, db=sg_db, doc_id=doc_id, doc_body=doc, rev=doc['_rev'], auth=current_user_auth)
@@ -682,7 +685,7 @@ def update_docs(sg_url, sg_db, users, update_runtime_sec, batch_size, docs_per_u
     while True:
 
         elapsed_sec = time.time() - start
-        log_info('Updaing for: {}s'.format(elapsed_sec))
+        log_info('Updated for: {}s'.format(elapsed_sec))
         if elapsed_sec > update_runtime_sec:
             log_info('Runtime limit reached. Exiting ...')
             return users
@@ -694,7 +697,7 @@ def update_docs(sg_url, sg_db, users, update_runtime_sec, batch_size, docs_per_u
             # For example if batch_size == num_users_per_type,
             # All users would update the docs
             for user_type in USER_TYPES:
-                futures = [pe.submit(
+                update_futures = [pe.submit(
                     update_docs_task,
                     users,
                     user_type,
@@ -704,9 +707,9 @@ def update_docs(sg_url, sg_db, users, update_runtime_sec, batch_size, docs_per_u
                     docs_per_user_per_update
                 ) for i in range(batch_size)]
 
-            # Block until all futures are completed or return
+            # Block until all update_futures are completed or return
             # exception in future.result()
-            for future in as_completed(futures):
+            for future in as_completed(update_futures):
                 # Increment updates
                 user = future.result()
                 users[user]['updates'] += 1

@@ -7,7 +7,7 @@ from requests.exceptions import ConnectionError
 import keywords.exceptions
 from keywords.couchbaseserver import CouchbaseServer
 from keywords.exceptions import ProvisioningError
-from keywords.utils import log_info
+from keywords.utils import log_info, add_cbs_to_sg_config_server_field
 from libraries.provision.ansible_runner import AnsibleRunner
 from libraries.testkit.admin import Admin
 from libraries.testkit.config import Config
@@ -128,7 +128,7 @@ class Cluster:
 
         server_port = 8091
         server_scheme = "http"
-
+        couchbase_server_primary_node = add_cbs_to_sg_config_server_field(self._cluster_config)
         if self.cbs_ssl:
             server_port = 18091
             server_scheme = "https"
@@ -139,14 +139,17 @@ class Cluster:
             "server_port": server_port,
             "server_scheme": server_scheme,
             "autoimport": "",
-            "xattrs": ""
+            "xattrs": "",
+            "couchbase_server_primary_node": couchbase_server_primary_node
         }
         if self.cbs_ssl and get_sg_version(self._cluster_config) >= "1.5.0":
             playbook_vars["server_scheme"] = "couchbases"
             playbook_vars["server_port"] = 11207
-            log_info("running ansible script to block http ports")
+            block_http_vars = {}
+            block_http_vars["port"] = 8091
             status = ansible_runner.run_ansible_playbook(
-                "block-http-ports.yml"
+                "block-http-ports.yml",
+                extra_vars=block_http_vars
             )
             if status != 0:
                 raise ProvisioningError("Failed to block CBS http port")
@@ -307,6 +310,20 @@ class Cluster:
                     errors.append((sa, e))
 
         return errors
+
+    def stop_sg_and_accel(self):
+
+        # Stop sync_gateways
+        log_info(">>> Stopping sync_gateway")
+        for sg in self.sync_gateways:
+            status = sg.stop()
+            assert status == 0, "Failed to stop sync gateway for host {}".format(sg.hostname)
+
+        # Stop sync_gateway accels
+        log_info(">>> Stopping sg_accel")
+        for sgaccel in self.sg_accels:
+            status = sgaccel.stop()
+            assert status == 0, "Failed to stop sync gateway for host {}".format(sgaccel.hostname)
 
     def __repr__(self):
         s = "\n\n"

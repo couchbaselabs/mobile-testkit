@@ -41,7 +41,7 @@ def persist_cluster_config_environment_prop(cluster_config, property_name, value
     for cluster_config.json
     """
 
-    valid_props = ["cbs_ssl_enabled", "xattrs_enabled", "sg_lb_enabled", "server_version", "sync_gateway_version"]
+    valid_props = ["cbs_ssl_enabled", "xattrs_enabled", "sg_lb_enabled", "sync_gateway_version", "server_version"]
     if property_name not in valid_props:
         raise ProvisioningError("Make sure the property you are trying to change is one of: {}".format(valid_props))
 
@@ -80,6 +80,13 @@ def is_cbs_ssl_enabled(cluster_config):
 
     cluster = load_cluster_config_json(cluster_config)
     return cluster["environment"]["cbs_ssl_enabled"]
+
+
+def get_cbs_servers(cluster_config):
+    """ Loads cluster config to see if cbs ssl is enabled """
+    cluster = load_cluster_config_json(cluster_config)
+    cbs_ips = [cb["ip"] for cb in cluster["couchbase_servers"]]
+    return cbs_ips
 
 
 def is_xattrs_enabled(cluster_config):
