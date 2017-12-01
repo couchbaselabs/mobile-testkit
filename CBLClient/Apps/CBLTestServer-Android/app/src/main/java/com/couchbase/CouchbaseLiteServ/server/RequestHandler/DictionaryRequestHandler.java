@@ -1,6 +1,7 @@
-package com.couchbase.CouchbaseLiteServ.server;
+package com.couchbase.CouchbaseLiteServ.server.RequestHandler;
 
 
+import com.couchbase.CouchbaseLiteServ.server.Args;
 import com.couchbase.lite.Array;
 import com.couchbase.lite.Blob;
 import com.couchbase.lite.Database;
@@ -19,22 +20,8 @@ public class DictionaryRequestHandler{
     /* - Dictionary - */
     /* -------------- */
 
-    public Map create(Args args) {
-        return new HashMap();
-    }
-
-    public Object get(Args args) {
-        Map<String, Object> map = args.get("dictionary");
-        String key = args.get("key");
-        return map.get(key);
-    }
-
-    public void put(Args args) {
-        Map<String, Object> map = args.get("dictionary");
-        String key = args.get("key");
-        String string = args.get("string");
-
-        map.put(key, string);
+    public Dictionary create(Args args) {
+        return new Dictionary();
     }
 
     public int count(Args args){
@@ -43,7 +30,7 @@ public class DictionaryRequestHandler{
     }
 
     public void fleeceEncode(Args args){
-        Document dictionary = args.get("dictionary");
+        Dictionary dictionary = args.get("dictionary");
         FLEncoder encoder = args.get("encoder");
         Database database = args.get("database");
         dictionary.fleeceEncode(encoder, database);

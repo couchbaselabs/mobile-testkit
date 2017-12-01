@@ -1,7 +1,5 @@
 package com.couchbase.CouchbaseLiteServ.server;
 
-import android.util.Log;
-
 public class ValueSerializer {
 
     public static String serialize(Object value, Memory memory) {
@@ -11,14 +9,14 @@ public class ValueSerializer {
             String string = (String) value;
 
             return "\"" + string + "\"";
-        } else if (value instanceof Number) {
-            Number number = (Number) value;
-
-            return number.toString();
         } else if (value instanceof Boolean) {
             Boolean bool = (Boolean) value;
 
             return (bool ? "true" : "false");
+        } else if (value instanceof Integer) {
+            Integer number = (Integer) value;
+
+            return number.toString();
         } else {
             return memory.add(value);
         }

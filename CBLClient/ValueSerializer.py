@@ -11,16 +11,13 @@ class ValueSerializer:
             return value.getAddress()
         elif isinstance(value, str):
             string = str(value)
-
             return "\"" + string + "\""
-        elif isinstance(value, int):
-            number = int(value)
-
-            return str(number)
         elif isinstance(value, bool):
             bool_val = bool(value)
-
             return "true" if bool_val else "false"
+        elif isinstance(value, int):
+            number = int(value)
+            return str(number)
         else:
             raise Exception("Invalid value type: {}".format(value))
 

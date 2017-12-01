@@ -1,5 +1,10 @@
 package com.couchbase.CouchbaseLiteServ.server;
 
+import com.couchbase.CouchbaseLiteServ.server.RequestHandler.DataTypesInitiatorHandler;
+import com.couchbase.CouchbaseLiteServ.server.RequestHandler.DatabaseRequestHandler;
+import com.couchbase.CouchbaseLiteServ.server.RequestHandler.DictionaryRequestHandler;
+import com.couchbase.CouchbaseLiteServ.server.RequestHandler.DocumentRequestHandler;
+
 import org.nanohttpd.protocols.http.IHTTPSession;
 import org.nanohttpd.protocols.http.NanoHTTPD;
 import org.nanohttpd.protocols.http.response.IStatus;
@@ -93,6 +98,9 @@ public class Server extends NanoHTTPD {
                 } else if (handlerType.equals("dictionary")){
                     target = DictionaryRequestHandler.class.getMethod(method_to_call, Args.class);
                     requestHandler = new DictionaryRequestHandler();
+                } else if (handlerType.equals("datatype")){
+                    target = DataTypesInitiatorHandler.class.getMethod(method_to_call, Args.class);
+                    requestHandler = new DataTypesInitiatorHandler();
                 } else {
                     throw new IllegalArgumentException("Handler not implemented for this call");
                 }

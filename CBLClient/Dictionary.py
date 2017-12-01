@@ -19,19 +19,6 @@ class Dictionary:
     def create(self):
         return self._client.invokeMethod("dictionary_create")
 
-    def get(self, dictionary, key):
-        args = Args()
-        args.setMemoryPointer("dictionary", dictionary)
-        args.setString("key", key)
-        return self._client.invokeMethod("dictionary_get", args)
-
-    def put(self, dictionary, key, string):
-        args = Args()
-        args.setMemoryPointer("dictionary", dictionary)
-        args.setString("key", key)
-        args.setString("string", string)
-        self._client.invokeMethod("dictionary_put", args)
-
     def getId(self, dictionary):
         args = Args()
         args.setMemoryPointer("dictionary", dictionary)

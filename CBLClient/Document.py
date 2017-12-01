@@ -88,7 +88,7 @@ class Document:
     def getArray(self, document, key):
         args = Args()
         args.setMemoryPointer("document", document)
-        args.setString("key", key)
+        args.setMemoryPointer("key", key)
         return self._client.invokeMethod("document_getArray", args)
 
     def setArray(self, document, key, value):
@@ -121,7 +121,7 @@ class Document:
         args = Args()
         args.setMemoryPointer("document", document)
         args.setString("key", key)
-        args.setString("value", value)
+        args.setBoolean("value", value)
         return self._client.invokeMethod("document_setBoolean", args)
 
     def getDate(self, document, key):
@@ -228,7 +228,7 @@ class Document:
         args.setString("value", value)
         return self._client.invokeMethod("document_setInt", args)
 
-    def removeKey(self, document, key):
+    def remove(self, document, key):
         args = Args()
         args.setMemoryPointer("document", document)
         args.setString("key", key)

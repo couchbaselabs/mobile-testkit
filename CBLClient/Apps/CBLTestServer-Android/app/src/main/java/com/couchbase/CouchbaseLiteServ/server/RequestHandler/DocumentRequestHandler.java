@@ -1,6 +1,7 @@
-package com.couchbase.CouchbaseLiteServ.server;
+package com.couchbase.CouchbaseLiteServ.server.RequestHandler;
 
 
+import com.couchbase.CouchbaseLiteServ.server.Args;
 import com.couchbase.lite.Blob;
 import com.couchbase.lite.Dictionary;
 import com.couchbase.lite.Document;
@@ -75,7 +76,7 @@ public class DocumentRequestHandler{
     public Object getObject(Args args){
         Document document = args.get("document");
         String key = args.get("key");
-        return document.getString(key);
+        return document.getObject(key);
     }
 
     public Document setObject(Args args){
@@ -152,9 +153,8 @@ public class DocumentRequestHandler{
         Document document = args.get("document");
         String key = args.get("key");
         Double value = args.get("value");
-        return  document.setObject(key, value);
+        return  document.setDouble(key, value);
     }
-
 
     public Boolean getBoolean(Args args){
         Document document = args.get("document");

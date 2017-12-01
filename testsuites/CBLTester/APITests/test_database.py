@@ -10,6 +10,7 @@ from CBLClient.Database import Database
 from CBLClient.Document import Document
 
 baseUrl = "http://172.16.1.154:8080"
+#baseUrl = "http://192.168.0.113:8080"
 dbName = "foo"
 docIdPrefix = "bar"
 

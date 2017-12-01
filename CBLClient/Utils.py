@@ -23,4 +23,3 @@ class Release:
                 self._client.release(i)
         else:
             self._client.release(obj)
-
