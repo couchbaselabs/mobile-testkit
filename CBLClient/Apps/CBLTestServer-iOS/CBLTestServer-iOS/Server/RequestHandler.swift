@@ -232,7 +232,10 @@ public class RequestHandler {
             return Collation.ascii().ignoreCase(ignoreCase)
             
         case "query_collation_unicode":
-            return Collation.unicode()
+            let ignoreCase: Bool = args.get(name: "ignoreCase")!
+            let ignoreAccents: Bool = args.get(name: "ignoreAccents")!
+            
+            return Collation.unicode().ignoreCase(ignoreCase).ignoreAccents(ignoreAccents)
             
         //////////////////////
         // Query DataSource //
@@ -301,6 +304,167 @@ public class RequestHandler {
         case "query_function_sum":
             let expression: Any = args.get(name: "expression")!
             return Function.sum(expression)
+
+        case "query_function_arrayContains":
+            let expression: Any = args.get(name: "expression")!
+            let value: Any = args.get(name: "value")!
+
+            return Function.arrayContains(expression, value: value)
+
+        case "query_function_arrayLength":
+            let expression: Any = args.get(name: "expression")!
+            return Function.arrayLength(expression)
+            
+        case "query_function_abs":
+            let expression: Any = args.get(name: "expression")!
+            return Function.abs(expression)
+            
+        case "query_function_acos":
+            let expression: Any = args.get(name: "expression")!
+            return Function.acos(expression)
+
+        case "query_function_asin":
+            let expression: Any = args.get(name: "expression")!
+            return Function.asin(expression)
+            
+        case "query_function_atan":
+            let expression: Any = args.get(name: "expression")!
+            return Function.atan(expression)
+
+        case "query_function_atan2":
+            let x: Any = args.get(name: "x")!
+            let y: Any = args.get(name: "y")!
+
+            return Function.atan2(x:x, y:y)
+
+        case "query_function_ceil":
+            let expression: Any = args.get(name: "expression")!
+            return Function.ceil(expression)
+            
+        case "query_function_cos":
+            let expression: Any = args.get(name: "expression")!
+            return Function.cos(expression)
+            
+        case "query_function_degrees":
+            let expression: Any = args.get(name: "expression")!
+            return Function.degrees(expression)
+
+        case "query_function_e":
+            return Function.e()
+
+        case "query_function_exp":
+            let expression: Any = args.get(name: "expression")!
+            return Function.exp(expression)
+            
+        case "query_function_floor":
+            let expression: Any = args.get(name: "expression")!
+            return Function.floor(expression)
+            
+        case "query_function_ln":
+            let expression: Any = args.get(name: "expression")!
+            return Function.ln(expression)
+            
+        case "query_function_log":
+            let expression: Any = args.get(name: "expression")!
+            return Function.log(expression)
+
+        case "query_function_pi":
+            return Function.pi()
+            
+        case "query_function_power":
+            let base: Any = args.get(name: "base")!
+            let exponent: Any = args.get(name: "exponent")!
+            
+            return Function.power(base:base, exponent:exponent)
+            
+        case "query_function_radians":
+            let expression: Any = args.get(name: "expression")!
+            return Function.radians(expression)
+
+        case "query_function_round":
+            let expression: Any = args.get(name: "expression")!
+            return Function.round(expression)
+
+        case "query_function_round_digits":
+            let expression: Any = args.get(name: "expression")!
+            let digits: Int = args.get(name: "digits")!
+
+            return Function.round(expression, digits: digits)
+
+        case "query_function_sign":
+            let expression: Any = args.get(name: "expression")!
+            return Function.sign(expression)
+
+        case "query_function_sin":
+            let expression: Any = args.get(name: "expression")!
+            return Function.sin(expression)
+
+        case "query_function_sqrt":
+            let expression: Any = args.get(name: "expression")!
+            return Function.sqrt(expression)
+
+        case "query_function_tan":
+            let expression: Any = args.get(name: "expression")!
+            return Function.tan(expression)
+
+        case "query_function_trunc":
+            let expression: Any = args.get(name: "expression")!
+            return Function.trunc(expression)
+
+        case "query_function_trunc_digits":
+            let expression: Any = args.get(name: "expression")!
+            let digits: Int = args.get(name: "digits")!
+            
+            return Function.trunc(expression, digits: digits)
+
+        case "query_function_contains":
+            let expression: Any = args.get(name: "expression")!
+            let substring: Any = args.get(name: "substring")!
+            return Function.contains(expression, substring: substring)
+
+        case "query_function_length":
+            let expression: Any = args.get(name: "expression")!
+            return Function.length(expression)
+
+        case "query_function_lower":
+            let expression: Any = args.get(name: "expression")!
+            return Function.lower(expression)
+
+        case "query_function_ltrim":
+            let expression: Any = args.get(name: "expression")!
+            return Function.ltrim(expression)
+
+        case "query_function_rtrim":
+            let expression: Any = args.get(name: "expression")!
+            return Function.rtrim(expression)
+
+        case "query_function_trim":
+            let expression: Any = args.get(name: "expression")!
+            return Function.trim(expression)
+
+        case "query_function_upper":
+            let expression: Any = args.get(name: "expression")!
+            return Function.upper(expression)
+
+        case "query_function_isArray":
+            let expression: Any = args.get(name: "expression")!
+            return Function.isArray(expression)
+
+        case "query_function_isNumber":
+            let expression: Any = args.get(name: "expression")!
+            return Function.isNumber(expression)
+
+        case "query_function_isDictionary":
+            let expression: Any = args.get(name: "expression")!
+            return Function.isDictionary(expression)
+
+        case "query_function_isString":
+            let expression: Any = args.get(name: "expression")!
+            return Function.isString(expression)
+
+        case "query_function_rank":
+            let property: Expression = args.get(name: "expression")!
+            return Function.rank(property)
 
         ///////////
         // Joins //
