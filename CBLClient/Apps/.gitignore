@@ -54,6 +54,9 @@ playground.xcworkspace
 # Carthage/Checkouts
 
 Carthage/Build
+Carthage/Checkouts
+CBLTestServer-iOS/Carthage/Build
+CBLTestServer-iOS/Carthage/Checkouts
 
 # fastlane
 #

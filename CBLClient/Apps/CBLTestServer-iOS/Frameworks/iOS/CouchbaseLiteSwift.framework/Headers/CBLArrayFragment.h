@@ -6,11 +6,15 @@
 //  Copyright © 2017 Couchbase. All rights reserved.
 //
 
-#import "CBLReadOnlyArrayFragment.h"
 @class CBLFragment;
 
-/** CBLArrayFragment protocol provides subscript access to CBLFragment objects by index. */
-@protocol CBLArrayFragment <CBLReadOnlyArrayFragment>
+NS_ASSUME_NONNULL_BEGIN
+
+/** 
+ CBLArrayFragment protocol provides subscript access to CBLFragment
+ objects by index. 
+ */
+@protocol CBLArrayFragment <NSObject>
 
 /** 
  Subscript access to a CBLFragment object by index.
@@ -18,6 +22,9 @@
  @param index The index.
  @return The CBLFragment object.
  */
-- (CBLFragment*) objectAtIndexedSubscript: (NSUInteger)index;
+- (nullable CBLFragment*) objectAtIndexedSubscript: (NSUInteger)index;
 
 @end
+
+NS_ASSUME_NONNULL_END
+
