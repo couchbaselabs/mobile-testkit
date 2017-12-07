@@ -39,7 +39,13 @@ class SyncGatewayConfig:
         output += "  skip bucketcreation: {}\n".format(self.skip_bucketcreation)
         return output
 
-    def sync_gateway_base_url_and_package(self, sg_ce=False):
+    def sync_gateway_base_url_and_package(self, sg_ce=False, sg_platform="centos", sa_platform="centos"):
+        platform_extension = {
+            "centos": "rpm",
+            "ubuntu": "deb",
+            "windows": "exe"
+        }
+
         if self._version_number == "1.1.0" or self._build_number == "1.1.1":
             log_info("Version unsupported in provisioning.")
             raise ProvisioningError("Unsupport version of sync_gateway")
@@ -55,8 +61,9 @@ class SyncGatewayConfig:
             if sg_ce:
                 sg_type = "community"
 
-            sg_package_name = "couchbase-sync-gateway-{0}_{1}-{2}_x86_64.rpm".format(sg_type, self._version_number, self._build_number)
-            accel_package_name = "couchbase-sg-accel-enterprise_{0}-{1}_x86_64.rpm".format(self._version_number, self._build_number)
+            sg_package_name = "couchbase-sync-gateway-{0}_{1}-{2}_x86_64.{3}".format(sg_type, self._version_number, self._build_number, platform_extension[sg_platform])
+            accel_package_name = "couchbase-sg-accel-enterprise_{0}-{1}_x86_64.{2}".format(self._version_number, self._build_number, platform_extension[sa_platform])
+
         return base_url, sg_package_name, accel_package_name
 
     def is_valid(self):
@@ -80,7 +87,8 @@ class SyncGatewayConfig:
         return True
 
 
-def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False):
+def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False, sg_platform="centos", sa_platform="centos"):
+
     log_info(sync_gateway_config)
 
     if sync_gateway_config.build_flags != "":
@@ -129,17 +137,38 @@ def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False):
 
     else:
         # Install from Package
-        sync_gateway_base_url, sync_gateway_package_name, sg_accel_package_name = sync_gateway_config.sync_gateway_base_url_and_package(sg_ce)
+        sync_gateway_base_url, sync_gateway_package_name, sg_accel_package_name = sync_gateway_config.sync_gateway_base_url_and_package(sg_ce=sg_ce, sg_platform=sg_platform, sa_platform=sa_platform)
 
         playbook_vars["couchbase_sync_gateway_package_base_url"] = sync_gateway_base_url
         playbook_vars["couchbase_sync_gateway_package"] = sync_gateway_package_name
         playbook_vars["couchbase_sg_accel_package"] = sg_accel_package_name
-        status = ansible_runner.run_ansible_playbook(
-            "install-sync-gateway-package.yml",
-            extra_vars=playbook_vars
-        )
+
+        if sg_platform == "windows":
+            status = ansible_runner.run_ansible_playbook(
+                "install-sync-gateway-package-windows.yml",
+                extra_vars=playbook_vars
+            )
+        else:
+            status = ansible_runner.run_ansible_playbook(
+                "install-sync-gateway-package.yml",
+                extra_vars=playbook_vars
+            )
+
         if status != 0:
             raise ProvisioningError("Failed to install sync_gateway package")
+
+        if sa_platform == "windows":
+            status = ansible_runner.run_ansible_playbook(
+                "install-sg-accel-package-windows.yml",
+                extra_vars=playbook_vars
+            )
+        else:
+            status = ansible_runner.run_ansible_playbook(
+                "install-sg-accel-package.yml",
+                extra_vars=playbook_vars
+            )
+        if status != 0:
+            raise ProvisioningError("Failed to install sg_accel package")
 
     # Configure aws cloudwatch logs forwarder
     status = ansible_runner.run_ansible_playbook(
@@ -244,6 +273,14 @@ if __name__ == "__main__":
                       action="store", dest="skip_bucketcreation", default=False,
                       help="skip the bucketcreation step")
 
+    parser.add_option("", "--sa-platform",
+                      action="store", dest="sa_platform", default="centos",
+                      help="Set the SGAccel OS platform")
+
+    parser.add_option("", "--sg-platform",
+                      action="store", dest="sg_platform", default="centos",
+                      help="Set the SG OS platform")
+
     arg_parameters = sys.argv[1:]
 
     (opts, args) = parser.parse_args(arg_parameters)
@@ -276,5 +313,7 @@ if __name__ == "__main__":
 
     install_sync_gateway(
         cluster_config=cluster_conf,
-        sync_gateway_config=sync_gateway_install_config
+        sync_gateway_config=sync_gateway_install_config,
+        sa_platform=opts.sa_platform,
+        sg_platform=opts.sg_platform
     )

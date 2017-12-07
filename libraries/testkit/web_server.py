@@ -22,6 +22,7 @@ class HttpHandler(BaseHTTPRequestHandler):
         content_len = int(self.headers.getheader('content-length', 0))
         post_body = self.rfile.read(content_len)
         data = json.loads(post_body)
+
         if "_id" in data:
             log_info("Webhook doc received: {}".format(data["_id"]))
         else:

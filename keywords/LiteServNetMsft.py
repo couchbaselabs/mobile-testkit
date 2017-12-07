@@ -47,12 +47,13 @@ class LiteServNetMsft(LiteServBase):
 
         self.ansible_runner = AnsibleRunner(config=config_location)
 
-    def download(self):
+    def download(self, version_build=None):
         """
         1. Downloads the LiteServ.zip package from latestbuild to the remote Windows host to Desktop\LiteServ\
         2. Extracts the package and removes the zip
         """
-
+        if version_build is not None:
+            self.version_build = version_build
         version, build = version_and_build(self.version_build)
         download_url = "{}/couchbase-lite-net/{}/{}/LiteServ.zip".format(LATEST_BUILDS, version, build)
         package_name = "couchbase-lite-net-msft-{}-liteserv".format(self.version_build)

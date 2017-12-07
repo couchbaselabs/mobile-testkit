@@ -5,6 +5,15 @@
     db:
 
   tasks:
+  - win_uri:
+      url: http://localhost:4985/{{ db }}/_offline
+      status_code: 200, 201
+      timeout: 30
+      method: POST
+      headers:
+        Content-Type: "application/json"
+    when: ansible_os_family == "Windows"
+
   - uri:
       url: http://localhost:4985/{{ db }}/_offline
       status_code: 200, 201
@@ -12,3 +21,4 @@
       method: POST
       headers:
         Content-Type: "application/json"
+    when: ansible_distribution == "CentOS" or ansible_distribution == "RedHat"

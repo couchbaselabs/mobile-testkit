@@ -14,12 +14,13 @@ from keywords.utils import log_info
 
 class LiteServAndroid(LiteServBase):
 
-    def download(self):
+    def download(self, version_build=None):
         """
         1. Check to see if .apk is downloaded already. If so, return
         2. Download the LiteServ .apk from latest builds to 'deps/binaries'
         """
-
+        if(version_build is not None):
+            self.version_build = version_build
         version, build = version_and_build(self.version_build)
 
         if version == "1.2.1":
@@ -67,7 +68,8 @@ class LiteServAndroid(LiteServBase):
             if count > max_retries:
                 raise LiteServError(".apk install failed!")
             try:
-                output = subprocess.check_output(["adb", "install", apk_path])
+                output = subprocess.check_output(["adb", "install", "-r", apk_path])
+                break
             except Exception as e:
                 if "INSTALL_FAILED_ALREADY_EXISTS" in e.message or "INSTALL_FAILED_UPDATE_INCOMPATIBLE" in e.message:
                     # Apk may be installed, remove and retry install
