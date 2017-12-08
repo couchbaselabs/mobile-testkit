@@ -1,7 +1,5 @@
 from CBLClient.Client import Client
 from CBLClient.Args import Args
-from keywords.utils import log_info
-
 
 class Document:
     _client = None
@@ -95,7 +93,7 @@ class Document:
         args = Args()
         args.setMemoryPointer("document", document)
         args.setString("key", key)
-        args.setString("value", value)
+        args.setMemoryPointer("value", value)
         return self._client.invokeMethod("document_setArray", args)
 
     def getBlob(self, document, key):
@@ -108,7 +106,7 @@ class Document:
         args = Args()
         args.setMemoryPointer("document", document)
         args.setString("key", key)
-        args.setString("value", value)
+        args.setMemoryPointer("value", value)
         return self._client.invokeMethod("document_setBlob", args)
 
     def getBoolean(self, document, key):
@@ -134,7 +132,7 @@ class Document:
         args = Args()
         args.setMemoryPointer("document", document)
         args.setString("key", key)
-        args.setString("value", value)
+        args.setMemoryPointer("value", value)
         return self._client.invokeMethod("document_setDate", args)
 
     def getDictionary(self, document, key):
@@ -147,7 +145,7 @@ class Document:
         args = Args()
         args.setMemoryPointer("document", document)
         args.setString("key", key)
-        args.setString("value", value)
+        args.setMemoryPointer("value", value)
         return self._client.invokeMethod("document_setDictionary", args)
 
     def getDouble(self, document, key):
@@ -160,7 +158,7 @@ class Document:
         args = Args()
         args.setMemoryPointer("document", document)
         args.setString("key", key)
-        args.setString("value", value)
+        args.setMemoryPointer("value", value)
         return self._client.invokeMethod("document_setDouble", args)
 
     def getFloat(self, document, key):
@@ -173,7 +171,7 @@ class Document:
         args = Args()
         args.setMemoryPointer("document", document)
         args.setString("key", key)
-        args.setString("value", value)
+        args.setMemoryPointer("value", value)
         return self._client.invokeMethod("document_setFloat", args)
 
     def getLong(self, document, key):
@@ -186,7 +184,7 @@ class Document:
         args = Args()
         args.setMemoryPointer("document", document)
         args.setString("key", key)
-        args.setString("value", value)
+        args.setMemoryPointer("value", value)
         return self._client.invokeMethod("document_setLong", args)
 
     def getObject(self, document, key):
@@ -199,7 +197,7 @@ class Document:
         args = Args()
         args.setMemoryPointer("document", document)
         args.setString("key", key)
-        args.setString("value", value)
+        args.setMemoryPointer("value", value)
         return self._client.invokeMethod("document_setObject", args)
 
     def getNumber(self, document, key):
@@ -212,7 +210,7 @@ class Document:
         args = Args()
         args.setMemoryPointer("document", document)
         args.setString("key", key)
-        args.setString("value", value)
+        args.setMemoryPointer("value", value)
         return self._client.invokeMethod("document_setNumber", args)
 
     def getInt(self, document, key):
@@ -225,7 +223,7 @@ class Document:
         args = Args()
         args.setMemoryPointer("document", document)
         args.setString("key", key)
-        args.setString("value", value)
+        args.setInt("value", value)
         return self._client.invokeMethod("document_setInt", args)
 
     def remove(self, document, key):

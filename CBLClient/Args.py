@@ -1,16 +1,17 @@
-from keywords.utils import log_info
-
 
 class Args:
     def __init__(self):
         self.index = 0
         self._args = {}
 
+    def setArray(self, name, arr):
+        self._args[name] = arr
+
     def setMemoryPointer(self, name, memoryPointer):
         self._args[name] = memoryPointer
 
     def setString(self, name, string):
-        self._args[name] = string
+        self._args[name] = str(string)
 
     def setInt(self, name, integer):
         self._args[name] = int(integer)
@@ -20,6 +21,9 @@ class Args:
 
     def setBoolean(self, name, bool_val):
         self._args[name] = bool_val
+
+    def setDictionary(self, name, dictionary):
+        self._args[name] = dictionary
 
     def getArgs(self):
         return self._args

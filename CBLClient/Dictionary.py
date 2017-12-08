@@ -1,7 +1,5 @@
-from Client import Client
-from Args import Args
-from keywords.utils import log_info
-
+from CBLClient.Client import Client
+from CBLClient.Args import Args
 
 class Dictionary:
     _client = None
@@ -16,8 +14,11 @@ class Dictionary:
 
         self._client = Client(baseUrl)
 
-    def create(self):
-        return self._client.invokeMethod("dictionary_create")
+    def create(self, dictionary=None):
+        args = Args()
+        if dictionary:
+            args.setMemoryPointer("content_dict", dictionary)
+        return self._client.invokeMethod("dictionary_create", args)
 
     def getId(self, dictionary):
         args = Args()
@@ -69,7 +70,7 @@ class Dictionary:
         args = Args()
         args.setMemoryPointer("dictionary", dictionary)
         args.setString("key", key)
-        args.setString("value", value)
+        args.setMemoryPointer("value", value)
         return self._client.invokeMethod("dictionary_setArray", args)
 
     def getBlob(self, dictionary, key):
@@ -82,7 +83,7 @@ class Dictionary:
         args = Args()
         args.setMemoryPointer("dictionary", dictionary)
         args.setString("key", key)
-        args.setString("value", value)
+        args.setMemoryPointer("value", value)
         return self._client.invokeMethod("dictionary_setBlob", args)
 
     def getBoolean(self, dictionary, key):
@@ -95,7 +96,7 @@ class Dictionary:
         args = Args()
         args.setMemoryPointer("dictionary", dictionary)
         args.setString("key", key)
-        args.setString("value", value)
+        args.setBoolean("value", value)
         return self._client.invokeMethod("dictionary_setBoolean", args)
 
     def getDate(self, dictionary, key):
@@ -108,7 +109,7 @@ class Dictionary:
         args = Args()
         args.setMemoryPointer("dictionary", dictionary)
         args.setString("key", key)
-        args.setString("value", value)
+        args.setMemoryPointer("value", value)
         return self._client.invokeMethod("dictionary_setDate", args)
 
     def getDictionary(self, dictionary, key):
@@ -121,7 +122,7 @@ class Dictionary:
         args = Args()
         args.setMemoryPointer("dictionary", dictionary)
         args.setString("key", key)
-        args.setString("value", value)
+        args.setMemoryPointer("value", value)
         return self._client.invokeMethod("dictionary_setDictionary", args)
 
     def getDouble(self, dictionary, key):
@@ -134,7 +135,7 @@ class Dictionary:
         args = Args()
         args.setMemoryPointer("dictionary", dictionary)
         args.setString("key", key)
-        args.setString("value", value)
+        args.setMemoryPointer("value", value)
         return self._client.invokeMethod("dictionary_setDouble", args)
 
     def getFloat(self, dictionary, key):
@@ -147,7 +148,7 @@ class Dictionary:
         args = Args()
         args.setMemoryPointer("dictionary", dictionary)
         args.setString("key", key)
-        args.setString("value", value)
+        args.setMemoryPointer("value", value)
         return self._client.invokeMethod("dictionary_setFloat", args)
 
     def getLong(self, dictionary, key):
@@ -160,7 +161,7 @@ class Dictionary:
         args = Args()
         args.setMemoryPointer("dictionary", dictionary)
         args.setString("key", key)
-        args.setString("value", value)
+        args.setMemoryPointer("value", value)
         return self._client.invokeMethod("dictionary_setLong", args)
 
     def getObject(self, dictionary, key):
@@ -173,7 +174,7 @@ class Dictionary:
         args = Args()
         args.setMemoryPointer("dictionary", dictionary)
         args.setString("key", key)
-        args.setString("value", value)
+        args.setMemoryPointer("value", value)
         return self._client.invokeMethod("dictionary_setObject", args)
 
     def getNumber(self, dictionary, key):
@@ -186,7 +187,7 @@ class Dictionary:
         args = Args()
         args.setMemoryPointer("dictionary", dictionary)
         args.setString("key", key)
-        args.setString("value", value)
+        args.setMemoryPointer("value", value)
         return self._client.invokeMethod("dictionary_setNumber", args)
 
     def getInt(self, dictionary, key):
@@ -199,7 +200,7 @@ class Dictionary:
         args = Args()
         args.setMemoryPointer("dictionary", dictionary)
         args.setString("key", key)
-        args.setString("value", value)
+        args.setInt("value", value)
         return self._client.invokeMethod("dictionary_setInt", args)
 
     def remove(self, dictionary, key):
