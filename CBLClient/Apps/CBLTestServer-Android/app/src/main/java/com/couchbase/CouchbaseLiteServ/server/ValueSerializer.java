@@ -1,14 +1,17 @@
 package com.couchbase.CouchbaseLiteServ.server;
 
+import com.google.gson.Gson;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 public class ValueSerializer {
 
     public static String serialize(Object value, Memory memory) {
         if (value == null)  {
             return "null";
-        } else if (value instanceof String) {
-            String string = (String) value;
-
-            return "\"" + string + "\"";
         } else if (value instanceof Boolean) {
             Boolean bool = (Boolean) value;
 
@@ -17,6 +20,28 @@ public class ValueSerializer {
             Integer number = (Integer) value;
 
             return number.toString();
+        } else if (value instanceof Map) {
+            Map<String, Object> map = (Map<String, Object>)value;
+            Map<String, String> stringMap = new HashMap<>();
+
+            for (Map.Entry<String, Object> entry : map.entrySet()) {
+                String key = entry.getKey();
+                String string = serialize(entry.getValue(), memory);
+                stringMap.put(key, string);
+            }
+            return new Gson().toJson(stringMap);
+        } else if (value instanceof List) {
+            List list = (List)value;
+            List<String> stringList = new ArrayList<>();
+
+            for (Object object : list) {
+                String string = serialize(object, memory);
+                stringList.add(string);
+            }
+            return new Gson().toJson(stringList);
+        } else if (value instanceof String) {
+            String string = (String) value;
+            return "\"" + string + "\"";
         } else {
             return memory.add(value);
         }
@@ -31,6 +56,30 @@ public class ValueSerializer {
             return (T)Boolean.TRUE;
         } else if (value.equals("false")) {
             return (T)Boolean.FALSE;
+        } else if (value.startsWith("{")) {
+            Map<String, String> stringMap = new Gson().fromJson(value, Map.class);
+            Map<String, Object> map = new HashMap<>();
+
+            for (Map.Entry<String, String> entry : stringMap.entrySet()) {
+                String key = entry.getKey();
+                String nestedVal = new Gson().toJson(entry.getValue());
+                Object object = deserialize(nestedVal, memory);
+
+                map.put(key, object);
+            }
+
+            return (T)map;
+        } else if (value.startsWith("[")) {
+            List<String> stringList = new Gson().fromJson(value, List.class);
+            List list = new ArrayList<>();
+
+            for (String string : stringList) {
+                Object object = deserialize(string, memory);
+
+                list.add(object);
+            }
+
+            return (T)list;
         } else if (value.startsWith("\"") && value.endsWith("\"")) {
             return (T)value.substring(1, value.length() - 1);
         } else {

@@ -1,23 +1,22 @@
-from Client import Client
-from Args import Args
-from keywords.utils import log_info
+from CBLClient.Client import Client
+from CBLClient.Args import Args
 
-
-class DataTypeInitiator:
+class DataTypeInitiator(object):
     _client = None
     _baseUrl = None
 
     def __init__(self, baseUrl):
-        self.baseUrl = baseUrl
+        self.baseurl = baseUrl
 
         # If no base url was specified, raise an exception
-        if not self.baseUrl:
+        if not self.baseurl:
             raise Exception("No baseUrl specified")
 
-        self._client = Client(baseUrl)
+        self._client = Client(self.baseurl)
 
     def setDate(self):
-        return self._client.invokeMethod("datatype_setDate")
+        args = Args()
+        return self._client.invokeMethod("datatype_setDate", args)
 
     def setDouble(self, value):
         args = Args()
@@ -29,14 +28,26 @@ class DataTypeInitiator:
         args.setString("value", value)
         return self._client.invokeMethod("datatype_setFloat", args)
 
+    def setLong(self, value):
+        args = Args()
+        args.setString("value", value)
+        return self._client.invokeMethod("datatype_setLong", args)
+
     def compare(self, first, second):
         args = Args()
         args.setMemoryPointer("first", first)
         args.setMemoryPointer("second", second)
         return self._client.invokeMethod("datatype_compare", args)
 
+    def compareHashMap(self, first, second):
+        args = Args()
+        args.setDictionary("first", first)
+        args.setDictionary("second", second)
+        return self._client.invokeMethod("datatype_compareHashMap", args)
+
     def hashMap(self):
-        return self._client.invokeMethod("datatype_hashMap")
+        args = Args()
+        return self._client.invokeMethod("datatype_hashMap", args)
 
     def get(self, dictionary, key):
         args = Args()
@@ -48,5 +59,10 @@ class DataTypeInitiator:
         args = Args()
         args.setMemoryPointer("dictionary", dictionary)
         args.setString("key", key)
-        args.setString("value", value)
+        if isinstance(value, str):
+            args.setString("value", value)
+        elif isinstance(value, bool):
+            args.setBoolean("value", value)
+        elif isinstance(value, int):
+            args.setInt("value", value)
         self._client.invokeMethod("datatype_put", args)

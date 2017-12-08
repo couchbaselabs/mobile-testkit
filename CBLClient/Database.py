@@ -1,7 +1,6 @@
 from CBLClient.Client import Client
 from CBLClient.Args import Args
 
-
 class Database:
     _db = None
 
@@ -41,12 +40,12 @@ class Database:
 
     def deleteDB(self, database):
         args = Args()
-        args.setString("database", database)
+        args.setMemoryPointer("database", database)
         return self._client.invokeMethod("database_deleteDB", args)
 
     def close(self, database):
         args = Args()
-        args.setString("database", database)
+        args.setMemoryPointer("database", database)
         return self._client.invokeMethod("database_close", args)
 
     def path(self, database):
@@ -70,11 +69,23 @@ class Database:
         args.setString("id", doc_id)
         return self._client.invokeMethod("database_getDocument", args)
 
-    def save(self, database, document):
+    def getDocuments(self, database, ids):
+        args = Args()
+        args.setMemoryPointer("database", database)
+        args.setArray("ids", ids)
+        return self._client.invokeMethod("database_getDocuments", args)
+
+    def saveDocument(self, database, document):
         args = Args()
         args.setMemoryPointer("database", database)
         args.setMemoryPointer("document", document)
-        self._client.invokeMethod("database_save", args)
+        self._client.invokeMethod("database_saveDocument", args)
+
+    def saveDocuments(self, database, documents):
+        args = Args()
+        args.setMemoryPointer("database", database)
+        args.setDictionary("documents", documents)
+        self._client.invokeMethod("database_saveDocuments", args)
 
     def contains(self, database, doc_id):
         args = Args()
@@ -114,17 +125,8 @@ class Database:
         args.setMemoryPointer("change", change)
         return self._client.invokeMethod("database_databaseChange_getDocumentId", args)
 
-    def addDocuments(self, database, data):
-        args = Args()
-        args.setMemoryPointer("database", database)
-        return self._client.invokeMethod("database_addDocuments", args, post_data=data)
-
     def getDocIds(self, database):
         args = Args()
         args.setMemoryPointer("database", database)
         return self._client.invokeMethod("database_getDocIds", args)
 
-    def getDocuments(self, database):
-        args = Args()
-        args.setMemoryPointer("database", database)
-        return self._client.invokeMethod("database_getDocuments", args)

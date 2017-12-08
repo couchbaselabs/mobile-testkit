@@ -12,7 +12,7 @@ import com.couchbase.lite.Array;
 import java.util.List;
 import java.util.Map;
 import java.util.Date;
-
+import java.util.Collections;
 
 public class DocumentRequestHandler{
     /* ------------ */
@@ -198,16 +198,17 @@ public class DocumentRequestHandler{
     }
 
 
-    public Array getArray(Args args){
+    public List getArray(Args args){
         Document document = args.get("document");
         String key = args.get("key");
-        return document.getArray(key);
+        return document.getArray(key).toList();
     }
 
     public Document setArray(Args args){
         Document document = args.get("document");
         String key = args.get("key");
-        Array value = args.get("value");
+        List list = args.get("value");
+        Array value = new Array(list);
         return  document.setArray(key, value);
     }
 
@@ -227,8 +228,7 @@ public class DocumentRequestHandler{
 
     public List<String> getKeys(Args args){
         Document document = args.get("document");
-        List<String> keys = document.getKeys();
-        return keys;
+        return document.getKeys();
     }
 
     public Map<String, Object> toMap(Args args){

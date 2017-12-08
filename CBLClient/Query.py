@@ -16,6 +16,22 @@ class Query:
 
         self._client = Client(baseUrl)
 
+    ############
+    # Collator #
+    ############
+    def query_collator_ascii(self, ignoreCase):
+        args = Args()
+        args.setString("ignoreCase", ignoreCase)
+
+        return self._client.invokeMethod("query_collator_ascii", args)
+
+    def query_collator_unicode(self, ignoreCase, ignoreAccents):
+        args = Args()
+        args.setString("ignoreCase", ignoreCase)
+        args.setString("ignoreAccents", ignoreAccents)
+
+        return self._client.invokeMethod("query_collator_unicode", args)
+
     def query_expression_property(self, prop):
         args = Args()
         args.setString("property", prop)

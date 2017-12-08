@@ -1,5 +1,5 @@
 //
-//  CBLArray+Swift.h
+//  CBLReadOnlyArray+Swift.h
 //  CouchbaseLite
 //
 //  Created by Pasin Suriyentrakorn on 5/8/17.
