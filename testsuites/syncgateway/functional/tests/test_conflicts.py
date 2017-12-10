@@ -28,7 +28,7 @@ def test_non_winning_revisions(params_from_base_test_setup, sg_conf_name):
     that the changes feed returns the correct revisions
 
     Steps:
-    - Create a doc
+    - Add a doc
     - Add 5 revs
     - changes, assert rev starts with "6-" from 0, store "last_seq_1"
     - Create a conflict off first revision ("2-foo") (POST docs, new_edits == false)
@@ -176,7 +176,7 @@ def test_winning_conflict_branch_revisions(params_from_base_test_setup, sg_conf_
     that the changes feed returns the correct revisions
 
     Steps:
-    - Create a doc ('test_doc')
+    - Add a doc ('test_doc')
     - Add 5 revs to 'test_doc'
     - POST _changes, assert rev starts with "6-" from 0, store "last_seq_1"
     - Create a conflict off first revision ("2-foo") (POST docs, new_edits == false)
@@ -300,12 +300,12 @@ def test_invalid_revs_limit_with_allow_conflicts(params_from_base_test_setup, sg
     Test case in Excel sheet : https://docs.google.com/spreadsheets/d/1YwI_gCeoBebQKBybkzoAEoXSc0XLReszDA-mPFQapgk/edit#gid=0
     Covered Test case #2
     Steps:
-    - Create a doc
+    - Add a doc
     - Have allow_conflicts to true in sg config
     - Put revs_limit=1 or any number lower than 20 and restart sync-gateway
     - Verify it fails
     - change revs_limit=20 and start sync-gateway
-    - Verify it starts withtout any error
+    - Verify it starts without any error
     """
 
     cluster_config = params_from_base_test_setup["cluster_config"]

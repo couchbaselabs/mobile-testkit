@@ -26,7 +26,7 @@ def test_no_conflicts_enabled(params_from_base_test_setup, sg_conf_name, num_of_
     covered #3
     Steps:
     1. Enable allow_conflicts = false in SG config
-    2. Create docs to SG.
+    2. Add docs to SG.
     3. Update the docs few times.
     4. Try to create a conflict.
     5. Check the revision list for the doc
@@ -56,7 +56,7 @@ def test_no_conflicts_enabled(params_from_base_test_setup, sg_conf_name, num_of_
     autouser_session = sg_client.create_session(url=sg_admin_url, db=sg_db, name='autotest', password='pass')
     # end of Set up
 
-    # 2. Create docs to SG.
+    # 2. Add docs to SG.
     sgdoc_bodies = document.create_docs(doc_id_prefix='sg_docs', number=num_of_docs,
                                         attachments_generator=attachment.generate_2_png_10_10, channels=channels)
     sg_docs = sg_client.add_bulk_docs(url=sg_url, db=sg_db, docs=sgdoc_bodies, auth=autouser_session)
@@ -80,7 +80,7 @@ def test_no_conflicts_enabled(params_from_base_test_setup, sg_conf_name, num_of_
 @pytest.mark.conflicts
 @pytest.mark.noconflicts
 @pytest.mark.parametrize("sg_conf_name, num_of_docs, revs_limit", [
-    ('sync_gateway_revs_conflict_configurable', 1, 10),
+    ('sync_gateway_revs_conflict_configurable', 10, 1),
     ('sync_gateway_revs_conflict_configurable', 10, 10)
 ])
 def test_no_conflicts_with_revs_limit(params_from_base_test_setup, sg_conf_name, num_of_docs, revs_limit):
@@ -89,9 +89,9 @@ def test_no_conflicts_with_revs_limit(params_from_base_test_setup, sg_conf_name,
     covered #4, #5
     Steps:
     1. Enable allow_conflicts = false in SG config with parametrized revs_limit
-    2. Create docs to SG.
-    3. Update the more than revs_limit.
-    4. Creat a conflict and verifyit fails.
+    2. Add docs to SG.
+    3. Update docs more than revs_limit.
+    4. Create a conflict and verify it fails.
     5. Get number of revisions and verify length is equal to revs_limit set to
     6. Update the docs 1 more time
     7. Get number of revisions and verify number of revisions should be same as revs_limit
@@ -119,13 +119,13 @@ def test_no_conflicts_with_revs_limit(params_from_base_test_setup, sg_conf_name,
     autouser_session = sg_client.create_session(url=sg_admin_url, db=sg_db, name='autotest', password='pass')
     # end of Set up
 
-    # 1. Enable allow_conflicts = false in SG config with revs_limit=1
+    # 1. Enable allow_conflicts = false in SG config with revs_limit
     temp_cluster_config = copy_to_temp_conf(cluster_config, mode)
     persist_cluster_config_environment_prop(temp_cluster_config, 'revs_limit', revs_limit, property_name_check=False)
     status = c.sync_gateways[0].restart(config=sg_conf, cluster_config=temp_cluster_config)
     assert status == 0, "Syncgateway did not start after having revs_limit 1 with no conflicts mode"
 
-    # 2. Create docs to SG.
+    # 2. Add docs to SG.
     sgdoc_bodies = document.create_docs(doc_id_prefix='sg_docs', number=num_of_docs,
                                         attachments_generator=attachment.generate_2_png_10_10, channels=channels)
     sg_docs = sg_client.add_bulk_docs(url=sg_url, db=sg_db, docs=sgdoc_bodies, auth=autouser_session)
@@ -176,14 +176,14 @@ def test_no_conflicts_update_revs_limit(params_from_base_test_setup, sg_conf_nam
     Test case link : https://docs.google.com/spreadsheets/d/1YwI_gCeoBebQKBybkzoAEoXSc0XLReszDA-mPFQapgk/edit#gid=0
     covered #14
     Steps:
-    1. Enable allow_conflicts = false in SG config with revs_limit=5
-    2. Create docs to SG.
+    1. Enable allow_conflicts = false in SG config with parametried revs_limit
+    2. Add docs to SG.
     3. Update the more than revs_limit.
     4. Check the revision list for the doc.
     5. Modify the revs_limit to 2
     6. Update doc
     7. Verify the revision history shows only 2 revisions now
-    8. Verify previous revsions deleted
+    8. Verify previous revisions deleted
     """
 
     # Setup
@@ -215,9 +215,7 @@ def test_no_conflicts_update_revs_limit(params_from_base_test_setup, sg_conf_nam
     status = c.sync_gateways[0].restart(config=sg_conf, cluster_config=temp_cluster_config)
     assert status == 0, "Syncgateway did not start after having revs_limit 1 with no conflicts mode"
 
-    # 2. Create docs to SG.
-    # sgdoc_bodies = document.create_docs(doc_id_prefix='sg_docs', number=num_of_docs,
-    #                                     attachments_generator=attachment.generate_2_png_10_10, channels=channels)
+    # 2. Add docs to SG.
     sgdoc_bodies = document.create_docs(doc_id_prefix="sg_docs", number=num_of_docs, channels=channels)
     sg_docs = sg_client.add_bulk_docs(url=sg_url, db=sg_db, docs=sgdoc_bodies, auth=autouser_session)
     assert len(sgdoc_bodies) == num_of_docs
@@ -246,7 +244,7 @@ def test_no_conflicts_update_revs_limit(params_from_base_test_setup, sg_conf_nam
     # 6. Update the docs 1 more time
     sg_client.update_docs(url=sg_url, db=sg_db, docs=sg_docs, number_updates=2, delay=None, auth=autouser_session, channels=channels)
 
-    # 7. Get number of revisions and verify number of revisions is equvalent to revs_limit set to
+    # 7. Get number of revisions and verify number of revisions is equivalent to revs_limit set to
     for doc in sg_docs:
         num_of_revs = sg_client.get_revs_num_in_history(url=sg_url, db=sg_db, doc_id=doc["id"], auth=autouser_session)
         assert len(num_of_revs) == 2, "Number of revisions in history is more than revs_limit set in sg config"
@@ -262,12 +260,12 @@ def test_no_conflicts_update_revs_limit(params_from_base_test_setup, sg_conf_nam
     ('sync_gateway_revs_conflict_configurable', 10, 1000, 1000)
 ])
 def test_conflicts_sg_accel_added(params_from_base_test_setup, sg_conf_name, num_of_docs, revs_limit, additional_updates):
-    """ @summary Enable no conflicts and  with non default revs_limit and verify revs_limit is maintained
+    """ @summary Verify no conflicts feature works with sg accel down
     Test case link : https://docs.google.com/spreadsheets/d/1YwI_gCeoBebQKBybkzoAEoXSc0XLReszDA-mPFQapgk/edit#gid=0
     covered #12, #16, #21
     Steps:
     1. Enable allow_conflicts = false in SG config with revs_limit
-    2. Create docs to SG.
+    2. Add docs to SG.
     3. Update the docs few times and get all revisions of updates
     4. Get number of revisions and verify length is equal to revs_limit set to
     5. Start sg accel
@@ -304,7 +302,7 @@ def test_conflicts_sg_accel_added(params_from_base_test_setup, sg_conf_name, num
     status = c.sync_gateways[0].restart(config=sg_conf, cluster_config=temp_cluster_config)
     assert status == 0, "Syncgateway did not start after having revs_limit  with no conflicts mode"
 
-    # 2. Create docs to SG.
+    # 2. Add docs to SG.
     sgdoc_bodies = document.create_docs(doc_id_prefix="sg_docs", number=num_of_docs, channels=channels)
     sg_docs = sg_client.add_bulk_docs(url=sg_url, db=sg_db, docs=sgdoc_bodies, auth=autouser_session)
     assert len(sgdoc_bodies) == num_of_docs
@@ -348,12 +346,12 @@ def test_conflicts_sg_accel_added(params_from_base_test_setup, sg_conf_name, num
     ('sync_gateway_revs_conflict_configurable', 1, 1)
 ])
 def test_migrate_conflicts_to_noConflicts(params_from_base_test_setup, sg_conf_name, num_of_docs, revs_limit):
-    """ @summary Enable no conflicts and  with non default revs_limit and verify revs_limit is maintained
+    """ @summary Migrating from no conflicts false to true
     Test case link : https://docs.google.com/spreadsheets/d/1YwI_gCeoBebQKBybkzoAEoXSc0XLReszDA-mPFQapgk/edit#gid=0
     covered #6, #7, #8
     Steps:
     1. Start sg with default(i.e allow_conflicts=true)
-    2. Create docs to SG.
+    2. Add docs to SG.
     3. Update docs few times .
     4. Create a conflicts and verify it is successful.
     5. Modify sg config by enabling allow_conflicts to false
@@ -389,7 +387,7 @@ def test_migrate_conflicts_to_noConflicts(params_from_base_test_setup, sg_conf_n
     autouser_session = sg_client.create_session(url=sg_admin_url, db=sg_db, name='autotest', password='pass')
     # end of Set up
 
-    # 2. Create docs to SG.
+    # 2. Add docs to SG.
     sgdoc_bodies = document.create_docs(doc_id_prefix='sg_docs', number=num_of_docs,
                                         attachments_generator=attachment.generate_2_png_10_10, channels=channels)
     sg_docs = sg_client.add_bulk_docs(url=sg_url, db=sg_db, docs=sgdoc_bodies, auth=autouser_session)
@@ -447,18 +445,18 @@ def test_migrate_conflicts_to_noConflicts(params_from_base_test_setup, sg_conf_n
     ('sync_gateway_revs_conflict_configurable', 10, 1000),
 ])
 def test_concurrent_updates_no_conflicts(params_from_base_test_setup, sg_conf_name, num_of_docs, revs_limit):
-    """@summary Enable no conflicts and  with non default revs_limit and verify revs_limit is maintained
+    """@summary Test with concurrent updates with no conflicts enabled
     Test case link : https://docs.google.com/spreadsheets/d/1YwI_gCeoBebQKBybkzoAEoXSc0XLReszDA-mPFQapgk/edit#gid=0
     covered #15
     Steps:
     1. Start sg with some revs_limit specified
-    2. Create docs to SG.
+    2. Add docs to SG.
     3. Update docs few times via sg .
     4. Update docs few times vis sdk concurrently with sg.
         -> There are chances of getting conflict errors on both, handled the error appropriately
-    8. update docs few number of times.
-    9. Verify it can maintain default revisions.
-    10. Verify previous revisions deleted and revisions maintained based on revs_limit
+    5. update docs few number of times.
+    6. Verify it can maintain default revisions.
+    7. Verify previous revisions deleted and revisions maintained based on revs_limit
     """
 
     # Setup
@@ -492,7 +490,7 @@ def test_concurrent_updates_no_conflicts(params_from_base_test_setup, sg_conf_na
     assert status == 0, "Syncgateway did not start after no conflicts is enabled"
     # end of Set up
 
-    # 2. Create docs to SG.
+    # 2. Add docs to SG.
     sgdoc_bodies = document.create_docs(doc_id_prefix='sg_docs', number=num_of_docs,
                                         attachments_generator=attachment.generate_2_png_10_10, channels=channels)
     sg_docs = sg_client.add_bulk_docs(url=sg_url, db=sg_db, docs=sgdoc_bodies, auth=autouser_session)
@@ -525,8 +523,8 @@ def test_concurrent_updates_no_conflicts(params_from_base_test_setup, sg_conf_na
         rev = update_sg_docs[0]['rev'].split('-')[1]
         prev_revs.append(rev)
 
-    # 9. Verify it can maintain default revisions.
-    # 10. Verify previous revisions deleted.
+    # 4. Verify it can maintain default revisions.
+    # 5. Verify previous revisions deleted.
     for doc in sg_docs:
         num_of_revs = sg_client.get_revs_num_in_history(url=sg_url, db=sg_db, doc_id=doc["id"], auth=autouser_session)
         assert len(num_of_revs) == revs_limit, "Number of revisions in history is more than revs_limit set in sg config"
@@ -562,12 +560,12 @@ def sdk_bulk_update(sdk_client, sdk_docs, num_of_updates):
     ('sync_gateway_revs_conflict_configurable', 10)
 ])
 def test_migrate_conflicts_delete_last_rev(params_from_base_test_setup, sg_conf_name, num_of_docs):
-    """ @summary Enable no conflicts and  with non default revs_limit and verify revs_limit is maintained
+    """ @summary Migrate conflicts to no-conflicts mode and delete last revision and verify revisions exists in open revisions
     Test case link : https://docs.google.com/spreadsheets/d/1YwI_gCeoBebQKBybkzoAEoXSc0XLReszDA-mPFQapgk/edit#gid=0
     covered #19
     Steps:
     1. Start sg with default(i.e allow_conflicts=true)
-    2. Create docs to SG.
+    2. Add docs to SG.
     3. Update docs few times .
     4. Create a conflicts and verify it is successful.
     5. Modify sg config by enabling allow_conflicts to false
@@ -598,7 +596,7 @@ def test_migrate_conflicts_delete_last_rev(params_from_base_test_setup, sg_conf_
     autouser_session = sg_client.create_session(url=sg_admin_url, db=sg_db, name='autotest', password='pass')
     # end of Set up
 
-    # 2. Create docs to SG.
+    # 2. Add docs to SG.
     sgdoc_bodies = document.create_docs(doc_id_prefix="sg_docs", number=num_of_docs, channels=channels)
     sg_docs = sg_client.add_bulk_docs(url=sg_url, db=sg_db, docs=sgdoc_bodies, auth=autouser_session)
     assert len(sgdoc_bodies) == num_of_docs
@@ -649,13 +647,13 @@ def test_migrate_conflicts_delete_last_rev(params_from_base_test_setup, sg_conf_
     ('sync_gateway_revs_conflict_configurable', 900)
 ])
 def test_revs_cache_size(params_from_base_test_setup, sg_conf_name, num_of_docs):
-    """ @summary Enable no conflicts and  with non default revs_limit and verify revs_limit is maintained
+    """ @summary Test for no-conflicts with rev_cache size
     Test case link : https://docs.google.com/spreadsheets/d/1YwI_gCeoBebQKBybkzoAEoXSc0XLReszDA-mPFQapgk/edit#gid=0
     covered #18
     Steps:
     Note : the sg config have rev_cache_size as 1000 , make sure number of docs is less than 1000 to have the test
     work with expected behavior
-    1. Create docs to SG.
+    1. Add docs to SG.
     2. Get the docs
     3. Verify number of rev_cache_hits is same as number of docs if rev_cache_size is more than number of docs.
     """
@@ -679,73 +677,19 @@ def test_revs_cache_size(params_from_base_test_setup, sg_conf_name, num_of_docs)
     autouser_session = sg_client.create_session(url=sg_admin_url, db=sg_db, name='autotest', password='pass')
     # end of Set up
 
-    # 2. Create docs to SG.
+    # 2. Add docs to SG.
     sgdoc_bodies = document.create_docs(doc_id_prefix="sg_docs", number=num_of_docs, channels=channels)
     sg_docs = sg_client.add_bulk_docs(url=sg_url, db=sg_db, docs=sgdoc_bodies, auth=autouser_session)
     assert len(sgdoc_bodies) == num_of_docs
 
-    # 4. Get all docs
+    # 3. Get all docs
     for i in range(retrieved_docs):
         doc = sg_docs[i]
         sg_client.get_doc(url=sg_url, db=sg_db, doc_id=doc["id"], auth=autouser_session)
 
-    # 5. Verify there are number of hits should be same as retrieved docs
+    # 4. Verify there are number of hits should be same as retrieved docs
     exp_vars = sg_client.get_expvars(url=sg_admin_url)
     revision_cache_hits = exp_vars["syncGateway_stats"]["revisionCache_hits"]
     revision_cache_misses = exp_vars["syncGateway_stats"]["revisionCache_misses"]
     assert revision_cache_hits == retrieved_docs, "Revision Cache hits did not hit with expected number {}".format(num_of_docs)
     assert revision_cache_misses == 0, "Revision Cache misses is not 0"
-
-
-@pytest.mark.syncgateway
-@pytest.mark.conflicts
-@pytest.mark.noconflicts
-@pytest.mark.parametrize("sg_conf_name, num_of_docs", [
-    ('sync_gateway_revs_conflict_configurable', 1500)
-])
-def test_revscache_morethan_numdocs(params_from_base_test_setup, sg_conf_name, num_of_docs):
-    """ @summary Enable no conflicts and  with non default revs_limit and verify revs_limit is maintained
-    Test case link : https://docs.google.com/spreadsheets/d/1YwI_gCeoBebQKBybkzoAEoXSc0XLReszDA-mPFQapgk/edit#gid=0
-    covered #18
-    Steps:
-    Note : the sg config have rev_cache_size as 1000 , make sure number of docs is less than 1000 to have the test
-    work with expected behavior
-    1. Create docs to SG.
-    2. Get the docs
-    3. Verify number of rev_cache_hits is same as number of docs if rev_cache_size is more than number of docs.
-    """
-
-    # Setup
-    cluster_config = params_from_base_test_setup["cluster_config"]
-    topology = params_from_base_test_setup["cluster_topology"]
-    mode = params_from_base_test_setup["mode"]
-    sg_url = topology["sync_gateways"][0]["public"]
-    sg_admin_url = topology["sync_gateways"][0]["admin"]
-    sg_db = "db"
-    revs_cache_size = 1000
-
-    sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
-    clust = cluster.Cluster(cluster_config)
-    clust.reset(sg_conf)
-
-    sg_client = MobileRestClient()
-    channels = ["no-conflicts"]
-    sg_client.create_user(url=sg_admin_url, db=sg_db, name='autotest', password='pass', channels=channels)
-    autouser_session = sg_client.create_session(url=sg_admin_url, db=sg_db, name='autotest', password='pass')
-    # end of Set up
-
-    # 2. Create docs to SG.
-    sgdoc_bodies = document.create_docs(doc_id_prefix="sg_docs", number=num_of_docs, channels=channels)
-    sg_docs = sg_client.add_bulk_docs(url=sg_url, db=sg_db, docs=sgdoc_bodies, auth=autouser_session)
-    assert len(sgdoc_bodies) == num_of_docs
-
-    # 4. Get all docs
-    for doc in reversed(sg_docs):
-        sg_client.get_doc(url=sg_url, db=sg_db, doc_id=doc["id"], auth=autouser_session)
-
-    # 5. Verify there are number of hits is same as number of docs and misses is the differrence
-    exp_vars = sg_client.get_expvars(url=sg_admin_url)
-    revision_cache_hits = exp_vars["syncGateway_stats"]["revisionCache_hits"]
-    revision_cache_misses = exp_vars["syncGateway_stats"]["revisionCache_misses"]
-    assert revision_cache_hits == revs_cache_size, "Revision Cache hits did not hit with expected number {}".format(num_of_docs)
-    assert revision_cache_misses == (num_of_docs - revs_cache_size), "Revision Cache misses is should show missed docs"

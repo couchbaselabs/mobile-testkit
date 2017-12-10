@@ -137,6 +137,9 @@ def params_from_base_suite_setup(request):
     if xattrs_enabled and version_is_binary(sync_gateway_version):
         check_xattr_support(server_version, sync_gateway_version)
 
+    if no_conflicts_enabled and sync_gateway_version < "2.0":
+        raise FeatureSupportedError('No conflicts feature not available for sync-gateway version below 2.0, so skipping the test')
+
     log_info("server_version: {}".format(server_version))
     log_info("sync_gateway_version: {}".format(sync_gateway_version))
     log_info("mode: {}".format(mode))

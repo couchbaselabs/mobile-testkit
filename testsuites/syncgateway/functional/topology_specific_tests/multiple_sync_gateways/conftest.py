@@ -52,6 +52,9 @@ def params_from_base_suite_setup(request):
     if mode == "di" and sg_ce:
         raise FeatureSupportedError("SGAccel is only available as an enterprise edition")
 
+    if no_conflicts_enabled and sync_gateway_version < "2.0":
+        raise FeatureSupportedError('No conflicts feature not available for sync-gateway version below 2.0, so skipping the test')
+
     # Make sure mode for sync_gateway is supported ('cc' or 'di')
     validate_sync_gateway_mode(mode)
 
