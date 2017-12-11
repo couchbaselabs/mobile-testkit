@@ -441,7 +441,7 @@ def test_migrate_conflicts_to_noConflicts(params_from_base_test_setup, sg_conf_n
 @pytest.mark.parametrize("sg_conf_name, num_of_docs, revs_limit", [
     ('sync_gateway_revs_conflict_configurable', 100, 10),
     ('sync_gateway_revs_conflict_configurable', 100, 10),
-    ('sync_gateway_revs_conflict_configurable', 1000, 1000),
+    ('sync_gateway_revs_conflict_configurable', 1000, 100),
     ('sync_gateway_revs_conflict_configurable', 10, 1000),
 ])
 def test_concurrent_updates_no_conflicts(params_from_base_test_setup, sg_conf_name, num_of_docs, revs_limit):
