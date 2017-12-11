@@ -11,9 +11,41 @@ from CBLClient.Query import Query
 from CBLClient.Utils import Release
 
 
+def test_documents():
+    source_db = None
+    base_url = "http://10.17.0.152:8989"
+    db = Database(base_url)
+    cbl_db = "test_db"
+
+    # Create CBL database
+    log_info("Creating a Database {}".format(cbl_db))
+    source_db = db.create(cbl_db)
+    log_info("Getting the database name")
+    db_name = db.getName(source_db)
+    assert db_name == "test_db"
+
+    # Add a doc to CBL
+    doc = {
+        "doc1": {
+            "name": "abc",
+            "place": "xyz"
+        },
+        "doc2": {
+            "name": "def",
+            "place": "ghi"
+        }
+    }
+
+    log_info("Saving the documents")
+    db.saveDocuments(database=source_db, documents=doc)
+    doc_ids = ["doc1", "doc2"]
+    log_info("Getting the documents")
+    doc_resp = db.getDocuments(source_db, doc_ids)
+    assert doc == doc_resp
+
 def test_replication():
     source_db = None
-    base_url = "http://192.168.1.8:8989"
+    base_url = "http://10.17.5.92:8989"
     db = Database(base_url)
     # SG URL
     sg_db = "db"
@@ -78,30 +110,25 @@ def test_replication():
 
 def test_query():
     source_db = None
-    base_url = "http://10.17.1.4:8989"
+    base_url = "http://192.168.1.2:8989"
     db = Database(base_url)
     cbl_db = "test_db"
 
     # Create CBL database
-    source_db = db.database_create(cbl_db)
+    source_db = db.create(cbl_db)
     log_info("Database is {}".format(source_db))
-    db_name = db.database_getName(source_db)
+    db_name = db.getName(source_db)
     assert db_name == "test_db"
 
     # Add a doc to CBL
-    # A bulk add API is needed
-    # The below approach is not scalable
-    dn = Dictionary(base_url)
-    dictionary = dn.dictionary_create()
-    dn.dictionary_put(dictionary, "FirstName", "abc")
-    dn.dictionary_put(dictionary, "LastName", "xyz")
-    dn.dictionary_put(dictionary, "City", "MV")
-    dn.dictionary_put(dictionary, "State", "CA")
+    doc = {
+        "doc1": {
+            "name": "abc",
+            "place": "xyz"
+        }
+    }
 
-    doc = Document(base_url)
-    document = doc.document_create(id="foo", dictionary=dictionary)
-    log_info("Document is {}".format(document))
-    db.database_save(source_db, document)
+    db.saveDocuments(database=source_db, documents=doc)
 
     # select FirstName from test_db where City = "MV"
     # Expression property for select

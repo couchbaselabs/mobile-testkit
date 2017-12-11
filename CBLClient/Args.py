@@ -1,5 +1,3 @@
-from keywords.utils import log_info
-
 
 class Args:
     def __init__(self):
@@ -20,6 +18,12 @@ class Args:
 
     def setBoolean(self, name, bool_val):
         self._args[name] = bool_val
+
+    def setDictionary(self, name, dictionary):
+        self._args[name] = dictionary
+
+    def setArray(self, name, array):
+        self._args[name] = array
 
     def getArgs(self):
         return self._args

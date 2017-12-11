@@ -20,7 +20,7 @@ class Database:
         self._db = self._client.invokeMethod("database_create", args)
         return self._db
 
-    def delete(self, name=None, path=None, database= None, document=None):
+    def delete(self, name=None, path=None, database=None, document=None):
         args = Args()
         if document and database:
             args.setMemoryPointer("database", database)
@@ -29,8 +29,8 @@ class Database:
             args.setString("name", name)
             args.setString("path", path)
         else:
-            raise Exception("Either pass database and document or pass "\
-                            "name and path to delete the document.")
+            raise Exception("Either pass database and document or pass \
+            name and path to delete the document.")
         return self._client.invokeMethod("database_delete", args)
 
     def purge(self, database, document):
@@ -114,17 +114,19 @@ class Database:
         args.setMemoryPointer("change", change)
         return self._client.invokeMethod("database_databaseChange_getDocumentId", args)
 
-    def addDocuments(self, database, data):
+    def saveDocuments(self, database, documents):
         args = Args()
         args.setMemoryPointer("database", database)
-        return self._client.invokeMethod("database_addDocuments", args, post_data=data)
+        args.setMemoryPointer("documents", documents)
+        return self._client.invokeMethod("database_saveDocuments", args)
 
     def getDocIds(self, database):
         args = Args()
         args.setMemoryPointer("database", database)
         return self._client.invokeMethod("database_getDocIds", args)
 
-    def getDocuments(self, database):
+    def getDocuments(self, database, ids):
         args = Args()
         args.setMemoryPointer("database", database)
+        args.setMemoryPointer("ids", ids)
         return self._client.invokeMethod("database_getDocuments", args)

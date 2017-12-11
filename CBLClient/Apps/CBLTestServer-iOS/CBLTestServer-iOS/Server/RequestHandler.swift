@@ -18,7 +18,7 @@ enum RequestHandlerError: Error {
 public class RequestHandler {
     public static let VOID = NSObject()
     
-    public func handleRequest(method: String, args: Args, post_body: Dictionary<String, AnyObject>?) throws -> Any? {
+    public func handleRequest(method: String, args: Args) throws -> Any? {
         switch method {
         //////////////
         // Database //
@@ -101,13 +101,16 @@ public class RequestHandler {
             
             return change.documentIDs
 
-        case "database_addDocuments":
+        case "database_saveDocuments":
             let database: Database = args.get(name:"database")!
+            let documents: Dictionary<String, Dictionary<String, Any>> = args.get(name: "documents")!
             
             try database.inBatch {
-                for doc_id in post_body! {
-                    let document = MutableDocument(doc_id.key, dictionary: (doc_id.value as! Dictionary<String, Any>))
-                    try! database.save(document)
+                for doc in documents {
+                    let id = doc.key
+                    let data: Dictionary<String, Any> = doc.value
+                    let document = MutableDocument(id, dictionary: data)
+                    try database.save(document)
                 }
             }
             
@@ -128,19 +131,15 @@ public class RequestHandler {
 
         case "database_getDocuments":
             let database: Database = args.get(name:"database")!
-            let query = Query
-                .select(SelectResult.expression(Expression.meta().id))
-                .from(DataSource.database(database))
-            
-            var result: [String: Any] = [:]
-            do {
-                for row in try query.run() {
-                    let id = row.string(forKey: "id")!
-                    let doc = database.getDocument(id)?.toDictionary()
-                    result[id] = doc
-                }
+            let ids: [String] = args.get(name:"ids")!
+            var documents = [String: [String: Any]]()
+
+            for id in ids {
+                let document: Document = database.getDocument(id)!
+                documents[id] = document.toDictionary()
             }
-            return try JSONSerialization.data(withJSONObject: result, options: .prettyPrinted)
+            
+            return documents
 
         //////////////
         // Document //
@@ -489,9 +488,9 @@ public class RequestHandler {
             let datasource: DataSource = args.get(name: "datasource")!
             return Join.crossJoin(datasource)
             
-        //////////////////
-        // Query Select //
-        //////////////////
+        ////////////////////////
+        // Query SelectResult //
+        ////////////////////////
 
         case "query_select_result_expression_create":
             let expression: Expression = args.get(name: "expression")!

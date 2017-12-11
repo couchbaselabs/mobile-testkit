@@ -1,7 +1,6 @@
 import json
 
 from MemoryPointer import MemoryPointer
-from keywords.utils import log_info
 
 
 class ValueSerializer:
@@ -18,6 +17,24 @@ class ValueSerializer:
         elif isinstance(value, int):
             number = int(value)
             return str(number)
+        elif isinstance(value, dict):
+            map = value
+            stringMap = {}
+
+            for map_param in map:
+                val = ValueSerializer.serialize(map[map_param])
+                stringMap[map_param] = val
+
+            return json.dumps(stringMap)
+            # return json.dumps(value)
+        elif isinstance(value, list):
+            stringList = []
+
+            for object in value:
+                string = ValueSerializer.serialize(object)
+                stringList.append(string)
+
+            return json.dumps(stringList)
         else:
             raise Exception("Invalid value type: {}".format(value))
 
@@ -35,6 +52,26 @@ class ValueSerializer:
             return False
         elif value.startswith("\"") and value.endswith("\""):
             return value[1:-1]
+        elif value.startswith("{"):
+            stringMap = json.loads(value)
+            map = {}
+
+            for entry in stringMap:
+                key = str(entry)
+                object = ValueSerializer.deserialize(stringMap[key])
+
+                map[key] = object
+
+            return map
+        elif value.startswith("["):
+            stringList = json.loads(value)
+            list = []
+
+            for string in stringList:
+                object = ValueSerializer.deserialize(string)
+                list.append(object)
+
+            return list
         else:
             if "." in value:
                 return float(value)
