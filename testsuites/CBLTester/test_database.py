@@ -87,7 +87,7 @@ def test_replication():
     )
 
     # Start and stop continuous replication
-    replicator = Replication(target_url)
+    replicator = Replication(base_url)
     repl = replicator.configure_replication(source_db, target_url)
     log_info("repl: {}".format(repl))
     replicator.start_replication(repl)

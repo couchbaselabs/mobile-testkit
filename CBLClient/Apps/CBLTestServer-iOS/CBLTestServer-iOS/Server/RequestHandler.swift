@@ -272,9 +272,12 @@ public class RequestHandler {
             let property: String = args.get(name: "property")!
             return Expression.property(property)
             
-        case "query_expression_meta":
-            return Expression.meta()
-            
+        case "query_expression_meta_id":
+            return Expression.meta().id
+        
+        case "query_expression_meta_sequence":
+            return Expression.meta().sequence
+
         case "query_expression_parameter":
             let parameter: String = args.get(name: "parameter")!
             return Expression.parameter(parameter)
@@ -303,6 +306,21 @@ public class RequestHandler {
             let variable: String = args.get(name: "variable")!
             return Expression.every(variable)
         
+        case "create_equalTo_expression":
+            let expression1: Expression = args.get(name: "expression1")!
+            let expression2: Any = args.get(name: "expression2")!
+            return expression1.equalTo(expression2)
+            
+        case "create_and_expression":
+            let expression1: Expression = args.get(name: "expression1")!
+            let expression2: Any = args.get(name: "expression2")!
+            return expression1.and(expression2)
+        
+        case "create_or_expression":
+            let expression1: Expression = args.get(name: "expression1")!
+            let expression2: Any = args.get(name: "expression2")!
+            return expression1.or(expression2)
+
         ////////////////////
         // Query Function //
         ////////////////////
@@ -534,19 +552,14 @@ public class RequestHandler {
 
         case "query_create":
             // Only does select FirstName from test_db where City = "MV"
-            let select_prop: PropertyExpression = args.get(name: "select_prop")!
+            let select_prop: SelectResult = args.get(name: "select_prop")!
             let from_prop: DatabaseSource = args.get(name: "from_prop")!
-            
-            //optional
-            let whr_key_prop: PropertyExpression = args.get(name: "whr_key_prop")!
-            let whr_val: String = args.get(name: "whr_val")!
+            let whr_key_prop: Expression = args.get(name: "whr_key_prop")!
 
             let query = Query
-                .select(SelectResult.expression(select_prop))
+                .select(select_prop)
                 .from(from_prop)
-                .where(
-                    whr_key_prop.equalTo(whr_val)
-                    )
+                .where(whr_key_prop)
             
             return query
             
