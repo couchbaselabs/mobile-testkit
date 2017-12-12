@@ -17,13 +17,17 @@ public class ValueSerializer {
             return "\"" + string! + "\""
         } else if (value is Int){
             let number:Int = value as! Int
-            return String(number)
-        } else if (value is UInt64){
-            let number:UInt64 = value as! UInt64
-            return String(number)
+            return "I" + String(number)
+        // Swift does not have a Long type
+        } else if (value is Double){
+            let number:Double = value as! Double
+            return "D" + String(number)
         } else if (value is Float){
             let number:Float = value as! Float
-            return String(number)
+            return "F" + String(number)
+        } else if (value is NSNumber){
+            let number:NSNumber = value as! NSNumber
+            return "#" + "\(number)"
         } else if (value is Bool) {
             let bool:Bool = value as! Bool
             return (bool ? "true" : "false")
@@ -69,15 +73,38 @@ public class ValueSerializer {
             return "null" as? T
         } else if (value!.hasPrefix("@")) {
             return memory.get(address:value!)
-        } else if (value == "true") {
-            return true as? T
-        } else if (value == "false") {
-            return false as? T
         } else if (value!.hasPrefix("\"") && value!.hasSuffix("\"")) {
             let start = value!.index(value!.startIndex, offsetBy: 1)
             let end = value!.index(value!.endIndex, offsetBy: -1)
             let range = start..<end
             return value!.substring(with: range) as? T
+        } else if value!.hasPrefix("I") {
+            let start = value!.index(value!.startIndex, offsetBy: 1)
+            let end = value!.index(value!.endIndex, offsetBy: 0)
+            let range = start..<end
+            return Int(value!.substring(with: range)) as? T
+            
+        } else if value!.hasPrefix("F") {
+            let start = value!.index(value!.startIndex, offsetBy: 1)
+            let end = value!.index(value!.endIndex, offsetBy: 0)
+            let range = start..<end
+            return Float(value!.substring(with: range)) as? T
+           
+        } else if value!.hasPrefix("D") {
+            let start = value!.index(value!.startIndex, offsetBy: 1)
+            let end = value!.index(value!.endIndex, offsetBy: 0)
+            let range = start..<end
+            return Double(value!.substring(with: range)) as? T
+        } else if value!.hasPrefix("#") {
+                if (value?.range(of:".")) != nil {
+                    return Double(value!) as? T
+                } else {
+                    return Int(value!) as? T
+                }
+        } else if (value == "true") {
+            return true as? T
+        } else if (value == "false") {
+            return false as? T
         } else if (value!.hasPrefix("{")) {
             let data: Data = value!.data(using: String.Encoding.utf8)!
             var stringMap = [String: Any]()
@@ -111,13 +138,8 @@ public class ValueSerializer {
             }
             
             return list as? T
-        }
-        else {
-            if (value?.range(of:".")) != nil {
-                return Double(value!) as? T
-            } else {
-                return Int(value!) as? T
-            }
+        } else {
+            return "Invalid value type \(String(describing: value))" as? T
         }
     }
 }

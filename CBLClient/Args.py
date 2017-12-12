@@ -11,7 +11,15 @@ class Args:
         self._args[name] = string
 
     def setInt(self, name, integer):
-        self._args[name] = int(integer)
+        self._args[name] = integer
+
+    def setLong(self, name, l):
+        self._args[name] = l
+
+    def setFloat(self, name, f):
+        self._args[name] = f
+
+    # There is no double/number in python
 
     def setNumber(self, name, number):
         self._args[name] = number

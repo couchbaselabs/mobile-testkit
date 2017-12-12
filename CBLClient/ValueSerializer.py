@@ -6,20 +6,27 @@ from MemoryPointer import MemoryPointer
 class ValueSerializer:
     @staticmethod
     def serialize(value):
-        if isinstance(value, MemoryPointer):
+        if not value:
+            return "null"
+        elif isinstance(value, MemoryPointer):
             return value.getAddress()
         elif isinstance(value, str):
             string = str(value)
             return "\"" + string + "\""
+        elif isinstance(value, int):
+            number = int(value)
+            return "I" + str(number)
+        elif isinstance(value, float):
+            number = float(value)
+            return "F" + str(number)
+        elif isinstance(value, long):
+            number = long(value)
+            return "L" + str(number)
+        # There is no double/number in python
         elif isinstance(value, bool):
             bool_val = bool(value)
             return "true" if bool_val else "false"
-        elif isinstance(value, int):
-            number = int(value)
-            return str(number)
-        elif isinstance(value, float):
-            number = float(value)
-            return str(number)
+
         elif isinstance(value, dict):
             map = value
             stringMap = {}
@@ -38,23 +45,32 @@ class ValueSerializer:
                 stringList.append(string)
 
             return json.dumps(stringList)
-        else:
-            raise Exception("Invalid value type: {}: {}".format(value, type(value)))
+
+        raise RuntimeError("Invalid value type: {}: {}".format(value, type(value)))
 
     @staticmethod
     def deserialize(value):
-        if isinstance(value, dict):
-            return value
-        elif not value or len(value) == 0 or value == "null":
+        if not value or len(value) == 0 or value == "null":
             return None
         elif value.startswith("@"):
             return MemoryPointer(value)
+        elif value.startswith("\"") and value.endswith("\""):
+            return value[1:-1]
+        elif value.startswith("I"):
+            return int(value[1:])
+        elif value.startswith("L"):
+            return long(value[1:])
+        elif value.startswith("F"):
+            return float(value[1:])
+        elif value.startswith("#"):
+            if "." in value:
+                return float(value)
+            else:
+                return int(value)
         elif value == "true":
             return True
         elif value == "false":
             return False
-        elif value.startswith("\"") and value.endswith("\""):
-            return value[1:-1]
         elif value.startswith("{"):
             stringMap = json.loads(value)
             map = {}
@@ -75,8 +91,5 @@ class ValueSerializer:
                 list.append(object)
 
             return list
-        else:
-            if "." in value:
-                return float(value)
-            else:
-                return int(value)
+
+        raise RuntimeError("Invalid value type: {}: {}".format(value, type(value)))

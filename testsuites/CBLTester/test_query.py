@@ -76,6 +76,7 @@ def test_simple_query():
     # Create SelectResult.expression(select_prop)
     select_string = "First Name"
     select_prop = qy.query_expression_property(select_string)
+    select_result_expression = qy.query_select_result_expression_create(select_prop)
 
     # Create from_prop - DatabaseSource from_prop"
     from_prop = qy.query_datasource_database(source_db)
@@ -84,9 +85,10 @@ def test_simple_query():
     whr_string = "City"
     whr_val = "MV"
     whr_prop = qy.query_expression_property(whr_string)
+    whr_equal_to = qy.create_equalTo_expression(whr_prop, whr_val)
 
     # create query using select_prop, from_prop, whr_key_prop and whr_val
-    query = qy.query_create(select_prop, from_prop, whr_prop, whr_val)
+    query = qy.query_create(select_result_expression, from_prop, whr_equal_to)
     # Run query
     query_result = qy.query_run(query)
     # Query result
@@ -196,4 +198,5 @@ def test_query_whr_and_or():
         result = qy.query_next_result(query_result)
         result_strings.append(result_string)
 
+    replicator.stop_replication(repl)
     log_info(result_strings)
