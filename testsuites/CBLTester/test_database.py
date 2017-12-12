@@ -43,6 +43,7 @@ def test_documents():
     doc_resp = db.getDocuments(source_db, doc_ids)
     assert doc == doc_resp
 
+
 def test_replication():
     source_db = None
     base_url = "http://10.17.5.92:8989"
@@ -55,25 +56,25 @@ def test_replication():
     sg_admin_url = "http://{}:4985".format(sg_ip)
 
     # Create CBL database
-    source_db = db.database_create(cbl_db)
+    source_db = db.create(cbl_db)
     log_info("Database is {}".format(source_db))
-    db_name = db.database_getName(source_db)
+    db_name = db.getName(source_db)
     assert db_name == "test_db"
 
     # Add a doc to CBL
     # A bulk add API is needed
     # The below approach is not scalable
     dn = Dictionary(base_url)
-    dictionary = dn.dictionary_create()
-    dn.dictionary_put(dictionary, "FirstName", "abc")
-    dn.dictionary_put(dictionary, "LastName", "xyz")
-    dn.dictionary_put(dictionary, "City", "MV")
-    dn.dictionary_put(dictionary, "State", "CA")
+    dictionary = dn.create()
+    dn.setString(dictionary, "FirstName", "abc")
+    dn.setString(dictionary, "LastName", "xyz")
+    dn.setString(dictionary, "City", "MV")
+    dn.setString(dictionary, "State", "CA")
 
     doc = Document(base_url)
-    document = doc.document_create(id="foo", dictionary=dictionary)
+    document = doc.create(doc_id="foo", dictionary=dictionary)
     log_info("Document is {}".format(document))
-    db.database_save(source_db, document)
+    db.save(source_db, document)
 
     # Add docs to SG
     sg_client = MobileRestClient()
@@ -99,13 +100,13 @@ def test_replication():
     )
 
     # Verify database doc counts
-    cbl_doc_count = db.database_docCount(source_db)
+    cbl_doc_count = db.getCount(source_db)
     assert len(all_docs["rows"]) == num_docs + 1
     assert cbl_doc_count == num_docs + 1
 
     # Check that all doc ids in SG are also present in CBL
     for i in all_docs["rows"]:
-        assert db.database_contains(source_db, str(i["id"]))
+        assert db.contains(source_db, str(i["id"]))
 
 
 def test_query():
@@ -155,49 +156,8 @@ def test_query():
         [
             result_set,
             source_db,
-            document,
-            dictionary,
             select_prop,
             dbsource_prop,
             whr_key_prop
         ]
     )
-
-
-def test_adddocs():
-    source_db = None
-    base_url = "http://10.17.1.4:8989"
-    db = Database(base_url)
-    cbl_db = "test_db"
-
-    # Create CBL database
-    source_db = db.database_create(cbl_db)
-    log_info("Database is {}".format(source_db))
-    db_name = db.database_getName(source_db)
-    assert db_name == "test_db"
-
-    sample_doc = {
-        "a": {
-            "c": "d",
-            "e": "f"
-        },
-        "b": {
-            "g": "h",
-            "i": "j"
-        }
-    }
-
-    db.database_addDocuments(source_db, sample_doc)
-    doc_count = db.database_docCount(source_db)
-    db_path = db.database_path(source_db)
-    log_info("doc_count: {}".format(doc_count))
-    log_info("db_path: {}".format(db_path))
-    assert doc_count == 2
-
-    doc_ids = db.database_getDocIds(source_db)
-    log_info("doc_ids: {}".format(doc_ids))
-
-    docs = db.database_getDocuments(source_db)
-    log_info("docs: {}".format(json.dumps(docs)))
-
-    db.database_delete(cbl_db, db_path)

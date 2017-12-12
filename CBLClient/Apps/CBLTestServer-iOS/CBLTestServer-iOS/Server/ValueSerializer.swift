@@ -21,6 +21,9 @@ public class ValueSerializer {
         } else if (value is UInt64){
             let number:UInt64 = value as! UInt64
             return String(number)
+        } else if (value is Float){
+            let number:Float = value as! Float
+            return String(number)
         } else if (value is Bool) {
             let bool:Bool = value as! Bool
             return (bool ? "true" : "false")

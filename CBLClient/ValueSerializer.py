@@ -17,6 +17,9 @@ class ValueSerializer:
         elif isinstance(value, int):
             number = int(value)
             return str(number)
+        elif isinstance(value, float):
+            number = float(value)
+            return str(number)
         elif isinstance(value, dict):
             map = value
             stringMap = {}
@@ -36,7 +39,7 @@ class ValueSerializer:
 
             return json.dumps(stringList)
         else:
-            raise Exception("Invalid value type: {}".format(value))
+            raise Exception("Invalid value type: {}: {}".format(value, type(value)))
 
     @staticmethod
     def deserialize(value):

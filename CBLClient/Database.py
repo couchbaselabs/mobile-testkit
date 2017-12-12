@@ -130,3 +130,9 @@ class Database:
         args.setMemoryPointer("database", database)
         args.setMemoryPointer("ids", ids)
         return self._client.invokeMethod("database_getDocuments", args)
+
+    def create_value_index(self, database, prop):
+        args = Args()
+        args.setMemoryPointer("database", database)
+        args.setString("property", prop)
+        return self._client.invokeMethod("create_value_index", args)

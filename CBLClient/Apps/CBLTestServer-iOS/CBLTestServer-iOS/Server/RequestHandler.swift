@@ -127,7 +127,7 @@ public class RequestHandler {
                 }
             }
 
-            return String(describing: result)
+            return result
 
         case "database_getDocuments":
             let database: Database = args.get(name:"database")!
@@ -140,6 +140,28 @@ public class RequestHandler {
             }
             
             return documents
+            
+        case "database_queryAllDocuments":
+            let database: Database = args.get(name:"database")!
+            let searchQuery = Query
+                .select(SelectResult.all())
+                .from(DataSource.database(database))
+            
+            return searchQuery
+
+        case "create_value_index":
+            // Creates a value index on given property
+            let database: Database = args.get(name: "database")!
+            let property: [String] = args.get(name: "property")!
+            
+            var valIndexItems = [ValueIndexItem]()
+            
+            for prop in property {
+                valIndexItems.append(ValueIndexItem.expression(Expression.property(prop)))
+            }
+//            let valIndexList = valIndexItems.joined(separator: ",")
+//            return try database.createIndex(Index.valueIndex().on(
+//                valIndexList), withName: "TypeIndex")
 
         //////////////
         // Document //
@@ -464,7 +486,7 @@ public class RequestHandler {
         case "query_function_rank":
             let property: Expression = args.get(name: "expression")!
             return Function.rank(property)
-
+            
         ///////////
         // Joins //
         ///////////

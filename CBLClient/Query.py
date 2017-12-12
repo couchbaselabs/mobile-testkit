@@ -71,3 +71,9 @@ class Query:
         args.setString("key", key)
 
         return self._client.invokeMethod("query_result_string", args)
+
+    def query_select_result_expression_create(self, expression):
+        args = Args()
+        args.setMemoryPointer("expression", expression)
+
+        return self._client.invokeMethod("query_select_result_expression_create", args)
