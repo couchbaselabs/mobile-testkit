@@ -269,7 +269,10 @@ class CouchbaseServer:
             resp.raise_for_status()
         except HTTPError as h:
             log_info("resp code: {}; error: {}".format(resp, h))
-            raise RBACUserDeletionError(h)
+            if '404 Client Error: Object Not Found for url' in h.message:
+                log_info("RBAC user does not exist, no need to delete RBAC bucket user {}".format(bucketname))
+            else:
+                raise RBACUserDeletionError(h)
 
     def _get_mem_total_lowest(self, server_info):
         # Workaround for https://github.com/couchbaselabs/mobile-testkit/issues/709
@@ -728,3 +731,8 @@ class CouchbaseServer:
         """ Gets an SDK bucket object """
         connection_str = "couchbase://{}/{}".format(self.host, bucket_name)
         return Bucket(connection_str, password='password')
+
+    def load_sample_bucket(self, sample_bucket):
+        """ Loads a given sample bucket """
+        log_info("Enabling sample bucket {}".format(sample_bucket))
+        self.remote_executor.must_execute('sudo /opt/couchbase/bin/cbdocloader -c localhost:8091 -u Administrator -p password -b travel-sample -m 100 -d /opt/couchbase/samples/{}.zip'.format(sample_bucket))

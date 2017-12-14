@@ -149,20 +149,6 @@ public class RequestHandler {
             
             return searchQuery
 
-        case "create_value_index":
-            // Creates a value index on given property
-            let database: Database = args.get(name: "database")!
-            let property: [String] = args.get(name: "property")!
-            
-            var valIndexItems = [ValueIndexItem]()
-            
-            for prop in property {
-                valIndexItems.append(ValueIndexItem.expression(Expression.property(prop)))
-            }
-//            let valIndexList = valIndexItems.joined(separator: ",")
-//            return try database.createIndex(Index.valueIndex().on(
-//                valIndexList), withName: "TypeIndex")
-
         //////////////
         // Document //
         //////////////
@@ -577,7 +563,20 @@ public class RequestHandler {
             let key: String = args.get(name: "key")!
             
             return query_result.string(forKey: key)
+            
+        case "query_get_doc":
+            let database: Database = args.get(name: "database")!
+            let doc_id: String = args.get(name: "doc_id")!
 
+            let searchQuery = Query
+                .select(SelectResult.all())
+                .from(DataSource.database(database))
+                .where((Expression.meta().id).equalTo(doc_id))
+
+            for row in try searchQuery.run() {
+                return row.toDictionary()
+            }
+           
         default:
             throw RequestHandlerError.MethodNotFound(method)
         }

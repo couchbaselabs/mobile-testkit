@@ -106,3 +106,10 @@ class Query:
         args.setMemoryPointer("expression2", expression2)
 
         return self._client.invokeMethod("create_or_expression", args)
+
+    def query_get_doc(self, database, doc_id):
+        args = Args()
+        args.setMemoryPointer("database", database)
+        args.setString("doc_id", doc_id)
+
+        return self._client.invokeMethod("query_get_doc", args)
