@@ -54,7 +54,7 @@ class Document:
         args.setString("value", value)
         return self._client.invokeMethod("document_setString", args)
 
-    def set(self,document, dictionary):
+    def set(self, document, dictionary):
         args = Args()
         args.setMemoryPointer("document", document)
         args.setMemoryPointer("dictionary", dictionary)

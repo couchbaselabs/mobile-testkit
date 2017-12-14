@@ -39,7 +39,16 @@ public class Server {
             
             do {
                 let args = Args()
-                if let queryParams = request.query {
+                var queryParams = request.query
+                let r = request as! GCDWebServerDataRequest
+
+                if queryParams?.count == 0 {
+                    print("data is \(r.data)")
+                    queryParams = r.jsonObject as? Dictionary<String, AnyObject>
+                }
+
+                if let queryParams = queryParams {
+                    // Get args from query params
                     for param in queryParams {
                         let value: Any = ValueSerializer.deserialize(value:(param.value as! String), memory: self.memory)!
                         // Handle nil value
@@ -47,33 +56,19 @@ public class Server {
                     }
                 }
 
-                // Get the POST body
-                var post_body: Dictionary<String, AnyObject>?
-                if request.contentType == "application/json" {
-                    let r = request as! GCDWebServerDataRequest
-                    post_body = r.jsonObject as? Dictionary<String, AnyObject>
-                }
-
                 // Find and invoke the method on the RequestHandler.
-                var serializedValue: Any? = nil
+                var body: Any? = nil
                 if "release" == method {
                     self.memory.remove(address: rawArgs!["object"] as! String)
                 } else {
-                    let result = try self.requestHandler.handleRequest(method: method, args: args, post_body: post_body)
-                    if let void = result as? NSObject, void.isEqual(RequestHandler.VOID) {
-                        // Do nothing.
-                    } else {
-                        serializedValue = ValueSerializer.serialize(value: result, memory: self.memory);
+                    let result = try self.requestHandler.handleRequest(method: method, args: args)
+                    if result != nil {
+                        body = ValueSerializer.serialize(value: result, memory: self.memory);
                     }
                 }
-                
-                if let body = serializedValue {
-                    // Send 200 code and body
-                    if let text = body as? String {
-                        return GCDWebServerDataResponse(text: text)!
-                    } else {
-                        return GCDWebServerDataResponse(data: body as! Data, contentType: "application/json")
-                    }
+
+                if body != nil {
+                    return GCDWebServerDataResponse(text: body as! String)
                 } else {
                     // Send 200 code and close
                     return GCDWebServerResponse(statusCode: 200)

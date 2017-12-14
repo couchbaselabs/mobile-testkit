@@ -118,7 +118,8 @@ def setup_client_syncgateway_suite(request):
         "sg_mode": sync_gateway_mode,
         "xattrs_enabled": xattrs_enabled,
         "device_enabled": device_enabled,
-        "liteserv_platform": liteserv_platform
+        "liteserv_platform": liteserv_platform,
+        "liteserv_version": liteserv_version
     }
 
     log_info("Tearing down suite ...")
@@ -138,6 +139,7 @@ def setup_client_syncgateway_test(request, setup_client_syncgateway_suite):
     xattrs_enabled = setup_client_syncgateway_suite["xattrs_enabled"]
     device_enabled = setup_client_syncgateway_suite["device_enabled"]
     liteserv_platform = setup_client_syncgateway_suite["liteserv_platform"]
+    liteserv_version = setup_client_syncgateway_suite["liteserv_version"]
     test_name = request.node.name
 
     if request.config.getoption("--liteserv-platform") == "macosx" and \
@@ -170,7 +172,8 @@ def setup_client_syncgateway_test(request, setup_client_syncgateway_suite):
         "xattrs_enabled": xattrs_enabled,
         "liteserv": liteserv,
         "liteserv_platform": liteserv_platform,
-        "device_enabled": device_enabled
+        "device_enabled": device_enabled,
+        "liteserv_version": liteserv_version
     }
 
     log_info("Tearing down test")

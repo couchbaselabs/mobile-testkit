@@ -10,6 +10,7 @@
       "bucket": "data-bucket",
       "username":"data-bucket",
       "password": "password",
+      "unsupported": { "allow_conflicts": false },
       "users": {
         "user_1": {
           "admin_channels": [

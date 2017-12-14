@@ -4,9 +4,6 @@ class Args:
         self.index = 0
         self._args = {}
 
-    def setArray(self, name, arr):
-        self._args[name] = arr
-
     def setMemoryPointer(self, name, memoryPointer):
         self._args[name] = memoryPointer
 
@@ -14,7 +11,15 @@ class Args:
         self._args[name] = str(string)
 
     def setInt(self, name, integer):
-        self._args[name] = int(integer)
+        self._args[name] = integer
+
+    def setLong(self, name, l):
+        self._args[name] = l
+
+    def setFloat(self, name, f):
+        self._args[name] = f
+
+    # There is no double/number in python
 
     def setNumber(self, name, number):
         self._args[name] = number
@@ -24,6 +29,9 @@ class Args:
 
     def setDictionary(self, name, dictionary):
         self._args[name] = dictionary
+
+    def setArray(self, name, array):
+        self._args[name] = array
 
     def getArgs(self):
         return self._args

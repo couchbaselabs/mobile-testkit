@@ -1,28 +1,19 @@
 import time
 import json
 import requests
-from requests.exceptions import ConnectionError
-from requests.exceptions import HTTPError
+from requests.exceptions import ConnectionError, HTTPError
 from requests import Session
 from requests.packages.urllib3.exceptions import InsecureRequestWarning
+from libraries.provision.ansible_runner import AnsibleRunner
 
 from couchbase.bucket import Bucket
-from couchbase.exceptions import CouchbaseError
-from couchbase.exceptions import NotFoundError
+from couchbase.exceptions import CouchbaseError, NotFoundError
 
 import keywords.constants
 from keywords.remoteexecutor import RemoteExecutor
-from keywords.exceptions import CBServerError
-from keywords.exceptions import ProvisioningError
-from keywords.exceptions import TimeoutError
-from keywords.exceptions import RBACUserCreationError
-from keywords.exceptions import RBACUserDeletionError
-from keywords.utils import log_r
-from keywords.utils import log_info
-from keywords.utils import log_debug
-from keywords.utils import log_error
+from keywords.exceptions import CBServerError, ProvisioningError, TimeoutError, RBACUserCreationError, RBACUserDeletionError
+from keywords.utils import log_r, log_info, log_debug, log_error, hostname_for_url
 from keywords import types
-
 
 requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
@@ -269,7 +260,10 @@ class CouchbaseServer:
             resp.raise_for_status()
         except HTTPError as h:
             log_info("resp code: {}; error: {}".format(resp, h))
-            raise RBACUserDeletionError(h)
+            if '404 Client Error: Object Not Found for url' in h.message:
+                log_info("RBAC user does not exist, no need to delete RBAC bucket user {}".format(bucketname))
+            else:
+                raise RBACUserDeletionError(h)
 
     def _get_mem_total_lowest(self, server_info):
         # Workaround for https://github.com/couchbaselabs/mobile-testkit/issues/709
@@ -512,9 +506,9 @@ class CouchbaseServer:
             if done_rebalacing:
                 break
 
-            time.sleep(1)
+            time.sleep(5)
 
-    def add_node(self, server_to_add):
+    def add_node(self, server_to_add, services="kv"):
         """
         Add the server_to_add to a Couchbase Server cluster
         """
@@ -522,9 +516,9 @@ class CouchbaseServer:
         if not isinstance(server_to_add, CouchbaseServer):
             raise TypeError("'server_to_add' must be a 'CouchbaseServer'")
 
-        log_info("Adding server node {} to cluster ...".format(server_to_add))
-        data = "hostname={}&user=Administrator&password=password&services=kv".format(
-            server_to_add.host
+        log_info("Adding server node {} to cluster ...".format(server_to_add.host))
+        data = "hostname={}&user=Administrator&password=password&services={}".format(
+            server_to_add.host, services
         )
 
         # HACK: Retry below addresses the following problem:
@@ -550,10 +544,10 @@ class CouchbaseServer:
 
             # If status of the POST is not 200, retry the request after a second
             if resp.status_code == 200:
-                log_info("{} added to cluster successfully".format(server_to_add))
+                log_info("{} added to cluster successfully".format(server_to_add.host))
                 break
             else:
-                log_info("{}: Could not add {} to cluster. Retrying ...".format(resp.status_code, server_to_add))
+                log_info("{}: {}: Could not add {} to cluster. Retrying ...".format(resp.status_code, resp.json(), server_to_add.host))
                 time.sleep(1)
 
     def rebalance_out(self, cluster_servers, server_to_remove):
@@ -575,7 +569,7 @@ class CouchbaseServer:
                 server = server.replace(":8091", "")
             known_nodes += "ns_1@{},".format(server)
 
-        # Add server_to_add to known nodes
+        # Add server_to_remove to ejected_node
         ejected_node = "ejectedNodes=ns_1@{}".format(server_to_remove.host)
         data = "{}&{}".format(ejected_node, known_nodes)
 
@@ -620,7 +614,7 @@ class CouchbaseServer:
         data = "{}ns_1@{}".format(known_nodes, server_to_add.host)
 
         # Rebalance nodes
-        log_info("Starting rebalance in for {}".format(server_to_add))
+        log_info("Starting rebalance in for {}".format(server_to_add.host))
         log_info("Known nodes: {}".format(data))
 
         # Override session headers for this one off request
@@ -728,3 +722,8 @@ class CouchbaseServer:
         """ Gets an SDK bucket object """
         connection_str = "couchbase://{}/{}".format(self.host, bucket_name)
         return Bucket(connection_str, password='password')
+
+    def load_sample_bucket(self, sample_bucket):
+        """ Loads a given sample bucket """
+        log_info("Enabling sample bucket {}".format(sample_bucket))
+        self.remote_executor.must_execute('sudo /opt/couchbase/bin/cbdocloader -c localhost:8091 -u Administrator -p password -b travel-sample -m 100 -d /opt/couchbase/samples/{}.zip'.format(sample_bucket))

@@ -16,23 +16,105 @@ class Replication:
 
         self._client = Client(baseUrl)
 
-    def configure_replication(self, source_db, target_url, replication_type="push_pull", continuous=True):
+    def configure(self, source_db, target_url=None, target_db=None, replication_type="push_pull", continuous=False,
+                  channels=None, documentIDs=None, replicator_authenticator=None):
         args = Args()
         args.setMemoryPointer("source_db", source_db)
-        args.setString("target_url", target_url)
         args.setString("replication_type", replication_type)
         args.setBoolean("continuous", continuous)
+        if channels is not None:
+            args.setArray("channels", channels)
+        if documentIDs is not None:
+            args.setArray("documentIDs", documentIDs)
+        if replicator_authenticator is not None:
+            log_info(" replicator authenticator is set")
+            args.setMemoryPointer("authenticator", replicator_authenticator)
+        if target_db is None:
+            args.setString("target_url", target_url)
+            return self._client.invokeMethod("configure_replicator_remote_db_url", args)
+        else:
+            args.setString("target_db", target_db)
+            return self._client.invokeMethod("configure_replicator_local_db", args)
 
-        return self._client.invokeMethod("configure_replication", args)
+    def authentication(self, session_id=None, cookie=None, username=None, password=None, authentication_type="basic"):
+        args = Args()
+        args.setString("authentication_type", authentication_type)
+        if authentication_type == "session":
+            args.setString("sessionId", session_id)
+            args.setString("cookieName", cookie)
+        else:
+            args.setString("username", username)
+            args.setString("password", password)
+        return self._client.invokeMethod("replicator_create_authenticator", args)
 
-    def start_replication(self, replication_obj):
+    def start(self, replication_obj):
         args = Args()
         args.setMemoryPointer("replication_obj", replication_obj)
 
-        self._client.invokeMethod("start_replication", args)
+        self._client.invokeMethod("replicator_start", args)
 
-    def stop_replication(self, replication_obj):
+    def stop(self, replication_obj):
         args = Args()
         args.setMemoryPointer("replication_obj", replication_obj)
 
-        self._client.invokeMethod("stop_replication", args)
+        self._client.invokeMethod("replicator_stop", args)
+
+    def status(self, replication_obj):
+        args = Args()
+        args.setMemoryPointer("replication_obj", replication_obj)
+
+        return self._client.invokeMethod("replicator_status", args)
+
+    def get_config(self, replication_obj):
+        args = Args()
+        args.setMemoryPointer("replication_obj", replication_obj)
+
+        return self._client.invokeMethod("replicator_config", args)
+
+    def get_completed(self, replication_obj):
+        args = Args()
+        args.setMemoryPointer("replication_obj", replication_obj)
+
+        return self._client.invokeMethod("replicator_get_completed", args)
+
+    def get_total(self, replication_obj):
+        args = Args()
+        args.setMemoryPointer("replication_obj", replication_obj)
+
+        return self._client.invokeMethod("replicator_get_total", args)
+
+    def get_activitylevel(self, replication_obj):
+        args = Args()
+        args.setMemoryPointer("replication_obj", replication_obj)
+        
+        return self._client.invokeMethod("replicator_get_activitylevel", args)
+
+    def get_error(self, replication_obj):
+        args = Args()
+        args.setMemoryPointer("replication_obj", replication_obj)
+
+        return self._client.invokeMethod("replicator_get_error", args)
+
+    def add_change_listener(self, replication_obj):
+        args = Args()
+        args.setMemoryPointer("replication_obj", replication_obj)
+
+        return self._client.invokeMethod("replicator_addChangeListener", args)
+
+    def remove_change_listener(self, replication_obj):
+        args = Args()
+        args.setMemoryPointer("replication_obj", replication_obj)
+
+        return self._client.invokeMethod("replicator_removeChangeListener", args)
+
+    def get_changes_count(self, replication_obj):
+        args = Args()
+        args.setMemoryPointer("replication_obj", replication_obj)
+
+        return self._client.invokeMethod("replicatorChangeListener_changesCount", args)
+
+    def get_changes_changelistener(self, replication_obj):
+        args = Args()
+        args.setMemoryPointer("replication_obj", replication_obj)
+
+        return self._client.invokeMethod("replicatorChangeListener_getChange", args)

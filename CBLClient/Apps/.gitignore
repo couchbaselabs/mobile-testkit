@@ -57,6 +57,7 @@ Carthage/Build
 Carthage/Checkouts
 CBLTestServer-iOS/Carthage/Build
 CBLTestServer-iOS/Carthage/Checkouts
+CBLTestServer-iOS/Frameworks
 
 # fastlane
 #

@@ -22,6 +22,7 @@ if [ $? -ne 0 ]; then
 fi
 
 currentdir=`pwd`
+export PATH=$PATH:/usr/local/bin
 
 # Setup virtual env
 virtualenv -p python venv
