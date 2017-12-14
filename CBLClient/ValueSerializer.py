@@ -5,7 +5,9 @@ from MemoryPointer import MemoryPointer
 class ValueSerializer:
     @staticmethod
     def serialize(value):
-        if isinstance(value, MemoryPointer):
+        if value == None:
+            return "null"
+        elif isinstance(value, MemoryPointer):
             return value.getAddress()
         elif isinstance(value, str):
             return "\"" + value + "\""

@@ -28,7 +28,7 @@ class Document:
             args.setString("id", doc_id)
             return self._client.invokeMethod("document_create", args)
         else:
-            return self._client.invokeMethod("document_create")
+            return self._client.invokeMethod("document_create", args)
 
     def delete(self, database, document):
         args = Args()

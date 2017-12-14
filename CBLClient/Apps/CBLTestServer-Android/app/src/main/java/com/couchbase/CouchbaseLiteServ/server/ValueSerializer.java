@@ -48,7 +48,7 @@ public class ValueSerializer {
     }
 
     public static <T> T deserialize(String value, Memory memory) {
-        if (value == null) {
+        if ((value == null) || (value == "null")) {
             return null;
         } else if (value.startsWith("@")) {
             return memory.get(value);

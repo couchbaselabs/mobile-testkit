@@ -43,7 +43,8 @@ class Client(object):
         except RuntimeError as err:
             raise err
         except Exception as err:
-            raise  err# RuntimeError(e)
+            out = resp.content
+            return  err, out# RuntimeError(e)
 
     def release(self, obj):
         args = Args()

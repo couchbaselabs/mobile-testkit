@@ -7,7 +7,7 @@ from CBLClient.DataTypeInitiator import DataTypeInitiator
 from keywords.utils import random_string
 
 #baseUrl = "http://172.16.1.154:8080"
-baseUrl = "http://192.168.0.106:8080"
+baseUrl = "http://192.168.1.4:8080"
 
 class TestDocument():
 

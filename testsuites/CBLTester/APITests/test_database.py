@@ -3,9 +3,10 @@ import pytest
 from keywords.utils import random_string
 from CBLClient.Database import Database
 from CBLClient.Document import Document
+from CodeWarrior.Standard_Suite import document
 
 #baseUrl = "http://172.16.1.154:8080"
-baseUrl = "http://192.168.0.106:8080"
+baseUrl = "http://192.168.1.4:8080"
 dbName = "foo"
 docIdPrefix = "bar"
 
@@ -13,17 +14,61 @@ class TestDatabase():
     db_obj = Database(baseUrl)
     doc_obj = Document(baseUrl)
 
+    @pytest.mark.parametrize("dbName, err_msg", [
+        ("", "name should not be empty"),
+        (random_string(1028), "File name too long")
+        ])
+    def test_database_create_exception(self, dbName, err_msg):
+        '''
+        @summary: Checking for the Exception handling in database create API
+        '''
+        _, err_resp = self.db_obj.create(dbName)
+        assert err_msg in err_resp
+
+    def test_getDocument_exception(self):
+        db = self.db_obj.create(random_string(6))
+        #checking when Null/None documentId is provided
+        err_msg = "a documentID parameter is null"
+        _, err_resp = self.db_obj.getDocument(db, None)
+        assert err_msg in err_resp
+        #checking document in db with empty name
+        doc_id = self.db_obj.getDocument(db, "")
+        assert None == doc_id
+        #checking for a non-existing doc in DB
+        doc_id = self.db_obj.getDocument(db, "I-do-not-exist")
+        assert None == doc_id
+
+    def test_saveDocument_exception(self):
+        db = self.db_obj.create(random_string(6))
+        err_msg = "a document parameter is null"
+        _, err_resp = self.db_obj.saveDocument(db, None)
+        assert err_msg in err_resp
+
+    def test_delete_exception(self):
+        db = self.db_obj.create(random_string(6))
+        #Exception checking when document id is null
+        err_msg = "a document parameter is null"
+        _, err_resp = self.db_obj.delete(database=db, document=None)
+        assert err_msg in err_resp
+        _, err_resp = self.db_obj.purge(database=db, document=None)
+        assert err_msg in err_resp
+
+    def test_deleteDB_exception(self):
+        assert 1
+
+    def test_exists_exception(self):
+        assert 1
+
     @pytest.mark.parametrize("dbName",[
-         #"",
-         random_string(1),
-         random_string(6),
-         #random_string(128),
-         "_{}".format(random_string(6)),
-         "{}_".format(random_string(6)),
-         "_{}_".format(random_string(6)),
-         random_string(6, digit=True),
-         random_string(6).capitalize(),
-         random_string(6).upper(),
+        random_string(1),
+        random_string(6),
+        random_string(128),
+        "_{}".format(random_string(6)),
+        "{}_".format(random_string(6)),
+        "_{}_".format(random_string(6)),
+        random_string(6, digit=True),
+        random_string(6).capitalize(),
+        random_string(6).upper(),
          ]) 
     def test_database(self, dbName):
         '''
@@ -41,10 +86,9 @@ class TestDatabase():
         assert 1
 
     @pytest.mark.parametrize("dbName",[
-         #"",
          random_string(1),
          random_string(6),
-         #random_string(128),
+         random_string(128),
          "_{}".format(random_string(6)),
          "{}_".format(random_string(6)),
          "_{}_".format(random_string(6)),
@@ -66,10 +110,9 @@ class TestDatabase():
         assert 1
 
     @pytest.mark.parametrize("dbName",[
-         #"",
          random_string(1),
          random_string(6),
-         #random_string(128),
+         random_string(128),
          "_{}".format(random_string(6)),
          "{}_".format(random_string(6)),
          "_{}_".format(random_string(6)),
@@ -86,10 +129,9 @@ class TestDatabase():
         assert self.db_obj.contains(db, docIdPrefix)
 
     @pytest.mark.parametrize("dbName",[
-         #"",
          random_string(1),
          random_string(6),
-         #random_string(128),
+         random_string(128),
          "_{}".format(random_string(6)),
          "{}_".format(random_string(6)),
          "_{}_".format(random_string(6)),
@@ -101,13 +143,12 @@ class TestDatabase():
         @summary: Testing delete(DB) method of Database API
         '''
         db = self.db_obj.create(dbName)
-        assert self.db_obj.deleteDB(db) ==-1
+        assert self.db_obj.deleteDB(db) == -1
 
     @pytest.mark.parametrize("dbName, docId",[
-         #"",
          (random_string(1), random_string(6)),
          (random_string(6), random_string(6)),
-         #(random_string(128), random_string(6)),
+         (random_string(128), random_string(6)),
          ("_{}".format(random_string(6)), random_string(6)),
          ("{}_".format(random_string(6)), random_string(6)),
          ("_{}_".format(random_string(6)), random_string(6)),
@@ -172,10 +213,9 @@ class TestDatabase():
         assert self.doc_obj.getId(new_doc) == self.doc_obj.getId(doc)
 
     @pytest.mark.parametrize("dbName",[
-         #"",
          random_string(1),
          random_string(6),
-         #random_string(128),
+         random_string(128),
          "_{}".format(random_string(6)),
          "{}_".format(random_string(6)),
          "_{}_".format(random_string(6)),
@@ -191,10 +231,9 @@ class TestDatabase():
         assert dbName == str(self.db_obj.getName(db))
 
     @pytest.mark.parametrize("dbName",[
-         #"",
          random_string(1),
          random_string(6),
-         #random_string(128),
+         random_string(128),
          "_{}".format(random_string(6)),
          "{}_".format(random_string(6)),
          "_{}_".format(random_string(6)),
@@ -235,10 +274,9 @@ class TestDatabase():
         assert self.db_obj.getDocument(db_2, docId)
 
     @pytest.mark.parametrize("dbName, docId",[
-         #"",
          (random_string(1), random_string(6)),
          (random_string(6), random_string(6)),
-         #(random_string(128), random_string(6)),
+         (random_string(128), random_string(6)),
          ("_{}".format(random_string(6)), random_string(6)),
          ("{}_".format(random_string(6)), random_string(6)),
          ("_{}_".format(random_string(6)), random_string(6)),
