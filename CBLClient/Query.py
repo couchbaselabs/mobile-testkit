@@ -44,12 +44,11 @@ class Query:
 
         return self._client.invokeMethod("query_datasource_database", args)
 
-    def query_create(self, select_prop, from_prop, whr_key_prop, whr_val):
+    def query_create(self, select_prop, from_prop, whr_key_prop):
         args = Args()
         args.setString("select_prop", select_prop)
         args.setMemoryPointer("from_prop", from_prop)
         args.setString("whr_key_prop", whr_key_prop)
-        args.setString("whr_val", whr_val)
 
         return self._client.invokeMethod("query_create", args)
 
@@ -71,3 +70,46 @@ class Query:
         args.setString("key", key)
 
         return self._client.invokeMethod("query_result_string", args)
+
+    def query_select_result_expression_create(self, expression):
+        args = Args()
+        args.setMemoryPointer("expression", expression)
+
+        return self._client.invokeMethod("query_select_result_expression_create", args)
+
+    def query_select_result_all_create(self):
+        return self._client.invokeMethod("query_select_result_all_create")
+
+    def query_expression_meta_id(self):
+        return self._client.invokeMethod("query_expression_meta_id")
+
+    def query_expression_meta_sequence(self):
+        return self._client.invokeMethod("query_expression_meta_sequence")
+
+    def create_equalTo_expression(self, expression1, expression2):
+        args = Args()
+        args.setMemoryPointer("expression1", expression1)
+        args.setMemoryPointer("expression2", expression2)
+
+        return self._client.invokeMethod("create_equalTo_expression", args)
+
+    def create_and_expression(self, expression1, expression2):
+        args = Args()
+        args.setMemoryPointer("expression1", expression1)
+        args.setMemoryPointer("expression2", expression2)
+
+        return self._client.invokeMethod("create_and_expression", args)
+
+    def create_or_expression(self, expression1, expression2):
+        args = Args()
+        args.setMemoryPointer("expression1", expression1)
+        args.setMemoryPointer("expression2", expression2)
+
+        return self._client.invokeMethod("create_or_expression", args)
+
+    def query_get_doc(self, database, doc_id):
+        args = Args()
+        args.setMemoryPointer("database", database)
+        args.setString("doc_id", doc_id)
+
+        return self._client.invokeMethod("query_get_doc", args)

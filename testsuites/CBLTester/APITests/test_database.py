@@ -25,7 +25,7 @@ class TestDatabase():
          random_string(6).capitalize(),
          random_string(6).upper(),
          ]) 
-    def test_database(self, dbName):
+    def test_database1(self, dbName):
         '''
         @summary: Testing Database constructor method of Database API
         '''

@@ -17,14 +17,17 @@ enum RequestHandlerError: Error {
 
 public class RequestHandler {
     public static let VOID = NSObject()
+    fileprivate var _pushPullReplListener:NSObjectProtocol?
     
-    public func handleRequest(method: String, args: Args, post_body: Dictionary<String, AnyObject>?) throws -> Any? {
+    public func handleRequest(method: String, args: Args) throws -> Any? {
         switch method {
         //////////////
         // Database //
         //////////////
         case "database_create":
+            
             let arg: String? = args.get(name: "name")
+            print("args of database_create \(arg!)")
             guard let name = arg else {
                 throw RequestHandlerError.InvalidArgument("name")
             }
@@ -101,13 +104,16 @@ public class RequestHandler {
             
             return change.documentIDs
 
-        case "database_addDocuments":
+        case "database_saveDocuments":
             let database: Database = args.get(name:"database")!
+            let documents: Dictionary<String, Dictionary<String, Any>> = args.get(name: "documents")!
             
             try database.inBatch {
-                for doc_id in post_body! {
-                    let document = MutableDocument(doc_id.key, dictionary: (doc_id.value as! Dictionary<String, Any>))
-                    try! database.save(document)
+                for doc in documents {
+                    let id = doc.key
+                    let data: Dictionary<String, Any> = doc.value
+                    let document = MutableDocument(id, dictionary: data)
+                    try database.save(document)
                 }
             }
             
@@ -124,23 +130,27 @@ public class RequestHandler {
                 }
             }
 
-            return String(describing: result)
+            return result
 
         case "database_getDocuments":
             let database: Database = args.get(name:"database")!
-            let query = Query
-                .select(SelectResult.expression(Expression.meta().id))
+            let ids: [String] = args.get(name:"ids")!
+            var documents = [String: [String: Any]]()
+
+            for id in ids {
+                let document: Document = database.getDocument(id)!
+                documents[id] = document.toDictionary()
+            }
+            
+            return documents
+            
+        case "database_queryAllDocuments":
+            let database: Database = args.get(name:"database")!
+            let searchQuery = Query
+                .select(SelectResult.all())
                 .from(DataSource.database(database))
             
-            var result: [String: Any] = [:]
-            do {
-                for row in try query.run() {
-                    let id = row.string(forKey: "id")!
-                    let doc = database.getDocument(id)?.toDictionary()
-                    result[id] = doc
-                }
-            }
-            return try JSONSerialization.data(withJSONObject: result, options: .prettyPrinted)
+            return searchQuery
 
         //////////////
         // Document //
@@ -192,12 +202,34 @@ public class RequestHandler {
         /////////////////
         // Replication //
         /////////////////
-
-        case "configure_replication":
-            let source_db: Database = args.get(name: "source_db")!
-            let target_url: String = args.get(name: "target_url")!
+            
+        case "replicator_create_authenticator":
+            let authenticatorType: String! = args.get(name: "authentication_type")
+            
+            if authenticatorType == "session" {
+                    let sessionid: String! = args.get(name: "sessionId")
+                    let expires: Any? = args.get(name: "expires")
+                    let cookiename: String! = args.get(name: "cookieName")
+                    return SessionAuthenticator(sessionID: sessionid, expires: expires, cookieName: cookiename)
+            }
+            else {
+                    let username: String! = args.get(name: "username")
+                    let password: String! = args.get(name: "password")
+                    return BasicAuthenticator(username: username!, password: password!)
+            }
+            
+            
+            
+        case "configure_replicator_remote_db_url":
+            
+            let source_db: Database? = args.get(name: "source_db")
+            let target_url: String? = args.get(name: "target_url")
             let replication_type: String? = args.get(name: "replication_type")!
             let continuous: Bool? = args.get(name: "continuous")
+            let channels: [String]? = args.get(name: "channels")
+            let documentIDs: [String]? = args.get(name: "documentIDs")
+            let authenticator: Authenticator? = args.get(name: "authenticator")
+            let conflictResolver: ConflictResolver? = args.get(name: "conflictResolver")
             
             var replicatorType = ReplicatorType.pushAndPull
             if let type = replication_type {
@@ -209,18 +241,114 @@ public class RequestHandler {
                     replicatorType = .pushAndPull
                 }
             }
-            var config = ReplicatorConfiguration(database: source_db, targetURL: URL(string: target_url)!)
-            config.replicatorType = replicatorType
-            config.continuous = continuous != nil ? continuous! : false
-            return Replicator(config: config)
+            let target_converted_url: URL? = URL(string: target_url!)
+            if (source_db != nil && target_converted_url != nil) {
+               var config = ReplicatorConfiguration(database: source_db!, targetURL: target_converted_url!)
+               config.replicatorType = replicatorType
+               config.continuous = continuous != nil ? continuous! : false
+               config.authenticator = authenticator
+               config.conflictResolver = conflictResolver
+               if channels != nil {
+                  config.channels = channels
+                }
+                if documentIDs != nil {
+                    config.documentIDs = documentIDs
+                }
+                return Replicator(config: config)
+            }
+            else{
+                throw RequestHandlerError.InvalidArgument("No source db provided or target url provided")
+            }
+            
 
-        case "start_replication":
+        case "configure_replicator_local_db":
+            let source_db: Database? = args.get(name: "source_db")
+            let targetDatabase: Database? = args.get(name: "targetDatabase")
+            let replication_type: String? = args.get(name: "replication_type")!
+            let continuous: Bool? = args.get(name: "continuous")
+            let documentIDs: [String]? = args.get(name: "documentIDs")
+            let conflictResolver: ConflictResolver? = args.get(name: "conflictResolver")
+            
+            
+            var replicatorType = ReplicatorType.pushAndPull
+            if let type = replication_type {
+                if type == "push" {
+                    replicatorType = .push
+                } else if type == "pull" {
+                    replicatorType = .pull
+                } else {
+                    replicatorType = .pushAndPull
+                }
+            }
+            if (source_db != nil && targetDatabase != nil) {
+                var config = ReplicatorConfiguration(database: source_db!, targetDatabase: targetDatabase!)
+                config.replicatorType = replicatorType
+                config.continuous = continuous != nil ? continuous! : false
+                config.conflictResolver = conflictResolver
+                if documentIDs != nil {
+                    config.documentIDs = documentIDs
+                }
+                return Replicator(config: config)
+            }
+            else{
+                throw RequestHandlerError.InvalidArgument("No source db provided or target db provided")
+            }
+            
+        case "replicator_start":
             let replication_obj: Replicator = args.get(name: "replication_obj")!
             replication_obj.start()
 
-        case "stop_replication":
+        case "replicator_stop":
             let replication_obj: Replicator = args.get(name: "replication_obj")!
             replication_obj.stop()
+
+        case "replicator_status":
+            let replication_obj: Replicator = args.get(name: "replication_obj")!
+            let value = replication_obj.status.stringify()
+            print("displaying replication status \(value)")
+            return value
+            
+        case "replicator_config":
+            let replication_obj: Replicator = args.get(name: "replication_obj")!
+            return replication_obj.config
+            
+        case "replicator_get_activitylevel":
+            let replication_obj: Replicator = args.get(name: "replication_obj")!
+            return String(replication_obj.status.activity.hashValue)
+            
+        case "replicator_get_completed":
+            let replication_obj: Replicator = args.get(name: "replication_obj")!
+            return replication_obj.status.progress.completed
+            
+        case "replicator_get_totoal":
+            let replication_obj: Replicator = args.get(name: "replication_obj")!
+            return replication_obj.status.progress.total
+            
+        case "replicator_get_error":
+            let replication_obj: Replicator = args.get(name: "replication_obj")!
+            print("repl object error is \(replication_obj.status.error!)")
+            return replication_obj.status.error
+            
+        case "replicator_addChangeListener":
+            let replication_obj: Replicator = args.get(name: "replication_obj")!
+            let changeListener = MyReplicationChangeListener()
+            let listenerToken = replication_obj.addChangeListener(changeListener.listener)
+            changeListener.listenerToken = listenerToken
+            return changeListener
+            
+        case "replicator_removeChangeListener":
+            let replication_obj: Replicator = args.get(name: "replication_obj")!
+            let changeListener : MyReplicationChangeListener = (args.get(name: "changeListener"))!
+            replication_obj.removeChangeListener(changeListener.listenerToken!)
+            
+        case "replicatorChangeListener_changesCount":
+            let changeListener: MyReplicationChangeListener = (args.get(name: "changeListener"))!
+            return changeListener.getChanges().count
+            
+        case "replicatorChangeListener_getChange":
+            let changeListener: MyReplicationChangeListener = (args.get(name: "changeListener"))!
+            let index: Int = (args.get(name: "index"))!
+            return changeListener.getChanges()[index]
         
         /////////////////////
         // Query Collation //
@@ -247,13 +375,22 @@ public class RequestHandler {
         //////////////////////
         // Query Expression //
         //////////////////////
+            
+        
+        ///////////
+        // Query //
+        ///////////
+
         case "query_expression_property":
             let property: String = args.get(name: "property")!
             return Expression.property(property)
             
-        case "query_expression_meta":
-            return Expression.meta()
-            
+        case "query_expression_meta_id":
+            return Expression.meta().id
+        
+        case "query_expression_meta_sequence":
+            return Expression.meta().sequence
+
         case "query_expression_parameter":
             let parameter: String = args.get(name: "parameter")!
             return Expression.parameter(parameter)
@@ -282,6 +419,21 @@ public class RequestHandler {
             let variable: String = args.get(name: "variable")!
             return Expression.every(variable)
         
+        case "create_equalTo_expression":
+            let expression1: Expression = args.get(name: "expression1")!
+            let expression2: Any = args.get(name: "expression2")!
+            return expression1.equalTo(expression2)
+            
+        case "create_and_expression":
+            let expression1: Expression = args.get(name: "expression1")!
+            let expression2: Any = args.get(name: "expression2")!
+            return expression1.and(expression2)
+        
+        case "create_or_expression":
+            let expression1: Expression = args.get(name: "expression1")!
+            let expression2: Any = args.get(name: "expression2")!
+            return expression1.or(expression2)
+
         ////////////////////
         // Query Function //
         ////////////////////
@@ -465,7 +617,7 @@ public class RequestHandler {
         case "query_function_rank":
             let property: Expression = args.get(name: "expression")!
             return Function.rank(property)
-
+            
         ///////////
         // Joins //
         ///////////
@@ -489,9 +641,9 @@ public class RequestHandler {
             let datasource: DataSource = args.get(name: "datasource")!
             return Join.crossJoin(datasource)
             
-        //////////////////
-        // Query Select //
-        //////////////////
+        ////////////////////////
+        // Query SelectResult //
+        ////////////////////////
 
         case "query_select_result_expression_create":
             let expression: Expression = args.get(name: "expression")!
@@ -513,19 +665,14 @@ public class RequestHandler {
 
         case "query_create":
             // Only does select FirstName from test_db where City = "MV"
-            let select_prop: PropertyExpression = args.get(name: "select_prop")!
+            let select_prop: SelectResult = args.get(name: "select_prop")!
             let from_prop: DatabaseSource = args.get(name: "from_prop")!
-            
-            //optional
-            let whr_key_prop: PropertyExpression = args.get(name: "whr_key_prop")!
-            let whr_val: String = args.get(name: "whr_val")!
+            let whr_key_prop: Expression = args.get(name: "whr_key_prop")!
 
             let query = Query
-                .select(SelectResult.expression(select_prop))
+                .select(select_prop)
                 .from(from_prop)
-                .where(
-                    whr_key_prop.equalTo(whr_val)
-                    )
+                .where(whr_key_prop)
             
             return query
             
@@ -543,7 +690,20 @@ public class RequestHandler {
             let key: String = args.get(name: "key")!
             
             return query_result.string(forKey: key)
+            
+        case "query_get_doc":
+            let database: Database = args.get(name: "database")!
+            let doc_id: String = args.get(name: "doc_id")!
 
+            let searchQuery = Query
+                .select(SelectResult.all())
+                .from(DataSource.database(database))
+                .where((Expression.meta().id).equalTo(doc_id))
+
+            for row in try searchQuery.run() {
+                return row.toDictionary()
+            }
+           
         default:
             throw RequestHandlerError.MethodNotFound(method)
         }
@@ -562,4 +722,19 @@ class MyDatabaseChangeListener  {
         return changes
     }
 }
+
+class MyReplicationChangeListener : NSObject  {
+    var repl_changes: [ReplicatorChange] = []
+    
+    var listenerToken: NSObjectProtocol?
+    
+    lazy var listener: (ReplicatorChange) -> Void = { (change: ReplicatorChange) in
+        self.repl_changes.append(change)
+    }
+    
+    public func getChanges() -> [ReplicatorChange] {
+        return repl_changes
+    }
+}
+
 
