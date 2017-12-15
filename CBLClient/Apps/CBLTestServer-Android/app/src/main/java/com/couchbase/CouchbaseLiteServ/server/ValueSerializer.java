@@ -19,7 +19,15 @@ public class ValueSerializer {
         } else if (value instanceof Integer) {
             Integer number = (Integer) value;
 
-            return number.toString();
+            return "I" + number.toString();
+        } else if (value instanceof Long) {
+            Long number = (Long) value;
+
+            return "L" + number.toString();
+        } else if (value instanceof Float) {
+            Float number = (Float) value;
+
+            return "F" + number.toString();
         } else if (value instanceof Map) {
             Map<String, Object> map = (Map<String, Object>)value;
             Map<String, String> stringMap = new HashMap<>();
@@ -62,7 +70,12 @@ public class ValueSerializer {
 
             for (Map.Entry<String, String> entry : stringMap.entrySet()) {
                 String key = entry.getKey();
-                String nestedVal = new Gson().toJson(entry.getValue());
+                String nestedVal;
+                if (entry.getValue() instanceof String){
+                    nestedVal = entry.getValue();
+                } else {
+                    nestedVal = new Gson().toJson(entry.getValue());
+                }
                 Object object = deserialize(nestedVal, memory);
 
                 map.put(key, object);
@@ -82,12 +95,17 @@ public class ValueSerializer {
             return (T)list;
         } else if (value.startsWith("\"") && value.endsWith("\"")) {
             return (T)value.substring(1, value.length() - 1);
-        } else {
-            if (value.contains(".")) {
-                return (T)new Double(value);
-            } else {
-                return (T)new Integer(value);
-            }
+        } else if (value.startsWith("I")){
+            return (T) new Integer(value.substring(1));
+        } else if (value.startsWith("L")){
+            return (T) new Long(value.substring(1));
+        } else if (value.startsWith("F")){
+            return (T) new Float(value.substring(1));
+        } else if (value.startsWith("D")){
+            return (T) new Double(value.substring(1));
+        }
+        else {
+            throw new IllegalArgumentException("Invalid value type" + (String) value);
         }
     }
 }

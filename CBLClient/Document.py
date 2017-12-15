@@ -57,7 +57,7 @@ class Document:
     def set(self, document, dictionary):
         args = Args()
         args.setMemoryPointer("document", document)
-        args.setMemoryPointer("dictionary", dictionary)
+        args.setDictionary("dictionary", dictionary)
         return self._client.invokeMethod("document_set", args)
 
     def getKeys(self, document):
@@ -93,7 +93,7 @@ class Document:
         args = Args()
         args.setMemoryPointer("document", document)
         args.setString("key", key)
-        args.setMemoryPointer("value", value)
+        args.setArray("value", value)
         return self._client.invokeMethod("document_setArray", args)
 
     def getBlob(self, document, key):
@@ -145,7 +145,7 @@ class Document:
         args = Args()
         args.setMemoryPointer("document", document)
         args.setString("key", key)
-        args.setMemoryPointer("value", value)
+        args.setDictionary("value", value)
         return self._client.invokeMethod("document_setDictionary", args)
 
     def getDouble(self, document, key):
@@ -171,7 +171,7 @@ class Document:
         args = Args()
         args.setMemoryPointer("document", document)
         args.setString("key", key)
-        args.setMemoryPointer("value", value)
+        args.setFloat("value", value)
         return self._client.invokeMethod("document_setFloat", args)
 
     def getLong(self, document, key):
@@ -184,7 +184,7 @@ class Document:
         args = Args()
         args.setMemoryPointer("document", document)
         args.setString("key", key)
-        args.setMemoryPointer("value", value)
+        args.setLong("value", value)
         return self._client.invokeMethod("document_setLong", args)
 
     def getObject(self, document, key):

@@ -6,7 +6,7 @@ from CBLClient.Document import Document
 from CodeWarrior.Standard_Suite import document
 
 #baseUrl = "http://172.16.1.154:8080"
-baseUrl = "http://192.168.1.4:8080"
+baseUrl = "http://192.168.43.236:8080"
 dbName = "foo"
 docIdPrefix = "bar"
 
@@ -70,7 +70,7 @@ class TestDatabase():
         random_string(6).capitalize(),
         random_string(6).upper(),
          ]) 
-    def test_database1(self, dbName):
+    def test_database(self, dbName):
         '''
         @summary: Testing Database constructor method of Database API
         '''

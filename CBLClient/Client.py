@@ -26,6 +26,8 @@ class Client(object):
                     val = ValueSerializer.serialize(v)
                     body[k] = val
 
+            log_info("body: {}".format(body))
+            log_info("URL: {}".format(url))
             # Create connection to method endpoint.
             headers = {"Content-Type": "application/json"}
             self.session.headers = headers

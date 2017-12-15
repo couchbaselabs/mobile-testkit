@@ -21,7 +21,6 @@ class Database:
     def create(self, name):
         args = Args()
         args.setString("name", name)
-        log_info(" name of the databse is ><<{}".format(name))
         self._db = self._client.invokeMethod("database_create", args)
         return self._db
 
@@ -106,7 +105,7 @@ class Database:
     def getCount(self, database):
         args = Args()
         args.setMemoryPointer("database", database)
-        return self._client.invokeMethod("database_docCount", args)
+        return self._client.invokeMethod("database_getCount", args)
 
     def addChangeListener(self, database):
         args = Args()
@@ -135,28 +134,17 @@ class Database:
         args.setMemoryPointer("change", change)
         return self._client.invokeMethod("database_databaseChange_getDocumentId", args)
 
-    def saveDocuments(self, database, documents):
-        args = Args()
-        args.setMemoryPointer("database", database)
-        args.setMemoryPointer("documents", documents)
-        return self._client.invokeMethod("database_saveDocuments", args)
-
     def getDocIds(self, database):
         args = Args()
         args.setMemoryPointer("database", database)
         return self._client.invokeMethod("database_getDocIds", args)
-
-    def getDocuments(self, database, ids):
-        args = Args()
-        args.setMemoryPointer("database", database)
-        args.setMemoryPointer("ids", ids)
-        return self._client.invokeMethod("database_getDocuments", args)
 
     def create_value_index(self, database, prop):
         args = Args()
         args.setMemoryPointer("database", database)
         args.setString("property", prop)
         return self._client.invokeMethod("create_value_index", args)
+
     def create_bulk_docs(self, number, id_prefix, db, channels=None, generator=None, attachments_generator=None):
         """
         if id_prefix == None, generate a uuid for each doc
