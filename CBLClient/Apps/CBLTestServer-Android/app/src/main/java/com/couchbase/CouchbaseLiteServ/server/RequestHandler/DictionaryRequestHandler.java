@@ -6,9 +6,9 @@ import com.couchbase.lite.Array;
 import com.couchbase.lite.Blob;
 import com.couchbase.lite.Database;
 import com.couchbase.lite.Dictionary;
-import com.couchbase.lite.Document;
 import com.couchbase.litecore.fleece.FLEncoder;
 
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -21,11 +21,15 @@ public class DictionaryRequestHandler{
     /* -------------- */
 
     public Dictionary create(Args args) {
+        Map<String, Object> dictionary = args.get("content_dict");
+        if (dictionary != null){
+            return new Dictionary(dictionary);
+        }
         return new Dictionary();
     }
 
     public int count(Args args){
-        Document dictionary = args.get("dictionary");
+        Dictionary dictionary = args.get("dictionary");
         return dictionary.count();
     }
 
@@ -59,7 +63,7 @@ public class DictionaryRequestHandler{
     public Object getObject(Args args){
         Dictionary dictionary = args.get("dictionary");
         String key = args.get("key");
-        return dictionary.getString(key);
+        return dictionary.getObject(key);
     }
 
     public Dictionary setObject(Args args){

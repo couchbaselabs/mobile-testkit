@@ -4,6 +4,7 @@ import com.couchbase.CouchbaseLiteServ.server.RequestHandler.DataTypesInitiatorH
 import com.couchbase.CouchbaseLiteServ.server.RequestHandler.DatabaseRequestHandler;
 import com.couchbase.CouchbaseLiteServ.server.RequestHandler.DictionaryRequestHandler;
 import com.couchbase.CouchbaseLiteServ.server.RequestHandler.DocumentRequestHandler;
+import com.google.gson.Gson;
 
 import org.nanohttpd.protocols.http.IHTTPSession;
 import org.nanohttpd.protocols.http.NanoHTTPD;
@@ -12,6 +13,8 @@ import org.nanohttpd.protocols.http.response.Response;
 import org.nanohttpd.protocols.http.response.Status;
 
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Method;
 import java.net.URLDecoder;
@@ -40,7 +43,7 @@ public class Server extends NanoHTTPD {
 
     public String queryParameterString;
 
-    private Memory memory = new Memory();
+    public static final Memory memory = new Memory();
 
     public Server(int port) throws IOException {
         super(port);
@@ -53,29 +56,26 @@ public class Server extends NanoHTTPD {
         String method = (path.startsWith("/") ? path.substring(1) : path);
         // Get args from query string.
         Map<String, String> rawArgs = new HashMap<>();
+
         Args args = new Args();
-        String query = session.getQueryParameterString();
-        if (query != null) {
-            for (String param : query.split("&")) {
-                String pair[] = param.split("=", 2);
-                String name = null;
-                try {
-                    name = URLDecoder.decode(pair[0], "UTF8");
-                } catch (UnsupportedEncodingException e) {
-                    e.printStackTrace();
-                }
+        try {
+            session.parseBody(rawArgs);
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (ResponseException e) {
+            e.printStackTrace();
+        }
+        Map<String, Object> query = new Gson().fromJson(rawArgs.get("postData"), Map.class);
+        if (query !=null){
+            for (String key : query.keySet()){
+                String param_value = (String) query.get(key);
                 String value = null;
                 try {
-                    value = URLDecoder.decode(pair.length > 1 ? pair[1] : null, "UTF8");
+                    value = URLDecoder.decode( param_value, "UTF8");
                 } catch (UnsupportedEncodingException e) {
                     e.printStackTrace();
                 }
-
-                if (value != null) {
-                    rawArgs.put(name, value);
-                }
-
-                args.put(name, ValueSerializer.deserialize(value, memory));
+                args.put(key, ValueSerializer.deserialize(value, memory));
             }
         }
 
@@ -116,12 +116,16 @@ public class Server extends NanoHTTPD {
                 IStatus status = Status.OK;
                 return Response.newFixedLengthResponse(status, "text/plain", body.getBytes());
             } else {
-                return Response.newFixedLengthResponse(Status.OK, "text/plain", "-1");
+                return Response.newFixedLengthResponse(Status.OK, "text/plain", "I-1");
             }
         } catch (Exception e) {
             // TODO: How should we handle exceptions?
             e.printStackTrace(System.out);
-             return Response.newFixedLengthResponse(Status.BAD_REQUEST, "text/plain", "0");
+            StringWriter sw = new StringWriter();
+            PrintWriter pw = new PrintWriter(sw);
+            e.printStackTrace(pw);
+            String sStackTrace = sw.toString();
+            return Response.newFixedLengthResponse(Status.BAD_REQUEST, "text/plain", sStackTrace.getBytes());
         }
     }
 }

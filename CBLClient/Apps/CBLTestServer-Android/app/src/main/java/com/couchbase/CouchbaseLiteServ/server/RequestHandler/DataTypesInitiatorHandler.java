@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Date;
 import java.util.Map;
+import java.util.Set;
 
 import com.couchbase.CouchbaseLiteServ.server.Args;
 
@@ -31,8 +32,7 @@ public class DataTypesInitiatorHandler {
     public void put(Args args) {
         Map<String, Object> map = args.get("dictionary");
         String key = args.get("key");
-        String value = args.get("value");
-
+        Object value = args.get("value");
         map.put(key, value);
     }
 
@@ -63,6 +63,30 @@ public class DataTypesInitiatorHandler {
             return true;
         }
         return false;
+    }
+
+    public Boolean compareHashMap(Args args){
+        HashMap first = args.get("first");
+        HashMap second = args.get("second");
+        Set<String> firstKeys = first.keySet();
+        Set<String> secondKeys = second.keySet();
+        try{
+            for (String key : secondKeys)
+            {
+                if (!(String.valueOf(first.get(key))).equals(String.valueOf(second.get(key)))){
+                    return false;
+                }
+            }
+            for (String key : firstKeys)
+            {
+                if (!second.containsKey(key)) {
+                    return false;
+                }
+            }
+        } catch (NullPointerException np) {
+            return false;
+        }
+        return true;
     }
 }
 

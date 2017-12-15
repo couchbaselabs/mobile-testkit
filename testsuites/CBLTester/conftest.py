@@ -1,5 +1,4 @@
 import pytest
-import datetime
 import time
 
 from keywords.utils import log_info
@@ -7,11 +6,9 @@ from utilities.cluster_config_utils import persist_cluster_config_environment_pr
 from keywords.ClusterKeywords import ClusterKeywords
 from keywords.couchbaseserver import CouchbaseServer
 from keywords.constants import CLUSTER_CONFIGS_DIR
-from keywords.SyncGateway import (sync_gateway_config_path_for_mode,
-                                  validate_sync_gateway_mode)
-from keywords.exceptions import ProvisioningError, FeatureSupportedError
+from keywords.SyncGateway import sync_gateway_config_path_for_mode
+from keywords.exceptions import ProvisioningError
 from keywords.tklogging import Logging
-from keywords.exceptions import RBACUserDeletionError
 from CBLClient.Replication import Replication
 from CBLClient.Database import Database
 from keywords.utils import host_for_url
@@ -109,7 +106,7 @@ def params_from_base_suite_setup(request):
     sg_config = sync_gateway_config_path_for_mode("sync_gateway_travel_sample", mode)
     cluster_utils = ClusterKeywords()
     cluster_topology = cluster_utils.get_cluster_topology(cluster_config)
-
+    
     if not skip_provisioning:
         log_info("Installing Sync Gateway + Couchbase Server + Accels ('di' only)")
 
@@ -155,11 +152,11 @@ def params_from_base_suite_setup(request):
     # Start continuous replication
     replicator = Replication(base_url)
     log_info("Configuring replication")
-    #repl = replicator.configure_replication(source_db, target_url)
-    #log_info("Starting replication")
-    #replicator.start_replication(repl)
+    repl = replicator.configure(source_db, target_url)
+    log_info("Starting replication")
+    replicator.start(repl)
     # Wait for replication to complete
-    # time.sleep(120)
+    time.sleep(120)
 
     yield {
         "cluster_config": cluster_config,
@@ -178,14 +175,13 @@ def params_from_base_suite_setup(request):
     }
 
     log_info("Stopping replication")
-    #replicator.stop_replication(repl)
+    replicator.stop_replication(repl)
 
 
 @pytest.fixture(scope="function")
 def params_from_base_test_setup(request, params_from_base_suite_setup):
     cluster_config = params_from_base_suite_setup["cluster_config"]
     xattrs_enabled = params_from_base_suite_setup["xattrs_enabled"]
-    liteserv_platform = params_from_base_suite_setup["liteserv_platform"]
     liteserv_host = params_from_base_suite_setup["liteserv_host"]
     liteserv_port = params_from_base_suite_setup["liteserv_port"]
     test_name = request.node.name
@@ -196,6 +192,10 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     sg_db = params_from_base_suite_setup["sg_db"]
     source_db = params_from_base_suite_setup["source_db"]
     cbl_db = params_from_base_suite_setup["cbl_db"]
+    cluster_helper = ClusterKeywords()
+    cluster_hosts = cluster_helper.get_cluster_topology(cluster_config=cluster_config)
+    sg_url = cluster_hosts["sync_gateways"][0]["public"]
+    sg_admin_url = cluster_hosts["sync_gateways"][0]["admin"]
 
     log_info("Running test '{}'".format(test_name))
     log_info("cluster_config: {}".format(cluster_config))
@@ -208,6 +208,8 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         "cluster_config": cluster_config,
         "cluster_topology": cluster_topology,
         "mode": mode,
+        "sg_url": sg_url,
+        "sg_admin_url": sg_admin_url,
         "xattrs_enabled": xattrs_enabled,
         "liteserv_host": liteserv_host,
         "liteserv_port": liteserv_port,

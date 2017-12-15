@@ -28,12 +28,14 @@ class LiteServiOS(LiteServBase):
         self.logfile_name = None
         self.device_id = None
 
-    def download(self):
+    def download(self, version_build=None):
         """
         1. Check to see if package is downloaded already. If so, return
         2. Download the LiteServ package from latest builds to 'deps/binaries'
         3. Unzip the packages and make the binary executable
         """
+        if version_build is not None:
+            self.version_build = version_build
         version, build = version_and_build(self.version_build)
 
         package_name = "LiteServ-iOS.zip"
@@ -121,33 +123,35 @@ class LiteServiOS(LiteServBase):
         ])
 
         log_info(output)
+        list_output = subprocess.Popen(["xcrun", "simctl", "list"], stdout=subprocess.PIPE)
+        output = subprocess.check_output(('grep', 'Booted'), stdin=list_output.stdout)
+        if len(output.splitlines()) > 0:
+            # Wait for the device to boot up
+            # We check the status of the simulator using the command
+            # xcrun simctl spawn booted launchctl print system | grep com.apple.springboard.services
+            # If the simulator is still coming up, the output will say
+            # 0x1d407    M   D   com.apple.springboard.services
+            # If the simulator has booted up completely, it will say
+            # 0x1e007    M   A   com.apple.springboard.services
+            # We check if the third field is A
+            start = time.time()
+            while True:
+                if time.time() - start > CLIENT_REQUEST_TIMEOUT:
+                    raise LiteServError("iPhone Simulator failed to start")
 
-        # Wait for the device to boot up
-        # We check the status of the simulator using the command
-        # xcrun simctl spawn booted launchctl print system | grep com.apple.springboard.services
-        # If the simulator is still coming up, the output will say
-        # 0x1d407    M   D   com.apple.springboard.services
-        # If the simulator has booted up completely, it will say
-        # 0x1e007    M   A   com.apple.springboard.services
-        # We check if the third field is A
-        start = time.time()
-        while True:
-            if time.time() - start > CLIENT_REQUEST_TIMEOUT:
-                raise LiteServError("iPhone Simulator failed to start")
-
-            output = subprocess.Popen([
-                "xcrun", "simctl", "spawn", "booted", "launchctl", "print", "system"
-            ], stdout=subprocess.PIPE)
-            output = subprocess.check_output(('grep', 'com.apple.springboard.services'), stdin=output.stdout)
-            output = re.sub(' +', ' ', output).strip()
-            status = output.split(" ")[2]
-            if status == "A":
-                log_info("iPhone Simulator seems to have booted up")
-                break
-            else:
-                log_info("Waiting for the iPhone Simulator to boot up")
-                time.sleep(1)
-                continue
+                output = subprocess.Popen([
+                    "xcrun", "simctl", "spawn", "booted", "launchctl", "print", "system"
+                ], stdout=subprocess.PIPE)
+                output = subprocess.check_output(('grep', 'com.apple.springboard.services'), stdin=output.stdout)
+                output = re.sub(' +', ' ', output).strip()
+                status = output.split(" ")[2]
+                if status == "A":
+                    log_info("iPhone Simulator seems to have booted up")
+                    break
+                else:
+                    log_info("Waiting for the iPhone Simulator to boot up")
+                    time.sleep(1)
+                    continue
 
         # Get the device ID
         list_output = subprocess.Popen(["xcrun", "simctl", "list"], stdout=subprocess.PIPE)

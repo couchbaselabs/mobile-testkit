@@ -10,12 +10,12 @@
   ignore_errors: yes
 
 # Remove sync_gateway package
-- name: SYNC GATEWAY | Uninstall sync_gateway rpm
+- name: SYNC GATEWAY | Uninstall sync_gateway rpm  
   shell: rpm -e couchbase-sync-gateway
   ignore_errors: yes
 
 # Remove sync_gateway service
-- name: SYNC GATEWAY | Remove sync_gateway service
+- name: SYNC GATEWAY | Remove sync_gateway service 
   file: path=/usr/lib/systemd/system/sync_gateway.service state=absent
   ignore_errors: yes
 

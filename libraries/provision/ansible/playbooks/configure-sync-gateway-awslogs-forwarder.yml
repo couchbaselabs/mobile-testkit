@@ -1,23 +1,29 @@
 - hosts: sync_gateways
-  become: yes
 
   tasks:
   - name: SYNC GATEWAY | upload default awslogs config
+    become: yes
     copy: src=files/awslogs_sync_gateway.conf dest=/var/awslogs/etc/awslogs.conf
     ignore_errors: yes
+    when: ansible_distribution == "CentOS"
 
   - name: SYNC GATEWAY | restart awslogs service
+    become: yes
     shell: service awslogs restart
     ignore_errors: yes
+    when: ansible_distribution == "CentOS"
 
 - hosts: sg_accels
-  become: yes
 
   tasks:
   - name: SG ACCEL | upload default awslogs config
+    become: yes
     copy: src=files/awslogs_sg_accel.conf dest=/var/awslogs/etc/awslogs.conf
     ignore_errors: yes
+    when: ansible_distribution == "CentOS"
 
   - name: SG ACCEL | restart awslogs service
+    become: yes
     shell: service awslogs restart
     ignore_errors: yes
+    when: ansible_distribution == "CentOS"

@@ -2,3 +2,10 @@
   win_template:
     src: "{{ sync_gateway_config_filepath }}"
     dest: 'C:\PROGRA~2\Couchbase\serviceconfig.json'
+
+- name: SYNC GATEWAY | Check deployed config
+  win_shell: type C:\PROGRA~2\Couchbase\serviceconfig.json
+  register: out
+
+- name: SYNC GATEWAY | Print deployed config
+  debug: var=out.stdout

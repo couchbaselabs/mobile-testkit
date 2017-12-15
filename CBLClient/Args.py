@@ -8,7 +8,7 @@ class Args:
         self._args[name] = memoryPointer
 
     def setString(self, name, string):
-        self._args[name] = string
+        self._args[name] = str(string)
 
     def setInt(self, name, integer):
         self._args[name] = integer

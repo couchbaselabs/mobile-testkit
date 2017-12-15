@@ -51,7 +51,7 @@ def test_replication():
     # SG URL
     sg_db = "db"
     cbl_db = "test_db"
-    sg_ip = "192.168.33.23"
+    sg_ip = "192.168.33.11"
     target_url = "blip://{}:4985/{}".format(sg_ip, sg_db)
     sg_admin_url = "http://{}:4985".format(sg_ip)
 
