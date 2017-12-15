@@ -113,3 +113,21 @@ class Query:
         args.setString("doc_id", doc_id)
 
         return self._client.invokeMethod("query_get_doc", args)
+
+    def query_get_docs_limit_offset(self, database, limit, offset):
+        args = Args()
+        args.setMemoryPointer("database", database)
+        args.setInt("limit", limit)
+        args.setInt("offset", offset)
+
+        return self._client.invokeMethod("query_get_docs_limit_offset", args)
+
+    def query_multiple_selects(self, database, select_property1, select_property2, whr_key, whr_val):
+        args = Args()
+        args.setMemoryPointer("database", database)
+        args.setString("select_property1", select_property1)
+        args.setString("select_property2", select_property2)
+        args.setString("whr_key", whr_key)
+        args.setString("whr_val", whr_val)
+
+        return self._client.invokeMethod("query_multiple_selects", args)

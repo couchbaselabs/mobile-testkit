@@ -12,6 +12,9 @@ from keywords.SyncGateway import (sync_gateway_config_path_for_mode,
 from keywords.exceptions import ProvisioningError, FeatureSupportedError
 from keywords.tklogging import Logging
 from keywords.exceptions import RBACUserDeletionError
+from CBLClient.Replication import Replication
+from CBLClient.Database import Database
+from keywords.utils import host_for_url
 
 
 def pytest_addoption(parser):
@@ -135,6 +138,29 @@ def params_from_base_suite_setup(request):
             # Sleep for a while for SG to import all docs
             time.sleep(120)
 
+    # Create CBL database
+    cbl_db = "test_db"
+    db = Database(base_url)
+    sg_db = "db"
+    sg_url = cluster_topology["sync_gateways"][0]["public"]
+    sg_ip = host_for_url(sg_url)
+    target_url = "blip://{}:4985/{}".format(sg_ip, sg_db)
+
+    log_info("Creating a Database {}".format(cbl_db))
+    source_db = db.create(cbl_db)
+    log_info("Getting the database name")
+    db_name = db.getName(source_db)
+    assert db_name == "test_db"
+
+    # Start continuous replication
+    replicator = Replication(base_url)
+    log_info("Configuring replication")
+    #repl = replicator.configure_replication(source_db, target_url)
+    #log_info("Starting replication")
+    #replicator.start_replication(repl)
+    # Wait for replication to complete
+    # time.sleep(120)
+
     yield {
         "cluster_config": cluster_config,
         "mode": mode,
@@ -143,8 +169,16 @@ def params_from_base_suite_setup(request):
         "cluster_topology": cluster_topology,
         "liteserv_version": liteserv_version,
         "liteserv_host": liteserv_host,
-        "liteserv_port": liteserv_port
+        "liteserv_port": liteserv_port,
+        "target_url": target_url,
+        "sg_ip": sg_ip,
+        "sg_db": sg_db,
+        "source_db": source_db,
+        "cbl_db": cbl_db
     }
+
+    log_info("Stopping replication")
+    #replicator.stop_replication(repl)
 
 
 @pytest.fixture(scope="function")
@@ -157,6 +191,11 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     test_name = request.node.name
     cluster_topology = params_from_base_suite_setup["cluster_topology"]
     mode = params_from_base_suite_setup["mode"]
+    target_url = params_from_base_suite_setup["target_url"]
+    sg_ip = params_from_base_suite_setup["sg_ip"]
+    sg_db = params_from_base_suite_setup["sg_db"]
+    source_db = params_from_base_suite_setup["source_db"]
+    cbl_db = params_from_base_suite_setup["cbl_db"]
 
     log_info("Running test '{}'".format(test_name))
     log_info("cluster_config: {}".format(cluster_config))
@@ -171,5 +210,10 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         "mode": mode,
         "xattrs_enabled": xattrs_enabled,
         "liteserv_host": liteserv_host,
-        "liteserv_port": liteserv_port
+        "liteserv_port": liteserv_port,
+        "target_url": target_url,
+        "sg_ip": sg_ip,
+        "sg_db": sg_db,
+        "source_db": source_db,
+        "cbl_db": cbl_db
     }

@@ -735,4 +735,4 @@ class CouchbaseServer:
     def load_sample_bucket(self, sample_bucket):
         """ Loads a given sample bucket """
         log_info("Enabling sample bucket {}".format(sample_bucket))
-        self.remote_executor.must_execute('sudo /opt/couchbase/bin/cbdocloader -c localhost:8091 -u Administrator -p password -b travel-sample -m 100 -d /opt/couchbase/samples/{}.zip'.format(sample_bucket))
+        self.remote_executor.must_execute('sudo /opt/couchbase/bin/cbdocloader -c localhost:8091 -u Administrator -p password -b {} -m 100 -d /opt/couchbase/samples/{}.zip'.format(sample_bucket, sample_bucket))

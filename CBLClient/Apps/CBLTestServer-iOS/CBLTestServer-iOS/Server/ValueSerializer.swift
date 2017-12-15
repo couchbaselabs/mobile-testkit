@@ -12,6 +12,8 @@ public class ValueSerializer {
     public static func serialize(value: Any?, memory: Memory) -> Any {
         if value == nil {
             return "null"
+        } else if ((value as? NSNull) != nil) {
+            return "null"
         } else if (value is String) {
             let string = value as? String
             return "\"" + string! + "\""

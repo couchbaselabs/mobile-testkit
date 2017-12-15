@@ -60,7 +60,7 @@ class ValueSerializer:
             return int(value[1:])
         elif value.startswith("L"):
             return long(value[1:])
-        elif value.startswith("F"):
+        elif value.startswith("F") or value.startswith("D"):
             return float(value[1:])
         elif value.startswith("#"):
             if "." in value:

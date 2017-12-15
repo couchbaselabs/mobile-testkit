@@ -576,6 +576,47 @@ public class RequestHandler {
             for row in try searchQuery.run() {
                 return row.toDictionary()
             }
+            
+        case "query_get_docs_limit_offset":
+            let database: Database = args.get(name: "database")!
+            let limit: Int = args.get(name: "limit")!
+            let offset: Int = args.get(name: "offset")!
+            
+            let searchQuery = Query
+                .select(SelectResult.all())
+                .from(DataSource.database(database))
+                .limit(limit,offset: offset)
+            
+            var resultArray = [Any]()
+
+            for row in try searchQuery.run() {
+                resultArray.append(row.toDictionary())
+            }
+            
+            return resultArray
+            
+        case "query_multiple_selects":
+            let database: Database = args.get(name: "database")!
+            let select_property1: String = args.get(name: "select_property1")!
+            let select_property2: String = args.get(name: "select_property2")!
+            let whr_key: String = args.get(name: "whr_key")!
+            let whr_val: String = args.get(name: "whr_val")!
+
+            let searchQuery = Query
+                .select(SelectResult.expression(Expression.meta().id),
+                        SelectResult.expression(Expression.property(select_property1)),
+                        SelectResult.expression(Expression.property(select_property2)))
+                .from(DataSource.database(database))
+                .where((Expression.property(whr_key)).equalTo(whr_val))
+            
+            var resultArray = [Any]()
+            
+            for row in try searchQuery.run() {
+                resultArray.append(row.toDictionary())
+            }
+            
+            print ("resultArray is \(resultArray)")
+            return resultArray
            
         default:
             throw RequestHandlerError.MethodNotFound(method)
