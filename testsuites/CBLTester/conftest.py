@@ -106,7 +106,7 @@ def params_from_base_suite_setup(request):
     sg_config = sync_gateway_config_path_for_mode("sync_gateway_travel_sample", mode)
     cluster_utils = ClusterKeywords()
     cluster_topology = cluster_utils.get_cluster_topology(cluster_config)
-
+    
     if not skip_provisioning:
         log_info("Installing Sync Gateway + Couchbase Server + Accels ('di' only)")
 
@@ -157,6 +157,10 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     test_name = request.node.name
     cluster_topology = params_from_base_suite_setup["cluster_topology"]
     mode = params_from_base_suite_setup["mode"]
+    cluster_helper = ClusterKeywords()
+    cluster_hosts = cluster_helper.get_cluster_topology(cluster_config=cluster_config)
+    sg_url = cluster_hosts["sync_gateways"][0]["public"]
+    sg_admin_url = cluster_hosts["sync_gateways"][0]["admin"]
 
     log_info("Running test '{}'".format(test_name))
     log_info("cluster_config: {}".format(cluster_config))
@@ -169,6 +173,8 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         "cluster_config": cluster_config,
         "cluster_topology": cluster_topology,
         "mode": mode,
+        "sg_url": sg_url,
+        "sg_admin_url": sg_admin_url,
         "xattrs_enabled": xattrs_enabled,
         "liteserv_host": liteserv_host,
         "liteserv_port": liteserv_port

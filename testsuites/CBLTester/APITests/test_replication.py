@@ -308,7 +308,7 @@ def test_replication_push_replication_without_authentication(setup_client_syncga
         ('session', None, None, 'invalid_session', 'invalid_cookie'),
     ]
 )
-def test_replication_push_replication_invalid_authentication(setup_client_syncgateway_test, replicator_authenticator,
+def test_replication_push_replication_invalid_authentication(params_from_base_test_setup, replicator_authenticator,
                                                              invalid_username, invalid_password, invalid_session, invalid_cookie):
     """
         @summary: 
@@ -323,14 +323,14 @@ def test_replication_push_replication_invalid_authentication(setup_client_syncga
     db = Database(base_url)
     cbl_db_name = "cbl_db"
 
-    sg_url = setup_client_syncgateway_test["sg_url"]
-    sg_admin_url = setup_client_syncgateway_test["sg_admin_url"]
+    sg_url = params_from_base_test_setup["sg_url"]
+    sg_admin_url = params_from_base_test_setup["sg_admin_url"]
     sg_blip_url = sg_url.replace("http", "blip")
     sg_blip_url = "{}/db".format(sg_blip_url)
     channels = ["ABC"]
 
-    sg_mode = setup_client_syncgateway_test["sg_mode"]
-    cluster_config = setup_client_syncgateway_test["cluster_config"]
+    sg_mode = params_from_base_test_setup["mode"]
+    cluster_config = params_from_base_test_setup["cluster_config"]
     # Create CBL database
     cbl_db = db.create(cbl_db_name)
 
