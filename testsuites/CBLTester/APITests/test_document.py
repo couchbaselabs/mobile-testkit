@@ -5,9 +5,10 @@ from CBLClient.Document import Document
 from CBLClient.Dictionary import Dictionary
 from CBLClient.DataTypeInitiator import DataTypeInitiator
 from keywords.utils import random_string
+from StdSuites.AppleScript_Suite import result
 
 #baseUrl = "http://172.16.1.154:8080"
-baseUrl = "http://192.168.0.106:8080"
+baseUrl = "http://192.168.43.236:8080"
 
 class TestDocument():
 
@@ -69,7 +70,7 @@ class TestDocument():
         9,
         99,
         999,
-        #9999
+        9999
         ])
     def test_count(self, num_of_keys):
         '''
@@ -111,38 +112,42 @@ class TestDocument():
         value = 1
         hashmap[key] = value
         self.doc_obj.setInt(doc, key, value)
-        key = "Double_key"
-        value = self.datatype.setDouble('2.0')
-        hashmap[key] = 2.0
-        self.doc_obj.setDouble(doc, key, value)
+        key = "Long_key"
+        value = long(random.randint(10,10000))
+        hashmap[key] = value
+        self.doc_obj.setLong(doc, key, value)
+        #key = "Double_key"
+        #value = self.datatype.setDouble('2.0')
+        #hashmap[key] = 2.0
+        #self.doc_obj.setDouble(doc, key, value)
         key = "Float_key"
-        value = self.datatype.setFloat('3.0')
-        hashmap[key] = 3.0
+        value = 3.0
+        hashmap[key] = value
         self.doc_obj.setFloat(doc, key, value)
-        assert self.datatype.compareHashMap(hashmap,
-                                            self.doc_obj.toMap(doc))
+        result_map = self.doc_obj.toMap(doc)
+        assert hashmap == result_map
 
     def test_set(self):
         '''
         @summary: Testing set method of Document API
         '''
         doc = self.doc_obj.create()
-        hashmap = self.datatype.hashMap()
+        hashmap = {}
         key = "string_key"
         value = "Test String"
-        self.datatype.put(hashmap, key, value)
+        hashmap[key] = value
         key = "Integer_key"
         value = 1
-        self.datatype.put(hashmap, key, value)
-        key = "Double_key"
-        value = self.datatype.setDouble('2.0')
-        self.datatype.put(hashmap, key, '2.0')
+        hashmap[key] = value
+        key = "Long_key"
+        value = long(random.randint(10,10000))
+        hashmap[key] = value
         key = "Float_key"
-        value = self.datatype.setFloat('3.0')
-        self.datatype.put(hashmap, key, '3.0')
+        value = 3.0
+        hashmap[key] = value
         self.doc_obj.set(doc, hashmap)
-        assert self.datatype.compareHashMap(hashmap,
-                                            self.doc_obj.toMap(doc))
+        result_map = self.doc_obj.toMap(doc)
+        assert hashmap == result_map
 
     def test_getKeys(self):
         '''
@@ -161,12 +166,12 @@ class TestDocument():
         value = 1
         result_list.append(key)
         self.doc_obj.setInt(doc, key, value)
-        key = "Double_key"
-        value = self.datatype.setDouble('2.0')
+        key = "Long_key"
+        value = long(random.randint(10,10000))
         result_list.append(key)
-        self.doc_obj.setDouble(doc, key, value)
+        self.doc_obj.setLong(doc, key, value)
         key = "Float_key"
-        value = self.datatype.setFloat('3.0')
+        value = random.uniform(1, 10)
         result_list.append(key)
         self.doc_obj.setFloat(doc, key, value)
         result_list.sort()

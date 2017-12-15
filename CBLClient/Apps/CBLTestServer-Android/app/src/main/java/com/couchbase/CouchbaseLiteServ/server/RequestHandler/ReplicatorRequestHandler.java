@@ -77,6 +77,16 @@ public class ReplicatorRequestHandler {
         Replicator replicator = args.get("replicator");
         replicator.stop();
     }
+
+    public Replicator replicatorChange_getReplicator(Args args){
+        ReplicatorChange change = args.get("change");
+        return change.getReplicator();
+    }
+
+    public Replicator.Status replicatorChange_getStatus(Args args){
+        ReplicatorChange change = args.get("change");
+        return change.getStatus();
+    }
 }
 
 class MyReplicatorListener implements ReplicatorChangeListener{

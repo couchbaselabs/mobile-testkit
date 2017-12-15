@@ -13,6 +13,8 @@ import org.nanohttpd.protocols.http.response.Response;
 import org.nanohttpd.protocols.http.response.Status;
 
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Method;
 import java.net.URLDecoder;
@@ -41,7 +43,7 @@ public class Server extends NanoHTTPD {
 
     public String queryParameterString;
 
-    private final Memory memory = new Memory();
+    public static final Memory memory = new Memory();
 
     public Server(int port) throws IOException {
         super(port);
@@ -114,12 +116,16 @@ public class Server extends NanoHTTPD {
                 IStatus status = Status.OK;
                 return Response.newFixedLengthResponse(status, "text/plain", body.getBytes());
             } else {
-                return Response.newFixedLengthResponse(Status.OK, "text/plain", "-1");
+                return Response.newFixedLengthResponse(Status.OK, "text/plain", "I-1");
             }
         } catch (Exception e) {
             // TODO: How should we handle exceptions?
             e.printStackTrace(System.out);
-             return Response.newFixedLengthResponse(Status.BAD_REQUEST, "text/plain", "0");
+            StringWriter sw = new StringWriter();
+            PrintWriter pw = new PrintWriter(sw);
+            e.printStackTrace(pw);
+            String sStackTrace = sw.toString();
+            return Response.newFixedLengthResponse(Status.BAD_REQUEST, "text/plain", sStackTrace.getBytes());
         }
     }
 }

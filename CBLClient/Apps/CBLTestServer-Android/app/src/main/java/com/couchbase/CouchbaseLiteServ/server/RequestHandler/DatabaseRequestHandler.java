@@ -166,6 +166,11 @@ public class DatabaseRequestHandler {
         return changeListener.getChanges().get(index);
     }
 
+    public Database databaseChange_getDatabase(Args args){
+        DatabaseChange change = args.get("change");
+        return change.getDatabase();
+    }
+
     public List<String> databaseChange_getDocumentId(Args args) {
         DatabaseChange change = args.get("change");
         return change.getDocumentIDs();

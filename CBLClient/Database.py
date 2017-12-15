@@ -21,15 +21,15 @@ class Database:
     def create(self, name):
         args = Args()
         args.setString("name", name)
-        log_info(" name of the databse is ><<{}".format(name))
         self._db = self._client.invokeMethod("database_create", args)
         return self._db
 
     def delete(self, name=None, path=None, database=None, document=None):
         args = Args()
-        if document and database:
+        if database:
             args.setMemoryPointer("database", database)
-            args.setMemoryPointer("document", document)
+            if document != None:
+                args.setMemoryPointer("document", document)
         elif name and path:
             args.setString("name", name)
             args.setString("path", path)
@@ -41,7 +41,8 @@ class Database:
     def purge(self, database, document):
         args = Args()
         args.setMemoryPointer("database", database)
-        args.setMemoryPointer("document", document)
+        if document != None:
+            args.setMemoryPointer("document", document)
         return self._client.invokeMethod("database_purge", args)
 
     def deleteDB(self, database):
@@ -69,10 +70,11 @@ class Database:
         args.setMemoryPointer("database", database)
         return self._client.invokeMethod("database_getPath", args)
 
-    def getDocument(self, database, doc_id):
+    def getDocument(self, database, doc_id=None):
         args = Args()
         args.setMemoryPointer("database", database)
-        args.setString("id", doc_id)
+        if doc_id != None:
+            args.setString("id", doc_id)
         return self._client.invokeMethod("database_getDocument", args)
 
     def getDocuments(self, database, ids):
@@ -84,14 +86,15 @@ class Database:
     def saveDocument(self, database, document):
         args = Args()
         args.setMemoryPointer("database", database)
-        args.setMemoryPointer("document", document)
-        self._client.invokeMethod("database_saveDocument", args)
+        if document != None:
+            args.setMemoryPointer("document", document)
+        return self._client.invokeMethod("database_saveDocument", args)
 
     def saveDocuments(self, database, documents):
         args = Args()
         args.setMemoryPointer("database", database)
         args.setDictionary("documents", documents)
-        self._client.invokeMethod("database_saveDocuments", args)
+        return self._client.invokeMethod("database_saveDocuments", args)
 
     def contains(self, database, doc_id):
         args = Args()
@@ -102,7 +105,7 @@ class Database:
     def getCount(self, database):
         args = Args()
         args.setMemoryPointer("database", database)
-        return self._client.invokeMethod("database_docCount", args)
+        return self._client.invokeMethod("database_getCount", args)
 
     def addChangeListener(self, database):
         args = Args()
@@ -113,7 +116,7 @@ class Database:
         args = Args()
         args.setMemoryPointer("database", database)
         args.setMemoryPointer("changeListener", changeListener)
-        self._client.invokeMethod("database_removeChangeListener", args)
+        return self._client.invokeMethod("database_removeChangeListener", args)
 
     def databaseChangeListener_changesCount(self, changeListener):
         args = Args()
@@ -131,28 +134,17 @@ class Database:
         args.setMemoryPointer("change", change)
         return self._client.invokeMethod("database_databaseChange_getDocumentId", args)
 
-    def saveDocuments(self, database, documents):
-        args = Args()
-        args.setMemoryPointer("database", database)
-        args.setMemoryPointer("documents", documents)
-        return self._client.invokeMethod("database_saveDocuments", args)
-
     def getDocIds(self, database):
         args = Args()
         args.setMemoryPointer("database", database)
         return self._client.invokeMethod("database_getDocIds", args)
-
-    def getDocuments(self, database, ids):
-        args = Args()
-        args.setMemoryPointer("database", database)
-        args.setMemoryPointer("ids", ids)
-        return self._client.invokeMethod("database_getDocuments", args)
 
     def create_value_index(self, database, prop):
         args = Args()
         args.setMemoryPointer("database", database)
         args.setString("property", prop)
         return self._client.invokeMethod("create_value_index", args)
+
     def create_bulk_docs(self, number, id_prefix, db, channels=None, generator=None, attachments_generator=None):
         """
         if id_prefix == None, generate a uuid for each doc

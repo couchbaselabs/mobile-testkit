@@ -6,9 +6,7 @@ from CBLClient.Dictionary import Dictionary
 from CBLClient.DataTypeInitiator import DataTypeInitiator
 
 #baseUrl = "http://172.16.1.154:8080"
-baseUrl = "http://192.168.0.106:8080"
-dbName = "foo"
-docIdPrefix = "bar"
+baseUrl = "http://192.168.43.236:8080"
 
 class TestDictionary():
 

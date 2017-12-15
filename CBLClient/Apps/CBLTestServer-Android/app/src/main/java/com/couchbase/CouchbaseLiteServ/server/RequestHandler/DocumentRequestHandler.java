@@ -12,7 +12,6 @@ import com.couchbase.lite.Array;
 import java.util.List;
 import java.util.Map;
 import java.util.Date;
-import java.util.Collections;
 
 public class DocumentRequestHandler{
     /* ------------ */
@@ -246,6 +245,16 @@ public class DocumentRequestHandler{
         Document document = args.get("document");
         String key = args.get("key");
         return document.contains(key);
+    }
+
+    public String documentChange_getDocumentId(Args args){
+        DocumentChange change = args.get("change");
+        return change.getDocumentID();
+    }
+
+    public String documentChange_toString(Args args){
+        DocumentChange change = args.get("change");
+        return change.toString();
     }
 }
 
