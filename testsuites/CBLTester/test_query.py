@@ -125,24 +125,6 @@ def test_get_docs_with_limit_offset(params_from_base_test_setup):
 
     assert len(docs_from_cbl) == limit
 
-    for i in docs_from_cbl:
-        log_info("doc: {}".format(i))
-
-    # Get doc from n1ql through query
-    log_info("Fetching docs from server through n1ql")
-    bucket_name = "travel-sample"
-    sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password')
-    n1ql_query = 'select * from `{}` where meta().id  not like "_sync%" limit {} offset {}'.format(bucket_name, limit, offset)
-    query = N1QLQuery(n1ql_query)
-    docs_from_n1ql = []
-
-    for row in sdk_client.n1ql_query(query):
-        docs_from_n1ql.append(row[bucket_name])
-
-    # TODO compare docs
-    # null gets returned as <null>
-    assert len(docs_from_cbl) == len(docs_from_n1ql)
-
 
 def test_multiple_selects(params_from_base_test_setup):
     """ @summary
@@ -161,7 +143,6 @@ def test_multiple_selects(params_from_base_test_setup):
     liteserv_port = params_from_base_test_setup["liteserv_port"]
     cluster_topology = params_from_base_test_setup["cluster_topology"]
     source_db = params_from_base_test_setup["source_db"]
-    cbl_db = params_from_base_test_setup["cbl_db"]
     cbs_url = cluster_topology['couchbase_servers'][0]
     base_url = "http://{}:{}".format(liteserv_host, liteserv_port)
     cbs_ip = host_for_url(cbs_url)
@@ -178,8 +159,6 @@ def test_multiple_selects(params_from_base_test_setup):
     for docs in result_set:
         docs_from_cbl.append(docs)
 
-    log_info("docs_from_cbl: {}".format(docs_from_cbl))
-
     # Get doc from n1ql through query
     log_info("Fetching docs from server through n1ql")
     bucket_name = "travel-sample"
@@ -191,7 +170,75 @@ def test_multiple_selects(params_from_base_test_setup):
     for row in sdk_client.n1ql_query(query):
         docs_from_n1ql.append(row)
 
-    # TODO compare docs
-    # null gets returned as <null>
+    assert len(docs_from_cbl) == len(docs_from_n1ql)
+    # assert docs_from_cbl == docs_from_n1ql
+    # Commented for https://github.com/couchbase/couchbase-lite-ios/issues/1982
+
+
+def test_query_where_and_or(params_from_base_test_setup):
+    """ @summary
+    Fetches docs with where an/or clause
+
+    let searchQuery = Query
+       .select(SelectResult.expression(Expression.meta().id))
+       .from(DataSource.database(db))
+       .where(Expression.property("type").equalTo("hotel")
+           .and(Expression.property("country").equalTo("United States")
+               .or(Expression.property("country").equalTo("France")))
+               .and(Expression.property("vacancy").equalTo(true)))
+
+    Verifies with n1ql - select meta().id from `travel-sample` t where t.type="hotel" and (t.country="United States" or t.country="France") and t.vacancy=true
+    """
+    liteserv_host = params_from_base_test_setup["liteserv_host"]
+    liteserv_port = params_from_base_test_setup["liteserv_port"]
+    cluster_topology = params_from_base_test_setup["cluster_topology"]
+    source_db = params_from_base_test_setup["source_db"]
+    cbs_url = cluster_topology['couchbase_servers'][0]
+    base_url = "http://{}:{}".format(liteserv_host, liteserv_port)
+    cbs_ip = host_for_url(cbs_url)
+
+    log_info("Fetching docs from CBL through query")
+    qy = Query(base_url)
+    whr_key1 = "type"
+    whr_val1 = "hotel"
+    whr_key2 = "country"
+    whr_val2 = "United States"
+    whr_key3 = "country"
+    whr_val3 = "France"
+    whr_key4 = "vacancy"
+    whr_val4 = True
+    result_set = qy.query_where_and_or(source_db, whr_key1, whr_val1, whr_key2, whr_val2, whr_key3, whr_val3, whr_key4, whr_val4)
+    docs_from_cbl = []
+
+    for docs in result_set:
+        docs_from_cbl.append(docs)
+
+     # Get doc from n1ql through query
+    log_info("Fetching docs from server through n1ql")
+    bucket_name = "travel-sample"
+    sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password')
+    n1ql_query = 'select meta().id from `{}` t where t.{}="{}" and (t.{}="{}" or t.{}="{}") and t.{}={}'.format(bucket_name, whr_key1, whr_val1, whr_key2, whr_val2, whr_key3, whr_val3, whr_key4, whr_val4)
+    query = N1QLQuery(n1ql_query)
+    docs_from_n1ql = []
+
+    for row in sdk_client.n1ql_query(query):
+        docs_from_n1ql.append(row)
 
     assert len(docs_from_cbl) == len(docs_from_n1ql)
+    assert sorted(docs_from_cbl) == sorted(docs_from_n1ql)
+
+
+def test_query_pattern_like(params_from_base_test_setup):
+    """ @summary
+    Fetches docs with like clause
+
+    let searchQuery = Query
+        .select(SelectResult.expression(Expression.meta().id),
+                SelectResult.expression(Expression.property("country")),
+                SelectResult.expression(Expression.property("name")))
+        .from(DataSource.database(db))
+        .where(Expression.property("type").equalTo("landmark")
+            .and( Expression.property("name").like("Royal engineers museum")))
+
+    Verifies with n1ql - select meta().id, country, name from `travel-sample` t where t.type="landmark"  and t.name like "Royal Engineers Museum"
+    """

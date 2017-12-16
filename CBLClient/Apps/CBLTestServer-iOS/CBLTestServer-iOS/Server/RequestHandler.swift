@@ -742,9 +742,36 @@ public class RequestHandler {
                 resultArray.append(row.toDictionary())
             }
             
-            print ("resultArray is \(resultArray)")
             return resultArray
            
+        case "query_where_and_or":
+            let database: Database = args.get(name: "database")!
+            let whr_key1: String = args.get(name: "whr_key1")!
+            let whr_val1: String = args.get(name: "whr_val1")!
+            let whr_key2: String = args.get(name: "whr_key2")!
+            let whr_val2: String = args.get(name: "whr_val2")!
+            let whr_key3: String = args.get(name: "whr_key3")!
+            let whr_val3: String = args.get(name: "whr_val3")!
+            let whr_key4: String = args.get(name: "whr_key4")!
+            let whr_val4: Bool = args.get(name: "whr_val4")!
+            
+            let searchQuery = Query
+                .select(SelectResult.expression(Expression.meta().id))
+                .from(DataSource.database(database))
+                .where(Expression.property(whr_key1).equalTo(whr_val1)
+                    .and(Expression.property(whr_key2).equalTo(whr_val2)
+                        .or(Expression.property(whr_key3).equalTo(whr_val3)))
+                    .and(Expression.property(whr_key4).equalTo(whr_val4)))
+            
+            var resultArray = [Any]()
+            
+            for row in try searchQuery.run() {
+                resultArray.append(row.toDictionary())
+            }
+            
+            print("resultArray is \(resultArray)")
+            return resultArray
+            
         default:
             throw RequestHandlerError.MethodNotFound(method)
         }

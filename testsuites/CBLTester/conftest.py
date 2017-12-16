@@ -106,7 +106,7 @@ def params_from_base_suite_setup(request):
     sg_config = sync_gateway_config_path_for_mode("sync_gateway_travel_sample", mode)
     cluster_utils = ClusterKeywords()
     cluster_topology = cluster_utils.get_cluster_topology(cluster_config)
-    
+
     if not skip_provisioning:
         log_info("Installing Sync Gateway + Couchbase Server + Accels ('di' only)")
 
@@ -156,7 +156,7 @@ def params_from_base_suite_setup(request):
     log_info("Starting replication")
     replicator.start(repl)
     # Wait for replication to complete
-    time.sleep(120)
+    #time.sleep(120)
 
     yield {
         "cluster_config": cluster_config,
@@ -175,7 +175,7 @@ def params_from_base_suite_setup(request):
     }
 
     log_info("Stopping replication")
-    replicator.stop_replication(repl)
+    replicator.stop(repl)
 
 
 @pytest.fixture(scope="function")

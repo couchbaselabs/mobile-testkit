@@ -131,3 +131,17 @@ class Query:
         args.setString("whr_val", whr_val)
 
         return self._client.invokeMethod("query_multiple_selects", args)
+
+    def query_where_and_or(self, database, whr_key1, whr_val1, whr_key2, whr_val2, whr_key3, whr_val3, whr_key4, whr_val4):
+        args = Args()
+        args.setMemoryPointer("database", database)
+        args.setString("whr_key1", whr_key1)
+        args.setString("whr_val1", whr_val1)
+        args.setString("whr_key2", whr_key2)
+        args.setString("whr_val2", whr_val2)
+        args.setString("whr_key3", whr_key3)
+        args.setString("whr_val3", whr_val3)
+        args.setString("whr_key4", whr_key4)
+        args.setBoolean("whr_val4", whr_val4)
+
+        return self._client.invokeMethod("query_where_and_or", args)
