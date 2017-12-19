@@ -680,6 +680,32 @@ class MobileRestClient:
 
         return resp_obj
 
+    def get_open_revs_ids(self, url, db, doc_id, auth=None):
+        """
+        Gets the open_revs=all for a specified doc_id.
+        Returns a parsed multipart reponse in the below format
+        {"rows" : docs}
+        """
+        # Returns multipart by default, specify json for cleaner code
+        headers = {"Accept": "application/json"}
+
+        auth_type = get_auth_type(auth)
+
+        params = {"open_revs": "all"}
+
+        if auth_type == AuthType.session:
+            resp = self._session.get("{}/{}/{}".format(url, db, doc_id), headers=headers, params=params, cookies=dict(SyncGatewaySession=auth[1]))
+        elif auth_type == AuthType.http_basic:
+            resp = self._session.get("{}/{}/{}".format(url, db, doc_id), headers=headers, params=params, auth=auth)
+        else:
+            resp = self._session.get("{}/{}/{}".format(url, db, doc_id), headers=headers, params=params)
+
+        log_r(resp)
+        resp.raise_for_status()
+        resp_obj = resp.json()
+
+        return resp_obj[0]['ok']['_revisions']['ids']
+
     def get_doc(self, url, db, doc_id, auth=None, rev=None, revs_info=False):
         """
         returns a dictionary with the following format:
@@ -2198,3 +2224,11 @@ class MobileRestClient:
         resp.raise_for_status()
         resp_obj = resp.json()
         return resp_obj
+
+    def get_revs_num_in_history(self, url, db, doc_id, auth=None):
+        """
+        Get all revisions from history for specified doc
+        """
+        doc = self.get_doc(url, db, doc_id, auth)
+        logging.debug(doc)
+        return doc["_revisions"]["ids"]

@@ -74,6 +74,9 @@
       },
       {{ xattrs }}
       "unsupported": {
+        {{ no_conflicts }}
+      },
+      "unsupported": {
         "oidc_test_provider": {
           "enabled": true
         }

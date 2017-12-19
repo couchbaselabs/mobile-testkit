@@ -5,7 +5,7 @@ import requests
 
 import libraries.testkit.settings
 from libraries.provision.ansible_runner import AnsibleRunner
-from utilities.cluster_config_utils import is_cbs_ssl_enabled, is_xattrs_enabled
+from utilities.cluster_config_utils import is_cbs_ssl_enabled, is_xattrs_enabled, no_conflicts_enabled, get_revs_limit
 from keywords.utils import add_cbs_to_sg_config_server_field
 
 log = logging.getLogger(libraries.testkit.settings.LOGGER)
@@ -49,11 +49,22 @@ class SgAccel:
             "server_scheme": self.server_scheme,
             "autoimport": "",
             "xattrs": "",
+            "no_conflicts": "",
+            "revs_limit": "",
             "couchbase_server_primary_node": couchbase_server_primary_node
         }
         if is_xattrs_enabled(self.cluster_config):
             playbook_vars["autoimport"] = '"import_docs": "continuous",'
             playbook_vars["xattrs"] = '"enable_shared_bucket_access": true,'
+
+        if no_conflicts_enabled(self.cluster_config):
+            playbook_vars["no_conflicts"] = '"allow_conflicts": false'
+        try:
+            revs_limit = get_revs_limit(self.cluster_config)
+            playbook_vars["revs_limit"] = '"revs_limit": {},'.format(revs_limit)
+        except KeyError as ex:
+            log.info("Keyerror in getting revs_limit{}".format(ex.message))
+
         status = self.ansible_runner.run_ansible_playbook(
             "start-sg-accel.yml",
             extra_vars=playbook_vars,
