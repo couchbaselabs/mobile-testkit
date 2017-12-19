@@ -10,7 +10,7 @@ from couchbase.n1ql import N1QLQuery
 
 def test_get_doc_ids(params_from_base_test_setup):
     """@summary
-    Fectches all the doc ids
+    Fetches all the doc ids
     Tests the below query
     let query = Query
                 .select(SelectResult.expression(Expression.meta().id))
@@ -44,7 +44,11 @@ def test_get_doc_ids(params_from_base_test_setup):
     assert sorted(ids_from_cbl) == sorted(doc_ids_from_n1ql)
 
 
-def test_doc_get(params_from_base_test_setup):
+@pytest.mark.parametrize("doc_id", [
+    ("airline_10"),
+    ("doc_id_does_not_exist"),
+])
+def test_doc_get(params_from_base_test_setup, doc_id):
     """ @summary
     Fetches a doc
     Tests the below query
@@ -65,16 +69,14 @@ def test_doc_get(params_from_base_test_setup):
     cbs_ip = host_for_url(cbs_url)
 
     # Get doc from CBL through query
-    doc_id = "airline_10"
     log_info("Fetching doc {} from CBL through query".format(doc_id))
     qy = Query(base_url)
     result_set = qy.query_get_doc(source_db, doc_id)
-    doc_from_cbl = result_set[cbl_db]
-    log_info("doc_from_cbl: {}".format(doc_from_cbl))
 
-    # doc_from_getdoc = qy.query_get_doc(source_db, doc_id)
-    # doc_from_cbl = result_set[cbl_db]
-    # log_info("doc_from_cbl: {}".format(doc_from_cbl))
+    doc_from_cbl = []
+
+    for result in result_set:
+        doc_from_cbl = result[cbl_db]
 
     # Get doc from n1ql through query
     log_info("Fetching doc {} from server through n1ql".format(doc_id))
@@ -88,13 +90,14 @@ def test_doc_get(params_from_base_test_setup):
         doc_from_n1ql = row[bucket_name]
 
     # Release
-    qy.release(source_db)
+    # qy.release(source_db)
 
     assert doc_from_cbl == doc_from_n1ql
 
 
 @pytest.mark.parametrize("limit, offset", [
     (5, 5),
+    (-5, -5),
 ])
 def test_get_docs_with_limit_offset(params_from_base_test_setup, limit, offset):
     """ @summary
@@ -121,10 +124,13 @@ def test_get_docs_with_limit_offset(params_from_base_test_setup, limit, offset):
     for docs in result_set:
         docs_from_cbl.append(docs[cbl_db])
 
-    assert len(docs_from_cbl) == limit
+    if limit > 0:
+        assert len(docs_from_cbl) == limit
+    else:
+        assert len(docs_from_cbl) == 0
 
     # Release
-    qy.release(source_db)
+    # qy.release(source_db)
 
 
 @pytest.mark.parametrize("select_property1, select_property2, whr_key, whr_val", [

@@ -699,10 +699,14 @@ public class RequestHandler {
                 .select(SelectResult.all())
                 .from(DataSource.database(database))
                 .where((Expression.meta().id).equalTo(doc_id))
-
+          
+            var resultArray = [Any]()
+            
             for row in try searchQuery.run() {
-                return row.toDictionary()
+                resultArray.append(row.toDictionary())
             }
+            
+            return resultArray
             
         case "query_get_docs_limit_offset":
             let database: Database = args.get(name: "database")!
@@ -719,7 +723,7 @@ public class RequestHandler {
             for row in try searchQuery.run() {
                 resultArray.append(row.toDictionary())
             }
-            
+
             return resultArray
             
         case "query_multiple_selects":

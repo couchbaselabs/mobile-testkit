@@ -156,7 +156,7 @@ def params_from_base_suite_setup(request):
     log_info("Starting replication")
     replicator.start(repl)
     # Wait for replication to complete
-    #time.sleep(120)
+    time.sleep(120)
 
     yield {
         "cluster_config": cluster_config,
