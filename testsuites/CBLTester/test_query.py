@@ -454,7 +454,7 @@ def test_query_ordering(params_from_base_test_setup, select_property1, whr_key, 
 @pytest.mark.parametrize("select_property1, select_property2, substring", [
     ("email", "name", "gmail.com"),
 ])
-def test_query_substring(params_from_base_test_setup, select_property1, select_property2, substring):
+def test_query_substring(params_from_base_test_setup, select_property1, select_property2, substring, limit):
     """ @summary
     Fetches docs in with a matching substring
 
@@ -501,10 +501,10 @@ def test_query_substring(params_from_base_test_setup, select_property1, select_p
     log_info("docs_from_n1ql: {}".format(docs_from_n1ql))
 
     # Release
-    qy.release(source_db)
+    # qy.release(source_db)
 
-    # assert len(docs_from_cbl) == len(docs_from_n1ql)
-    # assert sorted(docs_from_cbl) == sorted(docs_from_n1ql)
+    assert len(docs_from_cbl) == len(docs_from_n1ql)
+    assert sorted(docs_from_cbl) == sorted(docs_from_n1ql)
 
 
 @pytest.mark.parametrize("select_property1, whr_key1, whr_val1, whr_key2, whr_val2, equal_to", [

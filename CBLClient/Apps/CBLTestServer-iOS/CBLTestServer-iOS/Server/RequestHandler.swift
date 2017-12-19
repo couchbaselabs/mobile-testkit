@@ -880,7 +880,7 @@ public class RequestHandler {
                 .from(DataSource.database(database))
                 .where(Expression.property(select_property1).and(Function.contains(Expression.property(select_property1),
                                                                           substring: substring)))
-            
+           
             var resultArray = [Any]()
             
             for row in try searchQuery.run() {
