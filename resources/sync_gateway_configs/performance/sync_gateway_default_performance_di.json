@@ -1,7 +1,12 @@
 {
     "interface":":4984",
     "adminInterface": "0.0.0.0:4985",
-    "log": ["CRUD+", "Cache+", "HTTP+", "Changes+"],
+    "maxIncomingConnections": 0,
+    "maxCouchbaseConnections": 16,
+    "maxFileDescriptors": 90000,
+    "slowServerCallWarningThreshold": 500,
+    "compressResponses": true,
+    "log":["HTTP"],
     "cluster_config": {
         "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
         "data_dir":".",
@@ -10,7 +15,7 @@
         "password": "password"
     },
     "databases":{
-        "db": {
+        "db":{
             {{ xattrs }}
             "unsupported": {
                 {{ no_conflicts }}
@@ -19,13 +24,8 @@
             "bucket":"data-bucket",
             "username":"data-bucket",
             "password": "password",
-            "cache": {
-                "channel_cache_max_length": 5000,
-                "channel_cache_min_length": 5000,
-                "channel_cache_expiry": 90
-            },
+            "revs_limit":25,
             "channel_index":{
-                "num_shards":16,
                 "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
                 "bucket":"index-bucket",
                 "username":"index-bucket",
@@ -35,6 +35,4 @@
         }
     }
 }
-
-
 
