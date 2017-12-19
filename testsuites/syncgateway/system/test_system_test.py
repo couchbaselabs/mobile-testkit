@@ -254,7 +254,7 @@ def print_summary(users):
 def grant_users_access(users, channels, sg_admin_url, sg_db):
     sg_client = MobileRestClient()
     for username in users:
-        sg_client.update_user(url=sg_admin_url, db=sg_db, name=username, password=USER_PASSWORD, channels=channels)
+        sg_client.update_user(url=sg_admin_url, db=sg_db, name=username, channels=channels)
 
 
 def send_changes_termination_doc(sg_url, sg_db, users, terminator_doc_id, terminator_channel):

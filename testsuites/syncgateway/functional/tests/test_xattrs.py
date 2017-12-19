@@ -2026,10 +2026,13 @@ def test_sg_sdk_interop_shared_updates_from_sg(params_from_base_test_setup,
     cluster_topology = params_from_base_test_setup['cluster_topology']
     mode = params_from_base_test_setup['mode']
     xattrs_enabled = params_from_base_test_setup['xattrs_enabled']
+    no_conflicts_enabled = params_from_base_test_setup["no_conflicts_enabled"]
 
     # This test should only run when using xattr meta storage
     if not xattrs_enabled:
         pytest.skip('XATTR tests require --xattrs flag')
+    if no_conflicts_enabled:
+        pytest.skip('--no-conflicts is enabled, this test needs to create conflicts, so skipping the test')
 
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
     sg_admin_url = cluster_topology['sync_gateways'][0]['admin']
