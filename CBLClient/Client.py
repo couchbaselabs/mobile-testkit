@@ -27,7 +27,6 @@ class Client(object):
             # Create connection to method endpoint.
             headers = {"Content-Type": "application/json"}
             self.session.headers = headers
-            log_info("body is {}".format(body))
             resp = self.session.post(url, data=json.dumps(body))
             resp.raise_for_status()
 

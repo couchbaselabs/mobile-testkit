@@ -16,7 +16,6 @@ public class Args {
     }
     
     public func set(value:Any, forName:String) {
-        print("Setting \(forName) to \(value)")
         _args[forName] = value
     }
 }

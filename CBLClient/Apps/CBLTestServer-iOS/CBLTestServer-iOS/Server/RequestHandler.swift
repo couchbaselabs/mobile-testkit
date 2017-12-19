@@ -769,9 +769,151 @@ public class RequestHandler {
                 resultArray.append(row.toDictionary())
             }
             
-            print("resultArray is \(resultArray)")
             return resultArray
             
+        case "query_like":
+            let database: Database = args.get(name: "database")!
+            let whr_key: String = args.get(name: "whr_key")!
+            let select_property1: String = args.get(name: "select_property1")!
+            let select_property2: String = args.get(name: "select_property2")!
+            let whr_val: String = args.get(name: "whr_val")!
+            let like_key: String = args.get(name: "like_key")!
+            let like_val: String = args.get(name: "like_val")!
+
+            let searchQuery = Query
+                .select(SelectResult.expression(Expression.meta().id),
+                        SelectResult.expression(Expression.property(select_property1)),
+                        SelectResult.expression(Expression.property(select_property2)))
+                .from(DataSource.database(database))
+                .where(Expression.property(whr_key).equalTo(whr_val)
+                    .and(Expression.property(like_key).like(like_val)))
+
+            var resultArray = [Any]()
+            
+            for row in try searchQuery.run() {
+                resultArray.append(row.toDictionary())
+            }
+            
+            return resultArray
+            
+        case "query_regex":
+            let database: Database = args.get(name: "database")!
+            let whr_key: String = args.get(name: "whr_key")!
+            let select_property1: String = args.get(name: "select_property1")!
+            let select_property2: String = args.get(name: "select_property2")!
+            let whr_val: String = args.get(name: "whr_val")!
+            let regex_key: String = args.get(name: "regex_key")!
+            let regex_val: String = args.get(name: "regex_val")!
+            
+            let searchQuery = Query
+                .select(SelectResult.expression(Expression.meta().id),
+                        SelectResult.expression(Expression.property(select_property1)),
+                        SelectResult.expression(Expression.property(select_property2)))
+                .from(DataSource.database(database))
+                .where(Expression.property(whr_key).equalTo(whr_val)
+                    .and(Expression.property(regex_key).regex(regex_val)))
+            
+            var resultArray = [Any]()
+            
+            for row in try searchQuery.run() {
+                resultArray.append(row.toDictionary())
+            }
+            
+            return resultArray
+
+        case "query_isNullOrMissing":
+            let database: Database = args.get(name: "database")!
+            let select_property1: String = args.get(name: "select_property1")!
+            let limit: Int = args.get(name: "limit")!
+
+            let searchQuery = Query
+                .select(SelectResult.expression(Expression.meta().id),
+                        SelectResult.expression(Expression.property(select_property1)))
+                .from(DataSource.database(database))
+                .where(Expression.property(select_property1).isNullOrMissing())
+                .limit(limit)
+            
+            var resultArray = [Any]()
+            
+            for row in try searchQuery.run() {
+                resultArray.append(row.toDictionary())
+            }
+            
+            return resultArray
+
+        case "query_ordering":
+            let database: Database = args.get(name: "database")!
+            let select_property1: String = args.get(name: "select_property1")!
+            let whr_key: String = args.get(name: "whr_key")!
+            let whr_val: String = args.get(name: "whr_val")!
+            
+            let searchQuery = Query
+                .select(
+                    SelectResult.expression(Expression.meta().id),
+                    SelectResult.expression(Expression.property(select_property1)))
+                .from(DataSource.database(database))
+                .where(Expression.property(whr_key).equalTo(whr_val))
+                .orderBy(Ordering.property(select_property1).ascending())
+
+            var resultArray = [Any]()
+            
+            for row in try searchQuery.run() {
+                resultArray.append(row.toDictionary())
+            }
+            
+            return resultArray
+            
+        case "query_substring":
+            let database: Database = args.get(name: "database")!
+            let select_property1: String = args.get(name: "select_property1")!
+            let select_property2: String = args.get(name: "select_property2")!
+            let substring: String = args.get(name: "substring")!
+
+            let searchQuery = Query
+                .select(SelectResult.expression(Expression.meta().id),
+                        SelectResult.expression(Expression.property(select_property1)),
+                        SelectResult.expression(Function.upper(Expression.property(select_property2))))
+                .from(DataSource.database(database))
+                .where(Expression.property(select_property1).and(Function.contains(Expression.property(select_property1),
+                                                                          substring: substring)))
+            
+            var resultArray = [Any]()
+            
+            for row in try searchQuery.run() {
+                resultArray.append(row.toDictionary())
+            }
+            
+            return resultArray
+            
+        case "query_collation":
+            let database: Database = args.get(name: "database")!
+            let select_property1: String = args.get(name: "select_property1")!
+            let whr_key1: String = args.get(name: "whr_key1")!
+            let whr_val1: String = args.get(name: "whr_val1")!
+            let whr_key2: String = args.get(name: "whr_key2")!
+            let whr_val2: String = args.get(name: "whr_val2")!
+            let equal_to: String = args.get(name: "equal_to")!
+
+            let collator = Collation.unicode()
+                .ignoreAccents(true)
+                .ignoreCase(true)
+            
+            let searchQuery = Query
+                .select(SelectResult.expression(Expression.meta().id),
+                        SelectResult.expression(Expression.property(select_property1)))
+                .from(DataSource.database(database))
+                .where(Expression.property(whr_key1).equalTo(whr_val1)
+                    .and(Expression.property(whr_key2).equalTo(whr_val2))
+                    .and(Expression.property(select_property1).collate(collator).equalTo(equal_to)))
+
+            var resultArray = [Any]()
+            
+            for row in try searchQuery.run() {
+                resultArray.append(row.toDictionary())
+            }
+            
+            return resultArray
+
         default:
             throw RequestHandlerError.MethodNotFound(method)
         }
