@@ -1,12 +1,9 @@
-import time
 import pytest
 
-from libraries.data.doc_generators import simple_user
 from keywords.utils import log_info
 from CBLClient.Database import Database
 from CBLClient.Query import Query
 from keywords.utils import host_for_url
-from libraries.testkit.cluster import Cluster
 from couchbase.bucket import Bucket
 from couchbase.n1ql import N1QLQuery
 
@@ -25,7 +22,6 @@ def test_get_doc_ids(params_from_base_test_setup):
     liteserv_port = params_from_base_test_setup["liteserv_port"]
     cluster_topology = params_from_base_test_setup["cluster_topology"]
     source_db = params_from_base_test_setup["source_db"]
-    cbl_db = params_from_base_test_setup["cbl_db"]
     cbs_url = cluster_topology['couchbase_servers'][0]
 
     base_url = "http://{}:{}".format(liteserv_host, liteserv_port)
@@ -113,12 +109,9 @@ def test_get_docs_with_limit_offset(params_from_base_test_setup, limit, offset):
     """
     liteserv_host = params_from_base_test_setup["liteserv_host"]
     liteserv_port = params_from_base_test_setup["liteserv_port"]
-    cluster_topology = params_from_base_test_setup["cluster_topology"]
     source_db = params_from_base_test_setup["source_db"]
     cbl_db = params_from_base_test_setup["cbl_db"]
-    cbs_url = cluster_topology['couchbase_servers'][0]
     base_url = "http://{}:{}".format(liteserv_host, liteserv_port)
-    cbs_ip = host_for_url(cbs_url)
 
     log_info("Fetching docs from CBL through query")
     qy = Query(base_url)
@@ -500,14 +493,12 @@ def test_query_substring(params_from_base_test_setup, select_property1, select_p
         docs_from_n1ql.append(row)
 
     log_info("docs_from_n1ql: {}".format(docs_from_n1ql))
-    
+
     # Release
     qy.release(source_db)
 
     # assert len(docs_from_cbl) == len(docs_from_n1ql)
     # assert sorted(docs_from_cbl) == sorted(docs_from_n1ql)
-
-    
 
 
 @pytest.mark.parametrize("select_property1, whr_key1, whr_val1, whr_key2, whr_val2, equal_to", [
