@@ -207,3 +207,6 @@ class Query:
         args.setString("equal_to", equal_to)
 
         return self._client.invokeMethod("query_collation", args)
+
+    def release(self, object):
+        self._client.release(object)

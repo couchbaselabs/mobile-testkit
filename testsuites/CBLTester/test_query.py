@@ -43,6 +43,7 @@ def test_get_doc_ids(params_from_base_test_setup):
 
     log_info("Fetching doc ids from CBL")
     ids_from_cbl = db.getDocIds(source_db)
+
     assert len(ids_from_cbl) == len(doc_ids_from_n1ql)
     assert sorted(ids_from_cbl) == sorted(doc_ids_from_n1ql)
 
@@ -90,6 +91,9 @@ def test_doc_get(params_from_base_test_setup):
     for row in sdk_client.n1ql_query(query):
         doc_from_n1ql = row[bucket_name]
 
+    # Release
+    qy.release(source_db)
+
     assert doc_from_cbl == doc_from_n1ql
 
 
@@ -125,6 +129,9 @@ def test_get_docs_with_limit_offset(params_from_base_test_setup, limit, offset):
         docs_from_cbl.append(docs[cbl_db])
 
     assert len(docs_from_cbl) == limit
+
+    # Release
+    qy.release(source_db)
 
 
 @pytest.mark.parametrize("select_property1, select_property2, whr_key, whr_val", [
@@ -170,9 +177,11 @@ def test_multiple_selects(params_from_base_test_setup, select_property1, select_
     for row in sdk_client.n1ql_query(query):
         docs_from_n1ql.append(row)
 
+    # Release
+    qy.release(source_db)
+
     assert len(docs_from_cbl) == len(docs_from_n1ql)
-    # assert docs_from_cbl == docs_from_n1ql
-    # Commented for https://github.com/couchbase/couchbase-lite-ios/issues/1982
+    assert docs_from_cbl == docs_from_n1ql
 
 
 @pytest.mark.parametrize("whr_key1, whr_val1, whr_key2, whr_val2, whr_key3, whr_val3, whr_key4, whr_val4", [
@@ -218,6 +227,9 @@ def test_query_where_and_or(params_from_base_test_setup, whr_key1, whr_val1, whr
 
     for row in sdk_client.n1ql_query(query):
         docs_from_n1ql.append(row)
+
+    # Release
+    qy.release(source_db)
 
     assert len(docs_from_cbl) == len(docs_from_n1ql)
     assert sorted(docs_from_cbl) == sorted(docs_from_n1ql)
@@ -272,6 +284,9 @@ def test_query_pattern_like(params_from_base_test_setup, whr_key, whr_val, selec
 
     for row in sdk_client.n1ql_query(query):
         docs_from_n1ql.append(row)
+
+    # Release
+    qy.release(source_db)
 
     assert len(docs_from_cbl) == len(docs_from_n1ql)
     assert sorted(docs_from_cbl) == sorted(docs_from_n1ql)
@@ -328,11 +343,11 @@ def test_query_pattern_regex(params_from_base_test_setup, whr_key, whr_val, sele
     for row in sdk_client.n1ql_query(query):
         docs_from_n1ql.append(row)
 
-    log_info("docs_from_n1ql: {}".format(docs_from_n1ql))
+    # Release
+    qy.release(source_db)
+
     assert len(docs_from_cbl) == len(docs_from_n1ql)
-    #assert sorted(docs_from_cbl) == sorted(docs_from_n1ql)
-    assert docs_from_cbl == docs_from_n1ql
-    # assert cmp(docs_from_cbl, docs_from_n1ql) == 0
+    assert sorted(docs_from_cbl) == sorted(docs_from_n1ql)
 
 
 @pytest.mark.parametrize("select_property1, limit", [
@@ -377,6 +392,9 @@ def test_query_isNullOrMissing(params_from_base_test_setup, select_property1, li
 
     for row in sdk_client.n1ql_query(query):
         docs_from_n1ql.append(row)
+
+    # Release
+    qy.release(source_db)
 
     assert len(docs_from_cbl) == len(docs_from_n1ql)
     assert sorted(docs_from_cbl) == sorted(docs_from_n1ql)
@@ -426,6 +444,9 @@ def test_query_ordering(params_from_base_test_setup, select_property1, whr_key, 
 
     for row in sdk_client.n1ql_query(query):
         docs_from_n1ql.append(row)
+
+    # Release
+    qy.release(source_db)
 
     assert len(docs_from_cbl) == len(docs_from_n1ql)
     assert sorted(docs_from_cbl) == sorted(docs_from_n1ql)
@@ -479,8 +500,14 @@ def test_query_substring(params_from_base_test_setup, select_property1, select_p
         docs_from_n1ql.append(row)
 
     log_info("docs_from_n1ql: {}".format(docs_from_n1ql))
+    
+    # Release
+    qy.release(source_db)
+
     # assert len(docs_from_cbl) == len(docs_from_n1ql)
     # assert sorted(docs_from_cbl) == sorted(docs_from_n1ql)
+
+    
 
 
 @pytest.mark.parametrize("select_property1, whr_key1, whr_val1, whr_key2, whr_val2, equal_to", [
@@ -530,6 +557,9 @@ def test_query_collation(params_from_base_test_setup, select_property1, whr_key1
 
     for row in sdk_client.n1ql_query(query):
         docs_from_n1ql.append(row)
+
+    # Release
+    qy.release(source_db)
 
     assert len(docs_from_cbl) == len(docs_from_n1ql)
     assert sorted(docs_from_cbl) == sorted(docs_from_n1ql)

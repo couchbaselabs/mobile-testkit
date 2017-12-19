@@ -26,7 +26,7 @@ public class Server {
         server.addDefaultHandler(forMethod: "POST", request: GCDWebServerDataRequest.self) {
             (request) -> GCDWebServerResponse? in
             
-            let rawArgs = request.query
+            var rawArgs = [String: Any]()
             
             var method = ""
             
@@ -50,6 +50,8 @@ public class Server {
                 if let queryParams = queryParams {
                     // Get args from query params
                     for param in queryParams {
+                        rawArgs[param.key as! String] = param.value
+
                         let value: Any = ValueSerializer.deserialize(value:(param.value as! String), memory: self.memory)!
                         // Handle nil value
                         args.set(value: value, forName: param.key as! String)
@@ -59,7 +61,7 @@ public class Server {
                 // Find and invoke the method on the RequestHandler.
                 var body: Any? = nil
                 if "release" == method {
-                    self.memory.remove(address: rawArgs!["object"] as! String)
+                    self.memory.remove(address: rawArgs["object"] as! String)
                 } else {
                     let result = try self.requestHandler.handleRequest(method: method, args: args)
                     if result != nil {
