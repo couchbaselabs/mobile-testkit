@@ -369,13 +369,16 @@ def test_migrate_conflicts_to_noConflicts(params_from_base_test_setup, sg_conf_n
     mode = params_from_base_test_setup["mode"]
     sg_url = topology["sync_gateways"][0]["public"]
     sg_admin_url = topology["sync_gateways"][0]["admin"]
+    sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
+
     sg_db = "db"
     if revs_limit is None:
         revs_limit = 1000
     additional_updates = revs_limit
 
-    if no_conflicts_enabled:
-        pytest.skip('--no-conflicts is enabled, so skipping the test')
+    if no_conflicts_enabled or sync_gateway_version < "2.0":
+        pytest.skip('--no-conflicts is enabled and does not work with sg < 2.0 , so skipping the test')
+
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
     # 1. Start sg with default(i.e allow_conflicts=true)
     c = cluster.Cluster(cluster_config)
@@ -664,6 +667,11 @@ def test_revs_cache_size(params_from_base_test_setup, sg_conf_name, num_of_docs)
     mode = params_from_base_test_setup["mode"]
     sg_url = topology["sync_gateways"][0]["public"]
     sg_admin_url = topology["sync_gateways"][0]["admin"]
+    sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
+
+    if sync_gateway_version < "2.0":
+        pytest.skip('--no-conflicts is enabled and does not work with sg < 2.0 , so skipping the test')
+
     sg_db = "db"
     retrieved_docs = num_of_docs / 2
 
