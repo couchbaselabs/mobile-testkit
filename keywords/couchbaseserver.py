@@ -729,217 +729,126 @@ class CouchbaseServer:
          version - the version without any build number information, eg 4.5.0
          build_number - the build number associated with this major version release, eg, 2601 (or None)
          Return the filename portion of the package download URL
-
          """
 
         if version.startswith("3.1.6"):
             return "couchbase-server-enterprise-{}-{}.x86_64.rpm".format(version, cbs_platform)
-
         elif version.startswith("3.1"):
-
             return "couchbase-server-enterprise_{}_x86_64_{}-{}-rel.rpm".format(cbs_platform, version, build_number)
-
         else:
-
             return "couchbase-server-enterprise-{}-{}-{}.x86_64.rpm".format(version, build_number, cbs_platform)
- 
+
     def resolve_cb_nas_url(self, version, build_number, cbs_platform="centos7"):
         """
-
         Resolve a download URL for couchbase server on the internal VPN download site
-
-
         Given:
-
-
         version - the version without any build number information, eg 4.5.0
-
         build_number - the build number associated with this major version release, eg, 2601 (or None)
-
-
         Return the base_url of the package download URL (everything except the filename)
-
-
         """
 
         cbnas_base_url = "http://latestbuilds.service.couchbase.com/builds/latestbuilds/couchbase-server"
 
         if version.startswith("3.1"):
-
             base_url = "http://latestbuilds.service.couchbase.com/"
-
         elif version.startswith("4.0") or version.startswith("4.1"):
-
             base_url = "{}/sherlock/{}".format(cbnas_base_url, build_number)
-
         elif version.startswith("4.5") or version.startswith("4.6"):
-
             base_url = "{}/watson/{}".format(cbnas_base_url, build_number)
-
         elif version.startswith("4.7") or version.startswith("5.0"):
-
             base_url = "{}/spock/{}".format(cbnas_base_url, build_number)
-
         elif version.startswith("5.1"):
-
             base_url = "{}/vulcan/{}".format(cbnas_base_url, build_number)
-
         else:
-
             raise Exception(
                 "Unexpected couchbase server version: {}".format(version))
-
         package_name = self.get_package_name(
             version, build_number, cbs_platform)
 
         return base_url, package_name
 
     def resolve_cb_mobile_url(self, version, cbs_platform="centos7"):
- 
         """
- 
         Resolve a download URL for the corresponding package to given
- 
         version on http://cbmobile-packages.s3.amazonaws.com (an S3 bucket
- 
         for couchbase mobile that mirrors released couchbase server versions)
 
- 
         Given:
-
- 
         version - the version without any build number information, eg 4.5.0
-
- 
         Return the base_url of the package download URL (everything except the filename)
-
- 
         """
- 
+
         released_versions = {
- 
             "5.0.0": "3519",
- 
             "4.6.3": "4136",
- 
             "4.6.2": "3905",
- 
             "4.6.1": "3652",
- 
             "4.6.0": "3573",
- 
             "4.5.1": "2844",
- 
             "4.5.0": "2601",
- 
             "4.1.2": "6088",
- 
             "4.1.1": "5914",
- 
             "4.1.0": "5005",
- 
             "4.0.0": "4051",
- 
             "3.1.5": "1859",
- 
             "3.1.6": "1904"
- 
         }
- 
+
         build_number = released_versions[version]
- 
         base_url = "http://cbmobile-packages.s3.amazonaws.com"
- 
         package_name = self.get_package_name(version, build_number, cbs_platform)
- 
         return base_url, package_name
 
     def upgrade_server(self, cluster_config, server_version_build, cbs_platform, target=None, toy_build=None):
- 
         ansible_runner = AnsibleRunner(cluster_config)
 
         log_info(">>> Upgrading Couchbase Server")
- 
         # Install Server
- 
+
         if toy_build:
- 
             # http://server.jenkins.couchbase.com/view/All/job/watson-toy/1770/artifact/couchbase-server-enterprise-5.0.0-9900-centos7.x86_64.rpm
- 
             toy_build_url_parts = toy_build.split('/')
- 
             toy_build_url_len = len(toy_build_url_parts)
- 
             server_package_name = toy_build_url_parts[-1]
- 
             server_baseurl = "/".join(toy_build_url_parts[0:(toy_build_url_len - 1)])
- 
         else:
- 
             version_build = server_version_build.split("-")
- 
             server_verion = version_build[0]
- 
+
             if len(version_build) == 2:
- 
                 # Build number is included
- 
                 server_build = version_build[1]
- 
             else:
- 
                 server_build = None
 
             if server_build is None:
- 
                 server_baseurl, server_package_name = self.resolve_cb_mobile_url(server_verion, cbs_platform)
- 
             else:
- 
                 server_baseurl, server_package_name = self.resolve_cb_nas_url(server_verion, server_build, cbs_platform)
 
         if target is not None:
- 
             target = hostname_for_url(cluster_config, target)
- 
             log_info("Upgrading Couchbase server on {} ...".format(target))
- 
             status = ansible_runner.run_ansible_playbook(
- 
                 "upgrade-couchbase-server-package.yml",
- 
                 subset=target,
- 
+
                 extra_vars={
- 
                     "couchbase_server_package_base_url": server_baseurl,
- 
                     "couchbase_server_package_name": server_package_name
- 
                 }
- 
             )
- 
         else:
- 
             log_info("Upgrading Couchbase server on all nodes")
- 
             status = ansible_runner.run_ansible_playbook(
- 
                 "upgrade-couchbase-server-package.yml",
- 
                 extra_vars={
- 
                     "couchbase_server_package_base_url": server_baseurl,
- 
                     "couchbase_server_package_name": server_package_name
- 
                 }
- 
             )
 
         if status != 0:
- 
             raise ProvisioningError("Failed to install Couchbase Server")
 
         self.wait_for_ready_state()
