@@ -16,18 +16,7 @@ public class ReplicatorRequestHandler {
     /* -------------- */
 
     public Replicator create(Args args) {
-        ReplicatorConfiguration config;
-        Database sourceDB = args.get("sourceDB");
-        Database destinationDB = args.get("destinationDB");
-        URI targetURI = args.get("targerURI");
-        if (targetURI != null){
-            config = new ReplicatorConfiguration(sourceDB, targetURI);
-        } else if (destinationDB != null) {
-            config  = new ReplicatorConfiguration(sourceDB, destinationDB);
-        }
-        else {
-            throw new IllegalArgumentException();
-        }
+        ReplicatorConfiguration config = args.get("config");
         return new Replicator(config);
     }
 
@@ -43,14 +32,14 @@ public class ReplicatorRequestHandler {
 
     public void addChangeListener(Args args){
         Replicator replicator = args.get("replicator");
-        MyReplicatorListener changeListerner = new MyReplicatorListener();
-        replicator.addChangeListener(changeListerner);
+        MyReplicatorListener changeListener = new MyReplicatorListener();
+        replicator.addChangeListener(changeListener);
     }
 
     public void removeChangeListener(Args args){
         Replicator replicator = args.get("replicator");
-        MyReplicatorListener changeListerner = args.get("changeListener");
-        replicator.addChangeListener(changeListerner);
+        MyReplicatorListener changeListener = args.get("changeListener");
+        replicator.addChangeListener(changeListener);
     }
 
     public String toString(Args args){
@@ -78,12 +67,12 @@ public class ReplicatorRequestHandler {
         replicator.stop();
     }
 
-    public Replicator replicatorChange_getReplicator(Args args){
+    public Replicator replicatorChangeGetReplicator(Args args){
         ReplicatorChange change = args.get("change");
         return change.getReplicator();
     }
 
-    public Replicator.Status replicatorChange_getStatus(Args args){
+    public Replicator.Status replicatorChangeGetStatus(Args args){
         ReplicatorChange change = args.get("change");
         return change.getStatus();
     }

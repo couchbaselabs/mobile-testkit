@@ -23,26 +23,34 @@ class Query:
         args = Args()
         args.setString("ignoreCase", ignoreCase)
 
-        return self._client.invokeMethod("query_collator_ascii", args)
+        #needs to be change
+        #return self._client.invokeMethod("query_collator_ascii", args)
+        return self._client.invokeMethod("collation_ascii", args)
 
     def query_collator_unicode(self, ignoreCase, ignoreAccents):
         args = Args()
         args.setString("ignoreCase", ignoreCase)
         args.setString("ignoreAccents", ignoreAccents)
 
-        return self._client.invokeMethod("query_collator_unicode", args)
+        #needs to be change
+        #return self._client.invokeMethod("query_collator_unicode", args)
+        return self._client.invokeMethod("collation_unicode", args)
 
     def query_expression_property(self, prop):
         args = Args()
         args.setString("property", prop)
 
-        return self._client.invokeMethod("query_expression_property", args)
+        #needs to be change
+        #return self._client.invokeMethod("query_expression_property", args)
+        return self._client.invokeMethod("expression_property", args)
 
     def query_datasource_database(self, database):
         args = Args()
         args.setString("database", database)
 
-        return self._client.invokeMethod("query_datasource_database", args)
+        #needs to be change
+        #return self._client.invokeMethod("query_datasource_database", args)
+        return self._client.invokeMethod("datasource_database", args)
 
     def query_create(self, select_prop, from_prop, whr_key_prop):
         args = Args()
@@ -62,57 +70,79 @@ class Query:
         args = Args()
         args.setString("query_result_set", query_result_set)
 
-        return self._client.invokeMethod("query_next_result", args)
+        #needs to be change
+        #return self._client.invokeMethod("query_next_result", args)
+        return self._client.invokeMethod("query_nextResult", args)
+
 
     def query_result_string(self, query_result, key):
         args = Args()
         args.setString("query_result", query_result)
         args.setString("key", key)
 
-        return self._client.invokeMethod("query_result_string", args)
+        #needs to be change
+        #return self._client.invokeMethod("query_result_string", args)
+        #There is no method string in Android API. I'm assumming this method is for getString
+        return self._client.invokeMethod("result_getString", args) 
 
     def query_select_result_expression_create(self, expression):
         args = Args()
         args.setMemoryPointer("expression", expression)
 
-        return self._client.invokeMethod("query_select_result_expression_create", args)
+        #needs to be change
+        #return self._client.invokeMethod("query_select_result_expression_create", args)
+        return self._client.invokeMethod("selectResult_expressionCreate", args)
 
     def query_select_result_all_create(self):
-        return self._client.invokeMethod("query_select_result_all_create")
+        #needs to be change
+        #return self._client.invokeMethod("query_select_result_all_create")
+        return self._client.invokeMethod("selectResult_all")
 
     def query_expression_meta_id(self):
-        return self._client.invokeMethod("query_expression_meta_id")
+        #needs to be change
+        #return self._client.invokeMethod("query_expression_meta_id")
+        return self._client.invokeMethod("expression_metaId")
 
     def query_expression_meta_sequence(self):
-        return self._client.invokeMethod("query_expression_meta_sequence")
+        #needs to be change
+        #return self._client.invokeMethod("query_expression_meta_sequence")
+        return self._client.invokeMethod("expression_metaSequence")
 
     def create_equalTo_expression(self, expression1, expression2):
         args = Args()
         args.setMemoryPointer("expression1", expression1)
         args.setMemoryPointer("expression2", expression2)
 
-        return self._client.invokeMethod("create_equalTo_expression", args)
+        #needs to be change
+        #return self._client.invokeMethod("create_equalTo_expression", args)
+        return self._client.invokeMethod("expression_createEqualTo", args)
 
     def create_and_expression(self, expression1, expression2):
         args = Args()
         args.setMemoryPointer("expression1", expression1)
         args.setMemoryPointer("expression2", expression2)
 
-        return self._client.invokeMethod("create_and_expression", args)
+        #needs to be change
+        #return self._client.invokeMethod("create_and_expression", args)
+        return self._client.invokeMethod("expression_createAnd", args)
 
     def create_or_expression(self, expression1, expression2):
         args = Args()
         args.setMemoryPointer("expression1", expression1)
         args.setMemoryPointer("expression2", expression2)
 
-        return self._client.invokeMethod("create_or_expression", args)
+        #needs to be change
+        #return self._client.invokeMethod("create_or_expression", args)
+        return self._client.invokeMethod("expression_createOr", args)
 
     def query_get_doc(self, database, doc_id):
         args = Args()
         args.setMemoryPointer("database", database)
         args.setString("doc_id", doc_id)
 
-        return self._client.invokeMethod("query_get_doc", args)
+        #needs to be change
+        #return self._client.invokeMethod("query_get_doc", args)
+        return self._client.invokeMethod("query_getDoc", args)
 
     def query_get_docs_limit_offset(self, database, limit, offset):
         args = Args()
@@ -120,7 +150,9 @@ class Query:
         args.setInt("limit", limit)
         args.setInt("offset", offset)
 
-        return self._client.invokeMethod("query_get_docs_limit_offset", args)
+        #needs to be change
+        #return self._client.invokeMethod("query_get_docs_limit_offset", args)
+        return self._client.invokeMethod("query_docsLimitOffset", args)
 
     def query_multiple_selects(self, database, select_property1, select_property2, whr_key, whr_val):
         args = Args()
@@ -130,4 +162,6 @@ class Query:
         args.setString("whr_key", whr_key)
         args.setString("whr_val", whr_val)
 
-        return self._client.invokeMethod("query_multiple_selects", args)
+        #needs to be change
+        #return self._client.invokeMethod("query_multiple_selects", args)
+        return self._client.invokeMethod("query_multipleSelects", args)

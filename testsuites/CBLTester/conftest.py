@@ -10,6 +10,8 @@ from keywords.SyncGateway import sync_gateway_config_path_for_mode
 from keywords.exceptions import ProvisioningError
 from keywords.tklogging import Logging
 from CBLClient.Replication import Replication
+from CBLClient.Replicator_new import Replicator
+from CBLClient.ReplicatorConfiguration import ReplicatorConfiguration
 from CBLClient.Database import Database
 from keywords.utils import host_for_url
 
@@ -150,13 +152,17 @@ def params_from_base_suite_setup(request):
     assert db_name == "test_db"
 
     # Start continuous replication
-    replicator = Replication(base_url)
-    log_info("Configuring replication")
-    repl = replicator.configure(source_db, target_url)
-    log_info("Starting replication")
-    replicator.start(repl)
-    # Wait for replication to complete
-    time.sleep(120)
+#     replicator = Replication(base_url)
+#     log_info("Configuring replication")
+#     repl = replicator.configure(source_db, target_url)
+#     log_info("Starting replication")
+#     replicator.start(repl)
+#     replicator_obj = Replicator(base_url)
+#     config_obj = ReplicatorConfiguration(base_url)
+#     repl = config_obj.create(source_db, targetURI=target_url)
+#     replicator = replicator_obj.create(repl)
+#     # Wait for replication to complete
+#     time.sleep(120)
 
     yield {
         "cluster_config": cluster_config,
@@ -174,8 +180,8 @@ def params_from_base_suite_setup(request):
         "cbl_db": cbl_db
     }
 
-    log_info("Stopping replication")
-    replicator.stop_replication(repl)
+#     log_info("Stopping replication")
+#     replicator.stop_replication(repl)
 
 
 @pytest.fixture(scope="function")

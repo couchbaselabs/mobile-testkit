@@ -18,7 +18,7 @@ from libraries.testkit import cluster
 
 @pytest.mark.sanity
 @pytest.mark.listener
-def test_replication_configuration_valid_values(setup_client_syncgateway_test):
+def test_replication_configuration_valid_values(params_from_base_suite_setup):
     """
         @summary: 
         1. Create CBL DB and create bulk doc in CBL
@@ -27,15 +27,15 @@ def test_replication_configuration_valid_values(setup_client_syncgateway_test):
         4. Verify replication is successful and verify docs exist
     """
     # source_db = None
-    base_url = "http://192.168.0.103:8989"
+    base_url = "http://172.16.1.155:8080"
     db = Database(base_url)
     
     sg_db = "db"
     cbl_db_name = "cbl_db"
-    sg_url = setup_client_syncgateway_test["sg_url"]
-    sg_admin_url = setup_client_syncgateway_test["sg_admin_url"]
-    sg_mode = setup_client_syncgateway_test["sg_mode"]
-    cluster_config = setup_client_syncgateway_test["cluster_config"]
+    sg_url = params_from_base_suite_setup["sg_url"]
+    sg_admin_url = params_from_base_suite_setup["sg_admin_url"]
+    sg_mode = params_from_base_suite_setup["sg_mode"]
+    cluster_config = params_from_base_suite_setup["cluster_config"]
     sg_blip_url = sg_admin_url.replace("http", "blip")
     sg_blip_url = "{}/db".format(sg_blip_url)
     num_docs = 4

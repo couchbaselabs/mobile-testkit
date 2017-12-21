@@ -6,7 +6,8 @@ from CBLClient.Document import Document
 from CodeWarrior.Standard_Suite import document
 
 #baseUrl = "http://172.16.1.154:8080"
-baseUrl = "http://192.168.43.236:8080"
+baseUrl = "http://192.168.0.109:8080"
+#baseUrl = "http://172.23.121.73:55555"
 dbName = "foo"
 docIdPrefix = "bar"
 

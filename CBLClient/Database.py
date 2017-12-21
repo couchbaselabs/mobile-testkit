@@ -28,7 +28,7 @@ class Database:
         args = Args()
         if database:
             args.setMemoryPointer("database", database)
-            if document != None:
+            if document is not None:
                 args.setMemoryPointer("document", document)
         elif name and path:
             args.setString("name", name)
@@ -41,7 +41,7 @@ class Database:
     def purge(self, database, document):
         args = Args()
         args.setMemoryPointer("database", database)
-        if document != None:
+        if document is not None:
             args.setMemoryPointer("document", document)
         return self._client.invokeMethod("database_purge", args)
 
@@ -73,7 +73,7 @@ class Database:
     def getDocument(self, database, doc_id=None):
         args = Args()
         args.setMemoryPointer("database", database)
-        if doc_id != None:
+        if doc_id is not None:
             args.setString("id", doc_id)
         return self._client.invokeMethod("database_getDocument", args)
 
@@ -86,7 +86,7 @@ class Database:
     def saveDocument(self, database, document):
         args = Args()
         args.setMemoryPointer("database", database)
-        if document != None:
+        if document is not None:
             args.setMemoryPointer("document", document)
         return self._client.invokeMethod("database_saveDocument", args)
 

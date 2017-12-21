@@ -1,9 +1,19 @@
 package com.couchbase.CouchbaseLiteServ.server;
 
+import com.couchbase.CouchbaseLiteServ.server.RequestHandler.CollationRequestHandler;
+import com.couchbase.CouchbaseLiteServ.server.RequestHandler.DataSourceRequestHandler;
 import com.couchbase.CouchbaseLiteServ.server.RequestHandler.DataTypesInitiatorHandler;
 import com.couchbase.CouchbaseLiteServ.server.RequestHandler.DatabaseRequestHandler;
 import com.couchbase.CouchbaseLiteServ.server.RequestHandler.DictionaryRequestHandler;
 import com.couchbase.CouchbaseLiteServ.server.RequestHandler.DocumentRequestHandler;
+import com.couchbase.CouchbaseLiteServ.server.RequestHandler.ExpressionRequestHandler;
+import com.couchbase.CouchbaseLiteServ.server.RequestHandler.FunctionRequestHandler;
+import com.couchbase.CouchbaseLiteServ.server.RequestHandler.QueryRequestHandler;
+import com.couchbase.CouchbaseLiteServ.server.RequestHandler.ReplicatorConfigurationRequestHandler;
+import com.couchbase.CouchbaseLiteServ.server.RequestHandler.ReplicatorRequestHandler;
+import com.couchbase.CouchbaseLiteServ.server.RequestHandler.ResultRequestHandler;
+import com.couchbase.CouchbaseLiteServ.server.RequestHandler.SelectResultRequestHandler;
+import com.couchbase.lite.ReplicatorConfiguration;
 import com.google.gson.Gson;
 
 import org.nanohttpd.protocols.http.IHTTPSession;
@@ -89,20 +99,61 @@ public class Server extends NanoHTTPD {
             } else {
                 Object requestHandler = null;
                 Method target;
-                if (handlerType.equals("database")){
-                    target = DatabaseRequestHandler.class.getMethod(method_to_call, Args.class);
-                    requestHandler = new DatabaseRequestHandler();
-                } else if (handlerType.equals("document")){
-                    target = DocumentRequestHandler.class.getMethod(method_to_call, Args.class);
-                    requestHandler = new DocumentRequestHandler();
-                } else if (handlerType.equals("dictionary")){
-                    target = DictionaryRequestHandler.class.getMethod(method_to_call, Args.class);
-                    requestHandler = new DictionaryRequestHandler();
-                } else if (handlerType.equals("datatype")){
-                    target = DataTypesInitiatorHandler.class.getMethod(method_to_call, Args.class);
-                    requestHandler = new DataTypesInitiatorHandler();
-                } else {
-                    throw new IllegalArgumentException("Handler not implemented for this call");
+                switch (handlerType){
+                    case "database":
+                        target = DatabaseRequestHandler.class.getMethod(method_to_call, Args.class);
+                        requestHandler = new DatabaseRequestHandler();
+                        break;
+                    case "document":
+                        target = DocumentRequestHandler.class.getMethod(method_to_call, Args.class);
+                        requestHandler = new DocumentRequestHandler();
+                        break;
+                    case "dictionary":
+                        target = DictionaryRequestHandler.class.getMethod(method_to_call, Args.class);
+                        requestHandler = new DictionaryRequestHandler();
+                        break;
+                    case "datatype":
+                        target = DataTypesInitiatorHandler.class.getMethod(method_to_call, Args.class);
+                        requestHandler = new DataTypesInitiatorHandler();
+                        break;
+                    case "replicator":
+                        target = ReplicatorRequestHandler.class.getMethod(method_to_call, Args.class);
+                        requestHandler = new ReplicatorRequestHandler();
+                        break;
+                    case "replicatorConfiguration":
+                        target = ReplicatorConfigurationRequestHandler.class.getMethod(method_to_call, Args.class);
+                        requestHandler = new ReplicatorConfigurationRequestHandler();
+                        break;
+                    case "query":
+                        target = QueryRequestHandler.class.getMethod(method_to_call, Args.class);
+                        requestHandler = new QueryRequestHandler();
+                        break;
+                    case "expression":
+                        target = ExpressionRequestHandler.class.getMethod(method_to_call, Args.class);
+                        requestHandler = new ExpressionRequestHandler();
+                        break;
+                    case "function":
+                        target = FunctionRequestHandler.class.getMethod(method_to_call, Args.class);
+                        requestHandler = new FunctionRequestHandler();
+                        break;
+                    case "dataSource":
+                        target = DataSourceRequestHandler.class.getMethod(method_to_call, Args.class);
+                        requestHandler = new DataSourceRequestHandler();
+                        break;
+                    case "selectResult":
+                        target = SelectResultRequestHandler.class.getMethod(method_to_call, Args.class);
+                        requestHandler = new SelectResultRequestHandler();
+                        break;
+                    case "collation":
+                        target = CollationRequestHandler.class.getMethod(method_to_call, Args.class);
+                        requestHandler = new CollationRequestHandler();
+                        break;
+                    case "result":
+                        target = ResultRequestHandler.class.getMethod(method_to_call, Args.class);
+                        requestHandler = new ResultRequestHandler();
+                        break;
+                    default:
+                        throw new IllegalArgumentException("Handler not implemented for this call");
                 }
                 if (target.getReturnType().equals(Void.TYPE)) {
                     target.invoke(requestHandler, args);
