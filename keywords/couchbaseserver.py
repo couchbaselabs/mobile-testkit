@@ -762,9 +762,9 @@ class CouchbaseServer:
             base_url = "{}/sherlock/{}".format(cbnas_base_url, build_number)
         elif version.startswith("4.5") or version.startswith("4.6"):
             base_url = "{}/watson/{}".format(cbnas_base_url, build_number)
-        elif version.startswith("4.7") or version.startswith("5.0"):
+        elif version.startswith("4.7") or version.startswith("5.0") or version.startswith("5.1"):
             base_url = "{}/spock/{}".format(cbnas_base_url, build_number)
-        elif version.startswith("5.1"):
+        elif version.startswith("5.5"):
             base_url = "{}/vulcan/{}".format(cbnas_base_url, build_number)
         else:
             raise Exception("Unexpected couchbase server version: {}".format(version))
