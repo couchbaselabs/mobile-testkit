@@ -9,12 +9,6 @@
 import Foundation
 import CouchbaseLiteSwift
 
-enum QueryRequestHandlerError: Error {
-    case MethodNotFound(String)
-    case InvalidArgument(String)
-}
-
-
 public class QueryRequestHandler {
     public static let VOID = NSObject()
 
@@ -585,8 +579,8 @@ public class QueryRequestHandler {
             return resultArray
     
         default:
-            throw QueryRequestHandlerError.MethodNotFound(method)
+            throw RequestHandlerError.MethodNotFound(method)
         }
-        return QueryRequestHandler.VOID;
+        return QueryRequestHandler.VOID
     }
 }

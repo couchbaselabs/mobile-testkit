@@ -9,11 +9,6 @@
 import Foundation
 import CouchbaseLiteSwift
 
-enum DatabaseRequestHandlerError: Error {
-    case MethodNotFound(String)
-    case InvalidArgument(String)
-}
-
 
 public class DatabaseRequestHandler {
     public static let VOID = NSObject()
@@ -29,7 +24,7 @@ public class DatabaseRequestHandler {
             let arg: String? = args.get(name: "name")
             print("args of database_create \(arg!)")
             guard let name = arg else {
-                throw DatabaseRequestHandlerError.InvalidArgument("name")
+                throw RequestHandlerError.InvalidArgument("name")
             }
             return try Database(name: name)
 
@@ -152,9 +147,9 @@ public class DatabaseRequestHandler {
 
             return searchQuery
         default:
-            throw DatabaseRequestHandlerError.MethodNotFound(method)
+            throw RequestHandlerError.MethodNotFound(method)
         }
-        return DatabaseRequestHandler.VOID;
+        return DatabaseRequestHandler.VOID
     }
 }
 

@@ -9,11 +9,6 @@
 import Foundation
 import CouchbaseLiteSwift
 
-enum DataTypesInitiatorHandlerError: Error {
-    case MethodNotFound(String)
-    case InvalidArgument(String)
-}
-
 
 public class DataTypesInitiatorHandler {
     public static let VOID = NSObject()
@@ -21,8 +16,8 @@ public class DataTypesInitiatorHandler {
     public func handleRequest(method: String, args: Args) throws -> Any? {
         switch method {
         default:
-            throw DataTypesInitiatorHandlerError.MethodNotFound(method)
+            throw RequestHandlerError.MethodNotFound(method)
         }
-        return DataTypesInitiatorHandler.VOID;
+        return DataTypesInitiatorHandler.VOID
     }
 }

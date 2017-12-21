@@ -9,11 +9,6 @@
 import Foundation
 import CouchbaseLiteSwift
 
-enum DocumentRequestHandlerError: Error {
-    case MethodNotFound(String)
-    case InvalidArgument(String)
-}
-
 
 public class DocumentRequestHandler {
     public static let VOID = NSObject()
@@ -54,8 +49,8 @@ public class DocumentRequestHandler {
             document.setString(property, forKey: string)
 
         default:
-            throw DocumentRequestHandlerError.MethodNotFound(method)
+            throw RequestHandlerError.MethodNotFound(method)
         }
-        return DocumentRequestHandler.VOID;
+        return DocumentRequestHandler.VOID
     }
 }

@@ -10,7 +10,12 @@ import Foundation
 import CouchbaseLiteSwift
 
 enum ServerError: Error {
-    case MethodNotFound
+    case MethodNotImplemented(String)
+}
+
+enum RequestHandlerError: Error {
+    case MethodNotFound(String)
+    case InvalidArgument(String)
 }
 
 public class Server {
@@ -53,7 +58,6 @@ public class Server {
                 let r = request as! GCDWebServerDataRequest
 
                 if queryParams?.count == 0 {
-                    print("data is \(r.data)")
                     queryParams = r.jsonObject as? Dictionary<String, AnyObject>
                 }
 
@@ -87,11 +91,7 @@ public class Server {
                     } else if method.hasPrefix("datatype") {
                         result = try self.dataTypesInitiatorHandler.handleRequest(method: method, args: args)
                     } else {
-                        // Send 400 error code
-                        let error_text = "Handler not implemented for this call"
-                        let response = GCDWebServerDataResponse(text: error_text)!
-                        response.statusCode = 400
-                        return response
+                        throw ServerError.MethodNotImplemented(method)
                     }
                     if result != nil {
                         body = ValueSerializer.serialize(value: result, memory: self.memory);

@@ -9,12 +9,6 @@
 import Foundation
 import CouchbaseLiteSwift
 
-enum ReplicatorRequestHandlerError: Error {
-    case MethodNotFound(String)
-    case InvalidArgument(String)
-}
-
-
 public class ReplicatorRequestHandler {
     public static let VOID = NSObject()
     fileprivate var _pushPullReplListener:NSObjectProtocol?
@@ -80,7 +74,7 @@ public class ReplicatorRequestHandler {
                 return Replicator(withConfig: config)
             }
             else{
-                throw ReplicatorRequestHandlerError.InvalidArgument("No source db provided or target url provided")
+                throw RequestHandlerError.InvalidArgument("No source db provided or target url provided")
             }
 
 
@@ -115,7 +109,7 @@ public class ReplicatorRequestHandler {
                 return Replicator(withConfig: config)
             }
             else{
-                throw ReplicatorRequestHandlerError.InvalidArgument("No source db provided or target db provided")
+                throw RequestHandlerError.InvalidArgument("No source db provided or target db provided")
             }
 
         case "replicator_start":
@@ -175,9 +169,9 @@ public class ReplicatorRequestHandler {
             return changeListener.getChanges()[index]
 
         default:
-            throw ReplicatorRequestHandlerError.MethodNotFound(method)
+            throw RequestHandlerError.MethodNotFound(method)
         }
-        return ReplicatorRequestHandler.VOID;
+        return ReplicatorRequestHandler.VOID
     }
 }
 

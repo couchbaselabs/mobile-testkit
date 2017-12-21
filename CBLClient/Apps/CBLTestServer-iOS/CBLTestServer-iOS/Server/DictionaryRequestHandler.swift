@@ -10,11 +10,6 @@ import Foundation
 import CouchbaseLiteSwift
 import CouchbaseLiteSwift.CBLDictionary_Swift
 
-enum DictionaryRequestHandlerError: Error {
-    case MethodNotFound(String)
-    case InvalidArgument(String)
-}
-
 
 public class DictionaryRequestHandler {
     public static let VOID = NSObject()
@@ -32,7 +27,7 @@ public class DictionaryRequestHandler {
             } else {
                 return MutableDictionaryObject()
             }
-            
+
         case "dictionary_count":
             let dictionary: DictionaryObject = args.get(name: "dictionary")!
             return dictionary.count
@@ -202,11 +197,10 @@ public class DictionaryRequestHandler {
             let dictionary: DictionaryObject = args.get(name: "dictionary")!
             return  dictionary.makeIterator()
 
-            
         default:
-            throw DictionaryRequestHandlerError.MethodNotFound(method)
+            throw RequestHandlerError.MethodNotFound(method)
         }
-        return DictionaryRequestHandler.VOID;
+        return DictionaryRequestHandler.VOID
     }
 }
 
