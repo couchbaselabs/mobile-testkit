@@ -16,12 +16,22 @@ enum ServerError: Error {
 public class Server {
     let kPort:UInt = 8989
     let server: GCDWebServer!
-    let requestHandler: RequestHandler!
+    let dictionaryRequestHandler: DictionaryRequestHandler!
+    let queryRequestHandler: QueryRequestHandler!
+    let databaseRequestHandler: DatabaseRequestHandler!
+    let documentRequestHandler: DocumentRequestHandler!
+    let replicatorRequestHandler: ReplicatorRequestHandler!
+    let dataTypesInitiatorHandler: DataTypesInitiatorHandler!
     let memory = Memory()
     
     public init() {
         Database.setLogLevel(LogLevel.debug, domain: LogDomain.all)
-        requestHandler = RequestHandler()
+        dictionaryRequestHandler = DictionaryRequestHandler()
+        queryRequestHandler = QueryRequestHandler()
+        databaseRequestHandler = DatabaseRequestHandler()
+        documentRequestHandler = DocumentRequestHandler()
+        replicatorRequestHandler = ReplicatorRequestHandler()
+        dataTypesInitiatorHandler = DataTypesInitiatorHandler()
         server = GCDWebServer()
         server.addDefaultHandler(forMethod: "POST", request: GCDWebServerDataRequest.self) {
             (request) -> GCDWebServerResponse? in
@@ -63,7 +73,26 @@ public class Server {
                 if "release" == method {
                     self.memory.remove(address: rawArgs["object"] as! String)
                 } else {
-                    let result = try self.requestHandler.handleRequest(method: method, args: args)
+                    var result: Any? = nil
+                    if method.hasPrefix("query") {
+                        result = try self.queryRequestHandler.handleRequest(method: method, args: args)
+                    } else if method.hasPrefix("database") {
+                        result = try self.databaseRequestHandler.handleRequest(method: method, args: args)
+                    } else if method.hasPrefix("replicator") {
+                        result = try self.replicatorRequestHandler.handleRequest(method: method, args: args)
+                    } else if method.hasPrefix("document") {
+                        result = try self.documentRequestHandler.handleRequest(method: method, args: args)
+                    } else if method.hasPrefix("dictionary") {
+                        result = try self.dictionaryRequestHandler.handleRequest(method: method, args: args)
+                    } else if method.hasPrefix("datatype") {
+                        result = try self.dataTypesInitiatorHandler.handleRequest(method: method, args: args)
+                    } else {
+                        // Send 400 error code
+                        let error_text = "Handler not implemented for this call"
+                        let response = GCDWebServerDataResponse(text: error_text)!
+                        response.statusCode = 400
+                        return response
+                    }
                     if result != nil {
                         body = ValueSerializer.serialize(value: result, memory: self.memory);
                     }
