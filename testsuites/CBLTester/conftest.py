@@ -129,7 +129,7 @@ def params_from_base_suite_setup(request):
         server = CouchbaseServer(server_url)
 
         buckets = server.get_bucket_names()
-        if enable_sample_bucket not in buckets:
+        if enable_sample_bucket in buckets:
             server.delete_buckets()
             time.sleep(5)
             server.load_sample_bucket(enable_sample_bucket)
@@ -157,12 +157,13 @@ def params_from_base_suite_setup(request):
 #     repl = replicator.configure(source_db, target_url)
 #     log_info("Starting replication")
 #     replicator.start(repl)
-#     replicator_obj = Replicator(base_url)
-#     config_obj = ReplicatorConfiguration(base_url)
-#     repl = config_obj.create(source_db, targetURI=target_url)
-#     replicator = replicator_obj.create(repl)
-#     # Wait for replication to complete
-#     time.sleep(120)
+    replicator_obj = Replicator(base_url)
+    config_obj = ReplicatorConfiguration(base_url)
+    repl = config_obj.create(source_db, targetURI=target_url)
+    replicator = replicator_obj.create(repl)
+    #print replicator_obj.getStatus(replicator)
+    # Wait for replication to complete
+    time.sleep(120)
 
     yield {
         "cluster_config": cluster_config,

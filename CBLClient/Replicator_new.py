@@ -21,50 +21,50 @@ class Replicator(object):
     def create(self, config):
         args = Args()
         args.setMemoryPointer("config", config)
-        self._client.invokeMethod("replicator_create", args)
+        return self._client.invokeMethod("replicator_create", args)
 
     def getConfig(self,replicator):
         args = Args()
         args.setMemoryPointer("replicator", replicator)
-        self._client.invokeMethod("replicator_getConfig", args)
+        return self._client.invokeMethod("replicator_getConfig", args)
 
     def getStatus(self,replicator):
         args = Args()
         args.setMemoryPointer("replicator", replicator)
-        self._client.invokeMethod("replicator_getStatus", args)
+        return self._client.invokeMethod("replicator_getStatus", args)
 
     def addChangeListener(self,replicator):
         args = Args()
         args.setMemoryPointer("replicator", replicator)
-        self._client.invokeMethod("replicator_addChangeListener", args)
+        return self._client.invokeMethod("replicator_addChangeListener", args)
 
     def removeChangeListener(self,replicator, changeListener):
         args = Args()
         args.setMemoryPointer("replicator", replicator)
         args.setMemoryPointer("changeListener", changeListener)
-        self._client.invokeMethod("replicator_removeChangeListener", args)
+        return self._client.invokeMethod("replicator_removeChangeListener", args)
 
     def toString(self,replicator):
         args = Args()
         args.setMemoryPointer("replicator", replicator)
-        self._client.invokeMethod("replicator_toString", args)
+        return self._client.invokeMethod("replicator_toString", args)
 
     def networkReachable(self,replicator):
         args = Args()
         args.setMemoryPointer("replicator", replicator)
-        self._client.invokeMethod("replicator_networkReachable", args)
+        return self._client.invokeMethod("replicator_networkReachable", args)
 
     def networkUnreachable(self,replicator):
         args = Args()
         args.setMemoryPointer("replicator", replicator)
-        self._client.invokeMethod("replicator_networkUnreachable", args)
+        return self._client.invokeMethod("replicator_networkUnreachable", args)
 
     def start(self,replicator):
         args = Args()
         args.setMemoryPointer("replicator", replicator)
-        self._client.invokeMethod("replicator_start", args)
+        return self._client.invokeMethod("replicator_start", args)
 
     def stop(self,replicator):
         args = Args()
         args.setMemoryPointer("replicator", replicator)
-        self._client.invokeMethod("replicator_stop", args)
+        return self._client.invokeMethod("replicator_stop", args)

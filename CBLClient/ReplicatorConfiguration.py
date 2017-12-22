@@ -46,89 +46,89 @@ class ReplicatorConfiguration:
     def getConflictResolver(self, configuration):
         args = Args()
         args.setMemoryPointer("configuration", configuration)
-        self._client.invokeMethod("replicatorConfiguration_getConflictResolver",
+        return self._client.invokeMethod("replicatorConfiguration_getConflictResolver",
                                   args)
 
     def getDatabase(self, configuration):
         args = Args()
         args.setMemoryPointer("configuration", configuration)
-        self._client.invokeMethod("replicatorConfiguration_getDatabase",
+        return self._client.invokeMethod("replicatorConfiguration_getDatabase",
                                   args)
 
     def getDocumentIDs(self, configuration):
         args = Args()
         args.setMemoryPointer("configuration", configuration)
-        self._client.invokeMethod("replicatorConfiguration_getDocumentIDs",
+        return self._client.invokeMethod("replicatorConfiguration_getDocumentIDs",
                                   args)
 
     def getPinnedServerCertificate(self, configuration):
         args = Args()
         args.setMemoryPointer("configuration", configuration)
-        self._client.invokeMethod("replicatorConfiguration_getPinnedServerCertificate",
+        return self._client.invokeMethod("replicatorConfiguration_getPinnedServerCertificate",
                                   args)
 
     def getReplicatorType(self, configuration):
         args = Args()
         args.setMemoryPointer("configuration", configuration)
-        self._client.invokeMethod("replicatorConfiguration_getReplicatorType",
+        return self._client.invokeMethod("replicatorConfiguration_getReplicatorType",
                                   args)
 
     def getTarget(self, configuration):
         args = Args()
         args.setMemoryPointer("configuration", configuration)
-        self._client.invokeMethod("replicatorConfiguration_getTarget", args)
+        return self._client.invokeMethod("replicatorConfiguration_getTarget", args)
 
     def isContinuous(self, configuration):
         args = Args()
         args.setMemoryPointer("configuration", configuration)
-        self._client.invokeMethod("replicatorConfiguration_isContinuous",
+        return self._client.invokeMethod("replicatorConfiguration_isContinuous",
                                   args)
 
     def setAuthenticator(self, configuration, authenticator):
         args = Args()
         args.setMemoryPointer("configuration", configuration)
         args.setMemoryPointer("authenticator", authenticator)
-        self._client.invokeMethod("replicatorConfiguration_setAuthenticator",
+        return self._client.invokeMethod("replicatorConfiguration_setAuthenticator",
                                   args)
 
     def setChannels(self, configuration, channels):
         args = Args()
         args.setMemoryPointer("configuration", configuration)
         args.setArray("channels", channels)
-        self._client.invokeMethod("replicatorConfiguration_setChannels",
+        return self._client.invokeMethod("replicatorConfiguration_setChannels",
                                   args)
 
     def setConflictResolver(self, configuration, conflictResolver):
         args = Args()
         args.setMemoryPointer("configuration", configuration)
         args.setMemoryPointer("conflictResolver", conflictResolver)
-        self._client.invokeMethod("replicatorConfiguration_setConflictResolver",
+        return self._client.invokeMethod("replicatorConfiguration_setConflictResolver",
                                   args)
 
     def setContinuous(self, configuration, continuous):
         args = Args()
         args.setMemoryPointer("configuration", configuration)
         args.setBoolean("continuous", continuous)
-        self._client.invokeMethod("replicatorConfiguration_setContinuous",
+        return self._client.invokeMethod("replicatorConfiguration_setContinuous",
                                   args)
 
     def setDocumentIDs(self, configuration, documentIds):
         args = Args()
         args.setMemoryPointer("configuration", configuration)
         args.setArray("documentIds", documentIds)
-        self._client.invokeMethod("replicatorConfiguration_setDocumentIDs",
+        return self._client.invokeMethod("replicatorConfiguration_setDocumentIDs",
                                   args)
 
     def setPinnedServerCertificate(self, configuration, cert):
         args = Args()
         args.setMemoryPointer("configuration", configuration)
         args.setArray("cert", cert)
-        self._client.invokeMethod("replicatorConfiguration_setPinnedServerCertificate",
+        return self._client.invokeMethod("replicatorConfiguration_setPinnedServerCertificate",
                                   args)
 
     def setReplicatorType(self, configuration, replType):
         args = Args()
         args.setMemoryPointer("configuration", configuration)
         args.setMemoryPointer("replType", replType)
-        self._client.invokeMethod("replicatorConfiguration_setReplicatorType",
+        return self._client.invokeMethod("replicatorConfiguration_setReplicatorType",
                                   args)
