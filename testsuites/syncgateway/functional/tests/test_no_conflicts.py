@@ -68,7 +68,7 @@ def test_no_conflicts_enabled(params_from_base_test_setup, sg_conf_name, num_of_
     # 4. Try to create a conflict
     for doc in sg_docs:
         with pytest.raises(HTTPError) as he:
-            sg_client.add_conflict(url=sg_url, db=sg_db, doc_id=doc["id"], parent_revisions=doc["rev"], new_revision="2-foo",
+            sg_client.add_conflict(url=sg_url, db=sg_db, doc_id=doc["id"], parent_revisions=doc["rev"], new_revision="1-foo",
                                    auth=autouser_session)
         assert he.value.message.startswith('409 Client Error: Conflict for url:')
 

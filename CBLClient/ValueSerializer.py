@@ -5,13 +5,16 @@ from MemoryPointer import MemoryPointer
 class ValueSerializer:
     @staticmethod
     def serialize(value):
-        if value == None:
+        if value is None:
             return "null"
         elif isinstance(value, MemoryPointer):
             return value.getAddress()
         elif isinstance(value, str):
             string = str(value)
             return "\"" + string + "\""
+        elif isinstance(value, unicode):
+            value = value.encode('utf-8')
+            return "\"" + value + "\""
         elif isinstance(value, bool):
             bool_val = bool(value)
             return "true" if bool_val else "false"
@@ -64,16 +67,19 @@ class ValueSerializer:
             return long(value[1:])
         elif value.startswith("F") or value.startswith("D"):
             return float(value[1:])
+        elif value.startswith("#"):
+            if "." in value:
+                return float(value[1:])
+            else:
+                return int(value[1:])
         elif value.startswith("{"):
             stringMap = json.loads(value)
             dict_map = {}
-
             for entry in stringMap:
                 key = str(entry)
                 obj = ValueSerializer.deserialize(stringMap[key])
 
                 dict_map[key] = obj
-
             return dict_map
         elif value.startswith("["):
             stringList = json.loads(value)

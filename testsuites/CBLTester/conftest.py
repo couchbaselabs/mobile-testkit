@@ -12,6 +12,7 @@ from keywords.tklogging import Logging
 from CBLClient.Replication import Replication
 from CBLClient.Database import Database
 from keywords.utils import host_for_url
+from libraries.testkit.cluster import Cluster
 
 
 def pytest_addoption(parser):
@@ -55,6 +56,10 @@ def pytest_addoption(parser):
     parser.addoption("--xattrs",
                      action="store_true",
                      help="xattrs: Enable xattrs for sync gateway")
+                    
+    parser.addoption("--no-conflicts",
+                     action="store_true",
+                     help="If set, allow_conflicts is set to false in sync-gateway config")
 
 
 # This will get called once before the first test that
@@ -77,6 +82,7 @@ def params_from_base_suite_setup(request):
     xattrs_enabled = request.config.getoption("--xattrs")
     base_url = "http://{}:{}".format(liteserv_host, liteserv_port)
     cluster_config = "{}/base_{}".format(CLUSTER_CONFIGS_DIR, mode)
+    no_conflicts_enabled = request.config.getoption("--no-conflicts")
 
     try:
         server_version
@@ -103,10 +109,19 @@ def params_from_base_suite_setup(request):
         log_info("Using document storage for sync meta data")
         persist_cluster_config_environment_prop(cluster_config, 'xattrs_enabled', False)
 
+    if no_conflicts_enabled:
+        log_info("Running with no conflicts")
+        persist_cluster_config_environment_prop(cluster_config, 'no_conflicts_enabled', True)
+    else:
+        log_info("Running with allow conflicts")
+        persist_cluster_config_environment_prop(cluster_config, 'no_conflicts_enabled', False)
+
     sg_config = sync_gateway_config_path_for_mode("sync_gateway_travel_sample", mode)
     cluster_utils = ClusterKeywords()
     cluster_topology = cluster_utils.get_cluster_topology(cluster_config)
+    cluster = Cluster(cluster_config)
     
+    log_info("no conflicts enabled {}".format(no_conflicts_enabled))
     if not skip_provisioning:
         log_info("Installing Sync Gateway + Couchbase Server + Accels ('di' only)")
 
@@ -121,7 +136,7 @@ def params_from_base_suite_setup(request):
             logging_helper = Logging()
             logging_helper.fetch_and_analyze_logs(cluster_config=cluster_config, test_name=request.node.name)
             raise
-
+    cluster.reset(sg_config)
     if enable_sample_bucket:
         server_url = cluster_topology["couchbase_servers"][0]
         server = CouchbaseServer(server_url)
@@ -135,28 +150,12 @@ def params_from_base_suite_setup(request):
             # Sleep for a while for SG to import all docs
             time.sleep(120)
 
-    # Create CBL database
-    cbl_db = "test_db"
-    db = Database(base_url)
     sg_db = "db"
     sg_url = cluster_topology["sync_gateways"][0]["public"]
     sg_ip = host_for_url(sg_url)
-    target_url = "blip://{}:4985/{}".format(sg_ip, sg_db)
-
-    log_info("Creating a Database {}".format(cbl_db))
-    source_db = db.create(cbl_db)
-    log_info("Getting the database name")
-    db_name = db.getName(source_db)
-    assert db_name == "test_db"
-
-    # Start continuous replication
-    replicator = Replication(base_url)
-    log_info("Configuring replication")
-    repl = replicator.configure(source_db, target_url)
-    log_info("Starting replication")
-    replicator.start(repl)
-    # Wait for replication to complete
-    time.sleep(120)
+    target_admin_url = "blip://{}:4985/{}".format(sg_ip, sg_db)
+    target_url = "blip://{}:4984/{}".format(sg_ip, sg_db)
+    log_info("<<<Target url is >>{}".format(target_url))
 
     yield {
         "cluster_config": cluster_config,
@@ -168,14 +167,12 @@ def params_from_base_suite_setup(request):
         "liteserv_host": liteserv_host,
         "liteserv_port": liteserv_port,
         "target_url": target_url,
+        "target_admin_url": target_admin_url,
         "sg_ip": sg_ip,
         "sg_db": sg_db,
-        "source_db": source_db,
-        "cbl_db": cbl_db
+        "no_conflicts_enabled": no_conflicts_enabled,
+        "sync_gateway_version": sync_gateway_version
     }
-
-    log_info("Stopping replication")
-    replicator.stop_replication(repl)
 
 
 @pytest.fixture(scope="function")
@@ -187,11 +184,13 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     test_name = request.node.name
     cluster_topology = params_from_base_suite_setup["cluster_topology"]
     mode = params_from_base_suite_setup["mode"]
+    no_conflicts_enabled = params_from_base_suite_setup["no_conflicts_enabled"]
     target_url = params_from_base_suite_setup["target_url"]
+    target_admin_url = params_from_base_suite_setup["target_admin_url"]
     sg_ip = params_from_base_suite_setup["sg_ip"]
     sg_db = params_from_base_suite_setup["sg_db"]
-    source_db = params_from_base_suite_setup["source_db"]
-    cbl_db = params_from_base_suite_setup["cbl_db"]
+    sync_gateway_version = params_from_base_suite_setup["sync_gateway_version"]
+    
     cluster_helper = ClusterKeywords()
     cluster_hosts = cluster_helper.get_cluster_topology(cluster_config=cluster_config)
     sg_url = cluster_hosts["sync_gateways"][0]["public"]
@@ -214,8 +213,9 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         "liteserv_host": liteserv_host,
         "liteserv_port": liteserv_port,
         "target_url": target_url,
+        "target_admin_url": target_admin_url,
         "sg_ip": sg_ip,
         "sg_db": sg_db,
-        "source_db": source_db,
-        "cbl_db": cbl_db
+        "no_conflicts_enabled": no_conflicts_enabled,
+        "sync_gateway_version": sync_gateway_version
     }
