@@ -42,7 +42,7 @@ public class DictionaryRequestHandler {
             let key: String = args.get(name: "key")!
             let value: String = args.get(name: "value")!
             
-            return dictionary.setValue(value, forKey: key)
+            return dictionary.setString(value, forKey: key)
             
         case "dictionary_getNumber":
             let dictionary: DictionaryObject = args.get(name: "dictionary")!
@@ -54,7 +54,7 @@ public class DictionaryRequestHandler {
             let key: String = args.get(name: "key")!
             let value: NSNumber = args.get(name: "value")!
             
-            return dictionary.setValue(value, forKey: key)
+            return dictionary.setNumber(value, forKey: key)
         
         case "dictionary_getInt":
             let dictionary: DictionaryObject = args.get(name: "dictionary")!
@@ -71,14 +71,14 @@ public class DictionaryRequestHandler {
             let key: String = args.get(name: "key")!
             let value: Int = args.get(name: "value")!
             
-            return dictionary.setValue(value, forKey: key)
+            return dictionary.setInt(value, forKey: key)
         
         case "dictionary_setInt64":
             let dictionary: MutableDictionaryObject = args.get(name: "dictionary")!
             let key: String = args.get(name: "key")!
             let value: Int64 = args.get(name: "value")!
             
-            return dictionary.setValue(value, forKey: key)
+            return dictionary.setInt64(value, forKey: key)
      
         case "dictionary_getFloat":
             let dictionary: DictionaryObject = args.get(name: "dictionary")!
@@ -90,7 +90,7 @@ public class DictionaryRequestHandler {
             let key: String = args.get(name: "key")!
             let value: Float = args.get(name: "value")!
             
-            return dictionary.setValue(value, forKey: key)
+            return dictionary.setFloat(value, forKey: key)
         
         case "dictionary_getDouble":
             let dictionary: DictionaryObject = args.get(name: "dictionary")!
@@ -102,7 +102,7 @@ public class DictionaryRequestHandler {
             let key: String = args.get(name: "key")!
             let value: Double = args.get(name: "value")!
             
-            return dictionary.setValue(value, forKey: key)
+            return dictionary.setDouble(value, forKey: key)
         
         case "dictionary_getBoolean":
             let dictionary: DictionaryObject = args.get(name: "dictionary")!
@@ -114,7 +114,7 @@ public class DictionaryRequestHandler {
             let key: String = args.get(name: "key")!
             let value: Bool = args.get(name: "value")!
             
-            return dictionary.setValue(value, forKey: key)
+            return dictionary.setBoolean(value, forKey: key)
         
         case "dictionary_getBlob":
             let dictionary: DictionaryObject = args.get(name: "dictionary")!
@@ -126,7 +126,7 @@ public class DictionaryRequestHandler {
             let key: String = args.get(name: "key")!
             let value: Blob = args.get(name: "value")!
             
-            return dictionary.setValue(value, forKey: key)
+            return dictionary.setBlob(value, forKey: key)
         
         case "dictionary_getDate":
             let dictionary: DictionaryObject = args.get(name: "dictionary")!
@@ -138,7 +138,7 @@ public class DictionaryRequestHandler {
             let key: String = args.get(name: "key")!
             let value: Date = args.get(name: "value")!
             
-            return dictionary.setValue(value, forKey: key)
+            return dictionary.setDate(value, forKey: key)
         
         case "dictionary_getArray":
             let dictionary: DictionaryObject = args.get(name: "dictionary")!
@@ -150,7 +150,7 @@ public class DictionaryRequestHandler {
             let key: String = args.get(name: "key")!
             let value: ArrayObject = args.get(name: "value")!
             
-            return dictionary.setValue(value, forKey: key)
+            return dictionary.setArray(value, forKey: key)
 
         case "dictionary_getValue":
             let dictionary: DictionaryObject = args.get(name: "dictionary")!
@@ -173,8 +173,8 @@ public class DictionaryRequestHandler {
             let key: String = args.get(name: "key")!
             let value: DictionaryObject = args.get(name: "value")!
             
-            return dictionary.setValue(value, forKey: key)
-            
+            return dictionary.setDictionary(value, forKey: key)
+                       
         case "dictionary_getKeys":
             let dictionary: DictionaryObject = args.get(name: "dictionary")!
             return dictionary.keys

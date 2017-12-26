@@ -14,9 +14,9 @@
 		294FB20C1FEAFD9000DD0C23 /* DatabaseRequestHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 294FB20B1FEAFD9000DD0C23 /* DatabaseRequestHandler.swift */; };
 		294FB20E1FEB0E1800DD0C23 /* DocumentRequestHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 294FB20D1FEB0E1800DD0C23 /* DocumentRequestHandler.swift */; };
 		294FB2101FEB10C900DD0C23 /* DataTypesInitiatorHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 294FB20F1FEB10C900DD0C23 /* DataTypesInitiatorHandler.swift */; };
-		29590D6F1FEC58EC002AE145 /* CouchbaseLiteSwift.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 29590D6E1FEC58EC002AE145 /* CouchbaseLiteSwift.framework */; };
-		29590D701FEC58EC002AE145 /* CouchbaseLiteSwift.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 29590D6E1FEC58EC002AE145 /* CouchbaseLiteSwift.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		29917D981FA92F82006C7675 /* DictionaryRequestHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 29917D971FA92F82006C7675 /* DictionaryRequestHandler.swift */; };
+		2996929F1FF2E7D60040CC32 /* CouchbaseLiteSwift.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2996929E1FF2E7D60040CC32 /* CouchbaseLiteSwift.framework */; };
+		299692A01FF2E7D60040CC32 /* CouchbaseLiteSwift.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 2996929E1FF2E7D60040CC32 /* CouchbaseLiteSwift.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		29D15BA11FA7DCFA005DAAA3 /* ValueSerializer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 29D15BA01FA7DCFA005DAAA3 /* ValueSerializer.swift */; };
 		29D15BA31FA7DE39005DAAA3 /* Memory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 29D15BA21FA7DE39005DAAA3 /* Memory.swift */; };
 		29F77F271F9FC18D0035178F /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 29F77F261F9FC18D0035178F /* AppDelegate.swift */; };
@@ -67,7 +67,7 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
-				29590D701FEC58EC002AE145 /* CouchbaseLiteSwift.framework in Embed Frameworks */,
+				299692A01FF2E7D60040CC32 /* CouchbaseLiteSwift.framework in Embed Frameworks */,
 			);
 			name = "Embed Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -82,9 +82,8 @@
 		294FB20B1FEAFD9000DD0C23 /* DatabaseRequestHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DatabaseRequestHandler.swift; sourceTree = "<group>"; };
 		294FB20D1FEB0E1800DD0C23 /* DocumentRequestHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentRequestHandler.swift; sourceTree = "<group>"; };
 		294FB20F1FEB10C900DD0C23 /* DataTypesInitiatorHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataTypesInitiatorHandler.swift; sourceTree = "<group>"; };
-		29590D6C1FEC58E0002AE145 /* CouchbaseLiteSwift.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CouchbaseLiteSwift.framework; path = Carthage/Build/iOS/CouchbaseLiteSwift.framework; sourceTree = "<group>"; };
-		29590D6E1FEC58EC002AE145 /* CouchbaseLiteSwift.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CouchbaseLiteSwift.framework; path = Carthage/Build/iOS/CouchbaseLiteSwift.framework; sourceTree = "<group>"; };
 		29917D971FA92F82006C7675 /* DictionaryRequestHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DictionaryRequestHandler.swift; sourceTree = "<group>"; };
+		2996929E1FF2E7D60040CC32 /* CouchbaseLiteSwift.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CouchbaseLiteSwift.framework; path = Carthage/Build/iOS/CouchbaseLiteSwift.framework; sourceTree = "<group>"; };
 		29D15BA01FA7DCFA005DAAA3 /* ValueSerializer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ValueSerializer.swift; sourceTree = "<group>"; };
 		29D15BA21FA7DE39005DAAA3 /* Memory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Memory.swift; sourceTree = "<group>"; };
 		29F77F231F9FC18D0035178F /* CBLTestServer-iOS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "CBLTestServer-iOS.app"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -138,7 +137,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				29590D6F1FEC58EC002AE145 /* CouchbaseLiteSwift.framework in Frameworks */,
+				2996929F1FF2E7D60040CC32 /* CouchbaseLiteSwift.framework in Frameworks */,
 				29F786A01F9FC4850035178F /* libz.tbd in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -181,7 +180,7 @@
 		29F77F1A1F9FC18D0035178F = {
 			isa = PBXGroup;
 			children = (
-				29590D6E1FEC58EC002AE145 /* CouchbaseLiteSwift.framework */,
+				2996929E1FF2E7D60040CC32 /* CouchbaseLiteSwift.framework */,
 				29F77F251F9FC18D0035178F /* CBLTestServer-iOS */,
 				29F77F3A1F9FC18D0035178F /* CBLTestServer-iOSTests */,
 				29F77F451F9FC18D0035178F /* CBLTestServer-iOSUITests */,
@@ -305,7 +304,6 @@
 		29F7869E1F9FC4850035178F /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				29590D6C1FEC58E0002AE145 /* CouchbaseLiteSwift.framework */,
 				29F7869F1F9FC4850035178F /* libz.tbd */,
 			);
 			name = Frameworks;
