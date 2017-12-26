@@ -8,7 +8,6 @@
 
 import Foundation
 import CouchbaseLiteSwift
-import CouchbaseLiteSwift.CBLDictionary_Swift
 
 
 public class DictionaryRequestHandler {
@@ -17,9 +16,9 @@ public class DictionaryRequestHandler {
     
     public func handleRequest(method: String, args: Args) throws -> Any? {
         switch method {
-        ///////////////////////
-        // MutableDictionary //
-        ///////////////////////
+        /////////////////////////////
+        // MutableDictionaryObject //
+        /////////////////////////////
         case "dictionary_create":
             let dictionary: [String: Any]? = args.get(name: "content_dict")!
             if dictionary != nil {
@@ -29,7 +28,7 @@ public class DictionaryRequestHandler {
             }
 
         case "dictionary_count":
-            let dictionary: DictionaryObject = args.get(name: "dictionary")!
+            let dictionary: MutableDictionaryObject = args.get(name: "dictionary")!
             return dictionary.count
             
         case "dictionary_getString":
@@ -51,7 +50,7 @@ public class DictionaryRequestHandler {
             return dictionary.setString(value, forKey: key)
             
         case "dictionary_getNumber":
-            let dictionary: DictionaryObject = args.get(name: "dictionary")!
+            let dictionary: MutableDictionaryObject = args.get(name: "dictionary")!
             let key: String = args.get(name: "key")!
             return dictionary.number(forKey: key)
         
@@ -63,12 +62,12 @@ public class DictionaryRequestHandler {
             return dictionary.setNumber(value, forKey: key)
         
         case "dictionary_getInt":
-            let dictionary: DictionaryObject = args.get(name: "dictionary")!
+            let dictionary: MutableDictionaryObject = args.get(name: "dictionary")!
             let key: String = args.get(name: "key")!
             return dictionary.int(forKey: key)
         
         case "dictionary_getInt64":
-            let dictionary: DictionaryObject = args.get(name: "dictionary")!
+            let dictionary: MutableDictionaryObject = args.get(name: "dictionary")!
             let key: String = args.get(name: "key")!
             return dictionary.int64(forKey: key)
 
@@ -87,7 +86,7 @@ public class DictionaryRequestHandler {
             return dictionary.setInt64(value, forKey: key)
      
         case "dictionary_getFloat":
-            let dictionary: DictionaryObject = args.get(name: "dictionary")!
+            let dictionary: MutableDictionaryObject = args.get(name: "dictionary")!
             let key: String = args.get(name: "key")!
             return dictionary.float(forKey: key)
         
@@ -99,7 +98,7 @@ public class DictionaryRequestHandler {
             return dictionary.setFloat(value, forKey: key)
         
         case "dictionary_getDouble":
-            let dictionary: DictionaryObject = args.get(name: "dictionary")!
+            let dictionary: MutableDictionaryObject = args.get(name: "dictionary")!
             let key: String = args.get(name: "key")!
             return dictionary.double(forKey: key)
         
@@ -111,7 +110,7 @@ public class DictionaryRequestHandler {
             return dictionary.setDouble(value, forKey: key)
         
         case "dictionary_getBoolean":
-            let dictionary: DictionaryObject = args.get(name: "dictionary")!
+            let dictionary: MutableDictionaryObject = args.get(name: "dictionary")!
             let key: String = args.get(name: "key")!
             return dictionary.boolean(forKey: key)
         
@@ -123,7 +122,7 @@ public class DictionaryRequestHandler {
             return dictionary.setBoolean(value, forKey: key)
         
         case "dictionary_getBlob":
-            let dictionary: DictionaryObject = args.get(name: "dictionary")!
+            let dictionary: MutableDictionaryObject = args.get(name: "dictionary")!
             let key: String = args.get(name: "key")!
             return dictionary.blob(forKey: key)
         
@@ -135,7 +134,7 @@ public class DictionaryRequestHandler {
             return dictionary.setBlob(value, forKey: key)
         
         case "dictionary_getDate":
-            let dictionary: DictionaryObject = args.get(name: "dictionary")!
+            let dictionary: MutableDictionaryObject = args.get(name: "dictionary")!
             let key: String = args.get(name: "key")!
             return dictionary.date(forKey: key)
         
@@ -147,11 +146,11 @@ public class DictionaryRequestHandler {
             return dictionary.setDate(value, forKey: key)
         
         case "dictionary_getArray":
-            let dictionary: DictionaryObject = args.get(name: "dictionary")!
+            let dictionary: MutableDictionaryObject = args.get(name: "dictionary")!
             let key: String = args.get(name: "key")!
             return dictionary.array(forKey: key)
         
-        case "setArray":
+        case "dictionary_setArray":
             let dictionary: MutableDictionaryObject = args.get(name: "dictionary")!
             let key: String = args.get(name: "key")!
             let value: ArrayObject = args.get(name: "value")!
@@ -159,7 +158,7 @@ public class DictionaryRequestHandler {
             return dictionary.setArray(value, forKey: key)
 
         case "dictionary_getValue":
-            let dictionary: DictionaryObject = args.get(name: "dictionary")!
+            let dictionary: MutableDictionaryObject = args.get(name: "dictionary")!
             let key: String = args.get(name: "key")!
             return dictionary.value(forKey: key)
 
@@ -170,7 +169,7 @@ public class DictionaryRequestHandler {
             return dictionary.setValue(value, forKey: key)
             
         case "dictionary_getDictionary":
-            let dictionary: DictionaryObject = args.get(name: "dictionary")!
+            let dictionary: MutableDictionaryObject = args.get(name: "dictionary")!
             let key: String = args.get(name: "key")!
             return dictionary.dictionary(forKey: key)
         
@@ -182,11 +181,11 @@ public class DictionaryRequestHandler {
             return dictionary.setDictionary(value, forKey: key)
             
         case "dictionary_getKeys":
-            let dictionary: DictionaryObject = args.get(name: "dictionary")!
+            let dictionary: MutableDictionaryObject = args.get(name: "dictionary")!
             return dictionary.keys
 
         case "dictionary_toDictionary":
-            let dictionary: DictionaryObject = args.get(name: "dictionary")!
+            let dictionary: MutableDictionaryObject = args.get(name: "dictionary")!
             return dictionary.toDictionary()
         
         case "dictionary_remove":
@@ -195,12 +194,12 @@ public class DictionaryRequestHandler {
             return dictionary.removeValue(forKey: key)
         
         case "dictionary_contains":
-            let dictionary: DictionaryObject = args.get(name: "dictionary")!
+            let dictionary: MutableDictionaryObject = args.get(name: "dictionary")!
             let key: String = args.get(name: "key")!
             return dictionary.contains(key)
         
         case "dictionary_iterator":
-            let dictionary: DictionaryObject = args.get(name: "dictionary")!
+            let dictionary: MutableDictionaryObject = args.get(name: "dictionary")!
             return  dictionary.makeIterator()
 
         default:

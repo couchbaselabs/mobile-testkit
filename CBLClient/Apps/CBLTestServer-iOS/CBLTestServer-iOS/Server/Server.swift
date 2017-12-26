@@ -26,7 +26,7 @@ public class Server {
     let databaseRequestHandler: DatabaseRequestHandler!
     let documentRequestHandler: DocumentRequestHandler!
     let replicatorRequestHandler: ReplicatorRequestHandler!
-    let dataTypesInitiatorHandler: DataTypesInitiatorHandler!
+    let arrayRequestHandler: ArrayRequestHandler!
     let memory = Memory()
     
     public init() {
@@ -36,7 +36,7 @@ public class Server {
         databaseRequestHandler = DatabaseRequestHandler()
         documentRequestHandler = DocumentRequestHandler()
         replicatorRequestHandler = ReplicatorRequestHandler()
-        dataTypesInitiatorHandler = DataTypesInitiatorHandler()
+        arrayRequestHandler = ArrayRequestHandler()
         server = GCDWebServer()
         server.addDefaultHandler(forMethod: "POST", request: GCDWebServerDataRequest.self) {
             (request) -> GCDWebServerResponse? in
@@ -88,8 +88,8 @@ public class Server {
                         result = try self.documentRequestHandler.handleRequest(method: method, args: args)
                     } else if method.hasPrefix("dictionary") {
                         result = try self.dictionaryRequestHandler.handleRequest(method: method, args: args)
-                    } else if method.hasPrefix("datatype") {
-                        result = try self.dataTypesInitiatorHandler.handleRequest(method: method, args: args)
+                    } else if method.hasPrefix("array") {
+                        result = try self.arrayRequestHandler.handleRequest(method: method, args: args)
                     } else {
                         throw ServerError.MethodNotImplemented(method)
                     }
