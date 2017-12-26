@@ -37,6 +37,12 @@ public class DictionaryRequestHandler {
             let key: String = args.get(name: "key")!
             return dictionary.string(forKey: key)
         
+        case "dictionary_setData":
+            let dictionary: MutableDictionaryObject = args.get(name: "dictionary")!
+            let data: [String: Any]? = args.get(name: "data")!
+
+            return dictionary.setData(data)
+        
         case "dictionary_setString":
             let dictionary: MutableDictionaryObject = args.get(name: "dictionary")!
             let key: String = args.get(name: "key")!
@@ -174,7 +180,7 @@ public class DictionaryRequestHandler {
             let value: DictionaryObject = args.get(name: "value")!
             
             return dictionary.setDictionary(value, forKey: key)
-                       
+            
         case "dictionary_getKeys":
             let dictionary: DictionaryObject = args.get(name: "dictionary")!
             return dictionary.keys
