@@ -88,7 +88,7 @@ class Database:
         args.setMemoryPointer("database", database)
         if document is not None:
             args.setMemoryPointer("document", document)
-        return self._client.invokeMethod("database_saveDocument", args)
+        return self._client.invokeMethod("database_save", args)
 
     def saveDocuments(self, database, documents):
         args = Args()
@@ -134,10 +134,15 @@ class Database:
         args.setMemoryPointer("change", change)
         return self._client.invokeMethod("database_databaseChange_getDocumentId", args)
 
-    def getDocIds(self, database):
+#     def getDocIds(self, database):
+#         args = Args()
+#         args.setMemoryPointer("database", database)
+#         return self._client.invokeMethod("database_getDocIds", args)
+
+    def getIndexes(self, database):
         args = Args()
         args.setMemoryPointer("database", database)
-        return self._client.invokeMethod("database_getDocIds", args)
+        return self._client.invokeMethod("database_getIndexes", args)
 
     def create_value_index(self, database, prop):
         args = Args()
@@ -185,4 +190,23 @@ class Database:
             
         self.saveDocuments(db, added_docs)
 
+    def update_bulk_docs(self, database):
+  
+        updated_docs = {}
+        doc_ids = self.getDocIds(database)
+        docs = self.getDocuments(database, doc_ids)
+        for doc in docs:
+            doc_body = docs[doc]
+            try:
+                doc_body["updates-cbl"]
+            except Exception:
+                doc_body["updates-cbl"] = 0
+
+            doc_body["updates-cbl"] = doc_body["updates"] + 1
+            updated_docs[doc] = doc_body
+            # self.saveDocument(database, doc_body)
+
+        log_info("updates docs with update is {}".format(updated_docs))
+        log_info("type of updated docs are  {}".format(type(updated_docs)))
+        self.saveDocuments(database, updated_docs)
 

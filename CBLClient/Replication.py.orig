@@ -32,10 +32,14 @@ class Replication:
             args.setDictionary("headers", headers)
         if target_db is None:
             args.setString("target_url", target_url)
+<<<<<<< HEAD
+            return self._client.invokeMethod("replicator_configure_remote_db_url", args)
+=======
             return self._client.invokeMethod("replicator_configureRemoteDbUrl", args)
+>>>>>>> refs/remotes/origin/feature/cbl20-replication
         else:
             args.setString("target_db", target_db)
-            return self._client.invokeMethod("configure_replicator_local_db", args)
+            return self._client.invokeMethod("replicator_configure_local_db", args)
 
     def create(self, config):
         args = Args()
@@ -81,25 +85,25 @@ class Replication:
         args = Args()
         args.setMemoryPointer("replication_obj", replication_obj)
 
-        return self._client.invokeMethod("replicator_getCompleted", args)
+        return self._client.invokeMethod("replicator_get_completed", args)
 
     def get_total(self, replication_obj):
         args = Args()
         args.setMemoryPointer("replication_obj", replication_obj)
 
-        return self._client.invokeMethod("replicator_getTotal", args)
+        return self._client.invokeMethod("replicator_get_total", args)
 
     def get_activitylevel(self, replication_obj):
         args = Args()
         args.setMemoryPointer("replication_obj", replication_obj)
         
-        return self._client.invokeMethod("replicator_getActivityLevel", args)
+        return self._client.invokeMethod("replicator_get_activitylevel", args)
 
     def get_error(self, replication_obj):
         args = Args()
         args.setMemoryPointer("replication_obj", replication_obj)
 
-        return self._client.invokeMethod("replicator_getError", args)
+        return self._client.invokeMethod("replicator_get_error", args)
 
     def add_change_listener(self, replication_obj):
         args = Args()

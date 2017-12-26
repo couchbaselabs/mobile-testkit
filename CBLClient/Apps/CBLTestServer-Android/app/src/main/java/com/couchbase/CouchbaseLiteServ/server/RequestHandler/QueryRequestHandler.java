@@ -6,6 +6,7 @@ import com.couchbase.lite.CouchbaseLiteException;
 import com.couchbase.lite.DataSource;
 import com.couchbase.lite.Database;
 import com.couchbase.lite.Expression;
+import com.couchbase.lite.Meta;
 import com.couchbase.lite.Query;
 import com.couchbase.lite.Result;
 import com.couchbase.lite.ResultSet;
@@ -35,7 +36,7 @@ public class QueryRequestHandler {
 
     public ResultSet run(Args args) throws CouchbaseLiteException {
         Query query = args.get("query");
-        return query.run();
+        return query.execute();
     }
 
     public Result nextResult(Args args){
@@ -55,8 +56,8 @@ public class QueryRequestHandler {
         Query search_query = Query
                 .select(SelectResult.all())
                 .from(DataSource.database(database))
-                .where((Expression.meta().getId()).equalTo(doc_id));
-        ResultSet rows = search_query.run();
+                .where((Meta.id).equalTo(doc_id));
+        ResultSet rows = search_query.execute();
         for (Result row : rows){
             return row.toMap();
         }
@@ -72,7 +73,7 @@ public class QueryRequestHandler {
                 .from(DataSource.database(database))
                 .limit(limit, offset);
         List<Object> result_array = null;
-        ResultSet rows = search_query.run();
+        ResultSet rows = search_query.execute();
         for (Result row : rows){
             result_array.add(row);
         }
@@ -87,13 +88,13 @@ public class QueryRequestHandler {
         String whr_val = args.get("whr_val");
 
         Query search_query = Query
-                .select(SelectResult.expression(Expression.meta().getId()),
+                .select(SelectResult.expression(Meta.id),
                         SelectResult.expression(Expression.property(select_property1)),
                         SelectResult.expression(Expression.property(select_property2)))
                 .from(DataSource.database(database))
                 .where(Expression.property(whr_key).equalTo(whr_val));
         List<Object> result_array = null;
-        ResultSet rows = search_query.run();
+        ResultSet rows = search_query.execute();
         for (Result row : rows){
             result_array.add(row.toMap());
         }

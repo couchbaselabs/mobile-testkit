@@ -44,6 +44,7 @@ public class ReplicatorConfigurationRequestHandler {
 
     public List<String>  getChannels(Args args){
         ReplicatorConfiguration replicatorConfiguration = args.get("configuration");
+
         return replicatorConfiguration.getChannels();
     }
 
@@ -67,14 +68,14 @@ public class ReplicatorConfigurationRequestHandler {
         return replicatorConfiguration.getPinnedServerCertificate();
     }
 
-    public ReplicatorConfiguration.ReplicatorType getReplicatorType(Args args){
+    public String getReplicatorType(Args args){
         ReplicatorConfiguration replicatorConfiguration = args.get("configuration");
-        return replicatorConfiguration.getReplicatorType();
+        return replicatorConfiguration.getReplicatorType().toString();
     }
 
-    public Object getTarget(Args args){
+    public String getTarget(Args args){
         ReplicatorConfiguration replicatorConfiguration = args.get("configuration");
-        return replicatorConfiguration.getTarget();
+        return replicatorConfiguration.getTarget().toString();
     }
 
     public Boolean isContinuous(Args args){
@@ -123,10 +124,10 @@ public class ReplicatorConfigurationRequestHandler {
         String type = args.get("replType");
         ReplicatorConfiguration.ReplicatorType replicatorType;
         switch (type) {
-            case "push":
+            case "PUSH":
                 replicatorType = ReplicatorConfiguration.ReplicatorType.PUSH;
                 break;
-            case "pull":
+            case "PULL":
                 replicatorType = ReplicatorConfiguration.ReplicatorType.PULL;
                 break;
             default:

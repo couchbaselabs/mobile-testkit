@@ -14,7 +14,7 @@ public class SessionAuthenticatorRequestHandler {
     public SessionAuthenticator create(Args args){
         String sessionId = args.get("sessionId");
         String cookieName = args.get("cookieName");
-        Object expires  = args.get("expires");
+        Date expires  = args.get("expires");
         return new SessionAuthenticator(sessionId, expires, cookieName);
     }
 

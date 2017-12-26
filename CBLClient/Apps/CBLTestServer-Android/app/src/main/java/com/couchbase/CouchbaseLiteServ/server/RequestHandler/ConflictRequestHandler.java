@@ -3,21 +3,21 @@ package com.couchbase.CouchbaseLiteServ.server.RequestHandler;
 
 import com.couchbase.CouchbaseLiteServ.server.Args;
 import com.couchbase.lite.Conflict;
-import com.couchbase.lite.ReadOnlyDocument;
+import com.couchbase.lite.Document;
 
 public class ConflictRequestHandler {
 
-    public ReadOnlyDocument getBase(Args args){
+    public Document getBase(Args args){
         Conflict conflict = args.get("conflict");
         return conflict.getBase();
     }
 
-    public ReadOnlyDocument getMine(Args args){
+    public Document getMine(Args args){
         Conflict conflict = args.get("conflict");
         return conflict.getMine();
     }
 
-    public ReadOnlyDocument getTheirs(Args args){
+    public Document getTheirs(Args args){
         Conflict conflict = args.get("conflict");
         return conflict.getTheirs();
     }

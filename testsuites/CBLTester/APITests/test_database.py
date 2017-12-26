@@ -6,7 +6,7 @@ from CBLClient.Document import Document
 from CodeWarrior.Standard_Suite import document
 
 #baseUrl = "http://172.16.1.154:8080"
-baseUrl = "http://192.168.0.109:8080"
+baseUrl = "http://192.168.0.107:8080"
 #baseUrl = "http://172.23.121.73:55555"
 dbName = "foo"
 docIdPrefix = "bar"
@@ -172,7 +172,7 @@ class TestDatabase():
         (random_string(6), random_string(8), 9),
         (random_string(6), random_string(8), 99),
         (random_string(6), random_string(8), 999),
-        (random_string(6), random_string(8), 9999)
+#         (random_string(6), random_string(8), 9999)
         ])
     def test_getCount(self, num_of_docs, dbName, docId):
         '''
@@ -271,7 +271,7 @@ class TestDatabase():
         self.db_obj.saveDocument(db_1, doc)
         self.db_obj.saveDocument(db_2, doc)
         self.db_obj.purge(document=doc, database=db_1)
-        assert not self.db_obj.getDocument(db_1, docId)
+        assert not self.db_obj.getDocument(db_2, docId)
         assert self.db_obj.getDocument(db_2, docId)
 
     @pytest.mark.parametrize("dbName, docId",[

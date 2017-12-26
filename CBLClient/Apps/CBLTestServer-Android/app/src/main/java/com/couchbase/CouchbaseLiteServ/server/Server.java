@@ -1,5 +1,6 @@
 package com.couchbase.CouchbaseLiteServ.server;
 
+import com.couchbase.CouchbaseLiteServ.server.RequestHandler.BasicAuthenticatorRequestHandler;
 import com.couchbase.CouchbaseLiteServ.server.RequestHandler.CollationRequestHandler;
 import com.couchbase.CouchbaseLiteServ.server.RequestHandler.DataSourceRequestHandler;
 import com.couchbase.CouchbaseLiteServ.server.RequestHandler.DataTypesInitiatorHandler;
@@ -13,6 +14,7 @@ import com.couchbase.CouchbaseLiteServ.server.RequestHandler.ReplicatorConfigura
 import com.couchbase.CouchbaseLiteServ.server.RequestHandler.ReplicatorRequestHandler;
 import com.couchbase.CouchbaseLiteServ.server.RequestHandler.ResultRequestHandler;
 import com.couchbase.CouchbaseLiteServ.server.RequestHandler.SelectResultRequestHandler;
+import com.couchbase.CouchbaseLiteServ.server.RequestHandler.SessionAuthenticatorRequestHandler;
 import com.couchbase.lite.ReplicatorConfiguration;
 import com.google.gson.Gson;
 
@@ -151,6 +153,14 @@ public class Server extends NanoHTTPD {
                     case "result":
                         target = ResultRequestHandler.class.getMethod(method_to_call, Args.class);
                         requestHandler = new ResultRequestHandler();
+                        break;
+                    case "basicAuthenticator":
+                        target = BasicAuthenticatorRequestHandler.class.getMethod(method_to_call, Args.class);
+                        requestHandler = new BasicAuthenticatorRequestHandler();
+                        break;
+                    case "sessionAuthenticator":
+                        target = SessionAuthenticatorRequestHandler.class.getMethod(method_to_call, Args.class);
+                        requestHandler = new SessionAuthenticatorRequestHandler();
                         break;
                     default:
                         throw new IllegalArgumentException("Handler not implemented for this call");

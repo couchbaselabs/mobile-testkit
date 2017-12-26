@@ -31,44 +31,54 @@ public class BlobRequestHandler {
     }
 
     public String digest(Args args){
-        Blob obj = args.get("obj");
-        return obj.digest();
+        Blob blob = args.get("blob");
+        return blob.digest();
     }
 
-    public void fleeceEncode(Args args){
-        Blob obj = args.get("obj");
+    public void encodeTo(Args args){
+        Blob blob = args.get("blob");
         FLEncoder encoder = args.get("encoder");
-        Database database = args.get("database");
-        obj.fleeceEncode(encoder, database);
+        blob.encodeTo(encoder);
+    }
+
+    public Boolean equals(Args args){
+        Blob blob = args.get("blob");
+        Object obj = args.get("obj");
+        return blob.equals(obj);
+    }
+
+    public int hashCode(Args args){
+        Blob blob = args.get("blob");
+        return blob.hashCode();
     }
 
     public byte[] getContent(Args args){
-        Blob obj = args.get("obj");
-        return obj.getContent();
+        Blob blob = args.get("blob");
+        return blob.getContent();
     }
 
     public Map<String, Object> getProperties(Args args){
-        Blob obj = args.get("obj");
-        return obj.getProperties();
+        Blob blob = args.get("blob");
+        return blob.getProperties();
     }
 
     public InputStream getContentStream(Args args){
-        Blob obj = args.get("obj");
-        return obj.getContentStream();
+        Blob blob = args.get("blob");
+        return blob.getContentStream();
     }
 
     public String getContentType(Args args){
-        Blob obj = args.get("obj");
-        return obj.getContentType();
+        Blob blob = args.get("blob");
+        return blob.getContentType();
     }
 
     public long length(Args args){
-        Blob obj = args.get("obj");
-        return obj.length();
+        Blob blob = args.get("blob");
+        return blob.length();
     }
 
     public String toString(Args args){
-        Blob obj = args.get("obj");
-        return obj.toString();
+        Blob blob = args.get("blob");
+        return blob.toString();
     }
 }

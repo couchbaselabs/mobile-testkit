@@ -138,7 +138,7 @@ def params_from_base_suite_setup(request):
             logging_helper = Logging()
             logging_helper.fetch_and_analyze_logs(cluster_config=cluster_config, test_name=request.node.name)
             raise
-        cluster.reset(sg_config)
+    cluster.reset(sg_config)
     if enable_sample_bucket:
         server_url = cluster_topology["couchbase_servers"][0]
         server = CouchbaseServer(server_url)
@@ -155,9 +155,33 @@ def params_from_base_suite_setup(request):
     sg_db = "db"
     sg_url = cluster_topology["sync_gateways"][0]["public"]
     sg_ip = host_for_url(sg_url)
+<<<<<<< HEAD
+    target_url = "blip://{}:4985/{}".format(sg_ip, sg_db)
+
+    log_info("Creating a Database {}".format(cbl_db))
+    source_db = db.create(cbl_db)
+    log_info("Getting the database name")
+    db_name = db.getName(source_db)
+    assert db_name == "test_db"
+
+    # Start continuous replication
+#     replicator = Replication(base_url)
+#     log_info("Configuring replication")
+#     repl = replicator.configure(source_db, target_url)
+#     log_info("Starting replication")
+#     replicator.start(repl)
+    replicator_obj = Replicator(base_url)
+    config_obj = ReplicatorConfiguration(base_url)
+    repl = config_obj.create(source_db, targetURI=target_url)
+    replicator = replicator_obj.create(repl)
+    #print replicator_obj.getStatus(replicator)
+    # Wait for replication to complete
+    time.sleep(120)
+=======
     target_admin_url = "blip://{}:4985/{}".format(sg_ip, sg_db)
     target_url = "blip://{}:4984/{}".format(sg_ip, sg_db)
     log_info("<<<Target url is >>{}".format(target_url))
+>>>>>>> refs/remotes/origin/feature/cbl20-replication
 
     yield {
         "cluster_config": cluster_config,
@@ -176,8 +200,12 @@ def params_from_base_suite_setup(request):
         "sync_gateway_version": sync_gateway_version
     }
 
+<<<<<<< HEAD
 #     log_info("Stopping replication")
 #     replicator.stop_replication(repl)
+
+=======
+>>>>>>> refs/remotes/origin/feature/cbl20-replication
 
 @pytest.fixture(scope="function")
 def params_from_base_test_setup(request, params_from_base_suite_setup):

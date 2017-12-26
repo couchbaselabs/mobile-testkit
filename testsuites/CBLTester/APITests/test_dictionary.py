@@ -6,7 +6,7 @@ from CBLClient.Dictionary import Dictionary
 from CBLClient.DataTypeInitiator import DataTypeInitiator
 
 #baseUrl = "http://172.16.1.154:8080"
-baseUrl = "http://192.168.43.236:8080"
+baseUrl = "http://192.168.0.107:8080"
 
 class TestDictionary():
 
@@ -49,10 +49,8 @@ class TestDictionary():
         '''
         @summary: Testing contains method of Dictionary API
         '''
-        hashmap = {}
-        hashmap[key] = value
         test_dict = self.dict_obj.create()
-        self.dict_obj.set(test_dict, hashmap)
+        self.dict_obj.setString(test_dict, key, value)
         assert self.dict_obj.contains(test_dict, key)
 
     @pytest.mark.parametrize("num_of_keys", [
@@ -73,24 +71,24 @@ class TestDictionary():
         content_dict = self.dict_obj.create(hashmap)
         assert num_of_keys == self.dict_obj.count(content_dict)
 
-
-    def test_set(self):
-        '''
-        @summary: Testing set methods of Dictionary API
-        '''
-        content_dict = self.dict_obj.create()
-        hashmap = {"Double_key": "{}".format(random.uniform(1, 10)),
-                   "Float_key": "{}".format(random.random()),
-                   "Integer_key": random.randint(1, 1000),
-                   "Long_key": random.randint(100000, 10000000),
-                   "String_key": random_string(6)
-                   }
-        self.dict_obj.set(content_dict, hashmap)
-        dict_keys = self.dict_obj.getKeys(content_dict)
-        assert sorted(hashmap.keys()) == sorted(dict_keys)
-        #getKeys and contains keys are not matching for same dict
-        for key in hashmap.keys():
-            assert self.dict_obj.contains(content_dict, key)
+#     Not available in DB21
+#     def test_set(self):
+#         '''
+#         @summary: Testing set methods of Dictionary API
+#         '''
+#         content_dict = self.dict_obj.create()
+#         hashmap = {"Double_key": "{}".format(random.uniform(1, 10)),
+#                    "Float_key": "{}".format(random.random()),
+#                    "Integer_key": random.randint(1, 1000),
+#                    "Long_key": random.randint(100000, 10000000),
+#                    "String_key": random_string(6)
+#                    }
+#         self.dict_obj.set(content_dict, hashmap)
+#         dict_keys = self.dict_obj.getKeys(content_dict)
+#         assert sorted(hashmap.keys()) == sorted(dict_keys)
+#         #getKeys and contains keys are not matching for same dict
+#         for key in hashmap.keys():
+#             assert self.dict_obj.contains(content_dict, key)
 
     @pytest.mark.parametrize("key, value",[
         (random_string(6), True),

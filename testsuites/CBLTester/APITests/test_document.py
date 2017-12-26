@@ -1,20 +1,22 @@
 import pytest
 import random
 
+from CBLClient.Database import Database
 from CBLClient.Document import Document
 from CBLClient.Dictionary import Dictionary
 from CBLClient.DataTypeInitiator import DataTypeInitiator
 from keywords.utils import random_string
-from StdSuites.AppleScript_Suite import result
 
 #baseUrl = "http://172.16.1.154:8080"
-baseUrl = "http://192.168.43.236:8080"
+baseUrl = "http://192.168.0.107:8080"
 
 class TestDocument():
 
+    db_obj = Database(baseUrl)
     doc_obj = Document(baseUrl)
     dict_obj = Dictionary(baseUrl)
     datatype = DataTypeInitiator(baseUrl)
+    db_obj.create("dbname")
 
     @pytest.mark.parametrize("docId1, docId2",[
         (random_string(1), random_string(1)),
@@ -31,6 +33,7 @@ class TestDocument():
         '''
         @summary: Testing Document Constructor
         '''
+#         Failing with DB21 
         doc_1 = self.doc_obj.create()
         assert self.doc_obj.getId(doc_1)
         
@@ -60,38 +63,36 @@ class TestDocument():
         '''
         @summary: Testing Document set/contains method
         '''
-        content_dict = {}
-        content_dict[key] = value
         doc = self.doc_obj.create()
-        doc = self.doc_obj.set(doc, content_dict)
+        doc = self.doc_obj.setString(doc, key, value)
         assert self.doc_obj.contains(doc, key)
 
     @pytest.mark.parametrize("num_of_keys", [
         9,
         99,
         999,
-        9999
+#         9999
         ])
     def test_count(self, num_of_keys):
         '''
         @summary: Testing Document count method
         '''
-        content_dict = {}
-        for i in range(num_of_keys):
-            content_dict["test_{}".format(i)] = "Test content - {}".format(i)
         doc = self.doc_obj.create()
         assert self.doc_obj.count(doc) == 0
-        doc = self.doc_obj.set(doc, content_dict)
+        for i in range(num_of_keys):
+            key = "test_{}".format(i)
+            value = "Test content - {}".format(i)
+            doc = self.doc_obj.setString(doc, key, value)
         assert self.doc_obj.count(doc) == num_of_keys
 
     def test_remove(self):
         '''
         @summary: Testing Document remove method
         '''
-        content_dict = {}
-        content_dict["test"] = "test-1"
+        key = "test"
+        value = "test-1"
         doc = self.doc_obj.create()
-        doc = self.doc_obj.set(doc, content_dict)
+        doc = self.doc_obj.setString(doc, key, value)
         assert self.doc_obj.contains(doc, "test")
         self.doc_obj.remove(doc, "test")
         assert not self.doc_obj.contains(doc, "test")
@@ -127,27 +128,28 @@ class TestDocument():
         result_map = self.doc_obj.toMap(doc)
         assert hashmap == result_map
 
-    def test_set(self):
-        '''
-        @summary: Testing set method of Document API
-        '''
-        doc = self.doc_obj.create()
-        hashmap = {}
-        key = "string_key"
-        value = "Test String"
-        hashmap[key] = value
-        key = "Integer_key"
-        value = 1
-        hashmap[key] = value
-        key = "Long_key"
-        value = long(random.randint(10,10000))
-        hashmap[key] = value
-        key = "Float_key"
-        value = 3.0
-        hashmap[key] = value
-        self.doc_obj.set(doc, hashmap)
-        result_map = self.doc_obj.toMap(doc)
-        assert hashmap == result_map
+#     Not available in DB21
+#     def test_set(self):
+#         '''
+#         @summary: Testing set method of Document API
+#         '''
+#         doc = self.doc_obj.create()
+#         hashmap = {}
+#         key = "string_key"
+#         value = "Test String"
+#         hashmap[key] = value
+#         key = "Integer_key"
+#         value = 1
+#         hashmap[key] = value
+#         key = "Long_key"
+#         value = long(random.randint(10,10000))
+#         hashmap[key] = value
+#         key = "Float_key"
+#         value = 3.0
+#         hashmap[key] = value
+#         self.doc_obj.set(doc, hashmap)
+#         result_map = self.doc_obj.toMap(doc)
+#         assert hashmap == result_map
 
     def test_getKeys(self):
         '''

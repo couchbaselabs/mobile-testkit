@@ -43,7 +43,6 @@ public class Server {
                 let r = request as! GCDWebServerDataRequest
 
                 if queryParams?.count == 0 {
-                    print("data is \(r.data)")
                     queryParams = r.jsonObject as? Dictionary<String, AnyObject>
                 }
 

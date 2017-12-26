@@ -71,12 +71,13 @@ public class ValueSerializer {
             for (Map.Entry<String, String> entry : stringMap.entrySet()) {
                 String key = entry.getKey();
                 String nestedVal;
-                if (entry.getValue() instanceof String){
-                    nestedVal = entry.getValue();
-                } else {
-                    nestedVal = new Gson().toJson(entry.getValue());
-                }
-                Object object = deserialize(nestedVal, memory);
+                String val = entry.getValue();
+//                if (val.startsWith("\"")){
+//                    nestedVal = val.substring(1, value.length() - 1);
+//                } else {
+//                    nestedVal = val;
+//                }
+                Object object = deserialize(val, memory);
 
                 map.put(key, object);
             }

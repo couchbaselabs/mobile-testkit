@@ -20,7 +20,7 @@ class Client(object):
             url = self.baseurl + "/" + method
 
             if args:
-                #log_info("args: {}".format(args.getArgs()))
+                # log_info("args: {}".format(args.getArgs()))
 
                 for k, v in args:
                     val = ValueSerializer.serialize(v)
@@ -47,8 +47,7 @@ class Client(object):
         except RuntimeError as err:
             raise err
         except Exception as err:
-            out = resp.content
-            return  err, out# RuntimeError(e)
+            return err, resp.content  # RuntimeError(e)
 
     def release(self, obj):
         args = Args()

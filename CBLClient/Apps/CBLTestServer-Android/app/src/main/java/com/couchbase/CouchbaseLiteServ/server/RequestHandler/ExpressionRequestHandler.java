@@ -4,22 +4,23 @@ package com.couchbase.CouchbaseLiteServ.server.RequestHandler;
 import com.couchbase.CouchbaseLiteServ.server.Args;
 import com.couchbase.lite.Expression;
 import com.couchbase.lite.Meta;
+import com.couchbase.lite.internal.query.expression.PropertyExpression;
 
 public class ExpressionRequestHandler {
 
-    public Expression.PropertyExpression property(Args args) {
+    public PropertyExpression property(Args args) {
         String property = args.get("property");
         return Expression.property(property);
     }
 
     //Need to check the signature of this method
     public Meta.MetaExpression metaId() {
-        return Expression.meta().getId();
+        return Meta.id;
     }
 
     //Need to check the signature of this method
     public Meta.MetaExpression metaSequence() {
-        return Expression.meta().getSequence();
+        return Meta.sequence;
     }
 
     public Expression parameter(Args args) {
@@ -44,23 +45,23 @@ public class ExpressionRequestHandler {
         return Expression.variable(name);
     }
 
-
-    public Expression.In any(Args args) {
-        String variable = args.get("variable");
-        return Expression.any(variable);
-    }
-
-
-    public Expression.In anyAndEvery(Args args) {
-        String variable = args.get("variable");
-        return Expression.anyAndEvery(variable);
-    }
-
-
-    public Expression.In every(Args args) {
-        String variable = args.get("variable");
-        return Expression.every(variable);
-    }
+//    Not available in DB21
+//    public Expression.In any(Args args) {
+//        String variable = args.get("variable");
+//        return Expression.any(variable);
+//    }
+//
+//
+//    public Expression.In anyAndEvery(Args args) {
+//        String variable = args.get("variable");
+//        return Expression.anyAndEvery(variable);
+//    }
+//
+//
+//    public Expression.In every(Args args) {
+//        String variable = args.get("variable");
+//        return Expression.every(variable);
+//    }
 
 
     public Expression createEqualTo(Args args) {

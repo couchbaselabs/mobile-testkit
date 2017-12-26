@@ -1,13 +1,11 @@
 package com.couchbase.CouchbaseLiteServ.server.RequestHandler;
 
 import com.couchbase.CouchbaseLiteServ.server.Args;
-import com.couchbase.lite.Database;
 import com.couchbase.lite.Replicator;
 import com.couchbase.lite.ReplicatorChange;
 import com.couchbase.lite.ReplicatorChangeListener;
 import com.couchbase.lite.ReplicatorConfiguration;
 
-import java.net.URI;
 import java.util.List;
 
 public class ReplicatorRequestHandler {
@@ -25,9 +23,9 @@ public class ReplicatorRequestHandler {
         return replicator.getConfig();
     }
 
-    public Replicator.Status getStatus(Args args){
+    public Replicator.ActivityLevel getStatus(Args args){
         Replicator replicator = args.get("replicator");
-        return replicator.getStatus();
+        return replicator.getStatus().getActivityLevel();
     }
 
     public void addChangeListener(Args args){

@@ -62,7 +62,7 @@ public class RequestHandler {
             
         case "database_save":
             let database: Database = (args.get(name:"database"))!
-            let document: MutableDocument = args.get(name:"document")!
+            let document: MutableDocument = (args.get(name:"document"))!
             
             try! database.save(document)
             
@@ -218,9 +218,54 @@ public class RequestHandler {
                     return BasicAuthenticator(username: username!, password: password!)
             }
             
+          
+        case "replicator_configureRemoteDbUrl":
+            let source_db: Database? = args.get(name: "source_db")
+            let target_url: String? = args.get(name: "target_url")
+            let replication_type: String? = args.get(name: "replication_type")!
+            let continuous: Bool? = args.get(name: "continuous")
+            let channels: [String]? = args.get(name: "channels")
+            let documentIDs: [String]? = args.get(name: "documentIDs")
+            let authenticator: Authenticator? = args.get(name: "authenticator")
+            let conflictResolver: ConflictResolver? = args.get(name: "conflictResolver")
+            let headers: Dictionary<String, String>? = args.get(name: "headers")!
             
+            var replicatorType = ReplicatorType.pushAndPull
+            if let type = replication_type {
+                if type == "push" {
+                    replicatorType = .push
+                } else if type == "pull" {
+                    replicatorType = .pull
+                } else {
+                    replicatorType = .pushAndPull
+                }
+            }
+            let target_converted_url: URL? = URL(string: target_url!)
+            if (source_db != nil && target_converted_url != nil) {
+                var config = ReplicatorConfiguration(database: source_db!, targetURL: target_converted_url!)
+                config.replicatorType = replicatorType
+                config.continuous = continuous != nil ? continuous! : false
+                config.authenticator = authenticator
+                config.conflictResolver = conflictResolver
+                config.headers = headers
+                
+                if channels != nil {
+                    config.channels = channels
+                }
+                if documentIDs != nil {
+                    config.documentIDs = documentIDs
+                }
+                return config
+            }
+            else{
+                throw RequestHandlerError.InvalidArgument("No source db provided or target url provided")
+            }
             
-        case "configure_replicator_remote_db_url":
+        case "replicator_create":
+            let config: ReplicatorConfiguration? = args.get(name: "config")
+            return Replicator(config: config!)
+            
+        /*case "configure_replicator_remote_db_url":
             
             let source_db: Database? = args.get(name: "source_db")
             let target_url: String? = args.get(name: "target_url")
@@ -230,6 +275,7 @@ public class RequestHandler {
             let documentIDs: [String]? = args.get(name: "documentIDs")
             let authenticator: Authenticator? = args.get(name: "authenticator")
             let conflictResolver: ConflictResolver? = args.get(name: "conflictResolver")
+            let headers: Dictionary<String, String>? = args.get(name: "headers")!
             
             var replicatorType = ReplicatorType.pushAndPull
             if let type = replication_type {
@@ -248,6 +294,7 @@ public class RequestHandler {
                config.continuous = continuous != nil ? continuous! : false
                config.authenticator = authenticator
                config.conflictResolver = conflictResolver
+               config.headers = headers
                if channels != nil {
                   config.channels = channels
                 }
@@ -260,7 +307,7 @@ public class RequestHandler {
                 throw RequestHandlerError.InvalidArgument("No source db provided or target url provided")
             }
             
-
+        */
         case "configure_replicator_local_db":
             let source_db: Database? = args.get(name: "source_db")
             let targetDatabase: Database? = args.get(name: "targetDatabase")
@@ -320,14 +367,17 @@ public class RequestHandler {
             let replication_obj: Replicator = args.get(name: "replication_obj")!
             return replication_obj.status.progress.completed
             
-        case "replicator_get_totoal":
+        case "replicator_get_total":
             let replication_obj: Replicator = args.get(name: "replication_obj")!
             return replication_obj.status.progress.total
             
         case "replicator_get_error":
             let replication_obj: Replicator = args.get(name: "replication_obj")!
-            print("repl object error is \(replication_obj.status.error!)")
-            return replication_obj.status.error
+            // if replication_obj.status.error != nil {
+                
+                return replication_obj.status.error
+            //}
+            // return nil
             
         case "replicator_addChangeListener":
             let replication_obj: Replicator = args.get(name: "replication_obj")!
@@ -349,6 +399,24 @@ public class RequestHandler {
             let changeListener: MyReplicationChangeListener = (args.get(name: "changeListener"))!
             let index: Int = (args.get(name: "index"))!
             return changeListener.getChanges()[index]
+            
+        case "replicator_conflict_resolver":
+            let conflict_type: String? = args.get(name: "conflict_type")
+            if conflict_type == "mine" {
+                return ReplicationMine()
+                
+            } else if conflict_type == "theirs" {
+                return ReplicationTheirs()
+            }
+            else if conflict_type == "base" {
+                return ReplicationBase()
+            }
+            else {
+                func resolve(conflict: Conflict) -> Document? {
+                    return nil
+                }
+            }
+            
         
         /////////////////////
         // Query Collation //
@@ -778,4 +846,27 @@ class MyReplicationChangeListener : NSObject  {
     }
 }
 
+class ReplicationMine: ConflictResolver {
+    func resolve(conflict: Conflict) -> Document? {
+        return conflict.mine
+    }
+}
+
+class ReplicationTheirs: ConflictResolver {
+    func resolve(conflict: Conflict) -> Document? {
+        return conflict.theirs
+    }
+}
+
+class ReplicationBase: ConflictResolver {
+    func resolve(conflict: Conflict) -> Document? {
+        return conflict.base
+    }
+}
+
+class GiveUp: ConflictResolver {
+    func resolve(conflict: Conflict) -> Document? {
+        return nil
+    }
+}
 

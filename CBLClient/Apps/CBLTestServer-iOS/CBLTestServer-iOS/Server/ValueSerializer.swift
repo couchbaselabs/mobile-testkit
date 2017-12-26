@@ -110,7 +110,6 @@ public class ValueSerializer {
         } else if (value!.hasPrefix("{")) {
             let data: Data = value!.data(using: String.Encoding.utf8)!
             var stringMap = [String: Any]()
-
             do {
                 stringMap = try JSONSerialization.jsonObject(with: data, options: JSONSerialization.ReadingOptions.mutableContainers) as! Dictionary<String, Any>
             } catch {
