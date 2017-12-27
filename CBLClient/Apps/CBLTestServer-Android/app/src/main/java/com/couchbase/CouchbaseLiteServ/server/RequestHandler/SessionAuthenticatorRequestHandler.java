@@ -5,6 +5,7 @@ import com.couchbase.CouchbaseLiteServ.server.Args;
 import com.couchbase.lite.SessionAuthenticator;
 
 import java.util.Date;
+import java.util.concurrent.TimeUnit;
 
 public class SessionAuthenticatorRequestHandler {
     /* ------------------------ */
@@ -14,7 +15,9 @@ public class SessionAuthenticatorRequestHandler {
     public SessionAuthenticator create(Args args){
         String sessionId = args.get("sessionId");
         String cookieName = args.get("cookieName");
-        Date expires  = args.get("expires");
+        Date date = new Date();
+        long expTimeInSec  = args.get("expires");
+        Date expires = new Date(date.getTime() + TimeUnit.SECONDS.toMillis(expTimeInSec));
         return new SessionAuthenticator(sessionId, expires, cookieName);
     }
 
