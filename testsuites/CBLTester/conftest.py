@@ -12,6 +12,8 @@ from keywords.tklogging import Logging
 from CBLClient.Replication import Replication
 from CBLClient.Database import Database
 from keywords.utils import host_for_url
+from couchbase.bucket import Bucket
+from couchbase.n1ql import N1QLQuery
 
 
 def pytest_addoption(parser):
@@ -122,6 +124,22 @@ def params_from_base_suite_setup(request):
             logging_helper.fetch_and_analyze_logs(cluster_config=cluster_config, test_name=request.node.name)
             raise
 
+    # Create CBL database
+    cbl_db = "test_db"
+    db = Database(base_url)
+    sg_db = "db"
+    sg_url = cluster_topology["sync_gateways"][0]["public"]
+    sg_ip = host_for_url(sg_url)
+    target_url = "blip://{}:4985/{}".format(sg_ip, sg_db)
+    cbs_url = cluster_topology['couchbase_servers'][0]
+    cbs_ip = host_for_url(cbs_url)
+
+    log_info("Creating a Database {}".format(cbl_db))
+    source_db = db.create(cbl_db)
+    log_info("Getting the database name")
+    db_name = db.getName(source_db)
+    assert db_name == "test_db"
+
     if enable_sample_bucket:
         server_url = cluster_topology["couchbase_servers"][0]
         server = CouchbaseServer(server_url)
@@ -132,31 +150,22 @@ def params_from_base_suite_setup(request):
             time.sleep(5)
             server.load_sample_bucket(enable_sample_bucket)
             server._create_internal_rbac_bucket_user(enable_sample_bucket)
-            # Sleep for a while for SG to import all docs
-            time.sleep(120)
 
-    # Create CBL database
-    cbl_db = "test_db"
-    db = Database(base_url)
-    sg_db = "db"
-    sg_url = cluster_topology["sync_gateways"][0]["public"]
-    sg_ip = host_for_url(sg_url)
-    target_url = "blip://{}:4985/{}".format(sg_ip, sg_db)
+        # Create primary index
+        log_info("Creating primary index for {}".format(enable_sample_bucket))
+        sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, enable_sample_bucket), password='password')
+        n1ql_query = 'create primary index on {}'.format(enable_sample_bucket)
+        query = N1QLQuery(n1ql_query)
+        sdk_client.n1ql_query(query)
 
-    log_info("Creating a Database {}".format(cbl_db))
-    source_db = db.create(cbl_db)
-    log_info("Getting the database name")
-    db_name = db.getName(source_db)
-    assert db_name == "test_db"
-
-    # Start continuous replication
-    replicator = Replication(base_url)
-    log_info("Configuring replication")
-    repl = replicator.configure(source_db, target_url)
-    log_info("Starting replication")
-    replicator.start(repl)
-    # Wait for replication to complete
-    time.sleep(120)
+        # Start continuous replication
+        replicator = Replication(base_url)
+        log_info("Configuring replication")
+        repl = replicator.configure(source_db=source_db, target_url=target_url, continuous=True)
+        log_info("Starting replication")
+        replicator.start(repl)
+        # Wait for replication to complete
+        #time.sleep(120)
 
     yield {
         "cluster_config": cluster_config,
@@ -174,8 +183,9 @@ def params_from_base_suite_setup(request):
         "cbl_db": cbl_db
     }
 
-    log_info("Stopping replication")
-    replicator.stop(repl)
+    if enable_sample_bucket:
+        log_info("Stopping replication")
+        replicator.stop(repl)
 
 
 @pytest.fixture(scope="function")

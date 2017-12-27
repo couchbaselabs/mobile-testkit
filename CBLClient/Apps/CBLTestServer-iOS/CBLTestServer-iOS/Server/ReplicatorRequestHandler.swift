@@ -36,7 +36,7 @@ public class ReplicatorRequestHandler {
 
 
 
-        case "configure_replicator_remote_db_url":
+        case "replicator_configure_remote_db_url":
             let source_db: Database? = args.get(name: "source_db")
             let target_url: String? = args.get(name: "target_url")
             let replication_type: String? = args.get(name: "replication_type")!
@@ -78,7 +78,7 @@ public class ReplicatorRequestHandler {
             }
 
 
-        case "configure_replicator_local_db":
+        case "replicator_configure_local_db":
             let source_db: Database? = args.get(name: "source_db")
             let targetDatabase: Database? = args.get(name: "targetDatabase")
             let replication_type: String? = args.get(name: "replication_type")!

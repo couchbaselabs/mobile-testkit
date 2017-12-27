@@ -31,10 +31,10 @@ class Replication:
             args.setMemoryPointer("authenticator", replicator_authenticator)
         if target_db is None:
             args.setString("target_url", target_url)
-            return self._client.invokeMethod("configure_replicator_remote_db_url", args)
+            return self._client.invokeMethod("replicator_configure_remote_db_url", args)
         else:
             args.setString("target_db", target_db)
-            return self._client.invokeMethod("configure_replicator_local_db", args)
+            return self._client.invokeMethod("replicator_configure_local_db", args)
 
     def authentication(self, session_id=None, cookie=None, username=None, password=None, authentication_type="basic"):
         args = Args()

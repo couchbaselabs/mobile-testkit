@@ -184,7 +184,7 @@ public class DictionaryRequestHandler {
             let dictionary: MutableDictionaryObject = args.get(name: "dictionary")!
             return dictionary.keys
 
-        case "dictionary_toDictionary":
+        case "dictionary_toMap":
             let dictionary: MutableDictionaryObject = args.get(name: "dictionary")!
             return dictionary.toDictionary()
         
