@@ -17,6 +17,8 @@
 		2996929F1FF2E7D60040CC32 /* CouchbaseLiteSwift.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2996929E1FF2E7D60040CC32 /* CouchbaseLiteSwift.framework */; };
 		299692A01FF2E7D60040CC32 /* CouchbaseLiteSwift.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 2996929E1FF2E7D60040CC32 /* CouchbaseLiteSwift.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		299692A51FF30B1A0040CC32 /* ArrayRequesthandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 299692A41FF30B1A0040CC32 /* ArrayRequesthandler.swift */; };
+		299692A71FF31A590040CC32 /* SessionAuthenticatorRequestHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 299692A61FF31A590040CC32 /* SessionAuthenticatorRequestHandler.swift */; };
+		299692A91FF31D0D0040CC32 /* EncryptionKeyRequestHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 299692A81FF31D0D0040CC32 /* EncryptionKeyRequestHandler.swift */; };
 		29D15BA11FA7DCFA005DAAA3 /* ValueSerializer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 29D15BA01FA7DCFA005DAAA3 /* ValueSerializer.swift */; };
 		29D15BA31FA7DE39005DAAA3 /* Memory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 29D15BA21FA7DE39005DAAA3 /* Memory.swift */; };
 		29F77F271F9FC18D0035178F /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 29F77F261F9FC18D0035178F /* AppDelegate.swift */; };
@@ -84,6 +86,8 @@
 		29917D971FA92F82006C7675 /* DictionaryRequestHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DictionaryRequestHandler.swift; sourceTree = "<group>"; };
 		2996929E1FF2E7D60040CC32 /* CouchbaseLiteSwift.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CouchbaseLiteSwift.framework; path = Carthage/Build/iOS/CouchbaseLiteSwift.framework; sourceTree = "<group>"; };
 		299692A41FF30B1A0040CC32 /* ArrayRequesthandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArrayRequesthandler.swift; sourceTree = "<group>"; };
+		299692A61FF31A590040CC32 /* SessionAuthenticatorRequestHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionAuthenticatorRequestHandler.swift; sourceTree = "<group>"; };
+		299692A81FF31D0D0040CC32 /* EncryptionKeyRequestHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EncryptionKeyRequestHandler.swift; sourceTree = "<group>"; };
 		29D15BA01FA7DCFA005DAAA3 /* ValueSerializer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ValueSerializer.swift; sourceTree = "<group>"; };
 		29D15BA21FA7DE39005DAAA3 /* Memory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Memory.swift; sourceTree = "<group>"; };
 		29F77F231F9FC18D0035178F /* CBLTestServer-iOS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "CBLTestServer-iOS.app"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -173,6 +177,8 @@
 				294FB20B1FEAFD9000DD0C23 /* DatabaseRequestHandler.swift */,
 				294FB20D1FEB0E1800DD0C23 /* DocumentRequestHandler.swift */,
 				299692A41FF30B1A0040CC32 /* ArrayRequesthandler.swift */,
+				299692A61FF31A590040CC32 /* SessionAuthenticatorRequestHandler.swift */,
+				299692A81FF31D0D0040CC32 /* EncryptionKeyRequestHandler.swift */,
 			);
 			path = Server;
 			sourceTree = "<group>";
@@ -450,8 +456,10 @@
 			files = (
 				29F77F291F9FC18D0035178F /* ViewController.swift in Sources */,
 				29F786931F9FC4180035178F /* GCDWebServerFunctions.m in Sources */,
+				299692A71FF31A590040CC32 /* SessionAuthenticatorRequestHandler.swift in Sources */,
 				29F786961F9FC4180035178F /* GCDWebServerDataRequest.m in Sources */,
 				29F7869D1F9FC4180035178F /* GCDWebServerStreamedResponse.m in Sources */,
+				299692A91FF31D0D0040CC32 /* EncryptionKeyRequestHandler.swift in Sources */,
 				299692A51FF30B1A0040CC32 /* ArrayRequesthandler.swift in Sources */,
 				294FB20A1FEAF9E800DD0C23 /* ReplicatorRequestHandler.swift in Sources */,
 				29F7869C1F9FC4180035178F /* GCDWebServerFileResponse.m in Sources */,

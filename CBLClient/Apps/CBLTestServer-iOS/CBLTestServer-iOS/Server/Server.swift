@@ -27,6 +27,8 @@ public class Server {
     let documentRequestHandler: DocumentRequestHandler!
     let replicatorRequestHandler: ReplicatorRequestHandler!
     let arrayRequestHandler: ArrayRequestHandler!
+    let sessionauthenticatorRequestHandler: SessionAuthenticatorRequestHandler!
+    let encryptionkeyRequestHandler: EncryptionKeyRequestHandler!
     let memory = Memory()
     
     public init() {
@@ -37,6 +39,8 @@ public class Server {
         documentRequestHandler = DocumentRequestHandler()
         replicatorRequestHandler = ReplicatorRequestHandler()
         arrayRequestHandler = ArrayRequestHandler()
+        sessionauthenticatorRequestHandler = SessionAuthenticatorRequestHandler()
+        encryptionkeyRequestHandler = EncryptionKeyRequestHandler()
         server = GCDWebServer()
         server.addDefaultHandler(forMethod: "POST", request: GCDWebServerDataRequest.self) {
             (request) -> GCDWebServerResponse? in
@@ -90,6 +94,10 @@ public class Server {
                         result = try self.dictionaryRequestHandler.handleRequest(method: method, args: args)
                     } else if method.hasPrefix("array") {
                         result = try self.arrayRequestHandler.handleRequest(method: method, args: args)
+                    } else if method.hasPrefix("sessionauthenticator") {
+                        result = try self.sessionauthenticatorRequestHandler.handleRequest(method: method, args: args)
+                    } else if method.hasPrefix("encryptionkey") {
+                        result = try self.encryptionkeyRequestHandler.handleRequest(method: method, args: args)
                     } else {
                         throw ServerError.MethodNotImplemented(method)
                     }

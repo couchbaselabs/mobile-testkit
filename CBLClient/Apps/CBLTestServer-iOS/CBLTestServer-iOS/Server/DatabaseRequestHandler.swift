@@ -33,23 +33,34 @@ public class DatabaseRequestHandler {
 
             try database.close()
 
-        case "database_path":
+        case "database_getPath":
             let database: Database = (args.get(name:"database"))!
 
             return database.path
 
-        case "database_delete":
-            let name: String = (args.get(name:"name"))!
-            let path: String = (args.get(name:"path"))!
+        case "database_deleteDocument":
+            let database: Database = (args.get(name:"database"))!
+            let document: MutableDocument = (args.get(name:"document"))!
 
-            try Database.delete(withName: name, inDirectory: path)
+            try database.deleteDocument(document)
+        
+        case "database_deleteDB":
+            let database: Database = (args.get(name:"database"))!
+            
+            try database.delete()
+
+        case "database_deleteIndex":
+            let database: Database = (args.get(name:"database"))!
+            let name: String = (args.get(name: "name"))!
+            
+            try database.deleteIndex(forName: name)
 
         case "database_getName":
             let database: Database = args.get(name:"database")!
 
             return database.name
 
-        case "database_document":
+        case "database_getDocument":
             let database: Database = (args.get(name:"database"))!
             let id: String = (args.get(name: "id"))!
 
@@ -67,7 +78,7 @@ public class DatabaseRequestHandler {
 
             return database.containsDocument(withID: id)
 
-        case "database_docCount":
+        case "database_getCount":
             let database: Database = (args.get(name:"database"))!
             return database.count
 
@@ -94,7 +105,7 @@ public class DatabaseRequestHandler {
 
             return changeListener.getChanges()[index]
 
-            case "databaseChange_getDocumentId":
+        case "databaseChange_getDocumentId":
             let change: DatabaseChange = (args.get(name: "change"))!
 
             return change.documentIDs
