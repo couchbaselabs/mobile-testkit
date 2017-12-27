@@ -36,7 +36,8 @@ def sync_gateway_config_path_for_mode(config_prefix, mode):
 
     # Construct expected config path
     config = "{}/{}_{}.json".format(SYNC_GATEWAY_CONFIGS, config_prefix, mode)
-
+    print "Sync Gatway Config:", config
+    print os.getcwd()
     if not os.path.isfile(config):
         raise ValueError("Could not file config: {}".format(config))
 

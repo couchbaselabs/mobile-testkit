@@ -52,7 +52,9 @@ public class QueryRequestHandler {
 
     public Map<String, Object> getDoc(Args args) throws CouchbaseLiteException {
         Database database = args.get("database");
+        int out = database.getCount();
         String doc_id = args.get("doc_id");
+        boolean check = database.contains(doc_id);
         Query search_query = Query
                 .select(SelectResult.all())
                 .from(DataSource.database(database))

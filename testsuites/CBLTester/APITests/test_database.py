@@ -5,8 +5,8 @@ from CBLClient.Database import Database
 from CBLClient.Document import Document
 from CodeWarrior.Standard_Suite import document
 
-#baseUrl = "http://172.16.1.154:8080"
-baseUrl = "http://192.168.0.107:8080"
+baseUrl = "http://172.16.1.154:8080"
+#baseUrl = "http://192.168.0.117:8080"
 #baseUrl = "http://172.23.121.73:55555"
 dbName = "foo"
 docIdPrefix = "bar"
@@ -144,6 +144,7 @@ class TestDatabase():
         @summary: Testing delete(DB) method of Database API
         '''
         db = self.db_obj.create(dbName)
+        #self.db_obj.close(db)
         assert self.db_obj.deleteDB(db) == -1
 
     @pytest.mark.parametrize("dbName, docId",[

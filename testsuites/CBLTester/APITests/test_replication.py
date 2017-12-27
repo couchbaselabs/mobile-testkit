@@ -41,7 +41,7 @@ class TestReplication(object):
         sg_blip_url = "{}/db".format(sg_blip_url)
         channels = ["ABC"]
 
-        sg_config = sync_gateway_config_path_for_mode("listener_tests/listener_tests", sg_mode)
+        sg_config = sync_gateway_config_path_for_mode("sync_gateway_blip", sg_mode)
         c = cluster.Cluster(config=cluster_config)
         c.reset(sg_config_path=sg_config)
 
@@ -72,6 +72,7 @@ class TestReplication(object):
         # Check that all doc ids in SG are also present in CBL
         for doc in sg_docs["rows"]:
             assert self.db_obj.contains(cbl_db, str(doc["id"]))
+        self.db_obj.deleteDB(cbl_db)
 
     @pytest.mark.sanity
     @pytest.mark.listener
@@ -120,7 +121,6 @@ class TestReplication(object):
             # Verify sg docs does exist in CBL as it is a pull replication
             elif repl_type == "PULL":
                 assert self.db_obj.contains(cbl_db, doc_id)
-        self.db_obj.close(cbl_db)
         self.db_obj.deleteDB(cbl_db)
 
     def setup_sg_cbl_docs(self, cluster_config, mode, channels, sg_blip_url,
