@@ -73,7 +73,7 @@ public class DocumentRequestHandler {
             let key: String = (args.get(name: "key"))!
             let value: NSNumber = (args.get(name: "value"))!
             
-            return document.setNumber(forKey: key, value)
+            return document.setNumber(value, forKey: key)
 
         case "document_getInt":
             let document: MutableDocument = (args.get(name: "document"))!

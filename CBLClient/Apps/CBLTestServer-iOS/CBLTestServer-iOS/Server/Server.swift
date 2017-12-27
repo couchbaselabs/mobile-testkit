@@ -16,6 +16,7 @@ enum ServerError: Error {
 enum RequestHandlerError: Error {
     case MethodNotFound(String)
     case InvalidArgument(String)
+    case IOException(String)
 }
 
 public class Server {
@@ -29,6 +30,8 @@ public class Server {
     let arrayRequestHandler: ArrayRequestHandler!
     let sessionauthenticatorRequestHandler: SessionAuthenticatorRequestHandler!
     let encryptionkeyRequestHandler: EncryptionKeyRequestHandler!
+    let conflictRequestHandler: ConflictRequestHandler!
+    let blobRequestHandler: BlobRequestHandler!
     let memory = Memory()
     
     public init() {
@@ -41,6 +44,8 @@ public class Server {
         arrayRequestHandler = ArrayRequestHandler()
         sessionauthenticatorRequestHandler = SessionAuthenticatorRequestHandler()
         encryptionkeyRequestHandler = EncryptionKeyRequestHandler()
+        conflictRequestHandler = ConflictRequestHandler()
+        blobRequestHandler = BlobRequestHandler()
         server = GCDWebServer()
         server.addDefaultHandler(forMethod: "POST", request: GCDWebServerDataRequest.self) {
             (request) -> GCDWebServerResponse? in
@@ -98,6 +103,10 @@ public class Server {
                         result = try self.sessionauthenticatorRequestHandler.handleRequest(method: method, args: args)
                     } else if method.hasPrefix("encryptionkey") {
                         result = try self.encryptionkeyRequestHandler.handleRequest(method: method, args: args)
+                    } else if method.hasPrefix("conflict") {
+                        result = try self.conflictRequestHandler.handleRequest(method: method, args: args)
+                    } else if method.hasPrefix("blob") {
+                        result = try self.blobRequestHandler.handleRequest(method: method, args: args)
                     } else {
                         throw ServerError.MethodNotImplemented(method)
                     }
