@@ -226,9 +226,6 @@ def test_query_where_and_or(params_from_base_test_setup, whr_key1, whr_val1, whr
     for row in sdk_client.n1ql_query(query):
         docs_from_n1ql.append(row)
 
-    # Release
-    qy.release(source_db)
-
     assert len(docs_from_cbl) == len(docs_from_n1ql)
     log_info("Found {} docs".format(len(docs_from_cbl)))
     assert sorted(docs_from_cbl) == sorted(docs_from_n1ql)
@@ -497,9 +494,6 @@ def test_query_substring(params_from_base_test_setup, select_property1, select_p
 
     log_info("docs_from_n1ql: {}".format(docs_from_n1ql))
 
-    # Release
-    # qy.release(source_db)
-
     assert len(docs_from_cbl) == len(docs_from_n1ql)
     log_info("Found {} docs".format(len(docs_from_cbl)))
     assert sorted(docs_from_cbl) == sorted(docs_from_n1ql)
@@ -553,9 +547,6 @@ def test_query_collation(params_from_base_test_setup, select_property1, whr_key1
 
     for row in sdk_client.n1ql_query(query):
         docs_from_n1ql.append(row)
-
-    # Release
-    qy.release(source_db)
 
     assert len(docs_from_cbl) == len(docs_from_n1ql)
     log_info("Found {} docs".format(len(docs_from_cbl)))

@@ -209,6 +209,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         log_info("Starting replication")
         replicator.start(repl)
         # Wait for replication to complete
+        # TODO Wait for replication state idle
         time.sleep(120)
 
     # This dictionary is passed to each test
@@ -231,3 +232,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     if enable_sample_bucket:
         log_info("Stopping replication")
         replicator.stop(repl)
+
+    # Delete CBL database
+    log_info("Deleting the database {}".format(cbl_db))
+    db.deleteDB(source_db)
