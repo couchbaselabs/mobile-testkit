@@ -79,6 +79,17 @@ def params_from_base_suite_setup(request):
     xattrs_enabled = request.config.getoption("--xattrs")
     base_url = "http://{}:{}".format(liteserv_host, liteserv_port)
     cluster_config = "{}/base_{}".format(CLUSTER_CONFIGS_DIR, mode)
+    sg_config = sync_gateway_config_path_for_mode("sync_gateway_default_functional_tests", mode)
+    cluster_utils = ClusterKeywords()
+    cluster_topology = cluster_utils.get_cluster_topology(cluster_config)
+
+    sg_db = "db"
+    sg_url = cluster_topology["sync_gateways"][0]["public"]
+    sg_ip = host_for_url(sg_url)
+    target_url = "blip://{}:4985/{}".format(sg_ip, sg_db)
+
+    cbs_url = cluster_topology['couchbase_servers'][0]
+    cbs_ip = host_for_url(cbs_url)
 
     try:
         server_version
@@ -105,10 +116,6 @@ def params_from_base_suite_setup(request):
         log_info("Using document storage for sync meta data")
         persist_cluster_config_environment_prop(cluster_config, 'xattrs_enabled', False)
 
-    sg_config = sync_gateway_config_path_for_mode("sync_gateway_travel_sample", mode)
-    cluster_utils = ClusterKeywords()
-    cluster_topology = cluster_utils.get_cluster_topology(cluster_config)
-
     if not skip_provisioning:
         log_info("Installing Sync Gateway + Couchbase Server + Accels ('di' only)")
 
@@ -123,22 +130,6 @@ def params_from_base_suite_setup(request):
             logging_helper = Logging()
             logging_helper.fetch_and_analyze_logs(cluster_config=cluster_config, test_name=request.node.name)
             raise
-
-    # Create CBL database
-    cbl_db = "test_db"
-    db = Database(base_url)
-    sg_db = "db"
-    sg_url = cluster_topology["sync_gateways"][0]["public"]
-    sg_ip = host_for_url(sg_url)
-    target_url = "blip://{}:4985/{}".format(sg_ip, sg_db)
-    cbs_url = cluster_topology['couchbase_servers'][0]
-    cbs_ip = host_for_url(cbs_url)
-
-    log_info("Creating a Database {}".format(cbl_db))
-    source_db = db.create(cbl_db)
-    log_info("Getting the database name")
-    db_name = db.getName(source_db)
-    assert db_name == "test_db"
 
     if enable_sample_bucket:
         server_url = cluster_topology["couchbase_servers"][0]
@@ -158,15 +149,6 @@ def params_from_base_suite_setup(request):
         query = N1QLQuery(n1ql_query)
         sdk_client.n1ql_query(query)
 
-        # Start continuous replication
-        replicator = Replication(base_url)
-        log_info("Configuring replication")
-        repl = replicator.configure(source_db=source_db, target_url=target_url, continuous=True)
-        log_info("Starting replication")
-        replicator.start(repl)
-        # Wait for replication to complete
-        #time.sleep(120)
-
     yield {
         "cluster_config": cluster_config,
         "mode": mode,
@@ -179,13 +161,9 @@ def params_from_base_suite_setup(request):
         "target_url": target_url,
         "sg_ip": sg_ip,
         "sg_db": sg_db,
-        "source_db": source_db,
-        "cbl_db": cbl_db
+        "base_url": base_url,
+        "enable_sample_bucket": enable_sample_bucket
     }
-
-    if enable_sample_bucket:
-        log_info("Stopping replication")
-        replicator.stop(repl)
 
 
 @pytest.fixture(scope="function")
@@ -194,14 +172,14 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     xattrs_enabled = params_from_base_suite_setup["xattrs_enabled"]
     liteserv_host = params_from_base_suite_setup["liteserv_host"]
     liteserv_port = params_from_base_suite_setup["liteserv_port"]
+    enable_sample_bucket = params_from_base_suite_setup["enable_sample_bucket"]
     test_name = request.node.name
     cluster_topology = params_from_base_suite_setup["cluster_topology"]
     mode = params_from_base_suite_setup["mode"]
     target_url = params_from_base_suite_setup["target_url"]
+    base_url = params_from_base_suite_setup["base_url"]
     sg_ip = params_from_base_suite_setup["sg_ip"]
     sg_db = params_from_base_suite_setup["sg_db"]
-    source_db = params_from_base_suite_setup["source_db"]
-    cbl_db = params_from_base_suite_setup["cbl_db"]
     cluster_helper = ClusterKeywords()
     cluster_hosts = cluster_helper.get_cluster_topology(cluster_config=cluster_config)
     sg_url = cluster_hosts["sync_gateways"][0]["public"]
@@ -212,6 +190,26 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     log_info("cluster_topology: {}".format(cluster_topology))
     log_info("mode: {}".format(mode))
     log_info("xattrs_enabled: {}".format(xattrs_enabled))
+
+    # Create CBL database
+    cbl_db = "test_db"
+    db = Database(base_url)
+
+    log_info("Creating a Database {}".format(cbl_db))
+    source_db = db.create(cbl_db)
+    log_info("Getting the database name")
+    db_name = db.getName(source_db)
+    assert db_name == "test_db"
+
+    if enable_sample_bucket:
+        # Start continuous replication
+        replicator = Replication(base_url)
+        log_info("Configuring replication")
+        repl = replicator.configure(source_db=source_db, target_url=target_url, continuous=True)
+        log_info("Starting replication")
+        replicator.start(repl)
+        # Wait for replication to complete
+        time.sleep(120)
 
     # This dictionary is passed to each test
     yield {
@@ -229,3 +227,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         "source_db": source_db,
         "cbl_db": cbl_db
     }
+
+    if enable_sample_bucket:
+        log_info("Stopping replication")
+        replicator.stop(repl)
