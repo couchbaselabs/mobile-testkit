@@ -2,16 +2,21 @@ package com.couchbase.CouchbaseLiteServ.server.RequestHandler;
 
 
 import com.couchbase.CouchbaseLiteServ.server.Args;
+import com.couchbase.lite.Collation;
 import com.couchbase.lite.CouchbaseLiteException;
 import com.couchbase.lite.DataSource;
 import com.couchbase.lite.Database;
 import com.couchbase.lite.Expression;
+import com.couchbase.lite.Function;
 import com.couchbase.lite.Meta;
+import com.couchbase.lite.Ordering;
 import com.couchbase.lite.Query;
 import com.couchbase.lite.Result;
 import com.couchbase.lite.ResultSet;
 import com.couchbase.lite.SelectResult;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -55,12 +60,11 @@ public class QueryRequestHandler {
         int out = database.getCount();
         String doc_id = args.get("doc_id");
         boolean check = database.contains(doc_id);
-            Query search_query = Query
+            Query query = Query
                 .select(SelectResult.all())
                 .from(DataSource.database(database))
                 .where((Meta.id).equalTo(doc_id));
-        ResultSet rows = search_query.execute();
-        for (Result row : rows){
+        for (Result row : query.execute()){
             return row.toMap();
         }
         return null;
@@ -74,12 +78,12 @@ public class QueryRequestHandler {
                 .select(SelectResult.all())
                 .from(DataSource.database(database))
                 .limit(limit, offset);
-        List<Object> result_array = null;
+        List<Object> resultArray = new ArrayList<Object>();
         ResultSet rows = search_query.execute();
         for (Result row : rows){
-            result_array.add(row);
+            resultArray.add(row);
         }
-        return result_array;
+        return resultArray;
     }
 
     public List<Object> multipleSelects(Args args) throws CouchbaseLiteException{
@@ -95,12 +99,158 @@ public class QueryRequestHandler {
                         SelectResult.expression(Expression.property(select_property2)))
                 .from(DataSource.database(database))
                 .where(Expression.property(whr_key).equalTo(whr_val));
-        List<Object> result_array = null;
+        List<Object> resultArray = new ArrayList<Object>();
         ResultSet rows = search_query.execute();
         for (Result row : rows){
-            result_array.add(row.toMap());
+            resultArray.add(row.toMap());
         }
-        return result_array;
+        return resultArray;
     }
 
+    public List<Object> whereAndOr(Args args) throws CouchbaseLiteException {
+        Database database = args.get("database");
+        String whr_key1 = args.get("whr_key1");
+        String whr_key2 = args.get("whr_key2");
+        String whr_key3 = args.get("whr_key3");
+        String whr_key4 = args.get("whr_key4");
+        String whr_val1 = args.get("whr_val1");
+        String whr_val2 = args.get("whr_val2");
+        String whr_val3 = args.get("whr_val3");
+        Boolean whr_val4 = args.get("whr_val4");
+        List<Object> resultArray = new ArrayList<Object>();
+        Query query = Query
+                .select(SelectResult.expression(Meta.id))
+                .from(DataSource.database(database))
+                .where(Expression.property(whr_key1).equalTo(whr_val1)
+                        .and(Expression.property(whr_key2).equalTo(whr_val2)
+                                .or(Expression.property(whr_key3).equalTo(whr_val3)))
+                        .and(Expression.property(whr_key4).equalTo(whr_val4)));
+        for (Result row : query.execute()){
+            resultArray.add(row.toMap());
+        }
+        return resultArray;
+    }
+
+    public List<Object> like(Args args) throws CouchbaseLiteException {
+        Database database = args.get("database");
+        String whr_key = args.get("whr_key");
+        String select_property1 = args.get("select_property1");
+        String select_property2 = args.get("select_property2");
+        String like_key = args.get("like_key");
+        String whr_val = args.get("whr_val");
+        String like_val = args.get("like_val");
+        List<Object> resultArray = new ArrayList<Object>();
+        Query query = Query
+                .select(SelectResult.expression(Meta.id),
+                        SelectResult.expression(Expression.property(select_property1)),
+                        SelectResult.expression(Expression.property(select_property2)))
+                .from(DataSource.database(database))
+                .where(Expression.property(whr_key).equalTo(whr_val)
+                        .and(Expression.property(like_key).like(like_val)));
+        for (Result row : query.execute()){
+            resultArray.add(row.toMap());
+        }
+        return resultArray;
+    }
+
+    public List<Object> regex(Args args) throws CouchbaseLiteException {
+        Database database = args.get("database");
+        String whr_key = args.get("whr_key");
+        String select_property1 = args.get("select_property1");
+        String select_property2 = args.get("select_property2");
+        String regex_key = args.get("regex_key");
+        String whr_val = args.get("whr_val");
+        String regex_val = args.get("regex_val");
+        List<Object> resultArray = new ArrayList<Object>();
+        Query query = Query
+                .select(SelectResult.expression(Meta.id),
+                        SelectResult.expression(Expression.property(select_property1)),
+                        SelectResult.expression(Expression.property(select_property2)))
+                .from(DataSource.database(database))
+                .where(Expression.property(whr_key).equalTo(whr_val)
+                        .and(Expression.property(regex_key).regex(regex_val)));
+        for (Result row : query.execute()){
+            resultArray.add(row.toMap());
+        }
+        return resultArray;
+    }
+
+    public List<Object> ordering(Args args) throws CouchbaseLiteException {
+        Database database = args.get("database");
+        String whr_key = args.get("whr_key");
+        String select_property1 = args.get("select_property1");
+        String whr_val = args.get("whr_val");
+        List<Object> resultArray = new ArrayList<Object>();
+        Query query = Query
+                .select(SelectResult.expression(Meta.id),
+                        SelectResult.expression(Expression.property(select_property1)))
+                .from(DataSource.database(database))
+                .where(Expression.property(whr_key).equalTo(whr_val))
+                .orderBy(Ordering.property(select_property1).ascending());
+        for (Result row : query.execute()){
+            resultArray.add(row.toMap());
+        }
+        return resultArray;
+    }
+
+    public List<Object> substring(Args args) throws CouchbaseLiteException {
+        Database database = args.get("database");
+        String select_property1 = args.get("select_property1");
+        String select_property2 = args.get("select_property2");
+        String substring = args.get("substring");
+        List<Object> resultArray = new ArrayList<Object>();
+        Query query = Query
+                .select(SelectResult.expression(Meta.id),
+                        SelectResult.expression(Expression.property(select_property1)),
+                        SelectResult.expression(Expression.property(select_property2)))
+                .from(DataSource.database(database))
+                .where((Function.contains(Expression.property(select_property1), substring)));
+        for (Result row : query.execute()){
+            resultArray.add(row.toMap());
+        }
+        return resultArray;
+    }
+
+    public List<Object> isNullOrMissing(Args args) throws CouchbaseLiteException {
+        Database database = args.get("database");
+        String select_property1 = args.get("select_property1");
+        int limit = args.get("limit");
+        List<Object> resultArray = new ArrayList<Object>();
+        Query query = Query
+                .select(SelectResult.expression(Meta.id),
+                        SelectResult.expression(Expression.property(select_property1)))
+                .from(DataSource.database(database))
+                .where(Expression.property(select_property1).isNullOrMissing())
+                .limit(limit);
+        for (Result row : query.execute()){
+            resultArray.add(row.toMap());
+        }
+        return resultArray;
+    }
+
+    public List<Object> collation(Args args) throws CouchbaseLiteException {
+        Database database = args.get("database");
+        String select_property1 = args.get("select_property1");
+        String whr_key1 = args.get("whr_key1");
+        String whr_key2 = args.get("whr_key2");
+        String whr_val1 = args.get("whr_val1");
+        String whr_val2 = args.get("whr_val2");
+        String equal_to = args.get("equal_to");
+        List<Object> resultArray = new ArrayList<Object>();
+
+        Collation collation = Collation.unicode()
+                .ignoreAccents(true)
+                .ignoreCase(true);
+        Query query = Query
+                .select(SelectResult.expression(Meta.id),
+                        SelectResult.expression(Expression.property(select_property1)))
+                .from(DataSource.database(database))
+                .where(Expression.property(whr_key1).equalTo(whr_val1)
+                        .and(Expression.property(whr_key2).equalTo(whr_val2)
+                        .and(Expression.property(select_property1).collate(collation).equalTo(equal_to))));
+        for (Result row : query.execute()){
+            resultArray.add(row.toMap());
+        }
+        return resultArray;
+    }
 }

@@ -2,7 +2,6 @@ import pytest
 
 from keywords.utils import log_info
 from CBLClient.Database import Database
-from CBLClient.Dictionary import Dictionary
 from CBLClient.Query import Query
 from keywords.utils import host_for_url
 from couchbase.bucket import Bucket
@@ -32,7 +31,7 @@ def test_get_doc_ids(params_from_base_test_setup):
     log_info("Fetching doc ids from the server")
     bucket_name = "travel-sample"
     sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password')
-    n1ql_query = 'select meta().id from `{}` where meta().id not like "_sync%"'.format(bucket_name)
+    n1ql_query = 'select meta().id from `{}` where meta().id not like "_sync%" ORDER BY id'.format(bucket_name)
     query = N1QLQuery(n1ql_query)
     doc_ids_from_n1ql = []
     for row in sdk_client.n1ql_query(query):
@@ -43,7 +42,7 @@ def test_get_doc_ids(params_from_base_test_setup):
 
     assert len(ids_from_cbl) == len(doc_ids_from_n1ql)
     log_info("Found {} doc ids".format(len(ids_from_cbl)))
-    assert sorted(ids_from_cbl) == sorted(doc_ids_from_n1ql)
+    assert ids_from_cbl == doc_ids_from_n1ql
     log_info("Doc contents match between CBL and n1ql")
 
 
@@ -124,7 +123,7 @@ def test_get_docs_with_limit_offset(params_from_base_test_setup, limit, offset):
     docs_from_cbl = []
 
     for docs in result_set:
-        docs_from_cbl.append(docs[cbl_db])
+        docs_from_cbl.append(docs)
 
     if limit > 0:
         assert len(docs_from_cbl) == limit
@@ -452,7 +451,7 @@ def test_query_ordering(params_from_base_test_setup, select_property1, whr_key, 
 @pytest.mark.parametrize("select_property1, select_property2, substring", [
     ("email", "name", "gmail.com"),
 ])
-def test_query_substring(params_from_base_test_setup, select_property1, select_property2, substring, limit):
+def test_query_substring(params_from_base_test_setup, select_property1, select_property2, substring):
     """ @summary
     Fetches docs in with a matching substring
 

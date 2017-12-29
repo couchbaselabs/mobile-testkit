@@ -178,7 +178,8 @@ class Query:
         args.setString("whr_key4", whr_key4)
         args.setBoolean("whr_val4", whr_val4)
 
-        return self._client.invokeMethod("query_where_and_or", args)
+        #return self._client.invokeMethod("query_where_and_or", args)
+        return self._client.invokeMethod("query_whereAndOr", args)
 
     def query_like(self, database, whr_key, whr_val, select_property1, select_property2, like_key, like_val):
         args = Args()

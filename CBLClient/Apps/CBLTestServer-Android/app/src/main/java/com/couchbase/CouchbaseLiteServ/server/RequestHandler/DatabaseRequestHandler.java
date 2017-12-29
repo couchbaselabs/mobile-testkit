@@ -16,9 +16,12 @@ import com.couchbase.lite.Meta;
 import com.couchbase.lite.MutableDocument;
 import com.couchbase.lite.Query;
 import com.couchbase.lite.Result;
+import com.couchbase.lite.ResultSet;
 import com.couchbase.lite.SelectResult;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -148,10 +151,13 @@ public class DatabaseRequestHandler {
         Query query = Query
                 .select(SelectResult.expression(Meta.id))
                 .from(DataSource.database(database));
-        List<String> result = null;
-        for (Result row : query.execute()){
-            result.add(row.getString("id"));
+        List<String> result = new ArrayList<String>();
+        ResultSet results = query.execute();
+        for (Result row : results){
+
+            result.add(row.getString("_id"));
         }
+        Collections.sort(result);
         return result;
 
     }

@@ -24,7 +24,7 @@ class ValueSerializer:
             number = long(value)
             return "L" + str(number)
         elif isinstance(value, int):
-            if value%1000000000 < 2:
+            if value/1000000000 < 2:
                 number = int(value)
                 return "I" + str(number)
             else:
@@ -91,7 +91,7 @@ class ValueSerializer:
             res_list = []
 
             for string in stringList:
-                obj = ValueSerializer.deserialize(str(string))
+                obj = ValueSerializer.deserialize(string)
                 res_list.append(obj)
 
             return res_list

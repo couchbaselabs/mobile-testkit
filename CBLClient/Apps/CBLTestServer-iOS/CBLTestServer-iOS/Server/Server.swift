@@ -16,10 +16,7 @@ enum ServerError: Error {
 enum RequestHandlerError: Error {
     case MethodNotFound(String)
     case InvalidArgument(String)
-<<<<<<< HEAD
-=======
     case IOException(String)
->>>>>>> refs/remotes/origin/feature/cbl20-query
 }
 
 public class Server {
@@ -30,15 +27,11 @@ public class Server {
     let databaseRequestHandler: DatabaseRequestHandler!
     let documentRequestHandler: DocumentRequestHandler!
     let replicatorRequestHandler: ReplicatorRequestHandler!
-<<<<<<< HEAD
-    let dataTypesInitiatorHandler: DataTypesInitiatorHandler!
-=======
     let arrayRequestHandler: ArrayRequestHandler!
     let sessionauthenticatorRequestHandler: SessionAuthenticatorRequestHandler!
     let encryptionkeyRequestHandler: EncryptionKeyRequestHandler!
     let conflictRequestHandler: ConflictRequestHandler!
     let blobRequestHandler: BlobRequestHandler!
->>>>>>> refs/remotes/origin/feature/cbl20-query
     let memory = Memory()
     
     public init() {
@@ -48,15 +41,11 @@ public class Server {
         databaseRequestHandler = DatabaseRequestHandler()
         documentRequestHandler = DocumentRequestHandler()
         replicatorRequestHandler = ReplicatorRequestHandler()
-<<<<<<< HEAD
-        dataTypesInitiatorHandler = DataTypesInitiatorHandler()
-=======
         arrayRequestHandler = ArrayRequestHandler()
         sessionauthenticatorRequestHandler = SessionAuthenticatorRequestHandler()
         encryptionkeyRequestHandler = EncryptionKeyRequestHandler()
         conflictRequestHandler = ConflictRequestHandler()
         blobRequestHandler = BlobRequestHandler()
->>>>>>> refs/remotes/origin/feature/cbl20-query
         server = GCDWebServer()
         server.addDefaultHandler(forMethod: "POST", request: GCDWebServerDataRequest.self) {
             (request) -> GCDWebServerResponse? in
@@ -86,13 +75,12 @@ public class Server {
                     for param in queryParams {
                         rawArgs[param.key as! String] = param.value
 
-<<<<<<< HEAD
-                        let value: Any = ValueSerializer.deserialize(value:(param.value as! String), memory: self.memory)!
-=======
-                        let value: Any = ValueSerializer.deserialize(value:(param.value as? String), memory: self.memory)!
->>>>>>> refs/remotes/origin/feature/cbl20-query
-                        // Handle nil value
-                        args.set(value: value, forName: param.key as! String)
+                        if let value = ValueSerializer.deserialize(value:(param.value as? String), memory: self.memory) as Any? {
+                            // Handle nil value
+                            args.set(value: value, forName: param.key as! String)
+                        } else {
+                            args.set(value: "", forName: param.key as! String)
+                        }
                     }
                 }
 
@@ -112,10 +100,6 @@ public class Server {
                         result = try self.documentRequestHandler.handleRequest(method: method, args: args)
                     } else if method.hasPrefix("dictionary") {
                         result = try self.dictionaryRequestHandler.handleRequest(method: method, args: args)
-<<<<<<< HEAD
-                    } else if method.hasPrefix("datatype") {
-                        result = try self.dataTypesInitiatorHandler.handleRequest(method: method, args: args)
-=======
                     } else if method.hasPrefix("array") {
                         result = try self.arrayRequestHandler.handleRequest(method: method, args: args)
                     } else if method.hasPrefix("sessionauthenticator") {
@@ -126,7 +110,6 @@ public class Server {
                         result = try self.conflictRequestHandler.handleRequest(method: method, args: args)
                     } else if method.hasPrefix("blob") {
                         result = try self.blobRequestHandler.handleRequest(method: method, args: args)
->>>>>>> refs/remotes/origin/feature/cbl20-query
                     } else {
                         throw ServerError.MethodNotImplemented(method)
                     }

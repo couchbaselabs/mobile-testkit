@@ -22,7 +22,8 @@ class TestDatabase():
         '''
         @summary: Checking for the Exception handling in database create API
         '''
-        _, err_resp = self.db_obj.create(dbName)
+        #_, err_resp = self.db_obj.create(dbName)
+        err_resp = self.db_obj.create(dbName)
         assert err_msg in err_resp
 
     def test_getDocument_exception(self):
@@ -70,7 +71,7 @@ class TestDatabase():
         random_string(6).capitalize(),
         random_string(6).upper(),
     ])
-    def test_database(self, dbName):
+    def test_database_create_new(self, dbName):
         '''
         @summary: Testing Database constructor method of Database API
         '''
@@ -142,9 +143,9 @@ class TestDatabase():
         @summary: Testing delete(DB) method of Database API
         '''
         db = self.db_obj.create(dbName)
-        #self.db_obj.close(db)
-        # self.db_obj.close(db)
+        path = self.db_obj.getPath(db)
         assert self.db_obj.deleteDB(db) == -1
+#         assert self.db_obj.exists(dbName, path) == "false"
 
     @pytest.mark.parametrize("dbName, docId", [
         (random_string(1), random_string(6)),

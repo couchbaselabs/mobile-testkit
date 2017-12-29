@@ -91,8 +91,6 @@ public class Server extends NanoHTTPD {
             }
         }
 
-        String handlerType = method.split("_")[0];
-        String method_to_call = method.split("_")[1];
         try {
             // Find and invoke the method on the RequestHandler.
             String body = null;
@@ -100,6 +98,8 @@ public class Server extends NanoHTTPD {
                 memory.remove(rawArgs.get("object"));
             } else {
                 Object requestHandler = null;
+                String handlerType = method.split("_")[0];
+                String method_to_call = method.split("_")[1];
                 Method target;
                 switch (handlerType){
                     case "database":
