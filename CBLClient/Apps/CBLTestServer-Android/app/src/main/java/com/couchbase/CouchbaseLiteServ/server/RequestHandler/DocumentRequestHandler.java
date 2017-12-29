@@ -62,7 +62,7 @@ public class DocumentRequestHandler{
     }
 
     public String getString(Args args) {
-        MutableDocument document = args.get("document");
+        Document document = args.get("document");
         String key = args.get("key");
         return document.getString(key);
     }
@@ -173,7 +173,7 @@ public class DocumentRequestHandler{
 
 
     public Blob getBlob(Args args){
-        MutableDocument document = args.get("document");
+        Document document = args.get("document");
         String key = args.get("key");
         return document.getBlob(key);
     }
@@ -187,7 +187,7 @@ public class DocumentRequestHandler{
 
 
     public Date getDate(Args args){
-        MutableDocument document = args.get("document");
+        Document document = args.get("document");
         String key = args.get("key");
         return document.getDate(key);
     }
@@ -201,7 +201,7 @@ public class DocumentRequestHandler{
 
 
     public List getArray(Args args){
-        MutableDocument document = args.get("document");
+        Document document = args.get("document");
         String key = args.get("key");
         return document.getArray(key).toList();
     }
@@ -229,7 +229,7 @@ public class DocumentRequestHandler{
     }
 
     public List<String> getKeys(Args args){
-        MutableDocument document = args.get("document");
+        Document document = args.get("document");
         return document.getKeys();
     }
 

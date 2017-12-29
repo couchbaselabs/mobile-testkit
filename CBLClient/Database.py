@@ -134,10 +134,10 @@ class Database:
         args.setMemoryPointer("change", change)
         return self._client.invokeMethod("database_databaseChange_getDocumentId", args)
 
-#     def getDocIds(self, database):
-#         args = Args()
-#         args.setMemoryPointer("database", database)
-#         return self._client.invokeMethod("database_getDocIds", args)
+    def getDocIds(self, database):
+        args = Args()
+        args.setMemoryPointer("database", database)
+        return self._client.invokeMethod("database_getDocIds", args)
 
     def getIndexes(self, database):
         args = Args()

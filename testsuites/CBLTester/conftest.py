@@ -11,9 +11,12 @@ from keywords.exceptions import ProvisioningError
 from keywords.tklogging import Logging
 from CBLClient.Replication import Replication
 from CBLClient.Replicator_new import Replicator
+from CBLClient.BasicAuthenticator import BasicAuthenticator
 from CBLClient.ReplicatorConfiguration import ReplicatorConfiguration
 from CBLClient.Database import Database
 from keywords.utils import host_for_url
+from couchbase.bucket import Bucket
+from couchbase.n1ql import N1QLQuery
 from libraries.testkit.cluster import Cluster
 from time import sleep
 
@@ -121,6 +124,8 @@ def params_from_base_suite_setup(request):
     sg_config = sync_gateway_config_path_for_mode("sync_gateway_travel_sample", mode)
     cluster_utils = ClusterKeywords()
     cluster_topology = cluster_utils.get_cluster_topology(cluster_config)
+    cbs_url = cluster_topology['couchbase_servers'][0]
+    cbs_ip = host_for_url(cbs_url)
 
     if not skip_provisioning:
         log_info("Installing Sync Gateway + Couchbase Server + Accels ('di' only)")
@@ -137,20 +142,7 @@ def params_from_base_suite_setup(request):
             logging_helper.fetch_and_analyze_logs(cluster_config=cluster_config, test_name=request.node.name)
             raise
 
-    if enable_sample_bucket:
-        server_url = cluster_topology["couchbase_servers"][0]
-        server = CouchbaseServer(server_url)
-
-        buckets = server.get_bucket_names()
-        if enable_sample_bucket not in buckets:
-            server.delete_buckets()
-            time.sleep(5)
-            server.load_sample_bucket(enable_sample_bucket)
-            server._create_internal_rbac_bucket_user(enable_sample_bucket)
-            # Sleep for a while for SG to import all docs
-            time.sleep(120)
-
-    # Create CBL database
+        # Create CBL database
     cbl_db = "test_db"
     db = Database(base_url)
     sg_db = "db"
@@ -165,18 +157,39 @@ def params_from_base_suite_setup(request):
     db_name = db.getName(source_db)
     assert db_name == "test_db"
 
-    # Start continuous replication
-    repl_config_obj = ReplicatorConfiguration(base_url)
-    log_info("Configuring replication")
-    config = repl_config_obj.create(sourceDb=source_db, targetURI=target_admin_url)
-    repl_config_obj.setReplicatorType(config, "PUSH_AND_PULL")
-    repl_config_obj.setContinuous(config, True)
-    repl_config_obj.setChannels(config, ["ABC"])
-    repl_obj = Replicator(base_url)
-    replicator = repl_obj.create(config)
-    repl_obj.start(replicator)
-    time.sleep(15)
-    repl_obj.stop(replicator)
+    if enable_sample_bucket:
+        server_url = cluster_topology["couchbase_servers"][0]
+        server = CouchbaseServer(server_url)
+
+        buckets = server.get_bucket_names()
+        if enable_sample_bucket not in buckets:
+            server.delete_buckets()
+            server.load_sample_bucket(enable_sample_bucket)
+            server._create_internal_rbac_bucket_user(enable_sample_bucket)
+            # Sleep for a while for SG to import all docs
+            time.sleep(120)
+
+        # Start continuous replication
+        repl_config_obj = ReplicatorConfiguration(base_url)
+        log_info("Configuring replication")
+        config = repl_config_obj.create(sourceDb=source_db, targetURI=target_admin_url)
+        repl_config_obj.setReplicatorType(config, "PUSH_AND_PULL")
+        auth_obj = BasicAuthenticator(base_url)
+        authenticator = auth_obj.create("trave-sample", "password")
+        repl_config_obj.setAuthenticator(config, authenticator)
+    #     repl_config_obj.setContinuous(config, True)
+        repl_obj = Replicator(base_url)
+        replicator = repl_obj.create(config)
+        repl_obj.start(replicator)
+        time.sleep(60)
+        repl_obj.stop(replicator)
+
+        # Create primary index
+        log_info("Creating primary index for {}".format(enable_sample_bucket))
+        sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, enable_sample_bucket), password='password')
+        n1ql_query = 'create primary index on {}'.format(enable_sample_bucket)
+        query = N1QLQuery(n1ql_query)
+        sdk_client.n1ql_query(query)
 #     replicator = Replication(base_url)
 #     log_info("Configuring replication")
 #     repl = replicator.configure(source_db, target_url)

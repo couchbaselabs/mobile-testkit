@@ -4,6 +4,7 @@ import android.content.Context;
 
 import com.couchbase.CouchbaseLiteServ.server.Args;
 import com.couchbase.lite.CouchbaseLiteException;
+import com.couchbase.lite.DataSource;
 import com.couchbase.lite.Database;
 import com.couchbase.lite.DatabaseChange;
 import com.couchbase.lite.DatabaseChangeListener;
@@ -11,7 +12,11 @@ import com.couchbase.lite.DatabaseConfiguration;
 import com.couchbase.lite.Document;
 import com.couchbase.lite.DocumentChangeListener;
 import com.couchbase.CouchbaseLiteServ.MainActivity;
+import com.couchbase.lite.Meta;
 import com.couchbase.lite.MutableDocument;
+import com.couchbase.lite.Query;
+import com.couchbase.lite.Result;
+import com.couchbase.lite.SelectResult;
 
 import java.io.File;
 import java.util.HashMap;
@@ -118,7 +123,8 @@ public class DatabaseRequestHandler {
 
     public void delete(Args args) throws CouchbaseLiteException {
         Database database = args.get("database");
-        MutableDocument document = args.get("document");
+        Document document = args.get("document");
+
         database.delete(document);
    }
 
@@ -135,6 +141,19 @@ public class DatabaseRequestHandler {
        Database database = args.get("database");
        String id = args.get("id");
        return database.contains(id);
+    }
+
+    public List<String> getDocIds(Args args) throws CouchbaseLiteException {
+        Database database = args.get("database");
+        Query query = Query
+                .select(SelectResult.expression(Meta.id))
+                .from(DataSource.database(database));
+        List<String> result = null;
+        for (Result row : query.execute()){
+            result.add(row.getString("id"));
+        }
+        return result;
+
     }
 
 //    public void addChangeListener(Args args) {

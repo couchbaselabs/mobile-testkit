@@ -13,7 +13,7 @@ from keywords.MobileRestClient import MobileRestClient
 def test_upgrade():
     os.chdir("/Users/hemant/couchbase/couchbase/mobile-testkit")
     cluster_config = "{}/base_{}".format(CLUSTER_CONFIGS_DIR, "cc")
-    sg_config = sync_gateway_config_path_for_mode("sync_gateway_blip", "cc")
+    sg_config = sync_gateway_config_path_for_mode("testfest_todo", "cc")
     c = Cluster(config=cluster_config)
     c.reset(sg_config_path=sg_config)
     sg_client = MobileRestClient()

@@ -55,7 +55,7 @@ public class QueryRequestHandler {
         int out = database.getCount();
         String doc_id = args.get("doc_id");
         boolean check = database.contains(doc_id);
-        Query search_query = Query
+            Query search_query = Query
                 .select(SelectResult.all())
                 .from(DataSource.database(database))
                 .where((Meta.id).equalTo(doc_id));

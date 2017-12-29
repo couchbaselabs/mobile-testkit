@@ -33,7 +33,6 @@ public class DatabaseRequestHandler {
 
             try database.close()
 
-<<<<<<< HEAD
         case "database_path":
             let database: Database = (args.get(name:"database"))!
 
@@ -96,81 +95,6 @@ public class DatabaseRequestHandler {
             return changeListener.getChanges()[index]
 
             case "databaseChange_getDocumentId":
-=======
-        case "database_getPath":
-            let database: Database = (args.get(name:"database"))!
-
-            return database.path
-
-        case "database_deleteDocument":
-            let database: Database = (args.get(name:"database"))!
-            let document: MutableDocument = (args.get(name:"document"))!
-
-            try database.deleteDocument(document)
-        
-        case "database_deleteDB":
-            let database: Database = (args.get(name:"database"))!
-            
-            try database.delete()
-
-        case "database_deleteIndex":
-            let database: Database = (args.get(name:"database"))!
-            let name: String = (args.get(name: "name"))!
-            
-            try database.deleteIndex(forName: name)
-
-        case "database_getName":
-            let database: Database = args.get(name:"database")!
-
-            return database.name
-
-        case "database_getDocument":
-            let database: Database = (args.get(name:"database"))!
-            let id: String = (args.get(name: "id"))!
-
-            return (database.document(withID: id))!
-
-        case "database_save":
-            let database: Database = (args.get(name:"database"))!
-            let document: MutableDocument = args.get(name:"document")!
-
-            try! database.saveDocument(document)
-
-        case "database_contains":
-            let database: Database = (args.get(name:"database"))!
-            let id: String = (args.get(name: "id"))!
-
-            return database.containsDocument(withID: id)
-
-        case "database_getCount":
-            let database: Database = (args.get(name:"database"))!
-            return database.count
-
-        case "database_addChangeListener":
-            let database: Database = (args.get(name:"database"))!
-            let changeListener = MyDatabaseChangeListener()
-            database.addChangeListener(changeListener.listener)
-            return changeListener
-
-        case "database_removeChangeListener":
-            let database: Database = (args.get(name:"database"))!
-            let changeListener: ListenerToken = (args.get(name: "changeListener"))!
-
-            database.removeChangeListener(withToken: changeListener)
-
-        case "databaseChangeListener_changesCount":
-            let changeListener: MyDatabaseChangeListener = (args.get(name: "changeListener"))!
-
-            return changeListener.getChanges().count
-
-        case "databaseChangeListener_getChange":
-            let changeListener: MyDatabaseChangeListener = (args.get(name: "changeListener"))!
-            let index: Int = (args.get(name: "index"))!
-
-            return changeListener.getChanges()[index]
-
-        case "databaseChange_getDocumentId":
->>>>>>> refs/remotes/origin/feature/cbl20-query
             let change: DatabaseChange = (args.get(name: "change"))!
 
             return change.documentIDs

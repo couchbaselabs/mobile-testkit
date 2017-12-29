@@ -729,17 +729,14 @@ class CouchbaseServer:
          version - the version without any build number information, eg 4.5.0
          build_number - the build number associated with this major version release, eg, 2601 (or None)
          Return the filename portion of the package download URL
-
          """
 
         if version.startswith("3.1.6"):
             return "couchbase-server-enterprise-{}-{}.x86_64.rpm".format(version, cbs_platform)
-
         elif version.startswith("3.1"):
-
             return "couchbase-server-enterprise_{}_x86_64_{}-{}-rel.rpm".format(cbs_platform, version, build_number)
-
         else:
+            return "couchbase-server-enterprise-{}-{}-{}.x86_64.rpm".format(version, build_number, cbs_platform)
 
             return "couchbase-server-enterprise-{}-{}-{}.x86_64.rpm".format(version, build_number, cbs_platform)
 
@@ -753,6 +750,7 @@ class CouchbaseServer:
         """
 
         cbnas_base_url = "http://latestbuilds.service.couchbase.com/builds/latestbuilds/couchbase-server"
+
         if version.startswith("3.1"):
             base_url = "http://latestbuilds.service.couchbase.com/"
         elif version.startswith("4.0") or version.startswith("4.1"):
@@ -766,7 +764,6 @@ class CouchbaseServer:
         else:
             raise Exception(
                 "Unexpected couchbase server version: {}".format(version))
-
         package_name = self.get_package_name(
             version, build_number, cbs_platform)
 
@@ -778,10 +775,13 @@ class CouchbaseServer:
         Resolve a download URL for the corresponding package to given
         version on http://cbmobile-packages.s3.amazonaws.com (an S3 bucket
         for couchbase mobile that mirrors released couchbase server versions)
+
+
         Given:
         version - the version without any build number information, eg 4.5.0
         Return the base_url of the package download URL (everything except the filename)
         """
+
         released_versions = {
             "5.0.0": "3519",
             "4.6.3": "4136",
@@ -805,9 +805,10 @@ class CouchbaseServer:
 
     def upgrade_server(self, cluster_config, server_version_build, cbs_platform, target=None, toy_build=None):
         ansible_runner = AnsibleRunner(cluster_config)
-        log_info(">>> Upgrading Couchbase Server")
 
+        log_info(">>> Upgrading Couchbase Server")
         # Install Server
+
         if toy_build:
             # http://server.jenkins.couchbase.com/view/All/job/watson-toy/1770/artifact/couchbase-server-enterprise-5.0.0-9900-centos7.x86_64.rpm
             toy_build_url_parts = toy_build.split('/')
@@ -817,6 +818,7 @@ class CouchbaseServer:
         else:
             version_build = server_version_build.split("-")
             server_verion = version_build[0]
+
             if len(version_build) == 2:
                 # Build number is included
                 server_build = version_build[1]

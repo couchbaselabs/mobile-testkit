@@ -2,6 +2,7 @@ import pytest
 
 from keywords.utils import log_info
 from CBLClient.Database import Database
+from CBLClient.Dictionary import Dictionary
 from CBLClient.Query import Query
 from keywords.utils import host_for_url
 from couchbase.bucket import Bucket
@@ -41,7 +42,9 @@ def test_get_doc_ids(params_from_base_test_setup):
     ids_from_cbl = db.getDocIds(source_db)
 
     assert len(ids_from_cbl) == len(doc_ids_from_n1ql)
+    log_info("Found {} doc ids".format(len(ids_from_cbl)))
     assert sorted(ids_from_cbl) == sorted(doc_ids_from_n1ql)
+    log_info("Doc contents match between CBL and n1ql")
 
 
 @pytest.mark.parametrize("doc_id", [
@@ -68,15 +71,16 @@ def test_doc_get(params_from_base_test_setup, doc_id):
     base_url = "http://{}:{}".format(liteserv_host, liteserv_port)
     cbs_ip = host_for_url(cbs_url)
 
-    # Get doc from CBL through query 
+    # Get doc from CBL through query
     log_info("Fetching doc {} from CBL through query".format(doc_id))
     qy = Query(base_url)
     result_set = qy.query_get_doc(source_db, doc_id)
 
     doc_from_cbl = []
 
-    for result in result_set:
-        doc_from_cbl = result[cbl_db]
+    if result_set is not None:
+        for result in result_set:
+            doc_from_cbl = result_set[result]
 
     # Get doc from n1ql through query
     log_info("Fetching doc {} from server through n1ql".format(doc_id))
@@ -89,10 +93,8 @@ def test_doc_get(params_from_base_test_setup, doc_id):
     for row in sdk_client.n1ql_query(query):
         doc_from_n1ql = row[bucket_name]
 
-    # Release
-    # qy.release(source_db)
-
     assert doc_from_cbl == doc_from_n1ql
+    log_info("Doc contents match between CBL and n1ql")
 
 
 @pytest.mark.parametrize("limit, offset", [
@@ -126,11 +128,10 @@ def test_get_docs_with_limit_offset(params_from_base_test_setup, limit, offset):
 
     if limit > 0:
         assert len(docs_from_cbl) == limit
+        log_info("Found {} docs".format(limit))
     else:
         assert len(docs_from_cbl) == 0
-
-    # Release
-    # qy.release(source_db)
+        log_info("Found 0 docs")
 
 
 @pytest.mark.parametrize("select_property1, select_property2, whr_key, whr_val", [
@@ -176,11 +177,10 @@ def test_multiple_selects(params_from_base_test_setup, select_property1, select_
     for row in sdk_client.n1ql_query(query):
         docs_from_n1ql.append(row)
 
-    # Release
-    qy.release(source_db)
-
     assert len(docs_from_cbl) == len(docs_from_n1ql)
+    log_info("Found {} docs".format(len(docs_from_cbl)))
     assert docs_from_cbl == docs_from_n1ql
+    log_info("Doc contents match")
 
 
 @pytest.mark.parametrize("whr_key1, whr_val1, whr_key2, whr_val2, whr_key3, whr_val3, whr_key4, whr_val4", [
@@ -231,7 +231,9 @@ def test_query_where_and_or(params_from_base_test_setup, whr_key1, whr_val1, whr
     qy.release(source_db)
 
     assert len(docs_from_cbl) == len(docs_from_n1ql)
+    log_info("Found {} docs".format(len(docs_from_cbl)))
     assert sorted(docs_from_cbl) == sorted(docs_from_n1ql)
+    log_info("Doc contents match")
 
 
 @pytest.mark.parametrize("whr_key, whr_val, select_property1, select_property2, like_key, like_val", [
@@ -284,11 +286,10 @@ def test_query_pattern_like(params_from_base_test_setup, whr_key, whr_val, selec
     for row in sdk_client.n1ql_query(query):
         docs_from_n1ql.append(row)
 
-    # Release
-    qy.release(source_db)
-
     assert len(docs_from_cbl) == len(docs_from_n1ql)
+    log_info("Found {} docs".format(len(docs_from_cbl)))
     assert sorted(docs_from_cbl) == sorted(docs_from_n1ql)
+    log_info("Doc contents match")
 
 
 @pytest.mark.parametrize("whr_key, whr_val, select_property1, select_property2, regex_key, regex_val", [
@@ -342,11 +343,10 @@ def test_query_pattern_regex(params_from_base_test_setup, whr_key, whr_val, sele
     for row in sdk_client.n1ql_query(query):
         docs_from_n1ql.append(row)
 
-    # Release
-    qy.release(source_db)
-
     assert len(docs_from_cbl) == len(docs_from_n1ql)
+    log_info("Found {} docs".format(len(docs_from_cbl)))
     assert sorted(docs_from_cbl) == sorted(docs_from_n1ql)
+    log_info("Doc contents match")
 
 
 @pytest.mark.parametrize("select_property1, limit", [
@@ -392,11 +392,10 @@ def test_query_isNullOrMissing(params_from_base_test_setup, select_property1, li
     for row in sdk_client.n1ql_query(query):
         docs_from_n1ql.append(row)
 
-    # Release
-    qy.release(source_db)
-
     assert len(docs_from_cbl) == len(docs_from_n1ql)
+    log_info("Found {} docs".format(len(docs_from_cbl)))
     assert sorted(docs_from_cbl) == sorted(docs_from_n1ql)
+    log_info("Doc contents match")
 
 
 @pytest.mark.parametrize("select_property1, whr_key, whr_val", [
@@ -444,11 +443,10 @@ def test_query_ordering(params_from_base_test_setup, select_property1, whr_key, 
     for row in sdk_client.n1ql_query(query):
         docs_from_n1ql.append(row)
 
-    # Release
-    qy.release(source_db)
-
     assert len(docs_from_cbl) == len(docs_from_n1ql)
+    log_info("Found {} docs".format(len(docs_from_cbl)))
     assert sorted(docs_from_cbl) == sorted(docs_from_n1ql)
+    log_info("Doc contents match")
 
 
 @pytest.mark.parametrize("select_property1, select_property2, substring", [
@@ -504,7 +502,9 @@ def test_query_substring(params_from_base_test_setup, select_property1, select_p
     # qy.release(source_db)
 
     assert len(docs_from_cbl) == len(docs_from_n1ql)
+    log_info("Found {} docs".format(len(docs_from_cbl)))
     assert sorted(docs_from_cbl) == sorted(docs_from_n1ql)
+    log_info("Doc contents match")
 
 
 @pytest.mark.parametrize("select_property1, whr_key1, whr_val1, whr_key2, whr_val2, equal_to", [
@@ -559,4 +559,5 @@ def test_query_collation(params_from_base_test_setup, select_property1, whr_key1
     qy.release(source_db)
 
     assert len(docs_from_cbl) == len(docs_from_n1ql)
+    log_info("Found {} docs".format(len(docs_from_cbl)))
     assert sorted(docs_from_cbl) == sorted(docs_from_n1ql)
