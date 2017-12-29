@@ -75,9 +75,12 @@ public class Server {
                     for param in queryParams {
                         rawArgs[param.key as! String] = param.value
 
-                        let value: Any = ValueSerializer.deserialize(value:(param.value as? String), memory: self.memory)!
-                        // Handle nil value
-                        args.set(value: value, forName: param.key as! String)
+                        if let value = ValueSerializer.deserialize(value:(param.value as? String), memory: self.memory) as Any? {
+                            // Handle nil value
+                            args.set(value: value, forName: param.key as! String)
+                        } else {
+                            args.set(value: "", forName: param.key as! String)
+                        }
                     }
                 }
 

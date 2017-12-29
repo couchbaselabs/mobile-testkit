@@ -21,15 +21,12 @@ public class DatabaseRequestHandler {
         // Database //
         //////////////
         case "database_create":
-            let arg: String? = args.get(name: "name")
-            print("args of database_create \(arg!)")
-            guard let name = arg else {
-                throw RequestHandlerError.InvalidArgument("name")
-            }
-            return try Database(name: name)
+            let name: String? = args.get(name: "name")
+
+            return try Database(name: name!)
 
         case "database_close":
-            let database: Database = (args.get(name:"database"))!
+            let database: Database = args.get(name:"database")!
 
             try database.close()
 
@@ -45,9 +42,18 @@ public class DatabaseRequestHandler {
             try database.deleteDocument(document)
         
         case "database_deleteDB":
-            let database: Database = (args.get(name:"database"))!
+            let database: Database = args.get(name:"database")!
             
-            try database.delete()
+            return try database.delete()
+
+        case "database_exists":
+            let name: String = args.get(name:"name")!
+            
+            if Database.exists(withName: name) {
+                return "true"
+            } else {
+                return "false"
+            }
 
         case "database_deleteIndex":
             let database: Database = (args.get(name:"database"))!
@@ -62,9 +68,9 @@ public class DatabaseRequestHandler {
 
         case "database_getDocument":
             let database: Database = (args.get(name:"database"))!
-            let id: String = (args.get(name: "id"))!
+            let id: String? = args.get(name: "id")
 
-            return (database.document(withID: id))!
+            return database.document(withID: id!)
 
         case "database_save":
             let database: Database = (args.get(name:"database"))!

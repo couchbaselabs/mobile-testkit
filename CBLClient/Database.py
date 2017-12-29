@@ -145,6 +145,11 @@ class Database:
         args.setMemoryPointer("database", database)
         return self._client.invokeMethod("database_getIndexes", args)
 
+    def exists(self, name):
+        args = Args()
+        args.setString("name", name)
+        return self._client.invokeMethod("database_exists", args)
+
     def create_value_index(self, database, prop):
         args = Args()
         args.setMemoryPointer("database", database)

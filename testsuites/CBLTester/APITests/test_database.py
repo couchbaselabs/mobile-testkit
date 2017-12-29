@@ -4,7 +4,7 @@ from keywords.utils import random_string
 from CBLClient.Database import Database
 from CBLClient.Document import Document
 
-baseUrl = "http://10.17.2.72:8080"
+baseUrl = "http://192.168.1.2:8989"
 dbName = "foo"
 docIdPrefix = "bar"
 
@@ -21,7 +21,8 @@ class TestDatabase():
         '''
         @summary: Checking for the Exception handling in database create API
         '''
-        _, err_resp = self.db_obj.create(dbName)
+        #_, err_resp = self.db_obj.create(dbName)
+        err_resp = self.db_obj.create(dbName)
         assert err_msg in err_resp
 
     def test_getDocument_exception(self):
@@ -69,7 +70,7 @@ class TestDatabase():
         random_string(6).capitalize(),
         random_string(6).upper(),
     ])
-    def test_database(self, dbName):
+    def test_database_create_new(self, dbName):
         '''
         @summary: Testing Database constructor method of Database API
         '''
@@ -142,7 +143,8 @@ class TestDatabase():
         '''
         db = self.db_obj.create(dbName)
         # self.db_obj.close(db)
-        assert self.db_obj.deleteDB(db) == -1
+        self.db_obj.deleteDB(db) == -1
+        assert self.db_obj.exists(dbName) == "false"
 
     @pytest.mark.parametrize("dbName, docId", [
         (random_string(1), random_string(6)),
