@@ -18,7 +18,7 @@ class SessionAuthenticator:
         args = Args()
         args.setString("sessionId", sessionId)
         args.setString("cookieName", cookieName)
-        args.setMemoryPointer("expires", expires)
+        args.setLong("expires", expires)
         return self._client.invokeMethod("sessionAuthenticator_create",
                                          args)
 

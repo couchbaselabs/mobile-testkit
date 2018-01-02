@@ -156,12 +156,10 @@ def params_from_base_suite_setup(request):
         server_url = cluster_topology["couchbase_servers"][0]
         server = CouchbaseServer(server_url)
 
-        buckets = server.get_bucket_names()
-        if enable_sample_bucket not in buckets:
-            server.delete_buckets()
-            time.sleep(5)
-            server.load_sample_bucket(enable_sample_bucket)
-            server._create_internal_rbac_bucket_user(enable_sample_bucket)
+        server.delete_buckets()
+        time.sleep(5)
+        server.load_sample_bucket(enable_sample_bucket)
+        server._create_internal_rbac_bucket_user(enable_sample_bucket)
 
         # Create primary index
         log_info("Creating primary index for {}".format(enable_sample_bucket))
@@ -170,7 +168,7 @@ def params_from_base_suite_setup(request):
         query = N1QLQuery(n1ql_query)
         sdk_client.n1ql_query(query)
 
-        # Create CBL database
+    # Create CBL database
     cbl_db = "test_db"
     db = Database(base_url)
 
@@ -182,16 +180,13 @@ def params_from_base_suite_setup(request):
 
     if enable_sample_bucket:
         # Start continuous replication
-        repl_config_obj = ReplicatorConfiguration(base_url)
-        log_info("Configuring replication")
-        config = repl_config_obj.create(sourceDb=source_db, targetURI=target_admin_url)
-        repl_config_obj.setReplicatorType(config, "PUSH_AND_PULL")
+        repl_obj = Replicator(base_url)
         auth_obj = BasicAuthenticator(base_url)
         authenticator = auth_obj.create("trave-sample", "password")
-        repl_config_obj.setAuthenticator(config, authenticator)
-    #     repl_config_obj.setContinuous(config, True)
-        repl_obj = Replicator(base_url)
-        replicator = repl_obj.create(config)
+        replicator = repl_obj.configure(source_db=source_db,
+                                        target_url=target_admin_url,
+                                        replication_type="PUSH_AND_PULL",
+                                        replicator_authenticator=authenticator)
         repl_obj.start(replicator)
         time.sleep(1)
 

@@ -47,10 +47,8 @@ class Client(object):
             raise err
         except Exception as err:
             # resp can't be accessed here
-            if resp:
-                return err, resp.content
-            else:
-                return err
+            return err, resp.content
+
 
     def release(self, obj):
         args = Args()

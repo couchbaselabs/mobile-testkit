@@ -139,7 +139,7 @@ public class DatabaseRequestHandler {
     public boolean exists(Args args){
         String dbName = args.get("dbName");
         File directory = args.get("directory");
-        return Database.exists(dbName, directory);
+        return Database.exists(dbName, directory.getParentFile());
     }
 
     public boolean contains(Args args) {

@@ -38,6 +38,12 @@ class Database:
             name and path to delete the document.")
         return self._client.invokeMethod("database_delete", args)
 
+    def exists(self, dbName, directory):
+        args = Args()
+        args.setString("dbName", dbName)
+        args.setMemoryPointer("directory", directory)
+        return self._client.invokeMethod("database_exists", args)
+
     def purge(self, database, document):
         args = Args()
         args.setMemoryPointer("database", database)

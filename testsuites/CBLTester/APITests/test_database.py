@@ -4,8 +4,8 @@ from keywords.utils import random_string
 from CBLClient.Database import Database
 from CBLClient.Document import Document
 
-#baseUrl = "http://172.16.1.154:8080"
-baseUrl = "http://192.168.0.117:8080"
+baseUrl = "http://172.16.1.154:8080"
+#baseUrl = "http://192.168.0.117:8080"
 #baseUrl = "http://172.23.121.73:55555"
 dbName = "foo"
 docIdPrefix = "bar"
@@ -22,8 +22,7 @@ class TestDatabase():
         '''
         @summary: Checking for the Exception handling in database create API
         '''
-        #_, err_resp = self.db_obj.create(dbName)
-        err_resp = self.db_obj.create(dbName)
+        _, err_resp = self.db_obj.create(dbName)
         assert err_msg in err_resp
 
     def test_getDocument_exception(self):
@@ -71,12 +70,13 @@ class TestDatabase():
         random_string(6).capitalize(),
         random_string(6).upper(),
     ])
-    def test_database_create_new(self, dbName):
+    def test_database_create(self, dbName):
         '''
         @summary: Testing Database constructor method of Database API
         '''
         db = self.db_obj.create(dbName)
         assert self.db_obj.getName(db) == dbName
+        assert self.db_obj.deleteDB(db) == -1
 
     def test_database_add_listener(self):
         '''
@@ -127,6 +127,7 @@ class TestDatabase():
         db = self.db_obj.create(dbName)
         self.db_obj.saveDocument(db, doc)
         assert self.db_obj.contains(db, docIdPrefix)
+        assert self.db_obj.deleteDB(db) == -1
 
     @pytest.mark.parametrize("dbName", [
         random_string(1),
@@ -145,7 +146,7 @@ class TestDatabase():
         db = self.db_obj.create(dbName)
         path = self.db_obj.getPath(db)
         assert self.db_obj.deleteDB(db) == -1
-#         assert self.db_obj.exists(dbName, path) == "false"
+        assert self.db_obj.exists(dbName, path) == False
 
     @pytest.mark.parametrize("dbName, docId", [
         (random_string(1), random_string(6)),
@@ -182,13 +183,13 @@ class TestDatabase():
         assert self.db_obj.getCount(db) == 0
         doc_res = self.db_obj.getDocument(db, docId)
         assert doc_res is None
-        self.db_obj.deleteDB(db)
+        assert self.db_obj.deleteDB(db) == -1
 
     @pytest.mark.parametrize("dbName, docId, num_of_docs", [
         (random_string(6), random_string(8), 9),
         (random_string(6), random_string(8), 99),
         (random_string(6), random_string(8), 999),
-        # (random_string(6), random_string(8), 9999)
+        (random_string(6), random_string(8), 9999)
     ])
     def test_getCount(self, num_of_docs, dbName, docId):
         '''
@@ -200,12 +201,27 @@ class TestDatabase():
             self.db_obj.saveDocument(db, doc)
         doc_count = self.db_obj.getCount(db)
         assert num_of_docs == doc_count
+        assert self.db_obj.deleteDB(db) == -1
 
-    def test_exists(self):
+    @pytest.mark.parametrize("dbName", [
+        random_string(1),
+        random_string(6),
+        random_string(128),
+        "_{}".format(random_string(6)),
+        "{}_".format(random_string(6)),
+        "_{}_".format(random_string(6)),
+        random_string(6, digit=True),
+        random_string(6).upper(),
+    ])
+    def test_exists(self, dbName):
         '''
         @summary: Testing exist method of Database API
         '''
-        assert 0
+        db = self.db_obj.create(dbName)
+        path = self.db_obj.getPath(db)
+        assert self.db_obj.exists(dbName, path) == True
+        assert self.db_obj.deleteDB(db) == -1
+        assert self.db_obj.exists(dbName, path) == False
 
     @pytest.mark.parametrize("dbName, docId", [
         # "",
@@ -228,6 +244,7 @@ class TestDatabase():
         self.db_obj.saveDocument(db, doc)
         new_doc = self.db_obj.getDocument(db, docId)
         assert self.doc_obj.getId(new_doc) == self.doc_obj.getId(doc)
+        assert self.db_obj.deleteDB(db) == -1
 
     @pytest.mark.parametrize("dbName", [
         random_string(1),
@@ -246,6 +263,7 @@ class TestDatabase():
         '''
         db = self.db_obj.create(dbName)
         assert dbName == str(self.db_obj.getName(db))
+        assert self.db_obj.deleteDB(db) == -1
 
     @pytest.mark.parametrize("dbName", [
         random_string(1),
@@ -264,6 +282,7 @@ class TestDatabase():
         '''
         db = self.db_obj.create(dbName)
         assert self.db_obj.getPath(db)
+        assert self.db_obj.deleteDB(db) == -1
 
     @pytest.mark.parametrize("db1, db2, docId", [
         # "",
@@ -289,6 +308,8 @@ class TestDatabase():
         self.db_obj.purge(document=doc, database=db_1)
         assert not self.db_obj.getDocument(db_2, docId)
         assert self.db_obj.getDocument(db_2, docId)
+        assert self.db_obj.deleteDB(db_1) == -1
+        assert self.db_obj.deleteDB(db_2) == -1
 
     @pytest.mark.parametrize("dbName, docId", [
         (random_string(1), random_string(6)),
@@ -306,12 +327,13 @@ class TestDatabase():
         @summary: Testing save method of Database API
         '''
         doc = self.doc_obj.create(docId)
-        db_obj = self.db_obj.create(dbName)
-        doc_in_db_check = self.db_obj.getDocument(db_obj, docId)
+        db = self.db_obj.create(dbName)
+        doc_in_db_check = self.db_obj.getDocument(db, docId)
         assert not doc_in_db_check
-        self.db_obj.saveDocument(db_obj, doc)
-        doc_res = self.db_obj.getDocument(db_obj, docId)
+        self.db_obj.saveDocument(db, doc)
+        doc_res = self.db_obj.getDocument(db, docId)
         assert docId == str(self.doc_obj.getId(doc_res))
+        assert self.db_obj.deleteDB(db) == -1
 
     def test_getDocuments(self):
         '''
@@ -332,3 +354,4 @@ class TestDatabase():
         docs_in_db = self.db_obj.getDocuments(db, ids)
         assert num_of_docs == self.db_obj.getCount(db)
         assert documents == docs_in_db
+        assert self.db_obj.deleteDB(db) == -1

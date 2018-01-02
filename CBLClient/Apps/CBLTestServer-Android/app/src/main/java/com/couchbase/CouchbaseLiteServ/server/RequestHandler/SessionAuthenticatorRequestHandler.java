@@ -16,7 +16,7 @@ public class SessionAuthenticatorRequestHandler {
         String sessionId = args.get("sessionId");
         String cookieName = args.get("cookieName");
         Date date = new Date();
-        long expTimeInSec  = args.get("expires");
+        long expTimeInSec  = Long.parseLong(String.valueOf(args.get("expires")));
         Date expires = new Date(date.getTime() + TimeUnit.SECONDS.toMillis(expTimeInSec));
         return new SessionAuthenticator(sessionId, expires, cookieName);
     }
