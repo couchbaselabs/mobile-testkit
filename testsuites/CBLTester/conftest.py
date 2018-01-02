@@ -1,20 +1,19 @@
-import pytest
 import time
+import pytest
 
-from keywords.utils import log_info
 from utilities.cluster_config_utils import persist_cluster_config_environment_prop
+from keywords.utils import log_info
+from keywords.utils import host_for_url
 from keywords.ClusterKeywords import ClusterKeywords
 from keywords.couchbaseserver import CouchbaseServer
 from keywords.constants import CLUSTER_CONFIGS_DIR
 from keywords.SyncGateway import sync_gateway_config_path_for_mode
 from keywords.exceptions import ProvisioningError
 from keywords.tklogging import Logging
-from CBLClient.Replication import Replication
 from CBLClient.Replicator_new import Replicator
 from CBLClient.BasicAuthenticator import BasicAuthenticator
-from CBLClient.ReplicatorConfiguration import ReplicatorConfiguration
 from CBLClient.Database import Database
-from keywords.utils import host_for_url
+
 from couchbase.bucket import Bucket
 from couchbase.n1ql import N1QLQuery
 
@@ -59,7 +58,7 @@ def pytest_addoption(parser):
     parser.addoption("--xattrs",
                      action="store_true",
                      help="xattrs: Enable xattrs for sync gateway")
-                    
+
     parser.addoption("--no-conflicts",
                      action="store_true",
                      help="If set, allow_conflicts is set to false in sync-gateway config")
@@ -86,7 +85,6 @@ def params_from_base_suite_setup(request):
     base_url = "http://{}:{}".format(liteserv_host, liteserv_port)
     cluster_config = "{}/base_{}".format(CLUSTER_CONFIGS_DIR, mode)
     no_conflicts_enabled = request.config.getoption("--no-conflicts")
-    sg_config = sync_gateway_config_path_for_mode("sync_gateway_default_functional_tests", mode)
     cluster_utils = ClusterKeywords()
     cluster_topology = cluster_utils.get_cluster_topology(cluster_config)
 
@@ -95,9 +93,6 @@ def params_from_base_suite_setup(request):
     sg_ip = host_for_url(sg_url)
     target_url = "blip://{}:4984/{}".format(sg_ip, sg_db)
     target_admin_url = "blip://{}:4985/{}".format(sg_ip, sg_db)
-
-    cbs_url = cluster_topology['couchbase_servers'][0]
-    cbs_ip = host_for_url(cbs_url)
 
     try:
         server_version
@@ -160,6 +155,7 @@ def params_from_base_suite_setup(request):
         time.sleep(5)
         server.load_sample_bucket(enable_sample_bucket)
         server._create_internal_rbac_bucket_user(enable_sample_bucket)
+        time.sleep(120)
 
         # Create primary index
         log_info("Creating primary index for {}".format(enable_sample_bucket))
@@ -188,7 +184,7 @@ def params_from_base_suite_setup(request):
                                         replication_type="PUSH_AND_PULL",
                                         replicator_authenticator=authenticator)
         repl_obj.start(replicator)
-        time.sleep(1)
+        time.sleep(60)
 
     yield {
         "cluster_config": cluster_config,
@@ -226,7 +222,6 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     xattrs_enabled = params_from_base_suite_setup["xattrs_enabled"]
     liteserv_host = params_from_base_suite_setup["liteserv_host"]
     liteserv_port = params_from_base_suite_setup["liteserv_port"]
-    enable_sample_bucket = params_from_base_suite_setup["enable_sample_bucket"]
     no_conflicts_enabled = params_from_base_suite_setup["no_conflicts_enabled"]
     target_admin_url = params_from_base_suite_setup["target_admin_url"]
     source_db = params_from_base_suite_setup["source_db"]
@@ -235,11 +230,10 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     cluster_topology = params_from_base_suite_setup["cluster_topology"]
     mode = params_from_base_suite_setup["mode"]
     target_url = params_from_base_suite_setup["target_url"]
-    base_url = params_from_base_suite_setup["base_url"]
     sg_ip = params_from_base_suite_setup["sg_ip"]
     sg_db = params_from_base_suite_setup["sg_db"]
     sync_gateway_version = params_from_base_suite_setup["sync_gateway_version"]
-    
+
     cluster_helper = ClusterKeywords()
     cluster_hosts = cluster_helper.get_cluster_topology(cluster_config=cluster_config)
     sg_url = cluster_hosts["sync_gateways"][0]["public"]
@@ -270,4 +264,3 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         "source_db": source_db,
         "cbl_db": cbl_db,
     }
-

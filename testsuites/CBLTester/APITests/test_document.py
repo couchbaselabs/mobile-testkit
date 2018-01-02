@@ -1,5 +1,5 @@
-import pytest
 import random
+import pytest
 
 from CBLClient.Database import Database
 from CBLClient.Document import Document
@@ -7,18 +7,18 @@ from CBLClient.Dictionary import Dictionary
 from CBLClient.DataTypeInitiator import DataTypeInitiator
 from keywords.utils import random_string
 
-#baseUrl = "http://172.16.1.154:8080"
-baseUrl = "http://192.168.0.107:8080"
+#BASE_URL = "http://172.16.1.154:8080"
+BASE_URL = "http://192.168.0.117:8080"
 
-class TestDocument():
+class TestDocument(object):
 
-    db_obj = Database(baseUrl)
-    doc_obj = Document(baseUrl)
-    dict_obj = Dictionary(baseUrl)
-    datatype = DataTypeInitiator(baseUrl)
+    db_obj = Database(BASE_URL)
+    doc_obj = Document(BASE_URL)
+    dict_obj = Dictionary(BASE_URL)
+    datatype = DataTypeInitiator(BASE_URL)
     db_obj.create("dbname")
 
-    @pytest.mark.parametrize("docId1, docId2",[
+    @pytest.mark.parametrize("doc_id1, doc_id2", [
         (random_string(1), random_string(1)),
         (random_string(6), random_string(6)),
         ("_{}".format(random_string(6)), "_{}".format(random_string(6))),
@@ -29,25 +29,24 @@ class TestDocument():
         (random_string(8, digit=True), random_string(8, digit=True)),
         (random_string(128), random_string(128)),
         ])
-    def test_document(self, docId1, docId2):
+    def test_document(self, doc_id1, doc_id2):
         '''
         @summary: Testing Document Constructor
         '''
-#         Failing with DB21 
         doc_1 = self.doc_obj.create()
         assert self.doc_obj.getId(doc_1)
-        
-        doc_2 = self.doc_obj.create(docId1)
-        assert docId1 == self.doc_obj.getId(doc_2)
-        
+
+        doc_2 = self.doc_obj.create(doc_id1)
+        assert doc_id1 == self.doc_obj.getId(doc_2)
+
         doc_dict = {"test1": "test_string"}
         doc_3 = self.doc_obj.create(dictionary=doc_dict)
         assert self.doc_obj.getId(doc_3)
-        
-        doc_4 = self.doc_obj.create(docId2, doc_dict)
-        assert docId2 == self.doc_obj.getId(doc_4)
 
-    @pytest.mark.parametrize("key, value",[
+        doc_4 = self.doc_obj.create(doc_id2, doc_dict)
+        assert doc_id2 == self.doc_obj.getId(doc_4)
+
+    @pytest.mark.parametrize("key, value", [
         (random_string(5), ""),
         (random_string(5), random_string(1)),
         (random_string(5), random_string(10)),
@@ -71,7 +70,7 @@ class TestDocument():
         9,
         99,
         999,
-#         9999
+        9999
         ])
     def test_count(self, num_of_keys):
         '''
@@ -114,42 +113,15 @@ class TestDocument():
         hashmap[key] = value
         self.doc_obj.setInt(doc, key, value)
         key = "Long_key"
-        value = long(random.randint(10,10000))
+        value = long(random.randint(10, 10000))
         hashmap[key] = value
         self.doc_obj.setLong(doc, key, value)
-        #key = "Double_key"
-        #value = self.datatype.setDouble('2.0')
-        #hashmap[key] = 2.0
-        #self.doc_obj.setDouble(doc, key, value)
         key = "Float_key"
         value = 3.0
         hashmap[key] = value
         self.doc_obj.setFloat(doc, key, value)
         result_map = self.doc_obj.toMap(doc)
         assert hashmap == result_map
-
-#     Not available in DB21
-#     def test_set(self):
-#         '''
-#         @summary: Testing set method of Document API
-#         '''
-#         doc = self.doc_obj.create()
-#         hashmap = {}
-#         key = "string_key"
-#         value = "Test String"
-#         hashmap[key] = value
-#         key = "Integer_key"
-#         value = 1
-#         hashmap[key] = value
-#         key = "Long_key"
-#         value = long(random.randint(10,10000))
-#         hashmap[key] = value
-#         key = "Float_key"
-#         value = 3.0
-#         hashmap[key] = value
-#         self.doc_obj.set(doc, hashmap)
-#         result_map = self.doc_obj.toMap(doc)
-#         assert hashmap == result_map
 
     def test_getKeys(self):
         '''
@@ -169,7 +141,7 @@ class TestDocument():
         result_list.append(key)
         self.doc_obj.setInt(doc, key, value)
         key = "Long_key"
-        value = long(random.randint(10,10000))
+        value = long(random.randint(10, 10000))
         result_list.append(key)
         self.doc_obj.setLong(doc, key, value)
         key = "Float_key"
@@ -179,34 +151,32 @@ class TestDocument():
         result_list.sort()
         assert sorted(self.doc_obj.getKeys(doc)) == result_list
 
-    @pytest.mark.parametrize("key, value",[
-        (random_string(5), ""),
-        (random_string(5), random_string(1)),
-        (random_string(5), random_string(10)),
-        (random_string(5), "_{}".format(random_string(5))),
-        (random_string(5), "{}_".format(random_string(8))),
-        (random_string(5), "_{}_".format(random_string(9))),
-        (random_string(5), random_string(9).capitalize()),
-        (random_string(5), random_string(9).upper()),
-        (random_string(5), "{}12".format(random_string(5))),
-        (random_string(5), random_string(10, digit=True)),
-        #(random_string(128), random_string(128, True)),
+    @pytest.mark.parametrize("key, value", [
+#         (random_string(5), ""),
+#         (random_string(5), random_string(1)),
+#         (random_string(5), random_string(10)),
+#         (random_string(5), "_{}".format(random_string(5))),
+#         (random_string(5), "{}_".format(random_string(8))),
+#         (random_string(5), "_{}_".format(random_string(9))),
+#         (random_string(5), random_string(9).capitalize()),
+#         (random_string(5), random_string(9).upper()),
+#         (random_string(5), "{}12".format(random_string(5))),
+#         (random_string(5), random_string(10, digit=True)),
+        (random_string(128), random_string(128))
         ])
     def test_get_set_string(self, key, value):
         '''
         @summary: Testing Get and Set String method of Document API
         '''
         doc = self.doc_obj.create()
-#         key = "string_key"
-#         value = "Test String"
         self.doc_obj.setString(doc, key, value)
         assert value == self.doc_obj.getString(doc, key)
 
-    @pytest.mark.parametrize("key, value",[
-        (random_string(6), random.randint(0,9)),
-        (random_string(6), random.randint(10,99)),
-        (random_string(6), random.randint(100,999)),
-        (random_string(6), random.randint(1000,9999))
+    @pytest.mark.parametrize("key, value", [
+        (random_string(6), random.randint(0, 9)),
+        (random_string(6), random.randint(10, 99)),
+        (random_string(6), random.randint(100, 999)),
+        (random_string(6), random.randint(1000, 9999))
         ])
     def test_get_set_integer(self, key, value):
         '''
@@ -216,7 +186,7 @@ class TestDocument():
         self.doc_obj.setInt(doc, key, value)
         assert value == self.doc_obj.getInt(doc, key)
 
-    @pytest.mark.parametrize("key, value",[
+    @pytest.mark.parametrize("key, value", [
         (random_string(6), True),
         (random_string(6), False)])
     def test_get_set_boolean(self, key, value):
@@ -235,7 +205,7 @@ class TestDocument():
         key = "Dictionary_key"
         value = self.dict_obj.create()
         self.dict_obj.setString(value, "String_key", random_string(12))
-        self.dict_obj.setInt(value, "Integer_key", random.randint(0,50))
+        self.dict_obj.setInt(value, "Integer_key", random.randint(0, 50))
         self.doc_obj.setDictionary(doc, key, value)
         result_dict = self.doc_obj.getDictionary(doc, key)
         assert self.dict_obj.contains(result_dict, "String_key")
@@ -252,7 +222,7 @@ class TestDocument():
         new_date = self.doc_obj.getDate(doc, key)
         assert self.datatype.compare(date_obj, new_date)
 
-    @pytest.mark.parametrize("key, value",[
+    @pytest.mark.parametrize("key, value", [
         (random_string(6), "{}".format(random.uniform(0, 1))),
         (random_string(6), "{}".format(random.uniform(1, 10))),
         (random_string(6), "{}".format(random.uniform(11, 100))),
@@ -268,7 +238,7 @@ class TestDocument():
         assert self.datatype.compare(double_obj,
                                      self.doc_obj.getDouble(doc, key))
 
-    @pytest.mark.parametrize("key, value",[
+    @pytest.mark.parametrize("key, value", [
         (random_string(6), "{}".format(random.uniform(0, 1))),
         (random_string(6), "{}".format(random.uniform(1, 10))),
         (random_string(6), "{}".format(random.uniform(11, 100))),
@@ -284,11 +254,11 @@ class TestDocument():
         result = self.doc_obj.getFloat(doc, key)
         assert self.datatype.compare(float_obj, result)
 
-    @pytest.mark.parametrize("key, value",[
-        (random_string(6), "{}".format(random.randint(0,9))),
-        (random_string(6), "{}".format(random.randint(10,99))),
-        (random_string(6), "{}".format(random.randint(100,999))),
-        (random_string(6), "{}".format(random.randint(1000,9999)))
+    @pytest.mark.parametrize("key, value", [
+        (random_string(6), "{}".format(random.randint(0, 9))),
+        (random_string(6), "{}".format(random.randint(10, 99))),
+        (random_string(6), "{}".format(random.randint(100, 999))),
+        (random_string(6), "{}".format(random.randint(1000, 9999)))
         ])
     def test_get_set_long(self, key, value):
         '''

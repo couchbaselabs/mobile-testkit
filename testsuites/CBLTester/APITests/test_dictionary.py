@@ -1,19 +1,22 @@
-import pytest
 import random
+import pytest
 
 from keywords.utils import random_string
+from CBLClient.Database import Database
 from CBLClient.Dictionary import Dictionary
 from CBLClient.DataTypeInitiator import DataTypeInitiator
 
-#baseUrl = "http://172.16.1.154:8080"
-baseUrl = "http://192.168.0.107:8080"
+#BASE_URL = "http://172.16.1.154:8080"
+BASE_URL = "http://192.168.0.117:8080"
 
-class TestDictionary():
+class TestDictionary(object):
 
-    dict_obj = Dictionary(baseUrl)
-    datatype = DataTypeInitiator(baseUrl)
+    dict_obj = Dictionary(BASE_URL)
+    datatype = DataTypeInitiator(BASE_URL)
+    db_obj = Database(BASE_URL)
+    db = db_obj.create("db")
 
-    @pytest.mark.parametrize("key, value",[
+    @pytest.mark.parametrize("key, value", [
         (random_string(5), ""),
         (random_string(5), random_string(1)),
         (random_string(5), random_string(10)),
@@ -56,8 +59,8 @@ class TestDictionary():
     @pytest.mark.parametrize("num_of_keys", [
         9,
         99,
-        #999,
-        #9999
+        999,
+        9999
         ])
     def test_count(self, num_of_keys):
         '''
@@ -71,26 +74,7 @@ class TestDictionary():
         content_dict = self.dict_obj.create(hashmap)
         assert num_of_keys == self.dict_obj.count(content_dict)
 
-#     Not available in DB21
-#     def test_set(self):
-#         '''
-#         @summary: Testing set methods of Dictionary API
-#         '''
-#         content_dict = self.dict_obj.create()
-#         hashmap = {"Double_key": "{}".format(random.uniform(1, 10)),
-#                    "Float_key": "{}".format(random.random()),
-#                    "Integer_key": random.randint(1, 1000),
-#                    "Long_key": random.randint(100000, 10000000),
-#                    "String_key": random_string(6)
-#                    }
-#         self.dict_obj.set(content_dict, hashmap)
-#         dict_keys = self.dict_obj.getKeys(content_dict)
-#         assert sorted(hashmap.keys()) == sorted(dict_keys)
-#         #getKeys and contains keys are not matching for same dict
-#         for key in hashmap.keys():
-#             assert self.dict_obj.contains(content_dict, key)
-
-    @pytest.mark.parametrize("key, value",[
+    @pytest.mark.parametrize("key, value", [
         (random_string(6), True),
         (random_string(6), False)])
     def test_get_set_boolean(self, key, value):
@@ -143,7 +127,7 @@ class TestDictionary():
         resultmap = self.dict_obj.toMap(content_check)
         assert self.datatype.compareHashMap(hashmap, resultmap)
 
-    @pytest.mark.parametrize("key, value",[
+    @pytest.mark.parametrize("key, value", [
         (random_string(6), "{}".format(random.uniform(0, 1))),
         (random_string(6), "{}".format(random.uniform(1, 10))),
         (random_string(6), "{}".format(random.uniform(11, 100))),
@@ -160,7 +144,7 @@ class TestDictionary():
                                      self.dict_obj.getDouble(
                                          content_dict, key))
 
-    @pytest.mark.parametrize("key, value",[
+    @pytest.mark.parametrize("key, value", [
         (random_string(6), "{}".format(random.uniform(0, 1))),
         (random_string(6), "{}".format(random.uniform(1, 10))),
         (random_string(6), "{}".format(random.uniform(11, 100))),
@@ -177,11 +161,11 @@ class TestDictionary():
                                      self.dict_obj.getFloat(
                                          content_dict, key))
 
-    @pytest.mark.parametrize("key, value",[
-        (random_string(6), random.randint(0,9)),
-        (random_string(6), random.randint(10,99)),
-        #(random_string(6), random.randint(100,999)),
-        #(random_string(6), random.randint(1000,9999))
+    @pytest.mark.parametrize("key, value", [
+        (random_string(6), random.randint(0, 9)),
+        (random_string(6), random.randint(10, 99)),
+        (random_string(6), random.randint(100, 999)),
+        (random_string(6), random.randint(1000, 9999))
         ])
     def test_get_set_int(self, key, value):
         '''
@@ -191,7 +175,7 @@ class TestDictionary():
         self.dict_obj.setInt(content_dict, key, value)
         assert value == self.dict_obj.getInt(content_dict, key)
 
-    @pytest.mark.parametrize("key, value",[
+    @pytest.mark.parametrize("key, value", [
         (random_string(6), "{}".format(random.randint(0, 1))),
         (random_string(6), "{}".format(random.randint(1, 10))),
         (random_string(6), "{}".format(random.randint(11, 100))),
@@ -208,7 +192,7 @@ class TestDictionary():
                                      self.dict_obj.getLong(content_dict,
                                                            key))
 
-    @pytest.mark.parametrize("key, value",[
+    @pytest.mark.parametrize("key, value", [
         (random_string(5), ""),
         (random_string(5), random_string(1)),
         (random_string(5), random_string(10)),
@@ -253,7 +237,7 @@ class TestDictionary():
         (random_string(5), random.uniform(1, 10)),
         (random_string(5), random.random()),
         (random_string(5), random.randint(1, 1000)),
-        (random_string(5),  random.randint(100000, 10000000)),
+        (random_string(5), random.randint(100000, 10000000)),
         (random_string(5), random_string(6))
         ])
     def test_remove(self, key, value):
@@ -271,13 +255,14 @@ class TestDictionary():
         @summary: Testing remove method of Dictionary API
         '''
         hashmap = self.datatype.hashMap()
-        key_value = {"Date_key": self.datatype.setDate(),
-                     "Double_key": "{}".format(random.uniform(1, 10)),
-                     "Float_key": "{}".format(random.random()),
-                     "Integer_key": random.randint(1, 1000),
-                     "Long_key": random.randint(100000, 10000000),
-                     "String_key": random_string(6)
-                     }
+        key_value = {
+            "Date_key": self.datatype.setDate(),
+            "Double_key": "{}".format(random.uniform(1, 10)),
+            "Float_key": "{}".format(random.random()),
+            "Integer_key": random.randint(1, 1000),
+            "Long_key": random.randint(100000, 10000000),
+            "String_key": random_string(6)
+            }
         for key, value in key_value.items():
             self.datatype.put(hashmap, key, value)
         content_dict = self.dict_obj.create(hashmap)

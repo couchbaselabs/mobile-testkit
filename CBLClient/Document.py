@@ -1,18 +1,17 @@
 from CBLClient.Client import Client
 from CBLClient.Args import Args
 
-class Document:
+class Document(object):
     _client = None
-    _baseUrl = None
 
-    def __init__(self, baseUrl):
-        self.baseUrl = baseUrl
+    def __init__(self, base_url):
+        self.base_url = base_url
 
         # If no base url was specified, raise an exception
-        if not self.baseUrl:
-            raise Exception("No baseUrl specified")
+        if not self.base_url:
+            raise Exception("No base_url specified")
 
-        self._client = Client(baseUrl)
+        self._client = Client(base_url)
 
     def create(self, doc_id=None, dictionary=None,):
         args = Args()
@@ -27,8 +26,7 @@ class Document:
         elif doc_id:
             args.setString("id", doc_id)
             return self._client.invokeMethod("document_create", args)
-        else:
-            return self._client.invokeMethod("document_create", args)
+        return self._client.invokeMethod("document_create", args)
 
     def delete(self, database, document):
         args = Args()
@@ -82,7 +80,6 @@ class Document:
         args.setMemoryPointer("key", key)
         return self._client.invokeMethod("document_get", args)
 
-    
     def getArray(self, document, key):
         args = Args()
         args.setMemoryPointer("document", document)

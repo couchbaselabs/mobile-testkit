@@ -1,8 +1,8 @@
 import json
 
-from MemoryPointer import MemoryPointer
+from CBLClient.MemoryPointer import MemoryPointer
 
-class ValueSerializer:
+class ValueSerializer(object):
     @staticmethod
     def serialize(value):
         if value is None:
@@ -16,7 +16,7 @@ class ValueSerializer:
             value = value.encode('utf-8')
             return "\"" + value + "\""
         elif isinstance(value, bool):
-            # bool has to be before int, 
+            # bool has to be before int,
             # Python's Bool gets caught by int
             bool_val = bool(value)
             return "true" if bool_val else "false"
@@ -27,36 +27,35 @@ class ValueSerializer:
             if value/1000000000 < 2:
                 number = int(value)
                 return "I" + str(number)
-            else:
-                return "L" + str(value)
+            return "L" + str(value)
         elif isinstance(value, float):
             number = float(value)
             return "F" + str(number)
         # There is no double/number in python
         elif isinstance(value, dict):
             dict_map = value
-            stringMap = {}
+            string_map = {}
 
             for map_param in dict_map:
                 val = ValueSerializer.serialize(dict_map[map_param])
-                stringMap[map_param] = val
+                string_map[map_param] = val
 
-            return json.dumps(stringMap)
+            return json.dumps(string_map)
             # return json.dumps(value)
         elif isinstance(value, list):
-            stringList = []
+            string_list = []
 
             for obj in value:
                 string = ValueSerializer.serialize(obj)
-                stringList.append(string)
+                string_list.append(string)
 
-            return json.dumps(stringList)
+            return json.dumps(string_list)
 
         raise RuntimeError("Invalid value type: {}: {}".format(value, type(value)))
 
     @staticmethod
     def deserialize(value):
-        if not value or len(value) == 0 or value == "null":
+        if not value or value == "null":
             return None
         elif value.startswith("@"):
             return MemoryPointer(value)
@@ -75,22 +74,21 @@ class ValueSerializer:
         elif value.startswith("#"):
             if "." in value:
                 return float(value[1:])
-            else:
-                return int(value[1:])
+            return int(value[1:])
         elif value.startswith("{"):
-            stringMap = json.loads(value)
+            string_map = json.loads(value)
             dict_map = {}
-            for entry in stringMap:
+            for entry in string_map:
                 key = str(entry)
-                obj = ValueSerializer.deserialize(stringMap[key])
+                obj = ValueSerializer.deserialize(string_map[key])
 
                 dict_map[key] = obj
             return dict_map
         elif value.startswith("["):
-            stringList = json.loads(value)
+            string_list = json.loads(value)
             res_list = []
 
-            for string in stringList:
+            for string in string_list:
                 obj = ValueSerializer.deserialize(string)
                 res_list.append(obj)
 

@@ -133,6 +133,7 @@ public class QueryRequestHandler {
 
     public List<Object> like(Args args) throws CouchbaseLiteException {
         Database database = args.get("database");
+        int out = database.getCount();
         String whr_key = args.get("whr_key");
         String select_property1 = args.get("select_property1");
         String select_property2 = args.get("select_property2");

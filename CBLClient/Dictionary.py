@@ -1,18 +1,17 @@
 from CBLClient.Client import Client
 from CBLClient.Args import Args
 
-class Dictionary:
+class Dictionary(object):
     _client = None
-    _baseUrl = None
 
-    def __init__(self, baseUrl):
-        self.baseUrl = baseUrl
+    def __init__(self, base_url):
+        self.base_url = base_url
 
         # If no base url was specified, raise an exception
-        if not self.baseUrl:
-            raise Exception("No baseUrl specified")
+        if not self.base_url:
+            raise Exception("No base_url specified")
 
-        self._client = Client(baseUrl)
+        self._client = Client(base_url)
 
     def create(self, dictionary=None):
         args = Args()
@@ -38,7 +37,7 @@ class Dictionary:
         args.setString("value", value)
         return self._client.invokeMethod("dictionary_setString", args)
 
-    def set(self,dictionary, content_dict):
+    def set(self, dictionary, content_dict):
         args = Args()
         args.setMemoryPointer("dictionary", dictionary)
         args.setMemoryPointer("content_dict", content_dict)

@@ -1,5 +1,5 @@
 
-class MemoryPointer:
+class MemoryPointer(object):
     _address = None
 
     def __init__(self, address):

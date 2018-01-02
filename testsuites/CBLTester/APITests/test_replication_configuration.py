@@ -5,17 +5,13 @@ from CBLClient.ReplicatorConfiguration import ReplicatorConfiguration
 from CBLClient.BasicAuthenticator import BasicAuthenticator
 from CBLClient.SessionAuthenticator import SessionAuthenticator
 
-# from testsuites.CBLTester.conftest import params_from_base_test_setup
-
-
 class TestReplicatorConfiguration(object):
-    base_url = "http://192.168.0.107:8080"
+    base_url = "http://192.168.0.117:8080"
     db_obj = Database(base_url)
     cbl_db_name = "cbl_db"
     repl_config_obj = ReplicatorConfiguration(base_url)
     base_auth_obj = BasicAuthenticator(base_url)
     session_auth_obj = SessionAuthenticator(base_url)
-
 
     def test_create(self, params_from_base_test_setup):
         sg_admin_url = params_from_base_test_setup["sg_admin_url"]

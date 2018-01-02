@@ -8,16 +8,16 @@ class Replicator(object):
     '''
 
 
-    def __init__(self, baseUrl):
+    def __init__(self, base_url):
         '''
         Constructor
         '''
-        self.baseUrl = baseUrl
+        self.base_url = base_url
 
         # If no base url was specified, raise an exception
-        if not self.baseUrl:
-            raise Exception("No baseUrl specified")
-        self._client = Client(baseUrl)
+        if not self.base_url:
+            raise Exception("No base_url specified")
+        self._client = Client(base_url)
         self.config = None
 
     def create(self, config):
@@ -25,69 +25,69 @@ class Replicator(object):
         args.setMemoryPointer("config", config)
         return self._client.invokeMethod("replicator_create", args)
 
-    def getConfig(self,replicator):
+    def getConfig(self, replicator):
         args = Args()
         args.setMemoryPointer("replicator", replicator)
         return self._client.invokeMethod("replicator_getConfig", args)
 
-    def getStatus(self,replicator):
+    def getStatus(self, replicator):
         args = Args()
         args.setMemoryPointer("replicator", replicator)
         return self._client.invokeMethod("replicator_getStatus", args)
 
-    def addChangeListener(self,replicator):
+    def addChangeListener(self, replicator):
         args = Args()
         args.setMemoryPointer("replicator", replicator)
         return self._client.invokeMethod("replicator_addChangeListener", args)
 
-    def removeChangeListener(self,replicator, changeListener):
+    def removeChangeListener(self, replicator, change_listener):
         args = Args()
         args.setMemoryPointer("replicator", replicator)
-        args.setMemoryPointer("changeListener", changeListener)
+        args.setMemoryPointer("changeListener", change_listener)
         return self._client.invokeMethod("replicator_removeChangeListener", args)
 
-    def toString(self,replicator):
+    def toString(self, replicator):
         args = Args()
         args.setMemoryPointer("replicator", replicator)
         return self._client.invokeMethod("replicator_toString", args)
 
-    def networkReachable(self,replicator):
+    def networkReachable(self, replicator):
         args = Args()
         args.setMemoryPointer("replicator", replicator)
         return self._client.invokeMethod("replicator_networkReachable", args)
 
-    def networkUnreachable(self,replicator):
+    def networkUnreachable(self, replicator):
         args = Args()
         args.setMemoryPointer("replicator", replicator)
         return self._client.invokeMethod("replicator_networkUnreachable", args)
 
-    def start(self,replicator):
+    def start(self, replicator):
         args = Args()
         args.setMemoryPointer("replicator", replicator)
         return self._client.invokeMethod("replicator_start", args)
 
-    def stop(self,replicator):
+    def stop(self, replicator):
         args = Args()
         args.setMemoryPointer("replicator", replicator)
         return self._client.invokeMethod("replicator_stop", args)
 
-    def configure(self,source_db, target_url=None, target_db=None,
+    def configure(self, source_db, target_url=None, target_db=None,
                   replication_type="push_pull", continuous=False,
-                  channels=None, documentIDs=None,
+                  channels=None, document_ids=None,
                   replicator_authenticator=None):
         args = Args()
         args.setString("replication_type", replication_type)
-        repl_config_obj = ReplicatorConfiguration(self.baseUrl)
+        repl_config_obj = ReplicatorConfiguration(self.base_url)
         if target_url:
-            self.config = repl_config_obj.create(source_db, targetURI=target_url)
+            self.config = repl_config_obj.create(source_db, target_url=target_url)
         elif target_db:
-            self.config = repl_config_obj.create(source_db, targetDb=target_db)
+            self.config = repl_config_obj.create(source_db, target_db=target_db)
 
         if channels is not None:
             repl_config_obj.setChannels(self.config, channels)
 
-        if documentIDs is not None:
-            repl_config_obj.setDocumentIDs(self.config, documentIDs)
+        if document_ids is not None:
+            repl_config_obj.setDocumentIDs(self.config, document_ids)
 
         if replicator_authenticator is not None:
             repl_config_obj.setAuthenticator(self.config, replicator_authenticator)

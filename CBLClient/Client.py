@@ -8,8 +8,8 @@ from keywords.utils import log_info
 
 class Client(object):
 
-    def __init__(self, baseUrl):
-        self.baseurl = baseUrl
+    def __init__(self, base_url):
+        self.base_url = base_url
         self.session = Session()
 
     def invokeMethod(self, method, args=None):
@@ -17,7 +17,7 @@ class Client(object):
             # Create body from args.
             body = {}
 
-            url = self.baseurl + "/" + method
+            url = self.base_url + "/" + method
 
             if args:
                 # log_info("args: {}".format(args.getArgs()))

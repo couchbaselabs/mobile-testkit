@@ -1,23 +1,22 @@
 from CBLClient.Client import Client
 from CBLClient.Args import Args
 
-class SessionAuthenticator:
+class SessionAuthenticator(object):
     _client = None
-    _baseUrl = None
 
-    def __init__(self, baseUrl):
-        self.baseUrl = baseUrl
+    def __init__(self, base_url):
+        self.base_url = base_url
 
         # If no base url was specified, raise an exception
-        if not self.baseUrl:
-            raise Exception("No baseUrl specified")
+        if not self.base_url:
+            raise Exception("No base_url specified")
 
-        self._client = Client(baseUrl)
+        self._client = Client(base_url)
 
-    def create(self, sessionId, expires, cookieName):
+    def create(self, session_id, expires, cookie_name):
         args = Args()
-        args.setString("sessionId", sessionId)
-        args.setString("cookieName", cookieName)
+        args.setString("sessionId", session_id)
+        args.setString("cookieName", cookie_name)
         args.setLong("expires", expires)
         return self._client.invokeMethod("sessionAuthenticator_create",
                                          args)

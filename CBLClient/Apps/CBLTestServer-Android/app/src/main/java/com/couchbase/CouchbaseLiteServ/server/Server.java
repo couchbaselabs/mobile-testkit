@@ -80,13 +80,13 @@ public class Server extends NanoHTTPD {
         Map<String, Object> query = new Gson().fromJson(rawArgs.get("postData"), Map.class);
         if (query !=null){
             for (String key : query.keySet()){
-                String param_value = (String) query.get(key);
-                String value = null;
+                String value = (String) query.get(key);
+                /*String value = null;
                 try {
                     value = URLDecoder.decode( param_value, "UTF8");
                 } catch (UnsupportedEncodingException e) {
                     e.printStackTrace();
-                }
+                }*/
                 args.put(key, ValueSerializer.deserialize(value, memory));
             }
         }

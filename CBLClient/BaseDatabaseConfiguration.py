@@ -1,18 +1,17 @@
 from CBLClient.Client import Client
 from CBLClient.Args import Args
 
-class BaseDatabaseConfiguration:
+class BaseDatabaseConfiguration(object):
     _client = None
-    _baseUrl = None
 
-    def __init__(self, baseUrl):
-        self.baseUrl = baseUrl
+    def __init__(self, base_url):
+        self.base_url = base_url
 
         # If no base url was specified, raise an exception
-        if not self.baseUrl:
-            raise Exception("No baseUrl specified")
+        if not self.base_url:
+            raise Exception("No base_url specified")
 
-        self._client = Client(baseUrl)
+        self._client = Client(base_url)
 
     def create(self):
         args = Args()
@@ -22,38 +21,37 @@ class BaseDatabaseConfiguration:
         args = Args()
         args.setMemoryPointer("config", config)
         return self._client.invokeMethod("baseDbConfig_getConflictResolver",
-                                          args)
+                                         args)
 
     def getDirectory(self, config):
         args = Args()
         args.setMemoryPointer("config", config)
         return self._client.invokeMethod("baseDbConfig_getDirectory",
-                                          args)
+                                         args)
 
     def getEncryptionKey(self, config):
         args = Args()
         args.setMemoryPointer("config", config)
         return self._client.invokeMethod("baseDbConfig_getEncryptionKey",
-                                          args)
+                                         args)
 
-    def setConflictResolver(self, config, conflictResolver):
+    def setConflictResolver(self, config, conflict_resolver):
         args = Args()
         args.setMemoryPointer("config", config)
-        args.setMemoryPointer("conflictResolver", conflictResolver)
+        args.setMemoryPointer("conflictResolver", conflict_resolver)
         return self._client.invokeMethod("baseDbConfig_setConflictResolver",
-                                          args)
+                                         args)
 
     def setDirectory(self, config, directory):
         args = Args()
         args.setMemoryPointer("config", config)
         args.setMemoryPointer("directory", directory)
         return self._client.invokeMethod("baseDbConfig_setDirectory",
-                                          args)
+                                         args)
 
     def setEncryptionKey(self, config, key):
         args = Args()
         args.setMemoryPointer("config", config)
         args.setMemoryPointer("key", key)
         return self._client.invokeMethod("baseDbConfig_setEncryptionKey",
-                                          args)
-
+                                         args)

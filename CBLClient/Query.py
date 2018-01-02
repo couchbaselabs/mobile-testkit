@@ -1,36 +1,33 @@
 from CBLClient.Client import Client
 from CBLClient.Args import Args
-from keywords.utils import log_info
 
-
-class Query:
+class Query(object):
     _client = None
-    _baseUrl = None
 
-    def __init__(self, baseUrl):
-        self.baseUrl = baseUrl
+    def __init__(self, base_url):
+        self.base_url = base_url
 
         # If no base url was specified, raise an exception
-        if not self.baseUrl:
-            raise Exception("No baseUrl specified")
+        if not self.base_url:
+            raise Exception("No base_url specified")
 
-        self._client = Client(baseUrl)
+        self._client = Client(base_url)
 
     ############
     # Collator #
     ############
-    def query_collator_ascii(self, ignoreCase):
+    def query_collator_ascii(self, ignore_case):
         args = Args()
-        args.setString("ignoreCase", ignoreCase)
+        args.setString("ignoreCase", ignore_case)
 
         #needs to be change
         #return self._client.invokeMethod("query_collator_ascii", args)
         return self._client.invokeMethod("collation_ascii", args)
 
-    def query_collator_unicode(self, ignoreCase, ignoreAccents):
+    def query_collator_unicode(self, ignore_case, ignore_accents):
         args = Args()
-        args.setString("ignoreCase", ignoreCase)
-        args.setString("ignoreAccents", ignoreAccents)
+        args.setString("ignoreCase", ignore_case)
+        args.setString("ignoreAccents", ignore_accents)
 
         #needs to be change
         #return self._client.invokeMethod("query_collator_unicode", args)
@@ -83,7 +80,7 @@ class Query:
         #needs to be change
         #return self._client.invokeMethod("query_result_string", args)
         #There is no method string in Android API. I'm assumming this method is for getString
-        return self._client.invokeMethod("result_getString", args) 
+        return self._client.invokeMethod("result_getString", args)
 
     def query_select_result_expression_create(self, expression):
         args = Args()
@@ -243,5 +240,5 @@ class Query:
 
         return self._client.invokeMethod("query_collation", args)
 
-    def release(self, object):
-        self._client.release(object)
+    def release(self, obj):
+        self._client.release(obj)

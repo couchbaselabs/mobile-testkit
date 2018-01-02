@@ -1,29 +1,28 @@
 from CBLClient.Client import Client
 from CBLClient.Args import Args
 
-class Blob:
+class Blob(object):
     _client = None
-    _baseUrl = None
 
-    def __init__(self, baseUrl):
-        self.baseUrl = baseUrl
+    def __init__(self, base_url):
+        self.base_url = base_url
 
         # If no base url was specified, raise an exception
-        if not self.baseUrl:
-            raise Exception("No baseUrl specified")
+        if not self.base_url:
+            raise Exception("No base_url specified")
 
-        self._client = Client(baseUrl)
+        self._client = Client(base_url)
 
-    def create(self, contentType, content=None,
-               stream=None, fileURL = None):
+    def create(self, content_type, content=None,
+               stream=None, file_url=None):
         args = Args()
-        args.setString("contentType", contentType)
+        args.setString("contentType", content_type)
         if content:
             args.setArray("content", content)
         elif stream:
             args.setArray("stream", stream)
-        elif fileURL:
-            args.setMemoryPointer("fileURL", fileURL)
+        elif file_url:
+            args.setMemoryPointer("fileURL", file_url)
         else:
             raise Exception("Provide correct parameter")
         return self._client.invokeMethod("blob_create", args)

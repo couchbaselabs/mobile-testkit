@@ -1,28 +1,27 @@
+import uuid
+
 from CBLClient.Client import Client
 from CBLClient.Args import Args
 from keywords.utils import log_info
-from libraries.data import doc_generators
 from keywords import types
-import uuid
-import json
+from libraries.data import doc_generators
 
-class Database:
+class Database(object):
     _db = None
 
-    def __init__(self, baseUrl):
-        self.baseUrl = baseUrl
+    def __init__(self, base_url):
+        self.base_url = base_url
 
         # If no base url was specified, raise an exception
-        if not self.baseUrl:
-            raise Exception("No baseUrl specified")
+        if not self.base_url:
+            raise Exception("No base_url specified")
 
-        self._client = Client(baseUrl)
+        self._client = Client(base_url)
 
     def create(self, name):
         args = Args()
         args.setString("name", name)
-        self._db = self._client.invokeMethod("database_create", args)
-        return self._db
+        return self._client.invokeMethod("database_create", args)
 
     def delete(self, name=None, path=None, database=None, document=None):
         args = Args()
@@ -38,9 +37,9 @@ class Database:
             name and path to delete the document.")
         return self._client.invokeMethod("database_delete", args)
 
-    def exists(self, dbName, directory):
+    def exists(self, db_name, directory):
         args = Args()
-        args.setString("dbName", dbName)
+        args.setString("dbName", db_name)
         args.setMemoryPointer("directory", directory)
         return self._client.invokeMethod("database_exists", args)
 
@@ -118,20 +117,20 @@ class Database:
         args.setMemoryPointer("database", database)
         return self._client.invokeMethod("database_addChangeListener", args)
 
-    def removeChangeListener(self, database, changeListener):
+    def removeChangeListener(self, database, change_listener):
         args = Args()
         args.setMemoryPointer("database", database)
-        args.setMemoryPointer("changeListener", changeListener)
+        args.setMemoryPointer("changeListener", change_listener)
         return self._client.invokeMethod("database_removeChangeListener", args)
 
-    def databaseChangeListener_changesCount(self, changeListener):
+    def databaseChangeListener_changesCount(self, change_listener):
         args = Args()
-        args.setMemoryPointer("changeListener", changeListener)
+        args.setMemoryPointer("changeListener", change_listener)
         return self._client.invokeMethod("database_databaseChangeListener_changesCount", args)
 
-    def databaseChangeListener_getChange(self, changeListener, index):
+    def databaseChangeListener_getChange(self, change_listener, index):
         args = Args()
-        args.setMemoryPointer("changeListener", changeListener)
+        args.setMemoryPointer("changeListener", change_listener)
         args.setInt("index", index)
         return self._client.invokeMethod("database_databaseChangeListener_getChange", args)
 
@@ -193,11 +192,11 @@ class Database:
 
             doc_body["_id"] = doc_id
             added_docs[doc_id] = doc_body
-            
+
         self.saveDocuments(db, added_docs)
 
     def update_bulk_docs(self, database):
-  
+
         updated_docs = {}
         doc_ids = self.getDocIds(database)
         docs = self.getDocuments(database, doc_ids)
@@ -215,4 +214,3 @@ class Database:
         log_info("updates docs with update is {}".format(updated_docs))
         log_info("type of updated docs are  {}".format(type(updated_docs)))
         self.saveDocuments(database, updated_docs)
-
