@@ -2,19 +2,9 @@ import random
 import pytest
 
 from keywords.utils import random_string
-from CBLClient.Database import Database
-from CBLClient.Dictionary import Dictionary
-from CBLClient.DataTypeInitiator import DataTypeInitiator
 
-#BASE_URL = "http://172.16.1.154:8080"
-BASE_URL = "http://192.168.0.117:8080"
-
+@pytest.mark.usefixtures("class_init")
 class TestDictionary(object):
-
-    dict_obj = Dictionary(BASE_URL)
-    datatype = DataTypeInitiator(BASE_URL)
-    db_obj = Database(BASE_URL)
-    db = db_obj.create("db")
 
     @pytest.mark.parametrize("key, value", [
         (random_string(5), ""),
@@ -145,21 +135,18 @@ class TestDictionary(object):
                                          content_dict, key))
 
     @pytest.mark.parametrize("key, value", [
-        (random_string(6), "{}".format(random.uniform(0, 1))),
-        (random_string(6), "{}".format(random.uniform(1, 10))),
-        (random_string(6), "{}".format(random.uniform(11, 100))),
-        (random_string(6), "{}".format(random.uniform(101, 1000)))
+        (random_string(6), round(random.uniform(0, 1), 4)),
+        (random_string(6), round(random.uniform(1, 10), 4)),
+        (random_string(6), round(random.uniform(11, 100), 4)),
+        (random_string(6), round(random.uniform(101, 1000), 4))
         ])
     def test_get_set_float(self, key, value):
         '''
         @summary: Testing get and set Float methods of Dictionary API
         '''
-        float_value = self.datatype.setFloat(value)
         content_dict = self.dict_obj.create()
-        self.dict_obj.setFloat(content_dict, key, float_value)
-        assert self.datatype.compare(float_value,
-                                     self.dict_obj.getFloat(
-                                         content_dict, key))
+        self.dict_obj.setFloat(content_dict, key, value)
+        assert value == self.dict_obj.getFloat(content_dict, key)
 
     @pytest.mark.parametrize("key, value", [
         (random_string(6), random.randint(0, 9)),
@@ -244,8 +231,8 @@ class TestDictionary(object):
         '''
         @summary: Testing remove method of Dictionary API
         '''
-        hashmap = self.datatype.hashMap()
-        self.datatype.put(hashmap, key, value)
+        hashmap = {}
+        hashmap[key] = value
         content = self.dict_obj.create(hashmap)
         self.dict_obj.remove(content, key)
         assert not self.dict_obj.contains(content, key)

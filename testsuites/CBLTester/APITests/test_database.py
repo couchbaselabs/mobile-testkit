@@ -1,16 +1,9 @@
 import pytest
 
 from keywords.utils import random_string
-from CBLClient.Database import Database
-from CBLClient.Document import Document
 
-#BASE_URL = "http://172.16.1.154:8080"
-BASE_URL = "http://192.168.0.117:8080"
-#BASE_URL = "http://172.23.121.73:55555"
-
+@pytest.mark.usefixtures("class_init")
 class TestDatabase(object):
-    db_obj = Database(BASE_URL)
-    doc_obj = Document(BASE_URL)
 
     @pytest.mark.parametrize("db_name, err_msg", [
         ("", "name should not be empty"),

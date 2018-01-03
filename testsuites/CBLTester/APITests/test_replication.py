@@ -1,28 +1,15 @@
 from time import sleep
 import pytest
 
-from CBLClient.Database import Database
-from CBLClient.Replicator_new import Replicator
-from CBLClient.ReplicatorConfiguration import ReplicatorConfiguration
-from CBLClient.BasicAuthenticator import BasicAuthenticator
-from CBLClient.SessionAuthenticator import SessionAuthenticator
-
 from keywords.utils import log_info
 from keywords.MobileRestClient import MobileRestClient
 from keywords.SyncGateway import sync_gateway_config_path_for_mode
 from libraries.testkit.cluster import Cluster
 
+@pytest.mark.usefixtures("class_init")
 class TestReplication(object):
-    base_url = "http://192.168.0.117:8080"
-    #base_url = "http://172.16.1.154:8080"
-    db_obj = Database(base_url)
     cbl_db_name = "cbl_db"
     sg_db = "db"
-    replicator_obj = Replicator(base_url)
-    repl_config_obj = ReplicatorConfiguration(base_url)
-    base_auth_obj = BasicAuthenticator(base_url)
-    session_auth_obj = SessionAuthenticator(base_url)
-    sg_client = MobileRestClient()
 
     def test_replication_configuration_valid_values(self, params_from_base_test_setup):
         """
@@ -74,9 +61,9 @@ class TestReplication(object):
     @pytest.mark.sanity
     @pytest.mark.listener
     @pytest.mark.parametrize("repl_type, auth_type, sg_docs_count, cbl_docs_count", [
-#         ("PUSH", "basic", 10, 5),
-#         ("PULL", "basic", 10, 5),
-#         ("PUSH", "session", 10, 5),
+        ("PUSH", "basic", 10, 5),
+        ("PULL", "basic", 10, 5),
+        ("PUSH", "session", 10, 5),
         ("PULL", "session", 10, 5)
         ])
     def test_replication_configuration_with_one_way_replication(self, params_from_base_test_setup,

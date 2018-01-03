@@ -7,8 +7,8 @@ from CBLClient.Dictionary import Dictionary
 from CBLClient.DataTypeInitiator import DataTypeInitiator
 from keywords.utils import random_string
 
-#BASE_URL = "http://172.16.1.154:8080"
-BASE_URL = "http://192.168.0.117:8080"
+BASE_URL = "http://172.16.1.154:8080"
+#BASE_URL = "http://192.168.0.117:8080"
 
 class TestDocument(object):
 
@@ -152,16 +152,16 @@ class TestDocument(object):
         assert sorted(self.doc_obj.getKeys(doc)) == result_list
 
     @pytest.mark.parametrize("key, value", [
-#         (random_string(5), ""),
-#         (random_string(5), random_string(1)),
-#         (random_string(5), random_string(10)),
-#         (random_string(5), "_{}".format(random_string(5))),
-#         (random_string(5), "{}_".format(random_string(8))),
-#         (random_string(5), "_{}_".format(random_string(9))),
-#         (random_string(5), random_string(9).capitalize()),
-#         (random_string(5), random_string(9).upper()),
-#         (random_string(5), "{}12".format(random_string(5))),
-#         (random_string(5), random_string(10, digit=True)),
+        (random_string(5), ""),
+        (random_string(5), random_string(1)),
+        (random_string(5), random_string(10)),
+        (random_string(5), "_{}".format(random_string(5))),
+        (random_string(5), "{}_".format(random_string(8))),
+        (random_string(5), "_{}_".format(random_string(9))),
+        (random_string(5), random_string(9).capitalize()),
+        (random_string(5), random_string(9).upper()),
+        (random_string(5), "{}12".format(random_string(5))),
+        (random_string(5), random_string(10, digit=True)),
         (random_string(128), random_string(128))
         ])
     def test_get_set_string(self, key, value):
@@ -239,20 +239,20 @@ class TestDocument(object):
                                      self.doc_obj.getDouble(doc, key))
 
     @pytest.mark.parametrize("key, value", [
-        (random_string(6), "{}".format(random.uniform(0, 1))),
-        (random_string(6), "{}".format(random.uniform(1, 10))),
-        (random_string(6), "{}".format(random.uniform(11, 100))),
-        (random_string(6), "{}".format(random.uniform(101, 1000)))
+        (random_string(6), round(random.uniform(0, 1), 4)),
+        (random_string(6), round(random.uniform(1, 10), 4)),
+        (random_string(6), round(random.uniform(11, 100), 4)),
+        (random_string(6), round(random.uniform(101, 1000), 4))
         ])
     def test_get_set_float(self, key, value):
         '''
         @summary: Testing Get and Set Float method of Document API
         '''
         doc = self.doc_obj.create()
-        float_obj = self.datatype.setFloat(value)
-        self.doc_obj.setFloat(doc, key, float_obj)
+#         float_obj = self.datatype.setFloat(value)
+        self.doc_obj.setFloat(doc, key, value)
         result = self.doc_obj.getFloat(doc, key)
-        assert self.datatype.compare(float_obj, result)
+        assert value == result
 
     @pytest.mark.parametrize("key, value", [
         (random_string(6), "{}".format(random.randint(0, 9))),

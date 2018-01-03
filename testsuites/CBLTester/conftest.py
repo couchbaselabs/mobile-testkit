@@ -7,12 +7,18 @@ from keywords.utils import host_for_url
 from keywords.ClusterKeywords import ClusterKeywords
 from keywords.couchbaseserver import CouchbaseServer
 from keywords.constants import CLUSTER_CONFIGS_DIR
+from keywords.MobileRestClient import MobileRestClient
 from keywords.SyncGateway import sync_gateway_config_path_for_mode
 from keywords.exceptions import ProvisioningError
 from keywords.tklogging import Logging
 from CBLClient.Replicator_new import Replicator
 from CBLClient.BasicAuthenticator import BasicAuthenticator
 from CBLClient.Database import Database
+from CBLClient.Document import Document
+from CBLClient.Dictionary import Dictionary
+from CBLClient.DataTypeInitiator import DataTypeInitiator
+from CBLClient.SessionAuthenticator import SessionAuthenticator
+from CBLClient.ReplicatorConfiguration import ReplicatorConfiguration
 
 from couchbase.bucket import Bucket
 from couchbase.n1ql import N1QLQuery
@@ -155,7 +161,7 @@ def params_from_base_suite_setup(request):
         time.sleep(5)
         server.load_sample_bucket(enable_sample_bucket)
         server._create_internal_rbac_bucket_user(enable_sample_bucket)
-        time.sleep(120)
+        time.sleep(180)
 
         # Create primary index
         log_info("Creating primary index for {}".format(enable_sample_bucket))
@@ -174,17 +180,17 @@ def params_from_base_suite_setup(request):
     db_name = db.getName(source_db)
     assert db_name == "test_db"
 
-    if enable_sample_bucket:
+    #if enable_sample_bucket:
         # Start continuous replication
-        repl_obj = Replicator(base_url)
-        auth_obj = BasicAuthenticator(base_url)
-        authenticator = auth_obj.create("trave-sample", "password")
-        replicator = repl_obj.configure(source_db=source_db,
-                                        target_url=target_admin_url,
-                                        replication_type="PUSH_AND_PULL",
-                                        replicator_authenticator=authenticator)
-        repl_obj.start(replicator)
-        time.sleep(60)
+    repl_obj = Replicator(base_url)
+    auth_obj = BasicAuthenticator(base_url)
+    authenticator = auth_obj.create("trave-sample", "password")
+    replicator = repl_obj.configure(source_db=source_db,
+                                    target_url=target_admin_url,
+                                    replication_type="PUSH_AND_PULL",
+                                    replicator_authenticator=authenticator)
+    repl_obj.start(replicator)
+    time.sleep(60)
 
     yield {
         "cluster_config": cluster_config,
@@ -264,3 +270,32 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         "source_db": source_db,
         "cbl_db": cbl_db,
     }
+
+@pytest.fixture(scope="class")
+def class_init(request, params_from_base_suite_setup):
+    base_url = params_from_base_suite_setup["base_url"]
+    db_obj = Database(base_url)
+    doc_obj = Document(base_url)
+    dict_obj = Dictionary(base_url)
+    datatype = DataTypeInitiator(base_url)
+    replicator_obj = Replicator(base_url)
+    repl_config_obj = ReplicatorConfiguration(base_url)
+    base_auth_obj = BasicAuthenticator(base_url)
+    session_auth_obj = SessionAuthenticator(base_url)
+    sg_client = MobileRestClient()
+    db = db_obj.create("foo")
+
+    request.cls.db_obj = db_obj
+    request.cls.doc_obj = doc_obj
+    request.cls.dict_obj = dict_obj
+    request.cls.datatype = datatype
+    request.cls.replicator_obj = replicator_obj
+    request.cls.repl_config_obj = repl_config_obj
+    request.cls.base_auth_obj = base_auth_obj
+    request.cls.session_auth_obj = session_auth_obj
+    request.cls.sg_client = sg_client
+    request.cls.db_obj = db_obj
+    request.cls.db = db
+    yield 
+    db_obj.deleteDB(db)
+    
