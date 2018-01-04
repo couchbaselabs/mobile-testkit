@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		2909B0731F9FFA8900B4E0E4 /* Server.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2909B0721F9FFA8900B4E0E4 /* Server.swift */; };
 		2909B0761FA3B7B400B4E0E4 /* Args.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2909B0751FA3B7B400B4E0E4 /* Args.swift */; };
+		293F38381FFD792E00497870 /* DataTypesInitiatorHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 293F38371FFD792E00497870 /* DataTypesInitiatorHandler.swift */; };
 		294FB2081FEAF51F00DD0C23 /* QueryRequestHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 294FB2071FEAF51F00DD0C23 /* QueryRequestHandler.swift */; };
 		294FB20A1FEAF9E800DD0C23 /* ReplicatorRequestHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 294FB2091FEAF9E800DD0C23 /* ReplicatorRequestHandler.swift */; };
 		294FB20C1FEAFD9000DD0C23 /* DatabaseRequestHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 294FB20B1FEAFD9000DD0C23 /* DatabaseRequestHandler.swift */; };
@@ -81,6 +82,7 @@
 /* Begin PBXFileReference section */
 		2909B0721F9FFA8900B4E0E4 /* Server.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Server.swift; sourceTree = "<group>"; };
 		2909B0751FA3B7B400B4E0E4 /* Args.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Args.swift; sourceTree = "<group>"; };
+		293F38371FFD792E00497870 /* DataTypesInitiatorHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataTypesInitiatorHandler.swift; sourceTree = "<group>"; };
 		294FB2071FEAF51F00DD0C23 /* QueryRequestHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QueryRequestHandler.swift; sourceTree = "<group>"; };
 		294FB2091FEAF9E800DD0C23 /* ReplicatorRequestHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReplicatorRequestHandler.swift; sourceTree = "<group>"; };
 		294FB20B1FEAFD9000DD0C23 /* DatabaseRequestHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DatabaseRequestHandler.swift; sourceTree = "<group>"; };
@@ -186,6 +188,7 @@
 				299692A81FF31D0D0040CC32 /* EncryptionKeyRequestHandler.swift */,
 				299692AE1FF35A2B0040CC32 /* ConflictRequestHandler.swift */,
 				299692B01FF35B630040CC32 /* BlobRequestHandler.swift */,
+				293F38371FFD792E00497870 /* DataTypesInitiatorHandler.swift */,
 			);
 			path = Server;
 			sourceTree = "<group>";
@@ -481,6 +484,7 @@
 				294FB20E1FEB0E1800DD0C23 /* DocumentRequestHandler.swift in Sources */,
 				29D15BA11FA7DCFA005DAAA3 /* ValueSerializer.swift in Sources */,
 				29F786921F9FC4180035178F /* GCDWebServerConnection.m in Sources */,
+				293F38381FFD792E00497870 /* DataTypesInitiatorHandler.swift in Sources */,
 				29F786971F9FC4180035178F /* GCDWebServerFileRequest.m in Sources */,
 				294FB20C1FEAFD9000DD0C23 /* DatabaseRequestHandler.swift in Sources */,
 				29F786951F9FC4180035178F /* GCDWebServerResponse.m in Sources */,

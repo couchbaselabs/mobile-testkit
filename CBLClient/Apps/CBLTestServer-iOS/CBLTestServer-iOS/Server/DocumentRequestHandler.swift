@@ -217,7 +217,7 @@ public class DocumentRequestHandler {
             try! database.deleteDocument(document)
             
         case "document_getId":
-            let document: MutableDocument = (args.get(name: "document"))!
+            let document: Document = args.get(name: "document")!
             
             return document.id
 

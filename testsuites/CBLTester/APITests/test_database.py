@@ -4,7 +4,7 @@ from keywords.utils import random_string
 from CBLClient.Database import Database
 from CBLClient.Document import Document
 
-baseUrl = "http://192.168.1.2:8989"
+baseUrl = "http://10.17.3.72:8989"
 dbName = "foo"
 docIdPrefix = "bar"
 
@@ -21,11 +21,13 @@ class TestDatabase():
         '''
         @summary: Checking for the Exception handling in database create API
         '''
+        # TODO Has to be skipped for ios
         #_, err_resp = self.db_obj.create(dbName)
         err_resp = self.db_obj.create(dbName)
         assert err_msg in err_resp
 
     def test_getDocument_exception(self):
+        # TODO Has to be skipped for ios
         db = self.db_obj.create(random_string(6))
         # checking when Null/None documentId is provided
         err_msg = "a documentID parameter is null"
@@ -39,12 +41,14 @@ class TestDatabase():
         assert doc_id is None
 
     def test_saveDocument_exception(self):
+        # TODO Has to be skipped for ios
         db = self.db_obj.create(random_string(6))
         err_msg = "a document parameter is null"
         _, err_resp = self.db_obj.saveDocument(db, None)
         assert err_msg in err_resp
 
     def test_delete_exception(self):
+        # TODO Has to be skipped for ios
         db = self.db_obj.create(random_string(6))
         # Exception checking when document id is null
         err_msg = "a document parameter is null"
@@ -143,8 +147,9 @@ class TestDatabase():
         '''
         db = self.db_obj.create(dbName)
         # self.db_obj.close(db)
+        path = self.db_obj.getPath(db)
         self.db_obj.deleteDB(db) == -1
-        assert self.db_obj.exists(dbName) == "false"
+        assert self.db_obj.exists(dbName, path) == "false"
 
     @pytest.mark.parametrize("dbName, docId", [
         (random_string(1), random_string(6)),
@@ -157,14 +162,14 @@ class TestDatabase():
         (random_string(6).capitalize(), random_string(6)),
         (random_string(6).upper(), random_string(6))
     ])
-    def test_delete(self, dbName, docId):
+    def test_delete_doc(self, dbName, docId):
         '''
         @summary: Testing delete method of Database API
         '''
         doc = self.doc_obj.create(doc_id=docId)
         db = self.db_obj.create(dbName)
-        self.db_obj.saveDocument(db, doc)
-        self.db_obj.delete(document=doc, database=db)
+        doc_latest = self.db_obj.saveDocument(db, doc)
+        self.db_obj.delete(document=doc_latest, database=db)
         doc_res = self.db_obj.getDocument(db, docId)
         assert doc_res is None
 
@@ -203,13 +208,13 @@ class TestDatabase():
         (random_string(6).capitalize(), random_string(6)),
         (random_string(6).upper(), random_string(6))
     ])
-    def test_getDocument(self, dbName, docId):
+    def test_getDocument_new(self, dbName, docId):
         '''
         @summary: Testing getDocument method of Database API
         '''
         db = self.db_obj.create(dbName)
         doc = self.doc_obj.create(docId)
-        self.db_obj.saveDocument(db, doc)
+        self.db_obj.saveDocument(database=db, document=doc)
         new_doc = self.db_obj.getDocument(db, docId)
         assert self.doc_obj.getId(new_doc) == self.doc_obj.getId(doc)
 
@@ -250,7 +255,7 @@ class TestDatabase():
         assert self.db_obj.getPath(db)
 
     @pytest.mark.parametrize("db1, db2, docId", [
-        # "",
+        # "", # TODO Has to be skipped for ios
         (random_string(1), random_string(1), random_string(6)),
         (random_string(6), random_string(6), random_string(6)),
         # (random_string(128), random_string(128), random_string(6)),
@@ -268,9 +273,9 @@ class TestDatabase():
         doc = self.doc_obj.create(doc_id=docIdPrefix)
         db_1 = self.db_obj.create(db1)
         db_2 = self.db_obj.create(db2)
-        self.db_obj.saveDocument(db_1, doc)
+        doc1_new = self.db_obj.saveDocument(db_1, doc)
         self.db_obj.saveDocument(db_2, doc)
-        self.db_obj.purge(document=doc, database=db_1)
+        self.db_obj.purge(document=doc1_new, database=db_1)
         assert not self.db_obj.getDocument(db_2, docId)
         assert self.db_obj.getDocument(db_2, docId)
 
@@ -285,7 +290,7 @@ class TestDatabase():
         (random_string(6).capitalize(), random_string(6)),
         (random_string(6).upper(), random_string(6))
     ])
-    def test_saveDocument(self, dbName, docId):
+    def test_saveDocument_new(self, dbName, docId):
         '''
         @summary: Testing save method of Database API
         '''

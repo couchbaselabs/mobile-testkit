@@ -6,14 +6,24 @@ from utilities.cluster_config_utils import persist_cluster_config_environment_pr
 from keywords.ClusterKeywords import ClusterKeywords
 from keywords.couchbaseserver import CouchbaseServer
 from keywords.constants import CLUSTER_CONFIGS_DIR
-from keywords.SyncGateway import sync_gateway_config_path_for_mode
+from keywords.SyncGateway import (sync_gateway_config_path_for_mode, SyncGateway)
 from keywords.exceptions import ProvisioningError
 from keywords.tklogging import Logging
 from CBLClient.Replication import Replication
 from CBLClient.Database import Database
+from CBLClient.Document import Document
+from CBLClient.Dictionary import Dictionary
 from keywords.utils import host_for_url
 from couchbase.bucket import Bucket
 from couchbase.n1ql import N1QLQuery
+from CBLClient.DataTypeInitiator import DataTypeInitiator
+from CBLClient.Replicator_new import Replicator
+from CBLClient.ReplicatorConfiguration import ReplicatorConfiguration
+from CBLClient.BasicAuthenticator import BasicAuthenticator
+from CBLClient.SessionAuthenticator import SessionAuthenticator
+from keywords.MobileRestClient import MobileRestClient
+from keywords.constants import SDK_TIMEOUT
+from libraries.testkit import cluster
 
 
 def pytest_addoption(parser):
@@ -58,6 +68,11 @@ def pytest_addoption(parser):
                      action="store_true",
                      help="xattrs: Enable xattrs for sync gateway")
 
+    parser.addoption("--create-db-per-test",
+                     action="store_true",
+                     help="create-db-per-test: Creates/deletes client DB for every test. \
+                     Default is to create/delete client DB per suite")
+
 
 # This will get called once before the first test that
 # runs with this as input parameters in this file
@@ -77,9 +92,11 @@ def params_from_base_suite_setup(request):
     server_version = request.config.getoption("--server-version")
     enable_sample_bucket = request.config.getoption("--enable-sample-bucket")
     xattrs_enabled = request.config.getoption("--xattrs")
+    create_db_per_test = request.config.getoption("--create-db-per-test")
+
     base_url = "http://{}:{}".format(liteserv_host, liteserv_port)
     cluster_config = "{}/base_{}".format(CLUSTER_CONFIGS_DIR, mode)
-    sg_config = sync_gateway_config_path_for_mode("sync_gateway_default_functional_tests", mode)
+    sg_config = sync_gateway_config_path_for_mode("sync_gateway_travel_sample", mode)
     cluster_utils = ClusterKeywords()
     cluster_topology = cluster_utils.get_cluster_topology(cluster_config)
 
@@ -131,23 +148,71 @@ def params_from_base_suite_setup(request):
             logging_helper.fetch_and_analyze_logs(cluster_config=cluster_config, test_name=request.node.name)
             raise
 
+    if enable_sample_bucket and create_db_per_test:
+        raise Exception("Invalid options combination")
+
+    if not create_db_per_test:
+        # Create CBL database
+        cbl_db = "test_db"
+        db = Database(base_url)
+
+        log_info("Creating a Database {} at the suite setup".format(cbl_db))
+        source_db = db.create(cbl_db)
+        log_info("Getting the database name")
+        db_name = db.getName(source_db)
+        assert db_name == "test_db"
+
     if enable_sample_bucket:
         server_url = cluster_topology["couchbase_servers"][0]
         server = CouchbaseServer(server_url)
 
         buckets = server.get_bucket_names()
-        if enable_sample_bucket not in buckets:
-            server.delete_buckets()
+        if enable_sample_bucket in buckets:
+            log_info("Deleting existing {} bucket".format(enable_sample_bucket))
+            server.delete_bucket(enable_sample_bucket)
             time.sleep(5)
-            server.load_sample_bucket(enable_sample_bucket)
-            server._create_internal_rbac_bucket_user(enable_sample_bucket)
+
+        log_info("Loading sample bucket {}".format(enable_sample_bucket))
+        server.load_sample_bucket(enable_sample_bucket)
+        server._create_internal_rbac_bucket_user(enable_sample_bucket)
+
+        # Restart SG after the bucket deletion
+        sync_gateways = cluster_topology["sync_gateways"]
+        sg_obj = SyncGateway()
+
+        for sg in sync_gateways:
+            sg_ip = host_for_url(sg["admin"])
+            log_info("Restarting sync gateway {}".format(sg_ip))
+            sg_obj.restart_sync_gateways(cluster_config=cluster_config, url=sg_ip)
+            time.sleep(5)
+
+        if mode == "di":
+            ac_obj = SyncGateway()
+            sg_accels = cluster_topology["sg_accels"]
+            for ac in sg_accels:
+                ac_ip = host_for_url(ac)
+                log_info("Restarting sg accel {}".format(ac_ip))
+                ac_obj.restart_sync_gateways(cluster_config=cluster_config, url=ac_ip)
+                time.sleep(5)
 
         # Create primary index
+        password = "password"
+        log_info("Connecting to {}/{} with password {}".format(cbs_ip, enable_sample_bucket, password))
+        sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, enable_sample_bucket), password=password, timeout=SDK_TIMEOUT)
         log_info("Creating primary index for {}".format(enable_sample_bucket))
-        sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, enable_sample_bucket), password='password')
         n1ql_query = 'create primary index on {}'.format(enable_sample_bucket)
         query = N1QLQuery(n1ql_query)
         sdk_client.n1ql_query(query)
+
+        # Start continuous replication
+        replicator = Replication(base_url)
+        log_info("Configuring replication")
+        repl = replicator.configure(source_db=source_db, target_url=target_url, continuous=True)
+        log_info("Starting replication")
+        replicator.start(repl)
+        # Wait for replication to complete
+        # TODO Wait for replication state idle
+        time.sleep(300)
 
     yield {
         "cluster_config": cluster_config,
@@ -162,8 +227,18 @@ def params_from_base_suite_setup(request):
         "sg_ip": sg_ip,
         "sg_db": sg_db,
         "base_url": base_url,
-        "enable_sample_bucket": enable_sample_bucket
+        "create_db_per_test": create_db_per_test,
+        "source_db": source_db
     }
+
+    if enable_sample_bucket:
+        log_info("Stopping replication")
+        replicator.stop(repl)
+
+    if not create_db_per_test:
+        # Delete CBL database
+        log_info("Deleting the database {} at the suite teardown".format(cbl_db))
+        db.deleteDB(source_db)
 
 
 @pytest.fixture(scope="function")
@@ -172,7 +247,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     xattrs_enabled = params_from_base_suite_setup["xattrs_enabled"]
     liteserv_host = params_from_base_suite_setup["liteserv_host"]
     liteserv_port = params_from_base_suite_setup["liteserv_port"]
-    enable_sample_bucket = params_from_base_suite_setup["enable_sample_bucket"]
+    create_db_per_test = params_from_base_suite_setup["create_db_per_test"]
     test_name = request.node.name
     cluster_topology = params_from_base_suite_setup["cluster_topology"]
     mode = params_from_base_suite_setup["mode"]
@@ -180,6 +255,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     base_url = params_from_base_suite_setup["base_url"]
     sg_ip = params_from_base_suite_setup["sg_ip"]
     sg_db = params_from_base_suite_setup["sg_db"]
+    source_db = params_from_base_suite_setup["source_db"]
     cluster_helper = ClusterKeywords()
     cluster_hosts = cluster_helper.get_cluster_topology(cluster_config=cluster_config)
     sg_url = cluster_hosts["sync_gateways"][0]["public"]
@@ -191,26 +267,16 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     log_info("mode: {}".format(mode))
     log_info("xattrs_enabled: {}".format(xattrs_enabled))
 
-    # Create CBL database
     cbl_db = "test_db"
-    db = Database(base_url)
+    if create_db_per_test:
+        # Create CBL database
+        db = Database(base_url)
 
-    log_info("Creating a Database {}".format(cbl_db))
-    source_db = db.create(cbl_db)
-    log_info("Getting the database name")
-    db_name = db.getName(source_db)
-    assert db_name == "test_db"
-
-    if enable_sample_bucket:
-        # Start continuous replication
-        replicator = Replication(base_url)
-        log_info("Configuring replication")
-        repl = replicator.configure(source_db=source_db, target_url=target_url, continuous=True)
-        log_info("Starting replication")
-        replicator.start(repl)
-        # Wait for replication to complete
-        # TODO Wait for replication state idle
-        time.sleep(120)
+        log_info("Creating a Database {} at test setup".format(cbl_db))
+        source_db = db.create(cbl_db)
+        log_info("Getting the database name")
+        db_name = db.getName(source_db)
+        assert db_name == "test_db"
 
     # This dictionary is passed to each test
     yield {
@@ -229,10 +295,40 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         "cbl_db": cbl_db
     }
 
-    if enable_sample_bucket:
-        log_info("Stopping replication")
-        replicator.stop(repl)
+    if create_db_per_test:
+        # Delete CBL database
+        log_info("Deleting the database {} at test teardown".format(cbl_db))
+        db.deleteDB(source_db)
 
-    # Delete CBL database
-    log_info("Deleting the database {}".format(cbl_db))
-    db.deleteDB(source_db)
+
+@pytest.fixture(scope="class")
+def class_init(request, params_from_base_suite_setup):
+    base_url = params_from_base_suite_setup["base_url"]
+    liteserv_platform = params_from_base_suite_setup["liteserv_platform"]
+
+    db_obj = Database(base_url)
+    doc_obj = Document(base_url)
+    dict_obj = Dictionary(base_url)
+    datatype = DataTypeInitiator(base_url)
+    replicator_obj = Replicator(base_url)
+    repl_config_obj = ReplicatorConfiguration(base_url)
+    base_auth_obj = BasicAuthenticator(base_url)
+    session_auth_obj = SessionAuthenticator(base_url)
+    sg_client = MobileRestClient()
+    db = db_obj.create("foo")
+
+    request.cls.db_obj = db_obj
+    request.cls.doc_obj = doc_obj
+    request.cls.dict_obj = dict_obj
+    request.cls.datatype = datatype
+    request.cls.replicator_obj = replicator_obj
+    request.cls.repl_config_obj = repl_config_obj
+    request.cls.base_auth_obj = base_auth_obj
+    request.cls.session_auth_obj = session_auth_obj
+    request.cls.sg_client = sg_client
+    request.cls.db_obj = db_obj
+    request.cls.db = db
+    request.cls.liteserv_platform = liteserv_platform
+
+    yield
+    db_obj.deleteDB(db)

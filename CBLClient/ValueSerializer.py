@@ -65,9 +65,9 @@ class ValueSerializer:
             return float(value[1:])
         elif value.startswith("#"):
             if "." in value:
-                return float(value)
+                return float(value[1:])
             else:
-                return int(value)
+                return int(value[1:])
         elif value == "true":
             return True
         elif value == "false":

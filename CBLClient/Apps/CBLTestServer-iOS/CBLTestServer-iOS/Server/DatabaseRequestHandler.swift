@@ -35,11 +35,11 @@ public class DatabaseRequestHandler {
 
             return database.path
 
-        case "database_deleteDocument":
+        case "database_delete":
             let database: Database = (args.get(name:"database"))!
-            let document: MutableDocument = (args.get(name:"document"))!
+            let document: Document = (args.get(name:"document"))!
 
-            try database.deleteDocument(document)
+            return try database.deleteDocument(document)
         
         case "database_deleteDB":
             let database: Database = args.get(name:"database")!
@@ -48,8 +48,16 @@ public class DatabaseRequestHandler {
 
         case "database_exists":
             let name: String = args.get(name:"name")!
+            let directory: String? = args.get(name:"directory")!
+            var exists: Bool
             
-            if Database.exists(withName: name) {
+            if let directory = directory {
+                exists = Database.exists(withName: name, inDirectory: directory)
+            } else {
+                exists = Database.exists(withName: name)
+            }
+
+            if exists {
                 return "true"
             } else {
                 return "false"
@@ -71,12 +79,18 @@ public class DatabaseRequestHandler {
             let id: String? = args.get(name: "id")
 
             return database.document(withID: id!)
-
+            
         case "database_save":
             let database: Database = (args.get(name:"database"))!
             let document: MutableDocument = args.get(name:"document")!
 
-            try! database.saveDocument(document)
+            return try? database.saveDocument(document)
+
+        case "database_purge":
+            let database: Database = (args.get(name:"database"))!
+            let document: Document = args.get(name:"document")!
+            
+            return try? database.purgeDocument(document)
 
         case "database_contains":
             let database: Database = (args.get(name:"database"))!

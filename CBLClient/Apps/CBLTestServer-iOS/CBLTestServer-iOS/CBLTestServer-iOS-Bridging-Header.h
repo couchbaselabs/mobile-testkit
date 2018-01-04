@@ -3,5 +3,7 @@
 //
 
 #import "GCDWebServer.h"
+#import "GCDWebServerErrorResponse.h"
 #import "GCDWebServerDataRequest.h"
 #import "GCDWebServerDataResponse.h"
+
