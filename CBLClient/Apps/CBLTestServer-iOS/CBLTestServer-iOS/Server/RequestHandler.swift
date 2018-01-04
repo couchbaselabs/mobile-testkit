@@ -361,7 +361,7 @@ public class RequestHandler {
             
         case "replicator_get_activitylevel":
             let replication_obj: Replicator = args.get(name: "replication_obj")!
-            return String(replication_obj.status.activity.hashValue)
+            return replication_obj.status.activity.hashValue
             
         case "replicator_get_completed":
             let replication_obj: Replicator = args.get(name: "replication_obj")!
@@ -375,7 +375,7 @@ public class RequestHandler {
             let replication_obj: Replicator = args.get(name: "replication_obj")!
             // if replication_obj.status.error != nil {
                 
-                return replication_obj.status.error
+                return replication_obj.status.error?.localizedDescription
             //}
             // return nil
             
@@ -398,7 +398,7 @@ public class RequestHandler {
         case "replicatorChangeListener_getChange":
             let changeListener: MyReplicationChangeListener = (args.get(name: "changeListener"))!
             let index: Int = (args.get(name: "index"))!
-            return changeListener.getChanges()[index]
+            return changeListener.getChanges().description
             
         case "replicator_conflict_resolver":
             let conflict_type: String? = args.get(name: "conflict_type")
@@ -842,6 +842,7 @@ class MyReplicationChangeListener : NSObject  {
     }
     
     public func getChanges() -> [ReplicatorChange] {
+        NSLog("GOT repl CHANGES .......\(repl_changes)")
         return repl_changes
     }
 }

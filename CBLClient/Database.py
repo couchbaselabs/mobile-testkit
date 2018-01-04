@@ -199,9 +199,23 @@ class Database:
 
             doc_body["updates-cbl"] = doc_body["updates"] + 1
             updated_docs[doc] = doc_body
-            # self.saveDocument(database, doc_body)
 
         log_info("updates docs with update is {}".format(updated_docs))
-        log_info("type of updated docs are  {}".format(type(updated_docs)))
         self.saveDocuments(database, updated_docs)
+
+    def update_all_docs_individually(self, database, num_of_updates=1):
+
+        doc_ids = self.getDocIds(database)
+        docs = self.getDocuments(database, doc_ids)
+        for i in range(num_of_updates):
+            for doc in docs:
+                doc_body = docs[doc]
+                try:
+                    doc_body["updates-cbl"]
+                except Exception:
+                    doc_body["updates-cbl"] = 0
+
+                doc_body["updates-cbl"] = doc_body["updates"] + 1
+                log_info("Saving invidual document {}".format(doc_body))
+                self.saveDocument(database, doc_body)
 

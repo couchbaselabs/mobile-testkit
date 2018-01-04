@@ -1,5 +1,6 @@
 import pytest
 import time
+import random
 
 from keywords.MobileRestClient import MobileRestClient
 from keywords.utils import log_info
@@ -152,7 +153,7 @@ def test_replication_configuration_with_push_replication(setup_client_syncgatewa
     sg_client = MobileRestClient()
     sg_added_doc_ids, cbl_added_doc_ids, cbl_db = setup_sg_cbl_docs(setup_client_syncgateway_test, sg_db=sg_db, base_url=base_url, db=db,
                                                                     cbl_db_name=cbl_db_name, sg_url=sg_url, sg_admin_url=sg_admin_url, sg_blip_url=sg_blip_url,
-                                                                    replication_type="push", channels=channels, replicator_authenticator="session")
+                                                                    replication_type="push", channels=channels, replicator_authenticator_type="session")
     sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db)
     
     # Verify database doc counts
@@ -216,7 +217,7 @@ def test_replication_push_replication_without_authentication(params_from_base_te
 @pytest.mark.parametrize(
     'replicator_authenticator, invalid_username, invalid_password, invalid_session, invalid_cookie',
     [
-        # ('basic', 'invalid_user', 'password', None, None),
+        ('basic', 'invalid_user', 'password', None, None),
         ('session', None, None, 'invalid_session', 'invalid_cookie'),
     ]
 )
@@ -231,7 +232,7 @@ def test_replication_push_replication_invalid_authentication(params_from_base_te
     
     """
     sg_db = "db"
-    base_url = "http://10.17.0.133:8989"
+    base_url = "http://10.17.3.55:8989"
     db = Database(base_url)
     cbl_db_name = "cbl_db"
 
@@ -254,46 +255,29 @@ def test_replication_push_replication_invalid_authentication(params_from_base_te
     sg_client = MobileRestClient()
 
     db.create_bulk_docs(5, "cbl", db=cbl_db, channels=channels)
-    cbl_added_doc_ids = db.getDocIds(cbl_db)
     # Add docs in SG
     sg_client.create_user(sg_admin_url, sg_db, "autotest", password="password", channels=channels)
     cookie, session = sg_client.create_session(sg_admin_url, sg_db, "autotest")
-    auth_session = cookie, session
-    sg_added_docs = sg_client.add_docs(url=sg_url, db=sg_db, number=10, id_prefix="sg_doc", channels=channels, auth=auth_session)
-    sg_added_ids = [row["id"] for row in sg_added_docs]
 
     replicator = Replication(base_url)
     if replicator_authenticator == "session":
         replicator_authenticator = replicator.authentication(invalid_session, invalid_cookie, authentication_type="session")
     elif replicator_authenticator == "basic":
         replicator_authenticator = replicator.authentication(username=invalid_username, password=invalid_password, authentication_type="basic")
-    repl = replicator.configure(cbl_db, target_url=sg_blip_url, continuous=True, replication_type="push", replicator_authenticator=replicator_authenticator)
+    repl_config = replicator.configure(cbl_db, target_url=sg_blip_url, continuous=True, replication_type="push", replicator_authenticator=replicator_authenticator)
     
-    log_info("replicator status  is {}".format(replicator.status))
-    log_info("replicator error is {}".format(replicator.get_error))
+    repl = replicator.create(repl_config)
     replicator.start(repl)
     time.sleep(1)
+    error = replicator.get_error(repl)
+    assert "HTTP/1.1 401 Unauthorized" in error, "expected error did not occurred"
     replicator.stop(repl)
 
-    """
 
-    sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db)
-    
-    cbl_doc_count = db.getCount(cbl_db)
-    cbl_doc_ids = db.getDocIds(cbl_db)
-
-    assert len(sg_docs["rows"]) == 10, "Number of sg docs is not same as number of docs before replication"
-    assert cbl_doc_count == 5, "Did not get expected number of cbl docs"
-
-    # Check that all doc ids in SG are also present in CBL
-    sg_ids = [row["id"] for row in sg_docs["rows"]]
-    for doc in cbl_doc_ids:
-        assert doc not in sg_ids
-    """
 
 @pytest.mark.sanity
 @pytest.mark.listener
-def test_replication_configuration_with_filtered_doc_ids(setup_client_syncgateway_test):
+def test_replication_configuration_with_filtered_doc_ids(params_from_base_test_setup):
     """
         @summary:
         1. Create docs in SG
@@ -303,15 +287,17 @@ def test_replication_configuration_with_filtered_doc_ids(setup_client_syncgatewa
     
     """
     sg_db = "db"
-    base_url = "http://10.17.0.133:8989"
+    base_url = "http://10.17.3.55:8989"
     db = Database(base_url)
     cbl_db_name = "cbl_db"
 
-    sg_blip_url = setup_client_syncgateway_test["target_url"]
+    sg_blip_url = params_from_base_test_setup["target_url"]
+    sg_url = params_from_base_test_setup["sg_url"]
+    sg_admin_url = params_from_base_test_setup["sg_admin_url"]
     channels = ["ABC"]
 
-    sg_mode = setup_client_syncgateway_test["sg_mode"]
-    cluster_config = setup_client_syncgateway_test["cluster_config"]
+    sg_mode = params_from_base_test_setup["mode"]
+    cluster_config = params_from_base_test_setup["cluster_config"]
     # Create CBL database
     cbl_db = db.create(cbl_db_name)
 
@@ -322,26 +308,35 @@ def test_replication_configuration_with_filtered_doc_ids(setup_client_syncgatewa
 
     sg_client = MobileRestClient()
 
-    db.create_bulk_docs(5, "cbl", db=cbl_db, channels=channels)
+    db.create_bulk_docs(10, "cbl", db=cbl_db, channels=channels)
     cbl_added_doc_ids = db.getDocIds(cbl_db)
+    num_of_filtered_ids = 5
+    list_of_filtered_ids = random.sample(cbl_added_doc_ids, num_of_filtered_ids)
 
-    sg_docs = sg_client.get_all_docs(url=sg_blip_url, db=sg_db)
+    # replicator = Replication(base_url)
+    # repl_config = replicator.configure(cbl_db, target_url=sg_blip_url, continuous=True, documentIDs=list_of_filtered_ids)
+    sg_added_doc_ids, cbl_added_doc_ids, cbl_db, session = setup_sg_cbl_docs(params_from_base_test_setup, sg_db=sg_db, base_url=base_url, db=db,
+                                                                             cbl_db_name=cbl_db_name, sg_url=sg_url, sg_admin_url=sg_admin_url, sg_blip_url=sg_blip_url, document_ids=list_of_filtered_ids,
+                                                                             replicator_authenticator_type="basic", channels=channels)
+
+    sg_docs = sg_client.get_all_docs(url=sg_url, db=sg_db, auth=session)
     
-    # Verify database doc counts
-    cbl_doc_count = db.getCount(cbl_db)
-    cbl_doc_ids = db.getDocIds(cbl_db)
+    # Verify sg docs count
+    sg_added_docs = len(sg_added_doc_ids)
+    total_sg_docs = sg_added_docs + num_of_filtered_ids
 
-    assert len(sg_docs["rows"]) == 15, "Number of sg docs is not equal to total number of cbl docs and sg docs"
-    assert cbl_doc_count == 5, "Did not get expected number of cbl docs"
+    assert len(sg_docs["rows"]) == total_sg_docs, "Number of sg docs is not expected"
 
-    # Check that all doc ids in SG are also present in CBL
+    list_of_non_filtered_ids = set(cbl_added_doc_ids) - set(list_of_filtered_ids)
+    
+    # Verify only filtered cbl doc ids are replicated to sg
     sg_ids = [row["id"] for row in sg_docs["rows"]]
-    for doc in cbl_doc_ids:
-        assert doc in sg_ids
-
-    # Verify sg docs does not exist in CBL as it is just a push replication
-    # for id in sg_added_doc_ids:
-    #    assert id not in cbl_doc_ids
+    for id in list_of_filtered_ids:
+        assert id in sg_ids
+     
+    # Verify non filtered docs ids are not replicated in sg
+    for id in list_of_non_filtered_ids:
+        assert id not in sg_ids
 
 
 def test_replication_configuration_with_headers(params_from_base_test_setup):
@@ -353,7 +348,7 @@ def test_replication_configuration_with_headers(params_from_base_test_setup):
     
     """
     sg_db = "db"
-    base_url = "http://10.17.1.161:8989"
+    base_url = "http://10.17.3.55:8989"
     db = Database(base_url)
     cbl_db_name = "cbl_db"
     num_of_docs = 10
@@ -379,16 +374,23 @@ def test_replication_configuration_with_headers(params_from_base_test_setup):
     session_header = {"Cookie": sync_cookie}
     
     replicator = Replication(base_url)
-    # repl = replicator.configure(cbl_db, target_url=sg_blip_url, continuous=True, headers=session_header)
-    repl = replicator.configure(cbl_db, target_url=sg_blip_url, continuous=True)
-    
+    repl_config = replicator.configure(cbl_db, target_url=sg_blip_url, continuous=True, headers=session_header)
+    repl = replicator.create(repl_config)
+    # repl = replicator.configure(cbl_db, target_url=sg_blip_url, continuous=True)
+    repl_change_listener = replicator.add_change_listener(repl)
     replicator.start(repl)
     time.sleep(1)
+    
+    changes_count = replicator.get_changes_count(repl_change_listener)
+    print "replicator changes count", changes_count
+    changes = replicator.get_changes_changelistener(repl_change_listener, 1)
+    # print " replicator status msg ", repl_status_msg
+    print "replicator changes ", changes
+    
     replicator.stop(repl)
     repl_status_msg = replicator.status(repl)
-    repl_change_listener = replicator.add_change_listener(repl)
-    replicator.get_changes_changelistener(repl, repl_change_listener)
-    print " replicator status msg ", repl_status_msg
+    
+    
     sg_docs = sg_client.get_all_docs(url=sg_url, db=sg_db, auth=auth_session)
     
     # Verify database doc counts
@@ -404,7 +406,7 @@ def test_replication_configuration_with_headers(params_from_base_test_setup):
 
 
 def setup_sg_cbl_docs(params_from_base_test_setup, sg_db, base_url, db, cbl_db_name, sg_url,
-                      sg_admin_url, sg_blip_url, replication_type, document_ids=None, channels=None, 
+                      sg_admin_url, sg_blip_url, replication_type=None, document_ids=None, channels=None, 
                       replicator_authenticator_type=None, headers=None):
     
     sg_mode = params_from_base_test_setup["mode"]

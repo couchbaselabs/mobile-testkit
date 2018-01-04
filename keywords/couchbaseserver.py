@@ -729,18 +729,12 @@ class CouchbaseServer:
          version - the version without any build number information, eg 4.5.0
          build_number - the build number associated with this major version release, eg, 2601 (or None)
          Return the filename portion of the package download URL
-
          """
-
         if version.startswith("3.1.6"):
             return "couchbase-server-enterprise-{}-{}.x86_64.rpm".format(version, cbs_platform)
-
         elif version.startswith("3.1"):
-
             return "couchbase-server-enterprise_{}_x86_64_{}-{}-rel.rpm".format(cbs_platform, version, build_number)
-
         else:
-
             return "couchbase-server-enterprise-{}-{}-{}.x86_64.rpm".format(version, build_number, cbs_platform)
 
     def resolve_cb_nas_url(self, version, build_number, cbs_platform="centos7"):
@@ -759,9 +753,9 @@ class CouchbaseServer:
             base_url = "{}/sherlock/{}".format(cbnas_base_url, build_number)
         elif version.startswith("4.5") or version.startswith("4.6"):
             base_url = "{}/watson/{}".format(cbnas_base_url, build_number)
-        elif version.startswith("4.7") or version.startswith("5.0"):
+        elif version.startswith("4.7") or version.startswith("5.0") or version.startswith("5.1"):
             base_url = "{}/spock/{}".format(cbnas_base_url, build_number)
-        elif version.startswith("5.1"):
+        elif version.startswith("5.5"):
             base_url = "{}/vulcan/{}".format(cbnas_base_url, build_number)
         else:
             raise Exception(
@@ -773,7 +767,6 @@ class CouchbaseServer:
         return base_url, package_name
 
     def resolve_cb_mobile_url(self, version, cbs_platform="centos7"):
-
         """
         Resolve a download URL for the corresponding package to given
         version on http://cbmobile-packages.s3.amazonaws.com (an S3 bucket
@@ -797,7 +790,6 @@ class CouchbaseServer:
             "3.1.5": "1859",
             "3.1.6": "1904"
         }
-
         build_number = released_versions[version]
         base_url = "http://cbmobile-packages.s3.amazonaws.com"
         package_name = self.get_package_name(version, build_number, cbs_platform)
@@ -806,7 +798,6 @@ class CouchbaseServer:
     def upgrade_server(self, cluster_config, server_version_build, cbs_platform, target=None, toy_build=None):
         ansible_runner = AnsibleRunner(cluster_config)
         log_info(">>> Upgrading Couchbase Server")
-
         # Install Server
         if toy_build:
             # http://server.jenkins.couchbase.com/view/All/job/watson-toy/1770/artifact/couchbase-server-enterprise-5.0.0-9900-centos7.x86_64.rpm
@@ -822,7 +813,6 @@ class CouchbaseServer:
                 server_build = version_build[1]
             else:
                 server_build = None
-
             if server_build is None:
                 server_baseurl, server_package_name = self.resolve_cb_mobile_url(server_verion, cbs_platform)
             else:
