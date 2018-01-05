@@ -71,8 +71,8 @@ public class ValueSerializer {
     }
     
     public static func deserialize<T>(value: String?, memory: Memory) -> T? {
-        if value == nil {
-            return "null" as? T
+        if value == nil || value == "null" {
+            return nil
         } else if (value!.hasPrefix("@")) {
             return memory.get(address:value!)
         } else if (value!.hasPrefix("\"") && value!.hasSuffix("\"")) {

@@ -22,6 +22,9 @@ class TestDictionary(object):
         '''
         @summary: Testing create method of Dictionary API
         '''
+        if self.liteserv_platform == "ios" and value == "":
+            pytest.skip("Test not applicable for ios")
+
         content_dict = self.dict_obj.create()
         self.dict_obj.setString(content_dict, key, value)
         assert self.dict_obj.getString(content_dict, key) == value
@@ -79,6 +82,7 @@ class TestDictionary(object):
         '''
         @summary: Testing get and set Date methods of Dictionary API
         '''
+        # TODO implementation does not work on ios
         key = "Date_key"
         value = self.datatype.setDate()
         content_dict = self.dict_obj.create()
@@ -91,6 +95,7 @@ class TestDictionary(object):
         '''
         @summary: Testing get and set Dictionary methods of Dictionary API
         '''
+        # TODO ios gets back {} for self.datatype.hashMap()
         hashmap = self.datatype.hashMap()
         key = "Date_key"
         value = self.datatype.setDate()
@@ -127,7 +132,8 @@ class TestDictionary(object):
         '''
         @summary: Testing get and set Double methods of Dictionary API
         '''
-        double_value = self.datatype.setDouble(value)
+        # TODO implementation does not work on ios
+        double_value = self.datatype.setDouble(float(value))
         content_dict = self.dict_obj.create()
         self.dict_obj.setDouble(content_dict, key, double_value)
         assert self.datatype.compare(double_value,
@@ -144,6 +150,7 @@ class TestDictionary(object):
         '''
         @summary: Testing get and set Float methods of Dictionary API
         '''
+        # TODO Precision issue with ios assert 978.5709 == 978.571
         content_dict = self.dict_obj.create()
         self.dict_obj.setFloat(content_dict, key, value)
         assert value == self.dict_obj.getFloat(content_dict, key)
@@ -172,6 +179,9 @@ class TestDictionary(object):
         '''
         @summary: Testing get and set Long methods of Dictionary API
         '''
+        if self.liteserv_platform == "ios":
+            pytest.skip("Test not applicable for ios")
+
         long_value = self.datatype.setLong(value)
         content_dict = self.dict_obj.create()
         self.dict_obj.setLong(content_dict, key, long_value)
@@ -241,6 +251,7 @@ class TestDictionary(object):
         '''
         @summary: Testing remove method of Dictionary API
         '''
+        # TODO ios gets back {} for self.datatype.hashMap()
         hashmap = self.datatype.hashMap()
         key_value = {
             "Date_key": self.datatype.setDate(),

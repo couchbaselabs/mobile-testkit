@@ -13,10 +13,16 @@ class TestDatabase(object):
         '''
         @summary: Checking for the Exception handling in database create API
         '''
+        if self.liteserv_platform == "ios" and db_name == "":
+            pytest.skip("Test not applicable for ios")
+
         _, err_resp = self.db_obj.create(db_name)
         assert err_msg in err_resp
 
     def test_getDocument_exception(self):
+        if self.liteserv_platform == "ios":
+            pytest.skip("Test not applicable for ios")
+
         db = self.db_obj.create(random_string(6))
         # checking when Null/None documentId is provided
         err_msg = "a documentID parameter is null"
@@ -30,12 +36,18 @@ class TestDatabase(object):
         assert doc_id is None
 
     def test_saveDocument_exception(self):
+        if self.liteserv_platform == "ios":
+            pytest.skip("Test not applicable for ios")
+
         db = self.db_obj.create(random_string(6))
         err_msg = "a document parameter is null"
         _, err_resp = self.db_obj.saveDocument(db, None)
         assert err_msg in err_resp
 
     def test_delete_exception(self):
+        if self.liteserv_platform == "ios":
+            pytest.skip("Test not applicable for ios")
+
         db = self.db_obj.create(random_string(6))
         # Exception checking when document id is null
         err_msg = "a document parameter is null"
@@ -80,6 +92,7 @@ class TestDatabase(object):
         '''
         db = self.db_obj.create(db_name)
         assert self.db_obj.close(db) == -1
+        assert self.db_obj.deleteDB(db) == -1
 
     @pytest.mark.parametrize("db_name", [
         random_string(1),

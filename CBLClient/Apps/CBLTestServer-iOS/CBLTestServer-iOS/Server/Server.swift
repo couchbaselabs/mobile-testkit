@@ -32,6 +32,7 @@ public class Server {
     let encryptionkeyRequestHandler: EncryptionKeyRequestHandler!
     let conflictRequestHandler: ConflictRequestHandler!
     let blobRequestHandler: BlobRequestHandler!
+    let datatypeRequestHandler: DataTypesInitiatorRequestHandler!
     let memory = Memory()
     
     public init() {
@@ -46,6 +47,7 @@ public class Server {
         encryptionkeyRequestHandler = EncryptionKeyRequestHandler()
         conflictRequestHandler = ConflictRequestHandler()
         blobRequestHandler = BlobRequestHandler()
+        datatypeRequestHandler = DataTypesInitiatorRequestHandler()
         server = GCDWebServer()
         server.addDefaultHandler(forMethod: "POST", request: GCDWebServerDataRequest.self) {
             (request) -> GCDWebServerResponse? in
@@ -110,6 +112,8 @@ public class Server {
                         result = try self.conflictRequestHandler.handleRequest(method: method, args: args)
                     } else if method.hasPrefix("blob") {
                         result = try self.blobRequestHandler.handleRequest(method: method, args: args)
+                    } else if method.hasPrefix("datatype") {
+                        result = try self.datatypeRequestHandler.handleRequest(method: method, args: args)
                     } else {
                         throw ServerError.MethodNotImplemented(method)
                     }
@@ -124,10 +128,10 @@ public class Server {
                     // Send 200 code and close
                     return GCDWebServerResponse(statusCode: 200)
                 }
-            } catch let error {
+            } catch let error as NSError {
                 // Send 400 error code
                 let response = GCDWebServerDataResponse(text: error.localizedDescription)!
-                response.statusCode = 400
+                response.statusCode = error.code as Int
                 return response
             }
         }

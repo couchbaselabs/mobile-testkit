@@ -294,9 +294,9 @@ public class DictionaryRequestHandler {
         case "dictionary_setDouble":
             let dictionary: MutableDictionaryObject = args.get(name: "dictionary")!
             let key: String = args.get(name: "key")!
-            let value: Double = args.get(name: "value")!
+            let value: Float = args.get(name: "value")!
             
-            return dictionary.setDouble(value, forKey: key)
+            return dictionary.setDouble(Double(value), forKey: key)
         
         case "dictionary_getBoolean":
             let dictionary: MutableDictionaryObject = args.get(name: "dictionary")!

@@ -1,5 +1,1 @@
-<<<<<<< HEAD
-github "couchbase/couchbase-lite-ios" "2.0DB021"
-=======
-github "couchbase/couchbase-lite-ios" "574b02694259c0fa7f5a1e3b290e70974f3484b8"
->>>>>>> refs/remotes/origin/feature/cbl20-query
+github "couchbase/couchbase-lite-ios" "1e1ed20edc6c39ee05117f6b41517357d8f68356"

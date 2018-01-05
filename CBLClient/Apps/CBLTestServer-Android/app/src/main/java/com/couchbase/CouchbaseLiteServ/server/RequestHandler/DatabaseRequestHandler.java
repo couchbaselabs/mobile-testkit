@@ -136,6 +136,12 @@ public class DatabaseRequestHandler {
         database.delete();
    }
 
+   public void deleteDbByName(Args args) throws CouchbaseLiteException {
+        String dbName = args.get("dbName");
+        File directory = args.get("directory");
+        Database.delete(dbName, directory.getParentFile());
+   }
+
     public boolean exists(Args args){
         String dbName = args.get("dbName");
         File directory = args.get("directory");

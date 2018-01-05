@@ -1,6 +1,7 @@
 import json
 
 from requests import Session
+from requests import Response
 from CBLClient.ValueSerializer import ValueSerializer
 from CBLClient.Args import Args
 from keywords.utils import log_info
@@ -13,6 +14,7 @@ class Client(object):
         self.session = Session()
 
     def invokeMethod(self, method, args=None):
+        resp = Response()
         try:
             # Create body from args.
             body = {}
@@ -31,10 +33,9 @@ class Client(object):
             # Create connection to method endpoint.
             headers = {"Content-Type": "application/json"}
             self.session.headers = headers
+            log_info("body is {}".format(body))
             resp = self.session.post(url, data=json.dumps(body))
             resp.raise_for_status()
-
-            # Process response.
             responseCode = resp.status_code
 
             if responseCode == 200:
@@ -48,7 +49,6 @@ class Client(object):
         except Exception as err:
             # resp can't be accessed here
             return err, resp.content
-
 
     def release(self, obj):
         args = Args()
