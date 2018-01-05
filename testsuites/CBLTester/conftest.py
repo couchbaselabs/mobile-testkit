@@ -151,6 +151,7 @@ def params_from_base_suite_setup(request):
     if enable_sample_bucket and create_db_per_test:
         raise Exception("Invalid options combination")
 
+    source_db = None
     if not create_db_per_test:
         # Create CBL database
         cbl_db = "test_db"

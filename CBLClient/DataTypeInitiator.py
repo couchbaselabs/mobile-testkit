@@ -19,12 +19,12 @@ class DataTypeInitiator(object):
 
     def setDouble(self, value):
         args = Args()
-        args.setString("value", value)
+        args.setFloat("value", value)
         return self._client.invokeMethod("datatype_setDouble", args)
 
     def setFloat(self, value):
         args = Args()
-        args.setString("value", value)
+        args.setFloat("value", value)
         return self._client.invokeMethod("datatype_setFloat", args)
 
     def setLong(self, value):
@@ -65,3 +65,15 @@ class DataTypeInitiator(object):
         elif isinstance(value, int):
             args.setInt("value", value)
         self._client.invokeMethod("datatype_put", args)
+
+    def compareDate(self, date1, date2):
+        args = Args()
+        args.setMemoryPointer("date1", date1)
+        args.setMemoryPointer("date2", date2)
+        return self._client.invokeMethod("datatype_compareDate", args)
+
+    def compareDouble(self, double1, double2):
+        args = Args()
+        args.setMemoryPointer("double1", double1)
+        args.setMemoryPointer("double2", double2)
+        return self._client.invokeMethod("datatype_compareDouble", args)
