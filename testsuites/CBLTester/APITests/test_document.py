@@ -1,22 +1,10 @@
 import random
 import pytest
 
-from CBLClient.Database import Database
-from CBLClient.Document import Document
-from CBLClient.Dictionary import Dictionary
-from CBLClient.DataTypeInitiator import DataTypeInitiator
 from keywords.utils import random_string
 
-BASE_URL = "http://172.16.1.154:8080"
-#BASE_URL = "http://192.168.0.117:8080"
-
+@pytest.mark.usefixtures("class_init")
 class TestDocument(object):
-
-    db_obj = Database(BASE_URL)
-    doc_obj = Document(BASE_URL)
-    dict_obj = Dictionary(BASE_URL)
-    datatype = DataTypeInitiator(BASE_URL)
-    db_obj.create("dbname")
 
     @pytest.mark.parametrize("doc_id1, doc_id2", [
         (random_string(1), random_string(1)),

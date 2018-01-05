@@ -96,31 +96,31 @@ class TestDictionary(object):
         @summary: Testing get and set Dictionary methods of Dictionary API
         '''
         # TODO ios gets back {} for self.datatype.hashMap()
-        hashmap = self.datatype.hashMap()
+        hashmap = {}
         key = "Date_key"
         value = self.datatype.setDate()
-        self.datatype.put(hashmap, key, value)
+        hashmap[key] = value
         key = "Double_key"
         value = self.datatype.setDouble("2.0")
-        self.datatype.put(hashmap, key, value)
+        hashmap[key] = value
         key = "Float_key"
         value = self.datatype.setFloat("3.0")
-        self.datatype.put(hashmap, key, value)
+        hashmap[key] = value
         key = "Integer_key"
         value = 4
-        self.datatype.put(hashmap, key, value)
+        hashmap[key] = value
         key = "Long_key"
         value = self.datatype.setLong("1234567890")
-        self.datatype.put(hashmap, key, value)
+        hashmap[key] = value
         key = "String_key"
         value = "Test String"
-        self.datatype.put(hashmap, key, value)
+        hashmap[key] = value
         content = self.dict_obj.create(hashmap)
         content_dict = self.dict_obj.create()
         self.dict_obj.setDictionary(content_dict, "hashmap", content)
         content_check = self.dict_obj.getDictionary(content_dict, "hashmap")
-        resultmap = self.dict_obj.toMap(content_check)
-        assert self.datatype.compareHashMap(hashmap, resultmap)
+        for key in hashmap:
+            assert self.dict_obj.contains(content_check, key)
 
     @pytest.mark.parametrize("key, value", [
         (random_string(6), "{}".format(random.uniform(0, 1))),
@@ -252,17 +252,12 @@ class TestDictionary(object):
         @summary: Testing remove method of Dictionary API
         '''
         # TODO ios gets back {} for self.datatype.hashMap()
-        hashmap = self.datatype.hashMap()
-        key_value = {
-            "Date_key": self.datatype.setDate(),
-            "Double_key": "{}".format(random.uniform(1, 10)),
+        hashmap = {
             "Float_key": "{}".format(random.random()),
             "Integer_key": random.randint(1, 1000),
             "Long_key": random.randint(100000, 10000000),
             "String_key": random_string(6)
             }
-        for key, value in key_value.items():
-            self.datatype.put(hashmap, key, value)
         content_dict = self.dict_obj.create(hashmap)
         result_dict = self.dict_obj.toMap(content_dict)
-        assert self.datatype.compareHashMap(hashmap, result_dict)
+        assert hashmap == result_dict

@@ -13,6 +13,7 @@ public class DataTypesInitiatorHandler {
     /* ---------------------------------- */
     /* - Initiates Complex Java Objects - */
     /* ---------------------------------- */
+/*
 
     public <T> T[] setArray(Args args){
         T[] arr = args.get("name");
@@ -35,6 +36,7 @@ public class DataTypesInitiatorHandler {
         Object value = args.get("value");
         map.put(key, value);
     }
+*/
 
 
     public Date setDate(Args args) {
@@ -64,7 +66,7 @@ public class DataTypesInitiatorHandler {
         }
         return false;
     }
-
+/*
     public Boolean compareHashMap(Args args){
         HashMap first = args.get("first");
         HashMap second = args.get("second");
@@ -87,6 +89,6 @@ public class DataTypesInitiatorHandler {
             return false;
         }
         return true;
-    }
+    }*/
 }
 

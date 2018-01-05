@@ -5,6 +5,7 @@ import com.couchbase.CouchbaseLiteServ.server.Args;
 import com.couchbase.lite.Array;
 import com.couchbase.lite.Blob;
 import com.couchbase.lite.Database;
+import com.couchbase.lite.Dictionary;
 import com.couchbase.lite.MutableDictionary;
 import com.couchbase.lite.MutableDictionary;
 import com.couchbase.litecore.fleece.FLEncoder;
@@ -212,7 +213,7 @@ public class DictionaryRequestHandler{
     public MutableDictionary setDictionary(Args args){
         MutableDictionary dictionary = args.get("dictionary");
         String key = args.get("key");
-        MutableDictionary value = args.get("value");
+        Dictionary value = args.get("value");
         return  dictionary.setDictionary(key, value);
     }
 
