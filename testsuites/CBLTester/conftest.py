@@ -180,17 +180,17 @@ def params_from_base_suite_setup(request):
     db_name = db.getName(source_db)
     assert db_name == "test_db"
 
-    #if enable_sample_bucket:
+    if enable_sample_bucket:
         # Start continuous replication
-    repl_obj = Replicator(base_url)
-    auth_obj = BasicAuthenticator(base_url)
-    authenticator = auth_obj.create("trave-sample", "password")
-    replicator = repl_obj.configure(source_db=source_db,
-                                    target_url=target_admin_url,
-                                    replication_type="PUSH_AND_PULL",
-                                    replicator_authenticator=authenticator)
-    repl_obj.start(replicator)
-    time.sleep(60)
+        repl_obj = Replicator(base_url)
+        auth_obj = BasicAuthenticator(base_url)
+        authenticator = auth_obj.create("trave-sample", "password")
+        replicator = repl_obj.configure(source_db=source_db,
+                                        target_url=target_admin_url,
+                                        replication_type="PUSH_AND_PULL",
+                                        replicator_authenticator=authenticator)
+        repl_obj.start(replicator)
+        time.sleep(60)
 
     yield {
         "cluster_config": cluster_config,
@@ -278,7 +278,7 @@ def class_init(request, params_from_base_suite_setup):
     doc_obj = Document(base_url)
     dict_obj = Dictionary(base_url)
     datatype = DataTypeInitiator(base_url)
-    replicator_obj = Replicator(base_url)
+    repl_obj = Replicator(base_url)
     repl_config_obj = ReplicatorConfiguration(base_url)
     base_auth_obj = BasicAuthenticator(base_url)
     session_auth_obj = SessionAuthenticator(base_url)
@@ -289,7 +289,7 @@ def class_init(request, params_from_base_suite_setup):
     request.cls.doc_obj = doc_obj
     request.cls.dict_obj = dict_obj
     request.cls.datatype = datatype
-    request.cls.replicator_obj = replicator_obj
+    request.cls.repl_obj = repl_obj
     request.cls.repl_config_obj = repl_config_obj
     request.cls.base_auth_obj = base_auth_obj
     request.cls.session_auth_obj = session_auth_obj
