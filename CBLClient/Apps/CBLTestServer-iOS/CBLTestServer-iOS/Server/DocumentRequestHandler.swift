@@ -31,7 +31,9 @@ public class DocumentRequestHandler {
                 }
             } else {
                 if dictionary == nil {
-                    return MutableDocument()
+                    let doc = MutableDocument()
+                    print("doc is \(doc)")
+                    return doc
                 } else {
                     return MutableDocument(withData: dictionary)
                 }
@@ -51,9 +53,9 @@ public class DocumentRequestHandler {
            
         case "document_getString":
             let document: MutableDocument = (args.get(name: "document"))!
-            let property: String = (args.get(name: "property"))!
+            let key: String = (args.get(name: "key"))!
             
-            return document.string(forKey: property)
+            return document.string(forKey: key)
 
         case "document_setString":
             let document: MutableDocument = (args.get(name: "document"))!
@@ -88,13 +90,13 @@ public class DocumentRequestHandler {
             
             return  document.setInt(value, forKey: key)
 
-        case "document_getInt64":
+        case "document_getLong":
             let document: MutableDocument = (args.get(name: "document"))!
             let key: String = (args.get(name: "key"))!
             
             return  document.int64(forKey: key)
 
-        case "document_setInt64":
+        case "document_setLong":
             let document: MutableDocument = (args.get(name: "document"))!
             let key: String = (args.get(name: "key"))!
             let value: Int64 = (args.get(name: "value"))!
@@ -123,9 +125,9 @@ public class DocumentRequestHandler {
         case "document_setDouble":
             let document: MutableDocument = (args.get(name: "document"))!
             let key: String = (args.get(name: "key"))!
-            let value: Double = (args.get(name: "value"))!
-
-            return  document.setDouble(value, forKey: key)
+            let value: Float = (args.get(name: "value"))!
+            let double_value = Double(value)
+            return  document.setDouble(double_value, forKey: key)
 
         case "document_getBoolean":
             let document: MutableDocument = (args.get(name: "document"))!
@@ -160,8 +162,12 @@ public class DocumentRequestHandler {
         case "document_setDate":
             let document: MutableDocument = (args.get(name: "document"))!
             let key: String = (args.get(name: "key"))!
-            let value: Date = (args.get(name: "value"))!
-            return  document.setDate(value, forKey: key)
+            let value: String = (args.get(name: "value"))!
+            let formatter = DateFormatter()
+            formatter.dateFormat = "y-MM-dd H:m:ss.SSSS"
+            let date_value = formatter.date(from: value)
+
+            return document.setDate(date_value, forKey: key)
         
         case "document_getArray":
             let document: MutableDocument = (args.get(name: "document"))!

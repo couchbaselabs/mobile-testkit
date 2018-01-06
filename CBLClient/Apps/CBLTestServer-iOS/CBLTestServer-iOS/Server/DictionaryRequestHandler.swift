@@ -136,14 +136,20 @@ public class DictionaryRequestHandler {
         case "dictionary_getDate":
             let dictionary: MutableDictionaryObject = args.get(name: "dictionary")!
             let key: String = args.get(name: "key")!
-            return dictionary.date(forKey: key)
+            let dict_date = dictionary.date(forKey: key)
+            print("dict_date: \(dict_date)")
+            return dict_date
         
         case "dictionary_setDate":
             let dictionary: MutableDictionaryObject = args.get(name: "dictionary")!
             let key: String = args.get(name: "key")!
-            let value: Date = args.get(name: "value")!
+            let value: String = args.get(name: "value")!
             
-            return dictionary.setDate(value, forKey: key)
+            let formatter = DateFormatter()
+            formatter.dateFormat = "y-MM-dd H:m:ss.SSSS"
+            let date_value = formatter.date(from: value)
+            
+            return dictionary.setDate(date_value, forKey: key)
         
         case "dictionary_getArray":
             let dictionary: MutableDictionaryObject = args.get(name: "dictionary")!

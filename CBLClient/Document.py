@@ -68,7 +68,7 @@ class Document:
     def contains(self, document, key):
         args = Args()
         args.setMemoryPointer("document", document)
-        args.setMemoryPointer("key", key)
+        args.setString("key", key)
         return self._client.invokeMethod("document_contains", args)
 
     def count(self, document):
@@ -158,7 +158,7 @@ class Document:
         args = Args()
         args.setMemoryPointer("document", document)
         args.setString("key", key)
-        args.setMemoryPointer("value", value)
+        args.setFloat("value", value)
         return self._client.invokeMethod("document_setDouble", args)
 
     def getFloat(self, document, key):

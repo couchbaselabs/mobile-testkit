@@ -86,6 +86,12 @@ public class ValueSerializer {
             let range = start..<end
             return Int(value!.substring(with: range)) as? T
             
+        } else if value!.hasPrefix("L") {
+            let start = value!.index(value!.startIndex, offsetBy: 1)
+            let end = value!.index(value!.endIndex, offsetBy: 0)
+            let range = start..<end
+            return Int64(value!.substring(with: range)) as? T
+            
         } else if value!.hasPrefix("F") {
             let start = value!.index(value!.startIndex, offsetBy: 1)
             let end = value!.index(value!.endIndex, offsetBy: 0)

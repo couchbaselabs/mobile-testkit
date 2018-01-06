@@ -27,6 +27,9 @@ class ValueSerializer:
         elif isinstance(value, long):
             number = long(value)
             return "L" + str(number)
+        elif isinstance(value, unicode):
+            value = value.encode('utf-8')
+            return "\"" + value + "\""
         # There is no double/number in python
         elif isinstance(value, dict):
             map = value

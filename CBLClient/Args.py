@@ -14,10 +14,10 @@ class Args:
         self._args[name] = integer
 
     def setLong(self, name, l):
-        self._args[name] = l
+        self._args[name] = long(l)
 
     def setFloat(self, name, f):
-        self._args[name] = f
+        self._args[name] = float(f)
 
     # There is no double/number in python
 
