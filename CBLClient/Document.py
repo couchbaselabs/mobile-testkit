@@ -236,3 +236,20 @@ class Document:
         args = Args()
         args.setMemoryPointer("document", document)
         return self._client.invokeMethod("document_toMap", args)
+
+    def toMutable(self, document):
+        args = Args()
+        args.setMemoryPointer("document", document)
+        return self._client.invokeMethod("document_toMutable", args)
+
+    def toDictionary(self, document):
+        args = Args()
+        args.setMemoryPointer("document", document)
+        return self._client.invokeMethod("document_toDictionary", args)
+
+    def setData(self, document, data):
+        args = Args()
+        args.setMemoryPointer("document", document)
+        args.setDictionary("data", data)
+        return self._client.invokeMethod("document_setData", args)
+

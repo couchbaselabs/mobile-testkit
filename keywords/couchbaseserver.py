@@ -760,7 +760,6 @@ class CouchbaseServer:
         else:
             raise Exception(
                 "Unexpected couchbase server version: {}".format(version))
-
         package_name = self.get_package_name(
             version, build_number, cbs_platform)
 

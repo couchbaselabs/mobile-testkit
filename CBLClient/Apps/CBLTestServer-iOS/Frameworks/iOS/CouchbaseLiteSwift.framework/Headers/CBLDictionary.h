@@ -11,6 +11,7 @@
 @class CBLBlob;
 @class CBLArray;
 @class CBLDictionary;
+@class CBLMutableDictionary;
 
 
 NS_ASSUME_NONNULL_BEGIN
@@ -30,25 +31,75 @@ NS_ASSUME_NONNULL_BEGIN
 
 #pragma mark - Type Setters
 
-/** 
- Get a property's value as a CBLArray, which is a mapping object of an array value.
- Returns nil if the property doesn't exists, or its value is not an array.
+/**
+ Gets a property's value. The object types are CBLBlob, CBLArray,
+ CBLDictionary, NSNumber, or NSString based on the underlying data type; or nil if the
+ property value is NSNull or the property doesn't exist.
  
  @param key The key.
- @return The CBLArray object or nil.
+ @return The object value or nil.
  */
-- (nullable CBLArray*) arrayForKey: (NSString*)key;
+- (nullable id) valueForKey: (NSString*)key;
 
-/** 
- Get a property's value as a CBLBlob.
- Returns nil if the property doesn't exist, or its value is not a CBLBlob.
+/**
+ Gets a property's value as a string.
+ Returns nil if the property doesn't exist, or its value is not a string.
  
  @param key The key.
- @return The CBLBlob object or nil.
+ @return The NSString object or nil.
  */
-- (nullable CBLBlob*) blobForKey: (NSString*)key;
+- (nullable NSString*) stringForKey: (NSString*)key;
 
-/** 
+/**
+ Gets a property's value as a number.
+ Returns nil if the property doesn't exist, or its value is not a number.
+ 
+ @param key The key.
+ @return The NSNumber object or nil.
+ */
+- (nullable NSNumber*) numberForKey: (NSString*)key;
+
+/**
+ Gets a property's value as an integer value.
+ Floating point values will be rounded. The value `true` is returned as 1, `false` as 0.
+ Returns 0 if the property doesn't exist or does not have a numeric value.
+ 
+ @param key The key.
+ @return The integer value.
+ */
+- (NSInteger) integerForKey: (NSString*)key;
+
+/**
+ Gets a property's value as a long long value.
+ Floating point values will be rounded. The value `true` is returned as 1, `false` as 0.
+ Returns 0 if the property doesn't exist or does not have a numeric value.
+ 
+ @param key The key.
+ @return The long long value.
+ */
+- (long long) longLongForKey: (NSString*)key;
+
+/**
+ Gets a property's value as a float value.
+ Integers will be converted to float. The value `true` is returned as 1.0, `false` as 0.0.
+ Returns 0.0 if the property doesn't exist or does not have a numeric value.
+ 
+ @param key The key.
+ @return The float value.
+ */
+- (float) floatForKey: (NSString*)key;
+
+/**
+ Gets a property's value as a double value.
+ Integers will be converted to double. The value `true` is returned as 1.0, `false` as 0.0.
+ Returns 0.0 if the property doesn't exist or does not have a numeric value.
+ 
+ @param key The key.
+ @return The double value.
+ */
+- (double) doubleForKey: (NSString*)key;
+
+/**
  Gets a property's value as a boolean.
  Returns YES if the value exists, and is either `true` or a nonzero number.
  
@@ -70,6 +121,24 @@ NS_ASSUME_NONNULL_BEGIN
  */
 - (nullable NSDate*) dateForKey: (NSString*)key;
 
+/**
+ Get a property's value as a CBLBlob.
+ Returns nil if the property doesn't exist, or its value is not a CBLBlob.
+ 
+ @param key The key.
+ @return The CBLBlob object or nil.
+ */
+- (nullable CBLBlob*) blobForKey: (NSString*)key;
+
+/**
+ Get a property's value as a CBLArray, which is a mapping object of an array value.
+ Returns nil if the property doesn't exists, or its value is not an array.
+ 
+ @param key The key.
+ @return The CBLArray object or nil.
+ */
+- (nullable CBLArray*) arrayForKey: (NSString*)key;
+
 /** 
  Get a property's value as a CBLDictionary, which is a mapping object of
  a dictionary value.
@@ -80,94 +149,27 @@ NS_ASSUME_NONNULL_BEGIN
  */
 - (nullable CBLDictionary*) dictionaryForKey: (NSString*)key;
 
-/** 
- Gets a property's value as a double value.
- Integers will be converted to double. The value `true` is returned as 1.0, `false` as 0.0.
- Returns 0.0 if the property doesn't exist or does not have a numeric value.
- 
- @param key The key.
- @return The double value.
- */
-- (double) doubleForKey: (NSString*)key;
-
-/** 
- Gets a property's value as a float value.
- Integers will be converted to float. The value `true` is returned as 1.0, `false` as 0.0.
- Returns 0.0 if the property doesn't exist or does not have a numeric value.
- 
- @param key The key.
- @return The float value.
- */
-- (float) floatForKey: (NSString*)key;
-
-/** 
- Gets a property's value as an integer value.
- Floating point values will be rounded. The value `true` is returned as 1, `false` as 0.
- Returns 0 if the property doesn't exist or does not have a numeric value.
- 
- @param key The key.
- @return The integer value.
- */
-- (NSInteger) integerForKey: (NSString*)key;
-
-/**
- Gets a property's value as a long long value.
- Floating point values will be rounded. The value `true` is returned as 1, `false` as 0.
- Returns 0 if the property doesn't exist or does not have a numeric value.
- 
- @param key The key.
- @return The long long value.
- */
-- (long long) longLongForKey: (NSString*)key;
-
-/** 
- Gets a property's value as a number.
- Returns nil if the property doesn't exist, or its value is not a number.
- 
- @param key The key.
- @return The NSNumber object or nil.
- */
-- (nullable NSNumber*) numberForKey: (NSString*)key;
-
-/**
- Gets a property's value as an object. The object types are CBLBlob, CBLArray,
- CBLDictionary, NSNumber, or NSString based on the underlying data type; or nil if the
- property value is NSNull or the property doesn't exist.
- 
- @param key The key.
- @return The object value or nil.
- */
-- (nullable id) objectForKey: (NSString*)key;
-
-/** 
- Gets a property's value as a string.
- Returns nil if the property doesn't exist, or its value is not a string.
- 
- @param key The key.
- @return The NSString object or nil.
- */
-- (nullable NSString*) stringForKey: (NSString*)key;
 
 #pragma mark - Check existence
 
 /** 
  Tests whether a property exists or not.
- This can be less expensive than -objectForKey:, because it does not have to allocate an
+ This can be less expensive than -valuetForKey:, because it does not have to allocate an
  NSObject for the property value.
  
  @param key The key.
  @return The boolean value representing whether a property exists or not.
  */
-- (BOOL) containsObjectForKey: (NSString*)key;
+- (BOOL) containsValueForKey: (NSString*)key;
 
-#pragma mark - Convert to NSDictionary
+#pragma mark - Data
 
-/** 
- Gets content of the current object as an NSDictionary. The values contained in the
- returned NSDictionary object are JSON based values.
+/**
+ Gets content of the current object as an NSDictionary. The value types of the
+ values contained in the returned NSArray object are CBLBlob, NSArray,
+ NSDictionary, NSNumber, NSNull, and NSString.
  
- @return The NSDictionary object representing the content of the current object in the
-         JSON format.
+ @return The NSDictionary object representing the content of the current object.
  */
 - (NSDictionary<NSString*,id>*) toDictionary;
 
@@ -177,6 +179,8 @@ NS_ASSUME_NONNULL_BEGIN
 @interface CBLDictionary : NSObject <CBLDictionary>
 
 - (instancetype) init NS_UNAVAILABLE;
+
+- (CBLMutableDictionary*) toMutable;
 
 @end
 

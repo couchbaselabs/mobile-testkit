@@ -131,3 +131,82 @@ class Query:
         args.setString("whr_val", whr_val)
 
         return self._client.invokeMethod("query_multiple_selects", args)
+
+    def query_where_and_or(self, database, whr_key1, whr_val1, whr_key2, whr_val2, whr_key3, whr_val3, whr_key4, whr_val4):
+        args = Args()
+        args.setMemoryPointer("database", database)
+        args.setString("whr_key1", whr_key1)
+        args.setString("whr_val1", whr_val1)
+        args.setString("whr_key2", whr_key2)
+        args.setString("whr_val2", whr_val2)
+        args.setString("whr_key3", whr_key3)
+        args.setString("whr_val3", whr_val3)
+        args.setString("whr_key4", whr_key4)
+        args.setBoolean("whr_val4", whr_val4)
+
+        return self._client.invokeMethod("query_where_and_or", args)
+
+    def query_like(self, database, whr_key, whr_val, select_property1, select_property2, like_key, like_val):
+        args = Args()
+        args.setMemoryPointer("database", database)
+        args.setString("whr_key", whr_key)
+        args.setString("select_property1", select_property1)
+        args.setString("select_property2", select_property2)
+        args.setString("whr_val", whr_val)
+        args.setString("like_key", like_key)
+        args.setString("like_val", like_val)
+
+        return self._client.invokeMethod("query_like", args)
+
+    def query_regex(self, database, whr_key, whr_val, select_property1, select_property2, regex_key, regex_val):
+        args = Args()
+        args.setMemoryPointer("database", database)
+        args.setString("whr_key", whr_key)
+        args.setString("select_property1", select_property1)
+        args.setString("select_property2", select_property2)
+        args.setString("whr_val", whr_val)
+        args.setString("regex_key", regex_key)
+        args.setString("regex_val", regex_val)
+
+        return self._client.invokeMethod("query_regex", args)
+
+    def query_isNullOrMissing(self, database, select_property1, limit):
+        args = Args()
+        args.setMemoryPointer("database", database)
+        args.setString("select_property1", select_property1)
+        args.setInt("limit", limit)
+
+        return self._client.invokeMethod("query_isNullOrMissing", args)
+
+    def query_ordering(self, database, select_property1, whr_key, whr_val):
+        args = Args()
+        args.setMemoryPointer("database", database)
+        args.setString("select_property1", select_property1)
+        args.setString("whr_key", whr_key)
+        args.setString("whr_val", whr_val)
+
+        return self._client.invokeMethod("query_ordering", args)
+
+    def query_substring(self, database, select_property1, select_property2, substring):
+        args = Args()
+        args.setMemoryPointer("database", database)
+        args.setString("select_property1", select_property1)
+        args.setString("select_property2", select_property2)
+        args.setString("substring", substring)
+
+        return self._client.invokeMethod("query_substring", args)
+
+    def query_collation(self, database, select_property1, whr_key1, whr_val1, whr_key2, whr_val2, equal_to):
+        args = Args()
+        args.setMemoryPointer("database", database)
+        args.setString("select_property1", select_property1)
+        args.setString("whr_key1", whr_key1)
+        args.setString("whr_val1", whr_val1)
+        args.setString("whr_key2", whr_key2)
+        args.setString("whr_val2", whr_val2)
+        args.setString("equal_to", equal_to)
+
+        return self._client.invokeMethod("query_collation", args)
+
+    def release(self, object):
+        self._client.release(object)

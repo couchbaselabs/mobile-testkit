@@ -9,13 +9,13 @@
 import Foundation
 
 public class Args {
-    private var _args:[String:Any] = [:];
+    private var _args = Dictionary<String, Any>()
     
-    public func get<T>(name:String) -> T? {
+    public func get<T>(name: String) -> T? {
         return _args[name] as Any as? T
     }
     
-    public func set(value:Any, forName:String) {
+    public func set(value: Any, forName:String) {
         _args[forName] = value
     }
 }

@@ -2,10 +2,11 @@ import json
 
 from MemoryPointer import MemoryPointer
 
+
 class ValueSerializer:
     @staticmethod
     def serialize(value):
-        if value is None:
+        if not value:
             return "null"
         elif isinstance(value, MemoryPointer):
             return value.getAddress()
@@ -16,6 +17,8 @@ class ValueSerializer:
             value = value.encode('utf-8')
             return "\"" + value + "\""
         elif isinstance(value, bool):
+            # bool has to be before int, 
+            # Python's Bool gets caught by int
             bool_val = bool(value)
             return "true" if bool_val else "false"
         elif isinstance(value, int):
@@ -29,11 +32,11 @@ class ValueSerializer:
             return "L" + str(number)
         # There is no double/number in python
         elif isinstance(value, dict):
-            dict_map = value
+            map = value
             stringMap = {}
 
-            for map_param in dict_map:
-                val = ValueSerializer.serialize(dict_map[map_param])
+            for map_param in map:
+                val = ValueSerializer.serialize(map[map_param])
                 stringMap[map_param] = val
 
             return json.dumps(stringMap)
@@ -41,8 +44,8 @@ class ValueSerializer:
         elif isinstance(value, list):
             stringList = []
 
-            for obj in value:
-                string = ValueSerializer.serialize(obj)
+            for object in value:
+                string = ValueSerializer.serialize(object)
                 stringList.append(string)
 
             return json.dumps(stringList)
@@ -57,10 +60,6 @@ class ValueSerializer:
             return MemoryPointer(value)
         elif value.startswith("\"") and value.endswith("\""):
             return value[1:-1]
-        elif value == "true":
-            return True
-        elif value == "false":
-            return False
         elif value.startswith("I"):
             return int(value[1:])
         elif value.startswith("L"):
@@ -72,23 +71,29 @@ class ValueSerializer:
                 return float(value[1:])
             else:
                 return int(value[1:])
+        elif value == "true":
+            return True
+        elif value == "false":
+            return False
         elif value.startswith("{"):
             stringMap = json.loads(value)
-            dict_map = {}
+            map = {}
+
             for entry in stringMap:
                 key = str(entry)
-                obj = ValueSerializer.deserialize(stringMap[key])
+                object = ValueSerializer.deserialize(stringMap[key])
 
-                dict_map[key] = obj
-            return dict_map
+                map[key] = object
+
+            return map
         elif value.startswith("["):
             stringList = json.loads(value)
-            res_list = []
+            list = []
 
             for string in stringList:
-                obj = ValueSerializer.deserialize(str(string))
-                res_list.append(obj)
+                object = ValueSerializer.deserialize(string)
+                list.append(object)
 
-            return res_list
+            return list
 
         raise RuntimeError("Invalid value type: {}: {}".format(value, type(value)))

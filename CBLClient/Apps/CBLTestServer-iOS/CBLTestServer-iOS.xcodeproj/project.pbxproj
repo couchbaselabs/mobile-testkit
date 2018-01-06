@@ -9,10 +9,16 @@
 /* Begin PBXBuildFile section */
 		2909B0731F9FFA8900B4E0E4 /* Server.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2909B0721F9FFA8900B4E0E4 /* Server.swift */; };
 		2909B0761FA3B7B400B4E0E4 /* Args.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2909B0751FA3B7B400B4E0E4 /* Args.swift */; };
-		298980511FD600080005A0C3 /* CouchbaseLiteSwift.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 298980501FD600080005A0C3 /* CouchbaseLiteSwift.framework */; };
-		298980521FD600080005A0C3 /* CouchbaseLiteSwift.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 298980501FD600080005A0C3 /* CouchbaseLiteSwift.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		29917D981FA92F82006C7675 /* RequestHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 29917D971FA92F82006C7675 /* RequestHandler.swift */; };
-		29C373E51FB12F5F00756010 /* sample_document.swift in Sources */ = {isa = PBXBuildFile; fileRef = 29C373E41FB12F5F00756010 /* sample_document.swift */; };
+		294FB2081FEAF51F00DD0C23 /* QueryRequestHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 294FB2071FEAF51F00DD0C23 /* QueryRequestHandler.swift */; };
+		294FB20A1FEAF9E800DD0C23 /* ReplicatorRequestHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 294FB2091FEAF9E800DD0C23 /* ReplicatorRequestHandler.swift */; };
+		294FB20C1FEAFD9000DD0C23 /* DatabaseRequestHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 294FB20B1FEAFD9000DD0C23 /* DatabaseRequestHandler.swift */; };
+		294FB20E1FEB0E1800DD0C23 /* DocumentRequestHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 294FB20D1FEB0E1800DD0C23 /* DocumentRequestHandler.swift */; };
+		29917D981FA92F82006C7675 /* DictionaryRequestHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 29917D971FA92F82006C7675 /* DictionaryRequestHandler.swift */; };
+		299692A51FF30B1A0040CC32 /* ArrayRequesthandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 299692A41FF30B1A0040CC32 /* ArrayRequesthandler.swift */; };
+		299692A71FF31A590040CC32 /* SessionAuthenticatorRequestHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 299692A61FF31A590040CC32 /* SessionAuthenticatorRequestHandler.swift */; };
+		299692A91FF31D0D0040CC32 /* EncryptionKeyRequestHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 299692A81FF31D0D0040CC32 /* EncryptionKeyRequestHandler.swift */; };
+		299692AF1FF35A2B0040CC32 /* ConflictRequestHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 299692AE1FF35A2B0040CC32 /* ConflictRequestHandler.swift */; };
+		299692B11FF35B630040CC32 /* BlobRequestHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 299692B01FF35B630040CC32 /* BlobRequestHandler.swift */; };
 		29D15BA11FA7DCFA005DAAA3 /* ValueSerializer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 29D15BA01FA7DCFA005DAAA3 /* ValueSerializer.swift */; };
 		29D15BA31FA7DE39005DAAA3 /* Memory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 29D15BA21FA7DE39005DAAA3 /* Memory.swift */; };
 		29F77F271F9FC18D0035178F /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 29F77F261F9FC18D0035178F /* AppDelegate.swift */; };
@@ -37,6 +43,11 @@
 		29F7869D1F9FC4180035178F /* GCDWebServerStreamedResponse.m in Sources */ = {isa = PBXBuildFile; fileRef = 29F786901F9FC4180035178F /* GCDWebServerStreamedResponse.m */; };
 		29F786A01F9FC4850035178F /* libz.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 29F7869F1F9FC4850035178F /* libz.tbd */; };
 		FB7B1E731FDB60ED00A912BF /* Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB7B1E721FDB60ED00A912BF /* Extensions.swift */; };
+		FBE65BBB1FFEC08500C66683 /* CouchbaseLite.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FBE65BB91FFEC08500C66683 /* CouchbaseLite.framework */; };
+		FBE65BBC1FFEC08500C66683 /* CouchbaseLite.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FBE65BB91FFEC08500C66683 /* CouchbaseLite.framework */; };
+		FBE65BBE1FFEC0AF00C66683 /* CouchbaseLiteSwift.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 2996929E1FF2E7D60040CC32 /* CouchbaseLiteSwift.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		FBE65BC51FFEC14800C66683 /* CouchbaseLiteSwift.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FBE65BC31FFEC14800C66683 /* CouchbaseLiteSwift.framework */; };
+		FBE65BC61FFEC14800C66683 /* CouchbaseLiteSwift.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FBE65BC31FFEC14800C66683 /* CouchbaseLiteSwift.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -57,13 +68,13 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
-		298980531FD600090005A0C3 /* Embed Frameworks */ = {
+		299692AD1FF359D00040CC32 /* Embed Frameworks */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
-				298980521FD600080005A0C3 /* CouchbaseLiteSwift.framework in Embed Frameworks */,
+				FBE65BBE1FFEC0AF00C66683 /* CouchbaseLiteSwift.framework in Embed Frameworks */,
 			);
 			name = "Embed Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -73,10 +84,17 @@
 /* Begin PBXFileReference section */
 		2909B0721F9FFA8900B4E0E4 /* Server.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Server.swift; sourceTree = "<group>"; };
 		2909B0751FA3B7B400B4E0E4 /* Args.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Args.swift; sourceTree = "<group>"; };
-		298980501FD600080005A0C3 /* CouchbaseLiteSwift.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CouchbaseLiteSwift.framework; path = Carthage/Build/iOS/CouchbaseLiteSwift.framework; sourceTree = "<group>"; };
-		298980541FD600460005A0C3 /* CouchbaseLiteSwift.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CouchbaseLiteSwift.framework; path = Carthage/Build/iOS/CouchbaseLiteSwift.framework; sourceTree = "<group>"; };
-		29917D971FA92F82006C7675 /* RequestHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RequestHandler.swift; sourceTree = "<group>"; };
-		29C373E41FB12F5F00756010 /* sample_document.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = sample_document.swift; sourceTree = "<group>"; };
+		294FB2071FEAF51F00DD0C23 /* QueryRequestHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QueryRequestHandler.swift; sourceTree = "<group>"; };
+		294FB2091FEAF9E800DD0C23 /* ReplicatorRequestHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReplicatorRequestHandler.swift; sourceTree = "<group>"; };
+		294FB20B1FEAFD9000DD0C23 /* DatabaseRequestHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DatabaseRequestHandler.swift; sourceTree = "<group>"; };
+		294FB20D1FEB0E1800DD0C23 /* DocumentRequestHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentRequestHandler.swift; sourceTree = "<group>"; };
+		29917D971FA92F82006C7675 /* DictionaryRequestHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DictionaryRequestHandler.swift; sourceTree = "<group>"; };
+		2996929E1FF2E7D60040CC32 /* CouchbaseLiteSwift.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CouchbaseLiteSwift.framework; path = Carthage/Build/iOS/CouchbaseLiteSwift.framework; sourceTree = "<group>"; };
+		299692A41FF30B1A0040CC32 /* ArrayRequesthandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArrayRequesthandler.swift; sourceTree = "<group>"; };
+		299692A61FF31A590040CC32 /* SessionAuthenticatorRequestHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionAuthenticatorRequestHandler.swift; sourceTree = "<group>"; };
+		299692A81FF31D0D0040CC32 /* EncryptionKeyRequestHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EncryptionKeyRequestHandler.swift; sourceTree = "<group>"; };
+		299692AE1FF35A2B0040CC32 /* ConflictRequestHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConflictRequestHandler.swift; sourceTree = "<group>"; };
+		299692B01FF35B630040CC32 /* BlobRequestHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlobRequestHandler.swift; sourceTree = "<group>"; };
 		29D15BA01FA7DCFA005DAAA3 /* ValueSerializer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ValueSerializer.swift; sourceTree = "<group>"; };
 		29D15BA21FA7DE39005DAAA3 /* Memory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Memory.swift; sourceTree = "<group>"; };
 		29F77F231F9FC18D0035178F /* CBLTestServer-iOS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "CBLTestServer-iOS.app"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -123,6 +141,8 @@
 		29F786901F9FC4180035178F /* GCDWebServerStreamedResponse.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GCDWebServerStreamedResponse.m; sourceTree = "<group>"; };
 		29F7869F1F9FC4850035178F /* libz.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libz.tbd; path = usr/lib/libz.tbd; sourceTree = SDKROOT; };
 		FB7B1E721FDB60ED00A912BF /* Extensions.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Extensions.swift; sourceTree = "<group>"; };
+		FBE65BB91FFEC08500C66683 /* CouchbaseLite.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CouchbaseLite.framework; path = Carthage/Build/iOS/CouchbaseLite.framework; sourceTree = "<group>"; };
+		FBE65BC31FFEC14800C66683 /* CouchbaseLiteSwift.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CouchbaseLiteSwift.framework; path = Carthage/Build/iOS/CouchbaseLiteSwift.framework; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -130,7 +150,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				298980511FD600080005A0C3 /* CouchbaseLiteSwift.framework in Frameworks */,
 				29F786A01F9FC4850035178F /* libz.tbd in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -139,6 +158,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				FBE65BC51FFEC14800C66683 /* CouchbaseLiteSwift.framework in Frameworks */,
+				FBE65BBB1FFEC08500C66683 /* CouchbaseLite.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -146,6 +167,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				FBE65BC61FFEC14800C66683 /* CouchbaseLiteSwift.framework in Frameworks */,
+				FBE65BBC1FFEC08500C66683 /* CouchbaseLite.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -160,8 +183,16 @@
 				2909B0751FA3B7B400B4E0E4 /* Args.swift */,
 				29D15BA01FA7DCFA005DAAA3 /* ValueSerializer.swift */,
 				29D15BA21FA7DE39005DAAA3 /* Memory.swift */,
-				29917D971FA92F82006C7675 /* RequestHandler.swift */,
-				29C373E41FB12F5F00756010 /* sample_document.swift */,
+				29917D971FA92F82006C7675 /* DictionaryRequestHandler.swift */,
+				294FB2071FEAF51F00DD0C23 /* QueryRequestHandler.swift */,
+				294FB2091FEAF9E800DD0C23 /* ReplicatorRequestHandler.swift */,
+				294FB20B1FEAFD9000DD0C23 /* DatabaseRequestHandler.swift */,
+				294FB20D1FEB0E1800DD0C23 /* DocumentRequestHandler.swift */,
+				299692A41FF30B1A0040CC32 /* ArrayRequesthandler.swift */,
+				299692A61FF31A590040CC32 /* SessionAuthenticatorRequestHandler.swift */,
+				299692A81FF31D0D0040CC32 /* EncryptionKeyRequestHandler.swift */,
+				299692AE1FF35A2B0040CC32 /* ConflictRequestHandler.swift */,
+				299692B01FF35B630040CC32 /* BlobRequestHandler.swift */,
 			);
 			path = Server;
 			sourceTree = "<group>";
@@ -169,7 +200,7 @@
 		29F77F1A1F9FC18D0035178F = {
 			isa = PBXGroup;
 			children = (
-				298980501FD600080005A0C3 /* CouchbaseLiteSwift.framework */,
+				2996929E1FF2E7D60040CC32 /* CouchbaseLiteSwift.framework */,
 				29F77F251F9FC18D0035178F /* CBLTestServer-iOS */,
 				29F77F3A1F9FC18D0035178F /* CBLTestServer-iOSTests */,
 				29F77F451F9FC18D0035178F /* CBLTestServer-iOSUITests */,
@@ -293,7 +324,8 @@
 		29F7869E1F9FC4850035178F /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				298980541FD600460005A0C3 /* CouchbaseLiteSwift.framework */,
+				FBE65BC31FFEC14800C66683 /* CouchbaseLiteSwift.framework */,
+				FBE65BB91FFEC08500C66683 /* CouchbaseLite.framework */,
 				29F7869F1F9FC4850035178F /* libz.tbd */,
 			);
 			name = Frameworks;
@@ -309,7 +341,7 @@
 				29F77F1F1F9FC18D0035178F /* Sources */,
 				29F77F201F9FC18D0035178F /* Frameworks */,
 				29F77F211F9FC18D0035178F /* Resources */,
-				298980531FD600090005A0C3 /* Embed Frameworks */,
+				299692AD1FF359D00040CC32 /* Embed Frameworks */,
 			);
 			buildRules = (
 			);
@@ -439,18 +471,26 @@
 			buildActionMask = 2147483647;
 			files = (
 				29F77F291F9FC18D0035178F /* ViewController.swift in Sources */,
-				29C373E51FB12F5F00756010 /* sample_document.swift in Sources */,
 				29F786931F9FC4180035178F /* GCDWebServerFunctions.m in Sources */,
+				299692A71FF31A590040CC32 /* SessionAuthenticatorRequestHandler.swift in Sources */,
 				29F786961F9FC4180035178F /* GCDWebServerDataRequest.m in Sources */,
 				29F7869D1F9FC4180035178F /* GCDWebServerStreamedResponse.m in Sources */,
+				299692A91FF31D0D0040CC32 /* EncryptionKeyRequestHandler.swift in Sources */,
+				299692A51FF30B1A0040CC32 /* ArrayRequesthandler.swift in Sources */,
+				299692B11FF35B630040CC32 /* BlobRequestHandler.swift in Sources */,
+				294FB20A1FEAF9E800DD0C23 /* ReplicatorRequestHandler.swift in Sources */,
 				29F7869C1F9FC4180035178F /* GCDWebServerFileResponse.m in Sources */,
+				294FB2081FEAF51F00DD0C23 /* QueryRequestHandler.swift in Sources */,
+				299692AF1FF35A2B0040CC32 /* ConflictRequestHandler.swift in Sources */,
 				29F77F271F9FC18D0035178F /* AppDelegate.swift in Sources */,
-				29917D981FA92F82006C7675 /* RequestHandler.swift in Sources */,
+				29917D981FA92F82006C7675 /* DictionaryRequestHandler.swift in Sources */,
 				29F786991F9FC4180035178F /* GCDWebServerURLEncodedFormRequest.m in Sources */,
 				FB7B1E731FDB60ED00A912BF /* Extensions.swift in Sources */,
+				294FB20E1FEB0E1800DD0C23 /* DocumentRequestHandler.swift in Sources */,
 				29D15BA11FA7DCFA005DAAA3 /* ValueSerializer.swift in Sources */,
 				29F786921F9FC4180035178F /* GCDWebServerConnection.m in Sources */,
 				29F786971F9FC4180035178F /* GCDWebServerFileRequest.m in Sources */,
+				294FB20C1FEAFD9000DD0C23 /* DatabaseRequestHandler.swift in Sources */,
 				29F786951F9FC4180035178F /* GCDWebServerResponse.m in Sources */,
 				29F786941F9FC4180035178F /* GCDWebServerRequest.m in Sources */,
 				29F7869B1F9FC4180035178F /* GCDWebServerErrorResponse.m in Sources */,
@@ -656,6 +696,10 @@
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				DEVELOPMENT_TEAM = N2Q372V7W2;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/Carthage/Build/iOS",
+				);
 				INFOPLIST_FILE = "CBLTestServer-iOSTests/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = "com.couchbase.CBLTestServer-iOSTests";
@@ -671,6 +715,10 @@
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				DEVELOPMENT_TEAM = N2Q372V7W2;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/Carthage/Build/iOS",
+				);
 				INFOPLIST_FILE = "CBLTestServer-iOSTests/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = "com.couchbase.CBLTestServer-iOSTests";
@@ -685,6 +733,10 @@
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				DEVELOPMENT_TEAM = N2Q372V7W2;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/Carthage/Build/iOS",
+				);
 				INFOPLIST_FILE = "CBLTestServer-iOSUITests/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = "com.couchbase.CBLTestServer-iOSUITests";
@@ -699,6 +751,10 @@
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				DEVELOPMENT_TEAM = N2Q372V7W2;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/Carthage/Build/iOS",
+				);
 				INFOPLIST_FILE = "CBLTestServer-iOSUITests/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = "com.couchbase.CBLTestServer-iOSUITests";

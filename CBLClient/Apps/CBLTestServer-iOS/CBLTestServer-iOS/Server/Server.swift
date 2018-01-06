@@ -10,23 +10,47 @@ import Foundation
 import CouchbaseLiteSwift
 
 enum ServerError: Error {
-    case MethodNotFound
+    case MethodNotImplemented(String)
+}
+
+enum RequestHandlerError: Error {
+    case MethodNotFound(String)
+    case InvalidArgument(String)
+    case IOException(String)
 }
 
 public class Server {
     let kPort:UInt = 8989
     let server: GCDWebServer!
-    let requestHandler: RequestHandler!
+    let dictionaryRequestHandler: DictionaryRequestHandler!
+    let queryRequestHandler: QueryRequestHandler!
+    let databaseRequestHandler: DatabaseRequestHandler!
+    let documentRequestHandler: DocumentRequestHandler!
+    let replicatorRequestHandler: ReplicatorRequestHandler!
+    let arrayRequestHandler: ArrayRequestHandler!
+    let sessionauthenticatorRequestHandler: SessionAuthenticatorRequestHandler!
+    let encryptionkeyRequestHandler: EncryptionKeyRequestHandler!
+    let conflictRequestHandler: ConflictRequestHandler!
+    let blobRequestHandler: BlobRequestHandler!
     let memory = Memory()
     
     public init() {
         Database.setLogLevel(LogLevel.debug, domain: LogDomain.all)
-        requestHandler = RequestHandler()
+        dictionaryRequestHandler = DictionaryRequestHandler()
+        queryRequestHandler = QueryRequestHandler()
+        databaseRequestHandler = DatabaseRequestHandler()
+        documentRequestHandler = DocumentRequestHandler()
+        replicatorRequestHandler = ReplicatorRequestHandler()
+        arrayRequestHandler = ArrayRequestHandler()
+        sessionauthenticatorRequestHandler = SessionAuthenticatorRequestHandler()
+        encryptionkeyRequestHandler = EncryptionKeyRequestHandler()
+        conflictRequestHandler = ConflictRequestHandler()
+        blobRequestHandler = BlobRequestHandler()
         server = GCDWebServer()
         server.addDefaultHandler(forMethod: "POST", request: GCDWebServerDataRequest.self) {
             (request) -> GCDWebServerResponse? in
             
-            let rawArgs = request.query
+            var rawArgs = [String: Any]()
             
             var method = ""
             
@@ -49,18 +73,47 @@ public class Server {
                 if let queryParams = queryParams {
                     // Get args from query params
                     for param in queryParams {
-                        let value: Any = ValueSerializer.deserialize(value:(param.value as! String), memory: self.memory)!
-                        // Handle nil value
-                        args.set(value: value, forName: param.key as! String)
+                        rawArgs[param.key as! String] = param.value
+
+                        if let value = ValueSerializer.deserialize(value:(param.value as? String), memory: self.memory) as Any? {
+                            // Handle nil value
+                            args.set(value: value, forName: param.key as! String)
+                        } else {
+                            args.set(value: "", forName: param.key as! String)
+                        }
+                        print("param and value is \(param.key) and value is \(param.value)")
                     }
                 }
 
                 // Find and invoke the method on the RequestHandler.
                 var body: Any? = nil
                 if "release" == method {
-                    self.memory.remove(address: rawArgs!["object"] as! String)
+                    self.memory.remove(address: rawArgs["object"] as! String)
                 } else {
-                    let result = try self.requestHandler.handleRequest(method: method, args: args)
+                    var result: Any? = nil
+                    if method.hasPrefix("query") {
+                        result = try self.queryRequestHandler.handleRequest(method: method, args: args)
+                    } else if method.hasPrefix("database") {
+                        result = try self.databaseRequestHandler.handleRequest(method: method, args: args)
+                    } else if method.hasPrefix("replicator") {
+                        result = try self.replicatorRequestHandler.handleRequest(method: method, args: args)
+                    } else if method.hasPrefix("document") {
+                        result = try self.documentRequestHandler.handleRequest(method: method, args: args)
+                    } else if method.hasPrefix("dictionary") {
+                        result = try self.dictionaryRequestHandler.handleRequest(method: method, args: args)
+                    } else if method.hasPrefix("array") {
+                        result = try self.arrayRequestHandler.handleRequest(method: method, args: args)
+                    } else if method.hasPrefix("sessionauthenticator") {
+                        result = try self.sessionauthenticatorRequestHandler.handleRequest(method: method, args: args)
+                    } else if method.hasPrefix("encryptionkey") {
+                        result = try self.encryptionkeyRequestHandler.handleRequest(method: method, args: args)
+                    } else if method.hasPrefix("conflict") {
+                        result = try self.conflictRequestHandler.handleRequest(method: method, args: args)
+                    } else if method.hasPrefix("blob") {
+                        result = try self.blobRequestHandler.handleRequest(method: method, args: args)
+                    } else {
+                        throw ServerError.MethodNotImplemented(method)
+                    }
                     if result != nil {
                         body = ValueSerializer.serialize(value: result, memory: self.memory);
                     }

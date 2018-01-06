@@ -1138,6 +1138,8 @@ class MobileRestClient:
             doc["updates"]
         except Exception:
             doc["updates"] = 0
+        if doc["updates"] is None:
+            doc["updates"] = 0
         current_update_number = doc["updates"] + 1
 
         log_info("Updating {}/{}/{}: {} times".format(url, db, doc_id, number_updates))

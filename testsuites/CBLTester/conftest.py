@@ -13,6 +13,8 @@ from CBLClient.Replication import Replication
 from CBLClient.Database import Database
 from keywords.utils import host_for_url
 from libraries.testkit.cluster import Cluster
+from couchbase.bucket import Bucket
+from couchbase.n1ql import N1QLQuery
 
 
 def pytest_addoption(parser):
@@ -83,6 +85,18 @@ def params_from_base_suite_setup(request):
     base_url = "http://{}:{}".format(liteserv_host, liteserv_port)
     cluster_config = "{}/base_{}".format(CLUSTER_CONFIGS_DIR, mode)
     no_conflicts_enabled = request.config.getoption("--no-conflicts")
+    sg_config = sync_gateway_config_path_for_mode("sync_gateway_default_functional_tests", mode)
+    cluster_utils = ClusterKeywords()
+    cluster_topology = cluster_utils.get_cluster_topology(cluster_config)
+
+    sg_db = "db"
+    sg_url = cluster_topology["sync_gateways"][0]["public"]
+    sg_ip = host_for_url(sg_url)
+    target_url = "blip://{}:4984/{}".format(sg_ip, sg_db)
+    target_admin_url = "blip://{}:4985/{}".format(sg_ip, sg_db)
+
+    cbs_url = cluster_topology['couchbase_servers'][0]
+    cbs_ip = host_for_url(cbs_url)
 
     try:
         server_version
@@ -147,15 +161,13 @@ def params_from_base_suite_setup(request):
             time.sleep(5)
             server.load_sample_bucket(enable_sample_bucket)
             server._create_internal_rbac_bucket_user(enable_sample_bucket)
-            # Sleep for a while for SG to import all docs
-            time.sleep(120)
 
-    sg_db = "db"
-    sg_url = cluster_topology["sync_gateways"][0]["public"]
-    sg_ip = host_for_url(sg_url)
-    target_admin_url = "blip://{}:4985/{}".format(sg_ip, sg_db)
-    target_url = "blip://{}:4984/{}".format(sg_ip, sg_db)
-    log_info("<<<Target url is >>{}".format(target_url))
+        # Create primary index
+        log_info("Creating primary index for {}".format(enable_sample_bucket))
+        sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, enable_sample_bucket), password='password')
+        n1ql_query = 'create primary index on {}'.format(enable_sample_bucket)
+        query = N1QLQuery(n1ql_query)
+        sdk_client.n1ql_query(query)
 
     yield {
         "cluster_config": cluster_config,
@@ -171,7 +183,9 @@ def params_from_base_suite_setup(request):
         "sg_ip": sg_ip,
         "sg_db": sg_db,
         "no_conflicts_enabled": no_conflicts_enabled,
-        "sync_gateway_version": sync_gateway_version
+        "sync_gateway_version": sync_gateway_version,
+        "base_url": base_url,
+        "enable_sample_bucket": enable_sample_bucket
     }
 
 
@@ -181,16 +195,18 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     xattrs_enabled = params_from_base_suite_setup["xattrs_enabled"]
     liteserv_host = params_from_base_suite_setup["liteserv_host"]
     liteserv_port = params_from_base_suite_setup["liteserv_port"]
+    enable_sample_bucket = params_from_base_suite_setup["enable_sample_bucket"]
     test_name = request.node.name
     cluster_topology = params_from_base_suite_setup["cluster_topology"]
     mode = params_from_base_suite_setup["mode"]
     no_conflicts_enabled = params_from_base_suite_setup["no_conflicts_enabled"]
     target_url = params_from_base_suite_setup["target_url"]
     target_admin_url = params_from_base_suite_setup["target_admin_url"]
-    sg_ip = params_from_base_suite_setup["sg_ip"]
-    sg_db = params_from_base_suite_setup["sg_db"]
     sync_gateway_version = params_from_base_suite_setup["sync_gateway_version"]
     
+    base_url = params_from_base_suite_setup["base_url"]
+    sg_ip = params_from_base_suite_setup["sg_ip"]
+    sg_db = params_from_base_suite_setup["sg_db"]
     cluster_helper = ClusterKeywords()
     cluster_hosts = cluster_helper.get_cluster_topology(cluster_config=cluster_config)
     sg_url = cluster_hosts["sync_gateways"][0]["public"]
@@ -201,6 +217,27 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     log_info("cluster_topology: {}".format(cluster_topology))
     log_info("mode: {}".format(mode))
     log_info("xattrs_enabled: {}".format(xattrs_enabled))
+
+    """# Create CBL database
+    cbl_db = "test_db"
+    db = Database(base_url)
+
+    log_info("Creating a Database {}".format(cbl_db))
+    source_db = db.create(cbl_db)
+    log_info("Getting the database name")
+    db_name = db.getName(source_db)
+    assert db_name == "test_db"
+    """
+    if enable_sample_bucket:
+        # Start continuous replication
+        replicator = Replication(base_url)
+        log_info("Configuring replication")
+        repl = replicator.configure(source_db=source_db, target_url=target_url, continuous=True)
+        log_info("Starting replication")
+        replicator.start(repl)
+        # Wait for replication to complete
+        # TODO Wait for replication state idle
+        time.sleep(120)
 
     # This dictionary is passed to each test
     yield {
@@ -219,3 +256,12 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         "no_conflicts_enabled": no_conflicts_enabled,
         "sync_gateway_version": sync_gateway_version
     }
+
+    if enable_sample_bucket:
+        log_info("Stopping replication")
+        replicator.stop(repl)
+    """
+    # Delete CBL database
+    log_info("Deleting the database {}".format(cbl_db))
+    db.deleteDB(source_db)
+    """
