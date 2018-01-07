@@ -18,7 +18,7 @@ from libraries.testkit import cluster
 
 @pytest.mark.sanity
 @pytest.mark.listener
-def test_replication_configuration_invalid_db(setup_client_syncgateway_test):
+def test_replication_configuration_invalid_db(params_from_base_test_setup):
     """
         @summary: 
         1. Create CBL DB and create bulk doc in CBL
@@ -35,18 +35,17 @@ def test_replication_configuration_invalid_db(setup_client_syncgateway_test):
         12. Configure replication with target db None
         13. Verify that it throws invalid type
     """
-    # source_db = None
-    #base_url = "http://10.17.5.67:8989"
-    base_url = "http://192.168.0.109:8080"
-    db = Database(base_url)
-
     cbl_db_name = "cbl_db"
-    sg_admin_url = setup_client_syncgateway_test["sg_admin_url"]
-    sg_mode = setup_client_syncgateway_test["sg_mode"]
-    cluster_config = setup_client_syncgateway_test["cluster_config"]
+    sg_admin_url = params_from_base_test_setup["sg_admin_url"]
+    sg_mode = params_from_base_test_setup["mode"]
+    cluster_config = params_from_base_test_setup["cluster_config"]
     sg_blip_url = sg_admin_url.replace("http", "blip")
     sg_blip_url = "{}/db".format(sg_blip_url)
     channels = ["ABC"]
+    liteserv_host = params_from_base_test_setup["liteserv_host"]
+    liteserv_port = params_from_base_test_setup["liteserv_port"]
+    base_url = "http://{}:{}".format(liteserv_host, liteserv_port)
+    db = Database(base_url)
 
     # Create CBL database
     cbl_db = db.create(cbl_db_name)

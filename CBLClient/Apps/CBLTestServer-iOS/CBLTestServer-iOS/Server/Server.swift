@@ -33,6 +33,7 @@ public class Server {
     let conflictRequestHandler: ConflictRequestHandler!
     let blobRequestHandler: BlobRequestHandler!
     let datatypeRequestHandler: DataTypesInitiatorRequestHandler!
+    let replicatorConfigurationRequestHandler: ReplicatorConfigurationRequestHandler!
     let memory = Memory()
     
     public init() {
@@ -48,6 +49,7 @@ public class Server {
         conflictRequestHandler = ConflictRequestHandler()
         blobRequestHandler = BlobRequestHandler()
         datatypeRequestHandler = DataTypesInitiatorRequestHandler()
+        replicatorConfigurationRequestHandler = ReplicatorConfigurationRequestHandler()
         server = GCDWebServer()
         server.addDefaultHandler(forMethod: "POST", request: GCDWebServerDataRequest.self) {
             (request) -> GCDWebServerResponse? in
@@ -96,8 +98,6 @@ public class Server {
                         result = try self.queryRequestHandler.handleRequest(method: method, args: args)
                     } else if method.hasPrefix("database") {
                         result = try self.databaseRequestHandler.handleRequest(method: method, args: args)
-                    } else if method.hasPrefix("replicator") {
-                        result = try self.replicatorRequestHandler.handleRequest(method: method, args: args)
                     } else if method.hasPrefix("document") {
                         result = try self.documentRequestHandler.handleRequest(method: method, args: args)
                     } else if method.hasPrefix("dictionary") {
@@ -114,6 +114,10 @@ public class Server {
                         result = try self.blobRequestHandler.handleRequest(method: method, args: args)
                     } else if method.hasPrefix("datatype") {
                         result = try self.datatypeRequestHandler.handleRequest(method: method, args: args)
+                    } else if method.hasPrefix("replicatorConfiguration") {
+                        result = try self.replicatorConfigurationRequestHandler.handleRequest(method: method, args: args)
+                    } else if method.hasPrefix("replicator") {
+                        result = try self.replicatorRequestHandler.handleRequest(method: method, args: args)
                     } else {
                         throw ServerError.MethodNotImplemented(method)
                     }
