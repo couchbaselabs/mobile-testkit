@@ -244,7 +244,7 @@ class TestDocument(object):
         @summary: Testing Get and Set Float method of Document API
         '''
         doc = self.doc_obj.create()
-#         float_obj = self.datatype.setFloat(value)
+#       float_obj = self.datatype.setFloat(value)
         self.doc_obj.setFloat(doc, key, value)
         result = self.doc_obj.getFloat(doc, key)
         assert value == result

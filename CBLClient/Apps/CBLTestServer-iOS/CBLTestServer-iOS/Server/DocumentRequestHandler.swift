@@ -164,7 +164,7 @@ public class DocumentRequestHandler {
             let key: String = (args.get(name: "key"))!
             let value: String = (args.get(name: "value"))!
             let formatter = DateFormatter()
-            formatter.dateFormat = "y-MM-dd H:m:ss.SSSS"
+            formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ssZ"
             let date_value = formatter.date(from: value)
 
             return document.setDate(date_value, forKey: key)
@@ -210,7 +210,7 @@ public class DocumentRequestHandler {
 
             return document.value(forKey: key)
 
-        case "document_removeValue":
+        case "document_removeKey":
             let document: MutableDocument = (args.get(name: "document"))!
             let key: String = (args.get(name: "key"))!
             
@@ -243,7 +243,7 @@ public class DocumentRequestHandler {
             
             return document.contains(key: key)
 
-        case "document_toDictionary":
+        case "document_toMap":
             let document: MutableDocument = (args.get(name: "document"))!
             
             return document.toDictionary()

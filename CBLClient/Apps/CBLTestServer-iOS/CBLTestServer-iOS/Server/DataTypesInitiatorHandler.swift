@@ -39,10 +39,10 @@ public class DataTypesInitiatorRequestHandler {
             
         case "datatype_setDate":
             let formatter = DateFormatter()
-            formatter.dateFormat = "y-MM-dd H:m:ss.SSSS"
+            formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ssZ"
             let date = Date()
             let date_string = formatter.string(from: date)
-            print("datatype_setDate date_string: \(date_string)")
+
             return date_string
             
             
@@ -72,11 +72,8 @@ public class DataTypesInitiatorRequestHandler {
         case "datatype_compareDate":
             let date1: String = args.get(name: "date1")!
             let date2: Date = args.get(name: "date2")!
-            
-            print("date1: \(date1)")
-            print("date2: \(date2)")
             let formatter = DateFormatter()
-            formatter.dateFormat = "y-MM-dd H:m:ss.SSSS"
+            formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ssZ"
 
             if formatter.date(from: date1) == date2 {
                 return true
