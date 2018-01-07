@@ -43,7 +43,7 @@ public class DataTypesInitiatorRequestHandler {
             let date = Date()
             let date_string = formatter.string(from: date)
 
-            return date_string
+            return formatter.date(from: date_string)
             
             
         case "datatype_setDouble":
@@ -70,12 +70,12 @@ public class DataTypesInitiatorRequestHandler {
             return false
         
         case "datatype_compareDate":
-            let date1: String = args.get(name: "date1")!
+            let date1: Date = args.get(name: "date1")!
             let date2: Date = args.get(name: "date2")!
             let formatter = DateFormatter()
             formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ssZ"
 
-            if formatter.date(from: date1) == date2 {
+            if date1 == date2 {
                 return true
             } else {
                 return false

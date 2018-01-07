@@ -254,11 +254,7 @@ class TestDictionary(object):
         '''
         @summary: Testing remove method of Dictionary API
         '''
-        # TODO ios gets back {} for self.datatype.hashMap()
         hashmap = {}
-        key = "Date_key"
-        value = self.datatype.setDate()
-        hashmap[key] = value
         key = "Double_key"
         value = random.uniform(1, 10)
         hashmap[key] = value
