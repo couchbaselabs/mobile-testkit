@@ -10,7 +10,7 @@ import Foundation
 import CouchbaseLiteSwift
 
 public class QueryRequestHandler {
-    public static let VOID = NSObject()
+    public static let VOID: String? = nil
 
     public func handleRequest(method: String, args: Args) throws -> Any? {
         switch method {

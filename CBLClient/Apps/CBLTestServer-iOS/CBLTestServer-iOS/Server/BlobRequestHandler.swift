@@ -11,7 +11,7 @@ import CouchbaseLiteSwift
 
 
 public class BlobRequestHandler {
-    public static let VOID = NSObject()
+    public static let VOID: String? = nil
     fileprivate var _pushPullReplListener:NSObjectProtocol?
     
     public func handleRequest(method: String, args: Args) throws -> Any? {

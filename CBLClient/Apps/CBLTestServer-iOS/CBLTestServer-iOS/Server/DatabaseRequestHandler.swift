@@ -11,7 +11,7 @@ import CouchbaseLiteSwift
 
 
 public class DatabaseRequestHandler {
-    public static let VOID = NSObject()
+    public static let VOID: String? = nil
     fileprivate var _pushPullReplListener:NSObjectProtocol?
     
     public func handleRequest(method: String, args: Args) throws -> Any? {
@@ -23,7 +23,13 @@ public class DatabaseRequestHandler {
         case "database_create":
             let name: String? = args.get(name: "name")
 
-            return try Database(name: name!)
+            do {
+                return try Database(name: name!)
+            } catch {
+                print("Got error while creating DB \(error)")
+                return error.localizedDescription
+            }
+            
 
         case "database_close":
             let database: Database = args.get(name:"database")!
@@ -39,28 +45,26 @@ public class DatabaseRequestHandler {
             let database: Database = (args.get(name:"database"))!
             let document: Document = (args.get(name:"document"))!
 
-            return try database.deleteDocument(document)
+            do {
+                try database.deleteDocument(document)
+            } catch {
+                print("Got error while deleting DB \(error)")
+                return error
+            }
         
         case "database_deleteDB":
             let database: Database = args.get(name:"database")!
             
-            return try database.delete()
+            try database.delete()
 
         case "database_exists":
             let name: String = args.get(name:"name")!
             let directory: String? = args.get(name:"directory")!
-            var exists: Bool
-            
+           
             if let directory = directory {
-                exists = Database.exists(withName: name, inDirectory: directory)
+                return Database.exists(withName: name, inDirectory: directory)
             } else {
-                exists = Database.exists(withName: name)
-            }
-
-            if exists {
-                return "true"
-            } else {
-                return "false"
+                return Database.exists(withName: name)
             }
 
         case "database_deleteIndex":

@@ -126,7 +126,7 @@ public class Server {
                     return GCDWebServerDataResponse(text: body as! String)
                 } else {
                     // Send 200 code and close
-                    return GCDWebServerResponse(statusCode: 200)
+                    return GCDWebServerDataResponse(text: "I-1")
                 }
             } catch let error as NSError {
                 // Send 400 error code

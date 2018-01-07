@@ -11,7 +11,7 @@ import CouchbaseLiteSwift
 
 
 public class DocumentRequestHandler {
-    public static let VOID = NSObject()
+    public static let VOID: String? = nil
     fileprivate var _pushPullReplListener:NSObjectProtocol?
     
     public func handleRequest(method: String, args: Args) throws -> Any? {
@@ -52,7 +52,7 @@ public class DocumentRequestHandler {
             return document.setValue(value, forKey: key)
            
         case "document_getString":
-            let document: MutableDocument = (args.get(name: "document"))!
+            let document: Document = (args.get(name: "document"))!
             let key: String = (args.get(name: "key"))!
             
             return document.string(forKey: key)
