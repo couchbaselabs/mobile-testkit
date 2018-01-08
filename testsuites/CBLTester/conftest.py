@@ -199,7 +199,7 @@ def params_from_base_suite_setup(request):
             sg_ip = host_for_url(sg["admin"])
             log_info("Restarting sync gateway {}".format(sg_ip))
             sg_obj.restart_sync_gateways(cluster_config=cluster_config, url=sg_ip)
-            time.sleep(5)
+            time.sleep(240)
 
         if mode == "di":
             ac_obj = SyncGateway()
@@ -223,15 +223,16 @@ def params_from_base_suite_setup(request):
         # Start continuous replication
         repl_obj = Replicator(base_url)
         auth_obj = BasicAuthenticator(base_url)
-        authenticator = auth_obj.create("trave-sample", "password")
+        authenticator = auth_obj.create("traveL-sample", "password")
         replicator = repl_obj.configure(source_db=source_db,
                                         target_url=target_admin_url,
                                         replication_type="PUSH_AND_PULL",
+                                        continuous=True,
                                         replicator_authenticator=authenticator)
         repl_obj.start(replicator)
         # Wait for replication to complete
         # TODO Wait for replication state idle
-        time.sleep(300)
+        time.sleep(60)
 
     yield {
         "cluster_config": cluster_config,
