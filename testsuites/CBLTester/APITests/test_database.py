@@ -18,7 +18,6 @@ class TestDatabase():
             pytest.skip("Test not applicable for ios")
 
         # _, err_resp = self.db_obj.create(db_name)
-        db_name = db_name.lower()
         err_resp = self.db_obj.create(db_name)
         assert err_msg in err_resp
 
@@ -74,7 +73,6 @@ class TestDatabase():
         '''
         @summary: Testing Database constructor method of Database API
         '''
-        #db_name = db_name.lower()
         db = self.db_obj.create(db_name)
         assert self.db_obj.getName(db) == db_name
         assert self.db_obj.deleteDB(db) == -1
@@ -94,7 +92,6 @@ class TestDatabase():
         '''
         @summary: Testing close method of Database API
         '''
-        db_name = db_name.lower()
         db = self.db_obj.create(db_name)
         assert self.db_obj.close(db) == -1
 
@@ -114,7 +111,6 @@ class TestDatabase():
         '''
         doc_id_prefix = "bar"
         doc = self.doc_obj.create(doc_id=doc_id_prefix)
-        db_name = db_name.lower()
         db = self.db_obj.create(db_name)
         self.db_obj.saveDocument(db, doc)
         assert self.db_obj.contains(db, doc_id_prefix)
@@ -134,7 +130,6 @@ class TestDatabase():
         '''
         @summary: Testing delete(DB) method of Database API
         '''
-        db_name = db_name.lower()
         db = self.db_obj.create(db_name)
         path = self.db_obj.getPath(db)
         self.db_obj.deleteDB(db) == -1
@@ -155,7 +150,6 @@ class TestDatabase():
         '''
         @summary: Testing delete method of Database API
         '''
-        db_name = db_name.lower()
         db = self.db_obj.create(db_name)
         assert self.db_obj.getDocument(db, doc_id) == -1
 
@@ -188,7 +182,6 @@ class TestDatabase():
         '''
         @summary: Testing getCount method of Database API
         '''
-        db_name = db_name.lower()
         db = self.db_obj.create(db_name)
         for i in range(num_of_docs):
             doc = self.doc_obj.create(doc_id="{}_{}".format(doc_id, i))
@@ -211,7 +204,6 @@ class TestDatabase():
         '''
         @summary: Testing exist method of Database API
         '''
-        db_name = db_name.lower()
         db = self.db_obj.create(db_name)
         path = self.db_obj.getPath(db)
         directory = "/".join(path.split("/")[:-2])
@@ -235,7 +227,6 @@ class TestDatabase():
         '''
         @summary: Testing getDocument method of Database API
         '''
-        db_name = db_name.lower()
         db = self.db_obj.create(db_name)
         doc = self.doc_obj.create(doc_id)
         self.db_obj.saveDocument(database=db, document=doc)
@@ -258,7 +249,6 @@ class TestDatabase():
         '''
         @summary: Testing getName method of Database API
         '''
-        db_name = db_name.lower()
         db = self.db_obj.create(db_name)
         assert db_name == str(self.db_obj.getName(db))
         assert self.db_obj.deleteDB(db) == -1
@@ -278,7 +268,6 @@ class TestDatabase():
         '''
         @summary: Testing getPath method of Database API
         '''
-        db_name = db_name.lower()
         db = self.db_obj.create(db_name)
         assert self.db_obj.getPath(db)
         assert self.db_obj.deleteDB(db) == -1
@@ -328,7 +317,6 @@ class TestDatabase():
         @summary: Testing save method of Database API
         '''
         doc = self.doc_obj.create(doc_id)
-        db_name = db_name.lower()
         db = self.db_obj.create(db_name)
         doc_in_db_check = self.db_obj.getDocument(db, doc_id)
         assert doc_in_db_check == -1
