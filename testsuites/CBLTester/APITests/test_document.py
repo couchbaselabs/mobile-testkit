@@ -234,10 +234,10 @@ class TestDocument(object):
                                      self.doc_obj.getDouble(doc, key))
 
     @pytest.mark.parametrize("key, value", [
-        (random_string(6), round(random.uniform(0, 1), 4)),
-        (random_string(6), round(random.uniform(1, 10), 4)),
-        (random_string(6), round(random.uniform(11, 100), 4)),
-        (random_string(6), round(random.uniform(101, 1000), 4))
+        (random_string(6), round(random.uniform(0, 1), 3)),
+        (random_string(6), round(random.uniform(1, 10), 3)),
+        (random_string(6), round(random.uniform(11, 100), 3)),
+        (random_string(6), round(random.uniform(101, 1000), 3))
         ])
     def test_get_set_float(self, key, value):
         '''
