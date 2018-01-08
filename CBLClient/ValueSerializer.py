@@ -21,8 +21,10 @@ class ValueSerializer:
             # False value gets caught by this condition
             return "null"
         elif isinstance(value, int):
-            number = int(value)
-            return "I" + str(number)
+            if value / 1000000000 < 2:
+                number = int(value)
+                return "I" + str(number)
+            return "L" + str(value)
         elif isinstance(value, float):
             number = float(value)
             return "F" + str(number)
