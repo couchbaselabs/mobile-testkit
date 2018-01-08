@@ -3,6 +3,7 @@ import pytest
 
 from keywords.utils import random_string
 
+
 @pytest.mark.usefixtures("class_init")
 class TestDocument(object):
 
@@ -16,7 +17,7 @@ class TestDocument(object):
         (random_string(6).upper(), random_string(6).upper()),
         (random_string(8, digit=True), random_string(8, digit=True)),
         (random_string(128), random_string(128)),
-        ])
+    ])
     def test_document(self, doc_id1, doc_id2):
         '''
         @summary: Testing Document Constructor
@@ -171,7 +172,7 @@ class TestDocument(object):
         (random_string(6), random.randint(10, 99)),
         (random_string(6), random.randint(100, 999)),
         (random_string(6), random.randint(1000, 9999))
-        ])
+    ])
     def test_get_set_integer(self, key, value):
         '''
         @summary: Testing Get and Set Integer method of Document API
@@ -182,7 +183,7 @@ class TestDocument(object):
 
     @pytest.mark.parametrize("key, value", [
         (random_string(6), True),
-        #(random_string(6), False) TODO ios panics for false
+        (random_string(6), False)
     ])
     def test_get_set_boolean(self, key, value):
         '''
@@ -222,7 +223,7 @@ class TestDocument(object):
         (random_string(6), "{}".format(random.uniform(1, 10))),
         (random_string(6), "{}".format(random.uniform(11, 100))),
         (random_string(6), "{}".format(random.uniform(101, 1000)))
-        ])
+    ])
     def test_get_set_double(self, key, value):
         '''
         @summary: Testing Get and Set Double method of Document API
@@ -230,15 +231,14 @@ class TestDocument(object):
         doc = self.doc_obj.create()
         double_obj = self.datatype.setDouble(value)
         self.doc_obj.setDouble(doc, key, double_obj)
-        assert self.datatype.compareDouble(double_obj,
-                                     self.doc_obj.getDouble(doc, key))
+        assert self.datatype.compareDouble(double_obj, self.doc_obj.getDouble(doc, key))
 
     @pytest.mark.parametrize("key, value", [
         (random_string(6), round(random.uniform(0, 1), 3)),
         (random_string(6), round(random.uniform(1, 10), 3)),
         (random_string(6), round(random.uniform(11, 100), 3)),
         (random_string(6), round(random.uniform(101, 1000), 3))
-        ])
+    ])
     def test_get_set_float(self, key, value):
         '''
         @summary: Testing Get and Set Float method of Document API
@@ -254,7 +254,7 @@ class TestDocument(object):
         (random_string(6), "{}".format(random.randint(10, 99))),
         (random_string(6), "{}".format(random.randint(100, 999))),
         (random_string(6), "{}".format(random.randint(1000, 9999)))
-        ])
+    ])
     def test_get_set_long(self, key, value):
         '''
         @summary: Testing Get and Set Float method of Document API

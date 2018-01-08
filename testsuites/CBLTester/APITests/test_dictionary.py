@@ -70,7 +70,7 @@ class TestDictionary(object):
 
     @pytest.mark.parametrize("key, value", [
         (random_string(6), True),
-        # (random_string(6), False) #TODO ios panics
+        (random_string(6), False)
     ])
     def test_get_set_boolean(self, key, value):
         '''

@@ -6,18 +6,20 @@ from MemoryPointer import MemoryPointer
 class ValueSerializer:
     @staticmethod
     def serialize(value):
-        if not value:
-            return "null"
-        elif isinstance(value, MemoryPointer):
+        if isinstance(value, MemoryPointer):
             return value.getAddress()
         elif isinstance(value, str):
             string = str(value)
             return "\"" + string + "\""
         elif isinstance(value, bool):
-            # bool has to be before int, 
+            # bool has to be before int,
             # Python's Bool gets caught by int
             bool_val = bool(value)
             return "true" if bool_val else "false"
+        elif not value:
+            # This has to be after bool
+            # False value gets caught by this condition
+            return "null"
         elif isinstance(value, int):
             number = int(value)
             return "I" + str(number)
@@ -60,6 +62,10 @@ class ValueSerializer:
             return MemoryPointer(value)
         elif value.startswith("\"") and value.endswith("\""):
             return value[1:-1]
+        elif value == "true":
+            return True
+        elif value == "false":
+            return False
         elif value.startswith("I"):
             return int(value[1:])
         elif value.startswith("L"):
