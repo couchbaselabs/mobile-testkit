@@ -5,13 +5,12 @@
 //  Created by Raghu Sarangapani on 12/20/17.
 //  Copyright © 2017 Raghu Sarangapani. All rights reserved.
 //
-
 import Foundation
 import CouchbaseLiteSwift
 
 
 public class DocumentRequestHandler {
-    public static let VOID = NSObject()
+    public static let VOID: String? = nil
     fileprivate var _pushPullReplListener:NSObjectProtocol?
     
     public func handleRequest(method: String, args: Args) throws -> Any? {
@@ -22,38 +21,6 @@ public class DocumentRequestHandler {
         case "document_create":
             let id: String? = (args.get(name: "id"))
             let dictionary: [String: Any]? = (args.get(name: "dictionary"))
-<<<<<<< HEAD
-            return MutableDocument(withID: id, data: dictionary)
-            
-        case "document_delete":
-            let database: Database = (args.get(name:"database"))!
-            let document: Document = args.get(name:"document")!
-            
-            try! database.deleteDocument(document)
-            
-        case "document_getId":
-            let document: Document = (args.get(name: "document"))!
-            
-            return document.id
-            
-        case "document_getString":
-            let document: Document = (args.get(name: "document"))!
-            let property: String = (args.get(name: "property"))!
-            
-            return document.string(forKey: property)
-            
-        case "document_setString":
-            let document: MutableDocument = (args.get(name: "document"))!
-            let property: String = (args.get(name: "property"))!
-            let string: String = (args.get(name: "string"))!
-            
-            document.setString(property, forKey: string)
-
-        default:
-            throw RequestHandlerError.MethodNotFound(method)
-        }
-        return DocumentRequestHandler.VOID
-=======
 
             if id != nil {
                 if dictionary == nil {
@@ -63,7 +30,9 @@ public class DocumentRequestHandler {
                 }
             } else {
                 if dictionary == nil {
-                    return MutableDocument()
+                    let doc = MutableDocument()
+                    print("doc is \(doc)")
+                    return doc
                 } else {
                     return MutableDocument(withData: dictionary)
                 }
@@ -82,10 +51,10 @@ public class DocumentRequestHandler {
             return document.setValue(value, forKey: key)
            
         case "document_getString":
-            let document: MutableDocument = (args.get(name: "document"))!
-            let property: String = (args.get(name: "property"))!
+            let document: Document = (args.get(name: "document"))!
+            let key: String = (args.get(name: "key"))!
             
-            return document.string(forKey: property)
+            return document.string(forKey: key)
 
         case "document_setString":
             let document: MutableDocument = (args.get(name: "document"))!
@@ -120,13 +89,13 @@ public class DocumentRequestHandler {
             
             return  document.setInt(value, forKey: key)
 
-        case "document_getInt64":
+        case "document_getLong":
             let document: MutableDocument = (args.get(name: "document"))!
             let key: String = (args.get(name: "key"))!
             
             return  document.int64(forKey: key)
 
-        case "document_setInt64":
+        case "document_setLong":
             let document: MutableDocument = (args.get(name: "document"))!
             let key: String = (args.get(name: "key"))!
             let value: Int64 = (args.get(name: "value"))!
@@ -155,9 +124,9 @@ public class DocumentRequestHandler {
         case "document_setDouble":
             let document: MutableDocument = (args.get(name: "document"))!
             let key: String = (args.get(name: "key"))!
-            let value: Double = (args.get(name: "value"))!
-
-            return  document.setDouble(value, forKey: key)
+            let value: Float = (args.get(name: "value"))!
+            let double_value = Double(value)
+            return  document.setDouble(double_value, forKey: key)
 
         case "document_getBoolean":
             let document: MutableDocument = (args.get(name: "document"))!
@@ -192,8 +161,12 @@ public class DocumentRequestHandler {
         case "document_setDate":
             let document: MutableDocument = (args.get(name: "document"))!
             let key: String = (args.get(name: "key"))!
-            let value: Date = (args.get(name: "value"))!
-            return  document.setDate(value, forKey: key)
+            let value: String = (args.get(name: "value"))!
+            let formatter = DateFormatter()
+            formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ssZ"
+            let date_value = formatter.date(from: value)
+
+            return document.setDate(date_value, forKey: key)
         
         case "document_getArray":
             let document: MutableDocument = (args.get(name: "document"))!
@@ -236,7 +209,7 @@ public class DocumentRequestHandler {
 
             return document.value(forKey: key)
 
-        case "document_removeValue":
+        case "document_removeKey":
             let document: MutableDocument = (args.get(name: "document"))!
             let key: String = (args.get(name: "key"))!
             
@@ -269,7 +242,7 @@ public class DocumentRequestHandler {
             
             return document.contains(key: key)
 
-        case "document_toDictionary":
+        case "document_toMap":
             let document: MutableDocument = (args.get(name: "document"))!
             
             return document.toDictionary()
@@ -306,6 +279,5 @@ class MyDocumentChangeListener  {
     
     public func getChanges() -> [DocumentChange] {
         return changes
->>>>>>> refs/remotes/origin/feature/cbl20-query
     }
 }

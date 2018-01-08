@@ -11,7 +11,7 @@ import CouchbaseLiteSwift
 
 
 public class DatabaseRequestHandler {
-    public static let VOID = NSObject()
+    public static let VOID: String? = nil
     fileprivate var _pushPullReplListener:NSObjectProtocol?
     
     public func handleRequest(method: String, args: Args) throws -> Any? {
@@ -23,77 +23,19 @@ public class DatabaseRequestHandler {
         case "database_create":
             let name: String? = args.get(name: "name")
 
-            return try Database(name: name!)
+            do {
+                return try Database(name: name!)
+            } catch {
+                print("Got error while creating DB \(error)")
+                return error.localizedDescription
+            }
+            
 
         case "database_close":
             let database: Database = args.get(name:"database")!
 
             try database.close()
 
-<<<<<<< HEAD
-        case "database_path":
-            let database: Database = (args.get(name:"database"))!
-
-            return database.path
-
-        case "database_delete":
-            let name: String = (args.get(name:"name"))!
-            let path: String = (args.get(name:"path"))!
-
-            try Database.delete(withName: name, inDirectory: path)
-
-        case "database_getName":
-            let database: Database = args.get(name:"database")!
-
-            return database.name
-
-        case "database_document":
-            let database: Database = (args.get(name:"database"))!
-            let id: String = (args.get(name: "id"))!
-
-            return (database.document(withID: id))!
-
-        case "database_save":
-            let database: Database = (args.get(name:"database"))!
-            let document: MutableDocument = args.get(name:"document")!
-
-            try! database.saveDocument(document)
-
-        case "database_contains":
-            let database: Database = (args.get(name:"database"))!
-            let id: String = (args.get(name: "id"))!
-
-            return database.containsDocument(withID: id)
-
-        case "database_docCount":
-            let database: Database = (args.get(name:"database"))!
-            return database.count
-
-        case "database_addChangeListener":
-            let database: Database = (args.get(name:"database"))!
-            let changeListener = MyDatabaseChangeListener()
-            database.addChangeListener(changeListener.listener)
-            return changeListener
-
-        case "database_removeChangeListener":
-            let database: Database = (args.get(name:"database"))!
-            let changeListener: ListenerToken = (args.get(name: "changeListener"))!
-
-            database.removeChangeListener(withToken: changeListener)
-
-        case "databaseChangeListener_changesCount":
-            let changeListener: MyDatabaseChangeListener = (args.get(name: "changeListener"))!
-
-            return changeListener.getChanges().count
-
-        case "databaseChangeListener_getChange":
-            let changeListener: MyDatabaseChangeListener = (args.get(name: "changeListener"))!
-            let index: Int = (args.get(name: "index"))!
-
-            return changeListener.getChanges()[index]
-
-            case "databaseChange_getDocumentId":
-=======
         case "database_getPath":
             let database: Database = (args.get(name:"database"))!
 
@@ -103,28 +45,26 @@ public class DatabaseRequestHandler {
             let database: Database = (args.get(name:"database"))!
             let document: Document = (args.get(name:"document"))!
 
-            return try database.deleteDocument(document)
+            do {
+                try database.deleteDocument(document)
+            } catch {
+                print("Got error while deleting DB \(error)")
+                return error
+            }
         
         case "database_deleteDB":
             let database: Database = args.get(name:"database")!
             
-            return try database.delete()
+            try database.delete()
 
         case "database_exists":
             let name: String = args.get(name:"name")!
             let directory: String? = args.get(name:"directory")!
-            var exists: Bool
-            
+           
             if let directory = directory {
-                exists = Database.exists(withName: name, inDirectory: directory)
+                return Database.exists(withName: name, inDirectory: directory)
             } else {
-                exists = Database.exists(withName: name)
-            }
-
-            if exists {
-                return "true"
-            } else {
-                return "false"
+                return Database.exists(withName: name)
             }
 
         case "database_deleteIndex":
@@ -190,7 +130,6 @@ public class DatabaseRequestHandler {
             return changeListener.getChanges()[index]
 
         case "databaseChange_getDocumentId":
->>>>>>> refs/remotes/origin/feature/cbl20-query
             let change: DatabaseChange = (args.get(name: "change"))!
 
             return change.documentIDs

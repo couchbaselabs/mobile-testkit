@@ -14,6 +14,7 @@
 		294FB20A1FEAF9E800DD0C23 /* ReplicatorRequestHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 294FB2091FEAF9E800DD0C23 /* ReplicatorRequestHandler.swift */; };
 		294FB20C1FEAFD9000DD0C23 /* DatabaseRequestHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 294FB20B1FEAFD9000DD0C23 /* DatabaseRequestHandler.swift */; };
 		294FB20E1FEB0E1800DD0C23 /* DocumentRequestHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 294FB20D1FEB0E1800DD0C23 /* DocumentRequestHandler.swift */; };
+		2961A91D2001C65B00636422 /* ReplicatorConfigurationRequestHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2961A91C2001C65B00636422 /* ReplicatorConfigurationRequestHandler.swift */; };
 		29917D981FA92F82006C7675 /* DictionaryRequestHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 29917D971FA92F82006C7675 /* DictionaryRequestHandler.swift */; };
 		299692A51FF30B1A0040CC32 /* ArrayRequesthandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 299692A41FF30B1A0040CC32 /* ArrayRequesthandler.swift */; };
 		299692A71FF31A590040CC32 /* SessionAuthenticatorRequestHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 299692A61FF31A590040CC32 /* SessionAuthenticatorRequestHandler.swift */; };
@@ -87,6 +88,7 @@
 		294FB2091FEAF9E800DD0C23 /* ReplicatorRequestHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReplicatorRequestHandler.swift; sourceTree = "<group>"; };
 		294FB20B1FEAFD9000DD0C23 /* DatabaseRequestHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DatabaseRequestHandler.swift; sourceTree = "<group>"; };
 		294FB20D1FEB0E1800DD0C23 /* DocumentRequestHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentRequestHandler.swift; sourceTree = "<group>"; };
+		2961A91C2001C65B00636422 /* ReplicatorConfigurationRequestHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReplicatorConfigurationRequestHandler.swift; sourceTree = "<group>"; };
 		29917D971FA92F82006C7675 /* DictionaryRequestHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DictionaryRequestHandler.swift; sourceTree = "<group>"; };
 		2996929E1FF2E7D60040CC32 /* CouchbaseLiteSwift.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CouchbaseLiteSwift.framework; path = Carthage/Build/iOS/CouchbaseLiteSwift.framework; sourceTree = "<group>"; };
 		299692A41FF30B1A0040CC32 /* ArrayRequesthandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArrayRequesthandler.swift; sourceTree = "<group>"; };
@@ -189,6 +191,7 @@
 				299692AE1FF35A2B0040CC32 /* ConflictRequestHandler.swift */,
 				299692B01FF35B630040CC32 /* BlobRequestHandler.swift */,
 				293F38371FFD792E00497870 /* DataTypesInitiatorHandler.swift */,
+				2961A91C2001C65B00636422 /* ReplicatorConfigurationRequestHandler.swift */,
 			);
 			path = Server;
 			sourceTree = "<group>";
@@ -491,6 +494,7 @@
 				29F786941F9FC4180035178F /* GCDWebServerRequest.m in Sources */,
 				29F7869B1F9FC4180035178F /* GCDWebServerErrorResponse.m in Sources */,
 				29D15BA31FA7DE39005DAAA3 /* Memory.swift in Sources */,
+				2961A91D2001C65B00636422 /* ReplicatorConfigurationRequestHandler.swift in Sources */,
 				29F7869A1F9FC4180035178F /* GCDWebServerDataResponse.m in Sources */,
 				29F786911F9FC4180035178F /* GCDWebServer.m in Sources */,
 				2909B0731F9FFA8900B4E0E4 /* Server.swift in Sources */,

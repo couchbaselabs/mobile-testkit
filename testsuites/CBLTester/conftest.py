@@ -215,7 +215,6 @@ def params_from_base_suite_setup(request):
         log_info("Connecting to {}/{} with password {}".format(cbs_ip, enable_sample_bucket, password))
         sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, enable_sample_bucket), password=password, timeout=SDK_TIMEOUT)
         log_info("Creating primary index for {}".format(enable_sample_bucket))
-        sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, enable_sample_bucket), password='password')
         n1ql_query = 'create primary index on {}'.format(enable_sample_bucket)
         query = N1QLQuery(n1ql_query)
         sdk_client.n1ql_query(query)

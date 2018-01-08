@@ -50,8 +50,11 @@ class TestDocument(object):
         '''
         @summary: Testing Document set/contains method
         '''
+        if self.liteserv_platform == "ios" and value == "":
+            pytest.skip("Test not applicable for ios")
+
         doc = self.doc_obj.create()
-        doc = self.doc_obj.setString(doc, key, value)
+        self.doc_obj.setString(doc, key, value)
         assert self.doc_obj.contains(doc, key)
 
     @pytest.mark.parametrize("num_of_keys", [
@@ -69,7 +72,7 @@ class TestDocument(object):
         for i in range(num_of_keys):
             key = "test_{}".format(i)
             value = "Test content - {}".format(i)
-            doc = self.doc_obj.setString(doc, key, value)
+            self.doc_obj.setString(doc, key, value)
         assert self.doc_obj.count(doc) == num_of_keys
 
     def test_remove(self):
@@ -79,7 +82,7 @@ class TestDocument(object):
         key = "test"
         value = "test-1"
         doc = self.doc_obj.create()
-        doc = self.doc_obj.setString(doc, key, value)
+        self.doc_obj.setString(doc, key, value)
         assert self.doc_obj.contains(doc, "test")
         self.doc_obj.remove(doc, "test")
         assert not self.doc_obj.contains(doc, "test")
@@ -156,6 +159,9 @@ class TestDocument(object):
         '''
         @summary: Testing Get and Set String method of Document API
         '''
+        if self.liteserv_platform == "ios" and value == "":
+            pytest.skip("Test not applicable for ios")
+
         doc = self.doc_obj.create()
         self.doc_obj.setString(doc, key, value)
         assert value == self.doc_obj.getString(doc, key)
@@ -208,7 +214,7 @@ class TestDocument(object):
         date_obj = self.datatype.setDate()
         self.doc_obj.setDate(doc, key, date_obj)
         new_date = self.doc_obj.getDate(doc, key)
-        assert self.datatype.compare(date_obj, new_date)
+        assert self.datatype.compareDate(date_obj, new_date)
 
     @pytest.mark.parametrize("key, value", [
         (random_string(6), "{}".format(random.uniform(0, 1))),
@@ -223,7 +229,7 @@ class TestDocument(object):
         doc = self.doc_obj.create()
         double_obj = self.datatype.setDouble(value)
         self.doc_obj.setDouble(doc, key, double_obj)
-        assert self.datatype.compare(double_obj,
+        assert self.datatype.compareDouble(double_obj,
                                      self.doc_obj.getDouble(doc, key))
 
     @pytest.mark.parametrize("key, value", [
@@ -237,7 +243,6 @@ class TestDocument(object):
         @summary: Testing Get and Set Float method of Document API
         '''
         doc = self.doc_obj.create()
-#         float_obj = self.datatype.setFloat(value)
         self.doc_obj.setFloat(doc, key, value)
         result = self.doc_obj.getFloat(doc, key)
         assert value == result
@@ -256,4 +261,4 @@ class TestDocument(object):
         long_obj = self.datatype.setLong(value)
         self.doc_obj.setLong(doc, key, long_obj)
         result = self.doc_obj.getLong(doc, key)
-        assert self.datatype.compare(long_obj, result)
+        assert self.datatype.compareLong(long_obj, result)

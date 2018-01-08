@@ -29,7 +29,7 @@ class DataTypeInitiator(object):
 
     def setLong(self, value):
         args = Args()
-        args.setString("value", value)
+        args.setLong("value", value)
         return self._client.invokeMethod("datatype_setLong", args)
 
     def compare(self, first, second):
@@ -77,3 +77,9 @@ class DataTypeInitiator(object):
         args.setMemoryPointer("double1", double1)
         args.setMemoryPointer("double2", double2)
         return self._client.invokeMethod("datatype_compareDouble", args)
+
+    def compareLong(self, long1, long2):
+        args = Args()
+        args.setMemoryPointer("long1", long1)
+        args.setMemoryPointer("long2", long2)
+        return self._client.invokeMethod("datatype_compareLong", args)

@@ -17,7 +17,7 @@ class Args(object):
         self._args[name] = long_val
 
     def setFloat(self, name, f):
-        self._args[name] = f
+        self._args[name] = float(f)
 
     # There is no double/number in python
 

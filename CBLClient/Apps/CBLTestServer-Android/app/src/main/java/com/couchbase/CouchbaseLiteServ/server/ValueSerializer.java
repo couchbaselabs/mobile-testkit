@@ -11,7 +11,7 @@ public class ValueSerializer {
 
     public static String serialize(Object value, Memory memory) {
         if (value == null)  {
-            return "null";
+            return null;
         } else if (value instanceof Boolean) {
             Boolean bool = (Boolean) value;
 

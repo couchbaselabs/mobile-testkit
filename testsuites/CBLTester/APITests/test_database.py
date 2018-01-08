@@ -145,16 +145,17 @@ class TestDatabase(object):
         (random_string(6).capitalize(), random_string(6)),
         (random_string(6).upper(), random_string(6))
     ])
-    def test_delete(self, db_name, doc_id):
+    def test_delete_doc(self, db_name, doc_id):
         '''
         @summary: Testing delete method of Database API
         '''
+        db_name = db_name.lower()
         db = self.db_obj.create(db_name)
-        assert self.db_obj.getDocument(db, doc_id) is None
+        assert self.db_obj.getDocument(db, doc_id) == -1
 
         doc = self.doc_obj.create(doc_id=doc_id)
         self.doc_obj.setString(doc, "key", "value")
-        self.db_obj.saveDocument(db, doc)
+        doc_latest = self.db_obj.saveDocument(db, doc)
         doc_res = self.db_obj.getDocument(db, doc_id)
         assert doc_res is not None
         assert self.doc_obj.getId(doc_res) == doc_id
@@ -164,11 +165,11 @@ class TestDatabase(object):
         assert doc_res is not None
         assert self.doc_obj.getString(doc_res, "key") == "value"
 
-        self.db_obj.delete(document=doc, database=db)
+        self.db_obj.delete(document=doc_latest, database=db)
         doc_res = self.db_obj.getDocument(db, doc_id)
         assert self.db_obj.getCount(db) == 0
         doc_res = self.db_obj.getDocument(db, doc_id)
-        assert doc_res is None
+        assert doc_res == -1
         assert self.db_obj.deleteDB(db) == -1
 
     @pytest.mark.parametrize("db_name, doc_id, num_of_docs", [
@@ -293,7 +294,7 @@ class TestDatabase(object):
         self.db_obj.saveDocument(db_1, doc)
         self.db_obj.saveDocument(db_2, doc)
         self.db_obj.purge(document=doc, database=db_1)
-        assert not self.db_obj.getDocument(db_2, doc_id)
+        assert self.db_obj.getDocument(db_2, doc_id) == -1
         assert self.db_obj.getDocument(db_2, doc_id)
         assert self.db_obj.deleteDB(db_1) == -1
         assert self.db_obj.deleteDB(db_2) == -1

@@ -5,12 +5,11 @@
 //  Created by Raghu Sarangapani on 12/20/17.
 //  Copyright © 2017 Raghu Sarangapani. All rights reserved.
 //
-
 import Foundation
 import CouchbaseLiteSwift
 
 public class ReplicatorRequestHandler {
-    public static let VOID = NSObject()
+    public static let VOID: String? = nil
     fileprivate var _pushPullReplListener:NSObjectProtocol?
     
     public func handleRequest(method: String, args: Args) throws -> Any? {
@@ -18,7 +17,6 @@ public class ReplicatorRequestHandler {
         /////////////////
         // Replication //
         /////////////////
-
         case "replicator_create_authenticator":
         let authenticatorType: String! = args.get(name: "authentication_type")
 
@@ -36,51 +34,6 @@ public class ReplicatorRequestHandler {
 
 
 
-<<<<<<< HEAD
-        case "configure_replicator_remote_db_url":
-            let source_db: Database? = args.get(name: "source_db")
-            let target_url: String? = args.get(name: "target_url")
-            let replication_type: String? = args.get(name: "replication_type")!
-            let continuous: Bool? = args.get(name: "continuous")
-            let channels: [String]? = args.get(name: "channels")
-            let documentIDs: [String]? = args.get(name: "documentIDs")
-            let authenticator: Authenticator? = args.get(name: "authenticator")
-            let conflictResolver: ConflictResolver? = args.get(name: "conflictResolver")
-
-            var replicatorType = ReplicatorType.pushAndPull
-
-            if let type = replication_type {
-                if type == "push" {
-                    replicatorType = .push
-                } else if type == "pull" {
-                    replicatorType = .pull
-                } else {
-                    replicatorType = .pushAndPull
-                }
-            }
-
-            let target_converted_url: URL? = URL(string: target_url!)
-            if (source_db != nil && target_converted_url != nil) {
-                var config = ReplicatorConfiguration(withDatabase: source_db!, targetURL: target_converted_url!)
-                config.replicatorType = replicatorType
-                config.continuous = continuous != nil ? continuous! : false
-                config.authenticator = authenticator
-                config.conflictResolver = conflictResolver
-                if channels != nil {
-                    config.channels = channels
-                }
-                if documentIDs != nil {
-                    config.documentIDs = documentIDs
-                }
-                return Replicator(withConfig: config)
-            }
-            else{
-                throw RequestHandlerError.InvalidArgument("No source db provided or target url provided")
-            }
-
-
-        case "configure_replicator_local_db":
-=======
         case "replicator_configure_remote_db_url":
             let source_db: Database? = args.get(name: "source_db")
             let target_url: String? = args.get(name: "target_url")
@@ -124,7 +77,6 @@ public class ReplicatorRequestHandler {
 
 
         case "replicator_configure_local_db":
->>>>>>> refs/remotes/origin/feature/cbl20-query
             let source_db: Database? = args.get(name: "source_db")
             let targetDatabase: Database? = args.get(name: "targetDatabase")
             let replication_type: String? = args.get(name: "replication_type")!

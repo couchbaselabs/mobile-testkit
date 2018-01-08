@@ -87,9 +87,10 @@ class TestDictionary(object):
         value = self.datatype.setDate()
         content_dict = self.dict_obj.create()
         self.dict_obj.setDate(content_dict, key, value)
-        assert self.datatype.compare(value,
-                                     self.dict_obj.getDate(content_dict,
-                                                           key))
+        # assert self.datatype.compare(value,
+        #                            self.dict_obj.getDate(content_dict,
+        #                                                   key))
+        assert self.datatype.compareDate(value, self.dict_obj.getDate(content_dict, key))
 
     def test_get_set_dictionary(self):
         '''
@@ -101,16 +102,16 @@ class TestDictionary(object):
         value = self.datatype.setDate()
         hashmap[key] = value
         key = "Double_key"
-        value = self.datatype.setDouble("2.0")
+        value = self.datatype.setDouble(2.0)
         hashmap[key] = value
         key = "Float_key"
-        value = self.datatype.setFloat("3.0")
+        value = self.datatype.setFloat(3.0)
         hashmap[key] = value
         key = "Integer_key"
         value = 4
         hashmap[key] = value
         key = "Long_key"
-        value = self.datatype.setLong("1234567890")
+        value = self.datatype.setLong(1234567890)
         hashmap[key] = value
         key = "String_key"
         value = "Test String"
@@ -136,9 +137,10 @@ class TestDictionary(object):
         double_value = self.datatype.setDouble(float(value))
         content_dict = self.dict_obj.create()
         self.dict_obj.setDouble(content_dict, key, double_value)
-        assert self.datatype.compare(double_value,
-                                     self.dict_obj.getDouble(
-                                         content_dict, key))
+        # assert self.datatype.compare(double_value,
+        #                              self.dict_obj.getDouble(
+        #                                  content_dict, key))
+        assert self.datatype.compareDouble(double_value, self.dict_obj.getDouble(content_dict, key))
 
     @pytest.mark.parametrize("key, value", [
         (random_string(6), round(random.uniform(0, 1), 4)),
@@ -209,7 +211,6 @@ class TestDictionary(object):
         content_dict = self.dict_obj.create()
         self.dict_obj.setString(content_dict, key, value)
         assert value == self.dict_obj.getString(content_dict, key)
-
 
     @pytest.mark.parametrize("key, value, num_of_keys", [
         (random_string(5), random_string(5), 9),

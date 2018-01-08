@@ -143,9 +143,9 @@ public class DatabaseRequestHandler {
    }
 
     public boolean exists(Args args){
-        String dbName = args.get("dbName");
+        String name = args.get("name");
         File directory = args.get("directory");
-        return Database.exists(dbName, directory.getParentFile());
+        return Database.exists(name, directory.getParentFile());
     }
 
     public boolean contains(Args args) {

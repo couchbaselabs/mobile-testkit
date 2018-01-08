@@ -13,30 +13,6 @@ public class DataTypesInitiatorHandler {
     /* ---------------------------------- */
     /* - Initiates Complex Java Objects - */
     /* ---------------------------------- */
-/*
-
-    public <T> T[] setArray(Args args){
-        T[] arr = args.get("name");
-        return arr;
-    }
-
-    public HashMap hashMap(Args args){
-        return new HashMap();
-    }
-
-    public Object get(Args args) {
-        Map<String, Object> map = args.get("dictionary");
-        String key = args.get("key");
-        return map.get(key);
-    }
-
-    public void put(Args args) {
-        Map<String, Object> map = args.get("dictionary");
-        String key = args.get("key");
-        Object value = args.get("value");
-        map.put(key, value);
-    }
-*/
 
 
     public Date setDate(Args args) {
@@ -66,29 +42,33 @@ public class DataTypesInitiatorHandler {
         }
         return false;
     }
-/*
-    public Boolean compareHashMap(Args args){
-        HashMap first = args.get("first");
-        HashMap second = args.get("second");
-        Set<String> firstKeys = first.keySet();
-        Set<String> secondKeys = second.keySet();
-        try{
-            for (String key : secondKeys)
-            {
-                if (!(String.valueOf(first.get(key))).equals(String.valueOf(second.get(key)))){
-                    return false;
-                }
-            }
-            for (String key : firstKeys)
-            {
-                if (!second.containsKey(key)) {
-                    return false;
-                }
-            }
-        } catch (NullPointerException np) {
-            return false;
+
+    public Boolean compareDate(Args args) {
+        Date first = args.get("date1");
+        Date second = args.get("date2");
+        if (first.equals(second)){
+            return true;
         }
-        return true;
-    }*/
+        return false;
+    }
+
+    public Boolean compareDouble(Args args) {
+        Date first = args.get("double1");
+        Date second = args.get("double2");
+        if (first.equals(second)){
+            return true;
+        }
+        return false;
+    }
+
+    public Boolean compareLong(Args args) {
+        Date first = args.get("long1");
+        Date second = args.get("long2");
+        if (first.equals(second)){
+            return true;
+        }
+        return false;
+    }
+
 }
 

@@ -22,8 +22,6 @@ class Client(object):
             url = self.base_url + "/" + method
 
             if args:
-                # log_info("args: {}".format(args.getArgs()))
-
                 for k, v in args:
                     val = ValueSerializer.serialize(v)
                     body[k] = val
