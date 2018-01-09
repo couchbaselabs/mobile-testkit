@@ -23,7 +23,6 @@ from CBLClient.BasicAuthenticator import BasicAuthenticator
 from CBLClient.SessionAuthenticator import SessionAuthenticator
 from keywords.MobileRestClient import MobileRestClient
 from keywords.constants import SDK_TIMEOUT
-from libraries.testkit import cluster
 
 
 def pytest_addoption(parser):
@@ -69,9 +68,12 @@ def pytest_addoption(parser):
                      help="xattrs: Enable xattrs for sync gateway")
 
     parser.addoption("--create-db-per-test",
-                     action="store_true",
-                     help="create-db-per-test: Creates/deletes client DB for every test. \
-                     Default is to create/delete client DB per suite")
+                     action="store",
+                     help="create-db-per-test: Creates/deletes client DB for every test")
+
+    parser.addoption("--create-db-per-suite",
+                     action="store",
+                     help="create-db-per-suite: Creates/deletes client DB per suite")
 
 
 # This will get called once before the first test that
@@ -93,6 +95,7 @@ def params_from_base_suite_setup(request):
     enable_sample_bucket = request.config.getoption("--enable-sample-bucket")
     xattrs_enabled = request.config.getoption("--xattrs")
     create_db_per_test = request.config.getoption("--create-db-per-test")
+    create_db_per_suite = request.config.getoption("--create-db-per-suite")
 
     base_url = "http://{}:{}".format(liteserv_host, liteserv_port)
     cluster_config = "{}/base_{}".format(CLUSTER_CONFIGS_DIR, mode)
@@ -148,20 +151,20 @@ def params_from_base_suite_setup(request):
             logging_helper.fetch_and_analyze_logs(cluster_config=cluster_config, test_name=request.node.name)
             raise
 
-    if enable_sample_bucket and create_db_per_test:
-        raise Exception("Invalid options combination")
+    if enable_sample_bucket and not create_db_per_suite:
+        raise Exception("enable_sample_bucket has to be used with create_db_per_suite")
 
     source_db = None
-    if not create_db_per_test:
+    if create_db_per_suite:
         # Create CBL database
-        cbl_db = "test_db"
+        cbl_db = create_db_per_suite
         db = Database(base_url)
 
         log_info("Creating a Database {} at the suite setup".format(cbl_db))
         source_db = db.create(cbl_db)
         log_info("Getting the database name")
         db_name = db.getName(source_db)
-        assert db_name == "test_db"
+        assert db_name == cbl_db
 
     if enable_sample_bucket:
         server_url = cluster_topology["couchbase_servers"][0]
@@ -236,10 +239,14 @@ def params_from_base_suite_setup(request):
         log_info("Stopping replication")
         replicator.stop(repl)
 
-    if not create_db_per_test:
+    if create_db_per_suite:
         # Delete CBL database
-        log_info("Deleting the database {} at the suite teardown".format(cbl_db))
+        log_info("Deleting the database {} at the suite teardown".format(create_db_per_suite))
         db.deleteDB(source_db)
+
+    # Flush all the memory contents on the server app
+    db_obj = Database(base_url)
+    db_obj.flushMemory()
 
 
 @pytest.fixture(scope="function")
@@ -268,7 +275,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     log_info("mode: {}".format(mode))
     log_info("xattrs_enabled: {}".format(xattrs_enabled))
 
-    cbl_db = "test_db"
+    cbl_db = create_db_per_test
     if create_db_per_test:
         # Create CBL database
         db = Database(base_url)
@@ -277,7 +284,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         source_db = db.create(cbl_db)
         log_info("Getting the database name")
         db_name = db.getName(source_db)
-        assert db_name == "test_db"
+        assert db_name == cbl_db
 
     # This dictionary is passed to each test
     yield {
@@ -298,7 +305,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
 
     if create_db_per_test:
         # Delete CBL database
-        log_info("Deleting the database {} at test teardown".format(cbl_db))
+        log_info("Deleting the database {} at test teardown".format(create_db_per_test))
         db.deleteDB(source_db)
 
 

@@ -20,7 +20,7 @@ enum RequestHandlerError: Error {
 }
 
 public class Server {
-    let kPort:UInt = 8989
+    let kPort:UInt = 8080
     let server: GCDWebServer!
     let dictionaryRequestHandler: DictionaryRequestHandler!
     let queryRequestHandler: QueryRequestHandler!
@@ -92,6 +92,8 @@ public class Server {
                 var body: Any? = nil
                 if "release" == method {
                     self.memory.remove(address: rawArgs["object"] as! String)
+                } else if "flushMemory" == method {
+                    self.memory.flushMemory()
                 } else {
                     var result: Any? = nil
                     if method.hasPrefix("query") {

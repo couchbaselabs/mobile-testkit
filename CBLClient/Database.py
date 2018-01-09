@@ -157,6 +157,9 @@ class Database:
         args.setString("property", prop)
         return self._client.invokeMethod("create_value_index", args)
 
+    def flushMemory(self):
+        return self._client.invokeMethod("flushMemory")
+
     def create_bulk_docs(self, number, id_prefix, db, channels=None, generator=None, attachments_generator=None):
         """
         if id_prefix == None, generate a uuid for each doc
