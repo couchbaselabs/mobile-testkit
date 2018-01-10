@@ -51,6 +51,11 @@ class Database:
         args.setMemoryPointer("database", database)
         return self._client.invokeMethod("database_deleteDB", args)
 
+    def database_deleteDbByName(self, name):
+        args = Args()
+        args.setString("name", name)
+        return self._client.invokeMethod("database_deleteDbByName", args)
+
     def close(self, database):
         args = Args()
         args.setMemoryPointer("database", database)
