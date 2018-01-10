@@ -16,8 +16,11 @@ class TestDatabase(object):
         if self.liteserv_platform == "ios" and db_name == "":
             pytest.skip("Test not applicable for ios")
 
-        _, err_resp = self.db_obj.create(db_name)
-        assert err_msg in err_resp
+        try:
+            self.db_obj.create(db_name)
+            assert 0
+        except Exception, err_resp:
+            assert err_msg in str(err_resp)
 
     def test_getDocument_exception(self):
         if self.liteserv_platform == "ios":
@@ -26,14 +29,17 @@ class TestDatabase(object):
         db = self.db_obj.create(random_string(6))
         # checking when Null/None documentId is provided
         err_msg = "a documentID parameter is null"
-        _, err_resp = self.db_obj.getDocument(db, None)
-        assert err_msg in err_resp
+        try:
+            self.db_obj.getDocument(db, None)
+            assert 0
+        except Exception, err_resp:
+            assert err_msg in str(err_resp)
         # checking document in db with empty name
         doc_id = self.db_obj.getDocument(db, "")
-        assert doc_id is None
+        assert doc_id == -1
         # checking for a non-existing doc in DB
         doc_id = self.db_obj.getDocument(db, "I-do-not-exist")
-        assert doc_id is None
+        assert doc_id == -1
 
     def test_saveDocument_exception(self):
         if self.liteserv_platform == "ios":
@@ -41,8 +47,11 @@ class TestDatabase(object):
 
         db = self.db_obj.create(random_string(6))
         err_msg = "a document parameter is null"
-        _, err_resp = self.db_obj.saveDocument(db, None)
-        assert err_msg in err_resp
+        try:
+            self.db_obj.saveDocument(db, None)
+            assert 0
+        except Exception, err_resp:
+            assert err_msg in str(err_resp)
 
     def test_delete_exception(self):
         if self.liteserv_platform == "ios":
@@ -51,10 +60,16 @@ class TestDatabase(object):
         db = self.db_obj.create(random_string(6))
         # Exception checking when document id is null
         err_msg = "a document parameter is null"
-        _, err_resp = self.db_obj.delete(database=db, document=None)
-        assert err_msg in err_resp
-        _, err_resp = self.db_obj.purge(database=db, document=None)
-        assert err_msg in err_resp
+        try:
+            self.db_obj.delete(database=db, document=None)
+            assert 0
+        except Exception, err_resp:
+            assert err_msg in str(err_resp)
+        try:
+            self.db_obj.purge(database=db, document=None)
+            assert 0
+        except Exception, err_resp:
+            assert err_msg in str(err_resp)
 
     @pytest.mark.parametrize("db_name", [
         random_string(1),
@@ -92,7 +107,6 @@ class TestDatabase(object):
         '''
         db = self.db_obj.create(db_name)
         assert self.db_obj.close(db) == -1
-        assert self.db_obj.deleteDB(db) == -1
 
     @pytest.mark.parametrize("db_name", [
         random_string(1),
@@ -206,9 +220,10 @@ class TestDatabase(object):
         '''
         db = self.db_obj.create(db_name)
         path = self.db_obj.getPath(db)
-        assert self.db_obj.exists(db_name, path) is True
+#         directory = "/".join(path.split("/")[:-2])
+        assert self.db_obj.exists(db_name, path)
         assert self.db_obj.deleteDB(db) == -1
-        assert self.db_obj.exists(db_name, path) is False
+        assert not self.db_obj.exists(db_name, path)
 
     @pytest.mark.parametrize("db_name, doc_id", [
         # "",
@@ -317,7 +332,7 @@ class TestDatabase(object):
         doc = self.doc_obj.create(doc_id)
         db = self.db_obj.create(db_name)
         doc_in_db_check = self.db_obj.getDocument(db, doc_id)
-        assert not doc_in_db_check
+        assert doc_in_db_check == -1
         self.db_obj.saveDocument(db, doc)
         doc_res = self.db_obj.getDocument(db, doc_id)
         assert doc_id == str(self.doc_obj.getId(doc_res))

@@ -12,8 +12,10 @@
   "databases": {
     "todo": {
       {{ xattrs }}
+      {{ autoimport }}
       "unsupported": {
         {{ no_conflicts }}
+        "replicator_2": true
       },
       "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
       "bucket": "data-bucket",
@@ -35,6 +37,7 @@
         "jim": {"password": "pass", "admin_channels": ["jim"]},
         "seth": {"password": "pass", "admin_channels": ["seth"]},
         "raghu": {"password": "pass", "admin_channels": ["raghu"]},
+        "hemant": {"password": "pass", "admin_channels": ["hemant"]},
         "mod": {"password": "pass", "admin_roles": ["moderator"]},
         "admin": {"password": "pass", "admin_roles": ["admin"]}
       },

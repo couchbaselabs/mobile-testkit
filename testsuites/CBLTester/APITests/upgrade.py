@@ -8,6 +8,6 @@ from keywords.constants import CLUSTER_CONFIGS_DIR
 import pytest
 
 def test_upgrade():
-    cluster_config = "{}/base_{}".format(CLUSTER_CONFIGS_DIR, "cc")
+    cluster_config = "{}/base_{}".format(CLUSTER_CONFIGS_DIR, "di")
     cluster = Cluster(cluster_config)
-    cluster.reset("resources/sync_gateway_configs/testfest_todo_cc.json")
+    cluster.reset("resources/sync_gateway_configs/testfest_todo_di.json")

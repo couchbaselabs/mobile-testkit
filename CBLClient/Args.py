@@ -14,7 +14,7 @@ class Args(object):
         self._args[name] = integer
 
     def setLong(self, name, long_val):
-        self._args[name] = long_val
+        self._args[name] = long(long_val)
 
     def setFloat(self, name, f):
         self._args[name] = float(f)

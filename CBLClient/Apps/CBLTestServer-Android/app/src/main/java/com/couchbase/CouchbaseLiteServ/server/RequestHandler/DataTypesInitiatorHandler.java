@@ -53,8 +53,8 @@ public class DataTypesInitiatorHandler {
     }
 
     public Boolean compareDouble(Args args) {
-        Date first = args.get("double1");
-        Date second = args.get("double2");
+        Double first = args.get("double1");
+        Double second = args.get("double2");
         if (first.equals(second)){
             return true;
         }
@@ -62,8 +62,8 @@ public class DataTypesInitiatorHandler {
     }
 
     public Boolean compareLong(Args args) {
-        Date first = args.get("long1");
-        Date second = args.get("long2");
+        Long first = args.get("long1");
+        Long second = args.get("long2");
         if (first.equals(second)){
             return true;
         }

@@ -55,7 +55,7 @@ class ValueSerializer(object):
 
     @staticmethod
     def deserialize(value):
-        if not value or value == "null":
+        if not value or len(value) == 0 or value == "null":
             return None
         elif value.startswith("@"):
             return MemoryPointer(value)

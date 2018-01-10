@@ -26,4 +26,10 @@ public class Memory {
     public Map<String, Object> get_memory_map(){
         return _memory;
     }
+
+    public void flushMemory(){
+        for(String key : _memory.keySet()){
+            _memory.put(key, null);
+        }
+    }
 }

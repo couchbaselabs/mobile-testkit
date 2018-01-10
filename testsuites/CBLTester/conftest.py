@@ -72,6 +72,10 @@ def pytest_addoption(parser):
                      help="create-db-per-test: Creates/deletes client DB for every test. \
                      Default is to create/delete client DB per suite")
 
+    parser.addoption("--create-db-per-suite",
+                     action="store",
+                     help="create-db-per-suite: Creates/deletes client DB per suite")
+
     parser.addoption("--no-conflicts",
                      action="store_true",
                      help="If set, allow_conflicts is set to false in sync-gateway config")
@@ -95,7 +99,9 @@ def params_from_base_suite_setup(request):
     server_version = request.config.getoption("--server-version")
     enable_sample_bucket = request.config.getoption("--enable-sample-bucket")
     xattrs_enabled = request.config.getoption("--xattrs")
+
     create_db_per_test = request.config.getoption("--create-db-per-test")
+    create_db_per_suite = request.config.getoption("--create-db-per-suite")
 
     base_url = "http://{}:{}".format(liteserv_host, liteserv_port)
     cluster_config = "{}/base_{}".format(CLUSTER_CONFIGS_DIR, mode)
@@ -162,20 +168,20 @@ def params_from_base_suite_setup(request):
             logging_helper.fetch_and_analyze_logs(cluster_config=cluster_config, test_name=request.node.name)
             raise
 
-    if enable_sample_bucket and create_db_per_test:
-        raise Exception("Invalid options combination")
+    if enable_sample_bucket and not create_db_per_test:
+        raise Exception("enable_sample_bucket has to be used with create_db_per_suite")
 
     source_db = None
-    if not create_db_per_test:
+    if create_db_per_test:
         # Create CBL database
-        cbl_db = "test_db"
+        cbl_db = create_db_per_suite
         db = Database(base_url)
 
         log_info("Creating a Database {} at the suite setup".format(cbl_db))
         source_db = db.create(cbl_db)
         log_info("Getting the database name")
         db_name = db.getName(source_db)
-        assert db_name == "test_db"
+        assert db_name == cbl_db
 
     if enable_sample_bucket:
         server_url = cluster_topology["couchbase_servers"][0]
@@ -265,6 +271,11 @@ def params_from_base_suite_setup(request):
         db.deleteDB(source_db)
 
 
+    # Flush all the memory contents on the server app
+    db_obj = Database(base_url)
+    db_obj.flushMemory()
+
+
 @pytest.fixture(scope="function")
 def params_from_base_test_setup(request, params_from_base_suite_setup):
     base_url = params_from_base_suite_setup["base_url"]
@@ -281,6 +292,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     cluster_topology = params_from_base_suite_setup["cluster_topology"]
     mode = params_from_base_suite_setup["mode"]
     target_url = params_from_base_suite_setup["target_url"]
+    base_url = params_from_base_suite_setup["base_url"]
     sg_ip = params_from_base_suite_setup["sg_ip"]
     sg_db = params_from_base_suite_setup["sg_db"]
     sync_gateway_version = params_from_base_suite_setup["sync_gateway_version"]
@@ -296,6 +308,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     log_info("mode: {}".format(mode))
     log_info("xattrs_enabled: {}".format(xattrs_enabled))
 
+    cbl_db = create_db_per_test
     if create_db_per_test:
         # Create CBL database
         db = Database(base_url)
@@ -304,7 +317,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         source_db = db.create(cbl_db)
         log_info("Getting the database name")
         db_name = db.getName(source_db)
-        assert db_name == "test_db"
+        assert db_name == cbl_db
 
     # This dictionary is passed to each test
     yield {

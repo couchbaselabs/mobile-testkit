@@ -26,8 +26,6 @@ class Client(object):
                     val = ValueSerializer.serialize(v)
                     body[k] = val
 
-            log_info("body: {}".format(body))
-            log_info("URL: {}".format(url))
             # Create connection to method endpoint.
             headers = {"Content-Type": "application/json"}
             self.session.headers = headers
@@ -42,11 +40,9 @@ class Client(object):
                     # Only print short messages
                     log_info("Got response: {}".format(result))
                 return ValueSerializer.deserialize(result)
-        except RuntimeError as err:
-            raise err
         except Exception as err:
             # resp can't be accessed here
-            return err, resp.content
+            raise Exception(err, resp.content)
 
     def release(self, obj):
         args = Args()
