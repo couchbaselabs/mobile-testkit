@@ -57,7 +57,7 @@ public class DatabaseRequestHandler {
             
             try database.delete()
             
-        case "database_deleteDbByName":
+        case "database_deleteDBByName":
             let name: String = args.get(name:"name")!
             let directory: String? = args.get(name:"directory")!
             
