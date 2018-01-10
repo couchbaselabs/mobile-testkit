@@ -13,6 +13,7 @@ from CBLClient.Replication import Replication
 from CBLClient.Database import Database
 from CBLClient.Document import Document
 from CBLClient.Dictionary import Dictionary
+from CBLClient.Utils import Utils
 from keywords.utils import host_for_url
 from couchbase.bucket import Bucket
 from couchbase.n1ql import N1QLQuery
@@ -245,8 +246,8 @@ def params_from_base_suite_setup(request):
         db.deleteDB(source_db)
 
     # Flush all the memory contents on the server app
-    db_obj = Database(base_url)
-    db_obj.flushMemory()
+    utils_obj = Utils(base_url)
+    utils_obj.flushMemory()
 
 
 @pytest.fixture(scope="function")

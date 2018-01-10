@@ -3,7 +3,7 @@ from CBLClient.Args import Args
 from keywords.utils import log_info
 
 
-class Release:
+class Utils:
     _client = None
     _baseUrl = None
 
@@ -24,3 +24,5 @@ class Release:
         else:
             self._client.release(obj)
 
+    def flushMemory(self):
+        return self._client.invokeMethod("flushMemory")
