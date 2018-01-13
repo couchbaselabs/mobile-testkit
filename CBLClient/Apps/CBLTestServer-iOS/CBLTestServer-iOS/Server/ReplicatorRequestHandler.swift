@@ -82,14 +82,17 @@ public class ReplicatorRequestHandler {
 
         case "replicator_configureLocalDb":
             let source_db: Database? = args.get(name: "source_db")
-            let targetDatabase: Database? = args.get(name: "targetDatabase")
+            let targetDatabase: Database? = args.get(name: "target_db")
             let replication_type: String? = args.get(name: "replication_type")!
             let continuous: Bool? = args.get(name: "continuous")
+            let channels: [String]? = args.get(name: "channels")
             let documentIDs: [String]? = args.get(name: "documentIDs")
+            let authenticator: Authenticator? = args.get(name: "authenticator")
             let conflictResolver: ConflictResolver? = args.get(name: "conflictResolver")
-
+            let headers: Dictionary<String, String>? = args.get(name: "headers")!
+            
             var replicatorType = ReplicatorType.pushAndPull
-
+            
             if let type = replication_type {
                 if type == "push" {
                     replicatorType = .push
@@ -104,14 +107,19 @@ public class ReplicatorRequestHandler {
                 var config = ReplicatorConfiguration(withDatabase: source_db!, targetDatabase: targetDatabase!)
                 config.replicatorType = replicatorType
                 config.continuous = continuous != nil ? continuous! : false
+                config.authenticator = authenticator
                 config.conflictResolver = conflictResolver
+                config.headers = headers
+                if channels != nil {
+                    config.channels = channels
+                }
                 if documentIDs != nil {
                     config.documentIDs = documentIDs
                 }
-                return Replicator(withConfig: config)
+                return config
             }
             else{
-                throw RequestHandlerError.InvalidArgument("No source db provided or target db provided")
+                throw RequestHandlerError.InvalidArgument("No source db provided or target DB provided")
             }
 
         
@@ -151,7 +159,7 @@ public class ReplicatorRequestHandler {
 
         case "replicator_getError":
             let replication_obj: Replicator = args.get(name: "replication_obj")!
-            return replication_obj.status.error?.localizedDescription
+            return String(describing: replication_obj.status.error)
 
         case "replicator_addChangeListener":
             let replication_obj: Replicator = args.get(name: "replication_obj")!

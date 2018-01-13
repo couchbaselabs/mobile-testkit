@@ -12,6 +12,7 @@ from CBLClient.Query import Query
 from CBLClient.Utils import Release
 
 from keywords.SyncGateway import sync_gateway_config_path_for_mode
+from keywords import document, attachment
 from libraries.testkit import cluster
 
 
@@ -446,3 +447,446 @@ def setup_sg_cbl_docs(params_from_base_test_setup, sg_db, base_url, db, cbl_db_n
     replicator.stop(repl)
 
     return sg_added_ids, cbl_added_doc_ids, cbl_db, auth_session
+
+
+@pytest.mark.sanity
+@pytest.mark.listener
+@pytest.mark.noconflicts
+@pytest.mark.parametrize("sg_conf_name, num_of_docs", [
+    ('listener_tests/listener_tests_no_conflicts', 10),
+    ('listener_tests/listener_tests_no_conflicts', 100),
+    # ('listener_tests/listener_tests_no_conflicts', 1000)
+])
+def test_CBL_tombstone_doc(params_from_base_test_setup, sg_conf_name, num_of_docs):
+    """
+        @summary:
+        1. Create docs in SG.
+        2. pull replication to CBL with continuous
+        3. tombstone doc in sG.
+        4. wait for replication to finish
+        5. Verify that tombstone doc is deleted in CBL too
+
+    """
+    # base_url = "http://192.168.0.109:8989"
+    
+    sg_db = "db"
+    cbl_db_name = "cbl_db"
+    sg_url = params_from_base_test_setup["sg_url"]
+    sg_admin_url = params_from_base_test_setup["sg_admin_url"]
+    sg_mode = params_from_base_test_setup["mode"]
+    cluster_config = params_from_base_test_setup["cluster_config"]
+    sg_blip_url = params_from_base_test_setup["target_url"]
+    base_url = params_from_base_test_setup["base_url"]
+    no_conflicts_enabled = params_from_base_test_setup["no_conflicts_enabled"]
+    sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
+    sg_config = params_from_base_test_setup["sg_config"]
+
+    exp_doc_id = "doc_exp"
+
+    if sync_gateway_version < "2.0":
+        pytest.skip('--no-conflicts is enabled and does not work with sg < 2.0 , so skipping the test')
+
+    channels = ["Replication"]
+    sg_client = MobileRestClient()
+
+    # Modify sync-gateway config to use no-conflicts config
+    db = Database(base_url)
+    if no_conflicts_enabled:
+        sg_config = sync_gateway_config_path_for_mode(sg_conf_name, sg_mode)
+    c = cluster.Cluster(config=cluster_config)
+    c.reset(sg_config_path=sg_config)
+
+    # 1. Add docs to SG.
+    sg_client.create_user(sg_admin_url, sg_db, "autotest", password="password", channels=channels)
+    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, "autotest")
+    session = cookie, session_id
+    sg_docs = document.create_docs(doc_id_prefix='sg_docs', number=num_of_docs,
+                                   attachments_generator=attachment.generate_2_png_10_10, channels=channels)
+    sg_docs = sg_client.add_bulk_docs(url=sg_url, db=sg_db, docs=sg_docs, auth=session)
+    assert len(sg_docs) == num_of_docs
+    
+    # 2. Pull replication to CBL
+    cbl_db = db.create(cbl_db_name)
+    replicator = Replication(base_url)
+    replicator_authenticator = replicator.authentication(session_id, cookie, authentication_type="session")
+    repl_config = replicator.configure(cbl_db, sg_blip_url, continuous=True, channels=channels, replication_type="pull", replicator_authenticator=replicator_authenticator)
+    # repl_config = replicator.configure(cbl_db, sg_blip_url, continuous=True, channels=channels, replicator_authenticator=replicator_authenticator)
+    
+    repl = replicator.create(repl_config)
+    replicator.start(repl)
+    replicator.wait_until_replicator_idle(replicator, repl)
+    replicator.stop(repl)
+    
+    # 3. tombstone doc in SG.
+    doc_id = "sg_docs_6"
+    doc = sg_client.get_doc(url=sg_url, db=sg_db, doc_id=doc_id, auth=session)
+    deleted = sg_client.delete_doc(url=sg_url, db=sg_db, doc_id=doc_id, rev=doc['_rev'], auth=session)
+    
+    # 4. wait for replication to finish
+    replicator.start(repl)
+    replicator.wait_until_replicator_idle(replicator, repl)
+    replicator.stop(repl)
+    cbl_doc_ids = db.getDocIds(cbl_db)
+    assert doc_id not in cbl_doc_ids, "doc is expected to be deleted in CBL ,but not deleted"
+   
+    db.deleteDB(cbl_db)
+    db.close(cbl_db)
+   
+
+@pytest.mark.sanity
+@pytest.mark.listener
+@pytest.mark.parametrize("sg_conf_name, delete_doc_type", [
+    ('listener_tests/listener_tests_no_conflicts', "purge"),
+    ('listener_tests/listener_tests_no_conflicts', "expire"),
+])
+def test_CBL_for_purged_doc(params_from_base_test_setup, sg_conf_name, delete_doc_type):
+    """
+        @summary:
+        1. Create docs in SG.
+        2. pull replication to CBL with continuous
+        3. Purge doc or expire doc in SG.
+        4. wait for replication to finish.
+        5. Stop replication
+        6. Verify that purged doc or expired doc is not deleted in CBL
+
+    """
+    # base_url = "http://192.168.0.109:8989"
+    
+    sg_db = "db"
+    cbl_db_name = "cbl_db"
+    sg_url = params_from_base_test_setup["sg_url"]
+    sg_admin_url = params_from_base_test_setup["sg_admin_url"]
+    sg_mode = params_from_base_test_setup["mode"]
+    cluster_config = params_from_base_test_setup["cluster_config"]
+    sg_blip_url = params_from_base_test_setup["target_url"]
+    base_url = params_from_base_test_setup["base_url"]
+    no_conflicts_enabled = params_from_base_test_setup["no_conflicts_enabled"]
+    sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
+    sg_config = params_from_base_test_setup["sg_config"]
+    num_of_docs=10
+
+    if sync_gateway_version < "2.0":
+        pytest.skip('--no-conflicts is enabled and does not work with sg < 2.0 , so skipping the test')
+
+    channels = ["Replication"]
+    sg_client = MobileRestClient()
+
+    # Modify sync-gateway config to use no-conflicts config
+    db = Database(base_url)
+    if no_conflicts_enabled:
+        sg_config = sync_gateway_config_path_for_mode(sg_conf_name, sg_mode)
+    c = cluster.Cluster(config=cluster_config)
+    c.reset(sg_config_path=sg_config)
+
+    # 1. Add docs to SG.
+    sg_client.create_user(sg_admin_url, sg_db, "autotest", password="password", channels=channels)
+    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, "autotest")
+    session = cookie, session_id
+    sg_docs = document.create_docs(doc_id_prefix='sg_docs', number=num_of_docs,
+                                   attachments_generator=attachment.generate_2_png_10_10, channels=channels)
+    sg_docs = sg_client.add_bulk_docs(url=sg_url, db=sg_db, docs=sg_docs, auth=session)
+    assert len(sg_docs) == num_of_docs
+
+    # Create an expiry doc
+    if delete_doc_type == "expire":
+        doc_exp_3_body = document.create_doc(doc_id="exp_3", expiry=3, channels=channels)
+        doc_exp_3 = sg_client.add_doc(url=sg_url, db=sg_db, doc=doc_exp_3_body, auth=session)
+    
+    
+    # 2. Pull replication to CBL
+    cbl_db = db.create(cbl_db_name)
+    replicator = Replication(base_url)
+    replicator_authenticator = replicator.authentication(session_id, cookie, authentication_type="session")
+    repl_config = replicator.configure(cbl_db, sg_blip_url, continuous=True, channels=channels, replication_type="pull", replicator_authenticator=replicator_authenticator)
+    # repl_config = replicator.configure(cbl_db, sg_blip_url, continuous=True, channels=channels, replicator_authenticator=replicator_authenticator)
+    
+    repl = replicator.create(repl_config)
+    replicator.start(repl)
+    replicator.wait_until_replicator_idle(replicator, repl)
+    # replicator.stop(repl)
+    
+    # 3. Purge doc in SG.
+    if delete_doc_type == "purge":
+        doc_id = "sg_docs_7"
+        doc = sg_client.get_doc(url=sg_url, db=sg_db, doc_id=doc_id, auth=session)
+        sg_client.purge_doc(url=sg_admin_url, db=sg_db, doc=doc)
+
+    # expire doc
+    if delete_doc_type == "expire":
+        time.sleep(5)
+
+    # 4. wait for replication to finish
+    replicator.wait_until_replicator_idle(replicator, repl)
+    replicator.stop(repl)
+    cbl_doc_ids = db.getDocIds(cbl_db)
+    assert doc_id in cbl_doc_ids, "{} document in SG still exists in CBL after replication".format(delete_doc_type)
+
+    db.deleteDB(cbl_db)
+    db.close(cbl_db)
+
+@pytest.mark.sanity
+@pytest.mark.listener
+@pytest.mark.noconflicts
+@pytest.mark.parametrize("sg_conf_name, delete_doc_type", [
+    ('listener_tests/listener_tests_no_conflicts', "purge"),
+    # ('listener_tests/listener_tests_no_conflicts', "expire") # not supported yet
+])
+def test_replication_purge_in_CBL(params_from_base_test_setup, sg_conf_name, delete_doc_type):
+    """
+        @summary:
+        1. Create docs in CBL
+        2. Push replication to SG.
+        3. Purge or expire doc in CBL
+        4. Continue  replication to SG
+        5. Stop replication .
+        6. Verify docs did not get removed in SG
+    
+    """
+    sg_db = "db"
+    cbl_db_name = "cbl_db"
+    sg_url = params_from_base_test_setup["sg_url"]
+    sg_admin_url = params_from_base_test_setup["sg_admin_url"]
+    sg_mode = params_from_base_test_setup["mode"]
+    cluster_config = params_from_base_test_setup["cluster_config"]
+    sg_blip_url = params_from_base_test_setup["target_url"]
+    base_url = params_from_base_test_setup["base_url"]
+    no_conflicts_enabled = params_from_base_test_setup["no_conflicts_enabled"]
+    sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
+    sg_config = params_from_base_test_setup["sg_config"]
+
+    num_of_docs = 10
+    db = Database(base_url)
+    doc_obj = Document(base_url)
+    exp_doc_id = "exp_doc"
+
+    if sync_gateway_version < "2.0":
+        pytest.skip('It does not work with sg < 2.0 , so skipping the test')
+
+    channels = ["Replication"]
+    sg_client = MobileRestClient()
+    # Modify sync-gateway config to use no-conflicts config
+    
+    if no_conflicts_enabled:
+        sg_config = sync_gateway_config_path_for_mode("listener_tests/listener_tests_no_conflicts", sg_mode)
+    c = cluster.Cluster(config=cluster_config)
+    c.reset(sg_config_path=sg_config)
+
+    # Create CBL database
+    cbl_db = db.create(cbl_db_name)
+    db.create_bulk_docs(num_of_docs, "cbl", db=cbl_db, channels=channels)
+
+    # Create an expiry doc
+    if delete_doc_type == "expire":
+        doc_exp_3_body = document.create_doc(doc_id=exp_doc_id, expiry=3, channels=channels)
+        mutable_doc = doc_obj.create(exp_doc_id, doc_exp_3_body)
+        db.saveDocument(cbl_db, mutable_doc)
+        
+    # 2. push replication to SG.
+    sg_client.create_user(sg_admin_url, sg_db, "autotest", password="password", channels=channels)
+    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, "autotest")
+    session = cookie, session_id
+    replicator = Replication(base_url)
+    replicator_authenticator = replicator.authentication(session_id, cookie, authentication_type="session")
+    repl_config = replicator.configure(cbl_db, sg_blip_url, continuous=True, channels=channels, replication_type="push", replicator_authenticator=replicator_authenticator)
+    repl = replicator.create(repl_config)
+    replicator.start(repl)
+    replicator.wait_until_replicator_idle(replicator, repl)
+
+    # 3. Purge doc in CBL
+    cbl_doc_ids = db.getDocIds(cbl_db)
+    removed_cbl_id = random.choice(cbl_doc_ids)
+    if delete_doc_type == "purge":
+        random_cbl_doc = db.getDocument(cbl_db, doc_id=removed_cbl_id)
+        mutable_doc = doc_obj.toMutable(random_cbl_doc)
+        db.purge(cbl_db, mutable_doc)
+    
+    # 3. Expire doc in CBL
+    if delete_doc_type == "expire":
+        time.sleep(10)
+        removed_cbl_id = exp_doc_id
+
+    cbl_doc_ids = db.getDocIds(cbl_db)
+    assert removed_cbl_id not in cbl_doc_ids
+
+    # 4. Continue  replication to SG
+    replicator.wait_until_replicator_idle(replicator, repl)
+    # 5. Stop replication
+    replicator.stop(repl)
+
+    # 6. Verify docs did not  purged in SG
+    sg_docs = sg_client.get_all_docs(url=sg_url, db=sg_db, auth=session)
+    sg_doc_ids = [doc['id'] for doc in sg_docs["rows"]]
+    assert removed_cbl_id in sg_doc_ids, "{} document got {}ed in SG".format(delete_doc_type, delete_doc_type)
+
+
+@pytest.mark.sanity
+@pytest.mark.listener
+@pytest.mark.noconflicts
+@pytest.mark.parametrize("sg_conf_name", [
+    ('listener_tests/listener_tests_no_conflicts')
+])
+def test_replication_delete_in_CBL(params_from_base_test_setup, sg_conf_name):
+    """
+        @summary:
+        1. Create docs in CBL
+        2. Push replication to SG.
+        3. Delete doc in CBL
+        4. Continue replication to SG
+        5. Stop replication .
+        6. Verify deleted doc in CBL got removed in SG too
+    
+    """
+    sg_db = "db"
+    cbl_db_name = "cbl_db"
+    sg_url = params_from_base_test_setup["sg_url"]
+    sg_admin_url = params_from_base_test_setup["sg_admin_url"]
+    sg_mode = params_from_base_test_setup["mode"]
+    cluster_config = params_from_base_test_setup["cluster_config"]
+    sg_blip_url = params_from_base_test_setup["target_url"]
+    base_url = params_from_base_test_setup["base_url"]
+    no_conflicts_enabled = params_from_base_test_setup["no_conflicts_enabled"]
+    sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
+    sg_config = params_from_base_test_setup["sg_config"]
+
+    num_of_docs = 10
+    db = Database(base_url)
+    doc_obj = Document(base_url)
+
+    if sync_gateway_version < "2.0":
+        pytest.skip('It does not work with sg < 2.0 , so skipping the test')
+
+    channels = ["Replication"]
+    sg_client = MobileRestClient()
+    
+    # Modify sync-gateway config to use no-conflicts config
+    if no_conflicts_enabled:
+        sg_config = sync_gateway_config_path_for_mode("listener_tests/listener_tests_no_conflicts", sg_mode)
+    c = cluster.Cluster(config=cluster_config)
+    c.reset(sg_config_path=sg_config)
+
+    # Create CBL database
+    cbl_db = db.create(cbl_db_name)
+    db.create_bulk_docs(num_of_docs, "cbl", db=cbl_db, channels=channels)
+
+    # 2. push replication to SG.
+    sg_client.create_user(sg_admin_url, sg_db, "autotest", password="password", channels=channels)
+    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, "autotest")
+    session = cookie, session_id
+    replicator = Replication(base_url)
+    replicator_authenticator = replicator.authentication(session_id, cookie, authentication_type="session")
+    repl_config = replicator.configure(cbl_db, sg_blip_url, continuous=True, channels=channels, replication_type="push", replicator_authenticator=replicator_authenticator)
+    repl = replicator.create(repl_config)
+    replicator.start(repl)
+    replicator.wait_until_replicator_idle(replicator, repl)
+
+    # 3. Delete doc in CBL
+    cbl_doc_ids = db.getDocIds(cbl_db)
+    random_cbl_id = random.choice(cbl_doc_ids)
+    print "random choice is", random_cbl_id
+    random_cbl_doc = db.getDocument(cbl_db, doc_id=random_cbl_id)
+    print "random cbl doc after get is", random_cbl_doc
+    mutable_doc = doc_obj.toMutable(random_cbl_doc)
+    db.delete(database=cbl_db, document=mutable_doc)
+    cbl_doc_ids = db.getDocIds(cbl_db)
+    assert random_cbl_id not in cbl_doc_ids
+
+    # 4. Continue  replication to SG
+    replicator.wait_until_replicator_idle(replicator, repl)
+    # 5. Stop replication
+    replicator.stop(repl)
+
+    # 6. Verify deleted doc in CBL got removed in SG too
+    sg_docs = sg_client.get_all_docs(url=sg_url, db=sg_db, auth=session)
+    sg_doc_ids = [doc['id'] for doc in sg_docs["rows"]]
+    assert random_cbl_id not in sg_doc_ids, "deleted doc in CBL did not removed in SG"
+
+
+@pytest.mark.sanity
+@pytest.mark.listener
+@pytest.mark.noconflicts
+@pytest.mark.parametrize("sg_conf_name, num_of_docs, number_of_updates", [
+    ('listener_tests/listener_tests_no_conflicts', 10, 4),
+    # ('listener_tests/listener_tests_no_conflicts', 100, 10),
+    # ('listener_tests/listener_tests_no_conflicts', 1000, 10)
+])
+def test_CBL_push_pull_with_sgAccel_down(params_from_base_test_setup, sg_conf_name, num_of_docs, number_of_updates):
+    """
+        @summary:
+        1. Have SG and SG accel up
+        2. Create docs in CBL.
+        3. push replication to SG
+        4. update docs in SG.
+        5. Bring down sg Accel
+        6. Now Get pull replication to SG
+        7. update docs in CBL
+        8. Verify CBL can update docs successfully
+    """
+    # base_url = "http://192.168.0.109:8989"
+    
+    sg_db = "db"
+    cbl_db_name = "cbl_db"
+    sg_url = params_from_base_test_setup["sg_url"]
+    sg_admin_url = params_from_base_test_setup["sg_admin_url"]
+    sg_mode = params_from_base_test_setup["mode"]
+    cluster_config = params_from_base_test_setup["cluster_config"]
+    sg_blip_url = params_from_base_test_setup["target_url"]
+    base_url = params_from_base_test_setup["base_url"]
+    no_conflicts_enabled = params_from_base_test_setup["no_conflicts_enabled"]
+    sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
+    sg_config = params_from_base_test_setup["sg_config"]
+
+    username = "autotest"
+    password = "password"
+
+    if sync_gateway_version < "2.0" or sg_mode.lower() != "di":
+        pytest.skip('sg < 2.0 or mode is not in di , so skipping the test')
+
+    channels = ["Replication"]
+    sg_client = MobileRestClient()
+
+    # 1. Have SG and SG accel up
+    # Modify sync-gateway config to use no-conflicts config
+    db = Database(base_url)
+    if no_conflicts_enabled:
+        sg_config = sync_gateway_config_path_for_mode(sg_conf_name, sg_mode)
+    c = cluster.Cluster(config=cluster_config)
+    c.reset(sg_config_path=sg_config)
+
+    # 2. Create docs in CBL.
+    cbl_db = db.create(cbl_db_name)
+    db.create_bulk_docs(num_of_docs, "cbl", db=cbl_db, channels=channels)
+
+    # 3. push replication to SG
+    replication_type = "push"
+    replicator = Replication(base_url)
+    session, replicator_authenticator, repl = replicator.create_session_configure_replicate(
+        base_url, sg_admin_url, sg_db, username, password, channels, sg_client, cbl_db, sg_blip_url, replication_type)
+    replicator.stop(repl)  # todo : trying removing this
+
+    """
+    # 4. update docs in SG.
+    sg_docs = sg_client.get_all_docs(url=sg_url, db=sg_db, auth=session)
+    sg_client.update_docs(url=sg_url, db=sg_db, docs=sg_docs["rows"], number_updates=number_of_updates, auth=session)
+
+    
+    # 5. Bring down sg Accel
+    c.sg_accels[0].stop()
+
+    # 6. Now Get pull replication to SG
+    repl_config = replicator.configure(cbl_db, sg_blip_url, continuous=False,
+                                       replication_type="pull", channels=channels, replicator_authenticator=replicator_authenticator)
+
+    repl1 = replicator.create(repl_config)
+    replicator.start(repl1)
+    replicator.wait_until_replicator_idle(repl1)
+    replicator.stop(repl1)
+
+    # update docs in CBL
+    db.update_bulk_docs(database=cbl_db, number_of_updates=number_of_updates)
+    cbl_doc_ids = db.getDocIds(cbl_db)
+    cbl_db_docs = db.getDocuments(cbl_db, cbl_doc_ids)
+    print "cbld docs after updated CBL and SG", cbl_db_docs
+    for doc in cbl_doc_ids:
+        assert cbl_db_docs[doc]["updates-cbl"] == number_of_updates, "updates-cbl did not get updated"
+
+    """

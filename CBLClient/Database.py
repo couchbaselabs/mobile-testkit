@@ -39,7 +39,7 @@ class Database:
         else:
             raise Exception("Either pass database and document or pass \
             name and path to delete the document.")
-        return self._client.invokeMethod("database_delete", args)
+        return self._client.invokeMethod("database_deleteDocument", args)
 
     def purge(self, database, document):
         args = Args()
@@ -164,6 +164,11 @@ class Database:
         args.setString("name", name)
         return self._client.invokeMethod("database_exists", args)
 
+    def deleteDBbyName(self, name):
+        args = Args()
+        args.setString("name", name)
+        return self._client.invokeMethod("database_deleteDBbyName", args)
+
     def create_value_index(self, database, prop):
         args = Args()
         args.setMemoryPointer("database", database)
@@ -249,3 +254,13 @@ class Database:
                 doc_body["updates-cbl"] = doc_body["updates-cbl"] + 1
                 doc = doc_obj.setData(doc_mut, doc_body)
                 self.updateDocument(database, doc)
+
+
+    def deleteDBIfExists(self, db_name):
+        if self.exists(db_name):
+            self.deleteDBbyName(db_name)
+
+    def deleteDBIfExistsCreateNew(self, db_name):
+        if self.exists(db_name):
+            self.deleteDBbyName(db_name)
+        return self.create(db_name)

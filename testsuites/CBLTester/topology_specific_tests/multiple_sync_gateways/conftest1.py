@@ -83,7 +83,7 @@ def params_from_base_suite_setup(request):
     enable_sample_bucket = request.config.getoption("--enable-sample-bucket")
     xattrs_enabled = request.config.getoption("--xattrs")
     base_url = "http://{}:{}".format(liteserv_host, liteserv_port)
-    cluster_config = "{}/base_{}".format(CLUSTER_CONFIGS_DIR, mode)
+    cluster_config = "{}/multiple_sync_gateways_{}".format(CLUSTER_CONFIGS_DIR, mode)
     no_conflicts_enabled = request.config.getoption("--no-conflicts")
     sg_config = sync_gateway_config_path_for_mode("sync_gateway_default_functional_tests", mode)
     cluster_utils = ClusterKeywords()
@@ -185,8 +185,7 @@ def params_from_base_suite_setup(request):
         "no_conflicts_enabled": no_conflicts_enabled,
         "sync_gateway_version": sync_gateway_version,
         "base_url": base_url,
-        "enable_sample_bucket": enable_sample_bucket,
-        "sg_config": sg_config
+        "enable_sample_bucket": enable_sample_bucket
     }
 
 
@@ -204,7 +203,6 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     target_url = params_from_base_suite_setup["target_url"]
     target_admin_url = params_from_base_suite_setup["target_admin_url"]
     sync_gateway_version = params_from_base_suite_setup["sync_gateway_version"]
-    sg_config = params_from_base_suite_setup["sg_config"]
     
     base_url = params_from_base_suite_setup["base_url"]
     sg_ip = params_from_base_suite_setup["sg_ip"]
@@ -257,8 +255,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         "sg_db": sg_db,
         "no_conflicts_enabled": no_conflicts_enabled,
         "sync_gateway_version": sync_gateway_version,
-        "base_url": base_url,
-        "sg_config": sg_config
+        "base_url": base_url
     }
 
     if enable_sample_bucket:
