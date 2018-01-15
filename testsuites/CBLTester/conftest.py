@@ -68,9 +68,8 @@ def pytest_addoption(parser):
                      help="xattrs: Enable xattrs for sync gateway")
 
     parser.addoption("--create-db-per-test",
-                     action="store_true",
-                     help="create-db-per-test: Creates/deletes client DB for every test. \
-                     Default is to create/delete client DB per suite")
+                     action="store",
+                     help="create-db-per-test: Creates/deletes client DB for every test")
 
     parser.addoption("--create-db-per-suite",
                      action="store",
@@ -99,7 +98,6 @@ def params_from_base_suite_setup(request):
     server_version = request.config.getoption("--server-version")
     enable_sample_bucket = request.config.getoption("--enable-sample-bucket")
     xattrs_enabled = request.config.getoption("--xattrs")
-
     create_db_per_test = request.config.getoption("--create-db-per-test")
     create_db_per_suite = request.config.getoption("--create-db-per-suite")
 
@@ -168,11 +166,11 @@ def params_from_base_suite_setup(request):
             logging_helper.fetch_and_analyze_logs(cluster_config=cluster_config, test_name=request.node.name)
             raise
 
-    if enable_sample_bucket and not create_db_per_test:
+    if enable_sample_bucket and not create_db_per_suite:
         raise Exception("enable_sample_bucket has to be used with create_db_per_suite")
 
     source_db = None
-    if create_db_per_test:
+    if create_db_per_suite:
         # Create CBL database
         cbl_db = create_db_per_suite
         db = Database(base_url)
@@ -265,15 +263,14 @@ def params_from_base_suite_setup(request):
         log_info("Stopping replication")
         repl_obj.stop(replicator)
 
-    if not create_db_per_test:
+    if create_db_per_suite:
         # Delete CBL database
-        log_info("Deleting the database {} at the suite teardown".format(cbl_db))
+        log_info("Deleting the database {} at the suite teardown".format(create_db_per_suite))
         db.deleteDB(source_db)
 
-
     # Flush all the memory contents on the server app
-    db_obj = Database(base_url)
-    db_obj.flushMemory()
+    utils_obj = Utils(base_url)
+    utils_obj.flushMemory()
 
 
 @pytest.fixture(scope="function")
@@ -341,7 +338,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
 
     if create_db_per_test:
         # Delete CBL database
-        log_info("Deleting the database {} at test teardown".format(cbl_db))
+        log_info("Deleting the database {} at test teardown".format(create_db_per_test))
         db.deleteDB(source_db)
 
 

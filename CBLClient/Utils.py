@@ -1,7 +1,7 @@
 from CBLClient.Client import Client
 
 
-class Release(object):
+class Utils:
     _client = None
 
     def __init__(self, base_url):
@@ -20,3 +20,6 @@ class Release(object):
                 self._client.release(i)
         else:
             self._client.release(obj)
+
+    def flushMemory(self):
+        return self._client.invokeMethod("flushMemory")
