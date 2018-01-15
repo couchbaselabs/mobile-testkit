@@ -6,6 +6,7 @@ from keywords.utils import log_info
 from keywords import types
 from libraries.data import doc_generators
 
+
 class Database(object):
     _db = None
 

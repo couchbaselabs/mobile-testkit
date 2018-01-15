@@ -1,6 +1,6 @@
 import json
-
 from CBLClient.MemoryPointer import MemoryPointer
+
 
 class ValueSerializer(object):
     @staticmethod
@@ -24,7 +24,7 @@ class ValueSerializer(object):
             number = long(value)
             return "L" + str(number)
         elif isinstance(value, int):
-            if value/1000000000 < 2:
+            if value / 1000000000 < 2:
                 number = int(value)
                 return "I" + str(number)
             return "L" + str(value)

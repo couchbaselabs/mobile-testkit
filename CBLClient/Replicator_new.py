@@ -2,11 +2,11 @@ from CBLClient.Client import Client
 from CBLClient.Args import Args
 from CBLClient.ReplicatorConfiguration import ReplicatorConfiguration
 
+
 class Replicator(object):
     '''
     classdocs
     '''
-
 
     def __init__(self, base_url):
         '''

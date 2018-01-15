@@ -76,7 +76,7 @@ class TestReplication(object):
         sg_blip_url = sg_admin_url.replace("http", "blip")
         sg_blip_url = "{}/db".format(sg_blip_url)
         channels = ["ABC"]
-        sg_doc_ids, cbl_db, _ = self.setup_sg_cbl_docs(cluster_config,
+        sg_doc_ids, cbl_db, _, _ = self.setup_sg_cbl_docs(cluster_config,
                                                        sg_mode, channels,
                                                        sg_blip_url,
                                                        sg_admin_url,

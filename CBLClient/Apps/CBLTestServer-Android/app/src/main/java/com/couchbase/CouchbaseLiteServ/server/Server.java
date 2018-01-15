@@ -96,6 +96,8 @@ public class Server extends NanoHTTPD {
             String body = null;
             if ("release".equals(method)) {
                 memory.remove(rawArgs.get("object"));
+            } else if ("flushMemory".equals(method)){
+                memory.flushMemory();
             } else {
                 Object requestHandler = null;
                 String handlerType = method.split("_")[0];

@@ -1,6 +1,7 @@
 from CBLClient.Client import Client
 from CBLClient.Args import Args
 
+
 class BasicAuthenticator(object):
     _client = None
 

@@ -111,6 +111,7 @@ def params_from_base_suite_setup(request):
     cluster_topology = cluster_utils.get_cluster_topology(cluster_config)
 
     sg_db = "db"
+    cbl_db = None
     sg_url = cluster_topology["sync_gateways"][0]["public"]
     sg_ip = host_for_url(sg_url)
     target_url = "blip://{}:4984/{}".format(sg_ip, sg_db)
@@ -205,6 +206,7 @@ def params_from_base_suite_setup(request):
             sg_ip = host_for_url(sg["admin"])
             log_info("Restarting sync gateway {}".format(sg_ip))
             sg_obj.restart_sync_gateways(cluster_config=cluster_config, url=sg_ip)
+            # Giving time to SG to load all docs into it's cache
             time.sleep(240)
 
         if mode == "di":
