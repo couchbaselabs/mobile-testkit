@@ -62,11 +62,11 @@ class Query:
         args = Args()
         args.setString("query_result_set", query_result_set)
 
-        return self._client.invokeMethod("query_next_result", args)
+        return self._client.invokeMethod("query_nextResult", args)
 
     def query_result_string(self, query_result, key):
         args = Args()
-        args.setString("query_result", query_result)
+        args.setString("query_result_getString", query_result)
         args.setString("key", key)
 
         return self._client.invokeMethod("query_result_string", args)
@@ -75,44 +75,44 @@ class Query:
         args = Args()
         args.setMemoryPointer("expression", expression)
 
-        return self._client.invokeMethod("query_select_result_expression_create", args)
+        return self._client.invokeMethod("query_selectResult_expressionCreate", args)
 
     def query_select_result_all_create(self):
-        return self._client.invokeMethod("query_select_result_all_create")
+        return self._client.invokeMethod("selectResult_all")
 
     def query_expression_meta_id(self):
-        return self._client.invokeMethod("query_expression_meta_id")
+        return self._client.invokeMethod("query_expression_metaId")
 
     def query_expression_meta_sequence(self):
-        return self._client.invokeMethod("query_expression_meta_sequence")
+        return self._client.invokeMethod("query_expression_metaSequence")
 
-    def create_equalTo_expression(self, expression1, expression2):
+    def query_create_equalTo_expression(self, expression1, expression2):
         args = Args()
         args.setMemoryPointer("expression1", expression1)
         args.setMemoryPointer("expression2", expression2)
 
-        return self._client.invokeMethod("create_equalTo_expression", args)
+        return self._client.invokeMethod("query_expression_createEqualTo", args)
 
     def create_and_expression(self, expression1, expression2):
         args = Args()
         args.setMemoryPointer("expression1", expression1)
         args.setMemoryPointer("expression2", expression2)
 
-        return self._client.invokeMethod("create_and_expression", args)
+        return self._client.invokeMethod("query_expression_createAnd", args)
 
     def create_or_expression(self, expression1, expression2):
         args = Args()
         args.setMemoryPointer("expression1", expression1)
         args.setMemoryPointer("expression2", expression2)
 
-        return self._client.invokeMethod("create_or_expression", args)
+        return self._client.invokeMethod("query_expression_createOr", args)
 
     def query_get_doc(self, database, doc_id):
         args = Args()
         args.setMemoryPointer("database", database)
         args.setString("doc_id", doc_id)
 
-        return self._client.invokeMethod("query_get_doc", args)
+        return self._client.invokeMethod("query_getDoc", args)
 
     def query_get_docs_limit_offset(self, database, limit, offset):
         args = Args()
@@ -120,7 +120,7 @@ class Query:
         args.setInt("limit", limit)
         args.setInt("offset", offset)
 
-        return self._client.invokeMethod("query_get_docs_limit_offset", args)
+        return self._client.invokeMethod("query_docsLimitOffset", args)
 
     def query_multiple_selects(self, database, select_property1, select_property2, whr_key, whr_val):
         args = Args()
@@ -130,7 +130,7 @@ class Query:
         args.setString("whr_key", whr_key)
         args.setString("whr_val", whr_val)
 
-        return self._client.invokeMethod("query_multiple_selects", args)
+        return self._client.invokeMethod("query_multipleSelects", args)
 
     def query_where_and_or(self, database, whr_key1, whr_val1, whr_key2, whr_val2, whr_key3, whr_val3, whr_key4, whr_val4):
         args = Args()
@@ -144,7 +144,7 @@ class Query:
         args.setString("whr_key4", whr_key4)
         args.setBoolean("whr_val4", whr_val4)
 
-        return self._client.invokeMethod("query_where_and_or", args)
+        return self._client.invokeMethod("query_whereAndOr", args)
 
     def query_like(self, database, whr_key, whr_val, select_property1, select_property2, like_key, like_val):
         args = Args()

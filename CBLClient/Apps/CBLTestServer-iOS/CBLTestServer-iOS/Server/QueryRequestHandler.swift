@@ -45,10 +45,10 @@ public class QueryRequestHandler {
             let property: String = args.get(name: "property")!
             return Expression.property(property)
 
-        case "query_meta_id":
+        case "query_expression_metaId":
             return Meta.id
 
-        case "query_meta_sequence":
+        case "query_expression_metaSequence":
             return Meta.sequence
 
         case "query_expression_parameter":
@@ -79,17 +79,17 @@ public class QueryRequestHandler {
             let variable: String = args.get(name: "variable")!
             return ArrayExpression.every(variable)
 
-        case "create_equalTo_expression":
+        case "query_expression_createEqualTo":
             let expression1: Expression = args.get(name: "expression1")!
             let expression2: Any = args.get(name: "expression2")!
             return expression1.equalTo(expression2)
 
-        case "create_and_expression":
+        case "query_expression_createAnd":
             let expression1: Expression = args.get(name: "expression1")!
             let expression2: Any = args.get(name: "expression2")!
             return expression1.and(expression2)
 
-        case "create_or_expression":
+        case "query_expression_createOr":
             let expression1: Expression = args.get(name: "expression1")!
             let expression2: Any = args.get(name: "expression2")!
             return expression1.or(expression2)
@@ -305,12 +305,12 @@ public class QueryRequestHandler {
         // Query SelectResult //
         ////////////////////////
 
-        case "query_select_result_expression_create":
+        case "query_selectResult_expressionCreate":
             let expression: Expression = args.get(name: "expression")!
 
             return SelectResult.expression(expression)
 
-        case "query_select_result_all_create":
+        case "query_selectResult_all":
             return SelectResult.all()
 
         case "query_select":
@@ -340,18 +340,18 @@ public class QueryRequestHandler {
             let query: Query = args.get(name: "query")!
             return try query.execute()
 
-        case "query_next_result":
+        case "query_nextResult":
             let query_result_set: ResultSet = args.get(name: "query_result_set")!
 
             return query_result_set.next()
 
-        case "query_result_string":
+        case "query_result_getString":
             let query_result: Result = args.get(name: "query_result")!
             let key: String = args.get(name: "key")!
 
             return query_result.string(forKey: key)
 
-        case "query_get_doc":
+        case "query_getDoc":
             let database: Database = args.get(name: "database")!
             let doc_id: String = args.get(name: "doc_id")!
 
@@ -368,7 +368,7 @@ public class QueryRequestHandler {
 
             return resultArray
 
-        case "query_get_docs_limit_offset":
+        case "query_docsLimitOffset":
             let database: Database = args.get(name: "database")!
             let limit: Int = args.get(name: "limit")!
             let offset: Int = args.get(name: "offset")!
@@ -386,7 +386,7 @@ public class QueryRequestHandler {
 
             return resultArray
 
-        case "query_multiple_selects":
+        case "query_multipleSelects":
             let database: Database = args.get(name: "database")!
             let select_property1: String = args.get(name: "select_property1")!
             let select_property2: String = args.get(name: "select_property2")!
@@ -408,7 +408,7 @@ public class QueryRequestHandler {
 
             return resultArray
 
-        case "query_where_and_or":
+        case "query_whereAndOr":
             let database: Database = args.get(name: "database")!
             let whr_key1: String = args.get(name: "whr_key1")!
             let whr_val1: String = args.get(name: "whr_val1")!
