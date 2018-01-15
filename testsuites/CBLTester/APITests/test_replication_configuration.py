@@ -1,5 +1,6 @@
 import pytest
 
+
 @pytest.mark.usefixtures("class_init")
 class TestReplicatorConfiguration(object):
     cbl_db_name = "cbl_db"
@@ -42,7 +43,7 @@ class TestReplicatorConfiguration(object):
         assert self.repl_config_obj.getChannels(config) == -1
         channels = ["ABC"]
         self.repl_config_obj.setChannels(config, channels)
-        assert  channels == self.repl_config_obj.getChannels(config)
+        assert channels == self.repl_config_obj.getChannels(config)
 
     def test_get_set_continous(self, params_from_base_test_setup):
         sg_admin_url = params_from_base_test_setup["sg_admin_url"]
@@ -90,7 +91,7 @@ class TestReplicatorConfiguration(object):
         sg_blip_url = "{}/db".format(sg_blip_url)
         cbl_db = self.db_obj.create(self.cbl_db_name)
         config = self.repl_config_obj.create(source_db=cbl_db, target_url=sg_blip_url)
-        #assert 0
+        # assert 0
 
     def test_get_set_get_set_conflictResolver(self, params_from_base_test_setup):
         sg_admin_url = params_from_base_test_setup["sg_admin_url"]
@@ -98,4 +99,4 @@ class TestReplicatorConfiguration(object):
         sg_blip_url = "{}/db".format(sg_blip_url)
         cbl_db = self.db_obj.create(self.cbl_db_name)
         config = self.repl_config_obj.create(source_db=cbl_db, target_url=sg_blip_url)
-        #assert 0
+        # assert 0

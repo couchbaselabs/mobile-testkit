@@ -1,7 +1,7 @@
 import random
 import pytest
-
 from keywords.utils import random_string
+
 
 @pytest.mark.usefixtures("class_init")
 class TestDictionary(object):
@@ -17,7 +17,7 @@ class TestDictionary(object):
         (random_string(5), random_string(9).upper()),
         (random_string(5), "{}12".format(random_string(5))),
         (random_string(5), random_string(10, digit=True))
-        ])
+    ])
     def test_create(self, key, value):
         '''
         @summary: Testing create method of Dictionary API
@@ -40,7 +40,7 @@ class TestDictionary(object):
         (random_string(5), random.randint(1, 1000)),
         (random_string(5), random.randint(100000, 10000000)),
         (random_string(5), random_string(6))
-        ])
+    ])
     def test_contains(self, key, value):
         '''
         @summary: Testing contains method of Dictionary API
@@ -54,7 +54,7 @@ class TestDictionary(object):
         99,
         999,
         9999
-        ])
+    ])
     def test_count(self, num_of_keys):
         '''
         @summary: Testing count method of Dictionary API
@@ -69,7 +69,8 @@ class TestDictionary(object):
 
     @pytest.mark.parametrize("key, value", [
         (random_string(6), True),
-        (random_string(6), False)])
+        (random_string(6), False)
+    ])
     def test_get_set_boolean(self, key, value):
         '''
         @summary: Testing get and set Boolean methods of Dictionary API
@@ -128,7 +129,7 @@ class TestDictionary(object):
         (random_string(6), "{}".format(random.uniform(1, 10))),
         (random_string(6), "{}".format(random.uniform(11, 100))),
         (random_string(6), "{}".format(random.uniform(101, 1000)))
-        ])
+    ])
     def test_get_set_double(self, key, value):
         '''
         @summary: Testing get and set Double methods of Dictionary API
@@ -147,7 +148,7 @@ class TestDictionary(object):
         (random_string(6), round(random.uniform(1, 10), 3)),
         (random_string(6), round(random.uniform(11, 100), 3)),
         (random_string(6), round(random.uniform(101, 1000), 3))
-        ])
+    ])
     def test_get_set_float(self, key, value):
         '''
         @summary: Testing get and set Float methods of Dictionary API
@@ -162,7 +163,7 @@ class TestDictionary(object):
         (random_string(6), random.randint(10, 99)),
         (random_string(6), random.randint(100, 999)),
         (random_string(6), random.randint(1000, 9999))
-        ])
+    ])
     def test_get_set_int(self, key, value):
         '''
         @summary: Testing get and set Integer methods of Dictionary API
@@ -176,7 +177,7 @@ class TestDictionary(object):
         (random_string(6), "{}".format(random.randint(1, 10))),
         (random_string(6), "{}".format(random.randint(11, 100))),
         (random_string(6), "{}".format(random.randint(101, 1000)))
-        ])
+    ])
     def test_get_set_long(self, key, value):
         '''
         @summary: Testing get and set Long methods of Dictionary API
@@ -202,8 +203,8 @@ class TestDictionary(object):
         (random_string(5), random_string(9).upper()),
         (random_string(5), "{}12".format(random_string(5))),
         (random_string(5), random_string(10, digit=True)),
-        #(random_string(128), random_string(128, True)),
-        ])
+        (random_string(128), random_string(128, True)),
+    ])
     def test_get_set_string(self, key, value):
         '''
         @summary: Testing get and set String methods of Dictionary API
@@ -215,9 +216,9 @@ class TestDictionary(object):
     @pytest.mark.parametrize("key, value, num_of_keys", [
         (random_string(5), random_string(5), 9),
         (random_string(5), random_string(5), 99),
-        #(random_string(5), random_string(5), 999),
-        #(random_string(5), random_string(5), 9999)
-        ])
+        (random_string(5), random_string(5), 999),
+        (random_string(5), random_string(5), 9999)
+    ])
     def test_getKeys(self, key, value, num_of_keys):
         '''
         @summary: Testing getKeys methods of Dictionary API
@@ -237,7 +238,7 @@ class TestDictionary(object):
         (random_string(5), random.randint(1, 1000)),
         (random_string(5), random.randint(100000, 10000000)),
         (random_string(5), random_string(6))
-        ])
+    ])
     def test_remove(self, key, value):
         '''
         @summary: Testing remove method of Dictionary API
@@ -258,7 +259,7 @@ class TestDictionary(object):
             "Integer_key": random.randint(1, 1000),
             "Long_key": random.randint(100000, 10000000),
             "String_key": random_string(6)
-            }
+        }
         content_dict = self.dict_obj.create(hashmap)
         result_dict = self.dict_obj.toMap(content_dict)
         assert hashmap == result_dict

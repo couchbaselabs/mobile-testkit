@@ -1,6 +1,6 @@
 import pytest
-
 from keywords.utils import random_string
+
 
 @pytest.mark.usefixtures("class_init")
 class TestDatabase(object):

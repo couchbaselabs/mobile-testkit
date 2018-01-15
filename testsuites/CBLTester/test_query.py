@@ -65,7 +65,6 @@ def test_doc_get(params_from_base_test_setup, doc_id):
     liteserv_port = params_from_base_test_setup["liteserv_port"]
     cluster_topology = params_from_base_test_setup["cluster_topology"]
     source_db = params_from_base_test_setup["source_db"]
-    cbl_db = params_from_base_test_setup["cbl_db"]
     cbs_url = cluster_topology['couchbase_servers'][0]
     base_url = "http://{}:{}".format(liteserv_host, liteserv_port)
     cbs_ip = host_for_url(cbs_url)
@@ -116,7 +115,6 @@ def test_get_docs_with_limit_offset(params_from_base_test_setup, limit, offset):
     liteserv_host = params_from_base_test_setup["liteserv_host"]
     liteserv_port = params_from_base_test_setup["liteserv_port"]
     source_db = params_from_base_test_setup["source_db"]
-    cbl_db = params_from_base_test_setup["cbl_db"]
     base_url = "http://{}:{}".format(liteserv_host, liteserv_port)
 
     log_info("Fetching docs from CBL through query")

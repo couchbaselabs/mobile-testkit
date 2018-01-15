@@ -8,7 +8,7 @@ from CBLClient.Replication import Replication
 from CBLClient.Dictionary import Dictionary
 from CBLClient.Document import Document
 from CBLClient.Query import Query
-from CBLClient.Utils import Release
+from CBLClient.Utils import Utils
 
 from keywords.SyncGateway import sync_gateway_config_path_for_mode
 from libraries.testkit import cluster

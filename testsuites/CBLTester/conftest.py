@@ -21,9 +21,11 @@ from CBLClient.Dictionary import Dictionary
 from CBLClient.DataTypeInitiator import DataTypeInitiator
 from CBLClient.SessionAuthenticator import SessionAuthenticator
 from CBLClient.ReplicatorConfiguration import ReplicatorConfiguration
+from CBLClient.Utils import Utils
 
 from couchbase.bucket import Bucket
 from couchbase.n1ql import N1QLQuery
+
 
 def pytest_addoption(parser):
     parser.addoption("--mode",
@@ -373,4 +375,3 @@ def class_init(request, params_from_base_suite_setup):
 
     yield
     db_obj.deleteDB(db)
-    

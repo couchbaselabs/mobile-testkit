@@ -6,6 +6,7 @@ from keywords.MobileRestClient import MobileRestClient
 from keywords.SyncGateway import sync_gateway_config_path_for_mode
 from libraries.testkit.cluster import Cluster
 
+
 @pytest.mark.usefixtures("class_init")
 class TestReplication(object):
     cbl_db_name = "cbl_db"
@@ -38,11 +39,11 @@ class TestReplication(object):
 
         authenticator = self.base_auth_obj.create("travel-sample", "password")
         replicator = self.repl_obj.configure(source_db=cbl_db,
-                                                   target_url=sg_blip_url,
-                                                   replication_type="PUSH_AND_PULL",
-                                                   continuous=True,
-                                                   channels=channels,
-                                                   replicator_authenticator=authenticator)
+                                             target_url=sg_blip_url,
+                                             replication_type="PUSH_AND_PULL",
+                                             continuous=True,
+                                             channels=channels,
+                                             replicator_authenticator=authenticator)
         self.repl_obj.start(replicator)
         sleep(5)
         self.repl_obj.stop(replicator)
@@ -65,7 +66,7 @@ class TestReplication(object):
         ("PULL", "basic", 10, 5),
         ("PUSH", "session", 10, 5),
         ("PULL", "session", 10, 5)
-        ])
+    ])
     def test_replication_configuration_with_one_way_replication(self, params_from_base_test_setup,
                                                                 repl_type, auth_type, sg_docs_count, cbl_docs_count):
         sg_url = params_from_base_test_setup["sg_url"]
@@ -87,7 +88,7 @@ class TestReplication(object):
         sg_docs = self.sg_client.get_all_docs(url=sg_admin_url, db=self.sg_db)
 
         docs_at_cbl = self.db_obj.getCount(cbl_db)
-        #cbl_doc_ids = self.db_obj.getDocIds(cbl_db)
+        # cbl_doc_ids = self.db_obj.getDocIds(cbl_db)
         if repl_type == "PUSH":
             sg_final_doc_count = sg_docs_count + cbl_docs_count
             cbl_final_doc_count = cbl_docs_count
@@ -110,12 +111,11 @@ class TestReplication(object):
     @pytest.mark.listener
     def test_replication_push_replication_without_authentication(self, params_from_base_test_setup):
         """
-            @summary: 
+            @summary:
             1. Create docs in CBL
             2. Create docs in SG
             3. Do push replication without authentication.
             4. Verify docs are not replicated without authentication
-        
         """
         sg_db = "db"
         sg_url = params_from_base_test_setup["sg_url"]
@@ -129,18 +129,19 @@ class TestReplication(object):
         print "set up of conftest is done"
 
         cbl_db, auth_session = self.setup_sg_cbl_docs(cluster_config,
-                                                           sg_mode, channels,
-                                                           sg_blip_url,
-                                                           sg_admin_url,
-                                                           sg_url,
-                                                           repl_type="PUSH")[1:3]
-        sg_docs = self.sg_client.get_all_docs(url=sg_url, db=sg_db, auth=auth_session)
-        
+                                                      sg_mode, channels,
+                                                      sg_blip_url,
+                                                      sg_admin_url,
+                                                      sg_url,
+                                                      repl_type="PUSH")[1:3]
+        sg_docs = self.sg_client.get_all_docs(url=sg_url, db=sg_db,
+                                              auth=auth_session)
+
         cbl_doc_count = self.db.getCount(cbl_db)
         cbl_doc_ids = self.db.getDocIds(cbl_db)
-    
-        assert len(sg_docs["rows"]) == 15 , "Number of sg docs is not same previous number before replication as authentication is not provided"
-    
+
+        assert len(sg_docs["rows"]) == 15, "Number of sg docs is not same previous number before replication as authentication is not provided"
+
         # Check that all doc ids in CBL are not replicated to SG
         sg_ids = [row["id"] for row in sg_docs["rows"]]
         for doc in cbl_doc_ids:
@@ -158,19 +159,19 @@ class TestReplication(object):
     def test_replication_push_replication_invalid_authentication(self, params_from_base_test_setup, replicator_authenticator,
                                                                  invalid_username, invalid_password, invalid_session, invalid_cookie):
         """
-            @summary: 
+            @summary:
             1. Create docs in CBL
             2. Create docs in SG
             3. Do push replication with invalid authentication.
-            4. Verify replication configuration fails. 
-        
+            4. Verify replication configuration fails.
+
         """
         sg_url = params_from_base_test_setup["sg_url"]
         sg_admin_url = params_from_base_test_setup["sg_admin_url"]
         sg_blip_url = sg_url.replace("http", "blip")
         sg_blip_url = "{}/db".format(sg_blip_url)
         channels = ["ABC"]
-    
+
         sg_mode = params_from_base_test_setup["mode"]
         cluster_config = params_from_base_test_setup["cluster_config"]
         replicator = self.setup_sg_cbl_docs(cluster_config,
@@ -185,7 +186,7 @@ class TestReplication(object):
         """
 
         sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db)
-        
+
         cbl_doc_count = self.db.getCount(cbl_db)
         cbl_doc_ids = self.db.getDocIds(cbl_db)
 
@@ -207,7 +208,7 @@ class TestReplication(object):
             2. Create docs in CBL
             3. Send doc ids which you want to have replication to the docs ids passed in replication configuration
             4. Verify CBL docs with doc ids sent in configuration got replicated to SG
-        
+
         """
         sg_db = "db"
         cbl_db_name = "cbl_db"
@@ -252,35 +253,34 @@ class TestReplication(object):
             1. Create docs in CBL
             2. Make replication configuration by authenticating through headers
             4. Verify CBL docs with doc ids sent in configuration got replicated to SG
-        
         """
         sg_db = "db"
         cbl_db_name = "cbl_db"
         num_of_docs = 10
-    
+
         sg_admin_url = params_from_base_test_setup["sg_admin_url"]
         sg_url = params_from_base_test_setup["sg_url"]
         sg_blip_url = params_from_base_test_setup["target_url"]
         channels = ["ABC"]
-    
+
         # Create CBL database
         cbl_db = self.db.create(cbl_db_name)
         sg_client = MobileRestClient()
-    
+
         self.db.create_bulk_docs(num_of_docs, "cbll", db=cbl_db, channels=channels)
         cbl_added_doc_ids = self.db.getDocIds(cbl_db)
-    
+
         # Add docs in SG
         sg_client.create_user(sg_admin_url, sg_db, "autotest", password="password", channels=channels)
         cookie, session = sg_client.create_session(sg_admin_url, sg_db, "autotest")
         auth_session = cookie, session
         sync_cookie = "{}={}".format(cookie, session)
-        
+
         session_header = {"Cookie": sync_cookie}
-        
+
         # repl = replicator.configure(cbl_db, target_url=sg_blip_url, continuous=True, headers=session_header)
         repl = self.repl_obj.configure(cbl_db, target_url=sg_blip_url, continuous=True)
-        
+
         self.repl_obj.start(repl)
         sleep(1)
         self.repl_obj.stop(repl)
@@ -289,13 +289,13 @@ class TestReplication(object):
         self.repl_obj.get_changes_changelistener(repl, repl_change_listener)
         print " replicator status msg ", repl_status_msg
         sg_docs = sg_client.get_all_docs(url=sg_url, db=sg_db, auth=auth_session)
-        
+
         # Verify database doc counts
         cbl_doc_ids = self.db.getDocIds(cbl_db)
-    
+
         assert len(sg_docs["rows"]) == num_of_docs, "Number of sg docs should be equal to cbl docs"
         assert len(cbl_doc_ids) == num_of_docs, "Did not get expected number of cbl docs"
-    
+
         # Check that all doc ids in CBL are replicated to SG
         sg_ids = [row["id"] for row in sg_docs["rows"]]
         for doc in cbl_doc_ids:
@@ -317,30 +317,31 @@ class TestReplication(object):
                                      channels=channels)
         # Add docs in SG
         self.sg_client.create_user(sg_admin_url, self.sg_db, "travel-sample",
-                              password="password", channels=channels)
+                                   password="password", channels=channels)
         cookie, session = self.sg_client.create_session(sg_admin_url,
-                                                   self.sg_db, "travel-sample")
+                                                        self.sg_db,
+                                                        "travel-sample")
         auth_session = cookie, session
         sg_added_docs = self.sg_client.add_docs(url=sg_url, db=self.sg_db,
-                                           number=num_sg_docs,
-                                           id_prefix="sg_doc",
-                                           channels=channels,
-                                           auth=auth_session)
+                                                number=num_sg_docs,
+                                                id_prefix="sg_doc",
+                                                channels=channels,
+                                                auth=auth_session)
         sg_added_ids = [row["id"] for row in sg_added_docs]
 
         # Start and stop continuous replication
         if repl_auth_type == "session":
-            replicator_authenticator = self.session_auth_obj.create(session, 60*60, cookie)
+            replicator_authenticator = self.session_auth_obj.create(session, 60 * 60, cookie)
         elif repl_auth_type == "basic":
             replicator_authenticator = self.base_auth_obj.create(username="travel-sample", password="password")
         else:
             replicator_authenticator = None
         replicator = self.repl_obj.configure(source_db=cbl_db,
-                                                   target_url=sg_blip_url,
-                                                   replication_type=repl_type,
-                                                   continuous=True,
-                                                   channels=channels,
-                                                   replicator_authenticator=replicator_authenticator)
+                                             target_url=sg_blip_url,
+                                             replication_type=repl_type,
+                                             continuous=True,
+                                             channels=channels,
+                                             replicator_authenticator=replicator_authenticator)
         self.repl_obj.start(replicator)
         sleep(5)
         self.repl_obj.stop(replicator)
