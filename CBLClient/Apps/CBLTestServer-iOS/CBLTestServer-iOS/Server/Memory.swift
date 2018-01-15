@@ -28,10 +28,7 @@ public class Memory {
     }
     
     public func flushMemory() {
-        for key in _memory.keys {
-            _memory[key] = nil
-        }
-        
+        _memory.removeAll()
         _address = 0
     }
 }
