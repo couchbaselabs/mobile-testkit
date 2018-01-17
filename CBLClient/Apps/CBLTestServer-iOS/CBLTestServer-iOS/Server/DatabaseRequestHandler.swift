@@ -110,7 +110,7 @@ public class DatabaseRequestHandler {
             let database: Database = (args.get(name:"database"))!
             let id: String = (args.get(name: "id"))!
 
-            return database.containsDocument(withID: id)
+            return database.document(withID: id) != nil
 
         case "database_getCount":
             let database: Database = (args.get(name:"database"))!

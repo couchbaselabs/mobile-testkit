@@ -22,16 +22,14 @@ public class SessionAuthenticatorRequestHandler {
         case "sessionauthenticator_createwithDate":
             let sessionId: String = args.get(name: "sessionId")!
             let cookieName:String = args.get(name: "cookieName")!
-            let expires: Date = args.get(name: "expires")!
             
-            return SessionAuthenticator(sessionID: sessionId, expireDate: expires, cookieName: cookieName)
+            return SessionAuthenticator(sessionID: sessionId, cookieName: cookieName)
 
         case "sessionauthenticator_createwithString":
             let sessionId: String = args.get(name: "sessionId")!
             let cookieName:String = args.get(name: "cookieName")!
-            let expireString: Any = args.get(name: "expires")!
             
-            return SessionAuthenticator(sessionID: sessionId, expireString: expireString, cookieName: cookieName)
+            return SessionAuthenticator(sessionID: sessionId, cookieName: cookieName)
 
         case "sessionauthenticator_getSessionId":
             let session: SessionAuthenticator = args.get(name: "session")!
@@ -40,10 +38,6 @@ public class SessionAuthenticatorRequestHandler {
         case "sessionauthenticator_getCookieName":
             let session: SessionAuthenticator = args.get(name: "session")!
             return session.cookieName
-        
-        case "sessionauthenticator_getExpires":
-            let session: SessionAuthenticator = args.get(name: "session")!
-            return session.expires
 
         default:
             throw RequestHandlerError.MethodNotFound(method)
