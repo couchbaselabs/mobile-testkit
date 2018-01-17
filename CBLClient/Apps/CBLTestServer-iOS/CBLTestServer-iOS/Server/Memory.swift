@@ -26,4 +26,10 @@ public class Memory {
     public func remove(address: String) {
         _memory[address] = nil
     }
+
+    
+    public func flushMemory() {
+        _memory.removeAll()
+        _address = 0
+    }
 }

@@ -68,10 +68,7 @@ class Query(object):
         args = Args()
         args.setString("query_result_set", query_result_set)
 
-        #needs to be change
-        #return self._client.invokeMethod("query_next_result", args)
         return self._client.invokeMethod("query_nextResult", args)
-
 
     def query_result_string(self, query_result, key):
         args = Args()
