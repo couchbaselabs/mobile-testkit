@@ -117,6 +117,9 @@ def params_from_base_suite_setup(request):
     target_url = "blip://{}:4984/{}".format(sg_ip, sg_db)
     target_admin_url = "blip://{}:4985/{}".format(sg_ip, sg_db)
 
+    cbs_url = cluster_topology['couchbase_servers'][0]
+    cbs_ip = host_for_url(cbs_url)
+
     try:
         server_version
     except NameError:
@@ -337,7 +340,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         "no_conflicts_enabled": no_conflicts_enabled,
         "sync_gateway_version": sync_gateway_version,
         "source_db": source_db,
-        "cbl_db": cbl_db,
+        "cbl_db": cbl_db
     }
 
     if create_db_per_test:
