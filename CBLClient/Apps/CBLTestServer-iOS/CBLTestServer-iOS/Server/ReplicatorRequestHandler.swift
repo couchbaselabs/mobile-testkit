@@ -22,9 +22,8 @@ public class ReplicatorRequestHandler {
 
         if authenticatorType == "session" {
             let sessionid: String! = args.get(name: "sessionId")
-            let expires: Any? = args.get(name: "expires")
             let cookiename: String! = args.get(name: "cookieName")
-            return SessionAuthenticator(sessionID: sessionid, expireString: expires, cookieName: cookiename)
+            return SessionAuthenticator(sessionID: sessionid, cookieName: cookiename)
         }
         else {
             let username: String! = args.get(name: "username")
@@ -44,6 +43,7 @@ public class ReplicatorRequestHandler {
             let authenticator: Authenticator? = args.get(name: "authenticator")
             let conflictResolver: ConflictResolver? = args.get(name: "conflictResolver")
             let headers: Dictionary<String, String>? = args.get(name: "headers")!
+            let secure: Bool? = args.get(name: "secure")
 
             var replicatorType = ReplicatorType.pushAndPull
 
@@ -57,21 +57,36 @@ public class ReplicatorRequestHandler {
                 }
             }
 
-            let target_converted_url: URL? = URL(string: target_url!)
-            if (source_db != nil && target_converted_url != nil) {
-                var config = ReplicatorConfiguration(withDatabase: source_db!, targetURL: target_converted_url!)
-                config.replicatorType = replicatorType
-                config.continuous = continuous != nil ? continuous! : false
-                config.authenticator = authenticator
-                config.conflictResolver = conflictResolver
-                config.headers = headers
+            //let target_converted_url: URL? = URL(string: target_url!)
+            if (source_db != nil && target_url != nil) {
+                var target: URLEndpoint
+                if secure != nil {
+                    target = URLEndpoint(withHost: target_url!, secure: secure!)
+                } else {
+                    target = URLEndpoint(withHost: target_url!, secure: false)
+                }
+                
+                var config = ReplicatorConfiguration.Builder(withDatabase: source_db!, target: target)
+
+                config.setReplicatorType(replicatorType)
+                if continuous != nil {
+                    config.setContinuous(continuous!)
+                } else {
+                    config.setContinuous(false)
+                }
+                if headers != nil {
+                    config.setHeaders(headers)
+                }
+                config.setAuthenticator(authenticator)
+                config.setConflictResolver(conflictResolver!)
                 if channels != nil {
-                    config.channels = channels
+                    config.setChannels(channels)
                 }
                 if documentIDs != nil {
-                    config.documentIDs = documentIDs
+                    config.setDocumentIDs(documentIDs)
                 }
                 return config
+                # return Replicator(withConfig: config.build())
             }
             else{
                 throw RequestHandlerError.InvalidArgument("No source db provided or target url provided")
@@ -102,19 +117,33 @@ public class ReplicatorRequestHandler {
             }
 
             if (source_db != nil && targetDatabase != nil) {
-                var config = ReplicatorConfiguration(withDatabase: source_db!, targetDatabase: targetDatabase!)
-                config.replicatorType = replicatorType
-                config.continuous = continuous != nil ? continuous! : false
-                config.authenticator = authenticator
-                config.conflictResolver = conflictResolver
-                config.headers = headers
+                let target = DatabaseEndpoint(withDatabase: targetDatabase!)
+                var config = ReplicatorConfiguration.Builder(withDatabase: source_db!, target: target)
+
+                config.setReplicatorType(replicatorType)
+                if continuous != nil {
+                    config.setContinuous(continuous!)
+                } else {
+                    config.setContinuous(false)
+                }
+                if authenticator != nil {
+                    config.setAuthenticator(authenticator)
+                }
+                if headers != nil {
+                    config.setHeaders(headers)
+                }
                 if channels != nil {
-                    config.channels = channels
+                    config.setChannels(channels)
+                }
+                if conflictResolver != nil {
+                    config.setConflictResolver(conflictResolver!)
                 }
                 if documentIDs != nil {
-                    config.documentIDs = documentIDs
+                    config.setDocumentIDs(documentIDs)
                 }
                 return config
+                
+                # return Replicator(withConfig: config.build())
             }
             else{
                 throw RequestHandlerError.InvalidArgument("No source db provided or target DB provided")

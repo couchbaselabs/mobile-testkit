@@ -20,15 +20,22 @@ public class ReplicatorConfigurationRequestHandler {
         // ReplicatorConfiguration //
         /////////////////////////////
         case "replicatorConfiguration_create":
-            print("INNN replicatorConfiguration_create")
             let sourceDb: Database = args.get(name: "sourceDb")!
             let targetDb: Database? = args.get(name: "targetDb")!
-            let targetURI: URL? = URL(string: args.get(name: "targetURI")!)
+            let secure: Bool? = args.get(name: "secure")!
+            let targetURI: String? = args.get(name: "targetURI")!
             
             if (targetDb != nil){
-                return ReplicatorConfiguration(withDatabase: sourceDb, targetDatabase: targetDb!)
+                let target = DatabaseEndpoint(withDatabase: targetDb!)
+                return ReplicatorConfiguration.Builder(withDatabase: sourceDb, target: target)
             } else if (targetURI != nil){
-                return ReplicatorConfiguration(withDatabase: sourceDb, targetURL: targetURI!)
+                var target: URLEndpoint
+                if secure != nil {
+                    target = URLEndpoint(withHost: targetURI!, secure: secure!)
+                } else {
+                    target = URLEndpoint(withHost: targetURI!, secure: false)
+                }
+                return ReplicatorConfiguration.Builder(withDatabase: sourceDb, target: target)
             } else {
                 throw RequestHandlerError.InvalidArgument("Incorrect configuration parameter provided")
             }
@@ -70,37 +77,37 @@ public class ReplicatorConfigurationRequestHandler {
             return replicatorConfiguration.continuous
             
         case "replicatorConfiguration_setAuthenticator":
-            var replicatorConfiguration: ReplicatorConfiguration = args.get(name: "configuration")!
-            var authenticator: Authenticator = args.get(name: "authenticator")!
-            replicatorConfiguration.authenticator = authenticator
+            let replicatorConfiguration: ReplicatorConfiguration.Builder = args.get(name: "configuration")!
+            let authenticator: Authenticator = args.get(name: "authenticator")!
+            replicatorConfiguration.setAuthenticator(authenticator)
             
         case "replicatorConfiguration_setChannels":
-            var replicatorConfiguration: ReplicatorConfiguration = args.get(name: "configuration")!
+            let replicatorConfiguration: ReplicatorConfiguration.Builder = args.get(name: "configuration")!
             let channels: [String] = args.get(name: "channels")!
-            replicatorConfiguration.channels = channels
+            replicatorConfiguration.setChannels(channels)
             
         case "replicatorConfiguration_setConflictResolver":
-            var replicatorConfiguration: ReplicatorConfiguration = args.get(name: "configuration")!
+            let replicatorConfiguration: ReplicatorConfiguration.Builder = args.get(name: "configuration")!
             let conflictResolver: ConflictResolver = args.get(name: "conflictResolver")!
-            replicatorConfiguration.conflictResolver = conflictResolver
+            replicatorConfiguration.setConflictResolver(conflictResolver)
             
         case "replicatorConfiguration_setContinuous":
-            var replicatorConfiguration: ReplicatorConfiguration = args.get(name: "configuration")!
+            let replicatorConfiguration: ReplicatorConfiguration.Builder = args.get(name: "configuration")!
             let continuous: Bool = args.get(name: "continuous")!
-            replicatorConfiguration.continuous = continuous
+            replicatorConfiguration.setContinuous(continuous)
             
         case "replicatorConfiguration_setDocumentIDs":
-            var replicatorConfiguration: ReplicatorConfiguration = args.get(name: "configuration")!
+            let replicatorConfiguration: ReplicatorConfiguration.Builder = args.get(name: "configuration")!
             let documentIds: [String] = args.get(name: "documentIds")!
-            replicatorConfiguration.documentIDs = documentIds
+            replicatorConfiguration.setDocumentIDs(documentIds)
             
         case "replicatorConfiguration_setPinnedServerCertificate":
-            var replicatorConfiguration: ReplicatorConfiguration = args.get(name: "configuration")!
+            let replicatorConfiguration: ReplicatorConfiguration.Builder = args.get(name: "configuration")!
             let cert: SecCertificate? = args.get(name: "cert")!
-            replicatorConfiguration.pinnedServerCertificate = cert
+            replicatorConfiguration.setPinnedServerCertificate(cert)
             
         case "replicatorConfiguration_setReplicatorType":
-            var replicatorConfiguration: ReplicatorConfiguration = args.get(name: "configuration")!
+            let replicatorConfiguration: ReplicatorConfiguration.Builder = args.get(name: "configuration")!
             let type: String = args.get(name: "replType")!
             var replicatorType: ReplicatorType
             switch (type) {
@@ -113,7 +120,7 @@ public class ReplicatorConfigurationRequestHandler {
                 default:
                     replicatorType = ReplicatorType.pushAndPull
             }
-            replicatorConfiguration.replicatorType = replicatorType
+            replicatorConfiguration.setReplicatorType(replicatorType)
 
 
         default:

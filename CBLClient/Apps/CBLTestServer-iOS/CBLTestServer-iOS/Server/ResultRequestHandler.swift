@@ -18,12 +18,12 @@ public class ResultRequestHandler {
         ////////////
         // Result //
         ////////////
-        case "result_nextResult":
+        case "resultRequest_nextResult":
             let query_result_set: ResultSet = args.get(name: "query_result_set")!
             
             return query_result_set.next()
             
-        case "result_getString":
+        case "resultRequest_getString":
             let query_result: Result = args.get(name: "query_result")!
             let key: String = args.get(name: "key")!
             
