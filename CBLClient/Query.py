@@ -23,26 +23,26 @@ class Query:
         args = Args()
         args.setString("ignoreCase", ignoreCase)
 
-        return self._client.invokeMethod("query_collator_ascii", args)
+        return self._client.invokeMethod("collator_ascii", args)
 
     def query_collator_unicode(self, ignoreCase, ignoreAccents):
         args = Args()
         args.setString("ignoreCase", ignoreCase)
         args.setString("ignoreAccents", ignoreAccents)
 
-        return self._client.invokeMethod("query_collator_unicode", args)
+        return self._client.invokeMethod("collator_unicode", args)
 
     def query_expression_property(self, prop):
         args = Args()
         args.setString("property", prop)
 
-        return self._client.invokeMethod("query_expression_property", args)
+        return self._client.invokeMethod("expression_property", args)
 
     def query_datasource_database(self, database):
         args = Args()
         args.setString("database", database)
 
-        return self._client.invokeMethod("query_datasource_database", args)
+        return self._client.invokeMethod("datasource_database", args)
 
     def query_create(self, select_prop, from_prop, whr_key_prop):
         args = Args()
@@ -69,43 +69,43 @@ class Query:
         args.setString("query_result_getString", query_result)
         args.setString("key", key)
 
-        return self._client.invokeMethod("query_result_string", args)
+        return self._client.invokeMethod("result_getString", args)
 
     def query_select_result_expression_create(self, expression):
         args = Args()
         args.setMemoryPointer("expression", expression)
 
-        return self._client.invokeMethod("query_selectResult_expressionCreate", args)
+        return self._client.invokeMethod("selectResult_expressionCreate", args)
 
     def query_select_result_all_create(self):
         return self._client.invokeMethod("selectResult_all")
 
     def query_expression_meta_id(self):
-        return self._client.invokeMethod("query_expression_metaId")
+        return self._client.invokeMethod("expression_metaId")
 
     def query_expression_meta_sequence(self):
-        return self._client.invokeMethod("query_expression_metaSequence")
+        return self._client.invokeMethod("expression_metaSequence")
 
     def query_create_equalTo_expression(self, expression1, expression2):
         args = Args()
         args.setMemoryPointer("expression1", expression1)
         args.setMemoryPointer("expression2", expression2)
 
-        return self._client.invokeMethod("query_expression_createEqualTo", args)
+        return self._client.invokeMethod("expression_createEqualTo", args)
 
     def create_and_expression(self, expression1, expression2):
         args = Args()
         args.setMemoryPointer("expression1", expression1)
         args.setMemoryPointer("expression2", expression2)
 
-        return self._client.invokeMethod("query_expression_createAnd", args)
+        return self._client.invokeMethod("expression_createAnd", args)
 
     def create_or_expression(self, expression1, expression2):
         args = Args()
         args.setMemoryPointer("expression1", expression1)
         args.setMemoryPointer("expression2", expression2)
 
-        return self._client.invokeMethod("query_expression_createOr", args)
+        return self._client.invokeMethod("expression_createOr", args)
 
     def query_get_doc(self, database, doc_id):
         args = Args()

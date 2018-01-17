@@ -102,8 +102,6 @@ public class QueryRequestHandler {
             let query: Query = args.get(name: "query")!
             return try query.execute()
 
-
-
         case "query_getDoc":
             let database: Database = args.get(name: "database")!
             let doc_id: String = args.get(name: "doc_id")!
