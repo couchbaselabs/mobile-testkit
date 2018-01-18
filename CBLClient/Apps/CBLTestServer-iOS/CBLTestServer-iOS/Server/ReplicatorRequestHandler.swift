@@ -33,11 +33,11 @@ public class ReplicatorRequestHandler {
             return BasicAuthenticator(username: username!, password: password!)
         }
 
-
-
         case "replicator_configure_remote_db_url":
             let source_db: Database? = args.get(name: "source_db")
-            let target_url: String? = args.get(name: "target_url")
+            let target_host: String? = args.get(name: "target_host")
+            let target_port: Int = args.get(name: "target_port")!
+            let target_path: String? = args.get(name: "target_path")
             let replication_type: String? = args.get(name: "replication_type")!
             let continuous: Bool? = args.get(name: "continuous")
             let channels: [String]? = args.get(name: "channels")
@@ -58,16 +58,15 @@ public class ReplicatorRequestHandler {
                 }
             }
 
-            //let target_converted_url: URL? = URL(string: target_url!)
-            if (source_db != nil && target_url != nil) {
+            if (source_db != nil && target_host != nil && target_port != nil && target_path != nil) {
                 var target: URLEndpoint
                 if secure != nil {
-                    target = URLEndpoint(withHost: target_url!, secure: secure!)
+                    target = URLEndpoint(withHost: target_host!, port: UInt(target_port), path: target_path, secure: secure!)
                 } else {
-                    target = URLEndpoint(withHost: target_url!, secure: false)
+                    target = URLEndpoint(withHost: target_host!, port: UInt(target_port), path: target_path, secure: false)
                 }
                 
-                var config = ReplicatorConfiguration.Builder(withDatabase: source_db!, target: target)
+                let config = ReplicatorConfiguration.Builder(withDatabase: source_db!, target: target)
 
                 config.setReplicatorType(replicatorType)
                 if continuous != nil {
@@ -76,11 +75,18 @@ public class ReplicatorRequestHandler {
                     config.setContinuous(false)
                 }
 
-                config.setAuthenticator(authenticator)
-                config.setConflictResolver(conflictResolver!)
+                if authenticator != nil {
+                    config.setAuthenticator(authenticator)
+                }
+                
+                if conflictResolver != nil {
+                    config.setConflictResolver(conflictResolver!)
+                }
+
                 if channels != nil {
                     config.setChannels(channels)
                 }
+
                 if documentIDs != nil {
                     config.setDocumentIDs(documentIDs)
                 }
@@ -113,7 +119,7 @@ public class ReplicatorRequestHandler {
 
             if (source_db != nil && targetDatabase != nil) {
                 let target = DatabaseEndpoint(withDatabase: targetDatabase!)
-                var config = ReplicatorConfiguration.Builder(withDatabase: source_db!, target: target)
+                let config = ReplicatorConfiguration.Builder(withDatabase: source_db!, target: target)
 
                 config.setReplicatorType(replicatorType)
                 if continuous != nil {
@@ -122,7 +128,10 @@ public class ReplicatorRequestHandler {
                     config.setContinuous(false)
                 }
 
-                config.setConflictResolver(conflictResolver!)
+                if conflictResolver != nil {
+                    config.setConflictResolver(conflictResolver!)
+                }
+
                 if documentIDs != nil {
                     config.setDocumentIDs(documentIDs)
                 }

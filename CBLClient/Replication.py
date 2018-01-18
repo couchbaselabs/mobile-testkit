@@ -16,7 +16,7 @@ class Replication:
 
         self._client = Client(baseUrl)
 
-    def configure(self, source_db, target_url=None, target_db=None, replication_type="push_pull", continuous=False,
+    def configure(self, source_db, target_host=None, target_port=None, target_path=None, target_db=None, replication_type="push_pull", continuous=False,
                   channels=None, documentIDs=None, replicator_authenticator=None):
         args = Args()
         args.setMemoryPointer("source_db", source_db)
@@ -30,7 +30,9 @@ class Replication:
             log_info(" replicator authenticator is set")
             args.setMemoryPointer("authenticator", replicator_authenticator)
         if target_db is None:
-            args.setString("target_url", target_url)
+            args.setString("target_host", target_host)
+            args.setInt("target_port", target_port)
+            args.setString("target_path", target_path)
             return self._client.invokeMethod("replicator_configure_remote_db_url", args)
         else:
             args.setString("target_db", target_db)

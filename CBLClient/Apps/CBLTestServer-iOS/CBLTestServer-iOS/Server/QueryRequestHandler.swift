@@ -289,8 +289,7 @@ public class QueryRequestHandler {
                         SelectResult.expression(Expression.property(select_property1)),
                         SelectResult.expression(Function.upper(Expression.property(select_property2))))
                 .from(DataSource.database(database))
-                .where(Expression.property(select_property1).and(Function.contains(Expression.property(select_property1),
-                                                                                   substring: Expression.property(substring))))
+                .where(Expression.property(select_property1).isNullOrMissing().and(Function.contains(Expression.property(select_property1),                                                                                    substring: Expression.property(substring))))
 
             var resultArray = [Any]()
 
@@ -328,7 +327,7 @@ public class QueryRequestHandler {
             }
 
             return resultArray
-    
+               
         default:
             throw RequestHandlerError.MethodNotFound(method)
         }
