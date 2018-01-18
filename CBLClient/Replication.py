@@ -159,7 +159,7 @@ class Replication(object):
         while(self.getActivitylevel(repl) != 3 and count < max_times):
             print "sleeping... actvity level is", self.getActivitylevel(repl)
             time.sleep(0.5)
-            if self.getActivitylevel(repl) == 3:
+            if self.getActivitylevel(repl) == 3 or self.getActivitylevel(repl) == 1 or self.getActivitylevel(repl) == 2:
                 count += 1
             if self.getActivitylevel(repl) == 0:
                 break

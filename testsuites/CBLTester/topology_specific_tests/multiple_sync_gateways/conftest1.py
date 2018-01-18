@@ -85,7 +85,7 @@ def params_from_base_suite_setup(request):
     base_url = "http://{}:{}".format(liteserv_host, liteserv_port)
     cluster_config = "{}/multiple_sync_gateways_{}".format(CLUSTER_CONFIGS_DIR, mode)
     no_conflicts_enabled = request.config.getoption("--no-conflicts")
-    sg_config = sync_gateway_config_path_for_mode("sync_gateway_default_functional_tests", mode)
+    sg_config = sync_gateway_config_path_for_mode("listener_tests/multiple_sync_gateways", mode)
     cluster_utils = ClusterKeywords()
     cluster_topology = cluster_utils.get_cluster_topology(cluster_config)
 
@@ -130,7 +130,8 @@ def params_from_base_suite_setup(request):
         log_info("Running with allow conflicts")
         persist_cluster_config_environment_prop(cluster_config, 'no_conflicts_enabled', False)
 
-    sg_config = sync_gateway_config_path_for_mode("sync_gateway_travel_sample", mode)
+    # sg_config = sync_gateway_config_path_for_mode("sync_gateway_travel_sample", mode)
+    sg_config = sync_gateway_config_path_for_mode("listener_tests/multiple_sync_gateways", mode)
     cluster_utils = ClusterKeywords()
     cluster_topology = cluster_utils.get_cluster_topology(cluster_config)
     cluster = Cluster(cluster_config)

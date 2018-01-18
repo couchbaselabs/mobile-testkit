@@ -1,5 +1,6 @@
 import pytest
 import time
+import os
 import random
 
 from keywords.MobileRestClient import MobileRestClient
@@ -14,9 +15,26 @@ from CBLClient.Utils import Release
 from keywords.SyncGateway import sync_gateway_config_path_for_mode
 from keywords import document, attachment
 from libraries.testkit import cluster
+from keywords.exceptions import ProvisioningError
+from libraries.provision.ansible_runner import AnsibleRunner
+from keywords.utils import add_cbs_to_sg_config_server_field
+from utilities.cluster_config_utils import is_cbs_ssl_enabled, is_xattrs_enabled, no_conflicts_enabled
+from utilities.cluster_config_utils import get_revs_limit
+from keywords.utils import hostname_for_url
 
 
-def test_replication_configuration_valid_values(setup_client_syncgateway_test):
+
+
+@pytest.mark.sanity
+@pytest.mark.listener
+@pytest.mark.replication
+@pytest.mark.parametrize("sg_conf_name, num_of_docs, continuous", [
+    ('listener_tests/listener_tests_no_conflicts', 10, True),
+    # ('listener_tests/listener_tests_no_conflicts', 100, False),
+    # ('listener_tests/listener_tests_no_conflicts', 1000, True),
+    # ('listener_tests/listener_tests_no_conflicts', 1000, False)
+])
+def test_replication_configuration_valid_values(params_from_base_test_setup, sg_conf_name, num_of_docs, continuous):
     """
         @summary: 
         1. Create CBL DB and create bulk doc in CBL
@@ -30,10 +48,10 @@ def test_replication_configuration_valid_values(setup_client_syncgateway_test):
     
     sg_db = "db"
     cbl_db_name = "cbl_db"
-    sg_url = setup_client_syncgateway_test["sg_url"]
-    sg_admin_url = setup_client_syncgateway_test["sg_admin_url"]
-    sg_mode = setup_client_syncgateway_test["sg_mode"]
-    cluster_config = setup_client_syncgateway_test["cluster_config"]
+    sg_url = params_from_base_test_setup["sg_url"]
+    sg_admin_url = params_from_base_test_setup["sg_admin_url"]
+    sg_mode = params_from_base_test_setup["mode"]
+    cluster_config = params_from_base_test_setup["cluster_config"]
     sg_blip_url = sg_admin_url.replace("http", "blip")
     sg_blip_url = "{}/db".format(sg_blip_url)
     num_docs = 4
@@ -52,12 +70,12 @@ def test_replication_configuration_valid_values(setup_client_syncgateway_test):
     sg_client.create_user(sg_admin_url, sg_db, "autotest", password="password", channels=channels_sg)
     session = sg_client.create_session(sg_admin_url, sg_db, "autotest")
     
-    db.create_bulk_docs(5, "cbl", db=cbl_db, channels=channels_sg)
+    db.create_bulk_docs(num_docs, "cbl", db=cbl_db, channels=channels_sg)
     
     # Start and stop continuous replication
     replicator = Replication(base_url)
     
-    repl = replicator.configure(cbl_db, target_url=sg_blip_url, continuous=True)
+    repl = replicator.configure(cbl_db, target_url=sg_blip_url, continuous=continuous)
     replicator.start(repl)
     time.sleep(1)
     replicator.stop(repl)
@@ -69,7 +87,7 @@ def test_replication_configuration_valid_values(setup_client_syncgateway_test):
     cbl_docs = db.getDocIds(cbl_db)
     assert len(sg_docs["rows"]) == cbl_doc_count, "Expected number of docs does not exist in sync-gateway after replication"
 
-    # Check that all doc ids in SG are also present in CBL
+    # Check that all doc ids in SG are replicated to  CBL
     for doc in sg_docs["rows"]:
         assert db.contains(cbl_db, str(doc["id"]))
     
@@ -820,6 +838,8 @@ def test_CBL_push_pull_with_sgAccel_down(params_from_base_test_setup, sg_conf_na
         6. Now Get pull replication to SG
         7. update docs in CBL
         8. Verify CBL can update docs successfully
+        # TODO : complete after this issue fixed
+        https://github.com/couchbase/sync_gateway/issues/3165
     """
     # base_url = "http://192.168.0.109:8989"
     
@@ -863,12 +883,10 @@ def test_CBL_push_pull_with_sgAccel_down(params_from_base_test_setup, sg_conf_na
         base_url, sg_admin_url, sg_db, username, password, channels, sg_client, cbl_db, sg_blip_url, replication_type)
     replicator.stop(repl)  # todo : trying removing this
 
-    """
     # 4. update docs in SG.
     sg_docs = sg_client.get_all_docs(url=sg_url, db=sg_db, auth=session)
     sg_client.update_docs(url=sg_url, db=sg_db, docs=sg_docs["rows"], number_updates=number_of_updates, auth=session)
 
-    
     # 5. Bring down sg Accel
     c.sg_accels[0].stop()
 
@@ -889,4 +907,116 @@ def test_CBL_push_pull_with_sgAccel_down(params_from_base_test_setup, sg_conf_na
     for doc in cbl_doc_ids:
         assert cbl_db_docs[doc]["updates-cbl"] == number_of_updates, "updates-cbl did not get updated"
 
+
+@pytest.mark.sanity
+@pytest.mark.listener
+@pytest.mark.noconflicts
+@pytest.mark.parametrize("sg_conf_name, num_of_docs", [
+    ('listener_tests/listener_tests_no_conflicts', 10)
+])
+def test_CBL_offline(params_from_base_test_setup, sg_conf_name, num_of_docs):
     """
+        @summary:
+        1. Create docs in CBL1.
+        2. push replication to SG.
+        3. CBL goes offline(block outbound requests
+        to SG through IPtables)
+        4. Do updates on CBL
+        5. Continue push replication to SG from CBL
+        6. CBL comes online( unblock ports)
+        7. push replication and do pull replication
+        8. Verify conflicts resolved on CBL.
+    """
+    # base_url = "http://192.168.0.109:8989"
+    
+    sg_db = "db"
+    cbl_db_name = "cbl_db"
+    sg_url = params_from_base_test_setup["sg_url"]
+    sg_admin_url = params_from_base_test_setup["sg_admin_url"]
+    sg_mode = params_from_base_test_setup["mode"]
+    cluster_config = params_from_base_test_setup["cluster_config"]
+    sg_blip_url = params_from_base_test_setup["target_url"]
+    base_url = params_from_base_test_setup["base_url"]
+    no_conflicts_enabled = params_from_base_test_setup["no_conflicts_enabled"]
+    sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
+    sg_config = params_from_base_test_setup["sg_config"]
+
+    channels = ["Replication"]
+    username = "autotest"
+    password = "password"
+    number_of_updates = 3
+
+    sg_client = MobileRestClient()
+    db = Database(base_url)
+    replicator = Replication(base_url)
+
+    # 1. Create docs in CBL.
+    cbl_db = db.create(cbl_db_name)
+    # db.create_bulk_docs(num_of_docs, "cbl", db=cbl_db, generator="simple_user", attachments_generator=attachment.generate_png_100_100, channels=channels)
+    db.create_bulk_docs(num_of_docs, "cbl", db=cbl_db, channels=channels)
+    # 2. push replication to SG
+    replication_type = "push"
+    session, replicator_authenticator, repl = replicator.create_session_configure_replicate(
+        base_url, sg_admin_url, sg_db, username, password, channels, sg_client, cbl_db, sg_blip_url, replication_type)
+
+    # 3. CBL goes offline(Block incomming requests of CBL to Sg)
+    command = "mode=\"100% Loss\" osascript run_scripts/network_link_conditioner.applescript"
+    return_val = os.system(command)
+    if return_val != 0:
+        raise Exception("{0} failed".format(command))
+
+    # 4. Do updates on CBL
+    time.sleep(180)
+    db.update_bulk_docs(cbl_db, number_of_updates=number_of_updates)
+    # repl = replicator.configure_and_replicate(cbl_db, replicator, replicator_authenticator, target_url=sg_blip_url, replication_type=replication_type, continuous=True,
+    #                                           channels=channels)
+    replicator.wait_until_replicator_idle(repl)
+    replicator.stop(repl)
+
+    # 6. CBL comes online( unblock ports)
+    time.sleep(180)
+    command = "mode=\"Wi-Fi\" osascript run_scripts/network_link_conditioner.applescript"
+    return_val = os.system(command)
+    if return_val != 0:
+        raise Exception("{0} failed".format(command))
+  
+    replicator.wait_until_replicator_idle(repl)
+    replicator.stop(repl)
+    # 8. Verify replication happened in sync_gateway
+    sg_docs = sg_client.get_all_docs(url=sg_url, db=sg_db, auth=session)
+    for doc in sg_docs["rows"]:
+        assert(doc["updates-cbl"] == number_of_updates, "sync gateway is not replicated after CBL is back online")
+    
+    # 7. Do pull replication
+    replication_type = "pull"
+    repl = replicator.configure_and_replicate(cbl_db, replicator, replicator_authenticator, target_url=sg_blip_url, replication_type=replication_type, continuous=True,
+                                              channels=channels)
+    replicator.stop(repl)
+
+    # 8. Get Documents from CBL
+    cbl_doc_ids = db.getDocIds(cbl_db)
+    cbl_db_docs = db.getDocuments(cbl_db, cbl_doc_ids)
+    print "CBL docs at the end is ", cbl_db_docs
+
+    db.update_bulk_docs(cbl_db, number_of_updates=1)
+    
+    # 9 Verify CBL updated successfully
+    cbl_db_docs = db.getDocuments(cbl_db, cbl_doc_ids)
+    for doc in cbl_doc_ids:
+        assert cbl_db_docs[doc]["updates-cbl"] == number_of_updates + 1, "updates-cbl did not get updated"
+
+
+def modify_firewall_rule(cluster_config, ip, rule):
+        """ Start sync gateways in a cluster. If url is passed,
+        start the sync gateway at that url
+        """
+        ansible_runner = AnsibleRunner(cluster_config)
+        rules = {}
+        rules["rule"] = rule
+        rules["ip"] = ip
+        status = ansible_runner.run_ansible_playbook(
+            "iptables-add-rule.yml",
+            extra_vars=rules
+        )
+        if status != 0:
+            raise ProvisioningError("Failed to add rule to block ip")

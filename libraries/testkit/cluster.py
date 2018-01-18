@@ -157,6 +157,7 @@ class Cluster:
             playbook_vars["revs_limit"] = '"revs_limit": {},'.format(revs_limit)
         except KeyError as ex:
             log_info("Keyerror in getting revs_limit{}".format(ex.message))
+            playbook_vars["revs_limit"] = ''
         status = ansible_runner.run_ansible_playbook(
             "start-sync-gateway.yml",
             extra_vars=playbook_vars
