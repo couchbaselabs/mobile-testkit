@@ -107,7 +107,8 @@ def params_from_base_suite_setup(request):
     sg_db = "db"
     sg_url = cluster_topology["sync_gateways"][0]["public"]
     sg_ip = host_for_url(sg_url)
-    target_url = "blip://{}:4985/{}".format(sg_ip, sg_db)
+    sg_admin_port = 4985
+    target_url = "{}:{}/{}".format(sg_ip, sg_admin_port, sg_db)
 
     cbs_url = cluster_topology['couchbase_servers'][0]
     cbs_ip = host_for_url(cbs_url)
@@ -212,7 +213,7 @@ def params_from_base_suite_setup(request):
         # Start continuous replication
         replicator = Replication(base_url)
         log_info("Configuring replication")
-        repl = replicator.configure(source_db=source_db, target_url=target_url, continuous=True)
+        repl = replicator.configure(source_db=source_db, target_host=sg_ip, target_port=sg_admin_port, target_path=sg_db, continuous=True)
         log_info("Starting replication")
         replicator.start(repl)
         # Wait for replication to complete
