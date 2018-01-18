@@ -19,18 +19,22 @@ public class ConflictRequestHandler {
         //////////////
         // Conflict //
         //////////////
-        case "conflict_getBase":
-            let conflict: Conflict = args.get(name: "conflict")!
-            return conflict.base
-        
-        case "conflict_getMine":
-            let conflict: Conflict = args.get(name: "conflict")!
-            return conflict.mine
-
-        
-        case "conflict_getTheirs":
-            let conflict: Conflict = args.get(name: "conflict")!
-            return conflict.theirs
+        case "replicator_conflict_resolver":
+            let conflict_type: String? = args.get(name: "conflict_type")
+            if conflict_type == "mine" {
+                return ReplicationMine()
+                
+            } else if conflict_type == "theirs" {
+                return ReplicationTheirs()
+            }
+            else if conflict_type == "base" {
+                return ReplicationBase()
+            }
+            else {
+                func resolve(conflict: Conflict) -> Document? {
+                    return nil
+                }
+            }
 
         default:
             throw RequestHandlerError.MethodNotFound(method)
@@ -38,4 +42,29 @@ public class ConflictRequestHandler {
         return ConflictRequestHandler.VOID
     }
 }
+
+class ReplicationMine: ConflictResolver {
+    func resolve(conflict: Conflict) -> Document? {
+        return conflict.mine
+    }
+}
+
+class ReplicationTheirs: ConflictResolver {
+    func resolve(conflict: Conflict) -> Document? {
+        return conflict.theirs
+    }
+}
+
+class ReplicationBase: ConflictResolver {
+    func resolve(conflict: Conflict) -> Document? {
+        return conflict.base
+    }
+}
+
+class GiveUp: ConflictResolver {
+    func resolve(conflict: Conflict) -> Document? {
+        return nil
+    }
+}
+
 

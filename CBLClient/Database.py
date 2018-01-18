@@ -5,10 +5,14 @@ from CBLClient.Args import Args
 from keywords.utils import log_info
 from keywords import types
 from libraries.data import doc_generators
+from Document import Document
+import uuid
+import json
 
 
 class Database(object):
     _db = None
+    _baseUrl = None
 
     def __init__(self, base_url):
         self.base_url = base_url
@@ -36,7 +40,7 @@ class Database(object):
         else:
             raise Exception("Either pass database and document or pass \
             name and path to delete the document.")
-        return self._client.invokeMethod("database_delete", args)
+        return self._client.invokeMethod("database_deleteDocument", args)
 
     def purge(self, database, document):
         args = Args()
@@ -96,6 +100,18 @@ class Database(object):
         args.setDictionary("documents", documents)
         return self._client.invokeMethod("database_saveDocuments", args)
 
+    def updateDocuments(self, database, documents):
+        args = Args()
+        args.setMemoryPointer("database", database)
+        args.setDictionary("documents", documents)
+        return self._client.invokeMethod("database_updateDocuments", args)
+
+    def updateDocument(self, database, document):
+        args = Args()
+        args.setMemoryPointer("database", database)
+        args.setDictionary("document", document)
+        return self._client.invokeMethod("database_updateDocument", args)
+
     def contains(self, database, doc_id):
         args = Args()
         args.setMemoryPointer("database", database)
@@ -150,6 +166,11 @@ class Database(object):
         args.setMemoryPointer("directory", directory)
         return self._client.invokeMethod("database_exists", args)
 
+    def deleteDBbyName(self, name):
+        args = Args()
+        args.setString("name", name)
+        return self._client.invokeMethod("database_deleteDBbyName", args)
+
     def create_value_index(self, database, prop):
         args = Args()
         args.setMemoryPointer("database", database)
@@ -193,25 +214,55 @@ class Database(object):
 
             doc_body["_id"] = doc_id
             added_docs[doc_id] = doc_body
-
         self.saveDocuments(db, added_docs)
 
-    def update_bulk_docs(self, database):
-
+    def update_bulk_docs(self, database, number_of_updates=1):
+  
         updated_docs = {}
         doc_ids = self.getDocIds(database)
+        
         docs = self.getDocuments(database, doc_ids)
-        for doc in docs:
-            doc_body = docs[doc]
-            try:
-                doc_body["updates-cbl"]
-            except Exception:
-                doc_body["updates-cbl"] = 0
+        for i in xrange(number_of_updates):
+            print "docs in update bulk docs updating in ", i
+            for doc in docs:
+                doc_body = docs[doc]
+                try:
+                    doc_body["updates-cbl"]
+                except Exception:
+                    doc_body["updates-cbl"] = 0
 
-            doc_body["updates-cbl"] = doc_body["updates"] + 1
-            updated_docs[doc] = doc_body
-            # self.saveDocument(database, doc_body)
+                doc_body["updates-cbl"] = doc_body["updates-cbl"] + 1
+                updated_docs[doc] = doc_body
 
-        log_info("updates docs with update is {}".format(updated_docs))
-        log_info("type of updated docs are  {}".format(type(updated_docs)))
-        self.saveDocuments(database, updated_docs)
+            self.updateDocuments(database, updated_docs)
+
+    def update_all_docs_individually(self, database, num_of_updates=1):
+
+        doc_ids = self.getDocIds(database)
+        docs = self.getDocuments(database, doc_ids)
+        doc_obj = Document(self._baseUrl)
+        for i in xrange(num_of_updates):
+            for doc_id in doc_ids:
+                print("doc id invidually is ", doc_id)
+                doc_mem = self.getDocument(database, doc_id)
+                doc_mut = doc_obj.toMutable(doc_mem)
+                doc_body = doc_obj.toDictionary(doc_mut)
+                print("doc invidually is ", doc_body)
+                try:
+                    doc_body["updates-cbl"]
+                except Exception:
+                    doc_body["updates-cbl"] = 0
+
+                doc_body["updates-cbl"] = doc_body["updates-cbl"] + 1
+                doc = doc_obj.setData(doc_mut, doc_body)
+                self.updateDocument(database, doc)
+
+
+    def deleteDBIfExists(self, db_name):
+        if self.exists(db_name):
+            self.deleteDBbyName(db_name)
+
+    def deleteDBIfExistsCreateNew(self, db_name):
+        if self.exists(db_name):
+            self.deleteDBbyName(db_name)
+        return self.create(db_name)

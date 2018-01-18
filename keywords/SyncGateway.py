@@ -237,6 +237,7 @@ class SyncGateway:
             playbook_vars["revs_limit"] = '"revs_limit": {},'.format(revs_limit)
         except KeyError as ex:
             log_info("Keyerror in getting revs_limit{}".format(ex.message))
+            playbook_vars["revs_limit"] = ''
         if url is not None:
             target = hostname_for_url(cluster_config, url)
             log_info("Starting {} sync_gateway.".format(target))

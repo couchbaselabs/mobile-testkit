@@ -71,6 +71,7 @@ public class ValueSerializer {
     }
     
     public static func deserialize<T>(value: String?, memory: Memory) -> T? {
+        print("value in deserialize is \(value)")
         if value == nil || value == "null" {
             return nil
         } else if (value!.hasPrefix("@")) {
@@ -84,6 +85,7 @@ public class ValueSerializer {
             let start = value!.index(value!.startIndex, offsetBy: 1)
             let end = value!.index(value!.endIndex, offsetBy: 0)
             let range = start..<end
+            print("value of integer is \(Int(value!.substring(with: range)) as? T)")
             return Int(value!.substring(with: range)) as? T
             
         } else if value!.hasPrefix("F") {
@@ -119,8 +121,16 @@ public class ValueSerializer {
             
             for map_param in stringMap {
                 let key = map_param.key
-                map[key] = deserialize(value: map_param.value as? String, memory: memory)!
+                print("map_param key is \(key)")
+                if let key_value = deserialize(value: map_param.value as? String, memory: memory) as Any? {
+                     map[key] = key_value
+                }
+                else{
+                    map[key] = NSNull()
+                }
+                    print("map_param key value is ....\(map[key])")
             }
+            print("Returned map in deserialize is ....\(map)")
             return map as? T
         } else if (value!.hasPrefix("[")) {
             let data: Data = value!.data(using: String.Encoding.utf8)!
@@ -133,11 +143,10 @@ public class ValueSerializer {
             var list = [Any]()
             
             for string in stringList {
-                let object: Any = deserialize(value: string, memory: memory)!
-                
-                list.append(object);
+                 let object: Any? = deserialize(value: string, memory: memory)
+                 list.append(object ?? NSNull.init())
             }
-            
+            print("list in deserialize is \(list)")
             return list as? T
         } else {
             return "Invalid value type \(String(describing: value))" as? T

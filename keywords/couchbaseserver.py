@@ -730,7 +730,6 @@ class CouchbaseServer:
          build_number - the build number associated with this major version release, eg, 2601 (or None)
          Return the filename portion of the package download URL
          """
-
         if version.startswith("3.1.6"):
             return "couchbase-server-enterprise-{}-{}.x86_64.rpm".format(version, cbs_platform)
         elif version.startswith("3.1"):
@@ -757,9 +756,9 @@ class CouchbaseServer:
             base_url = "{}/sherlock/{}".format(cbnas_base_url, build_number)
         elif version.startswith("4.5") or version.startswith("4.6"):
             base_url = "{}/watson/{}".format(cbnas_base_url, build_number)
-        elif version.startswith("4.7") or version.startswith("5.0"):
+        elif version.startswith("4.7") or version.startswith("5.0") or version.startswith("5.1"):
             base_url = "{}/spock/{}".format(cbnas_base_url, build_number)
-        elif version.startswith("5.1"):
+        elif version.startswith("5.5"):
             base_url = "{}/vulcan/{}".format(cbnas_base_url, build_number)
         else:
             raise Exception(
@@ -770,7 +769,6 @@ class CouchbaseServer:
         return base_url, package_name
 
     def resolve_cb_mobile_url(self, version, cbs_platform="centos7"):
-
         """
         Resolve a download URL for the corresponding package to given
         version on http://cbmobile-packages.s3.amazonaws.com (an S3 bucket
@@ -781,7 +779,6 @@ class CouchbaseServer:
         version - the version without any build number information, eg 4.5.0
         Return the base_url of the package download URL (everything except the filename)
         """
-
         released_versions = {
             "5.0.0": "3519",
             "4.6.3": "4136",
@@ -797,7 +794,6 @@ class CouchbaseServer:
             "3.1.5": "1859",
             "3.1.6": "1904"
         }
-
         build_number = released_versions[version]
         base_url = "http://cbmobile-packages.s3.amazonaws.com"
         package_name = self.get_package_name(version, build_number, cbs_platform)
@@ -818,13 +814,11 @@ class CouchbaseServer:
         else:
             version_build = server_version_build.split("-")
             server_verion = version_build[0]
-
             if len(version_build) == 2:
                 # Build number is included
                 server_build = version_build[1]
             else:
                 server_build = None
-
             if server_build is None:
                 server_baseurl, server_package_name = self.resolve_cb_mobile_url(server_verion, cbs_platform)
             else:

@@ -24,7 +24,7 @@ public class SessionAuthenticatorRequestHandler {
             let cookieName:String = args.get(name: "cookieName")!
             let expires: Date = args.get(name: "expires")!
             
-            return SessionAuthenticator(sessionID: sessionId, expireDate: expires, cookieName: cookieName)
+            return SessionAuthenticator(sessionID: sessionId, cookieName: cookieName)
 
         case "sessionauthenticator_createwithString":
             let sessionId: String = args.get(name: "sessionId")!
@@ -48,6 +48,5 @@ public class SessionAuthenticatorRequestHandler {
         default:
             throw RequestHandlerError.MethodNotFound(method)
         }
-        return SessionAuthenticatorRequestHandler.VOID
     }
 }

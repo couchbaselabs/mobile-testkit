@@ -74,16 +74,23 @@ class ValueSerializer(object):
         elif value.startswith("#"):
             if "." in value:
                 return float(value[1:])
-            return int(value[1:])
+            else:
+                return int(value[1:])
+        elif value == "true":
+            return True
+        elif value == "false":
+            return False
         elif value.startswith("{"):
-            string_map = json.loads(value)
-            dict_map = {}
-            for entry in string_map:
+            stringMap = json.loads(value)
+            map = {}
+
+            for entry in stringMap:
                 key = str(entry)
                 obj = ValueSerializer.deserialize(string_map[key])
 
-                dict_map[key] = obj
-            return dict_map
+                map[key] = object
+
+            return map
         elif value.startswith("["):
             string_list = json.loads(value)
             res_list = []

@@ -71,7 +71,7 @@ public class ReplicatorConfigurationRequestHandler {
             
         case "replicatorConfiguration_setAuthenticator":
             var replicatorConfiguration: ReplicatorConfiguration = args.get(name: "configuration")!
-            let authenticator: Authenticator = args.get(name: "authenticator")!
+            var authenticator: Authenticator = args.get(name: "authenticator")!
             replicatorConfiguration.authenticator = authenticator
             
         case "replicatorConfiguration_setChannels":

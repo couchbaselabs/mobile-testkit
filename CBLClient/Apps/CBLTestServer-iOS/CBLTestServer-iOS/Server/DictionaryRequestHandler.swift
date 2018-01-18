@@ -205,7 +205,6 @@ public class DictionaryRequestHandler {
         default:
             throw RequestHandlerError.MethodNotFound(method)
         }
-        return DictionaryRequestHandler.VOID
     }
 }
 

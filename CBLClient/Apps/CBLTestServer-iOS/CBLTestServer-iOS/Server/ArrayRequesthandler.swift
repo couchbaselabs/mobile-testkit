@@ -368,6 +368,5 @@ public class ArrayRequestHandler {
         default:
             throw RequestHandlerError.MethodNotFound(method)
         }
-        return ArrayRequestHandler.VOID
     }
 }

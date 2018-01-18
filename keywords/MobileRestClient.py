@@ -680,18 +680,19 @@ class MobileRestClient:
 
         return resp_obj
 
-    def get_open_revs_ids(self, url, db, doc_id, auth=None):
+    def get_open_revs_ids(self, url, db, doc_id, rev=None, auth=None):
         """
         Gets the open_revs=all for a specified doc_id.
         Returns a parsed multipart reponse in the below format
         {"rows" : docs}
+        revs should be in array , Array of revisions which you want to retrieve
         """
         # Returns multipart by default, specify json for cleaner code
         headers = {"Accept": "application/json"}
 
         auth_type = get_auth_type(auth)
-
         params = {"open_revs": "all"}
+        params["revs"] = "true"
 
         if auth_type == AuthType.session:
             resp = self._session.get("{}/{}/{}".format(url, db, doc_id), headers=headers, params=params, cookies=dict(SyncGatewaySession=auth[1]))
@@ -703,7 +704,10 @@ class MobileRestClient:
         log_r(resp)
         resp.raise_for_status()
         resp_obj = resp.json()
-
+        if rev is not None:
+            for obj in resp_obj:
+                if rev in obj['ok']['_rev']:
+                    return obj['ok']['_revisions']['ids']
         return resp_obj[0]['ok']['_revisions']['ids']
 
     def get_doc(self, url, db, doc_id, auth=None, rev=None, revs_info=False):
@@ -1033,6 +1037,34 @@ class MobileRestClient:
                 time.sleep(1)
                 continue
 
+    def purge_doc(self, url, db, doc):
+        """
+        Purges the each doc by doc id
+
+        docs format (lite): [{u'ok': True, u'rev': u'3-56e50918afe3e9b3c29e94ad55cc6b15', u'id': u'large_attach_0'}, ...]
+        docs format (Sync Gateway): [{u'ok': True, u'_rev': u'3-56e50918afe3e9b3c29e94ad55cc6b15', u'_id': u'large_attach_0'}, ...]
+        """
+
+        server_type = self.get_server_type(url=url)
+
+        if server_type == ServerType.syncgateway:
+            log_info("Purging doc: {}".format(doc["_id"]))
+            data = {
+                doc["_id"]: ['*']
+            }
+        else:
+            log_info("Purging doc: {}".format(doc["id"]))
+            data = {
+                doc["id"]: [doc["rev"]]
+            }
+
+        resp = self._session.post("{}/{}/_purge".format(url, db), json.dumps(data))
+        log_r(resp)
+        resp.raise_for_status()
+        resp_obj = resp.json()
+            
+        return resp_obj
+
     def purge_docs(self, url, db, docs):
         """
         Purges the each doc in the provided 'docs' given the 'id' and 'rev'
@@ -1133,6 +1165,8 @@ class MobileRestClient:
         try:
             doc["updates"]
         except Exception:
+            doc["updates"] = 0
+        if doc["updates"] is None:
             doc["updates"] = 0
         current_update_number = doc["updates"] + 1
 

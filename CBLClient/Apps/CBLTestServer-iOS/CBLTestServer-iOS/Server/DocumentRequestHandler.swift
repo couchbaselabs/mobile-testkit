@@ -40,7 +40,6 @@ public class DocumentRequestHandler {
             
         case "document_toMutable":
             let document: Document = args.get(name:"document")!
-            
             return document.toMutable()
 
         case "document_setValue":

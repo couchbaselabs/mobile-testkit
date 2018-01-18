@@ -581,6 +581,5 @@ public class QueryRequestHandler {
         default:
             throw RequestHandlerError.MethodNotFound(method)
         }
-        return QueryRequestHandler.VOID
     }
 }

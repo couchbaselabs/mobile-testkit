@@ -583,10 +583,11 @@ def test_migrate_conflicts_delete_last_rev(params_from_base_test_setup, sg_conf_
     mode = params_from_base_test_setup["mode"]
     sg_url = topology["sync_gateways"][0]["public"]
     sg_admin_url = topology["sync_gateways"][0]["admin"]
+    sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
     sg_db = "db"
 
-    if no_conflicts_enabled:
-        pytest.skip('--no-conflicts is enabled, so skipping the test')
+    if no_conflicts_enabled or sync_gateway_version < "2.0":
+        pytest.skip('--no-conflicts is enabled and does not work with sg < 2.0 , so skipping the test')
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
     # 1. Start sg with default(i.e allow_conflicts=true)
     c = cluster.Cluster(cluster_config)
@@ -616,9 +617,8 @@ def test_migrate_conflicts_delete_last_rev(params_from_base_test_setup, sg_conf_
                                                 auth=autouser_session)
         assert conflicted_rev["rev"] == "2-foo"
     for doc in sg_docs:
-        num_of_open_revs = sg_client.get_open_revs_ids(url=sg_url, db=sg_db, doc_id=doc["id"], auth=autouser_session)
+        num_of_open_revs = sg_client.get_open_revs_ids(url=sg_url, db=sg_db, doc_id=doc["id"], rev="2-foo", auth=autouser_session)
     time.sleep(5)
-
     # 5. Enable allow_conflicts = false in SG config and 6. restart sg
     revs_limit = 2
     temp_cluster_config = copy_to_temp_conf(cluster_config, mode)
@@ -672,7 +672,7 @@ def test_revs_cache_size(params_from_base_test_setup, sg_conf_name, num_of_docs)
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
 
     if sync_gateway_version < "2.0":
-        pytest.skip('--no-conflicts is enabled and does not work with sg < 2.0 , so skipping the test')
+        pytest.skip('It does not work with sg < 2.0 , so skipping the test')
 
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
     c = cluster.Cluster(cluster_config)

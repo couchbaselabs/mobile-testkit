@@ -42,7 +42,10 @@ class Client(object):
                 return ValueSerializer.deserialize(result)
         except Exception as err:
             # resp can't be accessed here
-            raise Exception(err, resp.content)
+            if resp:
+                return err, resp.content
+            else:
+                return err
 
     def release(self, obj):
         args = Args()

@@ -9,11 +9,11 @@
             "unsupported": {
                 {{ no_conflicts }}
             },
+            {{ revs_limit }}
             "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
             "bucket":"data-bucket-1",
             "username":"data-bucket-1",
-            "password": "password",
-            "unsupported": { "allow_conflicts": false }
+            "password": "password"
         },
         "sg_db2":{
             {{ autoimport }}
@@ -21,11 +21,11 @@
             "unsupported": {
                 {{ no_conflicts }}
             },
+            {{ revs_limit }}
             "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
             "bucket":"data-bucket-2",
             "username":"data-bucket-2",
-            "password": "password",
-            "unsupported": { "allow_conflicts": false }
+            "password": "password"
         }
     }
 }

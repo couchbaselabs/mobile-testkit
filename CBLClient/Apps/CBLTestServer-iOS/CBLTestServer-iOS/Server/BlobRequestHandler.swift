@@ -70,6 +70,5 @@ public class BlobRequestHandler {
         default:
             throw RequestHandlerError.MethodNotFound(method)
         }
-        return BlobRequestHandler.VOID
     }
 }

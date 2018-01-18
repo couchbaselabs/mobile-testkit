@@ -81,21 +81,18 @@ public class DatabaseRequestHandler {
         case "database_getDocument":
             let database: Database = (args.get(name:"database"))!
             let id: String? = args.get(name: "id")
-
             return database.document(withID: id!)
             
         case "database_save":
             let database: Database = (args.get(name:"database"))!
             let document: MutableDocument = args.get(name:"document")!
-
-            return try? database.saveDocument(document)
+            try! database.saveDocument(document)
 
         case "database_purge":
             let database: Database = (args.get(name:"database"))!
-            let document: Document = args.get(name:"document")!
+            let document: MutableDocument = args.get(name:"document")!
+            try! database.purgeDocument(document)
             
-            return try? database.purgeDocument(document)
-
         case "database_contains":
             let database: Database = (args.get(name:"database"))!
             let id: String = (args.get(name: "id"))!
@@ -133,20 +130,57 @@ public class DatabaseRequestHandler {
             let change: DatabaseChange = (args.get(name: "change"))!
 
             return change.documentIDs
+            
+        case "database_deleteDBbyName":
+            let name: String = args.get(name:"name")!
+            let directory: String? = args.get(name:"directory")!
+            if let directory = directory {
+                return try Database.delete(withName: name, inDirectory: directory)
+            } else {
+                return try Database.delete(withName: name)
+            }
 
         case "database_saveDocuments":
             let database: Database = args.get(name:"database")!
             let documents: Dictionary<String, Dictionary<String, Any>> = args.get(name: "documents")!
-
             try database.inBatch {
                 for doc in documents {
                     let id = doc.key
                     let data: Dictionary<String, Any> = doc.value
                     let document = MutableDocument(withID: id, data: data)
-                    try database.saveDocument(document)
+                    let saved_document = try! database.saveDocument(document)
+                    
                 }
             }
-
+ 
+        case "database_updateDocuments":
+            let database: Database = args.get(name:"database")!
+            let documents: Dictionary<String, Dictionary<String, Any>> = args.get(name: "documents")!
+            print("documents in database save documents is\(documents)")
+            try database.inBatch {
+                for doc in documents {
+                    let id = doc.key
+                    let data: Dictionary<String, Any> = doc.value
+                    let updated_doc = database.document(withID: id)!.toMutable()
+                    updated_doc.setData(data)
+                    let savedDoc = try! database.saveDocument(updated_doc)
+                    print("saved document.... \(savedDoc.keys)")
+                }
+            }
+            
+        case "database_updateDocument":
+            
+            let database: Database = (args.get(name:"database"))!
+            //let document: Document = args.get(name:"document")!
+            let document: MutableDocument = args.get(name:"document")!
+            let id = document.id
+            let data : Dictionary<String, Any> = document.value(forKey: id) as! Dictionary<String, Any>
+            let updated_doc = database.document(withID: id)!.toMutable()
+            updated_doc.setData(data)
+            let savedDoc = try! database.saveDocument(updated_doc)
+            print("saved document.... \(savedDoc.keys)")
+            
+            
         case "database_getDocIds":
             let database: Database = args.get(name:"database")!
             let query = Query

@@ -34,6 +34,5 @@ public class EncryptionKeyRequestHandler {
         default:
             throw RequestHandlerError.MethodNotFound(method)
         }
-        return EncryptionKeyRequestHandler.VOID
     }
 }
