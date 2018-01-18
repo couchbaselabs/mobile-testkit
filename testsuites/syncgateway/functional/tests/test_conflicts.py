@@ -4,6 +4,8 @@ import pytest
 from keywords.SyncGateway import sync_gateway_config_path_for_mode
 from libraries.testkit import cluster
 from keywords.MobileRestClient import MobileRestClient
+from utilities.cluster_config_utils import persist_cluster_config_environment_prop, copy_to_temp_conf
+
 
 import keywords.exceptions
 import keywords.constants
@@ -18,14 +20,15 @@ from keywords import document
 @pytest.mark.basicauth
 @pytest.mark.channel
 @pytest.mark.parametrize("sg_conf_name", [
-    "sync_gateway_default_functional_tests"
+    "sync_gateway_default_functional_tests",
+    "sync_gateway_allow_conflicts"
 ])
 def test_non_winning_revisions(params_from_base_test_setup, sg_conf_name):
     """ Add non-winning revisions to the revision tree and ensure
     that the changes feed returns the correct revisions
 
     Steps:
-    - Create a doc
+    - Add a doc
     - Add 5 revs
     - changes, assert rev starts with "6-" from 0, store "last_seq_1"
     - Create a conflict off first revision ("2-foo") (POST docs, new_edits == false)
@@ -42,6 +45,10 @@ def test_non_winning_revisions(params_from_base_test_setup, sg_conf_name):
     cluster_config = params_from_base_test_setup["cluster_config"]
     topology = params_from_base_test_setup["cluster_topology"]
     mode = params_from_base_test_setup["mode"]
+    no_conflicts_enabled = params_from_base_test_setup["no_conflicts_enabled"]
+
+    if no_conflicts_enabled:
+        pytest.skip('--no-conflicts is enabled, this test needs to create conflicts, so skipping the test')
 
     sg_url = topology["sync_gateways"][0]["public"]
     sg_admin_url = topology["sync_gateways"][0]["admin"]
@@ -169,7 +176,7 @@ def test_winning_conflict_branch_revisions(params_from_base_test_setup, sg_conf_
     that the changes feed returns the correct revisions
 
     Steps:
-    - Create a doc ('test_doc')
+    - Add a doc ('test_doc')
     - Add 5 revs to 'test_doc'
     - POST _changes, assert rev starts with "6-" from 0, store "last_seq_1"
     - Create a conflict off first revision ("2-foo") (POST docs, new_edits == false)
@@ -182,6 +189,10 @@ def test_winning_conflict_branch_revisions(params_from_base_test_setup, sg_conf_
     cluster_config = params_from_base_test_setup["cluster_config"]
     topology = params_from_base_test_setup["cluster_topology"]
     mode = params_from_base_test_setup["mode"]
+    no_conflicts_enabled = params_from_base_test_setup["no_conflicts_enabled"]
+
+    if no_conflicts_enabled:
+        pytest.skip('--no-conflicts is enabled, this test needs to create conflicts, so skipping the test')
 
     sg_url = topology["sync_gateways"][0]["public"]
     sg_admin_url = topology["sync_gateways"][0]["admin"]
@@ -271,3 +282,49 @@ def test_winning_conflict_branch_revisions(params_from_base_test_setup, sg_conf_
     assert len(changes_2["results"]) == 1
     assert changes_2["results"][0]["id"] == "test_doc"
     assert changes_2["results"][0]["changes"][0]["rev"] == "7-foo"
+
+
+@pytest.mark.syncgateway
+@pytest.mark.conflicts
+@pytest.mark.parametrize("sg_conf_name, revs_limit", [
+    ('sync_gateway_revs_conflict_configurable', 1),
+    ('sync_gateway_revs_conflict_configurable', 19),
+    ('sync_gateway_revs_conflict_configurable', 'a'),
+    ('sync_gateway_revs_conflict_configurable', -1)
+    # TODO : commenting as revs_limit 0 behavior is going to change, existing behavior start sg successfully , but it will change to sg fails
+    # Enable it once behavior is changed
+    # ('sync_gateway_revs_conflict_configurable', 0)
+])
+def test_invalid_revs_limit_with_allow_conflicts(params_from_base_test_setup, sg_conf_name, revs_limit):
+    """ @summary Verify all borders of revs limit
+    Test case in Excel sheet : https://docs.google.com/spreadsheets/d/1YwI_gCeoBebQKBybkzoAEoXSc0XLReszDA-mPFQapgk/edit#gid=0
+    Covered Test case #2
+    Steps:
+    - Add a doc
+    - Have allow_conflicts to true in sg config
+    - Put revs_limit=1 or any number lower than 20 and restart sync-gateway
+    - Verify it fails
+    - change revs_limit=20 and start sync-gateway
+    - Verify it starts without any error
+    """
+
+    cluster_config = params_from_base_test_setup["cluster_config"]
+    mode = params_from_base_test_setup["mode"]
+    no_conflicts_enabled = params_from_base_test_setup["no_conflicts_enabled"]
+
+    if no_conflicts_enabled:
+        pytest.skip('--no-conflicts is enabled, this test needs to create conflicts, so skipping the test')
+
+    sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
+    clust = cluster.Cluster(cluster_config)
+    clust.reset(sg_conf)
+    temp_cluster_config = copy_to_temp_conf(cluster_config, mode)
+    persist_cluster_config_environment_prop(temp_cluster_config, 'revs_limit', revs_limit, property_name_check=False)
+    status = clust.sync_gateways[0].restart(config=sg_conf, cluster_config=temp_cluster_config)
+    assert status != 0, "Syncgateway started with revs limit 1 when no conflicts disabled"
+
+    # Now change the revs_limit to 20
+    revs_limit = 20
+    persist_cluster_config_environment_prop(temp_cluster_config, 'revs_limit', revs_limit, property_name_check=False)
+    status = clust.sync_gateways[0].restart(config=sg_conf, cluster_config=temp_cluster_config)
+    assert status == 0, "Syncgateway did not start after revs_limit changed to 20"

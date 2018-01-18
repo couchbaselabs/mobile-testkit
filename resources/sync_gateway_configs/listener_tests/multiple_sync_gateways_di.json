@@ -17,6 +17,9 @@
     "databases":{
         "sg_db1":{
             {{ xattrs }}
+            "unsupported": {
+                {{ no_conflicts }}
+            },
             "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
             "bucket":"data-bucket-1",
             "username":"data-bucket-1",
