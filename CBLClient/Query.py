@@ -21,33 +21,25 @@ class Query(object):
         args = Args()
         args.setString("ignoreCase", ignore_case)
 
-        #needs to be change
-        #return self._client.invokeMethod("query_collator_ascii", args)
-        return self._client.invokeMethod("collation_ascii", args)
+        return self._client.invokeMethod("collator_ascii", args)
 
     def query_collator_unicode(self, ignore_case, ignore_accents):
         args = Args()
         args.setString("ignoreCase", ignore_case)
         args.setString("ignoreAccents", ignore_accents)
 
-        #needs to be change
-        #return self._client.invokeMethod("query_collator_unicode", args)
-        return self._client.invokeMethod("collation_unicode", args)
+        return self._client.invokeMethod("collator_unicode", args)
 
     def query_expression_property(self, prop):
         args = Args()
         args.setString("property", prop)
 
-        #needs to be change
-        #return self._client.invokeMethod("query_expression_property", args)
         return self._client.invokeMethod("expression_property", args)
 
     def query_datasource_database(self, database):
         args = Args()
         args.setString("database", database)
 
-        #needs to be change
-        #return self._client.invokeMethod("query_datasource_database", args)
         return self._client.invokeMethod("datasource_database", args)
 
     def query_create(self, select_prop, from_prop, whr_key_prop):
@@ -75,17 +67,12 @@ class Query(object):
         args.setString("query_result", query_result)
         args.setString("key", key)
 
-        #needs to be change
-        #return self._client.invokeMethod("query_result_string", args)
-        #There is no method string in Android API. I'm assumming this method is for getString
         return self._client.invokeMethod("result_getString", args)
 
     def query_select_result_expression_create(self, expression):
         args = Args()
         args.setMemoryPointer("expression", expression)
 
-        #needs to be change
-        #return self._client.invokeMethod("query_select_result_expression_create", args)
         return self._client.invokeMethod("selectResult_expressionCreate", args)
 
     def query_select_result_all_create(self):
@@ -94,13 +81,9 @@ class Query(object):
         return self._client.invokeMethod("selectResult_all")
 
     def query_expression_meta_id(self):
-        #needs to be change
-        #return self._client.invokeMethod("query_expression_meta_id")
         return self._client.invokeMethod("expression_metaId")
 
     def query_expression_meta_sequence(self):
-        #needs to be change
-        #return self._client.invokeMethod("query_expression_meta_sequence")
         return self._client.invokeMethod("expression_metaSequence")
 
     def create_equalTo_expression(self, expression1, expression2):
@@ -108,8 +91,6 @@ class Query(object):
         args.setMemoryPointer("expression1", expression1)
         args.setMemoryPointer("expression2", expression2)
 
-        #needs to be change
-        #return self._client.invokeMethod("create_equalTo_expression", args)
         return self._client.invokeMethod("expression_createEqualTo", args)
 
     def create_and_expression(self, expression1, expression2):
@@ -117,8 +98,6 @@ class Query(object):
         args.setMemoryPointer("expression1", expression1)
         args.setMemoryPointer("expression2", expression2)
 
-        #needs to be change
-        #return self._client.invokeMethod("create_and_expression", args)
         return self._client.invokeMethod("expression_createAnd", args)
 
     def create_or_expression(self, expression1, expression2):
@@ -126,8 +105,6 @@ class Query(object):
         args.setMemoryPointer("expression1", expression1)
         args.setMemoryPointer("expression2", expression2)
 
-        #needs to be change
-        #return self._client.invokeMethod("create_or_expression", args)
         return self._client.invokeMethod("expression_createOr", args)
 
     def query_get_doc(self, database, doc_id):

@@ -156,7 +156,7 @@ class Replication(object):
         max_times = 10
         count = 0
         # Sleep until replicator completely processed
-        while(self.getActivitylevel(repl) != 3 and count < max_times):
+        while self.getActivitylevel(repl) != 3 and count < max_times:
             print "sleeping... actvity level is", self.getActivitylevel(repl)
             time.sleep(0.5)
             if self.getActivitylevel(repl) == 3 or self.getActivitylevel(repl) == 1 or self.getActivitylevel(repl) == 2:
@@ -164,7 +164,7 @@ class Replication(object):
             if self.getActivitylevel(repl) == 0:
                 break
 
-    def create_session_configure_replicate(self, baseUrl, sg_admin_url, sg_db, username, password,
+    def create_session_configure_replicate(self, sg_admin_url, sg_db, username, password,
                                            channels, sg_client, cbl_db, sg_blip_url, replication_type):
         sg_client.create_user(sg_admin_url, sg_db, username, password, channels=channels)
         cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, "autotest")

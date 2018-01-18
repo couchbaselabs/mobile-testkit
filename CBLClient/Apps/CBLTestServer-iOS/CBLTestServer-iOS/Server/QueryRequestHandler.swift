@@ -340,18 +340,7 @@ public class QueryRequestHandler {
             let query: Query = args.get(name: "query")!
             return try query.execute()
 
-        case "query_next_result":
-            let query_result_set: ResultSet = args.get(name: "query_result_set")!
-
-            return query_result_set.next()
-
-        case "query_result_string":
-            let query_result: Result = args.get(name: "query_result")!
-            let key: String = args.get(name: "key")!
-
-            return query_result.string(forKey: key)
-
-        case "query_get_doc":
+        case "query_getDoc":
             let database: Database = args.get(name: "database")!
             let doc_id: String = args.get(name: "doc_id")!
 
