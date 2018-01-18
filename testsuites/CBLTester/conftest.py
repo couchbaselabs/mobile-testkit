@@ -108,7 +108,7 @@ def params_from_base_suite_setup(request):
     sg_url = cluster_topology["sync_gateways"][0]["public"]
     sg_ip = host_for_url(sg_url)
     sg_admin_port = 4985
-    target_url = "{}:{}/{}".format(sg_ip, sg_admin_port, sg_db)
+    target_url = "ws://{}:{}/{}".format(sg_ip, sg_admin_port, sg_db)
 
     cbs_url = cluster_topology['couchbase_servers'][0]
     cbs_ip = host_for_url(cbs_url)
