@@ -703,7 +703,10 @@ class MobileRestClient:
         log_r(resp)
         resp.raise_for_status()
         resp_obj = resp.json()
-
+        if rev is not None:
+            for obj in resp_obj:
+                if rev in obj['ok']['_rev']:
+                    return obj['ok']['_revisions']['ids']
         return resp_obj[0]['ok']['_revisions']['ids']
 
     def get_doc(self, url, db, doc_id, auth=None, rev=None, revs_info=False):
