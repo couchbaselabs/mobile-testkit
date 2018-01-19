@@ -19,7 +19,7 @@ public class ConflictRequestHandler {
         //////////////
         // Conflict //
         //////////////
-        case "replicator_conflict_resolver":
+        case "conflict_resolver":
             let conflict_type: String? = args.get(name: "conflict_type")
             if conflict_type == "mine" {
                 return ReplicationMine()

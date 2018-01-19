@@ -30,6 +30,7 @@ from keywords.utils import hostname_for_url
 @pytest.mark.replication
 @pytest.mark.parametrize("sg_conf_name, num_of_docs, continuous", [
     ('listener_tests/listener_tests_no_conflicts', 10, True),
+    # ('listener_tests/listener_tests_no_conflicts', 10, False),
     # ('listener_tests/listener_tests_no_conflicts', 100, False),
     # ('listener_tests/listener_tests_no_conflicts', 1000, True),
     # ('listener_tests/listener_tests_no_conflicts', 1000, False)
@@ -56,6 +57,9 @@ def test_replication_configuration_valid_values(params_from_base_test_setup, sg_
     sg_blip_url = "{}/db".format(sg_blip_url)
     num_docs = 4
     channels_sg = ["ABC"]
+    username = "autotest"
+    password = "password"
+    number_of_updates = 2
 
     # Create CBL database
     cbl_db = db.create(cbl_db_name)
@@ -68,28 +72,34 @@ def test_replication_configuration_valid_values(params_from_base_test_setup, sg_
     c.reset(sg_config_path=sg_config)
 
     sg_client.create_user(sg_admin_url, sg_db, "autotest", password="password", channels=channels_sg)
-    session = sg_client.create_session(sg_admin_url, sg_db, "autotest")
     
     db.create_bulk_docs(num_docs, "cbl", db=cbl_db, channels=channels_sg)
     
-    # Start and stop continuous replication
+    # Configure replication with push_pull
+    print "replication in replication test ---"
     replicator = Replication(base_url)
+    session, replicator_authenticator, repl = replicator.create_session_configure_replicate(
+        base_url, sg_admin_url, sg_db, username, password, channels_sg, sg_client, cbl_db, sg_blip_url, continuous=continuous)
     
-    repl = replicator.configure(cbl_db, target_url=sg_blip_url, continuous=continuous)
-    replicator.start(repl)
-    time.sleep(1)
+    sg_docs = sg_client.get_all_docs(url=sg_url, db=sg_db, auth=session)
+    sg_client.update_docs(url=sg_url, db=sg_db, docs=sg_docs["rows"], number_updates=number_of_updates, auth=session)
+    replicator.wait_until_replicator_idle(replicator, repl)
     replicator.stop(repl)
     sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db)
     log_info("sg doc full details >><<{}".format(sg_docs["rows"]))
 
     # Verify database doc counts
     cbl_doc_count = db.getCount(cbl_db)
-    cbl_docs = db.getDocIds(cbl_db)
     assert len(sg_docs["rows"]) == cbl_doc_count, "Expected number of docs does not exist in sync-gateway after replication"
 
-    # Check that all doc ids in SG are replicated to  CBL
+    # Check that all docs of CBL got replicated to CBL
     for doc in sg_docs["rows"]:
         assert db.contains(cbl_db, str(doc["id"]))
+
+    cbl_doc_ids = db.getDocIds(cbl_db)
+    cbl_db_docs = db.getDocuments(cbl_db, cbl_doc_ids)
+    for doc in cbl_doc_ids:
+        assert cbl_db_docs[doc]["updates"] == number_of_updates, "updates did not get updated"
     
 
 @pytest.mark.sanity
@@ -98,18 +108,9 @@ def test_replication_configuration_with_pull_replication(setup_client_syncgatewa
     """
         @summary: 
         1. Create CBL DB and create bulk doc in CBL
-        2. Configure replication with empty string of source db
-        3. Verify that it throws http error bad request
-        4. Configure replication with source db None
-        5. Verify that it throws invalid type of db
-        6. Configure replication with empty target url
-        7. Verify that it throws http error bad request
-        8. Configure replication with target url None
-        9. Verify that it throws invalid type
-        10. Configure replication with empty target db
-        11. Verify that it throws http error bad request
-        12. Configure replication with target db None
-        13. Verify that it throws invalid type
+        2. Configure replication.
+        3. Create docs in SG.
+        4. 
     
     """
     sg_db = "db"
@@ -136,12 +137,12 @@ def test_replication_configuration_with_pull_replication(setup_client_syncgatewa
     assert len(sg_docs["rows"]) == 10, "Number of sg docs is not equal to total number of cbl docs and sg docs"
     assert cbl_doc_count == 15, "Did not get expected number of cbl docs"
     
-    # Check that all doc ids in SG are also present in CBL
+    # Check that all docs of SG is pulled to CBL
     sg_ids = [row["id"] for row in sg_docs["rows"]]
     for doc in cbl_added_doc_ids:
         assert doc not in sg_ids
 
-    # Verify sg docs does not exist in CBL as it is just a push replication
+    # Verify CBL docs are pushed to SG as it is pull 
     for id in sg_added_doc_ids:
         assert id in cbl_doc_ids
 

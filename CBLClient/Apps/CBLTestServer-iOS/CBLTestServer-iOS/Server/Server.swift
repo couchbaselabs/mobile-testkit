@@ -20,7 +20,7 @@ enum RequestHandlerError: Error {
 }
 
 public class Server {
-    let kPort:UInt = 8989
+    let kPort:UInt = 8080
     let server: GCDWebServer!
     let dictionaryRequestHandler: DictionaryRequestHandler!
     let queryRequestHandler: QueryRequestHandler!

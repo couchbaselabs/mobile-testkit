@@ -4,6 +4,7 @@ from CBLClient.Args import Args
 
 class ReplicatorConfiguration(object):
     _client = None
+    baseUrl = None
 
     def __init__(self, base_url):
         self.base_url = base_url
@@ -13,6 +14,27 @@ class ReplicatorConfiguration(object):
             raise Exception("No base_url specified")
 
         self._client = Client(base_url)
+
+    def configure(self, source_db, target_url=None, target_db=None, replication_type="push_pull", continuous=False,
+                  channels=None, documentIDs=None, replicator_authenticator=None, headers=None):
+        args = Args()
+        args.setMemoryPointer("source_db", source_db)
+        args.setString("replication_type", replication_type)
+        args.setBoolean("continuous", continuous)
+        if channels is not None:
+            args.setArray("channels", channels)
+        if documentIDs is not None:
+            args.setArray("documentIDs", documentIDs)
+        if replicator_authenticator is not None:
+            args.setMemoryPointer("authenticator", replicator_authenticator)
+        if headers is not None:
+            args.setDictionary("headers", headers)
+        if target_db is None:
+            args.setString("target_url", target_url)
+            return self._client.invokeMethod("replicator_configureRemoteDbUrl", args)
+        else:
+            args.setMemoryPointer("target_db", target_db)
+            return self._client.invokeMethod("replicator_configureLocalDb", args)
 
     def create(self, source_db, target_db=None, target_url=None):
         args = Args()

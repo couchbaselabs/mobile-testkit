@@ -14,6 +14,12 @@ class Conflict(object):
 
         self._client = Client(base_url)
 
+    def conflictResolver(self, conflict_type="giveup"):
+        args = Args()
+        args.setString("conflict_type", conflict_type)
+        
+        return self._client.invokeMethod("conflict_resolver", args)
+
     def getBase(self, conflict):
         args = Args()
         args.setMemoryPointer("conflict", conflict)

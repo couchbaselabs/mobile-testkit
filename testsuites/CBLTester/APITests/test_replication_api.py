@@ -8,7 +8,6 @@ from CBLClient.Replication import Replication
 from CBLClient.Dictionary import Dictionary
 from CBLClient.Document import Document
 from CBLClient.Query import Query
-from CBLClient.Utils import Release
 from requests.exceptions import HTTPError
 
 from keywords.SyncGateway import sync_gateway_config_path_for_mode
