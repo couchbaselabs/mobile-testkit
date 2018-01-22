@@ -22,19 +22,13 @@ public class ReplicatorConfigurationRequestHandler {
         case "replicatorConfiguration_create":
             let sourceDb: Database = args.get(name: "sourceDb")!
             let targetDb: Database? = args.get(name: "targetDb")!
-            let secure: Bool? = args.get(name: "secure")!
             let targetURI: String? = args.get(name: "targetURI")!
             
             if (targetDb != nil){
                 let target = DatabaseEndpoint(withDatabase: targetDb!)
                 return ReplicatorConfiguration.Builder(withDatabase: sourceDb, target: target)
             } else if (targetURI != nil){
-                var target: URLEndpoint
-                if secure != nil {
-                    target = URLEndpoint(withHost: targetURI!, secure: secure!)
-                } else {
-                    target = URLEndpoint(withHost: targetURI!, secure: false)
-                }
+                let target = URLEndpoint(withURL: URL(string: targetURI!)!)
                 return ReplicatorConfiguration.Builder(withDatabase: sourceDb, target: target)
             } else {
                 throw RequestHandlerError.InvalidArgument("Incorrect configuration parameter provided")
@@ -50,7 +44,6 @@ public class ReplicatorConfigurationRequestHandler {
             let authenticator: Authenticator? = args.get(name: "authenticator")
             let conflictResolver: ConflictResolver? = args.get(name: "conflictResolver")
             let headers: Dictionary<String, String>? = args.get(name: "headers")!
-            let secure: Bool? = args.get(name: "secure")
             
             var replicatorType = ReplicatorType.pushAndPull
             
@@ -66,13 +59,7 @@ public class ReplicatorConfigurationRequestHandler {
             
             //let target_converted_url: URL? = URL(string: target_url!)
             if (source_db != nil && target_url != nil) {
-                var target: URLEndpoint
-                if secure != nil {
-                    
-                    target = URLEndpoint(withURL: URL(string: target_url!)!)
-                } else {
-                    target = URLEndpoint(withUR: URL(string: target_url!)!)
-                }
+                let target = URLEndpoint(withURL: URL(string: target_url!)!)
                 
                 let config = ReplicatorConfiguration.Builder(withDatabase: source_db!, target: target)
                 

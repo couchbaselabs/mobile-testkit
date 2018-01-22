@@ -12,8 +12,7 @@
             {{ autoimport }}
             {{ xattrs }}
             "unsupported": { 
-                "allow_conflicts": false,
-                "replicator_2":true
+                {{ no_conflicts }}
              },
             "revs_limit": 5,
             "rev_cache_size": 1000,

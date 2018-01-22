@@ -15,8 +15,6 @@
 		2907D174200E7FCE00CE56EB /* ResultRequestHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2907D173200E7FCE00CE56EB /* ResultRequestHandler.swift */; };
 		2907D176200E860A00CE56EB /* BasicAuthenticatorRequestHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2907D175200E860A00CE56EB /* BasicAuthenticatorRequestHandler.swift */; };
 		2907D178200E876700CE56EB /* BaseDatabaseConfigurationRequestHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2907D177200E876700CE56EB /* BaseDatabaseConfigurationRequestHandler.swift */; };
-		2907D17D200E91EF00CE56EB /* CouchbaseLiteSwift.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2907D17C200E91EF00CE56EB /* CouchbaseLiteSwift.framework */; };
-		2907D17E200E91EF00CE56EB /* CouchbaseLiteSwift.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 2907D17C200E91EF00CE56EB /* CouchbaseLiteSwift.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		2909B0731F9FFA8900B4E0E4 /* Server.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2909B0721F9FFA8900B4E0E4 /* Server.swift */; };
 		2909B0761FA3B7B400B4E0E4 /* Args.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2909B0751FA3B7B400B4E0E4 /* Args.swift */; };
 		293F38381FFD792E00497870 /* DataTypesInitiatorHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 293F38371FFD792E00497870 /* DataTypesInitiatorHandler.swift */; };
@@ -54,8 +52,12 @@
 		29F7869C1F9FC4180035178F /* GCDWebServerFileResponse.m in Sources */ = {isa = PBXBuildFile; fileRef = 29F7868E1F9FC4180035178F /* GCDWebServerFileResponse.m */; };
 		29F7869D1F9FC4180035178F /* GCDWebServerStreamedResponse.m in Sources */ = {isa = PBXBuildFile; fileRef = 29F786901F9FC4180035178F /* GCDWebServerStreamedResponse.m */; };
 		29F786A01F9FC4850035178F /* libz.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 29F7869F1F9FC4850035178F /* libz.tbd */; };
+		FB5A86682012BE5B008127FC /* CouchbaseLiteSwift.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FB5A86662012BE5B008127FC /* CouchbaseLiteSwift.framework */; };
+		FB5A86692012BE5B008127FC /* CouchbaseLiteSwift.framework.dSYM in Resources */ = {isa = PBXBuildFile; fileRef = FB5A86672012BE5B008127FC /* CouchbaseLiteSwift.framework.dSYM */; };
+		FB5A866A2012BE72008127FC /* CouchbaseLiteSwift.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FB5A86662012BE5B008127FC /* CouchbaseLiteSwift.framework */; };
+		FB5A866B2012BE72008127FC /* CouchbaseLiteSwift.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = FB5A86662012BE5B008127FC /* CouchbaseLiteSwift.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		FB7B1E731FDB60ED00A912BF /* Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB7B1E721FDB60ED00A912BF /* Extensions.swift */; };
-		FB82EB6020107EE70082F653 /* CouchbaseLiteSwift.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = FB82EB5D20107EA50082F653 /* CouchbaseLiteSwift.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		FB82EB6020107EE70082F653 /* (null) in Embed Frameworks */ = {isa = PBXBuildFile; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		FBE65BBE1FFEC0AF00C66683 /* (null) in Embed Frameworks */ = {isa = PBXBuildFile; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
 
@@ -83,7 +85,8 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
-				FB82EB6020107EE70082F653 /* CouchbaseLiteSwift.framework in Embed Frameworks */,
+				FB5A866B2012BE72008127FC /* CouchbaseLiteSwift.framework in Embed Frameworks */,
+				FB82EB6020107EE70082F653 /* (null) in Embed Frameworks */,
 				FBE65BBE1FFEC0AF00C66683 /* (null) in Embed Frameworks */,
 			);
 			name = "Embed Frameworks";
@@ -100,7 +103,6 @@
 		2907D173200E7FCE00CE56EB /* ResultRequestHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResultRequestHandler.swift; sourceTree = "<group>"; };
 		2907D175200E860A00CE56EB /* BasicAuthenticatorRequestHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BasicAuthenticatorRequestHandler.swift; sourceTree = "<group>"; };
 		2907D177200E876700CE56EB /* BaseDatabaseConfigurationRequestHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BaseDatabaseConfigurationRequestHandler.swift; sourceTree = "<group>"; };
-		2907D17C200E91EF00CE56EB /* CouchbaseLiteSwift.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CouchbaseLiteSwift.framework; path = Frameworks/iOS/CouchbaseLiteSwift.framework; sourceTree = "<group>"; };
 		2909B0721F9FFA8900B4E0E4 /* Server.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Server.swift; sourceTree = "<group>"; };
 		2909B0751FA3B7B400B4E0E4 /* Args.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Args.swift; sourceTree = "<group>"; };
 		293F38371FFD792E00497870 /* DataTypesInitiatorHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataTypesInitiatorHandler.swift; sourceTree = "<group>"; };
@@ -160,6 +162,8 @@
 		29F7868F1F9FC4180035178F /* GCDWebServerStreamedResponse.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GCDWebServerStreamedResponse.h; sourceTree = "<group>"; };
 		29F786901F9FC4180035178F /* GCDWebServerStreamedResponse.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GCDWebServerStreamedResponse.m; sourceTree = "<group>"; };
 		29F7869F1F9FC4850035178F /* libz.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libz.tbd; path = usr/lib/libz.tbd; sourceTree = SDKROOT; };
+		FB5A86662012BE5B008127FC /* CouchbaseLiteSwift.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = CouchbaseLiteSwift.framework; sourceTree = "<group>"; };
+		FB5A86672012BE5B008127FC /* CouchbaseLiteSwift.framework.dSYM */ = {isa = PBXFileReference; lastKnownFileType = wrapper.dsym; path = CouchbaseLiteSwift.framework.dSYM; sourceTree = "<group>"; };
 		FB7B1E721FDB60ED00A912BF /* Extensions.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Extensions.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -168,7 +172,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				2907D17D200E91EF00CE56EB /* CouchbaseLiteSwift.framework in Frameworks */,
+				FB5A866A2012BE72008127FC /* CouchbaseLiteSwift.framework in Frameworks */,
+				FB5A86682012BE5B008127FC /* CouchbaseLiteSwift.framework in Frameworks */,
 				29F786A01F9FC4850035178F /* libz.tbd in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -225,7 +230,6 @@
 		29F77F1A1F9FC18D0035178F = {
 			isa = PBXGroup;
 			children = (
-				2907D17C200E91EF00CE56EB /* CouchbaseLiteSwift.framework */,
 				29F77F251F9FC18D0035178F /* CBLTestServer-iOS */,
 				29F77F3A1F9FC18D0035178F /* CBLTestServer-iOSTests */,
 				29F77F451F9FC18D0035178F /* CBLTestServer-iOSUITests */,
@@ -349,7 +353,8 @@
 		29F7869E1F9FC4850035178F /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				FB82EB5D20107EA50082F653 /* CouchbaseLiteSwift.framework */,
+				FB5A86662012BE5B008127FC /* CouchbaseLiteSwift.framework */,
+				FB5A86672012BE5B008127FC /* CouchbaseLiteSwift.framework.dSYM */,
 				29F7869F1F9FC4850035178F /* libz.tbd */,
 			);
 			name = Frameworks;
@@ -467,6 +472,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				FB5A86692012BE5B008127FC /* CouchbaseLiteSwift.framework.dSYM in Resources */,
 				29F77F311F9FC18D0035178F /* LaunchScreen.storyboard in Resources */,
 				29F77F2E1F9FC18D0035178F /* Assets.xcassets in Resources */,
 				29F77F2C1F9FC18D0035178F /* Main.storyboard in Resources */,
@@ -693,6 +699,7 @@
 					"$(inherited)",
 					"$(PROJECT_DIR)/Frameworks/iOS",
 					"$(PROJECT_DIR)/Carthage/Build/iOS",
+					"$(PROJECT_DIR)",
 				);
 				INFOPLIST_FILE = "CBLTestServer-iOS/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
@@ -714,6 +721,7 @@
 					"$(inherited)",
 					"$(PROJECT_DIR)/Frameworks/iOS",
 					"$(PROJECT_DIR)/Carthage/Build/iOS",
+					"$(PROJECT_DIR)",
 				);
 				INFOPLIST_FILE = "CBLTestServer-iOS/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";

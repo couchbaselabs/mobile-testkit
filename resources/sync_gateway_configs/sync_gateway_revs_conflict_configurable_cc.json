@@ -13,7 +13,6 @@
             {{ xattrs }}
             "unsupported": {
                 {{ no_conflicts }}
-                "replicator_2": true
             },
             {{ revs_limit }}
             "rev_cache_size": 1000,

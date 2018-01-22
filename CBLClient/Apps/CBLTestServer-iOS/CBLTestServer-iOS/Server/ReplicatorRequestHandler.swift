@@ -19,8 +19,8 @@ public class ReplicatorRequestHandler {
         /////////////////
         case "replicator_create":
             let config: ReplicatorConfiguration.Builder? = args.get(name: "config")
-             // return Replicator(withConfig: config!)
-            return Replicator(withConfig: config!.build())
+             //return Replicator(withConfig: config!)
+            return Replicator(withConfig: (config?.build())!)
             
         case "replicator_start":
             let replication_obj: Replicator = args.get(name: "replication_obj")!

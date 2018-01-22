@@ -4,12 +4,13 @@ from CBLClient.Args import Args
 
 class Authenticator(object):
     _client = None
+    base_url = None
 
     def __init__(self, base_url):
         self.base_url = base_url
 
         # If no base url was specified, raise an exception
-        if not self.base_url:
+        if self.base_url is None:
             raise Exception("No base_url specified")
 
         self._client = Client(base_url)
@@ -62,6 +63,6 @@ class Authenticator(object):
         args = Args()
         args.setString("authentication_type", authentication_type)
         if authentication_type == "session":
-            self.sessionAuthenticator_create(session_id, cookie)
+            return self.sessionAuthenticator_create(session_id, cookie)
         else:
-            self.basicAuthenticator_create(username, password)
+            return self.basicAuthenticator_create(username, password)

@@ -12,7 +12,7 @@ class TestReplication(object):
     cbl_db_name = "cbl_db"
     sg_db = "db"
 
-    def test_replication_configuration_valid_values(self, params_from_base_test_setup):
+    def test_replication1_configuration_valid_values1_1(self, params_from_base_test_setup):
         """
         @summary:
         1. Create CBL DB and create bulk doc in CBL
