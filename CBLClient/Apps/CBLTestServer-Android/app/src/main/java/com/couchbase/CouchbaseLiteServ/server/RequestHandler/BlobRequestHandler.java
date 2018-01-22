@@ -3,13 +3,11 @@ package com.couchbase.CouchbaseLiteServ.server.RequestHandler;
 
 import com.couchbase.CouchbaseLiteServ.server.Args;
 import com.couchbase.lite.Blob;
-import com.couchbase.lite.Database;
 import com.couchbase.litecore.fleece.FLEncoder;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
-import java.util.Base64;
 import java.util.Map;
 
 public class BlobRequestHandler {

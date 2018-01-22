@@ -17,7 +17,7 @@ android {
         }
     }
 }
-def COUCHBASE_LITE_VERSION = "2.0.0-DB021"
+def COUCHBASE_LITE_VERSION = "2.0.0-285"
 
 dependencies {
     compile "org.nanohttpd:nanohttpd:2.3.2-SNAPSHOT"

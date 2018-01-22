@@ -45,16 +45,6 @@ public class ReplicatorRequestHandler {
         return replicator.toString();
     }
 
-    public void networkReachable(Args args){
-        Replicator replicator = args.get("replicator");
-        replicator.networkReachable();
-    }
-
-    public void networkUnreachable(Args args){
-        Replicator replicator = args.get("replicator");
-        replicator.networkUnreachable();
-    }
-
     public void start(Args args){
         Replicator replicator = args.get("replicator");
         replicator.start();

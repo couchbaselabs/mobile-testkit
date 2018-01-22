@@ -4,15 +4,11 @@ package com.couchbase.CouchbaseLiteServ.server.RequestHandler;
 import com.couchbase.CouchbaseLiteServ.server.Args;
 import com.couchbase.lite.Array;
 import com.couchbase.lite.Blob;
-import com.couchbase.lite.Database;
 import com.couchbase.lite.Dictionary;
-import com.couchbase.lite.MutableDictionary;
 import com.couchbase.lite.MutableDictionary;
 import com.couchbase.litecore.fleece.FLEncoder;
 
-import java.util.Collections;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -41,14 +37,6 @@ public class DictionaryRequestHandler{
         dictionary.encodeTo(encoder);
     }
 
-//    Not available in DB21
-//    public MutableDictionary set(Args args){
-//        MutableDictionary dictionary = args.get("dictionary");
-//        Map<String, Object> content_dict  = args.get("content_dict");
-//        return dictionary.set(content_dict);
-//    }
-
-
     public String getString(Args args) {
         MutableDictionary dictionary = args.get("dictionary");
         String key = args.get("key");
@@ -61,21 +49,6 @@ public class DictionaryRequestHandler{
         String value = args.get("value");
         return dictionary.setString(key, value);
     }
-
-//    Not available in DB21
-//    public Object getObject(Args args){
-//        MutableDictionary dictionary = args.get("dictionary");
-//        String key = args.get("key");
-//        return dictionary.getObject(key);
-//    }
-
-//    Not available in DB21
-//    public MutableDictionary setObject(Args args){
-//        MutableDictionary dictionary = args.get("dictionary");
-//        String key = args.get("key");
-//        Object value = args.get("value");
-//        return  dictionary.setObject(key, value);
-//    }
 
 
     public Number getNumber(Args args){
