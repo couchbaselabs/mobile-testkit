@@ -18,53 +18,52 @@ public class ReplicatorRequestHandler {
         // Replication //
         /////////////////
         case "replicator_create":
-            let config: ReplicatorConfiguration.Builder? = args.get(name: "config")
-             //return Replicator(withConfig: config!)
-            return Replicator(withConfig: (config?.build())!)
+            let config: ReplicatorConfiguration? = args.get(name: "config")
+            return Replicator(withConfig: config!)
             
         case "replicator_start":
-            let replication_obj: Replicator = args.get(name: "replication_obj")!
+            let replication_obj: Replicator = args.get(name: "replicator")!
             replication_obj.start()
 
         case "replicator_stop":
-            let replication_obj: Replicator = args.get(name: "replication_obj")!
+            let replication_obj: Replicator = args.get(name: "replicator")!
             replication_obj.stop()
 
         case "replicator_status":
-            let replication_obj: Replicator = args.get(name: "replication_obj")!
+            let replication_obj: Replicator = args.get(name: "replicator")!
             let value = replication_obj.status.stringify()
             print("displaying replication status \(value)")
             return value
 
         case "replicator_config":
-            let replication_obj: Replicator = args.get(name: "replication_obj")!
+            let replication_obj: Replicator = args.get(name: "replicator")!
             return replication_obj.config
 
-        case "replicator_getActivitylevel":
-            let replication_obj: Replicator = args.get(name: "replication_obj")!
+        case "replicator_getActivityLevel":
+            let replication_obj: Replicator = args.get(name: "replicator")!
             return replication_obj.status.activity.hashValue
 
         case "replicator_getCompleted":
-            let replication_obj: Replicator = args.get(name: "replication_obj")!
+            let replication_obj: Replicator = args.get(name: "replicator")!
             return replication_obj.status.progress.completed
 
         case "replicator_getTotoal":
-            let replication_obj: Replicator = args.get(name: "replication_obj")!
+            let replication_obj: Replicator = args.get(name: "replicator")!
             return replication_obj.status.progress.total
 
         case "replicator_getError":
-            let replication_obj: Replicator = args.get(name: "replication_obj")!
+            let replication_obj: Replicator = args.get(name: "replicator")!
             return String(describing: replication_obj.status.error)
 
         case "replicator_addChangeListener":
-            let replication_obj: Replicator = args.get(name: "replication_obj")!
+            let replication_obj: Replicator = args.get(name: "replicator")!
             let changeListener = MyReplicationChangeListener()
             let listenerToken = replication_obj.addChangeListener(changeListener.listener)
             changeListener.listenerToken = listenerToken
             return changeListener
 
         case "replicator_removeChangeListener":
-            let replication_obj: Replicator = args.get(name: "replication_obj")!
+            let replication_obj: Replicator = args.get(name: "replicator")!
             let changeListener : MyReplicationChangeListener = (args.get(name: "changeListener"))!
             replication_obj.removeChangeListener(withToken: changeListener.listenerToken! as! ListenerToken)
 

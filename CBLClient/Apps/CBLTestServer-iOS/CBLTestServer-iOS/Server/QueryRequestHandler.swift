@@ -43,34 +43,34 @@ public class QueryRequestHandler {
             let expression: Expression = args.get(name: "expression")!
             let value: String = args.get(name: "value")!
 
-            return ArrayFunction.contains(expression, value: Expression.property(value))
+            return ArrayFunction.contains(expression as! ExpressionProtocol, value: Expression.property(value))
 
         case "query_ArrayFunction_arrayLength":
             let expression: Expression = args.get(name: "expression")!
-            return ArrayFunction.length(expression)
+            return ArrayFunction.length(expression as! ExpressionProtocol)
 
         ///////////
         // Joins //
         ///////////
         case "query_join_datasource":
             let datasource: DataSource = args.get(name: "datasource")!
-            return Join.join(datasource)
+            return Join.join(datasource as! DataSourceProtocol)
 
         case "query_left_join_datasource":
             let datasource: DataSource = args.get(name: "datasource")!
-            return Join.leftJoin(datasource)
+            return Join.leftJoin(datasource as! DataSourceProtocol)
 
         case "query_left_outer_join_datasource":
             let datasource: DataSource = args.get(name: "datasource")!
-            return Join.leftOuterJoin(datasource)
+            return Join.leftOuterJoin(datasource as! DataSourceProtocol)
 
         case "query_inner_join_datasource":
             let datasource: DataSource = args.get(name: "datasource")!
-            return Join.innerJoin(datasource)
+            return Join.innerJoin(datasource as! DataSourceProtocol as! DataSourceProtocol)
 
         case "query_cross_join_datasource":
             let datasource: DataSource = args.get(name: "datasource")!
-            return Join.crossJoin(datasource)
+            return Join.crossJoin(datasource as! DataSourceProtocol)
 
         ////////////////////////
         // Query SelectResult //
@@ -78,12 +78,12 @@ public class QueryRequestHandler {
         case "query_select":
             let select_result: SelectResult = args.get(name: "select_result")!
 
-            return Query.select(select_result)
+            return Query.select(select_result as! SelectResultProtocol)
 
         case "query_select_distinct":
             let select_result: SelectResult = args.get(name: "select_result")!
 
-            return Query.selectDistinct(select_result)
+            return Query.selectDistinct(select_result as! SelectResultProtocol)
 
         case "query_create":
         // Only does select FirstName from test_db where City = "MV"
@@ -92,9 +92,9 @@ public class QueryRequestHandler {
             let whr_key_prop: Expression = args.get(name: "whr_key_prop")!
 
             let query = Query
-                .select(select_prop)
-                .from(from_prop)
-                .where(whr_key_prop)
+                .select(select_prop as! SelectResultProtocol)
+                .from(from_prop as! DataSourceProtocol)
+                .where(whr_key_prop as! ExpressionProtocol)
 
             return query
 

@@ -372,7 +372,7 @@ def class_init(request, params_from_base_suite_setup):
     base_auth_obj = BasicAuthenticator(base_url)
     session_auth_obj = SessionAuthenticator(base_url)
     sg_client = MobileRestClient()
-    db = db_obj.create("foo")
+    db = db_obj.create("cbl-init-db")
 
     request.cls.db_obj = db_obj
     request.cls.doc_obj = doc_obj

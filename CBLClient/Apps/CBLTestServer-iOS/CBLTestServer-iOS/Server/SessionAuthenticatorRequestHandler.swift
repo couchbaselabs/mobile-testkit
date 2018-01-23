@@ -19,16 +19,16 @@ public class SessionAuthenticatorRequestHandler {
         //////////////////////////
         // SessionAuthenticator //
         //////////////////////////
-        case "sessionauthenticator_create":
+        case "sessionAuthenticator_create":
             let sessionid: String! = args.get(name: "sessionId")
             let cookiename: String! = args.get(name: "cookieName")
             return SessionAuthenticator(sessionID: sessionid, cookieName: cookiename)
             
-        case "sessionauthenticator_getSessionId":
+        case "sessionAuthenticator_getSessionId":
             let session: SessionAuthenticator = args.get(name: "session")!
             return session.sessionID
 
-        case "sessionauthenticator_getCookieName":
+        case "sessionAuthenticator_getCookieName":
             let session: SessionAuthenticator = args.get(name: "session")!
             return session.cookieName
 

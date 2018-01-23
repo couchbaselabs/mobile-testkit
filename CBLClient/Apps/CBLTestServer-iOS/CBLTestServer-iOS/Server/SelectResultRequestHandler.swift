@@ -21,7 +21,7 @@ public class SelectResultRequestHandler {
         case "selectResult_expressionCreate":
             let expression: Expression = args.get(name: "expression")!
             
-            return SelectResult.expression(expression)
+            return SelectResult.expression(expression as! ExpressionProtocol)
             
         case "selectResult_all":
             return SelectResult.all()

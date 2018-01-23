@@ -287,14 +287,14 @@ class Replication(object):
         sg_client.create_user(sg_admin_url, sg_db, username, password, channels=channels)
         cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, "autotest")
         session = cookie, session_id
-        # replicator_authenticator = authenticator.authentication(session_id, cookie, authentication_type="session")
-        replicator_authenticator = authenticator.authentication(username=username, password=password, authentication_type="basic")
+        replicator_authenticator = authenticator.authentication(session_id, cookie, authentication_type="session")
+        # replicator_authenticator = authenticator.authentication(username=username, password=password, authentication_type="basic")
         repl_config = self.configure(cbl_db, sg_blip_url, continuous=continuous, channels=channels, replication_type=replication_type, replicator_authenticator=replicator_authenticator)
-        # repl = self.create(repl_config)
-        self.start(repl_config)
-        self.wait_until_replicator_idle(repl_config)
+        repl = self.create(repl_config)
+        self.start(repl)
+        self.wait_until_replicator_idle(repl)
 
-        return session, replicator_authenticator, repl_config
+        return session, replicator_authenticator, repl
 
 """
     def configure(self, source_db, target_url=None, target_db=None,

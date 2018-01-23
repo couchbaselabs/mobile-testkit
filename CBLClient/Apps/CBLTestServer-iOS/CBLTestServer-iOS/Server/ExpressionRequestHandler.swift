@@ -35,12 +35,12 @@ public class ExpressionRequestHandler {
             
         case "expression_negated":
             let expression: Expression = args.get(name: "expression")!
-            return Expression.negated(expression)
+            return Expression.negated(expression as! ExpressionProtocol)
             
         case "expression_not":
             let expression: Expression = args.get(name: "expression")!
-            return Expression.not(expression)
-            
+            return Expression.not(expression as! ExpressionProtocol)
+        /*
         case "expression_createEqualTo":
             let expression1: Expression = args.get(name: "expression1")!
             let expression2: Expression = args.get(name: "expression2")!
@@ -55,7 +55,7 @@ public class ExpressionRequestHandler {
             let expression1: Expression = args.get(name: "expression1")!
             let expression2: Expression = args.get(name: "expression2")!
             return expression1.or(expression2)
-            
+        */
         default:
             throw RequestHandlerError.MethodNotFound(method)
         }

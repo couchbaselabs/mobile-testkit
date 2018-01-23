@@ -85,7 +85,6 @@ public class ValueSerializer {
             let start = value!.index(value!.startIndex, offsetBy: 1)
             let end = value!.index(value!.endIndex, offsetBy: 0)
             let range = start..<end
-            print("value of integer is \(Int(value!.substring(with: range)) as? T)")
             return Int(value!.substring(with: range)) as? T
             
         } else if value!.hasPrefix("F") {

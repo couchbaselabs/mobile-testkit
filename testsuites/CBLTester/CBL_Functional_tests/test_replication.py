@@ -15,17 +15,34 @@ from keywords import document, attachment
 from libraries.testkit import cluster
 
 
+@pytest.fixture(scope="function")
+def setup_teardown_test(params_from_base_test_setup):
+    cbl_db_name = "cbl_db"
+    base_url = params_from_base_test_setup["base_url"]
+    db = Database(base_url)
+    cbl_db = db.create(cbl_db_name)
+    print "setting up db"
+
+    yield{
+        "db": db,
+        "cbl_db": cbl_db,
+        "cbl_db_name": cbl_db_name
+    }
+    print "tearing down db"
+    db.deleteDB(cbl_db)
+
+
 @pytest.mark.sanity
 @pytest.mark.listener
 @pytest.mark.replication
-@pytest.mark.parametrize("sg_conf_name, num_of_docs, continuous", [
-    ('listener_tests/listener_tests_no_conflicts', 10, True),
+@pytest.mark.parametrize("num_of_docs, continuous", [
+    (10, True),
     # ('listener_tests/listener_tests_no_conflicts', 10, False),
     # ('listener_tests/listener_tests_no_conflicts', 100, False),
     # ('listener_tests/listener_tests_no_conflicts', 1000, True),
     # ('listener_tests/listener_tests_no_conflicts', 1000, False)
 ])
-def test_replication_configuration_valid_values(params_from_base_test_setup, sg_conf_name, num_of_docs, continuous):
+def test_replication_configuration_valid_values(params_from_base_test_setup, setup_teardown_test, num_of_docs, continuous):
     """
         @summary:
         1. Create CBL DB and create bulk doc in CBL
@@ -34,31 +51,31 @@ def test_replication_configuration_valid_values(params_from_base_test_setup, sg_
         4. Verify replication is successful and verify docs exist
     """
     sg_db = "db"
-    cbl_db_name = "cbl_db"
+    # cbl_db_name = "cbl_db"
     sg_url = params_from_base_test_setup["sg_url"]
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
-    sg_mode = params_from_base_test_setup["mode"]
     cluster_config = params_from_base_test_setup["cluster_config"]
     sg_blip_url = params_from_base_test_setup["target_url"]
     base_url = params_from_base_test_setup["base_url"]
-    db = Database(base_url)
-    num_docs = 4
+    sg_config = params_from_base_test_setup["sg_config"]
+    cbl_db = setup_teardown_test["cbl_db"]
+    db = setup_teardown_test["db"]
+    # db = Database(base_url)
     channels_sg = ["ABC"]
     username = "autotest"
     password = "password"
     number_of_updates = 2
 
     # Create CBL database
-    cbl_db = db.create(cbl_db_name)
+    # cbl_db = db.create(cbl_db_name)
     log_info("Database is {}".format(cbl_db))
     sg_client = MobileRestClient()
 
     # Reset cluster to ensure no data in system
-    sg_config = sync_gateway_config_path_for_mode(sg_conf_name, sg_mode)
     c = cluster.Cluster(config=cluster_config)
     c.reset(sg_config_path=sg_config)
 
-    db.create_bulk_docs(num_docs, "cbl", db=cbl_db, channels=channels_sg)
+    db.create_bulk_docs(num_of_docs, "cbl", db=cbl_db, channels=channels_sg)
 
     # Configure replication with push_pull
     replicator = Replication(base_url)
@@ -69,7 +86,7 @@ def test_replication_configuration_valid_values(params_from_base_test_setup, sg_
     sg_client.update_docs(url=sg_url, db=sg_db, docs=sg_docs["rows"], number_updates=number_of_updates, auth=session)
     replicator.wait_until_replicator_idle(repl)
     replicator.stop(repl)
-    sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db)
+    sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, include_docs=True)
     log_info("sg doc full details >><<{}".format(sg_docs["rows"]))
 
     # Verify database doc counts
@@ -82,6 +99,7 @@ def test_replication_configuration_valid_values(params_from_base_test_setup, sg_
 
     cbl_doc_ids = db.getDocIds(cbl_db)
     cbl_db_docs = db.getDocuments(cbl_db, cbl_doc_ids)
+    print "cbl db docs are ", cbl_db_docs
     for doc in cbl_doc_ids:
         assert cbl_db_docs[doc]["updates"] == number_of_updates, "updates did not get updated"
 
@@ -90,10 +108,10 @@ def test_replication_configuration_valid_values(params_from_base_test_setup, sg_
 @pytest.mark.listener
 @pytest.mark.replication
 @pytest.mark.parametrize("authenticator_type", [
-    # ('session'),
+    ('session'),
     ('basic')
 ])
-def test_replication_configuration_with_pull_replication(params_from_base_test_setup, authenticator_type):
+def test_replication_configuration_with_pull_replication(params_from_base_test_setup, setup_teardown_test, authenticator_type):
     """
         @summary:
         1. Create CBL DB and create bulk doc in CBL
@@ -104,7 +122,7 @@ def test_replication_configuration_with_pull_replication(params_from_base_test_s
 
     """
     sg_db = "db"
-    cbl_db_name = "cbl_db"
+    # cbl_db_name = "cbl_db"
 
     sg_url = params_from_base_test_setup["sg_url"]
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
@@ -112,8 +130,11 @@ def test_replication_configuration_with_pull_replication(params_from_base_test_s
     base_url = params_from_base_test_setup["base_url"]
     cluster_config = params_from_base_test_setup["cluster_config"]
     sg_config = params_from_base_test_setup["sg_config"]
+
+    db = setup_teardown_test["db"]
+    cbl_db_name = setup_teardown_test["cbl_db_name"]
     channels = ["ABC"]
-    db = Database(base_url)
+    # db = Database(base_url)
     c = cluster.Cluster(config=cluster_config)
     c.reset(sg_config_path=sg_config)
 

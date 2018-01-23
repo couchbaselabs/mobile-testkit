@@ -964,8 +964,8 @@ def test_multiple_cbls_updates_concurrently_with_pull(params_from_base_test_setu
 @pytest.mark.listener
 @pytest.mark.noconflicts
 @pytest.mark.parametrize("sg_conf_name, num_of_docs, number_of_updates, add_attachments", [
-    ('listener_tests/listener_tests_no_conflicts', 10, 2, false),
-    # ('listener_tests/listener_tests_no_conflicts', 10, 3 , true ),
+    ('listener_tests/listener_tests_no_conflicts', 10, 2, False),
+    # ('listener_tests/listener_tests_no_conflicts', 10, 3 , True ),
     # ('listener_tests/listener_tests_no_conflicts', 1000)
 ])
 def test_sg_cbl_updates_concurrently_with_push_pull(params_from_base_test_setup, sg_conf_name, num_of_docs, number_of_updates, add_attachments):

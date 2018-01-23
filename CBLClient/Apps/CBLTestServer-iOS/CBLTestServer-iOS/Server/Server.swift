@@ -119,7 +119,7 @@ public class Server {
                         result = try self.dictionaryRequestHandler.handleRequest(method: method, args: args)
                     } else if method.hasPrefix("array") {
                         result = try self.arrayRequestHandler.handleRequest(method: method, args: args)
-                    } else if method.hasPrefix("sessionauthenticator") {
+                    } else if method.hasPrefix("sessionAuthenticator") {
                         result = try self.sessionauthenticatorRequestHandler.handleRequest(method: method, args: args)
                     } else if method.hasPrefix("encryptionkey") {
                         result = try self.encryptionkeyRequestHandler.handleRequest(method: method, args: args)

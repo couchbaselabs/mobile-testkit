@@ -61,29 +61,27 @@ public class ReplicatorConfigurationRequestHandler {
             if (source_db != nil && target_url != nil) {
                 let target = URLEndpoint(withURL: URL(string: target_url!)!)
                 
-                let config = ReplicatorConfiguration.Builder(withDatabase: source_db!, target: target)
-                
-                config.setReplicatorType(replicatorType)
+                let builder = ReplicatorConfiguration.Builder(withDatabase: source_db!, target: target)
+                builder.setReplicatorType(replicatorType)
                 if continuous != nil {
-                    config.setContinuous(continuous!)
+                    builder.setContinuous(continuous!)
                 } else {
-                    config.setContinuous(false)
+                    builder.setContinuous(false)
                 }
                 if headers != nil {
-                    config.setHeaders(headers)
+                    builder.setHeaders(headers)
                 }
-                config.setAuthenticator(authenticator)
+                builder.setAuthenticator(authenticator)
                 if(conflictResolver != nil){
-                    config.setConflictResolver(conflictResolver!)
+                    builder.setConflictResolver(conflictResolver!)
                 }
                 if channels != nil {
-                    config.setChannels(channels)
+                    builder.setChannels(channels)
                 }
                 if documentIDs != nil {
-                    config.setDocumentIDs(documentIDs)
+                    builder.setDocumentIDs(documentIDs)
                 }
-                return config
-                // return Replicator(withConfig: config.build())
+                return builder.build()
             }
             else{
                 throw RequestHandlerError.InvalidArgument("No source db provided or target url provided")
@@ -115,31 +113,31 @@ public class ReplicatorConfigurationRequestHandler {
             
             if (source_db != nil && targetDatabase != nil) {
                 let target = DatabaseEndpoint(withDatabase: targetDatabase!)
-                let config = ReplicatorConfiguration.Builder(withDatabase: source_db!, target: target)
+                let builder = ReplicatorConfiguration.Builder(withDatabase: source_db!, target: target)
                 
-                config.setReplicatorType(replicatorType)
+                builder.setReplicatorType(replicatorType)
                 if continuous != nil {
-                    config.setContinuous(continuous!)
+                    builder.setContinuous(continuous!)
                 } else {
-                    config.setContinuous(false)
+                    builder.setContinuous(false)
                 }
                 if authenticator != nil {
-                    config.setAuthenticator(authenticator)
+                    builder.setAuthenticator(authenticator)
                 }
                 if headers != nil {
-                    config.setHeaders(headers)
+                    builder.setHeaders(headers)
                 }
                 if channels != nil {
-                    config.setChannels(channels)
+                    builder.setChannels(channels)
                 }
                 if conflictResolver != nil {
-                    config.setConflictResolver(conflictResolver!)
+                    builder.setConflictResolver(conflictResolver!)
                 }
                 if documentIDs != nil {
-                    config.setDocumentIDs(documentIDs)
+                    builder.setDocumentIDs(documentIDs)
                 }
-                return config
-                // return Replicator(withConfig: config.build())
+                
+                return builder.build()
             }
             else{
                 throw RequestHandlerError.InvalidArgument("No source db provided or target DB provided")

@@ -48,7 +48,6 @@ class ValueSerializer(object):
             for obj in value:
                 string = ValueSerializer.serialize(obj)
                 string_list.append(string)
-
             return json.dumps(string_list)
 
         raise RuntimeError("Invalid value type: {}: {}".format(value, type(value)))
@@ -81,14 +80,14 @@ class ValueSerializer(object):
         elif value == "false":
             return False
         elif value.startswith("{"):
-            stringMap = json.loads(value)
+            string_map = json.loads(value)
             map = {}
 
-            for entry in stringMap:
+            for entry in string_map:
                 key = str(entry)
                 obj = ValueSerializer.deserialize(string_map[key])
 
-                map[key] = object
+                map[key] = obj
 
             return map
         elif value.startswith("["):
