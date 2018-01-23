@@ -5,36 +5,36 @@ import com.couchbase.CouchbaseLiteServ.server.Args;
 import com.couchbase.lite.Authenticator;
 import com.couchbase.lite.ConflictResolver;
 import com.couchbase.lite.Database;
+import com.couchbase.lite.DatabaseEndpoint;
 import com.couchbase.lite.ReplicatorConfiguration;
+import com.couchbase.lite.ReplicatorConfiguration.Builder;
+import com.couchbase.lite.URLEndpoint;
 
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.URL;
 import java.util.List;
 
-/**
- *
- */
 public class ReplicatorConfigurationRequestHandler {
 
-    public ReplicatorConfiguration create(Args args) throws MalformedURLException, URISyntaxException {
+    public Builder builderCreate(Args args) throws MalformedURLException, URISyntaxException {
         Database sourceDb = args.get("sourceDb");
         Database targetDb = args.get("targetDb");
         URI targetURI = new URI((String) args.get("targetURI"));
-
         if (targetDb != null){
-            return new ReplicatorConfiguration(sourceDb, targetDb);
+            DatabaseEndpoint target = new DatabaseEndpoint(targetDb);
+            return new Builder(sourceDb, target);
         } else if (targetURI != null){
-            return new ReplicatorConfiguration(sourceDb, targetURI);
+            URLEndpoint target = new URLEndpoint(targetURI);
+            return new Builder(sourceDb, target);
         } else {
             throw new IllegalArgumentException("Incorrect configuration parameter provided");
         }
     }
 
-    public ReplicatorConfiguration copy(Args args){
-        ReplicatorConfiguration replicatorConfiguration = args.get("configuration");
-        return replicatorConfiguration.copy();
+    public ReplicatorConfiguration create(Args args) {
+        Builder builder = args.get("replicatorBuilder");
+        return builder.build();
     }
 
     public Authenticator getAuthenticator(Args args){
@@ -84,43 +84,43 @@ public class ReplicatorConfigurationRequestHandler {
     }
 
     public void setAuthenticator(Args args){
-        ReplicatorConfiguration replicatorConfiguration = args.get("configuration");
+        Builder builder = args.get("replicatorBuilder");
         Authenticator authenticator = args.get("authenticator");
-        replicatorConfiguration.setAuthenticator(authenticator);
+        builder.setAuthenticator(authenticator);
     }
 
     public void setChannels(Args args){
-        ReplicatorConfiguration replicatorConfiguration = args.get("configuration");
+        Builder builder = args.get("replicatorBuilder");
         List<String> channels = args.get("channels");
-        replicatorConfiguration.setChannels(channels);
+        builder.setChannels(channels);
     }
 
     public void setConflictResolver(Args args){
-        ReplicatorConfiguration replicatorConfiguration = args.get("configuration");
+        Builder builder = args.get("replicatorBuilder");
         ConflictResolver conflictResolver = args.get("conflictResolver");
-        replicatorConfiguration.setConflictResolver(conflictResolver);
+        builder.setConflictResolver(conflictResolver);
     }
 
     public void setContinuous(Args args){
-        ReplicatorConfiguration replicatorConfiguration = args.get("configuration");
+        Builder builder = args.get("replicatorBuilder");
         Boolean continuous = args.get("continuous");
-        replicatorConfiguration.setContinuous(continuous);
+        builder.setContinuous(continuous);
     }
 
     public void setDocumentIDs(Args args){
-        ReplicatorConfiguration replicatorConfiguration = args.get("configuration");
+        Builder builder = args.get("replicatorBuilder");
         List<String> documentIds = args.get("documentIds");
-        replicatorConfiguration.setDocumentIDs(documentIds);
+        builder.setDocumentIDs(documentIds);
     }
 
     public void setPinnedServerCertificate(Args args){
-        ReplicatorConfiguration replicatorConfiguration = args.get("configuration");
+        Builder builder = args.get("replicatorBuilder");
         byte[] cert = args.get("cert");
-        replicatorConfiguration.setPinnedServerCertificate(cert);
+        builder.setPinnedServerCertificate(cert);
     }
 
     public void setReplicatorType(Args args){
-        ReplicatorConfiguration replicatorConfiguration = args.get("configuration");
+        Builder builder = args.get("replicatorBuilder");
         String type = args.get("replType");
         ReplicatorConfiguration.ReplicatorType replicatorType;
         switch (type) {
@@ -133,7 +133,7 @@ public class ReplicatorConfigurationRequestHandler {
             default:
                 replicatorType = ReplicatorConfiguration.ReplicatorType.PUSH_AND_PULL;
         }
-        replicatorConfiguration.setReplicatorType(replicatorType);
+        builder.setReplicatorType(replicatorType);
     }
 
 }

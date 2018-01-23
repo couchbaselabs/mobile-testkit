@@ -9,6 +9,7 @@ import com.couchbase.lite.Database;
 import com.couchbase.lite.DatabaseChange;
 import com.couchbase.lite.DatabaseChangeListener;
 import com.couchbase.lite.DatabaseConfiguration;
+import com.couchbase.lite.DatabaseConfiguration.Builder;
 import com.couchbase.lite.Document;
 import com.couchbase.lite.DocumentChangeListener;
 import com.couchbase.CouchbaseLiteServ.MainActivity;
@@ -34,7 +35,7 @@ public class DatabaseRequestHandler {
     public Database create(Args args) throws CouchbaseLiteException {
         String name = args.get("name");
         Context context = MainActivity.getAppContext();
-        DatabaseConfiguration databaseConfig = new DatabaseConfiguration(context);
+        DatabaseConfiguration databaseConfig = new Builder(context).build();
         return new Database(name, databaseConfig);
     }
 
@@ -148,11 +149,12 @@ public class DatabaseRequestHandler {
         return Database.exists(name, directory.getParentFile());
     }
 
+/*    method dropped in DB022
     public boolean contains(Args args) {
        Database database = args.get("database");
        String id = args.get("id");
        return database.contains(id);
-    }
+    }*/
 
     public List<String> getDocIds(Args args) throws CouchbaseLiteException {
         Database database = args.get("database");

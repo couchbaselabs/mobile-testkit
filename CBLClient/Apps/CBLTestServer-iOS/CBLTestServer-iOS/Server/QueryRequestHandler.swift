@@ -10,7 +10,7 @@ import Foundation
 import CouchbaseLiteSwift
 
 public class QueryRequestHandler {
-    public static let VOID = NSObject()
+    public static let VOID: String? = nil
 
     public func handleRequest(method: String, args: Args) throws -> Any? {
         switch method {
@@ -102,8 +102,6 @@ public class QueryRequestHandler {
             let query: Query = args.get(name: "query")!
             return try query.execute()
 
-
-
         case "query_getDoc":
             let database: Database = args.get(name: "database")!
             let doc_id: String = args.get(name: "doc_id")!
@@ -121,7 +119,7 @@ public class QueryRequestHandler {
 
             return resultArray
 
-        case "query_get_docs_limit_offset":
+        case "query_docsLimitOffset":
             let database: Database = args.get(name: "database")!
             let limit: Int = args.get(name: "limit")!
             let offset: Int = args.get(name: "offset")!
@@ -139,7 +137,7 @@ public class QueryRequestHandler {
 
             return resultArray
 
-        case "query_multiple_selects":
+        case "query_multipleSelects":
             let database: Database = args.get(name: "database")!
             let select_property1: String = args.get(name: "select_property1")!
             let select_property2: String = args.get(name: "select_property2")!
@@ -161,7 +159,7 @@ public class QueryRequestHandler {
 
             return resultArray
 
-        case "query_where_and_or":
+        case "query_whereAndOr":
             let database: Database = args.get(name: "database")!
             let whr_key1: String = args.get(name: "whr_key1")!
             let whr_val1: String = args.get(name: "whr_val1")!
@@ -291,8 +289,7 @@ public class QueryRequestHandler {
                         SelectResult.expression(Expression.property(select_property1)),
                         SelectResult.expression(Function.upper(Expression.property(select_property2))))
                 .from(DataSource.database(database))
-                .where(Expression.property(select_property1).and(Function.contains(Expression.property(select_property1),
-                                                                                   substring: Expression.property(substring))))
+                .where(Expression.property(select_property1).isNullOrMissing().and(Function.contains(Expression.property(select_property1),                                                                                    substring: Expression.property(substring))))
 
             var resultArray = [Any]()
 
@@ -330,7 +327,7 @@ public class QueryRequestHandler {
             }
 
             return resultArray
-    
+               
         default:
             throw RequestHandlerError.MethodNotFound(method)
         }

@@ -7,7 +7,6 @@ import com.couchbase.lite.Document;
 import com.couchbase.lite.MutableDictionary;
 import com.couchbase.lite.DocumentChange;
 import com.couchbase.lite.DocumentChangeListener;
-import com.couchbase.lite.Array;
 import com.couchbase.lite.MutableDocument;
 
 import java.util.List;
@@ -49,13 +48,6 @@ public class DocumentRequestHandler{
         return document.count();
     }
 
-//    Not available in DB21
-//    public MutableDocument set(Args args){
-//        MutableDocument document = args.get("document");
-//        Map<String, Object> dictionary  = args.get("dictionary");
-//        return document.set(dictionary);
-//    }
-
     public String getId(Args args) {
         Document document = args.get("document");
         return document.getId();
@@ -73,21 +65,6 @@ public class DocumentRequestHandler{
         String value = args.get("value");
         return document.setString(key, value);
     }
-
-//    Not available in DB21
-//    public Object getObject(Args args){
-//        MutableDocument document = args.get("document");
-//        String key = args.get("key");
-//        return document.getObject(key);
-//    }
-//
-//    public MutableDocument setObject(Args args){
-//        MutableDocument document = args.get("document");
-//        String key = args.get("key");
-//        Object value = args.get("value");
-//        return  document.setObject(key, value);
-//    }
-
 
     public Number getNumber(Args args){
         MutableDocument document = args.get("document");
@@ -205,15 +182,6 @@ public class DocumentRequestHandler{
         String key = args.get("key");
         return document.getArray(key).toList();
     }
-
-//    public MutableDocument setArray(Args args){
-//        MutableDocument document = args.get("document");
-//        String key = args.get("key");
-//        List<Object> list = args.get("value");
-//        Array value = new Array(list);
-//        return  document.setArray(key, value);
-//    }
-
 
     public MutableDictionary getDictionary(Args args){
         MutableDocument document = args.get("document");

@@ -70,7 +70,7 @@ operations = {
         "<=": "2",
         ">": "2",
         ">=": "2",
-        "BETWEEN": "3",
+        "BETWEEN": "4",
         "IS": "2",
         "IS NOT": "2",
         "LIKE": "2",
@@ -84,8 +84,8 @@ operations = {
         "IS NOT NULL": "1",
         "COLLATE": "2",
         "NOT": "1",
-        "AND": "2+",
-        "OR": "2+",
+        "AND": "2",
+        "OR": "2",
         "CASE": "2+",
         "WHEN": "2",
         "ELSE": "1",
@@ -97,53 +97,78 @@ operations = {
         "?": "1+"
     }
 
-def get_operand_to_json(token):
+def get_operand(token):
     if token.startswith('$'):
         return [".", "$", token[1:]]
     elif token.isdigit():
         return int(token)
     return ['.', token]
 
-def infix_to_json(query):
-    query = ['('] + query.split(' ') + [')']
+def get_prefix_list(query):
+    query = query.split()
+    query.reverse()
+    for index, item in enumerate(query):
+        if item == '(':
+            query[index] = ')'
+        elif item == ')':
+            query[index] = '('
+    query = ['(' ] + query + [')']
+
     opstack = []
     result = []
-    output = []
-    final_list = []
-    level = -1
+    
     for token in query:
         if token not in operators:
-            result.append(get_operand_to_json(token))
+            result.append(get_operand(token))
         elif token == '(':
             opstack.append(token)
-            level += 1
         elif token == ')':
-            item = opstack.pop()
-            while(item != '('):
-                if result:
-                    result = [item] + result
-                    output.append(result)
-                    result = []
-                else:
-                    output = [item] + output
+            while opstack[-1] != '(':
                 item = opstack.pop()
-            if level > 1:
-                output = [output]
-            level -= 1
+                result.append(item)
+            opstack.pop()
         else:
             while prec[token] > prec[opstack[-1]]:
-                    item = opstack.pop()
-                    result = [item] + result
-                    output.append(result)
-                    result = []
+                item = opstack.pop()
+                result.append(item)
             opstack.append(token)
-    return final_list
+    result.reverse()
+    return result
+
+def prefix_evaluation(prefix_list):
+    opstack = []
+    for token in prefix_list[::-1]:
+        if token not in operators:
+            opstack.append(token)
+        else:
+            num_of_pop = operations[token]
+            opd = []
+            for _ in range(int(num_of_pop)):
+                item = opstack.pop()
+                if token == "BETWEEN" and item == ['.', 'and']:
+                        continue
+                opd.append(item)
+            eq = [token] + opd
+            opstack.append(eq)
+    return clear_evaluated_list(opstack.pop())
+
+def clear_evaluated_list(eval_list, prev_op=None):
+    result = []
+    for item in eval_list:
+        if item in logical_operator:
+            result.append(item)
+            prev_op = item
+        else:
+            if isinstance(item, list) and item[0] == prev_op:
+                    result.extend(clear_evaluated_list(item[1:], prev_op))
+            else:
+                result.append(item)
+    return result
 
 def get_json_query(query="SELECT name.first, name.last FROM students WHERE ( grade = 12 AND gpa >= $GPA ) OR ( a = b AND c > d )"):
     pattern = re.compile(r"SELECT (.*?) FROM (.*?) WHERE (.*)")
     regex_out = re.search(pattern, query)
     select_token, from_token, where_token = regex_out.groups()
-    print from_token
     json_txt = []
     # creating select statement
     json_txt.append("SELECT")
@@ -161,9 +186,12 @@ def get_json_query(query="SELECT name.first, name.last FROM students WHERE ( gra
         json_txt[1]["WHAT"].append(tk_list)
     # creating where statement
     json_txt[1]["WHERE"] = []
-    json_txt[1]["WHERE"] = infix_to_json(where_token)
+    json_txt[1]["WHERE"] = prefix_evaluation(get_prefix_list(where_token))
     return json_txt
 
 if __name__ == '__main__':
-    out = get_json_query()
-    print json.dumps(out)
+    query = "SELECT a, b FROM  simple_table_2  t_1   WHERE  ( t_1.int_field1 >= 5050 ) OR ( t_1.int_field1 > 5050 )"
+    query = "SELECT * FROM  simple_table_4  t_2  WHERE ( grade = 12 AND gpa >= $GPA  AND adf != fdf ) OR ( a = b AND c > d ) OR ( a = b AND c = a ) OR ( x > y AND y != 0 )"
+    #query = "SELECT * FROM  simple_table_4  t_2  WHERE NOT ( t_4.int_field1 BETWEEN 2 and 9999 )"
+    out = get_json_query(query)
+    print json.dumps(out, indent = 4)

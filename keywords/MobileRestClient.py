@@ -680,19 +680,18 @@ class MobileRestClient:
 
         return resp_obj
 
-    def get_open_revs_ids(self, url, db, doc_id, rev=None, auth=None):
+    def get_open_revs_ids(self, url, db, doc_id, auth=None):
         """
         Gets the open_revs=all for a specified doc_id.
         Returns a parsed multipart reponse in the below format
         {"rows" : docs}
-        revs should be in array , Array of revisions which you want to retrieve
         """
         # Returns multipart by default, specify json for cleaner code
         headers = {"Accept": "application/json"}
 
         auth_type = get_auth_type(auth)
+
         params = {"open_revs": "all"}
-        params["revs"] = "true"
 
         if auth_type == AuthType.session:
             resp = self._session.get("{}/{}/{}".format(url, db, doc_id), headers=headers, params=params, cookies=dict(SyncGatewaySession=auth[1]))

@@ -1,0 +1,500 @@
+SELECT LIST FROM  simple_table_2  t_1   WHERE  ( t_1.int_field1 >= 5050 ) OR ( t_1.int_field1 > 5050 )
+SELECT * FROM  simple_table_4  t_2   WHERE  t_2.int_field1 BETWEEN 13 and 9993
+SELECT DISTINCT( t_5.decimal_field1 ) FROM  simple_table_3  t_5   WHERE  t_5.decimal_field1 >= 4901
+SELECT * FROM  simple_table_3  t_5   WHERE  t_5.int_field1 <= 4995
+SELECT LIST FROM  simple_table_10  t_4   WHERE  t_4.int_field1 BETWEEN 2 and 9999
+SELECT * FROM  simple_table_1  t_3   WHERE  t_3.decimal_field1 BETWEEN 1 and 9996
+SELECT LIST FROM  simple_table_10  t_4   WHERE  t_4.int_field1 BETWEEN 2 and 9999
+SELECT DISTINCT( t_3.int_field1 ) FROM  simple_table_1  t_3   WHERE  t_3.decimal_field1 = 5214
+SELECT DISTINCT( t_4.decimal_field1 ) FROM  simple_table_10  t_4   WHERE  NOT ( t_4.int_field1 BETWEEN 2 and 9999 )
+SELECT LIST FROM  simple_table_3  t_5   WHERE  t_5.decimal_field1 IS NULL
+SELECT * FROM  simple_table_10  t_4   WHERE  t_4.decimal_field1 != 4815
+SELECT * FROM  simple_table_10  t_4   WHERE  t_4.int_field1 < 5130
+SELECT * FROM  simple_table_2  t_1   WHERE  t_1.int_field1 > 5050
+SELECT LIST FROM  simple_table_10  t_4   WHERE  t_4.int_field1 <= 5130
+SELECT LIST FROM  simple_table_3  t_5   WHERE  t_5.int_field1 BETWEEN 12 and 9994
+SELECT DISTINCT( t_2.decimal_field1 ) FROM  simple_table_4  t_2   WHERE  ( t_2.decimal_field1  IN [  19 , 37 , 46 , 49 , 52  ] ) OR ( t_2.decimal_field1 >= 4770 )
+SELECT DISTINCT( t_5.decimal_field1 ) FROM  simple_table_3  t_5   WHERE  NOT ( t_5.decimal_field1 < 4901 )
+SELECT * FROM  simple_table_10  t_4   WHERE  t_4.int_field1 < 5130
+SELECT * FROM  simple_table_10  t_4   WHERE  t_4.int_field1 IS NULL
+SELECT * FROM  simple_table_1  t_3   WHERE  ( t_3.int_field1 IS NULL ) AND ( t_3.int_field1  IN [  2 , 10 , 16 , 27 , 34  ] )
+SELECT LIST FROM  simple_table_2  t_1   WHERE  t_1.decimal_field1  IN [  20 , 32 , 35 , 36 , 37  ]
+SELECT DISTINCT( t_5.decimal_field1 ) FROM  simple_table_3  t_5   WHERE  NOT ( t_5.int_field1 < 4995 )
+SELECT LIST FROM  simple_table_3  t_5   WHERE  NOT ( t_5.int_field1 < 4995 )
+SELECT * FROM  simple_table_10  t_4   WHERE  t_4.int_field1 BETWEEN 2 and 9999
+SELECT DISTINCT( t_3.int_field1 ) FROM  simple_table_1  t_3   WHERE  t_3.int_field1 > 4743
+SELECT LIST FROM  simple_table_1  t_3   WHERE  t_3.int_field1 > 4743
+SELECT DISTINCT( t_2.decimal_field1 ) FROM  simple_table_4  t_2   WHERE  ( ( ( t_2.decimal_field1 = 4770 ) AND ( t_2.decimal_field1 != 4770 ) ) OR ( t_2.int_field1  IN [  13 , 18 , 24 , 38 , 41  ] ) ) AND ( t_2.decimal_field1 <= 4770 )
+SELECT DISTINCT( t_4.decimal_field1 ) FROM  simple_table_10  t_4   WHERE  t_4.decimal_field1  IN [  16 , 19 , 32 , 35 , 42  ]
+SELECT LIST FROM  simple_table_4  t_2   WHERE  ( t_2.int_field1 >= 4862 ) AND ( t_2.decimal_field1 < 4770 )
+SELECT DISTINCT( t_2.int_field1 ) FROM  simple_table_4  t_2   WHERE  t_2.decimal_field1  IN [  19 , 37 , 46 , 49 , 52  ]
+SELECT * FROM  simple_table_3  t_5   WHERE  ( t_5.decimal_field1  IN [  2 , 10 , 15 , 79 , 82  ] ) AND ( t_5.decimal_field1 = 4901 )
+SELECT LIST FROM  simple_table_2  t_1   WHERE  t_1.decimal_field1 IS NOT NULL
+SELECT * FROM  simple_table_2  t_1   WHERE  ( t_1.decimal_field1 BETWEEN 20 and 9993 ) OR ( t_1.int_field1 BETWEEN 26 and 9997 )
+SELECT LIST FROM  simple_table_1  t_3   WHERE  NOT ( t_3.int_field1 < 4743 )
+SELECT DISTINCT( t_3.decimal_field1 ) FROM  simple_table_1  t_3   WHERE  t_3.int_field1 < 4743
+SELECT * FROM  simple_table_3  t_5   WHERE  ( t_5.decimal_field1 = 4901 ) AND ( t_5.decimal_field1 IS NOT NULL )
+SELECT DISTINCT( t_4.int_field1 ) FROM  simple_table_10  t_4   WHERE  t_4.int_field1 >= 5130
+SELECT LIST FROM  simple_table_2  t_1   WHERE  ( t_1.decimal_field1 BETWEEN 20 and 9993 ) OR ( t_1.int_field1 > 5050 )
+SELECT LIST FROM  simple_table_2  t_1   WHERE  t_1.int_field1 != 5050
+SELECT * FROM  simple_table_4  t_2   WHERE  t_2.int_field1 != 4862
+SELECT LIST FROM  simple_table_4  t_2   WHERE  t_2.int_field1  IN [  13 , 18 , 24 , 38 , 41  ]
+SELECT LIST FROM  simple_table_3  t_5   WHERE  t_5.decimal_field1 IS NULL
+SELECT DISTINCT( t_3.decimal_field1 ) FROM  simple_table_1  t_3   WHERE  t_3.int_field1 > 4743
+SELECT * FROM  simple_table_4  t_2   WHERE  t_2.int_field1 > 4862
+SELECT LIST FROM  simple_table_3  t_5   WHERE  t_5.decimal_field1 BETWEEN 2 and 9993
+SELECT DISTINCT( t_5.decimal_field1 ) FROM  simple_table_3  t_5   WHERE  ( t_5.decimal_field1 <= 4901 ) OR ( NOT ( t_5.int_field1 IS NULL ) )
+SELECT DISTINCT( t_2.int_field1 ) FROM  simple_table_4  t_2   WHERE  t_2.int_field1 = 4862
+SELECT * FROM  simple_table_10  t_4   WHERE  ( t_4.int_field1 <= 5130 ) AND ( NOT ( t_4.decimal_field1 >= 4815 ) )
+SELECT LIST FROM  simple_table_3  t_5   WHERE  t_5.decimal_field1 >= 4901
+SELECT LIST FROM  simple_table_1  t_3   WHERE  t_3.decimal_field1 > 5214
+SELECT LIST FROM  simple_table_2  t_1   WHERE  t_1.decimal_field1 >= 5110
+SELECT DISTINCT( t_5.int_field1 ) FROM  simple_table_3  t_5   WHERE  ( t_5.int_field1 <= 4995 ) OR ( t_5.decimal_field1  IN [  2 , 10 , 15 , 79 , 82  ] )
+SELECT LIST FROM  simple_table_2  t_1   WHERE  t_1.int_field1 < 5050
+SELECT DISTINCT( t_5.decimal_field1 ) FROM  simple_table_3  t_5   WHERE  t_5.decimal_field1 BETWEEN 2 and 9993
+SELECT * FROM  simple_table_4  t_2   WHERE  t_2.decimal_field1 IS NOT NULL
+SELECT LIST FROM  simple_table_1  t_3   WHERE  t_3.decimal_field1 > 5214
+SELECT DISTINCT( t_4.int_field1 ) FROM  simple_table_10  t_4   WHERE  t_4.decimal_field1 <= 4815
+SELECT LIST FROM  simple_table_2  t_1   WHERE  ( t_1.int_field1 <= 5050 ) OR ( t_1.int_field1 < 5050 )
+SELECT LIST FROM  simple_table_10  t_4   WHERE  t_4.int_field1 = 5130
+SELECT LIST FROM  simple_table_3  t_5   WHERE  t_5.int_field1 IS NOT NULL
+SELECT DISTINCT( t_5.int_field1 ) FROM  simple_table_3  t_5   WHERE  t_5.int_field1 IS NULL
+SELECT DISTINCT( t_1.decimal_field1 ) FROM  simple_table_2  t_1   WHERE  t_1.int_field1 IS NULL
+SELECT * FROM  simple_table_4  t_2   WHERE  t_2.int_field1 > 4862
+SELECT LIST FROM  simple_table_10  t_4   WHERE  NOT ( t_4.decimal_field1  IN [  16 , 19 , 32 , 35 , 42  ] )
+SELECT * FROM  simple_table_1  t_3   WHERE  t_3.int_field1 IS NULL
+SELECT * FROM  simple_table_1  t_3   WHERE  ( ( t_3.decimal_field1 <= 5214 ) AND ( t_3.decimal_field1 > 5214 ) ) OR ( ( ( t_3.decimal_field1 <= 5214 ) OR ( t_3.decimal_field1 < 5214 ) ) AND ( ( t_3.int_field1 = 4743 ) AND ( ( t_3.decimal_field1 IS NULL ) AND ( NOT ( t_3.int_field1 <= 4743 ) ) ) ) )
+SELECT LIST FROM  simple_table_3  t_5   WHERE  t_5.decimal_field1 IS NULL
+SELECT DISTINCT( t_3.decimal_field1 ) FROM  simple_table_1  t_3   WHERE  t_3.int_field1 BETWEEN 2 and 9997
+SELECT DISTINCT( t_3.decimal_field1 ) FROM  simple_table_1  t_3   WHERE  t_3.int_field1 BETWEEN 2 and 9997
+SELECT DISTINCT( t_3.int_field1 ) FROM  simple_table_1  t_3   WHERE  t_3.int_field1 != 4743
+SELECT DISTINCT( t_5.decimal_field1 ) FROM  simple_table_3  t_5   WHERE  t_5.decimal_field1 > 4901
+SELECT LIST FROM  simple_table_2  t_1   WHERE  t_1.decimal_field1 = 5110
+SELECT * FROM  simple_table_4  t_2   WHERE  NOT ( t_2.decimal_field1 != 4770 )
+SELECT * FROM  simple_table_3  t_5   WHERE  t_5.int_field1 != 4995
+SELECT DISTINCT( t_4.int_field1 ) FROM  simple_table_10  t_4   WHERE  t_4.int_field1 BETWEEN 2 and 9999
+SELECT DISTINCT( t_1.int_field1 ) FROM  simple_table_2  t_1   WHERE  t_1.int_field1 < 5050
+SELECT * FROM  simple_table_3  t_5   WHERE  t_5.decimal_field1 >= 4901
+SELECT DISTINCT( t_4.int_field1 ) FROM  simple_table_10  t_4   WHERE  t_4.int_field1 IS NULL
+SELECT * FROM  simple_table_3  t_5   WHERE  t_5.decimal_field1 IS NULL
+SELECT DISTINCT( t_2.decimal_field1 ) FROM  simple_table_4  t_2   WHERE  ( t_2.int_field1 <= 4862 ) AND ( t_2.decimal_field1 IS NULL )
+SELECT LIST FROM  simple_table_1  t_3   WHERE  ( t_3.int_field1 >= 4743 ) AND ( t_3.int_field1 <= 4743 )
+SELECT DISTINCT( t_4.int_field1 ) FROM  simple_table_10  t_4   WHERE  t_4.decimal_field1 >= 4815
+SELECT DISTINCT( t_5.int_field1 ) FROM  simple_table_3  t_5   WHERE  t_5.int_field1 < 4995
+SELECT DISTINCT( t_3.decimal_field1 ) FROM  simple_table_1  t_3   WHERE  t_3.decimal_field1 = 5214
+SELECT LIST FROM  simple_table_10  t_4   WHERE  t_4.int_field1 IS NOT NULL
+SELECT LIST FROM  simple_table_4  t_2   WHERE  t_2.decimal_field1 >= 4770
+SELECT DISTINCT( t_5.int_field1 ) FROM  simple_table_3  t_5   WHERE  t_5.decimal_field1 < 4901
+SELECT * FROM  simple_table_10  t_4   WHERE  t_4.decimal_field1 = 4815
+SELECT * FROM  simple_table_2  t_1   WHERE  t_1.decimal_field1 >= 5110
+SELECT LIST FROM  simple_table_2  t_1   WHERE  ( t_1.int_field1 BETWEEN 26 and 9997 ) OR ( t_1.decimal_field1 <= 5110 )
+SELECT * FROM  simple_table_4  t_2   WHERE  t_2.decimal_field1 < 4770
+SELECT * FROM  simple_table_10  t_4   WHERE  t_4.decimal_field1 >= 4815
+SELECT DISTINCT( t_5.decimal_field1 ) FROM  simple_table_3  t_5   WHERE  t_5.int_field1 <= 4995
+SELECT * FROM  simple_table_2  t_1   WHERE  t_1.int_field1 IS NOT NULL
+SELECT DISTINCT( t_2.int_field1 ) FROM  simple_table_4  t_2   WHERE  t_2.decimal_field1 >= 4770
+SELECT LIST FROM  simple_table_10  t_4   WHERE  t_4.decimal_field1 != 4815
+SELECT DISTINCT( t_4.int_field1 ) FROM  simple_table_10  t_4   WHERE  NOT ( t_4.int_field1 IS NULL )
+SELECT LIST FROM  simple_table_2  t_1   WHERE  t_1.int_field1 IS NOT NULL
+SELECT LIST FROM  simple_table_4  t_2   WHERE  NOT ( t_2.int_field1 BETWEEN 13 and 9993 )
+SELECT * FROM  simple_table_4  t_2   WHERE  NOT ( t_2.int_field1 >= 4862 )
+SELECT DISTINCT( t_2.int_field1 ) FROM  simple_table_4  t_2   WHERE  t_2.decimal_field1 < 4770
+SELECT DISTINCT( t_5.decimal_field1 ) FROM  simple_table_3  t_5   WHERE  t_5.decimal_field1 > 4901
+SELECT * FROM  simple_table_2  t_1   WHERE  ( t_1.int_field1 != 5050 ) OR ( t_1.decimal_field1 != 5110 )
+SELECT * FROM  simple_table_10  t_4   WHERE  ( ( t_4.decimal_field1 <= 4815 ) AND ( t_4.int_field1 BETWEEN 2 and 9999 ) ) OR ( NOT ( t_4.int_field1 < 5130 ) )
+SELECT LIST FROM  simple_table_10  t_4   WHERE  ( t_4.int_field1  IN [  2 , 4 , 11 , 19 , 21  ] ) AND ( t_4.int_field1 BETWEEN 2 and 9999 )
+SELECT * FROM  simple_table_4  t_2   WHERE  NOT ( t_2.int_field1 != 4862 )
+SELECT DISTINCT( t_1.decimal_field1 ) FROM  simple_table_2  t_1   WHERE  t_1.int_field1 = 5050
+SELECT LIST FROM  simple_table_4  t_2   WHERE  t_2.decimal_field1 = 4770
+SELECT LIST FROM  simple_table_4  t_2   WHERE  t_2.int_field1 <= 4862
+SELECT * FROM  simple_table_1  t_3   WHERE  t_3.decimal_field1 <= 5214
+SELECT * FROM  simple_table_2  t_1   WHERE  ( t_1.int_field1 < 5050 ) OR ( t_1.decimal_field1 != 5110 )
+SELECT LIST FROM  simple_table_4  t_2   WHERE  t_2.int_field1 BETWEEN 13 and 9993
+SELECT * FROM  simple_table_4  t_2   WHERE  t_2.int_field1 = 4862
+SELECT LIST FROM  simple_table_4  t_2   WHERE  t_2.decimal_field1 >= 4770
+SELECT DISTINCT( t_3.decimal_field1 ) FROM  simple_table_1  t_3   WHERE  t_3.decimal_field1  IN [  1 , 14 , 46 , 53 , 54  ]
+SELECT * FROM  simple_table_4  t_2   WHERE  t_2.decimal_field1 <= 4770
+SELECT LIST FROM  simple_table_3  t_5   WHERE  t_5.int_field1 BETWEEN 12 and 9994
+SELECT DISTINCT( t_1.decimal_field1 ) FROM  simple_table_2  t_1   WHERE  t_1.decimal_field1 != 5110
+SELECT DISTINCT( t_3.int_field1 ) FROM  simple_table_1  t_3   WHERE  t_3.int_field1 IS NOT NULL
+SELECT LIST FROM  simple_table_10  t_4   WHERE  t_4.decimal_field1 < 4815
+SELECT LIST FROM  simple_table_4  t_2   WHERE  t_2.decimal_field1 >= 4770
+SELECT * FROM  simple_table_1  t_3   WHERE  t_3.int_field1 = 4743
+SELECT DISTINCT( t_2.int_field1 ) FROM  simple_table_4  t_2   WHERE  ( t_2.decimal_field1 IS NOT NULL ) AND ( t_2.decimal_field1 < 4770 )
+SELECT LIST FROM  simple_table_3  t_5   WHERE  ( t_5.int_field1  IN [  12 , 15 , 24 , 25 , 35  ] ) OR ( t_5.int_field1 != 4995 )
+SELECT * FROM  simple_table_2  t_1   WHERE  t_1.decimal_field1 != 5110
+SELECT DISTINCT( t_5.decimal_field1 ) FROM  simple_table_3  t_5   WHERE  ( t_5.decimal_field1 BETWEEN 2 and 9993 ) AND ( t_5.decimal_field1 < 4901 )
+SELECT LIST FROM  simple_table_2  t_1   WHERE  t_1.decimal_field1 BETWEEN 20 and 9993
+SELECT DISTINCT( t_2.int_field1 ) FROM  simple_table_4  t_2   WHERE  ( t_2.int_field1 != 4862 ) AND ( ( t_2.int_field1  IN [  13 , 18 , 24 , 38 , 41  ] ) OR ( t_2.decimal_field1 > 4770 ) )
+SELECT * FROM  simple_table_3  t_5   WHERE  t_5.int_field1 < 4995
+SELECT LIST FROM  simple_table_3  t_5   WHERE  t_5.int_field1 > 4995
+SELECT DISTINCT( t_1.int_field1 ) FROM  simple_table_2  t_1   WHERE  ( t_1.decimal_field1 >= 5110 ) AND ( t_1.int_field1 BETWEEN 26 and 9997 )
+SELECT LIST FROM  simple_table_4  t_2   WHERE  ( t_2.int_field1 <= 4862 ) OR ( t_2.decimal_field1 != 4770 )
+SELECT DISTINCT( t_2.int_field1 ) FROM  simple_table_4  t_2   WHERE  t_2.decimal_field1 IS NULL
+SELECT LIST FROM  simple_table_10  t_4   WHERE  ( t_4.int_field1 IS NOT NULL ) OR ( t_4.decimal_field1 IS NOT NULL )
+SELECT DISTINCT( t_3.int_field1 ) FROM  simple_table_1  t_3   WHERE  ( t_3.decimal_field1 IS NOT NULL ) AND ( NOT ( t_3.decimal_field1 IS NOT NULL ) )
+SELECT LIST FROM  simple_table_4  t_2   WHERE  t_2.int_field1 >= 4862
+SELECT * FROM  simple_table_4  t_2   WHERE  ( t_2.int_field1 > 4862 ) AND ( t_2.int_field1 = 4862 )
+SELECT DISTINCT( t_4.decimal_field1 ) FROM  simple_table_10  t_4   WHERE  t_4.decimal_field1 = 4815
+SELECT * FROM  simple_table_2  t_1   WHERE  t_1.decimal_field1 = 5110
+SELECT LIST FROM  simple_table_4  t_2   WHERE  t_2.decimal_field1 = 4770
+SELECT LIST FROM  simple_table_10  t_4   WHERE  NOT ( t_4.int_field1 BETWEEN 2 and 9999 )
+SELECT * FROM  simple_table_4  t_2   WHERE  t_2.decimal_field1  IN [  19 , 37 , 46 , 49 , 52  ]
+SELECT LIST FROM  simple_table_1  t_3   WHERE  t_3.decimal_field1 > 5214
+SELECT LIST FROM  simple_table_1  t_3   WHERE  t_3.int_field1 >= 4743
+SELECT DISTINCT( t_2.decimal_field1 ) FROM  simple_table_4  t_2   WHERE  t_2.decimal_field1 != 4770
+SELECT DISTINCT( t_3.decimal_field1 ) FROM  simple_table_1  t_3   WHERE  t_3.decimal_field1 != 5214
+SELECT * FROM  simple_table_4  t_2   WHERE  t_2.decimal_field1 > 4770
+SELECT LIST FROM  simple_table_3  t_5   WHERE  t_5.int_field1 IS NULL
+SELECT LIST FROM  simple_table_4  t_2   WHERE  t_2.decimal_field1 != 4770
+SELECT LIST FROM  simple_table_4  t_2   WHERE  t_2.decimal_field1  IN [  19 , 37 , 46 , 49 , 52  ]
+SELECT * FROM  simple_table_10  t_4   WHERE  t_4.decimal_field1 = 4815
+SELECT DISTINCT( t_3.decimal_field1 ) FROM  simple_table_1  t_3   WHERE  t_3.decimal_field1 >= 5214
+SELECT DISTINCT( t_2.decimal_field1 ) FROM  simple_table_4  t_2   WHERE  t_2.decimal_field1 IS NOT NULL
+SELECT * FROM  simple_table_1  t_3   WHERE  t_3.int_field1 = 4743
+SELECT * FROM  simple_table_1  t_3   WHERE  t_3.int_field1 != 4743
+SELECT LIST FROM  simple_table_10  t_4   WHERE  ( t_4.decimal_field1 BETWEEN 16 and 9995 ) OR ( t_4.decimal_field1 IS NULL )
+SELECT * FROM  simple_table_2  t_1   WHERE  t_1.decimal_field1 <= 5110
+SELECT LIST FROM  simple_table_10  t_4   WHERE  t_4.decimal_field1 = 4815
+SELECT LIST FROM  simple_table_2  t_1   WHERE  NOT ( t_1.int_field1  IN [  26 , 34 , 73 , 79 , 82  ] )
+SELECT * FROM  simple_table_3  t_5   WHERE  t_5.decimal_field1 > 4901
+SELECT LIST FROM  simple_table_2  t_1   WHERE  t_1.decimal_field1 != 5110
+SELECT DISTINCT( t_2.decimal_field1 ) FROM  simple_table_4  t_2   WHERE  t_2.decimal_field1 IS NOT NULL
+SELECT * FROM  simple_table_4  t_2   WHERE  t_2.int_field1 != 4862
+SELECT * FROM  simple_table_2  t_1   WHERE  t_1.decimal_field1 != 5110
+SELECT LIST FROM  simple_table_4  t_2   WHERE  ( t_2.int_field1 IS NULL ) OR ( t_2.decimal_field1 <= 4770 )
+SELECT LIST FROM  simple_table_4  t_2   WHERE  t_2.int_field1 != 4862
+SELECT LIST FROM  simple_table_3  t_5   WHERE  t_5.decimal_field1 = 4901
+SELECT LIST FROM  simple_table_1  t_3   WHERE  t_3.int_field1 != 4743
+SELECT LIST FROM  simple_table_2  t_1   WHERE  t_1.decimal_field1  IN [  20 , 32 , 35 , 36 , 37  ]
+SELECT * FROM  simple_table_10  t_4   WHERE  t_4.int_field1 != 5130
+SELECT LIST FROM  simple_table_4  t_2   WHERE  t_2.int_field1 <= 4862
+SELECT * FROM  simple_table_1  t_3   WHERE  t_3.decimal_field1 < 5214
+SELECT * FROM  simple_table_4  t_2   WHERE  t_2.int_field1  IN [  13 , 18 , 24 , 38 , 41  ]
+SELECT LIST FROM  simple_table_2  t_1   WHERE  t_1.decimal_field1 = 5110
+SELECT * FROM  simple_table_1  t_3   WHERE  t_3.int_field1 = 4743
+SELECT LIST FROM  simple_table_4  t_2   WHERE  t_2.decimal_field1 = 4770
+SELECT DISTINCT( t_3.int_field1 ) FROM  simple_table_1  t_3   WHERE  t_3.int_field1 < 4743
+SELECT * FROM  simple_table_10  t_4   WHERE  t_4.int_field1 >= 5130
+SELECT * FROM  simple_table_1  t_3   WHERE  t_3.int_field1 < 4743
+SELECT LIST FROM  simple_table_3  t_5   WHERE  t_5.decimal_field1 >= 4901
+SELECT LIST FROM  simple_table_10  t_4   WHERE  ( t_4.decimal_field1 = 4815 ) OR ( t_4.decimal_field1 >= 4815 )
+SELECT LIST FROM  simple_table_4  t_2   WHERE  t_2.decimal_field1 != 4770
+SELECT LIST FROM  simple_table_3  t_5   WHERE  t_5.int_field1 < 4995
+SELECT LIST FROM  simple_table_1  t_3   WHERE  t_3.int_field1 IS NULL
+SELECT * FROM  simple_table_3  t_5   WHERE  t_5.int_field1 >= 4995
+SELECT DISTINCT( t_3.decimal_field1 ) FROM  simple_table_1  t_3   WHERE  t_3.int_field1 <= 4743
+SELECT DISTINCT( t_1.int_field1 ) FROM  simple_table_2  t_1   WHERE  ( ( t_1.int_field1 IS NOT NULL ) OR ( t_1.int_field1 IS NULL ) ) AND ( t_1.decimal_field1 >= 5110 )
+SELECT LIST FROM  simple_table_4  t_2   WHERE  t_2.int_field1 != 4862
+SELECT DISTINCT( t_3.int_field1 ) FROM  simple_table_1  t_3   WHERE  t_3.int_field1 >= 4743
+SELECT LIST FROM  simple_table_4  t_2   WHERE  ( t_2.decimal_field1 != 4770 ) OR ( t_2.decimal_field1 != 4770 )
+SELECT LIST FROM  simple_table_4  t_2   WHERE  t_2.decimal_field1 != 4770
+SELECT * FROM  simple_table_10  t_4   WHERE  t_4.decimal_field1 != 4815
+SELECT LIST FROM  simple_table_3  t_5   WHERE  t_5.int_field1 <= 4995
+SELECT DISTINCT( t_4.int_field1 ) FROM  simple_table_10  t_4   WHERE  t_4.int_field1 = 5130
+SELECT DISTINCT( t_2.int_field1 ) FROM  simple_table_4  t_2   WHERE  t_2.decimal_field1 IS NULL
+SELECT LIST FROM  simple_table_3  t_5   WHERE  t_5.int_field1 <= 4995
+SELECT LIST FROM  simple_table_1  t_3   WHERE  t_3.decimal_field1 IS NULL
+SELECT LIST FROM  simple_table_3  t_5   WHERE  ( t_5.decimal_field1 != 4901 ) AND ( t_5.decimal_field1 != 4901 )
+SELECT * FROM  simple_table_4  t_2   WHERE  ( ( t_2.decimal_field1 >= 4770 ) OR ( t_2.decimal_field1 IS NOT NULL ) ) OR ( t_2.int_field1 BETWEEN 13 and 9993 )
+SELECT DISTINCT( t_4.decimal_field1 ) FROM  simple_table_10  t_4   WHERE  t_4.decimal_field1 BETWEEN 16 and 9995
+SELECT DISTINCT( t_4.int_field1 ) FROM  simple_table_10  t_4   WHERE  t_4.int_field1 IS NULL
+SELECT DISTINCT( t_5.int_field1 ) FROM  simple_table_3  t_5   WHERE  t_5.decimal_field1 != 4901
+SELECT LIST FROM  simple_table_3  t_5   WHERE  t_5.decimal_field1 > 4901
+SELECT LIST FROM  simple_table_1  t_3   WHERE  t_3.int_field1 < 4743
+SELECT DISTINCT( t_5.decimal_field1 ) FROM  simple_table_3  t_5   WHERE  t_5.decimal_field1 IS NOT NULL
+SELECT LIST FROM  simple_table_3  t_5   WHERE  t_5.decimal_field1 BETWEEN 2 and 9993
+SELECT DISTINCT( t_2.decimal_field1 ) FROM  simple_table_4  t_2   WHERE  t_2.decimal_field1 > 4770
+SELECT * FROM  simple_table_3  t_5   WHERE  t_5.int_field1 <= 4995
+SELECT DISTINCT( t_4.decimal_field1 ) FROM  simple_table_10  t_4   WHERE  NOT ( t_4.decimal_field1 IS NOT NULL )
+SELECT DISTINCT( t_3.int_field1 ) FROM  simple_table_1  t_3   WHERE  t_3.decimal_field1 <= 5214
+SELECT * FROM  simple_table_10  t_4   WHERE  t_4.int_field1 IS NULL
+SELECT LIST FROM  simple_table_3  t_5   WHERE  ( t_5.int_field1 <= 4995 ) OR ( t_5.int_field1 < 4995 )
+SELECT DISTINCT( t_3.decimal_field1 ) FROM  simple_table_1  t_3   WHERE  NOT ( t_3.int_field1 != 4743 )
+SELECT LIST FROM  simple_table_3  t_5   WHERE  t_5.decimal_field1 BETWEEN 2 and 9993
+SELECT * FROM  simple_table_10  t_4   WHERE  t_4.decimal_field1 IS NOT NULL
+SELECT LIST FROM  simple_table_2  t_1   WHERE  t_1.decimal_field1 IS NOT NULL
+SELECT * FROM  simple_table_2  t_1   WHERE  t_1.decimal_field1 IS NOT NULL
+SELECT LIST FROM  simple_table_1  t_3   WHERE  t_3.int_field1 IS NOT NULL
+SELECT * FROM  simple_table_2  t_1   WHERE  t_1.int_field1 IS NULL
+SELECT DISTINCT( t_3.int_field1 ) FROM  simple_table_1  t_3   WHERE  t_3.decimal_field1 < 5214
+SELECT LIST FROM  simple_table_2  t_1   WHERE  t_1.int_field1 <= 5050
+SELECT * FROM  simple_table_1  t_3   WHERE  t_3.decimal_field1 >= 5214
+SELECT * FROM  simple_table_10  t_4   WHERE  t_4.decimal_field1 <= 4815
+SELECT * FROM  simple_table_2  t_1   WHERE  t_1.int_field1 < 5050
+SELECT * FROM  simple_table_4  t_2   WHERE  ( ( t_2.int_field1 > 4862 ) OR ( t_2.decimal_field1 > 4770 ) ) AND ( t_2.decimal_field1 != 4770 )
+SELECT DISTINCT( t_1.int_field1 ) FROM  simple_table_2  t_1   WHERE  ( t_1.decimal_field1 <= 5110 ) AND ( t_1.decimal_field1 <= 5110 )
+SELECT DISTINCT( t_2.int_field1 ) FROM  simple_table_4  t_2   WHERE  ( NOT ( t_2.int_field1 <= 4862 ) ) AND ( NOT ( NOT ( t_2.decimal_field1 != 4770 ) ) )
+SELECT LIST FROM  simple_table_10  t_4   WHERE  t_4.decimal_field1  IN [  16 , 19 , 32 , 35 , 42  ]
+SELECT LIST FROM  simple_table_2  t_1   WHERE  t_1.int_field1 IS NOT NULL
+SELECT LIST FROM  simple_table_4  t_2   WHERE  t_2.int_field1 < 4862
+SELECT LIST FROM  simple_table_1  t_3   WHERE  t_3.decimal_field1 != 5214
+SELECT LIST FROM  simple_table_2  t_1   WHERE  t_1.int_field1 IS NULL
+SELECT LIST FROM  simple_table_4  t_2   WHERE  t_2.int_field1 < 4862
+SELECT LIST FROM  simple_table_2  t_1   WHERE  t_1.int_field1  IN [  26 , 34 , 73 , 79 , 82  ]
+SELECT DISTINCT( t_3.decimal_field1 ) FROM  simple_table_1  t_3   WHERE  ( t_3.decimal_field1 = 5214 ) AND ( t_3.int_field1 IS NULL )
+SELECT DISTINCT( t_1.int_field1 ) FROM  simple_table_2  t_1   WHERE  t_1.decimal_field1 BETWEEN 20 and 9993
+SELECT LIST FROM  simple_table_3  t_5   WHERE  t_5.decimal_field1 >= 4901
+SELECT LIST FROM  simple_table_1  t_3   WHERE  t_3.decimal_field1 != 5214
+SELECT LIST FROM  simple_table_2  t_1   WHERE  t_1.int_field1 = 5050
+SELECT DISTINCT( t_1.int_field1 ) FROM  simple_table_2  t_1   WHERE  t_1.int_field1 < 5050
+SELECT DISTINCT( t_3.int_field1 ) FROM  simple_table_1  t_3   WHERE  ( ( t_3.int_field1 >= 4743 ) AND ( t_3.decimal_field1  IN [  1 , 14 , 46 , 53 , 54  ] ) ) AND ( t_3.decimal_field1 != 5214 )
+SELECT * FROM  simple_table_3  t_5   WHERE  t_5.decimal_field1 IS NULL
+SELECT DISTINCT( t_5.decimal_field1 ) FROM  simple_table_3  t_5   WHERE  NOT ( t_5.int_field1 IS NULL )
+SELECT LIST FROM  simple_table_10  t_4   WHERE  t_4.int_field1 >= 5130
+SELECT * FROM  simple_table_10  t_4   WHERE  t_4.decimal_field1 >= 4815
+SELECT DISTINCT( t_3.int_field1 ) FROM  simple_table_1  t_3   WHERE  t_3.decimal_field1 IS NOT NULL
+SELECT * FROM  simple_table_1  t_3   WHERE  t_3.int_field1 != 4743
+SELECT * FROM  simple_table_4  t_2   WHERE  t_2.decimal_field1 >= 4770
+SELECT * FROM  simple_table_1  t_3   WHERE  t_3.int_field1 IS NOT NULL
+SELECT LIST FROM  simple_table_1  t_3   WHERE  t_3.decimal_field1 BETWEEN 1 and 9996
+SELECT LIST FROM  simple_table_10  t_4   WHERE  ( t_4.decimal_field1 != 4815 ) AND ( t_4.int_field1 < 5130 )
+SELECT DISTINCT( t_5.int_field1 ) FROM  simple_table_3  t_5   WHERE  t_5.decimal_field1 > 4901
+SELECT LIST FROM  simple_table_3  t_5   WHERE  t_5.int_field1 != 4995
+SELECT DISTINCT( t_3.decimal_field1 ) FROM  simple_table_1  t_3   WHERE  t_3.int_field1 = 4743
+SELECT LIST FROM  simple_table_4  t_2   WHERE  t_2.int_field1 < 4862
+SELECT DISTINCT( t_1.int_field1 ) FROM  simple_table_2  t_1   WHERE  t_1.int_field1 = 5050
+SELECT * FROM  simple_table_2  t_1   WHERE  t_1.int_field1 = 5050
+SELECT * FROM  simple_table_1  t_3   WHERE  t_3.decimal_field1 <= 5214
+SELECT DISTINCT( t_1.decimal_field1 ) FROM  simple_table_2  t_1   WHERE  t_1.decimal_field1 < 5110
+SELECT DISTINCT( t_5.int_field1 ) FROM  simple_table_3  t_5   WHERE  NOT ( t_5.int_field1 >= 4995 )
+SELECT * FROM  simple_table_2  t_1   WHERE  t_1.decimal_field1 BETWEEN 20 and 9993
+SELECT * FROM  simple_table_1  t_3   WHERE  ( NOT ( t_3.int_field1  IN [  2 , 10 , 16 , 27 , 34  ] ) ) OR ( ( t_3.decimal_field1 != 5214 ) OR ( t_3.decimal_field1  IN [  1 , 14 , 46 , 53 , 54  ] ) )
+SELECT LIST FROM  simple_table_4  t_2   WHERE  t_2.decimal_field1 IS NOT NULL
+SELECT DISTINCT( t_4.int_field1 ) FROM  simple_table_10  t_4   WHERE  t_4.decimal_field1 != 4815
+SELECT DISTINCT( t_3.decimal_field1 ) FROM  simple_table_1  t_3   WHERE  t_3.int_field1 < 4743
+SELECT LIST FROM  simple_table_1  t_3   WHERE  NOT ( NOT ( t_3.decimal_field1 > 5214 ) )
+SELECT LIST FROM  simple_table_3  t_5   WHERE  t_5.decimal_field1 IS NOT NULL
+SELECT * FROM  simple_table_4  t_2   WHERE  ( t_2.int_field1 <= 4862 ) OR ( ( t_2.int_field1 != 4862 ) OR ( NOT ( t_2.decimal_field1 > 4770 ) ) )
+SELECT LIST FROM  simple_table_3  t_5   WHERE  NOT ( t_5.int_field1 IS NULL )
+SELECT * FROM  simple_table_3  t_5   WHERE  ( t_5.decimal_field1 IS NULL ) OR ( NOT ( t_5.int_field1 BETWEEN 12 and 9994 ) )
+SELECT DISTINCT( t_2.int_field1 ) FROM  simple_table_4  t_2   WHERE  t_2.int_field1 = 4862
+SELECT * FROM  simple_table_10  t_4   WHERE  t_4.int_field1 < 5130
+SELECT * FROM  simple_table_10  t_4   WHERE  t_4.decimal_field1 > 4815
+SELECT LIST FROM  simple_table_3  t_5   WHERE  NOT ( NOT ( t_5.decimal_field1 IS NOT NULL ) )
+SELECT * FROM  simple_table_1  t_3   WHERE  ( t_3.int_field1 <= 4743 ) OR ( t_3.int_field1 IS NULL )
+SELECT DISTINCT( t_2.decimal_field1 ) FROM  simple_table_4  t_2   WHERE  t_2.decimal_field1  IN [  19 , 37 , 46 , 49 , 52  ]
+SELECT LIST FROM  simple_table_4  t_2   WHERE  ( t_2.decimal_field1 IS NULL ) AND ( ( ( t_2.int_field1 != 4862 ) AND ( t_2.decimal_field1 IS NOT NULL ) ) AND ( ( t_2.decimal_field1 > 4770 ) AND ( t_2.int_field1  IN [  13 , 18 , 24 , 38 , 41  ] ) ) )
+SELECT DISTINCT( t_1.int_field1 ) FROM  simple_table_2  t_1   WHERE  t_1.int_field1 = 5050
+SELECT * FROM  simple_table_3  t_5   WHERE  t_5.int_field1 < 4995
+SELECT * FROM  simple_table_4  t_2   WHERE  NOT ( ( t_2.int_field1 BETWEEN 13 and 9993 ) OR ( t_2.int_field1 BETWEEN 13 and 9993 ) )
+SELECT LIST FROM  simple_table_2  t_1   WHERE  t_1.int_field1 IS NULL
+SELECT * FROM  simple_table_3  t_5   WHERE  t_5.int_field1 IS NULL
+SELECT * FROM  simple_table_10  t_4   WHERE  t_4.int_field1 IS NULL
+SELECT * FROM  simple_table_10  t_4   WHERE  t_4.int_field1 = 5130
+SELECT LIST FROM  simple_table_10  t_4   WHERE  t_4.decimal_field1 >= 4815
+SELECT * FROM  simple_table_10  t_4   WHERE  t_4.int_field1 >= 5130
+SELECT * FROM  simple_table_10  t_4   WHERE  t_4.int_field1 != 5130
+SELECT LIST FROM  simple_table_4  t_2   WHERE  t_2.decimal_field1 = 4770
+SELECT DISTINCT( t_5.decimal_field1 ) FROM  simple_table_3  t_5   WHERE  t_5.int_field1 != 4995
+SELECT LIST FROM  simple_table_2  t_1   WHERE  ( t_1.int_field1 = 5050 ) OR ( t_1.int_field1 <= 5050 )
+SELECT LIST FROM  simple_table_10  t_4   WHERE  t_4.decimal_field1 < 4815
+SELECT DISTINCT( t_4.decimal_field1 ) FROM  simple_table_10  t_4   WHERE  ( t_4.int_field1 >= 5130 ) AND ( ( t_4.decimal_field1 > 4815 ) AND ( t_4.decimal_field1 BETWEEN 16 and 9995 ) )
+SELECT DISTINCT( t_3.decimal_field1 ) FROM  simple_table_1  t_3   WHERE  t_3.int_field1 IS NULL
+SELECT LIST FROM  simple_table_1  t_3   WHERE  t_3.decimal_field1 BETWEEN 1 and 9996
+SELECT LIST FROM  simple_table_2  t_1   WHERE  t_1.decimal_field1  IN [  20 , 32 , 35 , 36 , 37  ]
+SELECT DISTINCT( t_3.decimal_field1 ) FROM  simple_table_1  t_3   WHERE  t_3.decimal_field1 <= 5214
+SELECT DISTINCT( t_1.int_field1 ) FROM  simple_table_2  t_1   WHERE  t_1.decimal_field1 > 5110
+SELECT * FROM  simple_table_10  t_4   WHERE  t_4.int_field1  IN [  2 , 4 , 11 , 19 , 21  ]
+SELECT DISTINCT( t_5.int_field1 ) FROM  simple_table_3  t_5   WHERE  t_5.decimal_field1 <= 4901
+SELECT LIST FROM  simple_table_10  t_4   WHERE  t_4.int_field1 IS NOT NULL
+SELECT LIST FROM  simple_table_4  t_2   WHERE  NOT ( t_2.int_field1  IN [  13 , 18 , 24 , 38 , 41  ] )
+SELECT LIST FROM  simple_table_2  t_1   WHERE  t_1.decimal_field1 >= 5110
+SELECT * FROM  simple_table_2  t_1   WHERE  t_1.int_field1 BETWEEN 26 and 9997
+SELECT * FROM  simple_table_3  t_5   WHERE  t_5.int_field1  IN [  12 , 15 , 24 , 25 , 35  ]
+SELECT * FROM  simple_table_4  t_2   WHERE  t_2.int_field1 >= 4862
+SELECT * FROM  simple_table_4  t_2   WHERE  ( t_2.decimal_field1 = 4770 ) OR ( NOT ( t_2.int_field1 != 4862 ) )
+SELECT * FROM  simple_table_3  t_5   WHERE  t_5.int_field1 > 4995
+SELECT DISTINCT( t_1.decimal_field1 ) FROM  simple_table_2  t_1   WHERE  t_1.int_field1 IS NOT NULL
+SELECT * FROM  simple_table_10  t_4   WHERE  t_4.decimal_field1 = 4815
+SELECT DISTINCT( t_4.int_field1 ) FROM  simple_table_10  t_4   WHERE  t_4.decimal_field1 > 4815
+SELECT DISTINCT( t_1.int_field1 ) FROM  simple_table_2  t_1   WHERE  t_1.decimal_field1 >= 5110
+SELECT * FROM  simple_table_4  t_2   WHERE  ( t_2.decimal_field1 <= 4770 ) AND ( t_2.decimal_field1 BETWEEN 19 and 9991 )
+SELECT * FROM  simple_table_3  t_5   WHERE  t_5.int_field1 > 4995
+SELECT LIST FROM  simple_table_10  t_4   WHERE  ( NOT ( t_4.decimal_field1 != 4815 ) ) OR ( t_4.decimal_field1 BETWEEN 16 and 9995 )
+SELECT LIST FROM  simple_table_10  t_4   WHERE  t_4.int_field1 > 5130
+SELECT DISTINCT( t_1.decimal_field1 ) FROM  simple_table_2  t_1   WHERE  t_1.decimal_field1 IS NOT NULL
+SELECT DISTINCT( t_2.int_field1 ) FROM  simple_table_4  t_2   WHERE  t_2.int_field1 <= 4862
+SELECT LIST FROM  simple_table_3  t_5   WHERE  ( t_5.int_field1  IN [  12 , 15 , 24 , 25 , 35  ] ) OR ( NOT ( t_5.decimal_field1 < 4901 ) )
+SELECT DISTINCT( t_5.decimal_field1 ) FROM  simple_table_3  t_5   WHERE  t_5.int_field1 >= 4995
+SELECT DISTINCT( t_4.decimal_field1 ) FROM  simple_table_10  t_4   WHERE  t_4.decimal_field1 IS NULL
+SELECT * FROM  simple_table_10  t_4   WHERE  t_4.decimal_field1 IS NULL
+SELECT * FROM  simple_table_4  t_2   WHERE  t_2.decimal_field1  IN [  19 , 37 , 46 , 49 , 52  ]
+SELECT LIST FROM  simple_table_3  t_5   WHERE  t_5.int_field1 < 4995
+SELECT DISTINCT( t_1.decimal_field1 ) FROM  simple_table_2  t_1   WHERE  t_1.decimal_field1  IN [  20 , 32 , 35 , 36 , 37  ]
+SELECT * FROM  simple_table_3  t_5   WHERE  t_5.decimal_field1 >= 4901
+SELECT LIST FROM  simple_table_10  t_4   WHERE  t_4.decimal_field1 IS NULL
+SELECT * FROM  simple_table_4  t_2   WHERE  ( t_2.decimal_field1 IS NOT NULL ) OR ( t_2.int_field1 >= 4862 )
+SELECT LIST FROM  simple_table_1  t_3   WHERE  NOT ( t_3.decimal_field1 BETWEEN 1 and 9996 )
+SELECT LIST FROM  simple_table_2  t_1   WHERE  t_1.decimal_field1 IS NOT NULL
+SELECT * FROM  simple_table_2  t_1   WHERE  t_1.int_field1 = 5050
+SELECT DISTINCT( t_4.int_field1 ) FROM  simple_table_10  t_4   WHERE  NOT ( t_4.int_field1 < 5130 )
+SELECT LIST FROM  simple_table_3  t_5   WHERE  NOT ( t_5.int_field1 BETWEEN 12 and 9994 )
+SELECT * FROM  simple_table_1  t_3   WHERE  t_3.decimal_field1 IS NOT NULL
+SELECT LIST FROM  simple_table_10  t_4   WHERE  t_4.decimal_field1 < 4815
+SELECT DISTINCT( t_4.int_field1 ) FROM  simple_table_10  t_4   WHERE  ( t_4.int_field1 IS NOT NULL ) OR ( t_4.decimal_field1 BETWEEN 16 and 9995 )
+SELECT LIST FROM  simple_table_2  t_1   WHERE  t_1.decimal_field1 >= 5110
+SELECT LIST FROM  simple_table_3  t_5   WHERE  t_5.decimal_field1  IN [  2 , 10 , 15 , 79 , 82  ]
+SELECT LIST FROM  simple_table_3  t_5   WHERE  t_5.int_field1 < 4995
+SELECT DISTINCT( t_1.decimal_field1 ) FROM  simple_table_2  t_1   WHERE  t_1.decimal_field1 IS NOT NULL
+SELECT LIST FROM  simple_table_2  t_1   WHERE  NOT ( t_1.int_field1 IS NULL )
+SELECT LIST FROM  simple_table_4  t_2   WHERE  t_2.decimal_field1  IN [  19 , 37 , 46 , 49 , 52  ]
+SELECT LIST FROM  simple_table_2  t_1   WHERE  t_1.int_field1  IN [  26 , 34 , 73 , 79 , 82  ]
+SELECT * FROM  simple_table_4  t_2   WHERE  t_2.int_field1 = 4862
+SELECT DISTINCT( t_2.decimal_field1 ) FROM  simple_table_4  t_2   WHERE  t_2.int_field1 > 4862
+SELECT * FROM  simple_table_3  t_5   WHERE  t_5.decimal_field1 != 4901
+SELECT DISTINCT( t_3.int_field1 ) FROM  simple_table_1  t_3   WHERE  t_3.decimal_field1 IS NULL
+SELECT LIST FROM  simple_table_1  t_3   WHERE  ( t_3.int_field1 != 4743 ) AND ( t_3.int_field1 IS NULL )
+SELECT LIST FROM  simple_table_2  t_1   WHERE  t_1.decimal_field1 BETWEEN 20 and 9993
+SELECT * FROM  simple_table_3  t_5   WHERE  t_5.decimal_field1 BETWEEN 2 and 9993
+SELECT DISTINCT( t_3.int_field1 ) FROM  simple_table_1  t_3   WHERE  t_3.decimal_field1 >= 5214
+SELECT DISTINCT( t_2.decimal_field1 ) FROM  simple_table_4  t_2   WHERE  t_2.int_field1 != 4862
+SELECT * FROM  simple_table_10  t_4   WHERE  t_4.int_field1 < 5130
+SELECT LIST FROM  simple_table_1  t_3   WHERE  t_3.decimal_field1 IS NULL
+SELECT LIST FROM  simple_table_1  t_3   WHERE  ( NOT ( t_3.decimal_field1  IN [  1 , 14 , 46 , 53 , 54  ] ) ) OR ( ( t_3.int_field1 >= 4743 ) AND ( ( t_3.decimal_field1 > 5214 ) OR ( t_3.int_field1 BETWEEN 2 and 9997 ) ) )
+SELECT DISTINCT( t_1.int_field1 ) FROM  simple_table_2  t_1   WHERE  t_1.decimal_field1 = 5110
+SELECT DISTINCT( t_1.int_field1 ) FROM  simple_table_2  t_1   WHERE  NOT ( t_1.int_field1  IN [  26 , 34 , 73 , 79 , 82  ] )
+SELECT DISTINCT( t_4.decimal_field1 ) FROM  simple_table_10  t_4   WHERE  ( t_4.decimal_field1 IS NULL ) AND ( t_4.decimal_field1 IS NULL )
+SELECT LIST FROM  simple_table_4  t_2   WHERE  t_2.int_field1 != 4862
+SELECT DISTINCT( t_4.decimal_field1 ) FROM  simple_table_10  t_4   WHERE  t_4.decimal_field1  IN [  16 , 19 , 32 , 35 , 42  ]
+SELECT DISTINCT( t_1.int_field1 ) FROM  simple_table_2  t_1   WHERE  t_1.decimal_field1 > 5110
+SELECT DISTINCT( t_1.decimal_field1 ) FROM  simple_table_2  t_1   WHERE  t_1.int_field1 BETWEEN 26 and 9997
+SELECT * FROM  simple_table_2  t_1   WHERE  t_1.int_field1 != 5050
+SELECT DISTINCT( t_3.decimal_field1 ) FROM  simple_table_1  t_3   WHERE  t_3.int_field1 = 4743
+SELECT * FROM  simple_table_2  t_1   WHERE  t_1.decimal_field1 > 5110
+SELECT DISTINCT( t_3.int_field1 ) FROM  simple_table_1  t_3   WHERE  t_3.decimal_field1 != 5214
+SELECT LIST FROM  simple_table_3  t_5   WHERE  t_5.int_field1 != 4995
+SELECT LIST FROM  simple_table_3  t_5   WHERE  t_5.decimal_field1 IS NULL
+SELECT DISTINCT( t_1.decimal_field1 ) FROM  simple_table_2  t_1   WHERE  t_1.decimal_field1 < 5110
+SELECT DISTINCT( t_3.decimal_field1 ) FROM  simple_table_1  t_3   WHERE  ( ( t_3.decimal_field1 >= 5214 ) AND ( t_3.decimal_field1 >= 5214 ) ) AND ( t_3.decimal_field1 BETWEEN 1 and 9996 )
+SELECT * FROM  simple_table_1  t_3   WHERE  t_3.decimal_field1 IS NOT NULL
+SELECT * FROM  simple_table_1  t_3   WHERE  t_3.int_field1 >= 4743
+SELECT LIST FROM  simple_table_1  t_3   WHERE  t_3.int_field1 != 4743
+SELECT DISTINCT( t_3.int_field1 ) FROM  simple_table_1  t_3   WHERE  t_3.int_field1 IS NULL
+SELECT DISTINCT( t_5.int_field1 ) FROM  simple_table_3  t_5   WHERE  ( t_5.int_field1 IS NOT NULL ) OR ( t_5.decimal_field1 IS NULL )
+SELECT LIST FROM  simple_table_4  t_2   WHERE  t_2.decimal_field1  IN [  19 , 37 , 46 , 49 , 52  ]
+SELECT * FROM  simple_table_10  t_4   WHERE  t_4.decimal_field1 = 4815
+SELECT DISTINCT( t_1.int_field1 ) FROM  simple_table_2  t_1   WHERE  t_1.int_field1 = 5050
+SELECT DISTINCT( t_3.decimal_field1 ) FROM  simple_table_1  t_3   WHERE  t_3.int_field1 >= 4743
+SELECT * FROM  simple_table_10  t_4   WHERE  t_4.int_field1 = 5130
+SELECT DISTINCT( t_2.int_field1 ) FROM  simple_table_4  t_2   WHERE  ( t_2.decimal_field1 < 4770 ) OR ( t_2.decimal_field1  IN [  19 , 37 , 46 , 49 , 52  ] )
+SELECT LIST FROM  simple_table_2  t_1   WHERE  t_1.int_field1 BETWEEN 26 and 9997
+SELECT * FROM  simple_table_4  t_2   WHERE  NOT ( t_2.int_field1 BETWEEN 13 and 9993 )
+SELECT DISTINCT( t_4.int_field1 ) FROM  simple_table_10  t_4   WHERE  t_4.decimal_field1 IS NOT NULL
+SELECT LIST FROM  simple_table_10  t_4   WHERE  NOT ( t_4.decimal_field1 BETWEEN 16 and 9995 )
+SELECT DISTINCT( t_5.decimal_field1 ) FROM  simple_table_3  t_5   WHERE  t_5.decimal_field1 <= 4901
+SELECT LIST FROM  simple_table_2  t_1   WHERE  t_1.decimal_field1  IN [  20 , 32 , 35 , 36 , 37  ]
+SELECT * FROM  simple_table_4  t_2   WHERE  t_2.int_field1  IN [  13 , 18 , 24 , 38 , 41  ]
+SELECT * FROM  simple_table_4  t_2   WHERE  t_2.decimal_field1 <= 4770
+SELECT DISTINCT( t_1.int_field1 ) FROM  simple_table_2  t_1   WHERE  t_1.int_field1 >= 5050
+SELECT * FROM  simple_table_4  t_2   WHERE  ( ( t_2.int_field1 IS NULL ) OR ( ( t_2.decimal_field1 != 4770 ) AND ( ( t_2.decimal_field1 BETWEEN 19 and 9991 ) AND ( ( t_2.int_field1 IS NOT NULL ) AND ( t_2.decimal_field1 > 4770 ) ) ) ) ) OR ( t_2.int_field1 IS NOT NULL )
+SELECT DISTINCT( t_3.decimal_field1 ) FROM  simple_table_1  t_3   WHERE  t_3.int_field1 > 4743
+SELECT DISTINCT( t_1.int_field1 ) FROM  simple_table_2  t_1   WHERE  t_1.int_field1 BETWEEN 26 and 9997
+SELECT LIST FROM  simple_table_1  t_3   WHERE  t_3.decimal_field1 <= 5214
+SELECT DISTINCT( t_4.int_field1 ) FROM  simple_table_10  t_4   WHERE  t_4.int_field1 >= 5130
+SELECT LIST FROM  simple_table_1  t_3   WHERE  t_3.int_field1 < 4743
+SELECT LIST FROM  simple_table_1  t_3   WHERE  ( t_3.int_field1 < 4743 ) AND ( t_3.int_field1 IS NULL )
+SELECT DISTINCT( t_5.int_field1 ) FROM  simple_table_3  t_5   WHERE  t_5.decimal_field1 IS NULL
+SELECT LIST FROM  simple_table_2  t_1   WHERE  t_1.int_field1 > 5050
+SELECT DISTINCT( t_1.decimal_field1 ) FROM  simple_table_2  t_1   WHERE  t_1.decimal_field1 BETWEEN 20 and 9993
+SELECT LIST FROM  simple_table_10  t_4   WHERE  t_4.int_field1 IS NOT NULL
+SELECT DISTINCT( t_5.decimal_field1 ) FROM  simple_table_3  t_5   WHERE  t_5.int_field1 <= 4995
+SELECT DISTINCT( t_1.int_field1 ) FROM  simple_table_2  t_1   WHERE  t_1.decimal_field1 != 5110
+SELECT LIST FROM  simple_table_10  t_4   WHERE  t_4.int_field1 < 5130
+SELECT * FROM  simple_table_3  t_5   WHERE  NOT ( t_5.decimal_field1 <= 4901 )
+SELECT * FROM  simple_table_10  t_4   WHERE  t_4.decimal_field1 IS NOT NULL
+SELECT * FROM  simple_table_2  t_1   WHERE  t_1.int_field1 < 5050
+SELECT * FROM  simple_table_1  t_3   WHERE  t_3.decimal_field1  IN [  1 , 14 , 46 , 53 , 54  ]
+SELECT DISTINCT( t_3.int_field1 ) FROM  simple_table_1  t_3   WHERE  t_3.int_field1 BETWEEN 2 and 9997
+SELECT LIST FROM  simple_table_1  t_3   WHERE  t_3.int_field1 = 4743
+SELECT * FROM  simple_table_1  t_3   WHERE  ( t_3.decimal_field1 = 5214 ) AND ( t_3.decimal_field1  IN [  1 , 14 , 46 , 53 , 54  ] )
+SELECT DISTINCT( t_4.int_field1 ) FROM  simple_table_10  t_4   WHERE  NOT ( t_4.decimal_field1 = 4815 )
+SELECT LIST FROM  simple_table_2  t_1   WHERE  t_1.decimal_field1 = 5110
+SELECT LIST FROM  simple_table_4  t_2   WHERE  t_2.int_field1 >= 4862
+SELECT * FROM  simple_table_10  t_4   WHERE  t_4.decimal_field1 IS NOT NULL
+SELECT DISTINCT( t_3.decimal_field1 ) FROM  simple_table_1  t_3   WHERE  t_3.int_field1 != 4743
+SELECT LIST FROM  simple_table_1  t_3   WHERE  ( ( ( t_3.int_field1 <= 4743 ) OR ( ( t_3.int_field1 = 4743 ) AND ( ( t_3.decimal_field1 > 5214 ) OR ( t_3.decimal_field1 != 5214 ) ) ) ) AND ( ( t_3.decimal_field1  IN [  1 , 14 , 46 , 53 , 54  ] ) AND ( t_3.decimal_field1 IS NOT NULL ) ) ) OR ( t_3.int_field1 IS NULL )
+SELECT DISTINCT( t_4.int_field1 ) FROM  simple_table_10  t_4   WHERE  t_4.int_field1 > 5130
+SELECT * FROM  simple_table_4  t_2   WHERE  t_2.int_field1 BETWEEN 13 and 9993
+SELECT * FROM  simple_table_4  t_2   WHERE  t_2.decimal_field1 != 4770
+SELECT LIST FROM  simple_table_1  t_3   WHERE  t_3.int_field1 < 4743
+SELECT LIST FROM  simple_table_2  t_1   WHERE  t_1.decimal_field1 < 5110
+SELECT LIST FROM  simple_table_1  t_3   WHERE  t_3.decimal_field1 <= 5214
+SELECT LIST FROM  simple_table_3  t_5   WHERE  t_5.int_field1 IS NULL
+SELECT DISTINCT( t_5.int_field1 ) FROM  simple_table_3  t_5   WHERE  t_5.decimal_field1 IS NULL
+SELECT LIST FROM  simple_table_4  t_2   WHERE  t_2.int_field1 <= 4862
+SELECT * FROM  simple_table_2  t_1   WHERE  ( t_1.int_field1 != 5050 ) AND ( t_1.decimal_field1 IS NULL )
+SELECT DISTINCT( t_5.decimal_field1 ) FROM  simple_table_3  t_5   WHERE  NOT ( t_5.decimal_field1 <= 4901 )
+SELECT LIST FROM  simple_table_1  t_3   WHERE  t_3.decimal_field1 >= 5214
+SELECT * FROM  simple_table_4  t_2   WHERE  t_2.int_field1 != 4862
+SELECT LIST FROM  simple_table_1  t_3   WHERE  t_3.decimal_field1 < 5214
+SELECT LIST FROM  simple_table_10  t_4   WHERE  t_4.int_field1 = 5130
+SELECT * FROM  simple_table_1  t_3   WHERE  NOT ( t_3.int_field1 != 4743 )
+SELECT DISTINCT( t_2.decimal_field1 ) FROM  simple_table_4  t_2   WHERE  t_2.decimal_field1 = 4770
+SELECT * FROM  simple_table_1  t_3   WHERE  t_3.decimal_field1 IS NOT NULL
+SELECT LIST FROM  simple_table_4  t_2   WHERE  ( t_2.decimal_field1 != 4770 ) OR ( t_2.decimal_field1  IN [  19 , 37 , 46 , 49 , 52  ] )
+SELECT * FROM  simple_table_1  t_3   WHERE  t_3.int_field1 <= 4743
+SELECT DISTINCT( t_3.decimal_field1 ) FROM  simple_table_1  t_3   WHERE  t_3.decimal_field1 <= 5214
+SELECT DISTINCT( t_3.decimal_field1 ) FROM  simple_table_1  t_3   WHERE  NOT ( ( ( t_3.decimal_field1 IS NULL ) AND ( ( t_3.int_field1 IS NULL ) OR ( t_3.int_field1 <= 4743 ) ) ) AND ( t_3.decimal_field1 >= 5214 ) )
+SELECT LIST FROM  simple_table_1  t_3   WHERE  t_3.int_field1 BETWEEN 2 and 9997
+SELECT LIST FROM  simple_table_3  t_5   WHERE  t_5.int_field1 BETWEEN 12 and 9994
+SELECT LIST FROM  simple_table_3  t_5   WHERE  t_5.int_field1 IS NULL
+SELECT * FROM  simple_table_4  t_2   WHERE  t_2.int_field1 IS NOT NULL
+SELECT LIST FROM  simple_table_2  t_1   WHERE  t_1.int_field1 BETWEEN 26 and 9997
+SELECT LIST FROM  simple_table_10  t_4   WHERE  t_4.decimal_field1 IS NOT NULL
+SELECT DISTINCT( t_5.int_field1 ) FROM  simple_table_3  t_5   WHERE  t_5.int_field1  IN [  12 , 15 , 24 , 25 , 35  ]
+SELECT DISTINCT( t_5.decimal_field1 ) FROM  simple_table_3  t_5   WHERE  ( t_5.int_field1 IS NOT NULL ) AND ( t_5.int_field1 > 4995 )
+SELECT * FROM  simple_table_10  t_4   WHERE  t_4.int_field1 BETWEEN 2 and 9999
+SELECT * FROM  simple_table_4  t_2   WHERE  t_2.decimal_field1 <= 4770
+SELECT * FROM  simple_table_4  t_2   WHERE  t_2.decimal_field1 <= 4770
+SELECT DISTINCT( t_3.decimal_field1 ) FROM  simple_table_1  t_3   WHERE  ( t_3.decimal_field1 > 5214 ) OR ( t_3.decimal_field1 < 5214 )
+SELECT DISTINCT( t_5.int_field1 ) FROM  simple_table_3  t_5   WHERE  t_5.decimal_field1  IN [  2 , 10 , 15 , 79 , 82  ]
+SELECT * FROM  simple_table_3  t_5   WHERE  ( t_5.decimal_field1 < 4901 ) OR ( t_5.decimal_field1  IN [  2 , 10 , 15 , 79 , 82  ] )
+SELECT DISTINCT( t_1.int_field1 ) FROM  simple_table_2  t_1   WHERE  t_1.decimal_field1 < 5110
+SELECT * FROM  simple_table_3  t_5   WHERE  t_5.int_field1 = 4995
+SELECT LIST FROM  simple_table_1  t_3   WHERE  t_3.decimal_field1 <= 5214
+SELECT DISTINCT( t_5.decimal_field1 ) FROM  simple_table_3  t_5   WHERE  ( t_5.int_field1 <= 4995 ) AND ( t_5.int_field1 BETWEEN 12 and 9994 )
+SELECT LIST FROM  simple_table_4  t_2   WHERE  t_2.int_field1 <= 4862
+SELECT LIST FROM  simple_table_10  t_4   WHERE  t_4.decimal_field1 BETWEEN 16 and 9995
+SELECT LIST FROM  simple_table_10  t_4   WHERE  t_4.int_field1 <= 5130
+SELECT DISTINCT( t_1.int_field1 ) FROM  simple_table_2  t_1   WHERE  t_1.decimal_field1 <= 5110
+SELECT * FROM  simple_table_4  t_2   WHERE  t_2.int_field1 IS NULL
+SELECT DISTINCT( t_2.int_field1 ) FROM  simple_table_4  t_2   WHERE  t_2.decimal_field1 != 4770
+SELECT DISTINCT( t_2.decimal_field1 ) FROM  simple_table_4  t_2   WHERE  ( t_2.int_field1 = 4862 ) AND ( ( t_2.decimal_field1 IS NULL ) AND ( NOT ( t_2.int_field1 BETWEEN 13 and 9993 ) ) )
+SELECT LIST FROM  simple_table_4  t_2   WHERE  NOT ( t_2.int_field1 <= 4862 )
+SELECT LIST FROM  simple_table_4  t_2   WHERE  t_2.int_field1 = 4862
+SELECT * FROM  simple_table_1  t_3   WHERE  t_3.int_field1 > 4743
+SELECT * FROM  simple_table_3  t_5   WHERE  t_5.int_field1  IN [  12 , 15 , 24 , 25 , 35  ]
+SELECT * FROM  simple_table_3  t_5   WHERE  t_5.decimal_field1 IS NULL
+SELECT DISTINCT( t_2.decimal_field1 ) FROM  simple_table_4  t_2   WHERE  t_2.int_field1 < 4862
+SELECT DISTINCT( t_5.int_field1 ) FROM  simple_table_3  t_5   WHERE  t_5.decimal_field1 > 4901
+SELECT * FROM  simple_table_4  t_2   WHERE  ( t_2.decimal_field1 > 4770 ) AND ( NOT ( t_2.int_field1 >= 4862 ) )
+SELECT LIST FROM  simple_table_3  t_5   WHERE  t_5.int_field1  IN [  12 , 15 , 24 , 25 , 35  ]
+SELECT DISTINCT( t_3.int_field1 ) FROM  simple_table_1  t_3   WHERE  t_3.int_field1 BETWEEN 2 and 9997
+SELECT * FROM  simple_table_1  t_3   WHERE  ( t_3.decimal_field1 >= 5214 ) OR ( t_3.int_field1 != 4743 )
+SELECT DISTINCT( t_2.decimal_field1 ) FROM  simple_table_4  t_2   WHERE  t_2.int_field1 IS NOT NULL
+SELECT DISTINCT( t_3.int_field1 ) FROM  simple_table_1  t_3   WHERE  t_3.int_field1 = 4743
+SELECT LIST FROM  simple_table_4  t_2   WHERE  t_2.decimal_field1 != 4770
+SELECT * FROM  simple_table_1  t_3   WHERE  t_3.int_field1 IS NOT NULL
+SELECT LIST FROM  simple_table_3  t_5   WHERE  t_5.int_field1 IS NULL
+SELECT LIST FROM  simple_table_10  t_4   WHERE  t_4.decimal_field1 >= 4815
+SELECT DISTINCT( t_2.decimal_field1 ) FROM  simple_table_4  t_2   WHERE  t_2.decimal_field1 >= 4770
+SELECT LIST FROM  simple_table_3  t_5   WHERE  t_5.decimal_field1 = 4901
+SELECT * FROM  simple_table_3  t_5   WHERE  t_5.int_field1 IS NOT NULL
+SELECT * FROM  simple_table_1  t_3   WHERE  t_3.decimal_field1 IS NULL
+SELECT * FROM  simple_table_3  t_5   WHERE  t_5.decimal_field1 != 4901
+SELECT LIST FROM  simple_table_3  t_5   WHERE  t_5.decimal_field1 >= 4901
+SELECT LIST FROM  simple_table_3  t_5   WHERE  t_5.decimal_field1 = 4901
+SELECT DISTINCT( t_3.int_field1 ) FROM  simple_table_1  t_3   WHERE  ( NOT ( t_3.decimal_field1 < 5214 ) ) AND ( t_3.decimal_field1 > 5214 )
+SELECT LIST FROM  simple_table_1  t_3   WHERE  NOT ( t_3.int_field1 IS NOT NULL )
+SELECT * FROM  simple_table_3  t_5   WHERE  t_5.int_field1 IS NULL
+SELECT DISTINCT( t_2.int_field1 ) FROM  simple_table_4  t_2   WHERE  t_2.int_field1 <= 4862
+SELECT LIST FROM  simple_table_10  t_4   WHERE  t_4.int_field1 IS NOT NULL
+SELECT LIST FROM  simple_table_1  t_3   WHERE  t_3.int_field1 != 4743
+SELECT * FROM  simple_table_2  t_1   WHERE  t_1.decimal_field1 <= 5110
+SELECT LIST FROM  simple_table_4  t_2   WHERE  t_2.int_field1 IS NOT NULL
+SELECT DISTINCT( t_3.int_field1 ) FROM  simple_table_1  t_3   WHERE  t_3.decimal_field1 >= 5214
+SELECT * FROM  simple_table_4  t_2   WHERE  NOT ( t_2.decimal_field1 >= 4770 )
+SELECT DISTINCT( t_2.int_field1 ) FROM  simple_table_4  t_2   WHERE  ( ( t_2.int_field1 IS NOT NULL ) OR ( t_2.int_field1 IS NULL ) ) OR ( ( t_2.decimal_field1  IN [  19 , 37 , 46 , 49 , 52  ] ) OR ( t_2.int_field1 IS NOT NULL ) )
+SELECT LIST FROM  simple_table_4  t_2   WHERE  t_2.decimal_field1 IS NULL
+SELECT * FROM  simple_table_2  t_1   WHERE  t_1.int_field1 IS NOT NULL
