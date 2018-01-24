@@ -118,27 +118,6 @@ class TestDatabase(object):
         random_string(6, digit=True),
         random_string(6).upper(),
     ])
-    def test_contains(self, db_name):
-        '''
-        @summary: Testing contains method of Database API
-        '''
-        doc_id_prefix = "bar"
-        doc = self.doc_obj.create(doc_id=doc_id_prefix)
-        db = self.db_obj.create(db_name)
-        self.db_obj.saveDocument(db, doc)
-        assert self.db_obj.contains(db, doc_id_prefix)
-        assert self.db_obj.deleteDB(db) == -1
-
-    @pytest.mark.parametrize("db_name", [
-        random_string(1),
-        random_string(6),
-        random_string(128),
-        "_{}".format(random_string(6)),
-        "{}_".format(random_string(6)),
-        "_{}_".format(random_string(6)),
-        random_string(6, digit=True),
-        random_string(6).upper(),
-    ])
     def test_deleteDB(self, db_name):
         '''
         @summary: Testing delete(DB) method of Database API

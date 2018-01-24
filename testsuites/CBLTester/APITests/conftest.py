@@ -13,7 +13,8 @@ from keywords.SyncGateway import sync_gateway_config_path_for_mode
 from keywords.SyncGateway import SyncGateway
 from keywords.exceptions import ProvisioningError
 from keywords.tklogging import Logging
-from CBLClient.Replicator import Replicator
+from CBLClient.Replication import Replication
+from CBLClient.ReplicatorConfiguration import ReplicatorConfiguration
 from CBLClient.BasicAuthenticator import BasicAuthenticator
 from CBLClient.Database import Database
 from CBLClient.Document import Document
@@ -236,7 +237,7 @@ def params_from_base_suite_setup(request):
         sdk_client.n1ql_query(query)
 
         # Start continuous replication
-        repl_obj = Replicator(base_url)
+        repl_obj = Replication(base_url)
         auth_obj = BasicAuthenticator(base_url)
         authenticator = auth_obj.create("traveL-sample", "password")
         replicator = repl_obj.configure(source_db=source_db,
@@ -370,8 +371,8 @@ def class_init(request, params_from_base_suite_setup):
     doc_obj = Document(base_url)
     dict_obj = Dictionary(base_url)
     datatype = DataTypeInitiator(base_url)
-    repl_obj = Replicator(base_url)
-    # repl_config_obj = ReplicatorConfiguration(base_url)
+    repl_obj = Replication(base_url)
+    repl_config_obj = ReplicatorConfiguration(base_url)
     base_auth_obj = BasicAuthenticator(base_url)
     session_auth_obj = SessionAuthenticator(base_url)
     sg_client = MobileRestClient()
@@ -382,7 +383,7 @@ def class_init(request, params_from_base_suite_setup):
     request.cls.dict_obj = dict_obj
     request.cls.datatype = datatype
     request.cls.repl_obj = repl_obj
-    # request.cls.repl_config_obj = repl_config_obj
+    request.cls.repl_config_obj = repl_config_obj
     request.cls.base_auth_obj = base_auth_obj
     request.cls.session_auth_obj = session_auth_obj
     request.cls.sg_client = sg_client

@@ -4,6 +4,7 @@ import com.couchbase.CouchbaseLiteServ.server.RequestHandler.BasicAuthenticatorR
 import com.couchbase.CouchbaseLiteServ.server.RequestHandler.CollationRequestHandler;
 import com.couchbase.CouchbaseLiteServ.server.RequestHandler.DataSourceRequestHandler;
 import com.couchbase.CouchbaseLiteServ.server.RequestHandler.DataTypesInitiatorHandler;
+import com.couchbase.CouchbaseLiteServ.server.RequestHandler.DatabaseConfigurationRequestHandler;
 import com.couchbase.CouchbaseLiteServ.server.RequestHandler.DatabaseRequestHandler;
 import com.couchbase.CouchbaseLiteServ.server.RequestHandler.DictionaryRequestHandler;
 import com.couchbase.CouchbaseLiteServ.server.RequestHandler.DocumentRequestHandler;
@@ -15,6 +16,7 @@ import com.couchbase.CouchbaseLiteServ.server.RequestHandler.ReplicatorRequestHa
 import com.couchbase.CouchbaseLiteServ.server.RequestHandler.ResultRequestHandler;
 import com.couchbase.CouchbaseLiteServ.server.RequestHandler.SelectResultRequestHandler;
 import com.couchbase.CouchbaseLiteServ.server.RequestHandler.SessionAuthenticatorRequestHandler;
+import com.couchbase.lite.DatabaseConfiguration;
 import com.couchbase.lite.ReplicatorConfiguration;
 import com.google.gson.Gson;
 
@@ -104,6 +106,10 @@ public class Server extends NanoHTTPD {
                 String method_to_call = method.split("_")[1];
                 Method target;
                 switch (handlerType){
+                    case "databaseConfiguration":
+                        target = DatabaseConfigurationRequestHandler.class.getMethod(method_to_call, Args.class);
+                        requestHandler = new DatabaseConfigurationRequestHandler();
+                        break;
                     case "database":
                         target = DatabaseRequestHandler.class.getMethod(method_to_call, Args.class);
                         requestHandler = new DatabaseRequestHandler();

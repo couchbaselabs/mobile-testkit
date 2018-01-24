@@ -30,22 +30,21 @@ class Client(object):
             headers = {"Content-Type": "application/json"}
             self.session.headers = headers
             log_info("body is {}".format(body))
+            # log_info("URL is {}".format(url))
             resp = self.session.post(url, data=json.dumps(body))
             resp.raise_for_status()
             responseCode = resp.status_code
 
             if responseCode == 200:
                 result = resp.content
+                # log_info("Got response: {}".format(result))
                 if len(result) < 25:
                     # Only print short messages
                     log_info("Got response: {}".format(result))
                 return ValueSerializer.deserialize(result)
         except Exception as err:
-            # resp can't be accessed here
-            if resp:
-                return err, resp.content
-            else:
-                return err
+            raise Exception(str(err) + resp.content)
+
 
     def release(self, obj):
         args = Args()

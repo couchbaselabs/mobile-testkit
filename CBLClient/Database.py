@@ -35,10 +35,11 @@ class Database(object):
             args.setMemoryPointer("fileProtection", fileProtection)
         return self._client.invokeMethod("databaseConfiguration_configure", args)
 
-    def create(self, name, config):
+    def create(self, name, config=None):
         args = Args()
         args.setString("name", name)
-        args.setMemoryPointer("config", config)
+        if config:
+            args.setMemoryPointer("config", config)
         return self._client.invokeMethod("database_create", args)
 
     def delete(self, name=None, path=None, database=None, document=None):

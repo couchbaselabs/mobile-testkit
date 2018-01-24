@@ -34,9 +34,12 @@ public class DatabaseRequestHandler {
 
     public Database create(Args args) throws CouchbaseLiteException {
         String name = args.get("name");
-        Context context = MainActivity.getAppContext();
-        DatabaseConfiguration databaseConfig = new Builder(context).build();
-        return new Database(name, databaseConfig);
+        DatabaseConfiguration config = args.get("config");
+        if (config == null) {
+            Context context = MainActivity.getAppContext();
+            config = new Builder(context).build();
+        }
+        return new Database(name, config);
     }
 
     public Database create(String name) throws CouchbaseLiteException {
@@ -125,7 +128,7 @@ public class DatabaseRequestHandler {
         database.save(document);
    }
 
-    public void delete(Args args) throws CouchbaseLiteException {
+    public void deleteDocument(Args args) throws CouchbaseLiteException {
         Database database = args.get("database");
         Document document = args.get("document");
 
