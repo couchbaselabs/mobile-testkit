@@ -23,9 +23,22 @@ class Database(object):
 
         self._client = Client(base_url)
 
-    def create(self, name):
+    def configure(self, directory=None, conflictResolver=None, encryptionKey=None, fileProtection=None):
+        args = Args()
+        if directory is not None:
+            args.setString("directory", directory)
+        if conflictResolver is not None:
+            args.setMemoryPointer("conflictResolver", conflictResolver)
+        if encryptionKey is not None:
+            args.setMemoryPointer("encryptionKey", encryptionKey)
+        if fileProtection is not None:
+            args.setMemoryPointer("fileProtection", fileProtection)
+        return self._client.invokeMethod("databaseConfiguration_configure", args)
+
+    def create(self, name, config):
         args = Args()
         args.setString("name", name)
+        args.setMemoryPointer("config", config)
         return self._client.invokeMethod("database_create", args)
 
     def delete(self, name=None, path=None, database=None, document=None):

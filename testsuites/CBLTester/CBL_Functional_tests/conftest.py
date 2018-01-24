@@ -186,7 +186,8 @@ def params_from_base_suite_setup(request):
         db = Database(base_url)
 
         log_info("Creating a Database {} at the suite setup".format(cbl_db))
-        source_db = db.create(cbl_db)
+        db_config = db.configure()
+        source_db = db.create(cbl_db, db_config)
         log_info("Getting the database name")
         db_name = db.getName(source_db)
         assert db_name == cbl_db
@@ -320,12 +321,14 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     log_info("xattrs_enabled: {}".format(xattrs_enabled))
 
     cbl_db = create_db_per_test
+    db = None
     if create_db_per_test:
         # Create CBL database
         db = Database(base_url)
 
         log_info("Creating a Database {} at test setup".format(cbl_db))
-        source_db = db.create(cbl_db)
+        db_config = db.configure()
+        source_db = db.create(cbl_db, db_config)
         log_info("Getting the database name")
         db_name = db.getName(source_db)
         assert db_name == cbl_db
@@ -349,7 +352,8 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         "source_db": source_db,
         "cbl_db": cbl_db,
         "base_url": base_url,
-        "sg_config": sg_config
+        "sg_config": sg_config,
+        "db": db
     }
 
     if create_db_per_test:
@@ -372,7 +376,8 @@ def class_init(request, params_from_base_suite_setup):
     base_auth_obj = BasicAuthenticator(base_url)
     session_auth_obj = SessionAuthenticator(base_url)
     sg_client = MobileRestClient()
-    db = db_obj.create("cbl-init-db")
+    db_config = db_obj.configure()
+    db = db_obj.create("cbl-init-db", db_config)
 
     request.cls.db_obj = db_obj
     request.cls.doc_obj = doc_obj

@@ -124,7 +124,7 @@ def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False, sg_pl
         playbook_vars["xattrs"] = '"enable_shared_bucket_access": true,'
 
     if no_conflicts_enabled(cluster_config):
-        playbook_vars["no_conflicts"] = '"allow_conflicts": false,'
+        playbook_vars["no_conflicts"] = '"allow_conflicts": false'
     try:
         revs_limit = get_revs_limit(cluster_config)
         playbook_vars["revs_limit"] = '"revs_limit": {},'.format(revs_limit)

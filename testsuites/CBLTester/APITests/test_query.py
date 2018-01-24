@@ -16,7 +16,8 @@ class TestQuery(unittest.TestCase):
     def test_collation(self):
         db = Database(baseUrl)
         query = Query(baseUrl)
-        db_obj = db.create(dbName)
+        db_config = db.configure()
+        db_obj = db.create(dbName, db_config)
         self.assertTrue(db.getName(db_obj) == "foo", "Database Create Failed")
 
         doc = {

@@ -67,8 +67,8 @@ class TestReplication(object):
         ("PUSH", "session", 10, 5),
         ("PULL", "session", 10, 5)
     ])
-    def test_replication_configuration_with_one_way_replication(self, params_from_base_test_setup,
-                                                                repl_type, auth_type, sg_docs_count, cbl_docs_count):
+    def test_replication_configuration_with_one_way_replication1(self, params_from_base_test_setup,
+                                                                 repl_type, auth_type, sg_docs_count, cbl_docs_count):
         sg_url = params_from_base_test_setup["sg_url"]
         sg_admin_url = params_from_base_test_setup["sg_admin_url"]
         sg_mode = params_from_base_test_setup["mode"]

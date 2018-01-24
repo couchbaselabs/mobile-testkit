@@ -11,7 +11,7 @@
         "db":{
             {{ autoimport }}
             {{ xattrs }}
-            "unsupported": { 
+            "unsupported": {
                 {{ no_conflicts }}
              },
             "revs_limit": 5,

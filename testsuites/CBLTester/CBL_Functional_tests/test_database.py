@@ -19,7 +19,8 @@ def test_documents():
 
     # Create CBL database
     log_info("Creating a Database {}".format(cbl_db))
-    source_db = db.create(cbl_db)
+    db_config = db.configure()
+    source_db = db.create(cbl_db, db_config)
     log_info("Getting the database name")
     db_name = db.getName(source_db)
     assert db_name == "test_db"
@@ -56,7 +57,8 @@ def test_replication():
     sg_admin_url = "http://{}:4985".format(sg_ip)
 
     # Create CBL database
-    source_db = db.create(cbl_db)
+    db_config = db.configure()
+    source_db = db.create(cbl_db, db_config)
     log_info("Database is {}".format(source_db))
     db_name = db.getName(source_db)
     assert db_name == "test_db"
@@ -116,7 +118,8 @@ def test_query():
     cbl_db = "test_db"
 
     # Create CBL database
-    source_db = db.create(cbl_db)
+    db_config = db.configure()
+    source_db = db.create(cbl_db, db_config)
     log_info("Database is {}".format(source_db))
     db_name = db.getName(source_db)
     assert db_name == "test_db"

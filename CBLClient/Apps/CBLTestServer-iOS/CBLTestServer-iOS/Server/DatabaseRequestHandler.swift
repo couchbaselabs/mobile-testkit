@@ -20,20 +20,20 @@ public class DatabaseRequestHandler {
         //////////////
         // Database //
         //////////////
+    
         case "database_create":
-            let name: String? = args.get(name: "name")
-
+            let name: String! = args.get(name: "name")
+            let dbConfig: DatabaseConfiguration! = args.get(name: "config")
+            let builder = DatabaseConfiguration.Builder(config: dbConfig)
             do {
-                return try Database(name: name!)
+                return try Database(name: name!, config: builder.build())
             } catch {
                 print("Got error while creating DB \(error)")
                 return error.localizedDescription
             }
             
-
         case "database_close":
             let database: Database = args.get(name:"database")!
-
             try database.close()
 
         case "database_getPath":

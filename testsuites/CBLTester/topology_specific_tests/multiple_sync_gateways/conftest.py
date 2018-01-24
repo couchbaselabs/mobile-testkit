@@ -219,16 +219,16 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     log_info("mode: {}".format(mode))
     log_info("xattrs_enabled: {}".format(xattrs_enabled))
 
-    """# Create CBL database
     cbl_db = "test_db"
     db = Database(base_url)
 
     log_info("Creating a Database {}".format(cbl_db))
-    source_db = db.create(cbl_db)
+    db_config = db.configure()
+    source_db = db.create(cbl_db, db_config)
     log_info("Getting the database name")
     db_name = db.getName(source_db)
     assert db_name == "test_db"
-    """
+    
     if enable_sample_bucket:
         # Start continuous replication
         replicator = Replication(base_url)

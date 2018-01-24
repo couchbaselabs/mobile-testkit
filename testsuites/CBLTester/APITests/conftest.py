@@ -186,7 +186,8 @@ def params_from_base_suite_setup(request):
         db = Database(base_url)
 
         log_info("Creating a Database {} at the suite setup".format(cbl_db))
-        source_db = db.create(cbl_db)
+        db_config = db.configure()
+        source_db = db.create(cbl_db, db_config)
         log_info("Getting the database name")
         db_name = db.getName(source_db)
         assert db_name == cbl_db
@@ -326,7 +327,8 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         db = Database(base_url)
 
         log_info("Creating a Database {} at test setup".format(cbl_db))
-        source_db = db.create(cbl_db)
+        db_config = db.configure()
+        source_db = db.create(cbl_db, db_config)
         log_info("Getting the database name")
         db_name = db.getName(source_db)
         assert db_name == cbl_db

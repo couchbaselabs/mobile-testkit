@@ -41,6 +41,7 @@ public class Server {
     let selectResultRequestHandler: SelectResultRequestHandler!
     let resultRequestHandler: ResultRequestHandler!
     let basicAuthenticatorRequestHandler: BasicAuthenticatorRequestHandler!
+    let databaseConfigurationRequestHandler: DatabaseConfigurationRequestHandler!
     let memory = Memory()
     
     public init() {
@@ -64,6 +65,7 @@ public class Server {
         selectResultRequestHandler = SelectResultRequestHandler()
         resultRequestHandler = ResultRequestHandler()
         basicAuthenticatorRequestHandler = BasicAuthenticatorRequestHandler()
+        databaseConfigurationRequestHandler = DatabaseConfigurationRequestHandler()
         server = GCDWebServer()
         server.addDefaultHandler(forMethod: "POST", request: GCDWebServerDataRequest.self) {
             (request) -> GCDWebServerResponse? in
@@ -111,7 +113,9 @@ public class Server {
                     var result: Any? = nil
                     if method.hasPrefix("query") {
                         result = try self.queryRequestHandler.handleRequest(method: method, args: args)
-                    } else if method.hasPrefix("database") {
+                    } else if method.hasPrefix("databaseConfiguration") {
+                        result = try self.databaseConfigurationRequestHandler.handleRequest(method: method, args: args)
+                    }else if method.hasPrefix("database") {
                         result = try self.databaseRequestHandler.handleRequest(method: method, args: args)
                     } else if method.hasPrefix("document") {
                         result = try self.documentRequestHandler.handleRequest(method: method, args: args)
@@ -164,6 +168,7 @@ public class Server {
             } catch let error as NSError {
                 // Send 400 error code
                 let response = GCDWebServerDataResponse(text: error.localizedDescription)!
+                print("Error is : \(error.localizedDescription)")
                 response.statusCode = error.code as Int
                 return response
             }

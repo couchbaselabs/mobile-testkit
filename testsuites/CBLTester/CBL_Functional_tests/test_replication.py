@@ -20,7 +20,8 @@ def setup_teardown_test(params_from_base_test_setup):
     cbl_db_name = "cbl_db"
     base_url = params_from_base_test_setup["base_url"]
     db = Database(base_url)
-    cbl_db = db.create(cbl_db_name)
+    db_config = db.configure()
+    cbl_db = db.create(cbl_db_name, db_config)
     print "setting up db"
 
     yield{
@@ -29,6 +30,7 @@ def setup_teardown_test(params_from_base_test_setup):
         "cbl_db_name": cbl_db_name
     }
     print "tearing down db"
+    # db.close(cbl_db)
     db.deleteDB(cbl_db)
 
 
@@ -42,7 +44,7 @@ def setup_teardown_test(params_from_base_test_setup):
     # ('listener_tests/listener_tests_no_conflicts', 1000, True),
     # ('listener_tests/listener_tests_no_conflicts', 1000, False)
 ])
-def test_replication_configuration_valid_values(params_from_base_test_setup, setup_teardown_test, num_of_docs, continuous):
+def test_replication_configuration_valid_values(params_from_base_test_setup, num_of_docs, continuous):
     """
         @summary:
         1. Create CBL DB and create bulk doc in CBL
@@ -51,24 +53,24 @@ def test_replication_configuration_valid_values(params_from_base_test_setup, set
         4. Verify replication is successful and verify docs exist
     """
     sg_db = "db"
-    # cbl_db_name = "cbl_db"
     sg_url = params_from_base_test_setup["sg_url"]
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
     cluster_config = params_from_base_test_setup["cluster_config"]
     sg_blip_url = params_from_base_test_setup["target_url"]
     base_url = params_from_base_test_setup["base_url"]
     sg_config = params_from_base_test_setup["sg_config"]
-    cbl_db = setup_teardown_test["cbl_db"]
-    db = setup_teardown_test["db"]
-    # db = Database(base_url)
+    db = params_from_base_test_setup["db"]
+    cbl_db = params_from_base_test_setup["source_db"]
+    sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
+
+    if sync_gateway_version < "2.0.0":
+        pytest.skip('This test cannnot run with sg version below 2.0')
     channels_sg = ["ABC"]
     username = "autotest"
     password = "password"
     number_of_updates = 2
 
     # Create CBL database
-    # cbl_db = db.create(cbl_db_name)
-    log_info("Database is {}".format(cbl_db))
     sg_client = MobileRestClient()
 
     # Reset cluster to ensure no data in system
@@ -111,7 +113,7 @@ def test_replication_configuration_valid_values(params_from_base_test_setup, set
     ('session'),
     ('basic')
 ])
-def test_replication_configuration_with_pull_replication(params_from_base_test_setup, setup_teardown_test, authenticator_type):
+def test_replication_configuration_with_pull_replication(params_from_base_test_setup, authenticator_type):
     """
         @summary:
         1. Create CBL DB and create bulk doc in CBL
@@ -122,7 +124,6 @@ def test_replication_configuration_with_pull_replication(params_from_base_test_s
 
     """
     sg_db = "db"
-    # cbl_db_name = "cbl_db"
 
     sg_url = params_from_base_test_setup["sg_url"]
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
@@ -130,19 +131,22 @@ def test_replication_configuration_with_pull_replication(params_from_base_test_s
     base_url = params_from_base_test_setup["base_url"]
     cluster_config = params_from_base_test_setup["cluster_config"]
     sg_config = params_from_base_test_setup["sg_config"]
+    db = params_from_base_test_setup["db"]
+    cbl_db = params_from_base_test_setup["source_db"]
+    sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
 
-    db = setup_teardown_test["db"]
-    cbl_db_name = setup_teardown_test["cbl_db_name"]
+    if sync_gateway_version < "2.0.0":
+        pytest.skip('This test cannnot run with sg version below 2.0')
+
     channels = ["ABC"]
-    # db = Database(base_url)
     c = cluster.Cluster(config=cluster_config)
     c.reset(sg_config_path=sg_config)
 
     sg_client = MobileRestClient()
 
-    sg_added_doc_ids, cbl_added_doc_ids, cbl_db, session = setup_sg_cbl_docs(params_from_base_test_setup, sg_db=sg_db, base_url=base_url, db=db,
-                                                                             cbl_db_name=cbl_db_name, sg_url=sg_url, sg_admin_url=sg_admin_url, sg_blip_url=sg_blip_url,
-                                                                             replication_type="pull", channels=channels, replicator_authenticator_type=authenticator_type)
+    sg_added_doc_ids, cbl_added_doc_ids, session = setup_sg_cbl_docs(params_from_base_test_setup, sg_db=sg_db, base_url=base_url, db=db,
+                                                                     cbl_db=cbl_db, sg_url=sg_url, sg_admin_url=sg_admin_url, sg_blip_url=sg_blip_url,
+                                                                     replication_type="pull", channels=channels, replicator_authenticator_type=authenticator_type)
     sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db)
 
     cbl_doc_count = db.getCount(cbl_db)
@@ -165,7 +169,7 @@ def test_replication_configuration_with_pull_replication(params_from_base_test_s
 @pytest.mark.listener
 @pytest.mark.replication
 @pytest.mark.parametrize("authenticator_type", [
-    # ('session'),
+    ('session'),
     ('basic')
 ])
 def test_replication_configuration_with_push_replication(params_from_base_test_setup, authenticator_type):
@@ -179,7 +183,6 @@ def test_replication_configuration_with_push_replication(params_from_base_test_s
 
     """
     sg_db = "db"
-    cbl_db_name = "cbl_db"
 
     sg_url = params_from_base_test_setup["sg_url"]
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
@@ -187,21 +190,29 @@ def test_replication_configuration_with_push_replication(params_from_base_test_s
     base_url = params_from_base_test_setup["base_url"]
     cluster_config = params_from_base_test_setup["cluster_config"]
     sg_config = params_from_base_test_setup["sg_config"]
+    db = params_from_base_test_setup["db"]
+    cbl_db = params_from_base_test_setup["source_db"]
+    sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
+
+    if sync_gateway_version < "2.0.0":
+        pytest.skip('This test cannnot run with sg version below 2.0')
+
     c = cluster.Cluster(config=cluster_config)
     c.reset(sg_config_path=sg_config)
 
     channels = ["ABC"]
-    db = Database(base_url)
 
     sg_client = MobileRestClient()
-    sg_added_doc_ids, cbl_added_doc_ids, cbl_db = setup_sg_cbl_docs(params_from_base_test_setup, sg_db=sg_db, base_url=base_url, db=db,
-                                                                    cbl_db_name=cbl_db_name, sg_url=sg_url, sg_admin_url=sg_admin_url, sg_blip_url=sg_blip_url,
-                                                                    replication_type="push", channels=channels, replicator_authenticator_type=authenticator_type)
+    sg_added_doc_ids, cbl_added_doc_ids, session = setup_sg_cbl_docs(params_from_base_test_setup, sg_db=sg_db, base_url=base_url, db=db,
+                                                                     cbl_db=cbl_db, sg_url=sg_url, sg_admin_url=sg_admin_url, sg_blip_url=sg_blip_url,
+                                                                     replication_type="push", channels=channels, replicator_authenticator_type=authenticator_type)
     sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db)
+    print "sg docs in test are ", sg_docs["rows"]
 
     # Verify database doc counts
     cbl_doc_count = db.getCount(cbl_db)
     cbl_doc_ids = db.getDocIds(cbl_db)
+    print "cbl docs in test are ", db.getDocuments(cbl_db, cbl_doc_ids)
 
     assert len(sg_docs["rows"]) == 15, "Number of sg docs is not equal to total number of cbl docs and sg docs"
     assert cbl_doc_count == 5, "Did not get expected number of cbl docs"
@@ -229,7 +240,6 @@ def test_replication_push_replication_without_authentication(params_from_base_te
 
     """
     sg_db = "db"
-    cbl_db_name = "cbl_db"
 
     sg_url = params_from_base_test_setup["sg_url"]
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
@@ -237,18 +247,26 @@ def test_replication_push_replication_without_authentication(params_from_base_te
     base_url = params_from_base_test_setup["base_url"]
     cluster_config = params_from_base_test_setup["cluster_config"]
     sg_config = params_from_base_test_setup["sg_config"]
+    db = params_from_base_test_setup["db"]
+    cbl_db = params_from_base_test_setup["source_db"]
+    sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
+
+    if sync_gateway_version < "2.0.0":
+        pytest.skip('This test cannnot run with sg version below 2.0')
+
     c = cluster.Cluster(config=cluster_config)
     c.reset(sg_config_path=sg_config)
 
     channels = ["ABC"]
-    db = Database(base_url)
     sg_client = MobileRestClient()
-    cbl_db = db.create(cbl_db_name)
 
     db.create_bulk_docs(5, "cbl", db=cbl_db, channels=channels)
     # Add docs in SG
     sg_client.create_user(sg_admin_url, sg_db, "autotest", password="password", channels=channels)
-    cookie, session = sg_client.create_session(sg_admin_url, sg_db, "autotest")
+    session = sg_client.create_session(sg_admin_url, sg_db, "autotest")
+
+    sg_docs = sg_client.add_docs(url=sg_url, db=sg_db, number=10, id_prefix="sg_doc", channels=channels, auth=session)
+    sg_ids = [row["id"] for row in sg_docs]
 
     replicator = Replication(base_url)
     repl_config = replicator.configure(cbl_db, target_url=sg_blip_url, continuous=True, replication_type="push", replicator_authenticator=None)
@@ -257,14 +275,11 @@ def test_replication_push_replication_without_authentication(params_from_base_te
     replicator.start(repl)
     replicator.wait_until_replicator_idle(repl)
     error = replicator.getError(repl)
-    # TODO: change assert statement
     assert "HTTP/1.1 401 Unauthorized" in error, "expected error did not occurred"
     replicator.stop(repl)
 
-    sg_docs = sg_client.get_all_docs(url=sg_url, db=sg_db, auth=session)
     cbl_doc_ids = db.getDocIds(cbl_db)
     # Check that all doc ids in CBL are not replicated to SG
-    sg_ids = [row["id"] for row in sg_docs["rows"]]
     for doc in cbl_doc_ids:
         assert doc not in sg_ids
 
@@ -290,7 +305,6 @@ def test_replication_push_replication_invalid_authentication(params_from_base_te
 
     """
     sg_db = "db"
-    cbl_db_name = "cbl_db"
 
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
     sg_blip_url = params_from_base_test_setup["target_url"]
@@ -298,15 +312,20 @@ def test_replication_push_replication_invalid_authentication(params_from_base_te
     cluster_config = params_from_base_test_setup["cluster_config"]
     sg_config = params_from_base_test_setup["sg_config"]
     cluster_config = params_from_base_test_setup["cluster_config"]
+    sg_config = params_from_base_test_setup["sg_config"]
+    db = params_from_base_test_setup["db"]
+    cbl_db = params_from_base_test_setup["source_db"]
+    sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
+
+    if sync_gateway_version < "2.0.0":
+        pytest.skip('This test cannnot run with sg version below 2.0')
 
     c = cluster.Cluster(config=cluster_config)
     c.reset(sg_config_path=sg_config)
 
     channels = ["ABC"]
     sg_client = MobileRestClient()
-    db = Database(base_url)
     authenticator = Authenticator(base_url)
-    cbl_db = db.create(cbl_db_name)
 
     db.create_bulk_docs(5, "cbl", db=cbl_db, channels=channels)
     # Add docs in SG
@@ -341,7 +360,6 @@ def test_replication_configuration_with_filtered_doc_ids(params_from_base_test_s
 
     """
     sg_db = "db"
-    cbl_db_name = "cbl_db"
 
     sg_url = params_from_base_test_setup["sg_url"]
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
@@ -349,16 +367,17 @@ def test_replication_configuration_with_filtered_doc_ids(params_from_base_test_s
     base_url = params_from_base_test_setup["base_url"]
     cluster_config = params_from_base_test_setup["cluster_config"]
     sg_config = params_from_base_test_setup["sg_config"]
-
-    c = cluster.Cluster(config=cluster_config)
-    c.reset(sg_config_path=sg_config)
+    db = params_from_base_test_setup["db"]
+    cbl_db = params_from_base_test_setup["source_db"]
+    sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
 
     if sync_gateway_version < "2.0.0":
         pytest.skip('This test cannnot run with sg version below 2.0')
 
-    db = Database(base_url)
+    c = cluster.Cluster(config=cluster_config)
+    c.reset(sg_config_path=sg_config)
+
     channels = ["ABC"]
-    cbl_db = db.create(cbl_db_name)
     sg_client = MobileRestClient()
 
     db.create_bulk_docs(10, "cbl", db=cbl_db, channels=channels)
@@ -366,9 +385,9 @@ def test_replication_configuration_with_filtered_doc_ids(params_from_base_test_s
     num_of_filtered_ids = 5
     list_of_filtered_ids = random.sample(cbl_added_doc_ids, num_of_filtered_ids)
 
-    sg_added_doc_ids, cbl_added_doc_ids, cbl_db, session = setup_sg_cbl_docs(params_from_base_test_setup, sg_db=sg_db, base_url=base_url, db=db,
-                                                                             cbl_db_name=cbl_db_name, sg_url=sg_url, sg_admin_url=sg_admin_url, sg_blip_url=sg_blip_url, document_ids=list_of_filtered_ids,
-                                                                             replicator_authenticator_type="basic", channels=channels)
+    sg_added_doc_ids, cbl_added_doc_ids, session = setup_sg_cbl_docs(params_from_base_test_setup, sg_db=sg_db, base_url=base_url, db=db,
+                                                                     cbl_db=cbl_db, sg_url=sg_url, sg_admin_url=sg_admin_url, sg_blip_url=sg_blip_url, document_ids=list_of_filtered_ids,
+                                                                     replicator_authenticator_type="basic", channels=channels)
 
     sg_docs = sg_client.get_all_docs(url=sg_url, db=sg_db, auth=session)
     # Verify sg docs count
@@ -398,7 +417,6 @@ def test_replication_configuration_with_headers(params_from_base_test_setup):
 
     """
     sg_db = "db"
-    cbl_db_name = "cbl_db"
     num_of_docs = 10
 
     sg_url = params_from_base_test_setup["sg_url"]
@@ -408,6 +426,8 @@ def test_replication_configuration_with_headers(params_from_base_test_setup):
     cluster_config = params_from_base_test_setup["cluster_config"]
     sg_config = params_from_base_test_setup["sg_config"]
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
+    db = params_from_base_test_setup["db"]
+    cbl_db = params_from_base_test_setup["source_db"]
 
     if sync_gateway_version < "2.0.0":
         pytest.skip('This test cannnot run with sg version below 2.0')
@@ -416,10 +436,6 @@ def test_replication_configuration_with_headers(params_from_base_test_setup):
     c.reset(sg_config_path=sg_config)
 
     channels = ["ABC"]
-    db = Database(base_url)
-
-    # Create CBL database
-    cbl_db = db.create(cbl_db_name)
     sg_client = MobileRestClient()
 
     db.create_bulk_docs(num_of_docs, "cbll", db=cbl_db, channels=channels)
@@ -456,13 +472,11 @@ def test_replication_configuration_with_headers(params_from_base_test_setup):
         assert doc in sg_ids
 
 
-def setup_sg_cbl_docs(params_from_base_test_setup, sg_db, base_url, db, cbl_db_name, sg_url,
+def setup_sg_cbl_docs(params_from_base_test_setup, sg_db, base_url, db, cbl_db, sg_url,
                       sg_admin_url, sg_blip_url, replication_type=None, document_ids=None, channels=None,
                       replicator_authenticator_type=None, headers=None):
 
-    # Create CBL database
-    cbl_db = db.create(cbl_db_name)
-
+    
     sg_client = MobileRestClient()
 
     db.create_bulk_docs(5, "cbl", db=cbl_db, channels=channels)
@@ -483,14 +497,17 @@ def setup_sg_cbl_docs(params_from_base_test_setup, sg_db, base_url, db, cbl_db_n
         replicator_authenticator = authenticator.authentication(username="autotest", password="password", authentication_type="basic")
     else:
         replicator_authenticator = None
+    print "Authentication is done, now will be doing configuration"
     repl_config = replicator.configure(cbl_db, target_url=sg_blip_url, replication_type=replication_type, continuous=True,
                                        documentIDs=document_ids, channels=channels, replicator_authenticator=replicator_authenticator, headers=headers)
     repl = replicator.create(repl_config)
+    print "replicator created , now starting"
     replicator.start(repl)
+    print "replicator wait until replicator idle"
     replicator.wait_until_replicator_idle(repl)
     replicator.stop(repl)
 
-    return sg_added_ids, cbl_added_doc_ids, cbl_db, auth_session
+    return sg_added_ids, cbl_added_doc_ids, auth_session
 
 
 @pytest.mark.sanity
@@ -498,8 +515,8 @@ def setup_sg_cbl_docs(params_from_base_test_setup, sg_db, base_url, db, cbl_db_n
 @pytest.mark.noconflicts
 @pytest.mark.parametrize("num_of_docs", [
     (10),
-    # (100),
-    # (1000)
+    (100),
+    (1000)
 ])
 def test_CBL_tombstone_doc(params_from_base_test_setup, num_of_docs):
     """
@@ -512,15 +529,15 @@ def test_CBL_tombstone_doc(params_from_base_test_setup, num_of_docs):
 
     """
     sg_db = "db"
-    cbl_db_name = "cbl_db"
     sg_url = params_from_base_test_setup["sg_url"]
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
     cluster_config = params_from_base_test_setup["cluster_config"]
     sg_blip_url = params_from_base_test_setup["target_url"]
     base_url = params_from_base_test_setup["base_url"]
-    no_conflicts_enabled = params_from_base_test_setup["no_conflicts_enabled"]
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
     sg_config = params_from_base_test_setup["sg_config"]
+    db = params_from_base_test_setup["db"]
+    cbl_db = params_from_base_test_setup["source_db"]
 
     if sync_gateway_version < "2.0":
         pytest.skip('--no-conflicts is enabled and does not work with sg < 2.0 , so skipping the test')
@@ -529,7 +546,6 @@ def test_CBL_tombstone_doc(params_from_base_test_setup, num_of_docs):
     sg_client = MobileRestClient()
 
     # Modify sync-gateway config to use no-conflicts config
-    db = Database(base_url)
     c = cluster.Cluster(config=cluster_config)
     c.reset(sg_config_path=sg_config)
 
@@ -543,7 +559,6 @@ def test_CBL_tombstone_doc(params_from_base_test_setup, num_of_docs):
     assert len(sg_docs) == num_of_docs
 
     # 2. Pull replication to CBL
-    cbl_db = db.create(cbl_db_name)
     replicator = Replication(base_url)
     authenticator = Authenticator(base_url)
     replicator_authenticator = authenticator.authentication(session_id, cookie, authentication_type="session")
@@ -566,8 +581,6 @@ def test_CBL_tombstone_doc(params_from_base_test_setup, num_of_docs):
     cbl_doc_ids = db.getDocIds(cbl_db)
     assert doc_id not in cbl_doc_ids, "doc is expected to be deleted in CBL ,but not deleted"
 
-    db.deleteDB(cbl_db)
-    db.close(cbl_db)
 
 
 @pytest.mark.sanity
@@ -588,7 +601,6 @@ def test_CBL_for_purged_doc(params_from_base_test_setup, sg_conf_name, delete_do
 
     """
     sg_db = "db"
-    cbl_db_name = "cbl_db"
     sg_url = params_from_base_test_setup["sg_url"]
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
     sg_mode = params_from_base_test_setup["mode"]
@@ -598,6 +610,8 @@ def test_CBL_for_purged_doc(params_from_base_test_setup, sg_conf_name, delete_do
     no_conflicts_enabled = params_from_base_test_setup["no_conflicts_enabled"]
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
     sg_config = params_from_base_test_setup["sg_config"]
+    db = params_from_base_test_setup["db"]
+    cbl_db = params_from_base_test_setup["source_db"]
     num_of_docs = 10
 
     if sync_gateway_version < "2.0":
@@ -607,7 +621,6 @@ def test_CBL_for_purged_doc(params_from_base_test_setup, sg_conf_name, delete_do
     sg_client = MobileRestClient()
 
     # Modify sync-gateway config to use no-conflicts config
-    db = Database(base_url)
     if no_conflicts_enabled:
         sg_config = sync_gateway_config_path_for_mode(sg_conf_name, sg_mode)
     cl = cluster.Cluster(config=cluster_config)
@@ -629,7 +642,6 @@ def test_CBL_for_purged_doc(params_from_base_test_setup, sg_conf_name, delete_do
         doc_id = "exp_3"
 
     # 2. Pull replication to CBL
-    cbl_db = db.create(cbl_db_name)
     replicator = Replication(base_url)
     authenticator = Authenticator(base_url)
     replicator_authenticator = authenticator.authentication(session_id, cookie, authentication_type="session")
@@ -656,8 +668,6 @@ def test_CBL_for_purged_doc(params_from_base_test_setup, sg_conf_name, delete_do
     cbl_doc_ids = db.getDocIds(cbl_db)
     assert doc_id in cbl_doc_ids, "{} document in did not existed in CBL after replication".format(delete_doc_type)
 
-    db.deleteDB(cbl_db)
-    db.close(cbl_db)
 
 
 @pytest.mark.sanity
@@ -679,7 +689,6 @@ def test_replication_purge_in_CBL(params_from_base_test_setup, sg_conf_name, del
 
     """
     sg_db = "db"
-    cbl_db_name = "cbl_db"
     sg_url = params_from_base_test_setup["sg_url"]
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
     sg_mode = params_from_base_test_setup["mode"]
@@ -689,9 +698,10 @@ def test_replication_purge_in_CBL(params_from_base_test_setup, sg_conf_name, del
     no_conflicts_enabled = params_from_base_test_setup["no_conflicts_enabled"]
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
     sg_config = params_from_base_test_setup["sg_config"]
+    db = params_from_base_test_setup["db"]
+    cbl_db = params_from_base_test_setup["source_db"]
 
     num_of_docs = 10
-    db = Database(base_url)
     doc_obj = Document(base_url)
     exp_doc_id = "exp_doc"
 
@@ -709,7 +719,6 @@ def test_replication_purge_in_CBL(params_from_base_test_setup, sg_conf_name, del
     c.reset(sg_config_path=sg_config)
 
     # Create CBL database
-    cbl_db = db.create(cbl_db_name)
     db.create_bulk_docs(num_of_docs, "cbl", db=cbl_db, channels=channels)
 
     # Create an expiry doc
@@ -774,7 +783,6 @@ def test_replication_delete_in_CBL(params_from_base_test_setup, sg_conf_name):
 
     """
     sg_db = "db"
-    cbl_db_name = "cbl_db"
     sg_url = params_from_base_test_setup["sg_url"]
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
     sg_mode = params_from_base_test_setup["mode"]
@@ -784,9 +792,10 @@ def test_replication_delete_in_CBL(params_from_base_test_setup, sg_conf_name):
     no_conflicts_enabled = params_from_base_test_setup["no_conflicts_enabled"]
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
     sg_config = params_from_base_test_setup["sg_config"]
+    db = params_from_base_test_setup["db"]
+    cbl_db = params_from_base_test_setup["source_db"]
 
     num_of_docs = 10
-    db = Database(base_url)
     doc_obj = Document(base_url)
 
     if sync_gateway_version < "2.0":
@@ -803,7 +812,6 @@ def test_replication_delete_in_CBL(params_from_base_test_setup, sg_conf_name):
     c.reset(sg_config_path=sg_config)
 
     # Create CBL database
-    cbl_db = db.create(cbl_db_name)
     db.create_bulk_docs(num_of_docs, "cbl", db=cbl_db, channels=channels)
 
     # 2. push replication to SG.

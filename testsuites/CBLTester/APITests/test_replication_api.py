@@ -47,7 +47,8 @@ def test_replication_configuration_invalid_db(params_from_base_test_setup):
     db = Database(base_url)
 
     # Create CBL database
-    cbl_db = db.create(cbl_db_name)
+    db_config = db.configure()
+    cbl_db = db.create(cbl_db_name, db_config)
 
     # Reset cluster to ensure no data in system
     sg_config = sync_gateway_config_path_for_mode("listener_tests/listener_tests", sg_mode)
