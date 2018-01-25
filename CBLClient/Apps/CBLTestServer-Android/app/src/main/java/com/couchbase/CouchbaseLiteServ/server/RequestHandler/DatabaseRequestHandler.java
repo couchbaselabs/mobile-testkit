@@ -128,10 +128,9 @@ public class DatabaseRequestHandler {
         database.save(document);
    }
 
-    public void deleteDocument(Args args) throws CouchbaseLiteException {
+    public void delete(Args args) throws CouchbaseLiteException {
         Database database = args.get("database");
         Document document = args.get("document");
-
         database.delete(document);
    }
 

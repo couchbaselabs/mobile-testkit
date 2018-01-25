@@ -147,18 +147,15 @@ class TestDatabase(object):
         assert self.db_obj.getDocument(db, doc_id) == -1
 
         doc = self.doc_obj.create(doc_id=doc_id)
-        self.doc_obj.setString(doc, "key", "value")
-        doc_latest = self.db_obj.saveDocument(db, doc)
+        doc = self.doc_obj.setString(doc, "key", "value")
+        self.db_obj.saveDocument(db, doc)
         doc_res = self.db_obj.getDocument(db, doc_id)
         assert doc_res is not None
         assert self.doc_obj.getId(doc_res) == doc_id
         assert self.db_obj.getCount(db) == 1
-
-        doc_res = self.db_obj.getDocument(db, doc_id)
-        assert doc_res is not None
         assert self.doc_obj.getString(doc_res, "key") == "value"
 
-        self.db_obj.delete(document=doc_latest, database=db)
+        self.db_obj.delete(document=doc, database=db)
         doc_res = self.db_obj.getDocument(db, doc_id)
         assert self.db_obj.getCount(db) == 0
         doc_res = self.db_obj.getDocument(db, doc_id)

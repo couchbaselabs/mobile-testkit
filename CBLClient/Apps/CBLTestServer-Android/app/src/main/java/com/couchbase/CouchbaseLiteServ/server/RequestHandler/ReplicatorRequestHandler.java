@@ -28,6 +28,11 @@ public class ReplicatorRequestHandler {
         return replicator.getStatus().getActivityLevel();
     }
 
+    public int getActivityLevel(Args args) {
+        Replicator replicator = args.get("replicator");
+        return replicator.getStatus().getActivityLevel().getValue();
+    }
+
     public void addChangeListener(Args args){
         Replicator replicator = args.get("replicator");
         MyReplicatorListener changeListener = new MyReplicatorListener();

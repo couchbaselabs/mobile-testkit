@@ -24,7 +24,7 @@ class TestReplication(object):
         sg_admin_url = params_from_base_test_setup["sg_admin_url"]
         sg_mode = params_from_base_test_setup["mode"]
         cluster_config = params_from_base_test_setup["cluster_config"]
-        sg_blip_url = sg_admin_url.replace("http", "blip")
+        sg_blip_url = sg_admin_url.replace("http", "ws")
         sg_blip_url = "{}/db".format(sg_blip_url)
         channels = ["ABC"]
 
@@ -38,12 +38,13 @@ class TestReplication(object):
         self.sg_client.create_session(sg_admin_url, self.sg_db, "travel-sample")
 
         authenticator = self.base_auth_obj.create("travel-sample", "password")
-        replicator = self.repl_obj.configure(source_db=cbl_db,
+        config = self.repl_obj.configure(source_db=cbl_db,
                                              target_url=sg_blip_url,
                                              replication_type="PUSH_AND_PULL",
                                              continuous=True,
                                              channels=channels,
                                              replicator_authenticator=authenticator)
+        replicator = self.repl_obj.create(config)
         self.repl_obj.start(replicator)
         sleep(5)
         self.repl_obj.stop(replicator)
@@ -73,7 +74,7 @@ class TestReplication(object):
         sg_admin_url = params_from_base_test_setup["sg_admin_url"]
         sg_mode = params_from_base_test_setup["mode"]
         cluster_config = params_from_base_test_setup["cluster_config"]
-        sg_blip_url = sg_admin_url.replace("http", "blip")
+        sg_blip_url = sg_admin_url.replace("http", "ws")
         sg_blip_url = "{}/db".format(sg_blip_url)
         channels = ["ABC"]
         sg_doc_ids, cbl_db, _, _ = self.setup_sg_cbl_docs(cluster_config,
@@ -122,7 +123,7 @@ class TestReplication(object):
         sg_admin_url = params_from_base_test_setup["sg_admin_url"]
         sg_mode = params_from_base_test_setup["mode"]
         cluster_config = params_from_base_test_setup["cluster_config"]
-        sg_blip_url = sg_admin_url.replace("http", "blip")
+        sg_blip_url = sg_admin_url.replace("http", "ws")
         sg_blip_url = "{}/db".format(sg_blip_url)
         channels = ["ABC"]
 
@@ -168,7 +169,7 @@ class TestReplication(object):
         """
         sg_url = params_from_base_test_setup["sg_url"]
         sg_admin_url = params_from_base_test_setup["sg_admin_url"]
-        sg_blip_url = sg_url.replace("http", "blip")
+        sg_blip_url = sg_url.replace("http", "ws")
         sg_blip_url = "{}/db".format(sg_blip_url)
         channels = ["ABC"]
 
@@ -215,7 +216,7 @@ class TestReplication(object):
 
         sg_url = params_from_base_test_setup["sg_url"]
         sg_admin_url = params_from_base_test_setup["sg_admin_url"]
-        sg_blip_url = sg_url.replace("http", "blip")
+        sg_blip_url = sg_url.replace("http", "ws")
         sg_blip_url = "{}/db".format(sg_blip_url)
         channels = ["ABC"]
 
