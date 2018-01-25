@@ -28,6 +28,7 @@ public class MainActivity extends AppCompatActivity {
     private Replicator pullReplicator;
     private int numOfDocs;
     private long scenarioRunTimeMinutes;
+    private String syncGatewayURL;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -36,6 +37,9 @@ public class MainActivity extends AppCompatActivity {
         numOfDocs = getIntent().getIntExtra("numOfDocs",0);
         scenarioRunTimeMinutes = getIntent().getLongExtra("scenarioRunTimeMinutes",0);
         String syncGatewayURL = getIntent().getStringExtra("syncGatewayURL");
+        /*numOfDocs = 1000;
+        scenarioRunTimeMinutes = 5;
+        syncGatewayURL = "ws://192.168.0.107:4985/db/";*/
         if (syncGatewayURL == null || numOfDocs == 0 || scenarioRunTimeMinutes == 0) {
             Log.e("app", "Did not enter the values for one of them : syncGatewayURL, numOfDocs, scenarioRunTimeMinutes ");
             finish();
@@ -110,10 +114,7 @@ public class MainActivity extends AppCompatActivity {
         while (minutesCounted < scenarioRunTimeMinutes) {
             int n = rand.nextInt(numOfDocs);
             MutableDocument doc = database.getDocument("doc___" + n).toMutable();
-            System.out.println("updating doc: doc__" + n);
-            System.out.println("Before: " + doc.getString("name"));
             doc = doc.setString("name", "New_user_" + k);
-            System.out.println("After: " + doc.getString("name"));
             try {
                 database.save(doc);
             } catch (CouchbaseLiteException e) {
@@ -144,7 +145,6 @@ public class MainActivity extends AppCompatActivity {
         }
         Log.i("TEST", "after count -> %d", database.getCount());
         replicator.stop();
-        pullReplicator.stop();
         try {
             database.delete();
         } catch (CouchbaseLiteException e) {
