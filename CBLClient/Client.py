@@ -43,7 +43,10 @@ class Client(object):
                     log_info("Got response: {}".format(result))
                 return ValueSerializer.deserialize(result)
         except Exception as err:
-            raise Exception(str(err) + resp.content)
+            if resp.content:
+                raise Exception(str(err) + resp.content)
+            else:
+                raise Exception(str(err))
 
 
     def release(self, obj):

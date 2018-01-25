@@ -33,13 +33,9 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-    /*numOfDocs = getIntent().getIntExtra("numOfDocs",0);
-    scenarioRunTimeMinutes = getIntent().getLongExtra("scenarioRunTimeMinutes",0);
-    String syncGatewayURL = getIntent().getStringExtra("syncGatewayURL");
-*/
-        numOfDocs = 1000;
-        scenarioRunTimeMinutes = 10;
-        String syncGatewayURL = "ws://192.168.0.112:4985/db/";
+        numOfDocs = getIntent().getIntExtra("numOfDocs",0);
+        scenarioRunTimeMinutes = getIntent().getLongExtra("scenarioRunTimeMinutes",0);
+        String syncGatewayURL = getIntent().getStringExtra("syncGatewayURL");
         if (syncGatewayURL == null || numOfDocs == 0 || scenarioRunTimeMinutes == 0) {
             Log.e("app", "Did not enter the values for one of them : syncGatewayURL, numOfDocs, scenarioRunTimeMinutes ");
             finish();
@@ -70,23 +66,14 @@ public class MainActivity extends AppCompatActivity {
             e.printStackTrace();
         }
         ReplicatorConfiguration.Builder replBuilder = new ReplicatorConfiguration.Builder(database, new URLEndpoint(uri));
-        ReplicatorConfiguration replConfig = replBuilder.build();
         replBuilder.setContinuous(true);
         BasicAuthenticator authenticator = new BasicAuthenticator("travel-sample", "password");
         replBuilder.setAuthenticator(authenticator);
         replBuilder.setReplicatorType(ReplicatorConfiguration.ReplicatorType.PUSH_AND_PULL);
+        ReplicatorConfiguration replConfig = replBuilder.build();
 
         replicator = new Replicator(replConfig);
         replicator.start();
-/*
-        ReplicatorConfiguration.Builder pullBuilder = new ReplicatorConfiguration.Builder(replConfig);
-        ReplicatorConfiguration pullReplConfig = pullBuilder.build();
-        pullBuilder.setReplicatorType(ReplicatorConfiguration.ReplicatorType.PULL);
-        pullBuilder.setAuthenticator(authenticator);
-        pullBuilder.setContinuous(true);
-        pullReplicator = new Replicator(pullReplConfig);
-        pullReplicator.start();*/
-
     }
 
 
