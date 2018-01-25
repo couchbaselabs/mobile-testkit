@@ -4,9 +4,9 @@ function usage()
 {
     echo "./androidjava.sh"
     echo "\t-h --help"
-    echo "\t-t | --runtime-min=20"
-    echo "\t-m | --max-docs=3"
-    echo "\t-r | --replication-endpoint=blip://192.168.33.11:4984/db/"
+    echo "\t-t | --runtime-min=10"
+    echo "\t-m | --max-docs=3000"
+    echo "\t-r | --replication-endpoint=ws://192.168.0.112:4984/db/"
     echo ""
 }
 

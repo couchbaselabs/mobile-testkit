@@ -35,25 +35,21 @@ class Database(object):
             args.setMemoryPointer("fileProtection", fileProtection)
         return self._client.invokeMethod("databaseConfiguration_configure", args)
 
-    def create(self, name, config):
+    def create(self, name, config=None):
         args = Args()
         args.setString("name", name)
-        args.setMemoryPointer("config", config)
+        if config:
+            args.setMemoryPointer("config", config)
         return self._client.invokeMethod("database_create", args)
 
-    def delete(self, name=None, path=None, database=None, document=None):
+    def delete(self, database=None, document=None):
         args = Args()
-        if database:
+        if database and document:
             args.setMemoryPointer("database", database)
-            if document is not None:
-                args.setMemoryPointer("document", document)
-        elif name and path:
-            args.setString("name", name)
-            args.setString("path", path)
+            args.setMemoryPointer("document", document)
         else:
-            raise Exception("Either pass database and document or pass \
-            name and path to delete the document.")
-        return self._client.invokeMethod("database_deleteDocument", args)
+            raise Exception("Pass database and document to delete the document.")
+        return self._client.invokeMethod("database_delete", args)
 
     def purge(self, database, document):
         args = Args()
@@ -62,9 +58,16 @@ class Database(object):
             args.setMemoryPointer("document", document)
         return self._client.invokeMethod("database_purge", args)
 
-    def deleteDB(self, database):
+    def deleteDB(self, database, name=None, path=None):
         args = Args()
         args.setMemoryPointer("database", database)
+        if database:
+            args.setMemoryPointer("database", database)
+            if name is not None and path is not None:
+                args.setString("name", name)
+                args.setString("path", path)
+        else:
+            raise Exception("Should pass atleast database to delete")
         return self._client.invokeMethod("database_deleteDB", args)
 
     def close(self, database):
@@ -236,7 +239,6 @@ class Database(object):
         
         docs = self.getDocuments(database, doc_ids)
         for i in xrange(number_of_updates):
-            print "docs in update bulk docs updating in ", i
             for doc in docs:
                 doc_body = docs[doc]
                 try:
@@ -256,11 +258,9 @@ class Database(object):
         doc_obj = Document(self._baseUrl)
         for i in xrange(num_of_updates):
             for doc_id in doc_ids:
-                print("doc id invidually is ", doc_id)
                 doc_mem = self.getDocument(database, doc_id)
                 doc_mut = doc_obj.toMutable(doc_mem)
                 doc_body = doc_obj.toDictionary(doc_mut)
-                print("doc invidually is ", doc_body)
                 try:
                     doc_body["updates-cbl"]
                 except Exception:

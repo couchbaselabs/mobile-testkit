@@ -48,7 +48,7 @@ public class ReplicatorRequestHandler {
             let replication_obj: Replicator = args.get(name: "replicator")!
             return replication_obj.status.progress.completed
 
-        case "replicator_getTotoal":
+        case "replicator_getTotal":
             let replication_obj: Replicator = args.get(name: "replicator")!
             return replication_obj.status.progress.total
 

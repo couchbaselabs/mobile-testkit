@@ -87,9 +87,11 @@ def test_replication_configuration_valid_values(params_from_base_test_setup, num
     sg_docs = sg_client.get_all_docs(url=sg_url, db=sg_db, auth=session)
     sg_client.update_docs(url=sg_url, db=sg_db, docs=sg_docs["rows"], number_updates=number_of_updates, auth=session)
     replicator.wait_until_replicator_idle(repl)
+    total = replicator.getTotal(repl)
+    completed = replicator.getCompleted(repl)
     replicator.stop(repl)
+    assert total == completed, "total is not equal to completed"
     sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, include_docs=True)
-    log_info("sg doc full details >><<{}".format(sg_docs["rows"]))
 
     # Verify database doc counts
     cbl_doc_count = db.getCount(cbl_db)
@@ -867,7 +869,6 @@ def test_CBL_push_pull_with_sgAccel_down(params_from_base_test_setup, sg_conf_na
         https://github.com/couchbase/sync_gateway/issues/3165
     """
     sg_db = "db"
-    cbl_db_name = "cbl_db"
     sg_url = params_from_base_test_setup["sg_url"]
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
     sg_mode = params_from_base_test_setup["mode"]
@@ -877,6 +878,8 @@ def test_CBL_push_pull_with_sgAccel_down(params_from_base_test_setup, sg_conf_na
     no_conflicts_enabled = params_from_base_test_setup["no_conflicts_enabled"]
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
     sg_config = params_from_base_test_setup["sg_config"]
+    db = params_from_base_test_setup["db"]
+    cbl_db = params_from_base_test_setup["source_db"]
 
     username = "autotest"
     password = "password"
@@ -889,14 +892,12 @@ def test_CBL_push_pull_with_sgAccel_down(params_from_base_test_setup, sg_conf_na
 
     # 1. Have SG and SG accel up
     # Modify sync-gateway config to use no-conflicts config
-    db = Database(base_url)
     if no_conflicts_enabled:
         sg_config = sync_gateway_config_path_for_mode(sg_conf_name, sg_mode)
     c = cluster.Cluster(config=cluster_config)
     c.reset(sg_config_path=sg_config)
 
     # 2. Create docs in CBL.
-    cbl_db = db.create(cbl_db_name)
     db.create_bulk_docs(num_of_docs, "cbl", db=cbl_db, channels=channels)
 
     # 3. push replication to SG
@@ -926,7 +927,6 @@ def test_CBL_push_pull_with_sgAccel_down(params_from_base_test_setup, sg_conf_na
     db.update_bulk_docs(database=cbl_db, number_of_updates=number_of_updates)
     cbl_doc_ids = db.getDocIds(cbl_db)
     cbl_db_docs = db.getDocuments(cbl_db, cbl_doc_ids)
-    print "cbld docs after updated CBL and SG", cbl_db_docs
     for doc in cbl_doc_ids:
         assert cbl_db_docs[doc]["updates-cbl"] == number_of_updates, "updates-cbl did not get updated"
 

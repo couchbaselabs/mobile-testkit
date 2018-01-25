@@ -22,6 +22,24 @@ public class DatabaseConfigurationRequestHandler {
         }
     }
 
+    public DatabaseConfiguration configure(Args args) {
+        String directory = args.get("directory");
+        ConflictResolver conflictResolver = args.get("conflictResolver");
+        EncryptionKey encryptionKey = args.get("encryptionKey");
+        Context context = MainActivity.getAppContext();
+        Builder builder = new DatabaseConfiguration.Builder(context);
+        if (directory != null) {
+            builder.setDirectory(directory);
+        }
+        if (conflictResolver != null) {
+            builder.setConflictResolver(conflictResolver);
+        }
+        if (encryptionKey != null) {
+            builder.setEncryptionKey(encryptionKey);
+        }
+        return builder.build();
+    }
+
     public DatabaseConfiguration create(Args args) {
         Builder builder = args.get("databaseBuilder");
         return builder.build();

@@ -34,9 +34,10 @@ public class ReplicatorConfigurationRequestHandler {
                 throw RequestHandlerError.InvalidArgument("Incorrect configuration parameter provided")
             }
             
-        case "replicatorConfiguration_configureRemoteDbUrl":
+        case "replicatorConfiguration_configure":
             let source_db: Database? = args.get(name: "source_db")
             let target_url: String? = args.get(name: "target_url")
+            let targetDatabase: Database? = args.get(name: "target_db")
             let replication_type: String? = args.get(name: "replication_type")!
             let continuous: Bool? = args.get(name: "continuous")
             let channels: [String]? = args.get(name: "channels")
@@ -56,36 +57,42 @@ public class ReplicatorConfigurationRequestHandler {
                     replicatorType = .pushAndPull
                 }
             }
-            
+            let builder: ReplicatorConfiguration.Builder
             //let target_converted_url: URL? = URL(string: target_url!)
             if (source_db != nil && target_url != nil) {
                 let target = URLEndpoint(withURL: URL(string: target_url!)!)
                 
-                let builder = ReplicatorConfiguration.Builder(withDatabase: source_db!, target: target)
-                builder.setReplicatorType(replicatorType)
-                if continuous != nil {
-                    builder.setContinuous(continuous!)
-                } else {
-                    builder.setContinuous(false)
-                }
-                if headers != nil {
-                    builder.setHeaders(headers)
-                }
-                builder.setAuthenticator(authenticator)
-                if(conflictResolver != nil){
-                    builder.setConflictResolver(conflictResolver!)
-                }
-                if channels != nil {
-                    builder.setChannels(channels)
-                }
-                if documentIDs != nil {
-                    builder.setDocumentIDs(documentIDs)
-                }
-                return builder.build()
+                builder = ReplicatorConfiguration.Builder(withDatabase: source_db!, target: target)
+            }
+            else if (source_db != nil && targetDatabase != nil) {
+                let target = DatabaseEndpoint(withDatabase: targetDatabase!)
+                builder = ReplicatorConfiguration.Builder(withDatabase: source_db!, target: target)
             }
             else{
-                throw RequestHandlerError.InvalidArgument("No source db provided or target url provided")
+                    throw RequestHandlerError.InvalidArgument("No source db provided or target url provided")
             }
+                
+            builder.setReplicatorType(replicatorType)
+            if continuous != nil {
+                builder.setContinuous(continuous!)
+            } else {
+                builder.setContinuous(false)
+            }
+            if headers != nil {
+                builder.setHeaders(headers)
+            }
+            builder.setAuthenticator(authenticator)
+            if(conflictResolver != nil){
+                builder.setConflictResolver(conflictResolver!)
+            }
+            if channels != nil {
+                builder.setChannels(channels)
+            }
+            if documentIDs != nil {
+                builder.setDocumentIDs(documentIDs)
+            }
+            return builder.build()
+            
             
             
         case "replicatorConfiguration_configureLocalDb":

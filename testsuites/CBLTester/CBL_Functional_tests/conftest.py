@@ -371,6 +371,7 @@ def class_init(request, params_from_base_suite_setup):
     dict_obj = Dictionary(base_url)
     datatype = DataTypeInitiator(base_url)
     repl_obj = Replication(base_url)
+    # repl_config_obj = ReplicatorConfiguration(base_url)
     base_auth_obj = BasicAuthenticator(base_url)
     session_auth_obj = SessionAuthenticator(base_url)
     sg_client = MobileRestClient()

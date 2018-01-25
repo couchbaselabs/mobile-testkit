@@ -44,7 +44,6 @@ public class ReplicatorConfigurationRequestHandler {
 
     public List<String>  getChannels(Args args){
         ReplicatorConfiguration replicatorConfiguration = args.get("configuration");
-
         return replicatorConfiguration.getChannels();
     }
 

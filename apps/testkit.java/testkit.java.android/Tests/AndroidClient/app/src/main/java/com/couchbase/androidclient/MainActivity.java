@@ -3,12 +3,16 @@ package com.couchbase.androidclient;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 
+import com.couchbase.lite.BasicAuthenticator;
+import com.couchbase.lite.CouchbaseLiteException;
 import com.couchbase.lite.Database;
 import com.couchbase.lite.DatabaseChange;
 import com.couchbase.lite.DatabaseChangeListener;
 import com.couchbase.lite.DatabaseConfiguration;
 import com.couchbase.lite.Document;
-import com.couchbase.lite.Log;
+import com.couchbase.lite.MutableDocument;
+import com.couchbase.lite.URLEndpoint;
+import com.couchbase.lite.internal.support.Log;
 import com.couchbase.lite.Replicator;
 import com.couchbase.lite.ReplicatorConfiguration;
 
@@ -19,103 +23,146 @@ import java.util.TimerTask;
 
 public class MainActivity extends AppCompatActivity {
 
-  private Database database;
-  private Document doc;
-  private Replicator replicator;
-  private int numOfDocs;
-  private long scenarioRunTimeMinutes;
-  private String syncGatewayURL;
+    private Database database;
+    private Replicator replicator;
+    private Replicator pullReplicator;
+    private int numOfDocs;
+    private long scenarioRunTimeMinutes;
 
-  @Override
-  protected void onCreate(Bundle savedInstanceState) {
-    super.onCreate(savedInstanceState);
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
 
-    numOfDocs = getIntent().getIntExtra("numOfDocs",0);
+    /*numOfDocs = getIntent().getIntExtra("numOfDocs",0);
     scenarioRunTimeMinutes = getIntent().getLongExtra("scenarioRunTimeMinutes",0);
-    syncGatewayURL = getIntent().getStringExtra("syncGatewayURL");
-
-    if (syncGatewayURL == null || numOfDocs == 0 || scenarioRunTimeMinutes == 0) {
-      Log.e("app", "Did not enter the values for one of them : syncGatewayURL, numOfDocs, scenarioRunTimeMinutes ");
-      finish();
-      return;
-    }
-
-    setContentView(R.layout.activity_main);
-    DatabaseConfiguration config = new DatabaseConfiguration(this);
-
-    Log.i("state", "Creating database");
-    database = new Database("my-database", config);
-    database.addChangeListener(new DatabaseChangeListener() {
-      @Override
-      public void changed(DatabaseChange change) {
-        Log.i("Database change listener", "%s", change);
-      }
-    });
-
-    Log.i("state", "Replicating data");
-    URI uri = null;
-    try {
-      uri = new URI(syncGatewayURL);
-    } catch (URISyntaxException e) {
-      e.printStackTrace();
-    }
-    ReplicatorConfiguration replConfig = new ReplicatorConfiguration(database, uri);
-    replConfig.setContinuous(true);
-
-    replicator = new Replicator(replConfig);
-    replicator.start();
-
-  }
-
-
-  @Override
-  protected void onStart() {
-    int k = 0;
-    long startTime, stopTime, minutesCounted = 0;
-    super.onStart();
-
-    //Create docs in batch
-    database.inBatch(new TimerTask() {
-      @Override
-      public void run() {
-
-        for (int i = 0; i < numOfDocs; i++) {
-          doc = new Document("doc___" + i);
-          doc.set("type", "user");
-          doc.set("name", "user_" + i);
-          database.save(doc);
+    String syncGatewayURL = getIntent().getStringExtra("syncGatewayURL");
+*/
+        numOfDocs = 1000;
+        scenarioRunTimeMinutes = 10;
+        String syncGatewayURL = "ws://192.168.0.112:4985/db/";
+        if (syncGatewayURL == null || numOfDocs == 0 || scenarioRunTimeMinutes == 0) {
+            Log.e("app", "Did not enter the values for one of them : syncGatewayURL, numOfDocs, scenarioRunTimeMinutes ");
+            finish();
+            return;
         }
-      }
-    });
-    startTime = System.currentTimeMillis();
 
-    //update random doc
-    Random rand = new Random();
-    while (minutesCounted < scenarioRunTimeMinutes) {
-      int n = rand.nextInt(numOfDocs);
-      doc = database.getDocument("doc___" + n);
-      doc.set("name", "user_" + k);
-      database.save(doc);
-      try {
-        Thread.sleep(1000);
-      } catch (InterruptedException e) {
-        Log.e("app", e.getMessage());
-      }
-      stopTime = System.currentTimeMillis();
-      minutesCounted = ((stopTime - startTime) / 60000);
-      k++;
+        setContentView(R.layout.activity_main);
+        DatabaseConfiguration config = new DatabaseConfiguration.Builder(this).build();
+
+        Log.i("state", "Creating database");
+        try {
+            database = new Database("my-database", config);
+        } catch (CouchbaseLiteException e) {
+            e.printStackTrace();
+        }
+        database.addChangeListener(new DatabaseChangeListener() {
+            @Override
+            public void changed(DatabaseChange change) {
+                Log.i("Database change listener", "%s", change);
+            }
+        });
+
+        Log.i("state", "Replicating data");
+        URI uri = null;
+        try {
+            uri = new URI(syncGatewayURL);
+        } catch (URISyntaxException e) {
+            e.printStackTrace();
+        }
+        ReplicatorConfiguration.Builder replBuilder = new ReplicatorConfiguration.Builder(database, new URLEndpoint(uri));
+        ReplicatorConfiguration replConfig = replBuilder.build();
+        replBuilder.setContinuous(true);
+        BasicAuthenticator authenticator = new BasicAuthenticator("travel-sample", "password");
+        replBuilder.setAuthenticator(authenticator);
+        replBuilder.setReplicatorType(ReplicatorConfiguration.ReplicatorType.PUSH_AND_PULL);
+
+        replicator = new Replicator(replConfig);
+        replicator.start();
+/*
+        ReplicatorConfiguration.Builder pullBuilder = new ReplicatorConfiguration.Builder(replConfig);
+        ReplicatorConfiguration pullReplConfig = pullBuilder.build();
+        pullBuilder.setReplicatorType(ReplicatorConfiguration.ReplicatorType.PULL);
+        pullBuilder.setAuthenticator(authenticator);
+        pullBuilder.setContinuous(true);
+        pullReplicator = new Replicator(pullReplConfig);
+        pullReplicator.start();*/
+
     }
 
-    //Deleting docs
-    Log.i("TEST", "before count -> %d", database.getCount());
-    Log.i("app", "Deleting docs");
-    for (int i = 0; i < numOfDocs - 2; i++) {
-      doc = database.getDocument("doc___" + i);
-      database.delete(doc);
-    }
-    Log.i("TEST", "after count -> %d", database.getCount());
-    replicator.stop();
-    //database.delete();
 
-  }
+    @Override
+    protected void onStart() {
+        int k = 0;
+        long startTime, stopTime, minutesCounted = 0;
+        super.onStart();
+
+        //Create docs in batch
+        try {
+            database.inBatch(new TimerTask() {
+                @Override
+                public void run() {
+                    for (int i = 0; i < numOfDocs; i++) {
+                        MutableDocument doc = new MutableDocument("doc___" + i);
+                        doc.setString("type", "user");
+                        doc.setString("name", "user_" + i);
+                        try {
+                            database.save(doc);
+                        } catch (CouchbaseLiteException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }
+            });
+        } catch (CouchbaseLiteException e) {
+            e.printStackTrace();
+        }
+        startTime = System.currentTimeMillis();
+
+        //update random doc
+        Random rand = new Random();
+        while (minutesCounted < scenarioRunTimeMinutes) {
+            int n = rand.nextInt(numOfDocs);
+            MutableDocument doc = database.getDocument("doc___" + n).toMutable();
+            System.out.println("updating doc: doc__" + n);
+            System.out.println("Before: " + doc.getString("name"));
+            doc = doc.setString("name", "New_user_" + k);
+            System.out.println("After: " + doc.getString("name"));
+            try {
+                database.save(doc);
+            } catch (CouchbaseLiteException e) {
+                e.printStackTrace();
+            }
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                Log.e("app", e.getMessage());
+            }
+            stopTime = System.currentTimeMillis();
+            minutesCounted = ((stopTime - startTime) / 60000);
+            k++;
+        }
+        System.out.println("no. of doc updated:" + k);
+
+
+        //Deleting docs
+        Log.i("TEST", "before count -> %d", database.getCount());
+        Log.i("app", "Deleting docs");
+        for (int i = 0; i < numOfDocs - 2; i++) {
+            Document doc = database.getDocument("doc___" + i);
+            try {
+                database.delete(doc);
+            } catch (CouchbaseLiteException e) {
+                e.printStackTrace();
+            }
+        }
+        Log.i("TEST", "after count -> %d", database.getCount());
+        replicator.stop();
+        pullReplicator.stop();
+        try {
+            database.delete();
+        } catch (CouchbaseLiteException e) {
+            e.printStackTrace();
+        }
+
+    }
 }

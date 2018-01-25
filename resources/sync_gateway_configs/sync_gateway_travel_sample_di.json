@@ -17,18 +17,15 @@
     "databases":{
         "db":{
             {{ xattrs }}
-            "unsupported": {
-                "replicator_2": true
-            },
             "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
-            "bucket":"data-bucket",
-            "username":"data-bucket",
+            "bucket":"travel-sample",
+            "username":"travel-sample",
             "password": "password",
             "channel_index":{
                 "num_shards":16,
                 "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
-                "bucket":"travel-sample",
-                "username": "travel-sample",
+                "bucket":"index-bucket",
+                "username": "index-bucket",
                 "password": "password",
                 "writer":{{ is_index_writer }}
             }

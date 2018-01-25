@@ -21,9 +21,7 @@
             "bucket":"data-bucket",
             "username":"data-bucket",
             "password": "password",
-            "unsupported": { 
-                "allow_conflicts": false
-             },
+            "allow_conflicts": false,
             "revs_limit": 5,
             "channel_index":{
                 "num_shards":16,

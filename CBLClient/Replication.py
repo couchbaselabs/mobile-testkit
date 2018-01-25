@@ -39,12 +39,11 @@ class Replication(object):
         args.setString("replication_type", replication_type)
         if headers is not None:
             args.setDictionary("headers", headers)
-        if target_db is None:
+        if target_url is not None:
             args.setString("target_url", target_url)
-            return self._client.invokeMethod("replicatorConfiguration_configureRemoteDbUrl", args)
-        else:
+        if target_db is not None:
             args.setMemoryPointer("target_db", target_db)
-            return self._client.invokeMethod("replicatorConfiguration_configureLocalDb", args)
+        return self._client.invokeMethod("replicatorConfiguration_configure", args)
 
     """def create(self, source_db, target_db=None, target_url=None):
         args = Args()
