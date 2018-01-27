@@ -163,7 +163,7 @@ public class DatabaseRequestHandler {
                     let data: Dictionary<String, Any> = doc.value
                     let updated_doc = database.document(withID: id)!.toMutable()
                     updated_doc.setData(data)
-                    let savedDoc = try! database.saveDocument(updated_doc)
+                    let savedDoc = try database.saveDocument(updated_doc)
                     print("saved document.... \(savedDoc.keys)")
                 }
             }

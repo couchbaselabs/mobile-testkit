@@ -278,6 +278,7 @@ def params_from_base_suite_setup(request):
     if create_db_per_suite:
         # Delete CBL database
         log_info("Deleting the database {} at the suite teardown".format(create_db_per_suite))
+        time.sleep(10)
         db.deleteDB(source_db)
 
     # Flush all the memory contents on the server app

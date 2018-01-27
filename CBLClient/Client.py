@@ -29,7 +29,7 @@ class Client(object):
             # Create connection to method endpoint.
             headers = {"Content-Type": "application/json"}
             self.session.headers = headers
-            log_info("body is {}".format(body))
+            # log_info("body is {}".format(body))
             # log_info("URL is {}".format(url))
             resp = self.session.post(url, data=json.dumps(body))
             resp.raise_for_status()
@@ -44,10 +44,13 @@ class Client(object):
                 return ValueSerializer.deserialize(result)
         except Exception as err:
             if resp.content:
-                raise Exception(str(err) + resp.content)
+                print("resp text is {}", resp.json())
+                raise Exception("Error thrown from server {}-{}", format(str(err), resp.content))
+                return err, resp.content
             else:
-                raise Exception(str(err))
-
+                raise Exception("Error thrown from server {}", format(str(err)))
+                return err
+            # raise Exception(str(err) + resp.content)
 
     def release(self, obj):
         args = Args()

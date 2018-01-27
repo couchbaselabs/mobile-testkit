@@ -109,7 +109,9 @@ public class Server {
                 var body: Any? = nil
                 if "release" == method {
                     self.memory.remove(address: rawArgs["object"] as! String)
-                } else {
+                } else if "flushMemory" == method {
+                    self.memory.flushMemory()
+                } else{
                     var result: Any? = nil
                     if method.hasPrefix("query") {
                         result = try self.queryRequestHandler.handleRequest(method: method, args: args)
