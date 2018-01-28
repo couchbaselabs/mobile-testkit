@@ -271,12 +271,12 @@ class Replication(object):
         max_times = 10
         count = 0
         # Sleep until replicator completely processed
-        while self.getActivitylevel(repl) != 3 and count < max_times:
+        while self.getActivitylevel(repl) != "idle" and count < max_times:
             print "sleeping... actvity level is", self.getActivitylevel(repl)
             time.sleep(0.5)
-            if self.getActivitylevel(repl) == 3 or self.getActivitylevel(repl) == 1 or self.getActivitylevel(repl) == 2:
+            if self.getActivitylevel(repl) == "idle" or self.getActivitylevel(repl) == "offline" or self.getActivitylevel(repl) == "connecting":
                 count += 1
-            if self.getActivitylevel(repl) == 0:
+            if self.getActivitylevel(repl) == "stopped":
                 break
             err = self.getError(repl)
             # TODO remove the condition of 'connection reset by peer'

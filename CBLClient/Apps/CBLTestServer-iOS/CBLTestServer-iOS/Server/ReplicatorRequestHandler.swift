@@ -42,7 +42,7 @@ public class ReplicatorRequestHandler {
 
         case "replicator_getActivityLevel":
             let replication_obj: Replicator = args.get(name: "replicator")!
-            return replication_obj.status.activity.hashValue
+            return String(describing: replication_obj.status.activity)
 
         case "replicator_getCompleted":
             let replication_obj: Replicator = args.get(name: "replicator")!
