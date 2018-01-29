@@ -252,4 +252,6 @@ public class QueryRequestHandler {
         }
         return resultArray;
     }
+
+
 }

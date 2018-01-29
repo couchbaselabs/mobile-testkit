@@ -72,6 +72,7 @@ public class ReplicatorConfigurationRequestHandler {
             builder.setHeaders(headers);
         }
         builder.setAuthenticator(authenticator);
+        builder.setReplicatorType(replType);
         if (conflictResolver != null) {
             builder.setConflictResolver(conflictResolver);
         }

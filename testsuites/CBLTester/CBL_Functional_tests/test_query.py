@@ -42,7 +42,7 @@ def test_get_doc_ids(params_from_base_test_setup):
 
     assert len(ids_from_cbl) == len(doc_ids_from_n1ql)
     log_info("Found {} doc ids".format(len(ids_from_cbl)))
-#     assert ids_from_cbl == doc_ids_from_n1ql
+    assert sorted(ids_from_cbl) == sorted(doc_ids_from_n1ql)
     log_info("Doc contents match between CBL and n1ql")
 
 
@@ -93,7 +93,7 @@ def test_doc_get(params_from_base_test_setup, doc_id):
 
     assert len(docs_from_cbl) == len(docs_from_n1ql)
     log_info("Found {} docs".format(len(docs_from_cbl)))
-#     assert docs_from_cbl == docs_from_n1ql
+    assert docs_from_cbl == docs_from_n1ql
     log_info("Doc contents match between CBL and n1ql")
 
 
@@ -178,7 +178,7 @@ def test_multiple_selects(params_from_base_test_setup, select_property1, select_
 
     assert len(docs_from_cbl) == len(docs_from_n1ql)
     log_info("Found {} docs".format(len(docs_from_cbl)))
-#     assert docs_from_cbl == docs_from_n1ql
+    assert docs_from_cbl == docs_from_n1ql
     log_info("Doc contents match")
 
 
@@ -228,7 +228,7 @@ def test_query_where_and_or(params_from_base_test_setup, whr_key1, whr_val1, whr
 
     assert len(docs_from_cbl) == len(docs_from_n1ql)
     log_info("Found {} docs".format(len(docs_from_cbl)))
-#     assert sorted(docs_from_cbl) == sorted(docs_from_n1ql)
+    assert sorted(docs_from_cbl) == sorted(docs_from_n1ql)
     log_info("Doc contents match")
 
 
@@ -284,7 +284,7 @@ def test_query_pattern_like(params_from_base_test_setup, whr_key, whr_val, selec
 
     assert len(docs_from_cbl) == len(docs_from_n1ql)
     log_info("Found {} docs".format(len(docs_from_cbl)))
-#     assert sorted(docs_from_cbl) == sorted(docs_from_n1ql)
+    assert sorted(docs_from_cbl) == sorted(docs_from_n1ql)
     log_info("Doc contents match")
 
 
@@ -341,7 +341,7 @@ def test_query_pattern_regex(params_from_base_test_setup, whr_key, whr_val, sele
 
     assert len(docs_from_cbl) == len(docs_from_n1ql)
     log_info("Found {} docs".format(len(docs_from_cbl)))
-#     assert sorted(docs_from_cbl) == sorted(docs_from_n1ql)
+    assert sorted(docs_from_cbl) == sorted(docs_from_n1ql)
     log_info("Doc contents match")
 
 
@@ -390,7 +390,7 @@ def test_query_isNullOrMissing(params_from_base_test_setup, select_property1, li
 
     assert len(docs_from_cbl) == len(docs_from_n1ql)
     log_info("Found {} docs".format(len(docs_from_cbl)))
-#     assert sorted(docs_from_cbl) == sorted(docs_from_n1ql)
+    assert sorted(docs_from_cbl) == sorted(docs_from_n1ql)
     log_info("Doc contents match")
 
 
@@ -441,7 +441,7 @@ def test_query_ordering(params_from_base_test_setup, select_property1, whr_key, 
 
     assert len(docs_from_cbl) == len(docs_from_n1ql)
     log_info("Found {} docs".format(len(docs_from_cbl)))
-#     assert sorted(docs_from_cbl) == sorted(docs_from_n1ql)
+    assert sorted(docs_from_cbl) == sorted(docs_from_n1ql)
     log_info("Doc contents match")
 
 
@@ -496,7 +496,7 @@ def test_query_substring(params_from_base_test_setup, select_property1, select_p
 
     assert len(docs_from_cbl) == len(docs_from_n1ql)
     log_info("Found {} docs".format(len(docs_from_cbl)))
-#     assert sorted(docs_from_cbl) == sorted(docs_from_n1ql)
+    assert sorted(docs_from_cbl) == sorted(docs_from_n1ql)
     log_info("Doc contents match")
 
 
@@ -550,5 +550,5 @@ def test_query_collation(params_from_base_test_setup, select_property1, whr_key1
 
     assert len(docs_from_cbl) == len(docs_from_n1ql)
     log_info("Found {} docs".format(len(docs_from_cbl)))
-#     assert sorted(docs_from_cbl) == sorted(docs_from_n1ql)
+    assert sorted(docs_from_cbl) == sorted(docs_from_n1ql)
     log_info("Doc contents match")

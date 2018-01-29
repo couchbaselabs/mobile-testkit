@@ -4,7 +4,7 @@ import com.couchbase.CouchbaseLiteServ.server.Args;
 import com.couchbase.lite.Collation;
 
 
-public class CollationRequestHandler {
+public class CollatorRequestHandler {
 
     public Collation.ASCII ascii(Args args){
         Boolean ignoreCase = args.get("ignoreCase");

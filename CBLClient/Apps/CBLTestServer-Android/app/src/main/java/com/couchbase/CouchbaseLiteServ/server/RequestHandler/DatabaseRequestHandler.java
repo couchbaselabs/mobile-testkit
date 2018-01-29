@@ -95,6 +95,37 @@ public class DatabaseRequestHandler {
         return documents;
     }
 
+    public void updateDocument(Args args) throws CouchbaseLiteException {
+        Database database = args.get("database");
+        MutableDocument document = args.get("document");
+        String id = document.getId();
+        Map<String, Object> data = (Map<String, Object>) document.getValue(id);
+        MutableDocument updateDoc = database.getDocument(id).toMutable();
+        updateDoc.setData(data);
+        database.save(updateDoc);
+    }
+
+    public void updateDocuments(Args args) throws CouchbaseLiteException {
+        final Database database = args.get("database");
+        final Map<String, Map<String, Object>> documents = args.get("documents");
+        database.inBatch(new Runnable() {
+            @Override
+            public void run() {
+                for (Map.Entry<String, Map<String, Object>> entry : documents.entrySet()) {
+                    String id = entry.getKey();
+                    Map<String, Object> data = entry.getValue();
+                    MutableDocument updatedDoc = database.getDocument(id).toMutable();
+                    updatedDoc.setData(data);
+                    try {
+                        database.save(updatedDoc);
+                    } catch (CouchbaseLiteException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        });
+    }
+
     public void purge(Args args) throws CouchbaseLiteException {
         Database database = args.get("database");
         MutableDocument document = args.get("document");
@@ -167,7 +198,7 @@ public class DatabaseRequestHandler {
         ResultSet results = query.execute();
         for (Result row : results){
 
-            result.add(row.getString("_id"));
+            result.add(row.getString("id"));
         }
         Collections.sort(result);
         return result;

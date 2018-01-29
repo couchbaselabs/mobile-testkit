@@ -29,6 +29,7 @@ class Document(object):
             return self._client.invokeMethod("document_create", args)
         return self._client.invokeMethod("document_create", args)
 
+    # Why this method is in Document class
     def delete(self, database, document):
         args = Args()
         args.setMemoryPointer("database", database)
@@ -53,11 +54,11 @@ class Document(object):
         args.setString("value", value)
         return self._client.invokeMethod("document_setString", args)
 
-    def set(self, document, dictionary):
-        args = Args()
-        args.setMemoryPointer("document", document)
-        args.setDictionary("dictionary", dictionary)
-        return self._client.invokeMethod("document_set", args)
+#     def set(self, document, dictionary):
+#         args = Args()
+#         args.setMemoryPointer("document", document)
+#         args.setDictionary("dictionary", dictionary)
+#         return self._client.invokeMethod("document_set", args)
 
     def getKeys(self, document):
         args = Args()
@@ -75,11 +76,11 @@ class Document(object):
         args.setMemoryPointer("document", document)
         return self._client.invokeMethod("document_count", args)
 
-    def get(self, document, key):
-        args = Args()
-        args.setMemoryPointer("document", document)
-        args.setMemoryPointer("key", key)
-        return self._client.invokeMethod("document_get", args)
+#     def get(self, document, key):
+#         args = Args()
+#         args.setMemoryPointer("document", document)
+#         args.setMemoryPointer("key", key)
+#         return self._client.invokeMethod("document_get", args)
 
     def getArray(self, document, key):
         args = Args()
@@ -185,18 +186,18 @@ class Document(object):
         args.setLong("value", value)
         return self._client.invokeMethod("document_setLong", args)
 
-    def getObject(self, document, key):
-        args = Args()
-        args.setMemoryPointer("document", document)
-        args.setString("key", key)
-        return self._client.invokeMethod("document_getObject", args)
+#     def getObject(self, document, key):
+#         args = Args()
+#         args.setMemoryPointer("document", document)
+#         args.setString("key", key)
+#         return self._client.invokeMethod("document_getObject", args)
 
-    def setObject(self, document, key, value):
-        args = Args()
-        args.setMemoryPointer("document", document)
-        args.setString("key", key)
-        args.setMemoryPointer("value", value)
-        return self._client.invokeMethod("document_setObject", args)
+#     def setObject(self, document, key, value):
+#         args = Args()
+#         args.setMemoryPointer("document", document)
+#         args.setString("key", key)
+#         args.setMemoryPointer("value", value)
+#         return self._client.invokeMethod("document_setObject", args)
 
     def getNumber(self, document, key):
         args = Args()
@@ -240,10 +241,10 @@ class Document(object):
         args.setMemoryPointer("document", document)
         return self._client.invokeMethod("document_toMutable", args)
 
-    def toDictionary(self, document):
-        args = Args()
-        args.setMemoryPointer("document", document)
-        return self._client.invokeMethod("document_toDictionary", args)
+#     def toDictionary(self, document):
+#         args = Args()
+#         args.setMemoryPointer("document", document)
+#         return self._client.invokeMethod("document_toDictionary", args)
 
     def setData(self, document, data):
         args = Args()

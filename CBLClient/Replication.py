@@ -57,10 +57,11 @@ class Replication(object):
         return self._client.invokeMethod("replicatorConfiguration_create",
                                          args) """
 
-    def copy(self, configuration):
-        args = Args()
-        args.setMemoryPointer("configuration", configuration)
-        return self._client.invokeMethod("replicatorConfiguration_copy", args)
+#     Protected method now
+#     def copy(self, configuration):
+#         args = Args()
+#         args.setMemoryPointer("configuration", configuration)
+#         return self._client.invokeMethod("replicatorConfiguration_copy", args)
 
     def getAuthenticator(self, configuration):
         args = Args()
@@ -195,15 +196,16 @@ class Replication(object):
         args.setMemoryPointer("replicator", replicator)
         return self._client.invokeMethod("replicator_toString", args)
 
-    def networkReachable(self, replicator):
-        args = Args()
-        args.setMemoryPointer("replicator", replicator)
-        return self._client.invokeMethod("replicator_networkReachable", args)
-
-    def networkUnreachable(self, replicator):
-        args = Args()
-        args.setMemoryPointer("replicator", replicator)
-        return self._client.invokeMethod("replicator_networkUnreachable", args)
+#     Not available any more
+#     def networkReachable(self, replicator):
+#         args = Args()
+#         args.setMemoryPointer("replicator", replicator)
+#         return self._client.invokeMethod("replicator_networkReachable", args)
+# 
+#     def networkUnreachable(self, replicator):
+#         args = Args()
+#         args.setMemoryPointer("replicator", replicator)
+#         return self._client.invokeMethod("replicator_networkUnreachable", args)
 
     def start(self, replicator):
         args = Args()
@@ -238,9 +240,9 @@ class Replication(object):
     def getError(self, replicator):
         args = Args()
         args.setMemoryPointer("replicator", replicator)
-        error = self._client.invokeMethod("replicator_getError", args)
-        if error.__contains__("@"):
-            error = None
+#         error = self._client.invokeMethod("replicator_getError", args)
+#         if error.__contains__("@"):
+#             error = None
         return self._client.invokeMethod("replicator_getError", args)
 
     def getChangesCount(self, change_listener):
@@ -281,7 +283,8 @@ class Replication(object):
             err = self.getError(repl)
             # TODO remove the condition of 'connection reset by peer'
             # once https://github.com/couchbase/sync_gateway/issues/3249 is fixed
-            if err is not None and err != 'nil' and not err.__contains__("Connection reset by peer"):
+            if err != -1: #-1 means Null or None, so if any error, just raise the exception
+#             if err is not None and err != 'nil' and not err.__contains__("Connection reset by peer"):
                 raise Exception("Error while replicating", err)
 
     def create_session_configure_replicate(self, baseUrl, sg_admin_url, sg_db, username, password,

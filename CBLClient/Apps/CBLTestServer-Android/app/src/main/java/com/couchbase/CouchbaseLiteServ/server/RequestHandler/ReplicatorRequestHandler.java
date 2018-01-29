@@ -1,6 +1,7 @@
 package com.couchbase.CouchbaseLiteServ.server.RequestHandler;
 
 import com.couchbase.CouchbaseLiteServ.server.Args;
+import com.couchbase.lite.CouchbaseLiteException;
 import com.couchbase.lite.Replicator;
 import com.couchbase.lite.ReplicatorChange;
 import com.couchbase.lite.ReplicatorChangeListener;
@@ -23,14 +24,14 @@ public class ReplicatorRequestHandler {
         return replicator.getConfig();
     }
 
-    public Replicator.ActivityLevel getStatus(Args args){
+    public String status(Args args){
         Replicator replicator = args.get("replicator");
-        return replicator.getStatus().getActivityLevel();
+        return replicator.getStatus().toString();
     }
 
-    public int getActivityLevel(Args args) {
+    public String getActivityLevel(Args args) {
         Replicator replicator = args.get("replicator");
-        return replicator.getStatus().getActivityLevel().getValue();
+        return replicator.getStatus().getActivityLevel().toString().toLowerCase();
     }
 
     public void addChangeListener(Args args){
@@ -69,11 +70,45 @@ public class ReplicatorRequestHandler {
         ReplicatorChange change = args.get("change");
         return change.getStatus();
     }
+
+    public CouchbaseLiteException replicator_getError(Args args) {
+        Replicator replicator = args.get("replicator");
+        return replicator.getStatus().getError();
+    }
+
+    public ReplicatorConfiguration config(Args args) {
+        Replicator replicator = args.get("replicator");
+        return replicator.getConfig();
+    }
+
+    public long getCompleted(Args args) {
+        Replicator replicator = args.get("replicator");
+        return replicator.getStatus().getProgress().getCompleted();
+    }
+
+    public long getTotal(Args args) {
+        Replicator replicator = args.get("replicator");
+        return replicator.getStatus().getProgress().getTotal();
+    }
+
+    public String getError(Args args) {
+        Replicator replicator = args.get("replicator");
+        CouchbaseLiteException error = replicator.getStatus().getError();
+        if (error != null) {
+            return error.toString();
+        }
+        return null;
+    }
+
+    public Boolean isContinous(Args args) {
+        ReplicatorConfiguration config = args.get("config");
+        return config.isContinuous();
+    }
+
 }
 
 class MyReplicatorListener implements ReplicatorChangeListener{
     private List<ReplicatorChange> changes;
-
     public List<ReplicatorChange> getChanges(){
         return changes;
     }

@@ -44,13 +44,9 @@ class Client(object):
                 return ValueSerializer.deserialize(result)
         except Exception as err:
             if resp.content:
-                print("resp text is {}", resp.json())
-                raise Exception("Error thrown from server {}-{}", format(str(err), resp.content))
-                return err, resp.content
+                raise Exception(str(err) + resp.content)
             else:
-                raise Exception("Error thrown from server {}", format(str(err)))
-                return err
-            # raise Exception(str(err) + resp.content)
+                raise Exception(str(err))
 
     def release(self, obj):
         args = Args()

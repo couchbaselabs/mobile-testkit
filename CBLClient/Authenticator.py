@@ -53,11 +53,11 @@ class Authenticator(object):
         return self._client.invokeMethod("sessionAuthenticator_getCookieName",
                                          args)
 
-    def sessionAuthenticator_getExpires(self, session):
-        args = Args()
-        args.setMemoryPointer("session", session)
-        return self._client.invokeMethod("sessionAuthenticator_getExpires",
-                                         args)
+#     def sessionAuthenticator_getExpires(self, session):
+#         args = Args()
+#         args.setMemoryPointer("session", session)
+#         return self._client.invokeMethod("sessionAuthenticator_getExpires",
+#                                          args)
 
     def authentication(self, session_id=None, cookie=None, username=None, password=None, authentication_type="basic"):
         args = Args()

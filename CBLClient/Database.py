@@ -44,11 +44,8 @@ class Database(object):
 
     def delete(self, database=None, document=None):
         args = Args()
-        if database and document:
-            args.setMemoryPointer("database", database)
-            args.setMemoryPointer("document", document)
-        else:
-            raise Exception("Pass database and document to delete the document.")
+        args.setMemoryPointer("database", database)
+        args.setMemoryPointer("document", document)
         return self._client.invokeMethod("database_delete", args)
 
     def purge(self, database, document):
@@ -128,11 +125,11 @@ class Database(object):
         args.setDictionary("document", document)
         return self._client.invokeMethod("database_updateDocument", args)
 
-    def contains(self, database, doc_id):
-        args = Args()
-        args.setMemoryPointer("database", database)
-        args.setString("id", doc_id)
-        return self._client.invokeMethod("database_contains", args)
+#     def contains(self, database, doc_id):
+#         args = Args()
+#         args.setMemoryPointer("database", database)
+#         args.setString("id", doc_id)
+#         return self._client.invokeMethod("database_contains", args)
 
     def getCount(self, database):
         args = Args()
@@ -187,11 +184,12 @@ class Database(object):
         args.setString("name", name)
         return self._client.invokeMethod("database_deleteDBbyName", args)
 
-    def create_value_index(self, database, prop):
-        args = Args()
-        args.setMemoryPointer("database", database)
-        args.setString("property", prop)
-        return self._client.invokeMethod("create_value_index", args)
+#     Not implemented on server
+#     def create_value_index(self, database, prop):
+#         args = Args()
+#         args.setMemoryPointer("database", database)
+#         args.setString("property", prop)
+#         return self._client.invokeMethod("create_valueIndex", args)
 
     def create_bulk_docs(self, number, id_prefix, db, channels=None, generator=None, attachments_generator=None):
         """
@@ -238,14 +236,11 @@ class Database(object):
         doc_ids = self.getDocIds(database)
         
         docs = self.getDocuments(database, doc_ids)
-        for i in xrange(number_of_updates):
+        for _ in xrange(number_of_updates):
             for doc in docs:
                 doc_body = docs[doc]
-                try:
-                    doc_body["updates-cbl"]
-                except Exception:
+                if "updates-cbl" not in doc_body:
                     doc_body["updates-cbl"] = 0
-
                 doc_body["updates-cbl"] = doc_body["updates-cbl"] + 1
                 updated_docs[doc] = doc_body
 

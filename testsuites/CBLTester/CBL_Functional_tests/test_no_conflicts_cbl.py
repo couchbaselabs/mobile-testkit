@@ -196,19 +196,20 @@ def test_no_conflicts_enabled_with_revs_limit(params_from_base_test_setup, sg_co
 @pytest.mark.noconflicts
 @pytest.mark.parametrize("sg_conf_name, num_of_docs, revs_limit", [
     ('sync_gateway_revs_conflict_configurable', 10, 25),
-    ('sync_gateway_revs_conflict_configurable', 100, 35),
-    ('sync_gateway_revs_conflict_configurable', 100, 100)
+#     ('sync_gateway_revs_conflict_configurable', 100, 35),
+#     ('sync_gateway_revs_conflict_configurable', 100, 100)
 ])
 def test_no_conflicts_update_with_revs_limit(params_from_base_test_setup, sg_conf_name, num_of_docs, revs_limit):
     """
         @summary:
         1. Have sg config with allow conflicts with some revs_limit
         2. Create docs in CBL
-        3. Update docs in CBL and also update docs through SG with number of times more than revs_limit
-        4. Change the revs_limit less than actual revs limit
-        5. Restart sg
-        6. update doc 1 more time.
-        7. Verify revs limit is maintained with new modified revs_limit
+        3. Start a continous Replicator to have SG load all the docs. Verify if the no. of docs are same in both SG and CBL.
+        4. Update docs in CBL and also update docs through SG with number of times more than revs_limit. check the docs after replication become idle
+        5. Change the revs_limit less than actual revs limit
+        6. Restart sg
+        7. update doc 1 more time and let replication become idle
+        8. Verify revs limit is maintained with new modified revs_limit
 
     """
     # source_db = None

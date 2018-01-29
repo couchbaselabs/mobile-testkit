@@ -2,6 +2,7 @@ package com.couchbase.CouchbaseLiteServ.server.RequestHandler;
 
 
 import com.couchbase.CouchbaseLiteServ.server.Args;
+import com.couchbase.lite.Array;
 import com.couchbase.lite.Blob;
 import com.couchbase.lite.Document;
 import com.couchbase.lite.MutableDictionary;
@@ -36,11 +37,11 @@ public class DocumentRequestHandler{
         }
     }
 
-    public Object get(Args args) {
+/*    public Object get(Args args) {
         Map<String, Object> map = args.get("dictionary");
         String key = args.get("key");
         return map.get(key);
-    }
+    }*/
 
 
     public int count(Args args){
@@ -153,6 +154,24 @@ public class DocumentRequestHandler{
         Document document = args.get("document");
         String key = args.get("key");
         return document.getBlob(key);
+    }
+
+    public MutableDocument setArray(Args args) {
+        MutableDocument document = args.get("document");
+        Map<String, Object> value = args.get("value");
+        return  document.setData(value);
+    }
+
+    public MutableDocument toMutable(Args args) {
+        Document document = args.get("document");
+        return document.toMutable();
+    }
+
+    public MutableDocument setData(Args args) {
+        MutableDocument document = args.get("document");
+        String key = args.get("key");
+        Array value = args.get("value");
+        return  document.setArray(key, value);
     }
 
     public MutableDocument setBlob(Args args){
