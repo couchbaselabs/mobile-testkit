@@ -9,6 +9,12 @@ $ git clone https://github.com/couchbaselabs/mobile-testkit.git
 $ cd mobile-testkit/
 ```
 
+== Quick Start
+
+. Configure ansible.cfg with appropriate user (vagrant)
+. Edit resource/pool.json
+. Run `source setup.sh`
+
 == Repo Structure
 
 The repo structure is the following:
