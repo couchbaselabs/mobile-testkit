@@ -29,17 +29,20 @@ public class MainActivity extends AppCompatActivity {
     private int numOfDocs;
     private long scenarioRunTimeMinutes;
     private String syncGatewayURL;
+    final static String TAG = "System Testing App";
+    final static int BATCH_SIZE = 1000;
+    final static int ITERATION = 1000;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        numOfDocs = getIntent().getIntExtra("numOfDocs",0);
+        /*numOfDocs = getIntent().getIntExtra("numOfDocs",0);
         scenarioRunTimeMinutes = getIntent().getLongExtra("scenarioRunTimeMinutes",0);
-        String syncGatewayURL = getIntent().getStringExtra("syncGatewayURL");
-        /*numOfDocs = 1000;
-        scenarioRunTimeMinutes = 5;
-        syncGatewayURL = "ws://192.168.0.107:4985/db/";*/
+        syncGatewayURL = getIntent().getStringExtra("syncGatewayURL");*/
+        numOfDocs = 100000;
+        scenarioRunTimeMinutes = 1;
+        syncGatewayURL = "ws://172.16.1.107:4985/db/";
         if (syncGatewayURL == null || numOfDocs == 0 || scenarioRunTimeMinutes == 0) {
             Log.e("app", "Did not enter the values for one of them : syncGatewayURL, numOfDocs, scenarioRunTimeMinutes ");
             finish();
@@ -55,12 +58,13 @@ public class MainActivity extends AppCompatActivity {
         } catch (CouchbaseLiteException e) {
             e.printStackTrace();
         }
-        database.addChangeListener(new DatabaseChangeListener() {
+        // Commenting out as Hideki asked for it.
+        /*database.addChangeListener(new DatabaseChangeListener() {
             @Override
             public void changed(DatabaseChange change) {
                 Log.i("Database change listener", "%s", change);
             }
-        });
+        });*/
 
         Log.i("state", "Replicating data");
         URI uri = null;
@@ -88,25 +92,59 @@ public class MainActivity extends AppCompatActivity {
         super.onStart();
 
         //Create docs in batch
-        try {
-            database.inBatch(new TimerTask() {
-                @Override
-                public void run() {
-                    for (int i = 0; i < numOfDocs; i++) {
-                        MutableDocument doc = new MutableDocument("doc___" + i);
-                        doc.setString("type", "user");
-                        doc.setString("name", "user_" + i);
-                        try {
-                            database.save(doc);
-                        } catch (CouchbaseLiteException e) {
-                            e.printStackTrace();
+        /*try {
+            for (int j = 0; j <  numOfDocs / 1000; j++ ) {
+                final int finalJ = j;
+                database.inBatch(new TimerTask() {
+                    @Override
+                    public void run() {
+                        for (int i = 0; i < numOfDocs / 1000; i++) {
+                            int k = finalJ * 1000 + i;
+                            MutableDocument doc = new MutableDocument("doc___" + finalJ * 1000 + i);
+                            doc.setString("type", "user");
+                            doc.setString("name", "user_" + i);
+                            try {
+                                database.save(doc);
+                            } catch (CouchbaseLiteException e) {
+                                e.printStackTrace();
+                            }
                         }
                     }
-                }
-            });
+                });
+            }
         } catch (CouchbaseLiteException e) {
             e.printStackTrace();
+        }*/
+        Log.i(TAG, "### insert documents start");
+        for(int i = 0; i < ITERATION; i++){
+            Log.i(TAG, "batch save start: i = " + i);
+            final int I = i;
+            try {
+                database.inBatch(new Runnable() {
+                    @Override
+                    public void run() {
+                        for (int j = 0; j < BATCH_SIZE; j++) {
+                            int index = I * BATCH_SIZE + j;
+                            MutableDocument doc = new MutableDocument("doc___" + index);
+                            doc.setString("type", "user");
+                            doc.setString("name", "user_" + index);
+                            try {
+                                database.save(doc);
+                            } catch (CouchbaseLiteException e) {
+                                Log.e(TAG, "Database save  operation failed, index -> " + index, e);
+                                throw new RuntimeException("Database save  operation failed, index -> " + index, e);
+                            }
+                        }
+                    }
+                });
+                Log.i(TAG, "batch save end: i = " + i);
+                Log.i(TAG, "database size = " + database.getCount());
+            } catch (CouchbaseLiteException e) {
+                Log.e(TAG, "Database batch operation failed", e);
+                throw new RuntimeException("Database batch operation failed", e);
+            }
         }
+
         startTime = System.currentTimeMillis();
 
         //update random doc
