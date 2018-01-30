@@ -500,6 +500,21 @@ link:testsuites/listener/shared/client_client/README.md[Running Tests]
 
 link:testsuites/listener/shared/client_sg/README.md[Running Tests]
 
+=== iOS Simulator Setup
+
+. Get the latest build of iOS which you want to run: http://latestbuilds.service.couchbase.com/builds/latestbuilds/couchbase-lite-ios/2.0.0/565/  -> couchbase-lite-swift_enterprise_2.0.0-565.zip  for swift
+Unzip the file.
+. Get the testkit branch : open the xcode project which is in testkit branch from this folder -> https://github.com/couchbaselabs/mobile-testkit/tree/feature/cbl20-ver1/CBLClient/Apps/CBLTestServer-iOS
+. Copy the framework folder which got it at step b for swift. Path for framework folder for step b under iOS.
+. Drag framework folder and .DSYM file to xcode project , drag to framework folder in xcode.
+. Now Run the app on your favorite simulator.
+. On the console output window, you get ip address with port.
+. On terminal , go to the root folder of mobile testkit.
+. Run source setup.sh
+. Run this command “pytest -rsx -s -k test_sg_cbl_updates_concurrently_with_push_pull --server-version=5.0.0 --sync-gateway-version=2.0.0-759 --mode=di --liteserv-host=10.17.1.93 --liteserv-port=8080 --xattrs  --create-db-per-test=pull-test  --no-conflicts testsuites/CBLTester/CBL_Functional_tests/
+. In the above command, please change liteserv-host to the ip address which got in xcode console , this is where webserver started.
+ 
+ 
 === Android Emulator Setup
 ==== Setting up Google Emulators
 
