@@ -40,9 +40,9 @@ public class MainActivity extends AppCompatActivity {
         /*numOfDocs = getIntent().getIntExtra("numOfDocs",0);
         scenarioRunTimeMinutes = getIntent().getLongExtra("scenarioRunTimeMinutes",0);
         syncGatewayURL = getIntent().getStringExtra("syncGatewayURL");*/
-        numOfDocs = 100000;
-        scenarioRunTimeMinutes = 1;
-        syncGatewayURL = "ws://172.16.1.107:4985/db/";
+        numOfDocs = 1000000;
+        scenarioRunTimeMinutes = 60;
+        syncGatewayURL = "ws://192.168.0.177:4985/db/";
         if (syncGatewayURL == null || numOfDocs == 0 || scenarioRunTimeMinutes == 0) {
             Log.e("app", "Did not enter the values for one of them : syncGatewayURL, numOfDocs, scenarioRunTimeMinutes ");
             finish();

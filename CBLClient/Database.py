@@ -150,18 +150,18 @@ class Database(object):
     def databaseChangeListener_changesCount(self, change_listener):
         args = Args()
         args.setMemoryPointer("changeListener", change_listener)
-        return self._client.invokeMethod("database_databaseChangeListener_changesCount", args)
+        return self._client.invokeMethod("database_databaseChangeListenerChangesCount", args)
 
     def databaseChangeListener_getChange(self, change_listener, index):
         args = Args()
         args.setMemoryPointer("changeListener", change_listener)
         args.setInt("index", index)
-        return self._client.invokeMethod("database_databaseChangeListener_getChange", args)
+        return self._client.invokeMethod("database_databaseChangeListenerGetChange", args)
 
     def databaseChange_getDocumentId(self, change):
         args = Args()
         args.setMemoryPointer("change", change)
-        return self._client.invokeMethod("database_databaseChange_getDocumentId", args)
+        return self._client.invokeMethod("database_databaseChangeGetDocumentId", args)
 
     def getDocIds(self, database):
         args = Args()

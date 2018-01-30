@@ -34,10 +34,11 @@ public class ReplicatorRequestHandler {
         return replicator.getStatus().getActivityLevel().toString().toLowerCase();
     }
 
-    public void addChangeListener(Args args){
+    public ReplicatorChangeListener addChangeListener(Args args){
         Replicator replicator = args.get("replicator");
         MyReplicatorListener changeListener = new MyReplicatorListener();
         replicator.addChangeListener(changeListener);
+        return changeListener;
     }
 
     public void removeChangeListener(Args args){
@@ -61,17 +62,26 @@ public class ReplicatorRequestHandler {
         replicator.stop();
     }
 
-    public Replicator replicatorChangeGetReplicator(Args args){
+    public Replicator changeGetReplicator(Args args){
         ReplicatorChange change = args.get("change");
         return change.getReplicator();
     }
 
-    public Replicator.Status replicatorChangeGetStatus(Args args){
+    public Replicator.Status changeGetStatus(Args args){
         ReplicatorChange change = args.get("change");
         return change.getStatus();
     }
 
-    public CouchbaseLiteException replicator_getError(Args args) {
+    public int changeListenerChangesCount(Args args) {
+        MyReplicatorListener changeListener = args.get("changeListener");
+        return changeListener.getChanges().size();
+    }
+
+    public List<ReplicatorChange> changeListenerGetChanges(Args args) {
+        MyReplicatorListener changeListener = args.get("changeListener");
+        return changeListener.getChanges();
+    }
+    public CouchbaseLiteException replicatorGetError(Args args) {
         Replicator replicator = args.get("replicator");
         return replicator.getStatus().getError();
     }

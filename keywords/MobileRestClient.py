@@ -680,7 +680,7 @@ class MobileRestClient:
 
         return resp_obj
 
-    def get_open_revs_ids(self, url, db, doc_id, auth=None):
+    def get_open_revs_ids(self, url, db, doc_id, auth=None, rev=None):
         """
         Gets the open_revs=all for a specified doc_id.
         Returns a parsed multipart reponse in the below format

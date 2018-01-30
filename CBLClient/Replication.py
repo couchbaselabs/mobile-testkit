@@ -175,10 +175,11 @@ class Replication(object):
         args.setMemoryPointer("replicator", replicator)
         return self._client.invokeMethod("replicator_config", args)
 
-    def getStatus(self, replicator):
-        args = Args()
-        args.setMemoryPointer("replicator", replicator)
-        return self._client.invokeMethod("replicator_getStatus", args)
+#     Same as status method
+#     def getStatus(self, replicator):
+#         args = Args()
+#         args.setMemoryPointer("replicator", replicator)
+#         return self._client.invokeMethod("replicator_getStatus", args)
 
     def addChangeListener(self, replicator):
         args = Args()
@@ -248,13 +249,13 @@ class Replication(object):
     def getChangesCount(self, change_listener):
         args = Args()
         args.setMemoryPointer("changeListener", change_listener)
-        return self._client.invokeMethod("replicatorChangeListener_changesCount", args)
+        return self._client.invokeMethod("replicator_changeListenerChangesCount", args)
 
     def getChangesChangeListener(self, change_listener):
         args = Args()
         args.setMemoryPointer("changeListener", change_listener)
         # args.setInt("index", index)
-        return self._client.invokeMethod("replicatorChangeListener_getChanges", args)
+        return self._client.invokeMethod("replicator_changeListenerGetChanges", args)
 
     def configure_and_replicate(self, source_db, replicator_authenticator, target_db=None, target_url=None, replication_type="push_pull", continuous=True,
                                 channels=None):

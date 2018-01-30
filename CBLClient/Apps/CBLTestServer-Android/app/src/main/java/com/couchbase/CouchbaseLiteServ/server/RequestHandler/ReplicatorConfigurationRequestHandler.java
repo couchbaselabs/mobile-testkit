@@ -22,7 +22,10 @@ public class ReplicatorConfigurationRequestHandler {
     public Builder builderCreate(Args args) throws MalformedURLException, URISyntaxException {
         Database sourceDb = args.get("sourceDb");
         Database targetDb = args.get("targetDb");
-        URI targetURI = new URI((String) args.get("targetURI"));
+        URI targetURI = null;
+        if (args.get("targetURI") != null) {
+            targetURI = new URI((String) args.get("targetURI"));
+        }
         if (targetDb != null){
             DatabaseEndpoint target = new DatabaseEndpoint(targetDb);
             return new Builder(sourceDb, target);
@@ -36,7 +39,10 @@ public class ReplicatorConfigurationRequestHandler {
 
     public ReplicatorConfiguration configure(Args args) throws Exception {
         Database sourceDb = args.get("source_db");
-        URI targetURL = new URI((String) args.get("target_url"));
+        URI targetURL = null;
+        if (args.get("target_url") != null){
+            targetURL = new URI((String) args.get("target_url"));
+        }
         Database targetDb = args.get("target_db");
         String replicatorType = args.get("replication_type");
         Boolean continuous = args.get("continuous");

@@ -11,8 +11,8 @@ import com.couchbase.lite.DatabaseChangeListener;
 import com.couchbase.lite.DatabaseConfiguration;
 import com.couchbase.lite.DatabaseConfiguration.Builder;
 import com.couchbase.lite.Document;
-import com.couchbase.lite.DocumentChangeListener;
 import com.couchbase.CouchbaseLiteServ.MainActivity;
+import com.couchbase.lite.ListenerToken;
 import com.couchbase.lite.Meta;
 import com.couchbase.lite.MutableDocument;
 import com.couchbase.lite.Query;
@@ -40,6 +40,18 @@ public class DatabaseRequestHandler {
             config = new Builder(context).build();
         }
         return new Database(name, config);
+    }
+
+    public ListenerToken addChangeListener(Args args) {
+        Database database = args.get("database");
+        MyDatabaseChangeListener changeListener = new MyDatabaseChangeListener();
+        return database.addChangeListener(changeListener);
+    }
+
+    public void removeChangeListener(Args args) {
+        Database database = args.get("database");
+        ListenerToken changeListener = args.get("changeListener");
+        database.removeChangeListener(changeListener);
     }
 
     public Database create(String name) throws CouchbaseLiteException {
@@ -229,23 +241,23 @@ public class DatabaseRequestHandler {
 //        }
 //    }
 
-    public int databaseChangeListener_changesCount(Args args) {
+    public int databaseChangeListenerChangesCount(Args args) {
         MyDatabaseChangeListener changeListener = args.get("changeListener");
         return changeListener.getChanges().size();
     }
 
-    public DatabaseChange databaseChangeListener_getChange(Args args) {
+    public DatabaseChange databaseChangeListenerGetChange(Args args) {
         MyDatabaseChangeListener changeListener = args.get("changeListener");
         int index = args.get("index");
         return changeListener.getChanges().get(index);
     }
 
-    public Database databaseChange_getDatabase(Args args){
+    public Database changeGetDatabase(Args args){
         DatabaseChange change = args.get("change");
         return change.getDatabase();
     }
 
-    public List<String> databaseChange_getDocumentId(Args args) {
+    public List<String> changeGetDocumentId(Args args) {
         DatabaseChange change = args.get("change");
         return change.getDocumentIDs();
     }

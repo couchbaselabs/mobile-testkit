@@ -278,8 +278,8 @@ def params_from_base_suite_setup(request):
     if create_db_per_suite:
         # Delete CBL database
         log_info("Deleting the database {} at the suite teardown".format(create_db_per_suite))
-        time.sleep(10)
         db.deleteDB(source_db)
+        time.sleep(1)
 
     # Flush all the memory contents on the server app
     utils_obj = Utils(base_url)
@@ -360,6 +360,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         # Delete CBL database
         log_info("Deleting the database {} at test teardown".format(create_db_per_test))
         db.deleteDB(source_db)
+        time.sleep(1)
 
 
 @pytest.fixture(scope="class")

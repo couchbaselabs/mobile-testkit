@@ -5,7 +5,7 @@ from CBLClient.MemoryPointer import MemoryPointer
 class ValueSerializer(object):
     @staticmethod
     def serialize(value):
-        if value is None:
+        if value is None or value == "None":
             return "null"
         elif isinstance(value, MemoryPointer):
             return value.getAddress()

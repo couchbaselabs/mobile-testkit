@@ -279,6 +279,7 @@ def test_no_conflicts_update_with_revs_limit(params_from_base_test_setup, sg_con
                 sg_client.add_conflict(url=sg_url, db=sg_db, doc_id=doc["id"], parent_revisions=doc["value"]["rev"], new_revision="2-2B",
                                        auth=session)
             assert he.value.message.startswith('409 Client Error: Conflict for url:')
+            time.sleep(1)
         else:
             conflicted_rev = sg_client.add_conflict(url=sg_url, db=sg_db, doc_id=doc["id"], parent_revisions=doc["value"]["rev"], new_revision="2-2B",
                                                     auth=session)
@@ -326,8 +327,8 @@ def test_no_conflicts_update_with_revs_limit(params_from_base_test_setup, sg_con
 @pytest.mark.noconflicts
 @pytest.mark.parametrize("sg_conf_name, num_of_docs, revs_limit", [
     ('sync_gateway_revs_conflict_configurable', 10, 10),
-    ('sync_gateway_revs_conflict_configurable', 100, 10),
-    ('sync_gateway_revs_conflict_configurable', 1000, 5)
+#     ('sync_gateway_revs_conflict_configurable', 100, 10),
+#     ('sync_gateway_revs_conflict_configurable', 1000, 5)
 ])
 def test_migrate_conflicts_to_noConflicts_CBL(params_from_base_test_setup, sg_conf_name, num_of_docs, revs_limit):
     """
@@ -449,8 +450,8 @@ def test_migrate_conflicts_to_noConflicts_CBL(params_from_base_test_setup, sg_co
 @pytest.mark.noconflicts
 @pytest.mark.parametrize("sg_conf_name, num_of_docs, revs_limit", [
     ('sync_gateway_revs_conflict_configurable', 10, 20),
-    ('sync_gateway_revs_conflict_configurable', 100, 20),
-    ('sync_gateway_revs_conflict_configurable', 10, 500)
+#     ('sync_gateway_revs_conflict_configurable', 100, 20),
+#     ('sync_gateway_revs_conflict_configurable', 10, 500)
 ])
 def test_cbl_no_conflicts_sgAccel_added(params_from_base_test_setup, sg_conf_name, num_of_docs, revs_limit):
     """
@@ -504,6 +505,7 @@ def test_cbl_no_conflicts_sgAccel_added(params_from_base_test_setup, sg_conf_nam
     replicator_authenticator = authenticator.authentication(username="autotest", password="password", authentication_type="basic")
     repl_config = replicator.configure(cbl_db, sg_blip_url, continuous=True, channels=channels, replicator_authenticator=replicator_authenticator)
     repl = replicator.create(repl_config)
+    replicator.start(repl)
 
     # 1. Enable allow_conflicts = false in SG config with revs_limit
     temp_cluster_config = copy_to_temp_conf(cluster_config, mode)
@@ -670,8 +672,8 @@ def test_sg_CBL_updates_concurrently(params_from_base_test_setup, sg_conf_name, 
 @pytest.mark.noconflicts
 @pytest.mark.parametrize("sg_conf_name, num_of_docs, number_of_updates", [
     ('listener_tests/listener_tests_no_conflicts', 10, 2),
-    ('listener_tests/listener_tests_no_conflicts', 100, 10),
-    ('listener_tests/listener_tests_no_conflicts', 100, 50)
+#     ('listener_tests/listener_tests_no_conflicts', 100, 10),
+#     ('listener_tests/listener_tests_no_conflicts', 100, 50)
 ])
 def test_multiple_cbls_updates_concurrently_with_push(params_from_base_test_setup, sg_conf_name, num_of_docs, number_of_updates):
     """
@@ -865,13 +867,13 @@ def test_multiple_cbls_updates_concurrently_with_pull(params_from_base_test_setu
     assert len(sg_docs) == num_of_docs
 
     # Create CBL databases
-    """cbl_db1 = db.create(cbl_db_name1)
+    cbl_db1 = db.create(cbl_db_name1)
     cbl_db2 = db.create(cbl_db_name2)
     cbl_db3 = db.create(cbl_db_name3)
-    """
-    cbl_db1 = db. deleteDBIfExistsCreateNew(cbl_db_name1)
-    cbl_db2 = db. deleteDBIfExistsCreateNew(cbl_db_name2)
-    cbl_db3 = db. deleteDBIfExistsCreateNew(cbl_db_name3)
+    
+#     cbl_db1 = db.deleteDBIfExistsCreateNew(cbl_db_name1)
+#     cbl_db2 = db.deleteDBIfExistsCreateNew(cbl_db_name2)
+#     cbl_db3 = db.deleteDBIfExistsCreateNew(cbl_db_name3)
 
     # Replicate to all 3 CBLs
     replicator = Replication(base_url)
@@ -958,8 +960,8 @@ def test_multiple_cbls_updates_concurrently_with_pull(params_from_base_test_setu
 @pytest.mark.noconflicts
 @pytest.mark.parametrize("sg_conf_name, num_of_docs, number_of_updates, add_attachments", [
     ('listener_tests/listener_tests_no_conflicts', 10, 2, False),
-    ('listener_tests/listener_tests_no_conflicts', 10, 10, True),
-    ('listener_tests/listener_tests_no_conflicts', 1000, 10, True)
+#     ('listener_tests/listener_tests_no_conflicts', 10, 10, True),
+#     ('listener_tests/listener_tests_no_conflicts', 1000, 10, True)
 ])
 def test_sg_cbl_updates_concurrently_with_push_pull(params_from_base_test_setup, sg_conf_name, num_of_docs, number_of_updates, add_attachments):
     """
@@ -1121,6 +1123,7 @@ def test_CBL_push_without_pull(params_from_base_test_setup, sg_conf_name, num_of
     replicator_authenticator = authenticator.authentication(session_id, cookie, authentication_type="session")
     repl_config = replicator.configure(cbl_db, sg_blip_url, continuous=True, channels=channels, replication_type="pull", replicator_authenticator=replicator_authenticator)
     repl = replicator.create(repl_config)
+    replicator.start(repl)
     replicator.wait_until_replicator_idle(repl)
     replicator.stop(repl)
     
