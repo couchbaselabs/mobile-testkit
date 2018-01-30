@@ -39,10 +39,11 @@ def setup_teardown_test(params_from_base_test_setup):
 @pytest.mark.replication
 @pytest.mark.parametrize("num_of_docs, continuous", [
     (10, True),
-    # ('listener_tests/listener_tests_no_conflicts', 10, False),
-    # ('listener_tests/listener_tests_no_conflicts', 100, False),
-    # ('listener_tests/listener_tests_no_conflicts', 1000, True),
-    # ('listener_tests/listener_tests_no_conflicts', 1000, False)
+    (10, False),
+    (100, True),
+    (100, False),
+    (1000, True),
+    (1000, False)
 ])
 def test_replication_configuration_valid_values(params_from_base_test_setup, num_of_docs, continuous):
     """

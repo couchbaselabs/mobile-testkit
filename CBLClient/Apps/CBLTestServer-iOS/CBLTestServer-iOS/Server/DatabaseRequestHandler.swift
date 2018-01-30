@@ -62,7 +62,8 @@ public class DatabaseRequestHandler {
             let directory: String? = args.get(name:"directory")!
            
             if let directory = directory {
-                return Database.exists(withName: name, inDirectory: directory)
+                print("is database exists in path\(Database.exists(withName: name, inDirectory: directory))")
+                return Database.exists(withName: name, inDirectory: directory) as Bool
             } else {
                 return Database.exists(withName: name)
             }
@@ -115,18 +116,18 @@ public class DatabaseRequestHandler {
 
             database.removeChangeListener(withToken: changeListener)
 
-        case "databaseChangeListener_changesCount":
+        case "database_databaseChangeListenerChangesCount":
             let changeListener: MyDatabaseChangeListener = (args.get(name: "changeListener"))!
 
             return changeListener.getChanges().count
 
-        case "databaseChangeListener_getChange":
+        case "database_databaseChangeListenerGetChange":
             let changeListener: MyDatabaseChangeListener = (args.get(name: "changeListener"))!
             let index: Int = (args.get(name: "index"))!
 
             return changeListener.getChanges()[index]
 
-        case "databaseChange_getDocumentId":
+        case "database_databaseChangeGetDocumentId":
             let change: DatabaseChange = (args.get(name: "change"))!
 
             return change.documentIDs

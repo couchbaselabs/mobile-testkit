@@ -563,8 +563,8 @@ def test_cbl_no_conflicts_sgAccel_added(params_from_base_test_setup, sg_conf_nam
 @pytest.mark.noconflicts
 @pytest.mark.parametrize("sg_conf_name, num_of_docs, number_of_updates", [
     ('listener_tests/listener_tests_no_conflicts', 10, 4),
-    ('listener_tests/listener_tests_no_conflicts', 100, 10),
-    ('listener_tests/listener_tests_no_conflicts', 1000, 10)
+    # ('listener_tests/listener_tests_no_conflicts', 100, 10),
+    # ('listener_tests/listener_tests_no_conflicts', 1000, 10)
 ])
 def test_sg_CBL_updates_concurrently(params_from_base_test_setup, sg_conf_name, num_of_docs, number_of_updates):
     """
@@ -633,7 +633,8 @@ def test_sg_CBL_updates_concurrently(params_from_base_test_setup, sg_conf_name, 
     sg_docs = sg_docs["rows"]
     with ThreadPoolExecutor(max_workers=5) as tpe:
         update_from_sg_task = tpe.submit(
-            sg_client.update_docs,
+            sg_updateDocs,
+            sg_client=sg_client,
             url=sg_url,
             db=sg_db,
             docs=sg_docs,
@@ -662,9 +663,24 @@ def test_sg_CBL_updates_concurrently(params_from_base_test_setup, sg_conf_name, 
                                        auth=session)
             assert he.value.message.startswith('409 Client Error: Conflict for url:')
     else:
-        conflicted_rev = sg_client.add_conflict(url=sg_url, db=sg_db, doc_id=doc["id"], parent_revisions=doc["value"]["rev"], new_revision="2-foo",
-                                                auth=session)
-        assert conflicted_rev["rev"] == "2-foo"
+        for doc in sg_docs:
+            conflicted_rev = sg_client.add_conflict(url=sg_url, db=sg_db, doc_id=doc["id"], parent_revisions=doc["value"]["rev"], new_revision="2-foo",
+                                                    auth=session)
+            assert conflicted_rev["rev"] == "2-foo"
+
+
+def sg_updateDocs(sg_client, url, db, docs, number_updates, auth):
+    for doc in docs: 
+        count = 0
+        while count < 10:
+            try:
+                sg_client.update_doc(url=url, db=db, doc_id=doc["id"], number_updates=number_updates, auth=auth)
+                break
+            except HTTPError as he:
+                if ((he.response.status_code == 403 and str(he).startswith('403 Client Error: Forbidden for url:')) or
+                        (he.response.status_code == 409 and str(he).startswith('409 Client Error: Conflict for url:'))):
+                    log_info("retrying the doc to update again due to conflict issue ....")
+                count = + 1
 
 
 @pytest.mark.sanity
@@ -1171,7 +1187,7 @@ def process_replicator(replicator, repl, repl_change_listener=None):
     count = 0
     replicator.start(repl)
     # Sleep until replicator completely processed
-    while(replicator.getActivitylevel(repl) != 3 and count < max_times):
+    while(replicator.getActivitylevel(repl) != "idle" and count < max_times):
         print "sleeping... actvity level is", replicator.getActivitylevel(repl)
         time.sleep(0.5)
         count += 1
