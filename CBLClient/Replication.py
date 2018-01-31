@@ -284,8 +284,8 @@ class Replication(object):
             err = self.getError(repl)
             # TODO remove the condition of 'connection reset by peer'
             # once https://github.com/couchbase/sync_gateway/issues/3249 is fixed
-            if err != -1: #-1 means Null or None, so if any error, just raise the exception
-#             if err is not None and err != 'nil' and not err.__contains__("Connection reset by peer"):
+            # if err != -1: #-1 means Null or None, so if any error, just raise the exception
+            if err is not None and err != 'nil' and not err.__contains__("Connection reset by peer"):
                 raise Exception("Error while replicating", err)
 
     def create_session_configure_replicate(self, baseUrl, sg_admin_url, sg_db, username, password,

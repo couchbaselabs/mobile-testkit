@@ -157,6 +157,7 @@ public class Server {
                         throw ServerError.MethodNotImplemented(method)
                     }
                     if result != nil {
+                        print("result is \(result)")
                         body = ValueSerializer.serialize(value: result, memory: self.memory);
                     }
                 }

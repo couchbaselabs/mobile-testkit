@@ -24,21 +24,17 @@ public class DatabaseConfigurationRequestHandler {
             let directory: String? = args.get(name:"directory")!
             let conflictResolver : ConflictResolver? = args.get(name:"conflictResolver")!
             let encryptionKey: EncryptionKey? = args.get(name:"encryptionKey")!
-            let fileProtection: NSData.WritingOptions? = args.get(name: "fileProtection")!
-            let builder = DatabaseConfiguration.Builder()
-            if directory != nil{
-                builder.setDirectory(directory!)
+            let config = DatabaseConfiguration()
+            if directory != nil {
+                config.directory = directory!
             }
             if conflictResolver != nil{
-                builder.setConflictResolver(conflictResolver!)
+                config.conflictResolver = conflictResolver!
             }
             if encryptionKey != nil{
-                builder.setEncryptionKey(encryptionKey!)
+                config.encryptionKey = encryptionKey!
             }
-            if fileProtection != nil{
-                builder.setFileProtection(fileProtection!)
-            }
-            return builder.build()
+            return config
             
         case "databaseConfiguration_getConflictResolver":
             let config: DatabaseConfiguration = args.get(name: "config")!
@@ -53,24 +49,23 @@ public class DatabaseConfigurationRequestHandler {
             return config.encryptionKey
             
         case "databaseConfiguration_setConflictResolver":
-            let config: DatabaseConfiguration.Builder = args.get(name: "config")!
+            let config: DatabaseConfiguration = args.get(name: "config")!
             let conflictResolver: ConflictResolver = args.get(name: "conflictResolver")!
-            return config.setConflictResolver(conflictResolver)
+            return config.conflictResolver = conflictResolver
             
         case "databaseConfiguration_setDirectory":
-            let config: DatabaseConfiguration.Builder = args.get(name: "config")!
+            let config: DatabaseConfiguration = args.get(name: "config")!
             let directory: String = args.get(name: "directory")!
-            return config.setDirectory(directory)
+            return config.directory = directory
             
         case "databaseConfiguration_setEncryptionKey":
-            let config: DatabaseConfiguration.Builder = args.get(name: "config")!
+            let config: DatabaseConfiguration = args.get(name: "config")!
             let key: EncryptionKey = args.get(name: "key")!
-            return config.setEncryptionKey(key)
+            return config.encryptionKey = key
 
         default:
             throw RequestHandlerError.MethodNotFound(method)
         }
-        return DatabaseConfigurationRequestHandler.VOID
   }
 }
 

@@ -23,7 +23,7 @@ class Database(object):
 
         self._client = Client(base_url)
 
-    def configure(self, directory=None, conflictResolver=None, encryptionKey=None, fileProtection=None):
+    def configure(self, directory=None, conflictResolver=None, encryptionKey=None):
         args = Args()
         if directory is not None:
             args.setString("directory", directory)
@@ -31,8 +31,6 @@ class Database(object):
             args.setMemoryPointer("conflictResolver", conflictResolver)
         if encryptionKey is not None:
             args.setMemoryPointer("encryptionKey", encryptionKey)
-        if fileProtection is not None:
-            args.setMemoryPointer("fileProtection", fileProtection)
         return self._client.invokeMethod("databaseConfiguration_configure", args)
 
     def create(self, name, config=None):

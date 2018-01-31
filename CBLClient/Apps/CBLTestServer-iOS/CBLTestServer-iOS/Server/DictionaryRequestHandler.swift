@@ -21,7 +21,7 @@ public class DictionaryRequestHandler {
         case "dictionary_create":
             let dictionary: [String: Any]? = args.get(name: "content_dict")!
             if dictionary != nil {
-                return MutableDictionaryObject(withData: dictionary)
+                return MutableDictionaryObject(data: dictionary)
             } else {
                 return MutableDictionaryObject()
             }

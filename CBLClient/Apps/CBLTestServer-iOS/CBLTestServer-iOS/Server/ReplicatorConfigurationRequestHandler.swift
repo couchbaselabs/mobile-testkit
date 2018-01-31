@@ -19,17 +19,19 @@ public class ReplicatorConfigurationRequestHandler {
         /////////////////////////////
         // ReplicatorConfiguration //
         /////////////////////////////
+            
+        // TODO: Change client to expect replicator config, not the builder.
         case "replicatorConfiguration_create":
             let sourceDb: Database = args.get(name: "sourceDb")!
             let targetDb: Database? = args.get(name: "targetDb")!
             let targetURI: String? = args.get(name: "targetURI")!
             
             if (targetDb != nil){
-                let target = DatabaseEndpoint(withDatabase: targetDb!)
-                return ReplicatorConfiguration.Builder(withDatabase: sourceDb, target: target)
+                let target = DatabaseEndpoint(database: targetDb!)
+                return ReplicatorConfiguration(database: sourceDb, target: target)
             } else if (targetURI != nil){
-                let target = URLEndpoint(withURL: URL(string: targetURI!)!)
-                return ReplicatorConfiguration.Builder(withDatabase: sourceDb, target: target)
+                let target = URLEndpoint(url: URL(string: targetURI!)!)
+                return ReplicatorConfiguration(database: sourceDb, target: target)
             } else {
                 throw RequestHandlerError.InvalidArgument("Incorrect configuration parameter provided")
             }
@@ -57,44 +59,43 @@ public class ReplicatorConfigurationRequestHandler {
                     replicatorType = .pushAndPull
                 }
             }
-            let builder: ReplicatorConfiguration.Builder
+            let config: ReplicatorConfiguration!
             //let target_converted_url: URL? = URL(string: target_url!)
             if (source_db != nil && target_url != nil) {
-                let target = URLEndpoint(withURL: URL(string: target_url!)!)
-                
-                builder = ReplicatorConfiguration.Builder(withDatabase: source_db!, target: target)
+                let target = URLEndpoint(url: URL(string: target_url!)!)
+                config = ReplicatorConfiguration(database: source_db!, target: target)
             }
             else if (source_db != nil && targetDatabase != nil) {
-                let target = DatabaseEndpoint(withDatabase: targetDatabase!)
-                builder = ReplicatorConfiguration.Builder(withDatabase: source_db!, target: target)
+                let target = DatabaseEndpoint(database: targetDatabase!)
+                config = ReplicatorConfiguration(database: source_db!, target: target)
             }
             else{
                     throw RequestHandlerError.InvalidArgument("No source db provided or target url provided")
             }
-                
-            builder.setReplicatorType(replicatorType)
+            
+            config.replicatorType = replicatorType
             if continuous != nil {
-                builder.setContinuous(continuous!)
+                config.continuous = continuous!
             } else {
-                builder.setContinuous(false)
+                config.continuous = false
             }
             if headers != nil {
-                builder.setHeaders(headers)
+                config.headers = headers
             }
-            builder.setAuthenticator(authenticator)
+            config.authenticator = authenticator
             if(conflictResolver != nil){
-                builder.setConflictResolver(conflictResolver!)
+                config.conflictResolver = conflictResolver!
             }
             if channels != nil {
-                builder.setChannels(channels)
+                config.channels = channels
             }
             if documentIDs != nil {
-                builder.setDocumentIDs(documentIDs)
+                config.documentIDs = documentIDs
             }
-            return builder.build()
-            
-            
-            
+            return config
+        
+        // TODO: Remove
+        /*
         case "replicatorConfiguration_configureLocalDb":
             let source_db: Database? = args.get(name: "source_db")
             let targetDatabase: Database? = args.get(name: "target_db")
@@ -149,6 +150,7 @@ public class ReplicatorConfigurationRequestHandler {
             else{
                 throw RequestHandlerError.InvalidArgument("No source db provided or target DB provided")
             }
+        */
         case "replicatorConfiguration_getAuthenticator":
             let replicatorConfiguration: ReplicatorConfiguration = args.get(name: "configuration")!
             return replicatorConfiguration.authenticator
@@ -184,39 +186,46 @@ public class ReplicatorConfigurationRequestHandler {
         case "replicatorConfiguration_isContinuous":
             let replicatorConfiguration: ReplicatorConfiguration = args.get(name: "configuration")!
             return replicatorConfiguration.continuous
-            
+        
+        // TODO: change the argument from builder to config in client API call
         case "replicatorConfiguration_setAuthenticator":
-            let replicatorConfiguration: ReplicatorConfiguration.Builder = args.get(name: "configuration")!
+            let replicatorConfiguration: ReplicatorConfiguration = args.get(name: "configuration")!
             let authenticator: Authenticator = args.get(name: "authenticator")!
-            replicatorConfiguration.setAuthenticator(authenticator)
-            
+            replicatorConfiguration.authenticator = authenticator
+        
+        // TODO: change the argument from builder to config in client API call
         case "replicatorConfiguration_setChannels":
-            let replicatorConfiguration: ReplicatorConfiguration.Builder = args.get(name: "configuration")!
+            let replicatorConfiguration: ReplicatorConfiguration = args.get(name: "configuration")!
             let channels: [String] = args.get(name: "channels")!
-            replicatorConfiguration.setChannels(channels)
-            
+            replicatorConfiguration.channels = channels
+        
+        // TODO: change the argument from builder to config in client API call
         case "replicatorConfiguration_setConflictResolver":
-            let replicatorConfiguration: ReplicatorConfiguration.Builder = args.get(name: "configuration")!
+            let replicatorConfiguration: ReplicatorConfiguration = args.get(name: "configuration")!
             let conflictResolver: ConflictResolver = args.get(name: "conflictResolver")!
-            replicatorConfiguration.setConflictResolver(conflictResolver)
-            
+            replicatorConfiguration.conflictResolver = conflictResolver
+        
+        // TODO: change the argument from builder to config in client API call
         case "replicatorConfiguration_setContinuous":
-            let replicatorConfiguration: ReplicatorConfiguration.Builder = args.get(name: "configuration")!
+            let replicatorConfiguration: ReplicatorConfiguration = args.get(name: "configuration")!
             let continuous: Bool = args.get(name: "continuous")!
-            replicatorConfiguration.setContinuous(continuous)
-            
+            replicatorConfiguration.continuous = continuous
+        
+        // TODO: change the argument from builder to config in client API call
         case "replicatorConfiguration_setDocumentIDs":
-            let replicatorConfiguration: ReplicatorConfiguration.Builder = args.get(name: "configuration")!
+            let replicatorConfiguration: ReplicatorConfiguration = args.get(name: "configuration")!
             let documentIds: [String] = args.get(name: "documentIds")!
-            replicatorConfiguration.setDocumentIDs(documentIds)
+            replicatorConfiguration.documentIDs = documentIds
             
+        // TODO: change the argument from builder to config in client API call
         case "replicatorConfiguration_setPinnedServerCertificate":
-            let replicatorConfiguration: ReplicatorConfiguration.Builder = args.get(name: "configuration")!
+            let replicatorConfiguration: ReplicatorConfiguration = args.get(name: "configuration")!
             let cert: SecCertificate? = args.get(name: "cert")!
-            replicatorConfiguration.setPinnedServerCertificate(cert)
-            
+            replicatorConfiguration.pinnedServerCertificate = cert
+        
+        // TODO: change the argument from builder to config in client API call
         case "replicatorConfiguration_setReplicatorType":
-            let replicatorConfiguration: ReplicatorConfiguration.Builder = args.get(name: "configuration")!
+            let replicatorConfiguration: ReplicatorConfiguration = args.get(name: "configuration")!
             let type: String = args.get(name: "replType")!
             var replicatorType: ReplicatorType
             switch (type) {
@@ -229,8 +238,7 @@ public class ReplicatorConfigurationRequestHandler {
                 default:
                     replicatorType = ReplicatorType.pushAndPull
             }
-            replicatorConfiguration.setReplicatorType(replicatorType)
-
+            replicatorConfiguration.replicatorType = replicatorType
 
         default:
             throw RequestHandlerError.MethodNotFound(method)

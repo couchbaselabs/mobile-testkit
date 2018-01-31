@@ -24,9 +24,9 @@ public class DocumentRequestHandler {
 
             if id != nil {
                 if dictionary == nil {
-                    return MutableDocument(withID: id)
+                    return MutableDocument(id: id)
                 } else {
-                    return MutableDocument(withID: id, data: dictionary)
+                    return MutableDocument(id: id, data: dictionary)
                 }
             } else {
                 if dictionary == nil {
@@ -34,7 +34,7 @@ public class DocumentRequestHandler {
                     print("doc is \(doc)")
                     return doc
                 } else {
-                    return MutableDocument(withData: dictionary)
+                    return MutableDocument(data: dictionary)
                 }
             }
             

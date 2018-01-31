@@ -24,9 +24,8 @@ public class DatabaseRequestHandler {
         case "database_create":
             let name: String! = args.get(name: "name")
             let dbConfig: DatabaseConfiguration! = args.get(name: "config")
-            let builder = DatabaseConfiguration.Builder(config: dbConfig)
             do {
-                return try Database(name: name!, config: builder.build())
+                return try Database(name: name!, config: dbConfig)
             } catch {
                 print("Got error while creating DB \(error)")
                 return error.localizedDescription
@@ -148,8 +147,8 @@ public class DatabaseRequestHandler {
                 for doc in documents {
                     let id = doc.key
                     let data: Dictionary<String, Any> = doc.value
-                    let document = MutableDocument(withID: id, data: data)
-                    let saved_document = try! database.saveDocument(document)
+                    let document = MutableDocument(id: id, data: data)
+                    try! database.saveDocument(document)
                     
                 }
             }
@@ -184,7 +183,7 @@ public class DatabaseRequestHandler {
             
         case "database_getDocIds":
             let database: Database = args.get(name:"database")!
-            let query = Query
+            let query = QueryBuilder
                 .select(SelectResult.expression(Meta.id))
                 .from(DataSource.database(database))
 
@@ -211,7 +210,7 @@ public class DatabaseRequestHandler {
 
         case "database_queryAllDocuments":
             let database: Database = args.get(name:"database")!
-            let searchQuery = Query
+            let searchQuery = QueryBuilder
                 .select(SelectResult.all())
                 .from(DataSource.database(database))
 

@@ -20,7 +20,7 @@ public class ReplicatorRequestHandler {
         /////////////////
         case "replicator_create":
             let config: ReplicatorConfiguration? = args.get(name: "config")
-            return Replicator(withConfig: config!)
+            return Replicator(config: config!)
             
         case "replicator_start":
             let replication_obj: Replicator = args.get(name: "replicator")!
@@ -68,11 +68,11 @@ public class ReplicatorRequestHandler {
             let changeListener : MyReplicationChangeListener = (args.get(name: "changeListener"))!
             replication_obj.removeChangeListener(withToken: changeListener.listenerToken! as! ListenerToken)
 
-        case "replicatorChangeListener_changesCount":
+        case "replicator_changeListenerChangesCount":
             let changeListener: MyReplicationChangeListener = (args.get(name: "changeListener"))!
             return changeListener.getChanges().count
 
-        case "replicatorChangeListener_getChanges":
+        case "replicator_changeListenerGetChanges":
             let changeListener: MyReplicationChangeListener = (args.get(name: "changeListener"))!
             // let index: Int = (args.get(name: "index"))!
             return changeListener.getChanges().description

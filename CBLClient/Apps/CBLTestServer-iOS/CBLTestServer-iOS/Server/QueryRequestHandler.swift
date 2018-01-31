@@ -78,12 +78,12 @@ public class QueryRequestHandler {
         case "query_select":
             let select_result: SelectResult = args.get(name: "select_result")!
 
-            return Query.select(select_result as! SelectResultProtocol)
+            return QueryBuilder.select(select_result as! SelectResultProtocol)
 
         case "query_select_distinct":
             let select_result: SelectResult = args.get(name: "select_result")!
 
-            return Query.selectDistinct(select_result as! SelectResultProtocol)
+            return QueryBuilder.selectDistinct(select_result as! SelectResultProtocol)
 
         case "query_create":
         // Only does select FirstName from test_db where City = "MV"
@@ -91,7 +91,7 @@ public class QueryRequestHandler {
             let from_prop: DataSource = args.get(name: "from_prop")!
             let whr_key_prop: Expression = args.get(name: "whr_key_prop")!
 
-            let query = Query
+            let query = QueryBuilder
                 .select(select_prop as! SelectResultProtocol)
                 .from(from_prop as! DataSourceProtocol)
                 .where(whr_key_prop as! ExpressionProtocol)
@@ -106,7 +106,7 @@ public class QueryRequestHandler {
             let database: Database = args.get(name: "database")!
             let doc_id: String = args.get(name: "doc_id")!
 
-            let searchQuery = Query
+            let searchQuery = QueryBuilder
                 .select(SelectResult.all())
                 .from(DataSource.database(database))
                 .where((Meta.id).equalTo(Expression.property(doc_id)))
@@ -124,7 +124,7 @@ public class QueryRequestHandler {
             let limit: Int = args.get(name: "limit")!
             let offset: Int = args.get(name: "offset")!
 
-            let searchQuery = Query
+            let searchQuery = QueryBuilder
                 .select(SelectResult.all())
                 .from(DataSource.database(database))
                 .limit(Expression.int(limit), offset: Expression.int(offset))
@@ -144,7 +144,7 @@ public class QueryRequestHandler {
             let whr_key: String = args.get(name: "whr_key")!
             let whr_val: String = args.get(name: "whr_val")!
 
-            let searchQuery = Query
+            let searchQuery = QueryBuilder
                 .select(SelectResult.expression(Meta.id),
                         SelectResult.expression(Expression.property(select_property1)),
                         SelectResult.expression(Expression.property(select_property2)))
@@ -170,7 +170,7 @@ public class QueryRequestHandler {
             let whr_key4: String = args.get(name: "whr_key4")!
             let whr_val4: Bool = args.get(name: "whr_val4")!
 
-            let searchQuery = Query
+            let searchQuery = QueryBuilder
                 .select(SelectResult.expression(Meta.id))
                 .from(DataSource.database(database))
                 .where(Expression.property(whr_key1).equalTo(Expression.property(whr_val1))
@@ -195,7 +195,7 @@ public class QueryRequestHandler {
             let like_key: String = args.get(name: "like_key")!
             let like_val: String = args.get(name: "like_val")!
 
-            let searchQuery = Query
+            let searchQuery = QueryBuilder
                 .select(SelectResult.expression(Meta.id),
                         SelectResult.expression(Expression.property(select_property1)),
                         SelectResult.expression(Expression.property(select_property2)))
@@ -220,7 +220,7 @@ public class QueryRequestHandler {
             let regex_key: String = args.get(name: "regex_key")!
             let regex_val: String = args.get(name: "regex_val")!
 
-            let searchQuery = Query
+            let searchQuery = QueryBuilder
                 .select(SelectResult.expression(Meta.id),
                         SelectResult.expression(Expression.property(select_property1)),
                         SelectResult.expression(Expression.property(select_property2)))
@@ -241,7 +241,7 @@ public class QueryRequestHandler {
             let select_property1: String = args.get(name: "select_property1")!
             let limit: Int = args.get(name: "limit")!
 
-            let searchQuery = Query
+            let searchQuery = QueryBuilder
                 .select(SelectResult.expression(Meta.id),
                         SelectResult.expression(Expression.property(select_property1)))
                 .from(DataSource.database(database))
@@ -262,7 +262,7 @@ public class QueryRequestHandler {
             let whr_key: String = args.get(name: "whr_key")!
             let whr_val: String = args.get(name: "whr_val")!
 
-            let searchQuery = Query
+            let searchQuery = QueryBuilder
                 .select(
                     SelectResult.expression(Meta.id),
                     SelectResult.expression(Expression.property(select_property1)))
@@ -284,7 +284,7 @@ public class QueryRequestHandler {
             let select_property2: String = args.get(name: "select_property2")!
             let substring: String = args.get(name: "substring")!
 
-            let searchQuery = Query
+            let searchQuery = QueryBuilder
                 .select(SelectResult.expression(Meta.id),
                         SelectResult.expression(Expression.property(select_property1)),
                         SelectResult.expression(Function.upper(Expression.property(select_property2))))
@@ -312,7 +312,7 @@ public class QueryRequestHandler {
                 .ignoreAccents(true)
                 .ignoreCase(true)
 
-            let searchQuery = Query
+            let searchQuery = QueryBuilder
                 .select(SelectResult.expression(Meta.id),
                         SelectResult.expression(Expression.property(select_property1)))
                 .from(DataSource.database(database))
