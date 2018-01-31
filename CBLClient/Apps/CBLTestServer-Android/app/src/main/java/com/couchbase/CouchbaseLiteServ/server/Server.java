@@ -181,7 +181,7 @@ public class Server extends NanoHTTPD {
                 IStatus status = Status.OK;
                 return Response.newFixedLengthResponse(status, "text/plain", body.getBytes());
             } else {
-                return Response.newFixedLengthResponse(Status.OK, "text/plain", "I-1");
+                return Response.newFixedLengthResponse(Status.OK, "text/plain", "null");
             }
         } catch (Exception e) {
             // TODO: How should we handle exceptions?

@@ -196,8 +196,8 @@ def test_no_conflicts_enabled_with_revs_limit(params_from_base_test_setup, sg_co
 @pytest.mark.noconflicts
 @pytest.mark.parametrize("sg_conf_name, num_of_docs, revs_limit", [
     ('sync_gateway_revs_conflict_configurable', 10, 25),
-#     ('sync_gateway_revs_conflict_configurable', 100, 35),
-#     ('sync_gateway_revs_conflict_configurable', 100, 100)
+    # ('sync_gateway_revs_conflict_configurable', 100, 35),
+    # ('sync_gateway_revs_conflict_configurable', 100, 100)
 ])
 def test_no_conflicts_update_with_revs_limit(params_from_base_test_setup, sg_conf_name, num_of_docs, revs_limit):
     """
@@ -290,10 +290,11 @@ def test_no_conflicts_update_with_revs_limit(params_from_base_test_setup, sg_con
     # once issue is fixed, replace with update cbl docs
     # have for loop half the tiem of expected
     # for i in xrange((revs_limit + 5) / 2):
-    for i in xrange(revs_limit + 5):
+    for _ in xrange(revs_limit + 5):
         # sg_client.update_docs(url=sg_url, db=sg_db, docs=sg_docs, number_updates=1, delay=None,
         #                       auth=session, channels=channels)
         db.update_bulk_docs(cbl_db)
+        time.sleep(1)
 
     # Get cbl docs
     cbl_doc_ids = db.getDocIds(cbl_db)
@@ -309,9 +310,10 @@ def test_no_conflicts_update_with_revs_limit(params_from_base_test_setup, sg_con
     persist_cluster_config_environment_prop(temp_cluster_config, 'revs_limit', reduced_revs_limit, property_name_check=False)
     status = c.sync_gateways[0].restart(config=sg_config, cluster_config=temp_cluster_config)
     assert status == 0, "Syncgateway did not start after having revs_limit 2 with no conflicts mode"
-
+    time.sleep(5)
     # Update the docs 1 more time
     sg_client.update_docs(url=sg_url, db=sg_db, docs=sg_docs, number_updates=1, delay=None, auth=session, channels=channels)
+    time.sleep(2)
     replicator.wait_until_replicator_idle(repl)
     # Get number of revisions and verify number of revisions should be same revs_limit
     # Verify previous revisions does not exist
@@ -327,8 +329,8 @@ def test_no_conflicts_update_with_revs_limit(params_from_base_test_setup, sg_con
 @pytest.mark.noconflicts
 @pytest.mark.parametrize("sg_conf_name, num_of_docs, revs_limit", [
     ('sync_gateway_revs_conflict_configurable', 10, 10),
-#     ('sync_gateway_revs_conflict_configurable', 100, 10),
-#     ('sync_gateway_revs_conflict_configurable', 1000, 5)
+    # ('sync_gateway_revs_conflict_configurable', 100, 10),
+    # ('sync_gateway_revs_conflict_configurable', 1000, 5)
 ])
 def test_migrate_conflicts_to_noConflicts_CBL(params_from_base_test_setup, sg_conf_name, num_of_docs, revs_limit):
     """
@@ -450,8 +452,8 @@ def test_migrate_conflicts_to_noConflicts_CBL(params_from_base_test_setup, sg_co
 @pytest.mark.noconflicts
 @pytest.mark.parametrize("sg_conf_name, num_of_docs, revs_limit", [
     ('sync_gateway_revs_conflict_configurable', 10, 20),
-#     ('sync_gateway_revs_conflict_configurable', 100, 20),
-#     ('sync_gateway_revs_conflict_configurable', 10, 500)
+    # ('sync_gateway_revs_conflict_configurable', 100, 20),
+    # ('sync_gateway_revs_conflict_configurable', 10, 500)
 ])
 def test_cbl_no_conflicts_sgAccel_added(params_from_base_test_setup, sg_conf_name, num_of_docs, revs_limit):
     """
@@ -641,12 +643,12 @@ def test_sg_CBL_updates_concurrently(params_from_base_test_setup, sg_conf_name, 
             number_updates=number_of_updates,
             auth=session
         )
-
         update_from_cbl_task = tpe.submit(
             db.update_bulk_docs,
             database=cbl_db,
             number_of_updates=number_of_updates
         )
+        
         update_from_sg_task.result()
         update_from_cbl_task.result()
 
@@ -688,8 +690,8 @@ def sg_updateDocs(sg_client, url, db, docs, number_updates, auth):
 @pytest.mark.noconflicts
 @pytest.mark.parametrize("sg_conf_name, num_of_docs, number_of_updates", [
     ('listener_tests/listener_tests_no_conflicts', 10, 2),
-#     ('listener_tests/listener_tests_no_conflicts', 100, 10),
-#     ('listener_tests/listener_tests_no_conflicts', 100, 50)
+    # ('listener_tests/listener_tests_no_conflicts', 100, 10),
+    # ('listener_tests/listener_tests_no_conflicts', 100, 50)
 ])
 def test_multiple_cbls_updates_concurrently_with_push(params_from_base_test_setup, sg_conf_name, num_of_docs, number_of_updates):
     """
@@ -749,8 +751,6 @@ def test_multiple_cbls_updates_concurrently_with_push(params_from_base_test_setu
 
     # Replicate to CBL2
     replicator2 = Replication(base_url)
-    authenticator = Authenticator(base_url)
-    replicator_authenticator = authenticator.authentication(session_id, cookie, authentication_type="session")
     repl_config = replicator2.configure(cbl_db1, target_db=cbl_db2, continuous=True, channels=channels)
     repl = replicator2.create(repl_config)
     replicator2.start(repl)
@@ -761,6 +761,8 @@ def test_multiple_cbls_updates_concurrently_with_push(params_from_base_test_setu
     print "CBL2 replicated  docs are ", cbl_docs
 
     # Replicate to CBL3
+    authenticator = Authenticator(base_url)
+    replicator_authenticator = authenticator.authentication(session_id, cookie, authentication_type="session")
     repl_config = replicator2.configure(cbl_db1, target_db=cbl_db3, continuous=True, channels=channels, replicator_authenticator=replicator_authenticator)
     repl3 = replicator2.create(repl_config)
     replicator2.start(repl3)
@@ -827,8 +829,8 @@ def test_multiple_cbls_updates_concurrently_with_push(params_from_base_test_setu
 @pytest.mark.noconflicts
 @pytest.mark.parametrize("sg_conf_name, num_of_docs, number_of_updates", [
     ('listener_tests/listener_tests_no_conflicts', 10, 2),
-    # ('listener_tests/listener_tests_no_conflicts', 100),
-    # ('listener_tests/listener_tests_no_conflicts', 1000)
+    ('listener_tests/listener_tests_no_conflicts', 100, 10),
+    ('listener_tests/listener_tests_no_conflicts', 1000, 100)
 ])
 def test_multiple_cbls_updates_concurrently_with_pull(params_from_base_test_setup, sg_conf_name, num_of_docs, number_of_updates):
     """
@@ -976,8 +978,8 @@ def test_multiple_cbls_updates_concurrently_with_pull(params_from_base_test_setu
 @pytest.mark.noconflicts
 @pytest.mark.parametrize("sg_conf_name, num_of_docs, number_of_updates, add_attachments", [
     ('listener_tests/listener_tests_no_conflicts', 10, 2, False),
-#     ('listener_tests/listener_tests_no_conflicts', 10, 10, True),
-#     ('listener_tests/listener_tests_no_conflicts', 1000, 10, True)
+    # ('listener_tests/listener_tests_no_conflicts', 10, 10, True),
+    # ('listener_tests/listener_tests_no_conflicts', 1000, 10, True)
 ])
 def test_sg_cbl_updates_concurrently_with_push_pull(params_from_base_test_setup, sg_conf_name, num_of_docs, number_of_updates, add_attachments):
     """
@@ -1079,8 +1081,8 @@ def test_sg_cbl_updates_concurrently_with_push_pull(params_from_base_test_setup,
 @pytest.mark.noconflicts
 @pytest.mark.parametrize("sg_conf_name, num_of_docs, number_of_updates", [
     ('listener_tests/listener_tests_no_conflicts', 10, 4),
-    # ('listener_tests/listener_tests_no_conflicts', 100, 10),
-    # ('listener_tests/listener_tests_no_conflicts', 1000, 10)
+    ('listener_tests/listener_tests_no_conflicts', 100, 10),
+    ('listener_tests/listener_tests_no_conflicts', 1000, 10)
 ])
 def test_CBL_push_without_pull(params_from_base_test_setup, sg_conf_name, num_of_docs, number_of_updates):
     """
