@@ -30,7 +30,7 @@ UNSUPPORTED_1_5_0_CC = {
 }
 
 
-def skip_if_unsupported(sync_gateway_version, mode, test_name):
+def skip_if_unsupported(sync_gateway_version, mode, test_name, no_conflicts_enabled):
 
     # sync_gateway_version >= 1.5.0 and channel cache
     if compare_versions(sync_gateway_version, "1.5.0") >= 0 and mode == 'cc':
@@ -40,6 +40,9 @@ def skip_if_unsupported(sync_gateway_version, mode, test_name):
     if compare_versions(sync_gateway_version, "1.4.0") <= 0:
         if "log_rotation" in test_name or "test_backfill" in test_name or "test_awaken_backfill" in test_name:
             pytest.skip("{} test was added for sync gateway 1.4".format(test_name))
+
+    if sync_gateway_version < "2.0.0" and no_conflicts_enabled:
+        pytest.skip("{} test cannot run with no-conflicts with sg version < 2.0.0".format(test_name))
 
 
 # Add custom arguments for executing tests in this directory
@@ -304,7 +307,8 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     skip_if_unsupported(
         sync_gateway_version=params_from_base_suite_setup["sync_gateway_version"],
         mode=mode,
-        test_name=test_name
+        test_name=test_name,
+        no_conflicts_enabled=no_conflicts_enabled
     )
 
     log_info("Running test '{}'".format(test_name))
