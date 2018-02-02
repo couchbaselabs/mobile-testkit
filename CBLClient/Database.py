@@ -234,6 +234,8 @@ class Database(object):
         doc_ids = self.getDocIds(database)
         
         docs = self.getDocuments(database, doc_ids)
+        if len(docs) < 1:
+            raise Exception("cbl docs are empty , cannot update docs")
         for _ in xrange(number_of_updates):
             for doc in docs:
                 doc_body = docs[doc]

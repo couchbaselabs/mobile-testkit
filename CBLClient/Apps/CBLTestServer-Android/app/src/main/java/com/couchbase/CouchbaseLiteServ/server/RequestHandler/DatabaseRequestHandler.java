@@ -1,6 +1,7 @@
 package com.couchbase.CouchbaseLiteServ.server.RequestHandler;
 
 import android.content.Context;
+import android.util.Log;
 
 import com.couchbase.CouchbaseLiteServ.server.Args;
 import com.couchbase.lite.CouchbaseLiteException;
@@ -9,13 +10,13 @@ import com.couchbase.lite.Database;
 import com.couchbase.lite.DatabaseChange;
 import com.couchbase.lite.DatabaseChangeListener;
 import com.couchbase.lite.DatabaseConfiguration;
-import com.couchbase.lite.DatabaseConfiguration.Builder;
 import com.couchbase.lite.Document;
 import com.couchbase.CouchbaseLiteServ.MainActivity;
 import com.couchbase.lite.ListenerToken;
 import com.couchbase.lite.Meta;
 import com.couchbase.lite.MutableDocument;
 import com.couchbase.lite.Query;
+import com.couchbase.lite.QueryBuilder;
 import com.couchbase.lite.Result;
 import com.couchbase.lite.ResultSet;
 import com.couchbase.lite.SelectResult;
@@ -37,7 +38,7 @@ public class DatabaseRequestHandler {
         DatabaseConfiguration config = args.get("config");
         if (config == null) {
             Context context = MainActivity.getAppContext();
-            config = new Builder(context).build();
+            config = new DatabaseConfiguration(context);
         }
         return new Database(name, config);
     }
@@ -75,6 +76,7 @@ public class DatabaseRequestHandler {
 
     public File getPath(Args args) throws CouchbaseLiteException {
         Database database = args.get("database");
+        System.out.println("database path is "+database.getPath());
         return database.getPath();
     }
 
@@ -179,7 +181,13 @@ public class DatabaseRequestHandler {
 
     public void deleteDB(Args args) throws CouchbaseLiteException {
         Database database = args.get("database");
-        database.delete();
+        try {
+            database.delete();
+        }catch (CouchbaseLiteException ex){
+            Log.e("deleteDB", "deleteDB() ERROR !!!!!!");
+            ex.printStackTrace();
+        }
+        System.out.println("database delete ");
    }
 
    public void deleteDbByName(Args args) throws CouchbaseLiteException {
@@ -203,7 +211,7 @@ public class DatabaseRequestHandler {
 
     public List<String> getDocIds(Args args) throws CouchbaseLiteException {
         Database database = args.get("database");
-        Query query = Query
+        Query query = QueryBuilder
                 .select(SelectResult.expression(Meta.id))
                 .from(DataSource.database(database));
         List<String> result = new ArrayList<String>();

@@ -13,7 +13,7 @@ from CBLClient.Query import Query
 
 def test_documents():
     source_db = None
-    base_url = "http://10.17.0.152:8989"
+    base_url = "http://192.168.1.100:8080"
     db = Database(base_url)
     cbl_db = "test_db"
 
@@ -45,9 +45,9 @@ def test_documents():
     assert doc == doc_resp
 
 
-def test_replication():
+def test_replication1():
     source_db = None
-    base_url = "http://10.17.5.92:8989"
+    base_url = "http://192.168.1.100:8080"
     db = Database(base_url)
     # SG URL
     sg_db = "db"
@@ -76,8 +76,7 @@ def test_replication():
     doc = Document(base_url)
     document = doc.create(doc_id="foo", dictionary=dictionary)
     log_info("Document is {}".format(document))
-    db.save(source_db, document)
-
+    db.saveDocument(source_db, document)
     # Add docs to SG
     sg_client = MobileRestClient()
     num_docs = 10
@@ -90,11 +89,11 @@ def test_replication():
 
     # Start and stop continuous replication
     replicator = Replication(base_url)
-    repl = replicator.configure_replication(source_db, target_url)
+    repl = replicator.configure(source_db, target_url)
     log_info("repl: {}".format(repl))
-    replicator.start_replication(repl)
+    replicator.start(repl)
     time.sleep(5)
-    replicator.stop_replication(repl)
+    replicator.stop(repl)
 
     all_docs = sg_client.get_all_docs(
         url=sg_admin_url,

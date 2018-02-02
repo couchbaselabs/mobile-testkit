@@ -6,43 +6,38 @@ import android.content.Context;
 import com.couchbase.CouchbaseLiteServ.MainActivity;
 import com.couchbase.CouchbaseLiteServ.server.Args;
 import com.couchbase.lite.DatabaseConfiguration;
-import com.couchbase.lite.DatabaseConfiguration.Builder;
 import com.couchbase.lite.ConflictResolver;
 import com.couchbase.lite.EncryptionKey;
 
 public class DatabaseConfigurationRequestHandler {
 
-    public Builder builderCreate(Args args){
-        DatabaseConfiguration config = args.get("config");
-        if (config != null) {
-            return new Builder(config);
-        } else {
-            Context context = MainActivity.getAppContext();
-            return new Builder(context);
-        }
-    }
+    /* Not required as builder is removed
+    public DatabaseConfiguration builderCreate(Args args){
+        return new DatabaseConfiguration();
+    }*/
 
     public DatabaseConfiguration configure(Args args) {
         String directory = args.get("directory");
         ConflictResolver conflictResolver = args.get("conflictResolver");
         EncryptionKey encryptionKey = args.get("encryptionKey");
         Context context = MainActivity.getAppContext();
-        Builder builder = new DatabaseConfiguration.Builder(context);
+        DatabaseConfiguration config = new DatabaseConfiguration(context);
         if (directory != null) {
-            builder.setDirectory(directory);
+            config.setDirectory(directory);
         }
         if (conflictResolver != null) {
-            builder.setConflictResolver(conflictResolver);
+            config.setConflictResolver(conflictResolver);
         }
         if (encryptionKey != null) {
-            builder.setEncryptionKey(encryptionKey);
+            config.setEncryptionKey(encryptionKey);
         }
-        return builder.build();
+        return config;
     }
 
+    // TODO : This is may not require. Remove it if it is not used
     public DatabaseConfiguration create(Args args) {
-        Builder builder = args.get("databaseBuilder");
-        return builder.build();
+        DatabaseConfiguration config = args.get("config");
+        return config;
     }
 
     public ConflictResolver getConflictResolver(Args args){
@@ -60,21 +55,21 @@ public class DatabaseConfigurationRequestHandler {
         return config.getEncryptionKey();
     }
 
-    public Builder setConflictResolver(Args args){
-        Builder builder = args.get("builder");
+    public DatabaseConfiguration setConflictResolver(Args args){
+        DatabaseConfiguration config = args.get("config");
         ConflictResolver conflictResolver = args.get("conflictResolver");
-        return builder.setConflictResolver(conflictResolver);
+        return config.setConflictResolver(conflictResolver);
     }
 
-    public Builder setDirectory(Args args){
-        Builder builder = args.get("builder");
+    public DatabaseConfiguration setDirectory(Args args){
+        DatabaseConfiguration config = args.get("config");
         String directory = args.get("directory");
-        return builder.setDirectory(directory);
+        return config.setDirectory(directory);
     }
 
-    public Builder setEncryptionKey(Args args){
-        Builder builder = args.get("builder");
+    public DatabaseConfiguration setEncryptionKey(Args args){
+        DatabaseConfiguration config = args.get("config");
         EncryptionKey key = args.get("key");
-        return builder.setEncryptionKey(key);
+        return config.setEncryptionKey(key);
     }
 }

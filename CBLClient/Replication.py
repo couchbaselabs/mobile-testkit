@@ -274,19 +274,21 @@ class Replication(object):
         max_times = 10
         count = 0
         # Sleep until replicator completely processed
-        while self.getActivitylevel(repl) != "idle" and count < max_times:
-            print "sleeping... actvity level is", self.getActivitylevel(repl)
+        activity_level = self.getActivitylevel(repl)
+        while activity_level != "idle" and count < max_times:
+            print "sleeping... actvity level is", activity_level
             time.sleep(0.5)
-            if self.getActivitylevel(repl) == "idle" or self.getActivitylevel(repl) == "offline" or self.getActivitylevel(repl) == "connecting":
+            if activity_level == "idle" or activity_level == "offline" or activity_level == "connecting":
                 count += 1
-            if self.getActivitylevel(repl) == "stopped":
+            if activity_level == "stopped":
                 break
             err = self.getError(repl)
             # TODO remove the condition of 'connection reset by peer'
             # once https://github.com/couchbase/sync_gateway/issues/3249 is fixed
             # if err != -1: #-1 means Null or None, so if any error, just raise the exception
-            if err is not None and err != 'nil' and not err.__contains__("Connection reset by peer"):
+            if err is not None and err != 'nil':
                 raise Exception("Error while replicating", err)
+            activity_level = self.getActivitylevel(repl)
 
     def create_session_configure_replicate(self, baseUrl, sg_admin_url, sg_db, username, password,
                                            channels, sg_client, cbl_db, sg_blip_url, replication_type=None, continuous=True):
