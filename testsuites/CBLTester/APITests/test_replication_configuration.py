@@ -22,7 +22,7 @@ class TestReplicatorConfiguration(object):
         cbl_db = self.db_obj.create(self.cbl_db_name)
         builder = self.repl_config_obj.builderCreate(source_db=cbl_db, target_url=sg_blip_url)
         config = self.repl_config_obj.create(builder)
-        assert self.repl_config_obj.getAuthenticator(config) == -1
+        assert self.repl_config_obj.getAuthenticator(config) == None
         auth = self.base_auth_obj.create("username", "password")
         self.repl_config_obj.setAuthenticator(builder, auth)
         assert self.repl_config_obj.getAuthenticator(config) is not None
