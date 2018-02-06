@@ -176,12 +176,13 @@ def params_from_base_suite_setup(request):
             raise
 
     if enable_sample_bucket and not create_db_per_suite:
+        # if enable_sample_bucket and not create_db_per_test:
         raise Exception("enable_sample_bucket has to be used with create_db_per_suite")
 
     source_db = None
     if create_db_per_suite:
         # Create CBL database
-        cbl_db = create_db_per_suite
+        cbl_db = create_db_per_suite + str(time.time())
         db = Database(base_url)
 
         log_info("Creating a Database {} at the suite setup".format(cbl_db))
@@ -234,18 +235,18 @@ def params_from_base_suite_setup(request):
         query = N1QLQuery(n1ql_query)
         sdk_client.n1ql_query(query)
 
-        # Start continuous replication
-        repl_obj = Replication(base_url)
-        auth_obj = BasicAuthenticator(base_url)
-        authenticator = auth_obj.create("traveL-sample", "password")
-        repl_config = repl_obj.configure(source_db=source_db,
-                                         target_url=target_admin_url,
-                                         replication_type="PUSH_AND_PULL",
-                                         continuous=True,
-                                         replicator_authenticator=authenticator)
-        repl = repl_obj.create(repl_config)
-        repl_obj.start(repl)
-        repl_obj.wait_until_replicator_idle(repl)
+    # Start continuous replication
+    repl_obj = Replication(base_url)
+    auth_obj = BasicAuthenticator(base_url)
+    authenticator = auth_obj.create("traveL-sample", "password")
+    repl_config = repl_obj.configure(source_db=source_db,
+                                     target_url=target_admin_url,
+                                     replication_type="PUSH_AND_PULL",
+                                     continuous=True,
+                                     replicator_authenticator=authenticator)
+    repl = repl_obj.create(repl_config)
+    repl_obj.start(repl)
+    repl_obj.wait_until_replicator_idle(repl)
 
     yield {
         "cluster_config": cluster_config,
@@ -309,6 +310,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     sync_gateway_version = params_from_base_suite_setup["sync_gateway_version"]
     target_admin_url = params_from_base_suite_setup["target_admin_url"]
     sg_config = params_from_base_suite_setup["sg_config"]
+    liteserv_platform = params_from_base_suite_setup["liteserv_platform"]
 
     cluster_helper = ClusterKeywords()
     cluster_hosts = cluster_helper.get_cluster_topology(cluster_config=cluster_config)
@@ -321,9 +323,9 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     log_info("mode: {}".format(mode))
     log_info("xattrs_enabled: {}".format(xattrs_enabled))
 
-    cbl_db = create_db_per_test
     db = None
     if create_db_per_test:
+        cbl_db = create_db_per_test + str(time.time())
         # Create CBL database
         db = Database(base_url)
 
@@ -344,6 +346,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         "xattrs_enabled": xattrs_enabled,
         "liteserv_host": liteserv_host,
         "liteserv_port": liteserv_port,
+        "liteserv_platform": liteserv_platform,
         "target_url": target_url,
         "target_admin_url": target_admin_url,
         "sg_ip": sg_ip,
@@ -396,3 +399,33 @@ def class_init(request, params_from_base_suite_setup):
 
     yield
     db_obj.deleteDB(db)
+
+@pytest.fixture(scope="function")
+def setup_customized_teardown_test(params_from_base_test_setup):
+    cbl_db_name1 = "cbl_db1" + str(time.time())
+    cbl_db_name2 = "cbl_db2" + str(time.time())
+    cbl_db_name3 = "cbl_db3" + str(time.time())
+    base_url = params_from_base_test_setup["base_url"]
+    db = Database(base_url)
+    db_config = db.configure()
+    cbl_db1 = db.create(cbl_db_name1, db_config)
+    cbl_db2 = db.create(cbl_db_name2, db_config)
+    cbl_db3 = db.create(cbl_db_name3, db_config)
+    print "setting up all 3 dbs"
+
+    yield{
+        "db": db,
+        "cbl_db_name1": cbl_db_name1,
+        "cbl_db_name2": cbl_db_name2,
+        "cbl_db_name3": cbl_db_name3,
+        "cbl_db1": cbl_db1,
+        "cbl_db2": cbl_db2,
+        "cbl_db3": cbl_db3,
+    }
+    print "tearing down all 3 dbs"
+    # db.close(cbl_db)
+    time.sleep(2)
+    db.deleteDB(cbl_db1)
+    db.deleteDB(cbl_db2)
+    db.deleteDB(cbl_db3)
+

@@ -267,3 +267,32 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     log_info("Deleting the database {}".format(cbl_db))
     db.deleteDB(source_db)
     """
+
+@pytest.fixture(scope="function")
+def setup_customized_teardown_test(params_from_base_test_setup):
+    cbl_db_name1 = "cbl_db1" + str(time.time())
+    cbl_db_name2 = "cbl_db2" + str(time.time())
+    cbl_db_name3 = "cbl_db3" + str(time.time())
+    base_url = params_from_base_test_setup["base_url"]
+    db = Database(base_url)
+    db_config = db.configure()
+    cbl_db1 = db.create(cbl_db_name1, db_config)
+    cbl_db2 = db.create(cbl_db_name2, db_config)
+    cbl_db3 = db.create(cbl_db_name3, db_config)
+    print "setting up all 3 dbs"
+
+    yield{
+        "db": db,
+        "cbl_db_name1": cbl_db_name1,
+        "cbl_db_name2": cbl_db_name2,
+        "cbl_db_name3": cbl_db_name3,
+        "cbl_db1": cbl_db1,
+        "cbl_db2": cbl_db2,
+        "cbl_db3": cbl_db3,
+    }
+    print "tearing down all 3 dbs"
+    # db.close(cbl_db)
+    time.sleep(2)
+    db.deleteDB(cbl_db1)
+    db.deleteDB(cbl_db2)
+    db.deleteDB(cbl_db3)

@@ -109,14 +109,14 @@ public class QueryRequestHandler {
             let searchQuery = QueryBuilder
                 .select(SelectResult.all())
                 .from(DataSource.database(database))
-                .where((Meta.id).equalTo(Expression.property(doc_id)))
+                .where((Meta.id).equalTo(Expression.string(doc_id)))
 
             var resultArray = [Any]()
 
             for row in try searchQuery.execute() {
                 resultArray.append(row.toDictionary())
             }
-
+            
             return resultArray
 
         case "query_docsLimitOffset":
@@ -149,7 +149,7 @@ public class QueryRequestHandler {
                         SelectResult.expression(Expression.property(select_property1)),
                         SelectResult.expression(Expression.property(select_property2)))
                 .from(DataSource.database(database))
-                .where((Expression.property(whr_key)).equalTo(Expression.property(whr_val)))
+                .where((Expression.property(whr_key)).equalTo(Expression.string(whr_val)))
 
             var resultArray = [Any]()
 
@@ -173,9 +173,9 @@ public class QueryRequestHandler {
             let searchQuery = QueryBuilder
                 .select(SelectResult.expression(Meta.id))
                 .from(DataSource.database(database))
-                .where(Expression.property(whr_key1).equalTo(Expression.property(whr_val1))
-                    .and(Expression.property(whr_key2).equalTo(Expression.property(whr_val2))
-                        .or(Expression.property(whr_key3).equalTo(Expression.property(whr_val3))))
+                .where(Expression.property(whr_key1).equalTo(Expression.string(whr_val1))
+                    .and(Expression.property(whr_key2).equalTo(Expression.string(whr_val2))
+                        .or(Expression.property(whr_key3).equalTo(Expression.string(whr_val3))))
                     .and(Expression.property(whr_key4).equalTo(Expression.boolean(whr_val4))))
 
             var resultArray = [Any]()
@@ -200,8 +200,8 @@ public class QueryRequestHandler {
                         SelectResult.expression(Expression.property(select_property1)),
                         SelectResult.expression(Expression.property(select_property2)))
                 .from(DataSource.database(database))
-                .where(Expression.property(whr_key).equalTo(Expression.property(whr_val))
-                    .and(Expression.property(like_key).like(Expression.property(like_val))))
+                .where(Expression.property(whr_key).equalTo(Expression.string(whr_val))
+                    .and(Expression.property(like_key).like(Expression.string(like_val))))
 
             var resultArray = [Any]()
 
@@ -225,8 +225,8 @@ public class QueryRequestHandler {
                         SelectResult.expression(Expression.property(select_property1)),
                         SelectResult.expression(Expression.property(select_property2)))
                 .from(DataSource.database(database))
-                .where(Expression.property(whr_key).equalTo(Expression.property(whr_val))
-                    .and(Expression.property(regex_key).regex(Expression.property(regex_val))))
+                .where(Expression.property(whr_key).equalTo(Expression.string(whr_val))
+                    .and(Expression.property(regex_key).regex(Expression.string(regex_val))))
 
             var resultArray = [Any]()
 
@@ -246,6 +246,7 @@ public class QueryRequestHandler {
                         SelectResult.expression(Expression.property(select_property1)))
                 .from(DataSource.database(database))
                 .where(Expression.property(select_property1).isNullOrMissing())
+                .orderBy(Ordering.expression(Meta.id).ascending())
                 .limit(Expression.int(limit))
 
             var resultArray = [Any]()
@@ -267,7 +268,7 @@ public class QueryRequestHandler {
                     SelectResult.expression(Meta.id),
                     SelectResult.expression(Expression.property(select_property1)))
                 .from(DataSource.database(database))
-                .where(Expression.property(whr_key).equalTo(Expression.property(whr_val)))
+                .where(Expression.property(whr_key).equalTo(Expression.string(whr_val)))
                 .orderBy(Ordering.property(select_property1).ascending())
 
             var resultArray = [Any]()
@@ -289,7 +290,7 @@ public class QueryRequestHandler {
                         SelectResult.expression(Expression.property(select_property1)),
                         SelectResult.expression(Function.upper(Expression.property(select_property2))))
                 .from(DataSource.database(database))
-                .where(Expression.property(select_property1).isNullOrMissing().and(Function.contains(Expression.property(select_property1),                                                                                    substring: Expression.property(substring))))
+                .where(Function.contains(Expression.property(select_property1),                                                                                    substring: Expression.string(substring)))
 
             var resultArray = [Any]()
 
@@ -316,9 +317,9 @@ public class QueryRequestHandler {
                 .select(SelectResult.expression(Meta.id),
                         SelectResult.expression(Expression.property(select_property1)))
                 .from(DataSource.database(database))
-                .where(Expression.property(whr_key1).equalTo(Expression.property(whr_val1))
-                    .and(Expression.property(whr_key2).equalTo(Expression.property(whr_val2)))
-                    .and(Expression.property(select_property1).collate(collator).equalTo(Expression.property(equal_to))))
+                .where(Expression.property(whr_key1).equalTo(Expression.string(whr_val1))
+                    .and(Expression.property(whr_key2).equalTo(Expression.string(whr_val2)))
+                    .and(Expression.property(select_property1).collate(collator).equalTo(Expression.string(equal_to))))
 
             var resultArray = [Any]()
 

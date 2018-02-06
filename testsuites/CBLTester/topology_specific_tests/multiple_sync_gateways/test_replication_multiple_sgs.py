@@ -1,9 +1,11 @@
 import pytest
 import json
+import time
 
 from keywords.MobileRestClient import MobileRestClient
 from CBLClient.Database import Database
 from CBLClient.Replication import Replication
+from CBLClient.Authenticator import Authenticator
 from keywords.SyncGateway import sync_gateway_config_path_for_mode
 from libraries.testkit.cluster import Cluster
 from libraries.testkit import cluster
@@ -18,37 +20,30 @@ from utilities.cluster_config_utils import persist_cluster_config_environment_pr
 @pytest.mark.replication
 @pytest.mark.parametrize("sg_conf_name, num_of_docs", [
     ('listener_tests/multiple_sync_gateways', 10),
-    # ('listener_tests/listener_tests_no_conflicts', 100, 10),
-    # ('listener_tests/listener_tests_no_conflicts', 1000, 10)
+    ('listener_tests/multiple_sync_gateways', 100, 10),
+    ('listener_tests/multiple_sync_gateways', 1000, 10)
 ])
-def test_multiple_sgs_with_differrent_revs_limit(params_from_base_test_setup, sg_conf_name, num_of_docs):
+def test_multiple_sgs_with_differrent_revs_limit(params_from_base_test_setup, setup_customized_teardown_test, sg_conf_name, num_of_docs):
     """
         @summary:
         1. Create 2 DBs in 2 SGS and Create docs in CBL
         2. Set up 1 SG with revs limit 30 and SG2 with revs limit 25.
         3. Do push replication to two SGS(each DB
         to each SG).
-        4. Do updates on CBL.
+        4. Do updates on CBL for 35 times.
         5. Continue push replication to SGs 
         6. Verify that revs maintained on two SGS according to revs_limit.
         7. exchange DBs of SG and do push replication.
         8. Verify that revs maintained on two SGS according to revs_limit.
 
     """
-    # base_url = "http://192.168.0.109:8989"
-    
     sg_db1 = "sg_db1"
     sg_db2 = "sg_db2"
-    cbl_db_name1 = "cbl_db1"
-    cbl_db_name2 = "cbl_db2"
-    sg_url = params_from_base_test_setup["sg_url"]
-    sg_admin_url = params_from_base_test_setup["sg_admin_url"]
     sg_mode = params_from_base_test_setup["mode"]
     cluster_config = params_from_base_test_setup["cluster_config"]
-    sg_blip_url = params_from_base_test_setup["target_url"]
     base_url = params_from_base_test_setup["base_url"]
-    no_conflicts_enabled = params_from_base_test_setup["no_conflicts_enabled"]
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
+    db = Database(base_url)
 
     channels1 = ["Replication1"]
     channels2 = ["Replication2"]
@@ -58,8 +53,6 @@ def test_multiple_sgs_with_differrent_revs_limit(params_from_base_test_setup, sg
 
     if sync_gateway_version < "2.0":
         pytest.skip('--no-conflicts is enabled and does not work with sg < 2.0 , so skipping the test')
-    # Modify sync-gateway config to use no-conflicts config
-    db = Database(base_url)
     
     # cluster_config = "{}/multiple_sync_gateways_{}".format(CLUSTER_CONFIGS_DIR, sg_mode)
     c = cluster.Cluster(cluster_config)
@@ -91,14 +84,14 @@ def test_multiple_sgs_with_differrent_revs_limit(params_from_base_test_setup, sg
     sg1_admin_url = sg1.admin.admin_url
     sg2_url = sg2.url
     sg2_admin_url = sg2.admin.admin_url
-    sg1_blip_url = "blip://{}:4984/{}".format(sg1_ip, sg_db1)
-    sg2_blip_url = "blip://{}:4984/{}".format(sg2_ip, sg_db2)
+    sg1_blip_url = "ws://{}:4984/{}".format(sg1_ip, sg_db1)
+    sg2_blip_url = "ws://{}:4984/{}".format(sg2_ip, sg_db2)
 
     sg1_user = sg_client.create_user(sg1_admin_url, sg_db1, name1, password="password", channels=channels1)
     sg2_user = sg_client.create_user(sg2_admin_url, sg_db2, name2, password="password", channels=channels2)
     # Create bulk doc json
-    cbl_db1 = db.deleteDBIfExistsCreateNew(cbl_db_name1)
-    cbl_db2 = db.deleteDBIfExistsCreateNew(cbl_db_name2)
+    cbl_db1 = setup_customized_teardown_test["cbl_db1"]
+    cbl_db2 = setup_customized_teardown_test["cbl_db2"]
     db.create_bulk_docs(num_of_docs, "Replication1", db=cbl_db1, channels=channels1)
     cbl_doc_ids1 = db.getDocIds(cbl_db1)
     db.create_bulk_docs(num_of_docs, "Replication2", db=cbl_db2, channels=channels2)
@@ -111,15 +104,16 @@ def test_multiple_sgs_with_differrent_revs_limit(params_from_base_test_setup, sg
     replicator = Replication(base_url)
     cookie, session_id = sg_client.create_session(sg1_admin_url, sg_db1, name1)
     session1 = cookie, session_id
-    replicator_authenticator1 = replicator.authentication(session_id, cookie, authentication_type="session")
+    authenticator = Authenticator(base_url)
+    replicator_authenticator1 = authenticator.authentication(session_id, cookie, authentication_type="session")
     cookie, session_id = sg_client.create_session(sg2_admin_url, sg_db2, name2)
     session2 = cookie, session_id
-    replicator_authenticator2 = replicator.authentication(session_id, cookie, authentication_type="session")
-    repl1 = replicator.configure_and_replicate(source_db=cbl_db1, replicator=replicator,
-                                               replicator_authenticator=replicator_authenticator1, target_url=sg1_blip_url, replication_type="push")
+    replicator_authenticator2 = authenticator.authentication(session_id, cookie, authentication_type="session")
+    repl1 = replicator.configure_and_replicate(
+        source_db=cbl_db1, replicator_authenticator=replicator_authenticator1, target_url=sg1_blip_url, replication_type="push")
 
-    repl2 = replicator.configure_and_replicate(source_db=cbl_db2, replicator=replicator,
-                                               replicator_authenticator=replicator_authenticator2, target_url=sg2_blip_url, replication_type="push")
+    repl2 = replicator.configure_and_replicate(
+        source_db=cbl_db2, replicator_authenticator=replicator_authenticator2, target_url=sg2_blip_url, replication_type="push")
     
     db.update_bulk_docs(cbl_db1, number_of_updates=35)
     db.update_bulk_docs(cbl_db2, number_of_updates=35)
@@ -142,26 +136,26 @@ def test_multiple_sgs_with_differrent_revs_limit(params_from_base_test_setup, sg
         revs = sg_client.get_revs_num_in_history(sg2_url, sg_db2, doc_id, auth=session2)
         assert len(revs) == revs_limit2
 
-    # 3. exchange DBs of SG and do pull replication.
-    repl1 = replicator.configure_and_replicate(source_db=cbl_db1, replicator=replicator,
-                                               replicator_authenticator=replicator_authenticator2, target_url=sg2_blip_url, replication_type="push")
-    repl2 = replicator.configure_and_replicate(source_db=cbl_db2, replicator=replicator,
-                                               replicator_authenticator=replicator_authenticator1, target_url=sg1_blip_url, replication_type="push")
+    # 7. exchange DBs of SG and do pull replication.
+    repl1 = replicator.configure_and_replicate(
+        source_db=cbl_db1, replicator_authenticator=replicator_authenticator2, target_url=sg2_blip_url, replication_type="push")
+    repl2 = replicator.configure_and_replicate(
+        source_db=cbl_db2, replicator_authenticator=replicator_authenticator1, target_url=sg1_blip_url, replication_type="push")
    
     replicator.stop(repl1)
     replicator.stop(repl2)
     
     # 4. Get docs from sgs and verify revs_limit is maintained after switching sgs
-    sg_docs = sg_client.get_all_docs(url=sg2_url, db=sg_db1, auth=session1)
+    sg_docs = sg_client.get_all_docs(url=sg1_url, db=sg_db1, auth=session1)
     sg_doc_ids = [doc['id'] for doc in sg_docs["rows"]]
     for doc_id in sg_doc_ids: 
-        revs = sg_client.get_revs_num_in_history(sg2_url, sg_db1, doc_id, auth=session1)
+        revs = sg_client.get_revs_num_in_history(sg1_url, sg_db1, doc_id, auth=session1)
         assert len(revs) == revs_limit1
 
-    sg_docs = sg_client.get_all_docs(url=sg1_url, db=sg_db2, auth=session2)
+    sg_docs = sg_client.get_all_docs(url=sg2_url, db=sg_db2, auth=session2)
     sg_doc_ids = [doc['id'] for doc in sg_docs["rows"]]
     for doc_id in sg_doc_ids: 
-        revs = sg_client.get_revs_num_in_history(sg2_url, sg_db1, doc_id, auth=session1)
+        revs = sg_client.get_revs_num_in_history(sg2_url, sg_db1, doc_id, auth=session2)
         assert len(revs) == revs_limit2
 
 @pytest.mark.sanity
@@ -169,10 +163,10 @@ def test_multiple_sgs_with_differrent_revs_limit(params_from_base_test_setup, sg
 @pytest.mark.replication
 @pytest.mark.parametrize("sg_conf_name, num_of_docs", [
     ('listener_tests/multiple_sync_gateways', 10),
-    # ('listener_tests/listener_tests_no_conflicts', 100, 10),
-    # ('listener_tests/listener_tests_no_conflicts', 1000, 10)
+    ('listener_tests/multiple_sync_gateways', 100),
+    ('listener_tests/multiple_sync_gateways', 1000)
 ])
-def test_multiple_sgs_with_CBLs(params_from_base_test_setup, sg_conf_name, num_of_docs):
+def test_multiple_sgs_with_CBLs(params_from_base_test_setup, setup_customized_teardown_test, sg_conf_name, num_of_docs):
     """
         @summary:
         1. Create 2 DBs and Create docs in CBL
@@ -185,8 +179,6 @@ def test_multiple_sgs_with_CBLs(params_from_base_test_setup, sg_conf_name, num_o
         other CBL DB should fail as associated Sg is down
 
     """
-    # base_url = "http://192.168.0.109:8989"
-    
     sg_db1 = "sg_db1"
     sg_db2 = "sg_db2"
     cbl_db_name1 = "cbl_db1"
@@ -230,14 +222,14 @@ def test_multiple_sgs_with_CBLs(params_from_base_test_setup, sg_conf_name, num_o
     sg1_admin_url = sg1.admin.admin_url
     sg2_url = sg2.url
     sg2_admin_url = sg2.admin.admin_url
-    sg1_blip_url = "blip://{}:4984/{}".format(sg1_ip, sg_db1)
-    sg2_blip_url = "blip://{}:4984/{}".format(sg2_ip, sg_db2)
+    sg1_blip_url = "ws://{}:4984/{}".format(sg1_ip, sg_db1)
+    sg2_blip_url = "ws://{}:4984/{}".format(sg2_ip, sg_db2)
 
     sg1_user = sg_client.create_user(sg1_admin_url, sg_db1, "autotest1", password="password", channels=channels1)
     sg2_user = sg_client.create_user(sg2_admin_url, sg_db2, "autotest2", password="password", channels=channels2)
     # Create bulk doc json
-    cbl_db1 = db.deleteDBIfExistsCreateNew(cbl_db_name1)
-    cbl_db2 = db.deleteDBIfExistsCreateNew(cbl_db_name2)
+    cbl_db1 = setup_customized_teardown_test["cbl_db1"]
+    cbl_db2 = setup_customized_teardown_test["cbl_db2"]
     db.create_bulk_docs(num_of_docs, "Replication1", db=cbl_db1, channels=channels1)
     cbl_doc_ids1 = db.getDocIds(cbl_db1)
     db.create_bulk_docs(num_of_docs, "Replication2", db=cbl_db2, channels=channels2)
@@ -246,41 +238,42 @@ def test_multiple_sgs_with_CBLs(params_from_base_test_setup, sg_conf_name, num_o
     # 2. Do push replication to two SGS(each DB to each SG)
     replicator = Replication(base_url)
     cookie, session_id = sg_client.create_session(sg1_admin_url, sg_db1, name1)
-    session = cookie, session_id
-    replicator_authenticator = replicator.authentication(session_id, cookie, authentication_type="session")
-    repl1 = replicator.configure_and_replicate(source_db=cbl_db1, replicator=replicator,
-                                               replicator_authenticator=replicator_authenticator, target_url=sg1_blip_url, replication_type="push")
+    authenticator = Authenticator(base_url)
+    replicator_authenticator1 = authenticator.authentication(session_id, cookie, authentication_type="session")
+    repl1 = replicator.configure_and_replicate(
+        source_db=cbl_db1, replicator_authenticator=replicator_authenticator1, target_url=sg1_blip_url, replication_type="push")
 
     cookie, session_id = sg_client.create_session(sg2_admin_url, sg_db2, name2)
-    session = cookie, session_id
-    replicator_authenticator = replicator.authentication(session_id, cookie, authentication_type="session")
-    repl2 = replicator.configure_and_replicate(source_db=cbl_db2, replicator=replicator,
-                                               replicator_authenticator=replicator_authenticator, target_url=sg2_blip_url, replication_type="push")
+    authenticator = Authenticator(base_url)
+    replicator_authenticator2 = authenticator.authentication(session_id, cookie, authentication_type="session")
+    repl2 = replicator.configure_and_replicate(
+        source_db=cbl_db2, replicator_authenticator=replicator_authenticator2, target_url=sg2_blip_url, replication_type="push")
     replicator.stop(repl1)
     replicator.stop(repl2)
 
     # 3. exchange DBs of SG and do pull replication.
-    repl1 = replicator.configure_and_replicate(source_db=cbl_db1, replicator=replicator,
-                                               replicator_authenticator=replicator_authenticator, target_url=sg2_blip_url, replication_type="pull")
-    repl2 = replicator.configure_and_replicate(source_db=cbl_db2, replicator=replicator,
-                                               replicator_authenticator=replicator_authenticator, target_url=sg1_blip_url, replication_type="pull")
+    repl1 = replicator.configure_and_replicate(
+        source_db=cbl_db1, replicator_authenticator=replicator_authenticator2, target_url=sg2_blip_url, replication_type="pull")
+    repl2 = replicator.configure_and_replicate(
+        source_db=cbl_db2, replicator_authenticator=replicator_authenticator1, target_url=sg1_blip_url, replication_type="pull")
     
     replicator.stop(repl1)
     replicator.stop(repl2)
 
     # 4. stop one of the sg.
     sg1.stop()
-
+    # Add docs on cbl_db2
+    db.create_bulk_docs(1, "Replication2", db=cbl_db2, channels=channels2)
     # 5. Pull again 
-    repl1 = replicator.configure_and_replicate(source_db=cbl_db1, replicator=replicator,
-                                               replicator_authenticator=replicator_authenticator, target_url=sg2_blip_url, replication_type="pull")
-    repl2 = replicator.configure_and_replicate(source_db=cbl_db2, replicator=replicator,
-                                               replicator_authenticator=replicator_authenticator, target_url=sg1_blip_url, replication_type="pull")
-    
+    repl1 = replicator.configure_and_replicate(
+        source_db=cbl_db1, replicator_authenticator=replicator_authenticator2, target_url=sg2_blip_url, replication_type="pull")
+    repl2 = replicator.configure_and_replicate(
+        source_db=cbl_db2, replicator_authenticator=replicator_authenticator1, target_url=sg1_blip_url, replication_type="pull", err_check=False)
+
     replicator.stop(repl1)
     repl2_error = replicator.getError(repl2)
     print "The error is:", repl2_error
-    replicator.stop(repl2)
+    assert "Code=-1004" in repl2_error
     # 6. Verify one CBL DB should be successful as other CBL DB should fail as associated Sg is down
     cblDB1_doc_ids = db.getDocIds(cbl_db1)
     cbl_docs1 = db.getDocuments(cbl_db1, cblDB1_doc_ids)
@@ -289,14 +282,6 @@ def test_multiple_sgs_with_CBLs(params_from_base_test_setup, sg_conf_name, num_o
         assert doc in cblDB1_doc_ids, "cbl_db1 doc does not exist in combined replication cbl_db1"
     for doc in cbl_doc_ids2:
         assert doc in cblDB1_doc_ids, "cbl_db2 doc does not exist in combined replication cbl_db1"
-
-    cblDB2_doc_ids = db.getDocIds(cbl_db2)
-    cbl_docs2 = db.getDocuments(cbl_db2, cbl_doc_ids2)
-    print "CBL2  docs ", cbl_docs2
-    for doc in cbl_doc_ids1:
-        assert doc not in cblDB2_doc_ids, "cbl_db1 doc exist in combined replication cbl_db2"
-    for doc in cbl_doc_ids2:
-        assert doc in cblDB2_doc_ids, "cbl_db2 doc does not exist in combined replication cbl_db2"
 
 def create_sg_users(sg1, sg2, db1, db2, name1, password1, name2, password2, channels):
 

@@ -16,6 +16,8 @@ import com.couchbase.CouchbaseLiteServ.server.RequestHandler.ReplicatorRequestHa
 import com.couchbase.CouchbaseLiteServ.server.RequestHandler.ResultRequestHandler;
 import com.couchbase.CouchbaseLiteServ.server.RequestHandler.SelectResultRequestHandler;
 import com.couchbase.CouchbaseLiteServ.server.RequestHandler.SessionAuthenticatorRequestHandler;
+import com.couchbase.lite.Database;
+
 import com.google.gson.Gson;
 
 import org.nanohttpd.protocols.http.IHTTPSession;
@@ -57,6 +59,7 @@ public class Server extends NanoHTTPD {
 
     public Server(int port) throws IOException {
         super(port);
+        Database.setLogLevel(Database.LogDomain.ALL, Database.LogLevel.DEBUG);
         System.out.print("Running! Point your Mobile browser to http://localhost:" + port + "/\n");
     }
 

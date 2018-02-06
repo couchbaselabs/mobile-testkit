@@ -71,7 +71,10 @@ public class ReplicatorConfigurationRequestHandler {
             throw new Exception("\"No source db provided or target url provided\"");
         }
         if (continuous != null) {
-            config.setContinuous(true);
+            config.setContinuous(continuous);
+        }
+        else {
+            config.setContinuous(false);
         }
         if (headers != null) {
             config.setHeaders(headers);

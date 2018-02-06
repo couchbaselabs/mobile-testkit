@@ -112,8 +112,6 @@ class Query(object):
         args.setMemoryPointer("database", database)
         args.setString("doc_id", doc_id)
 
-        #needs to be change
-        #return self._client.invokeMethod("query_get_doc", args)
         return self._client.invokeMethod("query_getDoc", args)
 
     def query_get_docs_limit_offset(self, database, limit, offset):

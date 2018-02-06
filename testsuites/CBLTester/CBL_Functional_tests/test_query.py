@@ -18,14 +18,12 @@ def test_get_doc_ids(params_from_base_test_setup):
 
     Verifies with n1ql - select meta().id from `bucket_name` where meta().id not like "_sync%"
     """
-    liteserv_host = params_from_base_test_setup["liteserv_host"]
-    liteserv_port = params_from_base_test_setup["liteserv_port"]
     cluster_topology = params_from_base_test_setup["cluster_topology"]
     source_db = params_from_base_test_setup["source_db"]
+    base_url = params_from_base_test_setup["base_url"]
     cbs_url = cluster_topology['couchbase_servers'][0]
-
-    base_url = "http://{}:{}".format(liteserv_host, liteserv_port)
     db = Database(base_url)
+
     cbs_ip = host_for_url(cbs_url)
 
     log_info("Fetching doc ids from the server")
@@ -36,19 +34,18 @@ def test_get_doc_ids(params_from_base_test_setup):
     doc_ids_from_n1ql = []
     for row in sdk_client.n1ql_query(query):
         doc_ids_from_n1ql.append(row["id"])
-
+   
     log_info("Fetching doc ids from CBL")
     ids_from_cbl = db.getDocIds(source_db)
 
     assert len(ids_from_cbl) == len(doc_ids_from_n1ql)
-    log_info("Found {} doc ids".format(len(ids_from_cbl)))
     assert sorted(ids_from_cbl) == sorted(doc_ids_from_n1ql)
     log_info("Doc contents match between CBL and n1ql")
 
 
 @pytest.mark.parametrize("doc_id", [
     ("airline_10"),
-    ("doc_id_does_not_exist"),
+    # ("doc_id_does_not_exist"),
 ])
 def test_doc_get(params_from_base_test_setup, doc_id):
     """ @summary
@@ -61,12 +58,10 @@ def test_doc_get(params_from_base_test_setup, doc_id):
 
     Verifies with n1ql - select * from `bucket_name` where meta().id="doc_id"
     """
-    liteserv_host = params_from_base_test_setup["liteserv_host"]
-    liteserv_port = params_from_base_test_setup["liteserv_port"]
     cluster_topology = params_from_base_test_setup["cluster_topology"]
     source_db = params_from_base_test_setup["source_db"]
     cbs_url = cluster_topology['couchbase_servers'][0]
-    base_url = "http://{}:{}".format(liteserv_host, liteserv_port)
+    base_url = params_from_base_test_setup["base_url"]
     cbs_ip = host_for_url(cbs_url)
 
     # Get doc from CBL through query
@@ -75,8 +70,8 @@ def test_doc_get(params_from_base_test_setup, doc_id):
     result_set = qy.query_get_doc(source_db, doc_id)
 
     docs_from_cbl = []
-
-    if result_set != -1:
+    print "result set of clb is ", result_set
+    if result_set != -1 and result_set is not None:
         for result in result_set:
             docs_from_cbl.append(result)
 
@@ -93,6 +88,8 @@ def test_doc_get(params_from_base_test_setup, doc_id):
 
     assert len(docs_from_cbl) == len(docs_from_n1ql)
     log_info("Found {} docs".format(len(docs_from_cbl)))
+    print "cbl docs - ", docs_from_cbl
+    print "docs from n1ql0---  ", docs_from_n1ql
     assert docs_from_cbl == docs_from_n1ql
     log_info("Doc contents match between CBL and n1ql")
 
@@ -112,10 +109,8 @@ def test_get_docs_with_limit_offset(params_from_base_test_setup, limit, offset):
 
     Verifies with n1ql - select * from `travel-sample` where meta().id not like "_sync%" limit 5 offset 5
     """
-    liteserv_host = params_from_base_test_setup["liteserv_host"]
-    liteserv_port = params_from_base_test_setup["liteserv_port"]
     source_db = params_from_base_test_setup["source_db"]
-    base_url = "http://{}:{}".format(liteserv_host, liteserv_port)
+    base_url = params_from_base_test_setup["base_url"]
 
     log_info("Fetching docs from CBL through query")
     qy = Query(base_url)
@@ -149,12 +144,10 @@ def test_multiple_selects(params_from_base_test_setup, select_property1, select_
 
     Verifies with n1ql - select name, type, meta().id from `travel-sample` where country="France"
     """
-    liteserv_host = params_from_base_test_setup["liteserv_host"]
-    liteserv_port = params_from_base_test_setup["liteserv_port"]
     cluster_topology = params_from_base_test_setup["cluster_topology"]
     source_db = params_from_base_test_setup["source_db"]
     cbs_url = cluster_topology['couchbase_servers'][0]
-    base_url = "http://{}:{}".format(liteserv_host, liteserv_port)
+    base_url = params_from_base_test_setup["base_url"]
     cbs_ip = host_for_url(cbs_url)
 
     log_info("Fetching docs from CBL through query")
@@ -177,8 +170,12 @@ def test_multiple_selects(params_from_base_test_setup, select_property1, select_
         docs_from_n1ql.append(row)
 
     assert len(docs_from_cbl) == len(docs_from_n1ql)
-    log_info("Found {} docs".format(len(docs_from_cbl)))
-    assert docs_from_cbl == docs_from_n1ql
+    # log_info("Found cbl docs {} docs".format(docs_from_cbl))
+    # print "n1ql docs found ", docs_from_n1ql
+    for doc in docs_from_cbl:
+        assert doc in docs_from_n1ql
+    # assert docs_from_cbl == docs_from_n1ql
+
     log_info("Doc contents match")
 
 
@@ -199,12 +196,10 @@ def test_query_where_and_or(params_from_base_test_setup, whr_key1, whr_val1, whr
 
     Verifies with n1ql - select meta().id from `travel-sample` t where t.type="hotel" and (t.country="United States" or t.country="France") and t.vacancy=true
     """
-    liteserv_host = params_from_base_test_setup["liteserv_host"]
-    liteserv_port = params_from_base_test_setup["liteserv_port"]
     cluster_topology = params_from_base_test_setup["cluster_topology"]
     source_db = params_from_base_test_setup["source_db"]
     cbs_url = cluster_topology['couchbase_servers'][0]
-    base_url = "http://{}:{}".format(liteserv_host, liteserv_port)
+    base_url = params_from_base_test_setup["base_url"]
     cbs_ip = host_for_url(cbs_url)
 
     log_info("Fetching docs from CBL through query")
@@ -254,12 +249,10 @@ def test_query_pattern_like(params_from_base_test_setup, whr_key, whr_val, selec
 
     Verifies with n1ql - select meta().id, country, name from `travel-sample` t where t.type="landmark"  and t.name like "Royal Engineers Museum"
     """
-    liteserv_host = params_from_base_test_setup["liteserv_host"]
-    liteserv_port = params_from_base_test_setup["liteserv_port"]
     cluster_topology = params_from_base_test_setup["cluster_topology"]
     source_db = params_from_base_test_setup["source_db"]
     cbs_url = cluster_topology['couchbase_servers'][0]
-    base_url = "http://{}:{}".format(liteserv_host, liteserv_port)
+    base_url = params_from_base_test_setup["base_url"]
     cbs_ip = host_for_url(cbs_url)
 
     log_info("Fetching docs from CBL through query")
@@ -306,12 +299,10 @@ def test_query_pattern_regex(params_from_base_test_setup, whr_key, whr_val, sele
 
     Verifies with n1ql - select meta().id, country, name from `travel-sample` t where t.type="landmark" and REGEXP_CONTAINS(t.name, "\\bEng.*e\\b")
     """
-    liteserv_host = params_from_base_test_setup["liteserv_host"]
-    liteserv_port = params_from_base_test_setup["liteserv_port"]
     cluster_topology = params_from_base_test_setup["cluster_topology"]
     source_db = params_from_base_test_setup["source_db"]
     cbs_url = cluster_topology['couchbase_servers'][0]
-    base_url = "http://{}:{}".format(liteserv_host, liteserv_port)
+    base_url = params_from_base_test_setup["base_url"]
     cbs_ip = host_for_url(cbs_url)
 
     log_info("Fetching docs from CBL through query")
@@ -360,12 +351,10 @@ def test_query_isNullOrMissing(params_from_base_test_setup, select_property1, li
 
     Verifies with n1ql - select meta().id from `travel-sample` t where meta().id not like "_sync%" and (t.name IS NULL or t.name IS MISSING)
     """
-    liteserv_host = params_from_base_test_setup["liteserv_host"]
-    liteserv_port = params_from_base_test_setup["liteserv_port"]
     cluster_topology = params_from_base_test_setup["cluster_topology"]
     source_db = params_from_base_test_setup["source_db"]
     cbs_url = cluster_topology['couchbase_servers'][0]
-    base_url = "http://{}:{}".format(liteserv_host, liteserv_port)
+    base_url = params_from_base_test_setup["base_url"]
     cbs_ip = host_for_url(cbs_url)
 
     log_info("Fetching docs from CBL through query")
@@ -381,7 +370,7 @@ def test_query_isNullOrMissing(params_from_base_test_setup, select_property1, li
     log_info("Fetching docs from server through n1ql")
     bucket_name = "travel-sample"
     sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password')
-    n1ql_query = 'select meta().id, {} from `{}` t where meta().id not like "_sync%" and (t.{} IS NULL or t.{} IS MISSING) limit {}'.format(select_property1, bucket_name, select_property1, select_property1, limit)
+    n1ql_query = 'select meta().id, {} from `{}` t where meta().id not like "_sync%" and (t.{} IS NULL or t.{} IS MISSING) order by "{}" asc limit {}'.format(select_property1, bucket_name, select_property1, select_property1, select_property1, limit)
     query = N1QLQuery(n1ql_query)
     docs_from_n1ql = []
 
@@ -389,7 +378,6 @@ def test_query_isNullOrMissing(params_from_base_test_setup, select_property1, li
         docs_from_n1ql.append(row)
 
     assert len(docs_from_cbl) == len(docs_from_n1ql)
-    log_info("Found {} docs".format(len(docs_from_cbl)))
     assert sorted(docs_from_cbl) == sorted(docs_from_n1ql)
     log_info("Doc contents match")
 
@@ -411,12 +399,10 @@ def test_query_ordering(params_from_base_test_setup, select_property1, whr_key, 
 
     Verifies with n1ql - select meta().id, title from `travel-sample` t where t.type = "hotel" order by "title" asc
     """
-    liteserv_host = params_from_base_test_setup["liteserv_host"]
-    liteserv_port = params_from_base_test_setup["liteserv_port"]
     cluster_topology = params_from_base_test_setup["cluster_topology"]
     source_db = params_from_base_test_setup["source_db"]
     cbs_url = cluster_topology['couchbase_servers'][0]
-    base_url = "http://{}:{}".format(liteserv_host, liteserv_port)
+    base_url = params_from_base_test_setup["base_url"]
     cbs_ip = host_for_url(cbs_url)
 
     log_info("Fetching docs from CBL through query")
@@ -462,12 +448,10 @@ def test_query_substring(params_from_base_test_setup, select_property1, select_p
 
     Verifies with n1ql - select meta().id, email, UPPER(name) from `travel-sample` t where CONTAINS(t.email, "gmail.com")
     """
-    liteserv_host = params_from_base_test_setup["liteserv_host"]
-    liteserv_port = params_from_base_test_setup["liteserv_port"]
     cluster_topology = params_from_base_test_setup["cluster_topology"]
     source_db = params_from_base_test_setup["source_db"]
     cbs_url = cluster_topology['couchbase_servers'][0]
-    base_url = "http://{}:{}".format(liteserv_host, liteserv_port)
+    base_url = params_from_base_test_setup["base_url"]
     cbs_ip = host_for_url(cbs_url)
 
     log_info("Fetching docs from CBL through query")
@@ -520,12 +504,10 @@ def test_query_collation(params_from_base_test_setup, select_property1, whr_key1
 
     Verifies with n1ql - select meta().id, name from `travel-sample` t where t.type="hotel" and t.country = "France" and lower(t.name) = lower("Le Clos Fleuri")
     """
-    liteserv_host = params_from_base_test_setup["liteserv_host"]
-    liteserv_port = params_from_base_test_setup["liteserv_port"]
     cluster_topology = params_from_base_test_setup["cluster_topology"]
     source_db = params_from_base_test_setup["source_db"]
     cbs_url = cluster_topology['couchbase_servers'][0]
-    base_url = "http://{}:{}".format(liteserv_host, liteserv_port)
+    base_url = params_from_base_test_setup["base_url"]
     cbs_ip = host_for_url(cbs_url)
 
     log_info("Fetching docs from CBL through query")

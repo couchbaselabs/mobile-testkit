@@ -216,7 +216,15 @@ class Replication(object):
     def stop(self, replicator):
         args = Args()
         args.setMemoryPointer("replicator", replicator)
-        return self._client.invokeMethod("replicator_stop", args)
+        # return self._client.invokeMethod("replicator_stop", args)
+        self._client.invokeMethod("replicator_stop", args)
+        max_times = 15
+        count = 0
+        while self.getActivitylevel(replicator) != "stopped" and count < max_times:
+            time.sleep(0.5)
+            count += 1
+        if self.getActivitylevel(replicator) != "stopped":
+            raise Exception("Failed to stop the replicator")
 
     def status(self, replicator):
         args = Args()
@@ -258,7 +266,7 @@ class Replication(object):
         return self._client.invokeMethod("replicator_changeListenerGetChanges", args)
 
     def configure_and_replicate(self, source_db, replicator_authenticator, target_db=None, target_url=None, replication_type="push_pull", continuous=True,
-                                channels=None):
+                                channels=None, err_check=True):
         if target_db is None:
             repl_config = self.configure(source_db, target_url=target_url, continuous=continuous,
                                          replication_type=replication_type, channels=channels, replicator_authenticator=replicator_authenticator)
@@ -267,10 +275,10 @@ class Replication(object):
                                          replication_type=replication_type, channels=channels, replicator_authenticator=replicator_authenticator)
         repl = self.create(repl_config)
         self.start(repl)
-        self.wait_until_replicator_idle(repl)
+        self.wait_until_replicator_idle(repl, err_check)
         return repl
 
-    def wait_until_replicator_idle(self, repl):
+    def wait_until_replicator_idle(self, repl, err_check=True):
         max_times = 10
         count = 0
         # Sleep until replicator completely processed
@@ -282,12 +290,10 @@ class Replication(object):
                 count += 1
             if activity_level == "stopped":
                 break
-            err = self.getError(repl)
-            # TODO remove the condition of 'connection reset by peer'
-            # once https://github.com/couchbase/sync_gateway/issues/3249 is fixed
-            # if err != -1: #-1 means Null or None, so if any error, just raise the exception
-            if err is not None and err != 'nil':
-                raise Exception("Error while replicating", err)
+            if err_check:
+                err = self.getError(repl)
+                if err is not None and err != 'nil' and err != -1:
+                    raise Exception("Error while replicating", err)
             activity_level = self.getActivitylevel(repl)
 
     def create_session_configure_replicate(self, baseUrl, sg_admin_url, sg_db, username, password,

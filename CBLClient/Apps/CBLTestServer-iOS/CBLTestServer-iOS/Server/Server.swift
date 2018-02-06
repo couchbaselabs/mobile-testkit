@@ -101,7 +101,6 @@ public class Server {
                         } else {
                             args.set(value: "", forName: param.key as! String)
                         }
-                        print("param and value is \(param.key) and value is \(param.value)")
                     }
                 }
 
@@ -157,7 +156,6 @@ public class Server {
                         throw ServerError.MethodNotImplemented(method)
                     }
                     if result != nil {
-                        print("result is \(result)")
                         body = ValueSerializer.serialize(value: result, memory: self.memory);
                     }
                 }

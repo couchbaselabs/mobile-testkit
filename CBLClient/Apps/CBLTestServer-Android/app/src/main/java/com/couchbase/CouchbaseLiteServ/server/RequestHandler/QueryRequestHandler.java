@@ -221,6 +221,7 @@ public class QueryRequestHandler {
                         SelectResult.expression(Expression.property(select_property1)))
                 .from(DataSource.database(database))
                 .where(Expression.property(select_property1).isNullOrMissing())
+                .orderBy(Ordering.expression(Meta.id).ascending())
                 .limit(limit);
         for (Result row : query.execute()){
             resultArray.add(row.toMap());
