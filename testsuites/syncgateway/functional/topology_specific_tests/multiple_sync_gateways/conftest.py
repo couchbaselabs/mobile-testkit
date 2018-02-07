@@ -112,6 +112,9 @@ def params_from_base_suite_setup(request):
         log_info("Running with allow conflicts")
         persist_cluster_config_environment_prop(cluster_config, 'no_conflicts_enabled', False)
 
+    if sync_gateway_version < "2.0.0" and no_conflicts_enabled:
+        pytest.skip("Test cannot run with no-conflicts with sg version < 2.0.0")
+
     # Skip provisioning if user specifies '--skip-provisoning' or '--sequoia'
     should_provision = True
     if skip_provisioning or use_sequoia:

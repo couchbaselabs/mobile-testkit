@@ -46,6 +46,7 @@ def test_no_conflicts_enabled(params_from_base_test_setup, sg_conf_name, num_of_
 
     if not no_conflicts_enabled:
         pytest.skip('--no-conflicts is not enabled, so skipping the test')
+
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
     c = cluster.Cluster(cluster_config)
     c.reset(sg_conf)
@@ -279,11 +280,12 @@ def test_conflicts_sg_accel_added(params_from_base_test_setup, sg_conf_name, num
     mode = params_from_base_test_setup["mode"]
     sg_url = topology["sync_gateways"][0]["public"]
     sg_admin_url = topology["sync_gateways"][0]["admin"]
+    no_conflicts_enabled = params_from_base_test_setup["no_conflicts_enabled"]
     sg_db = "db"
     total_updates = revs_limit + additional_updates
     new_updates = 2
 
-    if mode != "di":
+    if not no_conflicts_enabled or mode != "di":
         pytest.skip('--no-conflicts is not enabled or mode is not di, so skipping the test')
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
     c = cluster.Cluster(cluster_config)
