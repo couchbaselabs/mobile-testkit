@@ -1,0 +1,16 @@
+﻿<Properties StartupConfiguration="{A8E9786C-64F3-46EF-894C-9A7E51AC9210}|Default" NuGet.AddPackagesDialog.IncludePrerelease="True">
+  <MonoDevelop.Ide.ItemProperties.TestServer.NetCore PreferredExecutionTarget="MonoDevelop.Default" />
+  <MonoDevelop.Ide.Workbench ActiveDocument="TestServer/SessionAuthenticationMethods.cs">
+    <Files>
+      <File FileName="TestServer/DatabaseMethods.cs" Line="329" Column="22" />
+      <File FileName="TestServer/ValueSerializer.cs" Line="42" Column="48" />
+      <File FileName="TestServer/SessionAuthenticationMethods.cs" Line="1" Column="1" />
+    </Files>
+  </MonoDevelop.Ide.Workbench>
+  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
+  <MonoDevelop.Ide.DebuggingService.Breakpoints>
+    <BreakpointStore />
+  </MonoDevelop.Ide.DebuggingService.Breakpoints>
+  <MonoDevelop.Ide.DebuggingService.PinnedWatches />
+  <MultiItemStartupConfigurations />
+</Properties>
