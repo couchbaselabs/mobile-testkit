@@ -15,7 +15,7 @@ using Couchbase.Lite.Query;
 
 namespace Couchbase.Lite.Testing
 {
-    internal static class CollatorRequestHandler
+    internal static class CollatorMethods
     {
         public static void Ascii([NotNull] NameValueCollection args,
                                   [NotNull] IReadOnlyDictionary<string, object> postBody,

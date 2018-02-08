@@ -1,147 +1,343 @@
-﻿//// 
-////  QueryMethods.cs
-//// 
-////  Author:
-////   Jim Borden  <jim.borden@couchbase.com>
-//// 
-////  Copyright (c) 2017 Couchbase, Inc All rights reserved.
-//// 
-////  Licensed under the Apache License, Version 2.0 (the "License");
-////  you may not use this file except in compliance with the License.
-////  You may obtain a copy of the License at
-//// 
-////  http://www.apache.org/licenses/LICENSE-2.0
-//// 
-////  Unless required by applicable law or agreed to in writing, software
-////  distributed under the License is distributed on an "AS IS" BASIS,
-////  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-////  See the License for the specific language governing permissions and
-////  limitations under the License.
-//// 
+﻿// 
+//  QueryMethods.cs
+// 
+//  Author:
+//   Hemant Rajput  <hemant.rajput@couchbase.com>
+// 
+//  Copyright (c) 2018 Couchbase, Inc All rights reserved.
+// 
+//  Licensed under the Apache License, Version 2.0 (the "License");
+//  you may not use this file except in compliance with the License.
+//  You may obtain a copy of the License at
+// 
+//  http://www.apache.org/licenses/LICENSE-2.0
+// 
+//  Unless required by applicable law or agreed to in writing, software
+//  distributed under the License is distributed on an "AS IS" BASIS,
+//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//  See the License for the specific language governing permissions and
+//  limitations under the License.
+// 
 
-//using System;
-//using System.Collections.Generic;
-//using System.Collections.Specialized;
-//using System.Net;
-//using System.Reflection;
+using System;
+using System.Collections.Generic;
+using System.Collections.Specialized;
+using System.Net;
+using System.Reflection;
 
-//using Couchbase.Lite.Query;
-//using Couchbase.Lite.Util;
+using Couchbase.Lite.Query;
+using Couchbase.Lite.Util;
 
-//using JetBrains.Annotations;
+using JetBrains.Annotations;
 
-//using Microsoft.CodeAnalysis.CSharp.Scripting;
-//using Microsoft.CodeAnalysis.Scripting;
+using static Couchbase.Lite.Testing.DatabaseMethods;
 
-//using static Couchbase.Lite.Testing.DatabaseMethods;
+namespace Couchbase.Lite.Testing
+{
+    internal static class QueryMethods
+    {
+        internal static void QuerySelect([NotNull] NameValueCollection args,
+            [NotNull] IReadOnlyDictionary<string, object> postBody,
+            [NotNull] HttpListenerResponse response)
+        {
+            With<ISelectResult>(postBody, "select_result", se => response.WriteBody(MemoryMap.Store(QueryBuilder.Select(se))));
+        }
 
-//namespace Couchbase.Lite.Testing
-//{
-//    internal static class QueryMethods
-//    {
-//        [NotNull]
-//        private static readonly MethodInfo EncodeAsJSON = Type.GetType("Couchbase.Lite.Internal.Query.XQuery, Couchbase.Lite")
-//            .GetMethod("EncodeAsJSON", BindingFlags.NonPublic | BindingFlags.Instance);
+        internal static void QueryCreate([NotNull] NameValueCollection args,
+            [NotNull] IReadOnlyDictionary<string, object> postBody,
+            [NotNull] HttpListenerResponse response)
+        {
+            With<ISelectResult>(postBody, "select_result", se => response.WriteBody(MemoryMap.Store(QueryBuilder.Select(se))));
+        }
 
+        internal static void QueryDistinct([NotNull] NameValueCollection args,
+            [NotNull] IReadOnlyDictionary<string, object> postBody,
+            [NotNull] HttpListenerResponse response)
+        {
+            With<ISelectResult>(postBody, "select_result", se =>
+            {
+                With<IDataSource>(postBody, "from_pop", ds =>
+                {
+                    With<IExpression>(postBody, "whr_key_prop", exp => response.WriteBody(MemoryMap.Store(QueryBuilder.Select(se).From(ds).Where(exp))));
+                });
+            });
+        }
 
-//        public static void Select([NotNull] NameValueCollection args,
-//                                  [NotNull] IReadOnlyDictionary<string, object> postBody,
-//                                  [NotNull] HttpListenerResponse response)
-//        {
-//            //With<ReplicatorConfiguration>(postBody, "config", repConf => response.WriteBody(MemoryMap.New<Replicator>(repConf)));
-//            With<ISelectResult>(postBody, "select_result", selRes => response.WriteBody(Query.Query.Select(selRes)));
-//        }
+        internal static void QueryRun([NotNull] NameValueCollection args,
+            [NotNull] IReadOnlyDictionary<string, object> postBody,
+            [NotNull] HttpListenerResponse response)
+        {
+            With<IQuery>(postBody, "query", query => response.WriteBody(MemoryMap.Store(query.Execute())));
+        }
 
-//        public static void Run([NotNull] NameValueCollection args,
-//                                  [NotNull] IReadOnlyDictionary<string, object> postBody,
-//                                  [NotNull] HttpListenerResponse response)
-//        {
-            
-//            //With<IQuery>(postBody, "query", q => response.WriteBody(q.Execute()));
-//        }
+        internal static void QueryNextResult([NotNull] NameValueCollection args,
+            [NotNull] IReadOnlyDictionary<string, object> postBody,
+            [NotNull] HttpListenerResponse response)
+        {
+            With<ISelectResult>(postBody, "select_result", se => response.WriteBody(MemoryMap.Store(QueryBuilder.Select(se))));
+        }
 
-//        //public static void NextResult([NotNull] NameValueCollection args,
-//        //                          [NotNull] IReadOnlyDictionary<string, object> postBody,
-//        //                          [NotNull] HttpListenerResponse response)
-//        //{
-//        //    With<IResultSet>(postBody, "query_result_set", q => response.WriteBody(q.Next()));
-//        //}
+        internal static void QueryGetDoc([NotNull] NameValueCollection args,
+            [NotNull] IReadOnlyDictionary<string, object> postBody,
+            [NotNull] HttpListenerResponse response)
+        {
+            With<Database>(postBody, "database", db =>
+            {
+                ulong cnt = db.Count;
+                var doc_id = postBody["doc_id"].ToString();
+                IExpression docId = Expression.Value(doc_id);
+                IQuery query = QueryBuilder
+                                .Select(SelectResult.All())
+                                .From(DataSource.Database(db))
+                                .Where(Meta.ID.EqualTo(docId));
+                foreach (Result row in query.Execute())
+                {
+                    response.WriteBody(row.ToDictionary());
+                }
+            });
+        }
 
-//        public static void GetDoc([NotNull] NameValueCollection args,
-//                                  [NotNull] IReadOnlyDictionary<string, object> postBody,
-//                                  [NotNull] HttpListenerResponse response)
-//        {
-//            With<Database>(postBody, "database", db => 
-//            {
-//                ulong cnt = db.Count;
-//                var doc_id = postBody["doc_id"].ToString();
-//                bool check = db.Contains(doc_id);
-//                Query query = Query.Query
-//                                   .Select(SelectResult.All())
-//                                   .From(DataSource.Database(db))
-//                                   .Where(Meta.ID).Equals(doc_id);
-//                for (IResult row in query.Execute()){
-//                     responserow.ToDictionary();
-//                }
-//            });
-//        }
+        internal static void QueryDocsLimitOffset([NotNull] NameValueCollection args,
+            [NotNull] IReadOnlyDictionary<string, object> postBody,
+            [NotNull] HttpListenerResponse response)
+        {
+            With<Database>(postBody, "database", db =>
+            {
+                IExpression limit = Expression.Value(postBody["limit"].ToString());
+                IExpression offset = Expression.Value(postBody["offset"].ToString());
+                IQuery query = QueryBuilder
+                                .Select(SelectResult.All())
+                                .From(DataSource.Database(db))
+                                .Limit(limit, offset);
+                List<object> resultArray = new List<object>();
+                foreach (Result row in query.Execute())
+                {
+                    resultArray.Add(row);
+                }
+                response.WriteBody(resultArray);
+            });
+        }
 
-//        public Map<String, Object> getDoc(Args args) throws CouchbaseLiteException
-//        {
-//            Database database = args.get("database");
-//        int out = database.getCount();
-//        String doc_id = args.get("doc_id");
-//        boolean check = database.contains(doc_id);
-//        Query query = Query
-//            .select(SelectResult.all())
-//            .from(DataSource.database(database))
-//            .where((Meta.id).equalTo(doc_id));
-//        for (Result row : query.execute()){
-//            return row.toMap();
-//        }
-//        return null;
-//    }
+        internal static void QueryDocsMultipleSelects([NotNull] NameValueCollection args,
+            [NotNull] IReadOnlyDictionary<string, object> postBody,
+            [NotNull] HttpListenerResponse response)
+        {
+            With<Database>(postBody, "database", db =>
+            {
+                var prop1 = postBody["select_property1"].ToString();
+                var prop2 = postBody["select_property2"].ToString();
+                var whrKey = postBody["whr_key"].ToString();
+                IExpression whrVal = Expression.Value(postBody["whr_val"].ToString());
 
-//        public static async void CompileQuery([NotNull] NameValueCollection args,
-//            [NotNull] IReadOnlyDictionary<string, object> postBody,
-//            [NotNull] HttpListenerResponse response)
-//        {
-//            var source = postBody.GetCast<string>("source");
-//            if (source == null)
-//            {
-//                throw new InvalidOperationException("Cannot compile query without source in POST body");
-//            }
+                IQuery query = QueryBuilder
+                                .Select(SelectResult.Expression(Meta.ID),
+                                        SelectResult.Expression(Expression.Property(prop1)),
+                                        SelectResult.Expression(Expression.Property(prop2)))
+                                .From(DataSource.Database(db))
+                                .Where(Expression.Property(whrKey).EqualTo(whrVal));
+                List<object> resultArray = new List<object>();
+                foreach (Result row in query.Execute())
+                {
+                    resultArray.Add(row.ToDictionary());
+                }
+                response.WriteBody(resultArray);
+            });
+        }
 
-//            await AsyncWith<Database>(postBody, "database", async db =>
-//            {
-//                try
-//                {
-//                    var globals = new Globals { Db = db };
-//                    var options = ScriptOptions.Default
-//                        .WithReferences(typeof(Query.Query).GetTypeInfo().Assembly)
-//                        .AddImports("Couchbase.Lite")
-//                        .AddImports("Couchbase.Lite.Query");
+        internal static void QueryWhereAndOr([NotNull] NameValueCollection args,
+            [NotNull] IReadOnlyDictionary<string, object> postBody,
+            [NotNull] HttpListenerResponse response)
+        {
+            With<Database>(postBody, "database", db =>
+            {
+                var whrKey1 = postBody["whr_key1"].ToString();
+                var whrKey2 = postBody["whr_key2"].ToString();
+                var whrKey3 = postBody["whr_key3"].ToString();
+                var whrKey4 = postBody["whr_key4"].ToString();
+                IExpression whrVal1 = Expression.Value(postBody["whr_val1"].ToString());
+                IExpression whrVal2 = Expression.Value(postBody["whr_val2"].ToString());
+                IExpression whrVal3 = Expression.Value(postBody["whr_val3"].ToString());
+                IExpression whrVal4 = Expression.Value(postBody["whr_val4"].ToString());
 
-//                    var compiled = CSharpScript.Create<IQuery>($"return {source}", options, typeof(Globals));
-//                    compiled.Compile();
-//                    var state = await compiled.RunAsync(globals);
-//                    var json = EncodeAsJSON.Invoke(state.ReturnValue, null) as string;
-//                    response.WriteRawBody(json);
-//                }
-//                catch (Exception e)
-//                {
-//                    response.WriteBody(e.Message?.Replace("\r", "")?.Replace('\n', ' ') ?? String.Empty, false);
-//                }
-//            });
-//        }
-//    }
+                IQuery query = QueryBuilder
+                                .Select(SelectResult.Expression(Meta.ID))
+                                .From(DataSource.Database(db))
+                                .Where(Expression.Property(whrKey1).EqualTo(whrVal1)
+                                        .And(Expression.Property(whrKey2).EqualTo(whrVal2))
+                                            .Or(Expression.Property(whrKey3).EqualTo(whrVal3))
+                                        .And(Expression.Property(whrKey4).EqualTo(whrVal4)));
+                List<object> resultArray = new List<object>();
+                foreach (Result row in query.Execute())
+                {
+                    resultArray.Add(row.ToDictionary());
+                }
+                response.WriteBody(resultArray);
+            });
+        }
 
-//    public class Globals
-//    {
-//        #region Variables
+        internal static void QueryLike([NotNull] NameValueCollection args,
+            [NotNull] IReadOnlyDictionary<string, object> postBody,
+            [NotNull] HttpListenerResponse response)
+        {
+            With<Database>(postBody, "database", db =>
+            {
+                var prop1 = postBody["select_property1"].ToString();
+                var prop2 = postBody["select_property2"].ToString();
+                var whrKey = postBody["whr_key"].ToString();
+                var likeKey = postBody["like_key"].ToString();
+                IExpression whrVal = Expression.Value(postBody["whr_val"].ToString());
+                IExpression likeVal = Expression.Value(postBody["like_val"].ToString());
 
-//        public Database Db;
+                IQuery query = QueryBuilder
+                                .Select(SelectResult.Expression(Meta.ID),
+                                        SelectResult.Expression(Expression.Property(prop1)),
+                                        SelectResult.Expression(Expression.Property(prop2)))
+                                .From(DataSource.Database(db))
+                                .Where(Expression.Property(whrKey).EqualTo(whrVal)
+                                        .And(Expression.Property(likeKey).Like(likeVal)));
+                List<object> resultArray = new List<object>();
+                foreach (Result row in query.Execute())
+                {
+                    resultArray.Add(row.ToDictionary());
+                }
+                response.WriteBody(resultArray);
+            });
+        }
 
-//        #endregion
-//    }
-//}
+        internal static void QueryRegex([NotNull] NameValueCollection args,
+            [NotNull] IReadOnlyDictionary<string, object> postBody,
+            [NotNull] HttpListenerResponse response)
+        {
+            With<Database>(postBody, "database", db =>
+            {
+                var prop1 = postBody["select_property1"].ToString();
+                var prop2 = postBody["select_property2"].ToString();
+                var whrKey = postBody["whr_key"].ToString();
+                var regexKey = postBody["regex_key"].ToString();
+                IExpression whrVal = Expression.Value(postBody["whr_val"].ToString());
+                IExpression regexVal = Expression.Value(postBody["regex_val"].ToString());
+
+                IQuery query = QueryBuilder
+                                .Select(SelectResult.Expression(Meta.ID),
+                                        SelectResult.Expression(Expression.Property(prop1)),
+                                        SelectResult.Expression(Expression.Property(prop2)))
+                                .From(DataSource.Database(db))
+                                .Where(Expression.Property(whrKey).EqualTo(whrVal)
+                                        .And(Expression.Property(regexKey).Regex(regexVal)));
+                List<object> resultArray = new List<object>();
+                foreach (Result row in query.Execute())
+                {
+                    resultArray.Add(row.ToDictionary());
+                }
+                response.WriteBody(resultArray);
+            });
+        }
+
+        internal static void QueryOrdering([NotNull] NameValueCollection args,
+            [NotNull] IReadOnlyDictionary<string, object> postBody,
+            [NotNull] HttpListenerResponse response)
+        {
+            With<Database>(postBody, "database", db =>
+            {
+                var prop1 = postBody["select_property1"].ToString();
+                var whrKey = postBody["whr_key"].ToString();
+                IExpression whrVal = Expression.Value(postBody["whr_val"].ToString());
+
+                IQuery query = QueryBuilder
+                                .Select(SelectResult.Expression(Meta.ID),
+                                        SelectResult.Expression(Expression.Property(prop1)))
+                                .From(DataSource.Database(db))
+                                .Where(Expression.Property(whrKey).EqualTo(whrVal))
+                                .OrderBy(Ordering.Property(prop1).Ascending());
+                List<object> resultArray = new List<object>();
+                foreach (Result row in query.Execute())
+                {
+                    resultArray.Add(row.ToDictionary());
+                }
+                response.WriteBody(resultArray);
+            });
+        }
+
+        internal static void QuerySubstring([NotNull] NameValueCollection args,
+            [NotNull] IReadOnlyDictionary<string, object> postBody,
+            [NotNull] HttpListenerResponse response)
+        {
+            With<Database>(postBody, "database", db =>
+            {
+                var prop1 = postBody["select_property1"].ToString();
+                var prop2 = postBody["select_property2"].ToString();
+                IExpression substring = Expression.Value(postBody["substring"].ToString());
+
+                IQuery query = QueryBuilder
+                                .Select(SelectResult.Expression(Meta.ID),
+                                        SelectResult.Expression(Expression.Property(prop1)),
+                                        SelectResult.Expression(Expression.Property(prop2)))
+                                .From(DataSource.Database(db))
+                                .Where(Function.Contains(Expression.Property(prop1), substring));
+                List<object> resultArray = new List<object>();
+                foreach (Result row in query.Execute())
+                {
+                    resultArray.Add(row.ToDictionary());
+                }
+                response.WriteBody(resultArray);
+            });
+        }
+
+        internal static void QueryIsNullOrMissing([NotNull] NameValueCollection args,
+            [NotNull] IReadOnlyDictionary<string, object> postBody,
+            [NotNull] HttpListenerResponse response)
+        {
+            With<Database>(postBody, "database", db =>
+            {
+                var prop1 = postBody["select_property1"].ToString();
+                IExpression limit = Expression.Value(postBody["limit"].ToString());
+
+                IQuery query = QueryBuilder
+                                .Select(SelectResult.Expression(Meta.ID),
+                                        SelectResult.Expression(Expression.Property(prop1)))
+                                .From(DataSource.Database(db))
+                                .Where(Expression.Property(prop1).IsNullOrMissing())
+                                .OrderBy(Ordering.Expression(Meta.ID).Ascending())
+                                .Limit(limit);
+                List<object> resultArray = new List<object>();
+                foreach (Result row in query.Execute())
+                {
+                    resultArray.Add(row.ToDictionary());
+                }
+                response.WriteBody(resultArray);
+            });
+        }
+
+        internal static void Querycollation([NotNull] NameValueCollection args,
+            [NotNull] IReadOnlyDictionary<string, object> postBody,
+            [NotNull] HttpListenerResponse response)
+        {
+            With<Database>(postBody, "database", db =>
+            {
+                var prop1 = postBody["select_property1"].ToString();
+                var whrKey1 = postBody["whr_key1"].ToString();
+                var whrKey2 = postBody["whr_key2"].ToString();
+                IExpression whrVal1 = Expression.Value(postBody["whr_val1"].ToString());
+                IExpression whrVal2 = Expression.Value(postBody["whr_val2"].ToString());
+                IExpression equal_to = Expression.Value(postBody["equal_to"].ToString());
+
+                ICollation collation = Collation.Unicode().IgnoreAccents(true).IgnoreCase(true);
+                IQuery query = QueryBuilder
+                                .Select(SelectResult.Expression(Meta.ID),
+                                        SelectResult.Expression(Expression.Property(prop1)))
+                                .From(DataSource.Database(db))
+                                .Where(Expression.Property(whrKey1).EqualTo(whrVal1)
+                                        .And(Expression.Property(whrKey2).EqualTo(whrVal2))
+                                        .And((Expression.Property(prop1).Collate(collation).EqualTo(equal_to))));
+                List<object> resultArray = new List<object>();
+                foreach (Result row in query.Execute())
+                {
+                    resultArray.Add(row.ToDictionary());
+                }
+                response.WriteBody(resultArray);
+            });
+        }
+
+    }
+
+}

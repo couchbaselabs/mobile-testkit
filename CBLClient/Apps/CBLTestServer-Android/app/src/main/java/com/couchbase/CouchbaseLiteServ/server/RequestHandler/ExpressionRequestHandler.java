@@ -78,7 +78,7 @@ public class ExpressionRequestHandler {
         return expression1.and(expression2);
     }
 
-    public Expression or(Args args) {
+    public Expression createOr(Args args) {
         Expression expression1 = args.get("expression1");
         Expression expression2 = args.get("expression2");
         return expression1.or(expression2);

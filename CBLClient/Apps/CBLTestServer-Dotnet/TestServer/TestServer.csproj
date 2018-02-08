@@ -10,7 +10,4 @@
     <PackageReference Include="Couchbase.Lite" Version="2.0.0-b0520" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Compile Remove="ExpressionMethods.cs" />
-  </ItemGroup>
 </Project>
