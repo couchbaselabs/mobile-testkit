@@ -45,7 +45,7 @@ namespace Couchbase.Lite.Testing
         private static readonly IDictionary<string, HandlerAction> RouteMap =
             new Dictionary<string, HandlerAction>
             {
-            ["basicAuthenticator_creaate"] = BasicAuthenticationMethods.Create,
+            ["basicAuthenticator_create"] = BasicAuthenticationMethods.Create,
             ["sessionAuthenticator_create"] = SessionAuthenticationMethods.Create,
             ["databaseConfiguration_configure"] = DatabaseConfigurationMethods.Configure,
             ["database_create"] = DatabaseMethods.DatabaseCreate,

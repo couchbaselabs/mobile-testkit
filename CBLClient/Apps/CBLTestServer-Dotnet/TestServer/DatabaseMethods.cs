@@ -218,7 +218,12 @@ namespace Couchbase.Lite.Testing
             [NotNull] IReadOnlyDictionary<string, object> postBody,
             [NotNull] HttpListenerResponse response)
         {
-            var docId = postBody["id"].ToString();
+            string docId = null;
+            if (postBody.ContainsKey("id"))
+            {
+                docId = postBody["id"].ToString();
+            }
+
             With<Database>(postBody, "database", db =>
             {
                 var doc = db.GetDocument(docId);
