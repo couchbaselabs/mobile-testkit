@@ -195,28 +195,28 @@ def params_from_base_suite_setup(request):
     if enable_sample_bucket:
         server_url = cluster_topology["couchbase_servers"][0]
         server = CouchbaseServer(server_url)
-
+ 
         buckets = server.get_bucket_names()
         if enable_sample_bucket in buckets:
             log_info("Deleting existing {} bucket".format(enable_sample_bucket))
             server.delete_bucket(enable_sample_bucket)
             time.sleep(5)
-
+ 
         log_info("Loading sample bucket {}".format(enable_sample_bucket))
         server.load_sample_bucket(enable_sample_bucket)
         server._create_internal_rbac_bucket_user(enable_sample_bucket)
-
+ 
         # Restart SG after the bucket deletion
         sync_gateways = cluster_topology["sync_gateways"]
         sg_obj = SyncGateway()
-
+ 
         for sg in sync_gateways:
             sg_ip = host_for_url(sg["admin"])
             log_info("Restarting sync gateway {}".format(sg_ip))
             sg_obj.restart_sync_gateways(cluster_config=cluster_config, url=sg_ip)
             # Giving time to SG to load all docs into it's cache
             time.sleep(240)
-
+ 
         if mode == "di":
             ac_obj = SyncGateway()
             sg_accels = cluster_topology["sg_accels"]
@@ -225,7 +225,7 @@ def params_from_base_suite_setup(request):
                 log_info("Restarting sg accel {}".format(ac_ip))
                 ac_obj.restart_sync_gateways(cluster_config=cluster_config, url=ac_ip)
                 time.sleep(5)
-
+ 
         # Create primary index
         password = "password"
         log_info("Connecting to {}/{} with password {}".format(cbs_ip, enable_sample_bucket, password))
@@ -235,18 +235,18 @@ def params_from_base_suite_setup(request):
         query = N1QLQuery(n1ql_query)
         sdk_client.n1ql_query(query)
 
-    # Start continuous replication
-    repl_obj = Replication(base_url)
-    auth_obj = BasicAuthenticator(base_url)
-    authenticator = auth_obj.create("traveL-sample", "password")
-    repl_config = repl_obj.configure(source_db=source_db,
-                                     target_url=target_admin_url,
-                                     replication_type="PUSH_AND_PULL",
-                                     continuous=True,
-                                     replicator_authenticator=authenticator)
-    repl = repl_obj.create(repl_config)
-    repl_obj.start(repl)
-    repl_obj.wait_until_replicator_idle(repl)
+        # Start continuous replication
+        repl_obj = Replication(base_url)
+        auth_obj = BasicAuthenticator(base_url)
+        authenticator = auth_obj.create("traveL-sample", "password")
+        repl_config = repl_obj.configure(source_db=source_db,
+                                         target_url=target_admin_url,
+                                         replication_type="PUSH_AND_PULL",
+                                         continuous=True,
+                                         replicator_authenticator=authenticator)
+        repl = repl_obj.create(repl_config)
+        repl_obj.start(repl)
+        repl_obj.wait_until_replicator_idle(repl)
 
     yield {
         "cluster_config": cluster_config,
