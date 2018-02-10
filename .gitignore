@@ -96,3 +96,4 @@ CBLClient/Apps/CBLTestServer-iOS/CBLTestServer-iOS.xcodeproj
 bin/
 obj/
 .vs/
+TestServer.zip
