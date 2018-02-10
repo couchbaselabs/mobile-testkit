@@ -235,18 +235,18 @@ def params_from_base_suite_setup(request):
         query = N1QLQuery(n1ql_query)
         sdk_client.n1ql_query(query)
 
-    # Start continuous replication
-    repl_obj = Replication(base_url)
-    auth_obj = BasicAuthenticator(base_url)
-    authenticator = auth_obj.create("traveL-sample", "password")
-    repl_config = repl_obj.configure(source_db=source_db,
-                                     target_url=target_admin_url,
-                                     replication_type="PUSH_AND_PULL",
-                                     continuous=True,
-                                     replicator_authenticator=authenticator)
-    repl = repl_obj.create(repl_config)
-    repl_obj.start(repl)
-    repl_obj.wait_until_replicator_idle(repl)
+        # Start continuous replication
+        repl_obj = Replication(base_url)
+        auth_obj = BasicAuthenticator(base_url)
+        authenticator = auth_obj.create("traveL-sample", "password")
+        repl_config = repl_obj.configure(source_db=source_db,
+                                         target_url=target_admin_url,
+                                         replication_type="PUSH_AND_PULL",
+                                         continuous=True,
+                                         replicator_authenticator=authenticator)
+        repl = repl_obj.create(repl_config)
+        repl_obj.start(repl)
+        repl_obj.wait_until_replicator_idle(repl)
 
     yield {
         "cluster_config": cluster_config,
