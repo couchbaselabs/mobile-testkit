@@ -112,13 +112,13 @@ namespace Couchbase.Lite.Testing
                 List<object> resultArray = new List<object>();
                 foreach (Result row in query.Execute())
                 {
-                    resultArray.Add(row);
+                    resultArray.Add(row.ToDictionary());
                 }
                 response.WriteBody(resultArray);
             });
         }
 
-        internal static void QueryDocsMultipleSelects([NotNull] NameValueCollection args,
+        internal static void QueryMultipleSelects([NotNull] NameValueCollection args,
             [NotNull] IReadOnlyDictionary<string, object> postBody,
             [NotNull] HttpListenerResponse response)
         {
@@ -163,8 +163,8 @@ namespace Couchbase.Lite.Testing
                                 .Select(SelectResult.Expression(Meta.ID))
                                 .From(DataSource.Database(db))
                                 .Where(Expression.Property(whrKey1).EqualTo(whrVal1)
-                                        .And(Expression.Property(whrKey2).EqualTo(whrVal2))
-                                            .Or(Expression.Property(whrKey3).EqualTo(whrVal3))
+                                        .And(Expression.Property(whrKey2).EqualTo(whrVal2)
+                                            .Or(Expression.Property(whrKey3).EqualTo(whrVal3)))
                                         .And(Expression.Property(whrKey4).EqualTo(whrVal4)));
                 List<object> resultArray = new List<object>();
                 foreach (Result row in query.Execute())

@@ -100,6 +100,8 @@ namespace Couchbase.Lite.Testing
             ["expression_createOr"] = ExpressionMethods.ExpressionCreateOr,
             ["datasource_database"] = DataSourceMethods.Database,
             ["query_create"] = QueryMethods.QueryCreate,
+            ["query_getDoc"] = QueryMethods.QueryGetDoc,
+            ["query_like"] = QueryMethods.QueryLike,
             ["query_run"] = QueryMethods.QueryRun,
             ["query_nextResult"] = QueryMethods.QueryNextResult,
             ["query_docsLimitOffset"] = QueryMethods.QueryDocsLimitOffset,
