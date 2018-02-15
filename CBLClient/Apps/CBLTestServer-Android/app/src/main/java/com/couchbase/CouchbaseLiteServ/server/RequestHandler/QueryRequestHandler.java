@@ -8,6 +8,7 @@ import com.couchbase.lite.DataSource;
 import com.couchbase.lite.Database;
 import com.couchbase.lite.Expression;
 import com.couchbase.lite.Function;
+import com.couchbase.lite.Join;
 import com.couchbase.lite.Meta;
 import com.couchbase.lite.Ordering;
 import com.couchbase.lite.Query;
@@ -19,6 +20,8 @@ import com.couchbase.lite.SelectResult;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+
+import static android.icu.text.UnicodeSet.from;
 
 public class QueryRequestHandler {
 
@@ -255,5 +258,269 @@ public class QueryRequestHandler {
         return resultArray;
     }
 
+    public List<Object> join(Args args) throws CouchbaseLiteException {
+        Database db = args.get("database");
+        String prop1 = args.get("select_property1");
+        String prop2 = args.get("select_property2");
+        String prop3 = args.get("select_property3");
+        String prop4 = args.get("select_property4");
+        String prop5 = args.get("select_property5");
+        String joinKey = args.get("join_key");
+        String whrKey1 = args.get("whr_key1");
+        String whrKey2 = args.get("whr_key2");
+        String whrKey3 = args.get("whr_key3");
+        Expression limit = Expression.value(args.get("limit"));
+        Expression whrVal1 = Expression.value(args.get("whr_val1"));
+        Expression whrVal2 = Expression.value(args.get("whr_val2"));
+        Expression whrVal3 = Expression.value(args.get("whr_val3"));
+        String main = "route";
+        String secondary = "airline";
+
+        List<Object> resultArray = new ArrayList<Object>();
+
+        Query query = QueryBuilder
+                .selectDistinct(
+                        SelectResult.expression(Expression.property(prop1).from(secondary)),
+                        SelectResult.expression(Expression.property(prop2).from(secondary)),
+                        SelectResult.expression(Expression.property(prop3).from(main)),
+                        SelectResult.expression(Expression.property(prop4).from(main)),
+                        SelectResult.expression(Expression.property(prop5).from(main)))
+                .from(DataSource.database(db).as(main))
+                .join(Join.join(DataSource.database(db).as(secondary))
+                    .on(Meta.id.from(secondary).equalTo(Expression.property(joinKey).from(main))))
+                .where(Expression.property(whrKey1).from(main).equalTo(whrVal1)
+                    .and(Expression.property(whrKey2).from(secondary).equalTo(whrVal2))
+                    .and(Expression.property(whrKey3).from(main).equalTo(whrVal3)))
+                .limit(limit);
+        for (Result row : query.execute()){
+            resultArray.add(row.toMap());
+        }
+        return resultArray;
+    }
+
+    public List<Object> join2(Args args) throws CouchbaseLiteException {
+        Database db = args.get("database");
+        String prop1 = args.get("select_property1");
+        String prop2 = args.get("select_property2");
+        String prop3 = args.get("select_property3");
+        String joinKey1 = args.get("join_key1");
+        String joinKey2 = args.get("join_key2");
+        String whrKey1 = args.get("whr_key1");
+        String whrKey2 = args.get("whr_key2");
+        Expression whrVal1 = Expression.value(args.get("whr_val1"));
+        Expression whrVal2 = Expression.value(args.get("whr_val2"));
+        String main = "employeeDS";
+        String secondary = "departmentDS";
+
+        List<Object> resultArray = new ArrayList<Object>();
+
+        DataSource employeeDS = DataSource.database(db).as(main);
+        DataSource departmentDS = DataSource.database(db).as(secondary);
+        Expression employeeDeptExpr = Expression.property(joinKey2).from(main);
+        Expression departmentCodeExpr = Expression.property(joinKey1).from(secondary);
+        Expression joinExpr = employeeDeptExpr.equalTo(departmentCodeExpr)
+                .and(Expression.property(whrKey1).from(main).equalTo(whrVal1))
+                .and(Expression.property(whrKey2).from(secondary).equalTo(whrVal2));
+        Join join = Join.leftJoin(departmentDS).on(joinExpr);
+        Query query = QueryBuilder
+                .select(
+                        SelectResult.expression(Expression.property(prop1).from(main)),
+                        SelectResult.expression(Expression.property(prop2).from(main)),
+                        SelectResult.expression(Expression.property(prop3).from(secondary)))
+                .from(employeeDS)
+                .join(join);
+        for (Result row : query.execute()) {
+            resultArray.add(row.toMap());
+        }
+        return resultArray;
+    }
+
+    public List<Object> equalTo(Args args) throws CouchbaseLiteException {
+        //SELECT * FROM `travel-sample` where id = 24
+        Database db = args.get("database");
+        String prop = args.get("prop");
+        Expression val = Expression.value(args.get("val"));
+        List<Object> resultArray = new ArrayList<Object>();
+
+        Query query = QueryBuilder
+                .select(SelectResult.expression(Meta.id))
+                .from(DataSource.database(db))
+                .where(Expression.property(prop).equalTo(val));
+        for (Result row : query.execute()) {
+            resultArray.add(row.toMap());
+        }
+        return resultArray;
+    }
+
+    public List<Object> notEqualTo(Args args) throws CouchbaseLiteException {
+        //SELECT * FROM `travel-sample` where id != 24
+        Database db = args.get("database");
+        String prop = args.get("prop");
+        Expression val = Expression.value(args.get("val"));
+        List<Object> resultArray = new ArrayList<Object>();
+
+        Query query = QueryBuilder
+                .select(SelectResult.expression(Meta.id))
+                .from(DataSource.database(db))
+                .where(Expression.property(prop).notEqualTo(val));
+        for (Result row : query.execute()) {
+            resultArray.add(row.toMap());
+        }
+        return resultArray;
+    }
+
+    public List<Object> greaterThan(Args args) throws CouchbaseLiteException {
+        //SELECT * FROM `travel-sample` where id > 1000
+        Database db = args.get("database");
+        String prop = args.get("prop");
+        Expression val = Expression.value(args.get("val"));
+        List<Object> resultArray = new ArrayList<Object>();
+
+        Query query = QueryBuilder
+                .select(SelectResult.expression(Meta.id))
+                .from(DataSource.database(db))
+                .where(Expression.property(prop).greaterThan(val));
+        for (Result row : query.execute()) {
+            resultArray.add(row.toMap());
+        }
+        return resultArray;
+    }
+
+    public List<Object> greaterThanOrEqualTo(Args args) throws CouchbaseLiteException {
+        //SELECT * FROM `travel-sample` where id >= 31000 limit 5
+        Database db = args.get("database");
+        String prop = args.get("prop");
+        Expression val = Expression.value(args.get("val"));
+        List<Object> resultArray = new ArrayList<Object>();
+
+        Query query = QueryBuilder
+                .select(SelectResult.expression(Meta.id))
+                .from(DataSource.database(db))
+                .where(Expression.property(prop).greaterThanOrEqualTo(val));
+        for (Result row : query.execute()) {
+            resultArray.add(row.toMap());
+        }
+        return resultArray;
+    }
+
+    public List<Object> lessThan(Args args) throws CouchbaseLiteException {
+        //SELECT * FROM `travel-sample` where id < 100 limit 5
+        Database db = args.get("database");
+        String prop = args.get("prop");
+        Expression val = Expression.value(args.get("prop"));
+        List<Object> resultArray = new ArrayList<Object>();
+
+        Query query = QueryBuilder
+                .select(SelectResult.expression(Meta.id))
+                .from(DataSource.database(db))
+                .where(Expression.property(prop).lessThan(val));
+        for (Result row : query.execute()) {
+            resultArray.add(row.toMap());
+        }
+        return resultArray;
+    }
+
+    public List<Object> lessThanOrEqualTo(Args args) throws CouchbaseLiteException {
+        //SELECT * FROM `travel-sample` where id <= 100 limit 5
+        Database db = args.get("database");
+        String prop = args.get("prop");
+        Expression val = Expression.value(args.get("prop"));
+        List<Object> resultArray = new ArrayList<Object>();
+
+        Query query = QueryBuilder
+                .select(SelectResult.expression(Meta.id))
+                .from(DataSource.database(db))
+                .where(Expression.property(prop).lessThanOrEqualTo(val));
+        for (Result row : query.execute()) {
+            resultArray.add(row.toMap());
+        }
+        return resultArray;
+    }
+
+    public List<Object> between(Args args) throws CouchbaseLiteException {
+        //SELECT * FROM `travel-sample` where id between 100 and 200
+        Database db = args.get("database");
+        String prop = args.get("prop");
+        Expression val1 = Expression.value(args.get("val1"));
+        Expression val2 = Expression.value(args.get("val2"));
+        List<Object> resultArray = new ArrayList<Object>();
+
+        Query query = QueryBuilder
+                .select(SelectResult.expression(Meta.id))
+                .from(DataSource.database(db))
+                .where(Expression.property(prop).between(val1, val2));
+        for (Result row : query.execute()) {
+            resultArray.add(row.toMap());
+        }
+        return resultArray;
+    }
+
+    public List<Object> in(Args args) throws CouchbaseLiteException {
+        //SELECT * FROM `travel-sample` where country in ["france", "United States"] limit 5
+        Database db = args.get("database");
+        String prop = args.get("prop");
+        List<Object> valueList =  args.get("value_list");
+        List<Object> resultArray = new ArrayList<Object>();
+
+        Query query = QueryBuilder
+                .select(SelectResult.expression(Meta.id))
+                .from(DataSource.database(db))
+                .where(Expression.property(prop).in(Expression.value(valueList)));
+        for (Result row : query.execute()) {
+            resultArray.add(row.toMap());
+        }
+        return resultArray;
+    }
+
+    public List<Object> is(Args args) throws CouchbaseLiteException {
+        //SELECT * FROM `travel-sample` where callsign is null limit 5
+        Database db = args.get("database");
+        String prop = args.get("prop");
+        List<Object> resultArray = new ArrayList<Object>();
+
+        Query query = QueryBuilder
+                .select(SelectResult.expression(Meta.id))
+                .from(DataSource.database(db))
+                .where(Expression.property(prop).is(Expression.value(null)));
+        for (Result row : query.execute()) {
+            resultArray.add(row.toMap());
+        }
+        return resultArray;
+    }
+
+    public List<Object> not(Args args) throws CouchbaseLiteException {
+        //SELECT * FROM `travel-sample` where id not  between 100 and 200 limit 5
+        Database db = args.get("database");
+        String prop = args.get("prop");
+        Expression val1 = Expression.value(args.get("val1"));
+        Expression val2 = Expression.value(args.get("val2"));
+        List<Object> resultArray = new ArrayList<Object>();
+
+        Query query = QueryBuilder
+                .select(SelectResult.expression(Meta.id))
+                .from(DataSource.database(db))
+                .where(Expression.not(Expression.property(prop).between(val1, val2)));
+        for (Result row : query.execute()) {
+            resultArray.add(row.toMap());
+        }
+        return resultArray;
+    }
+
+    public List<Object> isNot(Args args) throws CouchbaseLiteException {
+        //SELECT * FROM `travel-sample` where callsign is not null limit 5
+        Database db = args.get("database");
+        String prop = args.get("prop");
+
+        List<Object> resultArray = new ArrayList<Object>();
+
+        Query query = QueryBuilder
+                .select(SelectResult.expression(Meta.id))
+                .from(DataSource.database(db))
+                .where(Expression.property(prop).isNot(null));
+        for (Result row : query.execute()) {
+            resultArray.add(row.toMap());
+        }
+        return resultArray;
+    }
 
 }

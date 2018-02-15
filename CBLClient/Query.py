@@ -213,5 +213,132 @@ class Query(object):
 
         return self._client.invokeMethod("query_collation", args)
 
+    def query_join(self, database, select_property1, select_property2,
+                   select_property3, select_property4, select_property5,
+                   whr_key1, whr_key2, whr_key3, whr_val1, whr_val2,
+                   whr_val3, join_key, limit):
+        args = Args()
+        args.setMemoryPointer("database", database)
+        args.setString("select_property1", select_property1)
+        args.setString("select_property2", select_property2)
+        args.setString("select_property3", select_property3)
+        args.setString("select_property4", select_property4)
+        args.setString("select_property5", select_property5)
+        args.setString("whr_key1", whr_key1)
+        args.setString("whr_key2", whr_key2)
+        args.setString("whr_key3", whr_key3)
+        args.setString("join_key", join_key)
+        args.setString("whr_val1", whr_val1)
+        args.setString("whr_val2", whr_val2)
+        args.setString("whr_val3", whr_val3)
+        args.setString("limit", limit)
+        
+        return self._client.invokeMethod("query_join", args)
+
+    def query_join2(self, database, select_property1, select_property2,
+                   select_property3, whr_key1, whr_key2, whr_val1,
+                   whr_val2, join_key1, join_key2,):
+        args = Args()
+        args.setMemoryPointer("database", database)
+        args.setString("select_property1", select_property1)
+        args.setString("select_property2", select_property2)
+        args.setString("select_property3", select_property3)
+        args.setString("whr_key1", whr_key1)
+        args.setString("whr_key2", whr_key2)
+        args.setString("join_key1", join_key1)
+        args.setString("join_key2", join_key2)
+        args.setString("whr_val1", whr_val1)
+        args.setString("whr_val2", whr_val2)
+        
+        return self._client.invokeMethod("query_join2", args)
+
+    def query_between(self, database, prop, val1, val2):
+        args = Args()
+        args.setMemoryPointer("database", database)
+        args.setString("prop", prop)
+        args.setString("val1", val1)
+        args.setString("val2", val2)
+        
+        return self._client.invokeMethod("query_between", args)
+
+    def query_equal_to(self, database, prop, val):
+        args = Args()
+        args.setMemoryPointer("database", database)
+        args.setString("prop", prop)
+        args.setString("val", val)
+        
+        return self._client.invokeMethod("query_equalTo", args)
+
+    def query_greater_than_or_equal_to(self, database, prop, val):
+        args = Args()
+        args.setMemoryPointer("database", database)
+        args.setString("prop", prop)
+        args.setString("val", val)
+        
+        return self._client.invokeMethod("query_greaterThanOREqualTo", args)
+
+    def query_greater_than(self, database, prop, val):
+        args = Args()
+        args.setMemoryPointer("database", database)
+        args.setString("prop", prop)
+        args.setString("val", val)
+        
+        return self._client.invokeMethod("query_greaterThan", args)
+
+    def query_less_than(self, database, prop, val):
+        args = Args()
+        args.setMemoryPointer("database", database)
+        args.setString("prop", prop)
+        args.setString("val", val)
+        
+        return self._client.invokeMethod("query_lessThan", args)
+
+    def query_less_than_or_equal_to(self, database, prop, val):
+        args = Args()
+        args.setMemoryPointer("database", database)
+        args.setString("prop", prop)
+        args.setString("val", val)
+        
+        return self._client.invokeMethod("query_lessThanOrEqualTo", args)
+
+    def query_in(self, database, prop, value_list):
+        args = Args()
+        args.setMemoryPointer("database", database)
+        args.setString("prop", prop)
+        args.setString("value_list", value_list)
+        
+        return self._client.invokeMethod("query_in", args)
+
+    def query_is(self, database, prop):
+        args = Args()
+        args.setMemoryPointer("database", database)
+        args.setString("prop", prop)
+        
+        return self._client.invokeMethod("query_is", args)
+
+    def query_isNot(self, database, prop):
+        args = Args()
+        args.setMemoryPointer("database", database)
+        args.setString("prop", prop)
+        
+        return self._client.invokeMethod("query_isNot", args)
+
+    def query_not(self, database, prop, val1, val2):
+        args = Args()
+        args.setMemoryPointer("database", database)
+        args.setString("prop", prop)
+        args.setString("val1", val1)
+        args.setString("val2", val2)
+
+        return self._client.invokeMethod("query_not", args)
+
+    def query_not_equal_to(self, database, prop, val):
+        args = Args()
+        args.setMemoryPointer("database", database)
+        args.setString("prop", prop)
+        args.setString("val", val)
+
+        return self._client.invokeMethod("query_notEqualTo", args)
+
     def release(self, obj):
         self._client.release(obj)
