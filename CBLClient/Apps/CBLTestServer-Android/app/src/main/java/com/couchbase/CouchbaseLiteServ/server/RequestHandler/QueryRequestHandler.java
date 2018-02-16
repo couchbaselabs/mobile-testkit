@@ -21,8 +21,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import static android.icu.text.UnicodeSet.from;
-
 public class QueryRequestHandler {
 
    public Query select(Args args){
@@ -80,7 +78,7 @@ public class QueryRequestHandler {
                 .select(SelectResult.all())
                 .from(DataSource.database(database))
                 .limit(limit, offset);
-        List<Object> resultArray = new ArrayList<Object>();
+        List<Object> resultArray = new ArrayList<>();
         ResultSet rows = search_query.execute();
         for (Result row : rows){
             resultArray.add(row);
@@ -101,7 +99,7 @@ public class QueryRequestHandler {
                         SelectResult.expression(Expression.property(select_property2)))
                 .from(DataSource.database(database))
                 .where(Expression.property(whr_key).equalTo(whr_val));
-        List<Object> resultArray = new ArrayList<Object>();
+        List<Object> resultArray = new ArrayList<>();
         ResultSet rows = search_query.execute();
         for (Result row : rows){
             resultArray.add(row.toMap());
@@ -119,7 +117,7 @@ public class QueryRequestHandler {
         Expression whr_val2 = Expression.value(args.get("whr_val2"));
         Expression whr_val3 = Expression.value(args.get("whr_val3"));
         Expression whr_val4 = Expression.value(args.get("whr_val4"));
-        List<Object> resultArray = new ArrayList<Object>();
+        List<Object> resultArray = new ArrayList<>();
         Query query = QueryBuilder
                 .select(SelectResult.expression(Meta.id))
                 .from(DataSource.database(database))
@@ -142,7 +140,7 @@ public class QueryRequestHandler {
         String like_key = args.get("like_key");
         Expression whr_val = Expression.value(args.get("whr_val"));
         Expression like_val = Expression.value(args.get("like_val"));
-        List<Object> resultArray = new ArrayList<Object>();
+        List<Object> resultArray = new ArrayList<>();
         Query query = QueryBuilder
                 .select(SelectResult.expression(Meta.id),
                         SelectResult.expression(Expression.property(select_property1)),
@@ -164,7 +162,7 @@ public class QueryRequestHandler {
         String regex_key = args.get("regex_key");
         Expression whr_val = Expression.value(args.get("whr_val"));
         Expression regex_val = Expression.value(args.get("regex_val"));
-        List<Object> resultArray = new ArrayList<Object>();
+        List<Object> resultArray = new ArrayList<>();
         Query query = QueryBuilder
                 .select(SelectResult.expression(Meta.id),
                         SelectResult.expression(Expression.property(select_property1)),
@@ -183,7 +181,7 @@ public class QueryRequestHandler {
         String whr_key = args.get("whr_key");
         String select_property1 = args.get("select_property1");
         Expression whr_val = Expression.value(args.get("whr_val"));
-        List<Object> resultArray = new ArrayList<Object>();
+        List<Object> resultArray = new ArrayList<>();
         Query query = QueryBuilder
                 .select(SelectResult.expression(Meta.id),
                         SelectResult.expression(Expression.property(select_property1)))
@@ -201,7 +199,7 @@ public class QueryRequestHandler {
         String select_property1 = args.get("select_property1");
         String select_property2 = args.get("select_property2");
         Expression substring = Expression.value(args.get("substring"));
-        List<Object> resultArray = new ArrayList<Object>();
+        List<Object> resultArray = new ArrayList<>();
         Query query = QueryBuilder
                 .select(SelectResult.expression(Meta.id),
                         SelectResult.expression(Expression.property(select_property1)),
@@ -218,7 +216,7 @@ public class QueryRequestHandler {
         Database database = args.get("database");
         String select_property1 = args.get("select_property1");
         Expression limit = Expression.value(args.get("limit"));
-        List<Object> resultArray = new ArrayList<Object>();
+        List<Object> resultArray = new ArrayList<>();
         Query query = QueryBuilder
                 .select(SelectResult.expression(Meta.id),
                         SelectResult.expression(Expression.property(select_property1)))
@@ -240,7 +238,7 @@ public class QueryRequestHandler {
         Expression whr_val1 = Expression.value(args.get("whr_val1"));
         Expression whr_val2 = Expression.value(args.get("whr_val2"));
         Expression equal_to = Expression.value(args.get("equal_to"));
-        List<Object> resultArray = new ArrayList<Object>();
+        List<Object> resultArray = new ArrayList<>();
 
         Collation collation = Collation.unicode()
                 .ignoreAccents(true)
@@ -276,7 +274,7 @@ public class QueryRequestHandler {
         String main = "route";
         String secondary = "airline";
 
-        List<Object> resultArray = new ArrayList<Object>();
+        List<Object> resultArray = new ArrayList<>();
 
         Query query = QueryBuilder
                 .selectDistinct(
@@ -312,7 +310,7 @@ public class QueryRequestHandler {
         String main = "employeeDS";
         String secondary = "departmentDS";
 
-        List<Object> resultArray = new ArrayList<Object>();
+        List<Object> resultArray = new ArrayList<>();
 
         DataSource employeeDS = DataSource.database(db).as(main);
         DataSource departmentDS = DataSource.database(db).as(secondary);
@@ -340,12 +338,13 @@ public class QueryRequestHandler {
         Database db = args.get("database");
         String prop = args.get("prop");
         Expression val = Expression.value(args.get("val"));
-        List<Object> resultArray = new ArrayList<Object>();
+        List<Object> resultArray = new ArrayList<>();
 
         Query query = QueryBuilder
                 .select(SelectResult.expression(Meta.id))
                 .from(DataSource.database(db))
-                .where(Expression.property(prop).equalTo(val));
+                .where(Expression.property(prop).equalTo(val))
+                .orderBy(Ordering.expression(Meta.id).ascending());
         for (Result row : query.execute()) {
             resultArray.add(row.toMap());
         }
@@ -357,12 +356,13 @@ public class QueryRequestHandler {
         Database db = args.get("database");
         String prop = args.get("prop");
         Expression val = Expression.value(args.get("val"));
-        List<Object> resultArray = new ArrayList<Object>();
+        List<Object> resultArray = new ArrayList<>();
 
         Query query = QueryBuilder
                 .select(SelectResult.expression(Meta.id))
                 .from(DataSource.database(db))
-                .where(Expression.property(prop).notEqualTo(val));
+                .where(Expression.property(prop).notEqualTo(val))
+                .orderBy(Ordering.expression(Meta.id).ascending());
         for (Result row : query.execute()) {
             resultArray.add(row.toMap());
         }
@@ -374,12 +374,13 @@ public class QueryRequestHandler {
         Database db = args.get("database");
         String prop = args.get("prop");
         Expression val = Expression.value(args.get("val"));
-        List<Object> resultArray = new ArrayList<Object>();
+        List<Object> resultArray = new ArrayList<>();
 
         Query query = QueryBuilder
                 .select(SelectResult.expression(Meta.id))
                 .from(DataSource.database(db))
-                .where(Expression.property(prop).greaterThan(val));
+                .where(Expression.property(prop).greaterThan(val))
+                .orderBy(Ordering.expression(Meta.id).ascending());
         for (Result row : query.execute()) {
             resultArray.add(row.toMap());
         }
@@ -391,12 +392,13 @@ public class QueryRequestHandler {
         Database db = args.get("database");
         String prop = args.get("prop");
         Expression val = Expression.value(args.get("val"));
-        List<Object> resultArray = new ArrayList<Object>();
+        List<Object> resultArray = new ArrayList<>();
 
         Query query = QueryBuilder
                 .select(SelectResult.expression(Meta.id))
                 .from(DataSource.database(db))
-                .where(Expression.property(prop).greaterThanOrEqualTo(val));
+                .where(Expression.property(prop).greaterThanOrEqualTo(val))
+                .orderBy(Ordering.expression(Meta.id).ascending());
         for (Result row : query.execute()) {
             resultArray.add(row.toMap());
         }
@@ -407,13 +409,14 @@ public class QueryRequestHandler {
         //SELECT * FROM `travel-sample` where id < 100 limit 5
         Database db = args.get("database");
         String prop = args.get("prop");
-        Expression val = Expression.value(args.get("prop"));
-        List<Object> resultArray = new ArrayList<Object>();
+        Expression val = Expression.value(args.get("val"));
+        List<Object> resultArray = new ArrayList<>();
 
         Query query = QueryBuilder
                 .select(SelectResult.expression(Meta.id))
                 .from(DataSource.database(db))
-                .where(Expression.property(prop).lessThan(val));
+                .where(Expression.property(prop).lessThan(val))
+                .orderBy(Ordering.expression(Meta.id).ascending());
         for (Result row : query.execute()) {
             resultArray.add(row.toMap());
         }
@@ -424,13 +427,14 @@ public class QueryRequestHandler {
         //SELECT * FROM `travel-sample` where id <= 100 limit 5
         Database db = args.get("database");
         String prop = args.get("prop");
-        Expression val = Expression.value(args.get("prop"));
-        List<Object> resultArray = new ArrayList<Object>();
+        Expression val = Expression.value(args.get("val"));
+        List<Object> resultArray = new ArrayList<>();
 
         Query query = QueryBuilder
                 .select(SelectResult.expression(Meta.id))
                 .from(DataSource.database(db))
-                .where(Expression.property(prop).lessThanOrEqualTo(val));
+                .where(Expression.property(prop).lessThanOrEqualTo(val))
+                .orderBy(Ordering.expression(Meta.id).ascending());
         for (Result row : query.execute()) {
             resultArray.add(row.toMap());
         }
@@ -443,12 +447,13 @@ public class QueryRequestHandler {
         String prop = args.get("prop");
         Expression val1 = Expression.value(args.get("val1"));
         Expression val2 = Expression.value(args.get("val2"));
-        List<Object> resultArray = new ArrayList<Object>();
+        List<Object> resultArray = new ArrayList<>();
 
         Query query = QueryBuilder
                 .select(SelectResult.expression(Meta.id))
                 .from(DataSource.database(db))
-                .where(Expression.property(prop).between(val1, val2));
+                .where(Expression.property(prop).between(val1, val2))
+                .orderBy(Ordering.expression(Meta.id).ascending());
         for (Result row : query.execute()) {
             resultArray.add(row.toMap());
         }
@@ -456,16 +461,18 @@ public class QueryRequestHandler {
     }
 
     public List<Object> in(Args args) throws CouchbaseLiteException {
-        //SELECT * FROM `travel-sample` where country in ["france", "United States"] limit 5
+        //SELECT * FROM `travel-sample` where country in ["france", "United States"]
         Database db = args.get("database");
         String prop = args.get("prop");
-        List<Object> valueList =  args.get("value_list");
-        List<Object> resultArray = new ArrayList<Object>();
+        String val1 =  args.get("val1");
+        String val2 =  args.get("val2");
+        List<Object> resultArray = new ArrayList<>();
 
         Query query = QueryBuilder
                 .select(SelectResult.expression(Meta.id))
                 .from(DataSource.database(db))
-                .where(Expression.property(prop).in(Expression.value(valueList)));
+                .where(Expression.property(prop).in(Expression.value(val1), Expression.value(val2)))
+                .orderBy(Ordering.expression(Meta.id).ascending());
         for (Result row : query.execute()) {
             resultArray.add(row.toMap());
         }
@@ -473,15 +480,16 @@ public class QueryRequestHandler {
     }
 
     public List<Object> is(Args args) throws CouchbaseLiteException {
-        //SELECT * FROM `travel-sample` where callsign is null limit 5
+        //SELECT * FROM `travel-sample` where callsign is null
         Database db = args.get("database");
         String prop = args.get("prop");
-        List<Object> resultArray = new ArrayList<Object>();
+        List<Object> resultArray = new ArrayList<>();
 
         Query query = QueryBuilder
                 .select(SelectResult.expression(Meta.id))
                 .from(DataSource.database(db))
-                .where(Expression.property(prop).is(Expression.value(null)));
+                .where(Expression.property(prop).is(Expression.value(null)))
+                .orderBy(Ordering.expression(Meta.id).ascending());
         for (Result row : query.execute()) {
             resultArray.add(row.toMap());
         }
@@ -494,12 +502,13 @@ public class QueryRequestHandler {
         String prop = args.get("prop");
         Expression val1 = Expression.value(args.get("val1"));
         Expression val2 = Expression.value(args.get("val2"));
-        List<Object> resultArray = new ArrayList<Object>();
+        List<Object> resultArray = new ArrayList<>();
 
         Query query = QueryBuilder
-                .select(SelectResult.expression(Meta.id))
+                .select(SelectResult.expression(Expression.property(prop)))
                 .from(DataSource.database(db))
-                .where(Expression.not(Expression.property(prop).between(val1, val2)));
+                .where(Expression.not(Expression.property(prop).between(val1, val2)))
+                .orderBy(Ordering.expression(Expression.property(prop)).ascending());
         for (Result row : query.execute()) {
             resultArray.add(row.toMap());
         }
@@ -511,12 +520,14 @@ public class QueryRequestHandler {
         Database db = args.get("database");
         String prop = args.get("prop");
 
-        List<Object> resultArray = new ArrayList<Object>();
+        List<Object> resultArray = new ArrayList<>();
 
         Query query = QueryBuilder
-                .select(SelectResult.expression(Meta.id))
+                .select(SelectResult.expression(Meta.id),
+                        SelectResult.expression(Expression.property("callsign")))
                 .from(DataSource.database(db))
-                .where(Expression.property(prop).isNot(null));
+                .where(Expression.property(prop).isNot(Expression.value(null)))
+                .orderBy(Ordering.expression(Meta.id).ascending());
         for (Result row : query.execute()) {
             resultArray.add(row.toMap());
         }

@@ -182,7 +182,7 @@ def params_from_base_suite_setup(request):
     source_db = None
     if create_db_per_suite:
         # Create CBL database
-        cbl_db = create_db_per_suite + str(time.time())
+        cbl_db = create_db_per_suite
         db = Database(base_url)
 
         log_info("Creating a Database {} at the suite setup".format(cbl_db))
@@ -276,12 +276,12 @@ def params_from_base_suite_setup(request):
         log_info("Stopping replication")
         repl_obj.stop(repl)
 
-    if create_db_per_suite:
-        # Delete CBL database
-        log_info("Deleting the database {} at the suite teardown".format(create_db_per_suite))
-        time.sleep(2)
-        db.deleteDB(source_db)
-        time.sleep(1)
+#     if create_db_per_suite:
+#         # Delete CBL database
+#         log_info("Deleting the database {} at the suite teardown".format(create_db_per_suite))
+#         time.sleep(2)
+#         db.deleteDB(source_db)
+#         time.sleep(1)
 
     # Flush all the memory contents on the server app
     utils_obj = Utils(base_url)
