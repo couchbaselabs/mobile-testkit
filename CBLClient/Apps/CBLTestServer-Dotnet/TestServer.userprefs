@@ -1,10 +1,11 @@
 ﻿<Properties StartupConfiguration="{A8E9786C-64F3-46EF-894C-9A7E51AC9210}|Default" NuGet.AddPackagesDialog.IncludePrerelease="True">
   <MonoDevelop.Ide.ItemProperties.TestServer.NetCore PreferredExecutionTarget="MonoDevelop.Default" />
-  <MonoDevelop.Ide.Workbench ActiveDocument="TestServer/Router.cs">
+  <MonoDevelop.Ide.Workbench ActiveDocument="TestServer/HttpListenerResponseExtensions.cs">
     <Files>
-      <File FileName="TestServer/QueryMethods.cs" Line="342" Column="2" />
-      <File FileName="TestServer/Router.cs" Line="104" Column="13" />
+      <File FileName="TestServer/QueryMethods.cs" Line="1" Column="1" />
+      <File FileName="TestServer/Router.cs" Line="110" Column="55" />
       <File FileName="TestServer/ReplicatorConfigurationMethods.cs" Line="75" Column="9" />
+      <File FileName="TestServer/HttpListenerResponseExtensions.cs" Line="1" Column="1" />
     </Files>
   </MonoDevelop.Ide.Workbench>
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />

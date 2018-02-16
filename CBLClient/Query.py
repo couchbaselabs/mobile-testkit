@@ -256,8 +256,8 @@ class Query(object):
         args = Args()
         args.setMemoryPointer("database", database)
         args.setString("prop", prop)
-        args.setString("val1", val1)
-        args.setString("val2", val2)
+        args.setInt("val1", val1)
+        args.setInt("val2", val2)
         
         return self._client.invokeMethod("query_between", args)
 
@@ -273,15 +273,15 @@ class Query(object):
         args = Args()
         args.setMemoryPointer("database", database)
         args.setString("prop", prop)
-        args.setString("val", val)
+        args.setInt("val", val)
         
-        return self._client.invokeMethod("query_greaterThanOREqualTo", args)
+        return self._client.invokeMethod("query_greaterThanOrEqualTo", args)
 
     def query_greater_than(self, database, prop, val):
         args = Args()
         args.setMemoryPointer("database", database)
         args.setString("prop", prop)
-        args.setString("val", val)
+        args.setInt("val", val)
         
         return self._client.invokeMethod("query_greaterThan", args)
 
@@ -289,7 +289,7 @@ class Query(object):
         args = Args()
         args.setMemoryPointer("database", database)
         args.setString("prop", prop)
-        args.setString("val", val)
+        args.setInt("val", val)
         
         return self._client.invokeMethod("query_lessThan", args)
 
@@ -297,16 +297,16 @@ class Query(object):
         args = Args()
         args.setMemoryPointer("database", database)
         args.setString("prop", prop)
-        args.setString("val", val)
+        args.setInt("val", val)
         
         return self._client.invokeMethod("query_lessThanOrEqualTo", args)
 
-    def query_in(self, database, prop, value_list):
+    def query_in(self, database, prop, val1, val2):
         args = Args()
         args.setMemoryPointer("database", database)
         args.setString("prop", prop)
-        args.setString("value_list", value_list)
-        
+        args.setString("val1", val1)
+        args.setString("val2", val2)
         return self._client.invokeMethod("query_in", args)
 
     def query_is(self, database, prop):
