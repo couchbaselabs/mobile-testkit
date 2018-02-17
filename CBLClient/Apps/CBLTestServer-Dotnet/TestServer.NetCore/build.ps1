@@ -1,6 +1,6 @@
 ﻿param (
-    [Parameter(Mandatory=$true)][string]$Version,
-    [Parameter(Mandatory=$true)][int]$BuildNum,
+    [Parameter][string]$Version,
+    [Parameter][int]$BuildNum,
     [switch]$Community
 )
 
@@ -30,13 +30,34 @@ function Modify-Packages {
     [System.IO.File]::WriteAllLines($filename, $content)
 }
 
-$MyPath = Split-Path $MyInvocation.MyCommand.Source
-Push-Location $MyPath
+Push-Location $PSScriptRoot
+
+$version_to_use = $Version
+if(-Not $version_to_use) {
+    if(-Not $env:VERSION) {
+        throw "Version not defined for this script!  Either pass it in as -Version or define an environment variable named VERSION"
+    }
+
+    $version_to_use = $env:VERSION
+}
+
+$build_num_to_use = $BuildNum
+if(-Not $build_num_to_use) {
+    if(-Not $env:BLD_NUM) {
+        throw "Build Number not defined for this script!  Either pass it in as -BuildNum or define an environment variable named BLD_NUM"
+    }
+
+    $build_num_to_use = [int]$env:BLD_NUM
+}
 
 try {
-    $fullVersion = $version + "-b" + $buildNum.ToString("D4")
-    Modify-Packages "TestServer.NetCore.csproj" $fullVersion $Community
-    Modify-Packages "..\TestServer\TestServer.csproj" $fullVersion $Community
+    if($build_num_to_use -lt 538) {
+        $Community = $true
+    }
+
+    $fullVersion = $version_to_use + "-b" + $build_num_to_use.ToString("D4")
+    Modify-Packages "$PSScriptRoot\TestServer.NetCore.csproj" $fullVersion $Community
+    Modify-Packages "$PSScriptRoot\..\TestServer\TestServer.csproj" $fullVersion $Community
 
     Push-Location ..\TestServer
     dotnet restore
