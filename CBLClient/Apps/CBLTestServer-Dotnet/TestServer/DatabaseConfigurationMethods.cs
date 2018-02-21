@@ -26,10 +26,6 @@ namespace Couchbase.Lite.Testing
                 var directory = postBody["directory"].ToString();
                 databaseConfig.Directory = directory;
             }
-            if (postBody.ContainsKey("conflictResolver"))
-            {
-                With<IConflictResolver>(postBody, "conflictResolver", cr => databaseConfig.ConflictResolver = cr);
-            }
             if (postBody.ContainsKey("encryptionKey"))
             {
                 With<EncryptionKey>(postBody, "encryptionKey", er => databaseConfig.EncryptionKey = er);
@@ -46,13 +42,6 @@ namespace Couchbase.Lite.Testing
             response.WriteBody(databaseConfigId);
         }
 
-        public static void GetConflictResolver([NotNull] NameValueCollection args,
-                 [NotNull] IReadOnlyDictionary<string, object> postBody,
-                 [NotNull] HttpListenerResponse response)
-        {
-            With<DatabaseConfiguration>(postBody, "config", dbconfig => response.WriteBody(dbconfig.ConflictResolver));
-        }
-
         public static void GetDirectory([NotNull] NameValueCollection args,
          [NotNull] IReadOnlyDictionary<string, object> postBody,
          [NotNull] HttpListenerResponse response)
@@ -65,19 +54,6 @@ namespace Couchbase.Lite.Testing
          [NotNull] HttpListenerResponse response)
         {
             With<DatabaseConfiguration>(postBody, "config", dbconfig => response.WriteBody(dbconfig.EncryptionKey));
-        }
-
-
-        public static void SetConflictResolver([NotNull] NameValueCollection args,
-         [NotNull] IReadOnlyDictionary<string, object> postBody,
-         [NotNull] HttpListenerResponse response)
-        {
-            
-            With<DatabaseConfiguration>(postBody, "config", dbconfig => 
-            {
-                With<IConflictResolver>(postBody, "conflictResolver", cr => dbconfig.ConflictResolver = cr);
-            });
-            response.WriteEmptyBody();
         }
 
         public static void SetDirectory([NotNull] NameValueCollection args,

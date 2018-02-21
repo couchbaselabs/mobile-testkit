@@ -15,7 +15,7 @@ namespace Couchbase.Lite.Testing
                                             [NotNull] IReadOnlyDictionary<string, object> postBody,
                                             [NotNull] HttpListenerResponse response)
         {
-            var key = (byte)postBody["key"];
+            var key = (byte[])postBody["key"];
             var password = postBody["password"].ToString();
 
             if (password != null){

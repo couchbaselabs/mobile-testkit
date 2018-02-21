@@ -21,15 +21,16 @@ def setup_teardown_test(params_from_base_test_setup):
     base_url = params_from_base_test_setup["base_url"]
     db = Database(base_url)
     db_config = db.configure()
+    log_info("Creating db")
     cbl_db = db.create(cbl_db_name, db_config)
-    print "setting up db"
 
     yield{
         "db": db,
         "cbl_db": cbl_db,
         "cbl_db_name": cbl_db_name
     }
-    print "tearing down db"
+
+    log_info("Deleting the db")
     # db.close(cbl_db)
     db.deleteDB(cbl_db)
 
@@ -95,7 +96,7 @@ def test_replication_configuration_valid_values(params_from_base_test_setup, num
     time.sleep(2)  # wait until re
     sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, include_docs=True)
     sg_docs = sg_docs["rows"]
-    print " sg docs are replication is ", sg_docs
+
     # Verify database doc counts
     cbl_doc_count = db.getCount(cbl_db)
     assert len(sg_docs) == cbl_doc_count, "Expected number of docs does not exist in sync-gateway after replication"
@@ -106,9 +107,9 @@ def test_replication_configuration_valid_values(params_from_base_test_setup, num
     time.sleep(2)
     cbl_doc_ids = db.getDocIds(cbl_db)
     cbl_db_docs = db.getDocuments(cbl_db, cbl_doc_ids)
-    print "cbl db docs are ", cbl_db_docs
+    log_info("cbl db docs are : {}".format(cbl_db_docs))
     for doc in cbl_doc_ids:
-        if continuous == True:
+        if continuous:
             assert cbl_db_docs[doc]["updates"] == number_of_updates, "updates did not get updated"
         else:
             assert cbl_db_docs[doc]["updates"] == 0, "sync-gateway updates got pushed to CBL for one shot replication"
@@ -215,12 +216,10 @@ def test_replication_configuration_with_push_replication(params_from_base_test_s
                                                                      cbl_db=cbl_db, sg_url=sg_url, sg_admin_url=sg_admin_url, sg_blip_url=sg_blip_url,
                                                                      replication_type="push", channels=channels, replicator_authenticator_type=authenticator_type)
     sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db)
-    print "sg docs in test are ", sg_docs["rows"]
 
     # Verify database doc counts
     cbl_doc_count = db.getCount(cbl_db)
     cbl_doc_ids = db.getDocIds(cbl_db)
-    print "cbl docs in test are ", db.getDocuments(cbl_db, cbl_doc_ids)
 
     assert len(sg_docs["rows"]) == 15, "Number of sg docs is not equal to total number of cbl docs and sg docs"
     assert cbl_doc_count == 5, "Did not get expected number of cbl docs"
@@ -258,7 +257,6 @@ def test_replication_push_replication_without_authentication(params_from_base_te
     db = params_from_base_test_setup["db"]
     cbl_db = params_from_base_test_setup["source_db"]
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
-    liteserver_platform =  params_from_base_test_setup["liteserv_platform"]
 
     if sync_gateway_version < "2.0.0":
         pytest.skip('This test cannnot run with sg version below 2.0')
@@ -284,10 +282,9 @@ def test_replication_push_replication_without_authentication(params_from_base_te
     replicator.start(repl)
     replicator.wait_until_replicator_idle(repl, err_check=False)
     error = replicator.getError(repl)
-    if liteserver_platform == "ios":
-        assert "401 Unauthorized" in error, "expected error did not occurred"
-    else:
-        assert "code=401" in error, "expected error did not occurred"
+
+    assert "401" in error, "expected error did not occurred"
+
     replicator.stop(repl)
 
     cbl_doc_ids = db.getDocIds(cbl_db)
@@ -328,7 +325,6 @@ def test_replication_push_replication_invalid_authentication(params_from_base_te
     db = params_from_base_test_setup["db"]
     cbl_db = params_from_base_test_setup["source_db"]
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
-    liteserver_platform =  params_from_base_test_setup["liteserv_platform"]
 
     if sync_gateway_version < "2.0.0":
         pytest.skip('This test cannnot run with sg version below 2.0')
@@ -356,10 +352,8 @@ def test_replication_push_replication_invalid_authentication(params_from_base_te
     replicator.start(repl)
     replicator.wait_until_replicator_idle(repl, err_check=False)
     error = replicator.getError(repl)
-    if liteserver_platform == "ios":
-        assert "401 Unauthorized" in error, "expected error did not occurred"
-    else:
-        assert "code=401" in error, "expected error did not occurred"
+
+    assert "401" in error, "expected error did not occurred"
     replicator.stop(repl)
 
 
@@ -427,16 +421,16 @@ def test_replication_configuration_with_filtered_doc_ids(params_from_base_test_s
     # Now filter doc ids
     authenticator = Authenticator(base_url)
     cookie, session_id = session
-    print "cookie in authentication is ", cookie
-    print "session id in authentication is ", session_id
+    log_info("Authentication cookie: {}".format(cookie))
+    log_info("Authentication session id: {}".format(session_id))
     replicator_authenticator = authenticator.authentication(session_id, cookie, authentication_type="session")
     list_of_sg_filtered_ids = random.sample(sg_added_doc_ids, num_of_filtered_ids)
     repl_config = replicator.configure(cbl_db, target_url=sg_blip_url, continuous=False,
                                        documentIDs=list_of_sg_filtered_ids, channels=channels, replicator_authenticator=replicator_authenticator)
     repl = replicator.create(repl_config)
-    print "replicator created , now starting"
+    log_info("Starting replicator")
     replicator.start(repl)
-    print "replicator wait until replicator idle"
+    log_info("Waiting for replicator to go idle")
     replicator.wait_until_replicator_idle(repl)
     replicator.stop(repl)
 
@@ -498,7 +492,7 @@ def test_replication_configuration_with_headers(params_from_base_test_setup):
     replicator.start(repl)
     replicator.wait_until_replicator_idle(repl)
     changes_count = replicator.getChangesCount(repl_change_listener)
-    changes = replicator.getChangesChangeListener(repl_change_listener)
+    # changes = replicator.getChangesChangeListener(repl_change_listener)
     replicator.stop(repl)
     assert changes_count > 0, "did not get any changes"
     sg_docs = sg_client.get_all_docs(url=sg_url, db=sg_db, auth=auth_session)
@@ -539,13 +533,13 @@ def setup_sg_cbl_docs(params_from_base_test_setup, sg_db, base_url, db, cbl_db, 
         replicator_authenticator = authenticator.authentication(username="autotest", password="password", authentication_type="basic")
     else:
         replicator_authenticator = None
-    print "Authentication is done, now will be doing configuration"
+    log_info("Configuring replicator")
     repl_config = replicator.configure(cbl_db, target_url=sg_blip_url, replication_type=replication_type, continuous=False,
                                        documentIDs=document_ids, channels=channels, replicator_authenticator=replicator_authenticator, headers=headers)
     repl = replicator.create(repl_config)
-    print "replicator created , now starting"
+    log_info("Starting replicator")
     replicator.start(repl)
-    print "replicator wait until replicator idle"
+    log_info("Waiting for replicator to go idle")
     replicator.wait_until_replicator_idle(repl)
     replicator.stop(repl)
 
@@ -621,9 +615,8 @@ def test_CBL_tombstone_doc(params_from_base_test_setup, num_of_docs):
     replicator.wait_until_replicator_idle(repl)
     replicator.stop(repl)
     cbl_doc_ids = db.getDocIds(cbl_db)
-    print "cbl_doc_ids are", cbl_doc_ids
+    log_info("cbl_doc_ids are: {}".format(cbl_doc_ids))
     assert doc_id not in cbl_doc_ids, "doc is expected to be deleted in CBL ,but not deleted"
-
 
 
 @pytest.mark.sanity
@@ -710,7 +703,6 @@ def test_CBL_for_purged_doc(params_from_base_test_setup, sg_conf_name, delete_do
     replicator.stop(repl)
     cbl_doc_ids = db.getDocIds(cbl_db)
     assert doc_id in cbl_doc_ids, "{} document in did not existed in CBL after replication".format(delete_doc_type)
-
 
 
 @pytest.mark.sanity
@@ -981,6 +973,7 @@ def test_CBL_push_pull_with_sgAccel_down(params_from_base_test_setup, sg_conf_na
 def CBL_offline_test(params_from_base_test_setup, sg_conf_name, num_of_docs):
     """
         @summary:
+        This test is meant to be run locally only, not on jenkins.
         1. Create docs in CBL1.
         2. push replication to SG.
         3. CBL goes offline(block outbound requests
@@ -1064,7 +1057,6 @@ def CBL_offline_test(params_from_base_test_setup, sg_conf_name, num_of_docs):
     # 8. Get Documents from CBL
     cbl_doc_ids = db.getDocIds(cbl_db)
     cbl_db_docs = db.getDocuments(cbl_db, cbl_doc_ids)
-    print "CBL docs at the end is ", cbl_db_docs
 
     db.update_bulk_docs(cbl_db, number_of_updates=1)
 

@@ -6,7 +6,7 @@ from CBLClient.Query import Query
 from keywords.utils import host_for_url
 from couchbase.bucket import Bucket
 from couchbase.n1ql import N1QLQuery
-
+import numpy as np
 
 def test_get_doc_ids(params_from_base_test_setup):
     """@summary
@@ -30,6 +30,7 @@ def test_get_doc_ids(params_from_base_test_setup):
     bucket_name = "travel-sample"
     sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password')
     n1ql_query = 'select meta().id from `{}` where meta().id not like "_sync%" ORDER BY id'.format(bucket_name)
+    log_info(n1ql_query)
     query = N1QLQuery(n1ql_query)
     doc_ids_from_n1ql = []
     for row in sdk_client.n1ql_query(query):
@@ -70,7 +71,6 @@ def test_doc_get(params_from_base_test_setup, doc_id):
     result_set = qy.query_get_doc(source_db, doc_id)
 
     docs_from_cbl = []
-    print "result set of clb is ", result_set
     if result_set != -1 and result_set is not None:
         for result in result_set:
             docs_from_cbl.append(result)
@@ -80,16 +80,15 @@ def test_doc_get(params_from_base_test_setup, doc_id):
     bucket_name = "travel-sample"
     sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password')
     n1ql_query = 'select * from `{}` where meta().id="{}"'.format(bucket_name, doc_id)
+    log_info(n1ql_query)
     query = N1QLQuery(n1ql_query)
     docs_from_n1ql = []
 
     for row in sdk_client.n1ql_query(query):
-        docs_from_n1ql.append(row[bucket_name])
+        docs_from_n1ql.append(row)
 
     assert len(docs_from_cbl) == len(docs_from_n1ql)
     log_info("Found {} docs".format(len(docs_from_cbl)))
-    print "cbl docs - ", docs_from_cbl
-    print "docs from n1ql0---  ", docs_from_n1ql
     assert docs_from_cbl == docs_from_n1ql
     log_info("Doc contents match between CBL and n1ql")
 
@@ -163,6 +162,7 @@ def test_multiple_selects(params_from_base_test_setup, select_property1, select_
     bucket_name = "travel-sample"
     sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password')
     n1ql_query = 'select {}, {}, meta().id from `{}` where {}="{}"'.format(select_property1, select_property2, bucket_name, whr_key, whr_val)
+    log_info(n1ql_query)
     query = N1QLQuery(n1ql_query)
     docs_from_n1ql = []
 
@@ -170,11 +170,8 @@ def test_multiple_selects(params_from_base_test_setup, select_property1, select_
         docs_from_n1ql.append(row)
 
     assert len(docs_from_cbl) == len(docs_from_n1ql)
-    # log_info("Found cbl docs {} docs".format(docs_from_cbl))
-    # print "n1ql docs found ", docs_from_n1ql
-    for doc in docs_from_cbl:
-        assert doc in docs_from_n1ql
-    # assert docs_from_cbl == docs_from_n1ql
+    log_info("Found cbl docs {} docs".format(docs_from_cbl))
+    assert docs_from_cbl == docs_from_n1ql
 
     log_info("Doc contents match")
 
@@ -215,6 +212,7 @@ def test_query_where_and_or(params_from_base_test_setup, whr_key1, whr_val1, whr
     bucket_name = "travel-sample"
     sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password')
     n1ql_query = 'select meta().id from `{}` t where t.{}="{}" and (t.{}="{}" or t.{}="{}") and t.{}={}'.format(bucket_name, whr_key1, whr_val1, whr_key2, whr_val2, whr_key3, whr_val3, whr_key4, whr_val4)
+    log_info(n1ql_query)
     query = N1QLQuery(n1ql_query)
     docs_from_n1ql = []
 
@@ -269,6 +267,7 @@ def test_query_pattern_like(params_from_base_test_setup, whr_key, whr_val, selec
     bucket_name = "travel-sample"
     sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password')
     n1ql_query = 'select meta().id, {}, {} from `{}` t where t.{}="{}"  and t.{} like "{}"'.format(select_property1, select_property2, bucket_name, whr_key, whr_val, like_key, like_val)
+    log_info(n1ql_query)
     query = N1QLQuery(n1ql_query)
     docs_from_n1ql = []
 
@@ -371,6 +370,7 @@ def test_query_isNullOrMissing(params_from_base_test_setup, select_property1, li
     bucket_name = "travel-sample"
     sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password')
     n1ql_query = 'select meta().id, {} from `{}` t where meta().id not like "_sync%" and (t.{} IS NULL or t.{} IS MISSING) order by "{}" asc limit {}'.format(select_property1, bucket_name, select_property1, select_property1, select_property1, limit)
+    log_info(n1ql_query)
     query = N1QLQuery(n1ql_query)
     docs_from_n1ql = []
 
@@ -419,6 +419,7 @@ def test_query_ordering(params_from_base_test_setup, select_property1, whr_key, 
     bucket_name = "travel-sample"
     sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password')
     n1ql_query = 'select meta().id, {} from `{}` t where t.{} = "{}" order by "{}" asc'.format(select_property1, bucket_name, whr_key, whr_val, select_property1)
+    log_info(n1ql_query)
     query = N1QLQuery(n1ql_query)
     docs_from_n1ql = []
 
@@ -470,6 +471,7 @@ def test_query_substring(params_from_base_test_setup, select_property1, select_p
     bucket_name = "travel-sample"
     sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password')
     n1ql_query = 'select meta().id, {}, UPPER({}) from `{}` t where CONTAINS(t.{}, "{}")'.format(select_property1, select_property2, bucket_name, select_property1, substring)
+    log_info(n1ql_query)
     query = N1QLQuery(n1ql_query)
     docs_from_n1ql = []
 
@@ -524,6 +526,7 @@ def test_query_collation(params_from_base_test_setup, select_property1, whr_key1
     bucket_name = "travel-sample"
     sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password')
     n1ql_query = 'select meta().id, {} from `{}` t where t.{}="{}" and t.{} = "{}" and lower(t.{}) = lower("{}")'.format(select_property1, bucket_name, whr_key1, whr_val1, whr_key2, whr_val2, select_property1, equal_to)
+    log_info(n1ql_query)
     query = N1QLQuery(n1ql_query)
     docs_from_n1ql = []
 
@@ -534,3 +537,580 @@ def test_query_collation(params_from_base_test_setup, select_property1, whr_key1
     log_info("Found {} docs".format(len(docs_from_cbl)))
     assert sorted(docs_from_cbl) == sorted(docs_from_n1ql)
     log_info("Doc contents match")
+
+@pytest.mark.parametrize("select_property1, select_property2, select_property3, select_property4, select_property5, whr_key1, whr_key2, whr_key3, whr_val1, whr_val2, whr_val3, join_key", [
+    ("name", "callsign", "destinationairport", "stops", "airline", "type", "type", "sourceairport", "route", "airline", "SFO", "airlineid"),
+])
+def test_query_join(params_from_base_test_setup, select_property1,
+                   select_property2, select_property3, select_property4,
+                   select_property5, whr_key1, whr_key2, whr_key3,
+                   whr_val1, whr_val2, whr_val3, join_key):
+    """ @summary
+    Query query = QueryBuilder
+                .selectDistinct(
+                        SelectResult.expression(Expression.property(prop1).from(main)),
+                        SelectResult.expression(Expression.property(prop2).from(main)),
+                        SelectResult.expression(Expression.property(prop3).from(secondary)),
+                        SelectResult.expression(Expression.property(prop4).from(secondary)),
+                        SelectResult.expression(Expression.property(prop5).from(secondary)))
+                .from(DataSource.database(db).as(main))
+                .join(Join.join(DataSource.database(db).as(secondary))
+                    .on(Expression.property(joinKey)))
+                .where(Expression.property(whrKey1).from(main).equalTo(whrVal1)
+                    .and(Expression.property(whrKey2).from(main).equalTo(whrVal2))
+                    .and(Expression.property(whrKey3).from(main).equalTo(whrVal3)))
+                .limit(limit);)
+
+    Verifies with n1ql - 
+    SELECT DISTINCT airline.name, airline.callsign, route.destinationairport, route.stops, route.airline
+    FROM `travel-sample` route 
+      JOIN `travel-sample` airline 
+      ON KEYS route.airlineid 
+    WHERE route.type = "route" 
+      AND airline.type = "airline" 
+      AND route.sourceairport = "SFO" 
+    LIMIT 2;
+    """
+    cluster_topology = params_from_base_test_setup["cluster_topology"]
+    source_db = params_from_base_test_setup["source_db"]
+    cbs_url = cluster_topology['couchbase_servers'][0]
+    base_url = params_from_base_test_setup["base_url"]
+    cbs_ip = host_for_url(cbs_url)
+
+    log_info("Fetching docs from CBL through query")
+    qy = Query(base_url)
+    limit = 5
+    result_set = qy.query_join(source_db, select_property1,
+                               select_property2, select_property3,
+                               select_property4, select_property5,
+                               whr_key1, whr_key2, whr_key3, whr_val1,
+                               whr_val2, whr_val3, join_key, limit)
+
+    docs_from_cbl = []
+
+    for docs in result_set:
+        docs_from_cbl.append(docs)
+
+    # Get doc from n1ql through query
+    log_info("Fetching docs from server through n1ql")
+    bucket_name = "travel-sample"
+    sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password')
+    n1ql_query = 'select distinct airline.{}, airline.{}, route.{}, '\
+                'route.{}, route.{} from `{}` route join `{}` airline '\
+                'on keys route.{} where route.{}="{}" and '\
+                'airline.{} = "{}" and route.{} = {} limit'.format(
+                    select_property1, select_property2, 
+                    select_property3, select_property4,
+                    select_property5, bucket_name, bucket_name,
+                    join_key, whr_key1, whr_val1, whr_key2, whr_val2,
+                    whr_key3, whr_val3,)
+    log_info(n1ql_query)
+    query = N1QLQuery(n1ql_query)
+    docs_from_n1ql = []
+
+    for row in sdk_client.n1ql_query(query):
+        docs_from_n1ql.append(row)
+
+    assert len(docs_from_cbl) == len(docs_from_n1ql)
+    log_info("Found {} docs".format(len(docs_from_cbl)))
+    assert sorted(docs_from_cbl) == sorted(docs_from_n1ql)
+    log_info("Doc contents match")
+
+@pytest.mark.parametrize("prop, val", [
+    ("country", "France"),
+    ("type", "airline")
+])
+def test_equal_to(params_from_base_test_setup, prop, val):
+    """ @summary
+    Fetches a doc
+    Tests the below query
+    Query query = QueryBuilder
+                .select(SelectResult.expression(Meta.id))
+                .from(DataSource.database(db))
+                .where(Expression.property(prop).equalTo(val));
+
+    Verifies with n1ql - select meta().id from `bucket_name` where country = "france"
+    """
+    cluster_topology = params_from_base_test_setup["cluster_topology"]
+    source_db = params_from_base_test_setup["source_db"]
+    cbs_url = cluster_topology['couchbase_servers'][0]
+    base_url = params_from_base_test_setup["base_url"]
+    cbs_ip = host_for_url(cbs_url)
+
+    # Get doc from CBL through query
+    qy = Query(base_url)
+    result_set = qy.query_equal_to(source_db, prop, val)
+
+    docs_from_cbl = []
+    if result_set != -1 and result_set is not None:
+        for result in result_set:
+            docs_from_cbl.append(result)
+
+    # Get doc from n1ql through query
+    bucket_name = "travel-sample"
+    sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password')
+    n1ql_query = 'select meta().id from `{}` where {} = "{}" order by meta().id asc'.format(bucket_name, prop, val)
+    log_info(n1ql_query)
+    query = N1QLQuery(n1ql_query)
+    docs_from_n1ql = []
+
+    for row in sdk_client.n1ql_query(query):
+        docs_from_n1ql.append(row)
+
+    assert len(docs_from_cbl) == len(docs_from_n1ql)
+    log_info("Found {} docs".format(len(docs_from_cbl)))
+    assert np.array_equal(docs_from_cbl, docs_from_n1ql)
+    log_info("Doc contents match between CBL and n1ql")
+
+@pytest.mark.parametrize("prop, val", [
+    ("country", "United States"),
+    ("type", "airline")
+])
+def test_not_equal_to(params_from_base_test_setup, prop, val):
+    """ @summary
+    Fetches a doc
+    Tests the below query
+    Query query = QueryBuilder
+                .select(SelectResult.expression(Meta.id))
+                .from(DataSource.database(db))
+                .where(Expression.property(prop).notEqualTo(val));
+
+    Verifies with n1ql - select meta().id from `bucket_name` where country != "France"
+    """
+    cluster_topology = params_from_base_test_setup["cluster_topology"]
+    source_db = params_from_base_test_setup["source_db"]
+    cbs_url = cluster_topology['couchbase_servers'][0]
+    base_url = params_from_base_test_setup["base_url"]
+    cbs_ip = host_for_url(cbs_url)
+
+    # Get doc from CBL through query
+    qy = Query(base_url)
+    result_set = qy.query_not_equal_to(source_db, prop, val)
+
+    docs_from_cbl = []
+    if result_set != -1 and result_set is not None:
+        for result in result_set:
+            docs_from_cbl.append(result)
+
+    # Get doc from n1ql through query
+    bucket_name = "travel-sample"
+    sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password')
+    n1ql_query = 'select meta().id from `{}` where {} != "{}" order by meta().id asc'.format(bucket_name, prop, val)
+    log_info(n1ql_query)
+    query = N1QLQuery(n1ql_query)
+    docs_from_n1ql = []
+
+    for row in sdk_client.n1ql_query(query):
+        docs_from_n1ql.append(row)
+
+    assert len(docs_from_cbl) == len(docs_from_n1ql)
+    log_info("Found {} docs".format(len(docs_from_cbl)))
+    assert np.array_equal(docs_from_cbl, docs_from_n1ql)
+    log_info("Doc contents match between CBL and n1ql")
+
+@pytest.mark.parametrize("prop, val", [
+    ("id", 1000),
+])
+def test_greater_than(params_from_base_test_setup, prop, val):
+    """ @summary
+    Fetches a doc
+    Tests the below query
+    Query query = QueryBuilder
+                .select(SelectResult.expression(Meta.id))
+                .from(DataSource.database(db))
+                .where(Expression.property(prop).greaterThan(val));
+
+    Verifies with n1ql - select meta().id from `bucket_name` where id > 1000
+    """
+    cluster_topology = params_from_base_test_setup["cluster_topology"]
+    source_db = params_from_base_test_setup["source_db"]
+    cbs_url = cluster_topology['couchbase_servers'][0]
+    base_url = params_from_base_test_setup["base_url"]
+    cbs_ip = host_for_url(cbs_url)
+
+    # Get doc from CBL through query
+    qy = Query(base_url)
+    result_set = qy.query_greater_than(source_db, prop, val)
+
+    docs_from_cbl = []
+    if result_set != -1 and result_set is not None:
+        for result in result_set:
+            docs_from_cbl.append(result)
+
+    # Get doc from n1ql through query
+    bucket_name = "travel-sample"
+    sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password')
+    n1ql_query = 'select meta().id from `{}` where {} > {} order by meta().id asc'.format(bucket_name, prop, val)
+    log_info(n1ql_query)
+    query = N1QLQuery(n1ql_query)
+    docs_from_n1ql = []
+
+    for row in sdk_client.n1ql_query(query):
+        docs_from_n1ql.append(row)
+
+    assert len(docs_from_cbl) == len(docs_from_n1ql)
+    log_info("Found {} docs".format(len(docs_from_cbl)))
+    assert np.array_equal(docs_from_cbl, docs_from_n1ql)
+    log_info("Doc contents match between CBL and n1ql")
+
+@pytest.mark.parametrize("prop, val", [
+    ("id", 1000),
+])
+def test_greater_than_or_equal_to(params_from_base_test_setup, prop, val):
+    """ @summary
+    Fetches a doc
+    Tests the below query
+    Query query = QueryBuilder
+                .select(SelectResult.expression(Meta.id))
+                .from(DataSource.database(db))
+                .where(Expression.property(prop).greaterThanOrEqualTo(val));
+
+    Verifies with n1ql - select meta().id from `bucket_name` where id >= 1000
+    """
+    cluster_topology = params_from_base_test_setup["cluster_topology"]
+    source_db = params_from_base_test_setup["source_db"]
+    cbs_url = cluster_topology['couchbase_servers'][0]
+    base_url = params_from_base_test_setup["base_url"]
+    cbs_ip = host_for_url(cbs_url)
+
+    # Get doc from CBL through query
+    qy = Query(base_url)
+    result_set = qy.query_greater_than_or_equal_to(source_db, prop, val)
+
+    docs_from_cbl = []
+    if result_set != -1 and result_set is not None:
+        for result in result_set:
+            docs_from_cbl.append(result)
+
+    # Get doc from n1ql through query
+    bucket_name = "travel-sample"
+    sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password')
+    n1ql_query = 'select meta().id from `{}` where {} >= {} order by meta().id asc'.format(bucket_name, prop, val)
+    log_info(n1ql_query)
+    query = N1QLQuery(n1ql_query)
+    docs_from_n1ql = []
+
+    for row in sdk_client.n1ql_query(query):
+        docs_from_n1ql.append(row)
+
+    assert len(docs_from_cbl) == len(docs_from_n1ql)
+    log_info("Found {} docs".format(len(docs_from_cbl)))
+    assert np.array_equal(docs_from_cbl, docs_from_n1ql)
+    log_info("Doc contents match between CBL and n1ql")
+
+@pytest.mark.parametrize("prop, val", [
+    ("id", 1000),
+])
+def test_less_than(params_from_base_test_setup, prop, val):
+    """ @summary
+    Fetches a doc
+    Tests the below query
+    Query query = QueryBuilder
+                .select(SelectResult.expression(Meta.id))
+                .from(DataSource.database(db))
+                .where(Expression.property(prop).lessThan(val));
+
+    Verifies with n1ql - select meta().id from `bucket_name` where id < 1000
+    """
+    cluster_topology = params_from_base_test_setup["cluster_topology"]
+    source_db = params_from_base_test_setup["source_db"]
+    cbs_url = cluster_topology['couchbase_servers'][0]
+    base_url = params_from_base_test_setup["base_url"]
+    cbs_ip = host_for_url(cbs_url)
+
+    # Get doc from CBL through query
+    qy = Query(base_url)
+    result_set = qy.query_less_than(source_db, prop, val)
+
+    docs_from_cbl = []
+    if result_set != -1 and result_set is not None:
+        for result in result_set:
+            docs_from_cbl.append(result)
+
+    # Get doc from n1ql through query
+    bucket_name = "travel-sample"
+    sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password')
+    n1ql_query = 'select meta().id from `{}` where {} < {} order by meta().id asc'.format(bucket_name, prop, val)
+    log_info(n1ql_query)
+    query = N1QLQuery(n1ql_query)
+    docs_from_n1ql = []
+
+    for row in sdk_client.n1ql_query(query):
+        docs_from_n1ql.append(row)
+
+    assert len(docs_from_cbl) == len(docs_from_n1ql)
+    log_info("Found {} docs".format(len(docs_from_cbl)))
+    assert np.array_equal(docs_from_cbl, docs_from_n1ql)
+    log_info("Doc contents match between CBL and n1ql")
+
+@pytest.mark.parametrize("prop, val", [
+    ("id", 1000),
+])
+def test_less_than_or_equal_to(params_from_base_test_setup, prop, val):
+    """ @summary
+    Fetches a doc
+    Tests the below query
+    Query query = QueryBuilder
+                .select(SelectResult.expression(Meta.id))
+                .from(DataSource.database(db))
+                .where(Expression.property(prop).lessThanOrEqualTo(val));
+
+    Verifies with n1ql - select meta().id from `bucket_name` where id <= 1000
+    """
+    cluster_topology = params_from_base_test_setup["cluster_topology"]
+    source_db = params_from_base_test_setup["source_db"]
+    cbs_url = cluster_topology['couchbase_servers'][0]
+    base_url = params_from_base_test_setup["base_url"]
+    cbs_ip = host_for_url(cbs_url)
+
+    # Get doc from CBL through query
+    qy = Query(base_url)
+    result_set = qy.query_less_than_or_equal_to(source_db, prop, val)
+
+    docs_from_cbl = []
+    if result_set != -1 and result_set is not None:
+        for result in result_set:
+            docs_from_cbl.append(result)
+
+    # Get doc from n1ql through query
+    bucket_name = "travel-sample"
+    sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password')
+    n1ql_query = 'select meta().id from `{}` where {} <= {} order by meta().id asc'.format(bucket_name, prop, val)
+    log_info(n1ql_query)
+    query = N1QLQuery(n1ql_query)
+    docs_from_n1ql = []
+
+    for row in sdk_client.n1ql_query(query):
+        docs_from_n1ql.append(row)
+
+    assert len(docs_from_cbl) == len(docs_from_n1ql)
+    log_info("Found {} docs".format(len(docs_from_cbl)))
+    assert np.array_equal(docs_from_cbl, docs_from_n1ql)
+    log_info("Doc contents match between CBL and n1ql")
+
+@pytest.mark.parametrize("prop, val1, val2", [
+    ("country", "France", "United States"),
+])
+def test_in(params_from_base_test_setup, prop, val1, val2):
+    """ @summary
+    Fetches a doc
+    Tests the below query
+    Query query = QueryBuilder
+                .select(SelectResult.expression(Meta.id))
+                .from(DataSource.database(db))
+                .where(Expression.property(prop).in(Expression.value(valueList)));
+
+    Verifies with n1ql - select meta().id from `bucket_name` where country in ['France', 'United States']
+    """
+    cluster_topology = params_from_base_test_setup["cluster_topology"]
+    source_db = params_from_base_test_setup["source_db"]
+    cbs_url = cluster_topology['couchbase_servers'][0]
+    base_url = params_from_base_test_setup["base_url"]
+    cbs_ip = host_for_url(cbs_url)
+
+    # Get doc from CBL through query
+    qy = Query(base_url)
+    result_set = qy.query_in(source_db, prop, val1, val2)
+
+    docs_from_cbl = []
+    if result_set != -1 and result_set is not None:
+        for result in result_set:
+            docs_from_cbl.append(result)
+
+    # Get doc from n1ql through query
+    bucket_name = "travel-sample"
+    sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password')
+    n1ql_query = 'select meta().id from `{}` where {} in ["{}", "{}"] order by meta().id asc'.format(bucket_name, prop, val1, val2)
+    log_info(n1ql_query)
+    query = N1QLQuery(n1ql_query)
+    docs_from_n1ql = []
+
+    for row in sdk_client.n1ql_query(query):
+        docs_from_n1ql.append(row)
+
+    assert len(docs_from_cbl) == len(docs_from_n1ql)
+    log_info("Found {} docs".format(len(docs_from_cbl)))
+    assert np.array_equal(docs_from_cbl, docs_from_n1ql)
+    log_info("Doc contents match between CBL and n1ql")
+
+@pytest.mark.parametrize("prop, val1, val2", [
+    ("id", 1000, 2000),
+])
+def test_between(params_from_base_test_setup, prop, val1, val2):
+    """ @summary
+    Fetches a doc
+    Tests the below query
+    Query query = QueryBuilder
+                .select(SelectResult.expression(Meta.id))
+                .from(DataSource.database(db))
+                .where(Expression.property(prop).between(val1, val2));
+
+    Verifies with n1ql - select meta().id from `bucket_name` where id between 1000 and 2000
+    """
+    cluster_topology = params_from_base_test_setup["cluster_topology"]
+    source_db = params_from_base_test_setup["source_db"]
+    cbs_url = cluster_topology['couchbase_servers'][0]
+    base_url = params_from_base_test_setup["base_url"]
+    cbs_ip = host_for_url(cbs_url)
+
+    # Get doc from CBL through query
+    qy = Query(base_url)
+    result_set = qy.query_between(source_db, prop, val1, val2)
+
+    docs_from_cbl = []
+    if result_set != -1 and result_set is not None:
+        for result in result_set:
+            docs_from_cbl.append(result)
+
+    # Get doc from n1ql through query
+    bucket_name = "travel-sample"
+    sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password')
+    n1ql_query = 'select meta().id from `{}` where {} between {} and {} order by meta().id asc'.format(bucket_name, prop, val1, val2)
+    log_info(n1ql_query)
+    query = N1QLQuery(n1ql_query)
+    docs_from_n1ql = []
+
+    for row in sdk_client.n1ql_query(query):
+        docs_from_n1ql.append(row)
+
+    assert len(docs_from_cbl) == len(docs_from_n1ql)
+    log_info("Found {} docs".format(len(docs_from_cbl)))
+    assert np.array_equal(docs_from_cbl, docs_from_n1ql)
+    log_info("Doc contents match between CBL and n1ql")
+
+@pytest.mark.parametrize("prop", [
+    "callsign",
+    "iata"
+])
+def test_is(params_from_base_test_setup, prop):
+    """ @summary
+    Fetches a doc
+    Tests the below query
+    Query query = QueryBuilder
+                .select(SelectResult.expression(Meta.id))
+                .from(DataSource.database(db))
+                .where(Expression.property(prop).is(Expression.value(null)));
+
+    Verifies with n1ql - select meta().id from `bucket_name` where iata is null
+    """
+    cluster_topology = params_from_base_test_setup["cluster_topology"]
+    source_db = params_from_base_test_setup["source_db"]
+    cbs_url = cluster_topology['couchbase_servers'][0]
+    base_url = params_from_base_test_setup["base_url"]
+    cbs_ip = host_for_url(cbs_url)
+
+    # Get doc from CBL through query
+    qy = Query(base_url)
+    result_set = qy.query_is(source_db, prop)
+
+    docs_from_cbl = []
+    if result_set != -1 and result_set is not None:
+        for result in result_set:
+            docs_from_cbl.append(result)
+
+    # Get doc from n1ql through query
+    bucket_name = "travel-sample"
+    sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password')
+    n1ql_query = 'select meta().id from `{}` where {} is null order by meta().id asc'.format(bucket_name, prop)
+    log_info(n1ql_query)
+    query = N1QLQuery(n1ql_query)
+    docs_from_n1ql = []
+
+    for row in sdk_client.n1ql_query(query):
+        docs_from_n1ql.append(row)
+
+    assert len(docs_from_cbl) == len(docs_from_n1ql)
+    log_info("Found {} docs".format(len(docs_from_cbl)))
+    assert np.array_equal(docs_from_cbl, docs_from_n1ql)
+    log_info("Doc contents match between CBL and n1ql")
+
+@pytest.mark.parametrize("prop", [
+    "callsign",
+    "iata"
+])
+def test_isnot(params_from_base_test_setup, prop):
+    """ @summary
+    Fetches a doc
+    Tests the below query
+    Query query = QueryBuilder
+                .select(SelectResult.expression(Meta.id))
+                .from(DataSource.database(db))
+                .where(Expression.property(prop).isNot(Expression.value(null)));
+
+    Verifies with n1ql - select meta().id from `bucket_name` where iata is not null
+    """
+    cluster_topology = params_from_base_test_setup["cluster_topology"]
+    source_db = params_from_base_test_setup["source_db"]
+    cbs_url = cluster_topology['couchbase_servers'][0]
+    base_url = params_from_base_test_setup["base_url"]
+    cbs_ip = host_for_url(cbs_url)
+
+    # Get doc from CBL through query
+    qy = Query(base_url)
+    result_set = qy.query_isNot(source_db, prop)
+
+    docs_from_cbl = []
+    if result_set != -1 and result_set is not None:
+        for result in result_set:
+            docs_from_cbl.append(result)
+
+    # Get doc from n1ql through query
+    bucket_name = "travel-sample"
+    sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password')
+    n1ql_query = 'select meta().id, callsign from `{}` where {} is not null order by meta().id asc'.format(bucket_name, prop)
+    log_info(n1ql_query)
+    query = N1QLQuery(n1ql_query)
+    docs_from_n1ql = []
+
+    for row in sdk_client.n1ql_query(query):
+        docs_from_n1ql.append(row)
+
+    assert len(docs_from_cbl) == len(docs_from_n1ql)
+    log_info("Found {} docs".format(len(docs_from_cbl)))
+    assert np.array_equal(docs_from_cbl, docs_from_n1ql)
+    log_info("Doc contents match between CBL and n1ql")
+
+@pytest.mark.parametrize("prop, val1, val2", [
+    ("id", 1000, 2000),
+])
+def test_not(params_from_base_test_setup, prop, val1, val2):
+    """ @summary
+    Fetches a doc
+    Tests the below query
+    Query query = QueryBuilder
+                .select(SelectResult.expression(Meta.id))
+                .from(DataSource.database(db))
+                .where(Expression.not(Expression.property(prop).between(val1, val2)));
+
+    Verifies with n1ql - select meta().id from `bucket_name` where id not between 1000 and 2000
+    """
+    cluster_topology = params_from_base_test_setup["cluster_topology"]
+    source_db = params_from_base_test_setup["source_db"]
+    cbs_url = cluster_topology['couchbase_servers'][0]
+    base_url = params_from_base_test_setup["base_url"]
+    cbs_ip = host_for_url(cbs_url)
+
+    # Get doc from CBL through query
+    qy = Query(base_url)
+    result_set = qy.query_between(source_db, prop, val1, val2)
+
+    docs_from_cbl = []
+    if result_set != -1 and result_set is not None:
+        for result in result_set:
+            docs_from_cbl.append(result)
+
+    # Get doc from n1ql through query
+    bucket_name = "travel-sample"
+    sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password')
+    n1ql_query = 'select meta().id from `{}` where {} not between {} and {} order by meta().id asc'.format(bucket_name, prop, val1, val2)
+    log_info(n1ql_query)
+    query = N1QLQuery(n1ql_query)
+    docs_from_n1ql = []
+
+    for row in sdk_client.n1ql_query(query):
+        docs_from_n1ql.append(row)
+
+    assert len(docs_from_cbl) == len(docs_from_n1ql)
+    log_info("Found {} docs".format(len(docs_from_cbl)))
+    assert np.array_equal(docs_from_cbl, docs_from_n1ql)
+    log_info("Doc contents match between CBL and n1ql")

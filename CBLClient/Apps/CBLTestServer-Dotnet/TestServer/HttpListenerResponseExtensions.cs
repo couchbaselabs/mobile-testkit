@@ -37,16 +37,20 @@ namespace Couchbase.Lite.Testing
             {
                 throw new InvalidOperationException("Cannot write to a response with a null OutputStream");
             }
+
             Type bodyObjType = bodyObj.GetType();
-            var postBody = JsonConvert.SerializeObject(bodyObj);
             var serializedBody = ValueSerializer.Serialize(bodyObj, bodyObjType);
             var body = Encoding.UTF8.GetBytes(serializedBody);
-            response.ContentType = "application/json";
-            response.ContentLength64 = body.LongLength;
-            response.ContentEncoding = Encoding.UTF8;
-            response.StatusCode = success ? (int)HttpStatusCode.OK : (int)HttpStatusCode.BadRequest;
-            response.OutputStream.Write(body, 0, body.Length);
-            response.Close();
+            try {
+                response.ContentType = "application/json";
+                response.ContentLength64 = body.LongLength;
+                response.ContentEncoding = Encoding.UTF8;
+                response.StatusCode = success ? (int) HttpStatusCode.OK : (int) HttpStatusCode.BadRequest;
+                response.OutputStream.Write(body, 0, body.Length);
+                response.Close();
+            } catch (ObjectDisposedException) {
+                // Swallow...other side closed the connection
+            }
         }
 
         public static void WriteRawBody([NotNull]this HttpListenerResponse response, string bodyStr, bool success = true)
@@ -57,21 +61,28 @@ namespace Couchbase.Lite.Testing
             }
 
             var body = Encoding.UTF8.GetBytes(bodyStr);
-            response.ContentType = "application/json";
-            response.ContentLength64 = body.LongLength;
-            response.ContentEncoding = Encoding.UTF8;
-            response.StatusCode = success ? (int)HttpStatusCode.OK : (int)HttpStatusCode.BadRequest;
-            response.OutputStream.Write(body, 0, body.Length);
-            response.Close();
+            try {
+                response.ContentType = "application/json";
+                response.ContentLength64 = body.LongLength;
+                response.ContentEncoding = Encoding.UTF8;
+                response.StatusCode = success ? (int) HttpStatusCode.OK : (int) HttpStatusCode.BadRequest;
+                response.OutputStream.Write(body, 0, body.Length);
+                response.Close();
+            } catch (ObjectDisposedException) {
+                // Swallow...other side closed the connection
+            }
         }
 
         public static void WriteEmptyBody([NotNull]this HttpListenerResponse response, HttpStatusCode code = HttpStatusCode.OK)
         {
+            try {
+                response.ContentLength64 = 0;
+                response.StatusCode = (int) code;
 
-            response.ContentLength64 = 0;
-            response.StatusCode = (int)code;
-
-            response.Close();
+                response.Close();
+            } catch (ObjectDisposedException) {
+                // Swallow...other side closed the connection
+            }
         }
     }
 }

@@ -23,6 +23,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Net;
+using System.Linq;
 
 using Couchbase.Lite.Sync;
 using Couchbase.Lite.Util;
@@ -45,19 +46,20 @@ namespace Couchbase.Lite.Testing
             {
                 if (postBody["targetURI"] != null)
                 {
-                    var targetUrl = (URLEndpoint) postBody["targetURI"];
+                    var targetUrl = (URLEndpoint)postBody["targetURI"];
                     var replicationConfig = MemoryMap.New<ReplicatorConfiguration>(sdb, targetUrl);
                     response.WriteBody(replicationConfig);
                 }
                 else if (postBody["targetDb"] != null)
                 {
-                    With<Database>(postBody, "targetDB", tdb => 
+                    With<Database>(postBody, "targetDB", tdb =>
                     {
                         DatabaseEndpoint dbEndPoint = new DatabaseEndpoint(tdb);
-                        response.WriteBody(MemoryMap.New<ReplicatorConfiguration>(sdb, dbEndPoint)); 
+                        response.WriteBody(MemoryMap.New<ReplicatorConfiguration>(sdb, dbEndPoint));
                     });
                 }
-                else{
+                else
+                {
                     throw new ArgumentException("Invalid value for replication_type");
                 }
             });
@@ -75,13 +77,13 @@ namespace Couchbase.Lite.Testing
                                                      [NotNull] HttpListenerResponse response)
         {
             ReplicatorConfiguration config = null;
-            
+
             With<Database>(postBody, "source_db", sdb =>
             {
                 if (postBody.ContainsKey("target_url"))
                 {
                     Uri uri = new Uri(postBody["target_url"].ToString());
-                    URLEndpoint targetUrl =  new URLEndpoint(uri);
+                    URLEndpoint targetUrl = new URLEndpoint(uri);
                     config = new ReplicatorConfiguration(sdb, targetUrl);
                 }
                 else if (postBody.ContainsKey("target_db"))
@@ -96,27 +98,24 @@ namespace Couchbase.Lite.Testing
                 {
                     throw new Exception("Illegal arguments provided");
                 }
-                if (postBody.ContainsKey("continous"))
+                if (postBody.ContainsKey("continuous"))
                 {
-                    config.Continuous = Convert.ToBoolean(postBody["continous"]);
+                    config.Continuous = Convert.ToBoolean(postBody["continuous"]);
                 }
                 if (postBody.ContainsKey("channels"))
                 {
-                    config.Channels = (List<string>) postBody["channels"];
+                    List<object> channels = (List<object>)postBody["channels"];
+                    config.Channels = channels.Cast<string>().ToList();
                 }
                 if (postBody.ContainsKey("documentIds"))
                 {
-                    config.DocumentIDs = (List<string>)postBody["documentIds"]; ;
+                    List<object> documentIds = (List<object>)postBody["documentIds"];
+                    config.DocumentIDs = documentIds.Cast<string>().ToList();
                 }
                 if (postBody.ContainsKey("authenticator"))
                 {
                     Authenticator authenticator = MemoryMap.Get<Authenticator>(postBody["authenticator"].ToString());
                     config.Authenticator = authenticator;
-                }
-                if (postBody.ContainsKey("conflictResolver"))
-                {
-                    IConflictResolver conflictResolver = MemoryMap.Get<IConflictResolver>(postBody["conflictResolver"].ToString());
-                    config.ConflictResolver = conflictResolver;
                 }
 
                 if (postBody.ContainsKey("headers"))
@@ -157,13 +156,6 @@ namespace Couchbase.Lite.Testing
                                     [NotNull] HttpListenerResponse response)
         {
             With<ReplicatorConfiguration>(postBody, "configuration", repConf => response.WriteBody(repConf.Channels));
-        }
-
-        public static void GetConflictResolver([NotNull] NameValueCollection args,
-                                               [NotNull] IReadOnlyDictionary<string, object> postBody,
-                                               [NotNull] HttpListenerResponse response)
-        {
-            With<ReplicatorConfiguration>(postBody, "configuration", repConf => response.WriteBody(repConf.ConflictResolver));
         }
 
         public static void GetDatabase([NotNull] NameValueCollection args,
@@ -212,7 +204,7 @@ namespace Couchbase.Lite.Testing
                              [NotNull] IReadOnlyDictionary<string, object> postBody,
                              [NotNull] HttpListenerResponse response)
         {
-            With<ReplicatorConfiguration>(postBody, "configuration", repConf => 
+            With<ReplicatorConfiguration>(postBody, "configuration", repConf =>
             {
                 With<Authenticator>(postBody, "authenticator", auth => {
                     repConf.Authenticator = auth;
@@ -229,20 +221,6 @@ namespace Couchbase.Lite.Testing
             With<ReplicatorConfiguration>(postBody, "configuration", repConf =>
             {
                 repConf.Channels = channels;
-            });
-        }
-
-        public static void SetConflictResolver([NotNull] NameValueCollection args,
-             [NotNull] IReadOnlyDictionary<string, object> postBody,
-             [NotNull] HttpListenerResponse response)
-        {
-            IList<string> channels = (IList<string>)postBody["channels"];
-            With<ReplicatorConfiguration>(postBody, "configuration", repConf =>
-            {
-                With<IConflictResolver>(postBody, "conflictResolver", cr => {
-                    repConf.ConflictResolver = cr;
-                    response.WriteEmptyBody();
-                });
             });
         }
 
