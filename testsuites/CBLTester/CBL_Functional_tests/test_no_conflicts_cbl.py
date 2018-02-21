@@ -1059,7 +1059,6 @@ def test_sg_cbl_updates_concurrently_with_push_pull(params_from_base_test_setup,
     repl_config = replicator.configure(cbl_db1, target_url=sg_blip_url, continuous=True, channels=channels, replicator_authenticator=replicator_authenticator)
     repl1 = replicator.create(repl_config)
     cbl_docs, error = replicate_update_cbl_docs(replicator, db, cbl_db1, repl1)
-    verify_sg_docs_after_replication(no_conflicts_enabled, sg_client, sg_url, sg_db, session, error)
 
 
 @pytest.mark.sanity
@@ -1197,9 +1196,7 @@ def replicate_update_cbl_docs(replicator, db, cbl_db, repl):
     cbl_doc_ids = db.getDocIds(cbl_db)
     cbl_db_docs = db.getDocuments(cbl_db, cbl_doc_ids)
     error = replicator.getError(repl)
-    print "error after update docs ", error
     for doc in cbl_db_docs:
-        print "doc info is ---", cbl_db_docs[doc]
         try: 
             updates = cbl_db_docs[doc]["updates"]
         except Exception:
@@ -1216,19 +1213,12 @@ def replicate_update_cbl_docs(replicator, db, cbl_db, repl):
     changes = replicator.getChangesChangeListener(change_listener)
     error = replicator.getError(repl)
     replicator.stop(repl)
-    print "changes of replicated changes ", changes
     return cbl_db_docs, error
     
 
 def verify_sg_docs_after_replication(no_conflicts_enabled, sg_client, sg_url, sg_db, session, error):
-    if no_conflicts_enabled:
-        print "should do verification "
-        # TODO : should change the verification once below issue is fixed
-        # https://github.com/couchbase/couchbase-lite-core/issues/331
-        assert "Domain=WebSocket Code=409 \"rejected by proposeChanges\"" in error
-    else:
-        sg_docs = sg_client.get_all_docs(url=sg_url, db=sg_db, auth=session, include_docs=True)
-        for doc in sg_docs["rows"]:
-            doc_body = sg_client.get_doc(url=sg_url, db=sg_db, doc_id=doc["id"], auth=session)
-            assert doc_body["updates-cbl"] > 0
+    sg_docs = sg_client.get_all_docs(url=sg_url, db=sg_db, auth=session, include_docs=True)
+    for doc in sg_docs["rows"]:
+        doc_body = sg_client.get_doc(url=sg_url, db=sg_db, doc_id=doc["id"], auth=session)
+        assert doc_body["updates-cbl"] > 0
 
