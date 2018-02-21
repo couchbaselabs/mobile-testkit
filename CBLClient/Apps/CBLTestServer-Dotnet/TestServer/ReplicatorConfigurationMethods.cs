@@ -98,9 +98,9 @@ namespace Couchbase.Lite.Testing
                 {
                     throw new Exception("Illegal arguments provided");
                 }
-                if (postBody.ContainsKey("continous"))
+                if (postBody.ContainsKey("continuous"))
                 {
-                    config.Continuous = Convert.ToBoolean(postBody["continous"]);
+                    config.Continuous = Convert.ToBoolean(postBody["continuous"]);
                 }
                 if (postBody.ContainsKey("channels"))
                 {
@@ -116,11 +116,6 @@ namespace Couchbase.Lite.Testing
                 {
                     Authenticator authenticator = MemoryMap.Get<Authenticator>(postBody["authenticator"].ToString());
                     config.Authenticator = authenticator;
-                }
-                if (postBody.ContainsKey("conflictResolver"))
-                {
-                    IConflictResolver conflictResolver = MemoryMap.Get<IConflictResolver>(postBody["conflictResolver"].ToString());
-                    config.ConflictResolver = conflictResolver;
                 }
 
                 if (postBody.ContainsKey("headers"))
@@ -161,13 +156,6 @@ namespace Couchbase.Lite.Testing
                                     [NotNull] HttpListenerResponse response)
         {
             With<ReplicatorConfiguration>(postBody, "configuration", repConf => response.WriteBody(repConf.Channels));
-        }
-
-        public static void GetConflictResolver([NotNull] NameValueCollection args,
-                                               [NotNull] IReadOnlyDictionary<string, object> postBody,
-                                               [NotNull] HttpListenerResponse response)
-        {
-            With<ReplicatorConfiguration>(postBody, "configuration", repConf => response.WriteBody(repConf.ConflictResolver));
         }
 
         public static void GetDatabase([NotNull] NameValueCollection args,
@@ -233,20 +221,6 @@ namespace Couchbase.Lite.Testing
             With<ReplicatorConfiguration>(postBody, "configuration", repConf =>
             {
                 repConf.Channels = channels;
-            });
-        }
-
-        public static void SetConflictResolver([NotNull] NameValueCollection args,
-             [NotNull] IReadOnlyDictionary<string, object> postBody,
-             [NotNull] HttpListenerResponse response)
-        {
-            IList<string> channels = (IList<string>)postBody["channels"];
-            With<ReplicatorConfiguration>(postBody, "configuration", repConf =>
-            {
-                With<IConflictResolver>(postBody, "conflictResolver", cr => {
-                    repConf.ConflictResolver = cr;
-                    response.WriteEmptyBody();
-                });
             });
         }
 

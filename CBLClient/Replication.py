@@ -3,6 +3,7 @@ import time
 from CBLClient.Client import Client
 from CBLClient.Args import Args
 from CBLClient.Authenticator import Authenticator
+from keywords.utils import log_info
 
 
 class Replication(object):
@@ -224,7 +225,7 @@ class Replication(object):
             time.sleep(0.5)
             count += 1
         if self.getActivitylevel(replicator) != "stopped":
-            raise Exception("Failed to stop the replicator")
+            raise Exception("Failed to stop the replicator: {}".format(self.getActivitylevel(replicator)))
 
     def status(self, replicator):
         args = Args()
@@ -284,8 +285,8 @@ class Replication(object):
         # Sleep until replicator completely processed
         activity_level = self.getActivitylevel(repl)
         while activity_level != "idle" and count < max_times:
-            print "sleeping... actvity level is", activity_level
-            time.sleep(0.5)
+            log_info("Activity level: {}".format(activity_level))
+            time.sleep(2)
             if activity_level == "idle" or activity_level == "offline" or activity_level == "connecting":
                 count += 1
             if activity_level == "stopped":
