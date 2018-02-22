@@ -1,4 +1,4 @@
-import pytest
+"""import pytest
 
 from keywords.MobileRestClient import MobileRestClient
 from keywords.utils import log_info
@@ -14,9 +14,9 @@ from CBLClient.DatabaseConfiguration import DatabaseConfiguration
 @pytest.mark.listener
 @pytest.mark.database
 def test_databaseEncryption(params_from_base_test_setup):
-    """
+    '''
         @summary:
-    """
+    '''
 
     sg_db = "db"
     sg_url = params_from_base_test_setup["sg_url"]
@@ -40,6 +40,4 @@ def test_databaseEncryption(params_from_base_test_setup):
     cbl_db1 = db.create(cbl_db_name, db_config)
     cbl_doc_ids = db.getDocIds(cbl_db1)
     print "cbl doc ids are {}", cbl_doc_ids
-
-
-
+"""

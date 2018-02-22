@@ -6,7 +6,7 @@ from CBLClient.Query import Query
 from keywords.utils import host_for_url
 from couchbase.bucket import Bucket
 from couchbase.n1ql import N1QLQuery
-# import numpy as np
+import numpy as np
 
 
 def test_get_doc_ids(params_from_base_test_setup):

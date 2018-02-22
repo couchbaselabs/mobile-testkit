@@ -172,7 +172,6 @@ class TestDictionary(object):
         self.dict_obj.setInt(content_dict, key, value)
         assert value == self.dict_obj.getInt(content_dict, key)
 
-
     @pytest.mark.parametrize("key, value", [
         (random_string(6), "{}".format(random.randint(0, 1))),
         (random_string(6), "{}".format(random.randint(1, 10))),
@@ -192,7 +191,6 @@ class TestDictionary(object):
         assert self.datatype.compare(long_value,
                                      self.dict_obj.getLong(content_dict,
                                                            key))
-
 
     @pytest.mark.parametrize("key, value", [
         (random_string(5), ""),

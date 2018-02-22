@@ -264,4 +264,3 @@ class TestDocument(object):
         self.doc_obj.setLong(doc, key, long_obj)
         result = self.doc_obj.getLong(doc, key)
         assert self.datatype.compareLong(long_obj, result)
-
