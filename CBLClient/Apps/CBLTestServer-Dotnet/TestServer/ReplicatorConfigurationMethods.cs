@@ -129,7 +129,7 @@ namespace Couchbase.Lite.Testing
                     config.Headers = headers;
                 }
 
-                if (postBody.ContainsKey("replicatorType"))
+                if (postBody.ContainsKey("replication_type"))
                 {
                     var replicatorType = postBody["replication_type"].ToString().ToLower();
                     if (replicatorType == "push")
