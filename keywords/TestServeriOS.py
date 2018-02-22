@@ -1,4 +1,3 @@
-import json
 import subprocess
 import os
 import re
@@ -13,8 +12,6 @@ from keywords.constants import LATEST_BUILDS
 from keywords.exceptions import LiteServError
 from keywords.utils import version_and_build
 from keywords.utils import log_info
-from keywords.utils import log_r
-from keywords.constants import REGISTERED_CLIENT_DBS
 from keywords.constants import CLIENT_REQUEST_TIMEOUT
 from requests.exceptions import ConnectionError
 
@@ -27,15 +24,14 @@ class TestServeriOS(TestServerBase):
         self.liteserv_admin_url = "http://{}:59850".format(self.host)
         self.logfile_name = None
         self.device_id = None
-        self.device = "iPhone-8-Plus"
-        if community_enabled: 
+        self.device = "iPhone-7-Plus"
+        if community_enabled:
             self.app_dir = "CBLTestServer-iOS-community"
             self.package_name = "CBLTestServer-iOS-community.zip"
         else:
             self.app_dir = "CBLTestServer-iOS-enterprise"
             self.package_name = "CBLTestServer-iOS-enterprise.zip"
         self.app_name = "CBLTestServer-iOS.app"
-        
 
     def download(self, community_enabled, version_build=None):
         """
@@ -47,7 +43,7 @@ class TestServeriOS(TestServerBase):
             self.version_build = version_build
         version, build = version_and_build(self.version_build)
         app_name = "CBLTestServer-iOS.app"
-        
+
         expected_binary_path = "{}/{}/{}".format(BINARY_DIR, self.app_dir, app_name)
         if os.path.isfile(expected_binary_path):
             log_info("Package is already downloaded. Skipping.")
@@ -211,9 +207,7 @@ class TestServeriOS(TestServerBase):
         4. Return the url of the running LiteServ
         """
 
-        data = {}
-        encryption_enabled = False
-        self.device = "iPhone-8-Plus"
+        self.device = "iPhone-7-Plus"
         self.logfile_name = logfile_name
 
         # package_name = "CBLTestServer-iOS.app"
@@ -221,7 +215,7 @@ class TestServeriOS(TestServerBase):
 
         self.app_path = "{}/{}/{}".format(BINARY_DIR, self.app_dir, self.app_name)
         # TODO : remove below line
-        # self.app_path = "/Users/sridevi.saragadam/workspace/CBL2-0/build-scripts/mobile-testkit/CBLClient/Apps/CBLTestServer-iOS/build/Build/Products/Release-iphonesimulator/CBLTestServer-iOS.app"
+        # self.app_path = "/Users/sridevi.saragadam/Library/Developer/Xcode/DerivedData/CBLTestServer-iOS-ayypbvnmphhpihebbhrjusdqhzmk/Build/Products/Debug-iphonesimulator/CBLTestServer-iOS.app"
 
         # Without --exit, ios-sim blocks
         # With --exit, --log has no effect
@@ -244,8 +238,6 @@ class TestServeriOS(TestServerBase):
         4. Return the url of the running LiteServ
         """
 
-        data = {}
-        encryption_enabled = False
         self.logfile_name = logfile_name
 
         package_name = "LiteServ-iOS-Device.app"
@@ -317,7 +309,7 @@ class TestServeriOS(TestServerBase):
         # self.app_path = "/Users/sridevi.saragadam/Library/Developer/Xcode/DerivedData/CBLTestServer-iOS-ayypbvnmphhpihebbhrjusdqhzmk/Build/Products/Debug-iphonesimulator/CBLTestServer-iOS.app"
         if(self.host == "localhost"):
             # xcrun simctl launch booted com.couchbase.CBLTestServer-iOS
-            output = subprocess.check_output(["xcrun",  "simctl", "launch", "booted", bundle_id])
+            output = subprocess.check_output(["xcrun", "simctl", "launch", "booted", bundle_id])
             # output = subprocess.check_output(["ios-sim", "--devicetypeid", self.device, "launch", self.app_path, "--exit"])
         else:
             output = subprocess.check_output(["ios-deploy", "--justlaunch", "--bundle", self.app_path])
