@@ -36,7 +36,7 @@ class Replication(object):
         if replicator_authenticator is not None:
             args.setMemoryPointer("authenticator", replicator_authenticator)
         if replication_type is None:
-            replication_type = "push_pull" 
+            replication_type = "push_pull"
         args.setString("replication_type", replication_type)
         if headers is not None:
             args.setDictionary("headers", headers)
@@ -203,7 +203,7 @@ class Replication(object):
 #         args = Args()
 #         args.setMemoryPointer("replicator", replicator)
 #         return self._client.invokeMethod("replicator_networkReachable", args)
-# 
+#
 #     def networkUnreachable(self, replicator):
 #         args = Args()
 #         args.setMemoryPointer("replicator", replicator)
@@ -312,6 +312,7 @@ class Replication(object):
         self.wait_until_replicator_idle(repl)
 
         return session, replicator_authenticator, repl
+
 
 """
     def configure(self, source_db, target_url=None, target_db=None,

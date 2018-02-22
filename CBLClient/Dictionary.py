@@ -172,7 +172,7 @@ class Dictionary(object):
 #         args.setMemoryPointer("dictionary", dictionary)
 #         args.setString("key", key)
 #         return self._client.invokeMethod("dictionary_getObject", args)
-# 
+#
 #     def setObject(self, dictionary, key, value):
 #         args = Args()
 #         args.setMemoryPointer("dictionary", dictionary)

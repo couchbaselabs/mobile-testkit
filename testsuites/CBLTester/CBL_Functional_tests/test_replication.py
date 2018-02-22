@@ -107,7 +107,6 @@ def test_replication_configuration_valid_values(params_from_base_test_setup, num
     time.sleep(2)
     cbl_doc_ids = db.getDocIds(cbl_db)
     cbl_db_docs = db.getDocuments(cbl_db, cbl_doc_ids)
-    log_info("cbl db docs are : {}".format(cbl_db_docs))
     for doc in cbl_doc_ids:
         if continuous:
             assert cbl_db_docs[doc]["updates"] == number_of_updates, "updates did not get updated"
@@ -1067,3 +1066,181 @@ def CBL_offline_test(params_from_base_test_setup, sg_conf_name, num_of_docs):
     cbl_db_docs = db.getDocuments(cbl_db, cbl_doc_ids)
     for doc in cbl_doc_ids:
         assert cbl_db_docs[doc]["updates-cbl"] == number_of_updates + 1, "updates-cbl did not get updated"
+
+
+@pytest.mark.sanity
+@pytest.mark.listener
+@pytest.mark.syncgateway
+@pytest.mark.replication
+@pytest.mark.session
+@pytest.mark.parametrize("num_docs, need_attachments, replication_after_backgroundApp", [
+    (1000, True, False),
+    (10000, False, False),
+    # (10000, False, True),
+    # (1000, True, True)
+])
+def test_initial_pull_replication_background_apprun(params_from_base_test_setup, num_docs, need_attachments,
+                                                    replication_after_backgroundApp):
+    """
+    @summary
+    1. Add specified number of documents to sync-gateway.
+    2. Start continous pull replication to pull the docs from a sync_gateway database.
+    3. While docs are getting replicated , push the app to the background
+    4. Verify if all of the docs got pulled and replication completed when app goes background
+    """
+
+    sg_db = "db"
+
+    cluster_config = params_from_base_test_setup["cluster_config"]
+    sg_admin_url = params_from_base_test_setup["sg_admin_url"]
+    sg_blip_url = params_from_base_test_setup["target_url"]
+    liteserv_platform = params_from_base_test_setup["liteserv_platform"]
+    device_enabled = params_from_base_test_setup["device_enabled"]
+    cbl_db = params_from_base_test_setup["source_db"]
+    base_url = params_from_base_test_setup["base_url"]
+    testserver = params_from_base_test_setup["testserver"]
+    sg_config = params_from_base_test_setup["sg_config"]
+
+    c = cluster.Cluster(config=cluster_config)
+    c.reset(sg_config_path=sg_config)
+
+    # No command to push the app to background on device, so avoid test to run on ios device
+    if((liteserv_platform.lower() != "ios" and liteserv_platform.lower() != "android") or
+       (liteserv_platform.lower() == "ios" and device_enabled)):
+        pytest.skip('This test only valid for mobile')
+
+    client = MobileRestClient()
+    client.create_user(sg_admin_url, sg_db, "testuser", password="password", channels=["ABC", "NBC"])
+    cookie, session_id = client.create_session(sg_admin_url, sg_db, "testuser")
+    session = cookie, session_id
+    # Add 'number_of_sg_docs' to Sync Gateway
+    bulk_docs_resp = []
+    if need_attachments:
+        sg_doc_bodies = document.create_docs(
+            doc_id_prefix="seeded_doc",
+            number=num_docs,
+            attachments_generator=attachment.generate_2_png_10_10,
+            channels=["ABC"]
+        )
+    else:
+        sg_doc_bodies = document.create_docs(doc_id_prefix='seeded_doc', number=num_docs, channels=["ABC"])
+    # if adding bulk docs with huge attachment more than 5000 fails
+    for x in xrange(0, len(sg_doc_bodies), 100000):
+        chunk_docs = sg_doc_bodies[x:x + 100000]
+        ch_bulk_docs_resp = client.add_bulk_docs(url=sg_admin_url, db=sg_db, docs=chunk_docs, auth=session)
+        log_info("length of bulk docs resp{}".format(len(ch_bulk_docs_resp)))
+        bulk_docs_resp += ch_bulk_docs_resp
+    # docs = client.add_bulk_docs(url=sg_one_public, db=sg_db, docs=sg_doc_bodies, auth=session)
+    assert len(bulk_docs_resp) == num_docs
+
+    # Add a poll to make sure all of the docs have propagated to sync_gateway's _changes before initiating
+    # the one shot pull replication to ensure that the client is aware of all of the docs to pull
+    client.verify_docs_in_changes(url=sg_admin_url, db=sg_db, expected_docs=bulk_docs_resp, auth=session,
+                                  polling_interval=10)
+
+    db = Database(base_url)
+    # Replicate to all CBL
+    replicator = Replication(base_url)
+    authenticator = Authenticator(base_url)
+    replicator_authenticator = authenticator.authentication(session_id, cookie, authentication_type="session")
+    repl_config = replicator.configure(cbl_db, target_url=sg_blip_url, continuous=False,
+                                       replication_type="pull", replicator_authenticator=replicator_authenticator)
+
+    repl = replicator.create(repl_config)
+    replicator.start(repl)
+    time.sleep(3)  # let replication go for few seconds and then make app go background
+    testserver.close_app()
+    time.sleep(10)  # wait until all replication is done
+    testserver.open_app()
+    # Verify docs replicated to client
+    cbl_doc_ids = db.getDocIds(cbl_db)
+    assert len(cbl_doc_ids) == len(bulk_docs_resp)
+    sg_docs = client.get_all_docs(url=sg_admin_url, db=sg_db)
+    sg_ids = [row["id"] for row in sg_docs["rows"]]
+    for doc in cbl_doc_ids:
+        assert doc in sg_ids
+
+    replicator.stop(repl)
+
+
+@pytest.mark.sanity
+@pytest.mark.listener
+@pytest.mark.replication
+@pytest.mark.parametrize("num_docs, need_attachments, replication_after_backgroundApp", [
+    (100, True, False),
+    (10000, False, False),
+    # (1000000, False, False)  you can run this locally if needed, jenkins cannot run more than 15 mins
+])
+def test_push_replication_with_backgroundApp(params_from_base_test_setup, num_docs, need_attachments,
+                                             replication_after_backgroundApp):
+    """
+    @summary
+    1. Prepare Testserver to have specified number of documents.
+    2. Start continous push replication to push the docs into a sync_gateway database.
+    3. While docs are getting replecated , push the app to the background
+    4. Verify if all of the docs get pushed and replication continous when app goes background
+    """
+
+    sg_db = "db"
+
+    cluster_config = params_from_base_test_setup["cluster_config"]
+    sg_admin_url = params_from_base_test_setup["sg_admin_url"]
+    sg_blip_url = params_from_base_test_setup["target_url"]
+    liteserv_platform = params_from_base_test_setup["liteserv_platform"]
+    device_enabled = params_from_base_test_setup["device_enabled"]
+    cbl_db = params_from_base_test_setup["source_db"]
+    base_url = params_from_base_test_setup["base_url"]
+    testserver = params_from_base_test_setup["testserver"]
+    sg_config = params_from_base_test_setup["sg_config"]
+    db = params_from_base_test_setup["db"]
+    sg_url = params_from_base_test_setup["sg_url"]
+    channels = ["ABC"]
+
+    c = cluster.Cluster(config=cluster_config)
+    c.reset(sg_config_path=sg_config)
+
+    # No command to push the app to background on device, so avoid test to run on ios device
+    if((liteserv_platform.lower() != "ios" and liteserv_platform.lower() != "android") or
+       (liteserv_platform.lower() == "ios" and device_enabled)):
+        pytest.skip('This test only valid for mobile and cannot run on iOS device')
+
+    client = MobileRestClient()
+    client.create_user(sg_admin_url, sg_db, "testuser", password="password", channels=channels)
+    cookie, session_id = client.create_session(sg_admin_url, sg_db, "testuser")
+    session = cookie, session_id
+
+    # liteserv cannot handle bulk docs more than 100000, if you run more than 100000, it will chunk the
+    # docs into set of 100000 and call add bulk docs
+    if need_attachments:
+        for x in xrange(0, num_docs, 100000):
+            cbl_prefix = "cbl" + str(x)
+            db.create_bulk_docs(num_docs, cbl_prefix, db=cbl_db, generator="simple_user",
+                                attachments_generator=attachment.generate_png_100_100, channels=channels)
+    else:
+        cbl_prefix = "cbl" + str(x)
+        db.create_bulk_docs(num_docs, cbl_prefix, db=cbl_db, channels=channels)
+
+    cbl_doc_ids = db.getDocIds(cbl_db)
+    assert len(cbl_doc_ids) == num_docs
+
+    # Start replication after app goes background. So close app first and start replication
+    db = Database(base_url)
+    # Replicate to all CBL
+    replicator = Replication(base_url)
+    authenticator = Authenticator(base_url)
+    replicator_authenticator = authenticator.authentication(session_id, cookie, authentication_type="session")
+    repl_config = replicator.configure(cbl_db, target_url=sg_blip_url, continuous=False,
+                                       replication_type="push", replicator_authenticator=replicator_authenticator)
+
+    repl = replicator.create(repl_config)
+    replicator.start(repl)
+    time.sleep(3)  # let replication go for few seconds and then make app go background
+    testserver.close_app()
+    time.sleep(10)  # wait until all replication is done
+    testserver.open_app()
+
+    # Verify docs replicated to sync_gateway
+    sg_docs = client.get_all_docs(url=sg_url, db=sg_db, auth=session)
+    sg_ids = [row["id"] for row in sg_docs["rows"]]
+    for doc_id in cbl_doc_ids:
+        assert doc_id in sg_ids

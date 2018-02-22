@@ -11,7 +11,7 @@ class TestReplicatorConfiguration(object):
         sg_blip_url = "{}/db".format(sg_blip_url)
         cbl_db = self.db_obj.create(self.cbl_db_name)
         builder = self.repl_config_obj.builderCreate(source_db=cbl_db,
-                                             target_url=sg_blip_url)
+                                                     target_url=sg_blip_url)
         config = self.repl_config_obj.create(builder)
         assert self.cbl_db_name == self.db_obj.getName(self.repl_config_obj.getDatabase(config))
 
@@ -22,7 +22,7 @@ class TestReplicatorConfiguration(object):
         cbl_db = self.db_obj.create(self.cbl_db_name)
         builder = self.repl_config_obj.builderCreate(source_db=cbl_db, target_url=sg_blip_url)
         config = self.repl_config_obj.create(builder)
-        assert self.repl_config_obj.getAuthenticator(config) == None
+        assert self.repl_config_obj.getAuthenticator(config) is None
         auth = self.base_auth_obj.create("username", "password")
         self.repl_config_obj.setAuthenticator(builder, auth)
         assert self.repl_config_obj.getAuthenticator(config) is not None
@@ -86,7 +86,7 @@ class TestReplicatorConfiguration(object):
         sg_blip_url = "{}/db".format(sg_blip_url)
         cbl_db = self.db_obj.create(self.cbl_db_name)
         builder = self.repl_config_obj.builderCreate(source_db=cbl_db, target_url=sg_blip_url)
-        config = self.repl_config_obj.create(builder)
+        self.repl_config_obj.create(builder)
         # assert 0
 
     def test_get_set_get_set_conflictResolver(self, params_from_base_test_setup):
@@ -95,5 +95,6 @@ class TestReplicatorConfiguration(object):
         sg_blip_url = "{}/db".format(sg_blip_url)
         cbl_db = self.db_obj.create(self.cbl_db_name)
         builder = self.repl_config_obj.builderCreate(source_db=cbl_db, target_url=sg_blip_url)
-        config = self.repl_config_obj.create(builder)
+        self.repl_config_obj.create(builder)
+        # config = self.repl_config_obj.create(builder)
         # assert 0

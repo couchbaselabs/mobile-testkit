@@ -11,10 +11,31 @@ import UIKit
 class ViewController: UIViewController {
     
     var server: Server!
+    var backgroundTask: UIBackgroundTaskIdentifier = UIBackgroundTaskInvalid
 
     override func viewDidLoad() {
         super.viewDidLoad()
         server = Server()
+        
+        
+        NotificationCenter.default.addObserver(
+            forName: Notification.Name.UIApplicationDidEnterBackground,
+            object: nil, queue: nil) { (note) in
+                self.backgroundTask = UIApplication.shared.beginBackgroundTask(
+                    expirationHandler: {
+                        self.backgroundTask = UIBackgroundTaskInvalid;
+                })
+        }
+        
+        NotificationCenter.default.addObserver(
+            forName: Notification.Name.UIApplicationWillEnterForeground,
+            object: nil, queue: nil) { (note) in
+                if self.backgroundTask != UIBackgroundTaskInvalid {
+                    UIApplication.shared.endBackgroundTask(self.backgroundTask)
+                    self.backgroundTask = UIBackgroundTaskInvalid
+                }
+        }
+
     }
 
     override func didReceiveMemoryWarning() {

@@ -56,7 +56,7 @@ public class QueryRequestHandler {
 //        return query_result.string(key);
 //    }
 
-    public Map<String, Object> getDoc(Args args) throws CouchbaseLiteException {
+    public List<Object> getDoc(Args args) throws CouchbaseLiteException {
         Database database = args.get("database");
         int out = database.getCount();
         Expression doc_id = Expression.value(args.get("doc_id"));
@@ -64,8 +64,11 @@ public class QueryRequestHandler {
                 .select(SelectResult.all())
                 .from(DataSource.database(database))
                 .where((Meta.id).equalTo(doc_id));
+        List<Object> resultArray = new ArrayList<Object>();
         for (Result row : query.execute()){
-            return row.toMap();
+            // return row.toMap();
+            System.out.println("get doc in android "+ row);
+            resultArray.add(row.toMap());
         }
         return null;
     }
@@ -203,7 +206,7 @@ public class QueryRequestHandler {
         Query query = QueryBuilder
                 .select(SelectResult.expression(Meta.id),
                         SelectResult.expression(Expression.property(select_property1)),
-                        SelectResult.expression(Expression.property(select_property2)))
+                        SelectResult.expression(Function.upper(Expression.property(select_property2))))
                 .from(DataSource.database(database))
                 .where((Function.contains(Expression.property(select_property1), substring)));
         for (Result row : query.execute()){

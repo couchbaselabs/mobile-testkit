@@ -251,4 +251,3 @@ class Document(object):
         args.setMemoryPointer("document", document)
         args.setDictionary("data", data)
         return self._client.invokeMethod("document_setData", args)
-

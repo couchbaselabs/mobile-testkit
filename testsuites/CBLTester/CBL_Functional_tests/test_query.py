@@ -8,6 +8,7 @@ from couchbase.bucket import Bucket
 from couchbase.n1ql import N1QLQuery
 import numpy as np
 
+
 def test_get_doc_ids(params_from_base_test_setup):
     """@summary
     Fetches all the doc ids
@@ -35,7 +36,7 @@ def test_get_doc_ids(params_from_base_test_setup):
     doc_ids_from_n1ql = []
     for row in sdk_client.n1ql_query(query):
         doc_ids_from_n1ql.append(row["id"])
-   
+
     log_info("Fetching doc ids from CBL")
     ids_from_cbl = db.getDocIds(source_db)
 
@@ -478,11 +479,10 @@ def test_query_substring(params_from_base_test_setup, select_property1, select_p
     for row in sdk_client.n1ql_query(query):
         docs_from_n1ql.append(row)
 
-    log_info("docs_from_n1ql: {}".format(docs_from_n1ql))
-
     assert len(docs_from_cbl) == len(docs_from_n1ql)
-    log_info("Found {} docs".format(len(docs_from_cbl)))
-    assert sorted(docs_from_cbl) == sorted(docs_from_n1ql)
+    for doc in docs_from_cbl:
+        print "doc for cbl is ", doc
+        assert doc in docs_from_n1ql
     log_info("Doc contents match")
 
 
@@ -538,13 +538,15 @@ def test_query_collation(params_from_base_test_setup, select_property1, whr_key1
     assert sorted(docs_from_cbl) == sorted(docs_from_n1ql)
     log_info("Doc contents match")
 
+
 @pytest.mark.parametrize("select_property1, select_property2, select_property3, select_property4, select_property5, whr_key1, whr_key2, whr_key3, whr_val1, whr_val2, whr_val3, join_key", [
-    ("name", "callsign", "destinationairport", "stops", "airline", "type", "type", "sourceairport", "route", "airline", "SFO", "airlineid"),
+    ("name", "callsign", "destinationairport", "stops", "airline", "type",
+     "type", "sourceairport", "route", "airline", "SFO", "airlineid"),
 ])
 def test_query_join(params_from_base_test_setup, select_property1,
-                   select_property2, select_property3, select_property4,
-                   select_property5, whr_key1, whr_key2, whr_key3,
-                   whr_val1, whr_val2, whr_val3, join_key):
+                    select_property2, select_property3, select_property4,
+                    select_property5, whr_key1, whr_key2, whr_key3,
+                    whr_val1, whr_val2, whr_val3, join_key):
     """ @summary
     Query query = QueryBuilder
                 .selectDistinct(
@@ -561,14 +563,14 @@ def test_query_join(params_from_base_test_setup, select_property1,
                     .and(Expression.property(whrKey3).from(main).equalTo(whrVal3)))
                 .limit(limit);)
 
-    Verifies with n1ql - 
+    Verifies with n1ql -
     SELECT DISTINCT airline.name, airline.callsign, route.destinationairport, route.stops, route.airline
-    FROM `travel-sample` route 
-      JOIN `travel-sample` airline 
-      ON KEYS route.airlineid 
-    WHERE route.type = "route" 
-      AND airline.type = "airline" 
-      AND route.sourceairport = "SFO" 
+    FROM `travel-sample` route
+      JOIN `travel-sample` airline
+      ON KEYS route.airlineid
+    WHERE route.type = "route"
+      AND airline.type = "airline"
+      AND route.sourceairport = "SFO"
     LIMIT 2;
     """
     cluster_topology = params_from_base_test_setup["cluster_topology"]
@@ -596,14 +598,14 @@ def test_query_join(params_from_base_test_setup, select_property1,
     bucket_name = "travel-sample"
     sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password')
     n1ql_query = 'select distinct airline.{}, airline.{}, route.{}, '\
-                'route.{}, route.{} from `{}` route join `{}` airline '\
-                'on keys route.{} where route.{}="{}" and '\
-                'airline.{} = "{}" and route.{} = {} limit'.format(
-                    select_property1, select_property2, 
-                    select_property3, select_property4,
-                    select_property5, bucket_name, bucket_name,
-                    join_key, whr_key1, whr_val1, whr_key2, whr_val2,
-                    whr_key3, whr_val3,)
+        'route.{}, route.{} from `{}` route join `{}` airline '\
+        'on keys route.{} where route.{}="{}" and '\
+        'airline.{} = "{}" and route.{} = {} limit'.format(
+            select_property1, select_property2,
+            select_property3, select_property4,
+            select_property5, bucket_name, bucket_name,
+            join_key, whr_key1, whr_val1, whr_key2, whr_val2,
+            whr_key3, whr_val3,)
     log_info(n1ql_query)
     query = N1QLQuery(n1ql_query)
     docs_from_n1ql = []
@@ -615,6 +617,7 @@ def test_query_join(params_from_base_test_setup, select_property1,
     log_info("Found {} docs".format(len(docs_from_cbl)))
     assert sorted(docs_from_cbl) == sorted(docs_from_n1ql)
     log_info("Doc contents match")
+
 
 @pytest.mark.parametrize("prop, val", [
     ("country", "France"),
@@ -662,6 +665,7 @@ def test_equal_to(params_from_base_test_setup, prop, val):
     assert np.array_equal(docs_from_cbl, docs_from_n1ql)
     log_info("Doc contents match between CBL and n1ql")
 
+
 @pytest.mark.parametrize("prop, val", [
     ("country", "United States"),
     ("type", "airline")
@@ -708,6 +712,7 @@ def test_not_equal_to(params_from_base_test_setup, prop, val):
     assert np.array_equal(docs_from_cbl, docs_from_n1ql)
     log_info("Doc contents match between CBL and n1ql")
 
+
 @pytest.mark.parametrize("prop, val", [
     ("id", 1000),
 ])
@@ -752,6 +757,7 @@ def test_greater_than(params_from_base_test_setup, prop, val):
     log_info("Found {} docs".format(len(docs_from_cbl)))
     assert np.array_equal(docs_from_cbl, docs_from_n1ql)
     log_info("Doc contents match between CBL and n1ql")
+
 
 @pytest.mark.parametrize("prop, val", [
     ("id", 1000),
@@ -798,6 +804,7 @@ def test_greater_than_or_equal_to(params_from_base_test_setup, prop, val):
     assert np.array_equal(docs_from_cbl, docs_from_n1ql)
     log_info("Doc contents match between CBL and n1ql")
 
+
 @pytest.mark.parametrize("prop, val", [
     ("id", 1000),
 ])
@@ -842,6 +849,7 @@ def test_less_than(params_from_base_test_setup, prop, val):
     log_info("Found {} docs".format(len(docs_from_cbl)))
     assert np.array_equal(docs_from_cbl, docs_from_n1ql)
     log_info("Doc contents match between CBL and n1ql")
+
 
 @pytest.mark.parametrize("prop, val", [
     ("id", 1000),
@@ -888,6 +896,7 @@ def test_less_than_or_equal_to(params_from_base_test_setup, prop, val):
     assert np.array_equal(docs_from_cbl, docs_from_n1ql)
     log_info("Doc contents match between CBL and n1ql")
 
+
 @pytest.mark.parametrize("prop, val1, val2", [
     ("country", "France", "United States"),
 ])
@@ -933,6 +942,7 @@ def test_in(params_from_base_test_setup, prop, val1, val2):
     assert np.array_equal(docs_from_cbl, docs_from_n1ql)
     log_info("Doc contents match between CBL and n1ql")
 
+
 @pytest.mark.parametrize("prop, val1, val2", [
     ("id", 1000, 2000),
 ])
@@ -977,6 +987,7 @@ def test_between(params_from_base_test_setup, prop, val1, val2):
     log_info("Found {} docs".format(len(docs_from_cbl)))
     assert np.array_equal(docs_from_cbl, docs_from_n1ql)
     log_info("Doc contents match between CBL and n1ql")
+
 
 @pytest.mark.parametrize("prop", [
     "callsign",
@@ -1024,6 +1035,7 @@ def test_is(params_from_base_test_setup, prop):
     assert np.array_equal(docs_from_cbl, docs_from_n1ql)
     log_info("Doc contents match between CBL and n1ql")
 
+
 @pytest.mark.parametrize("prop", [
     "callsign",
     "iata"
@@ -1069,6 +1081,7 @@ def test_isnot(params_from_base_test_setup, prop):
     log_info("Found {} docs".format(len(docs_from_cbl)))
     assert np.array_equal(docs_from_cbl, docs_from_n1ql)
     log_info("Doc contents match between CBL and n1ql")
+
 
 @pytest.mark.parametrize("prop, val1, val2", [
     ("id", 1000, 2000),

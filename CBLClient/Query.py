@@ -76,8 +76,8 @@ class Query(object):
         return self._client.invokeMethod("selectResult_expressionCreate", args)
 
     def query_select_result_all_create(self):
-        #needs to be change
-        #return self._client.invokeMethod("query_select_result_all_create")
+        # needs to be change
+        # return self._client.invokeMethod("query_select_result_all_create")
         return self._client.invokeMethod("selectResult_all")
 
     def query_expression_meta_id(self):
@@ -120,8 +120,8 @@ class Query(object):
         args.setInt("limit", limit)
         args.setInt("offset", offset)
 
-        #needs to be change
-        #return self._client.invokeMethod("query_get_docs_limit_offset", args)
+        # needs to be change
+        # return self._client.invokeMethod("query_get_docs_limit_offset", args)
         return self._client.invokeMethod("query_docsLimitOffset", args)
 
     def query_multiple_selects(self, database, select_property1, select_property2, whr_key, whr_val):
@@ -132,8 +132,8 @@ class Query(object):
         args.setString("whr_key", whr_key)
         args.setString("whr_val", whr_val)
 
-        #needs to be change
-        #return self._client.invokeMethod("query_multiple_selects", args)
+        # needs to be change
+        # return self._client.invokeMethod("query_multiple_selects", args)
         return self._client.invokeMethod("query_multipleSelects", args)
 
     def query_where_and_or(self, database, whr_key1, whr_val1, whr_key2, whr_val2, whr_key3, whr_val3, whr_key4, whr_val4):
@@ -148,7 +148,7 @@ class Query(object):
         args.setString("whr_key4", whr_key4)
         args.setBoolean("whr_val4", whr_val4)
 
-        #return self._client.invokeMethod("query_where_and_or", args)
+        # return self._client.invokeMethod("query_where_and_or", args)
         return self._client.invokeMethod("query_whereAndOr", args)
 
     def query_like(self, database, whr_key, whr_val, select_property1, select_property2, like_key, like_val):
@@ -232,12 +232,12 @@ class Query(object):
         args.setString("whr_val2", whr_val2)
         args.setString("whr_val3", whr_val3)
         args.setString("limit", limit)
-        
+
         return self._client.invokeMethod("query_join", args)
 
     def query_join2(self, database, select_property1, select_property2,
-                   select_property3, whr_key1, whr_key2, whr_val1,
-                   whr_val2, join_key1, join_key2,):
+                    select_property3, whr_key1, whr_key2, whr_val1,
+                    whr_val2, join_key1, join_key2,):
         args = Args()
         args.setMemoryPointer("database", database)
         args.setString("select_property1", select_property1)
@@ -249,7 +249,7 @@ class Query(object):
         args.setString("join_key2", join_key2)
         args.setString("whr_val1", whr_val1)
         args.setString("whr_val2", whr_val2)
-        
+
         return self._client.invokeMethod("query_join2", args)
 
     def query_between(self, database, prop, val1, val2):
@@ -258,7 +258,7 @@ class Query(object):
         args.setString("prop", prop)
         args.setInt("val1", val1)
         args.setInt("val2", val2)
-        
+
         return self._client.invokeMethod("query_between", args)
 
     def query_equal_to(self, database, prop, val):
@@ -266,7 +266,7 @@ class Query(object):
         args.setMemoryPointer("database", database)
         args.setString("prop", prop)
         args.setString("val", val)
-        
+
         return self._client.invokeMethod("query_equalTo", args)
 
     def query_greater_than_or_equal_to(self, database, prop, val):
@@ -274,7 +274,7 @@ class Query(object):
         args.setMemoryPointer("database", database)
         args.setString("prop", prop)
         args.setInt("val", val)
-        
+
         return self._client.invokeMethod("query_greaterThanOrEqualTo", args)
 
     def query_greater_than(self, database, prop, val):
@@ -282,7 +282,7 @@ class Query(object):
         args.setMemoryPointer("database", database)
         args.setString("prop", prop)
         args.setInt("val", val)
-        
+
         return self._client.invokeMethod("query_greaterThan", args)
 
     def query_less_than(self, database, prop, val):
@@ -290,7 +290,7 @@ class Query(object):
         args.setMemoryPointer("database", database)
         args.setString("prop", prop)
         args.setInt("val", val)
-        
+
         return self._client.invokeMethod("query_lessThan", args)
 
     def query_less_than_or_equal_to(self, database, prop, val):
@@ -298,7 +298,7 @@ class Query(object):
         args.setMemoryPointer("database", database)
         args.setString("prop", prop)
         args.setInt("val", val)
-        
+
         return self._client.invokeMethod("query_lessThanOrEqualTo", args)
 
     def query_in(self, database, prop, val1, val2):
@@ -313,14 +313,14 @@ class Query(object):
         args = Args()
         args.setMemoryPointer("database", database)
         args.setString("prop", prop)
-        
+
         return self._client.invokeMethod("query_is", args)
 
     def query_isNot(self, database, prop):
         args = Args()
         args.setMemoryPointer("database", database)
         args.setString("prop", prop)
-        
+
         return self._client.invokeMethod("query_isNot", args)
 
     def query_not(self, database, prop, val1, val2):

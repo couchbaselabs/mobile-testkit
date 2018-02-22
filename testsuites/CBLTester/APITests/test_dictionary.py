@@ -93,7 +93,7 @@ class TestDictionary(object):
         #                                                   key))
         assert self.datatype.compareDate(value, self.dict_obj.getDate(content_dict, key))
 
-    def test_get_set_dictionary(self):
+    def test1_get_set_dictionary(self):
         '''
         @summary: Testing get and set Dictionary methods of Dictionary API
         '''

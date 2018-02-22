@@ -6,8 +6,6 @@ from keywords.utils import log_info
 from keywords import types
 from libraries.data import doc_generators
 from Document import Document
-import uuid
-import json
 
 
 class Database(object):
@@ -23,14 +21,14 @@ class Database(object):
 
         self._client = Client(base_url)
 
-    def configure(self, directory=None, conflictResolver=None, encryptionKey=None):
+    def configure(self, directory=None, conflictResolver=None, password=None):
         args = Args()
         if directory is not None:
             args.setString("directory", directory)
         if conflictResolver is not None:
             args.setMemoryPointer("conflictResolver", conflictResolver)
-        if encryptionKey is not None:
-            args.setMemoryPointer("encryptionKey", encryptionKey)
+        if password is not None:
+            args.setMemoryPointer("password", password)
         return self._client.invokeMethod("databaseConfiguration_configure", args)
 
     def create(self, name, config=None):
@@ -230,11 +228,11 @@ class Database(object):
         self.saveDocuments(db, added_docs)
 
     def update_bulk_docs(self, database, number_of_updates=1):
-  
+
         updated_docs = {}
         doc_ids = self.getDocIds(database)
         log_info("updating bulk docs")
-        
+
         docs = self.getDocuments(database, doc_ids)
         if len(docs) < 1:
             raise Exception("cbl docs are empty , cannot update docs")
@@ -251,7 +249,6 @@ class Database(object):
     def update_all_docs_individually(self, database, num_of_updates=1):
 
         doc_ids = self.getDocIds(database)
-        docs = self.getDocuments(database, doc_ids)
         doc_obj = Document(self._baseUrl)
         for i in xrange(num_of_updates):
             for doc_id in doc_ids:
@@ -265,7 +262,6 @@ class Database(object):
 
                 doc_body["updates-cbl"] = doc_body["updates-cbl"] + 1
                 self.updateDocument(database, doc_body, doc_id)
-
 
     def deleteDBIfExists(self, db_name):
         if self.exists(db_name):

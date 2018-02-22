@@ -6,7 +6,6 @@ import requests
 from keywords.TestServerBase import TestServerBase
 from keywords.constants import LATEST_BUILDS
 from keywords.constants import BINARY_DIR
-from keywords.constants import REGISTERED_CLIENT_DBS
 from keywords.exceptions import LiteServError
 from keywords.utils import version_and_build
 from keywords.utils import log_info
@@ -45,7 +44,7 @@ class TestServerAndroid(TestServerBase):
 
         apk_path = "{}/{}".format(BINARY_DIR, apk_name)
 
-        # TODO: Remove following lines after testing next 2 lines 
+        # TODO: Remove following lines after testing next 2 lines
         apk_name = "app-debug.apk"
         apk_path = "/Users/sridevi.saragadam/workspace/CBL2-0/build-scripts/mobile-testkit/CBLClient/Apps/CBLTestServer-Android/app/build/outputs/apk/debug/app-debug.apk"
         log_info("Installing: {}".format(apk_path))

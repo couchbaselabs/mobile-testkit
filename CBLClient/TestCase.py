@@ -1,6 +1,5 @@
 from Client import Client
 from Args import Args
-from keywords.utils import log_info
 
 
 class TestCase:

@@ -1,25 +1,17 @@
 import pytest
-import time
 
-from keywords.MobileRestClient import MobileRestClient
-from keywords.utils import log_info
 from CBLClient.Database import Database
 from CBLClient.Replication import Replication
-from CBLClient.Dictionary import Dictionary
-from CBLClient.Document import Document
-from CBLClient.Query import Query
 from requests.exceptions import HTTPError
-
 from keywords.SyncGateway import sync_gateway_config_path_for_mode
-from keywords.ClusterKeywords import ClusterKeywords
-from keywords.constants import CLUSTER_CONFIGS_DIR
 from libraries.testkit import cluster
+
 
 @pytest.mark.sanity
 @pytest.mark.listener
 def test_replication_configuration_invalid_db(params_from_base_test_setup):
     """
-        @summary: 
+        @summary:
         1. Create CBL DB and create bulk doc in CBL
         2. Configure replication with empty string of source db
         3. Verify that it throws http error bad request
