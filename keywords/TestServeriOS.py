@@ -33,7 +33,7 @@ class TestServeriOS(TestServerBase):
             self.package_name = "CBLTestServer-iOS-enterprise.zip"
         self.app_name = "CBLTestServer-iOS.app"
 
-    def download(self, community_enabled, version_build=None):
+    def download(self, version_build=None):
         """
         1. Check to see if package is downloaded already. If so, return
         2. Download the LiteServ package from latest builds to 'deps/binaries'

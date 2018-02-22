@@ -94,7 +94,7 @@ def pytest_addoption(parser):
 # This will get called once before the first test that
 # runs with this as input parameters in this file
 # This setup will be called once for all tests in the
-# testsuites/listener/shared/client_sg/ directory
+# testsuites/CBLTester/CBL_Functional_tests/ directory
 @pytest.fixture(scope="session")
 def params_from_base_suite_setup(request):
     liteserv_platform = request.config.getoption("--liteserv-platform")
@@ -122,7 +122,7 @@ def params_from_base_suite_setup(request):
 
     log_info("Downloading TestServer ...")
     # Download TestServer app
-    testserver.download(community_enabled)
+    testserver.download()
 
     # Install TestServer app
     if device_enabled and liteserv_platform == "ios":
