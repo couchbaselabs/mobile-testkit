@@ -34,8 +34,6 @@ namespace Couchbase.Lite.Testing
     {
         #region Public Methods
 
-
-
         public static void DocumentCreate([NotNull] NameValueCollection args,
             [NotNull] IReadOnlyDictionary<string, object> postBody,
             [NotNull] HttpListenerResponse response)
@@ -47,7 +45,6 @@ namespace Couchbase.Lite.Testing
                 var id = postBody["id"];
                 if (hasDictionary)
                 {
-
                     response.WriteBody(MemoryMap.New<MutableDocument>(id, postBody["dictionary"]));
                 }
                 else
@@ -74,13 +71,6 @@ namespace Couchbase.Lite.Testing
                                           [NotNull] HttpListenerResponse response)
         {
             With<MutableDocument>(postBody, "document", doc => response.WriteBody(doc.Count));
-        }
-
-        public static void DocumentGetID([NotNull] NameValueCollection args,
-                                  [NotNull] IReadOnlyDictionary<string, object> postBody,
-                                  [NotNull] HttpListenerResponse response)
-        {
-            With<MutableDocument>(postBody, "document", doc => response.WriteBody(doc.Id));
         }
 
         public static void DocumentGetString([NotNull] NameValueCollection args,
@@ -281,7 +271,7 @@ namespace Couchbase.Lite.Testing
                   [NotNull] IReadOnlyDictionary<string, object> postBody,
                   [NotNull] HttpListenerResponse response)
         {
-            With<MutableDocument>(postBody, "document", doc => response.WriteBody(doc.ToMutable()));
+            With<Document>(postBody, "document", doc => response.WriteBody(MemoryMap.Store(doc.ToMutable())));
         }
 
         public static void DocumentRemoveKey([NotNull] NameValueCollection args,

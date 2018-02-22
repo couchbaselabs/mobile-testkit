@@ -77,7 +77,6 @@ namespace Couchbase.Lite.Testing
                 Console.WriteLine("Type of Value is " + t.ToString());
                 return value.ToString();
             }
-
         }
 
         public static Dictionary<string, object> Deserialize(IReadOnlyDictionary<string, string> jsonObj)

@@ -120,7 +120,12 @@ namespace Couchbase.Lite.Testing
 
                 if (postBody.ContainsKey("headers"))
                 {
-                    Dictionary<String, String> headers = (Dictionary<String, String>)postBody["headers"];
+                    Dictionary<String, String> headers = new Dictionary<string, string>();
+                    Dictionary<String, object> header_object = (Dictionary<String, Object>)postBody["headers"];
+                    foreach (KeyValuePair<string, object> keyValuePair in header_object)
+                    {
+                        headers.Add(keyValuePair.Key, keyValuePair.Value.ToString());
+                    }
                     config.Headers = headers;
                 }
 

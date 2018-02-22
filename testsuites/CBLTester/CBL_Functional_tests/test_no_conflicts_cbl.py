@@ -12,13 +12,12 @@ from requests.exceptions import HTTPError
 
 from keywords.SyncGateway import sync_gateway_config_path_for_mode
 from libraries.testkit import cluster
-from libraries.testkit.admin import Admin
 from utilities.cluster_config_utils import persist_cluster_config_environment_prop, copy_to_temp_conf
 
 
 def start_sg_accel(c, sg_conf):
     status = c.sg_accels[0].start(config=sg_conf)
-    print "starting sg accel...."
+    log_info("starting sg accel....")
     assert status == 0, "sync_gateway accel did not start"
 
 
@@ -153,9 +152,9 @@ def test_no_conflicts_enabled_with_revs_limit(params_from_base_test_setup, sg_co
     time.sleep(2)
     sg_docs = sg_client.get_all_docs(url=sg_url, db=sg_db, auth=session)
     sg_docs = sg_docs["rows"]
-    print "sg docs after CBL replication is with revs limit", sg_docs
-    cbl_docids = db.getDocIds(cbl_db)
-    cbl_docs = db.getDocuments(cbl_db, cbl_docids)
+
+    # cbl_docids = db.getDocIds(cbl_db)
+    # cbl_docs = db.getDocuments(cbl_db, cbl_docids)
     assert len(sg_docs) == num_of_docs, "SG docs docs count is not same as CBL docs count "
 
     # 3. Update the docs few times
@@ -228,7 +227,7 @@ def test_no_conflicts_update_with_revs_limit(params_from_base_test_setup, sg_con
 
     channels = ["no-conflicts-cbl"]
     reduced_revs_limit = revs_limit - 3
-    
+
     if sync_gateway_version < "2.0":
         pytest.skip('--no-conflicts is enabled and does not work with sg < 2.0 , so skipping the test')
 
@@ -246,10 +245,10 @@ def test_no_conflicts_update_with_revs_limit(params_from_base_test_setup, sg_con
     # Create bulk doc json and update docs in CBL
     db.create_bulk_docs(num_of_docs, "no-conflicts", db=cbl_db, channels=channels)
     db.update_bulk_docs(cbl_db, number_of_updates=4)
-    
+
     # Get cbl docs
-    cbl_doc_ids = db.getDocIds(cbl_db)
-    cbl_docs = db.getDocuments(cbl_db, cbl_doc_ids)
+    # cbl_doc_ids = db.getDocIds(cbl_db)
+    # cbl_docs = db.getDocuments(cbl_db, cbl_doc_ids)
 
     sg_client = MobileRestClient()
     sg_client.create_user(sg_admin_url, sg_db, "autotest", password="password", channels=channels)
@@ -271,7 +270,7 @@ def test_no_conflicts_update_with_revs_limit(params_from_base_test_setup, sg_con
     sg_docs = sg_docs["rows"]
 
     assert len(sg_docs) == num_of_docs, "SG docs docs count is not same as CBL docs count "
-    
+
     for doc in sg_docs:
         if no_conflicts_enabled:
             with pytest.raises(HTTPError) as he:
@@ -292,8 +291,8 @@ def test_no_conflicts_update_with_revs_limit(params_from_base_test_setup, sg_con
         time.sleep(1)
 
     # Get cbl docs
-    cbl_doc_ids = db.getDocIds(cbl_db)
-    cbl_docs = db.getDocuments(cbl_db, cbl_doc_ids)
+    # cbl_doc_ids = db.getDocIds(cbl_db)
+    # cbl_docs = db.getDocuments(cbl_db, cbl_doc_ids)
     replicator.wait_until_replicator_idle(repl)
     # Get number of revisions and verify length is equal to revs_limit set to
     for doc in sg_docs:
@@ -395,7 +394,7 @@ def test_migrate_conflicts_to_noConflicts_CBL(params_from_base_test_setup, sg_co
     assert len(sg_docs) == num_of_docs, "SG docs docs count is not same as CBL docs count "
     # Create a conflicts and verify it is successful.
     for doc in sg_docs:
-        print "rev of the doc", doc["value"]["rev"]
+        log_info("Doc rev: {}".format(doc["value"]["rev"]))
         conflicted_rev = sg_client.add_conflict(url=sg_url, db=sg_db, doc_id=doc["id"], parent_revisions=doc["value"]["rev"], new_revision="2-2B",
                                                 auth=session)
         assert conflicted_rev["rev"] == "2-2B"
@@ -464,7 +463,6 @@ def test_cbl_no_conflicts_sgAccel_added(params_from_base_test_setup, sg_conf_nam
     base_url = params_from_base_test_setup["base_url"]
     db = params_from_base_test_setup["db"]
     cbl_db = params_from_base_test_setup["source_db"]
-
     channels = ["no-conflicts-cbl"]
 
     if not no_conflicts_enabled or sync_gateway_version < "2.0":
@@ -525,7 +523,7 @@ def test_cbl_no_conflicts_sgAccel_added(params_from_base_test_setup, sg_conf_nam
         #                                        auth=session, channels=channels)
         db.update_bulk_docs(cbl_db)
     # assert len(update_sg_docs) == num_of_docs, "SG docs docs count is not same as CBL docs count "
-    
+
     replicator.wait_until_replicator_idle(repl)
     time.sleep(1)  # needs some sleep time to do http call after multithreading
     sg_docs = sg_client.get_all_docs(url=sg_url, db=sg_db, auth=session)
@@ -575,9 +573,8 @@ def test_sg_CBL_updates_concurrently(params_from_base_test_setup, sg_conf_name, 
     base_url = params_from_base_test_setup["base_url"]
     db = params_from_base_test_setup["db"]
     cbl_db = params_from_base_test_setup["source_db"]
-
     channels = ["no-conflicts-channel"]
-    
+
     if sync_gateway_version < "2.0":
         pytest.skip('Does not work with sg < 2.0 , so skipping the test')
 
@@ -592,9 +589,8 @@ def test_sg_CBL_updates_concurrently(params_from_base_test_setup, sg_conf_name, 
 
     # Create bulk doc json
     db.create_bulk_docs(num_of_docs, "no-conflicts", db=cbl_db, channels=channels)
-    cbl_doc_ids = db.getDocIds(cbl_db)
-    cbl_docs = db.getDocuments(cbl_db, cbl_doc_ids)
-    print "CBL updated docs are ", cbl_docs
+    # cbl_doc_ids = db.getDocIds(cbl_db)
+    # cbl_docs = db.getDocuments(cbl_db, cbl_doc_ids)
     sg_client = MobileRestClient()
     sg_client.create_user(sg_admin_url, sg_db, "autotest", password="password", channels=channels)
     cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, "autotest")
@@ -610,12 +606,12 @@ def test_sg_CBL_updates_concurrently(params_from_base_test_setup, sg_conf_name, 
     replicator.wait_until_replicator_idle(repl)
     sg_docs = sg_client.get_all_docs(url=sg_url, db=sg_db, auth=session)
     sg_docs = sg_docs["rows"]
-    print("sg docs after replication is ", sg_docs)
+
     db.update_bulk_docs(database=cbl_db, number_of_updates=3)
     # replicator.start(repl)
     replicator.wait_until_replicator_idle(repl)
-    cbl_docs = db.getDocuments(cbl_db, cbl_doc_ids)
-    print "CBL updated docs and replication is are ", cbl_docs
+    # cbl_docs = db.getDocuments(cbl_db, cbl_doc_ids)
+
     # Update the same documents concurrently from a sync gateway client and and CBL client
     sg_docs = sg_client.get_all_docs(url=sg_url, db=sg_db, auth=session)
     sg_docs = sg_docs["rows"]
@@ -658,7 +654,7 @@ def test_sg_CBL_updates_concurrently(params_from_base_test_setup, sg_conf_name, 
 
 
 def sg_updateDocs(sg_client, url, db, docs, number_updates, auth):
-    for doc in docs: 
+    for doc in docs:
         count = 0
         while count < 10:
             try:
@@ -685,7 +681,6 @@ def test_multiple_cbls_updates_concurrently_with_push(params_from_base_test_setu
         1. Create docs in CBL
         2. update docs in SG in one thread, update docs in CBL in another thread -> will create CBL DB out of sync
         3. Now do sync dB of SG
-
     """
 
     sg_db = "db"
@@ -723,9 +718,7 @@ def test_multiple_cbls_updates_concurrently_with_push(params_from_base_test_setu
     db.create_bulk_docs(num_of_docs, "no-conflicts3", db=cbl_db3, channels=channels)
 
     cbl_doc_ids = db.getDocIds(cbl_db1)
-    print "doc ids are ", cbl_doc_ids
-    cbl_docs = db.getDocuments(cbl_db1, cbl_doc_ids)
-    print "CBL updated docs are ", cbl_docs
+    # cbl_docs = db.getDocuments(cbl_db1, cbl_doc_ids)
     sg_client = MobileRestClient()
     sg_client.create_user(sg_admin_url, sg_db, "autotest", password="password", channels=channels)
     cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, "autotest")
@@ -740,9 +733,7 @@ def test_multiple_cbls_updates_concurrently_with_push(params_from_base_test_setu
     replicator2.start(repl)
     replicator2.wait_until_replicator_idle(repl)
     cbl_doc_ids = db.getDocIds(cbl_db2)
-    print "doc ids are ", cbl_doc_ids
-    cbl_docs = db.getDocuments(cbl_db2, cbl_doc_ids)
-    print "CBL2 replicated  docs are ", cbl_docs
+    # cbl_docs = db.getDocuments(cbl_db2, cbl_doc_ids)
 
     # Replicate to CBL3
     repl_config = replicator2.configure(cbl_db1, target_db=cbl_db3, continuous=True, replicator_authenticator=replicator_authenticator)
@@ -753,11 +744,9 @@ def test_multiple_cbls_updates_concurrently_with_push(params_from_base_test_setu
     db.update_bulk_docs(database=cbl_db3, number_of_updates=1)
     replicator2.wait_until_replicator_idle(repl3)
     cbl_doc_ids = db.getDocIds(cbl_db2)
-    print "doc ids are ", cbl_doc_ids
-    cbl_docs = db.getDocuments(cbl_db2, cbl_doc_ids)
-    print "CBL3 replicated  docs are ", cbl_docs
-    # Update the same documents concurrently from a sync gateway client and and CBL client
+    # cbl_docs = db.getDocuments(cbl_db2, cbl_doc_ids)
 
+    # Update the same documents concurrently from a sync gateway client and and CBL client
     with ThreadPoolExecutor(max_workers=5) as tpe:
         update_from_cbl_task1 = tpe.submit(
             db.update_bulk_docs,
@@ -783,16 +772,17 @@ def test_multiple_cbls_updates_concurrently_with_push(params_from_base_test_setu
 
     replicator2.wait_until_replicator_idle(repl3)
     replicator2.stop(repl3)
-    time.sleep(2) # give sometime to restart the replicator
+    time.sleep(2)  # give sometime to restart the replicator
     # Replicate to Sync-gateway
     while replicator2.getActivitylevel(repl) != "stopped":
-        print "is repl stopped for repl1 ", replicator2.getActivitylevel(repl)
-        time.sleep(0.5)
+        log_info("replicator2 activity for repl: {}".format(replicator2.getActivitylevel(repl)))
+        time.sleep(2)
+
     while replicator2.getActivitylevel(repl3) != "stopped":
-        print "is repl stopped for repl3 ", replicator2.getActivitylevel(repl3)
+        log_info("replicator2 activity for repl3: {}".format(replicator2.getActivitylevel(repl3)))
         time.sleep(0.5)
-    clb_dbName3 = setup_customized_teardown_test["cbl_db_name3"]
-    db_path = db.getPath(cbl_db3)
+    # clb_dbName3 = setup_customized_teardown_test["cbl_db_name3"]
+    # db_path = db.getPath(cbl_db3)
     repl_config = replicator2.configure(cbl_db3, sg_blip_url, continuous=True, channels=channels, replicator_authenticator=replicator_authenticator)
     repl4 = replicator2.create(repl_config)
     process_replicator(replicator2, repl4)
@@ -810,7 +800,6 @@ def test_multiple_cbls_updates_concurrently_with_push(params_from_base_test_setu
                 sg_client.add_conflict(url=sg_url, db=sg_db, doc_id=doc["id"], parent_revisions=doc["value"]["rev"], new_revision="2-2B",
                                        auth=session)
             assert he.value.message.startswith('409 Client Error: Conflict for url:')
-
 
 
 @pytest.mark.sanity
@@ -874,7 +863,6 @@ def test_multiple_cbls_updates_concurrently_with_pull(params_from_base_test_setu
     cbl_db1 = setup_customized_teardown_test["cbl_db1"]
     cbl_db2 = setup_customized_teardown_test["cbl_db2"]
     cbl_db3 = setup_customized_teardown_test["cbl_db3"]
-    
 #     cbl_db1 = db.deleteDBIfExistsCreateNew(cbl_db_name1)
 #     cbl_db2 = db.deleteDBIfExistsCreateNew(cbl_db_name2)
 #     cbl_db3 = db.deleteDBIfExistsCreateNew(cbl_db_name3)
@@ -930,18 +918,18 @@ def test_multiple_cbls_updates_concurrently_with_pull(params_from_base_test_setu
         update_from_sg_task.result()
 
     replicator.wait_until_replicator_idle(repl1)
-    print "replicator 1 error is", replicator.getError(repl1)
+    log_info("repl1 error: {}".format(replicator.getError(repl1)))
     replicator.stop(repl1)
     replicator.wait_until_replicator_idle(repl2)
-    print "replicator 2 error is", replicator.getError(repl2)
+    log_info("repl2 error: {}".format(replicator.getError(repl2)))
     replicator.stop(repl2)
     replicator.wait_until_replicator_idle(repl3)
-    print "replicator 3 error is", replicator.getError(repl3)
+    log_info("repl3 error: {}".format(replicator.getError(repl3)))
     replicator.stop(repl3)
 
     # Replicate to Sync-gateway to CBLs
-    cbl_doc_ids = db.getDocIds(cbl_db1)
-    cbl_db_docs = db.getDocuments(cbl_db1, cbl_doc_ids)
+    # cbl_doc_ids = db.getDocIds(cbl_db1)
+    # cbl_db_docs = db.getDocuments(cbl_db1, cbl_doc_ids)
     replicator = Replication(base_url)
     replicator_authenticator = authenticator.authentication(session_id, cookie, authentication_type="session")
     repl_config = replicator.configure(cbl_db1, target_url=sg_blip_url, continuous=True, channels=channels, replicator_authenticator=replicator_authenticator)
@@ -981,7 +969,6 @@ def test_sg_cbl_updates_concurrently_with_push_pull(params_from_base_test_setup,
         TODO : Fails due to the issue https://github.com/couchbase/couchbase-lite-ios/issues/2009
         Add verification of sync-gateway
     """
-    
     sg_db = "db"
     sg_url = params_from_base_test_setup["sg_url"]
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
@@ -995,7 +982,6 @@ def test_sg_cbl_updates_concurrently_with_push_pull(params_from_base_test_setup,
     cbl_db1 = params_from_base_test_setup["source_db"]
 
     channels = ["replication"]
-    
     db = Database(base_url)
     sg_client = MobileRestClient()
 
@@ -1050,10 +1036,10 @@ def test_sg_cbl_updates_concurrently_with_push_pull(params_from_base_test_setup,
         )
         update_from_cbl_task1.result()
         update_from_sg_task.result()
-    
+
     replicator.wait_until_replicator_idle(repl1)
     replicator.stop(repl1)
-    
+
     # Replicate to Sync-gateway to CBLs
     replicator = Replication(base_url)
     repl_config = replicator.configure(cbl_db1, target_url=sg_blip_url, continuous=True, channels=channels, replicator_authenticator=replicator_authenticator)
@@ -1079,10 +1065,9 @@ def test_CBL_push_without_pull(params_from_base_test_setup, sg_conf_name, num_of
         5. Push replication.
         TODO : Bugs need to resolved to run this test : https://github.com/couchbase/couchbase-lite-ios/issues/2009
         https://github.com/couchbase/couchbase-lite-ios/issues/2010
-
     """
     # base_url = "http://192.168.0.109:8989"
-    
+
     sg_db = "db"
     sg_url = params_from_base_test_setup["sg_url"]
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
@@ -1129,18 +1114,17 @@ def test_CBL_push_without_pull(params_from_base_test_setup, sg_conf_name, num_of
     replicator.start(repl)
     replicator.wait_until_replicator_idle(repl)
     replicator.stop(repl)
-    
+
     # 3. Update the docs few times
     for i in xrange(number_of_updates):
         update_sg_docs = sg_client.update_docs(url=sg_url, db=sg_db, docs=sg_docs, number_updates=1, delay=None,
                                                auth=session, channels=channels)
-        print "updated sg docs are ", update_sg_docs
-    
+        log_info("Updated {} docs".format(len(update_sg_docs)))
+
     # 4. Update docs in CBL(without pull replication from SG)
     db.update_bulk_docs(database=cbl_db, number_of_updates=number_of_updates)
-    cbl_doc_ids = db.getDocIds(cbl_db)
-    cbl_docs = db.getDocuments(cbl_db, cbl_doc_ids)
-    print "CBL updated docs ", cbl_docs
+    # cbl_doc_ids = db.getDocIds(cbl_db)
+    # cbl_docs = db.getDocuments(cbl_db, cbl_doc_ids)
 
     # 5. Push replication to SG
     repl_config = replicator.configure(cbl_db, sg_blip_url, continuous=True, channels=channels, replication_type="push", replicator_authenticator=replicator_authenticator)
@@ -1148,9 +1132,10 @@ def test_CBL_push_without_pull(params_from_base_test_setup, sg_conf_name, num_of
     repl_change_listener = replicator.addChangeListener(repl)
     replicator.start(repl)
     replicator.wait_until_replicator_idle(repl)
-    changes = replicator.getChangesChangeListener(repl_change_listener)
+    # changes = replicator.getChangesChangeListener(repl_change_listener)
+    replicator.getChangesChangeListener(repl_change_listener)
     replicator.stop(repl)
-    print "replicator changes", changes
+
     # 6 Get sg docs
     sg_conflict_resolved_docs = sg_client.get_all_docs(url=sg_url, db=sg_db, auth=session, include_docs=True)
 
@@ -1175,14 +1160,15 @@ def process_replicator(replicator, repl, repl_change_listener=None):
     replicator.start(repl)
     # Sleep until replicator completely processed
     while(replicator.getActivitylevel(repl) != "idle" and count < max_times):
-        print "sleeping... actvity level is", replicator.getActivitylevel(repl)
-        time.sleep(0.5)
+        log_info("Activity level: {}".format(replicator.getActivitylevel(repl)))
+        time.sleep(2)
         count += 1
 
     if repl_change_listener is not None:
-        changes = replicator.getChangesChangeListener(repl_change_listener)
-        print "Changes are ", changes
-    print "replicator error is ", replicator.getError(repl)
+        # changes = replicator.getChangesChangeListener(repl_change_listener)
+        replicator.getChangesChangeListener(repl_change_listener)
+
+    log_info("repl error: {}".format(replicator.getError(repl)))
     replicator.stop(repl)
 
 
@@ -1192,16 +1178,17 @@ def replicate_update_cbl_docs(replicator, db, cbl_db, repl):
     replicator.wait_until_replicator_idle(repl)
     # update CBL docs
     db.update_bulk_docs(database=cbl_db, number_of_updates=1)
-    
+
     cbl_doc_ids = db.getDocIds(cbl_db)
     cbl_db_docs = db.getDocuments(cbl_db, cbl_doc_ids)
     error = replicator.getError(repl)
+
     for doc in cbl_db_docs:
-        try: 
+        try:
             updates = cbl_db_docs[doc]["updates"]
         except Exception:
             updates = 0
-        try: 
+        try:
             updates_cbl = cbl_db_docs[doc]["updates-cbl"]
         except Exception:
             updates_cbl = 0
@@ -1210,15 +1197,21 @@ def replicate_update_cbl_docs(replicator, db, cbl_db, repl):
         # assert cbl_db_docs[doc]["updates-cbl"] == number_of_updates or cbl_db_docs[doc]["updates-cbl"] == 1, "updates-cbl did not get updated"
 
     replicator.wait_until_replicator_idle(repl)
-    changes = replicator.getChangesChangeListener(change_listener)
+    # changes = replicator.getChangesChangeListener(change_listener)
+    replicator.getChangesChangeListener(change_listener)
     error = replicator.getError(repl)
     replicator.stop(repl)
+
     return cbl_db_docs, error
-    
+
 
 def verify_sg_docs_after_replication(no_conflicts_enabled, sg_client, sg_url, sg_db, session, error):
-    sg_docs = sg_client.get_all_docs(url=sg_url, db=sg_db, auth=session, include_docs=True)
-    for doc in sg_docs["rows"]:
-        doc_body = sg_client.get_doc(url=sg_url, db=sg_db, doc_id=doc["id"], auth=session)
-        assert doc_body["updates-cbl"] > 0
-
+    if no_conflicts_enabled:
+        # TODO : should change the verification once below issue is fixed
+        # https://github.com/couchbase/couchbase-lite-core/issues/331
+        assert "Domain=WebSocket Code=409 \"rejected by proposeChanges\"" in error
+    else:
+        sg_docs = sg_client.get_all_docs(url=sg_url, db=sg_db, auth=session, include_docs=True)
+        for doc in sg_docs["rows"]:
+            doc_body = sg_client.get_doc(url=sg_url, db=sg_db, doc_id=doc["id"], auth=session)
+            assert doc_body["updates-cbl"] > 0
