@@ -117,10 +117,11 @@ class Database(object):
         args.setDictionary("documents", documents)
         return self._client.invokeMethod("database_updateDocuments", args)
 
-    def updateDocument(self, database, document):
+    def updateDocument(self, database, data, doc_id):
         args = Args()
         args.setMemoryPointer("database", database)
-        args.setDictionary("document", document)
+        args.setDictionary("data", data)
+        args.setString("id", doc_id)
         return self._client.invokeMethod("database_updateDocument", args)
 
 #     def contains(self, database, doc_id):
@@ -232,6 +233,7 @@ class Database(object):
   
         updated_docs = {}
         doc_ids = self.getDocIds(database)
+        log_info("updating bulk docs")
         
         docs = self.getDocuments(database, doc_ids)
         if len(docs) < 1:
@@ -255,15 +257,14 @@ class Database(object):
             for doc_id in doc_ids:
                 doc_mem = self.getDocument(database, doc_id)
                 doc_mut = doc_obj.toMutable(doc_mem)
-                doc_body = doc_obj.toDictionary(doc_mut)
+                doc_body = doc_obj.toMap(doc_mut)
                 try:
                     doc_body["updates-cbl"]
                 except Exception:
                     doc_body["updates-cbl"] = 0
 
                 doc_body["updates-cbl"] = doc_body["updates-cbl"] + 1
-                doc = doc_obj.setData(doc_mut, doc_body)
-                self.updateDocument(database, doc)
+                self.updateDocument(database, doc_body, doc_id)
 
 
     def deleteDBIfExists(self, db_name):

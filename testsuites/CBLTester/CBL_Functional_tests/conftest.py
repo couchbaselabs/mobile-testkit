@@ -1,5 +1,6 @@
 import time
 import pytest
+import datetime
 
 from utilities.cluster_config_utils import persist_cluster_config_environment_prop
 from keywords.constants import SDK_TIMEOUT
@@ -8,7 +9,9 @@ from keywords.utils import host_for_url
 from keywords.ClusterKeywords import ClusterKeywords
 from keywords.couchbaseserver import CouchbaseServer
 from keywords.constants import CLUSTER_CONFIGS_DIR
+from keywords.constants import RESULTS_DIR
 from keywords.MobileRestClient import MobileRestClient
+from keywords.TestServerFactory import TestServerFactory
 from keywords.SyncGateway import sync_gateway_config_path_for_mode
 from keywords.SyncGateway import SyncGateway
 from keywords.exceptions import ProvisioningError
@@ -81,6 +84,12 @@ def pytest_addoption(parser):
     parser.addoption("--no-conflicts",
                      action="store_true",
                      help="If set, allow_conflicts is set to false in sync-gateway config")
+    
+    parser.addoption("--device", action="store_true",
+                     help="Enable device if you want to run it on device", default=False)
+
+    parser.addoption("--community", action="store_true",
+                     help="If set, community edition will get picked up , default is enterprise", default=False)
 
 
 # This will get called once before the first test that
@@ -103,6 +112,24 @@ def params_from_base_suite_setup(request):
     xattrs_enabled = request.config.getoption("--xattrs")
     create_db_per_test = request.config.getoption("--create-db-per-test")
     create_db_per_suite = request.config.getoption("--create-db-per-suite")
+    device_enabled = request.config.getoption("--device")
+    community_enabled = request.config.getoption("--community")
+
+    testserver = TestServerFactory.create(platform=liteserv_platform,
+                                          version_build=liteserv_version,
+                                          host=liteserv_host,
+                                          port=liteserv_port, 
+                                          community_enabled=community_enabled)
+
+    log_info("Downloading TestServer ...")
+    # Download TestServer app
+    testserver.download(community_enabled)
+
+    # Install TestServer app
+    if device_enabled and liteserv_platform == "ios":
+        testserver.install_device()
+    else:
+        testserver.install()
 
     base_url = "http://{}:{}".format(liteserv_host, liteserv_port)
     cluster_config = "{}/base_{}".format(CLUSTER_CONFIGS_DIR, mode)
@@ -159,6 +186,9 @@ def params_from_base_suite_setup(request):
     cbs_ip = host_for_url(cbs_url)
 
     cluster = Cluster(cluster_config)
+
+    if sync_gateway_version < "2.0":
+        pytest.skip('Does not work with sg < 2.0 , so skipping the test')
 
     if not skip_provisioning:
         log_info("Installing Sync Gateway + Couchbase Server + Accels ('di' only)")
@@ -269,7 +299,9 @@ def params_from_base_suite_setup(request):
         "source_db": source_db,
         "cbl_db": cbl_db,
         "base_url": base_url,
-        "sg_config": sg_config
+        "sg_config": sg_config,
+        "testserver": testserver,
+        "device_enabled": device_enabled
     }
 
     if enable_sample_bucket:
@@ -286,6 +318,7 @@ def params_from_base_suite_setup(request):
     # Flush all the memory contents on the server app
     utils_obj = Utils(base_url)
     utils_obj.flushMemory()
+    testserver.stop()
 
 
 @pytest.fixture(scope="function")
@@ -311,6 +344,16 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     target_admin_url = params_from_base_suite_setup["target_admin_url"]
     sg_config = params_from_base_suite_setup["sg_config"]
     liteserv_platform = params_from_base_suite_setup["liteserv_platform"]
+    testserver = params_from_base_suite_setup["testserver"]
+    device_enabled = params_from_base_suite_setup["device_enabled"]
+
+    # Start LiteServ and delete any databases
+    log_info("Starting TestServer...")
+
+    if device_enabled and liteserv_platform == "ios":
+        ls_url = testserver.start_device("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__, test_name, datetime.datetime.now()))
+    else:
+        ls_url = testserver.start("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__, test_name, datetime.datetime.now()))
 
     cluster_helper = ClusterKeywords()
     cluster_hosts = cluster_helper.get_cluster_topology(cluster_config=cluster_config)
@@ -357,9 +400,11 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         "cbl_db": cbl_db,
         "base_url": base_url,
         "sg_config": sg_config,
-        "db": db
+        "db": db,
+        "device_enabled": device_enabled,
+        "testserver": testserver
     }
-
+    log_info("Tearing down test")
     if create_db_per_test:
         # Delete CBL database
         log_info("Deleting the database {} at test teardown".format(create_db_per_test))
@@ -411,7 +456,7 @@ def setup_customized_teardown_test(params_from_base_test_setup):
     cbl_db1 = db.create(cbl_db_name1, db_config)
     cbl_db2 = db.create(cbl_db_name2, db_config)
     cbl_db3 = db.create(cbl_db_name3, db_config)
-    print "setting up all 3 dbs"
+    log_info("setting up all 3 dbs")
 
     yield{
         "db": db,
@@ -422,7 +467,7 @@ def setup_customized_teardown_test(params_from_base_test_setup):
         "cbl_db2": cbl_db2,
         "cbl_db3": cbl_db3,
     }
-    print "tearing down all 3 dbs"
+    log_info("Tearing down test")
     # db.close(cbl_db)
     time.sleep(2)
     db.deleteDB(cbl_db1)

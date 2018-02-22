@@ -17,12 +17,12 @@ android {
         }
     }
 }
-final String DEF_VERSION = "2.0.0-299"
+final String DEF_VERSION = "2.0.0-331"
 def COUCHBASE_LITE_VERSION = System.getProperty('version', DEF_VERSION)
 
 dependencies {
     implementation "org.nanohttpd:nanohttpd:2.3.2-SNAPSHOT"
-    implementation "com.couchbase.lite:couchbase-lite-android:${COUCHBASE_LITE_VERSION}"
+    implementation "com.couchbase.lite:couchbase-lite-android-ee:${COUCHBASE_LITE_VERSION}"
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation 'com.android.support:appcompat-v7:26.1.0'
     implementation 'com.android.support.constraint:constraint-layout:1.0.2'

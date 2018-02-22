@@ -1045,7 +1045,6 @@ def test_sg_cbl_updates_concurrently_with_push_pull(params_from_base_test_setup,
     repl_config = replicator.configure(cbl_db1, target_url=sg_blip_url, continuous=True, channels=channels, replicator_authenticator=replicator_authenticator)
     repl1 = replicator.create(repl_config)
     cbl_docs, error = replicate_update_cbl_docs(replicator, db, cbl_db1, repl1)
-    verify_sg_docs_after_replication(no_conflicts_enabled, sg_client, sg_url, sg_db, session, error)
 
 
 @pytest.mark.sanity

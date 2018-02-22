@@ -126,6 +126,12 @@ public class DatabaseRequestHandler {
 
             return changeListener.getChanges()[index]
 
+        case "database_databaseChangeListenerGetChanges":
+            let changeListener: MyDatabaseChangeListener = (args.get(name: "changeListener"))!
+            let index: Int = (args.get(name: "index"))!
+            
+            return changeListener.getChanges()
+            
         case "database_databaseChangeGetDocumentId":
             let change: DatabaseChange = (args.get(name: "change"))!
 
@@ -171,14 +177,11 @@ public class DatabaseRequestHandler {
         case "database_updateDocument":
             
             let database: Database = (args.get(name:"database"))!
-            //let document: Document = args.get(name:"document")!
-            let document: MutableDocument = args.get(name:"document")!
-            let id = document.id
-            let data : Dictionary<String, Any> = document.value(forKey: id) as! Dictionary<String, Any>
-            let updated_doc = database.document(withID: id)!.toMutable()
+            let data: Dictionary<String, Any> = args.get(name: "data")!
+            let docId: String = args.get(name: "id")!
+            let updated_doc = database.document(withID: docId)!.toMutable()
             updated_doc.setData(data)
             let savedDoc = try! database.saveDocument(updated_doc)
-            print("saved document.... \(savedDoc.keys)")
             
             
         case "database_getDocIds":

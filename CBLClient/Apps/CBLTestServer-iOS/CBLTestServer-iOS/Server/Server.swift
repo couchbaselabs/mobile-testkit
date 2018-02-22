@@ -30,7 +30,6 @@ public class Server {
     let arrayRequestHandler: ArrayRequestHandler!
     let sessionauthenticatorRequestHandler: SessionAuthenticatorRequestHandler!
     let encryptionkeyRequestHandler: EncryptionKeyRequestHandler!
-    let conflictRequestHandler: ConflictRequestHandler!
     let blobRequestHandler: BlobRequestHandler!
     let datatypeRequestHandler: DataTypesInitiatorRequestHandler!
     let replicatorConfigurationRequestHandler: ReplicatorConfigurationRequestHandler!
@@ -54,7 +53,6 @@ public class Server {
         arrayRequestHandler = ArrayRequestHandler()
         sessionauthenticatorRequestHandler = SessionAuthenticatorRequestHandler()
         encryptionkeyRequestHandler = EncryptionKeyRequestHandler()
-        conflictRequestHandler = ConflictRequestHandler()
         blobRequestHandler = BlobRequestHandler()
         datatypeRequestHandler = DataTypesInitiatorRequestHandler()
         replicatorConfigurationRequestHandler = ReplicatorConfigurationRequestHandler()
@@ -128,8 +126,6 @@ public class Server {
                         result = try self.sessionauthenticatorRequestHandler.handleRequest(method: method, args: args)
                     } else if method.hasPrefix("encryptionkey") {
                         result = try self.encryptionkeyRequestHandler.handleRequest(method: method, args: args)
-                    } else if method.hasPrefix("conflict") {
-                        result = try self.conflictRequestHandler.handleRequest(method: method, args: args)
                     } else if method.hasPrefix("blob") {
                         result = try self.blobRequestHandler.handleRequest(method: method, args: args)
                     } else if method.hasPrefix("datatype") {
