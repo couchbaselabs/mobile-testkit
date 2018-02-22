@@ -99,7 +99,7 @@ class TestServeriOS(TestServerBase):
     def install(self):
         """Installs / launches CBLTestServer on iOS simulator
         """
-        self.device = "iPhone-8-Plus"
+        self.device = "iPhone-7-Plus"
         # package_name = "CBLTestServer-iOS"
         # app_dir = "CBLTestServer-iOS"
 
