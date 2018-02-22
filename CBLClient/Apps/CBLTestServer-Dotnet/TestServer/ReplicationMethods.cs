@@ -137,6 +137,55 @@ namespace Couchbase.Lite.Testing
         {
             With<Replicator>(postBody, "replicator", rep => response.WriteBody(rep.Status.ToString()));
         }
+
+        internal static void AddChangeListener([NotNull] NameValueCollection args,
+            [NotNull] IReadOnlyDictionary<string, object> postBody,
+            [NotNull] HttpListenerResponse response)
+        {
+            With<Replicator>(postBody, "replicator", rep =>
+            {
+                var listener = new ReplicationChangeListenerProxy();
+                rep.AddChangeListener(listener.HandleChange);
+                response.WriteBody(MemoryMap.Store(listener));
+            });
+        }
+
+        internal static void RemoveChangeListener([NotNull] NameValueCollection args,
+            [NotNull] IReadOnlyDictionary<string, object> postBody,
+            [NotNull] HttpListenerResponse response)
+        {
+            With<Replicator>(postBody, "replicator", rep =>
+            {
+                var listener = (ListenerToken)postBody["changeListener"];
+                rep.RemoveChangeListener(listener);
+            });
+        }
+    }
+
+    internal sealed class ReplicationChangeListenerProxy
+    {
+        #region Variables
+
+        [NotNull]
+        private readonly List<ReplicatorStatusChangedEventArgs> _changes = new List<ReplicatorStatusChangedEventArgs>();
+
+        #endregion
+
+        #region Properties
+
+        [NotNull]
+        public IReadOnlyList<ReplicatorStatusChangedEventArgs> Changes => _changes;
+
+        #endregion
+
+        #region Public Methods
+
+        public void HandleChange(object sender, ReplicatorStatusChangedEventArgs args)
+        {
+            _changes.Add(args);
+        }
+
+        #endregion
     }
 
 }
