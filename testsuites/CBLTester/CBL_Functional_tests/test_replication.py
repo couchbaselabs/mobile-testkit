@@ -153,6 +153,9 @@ def test_replication_configuration_with_pull_replication(params_from_base_test_s
 
     sg_client = MobileRestClient()
 
+    # Add 5 docs to CBL
+    # Add 10 docs to SG
+    # One shot replication
     sg_added_doc_ids, cbl_added_doc_ids, session = setup_sg_cbl_docs(params_from_base_test_setup, sg_db=sg_db, base_url=base_url, db=db,
                                                                      cbl_db=cbl_db, sg_url=sg_url, sg_admin_url=sg_admin_url, sg_blip_url=sg_blip_url,
                                                                      replication_type="pull", channels=channels, replicator_authenticator_type=authenticator_type)
@@ -391,7 +394,7 @@ def test_replication_configuration_with_filtered_doc_ids(params_from_base_test_s
     sg_client = MobileRestClient()
     replicator = Replication(base_url)
 
-    db.create_bulk_docs(10, "cbl", db=cbl_db, channels=channels)
+    db.create_bulk_docs(number=10, id_prefix="cbl", db=cbl_db, channels=channels)
     cbl_added_doc_ids = db.getDocIds(cbl_db)
     num_of_filtered_ids = 5
     list_of_filtered_ids = random.sample(cbl_added_doc_ids, num_of_filtered_ids)
@@ -515,7 +518,7 @@ def setup_sg_cbl_docs(params_from_base_test_setup, sg_db, base_url, db, cbl_db, 
 
     sg_client = MobileRestClient()
 
-    db.create_bulk_docs(5, "cbl", db=cbl_db, channels=channels)
+    db.create_bulk_docs(number=5, id_prefix="cbl", db=cbl_db, channels=channels)
     cbl_added_doc_ids = db.getDocIds(cbl_db)
     # Add docs in SG
     sg_client.create_user(sg_admin_url, sg_db, "autotest", password="password", channels=channels)

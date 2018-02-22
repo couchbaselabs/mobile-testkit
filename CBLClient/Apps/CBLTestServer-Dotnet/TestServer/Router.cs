@@ -139,7 +139,8 @@ namespace Couchbase.Lite.Testing
             ["query_ordering"] = QueryMethods.QueryOrdering,
             ["query_substring"] = QueryMethods.QuerySubstring,
             ["query_collation"] = QueryMethods.Querycollation,
-            ["release"] = ReleaseObject
+            ["release"] = ReleaseObject,
+            ["flushMemory"] = flushMemory
             };
 
         #endregion
@@ -213,6 +214,15 @@ namespace Couchbase.Lite.Testing
         {
             var id = postBody["object"].ToString();
             MemoryMap.Release(id);
+        }
+
+        private static void flushMemory([NotNull]NameValueCollection args,
+            [NotNull]IReadOnlyDictionary<string, object> postBody,
+            [NotNull]HttpListenerResponse response)
+        {
+            MemoryMap.Clear();
+            response.WriteEmptyBody(HttpStatusCode.OK);
+            return;
         }
 
         #endregion

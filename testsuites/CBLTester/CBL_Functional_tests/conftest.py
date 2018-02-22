@@ -316,8 +316,10 @@ def params_from_base_suite_setup(request):
 #         time.sleep(1)
 
     # Flush all the memory contents on the server app
+    log_info("Flushing server memory")
     utils_obj = Utils(base_url)
     utils_obj.flushMemory()
+    log_info("Stopping the test server")
     testserver.stop()
 
 
@@ -445,6 +447,7 @@ def class_init(request, params_from_base_suite_setup):
     yield
     db_obj.deleteDB(db)
 
+
 @pytest.fixture(scope="function")
 def setup_customized_teardown_test(params_from_base_test_setup):
     cbl_db_name1 = "cbl_db1" + str(time.time())
@@ -469,8 +472,6 @@ def setup_customized_teardown_test(params_from_base_test_setup):
     }
     log_info("Tearing down test")
     # db.close(cbl_db)
-    time.sleep(2)
     db.deleteDB(cbl_db1)
     db.deleteDB(cbl_db2)
     db.deleteDB(cbl_db3)
-
