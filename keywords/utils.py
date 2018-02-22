@@ -214,6 +214,7 @@ def add_cbs_to_sg_config_server_field(cluster_config):
 
     return couchbase_server_primary_node
 
+
 def random_string(length, printable=False, digit=False):
     if digit:
         return ''.join(random.choice(string.digits) for _ in range(length))

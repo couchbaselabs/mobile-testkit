@@ -1,3 +1,4 @@
+"""
 import pytest
 
 from keywords.utils import log_info
@@ -64,5 +65,5 @@ def test_sanity(params_from_base_test_setup):
             print qy.query_get_doc(source_db, doc_id)
         except Exception,e:
             pass
-    
-    
+
+"""

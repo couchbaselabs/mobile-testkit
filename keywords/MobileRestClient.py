@@ -1061,7 +1061,7 @@ class MobileRestClient:
         log_r(resp)
         resp.raise_for_status()
         resp_obj = resp.json()
-            
+
         return resp_obj
 
     def purge_docs(self, url, db, docs):

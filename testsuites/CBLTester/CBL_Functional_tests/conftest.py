@@ -25,8 +25,7 @@ from CBLClient.DataTypeInitiator import DataTypeInitiator
 from CBLClient.SessionAuthenticator import SessionAuthenticator
 from CBLClient.Utils import Utils
 
-from keywords.utils import host_for_url
-from libraries.testkit.cluster import Cluster
+# from libraries.testkit.cluster import Cluster
 from couchbase.bucket import Bucket
 from couchbase.n1ql import N1QLQuery
 
@@ -84,7 +83,7 @@ def pytest_addoption(parser):
     parser.addoption("--no-conflicts",
                      action="store_true",
                      help="If set, allow_conflicts is set to false in sync-gateway config")
-    
+
     parser.addoption("--device", action="store_true",
                      help="Enable device if you want to run it on device", default=False)
 
@@ -118,7 +117,7 @@ def params_from_base_suite_setup(request):
     testserver = TestServerFactory.create(platform=liteserv_platform,
                                           version_build=liteserv_version,
                                           host=liteserv_host,
-                                          port=liteserv_port, 
+                                          port=liteserv_port,
                                           community_enabled=community_enabled)
 
     log_info("Downloading TestServer ...")
@@ -185,7 +184,7 @@ def params_from_base_suite_setup(request):
     cbs_url = cluster_topology['couchbase_servers'][0]
     cbs_ip = host_for_url(cbs_url)
 
-    cluster = Cluster(cluster_config)
+    # cluster = Cluster(cluster_config)
 
     if sync_gateway_version < "2.0":
         pytest.skip('Does not work with sg < 2.0 , so skipping the test')
@@ -225,28 +224,27 @@ def params_from_base_suite_setup(request):
     if enable_sample_bucket:
         server_url = cluster_topology["couchbase_servers"][0]
         server = CouchbaseServer(server_url)
- 
         buckets = server.get_bucket_names()
         if enable_sample_bucket in buckets:
             log_info("Deleting existing {} bucket".format(enable_sample_bucket))
             server.delete_bucket(enable_sample_bucket)
             time.sleep(5)
- 
+
         log_info("Loading sample bucket {}".format(enable_sample_bucket))
         server.load_sample_bucket(enable_sample_bucket)
         server._create_internal_rbac_bucket_user(enable_sample_bucket)
- 
+
         # Restart SG after the bucket deletion
         sync_gateways = cluster_topology["sync_gateways"]
         sg_obj = SyncGateway()
- 
+
         for sg in sync_gateways:
             sg_ip = host_for_url(sg["admin"])
             log_info("Restarting sync gateway {}".format(sg_ip))
             sg_obj.restart_sync_gateways(cluster_config=cluster_config, url=sg_ip)
             # Giving time to SG to load all docs into it's cache
             time.sleep(240)
- 
+
         if mode == "di":
             ac_obj = SyncGateway()
             sg_accels = cluster_topology["sg_accels"]
@@ -255,7 +253,7 @@ def params_from_base_suite_setup(request):
                 log_info("Restarting sg accel {}".format(ac_ip))
                 ac_obj.restart_sync_gateways(cluster_config=cluster_config, url=ac_ip)
                 time.sleep(5)
- 
+
         # Create primary index
         password = "password"
         log_info("Connecting to {}/{} with password {}".format(cbs_ip, enable_sample_bucket, password))
@@ -318,7 +316,7 @@ def params_from_base_suite_setup(request):
     # Flush all the memory contents on the server app
     utils_obj = Utils(base_url)
     utils_obj.flushMemory()
-    testserver.stop()
+    # testserver.stop()
 
 
 @pytest.fixture(scope="function")
@@ -351,9 +349,9 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     log_info("Starting TestServer...")
 
     if device_enabled and liteserv_platform == "ios":
-        ls_url = testserver.start_device("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__, test_name, datetime.datetime.now()))
+        testserver.start_device("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__, test_name, datetime.datetime.now()))
     else:
-        ls_url = testserver.start("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__, test_name, datetime.datetime.now()))
+        testserver.start("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__, test_name, datetime.datetime.now()))
 
     cluster_helper = ClusterKeywords()
     cluster_hosts = cluster_helper.get_cluster_topology(cluster_config=cluster_config)
@@ -445,6 +443,7 @@ def class_init(request, params_from_base_suite_setup):
     yield
     db_obj.deleteDB(db)
 
+
 @pytest.fixture(scope="function")
 def setup_customized_teardown_test(params_from_base_test_setup):
     cbl_db_name1 = "cbl_db1" + str(time.time())
@@ -473,4 +472,3 @@ def setup_customized_teardown_test(params_from_base_test_setup):
     db.deleteDB(cbl_db1)
     db.deleteDB(cbl_db2)
     db.deleteDB(cbl_db3)
-

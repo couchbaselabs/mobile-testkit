@@ -58,7 +58,7 @@ def pytest_addoption(parser):
     parser.addoption("--xattrs",
                      action="store_true",
                      help="xattrs: Enable xattrs for sync gateway")
-                    
+
     parser.addoption("--no-conflicts",
                      action="store_true",
                      help="If set, allow_conflicts is set to false in sync-gateway config")
@@ -135,7 +135,7 @@ def params_from_base_suite_setup(request):
     cluster_utils = ClusterKeywords()
     cluster_topology = cluster_utils.get_cluster_topology(cluster_config)
     cluster = Cluster(cluster_config)
-    
+
     log_info("no conflicts enabled {}".format(no_conflicts_enabled))
     if not skip_provisioning:
         log_info("Installing Sync Gateway + Couchbase Server + Accels ('di' only)")
@@ -204,7 +204,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     target_url = params_from_base_suite_setup["target_url"]
     target_admin_url = params_from_base_suite_setup["target_admin_url"]
     sync_gateway_version = params_from_base_suite_setup["sync_gateway_version"]
-    
+
     base_url = params_from_base_suite_setup["base_url"]
     sg_ip = params_from_base_suite_setup["sg_ip"]
     sg_db = params_from_base_suite_setup["sg_db"]
@@ -228,7 +228,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     log_info("Getting the database name")
     db_name = db.getName(source_db)
     assert db_name == "test_db"
-    
+
     if enable_sample_bucket:
         # Start continuous replication
         replicator = Replication(base_url)
@@ -268,6 +268,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     db.deleteDB(source_db)
     """
 
+
 @pytest.fixture(scope="function")
 def setup_customized_teardown_test(params_from_base_test_setup):
     cbl_db_name1 = "cbl_db1" + str(time.time())
@@ -279,7 +280,6 @@ def setup_customized_teardown_test(params_from_base_test_setup):
     cbl_db1 = db.create(cbl_db_name1, db_config)
     cbl_db2 = db.create(cbl_db_name2, db_config)
     cbl_db3 = db.create(cbl_db_name3, db_config)
-    print "setting up all 3 dbs"
 
     yield{
         "db": db,
@@ -290,7 +290,7 @@ def setup_customized_teardown_test(params_from_base_test_setup):
         "cbl_db2": cbl_db2,
         "cbl_db3": cbl_db3,
     }
-    print "tearing down all 3 dbs"
+    log_info("tearing down all 3 dbs")
     # db.close(cbl_db)
     time.sleep(2)
     db.deleteDB(cbl_db1)

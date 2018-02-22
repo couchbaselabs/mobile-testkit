@@ -23,7 +23,9 @@ public class DatabaseConfigurationRequestHandler {
         case "databaseConfiguration_configure":
             let directory: String? = args.get(name:"directory")!
             let conflictResolver : ConflictResolver? = args.get(name:"conflictResolver")!
-            let encryptionKey: EncryptionKey? = args.get(name:"encryptionKey")!
+            //let encryptionKey: EncryptionKey? = args.get(name:"encryptionKey")!
+            let password: String? = args.get(name:"password")!
+            let encryptionKey: EncryptionKey? = password != nil ? EncryptionKey.password(password!) : nil
             let config = DatabaseConfiguration()
             if directory != nil {
                 config.directory = directory!
@@ -60,8 +62,10 @@ public class DatabaseConfigurationRequestHandler {
             
         case "databaseConfiguration_setEncryptionKey":
             let config: DatabaseConfiguration = args.get(name: "config")!
-            let key: EncryptionKey = args.get(name: "key")!
-            return config.encryptionKey = key
+            let password: String? = args.get(name:"password")!
+            let encryptionKey: EncryptionKey? = password != nil ? EncryptionKey.password(password!) : nil
+            //let key: EncryptionKey = args.get(name: "key")!
+            return config.encryptionKey = encryptionKey
 
         default:
             throw RequestHandlerError.MethodNotFound(method)

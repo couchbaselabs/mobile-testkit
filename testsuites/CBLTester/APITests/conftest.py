@@ -23,8 +23,6 @@ from CBLClient.DataTypeInitiator import DataTypeInitiator
 from CBLClient.SessionAuthenticator import SessionAuthenticator
 from CBLClient.Utils import Utils
 
-from keywords.utils import host_for_url
-from libraries.testkit.cluster import Cluster
 from couchbase.bucket import Bucket
 from couchbase.n1ql import N1QLQuery
 
@@ -159,8 +157,8 @@ def params_from_base_suite_setup(request):
     cbs_url = cluster_topology['couchbase_servers'][0]
     cbs_ip = host_for_url(cbs_url)
 
-    cluster = Cluster(cluster_config)
-    
+    # cluster = Cluster(cluster_config)
+
     if not skip_provisioning:
         log_info("Installing Sync Gateway + Couchbase Server + Accels ('di' only)")
 
@@ -309,7 +307,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     sync_gateway_version = params_from_base_suite_setup["sync_gateway_version"]
     target_admin_url = params_from_base_suite_setup["target_admin_url"]
     sg_config = params_from_base_suite_setup["sg_config"]
-    
+
     cluster_helper = ClusterKeywords()
     cluster_hosts = cluster_helper.get_cluster_topology(cluster_config=cluster_config)
     sg_url = cluster_hosts["sync_gateways"][0]["public"]

@@ -781,8 +781,7 @@ def test_multiple_cbls_updates_concurrently_with_push(params_from_base_test_setu
     while replicator2.getActivitylevel(repl3) != "stopped":
         log_info("replicator2 activity for repl3: {}".format(replicator2.getActivitylevel(repl3)))
         time.sleep(0.5)
-    # clb_dbName3 = setup_customized_teardown_test["cbl_db_name3"]
-    # db_path = db.getPath(cbl_db3)
+    setup_customized_teardown_test["cbl_db_name3"]
     repl_config = replicator2.configure(cbl_db3, sg_blip_url, continuous=True, channels=channels, replicator_authenticator=replicator_authenticator)
     repl4 = replicator2.create(repl_config)
     process_replicator(replicator2, repl4)
@@ -863,9 +862,9 @@ def test_multiple_cbls_updates_concurrently_with_pull(params_from_base_test_setu
     cbl_db1 = setup_customized_teardown_test["cbl_db1"]
     cbl_db2 = setup_customized_teardown_test["cbl_db2"]
     cbl_db3 = setup_customized_teardown_test["cbl_db3"]
-#     cbl_db1 = db.deleteDBIfExistsCreateNew(cbl_db_name1)
-#     cbl_db2 = db.deleteDBIfExistsCreateNew(cbl_db_name2)
-#     cbl_db3 = db.deleteDBIfExistsCreateNew(cbl_db_name3)
+    #     cbl_db1 = db.deleteDBIfExistsCreateNew(cbl_db_name1)
+    #     cbl_db2 = db.deleteDBIfExistsCreateNew(cbl_db_name2)
+    #     cbl_db3 = db.deleteDBIfExistsCreateNew(cbl_db_name3)
 
     # Replicate to all 3 CBLs
     replicator = Replication(base_url)
@@ -928,8 +927,7 @@ def test_multiple_cbls_updates_concurrently_with_pull(params_from_base_test_setu
     replicator.stop(repl3)
 
     # Replicate to Sync-gateway to CBLs
-    # cbl_doc_ids = db.getDocIds(cbl_db1)
-    # cbl_db_docs = db.getDocuments(cbl_db1, cbl_doc_ids)
+    #  cbl_doc_ids = db.getDocIds(cbl_db1)
     replicator = Replication(base_url)
     replicator_authenticator = authenticator.authentication(session_id, cookie, authentication_type="session")
     repl_config = replicator.configure(cbl_db1, target_url=sg_blip_url, continuous=True, channels=channels, replicator_authenticator=replicator_authenticator)
@@ -1117,25 +1115,22 @@ def test_CBL_push_without_pull(params_from_base_test_setup, sg_conf_name, num_of
 
     # 3. Update the docs few times
     for i in xrange(number_of_updates):
-        update_sg_docs = sg_client.update_docs(url=sg_url, db=sg_db, docs=sg_docs, number_updates=1, delay=None,
-                                               auth=session, channels=channels)
-        log_info("Updated {} docs".format(len(update_sg_docs)))
+        sg_client.update_docs(url=sg_url, db=sg_db, docs=sg_docs, number_updates=1, delay=None,
+                              auth=session, channels=channels)
 
     # 4. Update docs in CBL(without pull replication from SG)
     db.update_bulk_docs(database=cbl_db, number_of_updates=number_of_updates)
     # cbl_doc_ids = db.getDocIds(cbl_db)
-    # cbl_docs = db.getDocuments(cbl_db, cbl_doc_ids)
 
     # 5. Push replication to SG
     repl_config = replicator.configure(cbl_db, sg_blip_url, continuous=True, channels=channels, replication_type="push", replicator_authenticator=replicator_authenticator)
     repl = replicator.create(repl_config)
-    repl_change_listener = replicator.addChangeListener(repl)
+    # repl_change_listener = replicator.addChangeListener(repl)
     replicator.start(repl)
     replicator.wait_until_replicator_idle(repl)
     # changes = replicator.getChangesChangeListener(repl_change_listener)
-    replicator.getChangesChangeListener(repl_change_listener)
     replicator.stop(repl)
-
+    # print "replicator changes", changes
     # 6 Get sg docs
     sg_conflict_resolved_docs = sg_client.get_all_docs(url=sg_url, db=sg_db, auth=session, include_docs=True)
 
@@ -1160,15 +1155,12 @@ def process_replicator(replicator, repl, repl_change_listener=None):
     replicator.start(repl)
     # Sleep until replicator completely processed
     while(replicator.getActivitylevel(repl) != "idle" and count < max_times):
-        log_info("Activity level: {}".format(replicator.getActivitylevel(repl)))
-        time.sleep(2)
+        time.sleep(0.5)
         count += 1
 
     if repl_change_listener is not None:
-        # changes = replicator.getChangesChangeListener(repl_change_listener)
-        replicator.getChangesChangeListener(repl_change_listener)
-
-    log_info("repl error: {}".format(replicator.getError(repl)))
+        changes = replicator.getChangesChangeListener(repl_change_listener)
+        log_info("changes are {}".format(changes))
     replicator.stop(repl)
 
 
@@ -1197,8 +1189,8 @@ def replicate_update_cbl_docs(replicator, db, cbl_db, repl):
         # assert cbl_db_docs[doc]["updates-cbl"] == number_of_updates or cbl_db_docs[doc]["updates-cbl"] == 1, "updates-cbl did not get updated"
 
     replicator.wait_until_replicator_idle(repl)
-    # changes = replicator.getChangesChangeListener(change_listener)
-    replicator.getChangesChangeListener(change_listener)
+    changes = replicator.getChangesChangeListener(change_listener)
+    log_info(changes)
     error = replicator.getError(repl)
     replicator.stop(repl)
 
@@ -1206,12 +1198,7 @@ def replicate_update_cbl_docs(replicator, db, cbl_db, repl):
 
 
 def verify_sg_docs_after_replication(no_conflicts_enabled, sg_client, sg_url, sg_db, session, error):
-    if no_conflicts_enabled:
-        # TODO : should change the verification once below issue is fixed
-        # https://github.com/couchbase/couchbase-lite-core/issues/331
-        assert "Domain=WebSocket Code=409 \"rejected by proposeChanges\"" in error
-    else:
-        sg_docs = sg_client.get_all_docs(url=sg_url, db=sg_db, auth=session, include_docs=True)
-        for doc in sg_docs["rows"]:
-            doc_body = sg_client.get_doc(url=sg_url, db=sg_db, doc_id=doc["id"], auth=session)
-            assert doc_body["updates-cbl"] > 0
+    sg_docs = sg_client.get_all_docs(url=sg_url, db=sg_db, auth=session, include_docs=True)
+    for doc in sg_docs["rows"]:
+        doc_body = sg_client.get_doc(url=sg_url, db=sg_db, doc_id=doc["id"], auth=session)
+        assert doc_body["updates-cbl"] > 0

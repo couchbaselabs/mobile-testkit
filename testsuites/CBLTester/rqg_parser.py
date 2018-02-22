@@ -1,3 +1,5 @@
+from keywords.utils import log_info
+
 '''
 Created on 16-Jan-2018
 
@@ -67,7 +69,7 @@ trans_op = {
     "IS NOT NULL": "IS-NOT-NULL",
     "IS NULL": "IS-NULL",
     "ANY AND EVERY": "ANY-AND-EVERY",
-    }
+}
 
 operations = {
     "+": "2+",
@@ -148,7 +150,7 @@ def get_prefix_list(query):
             if isinstance(operand, int) or isinstance(operand, float):
                 result.append(get_operand(token))
             else:
-#                 result.append('[{}]'.format(get_operand(token)))
+                # result.append('[{}]'.format(get_operand(token)))
                 result.append(get_operand(token))
         elif token == '(':
             opstack.append(token)
@@ -192,6 +194,7 @@ def prefix_evaluation(prefix_list):
             opstack.append(eq)
     return clear_evaluated_list(opstack.pop())
 
+
 def clear_evaluated_list(eval_list, prev_op=None):
     result = []
     for item in eval_list:
@@ -211,8 +214,9 @@ def clear_evaluated_list(eval_list, prev_op=None):
                 result.append(item)
     return result
 
+
 def get_json_query(query="SELECT name.first, name.last FROM students WHERE grade = 12 AND gpa >= $GPA"):
-    #removing extra white spaces from the query string
+    # removing extra white spaces from the query string
     query = ' '.join(query.split())
 
     query = multiple_replace(query, trans_op)
@@ -250,26 +254,29 @@ def get_json_query(query="SELECT name.first, name.last FROM students WHERE grade
     json_txt[1]["WHERE"] = prefix_evaluation(get_prefix_list(where_token.strip()))
     return json_txt
 
+
 def multiple_replace(text, a_dict):
     rx = re.compile('|'.join(map(re.escape, a_dict)))
+
     def one_xlat(match):
         return a_dict[match.group(0)]
     return rx.sub(one_xlat, text)
 
+
 if __name__ == '__main__':
     # query = "SELECT a, b FROM  simple_table_2  t_1   WHERE  ( t_1.int_field1 >= 5050 ) OR ( t_1.int_field1 > 5050 )"
-    #query = "SELECT * FROM  simple_table_4  t_2  WHERE ( grade = 12 AND gpa >= $GPA  AND adf != fdf ) OR ( a = b AND c > d AND b < c ) OR ( a = b AND c = a ) OR ( x > y AND y != 0 )"
-#     query = "SELECT * FROM  simple_table_4  t_2  WHERE NOT ( t_4.int_field1 BETWEEN 2 and 9999 )"
-#     query = "SELECT * FROM simple_table_2 t_1 WHERE  t_1.int_field1 IS NOT NULL"
-#     query = "SELECT DISTINCT(t_2.int_field1) FROM  simple_table_4  t_2   WHERE  ((t_2.int_field1 IS NOT NULL) OR (t_2.int_field1 IS NULL)) OR ((t_2.decimal_field1  IN [  19 , 37 , 46 , 49 , 52  ]) OR (t_2.int_field1 IS NOT NULL))"
-#     query = "SELECT DISTINCT(t_2.decimal_field1) FROM  simple_table_4  t_2   WHERE  ( t_2.decimal_field1  IN [  19 , 37 , 46 , 49 , 52  ] ) OR ( t_2.decimal_field1 >= 4770 ) "
-#     out = get_json_query(query)
-#     print json.dumps(out, indent=4)
+    # query = "SELECT * FROM  simple_table_4  t_2  WHERE ( grade = 12 AND gpa >= $GPA  AND adf != fdf ) OR ( a = b AND c > d AND b < c ) OR ( a = b AND c = a ) OR ( x > y AND y != 0 )"
+    #     query = "SELECT * FROM  simple_table_4  t_2  WHERE NOT ( t_4.int_field1 BETWEEN 2 and 9999 )"
+    #     query = "SELECT * FROM simple_table_2 t_1 WHERE  t_1.int_field1 IS NOT NULL"
+    #     query = "SELECT DISTINCT(t_2.int_field1) FROM  simple_table_4  t_2   WHERE  ((t_2.int_field1 IS NOT NULL) OR (t_2.int_field1 IS NULL)) OR ((t_2.decimal_field1  IN [  19 , 37 , 46 , 49 , 52  ]) OR (t_2.int_field1 IS NOT NULL))"
+    #     query = "SELECT DISTINCT(t_2.decimal_field1) FROM  simple_table_4  t_2   WHERE  ( t_2.decimal_field1  IN [  19 , 37 , 46 , 49 , 52  ] ) OR ( t_2.decimal_field1 >= 4770 ) "
+    #     out = get_json_query(query)
+    #     print json.dumps(out, indent=4)
     fh = open("n1ql_queries_in_JSON.txt", "w")
     for query in open("n1ql_ready_queries.txt"):
         try:
             fh.write(json.dumps(get_json_query(query), indent=4))
             fh.write("\n")
-        except Exception,err:
-            print "Error for Query: {}\n{}\n".format(query, str(err))
+        except Exception, err:
+            log_info("Error for Query: {}\n{}\n".format(query, str(err)))
     fh.close()
