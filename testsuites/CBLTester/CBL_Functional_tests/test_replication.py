@@ -367,9 +367,12 @@ def test_replication_configuration_with_filtered_doc_ids(params_from_base_test_s
         @summary:
         1. Create docs in SG
         2. Create docs in CBL
-        3. Send doc ids which you want to have replication to the docs ids passed in replication configuration
-        4. Verify CBL docs with doc ids sent in configuration got replicated to SG
-
+        3. PushPull Replicate one shot from CBL -> SG with doc id filters set
+        4. Verify SG only has the doc ids set in the replication from CBL
+        5. Add new docs to SG
+        6. PushPull Replicate one shot from SG -> CBL with doc id filters set
+        7. Verify CBL only has the doc ids set in the replication from SG
+        NOTE: Only works with one shot replication
     """
     sg_db = "db"
 
@@ -393,11 +396,12 @@ def test_replication_configuration_with_filtered_doc_ids(params_from_base_test_s
     sg_client = MobileRestClient()
     replicator = Replication(base_url)
 
-    db.create_bulk_docs(number=10, id_prefix="cbl", db=cbl_db, channels=channels)
+    db.create_bulk_docs(number=10, id_prefix="cbl_filter", db=cbl_db, channels=channels)
     cbl_added_doc_ids = db.getDocIds(cbl_db)
     num_of_filtered_ids = 5
     list_of_filtered_ids = random.sample(cbl_added_doc_ids, num_of_filtered_ids)
 
+    cbl_doc_ids = db.getDocIds(cbl_db)
     sg_added_doc_ids, cbl_added_doc_ids, session = setup_sg_cbl_docs(params_from_base_test_setup, sg_db=sg_db, base_url=base_url, db=db,
                                                                      cbl_db=cbl_db, sg_url=sg_url, sg_admin_url=sg_admin_url, sg_blip_url=sg_blip_url, document_ids=list_of_filtered_ids,
                                                                      replicator_authenticator_type="basic", channels=channels)
@@ -420,15 +424,22 @@ def test_replication_configuration_with_filtered_doc_ids(params_from_base_test_s
     for doc_id in list_of_non_filtered_ids:
         assert doc_id not in sg_ids
 
+    cbl_doc_ids = db.getDocIds(cbl_db)
+
     # Now filter doc ids
     authenticator = Authenticator(base_url)
     cookie, session_id = session
     log_info("Authentication cookie: {}".format(cookie))
     log_info("Authentication session id: {}".format(session_id))
-    replicator_authenticator = authenticator.authentication(session_id, cookie, authentication_type="session")
-    list_of_sg_filtered_ids = random.sample(sg_added_doc_ids, num_of_filtered_ids)
+    replicator_authenticator = authenticator.authentication(session_id, cookie,
+                                                            authentication_type="session")
+    sg_new_added_docs = sg_client.add_docs(url=sg_url, db=sg_db, number=10, id_prefix="sg_doc_filter",
+                                           channels=channels, auth=session)
+    sg_new_added_ids = [row["id"] for row in sg_new_added_docs]
+    list_of_sg_filtered_ids = random.sample(sg_new_added_ids, num_of_filtered_ids)
     repl_config = replicator.configure(cbl_db, target_url=sg_blip_url, continuous=False,
-                                       documentIDs=list_of_sg_filtered_ids, channels=channels, replicator_authenticator=replicator_authenticator)
+                                       documentIDs=list_of_sg_filtered_ids, channels=channels,
+                                       replicator_authenticator=replicator_authenticator)
     repl = replicator.create(repl_config)
     log_info("Starting replicator")
     replicator.start(repl)
@@ -438,13 +449,13 @@ def test_replication_configuration_with_filtered_doc_ids(params_from_base_test_s
 
     # Verify only filtered sg ids are replicated to cbl
     cbl_doc_ids = db.getDocIds(cbl_db)
-    list_of_non_sg_filtered_ids = set(sg_added_doc_ids) - set(list_of_sg_filtered_ids)
+    list_of_non_sg_filtered_ids = set(sg_new_added_ids) - set(list_of_sg_filtered_ids)
     for sg_id in list_of_sg_filtered_ids:
         assert sg_id in cbl_doc_ids
 
     # Verify non filtered docs ids are not replicated in cbl
     for doc_id in list_of_non_sg_filtered_ids:
-        assert doc_id not in sg_ids
+        assert doc_id not in cbl_doc_ids
 
 
 def test_replication_configuration_with_headers(params_from_base_test_setup):
@@ -512,18 +523,20 @@ def test_replication_configuration_with_headers(params_from_base_test_setup):
 
 
 def setup_sg_cbl_docs(params_from_base_test_setup, sg_db, base_url, db, cbl_db, sg_url,
-                      sg_admin_url, sg_blip_url, replication_type=None, document_ids=None, channels=None,
-                      replicator_authenticator_type=None, headers=None):
+                      sg_admin_url, sg_blip_url, replication_type=None, document_ids=None,
+                      channels=None, replicator_authenticator_type=None, headers=None,
+                      cbl_id_prefix="cbl", sg_id_prefix="sg_doc",
+                      num_cbl_docs=5, num_sg_docs=10):
 
     sg_client = MobileRestClient()
 
-    db.create_bulk_docs(number=5, id_prefix="cbl", db=cbl_db, channels=channels)
+    db.create_bulk_docs(number=num_cbl_docs, id_prefix=cbl_id_prefix, db=cbl_db, channels=channels)
     cbl_added_doc_ids = db.getDocIds(cbl_db)
     # Add docs in SG
     sg_client.create_user(sg_admin_url, sg_db, "autotest", password="password", channels=channels)
     cookie, session = sg_client.create_session(sg_admin_url, sg_db, "autotest")
     auth_session = cookie, session
-    sg_added_docs = sg_client.add_docs(url=sg_url, db=sg_db, number=10, id_prefix="sg_doc", channels=channels, auth=auth_session)
+    sg_added_docs = sg_client.add_docs(url=sg_url, db=sg_db, number=num_sg_docs, id_prefix=sg_id_prefix, channels=channels, auth=auth_session)
     sg_added_ids = [row["id"] for row in sg_added_docs]
 
     # Start and stop continuous replication
