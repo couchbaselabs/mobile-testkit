@@ -1,16 +1,9 @@
 import pytest
 import time
 
-from keywords.MobileRestClient import MobileRestClient
-from keywords.utils import log_info
 from CBLClient.Database import Database
-from CBLClient.Replication import Replication
-from CBLClient.Dictionary import Dictionary
-from CBLClient.Document import Document
-from CBLClient.Query import Query
 from CBLClient.DatabaseConfiguration import DatabaseConfiguration
 
-from requests.exceptions import HTTPError
 
 @pytest.mark.sanity
 @pytest.mark.listener
@@ -30,7 +23,7 @@ def test_databaseEncryption(params_from_base_test_setup, password):
         1. Create database without password
         2. access database withtout password
         3. Verify database can be accessed successfully
-        4. Now add the encryption using the password 
+        4. Now add the encryption using the password
         5. Verify that database cannot be accessed without password.
         6. Verify that database can be accessed with password
     '''
@@ -67,7 +60,6 @@ def test_databaseEncryption(params_from_base_test_setup, password):
         with pytest.raises(Exception) as he:
             db.create(cbl_db_name, db_config)
         assert he.value.message.startswith('400 Client Error: Bad Request for url:')
-        print "exception from android is ", he.value.message
 
     # 6. Verify that database can be accessed with password
     db_config1 = db.configure(password=password)
@@ -76,7 +68,6 @@ def test_databaseEncryption(params_from_base_test_setup, password):
     assert len(cbl_doc_ids) == len(cbl_doc_ids3), "docs ids did not match"
     for doc_id in cbl_doc_ids:
         assert doc_id in cbl_doc_ids3, "cbl doc is in first list does not exist in second list"
-
 
 
 @pytest.mark.sanity
@@ -133,7 +124,6 @@ def test_invalidEncryption(params_from_base_test_setup, password):
         with pytest.raises(Exception) as he:
             db.create(cbl_db_name, invalid_key_db_config)
         assert he.value.message.startswith('400 Client Error: Bad Request for url:')
-
 
 
 @pytest.mark.sanity
@@ -225,4 +215,3 @@ def test_DBEncryptionKey_withCompact(params_from_base_test_setup):
     assert len(cbl_doc_ids) == len(cbl_doc_ids1), "docs ids did not match"
     for doc_id in cbl_doc_ids:
         assert doc_id in cbl_doc_ids1, "cbl doc is in first list does not exist in second list"
-
