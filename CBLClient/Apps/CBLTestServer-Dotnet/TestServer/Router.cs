@@ -109,6 +109,7 @@ namespace Couchbase.Lite.Testing
             ["replicator_addChangeListener"] = ReplicationMethods.AddChangeListener,
             ["replicator_removeChangeListener"] = ReplicationMethods.RemoveChangeListener,
             ["replicatorConfiguration_setAuthenticator"] = ReplicatorConfigurationMethods.SetAuthenticator,
+            ["replicator_changeListenerChangesCount"] = ReplicationMethods.ChangeListenerChangesCount,
             ["configure_replication"] = ReplicatorConfigurationMethods.Configure,
             ["replication_getStatus"] = ReplicationMethods.Status,
             ["collator_ascii"] = CollatorMethods.Ascii,
