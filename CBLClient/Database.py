@@ -68,6 +68,11 @@ class Database(object):
         args.setMemoryPointer("database", database)
         return self._client.invokeMethod("database_close", args)
 
+    def compact(self, database):
+        args = Args()
+        args.setMemoryPointer("database", database)
+        return self._client.invokeMethod("database_compact", args)
+
     def path(self, database):
         args = Args()
         args.setString("database", database)
@@ -180,6 +185,13 @@ class Database(object):
         args = Args()
         args.setString("name", name)
         return self._client.invokeMethod("database_deleteDBbyName", args)
+
+    def setEncryptionKey(self, database, password):
+        args = Args()
+        args.setMemoryPointer("database", database)
+        args.setMemoryPointer("password", password)
+        return self._client.invokeMethod("database_setEncryptionKey", args)
+
 
 #     Not implemented on server
 #     def create_value_index(self, database, prop):

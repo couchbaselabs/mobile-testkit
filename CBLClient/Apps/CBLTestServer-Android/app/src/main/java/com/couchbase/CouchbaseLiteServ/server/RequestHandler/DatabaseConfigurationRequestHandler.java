@@ -19,7 +19,8 @@ public class DatabaseConfigurationRequestHandler {
     public DatabaseConfiguration configure(Args args) {
         String directory = args.get("directory");
         ConflictResolver conflictResolver = args.get("conflictResolver");
-        EncryptionKey encryptionKey = args.get("encryptionKey");
+        // EncryptionKey encryptionKey = args.get("encryptionKey");
+        String password = args.get("password");
         Context context = MainActivity.getAppContext();
         DatabaseConfiguration config = new DatabaseConfiguration(context);
         if (directory != null) {
@@ -28,8 +29,9 @@ public class DatabaseConfigurationRequestHandler {
         if (conflictResolver != null) {
             config.setConflictResolver(conflictResolver);
         }
-        if (encryptionKey != null) {
-            config.setEncryptionKey(encryptionKey);
+        if (password != null) {
+          EncryptionKey encryptionKey = new EncryptionKey(password);
+          config.setEncryptionKey(encryptionKey);
         }
         return config;
     }
@@ -69,7 +71,8 @@ public class DatabaseConfigurationRequestHandler {
 
     public DatabaseConfiguration setEncryptionKey(Args args){
         DatabaseConfiguration config = args.get("config");
-        EncryptionKey key = args.get("key");
-        return config.setEncryptionKey(key);
+        String password = args.get("password");
+        EncryptionKey encryptionKey = new EncryptionKey(password);
+        return config.setEncryptionKey(encryptionKey);
     }
 }

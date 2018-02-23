@@ -20,11 +20,11 @@ public class DatabaseConfigurationRequestHandler {
         /////////////////////////////
         // Database Configuration //
         ////////////////////////////
+            
         case "databaseConfiguration_configure":
             let directory: String? = args.get(name:"directory")!
             let conflictResolver : ConflictResolver? = args.get(name:"conflictResolver")!
-            //let encryptionKey: EncryptionKey? = args.get(name:"encryptionKey")!
-            let password: String? = args.get(name:"password")!
+            let password: String? = args.get(name:"password")
             let encryptionKey: EncryptionKey? = password != nil ? EncryptionKey.password(password!) : nil
             let config = DatabaseConfiguration()
             if directory != nil {
@@ -33,7 +33,7 @@ public class DatabaseConfigurationRequestHandler {
             if conflictResolver != nil{
                 config.conflictResolver = conflictResolver!
             }
-            if encryptionKey != nil{
+            if encryptionKey != nil {
                 config.encryptionKey = encryptionKey!
             }
             return config
@@ -53,19 +53,22 @@ public class DatabaseConfigurationRequestHandler {
         case "databaseConfiguration_setConflictResolver":
             let config: DatabaseConfiguration = args.get(name: "config")!
             let conflictResolver: ConflictResolver = args.get(name: "conflictResolver")!
-            return config.conflictResolver = conflictResolver
+            config.conflictResolver = conflictResolver
+            return config
             
         case "databaseConfiguration_setDirectory":
             let config: DatabaseConfiguration = args.get(name: "config")!
             let directory: String = args.get(name: "directory")!
-            return config.directory = directory
+            config.directory = directory
+            return config
             
         case "databaseConfiguration_setEncryptionKey":
             let config: DatabaseConfiguration = args.get(name: "config")!
             let password: String? = args.get(name:"password")!
             let encryptionKey: EncryptionKey? = password != nil ? EncryptionKey.password(password!) : nil
             //let key: EncryptionKey = args.get(name: "key")!
-            return config.encryptionKey = encryptionKey
+            config.encryptionKey = encryptionKey
+            return config
 
         default:
             throw RequestHandlerError.MethodNotFound(method)

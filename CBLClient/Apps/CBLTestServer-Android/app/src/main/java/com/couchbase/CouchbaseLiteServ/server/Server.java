@@ -193,7 +193,8 @@ public class Server extends NanoHTTPD {
             PrintWriter pw = new PrintWriter(sw);
             e.printStackTrace(pw);
             String sStackTrace = sw.toString();
-            return Response.newFixedLengthResponse(Status.BAD_REQUEST, "text/plain", sStackTrace.getBytes());
+            return Response.newFixedLengthResponse(Status.BAD_REQUEST, "text/plain", e.getMessage());
+            // return Response.newFixedLengthResponse(Status.BAD_REQUEST, "text/plain", sStackTrace.getBytes());
         }
     }
 }

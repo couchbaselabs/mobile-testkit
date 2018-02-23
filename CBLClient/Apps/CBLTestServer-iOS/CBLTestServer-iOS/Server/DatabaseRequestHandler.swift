@@ -25,7 +25,7 @@ public class DatabaseRequestHandler {
             let name: String! = args.get(name: "name")
             let dbConfig: DatabaseConfiguration! = args.get(name: "config")
             do {
-                return try Database(name: name!, config: dbConfig)
+             return try Database(name: name!, config: dbConfig)
             } catch {
                 print("Got error while creating DB \(error)")
                 return error.localizedDescription
@@ -103,6 +103,10 @@ public class DatabaseRequestHandler {
             let database: Database = (args.get(name:"database"))!
             return database.count
 
+        case "database_compact":
+            let database: Database = (args.get(name:"database"))!
+            return try! database.compact()
+            
         case "database_addChangeListener":
             let database: Database = (args.get(name:"database"))!
             let changeListener = MyDatabaseChangeListener()
@@ -210,6 +214,17 @@ public class DatabaseRequestHandler {
             }
 
             return documents
+            
+        case "database_setEncryptionKey":
+            let database: Database = args.get(name:"database")!
+            let password: String? = args.get(name:"password")!
+            let encryptionKey: EncryptionKey? = EncryptionKey.password(password!)
+            do {
+                return try database.setEncryptionKey(encryptionKey)
+            } catch {
+                print("Got error setting encryption key \(error)")
+                return error.localizedDescription
+            }
 
         case "database_queryAllDocuments":
             let database: Database = args.get(name:"database")!
