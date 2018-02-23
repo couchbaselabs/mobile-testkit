@@ -107,10 +107,10 @@ namespace Couchbase.Lite.Testing
                     List<object> channels = (List<object>)postBody["channels"];
                     config.Channels = channels.Cast<string>().ToList();
                 }
-                if (postBody.ContainsKey("documentIds"))
+                if (postBody.ContainsKey("documentIDs"))
                 {
-                    List<object> documentIds = (List<object>)postBody["documentIds"];
-                    config.DocumentIDs = documentIds.Cast<string>().ToList();
+                    List<object> documentIDs = (List<object>)postBody["documentIDs"];
+                    config.DocumentIDs = documentIDs.Cast<string>().ToList();
                 }
                 if (postBody.ContainsKey("authenticator"))
                 {
