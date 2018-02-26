@@ -231,7 +231,7 @@ class Query(object):
         args.setString("whr_val1", whr_val1)
         args.setString("whr_val2", whr_val2)
         args.setString("whr_val3", whr_val3)
-        args.setString("limit", limit)
+        args.setInt("limit", limit)
 
         return self._client.invokeMethod("query_join", args)
 
