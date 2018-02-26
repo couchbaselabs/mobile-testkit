@@ -7,7 +7,12 @@ import com.couchbase.lite.CouchbaseLiteException;
 import com.couchbase.lite.DataSource;
 import com.couchbase.lite.Database;
 import com.couchbase.lite.Expression;
+import com.couchbase.lite.FullTextExpression;
+import com.couchbase.lite.FullTextFunction;
+import com.couchbase.lite.FullTextIndex;
+import com.couchbase.lite.FullTextIndexItem;
 import com.couchbase.lite.Function;
+import com.couchbase.lite.IndexBuilder;
 import com.couchbase.lite.Join;
 import com.couchbase.lite.Meta;
 import com.couchbase.lite.Ordering;
@@ -537,4 +542,136 @@ public class QueryRequestHandler {
         return resultArray;
     }
 
+    public List<Object> singlePropertyFTS(Args args) throws CouchbaseLiteException {
+        Database db = args.get("database");
+        String prop = args.get("prop");
+        String val = args.get("val");
+        String docType = args.get("doc_type");
+        Expression limit = Expression.value(args.get("limit"));
+        String index = "singlePropertyIndex";
+
+        FullTextIndex ftsIndex = IndexBuilder.fullTextIndex(FullTextIndexItem.property(prop));
+        db.createIndex(index,ftsIndex);
+        FullTextExpression ftsExpression = FullTextExpression.index(index);
+        List<Object> resultArray = new ArrayList<>();
+
+        Query query = QueryBuilder
+                .select(SelectResult.expression(Meta.id),
+                        SelectResult.expression(Expression.property(prop)))
+                .from(DataSource.database(db))
+                .where(Expression.property(docType).and(ftsExpression.match(val)))
+                .limit(limit);
+        for (Result row : query.execute()) {
+            resultArray.add(row.toMap());
+        }
+        return resultArray;
+    }
+
+    public List<Object> multiplePropertyFTS(Args args) throws CouchbaseLiteException {
+        Database db = args.get("database");
+        String prop1 = args.get("prop1");
+        String prop2 = args.get("prop2");
+        String val = args.get("val");
+        String docType = args.get("doc_type");
+        Expression limit = Expression.value(args.get("limit"));
+        String index = "multiplePropertyIndex";
+
+        FullTextIndex ftsIndex = IndexBuilder.fullTextIndex(FullTextIndexItem.property(prop1), FullTextIndexItem.property(prop2));
+        db.createIndex(index,ftsIndex);
+        FullTextExpression ftsExpression = FullTextExpression.index(index);
+        List<Object> resultArray = new ArrayList<>();
+
+        Query query = QueryBuilder
+                .select(SelectResult.expression(Meta.id),
+                        SelectResult.expression(Expression.property(prop1)),
+                        SelectResult.expression(Expression.property(prop2)))
+                .from(DataSource.database(db))
+                .where(Expression.property(docType).and(ftsExpression.match(val)))
+                .limit(limit);
+        for (Result row : query.execute()) {
+            resultArray.add(row.toMap());
+        }
+        return resultArray;
+    }
+
+    public List<Object> ftsWithoutStemming(Args args) throws CouchbaseLiteException {
+        Database db = args.get("database");
+        String prop = args.get("prop");
+        String val = args.get("val");
+        String docType = args.get("doc_type");
+        Expression limit = Expression.value(args.get("limit"));
+        String index = "singlePropertyIndex";
+
+        /*
+        Disabling Stemming by setting language to null
+         */
+        FullTextIndex ftsIndex = IndexBuilder.fullTextIndex(FullTextIndexItem.property(prop)).setLanguage(null);
+        db.createIndex(index,ftsIndex);
+        FullTextExpression ftsExpression = FullTextExpression.index(index);
+        List<Object> resultArray = new ArrayList<>();
+
+        Query query = QueryBuilder
+                .select(SelectResult.expression(Meta.id),
+                        SelectResult.expression(Expression.property(prop)))
+                .from(DataSource.database(db))
+                .where(Expression.property(docType).and(ftsExpression.match(val)))
+                .limit(limit);
+        for (Result row : query.execute()) {
+            resultArray.add(row.toMap());
+        }
+        return resultArray;
+    }
+
+    public List<Object> logicalExpressionFTS(Args args) throws CouchbaseLiteException {
+        Database db = args.get("database");
+        String prop = args.get("prop");
+        String val1 = args.get("val1");
+        String val2 = args.get("val2");
+        String docType = args.get("doc_type");
+        Expression limit = Expression.value(args.get("limit"));
+        String val = val1 + " OR " + val2;
+        String index = "singlePropertyIndex";
+
+        FullTextIndex ftsIndex = IndexBuilder.fullTextIndex(FullTextIndexItem.property(prop)).setLanguage(null);
+        db.createIndex(index,ftsIndex);
+        FullTextExpression ftsExpression = FullTextExpression.index(index);
+        List<Object> resultArray = new ArrayList<>();
+
+        Query query = QueryBuilder
+                .select(SelectResult.expression(Meta.id),
+                        SelectResult.expression(Expression.property(prop)))
+                .from(DataSource.database(db))
+                .where(Expression.property(docType).and(ftsExpression.match(val)))
+                .limit(limit);
+        for (Result row : query.execute()) {
+            resultArray.add(row.toMap());
+        }
+        return resultArray;
+    }
+
+    public List<Object> ftsWithRanking(Args args) throws CouchbaseLiteException {
+        Database db = args.get("database");
+        String prop = args.get("prop");
+        String val = args.get("val");
+        String docType = args.get("doc_type");
+        Expression limit = Expression.value(args.get("limit"));
+        String index = "singlePropertyIndex";
+
+        FullTextIndex ftsIndex = IndexBuilder.fullTextIndex(FullTextIndexItem.property(prop)).setLanguage(null);
+        db.createIndex(index,ftsIndex);
+        FullTextExpression ftsExpression = FullTextExpression.index(index);
+        List<Object> resultArray = new ArrayList<>();
+
+        Query query = QueryBuilder
+                .select(SelectResult.expression(Meta.id),
+                        SelectResult.expression(Expression.property(prop)))
+                .from(DataSource.database(db))
+                .where(Expression.property(docType).and(ftsExpression.match(val)))
+                .orderBy(Ordering.expression(FullTextFunction.rank(index)).descending())
+                .limit(limit);
+        for (Result row : query.execute()) {
+            resultArray.add(row.toMap());
+        }
+        return resultArray;
+    }
 }

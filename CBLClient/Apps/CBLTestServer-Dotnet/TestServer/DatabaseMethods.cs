@@ -328,6 +328,7 @@ namespace Couchbase.Lite.Testing
                     {
                         string id = body.Key;
                         var docBody = (Dictionary<string, object>)body.Value;
+                        docBody.Remove("_id");
                         MutableDocument doc = new MutableDocument(id, docBody);
                        db.Save(doc);
 
