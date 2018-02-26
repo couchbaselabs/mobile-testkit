@@ -352,7 +352,7 @@ class Query(object):
         return self._client.invokeMethod("query_singlePropertyFTS", args)
 
     def query_multiple_property_fts(self, database, prop1, prop2,
-                                  val, doc_type, limit):
+                                    val, doc_type, limit):
         args = Args()
         args.setMemoryPointer("database", database)
         args.setString("prop1", prop1)
@@ -364,7 +364,7 @@ class Query(object):
         return self._client.invokeMethod("query_multiplePropertyFTS", args)
 
     def query_fts_without_stemming(self, database, prop, val,
-                                  doc_type, limit):
+                                   doc_type, limit):
         args = Args()
         args.setMemoryPointer("database", database)
         args.setString("prop", prop)
@@ -375,7 +375,7 @@ class Query(object):
         return self._client.invokeMethod("query_ftsWithoutStemming", args)
 
     def query_logical_expression_fts(self, database, prop, val1,
-                                  val2, doc_type, limit):
+                                     val2, doc_type, limit):
         args = Args()
         args.setMemoryPointer("database", database)
         args.setString("prop1", prop)
@@ -387,7 +387,7 @@ class Query(object):
         return self._client.invokeMethod("query_logicalExpressionFTS", args)
 
     def query_fts_with_ranking(self, database, prop, val,
-                                  doc_type, limit):
+                               doc_type, limit):
         args = Args()
         args.setMemoryPointer("database", database)
         args.setString("prop", prop)
