@@ -259,7 +259,7 @@ def test_no_conflicts_update_with_revs_limit(params_from_base_test_setup, sg_con
     replicator = Replication(base_url)
     authenticator = Authenticator(base_url)
     replicator_authenticator = authenticator.authentication(session_id, cookie, authentication_type="session")
-    repl_config = replicator.configure(cbl_db, sg_blip_url, continuous=True, channels=channels, replicator_authenticator=replicator_authenticator)
+    repl_config = replicator.configure(cbl_db, sg_blip_url, continuous=True, channels=channels, replication_type="push", replicator_authenticator=replicator_authenticator)
     repl = replicator.create(repl_config)
     replicator.start(repl)
     log_info("replicator status is {} ".format(replicator.status(repl)))
@@ -282,11 +282,9 @@ def test_no_conflicts_update_with_revs_limit(params_from_base_test_setup, sg_con
             conflicted_rev = sg_client.add_conflict(url=sg_url, db=sg_db, doc_id=doc["id"], parent_revisions=doc["value"]["rev"], new_revision="2-2B",
                                                     auth=session)
             assert conflicted_rev["rev"] == "2-2B"
-    # replicator.wait_until_replicator_idle(repl)
+    replicator.wait_until_replicator_idle(repl)
     # Update the docs few times
     for i in xrange(revs_limit + 5):
-        # sg_client.update_docs(url=sg_url, db=sg_db, docs=sg_docs, number_updates=1, delay=None,
-        #                       auth=session, channels=channels)
         db.update_bulk_docs(cbl_db)
         time.sleep(1)
 
@@ -678,9 +676,16 @@ def sg_updateDocs(sg_client, url, db, docs, number_updates, auth):
 def test_multiple_cbls_updates_concurrently_with_push(params_from_base_test_setup, setup_customized_teardown_test, sg_conf_name, num_of_docs, number_of_updates):
     """
         @summary:
-        1. Create docs in CBL
-        2. update docs in SG in one thread, update docs in CBL in another thread -> will create CBL DB out of sync
-        3. Now do sync dB of SG
+        1. Create docs in CBL DB1, DB2 , DB3 associated with each channel.
+        2. Replicate docs from CBL DB1 to DB2 with push pull and continous.
+        3. Wait until replicatio is done.
+        4. Repliate docs from CBL DB1 to DB3.
+        5. Wait until replication is done with push pull and continous.
+        6. update docs on CBL DB1, DB2, DB3.
+        7. Now update docs concurrently on all 3 CBL DBs.
+        8. Wait until replication is done.
+        9. Replicate docs from CBL DB3 to sg with push pull and continous.
+        10. Verify all docs recplicated to sync-gateway.
     """
 
     sg_db = "db"
@@ -746,7 +751,7 @@ def test_multiple_cbls_updates_concurrently_with_push(params_from_base_test_setu
     cbl_doc_ids = db.getDocIds(cbl_db2)
     # cbl_docs = db.getDocuments(cbl_db2, cbl_doc_ids)
 
-    # Update the same documents concurrently from a sync gateway client and and CBL client
+    # Update the same documents concurrently in all CBL DBs
     with ThreadPoolExecutor(max_workers=5) as tpe:
         update_from_cbl_task1 = tpe.submit(
             db.update_bulk_docs,
