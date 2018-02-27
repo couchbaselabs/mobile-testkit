@@ -259,7 +259,7 @@ def test_no_conflicts_update_with_revs_limit(params_from_base_test_setup, sg_con
     replicator = Replication(base_url)
     authenticator = Authenticator(base_url)
     replicator_authenticator = authenticator.authentication(session_id, cookie, authentication_type="session")
-    repl_config = replicator.configure(cbl_db, sg_blip_url, continuous=True, channels=channels, replicator_authenticator=replicator_authenticator)
+    repl_config = replicator.configure(cbl_db, sg_blip_url, continuous=True, channels=channels, replicator_authenticator=replicator_authenticator, replication_type="push")
     repl = replicator.create(repl_config)
     replicator.start(repl)
     log_info("replicator status is {} ".format(replicator.status(repl)))
@@ -282,7 +282,8 @@ def test_no_conflicts_update_with_revs_limit(params_from_base_test_setup, sg_con
             conflicted_rev = sg_client.add_conflict(url=sg_url, db=sg_db, doc_id=doc["id"], parent_revisions=doc["value"]["rev"], new_revision="2-2B",
                                                     auth=session)
             assert conflicted_rev["rev"] == "2-2B"
-    # replicator.wait_until_replicator_idle(repl)
+
+    replicator.wait_until_replicator_idle(repl)
     # Update the docs few times
     for i in xrange(revs_limit + 5):
         # sg_client.update_docs(url=sg_url, db=sg_db, docs=sg_docs, number_updates=1, delay=None,
@@ -297,7 +298,7 @@ def test_no_conflicts_update_with_revs_limit(params_from_base_test_setup, sg_con
     # Get number of revisions and verify length is equal to revs_limit set to
     for doc in sg_docs:
         num_of_revs = sg_client.get_revs_num_in_history(url=sg_url, db=sg_db, doc_id=doc["id"], auth=session)
-        assert len(num_of_revs) == revs_limit, "Number of revisions in history is more than revs_limit set in sg config"
+        assert len(num_of_revs) == revs_limit, "Number of revisions in history does not match the revs_limit set in sg config"
 
     #  Modify the revs_limit less than actual revs_limit
     temp_cluster_config = copy_to_temp_conf(cluster_config, mode)
@@ -406,6 +407,7 @@ def test_migrate_conflicts_to_noConflicts_CBL(params_from_base_test_setup, sg_co
     status = c.sync_gateways[0].restart(config=sg_config, cluster_config=temp_cluster_config)
     assert status == 0, "Syncgateway did not start after no conflicts is enabled"
     db.update_bulk_docs(cbl_db)
+    log_info("Waiting for replicator to go idle")
     replicator.wait_until_replicator_idle(repl, err_check=False)
     # Create a conflict and verify conflict throws 409.
     for doc in sg_docs:
@@ -950,8 +952,8 @@ def test_multiple_cbls_updates_concurrently_with_pull(params_from_base_test_setu
 @pytest.mark.noconflicts
 @pytest.mark.parametrize("sg_conf_name, num_of_docs, number_of_updates, add_attachments", [
     ('listener_tests/listener_tests_no_conflicts', 10, 2, False),
-    # ('listener_tests/listener_tests_no_conflicts', 10, 10, True),
-    # ('listener_tests/listener_tests_no_conflicts', 1000, 10, True)
+    ('listener_tests/listener_tests_no_conflicts', 10, 10, True),
+    ('listener_tests/listener_tests_no_conflicts', 1000, 10, True)
 ])
 def test_sg_cbl_updates_concurrently_with_push_pull(params_from_base_test_setup, sg_conf_name, num_of_docs, number_of_updates, add_attachments):
     """

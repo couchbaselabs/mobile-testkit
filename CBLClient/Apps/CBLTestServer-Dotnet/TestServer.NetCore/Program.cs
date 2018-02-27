@@ -55,7 +55,7 @@ namespace Couchbase.Lite.Testing.NetCore
             var listener = new TestServer();
             listener.Start();
 
-            Console.WriteLine("Press any key to exit...");
+            Console.WriteLine("CBLTestServer-NetCore - Press any key to exit...");
             Console.ReadKey(true);
 
             listener.Stop();

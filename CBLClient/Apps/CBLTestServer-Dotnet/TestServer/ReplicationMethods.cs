@@ -170,6 +170,16 @@ namespace Couchbase.Lite.Testing
                 response.WriteBody(changeListener.Changes.Count);
             });
         }
+
+        internal static void ChangeListenerChanges([NotNull] NameValueCollection args,
+            [NotNull] IReadOnlyDictionary<string, object> postBody,
+            [NotNull] HttpListenerResponse response)
+        {
+            With<ReplicationChangeListenerProxy>(postBody, "changeListener", changeListener =>
+            {
+                response.WriteBody(MemoryMap.Store(changeListener.Changes));
+            });
+        }
     }
 
     internal sealed class ReplicationChangeListenerProxy

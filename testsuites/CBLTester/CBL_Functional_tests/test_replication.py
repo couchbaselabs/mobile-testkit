@@ -567,7 +567,7 @@ def setup_sg_cbl_docs(params_from_base_test_setup, sg_db, base_url, db, cbl_db, 
 @pytest.mark.parametrize("num_of_docs", [
     (10),
     (100),
-    (1000)
+    (10000)
 ])
 def test_CBL_tombstone_doc(params_from_base_test_setup, num_of_docs):
     """

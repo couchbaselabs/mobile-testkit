@@ -222,7 +222,7 @@ class Replication(object):
         max_times = 15
         count = 0
         while self.getActivitylevel(replicator) != "stopped" and count < max_times:
-            time.sleep(0.5)
+            time.sleep(2)
             count += 1
         if self.getActivitylevel(replicator) != "stopped":
             raise Exception("Failed to stop the replicator: {}".format(self.getActivitylevel(replicator)))

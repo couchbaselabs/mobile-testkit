@@ -51,7 +51,12 @@ namespace Couchbase.Lite.Testing
             {
                 if (pair.Value is IDisposable d)
                 {
-                    d.Dispose();
+                    try {
+                        d.Dispose();
+                    } catch {
+                        Console.WriteLine("Failed to dispose " + d.ToString());
+                        throw;
+                    }
                 }
             }
 
@@ -90,7 +95,12 @@ namespace Couchbase.Lite.Testing
 
             if (existing is IDisposable d)
             {
-                d.Dispose();
+                try {
+                    d.Dispose();
+                } catch {
+                    Console.WriteLine("Failed to dispose " + d.ToString());
+                    throw;
+                }
             }
         }
 
