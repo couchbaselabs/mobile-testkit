@@ -1127,3 +1127,136 @@ def test_not(params_from_base_test_setup, prop, val1, val2):
     log_info("Found {} docs".format(len(docs_from_cbl)))
     assert np.array_equal(docs_from_cbl, docs_from_n1ql)
     log_info("Doc contents match between CBL and n1ql")
+
+
+@pytest.mark.parametrize("prop, val, doc_type", [
+    ("content", "Mechanical", "landmark"),
+    ("content", "walt*", "landmark"),  # Wildcard Expression
+    ("content", "on the history", "landmark"),  # Search with stop words
+    ("content", "blue fin yellow fin", "landmark"),  # Search ignoring stop words
+])
+def test_single_property_fts(params_from_base_test_setup, prop, val, doc_type):
+    """ @summary
+    Fetches a doc
+    Tests the below query
+    """
+    cluster_topology = params_from_base_test_setup["cluster_topology"]
+    source_db = params_from_base_test_setup["source_db"]
+    cbs_url = cluster_topology['couchbase_servers'][0]
+    base_url = params_from_base_test_setup["base_url"]
+    cbs_ip = host_for_url(cbs_url)
+
+    # Get doc from CBL through query
+    qy = Query(base_url)
+    limit = 10
+    result_set = qy.query_single_property_fts(source_db, prop, val,
+                                              doc_type, limit)
+    docs_from_cbl = []
+    if result_set != -1 and result_set is not None:
+        for result in result_set:
+            docs_from_cbl.append(result)
+    assert len(docs_from_cbl) == limit
+
+
+@pytest.mark.parametrize("prop1, prop2, val, doc_type", [
+    ("content", "name", "Mechanical", "landmark"),
+])
+def test_multiple_property_fts(params_from_base_test_setup, prop1, prop2, val, doc_type):
+    """ @summary
+    Fetches a doc
+    Tests the below query
+    """
+    cluster_topology = params_from_base_test_setup["cluster_topology"]
+    source_db = params_from_base_test_setup["source_db"]
+    cbs_url = cluster_topology['couchbase_servers'][0]
+    base_url = params_from_base_test_setup["base_url"]
+    cbs_ip = host_for_url(cbs_url)
+
+    # Get doc from CBL through query
+    qy = Query(base_url)
+    limit = 10
+    result_set = qy.query_multiple_property_fts(source_db, prop1, prop2,
+                                                val, doc_type, limit)
+    docs_from_cbl = []
+    if result_set != -1 and result_set is not None:
+        for result in result_set:
+            docs_from_cbl.append(result)
+    assert len(docs_from_cbl) == limit
+
+
+@pytest.mark.parametrize("prop, val, doc_type", [
+    ("content", "Mechanical", "landmark"),
+])
+def test_fts_without_stemming(params_from_base_test_setup, prop, val, doc_type):
+    """ @summary
+    Fetches a doc
+    Tests the below query
+    """
+    cluster_topology = params_from_base_test_setup["cluster_topology"]
+    source_db = params_from_base_test_setup["source_db"]
+    cbs_url = cluster_topology['couchbase_servers'][0]
+    base_url = params_from_base_test_setup["base_url"]
+    cbs_ip = host_for_url(cbs_url)
+
+    # Get doc from CBL through query
+    qy = Query(base_url)
+    limit = 10
+    result_set = qy.query_fts_without_stemming(source_db, prop, val,
+                                               doc_type, limit)
+    docs_from_cbl = []
+    if result_set != -1 and result_set is not None:
+        for result in result_set:
+            docs_from_cbl.append(result)
+    assert len(docs_from_cbl) == limit
+
+
+@pytest.mark.parametrize("prop, val1, val2, doc_type", [
+    ("content", "Mechanical", "Mechanism", "landmark"),
+])
+def test_logical_expression_fts(params_from_base_test_setup, prop, val1, val2, doc_type):
+    """ @summary
+    Fetches a doc
+    Tests the below query
+    """
+    cluster_topology = params_from_base_test_setup["cluster_topology"]
+    source_db = params_from_base_test_setup["source_db"]
+    cbs_url = cluster_topology['couchbase_servers'][0]
+    base_url = params_from_base_test_setup["base_url"]
+    cbs_ip = host_for_url(cbs_url)
+
+    # Get doc from CBL through query
+    qy = Query(base_url)
+    limit = 10
+    result_set = qy.query_logical_expression_fts(source_db, prop, val1,
+                                                 val2, doc_type, limit)
+    docs_from_cbl = []
+    if result_set != -1 and result_set is not None:
+        for result in result_set:
+            docs_from_cbl.append(result)
+    assert len(docs_from_cbl) == limit
+
+
+@pytest.mark.parametrize("prop, val, doc_type", [
+    ("content", "attract", "landmark"),
+])
+def test_fts_with_ranking(params_from_base_test_setup, prop, val, doc_type):
+    """ @summary
+    Fetches a doc
+    Tests the below query
+    """
+    cluster_topology = params_from_base_test_setup["cluster_topology"]
+    source_db = params_from_base_test_setup["source_db"]
+    cbs_url = cluster_topology['couchbase_servers'][0]
+    base_url = params_from_base_test_setup["base_url"]
+    cbs_ip = host_for_url(cbs_url)
+
+    # Get doc from CBL through query
+    qy = Query(base_url)
+    limit = 10
+    result_set = qy.query_fts_with_ranking(source_db, prop, val,
+                                           doc_type, limit)
+    docs_from_cbl = []
+    if result_set != -1 and result_set is not None:
+        for result in result_set:
+            docs_from_cbl.append(result)
+    assert len(docs_from_cbl) == limit

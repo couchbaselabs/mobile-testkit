@@ -167,6 +167,7 @@ public class Server {
                 let response = GCDWebServerDataResponse(text: error.localizedDescription)!
                 print("Error is : \(error.localizedDescription)")
                 response.statusCode = error.code as Int
+                response.contentType = error.localizedDescription
                 return response
             }
         }

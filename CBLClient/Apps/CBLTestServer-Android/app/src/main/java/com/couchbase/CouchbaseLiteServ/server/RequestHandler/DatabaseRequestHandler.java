@@ -20,6 +20,7 @@ import com.couchbase.lite.QueryBuilder;
 import com.couchbase.lite.Result;
 import com.couchbase.lite.ResultSet;
 import com.couchbase.lite.SelectResult;
+import com.couchbase.lite.EncryptionKey;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -190,6 +191,13 @@ public class DatabaseRequestHandler {
         System.out.println("database delete ");
    }
 
+    public void setEncryptionKey(Args args) throws CouchbaseLiteException {
+        Database database = args.get("database");
+        String password = args.get("password");
+        EncryptionKey encryptionKey = new EncryptionKey(password);
+        database.setEncryptionKey(encryptionKey);
+    }
+
    public void deleteDbByName(Args args) throws CouchbaseLiteException {
         String dbName = args.get("dbName");
         File directory = args.get("directory");
@@ -270,10 +278,6 @@ public class DatabaseRequestHandler {
         return change.getDocumentIDs();
     }
 
-    public void changeEncryptionkey(Args args){
-        Database database = args.get("database");
-        String key = args.get("key");
-    }
 }
 
 class MyDatabaseChangeListener implements DatabaseChangeListener{

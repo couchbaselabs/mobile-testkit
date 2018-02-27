@@ -50,7 +50,7 @@ namespace Couchbase.Lite.Testing.NetCore
             Extend();
 
             Couchbase.Lite.Support.NetDesktop.EnableTextLogging("TextLogging");
-            Database.SetLogLevel(Logging.LogDomain.All, Logging.LogLevel.Debug);
+            Database.SetLogLevel(Logging.LogDomain.All, Logging.LogLevel.Info);
 
             var listener = new TestServer();
             listener.Start();

@@ -17,7 +17,7 @@ android {
         }
     }
 }
-final String DEF_VERSION = "2.0.0-331"
+final String DEF_VERSION = "2.0.0-338"
 def COUCHBASE_LITE_VERSION = System.getProperty('version', DEF_VERSION)
 
 dependencies {
