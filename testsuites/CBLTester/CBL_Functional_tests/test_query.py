@@ -1221,6 +1221,7 @@ def test_single_property_fts(params_from_base_test_setup, prop, val, doc_type):
     ("content", "name", "name:fish beauty", "landmark"),  # overriding the property to be indexed
     ("content", "name", "beautiful OR beautifully", "landmark"),  # OR logical expression
     ("content", "name", "beauty AND splendour", "landmark"),  # AND logical expression
+    ("content", "name", "(beauty AND splendour) OR food", "landmark"),  # mix logical expression
 #     ("content", "name", "NOT beauty AND splendour", "landmark"),  # NOT logical expression
 ])
 def test_multiple_property_fts(params_from_base_test_setup, prop1, prop2, val, doc_type):
