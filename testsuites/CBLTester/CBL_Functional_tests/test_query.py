@@ -7,6 +7,7 @@ from keywords.utils import host_for_url
 from couchbase.bucket import Bucket
 from couchbase.n1ql import N1QLQuery
 import numpy as np
+from CBLClient.Document import Document
 
 
 def test_get_doc_ids(params_from_base_test_setup):
@@ -1130,10 +1131,10 @@ def test_not(params_from_base_test_setup, prop, val1, val2):
 
 
 @pytest.mark.parametrize("prop, val, doc_type", [
-    ("content", "Mechanical", "landmark"),
-    ("content", "walt*", "landmark"),  # Wildcard Expression
-    ("content", "on the history", "landmark"),  # Search with stop words
-    ("content", "blue fin yellow fin", "landmark"),  # Search ignoring stop words
+    ("content", "beautiful", "landmark"),
+    ("content", "beau*", "landmark"),  # Wildcard Expression
+    ("content", "in the high", "landmark"),  # Search with stop words
+    ("content", "fish chips", "landmark"),  # Search ignoring stop words
 ])
 def test_single_property_fts(params_from_base_test_setup, prop, val, doc_type):
     """ @summary
@@ -1145,6 +1146,33 @@ def test_single_property_fts(params_from_base_test_setup, prop, val, doc_type):
     cbs_url = cluster_topology['couchbase_servers'][0]
     base_url = params_from_base_test_setup["base_url"]
     cbs_ip = host_for_url(cbs_url)
+    db_obj = Database(base_url)
+    doc_obj = Document(base_url)
+
+    doc_content = {
+        "id": 10019,
+        "city": "Gillingham",
+        "content": None,
+        "image": None,
+        "name": "Royal Engineers Museum",
+        "phone": "+44 1634 822839",
+        "price": None,
+        "state": None,
+        "title": "Gillingham (Kent)",
+        "tollfree": None,
+        "type": "landmark"}
+    content_list = ["Adult - 6.99 for an Adult ticket that allows you to come back for further visits within a year (children's and concessionary tickets also available). Museum on military engineering and the history of the British Empire. A quite extensive collection that takes about half a day to see. Of most interest to fans of British and military history or civil engineering. The outside collection of tank mounted bridges etc can be seen for free. There is also an extensive series of themed special event weekends, admission to which is included in the cost of the annual ticket.",
+                    "A newly extended lively restaurant located in the high street, an American Hollywood style restaurant beautifully decorated with old photos and a great menu including burgers and ribs.",
+                    "Really popular oriental restaurant with a mixture foods including noodles, duck and other oriental staples. fish hello chips",
+                    "Indian restaurant opposite the railway station.  Good value and quality of food. An award winning up market restaurant. Sunday Buffet for only 8.50 and you can eat as much as you like. Very popular with the locals and beyond.",
+                    "Chinese restaurant just off the High Street. fish chips",
+                    "Best fish and chips in the area. beauty !!!",
+                    "This imposing beautiful structure in high George Square was built in 1888 in the Italian Renaissance style and is the headquarters of Glasgow City Council. Tours of the building are available daily, and visitors can see the magnificent marble staircases, lobbies, see the debating chamber and the lavish banqueting hall. Tours take about 45 min. In front the building, '''George Square''', the city's notional centre, is populated by several statues of civic leaders and famous figures from history and is often used for outdoor events."]
+    for item in content_list:
+        doc_content["id"] += 1
+        doc_content["content"] = item
+        document = doc_obj.create(doc_content["id"], doc_content)
+        db_obj.saveDocument(source_db, document)
 
     # Get doc from CBL through query
     qy = Query(base_url)
@@ -1155,11 +1183,13 @@ def test_single_property_fts(params_from_base_test_setup, prop, val, doc_type):
     if result_set != -1 and result_set is not None:
         for result in result_set:
             docs_from_cbl.append(result)
-    assert len(docs_from_cbl) == limit
+            print result
+    # assert len(docs_from_cbl) == limit
 
 
 @pytest.mark.parametrize("prop1, prop2, val, doc_type", [
-    ("content", "name", "Mechanical", "landmark"),
+    ("content", "name", "Fish & Chips", "landmark"),
+    ("content", "name", "beautiful OR beautifully", "landmark"),  # logical expression
 ])
 def test_multiple_property_fts(params_from_base_test_setup, prop1, prop2, val, doc_type):
     """ @summary
@@ -1171,7 +1201,41 @@ def test_multiple_property_fts(params_from_base_test_setup, prop1, prop2, val, d
     cbs_url = cluster_topology['couchbase_servers'][0]
     base_url = params_from_base_test_setup["base_url"]
     cbs_ip = host_for_url(cbs_url)
+    db_obj = Database(base_url)
+    doc_obj = Document(base_url)
 
+    doc_content = {
+        "id": 10019,
+        "city": "Gillingham",
+        "content": None,
+        "image": None,
+        "name": None,
+        "phone": "+44 1634 822839",
+        "price": None,
+        "state": None,
+        "title": "Gillingham (Kent)",
+        "tollfree": None,
+        "type": "landmark"}
+    name_list = ["Royal Engineers Museum",
+                 "City Chambers",
+                 "Hakuna Matata",
+                 "Blue Ocean"
+                 "Fire in the Hole",
+                 "Beautiful Rendezvous",
+                 "Fish & Chips"]
+    content_list = ["Adult - 6.99 for an Adult ticket that allows you to come back for further visits within a year (children's and concessionary tickets also available). Museum on military engineering and the history of the British Empire. A quite extensive collection that takes about half a day to see. Of most interest to fans of British and military history or civil engineering. The outside collection of tank mounted bridges etc can be seen for free. There is also an extensive series of themed special event weekends, admission to which is included in the cost of the annual ticket.",
+                    "A newly extended lively restaurant located in the high street, an American Hollywood style restaurant beautifully decorated with old photos and a great menu including burgers and ribs.",
+                    "Really popular oriental restaurant with a mixture foods including noodles, duck and other oriental staples. fish hello chips",
+                    "Indian restaurant opposite the railway station.  Good value and quality of food. An award winning up market restaurant. Sunday Buffet for only 8.50 and you can eat as much as you like. Very popular with the locals and beyond.",
+                    "Chinese restaurant just off the High Street. fish chips",
+                    "Best fish and chips in the area. beauty !!!",
+                    "This imposing beautiful structure in high George Square was built in 1888 in the Italian Renaissance style and is the headquarters of Glasgow City Council. Tours of the building are available daily, and visitors can see the magnificent marble staircases, lobbies, see the debating chamber and the lavish banqueting hall. Tours take about 45 min. In front the building, '''George Square''', the city's notional centre, is populated by several statues of civic leaders and famous figures from history and is often used for outdoor events."]
+    for item, name in zip(content_list, name_list):
+        doc_content["id"] += 1
+        doc_content["content"] = item
+        doc_content["name"] = name
+        document = doc_obj.create(doc_content["id"], doc_content)
+        db_obj.saveDocument(source_db, document)
     # Get doc from CBL through query
     qy = Query(base_url)
     limit = 10
@@ -1181,11 +1245,12 @@ def test_multiple_property_fts(params_from_base_test_setup, prop1, prop2, val, d
     if result_set != -1 and result_set is not None:
         for result in result_set:
             docs_from_cbl.append(result)
-    assert len(docs_from_cbl) == limit
+            print result
+    # assert len(docs_from_cbl) == limit
 
 
 @pytest.mark.parametrize("prop, val, doc_type", [
-    ("content", "Mechanical", "landmark"),
+    ("content", "beautiful", "landmark"),
 ])
 def test_fts_without_stemming(params_from_base_test_setup, prop, val, doc_type):
     """ @summary
@@ -1197,6 +1262,33 @@ def test_fts_without_stemming(params_from_base_test_setup, prop, val, doc_type):
     cbs_url = cluster_topology['couchbase_servers'][0]
     base_url = params_from_base_test_setup["base_url"]
     cbs_ip = host_for_url(cbs_url)
+    db_obj = Database(base_url)
+    doc_obj = Document(base_url)
+
+    doc_content = {
+        "id": 10019,
+        "city": "Gillingham",
+        "content": None,
+        "image": None,
+        "name": "Royal Engineers Museum",
+        "phone": "+44 1634 822839",
+        "price": None,
+        "state": None,
+        "title": "Gillingham (Kent)",
+        "tollfree": None,
+        "type": "landmark"}
+    content_list = ["Adult - 6.99 for an Adult ticket that allows you to come back for further visits within a year (children's and concessionary tickets also available). Museum on military engineering and the history of the British Empire. A quite extensive collection that takes about half a day to see. Of most interest to fans of British and military history or civil engineering. The outside collection of tank mounted bridges etc can be seen for free. There is also an extensive series of themed special event weekends, admission to which is included in the cost of the annual ticket.",
+                    "A newly extended lively restaurant located in the high street, an American Hollywood style restaurant beautifully decorated with old photos and a great menu including burgers and ribs.",
+                    "Really popular oriental restaurant with a mixture foods including noodles, duck and other oriental staples. fish hello chips",
+                    "Indian restaurant opposite the railway station.  Good value and quality of food. An award winning up market restaurant. Sunday Buffet for only 8.50 and you can eat as much as you like. Very popular with the locals and beyond.",
+                    "Chinese restaurant just off the High Street. fish chips",
+                    "Best fish and chips in the area. beauty !!!",
+                    "This imposing beautiful structure in high George Square was built in 1888 in the Italian Renaissance style and is the headquarters of Glasgow City Council. Tours of the building are available daily, and visitors can see the magnificent marble staircases, lobbies, see the debating chamber and the lavish banqueting hall. Tours take about 45 min. In front the building, '''George Square''', the city's notional centre, is populated by several statues of civic leaders and famous figures from history and is often used for outdoor events."]
+    for item in content_list:
+        doc_content["id"] += 1
+        doc_content["content"] = item
+        document = doc_obj.create(doc_content["id"], doc_content)
+        db_obj.saveDocument(source_db, document)
 
     # Get doc from CBL through query
     qy = Query(base_url)
@@ -1207,37 +1299,12 @@ def test_fts_without_stemming(params_from_base_test_setup, prop, val, doc_type):
     if result_set != -1 and result_set is not None:
         for result in result_set:
             docs_from_cbl.append(result)
-    assert len(docs_from_cbl) == limit
-
-
-@pytest.mark.parametrize("prop, val1, val2, doc_type", [
-    ("content", "Mechanical", "Mechanism", "landmark"),
-])
-def test_logical_expression_fts(params_from_base_test_setup, prop, val1, val2, doc_type):
-    """ @summary
-    Fetches a doc
-    Tests the below query
-    """
-    cluster_topology = params_from_base_test_setup["cluster_topology"]
-    source_db = params_from_base_test_setup["source_db"]
-    cbs_url = cluster_topology['couchbase_servers'][0]
-    base_url = params_from_base_test_setup["base_url"]
-    cbs_ip = host_for_url(cbs_url)
-
-    # Get doc from CBL through query
-    qy = Query(base_url)
-    limit = 10
-    result_set = qy.query_logical_expression_fts(source_db, prop, val1,
-                                                 val2, doc_type, limit)
-    docs_from_cbl = []
-    if result_set != -1 and result_set is not None:
-        for result in result_set:
-            docs_from_cbl.append(result)
-    assert len(docs_from_cbl) == limit
+            print result
+    # assert len(docs_from_cbl) == limit
 
 
 @pytest.mark.parametrize("prop, val, doc_type", [
-    ("content", "attract", "landmark"),
+    ("content", "beautiful", "landmark"),
 ])
 def test_fts_with_ranking(params_from_base_test_setup, prop, val, doc_type):
     """ @summary
@@ -1249,6 +1316,33 @@ def test_fts_with_ranking(params_from_base_test_setup, prop, val, doc_type):
     cbs_url = cluster_topology['couchbase_servers'][0]
     base_url = params_from_base_test_setup["base_url"]
     cbs_ip = host_for_url(cbs_url)
+    db_obj = Database(base_url)
+    doc_obj = Document(base_url)
+
+    doc_content = {
+        "id": 10019,
+        "city": "Gillingham",
+        "content": None,
+        "image": None,
+        "name": "Royal Engineers Museum",
+        "phone": "+44 1634 822839",
+        "price": None,
+        "state": None,
+        "title": "Gillingham (Kent)",
+        "tollfree": None,
+        "type": "landmark"}
+    content_list = ["Adult - 6.99 for an Adult ticket that allows you to come back for further visits within a year (children's and concessionary tickets also available). Museum on military engineering and the history of the British Empire. A quite extensive collection that takes about half a day to see. Of most interest to fans of British and military history or civil engineering. The outside collection of tank mounted bridges etc can be seen for free. There is also an extensive series of themed special event weekends, admission to which is included in the cost of the annual ticket.",
+                    "A newly extended lively restaurant located in the high street, an American Hollywood style restaurant beautifully decorated with old photos and a great menu including burgers and ribs.",
+                    "Really popular oriental restaurant with a mixture foods including noodles, duck and other oriental staples. fish hello chips",
+                    "Indian restaurant opposite the railway station.  Good value and quality of food. An award winning up market restaurant. Sunday Buffet for only 8.50 and you can eat as much as you like. Very popular with the locals and beyond.",
+                    "Chinese restaurant just off the High Street. fish chips",
+                    "Best fish and chips in the area. beauty !!!",
+                    "This imposing beautiful structure in high George Square was built in 1888 in the Italian Renaissance style and is the headquarters of Glasgow City Council. Tours of the building are available daily, and visitors can see the magnificent marble staircases, lobbies, see the debating chamber and the lavish banqueting hall. Tours take about 45 min. In front the building, '''George Square''', the city's notional centre, is populated by several statues of civic leaders and famous figures from history and is often used for outdoor events."]
+    for item in content_list:
+        doc_content["id"] += 1
+        doc_content["content"] = item
+        document = doc_obj.create(doc_content["id"], doc_content)
+        db_obj.saveDocument(source_db, document)
 
     # Get doc from CBL through query
     qy = Query(base_url)
@@ -1259,4 +1353,5 @@ def test_fts_with_ranking(params_from_base_test_setup, prop, val, doc_type):
     if result_set != -1 and result_set is not None:
         for result in result_set:
             docs_from_cbl.append(result)
-    assert len(docs_from_cbl) == limit
+            print result
+    # assert len(docs_from_cbl) == limit

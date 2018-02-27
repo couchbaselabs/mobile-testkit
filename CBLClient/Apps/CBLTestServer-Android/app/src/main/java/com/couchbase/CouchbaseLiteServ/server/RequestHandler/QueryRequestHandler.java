@@ -546,7 +546,7 @@ public class QueryRequestHandler {
         Database db = args.get("database");
         String prop = args.get("prop");
         String val = args.get("val");
-        String docType = args.get("doc_type");
+        Expression docType = Expression.value(args.get("doc_type"));
         Expression limit = Expression.value(args.get("limit"));
         String index = "singlePropertyIndex";
 
@@ -559,7 +559,7 @@ public class QueryRequestHandler {
                 .select(SelectResult.expression(Meta.id),
                         SelectResult.expression(Expression.property(prop)))
                 .from(DataSource.database(db))
-                .where(Expression.property(docType).and(ftsExpression.match(val)))
+                .where(Expression.property("type").equalTo(docType).and(ftsExpression.match(val)))
                 .limit(limit);
         for (Result row : query.execute()) {
             resultArray.add(row.toMap());
@@ -572,7 +572,7 @@ public class QueryRequestHandler {
         String prop1 = args.get("prop1");
         String prop2 = args.get("prop2");
         String val = args.get("val");
-        String docType = args.get("doc_type");
+        Expression docType = Expression.value(args.get("doc_type"));
         Expression limit = Expression.value(args.get("limit"));
         String index = "multiplePropertyIndex";
 
@@ -586,7 +586,7 @@ public class QueryRequestHandler {
                         SelectResult.expression(Expression.property(prop1)),
                         SelectResult.expression(Expression.property(prop2)))
                 .from(DataSource.database(db))
-                .where(Expression.property(docType).and(ftsExpression.match(val)))
+                .where(Expression.property("type").equalTo(docType).and(ftsExpression.match(val)))
                 .limit(limit);
         for (Result row : query.execute()) {
             resultArray.add(row.toMap());
@@ -598,7 +598,7 @@ public class QueryRequestHandler {
         Database db = args.get("database");
         String prop = args.get("prop");
         String val = args.get("val");
-        String docType = args.get("doc_type");
+        Expression docType = Expression.value(args.get("doc_type"));
         Expression limit = Expression.value(args.get("limit"));
         String index = "singlePropertyIndex";
 
@@ -614,34 +614,7 @@ public class QueryRequestHandler {
                 .select(SelectResult.expression(Meta.id),
                         SelectResult.expression(Expression.property(prop)))
                 .from(DataSource.database(db))
-                .where(Expression.property(docType).and(ftsExpression.match(val)))
-                .limit(limit);
-        for (Result row : query.execute()) {
-            resultArray.add(row.toMap());
-        }
-        return resultArray;
-    }
-
-    public List<Object> logicalExpressionFTS(Args args) throws CouchbaseLiteException {
-        Database db = args.get("database");
-        String prop = args.get("prop");
-        String val1 = args.get("val1");
-        String val2 = args.get("val2");
-        String docType = args.get("doc_type");
-        Expression limit = Expression.value(args.get("limit"));
-        String val = val1 + " OR " + val2;
-        String index = "singlePropertyIndex";
-
-        FullTextIndex ftsIndex = IndexBuilder.fullTextIndex(FullTextIndexItem.property(prop)).setLanguage(null);
-        db.createIndex(index,ftsIndex);
-        FullTextExpression ftsExpression = FullTextExpression.index(index);
-        List<Object> resultArray = new ArrayList<>();
-
-        Query query = QueryBuilder
-                .select(SelectResult.expression(Meta.id),
-                        SelectResult.expression(Expression.property(prop)))
-                .from(DataSource.database(db))
-                .where(Expression.property(docType).and(ftsExpression.match(val)))
+                .where(Expression.property("type").equalTo(docType).and(ftsExpression.match(val)))
                 .limit(limit);
         for (Result row : query.execute()) {
             resultArray.add(row.toMap());
@@ -653,11 +626,11 @@ public class QueryRequestHandler {
         Database db = args.get("database");
         String prop = args.get("prop");
         String val = args.get("val");
-        String docType = args.get("doc_type");
+        Expression docType = Expression.value(args.get("doc_type"));
         Expression limit = Expression.value(args.get("limit"));
         String index = "singlePropertyIndex";
 
-        FullTextIndex ftsIndex = IndexBuilder.fullTextIndex(FullTextIndexItem.property(prop)).setLanguage(null);
+        FullTextIndex ftsIndex = IndexBuilder.fullTextIndex(FullTextIndexItem.property(prop));
         db.createIndex(index,ftsIndex);
         FullTextExpression ftsExpression = FullTextExpression.index(index);
         List<Object> resultArray = new ArrayList<>();
@@ -666,7 +639,7 @@ public class QueryRequestHandler {
                 .select(SelectResult.expression(Meta.id),
                         SelectResult.expression(Expression.property(prop)))
                 .from(DataSource.database(db))
-                .where(Expression.property(docType).and(ftsExpression.match(val)))
+                .where(Expression.property("type").equalTo(docType).and(ftsExpression.match(val)))
                 .orderBy(Ordering.expression(FullTextFunction.rank(index)).descending())
                 .limit(limit);
         for (Result row : query.execute()) {
