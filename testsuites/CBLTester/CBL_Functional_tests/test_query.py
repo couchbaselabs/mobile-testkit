@@ -620,6 +620,32 @@ def test_query_join(params_from_base_test_setup, select_property1,
     log_info("Doc contents match")
 
 
+@pytest.mark.parametrize("select_property1, select_property2, select_property3, join_key1, join_key2, whr_key1, whr_key2, whr_val1, whr_val2", [
+    ("firstname", "lastname", "name", "department", "code", "type", "type", "employee", "department")
+])
+def test_query_join2(params_from_base_test_setup, select_property1,
+                    select_property2, select_property3, join_key1,
+                    join_key2, whr_key1, whr_key2, whr_val1, whr_val2):
+    cluster_topology = params_from_base_test_setup["cluster_topology"]
+    source_db = params_from_base_test_setup["source_db"]
+    cbs_url = cluster_topology['couchbase_servers'][0]
+    base_url = params_from_base_test_setup["base_url"]
+    cbs_ip = host_for_url(cbs_url)
+
+    log_info("Fetching docs from CBL through query")
+    qy = Query(base_url)
+    limit = 5
+    result_set = qy.query_join2(source_db, select_property1, 
+                                select_property2, select_property3, 
+                                join_key1, join_key2, whr_key1, 
+                                whr_key2, whr_val1, whr_val2)
+
+    docs_from_cbl = []
+
+    for docs in result_set:
+        docs_from_cbl.append(docs)
+
+
 @pytest.mark.parametrize("prop, val", [
     ("country", "France"),
     ("type", "airline")
@@ -1132,9 +1158,12 @@ def test_not(params_from_base_test_setup, prop, val1, val2):
 
 @pytest.mark.parametrize("prop, val, doc_type", [
     ("content", "beautiful", "landmark"),
-    ("content", "beau*", "landmark"),  # Wildcard Expression
+    ("content", "beau*", "landmark"),  # Wildcard Expression/ Prefix expression
     ("content", "in the high", "landmark"),  # Search with stop words
     ("content", "fish chips", "landmark"),  # Search ignoring stop words
+    ("content", "'\"foods including'\"", "landmark"),  # phrase queries
+    ("content", "'award NEAR/2 \"restaurant\"'", "landmark"),  # near queries 0 results
+    ("content", "'award NEAR/3 \"restaurant\"'", "landmark")  # near queries 1 results
 ])
 def test_single_property_fts(params_from_base_test_setup, prop, val, doc_type):
     """ @summary
@@ -1162,7 +1191,7 @@ def test_single_property_fts(params_from_base_test_setup, prop, val, doc_type):
         "tollfree": None,
         "type": "landmark"}
     content_list = ["Adult - 6.99 for an Adult ticket that allows you to come back for further visits within a year (children's and concessionary tickets also available). Museum on military engineering and the history of the British Empire. A quite extensive collection that takes about half a day to see. Of most interest to fans of British and military history or civil engineering. The outside collection of tank mounted bridges etc can be seen for free. There is also an extensive series of themed special event weekends, admission to which is included in the cost of the annual ticket.",
-                    "A newly extended lively restaurant located in the high street, an American Hollywood style restaurant beautifully decorated with old photos and a great menu including burgers and ribs.",
+                    "A newly extended lively restaurant located in the high street with great foods, an American Hollywood style restaurant beautifully decorated with old photos and a great menu including burgers and ribs.",
                     "Really popular oriental restaurant with a mixture foods including noodles, duck and other oriental staples. fish hello chips",
                     "Indian restaurant opposite the railway station.  Good value and quality of food. An award winning up market restaurant. Sunday Buffet for only 8.50 and you can eat as much as you like. Very popular with the locals and beyond.",
                     "Chinese restaurant just off the High Street. fish chips",
@@ -1189,7 +1218,10 @@ def test_single_property_fts(params_from_base_test_setup, prop, val, doc_type):
 
 @pytest.mark.parametrize("prop1, prop2, val, doc_type", [
     ("content", "name", "Fish & Chips", "landmark"),
-    ("content", "name", "beautiful OR beautifully", "landmark"),  # logical expression
+    ("content", "name", "name:fish beauty", "landmark"),  # overriding the property to be indexed
+    ("content", "name", "beautiful OR beautifully", "landmark"),  # OR logical expression
+    ("content", "name", "beauty AND splendour", "landmark"),  # AND logical expression
+#     ("content", "name", "NOT beauty AND splendour", "landmark"),  # NOT logical expression
 ])
 def test_multiple_property_fts(params_from_base_test_setup, prop1, prop2, val, doc_type):
     """ @summary
@@ -1217,19 +1249,19 @@ def test_multiple_property_fts(params_from_base_test_setup, prop1, prop2, val, d
         "tollfree": None,
         "type": "landmark"}
     name_list = ["Royal Engineers Museum",
-                 "City Chambers",
+                 "City Chambers beauty",
                  "Hakuna Matata",
                  "Blue Ocean"
                  "Fire in the Hole",
-                 "Beautiful Rendezvous",
+                 "Beautiful Ocean Rendezvous",
                  "Fish & Chips"]
     content_list = ["Adult - 6.99 for an Adult ticket that allows you to come back for further visits within a year (children's and concessionary tickets also available). Museum on military engineering and the history of the British Empire. A quite extensive collection that takes about half a day to see. Of most interest to fans of British and military history or civil engineering. The outside collection of tank mounted bridges etc can be seen for free. There is also an extensive series of themed special event weekends, admission to which is included in the cost of the annual ticket.",
                     "A newly extended lively restaurant located in the high street, an American Hollywood style restaurant beautifully decorated with old photos and a great menu including burgers and ribs.",
-                    "Really popular oriental restaurant with a mixture foods including noodles, duck and other oriental staples. fish hello chips",
+                    "Really popular oriental restaurant with a mixture foods including noodles, duck and other oriental staples. fish hello chips. beauty",
                     "Indian restaurant opposite the railway station.  Good value and quality of food. An award winning up market restaurant. Sunday Buffet for only 8.50 and you can eat as much as you like. Very popular with the locals and beyond.",
-                    "Chinese restaurant just off the High Street. fish chips",
-                    "Best fish and chips in the area. beauty !!!",
-                    "This imposing beautiful structure in high George Square was built in 1888 in the Italian Renaissance style and is the headquarters of Glasgow City Council. Tours of the building are available daily, and visitors can see the magnificent marble staircases, lobbies, see the debating chamber and the lavish banqueting hall. Tours take about 45 min. In front the building, '''George Square''', the city's notional centre, is populated by several statues of civic leaders and famous figures from history and is often used for outdoor events."]
+                    "Chinese restaurant just off the High Street. fish chips. beauty",
+                    "Best fish and chips in the area. beauty and splendour!!!",
+                    "This imposing beautiful structure in high George Square was built in 1888 in the Italian Renaissance style and is the headquarters of Glasgow City Council, splendour. Tours of the building are available daily, and visitors can see the magnificent marble staircases, lobbies, see the debating chamber and the lavish banqueting hall. Tours take about 45 min. In front the building, '''George Square''', the city's notional centre, is populated by several statues of civic leaders and famous figures from history and is often used for outdoor events. beauty"]
     for item, name in zip(content_list, name_list):
         doc_content["id"] += 1
         doc_content["content"] = item
