@@ -347,11 +347,20 @@ namespace Couchbase.Lite.Testing
             {
                 var prop = postBody["prop"].ToString();
                 var val = postBody["val"].ToString();
+                Boolean stemming = Convert.ToBoolean(postBody["stemming"]);
                 IExpression limit = Expression.Value(postBody["limit"].ToString());
                 IExpression doc_type = Expression.Value(postBody["doc_type"].ToString());
                 string index = "singlePropertyIndex";
 
-                IFullTextIndex ftsIndex = IndexBuilder.FullTextIndex(FullTextIndexItem.Property(prop));
+                IFullTextIndex ftsIndex;
+                if (stemming)
+                {
+                    ftsIndex = IndexBuilder.FullTextIndex(FullTextIndexItem.Property(prop));
+                } 
+                else
+                {
+                    ftsIndex = IndexBuilder.FullTextIndex(FullTextIndexItem.Property(prop)).SetLanguage(null);
+                }
                 db.CreateIndex(index, ftsIndex);
                 IFullTextExpression ftsExpression = FullTextExpression.Index(index);
 
@@ -379,11 +388,20 @@ namespace Couchbase.Lite.Testing
                 var prop1 = postBody["prop1"].ToString();
                 var prop2 = postBody["prop2"].ToString();
                 var val = postBody["val"].ToString();
+                Boolean stemming = Convert.ToBoolean(postBody["stemming"]);
                 IExpression limit = Expression.Value(postBody["limit"].ToString());
                 IExpression doc_type = Expression.Value(postBody["doc_type"].ToString());
                 string index = "singlePropertyIndex";
 
-                IFullTextIndex ftsIndex = IndexBuilder.FullTextIndex(FullTextIndexItem.Property(prop1), FullTextIndexItem.Property(prop2));
+                IFullTextIndex ftsIndex;
+                if (stemming) 
+                {
+                    ftsIndex = IndexBuilder.FullTextIndex(FullTextIndexItem.Property(prop1), FullTextIndexItem.Property(prop2));  
+                }
+                else
+                {
+                    ftsIndex = IndexBuilder.FullTextIndex(FullTextIndexItem.Property(prop1), FullTextIndexItem.Property(prop2)).SetLanguage(null);
+                }
                 db.CreateIndex(index, ftsIndex);
                 IFullTextExpression ftsExpression = FullTextExpression.Index(index);
 
@@ -391,37 +409,6 @@ namespace Couchbase.Lite.Testing
                                 .Select(SelectResult.Expression(Meta.ID),
                                         SelectResult.Expression(Expression.Property(prop1)),
                                         SelectResult.Expression(Expression.Property(prop2)))
-                                .From(DataSource.Database(db))
-                                .Where(Expression.Property("type").EqualTo(doc_type).And(ftsExpression.Match(val)))
-                                .Limit(limit);
-                List<object> resultArray = new List<object>();
-                foreach (Result row in query.Execute())
-                {
-                    resultArray.Add(row.ToDictionary());
-                }
-                response.WriteBody(resultArray);
-            });
-        }
-
-        internal static void QueryFTSWithoutStemming([NotNull] NameValueCollection args,
-            [NotNull] IReadOnlyDictionary<string, object> postBody,
-            [NotNull] HttpListenerResponse response)
-        {
-            With<Database>(postBody, "database", db =>
-            {
-                var prop = postBody["prop"].ToString();
-                var val = postBody["val"].ToString();
-                IExpression limit = Expression.Value(postBody["limit"].ToString());
-                IExpression doc_type = Expression.Value(postBody["doc_type"].ToString());
-                string index = "singlePropertyIndex";
-
-                IFullTextIndex ftsIndex = IndexBuilder.FullTextIndex(FullTextIndexItem.Property(prop)).SetLanguage(null);
-                db.CreateIndex(index, ftsIndex);
-                IFullTextExpression ftsExpression = FullTextExpression.Index(index);
-
-                IQuery query = QueryBuilder
-                                .Select(SelectResult.Expression(Meta.ID),
-                                        SelectResult.Expression(Expression.Property(prop)))
                                 .From(DataSource.Database(db))
                                 .Where(Expression.Property("type").EqualTo(doc_type).And(ftsExpression.Match(val)))
                                 .Limit(limit);

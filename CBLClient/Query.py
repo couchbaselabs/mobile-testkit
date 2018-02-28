@@ -341,50 +341,29 @@ class Query(object):
         return self._client.invokeMethod("query_notEqualTo", args)
 
     def query_single_property_fts(self, database, prop, val,
-                                  doc_type, limit):
+                                  doc_type, limit, stemming):
         args = Args()
         args.setMemoryPointer("database", database)
         args.setString("prop", prop)
         args.setString("val", val)
         args.setString("doc_type", doc_type)
+        args.setBoolean("stemming", stemming)
         args.setInt("limit", limit)
 
         return self._client.invokeMethod("query_singlePropertyFTS", args)
 
     def query_multiple_property_fts(self, database, prop1, prop2,
-                                    val, doc_type, limit):
+                                    val, doc_type, limit, stemming):
         args = Args()
         args.setMemoryPointer("database", database)
         args.setString("prop1", prop1)
         args.setString("prop2", prop2)
         args.setString("val", val)
         args.setString("doc_type", doc_type)
+        args.setBoolean("stemming", stemming)
         args.setInt("limit", limit)
 
         return self._client.invokeMethod("query_multiplePropertyFTS", args)
-
-    def query_fts_without_stemming(self, database, prop, val,
-                                   doc_type, limit):
-        args = Args()
-        args.setMemoryPointer("database", database)
-        args.setString("prop", prop)
-        args.setString("val", val)
-        args.setString("doc_type", doc_type)
-        args.setInt("limit", limit)
-
-        return self._client.invokeMethod("query_ftsWithoutStemming", args)
-
-    def query_logical_expression_fts(self, database, prop, val1,
-                                     val2, doc_type, limit):
-        args = Args()
-        args.setMemoryPointer("database", database)
-        args.setString("prop1", prop)
-        args.setString("val1", val1)
-        args.setString("val2", val2)
-        args.setString("doc_type", doc_type)
-        args.setInt("limit", limit)
-
-        return self._client.invokeMethod("query_logicalExpressionFTS", args)
 
     def query_fts_with_ranking(self, database, prop, val,
                                doc_type, limit):
