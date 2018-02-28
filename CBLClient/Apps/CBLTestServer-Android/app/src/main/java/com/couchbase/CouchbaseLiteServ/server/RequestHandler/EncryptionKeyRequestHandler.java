@@ -2,11 +2,11 @@ package com.couchbase.CouchbaseLiteServ.server.RequestHandler;
 
 
 import com.couchbase.CouchbaseLiteServ.server.Args;
-import com.couchbase.lite.EncryptionKey;
+// import com.couchbase.lite.EncryptionKey;
 
 public class EncryptionKeyRequestHandler {
 
-    public EncryptionKey create(Args args){
+    /*public EncryptionKey create(Args args){
         byte[] key = args.get("key");
         String password = args.get("password");
 
@@ -17,5 +17,5 @@ public class EncryptionKeyRequestHandler {
         } else {
             throw new IllegalArgumentException("an Encryption parameter is null");
         }
-    }
+    }*/
 }

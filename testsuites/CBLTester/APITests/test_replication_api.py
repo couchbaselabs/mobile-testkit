@@ -26,21 +26,13 @@ def test_replication_configuration_invalid_db(params_from_base_test_setup):
         12. Configure replication with target db None
         13. Verify that it throws invalid type
     """
-    cbl_db_name = "cbl_db"
-    sg_admin_url = params_from_base_test_setup["sg_admin_url"]
     sg_mode = params_from_base_test_setup["mode"]
     cluster_config = params_from_base_test_setup["cluster_config"]
-    sg_blip_url = sg_admin_url.replace("http", "blip")
-    sg_blip_url = "{}/db".format(sg_blip_url)
+    sg_blip_url = params_from_base_test_setup["target_url"]
+    cbl_db = params_from_base_test_setup["source_db"]
     channels = ["ABC"]
-    liteserv_host = params_from_base_test_setup["liteserv_host"]
-    liteserv_port = params_from_base_test_setup["liteserv_port"]
-    base_url = "http://{}:{}".format(liteserv_host, liteserv_port)
+    base_url = params_from_base_test_setup["base_url"]
     db = Database(base_url)
-
-    # Create CBL database
-    db_config = db.configure()
-    cbl_db = db.create(cbl_db_name, db_config)
 
     # Reset cluster to ensure no data in system
     sg_config = sync_gateway_config_path_for_mode("listener_tests/listener_tests", sg_mode)
@@ -75,3 +67,4 @@ def test_replication_configuration_invalid_db(params_from_base_test_setup):
     with pytest.raises(Exception) as he:
         replicator.configure(cbl_db, target_db=None, continuous=True)
     assert he.value.message.startswith('Invalid value type: None'), "Did not caught http error when source db is none"
+

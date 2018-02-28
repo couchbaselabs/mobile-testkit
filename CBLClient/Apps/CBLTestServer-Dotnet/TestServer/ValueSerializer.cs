@@ -26,7 +26,7 @@ namespace Couchbase.Lite.Testing
                 Boolean item = Convert.ToBoolean(value);
                 return item ? "true" : "false";
             }
-            else if (t.Equals(typeof(string)))
+            else if (t.Equals(typeof(string)) || t.Equals(typeof(Blob)))
             {
                 return "\"" + value.ToString() + "\"";
             }

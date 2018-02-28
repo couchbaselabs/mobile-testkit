@@ -546,11 +546,17 @@ public class QueryRequestHandler {
         Database db = args.get("database");
         String prop = args.get("prop");
         String val = args.get("val");
+        Boolean stemming = args.get("stemming");
         Expression docType = Expression.value(args.get("doc_type"));
         Expression limit = Expression.value(args.get("limit"));
         String index = "singlePropertyIndex";
+        FullTextIndex ftsIndex;
 
-        FullTextIndex ftsIndex = IndexBuilder.fullTextIndex(FullTextIndexItem.property(prop));
+        if (stemming) {
+            ftsIndex = IndexBuilder.fullTextIndex(FullTextIndexItem.property(prop));
+        } else {
+            ftsIndex = IndexBuilder.fullTextIndex(FullTextIndexItem.property(prop)).setLanguage(null);
+        }
         db.createIndex(index,ftsIndex);
         FullTextExpression ftsExpression = FullTextExpression.index(index);
         List<Object> resultArray = new ArrayList<>();
@@ -572,11 +578,17 @@ public class QueryRequestHandler {
         String prop1 = args.get("prop1");
         String prop2 = args.get("prop2");
         String val = args.get("val");
+        Boolean stemming = args.get("stemming");
         Expression docType = Expression.value(args.get("doc_type"));
         Expression limit = Expression.value(args.get("limit"));
         String index = "multiplePropertyIndex";
+        FullTextIndex ftsIndex;
 
-        FullTextIndex ftsIndex = IndexBuilder.fullTextIndex(FullTextIndexItem.property(prop1), FullTextIndexItem.property(prop2));
+        if (stemming) {
+            ftsIndex = IndexBuilder.fullTextIndex(FullTextIndexItem.property(prop1), FullTextIndexItem.property(prop2));
+        } else {
+            ftsIndex = IndexBuilder.fullTextIndex(FullTextIndexItem.property(prop1), FullTextIndexItem.property(prop2)).setLanguage(null);
+        }
         db.createIndex(index,ftsIndex);
         FullTextExpression ftsExpression = FullTextExpression.index(index);
         List<Object> resultArray = new ArrayList<>();
@@ -585,34 +597,6 @@ public class QueryRequestHandler {
                 .select(SelectResult.expression(Meta.id),
                         SelectResult.expression(Expression.property(prop1)),
                         SelectResult.expression(Expression.property(prop2)))
-                .from(DataSource.database(db))
-                .where(Expression.property("type").equalTo(docType).and(ftsExpression.match(val)))
-                .limit(limit);
-        for (Result row : query.execute()) {
-            resultArray.add(row.toMap());
-        }
-        return resultArray;
-    }
-
-    public List<Object> ftsWithoutStemming(Args args) throws CouchbaseLiteException {
-        Database db = args.get("database");
-        String prop = args.get("prop");
-        String val = args.get("val");
-        Expression docType = Expression.value(args.get("doc_type"));
-        Expression limit = Expression.value(args.get("limit"));
-        String index = "singlePropertyIndex";
-
-        /*
-        Disabling Stemming by setting language to null
-         */
-        FullTextIndex ftsIndex = IndexBuilder.fullTextIndex(FullTextIndexItem.property(prop)).setLanguage(null);
-        db.createIndex(index,ftsIndex);
-        FullTextExpression ftsExpression = FullTextExpression.index(index);
-        List<Object> resultArray = new ArrayList<>();
-
-        Query query = QueryBuilder
-                .select(SelectResult.expression(Meta.id),
-                        SelectResult.expression(Expression.property(prop)))
                 .from(DataSource.database(db))
                 .where(Expression.property("type").equalTo(docType).and(ftsExpression.match(val)))
                 .limit(limit);

@@ -6,8 +6,8 @@ import android.content.Context;
 import com.couchbase.CouchbaseLiteServ.MainActivity;
 import com.couchbase.CouchbaseLiteServ.server.Args;
 import com.couchbase.lite.DatabaseConfiguration;
-import com.couchbase.lite.ConflictResolver;
-import com.couchbase.lite.EncryptionKey;
+//import com.couchbase.lite.ConflictResolver;
+//import com.couchbase.lite.EncryptionKey;
 
 public class DatabaseConfigurationRequestHandler {
 
@@ -18,7 +18,7 @@ public class DatabaseConfigurationRequestHandler {
 
     public DatabaseConfiguration configure(Args args) {
         String directory = args.get("directory");
-        ConflictResolver conflictResolver = args.get("conflictResolver");
+        // ConflictResolver conflictResolver = args.get("conflictResolver");
         // EncryptionKey encryptionKey = args.get("encryptionKey");
         String password = args.get("password");
         Context context = MainActivity.getAppContext();
@@ -26,13 +26,13 @@ public class DatabaseConfigurationRequestHandler {
         if (directory != null) {
             config.setDirectory(directory);
         }
-        if (conflictResolver != null) {
+        /*if (conflictResolver != null) {
             config.setConflictResolver(conflictResolver);
         }
         if (password != null) {
           EncryptionKey encryptionKey = new EncryptionKey(password);
           config.setEncryptionKey(encryptionKey);
-        }
+        }*/
         return config;
     }
 
@@ -42,17 +42,17 @@ public class DatabaseConfigurationRequestHandler {
         return config;
     }
 
-    public ConflictResolver getConflictResolver(Args args){
+    /*public ConflictResolver getConflictResolver(Args args){
         DatabaseConfiguration config = args.get("config");
         return config.getConflictResolver();
-    }
+    }*/
 
     public String getDirectory(Args args){
         DatabaseConfiguration config = args.get("config");
         return config.getDirectory();
     }
 
-    public EncryptionKey getEncryptionKey(Args args){
+    /*public EncryptionKey getEncryptionKey(Args args){
         DatabaseConfiguration config = args.get("config");
         return config.getEncryptionKey();
     }
@@ -61,7 +61,7 @@ public class DatabaseConfigurationRequestHandler {
         DatabaseConfiguration config = args.get("config");
         ConflictResolver conflictResolver = args.get("conflictResolver");
         return config.setConflictResolver(conflictResolver);
-    }
+    }*/
 
     public DatabaseConfiguration setDirectory(Args args){
         DatabaseConfiguration config = args.get("config");
@@ -69,10 +69,10 @@ public class DatabaseConfigurationRequestHandler {
         return config.setDirectory(directory);
     }
 
-    public DatabaseConfiguration setEncryptionKey(Args args){
+    /*public DatabaseConfiguration setEncryptionKey(Args args){
         DatabaseConfiguration config = args.get("config");
         String password = args.get("password");
         EncryptionKey encryptionKey = new EncryptionKey(password);
         return config.setEncryptionKey(encryptionKey);
-    }
+    }*/
 }

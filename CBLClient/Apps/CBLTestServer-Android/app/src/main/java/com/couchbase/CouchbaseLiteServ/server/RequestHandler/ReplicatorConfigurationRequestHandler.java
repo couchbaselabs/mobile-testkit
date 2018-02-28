@@ -3,7 +3,7 @@ package com.couchbase.CouchbaseLiteServ.server.RequestHandler;
 
 import com.couchbase.CouchbaseLiteServ.server.Args;
 import com.couchbase.lite.Authenticator;
-import com.couchbase.lite.ConflictResolver;
+// import com.couchbase.lite.ConflictResolver;
 import com.couchbase.lite.Database;
 import com.couchbase.lite.DatabaseEndpoint;
 import com.couchbase.lite.ReplicatorConfiguration;
@@ -48,7 +48,7 @@ public class ReplicatorConfigurationRequestHandler {
         List<String> channels = args.get("channels");
         List<String> documentIds = args.get("documentIDs");
         Authenticator authenticator = args.get("authenticator");
-        ConflictResolver conflictResolver = args.get("conflictResolver");
+        // ConflictResolver conflictResolver = args.get("conflictResolver");
         Map<String, String> headers = args.get("headers");
 
         replicatorType = replicatorType.toLowerCase();
@@ -81,9 +81,9 @@ public class ReplicatorConfigurationRequestHandler {
         }
         config.setAuthenticator(authenticator);
         config.setReplicatorType(replType);
-        if (conflictResolver != null) {
+        /*if (conflictResolver != null) {
             config.setConflictResolver(conflictResolver);
-        }
+        }*/
         if (channels != null) {
             config.setChannels(channels);
         }
@@ -108,10 +108,10 @@ public class ReplicatorConfigurationRequestHandler {
         return replicatorConfiguration.getChannels();
     }
 
-    public ConflictResolver getConflictResolver(Args args){
+    /*public ConflictResolver getConflictResolver(Args args){
         ReplicatorConfiguration replicatorConfiguration = args.get("configuration");
         return replicatorConfiguration.getConflictResolver();
-    }
+    }*/
 
     public Database getDatabase(Args args){
         ReplicatorConfiguration replicatorConfiguration = args.get("configuration");
@@ -155,11 +155,11 @@ public class ReplicatorConfigurationRequestHandler {
         replicatorConfiguration.setChannels(channels);
     }
 
-    public void setConflictResolver(Args args){
+    /*public void setConflictResolver(Args args){
         ReplicatorConfiguration replicatorConfiguration = args.get("configuration");
         ConflictResolver conflictResolver = args.get("conflictResolver");
         replicatorConfiguration.setConflictResolver(conflictResolver);
-    }
+    }*/
 
     public void setContinuous(Args args){
         ReplicatorConfiguration replicatorConfiguration = args.get("configuration");

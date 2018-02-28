@@ -132,8 +132,6 @@ public class DatabaseRequestHandler {
 
         case "database_databaseChangeListenerGetChanges":
             let changeListener: MyDatabaseChangeListener = (args.get(name: "changeListener"))!
-            let index: Int = (args.get(name: "index"))!
-            
             return changeListener.getChanges()
             
         case "database_databaseChangeGetDocumentId":
@@ -173,8 +171,7 @@ public class DatabaseRequestHandler {
                     let data: Dictionary<String, Any> = doc.value
                     let updated_doc = database.document(withID: id)!.toMutable()
                     updated_doc.setData(data)
-                    let savedDoc = try database.saveDocument(updated_doc)
-                    print("saved document.... \(savedDoc.keys)")
+                    try database.saveDocument(updated_doc)
                 }
             }
             
@@ -185,7 +182,7 @@ public class DatabaseRequestHandler {
             let docId: String = args.get(name: "id")!
             let updated_doc = database.document(withID: docId)!.toMutable()
             updated_doc.setData(data)
-            let savedDoc = try! database.saveDocument(updated_doc)
+            try! database.saveDocument(updated_doc)
             
             
         case "database_getDocIds":
@@ -214,8 +211,9 @@ public class DatabaseRequestHandler {
             }
 
             return documents
-            
-        case "database_setEncryptionKey":
+          
+            // TODO : Uncomment once encrption feature is added
+        /*case "database_setEncryptionKey":
             let database: Database = args.get(name:"database")!
             let password: String? = args.get(name:"password")!
             let encryptionKey: EncryptionKey? = EncryptionKey.password(password!)
@@ -225,7 +223,7 @@ public class DatabaseRequestHandler {
                 print("Got error setting encryption key \(error)")
                 return error.localizedDescription
             }
-
+        */
         case "database_queryAllDocuments":
             let database: Database = args.get(name:"database")!
             let searchQuery = QueryBuilder

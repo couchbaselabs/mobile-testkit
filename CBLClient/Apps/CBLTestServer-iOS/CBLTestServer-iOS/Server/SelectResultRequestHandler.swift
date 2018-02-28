@@ -29,6 +29,5 @@ public class SelectResultRequestHandler {
         default:
             throw RequestHandlerError.MethodNotFound(method)
         }
-        return SelectResultRequestHandler.VOID
     }
 }
