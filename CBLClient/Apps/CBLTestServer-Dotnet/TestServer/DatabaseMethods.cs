@@ -84,7 +84,7 @@ namespace Couchbase.Lite.Testing
                     var val = (pair.Value as JObject)?.ToObject<IDictionary<string, object>>();
                     using (var doc = new MutableDocument(pair.Key, val))
                     {
-                        db.Save(doc).Dispose();
+                        db.Save(doc);
                     }
                 }
 

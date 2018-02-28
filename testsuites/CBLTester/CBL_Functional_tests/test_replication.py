@@ -913,8 +913,6 @@ def test_CBL_push_pull_with_sgAccel_down(params_from_base_test_setup, sg_conf_na
         6. Now Get pull replication to SG
         7. update docs in CBL
         8. Verify CBL can update docs successfully
-        # TODO : complete after this issue fixed
-        https://github.com/couchbase/sync_gateway/issues/3165
     """
     sg_db = "db"
     sg_url = params_from_base_test_setup["sg_url"]
@@ -1257,3 +1255,127 @@ def test_push_replication_with_backgroundApp(params_from_base_test_setup, num_do
     sg_ids = [row["id"] for row in sg_docs["rows"]]
     for doc_id in cbl_doc_ids:
         assert doc_id in sg_ids
+
+
+@pytest.mark.sanity
+@pytest.mark.listener
+def test_replication_wrong_blip(params_from_base_test_setup):
+    """
+        @summary:
+        1. Create docs in CBL
+        2. Push replication to SG with wrong blip
+        3. Verify it fails .
+    """
+    sg_db = "db"
+    sg_admin_url = params_from_base_test_setup["sg_admin_url"]
+    cluster_config = params_from_base_test_setup["cluster_config"]
+    sg_blip_url = params_from_base_test_setup["target_url"]
+    sg_blip_url = sg_blip_url.replace("ws", "http")
+    base_url = params_from_base_test_setup["base_url"]
+    sg_config = params_from_base_test_setup["sg_config"]
+    db = params_from_base_test_setup["db"]
+    cbl_db = params_from_base_test_setup["source_db"]
+
+    num_of_docs = 10
+    username = "autotest"
+    password = "password"
+
+    channels = ["Replication"]
+    sg_client = MobileRestClient()
+    authenticator = Authenticator(base_url)
+    replicator = Replication(base_url)
+
+    # Modify sync-gateway config to use no-conflicts config
+    c = cluster.Cluster(config=cluster_config)
+    c.reset(sg_config_path=sg_config)
+
+    # 1. Create docs in CBL.
+    db.create_bulk_docs(num_of_docs, "cbl", db=cbl_db, channels=channels)
+
+    # 2. Push replication to SG with wrong blip
+    sg_client.create_user(sg_admin_url, sg_db, username, password, channels=channels)
+    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, username)
+    replicator_authenticator = authenticator.authentication(session_id, cookie, authentication_type="session")
+    with pytest.raises(Exception) as ex:
+        replicator.configure(cbl_db, sg_blip_url, continuous=True, channels=channels, replicator_authenticator=replicator_authenticator)
+    assert ex.value.message.startswith('400 Client Error: Bad Request for url:')
+    assert 'The url parameter has an unsupported URL scheme (http) The supported URL schemes are ws and wss.' in ex.value.message
+
+
+@pytest.mark.listener
+@pytest.mark.parametrize("delete_source", [
+    ('cbl'),
+    # ('cbl')
+])
+def test_default_conflict_scenario_delete_wins(params_from_base_test_setup, delete_source):
+    """
+        @summary:
+        1. Create docs in CBL.
+        2. Replicate docs to SG.
+        3. using mutlithreading, update same 
+        doc in Sg and delete doc in CBL
+        4. Verify delete wins
+    """
+    sg_db = "db"
+    sg_url = params_from_base_test_setup["sg_url"]
+    sg_admin_url = params_from_base_test_setup["sg_admin_url"]
+    sg_config = params_from_base_test_setup["sg_config"]
+    cluster_config = params_from_base_test_setup["cluster_config"]
+    sg_blip_url = params_from_base_test_setup["target_url"]
+    base_url = params_from_base_test_setup["base_url"]
+    db = params_from_base_test_setup["db"]
+    cbl_db = params_from_base_test_setup["source_db"]
+    channels = ["replication-channel"]
+    num_of_docs = 10
+
+    # Reset cluster to clean the data
+    c = cluster.Cluster(config=cluster_config)
+    c.reset(sg_config_path=sg_config)
+
+    # Create bulk doc json
+    db.create_bulk_docs(num_of_docs, "replication", db=cbl_db, channels=channels)
+    sg_client = MobileRestClient()
+    sg_client.create_user(sg_admin_url, sg_db, "autotest", password="password", channels=channels)
+    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, "autotest")
+    session = cookie, session_id
+
+    # Start and stop continuous replication
+    replicator = Replication(base_url)
+    authenticator = Authenticator(base_url)
+    replicator_authenticator = authenticator.authentication(session_id, cookie, authentication_type="session")
+    repl_config = replicator.configure(cbl_db, sg_blip_url, continuous=True, channels=channels, replicator_authenticator=replicator_authenticator)
+    repl = replicator.create(repl_config)
+    replicator.start(repl)
+    replicator.wait_until_replicator_idle(repl)
+    replicator.stop(repl)
+    sg_docs = sg_client.get_all_docs(url=sg_url, db=sg_db, auth=session)
+    sg_docs = sg_docs["rows"]
+
+    if delete_source == 'cbl':
+        sg_client.update_docs(url=sg_url, db=sg_db, docs=sg_docs, number_updates=1, auth=session)
+        cbl_doc_ids = db.getDocIds(cbl_db)
+        for id in cbl_doc_ids:
+            doc = db.getDocument(cbl_db, id)
+            db.delete(cbl_db, doc)
+
+    if delete_source == 'sg':
+        sg_client.delete_docs(url=sg_url, db=sg_db, docs=sg_docs, auth=session)
+        db.update_bulk_docs(cbl_db)
+    
+    cbl_doc_ids = db.getDocIds(cbl_db)
+    cbl_docs = db.getDocuments(cbl_db, cbl_doc_ids)
+    assert len(cbl_docs) == 0 ,"did not delete docs after delete operation"
+    repl_config = replicator.configure(cbl_db, sg_blip_url, continuous=True, channels=channels, replicator_authenticator=replicator_authenticator)
+    repl = replicator.create(repl_config)
+    replicator.start(repl)
+    replicator.wait_until_replicator_idle(repl)
+
+    cbl_doc_ids = db.getDocIds(cbl_db)
+    cbl_docs = db.getDocuments(cbl_db, cbl_doc_ids)
+    print "cbl docs are ", cbl_docs
+    assert len(cbl_docs) == 0 ,"did not delete docs after delete operation"
+    sg_docs = sg_client.get_all_docs(url=sg_url, db=sg_db, auth=session)
+    sg_docs = sg_docs["rows"]
+    assert len(sg_docs) == 0 ,"did not delete docs in sg after delete operation in CBL"
+    replicator.stop(repl)
+    

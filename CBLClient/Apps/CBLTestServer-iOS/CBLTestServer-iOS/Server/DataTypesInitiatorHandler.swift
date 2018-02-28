@@ -117,20 +117,15 @@ public class DataTypesInitiatorRequestHandler {
             let firstKeys: Set<String> = Set(first.keys)
             let secondKeys: Set<String> = Set(second.keys)
         
-            do {
-                for key in secondKeys {
-                    if !(first[key] as! String == second[key] as! String ) {
-                        return false
-                    }
+            for key in secondKeys {
+                if !(first[key] as! String == second[key] as! String ) {
+                    return false
                 }
-
-                for key in firstKeys {
-                    if !second.keys.contains(key) {
-                        return false
-                    }
+            }
+            for key in firstKeys {
+                if !second.keys.contains(key) {
+                    return false
                 }
-            } catch {
-                return false
             }
             return true
 

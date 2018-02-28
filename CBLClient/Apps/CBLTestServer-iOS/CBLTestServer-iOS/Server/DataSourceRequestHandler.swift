@@ -25,6 +25,5 @@ public class DataSourceRequestHandler {
         default:
             throw RequestHandlerError.MethodNotFound(method)
         }
-        return DataSourceRequestHandler.VOID
     }
 }

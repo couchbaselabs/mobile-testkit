@@ -66,7 +66,7 @@ public class QueryRequestHandler {
 
         case "query_inner_join_datasource":
             let datasource: DataSource = args.get(name: "datasource")!
-            return Join.innerJoin(datasource as! DataSourceProtocol as! DataSourceProtocol)
+            return Join.innerJoin(datasource as! DataSourceProtocol)
 
         case "query_cross_join_datasource":
             let datasource: DataSource = args.get(name: "datasource")!
@@ -328,7 +328,7 @@ public class QueryRequestHandler {
             }
 
             return resultArray
-            
+        /*
         case "query_singlePropertyFTS":
             let database: Database = args.get(name: "database")!
             let prop: String = args.get(name: "prop")!
@@ -439,8 +439,7 @@ public class QueryRequestHandler {
             }
             
             return resultArray
-            
-            
+           */
         default:
             throw RequestHandlerError.MethodNotFound(method)
         }

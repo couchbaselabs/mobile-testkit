@@ -34,6 +34,5 @@ public class BasicAuthenticatorRequestHandler {
         default:
             throw RequestHandlerError.MethodNotFound(method)
         }
-        return BasicAuthenticatorRequestHandler.VOID
     }
 }
