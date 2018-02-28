@@ -1193,13 +1193,14 @@ def test_single_property_fts(params_from_base_test_setup, prop, val, doc_type, s
     if result_set != -1 and result_set is not None:
         for result in result_set:
             docs_from_cbl.append(result)
-    log_info(docs_from_cbl)
+            log_info(result)
     assert 0 < len(docs_from_cbl) <= limit
 
 
 @pytest.mark.parametrize("prop1, prop2, val, doc_type, stemming", [
     # with stemming
     ("content", "name", "centre art", "landmark", True),
+    ("content", "name", "tow*", "landmark", True),  # wild cards
     ("content", "name", "^Beautiful", "landmark", True),  # checking for content at the start
     ("content", "name", "name:cafe art", "landmark", True),  # overriding the property to be indexed
     ("content", "name", "beautiful OR arts", "landmark", True),  # OR logical expression
@@ -1209,6 +1210,7 @@ def test_single_property_fts(params_from_base_test_setup, prop, val, doc_type, s
     ("content", "name", "restaurant NOT chips", "landmark", True),  # NOT logical expression
     # Without stemming
     ("content", "name", "centre art", "landmark", False),
+    ("content", "name", "town*", "landmark", True),  # wild card
     ("content", "name", "^Beautiful", "landmark", False),  # checking for content at the start
     ("content", "name", "name:cafe art", "landmark", False),  # overriding the property to be indexed
     ("content", "name", "beautiful OR arts", "landmark", False),  # OR logical expression
@@ -1229,7 +1231,7 @@ def test_multiple_property_fts(params_from_base_test_setup, prop1, prop2, val, d
     
     # Get doc from CBL through query
     qy = Query(base_url)
-    limit = 100000
+    limit = 10
     result_set = qy.query_multiple_property_fts(source_db, prop1, prop2,
                                                 val, doc_type, limit,
                                                 stemming)
@@ -1237,8 +1239,7 @@ def test_multiple_property_fts(params_from_base_test_setup, prop1, prop2, val, d
     if result_set != -1 and result_set is not None:
         for result in result_set:
             docs_from_cbl.append(result)
-            print result
-    print len(docs_from_cbl)
+            log_info(result)
     assert 0 < len(docs_from_cbl) <= limit
 
 
@@ -1258,12 +1259,12 @@ def test_fts_with_ranking(params_from_base_test_setup, prop, val, doc_type):
 
     # Get doc from CBL through query
     qy = Query(base_url)
-    limit = 10000
+    limit = 10
     result_set = qy.query_fts_with_ranking(source_db, prop, val,
                                            doc_type, limit)
     docs_from_cbl = []
     if result_set != -1 and result_set is not None:
         for result in result_set:
             docs_from_cbl.append(result)
-            print result
+            log_info(result)
     assert 0 < len(docs_from_cbl) <= limit
