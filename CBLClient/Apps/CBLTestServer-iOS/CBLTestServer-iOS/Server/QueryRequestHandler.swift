@@ -328,7 +328,119 @@ public class QueryRequestHandler {
             }
 
             return resultArray
-               
+            
+        case "query_singlePropertyFTS":
+            let database: Database = args.get(name: "database")!
+            let prop: String = args.get(name: "prop")!
+            let val: String = args.get(name: "val")!
+            let doc_type: String = args.get(name: "doc_type")!
+            let limit: String = args.get(name: "limit")!
+            let index: String = "singlePropertyIndex"!
+            
+            let ftsIndex = IndexBuilder.fullTextIndex(FullTextIndexItem.property(prop))
+            try database.createIndex(ftsIndex, index)
+            let ftsExpression = FullTextExpression.index(index)
+            
+            let searchQuery = QueryBuilder
+                .select(SelectResult.expression(Meta.id),
+                        SelectResult.expression(Expression.property(prop)))
+                .from(DataSource.database(db))
+                .where(Expression.property("type").equalTo(Expression.string(doc_type)).and(ftsExpression.match(val)))
+                .limit(Expression.int(limit))
+            
+            var resultArray = [Any]()
+            
+            for row in try searchQuery.execute() {
+                resultArray.append(row.toDictionary())
+            }
+            
+            return resultArray
+            
+        case "query_multiplePropertyFTS":
+            let database: Database = args.get(name: "database")!
+            let prop1: String = args.get(name: "prop1")!
+            let prop2: String = args.get(name: "prop1")!
+            let val: String = args.get(name: "val")!
+            let doc_type: String = args.get(name: "doc_type")!
+            let limit: String = args.get(name: "limit")!
+            let index: String = "multiplePropertyIndex"!
+            
+            let ftsIndex = IndexBuilder.fullTextIndex(FullTextIndexItem.property(prop1), FullTextIndexItem.property(prop2))
+            try database.createIndex(ftsIndex, index)
+            let ftsExpression = FullTextExpression.index(index)
+            
+            let searchQuery = QueryBuilder
+                .select(SelectResult.expression(Meta.id),
+                        SelectResult.expression(Expression.property(prop1)),
+                        SelectResult.expression(Expression.property(prop2)))
+                .from(DataSource.database(db))
+                .where(Expression.property("type").equalTo(Expression.string(doc_type)).and(ftsExpression.match(val)))
+                .limit(Expression.int(limit))
+            
+            var resultArray = [Any]()
+            
+            for row in try searchQuery.execute() {
+                resultArray.append(row.toDictionary())
+            }
+            
+            return resultArray
+            
+        case "query_ftsWithoutStemming":
+            let database: Database = args.get(name: "database")!
+            let prop: String = args.get(name: "prop")!
+            let val: String = args.get(name: "val")!
+            let doc_type: String = args.get(name: "doc_type")!
+            let limit: String = args.get(name: "limit")!
+            let index: String = "singlePropertyIndex"!
+            
+            let ftsIndex = IndexBuilder.fullTextIndex(FullTextIndexItem.property(prop)).language(nil)
+            try database.createIndex(ftsIndex, index)
+            let ftsExpression = FullTextExpression.index(index)
+            
+            let searchQuery = QueryBuilder
+                .select(SelectResult.expression(Meta.id),
+                        SelectResult.expression(Expression.property(prop)))
+                .from(DataSource.database(db))
+                .where(Expression.property("type").equalTo(Expression.string(doc_type)).and(ftsExpression.match(val)))
+                .limit(Expression.int(limit))
+            
+            var resultArray = [Any]()
+            
+            for row in try searchQuery.execute() {
+                resultArray.append(row.toDictionary())
+            }
+            
+            return resultArray
+        
+        case "query_ftsWithRanking":
+            let database: Database = args.get(name: "database")!
+            let prop: String = args.get(name: "prop")!
+            let val: String = args.get(name: "val")!
+            let doc_type: String = args.get(name: "doc_type")!
+            let limit: String = args.get(name: "limit")!
+            let index: String = "singlePropertyIndex"!
+            
+            let ftsIndex = IndexBuilder.fullTextIndex(FullTextIndexItem.property(prop)).language(nil)
+            try database.createIndex(ftsIndex, index)
+            let ftsExpression = FullTextExpression.index(index)
+            
+            let searchQuery = QueryBuilder
+                .select(SelectResult.expression(Meta.id),
+                        SelectResult.expression(Expression.property(prop)))
+                .from(DataSource.database(db))
+                .where(Expression.property("type").equalTo(Expression.string(doc_type)).and(ftsExpression.match(val)))
+                .orderBy(Ordering.expression(FullTextFunction.rank(index)).descending())
+                .limit(Expression.int(limit))
+            
+            var resultArray = [Any]()
+            
+            for row in try searchQuery.execute() {
+                resultArray.append(row.toDictionary())
+            }
+            
+            return resultArray
+            
+            
         default:
             throw RequestHandlerError.MethodNotFound(method)
         }
