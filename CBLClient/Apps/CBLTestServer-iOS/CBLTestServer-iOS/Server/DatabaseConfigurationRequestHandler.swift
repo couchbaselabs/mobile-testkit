@@ -23,53 +23,41 @@ public class DatabaseConfigurationRequestHandler {
             
         case "databaseConfiguration_configure":
             let directory: String? = args.get(name:"directory")!
-            let conflictResolver : ConflictResolver? = args.get(name:"conflictResolver")!
-            let password: String? = args.get(name:"password")
-            let encryptionKey: EncryptionKey? = password != nil ? EncryptionKey.password(password!) : nil
+            // let password: String? = args.get(name:"password")
+            // let encryptionKey: EncryptionKey? = password != nil ? EncryptionKey.password(password!) : nil
             let config = DatabaseConfiguration()
             if directory != nil {
                 config.directory = directory!
             }
-            if conflictResolver != nil{
-                config.conflictResolver = conflictResolver!
-            }
+            /*
+            #if COUCHBASE_ENTERPRISE
             if encryptionKey != nil {
                 config.encryptionKey = encryptionKey!
             }
+            #endif */
             return config
-            
-        case "databaseConfiguration_getConflictResolver":
-            let config: DatabaseConfiguration = args.get(name: "config")!
-            return config.conflictResolver
             
         case "databaseConfiguration_getDirectory":
             let config: DatabaseConfiguration = args.get(name: "config")!
             return config.directory
             
-        case "databaseConfiguration_getEncryptionKey":
+        /*case "databaseConfiguration_getEncryptionKey":
             let config: DatabaseConfiguration = args.get(name: "config")!
             return config.encryptionKey
-            
-        case "databaseConfiguration_setConflictResolver":
-            let config: DatabaseConfiguration = args.get(name: "config")!
-            let conflictResolver: ConflictResolver = args.get(name: "conflictResolver")!
-            config.conflictResolver = conflictResolver
-            return config
-            
+         */
         case "databaseConfiguration_setDirectory":
             let config: DatabaseConfiguration = args.get(name: "config")!
             let directory: String = args.get(name: "directory")!
             config.directory = directory
             return config
             
-        case "databaseConfiguration_setEncryptionKey":
+        /*case "databaseConfiguration_setEncryptionKey":
             let config: DatabaseConfiguration = args.get(name: "config")!
             let password: String? = args.get(name:"password")!
-            let encryptionKey: EncryptionKey? = password != nil ? EncryptionKey.password(password!) : nil
-            //let key: EncryptionKey = args.get(name: "key")!
+            //let encryptionKey: EncryptionKey? = password != nil ? EncryptionKey.password(password!) : nil
             config.encryptionKey = encryptionKey
             return config
-
+        */
         default:
             throw RequestHandlerError.MethodNotFound(method)
         }

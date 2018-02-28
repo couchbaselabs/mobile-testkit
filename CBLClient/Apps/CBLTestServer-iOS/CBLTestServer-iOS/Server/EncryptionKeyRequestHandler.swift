@@ -20,17 +20,18 @@ public class EncryptionKeyRequestHandler {
         // EncryptionKey //
         ///////////////////
         case "encryptionkey_create":
+            /*
             let key: Data? = args.get(name: "key")!
             let password: String? = args.get(name: "password")!
-            
+             TODO : Uncomment this code once encryption is added back
             if (password != nil){
                 return EncryptionKey.password(password!)
             } else if(key != nil){
                 return EncryptionKey.key(key!)
             } else {
                 throw RequestHandlerError.InvalidArgument("Encryption parameter is null")
-            }
-
+            } */
+            return nil;
         default:
             throw RequestHandlerError.MethodNotFound(method)
         }

@@ -32,6 +32,5 @@ public class CollationRequestHandler {
         default:
             throw RequestHandlerError.MethodNotFound(method)
         }
-        return CollationRequestHandler.VOID
     }
 }

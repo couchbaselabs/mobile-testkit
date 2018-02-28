@@ -225,11 +225,6 @@ public class DocumentRequestHandler {
             
             return document.id
 
-        case "document_isDeleted":
-            let document: MutableDocument = (args.get(name: "document"))!
-            
-            return document.isDeleted
-
         case "document_count":
             let document: MutableDocument = (args.get(name: "document"))!
             

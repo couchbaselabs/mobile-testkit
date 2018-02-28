@@ -32,6 +32,5 @@ public class ResultRequestHandler {
         default:
             throw RequestHandlerError.MethodNotFound(method)
         }
-        return ResultRequestHandler.VOID
     }
 }
