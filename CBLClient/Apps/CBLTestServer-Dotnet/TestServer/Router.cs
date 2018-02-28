@@ -142,6 +142,9 @@ namespace Couchbase.Lite.Testing
             ["query_ordering"] = QueryMethods.QueryOrdering,
             ["query_substring"] = QueryMethods.QuerySubstring,
             ["query_collation"] = QueryMethods.Querycollation,
+            ["query_multiplePropertyFTS"] = QueryMethods.QueryMultiplePropertyFTS,
+            ["query_singlePropertyFTS"] = QueryMethods.QuerySinglePropertyFTS,
+            ["query_ftsWithRanking"] = QueryMethods.QueryFTSWithRanking,
             ["release"] = ReleaseObject,
             ["flushMemory"] = flushMemory
             };
