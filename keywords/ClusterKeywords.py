@@ -30,8 +30,9 @@ class ClusterKeywords:
             raise ProvisioningError("CLUSTER_CONFIG will be set by suite setup. Make sure it is unset.")
 
         path = "{}/{}".format(CLUSTER_CONFIGS_DIR, name)
+
         if not os.path.isfile(path):
-            raise ProvisioningError("{} not found. Make sure you have generated your cluster configurations.")
+            raise ProvisioningError("{} not found. Make sure you have generated your cluster configurations.".format(path))
 
         log_info("Setting CLUSTER_CONFIG: {}".format(path))
         os.environ["CLUSTER_CONFIG"] = path

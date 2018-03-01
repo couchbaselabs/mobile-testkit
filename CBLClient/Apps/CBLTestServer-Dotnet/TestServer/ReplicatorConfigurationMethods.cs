@@ -129,6 +129,12 @@ namespace Couchbase.Lite.Testing
                     config.Headers = headers;
                 }
 
+                if (postBody.ContainsKey("pinnedservercert"))
+                {
+                    byte[] cert = System.Text.Encoding.UTF8.GetBytes((String)postBody["pinnedservercert"]);
+                    config.PinnedServerCertificate = new X509Certificate2(cert);
+                }
+
                 if (postBody.ContainsKey("replication_type"))
                 {
                     var replicatorType = postBody["replication_type"].ToString().ToLower();
