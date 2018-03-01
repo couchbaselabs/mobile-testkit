@@ -1,6 +1,6 @@
 import time
 import pytest
-import os
+import datetime
 
 from utilities.cluster_config_utils import persist_cluster_config_environment_prop
 from keywords.constants import SDK_TIMEOUT
@@ -15,6 +15,7 @@ from keywords.SyncGateway import sync_gateway_config_path_for_mode
 from keywords.SyncGateway import SyncGateway
 from keywords.exceptions import ProvisioningError
 from keywords.tklogging import Logging
+from keywords.constants import RESULTS_DIR
 
 from CBLClient.Replication import Replication
 from CBLClient.BasicAuthenticator import BasicAuthenticator
