@@ -26,9 +26,12 @@ namespace Couchbase.Lite.Testing.UWP
         {
             this.InitializeComponent();
 
+            Couchbase.Lite.Support.UWP.EnableTextLogging();
+            Database.SetLogLevel(Logging.LogDomain.All, Logging.LogLevel.Debug);
+
             var listener = new TestServer();
             listener.Start();
-            Label.Text = "Listener listening!";
+            Label.Text = "CBLTestServer-NetUWP - listening!";
         }
     }
 }
