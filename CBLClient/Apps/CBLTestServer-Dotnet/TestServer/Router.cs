@@ -48,6 +48,7 @@ namespace Couchbase.Lite.Testing
             ["basicAuthenticator_create"] = BasicAuthenticationMethods.Create,
             ["sessionAuthenticator_create"] = SessionAuthenticationMethods.Create,
             ["databaseConfiguration_configure"] = DatabaseConfigurationMethods.Configure,
+            ["database_deleteBulkDocs"] = DatabaseMethods.DatabaseDeleteBulkDocs,
             ["database_create"] = DatabaseMethods.DatabaseCreate,
             ["database_close"] = DatabaseMethods.DatabaseClose,
             ["database_getPath"] = DatabaseMethods.DatabasePath,
