@@ -327,8 +327,8 @@ class Query(object):
         args = Args()
         args.setMemoryPointer("database", database)
         args.setString("prop", prop)
-        args.setString("val1", val1)
-        args.setString("val2", val2)
+        args.setInt("val1", val1)
+        args.setInt("val2", val2)
 
         return self._client.invokeMethod("query_not", args)
 

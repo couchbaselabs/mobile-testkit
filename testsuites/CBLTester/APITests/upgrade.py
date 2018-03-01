@@ -17,13 +17,13 @@ def test_upgrade():
 
 
 def test_provision():
-    mode = "di"
+    mode = "cc"
     cluster = ClusterKeywords()
     sg_config = sync_gateway_config_path_for_mode("sync_gateway_travel_sample", mode)
     cluster_config = "{}/base_{}".format(CLUSTER_CONFIGS_DIR, mode)
     cluster.provision_cluster(
         cluster_config=cluster_config,
-        server_version="5.0.0-3519",
-        sync_gateway_version="2.0.0-759",
+        server_version="5.5.0-1992",
+        sync_gateway_version="2.0.0-814",
         sync_gateway_config=sg_config
     )

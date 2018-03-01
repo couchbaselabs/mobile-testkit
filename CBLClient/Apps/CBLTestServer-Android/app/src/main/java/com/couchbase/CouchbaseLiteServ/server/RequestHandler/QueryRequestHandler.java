@@ -513,7 +513,7 @@ public class QueryRequestHandler {
         List<Object> resultArray = new ArrayList<>();
 
         Query query = QueryBuilder
-                .select(SelectResult.expression(Expression.property(prop)))
+                .select(SelectResult.expression(Meta.id))
                 .from(DataSource.database(db))
                 .where(Expression.not(Expression.property(prop).between(val1, val2)))
                 .orderBy(Ordering.expression(Expression.property(prop)).ascending());
