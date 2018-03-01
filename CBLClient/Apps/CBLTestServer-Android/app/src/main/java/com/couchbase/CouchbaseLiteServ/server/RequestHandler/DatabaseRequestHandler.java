@@ -210,6 +210,24 @@ public class DatabaseRequestHandler {
         return Database.exists(name, directory.getParentFile());
     }
 
+    public void deleteBulkDocs(Args args) throws CouchbaseLiteException {
+        final Database db = args.get("database");
+        final List<String> docIds = args.get("doc_ids");
+        db.inBatch(new Runnable() {
+            @Override
+            public void run() {
+                for(String id : docIds) {
+                    MutableDocument document = db.getDocument(id).toMutable();
+                    try {
+                        db.delete(document);
+                    } catch (CouchbaseLiteException e) {
+                        e.printStackTrace();
+                    }
+                }
+                }
+        });
+
+    }
 /*    method dropped in DB022
     public boolean contains(Args args) {
        Database database = args.get("database");
