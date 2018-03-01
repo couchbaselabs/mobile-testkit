@@ -7,8 +7,6 @@ from keywords.utils import host_for_url
 from couchbase.bucket import Bucket
 from couchbase.n1ql import N1QLQuery
 import numpy as np
-from CBLClient.Document import Document
-from botocore import docs
 
 
 def test_get_doc_ids(params_from_base_test_setup):
@@ -625,8 +623,8 @@ def test_query_join(params_from_base_test_setup, select_property1,
     ("firstname", "lastname", "name", "department", "code", "type", "type", "employee", "department")
 ])
 def test_query_join2(params_from_base_test_setup, select_property1,
-                    select_property2, select_property3, join_key1,
-                    join_key2, whr_key1, whr_key2, whr_val1, whr_val2):
+                     select_property2, select_property3, join_key1,
+                     join_key2, whr_key1, whr_key2, whr_val1, whr_val2):
     cluster_topology = params_from_base_test_setup["cluster_topology"]
     source_db = params_from_base_test_setup["source_db"]
     cbs_url = cluster_topology['couchbase_servers'][0]
@@ -636,9 +634,9 @@ def test_query_join2(params_from_base_test_setup, select_property1,
     log_info("Fetching docs from CBL through query")
     qy = Query(base_url)
     limit = 5
-    result_set = qy.query_join2(source_db, select_property1, 
-                                select_property2, select_property3, 
-                                join_key1, join_key2, whr_key1, 
+    result_set = qy.query_join2(source_db, select_property1,
+                                select_property2, select_property3,
+                                join_key1, join_key2, whr_key1,
                                 whr_key2, whr_val1, whr_val2)
 
     docs_from_cbl = []
@@ -1228,7 +1226,7 @@ def test_multiple_property_fts(params_from_base_test_setup, prop1, prop2, val, d
     cbs_url = cluster_topology['couchbase_servers'][0]
     base_url = params_from_base_test_setup["base_url"]
     cbs_ip = host_for_url(cbs_url)
-    
+
     # Get doc from CBL through query
     qy = Query(base_url)
     limit = 10
