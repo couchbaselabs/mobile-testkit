@@ -53,6 +53,8 @@
     server_port:
     autoimport:
     xattrs:
+    sslcert:
+    sslkey:
   tasks:
   - include: tasks/deploy-sync-gateway-config.yml
     become: yes

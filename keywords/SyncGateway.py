@@ -5,7 +5,7 @@ import json
 import requests
 from requests import Session
 
-from keywords.constants import SYNC_GATEWAY_CONFIGS
+from keywords.constants import SYNC_GATEWAY_CONFIGS, SYNC_GATEWAY_CERT
 from keywords.utils import version_is_binary, add_cbs_to_sg_config_server_field
 from keywords.utils import log_r
 from keywords.utils import version_and_build
@@ -36,8 +36,6 @@ def sync_gateway_config_path_for_mode(config_prefix, mode):
 
     # Construct expected config path
     config = "{}/{}_{}.json".format(SYNC_GATEWAY_CONFIGS, config_prefix, mode)
-    print "Sync Gatway Config:", config
-    print os.getcwd()
     if not os.path.isfile(config):
         raise ValueError("Could not file config: {}".format(config))
 
@@ -180,7 +178,7 @@ class SyncGateway:
 
         if version_is_binary(sync_gateway_version):
             version, build = version_and_build(sync_gateway_version)
-            print("VERSION: {} BUILD: {}".format(version, build))
+            log_info("VERSION: {} BUILD: {}".format(version, build))
             sg_config = SyncGatewayConfig(None, version, build, sync_gateway_config, "", False)
         else:
             sg_config = SyncGatewayConfig(sync_gateway_version, None, None, sync_gateway_config, "", False)
@@ -210,6 +208,7 @@ class SyncGateway:
 
         ansible_runner = AnsibleRunner(cluster_config)
         config_path = os.path.abspath(config)
+        sg_cert_path = os.path.abspath(SYNC_GATEWAY_CERT)
         couchbase_server_primary_node = add_cbs_to_sg_config_server_field(cluster_config)
         if is_cbs_ssl_enabled(cluster_config):
             self.server_port = 18091
@@ -217,6 +216,7 @@ class SyncGateway:
 
         playbook_vars = {
             "sync_gateway_config_filepath": config_path,
+            "sg_cert_path": sg_cert_path,
             "server_port": self.server_port,
             "server_scheme": self.server_scheme,
             "autoimport": "",
