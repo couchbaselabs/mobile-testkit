@@ -319,12 +319,12 @@ namespace Couchbase.Lite.Testing
                                                     [NotNull] IReadOnlyDictionary<string, object> postBody,
                                                     [NotNull] HttpListenerResponse response)
         {
-            List<string> docIds = (List<String>)postBody["doc_ids"];
+            var docIds = ((IEnumerable<object>)postBody["doc_ids"]).OfType<String>();
             With<Database>(postBody, "database", db =>
             {
                 db.InBatch(() =>
                 {
-                    foreach (var docId in docIds)
+                    foreach (String docId in docIds)
                     {
                         MutableDocument document = db.GetDocument(docId).ToMutable();
                         db.Delete(document);

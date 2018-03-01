@@ -239,10 +239,19 @@ class Database(object):
             added_docs[doc_id] = doc_body
         self.saveDocuments(db, added_docs)
 
-    def update_bulk_docs(self, database, number_of_updates=1):
+    def delete_bulk_docs(self, database, doc_ids=[]):
+        if not doc_ids:
+            doc_ids = self.getDocIds(database)
+        args = Args()
+        args.setMemoryPointer("database", database)
+        args.setArray("doc_ids", doc_ids)
+        return self._client.invokeMethod("database_deleteBulkDocs", args)
+
+    def update_bulk_docs(self, database, number_of_updates=1, doc_ids=[]):
 
         updated_docs = {}
-        doc_ids = self.getDocIds(database)
+        if not doc_ids:
+            doc_ids = self.getDocIds(database)
         log_info("updating bulk docs")
 
         docs = self.getDocuments(database, doc_ids)
