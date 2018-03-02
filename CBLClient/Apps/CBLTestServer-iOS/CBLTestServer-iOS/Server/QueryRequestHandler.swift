@@ -365,7 +365,7 @@ public class QueryRequestHandler {
         case "query_multiplePropertyFTS":
             let database: Database = args.get(name: "database")!
             let prop1: String = args.get(name: "prop1")!
-            let prop2: String = args.get(name: "prop1")!
+            let prop2: String = args.get(name: "prop2")!
             let val: String = args.get(name: "val")!
             let doc_type: String = args.get(name: "doc_type")!
             let stemming: Bool = args.get(name: "stemming")!
