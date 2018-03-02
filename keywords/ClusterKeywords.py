@@ -130,6 +130,11 @@ class ClusterKeywords:
             server_port = 18091
             server_scheme = "https"
 
+        sg_scheme = "http"
+
+        if sg_ssl_enabled(cluster_config):
+            sg_scheme = "https"
+
         running_services = []
         for host in cluster_obj["hosts"]:
 
@@ -143,7 +148,7 @@ class ClusterKeywords:
 
             # Sync Gateway
             try:
-                resp = requests.get("http://{}:4984".format(host["ip"]))
+                resp = requests.get("{}://{}:4984".format(sg_scheme, host["ip"]))
                 log_r(resp)
                 running_services.append(resp.url)
             except ConnectionError as he:
@@ -151,7 +156,7 @@ class ClusterKeywords:
 
             # Sg Accel
             try:
-                resp = requests.get("http://{}:4985".format(host["ip"]))
+                resp = requests.get("{}://{}:4985".format(sg_scheme, host["ip"]))
                 log_r(resp)
                 running_services.append(resp.url)
             except ConnectionError as he:

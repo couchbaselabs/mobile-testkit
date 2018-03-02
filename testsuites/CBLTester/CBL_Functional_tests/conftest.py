@@ -219,6 +219,13 @@ def params_from_base_suite_setup(request):
             logging_helper.fetch_and_analyze_logs(cluster_config=cluster_config, test_name=request.node.name)
             raise
 
+    # Hit this intalled running services to verify the correct versions are installed
+    cluster_utils.verify_cluster_versions(
+        cluster_config,
+        expected_server_version=server_version,
+        expected_sync_gateway_version=sync_gateway_version
+    )
+
     if enable_sample_bucket and not create_db_per_suite:
         # if enable_sample_bucket and not create_db_per_test:
         raise Exception("enable_sample_bucket has to be used with create_db_per_suite")

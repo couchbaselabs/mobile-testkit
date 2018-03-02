@@ -41,8 +41,7 @@ class Replication(object):
         if replicator_authenticator is not None:
             args.setMemoryPointer("authenticator", replicator_authenticator)
 
-        if replication_type is None:
-            replication_type = "push_pull"
+        if replication_type is not None:
             args.setString("replication_type", replication_type)
 
         if headers is not None:

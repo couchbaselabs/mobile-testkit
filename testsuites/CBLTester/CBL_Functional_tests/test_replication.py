@@ -880,6 +880,7 @@ def test_replication_delete_in_CBL(params_from_base_test_setup, sg_conf_name):
     random_cbl_id = random.choice(cbl_doc_ids)
     random_cbl_doc = db.getDocument(cbl_db, doc_id=random_cbl_id)
     mutable_doc = doc_obj.toMutable(random_cbl_doc)
+    log_info("Deleting doc: {}".format(random_cbl_id))
     db.delete(database=cbl_db, document=mutable_doc)
     cbl_doc_ids = db.getDocIds(cbl_db)
     assert random_cbl_id not in cbl_doc_ids
@@ -1299,7 +1300,8 @@ def test_replication_wrong_blip(params_from_base_test_setup):
     with pytest.raises(Exception) as ex:
         replicator.configure(cbl_db, sg_blip_url, continuous=True, channels=channels, replicator_authenticator=replicator_authenticator)
     assert ex.value.message.startswith('400 Client Error: Bad Request for url:')
-    assert 'The url parameter has an unsupported URL scheme (http) The supported URL schemes are ws and wss.' in ex.value.message
+    assert "unsupported" in ex.value.message or "Invalid" in ex.value.message
+    assert "ws" in ex.value.message and "wss" in ex.value.message
 
 
 @pytest.mark.listener

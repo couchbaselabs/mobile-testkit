@@ -10,7 +10,7 @@ import libraries.testkit.settings
 from libraries.provision.ansible_runner import AnsibleRunner
 from libraries.testkit.admin import Admin
 from libraries.testkit.debug import log_request, log_response
-from utilities.cluster_config_utils import is_cbs_ssl_enabled, is_xattrs_enabled, no_conflicts_enabled
+from utilities.cluster_config_utils import is_cbs_ssl_enabled, is_xattrs_enabled, no_conflicts_enabled, sg_ssl_enabled
 from utilities.cluster_config_utils import get_revs_limit
 from keywords.utils import add_cbs_to_sg_config_server_field, log_info
 
@@ -22,7 +22,13 @@ class SyncGateway:
     def __init__(self, cluster_config, target):
         self.ansible_runner = AnsibleRunner(cluster_config)
         self.ip = target["ip"]
-        self.url = "http://{}:4984".format(target["ip"])
+
+        sg_scheme = "http"
+
+        if sg_ssl_enabled(cluster_config):
+            sg_scheme = "https"
+
+        self.url = "{}://{}:4984".format(sg_scheme, target["ip"])
         self.hostname = target["name"]
         self._headers = {'Content-Type': 'application/json'}
         self.admin = Admin(self)
