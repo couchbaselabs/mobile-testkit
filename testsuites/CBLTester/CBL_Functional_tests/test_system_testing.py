@@ -1,20 +1,12 @@
 import pytest
 import time
-import numpy as np
 import random
 
 from keywords.MobileRestClient import MobileRestClient
-from keywords.utils import log_info
-from CBLClient.Database import Database
 from CBLClient.Replication import Replication
-from CBLClient.Document import Document
-from CBLClient.Authenticator import Authenticator
 
-from keywords.SyncGateway import sync_gateway_config_path_for_mode
-from keywords import document, attachment
 from libraries.testkit import cluster
 from libraries.data.doc_generators import simple
-from Tkconstants import CURRENT
 from datetime import datetime, timedelta
 
 
@@ -54,23 +46,23 @@ def test_system(params_from_base_test_setup, num_of_docs, num_of_updates, up_tim
     docs_ids = ["cbl_{}".format(i) for i in range(num_of_docs)]
     # Configure replication with push_pull
     replicator = Replication(base_url)
-    session, replicator_authenticator, repl = replicator.create_session_configure_replicate(
+    session, _, repl = replicator.create_session_configure_replicate(
         base_url, sg_admin_url, sg_db, username, password, channels_sg, sg_client, cbl_db, sg_blip_url, continuous=True)
 
     current_time = datetime.now()
     running_time = current_time + timedelta(minutes=up_time)
-    
+
     while(running_time - current_time > timedelta(0)):
         ########################################
-        ## Checking for doc update on SG side ##
+        # Checking for doc update on SG side
         ########################################
-        docs_to_update = random.sample(docs_ids, random.randint(0, len(docs_ids)/2))
+        docs_to_update = random.sample(docs_ids, random.randint(0, len(docs_ids) / 2))
         sg_docs = sg_client.get_all_docs(url=sg_url, db=sg_db, auth=session)["rows"]
-        sg_docs = [ doc for doc in sg_docs if doc["id"] in docs_to_update]
+        sg_docs = [doc for doc in sg_docs if doc["id"] in docs_to_update]
         print "updating {} docs on SG".format(len(docs_to_update))
         sg_client.update_docs(url=sg_url, db=sg_db, docs=sg_docs,
                               number_updates=num_of_updates, auth=session, channels=channels_sg)
- 
+
         replicator.wait_until_replicator_idle(repl)
         total = replicator.getTotal(repl)
         completed = replicator.getCompleted(repl)
@@ -78,19 +70,19 @@ def test_system(params_from_base_test_setup, num_of_docs, num_of_updates, up_tim
         time.sleep(5)  # wait until re
 #         sg_docs = sg_client.get_bulk_docs(url=sg_url, db=sg_db,
 #                                           doc_ids=docs_to_update, auth=session)[0]
- 
+
         # Verify database doc counts for SG updates
-        cbl_docs = db.getDocuments(cbl_db, docs_to_update)
+#         cbl_docs = db.getDocuments(cbl_db, docs_to_update)
 #         assert len(sg_docs) == len(cbl_docs), "Expected number of docs does not exist in CBL after replication"
 #         for doc in cbl_docs:
 #             assert cbl_docs[doc]["updates"] > 0
 
         #########################################
-        ## Checking for doc update on CBL side ##
+        # Checking for doc update on CBL side #
         #########################################
-        docs_to_update = random.sample(docs_ids, random.randint(0, len(docs_ids)/2))
+        docs_to_update = random.sample(docs_ids, random.randint(0, len(docs_ids) / 2))
         print "updating {} docs on CBL".format(len(docs_to_update))
-        db.update_bulk_docs(cbl_db,2,docs_to_update)
+        db.update_bulk_docs(cbl_db, 2, docs_to_update)
         replicator.wait_until_replicator_idle(repl)
         total = replicator.getTotal(repl)
         completed = replicator.getCompleted(repl)
@@ -98,22 +90,21 @@ def test_system(params_from_base_test_setup, num_of_docs, num_of_updates, up_tim
         time.sleep(5)  # wait until re
 #         sg_docs = sg_client.get_bulk_docs(url=sg_url, db=sg_db,
 #                                           doc_ids=docs_to_update, auth=session)[0]
- 
+
         # Verify database doc counts for SG updates
-        cbl_docs = db.getDocuments(cbl_db, docs_to_update)
+#         cbl_docs = db.getDocuments(cbl_db, docs_to_update)
 #         assert len(sg_docs) == len(cbl_docs), "Expected number of docs does not exist in sync-gateway after replication"
 #         for doc in cbl_docs:
 #             assert cbl_docs[doc]["updates-cbl"] > 0
 #         for doc in sg_docs:
 #             assert doc["updates-cbl"] > 0
 
-
         #############################
-        ## Deleting doc on SG side ##
+        # Deleting doc on SG side #
         #############################
-        docs_to_delete = random.sample(docs_ids, random.randint(0, len(docs_ids)/2))
+        docs_to_delete = random.sample(docs_ids, random.randint(0, len(docs_ids) / 2))
         sg_docs = sg_client.get_all_docs(url=sg_url, db=sg_db, auth=session)["rows"]
-        sg_docs = [ doc for doc in sg_docs if doc["id"] in docs_to_delete]
+        sg_docs = [doc for doc in sg_docs if doc["id"] in docs_to_delete]
         print "Deleting {} docs on SG".format(len(docs_to_delete))
         sg_client.delete_bulk_docs(url=sg_url, db=sg_db,
                                    docs=sg_docs, auth=session)
@@ -125,16 +116,16 @@ def test_system(params_from_base_test_setup, num_of_docs, num_of_updates, up_tim
 
         sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, include_docs=True)
         sg_docs = sg_docs["rows"]
-    
+
         # Verify database doc counts
-        cbl_doc_count = db.getCount(cbl_db)
+#         cbl_doc_count = db.getCount(cbl_db)
 #         assert len(sg_docs) == cbl_doc_count, "Expected number of docs does not exist in sync-gateway after replication"
         docs_ids = [doc_id for doc_id in docs_ids if doc_id not in docs_to_delete]
 
         ##############################
-        ## Deleting doc on CBL side ##
+        # Deleting doc on CBL side #
         ##############################
-        docs_to_delete = random.sample(docs_ids, random.randint(0, len(docs_ids)/2))
+        docs_to_delete = random.sample(docs_ids, random.randint(0, len(docs_ids) / 2))
         print "deleting {} docs on CBL".format(len(docs_to_delete))
         db.delete_bulk_docs(cbl_db, docs_to_delete)
         replicator.wait_until_replicator_idle(repl)
@@ -145,14 +136,14 @@ def test_system(params_from_base_test_setup, num_of_docs, num_of_updates, up_tim
 
         sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, include_docs=True)
         sg_docs = sg_docs["rows"]
-    
+
         # Verify database doc counts
-        cbl_doc_count = db.getCount(cbl_db)
+#         cbl_doc_count = db.getCount(cbl_db)
 #         assert len(sg_docs) == cbl_doc_count, "Expected number of docs does not exist in sync-gateway after replication"
         docs_ids = [doc_id for doc_id in docs_ids if doc_id not in docs_to_delete]
 
         ###############################
-        ## Creating docs on CBL side ##
+        # Creating docs on CBL side #
         ###############################
         docs_to_create = ["cbl_{}".format(doc_id) for doc_id in range(doc_id_for_new_docs, doc_id_for_new_docs + 20)]
         added_docs = {}
@@ -171,13 +162,13 @@ def test_system(params_from_base_test_setup, num_of_docs, num_of_updates, up_tim
 
         sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, include_docs=True)
         sg_docs = sg_docs["rows"]
-    
+
         # Verify database doc counts
-        cbl_doc_count = db.getCount(cbl_db)
+#         cbl_doc_count = db.getCount(cbl_db)
 #         assert len(sg_docs) == cbl_doc_count, "Expected number of docs does not exist in sync-gateway after replication"
-        doc_id_for_new_docs +=100
+        doc_id_for_new_docs += 100
 
         docs_ids = db.getDocIds(cbl_db)
         current_time = datetime.now()
-    #stopping replication
+    # stopping replication
     replicator.stop(repl)
