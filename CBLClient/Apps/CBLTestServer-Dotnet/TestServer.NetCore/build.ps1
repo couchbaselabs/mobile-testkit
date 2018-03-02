@@ -1,4 +1,4 @@
-﻿param (
+param (
     [Parameter][string]$Version,
     [Parameter][int]$BuildNum,
     [switch]$Community

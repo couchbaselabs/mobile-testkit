@@ -1,4 +1,4 @@
-﻿// 
+//
 //  BasicAuthenticationMethods.cs
 // 
 //  Author:

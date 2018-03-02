@@ -1,4 +1,4 @@
-﻿// 
+// 
 //  ReplicatorConfigurationMethods.cs
 // 
 //  Author:
