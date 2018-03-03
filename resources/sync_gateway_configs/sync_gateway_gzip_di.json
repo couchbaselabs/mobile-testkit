@@ -7,6 +7,8 @@
     "slowServerCallWarningThreshold": 500,
     "compressResponses": true,
     "log": ["*"],
+    {{ sslcert }}
+    {{ sslkey }}
     "cluster_config": {
         "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
         "data_dir":".",
