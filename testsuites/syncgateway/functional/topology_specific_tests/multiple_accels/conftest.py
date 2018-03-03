@@ -64,6 +64,8 @@ def params_from_base_suite_setup(request):
     # use multiple_sg_accels_di
     cluster_config = "{}/multiple_sg_accels_di".format(keywords.constants.CLUSTER_CONFIGS_DIR)
     sg_config = "{}/sync_gateway_default_functional_tests_di.json".format(SYNC_GATEWAY_CONFIGS)
+    cluster_utils = ClusterKeywords()
+    cluster_utils.set_cluster_config(cluster_config.split("/")[-1])
 
     # Add load balancer prop and check if load balancer IP is available
     if sg_lb:

@@ -109,6 +109,7 @@ def params_from_base_suite_setup(request):
     no_conflicts_enabled = request.config.getoption("--no-conflicts")
     cluster_utils = ClusterKeywords()
     cluster_topology = cluster_utils.get_cluster_topology(cluster_config)
+    cluster_utils.set_cluster_config(cluster_config.split("/")[-1])
 
     sg_db = "db"
     cbl_db = None

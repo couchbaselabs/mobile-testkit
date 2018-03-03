@@ -9,3 +9,13 @@
 
 - name: SG ACCEL | Print deployed config
   debug: var=out.stdout
+
+- name: SG ACCEL | Deploying SSL Cert
+  become: yes
+  template: src="{{ sg_cert_path }}/sg_cert.pem" dest=/home/sg_accel/sg_cert.pem owner=sg_accel group=sg_accel mode=0644 force=true
+  when: sslcert is defined
+
+- name: SG ACCEL | Deploying SSL Private Key
+  become: yes
+  template: src="{{ sg_cert_path }}/sg_privkey.pem" dest=/home/sg_accel/sg_privkey.pem owner=sg_accel group=sg_accel mode=0644 force=true
+  when: sslkey is defined
