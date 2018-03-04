@@ -13,10 +13,11 @@ from datetime import datetime, timedelta
 @pytest.mark.sanity
 @pytest.mark.listener
 @pytest.mark.replication
-@pytest.mark.parametrize("num_of_docs, num_of_updates, up_time", [
-    (1000000, 50, 1 * 10),
+@pytest.mark.parametrize("num_of_docs, num_of_updates, num_of_docs_in_itr, up_time", [
+    (1000000, 10, 10000, 3 * 60),
+#     (1000, 5, 1000, 1 * 5),
 ])
-def test_system(params_from_base_test_setup, num_of_docs, num_of_updates, up_time):
+def test_system(params_from_base_test_setup, num_of_docs, num_of_updates, num_of_docs_in_itr, up_time):
     sg_db = "db"
     sg_url = params_from_base_test_setup["sg_url"]
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
@@ -42,12 +43,12 @@ def test_system(params_from_base_test_setup, num_of_docs, num_of_updates, up_tim
     c = cluster.Cluster(config=cluster_config)
     c.reset(sg_config_path=sg_config)
 
-    num_of_itr = num_of_docs / 10000
-    last_itr_num_docs = num_of_docs % 10000
+    num_of_itr = num_of_docs / num_of_docs_in_itr
+    last_itr_num_docs = num_of_docs % num_of_docs_in_itr
     for i in range(num_of_itr):
-        db.create_bulk_docs(10000, "cbl", db=cbl_db, channels=channels_sg, id_start_num=i * 1000)
+        db.create_bulk_docs(num_of_docs_in_itr, "cbl", db=cbl_db, channels=channels_sg, id_start_num=i * num_of_docs_in_itr)
     if last_itr_num_docs != 0:
-        db.create_bulk_docs(last_itr_num_docs, "cbl", db=cbl_db, channels=channels_sg, id_start_num=i * 1000)
+        db.create_bulk_docs(last_itr_num_docs, "cbl", db=cbl_db, channels=channels_sg, id_start_num=i * num_of_docs_in_itr)
 #     sg_client.add_bulk_docs(url=sg_url, db=sg_db, docs=new_docs, auth=session)
     docs_ids = ["cbl_{}".format(i) for i in range(num_of_docs)]
 
@@ -58,12 +59,13 @@ def test_system(params_from_base_test_setup, num_of_docs, num_of_updates, up_tim
 
     current_time = datetime.now()
     running_time = current_time + timedelta(minutes=up_time)
+    range_num = num_of_itr * 10
 
     while(running_time - current_time > timedelta(0)):
         ########################################
         # Checking for doc update on SG side
         ########################################
-        docs_to_update = random.sample(docs_ids, random.randint(0, len(docs_ids) / 2000))
+        docs_to_update = random.sample(docs_ids, random.randint(0, len(docs_ids) / range_num))
         sg_docs = sg_client.get_all_docs(url=sg_url, db=sg_db, auth=session)["rows"]
         sg_docs = [doc for doc in sg_docs if doc["id"] in docs_to_update]
         print "updating {} docs on SG".format(len(docs_to_update))
@@ -87,7 +89,7 @@ def test_system(params_from_base_test_setup, num_of_docs, num_of_updates, up_tim
         #########################################
         # Checking for doc update on CBL side #
         #########################################
-        docs_to_update = random.sample(docs_ids, random.randint(0, len(docs_ids) / 2000))
+        docs_to_update = random.sample(docs_ids, random.randint(1, len(docs_ids) / range_num))
         print "updating {} docs on CBL".format(len(docs_to_update))
         db.update_bulk_docs(cbl_db, 2, docs_to_update)
         replicator.wait_until_replicator_idle(repl)
@@ -109,7 +111,7 @@ def test_system(params_from_base_test_setup, num_of_docs, num_of_updates, up_tim
         #############################
         # Deleting doc on SG side #
         #############################
-        docs_to_delete = random.sample(docs_ids, random.randint(0, len(docs_ids) / 2000))
+        docs_to_delete = random.sample(docs_ids, random.randint(1, len(docs_ids) / range_num))
         sg_docs = sg_client.get_all_docs(url=sg_url, db=sg_db, auth=session)["rows"]
         sg_docs = [doc for doc in sg_docs if doc["id"] in docs_to_delete]
         print "Deleting {} docs on SG".format(len(docs_to_delete))
@@ -132,7 +134,7 @@ def test_system(params_from_base_test_setup, num_of_docs, num_of_updates, up_tim
         ##############################
         # Deleting doc on CBL side #
         ##############################
-        docs_to_delete = random.sample(docs_ids, random.randint(0, len(docs_ids) / 2000))
+        docs_to_delete = random.sample(docs_ids, random.randint(1, len(docs_ids) / range_num))
         print "deleting {} docs on CBL".format(len(docs_to_delete))
         db.delete_bulk_docs(cbl_db, docs_to_delete)
         replicator.wait_until_replicator_idle(repl)
@@ -152,7 +154,7 @@ def test_system(params_from_base_test_setup, num_of_docs, num_of_updates, up_tim
         ###############################
         # Creating docs on CBL side #
         ###############################
-        docs_to_create = ["cbl_{}".format(doc_id) for doc_id in range(doc_id_for_new_docs, doc_id_for_new_docs + 1000)]
+        docs_to_create = ["cbl_{}".format(doc_id) for doc_id in range(doc_id_for_new_docs, doc_id_for_new_docs + range_num)]
         added_docs = {}
         for doc_id in docs_to_create:
             data = simple()
@@ -173,7 +175,7 @@ def test_system(params_from_base_test_setup, num_of_docs, num_of_updates, up_tim
         # Verify database doc counts
 #         cbl_doc_count = db.getCount(cbl_db)
 #         assert len(sg_docs) == cbl_doc_count, "Expected number of docs does not exist in sync-gateway after replication"
-        doc_id_for_new_docs += 1000
+        doc_id_for_new_docs += range_num
 
         docs_ids = db.getDocIds(cbl_db)
         current_time = datetime.now()
