@@ -52,6 +52,7 @@ public class ReplicatorConfigurationRequestHandler {
             let documentIDs: [String]? = args.get(name: "documentIDs")
             let authenticator: Authenticator? = args.get(name: "authenticator")
             let headers: Dictionary<String, String>? = args.get(name: "headers")!
+            let pinnedservercert: String? = args.get(name: "pinnedservercert")!
             
             var replicatorType = ReplicatorType.pushAndPull
             
@@ -104,6 +105,9 @@ public class ReplicatorConfigurationRequestHandler {
             if documentIDs != nil {
                 config.documentIDs = documentIDs
             }
+            //if pinnedservercert != nil {
+            //    config.pinnedServerCertificate
+            //}
             return config
         
         // TODO: Remove
