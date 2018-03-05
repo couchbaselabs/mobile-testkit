@@ -264,11 +264,9 @@ class Database(object):
                     doc_body["updates-cbl"] = 0
                 doc_body["updates-cbl"] = doc_body["updates-cbl"] + 1
                 updated_docs[doc] = doc_body
-
             self.updateDocuments(database, updated_docs)
 
     def update_all_docs_individually(self, database, num_of_updates=1):
-
         doc_ids = self.getDocIds(database)
         doc_obj = Document(self._baseUrl)
         for i in xrange(num_of_updates):
@@ -292,3 +290,9 @@ class Database(object):
         if self.exists(db_name):
             self.deleteDBbyName(db_name)
         return self.create(db_name)
+
+    def cbl_delete_bulk_docs(self, cbl_db):
+        cbl_doc_ids = self.getDocIds(cbl_db)
+        for id in cbl_doc_ids:
+            doc = self.getDocument(cbl_db, id)
+            self.delete(cbl_db, doc)
