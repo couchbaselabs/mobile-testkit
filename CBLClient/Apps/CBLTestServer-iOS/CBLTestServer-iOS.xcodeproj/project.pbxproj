@@ -16,6 +16,7 @@
 		2907D176200E860A00CE56EB /* BasicAuthenticatorRequestHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2907D175200E860A00CE56EB /* BasicAuthenticatorRequestHandler.swift */; };
 		2909B0731F9FFA8900B4E0E4 /* Server.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2909B0721F9FFA8900B4E0E4 /* Server.swift */; };
 		2909B0761FA3B7B400B4E0E4 /* Args.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2909B0751FA3B7B400B4E0E4 /* Args.swift */; };
+		292047A0204E05F900B21067 /* sg_cert.cer in Resources */ = {isa = PBXBuildFile; fileRef = 2920479F204E05C700B21067 /* sg_cert.cer */; };
 		293F38381FFD792E00497870 /* DataTypesInitiatorHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 293F38371FFD792E00497870 /* DataTypesInitiatorHandler.swift */; };
 		294FB2081FEAF51F00DD0C23 /* QueryRequestHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 294FB2071FEAF51F00DD0C23 /* QueryRequestHandler.swift */; };
 		294FB20A1FEAF9E800DD0C23 /* ReplicatorRequestHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 294FB2091FEAF9E800DD0C23 /* ReplicatorRequestHandler.swift */; };
@@ -96,6 +97,7 @@
 		2907D175200E860A00CE56EB /* BasicAuthenticatorRequestHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BasicAuthenticatorRequestHandler.swift; sourceTree = "<group>"; };
 		2909B0721F9FFA8900B4E0E4 /* Server.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Server.swift; sourceTree = "<group>"; };
 		2909B0751FA3B7B400B4E0E4 /* Args.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Args.swift; sourceTree = "<group>"; };
+		2920479F204E05C700B21067 /* sg_cert.cer */ = {isa = PBXFileReference; lastKnownFileType = file; name = sg_cert.cer; path = ../../../../resources/sync_gateway_cert/sg_cert.cer; sourceTree = "<group>"; };
 		293F38371FFD792E00497870 /* DataTypesInitiatorHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataTypesInitiatorHandler.swift; sourceTree = "<group>"; };
 		294FB2071FEAF51F00DD0C23 /* QueryRequestHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QueryRequestHandler.swift; sourceTree = "<group>"; };
 		294FB2091FEAF9E800DD0C23 /* ReplicatorRequestHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReplicatorRequestHandler.swift; sourceTree = "<group>"; };
@@ -247,6 +249,7 @@
 				29F77F2D1F9FC18D0035178F /* Assets.xcassets */,
 				29F7866C1F9FC3F30035178F /* CBLTestServer-iOS-Bridging-Header.h */,
 				29F77F321F9FC18D0035178F /* Info.plist */,
+				2920479F204E05C700B21067 /* sg_cert.cer */,
 				29F77F2F1F9FC18D0035178F /* LaunchScreen.storyboard */,
 				29F77F2A1F9FC18D0035178F /* Main.storyboard */,
 			);
@@ -458,6 +461,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				292047A0204E05F900B21067 /* sg_cert.cer in Resources */,
 				29F77F311F9FC18D0035178F /* LaunchScreen.storyboard in Resources */,
 				29F77F2E1F9FC18D0035178F /* Assets.xcassets in Resources */,
 				29F77F2C1F9FC18D0035178F /* Main.storyboard in Resources */,

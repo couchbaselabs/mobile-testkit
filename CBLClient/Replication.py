@@ -55,11 +55,7 @@ class Replication(object):
 
         cluster_config = os.environ["CLUSTER_CONFIG"]
         if sg_ssl_enabled(cluster_config):
-            cert_file = os.path.abspath("{}/sg_cert.pem".format(SYNC_GATEWAY_CERT))
-            f = open(cert_file)
-            cert = f.read()
-
-            args.setString("pinnedservercert", cert)
+            args.setString("pinnedservercert", "sg_cert")
 
         return self._client.invokeMethod("replicatorConfiguration_configure", args)
 
