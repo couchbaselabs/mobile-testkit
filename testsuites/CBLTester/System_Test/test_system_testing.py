@@ -15,7 +15,7 @@ from datetime import datetime, timedelta
 @pytest.mark.replication
 @pytest.mark.parametrize("num_of_docs, num_of_updates, num_of_docs_in_itr, up_time", [
     (1000000, 10, 10000, 3 * 60),
-#     (1000, 5, 1000, 1 * 5),
+    # (1000, 5, 1000, 1 * 5),
 ])
 def test_system(params_from_base_test_setup, num_of_docs, num_of_updates, num_of_docs_in_itr, up_time):
     sg_db = "db"

@@ -1413,7 +1413,7 @@ def test_default_conflict_scenario_delete_wins(params_from_base_test_setup, dele
 
 
 @pytest.mark.listener
-@pytest.mark.parametrize("highrevId_source, attachments", [
+@pytest.mark.parametrize("highrev_source, attachments", [
     ('sg', True),
     ('cbl', True),
     ('sg', False),

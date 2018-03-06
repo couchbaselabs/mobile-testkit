@@ -5,7 +5,6 @@ from CBLClient.Client import Client
 from CBLClient.Args import Args
 from CBLClient.Authenticator import Authenticator
 from keywords.utils import log_info
-from keywords.constants import SYNC_GATEWAY_CERT
 from utilities.cluster_config_utils import sg_ssl_enabled
 
 
