@@ -7,6 +7,8 @@
     "slowServerCallWarningThreshold": 500,
     "compressResponses": true,
     "log":["HTTP"],
+    {{ sslcert }}
+    {{ sslkey }}
     "databases":{
         "db":{
             {{ autoimport }}

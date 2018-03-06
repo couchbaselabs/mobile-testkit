@@ -37,7 +37,7 @@ public class BlobRequestHandler {
         case "blob_digest":
             let blob: Blob = args.get(name: "blob")!
             return blob.digest
-        
+
         case "blob_equals":
             let blob: Blob = args.get(name: "blob")!
             let obj: Any = args.get(name: "obj")!
@@ -46,7 +46,7 @@ public class BlobRequestHandler {
             } else {
                 return false
             }
-        
+      
         case "blob_hashCode":
             let blob: Blob = args.get(name: "blob")!
             return blob.hashValue

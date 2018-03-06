@@ -1,9 +1,12 @@
 import time
+import os
 
 from CBLClient.Client import Client
 from CBLClient.Args import Args
 from CBLClient.Authenticator import Authenticator
 from keywords.utils import log_info
+from keywords.constants import SYNC_GATEWAY_CERT
+from utilities.cluster_config_utils import sg_ssl_enabled
 
 
 class Replication(object):
@@ -31,19 +34,29 @@ class Replication(object):
         args.setBoolean("continuous", continuous)
         if channels is not None:
             args.setArray("channels", channels)
+
         if documentIDs is not None:
             args.setArray("documentIDs", documentIDs)
+
         if replicator_authenticator is not None:
             args.setMemoryPointer("authenticator", replicator_authenticator)
-        if replication_type is None:
-            replication_type = "push_pull"
-        args.setString("replication_type", replication_type)
+
+        if replication_type is not None:
+            args.setString("replication_type", replication_type)
+
         if headers is not None:
             args.setDictionary("headers", headers)
+
         if target_url is not None:
             args.setString("target_url", target_url)
+
         if target_db is not None:
             args.setMemoryPointer("target_db", target_db)
+
+        cluster_config = os.environ["CLUSTER_CONFIG"]
+        if sg_ssl_enabled(cluster_config):
+            args.setString("pinnedservercert", "sg_cert")
+
         return self._client.invokeMethod("replicatorConfiguration_configure", args)
 
     """def create(self, source_db, target_db=None, target_url=None):

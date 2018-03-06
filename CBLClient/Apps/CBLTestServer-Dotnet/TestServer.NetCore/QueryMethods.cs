@@ -1,4 +1,4 @@
-﻿//// 
+//// 
 ////  QueryMethods.cs
 //// 
 ////  Author:

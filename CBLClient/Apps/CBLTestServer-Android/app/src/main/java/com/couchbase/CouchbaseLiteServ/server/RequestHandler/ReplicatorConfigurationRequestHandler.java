@@ -1,6 +1,8 @@
 package com.couchbase.CouchbaseLiteServ.server.RequestHandler;
 
 
+import android.util.Log;
+
 import com.couchbase.CouchbaseLiteServ.server.Args;
 import com.couchbase.lite.Authenticator;
 // import com.couchbase.lite.ConflictResolver;
@@ -15,6 +17,11 @@ import java.net.URISyntaxException;
 import java.util.Dictionary;
 import java.util.List;
 import java.util.Map;
+import java.io.InputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+
 
 public class ReplicatorConfigurationRequestHandler {
 
@@ -47,6 +54,7 @@ public class ReplicatorConfigurationRequestHandler {
         Boolean continuous = args.get("continuous");
         List<String> channels = args.get("channels");
         List<String> documentIds = args.get("documentIDs");
+        String pinnedservercert = args.get("pinnedservercert");
         Authenticator authenticator = args.get("authenticator");
         // ConflictResolver conflictResolver = args.get("conflictResolver");
         Map<String, String> headers = args.get("headers");
@@ -89,6 +97,14 @@ public class ReplicatorConfigurationRequestHandler {
         }
         if (documentIds != null) {
             config.setDocumentIDs(documentIds);
+        }
+        System.out.println(args);
+        if (pinnedservercert != null){
+            String cert = args.get("pinnedservercert");
+            InputStream is = this.getClass().getResourceAsStream("/assets/" + cert + ".cer");
+            byte[] cert_bytes = toByteArray(is);
+
+            config.setPinnedServerCertificate(cert_bytes);
         }
         return config;
     }
@@ -196,4 +212,32 @@ public class ReplicatorConfigurationRequestHandler {
         replicatorConfiguration.setReplicatorType(replicatorType);
     }
 
+    public static byte[] toByteArray(InputStream input) throws IOException {
+        ByteArrayOutputStream output = new ByteArrayOutputStream();
+        copy(input, output);
+        return output.toByteArray();
+    }
+
+    public static int copy(InputStream input, OutputStream output) throws IOException {
+        long count = copyLarge(input, output);
+        if (count > Integer.MAX_VALUE) {
+            return -1;
+        }
+        return (int) count;
+    }
+
+    public static long copyLarge(InputStream input, OutputStream output)
+            throws IOException {
+        final int DEFAULT_BUFFER_SIZE = 1024 * 4;
+        byte[] buffer = new byte[DEFAULT_BUFFER_SIZE];
+        long count = 0;
+        int n = 0;
+        while (-1 != (n = input.read(buffer))) {
+            output.write(buffer, 0, n);
+            count += n;
+        }
+        return count;
+    }
+
 }
+

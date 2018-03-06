@@ -67,4 +67,3 @@ def test_replication_configuration_invalid_db(params_from_base_test_setup):
     with pytest.raises(Exception) as he:
         replicator.configure(cbl_db, target_db=None, continuous=True)
     assert he.value.message.startswith('Invalid value type: None'), "Did not caught http error when source db is none"
-

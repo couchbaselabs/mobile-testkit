@@ -2,6 +2,8 @@
   "log": ["*"],
   "adminInterface": "0.0.0.0:4985",
   "facebook": { "register": true },
+  {{ sslcert }}
+  {{ sslkey }}
   "databases": {
     "todolite": {
       {{ autoimport }}

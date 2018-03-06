@@ -12,6 +12,8 @@
       }
     }
   },
+  {{ sslcert }}
+  {{ sslkey }}
   "databases": {
     "db": {
       {{ autoimport }}

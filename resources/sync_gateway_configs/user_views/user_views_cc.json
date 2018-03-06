@@ -9,6 +9,8 @@
   "log": [
     "*"
   ],
+  {{ sslcert }}
+  {{ sslkey }}
   "databases": {
     "db": {
       {{ autoimport }}

@@ -1,4 +1,4 @@
-﻿// 
+// 
 //  MemoryMap.cs
 // 
 //  Author:

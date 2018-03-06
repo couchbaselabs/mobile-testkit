@@ -2,6 +2,8 @@
     "interface":":4984",
     "adminInterface": "0.0.0.0:4985",
     "log": ["*"],
+    {{ sslcert }}
+    {{ sslkey }}
     "databases":{
         "db":{
             {{ no_conflicts }}

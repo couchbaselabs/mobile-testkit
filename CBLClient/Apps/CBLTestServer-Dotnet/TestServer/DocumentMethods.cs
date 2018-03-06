@@ -1,4 +1,4 @@
-﻿// 
+// 
 //  DocumentMethods.cs
 // 
 //  Author:

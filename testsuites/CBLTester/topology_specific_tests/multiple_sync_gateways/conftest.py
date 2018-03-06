@@ -88,6 +88,7 @@ def params_from_base_suite_setup(request):
     sg_config = sync_gateway_config_path_for_mode("listener_tests/multiple_sync_gateways", mode)
     cluster_utils = ClusterKeywords()
     cluster_topology = cluster_utils.get_cluster_topology(cluster_config)
+    cluster_utils.set_cluster_config(cluster_config.split("/")[-1])
 
     sg_db = "db"
     sg_url = cluster_topology["sync_gateways"][0]["public"]

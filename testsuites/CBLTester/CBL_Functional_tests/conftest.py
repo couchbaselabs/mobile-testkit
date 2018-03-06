@@ -9,13 +9,14 @@ from keywords.utils import host_for_url
 from keywords.ClusterKeywords import ClusterKeywords
 from keywords.couchbaseserver import CouchbaseServer
 from keywords.constants import CLUSTER_CONFIGS_DIR
-from keywords.constants import RESULTS_DIR
 from keywords.MobileRestClient import MobileRestClient
 from keywords.TestServerFactory import TestServerFactory
 from keywords.SyncGateway import sync_gateway_config_path_for_mode
 from keywords.SyncGateway import SyncGateway
 from keywords.exceptions import ProvisioningError
 from keywords.tklogging import Logging
+from keywords.constants import RESULTS_DIR
+
 from CBLClient.Replication import Replication
 from CBLClient.BasicAuthenticator import BasicAuthenticator
 from CBLClient.Database import Database
@@ -90,6 +91,10 @@ def pytest_addoption(parser):
     parser.addoption("--community", action="store_true",
                      help="If set, community edition will get picked up , default is enterprise", default=False)
 
+    parser.addoption("--sg-ssl",
+                     action="store_true",
+                     help="If set, will enable SSL communication between Sync Gateway and CBL")
+
 
 # This will get called once before the first test that
 # runs with this as input parameters in this file
@@ -113,6 +118,7 @@ def params_from_base_suite_setup(request):
     create_db_per_suite = request.config.getoption("--create-db-per-suite")
     device_enabled = request.config.getoption("--device")
     community_enabled = request.config.getoption("--community")
+    sg_ssl = request.config.getoption("--sg-ssl")
 
     testserver = TestServerFactory.create(platform=liteserv_platform,
                                           version_build=liteserv_version,
@@ -136,13 +142,22 @@ def params_from_base_suite_setup(request):
     no_conflicts_enabled = request.config.getoption("--no-conflicts")
     cluster_utils = ClusterKeywords()
     cluster_topology = cluster_utils.get_cluster_topology(cluster_config)
+    cluster_utils.set_cluster_config(cluster_config.split("/")[-1])
 
     sg_db = "db"
     cbl_db = None
     sg_url = cluster_topology["sync_gateways"][0]["public"]
     sg_ip = host_for_url(sg_url)
+
+    persist_cluster_config_environment_prop(cluster_config, 'sync_gateway_ssl', False)
     target_url = "ws://{}:4984/{}".format(sg_ip, sg_db)
     target_admin_url = "ws://{}:4985/{}".format(sg_ip, sg_db)
+
+    if sg_ssl:
+        log_info("Enabling SSL on sync gateway")
+        persist_cluster_config_environment_prop(cluster_config, 'sync_gateway_ssl', True)
+        target_url = "wss://{}:4984/{}".format(sg_ip, sg_db)
+        target_admin_url = "wss://{}:4985/{}".format(sg_ip, sg_db)
 
     cbs_url = cluster_topology['couchbase_servers'][0]
     cbs_ip = host_for_url(cbs_url)
@@ -203,6 +218,13 @@ def params_from_base_suite_setup(request):
             logging_helper = Logging()
             logging_helper.fetch_and_analyze_logs(cluster_config=cluster_config, test_name=request.node.name)
             raise
+
+    # Hit this intalled running services to verify the correct versions are installed
+    cluster_utils.verify_cluster_versions(
+        cluster_config,
+        expected_server_version=server_version,
+        expected_sync_gateway_version=sync_gateway_version
+    )
 
     if enable_sample_bucket and not create_db_per_suite:
         # if enable_sample_bucket and not create_db_per_test:

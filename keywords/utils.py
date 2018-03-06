@@ -103,6 +103,7 @@ def hostname_for_url(cluster_config, url):
 
     # strip possible ports
     url = url.replace("http://", "")
+    url = url.replace("https://", "")
     url = url.replace(":4984", "")
     url = url.replace(":4985", "")
     url = url.replace(":8091", "")

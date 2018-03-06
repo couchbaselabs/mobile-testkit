@@ -89,6 +89,7 @@ class MobileRestClient:
         headers = {"Content-Type": "application/json"}
         self._session = Session()
         self._session.headers = headers
+        self._session.verify = False
 
     def merge(self, *doc_lists):
         """

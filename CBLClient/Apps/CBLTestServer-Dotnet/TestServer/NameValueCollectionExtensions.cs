@@ -1,4 +1,4 @@
-﻿// 
+// 
 //  NameValueCollectionExtensions.cs
 // 
 //  Author:

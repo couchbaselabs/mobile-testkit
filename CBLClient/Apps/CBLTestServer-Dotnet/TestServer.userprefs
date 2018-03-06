@@ -1,4 +1,4 @@
-﻿<Properties StartupConfiguration="{A8E9786C-64F3-46EF-894C-9A7E51AC9210}|Default" NuGet.AddPackagesDialog.IncludePrerelease="True">
+<Properties StartupConfiguration="{A8E9786C-64F3-46EF-894C-9A7E51AC9210}|Default" NuGet.AddPackagesDialog.IncludePrerelease="True">
   <MonoDevelop.Ide.ItemProperties.TestServer.NetCore PreferredExecutionTarget="MonoDevelop.Default" />
   <MonoDevelop.Ide.Workbench ActiveDocument="TestServer/HttpListenerResponseExtensions.cs">
     <Files>

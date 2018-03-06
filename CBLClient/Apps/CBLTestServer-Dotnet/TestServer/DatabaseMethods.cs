@@ -1,4 +1,4 @@
-﻿// 
+// 
 //  DatabaseMethods.cs
 // 
 //  Author:
@@ -165,7 +165,7 @@ namespace Couchbase.Lite.Testing
             [NotNull] HttpListenerResponse response)
         {
             With<Database>(postBody, "database", db => 
-                           With<MutableDocument>(postBody , "document", doc => db.Delete(doc)));
+                           With<Document>(postBody , "document", doc => db.Delete(doc)));
             response.WriteEmptyBody();
         }
 
