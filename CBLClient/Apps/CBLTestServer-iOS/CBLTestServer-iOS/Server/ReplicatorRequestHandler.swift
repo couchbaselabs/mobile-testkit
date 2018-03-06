@@ -91,7 +91,7 @@ public class ReplicatorRequestHandler {
 class MyReplicationChangeListener : NSObject  {
     var repl_changes: [ReplicatorChange] = []
     
-    var listenerToken: NSObjectProtocol?
+    var listenerToken: ListenerToken?
     
     lazy var listener: (ReplicatorChange) -> Void = { (change: ReplicatorChange) in
         self.repl_changes.append(change)

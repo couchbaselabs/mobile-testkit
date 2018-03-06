@@ -50,7 +50,9 @@ public class ReplicatorConfigurationRequestHandler {
             let continuous: Bool? = args.get(name: "continuous")
             let channels: [String]? = args.get(name: "channels")
             let documentIDs: [String]? = args.get(name: "documentIDs")
-            let authenticator: Authenticator? = args.get(name: "authenticator")
+            //let authenticator: Authenticator? = args.get(name: "authenticator")
+            let authValue: AnyObject? = args.get(name: "authenticator")
+            let authenticator: Authenticator? = authValue as? Authenticator
             let headers: Dictionary<String, String>? = args.get(name: "headers")!
             
             var replicatorType = ReplicatorType.pushAndPull
@@ -64,7 +66,7 @@ public class ReplicatorConfigurationRequestHandler {
                     replicatorType = .pushAndPull
                 }
             }
-            let config: ReplicatorConfiguration!
+            var config: ReplicatorConfiguration!
             
             if (source_db == nil){
                 throw RequestHandlerError.InvalidArgument("No source db provided")
@@ -79,7 +81,7 @@ public class ReplicatorConfigurationRequestHandler {
                 let targetDatabase: Database? = args.get(name: "target_db")
                 if (targetDatabase != nil) {
                     target = DatabaseEndpoint(database: targetDatabase!)
-                    config = ReplicatorConfiguration(database: source_db!, target: target)
+                    config = ReplicatorConfiguration(database: source_db!, target: target!)
                 }
             #endif
 

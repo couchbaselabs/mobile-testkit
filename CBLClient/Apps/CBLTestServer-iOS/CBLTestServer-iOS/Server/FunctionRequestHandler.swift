@@ -169,22 +169,6 @@ public class FunctionRequestHandler {
             let expression: Expression = args.get(name: "expression")!
             return Function.upper(expression as! ExpressionProtocol)
             
-        case "function_isArray":
-            let expression: Expression = args.get(name: "expression")!
-            //return Function.isArray(expression)
-            
-        case "function_isNumber":
-            let expression: Expression = args.get(name: "expression")!
-            //return Function.isNumber(expression)
-            
-        case "function_isDictionary":
-            let expression: Expression = args.get(name: "expression")!
-            //return Function.isDictionary(expression)
-            
-        case "function_isString":
-            let expression: Expression = args.get(name: "expression")!
-            //return Function.isString(expression)
-            
         case "function_rank":
             let indexName: String = args.get(name: "expression")!
             return FullTextFunction.rank(indexName)
