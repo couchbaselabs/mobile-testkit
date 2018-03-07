@@ -16,7 +16,7 @@ from libraries.testkit.cluster import Cluster
 
 # Set the default value to 404 - view not created yet
 SG_VIEWS = {
-    'sync_housekeeping': [
+    'sync_housekeeping_2.0': [
         "all_bits",
         "all_docs",
         "import",
@@ -24,7 +24,7 @@ SG_VIEWS = {
         "sessions",
         "tombstones"
     ],
-    'sync_gateway': [
+    'sync_gateway_2.0': [
         "access",
         "access_vbseq",
         "channels",
