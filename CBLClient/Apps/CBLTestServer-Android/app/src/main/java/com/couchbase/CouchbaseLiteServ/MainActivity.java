@@ -21,16 +21,16 @@ public class MainActivity extends AppCompatActivity {
     private Server server;
     private final static int PORT = 8080;
     private static Context context;
+    public static String ip = getLocalIpAddress();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         TextView textView = findViewById(R.id.textView);
-        String ip = getLocalIpAddress();
-        textView.setText("Running http server @" + ip + ":" + PORT);
+        textView.setText("Running http server @" + MainActivity.ip + ":" + PORT);
         try{
-            server = new Server(ip, PORT);
+            server = new Server(MainActivity.ip, PORT);
             server.start();
         } catch (IOException e) {
             e.printStackTrace();

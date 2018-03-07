@@ -12,8 +12,6 @@ class Replication(object):
     '''
     classdocs
     '''
-    baseUrl = None
-
     def __init__(self, base_url):
         '''
         Constructor
@@ -313,7 +311,6 @@ class Replication(object):
                                            channels, sg_client, cbl_db, sg_blip_url, replication_type=None, continuous=True):
 
         authenticator = Authenticator(baseUrl)
-        sg_client.create_user(sg_admin_url, sg_db, username, password, channels=channels)
         cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, "autotest")
         session = cookie, session_id
         replicator_authenticator = authenticator.authentication(session_id, cookie, authentication_type="session")

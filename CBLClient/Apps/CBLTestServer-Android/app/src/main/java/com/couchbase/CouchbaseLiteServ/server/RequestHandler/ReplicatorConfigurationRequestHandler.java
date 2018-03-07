@@ -69,6 +69,10 @@ public class ReplicatorConfigurationRequestHandler {
         // ConflictResolver conflictResolver = args.get("conflictResolver");
         Map<String, String> headers = args.get("headers");
 
+        if (replicatorType == null)
+        {
+            replicatorType = "push_pull";
+        }
         replicatorType = replicatorType.toLowerCase();
         ReplicatorConfiguration.ReplicatorType replType;
         if (replicatorType.equals("push")) {

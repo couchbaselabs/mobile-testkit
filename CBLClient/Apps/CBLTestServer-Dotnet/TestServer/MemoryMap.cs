@@ -68,6 +68,7 @@ namespace Couchbase.Lite.Testing
                     break;
                 }
             }
+            Console.WriteLine("My IP Address is :" + output);
             return output;
         }
         # endregion

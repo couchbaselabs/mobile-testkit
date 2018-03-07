@@ -15,7 +15,7 @@ public class Memory {
     }
 
     public String add(Object value) {
-        String address = "@" + Integer.toString(++_address) + "_" + MainActivity.getLocalIpAddress();
+        String address = "@" + Integer.toString(++_address) + "_" + MainActivity.ip + "_android";
 
         _memory.put(address, value);
 

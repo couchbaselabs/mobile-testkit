@@ -33,7 +33,7 @@ namespace Couchbase.Lite.Testing
     {
         #region Constants
 
-        private const ushort Port = 8080;
+        private const ushort Port = 55555;
 
         [NotNull]
         private static readonly Stream NullStream = new MemoryStream(new byte[0]);
