@@ -500,7 +500,7 @@ def test_cbl_no_conflicts_sgAccel_added(params_from_base_test_setup, sg_conf_nam
     status = c.sync_gateways[0].restart(config=sg_config, cluster_config=temp_cluster_config)
     assert status == 0, "Syncgateway did not start after having revs_limit  with no conflicts mode"
 
-    with ThreadPoolExecutor(max_workers=1) as tpe:
+    with ThreadPoolExecutor(max_workers=4) as tpe:
         wait_until_replicator_completes = tpe.submit(
             replicator.wait_until_replicator_idle,
             repl=repl,
@@ -613,7 +613,7 @@ def test_sg_CBL_updates_concurrently(params_from_base_test_setup, sg_conf_name, 
     # cbl_docs = db.getDocuments(cbl_db, cbl_doc_ids)
 
     # Update the same documents concurrently from a sync gateway client and and CBL client
-    sg_docs = sg_client.get_all_docs(url=sg_url, db=sg_db, auth=session)
+    sg_docs = sg_client.get_all_docs(url=sg_url, db=sg_db, auth=session, include_docs=True)
     sg_docs = sg_docs["rows"]
     with ThreadPoolExecutor(max_workers=5) as tpe:
         update_from_sg_task = tpe.submit(

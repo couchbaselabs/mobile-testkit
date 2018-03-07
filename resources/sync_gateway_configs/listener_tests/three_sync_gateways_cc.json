@@ -1,0 +1,37 @@
+{
+    "interface":":4984",
+    "adminInterface": "0.0.0.0:4985",
+    "log": ["CRUD+", "Cache+", "HTTP+", "Changes+"],
+    "databases":{
+        "sg_db1":{
+            {{ autoimport }}
+            {{ xattrs }}
+            {{ no_conflicts }}
+            {{ revs_limit }}
+            "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
+            "bucket":"data-bucket-1",
+            "username":"data-bucket-1",
+            "password": "password"
+        },
+        "sg_db2":{
+            {{ autoimport }}
+            {{ xattrs }}
+            {{ no_conflicts }}
+            {{ revs_limit }}
+            "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
+            "bucket":"data-bucket-2",
+            "username":"data-bucket-2",
+            "password": "password"
+        },
+        "sg_db3":{
+            {{ autoimport }}
+            {{ xattrs }}
+            {{ no_conflicts }}
+            {{ revs_limit }}
+            "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
+            "bucket":"data-bucket-3",
+            "username":"data-bucket-3",
+            "password": "password"
+        }
+    }
+}
