@@ -9,7 +9,8 @@ from keywords.exceptions import ProvisioningError
 from keywords.utils import log_info, log_warn, add_cbs_to_sg_config_server_field
 from libraries.provision.ansible_runner import AnsibleRunner
 from libraries.testkit.config import Config
-from utilities.cluster_config_utils import is_cbs_ssl_enabled, is_xattrs_enabled, no_conflicts_enabled, get_revs_limit
+from utilities.cluster_config_utils import is_cbs_ssl_enabled, is_xattrs_enabled, no_conflicts_enabled, get_revs_limit, sg_ssl_enabled
+from keywords.constants import SYNC_GATEWAY_CERT
 
 
 class SyncGatewayConfig:
@@ -96,6 +97,7 @@ def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False, sg_pl
 
     ansible_runner = AnsibleRunner(cluster_config)
     config_path = os.path.abspath(sync_gateway_config.config_path)
+    sg_cert_path = os.path.abspath(SYNC_GATEWAY_CERT)
     couchbase_server_primary_node = add_cbs_to_sg_config_server_field(cluster_config)
     # Create buckets unless the user explicitly asked to skip this step
     if not sync_gateway_config.skip_bucketcreation:
@@ -111,11 +113,14 @@ def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False, sg_pl
     # Shared vars
     playbook_vars = {
         "sync_gateway_config_filepath": config_path,
+        "sg_cert_path": sg_cert_path,
         "server_port": server_port,
         "server_scheme": server_scheme,
         "autoimport": "",
         "xattrs": "",
         "no_conflicts": "",
+        "sslcert": "",
+        "sslkey": "",
         "couchbase_server_primary_node": couchbase_server_primary_node
     }
 
@@ -125,6 +130,11 @@ def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False, sg_pl
 
     if no_conflicts_enabled(cluster_config):
         playbook_vars["no_conflicts"] = '"allow_conflicts": false,'
+
+    if sg_ssl_enabled(cluster_config):
+        playbook_vars["sslcert"] = '"SSLCert": "sg_cert.pem",'
+        playbook_vars["sslkey"] = '"SSLKey": "sg_privkey.pem",'
+
     try:
         revs_limit = get_revs_limit(cluster_config)
         playbook_vars["revs_limit"] = '"revs_limit": {},'.format(revs_limit)

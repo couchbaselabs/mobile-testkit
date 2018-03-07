@@ -1,5 +1,8 @@
+import os
+
 from CBLClient.Client import Client
 from CBLClient.Args import Args
+from utilities.cluster_config_utils import sg_ssl_enabled
 
 
 class ReplicatorConfiguration(object):
@@ -35,6 +38,10 @@ class ReplicatorConfiguration(object):
         else:
             args.setMemoryPointer("target_db", target_db)
             return self._client.invokeMethod("replicator_configureLocalDb", args)
+
+        cluster_config = os.environ["CLUSTER_CONFIG"]
+        if sg_ssl_enabled(cluster_config):
+            args.setString("pinnedservercert", "sg_cert")
 
     def builderCreate(self, source_db, target_db=None, target_url=None):
         args = Args()

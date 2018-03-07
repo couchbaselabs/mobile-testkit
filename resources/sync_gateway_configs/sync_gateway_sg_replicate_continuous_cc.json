@@ -17,6 +17,8 @@
       "continuous": true
     }
   ],
+  {{ sslcert }}
+  {{ sslkey }}
   "databases": {
     "db1": {
       {{ autoimport }}

@@ -14,7 +14,7 @@ from keywords.SyncGateway import (verify_sg_accel_version,
 from keywords.utils import (log_info, log_r, version_and_build,
                             version_is_binary, compare_versions)
 from libraries.testkit.cluster import Cluster
-from utilities.cluster_config_utils import is_load_balancer_enabled, get_load_balancer_ip
+from utilities.cluster_config_utils import is_load_balancer_enabled, get_load_balancer_ip, sg_ssl_enabled
 
 
 class ClusterKeywords:
@@ -30,8 +30,9 @@ class ClusterKeywords:
             raise ProvisioningError("CLUSTER_CONFIG will be set by suite setup. Make sure it is unset.")
 
         path = "{}/{}".format(CLUSTER_CONFIGS_DIR, name)
+
         if not os.path.isfile(path):
-            raise ProvisioningError("{} not found. Make sure you have generated your cluster configurations.")
+            raise ProvisioningError("{} not found. Make sure you have generated your cluster configurations.".format(path))
 
         log_info("Setting CLUSTER_CONFIG: {}".format(path))
         os.environ["CLUSTER_CONFIG"] = path
@@ -68,6 +69,11 @@ class ClusterKeywords:
 
         # Get load balancer IP
         lb_ip = None
+        sg_scheme = "http"
+
+        if sg_ssl_enabled(cluster_config):
+            sg_scheme = "https"
+
         if is_load_balancer_enabled(cluster_config) and lb_enable:
             # If load balancer is defined,
             # Switch all SG URLs to that of load balancer
@@ -84,11 +90,11 @@ class ClusterKeywords:
             log_info("Using load balancer IP as the SG IP: {}".format(sg_urls))
         else:
             for sg in cluster["sync_gateways"]:
-                public = "http://{}:4984".format(sg["ip"])
-                admin = "http://{}:4985".format(sg["ip"])
+                public = "{}://{}:4984".format(sg_scheme, sg["ip"])
+                admin = "{}://{}:4985".format(sg_scheme, sg["ip"])
                 sg_urls.append({"public": public, "admin": admin})
 
-        ac_urls = ["http://{}:4985".format(sga["ip"]) for sga in cluster["sg_accels"]]
+        ac_urls = ["{}://{}:4985".format(sg_scheme, sga["ip"]) for sga in cluster["sg_accels"]]
         lbs_urls = ["http://{}".format(lb["ip"]) for lb in cluster["load_balancers"]]
 
         server_port = 8091
@@ -124,6 +130,11 @@ class ClusterKeywords:
             server_port = 18091
             server_scheme = "https"
 
+        sg_scheme = "http"
+
+        if sg_ssl_enabled(cluster_config):
+            sg_scheme = "https"
+
         running_services = []
         for host in cluster_obj["hosts"]:
 
@@ -137,7 +148,7 @@ class ClusterKeywords:
 
             # Sync Gateway
             try:
-                resp = requests.get("http://{}:4984".format(host["ip"]))
+                resp = requests.get("{}://{}:4984".format(sg_scheme, host["ip"]))
                 log_r(resp)
                 running_services.append(resp.url)
             except ConnectionError as he:
@@ -145,7 +156,7 @@ class ClusterKeywords:
 
             # Sg Accel
             try:
-                resp = requests.get("http://{}:4985".format(host["ip"]))
+                resp = requests.get("{}://{}:4985".format(sg_scheme, host["ip"]))
                 log_r(resp)
                 running_services.append(resp.url)
             except ConnectionError as he:

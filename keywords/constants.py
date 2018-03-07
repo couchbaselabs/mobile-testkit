@@ -6,6 +6,7 @@ RESULTS_DIR = "results"
 TEST_DIR = "framework_tests"
 CLUSTER_CONFIGS_DIR = "resources/cluster_configs"
 SYNC_GATEWAY_CONFIGS = "resources/sync_gateway_configs"
+SYNC_GATEWAY_CERT = "resources/sync_gateway_cert"
 DATA_DIR = "resources/data"
 
 MAX_RETRIES = 5

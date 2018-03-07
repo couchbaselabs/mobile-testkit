@@ -481,7 +481,6 @@ def test_query_substring(params_from_base_test_setup, select_property1, select_p
 
     assert len(docs_from_cbl) == len(docs_from_n1ql)
     for doc in docs_from_cbl:
-        print "doc for cbl is ", doc
         assert doc in docs_from_n1ql
     log_info("Doc contents match")
 

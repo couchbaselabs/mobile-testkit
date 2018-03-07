@@ -1,4 +1,4 @@
-﻿// 
+// 
 //  UriExtensions.cs
 // 
 //  Author:

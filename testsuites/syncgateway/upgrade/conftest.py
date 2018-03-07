@@ -175,6 +175,8 @@ def params_from_base_suite_setup(request):
     # use base_(lb_)cc cluster config if mode is "cc" or base_(lb_)di cluster config if mode is "di"
     cluster_config = "{}/{}_{}".format(CLUSTER_CONFIGS_DIR, cluster_config, mode)
     log_info("Using '{}' config!".format(cluster_config))
+    cluster_utils = ClusterKeywords()
+    cluster_utils.set_cluster_config(cluster_config.split("/")[-1])
 
     try:
         server_version

@@ -8,6 +8,8 @@
     "compressResponses": false,
     "log": ["CRUD+", "Cache+", "HTTP+", "Changes+", "Import+"],
     "verbose":"true",
+    {{ sslcert }}
+    {{ sslkey }}
     "databases":{
         "db":{
             {{ autoimport }}

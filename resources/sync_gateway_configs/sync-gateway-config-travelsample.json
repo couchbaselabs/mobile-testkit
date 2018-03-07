@@ -1,6 +1,8 @@
 {
   "interface":":4984",
   "log": ["*"],
+  {{ sslcert }}
+  {{ sslkey }}
   "databases": {
     "travel-sample": {
       "import_docs": "continuous",

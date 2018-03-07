@@ -1,4 +1,4 @@
-﻿// 
+// 
 //  ReplicatorConfigurationMethods.cs
 // 
 //  Author:
@@ -20,10 +20,13 @@
 // 
 
 using System;
+using System.IO;
+using System.Reflection;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Net;
 using System.Linq;
+using System.Security.Cryptography.X509Certificates;
 
 using Couchbase.Lite.Sync;
 using Couchbase.Lite.Util;
@@ -77,6 +80,9 @@ namespace Couchbase.Lite.Testing
                                                      [NotNull] HttpListenerResponse response)
         {
             ReplicatorConfiguration config = null;
+            Assembly _assembly;
+            Stream _imageStream;
+            StreamReader _textStreamReader;
 
             With<Database>(postBody, "source_db", sdb =>
             {
@@ -127,6 +133,16 @@ namespace Couchbase.Lite.Testing
                         headers.Add(keyValuePair.Key, keyValuePair.Value.ToString());
                     }
                     config.Headers = headers;
+                }
+
+                if (postBody.ContainsKey("pinnedservercert"))
+                {
+                    var cert_file = postBody["pinnedservercert"].ToString();
+                    _assembly = Assembly.GetExecutingAssembly();
+                    _textStreamReader = new StreamReader(_assembly.GetManifestResourceStream("TestServer." + cert_file + ".pem"));
+    
+                    byte[] cert = System.Text.Encoding.UTF8.GetBytes(_textStreamReader.ReadToEnd());
+                    config.PinnedServerCertificate = new X509Certificate2(cert);
                 }
 
                 if (postBody.ContainsKey("replication_type"))

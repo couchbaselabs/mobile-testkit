@@ -631,7 +631,6 @@ def test_CBL_tombstone_doc(params_from_base_test_setup, num_of_docs):
     replicator.wait_until_replicator_idle(repl)
     replicator.stop(repl)
     cbl_doc_ids = db.getDocIds(cbl_db)
-    log_info("cbl_doc_ids are: {}".format(cbl_doc_ids))
     assert doc_id not in cbl_doc_ids, "doc is expected to be deleted in CBL ,but not deleted"
 
 
@@ -881,6 +880,7 @@ def test_replication_delete_in_CBL(params_from_base_test_setup, sg_conf_name):
     random_cbl_id = random.choice(cbl_doc_ids)
     random_cbl_doc = db.getDocument(cbl_db, doc_id=random_cbl_id)
     mutable_doc = doc_obj.toMutable(random_cbl_doc)
+    log_info("Deleting doc: {}".format(random_cbl_id))
     db.delete(database=cbl_db, document=mutable_doc)
     cbl_doc_ids = db.getDocIds(cbl_db)
     assert random_cbl_id not in cbl_doc_ids
@@ -1300,7 +1300,8 @@ def test_replication_wrong_blip(params_from_base_test_setup):
     with pytest.raises(Exception) as ex:
         replicator.configure(cbl_db, sg_blip_url, continuous=True, channels=channels, replicator_authenticator=replicator_authenticator)
     assert ex.value.message.startswith('400 Client Error: Bad Request for url:')
-    assert 'The url parameter has an unsupported URL scheme (http) The supported URL schemes are ws and wss.' in ex.value.message
+    assert "unsupported" in ex.value.message or "Invalid" in ex.value.message
+    assert "ws" in ex.value.message and "wss" in ex.value.message
 
 
 @pytest.mark.listener
@@ -1319,7 +1320,7 @@ def test_default_conflict_scenario_delete_wins(params_from_base_test_setup, dele
         2. Replicate docs to SG with push_pull and continous False
         3. Wait until replication is done and stop replication
         4. update doc in Sg and delete doc in CBL/ delete doc in Sg and update doc in CBL
-        4. Verify delete wins
+        5. Verify delete wins
     """
     sg_db = "db"
     sg_url = params_from_base_test_setup["sg_url"]
@@ -1419,6 +1420,7 @@ def test_default_conflict_scenario_delete_wins(params_from_base_test_setup, dele
     ('cbl', False),
 ])
 def test_default_conflict_scenario_highRevGeneration_wins(params_from_base_test_setup, highrev_source, attachments):
+
     """
         @summary:
         1. Create docs in CBL.
@@ -1455,18 +1457,11 @@ def test_default_conflict_scenario_highRevGeneration_wins(params_from_base_test_
     else:
         db.create_bulk_docs(num_of_docs, "replication", db=cbl_db, channels=channels)
     sg_client = MobileRestClient()
-    sg_client.create_user(sg_admin_url, sg_db, "autotest", password="password", channels=channels)
-    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, "autotest")
-    session = cookie, session_id
 
     # Start and stop continuous replication
     replicator = Replication(base_url)
-    authenticator = Authenticator(base_url)
-    replicator_authenticator = authenticator.authentication(session_id, cookie, authentication_type="session")
-    repl_config = replicator.configure(cbl_db, sg_blip_url, continuous=False, channels=channels, replicator_authenticator=replicator_authenticator)
-    repl = replicator.create(repl_config)
-    replicator.start(repl)
-    replicator.wait_until_replicator_idle(repl)
+    session, replicator_authenticator, repl = replicator.create_session_configure_replicate(
+        baseUrl=base_url, sg_admin_url=sg_admin_url, sg_db=sg_db, channels=channels, sg_client=sg_client, cbl_db=cbl_db, sg_blip_url=sg_blip_url, username="autotest", password="password", replication_type="push_pull", continuous=False)
     sg_docs = sg_client.get_all_docs(url=sg_url, db=sg_db, auth=session)
     sg_docs = sg_docs["rows"]
 

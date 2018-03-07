@@ -14,6 +14,8 @@
     server_port:
     autoimport:
     xattrs:
+    sslcert:
+    sslkey:
 
   tasks:
     - include: tasks/stop-sync-gateway.yml
@@ -35,6 +37,8 @@
     server_port:
     autoimport:
     xattrs:
+    sslcert:
+    sslkey:
 
   tasks:
     - include: tasks/stop-sg-accel.yml

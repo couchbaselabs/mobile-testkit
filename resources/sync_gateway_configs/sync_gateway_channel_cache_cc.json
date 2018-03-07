@@ -3,6 +3,8 @@
     "adminInterface": "0.0.0.0:4985",
     "compressResponses": false,
     "log": ["*"],
+    {{ sslcert }}
+    {{ sslkey }}
     "databases":{
         "db": {
             {{ autoimport }}

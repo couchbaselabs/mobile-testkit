@@ -50,10 +50,10 @@ public class ReplicatorConfigurationRequestHandler {
             let continuous: Bool? = args.get(name: "continuous")
             let channels: [String]? = args.get(name: "channels")
             let documentIDs: [String]? = args.get(name: "documentIDs")
-            //let authenticator: Authenticator? = args.get(name: "authenticator")
             let authValue: AnyObject? = args.get(name: "authenticator")
             let authenticator: Authenticator? = authValue as? Authenticator
             let headers: Dictionary<String, String>? = args.get(name: "headers")!
+            let pinnedservercert: String? = args.get(name: "pinnedservercert")!
             
             var replicatorType = ReplicatorType.pushAndPull
             
@@ -105,6 +105,12 @@ public class ReplicatorConfigurationRequestHandler {
             }
             if documentIDs != nil {
                 config.documentIDs = documentIDs
+            }
+            if pinnedservercert != nil {
+                let path = Bundle(for: type(of:self)).path(forResource: pinnedservercert, ofType: "cer")
+                let data = try! NSData(contentsOfFile: path!, options: [])
+                let certificate = SecCertificateCreateWithData(nil, data)
+                config.pinnedServerCertificate = certificate
             }
             return config
         

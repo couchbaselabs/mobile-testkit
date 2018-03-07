@@ -1,6 +1,6 @@
 import time
 import pytest
-import datetime
+# import datetime
 
 from utilities.cluster_config_utils import persist_cluster_config_environment_prop
 from keywords.constants import SDK_TIMEOUT
@@ -9,9 +9,9 @@ from keywords.utils import host_for_url
 from keywords.ClusterKeywords import ClusterKeywords
 from keywords.couchbaseserver import CouchbaseServer
 from keywords.constants import CLUSTER_CONFIGS_DIR
-from keywords.constants import RESULTS_DIR
+# from keywords.constants import RESULTS_DIR
 from keywords.MobileRestClient import MobileRestClient
-from keywords.TestServerFactory import TestServerFactory
+# from keywords.TestServerFactory import TestServerFactory
 from keywords.SyncGateway import sync_gateway_config_path_for_mode
 from keywords.SyncGateway import SyncGateway
 from keywords.exceptions import ProvisioningError
@@ -112,18 +112,18 @@ def params_from_base_suite_setup(request):
     create_db_per_test = request.config.getoption("--create-db-per-test")
     create_db_per_suite = request.config.getoption("--create-db-per-suite")
     device_enabled = request.config.getoption("--device")
-    community_enabled = request.config.getoption("--community")
+    # community_enabled = request.config.getoption("--community")
 
 #     testserver = TestServerFactory.create(platform=liteserv_platform,
 #                                           version_build=liteserv_version,
 #                                           host=liteserv_host,
 #                                           port=liteserv_port,
 #                                           community_enabled=community_enabled)
-# 
+#
 #     log_info("Downloading TestServer ...")
 #     # Download TestServer app
 #     testserver.download()
-# 
+#
 #     # Install TestServer app
 #     if device_enabled and liteserv_platform == "ios":
 #         testserver.install_device()
@@ -298,7 +298,7 @@ def params_from_base_suite_setup(request):
         "cbl_db": cbl_db,
         "base_url": base_url,
         "sg_config": sg_config,
-#         "testserver": testserver,
+        # "testserver": testserver,
         "device_enabled": device_enabled
     }
 
@@ -349,7 +349,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
 
 #     # Start LiteServ and delete any databases
 #     log_info("Starting TestServer...")
-# 
+#
 #     if device_enabled and liteserv_platform == "ios":
 #         testserver.start_device("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__, test_name, datetime.datetime.now()))
 #     else:
@@ -402,7 +402,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         "sg_config": sg_config,
         "db": db,
         "device_enabled": device_enabled,
-#         "testserver": testserver
+        # "testserver": testserver
     }
     log_info("Tearing down test")
     if create_db_per_test:
