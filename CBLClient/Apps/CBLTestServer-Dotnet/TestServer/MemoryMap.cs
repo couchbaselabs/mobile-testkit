@@ -22,6 +22,8 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Net.NetworkInformation;
+using System.Net.Sockets;
 using System.Threading;
 
 using JetBrains.Annotations;
@@ -40,8 +42,35 @@ namespace Couchbase.Lite.Testing
         #region Variables
 
         private static long _NextId;
+        private static string _IP = MemoryMap.GetMyHostIP(NetworkInterfaceType.Ethernet);
 
         #endregion
+
+        #region Private Methods
+        internal static string GetMyHostIP(NetworkInterfaceType _type)
+        {
+            string output = "";
+            foreach (NetworkInterface item in NetworkInterface.GetAllNetworkInterfaces())
+            {
+                if (item.NetworkInterfaceType == _type && item.OperationalStatus == OperationalStatus.Up)
+                {
+                    foreach (UnicastIPAddressInformation ip in item.GetIPProperties().UnicastAddresses)
+                    {
+                        if (ip.Address.AddressFamily == AddressFamily.InterNetwork)
+                        {
+                            output = ip.Address.ToString();
+                            break;
+                        }
+                    }
+                }
+                if (output != "")
+                {
+                    break;
+                }
+            }
+            return output;
+        }
+        # endregion
 
         #region Public Methods
 
@@ -106,7 +135,7 @@ namespace Couchbase.Lite.Testing
 
         public static string Store(object obj)
         {
-            var nextId = "@" + Interlocked.Increment(ref _NextId).ToString();
+            var nextId = "@" + Interlocked.Increment(ref _NextId).ToString() + "_" + _IP + "_net";
             if (!Map.TryAdd(nextId, obj))
             {
                 throw new InvalidOperationException("Unable to add newly created object to MemoryMap");
