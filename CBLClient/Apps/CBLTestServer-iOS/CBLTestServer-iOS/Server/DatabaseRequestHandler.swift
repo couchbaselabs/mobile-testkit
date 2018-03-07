@@ -50,7 +50,20 @@ public class DatabaseRequestHandler {
                 print("Got error while deleting DB \(error)")
                 return error
             }
-        
+            
+        case "database_deleteBulkDocs":
+            let database: Database = args.get(name:"database")!
+            let doc_ids: Array<String> = args.get(name: "doc_ids")!
+            print("Doc Id in database to delete documents are:\(doc_ids)")
+            try database.inBatch {
+                for id in doc_ids {
+                    let document: Document = database.document(withID: id)!
+                    do {
+                        try! database.deleteDocument(document)
+                    }
+                }
+            }
+
         case "database_deleteDB":
             let database: Database = args.get(name:"database")!
             

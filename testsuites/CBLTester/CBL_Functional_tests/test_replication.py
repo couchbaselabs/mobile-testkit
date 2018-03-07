@@ -84,6 +84,7 @@ def test_replication_configuration_valid_values(params_from_base_test_setup, num
 
     # Configure replication with push_pull
     replicator = Replication(base_url)
+    sg_client.create_user(sg_admin_url, sg_db, username, password, channels=channels_sg)
     session, replicator_authenticator, repl = replicator.create_session_configure_replicate(
         base_url, sg_admin_url, sg_db, username, password, channels_sg, sg_client, cbl_db, sg_blip_url, continuous=continuous)
 
@@ -950,6 +951,7 @@ def test_CBL_push_pull_with_sgAccel_down(params_from_base_test_setup, sg_conf_na
     # 3. push replication to SG
     replication_type = "push"
     replicator = Replication(base_url)
+    sg_client.create_user(sg_admin_url, sg_db, username, password, channels=channels)
     session, replicator_authenticator, repl = replicator.create_session_configure_replicate(
         base_url, sg_admin_url, sg_db, username, password, channels, sg_client, cbl_db, sg_blip_url, replication_type)
     replicator.stop(repl)  # todo : trying removing this
@@ -1033,6 +1035,7 @@ def CBL_offline_test(params_from_base_test_setup, sg_conf_name, num_of_docs):
     db.create_bulk_docs(num_of_docs, "cbl", db=cbl_db, channels=channels)
     # 2. push replication to SG
     replication_type = "push"
+    sg_client.create_user(sg_admin_url, sg_db, username, password, channels=channels)
     session, replicator_authenticator, repl = replicator.create_session_configure_replicate(
         base_url, sg_admin_url, sg_db, username, password, channels, sg_client, cbl_db, sg_blip_url, replication_type)
 
@@ -1349,6 +1352,7 @@ def test_default_conflict_scenario_delete_wins(params_from_base_test_setup, dele
 
     # Start and stop continuous replication
     replicator = Replication(base_url)
+    sg_client.create_user(sg_admin_url, sg_db, username, password, channels=channels)
     session, replicator_authenticator, repl = replicator.create_session_configure_replicate(baseUrl=base_url, sg_admin_url=sg_admin_url, sg_db=sg_db, username=username, password=password,
                                                                                             channels=channels, sg_client=sg_client, cbl_db=cbl_db, sg_blip_url=sg_blip_url, replication_type="push_pull", continuous=False)
     replicator.stop(repl)
@@ -1460,6 +1464,7 @@ def test_default_conflict_scenario_highRevGeneration_wins(params_from_base_test_
 
     # Start and stop continuous replication
     replicator = Replication(base_url)
+    sg_client.create_user(sg_admin_url, sg_db, username="autotest", password="password", channels=channels)
     session, replicator_authenticator, repl = replicator.create_session_configure_replicate(
         baseUrl=base_url, sg_admin_url=sg_admin_url, sg_db=sg_db, channels=channels, sg_client=sg_client, cbl_db=cbl_db, sg_blip_url=sg_blip_url, username="autotest", password="password", replication_type="push_pull", continuous=False)
     sg_docs = sg_client.get_all_docs(url=sg_url, db=sg_db, auth=session)
@@ -1562,6 +1567,7 @@ def test_default_conflict_scenario_highRevID_wins(params_from_base_test_setup, h
 
     # Start and stop continuous replication
     replicator = Replication(base_url)
+    sg_client.create_user(sg_admin_url, sg_db, username="autotest", password="password", channels=channels)
     session, replicator_authenticator, repl = replicator.create_session_configure_replicate(
         baseUrl=base_url, sg_admin_url=sg_admin_url, sg_db=sg_db, channels=channels, sg_client=sg_client, cbl_db=cbl_db, sg_blip_url=sg_blip_url, username="autotest", password="password", replication_type="push_pull", continuous=False)
     sg_docs = sg_client.get_all_docs(url=sg_url, db=sg_db, auth=session)

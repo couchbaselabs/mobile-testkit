@@ -1,5 +1,6 @@
 package com.couchbase.CouchbaseLiteServ.server;
 
+
 import com.couchbase.CouchbaseLiteServ.server.RequestHandler.BasicAuthenticatorRequestHandler;
 import com.couchbase.CouchbaseLiteServ.server.RequestHandler.CollatorRequestHandler;
 import com.couchbase.CouchbaseLiteServ.server.RequestHandler.DataSourceRequestHandler;
@@ -36,6 +37,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+
 public class Server extends NanoHTTPD {
 
     private static final String TAG = "com.example.hemant.coucbaselitesampleapp.serve";
@@ -59,10 +61,10 @@ public class Server extends NanoHTTPD {
 
     public static final Memory memory = new Memory();
 
-    public Server(int port) throws IOException {
+    public Server(String ip, int port) throws IOException {
         super(port);
         Database.setLogLevel(LogDomain.ALL, LogLevel.DEBUG);
-        System.out.print("Running! Point your Mobile browser to http://localhost:" + port + "/\n");
+        System.out.print("Running! Point your Mobile browser to http://" + ip + ":" + port + "/\n");
     }
 
     @Override
@@ -200,3 +202,4 @@ public class Server extends NanoHTTPD {
         }
     }
 }
+

@@ -217,7 +217,7 @@ public class DatabaseRequestHandler {
             @Override
             public void run() {
                 for(String id : docIds) {
-                    MutableDocument document = db.getDocument(id).toMutable();
+                    Document document = db.getDocument(id);
                     try {
                         db.delete(document);
                     } catch (CouchbaseLiteException e) {
