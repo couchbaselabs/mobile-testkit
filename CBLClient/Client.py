@@ -8,6 +8,8 @@ from keywords.utils import log_info
 
 
 class Client(object):
+    
+    prev_resp = ''
 
     def __init__(self, base_url):
         self.base_url = base_url
@@ -36,9 +38,10 @@ class Client(object):
             if responseCode == 200:
                 result = resp.content
                 # log_info("Got response: {}".format(result))
-                if len(result) < 25:
+                if len(result) < 25 and Client.prev_resp != result:
                     # Only print short messages
                     log_info("Got response: {}".format(result))
+                    Client.prev_resp = result
                 return ValueSerializer.deserialize(result)
         except Exception as err:
             if resp.content:

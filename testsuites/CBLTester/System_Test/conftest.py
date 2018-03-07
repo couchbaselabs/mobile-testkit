@@ -89,7 +89,9 @@ def pytest_addoption(parser):
 
     parser.addoption("--community", action="store_true",
                      help="If set, community edition will get picked up , default is enterprise", default=False)
-
+    parser.addoption("--sg-ssl",
+                     action="store_true",
+                     help="If set, will enable SSL communication between Sync Gateway and CBL")
 
 # This will get called once before the first test that
 # runs with this as input parameters in this file
@@ -112,6 +114,7 @@ def params_from_base_suite_setup(request):
     create_db_per_test = request.config.getoption("--create-db-per-test")
     create_db_per_suite = request.config.getoption("--create-db-per-suite")
     device_enabled = request.config.getoption("--device")
+    sg_ssl = request.config.getoption("--sg-ssl")
     # community_enabled = request.config.getoption("--community")
 
 #     testserver = TestServerFactory.create(platform=liteserv_platform,
@@ -181,10 +184,20 @@ def params_from_base_suite_setup(request):
 
     cluster_utils = ClusterKeywords()
     cluster_topology = cluster_utils.get_cluster_topology(cluster_config)
+    cluster_utils.set_cluster_config(cluster_config.split("/")[-1])
     cbs_url = cluster_topology['couchbase_servers'][0]
     cbs_ip = host_for_url(cbs_url)
 
-    # cluster = Cluster(cluster_config)
+    
+    persist_cluster_config_environment_prop(cluster_config, 'sync_gateway_ssl', False)
+    target_url = "ws://{}:4984/{}".format(sg_ip, sg_db)
+    target_admin_url = "ws://{}:4985/{}".format(sg_ip, sg_db)
+
+    if sg_ssl:
+        log_info("Enabling SSL on sync gateway")
+        persist_cluster_config_environment_prop(cluster_config, 'sync_gateway_ssl', True)
+        target_url = "wss://{}:4984/{}".format(sg_ip, sg_db)
+        target_admin_url = "wss://{}:4985/{}".format(sg_ip, sg_db)
 
     if sync_gateway_version < "2.0":
         pytest.skip('Does not work with sg < 2.0 , so skipping the test')
