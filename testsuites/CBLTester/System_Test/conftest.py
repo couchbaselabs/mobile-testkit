@@ -89,9 +89,11 @@ def pytest_addoption(parser):
 
     parser.addoption("--community", action="store_true",
                      help="If set, community edition will get picked up , default is enterprise", default=False)
+
     parser.addoption("--sg-ssl",
                      action="store_true",
                      help="If set, will enable SSL communication between Sync Gateway and CBL")
+
 
 # This will get called once before the first test that
 # runs with this as input parameters in this file
@@ -188,7 +190,6 @@ def params_from_base_suite_setup(request):
     cbs_url = cluster_topology['couchbase_servers'][0]
     cbs_ip = host_for_url(cbs_url)
 
-    
     persist_cluster_config_environment_prop(cluster_config, 'sync_gateway_ssl', False)
     target_url = "ws://{}:4984/{}".format(sg_ip, sg_db)
     target_admin_url = "ws://{}:4985/{}".format(sg_ip, sg_db)
