@@ -1,9 +1,10 @@
 package com.couchbase.CouchbaseLiteServ.server;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.Set;
+
+import com.couchbase.CouchbaseLiteServ.MainActivity;
+import com.couchbase.CouchbaseLiteServ.server.Server;
 
 public class Memory {
     private Map<String, Object> _memory = new HashMap<>();
@@ -14,7 +15,7 @@ public class Memory {
     }
 
     public String add(Object value) {
-        String address = "@" + Integer.toString(++_address);
+        String address = "@" + Integer.toString(++_address) + "_" + MainActivity.getLocalIpAddress();
 
         _memory.put(address, value);
 
