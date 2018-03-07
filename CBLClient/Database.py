@@ -296,3 +296,8 @@ class Database(object):
         for id in cbl_doc_ids:
             doc = self.getDocument(cbl_db, id)
             self.delete(cbl_db, doc)
+
+    def getBulkDocs(self, cbl_db):
+        cbl_doc_ids = self.getDocIds(cbl_db)
+        docs = self.getDocuments(cbl_db, cbl_doc_ids)
+        return docs
