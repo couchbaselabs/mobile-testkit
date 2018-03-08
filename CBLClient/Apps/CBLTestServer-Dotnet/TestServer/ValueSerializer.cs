@@ -38,7 +38,7 @@ namespace Couchbase.Lite.Testing
             {
                 return "L" + value;
             }
-            else if (t.Equals(typeof(float)))
+            else if (t.Equals(typeof(float)) || t.Equals(typeof(double)))
             {
                 return "F" + value;
             }

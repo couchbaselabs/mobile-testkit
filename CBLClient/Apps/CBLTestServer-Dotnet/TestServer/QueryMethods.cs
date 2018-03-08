@@ -108,8 +108,8 @@ namespace Couchbase.Lite.Testing
         {
             With<Database>(postBody, "database", db =>
             {
-                IExpression limit = Expression.Value(postBody["limit"].ToString());
-                IExpression offset = Expression.Value(postBody["offset"].ToString());
+                IExpression limit = Expression.Int((int)postBody["limit"]);
+                IExpression offset = Expression.Int((int)postBody["offset"]);
                 IQuery query = QueryBuilder
                                 .Select(SelectResult.All())
                                 .From(DataSource.Database(db))
@@ -162,7 +162,7 @@ namespace Couchbase.Lite.Testing
                 IExpression whrVal1 = Expression.Value(postBody["whr_val1"].ToString());
                 IExpression whrVal2 = Expression.Value(postBody["whr_val2"].ToString());
                 IExpression whrVal3 = Expression.Value(postBody["whr_val3"].ToString());
-                IExpression whrVal4 = Expression.Value(postBody["whr_val4"].ToString());
+                IExpression whrVal4 = Expression.Value((Boolean)postBody["whr_val4"]);
 
                 IQuery query = QueryBuilder
                                 .Select(SelectResult.Expression(Meta.ID))
@@ -276,7 +276,7 @@ namespace Couchbase.Lite.Testing
                 IQuery query = QueryBuilder
                                 .Select(SelectResult.Expression(Meta.ID),
                                         SelectResult.Expression(Expression.Property(prop1)),
-                                        SelectResult.Expression(Expression.Property(prop2)))
+                                        SelectResult.Expression(Function.Upper(Expression.Property(prop2))))
                                 .From(DataSource.Database(db))
                                 .Where(Function.Contains(Expression.Property(prop1), substring));
                 List<object> resultArray = new List<object>();
