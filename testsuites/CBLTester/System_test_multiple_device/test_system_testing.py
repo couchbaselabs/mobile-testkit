@@ -16,9 +16,9 @@ from datetime import datetime, timedelta
 @pytest.mark.listener
 @pytest.mark.replication
 @pytest.mark.parametrize("num_of_docs, num_of_updates, num_of_docs_in_itr, up_time", [
-#     (1000000, 10, 10000, 3 * 60),
+    # (1000000, 10, 10000, 3 * 60),
     (1000, 5, 200, 1 * 5),
-#     (1234, 2, 10, 1 * 5),
+    # (1234, 2, 10, 1 * 5),
 ])
 def test_system(params_from_base_suite_setup, num_of_docs, num_of_updates, num_of_docs_in_itr, up_time):
     sg_db = "db"
@@ -47,10 +47,10 @@ def test_system(params_from_base_suite_setup, num_of_docs, num_of_updates, num_o
     c = cluster.Cluster(config=cluster_config)
     c.reset(sg_config_path=sg_config)
 
-    docs_per_db = num_of_docs / len(cbl_db_list) #  Equally distributing docs to db
-    extra_docs = num_of_docs % len(cbl_db_list) #  Docs left after equal distribution
-    num_of_itr_per_db = docs_per_db / num_of_docs_in_itr #  iteration required to add docs in each db
-    extra_docs_in_itr_per_db = docs_per_db % num_of_docs_in_itr # iteration required to add docs leftover docs per db
+    docs_per_db = num_of_docs / len(cbl_db_list)  # Equally distributing docs to db
+    extra_docs = num_of_docs % len(cbl_db_list)  # Docs left after equal distribution
+    num_of_itr_per_db = docs_per_db / num_of_docs_in_itr  # iteration required to add docs in each db
+    extra_docs_in_itr_per_db = docs_per_db % num_of_docs_in_itr  # iteration required to add docs leftover docs per db
 
     doc_ids = set()
     # adding bulk docs to each db
@@ -83,15 +83,15 @@ def test_system(params_from_base_suite_setup, num_of_docs, num_of_updates, num_o
         current_time = datetime.now()
         running_time = current_time + timedelta(minutes=up_time)
         range_num = (num_of_itr_per_db + 1) * 10
-    
+
         x = 1
         while(running_time - current_time > timedelta(0)):
             new_docs_count = set([db_obj.getCount(cbl_db) for db_obj, cbl_db in zip(db_obj_list, cbl_db_list)])
             if len(new_docs_count) != 1:
                 assert 1
-            print '*'*20
+            print '*' * 20
             print "Starting iteration no. {} of system testing".format(x)
-            print '*'*20
+            print '*' * 20
             ######################################
             # Checking for doc update on SG side #
             ######################################
@@ -101,7 +101,7 @@ def test_system(params_from_base_suite_setup, num_of_docs, num_of_updates, num_o
             print "updating {} docs on SG".format(len(docs_to_update))
             sg_client.update_docs(url=sg_url, db=sg_db, docs=sg_docs,
                                   number_updates=num_of_updates, auth=session, channels=channels_sg)
-    
+
             # Waiting until replicator finishes on all dbs
             for repl_obj, repl in zip(replicator_obj_list, replicator_list):
                 t = Thread(target=_replicaton_status_check, args=(repl_obj, repl))
@@ -121,11 +121,11 @@ def test_system(params_from_base_suite_setup, num_of_docs, num_of_updates, num_o
                                                       replicator_obj_list,
                                                       replicator_list):
                 print "updating {} docs on {} db".format(len(docs_to_update),
-                                                      db_obj.getName(cbl_db))
+                                                         db_obj.getName(cbl_db))
                 db_obj.update_bulk_docs(cbl_db, num_of_updates, docs_to_update)
-    
+
                 # updating docs will affect all dbs as they are synced with SG.
-                t = Thread(target=_replicaton_status_check, args=(repl_obj, repl)) 
+                t = Thread(target=_replicaton_status_check, args=(repl_obj, repl))
                 t.start()
                 t.join()
 
@@ -143,14 +143,14 @@ def test_system(params_from_base_suite_setup, num_of_docs, num_of_updates, num_o
             sg_client.delete_bulk_docs(url=sg_url, db=sg_db,
                                        docs=sg_docs, auth=session)
             for repl_obj, repl in zip(replicator_obj_list, replicator_list):
-                t = Thread(target=_replicaton_status_check, args=(repl_obj, repl)) 
+                t = Thread(target=_replicaton_status_check, args=(repl_obj, repl))
                 t.start()
                 t.join()
 
             time.sleep(5)
             # removing ids of deleted doc from the list
             doc_ids = doc_ids - docs_to_delete
-    
+
             ############################
             # Deleting doc on CBL side #
             ############################
@@ -162,14 +162,14 @@ def test_system(params_from_base_suite_setup, num_of_docs, num_of_updates, num_o
                                                       replicator_obj_list,
                                                       replicator_list):
                 print "deleting {} docs from {} db".format(docs_to_delete_per_db,
-                                                        db_obj.getName(cbl_db))
-                db_obj.delete_bulk_docs(cbl_db, list(docs_to_delete)[i : i + docs_to_delete_per_db])
+                                                           db_obj.getName(cbl_db))
+                db_obj.delete_bulk_docs(cbl_db, list(docs_to_delete)[i: i + docs_to_delete_per_db])
                 i += docs_to_delete_per_db
                 time.sleep(5)
 
                 # Deleting docs will affect all dbs as they are synced with SG.
                 for repl_obj, repl in zip(replicator_obj_list, replicator_list):
-                    t = Thread(target=_replicaton_status_check, args=(repl_obj, repl)) 
+                    t = Thread(target=_replicaton_status_check, args=(repl_obj, repl))
                     t.start()
                     t.join()
             # removing ids of deleted doc from the list
@@ -193,9 +193,9 @@ def test_system(params_from_base_suite_setup, num_of_docs, num_of_updates, num_o
                                                       db_obj.getName(cbl_db))
                 db_obj.saveDocuments(cbl_db, added_docs)
                 time.sleep(5)
-    
+
                 # Adding docs will affect all dbs as they are synced with SG.
-                t = Thread(target=_replicaton_status_check, args=(repl_obj, repl)) 
+                t = Thread(target=_replicaton_status_check, args=(repl_obj, repl))
                 t.start()
                 t.join()
                 doc_id_for_new_docs += range_num
@@ -208,6 +208,7 @@ def test_system(params_from_base_suite_setup, num_of_docs, num_of_updates, num_o
         for repl_obj, repl in zip(replicator_obj_list, replicator_list):
             repl_obj.stop(repl)
             time.sleep(5)
+
 
 def _replicaton_status_check(repl_obj, replicator):
         repl_obj.wait_until_replicator_idle(replicator)

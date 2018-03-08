@@ -571,7 +571,7 @@ def setup_sg_cbl_docs(params_from_base_test_setup, sg_db, base_url, db, cbl_db, 
 @pytest.mark.parametrize("num_of_docs", [
     (10),
     (100),
-    (10000)
+    (1000)
 ])
 def test_CBL_tombstone_doc(params_from_base_test_setup, num_of_docs):
     """
@@ -1466,7 +1466,7 @@ def test_default_conflict_scenario_highRevGeneration_wins(params_from_base_test_
 
     # Start and stop continuous replication
     replicator = Replication(base_url)
-    sg_client.create_user(sg_admin_url, sg_db, username="autotest", password="password", channels=channels)
+    sg_client.create_user(sg_admin_url, sg_db, name="autotest", password="password", channels=channels)
     session, replicator_authenticator, repl = replicator.create_session_configure_replicate(
         baseUrl=base_url, sg_admin_url=sg_admin_url, sg_db=sg_db, channels=channels, sg_client=sg_client, cbl_db=cbl_db, sg_blip_url=sg_blip_url, username="autotest", password="password", replication_type="push_pull", continuous=False)
     sg_docs = sg_client.get_all_docs(url=sg_url, db=sg_db, auth=session)
@@ -1491,7 +1491,6 @@ def test_default_conflict_scenario_highRevGeneration_wins(params_from_base_test_
     sg_docs = sg_client.get_all_docs(url=sg_url, db=sg_db, auth=session, include_docs=True)
     sg_docs = sg_docs["rows"]
     sg_docs_values = [doc['doc'] for doc in sg_docs]
-    print "\n\nsg docs are ", sg_docs_values
 
     if highrev_source == 'cbl':
         for doc in cbl_docs:
@@ -1509,7 +1508,6 @@ def test_default_conflict_scenario_highRevGeneration_wins(params_from_base_test_
     replicator.wait_until_replicator_idle(repl)
     cbl_doc_ids = db.getDocIds(cbl_db)
     cbl_docs = db.getDocuments(cbl_db, cbl_doc_ids)
-    print "\n\ncbl docs are ", cbl_docs
     sg_docs = sg_client.get_all_docs(url=sg_url, db=sg_db, auth=session, include_docs=True)
     sg_docs = sg_docs["rows"]
     sg_docs_values = [doc['doc'] for doc in sg_docs]
@@ -1569,7 +1567,7 @@ def test_default_conflict_scenario_highRevID_wins(params_from_base_test_setup, h
 
     # Start and stop continuous replication
     replicator = Replication(base_url)
-    sg_client.create_user(sg_admin_url, sg_db, username="autotest", password="password", channels=channels)
+    sg_client.create_user(sg_admin_url, sg_db, name="autotest", password="password", channels=channels)
     session, replicator_authenticator, repl = replicator.create_session_configure_replicate(
         baseUrl=base_url, sg_admin_url=sg_admin_url, sg_db=sg_db, channels=channels, sg_client=sg_client, cbl_db=cbl_db, sg_blip_url=sg_blip_url, username="autotest", password="password", replication_type="push_pull", continuous=False)
     sg_docs = sg_client.get_all_docs(url=sg_url, db=sg_db, auth=session)
@@ -1650,7 +1648,7 @@ def test_default_conflict_with_two_conflictsAndTomstone(params_from_base_test_se
     session = cookie, session_id
     sg_docs = document.create_docs(doc_id_prefix='sg_docs', number=num_of_docs, channels=channels)
     sg_docs = sg_client.add_bulk_docs(url=sg_url, db=sg_db, docs=sg_docs, auth=session)
-    print "sg docs after adding is ", sg_docs
+
     # 2. Create two conflicts with 2-hex in sg.
     for i in xrange(len(sg_docs)):
         sg_client.add_conflict(url=sg_url, db=sg_db, doc_id=sg_docs[i]["id"], parent_revisions=sg_docs[i]["rev"],

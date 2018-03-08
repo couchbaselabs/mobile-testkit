@@ -102,9 +102,9 @@ def params_from_base_suite_setup(request):
     create_db_per_suite = request.config.getoption("--create-db-per-suite")
     device_enabled = request.config.getoption("--device")
     sg_ssl = request.config.getoption("--sg-ssl")
-    
+
 #     community_enabled = request.config.getoption("--community")
-# 
+#
 #     testserver_list = []
 #     for platform, version, host, port in zip(platform_list,
 #                                              version_list,
@@ -115,11 +115,11 @@ def params_from_base_suite_setup(request):
 #                                               host=host,
 #                                               port=port,
 #                                               community_enabled=community_enabled)
-#  
+#
 #         log_info("Downloading TestServer ...")
 #         # Download TestServer app
 #         testserver.download()
-#        
+#
 #         # Install TestServer app
 #         if device_enabled and platform == "ios":
 #             testserver.install_device()
@@ -207,7 +207,7 @@ def params_from_base_suite_setup(request):
     db_name_list = []
     cbl_db_list = []
     db_obj_list = []
-    for base_url, i in zip(base_url_list, range(len(base_url_list)) ):
+    for base_url, i in zip(base_url_list, range(len(base_url_list))):
         db_name = "{}_{}".format(create_db_per_suite, i)
         db_name_list.append(db_name)
         db = Database(base_url)
@@ -243,7 +243,7 @@ def params_from_base_suite_setup(request):
         "base_url_list": base_url_list,
         "sg_config": sg_config,
         "db_obj_list": db_obj_list,
-#         "testserver_list": testserver_list,
+        # "testserver_list": testserver_list,
         "device_enabled": device_enabled
     }
 
@@ -256,10 +256,10 @@ def params_from_base_suite_setup(request):
         time.sleep(2)
         db_obj.deleteDB(cbl_db)
         time.sleep(1)
-    
+
         # Flush all the memory contents on the server app
         log_info("Flushing server memory")
         utils_obj = Utils(base_url)
         utils_obj.flushMemory()
         log_info("Stopping the test server")
-#         testserver.stop()
+        # testserver.stop()
