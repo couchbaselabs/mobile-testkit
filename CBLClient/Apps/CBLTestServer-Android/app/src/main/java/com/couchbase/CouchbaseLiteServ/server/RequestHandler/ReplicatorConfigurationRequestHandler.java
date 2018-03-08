@@ -117,32 +117,6 @@ public class ReplicatorConfigurationRequestHandler {
             Context context = com.couchbase.CouchbaseLiteServ.MainActivity.getAppContext();
             byte[] ServerCert = this.getPinnedCertFile(context);
             // Set pinned certificate.
-            // config.setPinnedServerCertificate(ServerCert);
-
-            // Create a trust manager that does not validate certificate chains
-            TrustManager[] trustAllCerts = new TrustManager[] {
-                    new X509TrustManager() {
-                        public java.security.cert.X509Certificate[] getAcceptedIssuers() {
-                            return new X509Certificate[0];
-                        }
-                        public void checkClientTrusted(
-                                java.security.cert.X509Certificate[] certs, String authType) {
-                        }
-                        public void checkServerTrusted(
-                                java.security.cert.X509Certificate[] certs, String authType) {
-                        }
-                    }
-            };
-
-            // Install the all-trusting trust manager
-            try {
-                SSLContext sc = SSLContext.getInstance("SSL");
-                sc.init(null, trustAllCerts, new java.security.SecureRandom());
-                HttpsURLConnection.setDefaultSSLSocketFactory(sc.getSocketFactory());
-
-            } catch (GeneralSecurityException e) {
-            }
-
             config.setPinnedServerCertificate(ServerCert);
         }
         return config;
@@ -250,34 +224,6 @@ public class ReplicatorConfigurationRequestHandler {
         }
         replicatorConfiguration.setReplicatorType(replicatorType);
     }
-
-//    public static byte[] toByteArray(InputStream input) throws IOException {
-//        ByteArrayOutputStream output = new ByteArrayOutputStream();
-//        copy(input, output);
-//        return output.toByteArray();
-//    }
-
-//    public static int copy(InputStream input, OutputStream output) throws IOException {
-//        long count = copyLarge(input, output);
-//        if (count > Integer.MAX_VALUE) {
-//            return -1;
-//        }
-//        return (int) count;
-//    }
-//
-//    public static long copyLarge(InputStream input, OutputStream output)
-//            throws IOException {
-//        final int DEFAULT_BUFFER_SIZE = 1024 * 4;
-//        byte[] buffer = new byte[DEFAULT_BUFFER_SIZE];
-//        long count = 0;
-//        int n = 0;
-//        while (-1 != (n = input.read(buffer))) {
-//            output.write(buffer, 0, n);
-//            count += n;
-//        }
-//        return count;
-//    }
-
 
     private byte[] getPinnedCertFile(Context context) {
         AssetManager assetManager = context.getAssets();
