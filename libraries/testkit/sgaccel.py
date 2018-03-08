@@ -7,6 +7,9 @@ import libraries.testkit.settings
 from libraries.provision.ansible_runner import AnsibleRunner
 from utilities.cluster_config_utils import is_cbs_ssl_enabled, is_xattrs_enabled, no_conflicts_enabled, get_revs_limit
 from keywords.utils import add_cbs_to_sg_config_server_field
+from utilities.cluster_config_utils import sg_ssl_enabled
+from keywords.constants import SYNC_GATEWAY_CERT
+
 
 log = logging.getLogger(libraries.testkit.settings.LOGGER)
 
@@ -43,6 +46,7 @@ class SgAccel:
 
         log.info(">>> Starting sg_accel with configuration: {}".format(conf_path))
         couchbase_server_primary_node = add_cbs_to_sg_config_server_field(self.cluster_config)
+        sg_cert_path = os.path.abspath(SYNC_GATEWAY_CERT)
         playbook_vars = {
             "sync_gateway_config_filepath": conf_path,
             "server_port": self.server_port,
@@ -51,11 +55,19 @@ class SgAccel:
             "xattrs": "",
             "no_conflicts": "",
             "revs_limit": "",
+            "sslcert": "",
+            "sslkey": "",
+            "sg_cert_path": sg_cert_path,
             "couchbase_server_primary_node": couchbase_server_primary_node
         }
+
         if is_xattrs_enabled(self.cluster_config):
             playbook_vars["autoimport"] = '"import_docs": "continuous",'
             playbook_vars["xattrs"] = '"enable_shared_bucket_access": true,'
+
+        if sg_ssl_enabled(self.cluster_config):
+            playbook_vars["sslcert"] = '"SSLCert": "sg_cert.pem",'
+            playbook_vars["sslkey"] = '"SSLKey": "sg_privkey.pem",'
 
         if no_conflicts_enabled(self.cluster_config):
             playbook_vars["no_conflicts"] = '"allow_conflicts": false,'

@@ -14,6 +14,7 @@
     server_port:
     sslcert:
     sslkey:
+    sg_cert_path:
   tasks:
   - include: tasks/deploy-sg-accel-config.yml
     when: ansible_distribution == "CentOS" or ansible_distribution == "RedHat" or ansible_distribution == "Amazon" or ansible_distribution == "Ubuntu"
