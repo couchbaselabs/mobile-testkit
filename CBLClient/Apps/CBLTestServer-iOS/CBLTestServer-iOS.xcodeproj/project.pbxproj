@@ -23,8 +23,6 @@
 		294FB20C1FEAFD9000DD0C23 /* DatabaseRequestHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 294FB20B1FEAFD9000DD0C23 /* DatabaseRequestHandler.swift */; };
 		294FB20E1FEB0E1800DD0C23 /* DocumentRequestHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 294FB20D1FEB0E1800DD0C23 /* DocumentRequestHandler.swift */; };
 		2961A91D2001C65B00636422 /* ReplicatorConfigurationRequestHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2961A91C2001C65B00636422 /* ReplicatorConfigurationRequestHandler.swift */; };
-		297AE850204A29B7004C3679 /* CouchbaseLiteSwift.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 297AE84F204A29B7004C3679 /* CouchbaseLiteSwift.framework */; };
-		297AE851204A29B8004C3679 /* CouchbaseLiteSwift.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 297AE84F204A29B7004C3679 /* CouchbaseLiteSwift.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		29917D981FA92F82006C7675 /* DictionaryRequestHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 29917D971FA92F82006C7675 /* DictionaryRequestHandler.swift */; };
 		299692A51FF30B1A0040CC32 /* ArrayRequesthandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 299692A41FF30B1A0040CC32 /* ArrayRequesthandler.swift */; };
 		299692A71FF31A590040CC32 /* SessionAuthenticatorRequestHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 299692A61FF31A590040CC32 /* SessionAuthenticatorRequestHandler.swift */; };
@@ -54,6 +52,8 @@
 		29F7869D1F9FC4180035178F /* GCDWebServerStreamedResponse.m in Sources */ = {isa = PBXBuildFile; fileRef = 29F786901F9FC4180035178F /* GCDWebServerStreamedResponse.m */; };
 		FB5A86762017E672008127FC /* DatabaseConfigurationRequestHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB5A86752017E672008127FC /* DatabaseConfigurationRequestHandler.swift */; };
 		FB7B1E731FDB60ED00A912BF /* Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB7B1E721FDB60ED00A912BF /* Extensions.swift */; };
+		FBCA158E2051C28700072013 /* CouchbaseLiteSwift.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FBCA158D2051C28600072013 /* CouchbaseLiteSwift.framework */; };
+		FBCA15902051C29E00072013 /* CouchbaseLiteSwift.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = FBCA158D2051C28600072013 /* CouchbaseLiteSwift.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -74,15 +74,14 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
-		2907D17F200E91F000CE56EB /* Embed Frameworks */ = {
+		FBCA158F2051C29500072013 /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
-				297AE851204A29B8004C3679 /* CouchbaseLiteSwift.framework in Embed Frameworks */,
+				FBCA15902051C29E00072013 /* CouchbaseLiteSwift.framework in CopyFiles */,
 			);
-			name = "Embed Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXCopyFilesBuildPhase section */
@@ -104,8 +103,6 @@
 		294FB20B1FEAFD9000DD0C23 /* DatabaseRequestHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DatabaseRequestHandler.swift; sourceTree = "<group>"; };
 		294FB20D1FEB0E1800DD0C23 /* DocumentRequestHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentRequestHandler.swift; sourceTree = "<group>"; };
 		2961A91C2001C65B00636422 /* ReplicatorConfigurationRequestHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReplicatorConfigurationRequestHandler.swift; sourceTree = "<group>"; };
-		297AE84E204A29B7004C3679 /* CouchbaseLiteSwift.framework.dSYM */ = {isa = PBXFileReference; lastKnownFileType = wrapper.dsym; name = CouchbaseLiteSwift.framework.dSYM; path = Frameworks/CouchbaseLiteSwift.framework.dSYM; sourceTree = "<group>"; };
-		297AE84F204A29B7004C3679 /* CouchbaseLiteSwift.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CouchbaseLiteSwift.framework; path = Frameworks/CouchbaseLiteSwift.framework; sourceTree = "<group>"; };
 		29917D971FA92F82006C7675 /* DictionaryRequestHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DictionaryRequestHandler.swift; sourceTree = "<group>"; };
 		299692A41FF30B1A0040CC32 /* ArrayRequesthandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArrayRequesthandler.swift; sourceTree = "<group>"; };
 		299692A61FF31A590040CC32 /* SessionAuthenticatorRequestHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionAuthenticatorRequestHandler.swift; sourceTree = "<group>"; };
@@ -157,6 +154,7 @@
 		29F786901F9FC4180035178F /* GCDWebServerStreamedResponse.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GCDWebServerStreamedResponse.m; sourceTree = "<group>"; };
 		FB5A86752017E672008127FC /* DatabaseConfigurationRequestHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DatabaseConfigurationRequestHandler.swift; sourceTree = "<group>"; };
 		FB7B1E721FDB60ED00A912BF /* Extensions.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Extensions.swift; sourceTree = "<group>"; };
+		FBCA158D2051C28600072013 /* CouchbaseLiteSwift.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CouchbaseLiteSwift.framework; path = Frameworks/CouchbaseLiteSwift.framework; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -164,7 +162,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				297AE850204A29B7004C3679 /* CouchbaseLiteSwift.framework in Frameworks */,
+				FBCA158E2051C28700072013 /* CouchbaseLiteSwift.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -219,8 +217,6 @@
 		29F77F1A1F9FC18D0035178F = {
 			isa = PBXGroup;
 			children = (
-				297AE84F204A29B7004C3679 /* CouchbaseLiteSwift.framework */,
-				297AE84E204A29B7004C3679 /* CouchbaseLiteSwift.framework.dSYM */,
 				29F77F251F9FC18D0035178F /* CBLTestServer-iOS */,
 				29F77F3A1F9FC18D0035178F /* CBLTestServer-iOSTests */,
 				29F77F451F9FC18D0035178F /* CBLTestServer-iOSUITests */,
@@ -345,6 +341,7 @@
 		29F7869E1F9FC4850035178F /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				FBCA158D2051C28600072013 /* CouchbaseLiteSwift.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -359,7 +356,7 @@
 				29F77F1F1F9FC18D0035178F /* Sources */,
 				29F77F201F9FC18D0035178F /* Frameworks */,
 				29F77F211F9FC18D0035178F /* Resources */,
-				2907D17F200E91F000CE56EB /* Embed Frameworks */,
+				FBCA158F2051C29500072013 /* CopyFiles */,
 			);
 			buildRules = (
 			);
