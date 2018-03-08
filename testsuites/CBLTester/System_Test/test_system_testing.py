@@ -54,6 +54,7 @@ def test_system(params_from_base_test_setup, num_of_docs, num_of_updates, num_of
 
     # Configure replication with push_pull
     replicator = Replication(base_url)
+    sg_client.create_user(sg_admin_url, sg_db, username, password, channels=channels_sg)
     session, _, repl = replicator.create_session_configure_replicate(
         base_url, sg_admin_url, sg_db, username, password, channels_sg, sg_client, cbl_db, sg_blip_url, continuous=True)
 
