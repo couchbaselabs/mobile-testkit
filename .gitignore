@@ -91,7 +91,6 @@ apps/testkit.java/Testkit.java.android/Tests/AndroidClient/app/build
 apps/testkit.java/Testkit.java.android/Tests/AndroidClient/app/*.apk
 !apps/testkit.java/Testkit.java.android/Tests/AndroidClient/app/src/main/res
 !apps/testkit.java/Testkit.java.android/Tests/AndroidClient/app/src/main/res/*/*.*
-CBLClient/Apps/CBLTestServer-iOS/CBLTestServer-iOS.xcodeproj
 CBLClient/Apps/CBLTestServer-iOS/Frameworks/CouchbaseLiteSwift.framework
 bin/
 obj/
