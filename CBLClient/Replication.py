@@ -276,7 +276,7 @@ class Replication(object):
         # args.setInt("index", index)
         return self._client.invokeMethod("replicator_changeListenerGetChanges", args)
 
-    def configure_and_replicate(self, source_db, replicator_authenticator, target_db=None, target_url=None, replication_type="push_pull", continuous=True,
+    def configure_and_replicate(self, source_db, replicator_authenticator=None, target_db=None, target_url=None, replication_type="push_pull", continuous=True,
                                 channels=None, err_check=True):
         if target_db is None:
             repl_config = self.configure(source_db, target_url=target_url, continuous=continuous,

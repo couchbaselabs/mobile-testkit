@@ -2187,6 +2187,8 @@ def test_replication_with_3Channels(params_from_base_test_setup, setup_customize
         sg_docs3 = document.create_docs(doc_id_prefix='sg_docs-3', number=num_of_docs, channels=channel3, attachments_generator=attachment.generate_2_png_10_10)
     else:
         sg_docs = document.create_docs(doc_id_prefix='sg_docs-1', number=num_of_docs, channels=channel1)
+        sg_docs2 = document.create_docs(doc_id_prefix='sg_docs-2', number=num_of_docs, channels=channel2)
+        sg_docs3 = document.create_docs(doc_id_prefix='sg_docs-3', number=num_of_docs, channels=channel3)
     sg_client.add_bulk_docs(url=sg_url, db=sg_db, docs=sg_docs, auth=session1)
     sg_client.add_bulk_docs(url=sg_url, db=sg_db, docs=sg_docs2, auth=session2)
     sg_client.add_bulk_docs(url=sg_url, db=sg_db, docs=sg_docs3, auth=session3)
@@ -2211,16 +2213,18 @@ def test_replication_with_3Channels(params_from_base_test_setup, setup_customize
     replicator.stop(repl2)
     replicator.stop(repl3)
 
-    """
+
 @pytest.mark.listener
 def test_replication_with_privatePublicChannels(params_from_base_test_setup, setup_customized_teardown_test):
-
+    """
     @summary:
     1. Create 2 users , one with private and other with public channel
-    2. Create docs in sg in all 3 channels
-    3. replication to CBL with continous true and push_pull on 3 CBL DBs assosciated with each sg channel.
-    4. verify in CBL , docs got replicated to each DB appropirately
-
+    2. Create docs in sg in one private channel and public channel
+    3. replication to CBL with continous False and push_pull to CBL .
+    4. verify in CBL , only docs from public channel is replicated
+    5. update docs in cbl
+    6. Verify updated docs got replicated to sg
+    """
 
     sg_db = "db"
     sg_url = params_from_base_test_setup["sg_url"]
@@ -2230,23 +2234,12 @@ def test_replication_with_privatePublicChannels(params_from_base_test_setup, set
     base_url = params_from_base_test_setup["base_url"]
     sg_config = params_from_base_test_setup["sg_config"]
     db = params_from_base_test_setup["db"]
-    cbl_db = params_from_base_test_setup["source_db"]
-    sg_admin_blip_url = sg_blip_url.replace("4984", "4985")
-
     num_of_docs = 10
 
     privateChannel1 = ["Replication-1"]
-    privateChannel2 = ["Replication-2"]
-    publicChannel = ["*"]
+    publicChannel = ["!"]
 
     cbl_db1 = setup_customized_teardown_test["cbl_db1"]
-    cbl_db2 = setup_customized_teardown_test["cbl_db2"]
-
-    if topology_type == "1cbl_1sg":
-        cbl_db1 = cbl_db
-        cbl_db2 = cbl_db
-        cbl_db3 = cbl_db
-
     username1 = "autotest"
     username2 = "autotest2"
     password = "password"
@@ -2257,42 +2250,58 @@ def test_replication_with_privatePublicChannels(params_from_base_test_setup, set
     c = cluster.Cluster(config=cluster_config)
     c.reset(sg_config_path=sg_config)
 
-    # 1. Create 3 users in SG with 3 differrent channels.
+    # 1. Create 2 users in SG with 2 differrent channels.
     sg_client.create_user(sg_admin_url, sg_db, username1, password=password, channels=privateChannel1)
     cookie1, session_id1 = sg_client.create_session(sg_admin_url, sg_db, username1)
     session1 = cookie1, session_id1
 
-    sg_client.create_user(sg_admin_url, sg_db, username2, password=password, channels=privateChannel2)
+    sg_client.create_user(sg_admin_url, sg_db, username2, password=password)
     cookie2, session_id2 = sg_client.create_session(sg_admin_url, sg_db, username2)
     session2 = cookie2, session_id2
 
-    # 2. Create docs in sg in all 3 channels
+    # 2. Create docs in sg in one private channel and public channel
     sg_docs = document.create_docs(doc_id_prefix='sg_docs-1', number=num_of_docs, channels=privateChannel1)
     sg_client.add_bulk_docs(url=sg_url, db=sg_db, docs=sg_docs, auth=session1)
 
     sg_docs2 = document.create_docs(doc_id_prefix='sg_docs-2', number=num_of_docs, channels=publicChannel)
     sg_client.add_bulk_docs(url=sg_admin_url, db=sg_db, docs=sg_docs2)
 
-    # 3. replication to CBL with continous true and push_pull on 3 CBL DBs assosciated with each sg channel.
+    # 3. replication to CBL with continous False and push_pull to CBL .
     replicator = Replication(base_url)
     replicator_authenticator1 = authenticator.authentication(session_id1, cookie1, authentication_type="session")
-    repl1 = replicator.configure_and_replicate(source_db=cbl_db1, replicator_authenticator=replicator_authenticator1, target_url=sg_blip_url,
-                                               replication_type="pull", continuous=False, channels=channel1)
-    replicator_authenticator2 = authenticator.authentication(session_id2, cookie2, authentication_type="session")
-    repl2 = replicator.configure_and_replicate(source_db=cbl_db2, replicator_authenticator=replicator_authenticator2, target_url=sg_blip_url,
-                                               replication_type="pull", continuous=False, channels=channel2)
-    replicator_authenticator3 = authenticator.authentication(session_id3, cookie3, authentication_type="session")
-    repl3 = replicator.configure_and_replicate(source_db=cbl_db3, replicator_authenticator=replicator_authenticator3, target_url=sg_blip_url,
-                                               replication_type="pull", continuous=False, channels=channel3)
+    replicator.configure_and_replicate(source_db=cbl_db1, replicator_authenticator=replicator_authenticator1, target_url=sg_blip_url,
+                                       replication_type="pull", continuous=False, channels=publicChannel)
 
-    # 4. verify in CBL , docs got replicated to each DB appropirately
-    verify_sgDocIds_cblDocIds(sg_client, sg_url, sg_db, session1, cbl_db1, db)
-    verify_sgDocIds_cblDocIds(sg_client, sg_url, sg_db, session2, cbl_db2, db)
-    verify_sgDocIds_cblDocIds(sg_client, sg_url, sg_db, session3, cbl_db3, db)
-    replicator.stop(repl1)
-    replicator.stop(repl2)
-    replicator.stop(repl3)
-    """
+    # 4. verify in CBL , only docs from public channel is replicated
+    cbl_doc_ids = db.getDocIds(cbl_db1)
+    for doc in sg_docs2:
+        assert doc["_id"] in cbl_doc_ids, "doc with public channel did not replicate to cbl"
+
+    for doc in sg_docs:
+        assert doc["_id"] not in cbl_doc_ids, "doc with public channel replicated to cbl"
+
+    # 5. update docs in cbl
+    # Verify updated docs got replicated to sg
+    db.update_bulk_docs(cbl_db1)
+    replicator.configure_and_replicate(source_db=cbl_db1, replicator_authenticator=replicator_authenticator1, target_url=sg_blip_url,
+                                       replication_type="push_pull", continuous=False, channels=publicChannel)
+    sg_docs_new = sg_client.get_all_docs(url=sg_url, db=sg_db, auth=session1, include_docs=True)
+    sg_docs_new = sg_docs_new["rows"]
+    sg_docs2_ids = [row["_id"] for row in sg_docs2]
+    for doc in sg_docs_new:
+        if doc["id"] in sg_docs2_ids:
+            assert doc["doc"]["updates-cbl"] == 1, "sg docs with public channel did not have updated from cbl"
+        else:
+            try:
+                doc["doc"]["updates-cbl"]
+                assert False, "private channel docs also got update from cbl"
+            except KeyError:
+                assert True
+
+    sg_docs_new2 = sg_client.get_all_docs(url=sg_url, db=sg_db, auth=session2, include_docs=True)
+    sg_docs_new2 = sg_docs_new2["rows"]
+    for doc in sg_docs_new2:
+        assert doc["doc"]["updates-cbl"] == 1, "sg docs with public channel did not have updated from cbl in session2"
 
 
 @pytest.mark.listener
@@ -2595,17 +2604,14 @@ def test_replication_1withMultipleBuckets_deleteOneBucket(params_from_base_test_
     replicator.wait_until_replicator_idle(repl2)
     replicator.wait_until_replicator_idle(repl3)
 
-    # 6. Verify 3rd bucket's docs are removed in cbl
+    # 6. Verify 3rd bucket's docs are still exists in sg
     verify_sgDocIds_cblDocIds(sg_client, sg_url, sg_db1, session1, cbl_db1, db)
     verify_sgDocIds_cblDocIds(sg_client, sg_url, sg_db2, session2, cbl_db2, db)
     cbl_doc_ids = db.getDocIds(cbl_db3)
-    assert len(cbl_doc_ids) == 0, "cbl docs not deleted when assosciated bucket is deleted in CBS"
-    sg_docs = sg_client.get_all_docs(url=sg_url, db=sg_db3, auth=session3)
-    sg_docs = sg_docs["rows"]
-    sg_doc_ids = [row["id"] for row in sg_docs]
-    cbl_doc_ids = db.getDocIds(cbl_db3)
-    assert len(sg_doc_ids) == 0, "sg docs not deleted when assosciated bucket is deleted in CBS"
-    assert len(cbl_doc_ids) == 0, "cbl docs not deleted when assosciated bucket is deleted in CBS"
+    assert len(cbl_doc_ids) == num_of_docs, "cbl docs not deleted when assosciated bucket is deleted in CBS"
+    replicator.stop(repl1)
+    replicator.stop(repl2)
+    replicator.stop(repl3)
 
 
 def restart_sg(c, sg_conf, cluster_config):
