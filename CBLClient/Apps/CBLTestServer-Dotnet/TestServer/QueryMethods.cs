@@ -90,10 +90,15 @@ namespace Couchbase.Lite.Testing
                                 .Select(SelectResult.All())
                                 .From(DataSource.Database(db))
                                 .Where(Meta.ID.EqualTo(docId));
+
+                List <Dictionary<String, object>> resultArray = new List<Dictionary<String, object>>();
+
                 foreach (Result row in query.Execute())
                 {
-                    response.WriteBody(row.ToDictionary());
+                    resultArray.Add(row.ToDictionary());
                 }
+
+                response.WriteBody(resultArray);
             });
         }
 
@@ -451,6 +456,31 @@ namespace Couchbase.Lite.Testing
                 }
                 response.WriteBody(resultArray);
             });
+        }
+
+        internal static void QueryEqualTo([NotNull] NameValueCollection args,
+           [NotNull] IReadOnlyDictionary<string, object> postBody,
+           [NotNull] HttpListenerResponse response)
+        {
+            //SELECT * FROM `travel-sample` where id = 24
+            With<Database>(postBody, "database", db =>
+            {
+                var prop = postBody["prop"].ToString();
+                IExpression val = Expression.Value(postBody["val"].ToString());
+                List<Object> resultArray = new List<Object>();
+
+                IQuery query = QueryBuilder
+                        .Select(SelectResult.Expression(Meta.ID))
+                        .From(DataSource.Database(db))
+                        .Where(Expression.Property(prop).EqualTo(val))
+                        .OrderBy(Ordering.Expression(Meta.ID).Ascending());
+                foreach (Result row in query.Execute())
+                {
+                    resultArray.Add(row.ToDictionary());
+                }
+                response.WriteBody(resultArray);
+            });
+
         }
 
     }

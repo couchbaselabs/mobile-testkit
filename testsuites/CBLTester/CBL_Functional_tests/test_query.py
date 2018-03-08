@@ -62,6 +62,8 @@ def test_doc_get(params_from_base_test_setup, doc_id):
     """
     cluster_topology = params_from_base_test_setup["cluster_topology"]
     source_db = params_from_base_test_setup["source_db"]
+    cbl_db = params_from_base_test_setup["cbl_db"]
+    enable_sample_bucket = params_from_base_test_setup["enable_sample_bucket"]
     cbs_url = cluster_topology['couchbase_servers'][0]
     base_url = params_from_base_test_setup["base_url"]
     cbs_ip = host_for_url(cbs_url)
@@ -90,7 +92,7 @@ def test_doc_get(params_from_base_test_setup, doc_id):
 
     assert len(docs_from_cbl) == len(docs_from_n1ql)
     log_info("Found {} docs".format(len(docs_from_cbl)))
-    assert docs_from_cbl == docs_from_n1ql
+    assert docs_from_cbl[0][cbl_db] == docs_from_n1ql[0][enable_sample_bucket]
     log_info("Doc contents match between CBL and n1ql")
 
 
@@ -171,8 +173,7 @@ def test_multiple_selects(params_from_base_test_setup, select_property1, select_
         docs_from_n1ql.append(row)
 
     assert len(docs_from_cbl) == len(docs_from_n1ql)
-    log_info("Found cbl docs {} docs".format(docs_from_cbl))
-    assert docs_from_cbl == docs_from_n1ql
+    assert sorted(docs_from_cbl) == sorted(docs_from_n1ql)
 
     log_info("Doc contents match")
 
