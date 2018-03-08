@@ -1767,6 +1767,8 @@ def test_default_conflict_with_oneTombstone_conflict(params_from_base_test_setup
     for doc in sg_docs:
         assert doc["doc"]["updates-cbl"] == 1, "cbl update did not pushed to sg"
 
+    replicator.stop(repl)
+
 
 @pytest.mark.listener
 def test_default_conflict_with_three_conflicts(params_from_base_test_setup):
@@ -1841,6 +1843,8 @@ def test_default_conflict_with_three_conflicts(params_from_base_test_setup):
     sg_docs = sg_docs["rows"]
     for doc in sg_docs:
         assert doc["doc"]["updates-cbl"] == 1, "cbl update did not pushed to sg"
+
+    replicator.stop(repl)
 
 
 @pytest.mark.listener
@@ -2028,6 +2032,8 @@ def test_default_conflict_withConflicts_withChannels(params_from_base_test_setup
     db.update_bulk_docs(database=cbl_db, number_of_updates=1)
     replicator.wait_until_replicator_idle(repl1)
     replicator.wait_until_replicator_idle(repl2)
+    replicator.stop(repl1)
+    replicator.stop(repl2)
 
     # 5. Verify updated doc from cbl is pushed to sg.
     sg_docs = sg_client.get_all_docs(url=sg_url, db=sg_db, auth=session1, include_docs=True)
@@ -2108,7 +2114,7 @@ def test_CBL_push_pull_with_sg_down(params_from_base_test_setup):
     cbl_doc_ids = db.getDocIds(cbl_db)
     sg_docs = sg_client.get_all_docs(url=sg_url, db=sg_db, auth=session)
     sg_docs = sg_docs["rows"]
-    assert len(sg_docs) == len(cbl_doc_ids), "docs did not replicated when sync-gateway restarted"
+    assert len(sg_docs) == len(cbl_doc_ids), "Docs did not get replicated when sync-gateway restarted"
     assert len(sg_docs) == num_of_docs
     replicator.stop(repl)
 
@@ -2187,6 +2193,7 @@ def test_replication_with_3Channels(params_from_base_test_setup, setup_customize
         sg_docs = document.create_docs(doc_id_prefix='sg_docs-1', number=num_of_docs, channels=channel1)
         sg_docs2 = document.create_docs(doc_id_prefix='sg_docs-2', number=num_of_docs, channels=channel2)
         sg_docs3 = document.create_docs(doc_id_prefix='sg_docs-3', number=num_of_docs, channels=channel3)
+
     sg_client.add_bulk_docs(url=sg_url, db=sg_db, docs=sg_docs, auth=session1)
     sg_client.add_bulk_docs(url=sg_url, db=sg_db, docs=sg_docs2, auth=session2)
     sg_client.add_bulk_docs(url=sg_url, db=sg_db, docs=sg_docs3, auth=session3)
@@ -2602,7 +2609,7 @@ def test_replication_1withMultipleBuckets_deleteOneBucket(params_from_base_test_
     replicator.wait_until_replicator_idle(repl2)
     replicator.wait_until_replicator_idle(repl3)
 
-    # 6. Verify 3rd bucket's docs are still exists in sg
+    # 7. Verify 3rd bucket's docs are still exists in sg
     verify_sgDocIds_cblDocIds(sg_client, sg_url, sg_db1, session1, cbl_db1, db)
     verify_sgDocIds_cblDocIds(sg_client, sg_url, sg_db2, session2, cbl_db2, db)
     cbl_doc_ids = db.getDocIds(cbl_db3)
@@ -2614,8 +2621,8 @@ def test_replication_1withMultipleBuckets_deleteOneBucket(params_from_base_test_
 
 def restart_sg(c, sg_conf, cluster_config):
     status = c.sync_gateways[0].restart(config=sg_conf, cluster_config=cluster_config)
-    log_info("starting sg ....")
-    assert status == 0, "sync_gateway did not start"
+    log_info("Restarting sg ....")
+    assert status == 0, "Sync_gateway did not start"
 
 
 def verify_sgDocIds_cblDocIds(sg_client, url, sg_db, session, cbl_db, db):

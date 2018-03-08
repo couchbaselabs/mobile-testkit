@@ -14,6 +14,8 @@
         "username":"data-bucket-1",
         "password": "password"
     },
+    {{ sslcert }}
+    {{ sslkey }}
     "databases":{
         "sg_db1":{
             {{ xattrs }}

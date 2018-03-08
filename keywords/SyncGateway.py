@@ -379,7 +379,10 @@ class SyncGateway:
             "server_port": server_port,
             "server_scheme": server_scheme,
             "autoimport": "",
-            "xattrs": ""
+            "xattrs": "",
+            "sslkey": "",
+            "sslcert": "",
+            "sg_cert_path": ""
         }
 
         if is_xattrs_enabled(cluster_config):

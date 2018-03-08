@@ -55,6 +55,9 @@
     # hack until mobile-testkit/issues/406 allows any sync gateway to be referenced
     sync_gateway_node: "{{ hostvars[groups.sync_gateways[0]].ansible_host }}"
     is_index_writer: "true"
+    sslkey:
+    sslcert:
+    sg_cert_path:
   tasks:
   - include: tasks/deploy-sg-accel-config.yml
 
