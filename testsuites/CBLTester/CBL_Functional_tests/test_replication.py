@@ -1844,6 +1844,8 @@ def test_default_conflict_with_three_conflicts(params_from_base_test_setup):
     for doc in sg_docs:
         assert doc["doc"]["updates-cbl"] == 1, "cbl update did not pushed to sg"
 
+    replicator.stop(repl)
+
 
 @pytest.mark.listener
 def test_default_conflict_withConflicts_and_sgOffline(params_from_base_test_setup):
@@ -2030,6 +2032,8 @@ def test_default_conflict_withConflicts_withChannels(params_from_base_test_setup
     db.update_bulk_docs(database=cbl_db, number_of_updates=1)
     replicator.wait_until_replicator_idle(repl1)
     replicator.wait_until_replicator_idle(repl2)
+    replicator.stop(repl1)
+    replicator.stop(repl2)
 
     # 5. Verify updated doc from cbl is pushed to sg.
     sg_docs = sg_client.get_all_docs(url=sg_url, db=sg_db, auth=session1, include_docs=True)
