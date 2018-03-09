@@ -1357,7 +1357,6 @@ def test_default_conflict_scenario_delete_wins(params_from_base_test_setup, dele
     sg_client.create_user(sg_admin_url, sg_db, username, password, channels=channels)
     session, replicator_authenticator, repl = replicator.create_session_configure_replicate(baseUrl=base_url, sg_admin_url=sg_admin_url, sg_db=sg_db, username=username, password=password,
                                                                                             channels=channels, sg_client=sg_client, cbl_db=cbl_db, sg_blip_url=sg_blip_url, replication_type="push_pull", continuous=False)
-    replicator.stop(repl)
     sg_docs = sg_client.get_all_docs(url=sg_url, db=sg_db, auth=session)
     sg_docs = sg_docs["rows"]
 
@@ -1384,6 +1383,8 @@ def test_default_conflict_scenario_delete_wins(params_from_base_test_setup, dele
             sg_delete_task.result()
             cbl_update_task.result()
 
+    replicator.configure_and_replicate(source_db=cbl_db, replicator_authenticator=replicator_authenticator, target_url=sg_blip_url, continuous=False,
+                                       channels=channels)
     cbl_doc_ids = db.getDocIds(cbl_db)
     cbl_docs = db.getDocuments(cbl_db, cbl_doc_ids)
     assert len(cbl_docs) == 0, "did not delete docs after delete operation"
@@ -2486,6 +2487,8 @@ def test_replication_withMultipleBuckets(params_from_base_test_setup, setup_cust
                                        replication_type="pull", continuous=False, channels=channel3)
 
     # 4. verify in CBL , docs got replicated to each DB appropirately
+    cbl_doc_ids = db.getDocIds(cbl_db1)
+    cbl_docs = db.getDocuments(cbl_db1, cbl_doc_ids)
     verify_sgDocIds_cblDocIds(sg_client, sg_url, sg_db1, session1, cbl_db1, db)
     verify_sgDocIds_cblDocIds(sg_client, sg_url, sg_db2, session2, cbl_db2, db)
     verify_sgDocIds_cblDocIds(sg_client, sg_url, sg_db3, session3, cbl_db3, db)
