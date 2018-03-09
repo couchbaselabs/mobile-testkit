@@ -244,21 +244,16 @@ namespace Couchbase.Lite.Testing
             With<Database>(postBody, "database", db =>
             {
                 var retVal = new Dictionary<string, object>();
-                using (var query = Query.QueryBuilder
-                       .Select(SelectResult.Expression(Meta.ID))
-                    .From(DataSource.Database(db)))
-                {
-                    var result = query.Execute();
-                    foreach (var id in result.Select(x => x.GetString("id")))
-                    {
-                        using (var doc = db.GetDocument(id))
-                        {
+                var ids = (postBody["ids"] as IList<object>).Cast<string>();
+                foreach (var id in ids) {
+                    using (var doc = db.GetDocument(id)) {
+                        if (doc != null) {
                             retVal[id] = doc.ToDictionary();
                         }
                     }
-
-                    response.WriteBody(retVal);
                 }
+
+                response.WriteBody(retVal);
             });
         }
 
