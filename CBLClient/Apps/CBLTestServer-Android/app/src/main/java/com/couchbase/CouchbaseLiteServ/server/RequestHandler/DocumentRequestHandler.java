@@ -169,9 +169,9 @@ public class DocumentRequestHandler{
 
     public MutableDocument setData(Args args) {
         MutableDocument document = args.get("document");
-        String key = args.get("key");
-        Array value = args.get("value");
-        return  document.setArray(key, value);
+        Map<String, Object> data = args.get("data");
+        return document.setData(data);
+
     }
 
     public MutableDocument setBlob(Args args){

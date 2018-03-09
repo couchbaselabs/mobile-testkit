@@ -24,7 +24,7 @@ class TestServeriOS(TestServerBase):
         self.liteserv_admin_url = "http://{}:59850".format(self.host)
         self.logfile_name = None
         self.device_id = None
-        self.device = "iPhone-7-Plus"
+        self.device = "iPhone-8-Plus"
         if community_enabled:
             self.app_dir = "CBLTestServer-iOS-community"
             self.package_name = "CBLTestServer-iOS-community.zip"
@@ -95,7 +95,7 @@ class TestServeriOS(TestServerBase):
     def install(self):
         """Installs / launches CBLTestServer on iOS simulator
         """
-        self.device = "iPhone-7-Plus"
+        # self.device = "iPhone-7-Plus"
         # package_name = "CBLTestServer-iOS"
         # app_dir = "CBLTestServer-iOS"
 
@@ -207,15 +207,13 @@ class TestServeriOS(TestServerBase):
         4. Return the url of the running LiteServ
         """
 
-        self.device = "iPhone-7-Plus"
+        # self.device = "iPhone-7-Plus"
         self.logfile_name = logfile_name
 
         # package_name = "CBLTestServer-iOS.app"
         # app_dir = "CBLTestServer-iOS"
 
         self.app_path = "{}/{}/{}".format(BINARY_DIR, self.app_dir, self.app_name)
-        # TODO : remove below line
-        # self.app_path = "/Users/sridevi.saragadam/Library/Developer/Xcode/DerivedData/CBLTestServer-iOS-ayypbvnmphhpihebbhrjusdqhzmk/Build/Products/Debug-iphonesimulator/CBLTestServer-iOS.app"
 
         # Without --exit, ios-sim blocks
         # With --exit, --log has no effect

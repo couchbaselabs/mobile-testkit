@@ -4,6 +4,7 @@ import android.content.Context;
 import android.util.Log;
 
 import com.couchbase.CouchbaseLiteServ.server.Args;
+import com.couchbase.lite.ConcurrencyControl;
 import com.couchbase.lite.CouchbaseLiteException;
 import com.couchbase.lite.DataSource;
 import com.couchbase.lite.Database;
@@ -172,13 +173,45 @@ public class DatabaseRequestHandler {
         Database database = args.get("database");
         MutableDocument document = args.get("document");
         database.save(document);
-   }
+    }
+
+    public void saveWithConcurrency(Args args) throws CouchbaseLiteException {
+        Database database = args.get("database");
+        MutableDocument document = args.get("document");
+        String concurrencyControlType = args.get("concurrencyControlType");
+        ConcurrencyControl concurrencyType;
+        if (concurrencyControlType == null)
+        {
+            concurrencyType = ConcurrencyControl.LAST_WRITE_WINS;
+        }
+        if(concurrencyControlType.equals("failOnConflict"))
+            concurrencyType = ConcurrencyControl.FAIL_ON_CONFLICT;
+        else
+            concurrencyType = ConcurrencyControl.LAST_WRITE_WINS;
+        database.save(document, concurrencyType);
+    }
 
     public void delete(Args args) throws CouchbaseLiteException {
         Database database = args.get("database");
         Document document = args.get("document");
         database.delete(document);
    }
+
+    public void deleteWithConcurrency(Args args) throws CouchbaseLiteException {
+      Database database = args.get("database");
+      Document document = args.get("document");
+      String concurrencyControlType = args.get("concurrencyControlType");
+      ConcurrencyControl concurrencyType;
+      if (concurrencyControlType == null)
+      {
+        concurrencyType = ConcurrencyControl.LAST_WRITE_WINS;
+      }
+      if(concurrencyControlType.equals("failOnConflict"))
+        concurrencyType = ConcurrencyControl.FAIL_ON_CONFLICT;
+      else
+        concurrencyType = ConcurrencyControl.LAST_WRITE_WINS;
+      database.delete(document, concurrencyType);
+    }
 
     public void deleteDB(Args args) throws CouchbaseLiteException {
         Database database = args.get("database");

@@ -192,6 +192,24 @@ class Database(object):
         args.setMemoryPointer("password", password)
         return self._client.invokeMethod("database_setEncryptionKey", args)
 
+    def saveDocumentWithConcurrency(self, database, document, concurrencyControlType):
+        args = Args()
+        args.setMemoryPointer("database", database)
+        if document is not None:
+            args.setMemoryPointer("document", document)
+        if concurrencyControlType is not None:
+            args.setString("concurrencyControlType", concurrencyControlType)
+        return self._client.invokeMethod("database_saveWithConcurrency", args)
+
+    def deleteDocumentWithConcurrency(self, database, document, concurrencyControlType):
+        args = Args()
+        args.setMemoryPointer("database", database)
+        if document is not None:
+            args.setMemoryPointer("document", document)
+        if concurrencyControlType is not None:
+            args.setString("concurrencyControlType", concurrencyControlType)
+        return self._client.invokeMethod("database_deleteWithConcurrency", args)
+
 
 #     Not implemented on server
 #     def create_value_index(self, database, prop):

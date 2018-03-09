@@ -20,7 +20,7 @@ def test_get_doc_ids(params_from_base_test_setup):
     Verifies with n1ql - select meta().id from `bucket_name` where meta().id not like "_sync%"
     """
     cluster_topology = params_from_base_test_setup["cluster_topology"]
-    source_db = params_from_base_test_setup["source_db"]
+    source_db = params_from_base_test_setup["suite_source_db"]
     base_url = params_from_base_test_setup["base_url"]
     cbs_url = cluster_topology['couchbase_servers'][0]
     db = Database(base_url)
@@ -61,7 +61,7 @@ def test_doc_get(params_from_base_test_setup, doc_id):
     Verifies with n1ql - select * from `bucket_name` where meta().id="doc_id"
     """
     cluster_topology = params_from_base_test_setup["cluster_topology"]
-    source_db = params_from_base_test_setup["source_db"]
+    source_db = params_from_base_test_setup["suite_source_db"]
     cbs_url = cluster_topology['couchbase_servers'][0]
     base_url = params_from_base_test_setup["base_url"]
     cbs_ip = host_for_url(cbs_url)
@@ -109,7 +109,7 @@ def test_get_docs_with_limit_offset(params_from_base_test_setup, limit, offset):
 
     Verifies with n1ql - select * from `travel-sample` where meta().id not like "_sync%" limit 5 offset 5
     """
-    source_db = params_from_base_test_setup["source_db"]
+    source_db = params_from_base_test_setup["suite_source_db"]
     base_url = params_from_base_test_setup["base_url"]
 
     log_info("Fetching docs from CBL through query")
@@ -145,7 +145,7 @@ def test_multiple_selects(params_from_base_test_setup, select_property1, select_
     Verifies with n1ql - select name, type, meta().id from `travel-sample` where country="France"
     """
     cluster_topology = params_from_base_test_setup["cluster_topology"]
-    source_db = params_from_base_test_setup["source_db"]
+    source_db = params_from_base_test_setup["suite_source_db"]
     cbs_url = cluster_topology['couchbase_servers'][0]
     base_url = params_from_base_test_setup["base_url"]
     cbs_ip = host_for_url(cbs_url)
@@ -195,7 +195,7 @@ def test_query_where_and_or(params_from_base_test_setup, whr_key1, whr_val1, whr
     Verifies with n1ql - select meta().id from `travel-sample` t where t.type="hotel" and (t.country="United States" or t.country="France") and t.vacancy=true
     """
     cluster_topology = params_from_base_test_setup["cluster_topology"]
-    source_db = params_from_base_test_setup["source_db"]
+    source_db = params_from_base_test_setup["suite_source_db"]
     cbs_url = cluster_topology['couchbase_servers'][0]
     base_url = params_from_base_test_setup["base_url"]
     cbs_ip = host_for_url(cbs_url)
@@ -249,7 +249,7 @@ def test_query_pattern_like(params_from_base_test_setup, whr_key, whr_val, selec
     Verifies with n1ql - select meta().id, country, name from `travel-sample` t where t.type="landmark"  and t.name like "Royal Engineers Museum"
     """
     cluster_topology = params_from_base_test_setup["cluster_topology"]
-    source_db = params_from_base_test_setup["source_db"]
+    source_db = params_from_base_test_setup["suite_source_db"]
     cbs_url = cluster_topology['couchbase_servers'][0]
     base_url = params_from_base_test_setup["base_url"]
     cbs_ip = host_for_url(cbs_url)
@@ -300,7 +300,7 @@ def test_query_pattern_regex(params_from_base_test_setup, whr_key, whr_val, sele
     Verifies with n1ql - select meta().id, country, name from `travel-sample` t where t.type="landmark" and REGEXP_CONTAINS(t.name, "\\bEng.*e\\b")
     """
     cluster_topology = params_from_base_test_setup["cluster_topology"]
-    source_db = params_from_base_test_setup["source_db"]
+    source_db = params_from_base_test_setup["suite_source_db"]
     cbs_url = cluster_topology['couchbase_servers'][0]
     base_url = params_from_base_test_setup["base_url"]
     cbs_ip = host_for_url(cbs_url)
@@ -352,7 +352,7 @@ def test_query_isNullOrMissing(params_from_base_test_setup, select_property1, li
     Verifies with n1ql - select meta().id from `travel-sample` t where meta().id not like "_sync%" and (t.name IS NULL or t.name IS MISSING)
     """
     cluster_topology = params_from_base_test_setup["cluster_topology"]
-    source_db = params_from_base_test_setup["source_db"]
+    source_db = params_from_base_test_setup["suite_source_db"]
     cbs_url = cluster_topology['couchbase_servers'][0]
     base_url = params_from_base_test_setup["base_url"]
     cbs_ip = host_for_url(cbs_url)
@@ -401,7 +401,7 @@ def test_query_ordering(params_from_base_test_setup, select_property1, whr_key, 
     Verifies with n1ql - select meta().id, title from `travel-sample` t where t.type = "hotel" order by "title" asc
     """
     cluster_topology = params_from_base_test_setup["cluster_topology"]
-    source_db = params_from_base_test_setup["source_db"]
+    source_db = params_from_base_test_setup["suite_source_db"]
     cbs_url = cluster_topology['couchbase_servers'][0]
     base_url = params_from_base_test_setup["base_url"]
     cbs_ip = host_for_url(cbs_url)
@@ -451,7 +451,7 @@ def test_query_substring(params_from_base_test_setup, select_property1, select_p
     Verifies with n1ql - select meta().id, email, UPPER(name) from `travel-sample` t where CONTAINS(t.email, "gmail.com")
     """
     cluster_topology = params_from_base_test_setup["cluster_topology"]
-    source_db = params_from_base_test_setup["source_db"]
+    source_db = params_from_base_test_setup["suite_source_db"]
     cbs_url = cluster_topology['couchbase_servers'][0]
     base_url = params_from_base_test_setup["base_url"]
     cbs_ip = host_for_url(cbs_url)
@@ -506,7 +506,7 @@ def test_query_collation(params_from_base_test_setup, select_property1, whr_key1
     Verifies with n1ql - select meta().id, name from `travel-sample` t where t.type="hotel" and t.country = "France" and lower(t.name) = lower("Le Clos Fleuri")
     """
     cluster_topology = params_from_base_test_setup["cluster_topology"]
-    source_db = params_from_base_test_setup["source_db"]
+    source_db = params_from_base_test_setup["suite_source_db"]
     cbs_url = cluster_topology['couchbase_servers'][0]
     base_url = params_from_base_test_setup["base_url"]
     cbs_ip = host_for_url(cbs_url)
@@ -573,7 +573,7 @@ def test_query_join(params_from_base_test_setup, select_property1,
     LIMIT 2;
     """
     cluster_topology = params_from_base_test_setup["cluster_topology"]
-    source_db = params_from_base_test_setup["source_db"]
+    source_db = params_from_base_test_setup["suite_source_db"]
     cbs_url = cluster_topology['couchbase_servers'][0]
     base_url = params_from_base_test_setup["base_url"]
     cbs_ip = host_for_url(cbs_url)
@@ -624,7 +624,7 @@ def test_query_join(params_from_base_test_setup, select_property1,
 def test_query_join2(params_from_base_test_setup, select_property1,
                      select_property2, select_property3, join_key1,
                      join_key2, whr_key1, whr_key2, whr_val1, whr_val2):
-    source_db = params_from_base_test_setup["source_db"]
+    source_db = params_from_base_test_setup["suite_source_db"]
     base_url = params_from_base_test_setup["base_url"]
 
     log_info("Fetching docs from CBL through query")
@@ -656,7 +656,7 @@ def test_equal_to(params_from_base_test_setup, prop, val):
     Verifies with n1ql - select meta().id from `bucket_name` where country = "france"
     """
     cluster_topology = params_from_base_test_setup["cluster_topology"]
-    source_db = params_from_base_test_setup["source_db"]
+    source_db = params_from_base_test_setup["suite_source_db"]
     cbs_url = cluster_topology['couchbase_servers'][0]
     base_url = params_from_base_test_setup["base_url"]
     cbs_ip = host_for_url(cbs_url)
@@ -703,7 +703,7 @@ def test_not_equal_to(params_from_base_test_setup, prop, val):
     Verifies with n1ql - select meta().id from `bucket_name` where country != "France"
     """
     cluster_topology = params_from_base_test_setup["cluster_topology"]
-    source_db = params_from_base_test_setup["source_db"]
+    source_db = params_from_base_test_setup["suite_source_db"]
     cbs_url = cluster_topology['couchbase_servers'][0]
     base_url = params_from_base_test_setup["base_url"]
     cbs_ip = host_for_url(cbs_url)
@@ -749,7 +749,7 @@ def test_greater_than(params_from_base_test_setup, prop, val):
     Verifies with n1ql - select meta().id from `bucket_name` where id > 1000
     """
     cluster_topology = params_from_base_test_setup["cluster_topology"]
-    source_db = params_from_base_test_setup["source_db"]
+    source_db = params_from_base_test_setup["suite_source_db"]
     cbs_url = cluster_topology['couchbase_servers'][0]
     base_url = params_from_base_test_setup["base_url"]
     cbs_ip = host_for_url(cbs_url)
@@ -795,7 +795,7 @@ def test_greater_than_or_equal_to(params_from_base_test_setup, prop, val):
     Verifies with n1ql - select meta().id from `bucket_name` where id >= 1000
     """
     cluster_topology = params_from_base_test_setup["cluster_topology"]
-    source_db = params_from_base_test_setup["source_db"]
+    source_db = params_from_base_test_setup["suite_source_db"]
     cbs_url = cluster_topology['couchbase_servers'][0]
     base_url = params_from_base_test_setup["base_url"]
     cbs_ip = host_for_url(cbs_url)
@@ -841,7 +841,7 @@ def test_less_than(params_from_base_test_setup, prop, val):
     Verifies with n1ql - select meta().id from `bucket_name` where id < 1000
     """
     cluster_topology = params_from_base_test_setup["cluster_topology"]
-    source_db = params_from_base_test_setup["source_db"]
+    source_db = params_from_base_test_setup["suite_source_db"]
     cbs_url = cluster_topology['couchbase_servers'][0]
     base_url = params_from_base_test_setup["base_url"]
     cbs_ip = host_for_url(cbs_url)
@@ -887,7 +887,7 @@ def test_less_than_or_equal_to(params_from_base_test_setup, prop, val):
     Verifies with n1ql - select meta().id from `bucket_name` where id <= 1000
     """
     cluster_topology = params_from_base_test_setup["cluster_topology"]
-    source_db = params_from_base_test_setup["source_db"]
+    source_db = params_from_base_test_setup["suite_source_db"]
     cbs_url = cluster_topology['couchbase_servers'][0]
     base_url = params_from_base_test_setup["base_url"]
     cbs_ip = host_for_url(cbs_url)
@@ -933,7 +933,7 @@ def test_in(params_from_base_test_setup, prop, val1, val2):
     Verifies with n1ql - select meta().id from `bucket_name` where country in ['France', 'United States']
     """
     cluster_topology = params_from_base_test_setup["cluster_topology"]
-    source_db = params_from_base_test_setup["source_db"]
+    source_db = params_from_base_test_setup["suite_source_db"]
     cbs_url = cluster_topology['couchbase_servers'][0]
     base_url = params_from_base_test_setup["base_url"]
     cbs_ip = host_for_url(cbs_url)
@@ -979,7 +979,7 @@ def test_between(params_from_base_test_setup, prop, val1, val2):
     Verifies with n1ql - select meta().id from `bucket_name` where id between 1000 and 2000
     """
     cluster_topology = params_from_base_test_setup["cluster_topology"]
-    source_db = params_from_base_test_setup["source_db"]
+    source_db = params_from_base_test_setup["suite_source_db"]
     cbs_url = cluster_topology['couchbase_servers'][0]
     base_url = params_from_base_test_setup["base_url"]
     cbs_ip = host_for_url(cbs_url)
@@ -1026,7 +1026,7 @@ def test_is(params_from_base_test_setup, prop):
     Verifies with n1ql - select meta().id from `bucket_name` where iata is null
     """
     cluster_topology = params_from_base_test_setup["cluster_topology"]
-    source_db = params_from_base_test_setup["source_db"]
+    source_db = params_from_base_test_setup["suite_source_db"]
     cbs_url = cluster_topology['couchbase_servers'][0]
     base_url = params_from_base_test_setup["base_url"]
     cbs_ip = host_for_url(cbs_url)
@@ -1073,7 +1073,7 @@ def test_isnot(params_from_base_test_setup, prop):
     Verifies with n1ql - select meta().id from `bucket_name` where iata is not null
     """
     cluster_topology = params_from_base_test_setup["cluster_topology"]
-    source_db = params_from_base_test_setup["source_db"]
+    source_db = params_from_base_test_setup["suite_source_db"]
     cbs_url = cluster_topology['couchbase_servers'][0]
     base_url = params_from_base_test_setup["base_url"]
     cbs_ip = host_for_url(cbs_url)
@@ -1119,7 +1119,7 @@ def test_not(params_from_base_test_setup, prop, val1, val2):
     Verifies with n1ql - select meta().id from `bucket_name` where id not between 1000 and 2000
     """
     cluster_topology = params_from_base_test_setup["cluster_topology"]
-    source_db = params_from_base_test_setup["source_db"]
+    source_db = params_from_base_test_setup["suite_source_db"]
     cbs_url = cluster_topology['couchbase_servers'][0]
     base_url = params_from_base_test_setup["base_url"]
     cbs_ip = host_for_url(cbs_url)
@@ -1171,7 +1171,7 @@ def test_single_property_fts(params_from_base_test_setup, prop, val, doc_type, s
     Fetches a doc
     Tests the below query
     """
-    source_db = params_from_base_test_setup["source_db"]
+    source_db = params_from_base_test_setup["suite_source_db"]
     base_url = params_from_base_test_setup["base_url"]
 
     # Get doc from CBL through query
@@ -1213,7 +1213,7 @@ def test_multiple_property_fts(params_from_base_test_setup, prop1, prop2, val, d
     Fetches a doc
     Tests the below query
     """
-    source_db = params_from_base_test_setup["source_db"]
+    source_db = params_from_base_test_setup["suite_source_db"]
     base_url = params_from_base_test_setup["base_url"]
 
     # Get doc from CBL through query
@@ -1238,7 +1238,7 @@ def test_fts_with_ranking(params_from_base_test_setup, prop, val, doc_type):
     Fetches a doc
     Tests the below query
     """
-    source_db = params_from_base_test_setup["source_db"]
+    source_db = params_from_base_test_setup["suite_source_db"]
     base_url = params_from_base_test_setup["base_url"]
 
     # Get doc from CBL through query

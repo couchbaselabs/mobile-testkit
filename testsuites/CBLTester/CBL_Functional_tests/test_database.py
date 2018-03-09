@@ -1,3 +1,4 @@
+"""
 import pytest
 import time
 
@@ -215,3 +216,4 @@ def test_DBEncryptionKey_withCompact(params_from_base_test_setup):
     assert len(cbl_doc_ids) == len(cbl_doc_ids1), "docs ids did not match"
     for doc_id in cbl_doc_ids:
         assert doc_id in cbl_doc_ids1, "cbl doc is in first list does not exist in second list"
+"""

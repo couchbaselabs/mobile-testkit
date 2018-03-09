@@ -100,7 +100,43 @@ public class DatabaseRequestHandler {
             let database: Database = (args.get(name:"database"))!
             let document: MutableDocument = args.get(name:"document")!
             try! database.saveDocument(document)
+            
+        case "database_saveWithConcurrency":
+            let database: Database = (args.get(name:"database"))!
+            let document: MutableDocument = args.get(name:"document")!
+            let concurrencyControlType : String? = args.get(name:"concurrencyControlType")!
+            var concurrencyType = ConcurrencyControl.lastWriteWins
+            
+            if let type = concurrencyControlType {
+                if type == "failOnConflict" {
+                    concurrencyType = .failOnConflict
+                } else {
+                    concurrencyType = .lastWriteWins
+                }
+            }
+            try! database.saveDocument(document, concurrencyControl: concurrencyType)
 
+        case "database_deleteWithConcurrency":
+            let database: Database = (args.get(name:"database"))!
+            let document: Document = (args.get(name:"document"))!
+            let concurrencyControlType : String? = args.get(name:"concurrencyControlType")!
+            var concurrencyType = ConcurrencyControl.lastWriteWins
+            
+            if let type = concurrencyControlType {
+                if type == "failOnConflict" {
+                    concurrencyType = .failOnConflict
+                } else {
+                    concurrencyType = .lastWriteWins
+                }
+            }
+            do {
+                try database.deleteDocument(document, concurrencyControl: concurrencyType)
+            } catch {
+                print("Got error while deleting DB \(error)")
+                return error
+            }
+
+            
         case "database_purge":
             let database: Database = (args.get(name:"database"))!
             let document: MutableDocument = args.get(name:"document")!

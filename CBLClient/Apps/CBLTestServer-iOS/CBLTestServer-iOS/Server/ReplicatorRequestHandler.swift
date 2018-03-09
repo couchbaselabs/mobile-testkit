@@ -60,13 +60,13 @@ public class ReplicatorRequestHandler {
             let replication_obj: Replicator = args.get(name: "replicator")!
             let changeListener = MyReplicationChangeListener()
             let listenerToken = replication_obj.addChangeListener(changeListener.listener)
-            changeListener.listenerToken = listenerToken as! NSObjectProtocol
+            changeListener.listenerToken = listenerToken
             return changeListener
 
         case "replicator_removeChangeListener":
             let replication_obj: Replicator = args.get(name: "replicator")!
             let changeListener : MyReplicationChangeListener = (args.get(name: "changeListener"))!
-            replication_obj.removeChangeListener(withToken: changeListener.listenerToken! as! ListenerToken)
+            replication_obj.removeChangeListener(withToken: changeListener.listenerToken!)
 
         case "replicator_changeListenerChangesCount":
             let changeListener: MyReplicationChangeListener = (args.get(name: "changeListener"))!
