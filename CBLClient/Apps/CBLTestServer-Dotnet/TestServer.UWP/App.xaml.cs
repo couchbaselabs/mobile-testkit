@@ -27,7 +27,6 @@ namespace Couchbase.Lite.Testing.UWP
     {
         static App()
         {
-            Service.AutoRegister(typeof(App).GetTypeInfo().Assembly);
             Couchbase.Lite.Support.UWP.Activate();
         }
 
