@@ -540,8 +540,7 @@ def test_query_collation(params_from_base_test_setup, select_property1, whr_key1
 
 
 @pytest.mark.parametrize("select_property1, select_property2, select_property3, select_property4, select_property5, whr_key1, whr_key2, whr_key3, whr_val1, whr_val2, whr_val3, join_key", [
-    ("name", "callsign", "destinationairport", "stops", "airline", "type",
-     "type", "sourceairport", "route", "airline", "SFO", "airlineid"),
+    ("name", "callsign", "destinationairport", "stops", "airline", "type", "type", "sourceairport", "route", "airline", "SFO", "airlineid"),
 ])
 def test_query_join(params_from_base_test_setup, select_property1,
                     select_property2, select_property3, select_property4,
@@ -605,7 +604,7 @@ def test_query_join(params_from_base_test_setup, select_property1,
             select_property3, select_property4,
             select_property5, bucket_name, bucket_name,
             join_key, whr_key1, whr_val1, whr_key2, whr_val2,
-            whr_key3, whr_val3,)
+            whr_key3, whr_val3)
     log_info(n1ql_query)
     query = N1QLQuery(n1ql_query)
     docs_from_n1ql = []
@@ -1101,7 +1100,8 @@ def test_isnot(params_from_base_test_setup, prop):
 
     assert len(docs_from_cbl) == len(docs_from_n1ql)
     log_info("Found {} docs".format(len(docs_from_cbl)))
-    assert np.array_equal(sorted(docs_from_cbl), sorted(docs_from_n1ql))
+    assert sorted(docs_from_cbl) == sorted(docs_from_n1ql)
+    # assert np.array_equal(sorted(docs_from_cbl), sorted(docs_from_n1ql))
     log_info("Doc contents match between CBL and n1ql")
 
 

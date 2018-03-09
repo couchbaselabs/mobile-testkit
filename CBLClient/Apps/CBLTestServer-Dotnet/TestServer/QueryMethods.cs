@@ -91,7 +91,8 @@ namespace Couchbase.Lite.Testing
                                 .From(DataSource.Database(db))
                                 .Where(Meta.ID.EqualTo(docId));
 
-                List <Dictionary<String, object>> resultArray = new List<Dictionary<String, object>>();
+
+                List<Object> resultArray = new List<Object>();
 
                 foreach (Result row in query.Execute())
                 {
@@ -361,7 +362,7 @@ namespace Couchbase.Lite.Testing
                 if (stemming)
                 {
                     ftsIndex = IndexBuilder.FullTextIndex(FullTextIndexItem.Property(prop));
-                } 
+                }
                 else
                 {
                     ftsIndex = IndexBuilder.FullTextIndex(FullTextIndexItem.Property(prop)).SetLanguage(null);
@@ -399,9 +400,9 @@ namespace Couchbase.Lite.Testing
                 string index = "singlePropertyIndex";
 
                 IFullTextIndex ftsIndex;
-                if (stemming) 
+                if (stemming)
                 {
-                    ftsIndex = IndexBuilder.FullTextIndex(FullTextIndexItem.Property(prop1), FullTextIndexItem.Property(prop2));  
+                    ftsIndex = IndexBuilder.FullTextIndex(FullTextIndexItem.Property(prop1), FullTextIndexItem.Property(prop2));
                 }
                 else
                 {
@@ -462,7 +463,6 @@ namespace Couchbase.Lite.Testing
            [NotNull] IReadOnlyDictionary<string, object> postBody,
            [NotNull] HttpListenerResponse response)
         {
-            //SELECT * FROM `travel-sample` where id = 24
             With<Database>(postBody, "database", db =>
             {
                 var prop = postBody["prop"].ToString();
@@ -483,6 +483,338 @@ namespace Couchbase.Lite.Testing
 
         }
 
-    }
+        internal static void QueryNotEqualTo([NotNull] NameValueCollection args,
+           [NotNull] IReadOnlyDictionary<string, object> postBody,
+           [NotNull] HttpListenerResponse response)
+        {
+            With<Database>(postBody, "database", db =>
+            {
+                var prop = postBody["prop"].ToString();
+                IExpression val = Expression.Value(postBody["val"].ToString());
+                List<Object> resultArray = new List<Object>();
 
+                IQuery query = QueryBuilder
+                        .Select(SelectResult.Expression(Meta.ID))
+                        .From(DataSource.Database(db))
+                        .Where(Expression.Property(prop).NotEqualTo(val))
+                        .OrderBy(Ordering.Expression(Meta.ID).Ascending());
+                foreach (Result row in query.Execute())
+                {
+                    resultArray.Add(row.ToDictionary());
+                }
+                response.WriteBody(resultArray);
+            });
+
+        }
+
+        internal static void QueryGreaterThan([NotNull] NameValueCollection args,
+           [NotNull] IReadOnlyDictionary<string, object> postBody,
+           [NotNull] HttpListenerResponse response)
+        {
+            With<Database>(postBody, "database", db =>
+            {
+                var prop = postBody["prop"].ToString();
+                IExpression val = Expression.Value((int)postBody["val"]);
+                List<Object> resultArray = new List<Object>();
+
+                IQuery query = QueryBuilder
+                        .Select(SelectResult.Expression(Meta.ID))
+                        .From(DataSource.Database(db))
+                        .Where(Expression.Property(prop).GreaterThan(val))
+                        .OrderBy(Ordering.Expression(Meta.ID).Ascending());
+                foreach (Result row in query.Execute())
+                {
+                    resultArray.Add(row.ToDictionary());
+                }
+                response.WriteBody(resultArray);
+            });
+
+        }
+
+        internal static void QueryGreaterThanOrEqualTo([NotNull] NameValueCollection args,
+           [NotNull] IReadOnlyDictionary<string, object> postBody,
+           [NotNull] HttpListenerResponse response)
+        {
+            With<Database>(postBody, "database", db =>
+            {
+                var prop = postBody["prop"].ToString();
+                IExpression val = Expression.Value((int)postBody["val"]);
+                List<Object> resultArray = new List<Object>();
+
+                IQuery query = QueryBuilder
+                        .Select(SelectResult.Expression(Meta.ID))
+                        .From(DataSource.Database(db))
+                        .Where(Expression.Property(prop).GreaterThanOrEqualTo(val))
+                        .OrderBy(Ordering.Expression(Meta.ID).Ascending());
+                foreach (Result row in query.Execute())
+                {
+                    resultArray.Add(row.ToDictionary());
+                }
+                response.WriteBody(resultArray);
+            });
+
+        }
+
+        internal static void QueryLessThan([NotNull] NameValueCollection args,
+           [NotNull] IReadOnlyDictionary<string, object> postBody,
+           [NotNull] HttpListenerResponse response)
+        {
+            With<Database>(postBody, "database", db =>
+            {
+                var prop = postBody["prop"].ToString();
+                IExpression val = Expression.Value((int)postBody["val"]);
+                List<Object> resultArray = new List<Object>();
+
+                IQuery query = QueryBuilder
+                        .Select(SelectResult.Expression(Meta.ID))
+                        .From(DataSource.Database(db))
+                        .Where(Expression.Property(prop).LessThan(val))
+                        .OrderBy(Ordering.Expression(Meta.ID).Ascending());
+                foreach (Result row in query.Execute())
+                {
+                    resultArray.Add(row.ToDictionary());
+                }
+                response.WriteBody(resultArray);
+            });
+
+        }
+
+        internal static void QueryLessThanOrEqualTo([NotNull] NameValueCollection args,
+           [NotNull] IReadOnlyDictionary<string, object> postBody,
+           [NotNull] HttpListenerResponse response)
+        {
+            With<Database>(postBody, "database", db =>
+            {
+                var prop = postBody["prop"].ToString();
+                IExpression val = Expression.Value((int)postBody["val"]);
+                List<Object> resultArray = new List<Object>();
+
+                IQuery query = QueryBuilder
+                        .Select(SelectResult.Expression(Meta.ID))
+                        .From(DataSource.Database(db))
+                        .Where(Expression.Property(prop).LessThanOrEqualTo(val))
+                        .OrderBy(Ordering.Expression(Meta.ID).Ascending());
+                foreach (Result row in query.Execute())
+                {
+                    resultArray.Add(row.ToDictionary());
+                }
+                response.WriteBody(resultArray);
+            });
+
+        }
+
+        internal static void QueryBetween([NotNull] NameValueCollection args,
+           [NotNull] IReadOnlyDictionary<string, object> postBody,
+           [NotNull] HttpListenerResponse response)
+        {
+            With<Database>(postBody, "database", db =>
+            {
+                var prop = postBody["prop"].ToString();
+                IExpression val1 = Expression.Value((int)postBody["val1"]);
+                IExpression val2 = Expression.Value((int)postBody["val2"]);
+                List<Object> resultArray = new List<Object>();
+
+                IQuery query = QueryBuilder
+                        .Select(SelectResult.Expression(Meta.ID))
+                        .From(DataSource.Database(db))
+                        .Where(Expression.Property(prop).Between(val1, val2))
+                        .OrderBy(Ordering.Expression(Meta.ID).Ascending());
+                foreach (Result row in query.Execute())
+                {
+                    resultArray.Add(row.ToDictionary());
+                }
+                response.WriteBody(resultArray);
+            });
+
+        }
+
+        internal static void QueryIn([NotNull] NameValueCollection args,
+           [NotNull] IReadOnlyDictionary<string, object> postBody,
+           [NotNull] HttpListenerResponse response)
+        {
+            With<Database>(postBody, "database", db =>
+            {
+                var prop = postBody["prop"].ToString();
+                IExpression val1 = Expression.Value(postBody["val1"].ToString());
+                IExpression val2 = Expression.Value(postBody["val2"].ToString());
+                List<Object> resultArray = new List<Object>();
+
+                IQuery query = QueryBuilder
+                        .Select(SelectResult.Expression(Meta.ID))
+                        .From(DataSource.Database(db))
+                        .Where(Expression.Property(prop).In(val1, val2))
+                        .OrderBy(Ordering.Expression(Meta.ID).Ascending());
+                foreach (Result row in query.Execute())
+                {
+                    resultArray.Add(row.ToDictionary());
+                }
+                response.WriteBody(resultArray);
+            });
+
+        }
+
+        internal static void QueryIs([NotNull] NameValueCollection args,
+           [NotNull] IReadOnlyDictionary<string, object> postBody,
+           [NotNull] HttpListenerResponse response)
+        {
+            With<Database>(postBody, "database", db =>
+            {
+                var prop = postBody["prop"].ToString();
+                List<Object> resultArray = new List<Object>();
+
+                IQuery query = QueryBuilder
+                        .Select(SelectResult.Expression(Meta.ID))
+                        .From(DataSource.Database(db))
+                        .Where(Expression.Property(prop).Is(Expression.Value(null)))
+                        .OrderBy(Ordering.Expression(Meta.ID).Ascending());
+                foreach (Result row in query.Execute())
+                {
+                    resultArray.Add(row.ToDictionary());
+                }
+                response.WriteBody(resultArray);
+            });
+
+        }
+
+        internal static void QueryNot([NotNull] NameValueCollection args,
+           [NotNull] IReadOnlyDictionary<string, object> postBody,
+           [NotNull] HttpListenerResponse response)
+        {
+            With<Database>(postBody, "database", db =>
+            {
+                var prop = postBody["prop"].ToString();
+                IExpression val1 = Expression.Value((int)postBody["val1"]);
+                IExpression val2 = Expression.Value((int)postBody["val2"]);
+                List<Object> resultArray = new List<Object>();
+
+                IQuery query = QueryBuilder
+                        .Select(SelectResult.Expression(Meta.ID))
+                        .From(DataSource.Database(db))
+                        .Where(Expression.Not(Expression.Property(prop).Between(val1, val2)))
+                        .OrderBy(Ordering.Expression(Meta.ID).Ascending());
+                foreach (Result row in query.Execute())
+                {
+                    resultArray.Add(row.ToDictionary());
+                }
+                response.WriteBody(resultArray);
+            });
+        }
+
+        internal static void QueryIsNot([NotNull] NameValueCollection args,
+           [NotNull] IReadOnlyDictionary<string, object> postBody,
+           [NotNull] HttpListenerResponse response)
+        {
+            With<Database>(postBody, "database", db =>
+            {
+                var prop = postBody["prop"].ToString();
+                List<Object> resultArray = new List<Object>();
+
+                IQuery query = QueryBuilder
+                        .Select(SelectResult.Expression(Meta.ID),
+                                SelectResult.Expression(Expression.Property("callsign")))
+                        .From(DataSource.Database(db))
+                        .Where(Expression.Property(prop).IsNot(Expression.Value(null)))
+                        .OrderBy(Ordering.Expression(Meta.ID).Ascending());
+                foreach (Result row in query.Execute())
+                {
+                    resultArray.Add(row.ToDictionary());
+                }
+                response.WriteBody(resultArray);
+            });
+
+        }
+
+        internal static void QueryJoin([NotNull] NameValueCollection args,
+           [NotNull] IReadOnlyDictionary<string, object> postBody,
+           [NotNull] HttpListenerResponse response)
+        {
+            With<Database>(postBody, "database", db =>
+            {
+                var prop1 = postBody["select_property1"].ToString();
+                var prop2 = postBody["select_property2"].ToString();
+                var prop3 = postBody["select_property3"].ToString();
+                var prop4 = postBody["select_property4"].ToString();
+                var prop5 = postBody["select_property5"].ToString();
+                var joinKey = postBody["join_key"].ToString();
+                var whrKey1 = postBody["whr_key1"].ToString();
+                var whrKey2 = postBody["whr_key2"].ToString();
+                var whrKey3 = postBody["whr_key3"].ToString();
+                IExpression limit = Expression.Value((int)postBody["limit"]);
+                IExpression whrVal1 = Expression.Value(postBody["whr_val1"].ToString());
+                IExpression whrVal2 = Expression.Value(postBody["whr_val2"].ToString());
+                IExpression whrVal3 = Expression.Value(postBody["whr_val3"].ToString());
+                String main = "route";
+                String secondary = "airline";
+
+                List<Object> resultArray = new List<Object>();
+
+                IQuery query = QueryBuilder
+                        .SelectDistinct(
+                                SelectResult.Expression(Expression.Property(prop1).From(secondary)),
+                                SelectResult.Expression(Expression.Property(prop2).From(secondary)),
+                                SelectResult.Expression(Expression.Property(prop3).From(main)),
+                                SelectResult.Expression(Expression.Property(prop4).From(main)),
+                                SelectResult.Expression(Expression.Property(prop5).From(main)))
+                        .From(DataSource.Database(db).As(main))
+                        .Join(Join.InnerJoin(DataSource.Database(db).As(secondary))
+                            .On(Meta.ID.From(secondary).EqualTo(Expression.Property(joinKey).From(main))))
+                        .Where(Expression.Property(whrKey1).From(main).EqualTo(whrVal1)
+                            .And(Expression.Property(whrKey2).From(secondary).EqualTo(whrVal2))
+                            .And(Expression.Property(whrKey3).From(main).EqualTo(whrVal3)))
+                        .Limit(limit);
+
+                foreach (Result row in query.Execute())
+                {
+                    resultArray.Add(row.ToDictionary());
+                }
+                response.WriteBody(resultArray);
+            });
+
+        }
+
+        internal static void QueryJoin2([NotNull] NameValueCollection args,
+           [NotNull] IReadOnlyDictionary<string, object> postBody,
+           [NotNull] HttpListenerResponse response)
+        {
+            With<Database>(postBody, "database", db =>
+            {
+                var prop1 = postBody["select_property1"].ToString();
+                var prop2 = postBody["select_property2"].ToString();
+                var prop3 = postBody["select_property3"].ToString();
+                String joinKey1 = postBody["join_key1"].ToString();
+                String joinKey2 = postBody["join_key2"].ToString();
+                String whrKey1 = postBody["whr_key1"].ToString();
+                String whrKey2 = postBody["whr_key2"].ToString();
+                IExpression whrVal1 = Expression.Value(postBody["whr_val1"]);
+                IExpression whrVal2 = Expression.Value(postBody["whr_val2"]);
+                String main = "employeeDS";
+                String secondary = "departmentDS";
+
+                List<Object> resultArray = new List<Object>();
+
+                IDataSource employeeDS = DataSource.Database(db).As(main);
+                IDataSource departmentDS = DataSource.Database(db).As(secondary);
+                IExpression employeeDeptExpr = Expression.Property(joinKey2).From(main);
+                IExpression departmentCodeExpr = Expression.Property(joinKey1).From(secondary);
+                IExpression joinExpr = employeeDeptExpr.EqualTo(departmentCodeExpr)
+                        .And(Expression.Property(whrKey1).From(main).EqualTo(whrVal1))
+                        .And(Expression.Property(whrKey2).From(secondary).EqualTo(whrVal2));
+                IJoin join = Join.LeftJoin(departmentDS).On(joinExpr);
+                IQuery query = QueryBuilder
+                        .Select(
+                                SelectResult.Expression(Expression.Property(prop1).From(main)),
+                                SelectResult.Expression(Expression.Property(prop2).From(main)),
+                                SelectResult.Expression(Expression.Property(prop3).From(secondary)))
+                        .From(employeeDS)
+                        .Join(join);
+
+                foreach (Result row in query.Execute())
+                {
+                    resultArray.Add(row.ToDictionary());
+                }
+                response.WriteBody(resultArray);
+            });
+
+        }
+    }
 }
