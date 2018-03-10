@@ -39,11 +39,11 @@ class SyncGatewayConfig:
         output += "  skip bucketcreation: {}\n".format(self.skip_bucketcreation)
         return output
 
-    def sync_gateway_base_url_and_package(self, sg_ce=False, sg_platform="centos", sa_platform="centos"):
+    def sync_gateway_base_url_and_package(self, sg_ce=False, sg_platform="centos", sg_installer_type="msi", sa_platform="centos"):
         platform_extension = {
             "centos": "rpm",
             "ubuntu": "deb",
-            "windows": "exe"
+            "windows": sg_installer_type
         }
 
         if self._version_number == "1.1.0" or self._build_number == "1.1.1":
@@ -87,7 +87,7 @@ class SyncGatewayConfig:
         return True
 
 
-def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False, sg_platform="centos", sa_platform="centos"):
+def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False, sg_platform="centos", sg_installer_type="msi", sa_platform="centos"):
 
     log_info(sync_gateway_config)
 
@@ -145,7 +145,7 @@ def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False, sg_pl
 
     else:
         # Install from Package
-        sync_gateway_base_url, sync_gateway_package_name, sg_accel_package_name = sync_gateway_config.sync_gateway_base_url_and_package(sg_ce=sg_ce, sg_platform=sg_platform, sa_platform=sa_platform)
+        sync_gateway_base_url, sync_gateway_package_name, sg_accel_package_name = sync_gateway_config.sync_gateway_base_url_and_package(sg_ce=sg_ce, sg_platform=sg_platform, sg_installer_type=sg_installer_type, sa_platform=sa_platform)
 
         playbook_vars["couchbase_sync_gateway_package_base_url"] = sync_gateway_base_url
         playbook_vars["couchbase_sync_gateway_package"] = sync_gateway_package_name
