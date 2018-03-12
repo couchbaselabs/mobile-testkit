@@ -24,7 +24,7 @@ def test_replication_with_concurrencyControl_sameDocId_createUpdate(params_from_
     2. Create document id = doc1 as doc1b instance
     3. Save doc1a
     4. Save doc1b (success for LastWriteWins, fail for FailOnConflict)
-    5. update document 
+    5. update document
     """
 
     cluster_config = params_from_base_test_setup["cluster_config"]
@@ -36,7 +36,7 @@ def test_replication_with_concurrencyControl_sameDocId_createUpdate(params_from_
     channel = ["Replication-1"]
     doc_id = "doc_1"
     documentObj = Document(base_url)
-    
+
     c = cluster.Cluster(config=cluster_config)
     c.reset(sg_config_path=sg_config)
 
@@ -87,7 +87,7 @@ def test_replication_with_concurrencyControl_sameDocId_createUpdate(params_from_
 @pytest.mark.listener
 @pytest.mark.parametrize("concurrencyType", [
     ("lastWriteWins"),
-    # ("failOnConflict")
+    ("failOnConflict")
 ])
 def test_replication_with_concurrencyControl_deleteSameDocId(params_from_base_test_setup, concurrencyType):
     """

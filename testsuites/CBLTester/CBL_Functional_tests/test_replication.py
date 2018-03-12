@@ -2487,8 +2487,8 @@ def test_replication_withMultipleBuckets(params_from_base_test_setup, setup_cust
                                        replication_type="pull", continuous=False, channels=channel3)
 
     # 4. verify in CBL , docs got replicated to each DB appropirately
-    cbl_doc_ids = db.getDocIds(cbl_db1)
-    cbl_docs = db.getDocuments(cbl_db1, cbl_doc_ids)
+    # cbl_doc_ids = db.getDocIds(cbl_db1)
+    # cbl_docs = db.getDocuments(cbl_db1, cbl_doc_ids)
     verify_sgDocIds_cblDocIds(sg_client, sg_url, sg_db1, session1, cbl_db1, db)
     verify_sgDocIds_cblDocIds(sg_client, sg_url, sg_db2, session2, cbl_db2, db)
     verify_sgDocIds_cblDocIds(sg_client, sg_url, sg_db3, session3, cbl_db3, db)
