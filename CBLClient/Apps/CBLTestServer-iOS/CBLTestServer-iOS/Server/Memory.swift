@@ -46,7 +46,7 @@ func getWiFiAddress() -> String? {
 public class Memory {
     private var _memory:[String:Any] = [:];
     private var _address:Int = 0;
-    private var _ip:String = getWiFiAddress()!
+    private var _ip = getWiFiAddress()
     
     public func get<T>(address:String) -> T? {
         return _memory[address] as Any! as? T
@@ -54,7 +54,11 @@ public class Memory {
     
     public func add(value: Any) -> String {
         _address += 1
-        let address = "@\(_address)_\(_ip)_iOS"
+        var ipaddress = "127.0.0.1"
+        if let ip = _ip {
+            ipaddress = ip
+        }
+        let address = "@\(_address)_\(ipaddress)_iOS"
         _memory[address] = value
         return address
     }
