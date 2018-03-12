@@ -213,7 +213,6 @@ public class DatabaseRequestHandler {
         case "database_updateDocuments":
             let database: Database = args.get(name:"database")!
             let documents: Dictionary<String, Dictionary<String, Any>> = args.get(name: "documents")!
-            print("documents in database save documents is\(documents)")
             try database.inBatch {
                 for doc in documents {
                     let id = doc.key

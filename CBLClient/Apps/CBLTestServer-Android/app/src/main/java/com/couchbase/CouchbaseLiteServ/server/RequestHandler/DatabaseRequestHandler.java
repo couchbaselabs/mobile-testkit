@@ -61,7 +61,7 @@ public class DatabaseRequestHandler {
         return new Database(name, null);
     }
 
-    public int getCount(Args args) {
+    public long getCount(Args args) {
         Database database = args.get("database");
         return database.getCount();
     }
