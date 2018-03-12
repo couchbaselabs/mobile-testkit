@@ -1948,6 +1948,8 @@ def test_default_conflict_withConflicts_and_sgOffline(params_from_base_test_setu
     for id in cbl_doc_ids:
         assert cbl_docs[id]["updates"] == 1, "sg updated docs did not get replicated to cbl"
 
+    replicator.stop(repl)
+
 
 @pytest.mark.listener
 def test_default_conflict_withConflicts_withChannels(params_from_base_test_setup):

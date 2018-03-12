@@ -95,6 +95,10 @@ def pytest_addoption(parser):
                      action="store_true",
                      help="If set, will enable SSL communication between Sync Gateway and CBL")
 
+    parser.addoption("--flush-memory-per-test",
+                     action="store_true",
+                     help="If set, will flush server memory per test")
+
 
 # This will get called once before the first test that
 # runs with this as input parameters in this file
@@ -119,6 +123,7 @@ def params_from_base_suite_setup(request):
     device_enabled = request.config.getoption("--device")
     community_enabled = request.config.getoption("--community")
     sg_ssl = request.config.getoption("--sg-ssl")
+    flush_memory_per_test = request.config.getoption("--flush-memory-per-test")
 
     testserver = TestServerFactory.create(platform=liteserv_platform,
                                           version_build=liteserv_version,
@@ -321,7 +326,8 @@ def params_from_base_suite_setup(request):
         "base_url": base_url,
         "sg_config": sg_config,
         "testserver": testserver,
-        "device_enabled": device_enabled
+        "device_enabled": device_enabled,
+        "flush_memory_per_test": flush_memory_per_test
     }
 
     if enable_sample_bucket:
@@ -368,6 +374,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     liteserv_platform = params_from_base_suite_setup["liteserv_platform"]
     testserver = params_from_base_suite_setup["testserver"]
     device_enabled = params_from_base_suite_setup["device_enabled"]
+    flush_memory_per_test = params_from_base_suite_setup["flush_memory_per_test"]
     source_db = None
     cbl_db = None
 
@@ -440,6 +447,11 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         log_info("Deleting the database {} at test teardown".format(create_db_per_test))
         db.deleteDB(source_db)
         time.sleep(1)
+
+    if flush_memory_per_test:
+        log_info("Flushing server memory")
+        utils_obj = Utils(base_url)
+        utils_obj.flushMemory()
 
 
 @pytest.fixture(scope="class")
