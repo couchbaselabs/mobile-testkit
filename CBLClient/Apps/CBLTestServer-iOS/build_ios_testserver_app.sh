@@ -8,7 +8,13 @@ cd ${WORKSPACE}/mobile-testkit/CBLClient/Apps/CBLTestServer-iOS
 if [[ ! -d Frameworks ]]; then mkdir Frameworks; fi
 
 # Prepare framework
+if [ EDITION = "community" ]
+then
 SCHEME=CBLTestServer-iOS
+else
+SCHEME=CBLTestServer-iOS-EE
+fi
+SCHEME=CBLTestServer-iOS    
 SDK=iphonesimulator
 SDK_DEVICE=iphoneos
 FRAMEWORK_DIR=${WORKSPACE}/mobile-testkit/CBLClient/Apps/CBLTestServer-iOS/Frameworks
