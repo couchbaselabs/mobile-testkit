@@ -91,15 +91,17 @@ try {
         New-Item -ItemType Directory "zips"
     }
 
-    if(Test-Path "zips\TestServer.zip") {
-        Remove-Item "zips\TestServer.zip"
+    if(Test-Path "zips\TestServer.UWP.zip") {
+        Remove-Item "zips\TestServer.UWP.zip"
     }
     
     $ZipPath = Resolve-Path ".\zips"
 
     Push-Location "AppPackages\TestServer.UWP_1.0.0.0_x64_Test"
     try {
-        7z a -r ${ZipPath}\TestServer.zip *
+        7z a -r ${ZipPath}\TestServer.UWP.zip *
+        7z a ${ZipPath}\TestServer.UWP.zip ..\..\run.ps1
+        7z a ${ZipPath}\TestServer.UWP.zip ..\..\stop.ps1
     } finally {
         Pop-Location
     }

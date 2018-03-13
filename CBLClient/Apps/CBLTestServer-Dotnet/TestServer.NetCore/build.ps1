@@ -84,15 +84,15 @@ try {
         New-Item -ItemType Directory "zips"
     }
 
-    if(Test-Path "zips\TestServer.zip") {
-        Remove-Item "zips\TestServer.zip"
+    if(Test-Path "zips\TestServer.NetCore.zip") {
+        Remove-Item "zips\TestServer.NetCore.zip"
     }
     
     $ZipPath = Resolve-Path ".\zips"
 
     Push-Location bin\Release\netcoreapp2.0\publish
     try {
-        7z a -r ${ZipPath}\TestServer.zip *
+        7z a -r ${ZipPath}\TestServer.NetCore.zip *
     } finally {
         Pop-Location
     }
