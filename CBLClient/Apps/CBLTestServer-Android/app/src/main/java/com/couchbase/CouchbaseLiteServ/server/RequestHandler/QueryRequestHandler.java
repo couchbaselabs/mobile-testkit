@@ -63,7 +63,7 @@ public class QueryRequestHandler {
 
     public List<Object> getDoc(Args args) throws CouchbaseLiteException {
         Database database = args.get("database");
-        int out = database.getCount();
+        long out = database.getCount();
         Expression doc_id = Expression.value(args.get("doc_id"));
         Query query = QueryBuilder
                 .select(SelectResult.all())
@@ -141,7 +141,7 @@ public class QueryRequestHandler {
 
     public List<Object> like(Args args) throws CouchbaseLiteException {
         Database database = args.get("database");
-        int out = database.getCount();
+        long out = database.getCount();
         String whr_key = args.get("whr_key");
         String select_property1 = args.get("select_property1");
         String select_property2 = args.get("select_property2");

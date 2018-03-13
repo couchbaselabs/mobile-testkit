@@ -96,3 +96,4 @@ bin/
 obj/
 .vs/
 TestServer.zip
+CBLClient/Apps/CBLTestServer-Dotnet/TestServer.UWP/AppPackages/

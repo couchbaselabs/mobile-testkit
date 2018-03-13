@@ -21,6 +21,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Threading;
 
 using HandlerAction = System.Action<System.Collections.Specialized.NameValueCollection, 
     System.Collections.Generic.IReadOnlyDictionary<string, object>, 
@@ -50,13 +51,19 @@ namespace Couchbase.Lite.Testing.NetCore
             Extend();
 
             Couchbase.Lite.Support.NetDesktop.EnableTextLogging("TextLogging");
-            Database.SetLogLevel(Logging.LogDomain.All, Logging.LogLevel.Debug);
+            Database.SetLogLevel(Logging.LogDomain.All, Logging.LogLevel.Info);
 
             var listener = new TestServer();
             listener.Start();
 
-            Console.WriteLine("CBLTestServer-NetCore - Press any key to exit...");
-            Console.ReadKey(true);
+            Console.WriteLine("CBLTestServer-NetCore - Press any Ctrl+C to exit...");
+            var wait = new ManualResetEventSlim();
+            Console.CancelKeyPress += (sender, e) =>
+            {
+                wait.Set();
+            };
+
+            wait.Wait();
 
             listener.Stop();
         }

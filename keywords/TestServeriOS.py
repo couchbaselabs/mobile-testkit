@@ -214,7 +214,7 @@ class TestServeriOS(TestServerBase):
         # app_dir = "CBLTestServer-iOS"
 
         self.app_path = "{}/{}/{}".format(BINARY_DIR, self.app_dir, self.app_name)
-
+        # self.app_path = "/Users/sridevi.saragadam/Library/Developer/Xcode/DerivedData/CBLTestServer-iOS-ayypbvnmphhpihebbhrjusdqhzmk/Build/Products/Debug-EE-iphonesimulator/CBLTestServer-iOS.app"
         # Without --exit, ios-sim blocks
         # With --exit, --log has no effect
         # subprocess.Popen didn't launch the app

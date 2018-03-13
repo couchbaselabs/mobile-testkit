@@ -1,6 +1,6 @@
 param (
-    [Parameter][string]$Version,
-    [Parameter][int]$BuildNum,
+    [Parameter()][string]$Version,
+    [Parameter()][int]$BuildNum,
     [switch]$Community
 )
 
@@ -31,6 +31,13 @@ function Modify-Packages {
 }
 
 Push-Location $PSScriptRoot
+$VSRegistryKey = "HKLM:\SOFTWARE\WOW6432Node\Microsoft\VisualStudio\SxS\VS7"
+$VSInstall = (Get-ItemProperty -Path $VSRegistryKey -Name "15.0") | Select-Object -ExpandProperty "15.0"
+if(-Not $VSInstall) {
+    throw "Unable to locate VS2017 installation"
+}
+
+$MSBuild = "$VSInstall\MSBuild\15.0\Bin\MSBuild.exe"
 
 $version_to_use = $Version
 if(-Not $version_to_use) {
@@ -56,7 +63,7 @@ try {
     }
 
     $fullVersion = $version_to_use + "-b" + $build_num_to_use.ToString("D4")
-    Modify-Packages "$PSScriptRoot\TestServer.NetCore.csproj" $fullVersion $Community
+    Modify-Packages "$PSScriptRoot\TestServer.UWP.csproj" $fullVersion $Community
     Modify-Packages "$PSScriptRoot\..\TestServer\TestServer.csproj" $fullVersion $Community
 
     Push-Location ..\TestServer
@@ -68,15 +75,15 @@ try {
 
     Pop-Location
 
-    dotnet restore
+    & $MSBuild /t:Restore
     if($LASTEXITCODE -ne 0) {
-        Write-Error "Restore failed for TestServer.NetCore"
+        Write-Error "Restore failed for TestServer.UWP"
         exit 1
     }
 
-    dotnet publish -c Release
+    & $MSBuild /p:Configuration=Release /t:Rebuild /p:Platform=x64
     if($LASTEXITCODE -ne 0) {
-        Write-Error "Publish failed for TestServer.NetCore"
+        Write-Error "Build failed for TestServer.UWP"
         exit 1
     }
 
@@ -84,15 +91,17 @@ try {
         New-Item -ItemType Directory "zips"
     }
 
-    if(Test-Path "zips\TestServer.NetCore.zip") {
-        Remove-Item "zips\TestServer.NetCore.zip"
+    if(Test-Path "zips\TestServer.UWP.zip") {
+        Remove-Item "zips\TestServer.UWP.zip"
     }
     
     $ZipPath = Resolve-Path ".\zips"
 
-    Push-Location bin\Release\netcoreapp2.0\publish
+    Push-Location "AppPackages\TestServer.UWP_1.0.0.0_x64_Test"
     try {
-        7z a -r ${ZipPath}\TestServer.NetCore.zip *
+        7z a -r ${ZipPath}\TestServer.UWP.zip *
+        7z a ${ZipPath}\TestServer.UWP.zip ..\..\run.ps1
+        7z a ${ZipPath}\TestServer.UWP.zip ..\..\stop.ps1
     } finally {
         Pop-Location
     }
