@@ -532,7 +532,7 @@ public class QueryRequestHandler {
 
         Query query = QueryBuilder
                 .select(SelectResult.expression(Meta.id),
-                        SelectResult.expression(Expression.property("callsign")))
+                        SelectResult.expression(Expression.property(prop)))
                 .from(DataSource.database(db))
                 .where(Expression.property(prop).isNot(Expression.value(null)))
                 .orderBy(Ordering.expression(Meta.id).ascending());
