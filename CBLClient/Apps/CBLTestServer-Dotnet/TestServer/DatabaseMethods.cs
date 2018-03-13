@@ -290,6 +290,74 @@ namespace Couchbase.Lite.Testing
             });
         }
 
+        internal static void DatabaseSaveWithConcurrency([NotNull] NameValueCollection args,
+                                         [NotNull] IReadOnlyDictionary<string, object> postBody,
+                                         [NotNull] HttpListenerResponse response)
+        {
+            With<Database>(postBody, "database", db =>
+            {
+                With<MutableDocument>(postBody, "document", document =>
+                {
+                    var concurrencyControlType = postBody["concurrencyControlType"].ToString();
+                    var concurrencyType = ConcurrencyControl.LastWriteWins;
+
+                    if (concurrencyControlType != null) {
+                        if (concurrencyControlType == "failOnConflict") {
+                            concurrencyType = ConcurrencyControl.FailOnConflict;
+                        } else
+                        {
+                            concurrencyType = ConcurrencyControl.LastWriteWins;
+                        }
+                    }
+
+                    try
+                    {
+                        db.Save(document, concurrencyType);
+                    }
+                    catch (InvalidOperationException e)
+                    {
+                        Console.WriteLine("Error saving document to DB" + e.Message);
+                        response.WriteBody(e.Message);
+                    }
+                });               
+            });
+        }
+
+        internal static void DatabaseDeleteWithConcurrency([NotNull] NameValueCollection args,
+                                         [NotNull] IReadOnlyDictionary<string, object> postBody,
+                                         [NotNull] HttpListenerResponse response)
+        {
+            With<Database>(postBody, "database", db =>
+            {
+                With<MutableDocument>(postBody, "document", document =>
+                {
+                    var concurrencyControlType = postBody["concurrencyControlType"].ToString();
+                    var concurrencyType = ConcurrencyControl.LastWriteWins;
+
+                    if (concurrencyControlType != null)
+                    {
+                        if (concurrencyControlType == "failOnConflict")
+                        {
+                            concurrencyType = ConcurrencyControl.FailOnConflict;
+                        }
+                        else
+                        {
+                            concurrencyType = ConcurrencyControl.LastWriteWins;
+                        }
+                    }
+
+                    try
+                    {
+                        db.Delete(document, concurrencyType);
+                    } catch (InvalidOperationException e)
+                    {
+                        Console.WriteLine("Error deleting DB" + e.Message);
+                        response.WriteBody(e.Message);
+                    }
+                });
+            });
+        }
+
         //internal static void DatabaseRemoveChangeListener([NotNull] NameValueCollection args,
         //    [NotNull] IReadOnlyDictionary<string, object> postBody,
         //    [NotNull] HttpListenerResponse response)

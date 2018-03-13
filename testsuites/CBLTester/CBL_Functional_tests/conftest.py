@@ -375,6 +375,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     testserver = params_from_base_suite_setup["testserver"]
     device_enabled = params_from_base_suite_setup["device_enabled"]
     flush_memory_per_test = params_from_base_suite_setup["flush_memory_per_test"]
+    enable_sample_bucket = params_from_base_suite_setup["enable_sample_bucket"]
     source_db = None
     cbl_db = None
 
@@ -438,7 +439,8 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         "db": db,
         "device_enabled": device_enabled,
         "testserver": testserver,
-        "db_config": db_config
+        "db_config": db_config,
+        "enable_sample_bucket": enable_sample_bucket
     }
 
     log_info("Tearing down test")
