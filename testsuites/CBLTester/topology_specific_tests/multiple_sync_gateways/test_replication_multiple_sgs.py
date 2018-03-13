@@ -17,8 +17,8 @@ from utilities.cluster_config_utils import persist_cluster_config_environment_pr
 @pytest.mark.replication
 @pytest.mark.parametrize("sg_conf_name, num_of_docs", [
     ('listener_tests/multiple_sync_gateways', 10),
-    ('listener_tests/multiple_sync_gateways', 100, 10),
-    ('listener_tests/multiple_sync_gateways', 1000, 10)
+    ('listener_tests/multiple_sync_gateways', 100),
+    ('listener_tests/multiple_sync_gateways', 1000)
 ])
 def test_multiple_sgs_with_differrent_revs_limit(params_from_base_test_setup, setup_customized_teardown_test, sg_conf_name, num_of_docs):
     """
@@ -149,7 +149,7 @@ def test_multiple_sgs_with_differrent_revs_limit(params_from_base_test_setup, se
     sg_docs = sg_client.get_all_docs(url=sg2_url, db=sg_db2, auth=session2)
     sg_doc_ids = [doc['id'] for doc in sg_docs["rows"]]
     for doc_id in sg_doc_ids:
-        revs = sg_client.get_revs_num_in_history(sg2_url, sg_db1, doc_id, auth=session2)
+        revs = sg_client.get_revs_num_in_history(sg2_url, sg_db2, doc_id, auth=session2)
         assert len(revs) == revs_limit2
 
 

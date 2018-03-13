@@ -124,7 +124,7 @@ class TestServerAndroid(TestServerBase):
             "--ei", "listen_port", str(self.port),
         ])
         log_info(output)
-
+        self._wait_until_reachable(port=self.port)
         self._verify_launched()
 
         # return "http://{}:{}".format(self.host, self.port)

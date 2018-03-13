@@ -223,7 +223,8 @@ class TestServeriOS(TestServerBase):
         ])
 
         log_info(output)
-        time.sleep(10)
+        self._wait_until_reachable(port=self.port)
+        # time.sleep(10)
         self._verify_running()
         # return "http://{}:{}".format(self.host, self.port)
 
@@ -248,10 +249,10 @@ class TestServeriOS(TestServerBase):
         ])
         log_info(output)
 
-        self._verify_not_running()
-        self._verify_launched()
+        self._wait_until_reachable(port=self.port)
+        self._verify_running()
 
-        return "http://{}:{}".format(self.host, self.port)
+        # return "http://{}:{}".format(self.host, self.port)
 
     def _verify_launched(self):
         """ Poll on expected http://<host>:<port> until it is reachable

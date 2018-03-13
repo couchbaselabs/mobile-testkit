@@ -62,7 +62,8 @@ class TestServerBase(object):
         count = 0
         while count < MAX_RETRIES:
             try:
-                resp = self.session.get(url)
+                self.session.get(url)
+                # resp = self.session.get(url)
                 # If request does not throw, exit retry loop
                 break
             except ConnectionError:
@@ -72,8 +73,8 @@ class TestServerBase(object):
 
         if count == MAX_RETRIES:
             raise LiteServError("Could not connect to Test server app")
-
-        return resp.json()
+        return True
+        # return resp.json()
 
     def _verify_launched(self):
         raise NotImplementedError()
