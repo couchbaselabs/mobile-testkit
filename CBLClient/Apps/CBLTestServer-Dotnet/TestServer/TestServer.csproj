@@ -13,7 +13,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Couchbase.Lite.Enterprise" Version="2.0.0-b0606" />
+    <PackageReference Include="Couchbase.Lite.Enterprise" Version="2.0.0-b0642" />
     <PackageReference Include="JetBrains.Annotations" Version="11.1.0" />
     <PackageReference Include="Newtonsoft.Json" Version="11.0.1-beta3" />
   </ItemGroup>
