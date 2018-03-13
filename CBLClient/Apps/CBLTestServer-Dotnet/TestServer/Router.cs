@@ -59,6 +59,8 @@ namespace Couchbase.Lite.Testing
             ["database_saveDocuments"] = DatabaseMethods.DatabaseSaveDocuments,
             ["database_purge"] = DatabaseMethods.DatabasePurge,
             ["database_save"] = DatabaseMethods.DatabaseSave,
+            ["database_saveWithConcurrency"] = DatabaseMethods.DatabaseSaveWithConcurrency,
+            ["database_deleteWithConcurrency"] = DatabaseMethods.DatabaseDeleteWithConcurrency,
             ["database_getCount"] = DatabaseMethods.DatabaseGetCount,
             ["databaseChangeListener_changesCount"] = DatabaseMethods.DatabaseChangeListenerChangesCount,
             ["databaseChangeListener_getChange"] = DatabaseMethods.DatabaseChangeListenerGetChange,

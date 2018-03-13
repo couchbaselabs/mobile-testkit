@@ -231,7 +231,8 @@ namespace Couchbase.Lite.Testing
                                   [NotNull] HttpListenerResponse response)
         {
             var val = (Dictionary<string, Object>)postBody["value"];
-            With<MutableDocument>(postBody, "document", doc => response.WriteBody(doc.SetData(val)));
+            MutableDocument doc = MemoryMap.Get<MutableDocument>(postBody["document"].ToString());
+            response.WriteBody(MemoryMap.Store(doc.SetData(val)));
         }
 
         public static void DocumentGetDictionary([NotNull] NameValueCollection args,
