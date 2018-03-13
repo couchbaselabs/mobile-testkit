@@ -16,8 +16,6 @@ using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Navigation;
 
-using Couchbase.Lite.DI;
-
 namespace Couchbase.Lite.Testing.UWP
 {
     /// <summary>
