@@ -93,7 +93,7 @@ def pytest_addoption(parser):
     parser.addoption("--sg-installer-type",
                      action="store",
                      help="Sync Gateway Installer type (ex. exe or msi)",
-                     default="exe")
+                     default="msi")
 
     parser.addoption("--sa-platform",
                      action="store",
@@ -115,6 +115,11 @@ def pytest_addoption(parser):
     parser.addoption("--no-conflicts",
                      action="store_true",
                      help="If set, allow_conflicts is set to false in sync-gateway config")
+
+    parser.addoption("--sg-ssl",
+                     action="store_true",
+                     help="If set, will enable SSL communication between Sync Gateway and CBL")
+
 
 
 # This will be called once for the at the beggining of the execution in the 'tests/' directory
@@ -142,6 +147,7 @@ def params_from_base_suite_setup(request):
     sg_ce = request.config.getoption("--sg-ce")
     use_sequoia = request.config.getoption("--sequoia")
     no_conflicts_enabled = request.config.getoption("--no-conflicts")
+    sg_ssl = request.config.getoption("--sg-ssl")
 
     if xattrs_enabled and version_is_binary(sync_gateway_version):
         check_xattr_support(server_version, sync_gateway_version)
@@ -161,6 +167,7 @@ def params_from_base_suite_setup(request):
     log_info("sg_lb: {}".format(sg_lb))
     log_info("sg_ce: {}".format(sg_ce))
     log_info("no conflicts enabled {}".format(no_conflicts_enabled))
+    log_info("sg_ssl: {}".format(sg_ssl))
 
     # sg-ce is invalid for di mode
     if mode == "di" and sg_ce:
@@ -188,6 +195,12 @@ def params_from_base_suite_setup(request):
     else:
         log_info("Running tests with load balancer disabled")
         persist_cluster_config_environment_prop(cluster_config, 'sg_lb_enabled', False)
+
+    if sg_ssl:
+        log_info("Enabling SSL on sync gateway")
+        persist_cluster_config_environment_prop(cluster_config, 'sync_gateway_ssl', True)
+    else:
+        persist_cluster_config_environment_prop(cluster_config, 'sync_gateway_ssl', False)
 
     if cbs_ssl:
         log_info("Running tests with cbs <-> sg ssl enabled")
