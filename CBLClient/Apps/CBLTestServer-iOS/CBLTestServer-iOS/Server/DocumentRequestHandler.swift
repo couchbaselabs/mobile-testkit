@@ -236,7 +236,7 @@ public class DocumentRequestHandler {
             return document.contains(key: key)
 
         case "document_toMap":
-            let document: MutableDocument = (args.get(name: "document"))!
+            let document: Document = (args.get(name: "document"))!
             
             return document.toDictionary()
 

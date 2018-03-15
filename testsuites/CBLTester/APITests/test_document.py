@@ -287,11 +287,14 @@ class TestDocument(object):
         self.doc_obj.setDictionary(doc1b, "dict1b", doc1_key)
 
         dict2 = self.dict_obj.create()
-        self.dict_obj.setValue(dict1, "n2", "name")
-        doc1b.setDictionary("dict2", dict2)
+        self.dict_obj.setValue(dict2, "n2", "name")
+        self.doc_obj.setDictionary(doc1b, "dict2", dict2)
         self.db_obj.saveDocument(db, doc1b)
 
-        doc1b_dict = self.doc_obj.getDictionary(doc1b, "dict1b")
+        self.doc_obj.getDictionary(doc1b, "dict1b")
+        doc1b_id = self.doc_obj.getId(doc1b)
+        doc1b_doc = self.db_obj.getDocument(db, doc1b_id)
+        doc1b_todict = self.doc_obj.toMap(doc1b_doc)
 
         expected_dict = {
             "dict1": {"name": "n1"},
@@ -299,7 +302,8 @@ class TestDocument(object):
             "dict2": {"name": "n2"}
         }
 
-        assert expected_dict == doc1b_dict
+        print doc1b_todict
+        assert sorted(expected_dict) == sorted(doc1b_todict)
 
     def test_set_immutable_array_to_doc(self):
         '''
@@ -327,14 +331,18 @@ class TestDocument(object):
         self.doc_obj.setArray(doc1b, "array1b", doc1_array)
 
         array2 = self.array_obj.create()
-        self.dict_obj.addString(array2, "a2")
+        self.array_obj.addString(array2, "a2")
         dict2 = self.dict_obj.create()
-        self.dict_obj.setValue(dict1, "n2", "name")
+        self.dict_obj.setValue(dict2, "n2", "name")
         self.array_obj.addDictionary(array2, dict2)
         self.doc_obj.setArray(doc1b, "array2", array2)
         self.db_obj.saveDocument(db, doc1b)
 
-        doc1b_dict = self.doc_obj.getDictionary(doc1b, "dict1b")
+        self.doc_obj.getDictionary(doc1b, "dict1b")
+        doc1b_id = self.doc_obj.getId(doc1b)
+        doc1b_doc = self.db_obj.getDocument(db, doc1b_id)
+        doc1b_todict = self.doc_obj.toMap(doc1b_doc)
+        print doc1b_todict
 
         expected_dict = {
             "array1": ["a1", {"name": "n1"}],
@@ -342,4 +350,4 @@ class TestDocument(object):
             "array2": ["a2", {"name": "n2"}]
         }
 
-        assert expected_dict == doc1b_dict
+        assert sorted(expected_dict) == sorted(doc1b_todict)
