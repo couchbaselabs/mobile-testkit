@@ -65,7 +65,7 @@ public class DictionaryRequestHandler {
             let key: String = args.get(name: "key")!
             return dictionary.int(forKey: key)
         
-        case "dictionary_getInt64":
+        case "dictionary_getLong":
             let dictionary: MutableDictionaryObject = args.get(name: "dictionary")!
             let key: String = args.get(name: "key")!
             return dictionary.int64(forKey: key)
@@ -77,10 +77,10 @@ public class DictionaryRequestHandler {
             
             return dictionary.setInt(value, forKey: key)
         
-        case "dictionary_setInt64":
+        case "dictionary_setLong":
             let dictionary: MutableDictionaryObject = args.get(name: "dictionary")!
             let key: String = args.get(name: "key")!
-            let value: Int64 = args.get(name: "value")!
+            let value: Int64 = args.get(name: "value") as Int64!
             
             return dictionary.setInt64(value, forKey: key)
      

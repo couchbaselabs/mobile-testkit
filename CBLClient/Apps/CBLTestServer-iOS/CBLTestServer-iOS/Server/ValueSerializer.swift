@@ -97,6 +97,11 @@ public class ValueSerializer {
             let end = value!.index(value!.endIndex, offsetBy: 0)
             let range = start..<end
             return Double(value!.substring(with: range)) as? T
+        } else if value!.hasPrefix("L") {
+            let start = value!.index(value!.startIndex, offsetBy: 1)
+            let end = value!.index(value!.endIndex, offsetBy: 0)
+            let range = start..<end
+            return Int64(value!.substring(with: range)) as? T
         } else if value!.hasPrefix("#") {
                 if (value?.range(of:".")) != nil {
                     return Double(value!) as? T

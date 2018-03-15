@@ -163,7 +163,7 @@ class Dictionary(object):
         args = Args()
         args.setMemoryPointer("dictionary", dictionary)
         args.setString("key", key)
-        args.setMemoryPointer("value", value)
+        args.setLong("value", value)
         return self._client.invokeMethod("dictionary_setLong", args)
 
 #     Method no longer exist

@@ -160,12 +160,11 @@ public class DocumentRequestHandler {
         case "document_setDate":
             let document: MutableDocument = (args.get(name: "document"))!
             let key: String = (args.get(name: "key"))!
-            let value: String = (args.get(name: "value"))!
+            let value: Date = (args.get(name: "value"))!
             let formatter = DateFormatter()
             formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ssZ"
-            let date_value = formatter.date(from: value)
 
-            return document.setDate(date_value, forKey: key)
+            return document.setDate(value, forKey: key)
         
         case "document_getArray":
             let document: MutableDocument = (args.get(name: "document"))!
