@@ -19,6 +19,7 @@ from CBLClient.BasicAuthenticator import BasicAuthenticator
 from CBLClient.Database import Database
 from CBLClient.Document import Document
 from CBLClient.Dictionary import Dictionary
+from CBLClient.Array import Array
 from CBLClient.DataTypeInitiator import DataTypeInitiator
 from CBLClient.SessionAuthenticator import SessionAuthenticator
 from CBLClient.Utils import Utils
@@ -368,6 +369,7 @@ def class_init(request, params_from_base_suite_setup):
     db_obj = Database(base_url)
     doc_obj = Document(base_url)
     dict_obj = Dictionary(base_url)
+    array_obj = Array(base_url)
     datatype = DataTypeInitiator(base_url)
     repl_obj = Replication(base_url)
     repl_config_obj = ReplicatorConfiguration(base_url)
@@ -380,6 +382,7 @@ def class_init(request, params_from_base_suite_setup):
     request.cls.db_obj = db_obj
     request.cls.doc_obj = doc_obj
     request.cls.dict_obj = dict_obj
+    request.cls.array_obj = array_obj
     request.cls.datatype = datatype
     request.cls.repl_obj = repl_obj
     request.cls.repl_config_obj = repl_config_obj

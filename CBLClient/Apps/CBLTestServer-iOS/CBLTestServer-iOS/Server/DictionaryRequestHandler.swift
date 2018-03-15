@@ -40,6 +40,13 @@ public class DictionaryRequestHandler {
             let data: [String: Any]? = args.get(name: "data")!
 
             return dictionary.setData(data)
+            
+        case "dictionary_setValue":
+            let dictionary: MutableDictionaryObject = args.get(name: "dictionary")!
+            let key: String = args.get(name: "key")!
+            let value: String = args.get(name: "value")!
+            
+            return dictionary.setValue(value, forKey: key)
         
         case "dictionary_setString":
             let dictionary: MutableDictionaryObject = args.get(name: "dictionary")!

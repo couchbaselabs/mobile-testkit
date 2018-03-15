@@ -85,7 +85,7 @@ class Document(object):
     def getArray(self, document, key):
         args = Args()
         args.setMemoryPointer("document", document)
-        args.setMemoryPointer("key", key)
+        args.setString("key", key)
         return self._client.invokeMethod("document_getArray", args)
 
     def setArray(self, document, key, value):

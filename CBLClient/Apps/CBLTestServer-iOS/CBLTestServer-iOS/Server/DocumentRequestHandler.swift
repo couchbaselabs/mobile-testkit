@@ -167,10 +167,10 @@ public class DocumentRequestHandler {
             return document.setDate(value, forKey: key)
         
         case "document_getArray":
-            let document: MutableDocument = (args.get(name: "document"))!
+            let document: Document = (args.get(name: "document"))!
             let key: String = (args.get(name: "key"))!
 
-            return  document.array(forKey: key)
+            return document.array(forKey: key)
 
         case "document_setArray":
             let document: MutableDocument = (args.get(name: "document"))!
@@ -179,10 +179,10 @@ public class DocumentRequestHandler {
             return  document.setArray(value, forKey: key)
 
         case "document_getDictionary":
-            let document: MutableDocument = (args.get(name: "document"))!
+            let document: Document = (args.get(name: "document"))!
             let key: String = (args.get(name: "key"))!
 
-            return  document.dictionary(forKey: key)
+            return document.dictionary(forKey: key)
 
         case "document_setDictionary":
             let document: MutableDocument = (args.get(name: "document"))!

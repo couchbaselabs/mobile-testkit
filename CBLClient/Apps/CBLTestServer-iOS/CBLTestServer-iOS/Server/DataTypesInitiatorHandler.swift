@@ -104,10 +104,7 @@ public class DataTypesInitiatorRequestHandler {
         case "datatype_compareHashMap":
             let first: Dictionary<String, Any> = args.get(name: "first")!
             let second: Dictionary<String, Any> = args.get(name: "second")!
-            
-            print("first is \(first)")
-            print("second is \(second)")
-            
+                       
             return NSDictionary(dictionary: first).isEqual(to: second)
             
         case "datatype_compareHashMap_org":

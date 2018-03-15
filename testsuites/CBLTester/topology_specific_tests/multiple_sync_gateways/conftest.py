@@ -10,7 +10,6 @@ from keywords.constants import CLUSTER_CONFIGS_DIR
 from keywords.SyncGateway import sync_gateway_config_path_for_mode
 from keywords.exceptions import ProvisioningError
 from keywords.tklogging import Logging
-from CBLClient.Replication import Replication
 from CBLClient.Database import Database
 from keywords.utils import host_for_url
 from libraries.testkit.cluster import Cluster
@@ -20,6 +19,7 @@ from CBLClient.Utils import Utils
 from keywords.TestServerFactory import TestServerFactory
 from keywords.SyncGateway import SyncGateway
 from keywords.constants import RESULTS_DIR
+from keywords.constants import SDK_TIMEOUT
 
 
 def pytest_addoption(parser):
@@ -196,7 +196,7 @@ def params_from_base_suite_setup(request):
     log_info("no conflicts enabled {}".format(no_conflicts_enabled))
     if sync_gateway_version < "2.0":
         pytest.skip('Does not work with sg < 2.0 , so skipping the test')
-    
+
     if not skip_provisioning:
         log_info("Installing Sync Gateway + Couchbase Server + Accels ('di' only)")
 
@@ -246,7 +246,7 @@ def params_from_base_suite_setup(request):
         log_info("Loading sample bucket {}".format(enable_sample_bucket))
         server.load_sample_bucket(enable_sample_bucket)
         server._create_internal_rbac_bucket_user(enable_sample_bucket)
-        
+
         # Restart SG after the bucket deletion
         sync_gateways = cluster_topology["sync_gateways"]
         sg_obj = SyncGateway()
@@ -311,9 +311,9 @@ def params_from_base_suite_setup(request):
     # Flush all the memory contents on the server app
     log_info("Flushing server memory")
     utils_obj = Utils(base_url)
-    # utils_obj.flushMemory()
+    utils_obj.flushMemory()
     log_info("Stopping the test server")
-    # testserver.stop()
+    testserver.stop()
 
 
 @pytest.fixture(scope="function")

@@ -221,3 +221,10 @@ class Dictionary(object):
         args = Args()
         args.setMemoryPointer("dictionary", dictionary)
         return self._client.invokeMethod("dictionary_toMap", args)
+
+    def setValue(self, dictionary, key, value):
+        args = Args()
+        args.setMemoryPointer("dictionary", dictionary)
+        args.setString("key", key)
+        args.setInt("value", value)
+        return self._client.invokeMethod("dictionary_setValue", args)
