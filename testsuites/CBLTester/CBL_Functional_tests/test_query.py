@@ -41,13 +41,13 @@ def test_get_doc_ids(params_from_base_test_setup):
     ids_from_cbl = db.getDocIds(source_db)
 
     assert len(ids_from_cbl) == len(doc_ids_from_n1ql)
-    assert sorted(ids_from_cbl) == sorted(doc_ids_from_n1ql)
+    assert np.array_equal(sorted(ids_from_cbl), sorted(doc_ids_from_n1ql))
     log_info("Doc contents match between CBL and n1ql")
 
 
 @pytest.mark.parametrize("doc_id", [
     ("airline_10"),
-    # ("doc_id_does_not_exist"),
+    ("doc_id_does_not_exist"),
 ])
 def test_doc_get(params_from_base_test_setup, doc_id):
     """ @summary
@@ -76,7 +76,7 @@ def test_doc_get(params_from_base_test_setup, doc_id):
     docs_from_cbl = []
     if result_set != -1 and result_set is not None:
         for result in result_set:
-            docs_from_cbl.append(result)
+            docs_from_cbl.append(result[cbl_db])
 
     # Get doc from n1ql through query
     log_info("Fetching doc {} from server through n1ql".format(doc_id))
@@ -88,11 +88,11 @@ def test_doc_get(params_from_base_test_setup, doc_id):
     docs_from_n1ql = []
 
     for row in sdk_client.n1ql_query(query):
-        docs_from_n1ql.append(row)
+        docs_from_n1ql.append(row[enable_sample_bucket])
 
     assert len(docs_from_cbl) == len(docs_from_n1ql)
     log_info("Found {} docs".format(len(docs_from_cbl)))
-    assert docs_from_cbl[0][cbl_db] == docs_from_n1ql[0][enable_sample_bucket]
+    assert sorted(docs_from_cbl) == sorted(docs_from_n1ql)
     log_info("Doc contents match between CBL and n1ql")
 
 
@@ -580,12 +580,11 @@ def test_query_join(params_from_base_test_setup, select_property1,
 
     log_info("Fetching docs from CBL through query")
     qy = Query(base_url)
-    limit = 5
     result_set = qy.query_join(source_db, select_property1,
                                select_property2, select_property3,
                                select_property4, select_property5,
                                whr_key1, whr_key2, whr_key3, whr_val1,
-                               whr_val2, whr_val3, join_key, limit)
+                               whr_val2, whr_val3, join_key)
 
     docs_from_cbl = []
 
@@ -599,7 +598,7 @@ def test_query_join(params_from_base_test_setup, select_property1,
     n1ql_query = 'select distinct airline.{}, airline.{}, route.{}, '\
         'route.{}, route.{} from `{}` route join `{}` airline '\
         'on keys route.{} where route.{}="{}" and '\
-        'airline.{} = "{}" and route.{} = {} limit'.format(
+        'airline.{} = "{}" and route.{} = "{}"'.format(
             select_property1, select_property2,
             select_property3, select_property4,
             select_property5, bucket_name, bucket_name,
@@ -616,28 +615,6 @@ def test_query_join(params_from_base_test_setup, select_property1,
     log_info("Found {} docs".format(len(docs_from_cbl)))
     assert sorted(docs_from_cbl) == sorted(docs_from_n1ql)
     log_info("Doc contents match")
-
-
-@pytest.mark.parametrize("select_property1, select_property2, select_property3, join_key1, join_key2, whr_key1, whr_key2, whr_val1, whr_val2", [
-    ("firstname", "lastname", "name", "department", "code", "type", "type", "employee", "department")
-])
-def test_query_join2(params_from_base_test_setup, select_property1,
-                     select_property2, select_property3, join_key1,
-                     join_key2, whr_key1, whr_key2, whr_val1, whr_val2):
-    source_db = params_from_base_test_setup["suite_source_db"]
-    base_url = params_from_base_test_setup["base_url"]
-
-    log_info("Fetching docs from CBL through query")
-    qy = Query(base_url)
-    result_set = qy.query_join2(source_db, select_property1,
-                                select_property2, select_property3,
-                                join_key1, join_key2, whr_key1,
-                                whr_key2, whr_val1, whr_val2)
-
-    docs_from_cbl = []
-
-    for docs in result_set:
-        docs_from_cbl.append(docs)
 
 
 @pytest.mark.parametrize("prop, val", [
@@ -1090,7 +1067,7 @@ def test_isnot(params_from_base_test_setup, prop):
     # Get doc from n1ql through query
     bucket_name = "travel-sample"
     sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password')
-    n1ql_query = 'select meta().id, callsign from `{}` where {} is not null order by meta().id asc'.format(bucket_name, prop)
+    n1ql_query = 'select meta().id, {} from `{}` where {} is not null order by meta().id asc'.format(prop, bucket_name, prop)
     log_info(n1ql_query)
     query = N1QLQuery(n1ql_query)
     docs_from_n1ql = []

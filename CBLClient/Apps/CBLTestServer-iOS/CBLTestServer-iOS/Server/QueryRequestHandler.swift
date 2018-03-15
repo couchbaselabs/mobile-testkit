@@ -343,7 +343,6 @@ public class QueryRequestHandler {
             let whr_key3: String = args.get(name: "whr_key3")!
             let whr_val3: String = args.get(name: "whr_val3")!
             let join_key: String = args.get(name: "join_key")!
-            let limit: Int = args.get(name: "limit")!
             let main: String = "route"
             let secondary: String = "airline"
             
@@ -359,7 +358,6 @@ public class QueryRequestHandler {
                 .where(Expression.property(whr_key1).from(main).equalTo(Expression.string(whr_val1))
                     .and(Expression.property(whr_key2).from(secondary).equalTo(Expression.string(whr_val2)))
                     .and(Expression.property(whr_key3).from(main).equalTo(Expression.string(whr_val3))))
-                .limit(Expression.int(limit))
             var resultArray = [Any]()
             
             for row in try searchQuery.execute() {
@@ -443,13 +441,13 @@ public class QueryRequestHandler {
             
         case "query_greaterThan":
             let database: Database = args.get(name: "database")!
-            let val: String = args.get(name: "val")!
+            let val: Int = args.get(name: "val")!
             let prop: String = args.get(name: "prop")!
             
             let searchQuery = QueryBuilder
                 .select(SelectResult.expression(Meta.id))
                 .from(DataSource.database(database))
-                .where(Expression.property(prop).greaterThan(Expression.string(val)))
+                .where(Expression.property(prop).greaterThan(Expression.int(val)))
                 .orderBy(Ordering.expression(Meta.id).ascending())
             var resultArray = [Any]()
             
@@ -461,13 +459,13 @@ public class QueryRequestHandler {
             
         case "query_greaterThanOrEqualTo":
             let database: Database = args.get(name: "database")!
-            let val: String = args.get(name: "val")!
+            let val: Int = args.get(name: "val")!
             let prop: String = args.get(name: "prop")!
             
             let searchQuery = QueryBuilder
                 .select(SelectResult.expression(Meta.id))
                 .from(DataSource.database(database))
-                .where(Expression.property(prop).greaterThanOrEqualTo(Expression.string(val)))
+                .where(Expression.property(prop).greaterThanOrEqualTo(Expression.int(val)))
                 .orderBy(Ordering.expression(Meta.id).ascending())
             var resultArray = [Any]()
             
@@ -479,13 +477,13 @@ public class QueryRequestHandler {
             
         case "query_lessThan":
             let database: Database = args.get(name: "database")!
-            let val: String = args.get(name: "val")!
+            let val: Int = args.get(name: "val")!
             let prop: String = args.get(name: "prop")!
             
             let searchQuery = QueryBuilder
                 .select(SelectResult.expression(Meta.id))
                 .from(DataSource.database(database))
-                .where(Expression.property(prop).lessThan(Expression.string(val)))
+                .where(Expression.property(prop).lessThan(Expression.int(val)))
                 .orderBy(Ordering.expression(Meta.id).ascending())
             var resultArray = [Any]()
             
@@ -497,13 +495,13 @@ public class QueryRequestHandler {
             
         case "query_lessThanOrEqualTo":
             let database: Database = args.get(name: "database")!
-            let val: String = args.get(name: "val")!
+            let val: Int = args.get(name: "val")!
             let prop: String = args.get(name: "prop")!
             
             let searchQuery = QueryBuilder
                 .select(SelectResult.expression(Meta.id))
                 .from(DataSource.database(database))
-                .where(Expression.property(prop).lessThanOrEqualTo(Expression.string(val)))
+                .where(Expression.property(prop).lessThanOrEqualTo(Expression.int(val)))
                 .orderBy(Ordering.expression(Meta.id).ascending())
             var resultArray = [Any]()
             
@@ -515,14 +513,14 @@ public class QueryRequestHandler {
             
         case "query_between":
             let database: Database = args.get(name: "database")!
-            let val1: String = args.get(name: "val1")!
-            let val2: String = args.get(name: "val1")!
+            let val1: Int = args.get(name: "val1")!
+            let val2: Int = args.get(name: "val2")!
             let prop: String = args.get(name: "prop")!
             
             let searchQuery = QueryBuilder
                 .select(SelectResult.expression(Meta.id))
                 .from(DataSource.database(database))
-                .where(Expression.property(prop).between(Expression.string(val1), and: Expression.string(val2)))
+                .where(Expression.property(prop).between(Expression.int(val1), and: Expression.int(val2)))
                 .orderBy(Ordering.expression(Meta.id).ascending())
             var resultArray = [Any]()
             
@@ -570,14 +568,14 @@ public class QueryRequestHandler {
             
         case "query_not":
             let database: Database = args.get(name: "database")!
-            let val1: String = args.get(name: "val1")!
-            let val2: String = args.get(name: "val2")!
+            let val1: Int = args.get(name: "val1")!
+            let val2: Int = args.get(name: "val2")!
             let prop: String = args.get(name: "prop")!
             
             let searchQuery = QueryBuilder
                 .select(SelectResult.expression(Meta.id))
                 .from(DataSource.database(database))
-                .where(Expression.not(Expression.property(prop).between(Expression.string(val1), and: Expression.string(val2))))
+                .where(Expression.not(Expression.property(prop).between(Expression.int(val1), and: Expression.int(val2))))
                 .orderBy(Ordering.expression(Meta.id).ascending())
             var resultArray = [Any]()
             
