@@ -197,7 +197,8 @@ namespace Couchbase.Lite.Testing
                           [NotNull] HttpListenerResponse response)
         {
             var key = postBody["key"].ToString();
-            With<MutableDocument>(postBody, "document", doc => response.WriteBody(doc.GetArray(key)));
+            var doc = MemoryMap.Get<Document>(postBody["document"].ToString());
+            response.WriteBody(MemoryMap.Store(doc.GetArray(key)));
         }
 
         public static void DocumentSetArray([NotNull] NameValueCollection args,
@@ -205,8 +206,8 @@ namespace Couchbase.Lite.Testing
                                   [NotNull] HttpListenerResponse response)
         {
             var key = postBody["key"].ToString();
-            var val = (ArrayObject)postBody["value"];
-            With<MutableDocument>(postBody, "document", doc => response.WriteBody(doc.SetArray(key, val)));
+            var val = MemoryMap.Get<ArrayObject>(postBody["value"].ToString());
+            With<MutableDocument>(postBody, "document", doc => response.WriteBody(MemoryMap.Store(doc.SetArray(key, val))));
         }
 
         public static void DocumentGetDate([NotNull] NameValueCollection args,
@@ -230,7 +231,7 @@ namespace Couchbase.Lite.Testing
                                   [NotNull] IReadOnlyDictionary<string, object> postBody,
                                   [NotNull] HttpListenerResponse response)
         {
-            var val = (Dictionary<string, Object>)postBody["value"];
+            var val = (Dictionary<string, Object>)postBody["data"];
             MutableDocument doc = MemoryMap.Get<MutableDocument>(postBody["document"].ToString());
             response.WriteBody(MemoryMap.Store(doc.SetData(val)));
         }
@@ -240,7 +241,7 @@ namespace Couchbase.Lite.Testing
                           [NotNull] HttpListenerResponse response)
         {
             var key = postBody["key"].ToString();
-            With<MutableDocument>(postBody, "document", doc => response.WriteBody(doc.GetDictionary(key)));
+            With<Document>(postBody, "document", doc => response.WriteBody(MemoryMap.Store(doc.GetDictionary(key))));
         }
 
         public static void DocumentSetDictionary([NotNull] NameValueCollection args,
@@ -248,9 +249,9 @@ namespace Couchbase.Lite.Testing
                                   [NotNull] HttpListenerResponse response)
         {
             var key = postBody["key"].ToString();
-            With<MutableDictionaryObject>(postBody, "dictionary", dict =>
+            With<DictionaryObject>(postBody, "value", dict =>
             {
-                With<MutableDocument>(postBody, "document", doc => response.WriteBody(doc.SetDictionary(key, dict)));
+                With<MutableDocument>(postBody, "document", doc => response.WriteBody(MemoryMap.Store(doc.SetDictionary(key, dict))));
             });
         }
 
@@ -265,7 +266,7 @@ namespace Couchbase.Lite.Testing
                   [NotNull] IReadOnlyDictionary<string, object> postBody,
                   [NotNull] HttpListenerResponse response)
         {
-            With<MutableDocument>(postBody, "document", doc => response.WriteBody(doc.ToDictionary()));
+            With<Document>(postBody, "document", doc => response.WriteBody(doc.ToDictionary()));
         }
 
         public static void DocumentToMutable([NotNull] NameValueCollection args,

@@ -302,7 +302,6 @@ class TestDocument(object):
             "dict2": {"name": "n2"}
         }
 
-        print doc1b_todict
         assert sorted(expected_dict) == sorted(doc1b_todict)
 
     def test_set_immutable_array_to_doc(self):
@@ -314,7 +313,6 @@ class TestDocument(object):
         db_name = "test_db"
         db = self.db_obj.create(db_name)
         array1 = self.array_obj.create()
-        print array1
         self.array_obj.addString(array1, "a1")
         dict1 = self.dict_obj.create()
 
@@ -342,7 +340,6 @@ class TestDocument(object):
         doc1b_id = self.doc_obj.getId(doc1b)
         doc1b_doc = self.db_obj.getDocument(db, doc1b_id)
         doc1b_todict = self.doc_obj.toMap(doc1b_doc)
-        print doc1b_todict
 
         expected_dict = {
             "array1": ["a1", {"name": "n1"}],
