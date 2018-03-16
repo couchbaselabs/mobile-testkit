@@ -154,7 +154,7 @@ class TestServerAndroid(TestServerBase):
         subprocess.check_call(["adb", "-e", "logcat", "-c"])
 
         # Start redirecting adb output to the logfile
-        self.logfile = open(logfile_name, "w")
+        self.logfile = open(logfile_name, "w+")
         self.process = subprocess.Popen(args=["adb", "logcat"], stdout=self.logfile)
 
         activity_name = "com.couchbase.TestServerApp/com.couchbase.CouchbaseLiteServ.MainActivity"
@@ -184,7 +184,7 @@ class TestServerAndroid(TestServerBase):
         subprocess.check_call(["adb", "-d", "logcat", "-c"])
 
         # Start redirecting adb output to the logfile
-        self.logfile = open(logfile_name, "w")
+        self.logfile = open(logfile_name, "w+")
         self.process = subprocess.Popen(args=["adb", "logcat"], stdout=self.logfile)
 
         activity_name = "com.couchbase.TestServerApp/com.couchbase.CouchbaseLiteServ.MainActivity"
