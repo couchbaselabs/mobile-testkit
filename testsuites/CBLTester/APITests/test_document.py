@@ -235,10 +235,10 @@ class TestDocument(object):
                                                                   key))
 
     @pytest.mark.parametrize("key, value", [
-        (random_string(6), round(random.uniform(0, 1), 4)),
-        (random_string(6), round(random.uniform(1, 10), 4)),
-        (random_string(6), round(random.uniform(11, 100), 4)),
-        (random_string(6), round(random.uniform(101, 1000), 4))
+        (random_string(6), round(random.uniform(0, 1), 3)),
+        (random_string(6), round(random.uniform(1, 10), 3)),
+        (random_string(6), round(random.uniform(11, 100), 3)),
+        (random_string(6), round(random.uniform(101, 1000), 3))
     ])
     def test_get_set_float(self, key, value):
         '''
@@ -264,3 +264,87 @@ class TestDocument(object):
         self.doc_obj.setLong(doc, key, long_obj)
         result = self.doc_obj.getLong(doc, key)
         assert self.datatype.compareLong(long_obj, result)
+
+    def test_set_immutable_dict_to_doc(self):
+        '''
+        @summary: https://github.com/couchbase/couchbase-lite-ios/issues/2104
+        Set Immutable Dictionary to Document
+        and call toDictionary()
+        '''
+        db_name = "test_db"
+        db = self.db_obj.create(db_name)
+        dict1 = self.dict_obj.create()
+        self.dict_obj.setValue(dict1, "n1", "name")
+
+        doc1a = self.doc_obj.create(doc_id="doc1")
+        self.doc_obj.setDictionary(doc1a, "dict1", dict1)
+        self.db_obj.saveDocument(db, doc1a)
+
+        doc1a_id = self.doc_obj.getId(doc1a)
+        doc1 = self.db_obj.getDocument(db, doc1a_id)
+        doc1b = self.doc_obj.toMutable(doc1)
+        doc1_key = self.doc_obj.getDictionary(doc1, "dict1")
+        self.doc_obj.setDictionary(doc1b, "dict1b", doc1_key)
+
+        dict2 = self.dict_obj.create()
+        self.dict_obj.setValue(dict2, "n2", "name")
+        self.doc_obj.setDictionary(doc1b, "dict2", dict2)
+        self.db_obj.saveDocument(db, doc1b)
+
+        self.doc_obj.getDictionary(doc1b, "dict1b")
+        doc1b_id = self.doc_obj.getId(doc1b)
+        doc1b_doc = self.db_obj.getDocument(db, doc1b_id)
+        doc1b_todict = self.doc_obj.toMap(doc1b_doc)
+
+        expected_dict = {
+            "dict1": {"name": "n1"},
+            "dict1b": {"name": "n1"},
+            "dict2": {"name": "n2"}
+        }
+
+        assert sorted(expected_dict) == sorted(doc1b_todict)
+
+    def test_set_immutable_array_to_doc(self):
+        '''
+        @summary: https://github.com/couchbase/couchbase-lite-ios/issues/2104
+        Set Immutable Array to Document
+        and call toDictionary()
+        '''
+        db_name = "test_db"
+        db = self.db_obj.create(db_name)
+        array1 = self.array_obj.create()
+        self.array_obj.addString(array1, "a1")
+        dict1 = self.dict_obj.create()
+
+        self.dict_obj.setValue(dict1, "n1", "name")
+        self.array_obj.addDictionary(array1, dict1)
+        doc1a = self.doc_obj.create(doc_id="doc1")
+        self.doc_obj.setArray(doc1a, "array1", array1)
+        self.db_obj.saveDocument(db, doc1a)
+
+        doc1a_id = self.doc_obj.getId(doc1a)
+        doc1 = self.db_obj.getDocument(db, doc1a_id)
+        doc1b = self.doc_obj.toMutable(doc1)
+        doc1_array = self.doc_obj.getArray(doc1, "array1")
+        self.doc_obj.setArray(doc1b, "array1b", doc1_array)
+
+        array2 = self.array_obj.create()
+        self.array_obj.addString(array2, "a2")
+        dict2 = self.dict_obj.create()
+        self.dict_obj.setValue(dict2, "n2", "name")
+        self.array_obj.addDictionary(array2, dict2)
+        self.doc_obj.setArray(doc1b, "array2", array2)
+        self.db_obj.saveDocument(db, doc1b)
+
+        self.doc_obj.getDictionary(doc1b, "dict1b")
+        doc1b_id = self.doc_obj.getId(doc1b)
+        doc1b_doc = self.db_obj.getDocument(db, doc1b_id)
+        doc1b_todict = self.doc_obj.toMap(doc1b_doc)
+
+        expected_dict = {
+            "array1": ["a1", {"name": "n1"}],
+            "array1b": ["a1", {"name": "n1"}],
+            "array2": ["a2", {"name": "n2"}]
+        }
+
+        assert sorted(expected_dict) == sorted(doc1b_todict)

@@ -75,7 +75,7 @@ public class QueryRequestHandler {
             System.out.println("get doc in android "+ row);
             resultArray.add(row.toMap());
         }
-        return null;
+        return resultArray;
     }
 
     public List<Object> docsLimitOffset(Args args) throws CouchbaseLiteException {
@@ -296,8 +296,7 @@ public class QueryRequestHandler {
                     .on(Meta.id.from(secondary).equalTo(Expression.property(joinKey).from(main))))
                 .where(Expression.property(whrKey1).from(main).equalTo(whrVal1)
                     .and(Expression.property(whrKey2).from(secondary).equalTo(whrVal2))
-                    .and(Expression.property(whrKey3).from(main).equalTo(whrVal3)))
-                .limit(limit);
+                    .and(Expression.property(whrKey3).from(main).equalTo(whrVal3)));
         for (Result row : query.execute()){
             resultArray.add(row.toMap());
         }

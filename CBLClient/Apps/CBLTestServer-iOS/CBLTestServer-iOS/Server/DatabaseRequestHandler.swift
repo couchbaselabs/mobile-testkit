@@ -23,9 +23,13 @@ public class DatabaseRequestHandler {
     
         case "database_create":
             let name: String! = args.get(name: "name")
-            let dbConfig: DatabaseConfiguration! = args.get(name: "config")
+            let dbConfig: DatabaseConfiguration? = args.get(name: "config")
             do {
-             return try Database(name: name!, config: dbConfig)
+                if dbConfig != nil {
+                    return try Database(name: name!, config: dbConfig!)
+                } else {
+                    return try Database(name: name!)
+                }
             } catch {
                 print("Got error while creating DB \(error)")
                 return error.localizedDescription

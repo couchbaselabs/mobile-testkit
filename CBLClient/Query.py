@@ -216,7 +216,7 @@ class Query(object):
     def query_join(self, database, select_property1, select_property2,
                    select_property3, select_property4, select_property5,
                    whr_key1, whr_key2, whr_key3, whr_val1, whr_val2,
-                   whr_val3, join_key, limit):
+                   whr_val3, join_key):
         args = Args()
         args.setMemoryPointer("database", database)
         args.setString("select_property1", select_property1)
@@ -231,7 +231,6 @@ class Query(object):
         args.setString("whr_val1", whr_val1)
         args.setString("whr_val2", whr_val2)
         args.setString("whr_val3", whr_val3)
-        args.setInt("limit", limit)
 
         return self._client.invokeMethod("query_join", args)
 
