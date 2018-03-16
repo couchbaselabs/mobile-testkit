@@ -1093,8 +1093,8 @@ def CBL_offline_test(params_from_base_test_setup, sg_conf_name, num_of_docs):
 @pytest.mark.parametrize("num_docs, need_attachments, replication_after_backgroundApp", [
     (1000, True, False),
     (10000, False, False),
-    # (10000, False, True),
-    # (1000, True, True)
+    # (10000, False, True), # TODO : Not yet supported by Test server app
+    # (1000, True, True) # TODO: Not yet supported by Test server app
 ])
 def test_initial_pull_replication_background_apprun(params_from_base_test_setup, num_docs, need_attachments,
                                                     replication_after_backgroundApp):
@@ -1690,7 +1690,6 @@ def test_default_conflict_with_two_conflictsAndTomstone(params_from_base_test_se
     # 8. Verify cbl is resolved docs appropriately and deleted docs in sg is updated in cbl
     cbl_doc_ids = db.getDocIds(cbl_db)
     cbl_docs = db.getDocuments(cbl_db, cbl_doc_ids)
-    print "cbl docs are", cbl_docs
     for id in cbl_doc_ids:
         with pytest.raises(KeyError) as ke:
             cbl_docs[id]["updates"]
@@ -1812,7 +1811,6 @@ def test_default_conflict_with_three_conflicts(params_from_base_test_setup):
     session = cookie, session_id
     sg_docs = document.create_docs(doc_id_prefix='sg_docs', number=num_of_docs, channels=channels)
     sg_docs = sg_client.add_bulk_docs(url=sg_url, db=sg_db, docs=sg_docs, auth=session)
-    print "sg docs after adding is ", sg_docs
     # 2. Create two conflicts with 2-hex in sg.
     for i in xrange(len(sg_docs)):
         sg_client.add_conflict(url=sg_url, db=sg_db, doc_id=sg_docs[i]["id"], parent_revisions=sg_docs[i]["rev"],
@@ -1890,7 +1888,6 @@ def test_default_conflict_withConflicts_and_sgOffline(params_from_base_test_setu
     session = cookie, session_id
     sg_docs = document.create_docs(doc_id_prefix='sg_docs', number=num_of_docs, channels=channels)
     sg_docs = sg_client.add_bulk_docs(url=sg_url, db=sg_db, docs=sg_docs, auth=session)
-    print "sg docs after adding is ", sg_docs
     # 2. Create two conflicts with 2-hex in sg.
     for i in xrange(len(sg_docs)):
         sg_client.add_conflict(url=sg_url, db=sg_db, doc_id=sg_docs[i]["id"], parent_revisions=sg_docs[i]["rev"],
@@ -1945,11 +1942,9 @@ def test_default_conflict_withConflicts_and_sgOffline(params_from_base_test_setu
     replicator.wait_until_replicator_idle(repl)
     cbl_doc_ids = db.getDocIds(cbl_db)
     cbl_docs = db.getDocuments(cbl_db, cbl_doc_ids)
-    print "got docs"
     # Wait until cbl got updates property
     count = 0
     while count < 30:
-        print "started the count , ", count
         try:
             cbl_docs[cbl_doc_ids[0]]["updates"]
             break
@@ -2007,7 +2002,6 @@ def test_default_conflict_withConflicts_withChannels(params_from_base_test_setup
     session2 = cookie2, session_id2
 
     sg_docs = document.create_docs(doc_id_prefix='sg_docs', number=num_of_docs, channels=channels)
-    print "sg docs after creating is ", sg_docs
     sg_docs = sg_client.add_bulk_docs(url=sg_url, db=sg_db, docs=sg_docs, auth=session1)
 
     # Create two conflicts with 2-hex in sg by user1.
@@ -2136,9 +2130,9 @@ def test_CBL_push_pull_with_sg_down(params_from_base_test_setup):
 
 @pytest.mark.listener
 @pytest.mark.parametrize("topology_type, num_of_docs, attachments", [
-    # ('1cbl_1sg', 10, True),
+    ('1cbl_1sg', 10, True),
     ('3cbl_1sg', 10, True),
-    # ('1cbl_1sg', 10, False),
+    ('1cbl_1sg', 10, False),
     ('3cbl_1sg', 10, False)
 ])
 def test_replication_with_3Channels(params_from_base_test_setup, setup_customized_teardown_test, topology_type, num_of_docs, attachments):
@@ -2216,14 +2210,14 @@ def test_replication_with_3Channels(params_from_base_test_setup, setup_customize
     # 3. replication to CBL with continous true and push_pull on 3 CBL DBs assosciated with each sg channel.
     replicator = Replication(base_url)
     replicator_authenticator1 = authenticator.authentication(session_id1, cookie1, authentication_type="session")
-    repl1 = replicator.configure_and_replicate(source_db=cbl_db1, replicator_authenticator=replicator_authenticator1, target_url=sg_blip_url,
-                                               replication_type="pull", continuous=False, channels=channel1)
+    replicator.configure_and_replicate(source_db=cbl_db1, replicator_authenticator=replicator_authenticator1, target_url=sg_blip_url,
+                                       replication_type="pull", continuous=False, channels=channel1)
     replicator_authenticator2 = authenticator.authentication(session_id2, cookie2, authentication_type="session")
-    repl2 = replicator.configure_and_replicate(source_db=cbl_db2, replicator_authenticator=replicator_authenticator2, target_url=sg_blip_url,
-                                               replication_type="pull", continuous=False, channels=channel2)
+    replicator.configure_and_replicate(source_db=cbl_db2, replicator_authenticator=replicator_authenticator2, target_url=sg_blip_url,
+                                       replication_type="pull", continuous=False, channels=channel2)
     replicator_authenticator3 = authenticator.authentication(session_id3, cookie3, authentication_type="session")
-    repl3 = replicator.configure_and_replicate(source_db=cbl_db3, replicator_authenticator=replicator_authenticator3, target_url=sg_blip_url,
-                                               replication_type="pull", continuous=False, channels=channel3)
+    replicator.configure_and_replicate(source_db=cbl_db3, replicator_authenticator=replicator_authenticator3, target_url=sg_blip_url,
+                                       replication_type="pull", continuous=False, channels=channel3)
 
     # 4. verify in CBL , docs got replicated to each DB appropirately
     verify_sgDocIds_cblDocIds(sg_client, sg_url, sg_db, session1, cbl_db1, db)
@@ -2232,25 +2226,6 @@ def test_replication_with_3Channels(params_from_base_test_setup, setup_customize
     # replicator.stop(repl1)
     # replicator.stop(repl2)
     # replicator.stop(repl3)
-
-    # Create more docs on each channel for reorder channels in replication
-    sg_docs = document.create_docs(doc_id_prefix='sg_docs-11', number=2, channels=channel1)
-    sg_client.add_bulk_docs(url=sg_url, db=sg_db, docs=sg_docs, auth=session1)
-    sg_docs2 = document.create_docs(doc_id_prefix='sg_docs-21', number=2, channels=channel2)
-    sg_client.add_bulk_docs(url=sg_url, db=sg_db, docs=sg_docs2, auth=session2)
-    sg_docs3 = document.create_docs(doc_id_prefix='sg_docs-31', number=2, channels=channel3)
-    sg_client.add_bulk_docs(url=sg_url, db=sg_db, docs=sg_docs3, auth=session3)
-
-    # Reorder channels in replication with first one 
-    repl1 = replicator.configure_and_replicate(source_db=cbl_db1, replicator_authenticator=replicator_authenticator1, target_url=sg_blip_url,
-                                               replication_type="pull", continuous=False, channels=channel1)
-    replicator_authenticator2 = authenticator.authentication(session_id2, cookie2, authentication_type="session")
-    repl2 = replicator.configure_and_replicate(source_db=cbl_db2, replicator_authenticator=replicator_authenticator2, target_url=sg_blip_url,
-                                               replication_type="pull", continuous=False, channels=channel2)
-    replicator_authenticator3 = authenticator.authentication(session_id3, cookie3, authentication_type="session")
-    repl3 = replicator.configure_and_replicate(source_db=cbl_db3, replicator_authenticator=replicator_authenticator3, target_url=sg_blip_url,
-                                               replication_type="pull", continuous=False, channels=channel3)
-
 
 
 @pytest.mark.listener

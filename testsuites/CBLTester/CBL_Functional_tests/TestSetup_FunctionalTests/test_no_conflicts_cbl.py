@@ -92,7 +92,7 @@ def test_no_conflicts_enabled(params_from_base_test_setup):
     ('sync_gateway_revs_conflict_configurable', 10, 10),
     ('sync_gateway_revs_conflict_configurable', 100, 5)
 ])
-def test_no_conflicts_1enabled_with_revs_limit(params_from_base_test_setup, sg_conf_name, num_of_docs, revs_limit):
+def test_no_conflicts_enabled_with_revs_limit(params_from_base_test_setup, sg_conf_name, num_of_docs, revs_limit):
     """
         @summary:
         1. Enable allow_conflicts = false in SG config and specified revs_limit
@@ -1137,7 +1137,6 @@ def test_CBL_push_without_pull(params_from_base_test_setup, sg_conf_name, num_of
     replicator.wait_until_replicator_idle(repl)
     # changes = replicator.getChangesChangeListener(repl_change_listener)
     replicator.stop(repl)
-    # print "replicator changes", changes
     # 6 Get sg docs
     sg_conflict_resolved_docs = sg_client.get_all_docs(url=sg_url, db=sg_db, auth=session, include_docs=True)
 
