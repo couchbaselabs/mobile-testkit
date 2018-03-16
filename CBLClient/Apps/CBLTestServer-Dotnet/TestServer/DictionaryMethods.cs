@@ -220,5 +220,22 @@ namespace Couchbase.Lite.Testing
             var key = postBody["key"].ToString();
             With<MutableDictionaryObject>(postBody, "dictionary", d => response.WriteBody(d.Contains(key)));
         }
+
+        public static void DictionarySetValue([NotNull] NameValueCollection args,
+         [NotNull] IReadOnlyDictionary<string, object> postBody,
+         [NotNull] HttpListenerResponse response)
+        {
+            var key = postBody["key"].ToString();
+            var val = postBody["value"].ToString();
+            With<MutableDictionaryObject>(postBody, "dictionary", d => response.WriteBody(d.SetValue(key, val)));
+        }
+
+        public static void DictionaryGetValue([NotNull] NameValueCollection args,
+         [NotNull] IReadOnlyDictionary<string, object> postBody,
+         [NotNull] HttpListenerResponse response)
+        {
+            var key = postBody["key"].ToString();
+            With<MutableDictionaryObject>(postBody, "dictionary", d => response.WriteBody(d.GetValue(key)));
+        }
     }
 }
