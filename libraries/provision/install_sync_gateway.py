@@ -43,7 +43,7 @@ class SyncGatewayConfig:
         platform_extension = {
             "centos": "rpm",
             "ubuntu": "deb",
-            "windows": sg_installer_type
+            "windows": "msi"
         }
 
         if self._version_number == "1.1.0" or self._build_number == "1.1.1":
@@ -60,6 +60,9 @@ class SyncGatewayConfig:
 
             if sg_ce:
                 sg_type = "community"
+
+            if (sg_platform == "windows" or sa_platform == "windows") and sg_installer_type != "msi":
+                platform_extension["windows"] = "exe"
 
             sg_package_name = "couchbase-sync-gateway-{0}_{1}-{2}_x86_64.{3}".format(sg_type, self._version_number, self._build_number, platform_extension[sg_platform])
             accel_package_name = "couchbase-sg-accel-enterprise_{0}-{1}_x86_64.{2}".format(self._version_number, self._build_number, platform_extension[sa_platform])
