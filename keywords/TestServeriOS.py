@@ -70,11 +70,11 @@ class TestServeriOS(TestServerBase):
         """Installs / launches CBLTestServer on iOS device
         Warning: Only works with a single device at the moment
         """
-
+        self.app_name = "CBLTestServer-iOS-Device.app"
         # package_name = "CBLTestServer-iOS-Device.app"
         # app_dir = "CBLTestServer-iOS"
 
-        self.app_path = "{}/{}/{}".format(BINARY_DIR, self.app_dir, self.package_name)
+        self.app_path = "{}/{}/{}".format(BINARY_DIR, self.app_dir, self.app_name)
         log_info("Installing: {}".format(self.app_path))
 
         # install app / launch app to connected device
@@ -98,7 +98,7 @@ class TestServeriOS(TestServerBase):
         # self.device = "iPhone-7-Plus"
         # package_name = "CBLTestServer-iOS"
         # app_dir = "CBLTestServer-iOS"
-
+        self.app_name = "CBLTestServer-iOS.app"
         self.app_path = "{}/{}/{}".format(BINARY_DIR, self.app_dir, self.app_name)
         # TODO: Remove this once jenkins build for app is done
         # self.app_path = "/Users/sridevi.saragadam/workspace/CBL2-0/build-scripts/mobile-testkit/CBLClient/Apps/CBLTestServer-iOS/build/Build/Products/Release-iphonesimulator/CBLTestServer-iOS.app"
@@ -295,7 +295,7 @@ class TestServeriOS(TestServerBase):
             self.session.get("http://{}:{}/".format(self.host, self.port))
         except ConnectionError:
             # Expecting connection error if LiteServ is not running on the port
-            return False
+            raise LiteServError("Did not connected to Test server app")
 
         return True
 

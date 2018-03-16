@@ -33,12 +33,11 @@ cd CBLClient/Apps/CBLTestServer-Android
 
     echo ./gradlew clean && ./gradlew -Dversion=${MAVEN_UPLOAD_VERSION} assemble
     ./gradlew clean && ./gradlew -Dversion=${MAVEN_UPLOAD_VERSION} assemble
-fi
 
 TESTSERVER_APK=app/build/outputs/apk/debug/app-debug.apk
 if [ -e ${TESTSERVER_APK} ]
 then
-    cp -f ${TESTSERVER_APK} CBLTestServer-Android--${MAVEN_UPLOAD_VERSION}-debug.apk
+    cp -f ${TESTSERVER_APK} CBLTestServer-Android-${MAVEN_UPLOAD_VERSION}-debug.apk
 else
     exit 1
 fi

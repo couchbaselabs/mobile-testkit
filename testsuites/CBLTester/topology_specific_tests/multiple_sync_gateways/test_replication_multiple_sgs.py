@@ -54,7 +54,7 @@ def test_multiple_sgs_with_differrent_revs_limit(params_from_base_test_setup, se
     # cluster_config = "{}/multiple_sync_gateways_{}".format(CLUSTER_CONFIGS_DIR, sg_mode)
     c = cluster.Cluster(cluster_config)
     sg_config = sync_gateway_config_path_for_mode(sg_conf_name, sg_mode)
-    # c.reset(sg_config_path=sg_config)
+    c.reset(sg_config_path=sg_config)
     sg1 = c.sync_gateways[0]
     sg2 = c.sync_gateways[1]
 

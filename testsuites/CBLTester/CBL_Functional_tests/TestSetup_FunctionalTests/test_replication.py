@@ -1945,6 +1945,18 @@ def test_default_conflict_withConflicts_and_sgOffline(params_from_base_test_setu
     replicator.wait_until_replicator_idle(repl)
     cbl_doc_ids = db.getDocIds(cbl_db)
     cbl_docs = db.getDocuments(cbl_db, cbl_doc_ids)
+    print "got docs"
+    # Wait until cbl got updates property
+    count = 0
+    while count < 30:
+        print "started the count , ", count
+        try:
+            cbl_docs[cbl_doc_ids[0]]["updates"]
+            break
+        except Exception:
+            time.sleep(1)
+            count += 1
+            cbl_docs = db.getDocuments(cbl_db, cbl_doc_ids)
     for id in cbl_doc_ids:
         assert cbl_docs[id]["updates"] == 1, "sg updated docs did not get replicated to cbl"
 
@@ -2124,9 +2136,9 @@ def test_CBL_push_pull_with_sg_down(params_from_base_test_setup):
 
 @pytest.mark.listener
 @pytest.mark.parametrize("topology_type, num_of_docs, attachments", [
-    ('1cbl_1sg', 10, True),
+    # ('1cbl_1sg', 10, True),
     ('3cbl_1sg', 10, True),
-    ('1cbl_1sg', 10, False),
+    # ('1cbl_1sg', 10, False),
     ('3cbl_1sg', 10, False)
 ])
 def test_replication_with_3Channels(params_from_base_test_setup, setup_customized_teardown_test, topology_type, num_of_docs, attachments):
@@ -2217,9 +2229,28 @@ def test_replication_with_3Channels(params_from_base_test_setup, setup_customize
     verify_sgDocIds_cblDocIds(sg_client, sg_url, sg_db, session1, cbl_db1, db)
     verify_sgDocIds_cblDocIds(sg_client, sg_url, sg_db, session2, cbl_db2, db)
     verify_sgDocIds_cblDocIds(sg_client, sg_url, sg_db, session3, cbl_db3, db)
-    replicator.stop(repl1)
-    replicator.stop(repl2)
-    replicator.stop(repl3)
+    # replicator.stop(repl1)
+    # replicator.stop(repl2)
+    # replicator.stop(repl3)
+
+    # Create more docs on each channel for reorder channels in replication
+    sg_docs = document.create_docs(doc_id_prefix='sg_docs-11', number=2, channels=channel1)
+    sg_client.add_bulk_docs(url=sg_url, db=sg_db, docs=sg_docs, auth=session1)
+    sg_docs2 = document.create_docs(doc_id_prefix='sg_docs-21', number=2, channels=channel2)
+    sg_client.add_bulk_docs(url=sg_url, db=sg_db, docs=sg_docs2, auth=session2)
+    sg_docs3 = document.create_docs(doc_id_prefix='sg_docs-31', number=2, channels=channel3)
+    sg_client.add_bulk_docs(url=sg_url, db=sg_db, docs=sg_docs3, auth=session3)
+
+    # Reorder channels in replication with first one 
+    repl1 = replicator.configure_and_replicate(source_db=cbl_db1, replicator_authenticator=replicator_authenticator1, target_url=sg_blip_url,
+                                               replication_type="pull", continuous=False, channels=channel1)
+    replicator_authenticator2 = authenticator.authentication(session_id2, cookie2, authentication_type="session")
+    repl2 = replicator.configure_and_replicate(source_db=cbl_db2, replicator_authenticator=replicator_authenticator2, target_url=sg_blip_url,
+                                               replication_type="pull", continuous=False, channels=channel2)
+    replicator_authenticator3 = authenticator.authentication(session_id3, cookie3, authentication_type="session")
+    repl3 = replicator.configure_and_replicate(source_db=cbl_db3, replicator_authenticator=replicator_authenticator3, target_url=sg_blip_url,
+                                               replication_type="pull", continuous=False, channels=channel3)
+
 
 
 @pytest.mark.listener
@@ -2397,7 +2428,7 @@ def test_replication_withChannels1_withMultipleSgDBs(params_from_base_test_setup
 @pytest.mark.listener
 @pytest.mark.parametrize("topology_type", [
     ('3cbl_3sg'),
-    # ('1cbl_3sg')
+    ('1cbl_3sg')
 ])
 def test_replication_withMultipleBuckets(params_from_base_test_setup, setup_customized_teardown_test, topology_type):
     """
@@ -2637,7 +2668,7 @@ def test_replication_multipleChannels_withFilteredDocIds(params_from_base_test_s
         1. Create  users in SG with 2 user channels
         2. Create docs in sg in both channels
         3. replication to CBL with continous true/false and push_pull on 1 CBL DB
-            with document filters.
+           with document filters.
         4. verify in CBL , filtered docs from 2 channels got replicated
     """
     sg_db = "db"
@@ -2723,7 +2754,7 @@ def verify_sgDocIds_cblDocIds(sg_client, url, sg_db, session, cbl_db, db):
     while count < 30 and len(sg_doc_ids) != len(cbl_doc_ids):
         time.sleep(1)
         cbl_doc_ids = db.getDocIds(cbl_db)
-        print "count while waiting for docs to replicaiton ", count
+        count += 1
 
     for id in sg_doc_ids:
         assert id in cbl_doc_ids, "sg doc is not replicated to cbl "
@@ -2733,4 +2764,4 @@ def verify_cblDocs_in_sgDocs(sg_client, url, sg_db, session, cbl_db, db):
     sg_docs = sg_client.get_all_docs(url=url, db=sg_db, auth=session, include_docs=True)
     sg_docs = sg_docs["rows"]
     for doc in sg_docs:
-        assert doc["doc"]["updates-cbl"] == 1, "updated doc in cbl did not replicated to sg"
+        assert doc["doc"]["updates-cbl"] == 1 or doc["doc"]["updates-cbl"] == 3, "updated doc in cbl did not replicated to sg"

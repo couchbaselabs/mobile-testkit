@@ -127,7 +127,7 @@ def params_from_base_suite_setup(request):
     testserver.download()
 
     # Install TestServer app
-    if device_enabled and liteserv_platform == "ios":
+    if device_enabled:
         testserver.install_device()
     else:
         testserver.install()
@@ -350,7 +350,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     # Start LiteServ and delete any databases
 
     log_info("Starting TestServer...")
-    if device_enabled and liteserv_platform == "ios":
+    if device_enabled:
         testserver.start_device("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__, test_name, datetime.datetime.now()))
     else:
         testserver.start("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__, test_name, datetime.datetime.now()))
