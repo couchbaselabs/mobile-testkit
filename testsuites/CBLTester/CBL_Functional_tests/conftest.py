@@ -141,6 +141,8 @@ def params_from_base_suite_setup(request):
     else:
         testserver.install()
 
+    time.sleep(3)
+
     base_url = "http://{}:{}".format(liteserv_host, liteserv_port)
     cluster_config = "{}/base_{}".format(CLUSTER_CONFIGS_DIR, mode)
     sg_config = sync_gateway_config_path_for_mode("sync_gateway_travel_sample", mode)
@@ -382,11 +384,11 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     # Start LiteServ and delete any databases
 
     log_info("Starting TestServer...")
-
+    test_name_cp = test_name.replace("/", "-")
     if device_enabled:
-        testserver.start_device("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__, test_name, datetime.datetime.now()))
+        testserver.start_device("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__, test_name_cp, datetime.datetime.now()))
     else:
-        testserver.start("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__, test_name, datetime.datetime.now()))
+        testserver.start("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__, test_name_cp, datetime.datetime.now()))
     time.sleep(5)
 
     cluster_helper = ClusterKeywords()
@@ -449,7 +451,6 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         # Delete CBL database
         log_info("Deleting the database {} at test teardown".format(create_db_per_test))
         db.deleteDB(source_db)
-        time.sleep(1)
 
     if flush_memory_per_test:
         log_info("Flushing server memory")
