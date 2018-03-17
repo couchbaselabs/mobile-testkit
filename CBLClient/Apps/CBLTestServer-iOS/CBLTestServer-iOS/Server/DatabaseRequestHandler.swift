@@ -56,7 +56,6 @@ public class DatabaseRequestHandler {
         case "database_deleteBulkDocs":
             let database: Database = args.get(name:"database")!
             let doc_ids: Array<String> = args.get(name: "doc_ids")!
-
             try database.inBatch {
                 for id in doc_ids {
                     let document: Document = database.document(withID: id)!
