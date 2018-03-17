@@ -1122,9 +1122,8 @@ def test_initial_pull_replication_background_apprun(params_from_base_test_setup,
     c.reset(sg_config_path=sg_config)
 
     # No command to push the app to background on device, so avoid test to run on ios device
-    if((liteserv_platform.lower() != "ios" and liteserv_platform.lower() != "android") or
-       (liteserv_platform.lower() == "ios" and device_enabled)):
-        pytest.skip('This test only valid for mobile')
+    if((liteserv_platform.lower() != "ios") or (liteserv_platform.lower() == "ios" and device_enabled)):
+        pytest.skip('This test only valid for ios')
 
     client = MobileRestClient()
     client.create_user(sg_admin_url, sg_db, "testuser", password="password", channels=["ABC", "NBC"])
@@ -1217,9 +1216,8 @@ def test_push_replication_with_backgroundApp(params_from_base_test_setup, num_do
     c.reset(sg_config_path=sg_config)
 
     # No command to push the app to background on device, so avoid test to run on ios device
-    if((liteserv_platform.lower() != "ios" and liteserv_platform.lower() != "android") or
-       (liteserv_platform.lower() == "ios" and device_enabled)):
-        pytest.skip('This test only valid for mobile and cannot run on iOS device')
+    if((liteserv_platform.lower() != "ios") or (liteserv_platform.lower() == "ios" and device_enabled)):
+        pytest.skip('This test only can only run on ios simulator')
 
     client = MobileRestClient()
     client.create_user(sg_admin_url, sg_db, "testuser", password="password", channels=channels)
