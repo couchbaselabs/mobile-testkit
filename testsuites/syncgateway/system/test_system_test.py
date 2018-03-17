@@ -15,6 +15,9 @@ from keywords.utils import log_info
 from libraries.testkit.cluster import Cluster
 
 # Set the default value to 404 - view not created yet
+# The view names in SG 1.5.1 and below is sync_housekeeping/sync_gateway
+# The view names in SG 2.0.0 is sync_housekeeping_2.0/sync_gateway_2.0
+# TODO Need a way to intelligently change the view names
 SG_VIEWS = {
     'sync_housekeeping_2.0': [
         "all_bits",
