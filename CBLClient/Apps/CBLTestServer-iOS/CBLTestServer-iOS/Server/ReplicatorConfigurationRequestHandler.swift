@@ -114,63 +114,6 @@ public class ReplicatorConfigurationRequestHandler {
             }
             return config
         
-        // TODO: Remove
-        /*
-        case "replicatorConfiguration_configureLocalDb":
-            let source_db: Database? = args.get(name: "source_db")
-            let targetDatabase: Database? = args.get(name: "target_db")
-            let replication_type: String? = args.get(name: "replication_type")!
-            let continuous: Bool? = args.get(name: "continuous")
-            let channels: [String]? = args.get(name: "channels")
-            let documentIDs: [String]? = args.get(name: "documentIDs")
-            let authenticator: Authenticator? = args.get(name: "authenticator")
-            let conflictResolver: ConflictResolver? = args.get(name: "conflictResolver")
-            let headers: Dictionary<String, String>? = args.get(name: "headers")!
-            
-            var replicatorType = ReplicatorType.pushAndPull
-            
-            if let type = replication_type {
-                if type == "push" {
-                    replicatorType = .push
-                } else if type == "pull" {
-                    replicatorType = .pull
-                } else {
-                    replicatorType = .pushAndPull
-                }
-            }
-            
-            if (source_db != nil && targetDatabase != nil) {
-                let target = DatabaseEndpoint(withDatabase: targetDatabase!)
-                let builder = ReplicatorConfiguration.Builder(withDatabase: source_db!, target: target)
-                
-                builder.setReplicatorType(replicatorType)
-                if continuous != nil {
-                    builder.setContinuous(continuous!)
-                } else {
-                    builder.setContinuous(false)
-                }
-                if authenticator != nil {
-                    builder.setAuthenticator(authenticator)
-                }
-                if headers != nil {
-                    builder.setHeaders(headers)
-                }
-                if channels != nil {
-                    builder.setChannels(channels)
-                }
-                if conflictResolver != nil {
-                    builder.setConflictResolver(conflictResolver!)
-                }
-                if documentIDs != nil {
-                    builder.setDocumentIDs(documentIDs)
-                }
-                
-                return builder.build()
-            }
-            else{
-                throw RequestHandlerError.InvalidArgument("No source db provided or target DB provided")
-            }
-        */
         case "replicatorConfiguration_getAuthenticator":
             let replicatorConfiguration: ReplicatorConfiguration = args.get(name: "configuration")!
             return replicatorConfiguration.authenticator
