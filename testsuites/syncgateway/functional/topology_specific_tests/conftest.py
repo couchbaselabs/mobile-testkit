@@ -49,3 +49,13 @@ def pytest_addoption(parser):
     parser.addoption("--no-conflicts",
                      action="store_true",
                      help="If set, allow_conflicts is set to false in sync-gateway config")
+
+    parser.addoption("--sg-installer-type",
+                     action="store",
+                     help="Sync Gateway Installer type (ex. exe or msi)",
+                     default="msi")
+
+    parser.addoption("--sa-installer-type",
+                     action="store",
+                     help="Sync Gateway Accelerator Installer type (ex. exe or msi)",
+                     default="msi")
