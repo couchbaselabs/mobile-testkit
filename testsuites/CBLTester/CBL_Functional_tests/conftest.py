@@ -133,8 +133,7 @@ def params_from_base_suite_setup(request):
 
     log_info("Downloading TestServer ...")
     # Download TestServer app
-    if liteserv_platform.lower() == "android":
-        testserver.download()
+    testserver.download()
 
     # Install TestServer app
     if device_enabled:

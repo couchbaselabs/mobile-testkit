@@ -26,12 +26,13 @@ class TestServeriOS(TestServerBase):
         self.device_id = None
         self.device = "iPhone-8-Plus"
         if community_enabled:
-            self.app_dir = "CBLTestServer-iOS-community"
-            self.package_name = "CBLTestServer-iOS-community.zip"
+            self.app_dir = "CBLTestServer-iOS-community-{}".format(version_build)
+            self.package_name = "CBLTestServer-iOS-community-{}.zip".format(version_build)
+            self.app = "CBLTestServer-iOS"
         else:
-            self.app_dir = "CBLTestServer-iOS-enterprise"
-            self.package_name = "CBLTestServer-iOS-enterprise.zip"
-        self.app_name = "CBLTestServer-iOS.app"
+            self.app_dir = "CBLTestServer-iOS-enterprise-{}".format(version_build)
+            self.package_name = "CBLTestServer-iOS-enterprise-{}.zip".format(version_build)
+            self.app = "CBLTestServer-iOS-EE"
 
     def download(self, version_build=None):
         """
@@ -42,7 +43,7 @@ class TestServeriOS(TestServerBase):
         if version_build is not None:
             self.version_build = version_build
         version, build = version_and_build(self.version_build)
-        app_name = "CBLTestServer-iOS.app"
+        app_name = "{}-{}.app".format(self.app, version_build)
 
         expected_binary_path = "{}/{}/{}".format(BINARY_DIR, self.app_dir, app_name)
         if os.path.isfile(expected_binary_path):
@@ -70,7 +71,7 @@ class TestServeriOS(TestServerBase):
         """Installs / launches CBLTestServer on iOS device
         Warning: Only works with a single device at the moment
         """
-        self.app_name = "CBLTestServer-iOS-Device.app"
+        self.app_name = "{}-{}-Device.app".format(self.app, self.version_build)
         # package_name = "CBLTestServer-iOS-Device.app"
         # app_dir = "CBLTestServer-iOS"
 
@@ -98,7 +99,7 @@ class TestServeriOS(TestServerBase):
         # self.device = "iPhone-7-Plus"
         # package_name = "CBLTestServer-iOS"
         # app_dir = "CBLTestServer-iOS"
-        self.app_name = "CBLTestServer-iOS.app"
+        self.app_name = "{}-{}.app".format(self.app, self.version_build)
         self.app_path = "{}/{}/{}".format(BINARY_DIR, self.app_dir, self.app_name)
         # TODO: Remove this once jenkins build for app is done
         # self.app_path = "/Users/sridevi.saragadam/workspace/CBL2-0/build-scripts/mobile-testkit/CBLClient/Apps/CBLTestServer-iOS/build/Build/Products/Release-iphonesimulator/CBLTestServer-iOS.app"
@@ -242,7 +243,7 @@ class TestServeriOS(TestServerBase):
         package_name = "LiteServ-iOS-Device.app"
         # app_dir = "LiteServ-iOS"
 
-        self.app_path = "{}/{}/{}".format(BINARY_DIR, self.app_dir, package_name)
+        self.app_path = "{}/{}/{}".format(BINARY_DIR, self.app_dir, self.app_name)
 
         output = subprocess.check_output([
             "ios-deploy", "--justlaunch", "--bundle", self.app_path
