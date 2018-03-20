@@ -88,7 +88,7 @@ def test_replication_configuration_valid_values(params_from_base_test_setup, num
     replicator = Replication(base_url)
     sg_client.create_user(sg_admin_url, sg_db, username, password, channels=channels_sg)
     session, replicator_authenticator, repl = replicator.create_session_configure_replicate(
-        base_url, sg_admin_url, sg_db, username, password, channels_sg, sg_client, cbl_db, sg_blip_url, continuous=continuous)
+        base_url, sg_admin_url, sg_db, username, password, channels_sg, sg_client, cbl_db, sg_blip_url, continuous=continuous, replication_type="push_pull")
 
     sg_docs = sg_client.get_all_docs(url=sg_url, db=sg_db, auth=session)
     sg_client.update_docs(url=sg_url, db=sg_db, docs=sg_docs["rows"], number_updates=number_of_updates, auth=session)
@@ -105,18 +105,23 @@ def test_replication_configuration_valid_values(params_from_base_test_setup, num
     cbl_doc_count = db.getCount(cbl_db)
     assert len(sg_docs) == cbl_doc_count, "Expected number of docs does not exist in sync-gateway after replication"
 
-    # Check that all docs of CBL got replicated to CBL
-#     for doc in sg_docs["rows"]:
-#         assert db.contains(cbl_db, str(doc["id"]))
     time.sleep(2)
     cbl_doc_ids = db.getDocIds(cbl_db)
     cbl_db_docs = db.getDocuments(cbl_db, cbl_doc_ids)
+    count = 0
     for doc in cbl_doc_ids:
         if continuous:
+            while count < 30:
+                time.sleep(1)
+                print "sleep 1 sec...... for doc ", doc
+                cbl_db_docs = db.getDocuments(cbl_db, cbl_doc_ids)
+                # print "cbl docs after waitin  1 sec  ", cbl_db_docs
+                if cbl_db_docs[doc]["updates"] == number_of_updates:
+                    break
+                count += 1
             assert cbl_db_docs[doc]["updates"] == number_of_updates, "updates did not get updated"
         else:
             assert cbl_db_docs[doc]["updates"] == 0, "sync-gateway updates got pushed to CBL for one shot replication"
-
 
 @pytest.mark.sanity
 @pytest.mark.listener
@@ -450,7 +455,6 @@ def test_replication_configuration_with_filtered_doc_ids(params_from_base_test_s
     log_info("Waiting for replicator to go idle")
     replicator.wait_until_replicator_idle(repl)
     replicator.stop(repl)
-
     # Verify only filtered sg ids are replicated to cbl
     cbl_doc_ids = db.getDocIds(cbl_db)
     list_of_non_sg_filtered_ids = set(sg_new_added_ids) - set(list_of_sg_filtered_ids)
@@ -2518,9 +2522,9 @@ def test_replication_withMultipleBuckets(params_from_base_test_setup, setup_cust
     replicator.configure_and_replicate(source_db=cbl_db3, replicator_authenticator=replicator_authenticator3, target_url=sg_blip_url3,
                                        replication_type="push", continuous=False, channels=channel3)
 
-    verify_cblDocs_in_sgDocs(sg_client, sg_url, sg_db1, session1, cbl_db1, db)
-    verify_cblDocs_in_sgDocs(sg_client, sg_url, sg_db2, session2, cbl_db2, db)
-    verify_cblDocs_in_sgDocs(sg_client, sg_url, sg_db3, session3, cbl_db3, db)
+    verify_cblDocs_in_sgDocs(sg_client, sg_url, sg_db1, session1, cbl_db1, db, topology_type="1cbl")
+    verify_cblDocs_in_sgDocs(sg_client, sg_url, sg_db2, session2, cbl_db2, db, topology_type="1cbl")
+    verify_cblDocs_in_sgDocs(sg_client, sg_url, sg_db3, session3, cbl_db3, db, topology_type="1cbl")
 
 
 @pytest.mark.listener
@@ -2733,8 +2737,12 @@ def verify_sgDocIds_cblDocIds(sg_client, url, sg_db, session, cbl_db, db):
         assert id in cbl_doc_ids, "sg doc is not replicated to cbl "
 
 
-def verify_cblDocs_in_sgDocs(sg_client, url, sg_db, session, cbl_db, db):
+def verify_cblDocs_in_sgDocs(sg_client, url, sg_db, session, cbl_db, db, topology_type="1cbl"):
     sg_docs = sg_client.get_all_docs(url=url, db=sg_db, auth=session, include_docs=True)
     sg_docs = sg_docs["rows"]
+    if topology_type == "1cbl":
+        num_cbl_updates = 3
+    else:
+        num_cbl_updates = 1
     for doc in sg_docs:
-        assert doc["doc"]["updates-cbl"] == 1 or doc["doc"]["updates-cbl"] == 3, "updated doc in cbl did not replicated to sg"
+        assert doc["doc"]["updates-cbl"] == num_cbl_updates, "updated doc in cbl did not replicated to sg"
