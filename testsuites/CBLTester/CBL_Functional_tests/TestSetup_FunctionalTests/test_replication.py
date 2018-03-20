@@ -123,6 +123,7 @@ def test_replication_configuration_valid_values(params_from_base_test_setup, num
         else:
             assert cbl_db_docs[doc]["updates"] == 0, "sync-gateway updates got pushed to CBL for one shot replication"
 
+
 @pytest.mark.sanity
 @pytest.mark.listener
 @pytest.mark.replication
@@ -145,6 +146,7 @@ def test_replication_configuration_with_pull_replication(params_from_base_test_s
     sg_url = params_from_base_test_setup["sg_url"]
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
     sg_blip_url = params_from_base_test_setup["target_url"]
+    sg_mode = params_from_base_test_setup["mode"]
     base_url = params_from_base_test_setup["base_url"]
     cluster_config = params_from_base_test_setup["cluster_config"]
     sg_config = params_from_base_test_setup["sg_config"]
@@ -168,7 +170,13 @@ def test_replication_configuration_with_pull_replication(params_from_base_test_s
                                                                      cbl_db=cbl_db, sg_url=sg_url, sg_admin_url=sg_admin_url, sg_blip_url=sg_blip_url,
                                                                      replication_type="pull", channels=channels, replicator_authenticator_type=authenticator_type)
     sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db)
-
+    if sg_mode == "di":
+        cookie, session = sg_client.create_session(sg_admin_url, sg_db, "autotest")
+        authenticator = Authenticator(base_url)
+        replicator_authenticator = authenticator.authentication(session, cookie, authentication_type="session")
+        replicator = Replication(base_url)
+        replicator.configure_and_replicate(cbl_db, replicator_authenticator, target_url=sg_blip_url, continuous=False,
+                                           channels=channels)
     cbl_doc_count = db.getCount(cbl_db)
     cbl_doc_ids = db.getDocIds(cbl_db)
 
@@ -454,7 +462,6 @@ def test_replication_configuration_with_filtered_doc_ids(params_from_base_test_s
     replicator.start(repl)
     log_info("Waiting for replicator to go idle")
     replicator.wait_until_replicator_idle(repl)
-    replicator.stop(repl)
     # Verify only filtered sg ids are replicated to cbl
     cbl_doc_ids = db.getDocIds(cbl_db)
     list_of_non_sg_filtered_ids = set(sg_new_added_ids) - set(list_of_sg_filtered_ids)
@@ -1335,6 +1342,7 @@ def test_default_conflict_scenario_delete_wins(params_from_base_test_setup, dele
     sg_config = params_from_base_test_setup["sg_config"]
     cluster_config = params_from_base_test_setup["cluster_config"]
     sg_blip_url = params_from_base_test_setup["target_url"]
+    sg_mode = params_from_base_test_setup["mode"]
     base_url = params_from_base_test_setup["base_url"]
     db = params_from_base_test_setup["db"]
     cbl_db = params_from_base_test_setup["source_db"]
@@ -1390,10 +1398,12 @@ def test_default_conflict_scenario_delete_wins(params_from_base_test_setup, dele
     cbl_doc_ids = db.getDocIds(cbl_db)
     cbl_docs = db.getDocuments(cbl_db, cbl_doc_ids)
     assert len(cbl_docs) == 0, "did not delete docs after delete operation"
-    repl_config = replicator.configure(cbl_db, sg_blip_url, channels=channels, replicator_authenticator=replicator_authenticator)
-    repl = replicator.create(repl_config)
-    replicator.start(repl)
-    replicator.wait_until_replicator_idle(repl)
+    replicator.configure_and_replicate(source_db=cbl_db, replicator_authenticator=replicator_authenticator, target_url=sg_blip_url, continuous=False,
+                                       channels=channels)
+    # Di mode has delay for one shot replication, so need another replication only for DI mode
+    if sg_mode == "di":
+        replicator.configure_and_replicate(source_db=cbl_db, replicator_authenticator=replicator_authenticator, target_url=sg_blip_url, continuous=False,
+                                           channels=channels)
 
     cbl_doc_ids = db.getDocIds(cbl_db)
     cbl_docs = db.getDocuments(cbl_db, cbl_doc_ids)
@@ -1448,6 +1458,7 @@ def test_default_conflict_scenario_highRevGeneration_wins(params_from_base_test_
     sg_url = params_from_base_test_setup["sg_url"]
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
     sg_config = params_from_base_test_setup["sg_config"]
+    sg_mode = params_from_base_test_setup["mode"]
     cluster_config = params_from_base_test_setup["cluster_config"]
     sg_blip_url = params_from_base_test_setup["target_url"]
     base_url = params_from_base_test_setup["base_url"]
@@ -1505,10 +1516,12 @@ def test_default_conflict_scenario_highRevGeneration_wins(params_from_base_test_
             assert sg_docs_values[i]["updates"] == 2, "sg with high rev id is not updated"
 
     sg_client.update_docs(url=sg_url, db=sg_db, docs=sg_docs, number_updates=3, auth=session)
-    repl_config = replicator.configure(cbl_db, sg_blip_url, channels=channels, replicator_authenticator=replicator_authenticator)
-    repl = replicator.create(repl_config)
-    replicator.start(repl)
-    replicator.wait_until_replicator_idle(repl)
+    replicator.configure_and_replicate(source_db=cbl_db, replicator_authenticator=replicator_authenticator, target_url=sg_blip_url, continuous=False,
+                                       channels=channels)
+    # Di mode has delay for one shot replication, so need another replication only for DI mode
+    if sg_mode == "di":
+        replicator.configure_and_replicate(source_db=cbl_db, replicator_authenticator=replicator_authenticator, target_url=sg_blip_url, continuous=False,
+                                           channels=channels)
     cbl_doc_ids = db.getDocIds(cbl_db)
     cbl_docs = db.getDocuments(cbl_db, cbl_doc_ids)
     sg_docs = sg_client.get_all_docs(url=sg_url, db=sg_db, auth=session, include_docs=True)
@@ -1549,6 +1562,7 @@ def test_default_conflict_scenario_highRevID_wins(params_from_base_test_setup, h
     sg_url = params_from_base_test_setup["sg_url"]
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
     sg_config = params_from_base_test_setup["sg_config"]
+    sg_mode = params_from_base_test_setup["mode"]
     cluster_config = params_from_base_test_setup["cluster_config"]
     sg_blip_url = params_from_base_test_setup["target_url"]
     base_url = params_from_base_test_setup["base_url"]
@@ -1589,6 +1603,10 @@ def test_default_conflict_scenario_highRevID_wins(params_from_base_test_setup, h
             sg_client.add_conflict(url=sg_url, db=sg_db, doc_id=sg_docs[i]["id"], parent_revisions=sg_docs[i]["value"]["rev"], new_revision=new_revision, auth=session)
         replicator.configure_and_replicate(source_db=cbl_db, replicator_authenticator=replicator_authenticator, target_url=sg_blip_url, replication_type="push_pull", continuous=False,
                                            channels=channels, err_check=True)
+        # Di mode has delay for one shot replication, so need another replication only for DI mode
+        if sg_mode == "di":
+            replicator.configure_and_replicate(source_db=cbl_db, replicator_authenticator=replicator_authenticator, target_url=sg_blip_url, replication_type="push_pull", continuous=False,
+                                               channels=channels, err_check=True)
 
     cbl_doc_ids = db.getDocIds(cbl_db)
     cbl_docs = db.getDocuments(cbl_db, cbl_doc_ids)
@@ -2245,6 +2263,7 @@ def test_replication_with_privatePublicChannels(params_from_base_test_setup, set
     sg_db = "db"
     sg_url = params_from_base_test_setup["sg_url"]
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
+    sg_mode = params_from_base_test_setup["mode"]
     cluster_config = params_from_base_test_setup["cluster_config"]
     sg_blip_url = params_from_base_test_setup["target_url"]
     base_url = params_from_base_test_setup["base_url"]
@@ -2288,6 +2307,9 @@ def test_replication_with_privatePublicChannels(params_from_base_test_setup, set
     replicator.configure_and_replicate(source_db=cbl_db1, replicator_authenticator=replicator_authenticator1, target_url=sg_blip_url,
                                        replication_type="pull", continuous=False, channels=publicChannel)
 
+    if sg_mode == "di":
+        replicator.configure_and_replicate(source_db=cbl_db1, replicator_authenticator=replicator_authenticator1, target_url=sg_blip_url,
+                                           replication_type="pull", continuous=False, channels=publicChannel)
     # 4. verify in CBL , only docs from public channel is replicated
     cbl_doc_ids = db.getDocIds(cbl_db1)
     for doc in sg_docs2:
