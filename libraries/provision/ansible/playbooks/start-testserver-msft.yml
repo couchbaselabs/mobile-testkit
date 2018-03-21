@@ -10,5 +10,11 @@
 
     - debug: msg="Starting the Testserver "
     - name: Start TestServer
-      win_command: C:\PROGRA~1\dotnet\dotnet C:\Users\{{ ansible_user }}\Desktop\TestServer\{{ binary_path }}
-      when: st.stat.exists == True
+      win_nssm:
+        name: TestServer
+        application:  C:\PROGRA~1\dotnet\dotnet.exe
+        app_parameters:
+          _: "{{ binary_path }}"
+        state: started
+        stdout_file: C:\Users\{{ ansible_user }}\Desktop\TestServer\{{ binary_path }}\TestServer.log
+        stderr_file: C:\Users\{{ ansible_user }}\Desktop\TestServer\{{ binary_path }}\TestServer.log

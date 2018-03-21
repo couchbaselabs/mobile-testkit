@@ -1,0 +1,19 @@
+- name: Windows - Stop TestServer
+  hosts: windows
+  vars:
+    log_full_path:
+
+  tasks:
+    - name: Stop TestServer
+      win_nssm:
+        name: TestServer
+        application: C:\PROGRA~1\dotnet\dotnet.exe
+        state: stopped
+
+    - debug: msg="Copying logs to {{ log_full_path }}"
+
+    - name: Fetch logs
+      fetch: src=C:\PROGRA~1\dotnet\TextLogging\* dest={{ log_full_path }} flat=yes
+
+    - name: Delete log file
+      win_file: path=C:\PROGRA~1\dotnet\TextLogging\* state=absent

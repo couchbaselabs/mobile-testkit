@@ -26,6 +26,7 @@ from CBLClient.DataTypeInitiator import DataTypeInitiator
 from CBLClient.SessionAuthenticator import SessionAuthenticator
 from CBLClient.Utils import Utils
 from utilities.cluster_config_utils import get_load_balancer_ip
+from libraries.testkit import cluster
 
 # from libraries.testkit.cluster import Cluster
 from couchbase.bucket import Bucket
@@ -231,6 +232,8 @@ def params_from_base_suite_setup(request):
 
     cluster_utils = ClusterKeywords()
     cluster_topology = cluster_utils.get_cluster_topology(cluster_config)
+    c = cluster.Cluster(config=cluster_config)
+    c.reset(sg_config_path=sg_config)
     cbs_url = cluster_topology['couchbase_servers'][0]
     cbs_ip = host_for_url(cbs_url)
 
@@ -266,12 +269,13 @@ def params_from_base_suite_setup(request):
         raise Exception("enable_sample_bucket has to be used with create_db_per_suite")
 
     # Start Test server which needed for suite level set up like query tests
-    log_info("Starting TestServer...")
-    test_name_cp = test_name.replace("/", "-")
-    if device_enabled:
-        testserver.start_device("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__, test_name_cp, datetime.datetime.now()))
-    else:
-        testserver.start("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__, test_name_cp, datetime.datetime.now()))
+    if create_db_per_suite:
+        log_info("Starting TestServer...")
+        test_name_cp = test_name.replace("/", "-")
+        if device_enabled:
+            testserver.start_device("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__, test_name_cp, datetime.datetime.now()))
+        else:
+            testserver.start("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__, test_name_cp, datetime.datetime.now()))
 
     suite_source_db = None
     if create_db_per_suite:
@@ -424,6 +428,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         testserver.start_device("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__, test_name_cp, datetime.datetime.now()))
     else:
         testserver.start("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__, test_name_cp, datetime.datetime.now()))
+
     cluster_helper = ClusterKeywords()
     cluster_hosts = cluster_helper.get_cluster_topology(cluster_config=cluster_config)
     sg_url = cluster_hosts["sync_gateways"][0]["public"]
