@@ -135,6 +135,7 @@ def params_from_base_suite_setup(request):
     flush_memory_per_test = request.config.getoption("--flush-memory-per-test")
     sg_lb = request.config.getoption("--sg-lb")
     ci = request.config.getoption("--ci")
+    test_name = request.node.name
 
     testserver = TestServerFactory.create(platform=liteserv_platform,
                                           version_build=liteserv_version,
@@ -151,8 +152,6 @@ def params_from_base_suite_setup(request):
         testserver.install_device()
     else:
         testserver.install()
-
-    time.sleep(3)
 
     base_url = "http://{}:{}".format(liteserv_host, liteserv_port)
     # cluster_config = "{}/base_{}".format(CLUSTER_CONFIGS_DIR, mode)
@@ -265,6 +264,14 @@ def params_from_base_suite_setup(request):
     if enable_sample_bucket and not create_db_per_suite:
         # if enable_sample_bucket and not create_db_per_test:
         raise Exception("enable_sample_bucket has to be used with create_db_per_suite")
+
+    # Start Test server which needed for suite level set up like query tests
+    log_info("Starting TestServer...")
+    test_name_cp = test_name.replace("/", "-")
+    if device_enabled:
+        testserver.start_device("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__, test_name_cp, datetime.datetime.now()))
+    else:
+        testserver.start("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__, test_name_cp, datetime.datetime.now()))
 
     suite_source_db = None
     if create_db_per_suite:
@@ -411,15 +418,12 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     cbl_db = None
 
     # Start LiteServ and delete any databases
-
     log_info("Starting TestServer...")
     test_name_cp = test_name.replace("/", "-")
     if device_enabled:
         testserver.start_device("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__, test_name_cp, datetime.datetime.now()))
     else:
         testserver.start("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__, test_name_cp, datetime.datetime.now()))
-    time.sleep(5)
-
     cluster_helper = ClusterKeywords()
     cluster_hosts = cluster_helper.get_cluster_topology(cluster_config=cluster_config)
     sg_url = cluster_hosts["sync_gateways"][0]["public"]
