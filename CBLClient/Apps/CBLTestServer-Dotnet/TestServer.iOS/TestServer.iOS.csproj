@@ -100,8 +100,8 @@
     <Reference Include="Xamarin.iOS" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Couchbase.Lite.Support.iOS">
-      <Version>2.0.0-db021</Version>
+    <PackageReference Include="Couchbase.Lite.Enterprise.Support.iOS">
+      <Version>2.0.0-b0666</Version>
     </PackageReference>
   </ItemGroup>
   <ItemGroup>
