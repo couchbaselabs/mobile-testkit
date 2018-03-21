@@ -25,6 +25,7 @@ from CBLClient.Dictionary import Dictionary
 from CBLClient.DataTypeInitiator import DataTypeInitiator
 from CBLClient.SessionAuthenticator import SessionAuthenticator
 from CBLClient.Utils import Utils
+from utilities.cluster_config_utils import get_load_balancer_ip
 
 # from libraries.testkit.cluster import Cluster
 from couchbase.bucket import Bucket
@@ -99,6 +100,14 @@ def pytest_addoption(parser):
                      action="store_true",
                      help="If set, will flush server memory per test")
 
+    parser.addoption("--sg-lb",
+                     action="store_true",
+                     help="If set, will enable load balancer for Sync Gateway")
+
+    parser.addoption("--ci",
+                     action="store_true",
+                     help="If set, will target larger cluster (3 backing servers instead of 1, 2 accels if in di mode)")
+
 
 # This will get called once before the first test that
 # runs with this as input parameters in this file
@@ -124,6 +133,8 @@ def params_from_base_suite_setup(request):
     community_enabled = request.config.getoption("--community")
     sg_ssl = request.config.getoption("--sg-ssl")
     flush_memory_per_test = request.config.getoption("--flush-memory-per-test")
+    sg_lb = request.config.getoption("--sg-lb")
+    ci = request.config.getoption("--ci")
 
     testserver = TestServerFactory.create(platform=liteserv_platform,
                                           version_build=liteserv_version,
@@ -144,15 +155,26 @@ def params_from_base_suite_setup(request):
     time.sleep(3)
 
     base_url = "http://{}:{}".format(liteserv_host, liteserv_port)
-    cluster_config = "{}/base_{}".format(CLUSTER_CONFIGS_DIR, mode)
+    # cluster_config = "{}/base_{}".format(CLUSTER_CONFIGS_DIR, mode)
     sg_config = sync_gateway_config_path_for_mode("sync_gateway_travel_sample", mode)
     no_conflicts_enabled = request.config.getoption("--no-conflicts")
     cluster_utils = ClusterKeywords()
+    sg_db = "db"
+    suite_cbl_db = None
+
+    # use base_(lb_)cc cluster config if mode is "cc" or base_(lb_)di cluster config if mode is "di"
+    if ci:
+        cluster_config = "{}/ci_{}".format(CLUSTER_CONFIGS_DIR, mode)
+        if sg_lb:
+            cluster_config = "{}/ci_lb_{}".format(CLUSTER_CONFIGS_DIR, mode)
+    else:
+        cluster_config = "{}/base_{}".format(CLUSTER_CONFIGS_DIR, mode)
+        if sg_lb:
+            cluster_config = "{}/base_lb_{}".format(CLUSTER_CONFIGS_DIR, mode)
+
     cluster_topology = cluster_utils.get_cluster_topology(cluster_config)
     cluster_utils.set_cluster_config(cluster_config.split("/")[-1])
 
-    sg_db = "db"
-    suite_cbl_db = None
     sg_url = cluster_topology["sync_gateways"][0]["public"]
     sg_ip = host_for_url(sg_url)
 
@@ -168,6 +190,13 @@ def params_from_base_suite_setup(request):
 
     cbs_url = cluster_topology['couchbase_servers'][0]
     cbs_ip = host_for_url(cbs_url)
+
+    if sg_lb:
+        persist_cluster_config_environment_prop(cluster_config, 'sg_lb_enabled', True)
+        log_info("Running tests with load balancer enabled: {}".format(get_load_balancer_ip(cluster_config)))
+    else:
+        log_info("Running tests with load balancer disabled")
+        persist_cluster_config_environment_prop(cluster_config, 'sg_lb_enabled', False)
 
     try:
         server_version
