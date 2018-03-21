@@ -42,13 +42,13 @@ TESTSERVER_APP_DEVICE_CP=${SCHEME}-${VERSION}-${BLD_NUM}-Device.app
 TESTSERVER_ZIP=CBLTestServer-iOS-${EDITION}-${VERSION}-${BLD_NUM}.zip
 if [ EDITION = "community" ]
 then
-configuration=Debug
-product_location=Debug-${SDK}
-device_prod_loc=Debug-${SDK_DEVICE}
+configuration=Release
+product_location=Release-${SDK}
+device_prod_loc=Release-${SDK_DEVICE}
 else
-configuration=Debug-EE
-product_location=Debug-EE-${SDK}
-device_prod_loc=Debug-EE-${SDK_DEVICE}
+configuration=Release-EE
+product_location=Release-EE-${SDK}
+device_prod_loc=Release-EE-${SDK_DEVICE}
 fi
 xcodebuild CURRENT_PROJECT_VERSION=${BLD_NUM} CBL_VERSION_STRING=${VERSION} -scheme ${SCHEME} -sdk ${SDK} -configuration ${configuration} -derivedDataPath build
 xcodebuild CURRENT_PROJECT_VERSION=${BLD_NUM} CBL_VERSION_STRING=${VERSION} -scheme ${SCHEME} -sdk ${SDK_DEVICE} -configuration ${configuration} -derivedDataPath build-device -allowProvisioningUpdates
