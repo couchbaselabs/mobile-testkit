@@ -13,8 +13,11 @@ class TestDatabase(object):
         '''
         @summary: Checking for the Exception handling in database create API
         '''
-        if self.liteserv_platform == "ios" and db_name == "":
+        if self.liteserv_platform != "android" and db_name == "":
             pytest.skip("Test not applicable for ios")
+
+        if len(db_name) >= 128 and (self.liteserv_platform != "ios" or self.liteserv_platform != "android"):
+            pytest.skip("Test not supported on .net platfomrs")
 
         try:
             self.db_obj.create(db_name)
@@ -36,10 +39,10 @@ class TestDatabase(object):
             assert err_msg in str(err_resp)
         # checking document in db with empty name
         doc_id = self.db_obj.getDocument(db, "")
-        assert doc_id is None
+        assert doc_id == -1
         # checking for a non-existing doc in DB
         doc_id = self.db_obj.getDocument(db, "I-do-not-exist")
-        assert doc_id is None
+        assert doc_id == -1
 
     def test_saveDocument_exception(self):
         if self.liteserv_platform == "ios":
@@ -86,9 +89,12 @@ class TestDatabase(object):
         '''
         @summary: Testing Database constructor method of Database API
         '''
+        if len(db_name) >= 128 and (self.liteserv_platform != "ios" or self.liteserv_platform != "android"):
+            pytest.skip("Test not supported on .net platfomrs")
+
         db = self.db_obj.create(db_name)
         assert self.db_obj.getName(db) == db_name
-        assert self.db_obj.deleteDB(db) is None
+        assert self.db_obj.deleteDB(db) == -1
 
     @pytest.mark.parametrize("db_name", [
         random_string(1),
@@ -105,8 +111,11 @@ class TestDatabase(object):
         '''
         @summary: Testing close method of Database API
         '''
+        if len(db_name) >= 128 and (self.liteserv_platform != "ios" or self.liteserv_platform != "android"):
+            pytest.skip("Test not supported on .net platfomrs")
+
         db = self.db_obj.create(db_name)
-        assert self.db_obj.close(db) is None
+        assert self.db_obj.close(db) == -1
 
     @pytest.mark.parametrize("db_name", [
         random_string(1),
@@ -122,9 +131,12 @@ class TestDatabase(object):
         '''
         @summary: Testing delete(DB) method of Database API
         '''
+        if len(db_name) >= 128 and (self.liteserv_platform != "ios" or self.liteserv_platform != "android"):
+            pytest.skip("Test not supported on .net platfomrs")
+
         db = self.db_obj.create(db_name)
         path = self.db_obj.getPath(db)
-        assert self.db_obj.deleteDB(db) is None
+        assert self.db_obj.deleteDB(db) == -1
         assert self.db_obj.exists(db_name, path) is False
 
     @pytest.mark.parametrize("db_name, doc_id", [
@@ -142,9 +154,12 @@ class TestDatabase(object):
         '''
         @summary: Testing delete method of Database API
         '''
+        if len(db_name) >= 128 and (self.liteserv_platform != "ios" or self.liteserv_platform != "android"):
+            pytest.skip("Test not supported on .net platfomrs")
+
         db_name = db_name.lower()
         db = self.db_obj.create(db_name)
-        assert self.db_obj.getDocument(db, doc_id) is None
+        assert self.db_obj.getDocument(db, doc_id) == -1
 
         doc = self.doc_obj.create(doc_id=doc_id)
         doc = self.doc_obj.setString(doc, "key", "value")
@@ -159,8 +174,8 @@ class TestDatabase(object):
         doc_res = self.db_obj.getDocument(db, doc_id)
         assert self.db_obj.getCount(db) == 0
         doc_res = self.db_obj.getDocument(db, doc_id)
-        assert doc_res is None
-        assert self.db_obj.deleteDB(db) is None
+        assert doc_res == -1
+        assert self.db_obj.deleteDB(db) == -1
 
     @pytest.mark.parametrize("db_name, doc_id, num_of_docs", [
         (random_string(6), random_string(8), 9),
@@ -178,7 +193,7 @@ class TestDatabase(object):
             self.db_obj.saveDocument(db, doc)
         doc_count = self.db_obj.getCount(db)
         assert num_of_docs == doc_count
-        assert self.db_obj.deleteDB(db) is None
+        assert self.db_obj.deleteDB(db) == -1
 
     @pytest.mark.parametrize("db_name", [
         random_string(1),
@@ -194,11 +209,14 @@ class TestDatabase(object):
         '''
         @summary: Testing exist method of Database API
         '''
+        if len(db_name) >= 128 and (self.liteserv_platform != "ios" or self.liteserv_platform != "android"):
+            pytest.skip("Test not supported on .net platfomrs")
+
         db = self.db_obj.create(db_name)
         path = self.db_obj.getPath(db)
 #         directory = "/".join(path.split("/")[:-2])
         assert self.db_obj.exists(db_name, path)
-        assert self.db_obj.deleteDB(db) is None
+        assert self.db_obj.deleteDB(db) == -1
         assert not self.db_obj.exists(db_name, path)
 
     @pytest.mark.parametrize("db_name, doc_id", [
@@ -217,12 +235,15 @@ class TestDatabase(object):
         '''
         @summary: Testing getDocument method of Database API
         '''
+        if len(db_name) >= 128 and (self.liteserv_platform != "ios" or self.liteserv_platform != "android"):
+            pytest.skip("Test not supported on .net platfomrs")
+
         db = self.db_obj.create(db_name)
         doc = self.doc_obj.create(doc_id)
         self.db_obj.saveDocument(db, doc)
         new_doc = self.db_obj.getDocument(db, doc_id)
         assert self.doc_obj.getId(new_doc) == self.doc_obj.getId(doc)
-        assert self.db_obj.deleteDB(db) is None
+        assert self.db_obj.deleteDB(db) == -1
 
     @pytest.mark.parametrize("db_name", [
         random_string(1),
@@ -239,9 +260,12 @@ class TestDatabase(object):
         '''
         @summary: Testing getName method of Database API
         '''
+        if len(db_name) >= 128 and (self.liteserv_platform != "ios" or self.liteserv_platform != "android"):
+            pytest.skip("Test not supported on .net platfomrs")
+
         db = self.db_obj.create(db_name)
         assert db_name == str(self.db_obj.getName(db))
-        assert self.db_obj.deleteDB(db) is None
+        assert self.db_obj.deleteDB(db) == -1
 
     @pytest.mark.parametrize("db_name", [
         random_string(1),
@@ -258,9 +282,12 @@ class TestDatabase(object):
         '''
         @summary: Testing getPath method of Database API
         '''
+        if len(db_name) >= 128 and (self.liteserv_platform != "ios" or self.liteserv_platform != "android"):
+            pytest.skip("Test not supported on .net platfomrs")
+
         db = self.db_obj.create(db_name)
         assert self.db_obj.getPath(db)
-        assert self.db_obj.deleteDB(db) is None
+        assert self.db_obj.deleteDB(db) == -1
 
     @pytest.mark.parametrize("db1, db2, doc_id", [
         # "",
@@ -285,10 +312,10 @@ class TestDatabase(object):
         self.db_obj.saveDocument(db_1, doc)
         self.db_obj.saveDocument(db_2, doc)
         self.db_obj.purge(document=doc, database=db_1)
-        assert self.db_obj.getDocument(db_2, doc_id) is None
+        assert self.db_obj.getDocument(db_2, doc_id) == -1
         assert self.db_obj.getDocument(db_2, doc_id)
-        assert self.db_obj.deleteDB(db_1) is None
-        assert self.db_obj.deleteDB(db_2) is None
+        assert self.db_obj.deleteDB(db_1) == -1
+        assert self.db_obj.deleteDB(db_2) == -1
 
     @pytest.mark.parametrize("db_name, doc_id", [
         (random_string(1), random_string(6)),
@@ -305,14 +332,17 @@ class TestDatabase(object):
         '''
         @summary: Testing save method of Database API
         '''
+        if len(db_name) >= 128 and (self.liteserv_platform != "ios" or self.liteserv_platform != "android"):
+            pytest.skip("Test not supported on .net platfomrs")
+
         doc = self.doc_obj.create(doc_id)
         db = self.db_obj.create(db_name)
         doc_in_db_check = self.db_obj.getDocument(db, doc_id)
-        assert doc_in_db_check is None
+        assert doc_in_db_check == -1
         self.db_obj.saveDocument(db, doc)
         doc_res = self.db_obj.getDocument(db, doc_id)
         assert doc_id == str(self.doc_obj.getId(doc_res))
-        assert self.db_obj.deleteDB(db) is None
+        assert self.db_obj.deleteDB(db) == -1
 
     def test_getDocuments(self):
         '''
@@ -334,4 +364,4 @@ class TestDatabase(object):
         docs_in_db = self.db_obj.getDocuments(db, ids)
         assert num_of_docs == self.db_obj.getCount(db)
         assert documents == docs_in_db
-        assert self.db_obj.deleteDB(db) is None
+        assert self.db_obj.deleteDB(db) == -1

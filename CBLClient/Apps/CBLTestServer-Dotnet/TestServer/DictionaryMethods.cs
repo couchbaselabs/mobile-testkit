@@ -237,5 +237,12 @@ namespace Couchbase.Lite.Testing
             var key = postBody["key"].ToString();
             With<MutableDictionaryObject>(postBody, "dictionary", d => response.WriteBody(d.GetValue(key)));
         }
+
+        public static void DictionaryToMap([NotNull] NameValueCollection args,
+         [NotNull] IReadOnlyDictionary<string, object> postBody,
+         [NotNull] HttpListenerResponse response)
+        {
+            With<MutableDictionaryObject>(postBody, "dictionary", d => response.WriteBody(d.ToDictionary()));
+        }
     }
 }

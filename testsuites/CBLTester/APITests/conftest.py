@@ -82,6 +82,10 @@ def pytest_addoption(parser):
                      action="store_true",
                      help="If set, allow_conflicts is set to false in sync-gateway config")
 
+    parser.addoption("--sg-ssl",
+                     action="store_true",
+                     help="If set, will enable SSL communication between Sync Gateway and CBL")
+
 
 # This will get called once before the first test that
 # runs with this as input parameters in this file
@@ -103,6 +107,7 @@ def params_from_base_suite_setup(request):
     xattrs_enabled = request.config.getoption("--xattrs")
     create_db_per_test = request.config.getoption("--create-db-per-test")
     create_db_per_suite = request.config.getoption("--create-db-per-suite")
+    sg_ssl = request.config.getoption("--sg-ssl")
 
     base_url = "http://{}:{}".format(liteserv_host, liteserv_port)
     cluster_config = "{}/base_{}".format(CLUSTER_CONFIGS_DIR, mode)
@@ -160,6 +165,16 @@ def params_from_base_suite_setup(request):
     cbs_ip = host_for_url(cbs_url)
 
     # cluster = Cluster(cluster_config)
+
+    persist_cluster_config_environment_prop(cluster_config, 'sync_gateway_ssl', False)
+    target_url = "ws://{}:4984/{}".format(sg_ip, sg_db)
+    target_admin_url = "ws://{}:4985/{}".format(sg_ip, sg_db)
+
+    if sg_ssl:
+        log_info("Enabling SSL on sync gateway")
+        persist_cluster_config_environment_prop(cluster_config, 'sync_gateway_ssl', True)
+        target_url = "wss://{}:4984/{}".format(sg_ip, sg_db)
+        target_admin_url = "wss://{}:4985/{}".format(sg_ip, sg_db)
 
     if not skip_provisioning:
         log_info("Installing Sync Gateway + Couchbase Server + Accels ('di' only)")
