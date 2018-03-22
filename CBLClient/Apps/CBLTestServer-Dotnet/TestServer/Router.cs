@@ -191,7 +191,6 @@ namespace Couchbase.Lite.Testing
             ["query_is"] = QueryMethods.QueryIs,
             ["query_isNot"] = QueryMethods.QueryIsNot,
             ["query_join"] = QueryMethods.QueryJoin,
-            ["query_join2"] = QueryMethods.QueryJoin2,
             ["query_greaterThan"] = QueryMethods.QueryGreaterThan,
             ["query_greaterThanOrEqualTo"] = QueryMethods.QueryGreaterThanOrEqualTo,
             ["query_lessThan"] = QueryMethods.QueryLessThan,
