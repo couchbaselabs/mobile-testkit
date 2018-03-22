@@ -7,7 +7,8 @@ Created on 16-Jan-2018
 '''
 from collections import OrderedDict
 import re
-import json
+import os
+from subprocess import Popen
 
 
 literal = ("SELECT",
@@ -26,16 +27,24 @@ prec = {"+": 0,
         ">=": 0,
         "!=": 0,
         "BETWEEN": 1,
-        "AND": 1,
-        "OR": 1,
+        "AND": 2,
+        "OR": 2,
         "NOT": 1,
         "IN": 1,
         "IS": 1,
         "IS-NOT": 1,
         "IS-NULL": 1,
         "EXIST": 1,
-        '(': 2,
-        ')': 2}
+        "LIKE": 1,
+        "LIKE": 1,
+        "IS-MISSING": 1,
+        "IS-NOT-MISSING": 1,
+        "IS-NOT-NULL": 1,
+        "IS-NULL": 1,
+        "ANY-AND-EVERY": 1,
+        "NOT-IN": 1,
+        '(': 3,
+        ')': 3}
 
 arithmetic_operator = ("+",
                        "-",
@@ -57,7 +66,15 @@ logical_operator = ("BETWEEN",
                     "IS",
                     "IS-NOT",
                     "IS-NULL",
-                    "EXIST")
+                    "EXIST",
+                    "LIKE",
+                    "IS-NOT",
+                    "IS-MISSING",
+                    "IS-NOT-MISSING",
+                    "IS-NOT-NULL",
+                    "IS-NULL",
+                    "ANY-AND-EVERY",
+                    "NOT-IN",)
 
 operators = logical_operator + arithmetic_operator + ('(', ')')
 
@@ -88,6 +105,7 @@ operations = {
     "IS": "2",
     "IS-NOT": "2",
     "LIKE": "2",
+    "NOT-LIKE": "2",
     "MATCH": "2",
     "IN": "2",
     "NOT-IN": "2",
@@ -114,12 +132,24 @@ operations = {
 
 def get_operand(token):
     if token.startswith('$'):
-        return [".", "$", token[1:]]
+        return ['."$"{}'.format(token[1:])]
 #         return "".join([".", "$", token[1:]])
     elif token.isdigit():
         return int(token)
-    return ['.', token]
-#     return "".join(['.', token])
+    elif token == "meta().id":
+        return ["._id"]
+    elif token.startswith('"'):
+        if token == '"True"' or token == '"true"':
+            return "true"
+        elif token == '"False"' or token == '"false"':
+            return "false"
+        return token.strip('"')
+    elif token == "null":
+        return "null"
+    elif token.isalpha():
+        return ["".join(['.', token])]
+    else:
+        return token
 
 
 def get_prefix_list(query):
@@ -133,6 +163,20 @@ def get_prefix_list(query):
         query = re.sub(target_pattern, replacement_pattern, query)
 
     query = query.split()
+    item_list = []
+    split_word = ''
+    for word in query:
+        if word.startswith('"') and not word.endswith('"'):
+            split_word += word
+        elif not word.startswith('"') and word.endswith('"'):
+            split_word += " " + word
+            item_list.append(split_word)
+            split_word = ''
+        elif split_word != '':
+            split_word += " " + word
+        else:
+            item_list.append(word)
+    query = item_list
     query.reverse()
     for index, item in enumerate(query):
         if item == '(':
@@ -148,10 +192,10 @@ def get_prefix_list(query):
         if token not in operators:
             operand = get_operand(token)
             if isinstance(operand, int) or isinstance(operand, float):
-                result.append(get_operand(token))
+                result.append(operand)
             else:
                 # result.append('[{}]'.format(get_operand(token)))
-                result.append(get_operand(token))
+                result.append(operand)
         elif token == '(':
             opstack.append(token)
         elif token == ')':
@@ -178,10 +222,11 @@ def prefix_evaluation(prefix_list):
             num_of_pop = int(operations[token])
             opd = []
             if token == 'IN':
-                var = opstack.pop()
-                while opstack[-1] != ['.', ']']:
+                var = opstack.pop().strip()
+                while opstack[-1] != ']':
                     item = opstack.pop()
-                    if item == ['.', '['] or item == ['.', ',']:
+                    #print "*" + item + "*" + str(len(item))
+                    if item == '[' or item == ',':
                         continue
                     opd.append(item)
                 opstack.pop()
@@ -192,10 +237,11 @@ def prefix_evaluation(prefix_list):
                     opd.append(item)
             eq = [token] + opd
             opstack.append(eq)
-    return clear_evaluated_list(opstack.pop())
+    return opstack.pop()
 
 
 def clear_evaluated_list(eval_list, prev_op=None):
+    eval_list = eval_list.split()
     result = []
     for item in eval_list:
         if item in logical_operator:
@@ -212,7 +258,7 @@ def clear_evaluated_list(eval_list, prev_op=None):
                     result.append(item)
             else:
                 result.append(item)
-    return result
+    return " ".join(result)
 
 
 def get_json_query(query="SELECT name.first, name.last FROM students WHERE grade = 12 AND gpa >= $GPA"):
@@ -220,38 +266,39 @@ def get_json_query(query="SELECT name.first, name.last FROM students WHERE grade
     query = ' '.join(query.split())
 
     query = multiple_replace(query, trans_op)
-    pattern = re.compile(r"SELECT (.*?) FROM (.*?) WHERE (.*)")
+    pattern = re.compile(r"SELECT (.*?) FROM (.*?) WHERE (.*)", re.IGNORECASE)
     regex_out = re.search(pattern, query)
     select_token, from_token, where_token = regex_out.groups()
-    json_txt = []
+    json_txt = OrderedDict()
+
     # creating select statement
-    json_txt.append("SELECT")
-    json_txt.append(OrderedDict())
-    json_txt[1]["DISTINCT"] = False
-    if 'DISTINCT' in select_token.strip():
-        out = re.search("DISTINCT\((.*?)\)", select_token)
-        select_token = out.groups()[0]
-        json_txt[1]["DISTINCT"] = True
     tokens = select_token.split(',')
-    json_txt[1]["WHAT"] = []
+    json_txt["WHAT"] = []
     for item in tokens:
-        # tk_list = ['.']
+        item = item.strip()
         tk_list = []
-        if '.' in item:
+        if "meta().id" in item:
+            tk_list.append("._id")
+        elif '.' in item:
             tk_list.extend(item.split('.'))
         elif item == '*':
             tk_list.append(".")
         else:
-            tk_list.append([".", item])
-        json_txt[1]["WHAT"].append(tk_list)
+            tk_list.append(".{}".format(item))
+        json_txt["WHAT"].append(tk_list)
 
     # creating from statement
-    json_txt[1]["FROM"] = []
-    for db in from_token.strip().split(' '):
-        json_txt[1]["FROM"].append([".", db])
+    # json_txt["FROM"] = []
+    # for db in from_token.strip().split(' '):
+    #     json_txt["FROM"].append([".", db])
     # creating where statement
-    json_txt[1]["WHERE"] = []
-    json_txt[1]["WHERE"] = prefix_evaluation(get_prefix_list(where_token.strip()))
+    json_txt["WHERE"] = []
+    json_txt["WHERE"] = prefix_evaluation(get_prefix_list(where_token.strip()))
+    json_txt["DISTINCT"] = '"False"'
+    if 'DISTINCT' in select_token.strip():
+        out = re.search("DISTINCT\((.*?)\)", select_token)
+        select_token = out.groups()[0]
+        json_txt["DISTINCT"] = '"True"'
     return json_txt
 
 
@@ -262,21 +309,53 @@ def multiple_replace(text, a_dict):
         return a_dict[match.group(0)]
     return rx.sub(one_xlat, text)
 
+def converty_to_json_string(query):
+    query_str = ''
+    for k, v in query.iteritems():
+        query_str += k + ": " + str(v).replace('\'', '"') + ", "
+    query_str = '{ ' + query_str.rstrip(", ") + ' }'
+    query_str = query_str.replace('"true"', 'true')
+    query_str = query_str.replace('"null"', 'null')
+    query_str = query_str.replace('[', '[ ')
+    query_str = query_str.replace(']', '] ')
+    return query_str
 
 if __name__ == '__main__':
-    # query = "SELECT a, b FROM  simple_table_2  t_1   WHERE  ( t_1.int_field1 >= 5050 ) OR ( t_1.int_field1 > 5050 )"
-    # query = "SELECT * FROM  simple_table_4  t_2  WHERE ( grade = 12 AND gpa >= $GPA  AND adf != fdf ) OR ( a = b AND c > d AND b < c ) OR ( a = b AND c = a ) OR ( x > y AND y != 0 )"
-    #     query = "SELECT * FROM  simple_table_4  t_2  WHERE NOT ( t_4.int_field1 BETWEEN 2 and 9999 )"
-    #     query = "SELECT * FROM simple_table_2 t_1 WHERE  t_1.int_field1 IS NOT NULL"
-    #     query = "SELECT DISTINCT(t_2.int_field1) FROM  simple_table_4  t_2   WHERE  ((t_2.int_field1 IS NOT NULL) OR (t_2.int_field1 IS NULL)) OR ((t_2.decimal_field1  IN [  19 , 37 , 46 , 49 , 52  ]) OR (t_2.int_field1 IS NOT NULL))"
-    #     query = "SELECT DISTINCT(t_2.decimal_field1) FROM  simple_table_4  t_2   WHERE  ( t_2.decimal_field1  IN [  19 , 37 , 46 , 49 , 52  ] ) OR ( t_2.decimal_field1 >= 4770 ) "
-    #     out = get_json_query(query)
-    #     print json.dumps(out, indent=4)
+    queries = [
+        'SELECT * FROM `travel-sample` WHERE meta().id = "airline_10"',
+        'SELECT name, type, meta().id FROM `travel-sample` WHERE country = "France"',
+        'SELECT meta().id FROM `travel-sample` WHERE type = "hotel" AND ( country = "United States" OR country = "France" ) AND vacancy = "True"',
+        'SELECT meta().id, country, name FROM `travel-sample` where type = "landmark"  AND name LIKE "Royal Engineers Museum"',
+        'SELECT meta().id, country, name FROM `travel-sample` where type = "landmark"  OR name LIKE "Royal engineers museum"',
+        'SELECT meta().id, country, name FROM `travel-sample` where type = "landmark"  OR name LIKE "eng%e%"',
+        'SELECT meta().id, country, name FROM `travel-sample` where type = "landmark"  AND name LIKE "Eng%e%"',
+        'SELECT meta().id, country, name FROM `travel-sample` where type = "landmark"  OR name LIKE "%eng____r%"',
+        'SELECT meta().id, country, name FROM `travel-sample` where type = "landmark"  AND name LIKE "%Eng____r%"',
+        'SELECT meta().id FROM `travel-sample` where id = 24',
+        'SELECT meta().id FROM `travel-sample` where id != 24',
+        'SELECT meta().id FROM `travel-sample` where id > 2400',
+        'SELECT meta().id FROM `travel-sample` where id >= 2400',
+        'SELECT meta().id FROM `travel-sample` where id < 2400',
+        'SELECT meta().id FROM `travel-sample` where id <= 2400',
+        'SELECT meta().id FROM `travel-sample` where id BETWEEN 24 and 28',
+        'SELECT meta().id FROM `travel-sample` where callsign IS null',
+#         'SELECT meta().id FROM `travel-sample` where callsign IS NOT null',
+        ]
+    os.chdir("/Users/hemant/couchbase/couchbase/rqg/")
     fh = open("n1ql_queries_in_JSON.txt", "w")
-    for query in open("n1ql_ready_queries.txt"):
+    for query in queries:
         try:
-            fh.write(json.dumps(get_json_query(query), indent=4))
+            json_query = converty_to_json_string(get_json_query(query))
+            fh.write(json_query)
             fh.write("\n")
+            cmd = ["./cblite", "query", "--limit", "10", "travel-sample.cblite2"]
+            print "*" * 60
+            print "Executing command {} '{}'".format(" ".join(cmd), json_query)
+            print "*" * 60
+            cmd.append(json_query)
+            p = Popen(cmd)
+            p.communicate()
+            print "\n"
         except Exception, err:
             log_info("Error for Query: {}\n{}\n".format(query, str(err)))
     fh.close()
