@@ -6,7 +6,6 @@ from keywords.constants import LATEST_BUILDS
 from keywords.exceptions import LiteServError
 from keywords.utils import version_and_build
 from keywords.utils import log_info
-from keywords.utils import has_dot_net4_dot_5
 
 from libraries.provision.ansible_runner import AnsibleRunner
 
@@ -104,7 +103,7 @@ class TestServerNetMsft(TestServerBase):
         4. eturn the url of the running LiteServ
         """
         self.logfile = logfile_name
-        binary_path = "c:\\Users\\vagrant\\Desktop\\TestServer\\TestServer-Net-{}\\TestServer.NetCore.dll".format(self.version_build)
+        binary_path = "TestServer-Net-{}\\TestServer.NetCore.dll".format(self.version_build)
         log_info("Starting Test server {}".format(binary_path))
         # Start Testserver via Ansible on remote machine
         status = self.ansible_runner.run_ansible_playbook(
