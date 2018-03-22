@@ -26,7 +26,7 @@ from CBLClient.DataTypeInitiator import DataTypeInitiator
 from CBLClient.SessionAuthenticator import SessionAuthenticator
 from CBLClient.Utils import Utils
 from utilities.cluster_config_utils import get_load_balancer_ip
-from libraries.testkit import cluster
+# from libraries.testkit import cluster
 
 # from libraries.testkit.cluster import Cluster
 from couchbase.bucket import Bucket
@@ -232,8 +232,8 @@ def params_from_base_suite_setup(request):
 
     cluster_utils = ClusterKeywords()
     cluster_topology = cluster_utils.get_cluster_topology(cluster_config)
-    c = cluster.Cluster(config=cluster_config)
-    c.reset(sg_config_path=sg_config)
+    # c = cluster.Cluster(config=cluster_config)
+    # c.reset(sg_config_path=sg_config)
     cbs_url = cluster_topology['couchbase_servers'][0]
     cbs_ip = host_for_url(cbs_url)
 
