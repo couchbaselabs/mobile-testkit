@@ -311,7 +311,7 @@ class Replication(object):
                                            channels, sg_client, cbl_db, sg_blip_url, replication_type=None, continuous=True):
 
         authenticator = Authenticator(baseUrl)
-        cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, "autotest")
+        cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, username)
         session = cookie, session_id
         replicator_authenticator = authenticator.authentication(session_id, cookie, authentication_type="session")
         # replicator_authenticator = authenticator.authentication(username=username, password=password, authentication_type="basic")
