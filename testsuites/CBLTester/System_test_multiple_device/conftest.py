@@ -11,6 +11,7 @@ from keywords.SyncGateway import sync_gateway_config_path_for_mode
 from keywords.exceptions import ProvisioningError
 from keywords.tklogging import Logging
 from CBLClient.Database import Database
+from CBLClient.Query import Query
 from CBLClient.Utils import Utils
 
 
@@ -207,10 +208,12 @@ def params_from_base_suite_setup(request):
     db_name_list = []
     cbl_db_list = []
     db_obj_list = []
+    query_obj_list = []
     for base_url, i in zip(base_url_list, range(len(base_url_list))):
         db_name = "{}_{}".format(create_db_per_suite, i)
         db_name_list.append(db_name)
         db = Database(base_url)
+        query_obj_list.append(Query(base_url))
         db_obj_list.append(db)
 
         log_info("Creating a Database {} at the suite setup".format(db_name))
@@ -241,6 +244,7 @@ def params_from_base_suite_setup(request):
         "cbl_db_list": cbl_db_list,
         "db_name_list": db_name_list,
         "base_url_list": base_url_list,
+        "query_obj_list": query_obj_list,
         "sg_config": sg_config,
         "db_obj_list": db_obj_list,
         # "testserver_list": testserver_list,
@@ -252,7 +256,7 @@ def params_from_base_suite_setup(request):
 #                                              testserver_list,
 #                                              base_url_list):
     for cbl_db, db_obj, base_url in zip(cbl_db_list, db_obj_list, base_url_list):
-        log_info("Deleting the database {} at the suite teardown".format(db_name))
+        log_info("Deleting the database {} at the suite teardown".format(db_obj.getName(cbl_db)))
         time.sleep(2)
         db_obj.deleteDB(cbl_db)
         time.sleep(1)
