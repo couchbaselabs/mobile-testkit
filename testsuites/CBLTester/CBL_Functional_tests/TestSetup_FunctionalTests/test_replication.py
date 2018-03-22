@@ -107,21 +107,25 @@ def test_replication_configuration_valid_values(params_from_base_test_setup, num
 
     time.sleep(2)
     cbl_doc_ids = db.getDocIds(cbl_db)
-    cbl_db_docs = db.getDocuments(cbl_db, cbl_doc_ids)
+    # cbl_db_docs = db.getDocuments(cbl_db, cbl_doc_ids)
     count = 0
     for doc in cbl_doc_ids:
+        cbl_db_doc_ref = db.getDocument(cbl_db, doc)
+        doc_obj = Document(base_url)
+        cbl_db_doc = doc_obj.toMap(cbl_db_doc_ref)
         if continuous:
             while count < 30:
-                time.sleep(1)
-                print "sleep 1 sec...... for doc ", doc
-                cbl_db_docs = db.getDocuments(cbl_db, cbl_doc_ids)
-                # print "cbl docs after waitin  1 sec  ", cbl_db_docs
-                if cbl_db_docs[doc]["updates"] == number_of_updates:
+                time.sleep(0.5)
+                log_info("Checking {} for updates".format(doc))
+                if cbl_db_doc["updates"] == number_of_updates:
                     break
                 count += 1
-            assert cbl_db_docs[doc]["updates"] == number_of_updates, "updates did not get updated"
+                cbl_db_doc_ref = db.getDocument(cbl_db, doc)
+                doc_obj = Document(base_url)
+                cbl_db_doc = doc_obj.toMap(cbl_db_doc_ref)
+            assert cbl_db_doc["updates"] == number_of_updates, "updates did not get updated"
         else:
-            assert cbl_db_docs[doc]["updates"] == 0, "sync-gateway updates got pushed to CBL for one shot replication"
+            assert cbl_db_doc["updates"] == 0, "sync-gateway updates got pushed to CBL for one shot replication"
 
 
 @pytest.mark.sanity
@@ -2544,9 +2548,9 @@ def test_replication_withMultipleBuckets(params_from_base_test_setup, setup_cust
     replicator.configure_and_replicate(source_db=cbl_db3, replicator_authenticator=replicator_authenticator3, target_url=sg_blip_url3,
                                        replication_type="push", continuous=False, channels=channel3)
 
-    verify_cblDocs_in_sgDocs(sg_client, sg_url, sg_db1, session1, cbl_db1, db, topology_type="1cbl")
-    verify_cblDocs_in_sgDocs(sg_client, sg_url, sg_db2, session2, cbl_db2, db, topology_type="1cbl")
-    verify_cblDocs_in_sgDocs(sg_client, sg_url, sg_db3, session3, cbl_db3, db, topology_type="1cbl")
+    verify_cblDocs_in_sgDocs(sg_client, sg_url, sg_db1, session1, cbl_db1, db, topology_type=topology_type)
+    verify_cblDocs_in_sgDocs(sg_client, sg_url, sg_db2, session2, cbl_db2, db, topology_type=topology_type)
+    verify_cblDocs_in_sgDocs(sg_client, sg_url, sg_db3, session3, cbl_db3, db, topology_type=topology_type)
 
 
 @pytest.mark.listener
