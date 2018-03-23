@@ -7,6 +7,7 @@ import com.couchbase.lite.ReplicatorChange;
 import com.couchbase.lite.ReplicatorChangeListener;
 import com.couchbase.lite.ReplicatorConfiguration;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class ReplicatorRequestHandler {
@@ -118,7 +119,7 @@ public class ReplicatorRequestHandler {
 }
 
 class MyReplicatorListener implements ReplicatorChangeListener{
-    private List<ReplicatorChange> changes;
+    private List<ReplicatorChange> changes = new ArrayList<>();
     public List<ReplicatorChange> getChanges(){
         return changes;
     }
