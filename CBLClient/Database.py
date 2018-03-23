@@ -237,6 +237,8 @@ class Database(object):
                 doc_body = doc_generators.four_k()
             elif generator == "simple_user":
                 doc_body = doc_generators.simple_user()
+            elif generator == "complex_doc":
+                doc_body = doc_generators.complex_doc()
             else:
                 doc_body = doc_generators.simple()
 
