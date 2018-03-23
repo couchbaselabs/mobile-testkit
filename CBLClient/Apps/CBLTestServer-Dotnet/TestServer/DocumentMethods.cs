@@ -78,7 +78,7 @@ namespace Couchbase.Lite.Testing
                                   [NotNull] HttpListenerResponse response)
         {
             var key = postBody["key"].ToString();
-            With<MutableDocument>(postBody, "document", doc => response.WriteBody(doc.GetString(key)));
+            With<Document>(postBody, "document", doc => response.WriteBody(doc.GetString(key)));
         }
 
         public static void DocumentSetString([NotNull] NameValueCollection args,
@@ -87,7 +87,7 @@ namespace Couchbase.Lite.Testing
         {
             var key = postBody["key"].ToString();
             var val = postBody["value"].ToString();
-            With<MutableDocument>(postBody, "document", doc => response.WriteBody(doc.SetString(key, val)));
+            With<MutableDocument>(postBody, "document", doc => response.WriteBody(MemoryMap.Store(doc.SetString(key, val)));
         }
 
         public static void DocumentGetInt([NotNull] NameValueCollection args,

@@ -31,7 +31,7 @@ class TestDatabase(object):
 
         db = self.db_obj.create(random_string(6))
         # checking when Null/None documentId is provided
-        err_msg = "a documentID parameter is null"
+        err_msg = "null"
         try:
             self.db_obj.getDocument(db, None)
             assert 0
@@ -45,7 +45,7 @@ class TestDatabase(object):
         assert doc_id == -1
 
     def test_saveDocument_exception(self):
-        if self.liteserv_platform == "ios":
+        if self.liteserv_platform != "android":
             pytest.skip("Test not applicable for ios")
 
         db = self.db_obj.create(random_string(6))
@@ -57,7 +57,7 @@ class TestDatabase(object):
             assert err_msg in str(err_resp)
 
     def test_delete_exception(self):
-        if self.liteserv_platform == "ios":
+        if self.liteserv_platform != "android":
             pytest.skip("Test not applicable for ios")
 
         db = self.db_obj.create(random_string(6))
@@ -159,7 +159,7 @@ class TestDatabase(object):
 
         db_name = db_name.lower()
         db = self.db_obj.create(db_name)
-        assert self.db_obj.getDocument(db, doc_id) == -1
+        # assert self.db_obj.getDocument(db, doc_id) == -1
 
         doc = self.doc_obj.create(doc_id=doc_id)
         doc = self.doc_obj.setString(doc, "key", "value")
@@ -214,10 +214,13 @@ class TestDatabase(object):
 
         db = self.db_obj.create(db_name)
         path = self.db_obj.getPath(db)
-#         directory = "/".join(path.split("/")[:-2])
-        assert self.db_obj.exists(db_name, path)
+        if self.liteserv_platform == "ios" or self.liteserv_platform == "android":
+            directory = "/".join(path.split("/")[:-2])
+        else:
+            directory = '\\'.join(path.split('\\')[:-2])
+        assert self.db_obj.exists(db_name, directory)
         assert self.db_obj.deleteDB(db) == -1
-        assert not self.db_obj.exists(db_name, path)
+        assert not self.db_obj.exists(db_name, directory)
 
     @pytest.mark.parametrize("db_name, doc_id", [
         # "",
@@ -306,13 +309,14 @@ class TestDatabase(object):
         @summary: Testing purge method of Database API
         '''
         doc_id_prefix = "bar"
-        doc = self.doc_obj.create(doc_id=doc_id_prefix)
+        doc1 = self.doc_obj.create(doc_id=doc_id_prefix)
+        doc2 = self.doc_obj.create(doc_id=doc_id_prefix)
         db_1 = self.db_obj.create(db1)
         db_2 = self.db_obj.create(db2)
-        self.db_obj.saveDocument(db_1, doc)
-        self.db_obj.saveDocument(db_2, doc)
-        self.db_obj.purge(document=doc, database=db_1)
-        assert self.db_obj.getDocument(db_2, doc_id) == -1
+        self.db_obj.saveDocument(db_1, doc1)
+        self.db_obj.saveDocument(db_2, doc2)
+        self.db_obj.purge(document=doc1, database=db_1)
+        # assert self.db_obj.getDocument(db_2, doc_id) == -1
         assert self.db_obj.getDocument(db_2, doc_id)
         assert self.db_obj.deleteDB(db_1) == -1
         assert self.db_obj.deleteDB(db_2) == -1
@@ -337,8 +341,6 @@ class TestDatabase(object):
 
         doc = self.doc_obj.create(doc_id)
         db = self.db_obj.create(db_name)
-        doc_in_db_check = self.db_obj.getDocument(db, doc_id)
-        assert doc_in_db_check == -1
         self.db_obj.saveDocument(db, doc)
         doc_res = self.db_obj.getDocument(db, doc_id)
         assert doc_id == str(self.doc_obj.getId(doc_res))

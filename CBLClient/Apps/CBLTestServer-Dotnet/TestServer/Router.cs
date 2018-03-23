@@ -198,6 +198,9 @@ namespace Couchbase.Lite.Testing
             ["query_lessThan"] = QueryMethods.QueryLessThan,
             ["query_lessThanOrEqualTo"] = QueryMethods.QueryLessThanOrEqualTo,
             ["query_not"] = QueryMethods.QueryNot,
+            ["datatype_setLong"] = DataTypeMethods.DataTypeSetLong,
+            ["datatype_setDouble"] = DataTypeMethods.DataTypeSetDouble,
+            ["datatype_compare"] = DataTypeMethods.DataTypeCompare,
             ["release"] = ReleaseObject,
             ["flushMemory"] = flushMemory
             };

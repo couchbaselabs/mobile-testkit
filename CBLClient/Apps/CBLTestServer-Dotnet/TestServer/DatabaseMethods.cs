@@ -229,7 +229,7 @@ namespace Couchbase.Lite.Testing
                 var doc = db.GetDocument(docId);
                 if (doc == null)
                 {
-                    response.WriteEmptyBody(HttpStatusCode.NotFound);
+                    response.WriteEmptyBody();
                     return;
                 }
 
