@@ -1715,6 +1715,7 @@ def test_default_conflict_with_two_conflictsAndTomstone(params_from_base_test_se
     cbl_doc_ids = db.getDocIds(cbl_db)
     cbl_docs = db.getDocuments(cbl_db, cbl_doc_ids)
     for id in cbl_doc_ids:
+        cbl_doc_ids = db.getDocIds(cbl_db)
         with pytest.raises(KeyError) as ke:
             cbl_docs[id]["updates"]
         assert ke.value.message.startswith('updates')
@@ -2754,9 +2755,15 @@ def verify_sgDocIds_cblDocIds(sg_client, url, sg_db, session, cbl_db, db):
     sg_doc_ids = [row["id"] for row in sg_docs]
     cbl_doc_ids = db.getDocIds(cbl_db)
     count = 0
-    while count < 30 and len(sg_doc_ids) != len(cbl_doc_ids):
+    while len(sg_doc_ids) != len(cbl_doc_ids):
+        if count == 30:
+            break
+
         time.sleep(1)
         cbl_doc_ids = db.getDocIds(cbl_db)
+        sg_docs = sg_client.get_all_docs(url=url, db=sg_db, auth=session)
+        sg_docs = sg_docs["rows"]
+        sg_doc_ids = [row["id"] for row in sg_docs]
         count += 1
 
     for id in sg_doc_ids:
@@ -2766,9 +2773,25 @@ def verify_sgDocIds_cblDocIds(sg_client, url, sg_db, session, cbl_db, db):
 def verify_cblDocs_in_sgDocs(sg_client, url, sg_db, session, cbl_db, db, topology_type="1cbl"):
     sg_docs = sg_client.get_all_docs(url=url, db=sg_db, auth=session, include_docs=True)
     sg_docs = sg_docs["rows"]
-    if topology_type == "1cbl":
+    if "1cbl" in topology_type:
         num_cbl_updates = 3
     else:
         num_cbl_updates = 1
+
+    cbl_doc_ids = db.getDocIds(cbl_db)
+    sg_doc_ids = [row["id"] for row in sg_docs]
+
+    count = 0
+    while len(sg_doc_ids) != len(cbl_doc_ids):
+        if count == 30:
+            break
+
+        time.sleep(1)
+        cbl_doc_ids = db.getDocIds(cbl_db)
+        sg_docs = sg_client.get_all_docs(url=url, db=sg_db, auth=session, include_docs=True)
+        sg_docs = sg_docs["rows"]
+        sg_doc_ids = [row["id"] for row in sg_docs]
+        count += 1
+
     for doc in sg_docs:
         assert doc["doc"]["updates-cbl"] == num_cbl_updates, "updated doc in cbl did not replicated to sg"
