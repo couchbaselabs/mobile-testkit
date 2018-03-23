@@ -1,10 +1,12 @@
 import pytest
 import time
 
-from keywords.MobileRestClient import MobileRestClient
 from CBLClient.Database import Database
 from CBLClient.Replication import Replication
 from keywords import document
+from keywords.MobileRestClient import MobileRestClient
+from keywords.SyncGateway import sync_gateway_config_path_for_mode
+
 
 from libraries.testkit import cluster
 
@@ -22,7 +24,8 @@ def test_mutlitple_buckets(params_from_base_suite_setup, num_of_docs):
     target_url = params_from_base_suite_setup["target_url"].rsplit('/', 1)[0]
     base_url = params_from_base_suite_setup["base_url"]
     cluster_config = params_from_base_suite_setup["cluster_config"]
-    sg_config = params_from_base_suite_setup["sg_config"]
+    mode = params_from_base_suite_setup["mode"]
+    sg_config = sync_gateway_config_path_for_mode("multiple_dbs_unique_data_unique_index", mode)
     db_obj = Database(base_url)
     repl_obj = Replication(base_url)
 

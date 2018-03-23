@@ -1,33 +1,15 @@
-import time
 import pytest
-# import datetime
 
 from utilities.cluster_config_utils import persist_cluster_config_environment_prop
-from keywords.constants import SDK_TIMEOUT
 from keywords.utils import log_info
 from keywords.utils import host_for_url
 from keywords.ClusterKeywords import ClusterKeywords
-from keywords.couchbaseserver import CouchbaseServer
 from keywords.constants import CLUSTER_CONFIGS_DIR
-# from keywords.constants import RESULTS_DIR
-from keywords.MobileRestClient import MobileRestClient
-# from keywords.TestServerFactory import TestServerFactory
 from keywords.SyncGateway import sync_gateway_config_path_for_mode
-from keywords.SyncGateway import SyncGateway
 from keywords.exceptions import ProvisioningError
 from keywords.tklogging import Logging
-from CBLClient.Replication import Replication
-from CBLClient.BasicAuthenticator import BasicAuthenticator
-from CBLClient.Database import Database
-from CBLClient.Document import Document
-from CBLClient.Dictionary import Dictionary
-from CBLClient.DataTypeInitiator import DataTypeInitiator
-from CBLClient.SessionAuthenticator import SessionAuthenticator
 from CBLClient.Utils import Utils
 
-# from libraries.testkit.cluster import Cluster
-from couchbase.bucket import Bucket
-from couchbase.n1ql import N1QLQuery
 
 
 def pytest_addoption(parser):
