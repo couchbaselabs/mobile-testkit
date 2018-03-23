@@ -210,7 +210,7 @@ def params_from_base_suite_setup(request):
     db_obj_list = []
     query_obj_list = []
     for base_url, i in zip(base_url_list, range(len(base_url_list))):
-        db_name = "{}_{}".format(create_db_per_suite, i)
+        db_name = "{}_{}".format(create_db_per_suite, i + 1)
         db_name_list.append(db_name)
         db = Database(base_url)
         query_obj_list.append(Query(base_url))

@@ -258,6 +258,7 @@ class Database(object):
             doc_body["_id"] = doc_id
             added_docs[doc_id] = doc_body
         self.saveDocuments(db, added_docs)
+        return added_docs.keys()
 
     def delete_bulk_docs(self, database, doc_ids=[]):
         if not doc_ids:
