@@ -1,4 +1,5 @@
 import pytest
+import time
 
 from keywords.MobileRestClient import MobileRestClient
 from keywords import document
@@ -199,6 +200,8 @@ def test_replication_with_concurrencyControl_sgCBL_sameDocId(params_from_base_te
 
     # 3. Get cbl docs
     cbl_doc_ids = db.getDocIds(cbl_db)
+    # A sleep is needed for di mode
+    time.sleep(5)
     cbl_docs = db.getDocuments(cbl_db, cbl_doc_ids)
     for id in cbl_doc_ids:
         if concurrencyType == "lastWriteWins":
