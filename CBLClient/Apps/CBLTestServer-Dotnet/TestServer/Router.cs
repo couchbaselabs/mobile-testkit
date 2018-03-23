@@ -136,7 +136,7 @@ namespace Couchbase.Lite.Testing
             ["document_getKeys"] = DocumentMethods.DocumentGetKeys,
             ["document_toMap"] = DocumentMethods.DocumentToDictionary,
             ["document_toMutable"] = DocumentMethods.DocumentToMutable,
-            ["document_remove"] = DocumentMethods.DocumentRemoveKey,
+            ["document_removeKey"] = DocumentMethods.DocumentRemoveKey,
             ["document_contains"] = DocumentMethods.DocumentContains,
             ["replicatorConfiguration_configure"] = ReplicatorConfigurationMethods.Configure,
             ["replicator_create"] = ReplicationMethods.Create,
@@ -201,6 +201,8 @@ namespace Couchbase.Lite.Testing
             ["datatype_setLong"] = DataTypeMethods.DataTypeSetLong,
             ["datatype_setDouble"] = DataTypeMethods.DataTypeSetDouble,
             ["datatype_compare"] = DataTypeMethods.DataTypeCompare,
+            ["datatype_compareLong"] = DataTypeMethods.DataTypeCompareLong,
+            ["datatype_compareDouble"] = DataTypeMethods.DataTypeCompareLong,
             ["release"] = ReleaseObject,
             ["flushMemory"] = flushMemory
             };

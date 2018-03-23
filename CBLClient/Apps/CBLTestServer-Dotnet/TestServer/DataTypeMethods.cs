@@ -37,5 +37,14 @@ namespace Couchbase.Lite.Testing
             var second = postBody["second"].ToString();
             response.WriteBody(first == second);
         }
+
+        public static void DataTypeCompareLong([NotNull] NameValueCollection args,
+                                            [NotNull] IReadOnlyDictionary<string, object> postBody,
+                                            [NotNull] HttpListenerResponse response)
+        {
+            var first = (double)postBody["first"];
+            var second = (double)postBody["second"];
+            response.WriteBody(first == second);
+        }
     }
 }

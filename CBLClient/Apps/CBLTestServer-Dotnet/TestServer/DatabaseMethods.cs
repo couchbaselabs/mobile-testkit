@@ -164,8 +164,8 @@ namespace Couchbase.Lite.Testing
             [NotNull] IReadOnlyDictionary<string, object> postBody,
             [NotNull] HttpListenerResponse response)
         {
-            With<Database>(postBody, "database", db => 
-                           With<Document>(postBody , "document", doc => db.Delete(doc)));
+            With<Database>(postBody, "database", db =>
+                           With<Document>(postBody, "document", doc => db.Delete(doc)));
             response.WriteEmptyBody();
         }
 
@@ -175,7 +175,7 @@ namespace Couchbase.Lite.Testing
                                                   [NotNull] IReadOnlyDictionary<string, object> postBody,
                                                   [NotNull] HttpListenerResponse response)
         {
-            
+
             With<Database>(postBody, "database", db => db.Delete());
             int bodyResponse = -1;
             response.WriteBody(bodyResponse);
@@ -244,16 +244,21 @@ namespace Couchbase.Lite.Testing
             With<Database>(postBody, "database", db =>
             {
                 var retVal = new Dictionary<string, object>();
-                var ids = (postBody["ids"] as IList<object>).Cast<string>();
-                foreach (var id in ids) {
-                    using (var doc = db.GetDocument(id)) {
-                        if (doc != null) {
+                using (var query = Query.QueryBuilder
+                       .Select(SelectResult.Expression(Meta.ID))
+                    .From(DataSource.Database(db)))
+                {
+                    var result = query.Execute();
+                    foreach (var id in result.Select(x => x.GetString("id")))
+                    {
+                        using (var doc = db.GetDocument(id))
+                        {
                             retVal[id] = doc.ToDictionary();
                         }
                     }
-                }
 
-                response.WriteBody(retVal);
+                    response.WriteBody(retVal);
+                }
             });
         }
 
@@ -283,7 +288,7 @@ namespace Couchbase.Lite.Testing
                                           [NotNull] IReadOnlyDictionary<string, object> postBody,
                                           [NotNull] HttpListenerResponse response)
         {
-            With<Database>(postBody, "database", db => 
+            With<Database>(postBody, "database", db =>
             {
                 With<MutableDocument>(postBody, "document", docid => db.Purge(docid));
                 response.WriteEmptyBody();
@@ -313,13 +318,14 @@ namespace Couchbase.Lite.Testing
                     try
                     {
                         db.Save(document, concurrencyType);
+                        response.WriteEmptyBody();
                     }
                     catch (InvalidOperationException e)
                     {
                         Console.WriteLine("Error saving document to DB" + e.Message);
                         response.WriteBody(e.Message);
                     }
-                });               
+                });
             });
         }
 
@@ -329,7 +335,7 @@ namespace Couchbase.Lite.Testing
         {
             With<Database>(postBody, "database", db =>
             {
-                With<MutableDocument>(postBody, "document", document =>
+                With<Document>(postBody, "document", document =>
                 {
                     var concurrencyControlType = postBody["concurrencyControlType"].ToString();
                     var concurrencyType = ConcurrencyControl.LastWriteWins;
@@ -349,6 +355,7 @@ namespace Couchbase.Lite.Testing
                     try
                     {
                         db.Delete(document, concurrencyType);
+                        response.WriteEmptyBody();
                     } catch (InvalidOperationException e)
                     {
                         Console.WriteLine("Error deleting DB" + e.Message);
@@ -374,28 +381,14 @@ namespace Couchbase.Lite.Testing
             [NotNull] IReadOnlyDictionary<string, object> postBody,
             [NotNull] HttpListenerResponse response)
         {
-            With<Database>(postBody, "database", db => With<MutableDocument>(postBody, "document", doc => db.Save(doc)));
-            response.WriteEmptyBody();
-        }
-
-        internal static void DatabaseDeleteBulkDocs([NotNull] NameValueCollection args,
-                                                    [NotNull] IReadOnlyDictionary<string, object> postBody,
-                                                    [NotNull] HttpListenerResponse response)
-        {
-            var docIds = ((IEnumerable<object>)postBody["doc_ids"]).OfType<String>();
             With<Database>(postBody, "database", db =>
             {
-                db.InBatch(() =>
+                With<MutableDocument>(postBody, "document", doc =>
                 {
-                    foreach (String docId in docIds)
-                    {
-                        MutableDocument document = db.GetDocument(docId).ToMutable();
-                        db.Delete(document);
-
-                    }
+                    db.Save(doc);
+                    response.WriteEmptyBody();
                 });
             });
-            response.WriteEmptyBody();
         }
 
         internal static void DatabaseSaveDocuments([NotNull] NameValueCollection args,

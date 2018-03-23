@@ -228,11 +228,9 @@ class TestDocument(object):
         @summary: Testing Get and Set Double method of Document API
         '''
         doc = self.doc_obj.create()
-        double_obj = self.datatype.setDouble(value)
-        self.doc_obj.setDouble(doc, key, double_obj)
-        assert self.datatype.compareDouble(double_obj,
-                                           self.doc_obj.getDouble(doc,
-                                                                  key))
+        # double_obj = self.datatype.setDouble(value)
+        self.doc_obj.setDouble(doc, key, value)
+        assert float(value) == float(self.doc_obj.getDouble(doc, key))
 
     @pytest.mark.parametrize("key, value", [
         (random_string(6), round(random.uniform(0, 1), 3)),
@@ -260,10 +258,10 @@ class TestDocument(object):
         @summary: Testing Get and Set Float method of Document API
         '''
         doc = self.doc_obj.create()
-        long_obj = self.datatype.setLong(value)
-        self.doc_obj.setLong(doc, key, long_obj)
+        # long_obj = self.datatype.setLong(value)
+        self.doc_obj.setLong(doc, key, value)
         result = self.doc_obj.getLong(doc, key)
-        assert self.datatype.compareLong(long_obj, result)
+        assert long(value) == result
 
     def test_set_immutable_dict_to_doc(self):
         '''
