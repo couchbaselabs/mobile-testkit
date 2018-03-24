@@ -107,7 +107,6 @@ def test_replication_configuration_valid_values(params_from_base_test_setup, num
 
     time.sleep(2)
     cbl_doc_ids = db.getDocIds(cbl_db)
-    # cbl_db_docs = db.getDocuments(cbl_db, cbl_doc_ids)
     count = 0
     for doc in cbl_doc_ids:
         cbl_db_doc_ref = db.getDocument(cbl_db, doc)
@@ -115,8 +114,7 @@ def test_replication_configuration_valid_values(params_from_base_test_setup, num
         cbl_db_doc = doc_obj.toMap(cbl_db_doc_ref)
         if continuous:
             while count < 30:
-                time.sleep(0.5)
-                log_info("Checking {} for updates".format(doc))
+                time.sleep(1)
                 if cbl_db_doc["updates"] == number_of_updates:
                     break
                 count += 1
@@ -400,15 +398,15 @@ def test_replication_configuration_with_filtered_doc_ids(params_from_base_test_s
     sg_url = params_from_base_test_setup["sg_url"]
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
     sg_blip_url = params_from_base_test_setup["target_url"]
+    mode = params_from_base_test_setup["sg_mode"]
     base_url = params_from_base_test_setup["base_url"]
     cluster_config = params_from_base_test_setup["cluster_config"]
     sg_config = params_from_base_test_setup["sg_config"]
     db = params_from_base_test_setup["db"]
     cbl_db = params_from_base_test_setup["source_db"]
-    sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
 
-    if sync_gateway_version < "2.0.0":
-        pytest.skip('This test cannnot run with sg version below 2.0')
+    if mode == "di":
+        pytest.skip('Filter doc ids does not work with di modes')
 
     c = cluster.Cluster(config=cluster_config)
     c.reset(sg_config_path=sg_config)
@@ -1107,7 +1105,7 @@ def CBL_offline_test(params_from_base_test_setup, sg_conf_name, num_of_docs):
 @pytest.mark.session
 @pytest.mark.parametrize("num_docs, need_attachments, replication_after_backgroundApp", [
     (1000, True, False),
-    (10000, False, False),
+    (1000, False, False),
     # (10000, False, True), # TODO : Not yet supported by Test server app
     # (1000, True, True) # TODO: Not yet supported by Test server app
 ])
@@ -1174,7 +1172,7 @@ def test_initial_pull_replication_background_apprun(params_from_base_test_setup,
     replicator = Replication(base_url)
     authenticator = Authenticator(base_url)
     replicator_authenticator = authenticator.authentication(session_id, cookie, authentication_type="session")
-    repl_config = replicator.configure(cbl_db, target_url=sg_blip_url, continuous=False,
+    repl_config = replicator.configure(cbl_db, target_url=sg_blip_url, continuous=True,
                                        replication_type="pull", replicator_authenticator=replicator_authenticator)
 
     repl = replicator.create(repl_config)
@@ -1289,7 +1287,7 @@ def test_replication_wrong_blip(params_from_base_test_setup):
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
     cluster_config = params_from_base_test_setup["cluster_config"]
     sg_blip_url = params_from_base_test_setup["target_url"]
-    sg_blip_url = sg_blip_url.replace("ws", "http")
+    sg_blip_url = sg_blip_url.replace("ws", "ht2tp")
     base_url = params_from_base_test_setup["base_url"]
     sg_config = params_from_base_test_setup["sg_config"]
     db = params_from_base_test_setup["db"]
@@ -1399,8 +1397,12 @@ def test_default_conflict_scenario_delete_wins(params_from_base_test_setup, dele
 
     replicator.configure_and_replicate(source_db=cbl_db, replicator_authenticator=replicator_authenticator, target_url=sg_blip_url, continuous=False,
                                        channels=channels)
+    if sg_mode == "di":
+        replicator.configure_and_replicate(source_db=cbl_db, replicator_authenticator=replicator_authenticator, target_url=sg_blip_url, continuous=False,
+                                           channels=channels)
     cbl_doc_ids = db.getDocIds(cbl_db)
     cbl_docs = db.getDocuments(cbl_db, cbl_doc_ids)
+
     assert len(cbl_docs) == 0, "did not delete docs after delete operation"
     replicator.configure_and_replicate(source_db=cbl_db, replicator_authenticator=replicator_authenticator, target_url=sg_blip_url, continuous=False,
                                        channels=channels)
@@ -1498,11 +1500,11 @@ def test_default_conflict_scenario_highRevGeneration_wins(params_from_base_test_
         sg_client.update_docs(url=sg_url, db=sg_db, docs=sg_docs, auth=session, number_updates=2)
         db.update_bulk_docs(cbl_db)
 
-    repl_config = replicator.configure(cbl_db, sg_blip_url, channels=channels, replicator_authenticator=replicator_authenticator)
-    repl = replicator.create(repl_config)
-    replicator.start(repl)
-    replicator.wait_until_replicator_idle(repl)
-
+    replicator.configure_and_replicate(source_db=cbl_db, replicator_authenticator=replicator_authenticator, target_url=sg_blip_url, continuous=False,
+                                       channels=channels)
+    if sg_mode == "di":
+        replicator.configure_and_replicate(source_db=cbl_db, replicator_authenticator=replicator_authenticator, target_url=sg_blip_url, continuous=False,
+                                           channels=channels)
     cbl_doc_ids = db.getDocIds(cbl_db)
     cbl_docs = db.getDocuments(cbl_db, cbl_doc_ids)
 
@@ -2174,6 +2176,7 @@ def test_replication_with_3Channels(params_from_base_test_setup, setup_customize
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
     cluster_config = params_from_base_test_setup["cluster_config"]
     sg_blip_url = params_from_base_test_setup["target_url"]
+    sg_mode = params_from_base_test_setup["mode"]
     base_url = params_from_base_test_setup["base_url"]
     sg_config = params_from_base_test_setup["sg_config"]
     db = params_from_base_test_setup["db"]
@@ -2244,6 +2247,13 @@ def test_replication_with_3Channels(params_from_base_test_setup, setup_customize
     replicator.configure_and_replicate(source_db=cbl_db3, replicator_authenticator=replicator_authenticator3, target_url=sg_blip_url,
                                        replication_type="pull", continuous=False, channels=channel3)
 
+    if sg_mode == "di":
+        replicator.configure_and_replicate(source_db=cbl_db1, replicator_authenticator=replicator_authenticator1, target_url=sg_blip_url,
+                                           replication_type="pull", continuous=False, channels=channel1)
+        replicator.configure_and_replicate(source_db=cbl_db2, replicator_authenticator=replicator_authenticator2, target_url=sg_blip_url,
+                                           replication_type="pull", continuous=False, channels=channel2)
+        replicator.configure_and_replicate(source_db=cbl_db3, replicator_authenticator=replicator_authenticator3, target_url=sg_blip_url,
+                                           replication_type="pull", continuous=False, channels=channel3)
     # 4. verify in CBL , docs got replicated to each DB appropirately
     verify_sgDocIds_cblDocIds(sg_client, sg_url, sg_db, session1, cbl_db1, db)
     verify_sgDocIds_cblDocIds(sg_client, sg_url, sg_db, session2, cbl_db2, db)
@@ -2417,10 +2427,10 @@ def test_replication_withChannels1_withMultipleSgDBs(params_from_base_test_setup
     replicator = Replication(base_url)
     replicator_authenticator1 = authenticator.authentication(session_id1, cookie1, authentication_type="session")
     repl1 = replicator.configure_and_replicate(source_db=cbl_db1, replicator_authenticator=replicator_authenticator1, target_url=sg_blip_url1,
-                                               replication_type="pull", continuous=False, channels=channel1)
+                                               replication_type="pull", continuous=True, channels=channel1)
     replicator_authenticator2 = authenticator.authentication(session_id2, cookie2, authentication_type="session")
     repl2 = replicator.configure_and_replicate(source_db=cbl_db2, replicator_authenticator=replicator_authenticator2, target_url=sg_blip_url2,
-                                               replication_type="pull", continuous=False, channels=channel2)
+                                               replication_type="pull", continuous=True, channels=channel2)
 
     # 4. verify in CBL , docs got replicated to each DB appropirately
     verify_sgDocIds_cblDocIds(sg_client, sg_url, sg_db1, session1, cbl_db1, db)

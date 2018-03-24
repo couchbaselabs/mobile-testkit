@@ -67,7 +67,7 @@ class TestServerAndroid(TestServerBase):
             if count > max_retries:
                 raise LiteServError(".apk install failed!")
             try:
-                output = subprocess.check_output(["adb", "install", "-r", apk_path])
+                output = subprocess.check_output(["adb", "-e", "install", "-r", apk_path])
                 break
             except Exception as e:
                 if "INSTALL_FAILED_ALREADY_EXISTS" in e.message or "INSTALL_FAILED_UPDATE_INCOMPATIBLE" in e.message:
@@ -107,7 +107,7 @@ class TestServerAndroid(TestServerBase):
             if count > max_retries:
                 raise LiteServError(".apk install failed!")
             try:
-                output = subprocess.check_output(["adb", "install", "-r", apk_path])
+                output = subprocess.check_output(["adb", "-d", "install", "-r", apk_path])
                 break
             except Exception as e:
                 if "INSTALL_FAILED_ALREADY_EXISTS" in e.message or "INSTALL_FAILED_UPDATE_INCOMPATIBLE" in e.message:

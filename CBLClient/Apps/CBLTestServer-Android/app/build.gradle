@@ -1,6 +1,14 @@
 apply plugin: 'com.android.application'
 
 android {
+    signingConfigs {
+        config {
+            keyAlias 'cbl-android-key'
+            keyPassword 'couchbase'
+            storeFile file('android-key')
+            storePassword 'couchbase'
+        }
+    }
     compileSdkVersion 26
     defaultConfig {
         applicationId "com.couchbase.TestServerApp"
@@ -14,16 +22,17 @@ android {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.config
         }
     }
 }
-final String DEF_VERSION = "2.0.0-435"
+final String DEF_VERSION = "2.0.0-454"
 def COUCHBASE_LITE_VERSION = System.getProperty('version', DEF_VERSION)
 
 dependencies {
-    implementation "org.nanohttpd:nanohttpd:2.3.2-SNAPSHOT"
+    implementation 'org.nanohttpd:nanohttpd:2.3.2-SNAPSHOT'
     implementation "com.couchbase.lite:couchbase-lite-android-ee:${COUCHBASE_LITE_VERSION}"
-    implementation fileTree(dir: 'libs', include: ['*.jar'])
+    implementation fileTree(include: ['*.jar'], dir: 'libs')
     implementation 'com.android.support:appcompat-v7:26.1.0'
     implementation 'com.android.support.constraint:constraint-layout:1.0.2'
     testImplementation 'junit:junit:4.12'

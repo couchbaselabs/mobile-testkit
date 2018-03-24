@@ -221,7 +221,7 @@ public class DocumentRequestHandler{
     }
 
     public Map<String, Object> toMap(Args args){
-        MutableDocument document = args.get("document");
+        Document document = args.get("document");
         return document.toMap();
     }
 

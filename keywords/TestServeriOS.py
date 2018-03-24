@@ -215,7 +215,7 @@ class TestServeriOS(TestServerBase):
         # app_dir = "CBLTestServer-iOS"
 
         self.app_path = "{}/{}/{}".format(BINARY_DIR, self.app_dir, self.app_name)
-        # self.app_path = "/Users/sridevi.saragadam/Library/Developer/Xcode/DerivedData/CBLTestServer-iOS-ayypbvnmphhpihebbhrjusdqhzmk/Build/Products/Debug-EE-iphonesimulator/CBLTestServer-iOS.app"
+        # self.app_path = "/Users/sridevi.saragadam/Library/Developer/Xcode/DerivedData/CBLTestServer-iOS-ayypbvnmphhpihebbhrjusdqhzmk/Build/Products/Release-EE-iphonesimulator/CBLTestServer-iOS.app"
         # Without --exit, ios-sim blocks
         # With --exit, --log has no effect
         # subprocess.Popen didn't launch the app
@@ -239,10 +239,6 @@ class TestServeriOS(TestServerBase):
         """
 
         self.logfile_name = logfile_name
-
-        package_name = "LiteServ-iOS-Device.app"
-        # app_dir = "LiteServ-iOS"
-
         self.app_path = "{}/{}/{}".format(BINARY_DIR, self.app_dir, self.app_name)
 
         output = subprocess.check_output([
