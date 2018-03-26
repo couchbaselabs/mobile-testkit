@@ -16,8 +16,16 @@ namespace Couchbase.Lite.Testing
                                             [NotNull] IReadOnlyDictionary<string, object> postBody,
                                             [NotNull] HttpListenerResponse response)
         {
-            Dictionary<String, Object> dictionary = (Dictionary<String, Object>) postBody["content_dict"];
-            string dictId = MemoryMap.New<MutableDictionaryObject>(dictionary);
+			string dictId = null;
+            if (postBody.ContainsKey("content_dict"))
+            {
+                Dictionary<String, Object> dictionary = (Dictionary<String, Object>)postBody["content_dict"];
+                dictId = MemoryMap.New<MutableDictionaryObject>(dictionary);
+            }
+            else
+            {
+                dictId = MemoryMap.New<MutableDictionaryObject>();
+            }
             response.WriteBody(dictId);
         }
 

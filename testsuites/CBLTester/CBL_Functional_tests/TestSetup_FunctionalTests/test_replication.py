@@ -107,23 +107,22 @@ def test_replication_configuration_valid_values(params_from_base_test_setup, num
 
     time.sleep(2)
     cbl_doc_ids = db.getDocIds(cbl_db)
+    cbl_db_docs = db.getDocuments(cbl_db, cbl_doc_ids)
     count = 0
     for doc in cbl_doc_ids:
-        cbl_db_doc_ref = db.getDocument(cbl_db, doc)
-        doc_obj = Document(base_url)
-        cbl_db_doc = doc_obj.toMap(cbl_db_doc_ref)
         if continuous:
             while count < 30:
-                time.sleep(1)
-                if cbl_db_doc["updates"] == number_of_updates:
+                time.sleep(0.5)
+                log_info("Checking {} for updates".format(doc))
+                if cbl_db_docs[doc]["updates"] == number_of_updates:
                     break
-                count += 1
-                cbl_db_doc_ref = db.getDocument(cbl_db, doc)
-                doc_obj = Document(base_url)
-                cbl_db_doc = doc_obj.toMap(cbl_db_doc_ref)
-            assert cbl_db_doc["updates"] == number_of_updates, "updates did not get updated"
+                else:
+                    log_info("{} is missing updates, Retrying...".format(doc))
+                    count += 1
+                    cbl_db_docs = db.getDocuments(cbl_db, cbl_doc_ids)
+            assert cbl_db_docs[doc]["updates"] == number_of_updates, "updates did not get updated"
         else:
-            assert cbl_db_doc["updates"] == 0, "sync-gateway updates got pushed to CBL for one shot replication"
+            assert cbl_db_docs[doc]["updates"] == 0, "sync-gateway updates got pushed to CBL for one shot replication"
 
 
 @pytest.mark.sanity

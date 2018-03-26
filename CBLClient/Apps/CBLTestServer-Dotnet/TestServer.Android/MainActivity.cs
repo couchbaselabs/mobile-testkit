@@ -16,6 +16,8 @@ namespace Couchbase.Lite.Testing.Android
             Couchbase.Lite.Support.Droid.Activate(ApplicationContext);
             Couchbase.Lite.Support.Droid.EnableTextLogging();
 
+			Database.SetLogLevel(Logging.LogDomain.All, Logging.LogLevel.Debug);
+         
             var listener = new TestServer();
             listener.Start();
 

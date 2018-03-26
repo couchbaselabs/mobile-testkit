@@ -28,6 +28,8 @@ namespace Couchbase.Lite.Testing.iOS
             Window.MakeKeyAndVisible();
 
             Couchbase.Lite.Support.iOS.Activate();
+			Database.SetLogLevel(Logging.LogDomain.All, Logging.LogLevel.Debug);
+         
             var listener = new TestServer();
             listener.Start();
 

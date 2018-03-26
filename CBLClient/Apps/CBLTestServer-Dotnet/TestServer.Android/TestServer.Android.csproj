@@ -52,6 +52,12 @@
     <Reference Include="System.Xml" />
     <Reference Include="System.Core" />
     <Reference Include="Mono.Android" />
+    <Reference Include="TestServer">
+      <HintPath>..\TestServer\bin\Debug\netstandard2.0\TestServer.dll</HintPath>
+    </Reference>
+    <Reference Include="TestServer">
+      <HintPath>..\TestServer\bin\Debug\netstandard2.0\TestServer.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="MainActivity.cs" />
