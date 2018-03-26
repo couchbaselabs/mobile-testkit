@@ -76,9 +76,11 @@ namespace Couchbase.Lite.Testing
         public static void WriteEmptyBody([NotNull]this HttpListenerResponse response, HttpStatusCode code = HttpStatusCode.OK)
         {
             try {
-                response.ContentLength64 = 0;
-                response.StatusCode = (int) code;
-
+				var body = Encoding.UTF8.GetBytes("I-1");
+                response.ContentLength64 = body.LongLength;
+                response.ContentEncoding = Encoding.UTF8;
+                response.StatusCode = (int)code;
+                response.OutputStream.Write(body, 0, body.Length);
                 response.Close();
             } catch (ObjectDisposedException) {
                 // Swallow...other side closed the connection
