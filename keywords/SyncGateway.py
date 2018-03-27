@@ -321,6 +321,10 @@ class SyncGateway:
         playbook_vars["couchbase_sync_gateway_package_base_url"] = sync_gateway_base_url
         playbook_vars["couchbase_sync_gateway_package"] = sync_gateway_package_name
         playbook_vars["couchbase_sg_accel_package"] = sg_accel_package_name
+        playbook_vars["no_conflicts"] = ""
+
+        if no_conflicts_enabled(cluster_config):
+            playbook_vars["no_conflicts"] = '"allow_conflicts": false,'
 
         if url is not None:
             target = hostname_for_url(cluster_config, url)
@@ -359,8 +363,12 @@ class SyncGateway:
             "server_port": server_port,
             "server_scheme": server_scheme,
             "autoimport": "",
-            "xattrs": ""
+            "xattrs": "",
+            "no_conflicts": ""
         }
+
+        if no_conflicts_enabled(cluster_config):
+            playbook_vars["no_conflicts"] = '"allow_conflicts": false,'
 
         if is_xattrs_enabled(cluster_config):
             playbook_vars["xattrs"] = '"enable_shared_bucket_access": true,'
