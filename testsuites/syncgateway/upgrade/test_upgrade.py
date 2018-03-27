@@ -223,7 +223,6 @@ def test_upgrade(params_from_base_test_setup):
         # Iterate over a copy so that the array can be modified while iterating
         added_docs_copy = added_docs[:]
         for doc in added_docs_copy:
-            log_info("doc: {}".format(doc))
             if doc["id"] in deleted_docs:
                 log_info("Removing {} from added_docs".format(doc))
                 added_docs.remove(doc)
