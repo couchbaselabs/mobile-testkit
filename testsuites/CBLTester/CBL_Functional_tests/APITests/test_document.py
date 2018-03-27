@@ -216,7 +216,7 @@ class TestDocument(object):
         self.doc_obj.setDate(doc, key, date_obj)
         new_date = self.doc_obj.getDate(doc, key)
         assert self.datatype.compareDate(date_obj, new_date)
-
+   """
     @pytest.mark.parametrize("key, value", [
         (random_string(6), "{}".format(random.uniform(0, 1))),
         (random_string(6), "{}".format(random.uniform(1, 10))),
@@ -231,7 +231,7 @@ class TestDocument(object):
         # double_obj = self.datatype.setDouble(value)
         self.doc_obj.setDouble(doc, key, value)
         assert float(value) == float(self.doc_obj.getDouble(doc, key))
-
+    """
     @pytest.mark.parametrize("key, value", [
         (random_string(6), round(random.uniform(0, 1), 3)),
         (random_string(6), round(random.uniform(1, 10), 3)),

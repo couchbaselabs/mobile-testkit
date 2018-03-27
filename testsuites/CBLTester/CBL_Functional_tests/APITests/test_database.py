@@ -162,7 +162,7 @@ class TestDatabase(object):
         # assert self.db_obj.getDocument(db, doc_id) == -1
 
         doc = self.doc_obj.create(doc_id=doc_id)
-        doc = self.doc_obj.setString(doc, "key", "value")
+        self.doc_obj.setString(doc, "key", "value")
         self.db_obj.saveDocument(db, doc)
         doc_res = self.db_obj.getDocument(db, doc_id)
         assert doc_res is not None
