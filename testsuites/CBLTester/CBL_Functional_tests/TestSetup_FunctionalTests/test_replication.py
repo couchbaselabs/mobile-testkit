@@ -390,7 +390,7 @@ def test_replication_configuration_with_filtered_doc_ids(params_from_base_test_s
         5. Add new docs to SG
         6. PushPull Replicate one shot from SG -> CBL with doc id filters set
         7. Verify CBL only has the doc ids set in the replication from SG
-        NOTE: Only works with one shot replication for filtered doc ids 
+        NOTE: Only works with one shot replication for filtered doc ids
     """
     sg_db = "db"
 

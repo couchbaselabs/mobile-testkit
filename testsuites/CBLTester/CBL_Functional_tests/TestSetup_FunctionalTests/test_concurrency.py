@@ -1,5 +1,4 @@
 import pytest
-import time
 
 from keywords.MobileRestClient import MobileRestClient
 from keywords import document
