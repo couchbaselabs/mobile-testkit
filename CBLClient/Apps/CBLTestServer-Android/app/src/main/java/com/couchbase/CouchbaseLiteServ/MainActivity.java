@@ -10,6 +10,7 @@ import android.widget.TextView;
 import com.couchbase.CouchbaseLiteServ.server.Server;
 
 import java.io.IOException;
+import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.net.SocketException;
@@ -58,7 +59,7 @@ public class MainActivity extends AppCompatActivity {
                 System.out.println(intf.getName());
                 for (Enumeration<InetAddress> enumIpAddr = intf.getInetAddresses(); enumIpAddr.hasMoreElements();) {
                     InetAddress inetAddress = enumIpAddr.nextElement();
-                    if (!inetAddress.isLoopbackAddress() && intf.getName().equals("eth1")) {
+                    if (!inetAddress.isLoopbackAddress() && intf.getName().equals("eth1") && (inetAddress instanceof Inet4Address)) {
                         return inetAddress.getHostAddress();
                     }
                 }

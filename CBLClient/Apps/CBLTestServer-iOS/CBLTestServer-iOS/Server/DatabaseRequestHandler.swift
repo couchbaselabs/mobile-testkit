@@ -239,9 +239,12 @@ public class DatabaseRequestHandler {
             
         case "database_getDocIds":
             let database: Database = args.get(name:"database")!
+            let limit: Int = args.get(name:"limit")!
+            let offset: Int = args.get(name:"offset")!
             let query = QueryBuilder
                 .select(SelectResult.expression(Meta.id))
                 .from(DataSource.database(database))
+                .limit(Expression.int(limit), offset:Expression.int(offset))
 
             var result: [String] = []
             do {

@@ -16,7 +16,7 @@ from datetime import datetime, timedelta
 @pytest.mark.replication
 @pytest.mark.parametrize("num_of_docs, num_of_updates, num_of_docs_to_update, num_of_docs_in_itr, num_of_doc_to_delete, num_of_docs_to_add, up_time", [
 #     (500000, 10, 100, 10000, 100, 50, 4 * 60),
-    (100, 5, 10, 25, 10, 5, 1 * 10),
+    (50, 5, 10, 50, 10, 20, 1 * 10),
 ])
 def test_system(params_from_base_suite_setup, num_of_docs, num_of_updates, num_of_docs_to_update, num_of_docs_in_itr, num_of_doc_to_delete, num_of_docs_to_add, up_time):
     sg_db = "db"
@@ -31,7 +31,11 @@ def test_system(params_from_base_suite_setup, num_of_docs, num_of_updates, num_o
     db_name_list = params_from_base_suite_setup["db_name_list"]
     query_obj_list = params_from_base_suite_setup["query_obj_list"]
     sync_gateway_version = params_from_base_suite_setup["sync_gateway_version"]
+    resume_cluster = params_from_base_suite_setup["resume_cluster"]
+    generator = params_from_base_suite_setup["generator"]
     doc_id_for_new_docs = num_of_docs
+    query_limit = 1000
+    query_offset = 0
 
     if sync_gateway_version < "2.0.0":
         pytest.skip('This test cannnot run with sg version below 2.0')
@@ -42,56 +46,67 @@ def test_system(params_from_base_suite_setup, num_of_docs, num_of_updates, num_o
     # Create CBL database
     sg_client = MobileRestClient()
 
-    # Reset cluster to ensure no data in system
-    c = cluster.Cluster(config=cluster_config)
-    c.reset(sg_config_path=sg_config)
-
+    doc_ids = set()
     docs_per_db = num_of_docs / len(cbl_db_list)  # Equally distributing docs to db
     extra_docs = num_of_docs % len(cbl_db_list)  # Docs left after equal distribution
     num_of_itr_per_db = docs_per_db / num_of_docs_in_itr  # iteration required to add docs in each db
     extra_docs_in_itr_per_db = docs_per_db % num_of_docs_in_itr  # iteration required to add docs leftover docs per db
 
-    doc_ids = set()
-    # adding bulk docs to each db
-    for cbl_db, db_obj, db_name in zip(cbl_db_list, db_obj_list, db_name_list):
-        print "Adding doc on {} db".format(db_name)
-        doc_prefix = "cbl_{}".format(db_name)
-        j = 0
-        for j in range(num_of_itr_per_db):
-            ids = db_obj.create_bulk_docs(num_of_docs_in_itr, doc_prefix, db=cbl_db, channels=channels_sg, id_start_num=j * num_of_docs_in_itr)
-            x = ["{}_{}".format(doc_prefix, doc_id) for doc_id in range(j * num_of_docs_in_itr, (j * num_of_docs_in_itr) + num_of_docs_in_itr)]
-            assert sorted(ids) == sorted(x)
-            doc_ids.update(ids)
-        # adding remaining docs to each db
-        if extra_docs_in_itr_per_db != 0:
-            ids = db_obj.create_bulk_docs(extra_docs_in_itr_per_db, "cbl_{}".format(db_name), db=cbl_db, channels=channels_sg, id_start_num=(j + 1) * num_of_docs_in_itr)
-            x = ["{}_{}".format(doc_prefix, doc_id) for doc_id in range((j + 1) * num_of_docs_in_itr, ((j + 1) * num_of_docs_in_itr) + extra_docs_in_itr_per_db)]
-            assert sorted(ids) == sorted(x)
-            doc_ids.update(ids)
+    c = cluster.Cluster(config=cluster_config)
+    if not resume_cluster:
+        # Reset cluster to ensure no data in system
+        c.reset(sg_config_path=sg_config)
+        sg_client.create_user(sg_admin_url, sg_db, username, password, channels=channels_sg)
 
-    # add the extra docs to last db
-    if extra_docs != 0:
-        ids = db_obj.create_bulk_docs(extra_docs, "cbl_{}".format(db_name), db=cbl_db, channels=channels_sg, id_start_num=docs_per_db)
-        x = ["{}_{}".format(doc_prefix, doc_id) for doc_id in range(docs_per_db, docs_per_db + extra_docs_in_itr_per_db)]
-        assert sorted(ids) == sorted(x)
-        doc_ids.update(ids)
+        # adding bulk docs to each db
+        for cbl_db, db_obj, db_name in zip(cbl_db_list, db_obj_list, db_name_list):
+            print "Adding doc on {} db".format(db_name)
+            doc_prefix = "cbl_{}".format(db_name)
+            j = 0
+            for j in range(num_of_itr_per_db):
+                ids = db_obj.create_bulk_docs(num_of_docs_in_itr, doc_prefix, db=cbl_db, channels=channels_sg, id_start_num=j * num_of_docs_in_itr,  generator=generator)
+                x = ["{}_{}".format(doc_prefix, doc_id) for doc_id in range(j * num_of_docs_in_itr, (j * num_of_docs_in_itr) + num_of_docs_in_itr)]
+                assert sorted(ids) == sorted(x)
+                doc_ids.update(ids)
+            # adding remaining docs to each db
+            if extra_docs_in_itr_per_db != 0:
+                ids = db_obj.create_bulk_docs(extra_docs_in_itr_per_db, "cbl_{}".format(db_name), db=cbl_db, channels=channels_sg, id_start_num=(j + 1) * num_of_docs_in_itr,  generator=generator)
+                x = ["{}_{}".format(doc_prefix, doc_id) for doc_id in range((j + 1) * num_of_docs_in_itr, ((j + 1) * num_of_docs_in_itr) + extra_docs_in_itr_per_db)]
+                assert sorted(ids) == sorted(x)
+                doc_ids.update(ids)
+        # add the extra docs to last db
+        if extra_docs != 0:
+            ids = db_obj.create_bulk_docs(extra_docs, "cbl_{}".format(db_name), db=cbl_db, channels=channels_sg, id_start_num=docs_per_db,  generator=generator)
+            x = ["{}_{}".format(doc_prefix, doc_id) for doc_id in range(docs_per_db, docs_per_db + extra_docs_in_itr_per_db)]
+            assert sorted(ids) == sorted(x)
+            doc_ids.update(ids)
+    else:
+        # getting doc ids from the dbs
+        _check_doc_count(db_obj_list, cbl_db_list)
+        count = db_obj_list[0].getCount(cbl_db_list[0])
+        itr_count = count / query_limit + 1
+        for num in range(itr_count):
+            existing_docs= db_obj_list[0].getDocIds(cbl_db_list[0], (num + 1) * query_limit, query_offset)
+            doc_ids.update(existing_docs)
+            query_offset += query_limit
+        print "Docs in DB are - {}".format(doc_ids)
+        query_offset = 0
 
     # Configure replication with push_pull for all db
     replicator_obj_list = []
     replicator_list = []
-    sg_client.create_user(sg_admin_url, sg_db, username, password, channels=channels_sg)
     for base_url, cbl_db, query in zip(base_url_list, cbl_db_list, query_obj_list):
         repl_obj = Replication(base_url)
         replicator_obj_list.append(repl_obj)
         session, _, repl = repl_obj.create_session_configure_replicate(
             base_url, sg_admin_url, sg_db, username, password, channels_sg, sg_client, cbl_db, sg_blip_url, continuous=True)
         replicator_list.append(repl)
-        # query.query_get_docs_limit_offset(cbl_db, limit=num_of_docs / num_of_docs_in_itr, offset=0)
+        # query.query_get_docs_limit_offset(cbl_db, limit=num_of_docs / num_of_docs_in_itr, offset=query_offset)
 
     current_time = datetime.now()
     running_time = current_time + timedelta(minutes=up_time)
 
-    _check_doc_count(db_obj_list, cbl_db_list, num_of_docs)
+    _check_doc_count(db_obj_list, cbl_db_list)
     x = 1
     while(running_time - current_time > timedelta(0)):
 
@@ -118,7 +133,7 @@ def test_system(params_from_base_suite_setup, num_of_docs, num_of_updates, num_o
             t = Thread(target=_replicaton_status_check, args=(repl_obj, repl))
             t.start()
             t.join()
-            # query.query_get_docs_limit_offset(cbl_db, limit=num_of_docs / num_of_docs_in_itr, offset=0)
+            # query.query_get_docs_limit_offset(cbl_db, limit=num_of_docs / num_of_docs_in_itr, offset=query_offset)
 
         # Checking for the no. of docs in all db
 #         for db_obj, cbl_db in zip(db_obj_list, cbl_db_list):
@@ -144,7 +159,7 @@ def test_system(params_from_base_suite_setup, num_of_docs, num_of_updates, num_o
             t = Thread(target=_replicaton_status_check, args=(repl_obj, repl))
             t.start()
             t.join()
-            # query.query_get_docs_limit_offset(cbl_db, limit=num_of_docs / num_of_docs_in_itr, offset=0)
+            # query.query_get_docs_limit_offset(cbl_db, limit=num_of_docs / num_of_docs_in_itr, offset=query_offset)
 
         # Checking for the no. of docs in all db
 #         for db_obj, cbl_db in zip(db_obj_list, cbl_db_list):
@@ -167,11 +182,11 @@ def test_system(params_from_base_suite_setup, num_of_docs, num_of_updates, num_o
             t = Thread(target=_replicaton_status_check, args=(repl_obj, repl))
             t.start()
             t.join()
-            # query.query_get_docs_limit_offset(cbl_db, limit=num_of_docs / num_of_docs_in_itr, offset=0)
+            # query.query_get_docs_limit_offset(cbl_db, limit=num_of_docs / num_of_docs_in_itr, offset=query_offset)
 #             sg_client.delete_bulk_docs(url=sg_url, db=sg_db,
 #                                        docs=docs, auth=session)
             time.sleep(5)
-        _check_doc_count(db_obj_list, cbl_db_list, num_of_docs)
+        _check_doc_count(db_obj_list, cbl_db_list)
         # removing ids of deleted doc from the list
         doc_ids = doc_ids - docs_to_delete
 
@@ -194,7 +209,7 @@ def test_system(params_from_base_suite_setup, num_of_docs, num_of_updates, num_o
             db_obj.delete_bulk_docs(cbl_db, list(docs_to_delete)[i: i + docs_to_delete_per_db])
             i += docs_to_delete_per_db
             time.sleep(5)
-            # query.query_get_docs_limit_offset(cbl_db, limit=num_of_docs / num_of_docs_in_itr, offset=0)
+            # query.query_get_docs_limit_offset(cbl_db, limit=num_of_docs / num_of_docs_in_itr, offset=query_offset)
 
             # Deleting docs will affect all dbs as they are synced with SG.
             for repl_obj, repl, cbl_db, query in zip(replicator_obj_list,
@@ -204,8 +219,8 @@ def test_system(params_from_base_suite_setup, num_of_docs, num_of_updates, num_o
                 t = Thread(target=_replicaton_status_check, args=(repl_obj, repl))
                 t.start()
                 t.join()
-                # query.query_get_docs_limit_offset(cbl_db, limit=num_of_docs / num_of_docs_in_itr, offset=0)
-        _check_doc_count(db_obj_list, cbl_db_list, num_of_docs)
+                # query.query_get_docs_limit_offset(cbl_db, limit=num_of_docs / num_of_docs_in_itr, offset=query_offset)
+        _check_doc_count(db_obj_list, cbl_db_list)
         # removing ids of deleted doc from the list
         doc_ids = doc_ids - docs_to_delete
         # Checking for the no. of docs in all db
@@ -241,10 +256,10 @@ def test_system(params_from_base_suite_setup, num_of_docs, num_of_updates, num_o
             t = Thread(target=_replicaton_status_check, args=(repl_obj, repl))
             t.start()
             t.join()
-            # query.query_get_docs_limit_offset(cbl_db, limit=num_of_docs / num_of_docs_in_itr, offset=0)
+            # query.query_get_docs_limit_offset(cbl_db, limit=num_of_docs / num_of_docs_in_itr, offset=query_offset)
             time.sleep(5)
         doc_id_for_new_docs += num_of_docs_to_add
-        _check_doc_count(db_obj_list, cbl_db_list, num_of_docs)
+        _check_doc_count(db_obj_list, cbl_db_list)
             # assert len(doc_ids) == db_obj.getCount(cbl_db)
 
         current_time = datetime.now()
@@ -253,6 +268,7 @@ def test_system(params_from_base_suite_setup, num_of_docs, num_of_updates, num_o
     for repl_obj, repl in zip(replicator_obj_list, replicator_list):
         repl_obj.stop(repl)
         time.sleep(5)
+    _check_doc_count(db_obj_list, cbl_db_list)
 
 
 def _replicaton_status_check(repl_obj, replicator):
@@ -262,7 +278,8 @@ def _replicaton_status_check(repl_obj, replicator):
         assert total == completed, "total is not equal to completed"
         time.sleep(5)  # wait until replication is over
 
-def _check_doc_count(db_obj_list, cbl_db_list, num_of_docs):
+def _check_doc_count(db_obj_list, cbl_db_list):
     new_docs_count = set([db_obj.getCount(cbl_db) for db_obj, cbl_db in zip(db_obj_list, cbl_db_list)])
-    if len(new_docs_count) != 1 and new_docs_count == num_of_docs:
-        assert 1, "Doc count in all DBs are not equal or Doc count doesn't match with the expected number"
+    print "Doc count is - {}".format(new_docs_count)
+    if len(new_docs_count) != 1:
+        assert 0, "Doc count in all DBs are not equal"

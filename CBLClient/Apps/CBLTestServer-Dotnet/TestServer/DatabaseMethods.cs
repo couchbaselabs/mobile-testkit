@@ -201,11 +201,14 @@ namespace Couchbase.Lite.Testing
             [NotNull] IReadOnlyDictionary<string, object> postBody,
             [NotNull] HttpListenerResponse response)
         {
+            IExpression limit = Expression.Int((int)postBody["limit"]);
+            IExpression offset = Expression.Int((int)postBody["offset"]);
             With<Database>(postBody, "database", db =>
             {
                 using (var query = Query.QueryBuilder
-                    .Select(SelectResult.Expression(Meta.ID))
-                    .From(DataSource.Database(db)))
+                       .Select(SelectResult.Expression(Meta.ID))
+                       .From(DataSource.Database(db))
+                       .Limit(limit, offset))
                 {
                     var result = query.Execute();
                     var ids = result.Select(x => x.GetString("id")).ToList();

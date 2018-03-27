@@ -13,6 +13,7 @@ import com.couchbase.lite.DatabaseChangeListener;
 import com.couchbase.lite.DatabaseConfiguration;
 import com.couchbase.lite.Document;
 import com.couchbase.CouchbaseLiteServ.MainActivity;
+import com.couchbase.lite.Expression;
 import com.couchbase.lite.ListenerToken;
 import com.couchbase.lite.Meta;
 import com.couchbase.lite.MutableDocument;
@@ -270,9 +271,12 @@ public class DatabaseRequestHandler {
 
     public List<String> getDocIds(Args args) throws CouchbaseLiteException {
         Database database = args.get("database");
+        int limit = args.get("limit");
+        int offset = args.get("offset");
         Query query = QueryBuilder
                 .select(SelectResult.expression(Meta.id))
-                .from(DataSource.database(database));
+                .from(DataSource.database(database))
+                .limit(Expression.intValue(limit), Expression.intValue(offset));
         List<String> result = new ArrayList<String>();
         ResultSet results = query.execute();
         for (Result row : results){

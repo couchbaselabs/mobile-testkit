@@ -65,11 +65,23 @@ def pytest_addoption(parser):
                      action="store_true",
                      help="If set, allow_conflicts is set to false in sync-gateway config")
 
+    parser.addoption("--doc-generator",
+                     action="store",
+                     help="Provide the doc generator type. Valid values are - simple, four_k, simple_user and complex_doc",
+                     default="simple")
+
+    parser.addoption("--resume-cluster", action="store_true",
+                     help="Enable System test to start without reseting cluster", default=False)
+
+    parser.addoption("--no-db-delete", action="store_true",
+                     help="Enable System test to start without reseting cluster", default=False)
+
     parser.addoption("--device", action="store_true",
                      help="Enable device if you want to run it on device", default=False)
 
     parser.addoption("--community", action="store_true",
                      help="If set, community edition will get picked up , default is enterprise", default=False)
+
     parser.addoption("--sg-ssl",
                      action="store_true",
                      help="If set, will enable SSL communication between Sync Gateway and CBL")
@@ -103,6 +115,9 @@ def params_from_base_suite_setup(request):
     create_db_per_suite = request.config.getoption("--create-db-per-suite")
     device_enabled = request.config.getoption("--device")
     sg_ssl = request.config.getoption("--sg-ssl")
+    resume_cluster = request.config.getoption("--resume-cluster")
+    generator = request.config.getoption("--doc-generator")
+    no_db_delete = request.config.getoption("--no-db-delete")
 
 #     community_enabled = request.config.getoption("--community")
 #
@@ -222,6 +237,9 @@ def params_from_base_suite_setup(request):
         cbl_db_list.append(cbl_db)
         log_info("Getting the database name")
         assert db.getName(cbl_db) == db_name
+        if resume_cluster:
+            path = db.getPath(cbl_db)
+            assert db.exists(db_name, path)
 
     yield {
         "cluster_config": cluster_config,
@@ -248,7 +266,9 @@ def params_from_base_suite_setup(request):
         "sg_config": sg_config,
         "db_obj_list": db_obj_list,
         # "testserver_list": testserver_list,
-        "device_enabled": device_enabled
+        "device_enabled": device_enabled,
+        "generator": generator,
+        "resume_cluster": resume_cluster
     }
 
     # Delete CBL database
@@ -256,10 +276,11 @@ def params_from_base_suite_setup(request):
 #                                              testserver_list,
 #                                              base_url_list):
     for cbl_db, db_obj, base_url in zip(cbl_db_list, db_obj_list, base_url_list):
-        log_info("Deleting the database {} at the suite teardown".format(db_obj.getName(cbl_db)))
-        time.sleep(2)
-        db_obj.deleteDB(cbl_db)
-        time.sleep(1)
+        if not no_db_delete:
+            log_info("Deleting the database {} at the suite teardown".format(db_obj.getName(cbl_db)))
+            time.sleep(2)
+            db_obj.deleteDB(cbl_db)
+            time.sleep(1)
 
         # Flush all the memory contents on the server app
         log_info("Flushing server memory")
