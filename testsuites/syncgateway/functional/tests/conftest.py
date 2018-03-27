@@ -30,7 +30,7 @@ UNSUPPORTED_1_5_0_CC = {
 }
 
 
-def skip_if_unsupported(sync_gateway_version, mode, test_name):
+def skip_if_unsupported(sync_gateway_version, mode, test_name, no_conflicts_enabled):
 
     # sync_gateway_version >= 1.5.0 and channel cache
     if compare_versions(sync_gateway_version, "1.5.0") >= 0 and mode == 'cc':
@@ -40,6 +40,9 @@ def skip_if_unsupported(sync_gateway_version, mode, test_name):
     if compare_versions(sync_gateway_version, "1.4.0") <= 0:
         if "log_rotation" in test_name or "test_backfill" in test_name or "test_awaken_backfill" in test_name:
             pytest.skip("{} test was added for sync gateway 1.4".format(test_name))
+
+    if sync_gateway_version < "2.0.0" and no_conflicts_enabled:
+        pytest.skip("{} test cannot run with no-conflicts with sg version < 2.0.0".format(test_name))
 
 
 # Add custom arguments for executing tests in this directory
@@ -104,6 +107,10 @@ def pytest_addoption(parser):
                      action="store_true",
                      help="If set, the tests will use a cluster provisioned by sequoia")
 
+    parser.addoption("--no-conflicts",
+                     action="store_true",
+                     help="If set, allow_conflicts is set to false in sync-gateway config")
+
 
 # This will be called once for the at the beggining of the execution in the 'tests/' directory
 # and will be torn down, (code after the yeild) when all the test session has completed.
@@ -128,9 +135,13 @@ def params_from_base_suite_setup(request):
     sg_lb = request.config.getoption("--sg-lb")
     sg_ce = request.config.getoption("--sg-ce")
     use_sequoia = request.config.getoption("--sequoia")
+    no_conflicts_enabled = request.config.getoption("--no-conflicts")
 
     if xattrs_enabled and version_is_binary(sync_gateway_version):
         check_xattr_support(server_version, sync_gateway_version)
+
+    if no_conflicts_enabled and sync_gateway_version < "2.0":
+        raise FeatureSupportedError('No conflicts feature not available for sync-gateway version below 2.0, so skipping the test')
 
     log_info("server_version: {}".format(server_version))
     log_info("sync_gateway_version: {}".format(sync_gateway_version))
@@ -142,6 +153,7 @@ def params_from_base_suite_setup(request):
     log_info("sa_platform: {}".format(sa_platform))
     log_info("sg_lb: {}".format(sg_lb))
     log_info("sg_ce: {}".format(sg_ce))
+    log_info("no conflicts enabled {}".format(no_conflicts_enabled))
 
     # sg-ce is invalid for di mode
     if mode == "di" and sg_ce:
@@ -204,6 +216,13 @@ def params_from_base_suite_setup(request):
         log_info("Running test with sync_gateway version {}".format(sync_gateway_version))
         persist_cluster_config_environment_prop(cluster_config, 'sync_gateway_version', sync_gateway_version)
 
+    if no_conflicts_enabled:
+        log_info("Running with no conflicts")
+        persist_cluster_config_environment_prop(cluster_config, 'no_conflicts_enabled', True)
+    else:
+        log_info("Running with allow conflicts")
+        persist_cluster_config_environment_prop(cluster_config, 'no_conflicts_enabled', False)
+
     sg_config = sync_gateway_config_path_for_mode("sync_gateway_default_functional_tests", mode)
 
     # Skip provisioning if user specifies '--skip-provisoning' or '--sequoia'
@@ -246,7 +265,8 @@ def params_from_base_suite_setup(request):
         "cluster_topology": cluster_topology,
         "mode": mode,
         "xattrs_enabled": xattrs_enabled,
-        "sg_lb": sg_lb
+        "sg_lb": sg_lb,
+        "no_conflicts_enabled": no_conflicts_enabled
     }
 
     log_info("Tearing down 'params_from_base_suite_setup' ...")
@@ -270,6 +290,8 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     mode = params_from_base_suite_setup["mode"]
     xattrs_enabled = params_from_base_suite_setup["xattrs_enabled"]
     sg_lb = params_from_base_suite_setup["sg_lb"]
+    no_conflicts_enabled = params_from_base_suite_setup["no_conflicts_enabled"]
+    sync_gateway_version = params_from_base_suite_setup["sync_gateway_version"]
 
     test_name = request.node.name
 
@@ -285,7 +307,8 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     skip_if_unsupported(
         sync_gateway_version=params_from_base_suite_setup["sync_gateway_version"],
         mode=mode,
-        test_name=test_name
+        test_name=test_name,
+        no_conflicts_enabled=no_conflicts_enabled
     )
 
     log_info("Running test '{}'".format(test_name))
@@ -299,7 +322,9 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         "cluster_config": cluster_config,
         "cluster_topology": cluster_topology,
         "mode": mode,
-        "xattrs_enabled": xattrs_enabled
+        "xattrs_enabled": xattrs_enabled,
+        "no_conflicts_enabled": no_conflicts_enabled,
+        "sync_gateway_version": sync_gateway_version
     }
 
     # Code after the yield will execute when each test finishes

@@ -11,12 +11,12 @@ from keywords.utils import log_r
 from keywords.utils import version_and_build
 from keywords.utils import hostname_for_url
 from keywords.utils import log_info
+from utilities.cluster_config_utils import get_revs_limit
 
 from keywords.exceptions import ProvisioningError
 
 from libraries.provision.ansible_runner import AnsibleRunner
-from utilities.cluster_config_utils import is_cbs_ssl_enabled
-from utilities.cluster_config_utils import is_xattrs_enabled
+from utilities.cluster_config_utils import is_cbs_ssl_enabled, is_xattrs_enabled, no_conflicts_enabled
 
 
 def validate_sync_gateway_mode(mode):
@@ -220,6 +220,8 @@ class SyncGateway:
             "server_scheme": self.server_scheme,
             "autoimport": "",
             "xattrs": "",
+            "no_conflicts": "",
+            "revs_limit": "",
             "couchbase_server_primary_node": couchbase_server_primary_node
         }
 
@@ -227,6 +229,13 @@ class SyncGateway:
             playbook_vars["autoimport"] = '"import_docs": "continuous",'
             playbook_vars["xattrs"] = '"enable_shared_bucket_access": true,'
 
+        if no_conflicts_enabled(cluster_config):
+            playbook_vars["no_conflicts"] = '"allow_conflicts": false,'
+        try:
+            revs_limit = get_revs_limit(cluster_config)
+            playbook_vars["revs_limit"] = '"revs_limit": {},'.format(revs_limit)
+        except KeyError as ex:
+            log_info("Keyerror in getting revs_limit{}".format(ex.message))
         if url is not None:
             target = hostname_for_url(cluster_config, url)
             log_info("Starting {} sync_gateway.".format(target))

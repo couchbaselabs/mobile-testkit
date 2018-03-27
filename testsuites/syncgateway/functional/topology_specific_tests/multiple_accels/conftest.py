@@ -31,6 +31,7 @@ def params_from_base_suite_setup(request):
     sg_lb = request.config.getoption("--sg-lb")
     sg_ce = request.config.getoption("--sg-ce")
     use_sequoia = request.config.getoption("--sequoia")
+    no_conflicts_enabled = request.config.getoption("--no-conflicts")
 
     log_info("server_version: {}".format(server_version))
     log_info("sync_gateway_version: {}".format(sync_gateway_version))
@@ -41,6 +42,7 @@ def params_from_base_suite_setup(request):
     log_info("xattrs_enabled: {}".format(xattrs_enabled))
     log_info("sg_lb: {}".format(sg_lb))
     log_info("sg_ce: {}".format(sg_ce))
+    log_info("no conflicts enabled {}".format(no_conflicts_enabled))
 
     # sg-ce is invalid for di mode
     if mode == "di" and sg_ce:
@@ -48,6 +50,9 @@ def params_from_base_suite_setup(request):
 
     if xattrs_enabled and version_is_binary(sync_gateway_version):
         check_xattr_support(server_version, sync_gateway_version)
+
+    if no_conflicts_enabled and sync_gateway_version < "2.0":
+        raise FeatureSupportedError('No conflicts feature not available for sync-gateway version below 2.0, so skipping the test')
 
     # Make sure mode for sync_gateway is supported ('cc' or 'di')
     validate_sync_gateway_mode(mode)
@@ -101,6 +106,16 @@ def params_from_base_suite_setup(request):
     else:
         log_info("Running test with sync_gateway version {}".format(sync_gateway_version))
         persist_cluster_config_environment_prop(cluster_config, 'sync_gateway_version', sync_gateway_version)
+
+    if no_conflicts_enabled:
+        log_info("Running with no conflicts")
+        persist_cluster_config_environment_prop(cluster_config, 'no_conflicts_enabled', True)
+    else:
+        log_info("Running with allow conflicts")
+        persist_cluster_config_environment_prop(cluster_config, 'no_conflicts_enabled', False)
+
+    if sync_gateway_version < "2.0.0" and no_conflicts_enabled:
+        pytest.skip("Test cannot run with no-conflicts with sg version < 2.0.0")
 
     # Skip provisioning if user specifies '--skip-provisoning' or '--sequoia'
     should_provision = True

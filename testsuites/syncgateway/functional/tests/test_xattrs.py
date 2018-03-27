@@ -159,8 +159,8 @@ def test_olddoc_nil(params_from_base_test_setup, sg_conf_name):
 @pytest.mark.parametrize('sg_conf_name, number_users, number_docs_per_user, number_of_updates_per_user', [
     ('xattrs/no_import', 1, 1, 10),
     ('xattrs/no_import', 100, 10, 10),
-    ('xattrs/no_import', 10, 1000, 10),
-    ('xattrs/no_import', 100, 1000, 2)
+    ('xattrs/no_import', 10, 1000, 10)
+    # ('xattrs/no_import', 100, 1000, 2)
 ])
 def test_on_demand_doc_processing(params_from_base_test_setup, sg_conf_name, number_users, number_docs_per_user, number_of_updates_per_user):
     """
@@ -2026,10 +2026,13 @@ def test_sg_sdk_interop_shared_updates_from_sg(params_from_base_test_setup,
     cluster_topology = params_from_base_test_setup['cluster_topology']
     mode = params_from_base_test_setup['mode']
     xattrs_enabled = params_from_base_test_setup['xattrs_enabled']
+    no_conflicts_enabled = params_from_base_test_setup["no_conflicts_enabled"]
 
     # This test should only run when using xattr meta storage
     if not xattrs_enabled:
         pytest.skip('XATTR tests require --xattrs flag')
+    if no_conflicts_enabled:
+        pytest.skip('--no-conflicts is enabled, this test needs to create conflicts, so skipping the test')
 
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
     sg_admin_url = cluster_topology['sync_gateways'][0]['admin']

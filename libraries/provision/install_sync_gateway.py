@@ -9,7 +9,7 @@ from keywords.exceptions import ProvisioningError
 from keywords.utils import log_info, log_warn, add_cbs_to_sg_config_server_field
 from libraries.provision.ansible_runner import AnsibleRunner
 from libraries.testkit.config import Config
-from utilities.cluster_config_utils import is_cbs_ssl_enabled, is_xattrs_enabled
+from utilities.cluster_config_utils import is_cbs_ssl_enabled, is_xattrs_enabled, no_conflicts_enabled, get_revs_limit
 
 
 class SyncGatewayConfig:
@@ -115,6 +115,7 @@ def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False, sg_pl
         "server_scheme": server_scheme,
         "autoimport": "",
         "xattrs": "",
+        "no_conflicts": "",
         "couchbase_server_primary_node": couchbase_server_primary_node
     }
 
@@ -122,6 +123,13 @@ def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False, sg_pl
         playbook_vars["autoimport"] = '"import_docs": "continuous",'
         playbook_vars["xattrs"] = '"enable_shared_bucket_access": true,'
 
+    if no_conflicts_enabled(cluster_config):
+        playbook_vars["no_conflicts"] = '"allow_conflicts": false,'
+    try:
+        revs_limit = get_revs_limit(cluster_config)
+        playbook_vars["revs_limit"] = '"revs_limit": {},'.format(revs_limit)
+    except KeyError as ex:
+        log_info("Keyerror in getting revs_limit{}".format(ex.message))
     # Install Sync Gateway via Source or Package
     if sync_gateway_config.commit is not None:
         # Install from source

@@ -13,8 +13,8 @@ from libraries.testkit.admin import Admin
 from libraries.testkit.config import Config
 from libraries.testkit.sgaccel import SgAccel
 from libraries.testkit.syncgateway import SyncGateway
-from utilities.cluster_config_utils import is_load_balancer_enabled
-from utilities.cluster_config_utils import get_load_balancer_ip
+from utilities.cluster_config_utils import is_load_balancer_enabled, get_revs_limit
+from utilities.cluster_config_utils import get_load_balancer_ip, no_conflicts_enabled
 
 
 class Cluster:
@@ -140,6 +140,8 @@ class Cluster:
             "server_scheme": server_scheme,
             "autoimport": "",
             "xattrs": "",
+            "no_conflicts": "",
+            "revs_limit": "",
             "couchbase_server_primary_node": couchbase_server_primary_node
         }
 
@@ -148,6 +150,13 @@ class Cluster:
             playbook_vars["autoimport"] = '"import_docs": "continuous",'
             playbook_vars["xattrs"] = '"enable_shared_bucket_access": true,'
 
+        if no_conflicts_enabled(self._cluster_config):
+            playbook_vars["no_conflicts"] = '"allow_conflicts": false,'
+        try:
+            revs_limit = get_revs_limit(self._cluster_config)
+            playbook_vars["revs_limit"] = '"revs_limit": {},'.format(revs_limit)
+        except KeyError as ex:
+            log_info("Keyerror in getting revs_limit{}".format(ex.message))
         status = ansible_runner.run_ansible_playbook(
             "start-sync-gateway.yml",
             extra_vars=playbook_vars

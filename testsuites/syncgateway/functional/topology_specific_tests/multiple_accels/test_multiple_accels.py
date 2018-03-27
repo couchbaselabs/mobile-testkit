@@ -218,7 +218,7 @@ def test_dcp_reshard_single_sg_accel_goes_down_and_up(params_from_base_test_setu
 @pytest.mark.syncgateway
 @pytest.mark.sgaccel
 @pytest.mark.parametrize("sg_conf", [
-    ("{}/performance/sync_gateway_default_performance.json".format(SYNC_GATEWAY_CONFIGS)),
+    ("{}/performance/sync_gateway_default_performance_di.json".format(SYNC_GATEWAY_CONFIGS)),
 ])
 def test_pindex_distribution(params_from_base_test_setup, sg_conf):
 
