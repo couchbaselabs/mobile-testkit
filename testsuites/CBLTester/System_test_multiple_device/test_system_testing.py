@@ -7,7 +7,8 @@ from keywords.MobileRestClient import MobileRestClient
 from CBLClient.Replication import Replication
 
 from libraries.testkit import cluster
-from libraries.data.doc_generators import simple
+from libraries.data.doc_generators import simple, four_k, simple_user,\
+    complex_doc
 from datetime import datetime, timedelta
 
 
@@ -16,7 +17,7 @@ from datetime import datetime, timedelta
 @pytest.mark.replication
 @pytest.mark.parametrize("num_of_docs, num_of_updates, num_of_docs_to_update, num_of_docs_in_itr, num_of_doc_to_delete, num_of_docs_to_add, up_time", [
 #     (500000, 10, 100, 10000, 100, 50, 4 * 60),
-    (50, 5, 10, 50, 10, 20, 1 * 10),
+    (500, 5, 10, 5, 10, 10, 1 * 20),
 ])
 def test_system(params_from_base_suite_setup, num_of_docs, num_of_updates, num_of_docs_to_update, num_of_docs_in_itr, num_of_doc_to_delete, num_of_docs_to_add, up_time):
     sg_db = "db"
@@ -240,7 +241,14 @@ def test_system(params_from_base_suite_setup, num_of_docs, num_of_updates, num_o
             added_docs = {}
             new_doc_ids = []
             for doc_id in docs_to_create:
-                data = simple()
+                if generator == "complex_doc":
+                    data = complex_doc()
+                elif generator == "four_k":
+                    data = four_k()
+                elif generator == "simple_user":
+                    data = simple_user()
+                else:
+                    data = simple()
                 data["channels"] = channels_sg
                 data["_id"] = doc_id
                 added_docs[doc_id] = data
