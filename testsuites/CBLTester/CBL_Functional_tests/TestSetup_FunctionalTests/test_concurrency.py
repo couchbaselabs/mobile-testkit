@@ -188,7 +188,7 @@ def test_replication_with_concurrencyControl_sgCBL_sameDocId(params_from_base_te
     authenticator = Authenticator(base_url)
     replicator_authenticator = authenticator.authentication(session_id, cookie, authentication_type="session")
     replicator.configure_and_replicate(source_db=cbl_db, replicator_authenticator=replicator_authenticator, target_url=sg_blip_url,
-                                       replication_type="push_pull", continuous=False, channels=channel)
+                                       replication_type="push_pull", continuous=True, channels=channel)
     cbl_doc_ids = db.getDocIds(cbl_db)
     cbl_docs = db.getDocuments(cbl_db, cbl_doc_ids)
     # 1. Create document id = doc1 as doc1a instance
@@ -200,8 +200,6 @@ def test_replication_with_concurrencyControl_sgCBL_sameDocId(params_from_base_te
 
     # 3. Get cbl docs
     cbl_doc_ids = db.getDocIds(cbl_db)
-    # A sleep is needed for di mode
-    time.sleep(5)
     cbl_docs = db.getDocuments(cbl_db, cbl_doc_ids)
     for id in cbl_doc_ids:
         if concurrencyType == "lastWriteWins":

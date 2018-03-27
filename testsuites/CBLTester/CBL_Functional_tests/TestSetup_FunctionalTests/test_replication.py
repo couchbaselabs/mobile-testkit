@@ -390,14 +390,14 @@ def test_replication_configuration_with_filtered_doc_ids(params_from_base_test_s
         5. Add new docs to SG
         6. PushPull Replicate one shot from SG -> CBL with doc id filters set
         7. Verify CBL only has the doc ids set in the replication from SG
-        NOTE: Only works with one shot replication
+        NOTE: Only works with one shot replication for filtered doc ids 
     """
     sg_db = "db"
 
     sg_url = params_from_base_test_setup["sg_url"]
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
     sg_blip_url = params_from_base_test_setup["target_url"]
-    mode = params_from_base_test_setup["sg_mode"]
+    mode = params_from_base_test_setup["mode"]
     base_url = params_from_base_test_setup["base_url"]
     cluster_config = params_from_base_test_setup["cluster_config"]
     sg_config = params_from_base_test_setup["sg_config"]
@@ -1244,8 +1244,9 @@ def test_push_replication_with_backgroundApp(params_from_base_test_setup, num_do
             db.create_bulk_docs(num_docs, cbl_prefix, db=cbl_db, generator="simple_user",
                                 attachments_generator=attachment.generate_png_100_100, channels=channels)
     else:
-        cbl_prefix = "cbl" + str(x)
-        db.create_bulk_docs(num_docs, cbl_prefix, db=cbl_db, channels=channels)
+        for x in xrange(0, num_docs, 100000):
+            cbl_prefix = "cbl" + str(x)
+            db.create_bulk_docs(num_docs, cbl_prefix, db=cbl_db, channels=channels)
 
     cbl_doc_ids = db.getDocIds(cbl_db)
     assert len(cbl_doc_ids) == num_docs
@@ -2683,12 +2684,14 @@ def test_replication_multipleChannels_withFilteredDocIds(params_from_base_test_s
         3. replication to CBL with continous true/false and push_pull on 1 CBL DB
            with document filters.
         4. verify in CBL , filtered docs from 2 channels got replicated
+        NOTE: Only works with one shot replication for filtered doc ids
     """
     sg_db = "db"
 
     sg_url = params_from_base_test_setup["sg_url"]
     sg_admin_url = params_from_base_test_setup["sg_admin_url"]
     sg_blip_url = params_from_base_test_setup["target_url"]
+    sg_mode = params_from_base_test_setup["mode"]
     base_url = params_from_base_test_setup["base_url"]
     cluster_config = params_from_base_test_setup["cluster_config"]
     sg_config = params_from_base_test_setup["sg_config"]
@@ -2706,6 +2709,9 @@ def test_replication_multipleChannels_withFilteredDocIds(params_from_base_test_s
     # channel2 = ["xyz"]
     sg_client = MobileRestClient()
     replicator = Replication(base_url)
+
+    if sg_mode == "di":
+        pytest.skip('Filter doc ids does not work with di modes')
 
     sg_client.create_user(sg_admin_url, sg_db, username1, password="password", channels=channel1)
     cookie, session = sg_client.create_session(sg_admin_url, sg_db, username1)
@@ -2732,14 +2738,16 @@ def test_replication_multipleChannels_withFilteredDocIds(params_from_base_test_s
     repl = replicator.create(repl_config)
     replicator.start(repl)
     replicator.wait_until_replicator_idle(repl)
-
-    replicator_authenticator = authenticator.authentication(username=username2, password="password", authentication_type="basic")
-    repl_config = replicator.configure(cbl_db, target_url=sg_blip_url, replication_type="push_pull", continuous=False,
-                                       documentIDs=list_of_filtered_ids, channels=channel2, replicator_authenticator=replicator_authenticator)
-    repl = replicator.create(repl_config)
-    replicator.start(repl)
-    replicator.wait_until_replicator_idle(repl)
-
+    # Filter doc ids is supported only for one shot replication, Cannot support for continuous replication
+    """
+    if sg_mode == "di":
+        replicator_authenticator = authenticator.authentication(username=username2, password="password", authentication_type="basic")
+        repl_config = replicator.configure(cbl_db, target_url=sg_blip_url, replication_type="push_pull", continuous=False,
+                                           documentIDs=list_of_filtered_ids, channels=channel2, replicator_authenticator=replicator_authenticator)
+        repl = replicator.create(repl_config)
+        replicator.start(repl)
+        replicator.wait_until_replicator_idle(repl)
+    """
     # Verify only filtered cbl doc ids are replicated to sg
     cbl_doc_ids = db.getDocIds(cbl_db)
     list_of_non_filtered_ids = set(sg_combined_ids) - set(list_of_filtered_ids)
