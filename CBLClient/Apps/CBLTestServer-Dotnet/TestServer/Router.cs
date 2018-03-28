@@ -63,6 +63,7 @@ namespace Couchbase.Lite.Testing
             ["database_getPath"] = DatabaseMethods.DatabasePath,
             ["database_deleteDB"] = DatabaseMethods.DatabaseDeleteDB,
             ["database_delete"] = DatabaseMethods.DatabaseDelete,
+            ["database_deleteBulkDocs"] = DatabaseMethods.DatabaseDeleteBulkDocs,
             ["database_getName"] = DatabaseMethods.DatabaseGetName,
             ["database_getDocument"] = DatabaseMethods.DatabaseGetDocument,
             ["database_saveDocuments"] = DatabaseMethods.DatabaseSaveDocuments,

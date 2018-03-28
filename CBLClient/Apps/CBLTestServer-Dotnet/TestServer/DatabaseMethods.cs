@@ -34,6 +34,7 @@ using static Couchbase.Lite.Query.QueryBuilder;
 using JetBrains.Annotations;
 
 using Newtonsoft.Json.Linq;
+using System.IO;
 
 namespace Couchbase.Lite.Testing
 {
@@ -169,7 +170,24 @@ namespace Couchbase.Lite.Testing
             response.WriteEmptyBody();
         }
 
-
+        internal static void DatabaseDeleteBulkDocs([NotNull] NameValueCollection args,
+            [NotNull] IReadOnlyDictionary<string, object> postBody,
+            [NotNull] HttpListenerResponse response)
+        {
+            var docIds = ((List<object>) postBody["doc_ids"]).OfType<string>();
+            With<Database>(postBody, "database", db =>
+            {
+                db.InBatch(() =>
+                {
+                    foreach (var docId in docIds)
+                    {
+                        Document doc = db.GetDocument(docId);
+                        db.Delete(doc);
+                    }
+                });
+            });
+            response.WriteEmptyBody();
+        }
         // TODO
         internal static void DatabaseDeleteByName([NotNull] NameValueCollection args,
                                                   [NotNull] IReadOnlyDictionary<string, object> postBody,
@@ -187,7 +205,9 @@ namespace Couchbase.Lite.Testing
         {
             var name = postBody["name"].ToString();
             var directory = postBody["directory"].ToString();
-            response.WriteBody(Database.Exists(name, directory));
+            DirectoryInfo dir = new DirectoryInfo(directory);
+            var tmp = dir.Parent.FullName.ToString();
+            response.WriteBody(Database.Exists(name, tmp));
         }
 
         internal static void DatabaseGetCount([NotNull] NameValueCollection args,
