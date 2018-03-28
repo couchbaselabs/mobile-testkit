@@ -87,10 +87,10 @@ def test_system(params_from_base_suite_setup, num_of_docs, num_of_updates, num_o
         count = db_obj_list[0].getCount(cbl_db_list[0])
         itr_count = count / query_limit + 1
         for num in range(itr_count):
-            existing_docs= db_obj_list[0].getDocIds(cbl_db_list[0], (num + 1) * query_limit, query_offset)
+            existing_docs= db_obj_list[0].getDocIds(cbl_db_list[0], query_limit, (num + 1) * query_offset)
             doc_ids.update(existing_docs)
             query_offset += query_limit
-        print "Docs in DB are - {}".format(doc_ids)
+        print "{} Docs in DB - {}".format(len(doc_ids), doc_ids)
         query_offset = 0
 
     # Configure replication with push_pull for all db
