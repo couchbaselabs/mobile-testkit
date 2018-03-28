@@ -1248,7 +1248,8 @@ def test_push_replication_with_backgroundApp(params_from_base_test_setup, num_do
             cbl_prefix = "cbl" + str(x)
             db.create_bulk_docs(num_docs, cbl_prefix, db=cbl_db, channels=channels)
 
-    cbl_doc_ids = db.getDocIds(cbl_db)
+    # wait until cbl got expected docs as there could be delay due to bulk docs
+    cbl_doc_ids = db.getDocIds(cbl_db, limit=num_docs)
     assert len(cbl_doc_ids) == num_docs
 
     # Start replication after app goes background. So close app first and start replication
@@ -1257,7 +1258,7 @@ def test_push_replication_with_backgroundApp(params_from_base_test_setup, num_do
     replicator = Replication(base_url)
     authenticator = Authenticator(base_url)
     replicator_authenticator = authenticator.authentication(session_id, cookie, authentication_type="session")
-    repl_config = replicator.configure(cbl_db, target_url=sg_blip_url, continuous=False,
+    repl_config = replicator.configure(cbl_db, target_url=sg_blip_url, continuous=True,
                                        replication_type="push", replicator_authenticator=replicator_authenticator)
 
     repl = replicator.create(repl_config)
@@ -1266,12 +1267,13 @@ def test_push_replication_with_backgroundApp(params_from_base_test_setup, num_do
     testserver.close_app()
     time.sleep(10)  # wait until all replication is done
     testserver.open_app()
-
+    replicator.wait_until_replicator_idle(repl)
     # Verify docs replicated to sync_gateway
     sg_docs = client.get_all_docs(url=sg_url, db=sg_db, auth=session)
     sg_ids = [row["id"] for row in sg_docs["rows"]]
     for doc_id in cbl_doc_ids:
         assert doc_id in sg_ids
+    replicator.stop(repl)
 
 
 @pytest.mark.sanity
@@ -1658,11 +1660,15 @@ def test_default_conflict_with_two_conflictsAndTomstone(params_from_base_test_se
     base_url = params_from_base_test_setup["base_url"]
     db = params_from_base_test_setup["db"]
     cbl_db = params_from_base_test_setup["source_db"]
+    no_conflicts_enabled = params_from_base_test_setup["no_conflicts_enabled"]
 
     channels = ["replication-channel"]
     num_of_docs = 10
     username = "autotest"
     password = "password"
+
+    if no_conflicts_enabled:
+        pytest.skip('Cannot work with no-conflicts enabled')
 
     # Reset cluster to clean the data
     c = cluster.Cluster(config=cluster_config)
@@ -1745,11 +1751,15 @@ def test_default_conflict_with_oneTombstone_conflict(params_from_base_test_setup
     base_url = params_from_base_test_setup["base_url"]
     db = params_from_base_test_setup["db"]
     cbl_db = params_from_base_test_setup["source_db"]
+    no_conflicts_enabled = params_from_base_test_setup["no_conflicts_enabled"]
 
     channels = ["replication-channel"]
     num_of_docs = 10
     username = "autotest"
     password = "password"
+
+    if no_conflicts_enabled:
+        pytest.skip('Cannot work with no-conflicts enabled')
 
     # Reset cluster to clean the data
     c = cluster.Cluster(config=cluster_config)
@@ -1821,11 +1831,15 @@ def test_default_conflict_with_three_conflicts(params_from_base_test_setup):
     base_url = params_from_base_test_setup["base_url"]
     db = params_from_base_test_setup["db"]
     cbl_db = params_from_base_test_setup["source_db"]
+    no_conflicts_enabled = params_from_base_test_setup["no_conflicts_enabled"]
 
     channels = ["replication-channel"]
     num_of_docs = 10
     username = "autotest"
     password = "password"
+
+    if no_conflicts_enabled:
+        pytest.skip('Cannot work with no-conflicts enabled')
 
     # Reset cluster to clean the data
     c = cluster.Cluster(config=cluster_config)
@@ -1898,11 +1912,15 @@ def test_default_conflict_withConflicts_and_sgOffline(params_from_base_test_setu
     base_url = params_from_base_test_setup["base_url"]
     db = params_from_base_test_setup["db"]
     cbl_db = params_from_base_test_setup["source_db"]
+    no_conflicts_enabled = params_from_base_test_setup["no_conflicts_enabled"]
 
     channels = ["replication-channel"]
     num_of_docs = 10
     username = "autotest"
     password = "password"
+
+    if no_conflicts_enabled:
+        pytest.skip('Cannot work with no-conflicts enabled')
 
     # Reset cluster to clean the data
     c = cluster.Cluster(config=cluster_config)
@@ -2006,6 +2024,7 @@ def test_default_conflict_withConflicts_withChannels(params_from_base_test_setup
     base_url = params_from_base_test_setup["base_url"]
     db = params_from_base_test_setup["db"]
     cbl_db = params_from_base_test_setup["source_db"]
+    no_conflicts_enabled = params_from_base_test_setup["no_conflicts_enabled"]
 
     channels1 = ["replication-channel1"]
     channels2 = ["replication-channel2"]
@@ -2014,6 +2033,9 @@ def test_default_conflict_withConflicts_withChannels(params_from_base_test_setup
     username1 = "autotest1"
     username2 = "autotest2"
     password = "password"
+
+    if no_conflicts_enabled:
+        pytest.skip('Cannot work with no-conflicts enabled')
 
     # Reset cluster to clean the data
     c = cluster.Cluster(config=cluster_config)
@@ -2739,15 +2761,13 @@ def test_replication_multipleChannels_withFilteredDocIds(params_from_base_test_s
     replicator.start(repl)
     replicator.wait_until_replicator_idle(repl)
     # Filter doc ids is supported only for one shot replication, Cannot support for continuous replication
-    """
-    if sg_mode == "di":
-        replicator_authenticator = authenticator.authentication(username=username2, password="password", authentication_type="basic")
-        repl_config = replicator.configure(cbl_db, target_url=sg_blip_url, replication_type="push_pull", continuous=False,
-                                           documentIDs=list_of_filtered_ids, channels=channel2, replicator_authenticator=replicator_authenticator)
-        repl = replicator.create(repl_config)
-        replicator.start(repl)
-        replicator.wait_until_replicator_idle(repl)
-    """
+    replicator_authenticator = authenticator.authentication(username=username2, password="password", authentication_type="basic")
+    repl_config = replicator.configure(cbl_db, target_url=sg_blip_url, replication_type="push_pull", continuous=False,
+                                       documentIDs=list_of_filtered_ids, channels=channel2, replicator_authenticator=replicator_authenticator)
+    repl = replicator.create(repl_config)
+    replicator.start(repl)
+    replicator.wait_until_replicator_idle(repl)
+
     # Verify only filtered cbl doc ids are replicated to sg
     cbl_doc_ids = db.getDocIds(cbl_db)
     list_of_non_filtered_ids = set(sg_combined_ids) - set(list_of_filtered_ids)
