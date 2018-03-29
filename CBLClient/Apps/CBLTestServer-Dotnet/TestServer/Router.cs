@@ -204,6 +204,8 @@ namespace Couchbase.Lite.Testing
             ["datatype_compare"] = DataTypeMethods.DataTypeCompare,
             ["datatype_compareLong"] = DataTypeMethods.DataTypeCompareLong,
             ["datatype_compareDouble"] = DataTypeMethods.DataTypeCompareLong,
+            ["datatype_setDate"] = DataTypeMethods.DataTypeSetDate,
+            ["datatype_compareDate"] = DataTypeMethods.DataTypeCompareDate,
             ["release"] = ReleaseObject,
             ["flushMemory"] = flushMemory
             };

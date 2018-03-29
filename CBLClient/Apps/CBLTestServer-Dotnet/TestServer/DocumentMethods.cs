@@ -215,7 +215,7 @@ namespace Couchbase.Lite.Testing
                           [NotNull] HttpListenerResponse response)
         {
             var key = postBody["key"].ToString();
-            With<MutableDocument>(postBody, "document", doc => response.WriteBody(doc.GetDate(key)));
+            With<MutableDocument>(postBody, "document", doc => response.WriteBody(MemoryMap.Store(doc.GetDate(key).DateTime)));
         }
 
         public static void DocumentSetDate([NotNull] NameValueCollection args,
@@ -223,8 +223,9 @@ namespace Couchbase.Lite.Testing
                                   [NotNull] HttpListenerResponse response)
         {
             var key = postBody["key"].ToString();
-            var val = (DateTime)postBody["value"];
-            With<MutableDocument>(postBody, "document", doc => response.WriteBody(doc.SetDate(key, val)));
+            var val = postBody["value"].ToString();
+            var dateVal = MemoryMap.Get<DateTime>(val);
+            With<MutableDocument>(postBody, "document", doc => response.WriteBody(MemoryMap.Store(doc.SetDate(key, dateVal))));
         }
 
         public static void DocumentSetData([NotNull] NameValueCollection args,

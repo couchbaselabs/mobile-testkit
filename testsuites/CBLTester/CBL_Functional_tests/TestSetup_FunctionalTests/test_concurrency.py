@@ -186,8 +186,8 @@ def test_replication_with_concurrencyControl_sgCBL_sameDocId(params_from_base_te
     replicator = Replication(base_url)
     authenticator = Authenticator(base_url)
     replicator_authenticator = authenticator.authentication(session_id, cookie, authentication_type="session")
-    replicator.configure_and_replicate(source_db=cbl_db, replicator_authenticator=replicator_authenticator, target_url=sg_blip_url,
-                                       replication_type="push_pull", continuous=True, channels=channel)
+    repl = replicator.configure_and_replicate(source_db=cbl_db, replicator_authenticator=replicator_authenticator, target_url=sg_blip_url,
+                                              replication_type="push_pull", continuous=True, channels=channel)
     cbl_doc_ids = db.getDocIds(cbl_db)
     cbl_docs = db.getDocuments(cbl_db, cbl_doc_ids)
     # 1. Create document id = doc1 as doc1a instance
@@ -205,3 +205,5 @@ def test_replication_with_concurrencyControl_sgCBL_sameDocId(params_from_base_te
             assert cbl_docs[id]["content"] == "doc1", "last write wins did not succeed"
         else:
             assert cbl_docs[id]["content"] == "sg-doc1", "Fail on conflict did not work"
+
+    replicator.stop(repl)
