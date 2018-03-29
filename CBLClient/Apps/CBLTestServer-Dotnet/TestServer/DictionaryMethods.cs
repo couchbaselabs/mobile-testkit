@@ -16,13 +16,11 @@ namespace Couchbase.Lite.Testing
                                             [NotNull] IReadOnlyDictionary<string, object> postBody,
                                             [NotNull] HttpListenerResponse response)
         {
-			string dictId = null;
-            if (postBody.ContainsKey("content_dict"))
-            {
+            string dictId = null;
+            if (postBody.ContainsKey("content_dict")) {
                 Dictionary<String, Object> dictionary = (Dictionary<String, Object>)postBody["content_dict"];
                 dictId = MemoryMap.New<MutableDictionaryObject>(dictionary);
-            }
-            else
+            } else
             {
                 dictId = MemoryMap.New<MutableDictionaryObject>();
             }
@@ -117,8 +115,8 @@ namespace Couchbase.Lite.Testing
                                  [NotNull] HttpListenerResponse response)
         {
             var key = postBody["key"].ToString();
-            var val = (double)postBody["value"];
-            With<MutableDictionaryObject>(postBody, "dictionary", d => response.WriteBody(d.SetDouble(key, val)));
+            var val = Convert.ToDouble(postBody["value"]);
+            With<MutableDictionaryObject>(postBody, "dictionary", d => response.WriteBody(MemoryMap.Store(d.SetDouble(key, val))));
         }
 
         public static void DictionaryGetBoolean([NotNull] NameValueCollection args,
@@ -160,7 +158,7 @@ namespace Couchbase.Lite.Testing
                          [NotNull] HttpListenerResponse response)
         {
             var key = postBody["key"].ToString();
-            With<MutableDictionaryObject>(postBody, "dictionary", d => response.WriteBody(d.GetDate(key)));
+            With<MutableDictionaryObject>(postBody, "dictionary", d => response.WriteBody(MemoryMap.Store(d.GetDate(key).DateTime)));
         }
 
         public static void DictionarySetDate([NotNull] NameValueCollection args,
@@ -168,7 +166,7 @@ namespace Couchbase.Lite.Testing
                                  [NotNull] HttpListenerResponse response)
         {
             var key = postBody["key"].ToString();
-            var val = (DateTimeOffset)postBody["value"];
+            var val = MemoryMap.Get<DateTime>(postBody["value"].ToString());
             With<MutableDictionaryObject>(postBody, "dictionary", d => response.WriteBody(d.SetDate(key, val)));
         }
 
@@ -194,7 +192,7 @@ namespace Couchbase.Lite.Testing
                          [NotNull] HttpListenerResponse response)
         {
             var key = postBody["key"].ToString();
-            With<MutableDictionaryObject>(postBody, "dictionary", d => response.WriteBody(d.GetDictionary(key)));
+            With<MutableDictionaryObject>(postBody, "dictionary", d => response.WriteBody(MemoryMap.Store(d.GetDictionary(key))));
         }
 
         public static void DictionarySetDictionary([NotNull] NameValueCollection args,
@@ -202,8 +200,8 @@ namespace Couchbase.Lite.Testing
                                  [NotNull] HttpListenerResponse response)
         {
             var key = postBody["key"].ToString();
-            var val = (DictionaryObject)postBody["value"];
-            With<MutableDictionaryObject>(postBody, "dictionary", d => response.WriteBody(d.SetDictionary(key, val)));
+            var val = MemoryMap.Get<DictionaryObject>(postBody["value"].ToString());
+            With<MutableDictionaryObject>(postBody, "dictionary", d => response.WriteBody(MemoryMap.Store(d.SetDictionary(key, val))));
         }
 
         public static void DictionaryGetKeys([NotNull] NameValueCollection args,

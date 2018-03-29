@@ -90,7 +90,7 @@ class TestDatabase(object):
         @summary: Testing Database constructor method of Database API
         '''
         if len(db_name) >= 128 and (self.liteserv_platform != "ios" or self.liteserv_platform != "android"):
-            pytest.skip("Test not supported on .net platfomrs")
+            pytest.skip("Test not supported on .net platforms")
 
         db = self.db_obj.create(db_name)
         assert self.db_obj.getName(db) == db_name

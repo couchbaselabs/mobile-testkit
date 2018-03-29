@@ -25,8 +25,15 @@ namespace Couchbase.Lite.Testing
                                             [NotNull] IReadOnlyDictionary<string, object> postBody,
                                             [NotNull] HttpListenerResponse response)
         {
-            var val = (float)(postBody["value"]);
-            //val = (double)val;
+            var val = Convert.ToDouble(postBody["value"]);
+            response.WriteBody(val);
+        }
+
+        public static void DataTypeSetFloat([NotNull] NameValueCollection args,
+                                    [NotNull] IReadOnlyDictionary<string, object> postBody,
+                                    [NotNull] HttpListenerResponse response)
+        {
+            var val = (float)postBody["value"];
             response.WriteBody(val);
         }
 
@@ -43,8 +50,17 @@ namespace Couchbase.Lite.Testing
                                             [NotNull] IReadOnlyDictionary<string, object> postBody,
                                             [NotNull] HttpListenerResponse response)
         {
-            var first = (double)postBody["first"];
-            var second = (double)postBody["second"];
+            var first = (long)postBody["first"];
+            var second = (long)postBody["second"];
+            response.WriteBody(first == second);
+        }
+
+        public static void DataTypeCompareDouble([NotNull] NameValueCollection args,
+                                    [NotNull] IReadOnlyDictionary<string, object> postBody,
+                                    [NotNull] HttpListenerResponse response)
+        {
+            var first = Convert.ToDouble(postBody["double1"]);
+            var second = Convert.ToDouble(postBody["double2"]);
             response.WriteBody(first == second);
         }
 
@@ -62,7 +78,7 @@ namespace Couchbase.Lite.Testing
             var date1 = MemoryMap.Get<DateTime>(postBody["date1"].ToString());
             var date2 = MemoryMap.Get<DateTime>(postBody["date2"].ToString());
 
-            if (date1 == date2) {
+            if (DateTime.Compare(date1, date2) == 0) {
                 response.WriteBody(true);
             }
             else

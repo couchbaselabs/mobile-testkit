@@ -203,7 +203,7 @@ class TestDictionary(object):
         (random_string(5), random_string(9).upper()),
         (random_string(5), "{}12".format(random_string(5))),
         (random_string(5), random_string(10, digit=True)),
-        (random_string(128), random_string(128, True)),
+        (random_string(128), random_string(128, True, True)),
     ])
     def test_get_set_string(self, key, value):
         '''
