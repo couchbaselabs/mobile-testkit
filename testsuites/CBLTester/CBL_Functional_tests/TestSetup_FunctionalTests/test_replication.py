@@ -93,11 +93,6 @@ def test_replication_configuration_valid_values(params_from_base_test_setup, num
     sg_docs = sg_client.get_all_docs(url=sg_url, db=sg_db, auth=session)
     sg_client.update_docs(url=sg_url, db=sg_db, docs=sg_docs["rows"], number_updates=number_of_updates, auth=session)
     replicator.wait_until_replicator_idle(repl)
-    total = replicator.getTotal(repl)
-    completed = replicator.getCompleted(repl)
-    replicator.stop(repl)
-    assert total == completed, "total is not equal to completed"
-    time.sleep(2)  # wait until re
     sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, include_docs=True)
     sg_docs = sg_docs["rows"]
 
@@ -123,6 +118,11 @@ def test_replication_configuration_valid_values(params_from_base_test_setup, num
             assert cbl_db_docs[doc]["updates"] == number_of_updates, "updates did not get updated"
         else:
             assert cbl_db_docs[doc]["updates"] == 0, "sync-gateway updates got pushed to CBL for one shot replication"
+
+    total = replicator.getTotal(repl)
+    completed = replicator.getCompleted(repl)
+    replicator.stop(repl)
+    assert total == completed, "total is not equal to completed"
 
 
 @pytest.mark.sanity
