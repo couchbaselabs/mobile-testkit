@@ -264,6 +264,7 @@ namespace Couchbase.Lite.Testing
             [NotNull] IReadOnlyDictionary<string, object> postBody,
             [NotNull] HttpListenerResponse response)
         {
+            var ids = ((List<object>)postBody["ids"]).OfType<string>();
             With<Database>(postBody, "database", db =>
             {
                 var retVal = new Dictionary<string, object>();
@@ -272,7 +273,7 @@ namespace Couchbase.Lite.Testing
                     .From(DataSource.Database(db)))
                 {
                     var result = query.Execute();
-                    foreach (var id in result.Select(x => x.GetString("id")))
+                    foreach (var id in ids)
                     {
                         using (var doc = db.GetDocument(id))
                         {

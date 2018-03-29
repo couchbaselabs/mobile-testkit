@@ -768,5 +768,34 @@ namespace Couchbase.Lite.Testing
             });
 
         }
+
+        internal static void QueryLeftJoin([NotNull] NameValueCollection args,
+           [NotNull] IReadOnlyDictionary<string, object> postBody,
+           [NotNull] HttpListenerResponse response)
+        {
+            With<Database>(postBody, "database", db =>
+            {
+                var prop = postBody["select_property"].ToString();
+                String main = "main";
+                String secondary = "secondary";
+
+                List<Object> resultArray = new List<Object>();
+
+                using (IQuery query = QueryBuilder
+                        .Select(
+                           SelectResult.All().From(main),
+                           SelectResult.All().From(secondary))
+                       .From(DataSource.Database(db).As(main))
+                       .Join(Join.LeftJoin(DataSource.Database(db).As(secondary))
+                             .On(Meta.ID.EqualTo(Expression.Property(prop).From(secondary)))))
+
+                    foreach (Result row in query.Execute())
+                    {
+                        resultArray.Add(row.ToDictionary());
+                    }
+                response.WriteBody(resultArray);
+            });
+
+        }
     }
 }

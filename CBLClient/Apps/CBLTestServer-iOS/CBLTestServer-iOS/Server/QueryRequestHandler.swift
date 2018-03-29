@@ -366,35 +366,19 @@ public class QueryRequestHandler {
             
             return resultArray
             
-        case "query_join2":
+        case "query_leftJoin":
             let database: Database = args.get(name: "database")!
-            let select_property1: String = args.get(name: "select_property1")!
-            let select_property2: String = args.get(name: "select_property2")!
-            let select_property3: String = args.get(name: "select_property3")!
-            let whr_key1: String = args.get(name: "whr_key1")!
-            let whr_val1: String = args.get(name: "whr_val1")!
-            let whr_key2: String = args.get(name: "whr_key2")!
-            let whr_val2: String = args.get(name: "whr_val2")!
-            let join_key1: String = args.get(name: "join_key1")!
-            let join_key2: String = args.get(name: "join_key2")!
-            let main: String = "employeeDS"
-            let secondary: String = "departmentDS"
+            let select_property: String = args.get(name: "select_property")!
+            let main: String = "main"
+            let secondary: String = "secondary"
             
-            let employeeDS = DataSource.database(database).as(main);
-            let departmentDS = DataSource.database(database).as(secondary);
-            let employeeDeptExpr = Expression.property(join_key2).from(main);
-            let departmentCodeExpr = Expression.property(join_key1).from(secondary);
-            let joinExpr = employeeDeptExpr.equalTo(departmentCodeExpr)
-                .and(Expression.property(whr_key1).from(main).equalTo(Expression.string(whr_val1)))
-                .and(Expression.property(whr_key2).from(secondary).equalTo(Expression.string(whr_val2)));
-            let join = Join.leftJoin(departmentDS).on(joinExpr);
             let searchQuery = QueryBuilder
-                .select(
-                    SelectResult.expression(Expression.property(select_property1).from(main)),
-                    SelectResult.expression(Expression.property(select_property2).from(main)),
-                    SelectResult.expression(Expression.property(select_property3).from(secondary)))
-                .from(employeeDS)
-                .join(join);
+                .select(SelectResult.all().from(main),
+                        SelectResult.all().from(secondary))
+                .from(DataSource.database(database).as(main))
+                .join(Join.leftJoin(DataSource.database(database).as(secondary))
+                    .on(Meta.id.from(main).equalTo(Expression.property(select_property).from(secondary))))
+
             var resultArray = [Any]()
             
             for row in try searchQuery.execute() {

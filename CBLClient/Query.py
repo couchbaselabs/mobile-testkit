@@ -234,22 +234,12 @@ class Query(object):
 
         return self._client.invokeMethod("query_join", args)
 
-    def query_join2(self, database, select_property1, select_property2,
-                    select_property3, whr_key1, whr_key2, whr_val1,
-                    whr_val2, join_key1, join_key2,):
+    def query_leftjoin(self, database, select_property):
         args = Args()
         args.setMemoryPointer("database", database)
-        args.setString("select_property1", select_property1)
-        args.setString("select_property2", select_property2)
-        args.setString("select_property3", select_property3)
-        args.setString("whr_key1", whr_key1)
-        args.setString("whr_key2", whr_key2)
-        args.setString("join_key1", join_key1)
-        args.setString("join_key2", join_key2)
-        args.setString("whr_val1", whr_val1)
-        args.setString("whr_val2", whr_val2)
+        args.setString("select_property", select_property)
 
-        return self._client.invokeMethod("query_join2", args)
+        return self._client.invokeMethod("query_leftJoin", args)
 
     def query_between(self, database, prop, val1, val2):
         args = Args()

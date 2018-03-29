@@ -617,6 +617,59 @@ def test_query_join(params_from_base_test_setup, select_property1,
     log_info("Doc contents match")
 
 
+@pytest.mark.parametrize("select_property", [
+    ("sourceairport"),
+])
+def test_query_left_join(params_from_base_test_setup, select_property):
+    """ @summary
+    Fetches docs using collation
+      let collator = Collation.unicode()
+                .ignoreAccents(true)
+                .ignoreCase(true)
+
+     let searchQuery = Query
+        .select(SelectResult.expression(Expression.meta().id),
+                SelectResult.expression(Expression.property("name")))
+        .from(DataSource.database(db))
+        .where(Expression.property("type").equalTo("hotel")
+            .and(Expression.property("country").equalTo("France"))
+            .and(Expression.property("name").collate(collator).equalTo("Le Clos Fleuri")))
+
+    Verifies with n1ql - SELECT airline.*, route.* FROM `travel-sample` route JOIN `travel-sample` airline ON KEYS route.airlineid
+    """
+    cluster_topology = params_from_base_test_setup["cluster_topology"]
+    source_db = params_from_base_test_setup["suite_source_db"]
+    cbs_url = cluster_topology['couchbase_servers'][0]
+    base_url = params_from_base_test_setup["base_url"]
+    cbs_ip = host_for_url(cbs_url)
+
+    log_info("Fetching docs from CBL through query")
+    qy = Query(base_url)
+    result_set = qy.query_leftjoin(source_db, select_property)
+
+    docs_from_cbl = []
+
+    for docs in result_set:
+        docs_from_cbl.append(docs)
+
+    # Get doc from n1ql through query
+    log_info("Fetching docs from server through n1ql")
+    bucket_name = "travel-sample"
+    sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password')
+    n1ql_query = 'select airline.*, route.* from `{}` route JOIN `{}` airline ON KEYS route.airlineid'.format(bucket_name, bucket_name, select_property)
+    log_info(n1ql_query)
+    query = N1QLQuery(n1ql_query)
+    docs_from_n1ql = []
+
+    for row in sdk_client.n1ql_query(query):
+        docs_from_n1ql.append(row)
+
+    assert len(docs_from_cbl) == len(docs_from_n1ql)
+    log_info("Found {} docs".format(len(docs_from_cbl)))
+    assert sorted(docs_from_cbl) == sorted(docs_from_n1ql)
+    log_info("Doc contents match")
+
+
 @pytest.mark.parametrize("prop, val", [
     ("country", "France"),
     ("type", "airline")

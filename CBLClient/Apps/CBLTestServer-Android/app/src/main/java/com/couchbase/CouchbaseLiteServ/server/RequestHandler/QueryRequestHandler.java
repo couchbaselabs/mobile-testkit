@@ -71,8 +71,6 @@ public class QueryRequestHandler {
                 .where((Meta.id).equalTo(doc_id));
         List<Object> resultArray = new ArrayList<Object>();
         for (Result row : query.execute()){
-            // return row.toMap();
-            System.out.println("get doc in android "+ row);
             resultArray.add(row.toMap());
         }
         return resultArray;
@@ -303,37 +301,21 @@ public class QueryRequestHandler {
         return resultArray;
     }
 
-    public List<Object> join2(Args args) throws CouchbaseLiteException {
+    public List<Object> leftJoin(Args args) throws CouchbaseLiteException {
         Database db = args.get("database");
-        String prop1 = args.get("select_property1");
-        String prop2 = args.get("select_property2");
-        String prop3 = args.get("select_property3");
-        String joinKey1 = args.get("join_key1");
-        String joinKey2 = args.get("join_key2");
-        String whrKey1 = args.get("whr_key1");
-        String whrKey2 = args.get("whr_key2");
-        Expression whrVal1 = Expression.value(args.get("whr_val1"));
-        Expression whrVal2 = Expression.value(args.get("whr_val2"));
-        String main = "employeeDS";
-        String secondary = "departmentDS";
+        String prop = args.get("select_property");
+        String main = "main";
+        String secondary = "secondary";
 
         List<Object> resultArray = new ArrayList<>();
 
-        DataSource employeeDS = DataSource.database(db).as(main);
-        DataSource departmentDS = DataSource.database(db).as(secondary);
-        Expression employeeDeptExpr = Expression.property(joinKey2).from(main);
-        Expression departmentCodeExpr = Expression.property(joinKey1).from(secondary);
-        Expression joinExpr = employeeDeptExpr.equalTo(departmentCodeExpr)
-                .and(Expression.property(whrKey1).from(main).equalTo(whrVal1))
-                .and(Expression.property(whrKey2).from(secondary).equalTo(whrVal2));
-        Join join = Join.leftJoin(departmentDS).on(joinExpr);
+
         Query query = QueryBuilder
-                .select(
-                        SelectResult.expression(Expression.property(prop1).from(main)),
-                        SelectResult.expression(Expression.property(prop2).from(main)),
-                        SelectResult.expression(Expression.property(prop3).from(secondary)))
-                .from(employeeDS)
-                .join(join);
+                .select(SelectResult.all().from(main),
+                        SelectResult.all().from((secondary)))
+                .from(DataSource.database(db).as(main))
+                .join(Join.leftJoin(DataSource.database(db).as(secondary))
+                        .on(Meta.id.from(main).equalTo(Expression.property(prop).from(secondary))));
         for (Result row : query.execute()) {
             resultArray.add(row.toMap());
         }
