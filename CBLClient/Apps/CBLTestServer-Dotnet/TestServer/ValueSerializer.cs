@@ -65,8 +65,18 @@ namespace Couchbase.Lite.Testing
             else if (value is IList list)
             {
                 List<string> stringList = new List<string>();
-
+                
                 foreach (var item in list)
+                {
+                    stringList.Add(Serialize(item, item.GetType()));
+                }
+                return JsonConvert.SerializeObject(stringList);
+            }
+            else if (value is ICollection ilist)
+            {
+                List<string> stringList = new List<string>();
+
+                foreach (var item in ilist)
                 {
                     stringList.Add(Serialize(item, item.GetType()));
                 }
@@ -151,7 +161,7 @@ namespace Couchbase.Lite.Testing
             }
             else
             {
-                throw new Exception("Invalid value type");
+                throw new Exception("Invalid value type: " + value.GetType());
             }
 
         }
