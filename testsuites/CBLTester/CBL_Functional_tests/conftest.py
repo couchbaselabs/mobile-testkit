@@ -21,6 +21,7 @@ from CBLClient.Replication import Replication
 from CBLClient.BasicAuthenticator import BasicAuthenticator
 from CBLClient.Database import Database
 from CBLClient.Document import Document
+from CBLClient.Array import Array
 from CBLClient.Dictionary import Dictionary
 from CBLClient.DataTypeInitiator import DataTypeInitiator
 from CBLClient.SessionAuthenticator import SessionAuthenticator
@@ -344,6 +345,8 @@ def params_from_base_suite_setup(request):
         repl = repl_obj.create(repl_config)
         repl_obj.start(repl)
         repl_obj.wait_until_replicator_idle(repl)
+        log_info("Stopping replication")
+        repl_obj.stop(repl)
 
     yield {
         "cluster_config": cluster_config,
@@ -371,10 +374,6 @@ def params_from_base_suite_setup(request):
         "device_enabled": device_enabled,
         "flush_memory_per_test": flush_memory_per_test
     }
-
-    if enable_sample_bucket:
-        log_info("Stopping replication")
-        repl_obj.stop(repl)
 
     if create_db_per_suite:
         # Delete CBL database
@@ -504,6 +503,7 @@ def class_init(request, params_from_base_suite_setup):
 
     db_obj = Database(base_url)
     doc_obj = Document(base_url)
+    array_obj = Array(base_url)
     dict_obj = Dictionary(base_url)
     datatype = DataTypeInitiator(base_url)
     repl_obj = Replication(base_url)
@@ -516,6 +516,7 @@ def class_init(request, params_from_base_suite_setup):
 
     request.cls.db_obj = db_obj
     request.cls.doc_obj = doc_obj
+    request.cls.array_obj = array_obj
     request.cls.dict_obj = dict_obj
     request.cls.datatype = datatype
     request.cls.repl_obj = repl_obj
