@@ -25,6 +25,7 @@ class TestServeriOS(TestServerBase):
         self.logfile_name = None
         self.device_id = None
         self.device = "iPhone-8-Plus"
+        self.debug_mode = False
         if debug_mode:
             self.debug_mode = True
         if community_enabled:
