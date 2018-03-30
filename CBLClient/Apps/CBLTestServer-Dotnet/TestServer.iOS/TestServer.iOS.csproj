@@ -98,19 +98,10 @@
     <Reference Include="System.Xml" />
     <Reference Include="System.Core" />
     <Reference Include="Xamarin.iOS" />
-    <Reference Include="TestServer">
-      <HintPath>..\TestServer\bin\Debug\netstandard2.0\TestServer.dll</HintPath>
-    </Reference>
-    <Reference Include="TestServer">
-      <HintPath>..\TestServer\bin\Debug\netstandard2.0\TestServer.dll</HintPath>
-    </Reference>
-    <Reference Include="TestServer">
-      <HintPath>..\TestServer\bin\Debug\netstandard2.0\TestServer.dll</HintPath>
-    </Reference>
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Couchbase.Lite.Enterprise.Support.iOS">
-      <Version>2.0.0-b0676</Version>
+      <Version>2.0.0-b0705</Version>
     </PackageReference>
   </ItemGroup>
   <ItemGroup>

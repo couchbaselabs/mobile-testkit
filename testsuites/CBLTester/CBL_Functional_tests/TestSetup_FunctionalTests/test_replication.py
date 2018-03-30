@@ -1992,7 +1992,7 @@ def test_default_conflict_withConflicts_and_sgOffline(params_from_base_test_setu
             doc["doc"]["updates-cbl"]
             assert False, "updated doc deleted in cbl, did not get deleted in sg"
         except KeyError:
-                assert True
+            assert True
 
     # 9. update docs in sg and verify updated docs got replicated to cbl
     sg_client.update_docs(url=sg_url, db=sg_db, docs=sg_docs, number_updates=1, delay=None,
