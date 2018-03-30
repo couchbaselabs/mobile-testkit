@@ -190,6 +190,19 @@ public class DictionaryRequestHandler{
         return  dictionary.setDictionary(key, value);
     }
 
+    public Object getValue(Args args) {
+        MutableDictionary dictionary = args.get("dictionary");
+        String key = args.get("key");
+        return dictionary.getValue(key);
+    }
+
+    public MutableDictionary setValue(Args args) {
+        MutableDictionary dictionary = args.get("dictionary");
+        String key = args.get("key");
+        Object value = args.get("value");
+        return dictionary.setValue(key, value);
+    }
+
     public List<String> getKeys(Args args){
         MutableDictionary dictionary = args.get("dictionary");
         return dictionary.getKeys();

@@ -18,13 +18,15 @@ from requests.exceptions import ConnectionError
 
 class TestServeriOS(TestServerBase):
 
-    def __init__(self, version_build, host, port, community_enabled=None):
+    def __init__(self, version_build, host, port, community_enabled=None, debug_mode=False):
 
         super(TestServeriOS, self).__init__(version_build, host, port)
         self.liteserv_admin_url = "http://{}:59850".format(self.host)
         self.logfile_name = None
         self.device_id = None
         self.device = "iPhone-8-Plus"
+        if debug_mode:
+            self.debug_mode = True
         if community_enabled:
             self.app_dir = "CBLTestServer-iOS-community-{}".format(version_build)
             self.package_name = "CBLTestServer-iOS-community-{}.zip".format(version_build)
@@ -71,7 +73,10 @@ class TestServeriOS(TestServerBase):
         """Installs / launches CBLTestServer on iOS device
         Warning: Only works with a single device at the moment
         """
-        self.app_name = "{}-{}-Device.app".format(self.app, self.version_build)
+        if self.debug_mode:
+            self.app_name = "{}-{}-Device-debug.app".format(self.app, self.version_build)
+        else:
+            self.app_name = "{}-{}-Device.app".format(self.app, self.version_build)
         # package_name = "CBLTestServer-iOS-Device.app"
         # app_dir = "CBLTestServer-iOS"
 
@@ -99,7 +104,10 @@ class TestServeriOS(TestServerBase):
         # self.device = "iPhone-7-Plus"
         # package_name = "CBLTestServer-iOS"
         # app_dir = "CBLTestServer-iOS"
-        self.app_name = "{}-{}.app".format(self.app, self.version_build)
+        if self.debug_mode:
+            self.app_name = "{}-{}-debug.app".format(self.app, self.version_build)
+        else:
+            self.app_name = "{}-{}.app".format(self.app, self.version_build)
         self.app_path = "{}/{}/{}".format(BINARY_DIR, self.app_dir, self.app_name)
         # TODO: Remove this once jenkins build for app is done
         # self.app_path = "/Users/sridevi.saragadam/workspace/CBL2-0/build-scripts/mobile-testkit/CBLClient/Apps/CBLTestServer-iOS/build/Build/Products/Release-iphonesimulator/CBLTestServer-iOS.app"

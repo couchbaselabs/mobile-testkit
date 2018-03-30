@@ -1,6 +1,7 @@
 package com.couchbase.CouchbaseLiteServ.server;
 
 
+import com.couchbase.CouchbaseLiteServ.server.RequestHandler.ArrayRequestHandler;
 import com.couchbase.CouchbaseLiteServ.server.RequestHandler.BasicAuthenticatorRequestHandler;
 import com.couchbase.CouchbaseLiteServ.server.RequestHandler.CollatorRequestHandler;
 import com.couchbase.CouchbaseLiteServ.server.RequestHandler.DataSourceRequestHandler;
@@ -173,6 +174,10 @@ public class Server extends NanoHTTPD {
                         target = SessionAuthenticatorRequestHandler.class.getMethod(method_to_call, Args.class);
                         requestHandler = new SessionAuthenticatorRequestHandler();
                         break;
+                    case "array":
+                        target = ArrayRequestHandler.class.getMethod(method_to_call, Args.class);
+                        requestHandler = new ArrayRequestHandler();
+                        break;
                     default:
                         throw new IllegalArgumentException("Handler not implemented for this call");
                 }
@@ -188,7 +193,7 @@ public class Server extends NanoHTTPD {
                 IStatus status = Status.OK;
                 return Response.newFixedLengthResponse(status, "text/plain", body.getBytes());
             } else {
-                return Response.newFixedLengthResponse(Status.OK, "text/plain", "null");
+                return Response.newFixedLengthResponse(Status.OK, "text/plain", "I-1");
             }
         } catch (Exception e) {
             // TODO: How should we handle exceptions?

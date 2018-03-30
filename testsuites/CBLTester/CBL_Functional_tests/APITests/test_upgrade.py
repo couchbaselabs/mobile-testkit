@@ -14,8 +14,8 @@ def test_upgrade():
     cluster_config = "{}/base_{}".format(CLUSTER_CONFIGS_DIR, "cc")
     cluster_utils.set_cluster_config(cluster_config.split("/")[-1])
     sg_config = "resources/sync_gateway_configs/testfest_todo_cc.json"
-    server_version="5.5.0-1992"
-    sync_gateway_version="2.0.0-823"
+    server_version = "5.5.0-1992"
+    sync_gateway_version = "2.0.0-823"
     persist_cluster_config_environment_prop(cluster_config, 'server_version', server_version)
     persist_cluster_config_environment_prop(cluster_config, 'sync_gateway_ssl', False)
     persist_cluster_config_environment_prop(cluster_config, 'sync_gateway_version', sync_gateway_version)
@@ -29,8 +29,8 @@ def test_provision():
     cluster_config = "{}/base_{}".format(CLUSTER_CONFIGS_DIR, "cc")
     cluster_utils.set_cluster_config(cluster_config.split("/")[-1])
     sg_config = "resources/sync_gateway_configs/testfest_todo_cc.json"
-    server_version="5.5.0-1992"
-    sync_gateway_version="2.0.0-823"
+    server_version = "5.5.0-1992"
+    sync_gateway_version = "2.0.0-823"
     persist_cluster_config_environment_prop(cluster_config, 'server_version', server_version)
     persist_cluster_config_environment_prop(cluster_config, 'sync_gateway_ssl', False)
     persist_cluster_config_environment_prop(cluster_config, 'sync_gateway_version', sync_gateway_version)

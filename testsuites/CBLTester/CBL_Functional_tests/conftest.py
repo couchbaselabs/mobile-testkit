@@ -27,6 +27,7 @@ from CBLClient.DataTypeInitiator import DataTypeInitiator
 from CBLClient.SessionAuthenticator import SessionAuthenticator
 from CBLClient.Utils import Utils
 from utilities.cluster_config_utils import get_load_balancer_ip
+from CBLClient.ReplicatorConfiguration import ReplicatorConfiguration
 # from libraries.testkit import cluster
 
 # from libraries.testkit.cluster import Cluster
@@ -110,6 +111,9 @@ def pytest_addoption(parser):
                      action="store_true",
                      help="If set, will target larger cluster (3 backing servers instead of 1, 2 accels if in di mode)")
 
+    parser.addoption("--debug-mode", action="store_true",
+                     help="Enable debug mode for the app ", default=False)
+
 
 # This will get called once before the first test that
 # runs with this as input parameters in this file
@@ -137,13 +141,15 @@ def params_from_base_suite_setup(request):
     flush_memory_per_test = request.config.getoption("--flush-memory-per-test")
     sg_lb = request.config.getoption("--sg-lb")
     ci = request.config.getoption("--ci")
+    debug_mode = request.config.getoption("--debug-mode")
     test_name = request.node.name
 
     testserver = TestServerFactory.create(platform=liteserv_platform,
                                           version_build=liteserv_version,
                                           host=liteserv_host,
                                           port=liteserv_port,
-                                          community_enabled=community_enabled)
+                                          community_enabled=community_enabled,
+                                          debug_mode=debug_mode)
 
     log_info("Downloading TestServer ...")
     # Download TestServer app
@@ -421,6 +427,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     cbl_db = None
 
     # Start LiteServ and delete any databases
+
     if create_db_per_test:
         log_info("Starting TestServer...")
         test_name_cp = test_name.replace("/", "-")
@@ -505,9 +512,10 @@ def class_init(request, params_from_base_suite_setup):
     doc_obj = Document(base_url)
     array_obj = Array(base_url)
     dict_obj = Dictionary(base_url)
+    array_obj = Array(base_url)
     datatype = DataTypeInitiator(base_url)
     repl_obj = Replication(base_url)
-    # repl_config_obj = ReplicatorConfiguration(base_url)
+    repl_config_obj = ReplicatorConfiguration(base_url)
     base_auth_obj = BasicAuthenticator(base_url)
     session_auth_obj = SessionAuthenticator(base_url)
     sg_client = MobileRestClient()
@@ -518,9 +526,10 @@ def class_init(request, params_from_base_suite_setup):
     request.cls.doc_obj = doc_obj
     request.cls.array_obj = array_obj
     request.cls.dict_obj = dict_obj
+    request.cls.array_obj = array_obj
     request.cls.datatype = datatype
     request.cls.repl_obj = repl_obj
-    # request.cls.repl_config_obj = repl_config_obj
+    request.cls.repl_config_obj = repl_config_obj
     request.cls.base_auth_obj = base_auth_obj
     request.cls.session_auth_obj = session_auth_obj
     request.cls.sg_client = sg_client

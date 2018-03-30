@@ -5,10 +5,10 @@ import com.couchbase.CouchbaseLiteServ.server.Args;
 import com.couchbase.lite.Array;
 import com.couchbase.lite.Blob;
 import com.couchbase.lite.Document;
-import com.couchbase.lite.MutableDictionary;
 import com.couchbase.lite.DocumentChange;
 import com.couchbase.lite.DocumentChangeListener;
 import com.couchbase.lite.MutableDocument;
+import com.couchbase.lite.Dictionary;
 
 import java.util.List;
 import java.util.Map;
@@ -158,8 +158,9 @@ public class DocumentRequestHandler{
 
     public MutableDocument setArray(Args args) {
         MutableDocument document = args.get("document");
-        Map<String, Object> value = args.get("value");
-        return  document.setData(value);
+        String key = args.get("key");
+        Array value = args.get("value");
+        return  document.setArray(key, value);
     }
 
     public MutableDocument toMutable(Args args) {
@@ -196,14 +197,14 @@ public class DocumentRequestHandler{
     }
 
 
-    public List getArray(Args args){
+    public Array getArray(Args args){
         Document document = args.get("document");
         String key = args.get("key");
-        return document.getArray(key).toList();
+        return document.getArray(key);
     }
 
-    public MutableDictionary getDictionary(Args args){
-        MutableDocument document = args.get("document");
+    public Dictionary getDictionary(Args args){
+        Document document = args.get("document");
         String key = args.get("key");
         return document.getDictionary(key);
     }
@@ -211,7 +212,7 @@ public class DocumentRequestHandler{
     public MutableDocument setDictionary(Args args){
         MutableDocument document = args.get("document");
         String key = args.get("key");
-        MutableDictionary value = args.get("value");
+        Dictionary value = args.get("value");
         return  document.setDictionary(key, value);
     }
 

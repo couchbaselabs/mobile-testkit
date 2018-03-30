@@ -79,7 +79,7 @@ public class DatabaseRequestHandler {
            
             if let directory = directory {
                 print("is database exists in path\(Database.exists(withName: name, inDirectory: directory))")
-                return Database.exists(withName: name, inDirectory: directory) as Bool
+                return Database.exists(withName: name, inDirectory: directory)
             } else {
                 return Database.exists(withName: name)
             }

@@ -93,6 +93,10 @@ def test_replication_configuration_valid_values(params_from_base_test_setup, num
     sg_docs = sg_client.get_all_docs(url=sg_url, db=sg_db, auth=session)
     sg_client.update_docs(url=sg_url, db=sg_db, docs=sg_docs["rows"], number_updates=number_of_updates, auth=session)
     replicator.wait_until_replicator_idle(repl)
+    total = replicator.getTotal(repl)
+    completed = replicator.getCompleted(repl)
+    assert total == completed, "total is not equal to completed"
+    time.sleep(2)  # wait until replication is done
     sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, include_docs=True)
     sg_docs = sg_docs["rows"]
 
@@ -118,6 +122,7 @@ def test_replication_configuration_valid_values(params_from_base_test_setup, num
             assert cbl_db_docs[doc]["updates"] == number_of_updates, "updates did not get updated"
         else:
             assert cbl_db_docs[doc]["updates"] == 0, "sync-gateway updates got pushed to CBL for one shot replication"
+    replicator.stop(repl)
 
     total = replicator.getTotal(repl)
     completed = replicator.getCompleted(repl)
@@ -1717,16 +1722,25 @@ def test_default_conflict_with_two_conflictsAndTomstone(params_from_base_test_se
 
     # 7. Continue replication to CBL
     replicator.wait_until_replicator_idle(repl)
-    replicator.stop(repl)
 
     # 8. Verify cbl is resolved docs appropriately and deleted docs in sg is updated in cbl
     cbl_doc_ids = db.getDocIds(cbl_db)
     cbl_docs = db.getDocuments(cbl_db, cbl_doc_ids)
+    count = 0
     for id in cbl_doc_ids:
         cbl_doc_ids = db.getDocIds(cbl_db)
+        while count < 30:
+            try:
+                cbl_docs[id]["updates"]
+            except KeyError:
+                break
+            time.sleep(1)
+            count += 1
         with pytest.raises(KeyError) as ke:
             cbl_docs[id]["updates"]
+
         assert ke.value.message.startswith('updates')
+    replicator.stop(repl)
 
 
 @pytest.mark.listener

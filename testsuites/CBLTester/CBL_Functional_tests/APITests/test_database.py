@@ -6,7 +6,7 @@ from keywords.utils import random_string
 class TestDatabase(object):
 
     @pytest.mark.parametrize("db_name, err_msg", [
-        ("", "name should not be empty"),
+        ("", "id cannot be null"),
         (random_string(1028), "File name too long")
     ])
     def test_database_create_exception(self, db_name, err_msg):
@@ -49,7 +49,7 @@ class TestDatabase(object):
             pytest.skip("Test not applicable for ios")
 
         db = self.db_obj.create(random_string(6))
-        err_msg = "a document parameter is null"
+        err_msg = "document cannot be null"
         try:
             self.db_obj.saveDocument(db, None)
             assert 0
@@ -214,6 +214,7 @@ class TestDatabase(object):
 
         db = self.db_obj.create(db_name)
         path = self.db_obj.getPath(db)
+        print "path for db is ", path
         if self.liteserv_platform == "ios" or self.liteserv_platform == "android":
             directory = "/".join(path.split("/")[:-2])
         else:

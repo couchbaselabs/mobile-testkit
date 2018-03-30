@@ -13,12 +13,19 @@ from keywords.utils import log_info
 
 class TestServerAndroid(TestServerBase):
 
-    def __init__(self, version_build, host, port, community_enabled=None):
+    def __init__(self, version_build, host, port, community_enabled=None, debug_mode=False):
         super(TestServerAndroid, self).__init__(version_build, host, port)
         if community_enabled:
-            self.apk_name = "CBLTestServer-Android-{}-community-debug.apk".format(self.version_build)
+            apk_name_prefix = "CBLTestServer-Android-{}-community".format(self.version_build)
+            self.download_source = "couchbase-lite-android"
         else:
-            self.apk_name = "CBLTestServer-Android-{}-enterprise-debug.apk".format(self.version_build)
+            apk_name_prefix = "CBLTestServer-Android-{}-enterprise".format(self.version_build)
+            self.download_source = "couchbase-lite-android-ee"
+        if debug_mode:
+            self.apk_name = "{}-debug.apk".format(apk_name_prefix)
+        else:
+            # self.apk_name = "{}-release.apk".format(apk_name_prefix)
+            self.apk_name = "{}-debug.apk".format(apk_name_prefix)
         self.package_name = self.apk_name
         self.device_enabled = False
 
@@ -38,7 +45,7 @@ class TestServerAndroid(TestServerBase):
             return
 
         # Package not downloaded, proceed to download from latest builds
-        url = "{}/couchbase-lite-android/{}/{}/{}".format(LATEST_BUILDS, version, build, self.package_name)
+        url = "{}/{}/{}/{}/{}".format(LATEST_BUILDS, self.download_source, version, build, self.package_name)
 
         log_info("Downloading {} -> {}/{}".format(url, BINARY_DIR, self.package_name))
         resp = requests.get(url)
@@ -49,13 +56,8 @@ class TestServerAndroid(TestServerBase):
     def install(self):
         """Install the apk to running Android device or emulator"""
 
-        # apk_name = "CBLTestServer-Android-{}-enterprise-debug.apk".format(self.version_build)
-
         apk_path = "{}/{}".format(BINARY_DIR, self.apk_name)
         self.device_enabled = False
-        # TODO: Remove following lines after testing next 2 lines
-        # apk_name = "app-debug.apk"
-        # apk_path = "/Users/sridevi.saragadam/workspace/CBL2-0/build-scripts/mobile-testkit/CBLClient/Apps/CBLTestServer-Android/app/build/outputs/apk/debug/app-debug.apk"
         log_info("Installing: {}".format(apk_path))
 
         # If and apk is installed, attempt to remove it and reinstall.
@@ -93,9 +95,6 @@ class TestServerAndroid(TestServerBase):
         self.device_enabled = True
         apk_path = "{}/{}".format(BINARY_DIR, self.apk_name)
 
-        # TODO: Remove following lines after testing next 2 lines
-        # apk_name = "app-debug.apk"
-        # apk_path = "/Users/sridevi.saragadam/workspace/CBL2-0/build-scripts/mobile-testkit/CBLClient/Apps/CBLTestServer-Android/app/build/outputs/apk/debug/app-debug.apk"
         log_info("Installing: {}".format(apk_path))
 
         # If and apk is installed, attempt to remove it and reinstall.
