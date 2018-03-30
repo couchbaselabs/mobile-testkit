@@ -11,7 +11,6 @@ from keywords.tklogging import Logging
 from CBLClient.Utils import Utils
 
 
-
 def pytest_addoption(parser):
     parser.addoption("--mode",
                      action="store",
@@ -212,16 +211,9 @@ def params_from_base_suite_setup(request):
         "device_enabled": device_enabled
     }
 
-#     if create_db_per_suite:
-#         # Delete CBL database
-#         log_info("Deleting the database {} at the suite teardown".format(create_db_per_suite))
-#         time.sleep(2)
-#         db.deleteDB(source_db)
-#         time.sleep(1)
-
     # Flush all the memory contents on the server app
     log_info("Flushing server memory")
     utils_obj = Utils(base_url)
     utils_obj.flushMemory()
     log_info("Stopping the test server")
-#     testserver.stop()
+    # testserver.stop()

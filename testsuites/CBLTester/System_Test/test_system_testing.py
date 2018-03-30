@@ -15,7 +15,7 @@ from CBLClient.Query import Query
 @pytest.mark.listener
 @pytest.mark.replication
 @pytest.mark.parametrize("num_of_docs, num_of_updates, num_of_docs_in_itr, up_time", [
-#     (1000000, 10, 10000, 3 * 60),
+    # (1000000, 10, 10000, 3 * 60),
     (50, 5, 10, 1 * 5),
 ])
 def test_system(params_from_base_test_setup, num_of_docs, num_of_updates, num_of_docs_in_itr, up_time):
@@ -73,15 +73,14 @@ def test_system(params_from_base_test_setup, num_of_docs, num_of_updates, num_of
         print "updating {} docs on SG".format(len(docs_to_update))
         sg_client.update_docs(url=sg_url, db=sg_db, docs=sg_docs,
                               number_updates=num_of_updates, auth=session, channels=channels_sg)
- 
+
         replicator.wait_until_replicator_idle(repl)
         total = replicator.getTotal(repl)
         completed = replicator.getCompleted(repl)
         assert total == completed, "total is not equal to completed"
         time.sleep(5)  # wait until re
-        query.query_get_docs_limit_offset(cbl_db, limit=num_of_docs/100, offset=0)
-         
- 
+        query.query_get_docs_limit_offset(cbl_db, limit=num_of_docs / 100, offset=0)
+
         #########################################
         # Checking for doc update on CBL side #
         #########################################
@@ -93,7 +92,7 @@ def test_system(params_from_base_test_setup, num_of_docs, num_of_updates, num_of
         completed = replicator.getCompleted(repl)
         assert total == completed, "total is not equal to completed"
         time.sleep(5)  # wait until re
-        query.query_get_docs_limit_offset(cbl_db, limit=num_of_docs/100, offset=0)
+        query.query_get_docs_limit_offset(cbl_db, limit=num_of_docs / 100, offset=0)
 
         #############################
         # Deleting doc on SG side #
@@ -112,7 +111,7 @@ def test_system(params_from_base_test_setup, num_of_docs, num_of_updates, num_of
 
         sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, include_docs=True)
         sg_docs = sg_docs["rows"]
-        query.query_get_docs_limit_offset(cbl_db, limit=num_of_docs/100, offset=0)
+        query.query_get_docs_limit_offset(cbl_db, limit=num_of_docs / 100, offset=0)
 
         # Verify database doc counts
 #         cbl_doc_count = db.getCount(cbl_db)
@@ -133,7 +132,7 @@ def test_system(params_from_base_test_setup, num_of_docs, num_of_updates, num_of
 
         sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, include_docs=True)
         sg_docs = sg_docs["rows"]
-        query.query_get_docs_limit_offset(cbl_db, limit=num_of_docs/100, offset=0)
+        query.query_get_docs_limit_offset(cbl_db, limit=num_of_docs / 100, offset=0)
 
         # Verify database doc counts
 #         cbl_doc_count = db.getCount(cbl_db)
@@ -160,15 +159,15 @@ def test_system(params_from_base_test_setup, num_of_docs, num_of_updates, num_of
 
         sg_docs = sg_client.get_all_docs(url=sg_admin_url, db=sg_db, include_docs=True)
         sg_docs = sg_docs["rows"]
-        query.query_get_docs_limit_offset(cbl_db, limit=num_of_docs/100, offset=0)
+        query.query_get_docs_limit_offset(cbl_db, limit=num_of_docs / 100, offset=0)
 
         # Verify database doc counts
-#         cbl_doc_count = db.getCount(cbl_db)
-#         assert len(sg_docs) == cbl_doc_count, "Expected number of docs does not exist in sync-gateway after replication"
+        # cbl_doc_count = db.getCount(cbl_db)
+        # assert len(sg_docs) == cbl_doc_count, "Expected number of docs does not exist in sync-gateway after replication"
         doc_id_for_new_docs += range_num
 
         docs_ids.extend(docs_to_create)
-        #docs_ids = db.getDocIds(cbl_db)
+        # docs_ids = db.getDocIds(cbl_db)
         current_time = datetime.now()
     # stopping replication
     replicator.stop(repl)

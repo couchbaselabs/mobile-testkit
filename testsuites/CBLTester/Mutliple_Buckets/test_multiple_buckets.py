@@ -6,9 +6,8 @@ from CBLClient.Replication import Replication
 from keywords import document
 from keywords.MobileRestClient import MobileRestClient
 from keywords.SyncGateway import sync_gateway_config_path_for_mode
-
-
 from libraries.testkit import cluster
+
 
 @pytest.mark.sanity
 @pytest.mark.listener
@@ -75,4 +74,3 @@ def test_mutlitple_buckets(params_from_base_suite_setup, num_of_docs):
         print "Deleting DBs from CBL:"
         for cbl_db in db_lists:
             db_obj.deleteDB(cbl_db)
-    

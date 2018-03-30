@@ -6,7 +6,7 @@ from keywords.utils import log_info
 from keywords.utils import host_for_url
 from keywords.ClusterKeywords import ClusterKeywords
 from keywords.constants import CLUSTER_CONFIGS_DIR
-from keywords.TestServerFactory import TestServerFactory
+# from keywords.TestServerFactory import TestServerFactory
 from keywords.SyncGateway import sync_gateway_config_path_for_mode
 from keywords.exceptions import ProvisioningError
 from keywords.tklogging import Logging

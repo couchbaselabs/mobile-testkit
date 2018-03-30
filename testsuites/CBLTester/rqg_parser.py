@@ -225,7 +225,7 @@ def prefix_evaluation(prefix_list):
                 var = opstack.pop().strip()
                 while opstack[-1] != ']':
                     item = opstack.pop()
-                    #print "*" + item + "*" + str(len(item))
+                    # print "*" + item + "*" + str(len(item))
                     if item == '[' or item == ',':
                         continue
                     opd.append(item)
@@ -309,6 +309,7 @@ def multiple_replace(text, a_dict):
         return a_dict[match.group(0)]
     return rx.sub(one_xlat, text)
 
+
 def converty_to_json_string(query):
     query_str = ''
     for k, v in query.iteritems():
@@ -319,6 +320,7 @@ def converty_to_json_string(query):
     query_str = query_str.replace('[', '[ ')
     query_str = query_str.replace(']', '] ')
     return query_str
+
 
 if __name__ == '__main__':
     queries = [
@@ -339,8 +341,8 @@ if __name__ == '__main__':
         'SELECT meta().id FROM `travel-sample` where id <= 2400',
         'SELECT meta().id FROM `travel-sample` where id BETWEEN 24 and 28',
         'SELECT meta().id FROM `travel-sample` where callsign IS null',
-#         'SELECT meta().id FROM `travel-sample` where callsign IS NOT null',
-        ]
+        # 'SELECT meta().id FROM `travel-sample` where callsign IS NOT null',
+    ]
     os.chdir("/Users/hemant/couchbase/couchbase/rqg/")
     fh = open("n1ql_queries_in_JSON.txt", "w")
     for query in queries:
