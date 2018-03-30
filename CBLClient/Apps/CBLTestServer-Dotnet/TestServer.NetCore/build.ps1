@@ -10,52 +10,61 @@ function Modify-Packages {
     $community = $args[2]
 
     $content = [System.IO.File]::ReadAllLines($filename)
-    $regex = New-Object -TypeName "System.Text.RegularExpressions.Regex" ".*?<PackageReference Include=`"Couchbase\.Lite(.*?)`" Version=`"(.*?)`""
+    $checkNextLine = $false
     for($i = 0; $i -lt $content.Length; $i++) {
         $line = $content[$i]
-        $matches = $regex.Matches($line)
-        if($matches.Count -gt 0) {
-            $oldPackageName = $matches[0].Groups[1].Value;
+        $isMatch = $line -match ".*?<PackageReference Include=`"Couchbase\.Lite(.*?)`""
+        if($isMatch) {
+            $oldPackageName = $matches[1]
             $packageName = $oldPackageName.Replace(".Enterprise", "")
             if(-Not $community) {
                 $packageName = ".Enterprise" + $packageName;
             }
 
-            $oldVersion = $matches[0].Groups[2]
-            $line = $line.Replace("Couchbase.Lite$oldPackageName", "Couchbase.Lite$packageName").Replace($oldVersion, $ver)
+            $isMatch = $line -match ".*?Version=`"(.*?)`""
+            if($isMatch) {
+                $oldVersion = $matches[1]
+                $line = $line.Replace("Couchbase.Lite$oldPackageName", "Couchbase.Lite$packageName").Replace($oldVersion, $ver)
+            } else {
+                $checkNextLine = $true
+            }
+            
             $content[$i] = $line
+        } elseif($checkNextLine) {
+            $isMatch = $line -match ".*?<Version>(.*?)</Version>"
+            if($isMatch) {
+                $oldVersion = $matches[1]
+                $line = $line.Replace($oldVersion, $ver)
+                $checkNextLine = $false
+                $content[$i] = $line
+            } else {
+                $checkNextLine = !$line.Contains("</PackageReference>")
+            }
         }
     }
 
     [System.IO.File]::WriteAllLines($filename, $content)
 }
 
-Push-Location $PSScriptRoot
-
-$version_to_use = $Version
-if(-Not $version_to_use) {
-    if(-Not $env:VERSION) {
+function Calculate-Version {
+    $version_to_use = (($Version, $env:Version -ne $null) -ne '')[0]
+    if($version_to_use -eq '' -or !$version_to_use) {
         throw "Version not defined for this script!  Either pass it in as -Version or define an environment variable named VERSION"
     }
 
-    $version_to_use = $env:VERSION
-}
-
-$build_num_to_use = $BuildNum
-if(-Not $build_num_to_use) {
-    if(-Not $env:BLD_NUM) {
-        throw "Build Number not defined for this script!  Either pass it in as -BuildNum or define an environment variable named BLD_NUM"
+    $build_num_to_use = (($BuildNum, $env:BLD_NUM, '*' -ne $null) -ne 0)[0]
+    if($build_num_to_use -ne '*') {
+        $build_num_to_use = ([int]$build_num_to_use).ToString("D4")
     }
 
-    $build_num_to_use = [int]$env:BLD_NUM
+    return $version_to_use + "-b" + $build_num_to_use
 }
+
+Push-Location $PSScriptRoot
+
+$fullVersion = Calculate-Version
 
 try {
-    if($build_num_to_use -lt 538) {
-        $Community = $true
-    }
-
-    $fullVersion = $version_to_use + "-b" + $build_num_to_use.ToString("D4")
     Modify-Packages "$PSScriptRoot\TestServer.NetCore.csproj" $fullVersion $Community
     Modify-Packages "$PSScriptRoot\..\TestServer\TestServer.csproj" $fullVersion $Community
 
