@@ -702,8 +702,7 @@
 					"$(PROJECT_DIR)/Frameworks/iOS",
 					"$(PROJECT_DIR)/Carthage/Build/iOS",
 					"$(PROJECT_DIR)",
-					"$(PROJECT_DIR)/Frameworks",
-					"$(PROJECT_DIR)/Framkeworks",
+					"$(PROJECT_DIR)/Frameworks"
 				);
 				"FRAMEWORK_SEARCH_PATHS[arch=*]" = (
 					"$(inherited)",
@@ -732,8 +731,7 @@
 					"$(PROJECT_DIR)/Frameworks/iOS",
 					"$(PROJECT_DIR)/Carthage/Build/iOS",
 					"$(PROJECT_DIR)",
-					"$(PROJECT_DIR)/Frameworks",
-					"$(PROJECT_DIR)/Framkeworks",
+					"$(PROJECT_DIR)/Frameworks"
 				);
 				INFOPLIST_FILE = "CBLTestServer-iOS/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
@@ -890,8 +888,7 @@
 					"$(PROJECT_DIR)/Frameworks/iOS",
 					"$(PROJECT_DIR)/Carthage/Build/iOS",
 					"$(PROJECT_DIR)",
-					"$(PROJECT_DIR)/Frameworks",
-					"$(PROJECT_DIR)/Framkeworks",
+					"$(PROJECT_DIR)/Frameworks"
 				);
 				"FRAMEWORK_SEARCH_PATHS[arch=*]" = (
 					"$(inherited)",
@@ -1010,8 +1007,7 @@
 					"$(PROJECT_DIR)/Frameworks/iOS",
 					"$(PROJECT_DIR)/Carthage/Build/iOS",
 					"$(PROJECT_DIR)",
-					"$(PROJECT_DIR)/Frameworks",
-					"$(PROJECT_DIR)/Framkeworks",
+					"$(PROJECT_DIR)/Frameworks"
 				);
 				INFOPLIST_FILE = "CBLTestServer-iOS/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";

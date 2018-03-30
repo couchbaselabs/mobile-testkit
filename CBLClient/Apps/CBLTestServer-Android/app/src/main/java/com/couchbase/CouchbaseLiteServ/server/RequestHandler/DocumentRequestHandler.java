@@ -13,6 +13,7 @@ import com.couchbase.lite.Dictionary;
 import java.util.List;
 import java.util.Map;
 import java.util.Date;
+import java.lang.Double;
 
 public class DocumentRequestHandler{
     /* ------------ */
@@ -132,8 +133,9 @@ public class DocumentRequestHandler{
     public MutableDocument setDouble(Args args){
         MutableDocument document = args.get("document");
         String key = args.get("key");
-        Double value = args.get("value");
-        return  document.setDouble(key, value);
+        String value = args.get("value");
+        Double set_value = Double.parseDouble(value);
+        return  document.setDouble(key, set_value);
     }
 
     public Boolean getBoolean(Args args){

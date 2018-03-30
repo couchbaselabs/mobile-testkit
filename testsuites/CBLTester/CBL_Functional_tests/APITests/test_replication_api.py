@@ -29,7 +29,7 @@ def test_replication_configuration_invalid_db(params_from_base_test_setup):
     sg_mode = params_from_base_test_setup["mode"]
     cluster_config = params_from_base_test_setup["cluster_config"]
     sg_blip_url = params_from_base_test_setup["target_url"]
-    cbl_db = params_from_base_test_setup["source_db"]
+    cbl_db = params_from_base_test_setup["suite_source_db"]
     channels = ["ABC"]
     base_url = params_from_base_test_setup["base_url"]
     db = Database(base_url)
@@ -42,28 +42,31 @@ def test_replication_configuration_invalid_db(params_from_base_test_setup):
     db.create_bulk_docs(5, "cbl", db=cbl_db, channels=channels)
     replicator = Replication(base_url)
     # Test for empty string for source db
+    """ -> invalid test, passing target DB as invalid type
     with pytest.raises(HTTPError) as he:
         replicator.configure("", target_url=sg_blip_url, continuous=True)
     assert he.value.message.startswith('400 Client Error: Bad Request for url:'), "Did not caught http error when source db passed as empty string"
+    """
     # Test for source db with none value
     with pytest.raises(Exception) as he:
         replicator.configure(None, target_url=sg_blip_url, continuous=True)
-    assert he.value.message.startswith('Invalid value type: None'), "Did not caught http error when source db is none"
+    assert "No source db provided or target url provided" in he.value.message, "Did not caught Exception when source db is none"
 
     # Test for empty string for target url
-    with pytest.raises(HTTPError) as he:
+    with pytest.raises(Exception) as he:
         replicator.configure(cbl_db, target_url="", continuous=True)
-    assert he.value.message.startswith('400 Client Error: Bad Request for url:'), "Did not caught http error when source db passed as empty string"
+    assert "Invalid scheme for URLEndpoint url" in he.value.message, "Did not caught Exception when source db passed as empty string"
     # Test for target url with none value
     with pytest.raises(Exception) as he:
         replicator.configure(cbl_db, target_url=None, continuous=True)
-    assert he.value.message.startswith('Invalid value type: None'), "Did not caught http error when source db is none"
-
+    assert "No source db provided or target url provided" in he.value.message, "Did not caught Exception when target url is none"
+    """  -> invalid test, passing target DB as invalid type
     # Test for empty string for target DB
     with pytest.raises(HTTPError) as he:
         replicator.configure(cbl_db, target_db="", continuous=True)
     assert he.value.message.startswith('400 Client Error: Bad Request for url:'), "Did not caught http error when source db passed as empty string"
+    """
     # Test for target url with none value
     with pytest.raises(Exception) as he:
         replicator.configure(cbl_db, target_db=None, continuous=True)
-    assert he.value.message.startswith('Invalid value type: None'), "Did not caught http error when source db is none"
+    assert "No source db provided or target url provided" in he.value.message, "Did not caught Exception when source db is none"
