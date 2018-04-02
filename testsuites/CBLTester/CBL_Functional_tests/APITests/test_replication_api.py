@@ -2,7 +2,6 @@ import pytest
 
 from CBLClient.Database import Database
 from CBLClient.Replication import Replication
-from requests.exceptions import HTTPError
 from keywords.SyncGateway import sync_gateway_config_path_for_mode
 from libraries.testkit import cluster
 
