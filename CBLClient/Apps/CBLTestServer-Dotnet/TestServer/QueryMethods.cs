@@ -776,6 +776,7 @@ namespace Couchbase.Lite.Testing
             With<Database>(postBody, "database", db =>
             {
                 var prop = postBody["select_property"].ToString();
+                int limit = (int)postBody["limit"];
                 String main = "main";
                 String secondary = "secondary";
 
@@ -787,7 +788,8 @@ namespace Couchbase.Lite.Testing
                            SelectResult.All().From(secondary))
                        .From(DataSource.Database(db).As(main))
                        .Join(Join.LeftJoin(DataSource.Database(db).As(secondary))
-                             .On(Meta.ID.EqualTo(Expression.Property(prop).From(secondary)))))
+                             .On(Meta.ID.From(main).EqualTo(Expression.Property(prop).From(secondary))))
+                       .Limit(Expression.Int(limit)))
 
                     foreach (Result row in query.Execute())
                     {
@@ -796,6 +798,134 @@ namespace Couchbase.Lite.Testing
                 response.WriteBody(resultArray);
             });
 
+        }
+
+        internal static void QueryLeftOuterJoin([NotNull] NameValueCollection args,
+           [NotNull] IReadOnlyDictionary<string, object> postBody,
+           [NotNull] HttpListenerResponse response)
+        {
+            With<Database>(postBody, "database", db =>
+            {
+                var prop = postBody["select_property"].ToString();
+                String main = "main";
+                String secondary = "secondary";
+
+                List<Object> resultArray = new List<Object>();
+
+                using (IQuery query = QueryBuilder
+                        .Select(
+                           SelectResult.All().From(main),
+                           SelectResult.All().From(secondary))
+                       .From(DataSource.Database(db).As(main))
+                       .Join(Join.LeftOuterJoin(DataSource.Database(db).As(secondary))
+                             .On(Meta.ID.From(main).EqualTo(Expression.Property(prop).From(secondary)))))
+
+                    foreach (Result row in query.Execute())
+                    {
+                        resultArray.Add(row.ToDictionary());
+                    }
+                response.WriteBody(resultArray);
+            });
+
+        }
+
+        internal static void QueryInnerJoin([NotNull] NameValueCollection args,
+           [NotNull] IReadOnlyDictionary<string, object> postBody,
+           [NotNull] HttpListenerResponse response)
+        {
+            // SELECT
+            //  employeeDS.firstname,
+            //  employeeDS.lastname,
+            //  departmentDS.name
+            //FROM
+            //  `travel-sample` employeeDS
+            //  INNER JOIN `travel-sample` departmentDS ON employeeDS.department = departmentDS.code
+            //WHERE
+            //employeeDS.type = "employee"
+            //AND departmentDS.type = "department"
+
+
+            With<Database>(postBody, "database", db =>
+            {
+                var prop1 = postBody["select_property1"].ToString();
+                var prop2 = postBody["select_property2"].ToString();
+                var prop3 = postBody["select_property3"].ToString();
+                var joinKey1 = postBody["join_key1"].ToString();
+                var joinKey2 = postBody["join_key2"].ToString();
+                var whrKey1 = postBody["whr_key1"].ToString();
+                var whrKey2 = postBody["whr_key1"].ToString();
+                var whrVal1 = postBody["whr_val1"].ToString();
+                int whrVal2 = (int)postBody["whr_val2"];
+                int limit = (int)postBody["limit"];
+                String main = "main";
+                String secondary = "secondary";
+
+                List<Object> resultArray = new List<Object>();
+
+                using (IQuery query = QueryBuilder
+                       .Select(
+                           SelectResult.Expression(Expression.Property(prop1).From(main)),
+                           SelectResult.Expression(Expression.Property(prop2).From(main)),
+                           SelectResult.Expression(Expression.Property(prop3).From(secondary)))
+                       .From(DataSource.Database(db).As(main))
+                       .Join(Join.InnerJoin(DataSource.Database(db).As(secondary))
+                             .On(Expression.Property(joinKey1).From(secondary).EqualTo(Expression.Property(joinKey2).From(main))
+                                 .And(Expression.Property(whrKey1).From(secondary).EqualTo(Expression.String(whrVal1)))
+                                 .And(Expression.Property(whrKey2).From(main).EqualTo(Expression.Int(whrVal2))))))
+
+                    foreach (Result row in query.Execute())
+                    {
+                        resultArray.Add(row.ToDictionary());
+                    }
+                response.WriteBody(resultArray);
+            });
+        }
+
+        internal static void QueryCrossJoin([NotNull] NameValueCollection args,
+          [NotNull] IReadOnlyDictionary<string, object> postBody,
+          [NotNull] HttpListenerResponse response)
+        {
+            //SELECT
+            //  departmentDS.name AS DeptName,
+            //  locationDS.name AS LocationName,
+            //  locationDS.address
+            //FROM
+            //  `travel - sample` departmentDS
+            //  CROSS JOIN `travel - sample` locationDS
+            //WHERE
+            //  departmentDS.type = "department"
+
+            With<Database>(postBody, "database", db =>
+            {
+                var prop1 = postBody["select_property1"].ToString();
+                var prop2 = postBody["select_property2"].ToString();
+                var whrKey1 = postBody["whr_key1"].ToString();
+                var whrKey2 = postBody["whr_key1"].ToString();
+                var whrVal1 = postBody["whr_val1"].ToString();
+                var whrVal2 = postBody["whr_val2"].ToString();
+                String main = "airport";
+                String secondary = "airline";
+                String firstName = "firstNamme";
+                String secondName = "secondName";
+
+                List<Object> resultArray = new List<Object>();
+
+                using (IQuery query = QueryBuilder
+                       .Select(
+                           SelectResult.Expression(Expression.Property(prop1).From(main)).As (firstName),
+                           SelectResult.Expression(Expression.Property(prop1).From(secondary)).As (secondName),
+                           SelectResult.Expression(Expression.Property(prop2).From(secondary)))
+                       .From(DataSource.Database(db).As (main))
+                       .Join(Join.CrossJoin(DataSource.Database(db).As(secondary)))
+                       .Where(Expression.Property(whrKey1).From(main).EqualTo(Expression.String(whrVal1))
+                              .And(Expression.Property(whrKey2).From(secondary).EqualTo(Expression.String(whrVal2)))))
+
+                    foreach (Result row in query.Execute())
+                    {
+                        resultArray.Add(row.ToDictionary());
+                    }
+                response.WriteBody(resultArray);
+            });
         }
     }
 }

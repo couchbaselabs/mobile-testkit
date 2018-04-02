@@ -617,6 +617,115 @@ def test_query_join(params_from_base_test_setup, select_property1,
     log_info("Doc contents match")
 
 
+@pytest.mark.parametrize("select_property1, select_property2, select_property3, whr_key1, whr_key2, whr_val1, whr_val2, join_key1, join_key2, limit", [
+    ("airline", "sourceairport", "country", "country", "stops", "United States", 0, "icao", "destinationairport", 10),
+])
+def test_query_inner_join(params_from_base_test_setup, select_property1,
+                          select_property2, select_property3, whr_key1, whr_key2,
+                          whr_val1, whr_val2, join_key1, join_key2, limit):
+    """ @summary
+    Query query = QueryBuilder
+                .select(SelectResult.expression(Expression.property(prop1).from(main)),
+                        SelectResult.expression(Expression.property(prop2).from(main)),
+                        SelectResult.expression(Expression.property(prop3).from(secondary)))
+                .from(DataSource.database(db).as(main))
+                .join(Join.innerJoin(DataSource.database(db).as(secondary))
+                        .on(Expression.property(joinKey1).from(main).equalTo(Expression.property(joinKey2).from(secondary))
+                                .and(Expression.property(whrKey1).from(main).equalTo(Expression.string(whrVal1)))
+                                .and(Expression.property(whrKey2).from(secondary).equalTo(Expression.string(whrVal2)))));
+
+    Verifies with n1ql -
+    SELECT
+      route.airline,
+      route.sourceairport,
+      airport.country
+    FROM
+      `travel-sample` route
+      INNER JOIN `travel-sample` airport ON airport.icao = route.destinationairport
+    WHERE
+      airport.country = "United States"
+      AND route.stops = 0
+    """
+    cluster_topology = params_from_base_test_setup["cluster_topology"]
+    source_db = params_from_base_test_setup["suite_source_db"]
+    cbs_url = cluster_topology['couchbase_servers'][0]
+    base_url = params_from_base_test_setup["base_url"]
+    cbs_ip = host_for_url(cbs_url)
+
+    log_info("Fetching docs from CBL through query")
+    qy = Query(base_url)
+    result_set = qy.query_inner_join(source_db, select_property1,
+                                     select_property2, select_property3, whr_key1,
+                                     whr_key2, whr_val1, whr_val2,
+                                     join_key1, join_key2, limit)
+
+    docs_from_cbl = []
+
+    for docs in result_set:
+        docs_from_cbl.append(docs)
+
+    # Get doc from n1ql through query
+    log_info("Fetching docs from server through n1ql")
+    bucket_name = "travel-sample"
+    sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password')
+    n1ql_query = 'select  route.{}, route.{}, airport.{} '\
+        'from `{}` route inner join `{}` airport '\
+        'on airport.{} = route.{} where airport.{}="{}" and '\
+        'route.{} = {} order by route.{} asc limit {}'.format(
+            select_property1, select_property2,
+            select_property3, bucket_name, bucket_name,
+            join_key1, join_key2, whr_key1, whr_val1, whr_key2, whr_val2,
+            select_property1, limit)
+    log_info(n1ql_query)
+    query = N1QLQuery(n1ql_query)
+    docs_from_n1ql = []
+
+    for row in sdk_client.n1ql_query(query):
+        docs_from_n1ql.append(row)
+
+    assert len(docs_from_cbl) == len(docs_from_n1ql)
+    log_info("Found {} docs".format(len(docs_from_cbl)))
+    assert sorted(docs_from_cbl) == sorted(docs_from_n1ql)
+    log_info("Doc contents match")
+
+
+@pytest.mark.parametrize("select_property1, select_property2, whr_key1, whr_key2, whr_val1, whr_val2, limit", [
+    ("country", "city", "type", "type", "airport", "airline", 10),
+])
+def test_query_cross_join(params_from_base_test_setup, select_property1,
+                          select_property2, whr_key1, whr_key2,
+                          whr_val1, whr_val2, limit):
+    """ @summary
+    Query query = QueryBuilder
+                .select(SelectResult.expression(Expression.property(prop1).from(main)).as(firstName),
+                        SelectResult.expression(Expression.property(prop1).from(secondary)).as(secondName),
+                        SelectResult.expression(Expression.property(prop2).from(secondary)))
+                .from(DataSource.database(db).as(main))
+                .join(Join.crossJoin(DataSource.database(db).as(secondary)))
+                .where(Expression.property(whrKey1).from(main).equalTo(Expression.string(whrVal1))
+                        .and(Expression.property(whrKey2).from(main).equalTo(Expression.string(whrVal2))));
+    """
+    # cluster_topology = params_from_base_test_setup["cluster_topology"]
+    source_db = params_from_base_test_setup["suite_source_db"]
+    # cbs_url = cluster_topology['couchbase_servers'][0]
+    base_url = params_from_base_test_setup["base_url"]
+    # cbs_ip = host_for_url(cbs_url)
+
+    log_info("Fetching docs from CBL through query")
+    qy = Query(base_url)
+    result_set = qy.query_cross_join(source_db, select_property1,
+                                     select_property2, whr_key1,
+                                     whr_key2, whr_val1, whr_val2, limit)
+
+    docs_from_cbl = []
+
+    for docs in result_set:
+        docs_from_cbl.append(docs)
+
+    assert len(docs_from_cbl) == limit
+    log_info("Found {} docs".format(len(docs_from_cbl)))
+
+
 @pytest.mark.parametrize("select_property", [
     ("sourceairport"),
 ])
@@ -645,7 +754,7 @@ def test_query_left_join(params_from_base_test_setup, select_property):
 
     log_info("Fetching docs from CBL through query")
     qy = Query(base_url)
-    result_set = qy.query_leftjoin(source_db, select_property)
+    result_set = qy.query_left_join(source_db, select_property)
 
     docs_from_cbl = []
 
@@ -656,7 +765,7 @@ def test_query_left_join(params_from_base_test_setup, select_property):
     log_info("Fetching docs from server through n1ql")
     bucket_name = "travel-sample"
     sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password')
-    n1ql_query = 'select airline.*, route.* from `{}` route JOIN `{}` airline ON KEYS route.airlineid'.format(bucket_name, bucket_name, select_property)
+    n1ql_query = 'select airline.*, route.* from `{}` route JOIN `{}` airline ON KEYS route.{}'.format(bucket_name, bucket_name, select_property)
     log_info(n1ql_query)
     query = N1QLQuery(n1ql_query)
     docs_from_n1ql = []

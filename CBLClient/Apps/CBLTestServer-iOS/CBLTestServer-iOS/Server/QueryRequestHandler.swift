@@ -384,9 +384,116 @@ public class QueryRequestHandler {
             for row in try searchQuery.execute() {
                 resultArray.append(row.toDictionary())
             }
+            return resultArray
+
+        case "query_leftOuterJoin":
+            let database: Database = args.get(name: "database")!
+            let select_property: String = args.get(name: "select_property")!
+            let main: String = "main"
+            let secondary: String = "secondary"
+            
+            let searchQuery = QueryBuilder
+                .select(SelectResult.all().from(main),
+                        SelectResult.all().from(secondary))
+                .from(DataSource.database(database).as(main))
+                .join(Join.leftOuterJoin(DataSource.database(database).as(secondary))
+                    .on(Meta.id.from(main).equalTo(Expression.property(select_property).from(secondary))))
+            
+            var resultArray = [Any]()
+            
+            for row in try searchQuery.execute() {
+                resultArray.append(row.toDictionary())
+            }
+            return resultArray
+
+        case "query_innerJoin":
+            /*
+             SELECT
+             employeeDS.firstname,
+             employeeDS.lastname,
+             departmentDS.name
+             FROM
+             `travel-sample` employeeDS
+             INNER JOIN `travel-sample` departmentDS ON employeeDS.department = departmentDS.code
+             WHERE
+             employeeDS.type = "employee"
+             AND departmentDS.type = "department"
+             */
+            let database: Database = args.get(name: "database")!
+            let select_property1: String = args.get(name: "select_property1")!
+            let select_property2: String = args.get(name: "select_property2")!
+            let select_property3: String = args.get(name: "select_property3")!
+            let whr_key1: String = args.get(name: "whr_key1")!
+            let whr_val1: String = args.get(name: "whr_val1")!
+            let whr_key2: String = args.get(name: "whr_key2")!
+            let whr_val2: Int = args.get(name: "whr_val2")!
+            let limit: Int = args.get(name: "limit")!
+            let join_key1: String = args.get(name: "join_key1")!
+            let join_key2: String = args.get(name: "join_key2")!
+            let main: String = "route"
+            let secondary: String = "airport"
+            
+            let searchQuery = QueryBuilder
+                .select(SelectResult.expression(Expression.property(select_property1).from(main)),
+                        SelectResult.expression(Expression.property(select_property2).from(main)),
+                        SelectResult.expression(Expression.property(select_property3).from(secondary)))
+                .from(DataSource.database(database).as(main))
+                .join(Join.innerJoin(DataSource.database(database).as(secondary))
+                    .on(Expression.property(join_key1).from(secondary).equalTo(Expression.property(join_key2).from(main))
+                        .and(Expression.property(whr_key1).from(secondary).equalTo(Expression.string(whr_val1)))
+                        .and(Expression.property(whr_key2).from(main).equalTo(Expression.int(whr_val2)))))
+                //.orderBy(Ordering.expression(Expression.property(select_property1).from(main)).ascending())
+                //.limit(Expression.int(limit))
+            var resultArray = [Any]()
+            
+            for row in try searchQuery.execute() {
+                resultArray.append(row.toDictionary())
+            }
             
             return resultArray
+
+        case "query_crossJoin":
+            /*
+             SELECT
+             departmentDS.name AS DeptName,
+             locationDS.name AS LocationName,
+             locationDS.address
+             FROM
+             `travel-sample` departmentDS
+             CROSS JOIN `travel-sample` locationDS
+             WHERE
+             departmentDS.type = "department"
+             */
+            let database: Database = args.get(name: "database")!
+            let select_property1: String = args.get(name: "select_property1")!
+            let select_property2: String = args.get(name: "select_property2")!
+            let whr_key1: String = args.get(name: "whr_key1")!
+            let whr_val1: String = args.get(name: "whr_val1")!
+            let whr_key2: String = args.get(name: "whr_key2")!
+            let whr_val2: String = args.get(name: "whr_val2")!
+            let limit: Int = args.get(name: "limit")!
+            let main: String = "airport"
+            let secondary: String = "airline"
+            let first_name: String = "firstName"
+            let second_name: String = "secondName"
             
+            let searchQuery = QueryBuilder
+                .select(SelectResult.expression(Expression.property(select_property1).from(main)).as(first_name),
+                        SelectResult.expression(Expression.property(select_property1).from(secondary)).as(second_name),
+                        SelectResult.expression(Expression.property(select_property2).from(secondary)))
+                .from(DataSource.database(database).as(main))
+                .join(Join.crossJoin(DataSource.database(database).as(secondary)))
+                .where(Expression.property(whr_key1).from(main).equalTo(Expression.string(whr_val1))
+                    .and(Expression.property(whr_key2).from(secondary).equalTo(Expression.string(whr_val2))))
+                .limit(Expression.int(limit))
+            var resultArray = [Any]()
+            
+            for row in try searchQuery.execute() {
+                resultArray.append(row.toDictionary())
+            }
+            
+            return resultArray
+
         case "query_equalTo":
             let database: Database = args.get(name: "database")!
             let val: String = args.get(name: "val")!

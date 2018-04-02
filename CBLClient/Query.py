@@ -234,12 +234,52 @@ class Query(object):
 
         return self._client.invokeMethod("query_join", args)
 
-    def query_leftjoin(self, database, select_property):
+    def query_left_join(self, database, select_property, limit=100):
+        args = Args()
+        args.setMemoryPointer("database", database)
+        args.setString("select_property", select_property)
+        args.setInt("limit", limit)
+
+        return self._client.invokeMethod("query_leftJoin", args)
+
+    def query_left_outer_join(self, database, select_property):
         args = Args()
         args.setMemoryPointer("database", database)
         args.setString("select_property", select_property)
 
         return self._client.invokeMethod("query_leftJoin", args)
+
+    def query_inner_join(self, database, select_property1, select_property2,
+                         select_property3, whr_key1, whr_key2, whr_val1, whr_val2,
+                         join_key1, join_key2, limit=10):
+        args = Args()
+        args.setMemoryPointer("database", database)
+        args.setString("select_property1", select_property1)
+        args.setString("select_property2", select_property2)
+        args.setString("select_property3", select_property3)
+        args.setString("join_key1", join_key1)
+        args.setString("join_key2", join_key2)
+        args.setString("whr_key1", whr_key1)
+        args.setString("whr_key2", whr_key2)
+        args.setString("whr_val1", whr_val1)
+        args.setInt("whr_val2", whr_val2)
+        args.setInt("limit", limit)
+
+        return self._client.invokeMethod("query_innerJoin", args)
+
+    def query_cross_join(self, database, select_property1, select_property2,
+                         whr_key1, whr_key2, whr_val1, whr_val2, limit=10):
+        args = Args()
+        args.setMemoryPointer("database", database)
+        args.setString("select_property1", select_property1)
+        args.setString("select_property2", select_property2)
+        args.setString("whr_key1", whr_key1)
+        args.setString("whr_key2", whr_key2)
+        args.setString("whr_val1", whr_val1)
+        args.setString("whr_val2", whr_val2)
+        args.setInt("limit", limit)
+
+        return self._client.invokeMethod("query_crossJoin", args)
 
     def query_between(self, database, prop, val1, val2):
         args = Args()
