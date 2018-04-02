@@ -369,6 +369,7 @@ public class QueryRequestHandler {
         case "query_leftJoin":
             let database: Database = args.get(name: "database")!
             let select_property: String = args.get(name: "select_property")!
+            let limit: Int = args.get(name: "limit")!
             let main: String = "main"
             let secondary: String = "secondary"
             
@@ -378,6 +379,7 @@ public class QueryRequestHandler {
                 .from(DataSource.database(database).as(main))
                 .join(Join.leftJoin(DataSource.database(database).as(secondary))
                     .on(Meta.id.from(main).equalTo(Expression.property(select_property).from(secondary))))
+                .limit(Expression.int(limit))
 
             var resultArray = [Any]()
             
@@ -442,8 +444,8 @@ public class QueryRequestHandler {
                     .on(Expression.property(join_key1).from(secondary).equalTo(Expression.property(join_key2).from(main))
                         .and(Expression.property(whr_key1).from(secondary).equalTo(Expression.string(whr_val1)))
                         .and(Expression.property(whr_key2).from(main).equalTo(Expression.int(whr_val2)))))
-                //.orderBy(Ordering.expression(Expression.property(select_property1).from(main)).ascending())
-                //.limit(Expression.int(limit))
+                .orderBy(Ordering.expression(Expression.property(select_property1).from(main)).ascending())
+                .limit(Expression.int(limit))
             var resultArray = [Any]()
             
             for row in try searchQuery.execute() {
