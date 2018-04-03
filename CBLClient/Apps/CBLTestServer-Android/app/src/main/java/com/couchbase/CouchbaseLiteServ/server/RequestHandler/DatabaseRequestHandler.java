@@ -77,7 +77,7 @@ public class DatabaseRequestHandler {
         database.compact();
     }
 
-    public File getPath(Args args) throws CouchbaseLiteException {
+    public String getPath(Args args) throws CouchbaseLiteException {
         Database database = args.get("database");
         return database.getPath();
     }

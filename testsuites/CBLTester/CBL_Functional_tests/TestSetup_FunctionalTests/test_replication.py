@@ -1532,9 +1532,10 @@ def test_default_conflict_scenario_highRevGeneration_wins(params_from_base_test_
     replicator.configure_and_replicate(source_db=cbl_db, replicator_authenticator=replicator_authenticator, target_url=sg_blip_url, continuous=False,
                                        channels=channels)
     # Di mode has delay for one shot replication, so need another replication only for DI mode
+    repl = None
     if sg_mode == "di":
-        replicator.configure_and_replicate(source_db=cbl_db, replicator_authenticator=replicator_authenticator, target_url=sg_blip_url, continuous=False,
-                                           channels=channels)
+        repl = replicator.configure_and_replicate(source_db=cbl_db, replicator_authenticator=replicator_authenticator, target_url=sg_blip_url, continuous=True,
+                                                  channels=channels)
     cbl_doc_ids = db.getDocIds(cbl_db)
     cbl_docs = db.getDocuments(cbl_db, cbl_doc_ids)
     sg_docs = sg_client.get_all_docs(url=sg_url, db=sg_db, auth=session, include_docs=True)
@@ -1545,11 +1546,16 @@ def test_default_conflict_scenario_highRevGeneration_wins(params_from_base_test_
             verify_updates = 4
         if highrev_source == 'sg':
             verify_updates = 5
+        count = 0
+        while count < 30 and cbl_docs[doc]["updates"] != verify_updates:
+            time.sleep(1)
+            cbl_docs = db.getDocuments(cbl_db, cbl_doc_ids)
+            count += 1
         assert cbl_docs[doc]["updates"] == verify_updates, "cbl with high rev id is not updated "
         for i in xrange(len(sg_docs_values)):
             assert sg_docs_values[i]["updates"] == verify_updates, "sg with high rev id is not updated"
-
-    replicator.stop(repl)
+    if sg_mode == "di":
+        replicator.stop(repl)
 
 
 @pytest.mark.listener

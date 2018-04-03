@@ -77,13 +77,13 @@ public class ReplicatorConfigurationRequestHandler {
                 target = URLEndpoint(url: URL(string: target_url!)!)
             }
             
-            //#if COUCHBASE_ENTERPRISE
+            #if COUCHBASE_ENTERPRISE
                 let targetDatabase: Database? = args.get(name: "target_db")
                 if (targetDatabase != nil) {
                     target = DatabaseEndpoint(database: targetDatabase!)
                     config = ReplicatorConfiguration(database: source_db!, target: target!)
                 }
-            //#endif
+            #endif
 
             if (target == nil) {
                 throw RequestHandlerError.InvalidArgument("target url or database should be provided.")

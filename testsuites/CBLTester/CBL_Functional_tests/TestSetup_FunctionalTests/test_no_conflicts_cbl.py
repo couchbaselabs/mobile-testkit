@@ -652,6 +652,11 @@ def test_sg_CBL_updates_concurrently(params_from_base_test_setup, sg_conf_name, 
                                                     auth=session)
             assert conflicted_rev["rev"] == "2-foo"
 
+    # If number of docs is 1000 or more, it needs more time to delete the database after replicator is stopped, so it needs some sleep time before
+    # database gets deleted at teardown
+    if num_of_docs >= 1000:
+        time.sleep(3)
+
 
 def sg_updateDocs(sg_client, url, db, docs, number_updates, auth):
     for doc in docs:

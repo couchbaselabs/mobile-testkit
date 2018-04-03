@@ -420,18 +420,20 @@
 					29F77F221F9FC18D0035178F = {
 						CreatedOnToolsVersion = 8.3.3;
 						DevelopmentTeam = N2Q372V7W2;
-						LastSwiftMigration = 0830;
+						LastSwiftMigration = 0930;
 						ProvisioningStyle = Automatic;
 					};
 					29F77F361F9FC18D0035178F = {
 						CreatedOnToolsVersion = 8.3.3;
 						DevelopmentTeam = N2Q372V7W2;
+						LastSwiftMigration = 0930;
 						ProvisioningStyle = Automatic;
 						TestTargetID = 29F77F221F9FC18D0035178F;
 					};
 					29F77F411F9FC18D0035178F = {
 						CreatedOnToolsVersion = 8.3.3;
 						DevelopmentTeam = N2Q372V7W2;
+						LastSwiftMigration = 0930;
 						ProvisioningStyle = Automatic;
 						TestTargetID = 29F77F221F9FC18D0035178F;
 					};
@@ -702,7 +704,7 @@
 					"$(PROJECT_DIR)/Frameworks/iOS",
 					"$(PROJECT_DIR)/Carthage/Build/iOS",
 					"$(PROJECT_DIR)",
-					"$(PROJECT_DIR)/Frameworks"
+					"$(PROJECT_DIR)/Frameworks",
 				);
 				"FRAMEWORK_SEARCH_PATHS[arch=*]" = (
 					"$(inherited)",
@@ -716,7 +718,8 @@
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_OBJC_BRIDGING_HEADER = "CBLTestServer-iOS/CBLTestServer-iOS-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
-				SWIFT_VERSION = 3.0;
+				SWIFT_SWIFT3_OBJC_INFERENCE = On;
+				SWIFT_VERSION = 4.0;
 			};
 			name = Debug;
 		};
@@ -731,14 +734,15 @@
 					"$(PROJECT_DIR)/Frameworks/iOS",
 					"$(PROJECT_DIR)/Carthage/Build/iOS",
 					"$(PROJECT_DIR)",
-					"$(PROJECT_DIR)/Frameworks"
+					"$(PROJECT_DIR)/Frameworks",
 				);
 				INFOPLIST_FILE = "CBLTestServer-iOS/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = "com.couchbase.CBLTestServer-iOS";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_OBJC_BRIDGING_HEADER = "CBLTestServer-iOS/CBLTestServer-iOS-Bridging-Header.h";
-				SWIFT_VERSION = 3.0;
+				SWIFT_SWIFT3_OBJC_INFERENCE = On;
+				SWIFT_VERSION = 4.0;
 			};
 			name = Release;
 		};
@@ -757,7 +761,8 @@
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = "com.couchbase.CBLTestServer-iOSTests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_VERSION = 3.0;
+				SWIFT_SWIFT3_OBJC_INFERENCE = On;
+				SWIFT_VERSION = 4.0;
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/CBLTestServer-iOS.app/CBLTestServer-iOS";
 			};
 			name = Debug;
@@ -777,7 +782,8 @@
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = "com.couchbase.CBLTestServer-iOSTests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_VERSION = 3.0;
+				SWIFT_SWIFT3_OBJC_INFERENCE = On;
+				SWIFT_VERSION = 4.0;
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/CBLTestServer-iOS.app/CBLTestServer-iOS";
 			};
 			name = Release;
@@ -796,7 +802,8 @@
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = "com.couchbase.CBLTestServer-iOSUITests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_VERSION = 3.0;
+				SWIFT_SWIFT3_OBJC_INFERENCE = On;
+				SWIFT_VERSION = 4.0;
 				TEST_TARGET_NAME = "CBLTestServer-iOS";
 			};
 			name = Debug;
@@ -815,7 +822,8 @@
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = "com.couchbase.CBLTestServer-iOSUITests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_VERSION = 3.0;
+				SWIFT_SWIFT3_OBJC_INFERENCE = On;
+				SWIFT_VERSION = 4.0;
 				TEST_TARGET_NAME = "CBLTestServer-iOS";
 			};
 			name = Release;
@@ -888,7 +896,7 @@
 					"$(PROJECT_DIR)/Frameworks/iOS",
 					"$(PROJECT_DIR)/Carthage/Build/iOS",
 					"$(PROJECT_DIR)",
-					"$(PROJECT_DIR)/Frameworks"
+					"$(PROJECT_DIR)/Frameworks",
 				);
 				"FRAMEWORK_SEARCH_PATHS[arch=*]" = (
 					"$(inherited)",
@@ -903,7 +911,8 @@
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_OBJC_BRIDGING_HEADER = "CBLTestServer-iOS/CBLTestServer-iOS-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
-				SWIFT_VERSION = 3.0;
+				SWIFT_SWIFT3_OBJC_INFERENCE = On;
+				SWIFT_VERSION = 4.0;
 			};
 			name = "Debug-EE";
 		};
@@ -922,7 +931,8 @@
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = "com.couchbase.CBLTestServer-iOSTests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_VERSION = 3.0;
+				SWIFT_SWIFT3_OBJC_INFERENCE = On;
+				SWIFT_VERSION = 4.0;
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/CBLTestServer-iOS.app/CBLTestServer-iOS";
 			};
 			name = "Debug-EE";
@@ -941,7 +951,8 @@
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = "com.couchbase.CBLTestServer-iOSUITests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_VERSION = 3.0;
+				SWIFT_SWIFT3_OBJC_INFERENCE = On;
+				SWIFT_VERSION = 4.0;
 				TEST_TARGET_NAME = "CBLTestServer-iOS";
 			};
 			name = "Debug-EE";
@@ -1007,7 +1018,7 @@
 					"$(PROJECT_DIR)/Frameworks/iOS",
 					"$(PROJECT_DIR)/Carthage/Build/iOS",
 					"$(PROJECT_DIR)",
-					"$(PROJECT_DIR)/Frameworks"
+					"$(PROJECT_DIR)/Frameworks",
 				);
 				INFOPLIST_FILE = "CBLTestServer-iOS/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
@@ -1015,7 +1026,8 @@
 				PRODUCT_BUNDLE_IDENTIFIER = "com.couchbase.CBLTestServer-iOS";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_OBJC_BRIDGING_HEADER = "CBLTestServer-iOS/CBLTestServer-iOS-Bridging-Header.h";
-				SWIFT_VERSION = 3.0;
+				SWIFT_SWIFT3_OBJC_INFERENCE = On;
+				SWIFT_VERSION = 4.0;
 			};
 			name = "Release-EE";
 		};
@@ -1034,7 +1046,8 @@
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = "com.couchbase.CBLTestServer-iOSTests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_VERSION = 3.0;
+				SWIFT_SWIFT3_OBJC_INFERENCE = On;
+				SWIFT_VERSION = 4.0;
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/CBLTestServer-iOS.app/CBLTestServer-iOS";
 			};
 			name = "Release-EE";
@@ -1053,7 +1066,8 @@
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = "com.couchbase.CBLTestServer-iOSUITests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_VERSION = 3.0;
+				SWIFT_SWIFT3_OBJC_INFERENCE = On;
+				SWIFT_VERSION = 4.0;
 				TEST_TARGET_NAME = "CBLTestServer-iOS";
 			};
 			name = "Release-EE";
