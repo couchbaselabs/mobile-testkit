@@ -83,20 +83,7 @@ namespace Couchbase.Lite.Testing
                 {
                     try {
                         d.Dispose();
-                    } 
-                    catch (InvalidOperationException e)
-                    {
-                        // Ignore errors involving objects that are already disposed
-                        // TODO: tests need to be modified to not expect a new memory pointer 
-                        // everytime a set method is called on the document
-                        if (e.Message.Contains("Dispose called too many times")) {
-                            Console.WriteLine("Ignoring already disposed object: " + d.ToString());
-                        } else
-                        {
-                            throw;
-                        }
-                    }
-                    catch {
+                    } catch {
                         Console.WriteLine("Failed to dispose " + d.ToString());
                         throw;
                     }
