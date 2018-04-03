@@ -225,7 +225,7 @@ namespace Couchbase.Lite.Testing
             IExpression offset = Expression.Int((int)postBody["offset"]);
             With<Database>(postBody, "database", db =>
             {
-                using (var query = Query.QueryBuilder
+                using (IQuery query = Query.QueryBuilder
                        .Select(SelectResult.Expression(Meta.ID))
                        .From(DataSource.Database(db))
                        .Limit(limit, offset))

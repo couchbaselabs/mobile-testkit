@@ -857,7 +857,7 @@ namespace Couchbase.Lite.Testing
                 var joinKey1 = postBody["join_key1"].ToString();
                 var joinKey2 = postBody["join_key2"].ToString();
                 var whrKey1 = postBody["whr_key1"].ToString();
-                var whrKey2 = postBody["whr_key1"].ToString();
+                var whrKey2 = postBody["whr_key2"].ToString();
                 var whrVal1 = postBody["whr_val1"].ToString();
                 int whrVal2 = (int)postBody["whr_val2"];
                 int limit = (int)postBody["limit"];
