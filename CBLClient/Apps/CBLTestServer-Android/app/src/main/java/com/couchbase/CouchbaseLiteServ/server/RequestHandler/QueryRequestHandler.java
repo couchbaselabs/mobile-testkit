@@ -305,8 +305,8 @@ public class QueryRequestHandler {
         Database db = args.get("database");
         String prop = args.get("select_property");
         int limit = args.get("limit");
-        String main = "main";
-        String secondary = "secondary";
+        String main = "airline";
+        String secondary = "route";
 
         List<Object> resultArray = new ArrayList<>();
 
@@ -317,6 +317,7 @@ public class QueryRequestHandler {
                 .from(DataSource.database(db).as(main))
                 .join(Join.leftJoin(DataSource.database(db).as(secondary))
                         .on(Meta.id.from(main).equalTo(Expression.property(prop).from(secondary))))
+                //.orderBy(Ordering.expression(Expression.property(prop).from(secondary)).ascending())
                 .limit(Expression.intValue(limit));
         for (Result row : query.execute()) {
             resultArray.add(row.toMap());
@@ -327,8 +328,9 @@ public class QueryRequestHandler {
     public List<Object> leftOuterJoin(Args args) throws CouchbaseLiteException {
         Database db = args.get("database");
         String prop = args.get("select_property");
-        String main = "main";
-        String secondary = "secondary";
+        int limit = args.get("limit");
+        String main = "airline";
+        String secondary = "route";
 
         List<Object> resultArray = new ArrayList<>();
 
@@ -338,7 +340,9 @@ public class QueryRequestHandler {
                         SelectResult.all().from((secondary)))
                 .from(DataSource.database(db).as(main))
                 .join(Join.leftOuterJoin(DataSource.database(db).as(secondary))
-                        .on(Meta.id.from(main).equalTo(Expression.property(prop).from(secondary))));
+                        .on(Meta.id.from(main).equalTo(Expression.property(prop).from(secondary))))
+                //.orderBy(Ordering.expression(Expression.property(prop).from(secondary)).ascending())
+                .limit(Expression.intValue(limit));
         for (Result row : query.execute()) {
             resultArray.add(row.toMap());
         }
@@ -384,6 +388,7 @@ public class QueryRequestHandler {
                         .on(Expression.property(joinKey1).from(secondary).equalTo(Expression.property(joinKey2).from(main))
                                 .and(Expression.property(whrKey1).from(secondary).equalTo(Expression.string(whrVal1)))
                                 .and(Expression.property(whrKey2).from(main).equalTo(Expression.intValue(whrVal2)))))
+                //.orderBy(Ordering.expression(Expression.property(prop1).from(main)).ascending())
                 .limit(Expression.intValue(limit));
         ResultSet queryResults = query.execute();
         for (Result row : queryResults) {
@@ -428,6 +433,7 @@ public class QueryRequestHandler {
                 .join(Join.crossJoin(DataSource.database(db).as(secondary)))
                 .where(Expression.property(whrKey1).from(main).equalTo(Expression.string(whrVal1))
                         .and(Expression.property(whrKey2).from(secondary).equalTo(Expression.string(whrVal2))))
+                //.orderBy(Ordering.expression(Expression.property(prop1).from(main)).ascending())
                 .limit(Expression.intValue(limit));
         for (Result row : query.execute()) {
             resultArray.add(row.toMap());

@@ -247,7 +247,7 @@ class Query(object):
         args.setMemoryPointer("database", database)
         args.setString("select_property", select_property)
 
-        return self._client.invokeMethod("query_leftJoin", args)
+        return self._client.invokeMethod("query_leftOuterJoin", args)
 
     def query_inner_join(self, database, select_property1, select_property2,
                          select_property3, whr_key1, whr_key2, whr_val1, whr_val2,

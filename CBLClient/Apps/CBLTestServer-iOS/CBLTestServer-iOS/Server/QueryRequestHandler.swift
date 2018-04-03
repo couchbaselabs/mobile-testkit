@@ -368,17 +368,18 @@ public class QueryRequestHandler {
             
         case "query_leftJoin":
             let database: Database = args.get(name: "database")!
-            let select_property: String = args.get(name: "select_property")!
+            let prop: String = args.get(name: "select_property")!
             let limit: Int = args.get(name: "limit")!
-            let main: String = "main"
-            let secondary: String = "secondary"
+            let main: String = "airline"
+            let secondary: String = "route"
             
             let searchQuery = QueryBuilder
                 .select(SelectResult.all().from(main),
-                        SelectResult.all().from(secondary))
+                        SelectResult.all().from((secondary)))
                 .from(DataSource.database(database).as(main))
                 .join(Join.leftJoin(DataSource.database(database).as(secondary))
-                    .on(Meta.id.from(main).equalTo(Expression.property(select_property).from(secondary))))
+                    .on(Meta.id.from(main).equalTo(Expression.property(prop).from(secondary))))
+                //.orderBy(Ordering.expression(Expression.property(prop).from(secondary)).ascending())
                 .limit(Expression.int(limit))
 
             var resultArray = [Any]()
@@ -386,20 +387,24 @@ public class QueryRequestHandler {
             for row in try searchQuery.execute() {
                 resultArray.append(row.toDictionary())
             }
+            
             return resultArray
 
         case "query_leftOuterJoin":
             let database: Database = args.get(name: "database")!
-            let select_property: String = args.get(name: "select_property")!
-            let main: String = "main"
-            let secondary: String = "secondary"
+            let prop: String = args.get(name: "select_property")!
+            let limit: Int = args.get(name: "limit")!
+            let main: String = "airline"
+            let secondary: String = "route"
             
             let searchQuery = QueryBuilder
                 .select(SelectResult.all().from(main),
-                        SelectResult.all().from(secondary))
+                        SelectResult.all().from((secondary)))
                 .from(DataSource.database(database).as(main))
                 .join(Join.leftOuterJoin(DataSource.database(database).as(secondary))
-                    .on(Meta.id.from(main).equalTo(Expression.property(select_property).from(secondary))))
+                    .on(Meta.id.from(main).equalTo(Expression.property(prop).from(secondary))))
+                //.orderBy(Ordering.expression(Expression.property(prop).from(secondary)).ascending())
+                .limit(Expression.int(limit))
             
             var resultArray = [Any]()
             
@@ -433,7 +438,7 @@ public class QueryRequestHandler {
             let join_key1: String = args.get(name: "join_key1")!
             let join_key2: String = args.get(name: "join_key2")!
             let main: String = "route"
-            let secondary: String = "airport"
+            let secondary: String = "airline"
             
             let searchQuery = QueryBuilder
                 .select(SelectResult.expression(Expression.property(select_property1).from(main)),
@@ -444,7 +449,7 @@ public class QueryRequestHandler {
                     .on(Expression.property(join_key1).from(secondary).equalTo(Expression.property(join_key2).from(main))
                         .and(Expression.property(whr_key1).from(secondary).equalTo(Expression.string(whr_val1)))
                         .and(Expression.property(whr_key2).from(main).equalTo(Expression.int(whr_val2)))))
-                .orderBy(Ordering.expression(Expression.property(select_property1).from(main)).ascending())
+                //.orderBy(Ordering.expression(Expression.property(select_property1).from(main)).ascending())
                 .limit(Expression.int(limit))
             var resultArray = [Any]()
             
@@ -487,6 +492,7 @@ public class QueryRequestHandler {
                 .join(Join.crossJoin(DataSource.database(database).as(secondary)))
                 .where(Expression.property(whr_key1).from(main).equalTo(Expression.string(whr_val1))
                     .and(Expression.property(whr_key2).from(secondary).equalTo(Expression.string(whr_val2))))
+                //.orderBy(Ordering.expression(Expression.property(select_property1).from(main)).ascending())
                 .limit(Expression.int(limit))
             var resultArray = [Any]()
             

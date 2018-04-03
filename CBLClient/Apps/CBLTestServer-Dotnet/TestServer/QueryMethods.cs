@@ -87,15 +87,15 @@ namespace Couchbase.Lite.Testing
                 var doc_id = postBody["doc_id"].ToString();
                 IExpression docId = Expression.Value(doc_id);
                 List<Object> resultArray = new List<Object>();
-                using(IQuery query = QueryBuilder
+                using (IQuery query = QueryBuilder
                                 .Select(SelectResult.All())
                                 .From(DataSource.Database(db))
-                                .Where(Meta.ID.EqualTo(docId)))               
+                                .Where(Meta.ID.EqualTo(docId)))
 
-                foreach (Result row in query.Execute())
-                {
-                    resultArray.Add(row.ToDictionary());
-                }
+                    foreach (Result row in query.Execute())
+                    {
+                        resultArray.Add(row.ToDictionary());
+                    }
 
                 response.WriteBody(resultArray);
             });
@@ -110,15 +110,15 @@ namespace Couchbase.Lite.Testing
                 IExpression limit = Expression.Int((int)postBody["limit"]);
                 IExpression offset = Expression.Int((int)postBody["offset"]);
                 List<object> resultArray = new List<object>();
-                using(IQuery query = QueryBuilder
+                using (IQuery query = QueryBuilder
                                 .Select(SelectResult.All())
                                 .From(DataSource.Database(db))
                                 .Limit(limit, offset))
-                
-                foreach (Result row in query.Execute())
-                {
-                    resultArray.Add(row.ToDictionary());
-                }
+
+                    foreach (Result row in query.Execute())
+                    {
+                        resultArray.Add(row.ToDictionary());
+                    }
                 response.WriteBody(resultArray);
             });
         }
@@ -134,17 +134,17 @@ namespace Couchbase.Lite.Testing
                 var whrKey = postBody["whr_key"].ToString();
                 IExpression whrVal = Expression.Value(postBody["whr_val"].ToString());
                 List<object> resultArray = new List<object>();
-                using(IQuery query = QueryBuilder
+                using (IQuery query = QueryBuilder
                                 .Select(SelectResult.Expression(Meta.ID),
                                         SelectResult.Expression(Expression.Property(prop1)),
                                         SelectResult.Expression(Expression.Property(prop2)))
                                 .From(DataSource.Database(db))
                                 .Where(Expression.Property(whrKey).EqualTo(whrVal)))
-                
-                foreach (Result row in query.Execute())
-                {
-                    resultArray.Add(row.ToDictionary());
-                }
+
+                    foreach (Result row in query.Execute())
+                    {
+                        resultArray.Add(row.ToDictionary());
+                    }
                 response.WriteBody(resultArray);
             });
         }
@@ -164,18 +164,18 @@ namespace Couchbase.Lite.Testing
                 IExpression whrVal3 = Expression.Value(postBody["whr_val3"].ToString());
                 IExpression whrVal4 = Expression.Value((Boolean)postBody["whr_val4"]);
                 List<object> resultArray = new List<object>();
-                using(IQuery query = QueryBuilder
+                using (IQuery query = QueryBuilder
                                 .Select(SelectResult.Expression(Meta.ID))
                                 .From(DataSource.Database(db))
                                 .Where(Expression.Property(whrKey1).EqualTo(whrVal1)
                                         .And(Expression.Property(whrKey2).EqualTo(whrVal2)
                                             .Or(Expression.Property(whrKey3).EqualTo(whrVal3)))
                                         .And(Expression.Property(whrKey4).EqualTo(whrVal4))))
-                
-                foreach (Result row in query.Execute())
-                {
-                    resultArray.Add(row.ToDictionary());
-                }
+
+                    foreach (Result row in query.Execute())
+                    {
+                        resultArray.Add(row.ToDictionary());
+                    }
                 response.WriteBody(resultArray);
             });
         }
@@ -193,18 +193,18 @@ namespace Couchbase.Lite.Testing
                 IExpression whrVal = Expression.Value(postBody["whr_val"].ToString());
                 IExpression likeVal = Expression.Value(postBody["like_val"].ToString());
                 List<object> resultArray = new List<object>();
-                using(IQuery query = QueryBuilder
+                using (IQuery query = QueryBuilder
                                 .Select(SelectResult.Expression(Meta.ID),
                                         SelectResult.Expression(Expression.Property(prop1)),
                                         SelectResult.Expression(Expression.Property(prop2)))
                                 .From(DataSource.Database(db))
                                 .Where(Expression.Property(whrKey).EqualTo(whrVal)
                                         .And(Expression.Property(likeKey).Like(likeVal))))
-                
-                foreach (Result row in query.Execute())
-                {
-                    resultArray.Add(row.ToDictionary());
-                }
+
+                    foreach (Result row in query.Execute())
+                    {
+                        resultArray.Add(row.ToDictionary());
+                    }
                 response.WriteBody(resultArray);
             });
         }
@@ -222,18 +222,18 @@ namespace Couchbase.Lite.Testing
                 IExpression whrVal = Expression.Value(postBody["whr_val"].ToString());
                 IExpression regexVal = Expression.Value(postBody["regex_val"].ToString());
                 List<object> resultArray = new List<object>();
-                using(IQuery query = QueryBuilder
+                using (IQuery query = QueryBuilder
                                 .Select(SelectResult.Expression(Meta.ID),
                                         SelectResult.Expression(Expression.Property(prop1)),
                                         SelectResult.Expression(Expression.Property(prop2)))
                                 .From(DataSource.Database(db))
                                 .Where(Expression.Property(whrKey).EqualTo(whrVal)
                                         .And(Expression.Property(regexKey).Regex(regexVal))))
-                
-                foreach (Result row in query.Execute())
-                {
-                    resultArray.Add(row.ToDictionary());
-                }
+
+                    foreach (Result row in query.Execute())
+                    {
+                        resultArray.Add(row.ToDictionary());
+                    }
                 response.WriteBody(resultArray);
             });
         }
@@ -248,17 +248,17 @@ namespace Couchbase.Lite.Testing
                 var whrKey = postBody["whr_key"].ToString();
                 IExpression whrVal = Expression.Value(postBody["whr_val"].ToString());
                 List<object> resultArray = new List<object>();
-                using(IQuery query = QueryBuilder
+                using (IQuery query = QueryBuilder
                                 .Select(SelectResult.Expression(Meta.ID),
                                         SelectResult.Expression(Expression.Property(prop1)))
                                 .From(DataSource.Database(db))
                                 .Where(Expression.Property(whrKey).EqualTo(whrVal))
                                 .OrderBy(Ordering.Property(prop1).Ascending()))
-                
-                foreach (Result row in query.Execute())
-                {
-                    resultArray.Add(row.ToDictionary());
-                }
+
+                    foreach (Result row in query.Execute())
+                    {
+                        resultArray.Add(row.ToDictionary());
+                    }
                 response.WriteBody(resultArray);
             });
         }
@@ -273,17 +273,17 @@ namespace Couchbase.Lite.Testing
                 var prop2 = postBody["select_property2"].ToString();
                 IExpression substring = Expression.Value(postBody["substring"].ToString());
                 List<object> resultArray = new List<object>();
-                using(IQuery query = QueryBuilder
+                using (IQuery query = QueryBuilder
                                 .Select(SelectResult.Expression(Meta.ID),
                                         SelectResult.Expression(Expression.Property(prop1)),
                                         SelectResult.Expression(Function.Upper(Expression.Property(prop2))))
                                 .From(DataSource.Database(db))
                                 .Where(Function.Contains(Expression.Property(prop1), substring)))
-                
-                foreach (Result row in query.Execute())
-                {
-                    resultArray.Add(row.ToDictionary());
-                }
+
+                    foreach (Result row in query.Execute())
+                    {
+                        resultArray.Add(row.ToDictionary());
+                    }
                 response.WriteBody(resultArray);
             });
         }
@@ -297,18 +297,18 @@ namespace Couchbase.Lite.Testing
                 var prop1 = postBody["select_property1"].ToString();
                 IExpression limit = Expression.Value(postBody["limit"].ToString());
                 List<object> resultArray = new List<object>();
-                using(IQuery query = QueryBuilder
+                using (IQuery query = QueryBuilder
                                 .Select(SelectResult.Expression(Meta.ID),
                                         SelectResult.Expression(Expression.Property(prop1)))
                                 .From(DataSource.Database(db))
                                 .Where(Expression.Property(prop1).IsNullOrMissing())
                                 .OrderBy(Ordering.Expression(Meta.ID).Ascending())
                                 .Limit(limit))
-                
-                foreach (Result row in query.Execute())
-                {
-                    resultArray.Add(row.ToDictionary());
-                }
+
+                    foreach (Result row in query.Execute())
+                    {
+                        resultArray.Add(row.ToDictionary());
+                    }
                 response.WriteBody(resultArray);
             });
         }
@@ -327,18 +327,18 @@ namespace Couchbase.Lite.Testing
                 IExpression equal_to = Expression.Value(postBody["equal_to"].ToString());
                 List<object> resultArray = new List<object>();
                 ICollation collation = Collation.Unicode().IgnoreAccents(true).IgnoreCase(true);
-                using(IQuery query = QueryBuilder
+                using (IQuery query = QueryBuilder
                                 .Select(SelectResult.Expression(Meta.ID),
                                         SelectResult.Expression(Expression.Property(prop1)))
                                 .From(DataSource.Database(db))
                                 .Where(Expression.Property(whrKey1).EqualTo(whrVal1)
                                         .And(Expression.Property(whrKey2).EqualTo(whrVal2))
                                         .And((Expression.Property(prop1).Collate(collation).EqualTo(equal_to)))))
-                
-                foreach (Result row in query.Execute())
-                {
-                    resultArray.Add(row.ToDictionary());
-                }
+
+                    foreach (Result row in query.Execute())
+                    {
+                        resultArray.Add(row.ToDictionary());
+                    }
                 response.WriteBody(resultArray);
             });
         }
@@ -369,17 +369,17 @@ namespace Couchbase.Lite.Testing
                 db.CreateIndex(index, ftsIndex);
                 IFullTextExpression ftsExpression = FullTextExpression.Index(index);
                 List<object> resultArray = new List<object>();
-                using(IQuery query = QueryBuilder
+                using (IQuery query = QueryBuilder
                                 .Select(SelectResult.Expression(Meta.ID),
                                         SelectResult.Expression(Expression.Property(prop)))
                                 .From(DataSource.Database(db))
                                 .Where(Expression.Property("type").EqualTo(doc_type).And(ftsExpression.Match(val)))
                                 .Limit(limit))
-                
-                foreach (Result row in query.Execute())
-                {
-                    resultArray.Add(row.ToDictionary());
-                }
+
+                    foreach (Result row in query.Execute())
+                    {
+                        resultArray.Add(row.ToDictionary());
+                    }
                 response.WriteBody(resultArray);
             });
         }
@@ -410,18 +410,18 @@ namespace Couchbase.Lite.Testing
                 db.CreateIndex(index, ftsIndex);
                 IFullTextExpression ftsExpression = FullTextExpression.Index(index);
                 List<object> resultArray = new List<object>();
-                using(IQuery query = QueryBuilder
+                using (IQuery query = QueryBuilder
                                 .Select(SelectResult.Expression(Meta.ID),
                                         SelectResult.Expression(Expression.Property(prop1)),
                                         SelectResult.Expression(Expression.Property(prop2)))
                                 .From(DataSource.Database(db))
                                 .Where(Expression.Property("type").EqualTo(doc_type).And(ftsExpression.Match(val)))
                                 .Limit(limit))
-                
-                foreach (Result row in query.Execute())
-                {
-                    resultArray.Add(row.ToDictionary());
-                }
+
+                    foreach (Result row in query.Execute())
+                    {
+                        resultArray.Add(row.ToDictionary());
+                    }
                 response.WriteBody(resultArray);
             });
         }
@@ -442,18 +442,18 @@ namespace Couchbase.Lite.Testing
                 db.CreateIndex(index, ftsIndex);
                 IFullTextExpression ftsExpression = FullTextExpression.Index(index);
                 List<object> resultArray = new List<object>();
-                using(IQuery query = QueryBuilder
+                using (IQuery query = QueryBuilder
                                 .Select(SelectResult.Expression(Meta.ID),
                                         SelectResult.Expression(Expression.Property(prop)))
                                 .From(DataSource.Database(db))
                                 .Where(Expression.Property("type").EqualTo(doc_type).And(ftsExpression.Match(val)))
                                 .OrderBy(Ordering.Expression(FullTextFunction.Rank(index)).Descending())
                                 .Limit(limit))
-                
-                foreach (Result row in query.Execute())
-                {
-                    resultArray.Add(row.ToDictionary());
-                }
+
+                    foreach (Result row in query.Execute())
+                    {
+                        resultArray.Add(row.ToDictionary());
+                    }
                 response.WriteBody(resultArray);
             });
         }
@@ -468,15 +468,15 @@ namespace Couchbase.Lite.Testing
                 IExpression val = Expression.Value(postBody["val"].ToString());
                 List<Object> resultArray = new List<Object>();
 
-                using(IQuery query = QueryBuilder
+                using (IQuery query = QueryBuilder
                         .Select(SelectResult.Expression(Meta.ID))
                         .From(DataSource.Database(db))
                         .Where(Expression.Property(prop).EqualTo(val))
                         .OrderBy(Ordering.Expression(Meta.ID).Ascending()))
-                foreach (Result row in query.Execute())
-                {
-                    resultArray.Add(row.ToDictionary());
-                }
+                    foreach (Result row in query.Execute())
+                    {
+                        resultArray.Add(row.ToDictionary());
+                    }
                 response.WriteBody(resultArray);
             });
 
@@ -492,15 +492,15 @@ namespace Couchbase.Lite.Testing
                 IExpression val = Expression.Value(postBody["val"].ToString());
                 List<Object> resultArray = new List<Object>();
 
-                using(IQuery query = QueryBuilder
+                using (IQuery query = QueryBuilder
                         .Select(SelectResult.Expression(Meta.ID))
                         .From(DataSource.Database(db))
                         .Where(Expression.Property(prop).NotEqualTo(val))
                         .OrderBy(Ordering.Expression(Meta.ID).Ascending()))
-                foreach (Result row in query.Execute())
-                {
-                    resultArray.Add(row.ToDictionary());
-                }
+                    foreach (Result row in query.Execute())
+                    {
+                        resultArray.Add(row.ToDictionary());
+                    }
                 response.WriteBody(resultArray);
             });
 
@@ -516,15 +516,15 @@ namespace Couchbase.Lite.Testing
                 IExpression val = Expression.Value((int)postBody["val"]);
                 List<Object> resultArray = new List<Object>();
 
-                using(IQuery query = QueryBuilder
+                using (IQuery query = QueryBuilder
                         .Select(SelectResult.Expression(Meta.ID))
                         .From(DataSource.Database(db))
                         .Where(Expression.Property(prop).GreaterThan(val))
                         .OrderBy(Ordering.Expression(Meta.ID).Ascending()))
-                foreach (Result row in query.Execute())
-                {
-                    resultArray.Add(row.ToDictionary());
-                }
+                    foreach (Result row in query.Execute())
+                    {
+                        resultArray.Add(row.ToDictionary());
+                    }
                 response.WriteBody(resultArray);
             });
 
@@ -540,15 +540,15 @@ namespace Couchbase.Lite.Testing
                 IExpression val = Expression.Value((int)postBody["val"]);
                 List<Object> resultArray = new List<Object>();
 
-                using(IQuery query = QueryBuilder
+                using (IQuery query = QueryBuilder
                         .Select(SelectResult.Expression(Meta.ID))
                         .From(DataSource.Database(db))
                         .Where(Expression.Property(prop).GreaterThanOrEqualTo(val))
                         .OrderBy(Ordering.Expression(Meta.ID).Ascending()))
-                foreach (Result row in query.Execute())
-                {
-                    resultArray.Add(row.ToDictionary());
-                }
+                    foreach (Result row in query.Execute())
+                    {
+                        resultArray.Add(row.ToDictionary());
+                    }
                 response.WriteBody(resultArray);
             });
 
@@ -564,15 +564,15 @@ namespace Couchbase.Lite.Testing
                 IExpression val = Expression.Value((int)postBody["val"]);
                 List<Object> resultArray = new List<Object>();
 
-                using(IQuery query = QueryBuilder
+                using (IQuery query = QueryBuilder
                         .Select(SelectResult.Expression(Meta.ID))
                         .From(DataSource.Database(db))
                         .Where(Expression.Property(prop).LessThan(val))
                         .OrderBy(Ordering.Expression(Meta.ID).Ascending()))
-                foreach (Result row in query.Execute())
-                {
-                    resultArray.Add(row.ToDictionary());
-                }
+                    foreach (Result row in query.Execute())
+                    {
+                        resultArray.Add(row.ToDictionary());
+                    }
                 response.WriteBody(resultArray);
             });
 
@@ -588,15 +588,15 @@ namespace Couchbase.Lite.Testing
                 IExpression val = Expression.Value((int)postBody["val"]);
                 List<Object> resultArray = new List<Object>();
 
-                using(IQuery query = QueryBuilder
+                using (IQuery query = QueryBuilder
                         .Select(SelectResult.Expression(Meta.ID))
                         .From(DataSource.Database(db))
                         .Where(Expression.Property(prop).LessThanOrEqualTo(val))
                         .OrderBy(Ordering.Expression(Meta.ID).Ascending()))
-                foreach (Result row in query.Execute())
-                {
-                    resultArray.Add(row.ToDictionary());
-                }
+                    foreach (Result row in query.Execute())
+                    {
+                        resultArray.Add(row.ToDictionary());
+                    }
                 response.WriteBody(resultArray);
             });
 
@@ -613,15 +613,15 @@ namespace Couchbase.Lite.Testing
                 IExpression val2 = Expression.Value((int)postBody["val2"]);
                 List<Object> resultArray = new List<Object>();
 
-                using(IQuery query = QueryBuilder
+                using (IQuery query = QueryBuilder
                         .Select(SelectResult.Expression(Meta.ID))
                         .From(DataSource.Database(db))
                         .Where(Expression.Property(prop).Between(val1, val2))
                         .OrderBy(Ordering.Expression(Meta.ID).Ascending()))
-                foreach (Result row in query.Execute())
-                {
-                    resultArray.Add(row.ToDictionary());
-                }
+                    foreach (Result row in query.Execute())
+                    {
+                        resultArray.Add(row.ToDictionary());
+                    }
                 response.WriteBody(resultArray);
             });
 
@@ -638,15 +638,15 @@ namespace Couchbase.Lite.Testing
                 IExpression val2 = Expression.Value(postBody["val2"].ToString());
                 List<Object> resultArray = new List<Object>();
 
-                using(IQuery query = QueryBuilder
+                using (IQuery query = QueryBuilder
                         .Select(SelectResult.Expression(Meta.ID))
                         .From(DataSource.Database(db))
                         .Where(Expression.Property(prop).In(val1, val2))
                         .OrderBy(Ordering.Expression(Meta.ID).Ascending()))
-                foreach (Result row in query.Execute())
-                {
-                    resultArray.Add(row.ToDictionary());
-                }
+                    foreach (Result row in query.Execute())
+                    {
+                        resultArray.Add(row.ToDictionary());
+                    }
                 response.WriteBody(resultArray);
             });
 
@@ -661,15 +661,15 @@ namespace Couchbase.Lite.Testing
                 var prop = postBody["prop"].ToString();
                 List<Object> resultArray = new List<Object>();
 
-                using(IQuery query = QueryBuilder
+                using (IQuery query = QueryBuilder
                         .Select(SelectResult.Expression(Meta.ID))
                         .From(DataSource.Database(db))
                         .Where(Expression.Property(prop).Is(Expression.Value(null)))
                         .OrderBy(Ordering.Expression(Meta.ID).Ascending()))
-                foreach (Result row in query.Execute())
-                {
-                    resultArray.Add(row.ToDictionary());
-                }
+                    foreach (Result row in query.Execute())
+                    {
+                        resultArray.Add(row.ToDictionary());
+                    }
                 response.WriteBody(resultArray);
             });
 
@@ -686,15 +686,15 @@ namespace Couchbase.Lite.Testing
                 IExpression val2 = Expression.Value((int)postBody["val2"]);
                 List<Object> resultArray = new List<Object>();
 
-                using(IQuery query = QueryBuilder
+                using (IQuery query = QueryBuilder
                         .Select(SelectResult.Expression(Meta.ID))
                         .From(DataSource.Database(db))
                         .Where(Expression.Not(Expression.Property(prop).Between(val1, val2)))
                         .OrderBy(Ordering.Expression(Meta.ID).Ascending()))
-                foreach (Result row in query.Execute())
-                {
-                    resultArray.Add(row.ToDictionary());
-                }
+                    foreach (Result row in query.Execute())
+                    {
+                        resultArray.Add(row.ToDictionary());
+                    }
                 response.WriteBody(resultArray);
             });
         }
@@ -708,16 +708,16 @@ namespace Couchbase.Lite.Testing
                 var prop = postBody["prop"].ToString();
                 List<Object> resultArray = new List<Object>();
 
-                using(IQuery query = QueryBuilder
+                using (IQuery query = QueryBuilder
                         .Select(SelectResult.Expression(Meta.ID),
                                 SelectResult.Expression(Expression.Property(prop)))
                         .From(DataSource.Database(db))
                         .Where(Expression.Property(prop).IsNot(Expression.Value(null)))
                         .OrderBy(Ordering.Expression(Meta.ID).Ascending()))
-                foreach (Result row in query.Execute())
-                {
-                    resultArray.Add(row.ToDictionary());
-                }
+                    foreach (Result row in query.Execute())
+                    {
+                        resultArray.Add(row.ToDictionary());
+                    }
                 response.WriteBody(resultArray);
             });
 
@@ -746,7 +746,7 @@ namespace Couchbase.Lite.Testing
 
                 List<Object> resultArray = new List<Object>();
 
-                using(IQuery query = QueryBuilder
+                using (IQuery query = QueryBuilder
                         .SelectDistinct(
                                 SelectResult.Expression(Expression.Property(prop1).From(secondary)),
                                 SelectResult.Expression(Expression.Property(prop2).From(secondary)),
@@ -760,10 +760,10 @@ namespace Couchbase.Lite.Testing
                             .And(Expression.Property(whrKey2).From(secondary).EqualTo(whrVal2))
                             .And(Expression.Property(whrKey3).From(main).EqualTo(whrVal3))))
 
-                foreach (Result row in query.Execute())
-                {
-                    resultArray.Add(row.ToDictionary());
-                }
+                    foreach (Result row in query.Execute())
+                    {
+                        resultArray.Add(row.ToDictionary());
+                    }
                 response.WriteBody(resultArray);
             });
 
@@ -777,8 +777,8 @@ namespace Couchbase.Lite.Testing
             {
                 var prop = postBody["select_property"].ToString();
                 int limit = (int)postBody["limit"];
-                String main = "main";
-                String secondary = "secondary";
+                String main = "airline";
+                String secondary = "route";
 
                 List<Object> resultArray = new List<Object>();
 
@@ -789,6 +789,7 @@ namespace Couchbase.Lite.Testing
                        .From(DataSource.Database(db).As(main))
                        .Join(Join.LeftJoin(DataSource.Database(db).As(secondary))
                              .On(Meta.ID.From(main).EqualTo(Expression.Property(prop).From(secondary))))
+                       //.OrderBy(Ordering.Expression(Expression.Property(prop).From(secondary)))
                        .Limit(Expression.Int(limit)))
 
                     foreach (Result row in query.Execute())
@@ -807,6 +808,7 @@ namespace Couchbase.Lite.Testing
             With<Database>(postBody, "database", db =>
             {
                 var prop = postBody["select_property"].ToString();
+                int limit = (int)postBody["limit"];
                 String main = "main";
                 String secondary = "secondary";
 
@@ -818,7 +820,9 @@ namespace Couchbase.Lite.Testing
                            SelectResult.All().From(secondary))
                        .From(DataSource.Database(db).As(main))
                        .Join(Join.LeftOuterJoin(DataSource.Database(db).As(secondary))
-                             .On(Meta.ID.From(main).EqualTo(Expression.Property(prop).From(secondary)))))
+                             .On(Meta.ID.From(main).EqualTo(Expression.Property(prop).From(secondary))))
+                       //.OrderBy(Ordering.Expression(Expression.Property(prop).From(secondary)))
+                       .Limit(Expression.Int(limit)))
 
                     foreach (Result row in query.Execute())
                     {
@@ -857,8 +861,8 @@ namespace Couchbase.Lite.Testing
                 var whrVal1 = postBody["whr_val1"].ToString();
                 int whrVal2 = (int)postBody["whr_val2"];
                 int limit = (int)postBody["limit"];
-                String main = "main";
-                String secondary = "secondary";
+                String main = "route";
+                String secondary = "airline";
 
                 List<Object> resultArray = new List<Object>();
 
@@ -871,7 +875,9 @@ namespace Couchbase.Lite.Testing
                        .Join(Join.InnerJoin(DataSource.Database(db).As(secondary))
                              .On(Expression.Property(joinKey1).From(secondary).EqualTo(Expression.Property(joinKey2).From(main))
                                  .And(Expression.Property(whrKey1).From(secondary).EqualTo(Expression.String(whrVal1)))
-                                 .And(Expression.Property(whrKey2).From(main).EqualTo(Expression.Int(whrVal2))))))
+                                 .And(Expression.Property(whrKey2).From(main).EqualTo(Expression.Int(whrVal2)))))
+                       //.OrderBy(Ordering.Expression(Expression.Property(prop1).From(main)).Ascending())
+                       .Limit(Expression.Int(limit)))
 
                     foreach (Result row in query.Execute())
                     {
@@ -903,6 +909,7 @@ namespace Couchbase.Lite.Testing
                 var whrKey2 = postBody["whr_key1"].ToString();
                 var whrVal1 = postBody["whr_val1"].ToString();
                 var whrVal2 = postBody["whr_val2"].ToString();
+                int limit = (int)postBody["limit"];
                 String main = "airport";
                 String secondary = "airline";
                 String firstName = "firstNamme";
@@ -912,13 +919,15 @@ namespace Couchbase.Lite.Testing
 
                 using (IQuery query = QueryBuilder
                        .Select(
-                           SelectResult.Expression(Expression.Property(prop1).From(main)).As (firstName),
-                           SelectResult.Expression(Expression.Property(prop1).From(secondary)).As (secondName),
+                           SelectResult.Expression(Expression.Property(prop1).From(main)).As(firstName),
+                           SelectResult.Expression(Expression.Property(prop1).From(secondary)).As(secondName),
                            SelectResult.Expression(Expression.Property(prop2).From(secondary)))
-                       .From(DataSource.Database(db).As (main))
+                       .From(DataSource.Database(db).As(main))
                        .Join(Join.CrossJoin(DataSource.Database(db).As(secondary)))
                        .Where(Expression.Property(whrKey1).From(main).EqualTo(Expression.String(whrVal1))
-                              .And(Expression.Property(whrKey2).From(secondary).EqualTo(Expression.String(whrVal2)))))
+                              .And(Expression.Property(whrKey2).From(secondary).EqualTo(Expression.String(whrVal2))))
+                       //.OrderBy(Ordering.Expression(Expression.Property(prop1).From(main)).Ascending())
+                       .Limit(Expression.Int(limit)))
 
                     foreach (Result row in query.Execute())
                     {
