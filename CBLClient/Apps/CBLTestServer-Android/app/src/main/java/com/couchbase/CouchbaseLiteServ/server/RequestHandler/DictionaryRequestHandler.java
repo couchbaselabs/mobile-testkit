@@ -116,7 +116,7 @@ public class DictionaryRequestHandler{
     public MutableDictionary setDouble(Args args){
         MutableDictionary dictionary = args.get("dictionary");
         String key = args.get("key");
-        Double value = args.get("value");
+        Double value = Double.valueOf(args.get("value").toString());
         return  dictionary.setDouble(key, value);
     }
 

@@ -53,8 +53,8 @@ public class DataTypesInitiatorHandler {
     }
 
     public Boolean compareDouble(Args args) {
-        Double first = args.get("double1");
-        Double second = args.get("double2");
+        Double first = Double.valueOf(args.get("double1").toString());
+        Double second = Double.valueOf(args.get("double2").toString());
         if (first.equals(second)){
             return true;
         }
