@@ -62,7 +62,7 @@ class TestDatabase(object):
 
         db = self.db_obj.create(random_string(6))
         # Exception checking when document id is null
-        err_msg = "a document parameter is null"
+        err_msg = "document cannot be null"
         try:
             self.db_obj.delete(database=db, document=None)
             assert 0

@@ -239,8 +239,8 @@ public class DatabaseRequestHandler {
 
     public boolean exists(Args args){
         String name = args.get("name");
-        File directory = args.get("directory");
-        return Database.exists(name, directory.getParentFile());
+        File directory = new File(args.get("directory").toString());
+        return Database.exists(name, directory);
     }
 
     public void deleteBulkDocs(Args args) throws CouchbaseLiteException {
