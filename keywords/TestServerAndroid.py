@@ -24,8 +24,7 @@ class TestServerAndroid(TestServerBase):
         if debug_mode:
             self.apk_name = "{}-debug.apk".format(apk_name_prefix)
         else:
-            # self.apk_name = "{}-release.apk".format(apk_name_prefix)
-            self.apk_name = "{}-debug.apk".format(apk_name_prefix)
+            self.apk_name = "{}-release.apk".format(apk_name_prefix)
         self.package_name = self.apk_name
         self.device_enabled = False
 

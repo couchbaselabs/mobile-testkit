@@ -4,7 +4,7 @@ import pytest
 @pytest.mark.usefixtures("class_init")
 class TestReplicatorConfiguration(object):
     cbl_db_name = "cbl_db"
-
+"""
     def test_create(self, params_from_base_test_setup):
         sg_admin_url = params_from_base_test_setup["sg_admin_url"]
         sg_blip_url = sg_admin_url.replace("http", "ws")
@@ -98,3 +98,4 @@ class TestReplicatorConfiguration(object):
         self.repl_config_obj.create(builder)
         # config = self.repl_config_obj.create(builder)
         # assert 0
+"""

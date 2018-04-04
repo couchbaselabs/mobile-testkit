@@ -1720,7 +1720,17 @@ def test_default_conflict_with_two_conflictsAndTomstone(params_from_base_test_se
     # 5. Verify updated doc from cbl is pushed to sg.
     sg_docs = sg_client.get_all_docs(url=sg_url, db=sg_db, auth=session, include_docs=True)
     sg_docs = sg_docs["rows"]
+    count = 0
     for doc in sg_docs:
+        while count < 30:
+            try:
+                doc["doc"]["updates-cbl"]
+                break
+            except KeyError:
+                sg_docs = sg_client.get_all_docs(url=sg_url, db=sg_db, auth=session, include_docs=True)
+                sg_docs = sg_docs["rows"]
+                time.sleep(1)
+                count += 1
         assert doc["doc"]["updates-cbl"] == 1, "cbl update did not pushed to sg"
 
     # 6. Tombstone the latest active revision in sg
@@ -1734,13 +1744,13 @@ def test_default_conflict_with_two_conflictsAndTomstone(params_from_base_test_se
     cbl_docs = db.getDocuments(cbl_db, cbl_doc_ids)
     count = 0
     for id in cbl_doc_ids:
-        cbl_doc_ids = db.getDocIds(cbl_db)
-        while count < 30:
+        while count < 60:
             try:
                 cbl_docs[id]["updates"]
             except KeyError:
                 break
             time.sleep(1)
+            cbl_docs = db.getDocuments(cbl_db, cbl_doc_ids)
             count += 1
         with pytest.raises(KeyError) as ke:
             cbl_docs[id]["updates"]
