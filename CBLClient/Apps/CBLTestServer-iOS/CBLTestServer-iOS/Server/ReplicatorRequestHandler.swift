@@ -74,7 +74,6 @@ public class ReplicatorRequestHandler {
 
         case "replicator_changeListenerGetChanges":
             let changeListener: MyReplicationChangeListener = (args.get(name: "changeListener"))!
-            // let index: Int = (args.get(name: "index"))!
             return changeListener.getChanges().description
         
         case "replicator_isContinous":
@@ -98,7 +97,6 @@ class MyReplicationChangeListener : NSObject  {
     }
     
     public func getChanges() -> [ReplicatorChange] {
-        NSLog("GOT repl CHANGES .......\(repl_changes)")
         return repl_changes
     }
 }

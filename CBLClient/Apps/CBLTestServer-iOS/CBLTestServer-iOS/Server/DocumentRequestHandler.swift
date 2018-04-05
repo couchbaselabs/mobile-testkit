@@ -31,7 +31,6 @@ public class DocumentRequestHandler {
             } else {
                 if dictionary == nil {
                     let doc = MutableDocument()
-                    print("doc is \(doc)")
                     return doc
                 } else {
                     return MutableDocument(data: dictionary)

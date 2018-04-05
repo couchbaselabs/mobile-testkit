@@ -165,7 +165,6 @@ public class Server {
             } catch let error as NSError {
                 // Send 400 error code
                 let response = GCDWebServerDataResponse(text: error.localizedDescription)!
-                print("Error is : \(error.localizedDescription)")
                 response.statusCode = error.code as Int
                 response.contentType = error.localizedDescription
                 return response

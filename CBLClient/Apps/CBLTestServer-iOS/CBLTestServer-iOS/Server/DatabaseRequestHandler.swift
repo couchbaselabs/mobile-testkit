@@ -31,7 +31,6 @@ public class DatabaseRequestHandler {
                     return try Database(name: name!)
                 }
             } catch {
-                print("Got error while creating DB \(error)")
                 return error.localizedDescription
             }
             
@@ -51,14 +50,13 @@ public class DatabaseRequestHandler {
             do {
                 try database.deleteDocument(document)
             } catch {
-                print("Got error while deleting DB \(error)")
                 return error
             }
             
         case "database_deleteBulkDocs":
             let database: Database = args.get(name:"database")!
             let doc_ids: Array<String> = args.get(name: "doc_ids")!
-            print("Doc Id in database to delete documents are:\(doc_ids)")
+
             try database.inBatch {
                 for id in doc_ids {
                     let document: Document = database.document(withID: id)!
@@ -78,7 +76,6 @@ public class DatabaseRequestHandler {
             let directory: String? = args.get(name:"directory")!
            
             if let directory = directory {
-                print("is database exists in path\(Database.exists(withName: name, inDirectory: directory))")
                 return Database.exists(withName: name, inDirectory: directory)
             } else {
                 return Database.exists(withName: name)
@@ -136,7 +133,6 @@ public class DatabaseRequestHandler {
             do {
                 try database.deleteDocument(document, concurrencyControl: concurrencyType)
             } catch {
-                print("Got error while deleting DB \(error)")
                 return error
             }
 

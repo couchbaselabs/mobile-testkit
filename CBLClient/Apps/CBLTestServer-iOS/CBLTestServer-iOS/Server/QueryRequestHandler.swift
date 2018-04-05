@@ -449,7 +449,6 @@ public class QueryRequestHandler {
                     .on(Expression.property(join_key1).from(secondary).equalTo(Expression.property(join_key2).from(main))
                         .and(Expression.property(whr_key1).from(secondary).equalTo(Expression.string(whr_val1)))
                         .and(Expression.property(whr_key2).from(main).equalTo(Expression.int(whr_val2)))))
-                //.orderBy(Ordering.expression(Expression.property(select_property1).from(main)).ascending())
                 .limit(Expression.int(limit))
             var resultArray = [Any]()
             
@@ -492,7 +491,6 @@ public class QueryRequestHandler {
                 .join(Join.crossJoin(DataSource.database(database).as(secondary)))
                 .where(Expression.property(whr_key1).from(main).equalTo(Expression.string(whr_val1))
                     .and(Expression.property(whr_key2).from(secondary).equalTo(Expression.string(whr_val2))))
-                //.orderBy(Ordering.expression(Expression.property(select_property1).from(main)).ascending())
                 .limit(Expression.int(limit))
             var resultArray = [Any]()
             

@@ -33,7 +33,7 @@ else
 fi
 popd
 
-# Build LiteServ
+# Build CBLTestServer-iOS
 
 TESTSERVER_APP=CBLTestServer-iOS.app
 TESTSERVER_APP_DEVICE=CBLTestServer-iOS-Device.app
