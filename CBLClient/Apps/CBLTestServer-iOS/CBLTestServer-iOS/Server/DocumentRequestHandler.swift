@@ -123,9 +123,9 @@ public class DocumentRequestHandler {
         case "document_setDouble":
             let document: MutableDocument = (args.get(name: "document"))!
             let key: String = (args.get(name: "key"))!
-            let value: Float = (args.get(name: "value"))!
-            let double_value = Double(value)
-            return  document.setDouble(double_value, forKey: key)
+            let rawValue: String = args.get(name: "value")!
+            let value: Double = Double(rawValue)!
+            return  document.setDouble(value, forKey: key)
 
         case "document_getBoolean":
             let document: MutableDocument = (args.get(name: "document"))!

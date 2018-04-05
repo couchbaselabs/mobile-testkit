@@ -10,31 +10,33 @@ import Foundation
 
 public class ValueSerializer {
     public static func serialize(value: Any?, memory: Memory) -> Any {
-        if value == nil {
+        guard let v = value else {
             return "null"
-        } else if ((value as? NSNull) != nil) {
+        }
+        
+        if ((v as? NSNull) != nil) {
             return "null"
-        } else if (value is String) {
-            let string = value as? String
-            return "\"" + string! + "\""
-        } else if (value is Int){
-            let number:Int = value as! Int
+        } else if (v is String) {
+            let string = v as! String
+            return "\"" + string + "\""
+        } else if (v is Int){
+            let number = v as! Int
             return "I" + String(number)
-        // Swift does not have a Long type
-        } else if (value is Double){
-            let number:Double = value as! Double
+            // Swift does not have a Long type
+        } else if (v is Double){
+            let number = v as! Double
             return "D" + String(number)
-        } else if (value is Float){
-            let number:Float = value as! Float
+        } else if (v is Float){
+            let number = v as! Float
             return "F" + String(number)
-        } else if (value is NSNumber){
-            let number:NSNumber = value as! NSNumber
+        } else if (v is NSNumber){
+            let number = v as! NSNumber
             return "#" + "\(number)"
-        } else if (value is Bool) {
-            let bool:Bool = value as! Bool
+        } else if (v is Bool) {
+            let bool = v as! Bool
             return (bool ? "true" : "false")
-        } else if (value is Dictionary<String, Any>) {
-            let map = value as! Dictionary<String, Any>
+        } else if (v is Dictionary<String, Any>) {
+            let map = v as! Dictionary<String, Any>
             var stringMap = [String: Any]()
             
             for (key, val) in map {
@@ -49,8 +51,8 @@ public class ValueSerializer {
             } catch {
                 return "Error converting Dict to json"
             }
-        } else if (value is Array<Any>) {
-            let list = value as! Array<Any>
+        } else if (v is Array<Any>) {
+            let list = v as! Array<Any>
             var stringList = [String]()
             
             for object in list {
