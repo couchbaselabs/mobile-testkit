@@ -495,6 +495,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     if create_db_per_test:
         # Delete CBL database
         log_info("Deleting the database {} at test teardown".format(create_db_per_test))
+        time.sleep(1)
         db.deleteDB(source_db)
 
     if flush_memory_per_test:

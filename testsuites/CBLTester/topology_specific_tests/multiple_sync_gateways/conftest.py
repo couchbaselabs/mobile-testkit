@@ -90,11 +90,14 @@ def pytest_addoption(parser):
                      action="store_true",
                      help="If set, will flush server memory per test")
 
+    parser.addoption("--debug-mode", action="store_true",
+                     help="Enable debug mode for the app ", default=False)
+
 
 # This will get called once before the first test that
 # runs with this as input parameters in this file
 # This setup will be called once for all tests in the
-# testsuites/listener/shared/client_sg/ directory
+# testsuites/CBLTester/topology_sync_gateways/multiple_sync_gateways directory
 @pytest.fixture(scope="session")
 def params_from_base_suite_setup(request):
     liteserv_platform = request.config.getoption("--liteserv-platform")
@@ -115,12 +118,14 @@ def params_from_base_suite_setup(request):
     community_enabled = request.config.getoption("--community")
     sg_ssl = request.config.getoption("--sg-ssl")
     flush_memory_per_test = request.config.getoption("--flush-memory-per-test")
+    debug_mode = request.config.getoption("--debug-mode")
 
     testserver = TestServerFactory.create(platform=liteserv_platform,
                                           version_build=liteserv_version,
                                           host=liteserv_host,
                                           port=liteserv_port,
-                                          community_enabled=community_enabled)
+                                          community_enabled=community_enabled,
+                                          debug_mode=debug_mode)
 
     log_info("Downloading TestServer ...")
     # Download TestServer app
@@ -144,8 +149,8 @@ def params_from_base_suite_setup(request):
     sg_url = cluster_topology["sync_gateways"][0]["public"]
     sg_ip = host_for_url(sg_url)
     persist_cluster_config_environment_prop(cluster_config, 'sync_gateway_ssl', False)
-    target_url = "blip://{}:4984/{}".format(sg_ip, sg_db)
-    target_admin_url = "blip://{}:4985/{}".format(sg_ip, sg_db)
+    target_url = "ws://{}:4984/{}".format(sg_ip, sg_db)
+    target_admin_url = "ws://{}:4985/{}".format(sg_ip, sg_db)
 
     cbs_url = cluster_topology['couchbase_servers'][0]
     cbs_ip = host_for_url(cbs_url)
@@ -240,8 +245,9 @@ def params_from_base_suite_setup(request):
         server_url = cluster_topology["couchbase_servers"][0]
         server = CouchbaseServer(server_url)
         buckets = server.get_bucket_names()
-        if enable_sample_bucket not in buckets:
-            server.delete_buckets()
+        if enable_sample_bucket in buckets:
+            log_info("Deleting existing {} bucket".format(enable_sample_bucket))
+            server.delete_bucket(enable_sample_bucket)
             time.sleep(5)
         log_info("Loading sample bucket {}".format(enable_sample_bucket))
         server.load_sample_bucket(enable_sample_bucket)
@@ -350,10 +356,11 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     # Start LiteServ and delete any databases
 
     log_info("Starting TestServer...")
+    test_name_cp = test_name.replace("/", "-")
     if device_enabled:
-        testserver.start_device("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__, test_name, datetime.datetime.now()))
+        testserver.start_device("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__, test_name_cp, datetime.datetime.now()))
     else:
-        testserver.start("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__, test_name, datetime.datetime.now()))
+        testserver.start("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__, test_name_cp, datetime.datetime.now()))
     # sleep for some time to reach cbl
     time.sleep(5)
 
@@ -367,7 +374,8 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     log_info("cluster_topology: {}".format(cluster_topology))
     log_info("mode: {}".format(mode))
     log_info("xattrs_enabled: {}".format(xattrs_enabled))
-
+    db_config = None
+    db = None
     if create_db_per_test:
         cbl_db = create_db_per_test + str(time.time())
         # Create CBL database
@@ -413,8 +421,8 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     if create_db_per_test:
         # Delete CBL database
         log_info("Deleting the database {} at test teardown".format(create_db_per_test))
-        db.deleteDB(source_db)
         time.sleep(1)
+        db.deleteDB(source_db)
 
     if flush_memory_per_test:
         log_info("Flushing server memory")

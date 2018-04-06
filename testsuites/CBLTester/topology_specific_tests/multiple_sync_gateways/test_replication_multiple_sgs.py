@@ -261,14 +261,15 @@ def test_multiple_sgs_with_CBLs(params_from_base_test_setup, setup_customized_te
 
     replicator.stop(repl1)
     repl2_error = replicator.getError(repl2)
-    assert "Code=-1004" in repl2_error
+    assert "POSIXErrorDomain" in repl2_error
     # 6. Verify one CBL DB should be successful as other CBL DB should fail as associated Sg is down
     cblDB1_doc_ids = db.getDocIds(cbl_db1)
     for doc in cbl_doc_ids1:
         assert doc in cblDB1_doc_ids, "cbl_db1 doc does not exist in combined replication cbl_db1"
     for doc in cbl_doc_ids2:
         assert doc in cblDB1_doc_ids, "cbl_db2 doc does not exist in combined replication cbl_db1"
-
+    replicator.stop(repl1)
+    replicator.stop(repl2)
 
 def create_sg_users(sg1, sg2, db1, db2, name1, password1, name2, password2, channels):
 

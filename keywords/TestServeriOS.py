@@ -110,8 +110,6 @@ class TestServeriOS(TestServerBase):
         else:
             self.app_name = "{}-{}.app".format(self.app, self.version_build)
         self.app_path = "{}/{}/{}".format(BINARY_DIR, self.app_dir, self.app_name)
-        # TODO: Remove this once jenkins build for app is done
-        # self.app_path = "/Users/sridevi.saragadam/workspace/CBL2-0/build-scripts/mobile-testkit/CBLClient/Apps/CBLTestServer-iOS/build/Build/Products/Release-iphonesimulator/CBLTestServer-iOS.app"
         output = subprocess.check_output([
             "ios-sim", "--devicetypeid", self.device, "start"
         ])

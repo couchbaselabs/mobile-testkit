@@ -1538,9 +1538,6 @@ def test_default_conflict_scenario_highRevGeneration_wins(params_from_base_test_
                                                   channels=channels)
     cbl_doc_ids = db.getDocIds(cbl_db)
     cbl_docs = db.getDocuments(cbl_db, cbl_doc_ids)
-    sg_docs = sg_client.get_all_docs(url=sg_url, db=sg_db, auth=session, include_docs=True)
-    sg_docs = sg_docs["rows"]
-    sg_docs_values = [doc['doc'] for doc in sg_docs]
     for doc in cbl_docs:
         if highrev_source == 'cbl':
             verify_updates = 4
@@ -1552,8 +1549,11 @@ def test_default_conflict_scenario_highRevGeneration_wins(params_from_base_test_
             cbl_docs = db.getDocuments(cbl_db, cbl_doc_ids)
             count += 1
         assert cbl_docs[doc]["updates"] == verify_updates, "cbl with high rev id is not updated "
-        for i in xrange(len(sg_docs_values)):
-            assert sg_docs_values[i]["updates"] == verify_updates, "sg with high rev id is not updated"
+    sg_docs = sg_client.get_all_docs(url=sg_url, db=sg_db, auth=session, include_docs=True)
+    sg_docs = sg_docs["rows"]
+    sg_docs_values = [doc['doc'] for doc in sg_docs]
+    for i in xrange(len(sg_docs_values)):
+        assert sg_docs_values[i]["updates"] == verify_updates, "sg with high rev id is not updated"
     if sg_mode == "di":
         replicator.stop(repl)
 
