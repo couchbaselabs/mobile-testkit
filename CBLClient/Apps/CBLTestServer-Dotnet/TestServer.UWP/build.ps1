@@ -1,6 +1,5 @@
 param (
     [Parameter()][string]$Version,
-    [Parameter()][int]$BuildNum,
     [switch]$Community
 )
 
@@ -47,18 +46,18 @@ function Modify-Packages {
 }
 
 function Calculate-Version {
-    $version_to_use = (($Version, $env:Version -ne $null) -ne '')[0]
+    $version_to_use = (($Version, $env:VERSION -ne $null) -ne '')[0]
     if($version_to_use -eq '' -or !$version_to_use) {
         throw "Version not defined for this script!  Either pass it in as -Version or define an environment variable named VERSION"
     }
 
-    $build_num_to_use = (($BuildNum, $env:BLD_NUM, '*' -ne $null) -ne 0)[0]
-    if($build_num_to_use -ne '*') {
-        $build_num_to_use = ([int]$build_num_to_use).ToString("D4")
+    if($version_to_use.Contains("-")) {
+        return $version_to_use
     }
 
-    return $version_to_use + "-b" + $build_num_to_use
+    return $version_to_use + "-b*"
 }
+
 
 Push-Location $PSScriptRoot
 $VSRegistryKey = "HKLM:\SOFTWARE\WOW6432Node\Microsoft\VisualStudio\SxS\VS7"
