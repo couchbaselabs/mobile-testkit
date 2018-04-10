@@ -171,7 +171,7 @@ class ClusterKeywords:
         # Verify sync_gateway versions
         for sg in cluster_obj["sync_gateways"]:
             verify_sync_gateway_product_info(sg["ip"])
-            verify_sync_gateway_version(sg["ip"], expected_sync_gateway_version)
+            # verify_sync_gateway_version(sg["ip"], expected_sync_gateway_version)
 
         # Verify sg_accel versions, use the same expected version for sync_gateway for now
         for ac in cluster_obj["sg_accels"]:

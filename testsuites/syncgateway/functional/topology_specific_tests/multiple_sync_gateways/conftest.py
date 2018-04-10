@@ -33,6 +33,8 @@ def params_from_base_suite_setup(request):
     sg_lb = request.config.getoption("--sg-lb")
     use_sequoia = request.config.getoption("--sequoia")
     no_conflicts_enabled = request.config.getoption("--no-conflicts")
+    use_views = request.config.getoption("--use-views")
+    number_replicas = request.config.getoption("--number-replicas")
 
     if xattrs_enabled and version_is_binary(sync_gateway_version):
         check_xattr_support(server_version, sync_gateway_version)
@@ -47,6 +49,8 @@ def params_from_base_suite_setup(request):
     log_info("sg_ce: {}".format(sg_ce))
     log_info("sg_lb: {}".format(sg_lb))
     log_info("no conflicts enabled {}".format(no_conflicts_enabled))
+    log_info("use_views: {}".format(use_views))
+    log_info("number_replicas: {}".format(number_replicas))
 
     # sg-ce is invalid for di mode
     if mode == "di" and sg_ce:
@@ -61,6 +65,18 @@ def params_from_base_suite_setup(request):
     # use base_cc cluster config if mode is "cc" or base_di cluster config if more is "di"
     cluster_config = "{}/multiple_sync_gateways_{}".format(constants.CLUSTER_CONFIGS_DIR, mode)
     sg_config = sync_gateway_config_path_for_mode("sync_gateway_default_functional_tests", mode)
+
+    if use_views:
+        log_info("Running SG tests using views")
+        # Enable sg views in cluster configs
+        persist_cluster_config_environment_prop(cluster_config, 'sg_use_views', True)
+    else:
+        log_info("Running tests with cbs <-> sg ssl disabled")
+        # Disable sg views in cluster configs
+        persist_cluster_config_environment_prop(cluster_config, 'sg_use_views', False)
+
+    # Write the number of replicas to cluster config
+    persist_cluster_config_environment_prop(cluster_config, 'number_replicas', number_replicas)
 
     # Add load balancer prop and check if load balancer IP is available
     if sg_lb:

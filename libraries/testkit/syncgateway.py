@@ -12,6 +12,7 @@ from libraries.testkit.admin import Admin
 from libraries.testkit.debug import log_request, log_response
 from utilities.cluster_config_utils import is_cbs_ssl_enabled, is_xattrs_enabled, no_conflicts_enabled
 from utilities.cluster_config_utils import get_revs_limit
+from utilities.cluster_config_utils import get_sg_replicas, get_sg_use_views, get_sg_version
 from keywords.utils import add_cbs_to_sg_config_server_field, log_info
 
 log = logging.getLogger(libraries.testkit.settings.LOGGER)
@@ -60,8 +61,19 @@ class SyncGateway:
             "autoimport": "",
             "xattrs": "",
             "no_conflicts": "",
+            "num_index_replicas": "",
+            "num_index_replicas_housekeeping": "",
+            "sg_use_views": "",
             "couchbase_server_primary_node": self.couchbase_server_primary_node
         }
+
+        if get_sg_version(self.cluster_config) >= "2.1.0":
+            num_replicas = get_sg_replicas(self.cluster_config)
+            playbook_vars["num_index_replicas"] = '"num_index_replicas": {},'.format(num_replicas)
+            playbook_vars["num_index_replicas_housekeeping"] = '"num_index_replicas_housekeeping": {},'.format(num_replicas)
+            
+            if get_sg_use_views(self.cluster_config):
+                playbook_vars["sg_use_views"] = '"use_views": true,'
 
         if is_xattrs_enabled(self.cluster_config):
             playbook_vars["autoimport"] = '"import_docs": "continuous",'
@@ -96,8 +108,19 @@ class SyncGateway:
             "xattrs": "",
             "no_conflicts": "",
             "revs_limit": "",
+            "num_index_replicas": "",
+            "num_index_replicas_housekeeping": "",
+            "sg_use_views": "",
             "couchbase_server_primary_node": self.couchbase_server_primary_node
         }
+
+        if get_sg_version(self.cluster_config) >= "2.1.0":
+            num_replicas = get_sg_replicas(self.cluster_config)
+            playbook_vars["num_index_replicas"] = '"num_index_replicas": {},'.format(num_replicas)
+            playbook_vars["num_index_replicas_housekeeping"] = '"num_index_replicas_housekeeping": {},'.format(num_replicas)
+
+            if get_sg_use_views(self.cluster_config):
+                playbook_vars["sg_use_views"] = '"use_views": true,'
 
         if is_xattrs_enabled(self.cluster_config):
             playbook_vars["autoimport"] = '"import_docs": "continuous",'

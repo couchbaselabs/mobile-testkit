@@ -9,7 +9,7 @@ from keywords.exceptions import ProvisioningError
 from keywords.utils import log_info, log_warn, add_cbs_to_sg_config_server_field
 from libraries.provision.ansible_runner import AnsibleRunner
 from libraries.testkit.config import Config
-from utilities.cluster_config_utils import is_cbs_ssl_enabled, is_xattrs_enabled, no_conflicts_enabled, get_revs_limit
+from utilities.cluster_config_utils import is_cbs_ssl_enabled, is_xattrs_enabled, no_conflicts_enabled, get_revs_limit, get_sg_version, get_sg_replicas, get_sg_use_views
 
 
 class SyncGatewayConfig:
@@ -116,8 +116,19 @@ def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False, sg_pl
         "autoimport": "",
         "xattrs": "",
         "no_conflicts": "",
+        "num_index_replicas": "",
+        "num_index_replicas_housekeeping": "",
+        "sg_use_views": "",
         "couchbase_server_primary_node": couchbase_server_primary_node
     }
+
+    if get_sg_version(cluster_config) >= "2.1.0":
+        num_replicas = get_sg_replicas(cluster_config)
+        playbook_vars["num_index_replicas"] = '"num_index_replicas": {},'.format(num_replicas)
+        playbook_vars["num_index_replicas_housekeeping"] = '"num_index_replicas_housekeeping": {},'.format(num_replicas)
+        
+        if get_sg_use_views(cluster_config):
+                playbook_vars["sg_use_views"] = '"use_views": true,'
 
     if is_xattrs_enabled(cluster_config):
         playbook_vars["autoimport"] = '"import_docs": "continuous",'
