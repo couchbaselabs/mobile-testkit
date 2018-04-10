@@ -97,6 +97,10 @@ try {
         $env:NUGET_VERSION = $fullVersion
     }
 
+    if(-Not $env:BLD_NUM) {
+        $env:BLD_NUM = $env:NUGET_VERSION.Split("-")[1].TrimStart('b', '0')
+    }
+
     & $MSBuild /t:Restore
     if($LASTEXITCODE -ne 0) {
         Write-Error "Restore failed for TestServer.UWP"

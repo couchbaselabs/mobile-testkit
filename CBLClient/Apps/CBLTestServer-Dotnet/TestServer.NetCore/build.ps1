@@ -94,6 +94,11 @@ try {
         $env:NUGET_VERSION = Get-ChildItem $nugetDirectory -Filter "$releaseVersion-b*" | Select-Object -Last 1 -ExpandProperty Name
     } else {
         $env:NUGET_VERSION = $fullVersion
+        
+    }
+
+    if(-Not $env:BLD_NUM) {
+        $env:BLD_NUM = $env:NUGET_VERSION.Split("-")[1].TrimStart('b', '0')
     }
 
     dotnet publish -c Release
