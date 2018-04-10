@@ -153,7 +153,7 @@ class Cluster:
             num_replicas = get_sg_replicas(self._cluster_config)
             playbook_vars["num_index_replicas"] = '"num_index_replicas": {},'.format(num_replicas)
             playbook_vars["num_index_replicas_housekeeping"] = '"num_index_replicas_housekeeping": {},'.format(num_replicas)
-            
+
             if get_sg_use_views(self._cluster_config):
                 playbook_vars["sg_use_views"] = '"use_views": true,'
 
@@ -169,6 +169,8 @@ class Cluster:
             playbook_vars["revs_limit"] = '"revs_limit": {},'.format(revs_limit)
         except KeyError as ex:
             log_info("Keyerror in getting revs_limit{}".format(ex.message))
+
+        time.sleep(10)
         status = ansible_runner.run_ansible_playbook(
             "start-sync-gateway.yml",
             extra_vars=playbook_vars

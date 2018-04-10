@@ -129,9 +129,9 @@ def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False, sg_pl
         num_replicas = get_sg_replicas(cluster_config)
         playbook_vars["num_index_replicas"] = '"num_index_replicas": {},'.format(num_replicas)
         playbook_vars["num_index_replicas_housekeeping"] = '"num_index_replicas_housekeeping": {},'.format(num_replicas)
-        
+
         if get_sg_use_views(cluster_config):
-                playbook_vars["sg_use_views"] = '"use_views": true,'
+            playbook_vars["sg_use_views"] = '"use_views": true,'
 
     if is_xattrs_enabled(cluster_config):
         playbook_vars["autoimport"] = '"import_docs": "continuous",'
