@@ -69,6 +69,9 @@ if(-Not $VSInstall) {
 $MSBuild = "$VSInstall\MSBuild\15.0\Bin\MSBuild.exe"
 
 $fullVersion = Calculate-Version
+if(-Not $env:VERSION -Or $env:VERSION.Contains("-")) {
+    $env:VERSION = $fullVersion.Split("-")[0]
+}
 
 try {
     Modify-Packages "$PSScriptRoot\TestServer.UWP.csproj" $fullVersion $Community

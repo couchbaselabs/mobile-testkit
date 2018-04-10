@@ -61,6 +61,9 @@ function Calculate-Version {
 Push-Location $PSScriptRoot
 
 $fullVersion = Calculate-Version
+if(-Not $env:VERSION -Or $env:VERSION.Contains("-")) {
+    $env:VERSION = $fullVersion.Split("-")[0]
+}
 
 try {
     Modify-Packages "$PSScriptRoot\TestServer.NetCore.csproj" $fullVersion $Community
