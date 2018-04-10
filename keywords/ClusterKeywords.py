@@ -8,7 +8,7 @@ from keywords import couchbaseserver
 from keywords.constants import CLUSTER_CONFIGS_DIR
 from keywords.exceptions import ProvisioningError
 from keywords.SyncGateway import (verify_sg_accel_version,
-                                  verify_sync_gateway_version,
+                                  # verify_sync_gateway_version,
                                   verify_sg_accel_product_info,
                                   verify_sync_gateway_product_info)
 from keywords.utils import (log_info, log_r, version_and_build,
