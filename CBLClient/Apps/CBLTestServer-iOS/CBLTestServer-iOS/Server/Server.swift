@@ -19,6 +19,11 @@ enum RequestHandlerError: Error {
     case IOException(String)
 }
 
+enum ValueSerializerError: Error {
+    case SerializerError(String)
+    case DeSerializerError(String)
+}
+
 public class Server {
     let kPort:UInt = 8080
     let server: GCDWebServer!
@@ -93,7 +98,7 @@ public class Server {
                     for param in queryParams {
                         rawArgs[param.key as! String] = param.value
 
-                        if let value = ValueSerializer.deserialize(value:(param.value as? String), memory: self.memory) as Any? {
+                        if let value = try ValueSerializer.deserialize(value:(param.value as? String), memory: self.memory) as Any? {
                             // Handle nil value
                             args.set(value: value, forName: param.key as! String)
                         } else {
@@ -152,7 +157,7 @@ public class Server {
                         throw ServerError.MethodNotImplemented(method)
                     }
                     if result != nil {
-                        body = ValueSerializer.serialize(value: result, memory: self.memory);
+                        body = try ValueSerializer.serialize(value: result, memory: self.memory);
                     }
                 }
 

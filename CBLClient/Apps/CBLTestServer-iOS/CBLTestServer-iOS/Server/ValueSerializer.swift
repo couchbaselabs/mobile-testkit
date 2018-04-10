@@ -9,7 +9,8 @@
 import Foundation
 
 public class ValueSerializer {
-    public static func serialize(value: Any?, memory: Memory) -> Any {
+
+    public static func serialize(value: Any?, memory: Memory) throws -> Any {
         guard let v = value else {
             return "null"
         }
@@ -40,7 +41,7 @@ public class ValueSerializer {
             var stringMap = [String: Any]()
             
             for (key, val) in map {
-                let stringVal = serialize(value: val, memory: memory)
+                let stringVal = try serialize(value: val, memory: memory)
                 stringMap[key] = stringVal
             }
             
@@ -49,14 +50,14 @@ public class ValueSerializer {
                 let json = String.init(data: data, encoding: .utf8) as Any
                 return json
             } catch {
-                return "Error converting Dict to json"
+                throw ValueSerializerError.SerializerError("Error converting Dict to json")
             }
         } else if (v is Array<Any>) {
             let list = v as! Array<Any>
             var stringList = [String]()
             
             for object in list {
-                let stringVal: String = serialize(value: object, memory: memory) as! String
+                let stringVal: String = try serialize(value: object, memory: memory) as! String
                 stringList.append(stringVal)
             }
             
@@ -64,7 +65,7 @@ public class ValueSerializer {
                 let data = try JSONSerialization.data(withJSONObject: stringList, options: [])
                 return String.init(data: data, encoding: .utf8) as Any
             } catch {
-                return "Error converting Array to json"
+                throw ValueSerializerError.SerializerError("Error converting Array to json")
             }
         }
         else {
@@ -72,7 +73,7 @@ public class ValueSerializer {
         }
     }
     
-    public static func deserialize<T>(value: String?, memory: Memory) -> T? {
+    public static func deserialize<T>(value: String?, memory: Memory) throws -> T? {
         if value == nil || value == "null" {
             return nil
         } else if (value!.hasPrefix("@")) {
@@ -126,7 +127,7 @@ public class ValueSerializer {
             
             for map_param in stringMap {
                 let key = map_param.key
-                if let key_value = deserialize(value: map_param.value as? String, memory: memory) as Any? {
+                if let key_value = try deserialize(value: map_param.value as? String, memory: memory) as Any? {
                      map[key] = key_value
                 }
                 else{
@@ -145,12 +146,12 @@ public class ValueSerializer {
             var list = [Any]()
             
             for string in stringList {
-                 let object: Any? = deserialize(value: string, memory: memory)
+                 let object: Any? = try deserialize(value: string, memory: memory)
                  list.append(object ?? NSNull.init())
             }
             return list as? T
         } else {
-            return "Invalid value type \(String(describing: value))" as? T
+            throw ValueSerializerError.DeSerializerError("Invalid value type \(String(describing: value))")
         }
     }
 }
