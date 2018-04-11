@@ -47,19 +47,18 @@ function Modify-Packages {
 }
 
 function Calculate-Version {
-    $version_to_use = (($Version, $env:Version -ne $null) -ne '')[0]
+    $version_to_use = (($Version, $env:VERSION -ne $null) -ne '')[0]
     if($version_to_use -eq '' -or !$version_to_use) {
         throw "Version not defined for this script!  Either pass it in as -Version or define an environment variable named VERSION"
     }
 
-    $build_num_to_use = (($BuildNum, $env:BLD_NUM, '*' -ne $null) -ne 0)[0]
-    if($build_num_to_use -ne '*') {
-        $build_num_to_use = ([int]$build_num_to_use).ToString("D4")
+    if($version_to_use.Contains("-")) {
+        return $version_to_use
     }
 
-    return $version_to_use + "-b" + $build_num_to_use
+    return $version_to_use + "-b*"
 }
-
+cd ..
 Push-Location $PSScriptRoot
 $VSRegistryKey = "HKLM:\SOFTWARE\WOW6432Node\Microsoft\VisualStudio\SxS\VS7"
 $VSInstall = (Get-ItemProperty -Path $VSRegistryKey -Name "15.0") | Select-Object -ExpandProperty "15.0"
@@ -72,11 +71,6 @@ $MSBuild = "$VSInstall\MSBuild\15.0\Bin\MSBuild.exe"
 $fullVersion = Calculate-Version
 
 try {
-    if($build_num_to_use -lt 538) {
-        $Community = $true
-    }
-
-    $fullVersion = $version_to_use + "-b" + $build_num_to_use.ToString("D4")
     Modify-Packages "$PSScriptRoot\TestServer.Android.csproj" $fullVersion $Community
     Modify-Packages "$PSScriptRoot\..\TestServer\TestServer.csproj" $fullVersion $Community
 
@@ -93,6 +87,19 @@ try {
     if($LASTEXITCODE -ne 0) {
         Write-Error "Restore failed for TestServer.Android"
         exit 1
+    }
+
+    if($fullVersion.EndsWith("*")) {
+        $releaseVersion = $fullVersion.Split("-")[0]
+        if(-Not $Community) {
+            $nugetDirectory = "$HOME\.nuget\packages\couchbase.lite.enterprise"
+        } else {
+            $nugetDirectory = "$HOME\.nuget\packages\couchbase.lite"
+        }
+        
+        $env:NUGET_VERSION = Get-ChildItem $nugetDirectory -Filter "$releaseVersion-b*" | Select-Object -Last 1 -ExpandProperty Name
+    } else {
+        $env:NUGET_VERSION = $fullVersion
     }
 
     & $MSBuild /p:Configuration=Release /t:Rebuild

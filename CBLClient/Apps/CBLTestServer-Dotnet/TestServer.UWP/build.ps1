@@ -69,9 +69,6 @@ if(-Not $VSInstall) {
 $MSBuild = "$VSInstall\MSBuild\15.0\Bin\MSBuild.exe"
 
 $fullVersion = Calculate-Version
-if(-Not $env:VERSION -Or $env:VERSION.Contains("-")) {
-    $env:VERSION = $fullVersion.Split("-")[0]
-}
 
 try {
     Modify-Packages "$PSScriptRoot\TestServer.UWP.csproj" $fullVersion $Community
@@ -97,10 +94,6 @@ try {
         $env:NUGET_VERSION = Get-ChildItem $nugetDirectory -Filter "$releaseVersion-b*" | Select-Object -Last 1 -ExpandProperty Name
     } else {
         $env:NUGET_VERSION = $fullVersion
-    }
-
-    if(-Not $env:BLD_NUM) {
-        $env:BLD_NUM = $env:NUGET_VERSION.Split("-")[1].TrimStart('b', '0')
     }
 
     & $MSBuild /t:Restore
