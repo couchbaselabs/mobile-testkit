@@ -34,7 +34,6 @@ def setup_teardown_test(params_from_base_test_setup):
     }
 
     log_info("Deleting the db")
-    # db.close(cbl_db)
     db.deleteDB(cbl_db)
 
 
@@ -211,7 +210,7 @@ def test_replication_configuration_with_push_replication(params_from_base_test_s
         @summary:
         1. Create docs in SG
         2. Create docs in CBL
-        3. Do push replication with session authenticated user
+        3. Do push replication with session/basic authenticated user
         4. Verify CBL docs got replicated to SG
         5. Verify sg docs not replicated to CBL
 
@@ -526,7 +525,6 @@ def test_replication_configuration_with_headers(params_from_base_test_setup):
     replicator.start(repl)
     replicator.wait_until_replicator_idle(repl)
     changes_count = replicator.getChangesCount(repl_change_listener)
-    # changes = replicator.getChangesChangeListener(repl_change_listener)
     replicator.stop(repl)
     assert changes_count > 0, "did not get any changes"
     sg_docs = sg_client.get_all_docs(url=sg_url, db=sg_db, auth=auth_session)
@@ -541,45 +539,6 @@ def test_replication_configuration_with_headers(params_from_base_test_setup):
     sg_ids = [row["id"] for row in sg_docs["rows"]]
     for doc in cbl_doc_ids:
         assert doc in sg_ids
-
-
-def setup_sg_cbl_docs(params_from_base_test_setup, sg_db, base_url, db, cbl_db, sg_url,
-                      sg_admin_url, sg_blip_url, replication_type=None, document_ids=None,
-                      channels=None, replicator_authenticator_type=None, headers=None,
-                      cbl_id_prefix="cbl", sg_id_prefix="sg_doc",
-                      num_cbl_docs=5, num_sg_docs=10):
-
-    sg_client = MobileRestClient()
-
-    db.create_bulk_docs(number=num_cbl_docs, id_prefix=cbl_id_prefix, db=cbl_db, channels=channels)
-    cbl_added_doc_ids = db.getDocIds(cbl_db)
-    # Add docs in SG
-    sg_client.create_user(sg_admin_url, sg_db, "autotest", password="password", channels=channels)
-    cookie, session = sg_client.create_session(sg_admin_url, sg_db, "autotest")
-    auth_session = cookie, session
-    sg_added_docs = sg_client.add_docs(url=sg_url, db=sg_db, number=num_sg_docs, id_prefix=sg_id_prefix, channels=channels, auth=auth_session)
-    sg_added_ids = [row["id"] for row in sg_added_docs]
-
-    # Start and stop continuous replication
-    replicator = Replication(base_url)
-    authenticator = Authenticator(base_url)
-    if replicator_authenticator_type == "session":
-        replicator_authenticator = authenticator.authentication(session, cookie, authentication_type="session")
-    elif replicator_authenticator_type == "basic":
-        replicator_authenticator = authenticator.authentication(username="autotest", password="password", authentication_type="basic")
-    else:
-        replicator_authenticator = None
-    log_info("Configuring replicator")
-    repl_config = replicator.configure(cbl_db, target_url=sg_blip_url, replication_type=replication_type, continuous=False,
-                                       documentIDs=document_ids, channels=channels, replicator_authenticator=replicator_authenticator, headers=headers)
-    repl = replicator.create(repl_config)
-    log_info("Starting replicator")
-    replicator.start(repl)
-    log_info("Waiting for replicator to go idle")
-    replicator.wait_until_replicator_idle(repl)
-    replicator.stop(repl)
-
-    return sg_added_ids, cbl_added_doc_ids, auth_session
 
 
 @pytest.mark.sanity
@@ -1138,9 +1097,9 @@ def test_initial_pull_replication_background_apprun(params_from_base_test_setup,
     c = cluster.Cluster(config=cluster_config)
     c.reset(sg_config_path=sg_config)
 
-    # No command to push the app to background on device, so avoid test to run on ios device
-    if((liteserv_platform.lower() != "ios") or (liteserv_platform.lower() == "ios" and device_enabled)):
-        pytest.skip('This test only valid for ios')
+    # No command to push the app to background on device, so avoid test to run on ios device and no app for .net
+    if((liteserv_platform.lower() == "net-msft") or (liteserv_platform.lower() == "ios" and device_enabled)):
+        pytest.skip('This test cannot run on .net')
 
     client = MobileRestClient()
     client.create_user(sg_admin_url, sg_db, "testuser", password="password", channels=["ABC", "NBC"])
@@ -1232,9 +1191,9 @@ def test_push_replication_with_backgroundApp(params_from_base_test_setup, num_do
     c = cluster.Cluster(config=cluster_config)
     c.reset(sg_config_path=sg_config)
 
-    # No command to push the app to background on device, so avoid test to run on ios device
-    if((liteserv_platform.lower() != "ios") or (liteserv_platform.lower() == "ios" and device_enabled)):
-        pytest.skip('This test only can only run on ios simulator')
+    # No command to push the app to background on device, so avoid test to run on ios device and no app for .net
+    if((liteserv_platform.lower() == "net-msft") or (liteserv_platform.lower() == "ios" and device_enabled)):
+        pytest.skip('This test cannot run on .net')
 
     client = MobileRestClient()
     client.create_user(sg_admin_url, sg_db, "testuser", password="password", channels=channels)
@@ -1390,8 +1349,7 @@ def test_default_conflict_scenario_delete_wins(params_from_base_test_setup, dele
             )
             sg_updateDocs_task.result()
             cbl_delete_task.result()
-
-    if delete_source == 'sg':
+    else:
         with ThreadPoolExecutor(max_workers=4) as tpe:
             sg_delete_task = tpe.submit(
                 sg_client.delete_docs, url=sg_url, db=sg_db, docs=sg_docs, auth=session
@@ -1404,6 +1362,7 @@ def test_default_conflict_scenario_delete_wins(params_from_base_test_setup, dele
 
     replicator.configure_and_replicate(source_db=cbl_db, replicator_authenticator=replicator_authenticator, target_url=sg_blip_url, continuous=False,
                                        channels=channels)
+    # Di mode has delay for one shot replication, so need another replication only for DI mode
     if sg_mode == "di":
         replicator.configure_and_replicate(source_db=cbl_db, replicator_authenticator=replicator_authenticator, target_url=sg_blip_url, continuous=False,
                                            channels=channels)
@@ -1437,7 +1396,6 @@ def test_default_conflict_scenario_delete_wins(params_from_base_test_setup, dele
 
     cbl_doc_ids = db.getDocIds(cbl_db)
     cbl_docs = db.getDocuments(cbl_db, cbl_doc_ids)
-    # assert len(cbl_docs) == le "did not delete docs after delete operation"
     sg_docs = sg_client.get_all_docs(url=sg_url, db=sg_db, auth=session)
     sg_docs = sg_docs["rows"]
     assert len(cbl_docs) == num_of_docs
@@ -1465,7 +1423,7 @@ def test_default_conflict_scenario_highRevGeneration_wins(params_from_base_test_
         8. Now update docs in sync gateway 3 times.
         9. Start replication with push pull and continous False.
         10. Wait until replication is done
-        11. As sync-gateway revision id is higher, docs from
+        11. As sync-gateway revision id is higher, updates from sync-gateway wins
     """
     sg_db = "db"
     sg_url = params_from_base_test_setup["sg_url"]
@@ -1502,8 +1460,7 @@ def test_default_conflict_scenario_highRevGeneration_wins(params_from_base_test_
     if highrev_source == 'cbl':
         sg_client.update_docs(url=sg_url, db=sg_db, docs=sg_docs, number_updates=1, auth=session)
         db.update_bulk_docs(cbl_db, number_of_updates=2)
-
-    if highrev_source == 'sg':
+    else:
         sg_client.update_docs(url=sg_url, db=sg_db, docs=sg_docs, auth=session, number_updates=2)
         db.update_bulk_docs(cbl_db)
 
@@ -1522,7 +1479,7 @@ def test_default_conflict_scenario_highRevGeneration_wins(params_from_base_test_
     if highrev_source == 'cbl':
         for doc in cbl_docs:
             assert cbl_docs[doc]["updates-cbl"] == 2, "cbl with high rev id is not updated "
-    if highrev_source == 'sg':
+    else:
         for doc in cbl_docs:
             assert cbl_docs[doc]["updates"] == 2, "cbl with high rev id is not updated "
         for i in xrange(len(sg_docs_values)):
@@ -1541,7 +1498,7 @@ def test_default_conflict_scenario_highRevGeneration_wins(params_from_base_test_
     for doc in cbl_docs:
         if highrev_source == 'cbl':
             verify_updates = 4
-        if highrev_source == 'sg':
+        else:
             verify_updates = 5
         count = 0
         while count < 30 and cbl_docs[doc]["updates"] != verify_updates:
@@ -2862,3 +2819,42 @@ def verify_cblDocs_in_sgDocs(sg_client, url, sg_db, session, cbl_db, db, topolog
 
     for doc in sg_docs:
         assert doc["doc"]["updates-cbl"] == num_cbl_updates, "updated doc in cbl did not replicated to sg"
+
+
+def setup_sg_cbl_docs(params_from_base_test_setup, sg_db, base_url, db, cbl_db, sg_url,
+                      sg_admin_url, sg_blip_url, replication_type=None, document_ids=None,
+                      channels=None, replicator_authenticator_type=None, headers=None,
+                      cbl_id_prefix="cbl", sg_id_prefix="sg_doc",
+                      num_cbl_docs=5, num_sg_docs=10):
+
+    sg_client = MobileRestClient()
+
+    db.create_bulk_docs(number=num_cbl_docs, id_prefix=cbl_id_prefix, db=cbl_db, channels=channels)
+    cbl_added_doc_ids = db.getDocIds(cbl_db)
+    # Add docs in SG
+    sg_client.create_user(sg_admin_url, sg_db, "autotest", password="password", channels=channels)
+    cookie, session = sg_client.create_session(sg_admin_url, sg_db, "autotest")
+    auth_session = cookie, session
+    sg_added_docs = sg_client.add_docs(url=sg_url, db=sg_db, number=num_sg_docs, id_prefix=sg_id_prefix, channels=channels, auth=auth_session)
+    sg_added_ids = [row["id"] for row in sg_added_docs]
+
+    # Start and stop continuous replication
+    replicator = Replication(base_url)
+    authenticator = Authenticator(base_url)
+    if replicator_authenticator_type == "session":
+        replicator_authenticator = authenticator.authentication(session, cookie, authentication_type="session")
+    elif replicator_authenticator_type == "basic":
+        replicator_authenticator = authenticator.authentication(username="autotest", password="password", authentication_type="basic")
+    else:
+        replicator_authenticator = None
+    log_info("Configuring replicator")
+    repl_config = replicator.configure(cbl_db, target_url=sg_blip_url, replication_type=replication_type, continuous=False,
+                                       documentIDs=document_ids, channels=channels, replicator_authenticator=replicator_authenticator, headers=headers)
+    repl = replicator.create(repl_config)
+    log_info("Starting replicator")
+    replicator.start(repl)
+    log_info("Waiting for replicator to go idle")
+    replicator.wait_until_replicator_idle(repl)
+    replicator.stop(repl)
+
+    return sg_added_ids, cbl_added_doc_ids, auth_session
