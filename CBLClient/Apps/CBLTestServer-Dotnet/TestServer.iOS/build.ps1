@@ -94,6 +94,7 @@ try {
         $env:NUGET_VERSION = $fullVersion
     }
 
+    "NUGET_VERSION=$env:NUGET_VERSION" | Set-Content $env:WORKSPACE\env.properties
     & msbuild /p:Configuration=Release /p:Platform=iPhoneSimulator /t:Rebuild
     if($LASTEXITCODE -ne 0) {
         Write-Error "Build failed for TestServer.iOS"
