@@ -158,9 +158,17 @@ public class DatabaseRequestHandler {
             
         case "database_addChangeListener":
             let database: Database = (args.get(name:"database"))!
-            let changeListener = MyDatabaseChangeListener()
-            database.addChangeListener(changeListener.listener)
-            return changeListener
+            var token: ListenerToken? = nil
+            let docId: String? = (args.get(name:"docId"))
+            if (docId != nil) {
+                //let changeListener: DocumentChange = DocumentChange(database, docId!)
+                //token = database.addDocumentChangeListener(withID: docId!, listener: changeListener)
+            } else {
+                let changeListener = MyDatabaseChangeListener()
+                token = database.addChangeListener(changeListener.listener)
+            }
+            
+            return token
 
         case "database_removeChangeListener":
             let database: Database = (args.get(name:"database"))!
