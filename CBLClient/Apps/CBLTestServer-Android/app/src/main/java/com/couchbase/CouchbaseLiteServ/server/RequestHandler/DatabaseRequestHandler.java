@@ -22,7 +22,7 @@ import com.couchbase.lite.QueryBuilder;
 import com.couchbase.lite.Result;
 import com.couchbase.lite.ResultSet;
 import com.couchbase.lite.SelectResult;
-//import com.couchbase.lite.EncryptionKey;
+import com.couchbase.lite.EncryptionKey;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -46,21 +46,6 @@ public class DatabaseRequestHandler {
         return new Database(name, config);
     }
 
-    public ListenerToken addChangeListener(Args args) {
-        Database database = args.get("database");
-        MyDatabaseChangeListener changeListener = new MyDatabaseChangeListener();
-        return database.addChangeListener(changeListener);
-    }
-
-    public void removeChangeListener(Args args) {
-        Database database = args.get("database");
-        ListenerToken changeListener = args.get("changeListener");
-        database.removeChangeListener(changeListener);
-    }
-
-    public Database create(String name) throws CouchbaseLiteException {
-        return new Database(name, null);
-    }
 
     public long getCount(Args args) {
         Database database = args.get("database");
@@ -224,12 +209,12 @@ public class DatabaseRequestHandler {
         System.out.println("database delete ");
    }
 
-    /*public void setEncryptionKey(Args args) throws CouchbaseLiteException {
+    public void setEncryptionKey(Args args) throws CouchbaseLiteException {
         Database database = args.get("database");
         String password = args.get("password");
         EncryptionKey encryptionKey = new EncryptionKey(password);
         database.setEncryptionKey(encryptionKey);
-    }*/
+    }
 
    public void deleteDbByName(Args args) throws CouchbaseLiteException {
         String dbName = args.get("dbName");
@@ -261,12 +246,6 @@ public class DatabaseRequestHandler {
         });
 
     }
-/*    method dropped in DB022
-    public boolean contains(Args args) {
-       Database database = args.get("database");
-       String id = args.get("id");
-       return database.contains(id);
-    }*/
 
     public List<String> getDocIds(Args args) throws CouchbaseLiteException {
         Database database = args.get("database");
@@ -287,29 +266,35 @@ public class DatabaseRequestHandler {
 
     }
 
-//    public void addChangeListener(Args args) {
-//        Database database = args.get("database");
-//        if (args.contain("docId")) {
-//            String docId = args.get("docId");
-//            MyDocumentChangeListener changeListener = new MyDocumentChangeListener();
-//            database.addChangeListener(docId, changeListener);
-//        } else {
-//            MyDatabaseChangeListener changeListener = new MyDatabaseChangeListener();
-//            database.addChangeListener(changeListener);
-//        }
-//    }
+   public ListenerToken addChangeListener(Args args) {
+       Database database = args.get("database");
+       ListenerToken token;
+       if (args.contain("docId")) {
+           String docId = args.get("docId");
+           MyDocumentChangeListener changeListener = new MyDocumentChangeListener();
+           token = database.addDocumentChangeListener(docId, changeListener);
+       } else {
+           MyDatabaseChangeListener changeListener = new MyDatabaseChangeListener();
+           token = database.addChangeListener(changeListener);
+       }
+       return token;
+   }
 
-//    public void removeChangeListener(Args args) {
-//        Database database = args.get("database");
-//        if (args.contain("docId")){
-//        String docId = args.get("docId");
-//        DocumentChangeListener changeListener = args.get("changeListener");
-//        database.removeChangeListener(docId, changeListener);
-//        } else{
-//            DatabaseChangeListener changeListener = args.get("changeListener");
-//            database.removeChangeListener(changeListener);
-//        }
-//    }
+   public void removeChangeListener(Args args) {
+       Database database = args.get("database");
+       ListenerToken token = args.get("changeListenerToken");
+       database.removeChangeListener(token);
+       // TODO : This may not be required as it can remove change listener for doc id and database
+       /*if (args.contain("docId")){
+       String docId = args.get("docId");
+       DatabaseChangeListener changeListener = args.get("changeListener");
+       // DocumentChangeListener changeListener = args.get("changeListener");
+       database.removeChangeListener(docId, changeListener);
+       } else{
+           DatabaseChangeListener changeListener = args.get("changeListener");
+           database.removeChangeListener(changeListener);
+       }*/
+   }
 
     public int databaseChangeListenerChangesCount(Args args) {
         MyDatabaseChangeListener changeListener = args.get("changeListener");
