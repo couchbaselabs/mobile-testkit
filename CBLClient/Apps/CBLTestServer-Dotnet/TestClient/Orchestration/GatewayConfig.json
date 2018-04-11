@@ -1,0 +1,64 @@
+{
+    "adminInterface": ":4985",
+    "interface": ":4984",
+     "log":["*"],
+     "verbose": true,
+     "databases": {
+          "db": {
+             "server":"walrus:",
+             "users": {
+                "GUEST": {"disabled": false, "admin_channels": ["*"]},
+                "jim" : { "password": "borden", "admin_channels": ["*"]}
+              },
+             "bucket":"testing",
+             "sync":`function(doc) {
+               if(doc.reject) {
+                throw({forbidden: "Reject was set to true!"})
+               }
+
+               channel(doc.channels);
+             }`,
+             "unsupported": {
+                "replicator_2": true
+            }
+          },
+          "seekrit": {
+             "server":"walrus:",
+             "users": {
+                "GUEST": {"disabled": true, "admin_channels": ["*"]},
+                "pupshaw" : { "password": "frank", "admin_channels": ["*"]}
+              },
+             "bucket":"seekrit",
+             "sync":`function(doc) {channel(doc.channels);}`,
+             "unsupported": {
+                "replicator_2": true
+            }
+          },
+          "openid_db": {
+            "server":"walrus:",
+            "users": {
+                "GUEST": {"disabled":true},
+                "openidOP": {"admin_channels":["public"],"password":"abc123"},
+                "couchbaseUser": {"admin_channels":["*"],"password":"xyz789"}
+            },
+            "unsupported": {
+                "oidc_test_provider": {
+                    "enabled": true
+                }
+            },
+            "oidc": {
+                "providers": {
+                    "testing": {
+                        "issuer":"http://192.168.1.2:4984/openid_db/_oidc_testing",
+                        "callback_url":"cbl://192.168.1.2:4984/openid_db/_oidc_callback",
+                        "client_id":"sync_gateway",
+                        "validation_key":"abc123",
+                        "register": true
+                    }
+                },
+                "default_provider":"testing"
+            }
+          }
+     },
+     "facebook" : { "register" : true }
+}
