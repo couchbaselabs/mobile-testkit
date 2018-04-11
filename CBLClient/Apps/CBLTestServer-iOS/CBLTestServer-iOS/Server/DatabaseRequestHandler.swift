@@ -161,8 +161,8 @@ public class DatabaseRequestHandler {
             var token: ListenerToken? = nil
             let docId: String? = (args.get(name:"docId"))
             if (docId != nil) {
-                //let changeListener: DocumentChange = DocumentChange(database, docId!)
-                //token = database.addDocumentChangeListener(withID: docId!, listener: changeListener)
+                let changeListener = MyDocumentChangeListener()
+                token = database.addDocumentChangeListener(withID: docId!, listener: changeListener.listener)
             } else {
                 let changeListener = MyDatabaseChangeListener()
                 token = database.addChangeListener(changeListener.listener)
