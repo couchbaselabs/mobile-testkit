@@ -38,13 +38,6 @@ public class DocumentRequestHandler{
         }
     }
 
-/*    public Object get(Args args) {
-        Map<String, Object> map = args.get("dictionary");
-        String key = args.get("key");
-        return map.get(key);
-    }*/
-
-
     public int count(Args args){
         MutableDocument document = args.get("document");
         return document.count();
