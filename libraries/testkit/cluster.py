@@ -170,7 +170,9 @@ class Cluster:
         except KeyError as ex:
             log_info("Keyerror in getting revs_limit{}".format(ex.message))
 
-        time.sleep(10)
+        # Sleep for a few seconds for the indexes to teardown
+        time.sleep(5)
+
         status = ansible_runner.run_ansible_playbook(
             "start-sync-gateway.yml",
             extra_vars=playbook_vars
