@@ -68,12 +68,6 @@ namespace Couchbase.Lite.Testing
             });
         }
 
-        //public static void Copy([NotNull] NameValueCollection args,
-        //                                     [NotNull] IReadOnlyDictionary<string, object> postBody,
-        //                                     [NotNull] HttpListenerResponse response)
-        //{
-        //    With<ReplicatorConfiguration>(postBody, "configuration", repConf => response.WriteBody(repConf.Copy());
-        //}
 
         public static void Configure([NotNull] NameValueCollection args,
                                                      [NotNull] IReadOnlyDictionary<string, object> postBody,

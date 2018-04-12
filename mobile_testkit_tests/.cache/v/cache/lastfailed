@@ -1,0 +1,22 @@
+{
+  "test_attachment.py": true, 
+  "test_cluster.py": true, 
+  "test_compare_version.py": true, 
+  "test_config_init.py": true, 
+  "test_couchbase_server_install.py": true, 
+  "test_document.py": true, 
+  "test_generate_clusters_from_pool.py": true, 
+  "test_get_buckets_from_sync_gateway_config.py": true, 
+  "test_install_sync_gateway.py": true, 
+  "test_liteserv.py": true, 
+  "test_liteserv_android.py": true, 
+  "test_liteserv_ios.py": true, 
+  "test_liteserv_macosx.py": true, 
+  "test_liteserv_net_mono.py": true, 
+  "test_liteserv_net_msft.py": true, 
+  "test_provisioning.py": true, 
+  "test_runtime_cluster_config_modification.py": true, 
+  "test_scan_logs.py": true, 
+  "test_sync_gateway_base_url_and_package.py": true, 
+  "test_utils.py": true
+}

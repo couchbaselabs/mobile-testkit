@@ -1,9 +1,0 @@
-/Users/hemant/couchbase/couchbase/mobile-testkit/CBLClient/Apps/CBLTestServer-Dotnet/TestServer/bin/Debug/netstandard2.0/TestServer.deps.json
-/Users/hemant/couchbase/couchbase/mobile-testkit/CBLClient/Apps/CBLTestServer-Dotnet/TestServer/bin/Debug/netstandard2.0/TestServer.dll
-/Users/hemant/couchbase/couchbase/mobile-testkit/CBLClient/Apps/CBLTestServer-Dotnet/TestServer/bin/Debug/netstandard2.0/TestServer.pdb
-/Users/hemant/couchbase/couchbase/mobile-testkit/CBLClient/Apps/CBLTestServer-Dotnet/TestServer/obj/Debug/netstandard2.0/TestServer.csprojResolveAssemblyReference.cache
-/Users/hemant/couchbase/couchbase/mobile-testkit/CBLClient/Apps/CBLTestServer-Dotnet/TestServer/obj/Debug/netstandard2.0/TestServer.csproj.CoreCompileInputs.cache
-/Users/hemant/couchbase/couchbase/mobile-testkit/CBLClient/Apps/CBLTestServer-Dotnet/TestServer/obj/Debug/netstandard2.0/TestServer.AssemblyInfoInputs.cache
-/Users/hemant/couchbase/couchbase/mobile-testkit/CBLClient/Apps/CBLTestServer-Dotnet/TestServer/obj/Debug/netstandard2.0/TestServer.AssemblyInfo.cs
-/Users/hemant/couchbase/couchbase/mobile-testkit/CBLClient/Apps/CBLTestServer-Dotnet/TestServer/obj/Debug/netstandard2.0/TestServer.dll
-/Users/hemant/couchbase/couchbase/mobile-testkit/CBLClient/Apps/CBLTestServer-Dotnet/TestServer/obj/Debug/netstandard2.0/TestServer.pdb

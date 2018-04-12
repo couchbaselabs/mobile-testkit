@@ -1,4 +1,0 @@
-Couchbase.Lite.Testing.Android.MainActivity, TestServer.Android;md57aea67c4d08319974f101b0b09ff509e.MainActivity
-Couchbase.Lite.Testing.Android.MainActivity, TestServer.Android, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null;md57aea67c4d08319974f101b0b09ff509e.MainActivity
-Couchbase.Lite.Testing.Android.MainActivity;md57aea67c4d08319974f101b0b09ff509e.MainActivity
-couchbase.lite.testing.android.MainActivity;md57aea67c4d08319974f101b0b09ff509e.MainActivity
