@@ -12,7 +12,7 @@ import java.util.List;
 
 public class ArrayRequestHandler {
     /* ------------ */
-    /* - Array - */
+    /* -- Array --  */
     /* ------------ */
 
   public MutableArray create(Args args) {

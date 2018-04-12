@@ -261,7 +261,6 @@ public class DatabaseRequestHandler {
 
             result.add(row.getString("id"));
         }
-        Collections.sort(result);
         return result;
 
     }
@@ -284,16 +283,6 @@ public class DatabaseRequestHandler {
        Database database = args.get("database");
        ListenerToken token = args.get("changeListenerToken");
        database.removeChangeListener(token);
-       // TODO : This may not be required as it can remove change listener for doc id and database
-       /*if (args.contain("docId")){
-       String docId = args.get("docId");
-       DatabaseChangeListener changeListener = args.get("changeListener");
-       // DocumentChangeListener changeListener = args.get("changeListener");
-       database.removeChangeListener(docId, changeListener);
-       } else{
-           DatabaseChangeListener changeListener = args.get("changeListener");
-           database.removeChangeListener(changeListener);
-       }*/
    }
 
     public int databaseChangeListenerChangesCount(Args args) {

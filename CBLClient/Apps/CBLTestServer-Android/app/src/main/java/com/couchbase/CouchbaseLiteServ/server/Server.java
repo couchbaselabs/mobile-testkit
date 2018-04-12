@@ -87,12 +87,6 @@ public class Server extends NanoHTTPD {
         if (query !=null){
             for (String key : query.keySet()){
                 String value = (String) query.get(key);
-                /*String value = null;
-                try {
-                    value = URLDecoder.decode( param_value, "UTF8");
-                } catch (UnsupportedEncodingException e) {
-                    e.printStackTrace();
-                }*/
                 args.put(key, ValueSerializer.deserialize(value, memory));
             }
         }
@@ -203,7 +197,6 @@ public class Server extends NanoHTTPD {
             e.printStackTrace(pw);
             String sStackTrace = sw.toString();
             return Response.newFixedLengthResponse(Status.BAD_REQUEST, "text/plain", sStackTrace);
-            // return Response.newFixedLengthResponse(Status.BAD_REQUEST, "text/plain", sStackTrace.getBytes());
         }
     }
 }

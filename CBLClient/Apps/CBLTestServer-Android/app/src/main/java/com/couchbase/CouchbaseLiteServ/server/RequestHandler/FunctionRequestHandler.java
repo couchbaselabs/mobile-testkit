@@ -32,19 +32,6 @@ public class FunctionRequestHandler {
         return Function.sum(expression);
     }
 
-//    Not available in DB21
-//    public Expression arrayContains(Args args){
-//        Expression expression = args.get("expression");
-//        Object value = args.get("value");
-//        return Function.arrayContains(expression, value);
-//    }
-
-//    Not available in DB21
-//    public Expression arrayLength(Args args){
-//        Expression expression = args.get("expression");
-//        return Function.arrayLength(expression);
-//    }
-
     public Expression abs(Args args){
         Expression expression = args.get("expression");
         return Function.abs(expression);
@@ -202,28 +189,5 @@ public class FunctionRequestHandler {
         Expression expression = args.get("expression");
         return Function.upper(expression);
     }
-
-//    Not available in DB22
-//    public Expression isArray(Args args){
-//        Expression expression = args.get("expression");
-//        return Function.isArray(expression);
-//    }
-//
-//    public Expression isNumber(Args args){
-//        Expression expression = args.get("expression");
-//        return Function.isNumber(expression);
-//    }
-//
-//    public Expression isDictionary(Args args){
-//        Expression expression = args.get("expression");
-//        return Function.isDictionary(expression);
-//    }
-
-//    Not available in DB21
-//    public Expression rank(Args args){
-//        Expression property = args.get("property");
-//        return Function.rank(property);
-//    }
-
 
 }

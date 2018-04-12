@@ -55,12 +55,6 @@ public class QueryRequestHandler {
         return query_result_set.next();
     }
 
-//    public Query string(Args args){
-//        Result query_result = args.get("query_result");
-//        String key = args.get("key");
-//        return query_result.string(key);
-//    }
-
     public List<Object> getDoc(Args args) throws CouchbaseLiteException {
         Database database = args.get("database");
         long out = database.getCount();
