@@ -80,19 +80,6 @@ try {
         Write-Error "Restore failed for TestServer.NetCore"
         exit 1
     }
-    
-    if($fullVersion.EndsWith("*")) {
-        $releaseVersion = $fullVersion.Split("-")[0]
-        if(-Not $Community) {
-            $nugetDirectory = "$HOME\.nuget\packages\couchbase.lite.enterprise"
-        } else {
-            $nugetDirectory = "$HOME\.nuget\packages\couchbase.lite"
-        }
-        
-        $env:NUGET_VERSION = Get-ChildItem $nugetDirectory -Filter "$releaseVersion-b*" | Select-Object -Last 1 -ExpandProperty Name
-    } else {
-        $env:NUGET_VERSION = $fullVersion
-    }
 
     dotnet publish -c Release
     if($LASTEXITCODE -ne 0) {
