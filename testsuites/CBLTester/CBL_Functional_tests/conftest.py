@@ -387,6 +387,7 @@ def params_from_base_suite_setup(request):
         "no_conflicts_enabled": no_conflicts_enabled,
         "sync_gateway_version": sync_gateway_version,
         "target_admin_url": target_admin_url,
+        "base_url": base_url,
         "enable_sample_bucket": enable_sample_bucket,
         "create_db_per_test": create_db_per_test,
         "suite_source_db": suite_source_db,
