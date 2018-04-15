@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="sg_cert.pem" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="sg_cert.pem" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="JetBrains.Annotations" Version="11.1.0" />
+    <PackageReference Include="Newtonsoft.Json" Version="11.0.1" />
+    <PackageReference Include="Couchbase.Lite.Enterprise" Version="2.0.0-b0705" />
+  </ItemGroup>
+
+</Project>
