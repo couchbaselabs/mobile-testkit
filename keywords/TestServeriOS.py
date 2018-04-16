@@ -26,6 +26,8 @@ class TestServeriOS(TestServerBase):
         self.device_id = None
         self.device = "iPhone-8-Plus"
         self.debug_mode = False
+        self.app_path = ""
+        self.app_name = ""
         if debug_mode:
             self.debug_mode = True
         if community_enabled:
@@ -78,8 +80,6 @@ class TestServeriOS(TestServerBase):
             self.app_name = "{}-{}-Device-debug.app".format(self.app, self.version_build)
         else:
             self.app_name = "{}-{}-Device.app".format(self.app, self.version_build)
-        # package_name = "CBLTestServer-iOS-Device.app"
-        # app_dir = "CBLTestServer-iOS"
 
         self.app_path = "{}/{}/{}".format(BINARY_DIR, self.app_dir, self.app_name)
         log_info("Installing: {}".format(self.app_path))
@@ -102,9 +102,6 @@ class TestServeriOS(TestServerBase):
     def install(self):
         """Installs / launches CBLTestServer on iOS simulator
         """
-        # self.device = "iPhone-7-Plus"
-        # package_name = "CBLTestServer-iOS"
-        # app_dir = "CBLTestServer-iOS"
         if self.debug_mode:
             self.app_name = "{}-{}-debug.app".format(self.app, self.version_build)
         else:
@@ -215,12 +212,7 @@ class TestServeriOS(TestServerBase):
         4. Return the url of the running LiteServ
         """
 
-        # self.device = "iPhone-7-Plus"
         self.logfile_name = logfile_name
-
-        # package_name = "CBLTestServer-iOS.app"
-        # app_dir = "CBLTestServer-iOS"
-
         self.app_path = "{}/{}/{}".format(BINARY_DIR, self.app_dir, self.app_name)
         # self.app_path = "/Users/sridevi.saragadam/Library/Developer/Xcode/DerivedData/CBLTestServer-iOS-ayypbvnmphhpihebbhrjusdqhzmk/Build/Products/Release-EE-iphonesimulator/CBLTestServer-iOS.app"
         # Without --exit, ios-sim blocks
@@ -232,9 +224,7 @@ class TestServeriOS(TestServerBase):
 
         log_info(output)
         self._wait_until_reachable(port=self.port)
-        # time.sleep(10)
         self._verify_running()
-        # return "http://{}:{}".format(self.host, self.port)
 
     def start_device(self, logfile_name):
         """
@@ -255,8 +245,6 @@ class TestServeriOS(TestServerBase):
 
         self._wait_until_reachable(port=self.port)
         self._verify_running()
-
-        # return "http://{}:{}".format(self.host, self.port)
 
     def _verify_launched(self):
         """ Poll on expected http://<host>:<port> until it is reachable
@@ -319,5 +307,3 @@ class TestServeriOS(TestServerBase):
         log_info("output of open app is {}".format(output))
         log_info(output)
         time.sleep(5)
-        # self._verify_running()
-        # time.sleep(1) # wait until app launces properly
