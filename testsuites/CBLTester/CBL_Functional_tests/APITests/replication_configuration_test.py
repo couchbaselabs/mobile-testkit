@@ -4,6 +4,8 @@ import pytest
 @pytest.mark.usefixtures("class_init")
 class TestReplicatorConfiguration(object):
     cbl_db_name = "cbl_db"
+
+
 """
     def test_create(self, params_from_base_test_setup):
         sg_admin_url = params_from_base_test_setup["sg_admin_url"]
