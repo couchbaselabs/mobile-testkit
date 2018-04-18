@@ -2226,7 +2226,7 @@ def test_purge_and_view_compaction(params_from_base_test_setup, sg_conf_name):
     if not xattrs_enabled or mode == "di":
         pytest.skip('This test is di mode or xattrs not enabled')
 
-    if get_sg_version(cluster_conf) > "2.1.0" and not get_sg_use_views(cluster_conf):
+    if get_sg_version(cluster_conf) > "2.0.0" and not get_sg_use_views(cluster_conf):
         pytest.skip("This test uses view queries")
 
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
