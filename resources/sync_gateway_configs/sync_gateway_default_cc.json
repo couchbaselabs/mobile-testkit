@@ -7,7 +7,7 @@
     "slowServerCallWarningThreshold": 500,
     "compressResponses": false,
     "log": ["*"],
-    "logfile": "/home/sync_gateway/logs",
+    "logFilePath": "/home/sync_gateway/logs",
     {{ sslcert }}
     {{ sslkey }}
     "databases":{
