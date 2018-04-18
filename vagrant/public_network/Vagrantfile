@@ -9,9 +9,7 @@ Vagrant.configure(2) do |config|
 
   host_ips = [
     "host1",
-    "host2",
-    "host3",
-    "host4"
+    "host2"
   ]
 
   host_ips.each do |host_name|

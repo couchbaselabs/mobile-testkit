@@ -79,7 +79,7 @@ public class DatabaseRequestHandler {
            
             if let directory = directory {
                 print("is database exists in path\(Database.exists(withName: name, inDirectory: directory))")
-                return Database.exists(withName: name, inDirectory: directory)
+                return Database.exists(withName: name, inDirectory: directory) as Bool
             } else {
                 return Database.exists(withName: name)
             }
@@ -239,12 +239,9 @@ public class DatabaseRequestHandler {
             
         case "database_getDocIds":
             let database: Database = args.get(name:"database")!
-            let limit: Int = args.get(name:"limit")!
-            let offset: Int = args.get(name:"offset")!
             let query = QueryBuilder
                 .select(SelectResult.expression(Meta.id))
                 .from(DataSource.database(database))
-                .limit(Expression.int(limit), offset:Expression.int(offset))
 
             var result: [String] = []
             do {

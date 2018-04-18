@@ -10,6 +10,7 @@ from keywords.remoteexecutor import RemoteExecutor
 from keywords.SyncGateway import SyncGateway, sync_gateway_config_path_for_mode
 from keywords.utils import log_info, add_cbs_to_sg_config_server_field
 from libraries.testkit.cluster import Cluster
+from utilities.cluster_config_utils import get_sg_replicas, get_sg_use_views, get_sg_version
 
 
 def load_sync_gateway_config(sync_gateway_config, mode, server_url, xattrs_enabled, cluster_config):
@@ -26,6 +27,18 @@ def load_sync_gateway_config(sync_gateway_config, mode, server_url, xattrs_enabl
         else:
             autoimport_prop = ""
             xattrs_prop = ""
+
+        sg_use_views_prop = ""
+        num_index_replicas_prop = ""
+        num_index_replicas_housekeeping_prop = ""
+
+        if get_sg_version(cluster_config) >= "2.1.0":
+            num_replicas = get_sg_replicas(cluster_config)
+            num_index_replicas_prop = '"num_index_replicas": {},'.format(num_replicas)
+            num_index_replicas_housekeeping_prop = '"num_index_replicas_housekeeping": {},'.format(num_replicas)
+            if get_sg_use_views(cluster_config):
+                sg_use_views_prop = '"use_views": true,'
+
         couchbase_server_primary_node = add_cbs_to_sg_config_server_field(cluster_config)
         temp = template.render(
             couchbase_server_primary_node=couchbase_server_primary_node,
@@ -33,7 +46,10 @@ def load_sync_gateway_config(sync_gateway_config, mode, server_url, xattrs_enabl
             server_scheme=server_scheme,
             server_port=server_port,
             autoimport=autoimport_prop,
-            xattrs=xattrs_prop
+            xattrs=xattrs_prop,
+            sg_use_views=sg_use_views_prop,
+            num_index_replicas=num_index_replicas_prop,
+            num_index_replicas_housekeeping=num_index_replicas_housekeeping_prop
         )
         data = json.loads(temp)
 

@@ -11,7 +11,7 @@ from libraries.provision.ansible_runner import AnsibleRunner
 from libraries.testkit.admin import Admin
 from libraries.testkit.debug import log_request, log_response
 from utilities.cluster_config_utils import is_cbs_ssl_enabled, is_xattrs_enabled, no_conflicts_enabled, sg_ssl_enabled
-from utilities.cluster_config_utils import get_revs_limit
+from utilities.cluster_config_utils import get_revs_limit, get_sg_replicas, get_sg_use_views, get_sg_version
 from keywords.utils import add_cbs_to_sg_config_server_field, log_info
 from keywords.constants import SYNC_GATEWAY_CERT
 
@@ -71,8 +71,19 @@ class SyncGateway:
             "sslcert": "",
             "sslkey": "",
             "sg_cert_path": sg_cert_path,
+            "num_index_replicas": "",
+            "num_index_replicas_housekeeping": "",
+            "sg_use_views": "",
             "couchbase_server_primary_node": self.couchbase_server_primary_node
         }
+
+        if get_sg_version(self.cluster_config) >= "2.1.0":
+            num_replicas = get_sg_replicas(self.cluster_config)
+            playbook_vars["num_index_replicas"] = '"num_index_replicas": {},'.format(num_replicas)
+            playbook_vars["num_index_replicas_housekeeping"] = '"num_index_replicas_housekeeping": {},'.format(num_replicas)
+
+            if get_sg_use_views(self.cluster_config):
+                playbook_vars["sg_use_views"] = '"use_views": true,'
 
         if sg_ssl_enabled(self.cluster_config):
             playbook_vars["sslcert"] = '"SSLCert": "sg_cert.pem",'
@@ -116,8 +127,19 @@ class SyncGateway:
             "sslcert": "",
             "sslkey": "",
             "sg_cert_path": sg_cert_path,
+            "num_index_replicas": "",
+            "num_index_replicas_housekeeping": "",
+            "sg_use_views": "",
             "couchbase_server_primary_node": self.couchbase_server_primary_node
         }
+
+        if get_sg_version(self.cluster_config) >= "2.1.0":
+            num_replicas = get_sg_replicas(self.cluster_config)
+            playbook_vars["num_index_replicas"] = '"num_index_replicas": {},'.format(num_replicas)
+            playbook_vars["num_index_replicas_housekeeping"] = '"num_index_replicas_housekeeping": {},'.format(num_replicas)
+
+            if get_sg_use_views(self.cluster_config):
+                playbook_vars["sg_use_views"] = '"use_views": true,'
 
         if sg_ssl_enabled(self.cluster_config):
             playbook_vars["sslcert"] = '"SSLCert": "sg_cert.pem",'

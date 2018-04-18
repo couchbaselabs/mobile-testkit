@@ -16,7 +16,7 @@ from utilities.cluster_config_utils import get_revs_limit
 from keywords.exceptions import ProvisioningError
 
 from libraries.provision.ansible_runner import AnsibleRunner
-from utilities.cluster_config_utils import is_cbs_ssl_enabled, is_xattrs_enabled, no_conflicts_enabled, sg_ssl_enabled
+from utilities.cluster_config_utils import is_cbs_ssl_enabled, is_xattrs_enabled, no_conflicts_enabled, sg_ssl_enabled, get_sg_replicas, get_sg_use_views, get_sg_version
 
 
 def validate_sync_gateway_mode(mode):
@@ -241,8 +241,18 @@ class SyncGateway:
             "xattrs": "",
             "no_conflicts": "",
             "revs_limit": "",
+            "sg_use_views": "",
+            "num_index_replicas": "",
+            "num_index_replicas_housekeeping": "",
             "couchbase_server_primary_node": couchbase_server_primary_node
         }
+
+        if get_sg_version(cluster_config) >= "2.1.0":
+            num_replicas = get_sg_replicas(cluster_config)
+            playbook_vars["num_index_replicas"] = '"num_index_replicas": {},'.format(num_replicas)
+            playbook_vars["num_index_replicas_housekeeping"] = '"num_index_replicas_housekeeping": {},'.format(num_replicas)
+            if get_sg_use_views(cluster_config):
+                playbook_vars["sg_use_views"] = '"use_views": true,'
 
         if is_xattrs_enabled(cluster_config):
             playbook_vars["autoimport"] = '"import_docs": "continuous",'
@@ -382,8 +392,20 @@ class SyncGateway:
             "xattrs": "",
             "sslkey": "",
             "sslcert": "",
-            "sg_cert_path": ""
+            "sg_cert_path": "",
+            "num_index_replicas": "",
+            "num_index_replicas_housekeeping": "",
+            "sg_use_views": "",
+            "xattrs": ""
         }
+
+        if get_sg_version(cluster_config) >= "2.1.0":
+            num_replicas = get_sg_replicas(cluster_config)
+            playbook_vars["num_index_replicas"] = '"num_index_replicas": {},'.format(num_replicas)
+            playbook_vars["num_index_replicas_housekeeping"] = '"num_index_replicas_housekeeping": {},'.format(num_replicas)
+
+            if get_sg_use_views(cluster_config):
+                playbook_vars["sg_use_views"] = '"use_views": true,'
 
         if is_xattrs_enabled(cluster_config):
             playbook_vars["xattrs"] = '"enable_shared_bucket_access": true,'

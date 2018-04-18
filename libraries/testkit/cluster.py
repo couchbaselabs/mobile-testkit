@@ -16,6 +16,7 @@ from libraries.testkit.syncgateway import SyncGateway
 from utilities.cluster_config_utils import is_load_balancer_enabled, get_revs_limit
 from utilities.cluster_config_utils import get_load_balancer_ip, no_conflicts_enabled
 from keywords.constants import SYNC_GATEWAY_CERT
+from utilities.cluster_config_utils import get_sg_replicas, get_sg_use_views, get_sg_version
 
 
 class Cluster:
@@ -148,8 +149,19 @@ class Cluster:
             "revs_limit": "",
             "sslcert": "",
             "sslkey": "",
+            "num_index_replicas": "",
+            "num_index_replicas_housekeeping": "",
+            "sg_use_views": "",
             "couchbase_server_primary_node": couchbase_server_primary_node
         }
+
+        if get_sg_version(self._cluster_config) >= "2.1.0":
+            num_replicas = get_sg_replicas(self._cluster_config)
+            playbook_vars["num_index_replicas"] = '"num_index_replicas": {},'.format(num_replicas)
+            playbook_vars["num_index_replicas_housekeeping"] = '"num_index_replicas_housekeeping": {},'.format(num_replicas)
+
+            if get_sg_use_views(self._cluster_config):
+                playbook_vars["sg_use_views"] = '"use_views": true,'
 
         # Add configuration to run with xattrs
         if self.xattrs:
@@ -168,6 +180,10 @@ class Cluster:
         except KeyError as ex:
             log_info("Keyerror in getting revs_limit{}".format(ex.message))
             playbook_vars["revs_limit"] = ''
+
+        # Sleep for a few seconds for the indexes to teardown
+        time.sleep(5)
+
         status = ansible_runner.run_ansible_playbook(
             "start-sync-gateway.yml",
             extra_vars=playbook_vars
