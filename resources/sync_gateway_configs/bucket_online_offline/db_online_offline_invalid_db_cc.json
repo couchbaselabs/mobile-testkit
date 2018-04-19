@@ -18,7 +18,7 @@
             {{ sg_use_views }}
             {{ num_index_replicas }}
             {{ num_index_replicas_housekeeping }}
-            "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
+            "server":"{{ server_scheme }}://[{{ couchbase_server_primary_node }}]:{{ server_port }}",
             "bucket":"non-existent-bucket",
             "username":"non-existent-bucket",
             "password": "password",

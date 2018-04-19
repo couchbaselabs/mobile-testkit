@@ -88,7 +88,10 @@ def test_document_resurrection(params_from_base_test_setup, sg_conf_name, deleti
 
     # Initialize clients
     sg_client = MobileRestClient()
-    sdk_client = Bucket('couchbase://{}/{}'.format(cbs_host, bucket_name), password='password')
+    if cluster.ipv6:
+        sdk_client = Bucket('couchbase://{}/{}?ipv6=allow'.format(cbs_host, bucket_name), password='password')
+    else:
+        sdk_client = Bucket('couchbase://{}/{}'.format(cbs_host, bucket_name), password='password')
 
     # Create Sync Gateway user
     sg_user_channels = ['NASA', 'NATGEO']

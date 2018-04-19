@@ -30,7 +30,7 @@ def test_provision():
     cluster_utils.set_cluster_config(cluster_config.split("/")[-1])
     sg_config = "resources/sync_gateway_configs/sync_gateway_default_cc.json"
     server_version = "5.5.0-2368"
-    sync_gateway_version = "2.1.0-23"
+    sync_gateway_version = "2.1.0-35"
     persist_cluster_config_environment_prop(cluster_config, 'server_version', server_version)
     persist_cluster_config_environment_prop(cluster_config, 'sync_gateway_ssl', False)
     persist_cluster_config_environment_prop(cluster_config, 'sg_use_views', True)

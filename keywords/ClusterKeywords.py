@@ -66,6 +66,9 @@ class ClusterKeywords:
             cluster = json.loads(f.read())
 
         sg_urls = []
+        ac_urls = []
+        cbs_urls = []
+        lbs_urls = []
 
         # Get load balancer IP
         lb_ip = None
@@ -83,6 +86,8 @@ class ClusterKeywords:
             lb_ip = get_load_balancer_ip(cluster_config)
 
             for sg in cluster["sync_gateways"]:
+                if cluster["environment"]["ipv6_enabled"]:
+                    lb_ip = "[{}]".format(lb_ip)
                 public = "http://{}:4984".format(lb_ip)
                 admin = "http://{}:4985".format(lb_ip)
                 sg_urls.append({"public": public, "admin": admin})
@@ -90,12 +95,21 @@ class ClusterKeywords:
             log_info("Using load balancer IP as the SG IP: {}".format(sg_urls))
         else:
             for sg in cluster["sync_gateways"]:
-                public = "{}://{}:4984".format(sg_scheme, sg["ip"])
+                if cluster["environment"]["ipv6_enabled"]:
+                    sg["ip"] = "[{}]".format(sg["ip"])
+                public = "{}://{}:4984".format(sg_scheme,sg["ip"] )
                 admin = "{}://{}:4985".format(sg_scheme, sg["ip"])
                 sg_urls.append({"public": public, "admin": admin})
 
-        ac_urls = ["{}://{}:4985".format(sg_scheme, sga["ip"]) for sga in cluster["sg_accels"]]
-        lbs_urls = ["http://{}".format(lb["ip"]) for lb in cluster["load_balancers"]]
+
+        for sga in cluster["sg_accels"]:
+            if cluster["environment"]["ipv6_enabled"]:
+                sga["ip"] = "[{}]".format(sga["ip"])
+            ac_urls.append("{}://{}:4985".format(sg_scheme, sga["ip"]))
+        for lb in cluster["load_balancers"]:
+            if cluster["environment"]["ipv6_enabled"]:
+                lb["ip"] = "[{}]".format(lb["ip"])
+            lbs_urls.append("http://{}".format(lb["ip"]))
 
         server_port = 8091
         server_scheme = "http"
@@ -104,7 +118,10 @@ class ClusterKeywords:
             server_port = 18091
             server_scheme = "https"
 
-        cbs_urls = ["{}://{}:{}".format(server_scheme, cb["ip"], server_port) for cb in cluster["couchbase_servers"]]
+        for cb in cluster["couchbase_servers"]:
+            if cluster["environment"]["ipv6_enabled"]:
+                cb["ip"] = "[{}]".format(cb["ip"])
+            cbs_urls.append("{}://{}:{}".format(server_scheme, cb["ip"], server_port))
 
         # Format into urls that robot keywords can consume easily
         formatted_cluster = {
@@ -139,6 +156,8 @@ class ClusterKeywords:
         for host in cluster_obj["hosts"]:
 
             # Couchbase Server
+            if cluster_obj["environment"]["ipv6_enabled"]:
+                host["ip"] = "[{}]".format(host["ip"])
             try:
                 resp = requests.get("{}://Administrator:password@{}:{}/pools".format(server_scheme, host["ip"], server_port))
                 log_r(resp)

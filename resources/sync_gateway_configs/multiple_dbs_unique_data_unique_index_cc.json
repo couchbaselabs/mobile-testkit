@@ -18,7 +18,7 @@
             {{ sg_use_views }}
             {{ num_index_replicas }}
             {{ num_index_replicas_housekeeping }}
-            "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
+            "server":"{{ server_scheme }}://[{{ couchbase_server_primary_node }}]:{{ server_port }}",
             "bucket":"data-bucket-1",
             "username":"data-bucket-1",
             "password": "password"
@@ -30,7 +30,7 @@
             {{ sg_use_views }}
             {{ num_index_replicas }}
             {{ num_index_replicas_housekeeping }}
-            "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
+            "server":"{{ server_scheme }}://[{{ couchbase_server_primary_node }}]:{{ server_port }}",
             "bucket":"data-bucket-2",
             "username":"data-bucket-2",
             "password": "password"
@@ -39,7 +39,7 @@
             {{ autoimport }}
             {{ xattrs }}
             {{ no_conflicts }}
-            "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
+            "server":"{{ server_scheme }}://[{{ couchbase_server_primary_node }}]:{{ server_port }}",
             "bucket":"data-bucket-3",
             "username":"data-bucket-3",
             "password": "password"
@@ -48,7 +48,7 @@
             {{ autoimport }}
             {{ xattrs }}
             {{ no_conflicts }}
-            "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
+            "server":"{{ server_scheme }}://[{{ couchbase_server_primary_node }}]:{{ server_port }}",
             "bucket":"data-bucket-4",
             "username":"data-bucket-4",
             "password": "password"
@@ -57,7 +57,7 @@
             {{ autoimport }}
             {{ xattrs }}
             {{ no_conflicts }}
-            "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
+            "server":"{{ server_scheme }}://[{{ couchbase_server_primary_node }}]:{{ server_port }}",
             "bucket":"data-bucket-5",
             "username":"data-bucket-5",
             "password": "password"
@@ -66,7 +66,7 @@
             {{ autoimport }}
             {{ xattrs }}
             {{ no_conflicts }}
-            "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
+            "server":"{{ server_scheme }}://[{{ couchbase_server_primary_node }}]:{{ server_port }}",
             "bucket":"data-bucket-6",
             "username":"data-bucket-6",
             "password": "password"
@@ -75,7 +75,7 @@
             {{ autoimport }}
             {{ xattrs }}
             {{ no_conflicts }}
-            "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
+            "server":"{{ server_scheme }}://[{{ couchbase_server_primary_node }}]:{{ server_port }}",
             "bucket":"data-bucket-7",
             "username":"data-bucket-7",
             "password": "password"
@@ -84,7 +84,7 @@
             {{ autoimport }}
             {{ xattrs }}
             {{ no_conflicts }}
-            "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
+            "server":"{{ server_scheme }}://[{{ couchbase_server_primary_node }}]:{{ server_port }}",
             "bucket":"data-bucket-8",
             "username":"data-bucket-8",
             "password": "password"
@@ -93,7 +93,7 @@
             {{ autoimport }}
             {{ xattrs }}
             {{ no_conflicts }}
-            "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
+            "server":"{{ server_scheme }}://[{{ couchbase_server_primary_node }}]:{{ server_port }}",
             "bucket":"data-bucket-9",
             "username":"data-bucket-9",
             "password": "password"

@@ -87,7 +87,7 @@ class SyncGatewayConfig:
         return True
 
 
-def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False, sg_platform="centos", sa_platform="centos"):
+def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False, sg_platform="centos", sa_platform="centos", ipv6=False):
 
     log_info(sync_gateway_config)
 
@@ -100,7 +100,7 @@ def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False, sg_pl
     couchbase_server_primary_node = add_cbs_to_sg_config_server_field(cluster_config)
     # Create buckets unless the user explicitly asked to skip this step
     if not sync_gateway_config.skip_bucketcreation:
-        create_server_buckets(cluster_config, sync_gateway_config)
+        create_server_buckets(cluster_config, sync_gateway_config. ipv6)
 
     server_port = 8091
     server_scheme = "http"

@@ -1,5 +1,6 @@
 import json
 import os
+import re
 
 import pytest
 from jinja2 import Template
@@ -15,8 +16,9 @@ from utilities.cluster_config_utils import get_sg_replicas, get_sg_use_views, ge
 
 def load_sync_gateway_config(sync_gateway_config, mode, server_url, xattrs_enabled, cluster_config):
     """ Loads a syncgateway configuration for modification"""
-    server_scheme, server_ip, server_port = server_url.split(":")
-    server_ip = server_ip.replace("//", "")
+    match_obj = re.match("(http\w?):\/\/(.*):(\d.*$)", server_url, re.IGNORECASE)
+    server_scheme, server_ip, server_port = match_obj.groups()[0], match_obj.groups()[1], match_obj.groups()[2]
+#     server_ip = server_ip.replace("//", "")
 
     with open(sync_gateway_config) as default_conf:
         template = Template(default_conf.read())
@@ -79,7 +81,11 @@ def test_log_rotation_default_values(params_from_base_test_setup, sg_conf_name):
     cluster = Cluster(config=cluster_conf)
     cluster.reset(sg_config_path=sg_conf)
 
-    remote_executor = RemoteExecutor(cluster.sync_gateways[0].ip)
+    if cluster.ipv6:
+        sg_ip = cluster.sync_gateways[0].ip
+        sg_ip = sg_ip.replace("[", "")
+        sg_ip = sg_ip.replace("]", "")
+    remote_executor = RemoteExecutor(sg_ip)
 
     # Stop sync_gateways
     log_info(">>> Stopping sync_gateway")

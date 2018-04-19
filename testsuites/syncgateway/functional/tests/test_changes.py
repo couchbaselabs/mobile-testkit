@@ -1,9 +1,11 @@
 import pytest
 
 from keywords.MobileRestClient import MobileRestClient
+from libraries.testkit.cluster import Cluster
 from requests import Session
 from keywords.utils import log_info
 from keywords.SyncGateway import SyncGateway
+from keywords.SyncGateway import sync_gateway_config_path_for_mode
 
 
 @pytest.mark.sanity
@@ -27,6 +29,10 @@ def test_deleted_docs_from_changes_active_only(params_from_base_test_setup, sg_c
     sg_admin_url = topology["sync_gateways"][0]["admin"]
     sg_db = "db"
     num_docs = 10
+    mode = params_from_base_test_setup["mode"]
+    sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
+    cluster = Cluster(cluster_config)
+    cluster.reset(sg_conf)
     client = MobileRestClient()
 
     # Add doc to SG
