@@ -7,8 +7,8 @@ from jinja2 import Template
 from keywords.ClusterKeywords import ClusterKeywords
 from keywords.exceptions import ProvisioningError
 from keywords.remoteexecutor import RemoteExecutor
-from keywords.SyncGateway import SyncGateway, sync_gateway_config_path_for_mode
-from keywords.utils import log_info, add_cbs_to_sg_config_server_field
+from keywords.SyncGateway import SyncGateway, sync_gateway_config_path_for_mode, get_sync_gateway_version
+from keywords.utils import log_info, add_cbs_to_sg_config_server_field, host_for_url
 from libraries.testkit.cluster import Cluster
 from utilities.cluster_config_utils import get_sg_replicas, get_sg_use_views, get_sg_version
 
@@ -70,6 +70,13 @@ def test_log_rotation_default_values(params_from_base_test_setup, sg_conf_name):
     cluster_conf = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
     xattrs_enabled = params_from_base_test_setup["xattrs_enabled"]
+    cluster_helper = ClusterKeywords()
+    cluster_hosts = cluster_helper.get_cluster_topology(cluster_conf)
+    sg_admin_url = cluster_hosts["sync_gateways"][0]["admin"]
+    sg_ip = host_for_url(sg_admin_url)
+
+    if get_sync_gateway_version(sg_ip)[0] > "2.0":
+        pytest.skip("Test NA for SG  > 2.0")
 
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
 
@@ -84,8 +91,6 @@ def test_log_rotation_default_values(params_from_base_test_setup, sg_conf_name):
     # Stop sync_gateways
     log_info(">>> Stopping sync_gateway")
     sg_helper = SyncGateway()
-    cluster_helper = ClusterKeywords()
-    cluster_hosts = cluster_helper.get_cluster_topology(cluster_conf)
     sg_one_url = cluster_hosts["sync_gateways"][0]["public"]
     sg_helper.stop_sync_gateways(cluster_config=cluster_conf, url=sg_one_url)
 
@@ -146,12 +151,18 @@ def test_log_logKeys_string(params_from_base_test_setup, sg_conf_name):
     log_info("Using cluster_conf: {}".format(cluster_conf))
     log_info("Using sg_conf: {}".format(sg_conf))
 
+    cluster_helper = ClusterKeywords()
+    cluster_hosts = cluster_helper.get_cluster_topology(cluster_conf)
+    sg_admin_url = cluster_hosts["sync_gateways"][0]["admin"]
+    sg_ip = host_for_url(sg_admin_url)
+
+    if get_sync_gateway_version(sg_ip)[0] > "2.0":
+        pytest.skip("Test NA for SG  > 2.0")
+
     cluster = Cluster(config=cluster_conf)
     cluster.reset(sg_config_path=sg_conf)
 
     # read sample sg_conf
-    cluster_helper = ClusterKeywords()
-    cluster_hosts = cluster_helper.get_cluster_topology(cluster_conf)
     sg_one_url = cluster_hosts["sync_gateways"][0]["public"]
 
     data = load_sync_gateway_config(sg_conf, mode, cluster_hosts["couchbase_servers"][0], xattrs_enabled, cluster_conf)
@@ -198,12 +209,18 @@ def test_log_nondefault_logKeys_set(params_from_base_test_setup, sg_conf_name):
     log_info("Using cluster_conf: {}".format(cluster_conf))
     log_info("Using sg_conf: {}".format(sg_conf))
 
+    cluster_helper = ClusterKeywords()
+    cluster_hosts = cluster_helper.get_cluster_topology(cluster_conf)
+    sg_admin_url = cluster_hosts["sync_gateways"][0]["admin"]
+    sg_ip = host_for_url(sg_admin_url)
+
+    if get_sync_gateway_version(sg_ip)[0] > "2.0":
+        pytest.skip("Test NA for SG  > 2.0")
+
     cluster = Cluster(config=cluster_conf)
     cluster.reset(sg_config_path=sg_conf)
 
     # read sample sg_conf
-    cluster_helper = ClusterKeywords()
-    cluster_hosts = cluster_helper.get_cluster_topology(cluster_conf)
     sg_one_url = cluster_hosts["sync_gateways"][0]["public"]
     data = load_sync_gateway_config(sg_conf, mode, cluster_hosts["couchbase_servers"][0], xattrs_enabled, cluster_conf)
 
@@ -243,6 +260,14 @@ def test_log_maxage_10_timestamp_ignored(params_from_base_test_setup, sg_conf_na
     log_info("Using cluster_conf: {}".format(cluster_conf))
     log_info("Using sg_conf: {}".format(sg_conf))
 
+    cluster_helper = ClusterKeywords()
+    cluster_hosts = cluster_helper.get_cluster_topology(cluster_conf)
+    sg_admin_url = cluster_hosts["sync_gateways"][0]["admin"]
+    sg_ip = host_for_url(sg_admin_url)
+
+    if get_sync_gateway_version(sg_ip)[0] > "2.0":
+        pytest.skip("Test NA for SG  > 2.0")
+
     cluster = Cluster(config=cluster_conf)
     cluster.reset(sg_config_path=sg_conf)
 
@@ -251,8 +276,6 @@ def test_log_maxage_10_timestamp_ignored(params_from_base_test_setup, sg_conf_na
     # Stop sync_gateways
     log_info(">>> Stopping sync_gateway")
     sg_helper = SyncGateway()
-    cluster_helper = ClusterKeywords()
-    cluster_hosts = cluster_helper.get_cluster_topology(cluster_conf)
     sg_one_url = cluster_hosts["sync_gateways"][0]["public"]
 
     sg_helper.stop_sync_gateways(cluster_config=cluster_conf, url=sg_one_url)
@@ -309,11 +332,17 @@ def test_log_rotation_invalid_path(params_from_base_test_setup, sg_conf_name):
     log_info("Using cluster_conf: {}".format(cluster_conf))
     log_info("Using sg_conf: {}".format(sg_conf))
 
+    cluster_helper = ClusterKeywords()
+    cluster_hosts = cluster_helper.get_cluster_topology(cluster_conf)
+    sg_admin_url = cluster_hosts["sync_gateways"][0]["admin"]
+    sg_ip = host_for_url(sg_admin_url)
+
+    if get_sync_gateway_version(sg_ip)[0] > "2.0":
+        pytest.skip("Test NA for SG  > 2.0")
+
     cluster = Cluster(config=cluster_conf)
     cluster.reset(sg_config_path=sg_conf)
 
-    cluster_helper = ClusterKeywords()
-    cluster_hosts = cluster_helper.get_cluster_topology(cluster_conf)
     sg_one_url = cluster_hosts["sync_gateways"][0]["public"]
 
     # read sample sg_conf
@@ -361,6 +390,14 @@ def test_log_200mb(params_from_base_test_setup, sg_conf_name):
     log_info("Using cluster_conf: {}".format(cluster_conf))
     log_info("Using sg_conf: {}".format(sg_conf))
 
+    cluster_helper = ClusterKeywords()
+    cluster_hosts = cluster_helper.get_cluster_topology(cluster_conf)
+    sg_admin_url = cluster_hosts["sync_gateways"][0]["admin"]
+    sg_ip = host_for_url(sg_admin_url)
+
+    if get_sync_gateway_version(sg_ip)[0] > "2.0":
+        pytest.skip("Test NA for SG  > 2.0")
+
     cluster = Cluster(config=cluster_conf)
     cluster.reset(sg_config_path=sg_conf)
 
@@ -369,8 +406,6 @@ def test_log_200mb(params_from_base_test_setup, sg_conf_name):
     # Stop sync_gateways
     log_info(">>> Stopping sync_gateway")
     sg_helper = SyncGateway()
-    cluster_helper = ClusterKeywords()
-    cluster_hosts = cluster_helper.get_cluster_topology(cluster_conf)
     sg_one_url = cluster_hosts["sync_gateways"][0]["public"]
 
     sg_helper.stop_sync_gateways(cluster_config=cluster_conf, url=sg_one_url)
@@ -421,6 +456,14 @@ def test_log_number_backups(params_from_base_test_setup, sg_conf_name):
     log_info("Using cluster_conf: {}".format(cluster_conf))
     log_info("Using sg_conf: {}".format(sg_conf))
 
+    cluster_helper = ClusterKeywords()
+    cluster_hosts = cluster_helper.get_cluster_topology(cluster_conf)
+    sg_admin_url = cluster_hosts["sync_gateways"][0]["admin"]
+    sg_ip = host_for_url(sg_admin_url)
+
+    if get_sync_gateway_version(sg_ip)[0] > "2.0":
+        pytest.skip("Test NA for SG  > 2.0")
+
     cluster = Cluster(config=cluster_conf)
     cluster.reset(sg_config_path=sg_conf)
 
@@ -429,8 +472,6 @@ def test_log_number_backups(params_from_base_test_setup, sg_conf_name):
     # Stop sync_gateways
     log_info(">>> Stopping sync_gateway")
     sg_helper = SyncGateway()
-    cluster_helper = ClusterKeywords()
-    cluster_hosts = cluster_helper.get_cluster_topology(cluster_conf)
     sg_one_url = cluster_hosts["sync_gateways"][0]["public"]
     sg_helper.stop_sync_gateways(cluster_config=cluster_conf, url=sg_one_url)
 
@@ -478,11 +519,17 @@ def test_log_rotation_negative(params_from_base_test_setup, sg_conf_name):
     log_info("Using cluster_conf: {}".format(cluster_conf))
     log_info("Using sg_conf: {}".format(sg_conf))
 
+    cluster_helper = ClusterKeywords()
+    cluster_hosts = cluster_helper.get_cluster_topology(cluster_conf)
+    sg_admin_url = cluster_hosts["sync_gateways"][0]["admin"]
+    sg_ip = host_for_url(sg_admin_url)
+
+    if get_sync_gateway_version(sg_ip)[0] > "2.0":
+        pytest.skip("Test NA for SG  > 2.0")
+
     cluster = Cluster(config=cluster_conf)
     cluster.reset(sg_config_path=sg_conf)
 
-    cluster_helper = ClusterKeywords()
-    cluster_hosts = cluster_helper.get_cluster_topology(cluster_conf)
     sg_one_url = cluster_hosts["sync_gateways"][0]["public"]
 
     # read sample sg_conf
@@ -534,11 +581,17 @@ def test_log_maxbackups_0(params_from_base_test_setup, sg_conf_name):
     log_info("Using cluster_conf: {}".format(cluster_conf))
     log_info("Using sg_conf: {}".format(sg_conf))
 
+    cluster_helper = ClusterKeywords()
+    cluster_hosts = cluster_helper.get_cluster_topology(cluster_conf)
+    sg_admin_url = cluster_hosts["sync_gateways"][0]["admin"]
+    sg_ip = host_for_url(sg_admin_url)
+
+    if get_sync_gateway_version(sg_ip)[0] > "2.0":
+        pytest.skip("Test NA for SG  > 2.0")
+
     cluster = Cluster(config=cluster_conf)
     cluster.reset(sg_config_path=sg_conf)
 
-    cluster_helper = ClusterKeywords()
-    cluster_hosts = cluster_helper.get_cluster_topology(cluster_conf)
     sg_one_url = cluster_hosts["sync_gateways"][0]["public"]
 
     remote_executor = RemoteExecutor(cluster.sync_gateways[0].ip)
@@ -591,11 +644,17 @@ def test_log_logLevel_invalid(params_from_base_test_setup, sg_conf_name):
     log_info("Using cluster_conf: {}".format(cluster_conf))
     log_info("Using sg_conf: {}".format(sg_conf))
 
+    cluster_helper = ClusterKeywords()
+    cluster_hosts = cluster_helper.get_cluster_topology(cluster_conf)
+    sg_admin_url = cluster_hosts["sync_gateways"][0]["admin"]
+    sg_ip = host_for_url(sg_admin_url)
+
+    if get_sync_gateway_version(sg_ip)[0] > "2.0":
+        pytest.skip("Test NA for SG  > 2.0")
+
     cluster = Cluster(config=cluster_conf)
     cluster.reset(sg_config_path=sg_conf)
 
-    cluster_helper = ClusterKeywords()
-    cluster_hosts = cluster_helper.get_cluster_topology(cluster_conf)
     sg_one_url = cluster_hosts["sync_gateways"][0]["public"]
 
     # read sample sg_conf
