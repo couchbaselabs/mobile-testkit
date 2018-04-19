@@ -8,7 +8,7 @@ from keywords import couchbaseserver
 from keywords.constants import CLUSTER_CONFIGS_DIR
 from keywords.exceptions import ProvisioningError
 from keywords.SyncGateway import (verify_sg_accel_version,
-                                  # verify_sync_gateway_version,
+                                  verify_sync_gateway_version,
                                   verify_sg_accel_product_info,
                                   verify_sync_gateway_product_info)
 from keywords.utils import (log_info, log_r, version_and_build,
@@ -171,7 +171,7 @@ class ClusterKeywords:
         # Verify sync_gateway versions
         for sg in cluster_obj["sync_gateways"]:
             verify_sync_gateway_product_info(sg["ip"])
-            # verify_sync_gateway_version(sg["ip"], expected_sync_gateway_version)
+            verify_sync_gateway_version(sg["ip"], expected_sync_gateway_version)
 
         # Verify sg_accel versions, use the same expected version for sync_gateway for now
         for ac in cluster_obj["sg_accels"]:
