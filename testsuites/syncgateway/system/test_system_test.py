@@ -11,8 +11,9 @@ from keywords import couchbaseserver, document
 from keywords.ClusterKeywords import ClusterKeywords
 from keywords.MobileRestClient import MobileRestClient
 from keywords.SyncGateway import sync_gateway_config_path_for_mode, SyncGateway
-from keywords.utils import log_info
+from keywords.utils import log_info, host_for_url
 from libraries.testkit.cluster import Cluster
+from keywords.SyncGateway import get_sync_gateway_version
 
 # Set the default value to 404 - view not created yet
 # The view names in SG 1.5.1 and below is sync_housekeeping/sync_gateway
@@ -156,7 +157,10 @@ def test_system_test(params_from_base_test_setup):
     delete_views(cbs_session, cbs_admin_url, bucket_name)
     load_bucket(sdk_client, server_seed_docs)
     sg_helper.start_sync_gateways(cluster_config, config=sg_conf)
-    wait_for_view_creation(cbs_session, cbs_admin_url, bucket_name)
+    sg_ip = host_for_url(sg_admin_url)
+
+    if get_sync_gateway_version(sg_ip)[0] < "2.1.0":
+        wait_for_view_creation(cbs_session, cbs_admin_url, bucket_name)
 
     # Start concurrent creation of docs (max docs / num users)
     # Each user will add batch_size number of docs via bulk docs and sleep for 'create_delay'
