@@ -20,12 +20,6 @@ class Dictionary(object):
             args.setMemoryPointer("content_dict", dictionary)
         return self._client.invokeMethod("dictionary_create", args)
 
-#     Method no longer exist
-#     def getId(self, dictionary):
-#         args = Args()
-#         args.setMemoryPointer("dictionary", dictionary)
-#         return self._client.invokeMethod("dictionary_getId", args)
-
     def getString(self, dictionary, key):
         args = Args()
         args.setMemoryPointer("dictionary", dictionary)
@@ -38,13 +32,6 @@ class Dictionary(object):
         args.setString("key", key)
         args.setString("value", value)
         return self._client.invokeMethod("dictionary_setString", args)
-
-#     Method no longer exist
-#     def set(self, dictionary, content_dict):
-#         args = Args()
-#         args.setMemoryPointer("dictionary", dictionary)
-#         args.setMemoryPointer("content_dict", content_dict)
-#         return self._client.invokeMethod("dictionary_set", args)
 
     def getKeys(self, dictionary):
         args = Args()
@@ -165,20 +152,6 @@ class Dictionary(object):
         args.setString("key", key)
         args.setLong("value", value)
         return self._client.invokeMethod("dictionary_setLong", args)
-
-#     Method no longer exist
-#     def getObject(self, dictionary, key):
-#         args = Args()
-#         args.setMemoryPointer("dictionary", dictionary)
-#         args.setString("key", key)
-#         return self._client.invokeMethod("dictionary_getObject", args)
-#
-#     def setObject(self, dictionary, key, value):
-#         args = Args()
-#         args.setMemoryPointer("dictionary", dictionary)
-#         args.setString("key", key)
-#         args.setMemoryPointer("value", value)
-#         return self._client.invokeMethod("dictionary_setObject", args)
 
     def getNumber(self, dictionary, key):
         args = Args()

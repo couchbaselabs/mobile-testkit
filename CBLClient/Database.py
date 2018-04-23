@@ -212,14 +212,6 @@ class Database(object):
             args.setString("concurrencyControlType", concurrencyControlType)
         return self._client.invokeMethod("database_deleteWithConcurrency", args)
 
-
-#     Not implemented on server
-#     def create_value_index(self, database, prop):
-#         args = Args()
-#         args.setMemoryPointer("database", database)
-#         args.setString("property", prop)
-#         return self._client.invokeMethod("create_valueIndex", args)
-
     def create_bulk_docs(self, number, id_prefix, db, channels=None, generator=None, attachments_generator=None, id_start_num=0):
         """
         if id_prefix == None, generate a uuid for each doc

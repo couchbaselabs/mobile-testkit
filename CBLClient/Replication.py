@@ -68,12 +68,6 @@ class Replication(object):
         return self._client.invokeMethod("replicatorConfiguration_create",
                                          args) """
 
-#     Protected method now
-#     def copy(self, configuration):
-#         args = Args()
-#         args.setMemoryPointer("configuration", configuration)
-#         return self._client.invokeMethod("replicatorConfiguration_copy", args)
-
     def getAuthenticator(self, configuration):
         args = Args()
         args.setMemoryPointer("configuration", configuration)
@@ -186,12 +180,6 @@ class Replication(object):
         args.setMemoryPointer("replicator", replicator)
         return self._client.invokeMethod("replicator_config", args)
 
-#     Same as status method
-#     def getStatus(self, replicator):
-#         args = Args()
-#         args.setMemoryPointer("replicator", replicator)
-#         return self._client.invokeMethod("replicator_getStatus", args)
-
     def addChangeListener(self, replicator):
         args = Args()
         args.setMemoryPointer("replicator", replicator)
@@ -207,17 +195,6 @@ class Replication(object):
         args = Args()
         args.setMemoryPointer("replicator", replicator)
         return self._client.invokeMethod("replicator_toString", args)
-
-#     Not available any more
-#     def networkReachable(self, replicator):
-#         args = Args()
-#         args.setMemoryPointer("replicator", replicator)
-#         return self._client.invokeMethod("replicator_networkReachable", args)
-#
-#     def networkUnreachable(self, replicator):
-#         args = Args()
-#         args.setMemoryPointer("replicator", replicator)
-#         return self._client.invokeMethod("replicator_networkUnreachable", args)
 
     def start(self, replicator):
         args = Args()
@@ -260,9 +237,6 @@ class Replication(object):
     def getError(self, replicator):
         args = Args()
         args.setMemoryPointer("replicator", replicator)
-#         error = self._client.invokeMethod("replicator_getError", args)
-#         if error.__contains__("@"):
-#             error = None
         return self._client.invokeMethod("replicator_getError", args)
 
     def getChangesCount(self, change_listener):
@@ -273,7 +247,6 @@ class Replication(object):
     def getChangesChangeListener(self, change_listener):
         args = Args()
         args.setMemoryPointer("changeListener", change_listener)
-        # args.setInt("index", index)
         return self._client.invokeMethod("replicator_changeListenerGetChanges", args)
 
     def configure_and_replicate(self, source_db, replicator_authenticator=None, target_db=None, target_url=None, replication_type="push_pull", continuous=True,
@@ -314,38 +287,9 @@ class Replication(object):
         cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, username)
         session = cookie, session_id
         replicator_authenticator = authenticator.authentication(session_id, cookie, authentication_type="session")
-        # replicator_authenticator = authenticator.authentication(username=username, password=password, authentication_type="basic")
         repl_config = self.configure(cbl_db, sg_blip_url, continuous=continuous, channels=channels, replication_type=replication_type, replicator_authenticator=replicator_authenticator)
         repl = self.create(repl_config)
         self.start(repl)
         self.wait_until_replicator_idle(repl)
 
         return session, replicator_authenticator, repl
-
-
-"""
-    def configure(self, source_db, target_url=None, target_db=None,
-                  replication_type="push_pull", continuous=False,
-                  channels=None, document_ids=None,
-                  replicator_authenticator=None):
-        args = Args()
-        args.setString("replication_type", replication_type)
-        repl_config_obj = ReplicatorConfiguration(self.base_url)
-        if target_url:
-            self.config = repl_config_obj.create(source_db, target_url=target_url)
-        elif target_db:
-            self.config = repl_config_obj.create(source_db, target_db=target_db)
-
-        if channels is not None:
-            repl_config_obj.setChannels(self.config, channels)
-
-        if document_ids is not None:
-            repl_config_obj.setDocumentIDs(self.config, document_ids)
-
-        if replicator_authenticator is not None:
-            repl_config_obj.setAuthenticator(self.config, replicator_authenticator)
-
-        repl_config_obj.setContinuous(self.config, continuous)
-        repl_config_obj.setReplicatorType(self.config, replication_type)
-        return self.create(self.config)
-"""

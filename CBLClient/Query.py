@@ -120,8 +120,6 @@ class Query(object):
         args.setInt("limit", limit)
         args.setInt("offset", offset)
 
-        # needs to be change
-        # return self._client.invokeMethod("query_get_docs_limit_offset", args)
         return self._client.invokeMethod("query_docsLimitOffset", args)
 
     def query_multiple_selects(self, database, select_property1, select_property2, whr_key, whr_val):
@@ -132,8 +130,6 @@ class Query(object):
         args.setString("whr_key", whr_key)
         args.setString("whr_val", whr_val)
 
-        # needs to be change
-        # return self._client.invokeMethod("query_multiple_selects", args)
         return self._client.invokeMethod("query_multipleSelects", args)
 
     def query_where_and_or(self, database, whr_key1, whr_val1, whr_key2, whr_val2, whr_key3, whr_val3, whr_key4, whr_val4):

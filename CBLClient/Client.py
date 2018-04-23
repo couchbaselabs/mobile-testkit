@@ -35,7 +35,6 @@ class Client(object):
 
             if responseCode == 200:
                 result = resp.content
-                # log_info("Got response: {}".format(result))
                 if len(result) < 25:
                     # Only print short messages
                     log_info("Got response: {}".format(result))

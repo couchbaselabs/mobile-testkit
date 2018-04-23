@@ -13,11 +13,7 @@ class DatabaseConfiguration(object):
             raise Exception("No base_url specified")
 
         self._client = Client(base_url)
-    """
-    def create(self):
-        args = Args()
-        return self._client.invokeMethod("databaseConfiguration_create", args)
-    """
+
     def getConflictResolver(self, config):
         args = Args()
         args.setMemoryPointer("config", config)
