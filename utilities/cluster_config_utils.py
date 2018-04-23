@@ -116,6 +116,18 @@ def get_load_balancer_ip(cluster_config):
     return lb_ip
 
 
+def get_sg_replicas(cluster_config):
+    """ Loads cluster config to get sync gateway version"""
+    cluster = load_cluster_config_json(cluster_config)
+    return cluster["environment"]["number_replicas"]
+
+
+def get_sg_use_views(cluster_config):
+    """ Loads cluster config to get sync gateway views/GSI"""
+    cluster = load_cluster_config_json(cluster_config)
+    return cluster["environment"]["sg_use_views"]
+
+
 def get_sg_version(cluster_config):
     """ Loads cluster config to get sync gateway version"""
     cluster = load_cluster_config_json(cluster_config)

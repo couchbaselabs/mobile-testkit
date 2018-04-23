@@ -1,0 +1,8 @@
+# Delete the provided directory
+- name: SYNC GATEWAY | Create sync_gateway empty file
+  become: yes
+  shell: mkdir -p sudo dd if=/dev/zero of=/tmp/sg_logs/{{ file_name }} bs={{ file_size }} count=1
+
+- name: SYNC GATEWAY | Change the permissions
+  become: yes
+  shell: chmod 777 -R /tmp/sg_logs
