@@ -17,7 +17,7 @@ class TestDatabase(object):
             pytest.skip("Test not applicable for ios")
 
         if len(db_name) >= 128 and (self.liteserv_platform != "ios" or self.liteserv_platform != "android"):
-            pytest.skip("Test not supported on .net platfomrs")
+            pytest.skip("Test not supported on .net platforms")
 
         try:
             self.db_obj.create(db_name)
@@ -159,7 +159,6 @@ class TestDatabase(object):
 
         db_name = db_name.lower()
         db = self.db_obj.create(db_name)
-        # assert self.db_obj.getDocument(db, doc_id) == -1
 
         doc = self.doc_obj.create(doc_id=doc_id)
         self.doc_obj.setString(doc, "key", "value")
