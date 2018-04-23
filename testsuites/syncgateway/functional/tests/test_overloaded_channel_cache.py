@@ -124,4 +124,7 @@ def test_overloaded_channel_cache(params_from_base_test_setup, sg_conf_name, num
 
         # Since Sync Gateway will need to issue view queries to handle _changes requests that don't
         # fit in the channel cache, we expect there to be several view queries
+
+        # TODO for SG 2.1, a new parameter has to be queried
+        # Ref SG issue #3424
         assert resp_obj["syncGateway_changeCache"]["view_queries"] > 0

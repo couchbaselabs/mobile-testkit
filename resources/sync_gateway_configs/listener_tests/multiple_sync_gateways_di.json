@@ -18,6 +18,9 @@
         "sg_db1":{
             {{ xattrs }}
             {{ no_conflicts }}
+            {{ sg_use_views }}
+            {{ num_index_replicas }}
+            {{ num_index_replicas_housekeeping }}
             "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
             "bucket":"data-bucket-1",
             "username":"data-bucket-1",
@@ -32,6 +35,9 @@
         },
         "sg_db2":{
             {{ xattrs }}
+            {{ sg_use_views }}
+            {{ num_index_replicas }}
+            {{ num_index_replicas_housekeeping }}
             "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
             "bucket":"data-bucket-2",
             "username":"data-bucket-2",
