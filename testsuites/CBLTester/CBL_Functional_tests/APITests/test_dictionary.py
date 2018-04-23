@@ -93,11 +93,10 @@ class TestDictionary(object):
         #                                                   key))
         assert self.datatype.compareDate(value, self.dict_obj.getDate(content_dict, key))
 
-    def test1_get_set_dictionary(self):
+    def test_get_set_dictionary(self):
         '''
         @summary: Testing get and set Dictionary methods of Dictionary API
         '''
-        # TODO ios gets back {} for self.datatype.hashMap()
         hashmap = {}
         key = "Date_key"
         value = self.datatype.setDate()
@@ -134,13 +133,9 @@ class TestDictionary(object):
         '''
         @summary: Testing get and set Double methods of Dictionary API
         '''
-        # TODO implementation does not work on ios
         double_value = self.datatype.setDouble(float(value))
         content_dict = self.dict_obj.create()
         self.dict_obj.setDouble(content_dict, key, double_value)
-        # assert self.datatype.compare(double_value,
-        #                              self.dict_obj.getDouble(
-        #                                  content_dict, key))
         assert self.datatype.compareDouble(double_value, self.dict_obj.getDouble(content_dict, key))
 
     @pytest.mark.parametrize("key, value", [
@@ -153,7 +148,6 @@ class TestDictionary(object):
         '''
         @summary: Testing get and set Float methods of Dictionary API
         '''
-        # TODO Precision issue with ios assert 978.5709 == 978.571
         content_dict = self.dict_obj.create()
         self.dict_obj.setFloat(content_dict, key, value)
         assert value == self.dict_obj.getFloat(content_dict, key)
