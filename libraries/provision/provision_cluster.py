@@ -75,7 +75,6 @@ def provision_cluster(cluster_config, couchbase_server_config, sync_gateway_conf
     cluster_keywords = ClusterKeywords()
     cluster_topology = cluster_keywords.get_cluster_topology(cluster_config)
     server_url = cluster_topology["couchbase_servers"][0]
-    ipv6 = cluster_topology["environment"]["ipv6_enabled"]
     cb_server = CouchbaseServer(server_url)
     server_baseurl, server_package_name = couchbase_server_config.get_baseurl_package(cb_server, cbs_platform)
 
@@ -101,7 +100,7 @@ def provision_cluster(cluster_config, couchbase_server_config, sync_gateway_conf
         sg_platform=sg_platform,
         sa_platform=sa_platform,
         sg_ce=sg_ce,
-        ipv6=ipv6
+        ipv6=cluster.ipv6
     )
 
     # Install nginx

@@ -9,6 +9,7 @@ from keywords.exceptions import ProvisioningError
 from keywords.utils import log_info, log_warn, add_cbs_to_sg_config_server_field
 from libraries.provision.ansible_runner import AnsibleRunner
 from libraries.testkit.config import Config
+from libraries.testkit.cluster import Cluster
 from utilities.cluster_config_utils import is_cbs_ssl_enabled, is_xattrs_enabled, no_conflicts_enabled, get_revs_limit, get_sg_version, get_sg_replicas, get_sg_use_views, sg_ssl_enabled
 from keywords.constants import SYNC_GATEWAY_CERT
 
@@ -100,7 +101,7 @@ def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False, sg_pl
     couchbase_server_primary_node = add_cbs_to_sg_config_server_field(cluster_config)
     # Create buckets unless the user explicitly asked to skip this step
     if not sync_gateway_config.skip_bucketcreation:
-        create_server_buckets(cluster_config, sync_gateway_config. ipv6)
+        create_server_buckets(cluster_config, sync_gateway_config)
 
     server_port = 8091
     server_scheme = "http"
@@ -211,6 +212,7 @@ def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False, sg_pl
 def create_server_buckets(cluster_config, sync_gateway_config):
 
     # get the couchbase server url
+    cluster = Cluster(cluster_config)
     cluster_helper = ClusterKeywords()
     cluster_topology = cluster_helper.get_cluster_topology(cluster_config)
 
@@ -230,7 +232,7 @@ def create_server_buckets(cluster_config, sync_gateway_config):
     bucket_names = get_buckets_from_sync_gateway_config(sync_gateway_config.config_path)
 
     # create couchbase server buckets
-    cb_server.create_buckets(bucket_names)
+    cb_server.create_buckets(bucket_names, cluster.ipv6)
 
 
 def get_buckets_from_sync_gateway_config(sync_gateway_config_path):
