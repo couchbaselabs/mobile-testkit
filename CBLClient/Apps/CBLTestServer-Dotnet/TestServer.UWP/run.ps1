@@ -8,7 +8,7 @@ if(-Not $AppDirectory) {
     $AppDirectory = $PSScriptRoot
 }
 
-Remove-AppxPackage $PackageFullName
+Remove-AppxPackage $PackageFullName -ErrorAction Ignore
 Push-Location $AppDirectory
 try {
     .\Add-AppDevPackage.ps1 -Force

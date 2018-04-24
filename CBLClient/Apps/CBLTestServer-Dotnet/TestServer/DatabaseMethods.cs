@@ -132,8 +132,7 @@ namespace Couchbase.Lite.Testing
                                              [NotNull] HttpListenerResponse response)
         {
             With<Database>(postBody, "database", db => db.Compact());
-            int bodyObj = -1;
-            response.WriteBody(bodyObj);
+            response.WriteEmptyBody();
         }
 
         internal static void DatabaseCreate([NotNull]NameValueCollection args,
@@ -157,8 +156,7 @@ namespace Couchbase.Lite.Testing
             [NotNull] HttpListenerResponse response)
         {
             With<Database>(postBody, "database", db => db.Delete());
-            int bodyResponse = -1;
-            response.WriteBody(bodyResponse);
+            response.WriteEmptyBody();
         }
 
         internal static void DatabaseDelete([NotNull] NameValueCollection args,
@@ -430,7 +428,7 @@ namespace Couchbase.Lite.Testing
                         var docBody = (Dictionary<string, object>)body.Value;
                         docBody.Remove("_id");
                         MutableDocument doc = new MutableDocument(id, docBody);
-                       db.Save(doc);
+                        db.Save(doc);
 
                     }
                });

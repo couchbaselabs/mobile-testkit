@@ -298,8 +298,7 @@ namespace Couchbase.Lite.Testing
             [NotNull] HttpListenerResponse response)
         {
             With<Database>(postBody, "database", db => With<Document>(postBody, "document", db.Delete));
-            int bodyResponse = -1;
-            response.WriteBody(bodyResponse);
+            response.WriteEmptyBody();
         }
 
         public static void DocumentGetId([NotNull] NameValueCollection args,

@@ -58,7 +58,7 @@ namespace Couchbase.Lite.Testing
             {
                 With<IDataSource>(postBody, "from_pop", ds =>
                 {
-                    With<IExpression>(postBody, "whr_key_prop", exp => response.WriteBody(MemoryMap.Store(QueryBuilder.Select(se).From(ds).Where(exp))));
+                    With<IExpression>(postBody, "whr_key_prop", exp => response.WriteBody(MemoryMap.Store(QueryBuilder.SelectDistinct(se).From(ds).Where(exp))));
                 });
             });
         }
@@ -789,7 +789,6 @@ namespace Couchbase.Lite.Testing
                        .From(DataSource.Database(db).As(main))
                        .Join(Join.LeftJoin(DataSource.Database(db).As(secondary))
                              .On(Meta.ID.From(main).EqualTo(Expression.Property(prop).From(secondary))))
-                       //.OrderBy(Ordering.Expression(Expression.Property(prop).From(secondary)))
                        .Limit(Expression.Int(limit)))
 
                     foreach (Result row in query.Execute())
@@ -821,7 +820,6 @@ namespace Couchbase.Lite.Testing
                        .From(DataSource.Database(db).As(main))
                        .Join(Join.LeftOuterJoin(DataSource.Database(db).As(secondary))
                              .On(Meta.ID.From(main).EqualTo(Expression.Property(prop).From(secondary))))
-                       //.OrderBy(Ordering.Expression(Expression.Property(prop).From(secondary)))
                        .Limit(Expression.Int(limit)))
 
                     foreach (Result row in query.Execute())
@@ -876,7 +874,6 @@ namespace Couchbase.Lite.Testing
                              .On(Expression.Property(joinKey1).From(secondary).EqualTo(Expression.Property(joinKey2).From(main))
                                  .And(Expression.Property(whrKey1).From(secondary).EqualTo(Expression.String(whrVal1)))
                                  .And(Expression.Property(whrKey2).From(main).EqualTo(Expression.Int(whrVal2)))))
-                       //.OrderBy(Ordering.Expression(Expression.Property(prop1).From(main)).Ascending())
                        .Limit(Expression.Int(limit)))
 
                     foreach (Result row in query.Execute())
@@ -926,7 +923,6 @@ namespace Couchbase.Lite.Testing
                        .Join(Join.CrossJoin(DataSource.Database(db).As(secondary)))
                        .Where(Expression.Property(whrKey1).From(main).EqualTo(Expression.String(whrVal1))
                               .And(Expression.Property(whrKey2).From(secondary).EqualTo(Expression.String(whrVal2))))
-                       //.OrderBy(Ordering.Expression(Expression.Property(prop1).From(main)).Ascending())
                        .Limit(Expression.Int(limit)))
 
                     foreach (Result row in query.Execute())
