@@ -74,7 +74,7 @@ namespace Couchbase.Lite.Testing
         {
             ReplicatorConfiguration config = null;
             Assembly _assembly;
-            Stream _imageStream;
+            Stream imageStream;
             StreamReader _textStreamReader;
 
             With<Database>(postBody, "source_db", sdb =>
@@ -285,16 +285,15 @@ namespace Couchbase.Lite.Testing
             });
         }
 
-        //public static void setPinnedServerCertificate([NotNull] NameValueCollection args,
-        //                                              [NotNull] IReadOnlyDictionary<string, object> postBody,
-        //                                              [NotNull] HttpListenerResponse response)
-        //{
-        //    Byte cert = (Byte)postBody["cert"];
-        //    IList<string> documentIds = (IList<string>)postBody["documentIds"];
-        //    With<ReplicatorConfiguration>(postBody, "configuration", repConf =>
-        //    {
-        //        repConf.PinnedServerCertificate = cert;
-        //    });
-        //}
+        public static void setPinnedServerCertificate([NotNull] NameValueCollection args,
+                                                      [NotNull] IReadOnlyDictionary<string, object> postBody,
+                                                      [NotNull] HttpListenerResponse response)
+        {
+            Byte cert = (Byte)postBody["cert"];
+            With<ReplicatorConfiguration>(postBody, "configuration", repConf =>
+            {
+                repConf.PinnedServerCertificate = cert;
+            });
+        }
     }
 }

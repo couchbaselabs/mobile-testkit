@@ -170,7 +170,6 @@ namespace Couchbase.Lite.Testing
             ["expression_createEqualTo"] = ExpressionMethods.ExpressionCreateEqualTo,
             ["expression_createAnd"] = ExpressionMethods.ExpressionCreateAnd,
             ["expression_createOr"] = ExpressionMethods.ExpressionCreateOr,
-            ["datasource_database"] = DataSourceMethods.Database,
             ["query_create"] = QueryMethods.QueryCreate,
             ["query_getDoc"] = QueryMethods.QueryGetDoc,
             ["query_like"] = QueryMethods.QueryLike,
