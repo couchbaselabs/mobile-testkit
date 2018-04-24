@@ -196,15 +196,21 @@ class ClusterKeywords:
 
         # Verify Server version
         for server in cluster_obj["couchbase_servers"]:
+            if cluster_obj["environment"]["ipv6_enabled"]:
+                server["ip"] = "[{}]".format(server["ip"])
             couchbaseserver.verify_server_version(server["ip"], expected_server_version, cbs_ssl=cbs_ssl)
 
         # Verify sync_gateway versions
         for sg in cluster_obj["sync_gateways"]:
+            if cluster_obj["environment"]["ipv6_enabled"]:
+                sg["ip"] = "[{}]".format(sg["ip"])
             verify_sync_gateway_product_info(sg["ip"])
             # verify_sync_gateway_version(sg["ip"], expected_sync_gateway_version)
 
         # Verify sg_accel versions, use the same expected version for sync_gateway for now
         for ac in cluster_obj["sg_accels"]:
+            if cluster_obj["environment"]["ipv6_enabled"]:
+                ac["ip"] = "[{}]".format(ac["ip"])
             if compare_versions(expected_sync_gateway_version, "1.5.0") >= 0:
                 # Only verify the correct product naming after 1.5 since it was fixed in 1.5
                 verify_sg_accel_product_info(ac["ip"])
