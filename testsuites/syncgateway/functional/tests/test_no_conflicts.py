@@ -443,9 +443,9 @@ def test_migrate_conflicts_to_noConflicts(params_from_base_test_setup, sg_conf_n
 @pytest.mark.conflicts
 @pytest.mark.noconflicts
 @pytest.mark.parametrize("sg_conf_name, num_of_docs, revs_limit", [
-    ('sync_gateway_revs_conflict_configurable', 100, 10),
-    ('sync_gateway_revs_conflict_configurable', 100, 10),
-    ('sync_gateway_revs_conflict_configurable', 1000, 100),
+#     ('sync_gateway_revs_conflict_configurable', 100, 10),
+#     ('sync_gateway_revs_conflict_configurable', 100, 10),
+#     ('sync_gateway_revs_conflict_configurable', 1000, 100),
     ('sync_gateway_revs_conflict_configurable', 10, 1000),
 ])
 def test_concurrent_updates_no_conflicts(params_from_base_test_setup, sg_conf_name, num_of_docs, revs_limit):
@@ -505,7 +505,10 @@ def test_concurrent_updates_no_conflicts(params_from_base_test_setup, sg_conf_na
     bucket_name = 'data-bucket'
     cbs_url = topology['couchbase_servers'][0]
     cbs_ip = host_for_url(cbs_url)
-    sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password', timeout=SDK_TIMEOUT)
+    if c.ipv6:
+        sdk_client = Bucket('couchbase://{}/{}?ipv6=allow'.format(cbs_ip, bucket_name), password='password', timeout=SDK_TIMEOUT)
+    else:
+        sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, bucket_name), password='password', timeout=SDK_TIMEOUT)
     sg_doc_ids = [doc['id'] for doc in sg_docs]
     sdk_docs_resp = sdk_client.get_multi(sg_doc_ids)
 
