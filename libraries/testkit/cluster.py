@@ -167,8 +167,8 @@ class Cluster:
         try:
             revs_limit = get_revs_limit(self._cluster_config)
             playbook_vars["revs_limit"] = '"revs_limit": {},'.format(revs_limit)
-        except KeyError as ex:
-            log_info("Keyerror in getting revs_limit{}".format(ex.message))
+        except KeyError:
+            log_info("revs_limit not found in {}, Ignoring".format(self._cluster_config))
 
         # Sleep for a few seconds for the indexes to teardown
         time.sleep(5)

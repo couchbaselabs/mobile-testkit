@@ -75,8 +75,8 @@ class SgAccel:
         try:
             revs_limit = get_revs_limit(self.cluster_config)
             playbook_vars["revs_limit"] = '"revs_limit": {},'.format(revs_limit)
-        except KeyError as ex:
-            log.info("Keyerror in getting revs_limit{}".format(ex.message))
+        except KeyError:
+            log.info("revs_limit no found in {}, Ignoring".format(self.cluster_config))
 
         status = self.ansible_runner.run_ansible_playbook(
             "start-sg-accel.yml",

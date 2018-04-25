@@ -167,7 +167,7 @@ def verify_sg_accel_version(host, expected_sg_accel_version):
             raise ProvisioningError("Unexpected sync_gateway version!! Expected: {} Actual: {}".format(expected_sg_accel_version, running_ac_version))
 
 
-def load_sync_gateway_config(self, sg_conf, server_url, cluster_config):
+def load_sync_gateway_config(sg_conf, server_url, cluster_config):
     """ Loads a syncgateway configuration for modification"""
     server_scheme, server_ip, server_port = server_url.split(":")
     server_ip = server_ip.replace("//", "")
@@ -291,8 +291,8 @@ class SyncGateway(object):
         try:
             revs_limit = get_revs_limit(cluster_config)
             playbook_vars["revs_limit"] = '"revs_limit": {},'.format(revs_limit)
-        except KeyError as ex:
-            log_info("Keyerror in getting revs_limit{}".format(ex.message))
+        except KeyError:
+            log_info("revs_limit not found in {}, Ignoring".format(cluster_config))
         if url is not None:
             target = hostname_for_url(cluster_config, url)
             log_info("Starting {} sync_gateway.".format(target))
@@ -468,14 +468,14 @@ class SyncGateway(object):
             }
 
             status = ansible_runner.run_ansible_playbook(
-                "create-directory-sg.yml",
+                "create-directory.yml",
                 extra_vars=playbook_vars,
                 subset=target
             )
         else:
             log_info("Deleting and creating {} on all Sync Gateways ...".format(dir_name))
             status = ansible_runner.run_ansible_playbook(
-                "create-directory-sg.yml",
+                "create-directory.yml",
                 extra_vars=playbook_vars
             )
 
@@ -493,18 +493,20 @@ class SyncGateway(object):
 
             playbook_vars = {
                 "file_name": file_name,
-                "file_size": file_size
+                "file_size": file_size,
+                "owner": "sync_gateway",
+                "group": "sync_gateway"
             }
 
             status = ansible_runner.run_ansible_playbook(
-                "create-empty-file-sg.yml",
+                "create-empty-file.yml",
                 subset=target,
                 extra_vars=playbook_vars
             )
         else:
             log_info("Deleting and creating {} on all Sync Gateways ...".format(file_name))
             status = ansible_runner.run_ansible_playbook(
-                "create-empty-file-sg.yml",
+                "create-empty-file.yml",
                 extra_vars=playbook_vars
             )
 

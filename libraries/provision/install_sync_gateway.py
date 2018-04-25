@@ -139,8 +139,8 @@ def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False, sg_pl
     try:
         revs_limit = get_revs_limit(cluster_config)
         playbook_vars["revs_limit"] = '"revs_limit": {},'.format(revs_limit)
-    except KeyError as ex:
-        log_info("Keyerror in getting revs_limit{}".format(ex.message))
+    except KeyError:
+        log_info("revs_limit not found in {}, Ignoring".format(cluster_config))
     # Install Sync Gateway via Source or Package
     if sync_gateway_config.commit is not None:
         # Install from source

@@ -84,8 +84,8 @@ class SyncGateway:
         try:
             revs_limit = get_revs_limit(self.cluster_config)
             playbook_vars["revs_limit"] = '"revs_limit": {},'.format(revs_limit)
-        except KeyError as ex:
-            log_info("Keyerror in getting revs_limit{}".format(ex.message))
+        except KeyError:
+            log_info("revs_limit no found in {}, Ignoring".format(self.cluster_config))
         status = self.ansible_runner.run_ansible_playbook(
             "start-sync-gateway.yml",
             extra_vars=playbook_vars,
@@ -131,8 +131,8 @@ class SyncGateway:
         try:
             revs_limit = get_revs_limit(self.cluster_config)
             playbook_vars["revs_limit"] = '"revs_limit": {},'.format(revs_limit)
-        except KeyError as ex:
-            log_info("Keyerror in getting revs_limit{}".format(ex.message))
+        except KeyError:
+            log_info("revs_limit no found in {}, Ignoring".format(self.cluster_config))
 
         status = self.ansible_runner.run_ansible_playbook(
             "reset-sync-gateway.yml",

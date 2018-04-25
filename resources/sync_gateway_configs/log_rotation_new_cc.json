@@ -1,6 +1,8 @@
 {
+  "interface":":4984",
+  "adminInterface": "0.0.0.0:4985",
   "logging": {
-    "logFilePath": "/tmp/sg_logs",
+    "log_file_path": "/tmp/sg_logs",
     "console": {
       "logKeys": ["*"],
       "logLevel": "debug",

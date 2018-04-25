@@ -37,16 +37,16 @@ def test_log_rotation_default_values(params_from_base_test_setup, sg_conf_name):
     sg_one_url = cluster_hosts["sync_gateways"][0]["public"]
     sg_helper.stop_sync_gateways(cluster_config=cluster_conf, url=sg_one_url)
 
-    # read sample sg_conf
+    # Read the sample sg_conf
     data = load_sync_gateway_config(sg_conf, cluster_hosts["couchbase_servers"][0], cluster_conf)
 
     SG_LOGGING_SECTIONS = ['console', 'error', 'info', 'warn', 'debug']
 
-    # delete rotation from sample config
+    # Remove the rotation key from sample config
     for section in SG_LOGGING_SECTIONS:
         del data['logging'][section]["rotation"]
 
-    # create temp config file in the same folder as sg_conf
+    # Create temp config file in the same folder as sg_conf
     temp_conf = "/".join(sg_conf.split('/')[:-2]) + '/temp_conf.json'
 
     log_info("TEMP_CONF: {}".format(temp_conf))
@@ -57,31 +57,36 @@ def test_log_rotation_default_values(params_from_base_test_setup, sg_conf_name):
     # Create /tmp/sg_logs
     sg_helper.create_directory(cluster_config=cluster_conf, url=sg_one_url, dir_name="/tmp/sg_logs")
 
-    SG_LOGS = ['sg_debug.log', 'sg_error.log', 'sg_info.log', 'sg_warn.log']
+    # SG_LOGS = ['sg_debug', 'sg_error', 'sg_info', 'sg_warn']
+    SG_LOGS = ['sg_debug', 'sg_info', 'sg_warn']
     remote_executor = RemoteExecutor(cluster.sync_gateways[0].ip)
 
     for log in SG_LOGS:
-        # generate log file  with size  ~94MB to check that backup file not created while 100MB not reached
+        # Generate a log file with size ~94MB to check that backup file not created while 100MB not reached
         file_size = 94 * 1024 * 1024
-        file_name = "/tmp/sg_logs/{}".format(log)
+        file_name = "/tmp/sg_logs/{}.log".format(log)
+        log_info("Testing log rotation for {}".format(file_name))
         sg_helper.create_empty_file(cluster_config=cluster_conf, url=sg_one_url, file_name=file_name, file_size=file_size)
 
-        # iterate 5th times to verify that every time we get new backup file with ~100MB
-        for i in xrange(5):
-            sg_helper.start_sync_gateways(cluster_config=cluster_conf, url=sg_one_url, config=temp_conf)
-            # ~1M MB will be added to log file after requests
-            remote_executor.execute(
-                "for ((i=1;i <= 1000;i += 1)); do curl -s http://localhost:4984/ > /dev/null; done")
+    # iterate 5th times to verify that every time we get new backup file with ~100MB
+    for i in xrange(5):
+        sg_helper.start_sync_gateways(cluster_config=cluster_conf, url=sg_one_url, config=temp_conf)
+        # ~1M MB will be added to the info/debug/warn log files after the requests
+        remote_executor.execute(
+            "for ((i=1;i <= 2000;i += 1)); do curl -s http://localhost:4984/ABCD/ > /dev/null; done")
 
+        # Verify num of log files for every log file type
+        for log in SG_LOGS:
+            file_name = "/tmp/sg_logs/{}.log".format(log)
             _, stdout, _ = remote_executor.execute("ls /tmp/sg_logs/ | grep {} | wc -l".format(log))
-            # verify num of log files
+            log_info("Checking for {} files for {}".format(i + 1, file_name))
             assert stdout[0].rstrip() == str(i + 1)
 
-        sg_helper.stop_sync_gateways(cluster_config=cluster_conf, url=sg_one_url)
+            sg_helper.stop_sync_gateways(cluster_config=cluster_conf, url=sg_one_url)
 
-        # generate log file  with size  ~99MB
-        file_size = 99 * 1024 * 1024
-        sg_helper.create_empty_file(cluster_config=cluster_conf, url=sg_one_url, file_name=file_name, file_size=file_size)
+            # Generate an empty log file with size ~100MB
+            file_size = int(99.9 * 1024 * 1024)
+            sg_helper.create_empty_file(cluster_config=cluster_conf, url=sg_one_url, file_name=file_name, file_size=file_size)
 
     sg_helper.start_sync_gateways(cluster_config=cluster_conf, url=sg_one_url, config=sg_conf)
 

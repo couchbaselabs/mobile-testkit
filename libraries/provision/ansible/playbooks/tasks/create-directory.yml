@@ -1,4 +1,8 @@
 # Delete the provided directory
-- name: SYNC GATEWAY | Create sync_gateway directory
+- name: SYNC GATEWAY | Create sync_gateway directory {{ directory }}
   become: yes
   shell: mkdir -p {{ directory }}
+
+- name: SYNC GATEWAY | Change the permissions
+  become: yes
+  shell: chmod 777 -R {{ directory }}
