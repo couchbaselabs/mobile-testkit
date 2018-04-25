@@ -20,6 +20,9 @@
         "db1":{
             {{ xattrs }}
             {{ no_conflicts }}
+            {{ sg_use_views }}
+            {{ num_index_replicas }}
+            {{ num_index_replicas_housekeeping }}
             "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
             "bucket":"data-bucket-1",
             "username":"data-bucket-1",
@@ -35,6 +38,9 @@
         "db2":{
             {{ xattrs }}
             {{ no_conflicts }}
+            {{ sg_use_views }}
+            {{ num_index_replicas }}
+            {{ num_index_replicas_housekeeping }}
             "offline":false,
             "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
             "bucket":"data-bucket-2",
@@ -51,6 +57,9 @@
         "db3":{
             {{ xattrs }}
             {{ no_conflicts }}
+            {{ sg_use_views }}
+            {{ num_index_replicas }}
+            {{ num_index_replicas_housekeeping }}
             "offline":false,
             "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
             "bucket":"data-bucket-3",
@@ -67,6 +76,9 @@
         "db4":{
             {{ xattrs }}
             {{ no_conflicts }}
+            {{ sg_use_views }}
+            {{ num_index_replicas }}
+            {{ num_index_replicas_housekeeping }}
             "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
             "bucket":"data-bucket-4",
             "username":"data-bucket-4",

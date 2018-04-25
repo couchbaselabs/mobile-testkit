@@ -177,7 +177,6 @@ def setup_client_syncgateway_test(request, setup_client_syncgateway_suite):
     }
 
     log_info("Tearing down test")
-
     client.delete_databases(ls_url)
     liteserv.stop()
 
