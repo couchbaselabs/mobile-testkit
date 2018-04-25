@@ -1528,8 +1528,8 @@ def test_replication_attachments_survive_channel_removal(setup_client_syncgatewa
 def test_verify_doc_updates_pull(setup_client_syncgateway_test):
     """
     1. Add docs with attachments
-    2. Start push/pull replication
-    3. Wait for the replication to stop
+    2. Start push/pull replication with continuous=True
+    3. Wait for the replication to go idle
     4. stop replication
     5. update docs on SG multiple times
     6. Start pull replication
