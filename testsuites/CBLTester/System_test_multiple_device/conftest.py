@@ -86,6 +86,15 @@ def pytest_addoption(parser):
                      action="store_true",
                      help="If set, will enable SSL communication between Sync Gateway and CBL")
 
+    parser.addoption("--use-views",
+                     action="store_true",
+                     help="If set, uses views instead of GSI - SG 2.1 and above only")
+
+    parser.addoption("--number-replicas",
+                     action="store",
+                     help="Number of replicas for the indexer node - SG 2.1 and above only",
+                     default=0)
+
 
 # This will get called once before the first test that
 # runs with this as input parameters in this file
@@ -118,6 +127,8 @@ def params_from_base_suite_setup(request):
     resume_cluster = request.config.getoption("--resume-cluster")
     generator = request.config.getoption("--doc-generator")
     no_db_delete = request.config.getoption("--no-db-delete")
+    use_views = request.config.getoption("--use-views")
+    number_replicas = request.config.getoption("--number-replicas")
 
 #     community_enabled = request.config.getoption("--community")
 #
@@ -194,6 +205,18 @@ def params_from_base_suite_setup(request):
     else:
         log_info("Running with allow conflicts")
         persist_cluster_config_environment_prop(cluster_config, 'no_conflicts_enabled', False)
+
+    if use_views:
+        log_info("Running SG tests using views")
+        # Enable sg views in cluster configs
+        persist_cluster_config_environment_prop(cluster_config, 'sg_use_views', True)
+    else:
+        log_info("Running tests with cbs <-> sg ssl disabled")
+        # Disable sg views in cluster configs
+        persist_cluster_config_environment_prop(cluster_config, 'sg_use_views', False)
+
+    # Write the number of replicas to cluster config
+    persist_cluster_config_environment_prop(cluster_config, 'number_replicas', number_replicas)
 
     if sg_ssl:
         log_info("Enabling SSL on sync gateway")

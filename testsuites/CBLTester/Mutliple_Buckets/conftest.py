@@ -67,6 +67,15 @@ def pytest_addoption(parser):
                      action="store_true",
                      help="If set, will enable SSL communication between Sync Gateway and CBL")
 
+    parser.addoption("--use-views",
+                     action="store_true",
+                     help="If set, uses views instead of GSI - SG 2.1 and above only")
+
+    parser.addoption("--number-replicas",
+                     action="store",
+                     help="Number of replicas for the indexer node - SG 2.1 and above only",
+                     default=0)
+
 
 # This will get called once before the first test that
 # runs with this as input parameters in this file
@@ -88,6 +97,8 @@ def params_from_base_suite_setup(request):
     xattrs_enabled = request.config.getoption("--xattrs")
     device_enabled = request.config.getoption("--device")
     sg_ssl = request.config.getoption("--sg-ssl")
+    use_views = request.config.getoption("--use-views")
+    number_replicas = request.config.getoption("--number-replicas")
     # community_enabled = request.config.getoption("--community")
 
 #     testserver = TestServerFactory.create(platform=liteserv_platform,
@@ -136,6 +147,18 @@ def params_from_base_suite_setup(request):
     else:
         log_info("Running test with sync_gateway version {}".format(sync_gateway_version))
         persist_cluster_config_environment_prop(cluster_config, 'sync_gateway_version', sync_gateway_version)
+
+    if use_views:
+        log_info("Running SG tests using views")
+        # Enable sg views in cluster configs
+        persist_cluster_config_environment_prop(cluster_config, 'sg_use_views', True)
+    else:
+        log_info("Running tests with cbs <-> sg ssl disabled")
+        # Disable sg views in cluster configs
+        persist_cluster_config_environment_prop(cluster_config, 'sg_use_views', False)
+
+    # Write the number of replicas to cluster config
+    persist_cluster_config_environment_prop(cluster_config, 'number_replicas', number_replicas)
 
     if xattrs_enabled:
         log_info("Running test with xattrs for sync meta storage")
