@@ -11,14 +11,16 @@ from utilities.cluster_config_utils import persist_cluster_config_environment_pr
 
 def test_upgrade():
     cluster_utils = ClusterKeywords()
-    cluster_config = "{}/base_{}".format(CLUSTER_CONFIGS_DIR, "cc")
+    cluster_config = "{}/base_{}".format(CLUSTER_CONFIGS_DIR, "di")
     cluster_utils.set_cluster_config(cluster_config.split("/")[-1])
-    sg_config = "resources/sync_gateway_configs/testfest_todo_cc.json"
+    sg_config = "resources/sync_gateway_configs/log_rotation_di.json"
     server_version = "5.5.0-2368"
-    sync_gateway_version = "2.0.0-832"
+    sync_gateway_version = "2.1.0-49"
     persist_cluster_config_environment_prop(cluster_config, 'server_version', server_version)
     persist_cluster_config_environment_prop(cluster_config, 'sync_gateway_ssl', False)
+    persist_cluster_config_environment_prop(cluster_config, 'sg_use_views', True)
     persist_cluster_config_environment_prop(cluster_config, 'sync_gateway_version', sync_gateway_version)
+    persist_cluster_config_environment_prop(cluster_config, 'number_replicas', 0)
     cluster = Cluster(cluster_config)
     sg_config = "resources/sync_gateway_configs/testfest_todo_cc.json"
     cluster.reset(sg_config)
@@ -26,9 +28,9 @@ def test_upgrade():
 
 def test_provision():
     cluster_utils = ClusterKeywords()
-    cluster_config = "{}/base_{}".format(CLUSTER_CONFIGS_DIR, "cc")
+    cluster_config = "{}/base_{}".format(CLUSTER_CONFIGS_DIR, "di")
     cluster_utils.set_cluster_config(cluster_config.split("/")[-1])
-    sg_config = "resources/sync_gateway_configs/sync_gateway_default_cc.json"
+    sg_config = "resources/sync_gateway_configs/sync_gateway_default_di.json"
     server_version = "5.5.0-2368"
     sync_gateway_version = "2.1.0-35"
     persist_cluster_config_environment_prop(cluster_config, 'server_version', server_version)

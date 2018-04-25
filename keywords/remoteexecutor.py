@@ -27,6 +27,9 @@ class RemoteExecutor:
         client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         self.client = client
         self.host = host
+        if "[" in self.host:
+            self.host = self.host.replace("[", "")
+            self.host = self.host.replace("]", "")
         self.username = ansible.constants.DEFAULT_REMOTE_USER
 
     def execute(self, commamd):
