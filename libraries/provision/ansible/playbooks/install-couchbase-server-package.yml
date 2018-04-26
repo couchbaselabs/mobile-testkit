@@ -6,7 +6,7 @@
   vars:
     couchbase_server_package_base_url:
     couchbase_server_package_name:
-    ipv6:
+    ipv6_enabled:
     couchbase_server_package_url: "{{ couchbase_server_package_base_url }}/{{ couchbase_server_package_name }}"
 
 
@@ -33,6 +33,7 @@
     - debug: msg="Couchbase server primary node {{ couchbase_server_primary_node }}"
     - debug: msg="Couchbase server node {{ couchbase_server_node }}"
     - debug: msg="Downloading Couchbase server v. {{ couchbase_server_package_url }}"
+    - debug: msg="IPv6 Enabled - {{ ipv6_enabled }}"
 
     # Remove Couchbase Server
     - include: tasks/remove-couchbase-server.yml
@@ -47,21 +48,21 @@
 
     - name: Enabling CBS on IPV6 | Stopping CBS
       service: name=couchbase-server state=stopped
-      #when: ipv6
+      when: ipv6_enabled
 
     - name: Enabling CBS on IPV6 | Enabling IPv6 in static_config
       shell: sed -i -e 's/ipv6, false/ipv6, true/g' /opt/couchbase/etc/couchbase/static_config
-      #when: ipv6
+      when: ipv6_enabled
 
     - name: Enabling CBS on IPV6 | Deleting config.dat
       file:
         path: /opt/couchbase/var/lib/couchbase/config/config.dat
         state: absent
-        #when: ipv6
+      when: ipv6_enabled
 
     - name: Enabling CBS on IPV6 | Starting CBS
       service: name=couchbase-server state=started
-      #when: ipv6
+      when: ipv6_enabled
 
     # Change system settings for Couchbase Server
     - name: COUCHBASE SERVER | raise max file descriptors

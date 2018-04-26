@@ -128,6 +128,12 @@ def get_sg_use_views(cluster_config):
     return cluster["environment"]["sg_use_views"]
 
 
+def is_ipv6(cluster_config):
+    """ Loads cluster config to get IPv6 status"""
+    cluster = load_cluster_config_json(cluster_config)
+    return cluster["environment"]["sg_use_views"]
+
+
 def get_sg_version(cluster_config):
     """ Loads cluster config to gets the number of indexer replicas"""
     cluster = load_cluster_config_json(cluster_config)
