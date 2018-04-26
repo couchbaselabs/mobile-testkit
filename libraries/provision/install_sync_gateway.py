@@ -10,7 +10,7 @@ from keywords.utils import log_info, log_warn, add_cbs_to_sg_config_server_field
 from libraries.provision.ansible_runner import AnsibleRunner
 from libraries.testkit.config import Config
 from libraries.testkit.cluster import Cluster
-from utilities.cluster_config_utils import is_cbs_ssl_enabled, is_xattrs_enabled, no_conflicts_enabled, get_revs_limit, get_sg_version, get_sg_replicas, get_sg_use_views, sg_ssl_enabled
+from utilities.cluster_config_utils import is_cbs_ssl_enabled, is_xattrs_enabled, no_conflicts_enabled, get_revs_limit, get_sg_version, get_sg_replicas, get_sg_use_views, sg_ssl_enabled, is_ipv6
 from keywords.constants import SYNC_GATEWAY_CERT
 
 class SyncGatewayConfig:
@@ -173,6 +173,8 @@ def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False, sg_pl
         playbook_vars["couchbase_sync_gateway_package"] = sync_gateway_package_name
         playbook_vars["couchbase_sg_accel_package"] = sg_accel_package_name
 
+        if is_ipv6(cluster_config):
+            playbook_vars["couchbase_server_primary_node"] = "[{}]".format(couchbase_server_primary_node)
         if sg_platform == "windows":
             status = ansible_runner.run_ansible_playbook(
                 "install-sync-gateway-package-windows.yml",
