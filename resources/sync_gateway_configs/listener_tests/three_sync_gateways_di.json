@@ -8,7 +8,7 @@
     "compressResponses": false,
     "log": ["CRUD+", "Cache+", "HTTP+", "Changes+"],
     "cluster_config": {
-        "server":"{{ server_scheme }}://[{{ couchbase_server_primary_node }}]:{{ server_port }}",
+        "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
         "data_dir":".",
         "bucket":"data-bucket-1",
         "username":"data-bucket-1",
@@ -21,12 +21,12 @@
             {{ xattrs }}
             {{ no_conflicts }}
             {{ revs_limit }}
-            "server":"{{ server_scheme }}://[{{ couchbase_server_primary_node }}]:{{ server_port }}",
+            "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
             "bucket":"data-bucket-1",
             "username":"data-bucket-1",
             "password": "password",
             "channel_index":{
-                "server":"{{ server_scheme }}://[{{ couchbase_server_primary_node }}]:{{ server_port }}",
+                "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
                 "bucket":"index-bucket-1",
                 "username":"index-bucket-1",
                 "password": "password",
@@ -35,14 +35,14 @@
         },
         "sg_db2":{
             {{ xattrs }}
-            "server":"{{ server_scheme }}://[{{ couchbase_server_primary_node }}]:{{ server_port }}",
+            "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
             "bucket":"data-bucket-2",
             "username":"data-bucket-2",
             "password": "password",
             {{ no_conflicts }}
             {{ revs_limit }}
             "channel_index":{
-                "server":"{{ server_scheme }}://[{{ couchbase_server_primary_node }}]:{{ server_port }}",
+                "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
                 "bucket":"index-bucket-2",
                 "username":"index-bucket-2",
                 "password": "password",
@@ -51,14 +51,14 @@
         },
         "sg_db3":{
             {{ xattrs }}
-            "server":"{{ server_scheme }}://[{{ couchbase_server_primary_node }}]:{{ server_port }}",
+            "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
             "bucket":"data-bucket-3",
             "username":"data-bucket-3",
             "password": "password",
             {{ no_conflicts }}
             {{ revs_limit }}
             "channel_index":{
-                "server":"{{ server_scheme }}://[{{ couchbase_server_primary_node }}]:{{ server_port }}",
+                "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
                 "bucket":"index-bucket-3",
                 "username":"index-bucket-3",
                 "password": "password",

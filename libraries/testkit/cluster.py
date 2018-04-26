@@ -13,7 +13,8 @@ from libraries.testkit.admin import Admin
 from libraries.testkit.config import Config
 from libraries.testkit.sgaccel import SgAccel
 from libraries.testkit.syncgateway import SyncGateway
-from utilities.cluster_config_utils import is_load_balancer_enabled, get_revs_limit
+from utilities.cluster_config_utils import is_load_balancer_enabled, get_revs_limit,\
+    is_ipv6
 from utilities.cluster_config_utils import get_load_balancer_ip, no_conflicts_enabled
 from keywords.constants import SYNC_GATEWAY_CERT
 from utilities.cluster_config_utils import get_sg_replicas, get_sg_use_views, get_sg_version
@@ -155,6 +156,8 @@ class Cluster:
         server_port = 8091
         server_scheme = "http"
         couchbase_server_primary_node = add_cbs_to_sg_config_server_field(self._cluster_config)
+        if is_ipv6:
+            couchbase_server_primary_node = "[{}]".format(couchbase_server_primary_node)
         if self.cbs_ssl:
             server_port = 18091
             server_scheme = "https"

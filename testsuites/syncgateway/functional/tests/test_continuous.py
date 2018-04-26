@@ -17,9 +17,9 @@ from keywords.SyncGateway import sync_gateway_config_path_for_mode
 @pytest.mark.basicauth
 @pytest.mark.channel
 @pytest.mark.parametrize("sg_conf_name, num_users, num_docs, num_revisions", [
-#     ("sync_gateway_default_functional_tests", 1, 5000, 1),
-#     ("sync_gateway_default_functional_tests", 50, 5000, 1),
-#     ("sync_gateway_default_functional_tests", 50, 10, 10),
+    ("sync_gateway_default_functional_tests", 1, 5000, 1),
+    ("sync_gateway_default_functional_tests", 50, 5000, 1),
+    ("sync_gateway_default_functional_tests", 50, 10, 10),
     ("sync_gateway_default_functional_tests_revslimit50", 50, 50, 1000)
 ])
 def test_continuous_changes_parametrized(params_from_base_test_setup, sg_conf_name, num_users, num_docs, num_revisions):

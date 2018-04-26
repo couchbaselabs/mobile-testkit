@@ -10,7 +10,7 @@
     {{ sslcert }}
     {{ sslkey }}
     "cluster_config": {
-        "server":"{{ server_scheme }}://[{{ couchbase_server_primary_node }}]:{{ server_port }}",
+        "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
         "data_dir":".",
         "bucket":"data-bucket",
         "username":"data-bucket",
@@ -23,13 +23,13 @@
             {{ sg_use_views }}
             {{ num_index_replicas }}
             {{ num_index_replicas_housekeeping }}
-            "server":"{{ server_scheme }}://[{{ couchbase_server_primary_node }}]:{{ server_port }}",
+            "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
             "bucket":"data-bucket",
             "username":"data-bucket",
             "password": "password",
             "channel_index":{
                 "num_shards":16,
-                "server":"{{ server_scheme }}://[{{ couchbase_server_primary_node }}]:{{ server_port }}",
+                "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
                 "bucket":"index-bucket",
                 "username":"index-bucket",
                 "password": "password",

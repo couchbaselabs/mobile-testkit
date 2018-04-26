@@ -8,7 +8,7 @@
   "compressResponses": false,
   "log": ["CRUD+", "Cache+", "HTTP+", "Changes+"],
   "cluster_config": {
-    "server":"{{ server_scheme }}://[{{ couchbase_server_primary_node }}]:{{ server_port }}",
+    "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
     "data_dir":".",
     "bucket":"data-bucket",
     "username":"data-bucket",
@@ -25,13 +25,13 @@
       {{ num_index_replicas_housekeeping }}
       "channel_index":{
         "num_shards":16,
-        "server":"{{ server_scheme }}://[{{ couchbase_server_primary_node }}]:{{ server_port }}",
+        "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
         "bucket":"index-bucket",
         "username":"index-bucket",
         "password": "password",
         "writer":{{ is_index_writer }}
       },
-      "server":"{{ server_scheme }}://[{{ couchbase_server_primary_node }}]:{{ server_port }}",
+      "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
       "bucket":"data-bucket",
       "password": "password",
       "username":"data-bucket",

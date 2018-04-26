@@ -10,7 +10,8 @@ import libraries.testkit.settings
 from libraries.provision.ansible_runner import AnsibleRunner
 from libraries.testkit.admin import Admin
 from libraries.testkit.debug import log_request, log_response
-from utilities.cluster_config_utils import is_cbs_ssl_enabled, is_xattrs_enabled, no_conflicts_enabled, sg_ssl_enabled
+from utilities.cluster_config_utils import is_cbs_ssl_enabled, is_xattrs_enabled, no_conflicts_enabled, sg_ssl_enabled,\
+    is_ipv6
 from utilities.cluster_config_utils import get_revs_limit, get_sg_replicas, get_sg_use_views, get_sg_version
 from keywords.utils import add_cbs_to_sg_config_server_field, log_info
 from keywords.constants import SYNC_GATEWAY_CERT
@@ -158,6 +159,8 @@ class SyncGateway:
             log_info("Keyerror in getting revs_limit{}".format(ex.message))
             playbook_vars["revs_limit"] = ''
 
+        if is_ipv6:
+            playbook_vars["couchbase_server_primary_node"] = "[{}]".format(playbook_vars["couchbase_server_primary_node"])
         status = self.ansible_runner.run_ansible_playbook(
             "reset-sync-gateway.yml",
             extra_vars=playbook_vars,
