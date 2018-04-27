@@ -520,7 +520,7 @@ if __name__ == "__main__":
     parser = OptionParser(usage=usage)
 
     parser.add_option("", "--pool-file",
-                      action="store", type="string", dest="pool_file", default="/Users/hemant/couchbase/couchbase/mobile-testkit/resources/pool.json",
+                      action="store", type="string", dest="pool_file", default="resources/pool.json",
                       help="path to pool.json file")
 
     parser.add_option("-d", "--use-docker", action="store_true", dest="use_docker", default=False, help="Use docker connection with ansible")

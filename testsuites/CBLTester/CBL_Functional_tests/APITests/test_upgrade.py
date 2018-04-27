@@ -28,9 +28,9 @@ def test_upgrade():
 
 def test_provision():
     cluster_utils = ClusterKeywords()
-    cluster_config = "{}/base_{}".format(CLUSTER_CONFIGS_DIR, "cc")
+    cluster_config = "{}/base_{}".format(CLUSTER_CONFIGS_DIR, "di")
     cluster_utils.set_cluster_config(cluster_config.split("/")[-1])
-    sg_config = "resources/sync_gateway_configs/sync_gateway_default_cc.json"
+    sg_config = "resources/sync_gateway_configs/sync_gateway_default_di.json"
     server_version = "5.5.0-2368"
     sync_gateway_version = "2.1.0-35"
     persist_cluster_config_environment_prop(cluster_config, 'server_version', server_version)

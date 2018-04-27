@@ -9,7 +9,10 @@ Vagrant.configure(2) do |config|
 
   host_ip = {
     "host1" => "fc00::10",
-    "host2" => "fc00::11"
+    "host2" => "fc00::11",
+    "host3" => "fc00::12",
+    "host4" => "fc00::13",
+    "host5" => "fc00::14"
   }
 
   host_ip.each do |host_name, ip|
