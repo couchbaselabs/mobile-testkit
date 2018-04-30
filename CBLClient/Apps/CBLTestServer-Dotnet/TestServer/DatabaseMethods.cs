@@ -29,6 +29,7 @@ using static Couchbase.Lite.DatabaseChangedEventArgs;
 
 using  Couchbase.Lite.Query;
 using static Couchbase.Lite.Query.QueryBuilder;
+using static Couchbase.Lite.EncryptionKey;
 
 
 using JetBrains.Annotations;
@@ -132,6 +133,26 @@ namespace Couchbase.Lite.Testing
                                              [NotNull] HttpListenerResponse response)
         {
             With<Database>(postBody, "database", db => db.Compact());
+            int bodyObj = -1;
+            response.WriteBody(bodyObj);
+        }
+
+        internal static void DatabaseChangeEncryptionKey([NotNull] NameValueCollection args,
+                                             [NotNull] IReadOnlyDictionary<string, object> postBody,
+                                             [NotNull] HttpListenerResponse response)
+        {
+
+            With<Database>(postBody, "database", db =>
+            {
+                var password = postBody["password"].ToString();
+                if (password == "nil")
+                    db.ChangeEncryptionKey(null);
+                else
+                {
+                    var encryptionKey = new EncryptionKey(password); ;
+                    db.ChangeEncryptionKey(encryptionKey);
+                }
+            });
             response.WriteEmptyBody();
         }
 
@@ -156,7 +177,8 @@ namespace Couchbase.Lite.Testing
             [NotNull] HttpListenerResponse response)
         {
             With<Database>(postBody, "database", db => db.Delete());
-            response.WriteEmptyBody();
+            int bodyResponse = -1;
+            response.WriteBody(bodyResponse);
         }
 
         internal static void DatabaseDelete([NotNull] NameValueCollection args,
@@ -428,7 +450,7 @@ namespace Couchbase.Lite.Testing
                         var docBody = (Dictionary<string, object>)body.Value;
                         docBody.Remove("_id");
                         MutableDocument doc = new MutableDocument(id, docBody);
-                        db.Save(doc);
+                       db.Save(doc);
 
                     }
                });
