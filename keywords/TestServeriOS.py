@@ -214,7 +214,6 @@ class TestServeriOS(TestServerBase):
 
         self.logfile_name = logfile_name
         self.app_path = "{}/{}/{}".format(BINARY_DIR, self.app_dir, self.app_name)
-        # self.app_path = "/Users/sridevi.saragadam/Library/Developer/Xcode/DerivedData/CBLTestServer-iOS-ayypbvnmphhpihebbhrjusdqhzmk/Build/Products/Release-EE-iphonesimulator/CBLTestServer-iOS.app"
         # Without --exit, ios-sim blocks
         # With --exit, --log has no effect
         # subprocess.Popen didn't launch the app
@@ -297,13 +296,10 @@ class TestServeriOS(TestServerBase):
 
     def open_app(self):
         bundle_id = "com.couchbase.CBLTestServer-iOS"
-        # self.app_path = "/Users/sridevi.saragadam/Library/Developer/Xcode/DerivedData/CBLTestServer-iOS-ayypbvnmphhpihebbhrjusdqhzmk/Build/Products/Debug-iphonesimulator/CBLTestServer-iOS.app"
         if(self.host == "localhost"):
             # xcrun simctl launch booted com.couchbase.CBLTestServer-iOS
             output = subprocess.check_output(["xcrun", "simctl", "launch", "booted", bundle_id])
-            # output = subprocess.check_output(["ios-sim", "--devicetypeid", self.device, "launch", self.app_path, "--exit"])
         else:
             output = subprocess.check_output(["ios-deploy", "--justlaunch", "--bundle", self.app_path])
         log_info("output of open app is {}".format(output))
-        log_info(output)
         time.sleep(5)

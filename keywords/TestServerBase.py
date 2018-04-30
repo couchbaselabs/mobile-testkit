@@ -29,7 +29,7 @@ class TestServerBase(object):
         self.session = Session()
         self.session.headers['Content-Type'] = 'application/json'
 
-    def download(self):
+    def download(self, version_build):
         raise NotImplementedError()
 
     def download_oldVersion(self):

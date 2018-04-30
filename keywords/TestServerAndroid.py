@@ -38,7 +38,6 @@ class TestServerAndroid(TestServerBase):
             self.version_build = version_build
         version, build = version_and_build(self.version_build)
 
-        # package_name = "CBLTestServer-Android-{}-debug.apk".format(self.version_build)
         expected_binary_path = "{}/{}".format(BINARY_DIR, self.package_name)
         if os.path.isfile(expected_binary_path):
             log_info("Package is already downloaded. Skipping.")
@@ -91,7 +90,6 @@ class TestServerAndroid(TestServerBase):
     def install_device(self):
         """Install the apk to running Android device or emulator"""
 
-        # apk_name = "CBLTestServer-Android-{}-enterprise-debug.apk".format(self.version_build)
         self.device_enabled = True
         self.device_option = "-d"
         apk_path = "{}/{}".format(BINARY_DIR, self.apk_name)
@@ -199,8 +197,7 @@ class TestServerAndroid(TestServerBase):
         self._verify_launched()
 
     def _verify_launched(self):
-        """ Poll on expected http://<host>:<port> until it is reachable
-        Assert that the response contains the expected version information
+        """ Verify that app is launched with adb command
         """
         if self.device_enabled:
             output = subprocess.check_output(["adb", "-d", "shell", "pidof", "com.couchbase.TestServerApp", "|", "wc", "-l"])
@@ -237,8 +234,11 @@ class TestServerAndroid(TestServerBase):
         log_info(output)
 
     def open_app(self):
-        package_name = "com.couchbase.TestServerApp"
-        output = subprocess.check_output(["adb", self.device_option, "shell", "monkey", "-p", package_name, "1"])
-        log_info(output)
-        self._wait_until_reachable(port=self.port)
-        self._verify_launched()
+            package_name = "com.couchbase.TestServerApp"
+            if self.device_enabled:
+                output = subprocess.check_output(["adb", "-d", "shell", "monkey", "-p", package_name, "1"])
+            else:
+                output = subprocess.check_output(["adb", "-e", "shell", "monkey", "-p", package_name, "1"])
+            log_info(output)
+            self._wait_until_reachable(port=self.port)
+            self._verify_launched()
