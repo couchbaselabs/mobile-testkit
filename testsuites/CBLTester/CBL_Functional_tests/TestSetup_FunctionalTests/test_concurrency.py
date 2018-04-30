@@ -8,10 +8,6 @@ from libraries.testkit import cluster
 from CBLClient.Document import Document
 
 
-def create_doc_from_document(doc_id, content, channel):
-    return document.create_doc(doc_id=doc_id, content=content, channels=channel)
-
-
 @pytest.mark.listener
 @pytest.mark.parametrize("concurrencyType", [
     ("lastWriteWins"),
@@ -41,11 +37,11 @@ def test_replication_with_concurrencyControl_sameDocId_createUpdate(params_from_
     c.reset(sg_config_path=sg_config)
 
     # 1. Create document id = doc1 as doc1a instance
-    doc_body = create_doc_from_document(doc_id=doc_id, content="doc1", channel=channel)
+    doc_body = document.create_doc(doc_id=doc_id, content="doc1", channels=channel)
     mutable_doc1 = documentObj.create(doc_id, doc_body)
 
     # 2. Create document id = doc1 as doc1b instance
-    doc_body2 = create_doc_from_document(doc_id=doc_id, content="doc2", channel=channel)
+    doc_body2 = document.create_doc(doc_id=doc_id, content="doc2", channels=channel)
     mutable_doc2 = documentObj.create(doc_id, doc_body2)
     db.saveDocumentWithConcurrency(cbl_db, mutable_doc1, concurrencyType)
     db.saveDocumentWithConcurrency(cbl_db, mutable_doc2, concurrencyType)
@@ -60,9 +56,9 @@ def test_replication_with_concurrencyControl_sameDocId_createUpdate(params_from_
             assert cbl_docs[id]["content"] == "doc1", "Fail on conflict did not work"
 
     # 4. update doc with first update
-    document = db.getDocument(cbl_db, doc_id)
+    document1 = db.getDocument(cbl_db, doc_id)
     document2 = db.getDocument(cbl_db, doc_id)
-    doc_mut = documentObj.toMutable(document)
+    doc_mut = documentObj.toMutable(document1)
     doc_body1 = documentObj.toMap(doc_mut)
     doc_body1["concurrencyType"] = "concurrency1"
     saved_doc1 = documentObj.setData(doc_mut, doc_body1)
@@ -122,8 +118,6 @@ def test_replication_with_concurrencyControl_deleteSameDocId(params_from_base_te
     doc_body = documentObj.toMap(doc_mut)
     doc_body["concurrencyType"] = "concurrency1"
     saved_doc = documentObj.setData(doc_mut, doc_body)
-    db.saveDocument(cbl_db, saved_doc)
-
     db.saveDocument(cbl_db, saved_doc)
 
     db.deleteDocumentWithConcurrency(cbl_db, cbl_doc, concurrencyType)
@@ -190,11 +184,10 @@ def test_replication_with_concurrencyControl_sgCBL_sameDocId(params_from_base_te
                                               replication_type="push_pull", continuous=True, channels=channel)
     cbl_doc_ids = db.getDocIds(cbl_db)
     cbl_docs = db.getDocuments(cbl_db, cbl_doc_ids)
-    # 1. Create document id = doc1 as doc1a instance
+    # 3. Create document id = doc1 as doc1a instance
     doc_body = document.create_doc(doc_id=doc_id, content="doc1", channels=channel)
     mutable_doc = documentObj.create(doc_id, doc_body)
 
-    # db.saveDocumentWithConcurrency(cbl_db, mutable_doc1, concurrencyType)
     db.saveDocumentWithConcurrency(cbl_db, mutable_doc, concurrencyType)
 
     # 3. Get cbl docs

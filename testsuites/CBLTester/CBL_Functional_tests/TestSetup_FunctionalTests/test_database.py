@@ -1,4 +1,3 @@
-"""
 import pytest
 import time
 
@@ -50,7 +49,7 @@ def test_databaseEncryption(params_from_base_test_setup, password):
         assert doc_id in cbl_doc_ids1, "cbl doc is in first list does not exist in second list"
 
     # 4. Now add the encryption using the password
-    db.setEncryptionKey(cbl_db1, password)
+    db.changeEncryptionKey(cbl_db1, password)
     db.close(cbl_db1)
 
     # 5. Verify that database cannot be accessed without password.
@@ -117,12 +116,13 @@ def test_invalidEncryption(params_from_base_test_setup, password):
 
     # 4. access database with invalid password
     # 5. Verify database cannot be accessed
-    invalid_key_db_config = db_configure.setEncryptionKey(db_config, password=password)
-    if liteserv_platform == "ios":
+    if liteserv_platform.lower() == "ios":
+        invalid_key_db_config = db_configure.setEncryptionKey(db_config, password=password)
         cbl_db2 = db.create(cbl_db_name, invalid_key_db_config)
         assert "file is not a database" in cbl_db2
     else:
         with pytest.raises(Exception) as he:
+            invalid_key_db_config = db_configure.setEncryptionKey(db_config, password=password)
             db.create(cbl_db_name, invalid_key_db_config)
         assert he.value.message.startswith('400 Client Error: Bad Request for url:')
 
@@ -149,10 +149,9 @@ def test_updateDBEncryptionKey(params_from_base_test_setup):
     cbl_db = db.create(cbl_db_name, db_config)
     db.create_bulk_docs(2, "db-encryption", db=cbl_db)
     cbl_doc_ids = db.getDocIds(cbl_db)
-    # db.close(cbl_db)
 
     # 2.Update password with new password
-    db.setEncryptionKey(cbl_db, password="database-new-password")
+    db.changeEncryptionKey(cbl_db, password="database-new-password")
     # db.close(cbl_db)
 
     # 3.Verify database can be accessed with new password
@@ -216,4 +215,60 @@ def test_DBEncryptionKey_withCompact(params_from_base_test_setup):
     assert len(cbl_doc_ids) == len(cbl_doc_ids1), "docs ids did not match"
     for doc_id in cbl_doc_ids:
         assert doc_id in cbl_doc_ids1, "cbl doc is in first list does not exist in second list"
-"""
+
+
+@pytest.mark.sanity
+@pytest.mark.listener
+@pytest.mark.database
+def test_removeDBEncryptionKey(params_from_base_test_setup):
+    '''
+        @summary:
+        1. Create database with password
+        2. Verify database can be access with password.
+        3. remove password.
+        4. Verify database cannot be accessed with password.
+        5. Verify database can be accessed without password.
+    '''
+
+    base_url = params_from_base_test_setup["base_url"]
+    liteserv_platform = params_from_base_test_setup["liteserv_platform"]
+    password = "encryption"
+    db = Database(base_url)
+    dbConfiguration = DatabaseConfiguration(base_url)
+
+    # 1. Create database with password
+    cbl_db_name = "cbl_db_name" + str(time.time())
+    db_config = db.configure(password=password)
+    cbl_db = db.create(cbl_db_name, db_config)
+    db.create_bulk_docs(2, "db-encryption", db=cbl_db)
+    cbl_doc_ids = db.getDocIds(cbl_db)
+    db.close(cbl_db)
+
+    # 2. Verify database can be accessed with password.
+    db_config = dbConfiguration.setEncryptionKey(db_config, password)
+    # db_config1 = db.configure(password=password)
+    cbl_db3 = db.create(cbl_db_name, db_config)
+    cbl_doc_ids3 = db.getDocIds(cbl_db3)
+    assert cbl_doc_ids == cbl_doc_ids3, "docs ids did not match when compared with and without password"
+
+    # 3. remove password.
+    db.changeEncryptionKey(cbl_db3, "nil")
+    db.close(cbl_db3)
+
+    # 4. Verify that database cannot be accessed with password.
+    if liteserv_platform == "ios":
+        cbl_db2 = db.create(cbl_db_name, db_config)
+        assert "file is not a database" in cbl_db2
+    else:
+        with pytest.raises(Exception) as he:
+            db.create(cbl_db_name, db_config)
+        assert he.value.message.startswith('400 Client Error: Bad Request for url:')
+
+    # 5. Verify database can be accessed without password.
+    print "starting the database access without password"
+    db_config1 = db.configure()
+    cbl_db4 = db.create(cbl_db_name, db_config1)
+    print "Trying to get doc ids"
+    cbl_doc_ids4 = db.getDocIds(cbl_db4)
+    assert cbl_doc_ids == cbl_doc_ids4, "docs ids did not match when compared with and without password"
+    db.close(cbl_db4)

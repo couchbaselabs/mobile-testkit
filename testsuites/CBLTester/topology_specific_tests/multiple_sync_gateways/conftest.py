@@ -192,7 +192,6 @@ def params_from_base_suite_setup(request):
         log_info("Running with allow conflicts")
         persist_cluster_config_environment_prop(cluster_config, 'no_conflicts_enabled', False)
 
-    # sg_config = sync_gateway_config_path_for_mode("sync_gateway_travel_sample", mode)
     sg_config = sync_gateway_config_path_for_mode("listener_tests/multiple_sync_gateways", mode)
     cluster_utils = ClusterKeywords()
     cluster_topology = cluster_utils.get_cluster_topology(cluster_config)
@@ -452,7 +451,6 @@ def setup_customized_teardown_test(params_from_base_test_setup):
         "cbl_db3": cbl_db3,
     }
     log_info("tearing down all 3 dbs")
-    # db.close(cbl_db)
     time.sleep(2)
     db.deleteDB(cbl_db1)
     db.deleteDB(cbl_db2)
