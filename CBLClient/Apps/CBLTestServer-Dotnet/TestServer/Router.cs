@@ -58,7 +58,9 @@ namespace Couchbase.Lite.Testing
             ["basicAuthenticator_create"] = BasicAuthenticationMethods.Create,
             ["sessionAuthenticator_create"] = SessionAuthenticationMethods.Create,
             ["databaseConfiguration_configure"] = DatabaseConfigurationMethods.Configure,
+            ["databaseConfiguration_setEncryptionKey"] = DatabaseConfigurationMethods.SetEncryptionKey,
             ["database_create"] = DatabaseMethods.DatabaseCreate,
+            ["database_compact"] = DatabaseMethods.DatabaseCompact,
             ["database_close"] = DatabaseMethods.DatabaseClose,
             ["database_getPath"] = DatabaseMethods.DatabasePath,
             ["database_deleteDB"] = DatabaseMethods.DatabaseDeleteDB,
@@ -81,6 +83,7 @@ namespace Couchbase.Lite.Testing
             ["database_updateDocument"] = DatabaseMethods.DatabaseUpdateDocument,
             ["database_updateDocuments"] = DatabaseMethods.DatabaseUpdateDocuments,
             ["database_exists"] = DatabaseMethods.DatabaseExists,
+            ["database_changeEncryptionKey"] = DatabaseMethods.DatabaseChangeEncryptionKey,
             ["dictionary_contains"] = DictionaryMethods.DictionaryContains,
             ["dictionary_count"] = DictionaryMethods.DictionaryCount,
             ["dictionary_create"] = DictionaryMethods.DictionaryCreate,
@@ -152,8 +155,10 @@ namespace Couchbase.Lite.Testing
             ["replicator_addChangeListener"] = ReplicationMethods.AddChangeListener,
             ["replicator_removeChangeListener"] = ReplicationMethods.RemoveChangeListener,
             ["replicatorConfiguration_setAuthenticator"] = ReplicatorConfigurationMethods.SetAuthenticator,
+            ["replicatorConfiguration_setReplicatorType"] = ReplicatorConfigurationMethods.SetReplicatorType,
             ["replicator_changeListenerChangesCount"] = ReplicationMethods.ChangeListenerChangesCount,
             ["replicator_changeListenerGetChanges"] = ReplicationMethods.ChangeListenerChanges,
+            ["replicator_resetCheckpoint"] = ReplicationMethods.ResetCheckpoint,
             ["configure_replication"] = ReplicatorConfigurationMethods.Configure,
             ["replication_getStatus"] = ReplicationMethods.Status,
             ["collator_ascii"] = CollatorMethods.Ascii,
@@ -294,7 +299,7 @@ namespace Couchbase.Lite.Testing
         {
             MemoryMap.Clear();
             response.WriteEmptyBody(HttpStatusCode.OK);
-            return;
+            // return;
         }
 
         #endregion

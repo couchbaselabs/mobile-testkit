@@ -271,7 +271,7 @@ namespace Couchbase.Lite.Testing
                      [NotNull] IReadOnlyDictionary<string, object> postBody,
                      [NotNull] HttpListenerResponse response)
         {
-            var replicatorType = postBody["replication_type"].ToString().ToLower();
+            var replicatorType = postBody["replType"].ToString().ToLower();
             ReplicatorType replType = new ReplicatorType();
 
             if (replicatorType == "push")
@@ -290,6 +290,7 @@ namespace Couchbase.Lite.Testing
             {
                 repConf.ReplicatorType = replType;
             });
+            response.WriteEmptyBody();
         }
 
         //public static void setPinnedServerCertificate([NotNull] NameValueCollection args,

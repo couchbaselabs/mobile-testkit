@@ -26,10 +26,13 @@ namespace Couchbase.Lite.Testing
                 var directory = postBody["directory"].ToString();
                 databaseConfig.Directory = directory;
             }
-            //if (postBody.ContainsKey("encryptionKey"))
-            //{
-            //    With<EncryptionKey>(postBody, "encryptionKey", er => databaseConfig.EncryptionKey = er);
-            //}
+            
+            if (postBody.ContainsKey("password"))
+            {
+                var password = postBody["password"].ToString();
+                var encryptionKey = new EncryptionKey(password);
+                databaseConfig.EncryptionKey = encryptionKey;
+            }
             var databaseConfigId = MemoryMap.Store(databaseConfig);
             response.WriteBody(databaseConfigId);
         }
@@ -49,12 +52,12 @@ namespace Couchbase.Lite.Testing
             With<DatabaseConfiguration>(postBody, "config", dbconfig => response.WriteBody(dbconfig.Directory));
         }
 
-        //public static void GetEncryptionKey([NotNull] NameValueCollection args,
-        // [NotNull] IReadOnlyDictionary<string, object> postBody,
-        // [NotNull] HttpListenerResponse response)
-        //{
-        //    With<DatabaseConfiguration>(postBody, "config", dbconfig => response.WriteBody(dbconfig.EncryptionKey));
-        //}
+        public static void GetEncryptionKey([NotNull] NameValueCollection args,
+            [NotNull] IReadOnlyDictionary<string, object> postBody,
+            [NotNull] HttpListenerResponse response)
+            {
+                With<DatabaseConfiguration>(postBody, "config", dbconfig => response.WriteBody(dbconfig.EncryptionKey));
+            }
 
         public static void SetDirectory([NotNull] NameValueCollection args,
          [NotNull] IReadOnlyDictionary<string, object> postBody,
@@ -65,16 +68,19 @@ namespace Couchbase.Lite.Testing
             response.WriteEmptyBody();
         }
 
-        //public static void SetEncryptionKey([NotNull] NameValueCollection args,
-        // [NotNull] IReadOnlyDictionary<string, object> postBody,
-        // [NotNull] HttpListenerResponse response)
-        //{
+        public static void SetEncryptionKey([NotNull] NameValueCollection args,
+             [NotNull] IReadOnlyDictionary<string, object> postBody,
+             [NotNull] HttpListenerResponse response)
+            {
             
-        //    With<DatabaseConfiguration>(postBody, "config", dbconfig => 
-        //    {
-        //        With<EncryptionKey>(postBody, "encryptionKey", er => dbconfig.EncryptionKey = er);
-        //    });
-        //    response.WriteEmptyBody();
-        //}
+            With<DatabaseConfiguration>(postBody, "config", dbconfig => 
+            {
+                var password = postBody["password"].ToString();
+                var encryptionKey = new EncryptionKey(password);
+                dbconfig.EncryptionKey = encryptionKey;
+                var databaseConfigId = MemoryMap.Store(dbconfig);
+                response.WriteBody(databaseConfigId);
+            });
+        }
     }
 }

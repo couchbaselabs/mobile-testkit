@@ -29,6 +29,7 @@ using static Couchbase.Lite.DatabaseChangedEventArgs;
 
 using  Couchbase.Lite.Query;
 using static Couchbase.Lite.Query.QueryBuilder;
+using static Couchbase.Lite.EncryptionKey;
 
 
 using JetBrains.Annotations;
@@ -134,6 +135,25 @@ namespace Couchbase.Lite.Testing
             With<Database>(postBody, "database", db => db.Compact());
             int bodyObj = -1;
             response.WriteBody(bodyObj);
+        }
+
+        internal static void DatabaseChangeEncryptionKey([NotNull] NameValueCollection args,
+                                             [NotNull] IReadOnlyDictionary<string, object> postBody,
+                                             [NotNull] HttpListenerResponse response)
+        {
+
+            With<Database>(postBody, "database", db =>
+            {
+                var password = postBody["password"].ToString();
+                if (password == "nil")
+                    db.ChangeEncryptionKey(null);
+                else
+                {
+                    var encryptionKey = new EncryptionKey(password); ;
+                    db.ChangeEncryptionKey(encryptionKey);
+                }
+            });
+            response.WriteEmptyBody();
         }
 
         internal static void DatabaseCreate([NotNull]NameValueCollection args,
