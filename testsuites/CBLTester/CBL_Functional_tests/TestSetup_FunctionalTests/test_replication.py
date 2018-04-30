@@ -1139,7 +1139,7 @@ def test_initial_pull_replication_background_apprun(params_from_base_test_setup,
     c.reset(sg_config_path=sg_config)
 
     # No command to push the app to background on device, so avoid test to run on ios device
-    if((liteserv_platform.lower() != "ios") or (liteserv_platform.lower() == "ios" and device_enabled)):
+    if(liteserv_platform.lower() == "net-msft" or device_enabled):
         pytest.skip('This test only valid for ios')
 
     client = MobileRestClient()
@@ -1233,7 +1233,8 @@ def test_push_replication_with_backgroundApp(params_from_base_test_setup, num_do
     c.reset(sg_config_path=sg_config)
 
     # No command to push the app to background on device, so avoid test to run on ios device
-    if((liteserv_platform.lower() != "ios") or (liteserv_platform.lower() == "ios" and device_enabled)):
+
+    if(liteserv_platform.lower() == "net-msft" or device_enabled):
         pytest.skip('This test only can only run on ios simulator')
 
     client = MobileRestClient()
@@ -2758,7 +2759,6 @@ def test_replication_multipleChannels_withFilteredDocIds(params_from_base_test_s
     username1 = "autotest"
     username2 = "autotest2"
     num_of_docs = 10
-    # channel2 = ["xyz"]
     sg_client = MobileRestClient()
     replicator = Replication(base_url)
 
@@ -2808,6 +2808,270 @@ def test_replication_multipleChannels_withFilteredDocIds(params_from_base_test_s
     # Verify non filtered docs ids are not replicated in sg
     for doc_id in list_of_non_filtered_ids:
         assert doc_id not in cbl_doc_ids, "Non filtered doc id is replicated to cbl"
+
+
+@pytest.mark.sanity
+@pytest.mark.listener
+@pytest.mark.replication
+@pytest.mark.parametrize("replication_type, target_db", [
+    ('one_way', "sg"),
+    ('two_way', "sg"),
+    ('one_way', 'cbl'),
+    ('two_way', 'cbl'),
+])
+def test_resetCheckpointWithPurge(params_from_base_test_setup, replication_type, target_db):
+    """
+        @summary
+        create docs in cbl db1
+        replicate docs to sg/cbl2 db
+        purge docs in cbl db1
+        replicate again
+        Verify  purged docs should not get replciated
+        stop replicator
+        call reset api
+        restart the replication
+        Verify all purged docs got back in CBL
+    """
+    sg_db = "db"
+
+    sg_url = params_from_base_test_setup["sg_url"]
+    sg_admin_url = params_from_base_test_setup["sg_admin_url"]
+    sg_blip_url = params_from_base_test_setup["target_url"]
+    base_url = params_from_base_test_setup["base_url"]
+    cluster_config = params_from_base_test_setup["cluster_config"]
+    sg_config = params_from_base_test_setup["sg_config"]
+    db = params_from_base_test_setup["db"]
+    cbl_db = params_from_base_test_setup["source_db"]
+    db_config = params_from_base_test_setup["db_config"]
+
+    # Reset cluster to ensure no data in system
+    c = cluster.Cluster(config=cluster_config)
+    c.reset(sg_config_path=sg_config)
+
+    if target_db == "cbl":
+        cbl_db_name2 = "cbl_db2" + str(time.time())
+        cbl_db2 = db.create(cbl_db_name2, db_config)
+
+    channel = ["ABC"]
+    username = "autotest"
+    num_of_docs = 10
+    sg_client = MobileRestClient()
+    document = Document(base_url)
+
+    sg_client.create_user(sg_admin_url, sg_db, username, password="password", channels=channel)
+    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, username)
+    auth_session = cookie, session_id
+
+    # Create docs and start replication to sg
+    cbl_doc_ids = db.create_bulk_docs(num_of_docs, "reset-checkpoint-docs", db=cbl_db, channels=channel)
+    replicator = Replication(base_url)
+    authenticator = Authenticator(base_url)
+    replicator_authenticator = authenticator.authentication(session_id, cookie, authentication_type="session")
+    if replication_type == "one_way" and target_db == "sg":
+        repl_config = replicator.configure(cbl_db, sg_blip_url, continuous=True, channels=channel, replicator_authenticator=replicator_authenticator, replication_type="push")
+    if replication_type == "two_way" and target_db == "sg":
+        repl_config = replicator.configure(cbl_db, sg_blip_url, continuous=True, channels=channel, replicator_authenticator=replicator_authenticator)
+    if replication_type == "one_way" and target_db == "cbl":
+        repl_config = replicator.configure(cbl_db, target_db=cbl_db2, continuous=True, replicator_authenticator=replicator_authenticator, replication_type="push")
+    if replication_type == "two_way" and target_db == "cbl":
+        repl_config = replicator.configure(cbl_db, target_db=cbl_db2, continuous=True, replicator_authenticator=replicator_authenticator)
+    repl = replicator.create(repl_config)
+    replicator.start(repl)
+    replicator.wait_until_replicator_idle(repl)
+    if replication_type == "one_way":
+        replicator.stop(repl)
+    sg_client.get_all_docs(url=sg_url, db=sg_db, auth=auth_session)
+
+    # Wait until replication is idle and verify purged docs in cbl is not replicated in sg
+    if replication_type == "one_way":
+        replicator.setReplicatorType(repl_config, "pull")
+        repl = replicator.create(repl_config)
+        replicator.start(repl)
+        replicator.wait_until_replicator_idle(repl)
+
+    assert db.getCount(cbl_db) == num_of_docs, "Docs in cbl is lost"
+    # Purge docs in CBL
+    for i in cbl_doc_ids:
+        doc = db.getDocument(cbl_db, doc_id=i)
+        mutable_doc = document.toMutable(doc)
+        db.purge(cbl_db, mutable_doc)
+    assert db.getCount(cbl_db) == 0, "Docs that got purged in CBL did not get deleted"
+    replicator.wait_until_replicator_idle(repl)
+    replicator.stop(repl)
+    assert db.getCount(cbl_db) == 0, "Docs that got purged in CBL did not get deleted"
+
+    # Reset checkpoint and do replication again from sg to cbl
+    # Verify all docs are back
+    replicator.resetCheckPoint(repl)
+    if replication_type == "one_way":
+        replicator.setReplicatorType(repl_config, "pull")
+        repl = replicator.create(repl_config)
+
+    print "replicator after checkpoint...."
+    replicator.start(repl)
+    replicator.wait_until_replicator_idle(repl)
+    assert db.getCount(cbl_db) == num_of_docs, "Docs that got purged in CBL did not got back after resetCheckpoint"
+    replicator.stop(repl)
+
+
+@pytest.mark.listener
+@pytest.mark.replication
+def test_resetCheckpointFailure(params_from_base_test_setup):
+    """
+        @summary
+        create docs
+        replicate docs
+        call reset api
+        verify it throws an error that checkpoint reset is called without stopping replicator.
+    """
+    sg_db = "db"
+    sg_admin_url = params_from_base_test_setup["sg_admin_url"]
+    sg_blip_url = params_from_base_test_setup["target_url"]
+    base_url = params_from_base_test_setup["base_url"]
+    cluster_config = params_from_base_test_setup["cluster_config"]
+    sg_config = params_from_base_test_setup["sg_config"]
+    db = params_from_base_test_setup["db"]
+    cbl_db = params_from_base_test_setup["source_db"]
+    liteserv_platform = params_from_base_test_setup["liteserv_platform"]
+
+    if(liteserv_platform.lower() == "ios"):
+        pytest.skip('ResetCheckPoint API does not throw exception in iOS if replicator is not stopped, so skipping test')
+        # It crashes the app, but does not throw error
+
+    # Reset cluster to ensure no data in system
+    c = cluster.Cluster(config=cluster_config)
+    c.reset(sg_config_path=sg_config)
+
+    channel = ["ABC"]
+    username = "autotest"
+    num_of_docs = 10
+    sg_client = MobileRestClient()
+
+    sg_client.create_user(sg_admin_url, sg_db, username, password="password", channels=channel)
+    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, username)
+
+    # Create docs and start replication to sg
+    db.create_bulk_docs(num_of_docs, "reset-checkpoint-docs", db=cbl_db, channels=channel)
+    replicator = Replication(base_url)
+    authenticator = Authenticator(base_url)
+    replicator_authenticator = authenticator.authentication(session_id, cookie, authentication_type="session")
+    repl_config = replicator.configure(cbl_db, sg_blip_url, continuous=True, channels=channel, replicator_authenticator=replicator_authenticator)
+
+    repl = replicator.create(repl_config)
+    replicator.start(repl)
+    replicator.wait_until_replicator_idle(repl)
+
+    # call reset api
+    # verify it throws an error that checkpoint reset is called without stopping replicator.
+    with pytest.raises(Exception) as he:
+        replicator.resetCheckPoint(repl)
+    assert 'Replicator is not stopped.' in he.value.message
+    assert 'Resetting checkpoint is only allowed when the replicator is in the stopped state' in he.value.message
+    replicator.stop(repl)
+
+
+@pytest.mark.listener
+@pytest.mark.replication
+@pytest.mark.parametrize("replication_type, target_db", [
+    ('one_way', "sg"),
+    ('two_way', "sg"),
+    ('one_way', 'cbl'),
+    ('two_way', 'cbl'),
+])
+def test_resetCheckpointWithUpdate(params_from_base_test_setup, replication_type, target_db):
+    """
+        @summary
+        create docs
+        replicate docs
+        purge docs
+        replicate again
+        Verify  purged docs should not get replciated
+        stop replicator
+        call reset api
+        restart the replication
+        Verify all purged docs got back in CBL
+    """
+
+    sg_db = "db"
+    sg_admin_url = params_from_base_test_setup["sg_admin_url"]
+    sg_blip_url = params_from_base_test_setup["target_url"]
+    base_url = params_from_base_test_setup["base_url"]
+    cluster_config = params_from_base_test_setup["cluster_config"]
+    sg_config = params_from_base_test_setup["sg_config"]
+    db = params_from_base_test_setup["db"]
+    cbl_db = params_from_base_test_setup["source_db"]
+    db_config = params_from_base_test_setup["db_config"]
+
+    # Reset cluster to ensure no data in system
+    c = cluster.Cluster(config=cluster_config)
+    c.reset(sg_config_path=sg_config)
+
+    if target_db == "cbl":
+        cbl_db_name2 = "cbl_db2" + str(time.time())
+        cbl_db2 = db.create(cbl_db_name2, db_config)
+
+    channel = ["ABC"]
+    username = "autotest"
+    num_of_docs = 10
+    sg_client = MobileRestClient()
+
+    sg_client.create_user(sg_admin_url, sg_db, username, password="password", channels=channel)
+    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, username)
+
+    # Create docs and start replication to sg
+    db.create_bulk_docs(num_of_docs, "reset-checkpoint-docs", db=cbl_db, channels=channel)
+    replicator = Replication(base_url)
+    authenticator = Authenticator(base_url)
+    replicator_authenticator = authenticator.authentication(session_id, cookie, authentication_type="session")
+    if replication_type == "one_way" and target_db == "sg":
+        repl_config = replicator.configure(cbl_db, sg_blip_url, continuous=True, channels=channel, replicator_authenticator=replicator_authenticator, replication_type="push")
+    if replication_type == "two_way" and target_db == "sg":
+        repl_config = replicator.configure(cbl_db, sg_blip_url, continuous=True, channels=channel, replicator_authenticator=replicator_authenticator)
+    if replication_type == "one_way" and target_db == "cbl":
+        repl_config = replicator.configure(cbl_db, target_db=cbl_db2, continuous=True, replicator_authenticator=replicator_authenticator, replication_type="push")
+    if replication_type == "two_way" and target_db == "cbl":
+        repl_config = replicator.configure(cbl_db, target_db=cbl_db2, continuous=True, replicator_authenticator=replicator_authenticator)
+    repl = replicator.create(repl_config)
+    replicator.start(repl)
+    replicator.wait_until_replicator_idle(repl)
+    if replication_type == "one_way":
+        replicator.stop(repl)
+
+    # Now start pull replication for one-way
+    if replication_type == "one_way":
+        replicator.setReplicatorType(repl_config, "pull")
+        repl = replicator.create(repl_config)
+        replicator.start(repl)
+        replicator.wait_until_replicator_idle(repl)
+
+    assert db.getCount(cbl_db) == num_of_docs, "Docs in cbl is lost"
+    update_and_resetCheckPoint(db, cbl_db, replicator, repl, replication_type, repl_config, 1)
+    update_and_resetCheckPoint(db, cbl_db, replicator, repl, replication_type, repl_config, 2)
+
+
+def update_and_resetCheckPoint(db, cbl_db, replicator, repl, replication_type, repl_config, num_of_updates):
+    # update docs in CBL
+    db.update_bulk_docs(cbl_db)
+    cbl_doc_ids = db.getDocIds(cbl_db)
+    cbl_db_docs = db.getDocuments(cbl_db, cbl_doc_ids)
+
+    replicator.wait_until_replicator_idle(repl)
+    replicator.stop(repl)
+
+    # Reset checkpoint and do replication again from sg to cbl
+    # Verify all docs are back
+    replicator.resetCheckPoint(repl)
+    if replication_type == "one_way":
+        replicator.setReplicatorType(repl_config, "pull")
+        repl = replicator.create(repl_config)
+
+    print "replicator after checkpoint...."
+    replicator.start(repl)
+    replicator.wait_until_replicator_idle(repl)
+    replicator.stop(repl)
+
+    for doc in cbl_db_docs:
+        assert cbl_db_docs[doc]["updates-cbl"] == num_of_updates, "cbl docs did not get latest updates"
 
 
 def restart_sg(c, sg_conf, cluster_config):

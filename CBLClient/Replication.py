@@ -322,30 +322,7 @@ class Replication(object):
 
         return session, replicator_authenticator, repl
 
-
-"""
-    def configure(self, source_db, target_url=None, target_db=None,
-                  replication_type="push_pull", continuous=False,
-                  channels=None, document_ids=None,
-                  replicator_authenticator=None):
+    def resetCheckPoint(self, replicator):
         args = Args()
-        args.setString("replication_type", replication_type)
-        repl_config_obj = ReplicatorConfiguration(self.base_url)
-        if target_url:
-            self.config = repl_config_obj.create(source_db, target_url=target_url)
-        elif target_db:
-            self.config = repl_config_obj.create(source_db, target_db=target_db)
-
-        if channels is not None:
-            repl_config_obj.setChannels(self.config, channels)
-
-        if document_ids is not None:
-            repl_config_obj.setDocumentIDs(self.config, document_ids)
-
-        if replicator_authenticator is not None:
-            repl_config_obj.setAuthenticator(self.config, replicator_authenticator)
-
-        repl_config_obj.setContinuous(self.config, continuous)
-        repl_config_obj.setReplicatorType(self.config, replication_type)
-        return self.create(self.config)
-"""
+        args.setMemoryPointer("replicator", replicator)
+        return self._client.invokeMethod("replicator_resetCheckpoint", args)

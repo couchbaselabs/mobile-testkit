@@ -22,7 +22,7 @@ import com.couchbase.lite.QueryBuilder;
 import com.couchbase.lite.Result;
 import com.couchbase.lite.ResultSet;
 import com.couchbase.lite.SelectResult;
-//import com.couchbase.lite.EncryptionKey;
+import com.couchbase.lite.EncryptionKey;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -224,12 +224,16 @@ public class DatabaseRequestHandler {
         System.out.println("database delete ");
    }
 
-    /*public void setEncryptionKey(Args args) throws CouchbaseLiteException {
+    public void changeEncryptionKey(Args args) throws CouchbaseLiteException {
         Database database = args.get("database");
         String password = args.get("password");
-        EncryptionKey encryptionKey = new EncryptionKey(password);
-        database.setEncryptionKey(encryptionKey);
-    }*/
+        EncryptionKey encryptionKey;
+        if(password.equals("nil"))
+          encryptionKey = null;
+        else
+          encryptionKey = new EncryptionKey(password);
+        database.changeEncryptionKey(encryptionKey);
+    }
 
    public void deleteDbByName(Args args) throws CouchbaseLiteException {
         String dbName = args.get("dbName");

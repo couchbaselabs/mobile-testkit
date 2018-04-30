@@ -203,37 +203,31 @@ public class ReplicatorConfigurationRequestHandler {
             let replicatorConfiguration: ReplicatorConfiguration = args.get(name: "configuration")!
             return replicatorConfiguration.continuous
         
-        // TODO: change the argument from builder to config in client API call
         case "replicatorConfiguration_setAuthenticator":
             let replicatorConfiguration: ReplicatorConfiguration = args.get(name: "configuration")!
             let authenticator: Authenticator = args.get(name: "authenticator")!
             replicatorConfiguration.authenticator = authenticator
         
-        // TODO: change the argument from builder to config in client API call
         case "replicatorConfiguration_setChannels":
             let replicatorConfiguration: ReplicatorConfiguration = args.get(name: "configuration")!
             let channels: [String] = args.get(name: "channels")!
             replicatorConfiguration.channels = channels
         
-        // TODO: change the argument from builder to config in client API call
         case "replicatorConfiguration_setContinuous":
             let replicatorConfiguration: ReplicatorConfiguration = args.get(name: "configuration")!
             let continuous: Bool = args.get(name: "continuous")!
             replicatorConfiguration.continuous = continuous
         
-        // TODO: change the argument from builder to config in client API call
         case "replicatorConfiguration_setDocumentIDs":
             let replicatorConfiguration: ReplicatorConfiguration = args.get(name: "configuration")!
             let documentIds: [String] = args.get(name: "documentIds")!
             replicatorConfiguration.documentIDs = documentIds
             
-        // TODO: change the argument from builder to config in client API call
         case "replicatorConfiguration_setPinnedServerCertificate":
             let replicatorConfiguration: ReplicatorConfiguration = args.get(name: "configuration")!
             let cert: SecCertificate? = args.get(name: "cert")!
             replicatorConfiguration.pinnedServerCertificate = cert
         
-        // TODO: change the argument from builder to config in client API call
         case "replicatorConfiguration_setReplicatorType":
             let replicatorConfiguration: ReplicatorConfiguration = args.get(name: "configuration")!
             let type: String = args.get(name: "replType")!

@@ -188,11 +188,11 @@ class Database(object):
         args.setString("name", name)
         return self._client.invokeMethod("database_deleteDBbyName", args)
 
-    def setEncryptionKey(self, database, password):
+    def changeEncryptionKey(self, database, password):
         args = Args()
         args.setMemoryPointer("database", database)
         args.setMemoryPointer("password", password)
-        return self._client.invokeMethod("database_setEncryptionKey", args)
+        return self._client.invokeMethod("database_changeEncryptionKey", args)
 
     def saveDocumentWithConcurrency(self, database, document, concurrencyControlType):
         args = Args()
