@@ -116,6 +116,11 @@ public class ReplicatorRequestHandler {
         return config.isContinuous();
     }
 
+    public void resetCheckpoint(Args args) {
+        Replicator replicator = args.get("replicator");
+        replicator.resetCheckpoint();
+    }
+
 }
 
 class MyReplicatorListener implements ReplicatorChangeListener{
