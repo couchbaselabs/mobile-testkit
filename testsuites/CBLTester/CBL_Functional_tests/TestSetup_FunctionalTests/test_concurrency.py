@@ -46,7 +46,8 @@ def test_replication_with_concurrencyControl_sameDocId_createUpdate(params_from_
     mutable_doc1 = documentObj.create(doc_id, doc_body)
 
     # 2. Create document id = doc1 as doc1b instance
-    doc_body2 = create_doc_from_document(doc_id=doc_id, content="doc2", channel=channel)
+    # doc_body2 = create_doc_from_document(doc_id=doc_id, content="doc2", channel=channel)
+    doc_body2 = document.create_doc(doc_id=doc_id, content="doc2", channels=channel)
     mutable_doc2 = documentObj.create(doc_id, doc_body2)
     db.saveDocumentWithConcurrency(cbl_db, mutable_doc1, concurrencyType)
     db.saveDocumentWithConcurrency(cbl_db, mutable_doc2, concurrencyType)
