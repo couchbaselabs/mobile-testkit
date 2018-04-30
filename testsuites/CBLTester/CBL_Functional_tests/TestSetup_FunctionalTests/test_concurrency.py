@@ -41,7 +41,8 @@ def test_replication_with_concurrencyControl_sameDocId_createUpdate(params_from_
     c.reset(sg_config_path=sg_config)
 
     # 1. Create document id = doc1 as doc1a instance
-    doc_body = create_doc_from_document(doc_id=doc_id, content="doc1", channel=channel)
+    # doc_body = create_doc_from_document(doc_id=doc_id, content="doc1", channel=channel)
+    doc_body = document.create_doc(doc_id=doc_id, content="doc1", channels=channel)
     mutable_doc1 = documentObj.create(doc_id, doc_body)
 
     # 2. Create document id = doc1 as doc1b instance
@@ -60,9 +61,9 @@ def test_replication_with_concurrencyControl_sameDocId_createUpdate(params_from_
             assert cbl_docs[id]["content"] == "doc1", "Fail on conflict did not work"
 
     # 4. update doc with first update
-    document = db.getDocument(cbl_db, doc_id)
+    document1 = db.getDocument(cbl_db, doc_id)
     document2 = db.getDocument(cbl_db, doc_id)
-    doc_mut = documentObj.toMutable(document)
+    doc_mut = documentObj.toMutable(document1)
     doc_body1 = documentObj.toMap(doc_mut)
     doc_body1["concurrencyType"] = "concurrency1"
     saved_doc1 = documentObj.setData(doc_mut, doc_body1)

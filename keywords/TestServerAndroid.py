@@ -196,8 +196,6 @@ class TestServerAndroid(TestServerBase):
         self._wait_until_reachable(port=self.port)
         self._verify_launched()
 
-        # return "http://{}:{}".format(self.host, self.port)
-
     def _verify_launched(self):
         """ Poll on expected http://<host>:<port> until it is reachable
         Assert that the response contains the expected version information
@@ -249,3 +247,13 @@ class TestServerAndroid(TestServerBase):
     def close_app(self):
         output = subprocess.check_output(["adb", "shell", "input", "keyevent ", "3"])
         log_info(output)
+
+    def open_app(self):
+        package_name = "com.couchbase.TestServerApp"
+        if self.device_enabled:
+            output = subprocess.check_output(["adb", "-d", "shell", "monkey", "-p", package_name, "1"])
+        else:
+            output = subprocess.check_output(["adb", "-e", "shell", "monkey", "-p", package_name, "1"])
+        log_info(output)
+        self._wait_until_reachable(port=self.port)
+        self._verify_launched()
