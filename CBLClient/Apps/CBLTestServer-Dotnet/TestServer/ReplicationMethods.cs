@@ -180,6 +180,17 @@ namespace Couchbase.Lite.Testing
                 response.WriteBody(MemoryMap.Store(changeListener.Changes));
             });
         }
+
+        public static void ResetCheckpoint([NotNull] NameValueCollection args,
+            [NotNull] IReadOnlyDictionary<string, object> postBody,
+            [NotNull] HttpListenerResponse response)
+        {
+            With<Replicator>(postBody, "replicator", r =>
+            {
+                r.ResetCheckpoint();
+                response.WriteEmptyBody();
+            });
+        }
     }
 
     internal sealed class ReplicationChangeListenerProxy
