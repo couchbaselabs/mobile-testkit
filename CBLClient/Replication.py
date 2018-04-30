@@ -293,3 +293,8 @@ class Replication(object):
         self.wait_until_replicator_idle(repl)
 
         return session, replicator_authenticator, repl
+
+    def resetCheckPoint(self, replicator):
+            args = Args()
+            args.setMemoryPointer("replicator", replicator)
+            return self._client.invokeMethod("replicator_resetCheckpoint", args)
