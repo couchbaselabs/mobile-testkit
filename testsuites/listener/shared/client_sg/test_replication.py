@@ -1,6 +1,7 @@
 import json
 import re
 import time
+import uuid
 import pytest
 
 from keywords import document
@@ -15,6 +16,8 @@ from keywords.MobileRestClient import MobileRestClient
 from keywords.SyncGateway import sync_gateway_config_path_for_mode
 
 from libraries.testkit import cluster
+from keywords import types
+from libraries.data import doc_generators
 
 
 @pytest.mark.sanity
@@ -1518,3 +1521,110 @@ def test_replication_attachments_survive_channel_removal(setup_client_syncgatewa
         with open('resources/data/sample_text.txt', 'r') as file:
             expected_text = file.read()
         assert expected_text == att
+
+
+@pytest.mark.listener
+@pytest.mark.syncgateway
+@pytest.mark.attachments
+def test_replication_with_10_attachments(setup_client_syncgateway_test):
+    """
+    1.  Start LiteServ and Sync Gateway
+    2.  Create database
+    3.  Create 10 docs with 10 attachments with 2MB each for attachment.
+    4.  Start continuous push replication from ls_db to sg_db
+    5.  Verify replication is completed and all docs pushed to sg.
+    """
+
+    log_info("Running 'test_replication_with_10_attachments' ...")
+
+    cluster_config = setup_client_syncgateway_test["cluster_config"]
+    sg_mode = setup_client_syncgateway_test["sg_mode"]
+    sg_url = setup_client_syncgateway_test["sg_url"]
+    sg_url_admin = setup_client_syncgateway_test["sg_admin_url"]
+
+    ls_url = setup_client_syncgateway_test["ls_url"]
+
+    log_info("ls_url: {}".format(ls_url))
+    log_info("sg_url: {}".format(sg_url))
+    log_info("sg_url_admin: {}".format(sg_url_admin))
+
+    ls_db = "ls_db"
+    sg_db = "db"
+    num_docs = 10
+    channels = ["ABC"]
+
+    # Reset cluster to ensure no data in system
+    sg_config = sync_gateway_config_path_for_mode("listener_tests/listener_tests", sg_mode)
+    c = cluster.Cluster(config=cluster_config)
+    c.reset(sg_config_path=sg_config)
+
+    client = MobileRestClient()
+    client.create_database(ls_url, ls_db)
+    client.create_user(sg_url_admin, sg_db, "autotest", password="password", channels=channels)
+    session = client.create_session(sg_url_admin, sg_db, "autotest")
+
+    # doc with 2.36 PNG attachment
+    cbl_docs = add_2MB_docs(url=ls_url, db=ls_db, number=num_docs, id_prefix="2MB_attachment_k", auth=session, channels=channels, attachment_name="golden_gate_large.jpg", num_of_attachments=20)
+    assert len(cbl_docs) == num_docs
+
+    # Start continuous push replication from ls_db -> sg_db
+    repl_id = client.start_replication(
+        url=ls_url,
+        continuous=True,
+        from_db=ls_db,
+        to_url=sg_url_admin, to_db=sg_db
+    )
+
+    # Verify all docs got replicated successfully to sg
+    client.wait_for_replication_status_idle(ls_url, repl_id)
+
+    # Verify docs replicated to sync_gateway
+    client.verify_docs_present(url=sg_url, db=sg_db, expected_docs=cbl_docs, auth=session)
+
+    # Verify docs show up in sync_gateway's changes feed
+    client.verify_docs_in_changes(url=sg_url, db=sg_db, expected_docs=cbl_docs, auth=session)
+
+
+def add_2MB_docs(url, db, number, id_prefix, auth=None, channels=None, attachment_name=None, num_of_attachments=1):
+    """
+    if id_prefix == None, generate a uuid for each doc
+
+    Add a 'number' of docs with a prefix 'id_prefix' using the provided generator from libraries.data.doc_generators.
+    ex. id_prefix=testdoc with a number of 3 would create 'testdoc_0', 'testdoc_1', and 'testdoc_2'
+    """
+    added_docs = []
+    client = MobileRestClient()
+    attachments_generator = attachment.generate_png_1000_700
+    if channels is not None:
+        types.verify_is_list(channels)
+
+    log_info("PUT {} docs to {}/{}/ with prefix {}".format(number, url, db, id_prefix))
+    for i in xrange(number):
+        print "i in number is ", i
+        doc_body = doc_generators.simple()
+        if channels is not None:
+            doc_body["channels"] = channels
+
+        types.verify_is_callable(attachments_generator)
+        att_dict = {}
+        for j in range(num_of_attachments):
+            atts = attachments_generator()
+            for att in atts:
+                att_dict[att.name] = {"data": att.data}
+        doc_body["_attachments"] = att_dict
+        if id_prefix is None:
+            doc_id = str(uuid.uuid4())
+        else:
+            doc_id = "{}_{}".format(id_prefix, i)
+
+        doc_body["_id"] = doc_id
+        doc_obj = client.add_doc(url, db, doc_body, auth=auth, use_post=False)
+        doc_obj["attachments"] = doc_body["_attachments"].keys()
+        added_docs.append(doc_obj)
+
+    # check that the docs returned in the responses equals the expected number
+    if len(added_docs) != number:
+        raise AssertionError("Client was not able to add all docs to: {}".format(url))
+
+    log_info("Added: {} docs".format(len(added_docs)))
+    return added_docs

@@ -14,6 +14,11 @@ def generate_png_100_100():
     return att
 
 
+def generate_png_1000_700():
+    att = generate_png(1000, 700)
+    return att
+
+
 def generate_png_1_1():
     att = generate_png(1, 1)
     return att
