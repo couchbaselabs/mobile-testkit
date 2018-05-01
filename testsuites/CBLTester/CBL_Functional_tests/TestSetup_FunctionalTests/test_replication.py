@@ -258,7 +258,6 @@ def test_replication_configuration_with_push_replication(params_from_base_test_s
         assert doc_id not in cbl_doc_ids
 
 
-@pytest.mark.sanity
 @pytest.mark.listener
 @pytest.mark.replication
 def test_replication_push_replication_without_authentication(params_from_base_test_setup):
@@ -317,7 +316,6 @@ def test_replication_push_replication_without_authentication(params_from_base_te
         assert doc not in sg_ids
 
 
-@pytest.mark.sanity
 @pytest.mark.listener
 @pytest.mark.replication
 @pytest.mark.parametrize(
@@ -381,7 +379,6 @@ def test_replication_push_replication_invalid_authentication(params_from_base_te
     replicator.stop(repl)
 
 
-@pytest.mark.sanity
 @pytest.mark.listener
 @pytest.mark.replication
 def test_replication_configuration_with_filtered_doc_ids(params_from_base_test_setup):
@@ -478,6 +475,8 @@ def test_replication_configuration_with_filtered_doc_ids(params_from_base_test_s
         assert doc_id not in cbl_doc_ids
 
 
+@pytest.mark.listener
+@pytest.mark.replication
 def test_replication_configuration_with_headers(params_from_base_test_setup):
     """
         @summary:
@@ -613,8 +612,8 @@ def test_CBL_tombstone_doc(params_from_base_test_setup, num_of_docs):
     assert doc_id not in cbl_doc_ids, "doc is expected to be deleted in CBL ,but not deleted"
 
 
-@pytest.mark.sanity
 @pytest.mark.listener
+@pytest.mark.replication
 @pytest.mark.parametrize("sg_conf_name, delete_doc_type", [
     ('listener_tests/listener_tests_no_conflicts', "purge"),
     ('listener_tests/listener_tests_no_conflicts', "expire")
@@ -699,9 +698,9 @@ def test_CBL_for_purged_doc(params_from_base_test_setup, sg_conf_name, delete_do
     assert doc_id in cbl_doc_ids, "{} document in did not existed in CBL after replication".format(delete_doc_type)
 
 
-@pytest.mark.sanity
 @pytest.mark.listener
 @pytest.mark.noconflicts
+@pytest.mark.replication
 @pytest.mark.parametrize("sg_conf_name, delete_doc_type", [
     ('listener_tests/listener_tests_no_conflicts', "purge"),
     # ('listener_tests/listener_tests_no_conflicts', "expire") # not supported yet
@@ -794,9 +793,9 @@ def test_replication_purge_in_CBL(params_from_base_test_setup, sg_conf_name, del
     assert removed_cbl_id in sg_doc_ids, "{} document got {}ed in SG".format(delete_doc_type, delete_doc_type)
 
 
-@pytest.mark.sanity
 @pytest.mark.listener
 @pytest.mark.noconflicts
+@pytest.mark.replication
 @pytest.mark.parametrize("sg_conf_name", [
     ('listener_tests/listener_tests_no_conflicts')
 ])
@@ -874,9 +873,9 @@ def test_replication_delete_in_CBL(params_from_base_test_setup, sg_conf_name):
     assert random_cbl_id not in sg_doc_ids, "deleted doc in CBL did not removed in SG"
 
 
-@pytest.mark.sanity
 @pytest.mark.listener
 @pytest.mark.noconflicts
+@pytest.mark.replication
 @pytest.mark.parametrize("sg_conf_name, num_of_docs, number_of_updates", [
     ('listener_tests/listener_tests_no_conflicts', 10, 4),
     ('listener_tests/listener_tests_no_conflicts', 100, 10),
@@ -1061,7 +1060,6 @@ def CBL_offline_test(params_from_base_test_setup, sg_conf_name, num_of_docs):
         assert cbl_db_docs[doc]["updates-cbl"] == number_of_updates + 1, "updates-cbl did not get updated"
 
 
-@pytest.mark.sanity
 @pytest.mark.listener
 @pytest.mark.syncgateway
 @pytest.mark.replication
@@ -1098,7 +1096,7 @@ def test_initial_pull_replication_background_apprun(params_from_base_test_setup,
     c.reset(sg_config_path=sg_config)
 
     # No command to push the app to background on device, so avoid test to run on ios device and no app for .net
-    if((liteserv_platform.lower() == "net-msft") or (liteserv_platform.lower() == "ios" and device_enabled)):
+    if(liteserv_platform.lower() == "net-msft" and device_enabled):
         pytest.skip('This test cannot run on .net')
 
     client = MobileRestClient()
@@ -1155,7 +1153,6 @@ def test_initial_pull_replication_background_apprun(params_from_base_test_setup,
     replicator.stop(repl)
 
 
-@pytest.mark.sanity
 @pytest.mark.listener
 @pytest.mark.replication
 @pytest.mark.parametrize("num_docs, need_attachments, replication_after_backgroundApp", [
@@ -1192,7 +1189,7 @@ def test_push_replication_with_backgroundApp(params_from_base_test_setup, num_do
     c.reset(sg_config_path=sg_config)
 
     # No command to push the app to background on device, so avoid test to run on ios device and no app for .net
-    if((liteserv_platform.lower() == "net-msft") or (liteserv_platform.lower() == "ios" and device_enabled)):
+    if(liteserv_platform.lower() == "net-msft" or device_enabled):
         pytest.skip('This test cannot run on .net')
 
     client = MobileRestClient()
@@ -1240,8 +1237,8 @@ def test_push_replication_with_backgroundApp(params_from_base_test_setup, num_do
     replicator.stop(repl)
 
 
-@pytest.mark.sanity
 @pytest.mark.listener
+@pytest.mark.replication
 def test_replication_wrong_blip(params_from_base_test_setup):
     """
         @summary:
@@ -1287,6 +1284,7 @@ def test_replication_wrong_blip(params_from_base_test_setup):
 
 
 @pytest.mark.listener
+@pytest.mark.replication
 @pytest.mark.parametrize("delete_source, attachments, number_of_updates", [
     ('sg', True, 1),
     ('cbl', True, 1),
@@ -1403,6 +1401,7 @@ def test_default_conflict_scenario_delete_wins(params_from_base_test_setup, dele
 
 
 @pytest.mark.listener
+@pytest.mark.replication
 @pytest.mark.parametrize("highrev_source, attachments", [
     ('sg', True),
     ('cbl', True),
@@ -1516,6 +1515,7 @@ def test_default_conflict_scenario_highRevGeneration_wins(params_from_base_test_
 
 
 @pytest.mark.listener
+@pytest.mark.replication
 @pytest.mark.parametrize("highrevId_source, attachments", [
     ('sg', True),
     ('cbl', True),
@@ -1602,6 +1602,7 @@ def test_default_conflict_scenario_highRevID_wins(params_from_base_test_setup, h
 
 
 @pytest.mark.listener
+@pytest.mark.replication
 def test_default_conflict_with_two_conflictsAndTomstone(params_from_base_test_setup):
     """
         @summary:
@@ -1717,6 +1718,7 @@ def test_default_conflict_with_two_conflictsAndTomstone(params_from_base_test_se
 
 
 @pytest.mark.listener
+@pytest.mark.replication
 def test_default_conflict_with_oneTombstone_conflict(params_from_base_test_setup):
     """
         @summary:
@@ -1795,6 +1797,7 @@ def test_default_conflict_with_oneTombstone_conflict(params_from_base_test_setup
 
 
 @pytest.mark.listener
+@pytest.mark.replication
 def test_default_conflict_with_three_conflicts(params_from_base_test_setup):
     """
         @summary:
@@ -1875,6 +1878,7 @@ def test_default_conflict_with_three_conflicts(params_from_base_test_setup):
 
 
 @pytest.mark.listener
+@pytest.mark.replication
 def test_default_conflict_withConflicts_and_sgOffline(params_from_base_test_setup):
     """
         @summary:
@@ -1887,7 +1891,7 @@ def test_default_conflict_withConflicts_and_sgOffline(params_from_base_test_setu
         7. Stop sg.
         8. Now delete doc in cbl
         9. Wait until replication is done i.e
-        9. Verify docs docs deleted in sg.
+        9. Verify docs deleted in sg.
 
     """
     sg_db = "db"
@@ -1991,6 +1995,7 @@ def test_default_conflict_withConflicts_and_sgOffline(params_from_base_test_setu
 
 
 @pytest.mark.listener
+@pytest.mark.replication
 def test_default_conflict_withConflicts_withChannels(params_from_base_test_setup):
     """
         @summary:
@@ -2097,6 +2102,7 @@ def test_default_conflict_withConflicts_withChannels(params_from_base_test_setup
 
 
 @pytest.mark.listener
+@pytest.mark.replication
 def test_CBL_push_pull_with_sg_down(params_from_base_test_setup):
     """
         @summary:
@@ -2165,6 +2171,7 @@ def test_CBL_push_pull_with_sg_down(params_from_base_test_setup):
 
 
 @pytest.mark.listener
+@pytest.mark.replication
 @pytest.mark.parametrize("topology_type, num_of_docs, attachments", [
     ('1cbl_1sg', 10, True),
     ('3cbl_1sg', 10, True),
@@ -2273,6 +2280,7 @@ def test_replication_with_3Channels(params_from_base_test_setup, setup_customize
 
 
 @pytest.mark.listener
+@pytest.mark.replication
 def test_replication_with_privatePublicChannels(params_from_base_test_setup, setup_customized_teardown_test):
     """
     @summary:
@@ -2367,6 +2375,7 @@ def test_replication_with_privatePublicChannels(params_from_base_test_setup, set
 
 
 @pytest.mark.listener
+@pytest.mark.replication
 @pytest.mark.parametrize("topology_type", [
     ('2cbl_2sg'),
     ('1cbl_2sg')
@@ -2448,7 +2457,9 @@ def test_replication_withChannels1_withMultipleSgDBs(params_from_base_test_setup
     replicator.stop(repl2)
 
 
+@pytest.mark.sanity
 @pytest.mark.listener
+@pytest.mark.replication
 @pytest.mark.parametrize("topology_type", [
     ('3cbl_3sg'),
     ('1cbl_3sg')
@@ -2574,6 +2585,7 @@ def test_replication_withMultipleBuckets(params_from_base_test_setup, setup_cust
 
 
 @pytest.mark.listener
+@pytest.mark.replication
 def test_replication_1withMultipleBuckets_deleteOneBucket(params_from_base_test_setup, setup_customized_teardown_test):
     """
         @summary:
@@ -2582,7 +2594,7 @@ def test_replication_1withMultipleBuckets_deleteOneBucket(params_from_base_test_
         3. Create docs in all 3 sg dbs.
         3. Start replication to cBL with multiple replicator instances
         4. Each replicator instance to each bucket DB.
-        5. Deleted 3rd bucket on CBS.
+        5. Delete 3rd bucket on CBS.
         6. Continue replication.
         5. Verify docs of 3rd bucket is removed from CBL.
     """
@@ -2676,13 +2688,12 @@ def test_replication_1withMultipleBuckets_deleteOneBucket(params_from_base_test_
     verify_sgDocIds_cblDocIds(sg_client, sg_url, sg_db1, session1, cbl_db1, db)
     verify_sgDocIds_cblDocIds(sg_client, sg_url, sg_db2, session2, cbl_db2, db)
     cbl_doc_ids = db.getDocIds(cbl_db3)
-    assert len(cbl_doc_ids) == num_of_docs, "cbl docs not deleted when assosciated bucket is deleted in CBS"
+    assert len(cbl_doc_ids) == num_of_docs, "cbl docs not deleted when assosiated bucket is deleted in CBS"
     replicator.stop(repl1)
     replicator.stop(repl2)
     replicator.stop(repl3)
 
 
-@pytest.mark.sanity
 @pytest.mark.listener
 @pytest.mark.replication
 def test_replication_multipleChannels_withFilteredDocIds(params_from_base_test_setup):
@@ -2765,6 +2776,270 @@ def test_replication_multipleChannels_withFilteredDocIds(params_from_base_test_s
     # Verify non filtered docs ids are not replicated in sg
     for doc_id in list_of_non_filtered_ids:
         assert doc_id not in cbl_doc_ids, "Non filtered doc id is replicated to cbl"
+
+
+@pytest.mark.sanity
+@pytest.mark.listener
+@pytest.mark.replication
+@pytest.mark.parametrize("replication_type, target_db", [
+    ('one_way', "sg"),
+    ('two_way', "sg"),
+    ('one_way', 'cbl'),
+    ('two_way', 'cbl'),
+])
+def test_resetCheckpointWithPurge(params_from_base_test_setup, replication_type, target_db):
+    """
+        @summary
+        create docs in cbl db1
+        replicate docs to sg/cbl2 db
+        purge docs in cbl db1
+        replicate again
+        Verify  purged docs should not get replciated
+        stop replicator
+        call reset api
+        restart the replication
+        Verify all purged docs got back in CBL
+    """
+    sg_db = "db"
+
+    sg_url = params_from_base_test_setup["sg_url"]
+    sg_admin_url = params_from_base_test_setup["sg_admin_url"]
+    sg_blip_url = params_from_base_test_setup["target_url"]
+    base_url = params_from_base_test_setup["base_url"]
+    cluster_config = params_from_base_test_setup["cluster_config"]
+    sg_config = params_from_base_test_setup["sg_config"]
+    db = params_from_base_test_setup["db"]
+    cbl_db = params_from_base_test_setup["source_db"]
+    db_config = params_from_base_test_setup["db_config"]
+
+    # Reset cluster to ensure no data in system
+    c = cluster.Cluster(config=cluster_config)
+    c.reset(sg_config_path=sg_config)
+
+    if target_db == "cbl":
+        cbl_db_name2 = "cbl_db2" + str(time.time())
+        cbl_db2 = db.create(cbl_db_name2, db_config)
+
+    channel = ["ABC"]
+    username = "autotest"
+    num_of_docs = 10
+    sg_client = MobileRestClient()
+    document = Document(base_url)
+
+    sg_client.create_user(sg_admin_url, sg_db, username, password="password", channels=channel)
+    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, username)
+    auth_session = cookie, session_id
+
+    # Create docs and start replication to sg
+    cbl_doc_ids = db.create_bulk_docs(num_of_docs, "reset-checkpoint-docs", db=cbl_db, channels=channel)
+    replicator = Replication(base_url)
+    authenticator = Authenticator(base_url)
+    replicator_authenticator = authenticator.authentication(session_id, cookie, authentication_type="session")
+    if replication_type == "one_way" and target_db == "sg":
+        repl_config = replicator.configure(cbl_db, sg_blip_url, continuous=True, channels=channel, replicator_authenticator=replicator_authenticator, replication_type="push")
+    if replication_type == "two_way" and target_db == "sg":
+        repl_config = replicator.configure(cbl_db, sg_blip_url, continuous=True, channels=channel, replicator_authenticator=replicator_authenticator)
+    if replication_type == "one_way" and target_db == "cbl":
+        repl_config = replicator.configure(cbl_db, target_db=cbl_db2, continuous=True, replicator_authenticator=replicator_authenticator, replication_type="push")
+    if replication_type == "two_way" and target_db == "cbl":
+        repl_config = replicator.configure(cbl_db, target_db=cbl_db2, continuous=True, replicator_authenticator=replicator_authenticator)
+    repl = replicator.create(repl_config)
+    replicator.start(repl)
+    replicator.wait_until_replicator_idle(repl)
+    if replication_type == "one_way":
+        replicator.stop(repl)
+    sg_client.get_all_docs(url=sg_url, db=sg_db, auth=auth_session)
+
+    # Wait until replication is idle and verify purged docs in cbl is not replicated in sg
+    if replication_type == "one_way":
+        replicator.setReplicatorType(repl_config, "pull")
+        repl = replicator.create(repl_config)
+        replicator.start(repl)
+        replicator.wait_until_replicator_idle(repl)
+
+    assert db.getCount(cbl_db) == num_of_docs, "Docs in cbl is lost"
+    # Purge docs in CBL
+    for i in cbl_doc_ids:
+        doc = db.getDocument(cbl_db, doc_id=i)
+        mutable_doc = document.toMutable(doc)
+        db.purge(cbl_db, mutable_doc)
+    assert db.getCount(cbl_db) == 0, "Docs that got purged in CBL did not get deleted"
+    replicator.wait_until_replicator_idle(repl)
+    replicator.stop(repl)
+    assert db.getCount(cbl_db) == 0, "Docs that got purged in CBL did not get deleted"
+
+    # Reset checkpoint and do replication again from sg to cbl
+    # Verify all docs are back
+    replicator.resetCheckPoint(repl)
+    if replication_type == "one_way":
+        replicator.setReplicatorType(repl_config, "pull")
+        repl = replicator.create(repl_config)
+
+    print "replicator after checkpoint...."
+    replicator.start(repl)
+    replicator.wait_until_replicator_idle(repl)
+    assert db.getCount(cbl_db) == num_of_docs, "Docs that got purged in CBL did not got back after resetCheckpoint"
+    replicator.stop(repl)
+
+
+@pytest.mark.listener
+@pytest.mark.replication
+def test_resetCheckpointFailure(params_from_base_test_setup):
+    """
+        @summary
+        create docs
+        replicate docs
+        call reset api
+        verify it throws an error that checkpoint reset is called without stopping replicator.
+    """
+    sg_db = "db"
+    sg_admin_url = params_from_base_test_setup["sg_admin_url"]
+    sg_blip_url = params_from_base_test_setup["target_url"]
+    base_url = params_from_base_test_setup["base_url"]
+    cluster_config = params_from_base_test_setup["cluster_config"]
+    sg_config = params_from_base_test_setup["sg_config"]
+    db = params_from_base_test_setup["db"]
+    cbl_db = params_from_base_test_setup["source_db"]
+    liteserv_platform = params_from_base_test_setup["liteserv_platform"]
+
+    if(liteserv_platform.lower() == "ios"):
+        pytest.skip('ResetCheckPoint API does not throw exception in iOS if replicator is not stopped, so skipping test')
+        # It crashes the app, but does not throw error
+
+    # Reset cluster to ensure no data in system
+    c = cluster.Cluster(config=cluster_config)
+    c.reset(sg_config_path=sg_config)
+
+    channel = ["ABC"]
+    username = "autotest"
+    num_of_docs = 10
+    sg_client = MobileRestClient()
+
+    sg_client.create_user(sg_admin_url, sg_db, username, password="password", channels=channel)
+    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, username)
+
+    # Create docs and start replication to sg
+    db.create_bulk_docs(num_of_docs, "reset-checkpoint-docs", db=cbl_db, channels=channel)
+    replicator = Replication(base_url)
+    authenticator = Authenticator(base_url)
+    replicator_authenticator = authenticator.authentication(session_id, cookie, authentication_type="session")
+    repl_config = replicator.configure(cbl_db, sg_blip_url, continuous=True, channels=channel, replicator_authenticator=replicator_authenticator)
+
+    repl = replicator.create(repl_config)
+    replicator.start(repl)
+    replicator.wait_until_replicator_idle(repl)
+
+    # call reset api
+    # verify it throws an error that checkpoint reset is called without stopping replicator.
+    with pytest.raises(Exception) as he:
+        replicator.resetCheckPoint(repl)
+    assert 'Replicator is not stopped.' in he.value.message
+    assert 'Resetting checkpoint is only allowed when the replicator is in the stopped state' in he.value.message
+    replicator.stop(repl)
+
+
+@pytest.mark.listener
+@pytest.mark.replication
+@pytest.mark.parametrize("replication_type, target_db", [
+    ('one_way', "sg"),
+    ('two_way', "sg"),
+    ('one_way', 'cbl'),
+    ('two_way', 'cbl'),
+])
+def test_resetCheckpointWithUpdate(params_from_base_test_setup, replication_type, target_db):
+    """
+        @summary
+        create docs
+        replicate docs
+        purge docs
+        replicate again
+        Verify  purged docs should not get replciated
+        stop replicator
+        call reset api
+        restart the replication
+        Verify all purged docs got back in CBL
+    """
+
+    sg_db = "db"
+    sg_admin_url = params_from_base_test_setup["sg_admin_url"]
+    sg_blip_url = params_from_base_test_setup["target_url"]
+    base_url = params_from_base_test_setup["base_url"]
+    cluster_config = params_from_base_test_setup["cluster_config"]
+    sg_config = params_from_base_test_setup["sg_config"]
+    db = params_from_base_test_setup["db"]
+    cbl_db = params_from_base_test_setup["source_db"]
+    db_config = params_from_base_test_setup["db_config"]
+
+    # Reset cluster to ensure no data in system
+    c = cluster.Cluster(config=cluster_config)
+    c.reset(sg_config_path=sg_config)
+
+    if target_db == "cbl":
+        cbl_db_name2 = "cbl_db2" + str(time.time())
+        cbl_db2 = db.create(cbl_db_name2, db_config)
+
+    channel = ["ABC"]
+    username = "autotest"
+    num_of_docs = 10
+    sg_client = MobileRestClient()
+
+    sg_client.create_user(sg_admin_url, sg_db, username, password="password", channels=channel)
+    cookie, session_id = sg_client.create_session(sg_admin_url, sg_db, username)
+
+    # Create docs and start replication to sg
+    db.create_bulk_docs(num_of_docs, "reset-checkpoint-docs", db=cbl_db, channels=channel)
+    replicator = Replication(base_url)
+    authenticator = Authenticator(base_url)
+    replicator_authenticator = authenticator.authentication(session_id, cookie, authentication_type="session")
+    if replication_type == "one_way" and target_db == "sg":
+        repl_config = replicator.configure(cbl_db, sg_blip_url, continuous=True, channels=channel, replicator_authenticator=replicator_authenticator, replication_type="push")
+    if replication_type == "two_way" and target_db == "sg":
+        repl_config = replicator.configure(cbl_db, sg_blip_url, continuous=True, channels=channel, replicator_authenticator=replicator_authenticator)
+    if replication_type == "one_way" and target_db == "cbl":
+        repl_config = replicator.configure(cbl_db, target_db=cbl_db2, continuous=True, replicator_authenticator=replicator_authenticator, replication_type="push")
+    if replication_type == "two_way" and target_db == "cbl":
+        repl_config = replicator.configure(cbl_db, target_db=cbl_db2, continuous=True, replicator_authenticator=replicator_authenticator)
+    repl = replicator.create(repl_config)
+    replicator.start(repl)
+    replicator.wait_until_replicator_idle(repl)
+    if replication_type == "one_way":
+        replicator.stop(repl)
+
+    # Now start pull replication for one-way
+    if replication_type == "one_way":
+        replicator.setReplicatorType(repl_config, "pull")
+        repl = replicator.create(repl_config)
+        replicator.start(repl)
+        replicator.wait_until_replicator_idle(repl)
+
+    assert db.getCount(cbl_db) == num_of_docs, "Docs in cbl is lost"
+    update_and_resetCheckPoint(db, cbl_db, replicator, repl, replication_type, repl_config, 1)
+    update_and_resetCheckPoint(db, cbl_db, replicator, repl, replication_type, repl_config, 2)
+
+
+def update_and_resetCheckPoint(db, cbl_db, replicator, repl, replication_type, repl_config, num_of_updates):
+    # update docs in CBL
+    db.update_bulk_docs(cbl_db)
+    cbl_doc_ids = db.getDocIds(cbl_db)
+    cbl_db_docs = db.getDocuments(cbl_db, cbl_doc_ids)
+
+    replicator.wait_until_replicator_idle(repl)
+    replicator.stop(repl)
+
+    # Reset checkpoint and do replication again from sg to cbl
+    # Verify all docs are back
+    replicator.resetCheckPoint(repl)
+    if replication_type == "one_way":
+        replicator.setReplicatorType(repl_config, "pull")
+        repl = replicator.create(repl_config)
+
+    print "replicator after checkpoint...."
+    replicator.start(repl)
+    replicator.wait_until_replicator_idle(repl)
+    replicator.stop(repl)
+
+    for doc in cbl_db_docs:
+        assert cbl_db_docs[doc]["updates-cbl"] == num_of_updates, "cbl docs did not get latest updates"
 
 
 def restart_sg(c, sg_conf, cluster_config):
