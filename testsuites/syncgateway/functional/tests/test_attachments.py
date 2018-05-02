@@ -13,6 +13,7 @@ from keywords import document
 from keywords import attachment
 from libraries.testkit.cluster import Cluster
 
+
 @pytest.mark.syncgateway
 @pytest.mark.attachments
 @pytest.mark.basicauth

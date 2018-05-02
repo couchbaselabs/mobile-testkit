@@ -18,7 +18,7 @@ def load_sync_gateway_config(sync_gateway_config, mode, server_url, xattrs_enabl
     """ Loads a syncgateway configuration for modification"""
     match_obj = re.match("(http\w?):\/\/(.*):(\d.*$)", server_url, re.IGNORECASE)
     server_scheme, server_ip, server_port = match_obj.groups()[0], match_obj.groups()[1], match_obj.groups()[2]
-#     server_ip = server_ip.replace("//", "")
+    server_ip = server_ip.replace("//", "")
 
     with open(sync_gateway_config) as default_conf:
         template = Template(default_conf.read())

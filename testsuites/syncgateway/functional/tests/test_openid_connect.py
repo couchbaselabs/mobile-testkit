@@ -116,7 +116,7 @@ def discover_authenticate_endpoint(sg_url, sg_db, provider, ipv6):
 @pytest.mark.syncgateway
 @pytest.mark.oidc
 @pytest.mark.parametrize("sg_conf_name, is_admin_port, expect_signed_id_token", [
-#     ("sync_gateway_openid_connect", False, True),
+    ("sync_gateway_openid_connect", False, True),
     ("sync_gateway_openid_connect", True, True),
     ("sync_gateway_openid_connect_unsigned", False, False)
 ])
@@ -296,7 +296,6 @@ def test_openidconnect_oidc_challenge_invalid_provider_name(params_from_base_tes
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
 
     cluster_helper = ClusterKeywords()
-    cluster = Cluster(cluster_config)
     topology = cluster_helper.get_cluster_topology(cluster_config)
     sg_url = topology["sync_gateways"][0]["public"]
     sg_db = "db"
