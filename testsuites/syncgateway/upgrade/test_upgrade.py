@@ -27,7 +27,7 @@ def test_upgrade(params_from_base_test_setup):
     """
     cluster_config = params_from_base_test_setup['cluster_config']
     mode = params_from_base_test_setup['mode']
-    xattrs_enabled = params_from_base_test_setup['xattrs_enabled']
+    xattrs_post_upgrade = params_from_base_test_setup['xattrs_post_upgrade']
     ls_url = params_from_base_test_setup["ls_url"]
     server_version = params_from_base_test_setup['server_version']
     sync_gateway_version = params_from_base_test_setup['sync_gateway_version']
@@ -38,6 +38,7 @@ def test_upgrade(params_from_base_test_setup):
     num_docs = int(params_from_base_test_setup['num_docs'])
     cbs_platform = params_from_base_test_setup['cbs_platform']
     cbs_toy_build = params_from_base_test_setup['cbs_toy_build']
+    use_views = params_from_base_test_setup['use_views']
     sg_conf = "{}/resources/sync_gateway_configs/sync_gateway_default_functional_tests_{}.json".format(os.getcwd(), mode)
 
     # Add data to liteserv
@@ -167,38 +168,14 @@ def test_upgrade(params_from_base_test_setup):
                 ac_obj.restart_sync_gateways(cluster_config=cluster_config, url=ac_ip)
                 time.sleep(5)
 
-        if xattrs_enabled:
-            # Enable xattrs on all SG/SGAccel nodes
-            # cc - Start 1 SG with import enabled, all with XATTRs enabled
-            # di - All SGs/SGAccels with xattrs enabled - this will also enable import on SGAccel
-            #    - Do not enable import in SG.
-            if mode == "cc":
-                enable_import = True
-            elif mode == "di":
-                enable_import = False
-
-            if mode == "di":
-                ac_obj = SyncGateway()
-                for ac in sg_accels:
-                    ac_ip = host_for_url(ac)
-                    ac_obj.enable_import_xattrs(
-                        cluster_config=cluster_config,
-                        sg_conf=sg_conf,
-                        url=ac_ip,
-                        enable_import=False
-                    )
-
-            sg_obj = SyncGateway()
-            for sg in sync_gateways:
-                sg_ip = host_for_url(sg["admin"])
-                sg_obj.enable_import_xattrs(
-                    cluster_config=cluster_config,
-                    sg_conf=sg_conf,
-                    url=sg_ip,
-                    enable_import=enable_import
-                )
-                enable_import = False
-                # Check Import showing up on all nodes
+        # if xattrs_post_upgrade:
+        # Post upgrade tasks
+        # Enable xattrs on all SG/SGAccel nodes
+        # cc - Start 1 SG with import enabled, all with XATTRs enabled
+        # di - All SGs/SGAccels with xattrs enabled - this will also enable import on SGAccel
+        #    - Do not enable import in SG.
+        # Enable views or GSI
+        post_upgrade_sync_gateway_migration(mode, cluster_config, sg_conf, use_views, xattrs_post_upgrade, sync_gateways, sg_accels)
 
         send_changes_termination_doc(
             auth=sg_session,
@@ -260,7 +237,7 @@ def test_upgrade(params_from_base_test_setup):
         # Verify http status code 404, "reason": "deleted" for deleted docs
         verify_sg_deleted_docs(url=sg_admin_url, db=sg_db, deleted_docs=deleted_docs)
 
-        if xattrs_enabled:
+        if xattrs_post_upgrade:
             # Verify through SDK that there is no _sync property in the doc body
             bucket_name = 'data-bucket'
             sdk_client = Bucket('couchbase://{}/{}'.format(primary_server.host, bucket_name), password='password', timeout=SDK_TIMEOUT)
@@ -271,6 +248,52 @@ def test_upgrade(params_from_base_test_setup):
             for i in docs_from_sdk:
                 if "_sync" in docs_from_sdk[i].value:
                     raise Exception("_sync section found in docs after upgrade")
+
+        # Clean up views/indexes
+        sg_obj.post_upgrade_cleanup(sg_admin_url)
+
+
+def post_upgrade_sync_gateway_migration(mode, cluster_config, sg_conf, use_views, xattrs_post_upgrade, sync_gateways, sg_accels):
+    log_info('------------------------------------------')
+    log_info('START sync gateway post upgrade migration')
+    log_info('------------------------------------------')
+    if not xattrs_post_upgrade:
+        enable_import = False
+    else:
+        if mode == "cc":
+            enable_import = True
+        elif mode == "di":
+            enable_import = False
+
+    log_info("Migration SG to use_views: {}, xattrs_post_upgrade: {}, enable_import: {}".format(use_views, xattrs_post_upgrade, enable_import))
+    if mode == "di":
+        ac_obj = SyncGateway()
+        for ac in sg_accels:
+            ac_ip = host_for_url(ac)
+            ac_obj.enable_import_xattrs_views(
+                cluster_config=cluster_config,
+                sg_conf=sg_conf,
+                url=ac_ip,
+                enable_xattrs=xattrs_post_upgrade,
+                enable_import=False,
+                enable_views=use_views
+            )
+
+    sg_obj = SyncGateway()
+    for sg in sync_gateways:
+        sg_ip = host_for_url(sg["admin"])
+        sg_obj.enable_import_xattrs_views(
+            cluster_config=cluster_config,
+            sg_conf=sg_conf,
+            url=sg_ip,
+            enable_xattrs=xattrs_post_upgrade,
+            enable_import=enable_import,
+            enable_views=use_views
+        )
+        enable_import = False
+    log_info('------------------------------------------')
+    log_info('END sync gateway post upgrade migration')
+    log_info('------------------------------------------')
 
 
 def verify_sg_deleted_docs(url, db, deleted_docs):
@@ -308,8 +331,16 @@ def add_client_docs(client, url, db, channels, generator, ndocs, id_prefix, atta
 
 def add_docs_to_client_task(client, url, db, channels, num_docs):
     docs = []
-    docs_per_thread = num_docs // 10
-    with ProcessPoolExecutor(max_workers=10) as ad:
+    if num_docs < 100:
+        docs_per_thread = num_docs
+        threads = 1
+    else:
+        docs_per_thread = num_docs // 100
+        threads = 100
+
+    log_info("Adding {} docs with {} threads @ {} docs per thread".format(num_docs, threads, docs_per_thread))
+
+    with ProcessPoolExecutor(max_workers=100) as ad:
         futures = [ad.submit(
             add_client_docs,
             client=client,
@@ -320,7 +351,7 @@ def add_docs_to_client_task(client, url, db, channels, num_docs):
             ndocs=docs_per_thread,
             id_prefix="ls_db_upgrade_doc_{}".format(i),
             attachments_generator=attachment.generate_png_1_1
-        ) for i in range(10)]
+        ) for i in range(threads)]
 
         for future in as_completed(futures):
             docs.extend(future.result())
@@ -491,6 +522,16 @@ def upgrade_sync_gateway(sync_gateways, sync_gateway_version, sync_gateway_upgra
         verify_sync_gateway_product_info(sg_ip)
         log_info("Checking for sync gateway version: {}".format(sync_gateway_version))
         verify_sync_gateway_version(sg_ip, sync_gateway_version)
+        log_info("Stopping sync gateway: {}".format(sg_ip))
+        sg_obj.stop_sync_gateways(cluster_config=cluster_config, url=sg_ip)
+
+        # If SG >= 2.1, enable views in the SG config before the upgrade
+        # Else, post upgrade, SG will fail to start
+        # Views to GSI migration has to be done post server upgrade
+        if sync_gateway_upgraded_version.split("-")[0] >= "2.1.0":
+            log_info("Enabling views in SG config for: {}".format(sg_ip))
+            sg_obj.enable_import_xattrs_views(cluster_config, sg_conf, sg_ip, enable_views=True)
+
         log_info("Upgrading sync gateway: {}".format(sg_ip))
         sg_obj.upgrade_sync_gateways(
             cluster_config=cluster_config,

@@ -16,7 +16,8 @@ from utilities.cluster_config_utils import get_revs_limit
 from keywords.exceptions import ProvisioningError
 
 from libraries.provision.ansible_runner import AnsibleRunner
-from utilities.cluster_config_utils import is_cbs_ssl_enabled, is_xattrs_enabled, no_conflicts_enabled, get_sg_replicas, get_sg_use_views, get_sg_version
+from utilities.cluster_config_utils import is_cbs_ssl_enabled, is_xattrs_enabled, no_conflicts_enabled
+from utilities.cluster_config_utils import get_sg_replicas, get_sg_use_views, get_sg_version, get_sg_upgraded_version
 
 
 def validate_sync_gateway_mode(mode):
@@ -331,10 +332,6 @@ class SyncGateway:
         playbook_vars["couchbase_sync_gateway_package_base_url"] = sync_gateway_base_url
         playbook_vars["couchbase_sync_gateway_package"] = sync_gateway_package_name
         playbook_vars["couchbase_sg_accel_package"] = sg_accel_package_name
-        playbook_vars["no_conflicts"] = ""
-
-        if no_conflicts_enabled(cluster_config):
-            playbook_vars["no_conflicts"] = '"allow_conflicts": false,'
 
         if url is not None:
             target = hostname_for_url(cluster_config, url)
@@ -355,8 +352,8 @@ class SyncGateway:
         if status != 0:
             raise Exception("Could not upgrade sync_gateway/sg_accel")
 
-    def enable_import_xattrs(self, cluster_config, sg_conf, url, enable_import=False):
-        """Deploy an SG config with xattrs enabled
+    def enable_import_xattrs_views(self, cluster_config, sg_conf, url, enable_xattrs=False, enable_import=False, enable_views=False):
+        """ Deploy an SG config with xattrs, import and views enabled
             Will also enable import if enable_import is set to True
             It is used to enable xattrs and import in the SG config"""
         ansible_runner = AnsibleRunner(cluster_config)
@@ -383,18 +380,17 @@ class SyncGateway:
         if no_conflicts_enabled(cluster_config):
             playbook_vars["no_conflicts"] = '"allow_conflicts": false,'
 
-        if get_sg_version(cluster_config) >= "2.1.0":
-            num_replicas = get_sg_replicas(cluster_config)
-            playbook_vars["num_index_replicas"] = '"num_index_replicas": {},'.format(num_replicas)
-            playbook_vars["num_index_replicas_housekeeping"] = '"num_index_replicas_housekeeping": {},'.format(num_replicas)
-
-            if get_sg_use_views(cluster_config):
+        if get_sg_upgraded_version(cluster_config) >= "2.1.0":
+            if enable_views:
                 playbook_vars["sg_use_views"] = '"use_views": true,'
+            else:
+                num_replicas = get_sg_replicas(cluster_config)
+                playbook_vars["num_index_replicas"] = '"num_index_replicas": {},'.format(num_replicas)
 
-        if is_xattrs_enabled(cluster_config):
+        if is_xattrs_enabled(cluster_config) or enable_xattrs:
             playbook_vars["xattrs"] = '"enable_shared_bucket_access": true,'
 
-        if is_xattrs_enabled(cluster_config) and enable_import:
+        if is_xattrs_enabled(cluster_config) or enable_import:
             playbook_vars["autoimport"] = '"import_docs": "continuous",'
 
         # Deploy config
@@ -414,3 +410,29 @@ class SyncGateway:
             )
         if status != 0:
             raise Exception("Could not deploy config to sync_gateway")
+
+    def post_upgrade_cleanup(self, sg_admin_url):
+        """
+        Takes SG admin URL and calls the _post_upgrade rest end point
+        _post_upgrade rest end point will remove the older version of
+        views and indexes used by the previous version of SG
+        """
+        log_info("Calling _post_upgrade with preview")
+        resp = self._session.post("{}/_post_upgrade?preview=true".format(sg_admin_url))
+        resp.raise_for_status()
+        resp_json = resp.json()
+        log_info(resp_json)
+        assert resp_json["preview"]
+        log_info("Calling _post_upgrade")
+        resp = self._session.post("{}/_post_upgrade".format(sg_admin_url))
+        resp.raise_for_status()
+        resp_json = resp.json()
+        log_info(resp_json)
+        assert "preview" not in resp_json
+        log_info("Verifying that the views/indexes were removed")
+        resp = self._session.post("{}/_post_upgrade".format(sg_admin_url))
+        resp.raise_for_status()
+        resp_json = resp.json()
+        log_info(resp_json)
+        assert len(resp_json["post_upgrade_results"]["db"]["removed_design_docs"]) == 0
+        assert len(resp_json["post_upgrade_results"]["db"]["removed_indexes"]) == 0
