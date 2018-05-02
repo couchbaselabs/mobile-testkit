@@ -725,15 +725,11 @@ class CouchbaseServer:
 
     def get_package_name(self, version, build_number, cbs_platform="centos7"):
         """
-        Given:
-
-        version - the version without any build number information, eg 4.5.0
-        build_number - the build number associated with this major version release, eg, 2601 (or None)
-
-        Return the filename portion of the package download URL
-
-        """
-
+         Given:
+         version - the version without any build number information, eg 4.5.0
+         build_number - the build number associated with this major version release, eg, 2601 (or None)
+         Return the filename portion of the package download URL
+         """
         if version.startswith("3.1.6"):
             return "couchbase-server-enterprise-{}-{}.x86_64.rpm".format(version, cbs_platform)
         elif version.startswith("3.1"):
@@ -744,14 +740,10 @@ class CouchbaseServer:
     def resolve_cb_nas_url(self, version, build_number, cbs_platform="centos7"):
         """
         Resolve a download URL for couchbase server on the internal VPN download site
-
         Given:
-
         version - the version without any build number information, eg 4.5.0
         build_number - the build number associated with this major version release, eg, 2601 (or None)
-
         Return the base_url of the package download URL (everything except the filename)
-
         """
 
         cbnas_base_url = "http://latestbuilds.service.couchbase.com/builds/latestbuilds/couchbase-server"
@@ -767,9 +759,11 @@ class CouchbaseServer:
         elif version.startswith("5.5"):
             base_url = "{}/vulcan/{}".format(cbnas_base_url, build_number)
         else:
-            raise Exception("Unexpected couchbase server version: {}".format(version))
+            raise Exception(
+                "Unexpected couchbase server version: {}".format(version))
+        package_name = self.get_package_name(
+            version, build_number, cbs_platform)
 
-        package_name = self.get_package_name(version, build_number, cbs_platform)
         return base_url, package_name
 
     def resolve_cb_mobile_url(self, version, cbs_platform="centos7"):
@@ -778,12 +772,10 @@ class CouchbaseServer:
         version on http://cbmobile-packages.s3.amazonaws.com (an S3 bucket
         for couchbase mobile that mirrors released couchbase server versions)
 
+
         Given:
-
         version - the version without any build number information, eg 4.5.0
-
         Return the base_url of the package download URL (everything except the filename)
-
         """
         released_versions = {
             "5.0.1": "5003",
@@ -811,6 +803,7 @@ class CouchbaseServer:
 
         log_info(">>> Upgrading Couchbase Server")
         # Install Server
+
         if toy_build:
             # http://server.jenkins.couchbase.com/view/All/job/watson-toy/1770/artifact/couchbase-server-enterprise-5.0.0-9900-centos7.x86_64.rpm
             toy_build_url_parts = toy_build.split('/')
@@ -825,7 +818,6 @@ class CouchbaseServer:
                 server_build = version_build[1]
             else:
                 server_build = None
-
             if server_build is None:
                 server_baseurl, server_package_name = self.resolve_cb_mobile_url(server_verion, cbs_platform)
             else:
@@ -854,5 +846,9 @@ class CouchbaseServer:
 
         if status != 0:
             raise ProvisioningError("Failed to install Couchbase Server")
-
         self.wait_for_ready_state()
+
+    def load_sample_bucket(self, sample_bucket):
+        """ Loads a given sample bucket """
+        log_info("Enabling sample bucket {}".format(sample_bucket))
+        self.remote_executor.must_execute('sudo /opt/couchbase/bin/cbdocloader -c localhost:8091 -u Administrator -p password -b {} -m 100 -d /opt/couchbase/samples/{}.zip'.format(sample_bucket, sample_bucket))
