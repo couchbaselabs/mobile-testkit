@@ -14,7 +14,7 @@ public class DatabaseConfigurationRequestHandler {
     public DatabaseConfiguration configure(Args args) {
         String directory = args.get("directory");
         EncryptionKey encryptionKey;
-        // ConflictResolver conflictResolver = args.get("conflictResolver");
+        //ConflictResolver conflictResolver = args.get("conflictResolver");
         String password = args.get("password");
         Context context = MainActivity.getAppContext();
         DatabaseConfiguration config = new DatabaseConfiguration(context);
@@ -23,7 +23,7 @@ public class DatabaseConfigurationRequestHandler {
         }
         /*if (conflictResolver != null) {
             config.setConflictResolver(conflictResolver);
-        } */
+        }*/
         if (password != null) {
           encryptionKey = new EncryptionKey(password);
           config.setEncryptionKey(encryptionKey);
