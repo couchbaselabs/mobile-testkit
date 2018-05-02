@@ -34,6 +34,8 @@ def setup_client_syncgateway_suite(request):
     sync_gateway_mode = request.config.getoption("--sync-gateway-mode")
     server_version = request.config.getoption("--server-version")
     xattrs_enabled = request.config.getoption("--xattrs")
+    use_views = request.config.getoption("--use-views")
+    number_replicas = request.config.getoption("--number-replicas")
 
     liteserv = LiteServFactory.create(platform=liteserv_platform,
                                       version_build=liteserv_version,
@@ -70,6 +72,18 @@ def setup_client_syncgateway_suite(request):
     else:
         log_info("Running test with sync_gateway version {}".format(sync_gateway_version))
         persist_cluster_config_environment_prop(cluster_config, 'sync_gateway_version', sync_gateway_version)
+
+    if use_views:
+        log_info("Running SG tests using views")
+        # Enable sg views in cluster configs
+        persist_cluster_config_environment_prop(cluster_config, 'sg_use_views', True)
+    else:
+        log_info("Running tests with cbs <-> sg ssl disabled")
+        # Disable sg views in cluster configs
+        persist_cluster_config_environment_prop(cluster_config, 'sg_use_views', False)
+
+    # Write the number of replicas to cluster config
+    persist_cluster_config_environment_prop(cluster_config, 'number_replicas', number_replicas)
 
     if xattrs_enabled:
         log_info("Running test with xattrs for sync meta storage")
