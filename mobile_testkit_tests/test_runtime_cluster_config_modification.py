@@ -14,6 +14,7 @@ MOCK_CLUSTER_CONFIG = os.getcwd() + "/mobile_testkit_tests/test_data/mock_base_d
 
 def test_enable_cbs_ssl_in_cluster_config():
 
+    persist_cluster_config_environment_prop(MOCK_CLUSTER_CONFIG, 'sync_gateway_ssl', False)
     c = Cluster(MOCK_CLUSTER_CONFIG)
     assert not c.cbs_ssl
 
