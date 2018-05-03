@@ -271,6 +271,7 @@ def test_multiple_sgs_with_CBLs(params_from_base_test_setup, setup_customized_te
     replicator.stop(repl1)
     replicator.stop(repl2)
 
+
 def create_sg_users(sg1, sg2, db1, db2, name1, password1, name2, password2, channels):
 
     admin1 = Admin(sg1)

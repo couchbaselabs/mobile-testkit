@@ -1,1 +1,0 @@
-{"logging": {"default": {"logLevel": "debug", "logFilePath": "/tmp/sg_logs/sg_log_rotation.log", "logKeys": ["*"]}}, "databases": {"db": {"username": "data-bucket", "num_index_replicas_housekeeping": 0, "bucket": "data-bucket", "server": "http://[fc00::10]:8091", "num_index_replicas": 0, "password": "password"}}}
