@@ -59,6 +59,8 @@ class ChangesTracker:
         # convert to seconds for use with requests lib api
         if request_timeout is not None:
             request_timeout /= 1000
+        else:
+            request_timeout = 1000
 
         auth_type = get_auth_type(self.auth)
         current_seq_num = 0
@@ -118,6 +120,7 @@ class ChangesTracker:
 
             self.process_changes(resp_obj["results"])
             current_seq_num = resp_obj["last_seq"]
+            time.sleep(2)
 
         log_info("[Changes Tracker] End of longpoll changes loop")
 
@@ -145,7 +148,7 @@ class ChangesTracker:
                 logging.error("[Changes Tracker] wait_until: TIMEOUT")
                 return False
 
-            # Check that the expected docs exist in the the
+            # Check that the expected docs exist in the processed_changes
             missing_docs = []
             for doc in expected_docs:
                 if doc["id"] not in self.processed_changes:
@@ -175,4 +178,4 @@ class ChangesTracker:
 
             log_info("[Changes Tracker] Docs missing from changes feed: {}".format(len(missing_docs)))
 
-            time.sleep(1)
+            time.sleep(2)

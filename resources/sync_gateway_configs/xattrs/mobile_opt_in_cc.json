@@ -12,7 +12,6 @@
             {{ no_conflicts }}
             {{ sg_use_views }}
             {{ num_index_replicas }}
-            {{ num_index_replicas_housekeeping }}
             "enable_shared_bucket_access": true,
             "import_docs": "continuous",
             "import_filter": `function(doc){ return doc.type == "mobile"}`,
