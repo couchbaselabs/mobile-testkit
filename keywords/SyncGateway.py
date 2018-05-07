@@ -184,12 +184,10 @@ def load_sync_gateway_config(sg_conf, server_url, cluster_config):
 
         sg_use_views_prop = ""
         num_index_replicas_prop = ""
-        num_index_replicas_housekeeping_prop = ""
 
         if get_sg_version(cluster_config) >= "2.1.0":
             num_replicas = get_sg_replicas(cluster_config)
             num_index_replicas_prop = '"num_index_replicas": {},'.format(num_replicas)
-            num_index_replicas_housekeeping_prop = '"num_index_replicas_housekeeping": {},'.format(num_replicas)
             if get_sg_use_views(cluster_config):
                 sg_use_views_prop = '"use_views": true,'
 
@@ -202,8 +200,7 @@ def load_sync_gateway_config(sg_conf, server_url, cluster_config):
             autoimport=autoimport_prop,
             xattrs=xattrs_prop,
             sg_use_views=sg_use_views_prop,
-            num_index_replicas=num_index_replicas_prop,
-            num_index_replicas_housekeeping=num_index_replicas_housekeeping_prop
+            num_index_replicas=num_index_replicas_prop
         )
         data = json.loads(temp)
 
@@ -450,7 +447,6 @@ class SyncGateway(object):
             )
         if status != 0:
             raise Exception("Could not deploy config to sync_gateway")
-
 
     def create_directory(self, cluster_config, url, dir_name):
         if dir_name is None:
