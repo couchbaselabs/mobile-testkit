@@ -250,7 +250,7 @@ def test_upgrade(params_from_base_test_setup):
                     raise Exception("_sync section found in docs after upgrade")
 
         # Clean up views/indexes
-        sg_obj.post_upgrade_cleanup(sg_admin_url)
+        sg_obj.post_upgrade_cleanup(cluster_config, sg_admin_url)
 
 
 def post_upgrade_sync_gateway_migration(mode, cluster_config, sg_conf, use_views, xattrs_post_upgrade, sync_gateways, sg_accels):

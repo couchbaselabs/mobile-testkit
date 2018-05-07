@@ -411,28 +411,29 @@ class SyncGateway:
         if status != 0:
             raise Exception("Could not deploy config to sync_gateway")
 
-    def post_upgrade_cleanup(self, sg_admin_url):
+    def post_upgrade_cleanup(self, cluster_config, sg_admin_url):
         """
         Takes SG admin URL and calls the _post_upgrade rest end point
         _post_upgrade rest end point will remove the older version of
         views and indexes used by the previous version of SG
         """
-        log_info("Calling _post_upgrade with preview")
-        resp = self._session.post("{}/_post_upgrade?preview=true".format(sg_admin_url))
-        resp.raise_for_status()
-        resp_json = resp.json()
-        log_info(resp_json)
-        assert resp_json["preview"]
-        log_info("Calling _post_upgrade")
-        resp = self._session.post("{}/_post_upgrade".format(sg_admin_url))
-        resp.raise_for_status()
-        resp_json = resp.json()
-        log_info(resp_json)
-        assert "preview" not in resp_json
-        log_info("Verifying that the views/indexes were removed")
-        resp = self._session.post("{}/_post_upgrade".format(sg_admin_url))
-        resp.raise_for_status()
-        resp_json = resp.json()
-        log_info(resp_json)
-        assert len(resp_json["post_upgrade_results"]["db"]["removed_design_docs"]) == 0
-        assert len(resp_json["post_upgrade_results"]["db"]["removed_indexes"]) == 0
+        if get_sg_upgraded_version(cluster_config) >= "2.0.0":
+            log_info("Calling _post_upgrade with preview")
+            resp = self._session.post("{}/_post_upgrade?preview=true".format(sg_admin_url))
+            resp.raise_for_status()
+            resp_json = resp.json()
+            log_info(resp_json)
+            assert resp_json["preview"]
+            log_info("Calling _post_upgrade")
+            resp = self._session.post("{}/_post_upgrade".format(sg_admin_url))
+            resp.raise_for_status()
+            resp_json = resp.json()
+            log_info(resp_json)
+            assert "preview" not in resp_json
+            log_info("Verifying that the views/indexes were removed")
+            resp = self._session.post("{}/_post_upgrade".format(sg_admin_url))
+            resp.raise_for_status()
+            resp_json = resp.json()
+            log_info(resp_json)
+            assert len(resp_json["post_upgrade_results"]["db"]["removed_design_docs"]) == 0
+            assert len(resp_json["post_upgrade_results"]["db"]["removed_indexes"]) == 0
