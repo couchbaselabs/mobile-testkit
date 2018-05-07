@@ -4,48 +4,48 @@
   "logging": {
     "log_file_path": "/tmp/sg_logs",
     "console": {
-      "logKeys": ["*"],
-      "logLevel": "debug",
+      "log_keys": ["*"],
+      "log_level": "debug",
       "rotation": {
-        "maxsize": 1,
-        "maxage": 30,
-        "maxbackups": 2,
+        "max_size": 1,
+        "max_age": 30,
+        "max_backups": 2,
         "localtime": true
       }
     },
     "error": {
       "enabled": true,
       "rotation": {
-        "maxsize": 1,
-        "maxage": 180,
-        "maxbackups": 2,
+        "max_size": 1,
+        "max_age": 180,
+        "max_backups": 2,
         "localtime": true
       }
     },
     "warn": {
       "enabled": true,
       "rotation": {
-        "maxsize": 1,
-        "maxage": 90,
-        "maxbackups": 2,
+        "max_size": 1,
+        "max_age": 90,
+        "max_backups": 2,
         "localtime": true
       }
     },
     "info": {
       "enabled": true,
       "rotation": {
-        "maxsize": 1,
-        "maxage": 30,
-        "maxbackups": 2,
+        "max_size": 1,
+        "max_age": 30,
+        "max_backups": 2,
         "localtime": true
       }
     },
     "debug": {
       "enabled": true,
       "rotation": {
-        "maxsize": 1,
-        "maxage": 30,
-        "maxbackups": 2,
+        "max_size": 1,
+        "max_age": 30,
+        "max_backups": 2,
         "localtime": true
       }
     }

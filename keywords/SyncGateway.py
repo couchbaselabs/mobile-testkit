@@ -21,7 +21,6 @@ from utilities.cluster_config_utils import is_cbs_ssl_enabled, is_xattrs_enabled
 from utilities.cluster_config_utils import get_sg_replicas, get_sg_use_views, get_sg_version
 
 
-
 def validate_sync_gateway_mode(mode):
     """Verifies that the sync_gateway mode is either channel cache ('cc') or distributed index ('di')"""
     if mode != "cc" and mode != "di":
