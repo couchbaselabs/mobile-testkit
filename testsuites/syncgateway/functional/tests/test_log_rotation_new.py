@@ -478,3 +478,197 @@ def test_log_number_backups(params_from_base_test_setup, sg_conf_name):
             sg_helper.create_empty_file(cluster_config=cluster_conf, url=sg_one_url, file_name=file_name, file_size=file_size)
 
     sg_helper.start_sync_gateways(cluster_config=cluster_conf, url=sg_one_url, config=sg_conf)
+
+# https://github.com/couchbase/sync_gateway/issues/2222
+@pytest.mark.syncgateway
+@pytest.mark.logging
+@pytest.mark.parametrize("sg_conf_name", ["log_rotation_new"])
+def test_log_rotation_negative(params_from_base_test_setup, sg_conf_name):
+    """Test log rotation with negative values for:
+        "maxsize": -1,
+        "maxage": -30,
+        "maxbackups": -2
+    SG shouldn't start
+    """
+    cluster_conf = params_from_base_test_setup["cluster_config"]
+    mode = params_from_base_test_setup["mode"]
+    sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
+
+    log_info("Using cluster_conf: {}".format(cluster_conf))
+    log_info("Using sg_conf: {}".format(sg_conf))
+
+    cluster_helper = ClusterKeywords()
+    cluster_hosts = cluster_helper.get_cluster_topology(cluster_conf)
+    sg_admin_url = cluster_hosts["sync_gateways"][0]["admin"]
+    sg_ip = host_for_url(sg_admin_url)
+
+    if get_sync_gateway_version(sg_ip)[0] < "2.1":
+        pytest.skip("Test NA for SG < 2.1")
+
+    cluster = Cluster(config=cluster_conf)
+    cluster.reset(sg_config_path=sg_conf)
+
+    sg_one_url = cluster_hosts["sync_gateways"][0]["public"]
+
+    # Read sample sg_conf
+    data = load_sync_gateway_config(sg_conf, cluster_hosts["couchbase_servers"][0], cluster_conf)
+
+    # set negative values for rotation section
+    SG_LOGS = ['sg_debug', 'sg_info', 'sg_warn', 'sg_error']
+
+    for log in SG_LOGS:
+        log_section = log.split("_")[1]
+        data['logging'][log_section]["rotation"] = {
+            "max_size": -1,
+            "max_age": -30,
+            "max_backups": -2,
+            "localtime": True
+        }
+
+    # Create temp config file in the same folder as sg_conf
+    temp_conf = "/".join(sg_conf.split('/')[:-2]) + '/temp_conf.json'
+
+    with open(temp_conf, 'w') as fp:
+        json.dump(data, fp, indent=4)
+
+    # Stop sync_gateways
+    log_info(">>> Stopping sync_gateway")
+    sg_helper = SyncGateway()
+    sg_helper.stop_sync_gateways(cluster_config=cluster_conf, url=sg_one_url)
+    try:
+        sg_helper.start_sync_gateways(cluster_config=cluster_conf, url=sg_one_url, config=temp_conf)
+    except ProvisioningError:
+        sg_helper.start_sync_gateways(cluster_config=cluster_conf, url=sg_one_url, config=sg_conf)
+        # Remove generated conf file
+        os.remove(temp_conf)
+        return
+
+    # Remove generated conf file
+    os.remove(temp_conf)
+    pytest.fail("SG shouldn't be started!!!!")
+
+
+# https://github.com/couchbase/sync_gateway/issues/2225
+@pytest.mark.syncgateway
+@pytest.mark.logging
+@pytest.mark.parametrize("sg_conf_name", ["log_rotation_new"])
+def test_log_maxbackups_0(params_from_base_test_setup, sg_conf_name):
+    """Test with maxbackups=0 that means do not limit the number of backups
+    """
+    cluster_conf = params_from_base_test_setup["cluster_config"]
+    mode = params_from_base_test_setup["mode"]
+    sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
+
+    log_info("Using cluster_conf: {}".format(cluster_conf))
+    log_info("Using sg_conf: {}".format(sg_conf))
+
+    cluster_helper = ClusterKeywords()
+    cluster_hosts = cluster_helper.get_cluster_topology(cluster_conf)
+    sg_admin_url = cluster_hosts["sync_gateways"][0]["admin"]
+    sg_ip = host_for_url(sg_admin_url)
+
+    if get_sync_gateway_version(sg_ip)[0] < "2.1":
+        pytest.skip("Test NA for SG < 2.1")
+
+    cluster = Cluster(config=cluster_conf)
+    cluster.reset(sg_config_path=sg_conf)
+
+    sg_one_url = cluster_hosts["sync_gateways"][0]["public"]
+
+    remote_executor = RemoteExecutor(cluster.sync_gateways[0].ip)
+
+    # Stop sync_gateways
+    log_info(">>> Stopping sync_gateway")
+    sg_helper = SyncGateway()
+    sg_helper.stop_sync_gateways(cluster_config=cluster_conf, url=sg_one_url)
+
+    # Create /tmp/sg_logs
+    sg_helper.create_directory(cluster_config=cluster_conf, url=sg_one_url, dir_name="/tmp/sg_logs")
+
+    # Read sample sg_conf
+    data = load_sync_gateway_config(sg_conf, cluster_hosts["couchbase_servers"][0], cluster_conf)
+
+    # Generate log file with almost 1MB
+    # SG_LOGS = ['sg_debug', 'sg_error', 'sg_info', 'sg_warn']
+    # TODO figure out REST calls for error and warn
+    SG_LOGS = ['sg_debug', 'sg_info']
+
+    for log in SG_LOGS:
+        # Generate a log file with size ~1MB to check that backup file not created while 100MB not reached
+        file_size = int(0.99 * 1024 * 1024)
+        file_name = "/tmp/sg_logs/{}.log".format(log)
+        log_section = log.split("_")[1]
+        sg_helper.create_empty_file(cluster_config=cluster_conf, url=sg_one_url, file_name=file_name, file_size=file_size)
+        # Set maxbackups=0 in config file
+        data['logging'][log_section]["rotation"]["max_backups"] = 0
+
+    # Create temp config file in the same folder as sg_conf
+    temp_conf = "/".join(sg_conf.split('/')[:-2]) + '/temp_conf.json'
+
+    with open(temp_conf, 'w') as fp:
+        json.dump(data, fp, indent=4)
+
+    sg_helper.start_sync_gateways(cluster_config=cluster_conf, url=sg_one_url, config=temp_conf)
+    # ~1M MB will be added to log file after requests
+    remote_executor.execute("for ((i=1;i <= 1000;i += 1)); do curl -s http://localhost:4984/db/ABCD > /dev/null; done")
+
+    for log in SG_LOGS:
+        status, stdout, stderr = remote_executor.execute("ls /tmp/sg_logs/ | grep {} | wc -l".format(log))
+        assert stdout[0].rstrip() == '2'
+
+    # Remove generated conf file
+    os.remove(temp_conf)
+
+@pytest.mark.syncgateway
+@pytest.mark.logging
+@pytest.mark.parametrize("sg_conf_name", ["log_rotation_new"])
+def test_log_logLevel_invalid(params_from_base_test_setup, sg_conf_name):
+    """Run SG with non existing logLevel value
+    """
+    cluster_conf = params_from_base_test_setup["cluster_config"]
+    mode = params_from_base_test_setup["mode"]
+    sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
+
+    log_info("Using cluster_conf: {}".format(cluster_conf))
+    log_info("Using sg_conf: {}".format(sg_conf))
+
+    cluster_helper = ClusterKeywords()
+    cluster_hosts = cluster_helper.get_cluster_topology(cluster_conf)
+    sg_admin_url = cluster_hosts["sync_gateways"][0]["admin"]
+    sg_ip = host_for_url(sg_admin_url)
+
+    if get_sync_gateway_version(sg_ip)[0] < "2.1":
+        pytest.skip("Test NA for SG < 2.1")
+
+    cluster = Cluster(config=cluster_conf)
+    cluster.reset(sg_config_path=sg_conf)
+
+    sg_one_url = cluster_hosts["sync_gateways"][0]["public"]
+
+    # read sample sg_conf
+    data = load_sync_gateway_config(sg_conf, cluster_hosts["couchbase_servers"][0], cluster_conf)
+
+    # 'debugFake' invalid value for logLevel
+    data['logging']["console"]["log_level"] = "debugFake"
+
+    temp_conf = "/".join(sg_conf.split('/')[:-2]) + '/temp_conf.json'
+
+    # create temp config file in the same folder as sg_conf
+    with open(temp_conf, 'w') as fp:
+        json.dump(data, fp, indent=4)
+
+    # Stop sync_gateways
+    log_info(">>> Stopping sync_gateway")
+    sg_helper = SyncGateway()
+    sg_helper.stop_sync_gateways(cluster_config=cluster_conf, url=sg_one_url)
+    try:
+        sg_helper.start_sync_gateways(cluster_config=cluster_conf, url=sg_one_url, config=temp_conf)
+    except ProvisioningError:
+        sg_helper.start_sync_gateways(cluster_config=cluster_conf, url=sg_one_url, config=sg_conf)
+        # Remove generated conf file
+        os.remove(temp_conf)
+        return
+
+    # Remove generated conf file
+    os.remove(temp_conf)
+    pytest.fail("SG shouldn't be started!!!!")
