@@ -30,13 +30,17 @@ def load_sync_gateway_config(sync_gateway_config, mode, server_url, xattrs_enabl
 
         sg_use_views_prop = ""
         num_index_replicas_prop = ""
+        logging_prop = ""
 
         if get_sg_version(cluster_config) >= "2.1.0":
+            logging_prop = '"log": ["*"],'
             if get_sg_use_views(cluster_config):
                 sg_use_views_prop = '"use_views": true,'
             else:
                 num_replicas = get_sg_replicas(cluster_config)
                 num_index_replicas_prop = '"num_index_replicas": {},'.format(num_replicas)
+        else:
+            logging_prop = '"logging": {"debug": {"enabled": true}},'
 
         couchbase_server_primary_node = add_cbs_to_sg_config_server_field(cluster_config)
         temp = template.render(
@@ -47,7 +51,8 @@ def load_sync_gateway_config(sync_gateway_config, mode, server_url, xattrs_enabl
             autoimport=autoimport_prop,
             xattrs=xattrs_prop,
             sg_use_views=sg_use_views_prop,
-            num_index_replicas=num_index_replicas_prop
+            num_index_replicas=num_index_replicas_prop,
+            logging=logging_prop
         )
         data = json.loads(temp)
 

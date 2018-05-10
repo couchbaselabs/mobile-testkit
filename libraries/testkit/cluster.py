@@ -145,15 +145,19 @@ class Cluster:
             "revs_limit": "",
             "num_index_replicas": "",
             "sg_use_views": "",
+            "logging": "",
             "couchbase_server_primary_node": couchbase_server_primary_node
         }
 
         if get_sg_version(self._cluster_config) >= "2.1.0":
+            playbook_vars["logging"] = '"log": ["*"],'
             if get_sg_use_views(self._cluster_config):
                 playbook_vars["sg_use_views"] = '"use_views": true,'
             else:
                 num_replicas = get_sg_replicas(self._cluster_config)
                 playbook_vars["num_index_replicas"] = '"num_index_replicas": {},'.format(num_replicas)
+        else:
+            playbook_vars["logging"] = '"logging": {"debug": {"enabled": true}},'
 
         # Add configuration to run with xattrs
         if self.xattrs:

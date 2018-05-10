@@ -6,7 +6,7 @@
     "maxFileDescriptors": 90000,
     "slowServerCallWarningThreshold": 500,
     "compressResponses": false,
-    "log":["*"],
+    {{ logging }}
     "verbose":"true",
     "cluster_config": {
         "server":"http://127.0.0.1:8091",
