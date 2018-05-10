@@ -1139,7 +1139,7 @@ def test_initial_pull_replication_background_apprun(params_from_base_test_setup,
     c.reset(sg_config_path=sg_config)
 
     # No command to push the app to background on device, so avoid test to run on ios device
-    if(liteserv_platform.lower() == "net-msft" or device_enabled):
+    if liteserv_platform.lower() != "ios" or liteserv_platform.lower() != "xamarin-ios" or device_enabled:
         pytest.skip('This test only valid for ios')
 
     client = MobileRestClient()
@@ -1234,7 +1234,7 @@ def test_push_replication_with_backgroundApp(params_from_base_test_setup, num_do
 
     # No command to push the app to background on device, so avoid test to run on ios device
 
-    if(liteserv_platform.lower() == "net-msft" or device_enabled):
+    if liteserv_platform.lower() != "ios" or liteserv_platform.lower() != "xamarin-ios" or device_enabled:
         pytest.skip('This test only can only run on ios simulator')
 
     client = MobileRestClient()

@@ -16,7 +16,7 @@ class TestServerFactory:
 
     @staticmethod
     def validate_platform(platform):
-        valid_platforms = ["android", "ios", "net-mono", "net-msft"]
+        valid_platforms = ["android", "ios", "net-mono", "net-msft", "xamarin-ios", "xamarin-android"]
         if platform not in valid_platforms:
             raise ValueError("Unsupported 'platform': {}".format(platform))
 
@@ -38,9 +38,9 @@ class TestServerFactory:
         TestServerFactory.validate_host(host)
         TestServerFactory.validate_port(port)
 
-        if platform == "android":
+        if platform == "android" or platform == "xamarin-android":
             return TestServerAndroid(version_build, host, port, debug_mode)
-        elif platform == "ios":
+        elif platform == "ios" or platform == "xamarin-ios":
             return TestServeriOS(version_build, host, port, community_enabled=community_enabled, debug_mode=debug_mode)
         elif platform == "net-mono":
             return TestServerNetMono(version_build, host, port)
