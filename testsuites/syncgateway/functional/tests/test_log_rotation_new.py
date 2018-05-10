@@ -553,6 +553,7 @@ def test_log_maxbackups_0(params_from_base_test_setup, sg_conf_name):
     # Remove generated conf file
     os.remove(temp_conf)
 
+
 @pytest.mark.syncgateway
 @pytest.mark.logging
 @pytest.mark.parametrize("sg_conf_name", ["log_rotation_new"])

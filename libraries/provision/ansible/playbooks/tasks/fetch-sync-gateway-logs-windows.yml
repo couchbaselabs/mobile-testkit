@@ -1,20 +1,110 @@
 # Fetch sync gateway logs for CentOS
-- name: SYNC GATEWAY | Check if sync_gateway log directory is present on Windows
+- name: SYNC GATEWAY | Check if sync_gateway_error.log is present on Windows
   win_stat:
-    path: 'C:\PROGRA~2\Couchbase\var\lib\couchbase\logs\'
-  register: pa
+    path: 'C:\PROGRA~2\Couchbase\var\lib\couchbase\logs\sync_gateway_error.log'
+  register: pe2
 
 - name: SYNC GATEWAY | Fetch sync_gateway access log for Windows
   # Do not validate checksum as this is just a passive grab of the logs. Since they are continuously being appended to, the checksum may fail
-  fetch: src=C:\PROGRA~2\Couchbase\var\lib\couchbase\logs\ dest="/tmp/sg_logs/{{ inventory_hostname }}/" fail_on_missing=yes flat=yes validate_checksum=no
-  when: pa.stat.exists
+  fetch: src=C:\PROGRA~2\Couchbase\var\lib\couchbase\logs\sync_gateway_error.log dest="/tmp/sg_logs/{{ inventory_hostname }}/" fail_on_missing=yes flat=yes validate_checksum=no
+  when: pe2.stat.exists
 
-- name: SYNC GATEWAY | Check if C:\tmp\sg_logs is present
+- name: SYNC GATEWAY | Check if sync_gateway_error.log is present on Windows
   win_stat:
-    path: 'C:\tmp\sg_logs\'
+    path: 'C:\PROGRA~1\Couchbase\Sync Gateway\var\lib\couchbase\logs\sync_gateway_error.log'
+  register: pe1
+
+- name: SYNC GATEWAY | Fetch sync_gateway access log for Windows
+  # Do not validate checksum as this is just a passive grab of the logs. Since they are continuously being appended to, the checksum may fail
+  fetch: src=C:\PROGRA~1\Couchbase\Sync Gateway\var\lib\couchbase\logs\sync_gateway_error.log dest="/tmp/sg_logs/{{ inventory_hostname }}/" fail_on_missing=yes flat=yes validate_checksum=no
+  when: pe1.stat.exists
+
+- name: SYNC GATEWAY | Check if sg_debug.log is present on Windows
+  win_stat:
+    path: 'C:\PROGRA~1\Couchbase\Sync Gateway\var\lib\couchbase\logs\sg_debug.log'
+  register: sd1
+
+- name: SYNC GATEWAY | Fetch sg_debug.log for Windows
+  # Do not validate checksum as this is just a passive grab of the logs. Since they are continuously being appended to, the checksum may fail
+  fetch: src=C:\PROGRA~1\Couchbase\Sync Gateway\var\lib\couchbase\logs\sg_debug.log dest="/tmp/sg_logs/{{ inventory_hostname }}/" fail_on_missing=yes flat=yes validate_checksum=no
+  when: sd1.stat.exists
+
+- name: SYNC GATEWAY | Check if sg_info.log is present on Windows
+  win_stat:
+    path: 'C:\PROGRA~1\Couchbase\Sync Gateway\var\lib\couchbase\logs\sg_info.log'
+  register: si1
+
+- name: SYNC GATEWAY | Fetch sync_gateway access log for Windows
+  # Do not validate checksum as this is just a passive grab of the logs. Since they are continuously being appended to, the checksum may fail
+  fetch: src=C:\PROGRA~1\Couchbase\Sync Gateway\var\lib\couchbase\logs\sg_info.log dest="/tmp/sg_logs/{{ inventory_hostname }}/" fail_on_missing=yes flat=yes validate_checksum=no
+  when: si1.stat.exists
+
+- name: SYNC GATEWAY | Check if sg_error.log is present on Windows
+  win_stat:
+    path: 'C:\PROGRA~1\Couchbase\Sync Gateway\var\lib\couchbase\logs\sg_error.log'
+  register: se1
+
+- name: SYNC GATEWAY | Fetch sg_error.log for Windows
+  # Do not validate checksum as this is just a passive grab of the logs. Since they are continuously being appended to, the checksum may fail
+  fetch: src=C:\PROGRA~1\Couchbase\Sync Gateway\var\lib\couchbase\logs\sg_error.log dest="/tmp/sg_logs/{{ inventory_hostname }}/" fail_on_missing=yes flat=yes validate_checksum=no
+  when: se1.stat.exists
+
+- name: SYNC GATEWAY | Check if sg_warn.log is present on Windows
+  win_stat:
+    path: 'C:\PROGRA~1\Couchbase\Sync Gateway\var\lib\couchbase\logs\sg_warn.log'
+  register: sw1
+
+- name: SYNC GATEWAY | Fetch sg_warn.log for Windows
+  # Do not validate checksum as this is just a passive grab of the logs. Since they are continuously being appended to, the checksum may fail
+  fetch: src=C:\PROGRA~1\Couchbase\Sync Gateway\var\lib\couchbase\logs\sg_warn.log dest="/tmp/sg_logs/{{ inventory_hostname }}/" fail_on_missing=yes flat=yes validate_checksum=no
+  when: sw1.stat.exists
+
+- name: SYNC GATEWAY | Check if C:\tmp\sg_logs\sync_gateway_error.log is present
+  win_stat:
+    path: 'C:\tmp\sg_logs\sync_gateway_error.log'
   register: pt
 
 - name: SYNC GATEWAY | Fetch sync_gateway error log for Windows
   # Do not validate checksum as this is just a passive grab of the logs. Since they are continuously being appended to, the checksum may fail
-  fetch: src=C:\tmp\sg_logs\ dest="/tmp/sg_logs/{{ inventory_hostname }}/" fail_on_missing=yes flat=yes validate_checksum=no
+  fetch: src=C:\tmp\sg_logs\sync_gateway_error.log dest="/tmp/sg_logs/{{ inventory_hostname }}/" fail_on_missing=yes flat=yes validate_checksum=no
   when: pt.stat.exists
+
+- name: SYNC GATEWAY | Check if C:\tmp\sg_logs\sg_debug.log is present
+  win_stat:
+    path: 'C:\tmp\sg_logs\sg_debug.log'
+  register: sd
+
+- name: SYNC GATEWAY | Fetch sg_debug.log for Windows
+  # Do not validate checksum as this is just a passive grab of the logs. Since they are continuously being appended to, the checksum may fail
+  fetch: src=C:\tmp\sg_logs\sg_debug.log dest="/tmp/sg_logs/{{ inventory_hostname }}/" fail_on_missing=yes flat=yes validate_checksum=no
+  when: sd.stat.exists
+
+- name: SYNC GATEWAY | Check if C:\tmp\sg_logs\sg_info.log is present
+  win_stat:
+    path: 'C:\tmp\sg_logs\sg_info.log'
+  register: si
+
+- name: SYNC GATEWAY | Fetch sg_info.log for Windows
+  # Do not validate checksum as this is just a passive grab of the logs. Since they are continuously being appended to, the checksum may fail
+  fetch: src=C:\tmp\sg_logs\sg_info.log dest="/tmp/sg_logs/{{ inventory_hostname }}/" fail_on_missing=yes flat=yes validate_checksum=no
+  when: si.stat.exists
+
+- name: SYNC GATEWAY | Check if sg_warn.log is present
+  win_stat:
+    path: 'C:\tmp\sg_logs\sg_warn.log'
+  register: sw
+
+- name: SYNC GATEWAY | Fetch sg_warn.log for Windows
+  # Do not validate checksum as this is just a passive grab of the logs. Since they are continuously being appended to, the checksum may fail
+  fetch: src=C:\tmp\sg_logs\sg_warn.log dest="/tmp/sg_logs/{{ inventory_hostname }}/" fail_on_missing=yes flat=yes validate_checksum=no
+  when: sw.stat.exists
+
+- name: SYNC GATEWAY | Check if C:\tmp\sg_logs\sg_error.log is present
+  win_stat:
+    path: 'C:\tmp\sg_logs\sg_error.log'
+  register: se
+
+- name: SYNC GATEWAY | Fetch sg_error.log for Windows
+  # Do not validate checksum as this is just a passive grab of the logs. Since they are continuously being appended to, the checksum may fail
+  fetch: src=C:\tmp\sg_logs\sg_error.log dest="/tmp/sg_logs/{{ inventory_hostname }}/" fail_on_missing=yes flat=yes validate_checksum=no
+  when: se.stat.exists
