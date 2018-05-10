@@ -79,6 +79,8 @@ def test_log_rotation_default_values(params_from_base_test_setup, sg_conf_name):
         # ~1M MB will be added to the info/debug/warn log files after the requests
         remote_executor.execute(
             "for ((i=1;i <= 2000;i += 1)); do curl -s http://localhost:4984/ABCD/ > /dev/null; done")
+        remote_executor.execute(
+            "for ((i=1;i <= 2000;i += 1)); do curl -s -H 'Accept: text/plain' http://localhost:4985/db/ > /dev/null; done")
 
         # Verify num of log files for every log file type
         for log in SG_LOGS:
@@ -266,6 +268,7 @@ def test_log_maxage_timestamp_ignored(params_from_base_test_setup, sg_conf_name)
     sg_helper.start_sync_gateways(cluster_config=cluster_conf, url=sg_one_url, config=temp_conf)
     # ~1M MB will be added to log file after requests
     remote_executor.execute("for ((i=1;i <= 2000;i += 1)); do curl -s http://localhost:4984/ABCD/ > /dev/null; done")
+    remote_executor.execute("for ((i=1;i <= 2000;i += 1)); do curl -s -H 'Accept: text/plain' http://localhost:4985/db/ > /dev/null; done")
 
     sg_helper.stop_sync_gateways(cluster_config=cluster_conf, url=sg_one_url)
     # Change the timestamps for SG logs when SG stopped (Name is unchanged)
@@ -400,6 +403,7 @@ def test_log_200mb(params_from_base_test_setup, sg_conf_name):
     sg_helper.start_sync_gateways(cluster_config=cluster_conf, url=sg_one_url, config=temp_conf)
     # ~1M MB will be added to log file after requests
     remote_executor.execute("for ((i=1;i <= 2000;i += 1)); do curl -s http://localhost:4984/ABCD/ > /dev/null; done")
+    remote_executor.execute("for ((i=1;i <= 2000;i += 1)); do curl -s -H 'Accept: text/plain' http://localhost:4985/db/ > /dev/null; done")
 
     for log in SG_LOGS:
         status, stdout, stderr = remote_executor.execute("ls /tmp/sg_logs/ | grep {} | wc -l".format(log))
@@ -409,76 +413,6 @@ def test_log_200mb(params_from_base_test_setup, sg_conf_name):
     # Remove generated conf file
     os.remove(temp_conf)
 
-
-@pytest.mark.syncgateway
-@pytest.mark.logging
-@pytest.mark.parametrize("sg_conf_name", ["log_rotation_new"])
-def test_log_number_backups(params_from_base_test_setup, sg_conf_name):
-    """Test to check general behaviour for number of backups.
-     In test the following params have been used:
-        "maxsize": 1,
-        "maxbackups": 2
-    """
-    # TODO
-    cluster_conf = params_from_base_test_setup["cluster_config"]
-    mode = params_from_base_test_setup["mode"]
-
-    sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
-
-    log_info("Using cluster_conf: {}".format(cluster_conf))
-    log_info("Using sg_conf: {}".format(sg_conf))
-
-    cluster_helper = ClusterKeywords()
-    cluster_hosts = cluster_helper.get_cluster_topology(cluster_conf)
-    sg_admin_url = cluster_hosts["sync_gateways"][0]["admin"]
-    sg_ip = host_for_url(sg_admin_url)
-
-    if get_sync_gateway_version(sg_ip)[0] < "2.0":
-        pytest.skip("Test NA for SG < 2.0")
-
-    cluster = Cluster(config=cluster_conf)
-    cluster.reset(sg_config_path=sg_conf)
-
-    remote_executor = RemoteExecutor(cluster.sync_gateways[0].ip)
-
-    # Stop sync_gateways
-    log_info(">>> Stopping sync_gateway")
-    sg_helper = SyncGateway()
-    sg_one_url = cluster_hosts["sync_gateways"][0]["public"]
-    sg_helper.stop_sync_gateways(cluster_config=cluster_conf, url=sg_one_url)
-
-    # Create /tmp/sg_logs
-    sg_helper.create_directory(cluster_config=cluster_conf, url=sg_one_url, dir_name="/tmp/sg_logs")
-
-    # generate log file with almost 1MB
-    SG_LOGS = ['sg_debug', 'sg_info', 'sg_warn', 'sg_error']
-
-    for log in SG_LOGS:
-        file_name = "/tmp/sg_logs/{}.log".format(log)
-        file_size = int(1 * 1024 * 1024)
-        sg_helper.create_empty_file(cluster_config=cluster_conf, url=sg_one_url, file_name=file_name, file_size=file_size)
-
-    # iterate 5 times
-    for i in xrange(5):
-        sg_helper.start_sync_gateways(cluster_config=cluster_conf, url=sg_one_url, config=sg_conf)
-        # ~1M MB will be added to log file after requests
-        remote_executor.execute(
-            "for ((i=1;i <= 4000;i += 1)); do curl -s http://localhost:4984/ABCD/ > /dev/null; done")
-
-        for log in SG_LOGS:
-            file_name = "/tmp/sg_logs/{}.log".format(log)
-            _, stdout, _ = remote_executor.execute("ls /tmp/sg_logs/ | grep {} | wc -l".format(log))
-            # Max 3 files: 2 backups + 1 log file
-            assert stdout[0].rstrip() == str(min(3, i + 2))
-
-        sg_helper.stop_sync_gateways(cluster_config=cluster_conf, url=sg_one_url)
-
-        for log in SG_LOGS:
-            # Generate log file with almost 1MB
-            file_size = int(1 * 1024 * 1024)
-            sg_helper.create_empty_file(cluster_config=cluster_conf, url=sg_one_url, file_name=file_name, file_size=file_size)
-
-    sg_helper.start_sync_gateways(cluster_config=cluster_conf, url=sg_one_url, config=sg_conf)
 
 # https://github.com/couchbase/sync_gateway/issues/2222
 @pytest.mark.syncgateway
@@ -610,6 +544,7 @@ def test_log_maxbackups_0(params_from_base_test_setup, sg_conf_name):
     sg_helper.start_sync_gateways(cluster_config=cluster_conf, url=sg_one_url, config=temp_conf)
     # ~1M MB will be added to log file after requests
     remote_executor.execute("for ((i=1;i <= 1000;i += 1)); do curl -s http://localhost:4984/ABCD/ > /dev/null; done")
+    remote_executor.execute("for ((i=1;i <= 1000;i += 1)); do curl -s -H 'Accept: text/plain' http://localhost:4985/db/ > /dev/null; done")
 
     for log in SG_LOGS:
         status, stdout, stderr = remote_executor.execute("ls /tmp/sg_logs/ | grep {} | wc -l".format(log))

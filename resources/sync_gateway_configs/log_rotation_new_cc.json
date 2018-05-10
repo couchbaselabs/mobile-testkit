@@ -9,7 +9,6 @@
       "rotation": {
         "max_size": 1,
         "max_age": 30,
-        "max_backups": 2,
         "localtime": true
       }
     },
@@ -18,7 +17,6 @@
       "rotation": {
         "max_size": 1,
         "max_age": 180,
-        "max_backups": 2,
         "localtime": true
       }
     },
@@ -27,7 +25,6 @@
       "rotation": {
         "max_size": 1,
         "max_age": 90,
-        "max_backups": 2,
         "localtime": true
       }
     },
@@ -36,7 +33,6 @@
       "rotation": {
         "max_size": 1,
         "max_age": 30,
-        "max_backups": 2,
         "localtime": true
       }
     },
@@ -45,7 +41,6 @@
       "rotation": {
         "max_size": 1,
         "max_age": 30,
-        "max_backups": 2,
         "localtime": true
       }
     }
