@@ -1,11 +1,34 @@
-- name: SG ACCEL | Copy sg_accel config to Windows host
+- name: SG ACCEL | Check if C:\PROGRA~2\Couchbase is present on Windows
+  win_stat:
+    path: 'C:\PROGRA~2\Couchbase'
+  register: pa
+  
+- name: SG ACCEL | Copy sg_accel config to C:\PROGRA~2\Couchbase
   win_template:
     src: "{{ sync_gateway_config_filepath }}"
     dest: 'C:\PROGRA~2\Couchbase\basic_sg_accel_config.json'
+  when: pa.stat.exists
 
 - name: SG ACCEL | Check deployed config
   win_shell: type C:\PROGRA~2\Couchbase\basic_sg_accel_config.json
   register: out
+  when: pa.stat.exists
+
+- name: SG ACCEL | Check if C:\PROGRA~1\Couchbase\Sync Gateway Accelerator is present on Windows
+  win_stat:
+    path: 'C:\PROGRA~1\Couchbase\Sync Gateway Accelerator'
+  register: pb
+  
+- name: SG ACCEL | Copy sg_accel config to C:\PROGRA~1\Couchbase\Sync Gateway Accelerator
+  win_template:
+    src: "{{ sync_gateway_config_filepath }}"
+    dest: 'C:\PROGRA~1\Couchbase\Sync Gateway Accelerator\basic_sg_accel_config.json'
+  when: pb.stat.exists
+
+- name: SG ACCEL | Check deployed config C:\PROGRA~1\Couchbase\Sync Gateway\basic_sg_accel_config.json
+  win_shell: type "C:\PROGRA~1\Couchbase\Sync Gateway Accelerator\basic_sg_accel_config.json"
+  register: out
+  when: pb.stat.exists
 
 - name: SG ACCEL | Print deployed config
   debug: var=out.stdout
