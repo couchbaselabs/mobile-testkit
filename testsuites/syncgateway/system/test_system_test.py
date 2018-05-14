@@ -193,7 +193,8 @@ def test_system_test(params_from_base_test_setup):
             users,
             changes_delay,
             changes_limit,
-            changes_terminator_doc_id
+            changes_terminator_doc_id,
+            update_runtime_sec
         )
 
         log_info('------------------------------------------')
@@ -274,7 +275,7 @@ def send_changes_termination_doc(sg_url, sg_db, users, terminator_doc_id, termin
     sg_client.add_doc(url=sg_url, db=sg_db, doc=doc, auth=random_user['auth'])
 
 
-def start_polling_changes_worker(sg_url, sg_db, user_name, user_auth, changes_delay, changes_limit, terminator_doc_id, feed, channels_filtered, doc_ids_filtered):
+def start_polling_changes_worker(sg_url, sg_db, user_name, user_auth, changes_delay, changes_limit, terminator_doc_id, feed, channels_filtered, doc_ids_filtered, update_runtime_sec):
     sg_client = MobileRestClient()
     since = 0
     latest_changes = {}
@@ -293,11 +294,17 @@ def start_polling_changes_worker(sg_url, sg_db, user_name, user_auth, changes_de
         filter_type = '_doc_ids'
         filter_doc_ids = ['terminator']
 
+    start = time.time()
+
     while True:
 
         # If terminator doc is found, terminate the polling loop
         if found_terminator:
             log_info('Found terminator ({}, {})'.format(user_name, feed))
+            return user_name, latest_changes
+
+        if time.time() - start > update_runtime_sec:
+            log_info('start_polling_changes_worker exiting after {} time'.format(update_runtime_sec))
             return user_name, latest_changes
 
         log_info('_changes ({}) for ({}) since: {}'.format(feed, user_name, since))
@@ -328,7 +335,7 @@ def start_polling_changes_worker(sg_url, sg_db, user_name, user_auth, changes_de
         time.sleep(changes_delay)
 
 
-def start_continuous_changes_worker(sg_url, sg_db, user_name, user_auth, terminator_doc_id, channels_filtered):
+def start_continuous_changes_worker(sg_url, sg_db, user_name, user_auth, terminator_doc_id, channels_filtered, update_runtime_sec):
 
     sg_client = MobileRestClient()
 
@@ -352,7 +359,12 @@ def start_continuous_changes_worker(sg_url, sg_db, user_name, user_auth, termina
         filter_channels=filter_channels
     )
 
+    start = time.time()
+
     for line in stream.iter_lines():
+        if time.time() - start > update_runtime_sec:
+            log_info('start_continuous_changes_worker exiting after {} time'.format(update_runtime_sec))
+            return user_name, latest_changes
 
         # filter out keep-alive new lines
         if line:
@@ -370,7 +382,7 @@ def start_continuous_changes_worker(sg_url, sg_db, user_name, user_auth, termina
                     latest_changes[change['id']] = ''
 
 
-def start_changes_processing(sg_url, sg_db, users, changes_delay, changes_limit, terminator_doc_id):
+def start_changes_processing(sg_url, sg_db, users, changes_delay, changes_limit, terminator_doc_id, update_runtime_sec):
 
     # Make sure there are enough workers for 3 changes feed types for each user
     workers = len(users) * 3
@@ -412,7 +424,8 @@ def start_changes_processing(sg_url, sg_db, users, changes_delay, changes_limit,
                     terminator_doc_id,
                     "normal",
                     channels_filtered,
-                    doc_ids_filtered
+                    doc_ids_filtered,
+                    update_runtime_sec
                 )
             )
 
@@ -430,7 +443,8 @@ def start_changes_processing(sg_url, sg_db, users, changes_delay, changes_limit,
                         terminator_doc_id,
                         "longpoll",
                         channels_filtered,
-                        False
+                        False,
+                        update_runtime_sec
                     )
                 )
 
@@ -444,7 +458,8 @@ def start_changes_processing(sg_url, sg_db, users, changes_delay, changes_limit,
                         user_key,
                         user_val['auth'],
                         terminator_doc_id,
-                        channels_filtered
+                        channels_filtered,
+                        update_runtime_sec
                     )
                 )
 
