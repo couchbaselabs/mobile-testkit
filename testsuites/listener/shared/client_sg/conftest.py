@@ -25,6 +25,8 @@ def pytest_addoption(parser):
     parser.addoption("--server-version", action="store", help="server-version: version of Couchbase Server to install and run tests against")
     parser.addoption("--xattrs", action="store_true", help="Use xattrs for sync meta storage. Sync Gateway 1.5.0+ and Couchbase Server 5.0+")
     parser.addoption("--device", action="store_true", help="Enable device if you want to run it on device", default=False)
+    parser.addoption("--use-views", action="store_true", help="If set, uses views instead of GSI - SG 2.1 and above only")
+    parser.addoption("--number-replicas", action="store", help="Number of replicas for the indexer node - SG 2.1 and above only", default=0)
 
 
 # This will get called once before the first test that
@@ -51,6 +53,8 @@ def setup_client_syncgateway_suite(request):
     server_version = request.config.getoption("--server-version")
     xattrs_enabled = request.config.getoption("--xattrs")
     device_enabled = request.config.getoption("--device")
+    use_views = request.config.getoption("--use-views")
+    number_replicas = request.config.getoption("--number-replicas")
 
     liteserv = LiteServFactory.create(platform=liteserv_platform,
                                       version_build=liteserv_version,
@@ -59,7 +63,7 @@ def setup_client_syncgateway_suite(request):
                                       storage_engine=liteserv_storage_engine)
 
     if xattrs_enabled and version_is_binary(sync_gateway_version):
-            check_xattr_support(server_version, sync_gateway_version)
+        check_xattr_support(server_version, sync_gateway_version)
 
     log_info("Downloading LiteServ ...")
     # Download LiteServ
@@ -90,6 +94,18 @@ def setup_client_syncgateway_suite(request):
     else:
         log_info("Running test with sync_gateway version {}".format(sync_gateway_version))
         persist_cluster_config_environment_prop(cluster_config, 'sync_gateway_version', sync_gateway_version)
+
+    if use_views:
+        log_info("Running SG tests using views")
+        # Enable sg views in cluster configs
+        persist_cluster_config_environment_prop(cluster_config, 'sg_use_views', True)
+    else:
+        log_info("Running tests with cbs <-> sg ssl disabled")
+        # Disable sg views in cluster configs
+        persist_cluster_config_environment_prop(cluster_config, 'sg_use_views', False)
+
+    # Write the number of replicas to cluster config
+    persist_cluster_config_environment_prop(cluster_config, 'number_replicas', number_replicas)
 
     if xattrs_enabled:
         log_info("Running test with xattrs for sync meta storage")

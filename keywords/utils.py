@@ -1,5 +1,7 @@
 import logging
 import json
+import random
+import string
 
 from keywords.exceptions import FeatureSupportedError
 from utilities.cluster_config_utils import get_cbs_servers, get_sg_version
@@ -101,6 +103,7 @@ def hostname_for_url(cluster_config, url):
 
     # strip possible ports
     url = url.replace("http://", "")
+    url = url.replace("https://", "")
     url = url.replace(":4984", "")
     url = url.replace(":4985", "")
     url = url.replace(":8091", "")
@@ -211,3 +214,11 @@ def add_cbs_to_sg_config_server_field(cluster_config):
                 couchbase_server_primary_node = couchbase_server_primary_node + ","
 
     return couchbase_server_primary_node
+
+
+def random_string(length, printable=False, digit=False):
+    if digit:
+        return ''.join(random.choice(string.digits) for _ in range(length))
+    if printable:
+        return ''.join(random.choice(string.printable) for _ in range(length))
+    return ''.join(random.choice(string.ascii_letters + string.digits) for _ in range(length))

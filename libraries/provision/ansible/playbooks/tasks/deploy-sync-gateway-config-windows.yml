@@ -1,11 +1,34 @@
-- name: SYNC GATEWAY | Copy sync gateway config to Windows host
+- name: SYNC GATEWAY | Check if C:\PROGRA~2\Couchbase is present on Windows
+  win_stat:
+    path: 'C:\PROGRA~2\Couchbase'
+  register: pa
+  
+- name: SYNC GATEWAY | Copy sync gateway config to C:\PROGRA~2\Couchbase
   win_template:
     src: "{{ sync_gateway_config_filepath }}"
     dest: 'C:\PROGRA~2\Couchbase\serviceconfig.json'
-
-- name: SYNC GATEWAY | Check deployed config
+  when: pa.stat.exists
+  
+- name: SYNC GATEWAY | Check deployed config C:\PROGRA~2\Couchbase\serviceconfig.json
   win_shell: type C:\PROGRA~2\Couchbase\serviceconfig.json
   register: out
+  when: pa.stat.exists
+
+- name: SYNC GATEWAY | Check if C:\PROGRA~1\Couchbase\Sync Gateway is present on Windows
+  win_stat:
+    path: 'C:\PROGRA~1\Couchbase\Sync Gateway'
+  register: pb
+  
+- name: SYNC GATEWAY | Copy sync gateway config to C:\PROGRA~1\Couchbase\Sync Gateway
+  win_template:
+    src: "{{ sync_gateway_config_filepath }}"
+    dest: 'C:\PROGRA~1\Couchbase\Sync Gateway\serviceconfig.json'
+  when: pb.stat.exists
+
+- name: SYNC GATEWAY | Check deployed config C:\PROGRA~1\Couchbase\Sync Gateway\serviceconfig.json
+  win_shell: type "C:\PROGRA~1\Couchbase\Sync Gateway\serviceconfig.json"
+  register: out
+  when: pb.stat.exists
 
 - name: SYNC GATEWAY | Print deployed config
   debug: var=out.stdout

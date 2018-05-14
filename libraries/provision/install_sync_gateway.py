@@ -9,7 +9,7 @@ from keywords.exceptions import ProvisioningError
 from keywords.utils import log_info, log_warn, add_cbs_to_sg_config_server_field
 from libraries.provision.ansible_runner import AnsibleRunner
 from libraries.testkit.config import Config
-from utilities.cluster_config_utils import is_cbs_ssl_enabled, is_xattrs_enabled, no_conflicts_enabled, get_revs_limit
+from utilities.cluster_config_utils import is_cbs_ssl_enabled, is_xattrs_enabled, no_conflicts_enabled, get_revs_limit, get_sg_version, get_sg_replicas, get_sg_use_views
 
 
 class SyncGatewayConfig:
@@ -39,11 +39,11 @@ class SyncGatewayConfig:
         output += "  skip bucketcreation: {}\n".format(self.skip_bucketcreation)
         return output
 
-    def sync_gateway_base_url_and_package(self, sg_ce=False, sg_platform="centos", sa_platform="centos"):
+    def sync_gateway_base_url_and_package(self, sg_ce=False, sg_platform="centos", sg_installer_type="msi", sa_platform="centos", sa_installer_type="msi"):
         platform_extension = {
             "centos": "rpm",
             "ubuntu": "deb",
-            "windows": "exe"
+            "windows": "msi"
         }
 
         if self._version_number == "1.1.0" or self._build_number == "1.1.1":
@@ -60,6 +60,9 @@ class SyncGatewayConfig:
 
             if sg_ce:
                 sg_type = "community"
+
+            if (sg_platform == "windows" or sa_platform == "windows") and (sg_installer_type != "msi" or sa_installer_type != "msi"):
+                platform_extension["windows"] = "exe"
 
             sg_package_name = "couchbase-sync-gateway-{0}_{1}-{2}_x86_64.{3}".format(sg_type, self._version_number, self._build_number, platform_extension[sg_platform])
             accel_package_name = "couchbase-sg-accel-enterprise_{0}-{1}_x86_64.{2}".format(self._version_number, self._build_number, platform_extension[sa_platform])
@@ -87,7 +90,7 @@ class SyncGatewayConfig:
         return True
 
 
-def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False, sg_platform="centos", sa_platform="centos"):
+def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False, sg_platform="centos", sg_installer_type="msi", sa_platform="centos", sa_installer_type="msi"):
 
     log_info(sync_gateway_config)
 
@@ -116,8 +119,17 @@ def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False, sg_pl
         "autoimport": "",
         "xattrs": "",
         "no_conflicts": "",
+        "num_index_replicas": "",
+        "sg_use_views": "",
         "couchbase_server_primary_node": couchbase_server_primary_node
     }
+
+    if get_sg_version(cluster_config) >= "2.1.0":
+        if get_sg_use_views(cluster_config):
+            playbook_vars["sg_use_views"] = '"use_views": true,'
+        else:
+            num_replicas = get_sg_replicas(cluster_config)
+            playbook_vars["num_index_replicas"] = '"num_index_replicas": {},'.format(num_replicas)
 
     if is_xattrs_enabled(cluster_config):
         playbook_vars["autoimport"] = '"import_docs": "continuous",'
@@ -145,7 +157,7 @@ def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False, sg_pl
 
     else:
         # Install from Package
-        sync_gateway_base_url, sync_gateway_package_name, sg_accel_package_name = sync_gateway_config.sync_gateway_base_url_and_package(sg_ce=sg_ce, sg_platform=sg_platform, sa_platform=sa_platform)
+        sync_gateway_base_url, sync_gateway_package_name, sg_accel_package_name = sync_gateway_config.sync_gateway_base_url_and_package(sg_ce=sg_ce, sg_platform=sg_platform, sg_installer_type=sg_installer_type, sa_platform=sa_platform, sa_installer_type=sa_installer_type)
 
         playbook_vars["couchbase_sync_gateway_package_base_url"] = sync_gateway_base_url
         playbook_vars["couchbase_sync_gateway_package"] = sync_gateway_package_name

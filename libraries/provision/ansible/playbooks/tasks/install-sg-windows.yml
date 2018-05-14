@@ -1,5 +1,10 @@
 # Install and stop sync_gateway service
-- name: SYNC GATEWAY | Install sync_gateway exe {{ couchbase_sync_gateway_package | regex_replace('rpm', 'exe') }}
-  win_shell: C:\Users\Administrator\AppData\Local\Temp\{{ couchbase_sync_gateway_package | regex_replace('rpm', 'exe') }} /S /v /qn
+- name: SYNC GATEWAY | Install sync_gateway exe - {{ couchbase_sync_gateway_package }}
+  win_shell: C:\Users\Administrator\AppData\Local\Temp\{{ couchbase_sync_gateway_package }} /S /v /qn
+  when: "{{ couchbase_sync_gateway_package  | search('exe$') }}"
+
+- name: SYNC GATEWAY | Install sync_gateway msi - {{ couchbase_sync_gateway_package }}
+  win_shell: Start-Process "C:\Users\Administrator\AppData\Local\Temp\{{ couchbase_sync_gateway_package }}" /qn -wait
+  when: "{{ couchbase_sync_gateway_package | search('msi$') }}"
 
 - include: stop-sync-gateway-windows.yml

@@ -23,6 +23,8 @@ from keywords.userinfo import UserInfo
 from keywords.utils import host_for_url, log_info
 from libraries.testkit.cluster import Cluster
 from keywords.ChangesTracker import ChangesTracker
+from utilities.cluster_config_utils import get_sg_use_views, get_sg_version
+
 
 # Since sdk is quicker to update docs we need to have it sleep longer
 # between ops to avoid ops heavily weighted to SDK. These gives us more balanced
@@ -2223,6 +2225,9 @@ def test_purge_and_view_compaction(params_from_base_test_setup, sg_conf_name):
     # This test should only run when using xattr meta storage
     if not xattrs_enabled or mode == "di":
         pytest.skip('This test is di mode or xattrs not enabled')
+
+    if get_sg_version(cluster_conf) > "2.0.0" and not get_sg_use_views(cluster_conf):
+        pytest.skip("This test uses view queries")
 
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
     sg_admin_url = cluster_topology['sync_gateways'][0]['admin']
