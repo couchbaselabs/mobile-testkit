@@ -50,6 +50,15 @@ def pytest_addoption(parser):
                      action="store_true",
                      help="If set, allow_conflicts is set to false in sync-gateway config")
 
+    parser.addoption("--use-views",
+                     action="store_true",
+                     help="If set, uses views instead of GSI - SG 2.1 and above only")
+
+    parser.addoption("--number-replicas",
+                     action="store",
+                     help="Number of replicas for the indexer node - SG 2.1 and above only",
+                     default=0)
+
     parser.addoption("--sg-installer-type",
                      action="store",
                      help="Sync Gateway Installer type (ex. exe or msi)",

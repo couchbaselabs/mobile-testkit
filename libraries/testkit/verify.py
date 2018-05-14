@@ -168,6 +168,21 @@ def verify_changes(users, expected_num_docs, expected_num_revisions, expected_do
         # Check expected_num_docs matches number of changes results
         if expected_num_docs != len(changes_results):
             log_error("{0} -> {1} expected_num_docs != {2} len(changes_results)".format(user.name, expected_num_docs, len(changes_results)))
+            changes_results_ids = []
+            for i in changes_results:
+                changes_results_ids.append(i["id"])
+
+            changes_results_ids_tracker = {}
+            for i in changes_results_ids:
+                if i in changes_results_ids_tracker:
+                    changes_results_ids_tracker[i] += 1
+                else:
+                    changes_results_ids_tracker[i] = 1
+
+            for i in changes_results_ids_tracker:
+                if changes_results_ids_tracker[i] > 1:
+                    log_info("Duplicate id {}".format(i))
+
             errors["unexpected_changes_length"] += 1
 
         # Check number of expected num docs matched number of expected doc ids
@@ -189,6 +204,17 @@ def verify_changes(users, expected_num_docs, expected_num_revisions, expected_do
         # Assert there are no duplicates in changes doc ids
         if len(changes_doc_ids) != len(set(changes_doc_ids)):
             log_error("{0} -> Duplicates found in changes doc ids".format(user.name))
+            changes_doc_ids_tracker = {}
+            for i in set(changes_doc_ids):
+                if i in changes_doc_ids_tracker:
+                    changes_doc_ids_tracker[i] += 1
+                else:
+                    changes_doc_ids_tracker[i] = 1
+
+            for i in changes_doc_ids_tracker:
+                if changes_doc_ids_tracker[i] > 1:
+                    log_info("Duplicate id {}".format(i))
+
             errors["duplicate_changes_doc_ids"] += 1
 
         # Assert the expected doc ids and changes doc ids are the same

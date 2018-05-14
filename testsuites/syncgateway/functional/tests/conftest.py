@@ -121,6 +121,15 @@ def pytest_addoption(parser):
                      action="store_true",
                      help="If set, allow_conflicts is set to false in sync-gateway config")
 
+    parser.addoption("--use-views",
+                     action="store_true",
+                     help="If set, uses views instead of GSI - SG 2.1 and above only")
+
+    parser.addoption("--number-replicas",
+                     action="store",
+                     help="Number of replicas for the indexer node - SG 2.1 and above only",
+                     default=0)
+
 
 # This will be called once for the at the beggining of the execution in the 'tests/' directory
 # and will be torn down, (code after the yeild) when all the test session has completed.
@@ -148,6 +157,8 @@ def params_from_base_suite_setup(request):
     sg_ce = request.config.getoption("--sg-ce")
     use_sequoia = request.config.getoption("--sequoia")
     no_conflicts_enabled = request.config.getoption("--no-conflicts")
+    use_views = request.config.getoption("--use-views")
+    number_replicas = request.config.getoption("--number-replicas")
 
     if xattrs_enabled and version_is_binary(sync_gateway_version):
         check_xattr_support(server_version, sync_gateway_version)
@@ -167,7 +178,9 @@ def params_from_base_suite_setup(request):
     log_info("sa_platform: {}".format(sa_platform))
     log_info("sg_lb: {}".format(sg_lb))
     log_info("sg_ce: {}".format(sg_ce))
-    log_info("no conflicts enabled {}".format(no_conflicts_enabled))
+    log_info("no_conflicts_enabled: {}".format(no_conflicts_enabled))
+    log_info("use_views: {}".format(use_views))
+    log_info("number_replicas: {}".format(number_replicas))
 
     # sg-ce is invalid for di mode
     if mode == "di" and sg_ce:
@@ -204,6 +217,18 @@ def params_from_base_suite_setup(request):
         log_info("Running tests with cbs <-> sg ssl disabled")
         # Disable ssl in cluster configs
         persist_cluster_config_environment_prop(cluster_config, 'cbs_ssl_enabled', False)
+
+    if use_views:
+        log_info("Running SG tests using views")
+        # Enable sg views in cluster configs
+        persist_cluster_config_environment_prop(cluster_config, 'sg_use_views', True)
+    else:
+        log_info("Running tests with cbs <-> sg ssl disabled")
+        # Disable sg views in cluster configs
+        persist_cluster_config_environment_prop(cluster_config, 'sg_use_views', False)
+
+    # Write the number of replicas to cluster config
+    persist_cluster_config_environment_prop(cluster_config, 'number_replicas', number_replicas)
 
     if xattrs_enabled:
         log_info("Running test with xattrs for sync meta storage")
