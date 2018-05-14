@@ -101,7 +101,7 @@ def pytest_addoption(parser):
                      action="store_true",
                      help="If set, uses views instead of GSI - SG 2.1 and above only")
 
-    parser.addoption("--number-replicas",
+    parser.addoption("--num-replicas",
                      action="store",
                      help="Number of replicas for the indexer node - SG 2.1 and above only",
                      default=0)
@@ -136,7 +136,7 @@ def params_from_base_suite_setup(request):
     changes_delay = request.config.getoption("--changes-delay")
     changes_limit = request.config.getoption("--changes-limit")
     use_views = request.config.getoption("--use-views")
-    number_replicas = request.config.getoption("--number-replicas")
+    number_replicas = request.config.getoption("--num-replicas")
 
     if xattrs_enabled and version_is_binary(sync_gateway_version):
         check_xattr_support(server_version, sync_gateway_version)
