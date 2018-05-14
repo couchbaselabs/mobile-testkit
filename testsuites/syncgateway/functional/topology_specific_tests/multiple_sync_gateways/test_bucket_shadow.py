@@ -4,10 +4,11 @@ from collections import namedtuple
 
 import pytest
 
-from keywords.SyncGateway import sync_gateway_config_path_for_mode
-from keywords.utils import log_info
+from keywords.SyncGateway import sync_gateway_config_path_for_mode, get_sync_gateway_version
+from keywords.utils import log_info, host_for_url
 from libraries.testkit.admin import Admin
 from libraries.testkit.cluster import Cluster
+from keywords.ClusterKeywords import ClusterKeywords
 
 source_bucket_name = "source-bucket"
 data_bucket_name = "data-bucket"
@@ -97,9 +98,13 @@ def test_bucket_shadow_low_revs_limit_repeated_deletes(params_from_base_test_set
     cluster_config = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
     xattrs_enabled = params_from_base_test_setup["xattrs_enabled"]
+    cluster_helper = ClusterKeywords()
+    cluster_hosts = cluster_helper.get_cluster_topology(cluster_config)
+    sg_admin_url = cluster_hosts["sync_gateways"][0]["admin"]
+    sg_ip = host_for_url(sg_admin_url)
 
-    if mode == "di" or xattrs_enabled:
-        pytest.skip("https://github.com/couchbase/sync_gateway/issues/2193")
+    if mode == "di" or xattrs_enabled or get_sync_gateway_version(sg_ip)[0] > "2.0":
+        pytest.skip("https://github.com/couchbase/sync_gateway/issues/2193 and bucket shadow not supported in SG >= 2.1")
 
     default_config_path_shadower_low_revs = sync_gateway_config_path_for_mode("sync_gateway_bucketshadow_low_revs", mode)
     default_config_path_non_shadower_low_revs = sync_gateway_config_path_for_mode("sync_gateway_default_low_revs", mode)
@@ -168,8 +173,12 @@ def test_bucket_shadow_low_revs_limit(params_from_base_test_setup):
     cluster_config = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
     xattrs_enabled = params_from_base_test_setup["xattrs_enabled"]
+    cluster_helper = ClusterKeywords()
+    cluster_hosts = cluster_helper.get_cluster_topology(cluster_config)
+    sg_admin_url = cluster_hosts["sync_gateways"][0]["admin"]
+    sg_ip = host_for_url(sg_admin_url)
 
-    if mode == "di" or xattrs_enabled:
+    if mode == "di" or xattrs_enabled or get_sync_gateway_version(sg_ip)[0] > "2.0":
         pytest.skip("https://github.com/couchbase/sync_gateway/issues/2193")
 
     log_info("Running 'test_bucket_shadow_low_revs_limit'")
@@ -230,8 +239,12 @@ def test_bucket_shadow_multiple_sync_gateways(params_from_base_test_setup):
     cluster_config = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
     xattrs_enabled = params_from_base_test_setup["xattrs_enabled"]
+    cluster_helper = ClusterKeywords()
+    cluster_hosts = cluster_helper.get_cluster_topology(cluster_config)
+    sg_admin_url = cluster_hosts["sync_gateways"][0]["admin"]
+    sg_ip = host_for_url(sg_admin_url)
 
-    if mode == "di" or xattrs_enabled:
+    if mode == "di" or xattrs_enabled or get_sync_gateway_version(sg_ip)[0] > "2.0":
         pytest.skip("https://github.com/couchbase/sync_gateway/issues/2193")
 
     log_info("Running 'test_bucket_shadow_multiple_sync_gateways'")
