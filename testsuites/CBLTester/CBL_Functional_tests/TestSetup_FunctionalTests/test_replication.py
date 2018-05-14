@@ -695,7 +695,7 @@ def test_CBL_for_purged_doc(params_from_base_test_setup, sg_conf_name, delete_do
     replicator.wait_until_replicator_idle(repl)
     replicator.stop(repl)
     cbl_doc_ids = db.getDocIds(cbl_db)
-    assert doc_id in cbl_doc_ids, "{} document in did not existed in CBL after replication".format(delete_doc_type)
+    assert doc_id in cbl_doc_ids, "{} document does not exist in CBL after replication".format(delete_doc_type)
 
 
 @pytest.mark.listener
@@ -1008,7 +1008,6 @@ def CBL_offline_test(params_from_base_test_setup, sg_conf_name, num_of_docs):
 
     # 1. Create docs in CBL.
     cbl_db = db.create(cbl_db_name)
-    # db.create_bulk_docs(num_of_docs, "cbl", db=cbl_db, generator="simple_user", attachments_generator=attachment.generate_png_100_100, channels=channels)
     db.create_bulk_docs(num_of_docs, "cbl", db=cbl_db, channels=channels)
     # 2. push replication to SG
     replication_type = "push"
@@ -1728,7 +1727,7 @@ def test_default_conflict_with_oneTombstone_conflict(params_from_base_test_setup
         4. Start replication and pull to cbl
         5. Verify that doc got tomstoned.
         6. update the doc in sg.
-        7. Wait until replication is idle and stop the replicaitor
+        7. Wait until replication is idle and stop the replicator
         8. Verify updates from cbl got replicated to sg.
     """
     sg_db = "db"
@@ -2183,7 +2182,7 @@ def test_replication_with_3Channels(params_from_base_test_setup, setup_customize
         @summary:
         1. Create 3 users in SG with 3 differrent channels.
         2. Create docs in sg in all 3 channels
-        3. replication to CBL with continous true and push_pull on 3 CBL DBs assosciated with each sg channel.
+        3. replication to CBL with continous true and push_pull on 3 CBL DBs assosiated with each sg channel.
         4. verify in CBL , docs got replicated to each DB appropirately
 
     """
@@ -2251,7 +2250,7 @@ def test_replication_with_3Channels(params_from_base_test_setup, setup_customize
     sg_client.add_bulk_docs(url=sg_url, db=sg_db, docs=sg_docs2, auth=session2)
     sg_client.add_bulk_docs(url=sg_url, db=sg_db, docs=sg_docs3, auth=session3)
 
-    # 3. replication to CBL with continous true and push_pull on 3 CBL DBs assosciated with each sg channel.
+    # 3. replication to CBL with continous true and push_pull on 3 CBL DBs assosiated with each sg channel.
     replicator = Replication(base_url)
     replicator_authenticator1 = authenticator.authentication(session_id1, cookie1, authentication_type="session")
     replicator.configure_and_replicate(source_db=cbl_db1, replicator_authenticator=replicator_authenticator1, target_url=sg_blip_url,
@@ -2274,9 +2273,6 @@ def test_replication_with_3Channels(params_from_base_test_setup, setup_customize
     verify_sgDocIds_cblDocIds(sg_client, sg_url, sg_db, session1, cbl_db1, db)
     verify_sgDocIds_cblDocIds(sg_client, sg_url, sg_db, session2, cbl_db2, db)
     verify_sgDocIds_cblDocIds(sg_client, sg_url, sg_db, session3, cbl_db3, db)
-    # replicator.stop(repl1)
-    # replicator.stop(repl2)
-    # replicator.stop(repl3)
 
 
 @pytest.mark.listener
@@ -2385,7 +2381,7 @@ def test_replication_withChannels1_withMultipleSgDBs(params_from_base_test_setup
         @summary:
         1. Create 2 users in SG with 2 SG dbs with 2 differrent channels.
         2. Create docs in sg in all 2 channels with 2 sg DBs
-        3. replication to CBL with continous False and push_pull on 2 CBL DBs assosciated with each sg Dbs.
+        3. replication to CBL with continous False and push_pull on 2 CBL DBs assosiated with each sg Dbs.
         4. verify in CBL , docs got replicated to each DB appropirately
 
     """

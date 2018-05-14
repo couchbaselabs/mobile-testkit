@@ -239,12 +239,8 @@ def params_from_base_suite_setup(request):
 
     cluster_utils = ClusterKeywords()
     cluster_topology = cluster_utils.get_cluster_topology(cluster_config)
-    # c = cluster.Cluster(config=cluster_config)
-    # c.reset(sg_config_path=sg_config)
     cbs_url = cluster_topology['couchbase_servers'][0]
     cbs_ip = host_for_url(cbs_url)
-
-    # cluster = Cluster(cluster_config)
 
     if sync_gateway_version < "2.0":
         pytest.skip('Does not work with sg < 2.0 , so skipping the test')
@@ -565,7 +561,6 @@ def setup_customized_teardown_test(params_from_base_test_setup):
         "cbl_db3": cbl_db3,
     }
     log_info("Tearing down test")
-    # db.close(cbl_db)
     db.deleteDB(cbl_db1)
     db.deleteDB(cbl_db2)
     db.deleteDB(cbl_db3)

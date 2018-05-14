@@ -439,6 +439,7 @@ def test_cbl_no_conflicts_sgAccel_added(params_from_base_test_setup, sg_conf_nam
         4. Do push and pull replication to sg.
         5. update docs in CBL
         6. Verify docs updated successfully.
+        7. Create conflict and verify conflicts are not allowed after sg accel is added
     """
     # source_db = None
     sg_db = "db"
@@ -651,8 +652,7 @@ def sg_updateDocs(sg_client, url, db, docs, number_updates, auth):
                 sg_client.update_doc(url=url, db=db, doc_id=doc["id"], number_updates=number_updates, auth=auth)
                 break
             except HTTPError as he:
-                if ((he.response.status_code == 403 and str(he).startswith('403 Client Error: Forbidden for url:')) or
-                        (he.response.status_code == 409 and str(he).startswith('409 Client Error: Conflict for url:'))):
+                if (he.response.status_code == 409 and str(he).startswith('409 Client Error: Conflict for url:')):
                     log_info("retrying the doc to update again due to conflict issue ....")
                 count = + 1
 
@@ -671,13 +671,14 @@ def test_multiple_cbls_updates_concurrently_with_push(params_from_base_test_setu
         1. Create docs in CBL DB1, DB2 , DB3 associated with its own channel.
         2. Replicate docs from CBL DB1 to DB2 with push pull and continous.
         3. Wait until replication is done.
-        4. Repliate docs from CBL DB1 to DB3.
+        4. Replicate docs from CBL DB1 to DB3.
         5. Wait until replication is done with push pull and continous.
         6. update docs on CBL DB1, DB2, DB3.
         7. Now update docs concurrently on all 3 CBL DBs.
         8. Wait until replication is done.
         9. Replicate docs from CBL DB3 to sg with push pull and continous.
-        10. Verify all docs recplicated to sync-gateway.
+        10. Verify all docs replicated to sync-gateway.
+        11. Verify no conflicts allowed when trying to create conflicts
     """
 
     sg_db = "db"
@@ -775,7 +776,6 @@ def test_multiple_cbls_updates_concurrently_with_push(params_from_base_test_setu
     while replicator.getActivitylevel(repl3) != "stopped":
         log_info("replicator activity for repl3: {}".format(replicator.getActivitylevel(repl3)))
         time.sleep(0.5)
-    setup_customized_teardown_test["cbl_db_name3"]
     repl_config = replicator.configure(cbl_db3, sg_blip_url, continuous=True, channels=channels, replicator_authenticator=replicator_authenticator)
     repl4 = replicator.create(repl_config)
     process_replicator(replicator, repl4)
@@ -807,7 +807,7 @@ def test_multiple_cbls_updates_concurrently_with_pull(params_from_base_test_setu
     """
         @summary:
         1. Create docs in SG.
-        2. PUSH and Pull replication to 3 CBLs
+        2. Do Pull replication to 3 CBLs
         3. update docs in SG and all 3 CBL.
         4. PUSH and PULL replication to CBLs
         5. Verify docs can resolve conflicts and
@@ -1161,7 +1161,6 @@ def replicate_update_cbl_docs(replicator, db, cbl_db, repl):
             updates_cbl = 0
         total_updates = updates + updates_cbl
         assert total_updates > 0, "Either CBL or sg did not update the doc right"
-        # assert cbl_db_docs[doc]["updates-cbl"] == number_of_updates or cbl_db_docs[doc]["updates-cbl"] == 1, "updates-cbl did not get updated"
 
     replicator.wait_until_replicator_idle(repl)
     changes = replicator.getChangesChangeListener(change_listener)
