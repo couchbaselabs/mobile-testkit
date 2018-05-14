@@ -1518,3 +1518,119 @@ def test_replication_attachments_survive_channel_removal(setup_client_syncgatewa
         with open('resources/data/sample_text.txt', 'r') as file:
             expected_text = file.read()
         assert expected_text == att
+
+
+@pytest.mark.sanity
+@pytest.mark.listener
+@pytest.mark.syncgateway
+@pytest.mark.replication
+@pytest.mark.session
+def test_verify_doc_updates_pull(setup_client_syncgateway_test):
+    """
+    1. Add docs with attachments
+    2. Start push/pull replication with continuous=True
+    3. Wait for the replication to go idle
+    4. stop replication
+    5. update docs on SG multiple times
+    6. Start pull replication
+    7. Verify revisions match on CBL
+
+    https://github.com/couchbase/couchbase-lite-net/issues/937
+    """
+
+    cluster_config = setup_client_syncgateway_test["cluster_config"]
+    sg_mode = setup_client_syncgateway_test["sg_mode"]
+    ls_url = setup_client_syncgateway_test["ls_url"]
+    sg_url = setup_client_syncgateway_test["sg_url"]
+    sg_admin_url = setup_client_syncgateway_test["sg_admin_url"]
+
+    num_docs = 100
+    num_revs = 20
+
+    sg_db = "db"
+    sg_user_name = "sg_user"
+
+    sg_config = sync_gateway_config_path_for_mode("listener_tests/listener_tests", sg_mode)
+    c = cluster.Cluster(config=cluster_config)
+    c.reset(sg_config_path=sg_config)
+
+    log_info("Running 'test_verify_open_revs_with_revs_limit_push_conflict'")
+    log_info("ls_url: {}".format(ls_url))
+    log_info("sg_admin_url: {}".format(sg_admin_url))
+    log_info("sg_url: {}".format(sg_url))
+    log_info("num_docs: {}".format(num_docs))
+    log_info("num_revs: {}".format(num_revs))
+
+    client = MobileRestClient()
+
+    # Test the endpoint, listener does not support users but should have a default response
+    client.get_session(url=ls_url)
+    sg_user_channels = ["NBC"]
+    client.create_user(url=sg_admin_url, db=sg_db, name=sg_user_name, password="password", channels=sg_user_channels)
+    sg_session = client.create_session(url=sg_admin_url, db=sg_db, name=sg_user_name)
+
+    ls_db = client.create_database(url=ls_url, name="ls_db")
+    ls_db_docs = client.add_docs(url=ls_url, db=ls_db, number=num_docs, id_prefix="ls_db", channels=sg_user_channels, attachments_generator=attachment.generate_2_png_10_10,)
+    assert len(ls_db_docs) == num_docs
+
+    # Start replication sg_db -> ls_db
+    repl_one = client.start_replication(
+        url=ls_url,
+        continuous=True,
+        from_url=sg_admin_url,
+        from_db=sg_db,
+        to_db=ls_db
+    )
+
+    repl_two = client.start_replication(
+        url=ls_url,
+        continuous=True,
+        from_db=ls_db,
+        to_url=sg_admin_url,
+        to_db=sg_db
+    )
+
+    client.wait_for_replication_status_idle(url=ls_url, replication_id=repl_one)
+    client.wait_for_replication_status_idle(url=ls_url, replication_id=repl_two)
+
+    client.stop_replication(
+        url=ls_url,
+        continuous=True,
+        from_url=sg_admin_url,
+        from_db=sg_db,
+        to_db=ls_db
+    )
+
+    client.stop_replication(
+        url=ls_url,
+        continuous=True,
+        from_db=ls_db,
+        to_url=sg_admin_url,
+        to_db=sg_db
+    )
+
+    client.verify_docs_present(url=sg_admin_url, db=sg_db, expected_docs=ls_db_docs)
+
+    # Update docs on sync gateway
+    client.update_docs(url=sg_url, db=sg_db, docs=ls_db_docs, number_updates=num_revs, auth=sg_session)
+
+    # Start replication sg_db -> ls_db
+    repl_one = client.start_replication(
+        url=ls_url,
+        continuous=True,
+        from_url=sg_admin_url,
+        from_db=sg_db,
+        to_db=ls_db
+    )
+
+    client.wait_for_replication_status_idle(url=ls_url, replication_id=repl_one)
+
+    client.stop_replication(
+        url=ls_url,
+        continuous=True,
+        from_url=sg_admin_url,
+        from_db=sg_db,
+        to_db=ls_db
+    )
+
+    client.verify_revs_num_for_docs(url=ls_url, db=ls_db, docs=ls_db_docs, expected_revs_per_doc=20)
