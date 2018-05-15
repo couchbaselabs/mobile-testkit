@@ -16,7 +16,7 @@ from utilities.cluster_config_utils import get_revs_limit
 from keywords.exceptions import ProvisioningError
 
 from libraries.provision.ansible_runner import AnsibleRunner
-from utilities.cluster_config_utils import is_cbs_ssl_enabled, is_xattrs_enabled, no_conflicts_enabled, get_sg_replicas, get_sg_use_views, get_sg_version
+from utilities.cluster_config_utils import is_cbs_ssl_enabled, is_xattrs_enabled, no_conflicts_enabled, get_sg_replicas, get_sg_use_views, get_sg_version, sg_ssl_enabled
 
 
 def validate_sync_gateway_mode(mode):

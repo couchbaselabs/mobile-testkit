@@ -11,7 +11,6 @@ from keywords.SyncGateway import sync_gateway_config_path_for_mode
 from keywords.exceptions import ProvisioningError
 from keywords.tklogging import Logging
 
-from CBLClient.Replication import Replication
 from CBLClient.Database import Database
 from keywords.utils import host_for_url
 from libraries.testkit.cluster import Cluster
