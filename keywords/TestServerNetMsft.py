@@ -6,7 +6,6 @@ from keywords.constants import LATEST_BUILDS
 from keywords.exceptions import LiteServError
 from keywords.utils import version_and_build
 from keywords.utils import log_info
-from keywords.utils import has_dot_net4_dot_5
 
 from libraries.provision.ansible_runner import AnsibleRunner
 
@@ -45,6 +44,7 @@ class TestServerNetMsft(TestServerBase):
             f.write(ansible_liteserv_mfst_target_string)
 
         self.ansible_runner = AnsibleRunner(config=config_location)
+        self.version_build = version_build
 
     def download(self, version_build=None):
         """
@@ -56,13 +56,15 @@ class TestServerNetMsft(TestServerBase):
         version, build = version_and_build(self.version_build)
         # download_url = "{}/couchbase-lite-net/{}/{}/TestServer.zip".format(LATEST_BUILDS, version, build)
         # TODO: this is only for testing, remove download_url below line and uncomment later after testing don
-        download_url = "{}/couchbase-lite-net/{}/{}/couchbase-lite-net-2.0.0-520-source.tar.gz".format(LATEST_BUILDS, version, build)
-        package_name = "couchbase-lite-net-msft-{}-TestServer".format(self.version_build)
+        download_url = "{}/couchbase-lite-net/{}/{}/TestServer.NetCore.zip".format(LATEST_BUILDS, version, build)
+        package_name = "TestServer.NetCore.zip"
+        build_name = "TestServer-Net-{}".format(self.version_build)
 
         # Download LiteServ via Ansible on remote machine
         status = self.ansible_runner.run_ansible_playbook("download-testserver-msft.yml", extra_vars={
             "download_url": download_url,
-            "package_name": package_name
+            "package_name": package_name,
+            "build_name": build_name
         })
 
         if status != 0:
@@ -94,65 +96,16 @@ class TestServerNetMsft(TestServerBase):
 
     def start(self, logfile_name):
         """
-        1. Starts a LiteServ with logging to provided logfile file object.
+        1. Starts a Testserver with logging to provided logfile file object.
            The running LiteServ process will be stored in the self.process property.
         2. The method will poll on the endpoint to make sure LiteServ is available.
         3. The expected version will be compared with the version reported by http://<host>:<port>
         4. eturn the url of the running LiteServ
         """
-        """ TODO: Remove this code later
-        self._verify_not_running()
-
         self.logfile = logfile_name
-
-        process_args = [
-            "--port", str(self.port),
-            "--dir", "."
-        ]
-
-        if self.storage_engine == "ForestDB" or self.storage_engine == "ForestDB+Encryption":
-            process_args.append("--storage")
-            process_args.append("ForestDB")
-        else:
-            process_args.append("--storage")
-            process_args.append("SQLite")
-
-        if self.storage_engine == "SQLCipher" or self.storage_engine == "ForestDB+Encryption":
-            log_info("Using Encryption ...")
-            db_flags = []
-            for db_name in REGISTERED_CLIENT_DBS:
-                db_flags.append("--dbpassword")
-                db_flags.append("{}=pass".format(db_name))
-            process_args.extend(db_flags)
-
-        # The package structure for LiteServ is different pre 1.4. Handle for this case
-        if has_dot_net4_dot_5(self.version_build):
-            binary_path = "couchbase-lite-net-msft-{}-liteserv/net45/LiteServ.exe".format(self.version_build)
-        else:
-            binary_path = "couchbase-lite-net-msft-{}-liteserv/LiteServ.exe".format(self.version_build)
-
-        joined_args = " ".join(process_args)
-        log_info("Starting LiteServ {} with: {}".format(binary_path, joined_args))
-
-        # Start LiteServ via Ansible on remote machine
-        status = self.ansible_runner.run_ansible_playbook(
-            "start-liteserv-msft.yml",
-            extra_vars={
-                "binary_path": binary_path,
-                "launch_args": joined_args,
-            }
-        )
-        if status != 0:
-            raise LiteServError("Could not stop Liteserv")
-
-        self._verify_launched()
-
-        return "http://{}:{}".format(self.host, self.port)
-        """
-        binary_path = "couchbase-lite-net-msft-{}-TestServer\\TestServer.NetCore.dll".format(self.version_build)
+        binary_path = "TestServer-Net-{}\\TestServer.NetCore.dll".format(self.version_build)
         log_info("Starting Test server {}".format(binary_path))
-
-        # Start LiteServ via Ansible on remote machine
+        # Start Testserver via Ansible on remote machine
         status = self.ansible_runner.run_ansible_playbook(
             "start-testserver-msft.yml",
             extra_vars={
@@ -160,8 +113,8 @@ class TestServerNetMsft(TestServerBase):
             }
         )
         print "status of start test server msft is ", status
-        # if status != 0:
-        #    raise LiteServError("Could not start testserver")
+        if status != 0:
+            raise LiteServError("Could not start testserver")
 
     def _verify_launched(self):
         """Poll on expected http://<host>:<port> until it is reachable
@@ -194,23 +147,16 @@ class TestServerNetMsft(TestServerBase):
         Stops a .NET listener on a remote windows machine via ansible and pulls logs.
         """
 
-        # The package structure for LiteServ is different pre 1.4. Handle for this case
-        if has_dot_net4_dot_5(self.version_build):
-            binary_path = "couchbase-lite-net-msft-{}-liteserv/net45/LiteServ.exe".format(self.version_build)
-        else:
-            binary_path = "couchbase-lite-net-msft-{}-liteserv/LiteServ.exe".format(self.version_build)
-
         log_full_path = "{}/{}".format(os.getcwd(), self.logfile)
 
-        log_info("Stoping {} on windows maching ...".format(binary_path))
+        log_info("Stopping TestServer on windows matching ...")
         log_info("Pulling logs to {} ...".format(log_full_path))
 
         status = self.ansible_runner.run_ansible_playbook(
-            "stop-liteserv-windows.yml",
+            "stop-TestServer-windows.yml",
             extra_vars={
-                "binary_path": binary_path,
                 "log_full_path": log_full_path
             }
         )
         if status != 0:
-            raise LiteServError("Could not start Liteserv")
+            raise LiteServError("Could not stop TestServer")

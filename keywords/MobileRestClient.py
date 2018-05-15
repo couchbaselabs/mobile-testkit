@@ -231,8 +231,8 @@ class MobileRestClient:
 
             cookie_name = cookie_parts[0]
             session_id = cookie_parts[1]
+
         log_info("cookie name {}, session id {}".format(cookie_name, session_id))
-        return cookie_name, session_id
 
     def create_session_header(self, url, db, name, password=None, ttl=86400):
         """
@@ -1404,7 +1404,7 @@ class MobileRestClient:
                 docs.append(row)
 
         if len(errors) > 0 and validate:
-            raise RestError("_bulk_get recieved errors in the response!")
+            raise RestError("_bulk_get recieved errors in the response!{}".format(str(errors)))
 
         return docs, errors
 

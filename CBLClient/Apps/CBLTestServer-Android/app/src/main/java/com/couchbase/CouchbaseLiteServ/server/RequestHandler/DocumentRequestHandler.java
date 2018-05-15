@@ -5,14 +5,15 @@ import com.couchbase.CouchbaseLiteServ.server.Args;
 import com.couchbase.lite.Array;
 import com.couchbase.lite.Blob;
 import com.couchbase.lite.Document;
-import com.couchbase.lite.MutableDictionary;
 import com.couchbase.lite.DocumentChange;
 import com.couchbase.lite.DocumentChangeListener;
 import com.couchbase.lite.MutableDocument;
+import com.couchbase.lite.Dictionary;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Date;
+import java.lang.Double;
 
 public class DocumentRequestHandler{
     /* ------------ */
@@ -36,13 +37,6 @@ public class DocumentRequestHandler{
             }
         }
     }
-
-/*    public Object get(Args args) {
-        Map<String, Object> map = args.get("dictionary");
-        String key = args.get("key");
-        return map.get(key);
-    }*/
-
 
     public int count(Args args){
         MutableDocument document = args.get("document");
@@ -132,8 +126,9 @@ public class DocumentRequestHandler{
     public MutableDocument setDouble(Args args){
         MutableDocument document = args.get("document");
         String key = args.get("key");
-        Double value = args.get("value");
-        return  document.setDouble(key, value);
+        String value = args.get("value");
+        Double set_value = Double.parseDouble(value);
+        return  document.setDouble(key, set_value);
     }
 
     public Boolean getBoolean(Args args){
@@ -158,8 +153,9 @@ public class DocumentRequestHandler{
 
     public MutableDocument setArray(Args args) {
         MutableDocument document = args.get("document");
-        Map<String, Object> value = args.get("value");
-        return  document.setData(value);
+        String key = args.get("key");
+        Array value = args.get("value");
+        return  document.setArray(key, value);
     }
 
     public MutableDocument toMutable(Args args) {
@@ -169,9 +165,9 @@ public class DocumentRequestHandler{
 
     public MutableDocument setData(Args args) {
         MutableDocument document = args.get("document");
-        String key = args.get("key");
-        Array value = args.get("value");
-        return  document.setArray(key, value);
+        Map<String, Object> data = args.get("data");
+        return document.setData(data);
+
     }
 
     public MutableDocument setBlob(Args args){
@@ -196,14 +192,14 @@ public class DocumentRequestHandler{
     }
 
 
-    public List getArray(Args args){
+    public Array getArray(Args args){
         Document document = args.get("document");
         String key = args.get("key");
-        return document.getArray(key).toList();
+        return document.getArray(key);
     }
 
-    public MutableDictionary getDictionary(Args args){
-        MutableDocument document = args.get("document");
+    public Dictionary getDictionary(Args args){
+        Document document = args.get("document");
         String key = args.get("key");
         return document.getDictionary(key);
     }
@@ -211,7 +207,7 @@ public class DocumentRequestHandler{
     public MutableDocument setDictionary(Args args){
         MutableDocument document = args.get("document");
         String key = args.get("key");
-        MutableDictionary value = args.get("value");
+        Dictionary value = args.get("value");
         return  document.setDictionary(key, value);
     }
 
@@ -221,7 +217,7 @@ public class DocumentRequestHandler{
     }
 
     public Map<String, Object> toMap(Args args){
-        MutableDocument document = args.get("document");
+        Document document = args.get("document");
         return document.toMap();
     }
 

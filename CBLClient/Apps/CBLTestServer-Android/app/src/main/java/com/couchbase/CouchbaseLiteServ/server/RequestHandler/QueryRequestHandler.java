@@ -55,15 +55,9 @@ public class QueryRequestHandler {
         return query_result_set.next();
     }
 
-//    public Query string(Args args){
-//        Result query_result = args.get("query_result");
-//        String key = args.get("key");
-//        return query_result.string(key);
-//    }
-
     public List<Object> getDoc(Args args) throws CouchbaseLiteException {
         Database database = args.get("database");
-        int out = database.getCount();
+        long out = database.getCount();
         Expression doc_id = Expression.value(args.get("doc_id"));
         Query query = QueryBuilder
                 .select(SelectResult.all())
@@ -71,11 +65,9 @@ public class QueryRequestHandler {
                 .where((Meta.id).equalTo(doc_id));
         List<Object> resultArray = new ArrayList<Object>();
         for (Result row : query.execute()){
-            // return row.toMap();
-            System.out.println("get doc in android "+ row);
             resultArray.add(row.toMap());
         }
-        return null;
+        return resultArray;
     }
 
     public List<Object> docsLimitOffset(Args args) throws CouchbaseLiteException {
@@ -141,7 +133,7 @@ public class QueryRequestHandler {
 
     public List<Object> like(Args args) throws CouchbaseLiteException {
         Database database = args.get("database");
-        int out = database.getCount();
+        long out = database.getCount();
         String whr_key = args.get("whr_key");
         String select_property1 = args.get("select_property1");
         String select_property2 = args.get("select_property2");
@@ -296,15 +288,74 @@ public class QueryRequestHandler {
                     .on(Meta.id.from(secondary).equalTo(Expression.property(joinKey).from(main))))
                 .where(Expression.property(whrKey1).from(main).equalTo(whrVal1)
                     .and(Expression.property(whrKey2).from(secondary).equalTo(whrVal2))
-                    .and(Expression.property(whrKey3).from(main).equalTo(whrVal3)))
-                .limit(limit);
+                    .and(Expression.property(whrKey3).from(main).equalTo(whrVal3)));
         for (Result row : query.execute()){
             resultArray.add(row.toMap());
         }
         return resultArray;
     }
 
-    public List<Object> join2(Args args) throws CouchbaseLiteException {
+    public List<Object> leftJoin(Args args) throws CouchbaseLiteException {
+        Database db = args.get("database");
+        String prop = args.get("select_property");
+        int limit = args.get("limit");
+        String main = "airline";
+        String secondary = "route";
+
+        List<Object> resultArray = new ArrayList<>();
+
+
+        Query query = QueryBuilder
+                .select(SelectResult.all().from(main),
+                        SelectResult.all().from((secondary)))
+                .from(DataSource.database(db).as(main))
+                .join(Join.leftJoin(DataSource.database(db).as(secondary))
+                        .on(Meta.id.from(main).equalTo(Expression.property(prop).from(secondary))))
+                //.orderBy(Ordering.expression(Expression.property(prop).from(secondary)).ascending())
+                .limit(Expression.intValue(limit));
+        for (Result row : query.execute()) {
+            resultArray.add(row.toMap());
+        }
+        return resultArray;
+    }
+
+    public List<Object> leftOuterJoin(Args args) throws CouchbaseLiteException {
+        Database db = args.get("database");
+        String prop = args.get("select_property");
+        int limit = args.get("limit");
+        String main = "airline";
+        String secondary = "route";
+
+        List<Object> resultArray = new ArrayList<>();
+
+
+        Query query = QueryBuilder
+                .select(SelectResult.all().from(main),
+                        SelectResult.all().from((secondary)))
+                .from(DataSource.database(db).as(main))
+                .join(Join.leftOuterJoin(DataSource.database(db).as(secondary))
+                        .on(Meta.id.from(main).equalTo(Expression.property(prop).from(secondary))))
+                //.orderBy(Ordering.expression(Expression.property(prop).from(secondary)).ascending())
+                .limit(Expression.intValue(limit));
+        for (Result row : query.execute()) {
+            resultArray.add(row.toMap());
+        }
+        return resultArray;
+    }
+
+    public List<Object> innerJoin(Args args) throws CouchbaseLiteException {
+        /*
+        SELECT
+          employeeDS.firstname,
+          employeeDS.lastname,
+          departmentDS.name
+        FROM
+          `travel-sample` employeeDS
+          INNER JOIN `travel-sample` departmentDS ON employeeDS.department = departmentDS.code
+        WHERE
+          employeeDS.type = "employee"
+          AND departmentDS.type = "department"
+         */
         Database db = args.get("database");
         String prop1 = args.get("select_property1");
         String prop2 = args.get("select_property2");
@@ -313,28 +364,71 @@ public class QueryRequestHandler {
         String joinKey2 = args.get("join_key2");
         String whrKey1 = args.get("whr_key1");
         String whrKey2 = args.get("whr_key2");
-        Expression whrVal1 = Expression.value(args.get("whr_val1"));
-        Expression whrVal2 = Expression.value(args.get("whr_val2"));
-        String main = "employeeDS";
-        String secondary = "departmentDS";
+        String whrVal1 = args.get("whr_val1");
+        int whrVal2 = args.get("whr_val2");
+        int limit = args.get("limit");
+        String main = "route";
+        String secondary = "airline";
 
         List<Object> resultArray = new ArrayList<>();
 
-        DataSource employeeDS = DataSource.database(db).as(main);
-        DataSource departmentDS = DataSource.database(db).as(secondary);
-        Expression employeeDeptExpr = Expression.property(joinKey2).from(main);
-        Expression departmentCodeExpr = Expression.property(joinKey1).from(secondary);
-        Expression joinExpr = employeeDeptExpr.equalTo(departmentCodeExpr)
-                .and(Expression.property(whrKey1).from(main).equalTo(whrVal1))
-                .and(Expression.property(whrKey2).from(secondary).equalTo(whrVal2));
-        Join join = Join.leftJoin(departmentDS).on(joinExpr);
+
         Query query = QueryBuilder
-                .select(
-                        SelectResult.expression(Expression.property(prop1).from(main)),
+                .select(SelectResult.expression(Expression.property(prop1).from(main)),
                         SelectResult.expression(Expression.property(prop2).from(main)),
                         SelectResult.expression(Expression.property(prop3).from(secondary)))
-                .from(employeeDS)
-                .join(join);
+                .from(DataSource.database(db).as(main))
+                .join(Join.innerJoin(DataSource.database(db).as(secondary))
+                        .on(Expression.property(joinKey1).from(secondary).equalTo(Expression.property(joinKey2).from(main))
+                                .and(Expression.property(whrKey1).from(secondary).equalTo(Expression.string(whrVal1)))
+                                .and(Expression.property(whrKey2).from(main).equalTo(Expression.intValue(whrVal2)))))
+                //.orderBy(Ordering.expression(Expression.property(prop1).from(main)).ascending())
+                .limit(Expression.intValue(limit));
+        ResultSet queryResults = query.execute();
+        for (Result row : queryResults) {
+            resultArray.add(row.toMap());
+        }
+        return resultArray;
+    }
+
+
+    public List<Object> crossJoin(Args args) throws CouchbaseLiteException {
+        /*
+        SELECT
+          departmentDS.name AS DeptName,
+          locationDS.name AS LocationName,
+          locationDS.address
+        FROM
+          `travel-sample` departmentDS
+          CROSS JOIN `travel-sample` locationDS
+        WHERE
+          departmentDS.type = "department"
+         */
+        Database db = args.get("database");
+        String prop1 = args.get("select_property1");
+        String prop2 = args.get("select_property2");
+        String whrKey1 = args.get("whr_key1");
+        String whrKey2 = args.get("whr_key2");
+        String whrVal1 = args.get("whr_val1");
+        String whrVal2 = args.get("whr_val2");
+        int limit = args.get("limit");
+        String main = "airport";
+        String secondary = "airline";
+        String firstName = "firstName";
+        String secondName = "secondName";
+        List<Object> resultArray = new ArrayList<>();
+
+
+        Query query = QueryBuilder
+                .select(SelectResult.expression(Expression.property(prop1).from(main)).as(firstName),
+                        SelectResult.expression(Expression.property(prop1).from(secondary)).as(secondName),
+                        SelectResult.expression(Expression.property(prop2).from(secondary)))
+                .from(DataSource.database(db).as(main))
+                .join(Join.crossJoin(DataSource.database(db).as(secondary)))
+                .where(Expression.property(whrKey1).from(main).equalTo(Expression.string(whrVal1))
+                        .and(Expression.property(whrKey2).from(secondary).equalTo(Expression.string(whrVal2))))
+                //.orderBy(Ordering.expression(Expression.property(prop1).from(main)).ascending())
+                .limit(Expression.intValue(limit));
         for (Result row : query.execute()) {
             resultArray.add(row.toMap());
         }
@@ -532,7 +626,7 @@ public class QueryRequestHandler {
 
         Query query = QueryBuilder
                 .select(SelectResult.expression(Meta.id),
-                        SelectResult.expression(Expression.property("callsign")))
+                        SelectResult.expression(Expression.property(prop)))
                 .from(DataSource.database(db))
                 .where(Expression.property(prop).isNot(Expression.value(null)))
                 .orderBy(Ordering.expression(Meta.id).ascending());

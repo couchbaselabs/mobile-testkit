@@ -31,17 +31,17 @@ class TestServerFactory:
             raise ValueError("Make sure you provide a port!")
 
     @staticmethod
-    def create(platform, version_build, host, port, community_enabled=None):
-
+    def create(platform, version_build, host, port, community_enabled=None, debug_mode=False):
         TestServerFactory.validate_platform(platform)
         TestServerFactory.validate_version_build(version_build)
         TestServerFactory.validate_host(host)
         TestServerFactory.validate_port(port)
 
         if platform == "android":
-            return TestServerAndroid(version_build, host, port)
+            return TestServerAndroid(version_build, host, port, debug_mode)
         elif platform == "ios":
-            return TestServeriOS(version_build, host, port, community_enabled)
+            return TestServeriOS(version_build, host, port, community_enabled=community_enabled, debug_mode=debug_mode)
+
         elif platform == "net-mono":
             return TestServerNetMono(version_build, host, port)
         elif platform == "net-msft":

@@ -60,13 +60,13 @@ public class ReplicatorRequestHandler {
             let replication_obj: Replicator = args.get(name: "replicator")!
             let changeListener = MyReplicationChangeListener()
             let listenerToken = replication_obj.addChangeListener(changeListener.listener)
-            changeListener.listenerToken = listenerToken as! NSObjectProtocol
+            changeListener.listenerToken = listenerToken
             return changeListener
 
         case "replicator_removeChangeListener":
             let replication_obj: Replicator = args.get(name: "replicator")!
             let changeListener : MyReplicationChangeListener = (args.get(name: "changeListener"))!
-            replication_obj.removeChangeListener(withToken: changeListener.listenerToken! as! ListenerToken)
+            replication_obj.removeChangeListener(withToken: changeListener.listenerToken!)
 
         case "replicator_changeListenerChangesCount":
             let changeListener: MyReplicationChangeListener = (args.get(name: "changeListener"))!
@@ -74,13 +74,16 @@ public class ReplicatorRequestHandler {
 
         case "replicator_changeListenerGetChanges":
             let changeListener: MyReplicationChangeListener = (args.get(name: "changeListener"))!
-            // let index: Int = (args.get(name: "index"))!
             return changeListener.getChanges().description
         
         case "replicator_isContinous":
             let config: ReplicatorConfiguration? = args.get(name: "config")
             return config?.continuous
-            
+
+        case "replicator_resetCheckpoint":
+            let replication_obj: Replicator = args.get(name: "replicator")!
+            return replication_obj.resetCheckpoint()
+
         default:
             throw RequestHandlerError.MethodNotFound(method)
         }
@@ -91,14 +94,13 @@ public class ReplicatorRequestHandler {
 class MyReplicationChangeListener : NSObject  {
     var repl_changes: [ReplicatorChange] = []
     
-    var listenerToken: NSObjectProtocol?
+    var listenerToken: ListenerToken?
     
     lazy var listener: (ReplicatorChange) -> Void = { (change: ReplicatorChange) in
         self.repl_changes.append(change)
     }
     
     public func getChanges() -> [ReplicatorChange] {
-        NSLog("GOT repl CHANGES .......\(repl_changes)")
         return repl_changes
     }
 }

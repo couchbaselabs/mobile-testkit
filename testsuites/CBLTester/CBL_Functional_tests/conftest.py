@@ -21,10 +21,15 @@ from CBLClient.Replication import Replication
 from CBLClient.BasicAuthenticator import BasicAuthenticator
 from CBLClient.Database import Database
 from CBLClient.Document import Document
+from CBLClient.Array import Array
 from CBLClient.Dictionary import Dictionary
 from CBLClient.DataTypeInitiator import DataTypeInitiator
 from CBLClient.SessionAuthenticator import SessionAuthenticator
 from CBLClient.Utils import Utils
+
+from utilities.cluster_config_utils import get_load_balancer_ip
+from CBLClient.ReplicatorConfiguration import ReplicatorConfiguration
+# from libraries.testkit import cluster
 
 # from libraries.testkit.cluster import Cluster
 from couchbase.bucket import Bucket
@@ -95,6 +100,21 @@ def pytest_addoption(parser):
                      action="store_true",
                      help="If set, will enable SSL communication between Sync Gateway and CBL")
 
+    parser.addoption("--flush-memory-per-test",
+                     action="store_true",
+                     help="If set, will flush server memory per test")
+
+    parser.addoption("--sg-lb",
+                     action="store_true",
+                     help="If set, will enable load balancer for Sync Gateway")
+
+    parser.addoption("--ci",
+                     action="store_true",
+                     help="If set, will target larger cluster (3 backing servers instead of 1, 2 accels if in di mode)")
+
+    parser.addoption("--debug-mode", action="store_true",
+                     help="Enable debug mode for the app ", default=False)
+
 
 # This will get called once before the first test that
 # runs with this as input parameters in this file
@@ -119,19 +139,27 @@ def params_from_base_suite_setup(request):
     device_enabled = request.config.getoption("--device")
     community_enabled = request.config.getoption("--community")
     sg_ssl = request.config.getoption("--sg-ssl")
+    flush_memory_per_test = request.config.getoption("--flush-memory-per-test")
+    sg_lb = request.config.getoption("--sg-lb")
+    ci = request.config.getoption("--ci")
+    debug_mode = request.config.getoption("--debug-mode")
+    no_conflicts_enabled = request.config.getoption("--no-conflicts")
+
+    test_name = request.node.name
 
     testserver = TestServerFactory.create(platform=liteserv_platform,
                                           version_build=liteserv_version,
                                           host=liteserv_host,
                                           port=liteserv_port,
-                                          community_enabled=community_enabled)
+                                          community_enabled=community_enabled,
+                                          debug_mode=debug_mode)
 
     log_info("Downloading TestServer ...")
     # Download TestServer app
     testserver.download()
 
     # Install TestServer app
-    if device_enabled and liteserv_platform == "ios":
+    if device_enabled:
         testserver.install_device()
     else:
         testserver.install()
@@ -145,7 +173,21 @@ def params_from_base_suite_setup(request):
     cluster_utils.set_cluster_config(cluster_config.split("/")[-1])
 
     sg_db = "db"
-    cbl_db = None
+    suite_cbl_db = None
+
+    # use base_(lb_)cc cluster config if mode is "cc" or base_(lb_)di cluster config if mode is "di"
+    if ci:
+        cluster_config = "{}/ci_{}".format(CLUSTER_CONFIGS_DIR, mode)
+        if sg_lb:
+            cluster_config = "{}/ci_lb_{}".format(CLUSTER_CONFIGS_DIR, mode)
+    else:
+        cluster_config = "{}/base_{}".format(CLUSTER_CONFIGS_DIR, mode)
+        if sg_lb:
+            cluster_config = "{}/base_lb_{}".format(CLUSTER_CONFIGS_DIR, mode)
+
+    cluster_topology = cluster_utils.get_cluster_topology(cluster_config)
+    cluster_utils.set_cluster_config(cluster_config.split("/")[-1])
+
     sg_url = cluster_topology["sync_gateways"][0]["public"]
     sg_ip = host_for_url(sg_url)
 
@@ -161,6 +203,13 @@ def params_from_base_suite_setup(request):
 
     cbs_url = cluster_topology['couchbase_servers'][0]
     cbs_ip = host_for_url(cbs_url)
+
+    if sg_lb:
+        persist_cluster_config_environment_prop(cluster_config, 'sg_lb_enabled', True)
+        log_info("Running tests with load balancer enabled: {}".format(get_load_balancer_ip(cluster_config)))
+    else:
+        log_info("Running tests with load balancer disabled")
+        persist_cluster_config_environment_prop(cluster_config, 'sg_lb_enabled', False)
 
     try:
         server_version
@@ -199,8 +248,6 @@ def params_from_base_suite_setup(request):
     cbs_url = cluster_topology['couchbase_servers'][0]
     cbs_ip = host_for_url(cbs_url)
 
-    # cluster = Cluster(cluster_config)
-
     if sync_gateway_version < "2.0":
         pytest.skip('Does not work with sg < 2.0 , so skipping the test')
 
@@ -230,18 +277,27 @@ def params_from_base_suite_setup(request):
         # if enable_sample_bucket and not create_db_per_test:
         raise Exception("enable_sample_bucket has to be used with create_db_per_suite")
 
-    source_db = None
+    # Start Test server which needed for suite level set up like query tests
+    if create_db_per_suite:
+        log_info("Starting TestServer...")
+        test_name_cp = test_name.replace("/", "-")
+        if device_enabled:
+            testserver.start_device("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__, test_name_cp, datetime.datetime.now()))
+        else:
+            testserver.start("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__, test_name_cp, datetime.datetime.now()))
+
+    suite_source_db = None
     if create_db_per_suite:
         # Create CBL database
-        cbl_db = create_db_per_suite
-        db = Database(base_url)
+        suite_cbl_db = create_db_per_suite
+        suite_db = Database(base_url)
 
-        log_info("Creating a Database {} at the suite setup".format(cbl_db))
-        db_config = db.configure()
-        source_db = db.create(cbl_db, db_config)
+        log_info("Creating a Database {} at the suite setup".format(suite_cbl_db))
+        db_config = suite_db.configure()
+        suite_source_db = suite_db.create(suite_cbl_db, db_config)
         log_info("Getting the database name")
-        db_name = db.getName(source_db)
-        assert db_name == cbl_db
+        db_name = suite_db.getName(suite_source_db)
+        assert db_name == suite_cbl_db
 
     if enable_sample_bucket:
         server_url = cluster_topology["couchbase_servers"][0]
@@ -289,7 +345,7 @@ def params_from_base_suite_setup(request):
         repl_obj = Replication(base_url)
         auth_obj = BasicAuthenticator(base_url)
         authenticator = auth_obj.create("traveL-sample", "password")
-        repl_config = repl_obj.configure(source_db=source_db,
+        repl_config = repl_obj.configure(source_db=suite_source_db,
                                          target_url=target_admin_url,
                                          replication_type="PUSH_AND_PULL",
                                          continuous=True,
@@ -297,6 +353,8 @@ def params_from_base_suite_setup(request):
         repl = repl_obj.create(repl_config)
         repl_obj.start(repl)
         repl_obj.wait_until_replicator_idle(repl)
+        log_info("Stopping replication")
+        repl_obj.stop(repl)
 
     yield {
         "cluster_config": cluster_config,
@@ -316,24 +374,20 @@ def params_from_base_suite_setup(request):
         "base_url": base_url,
         "enable_sample_bucket": enable_sample_bucket,
         "create_db_per_test": create_db_per_test,
-        "source_db": source_db,
-        "cbl_db": cbl_db,
-        "base_url": base_url,
+        "suite_source_db": suite_source_db,
+        "suite_cbl_db": suite_cbl_db,
         "sg_config": sg_config,
         "testserver": testserver,
-        "device_enabled": device_enabled
+        "device_enabled": device_enabled,
+        "flush_memory_per_test": flush_memory_per_test
     }
 
-    if enable_sample_bucket:
-        log_info("Stopping replication")
-        repl_obj.stop(repl)
-
-#     if create_db_per_suite:
-#         # Delete CBL database
-#         log_info("Deleting the database {} at the suite teardown".format(create_db_per_suite))
-#         time.sleep(2)
-#         db.deleteDB(source_db)
-#         time.sleep(1)
+    if create_db_per_suite:
+        # Delete CBL database
+        log_info("Deleting the database {} at the suite teardown".format(create_db_per_suite))
+        time.sleep(2)
+        suite_db.deleteDB(suite_source_db)
+        time.sleep(1)
 
     # Flush all the memory contents on the server app
     log_info("Flushing server memory")
@@ -353,8 +407,8 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     create_db_per_test = params_from_base_suite_setup["create_db_per_test"]
     no_conflicts_enabled = params_from_base_suite_setup["no_conflicts_enabled"]
     target_admin_url = params_from_base_suite_setup["target_admin_url"]
-    source_db = params_from_base_suite_setup["source_db"]
-    cbl_db = params_from_base_suite_setup["cbl_db"]
+    suite_source_db = params_from_base_suite_setup["suite_source_db"]
+    suite_cbl_db = params_from_base_suite_setup["suite_cbl_db"]
     test_name = request.node.name
     cluster_topology = params_from_base_suite_setup["cluster_topology"]
     mode = params_from_base_suite_setup["mode"]
@@ -363,19 +417,22 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     sg_ip = params_from_base_suite_setup["sg_ip"]
     sg_db = params_from_base_suite_setup["sg_db"]
     sync_gateway_version = params_from_base_suite_setup["sync_gateway_version"]
-    target_admin_url = params_from_base_suite_setup["target_admin_url"]
     sg_config = params_from_base_suite_setup["sg_config"]
     liteserv_platform = params_from_base_suite_setup["liteserv_platform"]
     testserver = params_from_base_suite_setup["testserver"]
     device_enabled = params_from_base_suite_setup["device_enabled"]
+    flush_memory_per_test = params_from_base_suite_setup["flush_memory_per_test"]
+    enable_sample_bucket = params_from_base_suite_setup["enable_sample_bucket"]
+    source_db = None
+    cbl_db = None
 
-    # Start LiteServ and delete any databases
-    log_info("Starting TestServer...")
-
-    if device_enabled and liteserv_platform == "ios":
-        testserver.start_device("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__, test_name, datetime.datetime.now()))
-    else:
-        testserver.start("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__, test_name, datetime.datetime.now()))
+    if create_db_per_test:
+        log_info("Starting TestServer...")
+        test_name_cp = test_name.replace("/", "-")
+        if device_enabled:
+            testserver.start_device("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__, test_name_cp, datetime.datetime.now()))
+        else:
+            testserver.start("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__, test_name_cp, datetime.datetime.now()))
 
     cluster_helper = ClusterKeywords()
     cluster_hosts = cluster_helper.get_cluster_topology(cluster_config=cluster_config)
@@ -387,6 +444,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     log_info("cluster_topology: {}".format(cluster_topology))
     log_info("mode: {}".format(mode))
     log_info("xattrs_enabled: {}".format(xattrs_enabled))
+    db_config = None
 
     db = None
     if create_db_per_test:
@@ -420,18 +478,28 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         "sync_gateway_version": sync_gateway_version,
         "source_db": source_db,
         "cbl_db": cbl_db,
+        "suite_source_db": suite_source_db,
+        "suite_cbl_db": suite_cbl_db,
         "base_url": base_url,
         "sg_config": sg_config,
         "db": db,
         "device_enabled": device_enabled,
-        "testserver": testserver
+        "testserver": testserver,
+        "db_config": db_config,
+        "enable_sample_bucket": enable_sample_bucket
     }
+
     log_info("Tearing down test")
     if create_db_per_test:
         # Delete CBL database
         log_info("Deleting the database {} at test teardown".format(create_db_per_test))
-        db.deleteDB(source_db)
         time.sleep(1)
+        db.deleteDB(source_db)
+
+    if flush_memory_per_test:
+        log_info("Flushing server memory")
+        utils_obj = Utils(base_url)
+        utils_obj.flushMemory()
 
 
 @pytest.fixture(scope="class")
@@ -444,7 +512,10 @@ def class_init(request, params_from_base_suite_setup):
     dict_obj = Dictionary(base_url)
     datatype = DataTypeInitiator(base_url)
     repl_obj = Replication(base_url)
-    # repl_config_obj = ReplicatorConfiguration(base_url)
+    array_obj = Array(base_url)
+    dict_obj = Dictionary(base_url)
+    repl_config_obj = ReplicatorConfiguration(base_url)
+
     base_auth_obj = BasicAuthenticator(base_url)
     session_auth_obj = SessionAuthenticator(base_url)
     sg_client = MobileRestClient()
@@ -456,7 +527,12 @@ def class_init(request, params_from_base_suite_setup):
     request.cls.dict_obj = dict_obj
     request.cls.datatype = datatype
     request.cls.repl_obj = repl_obj
-    # request.cls.repl_config_obj = repl_config_obj
+    request.cls.repl_config_obj = repl_config_obj
+    request.cls.array_obj = array_obj
+    request.cls.dict_obj = dict_obj
+    request.cls.array_obj = array_obj
+    request.cls.datatype = datatype
+    request.cls.repl_obj = repl_obj
     request.cls.base_auth_obj = base_auth_obj
     request.cls.session_auth_obj = session_auth_obj
     request.cls.sg_client = sg_client
@@ -491,7 +567,6 @@ def setup_customized_teardown_test(params_from_base_test_setup):
         "cbl_db3": cbl_db3,
     }
     log_info("Tearing down test")
-    # db.close(cbl_db)
     db.deleteDB(cbl_db1)
     db.deleteDB(cbl_db2)
     db.deleteDB(cbl_db3)

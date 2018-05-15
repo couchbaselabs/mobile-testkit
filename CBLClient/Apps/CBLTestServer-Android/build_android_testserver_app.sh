@@ -14,10 +14,18 @@ cd ${WORKSPACE}/mobile-testkit/CBLClient/Apps/CBLTestServer-Android
 echo ./gradlew clean && ./gradlew -Dversion=${MAVEN_UPLOAD_VERSION} assemble
 ./gradlew clean && ./gradlew -Dversion=${MAVEN_UPLOAD_VERSION} assemble
 
-TESTSERVER_APK=app/build/outputs/apk/debug/app-debug.apk
-if [ -e ${TESTSERVER_APK} ]
+TESTSERVER_DEBUG_APK=app/build/outputs/apk/debug/app-debug.apk
+TESTSERVER_RELEASE_APK=app/build/outputs/apk/release/app-release.apk
+if [ -e ${TESTSERVER_DEBUG_APK} ]
 then
-    cp -f ${TESTSERVER_APK} ${WORKSPACE}/artifacts/CBLTestServer-Android-${MAVEN_UPLOAD_VERSION}-${EDITION}-debug.apk
+    cp -f ${TESTSERVER_DEBUG_APK} ${WORKSPACE}/artifacts_${EDITION}/CBLTestServer-Android-${MAVEN_UPLOAD_VERSION}-${EDITION}-debug.apk
+else
+    exit 1
+fi
+
+if [ -e ${TESTSERVER_RELEASE_APK} ]
+then
+    cp -f ${TESTSERVER_RELEASE_APK} ${WORKSPACE}/artifacts_${EDITION}/CBLTestServer-Android-${MAVEN_UPLOAD_VERSION}-${EDITION}-release.apk
 else
     exit 1
 fi

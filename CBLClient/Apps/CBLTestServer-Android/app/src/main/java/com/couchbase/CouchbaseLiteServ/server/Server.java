@@ -1,5 +1,7 @@
 package com.couchbase.CouchbaseLiteServ.server;
 
+
+import com.couchbase.CouchbaseLiteServ.server.RequestHandler.ArrayRequestHandler;
 import com.couchbase.CouchbaseLiteServ.server.RequestHandler.BasicAuthenticatorRequestHandler;
 import com.couchbase.CouchbaseLiteServ.server.RequestHandler.CollatorRequestHandler;
 import com.couchbase.CouchbaseLiteServ.server.RequestHandler.DataSourceRequestHandler;
@@ -36,6 +38,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+
 public class Server extends NanoHTTPD {
 
     private static final String TAG = "com.example.hemant.coucbaselitesampleapp.serve";
@@ -59,10 +62,10 @@ public class Server extends NanoHTTPD {
 
     public static final Memory memory = new Memory();
 
-    public Server(int port) throws IOException {
+    public Server(String ip, int port) throws IOException {
         super(port);
         Database.setLogLevel(LogDomain.ALL, LogLevel.DEBUG);
-        System.out.print("Running! Point your Mobile browser to http://localhost:" + port + "/\n");
+        System.out.print("Running! Point your Mobile browser to http://" + ip + ":" + port + "/\n");
     }
 
     @Override
@@ -84,12 +87,6 @@ public class Server extends NanoHTTPD {
         if (query !=null){
             for (String key : query.keySet()){
                 String value = (String) query.get(key);
-                /*String value = null;
-                try {
-                    value = URLDecoder.decode( param_value, "UTF8");
-                } catch (UnsupportedEncodingException e) {
-                    e.printStackTrace();
-                }*/
                 args.put(key, ValueSerializer.deserialize(value, memory));
             }
         }
@@ -171,6 +168,10 @@ public class Server extends NanoHTTPD {
                         target = SessionAuthenticatorRequestHandler.class.getMethod(method_to_call, Args.class);
                         requestHandler = new SessionAuthenticatorRequestHandler();
                         break;
+                    case "array":
+                        target = ArrayRequestHandler.class.getMethod(method_to_call, Args.class);
+                        requestHandler = new ArrayRequestHandler();
+                        break;
                     default:
                         throw new IllegalArgumentException("Handler not implemented for this call");
                 }
@@ -186,7 +187,7 @@ public class Server extends NanoHTTPD {
                 IStatus status = Status.OK;
                 return Response.newFixedLengthResponse(status, "text/plain", body.getBytes());
             } else {
-                return Response.newFixedLengthResponse(Status.OK, "text/plain", "null");
+                return Response.newFixedLengthResponse(Status.OK, "text/plain", "I-1");
             }
         } catch (Exception e) {
             // TODO: How should we handle exceptions?
@@ -196,7 +197,7 @@ public class Server extends NanoHTTPD {
             e.printStackTrace(pw);
             String sStackTrace = sw.toString();
             return Response.newFixedLengthResponse(Status.BAD_REQUEST, "text/plain", sStackTrace);
-            // return Response.newFixedLengthResponse(Status.BAD_REQUEST, "text/plain", sStackTrace.getBytes());
         }
     }
 }
+

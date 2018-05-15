@@ -15,6 +15,13 @@ class ViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        let label = UILabel(frame: CGRect(x: 0, y: 0, width: 360, height: 21))
+        label.center = CGPoint(x: 190, y: 285)
+        label.textAlignment = .center
+        label.text = "CBLTestServer-iOS running @" + getWiFiAddress()! + ":8080"
+        self.view.addSubview(label)
+
         server = Server()
         
         
@@ -42,7 +49,5 @@ class ViewController: UIViewController {
         super.didReceiveMemoryWarning()
         // Dispose of any resources that can be recreated.
     }
-
-
 }
 

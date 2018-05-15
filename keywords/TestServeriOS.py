@@ -18,20 +18,26 @@ from requests.exceptions import ConnectionError
 
 class TestServeriOS(TestServerBase):
 
-    def __init__(self, version_build, host, port, community_enabled=None):
+    def __init__(self, version_build, host, port, community_enabled=None, debug_mode=False):
 
         super(TestServeriOS, self).__init__(version_build, host, port)
         self.liteserv_admin_url = "http://{}:59850".format(self.host)
         self.logfile_name = None
         self.device_id = None
-        self.device = "iPhone-7-Plus"
+        self.device = "iPhone-8-Plus"
+        self.debug_mode = False
+        self.app_path = ""
+        self.app_name = ""
+        if debug_mode:
+            self.debug_mode = True
         if community_enabled:
-            self.app_dir = "CBLTestServer-iOS-community"
-            self.package_name = "CBLTestServer-iOS-community.zip"
+            self.app_dir = "CBLTestServer-iOS-community-{}".format(version_build)
+            self.package_name = "CBLTestServer-iOS-community-{}.zip".format(version_build)
+            self.app = "CBLTestServer-iOS"
         else:
-            self.app_dir = "CBLTestServer-iOS-enterprise"
-            self.package_name = "CBLTestServer-iOS-enterprise.zip"
-        self.app_name = "CBLTestServer-iOS.app"
+            self.app_dir = "CBLTestServer-iOS-enterprise-{}".format(version_build)
+            self.package_name = "CBLTestServer-iOS-enterprise-{}.zip".format(version_build)
+            self.app = "CBLTestServer-iOS-EE"
 
     def download(self, version_build=None):
         """
@@ -42,7 +48,7 @@ class TestServeriOS(TestServerBase):
         if version_build is not None:
             self.version_build = version_build
         version, build = version_and_build(self.version_build)
-        app_name = "CBLTestServer-iOS.app"
+        app_name = "{}-{}.app".format(self.app, version_build)
 
         expected_binary_path = "{}/{}/{}".format(BINARY_DIR, self.app_dir, app_name)
         if os.path.isfile(expected_binary_path):
@@ -70,11 +76,12 @@ class TestServeriOS(TestServerBase):
         """Installs / launches CBLTestServer on iOS device
         Warning: Only works with a single device at the moment
         """
+        if self.debug_mode:
+            self.app_name = "{}-{}-Device-debug.app".format(self.app, self.version_build)
+        else:
+            self.app_name = "{}-{}-Device.app".format(self.app, self.version_build)
 
-        # package_name = "CBLTestServer-iOS-Device.app"
-        # app_dir = "CBLTestServer-iOS"
-
-        self.app_path = "{}/{}/{}".format(BINARY_DIR, self.app_dir, self.package_name)
+        self.app_path = "{}/{}/{}".format(BINARY_DIR, self.app_dir, self.app_name)
         log_info("Installing: {}".format(self.app_path))
 
         # install app / launch app to connected device
@@ -95,13 +102,11 @@ class TestServeriOS(TestServerBase):
     def install(self):
         """Installs / launches CBLTestServer on iOS simulator
         """
-        self.device = "iPhone-7-Plus"
-        # package_name = "CBLTestServer-iOS"
-        # app_dir = "CBLTestServer-iOS"
-
+        if self.debug_mode:
+            self.app_name = "{}-{}-debug.app".format(self.app, self.version_build)
+        else:
+            self.app_name = "{}-{}.app".format(self.app, self.version_build)
         self.app_path = "{}/{}/{}".format(BINARY_DIR, self.app_dir, self.app_name)
-        # TODO: Remove this once jenkins build for app is done
-        # self.app_path = "/Users/sridevi.saragadam/workspace/CBL2-0/build-scripts/mobile-testkit/CBLClient/Apps/CBLTestServer-iOS/build/Build/Products/Release-iphonesimulator/CBLTestServer-iOS.app"
         output = subprocess.check_output([
             "ios-sim", "--devicetypeid", self.device, "start"
         ])
@@ -207,16 +212,8 @@ class TestServeriOS(TestServerBase):
         4. Return the url of the running LiteServ
         """
 
-        self.device = "iPhone-7-Plus"
         self.logfile_name = logfile_name
-
-        # package_name = "CBLTestServer-iOS.app"
-        # app_dir = "CBLTestServer-iOS"
-
         self.app_path = "{}/{}/{}".format(BINARY_DIR, self.app_dir, self.app_name)
-        # TODO : remove below line
-        # self.app_path = "/Users/sridevi.saragadam/Library/Developer/Xcode/DerivedData/CBLTestServer-iOS-ayypbvnmphhpihebbhrjusdqhzmk/Build/Products/Debug-iphonesimulator/CBLTestServer-iOS.app"
-
         # Without --exit, ios-sim blocks
         # With --exit, --log has no effect
         # subprocess.Popen didn't launch the app
@@ -225,9 +222,8 @@ class TestServeriOS(TestServerBase):
         ])
 
         log_info(output)
-        time.sleep(10)
+        self._wait_until_reachable(port=self.port)
         self._verify_running()
-        # return "http://{}:{}".format(self.host, self.port)
 
     def start_device(self, logfile_name):
         """
@@ -239,21 +235,15 @@ class TestServeriOS(TestServerBase):
         """
 
         self.logfile_name = logfile_name
-
-        package_name = "LiteServ-iOS-Device.app"
-        # app_dir = "LiteServ-iOS"
-
-        self.app_path = "{}/{}/{}".format(BINARY_DIR, self.app_dir, package_name)
+        self.app_path = "{}/{}/{}".format(BINARY_DIR, self.app_dir, self.app_name)
 
         output = subprocess.check_output([
             "ios-deploy", "--justlaunch", "--bundle", self.app_path
         ])
         log_info(output)
 
-        self._verify_not_running()
-        self._verify_launched()
-
-        return "http://{}:{}".format(self.host, self.port)
+        self._wait_until_reachable(port=self.port)
+        self._verify_running()
 
     def _verify_launched(self):
         """ Poll on expected http://<host>:<port> until it is reachable
@@ -296,7 +286,7 @@ class TestServeriOS(TestServerBase):
             self.session.get("http://{}:{}/".format(self.host, self.port))
         except ConnectionError:
             # Expecting connection error if LiteServ is not running on the port
-            return False
+            raise LiteServError("Did not connected to Test server app")
 
         return True
 
@@ -306,15 +296,10 @@ class TestServeriOS(TestServerBase):
 
     def open_app(self):
         bundle_id = "com.couchbase.CBLTestServer-iOS"
-        # self.app_path = "/Users/sridevi.saragadam/Library/Developer/Xcode/DerivedData/CBLTestServer-iOS-ayypbvnmphhpihebbhrjusdqhzmk/Build/Products/Debug-iphonesimulator/CBLTestServer-iOS.app"
         if(self.host == "localhost"):
             # xcrun simctl launch booted com.couchbase.CBLTestServer-iOS
             output = subprocess.check_output(["xcrun", "simctl", "launch", "booted", bundle_id])
-            # output = subprocess.check_output(["ios-sim", "--devicetypeid", self.device, "launch", self.app_path, "--exit"])
         else:
             output = subprocess.check_output(["ios-deploy", "--justlaunch", "--bundle", self.app_path])
         log_info("output of open app is {}".format(output))
-        log_info(output)
         time.sleep(5)
-        # self._verify_running()
-        # time.sleep(1) # wait until app launces properly

@@ -186,7 +186,7 @@ class LiteServNetMsft(LiteServBase):
 
         log_full_path = "{}/{}".format(os.getcwd(), self.logfile)
 
-        log_info("Stoping {} on windows maching ...".format(binary_path))
+        log_info("Stopping {} on windows matching ...".format(binary_path))
         log_info("Pulling logs to {} ...".format(log_full_path))
 
         status = self.ansible_runner.run_ansible_playbook(
@@ -197,4 +197,4 @@ class LiteServNetMsft(LiteServBase):
             }
         )
         if status != 0:
-            raise LiteServError("Could not start Liteserv")
+            raise LiteServError("Could not stop Liteserv")

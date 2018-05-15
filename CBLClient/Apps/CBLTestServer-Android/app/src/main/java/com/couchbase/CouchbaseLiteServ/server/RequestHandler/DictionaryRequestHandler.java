@@ -116,7 +116,7 @@ public class DictionaryRequestHandler{
     public MutableDictionary setDouble(Args args){
         MutableDictionary dictionary = args.get("dictionary");
         String key = args.get("key");
-        Double value = args.get("value");
+        Double value = Double.valueOf(args.get("value").toString());
         return  dictionary.setDouble(key, value);
     }
 
@@ -188,6 +188,19 @@ public class DictionaryRequestHandler{
         String key = args.get("key");
         Dictionary value = args.get("value");
         return  dictionary.setDictionary(key, value);
+    }
+
+    public Object getValue(Args args) {
+        MutableDictionary dictionary = args.get("dictionary");
+        String key = args.get("key");
+        return dictionary.getValue(key);
+    }
+
+    public MutableDictionary setValue(Args args) {
+        MutableDictionary dictionary = args.get("dictionary");
+        String key = args.get("key");
+        Object value = args.get("value");
+        return dictionary.setValue(key, value);
     }
 
     public List<String> getKeys(Args args){

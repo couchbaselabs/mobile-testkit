@@ -90,10 +90,20 @@ def pytest_addoption(parser):
                      help="Sync Gateway Platform binary to install (ex. centos or windows)",
                      default="centos")
 
+    parser.addoption("--sg-installer-type",
+                     action="store",
+                     help="Sync Gateway Installer type (ex. exe or msi)",
+                     default="msi")
+
     parser.addoption("--sa-platform",
                      action="store",
                      help="Sync Gateway Accelerator Platform binary to install (ex. centos or windows)",
                      default="centos")
+
+    parser.addoption("--sa-installer-type",
+                     action="store",
+                     help="Sync Gateway Accelerator Installer type (ex. exe or msi)",
+                     default="msi")
 
     parser.addoption("--sg-lb",
                      action="store_true",
@@ -110,6 +120,15 @@ def pytest_addoption(parser):
     parser.addoption("--no-conflicts",
                      action="store_true",
                      help="If set, allow_conflicts is set to false in sync-gateway config")
+
+    parser.addoption("--use-views",
+                     action="store_true",
+                     help="If set, uses views instead of GSI - SG 2.1 and above only")
+
+    parser.addoption("--number-replicas",
+                     action="store",
+                     help="Number of replicas for the indexer node - SG 2.1 and above only",
+                     default=0)
 
 
 # This will be called once for the at the beggining of the execution in the 'tests/' directory
@@ -131,11 +150,15 @@ def params_from_base_suite_setup(request):
     cbs_ssl = request.config.getoption("--server-ssl")
     xattrs_enabled = request.config.getoption("--xattrs")
     sg_platform = request.config.getoption("--sg-platform")
+    sg_installer_type = request.config.getoption("--sg-installer-type")
     sa_platform = request.config.getoption("--sa-platform")
+    sa_installer_type = request.config.getoption("--sa-installer-type")
     sg_lb = request.config.getoption("--sg-lb")
     sg_ce = request.config.getoption("--sg-ce")
     use_sequoia = request.config.getoption("--sequoia")
     no_conflicts_enabled = request.config.getoption("--no-conflicts")
+    use_views = request.config.getoption("--use-views")
+    number_replicas = request.config.getoption("--number-replicas")
 
     if xattrs_enabled and version_is_binary(sync_gateway_version):
         check_xattr_support(server_version, sync_gateway_version)
@@ -150,10 +173,14 @@ def params_from_base_suite_setup(request):
     log_info("race_enabled: {}".format(race_enabled))
     log_info("xattrs_enabled: {}".format(xattrs_enabled))
     log_info("sg_platform: {}".format(sg_platform))
+    log_info("sg_installer_type: {}".format(sg_installer_type))
+    log_info("sa_installer_type: {}".format(sa_installer_type))
     log_info("sa_platform: {}".format(sa_platform))
     log_info("sg_lb: {}".format(sg_lb))
     log_info("sg_ce: {}".format(sg_ce))
-    log_info("no conflicts enabled {}".format(no_conflicts_enabled))
+    log_info("no_conflicts_enabled: {}".format(no_conflicts_enabled))
+    log_info("use_views: {}".format(use_views))
+    log_info("number_replicas: {}".format(number_replicas))
 
     # sg-ce is invalid for di mode
     if mode == "di" and sg_ce:
@@ -192,6 +219,18 @@ def params_from_base_suite_setup(request):
         log_info("Running tests with cbs <-> sg ssl disabled")
         # Disable ssl in cluster configs
         persist_cluster_config_environment_prop(cluster_config, 'cbs_ssl_enabled', False)
+
+    if use_views:
+        log_info("Running SG tests using views")
+        # Enable sg views in cluster configs
+        persist_cluster_config_environment_prop(cluster_config, 'sg_use_views', True)
+    else:
+        log_info("Running tests with cbs <-> sg ssl disabled")
+        # Disable sg views in cluster configs
+        persist_cluster_config_environment_prop(cluster_config, 'sg_use_views', False)
+
+    # Write the number of replicas to cluster config
+    persist_cluster_config_environment_prop(cluster_config, 'number_replicas', number_replicas)
 
     if xattrs_enabled:
         log_info("Running test with xattrs for sync meta storage")
@@ -242,7 +281,9 @@ def params_from_base_suite_setup(request):
                 sync_gateway_config=sg_config,
                 race_enabled=race_enabled,
                 sg_platform=sg_platform,
+                sg_installer_type=sg_installer_type,
                 sa_platform=sa_platform,
+                sa_installer_type=sa_installer_type,
                 sg_ce=sg_ce
             )
         except ProvisioningError:

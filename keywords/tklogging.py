@@ -16,7 +16,9 @@ def fetch_sync_gateway_logs(cluster_config, prefix):
     # fetch logs from sync_gateway instances
     status = ansible_runner.run_ansible_playbook("fetch-sync-gateway-logs.yml")
     if status != 0:
-        raise CollectionError("Could not pull logs")
+        # raise CollectionError("Could not pull logs")
+        log_info("Could not pull logs")
+        return
 
     # zip logs and timestamp
     if os.path.isdir("/tmp/sg_logs"):

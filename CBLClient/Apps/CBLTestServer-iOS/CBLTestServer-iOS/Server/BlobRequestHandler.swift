@@ -37,12 +37,16 @@ public class BlobRequestHandler {
         case "blob_digest":
             let blob: Blob = args.get(name: "blob")!
             return blob.digest
-        
-       // case "blob_equals":
-           // let blob: Blob = args.get(name: "blob")!
-           // let obj: Any = args.get(name: "obj")!
-            //return blob.isEqual(obj)
-        
+
+        case "blob_equals":
+            let blob: Blob = args.get(name: "blob")!
+            let obj: Any = args.get(name: "obj")!
+            if let blob2 = obj as? Blob {
+                return blob == blob2
+            } else {
+                return false
+            }
+      
         case "blob_hashCode":
             let blob: Blob = args.get(name: "blob")!
             return blob.hashValue

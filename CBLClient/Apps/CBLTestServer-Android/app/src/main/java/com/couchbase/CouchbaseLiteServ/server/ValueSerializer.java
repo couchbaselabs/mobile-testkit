@@ -26,9 +26,13 @@ public class ValueSerializer {
             return "L" + number.toString();
         } else if (value instanceof Float) {
             Float number = (Float) value;
-
             return "F" + number.toString();
-        } else if (value instanceof Map) {
+        }
+        else if (value instanceof Double) {
+            Double number = (Double) value;
+            return "D" + number.toString();
+        }
+        else if (value instanceof Map) {
             Map<String, Object> map = (Map<String, Object>)value;
             Map<String, String> stringMap = new HashMap<>();
 

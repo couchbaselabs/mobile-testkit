@@ -23,11 +23,14 @@ public class DatabaseRequestHandler {
     
         case "database_create":
             let name: String! = args.get(name: "name")
-            let dbConfig: DatabaseConfiguration! = args.get(name: "config")
+            let dbConfig: DatabaseConfiguration? = args.get(name: "config")
             do {
-             return try Database(name: name!, config: dbConfig)
+                if dbConfig != nil {
+                    return try Database(name: name!, config: dbConfig!)
+                } else {
+                    return try Database(name: name!)
+                }
             } catch {
-                print("Got error while creating DB \(error)")
                 return error.localizedDescription
             }
             
@@ -47,10 +50,22 @@ public class DatabaseRequestHandler {
             do {
                 try database.deleteDocument(document)
             } catch {
-                print("Got error while deleting DB \(error)")
                 return error
             }
-        
+            
+        case "database_deleteBulkDocs":
+            let database: Database = args.get(name:"database")!
+            let doc_ids: Array<String> = args.get(name: "doc_ids")!
+
+            try database.inBatch {
+                for id in doc_ids {
+                    let document: Document = database.document(withID: id)!
+                    do {
+                        try! database.deleteDocument(document)
+                    }
+                }
+            }
+
         case "database_deleteDB":
             let database: Database = args.get(name:"database")!
             
@@ -61,8 +76,7 @@ public class DatabaseRequestHandler {
             let directory: String? = args.get(name:"directory")!
            
             if let directory = directory {
-                print("is database exists in path\(Database.exists(withName: name, inDirectory: directory))")
-                return Database.exists(withName: name, inDirectory: directory) as Bool
+                return Database.exists(withName: name, inDirectory: directory)
             } else {
                 return Database.exists(withName: name)
             }
@@ -87,7 +101,42 @@ public class DatabaseRequestHandler {
             let database: Database = (args.get(name:"database"))!
             let document: MutableDocument = args.get(name:"document")!
             try! database.saveDocument(document)
+            
+        case "database_saveWithConcurrency":
+            let database: Database = (args.get(name:"database"))!
+            let document: MutableDocument = args.get(name:"document")!
+            let concurrencyControlType : String? = args.get(name:"concurrencyControlType")!
+            var concurrencyType = ConcurrencyControl.lastWriteWins
+            
+            if let type = concurrencyControlType {
+                if type == "failOnConflict" {
+                    concurrencyType = .failOnConflict
+                } else {
+                    concurrencyType = .lastWriteWins
+                }
+            }
+            try! database.saveDocument(document, concurrencyControl: concurrencyType)
 
+        case "database_deleteWithConcurrency":
+            let database: Database = (args.get(name:"database"))!
+            let document: Document = (args.get(name:"document"))!
+            let concurrencyControlType : String? = args.get(name:"concurrencyControlType")!
+            var concurrencyType = ConcurrencyControl.lastWriteWins
+            
+            if let type = concurrencyControlType {
+                if type == "failOnConflict" {
+                    concurrencyType = .failOnConflict
+                } else {
+                    concurrencyType = .lastWriteWins
+                }
+            }
+            do {
+                try database.deleteDocument(document, concurrencyControl: concurrencyType)
+            } catch {
+                return error
+            }
+
+            
         case "database_purge":
             let database: Database = (args.get(name:"database"))!
             let document: MutableDocument = args.get(name:"document")!
@@ -109,9 +158,17 @@ public class DatabaseRequestHandler {
             
         case "database_addChangeListener":
             let database: Database = (args.get(name:"database"))!
-            let changeListener = MyDatabaseChangeListener()
-            database.addChangeListener(changeListener.listener)
-            return changeListener
+            var token: ListenerToken? = nil
+            let docId: String? = (args.get(name:"docId"))
+            if (docId != nil) {
+                let changeListener = MyDocumentChangeListener()
+                token = database.addDocumentChangeListener(withID: docId!, listener: changeListener.listener)
+            } else {
+                let changeListener = MyDatabaseChangeListener()
+                token = database.addChangeListener(changeListener.listener)
+            }
+            
+            return token
 
         case "database_removeChangeListener":
             let database: Database = (args.get(name:"database"))!
@@ -164,7 +221,6 @@ public class DatabaseRequestHandler {
         case "database_updateDocuments":
             let database: Database = args.get(name:"database")!
             let documents: Dictionary<String, Dictionary<String, Any>> = args.get(name: "documents")!
-            print("documents in database save documents is\(documents)")
             try database.inBatch {
                 for doc in documents {
                     let id = doc.key
@@ -187,9 +243,12 @@ public class DatabaseRequestHandler {
             
         case "database_getDocIds":
             let database: Database = args.get(name:"database")!
+            let limit: Int = args.get(name:"limit")!
+            let offset: Int = args.get(name:"offset")!
             let query = QueryBuilder
                 .select(SelectResult.expression(Meta.id))
                 .from(DataSource.database(database))
+                .limit(Expression.int(limit), offset:Expression.int(offset))
 
             var result: [String] = []
             do {
@@ -212,18 +271,23 @@ public class DatabaseRequestHandler {
 
             return documents
           
-            // TODO : Uncomment once encrption feature is added
-        /*case "database_setEncryptionKey":
+        case "database_changeEncryptionKey":
             let database: Database = args.get(name:"database")!
             let password: String? = args.get(name:"password")!
-            let encryptionKey: EncryptionKey? = EncryptionKey.password(password!)
+            let encryptionKey: EncryptionKey?
+            if password == "nil"{
+                encryptionKey = nil
+            }
+            else{
+                encryptionKey = EncryptionKey.password(password!)
+            }
             do {
-                return try database.setEncryptionKey(encryptionKey)
+                return try database.changeEncryptionKey(encryptionKey)
             } catch {
                 print("Got error setting encryption key \(error)")
                 return error.localizedDescription
             }
-        */
+
         case "database_queryAllDocuments":
             let database: Database = args.get(name:"database")!
             let searchQuery = QueryBuilder
