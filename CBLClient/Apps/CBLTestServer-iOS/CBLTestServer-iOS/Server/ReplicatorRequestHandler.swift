@@ -79,7 +79,11 @@ public class ReplicatorRequestHandler {
         case "replicator_isContinous":
             let config: ReplicatorConfiguration? = args.get(name: "config")
             return config?.continuous
-            
+
+        case "replicator_resetCheckpoint":
+            let replication_obj: Replicator = args.get(name: "replicator")!
+            return replication_obj.resetCheckpoint()
+
         default:
             throw RequestHandlerError.MethodNotFound(method)
         }

@@ -173,6 +173,7 @@ class Cluster:
             log_info("revs_limit not found in {}, Ignoring".format(self._cluster_config))
 
         # Sleep for a few seconds for the indexes to teardown
+        # TODO Find a better way to figure out index teardown
         time.sleep(5)
 
         status = ansible_runner.run_ansible_playbook(
