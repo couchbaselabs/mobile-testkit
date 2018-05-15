@@ -127,12 +127,6 @@ class Database(object):
         args.setString("id", doc_id)
         return self._client.invokeMethod("database_updateDocument", args)
 
-#     def contains(self, database, doc_id):
-#         args = Args()
-#         args.setMemoryPointer("database", database)
-#         args.setString("id", doc_id)
-#         return self._client.invokeMethod("database_contains", args)
-
     def getCount(self, database):
         args = Args()
         args.setMemoryPointer("database", database)

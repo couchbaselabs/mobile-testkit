@@ -41,7 +41,6 @@ class ValueSerializer(object):
                 string_map[map_param] = val
 
             return json.dumps(string_map)
-            # return json.dumps(value)
         elif isinstance(value, list):
             string_list = []
 
