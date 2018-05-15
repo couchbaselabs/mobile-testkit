@@ -95,6 +95,10 @@ def pytest_addoption(parser):
                      help="Number of replicas for the indexer node - SG 2.1 and above only",
                      default=0)
 
+    parser.addoption("--cluster-config",
+                     action="store",
+                     help="Provide cluster config to use. Default is base config",
+                     default="base")
 
 # This will get called once before the first test that
 # runs with this as input parameters in this file
@@ -129,6 +133,7 @@ def params_from_base_suite_setup(request):
     no_db_delete = request.config.getoption("--no-db-delete")
     use_views = request.config.getoption("--use-views")
     number_replicas = request.config.getoption("--number-replicas")
+    cluster_config_prefix = request.config.getoption("--cluster-config")
 
 #     community_enabled = request.config.getoption("--community")
 #
@@ -158,7 +163,7 @@ def params_from_base_suite_setup(request):
     for host, port in zip(host_list, port_list):
         base_url_list.append("http://{}:{}".format(host, port))
 
-    cluster_config = "{}/base_{}".format(CLUSTER_CONFIGS_DIR, mode)
+    cluster_config = "{}/{}_{}".format(CLUSTER_CONFIGS_DIR, cluster_config_prefix, mode)
     sg_config = sync_gateway_config_path_for_mode("sync_gateway_travel_sample", mode)
     no_conflicts_enabled = request.config.getoption("--no-conflicts")
     cluster_utils = ClusterKeywords()

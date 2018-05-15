@@ -6,7 +6,7 @@ from threading import Thread
 from keywords.MobileRestClient import MobileRestClient
 from CBLClient.Replication import Replication
 
-from libraries.testkit import cluster
+from libraries.testkit.cluster import Cluster
 from libraries.data.doc_generators import simple, four_k, simple_user,\
     complex_doc
 from datetime import datetime, timedelta
@@ -16,8 +16,8 @@ from datetime import datetime, timedelta
 @pytest.mark.listener
 @pytest.mark.replication
 @pytest.mark.parametrize("num_of_docs, num_of_updates, num_of_docs_to_update, num_of_docs_in_itr, num_of_doc_to_delete, num_of_docs_to_add, up_time", [
-    (1000000, 100, 100, 1000, 1000, 2000, 4 * 24 * 60),
-    # (500, 5, 10, 5, 10, 10, 1 * 20),
+#     (1000000, 100, 100, 1000, 1000, 2000, 4 * 24 * 60),
+    (500, 5, 10, 5, 10, 10, 1 * 20),
 ])
 def test_system(params_from_base_suite_setup, num_of_docs, num_of_updates, num_of_docs_to_update, num_of_docs_in_itr, num_of_doc_to_delete, num_of_docs_to_add, up_time):
     sg_db = "db"
@@ -53,10 +53,18 @@ def test_system(params_from_base_suite_setup, num_of_docs, num_of_updates, num_o
     num_of_itr_per_db = docs_per_db / num_of_docs_in_itr  # iteration required to add docs in each db
     extra_docs_in_itr_per_db = docs_per_db % num_of_docs_in_itr  # iteration required to add docs leftover docs per db
 
-    c = cluster.Cluster(config=cluster_config)
+    cluster = Cluster(config=cluster_config)
+    if len(cluster.servers) < 2:
+        raise Exception("Please provide at least 3 servers")
+
+    server_urls = []
+    for server in cluster.servers:
+        server_urls.append(server.url)
+    primary_server = cluster.servers[0]
+    servers = cluster.servers[1:]
     if not resume_cluster:
         # Reset cluster to ensure no data in system
-        c.reset(sg_config_path=sg_config)
+        cluster.reset(sg_config_path=sg_config)
         sg_client.create_user(sg_admin_url, sg_db, username, password, channels=channels_sg)
 
         # adding bulk docs to each db
@@ -121,6 +129,7 @@ def test_system(params_from_base_suite_setup, num_of_docs, num_of_updates, num_o
         print "Starting iteration no. {} of system testing".format(x)
         print '*' * 20
         x += 1
+        server = servers[random.randint(0, len(servers) - 1)]
         ######################################
         # Checking for doc update on SG side #
         ######################################
@@ -185,7 +194,9 @@ def test_system(params_from_base_suite_setup, num_of_docs, num_of_updates, num_o
         _check_doc_count(db_obj_list, cbl_db_list)
         # removing ids of deleted doc from the list
         doc_ids = doc_ids - docs_to_delete
-
+        # Deleting a node from the cluster
+        print "Rebalance out server: {}".format(server.host)
+        primary_server.rebalance_out(server_urls, server)
         ############################
         # Deleting doc on CBL side #
         ############################
@@ -217,6 +228,11 @@ def test_system(params_from_base_suite_setup, num_of_docs, num_of_updates, num_o
         _check_doc_count(db_obj_list, cbl_db_list)
         # removing ids of deleted doc from the list
         doc_ids = doc_ids - docs_to_delete
+        # Adding the node back to the cluster
+        print "Adding Server back {}".format(server.host)
+        primary_server.add_node(server,services="kv,index,n1ql")
+        print "Rebalance in server: {}".format(server.host)
+        primary_server.rebalance_in(server_urls, server)
 
         #############################
         # Creating docs on CBL side #
