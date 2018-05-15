@@ -17,7 +17,7 @@ class TestDatabase(object):
             pytest.skip("Test not applicable for ios")
 
         if len(db_name) >= 128 and (self.liteserv_platform != "ios" or self.liteserv_platform != "android"):
-            pytest.skip("Test not supported on .net platforms")
+            pytest.skip("Test not supported on .net platforms or the db name is longer than or equal to 128 characters")
 
         try:
             self.db_obj.create(db_name)
@@ -90,7 +90,7 @@ class TestDatabase(object):
         @summary: Testing Database constructor method of Database API
         '''
         if len(db_name) >= 128 and (self.liteserv_platform != "ios" or self.liteserv_platform != "android"):
-            pytest.skip("Test not supported on .net platforms")
+            pytest.skip("Test not supported on .net platforms or the db name is longer than or equal to 128 characters")
 
         db = self.db_obj.create(db_name)
         assert self.db_obj.getName(db) == db_name
@@ -112,7 +112,7 @@ class TestDatabase(object):
         @summary: Testing close method of Database API
         '''
         if len(db_name) >= 128 and (self.liteserv_platform != "ios" or self.liteserv_platform != "android"):
-            pytest.skip("Test not supported on .net platfomrs")
+            pytest.skip("Test not supported on .net platforms or the db name is longer than or equal to 128 characters")
 
         db = self.db_obj.create(db_name)
         assert self.db_obj.close(db) == -1
@@ -132,7 +132,7 @@ class TestDatabase(object):
         @summary: Testing delete(DB) method of Database API
         '''
         if len(db_name) >= 128 and (self.liteserv_platform != "ios" or self.liteserv_platform != "android"):
-            pytest.skip("Test not supported on .net platfomrs")
+            pytest.skip("Test not supported on .net platforms or the db name is longer than or equal to 128 characters")
 
         db = self.db_obj.create(db_name)
         path = self.db_obj.getPath(db)
@@ -155,7 +155,7 @@ class TestDatabase(object):
         @summary: Testing delete method of Database API
         '''
         if len(db_name) >= 128 and (self.liteserv_platform != "ios" or self.liteserv_platform != "android"):
-            pytest.skip("Test not supported on .net platfomrs")
+            pytest.skip("Test not supported on .net platforms or the db name is longer than or equal to 128 characters")
 
         db_name = db_name.lower()
         db = self.db_obj.create(db_name)
@@ -209,7 +209,7 @@ class TestDatabase(object):
         @summary: Testing exist method of Database API
         '''
         if len(db_name) >= 128 and (self.liteserv_platform != "ios" or self.liteserv_platform != "android"):
-            pytest.skip("Test not supported on .net platfomrs")
+            pytest.skip("Test not supported on .net platforms or the db name is longer than or equal to 128 characters")
 
         db = self.db_obj.create(db_name)
         path = self.db_obj.getPath(db)
@@ -238,7 +238,7 @@ class TestDatabase(object):
         @summary: Testing getDocument method of Database API
         '''
         if len(db_name) >= 128 and (self.liteserv_platform != "ios" or self.liteserv_platform != "android"):
-            pytest.skip("Test not supported on .net platfomrs")
+            pytest.skip("Test not supported on .net platforms or the db name is longer than or equal to 128 characters")
 
         db = self.db_obj.create(db_name)
         doc = self.doc_obj.create(doc_id)
@@ -263,7 +263,7 @@ class TestDatabase(object):
         @summary: Testing getName method of Database API
         '''
         if len(db_name) >= 128 and (self.liteserv_platform != "ios" or self.liteserv_platform != "android"):
-            pytest.skip("Test not supported on .net platfomrs")
+            pytest.skip("Test not supported on .net platforms or the db name is longer than or equal to 128 characters")
 
         db = self.db_obj.create(db_name)
         assert db_name == str(self.db_obj.getName(db))
@@ -285,7 +285,7 @@ class TestDatabase(object):
         @summary: Testing getPath method of Database API
         '''
         if len(db_name) >= 128 and (self.liteserv_platform != "ios" or self.liteserv_platform != "android"):
-            pytest.skip("Test not supported on .net platfomrs")
+            pytest.skip("Test not supported on .net platforms  or the db name is longer than or equal to 128 characters")
 
         db = self.db_obj.create(db_name)
         assert self.db_obj.getPath(db)
@@ -314,7 +314,6 @@ class TestDatabase(object):
         self.db_obj.saveDocument(db_1, doc1)
         self.db_obj.saveDocument(db_2, doc2)
         self.db_obj.purge(document=doc1, database=db_1)
-        # assert self.db_obj.getDocument(db_2, doc_id) == -1
         assert self.db_obj.getDocument(db_2, doc_id)
         assert self.db_obj.deleteDB(db_1) == -1
         assert self.db_obj.deleteDB(db_2) == -1
@@ -335,7 +334,7 @@ class TestDatabase(object):
         @summary: Testing save method of Database API
         '''
         if len(db_name) >= 128 and (self.liteserv_platform != "ios" or self.liteserv_platform != "android"):
-            pytest.skip("Test not supported on .net platfomrs")
+            pytest.skip("Test not supported on .net platforms  or the db name is longer than or equal to 128 characters")
 
         doc = self.doc_obj.create(doc_id)
         db = self.db_obj.create(db_name)

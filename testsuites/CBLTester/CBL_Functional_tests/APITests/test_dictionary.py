@@ -83,14 +83,10 @@ class TestDictionary(object):
         '''
         @summary: Testing get and set Date methods of Dictionary API
         '''
-        # TODO implementation does not work on ios
         key = "Date_key"
         value = self.datatype.setDate()
         content_dict = self.dict_obj.create()
         self.dict_obj.setDate(content_dict, key, value)
-        # assert self.datatype.compare(value,
-        #                            self.dict_obj.getDate(content_dict,
-        #                                                   key))
         assert self.datatype.compareDate(value, self.dict_obj.getDate(content_dict, key))
 
     def test_get_set_dictionary(self):
@@ -247,7 +243,6 @@ class TestDictionary(object):
         '''
         @summary: Testing remove method of Dictionary API
         '''
-        # TODO ios gets back {} for self.datatype.hashMap()
         hashmap = {
             "Float_key": "{}".format(random.random()),
             "Integer_key": random.randint(1, 1000),
