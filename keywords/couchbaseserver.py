@@ -737,8 +737,6 @@ class CouchbaseServer:
         else:
             return "couchbase-server-enterprise-{}-{}-{}.x86_64.rpm".format(version, build_number, cbs_platform)
 
-            return "couchbase-server-enterprise-{}-{}-{}.x86_64.rpm".format(version, build_number, cbs_platform)
-
     def resolve_cb_nas_url(self, version, build_number, cbs_platform="centos7"):
         """
         Resolve a download URL for couchbase server on the internal VPN download site
