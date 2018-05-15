@@ -86,6 +86,15 @@ def pytest_addoption(parser):
                      action="store_true",
                      help="If set, will enable SSL communication between Sync Gateway and CBL")
 
+    parser.addoption("--use-views",
+                     action="store_true",
+                     help="If set, uses views instead of GSI - SG 2.1 and above only")
+
+    parser.addoption("--number-replicas",
+                     action="store",
+                     help="Number of replicas for the indexer node - SG 2.1 and above only",
+                     default=0)
+
 
 # This will get called once before the first test that
 # runs with this as input parameters in this file
@@ -118,6 +127,8 @@ def params_from_base_suite_setup(request):
     resume_cluster = request.config.getoption("--resume-cluster")
     generator = request.config.getoption("--doc-generator")
     no_db_delete = request.config.getoption("--no-db-delete")
+    use_views = request.config.getoption("--use-views")
+    number_replicas = request.config.getoption("--number-replicas")
 
     community_enabled = request.config.getoption("--community")
 
@@ -159,6 +170,19 @@ def params_from_base_suite_setup(request):
     sg_ip = host_for_url(sg_url)
     target_url = "ws://{}:4984/{}".format(sg_ip, sg_db)
     target_admin_url = "ws://{}:4985/{}".format(sg_ip, sg_db)
+
+    if use_views:
+        log_info("Running SG tests using views")
+        # Enable sg views in cluster configs
+        persist_cluster_config_environment_prop(cluster_config, 'sg_use_views', True)
+    else:
+        log_info("Running tests with cbs <-> sg ssl disabled")
+        # Disable sg views in cluster configs
+        persist_cluster_config_environment_prop(cluster_config, 'sg_use_views', False)
+
+    # Write the number of replicas to cluster config
+    persist_cluster_config_environment_prop(cluster_config, 'number_replicas', number_replicas)
+
     cluster_utils = ClusterKeywords()
     cluster_utils.set_cluster_config(cluster_config.split("/")[-1])
     persist_cluster_config_environment_prop(cluster_config, 'sync_gateway_ssl', False)
@@ -271,9 +295,10 @@ def params_from_base_suite_setup(request):
     }
 
     # Delete CBL database
-    for db_name, testserver, base_url in zip(db_name_list,
-                                             testserver_list,
-                                             base_url_list):
+    for db_name, testserver, base_url, db_obj in zip(db_name_list,
+                                                     testserver_list,
+                                                     base_url_list,
+                                                     db_obj_list):
         if not no_db_delete:
             log_info("Deleting the database {} at the suite teardown".format(db_obj.getName(cbl_db)))
             time.sleep(2)

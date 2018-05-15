@@ -258,7 +258,6 @@ class TestDocument(object):
         @summary: Testing Get and Set Float method of Document API
         '''
         doc = self.doc_obj.create()
-        # long_obj = self.datatype.setLong(value)
         self.doc_obj.setLong(doc, key, value)
         result = self.doc_obj.getLong(doc, key)
         assert long(value) == result
@@ -300,7 +299,7 @@ class TestDocument(object):
             "dict2": {"name": "n2"}
         }
 
-        assert sorted(expected_dict) == sorted(doc1b_todict)
+        assert sorted(expected_dict) == sorted(doc1b_todict), "Dictionary content is not matching with the expected content."
 
     def test_set_immutable_array_to_doc(self):
         '''
@@ -345,4 +344,4 @@ class TestDocument(object):
             "array2": ["a2", {"name": "n2"}]
         }
 
-        assert sorted(expected_dict) == sorted(doc1b_todict)
+        assert sorted(expected_dict) == sorted(doc1b_todict), "Dictionary content is not matching with the expected content."
