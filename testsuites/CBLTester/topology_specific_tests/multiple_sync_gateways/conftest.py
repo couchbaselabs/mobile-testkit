@@ -224,21 +224,6 @@ def params_from_base_suite_setup(request):
 
     cluster.reset(sg_config)
 
-    if enable_sample_bucket:
-        server_url = cluster_topology["couchbase_servers"][0]
-        server = CouchbaseServer(server_url)
-
-        buckets = server.get_bucket_names()
-        if enable_sample_bucket not in buckets:
-            server.delete_buckets()
-            time.sleep(5)
-            server.load_sample_bucket(enable_sample_bucket)
-            server._create_internal_rbac_bucket_user(enable_sample_bucket)
-
-        # Create primary index
-        log_info("Creating primary index for {}".format(enable_sample_bucket))
-        sdk_client = Bucket('couchbase://{}/{}'.format(cbs_ip, enable_sample_bucket), password='password')
-
     # Hit this intalled running services to verify the correct versions are installed
     cluster_utils.verify_cluster_versions(
         cluster_config,
@@ -359,7 +344,6 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     cluster_topology = params_from_base_suite_setup["cluster_topology"]
     mode = params_from_base_suite_setup["mode"]
     target_url = params_from_base_suite_setup["target_url"]
-    enable_sample_bucket = params_from_base_suite_setup["enable_sample_bucket"]
     sync_gateway_version = params_from_base_suite_setup["sync_gateway_version"]
     sg_ip = params_from_base_suite_setup["sg_ip"]
     sg_db = params_from_base_suite_setup["sg_db"]
