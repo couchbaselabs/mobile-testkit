@@ -2,8 +2,10 @@ import logging
 import json
 import random
 import string
+import os
 
 from keywords.exceptions import FeatureSupportedError
+from keywords.constants import DATA_DIR
 from utilities.cluster_config_utils import get_cbs_servers, get_sg_version
 
 
@@ -222,3 +224,15 @@ def random_string(length, printable=False, digit=False):
     if printable:
         return ''.join(random.choice(string.printable) for _ in range(length))
     return ''.join(random.choice(string.ascii_letters + string.digits) for _ in range(length))
+
+
+def clear_resources_pngs():
+    log_info("Clearing png files in {}".format(DATA_DIR))
+    for the_file in os.listdir(DATA_DIR):
+        file_path = os.path.join(DATA_DIR, the_file)
+
+        try:
+            if os.path.isfile(file_path) and file_path.endswith(".png"):
+                os.unlink(file_path)
+        except Exception as e:
+            print(e)
