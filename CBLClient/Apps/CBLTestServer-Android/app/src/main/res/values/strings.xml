@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">CBLTestServer2.0</string>
+    <string name="textview">TextView</string>
+</resources>

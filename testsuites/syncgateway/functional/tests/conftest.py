@@ -90,10 +90,20 @@ def pytest_addoption(parser):
                      help="Sync Gateway Platform binary to install (ex. centos or windows)",
                      default="centos")
 
+    parser.addoption("--sg-installer-type",
+                     action="store",
+                     help="Sync Gateway Installer type (ex. exe or msi)",
+                     default="msi")
+
     parser.addoption("--sa-platform",
                      action="store",
                      help="Sync Gateway Accelerator Platform binary to install (ex. centos or windows)",
                      default="centos")
+
+    parser.addoption("--sa-installer-type",
+                     action="store",
+                     help="Sync Gateway Accelerator Installer type (ex. exe or msi)",
+                     default="msi")
 
     parser.addoption("--sg-lb",
                      action="store_true",
@@ -140,7 +150,9 @@ def params_from_base_suite_setup(request):
     cbs_ssl = request.config.getoption("--server-ssl")
     xattrs_enabled = request.config.getoption("--xattrs")
     sg_platform = request.config.getoption("--sg-platform")
+    sg_installer_type = request.config.getoption("--sg-installer-type")
     sa_platform = request.config.getoption("--sa-platform")
+    sa_installer_type = request.config.getoption("--sa-installer-type")
     sg_lb = request.config.getoption("--sg-lb")
     sg_ce = request.config.getoption("--sg-ce")
     use_sequoia = request.config.getoption("--sequoia")
@@ -161,6 +173,8 @@ def params_from_base_suite_setup(request):
     log_info("race_enabled: {}".format(race_enabled))
     log_info("xattrs_enabled: {}".format(xattrs_enabled))
     log_info("sg_platform: {}".format(sg_platform))
+    log_info("sg_installer_type: {}".format(sg_installer_type))
+    log_info("sa_installer_type: {}".format(sa_installer_type))
     log_info("sa_platform: {}".format(sa_platform))
     log_info("sg_lb: {}".format(sg_lb))
     log_info("sg_ce: {}".format(sg_ce))
@@ -265,7 +279,9 @@ def params_from_base_suite_setup(request):
                 sync_gateway_config=sg_config,
                 race_enabled=race_enabled,
                 sg_platform=sg_platform,
+                sg_installer_type=sg_installer_type,
                 sa_platform=sa_platform,
+                sa_installer_type=sa_installer_type,
                 sg_ce=sg_ce
             )
         except ProvisioningError:

@@ -162,6 +162,7 @@ def params_from_base_suite_setup(request):
     num_docs = request.config.getoption("--num-docs")
     cbs_platform = request.config.getoption("--cbs-platform")
     cbs_toy_build = request.config.getoption("--cbs-upgrade-toybuild")
+    use_views = request.config.getoption("--use-views")
     number_replicas = request.config.getoption("--number-replicas")
 
     if xattrs_post_upgrade and version_is_binary(sync_gateway_version):
@@ -184,8 +185,8 @@ def params_from_base_suite_setup(request):
     log_info("num_docs: {}".format(num_docs))
     log_info("cbs_platform: {}".format(cbs_platform))
     log_info("cbs_toy_build: {}".format(cbs_toy_build))
-    log_info("number_replicas: {}".format(number_replicas))
     log_info("use_views: {}".format(use_views))
+    log_info("number_replicas: {}".format(number_replicas))
 
     # Make sure mode for sync_gateway is supported ('cc' or 'di')
     validate_sync_gateway_mode(mode)
@@ -223,14 +224,23 @@ def params_from_base_suite_setup(request):
     # Only works with load balancer configs
     persist_cluster_config_environment_prop(cluster_config, 'sg_lb_enabled', True)
 
-    # Write the number of replicas to cluster config
-    persist_cluster_config_environment_prop(cluster_config, 'number_replicas', number_replicas)
-
     if xattrs_pre_upgrade:
         log_info("Enabling xattrs for sync gateway version {}".format(sync_gateway_version))
         persist_cluster_config_environment_prop(cluster_config, 'xattrs_enabled', True)
     else:
         persist_cluster_config_environment_prop(cluster_config, 'xattrs_enabled', False)
+
+    if use_views:
+        log_info("Running SG tests using views")
+        # Enable sg views in cluster configs
+        persist_cluster_config_environment_prop(cluster_config, 'sg_use_views', True)
+    else:
+        log_info("Running tests with cbs <-> sg ssl disabled")
+        # Disable sg views in cluster configs
+        persist_cluster_config_environment_prop(cluster_config, 'sg_use_views', False)
+
+    # Write the number of replicas to cluster config
+    persist_cluster_config_environment_prop(cluster_config, 'number_replicas', number_replicas)
 
     if cbs_ssl:
         log_info("Running tests with cbs <-> sg ssl enabled")

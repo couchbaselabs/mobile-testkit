@@ -34,6 +34,8 @@ def params_from_base_suite_setup(request):
     no_conflicts_enabled = request.config.getoption("--no-conflicts")
     use_views = request.config.getoption("--use-views")
     number_replicas = request.config.getoption("--number-replicas")
+    sg_installer_type = request.config.getoption("--sg-installer-type")
+    sa_installer_type = request.config.getoption("--sa-installer-type")
 
     log_info("server_version: {}".format(server_version))
     log_info("sync_gateway_version: {}".format(sync_gateway_version))
@@ -47,6 +49,8 @@ def params_from_base_suite_setup(request):
     log_info("no conflicts enabled {}".format(no_conflicts_enabled))
     log_info("use_views: {}".format(use_views))
     log_info("number_replicas: {}".format(number_replicas))
+    log_info("sg_installer_type: {}".format(sg_installer_type))
+    log_info("sa_installer_type: {}".format(sa_installer_type))
 
     # sg-ce is invalid for di mode
     if mode == "di" and sg_ce:
@@ -147,7 +151,9 @@ def params_from_base_suite_setup(request):
                 sync_gateway_version=sync_gateway_version,
                 sync_gateway_config=sg_config,
                 race_enabled=race_enabled,
-                sg_ce=sg_ce
+                sg_ce=sg_ce,
+                sg_installer_type=sg_installer_type,
+                sa_installer_type=sa_installer_type
             )
         except ProvisioningError:
             logging_helper = Logging()

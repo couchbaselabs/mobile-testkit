@@ -62,18 +62,17 @@ class SyncGateway:
             "xattrs": "",
             "no_conflicts": "",
             "num_index_replicas": "",
-            "num_index_replicas_housekeeping": "",
             "sg_use_views": "",
             "couchbase_server_primary_node": self.couchbase_server_primary_node
         }
 
         if get_sg_version(self.cluster_config) >= "2.1.0":
-            num_replicas = get_sg_replicas(self.cluster_config)
-            playbook_vars["num_index_replicas"] = '"num_index_replicas": {},'.format(num_replicas)
-            playbook_vars["num_index_replicas_housekeeping"] = '"num_index_replicas_housekeeping": {},'.format(num_replicas)
-
             if get_sg_use_views(self.cluster_config):
                 playbook_vars["sg_use_views"] = '"use_views": true,'
+            else:
+                num_replicas = get_sg_replicas(self.cluster_config)
+                playbook_vars["num_index_replicas"] = '"num_index_replicas": {},'.format(num_replicas)
+
 
         if is_xattrs_enabled(self.cluster_config):
             playbook_vars["autoimport"] = '"import_docs": "continuous",'
@@ -115,12 +114,11 @@ class SyncGateway:
         }
 
         if get_sg_version(self.cluster_config) >= "2.1.0":
-            num_replicas = get_sg_replicas(self.cluster_config)
-            playbook_vars["num_index_replicas"] = '"num_index_replicas": {},'.format(num_replicas)
-            playbook_vars["num_index_replicas_housekeeping"] = '"num_index_replicas_housekeeping": {},'.format(num_replicas)
-
             if get_sg_use_views(self.cluster_config):
                 playbook_vars["sg_use_views"] = '"use_views": true,'
+            else:
+                num_replicas = get_sg_replicas(self.cluster_config)
+                playbook_vars["num_index_replicas"] = '"num_index_replicas": {},'.format(num_replicas)
 
         if is_xattrs_enabled(self.cluster_config):
             playbook_vars["autoimport"] = '"import_docs": "continuous",'

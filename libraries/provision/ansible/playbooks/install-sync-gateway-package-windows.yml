@@ -42,7 +42,7 @@
     couchbase_server_primary_node: "{{ hostvars[groups.couchbase_servers[0]].ansible_host }}"
 
   tasks:
-  - name: SYNC GATEWAY |  Download sync_gateway exe {{ couchbase_sync_gateway_package_url }}
+  - name: SYNC GATEWAY |  Download sync_gateway {{ couchbase_sync_gateway_package_url }}
     win_get_url: url={{ couchbase_sync_gateway_package_url }} dest="C:\Users\Administrator\AppData\Local\Temp\{{ couchbase_sync_gateway_package }}"
   
 # Install sync_gateway

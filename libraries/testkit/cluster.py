@@ -144,7 +144,6 @@ class Cluster:
             "no_conflicts": "",
             "revs_limit": "",
             "num_index_replicas": "",
-            "num_index_replicas_housekeeping": "",
             "sg_use_views": "",
             "couchbase_server_primary_node": couchbase_server_primary_node
         }
@@ -170,6 +169,7 @@ class Cluster:
             log_info("Keyerror in getting revs_limit{}".format(ex.message))
 
         # Sleep for a few seconds for the indexes to teardown
+        # TODO Find a better way to figure out index teardown
         time.sleep(5)
 
         status = ansible_runner.run_ansible_playbook(

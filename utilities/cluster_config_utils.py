@@ -129,7 +129,7 @@ def get_sg_use_views(cluster_config):
 
 
 def get_sg_version(cluster_config):
-    """ Loads cluster config to gets the SG version"""
+    """ Loads cluster config to get the sync gateway version"""
     cluster = load_cluster_config_json(cluster_config)
     return cluster["environment"]["sync_gateway_version"]
 
