@@ -336,7 +336,7 @@ def add_docs_to_client_task(client, url, db, channels, num_docs):
         threads = 1
     else:
         docs_per_thread = num_docs // 100
-        threads = 100
+        threads = 10
 
     log_info("Adding {} docs with {} threads @ {} docs per thread".format(num_docs, threads, docs_per_thread))
 

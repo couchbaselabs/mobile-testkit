@@ -53,7 +53,6 @@ class SgAccel:
             "no_conflicts": "",
             "revs_limit": "",
             "num_index_replicas": "",
-            "num_index_replicas_housekeeping": "",
             "sg_use_views": "",
             "couchbase_server_primary_node": couchbase_server_primary_node
         }
