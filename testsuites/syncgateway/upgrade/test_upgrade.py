@@ -465,9 +465,10 @@ def update_docs(client, ls_url, ls_db, added_docs, auth, terminator_doc_id):
             client.put_doc(url=ls_url, db=ls_db, doc_id=doc_id, doc_body=doc, rev=doc['_rev'], auth=auth)
             new_doc = client.get_doc(url=ls_url, db=ls_db, doc_id=doc_id, auth=auth)
             doc_revs[doc_id] = new_doc['_rev']
+            log_info("New doc rev: {}".format(doc_revs[doc_id]))
             time.sleep(2)
 
-        time.sleep(5)
+        log_info("Done with current iteration of doc updates")
 
 
 def upgrade_server_cluster(servers, primary_server, secondary_server, server_version, server_upgraded_version, server_urls, cluster_config, cbs_platform, toy_build=None):
