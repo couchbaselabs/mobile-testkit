@@ -5,11 +5,12 @@ from zipfile import ZipFile
 import requests
 
 from keywords.LiteServBase import LiteServBase
-from keywords.constants import LATEST_BUILDS
+from keywords.constants import LATEST_BUILDS, LATEST_RELEASED_BUILDS
 from keywords.constants import BINARY_DIR
 from keywords.constants import RESULTS_DIR
 from keywords.constants import REGISTERED_CLIENT_DBS
 from keywords.exceptions import LiteServError
+from requests.exceptions import HTTPError
 from keywords.utils import version_and_build
 from keywords.utils import log_info
 
@@ -33,18 +34,31 @@ class LiteServMacOSX(LiteServBase):
             return
 
         version, build = version_and_build(self.version_build)
+        package_urls = []
 
         if version == "1.2.0":
             package_url = "{}/couchbase-lite-ios/release/{}/macosx/{}/{}".format(LATEST_BUILDS, version, self.version_build, package_name)
+            package_urls.append(package_url)
         else:
             package_url = "{}/couchbase-lite-ios/{}/macosx/{}/{}".format(LATEST_BUILDS, version, build, package_name)
+            release_url = "{}/{}/couchbase-lite/macosx/{}".format(LATEST_RELEASED_BUILDS, version, package_name)
+            package_urls.append(package_url)
+            package_urls.append(release_url)
 
         # Download package to deps/binaries
-        log_info("Downloading: {}".format(package_url))
-        resp = requests.get(package_url)
-        resp.raise_for_status()
-        with open("{}/{}".format(BINARY_DIR, package_name), "wb") as f:
-            f.write(resp.content)
+        for purl in package_urls:
+            try:
+                log_info("Downloading: {}".format(purl))
+                resp = requests.get(purl)
+                resp.raise_for_status()
+                with open("{}/{}".format(BINARY_DIR, package_name), "wb") as f:
+                    f.write(resp.content)
+                break
+            except HTTPError as he:
+                if he.response.status_code == 404:
+                    log_info("Got 404 error for {}, retrying ...".format(purl))
+                else:
+                    raise
 
         # Unzip package
         directory_name = package_name.replace(".zip", "")
