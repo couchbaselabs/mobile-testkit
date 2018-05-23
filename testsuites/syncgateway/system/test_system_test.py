@@ -281,7 +281,7 @@ def start_polling_changes_worker(sg_url, sg_db, user_name, user_auth, changes_de
     latest_changes = {}
     found_terminator = False
     # Give some extra time for the changes to finish
-    update_runtime_sec += 600
+    update_runtime_sec += 7200
 
     # Pass a channel filter to changes request if filtered is true
     filter_type = None
@@ -341,7 +341,7 @@ def start_continuous_changes_worker(sg_url, sg_db, user_name, user_auth, termina
 
     sg_client = MobileRestClient()
     # Give some extra time for the changes to finish
-    update_runtime_sec += 600
+    update_runtime_sec += 7200
 
     latest_changes = {}
 
