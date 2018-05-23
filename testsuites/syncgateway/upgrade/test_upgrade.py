@@ -444,6 +444,7 @@ def update_docs(client, ls_url, ls_db, added_docs, auth, terminator_doc_id):
 
     while True:
         try:
+            log_info("update_docs: Checking for termination doc")
             client.get_doc(url=ls_url, db=ls_db, doc_id=terminator_doc_id, auth=auth)
             log_info("update_docs: Found termination doc")
             log_info("update_docs: Updated {} docs".format(len(doc_revs.keys())))
