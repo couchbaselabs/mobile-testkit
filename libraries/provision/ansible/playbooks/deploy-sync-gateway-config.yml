@@ -16,6 +16,7 @@
     xattrs:
     sg_use_views:
     num_index_replicas:
+    logging:
 
   tasks:
     - include: tasks/stop-sync-gateway.yml
@@ -37,6 +38,7 @@
     server_port:
     autoimport:
     xattrs:
+    logging:
 
   tasks:
     - include: tasks/stop-sg-accel.yml
