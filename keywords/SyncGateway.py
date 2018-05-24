@@ -414,18 +414,22 @@ class SyncGateway(object):
             "num_index_replicas": "",
             "sg_use_views": "",
             "xattrs": "",
-            "no_conflicts": ""
+            "no_conflicts": "",
+            "logging": ""
         }
 
         if no_conflicts_enabled(cluster_config):
             playbook_vars["no_conflicts"] = '"allow_conflicts": false,'
 
         if get_sg_upgraded_version(cluster_config) >= "2.1.0":
+            playbook_vars["logging"] = '"logging": {"debug": {"enabled": true}},'
             if enable_views:
                 playbook_vars["sg_use_views"] = '"use_views": true,'
             else:
                 num_replicas = get_sg_replicas(cluster_config)
                 playbook_vars["num_index_replicas"] = '"num_index_replicas": {},'.format(num_replicas)
+        else:
+            playbook_vars["logging"] = '"log": ["*"],'
 
         if is_xattrs_enabled(cluster_config) or enable_xattrs:
             playbook_vars["xattrs"] = '"enable_shared_bucket_access": true,'
