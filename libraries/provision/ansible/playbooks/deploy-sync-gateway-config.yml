@@ -21,7 +21,7 @@
   tasks:
     - include: tasks/stop-sync-gateway.yml
     - include: tasks/deploy-sync-gateway-config.yml
-    - include: tasks/start-sync-gateway.yml
+#    - include: tasks/start-sync-gateway.yml
 
 # Deploy SG Accel config
 - hosts: sg_accels
@@ -43,4 +43,4 @@
   tasks:
     - include: tasks/stop-sg-accel.yml
     - include: tasks/deploy-sg-accel-config.yml
-    - include: tasks/start-sg-accel.yml
+#    - include: tasks/start-sg-accel.yml
