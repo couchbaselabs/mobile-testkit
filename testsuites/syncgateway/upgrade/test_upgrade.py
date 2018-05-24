@@ -278,6 +278,7 @@ def post_upgrade_sync_gateway_migration(mode, cluster_config, sg_conf, use_views
                 enable_import=False,
                 enable_views=use_views
             )
+            ac_obj.restart_sync_gateways(cluster_config=cluster_config, url=ac_ip)
 
     sg_obj = SyncGateway()
     for sg in sync_gateways:
@@ -291,6 +292,7 @@ def post_upgrade_sync_gateway_migration(mode, cluster_config, sg_conf, use_views
             enable_views=use_views
         )
         enable_import = False
+        sg_obj.restart_sync_gateways(cluster_config=cluster_config, url=sg_ip)
     log_info('------------------------------------------')
     log_info('END sync gateway post upgrade migration')
     log_info('------------------------------------------')
