@@ -153,20 +153,20 @@ def test_upgrade(params_from_base_test_setup):
         )
 
         # Restart SGs after the server upgrade
-        sg_obj = SyncGateway()
-        for sg in sync_gateways:
-            sg_ip = host_for_url(sg["admin"])
-            log_info("Restarting sync gateway {}".format(sg_ip))
-            sg_obj.restart_sync_gateways(cluster_config=cluster_config, url=sg_ip)
-            time.sleep(5)
+        # sg_obj = SyncGateway()
+        # for sg in sync_gateways:
+        #     sg_ip = host_for_url(sg["admin"])
+        #     log_info("Restarting sync gateway {}".format(sg_ip))
+        #     sg_obj.restart_sync_gateways(cluster_config=cluster_config, url=sg_ip)
+        #     time.sleep(5)
 
-        if mode == "di":
-            ac_obj = SyncGateway()
-            for ac in sg_accels:
-                ac_ip = host_for_url(ac)
-                log_info("Restarting sg accel {}".format(ac_ip))
-                ac_obj.restart_sync_gateways(cluster_config=cluster_config, url=ac_ip)
-                time.sleep(5)
+        # if mode == "di":
+        #     ac_obj = SyncGateway()
+        #     for ac in sg_accels:
+        #         ac_ip = host_for_url(ac)
+        #         log_info("Restarting sg accel {}".format(ac_ip))
+        #         ac_obj.restart_sync_gateways(cluster_config=cluster_config, url=ac_ip)
+        #         time.sleep(5)
 
         # if xattrs_post_upgrade:
         # Post upgrade tasks
@@ -278,7 +278,7 @@ def post_upgrade_sync_gateway_migration(mode, cluster_config, sg_conf, use_views
                 enable_import=False,
                 enable_views=use_views
             )
-            ac_obj.start_sync_gateways(cluster_config=cluster_config, url=ac_ip)
+            ac_obj.restart_sync_gateways(cluster_config=cluster_config, url=ac_ip)
 
     sg_obj = SyncGateway()
     for sg in sync_gateways:
@@ -292,7 +292,7 @@ def post_upgrade_sync_gateway_migration(mode, cluster_config, sg_conf, use_views
             enable_views=use_views
         )
         enable_import = False
-        sg_obj.start_sync_gateways(cluster_config=cluster_config, url=sg_ip)
+        sg_obj.restart_sync_gateways(cluster_config=cluster_config, url=sg_ip)
     log_info('------------------------------------------')
     log_info('END sync gateway post upgrade migration')
     log_info('------------------------------------------')
