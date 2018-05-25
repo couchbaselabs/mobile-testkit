@@ -186,6 +186,7 @@ def test_upgrade(params_from_base_test_setup):
         )
         log_info("Waiting for doc updates to complete")
         updated_doc_revs, deleted_docs = updates_future.result()
+        time.sleep(120)
         log_info("deleted_docs: {}".format(deleted_docs))
 
         # Gather the new revs for verification
