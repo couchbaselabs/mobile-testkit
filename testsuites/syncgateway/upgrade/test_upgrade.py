@@ -17,6 +17,9 @@ from couchbase.bucket import Bucket
 from keywords.constants import SDK_TIMEOUT
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from requests.exceptions import HTTPError
+from couchbase.exceptions import NotFoundError
+from keywords.exceptions import TimeoutException
+from couchbase.n1ql import N1QLQuery
 
 
 def test_upgrade(params_from_base_test_setup):
@@ -60,7 +63,7 @@ def test_upgrade(params_from_base_test_setup):
     )
     sg_session = client.create_session(url=sg_admin_url, db=sg_db, name=sg_user_name, password=sg_user_password)
 
-    log_info("Starting continuous push pull replication from liteserv to sync gateway")
+    log_info("Starting continuous replication from liteserv to sync gateway")
     repl_one = client.start_replication(
         url=ls_url, continuous=True,
         from_db=ls_db,
@@ -84,6 +87,34 @@ def test_upgrade(params_from_base_test_setup):
         num_docs=num_docs
     )
     log_info("Added {} docs".format(len(added_docs)))
+
+    # Check for docs on the server
+    doc_ids = []
+    for i in range(len(added_docs)):
+        doc_ids.append(added_docs[i]["id"])
+    bucket_name = 'data-bucket'
+    cluster = Cluster(config=cluster_config)
+    primary_server = cluster.servers[0]
+    sdk_client = Bucket('couchbase://{}/{}'.format(primary_server.host, bucket_name), password='password', timeout=SDK_TIMEOUT)
+    n1ql_query = 'create primary index on {}'.format(bucket_name)
+    query = N1QLQuery(n1ql_query)
+    sdk_client.n1ql_query(query)
+    log_info("Checking that all docs added to CBL showed up on the CBS")
+    docs_check_time = "120"
+    start = time.time()
+    while True:
+        try:
+            if time.time() - start > docs_check_time:
+                # n1ql_query = 'select meta().id from {}'.format(bucket_name)
+                # query = N1QLQuery(n1ql_query)
+                # n1ql_docs = sdk_client.n1ql_query(n1ql_query)
+                raise TimeoutException("Timeout out waiting for docs to shown up on the server")
+            docs_from_sdk = sdk_client.get_multi(doc_ids)
+            log_info("All added docs to CBL found on CBS")
+            break
+        except NotFoundError:
+            log_info("All added docs to CBL are not found on CBS, retrying ...")
+            time.sleep(5)
 
     # start updating docs
     terminator_doc_id = 'terminator'
