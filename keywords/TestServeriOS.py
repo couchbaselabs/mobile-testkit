@@ -3,7 +3,7 @@ import os
 import re
 import time
 from zipfile import ZipFile
-from shutil import copyfile
+# from shutil import copyfile
 import requests
 
 from keywords.TestServerBase import TestServerBase
@@ -282,13 +282,15 @@ class TestServeriOS(TestServerBase):
         """
         self.close_app()
         # Have to separately copy the simulator logs
+        """
         if self.logfile_name and self.device_id:
             home = os.environ['HOME']
-            ios_log_file = "{}/Library/Logs/CoreSimulator/{}/system.log".format(home, self.device_id)
-            copyfile(ios_log_file, self.logfile_name)
+            # ios_log_file = "{}/Library/Logs/CoreSimulator/{}/system.log".format(home, self.device_id)
+            # copyfile(ios_log_file, self.logfile_name)
             # Empty the simulator logs so that the next test run
             # will only have logs for that run
-            open(ios_log_file, 'w').close()
+            # open(ios_log_file, 'w').close()
+        """
 
     def _verify_running(self):
         """
