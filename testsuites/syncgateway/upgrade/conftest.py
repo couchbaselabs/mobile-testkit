@@ -131,6 +131,14 @@ def pytest_addoption(parser):
                      action="store_true",
                      help="Use xattrs for sync meta storage. Only works with Sync Gateway 2.0+ and Couchbase Server 5.0+")
 
+    parser.addoption("--server-upgrade-only",
+                     action="store_true",
+                     help="Only upgrade the CBS cluster, do not upgrade SG cluster")
+
+    parser.addoption("--sg-upgrade-only",
+                     action="store_true",
+                     help="Only upgrade the SG cluster, do not upgrade CBS cluster")
+
 
 # This will be called once for the at the beggining of the execution in the 'tests/' directory
 # and will be torn down, (code after the yeild) when all the test session has completed.
@@ -164,6 +172,8 @@ def params_from_base_suite_setup(request):
     cbs_toy_build = request.config.getoption("--cbs-upgrade-toybuild")
     use_views = request.config.getoption("--use-views")
     number_replicas = request.config.getoption("--number-replicas")
+    server_upgrade_only = request.config.getoption("--server-upgrade-only")
+    sg_upgrade_only = request.config.getoption("--sg-upgrade-only")
 
     if xattrs_post_upgrade and version_is_binary(sync_gateway_version):
         check_xattr_support(server_upgraded_version, sync_gateway_upgraded_version)
@@ -187,6 +197,8 @@ def params_from_base_suite_setup(request):
     log_info("cbs_toy_build: {}".format(cbs_toy_build))
     log_info("use_views: {}".format(use_views))
     log_info("number_replicas: {}".format(number_replicas))
+    log_info("server_upgrade_only: {}".format(server_upgrade_only))
+    log_info("sg_upgrade_only: {}".format(sg_upgrade_only))
 
     # Make sure mode for sync_gateway is supported ('cc' or 'di')
     validate_sync_gateway_mode(mode)
@@ -314,7 +326,9 @@ def params_from_base_suite_setup(request):
         "num_docs": num_docs,
         "cbs_platform": cbs_platform,
         "cbs_toy_build": cbs_toy_build,
-        "use_views": use_views
+        "use_views": use_views,
+        "server_upgrade_only": server_upgrade_only,
+        "sg_upgrade_only": sg_upgrade_only
     }
 
     log_info("Tearing down 'params_from_base_suite_setup' ...")
@@ -345,6 +359,8 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     cbs_platform = params_from_base_suite_setup["cbs_platform"]
     cbs_toy_build = params_from_base_suite_setup["cbs_toy_build"]
     use_views = params_from_base_suite_setup["use_views"]
+    server_upgrade_only = params_from_base_suite_setup["server_upgrade_only"]
+    sg_upgrade_only = params_from_base_suite_setup["sg_upgrade_only"]
 
     test_name = request.node.name
     log_info("Running test '{}'".format(test_name))
@@ -400,7 +416,9 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         "num_docs": num_docs,
         "cbs_platform": cbs_platform,
         "cbs_toy_build": cbs_toy_build,
-        "use_views": use_views
+        "use_views": use_views,
+        "server_upgrade_only": server_upgrade_only,
+        "sg_upgrade_only": sg_upgrade_only
     }
 
     client.delete_databases(ls_url)

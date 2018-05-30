@@ -19,7 +19,6 @@ from concurrent.futures import ProcessPoolExecutor, as_completed
 from requests.exceptions import HTTPError
 from couchbase.exceptions import NotFoundError
 from keywords.exceptions import TimeoutException
-from couchbase.n1ql import N1QLQuery
 
 
 def test_upgrade(params_from_base_test_setup):
@@ -41,6 +40,8 @@ def test_upgrade(params_from_base_test_setup):
     num_docs = int(params_from_base_test_setup['num_docs'])
     cbs_platform = params_from_base_test_setup['cbs_platform']
     cbs_toy_build = params_from_base_test_setup['cbs_toy_build']
+    server_upgrade_only = params_from_base_test_setup["server_upgrade_only"]
+    sg_upgrade_only = params_from_base_test_setup["sg_upgrade_only"]
     use_views = params_from_base_test_setup['use_views']
     sg_conf = "{}/resources/sync_gateway_configs/sync_gateway_default_functional_tests_{}.json".format(os.getcwd(), mode)
 
@@ -89,32 +90,11 @@ def test_upgrade(params_from_base_test_setup):
     log_info("Added {} docs".format(len(added_docs)))
 
     # Check for docs on the server
-    doc_ids = []
+    initial_added_doc_ids = []
     for i in range(len(added_docs)):
-        doc_ids.append(added_docs[i]["id"])
-    bucket_name = 'data-bucket'
-    cluster = Cluster(config=cluster_config)
-    primary_server = cluster.servers[0]
-    sdk_client = Bucket('couchbase://{}/{}'.format(primary_server.host, bucket_name), password='password', timeout=SDK_TIMEOUT)
-    n1ql_query = 'create primary index on {}'.format(bucket_name)
-    query = N1QLQuery(n1ql_query)
-    sdk_client.n1ql_query(query)
-    log_info("Checking that all docs added to CBL showed up on the CBS")
-    docs_check_time = "120"
-    start = time.time()
-    while True:
-        try:
-            if time.time() - start > docs_check_time:
-                # n1ql_query = 'select meta().id from {}'.format(bucket_name)
-                # query = N1QLQuery(n1ql_query)
-                # n1ql_docs = sdk_client.n1ql_query(n1ql_query)
-                raise TimeoutException("Timeout out waiting for docs to shown up on the server")
-            docs_from_sdk = sdk_client.get_multi(doc_ids)
-            log_info("All added docs to CBL found on CBS")
-            break
-        except NotFoundError:
-            log_info("All added docs to CBL are not found on CBS, retrying ...")
-            time.sleep(5)
+        initial_added_doc_ids.append(added_docs[i]["id"])
+    log_info("Checking for docs present on the server after initial add")
+    check_docs_on_server(initial_added_doc_ids, cluster_config)
 
     # start updating docs
     terminator_doc_id = 'terminator'
@@ -141,22 +121,26 @@ def test_upgrade(params_from_base_test_setup):
         sync_gateways = topology["sync_gateways"]
         sg_accels = topology["sg_accels"]
 
-        upgrade_sync_gateway(
-            sync_gateways,
-            sync_gateway_version,
-            sync_gateway_upgraded_version,
-            sg_conf,
-            cluster_config
-        )
-
-        if mode == "di":
-            upgrade_sg_accel(
-                sg_accels,
+        if not server_upgrade_only:
+            upgrade_sync_gateway(
+                sync_gateways,
                 sync_gateway_version,
                 sync_gateway_upgraded_version,
                 sg_conf,
                 cluster_config
             )
+
+            if mode == "di":
+                upgrade_sg_accel(
+                    sg_accels,
+                    sync_gateway_version,
+                    sync_gateway_upgraded_version,
+                    sg_conf,
+                    cluster_config
+                )
+
+        # log_info("Checking for docs present on the server after SG upgrade")
+        # check_docs_on_server(initial_added_doc_ids, cluster_config)
 
         # Upgrade CBS
         cluster = Cluster(config=cluster_config)
@@ -171,33 +155,21 @@ def test_upgrade(params_from_base_test_setup):
         secondary_server = cluster.servers[1]
         servers = cluster.servers[1:]
 
-        upgrade_server_cluster(
-            servers,
-            primary_server,
-            secondary_server,
-            server_version,
-            server_upgraded_version,
-            server_urls,
-            cluster_config,
-            cbs_platform,
-            toy_build=cbs_toy_build
-        )
+        if not sg_upgrade_only:
+            upgrade_server_cluster(
+                servers,
+                primary_server,
+                secondary_server,
+                server_version,
+                server_upgraded_version,
+                server_urls,
+                cluster_config,
+                cbs_platform,
+                toy_build=cbs_toy_build
+            )
 
-        # Restart SGs after the server upgrade
-        # sg_obj = SyncGateway()
-        # for sg in sync_gateways:
-        #     sg_ip = host_for_url(sg["admin"])
-        #     log_info("Restarting sync gateway {}".format(sg_ip))
-        #     sg_obj.restart_sync_gateways(cluster_config=cluster_config, url=sg_ip)
-        #     time.sleep(5)
-
-        # if mode == "di":
-        #     ac_obj = SyncGateway()
-        #     for ac in sg_accels:
-        #         ac_ip = host_for_url(ac)
-        #         log_info("Restarting sg accel {}".format(ac_ip))
-        #         ac_obj.restart_sync_gateways(cluster_config=cluster_config, url=ac_ip)
-        #         time.sleep(5)
+        # log_info("Checking for docs present on the server after CBS upgrade")
+        # check_docs_on_server(initial_added_doc_ids, cluster_config)
 
         # if xattrs_post_upgrade:
         # Post upgrade tasks
@@ -207,6 +179,8 @@ def test_upgrade(params_from_base_test_setup):
         #    - Do not enable import in SG.
         # Enable views or GSI
         post_upgrade_sync_gateway_migration(mode, cluster_config, sg_conf, use_views, xattrs_post_upgrade, sync_gateways, sg_accels)
+        # log_info("Checking for docs present on the server post SG migration")
+        # check_docs_on_server(initial_added_doc_ids, cluster_config)
 
         send_changes_termination_doc(
             auth=sg_session,
@@ -217,8 +191,8 @@ def test_upgrade(params_from_base_test_setup):
         )
         log_info("Waiting for doc updates to complete")
         updated_doc_revs, deleted_docs = updates_future.result()
-        time.sleep(120)
-        log_info("deleted_docs: {}".format(deleted_docs))
+        time.sleep(60)
+        # log_info("deleted_docs: {}".format(deleted_docs))
 
         # Gather the new revs for verification
         log_info("Gathering the updated revs for verification")
@@ -233,7 +207,6 @@ def test_upgrade(params_from_base_test_setup):
         added_docs_copy = added_docs[:]
         for doc in added_docs_copy:
             if doc["id"] in deleted_docs:
-                log_info("Removing {} from added_docs".format(doc))
                 added_docs.remove(doc)
                 doc_ids.remove(doc["id"])
 
@@ -284,6 +257,37 @@ def test_upgrade(params_from_base_test_setup):
         # Clean up views/indexes
         sg_obj = SyncGateway()
         sg_obj.post_upgrade_cleanup(cluster_config, sg_admin_url)
+
+
+def check_docs_on_server(doc_ids, cluster_config):
+    # Check for docs on the server
+    bucket_name = 'data-bucket'
+    cluster = Cluster(config=cluster_config)
+    primary_server = cluster.servers[0]
+    sdk_client = Bucket('couchbase://{}/{}'.format(primary_server.host, bucket_name), password='password', timeout=SDK_TIMEOUT)
+    log_info("Checking that all docs added to CBL showed up on the CBS")
+    docs_check_time = "120"
+    start = time.time()
+    missing_doc_ids = doc_ids[:]
+    log_info("Checking for the presence of {} Doc IDs".format(len(missing_doc_ids)))
+    while True:
+        if time.time() - start > docs_check_time:
+            raise TimeoutException("Timeout out waiting for docs to shown up on the server")
+
+        for d_id in doc_ids:
+            try:
+                sdk_client.get(d_id)
+                # log_info("Removing {} from missing_doc_ids".format(d_id))
+                missing_doc_ids.remove(d_id)
+            except (NotFoundError, ValueError):
+                pass   # Ignore for now
+
+        if len(missing_doc_ids) == 0:
+            log_info("All added docs to CBL found on CBS")
+            break
+
+        log_info("{} Doc IDs missing on CBS, retrying ...".format(len(missing_doc_ids)))
+        time.sleep(5)
 
 
 def post_upgrade_sync_gateway_migration(mode, cluster_config, sg_conf, use_views, xattrs_post_upgrade, sync_gateways, sg_accels):
@@ -479,7 +483,6 @@ def update_docs(client, ls_url, ls_db, added_docs, auth, terminator_doc_id):
 
     while True:
         try:
-            log_info("update_docs: Checking for termination doc")
             client.get_doc(url=ls_url, db=ls_db, doc_id=terminator_doc_id, auth=auth)
             log_info("update_docs: Found termination doc")
             log_info("update_docs: Updated {} docs".format(len(doc_revs.keys())))
@@ -500,10 +503,7 @@ def update_docs(client, ls_url, ls_db, added_docs, auth, terminator_doc_id):
             client.put_doc(url=ls_url, db=ls_db, doc_id=doc_id, doc_body=doc, rev=doc['_rev'], auth=auth)
             new_doc = client.get_doc(url=ls_url, db=ls_db, doc_id=doc_id, auth=auth)
             doc_revs[doc_id] = new_doc['_rev']
-            log_info("New doc rev: {}".format(doc_revs[doc_id]))
             time.sleep(2)
-
-        log_info("Done with current iteration of doc updates")
 
 
 def upgrade_server_cluster(servers, primary_server, secondary_server, server_version, server_upgraded_version, server_urls, cluster_config, cbs_platform, toy_build=None):
