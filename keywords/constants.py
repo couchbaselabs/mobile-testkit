@@ -8,7 +8,7 @@ CLUSTER_CONFIGS_DIR = "resources/cluster_configs"
 SYNC_GATEWAY_CONFIGS = "resources/sync_gateway_configs"
 DATA_DIR = "resources/data"
 
-MAX_RETRIES = 5
+MAX_RETRIES = 10
 
 CLIENT_REQUEST_TIMEOUT = 120
 REBALANCE_TIMEOUT_SECS = 3600

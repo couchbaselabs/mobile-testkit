@@ -46,7 +46,7 @@ class TestServeriOS(TestServerBase):
             self.bundle_id = "com.couchbase.CBLTestServer-iOS"
         else:
             # Xamarin-ios
-            self.app_dir = os.getcwd()
+            self.app_dir = "TestServer.iOS"
             self.package_name = "TestServer.iOS.zip"
             self.app = "TestServer.iOS"
             self.bundle_id = "com.couchbase.TestServer-iOS"
@@ -122,11 +122,8 @@ class TestServeriOS(TestServerBase):
         if self.debug_mode:
             self.app_name = "{}-{}-debug.app".format(self.app, self.version_build)
         else:
-            self.app_name = "{}-{}.app".format(self.app, self.version_build)
+            self.app_name = "{}.app".format(self.app)
         self.app_path = "{}/{}/{}".format(BINARY_DIR, self.app_dir, self.app_name)
-        output = subprocess.check_output([
-            "ios-sim", "--devicetypeid", self.device, "start"
-        ])
 
         log_info("Installing: {}".format(self.app_path))
         # Launch the simulator and install the app
