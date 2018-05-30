@@ -31,9 +31,13 @@ class TestServerAndroid(TestServerBase):
             self.package_name = self.apk_name
             self.device_enabled = False
             self.device_option = "-e"
+            self.installed_package_name = "com.couchbase.TestServerApp"
+            self.activity_name = self.installed_package_name + "/com.couchbase.CouchbaseLiteServ.MainActivity"
         else:
             # Xamarin-android
             self.package_name = self.apk_name = "TestServer.Android.apk"
+            self.installed_package_name = "TestServer.Android"
+            self.activity_name = self.installed_package_name + "/md57aea67c4d08319974f101b0b09ff509e.MainActivity"
 
     def download(self, version_build=None):
         """
@@ -91,7 +95,8 @@ class TestServerAndroid(TestServerBase):
                     break
 
         output = subprocess.check_output(["adb", "-e", "shell", "pm", "list", "packages"])
-        if "com.couchbase.TestServerApp" not in output:
+
+        if self.installed_package_name not in output:
             raise LiteServError("Failed to install package: {}".format(output))
 
         log_info("LiteServ installed to {}".format(self.host))
@@ -128,7 +133,7 @@ class TestServerAndroid(TestServerBase):
                     break
 
         output = subprocess.check_output(["adb", "-d", "shell", "pm", "list", "packages"])
-        if "com.couchbase.TestServerApp" not in output:
+        if self.installed_package_name not in output:
             raise LiteServError("Failed to install package: {}".format(output))
 
         log_info("LiteServ installed to {}".format(self.host))
@@ -136,13 +141,13 @@ class TestServerAndroid(TestServerBase):
     def remove(self):
         """Removes the Test Server application from the running device
         """
-        output = subprocess.check_output(["adb", "uninstall", "com.couchbase.TestServerApp"])
+        output = subprocess.check_output(["adb", "uninstall", self.installed_package_name])
         if output.strip() != "Success":
             log_info(output)
             raise LiteServError("Error. Could not remove app.")
 
         output = subprocess.check_output(["adb", "shell", "pm", "list", "packages"])
-        if "com.couchbase.TestServerApp" in output:
+        if self.installed_package_name in output:
             raise LiteServError("Error uninstalling app!")
 
         log_info("Testserver app removed from {}".format(self.host))
@@ -164,9 +169,10 @@ class TestServerAndroid(TestServerBase):
         self.logfile = open(logfile_name, "w+")
         self.process = subprocess.Popen(args=["adb", "logcat"], stdout=self.logfile)
 
-        activity_name = "com.couchbase.TestServerApp/com.couchbase.CouchbaseLiteServ.MainActivity"
+        # TestServer.Android/md57aea67c4d08319974f101b0b09ff509e.MainActivity
+
         output = subprocess.check_output([
-            "adb", "-e", "shell", "am", "start", "-n", activity_name,
+            "adb", "-e", "shell", "am", "start", "-n", self.activity_name,
             "--es", "username", "none",
             "--es", "password", "none",
             "--ei", "listen_port", str(self.port),
@@ -194,9 +200,8 @@ class TestServerAndroid(TestServerBase):
         self.logfile = open(logfile_name, "w+")
         self.process = subprocess.Popen(args=["adb", "logcat"], stdout=self.logfile)
 
-        activity_name = "com.couchbase.TestServerApp/com.couchbase.CouchbaseLiteServ.MainActivity"
         output = subprocess.check_output([
-            "adb", "-d", "shell", "am", "start", "-n", activity_name,
+            "adb", "-d", "shell", "am", "start", "-n", self.activity_name,
             "--es", "username", "none",
             "--es", "password", "none",
             "--ei", "listen_port", str(self.port),
