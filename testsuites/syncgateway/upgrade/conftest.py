@@ -133,11 +133,13 @@ def pytest_addoption(parser):
 
     parser.addoption("--server-upgrade-only",
                      action="store_true",
-                     help="Only upgrade the CBS cluster, do not upgrade SG cluster")
+                     help="Only upgrade the CBS cluster, do not upgrade SG cluster",
+                     default=False)
 
     parser.addoption("--sg-upgrade-only",
                      action="store_true",
-                     help="Only upgrade the SG cluster, do not upgrade CBS cluster")
+                     help="Only upgrade the SG cluster, do not upgrade CBS cluster",
+                     default=False)
 
 
 # This will be called once for the at the beggining of the execution in the 'tests/' directory
