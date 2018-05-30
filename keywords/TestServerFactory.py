@@ -39,7 +39,7 @@ class TestServerFactory:
         TestServerFactory.validate_port(port)
 
         if platform == "android" or platform == "xamarin-android":
-            return TestServerAndroid(version_build, host, port, debug_mode, platform)
+            return TestServerAndroid(version_build, host, port, debug_mode, platform=platform)
         elif platform == "ios" or platform == "xamarin-ios":
             return TestServeriOS(version_build, host, port, community_enabled=community_enabled, debug_mode=debug_mode, platform=platform)
         elif platform == "net-mono":

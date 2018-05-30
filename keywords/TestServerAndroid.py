@@ -13,21 +13,27 @@ from keywords.utils import log_info
 
 class TestServerAndroid(TestServerBase):
 
-    def __init__(self, version_build, host, port, community_enabled=None, debug_mode=False):
+    def __init__(self, version_build, host, port, community_enabled=None, debug_mode=False, platform="android"):
         super(TestServerAndroid, self).__init__(version_build, host, port)
-        if community_enabled:
-            apk_name_prefix = "CBLTestServer-Android-{}-community".format(self.version_build)
-            self.download_source = "couchbase-lite-android"
+        self.platform = platform
+
+        if self.platform == "android":
+            if community_enabled:
+                apk_name_prefix = "CBLTestServer-Android-{}-community".format(self.version_build)
+                self.download_source = "couchbase-lite-android"
+            else:
+                apk_name_prefix = "CBLTestServer-Android-{}-enterprise".format(self.version_build)
+                self.download_source = "couchbase-lite-android-ee"
+            if debug_mode:
+                self.apk_name = "{}-debug.apk".format(apk_name_prefix)
+            else:
+                self.apk_name = "{}-release.apk".format(apk_name_prefix)
+            self.package_name = self.apk_name
+            self.device_enabled = False
+            self.device_option = "-e"
         else:
-            apk_name_prefix = "CBLTestServer-Android-{}-enterprise".format(self.version_build)
-            self.download_source = "couchbase-lite-android-ee"
-        if debug_mode:
-            self.apk_name = "{}-debug.apk".format(apk_name_prefix)
-        else:
-            self.apk_name = "{}-release.apk".format(apk_name_prefix)
-        self.package_name = self.apk_name
-        self.device_enabled = False
-        self.device_option = "-e"
+            # Xamarin-android
+            self.package_name = self.apk_name = "TestServer.Android.apk"
 
     def download(self, version_build=None):
         """
@@ -44,7 +50,10 @@ class TestServerAndroid(TestServerBase):
             return
 
         # Package not downloaded, proceed to download from latest builds
-        url = "{}/{}/{}/{}/{}".format(LATEST_BUILDS, self.download_source, version, build, self.package_name)
+        if self.platform == "android":
+            url = "{}/{}/{}/{}/{}".format(LATEST_BUILDS, self.download_source, version, build, self.package_name)
+        else:
+            url = "{}/couchbase-lite-net/{}/{}/{}".format(LATEST_BUILDS, version, build, self.package_name)
 
         log_info("Downloading {} -> {}/{}".format(url, BINARY_DIR, self.package_name))
         resp = requests.get(url)
