@@ -305,9 +305,9 @@ def start_polling_changes_worker(sg_url, sg_db, user_name, user_auth, changes_de
             log_info('Found terminator ({}, {})'.format(user_name, feed))
             return user_name, latest_changes
 
-        if time.time() - start > update_runtime_sec:
-            log_info('start_polling_changes_worker exiting after {} time'.format(update_runtime_sec))
-            return user_name, latest_changes
+        # if time.time() - start > update_runtime_sec:
+        #     log_info('start_polling_changes_worker exiting after {} time'.format(update_runtime_sec))
+        #     return user_name, latest_changes
 
         log_info('_changes ({}) for ({}) since: {}'.format(feed, user_name, since))
         changes = sg_client.get_changes(
@@ -366,9 +366,9 @@ def start_continuous_changes_worker(sg_url, sg_db, user_name, user_auth, termina
     start = time.time()
 
     for line in stream.iter_lines():
-        if time.time() - start > update_runtime_sec:
-            log_info('start_continuous_changes_worker exiting after {} time'.format(update_runtime_sec))
-            return user_name, latest_changes
+        # if time.time() - start > update_runtime_sec:
+        #     log_info('start_continuous_changes_worker exiting after {} time'.format(update_runtime_sec))
+        #     return user_name, latest_changes
 
         # filter out keep-alive new lines
         if line:
