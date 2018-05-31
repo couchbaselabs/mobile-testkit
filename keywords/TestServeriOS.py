@@ -119,10 +119,14 @@ class TestServeriOS(TestServerBase):
     def install(self):
         """Installs / launches CBLTestServer on iOS simulator
         """
-        if self.debug_mode:
-            self.app_name = "{}-{}-debug.app".format(self.app, self.version_build)
+        if self.platform == "ios":
+            if self.debug_mode:
+                self.app_name = "{}-{}-debug.app".format(self.app, self.version_build)
+            else:
+                self.app_name = "{}-{}.app".format(self.app, self.version_build)
         else:
             self.app_name = "{}.app".format(self.app)
+
         self.app_path = "{}/{}/{}".format(BINARY_DIR, self.app_dir, self.app_name)
 
         log_info("Installing: {}".format(self.app_path))
