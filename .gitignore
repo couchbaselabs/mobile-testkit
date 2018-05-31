@@ -12,6 +12,7 @@
 *.pyc
 .gradle
 local.properties
+.DS_Store
 build
 cli/config.json
 venv
