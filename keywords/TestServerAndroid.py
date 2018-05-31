@@ -30,7 +30,6 @@ class TestServerAndroid(TestServerBase):
                 self.apk_name = "{}-release.apk".format(apk_name_prefix)
             self.package_name = self.apk_name
             self.device_enabled = False
-            self.device_option = "-e"
             self.installed_package_name = "com.couchbase.TestServerApp"
             self.activity_name = self.installed_package_name + "/com.couchbase.CouchbaseLiteServ.MainActivity"
         else:
@@ -38,6 +37,8 @@ class TestServerAndroid(TestServerBase):
             self.package_name = self.apk_name = "TestServer.Android.apk"
             self.installed_package_name = "TestServer.Android"
             self.activity_name = self.installed_package_name + "/md57aea67c4d08319974f101b0b09ff509e.MainActivity"
+
+        self.device_option = "-e"
 
     def download(self, version_build=None):
         """
@@ -214,9 +215,9 @@ class TestServerAndroid(TestServerBase):
         """ Verify that app is launched with adb command
         """
         if self.device_enabled:
-            output = subprocess.check_output(["adb", "-d", "shell", "pidof", "com.couchbase.TestServerApp", "|", "wc", "-l"])
+            output = subprocess.check_output(["adb", "-d", "shell", "pidof", self.installed_package_name, "|", "wc", "-l"])
         else:
-            output = subprocess.check_output(["adb", "-e", "shell", "pidof", "com.couchbase.TestServerApp", "|", "wc", "-l"])
+            output = subprocess.check_output(["adb", "-e", "shell", "pidof", self.installed_package_name, "|", "wc", "-l"])
         log_info("output for running activity {}".format(output))
         if output is None:
             raise LiteServError("Err! App did not launched")
@@ -229,11 +230,11 @@ class TestServerAndroid(TestServerBase):
         """
 
         log_info("Stopping LiteServ: http://{}:{}".format(self.host, self.port))
-        output = subprocess.check_output(["adb", self.device_option, "shell", "am", "force-stop", "com.couchbase.TestServerApp"])
+        output = subprocess.check_output(["adb", self.device_option, "shell", "am", "force-stop", self.installed_package_name])
         log_info(output)
 
         # Clear package data
-        output = subprocess.check_output(["adb", self.device_option, "shell", "pm", "clear", "com.couchbase.TestServerApp"])
+        output = subprocess.check_output(["adb", self.device_option, "shell", "pm", "clear", self.installed_package_name])
         log_info(output)
 
         # self._verify_not_running()
