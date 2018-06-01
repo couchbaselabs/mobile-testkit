@@ -428,10 +428,11 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     if create_db_per_test:
         log_info("Starting TestServer...")
         test_name_cp = test_name.replace("/", "-")
+        log_filename = "{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__, test_name_cp, datetime.datetime.now())
         if device_enabled:
-            testserver.start_device("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__, test_name_cp, datetime.datetime.now()))
+            testserver.start_device(log_filename)
         else:
-            testserver.start("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__, test_name_cp, datetime.datetime.now()))
+            testserver.start(log_filename)
 
     cluster_helper = ClusterKeywords()
     cluster_hosts = cluster_helper.get_cluster_topology(cluster_config=cluster_config)
@@ -485,7 +486,8 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         "device_enabled": device_enabled,
         "testserver": testserver,
         "db_config": db_config,
-        "enable_sample_bucket": enable_sample_bucket
+        "enable_sample_bucket": enable_sample_bucket,
+        "log_filename": log_filename
     }
 
     log_info("Tearing down test")
