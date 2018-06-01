@@ -388,8 +388,6 @@ def params_from_base_suite_setup(request):
     log_info("Flushing server memory")
     utils_obj = Utils(base_url)
     utils_obj.flushMemory()
-    log_info("Stopping the test server")
-    testserver.stop()
 
     # Delete png files under resources/data
     clear_resources_pngs()
@@ -501,6 +499,9 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         log_info("Flushing server memory")
         utils_obj = Utils(base_url)
         utils_obj.flushMemory()
+
+    log_info("Stopping the test server")
+    testserver.stop()
 
 
 @pytest.fixture(scope="class")
