@@ -193,8 +193,7 @@ def test_system_test(params_from_base_test_setup):
             users,
             changes_delay,
             changes_limit,
-            changes_terminator_doc_id,
-            update_runtime_sec
+            changes_terminator_doc_id
         )
 
         log_info('------------------------------------------')
@@ -371,7 +370,7 @@ def start_continuous_changes_worker(sg_url, sg_db, user_name, user_auth, termina
                     latest_changes[change['id']] = ''
 
 
-def start_changes_processing(sg_url, sg_db, users, changes_delay, changes_limit, terminator_doc_id, update_runtime_sec):
+def start_changes_processing(sg_url, sg_db, users, changes_delay, changes_limit, terminator_doc_id):
 
     # Make sure there are enough workers for 3 changes feed types for each user
     workers = len(users) * 3
