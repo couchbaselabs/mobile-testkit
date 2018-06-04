@@ -2628,7 +2628,7 @@ def test_replication_1withMultipleBuckets_deleteOneBucket(params_from_base_test_
     authenticator = Authenticator(base_url)
 
     # 1. Create couple of buckets in CBS.
-    cluster_util = ClusterKeywords()
+    cluster_util = ClusterKeywords(cluster_config)
     topology = cluster_util.get_cluster_topology(cluster_config)
     cb_server_url = topology["couchbase_servers"][0]
     cb_server = couchbaseserver.CouchbaseServer(url=cb_server_url)

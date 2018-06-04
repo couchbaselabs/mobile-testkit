@@ -233,6 +233,7 @@ class MobileRestClient:
             session_id = cookie_parts[1]
 
         log_info("cookie name {}, session id {}".format(cookie_name, session_id))
+        return cookie_name, session_id
 
     def create_session_header(self, url, db, name, password=None, ttl=86400):
         """

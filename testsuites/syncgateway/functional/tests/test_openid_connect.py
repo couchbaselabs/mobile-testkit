@@ -126,7 +126,7 @@ def test_openidconnect_basic_test(params_from_base_test_setup, sg_conf_name, is_
     mode = params_from_base_test_setup["mode"]
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
 
-    cluster_helper = ClusterKeywords()
+    cluster_helper = ClusterKeywords(cluster_config)
     topology = cluster_helper.get_cluster_topology(cluster_config)
     sg_url = topology["sync_gateways"][0]["public"]
     sg_db = "db"
@@ -138,7 +138,7 @@ def test_openidconnect_basic_test(params_from_base_test_setup, sg_conf_name, is_
     log_info("Using is_admin_port: {}".format(is_admin_port))
     log_info("Using expect_signed_id_token: {}".format(expect_signed_id_token))
 
-    cluster_helper = ClusterKeywords()
+    cluster_helper = ClusterKeywords(cluster_config)
     cluster_helper.reset_cluster(
         cluster_config=cluster_config,
         sync_gateway_config=sg_conf
@@ -241,7 +241,7 @@ def test_openidconnect_notauthenticated(params_from_base_test_setup, sg_conf_nam
     mode = params_from_base_test_setup["mode"]
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
 
-    cluster_helper = ClusterKeywords()
+    cluster_helper = ClusterKeywords(cluster_config)
     topology = cluster_helper.get_cluster_topology(cluster_config)
     sg_url = topology["sync_gateways"][0]["public"]
     sg_db = "db"
@@ -251,7 +251,7 @@ def test_openidconnect_notauthenticated(params_from_base_test_setup, sg_conf_nam
     log_info("Using sg_url: {}".format(sg_url))
     log_info("Using sg_db: {}".format(sg_db))
 
-    cluster_helper = ClusterKeywords()
+    cluster_helper = ClusterKeywords(cluster_config)
     cluster_helper.reset_cluster(
         cluster_config=cluster_config,
         sync_gateway_config=sg_conf
@@ -292,7 +292,7 @@ def test_openidconnect_oidc_challenge_invalid_provider_name(params_from_base_tes
     mode = params_from_base_test_setup["mode"]
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
 
-    cluster_helper = ClusterKeywords()
+    cluster_helper = ClusterKeywords(cluster_config)
     topology = cluster_helper.get_cluster_topology(cluster_config)
     sg_url = topology["sync_gateways"][0]["public"]
     sg_db = "db"
@@ -302,7 +302,7 @@ def test_openidconnect_oidc_challenge_invalid_provider_name(params_from_base_tes
     log_info("Using sg_url: {}".format(sg_url))
     log_info("Using sg_db: {}".format(sg_db))
 
-    cluster_helper = ClusterKeywords()
+    cluster_helper = ClusterKeywords(cluster_config)
     cluster_helper.reset_cluster(
         cluster_config=cluster_config,
         sync_gateway_config=sg_conf
@@ -328,7 +328,7 @@ def test_openidconnect_no_session(params_from_base_test_setup, sg_conf_name):
     mode = params_from_base_test_setup["mode"]
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
 
-    cluster_helper = ClusterKeywords()
+    cluster_helper = ClusterKeywords(cluster_config)
     topology = cluster_helper.get_cluster_topology(cluster_config)
     sg_url = topology["sync_gateways"][0]["public"]
     sg_db = "db"
@@ -338,7 +338,7 @@ def test_openidconnect_no_session(params_from_base_test_setup, sg_conf_name):
     log_info("Using sg_url: {}".format(sg_url))
     log_info("Using sg_db: {}".format(sg_db))
 
-    cluster_helper = ClusterKeywords()
+    cluster_helper = ClusterKeywords(cluster_config)
     cluster_helper.reset_cluster(
         cluster_config=cluster_config,
         sync_gateway_config=sg_conf
@@ -372,7 +372,7 @@ def test_openidconnect_expired_token(params_from_base_test_setup, sg_conf_name):
     mode = params_from_base_test_setup["mode"]
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
 
-    cluster_helper = ClusterKeywords()
+    cluster_helper = ClusterKeywords(cluster_config)
     topology = cluster_helper.get_cluster_topology(cluster_config)
     sg_url = topology["sync_gateways"][0]["public"]
     sg_db = "db"
@@ -382,7 +382,7 @@ def test_openidconnect_expired_token(params_from_base_test_setup, sg_conf_name):
     log_info("Using sg_url: {}".format(sg_url))
     log_info("Using sg_db: {}".format(sg_db))
 
-    cluster_helper = ClusterKeywords()
+    cluster_helper = ClusterKeywords(cluster_config)
     cluster_helper.reset_cluster(
         cluster_config=cluster_config,
         sync_gateway_config=sg_conf
@@ -440,7 +440,7 @@ def test_openidconnect_negative_token_expiry(params_from_base_test_setup, sg_con
     mode = params_from_base_test_setup["mode"]
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
 
-    cluster_helper = ClusterKeywords()
+    cluster_helper = ClusterKeywords(cluster_config)
     topology = cluster_helper.get_cluster_topology(cluster_config)
     sg_url = topology["sync_gateways"][0]["public"]
     sg_db = "db"
@@ -450,7 +450,7 @@ def test_openidconnect_negative_token_expiry(params_from_base_test_setup, sg_con
     log_info("Using sg_url: {}".format(sg_url))
     log_info("Using sg_db: {}".format(sg_db))
 
-    cluster_helper = ClusterKeywords()
+    cluster_helper = ClusterKeywords(cluster_config)
     cluster_helper.reset_cluster(
         cluster_config=cluster_config,
         sync_gateway_config=sg_conf
@@ -492,7 +492,7 @@ def test_openidconnect_garbage_token(params_from_base_test_setup, sg_conf_name):
 
     cluster_config = params_from_base_test_setup["cluster_config"]
 
-    cluster_helper = ClusterKeywords()
+    cluster_helper = ClusterKeywords(cluster_config)
     topology = cluster_helper.get_cluster_topology(cluster_config)
     sg_url = topology["sync_gateways"][0]["public"]
     sg_db = "db"
@@ -572,7 +572,7 @@ def test_openidconnect_invalid_scope(params_from_base_test_setup, sg_conf_name):
     mode = params_from_base_test_setup["mode"]
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
 
-    cluster_helper = ClusterKeywords()
+    cluster_helper = ClusterKeywords(cluster_config)
     topology = cluster_helper.get_cluster_topology(cluster_config)
     sg_url = topology["sync_gateways"][0]["public"]
     sg_db = "db"
@@ -582,7 +582,7 @@ def test_openidconnect_invalid_scope(params_from_base_test_setup, sg_conf_name):
     log_info("Using sg_url: {}".format(sg_url))
     log_info("Using sg_db: {}".format(sg_db))
 
-    cluster_helper = ClusterKeywords()
+    cluster_helper = ClusterKeywords(cluster_config)
     cluster_helper.reset_cluster(
         cluster_config=cluster_config,
         sync_gateway_config=sg_conf
@@ -611,7 +611,7 @@ def test_openidconnect_small_scope(params_from_base_test_setup, sg_conf_name):
     mode = params_from_base_test_setup["mode"]
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
 
-    cluster_helper = ClusterKeywords()
+    cluster_helper = ClusterKeywords(cluster_config)
     topology = cluster_helper.get_cluster_topology(cluster_config)
     sg_url = topology["sync_gateways"][0]["public"]
     sg_db = "db"
@@ -621,7 +621,7 @@ def test_openidconnect_small_scope(params_from_base_test_setup, sg_conf_name):
     log_info("Using sg_url: {}".format(sg_url))
     log_info("Using sg_db: {}".format(sg_db))
 
-    cluster_helper = ClusterKeywords()
+    cluster_helper = ClusterKeywords(cluster_config)
     cluster_helper.reset_cluster(
         cluster_config=cluster_config,
         sync_gateway_config=sg_conf
@@ -671,7 +671,7 @@ def test_openidconnect_large_scope(params_from_base_test_setup, sg_conf_name):
     mode = params_from_base_test_setup["mode"]
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
 
-    cluster_helper = ClusterKeywords()
+    cluster_helper = ClusterKeywords(cluster_config)
     topology = cluster_helper.get_cluster_topology(cluster_config)
     sg_url = topology["sync_gateways"][0]["public"]
     sg_db = "db"
@@ -681,7 +681,7 @@ def test_openidconnect_large_scope(params_from_base_test_setup, sg_conf_name):
     log_info("Using sg_url: {}".format(sg_url))
     log_info("Using sg_db: {}".format(sg_db))
 
-    cluster_helper = ClusterKeywords()
+    cluster_helper = ClusterKeywords(cluster_config)
     cluster_helper.reset_cluster(
         cluster_config=cluster_config,
         sync_gateway_config=sg_conf
@@ -733,7 +733,7 @@ def test_openidconnect_public_session_endpoint(params_from_base_test_setup, sg_c
     mode = params_from_base_test_setup["mode"]
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
 
-    cluster_helper = ClusterKeywords()
+    cluster_helper = ClusterKeywords(cluster_config)
     topology = cluster_helper.get_cluster_topology(cluster_config)
     sg_url = topology["sync_gateways"][0]["public"]
     sg_db = "db"
@@ -743,7 +743,7 @@ def test_openidconnect_public_session_endpoint(params_from_base_test_setup, sg_c
     log_info("Using sg_url: {}".format(sg_url))
     log_info("Using sg_db: {}".format(sg_db))
 
-    cluster_helper = ClusterKeywords()
+    cluster_helper = ClusterKeywords(cluster_config)
     cluster_helper.reset_cluster(
         cluster_config=cluster_config,
         sync_gateway_config=sg_conf

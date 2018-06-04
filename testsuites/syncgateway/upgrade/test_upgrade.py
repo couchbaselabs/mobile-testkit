@@ -104,7 +104,7 @@ def test_upgrade(params_from_base_test_setup):
         # 3. Enable import/xattrs on SGs
 
         # Upgrade SG docmeta -> docmeta
-        cluster_util = ClusterKeywords()
+        cluster_util = ClusterKeywords(cluster_config)
         topology = cluster_util.get_cluster_topology(cluster_config, lb_enable=False)
         sync_gateways = topology["sync_gateways"]
         sg_accels = topology["sg_accels"]

@@ -214,7 +214,7 @@ def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False, sg_pl
 def create_server_buckets(cluster_config, sync_gateway_config):
 
     # get the couchbase server url
-    cluster_helper = ClusterKeywords()
+    cluster_helper = ClusterKeywords(cluster_config)
     cluster_topology = cluster_helper.get_cluster_topology(cluster_config)
 
     # Handle the case of resources/cluster_configs/1sg, where we are targeting a

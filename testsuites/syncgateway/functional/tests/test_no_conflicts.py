@@ -670,10 +670,10 @@ def test_revs_cache_size(params_from_base_test_setup, sg_conf_name, num_of_docs)
     sg_admin_url = topology["sync_gateways"][0]["admin"]
     sg_db = "db"
     retrieved_docs = num_of_docs / 2
-
+    no_conflicts_enabled = params_from_base_test_setup["no_conflicts_enabled"]
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
 
-    if sync_gateway_version < "2.0":
+    if not no_conflicts_enabled or sync_gateway_version < "2.0":
         pytest.skip('--no-conflicts is enabled and does not work with sg < 2.0 , so skipping the test')
 
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)

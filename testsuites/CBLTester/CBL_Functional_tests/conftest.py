@@ -167,10 +167,8 @@ def params_from_base_suite_setup(request):
     base_url = "http://{}:{}".format(liteserv_host, liteserv_port)
     cluster_config = "{}/base_{}".format(CLUSTER_CONFIGS_DIR, mode)
     sg_config = sync_gateway_config_path_for_mode("sync_gateway_travel_sample", mode)
-    no_conflicts_enabled = request.config.getoption("--no-conflicts")
-    cluster_utils = ClusterKeywords()
+    cluster_utils = ClusterKeywords(cluster_config)
     cluster_topology = cluster_utils.get_cluster_topology(cluster_config)
-    cluster_utils.set_cluster_config(cluster_config.split("/")[-1])
 
     sg_db = "db"
     suite_cbl_db = None
@@ -186,7 +184,6 @@ def params_from_base_suite_setup(request):
             cluster_config = "{}/base_lb_{}".format(CLUSTER_CONFIGS_DIR, mode)
 
     cluster_topology = cluster_utils.get_cluster_topology(cluster_config)
-    cluster_utils.set_cluster_config(cluster_config.split("/")[-1])
 
     sg_url = cluster_topology["sync_gateways"][0]["public"]
     sg_ip = host_for_url(sg_url)
@@ -243,7 +240,7 @@ def params_from_base_suite_setup(request):
         log_info("Running with allow conflicts")
         persist_cluster_config_environment_prop(cluster_config, 'no_conflicts_enabled', False)
 
-    cluster_utils = ClusterKeywords()
+    cluster_utils = ClusterKeywords(cluster_config)
     cluster_topology = cluster_utils.get_cluster_topology(cluster_config)
     cbs_url = cluster_topology['couchbase_servers'][0]
     cbs_ip = host_for_url(cbs_url)
@@ -434,7 +431,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         else:
             testserver.start("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__, test_name_cp, datetime.datetime.now()))
 
-    cluster_helper = ClusterKeywords()
+    cluster_helper = ClusterKeywords(cluster_config)
     cluster_hosts = cluster_helper.get_cluster_topology(cluster_config=cluster_config)
     sg_url = cluster_hosts["sync_gateways"][0]["public"]
     sg_admin_url = cluster_hosts["sync_gateways"][0]["admin"]

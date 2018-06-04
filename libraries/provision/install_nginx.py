@@ -20,7 +20,7 @@ def install_nginx(cluster_config):
     4. Start the nginx service
     """
 
-    cluster = ClusterKeywords()
+    cluster = ClusterKeywords(cluster_config)
     # Set lb_enable to False to get the actual SG IPs for nginx.conf
     topology = cluster.get_cluster_topology(cluster_config, lb_enable=False)
 

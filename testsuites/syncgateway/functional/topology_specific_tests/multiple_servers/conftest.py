@@ -70,8 +70,7 @@ def params_from_base_suite_setup(request):
     # use base_cc cluster config if mode is "cc" or base_di cluster config if more is "di"
     cluster_config = "{}/multiple_servers_{}".format(CLUSTER_CONFIGS_DIR, mode)
     sg_config = sync_gateway_config_path_for_mode("sync_gateway_default_functional_tests", mode)
-    cluster_utils = ClusterKeywords()
-    cluster_utils.set_cluster_config(cluster_config.split("/")[-1])
+    cluster_utils = ClusterKeywords(cluster_config)
 
     if use_views:
         log_info("Running SG tests using views")
@@ -142,7 +141,7 @@ def params_from_base_suite_setup(request):
     if skip_provisioning or use_sequoia:
         should_provision = False
 
-    cluster_utils = ClusterKeywords()
+    cluster_utils = ClusterKeywords(cluster_config)
     if should_provision:
         try:
             cluster_utils.provision_cluster(

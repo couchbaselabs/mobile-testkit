@@ -143,9 +143,8 @@ def params_from_base_suite_setup(request):
     cluster_config = "{}/multiple_sync_gateways_{}".format(CLUSTER_CONFIGS_DIR, mode)
     no_conflicts_enabled = request.config.getoption("--no-conflicts")
     sg_config = sync_gateway_config_path_for_mode("listener_tests/multiple_sync_gateways", mode)
-    cluster_utils = ClusterKeywords()
+    cluster_utils = ClusterKeywords(cluster_config)
     cluster_topology = cluster_utils.get_cluster_topology(cluster_config)
-    cluster_utils.set_cluster_config(cluster_config.split("/")[-1])
 
     sg_db = "db"
     sg_url = cluster_topology["sync_gateways"][0]["public"]
@@ -197,7 +196,7 @@ def params_from_base_suite_setup(request):
         persist_cluster_config_environment_prop(cluster_config, 'no_conflicts_enabled', False)
 
     sg_config = sync_gateway_config_path_for_mode("listener_tests/multiple_sync_gateways", mode)
-    cluster_utils = ClusterKeywords()
+    cluster_utils = ClusterKeywords(cluster_config)
     cluster_topology = cluster_utils.get_cluster_topology(cluster_config)
     cluster = Cluster(cluster_config)
 
@@ -366,7 +365,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     # sleep for some time to reach cbl
     time.sleep(5)
 
-    cluster_helper = ClusterKeywords()
+    cluster_helper = ClusterKeywords(cluster_config)
     cluster_hosts = cluster_helper.get_cluster_topology(cluster_config=cluster_config)
     sg_url = cluster_hosts["sync_gateways"][0]["public"]
     sg_admin_url = cluster_hosts["sync_gateways"][0]["admin"]
