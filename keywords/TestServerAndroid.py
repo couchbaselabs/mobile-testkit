@@ -170,8 +170,6 @@ class TestServerAndroid(TestServerBase):
         self.logfile = open(logfile_name, "w+")
         self.process = subprocess.Popen(args=["adb", "logcat"], stdout=self.logfile)
 
-        # TestServer.Android/md57aea67c4d08319974f101b0b09ff509e.MainActivity
-
         output = subprocess.check_output([
             "adb", "-e", "shell", "am", "start", "-n", self.activity_name,
             "--es", "username", "none",
