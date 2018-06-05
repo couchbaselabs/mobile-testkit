@@ -453,16 +453,23 @@ def start_changes_processing(sg_url, sg_db, users, changes_delay, changes_limit,
             user_name, latest_change = changes_task.result()
             users[user_name]['normal'] = latest_change
 
+        log_info("users[user_name]['normal']: {}".format(users[user_name]['normal']))
+
         # Block on termination of "longpoll" changes feeds
         for changes_task in as_completed(longpoll_changes_tasks):
             user_name, latest_change = changes_task.result()
             users[user_name]['longpoll'] = latest_change
+
+        log_info("users[user_name]['longpoll']: {}".format(users[user_name]['longpoll']))
 
         # Block on termination of "continuous" changes feeds
         for changes_task in as_completed(continuous_changes_tasks):
             user_name, latest_change = changes_task.result()
             users[user_name]['continuous'] = latest_change
 
+        log_info("users[user_name]['continuous']: {}".format(users[user_name]['continuous']))
+
+    log_info("users: {}".format(users))
     return users
 
 
