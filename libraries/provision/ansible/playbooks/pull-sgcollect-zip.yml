@@ -1,0 +1,27 @@
+---
+- hosts: sync_gateways
+  any_errors_fatal: true
+
+  vars:
+    sg_logs_dir: 
+
+  tasks:
+    - include: tasks/sg-pull-sgcollect-zip.yml
+      when: ansible_distribution == "CentOS" or ansible_distribution == "RedHat" or ansible_distribution == "Amazon" or ansible_distribution == "Ubuntu"
+
+    - include: tasks/sg-pullRedacted-zip-windows.yml
+      when: ansible_os_family == "Windows"
+
+
+- hosts: sg_accels
+  any_errors_fatal: true
+
+  vars:
+    sa_logs_dir: 
+
+  tasks:
+  - include: tasks/sa-pull-sgcollect-zip.yml
+    when: ansible_distribution == "CentOS" or ansible_distribution == "RedHat" or ansible_distribution == "Amazon" or ansible_distribution == "Ubuntu"
+
+  - include: tasks/sa-pullRedacted-zip-windows.yml
+    when: ansible_os_family == "Windows"

@@ -37,6 +37,8 @@ def params_from_base_suite_setup(request):
     number_replicas = request.config.getoption("--number-replicas")
     sg_installer_type = request.config.getoption("--sg-installer-type")
     sa_installer_type = request.config.getoption("--sa-installer-type")
+    use_views = request.config.getoption("--use-views")
+    number_replicas = request.config.getoption("--number-replicas")
 
     if xattrs_enabled and version_is_binary(sync_gateway_version):
         check_xattr_support(server_version, sync_gateway_version)
@@ -55,6 +57,8 @@ def params_from_base_suite_setup(request):
     log_info("number_replicas: {}".format(number_replicas))
     log_info("sg_installer_type: {}".format(sg_installer_type))
     log_info("sa_installer_type: {}".format(sa_installer_type))
+    log_info("use_views: {}".format(use_views))
+    log_info("number_replicas: {}".format(number_replicas))
 
     # sg-ce is invalid for di mode
     if mode == "di" and sg_ce:

@@ -9,7 +9,7 @@ from keywords.exceptions import ProvisioningError
 from keywords.utils import log_info, log_warn, add_cbs_to_sg_config_server_field
 from libraries.provision.ansible_runner import AnsibleRunner
 from libraries.testkit.config import Config
-from utilities.cluster_config_utils import is_cbs_ssl_enabled, is_xattrs_enabled, no_conflicts_enabled, get_revs_limit, get_sg_version, get_sg_replicas, get_sg_use_views
+from utilities.cluster_config_utils import is_cbs_ssl_enabled, is_xattrs_enabled, no_conflicts_enabled, get_revs_limit, get_sg_version, get_sg_replicas, get_sg_use_views, get_logging
 
 
 class SyncGatewayConfig:
@@ -116,6 +116,7 @@ def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False, sg_pl
         "sync_gateway_config_filepath": config_path,
         "server_port": server_port,
         "server_scheme": server_scheme,
+        "logging": "",
         "autoimport": "",
         "xattrs": "",
         "no_conflicts": "",
@@ -130,6 +131,12 @@ def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False, sg_pl
         else:
             num_replicas = get_sg_replicas(cluster_config)
             playbook_vars["num_index_replicas"] = '"num_index_replicas": {},'.format(num_replicas)
+
+        try:
+            logging_key = get_logging(cluster_config)
+            playbook_vars["logging"] = '"redaction_level": "{}"'.format(logging_key)
+        except KeyError as ex:
+            log_info("Keyerror in getting logging{}".format(ex.message))
 
     if is_xattrs_enabled(cluster_config):
         playbook_vars["autoimport"] = '"import_docs": "continuous",'
