@@ -5,7 +5,7 @@ from keywords.ClusterKeywords import ClusterKeywords
 from keywords.SyncGateway import (sync_gateway_config_path_for_mode,
                                   validate_sync_gateway_mode)
 from keywords.tklogging import Logging
-from keywords.utils import log_info, check_xattr_support, version_is_binary
+from keywords.utils import log_info, check_xattr_support, version_is_binary, clear_resources_pngs
 
 from keywords.exceptions import ProvisioningError, FeatureSupportedError
 
@@ -33,6 +33,8 @@ def params_from_base_suite_setup(request):
     sg_lb = request.config.getoption("--sg-lb")
     use_sequoia = request.config.getoption("--sequoia")
     no_conflicts_enabled = request.config.getoption("--no-conflicts")
+    use_views = request.config.getoption("--use-views")
+    number_replicas = request.config.getoption("--number-replicas")
     sg_installer_type = request.config.getoption("--sg-installer-type")
     sa_installer_type = request.config.getoption("--sa-installer-type")
     use_views = request.config.getoption("--use-views")
@@ -51,6 +53,8 @@ def params_from_base_suite_setup(request):
     log_info("sg_ce: {}".format(sg_ce))
     log_info("sg_lb: {}".format(sg_lb))
     log_info("no conflicts enabled {}".format(no_conflicts_enabled))
+    log_info("use_views: {}".format(use_views))
+    log_info("number_replicas: {}".format(number_replicas))
     log_info("sg_installer_type: {}".format(sg_installer_type))
     log_info("sa_installer_type: {}".format(sa_installer_type))
     log_info("use_views: {}".format(use_views))
@@ -172,6 +176,9 @@ def params_from_base_suite_setup(request):
     # Stop all sync_gateway and sg_accels as test finished
     c = cluster.Cluster(cluster_config)
     c.stop_sg_and_accel()
+
+    # Delete png files under resources/data
+    clear_resources_pngs()
 
 
 # This is called before each test and will yield the dictionary to each test that references the method

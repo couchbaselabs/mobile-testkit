@@ -1,25 +1,38 @@
-import pytest
 import time
+import pytest
 import datetime
 
-from keywords.utils import log_info
 from utilities.cluster_config_utils import persist_cluster_config_environment_prop
+from keywords.constants import SDK_TIMEOUT
+from keywords.utils import log_info
+from keywords.utils import host_for_url, clear_resources_pngs
 from keywords.ClusterKeywords import ClusterKeywords
 from keywords.couchbaseserver import CouchbaseServer
 from keywords.constants import CLUSTER_CONFIGS_DIR
+from keywords.MobileRestClient import MobileRestClient
+from keywords.TestServerFactory import TestServerFactory
 from keywords.SyncGateway import sync_gateway_config_path_for_mode
+from keywords.SyncGateway import SyncGateway
 from keywords.exceptions import ProvisioningError
 from keywords.tklogging import Logging
+from keywords.constants import RESULTS_DIR
+
+from CBLClient.Replication import Replication
+from CBLClient.BasicAuthenticator import BasicAuthenticator
 from CBLClient.Database import Database
-from keywords.utils import host_for_url, clear_resources_pngs
-from libraries.testkit.cluster import Cluster
+from CBLClient.Document import Document
+from CBLClient.Array import Array
+from CBLClient.Dictionary import Dictionary
+from CBLClient.DataTypeInitiator import DataTypeInitiator
+from CBLClient.SessionAuthenticator import SessionAuthenticator
+from CBLClient.Utils import Utils
+from utilities.cluster_config_utils import get_load_balancer_ip
+from CBLClient.ReplicatorConfiguration import ReplicatorConfiguration
+# from libraries.testkit import cluster
+
+# from libraries.testkit.cluster import Cluster
 from couchbase.bucket import Bucket
 from couchbase.n1ql import N1QLQuery
-from CBLClient.Utils import Utils
-from keywords.TestServerFactory import TestServerFactory
-from keywords.SyncGateway import SyncGateway
-from keywords.constants import RESULTS_DIR
-from keywords.constants import SDK_TIMEOUT
 
 
 def pytest_addoption(parser):
@@ -90,6 +103,14 @@ def pytest_addoption(parser):
                      action="store_true",
                      help="If set, will flush server memory per test")
 
+    parser.addoption("--sg-lb",
+                     action="store_true",
+                     help="If set, will enable load balancer for Sync Gateway")
+
+    parser.addoption("--ci",
+                     action="store_true",
+                     help="If set, will target larger cluster (3 backing servers instead of 1, 2 accels if in di mode)")
+
     parser.addoption("--debug-mode", action="store_true",
                      help="Enable debug mode for the app ", default=False)
 
@@ -97,7 +118,7 @@ def pytest_addoption(parser):
 # This will get called once before the first test that
 # runs with this as input parameters in this file
 # This setup will be called once for all tests in the
-# testsuites/CBLTester/topology_sync_gateways/multiple_sync_gateways directory
+# testsuites/CBLTester/CBL_Functional_tests/ directory
 @pytest.fixture(scope="session")
 def params_from_base_suite_setup(request):
     liteserv_platform = request.config.getoption("--liteserv-platform")
@@ -118,7 +139,10 @@ def params_from_base_suite_setup(request):
     community_enabled = request.config.getoption("--community")
     sg_ssl = request.config.getoption("--sg-ssl")
     flush_memory_per_test = request.config.getoption("--flush-memory-per-test")
+    sg_lb = request.config.getoption("--sg-lb")
+    ci = request.config.getoption("--ci")
     debug_mode = request.config.getoption("--debug-mode")
+    test_name = request.node.name
 
     testserver = TestServerFactory.create(platform=liteserv_platform,
                                           version_build=liteserv_version,
@@ -138,28 +162,49 @@ def params_from_base_suite_setup(request):
         testserver.install()
 
     base_url = "http://{}:{}".format(liteserv_host, liteserv_port)
-    cluster_config = "{}/multiple_sync_gateways_{}".format(CLUSTER_CONFIGS_DIR, mode)
+    # cluster_config = "{}/base_{}".format(CLUSTER_CONFIGS_DIR, mode)
+    sg_config = sync_gateway_config_path_for_mode("sync_gateway_travel_sample", mode)
     no_conflicts_enabled = request.config.getoption("--no-conflicts")
-    sg_config = sync_gateway_config_path_for_mode("listener_tests/multiple_sync_gateways", mode)
     cluster_utils = ClusterKeywords()
+    sg_db = "db"
+    suite_cbl_db = None
+
+    # use base_(lb_)cc cluster config if mode is "cc" or base_(lb_)di cluster config if mode is "di"
+    if ci:
+        cluster_config = "{}/ci_{}".format(CLUSTER_CONFIGS_DIR, mode)
+        if sg_lb:
+            cluster_config = "{}/ci_lb_{}".format(CLUSTER_CONFIGS_DIR, mode)
+    else:
+        cluster_config = "{}/base_{}".format(CLUSTER_CONFIGS_DIR, mode)
+        if sg_lb:
+            cluster_config = "{}/base_lb_{}".format(CLUSTER_CONFIGS_DIR, mode)
+
     cluster_topology = cluster_utils.get_cluster_topology(cluster_config)
     cluster_utils.set_cluster_config(cluster_config.split("/")[-1])
 
-    sg_db = "db"
     sg_url = cluster_topology["sync_gateways"][0]["public"]
     sg_ip = host_for_url(sg_url)
+
     persist_cluster_config_environment_prop(cluster_config, 'sync_gateway_ssl', False)
     target_url = "ws://{}:4984/{}".format(sg_ip, sg_db)
     target_admin_url = "ws://{}:4985/{}".format(sg_ip, sg_db)
-
-    cbs_url = cluster_topology['couchbase_servers'][0]
-    cbs_ip = host_for_url(cbs_url)
 
     if sg_ssl:
         log_info("Enabling SSL on sync gateway")
         persist_cluster_config_environment_prop(cluster_config, 'sync_gateway_ssl', True)
         target_url = "wss://{}:4984/{}".format(sg_ip, sg_db)
         target_admin_url = "wss://{}:4985/{}".format(sg_ip, sg_db)
+
+    cbs_url = cluster_topology['couchbase_servers'][0]
+    cbs_ip = host_for_url(cbs_url)
+
+    if sg_lb:
+        persist_cluster_config_environment_prop(cluster_config, 'sg_lb_enabled', True)
+        log_info("Running tests with load balancer enabled: {}".format(get_load_balancer_ip(cluster_config)))
+    else:
+        log_info("Running tests with load balancer disabled")
+        persist_cluster_config_environment_prop(cluster_config, 'sg_lb_enabled', False)
+
     try:
         server_version
     except NameError:
@@ -192,12 +237,11 @@ def params_from_base_suite_setup(request):
         log_info("Running with allow conflicts")
         persist_cluster_config_environment_prop(cluster_config, 'no_conflicts_enabled', False)
 
-    sg_config = sync_gateway_config_path_for_mode("listener_tests/multiple_sync_gateways", mode)
     cluster_utils = ClusterKeywords()
     cluster_topology = cluster_utils.get_cluster_topology(cluster_config)
-    cluster = Cluster(cluster_config)
+    cbs_url = cluster_topology['couchbase_servers'][0]
+    cbs_ip = host_for_url(cbs_url)
 
-    log_info("no conflicts enabled {}".format(no_conflicts_enabled))
     if sync_gateway_version < "2.0":
         pytest.skip('Does not work with sg < 2.0 , so skipping the test')
 
@@ -215,19 +259,28 @@ def params_from_base_suite_setup(request):
             logging_helper = Logging()
             logging_helper.fetch_and_analyze_logs(cluster_config=cluster_config, test_name=request.node.name)
             raise
-    cluster.reset(sg_config)
+
     # Hit this intalled running services to verify the correct versions are installed
     cluster_utils.verify_cluster_versions(
         cluster_config,
         expected_server_version=server_version,
         expected_sync_gateway_version=sync_gateway_version
     )
+
     if enable_sample_bucket and not create_db_per_suite:
         # if enable_sample_bucket and not create_db_per_test:
         raise Exception("enable_sample_bucket has to be used with create_db_per_suite")
 
+    # Start Test server which needed for suite level set up like query tests
+    if create_db_per_suite:
+        log_info("Starting TestServer...")
+        test_name_cp = test_name.replace("/", "-")
+        if device_enabled:
+            testserver.start_device("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__, test_name_cp, datetime.datetime.now()))
+        else:
+            testserver.start("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__, test_name_cp, datetime.datetime.now()))
+
     suite_source_db = None
-    suite_cbl_db = None
     if create_db_per_suite:
         # Create CBL database
         suite_cbl_db = create_db_per_suite
@@ -248,6 +301,7 @@ def params_from_base_suite_setup(request):
             log_info("Deleting existing {} bucket".format(enable_sample_bucket))
             server.delete_bucket(enable_sample_bucket)
             time.sleep(5)
+
         log_info("Loading sample bucket {}".format(enable_sample_bucket))
         server.load_sample_bucket(enable_sample_bucket)
         server._create_internal_rbac_bucket_user(enable_sample_bucket)
@@ -271,6 +325,7 @@ def params_from_base_suite_setup(request):
                 log_info("Restarting sg accel {}".format(ac_ip))
                 ac_obj.restart_sync_gateways(cluster_config=cluster_config, url=ac_ip)
                 time.sleep(5)
+
         # Create primary index
         password = "password"
         log_info("Connecting to {}/{} with password {}".format(cbs_ip, enable_sample_bucket, password))
@@ -279,6 +334,21 @@ def params_from_base_suite_setup(request):
         n1ql_query = 'create primary index on {}'.format(enable_sample_bucket)
         query = N1QLQuery(n1ql_query)
         sdk_client.n1ql_query(query)
+
+        # Start continuous replication
+        repl_obj = Replication(base_url)
+        auth_obj = BasicAuthenticator(base_url)
+        authenticator = auth_obj.create("traveL-sample", "password")
+        repl_config = repl_obj.configure(source_db=suite_source_db,
+                                         target_url=target_admin_url,
+                                         replication_type="PUSH_AND_PULL",
+                                         continuous=True,
+                                         replicator_authenticator=authenticator)
+        repl = repl_obj.create(repl_config)
+        repl_obj.start(repl)
+        repl_obj.wait_until_replicator_idle(repl)
+        log_info("Stopping replication")
+        repl_obj.stop(repl)
 
     yield {
         "cluster_config": cluster_config,
@@ -306,6 +376,7 @@ def params_from_base_suite_setup(request):
         "device_enabled": device_enabled,
         "flush_memory_per_test": flush_memory_per_test
     }
+
     if create_db_per_suite:
         # Delete CBL database
         log_info("Deleting the database {} at the suite teardown".format(create_db_per_suite))
@@ -350,21 +421,19 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     testserver = params_from_base_suite_setup["testserver"]
     device_enabled = params_from_base_suite_setup["device_enabled"]
     flush_memory_per_test = params_from_base_suite_setup["flush_memory_per_test"]
+    enable_sample_bucket = params_from_base_suite_setup["enable_sample_bucket"]
     source_db = None
     cbl_db = None
-    db_config = None
-    db = None
 
     # Start LiteServ and delete any databases
 
-    log_info("Starting TestServer...")
-    test_name_cp = test_name.replace("/", "-")
-    if device_enabled:
-        testserver.start_device("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__, test_name_cp, datetime.datetime.now()))
-    else:
-        testserver.start("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__, test_name_cp, datetime.datetime.now()))
-    # sleep for some time to reach cbl
-    time.sleep(5)
+    if create_db_per_test:
+        log_info("Starting TestServer...")
+        test_name_cp = test_name.replace("/", "-")
+        if device_enabled:
+            testserver.start_device("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__, test_name_cp, datetime.datetime.now()))
+        else:
+            testserver.start("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__, test_name_cp, datetime.datetime.now()))
 
     cluster_helper = ClusterKeywords()
     cluster_hosts = cluster_helper.get_cluster_topology(cluster_config=cluster_config)
@@ -377,6 +446,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     log_info("mode: {}".format(mode))
     log_info("xattrs_enabled: {}".format(xattrs_enabled))
     db_config = None
+
     db = None
     if create_db_per_test:
         cbl_db = create_db_per_test + str(time.time())
@@ -416,7 +486,8 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         "db": db,
         "device_enabled": device_enabled,
         "testserver": testserver,
-        "db_config": db_config
+        "db_config": db_config,
+        "enable_sample_bucket": enable_sample_bucket
     }
 
     log_info("Tearing down test")
@@ -432,6 +503,44 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         utils_obj.flushMemory()
 
 
+@pytest.fixture(scope="class")
+def class_init(request, params_from_base_suite_setup):
+    base_url = params_from_base_suite_setup["base_url"]
+    liteserv_platform = params_from_base_suite_setup["liteserv_platform"]
+
+    db_obj = Database(base_url)
+    doc_obj = Document(base_url)
+    array_obj = Array(base_url)
+    dict_obj = Dictionary(base_url)
+    array_obj = Array(base_url)
+    datatype = DataTypeInitiator(base_url)
+    repl_obj = Replication(base_url)
+    repl_config_obj = ReplicatorConfiguration(base_url)
+    base_auth_obj = BasicAuthenticator(base_url)
+    session_auth_obj = SessionAuthenticator(base_url)
+    sg_client = MobileRestClient()
+    db_config = db_obj.configure()
+    db = db_obj.create("cbl-init-db", db_config)
+
+    request.cls.db_obj = db_obj
+    request.cls.doc_obj = doc_obj
+    request.cls.array_obj = array_obj
+    request.cls.dict_obj = dict_obj
+    request.cls.array_obj = array_obj
+    request.cls.datatype = datatype
+    request.cls.repl_obj = repl_obj
+    request.cls.repl_config_obj = repl_config_obj
+    request.cls.base_auth_obj = base_auth_obj
+    request.cls.session_auth_obj = session_auth_obj
+    request.cls.sg_client = sg_client
+    request.cls.db_obj = db_obj
+    request.cls.db = db
+    request.cls.liteserv_platform = liteserv_platform
+
+    yield
+    db_obj.deleteDB(db)
+
+
 @pytest.fixture(scope="function")
 def setup_customized_teardown_test(params_from_base_test_setup):
     cbl_db_name1 = "cbl_db1" + str(time.time())
@@ -443,6 +552,7 @@ def setup_customized_teardown_test(params_from_base_test_setup):
     cbl_db1 = db.create(cbl_db_name1, db_config)
     cbl_db2 = db.create(cbl_db_name2, db_config)
     cbl_db3 = db.create(cbl_db_name3, db_config)
+    log_info("setting up all 3 dbs")
 
     yield{
         "db": db,
@@ -453,8 +563,7 @@ def setup_customized_teardown_test(params_from_base_test_setup):
         "cbl_db2": cbl_db2,
         "cbl_db3": cbl_db3,
     }
-    log_info("tearing down all 3 dbs")
-    time.sleep(2)
+    log_info("Tearing down test")
     db.deleteDB(cbl_db1)
     db.deleteDB(cbl_db2)
     db.deleteDB(cbl_db3)

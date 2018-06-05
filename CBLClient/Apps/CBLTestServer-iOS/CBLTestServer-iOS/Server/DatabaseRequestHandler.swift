@@ -270,18 +270,23 @@ public class DatabaseRequestHandler {
 
             return documents
           
-            // TODO : Uncomment once encrption feature is added
-        /*case "database_setEncryptionKey":
+        case "database_changeEncryptionKey":
             let database: Database = args.get(name:"database")!
             let password: String? = args.get(name:"password")!
-            let encryptionKey: EncryptionKey? = EncryptionKey.password(password!)
+            let encryptionKey: EncryptionKey?
+            if password == "nil"{
+                encryptionKey = nil
+            }
+            else{
+                encryptionKey = EncryptionKey.password(password!)
+            }
             do {
-                return try database.setEncryptionKey(encryptionKey)
+                return try database.changeEncryptionKey(encryptionKey)
             } catch {
                 print("Got error setting encryption key \(error)")
                 return error.localizedDescription
             }
-        */
+
         case "database_queryAllDocuments":
             let database: Database = args.get(name:"database")!
             let searchQuery = QueryBuilder
