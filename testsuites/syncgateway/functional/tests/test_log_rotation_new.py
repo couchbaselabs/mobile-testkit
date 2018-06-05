@@ -15,7 +15,9 @@ from keywords.exceptions import ProvisioningError
 @pytest.mark.logging
 @pytest.mark.parametrize("sg_conf_name", ["log_rotation_new"])
 def test_log_rotation_default_values(params_from_base_test_setup, sg_conf_name):
-    """Test to verify default values for rotation section:
+    """
+    @summary
+    Test to verify default values for rotation section:
     maxsize = 100 MB
     MaxAge = 0(do not limit the number of MaxAge)
     MaxBackups = 0(do not limit the number of backups)
@@ -32,7 +34,7 @@ def test_log_rotation_default_values(params_from_base_test_setup, sg_conf_name):
     log_info("Using sg_conf: {}".format(sg_conf))
 
     if get_sync_gateway_version(sg_ip)[0] < "2.1":
-        pytest.skip("Test NA for SG  < 2.1")
+        pytest.skip("Continuous logging Test NA for SG < 2.1")
 
     cluster = Cluster(config=cluster_conf)
     cluster.reset(sg_config_path=sg_conf)
@@ -73,7 +75,7 @@ def test_log_rotation_default_values(params_from_base_test_setup, sg_conf_name):
         log_info("Testing log rotation for {}".format(file_name))
         sg_helper.create_empty_file(cluster_config=cluster_conf, url=sg_one_url, file_name=file_name, file_size=file_size)
 
-    # iterate 5th times to verify that every time we get new backup file with ~100MB
+    # iterate 5 times to verify that every time we get new backup file with ~100MB
     for i in xrange(5):
         sg_helper.start_sync_gateways(cluster_config=cluster_conf, url=sg_one_url, config=temp_conf)
         # ~1M MB will be added to the info/debug/warn log files after the requests
@@ -105,7 +107,9 @@ def test_log_rotation_default_values(params_from_base_test_setup, sg_conf_name):
 @pytest.mark.logging
 @pytest.mark.parametrize("sg_conf_name", ["log_rotation_new"])
 def test_invalid_logKeys_string(params_from_base_test_setup, sg_conf_name):
-    """Negative test to verify that we are not able start SG when
+    """
+    @summary
+    Negative test to verify that we are not able start SG when
     logKeys is string
     """
     cluster_conf = params_from_base_test_setup["cluster_config"]
@@ -121,7 +125,7 @@ def test_invalid_logKeys_string(params_from_base_test_setup, sg_conf_name):
     sg_ip = host_for_url(sg_admin_url)
 
     if get_sync_gateway_version(sg_ip)[0] < "2.1":
-        pytest.skip("Test NA for SG  < 2.1")
+        pytest.skip("Continuous logging Test NA for SG < 2.1")
 
     cluster = Cluster(config=cluster_conf)
     cluster.reset(sg_config_path=sg_conf)
@@ -160,7 +164,9 @@ def test_invalid_logKeys_string(params_from_base_test_setup, sg_conf_name):
 @pytest.mark.logging
 @pytest.mark.parametrize("sg_conf_name", ["log_rotation_new"])
 def test_log_nondefault_logKeys_set(params_from_base_test_setup, sg_conf_name):
-    """Test to verify non default logKeys with any invalid area.
+    """
+    @summary
+    Test to verify non default logKeys with any invalid area.
     SG should work even with non existing logging area
     (positive case)
     """
@@ -210,7 +216,9 @@ def test_log_nondefault_logKeys_set(params_from_base_test_setup, sg_conf_name):
 @pytest.mark.logging
 @pytest.mark.parametrize("sg_conf_name", ["log_rotation_new"])
 def test_log_maxage_timestamp_ignored(params_from_base_test_setup, sg_conf_name):
-    """Test to verify SG continues to wrile logs in the same file even when
+    """
+    @summary
+    Test to verify SG continues to wrile logs in the same file even when
      timestamp for the log file has been changed
     """
     cluster_conf = params_from_base_test_setup["cluster_config"]
@@ -226,7 +234,7 @@ def test_log_maxage_timestamp_ignored(params_from_base_test_setup, sg_conf_name)
     sg_ip = host_for_url(sg_admin_url)
 
     if get_sync_gateway_version(sg_ip)[0] < "2.1":
-        pytest.skip("Test NA for SG  < 2.1")
+        pytest.skip("Continuous logging Test NA for SG < 2.1")
 
     cluster = Cluster(config=cluster_conf)
     cluster.reset(sg_config_path=sg_conf)
@@ -292,7 +300,9 @@ def test_log_maxage_timestamp_ignored(params_from_base_test_setup, sg_conf_name)
 @pytest.mark.logging
 @pytest.mark.parametrize("sg_conf_name", ["log_rotation_new"])
 def test_log_rotation_invalid_path(params_from_base_test_setup, sg_conf_name):
-    """Test to check that SG is not started with invalid logFilePath.
+    """
+    @summary
+    Test to check that SG is not started with invalid logFilePath.
     OS specific case. SG should check if path correct on startup
     """
     cluster_conf = params_from_base_test_setup["cluster_config"]
@@ -308,7 +318,7 @@ def test_log_rotation_invalid_path(params_from_base_test_setup, sg_conf_name):
     sg_ip = host_for_url(sg_admin_url)
 
     if get_sync_gateway_version(sg_ip)[0] < "2.1":
-        pytest.skip("Test NA for SG  < 2.1")
+        pytest.skip("Continuous logging Test NA for SG < 2.1")
 
     cluster = Cluster(config=cluster_conf)
     cluster.reset(sg_config_path=sg_conf)
@@ -348,7 +358,9 @@ def test_log_rotation_invalid_path(params_from_base_test_setup, sg_conf_name):
 @pytest.mark.logging
 @pytest.mark.parametrize("sg_conf_name", ["log_rotation_new"])
 def test_log_200mb(params_from_base_test_setup, sg_conf_name):
-    """Test to check maxsize with value 200MB( 100Mb by default)
+    """
+    @summary
+    Test to check maxsize with value 200MB( 100Mb by default)
     """
     cluster_conf = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
@@ -363,7 +375,7 @@ def test_log_200mb(params_from_base_test_setup, sg_conf_name):
     sg_ip = host_for_url(sg_admin_url)
 
     if get_sync_gateway_version(sg_ip)[0] < "2.1":
-        pytest.skip("Test NA for SG  < 2.1")
+        pytest.skip("Continuous logging Test NA for SG < 2.1")
 
     cluster = Cluster(config=cluster_conf)
     cluster.reset(sg_config_path=sg_conf)
@@ -419,7 +431,9 @@ def test_log_200mb(params_from_base_test_setup, sg_conf_name):
 @pytest.mark.logging
 @pytest.mark.parametrize("sg_conf_name", ["log_rotation_new"])
 def test_log_rotation_negative(params_from_base_test_setup, sg_conf_name):
-    """Test log rotation with negative values for:
+    """
+    @summary
+    Test log rotation with negative values for:
         "maxsize": -1,
         "maxage": -30,
         "maxbackups": -2
@@ -438,7 +452,7 @@ def test_log_rotation_negative(params_from_base_test_setup, sg_conf_name):
     sg_ip = host_for_url(sg_admin_url)
 
     if get_sync_gateway_version(sg_ip)[0] < "2.1":
-        pytest.skip("Test NA for SG < 2.1")
+        pytest.skip("Continuous logging Test NA for SG < 2.1")
 
     cluster = Cluster(config=cluster_conf)
     cluster.reset(sg_config_path=sg_conf)
@@ -488,7 +502,9 @@ def test_log_rotation_negative(params_from_base_test_setup, sg_conf_name):
 @pytest.mark.logging
 @pytest.mark.parametrize("sg_conf_name", ["log_rotation_new"])
 def test_log_maxbackups_0(params_from_base_test_setup, sg_conf_name):
-    """Test with maxbackups=0 that means do not limit the number of backups
+    """
+    @summary
+    Test with maxbackups=0 that means do not limit the number of backups
     """
     cluster_conf = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
@@ -503,7 +519,7 @@ def test_log_maxbackups_0(params_from_base_test_setup, sg_conf_name):
     sg_ip = host_for_url(sg_admin_url)
 
     if get_sync_gateway_version(sg_ip)[0] < "2.1":
-        pytest.skip("Test NA for SG < 2.1")
+        pytest.skip("Continuous logging Test NA for SG < 2.1")
 
     cluster = Cluster(config=cluster_conf)
     cluster.reset(sg_config_path=sg_conf)
@@ -558,7 +574,9 @@ def test_log_maxbackups_0(params_from_base_test_setup, sg_conf_name):
 @pytest.mark.logging
 @pytest.mark.parametrize("sg_conf_name", ["log_rotation_new"])
 def test_log_logLevel_invalid(params_from_base_test_setup, sg_conf_name):
-    """Run SG with non existing logLevel value
+    """
+    @summary
+    Run SG with non existing logLevel value
     """
     cluster_conf = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
@@ -573,7 +591,7 @@ def test_log_logLevel_invalid(params_from_base_test_setup, sg_conf_name):
     sg_ip = host_for_url(sg_admin_url)
 
     if get_sync_gateway_version(sg_ip)[0] < "2.1":
-        pytest.skip("Test NA for SG < 2.1")
+        pytest.skip("Continuous logging Test NA for SG < 2.1")
 
     cluster = Cluster(config=cluster_conf)
     cluster.reset(sg_config_path=sg_conf)
