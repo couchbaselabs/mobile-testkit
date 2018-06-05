@@ -11,7 +11,7 @@ from libraries.provision.ansible_runner import AnsibleRunner
 from libraries.testkit.admin import Admin
 from libraries.testkit.debug import log_request, log_response
 from utilities.cluster_config_utils import is_cbs_ssl_enabled, is_xattrs_enabled, no_conflicts_enabled
-from utilities.cluster_config_utils import get_revs_limit
+from utilities.cluster_config_utils import get_revs_limit, get_logging
 from utilities.cluster_config_utils import get_sg_replicas, get_sg_use_views, get_sg_version
 from keywords.utils import add_cbs_to_sg_config_server_field, log_info
 
@@ -58,6 +58,7 @@ class SyncGateway:
             "sync_gateway_config_filepath": conf_path,
             "server_port": self.server_port,
             "server_scheme": self.server_scheme,
+            "logging": "",
             "autoimport": "",
             "xattrs": "",
             "no_conflicts": "",
@@ -67,6 +68,14 @@ class SyncGateway:
         }
 
         if get_sg_version(self.cluster_config) >= "2.1.0":
+            num_replicas = get_sg_replicas(self.cluster_config)
+            playbook_vars["num_index_replicas"] = '"num_index_replicas": {},'.format(num_replicas)
+            try:
+                logging_key = get_logging(self.cluster_config)
+                playbook_vars["logging"] = '"redaction_level": {},'.format(logging_key)
+            except KeyError as ex:
+                log_info("Keyerror in getting logging{}".format(ex.message))
+
             if get_sg_use_views(self.cluster_config):
                 playbook_vars["sg_use_views"] = '"use_views": true,'
             else:
@@ -102,6 +111,7 @@ class SyncGateway:
             "sync_gateway_config_filepath": conf_path,
             "server_port": self.server_port,
             "server_scheme": self.server_scheme,
+            "logging": "",
             "autoimport": "",
             "xattrs": "",
             "no_conflicts": "",
@@ -112,6 +122,14 @@ class SyncGateway:
         }
 
         if get_sg_version(self.cluster_config) >= "2.1.0":
+            num_replicas = get_sg_replicas(self.cluster_config)
+            playbook_vars["num_index_replicas"] = '"num_index_replicas": {},'.format(num_replicas)
+            try:
+                logging_key = get_logging(self.cluster_config)
+                playbook_vars["logging"] = '"redaction_level": {},'.format(logging_key)
+            except KeyError as ex:
+                log_info("Keyerror in getting logging{}".format(ex.message))
+
             if get_sg_use_views(self.cluster_config):
                 playbook_vars["sg_use_views"] = '"use_views": true,'
             else:

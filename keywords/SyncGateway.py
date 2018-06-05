@@ -16,7 +16,7 @@ from utilities.cluster_config_utils import get_revs_limit
 from keywords.exceptions import ProvisioningError
 
 from libraries.provision.ansible_runner import AnsibleRunner
-from utilities.cluster_config_utils import is_cbs_ssl_enabled, is_xattrs_enabled, no_conflicts_enabled, get_sg_replicas, get_sg_use_views, get_sg_version
+from utilities.cluster_config_utils import is_cbs_ssl_enabled, is_xattrs_enabled, no_conflicts_enabled, get_sg_replicas, get_sg_use_views, get_sg_version, get_logging
 
 
 def validate_sync_gateway_mode(mode):
@@ -218,6 +218,7 @@ class SyncGateway:
             "sync_gateway_config_filepath": config_path,
             "server_port": self.server_port,
             "server_scheme": self.server_scheme,
+            "logging": "",
             "autoimport": "",
             "xattrs": "",
             "no_conflicts": "",
@@ -233,6 +234,12 @@ class SyncGateway:
             else:
                 num_replicas = get_sg_replicas(cluster_config)
                 playbook_vars["num_index_replicas"] = '"num_index_replicas": {},'.format(num_replicas)
+
+            try:
+                logging_key = get_logging(cluster_config)
+                playbook_vars["logging"] = '"redaction_level": "{}"'.format(logging_key)
+            except KeyError as ex:
+                log_info("Keyerror in getting logging{}".format(ex.message))
 
         if is_xattrs_enabled(cluster_config):
             playbook_vars["autoimport"] = '"import_docs": "continuous",'
@@ -367,6 +374,7 @@ class SyncGateway:
             "sync_gateway_config_filepath": sg_conf,
             "server_port": server_port,
             "server_scheme": server_scheme,
+            "logging": "",
             "autoimport": "",
             "num_index_replicas": "",
             "sg_use_views": "",
@@ -379,6 +387,12 @@ class SyncGateway:
             else:
                 num_replicas = get_sg_replicas(cluster_config)
                 playbook_vars["num_index_replicas"] = '"num_index_replicas": {},'.format(num_replicas)
+
+            try:
+                logging_key = get_logging(cluster_config)
+                playbook_vars["logging"] = '"redaction_level": "{}"'.format(logging_key)
+            except KeyError as ex:
+                log_info("Keyerror in getting logging{}".format(ex.message))
 
         if is_xattrs_enabled(cluster_config):
             playbook_vars["xattrs"] = '"enable_shared_bucket_access": true,'

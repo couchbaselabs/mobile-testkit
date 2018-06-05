@@ -1,0 +1,15 @@
+  - name: SYNC GATEWAY | Check if sync_gateway redacted zip file exists under {{ sg_logs_dir }}
+    win_shell: dir /b *.zip
+    register: files_to_copy
+    args:
+      chdir: "{{ sg_logs_dir }}"
+      executable: cmd
+
+
+  - debug:
+      msg: "files of sg accel is {{ files_to_copy }}"
+
+  - name: SYNC COLLECT FETCH | sg collect fetching redacted zip file from {{ sg_logs_dir }}
+    fetch: src={{ sg_logs_dir }}/{{ item }} dest=/tmp/sg_redaction_logs/{{ inventory_hostname }}/ fail_on_missing=yes flat=yes validate_checksum=no
+    with_items: "{{ files_to_copy.stdout_lines }}"
+  
