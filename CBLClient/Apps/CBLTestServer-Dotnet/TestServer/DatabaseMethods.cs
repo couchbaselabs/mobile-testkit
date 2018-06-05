@@ -62,6 +62,7 @@ namespace Couchbase.Lite.Testing
 
         #region Internal Methods
 
+        // TODO. Have to write this function
         //internal static void DatabaseAddChangeListener([NotNull] NameValueCollection args,
         //    [NotNull] IReadOnlyDictionary<string, object> postBody,
         //    [NotNull] HttpListenerResponse response)
@@ -133,8 +134,7 @@ namespace Couchbase.Lite.Testing
                                              [NotNull] HttpListenerResponse response)
         {
             With<Database>(postBody, "database", db => db.Compact());
-            int bodyObj = -1;
-            response.WriteBody(bodyObj);
+            response.WriteEmptyBody();
         }
 
         internal static void DatabaseChangeEncryptionKey([NotNull] NameValueCollection args,
@@ -177,8 +177,7 @@ namespace Couchbase.Lite.Testing
             [NotNull] HttpListenerResponse response)
         {
             With<Database>(postBody, "database", db => db.Delete());
-            int bodyResponse = -1;
-            response.WriteBody(bodyResponse);
+            response.WriteEmptyBody();
         }
 
         internal static void DatabaseDelete([NotNull] NameValueCollection args,
@@ -213,10 +212,11 @@ namespace Couchbase.Lite.Testing
                                                   [NotNull] IReadOnlyDictionary<string, object> postBody,
                                                   [NotNull] HttpListenerResponse response)
         {
+            string dbName = postBody["name"].ToString();
+            string directory = postBody["name"].ToString();
 
-            With<Database>(postBody, "database", db => db.Delete());
-            int bodyResponse = -1;
-            response.WriteBody(bodyResponse);
+            Database.Delete(dbName, directory);
+            response.WriteEmptyBody();
         }
 
         internal static void DatabaseExists([NotNull] NameValueCollection args,
@@ -270,11 +270,6 @@ namespace Couchbase.Lite.Testing
             With<Database>(postBody, "database", db =>
             {
                 var doc = db.GetDocument(docId);
-                if (doc == null)
-                {
-                    response.WriteEmptyBody();
-                    return;
-                }
 
                 response.WriteBody(MemoryMap.Store(doc));
             });
@@ -409,6 +404,7 @@ namespace Couchbase.Lite.Testing
             });
         }
 
+        // TODO: Have to write complete function
         //internal static void DatabaseRemoveChangeListener([NotNull] NameValueCollection args,
         //    [NotNull] IReadOnlyDictionary<string, object> postBody,
         //    [NotNull] HttpListenerResponse response)
@@ -450,7 +446,7 @@ namespace Couchbase.Lite.Testing
                         var docBody = (Dictionary<string, object>)body.Value;
                         docBody.Remove("_id");
                         MutableDocument doc = new MutableDocument(id, docBody);
-                       db.Save(doc);
+                        db.Save(doc);
 
                     }
                });
