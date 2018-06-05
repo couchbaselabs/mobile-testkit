@@ -6,8 +6,9 @@ import requests
 import libraries.testkit.settings
 from libraries.provision.ansible_runner import AnsibleRunner
 from utilities.cluster_config_utils import is_cbs_ssl_enabled, is_xattrs_enabled, no_conflicts_enabled, get_revs_limit
-from utilities.cluster_config_utils import get_sg_replicas, get_sg_use_views, get_sg_version
+from utilities.cluster_config_utils import get_sg_replicas, get_sg_use_views, get_sg_version, get_logging
 from keywords.utils import add_cbs_to_sg_config_server_field
+from keywords.utils import log_info
 
 log = logging.getLogger(libraries.testkit.settings.LOGGER)
 
@@ -48,6 +49,7 @@ class SgAccel:
             "sync_gateway_config_filepath": conf_path,
             "server_port": self.server_port,
             "server_scheme": self.server_scheme,
+            "logging": "",
             "autoimport": "",
             "xattrs": "",
             "no_conflicts": "",
@@ -63,6 +65,12 @@ class SgAccel:
             else:
                 num_replicas = get_sg_replicas(self.cluster_config)
                 playbook_vars["num_index_replicas"] = '"num_index_replicas": {},'.format(num_replicas)
+
+            try:
+                logging_key = get_logging(self.cluster_config)
+                playbook_vars["logging"] = '"redaction_level": "{}"'.format(logging_key)
+            except KeyError as ex:
+                log_info("Keyerror in getting logging{}".format(ex.message))
 
         if is_xattrs_enabled(self.cluster_config):
             playbook_vars["autoimport"] = '"import_docs": "continuous",'

@@ -13,7 +13,7 @@ from libraries.testkit.admin import Admin
 from libraries.testkit.config import Config
 from libraries.testkit.sgaccel import SgAccel
 from libraries.testkit.syncgateway import SyncGateway
-from utilities.cluster_config_utils import is_load_balancer_enabled, get_revs_limit
+from utilities.cluster_config_utils import is_load_balancer_enabled, get_revs_limit, get_logging
 from utilities.cluster_config_utils import get_load_balancer_ip, no_conflicts_enabled
 from utilities.cluster_config_utils import get_sg_replicas, get_sg_use_views, get_sg_version
 
@@ -139,6 +139,7 @@ class Cluster:
             "sync_gateway_config_filepath": config_path_full,
             "server_port": server_port,
             "server_scheme": server_scheme,
+            "logging": "",
             "autoimport": "",
             "xattrs": "",
             "no_conflicts": "",
@@ -154,6 +155,12 @@ class Cluster:
             else:
                 num_replicas = get_sg_replicas(self._cluster_config)
                 playbook_vars["num_index_replicas"] = '"num_index_replicas": {},'.format(num_replicas)
+
+            try:
+                logging_key = get_logging(self._cluster_config)
+                playbook_vars["logging"] = '"redaction_level": "{}"'.format(logging_key)
+            except KeyError as ex:
+                log_info("Keyerror in getting logging{}".format(ex.message))
 
         # Add configuration to run with xattrs
         if self.xattrs:
