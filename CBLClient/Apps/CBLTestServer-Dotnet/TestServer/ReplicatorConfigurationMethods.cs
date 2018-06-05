@@ -27,6 +27,7 @@ using System.Collections.Specialized;
 using System.Net;
 using System.Linq;
 using System.Security.Cryptography.X509Certificates;
+using System.Runtime.Serialization.Formatters.Binary;
 
 using Couchbase.Lite.Sync;
 using Couchbase.Lite.Util;
@@ -286,14 +287,22 @@ namespace Couchbase.Lite.Testing
             response.WriteEmptyBody();
         }
 
+        // TODO have to fix this method
         public static void setPinnedServerCertificate([NotNull] NameValueCollection args,
                                                       [NotNull] IReadOnlyDictionary<string, object> postBody,
                                                       [NotNull] HttpListenerResponse response)
         {
-            Byte cert = (Byte)postBody["cert"];
+            BinaryFormatter binaryFormatter = new BinaryFormatter();
+            byte[] certs;
+            var obj = postBody["cert"];
+            using (MemoryStream ms = new MemoryStream()){
+                binaryFormatter.Serialize(ms, obj);
+                 certs = ms.ToArray();
+
+            }
             With<ReplicatorConfiguration>(postBody, "configuration", repConf =>
             {
-                repConf.PinnedServerCertificate = cert;
+                repConf.PinnedServerCertificate = null;
             });
         }
     }
