@@ -683,6 +683,7 @@ def update_docs(sg_url, sg_db, users, update_runtime_sec, batch_size, docs_per_u
         batch_size,
         update_delay
     ))
+    update_runtime_sec += 600
     log_info('Continue to update for {}s'.format(update_runtime_sec))
 
     num_users_per_type = len(users) / len(USER_TYPES)
