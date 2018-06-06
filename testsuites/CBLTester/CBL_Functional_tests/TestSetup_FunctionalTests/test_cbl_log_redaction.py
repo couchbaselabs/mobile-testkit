@@ -52,7 +52,6 @@ def test_mask_password_in_logs(params_from_base_test_setup, password):
     replicator = Replication(base_url)
     authenticator = Authenticator(base_url)
 
-    # One shot replication
     sg_client = MobileRestClient()
 
     db.create_bulk_docs(number=num_cbl_docs, id_prefix="cblid", db=cbl_db, channels=channels)
@@ -114,7 +113,6 @@ def test_verify_invalid_maskPassword_in_logs(params_from_base_test_setup, invali
     replicator = Replication(base_url)
     authenticator = Authenticator(base_url)
 
-    # One shot replication
     sg_client = MobileRestClient()
     db.create_bulk_docs(number=num_cbl_docs, id_prefix="cblid", db=cbl_db, channels=channels)
 
