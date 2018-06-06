@@ -101,7 +101,7 @@ def pytest_addoption(parser):
                      action="store_true",
                      help="If set, uses views instead of GSI - SG 2.1 and above only")
 
-    parser.addoption("--num-replicas",
+    parser.addoption("--number-replicas",
                      action="store",
                      help="Number of replicas for the indexer node - SG 2.1 and above only",
                      default=0)
