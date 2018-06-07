@@ -5,7 +5,3 @@
 
   tasks:
     - include: tasks/stop-fetch-windows-cbl-logs.yml
-
-    - name: Fetch logs
-      fetch: src=C:\PROGRA~1\dotnet\TextLogging\{{ item }} dest={{ log_full_path }} fail_on_missing=yes flat=yes validate_checksum=no
-      with_items: "{{ files_to_copy.stdout_lines }}"
