@@ -52,11 +52,13 @@ class TestServerNetMsft(TestServerBase):
             self.binary_path = "TestServer-Net-{}\\TestServer.NetCore.dll".format(self.version_build)
             self.download_url = "{}/couchbase-lite-net/{}/{}/TestServer.NetCore.zip".format(LATEST_BUILDS, self.version, self.build)
             self.package_name = "TestServer.NetCore.zip"
+            self.build_name = "TestServer-Net-{}".format(self.version_build)
         else:
             self.binary_path = "TestServer-UWP-{}\\run.ps1".format(self.version_build)
             self.download_url = "{}/couchbase-lite-net/{}/{}/TestServer.UWP.zip".format(LATEST_BUILDS, self.version, self.build)
             self.package_name = "TestServer.UWP.zip"
             self.stop_binary_path = "TestServer-UWP-{}\\stop.ps1".format(self.version_build)
+            self.build_name = "TestServer-UWP-{}".format(self.version_build)
 
     def download(self, version_build=None):
         """
@@ -66,13 +68,11 @@ class TestServerNetMsft(TestServerBase):
         if version_build is not None:
             self.version_build = version_build
 
-        build_name = "TestServer-UWP-{}".format(self.version_build)
-
         # Download LiteServ via Ansible on remote machine
         status = self.ansible_runner.run_ansible_playbook("download-testserver-msft.yml", extra_vars={
             "download_url": self.download_url,
             "package_name": self.package_name,
-            "build_name": build_name
+            "build_name": self.build_name
         })
 
         if status != 0:
