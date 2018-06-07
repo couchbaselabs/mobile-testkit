@@ -2,6 +2,8 @@
     {{ logging }}
    "compressResponses": false,
    "AdminInterface":"0.0.0.0:4985",
+   {{ sslcert }}
+   {{ sslkey }}
    "databases":{
       "db":{
          "oidc":{

@@ -96,7 +96,7 @@ def setup_client_syncgateway_suite(request):
 
     if not skip_provisioning:
         log_info("Installing Sync Gateway + Couchbase Server + Accels ('di' only)")
-        cluster_utils = ClusterKeywords()
+        cluster_utils = ClusterKeywords(cluster_config)
         cluster_utils.provision_cluster(
             cluster_config=cluster_config,
             server_version=server_version,
@@ -137,7 +137,7 @@ def setup_client_syncgateway_test(request, setup_client_syncgateway_suite):
     ls_url = liteserv.start("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(liteserv).__name__, test_name, datetime.datetime.now()))
     client.delete_databases(ls_url)
 
-    cluster_helper = ClusterKeywords()
+    cluster_helper = ClusterKeywords(cluster_config)
     cluster_hosts = cluster_helper.get_cluster_topology(cluster_config=cluster_config)
 
     sg_url = cluster_hosts["sync_gateways"][0]["public"]

@@ -15,6 +15,7 @@ from libraries.testkit.sgaccel import SgAccel
 from libraries.testkit.syncgateway import SyncGateway
 from utilities.cluster_config_utils import is_load_balancer_enabled, get_revs_limit
 from utilities.cluster_config_utils import get_load_balancer_ip, no_conflicts_enabled
+from keywords.constants import SYNC_GATEWAY_CERT
 from utilities.cluster_config_utils import get_sg_replicas, get_sg_use_views, get_sg_version
 
 
@@ -56,6 +57,7 @@ class Cluster:
 
         self.cbs_ssl = cluster["environment"]["cbs_ssl_enabled"]
         self.xattrs = cluster["environment"]["xattrs_enabled"]
+        self.sync_gateway_ssl = cluster["environment"]["sync_gateway_ssl"]
 
         if self.cbs_ssl:
             cbs_urls = ["https://{}:18091".format(cbs["ip"]) for cbs in cluster["couchbase_servers"]]
@@ -109,6 +111,7 @@ class Cluster:
         config = Config(config_path_full)
         mode = config.get_mode()
         bucket_name_set = config.get_bucket_name_set()
+        sg_cert_path = os.path.abspath(SYNC_GATEWAY_CERT)
 
         self.sync_gateway_config = config
 
@@ -137,12 +140,15 @@ class Cluster:
         # Start sync-gateway
         playbook_vars = {
             "sync_gateway_config_filepath": config_path_full,
+            "sg_cert_path": sg_cert_path,
             "server_port": server_port,
             "server_scheme": server_scheme,
             "autoimport": "",
             "xattrs": "",
             "no_conflicts": "",
             "revs_limit": "",
+            "sslcert": "",
+            "sslkey": "",
             "num_index_replicas": "",
             "sg_use_views": "",
             "logging": "",
@@ -163,6 +169,10 @@ class Cluster:
         if self.xattrs:
             playbook_vars["autoimport"] = '"import_docs": "continuous",'
             playbook_vars["xattrs"] = '"enable_shared_bucket_access": true,'
+
+        if self.sync_gateway_ssl:
+            playbook_vars["sslcert"] = '"SSLCert": "sg_cert.pem",'
+            playbook_vars["sslkey"] = '"SSLKey": "sg_privkey.pem",'
 
         if no_conflicts_enabled(self._cluster_config):
             playbook_vars["no_conflicts"] = '"allow_conflicts": false,'

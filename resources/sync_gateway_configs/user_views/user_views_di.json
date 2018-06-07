@@ -14,6 +14,8 @@
     "password": "password",
     "data_dir": "."
   },
+  {{ sslcert }}
+  {{ sslkey }}
   "databases": {
     "db": {
       {{ xattrs }}

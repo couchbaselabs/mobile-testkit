@@ -53,7 +53,7 @@ def generate_cluster_configs_from_vagrant(private_network, public_network, publi
         name = stat.name
         # Expected output: '10.0.2.15 192.168.0.61 2605:e000:9092:200:a00:27ff:fe7b:9bbf \r\n'
         # where second ip is the publicly routable ip
-        output = subprocess.check_output('vagrant ssh {} -c "hostname -I"'.format(name), shell=True)
+        output = subprocess.check_output('vagrant ssh {} -c "hostname -I" | grep -v warning '.format(name), shell=True)
         cleaned_output = output.strip()
         ip_addresses = cleaned_output.split()
         if len(ip_addresses) < 2:

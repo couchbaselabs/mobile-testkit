@@ -32,7 +32,10 @@
     server_port:
     autoimport:
     xattrs:
+    sslcert:
+    sslkey:
     logging:
+
   tasks:
   - include: tasks/deploy-sync-gateway-config.yml
     become: yes
@@ -54,7 +57,10 @@
     server_port:
     autoimport:
     xattrs:
+    sslcert:
+    sslkey:
     logging:
+
   tasks:
   - include: tasks/deploy-sync-gateway-config.yml
     become: yes

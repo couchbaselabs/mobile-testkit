@@ -10,10 +10,11 @@ import libraries.testkit.settings
 from libraries.provision.ansible_runner import AnsibleRunner
 from libraries.testkit.admin import Admin
 from libraries.testkit.debug import log_request, log_response
-from utilities.cluster_config_utils import is_cbs_ssl_enabled, is_xattrs_enabled, no_conflicts_enabled
+from utilities.cluster_config_utils import is_cbs_ssl_enabled, is_xattrs_enabled, no_conflicts_enabled, sg_ssl_enabled
 from utilities.cluster_config_utils import get_revs_limit
 from utilities.cluster_config_utils import get_sg_replicas, get_sg_use_views, get_sg_version
 from keywords.utils import add_cbs_to_sg_config_server_field, log_info
+from keywords.constants import SYNC_GATEWAY_CERT
 
 log = logging.getLogger(libraries.testkit.settings.LOGGER)
 
@@ -23,7 +24,13 @@ class SyncGateway:
     def __init__(self, cluster_config, target):
         self.ansible_runner = AnsibleRunner(cluster_config)
         self.ip = target["ip"]
-        self.url = "http://{}:4984".format(target["ip"])
+
+        sg_scheme = "http"
+
+        if sg_ssl_enabled(cluster_config):
+            sg_scheme = "https"
+
+        self.url = "{}://{}:4984".format(sg_scheme, target["ip"])
         self.hostname = target["name"]
         self._headers = {'Content-Type': 'application/json'}
         self.admin = Admin(self)
@@ -53,6 +60,7 @@ class SyncGateway:
     def start(self, config):
         conf_path = os.path.abspath(config)
         log.info(">>> Starting sync_gateway with configuration: {}".format(conf_path))
+        sg_cert_path = os.path.abspath(SYNC_GATEWAY_CERT)
 
         playbook_vars = {
             "sync_gateway_config_filepath": conf_path,
@@ -61,11 +69,18 @@ class SyncGateway:
             "autoimport": "",
             "xattrs": "",
             "no_conflicts": "",
+            "sslcert": "",
+            "sslkey": "",
+            "sg_cert_path": sg_cert_path,
             "num_index_replicas": "",
             "sg_use_views": "",
             "logging": "",
             "couchbase_server_primary_node": self.couchbase_server_primary_node
         }
+
+        if sg_ssl_enabled(self.cluster_config):
+            playbook_vars["sslcert"] = '"SSLCert": "sg_cert.pem",'
+            playbook_vars["sslkey"] = '"SSLKey": "sg_privkey.pem",'
 
         if get_sg_version(self.cluster_config) >= "2.1.0":
             playbook_vars["logging"] = '"logging": {"debug": {"enabled": true}},'
@@ -88,6 +103,7 @@ class SyncGateway:
             playbook_vars["revs_limit"] = '"revs_limit": {},'.format(revs_limit)
         except KeyError:
             log_info("revs_limit no found in {}, Ignoring".format(self.cluster_config))
+
         status = self.ansible_runner.run_ansible_playbook(
             "start-sync-gateway.yml",
             extra_vars=playbook_vars,
@@ -101,6 +117,7 @@ class SyncGateway:
             self.cluster_config = cluster_config
         conf_path = os.path.abspath(config)
         log.info(">>> Restarting sync_gateway with configuration: {}".format(conf_path))
+        sg_cert_path = os.path.abspath(SYNC_GATEWAY_CERT)
 
         playbook_vars = {
             "sync_gateway_config_filepath": conf_path,
@@ -110,11 +127,18 @@ class SyncGateway:
             "xattrs": "",
             "no_conflicts": "",
             "revs_limit": "",
+            "sslcert": "",
+            "sslkey": "",
+            "sg_cert_path": sg_cert_path,
             "num_index_replicas": "",
             "sg_use_views": "",
             "logging": "",
             "couchbase_server_primary_node": self.couchbase_server_primary_node
         }
+
+        if sg_ssl_enabled(self.cluster_config):
+            playbook_vars["sslcert"] = '"SSLCert": "sg_cert.pem",'
+            playbook_vars["sslkey"] = '"SSLKey": "sg_privkey.pem",'
 
         if get_sg_version(self.cluster_config) >= "2.1.0":
             playbook_vars["logging"] = '"logging": {"debug": {"enabled": true}},'

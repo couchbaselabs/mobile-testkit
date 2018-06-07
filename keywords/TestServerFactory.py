@@ -32,7 +32,6 @@ class TestServerFactory:
 
     @staticmethod
     def create(platform, version_build, host, port, community_enabled=None, debug_mode=False):
-
         TestServerFactory.validate_platform(platform)
         TestServerFactory.validate_version_build(version_build)
         TestServerFactory.validate_host(host)

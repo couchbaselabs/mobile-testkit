@@ -66,6 +66,7 @@ def params_from_base_suite_setup(request):
 
     # use load_balancer_cc cluster config if mode is "cc" or load_balancer_di cluster config if mode is "di"
     cluster_config = "{}/load_balancer_{}".format(keywords.constants.CLUSTER_CONFIGS_DIR, mode)
+    cluster_utils = ClusterKeywords(cluster_config)
     sg_config = sync_gateway_config_path_for_mode("sync_gateway_default_functional_tests", mode)
 
     # Add load balancer prop and check if load balancer IP is available
@@ -137,7 +138,7 @@ def params_from_base_suite_setup(request):
     if skip_provisioning or use_sequoia:
         should_provision = False
 
-    cluster_utils = ClusterKeywords()
+    cluster_utils = ClusterKeywords(cluster_config)
     if should_provision:
         try:
             cluster_utils.provision_cluster(

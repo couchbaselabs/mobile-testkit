@@ -1,12 +1,15 @@
 {
     "interface":":4984",
     "adminInterface": "0.0.0.0:4985",
+    {{ sslcert }}
+    {{ sslkey }}
     {{ logging }}
     "databases":{
         "sg_db1":{
             {{ autoimport }}
             {{ xattrs }}
             {{ no_conflicts }}
+            {{ revs_limit }}
             {{ sg_use_views }}
             {{ num_index_replicas }}
             "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
@@ -18,6 +21,7 @@
             {{ autoimport }}
             {{ xattrs }}
             {{ no_conflicts }}
+            {{ revs_limit }}
             {{ sg_use_views }}
             {{ num_index_replicas }}
             "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",

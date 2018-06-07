@@ -66,5 +66,6 @@ class RemoteExecutor:
 
         status, stdout_p, stderr_p = self.execute(command)
         if status != 0:
+            log_info("{}: {}".format(stdout_p, stderr_p))
             raise RemoteCommandError("command: {} failed on host: {}".format(command, self.host))
         return stdout_p, stderr_p

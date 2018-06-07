@@ -35,7 +35,7 @@ def test_attachments_on_docs_rejected_by_sync_function(params_from_base_test_set
 
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
 
-    cluster_helper = ClusterKeywords()
+    cluster_helper = ClusterKeywords(cluster_config)
     cluster_helper.reset_cluster(cluster_config, sg_conf)
 
     topology = cluster_helper.get_cluster_topology(cluster_config)

@@ -1,6 +1,8 @@
 {
   "interface": ":4984",
   "adminInterface": "0.0.0.0:4985",
+  {{ sslcert }}
+  {{ sslkey }}
   {{ logging }}
   "databases": {
     "db": {
@@ -13,6 +15,7 @@
       "bucket": "data-bucket",
       "username":"data-bucket",
       "password": "password",
+      "unsupported": { "allow_conflicts": false },
       "users": {
         "user_1": {
           "admin_channels": [

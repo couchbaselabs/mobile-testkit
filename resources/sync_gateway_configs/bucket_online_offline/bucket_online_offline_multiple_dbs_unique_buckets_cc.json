@@ -8,6 +8,8 @@
     "compressResponses": false,
     {{ logging }}
     "verbose":"true",
+    {{ sslcert }}
+    {{ sslkey }}
     "databases":{
         "db1":{
             {{ autoimport }}

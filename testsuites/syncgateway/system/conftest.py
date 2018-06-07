@@ -156,6 +156,7 @@ def params_from_base_suite_setup(request):
     # use ci_lb_cc cluster config if mode is "cc" or ci_lb_di cluster config if more is "di"
     log_info("Using 'ci_lb_{}' config!".format(mode))
     cluster_config = "{}/ci_lb_{}".format(CLUSTER_CONFIGS_DIR, mode)
+    cluster_utils = ClusterKeywords(cluster_config)
 
     try:
         server_version
@@ -213,7 +214,7 @@ def params_from_base_suite_setup(request):
     if skip_provisioning or use_sequoia:
         should_provision = False
 
-    cluster_utils = ClusterKeywords()
+    cluster_utils = ClusterKeywords(cluster_config)
     if should_provision:
         try:
             cluster_utils.provision_cluster(

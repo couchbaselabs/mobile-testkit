@@ -14,6 +14,8 @@
     server_port:
     autoimport:
     xattrs:
+    sslcert:
+    sslkey:
     logging:
 
   tasks:
@@ -36,6 +38,8 @@
     server_port:
     autoimport:
     xattrs:
+    sslcert:
+    sslkey:
     logging:
 
   tasks:

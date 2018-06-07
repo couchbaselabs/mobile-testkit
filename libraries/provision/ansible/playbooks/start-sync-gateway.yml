@@ -13,7 +13,10 @@
     server_scheme:
     couchbase_server_primary_node:
     server_port:
+    sslcert:
+    sslkey:
     logging:
+
   tasks:
   - include: tasks/deploy-sync-gateway-config.yml
     when: ansible_distribution == "CentOS" or ansible_distribution == "RedHat" or ansible_distribution == "Amazon" or ansible_distribution == "Ubuntu"
