@@ -1,0 +1,7 @@
+- name: Windows - Stop TestServer
+  hosts: windows
+  vars:
+    log_full_path:
+
+  tasks:
+    - include: tasks/stop-fetch-windows-cbl-logs.yml

@@ -5,7 +5,7 @@ from keywords.ClusterKeywords import ClusterKeywords
 from keywords.SyncGateway import (sync_gateway_config_path_for_mode,
                                   validate_sync_gateway_mode)
 from keywords.tklogging import Logging
-from keywords.utils import log_info, check_xattr_support, version_is_binary
+from keywords.utils import log_info, check_xattr_support, version_is_binary, clear_resources_pngs
 
 from keywords.exceptions import ProvisioningError, FeatureSupportedError
 
@@ -173,6 +173,9 @@ def params_from_base_suite_setup(request):
     # Stop all sync_gateway and sg_accels as test finished
     c = cluster.Cluster(cluster_config)
     c.stop_sg_and_accel()
+
+    # Delete png files under resources/data
+    clear_resources_pngs()
 
 
 # This is called before each test and will yield the dictionary to each test that references the method

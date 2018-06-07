@@ -12,7 +12,7 @@ from keywords.exceptions import ProvisioningError
 from keywords.tklogging import Logging
 
 from CBLClient.Database import Database
-from keywords.utils import host_for_url
+from keywords.utils import host_for_url, clear_resources_pngs
 from libraries.testkit.cluster import Cluster
 from couchbase.bucket import Bucket
 from couchbase.n1ql import N1QLQuery
@@ -324,6 +324,9 @@ def params_from_base_suite_setup(request):
     utils_obj.flushMemory()
     log_info("Stopping the test server")
     testserver.stop()
+
+    # Delete png files under resources/data
+    clear_resources_pngs()
 
 
 @pytest.fixture(scope="function")

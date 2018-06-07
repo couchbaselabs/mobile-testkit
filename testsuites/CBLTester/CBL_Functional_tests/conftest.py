@@ -5,7 +5,7 @@ import datetime
 from utilities.cluster_config_utils import persist_cluster_config_environment_prop
 from keywords.constants import SDK_TIMEOUT
 from keywords.utils import log_info
-from keywords.utils import host_for_url
+from keywords.utils import host_for_url, clear_resources_pngs
 from keywords.ClusterKeywords import ClusterKeywords
 from keywords.couchbaseserver import CouchbaseServer
 from keywords.constants import CLUSTER_CONFIGS_DIR
@@ -390,8 +390,9 @@ def params_from_base_suite_setup(request):
     log_info("Flushing server memory")
     utils_obj = Utils(base_url)
     utils_obj.flushMemory()
-    log_info("Stopping the test server")
-    testserver.stop()
+
+    # Delete png files under resources/data
+    clear_resources_pngs()
 
 
 @pytest.fixture(scope="function")
@@ -426,10 +427,11 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     if create_db_per_test:
         log_info("Starting TestServer...")
         test_name_cp = test_name.replace("/", "-")
+        log_filename = "{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__, test_name_cp, datetime.datetime.now())
         if device_enabled:
-            testserver.start_device("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__, test_name_cp, datetime.datetime.now()))
+            testserver.start_device(log_filename)
         else:
-            testserver.start("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(testserver).__name__, test_name_cp, datetime.datetime.now()))
+            testserver.start(log_filename)
 
     cluster_helper = ClusterKeywords(cluster_config)
     cluster_hosts = cluster_helper.get_cluster_topology(cluster_config=cluster_config)
@@ -483,7 +485,8 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         "device_enabled": device_enabled,
         "testserver": testserver,
         "db_config": db_config,
-        "enable_sample_bucket": enable_sample_bucket
+        "enable_sample_bucket": enable_sample_bucket,
+        "log_filename": log_filename
     }
 
     log_info("Tearing down test")
@@ -497,6 +500,9 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
         log_info("Flushing server memory")
         utils_obj = Utils(base_url)
         utils_obj.flushMemory()
+
+    log_info("Stopping the test server")
+    testserver.stop()
 
 
 @pytest.fixture(scope="class")

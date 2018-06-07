@@ -1,7 +1,6 @@
 import base64
 import random
 import uuid
-import os
 
 from PIL import Image
 
@@ -59,10 +58,6 @@ def generate_png(width, height):
     # Load and store image data
     att = load_from_data_dir([image_temp_name])
     log_info("Creating Attachment: {}".format(image_temp_name))
-
-    # Remove temporary image
-    log_info("Removing temporary generated image: {}".format(image_temp_path))
-    os.remove(image_temp_path)
 
     # Return attachment with generated name and loaded image data
     return att

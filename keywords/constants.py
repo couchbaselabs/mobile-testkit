@@ -9,7 +9,7 @@ SYNC_GATEWAY_CONFIGS = "resources/sync_gateway_configs"
 SYNC_GATEWAY_CERT = "resources/sync_gateway_cert"
 DATA_DIR = "resources/data"
 
-MAX_RETRIES = 5
+MAX_RETRIES = 10
 
 CLIENT_REQUEST_TIMEOUT = 120
 REBALANCE_TIMEOUT_SECS = 3600
