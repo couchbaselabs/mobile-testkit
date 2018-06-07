@@ -34,6 +34,8 @@
     xattrs:
     sslcert:
     sslkey:
+    logging:
+
   tasks:
   - include: tasks/deploy-sync-gateway-config.yml
     become: yes
@@ -57,6 +59,8 @@
     xattrs:
     sslcert:
     sslkey:
+    logging:
+
   tasks:
   - include: tasks/deploy-sync-gateway-config.yml
     become: yes

@@ -15,6 +15,7 @@
     server_port:
     sslcert:
     sslkey:
+    logging:
 
   tasks:
   - include: tasks/deploy-sync-gateway-config.yml

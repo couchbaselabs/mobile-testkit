@@ -74,6 +74,7 @@ class SyncGateway:
             "sg_cert_path": sg_cert_path,
             "num_index_replicas": "",
             "sg_use_views": "",
+            "logging": "",
             "couchbase_server_primary_node": self.couchbase_server_primary_node
         }
 
@@ -82,11 +83,14 @@ class SyncGateway:
             playbook_vars["sslkey"] = '"SSLKey": "sg_privkey.pem",'
 
         if get_sg_version(self.cluster_config) >= "2.1.0":
+            playbook_vars["logging"] = '"logging": {"debug": {"enabled": true}},'
             if get_sg_use_views(self.cluster_config):
                 playbook_vars["sg_use_views"] = '"use_views": true,'
             else:
                 num_replicas = get_sg_replicas(self.cluster_config)
                 playbook_vars["num_index_replicas"] = '"num_index_replicas": {},'.format(num_replicas)
+        else:
+            playbook_vars["logging"] = '"log": ["*"],'
 
         if is_xattrs_enabled(self.cluster_config):
             playbook_vars["autoimport"] = '"import_docs": "continuous",'
@@ -97,9 +101,9 @@ class SyncGateway:
         try:
             revs_limit = get_revs_limit(self.cluster_config)
             playbook_vars["revs_limit"] = '"revs_limit": {},'.format(revs_limit)
-        except KeyError as ex:
-            log_info("Keyerror in getting revs_limit{}".format(ex.message))
-            playbook_vars["revs_limit"] = ''
+        except KeyError:
+            log_info("revs_limit no found in {}, Ignoring".format(self.cluster_config))
+
         status = self.ansible_runner.run_ansible_playbook(
             "start-sync-gateway.yml",
             extra_vars=playbook_vars,
@@ -128,6 +132,7 @@ class SyncGateway:
             "sg_cert_path": sg_cert_path,
             "num_index_replicas": "",
             "sg_use_views": "",
+            "logging": "",
             "couchbase_server_primary_node": self.couchbase_server_primary_node
         }
 
@@ -136,11 +141,14 @@ class SyncGateway:
             playbook_vars["sslkey"] = '"SSLKey": "sg_privkey.pem",'
 
         if get_sg_version(self.cluster_config) >= "2.1.0":
+            playbook_vars["logging"] = '"logging": {"debug": {"enabled": true}},'
             if get_sg_use_views(self.cluster_config):
                 playbook_vars["sg_use_views"] = '"use_views": true,'
             else:
                 num_replicas = get_sg_replicas(self.cluster_config)
                 playbook_vars["num_index_replicas"] = '"num_index_replicas": {},'.format(num_replicas)
+        else:
+            playbook_vars["logging"] = '"log": ["*"],'
 
         if is_xattrs_enabled(self.cluster_config):
             playbook_vars["autoimport"] = '"import_docs": "continuous",'
@@ -151,9 +159,8 @@ class SyncGateway:
         try:
             revs_limit = get_revs_limit(self.cluster_config)
             playbook_vars["revs_limit"] = '"revs_limit": {},'.format(revs_limit)
-        except KeyError as ex:
-            log_info("Keyerror in getting revs_limit{}".format(ex.message))
-            playbook_vars["revs_limit"] = ''
+        except KeyError:
+            log_info("revs_limit no found in {}, Ignoring".format(self.cluster_config))
 
         status = self.ansible_runner.run_ansible_playbook(
             "reset-sync-gateway.yml",

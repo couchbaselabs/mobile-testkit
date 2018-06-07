@@ -1,0 +1,14 @@
+---
+# Delete and create directories
+- hosts: sync_gateways, sg_accels
+  vars:
+    file_name:
+    file_size:
+
+  tasks:
+  - include: tasks/delete-file.yml
+    when: ansible_distribution == "CentOS" or ansible_distribution == "RedHat" or ansible_distribution == "Amazon" or ansible_distribution == "Ubuntu"
+
+  - include: tasks/create-empty-file.yml
+    when: ansible_distribution == "CentOS" or ansible_distribution == "RedHat" or ansible_distribution == "Amazon" or ansible_distribution == "Ubuntu"
+

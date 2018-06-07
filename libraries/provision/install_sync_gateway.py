@@ -127,15 +127,19 @@ def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False, sg_pl
         "sslkey": "",
         "num_index_replicas": "",
         "sg_use_views": "",
+        "logging": "",
         "couchbase_server_primary_node": couchbase_server_primary_node
     }
 
     if get_sg_version(cluster_config) >= "2.1.0":
+        playbook_vars["logging"] = '"logging": {"debug": {"enabled": true}},'
         if get_sg_use_views(cluster_config):
             playbook_vars["sg_use_views"] = '"use_views": true,'
         else:
             num_replicas = get_sg_replicas(cluster_config)
             playbook_vars["num_index_replicas"] = '"num_index_replicas": {},'.format(num_replicas)
+    else:
+        playbook_vars["logging"] = '"log": ["*"],'
 
     if is_xattrs_enabled(cluster_config):
         playbook_vars["autoimport"] = '"import_docs": "continuous",'
@@ -151,9 +155,9 @@ def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False, sg_pl
     try:
         revs_limit = get_revs_limit(cluster_config)
         playbook_vars["revs_limit"] = '"revs_limit": {},'.format(revs_limit)
-    except KeyError as ex:
-        log_info("Keyerror in getting revs_limit{}".format(ex.message))
-        playbook_vars["revs_limit"] = ''
+    except KeyError:
+        log_info("revs_limit not found in {}, Ignoring".format(cluster_config))
+
     # Install Sync Gateway via Source or Package
     if sync_gateway_config.commit is not None:
         # Install from source

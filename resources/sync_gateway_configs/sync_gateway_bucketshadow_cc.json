@@ -6,9 +6,9 @@
     "maxFileDescriptors": 90000,
      "slowServerCallWarningThreshold": 500,
     "compressResponses": false,
-    "log": ["*"],
     {{ sslcert }}
     {{ sslkey }}
+    {{ logging }}
     "databases":{
         "db":{
             {{ no_conflicts }}

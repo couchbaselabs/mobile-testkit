@@ -16,6 +16,7 @@
     xattrs:
     sslcert:
     sslkey:
+    logging:
 
   tasks:
     - include: tasks/stop-sync-gateway.yml
@@ -39,6 +40,7 @@
     xattrs:
     sslcert:
     sslkey:
+    logging:
 
   tasks:
     - include: tasks/stop-sg-accel.yml
