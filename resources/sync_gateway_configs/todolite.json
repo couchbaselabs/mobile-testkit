@@ -2,12 +2,15 @@
   "log": ["*"],
   "adminInterface": "0.0.0.0:4985",
   "facebook": { "register": true },
+  {{ sslcert }}
+  {{ sslkey }}
   "databases": {
     "todolite": {
       {{ autoimport }}
       {{ xattrs }}
       {{ sg_use_views }}
       {{ num_index_replicas }}
+
       "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
       "bucket":"data-bucket",
       "username":"data-bucket",

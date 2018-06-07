@@ -11,6 +11,7 @@ from keywords.SyncGateway import sync_gateway_config_path_for_mode
 from keywords import couchbaseserver
 from keywords import document
 from keywords import attachment
+from libraries.testkit.cluster import Cluster
 
 
 @pytest.mark.syncgateway
@@ -198,6 +199,7 @@ def test_writing_attachment_to_couchbase_server(params_from_base_test_setup, sg_
 
     cluster_helper = ClusterKeywords()
     cluster_helper.reset_cluster(cluster_config, sg_conf)
+    cluster = Cluster(config=cluster_config)
 
     topology = cluster_helper.get_cluster_topology(cluster_config)
 
@@ -235,6 +237,6 @@ def test_writing_attachment_to_couchbase_server(params_from_base_test_setup, sg_
     server = couchbaseserver.CouchbaseServer(cbs_url)
 
     # Assert that the attachment doc gets written to couchbase server
-    server_att_docs = server.get_server_docs_with_prefix(bucket=bucket, prefix="_sync:att:")
+    server_att_docs = server.get_server_docs_with_prefix(bucket=bucket, prefix="_sync:att:", ipv6=cluster.ipv6)
     num_att_docs = len(server_att_docs)
     assert num_att_docs == 1

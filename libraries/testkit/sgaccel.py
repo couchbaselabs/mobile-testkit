@@ -8,6 +8,8 @@ from libraries.provision.ansible_runner import AnsibleRunner
 from utilities.cluster_config_utils import is_cbs_ssl_enabled, is_xattrs_enabled, no_conflicts_enabled, get_revs_limit
 from utilities.cluster_config_utils import get_sg_replicas, get_sg_use_views, get_sg_version
 from keywords.utils import add_cbs_to_sg_config_server_field
+from utilities.cluster_config_utils import sg_ssl_enabled
+
 
 log = logging.getLogger(libraries.testkit.settings.LOGGER)
 
@@ -54,10 +56,16 @@ class SgAccel:
             "revs_limit": "",
             "num_index_replicas": "",
             "sg_use_views": "",
+            "sslcert": "",
+            "sslkey": "",
             "couchbase_server_primary_node": couchbase_server_primary_node
         }
 
         if get_sg_version(self.cluster_config) >= "2.1.0":
+            num_replicas = get_sg_replicas(self.cluster_config)
+            playbook_vars["num_index_replicas"] = '"num_index_replicas": {},'.format(num_replicas)
+            playbook_vars["num_index_replicas_housekeeping"] = '"num_index_replicas_housekeeping": {},'.format(num_replicas)
+
             if get_sg_use_views(self.cluster_config):
                 playbook_vars["sg_use_views"] = '"use_views": true,'
             else:
@@ -68,6 +76,10 @@ class SgAccel:
             playbook_vars["autoimport"] = '"import_docs": "continuous",'
             playbook_vars["xattrs"] = '"enable_shared_bucket_access": true,'
 
+        if sg_ssl_enabled(self.cluster_config):
+            playbook_vars["sslcert"] = '"SSLCert": "sg_cert.pem",'
+            playbook_vars["sslkey"] = '"SSLKey": "sg_privkey.pem",'
+
         if no_conflicts_enabled(self.cluster_config):
             playbook_vars["no_conflicts"] = '"allow_conflicts": false,'
         try:
@@ -75,6 +87,7 @@ class SgAccel:
             playbook_vars["revs_limit"] = '"revs_limit": {},'.format(revs_limit)
         except KeyError as ex:
             log.info("Keyerror in getting revs_limit{}".format(ex.message))
+            playbook_vars["revs_limit"] = ''
 
         status = self.ansible_runner.run_ansible_playbook(
             "start-sg-accel.yml",

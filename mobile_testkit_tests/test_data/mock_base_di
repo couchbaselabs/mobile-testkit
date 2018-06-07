@@ -25,4 +25,6 @@ xattrs_enabled=False
 sg_lb_enabled=False
 sync_gateway_version=1.5.0-571
 server_version=5.0.0-3519
+ipv6_enabled=False
+sync_gateway_ssl=False
 

@@ -83,7 +83,6 @@ def provision_cluster(cluster_config, couchbase_server_config, sync_gateway_conf
 
     # Reset previous installs
     clean_cluster(cluster_config)
-
     # Install server package
     log_info("Installing Couchbase Server")
     install_couchbase_server.install_couchbase_server(
@@ -96,12 +95,13 @@ def provision_cluster(cluster_config, couchbase_server_config, sync_gateway_conf
     log_info("Installing Sync Gateway")
     install_sync_gateway.install_sync_gateway(
         cluster_config=cluster_config,
+        sg_installer_type=sg_installer_type,
         sync_gateway_config=sync_gateway_config,
         sg_platform=sg_platform,
-        sg_installer_type=sg_installer_type,
         sa_platform=sa_platform,
         sa_installer_type=sa_installer_type,
-        sg_ce=sg_ce
+        sg_ce=sg_ce,
+        ipv6=cluster.ipv6
     )
 
     # Install nginx

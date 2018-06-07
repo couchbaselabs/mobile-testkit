@@ -10,9 +10,9 @@ import libraries.testkit.settings
 from libraries.provision.ansible_runner import AnsibleRunner
 from libraries.testkit.admin import Admin
 from libraries.testkit.debug import log_request, log_response
-from utilities.cluster_config_utils import is_cbs_ssl_enabled, is_xattrs_enabled, no_conflicts_enabled
-from utilities.cluster_config_utils import get_revs_limit
-from utilities.cluster_config_utils import get_sg_replicas, get_sg_use_views, get_sg_version
+from utilities.cluster_config_utils import is_cbs_ssl_enabled, is_xattrs_enabled, no_conflicts_enabled, sg_ssl_enabled,\
+    is_ipv6
+from utilities.cluster_config_utils import get_revs_limit, get_sg_replicas, get_sg_use_views, get_sg_version
 from keywords.utils import add_cbs_to_sg_config_server_field, log_info
 
 log = logging.getLogger(libraries.testkit.settings.LOGGER)
@@ -23,7 +23,13 @@ class SyncGateway:
     def __init__(self, cluster_config, target):
         self.ansible_runner = AnsibleRunner(cluster_config)
         self.ip = target["ip"]
-        self.url = "http://{}:4984".format(target["ip"])
+
+        sg_scheme = "http"
+
+        if sg_ssl_enabled(cluster_config):
+            sg_scheme = "https"
+
+        self.url = "{}://{}:4984".format(sg_scheme, target["ip"])
         self.hostname = target["name"]
         self._headers = {'Content-Type': 'application/json'}
         self.admin = Admin(self)
@@ -61,17 +67,27 @@ class SyncGateway:
             "autoimport": "",
             "xattrs": "",
             "no_conflicts": "",
+            "sslcert": "",
+            "sslkey": "",
             "num_index_replicas": "",
             "sg_use_views": "",
             "couchbase_server_primary_node": self.couchbase_server_primary_node
         }
 
         if get_sg_version(self.cluster_config) >= "2.1.0":
+            num_replicas = get_sg_replicas(self.cluster_config)
+            playbook_vars["num_index_replicas"] = '"num_index_replicas": {},'.format(num_replicas)
+            playbook_vars["num_index_replicas_housekeeping"] = '"num_index_replicas_housekeeping": {},'.format(num_replicas)
+
             if get_sg_use_views(self.cluster_config):
                 playbook_vars["sg_use_views"] = '"use_views": true,'
             else:
                 num_replicas = get_sg_replicas(self.cluster_config)
                 playbook_vars["num_index_replicas"] = '"num_index_replicas": {},'.format(num_replicas)
+
+        if sg_ssl_enabled(self.cluster_config):
+            playbook_vars["sslcert"] = '"SSLCert": "sg_cert.pem",'
+            playbook_vars["sslkey"] = '"SSLKey": "sg_privkey.pem",'
 
         if is_xattrs_enabled(self.cluster_config):
             playbook_vars["autoimport"] = '"import_docs": "continuous",'
@@ -84,6 +100,7 @@ class SyncGateway:
             playbook_vars["revs_limit"] = '"revs_limit": {},'.format(revs_limit)
         except KeyError as ex:
             log_info("Keyerror in getting revs_limit{}".format(ex.message))
+            playbook_vars["revs_limit"] = ''
         status = self.ansible_runner.run_ansible_playbook(
             "start-sync-gateway.yml",
             extra_vars=playbook_vars,
@@ -106,17 +123,27 @@ class SyncGateway:
             "xattrs": "",
             "no_conflicts": "",
             "revs_limit": "",
+            "sslcert": "",
+            "sslkey": "",
             "num_index_replicas": "",
             "sg_use_views": "",
             "couchbase_server_primary_node": self.couchbase_server_primary_node
         }
 
         if get_sg_version(self.cluster_config) >= "2.1.0":
+            num_replicas = get_sg_replicas(self.cluster_config)
+            playbook_vars["num_index_replicas"] = '"num_index_replicas": {},'.format(num_replicas)
+            playbook_vars["num_index_replicas_housekeeping"] = '"num_index_replicas_housekeeping": {},'.format(num_replicas)
+
             if get_sg_use_views(self.cluster_config):
                 playbook_vars["sg_use_views"] = '"use_views": true,'
             else:
                 num_replicas = get_sg_replicas(self.cluster_config)
                 playbook_vars["num_index_replicas"] = '"num_index_replicas": {},'.format(num_replicas)
+
+        if sg_ssl_enabled(self.cluster_config):
+            playbook_vars["sslcert"] = '"SSLCert": "sg_cert.pem",'
+            playbook_vars["sslkey"] = '"SSLKey": "sg_privkey.pem",'
 
         if is_xattrs_enabled(self.cluster_config):
             playbook_vars["autoimport"] = '"import_docs": "continuous",'
@@ -129,7 +156,10 @@ class SyncGateway:
             playbook_vars["revs_limit"] = '"revs_limit": {},'.format(revs_limit)
         except KeyError as ex:
             log_info("Keyerror in getting revs_limit{}".format(ex.message))
+            playbook_vars["revs_limit"] = ''
 
+        if is_ipv6:
+            playbook_vars["couchbase_server_primary_node"] = "[{}]".format(playbook_vars["couchbase_server_primary_node"])
         status = self.ansible_runner.run_ansible_playbook(
             "reset-sync-gateway.yml",
             extra_vars=playbook_vars,

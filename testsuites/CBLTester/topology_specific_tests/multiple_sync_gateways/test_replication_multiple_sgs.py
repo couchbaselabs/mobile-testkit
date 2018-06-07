@@ -51,6 +51,7 @@ def test_multiple_sgs_with_differrent_revs_limit(params_from_base_test_setup, se
     if sync_gateway_version < "2.0":
         pytest.skip('--no-conflicts is enabled and does not work with sg < 2.0 , so skipping the test')
 
+    # cluster_config = "{}/multiple_sync_gateways_{}".format(CLUSTER_CONFIGS_DIR, sg_mode)
     c = cluster.Cluster(cluster_config)
     sg_config = sync_gateway_config_path_for_mode(sg_conf_name, sg_mode)
     c.reset(sg_config_path=sg_config)
@@ -89,7 +90,9 @@ def test_multiple_sgs_with_differrent_revs_limit(params_from_base_test_setup, se
     cbl_db1 = setup_customized_teardown_test["cbl_db1"]
     cbl_db2 = setup_customized_teardown_test["cbl_db2"]
     db.create_bulk_docs(num_of_docs, "Replication1", db=cbl_db1, channels=channels1)
+    # cbl_doc_ids1 = db.getDocIds(cbl_db1)
     db.create_bulk_docs(num_of_docs, "Replication2", db=cbl_db2, channels=channels2)
+    # cbl_doc_ids2 = db.getDocIds(cbl_db2)
 
     # 2. Do push replication to two SGS(each DB to each SG)
     replicator = Replication(base_url)
@@ -204,7 +207,9 @@ def test_multiple_sgs_with_CBLs(params_from_base_test_setup, setup_customized_te
 
     sg1_ip = sg1.ip
     sg2_ip = sg2.ip
+    # sg1_url = sg1.url
     sg1_admin_url = sg1.admin.admin_url
+    # sg2_url = sg2.url
     sg2_admin_url = sg2.admin.admin_url
     sg1_blip_url = "ws://{}:4984/{}".format(sg1_ip, sg_db1)
     sg2_blip_url = "ws://{}:4984/{}".format(sg2_ip, sg_db2)
@@ -263,6 +268,7 @@ def test_multiple_sgs_with_CBLs(params_from_base_test_setup, setup_customized_te
         assert doc in cblDB1_doc_ids, "cbl_db1 doc does not exist in combined replication cbl_db1"
     for doc in cbl_doc_ids2:
         assert doc in cblDB1_doc_ids, "cbl_db2 doc does not exist in combined replication cbl_db1"
+    replicator.stop(repl1)
     replicator.stop(repl2)
 
 

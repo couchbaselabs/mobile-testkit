@@ -11,12 +11,12 @@ from keywords.utils import log_r
 from keywords.utils import version_and_build
 from keywords.utils import hostname_for_url
 from keywords.utils import log_info
-from utilities.cluster_config_utils import get_revs_limit
+from utilities.cluster_config_utils import get_revs_limit, is_ipv6
 
 from keywords.exceptions import ProvisioningError
 
 from libraries.provision.ansible_runner import AnsibleRunner
-from utilities.cluster_config_utils import is_cbs_ssl_enabled, is_xattrs_enabled, no_conflicts_enabled, get_sg_replicas, get_sg_use_views, get_sg_version
+from utilities.cluster_config_utils import is_cbs_ssl_enabled, is_xattrs_enabled, no_conflicts_enabled, sg_ssl_enabled, get_sg_replicas, get_sg_use_views, get_sg_version
 
 
 def validate_sync_gateway_mode(mode):
@@ -36,7 +36,6 @@ def sync_gateway_config_path_for_mode(config_prefix, mode):
 
     # Construct expected config path
     config = "{}/{}_{}.json".format(SYNC_GATEWAY_CONFIGS, config_prefix, mode)
-
     if not os.path.isfile(config):
         raise ValueError("Could not file config: {}".format(config))
 
@@ -44,7 +43,12 @@ def sync_gateway_config_path_for_mode(config_prefix, mode):
 
 
 def get_sync_gateway_version(host):
-    resp = requests.get("http://{}:4984".format(host))
+    sg_scheme = "http"
+    cluster_config = os.environ["CLUSTER_CONFIG"]
+    if sg_ssl_enabled(cluster_config):
+        sg_scheme = "https"
+
+    resp = requests.get("{}://{}:4984".format(sg_scheme, host), verify=False)
     log_r(resp)
     resp.raise_for_status()
     resp_obj = resp.json()
@@ -71,8 +75,12 @@ def verify_sync_gateway_product_info(host):
     - vendor name in GET / request
     - Server header in response
     """
+    sg_scheme = "http"
+    cluster_config = os.environ["CLUSTER_CONFIG"]
+    if sg_ssl_enabled(cluster_config):
+        sg_scheme = "https"
 
-    resp = requests.get("http://{}:4984".format(host))
+    resp = requests.get("{}://{}:4984".format(sg_scheme, host), verify=False)
     log_r(resp)
     resp.raise_for_status()
     resp_obj = resp.json()
@@ -109,7 +117,12 @@ def verify_sync_gateway_version(host, expected_sync_gateway_version):
 
 
 def get_sg_accel_version(host):
-    resp = requests.get("http://{}:4985".format(host))
+    sg_scheme = "http"
+    cluster_config = os.environ["CLUSTER_CONFIG"]
+    if sg_ssl_enabled(cluster_config):
+        sg_scheme = "https"
+
+    resp = requests.get("{}://{}:4985".format(sg_scheme, host), verify=False)
     log_r(resp)
     resp.raise_for_status()
     resp_obj = resp.json()
@@ -131,8 +144,12 @@ def verify_sg_accel_product_info(host):
     - vendor name in GET / request
     - Server header in response
     """
+    sg_scheme = "http"
+    cluster_config = os.environ["CLUSTER_CONFIG"]
+    if sg_ssl_enabled(cluster_config):
+        sg_scheme = "https"
 
-    resp = requests.get("http://{}:4985".format(host))
+    resp = requests.get("{}://{}:4985".format(sg_scheme, host), verify=False)
     log_r(resp)
     resp.raise_for_status()
     resp_obj = resp.json()
@@ -179,7 +196,7 @@ class SyncGateway:
 
         if version_is_binary(sync_gateway_version):
             version, build = version_and_build(sync_gateway_version)
-            print("VERSION: {} BUILD: {}".format(version, build))
+            log_info("VERSION: {} BUILD: {}".format(version, build))
             sg_config = SyncGatewayConfig(None, version, build, sync_gateway_config, "", False)
         else:
             sg_config = SyncGatewayConfig(sync_gateway_version, None, None, sync_gateway_config, "", False)
@@ -214,6 +231,8 @@ class SyncGateway:
             self.server_port = 18091
             self.server_scheme = "https"
 
+        if is_ipv6:
+            couchbase_server_primary_node = "[{}]".format(couchbase_server_primary_node)
         playbook_vars = {
             "sync_gateway_config_filepath": config_path,
             "server_port": self.server_port,
@@ -228,6 +247,7 @@ class SyncGateway:
         }
 
         if get_sg_version(cluster_config) >= "2.1.0":
+            num_replicas = get_sg_replicas(cluster_config)
             if get_sg_use_views(cluster_config):
                 playbook_vars["sg_use_views"] = '"use_views": true,'
             else:
@@ -245,6 +265,7 @@ class SyncGateway:
             playbook_vars["revs_limit"] = '"revs_limit": {},'.format(revs_limit)
         except KeyError as ex:
             log_info("Keyerror in getting revs_limit{}".format(ex.message))
+            playbook_vars["revs_limit"] = ''
         if url is not None:
             target = hostname_for_url(cluster_config, url)
             log_info("Starting {} sync_gateway.".format(target))
@@ -368,12 +389,17 @@ class SyncGateway:
             "server_port": server_port,
             "server_scheme": server_scheme,
             "autoimport": "",
+            "xattrs": "",
+            "sslkey": "",
+            "sslcert": "",
             "num_index_replicas": "",
             "sg_use_views": "",
             "xattrs": ""
         }
 
         if get_sg_version(cluster_config) >= "2.1.0":
+            num_replicas = get_sg_replicas(cluster_config)
+
             if get_sg_use_views(cluster_config):
                 playbook_vars["sg_use_views"] = '"use_views": true,'
             else:

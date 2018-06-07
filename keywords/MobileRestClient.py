@@ -231,6 +231,7 @@ class MobileRestClient:
 
             cookie_name = cookie_parts[0]
             session_id = cookie_parts[1]
+        log_info("cookie name {}, session id {}".format(cookie_name, session_id))
         return cookie_name, session_id
 
     def create_session_header(self, url, db, name, password=None, ttl=86400):
@@ -806,7 +807,11 @@ class MobileRestClient:
             if use_post:
                 resp = self._session.post("{}/{}/".format(url, db), data=json.dumps(doc))
             else:
-                resp = self._session.put("{}/{}/{}".format(url, db, doc["_id"]), data=json.dumps(doc))
+                try:
+                    resp = self._session.put("{}/{}/{}".format(url, db, doc["_id"]), data=json.dumps(doc))
+                except Exception, err:
+                    print err
+                    raise
 
         log_r(resp)
         resp.raise_for_status()

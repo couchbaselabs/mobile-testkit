@@ -2,6 +2,8 @@
   "interface":":4984",
   "adminInterface": "0.0.0.0:4985",
   "log": ["*"],
+  {{ sslcert }}
+  {{ sslkey }}
   "databases": {
     "todo": {
       {{ autoimport }}
@@ -9,6 +11,7 @@
       {{ no_conflicts }}
       {{ sg_use_views }}
       {{ num_index_replicas }}
+
       "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
       "bucket": "data-bucket",
       "username":"data-bucket",
@@ -20,10 +23,11 @@
         "pasin": {"password": "pass", "admin_channels": ["pasin"]},
         "jens": {"password": "pass", "admin_channels": ["jens"]},
         "jim": {"password": "pass", "admin_channels": ["jim"]},
-        "seth": {"password": "pass", "admin_channels": ["seth"]},
+        "sridevi": {"password": "pass", "admin_channels": ["sridevi"]},
         "raghu": {"password": "pass", "admin_channels": ["raghu"]},
         "mod": {"password": "pass", "admin_roles": ["moderator"]},
-        "admin": {"password": "pass", "admin_roles": ["admin"]}
+        "admin": {"password": "pass", "admin_roles": ["admin"]},
+        "hemant": {"password": "pass", "admin_roles": ["admin"]}
       },
       "roles": {
         "moderator": {},

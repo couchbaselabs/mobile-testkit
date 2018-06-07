@@ -41,7 +41,7 @@ def test_multiple_db_unique_data_bucket_unique_index_bucket(params_from_base_tes
 
     admin = Admin(cluster.sync_gateways[0])
 
-    db_one_users = admin.register_bulk_users(target=cluster.sync_gateways[0], db="db", name_prefix="bulk_db_user", number=num_db_users, password="password", channels=["ABC"])
+    db_one_users = admin.register_bulk_users(target=cluster.sync_gateways[0], db="db1", name_prefix="bulk_db_user", number=num_db_users, password="password", channels=["ABC"])
     db_two_users = admin.register_bulk_users(target=cluster.sync_gateways[0], db="db2", name_prefix="bulk_db2_user", number=num_db2_users, password="password", channels=["ABC"])
 
     all_users = list(db_one_users)

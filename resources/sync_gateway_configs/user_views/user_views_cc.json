@@ -9,6 +9,8 @@
   "log": [
     "*"
   ],
+  {{ sslcert }}
+  {{ sslkey }}
   "databases": {
     "db": {
       {{ autoimport }}
@@ -16,6 +18,7 @@
       {{ no_conflicts }}
       {{ sg_use_views }}
       {{ num_index_replicas }}
+
       "unsupported": {
         "user_views": {
           "enabled":true

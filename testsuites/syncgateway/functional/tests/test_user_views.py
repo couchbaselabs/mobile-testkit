@@ -167,7 +167,7 @@ def test_user_views_sanity(params_from_base_test_setup, sg_conf_name):
 
     # Assert that the attachment docs gets written to couchbase server
     server = couchbaseserver.CouchbaseServer(cbs_url)
-    server_att_docs = server.get_server_docs_with_prefix(bucket=bucket, prefix="_sync:att:")
+    server_att_docs = server.get_server_docs_with_prefix(bucket=bucket, prefix="_sync:att:", ipv6=cluster.ipv6)
     expected_num_attachments = (number_docs_per_channel * 2) + \
         number_docs_per_channel + \
         (number_docs_per_channel * 2) + \

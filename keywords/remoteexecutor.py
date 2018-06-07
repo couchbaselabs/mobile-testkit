@@ -27,6 +27,9 @@ class RemoteExecutor:
         client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         self.client = client
         self.host = host
+        if "[" in self.host:
+            self.host = self.host.replace("[", "")
+            self.host = self.host.replace("]", "")
         self.username = ansible.constants.DEFAULT_REMOTE_USER
 
     def execute(self, commamd):
@@ -66,5 +69,6 @@ class RemoteExecutor:
 
         status, stdout_p, stderr_p = self.execute(command)
         if status != 0:
+            log_info("{}: {}".format(stdout_p, stderr_p))
             raise RemoteCommandError("command: {} failed on host: {}".format(command, self.host))
         return stdout_p, stderr_p

@@ -121,6 +121,10 @@ def pytest_addoption(parser):
                      action="store_true",
                      help="If set, allow_conflicts is set to false in sync-gateway config")
 
+    parser.addoption("--sg-ssl",
+                     action="store_true",
+                     help="If set, will enable SSL communication between Sync Gateway and CBL")
+
     parser.addoption("--use-views",
                      action="store_true",
                      help="If set, uses views instead of GSI - SG 2.1 and above only")
@@ -157,6 +161,7 @@ def params_from_base_suite_setup(request):
     sg_ce = request.config.getoption("--sg-ce")
     use_sequoia = request.config.getoption("--sequoia")
     no_conflicts_enabled = request.config.getoption("--no-conflicts")
+    sg_ssl = request.config.getoption("--sg-ssl")
     use_views = request.config.getoption("--use-views")
     number_replicas = request.config.getoption("--number-replicas")
 
@@ -178,6 +183,8 @@ def params_from_base_suite_setup(request):
     log_info("sa_platform: {}".format(sa_platform))
     log_info("sg_lb: {}".format(sg_lb))
     log_info("sg_ce: {}".format(sg_ce))
+    log_info("sg_ssl: {}".format(sg_ssl))
+    log_info("no conflicts enabled {}".format(no_conflicts_enabled))
     log_info("no_conflicts_enabled: {}".format(no_conflicts_enabled))
     log_info("use_views: {}".format(use_views))
     log_info("number_replicas: {}".format(number_replicas))
@@ -200,6 +207,14 @@ def params_from_base_suite_setup(request):
             cluster_config = "{}/base_lb_{}".format(CLUSTER_CONFIGS_DIR, mode)
 
     log_info("Using '{}' config!".format(cluster_config))
+    cluster_utils = ClusterKeywords()
+    cluster_utils.set_cluster_config(cluster_config.split("/")[-1])
+
+    if sg_ssl:
+        log_info("Enabling SSL on sync gateway")
+        persist_cluster_config_environment_prop(cluster_config, 'sync_gateway_ssl', True)
+    else:
+        persist_cluster_config_environment_prop(cluster_config, 'sync_gateway_ssl', False)
 
     # Add load balancer prop and check if load balancer IP is available
     if sg_lb:
