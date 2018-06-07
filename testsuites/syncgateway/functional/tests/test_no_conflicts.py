@@ -673,7 +673,7 @@ def test_revs_cache_size(params_from_base_test_setup, sg_conf_name, num_of_docs)
     sync_gateway_version = params_from_base_test_setup["sync_gateway_version"]
 
     if sync_gateway_version < "2.0":
-        pytest.skip('--no-conflicts is enabled and does not work with sg < 2.0 , so skipping the test')
+        pytest.skip('It does not work with sg < 2.0 , so skipping the test')
 
     sg_conf = sync_gateway_config_path_for_mode(sg_conf_name, mode)
     c = cluster.Cluster(cluster_config)
