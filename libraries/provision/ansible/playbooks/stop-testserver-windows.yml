@@ -1,0 +1,10 @@
+- name: Windows - Stop TestServer
+  hosts: windows
+  vars:
+    log_full_path:
+
+  tasks:
+    - include: tasks/stop-fetch-windows-cbl-logs.yml
+
+    - name: Delete log file
+      win_file: path=C:\PROGRA~1\dotnet\TextLogging\* state=absent
