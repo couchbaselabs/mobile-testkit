@@ -145,15 +145,19 @@ class Cluster:
             "revs_limit": "",
             "num_index_replicas": "",
             "sg_use_views": "",
+            "logging": "",
             "couchbase_server_primary_node": couchbase_server_primary_node
         }
 
         if get_sg_version(self._cluster_config) >= "2.1.0":
+            playbook_vars["logging"] = '"logging": {"debug": {"enabled": true}},'
             if get_sg_use_views(self._cluster_config):
                 playbook_vars["sg_use_views"] = '"use_views": true,'
             else:
                 num_replicas = get_sg_replicas(self._cluster_config)
                 playbook_vars["num_index_replicas"] = '"num_index_replicas": {},'.format(num_replicas)
+        else:
+            playbook_vars["logging"] = '"log": ["*"],'
 
         # Add configuration to run with xattrs
         if self.xattrs:
@@ -165,8 +169,8 @@ class Cluster:
         try:
             revs_limit = get_revs_limit(self._cluster_config)
             playbook_vars["revs_limit"] = '"revs_limit": {},'.format(revs_limit)
-        except KeyError as ex:
-            log_info("Keyerror in getting revs_limit{}".format(ex.message))
+        except KeyError:
+            log_info("revs_limit not found in {}, Ignoring".format(self._cluster_config))
 
         # Sleep for a few seconds for the indexes to teardown
         # TODO Find a better way to figure out index teardown

@@ -4,6 +4,7 @@ import json
 
 import requests
 from requests import Session
+from jinja2 import Template
 
 from keywords.constants import SYNC_GATEWAY_CONFIGS
 from keywords.utils import version_is_binary, add_cbs_to_sg_config_server_field
@@ -13,10 +14,11 @@ from keywords.utils import hostname_for_url
 from keywords.utils import log_info
 from utilities.cluster_config_utils import get_revs_limit
 
-from keywords.exceptions import ProvisioningError
+from keywords.exceptions import ProvisioningError, Error
 
 from libraries.provision.ansible_runner import AnsibleRunner
-from utilities.cluster_config_utils import is_cbs_ssl_enabled, is_xattrs_enabled, no_conflicts_enabled, get_sg_replicas, get_sg_use_views, get_sg_version
+from utilities.cluster_config_utils import is_cbs_ssl_enabled, is_xattrs_enabled, no_conflicts_enabled
+from utilities.cluster_config_utils import get_sg_replicas, get_sg_use_views, get_sg_version
 
 
 def validate_sync_gateway_mode(mode):
@@ -164,7 +166,48 @@ def verify_sg_accel_version(host, expected_sg_accel_version):
             raise ProvisioningError("Unexpected sync_gateway version!! Expected: {} Actual: {}".format(expected_sg_accel_version, running_ac_version))
 
 
-class SyncGateway:
+def load_sync_gateway_config(sg_conf, server_url, cluster_config):
+    """ Loads a syncgateway configuration for modification"""
+    server_scheme, server_ip, server_port = server_url.split(":")
+    server_ip = server_ip.replace("//", "")
+
+    with open(sg_conf) as default_conf:
+        template = Template(default_conf.read())
+
+        if is_xattrs_enabled(cluster_config):
+            autoimport_prop = '"import_docs": "continuous",'
+            xattrs_prop = '"enable_shared_bucket_access": true,'
+        else:
+            autoimport_prop = ""
+            xattrs_prop = ""
+
+        sg_use_views_prop = ""
+        num_index_replicas_prop = ""
+
+        if get_sg_version(cluster_config) >= "2.1.0":
+            num_replicas = get_sg_replicas(cluster_config)
+            num_index_replicas_prop = '"num_index_replicas": {},'.format(num_replicas)
+            if get_sg_use_views(cluster_config):
+                sg_use_views_prop = '"use_views": true,'
+
+        couchbase_server_primary_node = add_cbs_to_sg_config_server_field(cluster_config)
+        temp = template.render(
+            couchbase_server_primary_node=couchbase_server_primary_node,
+            is_index_writer="false",
+            server_scheme=server_scheme,
+            server_port=server_port,
+            autoimport=autoimport_prop,
+            xattrs=xattrs_prop,
+            sg_use_views=sg_use_views_prop,
+            num_index_replicas=num_index_replicas_prop
+        )
+        data = json.loads(temp)
+
+    log_info("Loaded sync_gateway config: {}".format(data))
+    return data
+
+
+class SyncGateway(object):
 
     def __init__(self):
         self._session = Session()
@@ -179,7 +222,7 @@ class SyncGateway:
 
         if version_is_binary(sync_gateway_version):
             version, build = version_and_build(sync_gateway_version)
-            print("VERSION: {} BUILD: {}".format(version, build))
+            log_info("VERSION: {} BUILD: {}".format(version, build))
             sg_config = SyncGatewayConfig(None, version, build, sync_gateway_config, "", False)
         else:
             sg_config = SyncGatewayConfig(sync_gateway_version, None, None, sync_gateway_config, "", False)
@@ -243,8 +286,8 @@ class SyncGateway:
         try:
             revs_limit = get_revs_limit(cluster_config)
             playbook_vars["revs_limit"] = '"revs_limit": {},'.format(revs_limit)
-        except KeyError as ex:
-            log_info("Keyerror in getting revs_limit{}".format(ex.message))
+        except KeyError:
+            log_info("revs_limit not found in {}, Ignoring".format(cluster_config))
         if url is not None:
             target = hostname_for_url(cluster_config, url)
             log_info("Starting {} sync_gateway.".format(target))
@@ -403,3 +446,61 @@ class SyncGateway:
             )
         if status != 0:
             raise Exception("Could not deploy config to sync_gateway")
+
+    def create_directory(self, cluster_config, url, dir_name):
+        if dir_name is None:
+            raise Error("Please provide a directory to delete")
+
+        if url is not None:
+            target = hostname_for_url(cluster_config, url)
+            ansible_runner = AnsibleRunner(cluster_config)
+            log_info("Deleting and creating {} on Sync Gateway {} ...".format(dir_name, url))
+            playbook_vars = {
+                "directory": dir_name
+            }
+
+            status = ansible_runner.run_ansible_playbook(
+                "create-directory.yml",
+                extra_vars=playbook_vars,
+                subset=target
+            )
+        else:
+            log_info("Deleting and creating {} on all Sync Gateways ...".format(dir_name))
+            status = ansible_runner.run_ansible_playbook(
+                "create-directory.yml",
+                extra_vars=playbook_vars
+            )
+
+        if status != 0:
+            raise ProvisioningError("Could not create the directory on sync_gateway")
+
+    def create_empty_file(self, cluster_config, url, file_name, file_size):
+        if file_name is None or file_size is None:
+            raise Error("Please provide a file name and the file size to create")
+
+        if url is not None:
+            target = hostname_for_url(cluster_config, url)
+            ansible_runner = AnsibleRunner(cluster_config)
+            log_info("Deleting and creating {} on Sync Gateway {} ...".format(file_name, url))
+
+            playbook_vars = {
+                "file_name": file_name,
+                "file_size": file_size,
+                "owner": "sync_gateway",
+                "group": "sync_gateway"
+            }
+
+            status = ansible_runner.run_ansible_playbook(
+                "create-empty-file.yml",
+                subset=target,
+                extra_vars=playbook_vars
+            )
+        else:
+            log_info("Deleting and creating {} on all Sync Gateways ...".format(file_name))
+            status = ansible_runner.run_ansible_playbook(
+                "create-empty-file.yml",
+                extra_vars=playbook_vars
+            )
+
+        if status != 0:
+            raise ProvisioningError("Could not create an empty file on sync_gateway")
