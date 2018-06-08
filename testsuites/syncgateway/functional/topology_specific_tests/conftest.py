@@ -50,6 +50,10 @@ def pytest_addoption(parser):
                      action="store_true",
                      help="If set, allow_conflicts is set to false in sync-gateway config")
 
+    parser.addoption("--sg-ssl",
+                     action="store_true",
+                     help="If set, will enable SSL communication between Sync Gateway and CBL")
+
     parser.addoption("--use-views",
                      action="store_true",
                      help="If set, uses views instead of GSI - SG 2.1 and above only")

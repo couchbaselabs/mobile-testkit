@@ -10,3 +10,4 @@ def pytest_addoption(parser):
     parser.addoption("--liteserv-two-host", action="store", help="liteserv-two-host: the host to start to the first liteserv on")
     parser.addoption("--liteserv-two-port", action="store", help="liteserv-two-port: the port to assign to the first liteserv")
     parser.addoption("--liteserv-two-storage-engine", action="store", help="liteserv-two-storage-engine: the storage engine to use with the first liteserv")
+    parser.addoption("--sg-ssl", action="store_true", help="If set, will enable SSL communication between Sync Gateway and CBL")
