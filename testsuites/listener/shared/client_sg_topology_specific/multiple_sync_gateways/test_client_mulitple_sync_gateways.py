@@ -37,7 +37,7 @@ def test_listener_two_sync_gateways(setup_client_syncgateway_test):
     cluster_config = setup_client_syncgateway_test["cluster_config"]
     sg_mode = setup_client_syncgateway_test["sg_mode"]
 
-    cluster_util = ClusterKeywords()
+    cluster_util = ClusterKeywords(cluster_config)
     topology = cluster_util.get_cluster_topology(cluster_config)
 
     sg_one_admin_url = topology["sync_gateways"][0]["admin"]

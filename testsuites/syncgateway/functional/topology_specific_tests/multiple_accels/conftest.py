@@ -32,6 +32,7 @@ def params_from_base_suite_setup(request):
     sg_ce = request.config.getoption("--sg-ce")
     use_sequoia = request.config.getoption("--sequoia")
     no_conflicts_enabled = request.config.getoption("--no-conflicts")
+    sg_ssl = request.config.getoption("--sg-ssl")
     use_views = request.config.getoption("--use-views")
     number_replicas = request.config.getoption("--number-replicas")
     sg_installer_type = request.config.getoption("--sg-installer-type")
@@ -47,6 +48,7 @@ def params_from_base_suite_setup(request):
     log_info("sg_lb: {}".format(sg_lb))
     log_info("sg_ce: {}".format(sg_ce))
     log_info("no conflicts enabled {}".format(no_conflicts_enabled))
+    log_info("sg_ssl: {}".format(sg_ssl))
     log_info("use_views: {}".format(use_views))
     log_info("number_replicas: {}".format(number_replicas))
     log_info("sg_installer_type: {}".format(sg_installer_type))
@@ -72,6 +74,13 @@ def params_from_base_suite_setup(request):
     # use multiple_sg_accels_di
     cluster_config = "{}/multiple_sg_accels_di".format(keywords.constants.CLUSTER_CONFIGS_DIR)
     sg_config = "{}/sync_gateway_default_functional_tests_di.json".format(SYNC_GATEWAY_CONFIGS)
+    cluster_utils = ClusterKeywords(cluster_config)
+
+    if sg_ssl:
+        log_info("Enabling SSL on sync gateway")
+        persist_cluster_config_environment_prop(cluster_config, 'sync_gateway_ssl', True)
+    else:
+        persist_cluster_config_environment_prop(cluster_config, 'sync_gateway_ssl', False)
 
     # Add load balancer prop and check if load balancer IP is available
     if sg_lb:
@@ -142,7 +151,7 @@ def params_from_base_suite_setup(request):
     if skip_provisioning or use_sequoia:
         should_provision = False
 
-    cluster_utils = ClusterKeywords()
+    cluster_utils = ClusterKeywords(cluster_config)
     if should_provision:
         try:
             cluster_utils.provision_cluster(

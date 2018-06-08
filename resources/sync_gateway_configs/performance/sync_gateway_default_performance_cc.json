@@ -6,9 +6,9 @@
     "maxFileDescriptors": 90000,
     "slowServerCallWarningThreshold": 500,
     "compressResponses": true,
-    "log":["HTTP"],
     {{ sslcert }}
     {{ sslkey }}
+    {{ logging }}
     "databases":{
         "db":{
             {{ autoimport }}
@@ -16,7 +16,6 @@
             {{ no_conflicts }}
             {{ sg_use_views }}
             {{ num_index_replicas }}
-
             "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
             "bucket":"data-bucket",
             "username":"data-bucket",

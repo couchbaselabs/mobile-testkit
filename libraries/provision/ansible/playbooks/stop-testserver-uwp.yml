@@ -1,0 +1,9 @@
+- name: Windows UWP - Stop TestServer
+  hosts: windows
+  vars:
+    binary_path:
+
+  tasks:
+    - debug: msg="Stopping the Testserver UWP"
+    - name: Stop TestServer UWP
+      win_shell: C:\Users\{{ ansible_user }}\Desktop\TestServer\{{ binary_path }}

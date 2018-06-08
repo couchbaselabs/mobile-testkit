@@ -98,7 +98,7 @@ def test_bucket_shadow_low_revs_limit_repeated_deletes(params_from_base_test_set
     cluster_config = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
     xattrs_enabled = params_from_base_test_setup["xattrs_enabled"]
-    cluster_helper = ClusterKeywords()
+    cluster_helper = ClusterKeywords(cluster_config)
     cluster_hosts = cluster_helper.get_cluster_topology(cluster_config)
     sg_admin_url = cluster_hosts["sync_gateways"][0]["admin"]
     sg_ip = host_for_url(sg_admin_url)
@@ -173,7 +173,7 @@ def test_bucket_shadow_low_revs_limit(params_from_base_test_setup):
     cluster_config = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
     xattrs_enabled = params_from_base_test_setup["xattrs_enabled"]
-    cluster_helper = ClusterKeywords()
+    cluster_helper = ClusterKeywords(cluster_config)
     cluster_hosts = cluster_helper.get_cluster_topology(cluster_config)
     sg_admin_url = cluster_hosts["sync_gateways"][0]["admin"]
     sg_ip = host_for_url(sg_admin_url)
@@ -239,7 +239,7 @@ def test_bucket_shadow_multiple_sync_gateways(params_from_base_test_setup):
     cluster_config = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
     xattrs_enabled = params_from_base_test_setup["xattrs_enabled"]
-    cluster_helper = ClusterKeywords()
+    cluster_helper = ClusterKeywords(cluster_config)
     cluster_hosts = cluster_helper.get_cluster_topology(cluster_config)
     sg_admin_url = cluster_hosts["sync_gateways"][0]["admin"]
     sg_ip = host_for_url(sg_admin_url)

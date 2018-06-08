@@ -13,6 +13,9 @@
     server_scheme:
     couchbase_server_primary_node:
     server_port:
+    sslcert:
+    sslkey:
+    logging:
 
   tasks:
   - include: tasks/deploy-sync-gateway-config.yml
