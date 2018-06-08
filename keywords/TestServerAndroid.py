@@ -13,20 +13,31 @@ from keywords.utils import log_info
 
 class TestServerAndroid(TestServerBase):
 
-    def __init__(self, version_build, host, port, community_enabled=None, debug_mode=False):
+    def __init__(self, version_build, host, port, community_enabled=None, debug_mode=False, platform="android"):
         super(TestServerAndroid, self).__init__(version_build, host, port)
-        if community_enabled:
-            apk_name_prefix = "CBLTestServer-Android-{}-community".format(self.version_build)
-            self.download_source = "couchbase-lite-android"
+        self.platform = platform
+
+        if self.platform == "android":
+            if community_enabled:
+                apk_name_prefix = "CBLTestServer-Android-{}-community".format(self.version_build)
+                self.download_source = "couchbase-lite-android"
+            else:
+                apk_name_prefix = "CBLTestServer-Android-{}-enterprise".format(self.version_build)
+                self.download_source = "couchbase-lite-android-ee"
+            if debug_mode:
+                self.apk_name = "{}-debug.apk".format(apk_name_prefix)
+            else:
+                self.apk_name = "{}-release.apk".format(apk_name_prefix)
+            self.package_name = self.apk_name
+            self.device_enabled = False
+            self.installed_package_name = "com.couchbase.TestServerApp"
+            self.activity_name = self.installed_package_name + "/com.couchbase.CouchbaseLiteServ.MainActivity"
         else:
-            apk_name_prefix = "CBLTestServer-Android-{}-enterprise".format(self.version_build)
-            self.download_source = "couchbase-lite-android-ee"
-        if debug_mode:
-            self.apk_name = "{}-debug.apk".format(apk_name_prefix)
-        else:
-            self.apk_name = "{}-release.apk".format(apk_name_prefix)
-        self.package_name = self.apk_name
-        self.device_enabled = False
+            # Xamarin-android
+            self.package_name = self.apk_name = "TestServer.Android.apk"
+            self.installed_package_name = "TestServer.Android"
+            self.activity_name = self.installed_package_name + "/md57aea67c4d08319974f101b0b09ff509e.MainActivity"
+
         self.device_option = "-e"
 
     def download(self, version_build=None):
@@ -44,7 +55,10 @@ class TestServerAndroid(TestServerBase):
             return
 
         # Package not downloaded, proceed to download from latest builds
-        url = "{}/{}/{}/{}/{}".format(LATEST_BUILDS, self.download_source, version, build, self.package_name)
+        if self.platform == "android":
+            url = "{}/{}/{}/{}/{}".format(LATEST_BUILDS, self.download_source, version, build, self.package_name)
+        else:
+            url = "{}/couchbase-lite-net/{}/{}/{}".format(LATEST_BUILDS, version, build, self.package_name)
 
         log_info("Downloading {} -> {}/{}".format(url, BINARY_DIR, self.package_name))
         resp = requests.get(url)
@@ -82,7 +96,8 @@ class TestServerAndroid(TestServerBase):
                     break
 
         output = subprocess.check_output(["adb", "-e", "shell", "pm", "list", "packages"])
-        if "com.couchbase.TestServerApp" not in output:
+
+        if self.installed_package_name not in output:
             raise LiteServError("Failed to install package: {}".format(output))
 
         log_info("LiteServ installed to {}".format(self.host))
@@ -119,7 +134,7 @@ class TestServerAndroid(TestServerBase):
                     break
 
         output = subprocess.check_output(["adb", "-d", "shell", "pm", "list", "packages"])
-        if "com.couchbase.TestServerApp" not in output:
+        if self.installed_package_name not in output:
             raise LiteServError("Failed to install package: {}".format(output))
 
         log_info("LiteServ installed to {}".format(self.host))
@@ -127,13 +142,13 @@ class TestServerAndroid(TestServerBase):
     def remove(self):
         """Removes the Test Server application from the running device
         """
-        output = subprocess.check_output(["adb", "uninstall", "com.couchbase.TestServerApp"])
+        output = subprocess.check_output(["adb", "uninstall", self.installed_package_name])
         if output.strip() != "Success":
             log_info(output)
             raise LiteServError("Error. Could not remove app.")
 
         output = subprocess.check_output(["adb", "shell", "pm", "list", "packages"])
-        if "com.couchbase.TestServerApp" in output:
+        if self.installed_package_name in output:
             raise LiteServError("Error uninstalling app!")
 
         log_info("Testserver app removed from {}".format(self.host))
@@ -155,9 +170,8 @@ class TestServerAndroid(TestServerBase):
         self.logfile = open(logfile_name, "w+")
         self.process = subprocess.Popen(args=["adb", "logcat"], stdout=self.logfile)
 
-        activity_name = "com.couchbase.TestServerApp/com.couchbase.CouchbaseLiteServ.MainActivity"
         output = subprocess.check_output([
-            "adb", "-e", "shell", "am", "start", "-n", activity_name,
+            "adb", "-e", "shell", "am", "start", "-n", self.activity_name,
             "--es", "username", "none",
             "--es", "password", "none",
             "--ei", "listen_port", str(self.port),
@@ -185,9 +199,8 @@ class TestServerAndroid(TestServerBase):
         self.logfile = open(logfile_name, "w+")
         self.process = subprocess.Popen(args=["adb", "logcat"], stdout=self.logfile)
 
-        activity_name = "com.couchbase.TestServerApp/com.couchbase.CouchbaseLiteServ.MainActivity"
         output = subprocess.check_output([
-            "adb", "-d", "shell", "am", "start", "-n", activity_name,
+            "adb", "-d", "shell", "am", "start", "-n", self.activity_name,
             "--es", "username", "none",
             "--es", "password", "none",
             "--ei", "listen_port", str(self.port),
@@ -200,9 +213,9 @@ class TestServerAndroid(TestServerBase):
         """ Verify that app is launched with adb command
         """
         if self.device_enabled:
-            output = subprocess.check_output(["adb", "-d", "shell", "pidof", "com.couchbase.TestServerApp", "|", "wc", "-l"])
+            output = subprocess.check_output(["adb", "-d", "shell", "pidof", self.installed_package_name, "|", "wc", "-l"])
         else:
-            output = subprocess.check_output(["adb", "-e", "shell", "pidof", "com.couchbase.TestServerApp", "|", "wc", "-l"])
+            output = subprocess.check_output(["adb", "-e", "shell", "pidof", self.installed_package_name, "|", "wc", "-l"])
         log_info("output for running activity {}".format(output))
         if output is None:
             raise LiteServError("Err! App did not launched")
@@ -215,11 +228,11 @@ class TestServerAndroid(TestServerBase):
         """
 
         log_info("Stopping LiteServ: http://{}:{}".format(self.host, self.port))
-        output = subprocess.check_output(["adb", self.device_option, "shell", "am", "force-stop", "com.couchbase.TestServerApp"])
+        output = subprocess.check_output(["adb", self.device_option, "shell", "am", "force-stop", self.installed_package_name])
         log_info(output)
 
         # Clear package data
-        output = subprocess.check_output(["adb", self.device_option, "shell", "pm", "clear", "com.couchbase.TestServerApp"])
+        output = subprocess.check_output(["adb", self.device_option, "shell", "pm", "clear", self.installed_package_name])
         log_info(output)
 
         # self._verify_not_running()

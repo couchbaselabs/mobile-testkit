@@ -2,9 +2,9 @@
     "interface":":4984",
     "adminInterface": "0.0.0.0:4985",
     "compressResponses": false,
-    "log": ["*"],
     {{ sslcert }}
     {{ sslkey }}
+    {{ logging }}
     "databases":{
         "db": {
             {{ autoimport }}
@@ -12,7 +12,6 @@
             {{ no_conflicts }}
             {{ sg_use_views }}
             {{ num_index_replicas }}
-
             "server":"{{ server_scheme }}://{{ couchbase_server_primary_node }}:{{ server_port }}",
             "bucket":"data-bucket",
             "username":"data-bucket",

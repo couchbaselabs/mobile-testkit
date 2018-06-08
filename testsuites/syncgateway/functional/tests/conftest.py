@@ -284,7 +284,7 @@ def params_from_base_suite_setup(request):
     if skip_provisioning or use_sequoia:
         should_provision = False
 
-    cluster_utils = ClusterKeywords()
+    cluster_utils = ClusterKeywords(cluster_config)
     if should_provision:
         try:
             cluster_utils.provision_cluster(
@@ -312,7 +312,7 @@ def params_from_base_suite_setup(request):
     )
 
     # Load topology as a dictionary
-    cluster_utils = ClusterKeywords()
+    cluster_utils = ClusterKeywords(cluster_config)
     cluster_topology = cluster_utils.get_cluster_topology(cluster_config)
 
     yield {

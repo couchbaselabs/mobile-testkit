@@ -1,5 +1,5 @@
 {
-  "log": ["*"],
+  {{ logging }}
   "adminInterface": "0.0.0.0:4985",
   "facebook": { "register": true },
   {{ sslcert }}

@@ -1,0 +1,4 @@
+# Delete the provided directory
+- name: SYNC GATEWAY | Delete sync_gateway file {{ file_name }}
+  become: yes
+  shell: rm -rf {{ file_name }}

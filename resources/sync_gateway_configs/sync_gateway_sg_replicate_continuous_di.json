@@ -6,9 +6,7 @@
   "maxFileDescriptors": 90000,
   "slowServerCallWarningThreshold": 500,
   "compressResponses": false,
-  "log": [
-    "CRUD+", "Cache+", "HTTP+", "Changes+", "Replicate"
-  ],
+  {{ logging }}
   "replications": [
     {
       "replication_id": "continuous",

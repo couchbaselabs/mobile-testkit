@@ -1,0 +1,10 @@
+- name: Windows UWP - Start TestServer
+  hosts: windows
+  vars:
+    binary_path:
+
+  tasks:
+    - debug: msg="Starting the Testserver UWP"
+
+    - name: Start TestServer UWP
+      win_shell: C:\Users\{{ ansible_user }}\Desktop\TestServer\{{ binary_path }}

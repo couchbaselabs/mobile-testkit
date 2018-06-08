@@ -11,6 +11,7 @@ from libraries.provision.ansible_runner import AnsibleRunner
 from libraries.testkit.config import Config
 from libraries.testkit.cluster import Cluster
 from utilities.cluster_config_utils import is_cbs_ssl_enabled, is_xattrs_enabled, no_conflicts_enabled, get_revs_limit, get_sg_version, get_sg_replicas, get_sg_use_views, sg_ssl_enabled, is_ipv6
+from keywords.constants import SYNC_GATEWAY_CERT
 
 
 class SyncGatewayConfig:
@@ -108,6 +109,7 @@ def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False,
 
     ansible_runner = AnsibleRunner(cluster_config)
     config_path = os.path.abspath(sync_gateway_config.config_path)
+    sg_cert_path = os.path.abspath(SYNC_GATEWAY_CERT)
     couchbase_server_primary_node = add_cbs_to_sg_config_server_field(cluster_config)
     # Create buckets unless the user explicitly asked to skip this step
     if not sync_gateway_config.skip_bucketcreation:
@@ -123,6 +125,7 @@ def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False,
     # Shared vars
     playbook_vars = {
         "sync_gateway_config_filepath": config_path,
+        "sg_cert_path": sg_cert_path,
         "server_port": server_port,
         "server_scheme": server_scheme,
         "autoimport": "",
@@ -133,12 +136,12 @@ def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False,
         "num_index_replicas": "",
         "num_index_replicas_housekeeping": "",
         "sg_use_views": "",
+        "logging": "",
         "couchbase_server_primary_node": couchbase_server_primary_node
     }
 
     if get_sg_version(cluster_config) >= "2.1.0":
-        num_replicas = get_sg_replicas(cluster_config)
-
+        playbook_vars["logging"] = '"logging": {"debug": {"enabled": true}},'
         if get_sg_use_views(cluster_config):
             playbook_vars["sg_use_views"] = '"use_views": true,'
         else:
@@ -146,6 +149,8 @@ def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False,
             playbook_vars[
                 "num_index_replicas"] = '"num_index_replicas": {},'.format(
                 num_replicas)
+    else:
+        playbook_vars["logging"] = '"log": ["*"],'
 
     if is_xattrs_enabled(cluster_config):
         playbook_vars["autoimport"] = '"import_docs": "continuous",'
@@ -161,9 +166,9 @@ def install_sync_gateway(cluster_config, sync_gateway_config, sg_ce=False,
     try:
         revs_limit = get_revs_limit(cluster_config)
         playbook_vars["revs_limit"] = '"revs_limit": {},'.format(revs_limit)
-    except KeyError as ex:
-        log_info("Keyerror in getting revs_limit{}".format(ex.message))
-        playbook_vars["revs_limit"] = ''
+    except KeyError:
+        log_info("revs_limit not found in {}, Ignoring".format(cluster_config))
+
     # Install Sync Gateway via Source or Package
     if sync_gateway_config.commit is not None:
         # Install from source
@@ -230,7 +235,7 @@ def create_server_buckets(cluster_config, sync_gateway_config):
 
     # get the couchbase server url
     cluster = Cluster(cluster_config)
-    cluster_helper = ClusterKeywords()
+    cluster_helper = ClusterKeywords(cluster_config)
     cluster_topology = cluster_helper.get_cluster_topology(cluster_config)
 
     # Handle the case of resources/cluster_configs/1sg, where we are targeting a

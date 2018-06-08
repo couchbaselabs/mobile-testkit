@@ -14,6 +14,7 @@ from utilities.cluster_config_utils import is_cbs_ssl_enabled, is_xattrs_enabled
     is_ipv6
 from utilities.cluster_config_utils import get_revs_limit, get_sg_replicas, get_sg_use_views, get_sg_version
 from keywords.utils import add_cbs_to_sg_config_server_field, log_info
+from keywords.constants import SYNC_GATEWAY_CERT
 
 log = logging.getLogger(libraries.testkit.settings.LOGGER)
 
@@ -59,6 +60,7 @@ class SyncGateway:
     def start(self, config):
         conf_path = os.path.abspath(config)
         log.info(">>> Starting sync_gateway with configuration: {}".format(conf_path))
+        sg_cert_path = os.path.abspath(SYNC_GATEWAY_CERT)
 
         playbook_vars = {
             "sync_gateway_config_filepath": conf_path,
@@ -69,21 +71,28 @@ class SyncGateway:
             "no_conflicts": "",
             "sslcert": "",
             "sslkey": "",
+            "sg_cert_path": sg_cert_path,
             "num_index_replicas": "",
             "sg_use_views": "",
+            "logging": "",
             "couchbase_server_primary_node": self.couchbase_server_primary_node
         }
 
-        if get_sg_version(self.cluster_config) >= "2.1.0":
-            num_replicas = get_sg_replicas(self.cluster_config)
-            playbook_vars["num_index_replicas"] = '"num_index_replicas": {},'.format(num_replicas)
-            playbook_vars["num_index_replicas_housekeeping"] = '"num_index_replicas_housekeeping": {},'.format(num_replicas)
+        if sg_ssl_enabled(self.cluster_config):
+            playbook_vars["sslcert"] = '"SSLCert": "sg_cert.pem",'
+            playbook_vars["sslkey"] = '"SSLKey": "sg_privkey.pem",'
 
+
+        if get_sg_version(self.cluster_config) >= "2.1.0":
+            playbook_vars["logging"] = '"logging": {"debug": {"enabled": true}},'
+            num_replicas = get_sg_replicas(self.cluster_config)
             if get_sg_use_views(self.cluster_config):
                 playbook_vars["sg_use_views"] = '"use_views": true,'
             else:
                 num_replicas = get_sg_replicas(self.cluster_config)
                 playbook_vars["num_index_replicas"] = '"num_index_replicas": {},'.format(num_replicas)
+        else:
+            playbook_vars["logging"] = '"log": ["*"],'
 
         if sg_ssl_enabled(self.cluster_config):
             playbook_vars["sslcert"] = '"SSLCert": "sg_cert.pem",'
@@ -98,9 +107,9 @@ class SyncGateway:
         try:
             revs_limit = get_revs_limit(self.cluster_config)
             playbook_vars["revs_limit"] = '"revs_limit": {},'.format(revs_limit)
-        except KeyError as ex:
-            log_info("Keyerror in getting revs_limit{}".format(ex.message))
-            playbook_vars["revs_limit"] = ''
+        except KeyError:
+            log_info("revs_limit no found in {}, Ignoring".format(self.cluster_config))
+
         status = self.ansible_runner.run_ansible_playbook(
             "start-sync-gateway.yml",
             extra_vars=playbook_vars,
@@ -114,6 +123,7 @@ class SyncGateway:
             self.cluster_config = cluster_config
         conf_path = os.path.abspath(config)
         log.info(">>> Restarting sync_gateway with configuration: {}".format(conf_path))
+        sg_cert_path = os.path.abspath(SYNC_GATEWAY_CERT)
 
         playbook_vars = {
             "sync_gateway_config_filepath": conf_path,
@@ -125,21 +135,27 @@ class SyncGateway:
             "revs_limit": "",
             "sslcert": "",
             "sslkey": "",
+            "sg_cert_path": sg_cert_path,
             "num_index_replicas": "",
             "sg_use_views": "",
+            "logging": "",
             "couchbase_server_primary_node": self.couchbase_server_primary_node
         }
 
-        if get_sg_version(self.cluster_config) >= "2.1.0":
-            num_replicas = get_sg_replicas(self.cluster_config)
-            playbook_vars["num_index_replicas"] = '"num_index_replicas": {},'.format(num_replicas)
-            playbook_vars["num_index_replicas_housekeeping"] = '"num_index_replicas_housekeeping": {},'.format(num_replicas)
+        if sg_ssl_enabled(self.cluster_config):
+            playbook_vars["sslcert"] = '"SSLCert": "sg_cert.pem",'
+            playbook_vars["sslkey"] = '"SSLKey": "sg_privkey.pem",'
 
+        if get_sg_version(self.cluster_config) >= "2.1.0":
+            playbook_vars["logging"] = '"logging": {"debug": {"enabled": true}},'
+            num_replicas = get_sg_replicas(self.cluster_config)
             if get_sg_use_views(self.cluster_config):
                 playbook_vars["sg_use_views"] = '"use_views": true,'
             else:
                 num_replicas = get_sg_replicas(self.cluster_config)
                 playbook_vars["num_index_replicas"] = '"num_index_replicas": {},'.format(num_replicas)
+        else:
+            playbook_vars["logging"] = '"log": ["*"],'
 
         if sg_ssl_enabled(self.cluster_config):
             playbook_vars["sslcert"] = '"SSLCert": "sg_cert.pem",'
@@ -154,8 +170,8 @@ class SyncGateway:
         try:
             revs_limit = get_revs_limit(self.cluster_config)
             playbook_vars["revs_limit"] = '"revs_limit": {},'.format(revs_limit)
-        except KeyError as ex:
-            log_info("Keyerror in getting revs_limit{}".format(ex.message))
+        except KeyError:
+            log_info("revs_limit no found in {}, Ignoring".format(self.cluster_config))
             playbook_vars["revs_limit"] = ''
 
         if is_ipv6:

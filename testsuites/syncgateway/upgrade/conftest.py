@@ -118,6 +118,10 @@ def pytest_addoption(parser):
                      action="store",
                      help="cbs-upgrade-toybuild: Couchbase server toy build to use")
 
+    parser.addoption("--sg-ssl",
+                     action="store_true",
+                     help="If set, will enable SSL communication between Sync Gateway and CBL")
+
     parser.addoption("--use-views",
                      action="store_true",
                      help="If set, uses views instead of GSI - SG 2.1 and above only")
@@ -156,6 +160,7 @@ def params_from_base_suite_setup(request):
     num_docs = request.config.getoption("--num-docs")
     cbs_platform = request.config.getoption("--cbs-platform")
     cbs_toy_build = request.config.getoption("--cbs-upgrade-toybuild")
+    sg_ssl = request.config.getoption("--sg-ssl")
     use_views = request.config.getoption("--use-views")
     number_replicas = request.config.getoption("--number-replicas")
 
@@ -178,6 +183,7 @@ def params_from_base_suite_setup(request):
     log_info("num_docs: {}".format(num_docs))
     log_info("cbs_platform: {}".format(cbs_platform))
     log_info("cbs_toy_build: {}".format(cbs_toy_build))
+    log_info("sg_ssl: {}".format(sg_ssl))
     log_info("use_views: {}".format(use_views))
     log_info("number_replicas: {}".format(number_replicas))
 
@@ -188,6 +194,7 @@ def params_from_base_suite_setup(request):
     # use base_(lb_)cc cluster config if mode is "cc" or base_(lb_)di cluster config if mode is "di"
     cluster_config = "{}/{}_{}".format(CLUSTER_CONFIGS_DIR, cluster_config, mode)
     log_info("Using '{}' config!".format(cluster_config))
+    cluster_utils = ClusterKeywords(cluster_config)
 
     try:
         server_version
@@ -209,6 +216,12 @@ def params_from_base_suite_setup(request):
 
     # Only works with load balancer configs
     persist_cluster_config_environment_prop(cluster_config, 'sg_lb_enabled', True)
+
+    if sg_ssl:
+        log_info("Enabling SSL on sync gateway")
+        persist_cluster_config_environment_prop(cluster_config, 'sync_gateway_ssl', True)
+    else:
+        persist_cluster_config_environment_prop(cluster_config, 'sync_gateway_ssl', False)
 
     if use_views:
         log_info("Running SG tests using views")
@@ -251,7 +264,7 @@ def params_from_base_suite_setup(request):
     if skip_provisioning:
         should_provision = False
 
-    cluster_utils = ClusterKeywords()
+    cluster_utils = ClusterKeywords(cluster_config)
     if should_provision:
         try:
             cluster_utils.provision_cluster(
@@ -339,7 +352,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     ls_url = liteserv.start("{}/logs/{}-{}-{}.txt".format(RESULTS_DIR, type(liteserv).__name__, test_name, datetime.datetime.now()))
     client.delete_databases(ls_url)
 
-    cluster_helper = ClusterKeywords()
+    cluster_helper = ClusterKeywords(cluster_config)
     cluster_hosts = cluster_helper.get_cluster_topology(cluster_config=cluster_config)
     sg_url = cluster_hosts["sync_gateways"][0]["public"]
     sg_admin_url = cluster_hosts["sync_gateways"][0]["admin"]

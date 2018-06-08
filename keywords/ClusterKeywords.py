@@ -19,6 +19,15 @@ from utilities.cluster_config_utils import is_load_balancer_enabled, get_load_ba
 
 class ClusterKeywords:
 
+    def __init__(self, cluster_config):
+        self.sg_scheme = "http"
+        self.cluster_config = cluster_config
+
+        if sg_ssl_enabled(self.cluster_config):
+            self.sg_scheme = "https"
+
+        os.environ["CLUSTER_CONFIG"] = cluster_config
+
     def set_cluster_config(self, name):
         """Sets CLUSTER_CONFIG environment variable for provisioning
 

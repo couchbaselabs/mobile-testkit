@@ -30,13 +30,17 @@ def load_sync_gateway_config(sync_gateway_config, mode, server_url, xattrs_enabl
 
         sg_use_views_prop = ""
         num_index_replicas_prop = ""
+        logging_prop = ""
 
         if get_sg_version(cluster_config) >= "2.1.0":
+            logging_prop = '"log": ["*"],'
             if get_sg_use_views(cluster_config):
                 sg_use_views_prop = '"use_views": true,'
             else:
                 num_replicas = get_sg_replicas(cluster_config)
                 num_index_replicas_prop = '"num_index_replicas": {},'.format(num_replicas)
+        else:
+            logging_prop = '"logging": {"debug": {"enabled": true}},'
 
         couchbase_server_primary_node = add_cbs_to_sg_config_server_field(cluster_config)
         temp = template.render(
@@ -47,7 +51,8 @@ def load_sync_gateway_config(sync_gateway_config, mode, server_url, xattrs_enabl
             autoimport=autoimport_prop,
             xattrs=xattrs_prop,
             sg_use_views=sg_use_views_prop,
-            num_index_replicas=num_index_replicas_prop
+            num_index_replicas=num_index_replicas_prop,
+            logging=logging_prop
         )
         data = json.loads(temp)
 
@@ -68,7 +73,7 @@ def test_log_rotation_default_values(params_from_base_test_setup, sg_conf_name):
     cluster_conf = params_from_base_test_setup["cluster_config"]
     mode = params_from_base_test_setup["mode"]
     xattrs_enabled = params_from_base_test_setup["xattrs_enabled"]
-    cluster_helper = ClusterKeywords()
+    cluster_helper = ClusterKeywords(cluster_conf)
     cluster_hosts = cluster_helper.get_cluster_topology(cluster_conf)
     sg_admin_url = cluster_hosts["sync_gateways"][0]["admin"]
     sg_ip = host_for_url(sg_admin_url)
@@ -149,7 +154,7 @@ def test_log_logKeys_string(params_from_base_test_setup, sg_conf_name):
     log_info("Using cluster_conf: {}".format(cluster_conf))
     log_info("Using sg_conf: {}".format(sg_conf))
 
-    cluster_helper = ClusterKeywords()
+    cluster_helper = ClusterKeywords(cluster_conf)
     cluster_hosts = cluster_helper.get_cluster_topology(cluster_conf)
     sg_admin_url = cluster_hosts["sync_gateways"][0]["admin"]
     sg_ip = host_for_url(sg_admin_url)
@@ -207,7 +212,7 @@ def test_log_nondefault_logKeys_set(params_from_base_test_setup, sg_conf_name):
     log_info("Using cluster_conf: {}".format(cluster_conf))
     log_info("Using sg_conf: {}".format(sg_conf))
 
-    cluster_helper = ClusterKeywords()
+    cluster_helper = ClusterKeywords(cluster_conf)
     cluster_hosts = cluster_helper.get_cluster_topology(cluster_conf)
     sg_admin_url = cluster_hosts["sync_gateways"][0]["admin"]
     sg_ip = host_for_url(sg_admin_url)
@@ -258,7 +263,7 @@ def test_log_maxage_10_timestamp_ignored(params_from_base_test_setup, sg_conf_na
     log_info("Using cluster_conf: {}".format(cluster_conf))
     log_info("Using sg_conf: {}".format(sg_conf))
 
-    cluster_helper = ClusterKeywords()
+    cluster_helper = ClusterKeywords(cluster_conf)
     cluster_hosts = cluster_helper.get_cluster_topology(cluster_conf)
     sg_admin_url = cluster_hosts["sync_gateways"][0]["admin"]
     sg_ip = host_for_url(sg_admin_url)
@@ -330,7 +335,7 @@ def test_log_rotation_invalid_path(params_from_base_test_setup, sg_conf_name):
     log_info("Using cluster_conf: {}".format(cluster_conf))
     log_info("Using sg_conf: {}".format(sg_conf))
 
-    cluster_helper = ClusterKeywords()
+    cluster_helper = ClusterKeywords(cluster_conf)
     cluster_hosts = cluster_helper.get_cluster_topology(cluster_conf)
     sg_admin_url = cluster_hosts["sync_gateways"][0]["admin"]
     sg_ip = host_for_url(sg_admin_url)
@@ -388,7 +393,7 @@ def test_log_200mb(params_from_base_test_setup, sg_conf_name):
     log_info("Using cluster_conf: {}".format(cluster_conf))
     log_info("Using sg_conf: {}".format(sg_conf))
 
-    cluster_helper = ClusterKeywords()
+    cluster_helper = ClusterKeywords(cluster_conf)
     cluster_hosts = cluster_helper.get_cluster_topology(cluster_conf)
     sg_admin_url = cluster_hosts["sync_gateways"][0]["admin"]
     sg_ip = host_for_url(sg_admin_url)
@@ -454,7 +459,7 @@ def test_log_number_backups(params_from_base_test_setup, sg_conf_name):
     log_info("Using cluster_conf: {}".format(cluster_conf))
     log_info("Using sg_conf: {}".format(sg_conf))
 
-    cluster_helper = ClusterKeywords()
+    cluster_helper = ClusterKeywords(cluster_conf)
     cluster_hosts = cluster_helper.get_cluster_topology(cluster_conf)
     sg_admin_url = cluster_hosts["sync_gateways"][0]["admin"]
     sg_ip = host_for_url(sg_admin_url)
@@ -517,7 +522,7 @@ def test_log_rotation_negative(params_from_base_test_setup, sg_conf_name):
     log_info("Using cluster_conf: {}".format(cluster_conf))
     log_info("Using sg_conf: {}".format(sg_conf))
 
-    cluster_helper = ClusterKeywords()
+    cluster_helper = ClusterKeywords(cluster_conf)
     cluster_hosts = cluster_helper.get_cluster_topology(cluster_conf)
     sg_admin_url = cluster_hosts["sync_gateways"][0]["admin"]
     sg_ip = host_for_url(sg_admin_url)
@@ -579,7 +584,7 @@ def test_log_maxbackups_0(params_from_base_test_setup, sg_conf_name):
     log_info("Using cluster_conf: {}".format(cluster_conf))
     log_info("Using sg_conf: {}".format(sg_conf))
 
-    cluster_helper = ClusterKeywords()
+    cluster_helper = ClusterKeywords(cluster_conf)
     cluster_hosts = cluster_helper.get_cluster_topology(cluster_conf)
     sg_admin_url = cluster_hosts["sync_gateways"][0]["admin"]
     sg_ip = host_for_url(sg_admin_url)
@@ -642,7 +647,7 @@ def test_log_logLevel_invalid(params_from_base_test_setup, sg_conf_name):
     log_info("Using cluster_conf: {}".format(cluster_conf))
     log_info("Using sg_conf: {}".format(sg_conf))
 
-    cluster_helper = ClusterKeywords()
+    cluster_helper = ClusterKeywords(cluster_conf)
     cluster_hosts = cluster_helper.get_cluster_topology(cluster_conf)
     sg_admin_url = cluster_hosts["sync_gateways"][0]["admin"]
     sg_ip = host_for_url(sg_admin_url)

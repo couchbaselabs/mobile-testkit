@@ -9,3 +9,13 @@
 
 - name: SYNC GATEWAY | Print deployed config
   debug: var=out.stdout
+
+- name: SYNC GATEWAY | Deploying SSL Cert
+  become: yes
+  template: src="{{ sg_cert_path }}/sg_cert.pem" dest=/home/sync_gateway/sg_cert.pem owner=sync_gateway group=sync_gateway mode=0644 force=true
+  when: sslcert is defined
+
+- name: SYNC GATEWAY | Deploying SSL Private Key
+  become: yes
+  template: src="{{ sg_cert_path }}/sg_privkey.pem" dest=/home/sync_gateway/sg_privkey.pem owner=sync_gateway group=sync_gateway mode=0644 force=true
+  when: sslkey is defined

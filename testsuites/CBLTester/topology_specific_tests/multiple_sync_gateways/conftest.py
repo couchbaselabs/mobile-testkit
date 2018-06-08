@@ -10,11 +10,13 @@ from keywords.constants import CLUSTER_CONFIGS_DIR
 from keywords.SyncGateway import sync_gateway_config_path_for_mode
 from keywords.exceptions import ProvisioningError
 from keywords.tklogging import Logging
+
 from CBLClient.Database import Database
 from keywords.utils import host_for_url, clear_resources_pngs
 from libraries.testkit.cluster import Cluster
 from couchbase.bucket import Bucket
 from couchbase.n1ql import N1QLQuery
+
 from CBLClient.Utils import Utils
 from keywords.TestServerFactory import TestServerFactory
 from keywords.SyncGateway import SyncGateway
@@ -141,13 +143,13 @@ def params_from_base_suite_setup(request):
     cluster_config = "{}/multiple_sync_gateways_{}".format(CLUSTER_CONFIGS_DIR, mode)
     no_conflicts_enabled = request.config.getoption("--no-conflicts")
     sg_config = sync_gateway_config_path_for_mode("listener_tests/multiple_sync_gateways", mode)
-    cluster_utils = ClusterKeywords()
+    cluster_utils = ClusterKeywords(cluster_config)
     cluster_topology = cluster_utils.get_cluster_topology(cluster_config)
-    cluster_utils.set_cluster_config(cluster_config.split("/")[-1])
 
     sg_db = "db"
     sg_url = cluster_topology["sync_gateways"][0]["public"]
     sg_ip = host_for_url(sg_url)
+
     persist_cluster_config_environment_prop(cluster_config, 'sync_gateway_ssl', False)
     target_url = "ws://{}:4984/{}".format(sg_ip, sg_db)
     target_admin_url = "ws://{}:4985/{}".format(sg_ip, sg_db)
@@ -160,6 +162,7 @@ def params_from_base_suite_setup(request):
         persist_cluster_config_environment_prop(cluster_config, 'sync_gateway_ssl', True)
         target_url = "wss://{}:4984/{}".format(sg_ip, sg_db)
         target_admin_url = "wss://{}:4985/{}".format(sg_ip, sg_db)
+
     try:
         server_version
     except NameError:
@@ -193,11 +196,12 @@ def params_from_base_suite_setup(request):
         persist_cluster_config_environment_prop(cluster_config, 'no_conflicts_enabled', False)
 
     sg_config = sync_gateway_config_path_for_mode("listener_tests/multiple_sync_gateways", mode)
-    cluster_utils = ClusterKeywords()
+    cluster_utils = ClusterKeywords(cluster_config)
     cluster_topology = cluster_utils.get_cluster_topology(cluster_config)
     cluster = Cluster(cluster_config)
 
     log_info("no conflicts enabled {}".format(no_conflicts_enabled))
+
     if sync_gateway_version < "2.0":
         pytest.skip('Does not work with sg < 2.0 , so skipping the test')
 
@@ -215,7 +219,9 @@ def params_from_base_suite_setup(request):
             logging_helper = Logging()
             logging_helper.fetch_and_analyze_logs(cluster_config=cluster_config, test_name=request.node.name)
             raise
+
     cluster.reset(sg_config)
+
     # Hit this intalled running services to verify the correct versions are installed
     cluster_utils.verify_cluster_versions(
         cluster_config,
@@ -290,17 +296,16 @@ def params_from_base_suite_setup(request):
         "liteserv_host": liteserv_host,
         "liteserv_port": liteserv_port,
         "target_url": target_url,
+        "target_admin_url": target_admin_url,
         "sg_ip": sg_ip,
         "sg_db": sg_db,
         "no_conflicts_enabled": no_conflicts_enabled,
         "sync_gateway_version": sync_gateway_version,
-        "target_admin_url": target_admin_url,
         "base_url": base_url,
         "enable_sample_bucket": enable_sample_bucket,
         "create_db_per_test": create_db_per_test,
         "suite_source_db": suite_source_db,
         "suite_cbl_db": suite_cbl_db,
-        "base_url": base_url,
         "sg_config": sg_config,
         "testserver": testserver,
         "device_enabled": device_enabled,
@@ -340,11 +345,9 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     cluster_topology = params_from_base_suite_setup["cluster_topology"]
     mode = params_from_base_suite_setup["mode"]
     target_url = params_from_base_suite_setup["target_url"]
-    base_url = params_from_base_suite_setup["base_url"]
+    sync_gateway_version = params_from_base_suite_setup["sync_gateway_version"]
     sg_ip = params_from_base_suite_setup["sg_ip"]
     sg_db = params_from_base_suite_setup["sg_db"]
-    sync_gateway_version = params_from_base_suite_setup["sync_gateway_version"]
-    target_admin_url = params_from_base_suite_setup["target_admin_url"]
     sg_config = params_from_base_suite_setup["sg_config"]
     liteserv_platform = params_from_base_suite_setup["liteserv_platform"]
     testserver = params_from_base_suite_setup["testserver"]
@@ -356,7 +359,6 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     db = None
 
     # Start LiteServ and delete any databases
-
     log_info("Starting TestServer...")
     test_name_cp = test_name.replace("/", "-")
     if device_enabled:
@@ -366,7 +368,7 @@ def params_from_base_test_setup(request, params_from_base_suite_setup):
     # sleep for some time to reach cbl
     time.sleep(5)
 
-    cluster_helper = ClusterKeywords()
+    cluster_helper = ClusterKeywords(cluster_config)
     cluster_hosts = cluster_helper.get_cluster_topology(cluster_config=cluster_config)
     sg_url = cluster_hosts["sync_gateways"][0]["public"]
     sg_admin_url = cluster_hosts["sync_gateways"][0]["admin"]
