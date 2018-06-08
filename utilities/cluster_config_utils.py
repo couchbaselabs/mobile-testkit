@@ -159,6 +159,11 @@ def get_revs_limit(cluster_config):
     return cluster["environment"]["revs_limit"]
 
 
+def get_logging(cluster_config):
+    cluster = load_cluster_config_json(cluster_config)
+    return cluster["environment"]["redactlevel"]
+
+
 def copy_to_temp_conf(cluster_config, mode):
     # Creating temporary cluster config and json files to add revs limit dynamically
     temp_cluster_config = "resources/cluster_configs/temp_cluster_config_{}".format(mode)

@@ -1,0 +1,19 @@
+---
+- hosts: sync_gateways
+  any_errors_fatal: true
+  tasks:
+  - include: tasks/fetch-sync-gateway-all-logs.yml
+    when: ansible_distribution == "CentOS" or ansible_distribution == "RedHat" or ansible_distribution == "Amazon" or ansible_distribution == "Ubuntu"
+
+  - include: tasks/fetch-sync-gateway-logs-windows.yml
+    when: ansible_os_family == "Windows"
+
+- hosts: sg_accels
+  become: yes
+  any_errors_fatal: true
+  tasks:
+  - include: tasks/fetch-sg-accel-logs.yml
+    when: ansible_distribution == "CentOS" or ansible_distribution == "RedHat" or ansible_distribution == "Amazon" or ansible_distribution == "Ubuntu"
+
+  - include: tasks/fetch-sg-accel-logs-windows.yml
+    when: ansible_os_family == "Windows"
