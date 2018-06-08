@@ -33,6 +33,7 @@ def params_from_base_suite_setup(request):
     sg_lb = request.config.getoption("--sg-lb")
     use_sequoia = request.config.getoption("--sequoia")
     no_conflicts_enabled = request.config.getoption("--no-conflicts")
+    sg_ssl = request.config.getoption("--sg-ssl")
     use_views = request.config.getoption("--use-views")
     number_replicas = request.config.getoption("--number-replicas")
     sg_installer_type = request.config.getoption("--sg-installer-type")
@@ -51,6 +52,7 @@ def params_from_base_suite_setup(request):
     log_info("sg_ce: {}".format(sg_ce))
     log_info("sg_lb: {}".format(sg_lb))
     log_info("no conflicts enabled {}".format(no_conflicts_enabled))
+    log_info("sg_ssl: {}".format(sg_ssl))
     log_info("use_views: {}".format(use_views))
     log_info("number_replicas: {}".format(number_replicas))
     log_info("sg_installer_type: {}".format(sg_installer_type))
@@ -82,6 +84,12 @@ def params_from_base_suite_setup(request):
 
     # Write the number of replicas to cluster config
     persist_cluster_config_environment_prop(cluster_config, 'number_replicas', number_replicas)
+
+    if sg_ssl:
+        log_info("Enabling SSL on sync gateway")
+        persist_cluster_config_environment_prop(cluster_config, 'sync_gateway_ssl', True)
+    else:
+        persist_cluster_config_environment_prop(cluster_config, 'sync_gateway_ssl', False)
 
     # Add load balancer prop and check if load balancer IP is available
     if sg_lb:
